@@ -37,7 +37,7 @@ import {
 	strip_resolution_suffix
 } from '../pathname.js';
 import { server_data_serializer } from './page/data_serializer.js';
-import { get_remote_function, get_remote_id, handle_remote_call } from './remote-functions.js';
+import { get_remote_id, handle_remote_call } from './remote-functions.js';
 import { record_span } from '../telemetry/record_span.js';
 import { otel } from '../telemetry/otel.js';
 
@@ -114,7 +114,7 @@ export async function internal_respond(request, options, manifest, state) {
 	/** @type {boolean[] | undefined} */
 	let invalidated_data_nodes;
 
-	let is_remote_query = false;
+	let skip_route_resolution = false;
 
 	if (is_route_resolution_request) {
 		/**
@@ -133,14 +133,13 @@ export async function internal_respond(request, options, manifest, state) {
 			.map((node) => node === '1');
 		url.searchParams.delete(INVALIDATED_PARAM);
 	} else if (remote_id) {
-		// swallow lookup errors so they surface through `handle_remote_call` like before
-		const fn = await get_remote_function(manifest, remote_id).catch(() => undefined);
-		const type = fn?.__?.type;
-		is_remote_query = type === 'query' || type === 'query_batch' || type === 'query_live';
+		// query clients don't send these headers, leaving `event.url` as the endpoint URL
+		const pathname = request.headers.get('x-sveltekit-pathname');
 
-		// the calling page's URL is only forwarded for flavors that can access `event.url`
-		if (!is_remote_query) {
-			url.pathname = request.headers.get('x-sveltekit-pathname') ?? base;
+		if (pathname === null) {
+			skip_route_resolution = true;
+		} else {
+			url.pathname = pathname;
 			url.search = request.headers.get('x-sveltekit-search') ?? '';
 		}
 	}
@@ -346,7 +345,7 @@ export async function internal_respond(request, options, manifest, state) {
 		return text('Not found', { status: 404, headers });
 	}
 
-	if (!state.prerendering?.fallback && !is_remote_query) {
+	if (!state.prerendering?.fallback && !skip_route_resolution) {
 		try {
 			const matchers = await manifest._.matchers();
 			const result = find_route(resolved_path, manifest._.routes, matchers);

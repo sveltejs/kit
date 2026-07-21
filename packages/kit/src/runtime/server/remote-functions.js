@@ -45,8 +45,13 @@ export async function handle_remote_call(event, state, options, manifest, id) {
  * @param {string} id
  */
 async function handle_remote_call_internal(event, state, options, manifest, id) {
-	const additional_args = id.split('/')[2];
-	const fn = await get_remote_function(manifest, id);
+	const [hash, name, additional_args] = id.split('/');
+	const remotes = manifest._.remotes;
+
+	if (!Object.hasOwn(remotes, hash)) error(404);
+
+	const module = await remotes[hash]();
+	const fn = Object.hasOwn(module.default, name) ? module.default[name] : undefined;
 
 	if (!fn) error(404);
 
@@ -571,22 +576,6 @@ async function handle_remote_form_post_internal(event, state, manifest, id) {
 			error: check_incorrect_fail_use(err)
 		};
 	}
-}
-
-/**
- * Loads the remote function for the given id, or `undefined` if it doesn't exist
- * @param {SSRManifest} manifest
- * @param {string} id
- */
-export async function get_remote_function(manifest, id) {
-	const [hash, name] = id.split('/');
-	const remotes = manifest._.remotes;
-
-	if (!Object.hasOwn(remotes, hash)) return;
-
-	const module = await remotes[hash]();
-
-	return Object.hasOwn(module.default, name) ? module.default[name] : undefined;
 }
 
 /**
