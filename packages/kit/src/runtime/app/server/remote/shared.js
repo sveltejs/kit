@@ -136,7 +136,10 @@ function derive_remote_function_event(event, state, allow_cookies) {
 
 	if (state.is_in_remote_query) {
 		for (const property of ['url', 'params', 'route']) {
+			// non-enumerable so that deriving the event again for a nested query
+			// doesn't invoke the getter while spreading
 			Object.defineProperty(derived, property, {
+				enumerable: false,
 				get() {
 					throw new Error(
 						`Cannot access event.${property} in a query. Pass the value as an argument to the query instead`
