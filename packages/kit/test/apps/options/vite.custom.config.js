@@ -54,7 +54,7 @@ const config = {
 			},
 			typescript: {
 				config(config) {
-					config.include.push('../vite.custom.config.js', '../playwright.config.js');
+					config.include = ['**', '../vite.custom.config.js', '../playwright.config.js'];
 				}
 			}
 		})
