@@ -62,6 +62,7 @@ export function get_tsconfig(out, kit, cwd) {
 
 	const config = {
 		compilerOptions: {
+			paths: get_tsconfig_paths(kit, cwd),
 			rootDirs: [config_relative('.'), config_relative(`${kit.outDir}/types`)],
 			types: ['$app/types'],
 

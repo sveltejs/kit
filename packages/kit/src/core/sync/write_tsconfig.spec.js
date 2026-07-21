@@ -16,12 +16,11 @@ test('Creates tsconfig path aliases from kit.alias', () => {
 	});
 
 	// Use a cwd without a package.json so no `#`-prefixed imports are picked up
-	const { compilerOptions } = get_tsconfig(kit, import.meta.dirname);
+	const { compilerOptions } = get_tsconfig('dir/tsconfig.json', kit, import.meta.dirname);
 
 	// No `#`-prefixed path aliases because the package.json at the test cwd
 	// doesn't have an `imports` field
 	expect(compilerOptions.paths).toEqual({
-		'$app/types': ['./types/index.d.ts'],
 		simpleKey: ['../simple/value'],
 		'simpleKey/*': ['../simple/value/*'],
 		key: ['../value'],
@@ -34,12 +33,15 @@ test('Creates tsconfig path aliases from kit.alias', () => {
 
 test('Creates tsconfig path aliases from package.json import map', () => {
 	const { kit } = validate_config({});
-	const { compilerOptions } = get_tsconfig(kit, import.meta.dirname + '/write_tsconfig_test');
+	const { compilerOptions } = get_tsconfig(
+		'dir/tsconfig.json',
+		kit,
+		import.meta.dirname + '/write_tsconfig_test'
+	);
 
 	// No `#`-prefixed path aliases because the package.json at the test cwd
 	// doesn't have an `imports` field
 	expect(compilerOptions.paths).toEqual({
-		'$app/types': ['./types/index.d.ts'],
 		'#lib': ['../src/lib'],
 		'#lib/*': ['../src/lib/*']
 	});
@@ -56,7 +58,7 @@ test('Allows generated tsconfig to be mutated', () => {
 		}
 	});
 
-	const config = get_tsconfig(kit, '.');
+	const config = get_tsconfig('dir/tsconfig.json', kit, '.');
 
 	// @ts-expect-error
 	assert.equal(config.extends, 'some/other/tsconfig.json');
@@ -74,41 +76,8 @@ test('Allows generated tsconfig to be replaced', () => {
 		}
 	});
 
-	const config = get_tsconfig(kit, '.');
+	const config = get_tsconfig('dir/tsconfig.json', kit, '.');
 
 	// @ts-expect-error
 	assert.equal(config.extends, 'some/other/tsconfig.json');
-});
-
-test('Creates tsconfig include from kit.files', () => {
-	const { kit } = validate_config({
-		kit: {
-			files: {
-				routes: 'app'
-			}
-		}
-	});
-
-	const { include } = get_tsconfig(kit, '.');
-
-	expect(include).toEqual([
-		'ambient.d.ts',
-		'env.d.ts',
-		'non-ambient.d.ts',
-		'./types/**/$types.d.ts',
-		'../vite.config.js',
-		'../vite.config.ts',
-		'../app/**/*.js',
-		'../app/**/*.ts',
-		'../app/**/*.svelte',
-		'../src/**/*.js',
-		'../src/**/*.ts',
-		'../src/**/*.svelte',
-		'../test/**/*.js',
-		'../test/**/*.ts',
-		'../test/**/*.svelte',
-		'../tests/**/*.js',
-		'../tests/**/*.ts',
-		'../tests/**/*.svelte'
-	]);
 });

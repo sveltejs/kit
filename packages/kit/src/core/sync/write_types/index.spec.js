@@ -32,7 +32,7 @@ function run_test(dir) {
 	});
 
 	write_all_types(initial, manifest, root);
-	write_non_ambient(initial.kit, manifest);
+	write_non_ambient(initial.kit, manifest, root);
 }
 
 test('Creates correct $types', { timeout: 60000 }, () => {
