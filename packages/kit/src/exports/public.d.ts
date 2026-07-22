@@ -365,32 +365,10 @@ export interface KitConfig {
 	/**
 	 * An object containing zero or more aliases used to replace values in `import` statements. These aliases are automatically passed to Vite and TypeScript.
 	 *
-	 * ```js
-	 * /// file: vite.config.js
-	 * import { defineConfig } from 'vite';
-	 * import { sveltekit } from '@sveltejs/kit/vite';
-	 *
-	 * export default defineConfig({
-	 *   plugins: [
-	 *     sveltekit({
-	 *       alias: {
-	 *         // this will match a file
-	 *         'my-file': 'path/to/my-file.js',
-	 *
-	 *         // this will match a directory and its contents
-	 *         // (`my-directory/x` resolves to `path/to/my-directory/x`)
-	 *         'my-directory': 'path/to/my-directory',
-	 *
-	 *         // an alias ending /* will only match
-	 *         // the contents of a directory, not the directory itself
-	 *         'my-directory/*': 'path/to/my-directory/*'
-	 *       }
-	 *     })
-	 *   ]
-	 * });
-	 * ```
+	 * This option is deprecated. Use [subpath imports](https://svelte.dev/docs/kit/$lib) instead.
 	 *
 	 * > [!NOTE] You will need to run `npm run dev` to have SvelteKit automatically generate the required alias configuration in `jsconfig.json` or `tsconfig.json`.
+	 * @deprecated
 	 * @default {}
 	 */
 	alias?: Record<string, string>;
