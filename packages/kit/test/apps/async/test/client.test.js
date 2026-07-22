@@ -142,20 +142,36 @@ test.describe('remote function mutations', () => {
 		expect(request_count).toBe(1); // only the command itself — no separate refetch of get_b
 	});
 
-	test('a query re-refreshed by another query during collection re-runs', async ({ page }) => {
+	test('a query re-refreshed by another query during collection is cached, not re-run', async ({
+		page
+	}) => {
 		await page.goto('/remote/re-refresh');
 		await expect(page.locator('#value')).toHaveText('0');
 
 		let request_count = 0;
 		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
 
-		// `bump` refreshes `get_value` (which would see 10) and `driver`. When `driver`
-		// runs during collection it bumps the value to 11 and re-refreshes `get_value`,
-		// which must run *again* and serialize 11 — not the stale 10 from its first run.
+		// `bump` refreshes `get_value` (which sees 10) and `driver`. When `driver`
+		// runs during collection it bumps the value to 11 and re-refreshes `get_value`.
+		// `get_value` has already been processed once this drain, so the re-refresh is
+		// cached rather than re-run — the client keeps the first (10) value. This is
+		// what prevents A → B → A refresh cycles from looping forever.
 		await page.click('#bump');
-		await expect(page.locator('#value')).toHaveText('11');
+		await expect(page.locator('#value')).toHaveText('10');
 		await page.waitForTimeout(100); // allow all requests to finish
-		expect(request_count).toBe(1); // only the command — the re-run rode along in the response
+		expect(request_count).toBe(1); // only the command — no separate refetch
+	});
+
+	test('queries that refresh each other in a cycle do not loop forever', async ({ page }) => {
+		await page.goto('/remote/refresh-cycle');
+		await expect(page.locator('#value')).toHaveText('0');
+
+		// `get_a` refreshes `get_b` and `get_b` refreshes `get_a`. Without cycle
+		// detection in the drain phase the command response would never settle, so
+		// `#value` would stay at 0 and this assertion would time out.
+		await page.click('#bump');
+
+		await expect(page.locator('#value')).toHaveText('1');
 	});
 
 	test('hydrated query errors are reused', async ({ page }) => {

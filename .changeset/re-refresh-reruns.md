@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: re-run a server-side query when it is refreshed again before the request completes
+fix: prevent infinite loops when server-side queries refresh each other in a cycle during the single-flight drain
