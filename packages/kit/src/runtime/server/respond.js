@@ -136,6 +136,8 @@ export async function internal_respond(request, options, manifest, state) {
 	/** @type {boolean[] | undefined} */
 	let invalidated_data_nodes;
 
+	let skip_route_resolution = false;
+
 	if (is_route_resolution_request) {
 		/**
 		 * If the request is for a route resolution, first modify the URL, then continue as normal
@@ -153,8 +155,15 @@ export async function internal_respond(request, options, manifest, state) {
 			.map((node) => node === '1');
 		url.searchParams.delete(INVALIDATED_PARAM);
 	} else if (remote_id) {
-		url.pathname = request.headers.get('x-sveltekit-pathname') ?? base;
-		url.search = request.headers.get('x-sveltekit-search') ?? '';
+		// query clients don't send these headers, leaving `event.url` as the endpoint URL
+		const pathname = request.headers.get('x-sveltekit-pathname');
+
+		if (pathname === null) {
+			skip_route_resolution = true;
+		} else {
+			url.pathname = pathname;
+			url.search = request.headers.get('x-sveltekit-search') ?? '';
+		}
 	}
 
 	/** @type {Record<string, string>} */
@@ -359,7 +368,7 @@ export async function internal_respond(request, options, manifest, state) {
 		return text('Not found', { status: 404, headers });
 	}
 
-	if (!state.prerendering?.fallback) {
+	if (!state.prerendering?.fallback && !skip_route_resolution) {
 		try {
 			const matchers = await manifest._.matchers();
 			const result = find_route(resolved_path, manifest._.routes, matchers);
