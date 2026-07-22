@@ -54,8 +54,10 @@ const initialized = server.init({
 export default async (request, context) => {
 	if (!origin) {
 		origin = new URL(request.url).origin;
-		await initialized;
 	}
+
+	// always await initialization to prevent race condition with concurrent requests
+	await initialized;
 
 	return server.respond(request, {
 		getClientAddress() {
