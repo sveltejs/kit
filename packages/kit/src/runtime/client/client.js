@@ -2683,7 +2683,7 @@ async function update_state(url, state, replace, persist, caller) {
 	const intent = await get_navigation_intent(resolved, false);
 	const nav =
 		// For backwards compatibility we don't trigger navigation hooks etc for push/replaceState
-		url !== '' && caller === 'goto'
+		caller === 'goto'
 			? _before_navigate({ url: resolved, type: 'goto', intent, shallow: true })
 			: undefined;
 

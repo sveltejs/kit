@@ -67,9 +67,6 @@ Once shallow routing is active, `page.shallow` is set with the visible URL, para
 A regular `goto` call without `shallow: true`, or a link click, exits shallow routing.
 
 > [!NOTE]
-> `goto('', { shallow: true, state: ... });` does _not_ trigger navigation hooks.
-
-> [!NOTE]
 > In SvelteKit 2 this functionality was achieved using `pushState` and `replaceState`, which are now deprecated. Use `goto` with `shallow: true` instead, and use the `replace` option when replacing the current history entry.
 
 ## Routing options
