@@ -419,8 +419,7 @@ export async function collect_remote_data(data, event, state, options) {
 
 		drain();
 
-		// `inflight` grows as settles drain newly-refreshed queries; the array iterator
-		// reads the live length, so entries appended after the loop starts are awaited too.
+		// `inflight` grows as settles drain newly-refreshed queries
 		for (const promise of inflight) {
 			await promise;
 		}
