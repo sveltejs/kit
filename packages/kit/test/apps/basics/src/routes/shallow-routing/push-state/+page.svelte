@@ -7,7 +7,7 @@
 	let resolved = $state(null);
 
 	function one() {
-		void goto(null, { state: { active: true } });
+		void goto('', { shallow: true, state: { active: true } });
 	}
 
 	function two() {
@@ -34,12 +34,12 @@
 <button data-id="cancel" onclick={() => goto('?cancel', { shallow: true, state: { active: true } })}
 	>cancel</button
 >
-<button data-id="state-only" onclick={() => goto(null, { state: { active: true } })}
+<button data-id="state-only" onclick={() => goto('', { shallow: true, state: { active: true } })}
 	>state only</button
 >
 <button
 	data-id="state-only-persist"
-	onclick={() => goto(null, { state: { active: true }, persistState: true })}
+	onclick={() => goto('', { shallow: true, state: { active: true }, persistState: true })}
 	>persist state only</button
 >
 <button

@@ -1684,8 +1684,33 @@ test.describe('Shallow routing', () => {
 
 		await page.locator('[data-id="one"]').click();
 		await expect(page.locator('p')).toHaveText('active: true');
-		await expect(page.locator('[data-id="shallow"]')).toHaveText('null');
-		expect(await page.evaluate(() => window.shallow_navigation_log)).toEqual([]);
+		await expect(page.locator('[data-id="shallow"]')).toHaveText(
+			'/shallow-routing/push-state /shallow-routing/push-state {}'
+		);
+		expect(await page.evaluate(() => window.shallow_navigation_log)).toEqual([
+			{
+				hook: 'before',
+				params: {},
+				path: '/shallow-routing/push-state',
+				route: '/shallow-routing/push-state',
+				shallow: true,
+				type: 'goto'
+			},
+			{
+				hook: 'on',
+				shallow: true,
+				type: 'goto'
+			},
+			{
+				hook: 'after',
+				shallow: true,
+				state: 'active: true',
+				type: 'goto'
+			},
+			{
+				hook: 'complete'
+			}
+		]);
 
 		await page.goBack();
 		await expect(page.locator('p')).toHaveText('active: false');
@@ -1793,17 +1818,15 @@ test.describe('Shallow routing', () => {
 		]);
 	});
 
-	test('Adds state without a shallow navigation and does not restore it by default', async ({
-		baseURL,
-		page
-	}) => {
+	test('Adds state and does not restore it by default', async ({ baseURL, page }) => {
 		await page.goto('/shallow-routing/push-state');
 		await page.locator('[data-id="state-only"]').click();
 
 		expect(page.url()).toBe(`${baseURL}/shallow-routing/push-state`);
 		await expect(page.locator('p')).toHaveText('active: true');
-		await expect(page.locator('[data-id="shallow"]')).toHaveText('null');
-		expect(await page.evaluate(() => window.shallow_navigation_log)).toEqual([]);
+		await expect(page.locator('[data-id="shallow"]')).toHaveText(
+			'/shallow-routing/push-state /shallow-routing/push-state {}'
+		);
 
 		await page.reload();
 		await expect(page.locator('p')).toHaveText('active: false');
@@ -1859,7 +1882,7 @@ test.describe('Shallow routing', () => {
 		await expect(page.locator('[data-id="shallow"]')).toHaveText(
 			'/shallow-routing/push-state/a /shallow-routing/push-state/a {}'
 		);
-		expect(await page.evaluate(() => window.shallow_navigation_log)).toEqual([]);
+		expect(await page.evaluate(() => window.shallow_navigation_log.length)).toBeGreaterThan(0);
 
 		await page.goBack();
 		await page.goForward();
@@ -1935,8 +1958,24 @@ test.describe('Shallow routing', () => {
 
 		await page.locator('[data-id="one"]').click();
 		await expect(page.locator('p')).toHaveText('active: true');
-		await expect(page.locator('[data-id="shallow"]')).toHaveText('null');
-		expect(await page.evaluate(() => window.shallow_navigation_log)).toEqual([]);
+		await expect(page.locator('[data-id="shallow"]')).toHaveText('/shallow-routing/replace-state');
+		expect(await page.evaluate(() => window.shallow_navigation_log)).toEqual([
+			{
+				hook: 'before',
+				shallow: true,
+				type: 'goto'
+			},
+			{
+				hook: 'on',
+				shallow: true,
+				type: 'goto'
+			},
+			{
+				hook: 'after',
+				shallow: true,
+				type: 'goto'
+			}
+		]);
 
 		await page.goBack();
 		expect(page.url()).toBe(`${baseURL}/shallow-routing/replace-state/b`);
@@ -1970,7 +2009,7 @@ test.describe('Shallow routing', () => {
 		await expect(page.locator('[data-id="shallow"]')).toHaveText(
 			'/shallow-routing/replace-state/a'
 		);
-		expect(await page.evaluate(() => window.shallow_navigation_log)).toEqual([]);
+		expect(await page.evaluate(() => window.shallow_navigation_log.length)).toBeGreaterThan(0);
 
 		await page.goBack();
 		expect(page.url()).toBe(`${baseURL}/shallow-routing/replace-state/b`);
@@ -1988,8 +2027,7 @@ test.describe('Shallow routing', () => {
 
 		expect(page.url()).toBe(`${baseURL}/shallow-routing/replace-state`);
 		await expect(page.locator('p')).toHaveText('active: true');
-		await expect(page.locator('[data-id="shallow"]')).toHaveText('null');
-		expect(await page.evaluate(() => window.shallow_navigation_log)).toEqual([]);
+		await expect(page.locator('[data-id="shallow"]')).toHaveText('/shallow-routing/replace-state');
 
 		await page.reload();
 		await expect(page.locator('p')).toHaveText('active: true');

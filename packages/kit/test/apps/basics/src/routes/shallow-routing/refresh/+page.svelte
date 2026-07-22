@@ -5,7 +5,7 @@
 	let { data } = $props();
 
 	function activate() {
-		goto(null, { state: { active: true } });
+		goto('', { shallow: true, state: { active: true } });
 	}
 </script>
 

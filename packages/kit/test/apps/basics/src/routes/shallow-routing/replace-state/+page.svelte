@@ -3,7 +3,7 @@
 	import { page } from '$app/state';
 
 	async function one() {
-		await goto(null, { replace: true, state: { active: true } });
+		await goto('', { shallow: true, replace: true, state: { active: true } });
 	}
 
 	async function two() {
@@ -26,7 +26,8 @@
 >
 <button
 	data-id="state-only"
-	onclick={() => goto(null, { replace: true, state: { active: true }, persistState: true })}
+	onclick={() =>
+		goto('', { shallow: true, replace: true, state: { active: true }, persistState: true })}
 	>persist state only</button
 >
 

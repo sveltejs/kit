@@ -3,7 +3,7 @@
 	import { page } from '$app/state';
 
 	function handleClick() {
-		goto(null, { state: { active: true } });
+		goto('', { shallow: true, state: { active: true } });
 	}
 </script>
 

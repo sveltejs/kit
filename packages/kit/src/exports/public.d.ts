@@ -1264,17 +1264,32 @@ export interface NavigationTarget<
 }
 
 export interface GotoOptions {
-	/** If `true`, replaces the current history entry rather than creating a new one. */
+	/**
+	 * If `true`, replaces the current history entry rather than creating a new one.
+	 * @default false
+	 */
 	replace?: boolean;
 	/** @deprecated Use `replace` instead. */
 	replaceState?: boolean;
-	/** If `true`, updates the URL and `page.state` without navigating. */
+	/**
+	 * If `true`, updates the URL and `page.state` without navigating.
+	 * @default false
+	 */
 	shallow?: boolean;
-	/** If `true`, preserves the browser's scroll position. */
+	/**
+	 * If `true`, preserves the browser's scroll position.
+	 * @default false
+	 */
 	noScroll?: boolean;
-	/** If `true`, keeps the currently focused element focused. */
+	/**
+	 * If `true`, keeps the currently focused element focused.
+	 * @default false
+	 */
 	keepFocus?: boolean;
-	/** If `true`, reruns all `load` functions and queries of the page. */
+	/**
+	 * If `true`, reruns all `load` functions and queries of the page.
+	 * @default false
+	 */
 	refreshAll?: boolean;
 	/** Causes any `load` functions to rerun if they depend on one of the URLs. */
 	invalidate?: Array<string | URL | ((url: URL) => boolean)>;
@@ -1282,7 +1297,10 @@ export interface GotoOptions {
 	invalidateAll?: boolean;
 	/** An optional object that will be available as `page.state`. */
 	state?: App.PageState;
-	/** If `true`, `page.state` will be restored after a full page reload. */
+	/**
+	 * If `true`, `page.state` will be restored after a full page reload.
+	 * @default false
+	 */
 	persistState?: boolean;
 }
 
@@ -1481,7 +1499,7 @@ export interface Page<
 	 */
 	state: App.PageState;
 	/**
-	 * Information about the target of the most recent shallow navigation, or `null` if no shallow navigation has occurred.
+	 * Information about the target of the current shallow navigation, or `null` if no shallow navigation has occurred.
 	 */
 	shallow: {
 		/** Parameters of the target route, or `null` if the URL does not resolve to a route. */

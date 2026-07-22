@@ -2374,7 +2374,7 @@ let warned_on_replace_state_function = false;
  * If the URL does not resolve to a route within the app, the returned promise will reject unless `shallow` is `true`.
  * For external URLs, use `window.location = url` to perform a full-page navigation instead of calling `goto(url)`.
  *
- * @param {string | URL | null} url Where to navigate to. Note that if you've set [`config.paths.base`](https://svelte.dev/docs/kit/configuration#paths) and the URL is root-relative, you need to prepend the base path if you want to navigate within the app.
+ * @param {string | URL} url Where to navigate to. Note that if you've set [`config.paths.base`](https://svelte.dev/docs/kit/configuration#paths) and the URL is root-relative, you need to prepend the base path if you want to navigate within the app.
  * @param {import('@sveltejs/kit').GotoOptions} [opts] Options related to the navigation
  * @returns {Promise<void>}
  */
@@ -2391,13 +2391,6 @@ export async function goto(url, opts = {}) {
 	}
 
 	const replace = opts.replace ?? opts.replaceState ?? false;
-
-	if (url === null) {
-		// Untrack to avoid triggering outer reactive contexts because we access page.X inside
-		return untrack(() =>
-			update_state(null, opts.state ?? {}, replace, opts.persistState ?? false, 'goto')
-		);
-	}
 
 	url = new URL(resolve_url(url));
 
@@ -2665,7 +2658,7 @@ export async function replaceState(url, state, options = {}) {
 }
 
 /**
- * @param {string | URL | null} url
+ * @param {string | URL} url
  * @param {App.PageState} state
  * @param {boolean} replace
  * @param {boolean} persist
@@ -2686,15 +2679,15 @@ async function update_state(url, state, replace, persist, caller) {
 		}
 	}
 
-	const resolved = !url ? null : resolve_url(url);
-	const intent = resolved ? await get_navigation_intent(resolved, false) : undefined;
+	const resolved = resolve_url(url);
+	const intent = await get_navigation_intent(resolved, false);
 	const nav =
 		// For backwards compatibility we don't trigger navigation hooks etc for push/replaceState
-		resolved && caller === 'goto'
+		url !== '' && caller === 'goto'
 			? _before_navigate({ url: resolved, type: 'goto', intent, shallow: true })
 			: undefined;
 
-	if (resolved && !nav && caller === 'goto') return;
+	if (!nav && caller === 'goto') return;
 
 	const nav_token = {};
 
@@ -2710,17 +2703,13 @@ async function update_state(url, state, replace, persist, caller) {
 	const entry = {
 		[HISTORY_INDEX]: (current_history_index += replace ? 0 : 1),
 		[NAVIGATION_INDEX]: current_navigation_index,
-		...((resolved || page.shallow) && { [PAGE_URL_KEY]: page.url.href }),
+		[PAGE_URL_KEY]: page.url.href,
 		[STATES_PERSISTED_KEY]: persist,
 		[STATES_KEY]: state
 	};
 
 	const fn = replace ? history.replaceState : history.pushState;
-	if (resolved) {
-		fn.call(history, entry, '', resolved);
-	} else {
-		fn.call(history, entry, '');
-	}
+	fn.call(history, entry, '', resolved);
 
 	if (!replace) {
 		has_navigated = true;
@@ -2748,13 +2737,11 @@ async function update_state(url, state, replace, persist, caller) {
 	}
 
 	page.state = state;
-	if (resolved) {
-		page.shallow = {
-			params: intent?.params ?? null,
-			route: intent ? { id: intent.route.id } : null,
-			url: resolved
-		};
-	}
+	page.shallow = {
+		params: intent?.params ?? null,
+		route: intent ? { id: intent.route.id } : null,
+		url: resolved
+	};
 
 	if (!nav) return;
 

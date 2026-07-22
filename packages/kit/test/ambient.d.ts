@@ -1,4 +1,4 @@
-import { AfterNavigate, BeforeNavigate } from '@sveltejs/kit';
+import { AfterNavigate, BeforeNavigate, GotoOptions } from '@sveltejs/kit';
 
 declare global {
 	interface Window {
@@ -6,17 +6,7 @@ declare global {
 		started: boolean;
 	}
 
-	const goto: (
-		href: string | null,
-		opts?: {
-			replace?: boolean;
-			replaceState?: boolean;
-			shallow?: boolean;
-			persistState?: boolean;
-			state?: App.PageState;
-			noScroll?: boolean;
-		}
-	) => Promise<void>;
+	const goto: (href: string, opts?: GotoOptions) => Promise<void>;
 
 	const invalidate: (url: string) => Promise<void>;
 	const preloadData: (url: string) => Promise<void>;
