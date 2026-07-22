@@ -1,6 +1,7 @@
 import { read_implementation, manifest } from '../../server/internal.js';
 import { assets } from '$app/paths/internal/server';
 import { base64_decode } from '../../utils.js';
+import { from_fs } from '../../../utils/vite.js';
 
 /**
  * Read the contents of an imported asset from the filesystem
@@ -23,6 +24,10 @@ export function read(asset) {
 		throw new Error(
 			'No `read` implementation was provided. Please ensure that your adapter is up to date and supports this feature'
 		);
+	}
+
+	if (__SVELTEKIT_DEV__) {
+		asset = from_fs(asset);
 	}
 
 	// handle inline assets internally

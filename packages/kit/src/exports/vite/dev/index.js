@@ -22,7 +22,7 @@ import {
 } from '../utils.js';
 import { escape_html } from '../../../utils/escape.js';
 import { fix_stack_trace } from './sourcemaps.js';
-import { sveltekit_manifest_data } from '../module_ids.js';
+import { sveltekit_dev_server_entry, sveltekit_manifest_data } from '../module_ids.js';
 
 /**
  * @param {import('vite').ViteDevServer} vite
@@ -258,11 +258,14 @@ export function dev(vite, vite_config, svelte_config, root, set_manifest_data) {
 					throw new Error('The configured Vite SSR environment must be a RunnableDevEnvironment');
 				}
 
-				/** @type {import('./ssr_entry.js')} */
-				const { respond } = await vite.environments.ssr.runner.import(
-					'__sveltekit/dev-server-entry.js'
-				);
-				const rendered = await respond(request, req.socket.remoteAddress);
+				/** @type {{ fetch(request: Request): Promise<Response> }} */
+				const { fetch } = await vite.environments.ssr.runner.import(sveltekit_dev_server_entry);
+
+				if (req.socket.remoteAddress) {
+					request.headers.set('x-sveltekit-remote-address', req.socket.remoteAddress);
+				}
+
+				const rendered = await fetch(request);
 
 				if (rendered.status === 404) {
 					// @ts-expect-error

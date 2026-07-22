@@ -12,15 +12,22 @@ const server = new Server(manifest);
 
 await server.init({
 	env,
-	read: (file) => createReadableStream(from_fs(file))
+	read: (file) => createReadableStream(file)
 });
 
 /**
  * @param {Request} request
- * @param {string | undefined} remote_address
  * @returns {Promise<Response>}
  */
-export async function respond(request, remote_address) {
+export async function fetch(request) {
+	/** @type {string | undefined} */
+	let remote_address;
+
+	if (request.headers.has('x-sveltekit-remote-address')) {
+		remote_address = request.headers.get('x-sveltekit-remote-address') ?? undefined;
+		request.headers.delete('x-sveltekit-remote-address');
+	}
+
 	return await server.respond(request, {
 		getClientAddress: () => {
 			if (remote_address) return remote_address;

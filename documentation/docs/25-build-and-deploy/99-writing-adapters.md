@@ -84,7 +84,26 @@ config(userConfig) {
 }
 ```
 
-You can also create your own server entry file by importing the `Server` class from `sveltekit:server`, the environment variables loaded by Vite through `env` from `sveltekit:env`, and your app-specific information as `manifest` from `sveltekit:server-manifest`.
+You can also define a custom server entry during development by adding a Vite plugin which resolves the `sveltekit:server-entry` ID to your own module.
+
+```js
+{
+	name: 'vite-plugin-name-it-yourself',
+	applyToEnvironment(environment) {
+		return environment.name === 'ssr';
+	},
+	resolveId: {
+		filter: {
+			id: /^sveltekit:server-entry$/
+		},
+		handler(id) {
+			return import.meta.resolve('./path-to-your-server.js');
+		}
+	}
+}
+```
+
+This module should instantiate the server with your app's manifest, initialise environment variables and the `read` implementation, and export a `fetch` handler which receives a `Request` and returns a `Response`:
 
 ```js
 import { env } from 'sveltekit:env';
@@ -93,21 +112,23 @@ import { manifest } from 'sveltekit:server-manifest';
 
 const server = new Server(manifest);
 
-await server.init({ env });
+await server.init({
+	env,
+	read: (file) => { /* implement how your platform retrieves file contents */ }
+});
 
-export default {
-	/**
-	 * @param {Request} request
-	 * @returns {Promise<Response>}
-	 */
-	async fetch(request) {
-		return await server.respond(request, {
-			getClientAddress: () => {
-				return request.headers.get('how-your-platform-exposes-the-remote-address')
-			}
-		});
-	}
+/**
+ * @param {Request} request
+ * @returns {Promise<Response>}
+ */
+export async function fetch(request) {
+	return await server.respond(request, {
+		getClientAddress: () => {
+			return request.headers.get('how-your-platform-exposes-the-remote-address')
+		}
+	});
 }
 
+// Without this, server file changes will invalidate the entire Vite server module graph:
 import.meta.hot?.accept();
 ```

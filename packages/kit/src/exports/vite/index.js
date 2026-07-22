@@ -61,7 +61,9 @@ import {
 	sveltekit_manifest_data,
 	sveltekit_env_public_client,
 	sveltekit_env_public_server,
-	sveltekit_traced
+	sveltekit_traced,
+	sveltekit_dev_server_entry,
+	sveltekit_dev_server_handler
 } from './module_ids.js';
 import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
@@ -615,17 +617,16 @@ function kit({ svelte_config }) {
 		resolveId: {
 			filter: {
 				id: [
-					exactRegex('__sveltekit/dev-server-entry.js'),
+					exactRegex(sveltekit_dev_server_entry),
 					exactRegex('sveltekit:server-manifest'),
 					exactRegex('sveltekit:server'),
-					exactRegex('sveltekit:env')
+					exactRegex('sveltekit:env'),
+					exactRegex(sveltekit_dev_server_handler)
 				]
 			},
 			handler(id) {
-				if (id === '__sveltekit/dev-server-entry.js') {
-					return server_instrumentation
-						? sveltekit_traced
-						: posixify(path.join(import.meta.dirname, 'dev/ssr_entry.js'));
+				if (id === sveltekit_dev_server_entry) {
+					return server_instrumentation ? sveltekit_traced : sveltekit_dev_server_handler;
 				}
 
 				if (id === 'sveltekit:server-manifest') {
@@ -638,6 +639,10 @@ function kit({ svelte_config }) {
 
 				if (id === 'sveltekit:env') {
 					return id;
+				}
+
+				if (id === sveltekit_dev_server_handler) {
+					return posixify(path.join(import.meta.dirname, 'dev/ssr_entry.js'));
 				}
 			}
 		},
@@ -688,7 +693,7 @@ function kit({ svelte_config }) {
 						return dedent`
 							import ${s(posixify(server_instrumentation))};
 
-							const { respond } = await import(${s(import.meta.resolve('./dev/ssr_entry.js'))});
+							const { respond } = await import(${s(sveltekit_dev_server_handler)});
 							export { respond };
 
 							import.meta.hot?.accept();
