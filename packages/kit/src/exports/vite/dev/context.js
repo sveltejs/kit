@@ -9,7 +9,7 @@
  */
 
 /** @type {Context} */
-const context = import.meta.hot?.data;
+const context = import.meta.hot?.data ?? {};
 
 /** @returns {ViteDevServer} */
 export function get_dev_server() {
