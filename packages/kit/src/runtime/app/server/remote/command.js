@@ -65,7 +65,11 @@ export function command(validate_or_fn, maybe_fn) {
 	const wrapper = (arg) => {
 		const { event, state } = get_request_store();
 
-		if (!MUTATIVE_METHODS.includes(event.request.method)) {
+		if (
+			!MUTATIVE_METHODS.includes(event.request.method) ||
+			state.is_in_remote_query ||
+			state.is_in_remote_prerender
+		) {
 			const violation =
 				state.is_in_remote_query || state.is_in_remote_prerender
 					? `inside a query or prerender function`
