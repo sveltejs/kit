@@ -6,6 +6,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import { pathToFileURL } from 'node:url';
 import { styleText } from 'node:util';
 import * as devalue from 'devalue';
 import MagicString from 'magic-string';
@@ -68,7 +69,6 @@ import { should_ignore, has_children } from './static_analysis/utils.js';
 import { process_config, split_config, validate_config } from '../../core/config/index.js';
 import { treeshake_prerendered_remotes } from './build/remote.js';
 import { SVELTE_KIT_ASSETS } from '../../constants.js';
-import { fileURLToPath, pathToFileURL } from 'node:url';
 
 /**
  * The posix-ified root of the project based on the Vite configuration.
