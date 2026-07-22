@@ -4,6 +4,7 @@
 !/src/core/adapt/fixtures/*/.svelte-kit
 !/test/node_modules
 /test/apps/basics/test/errors.json
+/test/prerendering/paths-base/prerendered-paths.json
 /types/*.map
 .custom-out-dir
 

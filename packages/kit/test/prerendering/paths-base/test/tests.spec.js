@@ -7,6 +7,14 @@ const build = fileURLToPath(new URL('../build', import.meta.url));
 /** @param {string} file */
 const read = (file) => fs.readFileSync(`${build}/${file}`, 'utf-8');
 
+test('root page with a base path is recorded without a trailing slash', () => {
+	const paths = JSON.parse(
+		fs.readFileSync(fileURLToPath(new URL('../prerendered-paths.json', import.meta.url)), 'utf-8')
+	);
+	assert.ok(paths.includes('/path-base'));
+	assert.ok(!paths.includes('/path-base/'));
+});
+
 test('prerenders /path-base', () => {
 	const content = read('index.html');
 	assert.ok(content.includes('favicon.png') && content.includes('nested'));
