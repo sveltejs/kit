@@ -36,57 +36,73 @@ export function write_tsconfig(kit, root) {
 	const user_config = load_user_tsconfig(root);
 	if (user_config) validate_user_config(user_config);
 
-	const dir = path.join(root, 'node_modules/$app/tsconfig');
+	const main = path.join(root, 'node_modules/$app/tsconfig/tsconfig.json');
+	const service_worker = path.join(root, 'node_modules/$app/tsconfig/service-worker/tsconfig.json');
+
+	write_if_changed(main, JSON.stringify(get_tsconfig(main, kit, root), null, '\t'));
 
 	write_if_changed(
-		path.join(dir, 'tsconfig.json'),
-		JSON.stringify(get_tsconfig(dir, kit, root), null, '\t')
-	);
-
-	write_if_changed(
-		path.join(dir, 'service-worker/tsconfig.json'),
-		JSON.stringify(get_tsconfig_serviceworker(), null, '\t')
+		service_worker,
+		JSON.stringify(get_tsconfig_serviceworker(service_worker, kit, root), null, '\t')
 	);
 }
 
 /**
- * Generates the tsconfig that the user's tsconfig inherits from.
- * @param {string} dir The directory we're writing to
- * @param {import('types').ValidatedKitConfig} kit
- * @param {string} cwd
+ * Without these, compilation will fail
  */
-export function get_tsconfig(dir, kit, cwd) {
+const ESSENTIAL_OPTIONS = {
+	// svelte-preprocess cannot figure out whether you have a value or a type, so tell TypeScript
+	// to enforce using \`import type\` instead of \`import\` for Types.
+	// Also, TypeScript doesn't know about import usages in the template because it only sees the
+	// script of a Svelte file. Therefore preserve all value imports.
+	verbatimModuleSyntax: true,
+	// Vite compiles modules one at a time
+	isolatedModules: true
+};
+
+/**
+ * Options that are strongly recommended, either because not having them is silly or
+ * because the align TypeScript's behaviour with Vite's, but which can be overwritten
+ */
+const RECOMMENDED_OPTIONS = {
+	allowJs: true,
+	checkJs: true,
+	forceConsistentCasingInFileNames: true,
+	resolveJsonModule: true,
+	moduleDetection: 'force',
+	moduleResolution: 'bundler',
+	allowImportingTsExtensions: true,
+	module: 'esnext',
+	target: 'esnext',
+	skipLibCheck: true,
+	esModuleInterop: true,
+	noEmit: true // prevent tsconfig error "overwriting input files" - Vite handles the build and ignores this
+};
+
+/**
+ * Generates the tsconfig that the user's tsconfig inherits from.
+ * @param {string} out The file we're writing to
+ * @param {import('types').ValidatedKitConfig} kit
+ * @param {string} root The project root
+ */
+export function get_tsconfig(out, kit, root) {
+	const dir = path.dirname(out);
+
 	/** @param {string} file */
 	const config_relative = (file) => posixify(path.relative(dir, file));
 
 	const config = {
 		compilerOptions: {
-			paths: get_tsconfig_paths(kit, cwd),
+			paths: get_tsconfig_paths(kit, dir, root),
 			rootDirs: [config_relative('.'), config_relative(`${kit.outDir}/types`)],
 			types: ['$app/types'],
-
-			// essential options
-			// svelte-preprocess cannot figure out whether you have a value or a type, so tell TypeScript
-			// to enforce using \`import type\` instead of \`import\` for Types.
-			// Also, TypeScript doesn't know about import usages in the template because it only sees the
-			// script of a Svelte file. Therefore preserve all value imports.
-			verbatimModuleSyntax: true,
-			// Vite compiles modules one at a time
-			isolatedModules: true,
-
-			// recommended options
-			allowJs: true,
-			checkJs: true,
-			forceConsistentCasingInFileNames: true,
-			resolveJsonModule: true,
 
 			// This is required for svelte-package to work as expected
 			// Can be overwritten
 			lib: ['esnext', 'DOM', 'DOM.Iterable'],
-			moduleResolution: 'bundler',
-			module: 'esnext',
-			noEmit: true, // prevent tsconfig error "overwriting input files" - Vite handles the build and ignores this
-			target: 'esnext'
+
+			...ESSENTIAL_OPTIONS,
+			...RECOMMENDED_OPTIONS
 		},
 		exclude: [
 			config_relative(
@@ -100,9 +116,15 @@ export function get_tsconfig(dir, kit, cwd) {
 	return kit.typescript.config(config) ?? config;
 }
 
-function get_tsconfig_serviceworker() {
+/**
+ * @param {string} out
+ * @param {import('types').ValidatedKitConfig} kit
+ * @param {string} root
+ */
+function get_tsconfig_serviceworker(out, kit, root) {
 	return {
 		compilerOptions: {
+			paths: get_tsconfig_paths(kit, path.dirname(out), root),
 			lib: ['ESNext', 'WebWorker'],
 			types: ['$app/types']
 		}
@@ -173,12 +195,13 @@ const value_regex = /^(.*?)((\/\*)|(\.\w+))?$/;
  * Related to vite alias creation.
  *
  * @param {import('types').ValidatedKitConfig} config
- * @param {string} cwd
+ * @param {string} dir
+ * @param {string} root
  */
-function get_tsconfig_paths(config, cwd) {
+function get_tsconfig_paths(config, dir, root) {
 	/** @param {string} file */
 	const config_relative = (file) => {
-		let relative_path = path.relative(config.outDir, file);
+		let relative_path = path.relative(dir, file);
 		if (!relative_path.startsWith('..')) {
 			relative_path = './' + relative_path;
 		}
@@ -188,7 +211,7 @@ function get_tsconfig_paths(config, cwd) {
 	const alias = { ...config.alias };
 
 	// Add all `#`-prefixed imports from package.json as path aliases
-	const imports = read_package_imports(cwd);
+	const imports = read_package_imports(root);
 	if (imports) {
 		for (const [key, raw_value] of Object.entries(imports)) {
 			if (!key.startsWith('#')) continue;
