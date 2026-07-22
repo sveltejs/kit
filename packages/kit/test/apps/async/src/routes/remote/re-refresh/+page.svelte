@@ -6,4 +6,4 @@
 
 <p id="value">{await value}</p>
 
-<button id="bump" onclick={() => bump()}>bump</button>
+<button id="bump" onclick={() => bump({})}>bump</button>
