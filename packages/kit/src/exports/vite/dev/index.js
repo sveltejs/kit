@@ -259,7 +259,9 @@ export function dev(vite, vite_config, svelte_config, root, set_manifest_data) {
 				}
 
 				/** @type {{ fetch(request: Request): Promise<Response> }} */
-				const { fetch } = await vite.environments.ssr.runner.import(sveltekit_dev_internal_server_entry);
+				const { fetch } = await vite.environments.ssr.runner.import(
+					sveltekit_dev_internal_server_entry
+				);
 
 				if (req.socket.remoteAddress) {
 					request.headers.set('x-sveltekit-remote-address', req.socket.remoteAddress);
