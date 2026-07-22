@@ -69,7 +69,7 @@ import { should_ignore, has_children } from './static_analysis/utils.js';
 import { process_config, split_config, validate_config } from '../../core/config/index.js';
 import { treeshake_prerendered_remotes } from './build/remote.js';
 import { SVELTE_KIT_ASSETS } from '../../constants.js';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 /**
  * The posix-ified root of the project based on the Vite configuration.
@@ -689,7 +689,7 @@ function kit({ svelte_config }) {
 						return dedent`
 							import ${s(posixify(server_instrumentation))};
 
-							const { respond } = await import('${import.meta.resolve('./dev/ssr_entry.js')}');
+							const { respond } = await import(${s(import.meta.resolve('./dev/ssr_entry.js'))});
 							export { respond };
 
 							import.meta.hot?.accept();
@@ -1710,18 +1710,21 @@ function kit({ svelte_config }) {
 		 * @see https://vitejs.dev/guide/api-plugin.html#configureserver
 		 */
 		async configureServer(server) {
+			/** @type {typeof import('./dev/context.js')} */
+			let context;
+
 			if (isRunnableDevEnvironment(server.environments.ssr)) {
-				/** @type {typeof import('./dev/context.js')} */
-				const { set_dev_server, set_remotes, set_svelte_config } =
-					await server.environments.ssr.runner.import(import.meta.resolve('./dev/context.js'));
-				set_dev_server(server);
-				set_remotes(remotes);
-				set_svelte_config(svelte_config);
+				context = await server.environments.ssr.runner.import(
+					import.meta.resolve('./dev/context.js')
+				);
+				context.set_dev_server(server);
 			}
 
 			return dev(server, vite_config, svelte_config, root, (data) => {
 				manifest_data = data;
 				invalidate_module(server, sveltekit_manifest_data);
+				context.set_svelte_config(svelte_config);
+				context.set_remotes(remotes);
 			});
 		},
 
