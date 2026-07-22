@@ -21,13 +21,8 @@ export default defineConfig({
 	plugins: [
 		sveltekit({
 			adapter: adapter({
-				// if true, will create a Netlify Edge Function rather
-				// than using standard Node-based functions
+				// See below for an explanation of these options
 				edge: false,
-
-				// if true, will split your app into multiple functions
-				// instead of creating a single one for the entire app.
-				// if `edge` is true, this option cannot be used
 				split: false
 			})
 		})
@@ -43,35 +38,22 @@ Then, make sure you have a [netlify.toml](https://docs.netlify.com/configure-bui
 	publish = "build"
 ```
 
-If the `netlify.toml` file or the `build.publish` value is missing, a default value of `"build"` will be used. Note that if you have set the publish directory in the Netlify UI to something else then you will need to set it in `netlify.toml` too, or use the default value of `"build"`.
+If the `netlify.toml` file or the `build.publish` value is missing, a default value of `"build"` will be used.
 
-### Node version
+> [!NOTE]
+> If you have set the publish directory in the Netlify UI to something else then you will need to set it in `netlify.toml` too.
 
-New projects will use the current Node LTS version by default. However, if you're upgrading a project you created a while ago it may be stuck on an older version. See [the Netlify docs](https://docs.netlify.com/configure-builds/manage-dependencies/#node-js-and-javascript) for details on manually specifying a current Node version.
+## Options
 
-## Netlify Edge Functions
+### `edge`
 
-SvelteKit supports [Netlify Edge Functions](https://docs.netlify.com/build/edge-functions/overview/). If you pass the option `edge: true` to the `adapter` function, server-side rendering will happen in a Deno-based edge function that's deployed close to the site visitor. If set to `false` (the default), the site will deploy to Node-based Netlify Functions.
+If `true`, your app will be deployed as a [Netlify Edge Function](https://docs.netlify.com/build/edge-functions/overview/) rather than the standard Node-based function.
 
-```js
-// @errors: 2307
-/// file: vite.config.js
-import adapter from '@sveltejs/adapter-netlify';
-import { sveltekit } from '@sveltejs/kit/vite';
-import { defineConfig } from 'vite';
+### `split`
 
-export default defineConfig({
-	plugins: [
-		sveltekit({
-			adapter: adapter({
-				// will create a Netlify Edge Function using Deno-based
-				// rather than using standard Node-based functions
-				edge: true
-			})
-		})
-	]
-});
-```
+If `true`, your app will be split into multiple functions instead of a single one for the entire app.
+
+If `edge` is `true`, this option cannot be used.
 
 ## Netlify alternatives to SvelteKit functionality
 
