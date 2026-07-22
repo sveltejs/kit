@@ -1677,7 +1677,7 @@ test.describe('untrack', () => {
 	});
 });
 
-test.describe.only('Shallow routing', () => {
+test.describe('Shallow routing', () => {
 	test('Adds state without changing the current URL', async ({ page }) => {
 		await page.goto('/shallow-routing/push-state');
 		await expect(page.locator('p')).toHaveText('active: false');
