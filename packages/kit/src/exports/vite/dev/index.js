@@ -30,9 +30,9 @@ import { sveltekit_manifest_data } from '../module_ids.js';
  * @param {import('types').ValidatedConfig} svelte_config
  * @param {string} root The project root directory
  * @param {(manifest_data: import('types').ManifestData) => void} set_manifest_data
- * @return {Promise<() => void>}
+ * @return {() => void}
  */
-export async function dev(vite, vite_config, svelte_config, root, set_manifest_data) {
+export function dev(vite, vite_config, svelte_config, root, set_manifest_data) {
 	sync.init(svelte_config, root);
 
 	/** @type {import('types').ManifestData} */
@@ -168,13 +168,6 @@ export async function dev(vite, vite_config, svelte_config, root, set_manifest_d
 		next();
 	});
 
-	if (!isRunnableDevEnvironment(vite.environments.ssr)) {
-		throw new Error('The configured Vite SSR environment must be a RunnableDevEnvironment');
-	}
-
-	/** @type {import('./ssr_entry.js')} */
-	const { respond } = await vite.environments.ssr.runner.import('__sveltekit/dev-server-entry.js');
-
 	return () => {
 		const serve_static_middleware = vite.middlewares.stack.find(
 			(middleware) =>
@@ -261,6 +254,14 @@ export async function dev(vite, vite_config, svelte_config, root, set_manifest_d
 					request: req
 				});
 
+				if (!isRunnableDevEnvironment(vite.environments.ssr)) {
+					throw new Error('The configured Vite SSR environment must be a RunnableDevEnvironment');
+				}
+
+				/** @type {import('./ssr_entry.js')} */
+				const { respond } = await vite.environments.ssr.runner.import(
+					'__sveltekit/dev-server-entry.js'
+				);
 				const rendered = await respond(request, req.socket.remoteAddress);
 
 				if (rendered.status === 404) {
