@@ -368,42 +368,62 @@ export async function collect_remote_data(data, event, state, options) {
 	/** @type {Promise<any>[]} */
 	const promises = [];
 
+	// Keys the explicit pass has serialized. Invoking a query's `fn` there can, as a
+	// side effect, register the same query in `state.remote.implicit` (via
+	// `get_response`), so we skip those keys in the implicit pass below to avoid
+	// processing them twice.
+	/** @type {Set<string>} */
+	const processed = new Set();
+
 	if (state.remote.explicit) {
-		for (const [remote_key, { internals, fn }] of state.remote.explicit) {
-			// there were explicit refreshes/reconnects (via `refresh()`/`set()`/`reconnect()`),
-			// so the client should apply these single-flight updates instead of calling `invalidateAll()`
-			data.r = true;
+		const { explicit } = state.remote;
 
-			const type = /** @type {'p' | 'q' | 'l'} */ (
-				internals.type === 'query_live' ? 'l' : internals.type[0]
-			);
+		/** @type {Promise<void>[]} */
+		const inflight = [];
 
-			// `fn` is deferred until now so the query runs after any state mutations
-			// in the command/form body. If the query was re-awaited in the meantime,
-			// `fn` returns the existing (fresh) cache entry rather than re-running.
-			// Kick off the query immediately and collect the promise so that multiple
-			// explicit refreshes run concurrently rather than serially.
-			const promise = fn();
+		const drain = () => {
+			for (const [remote_key, { internals, fn }] of explicit) {
+				explicit.delete(remote_key);
+				processed.add(remote_key);
 
-			promises.push(
-				promise.then(
-					(v) => {
-						((data[type] ??= {})[remote_key] ??= {}).v = v;
-					},
-					async (e) => {
-						if (e instanceof Redirect) {
-							// already handled elsewhere
-							return;
+				// there were explicit refreshes/reconnects (via `refresh()`/`set()`/`reconnect()`),
+				// so the client should apply these single-flight updates instead of calling `invalidateAll()`
+				data.r = true;
+
+				const type = /** @type {'p' | 'q' | 'l'} */ (
+					internals.type === 'query_live' ? 'l' : internals.type[0]
+				);
+
+				// `fn` is deferred until now so the query runs after any state mutations
+				// in the command/form body. If the query was re-awaited in the meantime,
+				// `fn` returns the existing (fresh) cache entry rather than re-running.
+				inflight.push(
+					fn().then(
+						(v) => {
+							// a fresh value replaces the node entirely, so a re-run can't leave
+							// a stale error from a previous run alongside the new value
+							(data[type] ??= {})[remote_key] = { v };
+							drain();
+						},
+						async (e) => {
+							if (!(e instanceof Redirect)) {
+								// (a Redirect is already handled elsewhere)
+								(data[type] ??= {})[remote_key] = { e: await convert_error(e) };
+							}
+							drain();
 						}
+					)
+				);
+			}
+		};
 
-						((data[type] ??= {})[remote_key] ??= {}).e = await convert_error(e);
-					}
-				)
-			);
+		drain();
+
+		// `inflight` grows as settles drain newly-refreshed queries
+		for (const promise of inflight) {
+			await promise;
 		}
 	}
-
-	await Promise.all(promises);
 
 	if (state.remote.implicit) {
 		for (const [internals, record] of state.remote.implicit) {
@@ -415,6 +435,10 @@ export async function collect_remote_data(data, event, state, options) {
 			for (const key in record) {
 				// form outputs are registered under the client-side action id directly
 				const remote_key = internals.type === 'form' ? key : create_remote_key(internals.id, key);
+
+				// already serialized by the explicit pass (which always awaits and wins),
+				// so don't reprocess it here with the implicit "still loading" heuristic
+				if (processed.has(remote_key)) continue;
 
 				const type = /** @type {'p' | 'q' | 'l' | 'f'} */ (
 					internals.type === 'query_live' ? 'l' : internals.type[0]
