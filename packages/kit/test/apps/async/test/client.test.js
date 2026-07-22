@@ -122,6 +122,42 @@ test.describe('remote function mutations', () => {
 		expect(request_count).toBe(0);
 	});
 
+	test('a lazily-run refreshed query that refreshes another is included in the single-flight response', async ({
+		page
+	}) => {
+		await page.goto('/remote/nested-refresh');
+		await expect(page.locator('#a')).toHaveText('0');
+		await expect(page.locator('#b')).toHaveText('0');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		// `bump` refreshes `get_a`; when `get_a` runs on the server it refreshes
+		// `get_b`, which is added to the single-flight set mid-collection. Both must
+		// come back in the command response, so `#b` updates without an extra request.
+		await page.click('#bump');
+		await expect(page.locator('#a')).toHaveText('5');
+		await expect(page.locator('#b')).toHaveText('50');
+		await page.waitForTimeout(100); // allow all requests to finish
+		expect(request_count).toBe(1); // only the command itself — no separate refetch of get_b
+	});
+
+	test('a query re-refreshed by another query during collection re-runs', async ({ page }) => {
+		await page.goto('/remote/re-refresh');
+		await expect(page.locator('#value')).toHaveText('0');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		// `bump` refreshes `get_value` (which would see 10) and `driver`. When `driver`
+		// runs during collection it bumps the value to 11 and re-refreshes `get_value`,
+		// which must run *again* and serialize 11 — not the stale 10 from its first run.
+		await page.click('#bump');
+		await expect(page.locator('#value')).toHaveText('11');
+		await page.waitForTimeout(100); // allow all requests to finish
+		expect(request_count).toBe(1); // only the command — the re-run rode along in the response
+	});
+
 	test('hydrated query errors are reused', async ({ page }) => {
 		let request_count = 0;
 		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
