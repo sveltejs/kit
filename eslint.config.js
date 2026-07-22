@@ -45,7 +45,9 @@ export default [
 	{
 		languageOptions: {
 			parserOptions: {
-				projectService: true
+				projectService: {
+					allowDefaultProject: ['packages/kit/src/runtime/app/service-worker/index.js']
+				}
 			}
 		},
 		rules: {
