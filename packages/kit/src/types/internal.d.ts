@@ -740,6 +740,11 @@ export interface RequestState {
 	readonly is_in_remote_prerender: boolean;
 	readonly is_in_render: boolean;
 	readonly is_in_universal_load: boolean;
+	/**
+	 * The event before `derive_remote_function_event` hid or stubbed properties.
+	 * Hooks like `handleValidationError` receive this so `url` etc. stay accessible
+	 */
+	readonly original_event?: RequestEvent;
 }
 
 export interface RequestStore {
