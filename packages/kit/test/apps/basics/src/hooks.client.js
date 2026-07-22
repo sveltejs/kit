@@ -4,6 +4,10 @@ window.PUBLIC_DYNAMIC = env.PUBLIC_DYNAMIC;
 
 /** @type{import("@sveltejs/kit").HandleClientError} */
 export function handleError({ error, event, status, message }) {
+	(window.handle_error_calls ??= []).push({
+		status,
+		message: /** @type {Error} */ (error).message
+	});
 	return event.url.pathname.endsWith('404-fallback')
 		? undefined
 		: { message: `${/** @type {Error} */ (error).message} (${status} ${message})` };

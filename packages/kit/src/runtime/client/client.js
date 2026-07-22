@@ -1330,14 +1330,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 					};
 				}
 
-				if (preload && preload_tokens.has(preload)) {
-					return preload_error({
-						error: await handle_error(err, { params, url, route: { id: route.id } }),
-						url,
-						params,
-						route
-					});
-				}
+				const is_preload = !!preload && preload_tokens.has(preload);
 
 				let status = get_status(err);
 				/** @type {App.Error} */
@@ -1351,15 +1344,21 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 				} else if (err instanceof HttpError) {
 					error = err.body;
 				} else {
-					// Referenced node could have been removed due to redeploy, check
-					const updated = await stores.updated.check();
-					if (updated) {
-						// Before reloading, try to update the service worker if it exists
-						await update_service_worker();
-						return await native_navigation(url);
+					if (!is_preload) {
+						// Referenced node could have been removed due to redeploy, check
+						const updated = await stores.updated.check();
+						if (updated) {
+							// Before reloading, try to update the service worker if it exists
+							await update_service_worker();
+							return await native_navigation(url);
+						}
 					}
 
 					error = await handle_error(err, { params, url, route: { id: route.id } });
+				}
+
+				if (is_preload) {
+					return preload_error({ error, url, params, route });
 				}
 
 				const error_load = await load_nearest_error_page(i, branch, errors);

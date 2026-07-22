@@ -1789,6 +1789,17 @@ test.describe('Shallow routing', () => {
 	});
 });
 
+test.describe('Preloading', () => {
+	test('does not invoke handleError for server load errors during preload', async ({ page }) => {
+		await page.goto('/preloading/preload-error');
+		await page.locator('button').click();
+		await expect(page.locator('#result')).toContainText('"type":"loaded"');
+
+		// the server already handled the error; the client hook must not run
+		expect(await page.evaluate(() => window.handle_error_calls)).toBeUndefined();
+	});
+});
+
 test.describe('reroute', () => {
 	test('Apply reroute during client side navigation', async ({ page, clicknav }) => {
 		await page.goto('/reroute/basic');
