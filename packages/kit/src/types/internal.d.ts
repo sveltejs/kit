@@ -737,6 +737,7 @@ export interface RequestState {
 	readonly is_in_remote_function: boolean;
 	readonly is_in_remote_form_or_command: boolean;
 	readonly is_in_remote_query: boolean;
+	readonly is_in_remote_prerender: boolean;
 	readonly is_in_render: boolean;
 	readonly is_in_universal_load: boolean;
 }
