@@ -2608,7 +2608,7 @@ export async function preloadCode(pathname) {
 /**
  * Programmatically create a new history entry with the given `page.state`. Used for [shallow routing](https://svelte.dev/docs/kit/shallow-routing).
  *
- * @deprecated Use `goto(url, { state, shallow: true })` instead. To keep the current URL, use `goto(null, { state })`.
+ * @deprecated Use `goto(url, { state, shallow: true })` instead.
  * @param {string | URL} url
  * @param {App.PageState} state
  * @param {Object} [options]
@@ -2623,7 +2623,7 @@ export async function pushState(url, state, options = {}) {
 	if (DEV && !warned_on_push_state) {
 		warned_on_push_state = true;
 		console.warn(
-			'`pushState(...)` is deprecated. Use `goto(url, { state, shallow: true })` instead. To keep the current URL, use `goto(null, { state })`.'
+			'`pushState(...)` is deprecated. Use `goto(url, { state, shallow: true })` instead.'
 		);
 	}
 
@@ -2634,7 +2634,7 @@ export async function pushState(url, state, options = {}) {
 /**
  * Programmatically replace the current history entry with the given `page.state`. Used for [shallow routing](https://svelte.dev/docs/kit/shallow-routing).
  *
- * @deprecated Use `goto(url, { state, shallow: true, replace: true })` instead. To keep the current URL, use `goto(null, { state, replace: true })`.
+ * @deprecated Use `goto(url, { state, shallow: true, replace: true })` instead.
  * @param {string | URL} url
  * @param {App.PageState} state
  * @param {Object} [options]
@@ -2649,7 +2649,7 @@ export async function replaceState(url, state, options = {}) {
 	if (DEV && !warned_on_replace_state_function) {
 		warned_on_replace_state_function = true;
 		console.warn(
-			'`replaceState(...)` is deprecated. Use `goto(url, { state, shallow: true, replace: true })` instead. To keep the current URL, use `goto(null, { state, replace: true })`.'
+			'`replaceState(...)` is deprecated. Use `goto(url, { state, shallow: true, replace: true })` instead.'
 		);
 	}
 

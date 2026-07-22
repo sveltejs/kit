@@ -1236,17 +1236,32 @@ declare module '@sveltejs/kit' {
 	}
 
 	export interface GotoOptions {
-		/** If `true`, replaces the current history entry rather than creating a new one. */
+		/**
+		 * If `true`, replaces the current history entry rather than creating a new one.
+		 * @default false
+		 */
 		replace?: boolean;
 		/** @deprecated Use `replace` instead. */
 		replaceState?: boolean;
-		/** If `true`, updates the URL and `page.state` without navigating. */
+		/**
+		 * If `true`, updates the URL and `page.state` without navigating.
+		 * @default false
+		 */
 		shallow?: boolean;
-		/** If `true`, preserves the browser's scroll position. */
+		/**
+		 * If `true`, preserves the browser's scroll position.
+		 * @default false
+		 */
 		noScroll?: boolean;
-		/** If `true`, keeps the currently focused element focused. */
+		/**
+		 * If `true`, keeps the currently focused element focused.
+		 * @default false
+		 */
 		keepFocus?: boolean;
-		/** If `true`, reruns all `load` functions and queries of the page. */
+		/**
+		 * If `true`, reruns all `load` functions and queries of the page.
+		 * @default false
+		 */
 		refreshAll?: boolean;
 		/** Causes any `load` functions to rerun if they depend on one of the URLs. */
 		invalidate?: Array<string | URL | ((url: URL) => boolean)>;
@@ -1254,7 +1269,10 @@ declare module '@sveltejs/kit' {
 		invalidateAll?: boolean;
 		/** An optional object that will be available as `page.state`. */
 		state?: App.PageState;
-		/** If `true`, `page.state` will be restored after a full page reload. */
+		/**
+		 * If `true`, `page.state` will be restored after a full page reload.
+		 * @default false
+		 */
 		persistState?: boolean;
 	}
 
@@ -1453,7 +1471,7 @@ declare module '@sveltejs/kit' {
 		 */
 		state: App.PageState;
 		/**
-		 * Information about the target of the most recent shallow navigation, or `null` if no shallow navigation has occurred.
+		 * Information about the target of the current shallow navigation, or `null` if no shallow navigation has occurred.
 		 */
 		shallow: {
 			/** Parameters of the target route, or `null` if the URL does not resolve to a route. */
@@ -3195,7 +3213,7 @@ declare module '$app/navigation' {
 	 * @param url Where to navigate to. Note that if you've set [`config.paths.base`](https://svelte.dev/docs/kit/configuration#paths) and the URL is root-relative, you need to prepend the base path if you want to navigate within the app.
 	 * @param opts Options related to the navigation
 	 * */
-	export function goto(url: string | URL | null, opts?: import("@sveltejs/kit").GotoOptions): Promise<void>;
+	export function goto(url: string | URL, opts?: import("@sveltejs/kit").GotoOptions): Promise<void>;
 	/**
 	 * Causes any `load` functions belonging to the currently active page to re-run if they depend on the `url` in question, via `fetch` or `depends`. Returns a `Promise` that resolves when the page is subsequently updated.
 	 *
@@ -3265,7 +3283,7 @@ declare module '$app/navigation' {
 	/**
 	 * Programmatically create a new history entry with the given `page.state`. Used for [shallow routing](https://svelte.dev/docs/kit/shallow-routing).
 	 *
-	 * @deprecated Use `goto(url, { state, shallow: true })` instead. To keep the current URL, use `goto(null, { state })`.
+	 * @deprecated Use `goto(url, { state, shallow: true })` instead.
 	 * */
 	export function pushState(url: string | URL, state: App.PageState, options?: {
 		persist?: boolean | undefined;
@@ -3273,7 +3291,7 @@ declare module '$app/navigation' {
 	/**
 	 * Programmatically replace the current history entry with the given `page.state`. Used for [shallow routing](https://svelte.dev/docs/kit/shallow-routing).
 	 *
-	 * @deprecated Use `goto(url, { state, shallow: true, replace: true })` instead. To keep the current URL, use `goto(null, { state, replace: true })`.
+	 * @deprecated Use `goto(url, { state, shallow: true, replace: true })` instead.
 	 * */
 	export function replaceState(url: string | URL, state: App.PageState, options?: {
 		persist?: boolean | undefined;
