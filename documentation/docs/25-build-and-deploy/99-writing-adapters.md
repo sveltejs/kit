@@ -87,6 +87,7 @@ config(userConfig) {
 You can also define a custom server entry during development by adding a Vite plugin which resolves the `sveltekit:server-entry` ID to your own module.
 
 ```js
+// @errors: 1005 1128
 {
 	name: 'vite-plugin-name-it-yourself',
 	applyToEnvironment(environment) {
