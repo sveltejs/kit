@@ -34,7 +34,7 @@ function run_test(dir) {
 
 	write_all_types(initial, manifest, root);
 	write_non_ambient(initial.kit, manifest, root);
-	write_env(initial.kit, '', {}, root);
+	write_env('', {}, root);
 }
 
 describe('Creates correct $types', () => {

@@ -10,12 +10,11 @@ const DOCS = '// See https://svelte.dev/docs/kit/environment-variables for more 
  * Writes ambient declarations including types reference to @sveltejs/kit,
  * and the existing environment variables in process.env to
  * $env/static/private and $env/static/public
- * @param {import('types').ValidatedKitConfig} kit
  * @param {string | null} entry
  * @param {Record<string, EnvVarConfig<any>> | null} env_config
  * @param {string} root
  */
-export function write_env(kit, entry, env_config, root) {
+export function write_env(entry, env_config, root) {
 	const content = [];
 
 	const dir = path.join(root, 'node_modules/$app/types');

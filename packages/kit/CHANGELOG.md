@@ -2278,7 +2278,7 @@
   ▲ [WARNING] Cannot find base config file "./.svelte-kit/tsconfig.json" [tsconfig.json]
 
       tsconfig.json:2:12:
-        2 │   "extends": "./.svelte-kit/tsconfig.json",
+        2 │   "extends": "$app/tsconfig",
           ╵              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ```
 

@@ -3588,6 +3588,7 @@ declare module '$app/server' {
 }
 
 declare module '$app/service-worker' {
+	// @ts-ignore
 	export const self: ServiceWorkerGlobalScope;
 
 	export {};

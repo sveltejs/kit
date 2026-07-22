@@ -1,5 +1,4 @@
 import path from 'node:path';
-import process from 'node:process';
 import create_manifest_data from './create_manifest_data/index.js';
 import { write_client_manifest } from './write_client_manifest.js';
 import { write_tsconfig } from './write_tsconfig.js';
@@ -65,7 +64,7 @@ export function update(config, manifest_data, file, root) {
 	}
 
 	write_types(config, manifest_data, file, root);
-	write_non_ambient(config.kit, manifest_data);
+	write_non_ambient(config.kit, manifest_data, root);
 }
 
 /**
@@ -100,7 +99,7 @@ export function all_types(config, root) {
 export async function env(kit, entry, root, mode) {
 	const env_config = await load_explicit_env(kit, entry, root, mode);
 
-	write_env(kit, entry, env_config, root);
+	write_env(entry, env_config, root);
 
 	return env_config;
 }

@@ -4,7 +4,6 @@ import { styleText } from 'node:util';
 import { posixify } from '../../utils/os.js';
 import { read_package_imports, normalize_import_value } from '../../utils/imports.js';
 import { write_if_changed } from './utils.js';
-import { exclude } from 'rolldown/filter';
 
 /**
  * @param {string} cwd
@@ -15,14 +14,6 @@ function maybe_file(cwd, file) {
 	if (fs.existsSync(resolved)) {
 		return resolved;
 	}
-}
-
-/**
- * @param {string} cwd
- * @param {string} file
- */
-function project_relative(cwd, file) {
-	return posixify(path.relative(cwd, file));
 }
 
 /**
