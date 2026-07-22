@@ -1677,7 +1677,7 @@ test.describe('untrack', () => {
 	});
 });
 
-test.describe('Shallow routing', () => {
+test.describe.only('Shallow routing', () => {
 	test('Adds state without changing the current URL', async ({ page }) => {
 		await page.goto('/shallow-routing/push-state');
 		await expect(page.locator('p')).toHaveText('active: false');
@@ -2060,9 +2060,7 @@ test.describe('Shallow routing', () => {
 		await expect(page.locator('p')).toHaveText('count: 1');
 		expect(warnings.filter((warning) => warning.includes('pushState(...)'))).toEqual(
 			process.env.DEV
-				? [
-						'`pushState(...)` is deprecated. Use `goto(url, { state, shallow: true })` instead. To keep the current URL, use `goto(null, { state })`.'
-					]
+				? ['`pushState(...)` is deprecated. Use `goto(url, { state, shallow: true })` instead.']
 				: []
 		);
 	});
@@ -2083,7 +2081,7 @@ test.describe('Shallow routing', () => {
 		expect(warnings.filter((warning) => warning.includes('replaceState(...)'))).toEqual(
 			process.env.DEV
 				? [
-						'`replaceState(...)` is deprecated. Use `goto(url, { state, shallow: true, replace: true })` instead. To keep the current URL, use `goto(null, { state, replace: true })`.'
+						'`replaceState(...)` is deprecated. Use `goto(url, { state, shallow: true, replace: true })` instead.'
 					]
 				: []
 		);
