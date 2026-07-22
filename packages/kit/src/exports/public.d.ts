@@ -365,7 +365,7 @@ export interface KitConfig {
 	/**
 	 * An object containing zero or more aliases used to replace values in `import` statements. These aliases are automatically passed to Vite and TypeScript.
 	 *
-	 * This option is deprecated. Use [subpath imports](https://nodejs.org/api/packages.html#subpath-imports) (see [`#lib`](https://svelte.dev/docs/kit/$lib)) instead. Projects that want bundler and TypeScript aliases configured in one place can set [`resolve.tsconfigPaths`](https://vite.dev/config/shared-options#resolve-tsconfigpaths) in their Vite config.
+	 * This option is deprecated. Use [subpath imports](https://svelte.dev/docs/kit/$lib) instead.
 	 *
 	 * > [!NOTE] You will need to run `npm run dev` to have SvelteKit automatically generate the required alias configuration in `jsconfig.json` or `tsconfig.json`.
 	 * @deprecated
