@@ -185,6 +185,7 @@ export async function internal_respond(request, options, manifest, state) {
 		is_in_remote_function: false,
 		is_in_remote_form_or_command: false,
 		is_in_remote_query: false,
+		is_in_remote_prerender: false,
 		is_in_render: false,
 		is_in_universal_load: false
 	};
