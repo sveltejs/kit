@@ -10,6 +10,35 @@ import { SvelteKitError } from '@sveltejs/kit/internal';
 const decoder = new TextDecoder();
 
 /**
+ * Regex matching the HTML spec's "valid floating-point number" definition
+ * (https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#valid-floating-point-number).
+ * Unlike `parseFloat`, this rejects strings like `"20."`, `"20,"`, `"+20"`, `"Infinity"`, etc.
+ */
+const valid_floating_point_number_regex = /^-?(\d+|\.\d+|\d+\.\d+)([eE][+-]?\d+)?$/;
+
+/**
+ * Checks if a string is a valid floating-point number per the HTML spec.
+ * @param {string} value
+ * @returns {boolean}
+ */
+export function is_valid_floating_point_number(value) {
+	return valid_floating_point_number_regex.test(value);
+}
+
+/**
+ * Parses a string as a floating-point number using the HTML spec's
+ * "valid floating-point number" definition. Returns `undefined` for
+ * empty or invalid strings, mirroring the spec's value sanitization
+ * algorithm which sets invalid values to the empty string.
+ * @param {string} value
+ * @returns {number | undefined}
+ */
+function parse_number_value(value) {
+	if (value === '' || !valid_floating_point_number_regex.test(value)) return undefined;
+	return parseFloat(value);
+}
+
+/**
  * Sets a value in a nested object using a path string, mutating the original object
  * @param {Record<string, any>} object
  * @param {string} path_string
@@ -18,7 +47,7 @@ const decoder = new TextDecoder();
 export function set_nested_value(object, path_string, value) {
 	if (path_string.startsWith('n:')) {
 		path_string = path_string.slice(2);
-		value = value === '' ? undefined : parseFloat(value);
+		value = parse_number_value(value);
 	} else if (path_string.startsWith('b:')) {
 		path_string = path_string.slice(2);
 		value = value === 'on';
@@ -53,7 +82,7 @@ export function convert_formdata(data) {
 
 		if (key.startsWith('n:')) {
 			key = key.slice(2);
-			values = values.map((v) => (v === '' ? undefined : parseFloat(/** @type {string} */ (v))));
+			values = values.map((v) => parse_number_value(v));
 		} else if (key.startsWith('b:')) {
 			key = key.slice(2);
 			values = values.map((v) => v === 'on');
@@ -893,7 +922,43 @@ export function create_field_proxy(target, get, set, get_issues, get_touched, ge
 						});
 					}
 
-					// Handle all other input types (text, number, etc.)
+					// Handle number/range inputs — these need special handling to avoid
+					// clobbering the browser's intermediate editing state (e.g. "20.")
+					// which the browser reports as element.value === "" for type=number.
+					// When the field has been edited and the current value is undefined
+					// (meaning the input is currently invalid), return '' so that Svelte's
+					// set_value guard (element.value === value) prevents the write —
+					// the browser reports element.value as "" for invalid type=number input
+					if (type === 'number' || type === 'range') {
+						return Object.defineProperties(base_props, {
+							defaultValue: {
+								enumerable: true,
+								get() {
+									return input_value;
+								}
+							},
+							value: {
+								enumerable: true,
+								get() {
+									const value = get_value();
+									if (value != null) return String(value);
+
+									// Field has no valid number — if it has been edited,
+									// return '' instead of falling back to input_value,
+									// so Svelte doesn't clobber the browser's intermediate
+									// editing state (e.g. "20." which the browser reports as "")
+									if (key !== '' && get_dirty()[key]) {
+										return '';
+									}
+
+									// Not yet edited — show the default value for initial render
+									return input_value != null ? String(input_value) : '';
+								}
+							}
+						});
+					}
+
+					// Handle all other input types (text, etc.)
 					return Object.defineProperties(base_props, {
 						defaultValue: {
 							enumerable: true,

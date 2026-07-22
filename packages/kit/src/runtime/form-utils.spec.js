@@ -6,6 +6,7 @@ import {
 	create_field_proxy,
 	deep_set,
 	deserialize_binary_form,
+	is_valid_floating_point_number,
 	serialize_binary_form,
 	split_path
 } from './form-utils.js';
@@ -113,6 +114,92 @@ describe('convert_formdata', () => {
 		const data = new FormData();
 		data.append(attack, 'bad');
 		expect(() => convert_formdata(data)).toThrow(/Invalid key "/);
+	});
+
+	test('coerces number fields using the strict valid floating-point number definition', () => {
+		const data = new FormData();
+		data.append('n:integer', '42');
+		data.append('n:decimal', '20.5');
+		data.append('n:negative', '-3.14');
+		data.append('n:leading_dot', '.5');
+		data.append('n:exponent', '1e3');
+		data.append('n:negative_exponent', '1.5e-2');
+		data.append('n:trailing_dot', '20.');
+		data.append('n:comma_decimal', '20,5');
+		data.append('n:plus_sign', '+20');
+		data.append('n:whitespace', '  20  ');
+		data.append('n:infinity', 'Infinity');
+		data.append('n:nan', 'NaN');
+		data.append('n:empty', '');
+		data.append('n:just_dot', '.');
+		data.append('n:zero', '0');
+		data.append('n:negative_zero', '-0');
+
+		expect(convert_formdata(data)).toEqual({
+			integer: 42,
+			decimal: 20.5,
+			negative: -3.14,
+			leading_dot: 0.5,
+			exponent: 1000,
+			negative_exponent: 0.015,
+			trailing_dot: undefined,
+			comma_decimal: undefined,
+			plus_sign: undefined,
+			whitespace: undefined,
+			infinity: undefined,
+			nan: undefined,
+			empty: undefined,
+			just_dot: undefined,
+			zero: 0,
+			negative_zero: -0
+		});
+	});
+
+	test('coerces number array fields', () => {
+		const data = new FormData();
+		data.append('n:values[]', '1');
+		data.append('n:values[]', '2.5');
+		data.append('n:values[]', '');
+
+		expect(convert_formdata(data)).toEqual({
+			values: [1, 2.5, undefined]
+		});
+	});
+});
+
+describe('is_valid_floating_point_number', () => {
+	test.each([
+		['20', true],
+		['20.5', true],
+		['.5', true],
+		['-.5', true],
+		['-20.5', true],
+		['0', true],
+		['-0', true],
+		['00', true],
+		['0.0', true],
+		['1e3', true],
+		['1.5e-2', true],
+		['1E3', true],
+		['1e+3', true],
+		['-1e-3', true],
+		['', false],
+		['.', false],
+		['20.', false],
+		['20,', false],
+		['20,5', false],
+		['+20', false],
+		['  20  ', false],
+		['Infinity', false],
+		['NaN', false],
+		['abc', false],
+		['1.2.3', false],
+		['1e', false],
+		['e3', false],
+		['--20', false],
+		['20-5', false]
+	])('%s => %s', (input, expected) => {
+		expect(is_valid_floating_point_number(input)).toBe(expected);
 	});
 });
 
@@ -781,5 +868,96 @@ describe('create_field_proxy', () => {
 		expect(cloned).toBeInstanceOf(Date);
 		expect(cloned.getTime()).toBe(original.getTime());
 		expect(cloned).not.toBe(original);
+	});
+
+	// Regression test for https://github.com/sveltejs/kit/issues/16270
+	// The as('number') value getter must return '' (not the default value)
+	// when a dirty field has no valid number, so that Svelte's set_value
+	// guard prevents clobbering the browser's intermediate editing state.
+	test("as('number') value getter returns '' for dirty fields with undefined value", () => {
+		const input = { price: undefined };
+		/** @type {Record<string, boolean>} */
+		const dirty = { price: true };
+
+		const proxy = create_field_proxy(
+			{},
+			() => input,
+			() => {},
+			() => ({}),
+			() => ({}),
+			() => dirty,
+			[]
+		);
+
+		const props = proxy.price.as('number', 42);
+		expect(props.value).toBe('');
+	});
+
+	test("as('number') value getter returns default value for non-dirty fields with undefined value", () => {
+		const input = { price: undefined };
+
+		const proxy = create_field_proxy(
+			{},
+			() => input,
+			() => {},
+			() => ({}),
+			() => ({}),
+			() => ({}),
+			[]
+		);
+
+		const props = proxy.price.as('number', 42);
+		expect(props.value).toBe('42');
+	});
+
+	test("as('number') value getter returns stringified number for valid values", () => {
+		const input = { price: 20.5 };
+
+		const proxy = create_field_proxy(
+			{},
+			() => input,
+			() => {},
+			() => ({}),
+			() => ({}),
+			() => ({ price: true }),
+			[]
+		);
+
+		const props = proxy.price.as('number', 42);
+		expect(props.value).toBe('20.5');
+	});
+
+	test("as('number') value getter returns '' for dirty fields with undefined value and no default", () => {
+		const input = { price: undefined };
+
+		const proxy = create_field_proxy(
+			{},
+			() => input,
+			() => {},
+			() => ({}),
+			() => ({}),
+			() => ({ price: true }),
+			[]
+		);
+
+		const props = proxy.price.as('number');
+		expect(props.value).toBe('');
+	});
+
+	test("as('range') value getter behaves the same as as('number') for dirty undefined fields", () => {
+		const input = { value: undefined };
+
+		const proxy = create_field_proxy(
+			{},
+			() => input,
+			() => {},
+			() => ({}),
+			() => ({}),
+			() => ({ value: true }),
+			[]
+		);
+
+		const props = proxy.value.as('range', 50);
+		expect(props.value).toBe('');
 	});
 });
