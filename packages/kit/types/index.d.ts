@@ -337,32 +337,10 @@ declare module '@sveltejs/kit' {
 		/**
 		 * An object containing zero or more aliases used to replace values in `import` statements. These aliases are automatically passed to Vite and TypeScript.
 		 *
-		 * ```js
-		 * /// file: vite.config.js
-		 * import { defineConfig } from 'vite';
-		 * import { sveltekit } from '@sveltejs/kit/vite';
-		 *
-		 * export default defineConfig({
-		 *   plugins: [
-		 *     sveltekit({
-		 *       alias: {
-		 *         // this will match a file
-		 *         'my-file': 'path/to/my-file.js',
-		 *
-		 *         // this will match a directory and its contents
-		 *         // (`my-directory/x` resolves to `path/to/my-directory/x`)
-		 *         'my-directory': 'path/to/my-directory',
-		 *
-		 *         // an alias ending /* will only match
-		 *         // the contents of a directory, not the directory itself
-		 *         'my-directory/*': 'path/to/my-directory/*'
-		 *       }
-		 *     })
-		 *   ]
-		 * });
-		 * ```
+		 * This option is deprecated. Use [subpath imports](https://svelte.dev/docs/kit/$lib) instead.
 		 *
 		 * > [!NOTE] You will need to run `npm run dev` to have SvelteKit automatically generate the required alias configuration in `jsconfig.json` or `tsconfig.json`.
+		 * @deprecated
 		 * @default {}
 		 */
 		alias?: Record<string, string>;
@@ -1585,9 +1563,10 @@ declare module '@sveltejs/kit' {
 		/**
 		 * The parameters of the current route - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object.
 		 *
-		 * In the context of a remote function request initiated by the client, this relates to the page the remote function
-		 * was called from, _not_ the URL of the endpoint SvelteKit creates for the remote function. Never use this to determine
-		 * whether or not a user is authorized to access certain data, as these values are part of the request which could be manipulated.
+		 * Inside `query` functions (including `query.batch` and `query.live`), accessing this property throws an error.
+		 * Pass values from the page as arguments to the query instead. Inside `form` and `command` functions it relates to the page
+		 * the remote function was called from, _not_ the URL of the endpoint SvelteKit creates for the remote function. Never use it
+		 * to determine whether or not a user is authorized to access certain data, as these values are part of the request which could be manipulated.
 		 */
 		params: Params;
 		/**
@@ -1605,9 +1584,10 @@ declare module '@sveltejs/kit' {
 			/**
 			 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
 			 *
-			 * In the context of a remote function request initiated by the client, this relates to the page the remote function
-			 * was called from, _not_ the URL of the endpoint SvelteKit creates for the remote function. Never use this to determine
-			 * whether or not a user is authorized to access certain data, as these values are part of the request which could be manipulated.
+			 * Inside `query` functions (including `query.batch` and `query.live`), accessing this property throws an error.
+			 * Pass values from the page as arguments to the query instead. Inside `form` and `command` functions it relates to the page
+			 * the remote function was called from, _not_ the URL of the endpoint SvelteKit creates for the remote function. Never use it
+			 * to determine whether or not a user is authorized to access certain data, as these values are part of the request which could be manipulated.
 			 */
 			id: RouteId;
 		};
@@ -1637,9 +1617,10 @@ declare module '@sveltejs/kit' {
 		/**
 		 * The requested URL.
 		 *
-		 * In the context of a remote function request initiated by the client, this relates to the page the remote function
-		 * was called from, _not_ the URL of the endpoint SvelteKit creates for the remote function. Never use this to determine
-		 * whether or not a user is authorized to access certain data, as these values are part of the request which could be manipulated.
+		 * Inside `query` functions (including `query.batch` and `query.live`), accessing this property throws an error.
+		 * Pass values from the page as arguments to the query instead. Inside `form` and `command` functions it relates to the page
+		 * the remote function was called from, _not_ the URL of the endpoint SvelteKit creates for the remote function. Never use it
+		 * to determine whether or not a user is authorized to access certain data, as these values are part of the request which could be manipulated.
 		 */
 		url: URL;
 		/**

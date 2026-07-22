@@ -109,16 +109,53 @@ test.describe('remote functions', () => {
 		expect(body).not.toContain('private-data');
 	});
 
-	test('queries can access the route/url of the page they were called from', async ({
+	test('queries cannot access the route/url of the page they were called from', async ({
 		page,
 		clicknav
 	}) => {
-		await page.goto('/remote');
+		const expected = ['url', 'params', 'route']
+			.map(
+				(property) =>
+					`Cannot access event.${property} in a query. Pass the value as an argument to the query instead`
+			)
+			.join(' | ');
 
+		// direct navigation renders the errors during SSR
+		await page.goto('/remote/event');
+		await expect(page.locator('[data-id="results"]')).toHaveText(expected);
+
+		// client-side navigation calls the query over HTTP
+		await page.goto('/remote');
+		await clicknav('[href="/remote/event"]');
+		await expect(page.locator('[data-id="results"]')).toHaveText(expected);
+	});
+
+	test('forged url headers do not expose event.url to a query', async ({
+		page,
+		clicknav,
+		javaScriptEnabled,
+		request
+	}) => {
+		test.skip(!javaScriptEnabled, 'requires JavaScript to capture the query request');
+
+		// capture the real query request so the replay hits the exact endpoint
+		const captured = page.waitForRequest((req) => req.url().includes('/get_event'));
+		await page.goto('/remote');
 		await clicknav('[href="/remote/event"]');
 
-		await expect(page.locator('[data-id="route"]')).toHaveText('route: /remote/event');
-		await expect(page.locator('[data-id="pathname"]')).toHaveText('pathname: /remote/event');
+		const response = await request.fetch((await captured).url(), {
+			headers: { 'x-sveltekit-pathname': '/forged', 'x-sveltekit-search': '?forged=1' }
+		});
+
+		const body = await response.text();
+		for (const property of ['url', 'params', 'route']) {
+			expect(body).toContain(`Cannot access event.${property} in a query`);
+		}
+	});
+
+	test('queries can read prerendered data during SSR', async ({ page }) => {
+		await page.goto('/remote/prerender-in-query');
+		await expect(page.locator('[data-id="nested-prerender"]')).toHaveText('yes');
 	});
 
 	test('form works', async ({ page, javaScriptEnabled }) => {
