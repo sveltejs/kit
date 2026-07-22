@@ -62,8 +62,8 @@ import {
 	sveltekit_env_public_client,
 	sveltekit_env_public_server,
 	sveltekit_traced,
-	sveltekit_dev_server_entry,
-	sveltekit_dev_server_handler
+	sveltekit_dev_internal_server_entry,
+	sveltekit_dev_server_entry
 } from './module_ids.js';
 import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
@@ -617,16 +617,18 @@ function kit({ svelte_config }) {
 		resolveId: {
 			filter: {
 				id: [
-					exactRegex(sveltekit_dev_server_entry),
+					exactRegex(sveltekit_dev_internal_server_entry),
 					exactRegex('sveltekit:server-manifest'),
 					exactRegex('sveltekit:server'),
 					exactRegex('sveltekit:env'),
-					exactRegex(sveltekit_dev_server_handler)
+					exactRegex(sveltekit_dev_server_entry)
 				]
 			},
 			handler(id) {
-				if (id === sveltekit_dev_server_entry) {
-					return server_instrumentation ? sveltekit_traced : sveltekit_dev_server_handler;
+				if (id === sveltekit_dev_internal_server_entry) {
+					return server_instrumentation
+						? sveltekit_traced
+						: this.resolve(sveltekit_dev_server_entry);
 				}
 
 				if (id === 'sveltekit:server-manifest') {
@@ -641,7 +643,7 @@ function kit({ svelte_config }) {
 					return id;
 				}
 
-				if (id === sveltekit_dev_server_handler) {
+				if (id === sveltekit_dev_server_entry) {
 					return posixify(path.join(import.meta.dirname, 'dev/ssr_entry.js'));
 				}
 			}
@@ -693,7 +695,7 @@ function kit({ svelte_config }) {
 						return dedent`
 							import ${s(posixify(server_instrumentation))};
 
-							const { respond } = await import(${s(sveltekit_dev_server_handler)});
+							const { respond } = await import(${s(sveltekit_dev_server_entry)});
 							export { respond };
 
 							import.meta.hot?.accept();
@@ -2243,9 +2245,9 @@ function kit({ svelte_config }) {
 		[
 			svelte_config.kit.adapter?.vite?.plugins,
 			plugin_setup,
+			plugin_dev_ssr,
 			plugin_remote_guard,
 			plugin_remote,
-			plugin_dev_ssr,
 			plugin_virtual_modules,
 			process.env.TEST !== 'true' ? plugin_guard : undefined,
 			plugin_service_worker,
