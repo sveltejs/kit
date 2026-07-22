@@ -407,10 +407,6 @@ export function refresh(event, state, internals, payload, fn) {
 	if (!event.isRemoteRequest && state.is_in_remote_form_or_command) {
 		// ...or this is a no-JS (native) form submission, where the page re-renders
 		// anyway so there's no live client cache to apply a single-flight update to.
-		//
-		// SSR render also has `isRemoteRequest === false`, but the flag is `false`
-		// there, so it falls through — we *do* want to serialize the value during
-		// render so the hydrating client can reuse it without a network call.
 		return;
 	}
 
