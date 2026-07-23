@@ -510,7 +510,7 @@ test.describe('remote function mutations', () => {
 	test('fields.set updates DOM before validate', async ({ page }) => {
 		await page.goto('/remote/form/imperative');
 
-		const input = page.locator('input[name="message"]');
+		const input = page.locator('input[name^="message"]');
 		await input.fill('123');
 
 		await page.locator('#set-and-validate').click();
@@ -1072,8 +1072,8 @@ test.describe('remote function mutations', () => {
 
 		const form1 = page.locator('form').nth(0);
 
-		const text = form1.locator('input[name="text_field"]');
-		const checkbox = form1.locator('input[name="b:checkbox_field"]');
+		const text = form1.locator('input[name^="text_field"]');
+		const checkbox = form1.locator('input[name^="b:checkbox_field"]');
 
 		// initial values rendered correctly
 		await expect(text).toHaveValue('Example text');
@@ -1152,7 +1152,7 @@ test.describe('remote function mutations', () => {
 		page
 	}) => {
 		await page.goto('/remote/form/native-result');
-		await page.locator('#plain input[name="message"]').fill('hello');
+		await page.locator('#plain input[name^="message"]').fill('hello');
 		await page.click('#plain button');
 
 		// wait for the page resulting from the full-page POST to hydrate
@@ -1164,20 +1164,20 @@ test.describe('remote function mutations', () => {
 		page
 	}) => {
 		await page.goto('/remote/form/native-result');
-		await page.locator('#plain input[name="message"]').fill('ab');
+		await page.locator('#plain input[name^="message"]').fill('ab');
 		await page.click('#plain button');
 
 		// wait for the page resulting from the full-page POST to hydrate
 		await expect(page.locator('#hydrated')).toHaveText('true');
 		await expect(page.locator('#issue')).toHaveText('too short');
-		await expect(page.locator('#plain input[name="message"]')).toHaveValue('ab');
+		await expect(page.locator('#plain input[name^="message"]')).toHaveValue('ab');
 	});
 
 	test('keyed form result from a native (non-enhanced) submission survives hydration', async ({
 		page
 	}) => {
 		await page.goto('/remote/form/native-result');
-		await page.locator('#keyed input[name="message"]').fill('hello');
+		await page.locator('#keyed input[name^="message"]').fill('hello');
 		await page.click('#keyed button');
 
 		// wait for the page resulting from the full-page POST to hydrate
@@ -1191,7 +1191,7 @@ test.describe('remote function mutations', () => {
 		page
 	}) => {
 		await page.goto('/remote/form/native-result');
-		await page.locator('#keyed-slash input[name="message"]').fill('hello');
+		await page.locator('#keyed-slash input[name^="message"]').fill('hello');
 		await page.click('#keyed-slash button');
 
 		// wait for the page resulting from the full-page POST to hydrate
@@ -1217,7 +1217,7 @@ test.describe('remote function mutations', () => {
 
 	test('form submission with element id `reset` resets the form', async ({ page }) => {
 		await page.goto('/remote/form/reset-id');
-		await page.locator('[name="message"]').fill('short');
+		await page.locator('[name^="message"]').fill('short');
 		await page.click('button');
 
 		await expect(page.locator('.error')).toHaveText('too short');
@@ -1225,11 +1225,11 @@ test.describe('remote function mutations', () => {
 		await page.click('[type="reset"]');
 		await expect(page.locator('.error')).toHaveCount(0);
 
-		await page.locator('[name="message"]').fill('long enough');
+		await page.locator('[name^="message"]').fill('long enough');
 		await page.click('button');
 
 		await expect(page.locator('#result')).toHaveText('long enough');
-		await expect(page.locator('[name="message"]')).toBeEmpty();
+		await expect(page.locator('[name^="message"]')).toBeEmpty();
 	});
 });
 
