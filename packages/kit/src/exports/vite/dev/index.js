@@ -500,10 +500,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, s
 			// Vite throws a Cannot read properties of undefined (reading 'wrapDynamicImport')
 			// if you try to run ssr.runner.import before the server has started so
 			// we do it inside here to avoid that
-			if (!manifest_created) {
-				await update_manifest();
-				manifest_created = true;
-			}
+			await (init_manifest ??= update_manifest());
 
 			// Vite's base middleware strips out the base path. Restore it
 			const original_url = req.url;
