@@ -7,7 +7,7 @@ import { URL } from 'node:url';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { styleText } from 'node:util';
 import sirv from 'sirv';
-import { isCSSRequest, loadEnv, buildErrorMessage } from 'vite';
+import { isCSSRequest, loadEnv, buildErrorMessage, isRunnableDevEnvironment } from 'vite';
 import { createReadableStream, getRequest, setResponse } from '../../../exports/node/index.js';
 import { coalesce_to_error } from '../../../utils/error.js';
 import { resolve_entry } from '../../../utils/filesystem.js';
@@ -79,10 +79,19 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, s
 	/** @type {Error | null} */
 	let manifest_error = null;
 
-	/** @param {string} url */
+	if (!isRunnableDevEnvironment(vite.environments.ssr)) {
+		throw new Error('The configured Vite SSR environment must be a RunnableDevEnvironment');
+	}
+
+	const { runner } = vite.environments.ssr;
+
+	/**
+	 * @param {string} url
+	 * @returns {Promise<Record<string, any>>}
+	 */
 	async function loud_ssr_load_module(url) {
 		try {
-			return await vite.ssrLoadModule(url, { fixStacktrace: true });
+			return await runner.import(url);
 		} catch (/** @type {any} */ err) {
 			const msg = buildErrorMessage(err, [
 				styleText('red', `Internal server error: ${err.message}`)
@@ -93,10 +102,10 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, s
 			}
 
 			// TODO this is inadequate — it doesn't reliably show the overlay on every page load,
-			// and when it does appear it may immediately vanish. `vite.ws.send` broadcasts
+			// and when it does appear it may immediately vanish. `vite.hot.send` broadcasts
 			// to all connected clients, even ones that are unaffected by the error.
 			// we need a more considered approach
-			vite.ws.send({
+			vite.hot.send({
 				type: 'error',
 				err: /** @type {import('vite').ErrorPayload['err']} */ ({
 					...err,
@@ -117,7 +126,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, s
 
 		const module = await loud_ssr_load_module(url);
 
-		const module_node = await vite.moduleGraph.getModuleByUrl(url);
+		const module_node = await vite.environments.ssr.moduleGraph.getModuleByUrl(url);
 		if (!module_node) throw new Error(`Could not find node for ${url}`);
 
 		return { module, module_node, url };
@@ -137,13 +146,13 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, s
 
 			if (manifest_error) {
 				manifest_error = null;
-				vite.ws.send({ type: 'full-reload' });
+				vite.hot.send({ type: 'full-reload' });
 			}
 		} catch (error) {
 			manifest_error = /** @type {Error} */ (error);
 
 			console.error(styleText(['bold', 'red'], manifest_error.message));
-			vite.ws.send({
+			vite.hot.send({
 				type: 'error',
 				err: {
 					message: manifest_error.message ?? 'Invalid routes',
@@ -216,7 +225,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, s
 						result.stylesheets = [];
 						result.fonts = [];
 
-						/** @type {import('vite').ModuleNode[]} */
+						/** @type {import('vite').EnvironmentModuleNode[]} */
 						const module_nodes = [];
 
 						if (node.component) {
@@ -250,7 +259,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, s
 						// in dev we inline all styles to avoid FOUC. this gets populated lazily so that
 						// components/stylesheets loaded via import() during `load` are included
 						result.inline_styles = async () => {
-							/** @type {Set<import('vite').ModuleNode | import('vite').EnvironmentModuleNode>} */
+							/** @type {Set<import('vite').EnvironmentModuleNode>} */
 							const deps = new Set();
 
 							for (const module_node of module_nodes) {
@@ -266,7 +275,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, s
 										? dep.url.replace('?', '?inline&')
 										: dep.url + '?inline';
 									try {
-										const mod = await vite.ssrLoadModule(inlineCssUrl);
+										const mod = await runner.import(inlineCssUrl);
 										styles[dep.url] = mod.default;
 									} catch {
 										// this can happen with dynamically imported modules, I think
@@ -287,7 +296,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, s
 					return Object.fromEntries(
 						get_remotes().map((remote) => [
 							remote.hash,
-							() => vite.ssrLoadModule(remote.file).then((module) => ({ default: module }))
+							() => runner.import(remote.file).then((module) => ({ default: module }))
 						])
 					);
 				},
@@ -316,7 +325,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, s
 					if (!manifest_data.params) return {};
 
 					const url = path.resolve(root, manifest_data.params);
-					const module = await vite.ssrLoadModule(url, { fixStacktrace: true });
+					const module = await runner.import(url);
 
 					if (!module.params) {
 						throw new Error(
@@ -336,47 +345,36 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, s
 			return;
 		}
 
-		try {
-			vite.ssrFixStacktrace(error);
-		} catch {
-			// ssrFixStacktrace can fail on StackBlitz web containers and we don't know why
-			// by ignoring it the line numbers are wrong, but at least we can show the error
-		}
+		let end = 0;
 
-		if (error.stack) {
-			let end = 0;
-
-			error.stack = error.stack
-				.replaceAll('\0', '') // remove null bytes from e.g. virtual module IDs, or the response will fail
-				.split('\n')
-				.map((line, i) => {
-					const match = /^ {4}at (?:[^ ]+ \((.+)\)|(.+))$/.exec(line);
-					if (!match) {
-						end = i + 1;
-						return line;
-					}
-
-					const loc = match[1] ?? match[2];
-					const file = loc.replace(/:\d+:\d+$/, '');
-
-					if (fs.existsSync(file)) {
-						if (!file.includes('node_modules') && !file.includes(SRC_ROOT)) {
-							end = i + 1;
-						}
-
-						return line.replace(file, path.relative(process.cwd(), file));
-					}
-
+		error.stack = error.stack
+			.replaceAll('\0', '') // remove null bytes from e.g. virtual module IDs, or the response will fail
+			.split('\n')
+			.map((line, i) => {
+				const match = /^ {4}at (?:[^ ]+ \((.+)\)|(.+))$/.exec(line);
+				if (!match) {
+					end = i + 1;
 					return line;
-				})
-				.slice(0, end)
-				.join('\n');
+				}
 
-			return error.stack;
-		}
+				const loc = match[1] ?? match[2];
+				const file = loc.replace(/:\d+:\d+$/, '');
+
+				if (fs.existsSync(file)) {
+					if (!file.includes('node_modules') && !file.includes(SRC_ROOT)) {
+						end = i + 1;
+					}
+
+					return line.replace(file, path.relative(process.cwd(), file));
+				}
+
+				return line;
+			})
+			.slice(0, end)
+			.join('\n');
+
+		return error.stack;
 	}
-
-	await update_manifest();
 
 	const params_file = resolve_entry(svelte_config.kit.files.params);
 
@@ -430,7 +428,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, s
 	if (appTemplate !== 'index.html') {
 		vite.watcher.on('change', (file) => {
 			if (file === appTemplate) {
-				vite.ws.send({ type: 'full-reload' });
+				vite.hot.send({ type: 'full-reload' });
 			}
 		});
 	}
@@ -480,6 +478,9 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, s
 	const env = loadEnv(vite_config.mode, svelte_config.kit.env.dir, '');
 	const emulator = await svelte_config.kit.adapter?.emulate?.();
 
+	/** @type {boolean | void} */
+	let manifest_created;
+
 	return () => {
 		const serve_static_middleware = vite.middlewares.stack.find(
 			(middleware) =>
@@ -491,6 +492,14 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, s
 		remove_static_middlewares(vite.middlewares);
 
 		vite.middlewares.use(async (req, res) => {
+			// Vite throws a Cannot read properties of undefined (reading 'wrapDynamicImport')
+			// if you try to run ssr.runner.import before the server has started so
+			// we do it inside here to avoid that
+			if (!manifest_created) {
+				await update_manifest();
+				manifest_created = true;
+			}
+
 			// Vite's base middleware strips out the base path. Restore it
 			const original_url = req.url;
 			req.url = req.originalUrl;
@@ -544,22 +553,20 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, s
 				);
 
 				if (resolved_instrumentation) {
-					await vite.ssrLoadModule(resolved_instrumentation);
+					await runner.import(resolved_instrumentation);
 				}
 
 				// we have to import `Server` before calling `set_assets`
 				const { Server } = /** @type {import('types').ServerModule} */ (
-					await vite.ssrLoadModule(`${get_runtime_base(root)}/server/index.js`, {
-						fixStacktrace: true
-					})
+					await runner.import(`${get_runtime_base(root)}/server/index.js`)
 				);
 
-				const { set_fix_stack_trace } = await vite.ssrLoadModule(
+				const { set_fix_stack_trace } = await runner.import(
 					`${get_runtime_base(root)}/server/internal.js`
 				);
 				set_fix_stack_trace(fix_stack_trace);
 
-				const { set_assets } = await vite.ssrLoadModule('$app/paths/internal/server');
+				const { set_assets } = await runner.import('$app/paths/internal/server');
 				set_assets(assets);
 
 				const server = new Server(manifest);
@@ -652,16 +659,16 @@ function remove_static_middlewares(server) {
 
 /**
  * @param {import('vite').ViteDevServer} vite
- * @param {import('vite').ModuleNode | import('vite').EnvironmentModuleNode} node
- * @param {Set<import('vite').ModuleNode | import('vite').EnvironmentModuleNode>} deps
+ * @param {import('vite').EnvironmentModuleNode} node
+ * @param {Set<import('vite').EnvironmentModuleNode>} deps
  */
 async function find_deps(vite, node, deps) {
-	// since `ssrTransformResult.deps` contains URLs instead of `ModuleNode`s, this process is asynchronous.
+	// since `transformResult.deps` contains URLs instead of `ModuleNode`s, this process is asynchronous.
 	// instead of using `await`, we resolve all branches in parallel.
 	/** @type {Promise<void>[]} */
 	const branches = [];
 
-	/** @param {import('vite').ModuleNode | import('vite').EnvironmentModuleNode} node */
+	/** @param {import('vite').EnvironmentModuleNode} node */
 	async function add(node) {
 		if (!deps.has(node)) {
 			deps.add(node);
@@ -671,39 +678,26 @@ async function find_deps(vite, node, deps) {
 
 	/** @param {string} url */
 	async function add_by_url(url) {
-		const node = await get_server_module_by_url(vite, url);
+		const node = await vite.environments.ssr.moduleGraph.getModuleByUrl(url);
 
 		if (node) {
 			await add(node);
 		}
 	}
 
-	const transform_result =
-		/** @type {import('vite').ModuleNode} */ (node).ssrTransformResult || node.transformResult;
-
-	if (transform_result) {
-		if (transform_result.deps) {
-			transform_result.deps.forEach((url) => branches.push(add_by_url(url)));
+	if (node.transformResult) {
+		if (node.transformResult.deps) {
+			node.transformResult.deps.forEach((url) => branches.push(add_by_url(url)));
 		}
 
-		if (transform_result.dynamicDeps) {
-			transform_result.dynamicDeps.forEach((url) => branches.push(add_by_url(url)));
+		if (node.transformResult.dynamicDeps) {
+			node.transformResult.dynamicDeps.forEach((url) => branches.push(add_by_url(url)));
 		}
 	} else {
 		node.importedModules.forEach((node) => branches.push(add(node)));
 	}
 
 	await Promise.all(branches);
-}
-
-/**
- * @param {import('vite').ViteDevServer} vite
- * @param {string} url
- */
-function get_server_module_by_url(vite, url) {
-	return vite.environments
-		? vite.environments.ssr.moduleGraph.getModuleByUrl(url)
-		: vite.moduleGraph.getModuleByUrl(url, true);
 }
 
 /**
@@ -725,4 +719,21 @@ function has_correct_case(file, assets) {
 	}
 
 	return false;
+}
+
+/**
+ * Invalidates a module in all environments.
+ * @param {import('vite').ViteDevServer} server
+ * @param {string} id
+ * @returns {void}
+ */
+export function invalidate_module(server, id) {
+	for (const environment in server.environments) {
+		// Invalidate the manifest data module so it reloads with new routes/files
+		const module = server.environments[environment].moduleGraph.getModuleById(id);
+		if (module) {
+			server.environments[environment].moduleGraph.invalidateModule(module);
+			void server.environments[environment].reloadModule(module);
+		}
+	}
 }
