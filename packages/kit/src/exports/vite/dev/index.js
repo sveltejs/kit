@@ -114,7 +114,6 @@ export function dev(vite, vite_config, svelte_config, root, set_manifest_data) {
 		// Unless it's a file where the trailing slash page option might have changed
 		if (timeout || !/\+(page|layout|server).*$/.test(file)) return;
 		sync.update(svelte_config, manifest_data, file, root);
-		invalidate_module(vite, sveltekit_manifest_data);
 		invalidate_module(vite, sveltekit_dev_manifest_data);
 	});
 
