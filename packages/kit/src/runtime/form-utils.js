@@ -16,7 +16,7 @@ const decoder = new TextDecoder();
  * @param {any} value
  */
 export function set_nested_value(object, field, value) {
-	deep_set(object, split_path(field.name), coerce_form_value(field.type, value));
+	deep_set(object, split_path(field.name), value);
 }
 
 /**
@@ -57,7 +57,7 @@ export function parse_form_key(form_id, key) {
  * @param {any} value
  * @returns {any}
  */
-function coerce_form_value(type, value) {
+export function coerce_form_value(type, value) {
 	if (Array.isArray(value)) return value.map((value) => coerce_form_value(type, value));
 	if (type === 'number') return value === '' ? undefined : parseFloat(value);
 	if (type === 'boolean') return value === 'on';
@@ -94,7 +94,11 @@ export function convert_formdata(form_id, data) {
 			);
 		}
 
-		set_nested_value(result, field, field.is_array ? entries : entries[0]);
+		set_nested_value(
+			result,
+			field,
+			coerce_form_value(field.type, field.is_array ? entries : entries[0])
+		);
 	}
 
 	return result;

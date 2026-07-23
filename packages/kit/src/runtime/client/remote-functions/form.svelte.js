@@ -26,7 +26,8 @@ import {
 	deep_get,
 	DELETE_KEY,
 	BINARY_FORM_CONTENT_TYPE,
-	parse_form_key
+	parse_form_key,
+	coerce_form_value
 } from '../../form-utils.js';
 
 /**
@@ -416,13 +417,15 @@ export function form(id) {
 
 				if (event.submitter) {
 					const name = event.submitter.getAttribute('name');
+
+					/** @type {null | ReturnType<typeof parse_form_key>} */
 					let submitter = null;
 
 					const value = /** @type {any} */ (event.submitter).value;
 
 					if (name !== null && value !== undefined) {
 						submitter = parse_form_key(action_id_without_key, name);
-						set_nested_value(input, submitter, value);
+						set_nested_value(input, submitter, coerce_form_value(submitter.type, value));
 					}
 
 					previous_submitter = submitter;
