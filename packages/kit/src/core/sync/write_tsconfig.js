@@ -1,7 +1,7 @@
 import process from 'node:process';
 import fs from 'node:fs';
 import path from 'node:path';
-import * as ts from 'typescript';
+import ts from 'typescript';
 import { styleText } from 'node:util';
 import { posixify } from '../../utils/os.js';
 import { read_package_imports, normalize_import_value } from '../../utils/imports.js';
@@ -32,16 +32,13 @@ export function write_tsconfig(kit, root) {
 				...ESSENTIAL_OPTIONS,
 				...RECOMMENDED_OPTIONS
 			},
-			exclude: [
-				path.extname(kit.files.serviceWorker)
-					? kit.files.serviceWorker
-					: `${kit.files.serviceWorker}/**`
-			]
+			exclude: [kit.files.serviceWorker]
 		},
 		{
 			extends: '$app/tsconfig',
 			include: ['src']
-		}
+		},
+		kit.typescript.config
 	);
 
 	write_parent_tsconfig(
@@ -72,8 +69,9 @@ const last_warned = new Map();
  * @param {string} parent
  * @param {any} config
  * @param {any} example
+ * @param {(input: any) => any} [transform] TODO get rid of this
  */
-function write_parent_tsconfig(root, dir, parent, config, example) {
+function write_parent_tsconfig(root, dir, parent, config, example, transform) {
 	const out_dir = path.join(root, `node_modules/${parent}`);
 	const out_file = path.join(out_dir, 'tsconfig.json');
 
@@ -85,7 +83,7 @@ function write_parent_tsconfig(root, dir, parent, config, example) {
 			Object.entries(config.compilerOptions?.paths).map(([k, v]) => [k, v.map(relative)])
 		);
 
-	const resolved = {
+	let resolved = {
 		compilerOptions: {
 			...config.compilerOptions,
 			paths,
@@ -94,6 +92,8 @@ function write_parent_tsconfig(root, dir, parent, config, example) {
 		include: config.include?.map(relative),
 		exclude: config.exclude?.map(relative)
 	};
+
+	resolved = transform?.(resolved) ?? resolved;
 
 	write_if_changed(out_file, JSON.stringify(resolved, null, '\t'));
 
@@ -112,6 +112,7 @@ function validate_resolved_config(dir, parent, config, example) {
 	const user_config = load_user_tsconfig(dir);
 	if (!user_config) return;
 
+	// skip validation if the file wasn't written to since the last check
 	const last_mtime = last_warned.get(user_config.file) ?? -1;
 	const mtime = fs.statSync(user_config.file).mtimeMs;
 	if (last_mtime >= mtime) return;
