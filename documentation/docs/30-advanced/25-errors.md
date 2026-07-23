@@ -122,7 +122,7 @@ Errors that occur during `load` or rendering (for example inside a component's `
 
 ## Responses
 
-If an error occurs inside `handle` or inside a [`+server.js`](routing#server) request handler, SvelteKit will render the root [`+error.svelte`](routing#error) component for document requests that accept HTML, while clients that prefer JSON will receive a JSON representation of the error object. If the error page cannot be rendered, SvelteKit will use the fallback error page.
+If an error occurs inside `handle` or inside a [`+server.js`](routing#server) request handler, SvelteKit will render the root [`+error.svelte`](routing#error) component for document requests that accept HTML, while requests that prefer JSON receive a JSON representation of the error object. If the error page cannot be rendered, SvelteKit will use the fallback error page.
 
 You can customise the fallback error page by adding a `src/error.html` file:
 
