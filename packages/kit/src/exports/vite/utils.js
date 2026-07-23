@@ -162,6 +162,7 @@ const remote_module_cache = new Map();
  * @returns {boolean}
  */
 export function is_remote_module(id) {
+	id = posixify(id);
 	if (!remote_module_pattern.test(id)) return false;
 	if (!id.includes('node_modules')) return true;
 

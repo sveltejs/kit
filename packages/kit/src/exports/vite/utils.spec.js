@@ -81,6 +81,7 @@ test('recognizes remote modules', () => {
 	try {
 		expect(is_remote_module(path.join(temp, 'src', 'remote.js'))).toBe(true);
 		expect(is_remote_module(path.join(temp, 'src', 'remotely.js'))).toBe(false);
+		expect(is_remote_module('C:\\app\\src\\remote.js')).toBe(true);
 
 		const plain = path.join(temp, 'node_modules', 'plain');
 		write_package_json(plain, {
