@@ -3,9 +3,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import ts from 'typescript';
 import { styleText } from 'node:util';
-import { posixify } from '../../utils/os.js';
-import { read_package_imports, normalize_import_value } from '../../utils/imports.js';
-import { write_if_changed } from './utils.js';
+import { posixify } from '../../../utils/os.js';
+import { read_package_imports, normalize_import_value } from '../../../utils/imports.js';
+import { write_if_changed } from '../utils.js';
 
 /**
  * Generates the tsconfig that the user's tsconfig inherits from.

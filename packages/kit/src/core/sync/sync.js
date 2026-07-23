@@ -1,7 +1,7 @@
 import path from 'node:path';
 import create_manifest_data from './create_manifest_data/index.js';
 import { write_client_manifest } from './write_client_manifest.js';
-import { write_tsconfig } from './write_tsconfig.js';
+import { write_tsconfig } from './write_tsconfig/index.js';
 import { write_types, write_all_types } from './write_types/index.js';
 import { write_ambient } from './write_ambient.js';
 import { write_non_ambient } from './write_non_ambient.js';

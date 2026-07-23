@@ -1,6 +1,6 @@
 import { assert, expect, test } from 'vitest';
 import { validate_config } from '../config/index.js';
-import { get_tsconfig } from './write_tsconfig.js';
+import { get_tsconfig } from './write_tsconfig/index.js';
 
 test('Creates tsconfig path aliases from kit.alias', () => {
 	const { kit } = validate_config({
