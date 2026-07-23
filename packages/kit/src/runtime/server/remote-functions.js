@@ -384,6 +384,7 @@ export async function collect_remote_data(data, event, state, options) {
 		const drain = () => {
 			for (const [remote_key, { internals, fn }] of explicit) {
 				explicit.delete(remote_key);
+				if (processed.has(remote_key)) continue;
 				processed.add(remote_key);
 
 				// there were explicit refreshes/reconnects (via `refresh()`/`set()`/`reconnect()`),
