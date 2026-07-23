@@ -40,6 +40,8 @@ import { server_data_serializer } from './page/data_serializer.js';
 import { get_remote_id, handle_remote_call } from './remote-functions.js';
 import { record_span } from '../telemetry/record_span.js';
 import { otel } from '../telemetry/otel.js';
+import { get_status } from '../../utils/error.js';
+import { negotiate } from '../../utils/http.js';
 
 /** @type {import('types').RequiredResolveOptions['transformPageChunk']} */
 const default_transform = ({ html }) => html;
@@ -296,6 +298,33 @@ export async function internal_respond(request, options, manifest, state) {
 		preload: default_preload
 	};
 
+	/** @param {unknown} error */
+	async function fatal_error(error) {
+		if (
+			state.depth === 0 &&
+			!state.prerendering &&
+			!is_data_request &&
+			!is_route_resolution_request &&
+			!remote_id &&
+			!non_html_fetch_destinations.has(request.headers.get('sec-fetch-dest') ?? '') &&
+			negotiate(request.headers.get('accept') || 'text/html', ['application/json', 'text/html']) ===
+				'text/html'
+		) {
+			return await respond_with_error({
+				event,
+				event_state,
+				options,
+				manifest,
+				state,
+				status: get_status(error),
+				error,
+				resolve_opts
+			});
+		}
+
+		return await handle_fatal_error(event, event_state, options, error);
+	}
+
 	/** @type {import('types').TrailingSlash} */
 	let trailing_slash = 'never';
 
@@ -339,7 +368,7 @@ export async function internal_respond(request, options, manifest, state) {
 				statusText: response.statusText
 			});
 		} catch (error) {
-			return await handle_fatal_error(event, event_state, options, error);
+			return await fatal_error(error);
 		}
 	}
 
@@ -379,7 +408,7 @@ export async function internal_respond(request, options, manifest, state) {
 				event.params = result.params;
 			}
 		} catch (e) {
-			return await handle_fatal_error(event, event_state, options, e);
+			return await fatal_error(e);
 		}
 	}
 
@@ -461,10 +490,10 @@ export async function internal_respond(request, options, manifest, state) {
 				add_cookies_to_headers(response.headers, new_cookies.values());
 				return response;
 			} catch (err) {
-				return await handle_fatal_error(event, event_state, options, err);
+				return await fatal_error(err);
 			}
 		}
-		return await handle_fatal_error(event, event_state, options, e);
+		return await fatal_error(e);
 	}
 
 	async function handle() {
@@ -802,7 +831,7 @@ export async function internal_respond(request, options, manifest, state) {
 			// and I don't even know how to describe it. need to investigate at some point
 
 			// HttpError from endpoint can end up here - TODO should it be handled there instead?
-			return await handle_fatal_error(event, event_state, options, e);
+			return await fatal_error(e);
 		} finally {
 			event.cookies.set = () => {
 				throw new Error('Cannot use `cookies.set(...)` after the response has been generated');

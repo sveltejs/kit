@@ -592,7 +592,7 @@ test.describe('Errors', () => {
 
 			expect(res.status()).toBe(401);
 			expect(await res.text()).toContain(
-				'This is the static error page with the following message: You shall not pass'
+				'This is your custom error page saying: "<b>You shall not pass</b>"'
 			);
 		}
 
@@ -661,6 +661,21 @@ test.describe('Errors', () => {
 
 			expect(res.status()).toBe(500);
 			expect(await res.text()).toContain(
+				'This is your custom error page saying: "<b>Error in handle (500 Internal Error)</b>"'
+			);
+		}
+
+		// HTML subresource
+		{
+			const res = await request.get('/errors/error-in-handle', {
+				headers: {
+					accept: 'text/html',
+					'sec-fetch-dest': 'image'
+				}
+			});
+
+			expect(res.status()).toBe(500);
+			expect(await res.text()).toContain(
 				'This is the static error page with the following message: Error in handle'
 			);
 		}
@@ -693,7 +708,7 @@ test.describe('Errors', () => {
 
 			expect(res.status()).toBe(500);
 			expect(await res.text()).toContain(
-				'This is the static error page with the following message: Expected error in handle'
+				'This is your custom error page saying: "<b>Expected error in handle</b>"'
 			);
 		}
 

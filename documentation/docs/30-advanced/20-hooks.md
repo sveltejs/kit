@@ -61,7 +61,7 @@ export async function handle({ event, resolve }) {
 }
 ```
 
-Note that `resolve(...)` will never throw an error, it will always return a `Promise<Response>` with the appropriate status code. If an error is thrown elsewhere during `handle`, it is treated as fatal, and SvelteKit will respond with a JSON representation of the error or a fallback error page — which can be customised via `src/error.html` — depending on the `Accept` header. You can read more about error handling [here](errors).
+Note that `resolve(...)` will never throw an error, it will always return a `Promise<Response>` with the appropriate status code. If an error is thrown elsewhere during `handle`, SvelteKit will render the root [`+error.svelte`](routing#error) component for document requests that accept HTML, while clients that prefer JSON will receive a JSON representation of the error. If the error page cannot be rendered, SvelteKit will use a fallback error page, which can be customised via `src/error.html`. You can read more about error handling [here](errors).
 
 ### locals
 

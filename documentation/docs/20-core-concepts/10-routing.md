@@ -320,7 +320,7 @@ The first argument to `Response` can be a [`ReadableStream`](https://developer.m
 
 You can use the [`error`](@sveltejs-kit#error), [`redirect`](@sveltejs-kit#redirect) and [`json`](@sveltejs-kit#json) methods from `@sveltejs/kit` for convenience (but you don't have to).
 
-If an error is thrown (either `error(...)` or an unexpected error), the response will be a JSON representation of the error or a fallback error page — which can be customised via `src/error.html` — depending on the `Accept` header. The [`+error.svelte`](#error) component will _not_ be rendered in this case. You can read more about error handling [here](errors).
+If an error is thrown (either `error(...)` or an unexpected error), the root [`+error.svelte`](#error) component will be rendered for document requests that accept HTML, while clients that prefer JSON will receive a JSON representation of the error. If the error page cannot be rendered, SvelteKit will use a fallback error page, which can be customised via `src/error.html`. You can read more about error handling [here](errors).
 
 > [!NOTE] When creating an `OPTIONS` handler, note that Vite will inject `Access-Control-Allow-Origin` and `Access-Control-Allow-Methods` headers — these will not be present in production unless you add them.
 
