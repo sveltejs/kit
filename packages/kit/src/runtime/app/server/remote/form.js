@@ -8,7 +8,7 @@ import {
 	deep_set,
 	normalize_issue,
 	flatten_issues,
-	validate_field_name
+	parse_form_field_name
 } from '../../../form-utils.js';
 import { get_cache, get_implicit_lookup, run_remote_function } from './shared.js';
 import { ValidationError } from '@sveltejs/kit/internal';
@@ -268,21 +268,17 @@ function handle_issues(output, issues, form_data, form_id) {
 	if (form_data) {
 		output.input = {};
 
-		for (let key of form_data.keys()) {
+		for (const field_name of form_data.keys()) {
 			// redact sensitive fields
-			if (/^[.\]]?_/.test(key)) continue;
+			if (/^[.\]]?_/.test(field_name)) continue;
 
-			const values = form_data.getAll(key).filter((value) => typeof value === 'string');
-			key = validate_field_name(form_id, key);
-
-			const is_array = key.endsWith('[]');
-
-			if (is_array) key = key.slice(0, -2);
+			const values = form_data.getAll(field_name).filter((value) => typeof value === 'string');
+			const field = parse_form_field_name(form_id, field_name);
 
 			set_nested_value(
 				/** @type {Record<string, any>} */ (output.input),
-				key,
-				is_array ? values : values[0]
+				field,
+				field.is_array ? values : values[0]
 			);
 		}
 	}

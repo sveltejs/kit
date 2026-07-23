@@ -10,33 +10,60 @@ import { SvelteKitError } from '@sveltejs/kit/internal';
 const decoder = new TextDecoder();
 
 /**
- * Sets a value in a nested object using a path string, mutating the original object
+ * Sets a parsed form field value in a nested object, mutating the original object.
  * @param {Record<string, any>} object
- * @param {string} path_string
+ * @param {{ name: string; type: 'number' | 'boolean' | null }} field
  * @param {any} value
  */
-export function set_nested_value(object, path_string, value) {
-	if (path_string.startsWith('n:')) {
-		path_string = path_string.slice(2);
-		value = value === '' ? undefined : parseFloat(value);
-	} else if (path_string.startsWith('b:')) {
-		path_string = path_string.slice(2);
-		value = value === 'on';
-	}
-
-	deep_set(object, split_path(path_string), value);
+export function set_nested_value(object, field, value) {
+	deep_set(object, split_path(field.name), coerce_form_value(field.type, value));
 }
 
 /**
- * Validates that an input's name starts with the form's id, and strips the prefix.
+ * Separates a form field's path from the metadata encoded in its name.
  * @param {string} form_id
  * @param {string} name
+ * @returns {{ name: string; type: 'number' | 'boolean' | null; is_array: boolean }}
  */
-export function validate_field_name(form_id, name) {
+export function parse_form_field_name(form_id, name) {
 	if (!name.endsWith('/' + form_id)) {
 		throw new Error(`Form contained a field that wasn't created with form.fields.as(...): ${name}`);
 	}
-	return name.slice(0, -form_id.length - 1);
+
+	return parse_form_field_path(name.slice(0, -form_id.length - 1));
+}
+
+/**
+ * @param {string} name
+ */
+function parse_form_field_path(name) {
+	/** @type {'number' | 'boolean' | null} */
+	let type = null;
+
+	if (name.startsWith('n:')) {
+		name = name.slice(2);
+		type = 'number';
+	} else if (name.startsWith('b:')) {
+		name = name.slice(2);
+		type = 'boolean';
+	}
+
+	const is_array = name.endsWith('[]');
+	if (is_array) name = name.slice(0, -2);
+
+	return { name, type, is_array };
+}
+
+/**
+ * @param {'number' | 'boolean' | null} type
+ * @param {any} value
+ * @returns {any}
+ */
+function coerce_form_value(type, value) {
+	if (Array.isArray(value)) return value.map((value) => coerce_form_value(type, value));
+	if (type === 'number') return value === '' ? undefined : parseFloat(value);
+	if (type === 'boolean') return value === 'on';
+	return value;
 }
 
 /** Pass this to set_nested_value to delete the last part of the given path */
@@ -51,34 +78,25 @@ export function convert_formdata(form_id, data) {
 	/** @type {Record<string, any>} */
 	const result = {};
 
-	for (let key of data.keys()) {
+	for (const field_name of data.keys()) {
 		/** @type {any[]} */
-		let values = data.getAll(key);
+		const values = data.getAll(field_name);
 
-		key = validate_field_name(form_id, key);
-		const is_array = key.endsWith('[]');
-
-		if (is_array) key = key.slice(0, -2);
+		const field = parse_form_field_name(form_id, field_name);
 
 		// an empty `<input type="file">` will submit a non-existent file, bizarrely
-		values = values.filter(
+		const entries = values.filter(
 			(entry) => typeof entry === 'string' || entry.name !== '' || entry.size > 0
 		);
-		if (values.length === 0 && !is_array) continue;
+		if (entries.length === 0 && !field.is_array) continue;
 
-		if (key.startsWith('n:')) {
-			key = key.slice(2);
-			values = values.map((v) => (v === '' ? undefined : parseFloat(/** @type {string} */ (v))));
-		} else if (key.startsWith('b:')) {
-			key = key.slice(2);
-			values = values.map((v) => v === 'on');
+		if (entries.length > 1 && !field.is_array) {
+			throw new Error(
+				`Form cannot contain duplicated keys — "${field.name}" has ${entries.length} values`
+			);
 		}
 
-		if (values.length > 1 && !is_array) {
-			throw new Error(`Form cannot contain duplicated keys — "${key}" has ${values.length} values`);
-		}
-
-		set_nested_value(result, key, is_array ? values : values[0]);
+		set_nested_value(result, field, field.is_array ? entries : entries[0]);
 	}
 
 	return result;
