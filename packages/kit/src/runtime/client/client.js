@@ -1167,12 +1167,12 @@ function diff_search_params(old_url, new_url) {
 	const changed = new Set([...old_url.searchParams.keys(), ...new_url.searchParams.keys()]);
 
 	for (const key of changed) {
-		const old_values = old_url.searchParams.getAll(key);
-		const new_values = new_url.searchParams.getAll(key);
+		const old_values = old_url.searchParams.getAll(key).sort();
+		const new_values = new_url.searchParams.getAll(key).sort();
 
 		if (
-			old_values.every((value) => new_values.includes(value)) &&
-			new_values.every((value) => old_values.includes(value))
+			old_values.length === new_values.length &&
+			old_values.every((value, i) => value === new_values[i])
 		) {
 			changed.delete(key);
 		}
