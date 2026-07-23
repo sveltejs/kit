@@ -521,6 +521,10 @@ export async function internal_respond(request, options, manifest, state) {
 													response.headers.set('x-sveltekit-routeid', encodeURI(event.route.id));
 												}
 
+												if (!state.prerendering && __SVELTEKIT_APP_VERSION_CHECKS_ENABLED__) {
+													response.headers.set('x-sveltekit-version', options.version);
+												}
+
 												resolve_span.setAttributes({
 													'http.response.status_code': response.status,
 													'http.response.body.size':
@@ -558,6 +562,10 @@ export async function internal_respond(request, options, manifest, state) {
 					const value = response.headers.get(key);
 					if (value) headers.set(key, value);
 				}
+
+				// preserve the version header so a 304'd data request still tells the client the current version
+				const version = response.headers.get('x-sveltekit-version');
+				if (version) headers.set('x-sveltekit-version', version);
 
 				for (const cookie of response.headers.getSetCookie()) {
 					headers.append('set-cookie', cookie);

@@ -25,16 +25,43 @@ export const updated = new (class Updated {
 	check = async () => false;
 })();
 
-if (!DEV && BROWSER) {
+/**
+ * Internal: mark `updated.current` as `true` if the given version differs.
+ * Called from the server response header path. No-op unless version checks
+ * are enabled (assigned below). Not exported on the public `updated` object.
+ * @type {(new_version: string | null) => void}
+ */
+export let notify_version = () => {};
+
+if (!DEV && BROWSER && __SVELTEKIT_APP_VERSION_CHECKS_ENABLED__) {
 	const interval = __SVELTEKIT_APP_VERSION_POLL_INTERVAL__;
 
-	/** @type {number} */
+	/** @type {number | undefined} */
 	let timeout;
+
+	/** True while a version check request is in-flight, to prevent concurrent checks */
+	let checking = false;
+
+	/**
+	 * Mark `updated.current` as `true` if the given version differs from the one
+	 * the app was hydrated with. Called from the server response header path.
+	 * Does NOT reset the poll timer — unlike `check()`, this is a passive observation
+	 * from a single server instance's response, not an explicit version check. The
+	 * poll timer continues on its original schedule as a backstop.
+	 * @param {string | null} new_version
+	 */
+	notify_version = (new_version) => {
+		if (new_version && new_version !== version) {
+			updated.current = true;
+		}
+	};
 
 	/** @type {() => Promise<boolean>} */
 	async function check() {
-		window.clearTimeout(timeout);
+		if (checking) return updated.current;
+		checking = true;
 
+		window.clearTimeout(timeout);
 		if (interval) timeout = window.setTimeout(check, interval);
 
 		try {
@@ -59,6 +86,8 @@ if (!DEV && BROWSER) {
 			return new_update;
 		} catch {
 			return false;
+		} finally {
+			checking = false;
 		}
 	}
 
