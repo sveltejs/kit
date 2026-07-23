@@ -327,6 +327,7 @@ function has_correct_case(file, assets) {
 }
 
 /**
+ * Invalidates a module in all environments.
  * @param {ViteDevServer} server
  * @param {string} id
  * @returns {void}
