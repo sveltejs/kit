@@ -18,11 +18,6 @@ export default defineConfig({
 			experimental: {
 				remoteFunctions: true,
 				forkPreloads: true
-			},
-			typescript: {
-				config(config) {
-					config.include = ['**', '../unit-test/*.js', '../test/*.js', '../playwright.config.js'];
-				}
 			}
 		})
 	],
