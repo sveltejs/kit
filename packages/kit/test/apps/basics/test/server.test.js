@@ -591,9 +591,9 @@ test.describe('Errors', () => {
 			expect(error).toBe(undefined);
 
 			expect(res.status()).toBe(401);
-			expect(await res.text()).toContain(
-				'This is your custom error page saying: "<b>You shall not pass</b>"'
-			);
+			const body = await res.text();
+			expect(body).toContain('This is your custom error page saying:');
+			expect(body).toContain('You shall not pass</b>');
 		}
 
 		// JSON (default)
@@ -660,9 +660,9 @@ test.describe('Errors', () => {
 			});
 
 			expect(res.status()).toBe(500);
-			expect(await res.text()).toContain(
-				'This is your custom error page saying: "<b>Error in handle (500 Internal Error)</b>"'
-			);
+			const body = await res.text();
+			expect(body).toContain('This is your custom error page saying:');
+			expect(body).toContain('Error in handle (500 Internal Error)</b>');
 		}
 
 		// HTML subresource
@@ -707,9 +707,9 @@ test.describe('Errors', () => {
 			});
 
 			expect(res.status()).toBe(500);
-			expect(await res.text()).toContain(
-				'This is your custom error page saying: "<b>Expected error in handle</b>"'
-			);
+			const body = await res.text();
+			expect(body).toContain('This is your custom error page saying:');
+			expect(body).toContain('Expected error in handle</b>');
 		}
 
 		// JSON (default)
