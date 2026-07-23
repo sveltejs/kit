@@ -250,12 +250,14 @@ function generate_app_types(manifest_data, config, dir) {
 }
 
 /**
- * Writes non-ambient declarations to the output directory
+ * Writes `node_modules/$app/types/index.d.ts`. This file contains
+ * declarations for `$app/types` and `svelte/elements`, and
+ * imports `env.ts` which declares `$app/env/(public|private)`
  * @param {import('types').ValidatedKitConfig} config
  * @param {import('types').ManifestData} manifest_data
  * @param {string} root
  */
-export function write_non_ambient(config, manifest_data, root) {
+export function write_app_types(config, manifest_data, root) {
 	const dir = path.join(root, 'node_modules/$app/types');
 
 	const content = [

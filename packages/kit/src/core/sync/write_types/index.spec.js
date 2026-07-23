@@ -6,7 +6,7 @@ import { assert, describe, expect, test } from 'vitest';
 import { rimraf } from '../../../utils/filesystem.js';
 import create_manifest_data from '../create_manifest_data/index.js';
 import { tweak_types, write_all_types } from './index.js';
-import { write_non_ambient } from '../write_non_ambient.js';
+import { write_app_types } from '../write_app_types.js';
 import { validate_config } from '../../config/index.js';
 import { write_env } from '../write_env.js';
 
@@ -33,7 +33,7 @@ function run_test(dir) {
 	});
 
 	write_all_types(initial, manifest, root);
-	write_non_ambient(initial.kit, manifest, root);
+	write_app_types(initial.kit, manifest, root);
 	write_env('', {}, root);
 }
 
