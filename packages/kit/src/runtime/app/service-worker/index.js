@@ -14,10 +14,6 @@ export const self = /** @type {ServiceWorkerGlobalScope} */ (
 	/** @type {unknown} */ (globalThis.self)
 );
 
-self.addEventListener('fetch', (e) => {
-	e.respondWith;
-});
-
 if (DEV) {
 	if (
 		typeof ServiceWorkerGlobalScope === 'undefined' ||
