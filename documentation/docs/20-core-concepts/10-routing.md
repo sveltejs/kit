@@ -163,7 +163,7 @@ If the error occurs inside a `load` function in `+layout(.server).js`, the close
 
 If no route can be found (404), `src/routes/+error.svelte` (or the default error page, if that file does not exist) will be used.
 
-> [!NOTE] `+error.svelte` is _not_ used when an error occurs inside [`handle`](hooks#handle) or a [+server.js](#server) request handler.
+> [!NOTE] When an error occurs inside [`handle`](hooks#handle) or a [+server.js](#server) request handler, the root `+error.svelte` is rendered if the request accepts HTML, rather than the closest error boundary.
 
 You can read more about error handling [here](errors).
 
