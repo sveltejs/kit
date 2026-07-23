@@ -1308,3 +1308,60 @@ Note that some properties of `RequestEvent` are different inside remote function
 ## Redirects
 
 Inside `query`, `form` and `prerender` functions it is possible to use the [`redirect(...)`](@sveltejs-kit#redirect) function. It is *not* possible inside `command` functions, as you should avoid redirecting here. (If you absolutely have to, you can return a `{ redirect: location }` object and deal with it in the client.)
+
+This matters when you share helpers that call `redirect()`, for example an auth helper built with [`getRequestEvent`]($app-server#getRequestEvent):
+
+```ts
+/// file: auth.remote.js
+import { redirect } from '@sveltejs/kit';
+import { getRequestEvent } from '$app/server';
+
+export function requireLogin() {
+	const { locals, url } = getRequestEvent();
+
+	if (!locals.user) {
+		const location = new URL('/login', url.origin);
+		location.searchParams.set('redirectTo', url.pathname);
+		redirect(307, location);
+	}
+
+	return locals.user;
+}
+```
+
+That helper works inside `query` and `form`, but calling it from a `command` will fail because redirects are rejected there. Catch the redirect on the server with [`isRedirect`](@sveltejs-kit#isRedirect) and return a result the client can handle with [`goto`]($app-navigation#goto):
+
+```ts
+/// file: save.remote.js
+import { isRedirect } from '@sveltejs/kit';
+import { command } from '$app/server';
+import { requireLogin } from './auth.remote';
+
+export const save = command(async (data) => {
+	try {
+		requireLogin();
+	} catch (e) {
+		if (isRedirect(e)) {
+			return { error: 'UNAUTHENTICATED', location: e.location };
+		}
+		throw e;
+	}
+
+	// ...
+});
+```
+
+```ts
+/// file: +page.svelte
+<script>
+	import { goto } from '$app/navigation';
+	import { save } from './save.remote';
+
+	async function submit(data) {
+		const response = await save(data);
+		if (response?.error === 'UNAUTHENTICATED') {
+			goto(response.location);
+		}
+	}
+</script>
+```
