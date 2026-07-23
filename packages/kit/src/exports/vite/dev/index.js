@@ -729,7 +729,6 @@ function has_correct_case(file, assets) {
  */
 export function invalidate_module(server, id) {
 	for (const environment in server.environments) {
-		// Invalidate the manifest data module so it reloads with new routes/files
 		const module = server.environments[environment].moduleGraph.getModuleById(id);
 		if (module) {
 			server.environments[environment].moduleGraph.invalidateModule(module);
