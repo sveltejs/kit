@@ -483,8 +483,8 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, s
 	const env = loadEnv(vite_config.mode, svelte_config.kit.env.dir, '');
 	const emulator = await svelte_config.kit.adapter?.emulate?.();
 
-	/** @type {boolean | void} */
-	let manifest_created;
+	/** @type {Promise<void> | undefined} */
+	let init_manifest;
 
 	return () => {
 		const serve_static_middleware = vite.middlewares.stack.find(
