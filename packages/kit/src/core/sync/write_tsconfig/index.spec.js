@@ -1,6 +1,6 @@
 import { assert, expect, test } from 'vitest';
-import { validate_config } from '../config/index.js';
-import { get_tsconfig } from './write_tsconfig/index.js';
+import { validate_config } from '../../config/index.js';
+import { get_tsconfig } from './index.js';
 
 test('Creates tsconfig path aliases from kit.alias', () => {
 	const { kit } = validate_config({
@@ -26,8 +26,8 @@ test('Creates tsconfig path aliases from kit.alias', () => {
 		key: ['../value'],
 		'key/*': ['../some/other/value/*'],
 		keyToFile: ['../path/to/file.ts'],
-		$routes: ['./types/src/routes'],
-		'$routes/*': ['./types/src/routes/*']
+		$routes: ['../.svelte-kit/types/src/routes'],
+		'$routes/*': ['../.svelte-kit/types/src/routes/*']
 	});
 });
 
@@ -36,7 +36,7 @@ test('Creates tsconfig path aliases from package.json import map', () => {
 	const { compilerOptions } = get_tsconfig(
 		'dir/tsconfig.json',
 		kit,
-		import.meta.dirname + '/write_tsconfig_test'
+		import.meta.dirname + '/test-app'
 	);
 
 	// No `#`-prefixed path aliases because the package.json at the test cwd
