@@ -1250,12 +1250,12 @@ declare module '@sveltejs/kit' {
 		shallow?: boolean;
 		/**
 		 * If `true`, preserves the browser's scroll position.
-		 * @default false
+		 * @default false, or true when `shallow` is true
 		 */
 		noScroll?: boolean;
 		/**
 		 * If `true`, keeps the currently focused element focused.
-		 * @default false
+		 * @default false, or true when `shallow` is true
 		 */
 		keepFocus?: boolean;
 		/**
@@ -3285,17 +3285,13 @@ declare module '$app/navigation' {
 	 *
 	 * @deprecated Use `goto(url, { state, shallow: true })` instead.
 	 * */
-	export function pushState(url: string | URL, state: App.PageState, options?: {
-		persist?: boolean | undefined;
-	}): Promise<void>;
+	export function pushState(url: string | URL, state: App.PageState): Promise<void>;
 	/**
 	 * Programmatically replace the current history entry with the given `page.state`. Used for [shallow routing](https://svelte.dev/docs/kit/shallow-routing).
 	 *
 	 * @deprecated Use `goto(url, { state, shallow: true, replace: true })` instead.
 	 * */
-	export function replaceState(url: string | URL, state: App.PageState, options?: {
-		persist?: boolean | undefined;
-	}): Promise<void>;
+	export function replaceState(url: string | URL, state: App.PageState): Promise<void>;
 	type MaybePromise<T> = T | Promise<T>;
 
 	export {};

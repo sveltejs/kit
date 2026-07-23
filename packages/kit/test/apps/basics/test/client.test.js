@@ -1952,6 +1952,51 @@ test.describe('Shallow routing', () => {
 		await expect(page.locator('p')).toHaveText('active: true');
 	});
 
+	test('Preserves shallow navigation options across history entries', async ({ page }) => {
+		await page.goto('/shallow-routing/push-state');
+		const input = page.locator('[data-id="options-focus"]');
+		const defaults = page.locator('[data-id="options-default"]');
+		const disabled = page.locator('[data-id="options-false"]');
+
+		await input.focus();
+		await page.evaluate(() => window.scrollTo(0, 500));
+		await defaults.click();
+
+		await expect(page).toHaveURL(/\?options=default$/);
+		await expect
+			.poll(() =>
+				page.evaluate(() => ({
+					focus: document.activeElement?.getAttribute('data-id'),
+					y: scrollY
+				}))
+			)
+			.toEqual({ focus: 'options-default', y: 500 });
+
+		await disabled.click();
+
+		await expect(page).toHaveURL(/\?options=false$/);
+		await expect
+			.poll(() => page.evaluate(() => ({ focus: document.activeElement?.tagName, y: scrollY })))
+			.toEqual({ focus: 'BODY', y: 0 });
+
+		await input.focus();
+		await page.evaluate(() => window.scrollTo(0, 700));
+		await page.goBack();
+		await expect(page).toHaveURL(/\?options=default$/);
+		await expect
+			.poll(() => page.evaluate(() => ({ focus: document.activeElement?.tagName, y: scrollY })))
+			.toEqual({ focus: 'BODY', y: 500 });
+
+		await input.focus();
+		await page.evaluate(() => window.scrollTo(0, 300));
+
+		await page.goForward();
+		await expect(page).toHaveURL(/\?options=false$/);
+		await expect
+			.poll(() => page.evaluate(() => ({ focus: document.activeElement?.tagName, y: scrollY })))
+			.toEqual({ focus: 'BODY', y: 700 });
+	});
+
 	test('Replaces state on the current URL', async ({ baseURL, page, clicknav }) => {
 		await page.goto('/shallow-routing/replace-state/b');
 		await clicknav('[href="/shallow-routing/replace-state"]');

@@ -1278,12 +1278,12 @@ export interface GotoOptions {
 	shallow?: boolean;
 	/**
 	 * If `true`, preserves the browser's scroll position.
-	 * @default false
+	 * @default false, or true when `shallow` is true
 	 */
 	noScroll?: boolean;
 	/**
 	 * If `true`, keeps the currently focused element focused.
-	 * @default false
+	 * @default false, or true when `shallow` is true
 	 */
 	keepFocus?: boolean;
 	/**

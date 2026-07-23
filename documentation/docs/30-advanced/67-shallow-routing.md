@@ -88,6 +88,16 @@ goto(url, {
 });
 ```
 
+Shallow navigations preserve the current scroll position and focused element by default. You can opt out of either behavior with `noScroll: false` or `keepFocus: false`:
+
+```js
+goto(url, {
+	shallow: true,
+	noScroll: false,
+	keepFocus: false
+});
+```
+
 > [!NOTE]
 > `page.state` is only populated after JavaScript loads, which can cause flickering UI. Use it carefully.
 

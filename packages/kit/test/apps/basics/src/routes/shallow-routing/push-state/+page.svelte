@@ -68,6 +68,17 @@
 	>end shallow</button
 >
 <button data-id="refresh" onclick={refreshAll}>refresh all</button>
+<div style="position: fixed; right: 0; bottom: 0">
+	<input data-id="options-focus" aria-label="focus target" />
+	<button data-id="options-default" onclick={() => goto('?options=default', { shallow: true })}
+		>default options</button
+	>
+	<button
+		data-id="options-false"
+		onclick={() => goto('?options=false', { shallow: true, noScroll: false, keepFocus: false })}
+		>disabled options</button
+	>
+</div>
 
 <p>active: {page.state.active ?? false}</p>
 <span data-id="shallow">
@@ -77,3 +88,4 @@
 </span>
 <span data-id="resolved">{resolved}</span>
 <span data-id="now">{data.now}</span>
+<div style="height: 2000px"></div>
