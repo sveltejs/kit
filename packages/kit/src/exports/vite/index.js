@@ -695,8 +695,8 @@ function kit({ svelte_config }) {
 						return dedent`
 							import ${s(posixify(server_instrumentation))};
 
-							const { respond } = await import(${s(sveltekit_dev_server_entry)});
-							export { respond };
+							const { fetch } = await import(${s(sveltekit_dev_server_entry)});
+							export { fetch };
 
 							import.meta.hot?.accept();
 						`;

@@ -259,7 +259,7 @@ export function dev(vite, vite_config, svelte_config, root, set_manifest_data) {
 				}
 
 				/** @type {{ fetch(request: Request): Promise<Response> }} */
-				const { fetch } = await vite.environments.ssr.runner.import(
+				const server_entry = await vite.environments.ssr.runner.import(
 					sveltekit_dev_internal_server_entry
 				);
 
@@ -267,7 +267,7 @@ export function dev(vite, vite_config, svelte_config, root, set_manifest_data) {
 					request.headers.set('x-sveltekit-remote-address', req.socket.remoteAddress);
 				}
 
-				const rendered = await fetch(request);
+				const rendered = await server_entry.fetch(request);
 
 				if (rendered.status === 404) {
 					// @ts-expect-error
