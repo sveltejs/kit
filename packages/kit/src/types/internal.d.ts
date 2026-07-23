@@ -646,7 +646,7 @@ export interface RemoteFormInternals extends BaseRemoteInternals {
 	 * For keyed (`form.for(key)`) instances: the id as the client computes it
 	 * (the key is JSON-stringified but not URI-encoded, unlike `id`)
 	 */
-	action_id?: string;
+	key?: string;
 	fn(body: Record<string, any>, meta: BinaryFormMeta, form_data: FormData | null): Promise<any>;
 }
 
@@ -700,8 +700,11 @@ export interface RequestState {
 		 */
 		implicit: null | Map<RemoteInternals, Record<string, () => MaybePromise<any>>>;
 		/**
-		 * Data that is explicitly included because of a `set(...)` or `refresh()`.
-		 * This is always awaited
+		 * Data that is explicitly included because of a `set(...)`, `refresh()` or
+		 * `reconnect()`. The stored function is invoked lazily at the end of the
+		 * request by `collect_remote_data`; if the query was already read (and thus
+		 * cached) earlier in the request, invoking it does no additional work. This
+		 * is always awaited and serialized.
 		 */
 		explicit: null | Map<
 			string,
@@ -736,8 +739,14 @@ export interface RequestState {
 	readonly is_in_remote_function: boolean;
 	readonly is_in_remote_form_or_command: boolean;
 	readonly is_in_remote_query: boolean;
+	readonly is_in_remote_prerender: boolean;
 	readonly is_in_render: boolean;
 	readonly is_in_universal_load: boolean;
+	/**
+	 * The event before `derive_remote_function_event` hid or stubbed properties.
+	 * Hooks like `handleValidationError` receive this so `url` etc. stay accessible
+	 */
+	readonly original_event?: RequestEvent;
 }
 
 export interface RequestStore {

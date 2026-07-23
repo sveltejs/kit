@@ -543,6 +543,28 @@ test.describe('Errors', () => {
 		}
 	});
 
+	test('returns a lightweight 404 for subresource requests', async ({ request }) => {
+		const response = await request.get('/errors/does-not-exist-subresource', {
+			headers: { 'sec-fetch-dest': 'image' }
+		});
+
+		expect(response.status()).toBe(404);
+		expect(await response.text()).toBe('Not Found');
+		expect(response.headers()['vary']).toContain('Sec-Fetch-Dest');
+	});
+
+	test('renders the error page for document and fetch requests', async ({ request }) => {
+		for (const destination of ['document', null, 'empty']) {
+			const response = await request.get(
+				'/errors/does-not-exist-subresource',
+				destination ? { headers: { 'sec-fetch-dest': destination } } : {}
+			);
+
+			expect(response.status()).toBe(404);
+			expect(await response.text()).toContain('This is your custom error page saying:');
+		}
+	});
+
 	test('stack traces are not fixed twice', async ({ page }) => {
 		await page.goto('/errors/stack-trace');
 		expect(await page.textContent('#message')).toBe(
@@ -787,6 +809,22 @@ test.describe('Routing', () => {
 
 		const data = await response.json();
 		expect(data).toEqual({ surprise: 'lol' });
+	});
+
+	test('falls back to page actions if sibling endpoint has no POST handler', async ({
+		baseURL,
+		request
+	}) => {
+		const response = await request.post('/endpoint-output/actions-with-endpoint', {
+			form: {},
+			headers: {
+				accept: 'application/json',
+				origin: new URL(baseURL).origin
+			}
+		});
+
+		expect(response.status()).toBe(200);
+		expect((await response.json()).type).toBe('success');
 	});
 
 	test('Vite trailing slash redirect for prerendered pages retains URL query string', async ({

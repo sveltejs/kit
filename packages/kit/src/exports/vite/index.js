@@ -7,11 +7,13 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { styleText } from 'node:util';
+import MagicString from 'magic-string';
 import { loadEnv } from 'vite';
 import { exactRegex, prefixRegex } from 'rolldown/filter';
 
 import { copy, mkdirp, read, resolve_entry, rimraf } from '../../utils/filesystem.js';
 import { posixify } from '../../utils/os.js';
+import { to_fs } from '../../utils/vite.js';
 import {
 	create_sveltekit_env,
 	create_sveltekit_env_public,
@@ -55,7 +57,6 @@ import {
 	sveltekit_env_private,
 	sveltekit_env_service_worker,
 	sveltekit_manifest_data,
-	sveltekit_server,
 	sveltekit_env_public_client,
 	sveltekit_env_public_server
 } from './module_ids.js';
@@ -474,22 +475,27 @@ function kit({ svelte_config }) {
 					}
 				};
 
-				// treat .remote.js files as empty for the purposes of prebundling
+				// externalize .remote.js files to stop dependency tracing during prebundling
 				if (kit.experimental.remoteFunctions) {
 					// @ts-expect-error optimizeDeps is already set above
 					new_config.optimizeDeps.rolldownOptions ??= {};
 					// @ts-expect-error
 					new_config.optimizeDeps.rolldownOptions.plugins ??= [];
 					// @ts-expect-error
-					new_config.optimizeDeps.rolldownOptions.plugins.push({
-						name: 'vite-plugin-sveltekit-setup:optimize-remote-functions',
-						load: {
-							filter: { id: remote_module_pattern },
-							handler() {
-								return '';
+					new_config.optimizeDeps.rolldownOptions.plugins.push(
+						/** @type {Rolldown.Plugin} */ ({
+							name: 'vite-plugin-sveltekit-setup:optimize-remote-functions',
+							resolveId: {
+								filter: { id: remote_module_pattern },
+								async handler(id, importer) {
+									const resolved = await this.resolve(id, importer, { skipSelf: true });
+									if (!resolved) return { id, external: true };
+									// a servable /@fs url; 'absolute' stops rolldown relativizing it in the deps bundle
+									return { id: to_fs(resolved.id), external: 'absolute' };
+								}
 							}
-						}
-					});
+						})
+					);
 				}
 
 				const define = {
@@ -661,8 +667,7 @@ function kit({ svelte_config }) {
 					exactRegex(sveltekit_env_public_client),
 					exactRegex(sveltekit_env_public_server),
 					exactRegex(sveltekit_env_service_worker),
-					exactRegex(sveltekit_manifest_data),
-					exactRegex(sveltekit_server)
+					exactRegex(sveltekit_manifest_data)
 				]
 			},
 			handler(id) {
@@ -929,23 +934,25 @@ function kit({ svelte_config }) {
 					// an ssrLoadModule during dev. During a link preload, the module can be mistakenly
 					// loaded and transformed twice and the first time all its exports would be undefined
 					// triggering a dev server error. By adding a microtask we ensure that the module is fully loaded
+					const ms = new MagicString(code);
 
 					// Extra newlines to prevent syntax errors around missing semicolons or comments
-					code +=
+					ms.append(
 						'\n\n' +
-						dedent`
-					import * as $$_self_$$ from './${path.basename(id)}';
-					import { init_remote_functions as $$_init_$$ } from '@sveltejs/kit/internal/server';
+							dedent`
+								import * as $$_self_$$ from './${path.basename(id)}';
+								import { init_remote_functions as $$_init_$$ } from '@sveltejs/kit/internal/server';
 
-					${dev_server ? 'await Promise.resolve()' : ''}
+								${dev_server ? 'await Promise.resolve()' : ''}
 
-					$$_init_$$($$_self_$$, ${s(file)}, ${s(remote.hash)});
+								$$_init_$$($$_self_$$, ${s(file)}, ${s(remote.hash)});
 
-					for (const [name, fn] of Object.entries($$_self_$$)) {
-						fn.__.id = ${s(remote.hash)} + '/' + name;
-						fn.__.name = name;
-					}
-				`;
+								for (const [name, fn] of Object.entries($$_self_$$)) {
+									fn.__.id = ${s(remote.hash)} + '/' + name;
+									fn.__.name = name;
+								}
+							`
+					);
 
 					// Emit a dedicated entry chunk for this remote in SSR builds (prod only)
 					if (!dev_server) {
@@ -960,7 +967,10 @@ function kit({ svelte_config }) {
 						}
 					}
 
-					return code;
+					return {
+						code: ms.toString(),
+						map: ms.generateMap({ hires: 'boundary' })
+					};
 				}
 
 				// For the client, read the exports and create a new module that only contains fetch functions with the correct metadata
@@ -1010,7 +1020,8 @@ function kit({ svelte_config }) {
 				}
 
 				return {
-					code: result
+					code: result,
+					map: null
 				};
 			}
 		}

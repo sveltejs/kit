@@ -305,6 +305,19 @@ export async function render_response({
 		head.add_style(style, attributes);
 	}
 
+	/**
+	 * see the `output.linkHeaderPreload` option for details on why we have multiple options here
+	 * @param {string} path
+	 * @param {string[]} attributes
+	 */
+	const add_preload = (path, attributes) => {
+		if (options.link_header_preload && !state.prerendering) {
+			link_headers.add(`<${encodeURI(path)}>; ${attributes.join('; ')}; nopush`);
+		} else {
+			head.add_link_tag(path, attributes);
+		}
+	};
+
 	for (const dep of stylesheets) {
 		const path = prefixed(dep);
 
@@ -329,18 +342,7 @@ export async function render_response({
 		if (resolve_opts.preload({ type: 'font', path })) {
 			const ext = dep.slice(dep.lastIndexOf('.') + 1);
 
-			if (options.link_header_preload && !state.prerendering) {
-				link_headers.add(
-					`<${encodeURI(path)}>; rel="preload"; as="font"; type="font/${ext}"; crossorigin; nopush`
-				);
-			} else {
-				head.add_link_tag(path, [
-					'rel="preload"',
-					'as="font"',
-					`type="font/${ext}"`,
-					'crossorigin'
-				]);
-			}
+			add_preload(path, ['rel="preload"', 'as="font"', `type="font/${ext}"`, 'crossorigin']);
 		}
 	}
 
@@ -369,23 +371,12 @@ export async function render_response({
 		}
 
 		if (!client.inline) {
-			const included_modulepreloads = Array.from(modulepreloads, (dep) => prefixed(dep)).filter(
-				(path) => resolve_opts.preload({ type: 'js', path })
-			);
+			for (const dep of modulepreloads) {
+				const path = prefixed(dep);
 
-			/** @type {(path: string) => void} */
-			let add_preload;
-
-			// see the output.preloadStrategy option for details on why we have multiple options here
-			if (options.link_header_preload && !state.prerendering) {
-				add_preload = (path) =>
-					link_headers.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
-			} else {
-				add_preload = (path) => head.add_link_tag(path, ['rel="modulepreload"']);
-			}
-
-			for (const path of included_modulepreloads) {
-				add_preload(path);
+				if (resolve_opts.preload({ type: 'js', path })) {
+					add_preload(path, ['rel="modulepreload"']);
+				}
 			}
 		}
 

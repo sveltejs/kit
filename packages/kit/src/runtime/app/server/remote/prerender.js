@@ -102,7 +102,8 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 				try {
 					// TODO adapters can provide prerendered data more efficiently than
 					// fetching from the public internet
-					const response = await fetch(new URL(url, event.url.origin).href);
+					// `request.url` rather than `event.url`, which throws inside queries
+					const response = await fetch(new URL(url, event.request.url).href);
 
 					if (!response.ok) {
 						throw new Error('Prerendered response not found');
@@ -126,7 +127,13 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 				return /** @type {Promise<any>} */ (state.prerendering.remote_responses.get(url));
 			}
 
-			const promise = run_remote_function(event, state, false, () => validate(arg), fn);
+			const promise = run_remote_function(
+				event,
+				{ ...state, is_in_remote_prerender: true },
+				false,
+				() => validate(arg),
+				fn
+			);
 
 			if (state.prerendering) {
 				state.prerendering.remote_responses.set(url, promise);

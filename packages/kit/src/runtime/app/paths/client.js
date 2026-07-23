@@ -1,8 +1,7 @@
 /** @import { AssetPath, RouteId, RouteIdWithSearchOrHash, Path, PathnameWithSearchOrHash, ResolvedPathname, RouteParams } from '$app/types' */
 /** @import { ResolveArgs } from './types.js' */
-import { base, assets, hash_routing } from './internal/client.js';
+import { base, assets, hash_routing, match_implementation } from './internal/client.js';
 import { resolve_route } from '../../../utils/routing.js';
-import { get_navigation_intent } from '../../client/client.js';
 import { DEV } from 'esm-env';
 
 /**
@@ -96,19 +95,6 @@ export function resolve(...args) {
  * @param {Path | URL | (string & {})} url
  * @returns {Promise<{ [K in RouteId]: { id: K; params: RouteParams<K>; } }[RouteId] | null>}
  */
-export async function match(url) {
-	if (typeof url === 'string') {
-		url = new URL(url, location.href);
-	}
-
-	const intent = await get_navigation_intent(url, false);
-
-	if (intent) {
-		return {
-			id: /** @type {RouteId} */ (intent.route.id),
-			params: intent.params
-		};
-	}
-
-	return null;
+export function match(url) {
+	return match_implementation(url);
 }

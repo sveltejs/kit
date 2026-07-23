@@ -1,3 +1,4 @@
+/** @import { RouteId } from '$app/types' */
 /** @import { RemoteFunctionDataNode, ServerNodesResponse, ServerRedirectNode } from 'types' */
 /** @import { NavigationIntent } from './types.js' */
 /** @import { RenderNode } from '../types.js' */
@@ -21,7 +22,7 @@ import {
 	scroll_state,
 	load_css
 } from './utils.js';
-import { base } from '$app/paths/internal/client';
+import { base, set_match_implementation } from '$app/paths/internal/client';
 import * as devalue from 'devalue';
 import {
 	HISTORY_INFO_KEY,
@@ -180,13 +181,13 @@ function blur_active_element(keepfocus) {
  * @param {Element | null} active_element
  */
 function reset_scroll_and_focus(url, scroll, keepfocus, active_element) {
-	/** @type {Element | null | ''} */
+	/** @type {Element | null} */
 	let deep_linked = null;
 
 	if (autoscroll) {
 		if (scroll) {
 			scrollTo(scroll.x, scroll.y);
-		} else if ((deep_linked = url.hash && document.getElementById(get_id(url)))) {
+		} else if ((deep_linked = get_hash_element(url))) {
 			deep_linked.scrollIntoView();
 		} else {
 			scrollTo(0, 0);
@@ -402,6 +403,23 @@ export const query_map = new Map();
  * A map of id -> payload -> live query internals for all active queries.
  */
 export const live_query_map = new Map();
+
+set_match_implementation(async (url) => {
+	if (typeof url === 'string') {
+		url = new URL(url, location.href);
+	}
+
+	const intent = await get_navigation_intent(url, false);
+
+	if (intent) {
+		return {
+			id: /** @type {RouteId} */ (intent.route.id),
+			params: intent.params
+		};
+	}
+
+	return null;
+});
 
 /**
  * @param {import('./types.js').SvelteKitApp} _app
@@ -1286,7 +1304,8 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 	/** @type {import('types').ServerNodesResponse | import('types').ServerRedirectNode | null} */
 	let server_data = null;
 	const url_changed = current.url ? id !== get_page_key(current.url) : false;
-	const route_changed = current.route ? route.id !== current.route.id : false;
+	// current.route is null after an error-page render, so a missing route counts as changed
+	const route_changed = !current.route || route.id !== current.route.id;
 	const search_params_changed = diff_search_params(current.url, url);
 
 	let parent_invalid = false;
@@ -3537,8 +3556,8 @@ function reset_focus(url, scroll = true) {
 
 		// Mimic the browsers' behaviour and set the sequential focus navigation
 		// starting point to the fragment identifier.
-		const id = get_id(url);
-		if (id && document.getElementById(id)) {
+		const element = get_hash_element(url);
+		if (element) {
 			const { x, y } = scroll_state();
 
 			// `element.focus()` doesn't work on Safari and Firefox Ubuntu so we need
@@ -3547,7 +3566,7 @@ function reset_focus(url, scroll = true) {
 				const history_state = history.state;
 
 				resetting_focus = true;
-				location.replace(new URL(`#${id}`, location.href));
+				location.replace(new URL(`#${element.id}`, location.href));
 
 				// Firefox has a bug that sets the history state to `null` so we need to
 				// restore it after. See https://bugzilla.mozilla.org/show_bug.cgi?id=1199924
@@ -3708,6 +3727,15 @@ function get_id(url) {
 	}
 
 	return decodeURIComponent(id);
+}
+
+/**
+ * @param {URL} url
+ * @returns {Element | null}
+ */
+function get_hash_element(url) {
+	const id = get_id(url);
+	return id ? document.getElementById(id) : null;
 }
 
 if (DEV) {
