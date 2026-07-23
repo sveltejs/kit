@@ -1215,7 +1215,8 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 	/** @type {import('types').ServerNodesResponse | import('types').ServerRedirectNode | null} */
 	let server_data = null;
 	const url_changed = current.url ? id !== get_page_key(current.url) : false;
-	const route_changed = current.route ? route.id !== current.route.id : false;
+	// current.route is null after an error-page render, so a missing route counts as changed
+	const route_changed = !current.route || route.id !== current.route.id;
 	const search_params_changed = diff_search_params(current.url, url);
 
 	let parent_invalid = false;
