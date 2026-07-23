@@ -408,7 +408,7 @@ export function form(id) {
 				if (
 					previous_submitter !== null &&
 					!Array.from(form_data.keys())
-						.map((name) => parse_form_key(action_id_without_key, name).name)
+						.map((k) => parse_form_key(action_id_without_key, k).name)
 						.includes(previous_submitter.name)
 				) {
 					set_nested_value(input, previous_submitter, undefined);
