@@ -1,4 +1,5 @@
 import path from 'node:path';
+import { posixify } from './os.js';
 
 /**
  * @param {import('types').RouteData[]} routes
@@ -48,7 +49,7 @@ export async function load_and_validate_params({ routes, params_path, root, load
 		throw new Error(`No matcher found for parameter '${names.values().next().value}'`);
 	}
 
-	const file = path.resolve(root, params_path);
+	const file = posixify(path.resolve(root, params_path));
 	const module = await load(file);
 
 	if (!module.params || typeof module.params !== 'object') {

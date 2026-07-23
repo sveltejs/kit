@@ -680,8 +680,8 @@ function kit({ svelte_config }) {
 							await load_and_validate_params({
 								routes: manifest_data.routes,
 								params_path: manifest_data.params,
-								root: to_fs(__SVELTEKIT_ROOT__),
-								load: (file) => loud_ssr_load_module(file)
+								root: __SVELTEKIT_ROOT__,
+								load: (file) => loud_ssr_load_module(to_fs(file))
 							});
 
 							export const mime_types = ${s(get_mime_lookup(manifest_data))};
