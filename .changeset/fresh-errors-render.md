@@ -1,5 +1,5 @@
 ---
-'@sveltejs/kit': minor
+'@sveltejs/kit': major
 ---
 
-feat: render the root `+error.svelte` page for `handle` and `+server.js` errors when the request expects HTML
+breaking: render the root `+error.svelte` page for `handle` and `+server.js` errors when the request expects HTML
