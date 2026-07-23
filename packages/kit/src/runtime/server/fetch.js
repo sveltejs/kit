@@ -2,7 +2,7 @@ import { parseSetCookie } from 'cookie';
 import { noop } from '../../utils/functions.js';
 import { respond } from './respond.js';
 import * as paths from '$app/paths/internal/server';
-import { read_implementation } from '__sveltekit/server';
+import { read_implementation } from './internal.js';
 import { has_prerendered_path } from './utils.js';
 
 /**

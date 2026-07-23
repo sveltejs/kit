@@ -5,6 +5,7 @@ await createBundle({
 	output: 'types/index.d.ts',
 	modules: {
 		'@sveltejs/kit': 'src/exports/public.d.ts',
+		'@sveltejs/kit/env': 'src/exports/env/index.js',
 		'@sveltejs/kit/hooks': 'src/exports/hooks/index.js',
 		'@sveltejs/kit/node': 'src/exports/node/index.js',
 		'@sveltejs/kit/vite': 'src/exports/vite/index.js',
@@ -16,7 +17,10 @@ await createBundle({
 		'$app/state': 'src/runtime/app/state/index.js'
 	},
 	include: ['src'],
-	exclude: ['**/test/**', '**/fixtures/**', '**/*.spec.js']
+	exclude: ['**/test/**', '**/fixtures/**', '**/*.spec.js'],
+	compilerOptions: {
+		stripInternal: true
+	}
 });
 
 // dts-buddy doesn't inline imports of module declaration in ambient-private.d.ts but also doesn't include them, resulting in broken types - guard against that

@@ -127,6 +127,47 @@ test.describe('hash based navigation', () => {
 		await expect(page.locator('button[id="button3"]')).toBeFocused();
 	});
 
+	test('does not look up an empty anchor id on navigation', async ({ page }) => {
+		await page.addInitScript(`
+			window.empty_id_lookups = [];
+			const get_element_by_id = Document.prototype.getElementById;
+			Document.prototype.getElementById = function (id) {
+				if (id === '') window.empty_id_lookups.push(new Error().stack);
+				return get_element_by_id.call(this, id);
+			};
+		`);
+
+		await page.goto('/');
+		await page.locator('a[href="/#/a"]').click();
+		await expect(page.locator('p')).toHaveText('a');
+
+		// on failure, the captured stack traces reveal which call site made the empty lookup
+		expect(await page.evaluate('window.empty_id_lookups')).toEqual([]);
+	});
+
+	test('does not look up an empty anchor id when resetting focus to a real anchor', async ({
+		page
+	}) => {
+		await page.addInitScript(`
+			window.empty_id_lookups = [];
+			const get_element_by_id = Document.prototype.getElementById;
+			Document.prototype.getElementById = function (id) {
+				if (id === '') window.empty_id_lookups.push(new Error().stack);
+				return get_element_by_id.call(this, id);
+			};
+		`);
+
+		await page.goto('/#/focus');
+		await page.locator('a[href="#/focus/a#p"]').click();
+		await page.waitForURL('#/focus/a#p');
+
+		// `reset_focus` sets the sequential focus navigation starting point to the
+		// anchor. This exercises the branch that looks up a real anchor and restores
+		// the hash from `element.id`, so the hash must be preserved exactly.
+		expect(new URL(page.url()).hash).toBe('#/focus/a#p');
+		expect(await page.evaluate('window.empty_id_lookups')).toEqual([]);
+	});
+
 	test('resolve works', async ({ page }) => {
 		await page.goto('/#/resolve');
 		await page.locator('a', { hasText: 'go to home' }).click();

@@ -210,6 +210,24 @@ test.describe('$app/env', () => {
 			'PUBLIC_DYNAMIC: accessible anywhere/evaluated at run time'
 		);
 	});
+
+	test('legacy $env/* imports still work', async ({ page }) => {
+		await page.goto('/env/legacy');
+
+		await expect(page.locator('#static-private')).toHaveText(
+			'PRIVATE_STATIC: accessible to server-side code/replaced at build time'
+		);
+		await expect(page.locator('#dynamic-private')).toHaveText(
+			'PRIVATE_DYNAMIC: accessible to server-side code/evaluated at run time'
+		);
+
+		await expect(page.locator('#static-public')).toHaveText(
+			'PUBLIC_STATIC: accessible anywhere/replaced at build time'
+		);
+		await expect(page.locator('#dynamic-public')).toHaveText(
+			'PUBLIC_DYNAMIC: accessible anywhere/evaluated at run time'
+		);
+	});
 });
 
 test.describe('Load', () => {
@@ -726,6 +744,45 @@ test.describe('$app/env', () => {
 	test('includes version', async ({ page }) => {
 		await page.goto('/app-environment');
 		expect(await page.textContent('h1')).toBe('TEST_VERSION');
+	});
+});
+
+test.describe('$app/manifest', () => {
+	test('exposes routes', async ({ page }) => {
+		await page.goto('/app-manifest');
+		const routes = JSON.parse((await page.textContent('[data-name="routes"] pre')) ?? '');
+		const ids = routes.map((/** @type {any} */ r) => r.id);
+		expect(ids).toContain('/');
+		expect(ids).toContain('/app-manifest');
+		expect(ids).toContain('/routing');
+	});
+
+	test('exposes static assets', async ({ page }) => {
+		await page.goto('/app-manifest');
+		const assets = JSON.parse((await page.textContent('[data-name="assets"] pre')) ?? '');
+		const paths = assets.map((/** @type {any} */ a) => a.path);
+		expect(paths).toContain('favicon.png');
+		expect(paths).toContain('static.json');
+	});
+
+	test('exposes immutable assets', async ({ page }) => {
+		test.skip(!!process.env.DEV, 'only known after build');
+		await page.goto('/app-manifest');
+		const immutable = JSON.parse((await page.textContent('[data-name="immutable"] pre')) ?? '');
+		const paths = immutable.map((/** @type {any} */ a) => a.path);
+		expect(paths.length).toBeGreaterThan(0);
+		// should only include immutable chunks
+		expect(paths.every((/** @type {string} */ f) => f.includes('_app/immutable/'))).toBe(true);
+	});
+
+	test('exposes prerendered paths', async ({ page }) => {
+		test.skip(!!process.env.DEV, 'prerendered paths are only known after build');
+		await page.goto('/app-manifest');
+		const prerendered = JSON.parse((await page.textContent('[data-name="prerendered"] pre')) ?? '');
+		const paths = prerendered.map((/** @type {any} */ a) => a.path);
+		// the test app prerenders '*' — some known prerendered routes
+		expect(paths.length).toBeGreaterThan(0);
+		expect(paths).toContain('prerendering/no-ssr');
 	});
 });
 

@@ -35,7 +35,7 @@ export default defineConfig({
 
 ## Overview
 
-Remote functions are exported from a `.remote.js` or `.remote.ts` file, and come in four flavours: `query`, `form`, `command` and `prerender`. On the client, the exported functions are transformed to `fetch` wrappers that invoke their counterparts on the server via a generated HTTP endpoint. Remote files can be placed anywhere in your `src` directory (except inside the `src/lib/server` directory), and third party libraries can provide them, too.
+Remote functions are exported from a _remote module_, which is a file whose name includes a `remote` segment (e.g. `remote.ts` or `data.remote.ts`). They come in four flavours: `query`, `form`, `command` and `prerender`. On the client, the exported functions are transformed to `fetch` wrappers that invoke their counterparts on the server via a generated HTTP endpoint. Remote modules can be placed anywhere in your `src` directory (except inside a `server` directory — files here [cannot be imported into client-side code](server-only-modules)), and third-party libraries can provide them too.
 
 ## query
 
@@ -46,13 +46,13 @@ The `query` function allows you to read dynamic data from the server.
 ```js
 /// file: src/routes/blog/data.remote.js
 // @filename: ambient.d.ts
-declare module '$lib/server/database' {
+declare module '#lib/server/database' {
 	export function sql(strings: TemplateStringsArray, ...values: any[]): Promise<any[]>;
 }
 // @filename: index.js
 // ---cut---
 import { query } from '$app/server';
-import * as db from '$lib/server/database';
+import * as db from '#lib/server/database';
 
 export const getPosts = query(async () => {
 	const posts = await db.sql`
@@ -66,7 +66,7 @@ export const getPosts = query(async () => {
 });
 ```
 
-> [!NOTE] Throughout this page, you'll see imports from fictional modules like `$lib/server/database` and `$lib/server/auth`. These are purely for illustrative purposes — you can use whatever database client and auth setup you like.
+> [!NOTE] Throughout this page, you'll see imports from fictional modules like `#lib/server/database` and `#lib/server/auth`. These are purely for illustrative purposes — you can use whatever database client and auth setup you like.
 >
 > The `db.sql` function above is a [tagged template function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#tagged_templates) that escapes any interpolated values.
 
@@ -139,7 +139,7 @@ Since `getPost` exposes an HTTP endpoint, it's important to validate this argume
 ```js
 /// file: src/routes/blog/data.remote.js
 // @filename: ambient.d.ts
-declare module '$lib/server/database' {
+declare module '#lib/server/database' {
 	export function sql(strings: TemplateStringsArray, ...values: any[]): Promise<any[]>;
 }
 // @filename: index.js
@@ -147,7 +147,7 @@ declare module '$lib/server/database' {
 import * as v from 'valibot';
 import { error } from '@sveltejs/kit';
 import { query } from '$app/server';
-import * as db from '$lib/server/database';
+import * as db from '#lib/server/database';
 
 export const getPosts = query(async () => { /* ... */ });
 
@@ -162,7 +162,7 @@ export const getPost = query(v.string(), async (slug) => {
 });
 ```
 
-Both the argument and the return value are serialized with [devalue](https://github.com/sveltejs/devalue), which handles types like `Date` and `Map` (and custom types defined in your [transport hook](hooks#Universal-hooks-transport)) in addition to JSON.
+Both the argument and the return value are serialized with [devalue](https://github.com/sveltejs/devalue), which handles types like `Date` and `Map` (and custom types defined in your [transport hook](hooks#transport)) in addition to JSON.
 
 > [!NOTE] For `query` and `prerender` arguments (but not return values), objects, maps, and sets are sorted so that instances with the same members result in the same cache key. For example, `getPosts({ limit: 10, offset: 10 })` and `getPosts({ offset: 10, limit: 10 })` will result in the same cache key. If order is important to you, you'll have to use an array.
 
@@ -211,14 +211,14 @@ On the server, the callback receives an array of the arguments the function was 
 ```js
 /// file: weather.remote.js
 // @filename: ambient.d.ts
-declare module '$lib/server/database' {
+declare module '#lib/server/database' {
 	export function sql(strings: TemplateStringsArray, ...values: any[]): Promise<any[]>;
 }
 // @filename: index.js
 // ---cut---
 import * as v from 'valibot';
 import { query } from '$app/server';
-import * as db from '$lib/server/database';
+import * as db from '#lib/server/database';
 
 export const getWeather = query.batch(v.string(), async (cityIds) => {
 	const weather = await db.sql`
@@ -323,11 +323,11 @@ The `form` function makes it easy to write data to the server. It takes a callba
 ```ts
 /// file: src/routes/blog/data.remote.js
 // @filename: ambient.d.ts
-declare module '$lib/server/database' {
+declare module '#lib/server/database' {
 	export function sql(strings: TemplateStringsArray, ...values: any[]): Promise<any[]>;
 }
 
-declare module '$lib/server/auth' {
+declare module '#lib/server/auth' {
 	interface User {
 		name: string;
 	}
@@ -342,8 +342,8 @@ declare module '$lib/server/auth' {
 import * as v from 'valibot';
 import { error, redirect } from '@sveltejs/kit';
 import { query, form } from '$app/server';
-import * as db from '$lib/server/database';
-import * as auth from '$lib/server/auth';
+import * as db from '#lib/server/database';
+import * as auth from '#lib/server/auth';
 
 export const getPosts = query(async () => { /* ... */ });
 
@@ -568,7 +568,7 @@ In addition to declarative schema validation, you can programmatically mark fiel
 // @errors: 18046
 /// file: src/routes/shop/data.remote.js
 // @filename: ambient.d.ts
-declare module '$lib/server/database' {
+declare module '#lib/server/database' {
 	export function buy(qty: number): Promise<void>
 }
 // @filename: index.js
@@ -576,7 +576,7 @@ declare module '$lib/server/database' {
 import * as v from 'valibot';
 import { invalid } from '@sveltejs/kit';
 import { form } from '$app/server';
-import * as db from '$lib/server/database';
+import * as db from '#lib/server/database';
 
 export const buyHotcakes = form(
 	v.object({
@@ -739,11 +739,11 @@ The example above uses [`redirect(...)`](@sveltejs-kit#redirect), which sends th
 ```ts
 /// file: src/routes/blog/data.remote.js
 // @filename: ambient.d.ts
-declare module '$lib/server/database' {
+declare module '#lib/server/database' {
 	export function sql(strings: TemplateStringsArray, ...values: any[]): Promise<any[]>;
 }
 
-declare module '$lib/server/auth' {
+declare module '#lib/server/auth' {
 	interface User {
 		name: string;
 	}
@@ -757,8 +757,8 @@ declare module '$lib/server/auth' {
 import * as v from 'valibot';
 import { error, redirect } from '@sveltejs/kit';
 import { query, form } from '$app/server';
-import * as db from '$lib/server/database';
-import * as auth from '$lib/server/auth';
+import * as db from '#lib/server/database';
+import * as auth from '#lib/server/auth';
 
 export const getPosts = query(async () => { /* ... */ });
 
@@ -806,7 +806,7 @@ We can customize what happens when the form is submitted with the `enhance` meth
 <!--- file: src/routes/blog/new/+page.svelte --->
 <script>
 	import { createPost } from '../data.remote';
-	import { showToast } from '$lib/toast';
+	import { showToast } from '#lib/toast';
 </script>
 
 <h1>Create a new post</h1>
@@ -864,7 +864,7 @@ To accomplish this, add a field to your schema for the button value, and use `as
 ```svelte
 <!--- file: src/routes/login/+page.svelte --->
 <script>
-	import { loginOrRegister } from '$lib/auth';
+	import { loginOrRegister } from '#lib/auth';
 </script>
 
 <form {...loginOrRegister}>
@@ -886,7 +886,7 @@ To accomplish this, add a field to your schema for the button value, and use `as
 In your form handler, you can check which button was clicked:
 
 ```js
-/// file: $lib/auth.js
+/// file: #lib/auth.js
 import * as v from 'valibot';
 import { form } from '$app/server';
 
@@ -917,14 +917,14 @@ As with `query` and `form`, if the function accepts an argument, it should be [v
 ```ts
 /// file: likes.remote.js
 // @filename: ambient.d.ts
-declare module '$lib/server/database' {
+declare module '#lib/server/database' {
 	export function sql(strings: TemplateStringsArray, ...values: any[]): Promise<any[]>;
 }
 // @filename: index.js
 // ---cut---
 import * as v from 'valibot';
 import { query, command } from '$app/server';
-import * as db from '$lib/server/database';
+import * as db from '#lib/server/database';
 
 export const getLikes = query(v.string(), async (id) => {
 	const [row] = await db.sql`
@@ -951,7 +951,7 @@ Now simply call `addLike`, from (for example) an event handler:
 <!--- file: +page.svelte --->
 <script>
 	import { getLikes, addLike } from './likes.remote';
-	import { showToast } from '$lib/toast';
+	import { showToast } from '#lib/toast';
 
 	let { item } = $props();
 </script>
@@ -1132,13 +1132,13 @@ The `prerender` function is similar to `query`, except that it will be invoked a
 ```js
 /// file: src/routes/blog/data.remote.js
 // @filename: ambient.d.ts
-declare module '$lib/server/database' {
+declare module '#lib/server/database' {
 	export function sql(strings: TemplateStringsArray, ...values: any[]): Promise<any[]>;
 }
 // @filename: index.js
 // ---cut---
 import { prerender } from '$app/server';
-import * as db from '$lib/server/database';
+import * as db from '#lib/server/database';
 
 export const getPosts = prerender(async () => {
 	const posts = await db.sql`
@@ -1163,7 +1163,7 @@ As with queries, prerender functions can accept an argument, which should be [va
 ```js
 /// file: src/routes/blog/data.remote.js
 // @filename: ambient.d.ts
-declare module '$lib/server/database' {
+declare module '#lib/server/database' {
 	export function sql(strings: TemplateStringsArray, ...values: any[]): Promise<any[]>;
 }
 // @filename: index.js
@@ -1171,7 +1171,7 @@ declare module '$lib/server/database' {
 import * as v from 'valibot';
 import { error } from '@sveltejs/kit';
 import { prerender } from '$app/server';
-import * as db from '$lib/server/database';
+import * as db from '#lib/server/database';
 
 export const getPosts = prerender(async () => { /* ... */ });
 
@@ -1236,7 +1236,7 @@ As long as _you're_ not passing invalid data to your remote functions, there are
 - the function signature changed between deployments, and some users are currently on an older version of your app
 - someone is trying to attack your site by poking your exposed endpoints with bad data
 
-In the second case, we don't want to give the attacker any help, so SvelteKit will generate a generic [400 Bad Request](https://http.dog/400) response. You can control the message by implementing the [`handleValidationError`](hooks#Server-hooks-handleValidationError) server hook, which, like [`handleError`](hooks#Shared-hooks-handleError), must return an [`App.Error`](errors#Type-safety) (which defaults to `{ message: string }`):
+In the second case, we don't want to give the attacker any help, so SvelteKit will generate a generic [400 Bad Request](https://http.dog/400) response. You can control the message by implementing the [`handleValidationError`](hooks#handleValidationError) server hook, which, like [`handleError`](hooks#handleError), must return an [`App.Error`](errors#Type-safety) (which defaults to `{ message: string }`):
 
 ```js
 /// file: src/hooks.server.js
@@ -1272,14 +1272,14 @@ interface User {
 	avatar: string;
 }
 
-declare module '$lib/server/database' {
+declare module '#lib/server/database' {
 	export function findUser(sessionId: string | undefined): Promise<User | null>;
 }
 
 // @filename: index.js
 // ---cut---
 import { getRequestEvent, query } from '$app/server';
-import { findUser } from '$lib/server/database';
+import { findUser } from '#lib/server/database';
 
 export const getProfile = query(async () => {
 	const user = await getUser();
@@ -1302,7 +1302,8 @@ const getUser = query(async () => {
 Note that some properties of `RequestEvent` are different inside remote functions:
 
 - you cannot set headers (other than writing cookies, and then only inside `form` and `command` functions)
-- `route`, `params` and `url` relate to the page the remote function was called from, _not_ the URL of the endpoint SvelteKit creates for the remote function. Never use them to determine whether or not a user is authorized to access certain data, as these values are part of the request which could be manipulated. Queries are also not re-run when the user navigates (unless the argument to the query changes as a result of navigation), and so you should be mindful of how you use these values.
+- inside `query` functions (including `query.batch` and `query.live`), accessing `route`, `params` or `url` throws an error. Queries are cached by their arguments and are not re-run when the user navigates, so results depending on these values would go stale without the cache noticing. Pass values from the page as arguments to the query instead. You can still derive trusted context from cookies or headers in the [`handle`](hooks#handle) hook and put it on `locals`, but note that for query requests `handle` sees the URL of the remote endpoint, not of the page
+- in `form` and `command` functions, `route`, `params` and `url` relate to the page the remote function was called from, _not_ the URL of the endpoint SvelteKit creates for the remote function. Never use them to determine whether or not a user is authorized to access certain data, as these values are part of the request which could be manipulated
 
 ## Redirects
 

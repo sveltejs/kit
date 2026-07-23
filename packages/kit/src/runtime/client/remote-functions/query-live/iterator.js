@@ -1,6 +1,6 @@
 import { app_dir, base } from '$app/paths/internal/client';
 import { app } from '../../client.js';
-import { get_remote_request_headers, handle_side_channel_response } from '../shared.svelte.js';
+import { handle_side_channel_response } from '../shared.svelte.js';
 import * as devalue from 'devalue';
 import { HttpError } from '@sveltejs/kit/internal';
 import { noop } from '../../../../utils/functions.js';
@@ -23,7 +23,6 @@ export async function* create_live_iterator(
 	const url = `${base}/${app_dir}/remote/${id}${payload ? `?payload=${payload}` : ''}`;
 
 	const response = await fetch(url, {
-		headers: get_remote_request_headers(),
 		signal: controller.signal
 	});
 

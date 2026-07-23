@@ -56,10 +56,10 @@ If you're only using the import as a type, change it to \`import type\`.`);
 			wait_for_started: false
 		});
 		expect(await page.textContent('.message-body'))
-			.toBe(`Cannot import $lib/nested/server/private.js into code that runs in the browser, as this could leak sensitive information.
+			.toBe(`Cannot import #lib/nested/server/private.js into code that runs in the browser, as this could leak sensitive information.
 
  src/routes/illegal-imports/server-only-folder/relative-nested/+page.svelte imports
-  $lib/nested/server/private.js
+  #lib/nested/server/private.js
 
 If you're only using the import as a type, change it to \`import type\`.`);
 	});
@@ -71,10 +71,10 @@ If you're only using the import as a type, change it to \`import type\`.`);
 			wait_for_started: false
 		});
 		expect(await page.textContent('.message-body'))
-			.toBe(`Cannot import $lib/server/blah/private.js into code that runs in the browser, as this could leak sensitive information.
+			.toBe(`Cannot import #lib/server/blah/private.js into code that runs in the browser, as this could leak sensitive information.
 
  src/routes/illegal-imports/server-only-folder/path-top-level/+page.svelte imports
-  $lib/server/blah/private.js
+  #lib/server/blah/private.js
 
 If you're only using the import as a type, change it to \`import type\`.`);
 	});

@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "3.0.0-next.7",
+	"version": "3.0.0-next.11",
 	"description": "SvelteKit is the fastest way to build Svelte apps",
 	"keywords": [
 		"framework",
@@ -34,7 +34,7 @@
 		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"@types/connect": "catalog:",
 		"@types/node": "catalog:",
-		"dts-buddy": "^0.8.1",
+		"dts-buddy": "^0.8.3",
 		"jsdom": "catalog:",
 		"rolldown": "catalog:",
 		"svelte": "catalog:",
@@ -92,14 +92,17 @@
 	},
 	"imports": {
 		"#app/paths": {
+			"workerd": "./src/runtime/app/paths/server.js",
 			"browser": "./src/runtime/app/paths/client.js",
 			"default": "./src/runtime/app/paths/server.js"
 		},
 		"#app/env/public": {
+			"workerd": "./src/runtime/app/env/public/server.js",
 			"browser": "./src/runtime/app/env/public/client.js",
 			"default": "./src/runtime/app/env/public/server.js"
 		},
 		"#internal": {
+			"workerd": "./src/exports/internal/server/index.js",
 			"browser": "./src/exports/internal/client.js",
 			"default": "./src/exports/internal/server/index.js"
 		}
@@ -132,6 +135,10 @@
 		"./hooks": {
 			"types": "./types/index.d.ts",
 			"import": "./src/exports/hooks/index.js"
+		},
+		"./env": {
+			"types": "./types/index.d.ts",
+			"import": "./src/exports/env/index.js"
 		},
 		"./vite": {
 			"types": "./types/index.d.ts",

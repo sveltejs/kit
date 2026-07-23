@@ -271,7 +271,9 @@ test.describe('Endpoints', () => {
 	});
 
 	test('invalid request method returns allow header', async ({ request }) => {
-		const response = await request.post('/endpoint-output/body');
+		const response = await request.post('/endpoint-output/body', {
+			headers: { origin: 'https://trusted.example.com' }
+		});
 
 		expect(response.status()).toBe(405);
 
@@ -281,7 +283,9 @@ test.describe('Endpoints', () => {
 	});
 
 	test('405 allow header has no duplicate methods listed', async ({ request }) => {
-		const response = await request.post('/endpoint-output/head-handler');
+		const response = await request.post('/endpoint-output/head-handler', {
+			headers: { origin: 'https://trusted.example.com' }
+		});
 
 		expect(response.status()).toBe(405);
 
@@ -321,7 +325,9 @@ test.describe('Endpoints', () => {
 	});
 
 	test('POST to post-only endpoint with sibling page still hits endpoint', async ({ request }) => {
-		const response = await request.post('/endpoint-output/post-only-with-page');
+		const response = await request.post('/endpoint-output/post-only-with-page', {
+			headers: { origin: 'https://trusted.example.com' }
+		});
 
 		expect(response.status()).toBe(200);
 		expect(await response.text()).toBe('ok');
@@ -511,7 +517,9 @@ test.describe('Errors', () => {
 	});
 
 	test('unhandled http method', async ({ request }) => {
-		const response = await request.put('/errors/invalid-route-response');
+		const response = await request.put('/errors/invalid-route-response', {
+			headers: { origin: 'https://trusted.example.com' }
+		});
 
 		expect(response.status()).toBe(405);
 		expect(await response.text()).toMatch('PUT method not allowed');
@@ -532,6 +540,28 @@ test.describe('Errors', () => {
 			expect(/** @type {Response} */ (response).status()).toBeGreaterThanOrEqual(400);
 		} else {
 			expect(/** @type {Response} */ (response).status()).toBe(400);
+		}
+	});
+
+	test('returns a lightweight 404 for subresource requests', async ({ request }) => {
+		const response = await request.get('/errors/does-not-exist-subresource', {
+			headers: { 'sec-fetch-dest': 'image' }
+		});
+
+		expect(response.status()).toBe(404);
+		expect(await response.text()).toBe('Not Found');
+		expect(response.headers()['vary']).toContain('Sec-Fetch-Dest');
+	});
+
+	test('renders the error page for document and fetch requests', async ({ request }) => {
+		for (const destination of ['document', null, 'empty']) {
+			const response = await request.get(
+				'/errors/does-not-exist-subresource',
+				destination ? { headers: { 'sec-fetch-dest': destination } } : {}
+			);
+
+			expect(response.status()).toBe(404);
+			expect(await response.text()).toContain('This is your custom error page saying:');
 		}
 	});
 
@@ -594,14 +624,16 @@ test.describe('Errors', () => {
 	test('POST to missing page endpoint', async ({ request }) => {
 		const res = await request.post('/errors/missing-actions', {
 			headers: {
-				accept: 'text/html'
+				accept: 'text/html',
+				origin: 'https://trusted.example.com'
 			}
 		});
 		expect(res?.status()).toBe(405);
 
 		const res_json = await request.post('/errors/missing-actions', {
 			headers: {
-				accept: 'application/json'
+				accept: 'application/json',
+				origin: 'https://trusted.example.com'
 			}
 		});
 		expect(res_json?.status()).toBe(405);
@@ -777,6 +809,22 @@ test.describe('Routing', () => {
 
 		const data = await response.json();
 		expect(data).toEqual({ surprise: 'lol' });
+	});
+
+	test('falls back to page actions if sibling endpoint has no POST handler', async ({
+		baseURL,
+		request
+	}) => {
+		const response = await request.post('/endpoint-output/actions-with-endpoint', {
+			form: {},
+			headers: {
+				accept: 'application/json',
+				origin: new URL(baseURL).origin
+			}
+		});
+
+		expect(response.status()).toBe(200);
+		expect((await response.json()).type).toBe('success');
 	});
 
 	test('Vite trailing slash redirect for prerendered pages retains URL query string', async ({

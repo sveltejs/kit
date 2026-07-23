@@ -1,5 +1,17 @@
 # @sveltejs/package
 
+## 3.0.0-next.3
+
+### Minor Changes
+
+- feat: transform import aliases into relative imports in files ([#16360](https://github.com/sveltejs/kit/pull/16360))
+
+## 3.0.0-next.2
+
+### Minor Changes
+
+- feat: warn when using a `.server.` file or file inside a `server` directory without importing a server-only module ([#16266](https://github.com/sveltejs/kit/pull/16266))
+
 ## 3.0.0-next.1
 ### Patch Changes
 

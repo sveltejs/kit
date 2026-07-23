@@ -638,6 +638,16 @@ export function tweak_types(content, is_server) {
 		const code = new MagicString(content);
 
 		const exports = new Map();
+		/** @param {import('typescript').BindingName} name */
+		function add_export(name) {
+			if (ts.isIdentifier(name)) {
+				if (names.has(name.text)) exports.set(name.text, name.text);
+			} else {
+				for (const element of name.elements) {
+					if (ts.isBindingElement(element)) add_export(element.name);
+				}
+			}
+		}
 
 		ast.forEachChild((node) => {
 			if (
@@ -664,9 +674,7 @@ export function tweak_types(content, is_server) {
 
 				if (ts.isVariableStatement(node)) {
 					node.declarationList.declarations.forEach((declaration) => {
-						if (ts.isIdentifier(declaration.name) && names.has(declaration.name.text)) {
-							exports.set(declaration.name.text, declaration.name.text);
-						}
+						add_export(declaration.name);
 					});
 				}
 			}
@@ -709,6 +717,62 @@ export function tweak_types(content, is_server) {
 			return _modified;
 		}
 
+		/**
+		 * @param {number} name_end position of the identifier the annotation is attached to
+		 * @param {import('typescript').TypeNode} type_node
+		 * @returns {string} the removed annotation's text
+		 */
+		function strip_type_annotation(name_end, type_node) {
+			let a = type_node.pos;
+			const b = type_node.end;
+			while (is_whitespace(content[a])) a += 1;
+
+			const type = content.slice(a, b);
+			code.remove(name_end, type_node.end);
+			modified = true;
+			return type;
+		}
+
+		/**
+		 * Types the first parameter of an untyped arrow/function expression.
+		 * @param {import('typescript').Expression | undefined} rhs
+		 * @param {string} type
+		 * @returns {boolean} `false` if there was nothing to annotate
+		 */
+		function annotate_first_param(rhs, type) {
+			if (
+				!rhs ||
+				!(ts.isArrowFunction(rhs) || ts.isFunctionExpression(rhs)) ||
+				!rhs.parameters.length
+			) {
+				return false;
+			}
+
+			const arg = rhs.parameters[0];
+			const add_parens = content[arg.pos - 1] !== '(';
+
+			if (add_parens) code.prependRight(arg.pos, '(');
+
+			if (arg.type) return false;
+
+			code.appendLeft(arg.name.end, `: ${type}` + (add_parens ? ')' : ''));
+			return true;
+		}
+
+		/**
+		 * @param {import('typescript').Expression | undefined} initializer
+		 * @param {(prop: import('typescript').PropertyAssignment) => void} callback
+		 */
+		function for_each_action(initializer, callback) {
+			if (initializer && ts.isObjectLiteralExpression(initializer)) {
+				for (const prop of initializer.properties) {
+					if (ts.isPropertyAssignment(prop) && ts.isIdentifier(prop.name)) {
+						callback(prop);
+					}
+				}
+			}
+		}
+
 		ast.forEachChild((node) => {
 			if (ts.isFunctionDeclaration(node) && node.name?.text && node.name?.text === 'load') {
 				// remove JSDoc comment above `export function load ...`
@@ -734,42 +798,13 @@ export function tweak_types(content, is_server) {
 						// edge case — remove JSDoc comment above individual export
 						replace_jsdoc_type_tags(declaration, declaration.initializer);
 
-						// remove type from `export const load: Load ...`
 						if (declaration.type) {
-							let a = declaration.type.pos;
-							const b = declaration.type.end;
-							while (is_whitespace(content[a])) a += 1;
+							const type = strip_type_annotation(declaration.name.end, declaration.type);
 
-							const type = content.slice(a, b);
-							code.remove(declaration.name.end, declaration.type.end);
-
-							const rhs = declaration.initializer;
-
-							if (
-								rhs &&
-								(ts.isArrowFunction(rhs) || ts.isFunctionExpression(rhs)) &&
-								rhs.parameters.length
-							) {
-								const arg = rhs.parameters[0];
-								const add_parens = content[arg.pos - 1] !== '(';
-
-								if (add_parens) code.prependRight(arg.pos, '(');
-
-								if (arg && !arg.type) {
-									code.appendLeft(
-										arg.name.end,
-										`: Parameters<${type}>[0]` + (add_parens ? ')' : '')
-									);
-								} else {
-									// prevent "type X is imported but not used" (isn't silenced by @ts-nocheck) when svelte-check runs
-									code.append(`;null as any as ${type};`);
-								}
-							} else {
+							if (!annotate_first_param(declaration.initializer, `Parameters<${type}>[0]`)) {
 								// prevent "type X is imported but not used" (isn't silenced by @ts-nocheck) when svelte-check runs
 								code.append(`;null as any as ${type};`);
 							}
-
-							modified = true;
 						}
 					} else if (
 						is_server &&
@@ -781,69 +816,34 @@ export function tweak_types(content, is_server) {
 						const removed = replace_jsdoc_type_tags(node, declaration.initializer);
 						// ... and move type to each individual action
 						if (removed) {
-							const rhs = declaration.initializer;
-							if (ts.isObjectLiteralExpression(rhs)) {
-								for (const prop of rhs.properties) {
-									if (ts.isPropertyAssignment(prop) && ts.isIdentifier(prop.name)) {
-										const rhs = prop.initializer;
-										const replaced = replace_jsdoc_type_tags(prop, rhs);
-										if (
-											!replaced &&
-											rhs &&
-											(ts.isArrowFunction(rhs) || ts.isFunctionExpression(rhs)) &&
-											rhs.parameters?.[0]
-										) {
-											const name = ts.isIdentifier(rhs.parameters[0].name)
-												? rhs.parameters[0].name.text
-												: 'event';
-											code.prependRight(
-												rhs.pos,
-												`/** @param {import('./$types').RequestEvent} ${name} */ `
-											);
-										}
-									}
+							for_each_action(declaration.initializer, (prop) => {
+								const rhs = prop.initializer;
+								const replaced = replace_jsdoc_type_tags(prop, rhs);
+								if (
+									!replaced &&
+									rhs &&
+									(ts.isArrowFunction(rhs) || ts.isFunctionExpression(rhs)) &&
+									rhs.parameters?.[0]
+								) {
+									const name = ts.isIdentifier(rhs.parameters[0].name)
+										? rhs.parameters[0].name.text
+										: 'event';
+									code.prependRight(
+										rhs.pos,
+										`/** @param {import('./$types').RequestEvent} ${name} */ `
+									);
 								}
-							}
+							});
 						}
 
-						// remove type from `export const actions: Actions ...`
 						if (declaration.type) {
-							let a = declaration.type.pos;
-							const b = declaration.type.end;
-							while (is_whitespace(content[a])) a += 1;
-
-							const type = content.slice(a, b);
-							code.remove(declaration.name.end, declaration.type.end);
+							const type = strip_type_annotation(declaration.name.end, declaration.type);
 							code.append(`;null as any as ${type};`);
-							modified = true;
 
 							// ... and move type to each individual action
-							const rhs = declaration.initializer;
-							if (ts.isObjectLiteralExpression(rhs)) {
-								for (const prop of rhs.properties) {
-									if (ts.isPropertyAssignment(prop) && ts.isIdentifier(prop.name)) {
-										const rhs = prop.initializer;
-
-										if (
-											rhs &&
-											(ts.isArrowFunction(rhs) || ts.isFunctionExpression(rhs)) &&
-											rhs.parameters.length
-										) {
-											const arg = rhs.parameters[0];
-											const add_parens = content[arg.pos - 1] !== '(';
-
-											if (add_parens) code.prependRight(arg.pos, '(');
-
-											if (arg && !arg.type) {
-												code.appendLeft(
-													arg.name.end,
-													": import('./$types').RequestEvent" + (add_parens ? ')' : '')
-												);
-											}
-										}
-									}
-								}
-							}
+							for_each_action(declaration.initializer, (prop) => {
+								annotate_first_param(prop.initializer, "import('./$types').RequestEvent");
+							});
 						}
 					}
 				}

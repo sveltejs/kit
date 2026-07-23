@@ -425,7 +425,7 @@ function form_tests() {
 
 	// all schema properties optional
 	const f3 = form(
-		null as any as StandardSchemaV1<{ a?: string; nested?: { prop?: string } }>,
+		null as any as StandardSchemaV1<{ a?: string; b?: number; nested?: { prop?: string } }>,
 		(data, issue) => {
 			data.a === '';
 			data.nested?.prop === '';
@@ -452,6 +452,9 @@ function form_tests() {
 	f3.fields.as('text');
 	f3.fields.a.issues();
 	f3.fields.a.value();
+	f3.fields.a.as('text', undefined);
+	// @ts-expect-error
+	f3.fields.b.as('number', '');
 	f3.fields.nested.prop.issues();
 	f3.fields.nested.prop.value();
 	// @ts-expect-error

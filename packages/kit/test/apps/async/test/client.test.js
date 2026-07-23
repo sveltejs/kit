@@ -30,6 +30,13 @@ test.describe('remote functions', () => {
 		const response = await response_promise;
 		expect(response.headers()['cache-control']).toBe('private, no-store');
 	});
+
+	test('packages can re-export remote functions', async ({ page }) => {
+		await page.goto('/remote-lib');
+		await expect(page.locator('h1')).toHaveText('lib says hello');
+		await page.getByRole('button', { name: 'call remote function' }).click();
+		await expect(page.locator('p')).toHaveText('lib says client');
+	});
 });
 
 // have to run in serial because commands mutate in-memory data on the server (should fix this at some point)
@@ -81,6 +88,90 @@ test.describe('remote function mutations', () => {
 		await expect(page.locator('#ssr-batch-result-2')).toHaveText('Walk the dog');
 		await expect(page.locator('#ssr-batch-result-3')).toHaveText('Not found');
 		expect(request_count).toBe(0);
+	});
+
+	test('query.set from within a query during SSR inlines the set values', async ({ page }) => {
+		await page.goto('/remote/query-set-inline');
+
+		// start counting after navigation, so we only observe requests triggered by
+		// creating the `get_thing(id)` resources — they should reuse the inlined values
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.click('#show');
+		await expect(page.locator('#thing-1')).toHaveText('one');
+		await expect(page.locator('#thing-2')).toHaveText('two');
+		await expect(page.locator('#thing-3')).toHaveText('three');
+		await page.waitForTimeout(100); // allow all requests to finish (there shouldn't be any)
+		expect(request_count).toBe(0);
+	});
+
+	test('query.refresh from within a query during SSR inlines the refreshed values', async ({
+		page
+	}) => {
+		await page.goto('/remote/query-set-inline/refresh');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.click('#show');
+		await expect(page.locator('#thing-1')).toHaveText('one');
+		await expect(page.locator('#thing-2')).toHaveText('two');
+		await expect(page.locator('#thing-3')).toHaveText('three');
+		await page.waitForTimeout(100); // allow all requests to finish (there shouldn't be any)
+		expect(request_count).toBe(0);
+	});
+
+	test('a lazily-run refreshed query that refreshes another is included in the single-flight response', async ({
+		page
+	}) => {
+		await page.goto('/remote/nested-refresh');
+		await expect(page.locator('#a')).toHaveText('0');
+		await expect(page.locator('#b')).toHaveText('0');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		// `bump` refreshes `get_a`; when `get_a` runs on the server it refreshes
+		// `get_b`, which is added to the single-flight set mid-collection. Both must
+		// come back in the command response, so `#b` updates without an extra request.
+		await page.click('#bump');
+		await expect(page.locator('#a')).toHaveText('5');
+		await expect(page.locator('#b')).toHaveText('50');
+		await page.waitForTimeout(100); // allow all requests to finish
+		expect(request_count).toBe(1); // only the command itself — no separate refetch of get_b
+	});
+
+	test('a query re-refreshed by another query during collection is cached, not re-run', async ({
+		page
+	}) => {
+		await page.goto('/remote/re-refresh');
+		await expect(page.locator('#value')).toHaveText('0');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		// `bump` refreshes `get_value` (which sees 10) and `driver`. When `driver`
+		// runs during collection it bumps the value to 11 and re-refreshes `get_value`.
+		// `get_value` has already been processed once this drain, so the re-refresh is
+		// cached rather than re-run — the client keeps the first (10) value. This is
+		// what prevents A → B → A refresh cycles from looping forever.
+		await page.click('#bump');
+		await expect(page.locator('#value')).toHaveText('10');
+		await page.waitForTimeout(100); // allow all requests to finish
+		expect(request_count).toBe(1); // only the command — no separate refetch
+	});
+
+	test('queries that refresh each other in a cycle do not loop forever', async ({ page }) => {
+		await page.goto('/remote/refresh-cycle');
+		await expect(page.locator('#value')).toHaveText('0');
+
+		// `get_a` refreshes `get_b` and `get_b` refreshes `get_a`. Without cycle
+		// detection in the drain phase the command response would never settle, so
+		// `#value` would stay at 0 and this assertion would time out.
+		await page.click('#bump');
+
+		await expect(page.locator('#value')).toHaveText('1');
 	});
 
 	test('hydrated query errors are reused', async ({ page }) => {
@@ -322,8 +413,8 @@ test.describe('remote function mutations', () => {
 		await expect(page.locator('#result')).toHaveText('action: hello');
 	});
 
-	test('command inside handle hook works with POST', async ({ request }) => {
-		const response = await request.post('/remote/hook-command');
+	test('command inside handle hook works with POST', async ({ request, baseURL }) => {
+		const response = await request.post('/remote/hook-command', { headers: { origin: baseURL } });
 		expect(response.status()).toBe(200);
 		const data = await response.json();
 		expect(data.result).toBe('action: from-hook');

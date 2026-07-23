@@ -60,6 +60,19 @@ function serve(path, client = false) {
 		: undefined;
 }
 
+/**
+ * Relative reference from `from` to `to`, which must differ only by a trailing slash.
+ * Keep in sync with the copy in `packages/kit/src/utils/url.js`
+ * @param {string} from
+ * @param {string} to
+ * @returns {string}
+ */
+function relative_pathname(from, to) {
+	const segment = to.replace(/\/$/, '').split('/').at(-1);
+
+	return from.endsWith('/') ? `../${segment}` : `${segment}/`;
+}
+
 // required because the static file server ignores trailing slashes
 /** @returns {import('polka').Middleware} */
 function serve_prerendered() {
@@ -79,9 +92,9 @@ function serve_prerendered() {
 		}
 
 		// remove or add trailing slash as appropriate
-		let location = pathname.at(-1) === '/' ? pathname.slice(0, -1) : pathname + '/';
-		if (prerendered.has(location)) {
-			if (query) location += search;
+		const inverted = pathname.at(-1) === '/' ? pathname.slice(0, -1) : pathname + '/';
+		if (prerendered.has(inverted)) {
+			const location = relative_pathname(pathname, inverted) + (query ? search : '');
 			res.writeHead(308, { location }).end();
 		} else {
 			void next();
@@ -93,10 +106,24 @@ function serve_prerendered() {
 const ssr = async (req, res) => {
 	/** @type {Request} */
 	let request;
+	let request_origin = origin;
+
+	if (!request_origin) {
+		try {
+			request_origin = get_origin(req.headers);
+		} catch (error) {
+			console.error(
+				`Could not determine request origin: ${error instanceof Error ? error.message : String(error)}`
+			);
+			res.statusCode = 400;
+			res.end('Bad Request');
+			return;
+		}
+	}
 
 	try {
 		request = getRequest({
-			base: origin || get_origin(req.headers),
+			base: request_origin,
 			request: req,
 			bodySizeLimit: body_size_limit
 		});

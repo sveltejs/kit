@@ -1,5 +1,32 @@
 # @sveltejs/adapter-node
 
+## 6.0.0-next.5
+
+### Minor Changes
+
+- feat: better error logging ([#16374](https://github.com/sveltejs/kit/pull/16374))
+
+### Patch Changes
+
+- Updated dependencies [[`5220191`](https://github.com/sveltejs/kit/commit/5220191a3bac885fb1474718afee03dafa6b0ce7), [`8cb2f7d`](https://github.com/sveltejs/kit/commit/8cb2f7d007af7e53f780d5b8dbbfe87459befd41), [`b88c7a7`](https://github.com/sveltejs/kit/commit/b88c7a7ba07c0a9309598aebcb86709f8a09c443), [`a6ea113`](https://github.com/sveltejs/kit/commit/a6ea1135fd1a9f0ec5dcc2625215331c55ff8a02), [`6446f64`](https://github.com/sveltejs/kit/commit/6446f64b755ce6489f66c71961e43ad0d89e84eb), [`58f1789`](https://github.com/sveltejs/kit/commit/58f178999e172820bcb278be0c61e7f97b0396ac), [`09774a2`](https://github.com/sveltejs/kit/commit/09774a27004853ecb5140fde9f40356b9bffb077), [`c542fdd`](https://github.com/sveltejs/kit/commit/c542fdda394cff4b3709ddb895417b8a14ab7d30), [`aedaa27`](https://github.com/sveltejs/kit/commit/aedaa27be9df0882e54952b443985197a1e0a16e), [`428ee1a`](https://github.com/sveltejs/kit/commit/428ee1ae27543caa483c9532457b1855dbc10683), [`fefb3ae`](https://github.com/sveltejs/kit/commit/fefb3ae495cc1ec10e35be988b2878bfd880a62e)]:
+  - @sveltejs/kit@3.0.0-next.11
+
+## 6.0.0-next.4
+
+### Patch Changes
+
+- fix: correctly bundle entrypoints on Windows ([#16367](https://github.com/sveltejs/kit/pull/16367))
+- Updated dependencies [[`c1ee782`](https://github.com/sveltejs/kit/commit/c1ee7829b0c7ec9a874c86d7fd1e952f875f5bed), [`1a1b3ea`](https://github.com/sveltejs/kit/commit/1a1b3ea53bdff1d83c4f22e934e825810a088688), [`6423d98`](https://github.com/sveltejs/kit/commit/6423d9827cd31dd7b26c4c611dbabe6d636fc91c), [`6d1f4f0`](https://github.com/sveltejs/kit/commit/6d1f4f0cea991c532cfad49eec8662dac31dfe2b), [`5ca9906`](https://github.com/sveltejs/kit/commit/5ca990646d886d184216995b01d10f5cc649ceed), [`b148d31`](https://github.com/sveltejs/kit/commit/b148d31398f6c0219d553a172d8cf46223d5db53), [`5ca9906`](https://github.com/sveltejs/kit/commit/5ca990646d886d184216995b01d10f5cc649ceed), [`9f3d9bb`](https://github.com/sveltejs/kit/commit/9f3d9bbb0c63e7197c23f7529565542c2d77e592), [`7bfd922`](https://github.com/sveltejs/kit/commit/7bfd922b367571426dcc5c573317bab8beac35f6), [`ffa0e3b`](https://github.com/sveltejs/kit/commit/ffa0e3b06e82d7023dd2189ccfe1fc191c90b941)]:
+  - @sveltejs/kit@3.0.0-next.9
+
+## 6.0.0-next.3
+
+### Patch Changes
+
+- fix: allow prerelease versions of SvelteKit 3 to satisfy the peer dependency range ([#16286](https://github.com/sveltejs/kit/pull/16286))
+- Updated dependencies [[`737d119`](https://github.com/sveltejs/kit/commit/737d119730ec163832f838b3813c9cbb75dd799f), [`fa78efb`](https://github.com/sveltejs/kit/commit/fa78efb626031497eecc3a88fa7b6f6da36eca0f), [`07c207e`](https://github.com/sveltejs/kit/commit/07c207ed919570d4ed4954f751056b4f838abdea), [`a47071b`](https://github.com/sveltejs/kit/commit/a47071bb6581fe5f6df4cc47b80e9f0f594624e5), [`14d7d5a`](https://github.com/sveltejs/kit/commit/14d7d5abd9cd8462e4c79ed6a5c10bc43258e97a), [`5c38e51`](https://github.com/sveltejs/kit/commit/5c38e515db7fbb92e5ae01db84b4f0040a02f187), [`0702baa`](https://github.com/sveltejs/kit/commit/0702baa58b2a4600e83b55ef4a85e9cbe3391a4f), [`e1938c6`](https://github.com/sveltejs/kit/commit/e1938c62348b8ccc83e186b1acad76a0a10cc9ea), [`8293144`](https://github.com/sveltejs/kit/commit/8293144b6fbfff9f97cdb1d2224a5eaa04c84fc4), [`f76d7d9`](https://github.com/sveltejs/kit/commit/f76d7d91e18a0afd1f6798c095eb8c170c108cff), [`ab5c253`](https://github.com/sveltejs/kit/commit/ab5c253efb2546ead74db4c8c9b4c7639d97e0ed), [`b557b1b`](https://github.com/sveltejs/kit/commit/b557b1ba76903e1fb0fc3bb87bddc5420332137a), [`4a513e2`](https://github.com/sveltejs/kit/commit/4a513e27ab2ad44dae0c6a4a6c8deda840008530)]:
+  - @sveltejs/kit@3.0.0-next.8
+
 ## 6.0.0-next.2
 ### Major Changes
 

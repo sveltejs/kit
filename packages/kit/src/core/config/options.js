@@ -1,6 +1,7 @@
 /** @import { SvelteConfig } from '@sveltejs/vite-plugin-svelte' */
 /** @import { ValidatedKitConfig } from 'types' */
 /** @import { Validator } from './types.js' */
+import { styleText } from 'node:util';
 
 const directives = object({
 	'child-src': string_array(),
@@ -60,6 +61,12 @@ export const validate_svelte_options = object(
 	true
 );
 
+const prerender_handler = validate(undefined, (input, keypath) => {
+	if (typeof input === 'function') return input;
+	if (['fail', 'warn', 'ignore'].includes(input)) return input;
+	throw new Error(`${keypath} should be "fail", "warn", "ignore" or a custom function`);
+});
+
 /** @type {Validator<ValidatedKitConfig>} */
 export const validate_kit_options = object({
 	adapter: validate(undefined, (input, keypath) => {
@@ -71,17 +78,21 @@ export const validate_kit_options = object({
 		return input;
 	}),
 
-	alias: validate({}, (input, keypath) => {
-		if (typeof input !== 'object') {
-			throw new Error(`${keypath} should be an object`);
-		}
+	alias: deprecate(
+		validate({}, (input, keypath) => {
+			if (typeof input !== 'object') {
+				throw new Error(`${keypath} should be an object`);
+			}
 
-		for (const key in input) {
-			assert_string(input[key], `${keypath}.${key}`);
-		}
+			for (const key in input) {
+				assert_string(input[key], `${keypath}.${key}`);
+			}
 
-		return input;
-	}),
+			return input;
+		}),
+		(keypath) =>
+			`The \`${keypath}\` option is deprecated, and will be removed in a future version of SvelteKit. Use subpath imports instead: https://svelte.dev/docs/kit/$lib`
+	),
 
 	appDir: validate('_app', (input, keypath) => {
 		assert_string(input, keypath);
@@ -140,7 +151,10 @@ export const validate_kit_options = object({
 			server: string(null),
 			universal: string(null)
 		}),
-		lib: string(null),
+		lib: removed(
+			(keypath) =>
+				`\`${keypath}\` has been removed. Use #lib instead of $lib: https://svelte.dev/docs/kit/$lib`
+		),
 		params: string(null),
 		routes: string(null),
 		serviceWorker: string(null),
@@ -244,75 +258,11 @@ export const validate_kit_options = object({
 			return input;
 		}),
 
-		handleHttpError: validate(
-			(/** @type {any} */ { message }) => {
-				throw new Error(
-					message +
-						'\nTo suppress or handle this error, implement `handleHttpError` in https://svelte.dev/docs/kit/configuration#prerender'
-				);
-			},
-			(input, keypath) => {
-				if (typeof input === 'function') return input;
-				if (['fail', 'warn', 'ignore'].includes(input)) return input;
-				throw new Error(`${keypath} should be "fail", "warn", "ignore" or a custom function`);
-			}
-		),
-
-		handleMissingId: validate(
-			(/** @type {any} */ { message }) => {
-				throw new Error(
-					message +
-						'\nTo suppress or handle this error, implement `handleMissingId` in https://svelte.dev/docs/kit/configuration#prerender'
-				);
-			},
-			(input, keypath) => {
-				if (typeof input === 'function') return input;
-				if (['fail', 'warn', 'ignore'].includes(input)) return input;
-				throw new Error(`${keypath} should be "fail", "warn", "ignore" or a custom function`);
-			}
-		),
-
-		handleEntryGeneratorMismatch: validate(
-			(/** @type {any} */ { message }) => {
-				throw new Error(
-					message +
-						'\nTo suppress or handle this error, implement `handleEntryGeneratorMismatch` in https://svelte.dev/docs/kit/configuration#prerender'
-				);
-			},
-			(input, keypath) => {
-				if (typeof input === 'function') return input;
-				if (['fail', 'warn', 'ignore'].includes(input)) return input;
-				throw new Error(`${keypath} should be "fail", "warn", "ignore" or a custom function`);
-			}
-		),
-
-		handleUnseenRoutes: validate(
-			(/** @type {any} */ { message }) => {
-				throw new Error(
-					message +
-						'\nTo suppress or handle this error, implement `handleUnseenRoutes` in https://svelte.dev/docs/kit/configuration#prerender'
-				);
-			},
-			(input, keypath) => {
-				if (typeof input === 'function') return input;
-				if (['fail', 'warn', 'ignore'].includes(input)) return input;
-				throw new Error(`${keypath} should be "fail", "warn", "ignore" or a custom function`);
-			}
-		),
-
-		handleInvalidUrl: validate(
-			(/** @type {any} */ { message }) => {
-				throw new Error(
-					message +
-						'\nTo suppress or handle this error, implement `handleInvalidUrl` in https://svelte.dev/docs/kit/configuration#prerender'
-				);
-			},
-			(input, keypath) => {
-				if (typeof input === 'function') return input;
-				if (['fail', 'warn', 'ignore'].includes(input)) return input;
-				throw new Error(`${keypath} should be "fail", "warn", "ignore" or a custom function`);
-			}
-		),
+		handleHttpError: prerender_handler,
+		handleMissingId: prerender_handler,
+		handleEntryGeneratorMismatch: prerender_handler,
+		handleUnseenRoutes: prerender_handler,
+		handleInvalidUrl: prerender_handler,
 
 		origin: removed(
 			(keypath) => `\`${keypath}\` has been removed in favour of \`config.paths.origin\``
@@ -346,26 +296,24 @@ export const validate_kit_options = object({
 	})
 });
 
-// /**
-//  * @param {Validator} fn
-//  * @param {(keypath: string) => string} get_message
-//  * @returns {Validator}
-//  */
-// function deprecate(
-// 	fn,
-// 	get_message = (keypath) =>
-// 		`The \`${keypath}\` option is deprecated, and will be removed in a future version`
-// ) {
-// 	return (input, keypath) => {
-//		keypath = remove_kit_prefix(keypath);
-//
-// 		if (input !== undefined) {
-// 			console.warn(styleText(['bold', 'yellow'], get_message(keypath)));
-// 		}
+/**
+ * @param {Validator} fn
+ * @param {(keypath: string) => string} get_message
+ * @returns {Validator}
+ */
+function deprecate(
+	fn,
+	get_message = (keypath) =>
+		`The \`${keypath}\` option is deprecated, and will be removed in a future version`
+) {
+	return (input, keypath) => {
+		if (input !== undefined) {
+			console.warn(styleText(['bold', 'yellow'], get_message(keypath)));
+		}
 
-// 		return fn(input, keypath);
-// 	};
-// }
+		return fn(input, keypath);
+	};
+}
 
 // Derive the names of SvelteKit's own config options from the schema, so they
 // stay in sync automatically. These are used to separate Kit's options from

@@ -10,6 +10,7 @@ import {
 	service_worker,
 	sveltekit_env_private
 } from './module_ids.js';
+import { styleText } from 'node:util';
 
 /**
  * Transforms alias to a valid vite.resolve.alias array.
@@ -21,11 +22,7 @@ import {
  */
 export function get_config_aliases(config, root) {
 	/** @type {import('vite').Alias[]} */
-	const alias = [
-		// For now, we handle `$lib` specially here rather than make it a default value for
-		// `config.alias` since it has special meaning for packaging, etc.
-		{ find: '$lib', replacement: posixify(config.files.lib) }
-	];
+	const alias = [];
 
 	for (let [key, value] of Object.entries(config.alias)) {
 		value = posixify(value);
@@ -118,16 +115,20 @@ export function not_found(req, res, base) {
 const query_pattern = /\?.*$/s;
 
 /**
- * Removes cwd/lib path from the start of the id
+ * Removes cwd path from the start of the id and replaces any `#`-prefixed
+ * import alias target paths with their alias names.
  * @param {string} id
- * @param {string} lib
+ * @param {Array<{ alias: string, path: string }>} aliases — sorted by path length descending
  * @param {string} cwd
  */
-export function normalize_id(id, lib, cwd) {
+export function normalize_id(id, aliases, cwd) {
 	id = id.replace(query_pattern, '');
 
-	if (id.startsWith(lib)) {
-		id = id.replace(lib, '$lib');
+	for (const { alias, path } of aliases) {
+		if (id === path || id.startsWith(path + '/')) {
+			id = id.replace(path, alias);
+			break;
+		}
 	}
 
 	if (id.startsWith(cwd)) {
@@ -148,6 +149,10 @@ export function normalize_id(id, lib, cwd) {
 
 	return posixify(id);
 }
+
+export const remote_module_pattern = /[/.]remote(\.[^/]+)+$/;
+export const server_only_module_pattern = /[/.]server(\.[^/]+)+$/;
+export const server_only_directory_pattern = /\/server\//;
 
 export const strip_virtual_prefix = /** @param {string} id */ (id) => id.replace('\0virtual:', '');
 
@@ -186,4 +191,19 @@ export function error_for_missing_config(feature_name, path, value) {
 			${result}
 		`
 	);
+}
+
+/**
+ * @param {number} status
+ * @param {Request} request
+ */
+export function log_response(status, request) {
+	const url = new URL(request.url);
+	const log = `[${status}] ${request.method} ${url.href.replace(url.origin, '')}`;
+
+	if (status < 400) {
+		console.log(log);
+	} else {
+		console.error(styleText(['bold', 'red'], log));
+	}
 }

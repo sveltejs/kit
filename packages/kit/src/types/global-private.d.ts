@@ -1,4 +1,4 @@
-import { RemoteFunctionData } from 'types';
+import { SvelteKitPayload } from 'types';
 
 declare global {
 	const __SVELTEKIT_ADAPTER_NAME__: string;
@@ -33,30 +33,25 @@ declare global {
 	 * Used for treeshaking universal load code from client bundles when no universal loads exist.
 	 */
 	const __SVELTEKIT_HAS_UNIVERSAL_LOAD__: boolean;
-	/** The `__sveltekit_abc123` object in the init `<script>` */
-	const __SVELTEKIT_PAYLOAD__: {
-		/** The basepath, usually relative to the current page */
-		base: string;
-		/** Path to externally-hosted assets */
-		assets?: string;
-		/** Public environment variables */
-		env?: Record<string, string>;
-		/** Serialized data from query/form/command functions */
-		data?: RemoteFunctionData;
-		/** Create a placeholder promise */
-		defer?: (id: number) => Promise<any>;
-		/** Resolve a placeholder promise */
-		resolve?: (data: { id: number; data: any; error: any }) => void;
-	};
 	/**
-	 * The Vite `root` setting used to construct paths to nodes and components
-	 * for the SSR manifest during development
+	 * The `__sveltekit_abc123` object in the init `<script>`.
+	 * Should only be used when bundleStrategy !== 'inline' to avoid SvelteKit runtime changing on every build, preventing cacheability.
 	 */
-	const __SVELTEKIT_ROOT__: string;
+	const __SVELTEKIT_PAYLOAD__: SvelteKitPayload;
 	/**
 	 * Whether the `experimental.async` flag is applied
 	 */
 	const __SVELTEKIT_SUPPORTS_ASYNC__: boolean;
+	/**
+	 * Manifest data placeholders used by `$app/manifest`. During build, these
+	 * are bare identifiers (fake globals) that the bundler leaves as unresolved
+	 * references. They are replaced with real values by scanning the output
+	 * chunks after each build completes.
+	 */
+	const __SVELTEKIT_MANIFEST_IMMUTABLE__: string[];
+	const __SVELTEKIT_MANIFEST_ASSETS__: string[];
+	const __SVELTEKIT_MANIFEST_PRERENDERED__: string[];
+	const __SVELTEKIT_MANIFEST_ROUTES__: { id: string }[];
 	/**
 	 * This makes the use of specific features visible at both dev and build time, in such a
 	 * way that we can error when they are not supported by the target platform.

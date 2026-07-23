@@ -39,7 +39,7 @@ test('build /basepath/service-worker.js', async ({ baseURL, request }) => {
 		pathname
 	});
 
-	expect(self.base).toBe('/basepath');
+	expect(self.base).toBe('/basepath/');
 	expect(self.build?.[0]).toMatch(/\/basepath\/_app\/immutable\/bundle\.[\w-]+\.js/);
 	expect(self.image_src).toMatch(/\/basepath\/_app\/immutable\/assets\/image\.[\w-]+\.jpg/);
 });

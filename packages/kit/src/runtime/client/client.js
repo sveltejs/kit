@@ -1,3 +1,4 @@
+/** @import { RouteId } from '$app/types' */
 /** @import { RemoteFunctionDataNode, ServerNodesResponse, ServerRedirectNode } from 'types' */
 /** @import { NavigationIntent } from './types.js' */
 /** @import { RenderNode } from '../types.js' */
@@ -21,7 +22,7 @@ import {
 	scroll_state,
 	load_css
 } from './utils.js';
-import { base } from '$app/paths/internal/client';
+import { base, set_match_implementation } from '$app/paths/internal/client';
 import * as devalue from 'devalue';
 import {
 	HISTORY_INDEX,
@@ -43,6 +44,7 @@ import {
 } from '../shared.js';
 import { get_message, get_status } from '../../utils/error.js';
 import { page, update, navigating, updated } from './state.svelte.js';
+import { payload } from './payload.js';
 import { add_data_suffix, add_resolution_suffix } from '../pathname.js';
 import { noop_span } from '../telemetry/noop.js';
 import { read_ndjson } from './ndjson.js';
@@ -331,6 +333,23 @@ export const query_map = new Map();
  */
 export const live_query_map = new Map();
 
+set_match_implementation(async (url) => {
+	if (typeof url === 'string') {
+		url = new URL(url, location.href);
+	}
+
+	const intent = await get_navigation_intent(url, false);
+
+	if (intent) {
+		return {
+			id: /** @type {RouteId} */ (intent.route.id),
+			params: intent.params
+		};
+	}
+
+	return null;
+});
+
 /**
  * @param {import('./types.js').SvelteKitApp} _app
  * @param {HTMLElement} _target
@@ -343,8 +362,8 @@ export async function start(_app, _target, hydrate) {
 		);
 	}
 
-	if (__SVELTEKIT_PAYLOAD__.data) {
-		const { q = {}, p = {}, l = {}, f = {} } = __SVELTEKIT_PAYLOAD__.data;
+	if (payload.data) {
+		const { q = {}, p = {}, l = {}, f = {} } = payload.data;
 
 		// store the whole nodes — error records seed the corresponding
 		// resources in a failed state when they are created during hydration
@@ -428,7 +447,7 @@ async function _invalidate(reset_page_state = true) {
 	// is running because subsequent invalidations may make earlier ones outdated,
 	// but batch multiple synchronous invalidations.
 	await (pending_invalidate ||= Promise.resolve());
-	if (!pending_invalidate) return;
+	if (pending_invalidate === null) return;
 	pending_invalidate = null;
 
 	const token = (invalidation_token = {});
@@ -1196,7 +1215,8 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 	/** @type {import('types').ServerNodesResponse | import('types').ServerRedirectNode | null} */
 	let server_data = null;
 	const url_changed = current.url ? id !== get_page_key(current.url) : false;
-	const route_changed = current.route ? route.id !== current.route.id : false;
+	// current.route is null after an error-page render, so a missing route counts as changed
+	const route_changed = !current.route || route.id !== current.route.id;
 	const search_params_changed = diff_search_params(current.url, url);
 
 	let parent_invalid = false;
@@ -1985,14 +2005,14 @@ async function navigate({
 	}
 
 	// we reset scroll before dealing with focus, to avoid a flash of unscrolled content
-	/** @type {Element | null | ''} */
+	/** @type {Element | null} */
 	let deep_linked = null;
 
 	if (autoscroll) {
 		const scroll = popped ? popped.scroll : noscroll ? scroll_state() : null;
 		if (scroll) {
 			scrollTo(scroll.x, scroll.y);
-		} else if ((deep_linked = url.hash && document.getElementById(get_id(url)))) {
+		} else if ((deep_linked = get_hash_element(url))) {
 			// Here we use `scrollIntoView` on the element instead of `scrollTo`
 			// because it natively supports the `scroll-margin` and `scroll-behavior`
 			// CSS properties.
@@ -2088,22 +2108,63 @@ let current_a = { element: undefined, href: undefined };
 function setup_preload() {
 	/** @type {NodeJS.Timeout} */
 	let mousemove_timeout;
+	/** @type {HTMLAnchorElement | SVGAElement | undefined} */
+	let hovered_a;
 	/** @type {PreloadDataPriority} */
 	let current_priority;
 
-	container.addEventListener('mousemove', (event) => {
-		const target = /** @type {Element} */ (event.target);
+	function clear_hover_preload() {
+		clearTimeout(mousemove_timeout);
+		hovered_a?.removeEventListener('mousemove', start_hover_preload);
+		hovered_a?.removeEventListener('mouseleave', clear_hover_preload);
+		hovered_a = undefined;
+	}
 
+	function start_hover_preload() {
 		clearTimeout(mousemove_timeout);
 		mousemove_timeout = setTimeout(() => {
-			void preload(target, PRELOAD_PRIORITIES.hover);
+			if (!hovered_a) return;
+			void preload(hovered_a, PRELOAD_PRIORITIES.hover);
 		}, 20);
+	}
+
+	// Use mouseover initially instead of mousemove to avoid cluttering the event queue
+	container.addEventListener('mouseover', (event) => {
+		if (!(event.target instanceof Element)) return;
+
+		const a = find_anchor(event.target, container);
+		if (!a || a === hovered_a) return;
+
+		clear_hover_preload();
+		hovered_a = a;
+
+		const options = get_router_options(a);
+
+		if (
+			options.preload_code < PRELOAD_PRIORITIES.hover &&
+			options.preload_data < PRELOAD_PRIORITIES.hover
+		) {
+			// don't add event listeners if no preloading will happen
+			return;
+		}
+
+		// Instead of just preloading right away, we start a mousemove listener to implement
+		// "mouse comes to a rest" behavior. This avoid false positives when you just move
+		// your mouse across the screen and happen to pass over a link.
+		a.addEventListener('mousemove', start_hover_preload);
+		a.addEventListener('mouseleave', clear_hover_preload, { once: true });
+
+		start_hover_preload();
 	});
 
 	/** @param {Event} event */
 	function tap(event) {
 		if (event.defaultPrevented) return;
-		void preload(/** @type {Element} */ (event.composedPath()[0]), PRELOAD_PRIORITIES.tap);
+
+		const a = find_anchor(/** @type {Element} */ (event.composedPath()[0]), container);
+		if (!a) return;
+
+		void preload(a, PRELOAD_PRIORITIES.tap);
 	}
 
 	container.addEventListener('mousedown', tap);
@@ -2122,12 +2183,10 @@ function setup_preload() {
 	);
 
 	/**
-	 * @param {Element} element
+	 * @param {HTMLAnchorElement | SVGAElement} a
 	 * @param {PreloadDataPriority} priority
 	 */
-	async function preload(element, priority) {
-		const a = find_anchor(element, container);
-
+	async function preload(a, priority) {
 		// we don't want to preload data again if the user has already hovered/tapped
 		const interacted =
 			a === current_a.element && a?.href === current_a.href && priority >= current_priority;
@@ -3254,8 +3313,8 @@ function reset_focus(url, scroll = true) {
 
 		// Mimic the browsers' behaviour and set the sequential focus navigation
 		// starting point to the fragment identifier.
-		const id = get_id(url);
-		if (id && document.getElementById(id)) {
+		const element = get_hash_element(url);
+		if (element) {
 			const { x, y } = scroll_state();
 
 			// `element.focus()` doesn't work on Safari and Firefox Ubuntu so we need
@@ -3264,7 +3323,7 @@ function reset_focus(url, scroll = true) {
 				const history_state = history.state;
 
 				resetting_focus = true;
-				location.replace(new URL(`#${id}`, location.href));
+				location.replace(new URL(`#${element.id}`, location.href));
 
 				// Firefox has a bug that sets the history state to `null` so we need to
 				// restore it after. See https://bugzilla.mozilla.org/show_bug.cgi?id=1199924
@@ -3286,9 +3345,6 @@ function reset_focus(url, scroll = true) {
 			const tabindex = root.getAttribute('tabindex');
 
 			root.tabIndex = -1;
-			// TODO: remove this when we switch to TypeScript 6
-			// @ts-ignore options.focusVisible is only typed in TypeScript 6
-			// See https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/focus#browser_compatibility
 			root.focus({ preventScroll: true, focusVisible: false });
 
 			// restore `tabindex` as to prevent `root` from stealing input from elements
@@ -3417,6 +3473,15 @@ function get_id(url) {
 	}
 
 	return decodeURIComponent(id);
+}
+
+/**
+ * @param {URL} url
+ * @returns {Element | null}
+ */
+function get_hash_element(url) {
+	const id = get_id(url);
+	return id ? document.getElementById(id) : null;
 }
 
 if (DEV) {

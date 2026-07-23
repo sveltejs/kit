@@ -1,8 +1,6 @@
-import path from 'node:path';
-import { styleText } from 'node:util';
+import { check_spelling, dedent, write_if_changed } from './utils.js';
 import { relative_path, resolve_entry } from '../../utils/filesystem.js';
 import { s } from '../../utils/misc.js';
-import { dedent, write_if_changed } from './utils.js';
 
 /**
  * Writes the client manifest to disk. The manifest is used to power the router. It contains the
@@ -123,15 +121,9 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 	const client_hooks_file = resolve_entry(kit.files.hooks.client);
 	const universal_hooks_file = resolve_entry(kit.files.hooks.universal);
 
-	const typo = resolve_entry('src/+hooks.client');
-	if (typo) {
-		console.log(
-			styleText(
-				['bold', 'yellow'],
-				`Unexpected + prefix. Did you mean ${typo.split('/').at(-1)?.slice(1)}?` +
-					` at ${path.resolve(typo)}`
-			)
-		);
+	if (!client_hooks_file) {
+		check_spelling('src/hooks.client', 'src/+hooks.client', 'Unexpected + prefix');
+		check_spelling('src/hooks.client', 'src/hook.client', 'Missing s suffix');
 	}
 
 	// Stringified version of
@@ -139,11 +131,6 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 	write_if_changed(
 		`${output}/app.js`,
 		dedent`
-			// in dev, this makes Vite inject its client as this module's first dependency,
-			// so that global constant replacements are installed before any other module
-			// (including user hooks) evaluates. In build it's inert.
-			import.meta.hot;
-
 			${
 				client_hooks_file
 					? `import * as client_hooks from '${relative_path(output, client_hooks_file)}';`

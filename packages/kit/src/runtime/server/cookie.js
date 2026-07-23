@@ -12,10 +12,11 @@ import { text_encoder } from '../utils.js';
 const cookie_paths = {};
 
 /**
- * Cookies that are larger than this size (including the name and other
- * attributes) are discarded by browsers
+ * Cookies whose name and value combined are larger than this size are
+ * discarded by browsers. This is the limit codified for the name/value pair
+ * in RFC 6265bis: https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis-20#section-5.6-7.5.1
  */
-const MAX_COOKIE_SIZE = 4129;
+const MAX_COOKIE_SIZE = 4096;
 
 /**
  * Generates a unique key for a cookie based on its domain, path, and name in
@@ -42,6 +43,25 @@ export function get_cookies(request, url) {
 		parseCookie(header, { decode: (value) => value })
 	);
 
+	/** @type {ReturnType<typeof parseCookie> | undefined} */
+	let default_cookies;
+
+	/**
+	 * The header never changes during the request, so the default-decode parse is cached
+	 * @param {import('cookie').ParseOptions} [opts]
+	 */
+	function parse_header(opts) {
+		return opts?.decode ? parseCookie(header, opts) : (default_cookies ??= parseCookie(header));
+	}
+
+	/** @param {import('./page/types.js').Cookie} cookie */
+	function matches_url(cookie) {
+		return (
+			domain_matches(url.hostname, cookie.options.domain) &&
+			path_matches(url.pathname, cookie.options.path)
+		);
+	}
+
 	/** @type {string | undefined} */
 	let normalized_url;
 
@@ -53,7 +73,7 @@ export function get_cookies(request, url) {
 		httpOnly: true,
 		path: '/',
 		sameSite: 'lax',
-		secure: url.hostname === 'localhost' && url.protocol === 'http:' ? false : true
+		secure: !__SVELTEKIT_DEV__ && !(url.hostname === 'localhost' && url.protocol === 'http:')
 	};
 
 	/** @type {import('@sveltejs/kit').Cookies} */
@@ -65,22 +85,23 @@ export function get_cookies(request, url) {
 
 		get(name, opts) {
 			// Look for the most specific matching cookie from new_cookies
-			const best_match = Array.from(new_cookies.values())
-				.filter((c) => {
-					return (
-						c.name === name &&
-						domain_matches(url.hostname, c.options.domain) &&
-						path_matches(url.pathname, c.options.path)
-					);
-				})
-				.sort((a, b) => b.options.path.length - a.options.path.length)[0];
+			/** @type {import('./page/types.js').Cookie | undefined} */
+			let best_match;
+			for (const c of new_cookies.values()) {
+				if (
+					c.name === name &&
+					matches_url(c) &&
+					(!best_match || c.options.path.length > best_match.options.path.length)
+				) {
+					best_match = c;
+				}
+			}
 
 			if (best_match) {
 				return best_match.options.maxAge === 0 ? undefined : best_match.value;
 			}
 
-			const req_cookies = parseCookie(header, { decode: opts?.decode });
-			const cookie = req_cookies[name]; // the decoded string or undefined
+			const cookie = parse_header(opts)[name]; // the decoded string or undefined
 
 			// in development, if the cookie was set during this session with `cookies.set`,
 			// but at a different path, warn the user. (ignore cookies from request headers,
@@ -103,16 +124,14 @@ export function get_cookies(request, url) {
 		},
 
 		getAll(opts) {
-			const cookies = parseCookie(header, { decode: opts?.decode });
+			// copy, so the cached parse isn't mutated below
+			const cookies = { ...parse_header(opts) };
 
 			// Group cookies by name and find the most specific one for each name
 			const lookup = new Map();
 
 			for (const c of new_cookies.values()) {
-				if (
-					domain_matches(url.hostname, c.options.domain) &&
-					path_matches(url.pathname, c.options.path)
-				) {
+				if (matches_url(c)) {
 					const existing = lookup.get(c.name);
 
 					// If no existing cookie or this one has a more specific (longer) path, use this one
@@ -225,9 +244,12 @@ export function get_cookies(request, url) {
 		new_cookies.set(cookie_key, cookie);
 
 		if (DEV) {
-			const { encode, ...rest } = cookie.options;
-			const serialized = stringifySetCookie({ name, value, ...rest }, { encode });
-			if (text_encoder.encode(serialized).byteLength > MAX_COOKIE_SIZE) {
+			const size =
+				// only the name/value pair counts towards MAX_COOKIE_SIZE, not the other attributes
+				text_encoder.encode(name).byteLength +
+				text_encoder.encode((options.encode ?? encodeURIComponent)(value)).byteLength;
+
+			if (size > MAX_COOKIE_SIZE) {
 				throw new Error(`Cookie "${name}" is too large, and will be discarded by the browser`);
 			}
 

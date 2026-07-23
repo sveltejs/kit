@@ -8,7 +8,7 @@ export default {
 		sveltekit({
 			compilerOptions: {
 				experimental: {
-					// async: true
+					async: true
 				}
 			},
 
