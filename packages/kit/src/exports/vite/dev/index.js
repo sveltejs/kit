@@ -106,6 +106,11 @@ export function dev(vite, vite_config, svelte_config, root, set_manifest_data) {
 	watch('add', () => debounce(update_manifest));
 	watch('unlink', () => debounce(update_manifest));
 	watch('change', (file) => {
+		// `manifest_data` is populated lazily on the first request (see `update_manifest`
+		// call in the middleware below), so it may still be undefined if a file changes
+		// before the dev server has served a request. In that case there's nothing to
+		// update — the manifest will be created from scratch on the first request.
+		if (!manifest_data) return;
 		// Don't run for a single file if the whole manifest is about to get updated
 		// Unless it's a file where the trailing slash page option might have changed
 		if (timeout || !/\+(page|layout|server).*$/.test(file)) return;
