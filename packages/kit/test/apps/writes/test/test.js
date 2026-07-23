@@ -73,7 +73,8 @@ test.describe('Filesystem updates', () => {
 			// than racing a fixed `waitForTimeout` against Vite's invalidation)
 			await expect(async () => {
 				await page.goto('/universal', { wait_for_started: false });
-				await expect(page.locator('h1')).toHaveText('Internal Error', { timeout: 1000 });
+				// the SSR failure now renders the default root error page, whose h1 is the status
+				await expect(page.locator('h1')).toHaveText('500', { timeout: 1000 });
 			}).toPass();
 			expect(await get_computed_style('body', 'background-color')).not.toBe('rgb(255, 0, 0)');
 		} finally {
@@ -89,7 +90,7 @@ test.describe('Filesystem updates', () => {
 			fs.writeFileSync(file, contents.replace(/export const ssr = .*;/, 'export const ssr = !1;'));
 			await page.waitForTimeout(500); // this is the rare time we actually need waitForTimeout; we have no visibility into whether the module graph has been invalidated
 			expect(await get_computed_style('body', 'background-color')).not.toBe('rgb(255, 0, 0)');
-			await expect(page.locator('h1')).toHaveText('Internal Error');
+			await expect(page.locator('h1')).toHaveText('500');
 		} finally {
 			fs.writeFileSync(file, contents.replace(/\\nexport const ssr = false;\\n/, ''));
 		}
@@ -114,7 +115,7 @@ test.describe('Filesystem updates', () => {
 			fs.writeFileSync(file, contents.replace(/export const ssr = false;/, ''));
 			await page.waitForTimeout(500); // this is the rare time we actually need waitForTimeout; we have no visibility into whether the module graph has been invalidated
 			expect(await get_computed_style('body', 'background-color')).not.toBe('rgb(255, 0, 0)');
-			await expect(page.locator('h1')).toHaveText('Internal Error');
+			await expect(page.locator('h1')).toHaveText('500');
 		} finally {
 			fs.writeFileSync(file, contents);
 		}
