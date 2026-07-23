@@ -173,6 +173,8 @@ export function dev(vite, vite_config, svelte_config, root, set_manifest_data) {
 		next();
 	});
 
+	let inited_manifest = false;
+
 	return () => {
 		const serve_static_middleware = vite.middlewares.stack.find(
 			(middleware) =>
@@ -184,6 +186,14 @@ export function dev(vite, vite_config, svelte_config, root, set_manifest_data) {
 		remove_static_middlewares(vite.middlewares);
 
 		vite.middlewares.use(async (req, res) => {
+			// Vite throws a Cannot read properties of undefined (reading 'wrapDynamicImport')
+			// if you try to run ssr.runner.import before the server has started so
+			// we do it inside here to avoid that
+			if (!inited_manifest) {
+				inited_manifest = true;
+				update_manifest();
+			}
+
 			// Vite's base middleware strips out the base path. Restore it
 			const original_url = req.url;
 			req.url = req.originalUrl;
