@@ -17,7 +17,6 @@ export const manifest = {
 	appDir: __SVELTEKIT_APP_DIR__,
 	appPath: `${__SVELTEKIT_PATHS_BASE__}/${__SVELTEKIT_APP_DIR__}`,
 	assets: new Set(manifest_data.assets.map((asset) => asset.file)),
-	base: __SVELTEKIT_PATHS_BASE__,
 	mimeTypes: mime_types,
 	_: {
 		client: {

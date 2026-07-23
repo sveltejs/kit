@@ -69,7 +69,6 @@ export interface AssetDependencies {
 export interface BuildData {
 	app_dir: string;
 	app_path: string;
-	base: string;
 	manifest_data: ManifestData;
 	out_dir: string;
 	service_worker: string | null;
