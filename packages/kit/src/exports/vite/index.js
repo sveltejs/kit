@@ -742,14 +742,10 @@ function kit({ svelte_config }) {
 					);
 
 					for (const id of [sveltekit_env, sveltekit_env_public_client]) {
-						const module = server.moduleGraph.getModuleById(id);
-
-						if (module) {
-							server.moduleGraph.invalidateModule(module);
-						}
+						invalidate_module(server, id);
 					}
 
-					server.ws.send({ type: 'full-reload' });
+					server.hot.send({ type: 'full-reload' });
 				}
 			});
 		},
@@ -1053,7 +1049,7 @@ function kit({ svelte_config }) {
 				if (this.environment.config.consumer !== 'client') {
 					// we need to add an `await Promise.resolve()` because if the user imports this function
 					// on the client AND in a load function when loading the client module we will trigger
-					// an ssrLoadModule during dev. During a link preload, the module can be mistakenly
+					// an import during dev. During a link preload, the module can be mistakenly
 					// loaded and transformed twice and the first time all its exports would be undefined
 					// triggering a dev server error. By adding a microtask we ensure that the module is fully loaded
 					const ms = new MagicString(code);
@@ -1104,7 +1100,7 @@ function kit({ svelte_config }) {
 				// being called again with `opts.ssr === true` if the module isn't
 				// already loaded) so we can determine what it exports
 				if (dev_server) {
-					if (!isRunnableDevEnvironment(dev_server.environments.ssr)) {
+					if (!vite.isRunnableDevEnvironment(dev_server.environments.ssr)) {
 						throw new Error('The configured Vite SSR environment must be a RunnableDevEnvironment');
 					}
 

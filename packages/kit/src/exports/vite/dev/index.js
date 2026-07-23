@@ -121,7 +121,7 @@ export function dev(vite, vite_config, svelte_config, root, set_manifest_data) {
 	if (appTemplate !== 'index.html') {
 		vite.watcher.on('change', (file) => {
 			if (file === appTemplate) {
-				vite.ws.send({ type: 'full-reload' });
+				vite.hot.send({ type: 'full-reload' });
 			}
 		});
 	}
@@ -328,7 +328,6 @@ function has_correct_case(file, assets) {
  */
 export function invalidate_module(server, id) {
 	for (const environment in server.environments) {
-		// Invalidate the manifest data module so it reloads with new routes/files
 		const module = server.environments[environment].moduleGraph.getModuleById(id);
 		if (module) {
 			server.environments[environment].moduleGraph.invalidateModule(module);
