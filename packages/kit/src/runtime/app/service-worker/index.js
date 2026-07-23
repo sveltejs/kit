@@ -4,6 +4,12 @@
 
 import { DEV } from 'esm-env';
 
+/**
+ * The execution context of a service worker. This export exists to make it easier to
+ * use service workers with the correct types, provided it is used in a module governed
+ * by a `tsconfig.json` that extends [`$app/tsconfig/service-worker`](https://svelte.dev/docs/kit/$app-tsconfig-service-worker),
+ *
+ */
 export const self = /** @type {ServiceWorkerGlobalScope} */ (
 	/** @type {unknown} */ (globalThis.self)
 );
