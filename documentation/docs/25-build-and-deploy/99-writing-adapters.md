@@ -98,7 +98,7 @@ You can also define a custom server entry during development by adding a Vite pl
 			id: /^sveltekit:server-entry$/
 		},
 		handler(id) {
-			return import.meta.resolve('./path-to-your-server.js');
+			return this.resolve(import.meta.resolve('./path-to-your-server.js'));
 		}
 	}
 }
