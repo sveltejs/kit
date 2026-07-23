@@ -86,7 +86,7 @@ describe('updated', () => {
 
 	test('check() does not run concurrent checks', async () => {
 		/** @type {Array<{ resolve: (value: any) => void }>} */
-		let resolve_queue = [];
+		const resolve_queue = [];
 
 		vi.stubGlobal(
 			'fetch',
