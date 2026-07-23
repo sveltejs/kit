@@ -102,7 +102,6 @@ export function generate_manifest({
 			appDir: ${s(build_data.app_dir)},
 			appPath: ${s(build_data.app_path)},
 			assets: new Set(${s(assets)}),
-			base: ${s(build_data.base)},
 			mimeTypes: ${s(mime_types)},
 			_: {
 				client: ${uneval(build_data.client)},
