@@ -4,5 +4,6 @@
 		"checkJs": true,
 		"noEmit": true
 	},
-	"extends": "$app/tsconfig"
+	"extends": "$app/tsconfig",
+	"include": ["source", "test", "vite.custom.config.js", "playwright.config.js"]
 }

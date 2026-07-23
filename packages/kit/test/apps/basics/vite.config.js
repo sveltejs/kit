@@ -84,12 +84,6 @@ export default defineConfig({
 
 			router: {
 				resolution: /** @type {'client' | 'server'} */ (process.env.ROUTER_RESOLUTION) || 'client'
-			},
-
-			typescript: {
-				config: (config) => {
-					config.include = ['**', '../unit-test'];
-				}
 			}
 		})
 	],
