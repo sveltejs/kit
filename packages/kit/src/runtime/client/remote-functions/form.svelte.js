@@ -46,6 +46,7 @@ function merge_with_server_issues(form_data, current_issues, client_issues) {
 		...client_issues
 	];
 
+	/** @type {Map<string, number>} */
 	const positions = new Map();
 	let i = 0;
 	for (const key of form_data.keys()) {
