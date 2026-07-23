@@ -701,8 +701,11 @@ export interface RequestState {
 		 */
 		implicit: null | Map<RemoteInternals, Record<string, () => MaybePromise<any>>>;
 		/**
-		 * Data that is explicitly included because of a `set(...)` or `refresh()`.
-		 * This is always awaited
+		 * Data that is explicitly included because of a `set(...)`, `refresh()` or
+		 * `reconnect()`. The stored function is invoked lazily at the end of the
+		 * request by `collect_remote_data`; if the query was already read (and thus
+		 * cached) earlier in the request, invoking it does no additional work. This
+		 * is always awaited and serialized.
 		 */
 		explicit: null | Map<
 			string,
