@@ -1,5 +1,6 @@
 import path from 'node:path';
 import { normalize_import_value, read_package_imports } from '../../../utils/imports.js';
+import { posixify } from '../../../utils/os.js';
 
 /**
  * Without these, compilation will fail
@@ -52,7 +53,7 @@ export function extends_parent(options, parent) {
  */
 export function normalize_config(out, config, transform) {
 	const dir = path.dirname(out);
-	const relative = (/** @type {string} */ file) => path.relative(dir, file);
+	const relative = (/** @type {string} */ file) => posixify(path.relative(dir, file));
 
 	const paths =
 		config.compilerOptions?.paths &&
