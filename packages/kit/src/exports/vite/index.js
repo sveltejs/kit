@@ -546,9 +546,7 @@ function kit({ svelte_config }) {
 						__SVELTEKIT_PAYLOAD__: kit_global, // only relevant when bundleStrategy !== 'split'
 						__SVELTEKIT_HAS_SERVER_LOAD__: 'true',
 						__SVELTEKIT_HAS_UNIVERSAL_LOAD__: 'true',
-						__SVELTEKIT_PATHS_ASSETS__: kit.paths.assets
-							? s(SVELTE_KIT_ASSETS)
-							: s(kit.paths.base),
+						__SVELTEKIT_PATHS_ASSETS__: kit.paths.assets ? s(SVELTE_KIT_ASSETS) : s(kit.paths.base),
 						__SVELTEKIT_FILES_ASSETS__: s(posixify(kit.files.assets))
 					};
 
