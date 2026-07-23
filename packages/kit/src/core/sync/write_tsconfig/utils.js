@@ -100,7 +100,7 @@ export function validate_resolved_config(resolved, options) {
 		const mismatch = new Set();
 
 		for (const [k, expected] of Object.entries(options.paths)) {
-			const actual = resolved.paths?.[k]?.map((x) =>
+			const actual = resolved.paths?.[k]?.map((/** @type {string} */ x) =>
 				path.resolve(/** @type {string} */ (resolved.pathsBasePath), x)
 			);
 
