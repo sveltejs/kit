@@ -22,7 +22,7 @@ declare module '__sveltekit/server' {
 }
 
 /** Used to construct the SSR manifest from within an environment during development */
-declare module '__sveltekit/manifest-data' {
+declare module '__sveltekit/dev-manifest-data' {
 	import { ManifestData } from 'types';
 
 	export const env: Record<string, string>;

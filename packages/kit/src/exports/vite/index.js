@@ -61,9 +61,10 @@ import {
 	sveltekit_manifest_data,
 	sveltekit_env_public_client,
 	sveltekit_env_public_server,
-	sveltekit_traced,
-	sveltekit_dev_internal_server_entry,
-	sveltekit_dev_server_entry
+	sveltekit_dev_traced,
+	sveltekit_dev_server_entry,
+	sveltekit_dev_manifest_data,
+	sveltekit_dev_server
 } from './module_ids.js';
 import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
@@ -617,7 +618,7 @@ function kit({ svelte_config }) {
 		resolveId: {
 			filter: {
 				id: [
-					exactRegex(sveltekit_dev_internal_server_entry),
+					exactRegex(sveltekit_dev_server),
 					exactRegex('sveltekit:server-manifest'),
 					exactRegex('sveltekit:server'),
 					exactRegex('sveltekit:env'),
@@ -625,9 +626,9 @@ function kit({ svelte_config }) {
 				]
 			},
 			handler(id) {
-				if (id === sveltekit_dev_internal_server_entry) {
+				if (id === sveltekit_dev_server) {
 					return server_instrumentation
-						? sveltekit_traced
+						? sveltekit_dev_traced
 						: this.resolve(sveltekit_dev_server_entry);
 				}
 
@@ -652,13 +653,13 @@ function kit({ svelte_config }) {
 			filter: {
 				id: [
 					exactRegex('sveltekit:env'),
-					exactRegex(sveltekit_manifest_data),
-					exactRegex(sveltekit_traced)
+					exactRegex(sveltekit_dev_manifest_data),
+					exactRegex(sveltekit_dev_traced)
 				]
 			},
 			handler(id) {
 				switch (id) {
-					case sveltekit_manifest_data: {
+					case sveltekit_dev_manifest_data: {
 						return dedent`
 							import { load_and_validate_params } from '__SVELTEKIT__/utils/params.js';
 							import { to_fs } from '__SVELTEKIT__/utils/vite.js';
@@ -687,7 +688,7 @@ function kit({ svelte_config }) {
 						`;
 					}
 
-					case sveltekit_traced: {
+					case sveltekit_dev_traced: {
 						if (!server_instrumentation) {
 							throw new Error('Server instrumentation file not found. This should never happen');
 						}

@@ -2,7 +2,7 @@
 /** @import { EnvironmentModuleNode } from 'vite' */
 import fs from 'node:fs';
 import { isCSSRequest } from 'vite';
-import { manifest_data, mime_types } from '__sveltekit/manifest-data';
+import { manifest_data, mime_types } from '__sveltekit/dev-manifest-data';
 import { get_dev_server, get_remotes } from './context.js';
 import { resolve } from './utils.js';
 import { compact } from '../../../utils/array.js';
