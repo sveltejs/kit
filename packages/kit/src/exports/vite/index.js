@@ -548,7 +548,7 @@ function kit({ svelte_config }) {
 						__SVELTEKIT_HAS_UNIVERSAL_LOAD__: 'true',
 						__SVELTEKIT_PATHS_ASSETS__: kit.paths.assets
 							? s(SVELTE_KIT_ASSETS)
-							: s(kit.paths.assets),
+							: s(kit.paths.base),
 						__SVELTEKIT_FILES_ASSETS__: s(posixify(kit.files.assets))
 					};
 
