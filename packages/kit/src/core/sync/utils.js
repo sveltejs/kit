@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { mkdirp } from '../../utils/filesystem.js';
+import { styleText } from 'node:util';
+import { mkdirp, resolve_entry } from '../../utils/filesystem.js';
 
 /** @type {Map<string, string>} */
 const previous_contents = new Map();
@@ -67,4 +68,23 @@ export function dedent(strings, ...values) {
 	str = str.trim();
 
 	return str;
+}
+
+/**
+ * @param {string} original
+ * @param {string} typo The common misspelling to check for
+ * @param {string} description What was wrong with the filename
+ */
+export function check_spelling(original, typo, description) {
+	const misspelled = resolve_entry(typo);
+	if (!misspelled) return;
+
+	const corrected = path.basename(misspelled).replace(path.basename(typo), path.basename(original));
+
+	console.warn(
+		styleText(
+			['bold', 'yellow'],
+			`${description}. Did you mean ${corrected}?` + ` at ${path.resolve(misspelled)}`
+		)
+	);
 }
