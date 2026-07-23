@@ -22,7 +22,7 @@ import {
 } from '../utils.js';
 import { escape_html } from '../../../utils/escape.js';
 import { fix_stack_trace } from './sourcemaps.js';
-import { sveltekit_dev_server, sveltekit_manifest_data } from '../module_ids.js';
+import { sveltekit_dev_manifest_data, sveltekit_dev_server, sveltekit_manifest_data } from '../module_ids.js';
 
 /**
  * @param {import('vite').ViteDevServer} vite
@@ -111,6 +111,7 @@ export function dev(vite, vite_config, svelte_config, root, set_manifest_data) {
 		if (timeout || !/\+(page|layout|server).*$/.test(file)) return;
 		sync.update(svelte_config, manifest_data, file, root);
 		invalidate_module(vite, sveltekit_manifest_data);
+		invalidate_module(vite, sveltekit_dev_manifest_data);
 	});
 
 	const { appTemplate, errorTemplate, serviceWorker, hooks } = svelte_config.kit.files;

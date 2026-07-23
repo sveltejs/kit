@@ -1729,6 +1729,7 @@ function kit({ svelte_config }) {
 			return dev(server, vite_config, svelte_config, root, (data) => {
 				manifest_data = data;
 				invalidate_module(server, sveltekit_manifest_data);
+				invalidate_module(server, sveltekit_dev_manifest_data);
 				context.set_svelte_config(svelte_config);
 				context.set_remotes(remotes);
 			});
