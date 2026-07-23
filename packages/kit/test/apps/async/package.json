@@ -22,6 +22,7 @@
 		"typescript": "catalog:",
 		"valibot": "catalog:",
 		"vite": "catalog:",
+		"e2e-test-dep-plain": "file:./_test_dependencies/plain-lib",
 		"e2e-test-dep-remote": "file:./_test_dependencies/remote-lib"
 	},
 	"imports": {

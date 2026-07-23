@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import path from 'node:path';
 import { posixify } from '../../utils/os.js';
 import { negotiate } from '../../utils/http.js';
@@ -151,6 +152,44 @@ export function normalize_id(id, aliases, cwd) {
 }
 
 export const remote_module_pattern = /[/.]remote(\.[^/]+)+$/;
+/** @type {Map<string, boolean>} */
+const remote_module_cache = new Map();
+
+/**
+ * Whether `id` is a remote module. Files in node_modules only count if the
+ * package they belong to has a peer dependency on `@sveltejs/kit`
+ * @param {string} id
+ * @returns {boolean}
+ */
+export function is_remote_module(id) {
+	if (!remote_module_pattern.test(id)) return false;
+	if (!id.includes('node_modules')) return true;
+
+	const directory = path.dirname(id);
+	const cached = remote_module_cache.get(directory);
+	if (cached !== undefined) return cached;
+
+	let current = directory;
+
+	while (true) {
+		try {
+			const package_json = JSON.parse(fs.readFileSync(path.join(current, 'package.json'), 'utf8'));
+
+			if (package_json.peerDependencies?.['@sveltejs/kit']) {
+				remote_module_cache.set(directory, true);
+				return true;
+			}
+		} catch {}
+
+		const parent = path.dirname(current);
+		if (path.basename(current) === 'node_modules' || parent === current) break;
+		current = parent;
+	}
+
+	remote_module_cache.set(directory, false);
+	return false;
+}
+
 export const server_only_module_pattern = /[/.]server(\.[^/]+)+$/;
 export const server_only_directory_pattern = /\/server\//;
 
