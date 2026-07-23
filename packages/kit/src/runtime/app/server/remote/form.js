@@ -7,7 +7,8 @@ import {
 	set_nested_value,
 	deep_set,
 	normalize_issue,
-	flatten_issues
+	flatten_issues,
+	parse_form_key
 } from '../../../form-utils.js';
 import { get_cache, get_implicit_lookup, run_remote_function } from './shared.js';
 import { ValidationError } from '@sveltejs/kit/internal';
@@ -102,7 +103,7 @@ export function form(validate_or_fn, maybe_fn) {
 				}
 
 				if (validated?.issues !== undefined) {
-					handle_issues(output, validated.issues, form_data);
+					handle_issues(output, validated.issues, form_data, __.id);
 				} else {
 					if (validated !== undefined) {
 						data = validated.value;
@@ -120,7 +121,7 @@ export function form(validate_or_fn, maybe_fn) {
 						);
 					} catch (e) {
 						if (e instanceof ValidationError) {
-							handle_issues(output, e.issues, form_data);
+							handle_issues(output, e.issues, form_data, __.id);
 						} else {
 							throw e;
 						}
@@ -135,7 +136,7 @@ export function form(validate_or_fn, maybe_fn) {
 
 					// register under the client-side action id so the output is serialized
 					// into the page, allowing the hydrated client to restore `result`/`issues`/`input`
-					get_implicit_lookup(__, state)[__.action_id ?? __.id] = () => cache[''];
+					get_implicit_lookup(__, state)[__.key ? `${__.id}/${__.key}` : __.id] = () => cache[''];
 				}
 
 				return output;
@@ -145,7 +146,7 @@ export function form(validate_or_fn, maybe_fn) {
 		Object.defineProperty(instance, '__', { value: __ });
 
 		Object.defineProperty(instance, 'action', {
-			get: () => `?/remote=${__.id}`,
+			get: () => `?/remote=${__.key ? `${__.id}/${encodeURIComponent(__.key)}` : __.id}`,
 			enumerable: true
 		});
 
@@ -153,10 +154,10 @@ export function form(validate_or_fn, maybe_fn) {
 			get() {
 				// the form instance is created once per module and shared across requests,
 				// so the current request's state has to be resolved at access time
-				return create_field_proxy(
-					{},
-					() => get_cache(__, get_request_store().state)?.['']?.input ?? {},
-					(path, value) => {
+				return create_field_proxy({
+					form_id: __.id,
+					get: () => get_cache(__, get_request_store().state)?.['']?.input ?? {},
+					set: (path, value) => {
 						const cache = get_cache(__, get_request_store().state);
 						const entry = cache[''];
 
@@ -174,11 +175,11 @@ export function form(validate_or_fn, maybe_fn) {
 						deep_set(input, path.map(String), value);
 						(cache[''] ??= {}).input = input;
 					},
-					() => flatten_issues(get_cache(__, get_request_store().state)?.['']?.issues ?? []),
-					() => ({}),
-					() => ({}),
-					[]
-				);
+					get_issues: () =>
+						flatten_issues(get_cache(__, get_request_store().state)?.['']?.issues ?? []),
+					get_touched: () => ({}),
+					get_dirty: () => ({})
+				});
 			}
 		});
 
@@ -228,12 +229,15 @@ export function form(validate_or_fn, maybe_fn) {
 				value: (key) => {
 					const { state } = get_request_store();
 					const cache_key = __.id + '|' + JSON.stringify(key);
+					/** @type {RemoteForm<Input, Output> & { __: RemoteFormInternals }} */
 					let instance = (state.remote.forms ??= new Map()).get(cache_key);
 
 					if (!instance) {
-						instance = create_instance(key);
-						instance.__.id = `${__.id}/${encodeURIComponent(JSON.stringify(key))}`;
-						instance.__.action_id = `${__.id}/${JSON.stringify(key)}`;
+						instance = /** @type {RemoteForm<Input, Output> & { __: RemoteFormInternals }} */ (
+							create_instance(key)
+						);
+						instance.__.id = __.id;
+						instance.__.key = JSON.stringify(key);
 						instance.__.name = __.name;
 
 						state.remote.forms.set(cache_key, instance);
@@ -254,8 +258,9 @@ export function form(validate_or_fn, maybe_fn) {
  * @param {{ issues?: InternalRemoteFormIssue[], input?: Record<string, any>, result: any }} output
  * @param {readonly StandardSchemaV1.Issue[]} issues
  * @param {FormData | null} form_data - null if the form is progressively enhanced
+ * @param {string} form_id - hash/name of the form
  */
-function handle_issues(output, issues, form_data) {
+function handle_issues(output, issues, form_data, form_id) {
 	output.issues = issues.map((issue) => normalize_issue(issue, true));
 
 	// if it was a progressively-enhanced submission, we don't need
@@ -263,19 +268,17 @@ function handle_issues(output, issues, form_data) {
 	if (form_data) {
 		output.input = {};
 
-		for (let key of form_data.keys()) {
+		for (const field_name of form_data.keys()) {
 			// redact sensitive fields
-			if (/^[.\]]?_/.test(key)) continue;
+			if (/^[.\]]?_/.test(field_name)) continue;
 
-			const is_array = key.endsWith('[]');
-			const values = form_data.getAll(key).filter((value) => typeof value === 'string');
-
-			if (is_array) key = key.slice(0, -2);
+			const values = form_data.getAll(field_name).filter((value) => typeof value === 'string');
+			const field = parse_form_key(form_id, field_name);
 
 			set_nested_value(
 				/** @type {Record<string, any>} */ (output.input),
-				key,
-				is_array ? values : values[0]
+				field,
+				field.is_array ? values : values[0]
 			);
 		}
 	}

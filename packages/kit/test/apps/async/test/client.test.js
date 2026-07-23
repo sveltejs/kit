@@ -142,20 +142,36 @@ test.describe('remote function mutations', () => {
 		expect(request_count).toBe(1); // only the command itself — no separate refetch of get_b
 	});
 
-	test('a query re-refreshed by another query during collection re-runs', async ({ page }) => {
+	test('a query re-refreshed by another query during collection is cached, not re-run', async ({
+		page
+	}) => {
 		await page.goto('/remote/re-refresh');
 		await expect(page.locator('#value')).toHaveText('0');
 
 		let request_count = 0;
 		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
 
-		// `bump` refreshes `get_value` (which would see 10) and `driver`. When `driver`
-		// runs during collection it bumps the value to 11 and re-refreshes `get_value`,
-		// which must run *again* and serialize 11 — not the stale 10 from its first run.
+		// `bump` refreshes `get_value` (which sees 10) and `driver`. When `driver`
+		// runs during collection it bumps the value to 11 and re-refreshes `get_value`.
+		// `get_value` has already been processed once this drain, so the re-refresh is
+		// cached rather than re-run — the client keeps the first (10) value. This is
+		// what prevents A → B → A refresh cycles from looping forever.
 		await page.click('#bump');
-		await expect(page.locator('#value')).toHaveText('11');
+		await expect(page.locator('#value')).toHaveText('10');
 		await page.waitForTimeout(100); // allow all requests to finish
-		expect(request_count).toBe(1); // only the command — the re-run rode along in the response
+		expect(request_count).toBe(1); // only the command — no separate refetch
+	});
+
+	test('queries that refresh each other in a cycle do not loop forever', async ({ page }) => {
+		await page.goto('/remote/refresh-cycle');
+		await expect(page.locator('#value')).toHaveText('0');
+
+		// `get_a` refreshes `get_b` and `get_b` refreshes `get_a`. Without cycle
+		// detection in the drain phase the command response would never settle, so
+		// `#value` would stay at 0 and this assertion would time out.
+		await page.click('#bump');
+
+		await expect(page.locator('#value')).toHaveText('1');
 	});
 
 	test('hydrated query errors are reused', async ({ page }) => {
@@ -494,7 +510,7 @@ test.describe('remote function mutations', () => {
 	test('fields.set updates DOM before validate', async ({ page }) => {
 		await page.goto('/remote/form/imperative');
 
-		const input = page.locator('input[name="message"]');
+		const input = page.locator('input[name^="message"]');
 		await input.fill('123');
 
 		await page.locator('#set-and-validate').click();
@@ -1056,8 +1072,8 @@ test.describe('remote function mutations', () => {
 
 		const form1 = page.locator('form').nth(0);
 
-		const text = form1.locator('input[name="text_field"]');
-		const checkbox = form1.locator('input[name="b:checkbox_field"]');
+		const text = form1.locator('input[name^="text_field"]');
+		const checkbox = form1.locator('input[name^="b:checkbox_field"]');
 
 		// initial values rendered correctly
 		await expect(text).toHaveValue('Example text');
@@ -1136,7 +1152,7 @@ test.describe('remote function mutations', () => {
 		page
 	}) => {
 		await page.goto('/remote/form/native-result');
-		await page.locator('#plain input[name="message"]').fill('hello');
+		await page.locator('#plain input[name^="message"]').fill('hello');
 		await page.click('#plain button');
 
 		// wait for the page resulting from the full-page POST to hydrate
@@ -1148,20 +1164,20 @@ test.describe('remote function mutations', () => {
 		page
 	}) => {
 		await page.goto('/remote/form/native-result');
-		await page.locator('#plain input[name="message"]').fill('ab');
+		await page.locator('#plain input[name^="message"]').fill('ab');
 		await page.click('#plain button');
 
 		// wait for the page resulting from the full-page POST to hydrate
 		await expect(page.locator('#hydrated')).toHaveText('true');
 		await expect(page.locator('#issue')).toHaveText('too short');
-		await expect(page.locator('#plain input[name="message"]')).toHaveValue('ab');
+		await expect(page.locator('#plain input[name^="message"]')).toHaveValue('ab');
 	});
 
 	test('keyed form result from a native (non-enhanced) submission survives hydration', async ({
 		page
 	}) => {
 		await page.goto('/remote/form/native-result');
-		await page.locator('#keyed input[name="message"]').fill('hello');
+		await page.locator('#keyed input[name^="message"]').fill('hello');
 		await page.click('#keyed button');
 
 		// wait for the page resulting from the full-page POST to hydrate
@@ -1175,7 +1191,7 @@ test.describe('remote function mutations', () => {
 		page
 	}) => {
 		await page.goto('/remote/form/native-result');
-		await page.locator('#keyed-slash input[name="message"]').fill('hello');
+		await page.locator('#keyed-slash input[name^="message"]').fill('hello');
 		await page.click('#keyed-slash button');
 
 		// wait for the page resulting from the full-page POST to hydrate
@@ -1201,7 +1217,7 @@ test.describe('remote function mutations', () => {
 
 	test('form submission with element id `reset` resets the form', async ({ page }) => {
 		await page.goto('/remote/form/reset-id');
-		await page.locator('[name="message"]').fill('short');
+		await page.locator('[name^="message"]').fill('short');
 		await page.click('button');
 
 		await expect(page.locator('.error')).toHaveText('too short');
@@ -1209,11 +1225,11 @@ test.describe('remote function mutations', () => {
 		await page.click('[type="reset"]');
 		await expect(page.locator('.error')).toHaveCount(0);
 
-		await page.locator('[name="message"]').fill('long enough');
+		await page.locator('[name^="message"]').fill('long enough');
 		await page.click('button');
 
 		await expect(page.locator('#result')).toHaveText('long enough');
-		await expect(page.locator('[name="message"]')).toBeEmpty();
+		await expect(page.locator('[name^="message"]')).toBeEmpty();
 	});
 });
 

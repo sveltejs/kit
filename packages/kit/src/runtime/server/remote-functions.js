@@ -240,7 +240,11 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 					);
 				}
 
-				const { data: input, meta, form_data } = await deserialize_binary_form(event.request);
+				const {
+					data: input,
+					meta,
+					form_data
+				} = await deserialize_binary_form(event.request, internals.id);
 				state.remote.requested = create_requested_map(meta.remote_refreshes);
 
 				// If this is a keyed form instance (created via form.for(key)), add the key to the form data (unless already set)
@@ -384,6 +388,7 @@ export async function collect_remote_data(data, event, state, options) {
 		const drain = () => {
 			for (const [remote_key, { internals, fn }] of explicit) {
 				explicit.delete(remote_key);
+				if (processed.has(remote_key)) continue;
 				processed.add(remote_key);
 
 				// there were explicit refreshes/reconnects (via `refresh()`/`set()`/`reconnect()`),
@@ -564,9 +569,9 @@ async function handle_remote_form_post_internal(event, state, manifest, id) {
 	}
 
 	try {
-		const fn = /** @type {RemoteFormInternals} */ (/** @type {any} */ (form).__).fn;
+		const __ = /** @type {RemoteFormInternals} */ (/** @type {any} */ (form).__);
 
-		const { data, meta, form_data } = await deserialize_binary_form(event.request);
+		const { data, meta, form_data } = await deserialize_binary_form(event.request, __.id);
 
 		if (action_id && !('id' in data)) {
 			data.id = JSON.parse(decodeURIComponent(action_id));
@@ -574,7 +579,7 @@ async function handle_remote_form_post_internal(event, state, manifest, id) {
 
 		await with_request_store(
 			{ event, state: { ...state, is_in_remote_form_or_command: true } },
-			() => fn(data, meta, form_data)
+			() => __.fn(data, meta, form_data)
 		);
 
 		// We don't want the data to appear on `let { form } = $props()`, which is why we're not returning it.
