@@ -11,4 +11,4 @@ This module contains TypeScript configuration tailored for your service worker:
 }
 ```
 
-You can extend this configuration with your own `compilerOptions`, adhering to the same restrictions as [`$app/tsconfig]($app-tsconfig).
+You can extend this configuration with your own `compilerOptions`, adhering to the same restrictions as [`$app/tsconfig`]($app-tsconfig).

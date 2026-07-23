@@ -3569,6 +3569,12 @@ declare module '$app/server' {
 }
 
 declare module '$app/service-worker' {
+	/**
+	 * The execution context of a service worker. This export exists to make it easier to
+	 * use service workers with the correct types, provided the importing module is governed
+	 * by a `tsconfig.json` that extends [`$app/tsconfig/service-worker`](https://svelte.dev/docs/kit/$app-tsconfig-service-worker).
+	 *
+	 */
 	// @ts-ignore
 	export const self: ServiceWorkerGlobalScope;
 
