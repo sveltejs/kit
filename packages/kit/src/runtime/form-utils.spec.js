@@ -6,7 +6,7 @@ import {
 	create_field_proxy,
 	deep_set,
 	deserialize_binary_form,
-	parse_form_field_name,
+	parse_form_key,
 	serialize_binary_form,
 	split_path
 } from './form-utils.js';
@@ -53,12 +53,12 @@ describe('split_path', () => {
 
 describe('convert_formdata', () => {
 	test('normalizes type prefixes and array suffixes', () => {
-		expect(parse_form_field_name('form', 'n:items[]/form')).toEqual({
+		expect(parse_form_key('form', 'n:items[]/form')).toEqual({
 			name: 'items',
 			type: 'number',
 			is_array: true
 		});
-		expect(parse_form_field_name('form', 'b:enabled/form')).toEqual({
+		expect(parse_form_key('form', 'b:enabled/form')).toEqual({
 			name: 'enabled',
 			type: 'boolean',
 			is_array: false
@@ -66,9 +66,7 @@ describe('convert_formdata', () => {
 	});
 
 	test('rejects field names without the form id suffix', () => {
-		expect(() => parse_form_field_name('form', 'foo/other')).toThrow(
-			/wasn't created with form.fields.as/
-		);
+		expect(() => parse_form_key('form', 'foo/other')).toThrow(/wasn't created with form.fields.as/);
 	});
 
 	test('coerces typed values after normalizing field names', () => {

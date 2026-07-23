@@ -26,7 +26,7 @@ import {
 	deep_get,
 	DELETE_KEY,
 	BINARY_FORM_CONTENT_TYPE,
-	parse_form_field_name
+	parse_form_key
 } from '../../form-utils.js';
 
 /**
@@ -408,20 +408,20 @@ export function form(id) {
 				if (
 					previous_submitter !== null &&
 					!Array.from(form_data.keys())
-						.map((name) => parse_form_field_name(action_id_without_key, name).name)
+						.map((name) => parse_form_key(action_id_without_key, name).name)
 						.includes(previous_submitter.name)
 				) {
 					set_nested_value(input, previous_submitter, undefined);
 				}
 
 				if (event.submitter) {
-					let name = event.submitter.getAttribute('name');
+					const name = event.submitter.getAttribute('name');
 					let submitter = null;
 
 					const value = /** @type {any} */ (event.submitter).value;
 
 					if (name !== null && value !== undefined) {
-						submitter = parse_form_field_name(action_id_without_key, name);
+						submitter = parse_form_key(action_id_without_key, name);
 						set_nested_value(input, submitter, value);
 					}
 
@@ -469,7 +469,7 @@ export function form(id) {
 				const name = element.name;
 				if (!name) return;
 
-				const field = parse_form_field_name(action_id_without_key, name);
+				const field = parse_form_key(action_id_without_key, name);
 
 				const is_file = element.type === 'file';
 
@@ -548,12 +548,12 @@ export function form(id) {
 				const name = /** @type {HTMLInputElement} */ (e.target).name;
 				if (!name) return;
 
-				const { name: field_name } = parse_form_field_name(action_id_without_key, name);
+				const field = parse_form_key(action_id_without_key, name);
 
-				touched[field_name] = true;
+				touched[field.name] = true;
 
-				if (Object.hasOwn(dirty, field_name)) {
-					can_validate[field_name] = true;
+				if (Object.hasOwn(dirty, field.name)) {
+					can_validate[field.name] = true;
 				}
 			};
 

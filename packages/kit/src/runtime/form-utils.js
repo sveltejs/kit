@@ -22,21 +22,19 @@ export function set_nested_value(object, field, value) {
 /**
  * Separates a form field's path from the metadata encoded in its name.
  * @param {string} form_id
- * @param {string} name
+ * @param {string} key
  * @returns {{ name: string; type: 'number' | 'boolean' | null; is_array: boolean }}
  */
-export function parse_form_field_name(form_id, name) {
-	if (!name.endsWith('/' + form_id)) {
+export function parse_form_key(form_id, key) {
+	const suffix = '/' + form_id;
+	let name = key;
+
+	if (!name.endsWith(suffix)) {
 		throw new Error(`Form contained a field that wasn't created with form.fields.as(...): ${name}`);
 	}
 
-	return parse_form_field_path(name.slice(0, -form_id.length - 1));
-}
+	name = name.slice(0, -suffix.length);
 
-/**
- * @param {string} name
- */
-function parse_form_field_path(name) {
 	/** @type {'number' | 'boolean' | null} */
 	let type = null;
 
@@ -82,7 +80,7 @@ export function convert_formdata(form_id, data) {
 		/** @type {any[]} */
 		const values = data.getAll(field_name);
 
-		const field = parse_form_field_name(form_id, field_name);
+		const field = parse_form_key(form_id, field_name);
 
 		// an empty `<input type="file">` will submit a non-existent file, bizarrely
 		const entries = values.filter(
