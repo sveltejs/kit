@@ -3,6 +3,5 @@ node_modules
 /.svelte-kit
 
 # Cloudflare
-/.wrangler
+.wrangler
 /dist
-/config
