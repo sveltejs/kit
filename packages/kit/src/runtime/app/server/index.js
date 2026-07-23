@@ -26,10 +26,6 @@ export function read(asset) {
 		);
 	}
 
-	if (__SVELTEKIT_DEV__) {
-		asset = from_fs(asset);
-	}
-
 	// handle inline assets internally
 	const match = /^data:([^;,]+)?(;base64)?,/.exec(asset);
 	if (match) {
@@ -68,7 +64,7 @@ export function read(asset) {
 		const length = manifest._.server_assets[file];
 		const type = manifest.mimeTypes[file.slice(file.lastIndexOf('.'))];
 
-		return new Response(read_implementation(file), {
+		return new Response(read_implementation(__SVELTEKIT_DEV__ ? from_fs(file) : file), {
 			headers: {
 				'Content-Length': '' + length,
 				'Content-Type': type
