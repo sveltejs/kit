@@ -1071,6 +1071,24 @@ test.describe('data-sveltekit attributes', () => {
 		await expect(page).toHaveURL(offline_url);
 	});
 
+	test('preloaded redirect is not replayed on navigation', async ({ page }) => {
+		await page.goto('/data-sveltekit/preload-data/redirect-gate/start');
+
+		// preload /dashboard while its load redirects to /select
+		await page.locator('#gated').hover();
+		await page.locator('#gated').dispatchEvent('touchstart');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
+		]);
+
+		// navigating must re-run load rather than replay the cached redirect,
+		// otherwise the mutual redirect never resolves and loops
+		await page.locator('#gated').click();
+		await expect(page.locator('h1')).toHaveText('dashboard');
+		await expect(page).toHaveURL(/redirect-gate\/dashboard/);
+	});
+
 	test('data-sveltekit-preload-data error does not block user navigation', async ({
 		page,
 		context,

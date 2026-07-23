@@ -622,8 +622,11 @@ async function _preload_data(intent) {
 			token: preload,
 			promise: load_route({ ...intent, preload }).then((result) => {
 				preload_tokens.delete(preload);
-				if (result.type === 'loaded' && result.state.error) {
-					// Don't cache errors, because they might be transient
+				if (result.type === 'redirect' || (result.type === 'loaded' && result.state.error)) {
+					// Don't cache errors or redirects, because they might be transient.
+					// A cached redirect would be replayed without re-running `load`
+					// until a navigation commits, which can turn a resolvable
+					// redirect chain into a redirect loop
 					discard_load_cache();
 				}
 				return result;
