@@ -1,4 +1,4 @@
-import { build } from '$service-worker';
+import { immutable } from '$app/manifest';
 import { version } from '$app/env';
 import { MESSAGE } from '$app/env/public';
 import { resolve } from '$app/paths';
@@ -7,7 +7,7 @@ import src from './image.jpg?url';
 //@ts-ignore
 self.base = resolve('');
 //@ts-ignore
-self.build = build;
+self.immutable = immutable;
 //@ts-ignore
 self.image_src = src;
 
@@ -15,7 +15,7 @@ const name = `cache-${version}`;
 
 self.addEventListener('install', (event) => {
 	// @ts-expect-error
-	event.waitUntil(caches.open(name).then((cache) => cache.addAll(build)));
+	event.waitUntil(caches.open(name).then((cache) => cache.addAll(immutable.map((a) => a.path))));
 	console.log(MESSAGE);
 });
 
@@ -39,7 +39,7 @@ self.addEventListener('fetch', (event) => {
 	const url = new URL(request.url);
 	const cached = caches.match(request);
 
-	if (url.origin === location.origin && build.includes(url.pathname)) {
+	if (url.origin === location.origin && immutable.some((a) => url.pathname.includes(a.path))) {
 		// always return build files from cache
 		// @ts-expect-error
 		event.respondWith(cached);
