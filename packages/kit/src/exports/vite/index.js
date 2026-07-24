@@ -789,7 +789,7 @@ function kit({ svelte_config }) {
 				if (manifest_data.hooks.universal) entrypoints.add(manifest_data.hooks.universal);
 
 				if (service_worker_entry_file) {
-					entrypoints.add(path.relative(root, service_worker_entry_file));
+					entrypoints.add(posixify(path.relative(root, service_worker_entry_file)));
 				}
 
 				// Walk up the import graph from the server-only module, looking for a chain
