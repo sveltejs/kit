@@ -6,7 +6,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { styleText } from 'node:util';
 import MagicString from 'magic-string';
 import { isRunnableDevEnvironment, loadEnv } from 'vite';
@@ -72,7 +72,7 @@ import { treeshake_prerendered_remotes } from './build/remote.js';
 import { SVELTE_KIT_ASSETS } from '../../constants.js';
 import { get_runner } from '../../runner.js';
 
-const dev_context = import.meta.resolve('./dev/context.js');
+const dev_context = posixify(fileURLToPath(import.meta.resolve('./dev/context.js')));
 
 /**
  * The posix-ified root of the project based on the Vite configuration.
