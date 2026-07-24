@@ -1,3 +1,4 @@
+/** @import { ValidatedKitConfig } from 'types' */
 import process from 'node:process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -67,16 +68,17 @@ export function write_tsconfig(kit, root) {
 }
 
 /**
- *
- * @param {string} root
- * @param {string} dir
- * @param {string} parent
- * @param {any} config
- * @param {any} example
- * @param {(input: any) => any} [transform] TODO get rid of this
+ * Write a generated `tsconfig.json` inside `node_modules`, for the
+ * user config to extend
+ * @param {string} root The project root
+ * @param {string} dir The directory to resolve a user config from
+ * @param {string} id The id of the generated config
+ * @param {any} config The contents of the generated tsconfig, with paths relative to `root`
+ * @param {any} example What to print if the user config does _not_ extend the generated config
+ * @param {ValidatedKitConfig['typescript']['config']} [transform] TODO get rid of this
  */
-function write_parent_tsconfig(root, dir, parent, config, example, transform) {
-	const out_file = path.join(root, `node_modules/${parent}/tsconfig.json`);
+function write_parent_tsconfig(root, dir, id, config, example, transform) {
+	const out_file = path.join(root, `node_modules/${id}/tsconfig.json`);
 
 	let normalized = normalize_config(out_file, config);
 	normalized = transform?.(normalized) ?? normalized;
@@ -88,7 +90,7 @@ function write_parent_tsconfig(root, dir, parent, config, example, transform) {
 	if (user_config && modified_since_last_check(user_config.file)) {
 		// now that we've written the parent config, we can resolve the
 		// user config and validate that nothing important was overwritten
-		if (!extends_parent(user_config.options, parent)) {
+		if (!extends_parent(user_config.options, id)) {
 			console.warn(
 				styleText(
 					['bold', 'yellow'],
