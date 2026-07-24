@@ -833,6 +833,9 @@ declare module '@sveltejs/kit' {
 			 */
 			server?: boolean;
 		};
+		/**
+		 * @deprecated Add configuration to `tsconfig.json` directly
+		 */
 		typescript?: {
 			/**
 			 * A function that allows you to edit the generated `tsconfig.json`. You can mutate the config (recommended) or return a new one.
@@ -3564,6 +3567,19 @@ declare module '$app/server' {
 					: T extends Record<string, any>
 						? { [K in keyof T]: HasNonOptionalBoolean<T[K]> }[keyof T]
 						: never;
+
+	export {};
+}
+
+declare module '$app/service-worker' {
+	/**
+	 * The execution context of a service worker. This export exists to make it easier to
+	 * use service workers with the correct types, provided the importing module is governed
+	 * by a `tsconfig.json` that extends [`$app/tsconfig/service-worker`](https://svelte.dev/docs/kit/$app-tsconfig-service-worker).
+	 *
+	 */
+	// @ts-ignore
+	export const self: ServiceWorkerGlobalScope;
 
 	export {};
 }

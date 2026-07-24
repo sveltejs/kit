@@ -6,5 +6,6 @@
 		"resolveJsonModule": true,
 		"rewriteRelativeImportExtensions": true
 	},
-	"extends": "./.svelte-kit/tsconfig.json"
+	"include": ["src", "unit-test", "test", "playwright.config.js"],
+	"extends": "$app/tsconfig"
 }

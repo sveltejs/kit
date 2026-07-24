@@ -10,5 +10,5 @@
 		"strict": true,
 		"moduleResolution": "bundler"
 	},
-	"extends": "./.svelte-kit/tsconfig.json"
+	"extends": "$app/tsconfig"
 }
