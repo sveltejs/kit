@@ -1,3 +1,5 @@
+/** @import { RequestEvent } from '@sveltejs/kit'; */
+/** @import { InternalServer, PrerenderOption } from 'types'; */
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { Server as KitServer } from '../../../runtime/server/index.js';
 import { fix_stack_trace } from './sourcemaps.js';
@@ -11,6 +13,14 @@ set_fix_stack_trace(fix_stack_trace);
 const { set_assets } = await import(/* @vite-ignore */ '$app/paths/internal/server');
 set_assets(__SVELTEKIT_PATHS_ASSETS__);
 
+/**
+ * @typedef {object} FeatureContext
+ * @property {RequestEvent} event
+ * @property {Record<string, any>} config
+ * @property {PrerenderOption} prerender
+ */
+
+/** @type {AsyncLocalStorage<FeatureContext>} */
 const async_local_storage = new AsyncLocalStorage();
 
 /** @param {string} label */
@@ -18,7 +28,12 @@ globalThis.__SVELTEKIT_TRACK__ = (label) => {
 	const context = async_local_storage.getStore();
 	if (!context || context.prerender === true) return;
 
-	check_feature(context.event.route.id, context.config, label, dev.svelte_config.kit.adapter);
+	check_feature(
+		/** @type {string} */ (context.event.route.id),
+		context.config,
+		label,
+		dev.svelte_config.kit.adapter
+	);
 };
 
 const fetch = globalThis.fetch;
@@ -36,15 +51,18 @@ globalThis.fetch = (info, init) => {
 const emulator = await dev.svelte_config.kit.adapter?.emulate?.();
 
 export class Server extends KitServer {
-	/** @type {import('types').InternalServer['respond']} */
+	/** @type {InternalServer['respond']} */
 	async respond(request, options) {
-		options.before_handle = async (event, config, prerender, handle) => {
-			// we need to use .run because .enterWith() is not supported in Cloudflare Workers
-			// see https://blog.cloudflare.com/workers-node-js-asynclocalstorage/
-			return await async_local_storage.run({ event, config, prerender }, handle);
-		};
-		options.emulator = emulator;
-
-		return await super.respond(request, options);
+		return await /** @type {InternalServer['respond']} */ (super.respond)(request, {
+			...options,
+			before_handle: async (event, config, prerender, handle) => {
+				// we need to use .run because .enterWith() is not supported in Cloudflare Workers
+				// see https://blog.cloudflare.com/workers-node-js-asynclocalstorage/
+				return await async_local_storage.run({ event, config, prerender }, () => {
+					return options.before_handle?.(event, config, prerender, handle) ?? handle();
+				});
+			},
+			emulator
+		});
 	}
 }
