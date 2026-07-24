@@ -25,41 +25,74 @@ export const updated = new (class Updated {
 	check = async () => false;
 })();
 
+/**
+ * Internal: mark `updated.current` as `true` if the given version differs.
+ * Called from the server response header path. No-op unless version checks
+ * are enabled (assigned below). Not exported on the public `updated` object.
+ * @type {(new_version: string | null) => void}
+ */
+export let notify_version = () => {};
+
 if (!DEV && BROWSER) {
 	const interval = __SVELTEKIT_APP_VERSION_POLL_INTERVAL__;
 
-	/** @type {number} */
+	/** @type {number | undefined} */
 	let timeout;
 
+	/** @type {Promise<boolean> | undefined} */
+	let checking;
+
+	if (__SVELTEKIT_APP_VERSION_CHECKS_ENABLED__) {
+		/**
+		 * Mark `updated.current` as `true` if the given version differs from the one
+		 * the app was hydrated with. Called from the server response header path.
+		 * Does NOT reset the poll timer — unlike `check()`, this is a passive observation
+		 * from a single server instance's response, not an explicit version check. The
+		 * poll timer continues on its original schedule as a backstop. This is important
+		 * for platforms that implement skew protection, where `x-sveltekit-version`
+		 * may be out of date — in this case we still need to poll for `version.json`.
+		 * @param {string | null} new_version
+		 */
+		notify_version = (new_version) => {
+			if (new_version && new_version !== version) {
+				updated.current = true;
+			}
+		};
+	}
+
 	/** @type {() => Promise<boolean>} */
-	async function check() {
+	function check() {
+		if (checking) return checking;
+
 		window.clearTimeout(timeout);
 
-		if (interval) timeout = window.setTimeout(check, interval);
+		return (checking = (async () => {
+			try {
+				const res = await fetch(`${assets}/${__SVELTEKIT_APP_VERSION_FILE__}`, {
+					headers: {
+						'cache-control': 'no-cache'
+					}
+				});
 
-		try {
-			const res = await fetch(`${assets}/${__SVELTEKIT_APP_VERSION_FILE__}`, {
-				headers: {
-					'cache-control': 'no-cache'
+				if (!res.ok) {
+					return false;
 				}
-			});
 
-			if (!res.ok) {
+				const data = await res.json();
+				const new_update = data.version !== version;
+
+				if (new_update) {
+					updated.current = true;
+				}
+
+				return new_update;
+			} catch {
 				return false;
+			} finally {
+				checking = undefined;
+				if (interval && !updated.current) timeout = window.setTimeout(check, interval);
 			}
-
-			const data = await res.json();
-			const new_update = data.version !== version;
-
-			if (new_update) {
-				updated.current = true;
-				window.clearTimeout(timeout);
-			}
-
-			return new_update;
-		} catch {
-			return false;
-		}
+		})());
 	}
 
 	if (interval) timeout = window.setTimeout(check, interval);

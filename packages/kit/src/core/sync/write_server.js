@@ -53,6 +53,7 @@ export const options = {
 			)},
 		error
 	},
+	version: ${s(config.kit.version.name)},
 	version_hash: ${s(hash(config.kit.version.name))}
 };
 

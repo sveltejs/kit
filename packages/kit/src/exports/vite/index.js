@@ -502,6 +502,7 @@ function kit({ svelte_config }) {
 				const define = {
 					__SVELTEKIT_APP_DIR__: s(posixify(kit.appDir)),
 					__SVELTEKIT_APP_VERSION__: s(kit.version.name),
+					__SVELTEKIT_APP_VERSION_CHECKS_ENABLED__: s(kit.output.bundleStrategy !== 'inline'),
 					__SVELTEKIT_EMBEDDED__: s(kit.embedded),
 					__SVELTEKIT_FORK_PRELOADS__: s(kit.experimental.forkPreloads),
 					__SVELTEKIT_PATHS_ASSETS__: s(kit.paths.assets),

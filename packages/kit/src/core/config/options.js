@@ -297,7 +297,7 @@ export const validate_kit_options = object({
 
 	version: object({
 		name: string(Date.now().toString()),
-		pollInterval: number(0)
+		pollInterval: number(3_600_000)
 	})
 });
 
