@@ -67,7 +67,7 @@ export async function load_server_data({ event, event_state, state, node, parent
 		}
 	);
 
-	if (state.prerender_default) {
+	if (state.prerendering || state.prerender_default === true) {
 		disable_search(url);
 	}
 
