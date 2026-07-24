@@ -1,5 +1,6 @@
 /** @import { ServerHooks } from 'types' */
 import * as devalue from 'devalue';
+import { DEV } from 'esm-env';
 import { text } from '@sveltejs/kit';
 import { ENDPOINT_METHODS } from '../../constants.js';
 
@@ -138,6 +139,17 @@ export function get_node_type(node_id) {
  */
 export function count_non_ssi_comments(str) {
 	return (str.match(/<!--(?!#)/g) ?? []).length;
+}
+
+/**
+ * Whether the response should be rendered as prerendered output, either because we're
+ * inside the prerendering pass at build time or because the page is prerenderable
+ * and dev output should match the build
+ * @param {import('types').SSRState} state
+ * @returns {boolean}
+ */
+export function renders_prerendered_output(state) {
+	return !!state.prerendering || (DEV && state.prerender_default === true);
 }
 
 /**

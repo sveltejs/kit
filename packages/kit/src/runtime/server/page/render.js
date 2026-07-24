@@ -14,7 +14,12 @@ import { create_server_routing_response, generate_route_object } from './server_
 import { add_data_suffix, add_resolution_suffix } from '../../pathname.js';
 import { try_get_request_store, with_request_store } from '@sveltejs/kit/internal/server';
 import { text_encoder } from '../../utils.js';
-import { count_non_ssi_comments, create_replacer, get_global_name } from '../utils.js';
+import {
+	count_non_ssi_comments,
+	create_replacer,
+	get_global_name,
+	renders_prerendered_output
+} from '../utils.js';
 import { handle_error_and_jsonify } from '../errors.js';
 import * as env from '__sveltekit/env';
 import { collect_remote_data } from '../remote-functions.js';
@@ -58,7 +63,7 @@ export async function render_response({
 	data_serializer,
 	error_components
 }) {
-	if (state.prerendering || state.prerender_default === true) {
+	if (renders_prerendered_output(state)) {
 		if (options.csp.mode === 'nonce') {
 			throw new Error('Cannot use prerendering if config.csp.mode === "nonce"');
 		}
@@ -106,7 +111,7 @@ export async function render_response({
 	let base_expression = s(paths.base);
 
 	const csp = new Csp(options.csp, {
-		prerender: !!(state.prerendering || state.prerender_default === true)
+		prerender: renders_prerendered_output(state)
 	});
 
 	// if appropriate, use relative paths for greater portability
@@ -310,7 +315,7 @@ export async function render_response({
 	 * @param {string[]} attributes
 	 */
 	const add_preload = (path, attributes) => {
-		if (options.link_header_preload && !(state.prerendering || state.prerender_default === true)) {
+		if (options.link_header_preload && !renders_prerendered_output(state)) {
 			link_headers.add(`<${encodeURI(path)}>; ${attributes.join('; ')}; nopush`);
 		} else {
 			head.add_link_tag(path, attributes);
@@ -354,7 +359,7 @@ export async function render_response({
 				serialize_data(
 					item,
 					resolve_opts.filterSerializedResponseHeaders,
-					!!(state.prerendering || state.prerender_default === true)
+					renders_prerendered_output(state)
 				)
 			)
 			.join('\n\t\t\t')}`;
@@ -367,8 +372,7 @@ export async function render_response({
 		// import the env.js module so that it evaluates before any user code can evaluate.
 		// TODO revert to using top-level await once https://bugs.webkit.org/show_bug.cgi?id=242740 is fixed
 		// https://github.com/sveltejs/kit/pull/11601
-		const load_env_eagerly =
-			client.uses_env_dynamic_public && (state.prerendering || state.prerender_default === true);
+		const load_env_eagerly = client.uses_env_dynamic_public && renders_prerendered_output(state);
 
 		if (load_env_eagerly) {
 			modulepreloads.add(`${paths.app_dir}/env.js`);
@@ -573,7 +577,7 @@ export async function render_response({
 		'content-type': 'text/html'
 	});
 
-	if (state.prerendering || state.prerender_default === true) {
+	if (renders_prerendered_output(state)) {
 		// TODO read headers set with setHeaders and convert into http-equiv where possible
 		const csp_headers = csp.csp_provider.get_meta();
 		if (csp_headers) {
