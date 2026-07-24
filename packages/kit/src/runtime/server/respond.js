@@ -521,8 +521,16 @@ export async function internal_respond(request, options, manifest, state) {
 													response.headers.set('x-sveltekit-routeid', encodeURI(event.route.id));
 												}
 
+												// inform the client of the current app version, so it can detect
+												// deployments without polling. Skipped during prerendering, since
+												// prerendered responses are static and the header would be stale.
 												if (!state.prerendering && __SVELTEKIT_APP_VERSION_CHECKS_ENABLED__) {
-													response.headers.set('x-sveltekit-version', options.version);
+													try {
+														response.headers.set('x-sveltekit-version', options.version);
+													} catch {
+														// the response might have immutable headers (e.g. if it was
+														// returned directly from event.fetch) — skip the header in that case
+													}
 												}
 
 												resolve_span.setAttributes({
