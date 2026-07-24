@@ -1270,13 +1270,14 @@ test.describe('Actions', () => {
 		await page.locator('button.html').click();
 
 		await expect(page.locator('h1')).toHaveText('502');
-		await expect(page.locator('p')).toHaveText('Bad Gateway');
+		// the suffix comes from the `handleError` hook in hooks.client.js
+		await expect(page.locator('p')).toHaveText('Bad Gateway (502 Bad Gateway)');
 
 		await page.goto('/actions/enhance-non-action-response');
 		await page.locator('button.empty').click();
 
 		await expect(page.locator('h1')).toHaveText('403');
-		await expect(page.locator('p')).toHaveText('Forbidden');
+		await expect(page.locator('p')).toHaveText('Forbidden (403 Forbidden)');
 	});
 
 	test('use:enhance abort controller', async ({ page, javaScriptEnabled }) => {

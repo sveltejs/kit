@@ -1,3 +1,4 @@
+import { HttpError, SvelteKitError } from '@sveltejs/kit/internal';
 import { DEV } from 'esm-env';
 import { noop } from '../../utils/functions.js';
 import { refreshAll } from './navigation.js';
@@ -228,19 +229,15 @@ export function enhance(form_element, submit = noop) {
 						result.status = response.status;
 					}
 				} else if (!response.ok) {
-					// the action never ran, e.g. the CSRF check or a proxy rejected the request
-					// `status` on the error object is where the client reads the page status from
-					result = {
-						type: 'error',
-						status: response.status,
-						error:
-							parsed && typeof parsed === 'object'
-								? { ...parsed, status: response.status }
-								: {
-										message: typeof parsed === 'string' ? parsed : response.statusText,
-										status: response.status
-									}
-					};
+					// the action never ran, e.g. the CSRF check or a proxy rejected the request.
+					// an `App.Error`-shaped body is an expected error, anything else goes through `handleError`
+					throw parsed && typeof parsed === 'object' && typeof parsed.message === 'string'
+						? new HttpError({ ...parsed, status: response.status })
+						: new SvelteKitError(
+								response.status,
+								response.statusText,
+								typeof parsed === 'string' ? parsed : response.statusText
+							);
 				} else {
 					result = parsed;
 				}
