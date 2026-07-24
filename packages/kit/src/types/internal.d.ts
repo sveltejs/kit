@@ -497,6 +497,7 @@ export interface SSROptions {
 		}): string;
 		error(values: { message: string; status: number }): string;
 	};
+	version: string;
 	version_hash: string;
 }
 

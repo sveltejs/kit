@@ -265,7 +265,11 @@ export function create_sveltekit_env_service_worker(
 	return dedent`
 		import { env } from '${base}/${app_dir}/env.js';
 
-		${global} = { env, version: ${JSON.stringify(version)} };
+		${global} = {
+			base: location.pathname.split('/').slice(0, -1).join('/'),
+			env,
+			version: ${JSON.stringify(version)}
+		};
 	`;
 }
 
@@ -294,6 +298,7 @@ export function create_sveltekit_env_service_worker_dev(variables, env, version,
 
 	return dedent`
 		${global} = {
+			base: location.pathname.split('/').slice(0, -1).join('/'),
 			env: {
 				${properties.join(',\n\t\t') || '// empty'}
 			},

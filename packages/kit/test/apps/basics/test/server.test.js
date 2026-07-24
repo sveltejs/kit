@@ -968,6 +968,16 @@ test.describe('Miscellaneous', () => {
 		const response = await request.get('/prerendering/中文');
 		expect(response.status()).toBe(200);
 	});
+
+	test('does not send x-sveltekit-version header on document responses', async ({ page }) => {
+		const response = await page.goto('/');
+		expect(response?.headers()['x-sveltekit-version']).toBeUndefined();
+	});
+
+	test('sends x-sveltekit-version header on data responses', async ({ request }) => {
+		const response = await request.get('/__data.json');
+		expect(response.headers()['x-sveltekit-version']).toBeTruthy();
+	});
 });
 
 test.describe('reroute', () => {
