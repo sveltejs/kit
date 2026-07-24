@@ -344,7 +344,7 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 						typeof request_body !== 'string' &&
 						!ArrayBuffer.isView(request_body)
 					) {
-						// Unhashable request bodies cannot be serialized, so the browser repeats the fetch.
+						// requests whose body can't be hashed aren't serialized — the browser repeats the fetch
 						return;
 					}
 
