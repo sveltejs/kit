@@ -113,16 +113,34 @@ export class Server {
 								return;
 							}
 
+							/** @type {string} */
+							let message = '';
+							let stack = '';
+
 							let e = error;
 							while (e instanceof Error) {
 								if (e.stack) {
+									message ||= e.message;
+									stack += e.stack;
 									console.error(e.stack);
 								}
 								e = e.cause;
 							}
 
 							if (e) {
-								console.error(String(e));
+								const original_message = String(e);
+								console.error(original_message);
+								if (import.meta.hot && original_message) message = original_message;
+							}
+
+							if (import.meta.hot && message) {
+								import.meta.hot.send('vite:error', {
+									type: 'error',
+									err: {
+										message,
+										stack: stack.replace(`Error: ${message}\n`, '')
+									}
+								});
 							}
 						}),
 					handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request)),
