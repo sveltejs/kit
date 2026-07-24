@@ -25,7 +25,9 @@ import {
 	serialize_binary_form,
 	deep_get,
 	DELETE_KEY,
-	BINARY_FORM_CONTENT_TYPE
+	BINARY_FORM_CONTENT_TYPE,
+	parse_form_key,
+	coerce_form_value
 } from '../../form-utils.js';
 
 /**
@@ -123,8 +125,8 @@ export function form(id) {
 		/** @type {InternalRemoteFormIssue[] | null} */
 		let unread_issues = null;
 
-		/** @type {string | null} */
-		let previous_submitter_name = null;
+		/** @type {{ name: string; type: 'number' | 'boolean' | null; is_array: boolean } | null} */
+		let previous_submitter = null;
 
 		/**
 		 * In dev, warn if there are validation issues going unread
@@ -160,8 +162,8 @@ export function form(id) {
 		 * @returns {Record<string, any>}
 		 */
 		function convert(form_data) {
-			const data = convert_formdata(form_data);
-			if (key !== undefined && !form_data.has('id')) {
+			const data = convert_formdata(action_id_without_key, form_data);
+			if (key !== undefined && !('id' in data)) {
 				data.id = key;
 			}
 			return data;
@@ -405,26 +407,30 @@ export function form(id) {
 				const form_data = new FormData(form, event.submitter);
 
 				if (
-					previous_submitter_name !== null &&
-					!Array.from(form_data.keys()).map(strip_prefix).includes(previous_submitter_name)
+					previous_submitter !== null &&
+					!Array.from(form_data.keys())
+						.map((k) => parse_form_key(action_id_without_key, k).name)
+						.includes(previous_submitter.name)
 				) {
-					// Strip any `n:`/`b:` type prefix before clearing, otherwise
-					// `set_nested_value` would coerce `undefined` to `NaN`/`false`
-					// instead of clearing the previously-submitted value.
-					set_nested_value(input, previous_submitter_name, undefined);
+					set_nested_value(input, previous_submitter, undefined);
 				}
 
 				if (event.submitter) {
 					const name = event.submitter.getAttribute('name');
+
+					/** @type {null | ReturnType<typeof parse_form_key>} */
+					let submitter = null;
+
 					const value = /** @type {any} */ (event.submitter).value;
 
 					if (name !== null && value !== undefined) {
-						set_nested_value(input, name, value);
+						submitter = parse_form_key(action_id_without_key, name);
+						set_nested_value(input, submitter, coerce_form_value(submitter.type, value));
 					}
 
-					previous_submitter_name = strip_prefix(name);
+					previous_submitter = submitter;
 				} else {
-					previous_submitter_name = null;
+					previous_submitter = null;
 				}
 
 				if (DEV) {
@@ -463,15 +469,14 @@ export function form(id) {
 				// but that makes the types unnecessarily awkward
 				const element = /** @type {HTMLInputElement} */ (e.target);
 
-				let name = element.name;
+				const name = element.name;
 				if (!name) return;
 
-				const is_array = name.endsWith('[]');
-				if (is_array) name = name.slice(0, -2);
+				const field = parse_form_key(action_id_without_key, name);
 
 				const is_file = element.type === 'file';
 
-				if (is_array) {
+				if (field.is_array) {
 					let value;
 
 					if (element.tagName === 'SELECT') {
@@ -481,7 +486,7 @@ export function form(id) {
 						);
 					} else {
 						const elements = /** @type {HTMLInputElement[]} */ (
-							Array.from(form.querySelectorAll(`[name="${name}[]"]`))
+							Array.from(form.querySelectorAll(`[name="${name}"]`))
 						);
 
 						if (DEV) {
@@ -502,7 +507,7 @@ export function form(id) {
 						}
 					}
 
-					set_nested_value(input, name, value);
+					set_nested_value(input, field, value);
 				} else if (is_file) {
 					if (DEV && element.multiple) {
 						throw new Error(
@@ -513,21 +518,19 @@ export function form(id) {
 					const file = /** @type {HTMLInputElement & { files: FileList }} */ (element).files[0];
 
 					if (file) {
-						set_nested_value(input, name, file);
+						set_nested_value(input, field, file);
 					} else {
-						set_nested_value(input, name, DELETE_KEY);
+						set_nested_value(input, field, DELETE_KEY);
 					}
 				} else {
 					set_nested_value(
 						input,
-						name,
+						field,
 						element.type === 'checkbox' && !element.checked ? null : element.value
 					);
 				}
 
-				name = strip_prefix(name);
-
-				dirty[name] = true;
+				dirty[field.name] = true;
 			};
 
 			const handle_reset = async () => {
@@ -535,7 +538,7 @@ export function form(id) {
 				// the inputs are actually updated (so that it can be cancelled)
 				await tick();
 
-				input = convert_formdata(new FormData(form));
+				input = convert_formdata(action_id_without_key, new FormData(form));
 				raw_issues = [];
 				touched = {};
 				dirty = {};
@@ -545,15 +548,15 @@ export function form(id) {
 
 			/** @param {Event} e */
 			const handle_focusout = (e) => {
-				let name = /** @type {HTMLInputElement} */ (e.target).name;
+				const name = /** @type {HTMLInputElement} */ (e.target).name;
 				if (!name) return;
 
-				name = strip_prefix(name).replace(/\[\]$/, '');
+				const field = parse_form_key(action_id_without_key, name);
 
-				touched[name] = true;
+				touched[field.name] = true;
 
-				if (Object.hasOwn(dirty, name)) {
-					can_validate[name] = true;
+				if (Object.hasOwn(dirty, field.name)) {
+					can_validate[field.name] = true;
 				}
 			};
 
@@ -608,10 +611,10 @@ export function form(id) {
 			},
 			fields: {
 				get: () =>
-					create_field_proxy(
-						{},
-						() => input,
-						(path, value) => {
+					create_field_proxy({
+						form_id: action_id_without_key,
+						get: () => input,
+						set: (path, value) => {
 							if (path.length === 0) {
 								input = value;
 							} else if (value !== deep_get(input, path)) {
@@ -626,7 +629,7 @@ export function form(id) {
 								}
 							}
 						},
-						(path, all) => {
+						get_issues: (path, all) => {
 							if (DEV && unread_issues !== null && path !== undefined) {
 								unread_issues = unread_issues.filter((issue) => {
 									return (
@@ -638,10 +641,9 @@ export function form(id) {
 
 							return issues;
 						},
-						() => touched,
-						() => dirty,
-						[]
-					)
+						get_touched: () => touched,
+						get_dirty: () => dirty
+					})
 			},
 			result: {
 				get: () => result
@@ -808,14 +810,4 @@ function validate_form_data(form_data, enctype) {
 			}
 		}
 	}
-}
-
-/**
- * Remove the `n:` or `b:` prefix from a field name
- * @template {string | null} T
- * @param {T} name
- * @returns {T}
- */
-function strip_prefix(name) {
-	return /** @type {T} */ (name && name.replace(/^[nb]:/, ''));
 }

@@ -48,5 +48,8 @@
 		"!dist/**/*.spec.*"
 	],
 	"svelte": "./dist/index.js",
-	"types": "./dist/index.d.ts"
+	"types": "./dist/index.d.ts",
+	"imports": {
+		"#lib/*": "./src/lib/*"
+	}
 }

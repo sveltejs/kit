@@ -404,17 +404,18 @@ export function refresh(event, state, internals, payload, fn) {
 		return;
 	}
 
-	if (!event.isRemoteRequest) {
-		// or this is a no-JS form submission
+	if (!event.isRemoteRequest && state.is_in_remote_form_or_command) {
+		// ...or this is a no-JS (native) form submission, where the page re-renders
+		// anyway so there's no live client cache to apply a single-flight update to.
 		return;
 	}
 
 	const key = create_remote_key(internals.id, payload);
 
 	// `fn` is stored rather than invoked eagerly. The query is run at the end of
-	// the command/form (in `collect_remote_data`), so that it observes any state
+	// the request (in `collect_remote_data`), so that it observes any state
 	// mutations that happen after `refresh()` is called. If the developer re-awaits
-	// the query before the command finishes, the cache entry created by that await
+	// the query before the request finishes, the cache entry created by that await
 	// is reused instead of re-running the query.
 	(state.remote.explicit ??= new Map()).set(key, {
 		internals,

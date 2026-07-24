@@ -50,6 +50,28 @@ const default_filter = () => false;
 /** @type {import('types').RequiredResolveOptions['preload']} */
 const default_preload = ({ type }) => type === 'js' || type === 'css';
 
+// `Sec-Fetch-Dest` values for subresource requests that can never render an HTML error page
+// https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Sec-Fetch-Dest
+const non_html_fetch_destinations = new Set([
+	'audio',
+	'audioworklet',
+	'font',
+	'image',
+	'json',
+	'manifest',
+	'paintworklet',
+	'report',
+	'script',
+	'serviceworker',
+	'sharedworker',
+	'style',
+	'track',
+	'video',
+	'webidentity',
+	'worker',
+	'xslt'
+]);
+
 const page_methods = new Set(['GET', 'HEAD', 'POST']);
 
 const allowed_page_methods = new Set(['GET', 'HEAD', 'OPTIONS']);
@@ -114,6 +136,8 @@ export async function internal_respond(request, options, manifest, state) {
 	/** @type {boolean[] | undefined} */
 	let invalidated_data_nodes;
 
+	let skip_route_resolution = false;
+
 	if (is_route_resolution_request) {
 		/**
 		 * If the request is for a route resolution, first modify the URL, then continue as normal
@@ -131,8 +155,15 @@ export async function internal_respond(request, options, manifest, state) {
 			.map((node) => node === '1');
 		url.searchParams.delete(INVALIDATED_PARAM);
 	} else if (remote_id) {
-		url.pathname = request.headers.get('x-sveltekit-pathname') ?? base;
-		url.search = request.headers.get('x-sveltekit-search') ?? '';
+		// query clients don't send these headers, leaving `event.url` as the endpoint URL
+		const pathname = request.headers.get('x-sveltekit-pathname');
+
+		if (pathname === null) {
+			skip_route_resolution = true;
+		} else {
+			url.pathname = pathname;
+			url.search = request.headers.get('x-sveltekit-search') ?? '';
+		}
 	}
 
 	/** @type {Record<string, string>} */
@@ -163,6 +194,7 @@ export async function internal_respond(request, options, manifest, state) {
 		is_in_remote_function: false,
 		is_in_remote_form_or_command: false,
 		is_in_remote_query: false,
+		is_in_remote_prerender: false,
 		is_in_render: false,
 		is_in_universal_load: false
 	};
@@ -336,7 +368,7 @@ export async function internal_respond(request, options, manifest, state) {
 		return text('Not found', { status: 404, headers });
 	}
 
-	if (!state.prerendering?.fallback) {
+	if (!state.prerendering?.fallback && !skip_route_resolution) {
 		try {
 			const matchers = await manifest._.matchers();
 			const result = find_route(resolved_path, manifest._.routes, matchers);
@@ -736,6 +768,13 @@ export async function internal_respond(request, options, manifest, state) {
 			// if this request came direct from the user, rather than
 			// via our own `fetch`, render a 404 page
 			if (state.depth === 0) {
+				if (non_html_fetch_destinations.has(event.request.headers.get('sec-fetch-dest') ?? '')) {
+					return text('Not Found', {
+						status: 404,
+						headers: { vary: 'Sec-Fetch-Dest' }
+					});
+				}
+
 				return await respond_with_error({
 					event,
 					event_state,

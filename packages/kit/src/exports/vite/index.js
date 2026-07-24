@@ -29,7 +29,7 @@ import { runtime_directory, logger } from '../../core/utils.js';
 import { generate_manifest } from '../../core/generate_manifest/index.js';
 import { build_server_nodes } from './build/build_server.js';
 import { find_deps, resolve_symlinks } from './build/utils.js';
-import { dev } from './dev/index.js';
+import { dev, invalidate_module } from './dev/index.js';
 import { preview } from './preview/index.js';
 import {
 	error_for_missing_config,
@@ -55,7 +55,6 @@ import {
 	sveltekit_env_private,
 	sveltekit_env_service_worker,
 	sveltekit_manifest_data,
-	sveltekit_server,
 	sveltekit_env_public_client,
 	sveltekit_env_public_server
 } from './module_ids.js';
@@ -64,6 +63,7 @@ import { compact } from '../../utils/array.js';
 import { should_ignore, has_children } from './static_analysis/utils.js';
 import { process_config, split_config, validate_config } from '../../core/config/index.js';
 import { treeshake_prerendered_remotes } from './build/remote.js';
+import { get_runner } from '../../runner.js';
 
 /**
  * The posix-ified root of the project based on the Vite configuration.
@@ -618,14 +618,10 @@ function kit({ svelte_config }) {
 					);
 
 					for (const id of [sveltekit_env, sveltekit_env_public_client]) {
-						const module = server.moduleGraph.getModuleById(id);
-
-						if (module) {
-							server.moduleGraph.invalidateModule(module);
-						}
+						invalidate_module(server, id);
 					}
 
-					server.ws.send({ type: 'full-reload' });
+					server.hot.send({ type: 'full-reload' });
 				}
 			});
 		},
@@ -659,8 +655,7 @@ function kit({ svelte_config }) {
 					exactRegex(sveltekit_env_public_client),
 					exactRegex(sveltekit_env_public_server),
 					exactRegex(sveltekit_env_service_worker),
-					exactRegex(sveltekit_manifest_data),
-					exactRegex(sveltekit_server)
+					exactRegex(sveltekit_manifest_data)
 				]
 			},
 			handler(id) {
@@ -921,7 +916,7 @@ function kit({ svelte_config }) {
 				if (this.environment.config.consumer !== 'client') {
 					// we need to add an `await Promise.resolve()` because if the user imports this function
 					// on the client AND in a load function when loading the client module we will trigger
-					// an ssrLoadModule during dev. During a link preload, the module can be mistakenly
+					// an import during dev. During a link preload, the module can be mistakenly
 					// loaded and transformed twice and the first time all its exports would be undefined
 					// triggering a dev server error. By adding a microtask we ensure that the module is fully loaded
 					const ms = new MagicString(code);
@@ -972,7 +967,7 @@ function kit({ svelte_config }) {
 				// being called again with `opts.ssr === true` if the module isn't
 				// already loaded) so we can determine what it exports
 				if (dev_server) {
-					const module = await dev_server.ssrLoadModule(id);
+					const module = await get_runner(dev_server).import(id);
 
 					for (const [name, value] of Object.entries(module)) {
 						const type = value?.__?.type;
@@ -1556,11 +1551,7 @@ function kit({ svelte_config }) {
 				(data) => {
 					manifest_data = data;
 					// Invalidate the manifest data module so it reloads with new routes/files
-					const module = server.moduleGraph.getModuleById(sveltekit_manifest_data);
-					if (module) {
-						server.moduleGraph.invalidateModule(module);
-						void server.reloadModule(module);
-					}
+					invalidate_module(server, sveltekit_manifest_data);
 				}
 			);
 		},

@@ -39,7 +39,9 @@ export async function handle({ event, resolve }) {
 }
 
 /** @type {import('@sveltejs/kit').HandleValidationError} */
-export const handleValidationError = ({ issues }) => {
+export const handleValidationError = ({ issues, event }) => {
+	// must not throw, even when validation failed inside a query
+	void event.url.pathname;
 	return { message: issues[0].message };
 };
 

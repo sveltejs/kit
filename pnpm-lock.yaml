@@ -20,7 +20,7 @@ catalogs:
       version: 0.220.0
     '@opentelemetry/sdk-trace-node':
       specifier: ^2.8.0
-      version: 2.8.0
+      version: 2.9.0
     '@playwright/test':
       specifier: ^1.61.1
       version: 1.61.1
@@ -147,7 +147,7 @@ importers:
   packages/adapter-cloudflare:
     dependencies:
       '@cloudflare/workers-types':
-        specifier: ^4.20260617.1
+        specifier: ^4.20260621.1
         version: 4.20260621.1
       worktop:
         specifier: 0.8.0-next.18
@@ -226,7 +226,7 @@ importers:
         specifier: ^5.3.0
         version: 5.3.0
       rolldown:
-        specifier: ^1.1.2
+        specifier: ^1.2.0
         version: 1.2.0
     devDependencies:
       '@netlify/edge-functions':
@@ -308,7 +308,7 @@ importers:
   packages/adapter-node:
     dependencies:
       rolldown:
-        specifier: ^1.1.2
+        specifier: ^1.2.0
         version: 1.2.0
     devDependencies:
       '@polka/url':
@@ -417,7 +417,7 @@ importers:
         specifier: ^1.3.2
         version: 1.3.2(supports-color@10.2.2)
       rolldown:
-        specifier: ^1.1.2
+        specifier: ^1.2.0
         version: 1.2.0
     devDependencies:
       '@sveltejs/kit':
@@ -721,7 +721,7 @@ importers:
         version: 0.220.0(@opentelemetry/api@1.9.0)(supports-color@10.2.2)
       '@opentelemetry/sdk-trace-node':
         specifier: 'catalog:'
-        version: 2.8.0(@opentelemetry/api@1.9.0)
+        version: 2.9.0(@opentelemetry/api@1.9.0)
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../..
@@ -1596,10 +1596,6 @@ packages:
     resolution: {integrity: sha512-2y4+DMh7gMMEQaGwKwJMY7cixmJrK7u7rSZQ9t5O+xwqty9qXhO9EKbIeMDlt13A1Bdxuiu7ptkMKC+AoOO28Q==}
     engines: {node: ^22.11 || ^24 || >=26}
 
-  '@changesets/types@7.0.0-next.6':
-    resolution: {integrity: sha512-bdxuVLYKrCt14kNFb+ltta8pOPFmQWB0DpMcz9IWMD+DRupQ4+wZyCkXIkfIoqu3iN0fcQkSuoZ2tNOfV+fepg==}
-    engines: {node: ^22.11 || ^24 || >=26}
-
   '@changesets/types@7.0.0-next.7':
     resolution: {integrity: sha512-1XyshLw+lRCg2DWxi1Qt3hbezjBostHzXvGXVgSzAeZ+fL+r2ikcMbpaQ98D9ivwKhYFf1FBbKbEc+XsBZsIJQ==}
     engines: {node: ^22.11 || ^24 || >=26}
@@ -2350,20 +2346,8 @@ packages:
     peerDependencies:
       '@opentelemetry/api': ^1.9.0
 
-  '@opentelemetry/context-async-hooks@2.8.0':
-    resolution: {integrity: sha512-/3FIraneMcng67SUJCxvyInk/oxzwsxyadufk0wwfOBLf5wqtAGX4MoQASwSbndBPeARzBryUM9Azr5kHIdWLw==}
-    engines: {node: ^18.19.0 || >=20.6.0}
-    peerDependencies:
-      '@opentelemetry/api': '>=1.0.0 <1.10.0'
-
   '@opentelemetry/context-async-hooks@2.9.0':
     resolution: {integrity: sha512-OQ0vzvbZBiUhjqLnUaoNfYmP8553Crr3aggB4y0ZUi815mZ7idpdJXQmoKdeBKJelYttoBlLSSHubmyw3wvX4w==}
-    engines: {node: ^18.19.0 || >=20.6.0}
-    peerDependencies:
-      '@opentelemetry/api': '>=1.0.0 <1.10.0'
-
-  '@opentelemetry/core@2.8.0':
-    resolution: {integrity: sha512-hd1Lfh8p545nNz+jq1Ejfz+Mn1hyLuxYn1YzTfFNrxr8urEWMNQLPf1Th8kjOH+HxwawCrtgBp8JpBUR4ZSgww==}
     engines: {node: ^18.19.0 || >=20.6.0}
     peerDependencies:
       '@opentelemetry/api': '>=1.0.0 <1.10.0'
@@ -2476,12 +2460,6 @@ packages:
     peerDependencies:
       '@opentelemetry/api': '>=1.0.0 <1.10.0'
 
-  '@opentelemetry/resources@2.8.0':
-    resolution: {integrity: sha512-qmXQ27ilDbUK/vGMqwL8D4/rhn76C+sherM4wTbjlfknR8Nvfc/hCxjRJPhkzZzUsPiNg16SA31NxMabwttRjg==}
-    engines: {node: ^18.19.0 || >=20.6.0}
-    peerDependencies:
-      '@opentelemetry/api': '>=1.3.0 <1.10.0'
-
   '@opentelemetry/resources@2.9.0':
     resolution: {integrity: sha512-jyA5MBLQ+Dkl3+JsZkUoUvL7yHvU64kLsvpXKarWm6347Sl1t1bXFTFykUePNpT5WH5pm9a2Qtt03iIYQhZ1Fg==}
     engines: {node: ^18.19.0 || >=20.6.0}
@@ -2506,23 +2484,11 @@ packages:
     peerDependencies:
       '@opentelemetry/api': '>=1.3.0 <1.10.0'
 
-  '@opentelemetry/sdk-trace-base@2.8.0':
-    resolution: {integrity: sha512-mhU4jp+vW0mGbFRd+GeXHvmfA4aDqWjBjLC3pE5XMpLs0IE2ryYb019Ts2AQrOq67gaTF25D91+fgvEHDZEnuQ==}
-    engines: {node: ^18.19.0 || >=20.6.0}
-    peerDependencies:
-      '@opentelemetry/api': '>=1.3.0 <1.10.0'
-
   '@opentelemetry/sdk-trace-base@2.9.0':
     resolution: {integrity: sha512-cp9zmTl62R8PJrpvFcmc8N2JQU/xfa0S+61q511Nji+QxCfZ8Ifvg7H27G8cANe4crg4RTrWsVvanHiXjSp6ag==}
     engines: {node: ^18.19.0 || >=20.6.0}
     peerDependencies:
       '@opentelemetry/api': '>=1.3.0 <1.10.0'
-
-  '@opentelemetry/sdk-trace-node@2.8.0':
-    resolution: {integrity: sha512-nZt9OGufioAc3AfoLTqA9bsAeaMJAictYDdI2VcNQ+PmT+3rfKjAZDZvgPfd8VPX0O5Bw1hdQF6kDK8VSpZiWg==}
-    engines: {node: ^18.19.0 || >=20.6.0}
-    peerDependencies:
-      '@opentelemetry/api': '>=1.0.0 <1.10.0'
 
   '@opentelemetry/sdk-trace-node@2.9.0':
     resolution: {integrity: sha512-ec9a7ps37huy5itYk0MalaZdSLlM6AXWp/FhtEjgMpp5leEGojBDvAl/UWttQnkMZOvFHKzRESn8TD3yKTF5nQ==}
@@ -3043,8 +3009,8 @@ packages:
   blake3-wasm@2.1.5:
     resolution: {integrity: sha512-F1+K8EbfOZE49dtoPtmxUQrpXaBIl3ICvasLh+nJta0xkz+9kF/7uet9fLnwKqhDrmj6g+6K3Tw9yQPUg2ka5g==}
 
-  brace-expansion@5.0.6:
-    resolution: {integrity: sha512-kLpxurY4Z4r9sgMsyG0Z9uzsBlgiU/EFKhj/h91/8yHu0edo7XuixOIH3VcJ8kkxs6/jPzoI6U9Vj3WqbMQ94g==}
+  brace-expansion@5.0.7:
+    resolution: {integrity: sha512-7oFy703dxfY3/NLxC1fh2SUCQ0H9rmAY+5EpDVfXjUTTs+HEwR2nYaqLv+GWcTsumwxPfiz6CzCNkwXwBUwqCA==}
     engines: {node: 18 || 20 || >=22}
 
   cac@7.0.0:
@@ -3462,8 +3428,8 @@ packages:
   jju@1.4.0:
     resolution: {integrity: sha512-8wb9Yw966OSxApiCt0K3yNJL8pnNeIv+OEq2YMidz4FKP6nonSRoOXc80iXY4JaN2FC11B9qsNmDsm+ZOfMROA==}
 
-  js-yaml@4.2.0:
-    resolution: {integrity: sha512-ePWsvanv0DWuDRsW8dnt+R4jQ31SCRCQ7hhNcPXZPsoBZiemuZNYGf7adZdqX2D86j6rvKp3RpCxVTSb8WQlOw==}
+  js-yaml@4.3.0:
+    resolution: {integrity: sha512-1td788aAnnZ5qs7V2QIRl1owjtYpbKt749Y3xauqQgwIIGF/xXWz1wMTEBx5O3LK3lXLVuqXPdPxj2BoFHaW9Q==}
     hasBin: true
 
   jsdom@29.1.1:
@@ -3781,8 +3747,8 @@ packages:
     engines: {node: '>=14'}
     hasBin: true
 
-  protobufjs@7.6.4:
-    resolution: {integrity: sha512-RJJPTTpvFfHcWLkIa2JFWK4XvtSzS0yEWDmunqHXli1h3JlkbcQZXDZdcWxv+JK3Xsl5/UFDPZ0iGm7DAengYw==}
+  protobufjs@7.6.5:
+    resolution: {integrity: sha512-/FPD0nUc9jH6rfFjji9IBqOz4pcSE3CsT1m7Ep6Mdb0LxSUMj8hgl6GomOvZzpNpAqqGaXA0P3VSrZLFzIhQrw==}
     engines: {node: '>=12.0.0'}
 
   publint@0.3.0:
@@ -3877,8 +3843,8 @@ packages:
     resolution: {integrity: sha512-7++dFhtcx3353uBaq8DDR4NuxBetBzC7ZQOhmTQInHEd6bSrXdiEyzCvG07Z44UYdLShWUyXt5M/yhz8ekcb1A==}
     engines: {node: '>=8'}
 
-  shell-quote@1.8.4:
-    resolution: {integrity: sha512-VsC6n6vz1ihYYyZZwX7YZSF5l5x36ca17OC+a69h94YqB7X6XLwf+5MOgynYir2SLFUbl8gIYvBo8K8RoNQ6bQ==}
+  shell-quote@1.10.0:
+    resolution: {integrity: sha512-w1aiOKwKuRgtwAReIIj89puqg+I7GvX4IbLrvmhXbzQsj1+Zwi4VO3+fa6ZF91TWSjIxoEkKnMeHcLEODK5ZXA==}
     engines: {node: '>= 0.4'}
 
   siginfo@2.0.0:
@@ -3994,8 +3960,8 @@ packages:
     resolution: {integrity: sha512-uxc/zpqFg6x7C8vOE7lh6Lbda8eEL9zmVm/PLeTPBRhh1xCgdWaQ+J1CUieGpIfm2HdtsUpRv+HshiasBMcc6A==}
     engines: {node: '>=6'}
 
-  tar@7.5.16:
-    resolution: {integrity: sha512-56adEpPMouktRlBLXiaYFFzZ/3+JXa8P9n7WbR+ibIjtviN55mEaOkiysCnPnWm+7kkui1Dn8J9l+g6zV8731w==}
+  tar@7.5.20:
+    resolution: {integrity: sha512-9FcyK4PA6+WbzlTM9WhQm6vB5W7cP7dUiPsv1g7YDwEQnQ1CGpK3MGlKk/ITVWMk05kHZuBhmVhiv8LZoy/PFQ==}
     engines: {node: '>=18'}
 
   tinybench@2.9.0:
@@ -4349,7 +4315,7 @@ snapshots:
       '@changesets/format': 0.1.0
       '@changesets/git': 4.0.0-next.6
       '@changesets/should-skip-package': 1.0.0-next.6
-      '@changesets/types': 7.0.0-next.6
+      '@changesets/types': 7.0.0-next.7
       import-meta-resolve: 4.2.0
       jsonc-parser: 3.3.1
       semver: 7.8.5
@@ -4359,12 +4325,12 @@ snapshots:
       '@changesets/errors': 1.0.0-next.3
       '@changesets/get-dependents-graph': 3.0.0-next.6
       '@changesets/should-skip-package': 1.0.0-next.6
-      '@changesets/types': 7.0.0-next.6
+      '@changesets/types': 7.0.0-next.7
       semver: 7.8.5
 
   '@changesets/changelog-git@1.0.0-next.6':
     dependencies:
-      '@changesets/types': 7.0.0-next.6
+      '@changesets/types': 7.0.0-next.7
 
   '@changesets/changelog-github@1.0.0-next.7':
     dependencies:
@@ -4383,7 +4349,7 @@ snapshots:
       '@changesets/pre': 3.0.0-next.6
       '@changesets/read': 1.0.0-next.7
       '@changesets/should-skip-package': 1.0.0-next.6
-      '@changesets/types': 7.0.0-next.6
+      '@changesets/types': 7.0.0-next.7
       '@changesets/write': 1.0.0-next.6
       '@clack/prompts': 1.6.0
       '@manypkg/get-packages': 3.1.0
@@ -4398,7 +4364,7 @@ snapshots:
     dependencies:
       '@changesets/get-dependents-graph': 3.0.0-next.6
       '@changesets/should-skip-package': 1.0.0-next.6
-      '@changesets/types': 7.0.0-next.6
+      '@changesets/types': 7.0.0-next.7
       '@manypkg/get-packages': 3.1.0
       picomatch: 4.0.5
 
@@ -4410,7 +4376,7 @@ snapshots:
 
   '@changesets/get-dependents-graph@3.0.0-next.6':
     dependencies:
-      '@changesets/types': 7.0.0-next.6
+      '@changesets/types': 7.0.0-next.7
       semver: 7.8.5
 
   '@changesets/get-github-info@1.0.0-next.4':
@@ -4420,40 +4386,38 @@ snapshots:
   '@changesets/git@4.0.0-next.6':
     dependencies:
       '@changesets/errors': 1.0.0-next.3
-      '@changesets/types': 7.0.0-next.6
+      '@changesets/types': 7.0.0-next.7
       '@manypkg/get-packages': 3.1.0
       picomatch: 4.0.5
       tinyexec: 1.2.4
 
   '@changesets/parse@1.0.0-next.7':
     dependencies:
-      '@changesets/types': 7.0.0-next.6
+      '@changesets/types': 7.0.0-next.7
       yaml: 2.9.0
 
   '@changesets/pre@3.0.0-next.6':
     dependencies:
       '@changesets/errors': 1.0.0-next.3
-      '@changesets/types': 7.0.0-next.6
+      '@changesets/types': 7.0.0-next.7
       '@manypkg/get-packages': 3.1.0
 
   '@changesets/read@1.0.0-next.7':
     dependencies:
       '@changesets/git': 4.0.0-next.6
       '@changesets/parse': 1.0.0-next.7
-      '@changesets/types': 7.0.0-next.6
+      '@changesets/types': 7.0.0-next.7
 
   '@changesets/should-skip-package@1.0.0-next.6':
     dependencies:
-      '@changesets/types': 7.0.0-next.6
-
-  '@changesets/types@7.0.0-next.6': {}
+      '@changesets/types': 7.0.0-next.7
 
   '@changesets/types@7.0.0-next.7': {}
 
   '@changesets/write@1.0.0-next.6':
     dependencies:
       '@changesets/format': 0.1.0
-      '@changesets/types': 7.0.0-next.6
+      '@changesets/types': 7.0.0-next.7
       human-id: 4.2.0
 
   '@clack/core@1.4.2':
@@ -4673,7 +4637,7 @@ snapshots:
     dependencies:
       lodash.camelcase: 4.3.0
       long: 5.3.2
-      protobufjs: 7.6.4
+      protobufjs: 7.6.5
       yargs: 17.7.2
 
   '@humanfs/core@0.19.1': {}
@@ -4941,7 +4905,7 @@ snapshots:
   '@manypkg/tools@2.1.1':
     dependencies:
       jju: 1.4.0
-      js-yaml: 4.2.0
+      js-yaml: 4.3.0
       tinyglobby: 0.2.17
 
   '@mapbox/node-pre-gyp@2.0.0(supports-color@10.2.2)':
@@ -4952,7 +4916,7 @@ snapshots:
       node-fetch: 2.7.0
       nopt: 8.0.0
       semver: 7.8.5
-      tar: 7.5.16
+      tar: 7.5.20
     transitivePeerDependencies:
       - encoding
       - supports-color
@@ -4993,18 +4957,9 @@ snapshots:
       '@opentelemetry/core': 2.9.0(@opentelemetry/api@1.9.0)
       yaml: 2.9.0
 
-  '@opentelemetry/context-async-hooks@2.8.0(@opentelemetry/api@1.9.0)':
-    dependencies:
-      '@opentelemetry/api': 1.9.0
-
   '@opentelemetry/context-async-hooks@2.9.0(@opentelemetry/api@1.9.0)':
     dependencies:
       '@opentelemetry/api': 1.9.0
-
-  '@opentelemetry/core@2.8.0(@opentelemetry/api@1.9.0)':
-    dependencies:
-      '@opentelemetry/api': 1.9.0
-      '@opentelemetry/semantic-conventions': 1.36.0
 
   '@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.0)':
     dependencies:
@@ -5154,12 +5109,6 @@ snapshots:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/core': 2.9.0(@opentelemetry/api@1.9.0)
 
-  '@opentelemetry/resources@2.8.0(@opentelemetry/api@1.9.0)':
-    dependencies:
-      '@opentelemetry/api': 1.9.0
-      '@opentelemetry/core': 2.8.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.36.0
-
   '@opentelemetry/resources@2.9.0(@opentelemetry/api@1.9.0)':
     dependencies:
       '@opentelemetry/api': 1.9.0
@@ -5213,13 +5162,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@opentelemetry/sdk-trace-base@2.8.0(@opentelemetry/api@1.9.0)':
-    dependencies:
-      '@opentelemetry/api': 1.9.0
-      '@opentelemetry/core': 2.8.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/resources': 2.8.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.36.0
-
   '@opentelemetry/sdk-trace-base@2.9.0(@opentelemetry/api@1.9.0)':
     dependencies:
       '@opentelemetry/api': 1.9.0
@@ -5227,13 +5169,6 @@ snapshots:
       '@opentelemetry/resources': 2.9.0(@opentelemetry/api@1.9.0)
       '@opentelemetry/sdk-trace': 2.9.0(@opentelemetry/api@1.9.0)
       '@opentelemetry/semantic-conventions': 1.36.0
-
-  '@opentelemetry/sdk-trace-node@2.8.0(@opentelemetry/api@1.9.0)':
-    dependencies:
-      '@opentelemetry/api': 1.9.0
-      '@opentelemetry/context-async-hooks': 2.8.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/core': 2.8.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/sdk-trace-base': 2.8.0(@opentelemetry/api@1.9.0)
 
   '@opentelemetry/sdk-trace-node@2.9.0(@opentelemetry/api@1.9.0)':
     dependencies:
@@ -5705,7 +5640,7 @@ snapshots:
 
   blake3-wasm@2.1.5: {}
 
-  brace-expansion@5.0.6:
+  brace-expansion@5.0.7:
     dependencies:
       balanced-match: 4.0.4
 
@@ -6122,7 +6057,7 @@ snapshots:
 
   jju@1.4.0: {}
 
-  js-yaml@4.2.0:
+  js-yaml@4.3.0:
     dependencies:
       argparse: 2.0.1
 
@@ -6171,7 +6106,7 @@ snapshots:
   launch-editor@2.14.1:
     dependencies:
       picocolors: 1.1.1
-      shell-quote: 1.8.4
+      shell-quote: 1.10.0
 
   levn@0.4.1:
     dependencies:
@@ -6263,7 +6198,7 @@ snapshots:
 
   minimatch@10.2.5:
     dependencies:
-      brace-expansion: 5.0.6
+      brace-expansion: 5.0.7
 
   minipass@7.1.2: {}
 
@@ -6387,7 +6322,7 @@ snapshots:
 
   prettier@3.8.1: {}
 
-  protobufjs@7.6.4:
+  protobufjs@7.6.5:
     dependencies:
       '@protobufjs/aspromise': 1.1.2
       '@protobufjs/base64': 1.1.2
@@ -6560,7 +6495,7 @@ snapshots:
 
   shebang-regex@3.0.0: {}
 
-  shell-quote@1.8.4: {}
+  shell-quote@1.10.0: {}
 
   siginfo@2.0.0: {}
 
@@ -6670,7 +6605,7 @@ snapshots:
 
   tapable@2.3.3: {}
 
-  tar@7.5.16:
+  tar@7.5.20:
     dependencies:
       '@isaacs/fs-minipass': 4.0.1
       chownr: 3.0.0

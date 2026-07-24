@@ -1,11 +1,9 @@
 import path from 'node:path';
-import process from 'node:process';
 import create_manifest_data from './create_manifest_data/index.js';
 import { write_client_manifest } from './write_client_manifest.js';
-import { write_tsconfig } from './write_tsconfig.js';
+import { write_tsconfig } from './write_tsconfig/index.js';
 import { write_types, write_all_types } from './write_types/index.js';
-import { write_ambient } from './write_ambient.js';
-import { write_non_ambient } from './write_non_ambient.js';
+import { write_app_types } from './write_app_types.js';
 import { write_server } from './write_server.js';
 import {
 	create_node_analyser,
@@ -21,7 +19,6 @@ import { write_env } from './write_env.js';
  */
 export function init(config, root) {
 	write_tsconfig(config.kit, root);
-	write_ambient(config.kit);
 }
 
 /**
@@ -37,7 +34,7 @@ export function create(config, root) {
 	write_client_manifest(config.kit, manifest_data, `${output}/client`);
 	write_server(config, output, root);
 	write_all_types(config, manifest_data, root);
-	write_non_ambient(config.kit, manifest_data);
+	write_app_types(config.kit, manifest_data, root);
 
 	return { manifest_data };
 }
@@ -65,7 +62,7 @@ export function update(config, manifest_data, file, root) {
 	}
 
 	write_types(config, manifest_data, file, root);
-	write_non_ambient(config.kit, manifest_data);
+	write_app_types(config.kit, manifest_data, root);
 }
 
 /**
@@ -81,13 +78,13 @@ export function all(config, root) {
 /**
  * Run sync.init and then generate all type files.
  * @param {import('types').ValidatedConfig} config
+ * @param {string} root
  */
-export function all_types(config) {
-	const cwd = process.cwd();
-	init(config, cwd);
-	const manifest_data = create_manifest_data({ config, cwd });
-	write_all_types(config, manifest_data, cwd);
-	write_non_ambient(config.kit, manifest_data);
+export function all_types(config, root) {
+	init(config, root);
+	const manifest_data = create_manifest_data({ config, cwd: root });
+	write_all_types(config, manifest_data, root);
+	write_app_types(config.kit, manifest_data, root);
 }
 
 /**
@@ -100,7 +97,7 @@ export function all_types(config) {
 export async function env(kit, entry, root, mode) {
 	const env_config = await load_explicit_env(kit, entry, root, mode);
 
-	write_env(kit, entry, env_config);
+	write_env(entry, env_config, root);
 
 	return env_config;
 }
