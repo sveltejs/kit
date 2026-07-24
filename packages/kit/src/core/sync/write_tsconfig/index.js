@@ -196,10 +196,11 @@ function load_tsconfig(file) {
 	return options.config;
 }
 
-// <something><optional /*>
-const alias_regex = /^(.+?)(\/\*)?$/;
-// <path><optional /* or .fileending>
-const value_regex = /^(.*?)((\/\*)|(\.\w+))?$/;
+/** Matches anything (except the empty string/string with newline), and separates any trailing `/*` */
+const alias_key = /^(.+?)(\/\*)?$/;
+
+/** Matches anything (except the empty string/string with newline), and separates any trailing `/*` or file extension */
+const alias_value = /^(.+?)((\/\*)|(\.\w+))?$/;
 
 /**
  * Generates tsconfig path aliases from kit's aliases and the package.json `imports` field.
@@ -219,10 +220,10 @@ function get_paths(config, root) {
 	const paths = {};
 
 	for (const [key, value] of Object.entries(alias)) {
-		const key_match = alias_regex.exec(key);
+		const key_match = alias_key.exec(key);
 		if (!key_match) throw new Error(`Invalid alias key: ${key}`);
 
-		const value_match = value_regex.exec(value);
+		const value_match = alias_value.exec(value);
 		if (!value_match) throw new Error(`Invalid alias value: ${value}`);
 
 		const resolved = path.resolve(root, remove_trailing_slashstar(value));
