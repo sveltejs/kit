@@ -1,6 +1,6 @@
 import { BROWSER, DEV } from 'esm-env';
 import { noop } from '../../utils/functions.js';
-import { hash } from '../../utils/hash.js';
+import { hash_request } from '../../utils/hash.js';
 import { base64_decode } from '../utils.js';
 
 let loading = 0;
@@ -162,18 +162,9 @@ function build_selector(resource, opts) {
 	let selector = `script[data-sveltekit-fetched][data-url=${url}]`;
 
 	if (opts?.headers || opts?.body) {
-		/** @type {import('types').StrictBody[]} */
-		const values = [];
-
-		if (opts.headers) {
-			values.push([...new Headers(opts.headers)].join(','));
-		}
-
-		if (opts.body && (typeof opts.body === 'string' || ArrayBuffer.isView(opts.body))) {
-			values.push(opts.body);
-		}
-
-		selector += `[data-hash="${hash(...values)}"]`;
+		const body =
+			typeof opts.body === 'string' || ArrayBuffer.isView(opts.body) ? opts.body : undefined;
+		selector += `[data-hash="${hash_request(opts.headers, body)}"]`;
 	}
 
 	return selector;
