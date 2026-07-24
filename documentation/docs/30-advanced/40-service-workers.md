@@ -115,8 +115,8 @@ Service workers run in a different context to the rest of your app. As such, the
 /// file: tsconfig.json
 {
 	"extends": "$app/tsconfig",
-	"includes": ["src", "test"],
-	"excludes": ["src/service-worker"]
+	"include": ["src", "test"],
+	"exclude": ["src/service-worker"]
 }
 ```
 
