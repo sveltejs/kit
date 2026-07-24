@@ -72,6 +72,8 @@ import { treeshake_prerendered_remotes } from './build/remote.js';
 import { SVELTE_KIT_ASSETS } from '../../constants.js';
 import { get_runner } from '../../runner.js';
 
+const dev_context = import.meta.resolve('./dev/context.js');
+
 /**
  * The posix-ified root of the project based on the Vite configuration.
  * Populated after Vite plugins' `config` hooks run
@@ -1676,15 +1678,15 @@ function kit({ svelte_config }) {
 
 			if (isRunnableDevEnvironment(server.environments.ssr)) {
 				context = /** @type {typeof import('./dev/context.js')} */ (
-					await server.environments.ssr.runner.import(import.meta.resolve('./dev/context.js'))
+					await server.environments.ssr.runner.import(dev_context)
 				).dev;
 				context.vite = server;
 			}
 
 			return dev(server, vite_config, svelte_config, root, (data) => {
-				manifest_data = data;
-				context.manifest_data = data;
+				manifest_data = context.manifest_data = data;
 				invalidate_module(server, sveltekit_manifest_data);
+				invalidate_module(server, dev_context);
 				context.svelte_config = svelte_config;
 				context.remotes = remotes;
 			});
