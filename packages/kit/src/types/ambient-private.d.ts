@@ -21,15 +21,6 @@ declare module '__sveltekit/server' {
 	export function set_read_implementation(fn: (path: string) => ReadableStream): void;
 }
 
-/** Used to construct the SSR manifest from within an environment during development */
-declare module '__sveltekit/dev-manifest-data' {
-	import { ManifestData } from 'types';
-
-	export const env: Record<string, string>;
-	export const mime_types: Record<string, string>;
-	export const manifest_data: ManifestData;
-}
-
 declare module '__sveltekit/env' {
 	// exported environment variables are defined in env.d.ts
 
