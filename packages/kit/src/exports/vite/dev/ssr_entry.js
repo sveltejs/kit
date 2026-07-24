@@ -42,5 +42,3 @@ export async function fetch(request) {
 		}
 	});
 }
-
-import.meta.hot?.accept();
