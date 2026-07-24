@@ -319,6 +319,19 @@ test.describe('Load', () => {
 		}
 	});
 
+	test('POST fetches with non-string bodies are not serialized', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		await page.goto('/load/serialization-post-body-object');
+
+		expect(await page.textContent('h1')).toBe('A=1');
+
+		if (!javaScriptEnabled) {
+			expect(await page.locator('script[data-sveltekit-fetched]').count()).toBe(0);
+		}
+	});
+
 	test('fetches using an arraybuffer serialized with b64', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/load/fetch-arraybuffer-b64');
 
