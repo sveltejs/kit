@@ -233,6 +233,7 @@ export function create_builder({
 			entrypoint,
 			instrumentation,
 			start = join(dirname(entrypoint), 'start.js'),
+			env,
 			module = {
 				exports: ['default']
 			}
@@ -265,7 +266,9 @@ export function create_builder({
 					: create_instrumentation_facade({
 							instrumentation: relative_instrumentation,
 							start: relative_start,
-							exports: module.exports
+							exports: module.exports,
+							env,
+							entrypoint
 						});
 
 			rimraf(entrypoint);
@@ -298,15 +301,35 @@ async function compress_file(file, format = 'gz') {
 
 /**
  * Given a list of exports, generate a facade that:
+ * - Imports and calls `set_env` with the platform's env (if provided), so that dynamic env
+ *   vars are populated before instrumentation or any application code is evaluated
  * - Imports the instrumentation file
- * - Imports `exports` from the entrypoint (dynamically, if `tla` is true)
+ * - Imports `exports` from the entrypoint (dynamically)
  * - Re-exports `exports` from the entrypoint
  *
- * @param {{ instrumentation: string; start: string; exports: string[] }} opts
+ * @param {{ instrumentation: string; start: string; exports: string[]; env?: string | { imports: string[], expression: string }; entrypoint: string }} opts
  * @returns {string}
  */
-function create_instrumentation_facade({ instrumentation, start, exports }) {
-	const import_instrumentation = `import './${instrumentation}';`;
+function create_instrumentation_facade({ instrumentation, start, exports, env, entrypoint }) {
+	const parts = [];
+
+	if (env) {
+		// Generate a separate init module that imports `set_env` and calls it with the
+		// platform's env expression. Static imports are evaluated in order, so importing
+		// this module before instrumentation ensures env is populated before any
+		// instrumentation code (or transitively imported app modules) run.
+		const env_init_name = '__sveltekit_env_init.js';
+		const env_init_path = join(dirname(entrypoint), env_init_name);
+		const imports = typeof env === 'string' ? [] : env.imports;
+		const expression = typeof env === 'string' ? env : env.expression;
+		write(
+			env_init_path,
+			`${imports.join('\n')}\nimport { set_env } from './env.js';\nset_env(${expression});\n`
+		);
+		parts.push(`import './${env_init_name}';`);
+	}
+
+	parts.push(`import './${instrumentation}';`);
 
 	const { namespace, declarations, reexports } = create_exported_declarations(
 		exports,
@@ -314,13 +337,11 @@ function create_instrumentation_facade({ instrumentation, start, exports }) {
 		'__mod'
 	);
 
-	const parts = [
-		`const ${namespace} = await import('./${start}');`,
-		declarations.join('\n'),
-		reexports.length > 0 ? `export { ${reexports.join(', ')} };` : ''
-	]
-		.filter(Boolean)
-		.join('\n');
+	parts.push(`const ${namespace} = await import('./${start}');`);
+	parts.push(declarations.join('\n'));
+	if (reexports.length > 0) {
+		parts.push(`export { ${reexports.join(', ')} };`);
+	}
 
-	return `${import_instrumentation}\n${parts}`;
+	return parts.filter(Boolean).join('\n');
 }

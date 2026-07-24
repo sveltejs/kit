@@ -196,6 +196,12 @@ declare module '@sveltejs/kit' {
 		 * `entrypoint` which imports `instrumentation` and then dynamically imports `start`. This allows
 		 * the module hooks necessary for instrumentation libraries to be loaded prior to any application code.
 		 *
+		 * If `env` is provided, a separate init module is generated that imports `set_env` from the env
+		 * module and calls it with the provided expression. This module is imported before `instrumentation`,
+		 * ensuring dynamic env vars are populated (and validated) before any instrumentation or application
+		 * code is evaluated. The expression should evaluate to a `Record<string, string>` — e.g. `'process.env'`
+		 * for Node-like platforms, or an import from `'cloudflare:workers'` for Cloudflare Workers.
+		 *
 		 * Caveats:
 		 * - "Live exports" will not work. If your adapter uses live exports, your users will need to manually import the server instrumentation on startup.
 		 * - If `tla` is `false`, OTEL auto-instrumentation may not work properly. Use it if your environment supports it.
@@ -205,6 +211,7 @@ declare module '@sveltejs/kit' {
 		 * @param options.entrypoint the path to the entrypoint to trace.
 		 * @param options.instrumentation the path to the instrumentation file.
 		 * @param options.start the name of the start file. This is what `entrypoint` will be renamed to.
+		 * @param options.env a JS expression that evaluates to the env object, or an object with `imports` (array of import statement strings) and `expression` (a JS expression), used to populate dynamic env vars before instrumentation runs.
 		 * @param options.module configuration for the resulting entrypoint module.
 		 * @param options.module.generateText a function that receives the relative paths to the instrumentation and start files, and generates the text of the module to be traced. If not provided, the default implementation will be used, which uses top-level await.
 		 * @since 2.31.0
@@ -213,6 +220,7 @@ declare module '@sveltejs/kit' {
 			entrypoint: string;
 			instrumentation: string;
 			start?: string;
+			env?: string | { imports: string[]; expression: string };
 			module?:
 				| {
 						exports: string[];

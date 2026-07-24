@@ -322,7 +322,9 @@ export const config = {
 function generate_traced_module(config) {
 	return ({ instrumentation, start }) => {
 		return `\
-import '../server/${instrumentation}';
+const { set_env } = await import('../server/env.js');
+set_env(process.env);
+await import('../server/${instrumentation}');
 const { default: _0 } = await import('../server/${start}');
 export { _0 as default };
 

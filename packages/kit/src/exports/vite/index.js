@@ -687,7 +687,7 @@ function kit({ svelte_config }) {
 						return create_manifest_data_module(is_build, manifest_data);
 
 					case sveltekit_env:
-						return create_sveltekit_env(explicit_env_config, env, explicit_env_entry, !is_build);
+						return create_sveltekit_env(explicit_env_config, env, explicit_env_entry);
 
 					case sveltekit_env_public_client:
 						return create_sveltekit_env_public(
