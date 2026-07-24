@@ -136,6 +136,7 @@ export async function internal_respond(request, options, manifest, state) {
 	/** @type {boolean[] | undefined} */
 	let invalidated_data_nodes;
 
+	/** Skipped for query remote function requests */
 	let skip_route_resolution = false;
 
 	if (is_route_resolution_request) {
@@ -368,7 +369,7 @@ export async function internal_respond(request, options, manifest, state) {
 		return text('Not found', { status: 404, headers });
 	}
 
-	if (!state.prerendering?.fallback && !skip_route_resolution) {
+	if ((!state.prerendering?.fallback && !skip_route_resolution) || is_data_request) {
 		try {
 			const matchers = await manifest._.matchers();
 			const result = find_route(resolved_path, manifest._.routes, matchers);
@@ -435,7 +436,7 @@ export async function internal_respond(request, options, manifest, state) {
 					prerender = node.prerender ?? prerender;
 				} else if (page_nodes) {
 					config = page_nodes.get_config() ?? config;
-					prerender = page_nodes.prerender();
+					prerender = state.prerender_default = page_nodes.prerender();
 				}
 
 				if (state.emulator?.platform) {
@@ -614,7 +615,7 @@ export async function internal_respond(request, options, manifest, state) {
 				});
 			}
 
-			if (options.hash_routing || state.prerendering?.fallback) {
+			if ((options.hash_routing || state.prerendering?.fallback) && !is_data_request) {
 				return await render_response({
 					event,
 					event_state,

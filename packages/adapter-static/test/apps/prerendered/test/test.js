@@ -27,3 +27,7 @@ test('exposes public env vars to the client', async ({ page }) => {
 	expect(await page.textContent('h1')).toEqual('The answer is 42');
 	expect(await page.textContent('h2')).toEqual('The dynamic answer is 42');
 });
+
+test.describe('dev', () => {
+	// TODO: add tests for prerender errors during development
+});

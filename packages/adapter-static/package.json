@@ -30,7 +30,8 @@
 	"files": [
 		"index.js",
 		"index.d.ts",
-		"platforms.js"
+		"platforms.js",
+		"src/**/*.js"
 	],
 	"scripts": {
 		"lint": "prettier --check .",

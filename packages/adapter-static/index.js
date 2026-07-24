@@ -1,5 +1,6 @@
 import path from 'node:path';
 import { platforms } from './platforms.js';
+import { get_options_message } from './utils.js';
 
 /** @type {import('./index.js').default} */
 export default function (options) {
@@ -17,35 +18,12 @@ export default function (options) {
 ${dynamic_routes.map((route) => `  - ${path.posix.join(prefix, route.id)}`).join('\n')}\n`
 					);
 
-					const options = [
-						'set the `fallback` option — see https://svelte.dev/docs/kit/single-page-apps#usage for more info.',
-						'add `export const prerender = true` to your root `+layout.js/.ts` or `+layout.server.js/.ts` file. This will try to prerender all pages.',
-						'add `export const prerender = true` to any `+server.js/ts` files that are not fetched by page `load` functions.'
-					];
-
-					if (
-						has_param_routes ||
-						JSON.stringify(builder.config.kit.prerender.entries) !== '["*"]'
-					) {
-						let option = 'adjust the `prerender.entries` config option';
-						if (has_param_routes)
-							option += ' (routes with parameters are not part of entry points by default)';
-						options.push(option);
-					}
-
-					options.push(
-						"pass `strict: false` to `adapter-static` to ignore this error. Only do this if you are sure you don't need the routes in question in your final app, as they will be unavailable. See https://github.com/sveltejs/kit/tree/main/packages/adapter-static#strict for more info."
-					);
-
 					builder.log(
-						`You have the following options:${options.map((o) => `\n  - ${o}`).join('')}\n`
+						get_options_message(
+							has_param_routes,
+							JSON.stringify(builder.config.kit.prerender.entries) !== '["*"]'
+						)
 					);
-
-					builder.log(
-						`If this doesn't help, you may need to use a different adapter. @sveltejs/adapter-static can only be used for sites that don't need a server for dynamic rendering, and can run on just a static file server.\n`
-					);
-
-					builder.log(`See https://svelte.dev/docs/kit/page-options#prerender for more details\n`);
 
 					const error = new Error('Encountered dynamic routes');
 					error.stack = '';
@@ -99,6 +77,33 @@ ${dynamic_routes.map((route) => `  - ${path.posix.join(prefix, route.id)}`).join
 			}
 
 			if (!options) platform?.done(builder);
+		},
+		vite: {
+			plugins: [
+				{
+					name: 'vite-plugin-sveltekit-adapter-static',
+					configEnvironment(name) {
+						if (name === 'ssr') {
+							return {
+								define: {
+									__SVELTEKIT_ADAPTER_STATIC_FALLBACK__: options?.fallback ? 'true' : 'false'
+								}
+							};
+						}
+					},
+					applyToEnvironment(environment) {
+						return environment.name === 'ssr';
+					},
+					resolveId: {
+						filter: {
+							id: /^sveltekit:server-entry$/
+						},
+						handler() {
+							return this.resolve(import.meta.resolve('./src/dev.js'));
+						}
+					}
+				}
+			]
 		}
 	};
 }

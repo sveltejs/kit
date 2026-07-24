@@ -11,5 +11,5 @@
 		},
 		"types": ["node"]
 	},
-	"include": ["index.js", "test/utils.js"]
+	"include": ["index.js", "utils.js", "src/*.js", "src/*.ts", "test/utils.js"]
 }
