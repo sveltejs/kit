@@ -258,9 +258,9 @@ test('prerendered.paths omits trailing slashes for endpoints', () => {
 	const content = read('service-worker.js');
 
 	for (const path of [
-		'/trailing-slash/page/',
-		'/trailing-slash/page/__data.json',
-		'/trailing-slash/standalone-endpoint.json'
+		'trailing-slash/page/',
+		'trailing-slash/page/__data.json',
+		'trailing-slash/standalone-endpoint.json'
 	]) {
 		expect(content, `Missing ${path}`).toMatch(`"${path}"`);
 	}

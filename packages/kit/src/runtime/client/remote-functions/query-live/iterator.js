@@ -1,5 +1,6 @@
 import { app_dir, base } from '$app/paths/internal/client';
 import { app } from '../../client.js';
+import { notify_version } from '../../state.svelte.js';
 import { handle_side_channel_response } from '../shared.svelte.js';
 import * as devalue from 'devalue';
 import { HttpError } from '@sveltejs/kit/internal';
@@ -25,6 +26,9 @@ export async function* create_live_iterator(
 	const response = await fetch(url, {
 		signal: controller.signal
 	});
+
+	// detect new deployments from the response header
+	notify_version(response.headers.get('x-sveltekit-version'));
 
 	if (!response.ok) {
 		const result = await response.json().catch(() => ({

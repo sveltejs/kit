@@ -4,6 +4,7 @@ import { noop } from '../../utils/functions.js';
 import { refreshAll } from './navigation.js';
 import { app as client_app, applyAction, handle_error } from '../client/client.js';
 import { app as server_app } from '../server/app.js';
+import { notify_version } from '../client/state.svelte.js';
 
 export { applyAction };
 
@@ -200,6 +201,9 @@ export function enhance(form_element, submit = noop) {
 				body,
 				signal: controller.signal
 			});
+
+			// detect new deployments from the response header
+			notify_version(response.headers.get('x-sveltekit-version'));
 
 			if (response.status === 204) {
 				result = { type: 'success', status: 204 };

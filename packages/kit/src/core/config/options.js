@@ -275,11 +275,11 @@ export const validate_kit_options = object({
 	}),
 
 	serviceWorker: object({
+		files: removed(),
 		register: boolean(true),
 		// options could be undefined but if it is defined we only validate that
 		// it's an object since the type comes from the browser itself
-		options: validate(undefined, object({}, true)),
-		files: fun((filename) => !/\.DS_Store/.test(filename))
+		options: validate(undefined, object({}, true))
 	}),
 
 	tracing: object({
@@ -297,7 +297,7 @@ export const validate_kit_options = object({
 
 	version: object({
 		name: string(Date.now().toString()),
-		pollInterval: number(0)
+		pollInterval: number(3_600_000)
 	})
 });
 

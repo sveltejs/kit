@@ -4,40 +4,40 @@ title: Service workers
 
 Service workers act as proxy servers that handle network requests inside your app. This makes it possible to make your app work offline, but even if you don't need offline support (or can't realistically implement it because of the type of app you're building), it's often worth using service workers to speed up navigation by precaching your built JS and CSS.
 
-In SvelteKit, if you have a `src/service-worker.js` file (or `src/service-worker/index.js`) it will be bundled and automatically registered.
+In SvelteKit, if you have a `src/service-worker/index.ts` file it will be bundled and automatically registered.
+
+> [!NOTE] `src/service-worker.ts` or `.js` is also valid, but see the section on [type safety](#type-safety) below
 
 ## Inside the service worker
 
-Inside the service worker you have access to the [`$service-worker` module]($service-worker), which provides you with the paths to all static assets, build files and prerendered pages. You're also provided with an app version string, which you can use for creating a unique cache name, and the deployment's `base` path. If your Vite config specifies `define` (used for global variable replacements), this will be applied to service workers as well as your server/client builds.
+For the service worker to do anything useful, you will likely need to import some stuff:
 
-The following example caches the built app and any files in `static` eagerly, and caches all other requests as they happen. This would make each page work offline once visited.
+- [`$app/service-worker`]($app-service-worker) exports `self` which is just `globalThis` typed as [`ServiceWorkerGlobalScope`](https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerGlobalScope) (provided you follow [these steps](#type-safety)), so that your `fetch` events are typed correctly
+- [`$app/env`]($app-env) exports `version`, which is useful for creating deployment-scoped caches
+- [`$app/manifest`]($app-manifest) exports `immutable` build files, your `assets`, and any `prerendered` content, allowing you to populate your caches
+
+A typical service worker might look like this:
 
 ```js
-// @errors: 2688
 /// file: src/service-worker.js
-// Disables access to DOM typings like `HTMLElement` which are not available
-// inside a service worker and instantiates the correct globals
 /// <reference no-default-lib="true"/>
 /// <reference lib="esnext" />
 /// <reference lib="webworker" />
-
-// Ensures that the `$service-worker` import has proper type definitions
-/// <reference types="@sveltejs/kit" />
-
-// Only necessary if you have an import from `$app/env/*`
-/// <reference types="../.svelte-kit/env.d.ts" />
-
-import { build, files, version } from '$service-worker';
-
-// This gives `self` the correct types
-const self = /** @type {ServiceWorkerGlobalScope} */ (/** @type {unknown} */ (globalThis.self));
+// ---cut---
+import { self } from '$app/service-worker';
+import { version } from '$app/env';
+import { immutable, assets } from '$app/manifest';
+import { resolve } from '$app/paths';
 
 // Create a unique cache name for this deployment
 const CACHE = `cache-${version}`;
 
+// `immutable`/`assets` paths from `$app/manifest` are relative to the
+// base path, so resolve them to absolute pathnames that can be matched
+// against `url.pathname` in the `fetch` handler
 const ASSETS = [
-	...build, // the app itself
-	...files  // everything in `static`
+	...immutable.map((asset) => resolve(asset.path)), // the Vite output
+	...assets.map((asset) => resolve(asset.path))  // everything in `static`
 ];
 
 self.addEventListener('install', (event) => {
@@ -69,7 +69,7 @@ self.addEventListener('fetch', (event) => {
 		const url = new URL(event.request.url);
 		const cache = await caches.open(CACHE);
 
-		// `build`/`files` can always be served from the cache
+		// `immutable`/`assets` can always be served from the cache
 		if (ASSETS.includes(url.pathname)) {
 			const response = await cache.match(url.pathname);
 
@@ -78,32 +78,26 @@ self.addEventListener('fetch', (event) => {
 			}
 		}
 
-		// for everything else, try the network first, but
-		// fall back to the cache if we're offline
+		// for everything else, try the network first...
 		try {
 			const response = await fetch(event.request);
 
-			// if we're offline, fetch can return a value that is not a Response
-			// instead of throwing - and we can't pass this non-Response to respondWith
-			if (!(response instanceof Response)) {
-				throw new Error('invalid response from fetch');
-			}
-
 			if (response.status === 200 && !response.headers.get('cache-control')?.includes('no-store')) {
-				cache.put(event.request, response.clone());
+				// ...and cache responses in the background for next time....
+				void cache.put(event.request, response.clone());
 			}
 
 			return response;
-		} catch (err) {
+		} catch (error) {
+			// ...otherwise fall back to previously cached data if it exists...
 			const response = await cache.match(event.request);
 
 			if (response) {
 				return response;
 			}
 
-			// if there's no cache, then just error out
-			// as there is nothing we can do to respond to this request
-			throw err;
+			// ...or throw the error
+			throw error;
 		}
 	}
 
@@ -113,18 +107,42 @@ self.addEventListener('fetch', (event) => {
 
 > [!NOTE] Be careful when caching! In some cases, stale data might be worse than data that's unavailable while offline. Since browsers will empty caches if they get too full, you should also be careful about caching large assets like video files.
 
-> [!NOTE] `build` and `prerendered` are empty arrays during development
+## Type safety
+
+Service workers run in a different context to the rest of your app. As such, they needs different types. You should ensure that your project's root `tsconfig.json` excludes your service worker code...
+
+```json
+/// file: tsconfig.json
+{
+	"extends": "$app/tsconfig",
+	"include": ["src", "test"],
+	"exclude": ["src/service-worker"]
+}
+```
+
+...and that your `src/service-worker/index.ts` file sits alongside a separate `tsconfig.json`, which should set up the correct types by extending [`$app/tsconfig/service-worker`]($app-tsconfig-service-worker):
+
+```json
+/// file: src/service-worker/tsconfig.json
+{
+	"extends": "$app/tsconfig/service-worker"
+}
+```
 
 ## Manual registration
 
-You can [disable automatic registration](configuration#serviceWorker) if you need to register the service worker with your own logic. The default registration looks something like this:
+You can [disable automatic registration](configuration#serviceWorker) if you need to register the service worker with your own logic. The default registration, which is injected into server-rendered HTML, looks something like this:
 
 ```js
 if ('serviceWorker' in navigator) {
+	const script_url = './service-worker.js';
+	const policy = globalThis?.window?.trustedTypes?.createPolicy(
+		'sveltekit-trusted-url',
+		{ createScriptURL(url) { return url; } }
+	);
+	const sanitised = policy?.createScriptURL(script_url) ?? script_url;
 	addEventListener('load', function () {
-		navigator.serviceWorker.register('./path/to/service-worker.js', {
-			type: 'module'
-		});
+		navigator.serviceWorker.register(sanitised, { type: 'module' });
 	});
 }
 ```
