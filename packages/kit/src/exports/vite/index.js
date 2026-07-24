@@ -8,7 +8,6 @@ import path from 'node:path';
 import process from 'node:process';
 import { pathToFileURL } from 'node:url';
 import { styleText } from 'node:util';
-import * as devalue from 'devalue';
 import MagicString from 'magic-string';
 import { isRunnableDevEnvironment, loadEnv } from 'vite';
 import { exactRegex, prefixRegex } from 'rolldown/filter';
@@ -28,7 +27,7 @@ import {
 import * as sync from '../../core/sync/sync.js';
 import { create_assets } from '../../core/sync/create_manifest_data/index.js';
 import { load_and_validate_params } from '../../utils/params.js';
-import { runtime_directory, logger, get_runtime_base, get_mime_lookup } from '../../core/utils.js';
+import { runtime_directory, logger, get_runtime_base } from '../../core/utils.js';
 import { generate_manifest } from '../../core/generate_manifest/index.js';
 import { build_server_nodes } from './build/build_server.js';
 import { find_deps, resolve_symlinks } from './build/utils.js';
@@ -63,8 +62,7 @@ import {
 	sveltekit_env_public_server,
 	sveltekit_dev_traced,
 	sveltekit_dev_server_entry,
-	sveltekit_dev_manifest_data,
-	sveltekit_dev_server
+	sveltekit_dev_init
 } from './module_ids.js';
 import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
@@ -617,7 +615,7 @@ function kit({ svelte_config }) {
 		resolveId: {
 			filter: {
 				id: [
-					exactRegex(sveltekit_dev_server),
+					exactRegex(sveltekit_dev_init),
 					exactRegex('sveltekit:server-manifest'),
 					exactRegex('sveltekit:server'),
 					exactRegex('sveltekit:env'),
@@ -625,7 +623,7 @@ function kit({ svelte_config }) {
 				]
 			},
 			handler(id) {
-				if (id === sveltekit_dev_server) {
+				if (id === sveltekit_dev_init) {
 					return server_instrumentation
 						? sveltekit_dev_traced
 						: this.resolve(sveltekit_dev_server_entry);
@@ -650,43 +648,10 @@ function kit({ svelte_config }) {
 		},
 		load: {
 			filter: {
-				id: [
-					exactRegex('sveltekit:env'),
-					exactRegex(sveltekit_dev_manifest_data),
-					exactRegex(sveltekit_dev_traced)
-				]
+				id: [exactRegex('sveltekit:env'), exactRegex(sveltekit_dev_traced)]
 			},
 			handler(id) {
 				switch (id) {
-					case sveltekit_dev_manifest_data: {
-						return dedent`
-							import { load_and_validate_params } from '__SVELTEKIT__/utils/params.js';
-							import { to_fs } from '__SVELTEKIT__/utils/vite.js';
-							import { loud_ssr_load_module } from '__SVELTEKIT__/exports/vite/dev/utils.js';
-
-							export const manifest_data = {
-								assets: ${s(manifest_data.assets)},
-								hooks: {
-									client: ${s(manifest_data.hooks.client)},
-									server: ${s(manifest_data.hooks.server)},
-									universal: ${s(manifest_data.hooks.universal)}
-								},
-								nodes: ${devalue.uneval(manifest_data.nodes)},
-								routes: ${devalue.uneval(manifest_data.routes)},
-								params: ${s(manifest_data.params)}
-							};
-
-							await load_and_validate_params({
-								routes: manifest_data.routes,
-								params_path: manifest_data.params,
-								root: __SVELTEKIT_ROOT__,
-								load: (file) => loud_ssr_load_module(to_fs(file))
-							});
-
-							export const mime_types = ${s(get_mime_lookup(manifest_data))};
-						`;
-					}
-
 					case sveltekit_dev_traced: {
 						if (!server_instrumentation) {
 							throw new Error('Server instrumentation file not found. This should never happen');
@@ -1707,22 +1672,22 @@ function kit({ svelte_config }) {
 		 * @see https://vitejs.dev/guide/api-plugin.html#configureserver
 		 */
 		async configureServer(server) {
-			/** @type {typeof import('./dev/context.js')} */
+			/** @type {import('./dev/context.js').Context} */
 			let context;
 
 			if (isRunnableDevEnvironment(server.environments.ssr)) {
-				context = await server.environments.ssr.runner.import(
-					import.meta.resolve('./dev/context.js')
-				);
-				context.set_dev_server(server);
+				context = /** @type {typeof import('./dev/context.js')} */ (
+					await server.environments.ssr.runner.import(import.meta.resolve('./dev/context.js'))
+				).dev;
+				context.vite = server;
 			}
 
 			return dev(server, vite_config, svelte_config, root, (data) => {
 				manifest_data = data;
+				context.manifest_data = data;
 				invalidate_module(server, sveltekit_manifest_data);
-				invalidate_module(server, sveltekit_dev_manifest_data);
-				context.set_svelte_config(svelte_config);
-				context.set_remotes(remotes);
+				context.svelte_config = svelte_config;
+				context.remotes = remotes;
 			});
 		},
 

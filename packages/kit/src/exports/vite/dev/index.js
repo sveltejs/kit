@@ -21,7 +21,7 @@ import {
 } from '../utils.js';
 import { escape_html } from '../../../utils/escape.js';
 import { fix_stack_trace } from './sourcemaps.js';
-import { sveltekit_dev_manifest_data, sveltekit_dev_server } from '../module_ids.js';
+import { sveltekit_dev_init } from '../module_ids.js';
 import { get_runner } from '../../../runner.js';
 
 /**
@@ -115,7 +115,6 @@ export function dev(vite, vite_config, svelte_config, root, set_manifest_data) {
 		// Unless it's a file where the trailing slash page option might have changed
 		if (timeout || !/\+(page|layout|server).*$/.test(file)) return;
 		sync.update(svelte_config, manifest_data, file, root);
-		invalidate_module(vite, sveltekit_dev_manifest_data);
 	});
 
 	const { appTemplate, errorTemplate, serviceWorker, hooks } = svelte_config.kit.files;
@@ -173,8 +172,6 @@ export function dev(vite, vite_config, svelte_config, root, set_manifest_data) {
 		next();
 	});
 
-	let inited_manifest = false;
-
 	return () => {
 		const serve_static_middleware = vite.middlewares.stack.find(
 			(middleware) =>
@@ -186,14 +183,6 @@ export function dev(vite, vite_config, svelte_config, root, set_manifest_data) {
 		remove_static_middlewares(vite.middlewares);
 
 		vite.middlewares.use(async (req, res) => {
-			// Vite throws a Cannot read properties of undefined (reading 'wrapDynamicImport')
-			// if you try to run ssr.runner.import before the server has started so
-			// we do it inside here to avoid that
-			if (!inited_manifest) {
-				inited_manifest = true;
-				update_manifest();
-			}
-
 			// Vite's base middleware strips out the base path. Restore it
 			const original_url = req.url;
 			req.url = req.originalUrl;
@@ -272,7 +261,7 @@ export function dev(vite, vite_config, svelte_config, root, set_manifest_data) {
 				const runner = get_runner(vite);
 
 				/** @type {{ fetch(request: Request): Promise<Response> }} */
-				const server_entry = await runner.import(sveltekit_dev_server);
+				const server_entry = await runner.import(sveltekit_dev_init);
 
 				if (req.socket.remoteAddress) {
 					request.headers.set('x-sveltekit-remote-address', req.socket.remoteAddress);

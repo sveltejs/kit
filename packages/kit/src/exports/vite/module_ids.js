@@ -12,12 +12,10 @@ export const service_worker = '\0virtual:service-worker';
 /** Used to construct `$app/manifest` */
 export const sveltekit_manifest_data = '\0virtual:__sveltekit/manifest-data';
 
-export const sveltekit_dev_server = '__sveltekit/dev-server.js';
+export const sveltekit_dev_init = '__sveltekit/dev-server.js';
 /** A facade that initialises tracing during development */
 export const sveltekit_dev_traced = '\0virtual:__sveltekit/traced';
 export const sveltekit_dev_server_entry = 'sveltekit:server-entry';
-/** Used to construct the SSR manifest from within an environment during development */
-export const sveltekit_dev_manifest_data = '\0virtual:__sveltekit/dev-manifest-data';
 
 export const app_server = posixify(
 	fileURLToPath(new URL('../../runtime/app/server/index.js', import.meta.url))

@@ -1,23 +1,31 @@
-/** @import { SSRManifest } from '@sveltejs/kit' */
+/** @import { ParamMatcher, SSRManifest } from '@sveltejs/kit' */
 /** @import { EnvironmentModuleNode } from 'vite' */
 import fs from 'node:fs';
 import { isCSSRequest } from 'vite';
-import { manifest_data, mime_types } from '__sveltekit/dev-manifest-data';
-import { get_dev_server, get_remotes } from './context.js';
-import { resolve } from './utils.js';
+import { dev } from './context.js';
+import { loud_ssr_load_module, resolve } from './utils.js';
+import { get_mime_lookup } from '../../../core/utils.js';
 import { compact } from '../../../utils/array.js';
+import { load_and_validate_params } from '../../../utils/params.js';
 import { join } from '../../../utils/path.js';
 import { from_fs, to_fs } from '../../../utils/vite.js';
 
 // vite-specifc queries that we should skip handling for css urls
 const vite_css_query_regex = /(?:\?|&)(?:raw|url|inline)(?:&|$)/;
 
+await load_and_validate_params({
+	routes: dev.manifest_data.routes,
+	params_path: dev.manifest_data.params,
+	root: __SVELTEKIT_ROOT__,
+	load: (file) => loud_ssr_load_module(to_fs(file))
+});
+
 /** @type {SSRManifest} */
 export const manifest = {
 	appDir: __SVELTEKIT_APP_DIR__,
 	appPath: `${__SVELTEKIT_PATHS_BASE__}/${__SVELTEKIT_APP_DIR__}`,
-	assets: new Set(manifest_data.assets.map((asset) => asset.file)),
-	mimeTypes: mime_types,
+	assets: new Set(dev.manifest_data.assets.map((asset) => asset.file)),
+	mimeTypes: get_mime_lookup(dev.manifest_data),
 	_: {
 		client: {
 			start: `${__SVELTEKIT_RUNTIME__}/client/entry.js`,
@@ -28,7 +36,7 @@ export const manifest = {
 			uses_env_dynamic_public: true,
 			nodes: __SVELTEKIT_CLIENT_ROUTING__
 				? undefined
-				: manifest_data.nodes.map((node, i) => {
+				: dev.manifest_data.nodes.map((node, i) => {
 						if (node.component || node.universal) {
 							return `${__SVELTEKIT_PATHS_BASE__}${to_fs(__SVELTEKIT_OUT_DIR__)}/generated/client/nodes/${i}.js`;
 						}
@@ -38,7 +46,7 @@ export const manifest = {
 			routes: __SVELTEKIT_CLIENT_ROUTING__
 				? undefined
 				: compact(
-						manifest_data.routes.map((route) => {
+						dev.manifest_data.routes.map((route) => {
 							if (!route.page) return;
 
 							return {
@@ -46,10 +54,10 @@ export const manifest = {
 								pattern: route.pattern,
 								params: route.params,
 								layouts: route.page.layouts.map((l) =>
-									l !== undefined ? [!!manifest_data.nodes[l].server, l] : undefined
+									l !== undefined ? [!!dev.manifest_data.nodes[l].server, l] : undefined
 								),
 								errors: route.page.errors,
-								leaf: [!!manifest_data.nodes[route.page.leaf].server, route.page.leaf]
+								leaf: [!!dev.manifest_data.nodes[route.page.leaf].server, route.page.leaf]
 							};
 						})
 					)
@@ -61,7 +69,7 @@ export const manifest = {
 				get: (_, /** @type {string} */ file) => fs.statSync(from_fs(file)).size
 			}
 		),
-		nodes: manifest_data.nodes.map((node, i) => {
+		nodes: dev.manifest_data.nodes.map((node, i) => {
 			return async () => {
 				/** @type {import('types').SSRNode} */
 				const result = {};
@@ -143,7 +151,7 @@ export const manifest = {
 		prerendered_routes: new Set(),
 		get remotes() {
 			return Object.fromEntries(
-				get_remotes().map((remote) => [
+				dev.remotes.map((remote) => [
 					remote.hash,
 					() =>
 						import(/* @vite-ignore */ join(__SVELTEKIT_ROOT__, remote.file)).then((module) => ({
@@ -153,7 +161,7 @@ export const manifest = {
 			);
 		},
 		routes: compact(
-			manifest_data.routes.map((route) => {
+			dev.manifest_data.routes.map((route) => {
 				if (!route.page && !route.endpoint) return null;
 
 				const endpoint = route.endpoint;
@@ -175,13 +183,16 @@ export const manifest = {
 			})
 		),
 		matchers: async () => {
-			if (!manifest_data.params) return {};
+			if (!dev.manifest_data.params) return {};
 
-			const url = join(__SVELTEKIT_ROOT__, manifest_data.params);
+			const url = join(__SVELTEKIT_ROOT__, dev.manifest_data.params);
+			/** @type {{ module: { params?: Record<string, ParamMatcher<any>> } }} */
 			const { module } = await resolve(url);
 
 			if (!module.params) {
-				throw new Error(`${manifest_data.params} does not export \`params\` from \`defineParams\``);
+				throw new Error(
+					`${dev.manifest_data.params} does not export \`params\` from \`defineParams\``
+				);
 			}
 
 			return module.params;
@@ -194,8 +205,6 @@ export const manifest = {
  * @param {Set<EnvironmentModuleNode>} deps
  */
 async function find_deps(node, deps) {
-	const dev_server = get_dev_server();
-
 	// since `ssrTransformResult.deps` contains URLs instead of `ModuleNode`s, this process is asynchronous.
 	// instead of using `await`, we resolve all branches in parallel.
 	/** @type {Promise<void>[]} */
@@ -211,7 +220,7 @@ async function find_deps(node, deps) {
 
 	/** @param {string} url */
 	async function add_by_url(url) {
-		const node = await dev_server.environments.ssr.moduleGraph.getModuleByUrl(url);
+		const node = await dev.vite.environments.ssr.moduleGraph.getModuleByUrl(url);
 
 		if (node) {
 			await add(node);
