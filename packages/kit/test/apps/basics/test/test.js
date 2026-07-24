@@ -332,6 +332,20 @@ test.describe('Load', () => {
 		}
 	});
 
+	test('POST fetches with non-string bodies do not reuse responses serialized for other requests', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		await page.goto('/load/serialization-post-body-collision');
+
+		expect(await page.textContent('h1')).toBe('POST:a=1');
+		expect(await page.textContent('p')).toBe('GET');
+
+		if (!javaScriptEnabled) {
+			expect(await page.locator('script[data-sveltekit-fetched]').count()).toBe(1);
+		}
+	});
+
 	test('fetches using an arraybuffer serialized with b64', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/load/fetch-arraybuffer-b64');
 
