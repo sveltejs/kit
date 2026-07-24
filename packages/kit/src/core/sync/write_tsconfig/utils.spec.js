@@ -1,6 +1,6 @@
 import { assert, describe, test } from 'vitest';
 import {
-	extends_parent,
+	extends_id,
 	get_subpath_imports,
 	normalize_config,
 	validate_resolved_config
@@ -74,19 +74,19 @@ describe('get_subpath_imports', () => {
 	});
 });
 
-describe('extends_parent', () => {
-	const parent = 'PARENT';
+describe('extends_id', () => {
+	const id = 'POTATO';
 
-	test('validates that a config extends a parent (string)', () => {
-		assert.equal(extends_parent({ extends: parent }, parent), true);
+	test('validates that a config extends an id (string)', () => {
+		assert.equal(extends_id({ extends: id }, id), true);
 	});
 
-	test('validates that a config extends a parent (array)', () => {
-		assert.equal(extends_parent({ extends: [parent] }, parent), true);
+	test('validates that a config extends an id (array)', () => {
+		assert.equal(extends_id({ extends: [id] }, id), true);
 	});
 
-	test('validates that a config does not extend a parent', () => {
-		assert.equal(extends_parent({}, parent), false);
+	test('validates that a config does not extend an id', () => {
+		assert.equal(extends_id({}, id), false);
 	});
 });
 

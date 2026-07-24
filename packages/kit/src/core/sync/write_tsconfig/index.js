@@ -7,7 +7,7 @@ import { styleText } from 'node:util';
 import { write_if_changed } from '../utils.js';
 import {
 	ESSENTIAL_OPTIONS,
-	extends_parent,
+	extends_id,
 	get_subpath_imports,
 	normalize_config,
 	RECOMMENDED_OPTIONS,
@@ -90,7 +90,7 @@ function write_parent_tsconfig(root, dir, id, config, example, transform) {
 	if (user_config && modified_since_last_check(user_config.file)) {
 		// now that we've written the parent config, we can resolve the
 		// user config and validate that nothing important was overwritten
-		if (!extends_parent(user_config.options, id)) {
+		if (!extends_id(user_config.options, id)) {
 			console.warn(
 				styleText(
 					['bold', 'yellow'],

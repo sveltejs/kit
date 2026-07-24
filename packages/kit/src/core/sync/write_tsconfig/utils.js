@@ -38,11 +38,11 @@ export const RECOMMENDED_OPTIONS = {
 
 /**
  * @param {any} options
- * @param {string} parent
+ * @param {string} id
  */
-export function extends_parent(options, parent) {
+export function extends_id(options, id) {
 	const o = options.extends;
-	return Array.isArray(o) ? o.includes(parent) : o === parent;
+	return Array.isArray(o) ? o.includes(id) : o === id;
 }
 
 /**
