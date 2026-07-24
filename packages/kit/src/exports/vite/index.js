@@ -6,7 +6,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { pathToFileURL } from 'node:url';
 import { styleText } from 'node:util';
 import MagicString from 'magic-string';
 import { isRunnableDevEnvironment, loadEnv } from 'vite';
@@ -72,7 +72,7 @@ import { treeshake_prerendered_remotes } from './build/remote.js';
 import { SVELTE_KIT_ASSETS } from '../../constants.js';
 import { get_runner } from '../../runner.js';
 
-const dev_context = posixify(fileURLToPath(import.meta.resolve('./dev/context.js')));
+const dev_context = posixify(path.join(import.meta.dirname, 'dev/context.js'));
 
 /**
  * The posix-ified root of the project based on the Vite configuration.
@@ -631,11 +631,11 @@ function kit({ svelte_config }) {
 				}
 
 				if (id === 'sveltekit:server-manifest') {
-					return path.join(import.meta.dirname, 'dev/ssr_manifest.js');
+					return posixify(path.join(import.meta.dirname, 'dev/ssr_manifest.js'));
 				}
 
 				if (id === 'sveltekit:server') {
-					return path.join(import.meta.dirname, 'dev/server.js');
+					return posixify(path.join(import.meta.dirname, 'dev/server.js'));
 				}
 
 				if (id === 'sveltekit:env') {
@@ -663,8 +663,6 @@ function kit({ svelte_config }) {
 
 							const { fetch } = await import(${s(sveltekit_dev_server_entry)});
 							export { fetch };
-
-							import.meta.hot?.accept();
 						`;
 					}
 
