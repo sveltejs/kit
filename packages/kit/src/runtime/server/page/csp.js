@@ -53,19 +53,19 @@ class BaseProvider {
 	#directives;
 
 	/** @type {Set<import('types').Csp.Source>} */
-	#script_src;
+	#script_src = new Set();
 
 	/** @type {Set<import('types').Csp.Source>} */
-	#script_src_elem;
+	#script_src_elem = new Set();
 
 	/** @type {Set<import('types').Csp.Source>} */
-	#style_src;
+	#style_src = new Set();
 
 	/** @type {Set<import('types').Csp.Source>} */
-	#style_src_attr;
+	#style_src_attr = new Set();
 
 	/** @type {Set<import('types').Csp.Source>} */
-	#style_src_elem;
+	#style_src_elem = new Set();
 
 	/** @type {boolean} */
 	script_needs_nonce;
@@ -89,12 +89,6 @@ class BaseProvider {
 		this.#directives = __SVELTEKIT_DEV__ ? { ...directives } : directives; // clone in dev so we can safely mutate
 
 		const d = this.#directives;
-
-		this.#script_src = new Set();
-		this.#script_src_elem = new Set();
-		this.#style_src = new Set();
-		this.#style_src_attr = new Set();
-		this.#style_src_elem = new Set();
 
 		const effective_script_src = d['script-src'] || d['default-src'];
 		const script_src_elem = d['script-src-elem'];
@@ -291,13 +285,11 @@ class BaseProvider {
 
 			const directive = [key];
 			if (Array.isArray(value)) {
-				value.forEach((value) => {
-					if (quoted.has(value) || crypto_pattern.test(value)) {
-						directive.push(`'${value}'`);
-					} else {
-						directive.push(value);
-					}
-				});
+				for (const source of value) {
+					directive.push(
+						quoted.has(source) || crypto_pattern.test(source) ? `'${source}'` : source
+					);
+				}
 			}
 
 			header.push(directive.join(' '));
@@ -328,17 +320,17 @@ class CspReportOnlyProvider extends BaseProvider {
 	constructor(use_hashes, directives, nonce) {
 		super(use_hashes, directives, nonce);
 
-		if (Object.values(directives).filter((v) => !!v).length > 0) {
-			// If we're generating content-security-policy-report-only,
-			// if there are any directives, we need a report-uri or report-to (or both)
-			// else it's just an expensive noop.
-			const has_report_to = directives['report-to']?.length ?? 0 > 0;
-			const has_report_uri = directives['report-uri']?.length ?? 0 > 0;
-			if (!has_report_to && !has_report_uri) {
-				throw Error(
-					'`content-security-policy-report-only` must be specified with either the `report-to` or `report-uri` directives, or both'
-				);
-			}
+		// If we're generating content-security-policy-report-only,
+		// if there are any directives, we need a report-uri or report-to (or both)
+		// else it's just an expensive noop.
+		if (
+			Object.values(directives).some((v) => !!v) &&
+			!directives['report-to']?.length &&
+			!directives['report-uri']?.length
+		) {
+			throw Error(
+				'`content-security-policy-report-only` must be specified with either the `report-to` or `report-uri` directives, or both'
+			);
 		}
 	}
 }
