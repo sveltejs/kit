@@ -71,7 +71,11 @@ import { compact } from '../../utils/array.js';
 import { should_ignore, has_children } from './static_analysis/utils.js';
 import { process_config, split_config, validate_config } from '../../core/config/index.js';
 import { treeshake_prerendered_remotes } from './build/remote.js';
+<<<<<<< HEAD
 import { SVELTE_KIT_ASSETS } from '../../constants.js';
+=======
+>>>>>>> version-3
+import { get_runner } from '../../runner.js';
 
 /**
  * The posix-ified root of the project based on the Vite configuration.
@@ -1100,11 +1104,7 @@ function kit({ svelte_config }) {
 				// being called again with `opts.ssr === true` if the module isn't
 				// already loaded) so we can determine what it exports
 				if (dev_server) {
-					if (!vite.isRunnableDevEnvironment(dev_server.environments.ssr)) {
-						throw new Error('The configured Vite SSR environment must be a RunnableDevEnvironment');
-					}
-
-					const module = await dev_server.environments.ssr.runner.import(id);
+					const module = await get_runner(dev_server).import(id);
 
 					for (const [name, value] of Object.entries(module)) {
 						const type = value?.__?.type;
@@ -1710,6 +1710,7 @@ function kit({ svelte_config }) {
 		 * @see https://vitejs.dev/guide/api-plugin.html#configureserver
 		 */
 		async configureServer(server) {
+<<<<<<< HEAD
 			/** @type {typeof import('./dev/context.js')} */
 			let context;
 
@@ -1727,6 +1728,20 @@ function kit({ svelte_config }) {
 				context.set_svelte_config(svelte_config);
 				context.set_remotes(remotes);
 			});
+=======
+			return await dev(
+				server,
+				vite_config,
+				svelte_config,
+				() => remotes,
+				root,
+				(data) => {
+					manifest_data = data;
+					// Invalidate the manifest data module so it reloads with new routes/files
+					invalidate_module(server, sveltekit_manifest_data);
+				}
+			);
+>>>>>>> version-3
 		},
 
 		/**
