@@ -117,31 +117,28 @@ class BaseProvider {
 
 			// ...and add unsafe-inline so we can inject <style> elements
 			// Note that 'unsafe-inline' is ignored if either a hash or nonce value is present in the source list, so we remove those during dev when injecting unsafe-inline
+			/**
+			 * @template {import('types').Csp.Source | import('types').Csp.ActionSource} T
+			 * @param {T[]} directive
+			 * @returns {(T | 'unsafe-inline')[]}
+			 */
+			const with_unsafe_inline = (directive) => [
+				...directive.filter(
+					(value) => !(value.startsWith('sha256-') || value.startsWith('nonce-'))
+				),
+				'unsafe-inline'
+			];
+
 			if (effective_style_src && !effective_style_src.includes('unsafe-inline')) {
-				d['style-src'] = [
-					...effective_style_src.filter(
-						(value) => !(value.startsWith('sha256-') || value.startsWith('nonce-'))
-					),
-					'unsafe-inline'
-				];
+				d['style-src'] = with_unsafe_inline(effective_style_src);
 			}
 
 			if (style_src_attr && !style_src_attr.includes('unsafe-inline')) {
-				d['style-src-attr'] = [
-					...style_src_attr.filter(
-						(value) => !(value.startsWith('sha256-') || value.startsWith('nonce-'))
-					),
-					'unsafe-inline'
-				];
+				d['style-src-attr'] = with_unsafe_inline(style_src_attr);
 			}
 
 			if (style_src_elem && !style_src_elem.includes('unsafe-inline')) {
-				d['style-src-elem'] = [
-					...style_src_elem.filter(
-						(value) => !(value.startsWith('sha256-') || value.startsWith('nonce-'))
-					),
-					'unsafe-inline'
-				];
+				d['style-src-elem'] = with_unsafe_inline(style_src_elem);
 			}
 		}
 
