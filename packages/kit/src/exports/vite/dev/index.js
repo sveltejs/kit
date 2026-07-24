@@ -7,7 +7,7 @@ import { URL } from 'node:url';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { styleText } from 'node:util';
 import sirv from 'sirv';
-import { isCSSRequest, loadEnv, buildErrorMessage, isRunnableDevEnvironment } from 'vite';
+import { isCSSRequest, loadEnv, buildErrorMessage } from 'vite';
 import { createReadableStream, getRequest, setResponse } from '../../../exports/node/index.js';
 import { coalesce_to_error } from '../../../utils/error.js';
 import { resolve_entry } from '../../../utils/filesystem.js';
