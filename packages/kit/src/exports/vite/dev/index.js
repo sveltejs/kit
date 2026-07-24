@@ -29,6 +29,7 @@ import {
 import { SCHEME } from '../../../utils/url.js';
 import { check_feature } from '../../../utils/features.js';
 import { escape_html } from '../../../utils/escape.js';
+import { get_runner } from '../../../runner.js';
 
 // vite-specifc queries that we should skip handling for css urls
 const vite_css_query_regex = /(?:\?|&)(?:raw|url|inline)(?:&|$)/;
@@ -79,11 +80,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, s
 	/** @type {Error | null} */
 	let manifest_error = null;
 
-	if (!isRunnableDevEnvironment(vite.environments.ssr)) {
-		throw new Error('The configured Vite SSR environment must be a RunnableDevEnvironment');
-	}
-
-	const { runner } = vite.environments.ssr;
+	const runner = get_runner(vite);
 
 	/**
 	 * @param {string} url
