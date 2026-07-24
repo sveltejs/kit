@@ -1325,6 +1325,43 @@ test.describe('Snapshots', () => {
 
 		await expect(page.locator('[data-testid="order"]')).toHaveText('afterNavigate,restore');
 	});
+
+	test('recovers a File snapshot across popstate', async ({ page, clicknav }) => {
+		await page.goto('/snapshot/file');
+
+		await page.locator('[data-testid="picker"]').setInputFiles({
+			name: 'hello.txt',
+			mimeType: 'text/plain',
+			buffer: Buffer.from('hello world')
+		});
+
+		await expect(page.locator('[data-testid="info"]')).toHaveText('hello.txt|11');
+
+		await clicknav('[href="/snapshot/b"]');
+		await page.goBack();
+
+		// a File is not JSON-serializable, so this only works because the snapshot
+		// backend uses the structured clone algorithm (IndexedDB)
+		await expect(page.locator('[data-testid="info"]')).toHaveText('hello.txt|11');
+	});
+
+	test('recovers a File snapshot across reload', async ({ page }) => {
+		await page.goto('/snapshot/file');
+
+		await page.locator('[data-testid="picker"]').setInputFiles({
+			name: 'hello.txt',
+			mimeType: 'text/plain',
+			buffer: Buffer.from('hello world')
+		});
+
+		await expect(page.locator('[data-testid="info"]')).toHaveText('hello.txt|11');
+
+		await page.reload();
+
+		// the File is persisted to IndexedDB from `visibilitychange` (the last
+		// reliable signal before unload) and read back during hydration
+		await expect(page.locator('[data-testid="info"]')).toHaveText('hello.txt|11');
+	});
 });
 
 test.describe('Streaming', () => {

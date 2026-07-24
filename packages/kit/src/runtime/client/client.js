@@ -12,6 +12,7 @@ import { decode_pathname, strip_hash, make_trackable, normalize_path } from '../
 import { dev_fetch, initial_fetch, lock_fetch, subsequent_fetch, unlock_fetch } from './fetcher.js';
 import { parse, parse_server_route } from './parse.js';
 import * as storage from './session-storage.js';
+import * as snapshots from './snapshot-storage.svelte.js';
 import {
 	find_anchor,
 	resolve_url,
@@ -30,7 +31,6 @@ import {
 	PRELOAD_PRIORITIES,
 	SCROLL_KEY,
 	STATES_KEY,
-	SNAPSHOT_KEY,
 	PAGE_URL_KEY
 } from './constants.js';
 import { validate_page_exports } from '../../utils/exports.js';
@@ -86,12 +86,6 @@ const resetters = [];
  * @type {Record<number, { x: number; y: number }>}
  */
 const scroll_positions = storage.get(SCROLL_KEY) ?? {};
-
-/**
- * navigation index -> any
- * @type {Record<string, any[]>}
- */
-const snapshots = storage.get(SNAPSHOT_KEY) ?? {};
 
 /**
  * @deprecated this is a temporary measure to avoid a regression, replace with nested `RenderNode` classes
@@ -155,11 +149,7 @@ function clear_onward_history(current_history_index, current_navigation_index) {
 		i += 1;
 	}
 
-	i = current_navigation_index + 1;
-	while (snapshots[i]) {
-		delete snapshots[i];
-		i += 1;
-	}
+	snapshots.truncate(current_navigation_index);
 }
 
 /**
@@ -383,6 +373,7 @@ export async function start(_app, _target, hydrate) {
 
 	app = _app;
 
+	await snapshots.init();
 	await _app.hooks.init?.();
 
 	routes = __SVELTEKIT_CLIENT_ROUTING__ ? parse(_app) : [];
@@ -542,13 +533,16 @@ function reset_invalidation() {
 /** @param {number} index */
 function capture_snapshot(index) {
 	if (components.some((c) => c?.snapshot)) {
-		snapshots[index] = components.map((c) => c?.snapshot?.capture());
+		void snapshots.set(
+			index,
+			components.map((c) => c?.snapshot?.capture())
+		);
 	}
 }
 
 /** @param {number} index */
 function restore_snapshot(index) {
-	snapshots[index]?.forEach((value, i) => {
+	snapshots.get(index)?.forEach((value, i) => {
 		components[i]?.snapshot?.restore(value);
 	});
 }
@@ -558,7 +552,6 @@ function persist_state() {
 	storage.set(SCROLL_KEY, scroll_positions);
 
 	capture_snapshot(current_navigation_index);
-	storage.set(SNAPSHOT_KEY, snapshots);
 }
 
 /**
