@@ -27,13 +27,17 @@ A typical service worker might look like this:
 import { self } from '$app/service-worker';
 import { version } from '$app/env';
 import { immutable, assets } from '$app/manifest';
+import { resolve } from '$app/paths';
 
 // Create a unique cache name for this deployment
 const CACHE = `cache-${version}`;
 
+// `immutable`/`assets` paths from `$app/manifest` are relative to the
+// base path, so resolve them to absolute pathnames that can be matched
+// against `url.pathname` in the `fetch` handler
 const ASSETS = [
-	...immutable.map((asset) => asset.path), // the Vite output
-	...assets.map((asset) => asset.path)  // everything in `static`
+	...immutable.map((asset) => resolve(asset.path)), // the Vite output
+	...assets.map((asset) => resolve(asset.path))  // everything in `static`
 ];
 
 self.addEventListener('install', (event) => {
@@ -111,8 +115,8 @@ Service workers run in a different context to the rest of your app. As such, the
 /// file: tsconfig.json
 {
 	"extends": "$app/tsconfig",
-	"includes": ["src", "test"],
-	"excludes": ["src/service-worker"]
+	"include": ["src", "test"],
+	"exclude": ["src/service-worker"]
 }
 ```
 
