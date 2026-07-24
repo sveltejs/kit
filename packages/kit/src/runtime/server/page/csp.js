@@ -168,13 +168,16 @@ class BaseProvider {
 		this.#nonce = nonce;
 	}
 
-	/** @param {string} content */
-	add_script(content) {
-		if (!this.#script_needs_csp) return;
+	/**
+	 * @param {string} content
+	 * @returns {`nonce-${string}` | `sha256-${string}`}
+	 */
+	#get_source(content) {
+		return this.#use_hashes ? `sha256-${sha256(content)}` : `nonce-${this.#nonce}`;
+	}
 
-		/** @type {`nonce-${string}` | `sha256-${string}`} */
-		const source = this.#use_hashes ? `sha256-${sha256(content)}` : `nonce-${this.#nonce}`;
-
+	/** @param {`nonce-${string}` | `sha256-${string}`} source */
+	#add_script_source(source) {
 		if (this.#script_src_needs_csp) {
 			this.#script_src.add(source);
 		}
@@ -184,15 +187,17 @@ class BaseProvider {
 		}
 	}
 
+	/** @param {string} content */
+	add_script(content) {
+		if (!this.#script_needs_csp) return;
+
+		this.#add_script_source(this.#get_source(content));
+	}
+
 	/** @param {`sha256-${string}`[]} hashes */
 	add_script_hashes(hashes) {
 		for (const hash of hashes) {
-			if (this.#script_src_needs_csp) {
-				this.#script_src.add(hash);
-			}
-			if (this.#script_src_elem_needs_csp) {
-				this.#script_src_elem.add(hash);
-			}
+			this.#add_script_source(hash);
 		}
 	}
 
@@ -200,8 +205,7 @@ class BaseProvider {
 	add_style(content) {
 		if (!this.#style_needs_csp) return;
 
-		/** @type {`nonce-${string}` | `sha256-${string}`} */
-		const source = this.#use_hashes ? `sha256-${sha256(content)}` : `nonce-${this.#nonce}`;
+		const source = this.#get_source(content);
 
 		if (this.#style_src_needs_csp) {
 			this.#style_src.add(source);
@@ -244,40 +248,34 @@ class BaseProvider {
 
 		const directives = { ...this.#directives };
 
-		if (this.#style_src.size > 0) {
-			directives['style-src'] = [
-				...(directives['style-src'] || directives['default-src'] || []),
-				...this.#style_src
-			];
-		}
+		/**
+		 * @template {'style-src' | 'style-src-attr' | 'style-src-elem' | 'script-src' | 'script-src-elem'} K
+		 * @param {K} key
+		 * @param {Set<import('types').Csp.Source>} sources
+		 * @param {import('types').CspDirectives[K]} [base]
+		 */
+		const merge_sources = (key, sources, base) => {
+			if (sources.size > 0) {
+				directives[key] = /** @type {import('types').CspDirectives[K]} */ ([
+					...(base || []),
+					...sources
+				]);
+			}
+		};
 
-		if (this.#style_src_attr.size > 0) {
-			directives['style-src-attr'] = [
-				...(directives['style-src-attr'] || []),
-				...this.#style_src_attr
-			];
-		}
-
-		if (this.#style_src_elem.size > 0) {
-			directives['style-src-elem'] = [
-				...(directives['style-src-elem'] || []),
-				...this.#style_src_elem
-			];
-		}
-
-		if (this.#script_src.size > 0) {
-			directives['script-src'] = [
-				...(directives['script-src'] || directives['default-src'] || []),
-				...this.#script_src
-			];
-		}
-
-		if (this.#script_src_elem.size > 0) {
-			directives['script-src-elem'] = [
-				...(directives['script-src-elem'] || []),
-				...this.#script_src_elem
-			];
-		}
+		merge_sources(
+			'style-src',
+			this.#style_src,
+			directives['style-src'] || directives['default-src']
+		);
+		merge_sources('style-src-attr', this.#style_src_attr, directives['style-src-attr']);
+		merge_sources('style-src-elem', this.#style_src_elem, directives['style-src-elem']);
+		merge_sources(
+			'script-src',
+			this.#script_src,
+			directives['script-src'] || directives['default-src']
+		);
+		merge_sources('script-src-elem', this.#script_src_elem, directives['script-src-elem']);
 
 		for (const key in directives) {
 			if (is_meta && (key === 'frame-ancestors' || key === 'report-uri' || key === 'sandbox')) {

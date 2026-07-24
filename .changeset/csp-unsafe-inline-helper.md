@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-chore: deduplicate dev-mode `unsafe-inline` injection in CSP
+chore: deduplicate repeated CSP directive handling
