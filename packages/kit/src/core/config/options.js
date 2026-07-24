@@ -275,6 +275,7 @@ export const validate_kit_options = object({
 	}),
 
 	serviceWorker: object({
+		files: removed(),
 		register: boolean(true),
 		// options could be undefined but if it is defined we only validate that
 		// it's an object since the type comes from the browser itself
