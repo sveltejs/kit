@@ -21,13 +21,13 @@ export async function loud_ssr_load_module(url) {
 		// we need a more considered approach
 		dev.vite.hot.send({
 			type: 'error',
-			err: /** @type {import('vite').ErrorPayload['err']} */ ({
+			err: {
 				...err,
 				// these properties are non-enumerable and will
 				// not be serialized unless we explicitly include them
 				message: err.message,
 				stack: err.stack ?? ''
-			})
+			}
 		});
 
 		throw err;
