@@ -33,8 +33,8 @@ test.describe("bundleStrategy: 'inline'", () => {
 		expect(fs.existsSync(`${client}/_app/version.json`)).toBe(true);
 	});
 
-	test('does not send x-sveltekit-version header when checks are disabled', async ({ page }) => {
-		const response = await page.goto('/serialization-stream');
-		expect(response?.headers()['x-sveltekit-version']).toBeUndefined();
+	test('does not send x-sveltekit-version header when checks are disabled', async ({ request }) => {
+		const response = await request.get('/serialization-stream/__data.json');
+		expect(response.headers()['x-sveltekit-version']).toBeUndefined();
 	});
 });

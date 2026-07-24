@@ -13,6 +13,7 @@ import { check_incorrect_fail_use } from './page/actions.js';
 import { DEV } from 'esm-env';
 import { record_span } from '../telemetry/record_span.js';
 import { deserialize_binary_form } from '../form-utils.js';
+import { with_version_header } from './utils.js';
 
 /**
  * How long (in milliseconds) to wait after the last message was sent before
@@ -28,11 +29,12 @@ export async function handle_remote_call(event, state, options, manifest, id) {
 		attributes: {
 			'sveltekit.remote.call.id': id
 		},
-		fn: (current) => {
+		fn: async (current) => {
 			const traced_event = merge_tracing(event, current);
-			return with_request_store({ event: traced_event, state }, () =>
+			const response = await with_request_store({ event: traced_event, state }, () =>
 				handle_remote_call_internal(traced_event, state, options, manifest, id)
 			);
+			return with_version_header(response);
 		}
 	});
 }

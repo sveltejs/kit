@@ -51,6 +51,16 @@ export function redirect_response(status, location) {
 }
 
 /**
+ * @param {Response} response
+ */
+export function with_version_header(response) {
+	if (__SVELTEKIT_APP_VERSION_CHECKS_ENABLED__) {
+		response.headers.set('x-sveltekit-version', __SVELTEKIT_APP_VERSION__);
+	}
+	return response;
+}
+
+/**
  * @param {import('@sveltejs/kit').RequestEvent} event
  * @param {Error & { path: string }} error
  */
