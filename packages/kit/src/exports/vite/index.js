@@ -426,7 +426,6 @@ function kit({ svelte_config }) {
 					resolve: {
 						alias: [
 							{ find: '__SERVER__', replacement: `${out_dir}/generated/server` },
-							{ find: '__SVELTEKIT__', replacement: `${runtime_directory}/..` },
 							{ find: '$app', replacement: `${runtime_directory}/app` },
 							{ find: '$env', replacement: `${runtime_directory}/env` },
 							{

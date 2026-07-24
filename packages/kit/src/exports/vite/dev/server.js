@@ -1,9 +1,9 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { Server as KitServer } from '../../../runtime/server/index.js';
 import { fix_stack_trace } from './sourcemaps.js';
-import { get_svelte_config } from './context.js';
 import { check_feature } from '../../../utils/features.js';
 import { SCHEME } from '../../../utils/url.js';
+import { dev } from './context.js';
 
 const { set_fix_stack_trace } = await import(/* @vite-ignore */ '__sveltekit/server');
 set_fix_stack_trace(fix_stack_trace);
@@ -18,7 +18,7 @@ globalThis.__SVELTEKIT_TRACK__ = (label) => {
 	const context = async_local_storage.getStore();
 	if (!context || context.prerender === true) return;
 
-	check_feature(context.event.route.id, context.config, label, get_svelte_config().kit.adapter);
+	check_feature(context.event.route.id, context.config, label, dev.svelte_config.kit.adapter);
 };
 
 const fetch = globalThis.fetch;
@@ -33,7 +33,7 @@ globalThis.fetch = (info, init) => {
 	return fetch(info, init);
 };
 
-const emulator = await get_svelte_config()?.kit.adapter?.emulate?.();
+const emulator = await dev.svelte_config.kit.adapter?.emulate?.();
 
 export class Server extends KitServer {
 	/** @type {import('types').InternalServer['respond']} */
