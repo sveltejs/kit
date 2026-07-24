@@ -28,6 +28,7 @@ test('build /basepath/service-worker.js', async ({ baseURL, request }) => {
 	const self = {
 		addEventListener: () => {},
 		base: null,
+		/** @type {null | Array<{ path: string }>} */
 		immutable: null,
 		image_src: undefined
 	};
