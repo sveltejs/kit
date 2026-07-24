@@ -72,6 +72,7 @@ import { should_ignore, has_children } from './static_analysis/utils.js';
 import { process_config, split_config, validate_config } from '../../core/config/index.js';
 import { treeshake_prerendered_remotes } from './build/remote.js';
 import { SVELTE_KIT_ASSETS } from '../../constants.js';
+import { get_runner } from '../../runner.js';
 
 /**
  * The posix-ified root of the project based on the Vite configuration.
@@ -1100,11 +1101,7 @@ function kit({ svelte_config }) {
 				// being called again with `opts.ssr === true` if the module isn't
 				// already loaded) so we can determine what it exports
 				if (dev_server) {
-					if (!vite.isRunnableDevEnvironment(dev_server.environments.ssr)) {
-						throw new Error('The configured Vite SSR environment must be a RunnableDevEnvironment');
-					}
-
-					const module = await dev_server.environments.ssr.runner.import(id);
+					const module = await get_runner(dev_server).import(id);
 
 					for (const [name, value] of Object.entries(module)) {
 						const type = value?.__?.type;
