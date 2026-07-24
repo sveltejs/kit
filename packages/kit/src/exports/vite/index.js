@@ -721,7 +721,7 @@ function kit({ svelte_config }) {
 
 		applyToEnvironment(environment) {
 			// the import map is only read for client-side violations in `load`, so skip other environments
-			return environment.config.consumer === 'client' && environment.name !== 'serviceWorker';
+			return environment.config.consumer === 'client';
 		},
 
 		resolveId: {
@@ -791,6 +791,10 @@ function kit({ svelte_config }) {
 
 				if (manifest_data.hooks.client) entrypoints.add(manifest_data.hooks.client);
 				if (manifest_data.hooks.universal) entrypoints.add(manifest_data.hooks.universal);
+
+				if (service_worker_entry_file) {
+					entrypoints.add(path.relative(root, service_worker_entry_file));
+				}
 
 				// Walk up the import graph from the server-only module, looking for a chain
 				// that leads back to a client entrypoint. We search all candidates (not just
