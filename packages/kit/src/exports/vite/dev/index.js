@@ -167,6 +167,8 @@ export function dev(vite, vite_config, svelte_config, root, set_manifest_data) {
 		next();
 	});
 
+	vite.environments.ssr.hot.on('vite:error', vite.hot.send);
+
 	return () => {
 		const serve_static_middleware = vite.middlewares.stack.find(
 			(middleware) =>
