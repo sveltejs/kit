@@ -322,14 +322,15 @@ function has_correct_case(file, assets) {
  * Invalidates a module in all environments.
  * @param {ViteDevServer} server
  * @param {string} id
+ * @param {{ reload?: boolean }=} opts
  * @returns {void}
  */
-export function invalidate_module(server, id) {
+export function invalidate_module(server, id, opts = { reload: false }) {
 	for (const environment in server.environments) {
 		const module = server.environments[environment].moduleGraph.getModuleById(id);
 		if (module) {
 			server.environments[environment].moduleGraph.invalidateModule(module);
-			void server.environments[environment].reloadModule(module);
+			if (opts.reload) void server.environments[environment].reloadModule(module);
 		}
 	}
 }
