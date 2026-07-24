@@ -1997,6 +1997,67 @@ test.describe('Shallow routing', () => {
 			.toEqual({ focus: 'BODY', y: 700 });
 	});
 
+	test('Preserves scroll and focus across popstate unless an intervening navigation resets them', async ({
+		app,
+		page
+	}) => {
+		for (const shallow of [true, false]) {
+			const prefix = shallow ? 'shallow' : 'regular';
+			const input = page.locator('[data-id="options-focus"]');
+			const state = () =>
+				page.evaluate(() => ({
+					focus: document.activeElement?.getAttribute('data-id') ?? document.activeElement?.tagName,
+					y: scrollY
+				}));
+
+			await page.goto('/shallow-routing/push-state');
+			await input.focus();
+			await page.evaluate(() => scrollTo(0, 500));
+
+			await app.goto(`?${prefix}=a`, { shallow, noScroll: true, keepFocus: true });
+			await expect.poll(state).toEqual({ focus: 'options-focus', y: 500 });
+
+			await page.evaluate(() => scrollTo(0, 700));
+			await page.goBack();
+			await expect(page).not.toHaveURL(new RegExp(`${prefix}=a`));
+			await expect.poll(state).toEqual({ focus: 'options-focus', y: 700 });
+
+			await page.evaluate(() => scrollTo(0, 300));
+			await page.goForward();
+			await expect(page).toHaveURL(new RegExp(`${prefix}=a`));
+			await expect.poll(state).toEqual({ focus: 'options-focus', y: 300 });
+
+			await page.reload();
+			await input.focus();
+			await page.evaluate(() => scrollTo(0, 350));
+			await page.goBack();
+			await expect(page).not.toHaveURL(new RegExp(`${prefix}=a`));
+			await expect.poll(state).toEqual({ focus: 'options-focus', y: 350 });
+
+			await page.evaluate(() => scrollTo(0, 400));
+			await page.goForward();
+			await expect(page).toHaveURL(new RegExp(`${prefix}=a`));
+			await expect.poll(state).toEqual({ focus: 'options-focus', y: 400 });
+
+			await app.goto(`?${prefix}=b`, { shallow, noScroll: false, keepFocus: false });
+			await input.focus();
+			await page.evaluate(() => scrollTo(0, 700));
+			await app.goto(`?${prefix}=c`, { shallow, noScroll: true, keepFocus: true });
+			await expect.poll(state).toEqual({ focus: 'options-focus', y: 700 });
+
+			await page.evaluate(() => scrollTo(0, 900));
+			await page.evaluate(() => history.go(-2));
+			await expect(page).toHaveURL(new RegExp(`${prefix}=a`));
+			await expect.poll(state).toEqual({ focus: 'BODY', y: 400 });
+
+			await input.focus();
+			await page.evaluate(() => scrollTo(0, 400));
+			await page.evaluate(() => history.go(2));
+			await expect(page).toHaveURL(new RegExp(`${prefix}=c`));
+			await expect.poll(state).toEqual({ focus: 'BODY', y: 900 });
+		}
+	});
+
 	test('Replaces state on the current URL', async ({ baseURL, page, clicknav }) => {
 		await page.goto('/shallow-routing/replace-state/b');
 		await clicknav('[href="/shallow-routing/replace-state"]');

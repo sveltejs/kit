@@ -57,7 +57,8 @@ const Root = asClassComponent(RootModern);
  *   pageUrl?: string;
  *   state: Record<string, any>;
  *   persistState: boolean;
- *   keepFocus: boolean;
+ *   noScrollIndex: number;
+ *   keepFocusIndex: number;
  * }} HistoryMetadata
  */
 
@@ -90,7 +91,7 @@ const resetters = [];
 // popstate it's too late to access the options or update the focus position associated with the
 // state we're navigating from
 /**
- * @type {Record<number, { scroll?: { x: number; y: number }; keepFocus: boolean }>}
+ * @type {Record<number, { scroll?: { x: number; y: number }; noScrollIndex?: number; keepFocusIndex?: number }>}
  */
 const history_info = storage.get(HISTORY_INFO_KEY) ?? {};
 
@@ -154,12 +155,13 @@ function capture_scroll(index) {
 
 /**
  * @param {number} index
- * @param {Pick<HistoryMetadata, 'keepFocus'>} options
+ * @param {Pick<HistoryMetadata, 'noScrollIndex' | 'keepFocusIndex'>} options
  */
 function set_history_options(index, options) {
 	history_info[index] = {
 		...history_info[index],
-		keepFocus: options.keepFocus
+		noScrollIndex: options.noScrollIndex,
+		keepFocusIndex: options.keepFocusIndex
 	};
 }
 
@@ -360,6 +362,12 @@ let current_history_index;
 /** @type {number} */
 let current_navigation_index;
 
+/** @type {number} */
+let current_noscroll_index;
+
+/** @type {number} */
+let current_keepfocus_index;
+
 /**
  * @param {any} [state]
  * @returns {HistoryMetadata | undefined}
@@ -470,11 +478,17 @@ export async function start(_app, _target, hydrate) {
 	const history_metadata = get_history_metadata();
 	current_history_index = history_metadata?.historyIndex ?? 0;
 	current_navigation_index = history_metadata?.navigationIndex ?? 0;
+	current_noscroll_index = history_metadata?.noScrollIndex ?? 0;
+	current_keepfocus_index = history_metadata?.keepFocusIndex ?? 0;
 
 	if (!current_history_index) {
 		// we use Date.now() as an offset so that cross-document navigations
 		// within the app don't result in data loss
-		current_history_index = current_navigation_index = Date.now();
+		current_history_index =
+			current_navigation_index =
+			current_noscroll_index =
+			current_keepfocus_index =
+				Date.now();
 
 		// create initial history entry, so we can return here
 		history.replaceState(
@@ -485,8 +499,8 @@ export async function start(_app, _target, hydrate) {
 					navigationIndex: current_navigation_index,
 					state: {},
 					persistState: false,
-					noScroll: false,
-					keepFocus: false
+					noScrollIndex: current_history_index,
+					keepFocusIndex: current_history_index
 				}
 			},
 			''
@@ -1971,6 +1985,10 @@ async function navigate({
 	if (!popped) {
 		// this is a new navigation, rather than a popstate
 		const change = replace_state ? 0 : 1;
+		if (type !== 'enter') {
+			if (!noscroll) current_noscroll_index += 1;
+			if (!keepfocus) current_keepfocus_index += 1;
+		}
 
 		const entry = {
 			[HISTORY_METADATA_KEY]: /** @satisfies {HistoryMetadata} */ ({
@@ -1978,7 +1996,8 @@ async function navigate({
 				navigationIndex: (current_navigation_index += change),
 				state,
 				persistState: persist_state,
-				keepFocus: keepfocus ?? false
+				noScrollIndex: current_noscroll_index,
+				keepFocusIndex: current_keepfocus_index
 			})
 		};
 
@@ -2110,12 +2129,7 @@ async function navigate({
 		Object.assign(navigation_result.props.page, rendering_error);
 	}
 
-	reset_scroll_and_focus(
-		url,
-		popped ? popped.scroll : noscroll ? scroll_state() : null,
-		keepfocus,
-		activeElement
-	);
+	reset_scroll_and_focus(url, noscroll ? scroll_state() : popped?.scroll, keepfocus, activeElement);
 
 	is_navigating = false;
 
@@ -2787,6 +2801,8 @@ async function update_state(url, state, { replace, persist_state, noscroll, keep
 	}
 
 	if (!replace) capture_scroll(current_history_index);
+	if (!noscroll) current_noscroll_index += 1;
+	if (!keepfocus) current_keepfocus_index += 1;
 
 	const entry = {
 		[HISTORY_METADATA_KEY]: /** @satisfies {HistoryMetadata} */ ({
@@ -2795,7 +2811,8 @@ async function update_state(url, state, { replace, persist_state, noscroll, keep
 			pageUrl: page.url.href,
 			state,
 			persistState: persist_state,
-			keepFocus: keepfocus
+			noScrollIndex: current_noscroll_index,
+			keepFocusIndex: current_keepfocus_index
 		})
 	};
 
@@ -3069,7 +3086,11 @@ function _start_router() {
 			// set this flag to distinguish between navigations triggered by
 			// clicking a hash link and those triggered by popstate. We gotta retrieve
 			// history metadata here because the hashchange event will occur after history.state was updated
-			hash_navigating = /** @type {HistoryMetadata} */ (get_history_metadata());
+			hash_navigating = {
+				.../** @type {HistoryMetadata} */ (get_history_metadata()),
+				noScrollIndex: current_noscroll_index + (options.noscroll ? 0 : 1),
+				keepFocusIndex: current_keepfocus_index + (options.keepfocus ? 0 : 1)
+			};
 
 			capture_scroll(current_history_index);
 
@@ -3155,9 +3176,6 @@ function _start_router() {
 
 		const history_metadata = get_history_metadata(event.state);
 
-		// For popstate events we honor keepFocus but not noScroll because you generally expect
-		// to come back to the scroll position you were at when you left the page.
-
 		if (history_metadata?.historyIndex) {
 			const history_index = history_metadata.historyIndex;
 			const source_info = history_info[current_history_index];
@@ -3168,7 +3186,11 @@ function _start_router() {
 			if (history_index === current_history_index) return;
 
 			const delta = history_index - current_history_index;
-			const options = delta > 0 ? history_metadata : source_info;
+			const no_scroll_index = history_metadata.noScrollIndex;
+			const keep_focus_index = history_metadata.keepFocusIndex;
+			const noscroll = no_scroll_index === (source_info?.noScrollIndex ?? current_noscroll_index);
+			const keepfocus =
+				keep_focus_index === (source_info?.keepFocusIndex ?? current_keepfocus_index);
 			const scroll = history_info[history_index]?.scroll;
 			const state = history_metadata.state;
 			const url = new URL(history_metadata.pageUrl ?? location.href);
@@ -3200,7 +3222,7 @@ function _start_router() {
 				// exception is if we haven't navigated yet, since we could have
 				// got here after a modal navigation then a reload
 
-				blur_active_element(options.keepFocus);
+				blur_active_element(keepfocus);
 
 				if (state !== page.state) {
 					page.state = state;
@@ -3212,14 +3234,17 @@ function _start_router() {
 
 				capture_scroll(current_history_index);
 				current_history_index = history_index;
-				if (scroll) scrollTo(scroll.x, scroll.y);
+				current_noscroll_index = no_scroll_index;
+				current_keepfocus_index = keep_focus_index;
+				if (!noscroll && scroll) scrollTo(scroll.x, scroll.y);
 				return;
 			}
 
 			await navigate({
 				type: 'popstate',
 				url,
-				keepfocus: options.keepFocus,
+				keepfocus,
+				noscroll,
 				popped: {
 					state,
 					scroll,
@@ -3229,6 +3254,8 @@ function _start_router() {
 				accept: () => {
 					current_history_index = history_index;
 					current_navigation_index = navigation_index;
+					current_noscroll_index = no_scroll_index;
+					current_keepfocus_index = keep_focus_index;
 				},
 				block: () => {
 					history.go(-delta);
@@ -3259,6 +3286,8 @@ function _start_router() {
 		if (hash_navigating) {
 			const history_metadata = hash_navigating;
 			hash_navigating = null;
+			current_noscroll_index = history_metadata.noScrollIndex;
+			current_keepfocus_index = history_metadata.keepFocusIndex;
 			history.replaceState(
 				{
 					...history.state,
