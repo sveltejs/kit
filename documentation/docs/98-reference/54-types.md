@@ -119,80 +119,9 @@ Starting with version 2.16.0, two additional helper types are provided: `PagePro
 > </script>
 > ```
 
-> [!NOTE] For this to work, your own `tsconfig.json` or `jsconfig.json` should extend from the generated `.svelte-kit/tsconfig.json` (where `.svelte-kit` is your [`outDir`](configuration#outDir)):
+> [!NOTE] For this to work, your own `tsconfig.json` or `jsconfig.json` should extend from the generated `$app/types`:
 >
-> `{ "extends": "./.svelte-kit/tsconfig.json" }`
-
-### Default tsconfig.json
-
-The generated `.svelte-kit/tsconfig.json` file contains a mixture of options. Some are generated programmatically based on your project configuration, and should generally not be overridden without good reason:
-
-```json
-/// file: .svelte-kit/tsconfig.json
-{
-	"compilerOptions": {
-		"paths": {
-			"#lib": ["../src/lib/index.js"],
-			"#lib/*": ["../src/lib/*"]
-		},
-		"rootDirs": ["..", "./types"]
-	},
-	"include": [
-		"ambient.d.ts",
-		"non-ambient.d.ts",
-		"./types/**/$types.d.ts",
-		"../vite.config.js",
-		"../vite.config.ts",
-		"../src/**/*.js",
-		"../src/**/*.ts",
-		"../src/**/*.svelte",
-		"../tests/**/*.js",
-		"../tests/**/*.ts",
-		"../tests/**/*.svelte"
-	],
-	"exclude": [
-		"../node_modules/**",
-		"../src/service-worker.js",
-		"../src/service-worker/**/*.js",
-		"../src/service-worker.ts",
-		"../src/service-worker/**/*.ts",
-		"../src/service-worker.d.ts",
-		"../src/service-worker/**/*.d.ts"
-	]
-}
-```
-
-Others are required for SvelteKit to work properly, and should also be left untouched unless you know what you're doing:
-
-```json
-/// file: .svelte-kit/tsconfig.json
-{
-	"compilerOptions": {
-		// this ensures that types are explicitly
-		// imported with `import type`, which is
-		// necessary as Svelte/Vite cannot
-		// otherwise compile components correctly
-		"verbatimModuleSyntax": true,
-
-		// Vite compiles one TypeScript module
-		// at a time, rather than compiling
-		// the entire module graph
-		"isolatedModules": true,
-
-		// Tell TS it's used only for type-checking
-		"noEmit": true,
-
-		// This ensures both `vite build`
-		// and `svelte-package` work correctly
-		"lib": ["esnext", "DOM", "DOM.Iterable"],
-		"moduleResolution": "bundler",
-		"module": "esnext",
-		"target": "esnext"
-	}
-}
-```
-
-Use the [`typescript.config` setting](configuration#typescript) of the SvelteKit plugin in `vite.config.js` to extend or modify the generated `tsconfig.json`.
+> `{ "extends": "$app/tsconfig" }`
 
 ## app.d.ts
 

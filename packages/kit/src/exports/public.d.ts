@@ -861,6 +861,9 @@ export interface KitConfig {
 		 */
 		server?: boolean;
 	};
+	/**
+	 * @deprecated Add configuration to `tsconfig.json` directly
+	 */
 	typescript?: {
 		/**
 		 * A function that allows you to edit the generated `tsconfig.json`. You can mutate the config (recommended) or return a new one.

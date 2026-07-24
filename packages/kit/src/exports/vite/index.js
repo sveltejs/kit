@@ -71,7 +71,10 @@ import { compact } from '../../utils/array.js';
 import { should_ignore, has_children } from './static_analysis/utils.js';
 import { process_config, split_config, validate_config } from '../../core/config/index.js';
 import { treeshake_prerendered_remotes } from './build/remote.js';
+<<<<<<< HEAD
 import { SVELTE_KIT_ASSETS } from '../../constants.js';
+=======
+>>>>>>> version-3
 import { get_runner } from '../../runner.js';
 
 /**
@@ -1707,6 +1710,7 @@ function kit({ svelte_config }) {
 		 * @see https://vitejs.dev/guide/api-plugin.html#configureserver
 		 */
 		async configureServer(server) {
+<<<<<<< HEAD
 			/** @type {typeof import('./dev/context.js')} */
 			let context;
 
@@ -1724,6 +1728,20 @@ function kit({ svelte_config }) {
 				context.set_svelte_config(svelte_config);
 				context.set_remotes(remotes);
 			});
+=======
+			return await dev(
+				server,
+				vite_config,
+				svelte_config,
+				() => remotes,
+				root,
+				(data) => {
+					manifest_data = data;
+					// Invalidate the manifest data module so it reloads with new routes/files
+					invalidate_module(server, sveltekit_manifest_data);
+				}
+			);
+>>>>>>> version-3
 		},
 
 		/**

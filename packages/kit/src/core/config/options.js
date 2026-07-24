@@ -286,9 +286,14 @@ export const validate_kit_options = object({
 		server: boolean(false)
 	}),
 
-	typescript: object({
-		config: fun((config) => config)
-	}),
+	typescript: deprecate(
+		object({
+			config: fun((config) => config)
+		}),
+		(keypath) => {
+			return `The \`${keypath}\` option is deprecated, and will be removed in a future version. Add configuration to tsconfig.json directly`;
+		}
+	),
 
 	version: object({
 		name: string(Date.now().toString()),
