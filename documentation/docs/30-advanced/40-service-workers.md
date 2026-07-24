@@ -105,7 +105,7 @@ self.addEventListener('fetch', (event) => {
 
 ## Type safety
 
-Service workers run in a different context to the rest of your app. As such, it needs different types. You should ensure that your project's root `tsconfig.json` excludes your service worker code...
+Service workers run in a different context to the rest of your app. As such, they needs different types. You should ensure that your project's root `tsconfig.json` excludes your service worker code...
 
 ```json
 /// file: tsconfig.json
