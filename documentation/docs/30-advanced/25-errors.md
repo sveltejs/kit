@@ -108,6 +108,7 @@ Since SvelteKit 2.54 and Svelte 5.53, you can change this by enabling the experi
 
 ```js
 /// file: svelte.config.js
+// @errors: 2353
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	kit: {
