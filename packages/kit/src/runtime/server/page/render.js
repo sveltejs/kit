@@ -58,7 +58,7 @@ export async function render_response({
 	data_serializer,
 	error_components
 }) {
-	if (state.prerender_default) {
+	if (state.prerendering || state.prerender_default === true) {
 		if (options.csp.mode === 'nonce') {
 			throw new Error('Cannot use prerendering if config.csp.mode === "nonce"');
 		}
@@ -106,7 +106,7 @@ export async function render_response({
 	let base_expression = s(paths.base);
 
 	const csp = new Csp(options.csp, {
-		prerender: !!state.prerender_default
+		prerender: state.prerendering || state.prerender_default === true
 	});
 
 	// if appropriate, use relative paths for greater portability
@@ -310,7 +310,7 @@ export async function render_response({
 	 * @param {string[]} attributes
 	 */
 	const add_preload = (path, attributes) => {
-		if (options.link_header_preload && !state.prerender_default) {
+		if (options.link_header_preload && !(state.prerendering || state.prerender_default === true) {
 			link_headers.add(`<${encodeURI(path)}>; ${attributes.join('; ')}; nopush`);
 		} else {
 			head.add_link_tag(path, attributes);
