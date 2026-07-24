@@ -47,7 +47,9 @@ if (!DEV && BROWSER && __SVELTEKIT_APP_VERSION_CHECKS_ENABLED__) {
 	 * the app was hydrated with. Called from the server response header path.
 	 * Does NOT reset the poll timer — unlike `check()`, this is a passive observation
 	 * from a single server instance's response, not an explicit version check. The
-	 * poll timer continues on its original schedule as a backstop.
+	 * poll timer continues on its original schedule as a backstop. This is important
+	 * for platforms that implement skew protection, where `x-sveltekit-version`
+	 * may be out of date — in this case we still need to poll for `version.json`
 	 * @param {string | null} new_version
 	 */
 	notify_version = (new_version) => {
