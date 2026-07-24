@@ -37,8 +37,7 @@ import {
 	normalize_id,
 	remote_module_pattern,
 	server_only_directory_pattern,
-	server_only_module_pattern,
-	strip_virtual_prefix
+	server_only_module_pattern
 } from './utils.js';
 import { stackless } from '../../utils/error.js';
 import { write_client_manifest } from '../../core/sync/write_client_manifest.js';
@@ -302,9 +301,6 @@ function kit({ svelte_config }) {
 
 	/** @type {string | null} */
 	let service_worker_entry_file;
-	/** @type {import('node:path').ParsedPath} */
-	let parsed_service_worker;
-
 	/** @type {string} */
 	let normalized_cwd;
 	/** @type {Array<{ alias: string, path: string }>} */
@@ -1057,7 +1053,6 @@ function kit({ svelte_config }) {
 
 		config(config) {
 			service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
-			parsed_service_worker = path.parse(kit.files.serviceWorker);
 
 			if (!service_worker_entry_file) return;
 
@@ -1112,47 +1107,23 @@ function kit({ svelte_config }) {
 			return environment.name === 'serviceWorker';
 		},
 
-		resolveId(id, importer) {
-			// If importing from a service-worker, only allow certain modules.
-			// This check won't catch transitive imports, but it will warn when the import comes from a service-worker directly.
-			// Transitive imports will be caught during the build.
-			if (importer) {
-				const parsed_importer = path.parse(importer);
-
-				const importer_is_service_worker =
-					parsed_importer.dir === parsed_service_worker.dir &&
-					parsed_importer.name === parsed_service_worker.name;
-
-				if (
-					importer_is_service_worker &&
-					id !== '$app/manifest' &&
-					id !== 'virtual:$app/env/public' &&
-					id !== '__sveltekit/env/service-worker'
-				) {
-					// TODO this... doesn't seem to be happening? we can import `$app/paths` just fine?
-					throw new Error(
-						`Cannot import ${normalize_id(
-							id,
-							normalized_aliases,
-							normalized_cwd
-						)} into service-worker code. Only the modules $app/manifest and $app/env/public are available in service workers.`
-					);
-				}
-			}
-
-			if (id.startsWith('$app/')) {
-				// ids with :$ don't work with reverse proxies like nginx
-				return `\0virtual:${id.substring(1)}`;
-			}
-
-			if (id.startsWith('__sveltekit')) {
+		resolveId: {
+			filter: {
+				id: [prefixRegex('__sveltekit/')]
+			},
+			handler(id) {
 				return `\0virtual:${id}`;
 			}
 		},
 
 		load: {
 			filter: {
-				id: [prefixRegex('\0virtual:')]
+				id: [
+					exactRegex('\0virtual:app/manifest'),
+					exactRegex(sveltekit_manifest_data),
+					exactRegex(sveltekit_env_service_worker),
+					exactRegex(sveltekit_env_public_client)
+				]
 			},
 			handler(id) {
 				if (!build_files) {
@@ -1229,18 +1200,31 @@ function kit({ svelte_config }) {
 						`const env = ${kit_global}.env;`
 					);
 				}
+			}
+		},
 
-				const sw_normalized_cwd = vite.normalizePath(vite_config.root);
-				const sw_normalized_aliases = get_import_aliases(
-					vite_config.root,
-					vite.normalizePath.bind(vite)
-				);
-				const relative = normalize_id(id, sw_normalized_aliases, sw_normalized_cwd);
-				const stripped = strip_virtual_prefix(relative);
+		generateBundle(_, bundle) {
+			const invalid_modules = new Set();
+			const modules = new Map([
+				[`${runtime_directory}/app/forms.js`, '$app/forms'],
+				[`${runtime_directory}/app/navigation.js`, '$app/navigation'],
+				[`${runtime_directory}/app/state/index.js`, '$app/state']
+			]);
 
-				// TODO this doesn't seem to be happening
+			for (const output of Object.values(bundle)) {
+				if (output.type !== 'chunk') continue;
+
+				for (const id of output.moduleIds) {
+					const module = modules.get(id);
+					if (module) invalid_modules.add(module);
+				}
+			}
+
+			if (invalid_modules.size > 0) {
 				throw new Error(
-					`Cannot import ${stripped} into service-worker code. Only the modules $app/manifest and $app/env/public are available in service workers.`
+					`Cannot import ${Array.from(modules.values())
+						.filter((module) => invalid_modules.has(module))
+						.join(', ')} into service-worker code.`
 				);
 			}
 		}
