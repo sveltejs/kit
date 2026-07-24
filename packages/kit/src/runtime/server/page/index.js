@@ -122,7 +122,7 @@ export async function render_page(
 		// renders an empty 'shell' page if SSR is turned off and if there is
 		// no server data to prerender. As a result, the load functions and rendering
 		// only occur client-side.
-		if (ssr === false && !(should_prerender && should_prerender_data)) {
+		if (ssr === false && !(state.prerendering && should_prerender_data)) {
 			// if the user makes a request through a non-enhanced form, the returned value is lost
 			// because there is no SSR or client-side handling of the response
 			if (DEV && action_result && !event.request.headers.has('x-sveltekit-action')) {
@@ -173,7 +173,7 @@ export async function render_page(
 
 		const data_serializer = server_data_serializer(event, event_state, options);
 		const data_serializer_json =
-			should_prerender && should_prerender_data
+			state.prerendering && should_prerender_data
 				? server_data_serializer_json(event, event_state, options)
 				: null;
 

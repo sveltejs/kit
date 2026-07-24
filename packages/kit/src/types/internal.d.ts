@@ -185,7 +185,7 @@ export class InternalServer extends Server {
 			/** @internal used during development to check feature availability depending on the current route */
 			before_handle?: (
 				event: RequestEvent,
-				config: Record<string, any>,
+				config: any,
 				prerender: PrerenderOption,
 				handle: () => Promise<Response>
 			) => Promise<Response>;
@@ -233,7 +233,6 @@ export interface PrerenderDependency {
 	body: null | string | Uint8Array;
 }
 
-/** Internal context for the prerendering process */
 export interface PrerenderOptions {
 	cache?: string; // including this here is a bit of a hack, but it makes it easy to add <meta http-equiv>
 	fallback?: boolean;
