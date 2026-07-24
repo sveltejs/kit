@@ -37,6 +37,7 @@ export const RECOMMENDED_OPTIONS = {
 };
 
 /**
+ * Validates that a tsconfig contains `"extends": "<id>"`
  * @param {any} options
  * @param {string} id
  */
