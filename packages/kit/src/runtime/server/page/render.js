@@ -106,7 +106,7 @@ export async function render_response({
 	let base_expression = s(paths.base);
 
 	const csp = new Csp(options.csp, {
-		prerender: state.prerendering || state.prerender_default === true
+		prerender: !!(state.prerendering || state.prerender_default === true)
 	});
 
 	// if appropriate, use relative paths for greater portability
@@ -354,7 +354,7 @@ export async function render_response({
 				serialize_data(
 					item,
 					resolve_opts.filterSerializedResponseHeaders,
-					!!state.prerender_default
+					!!(state.prerendering || state.prerender_default === true)
 				)
 			)
 			.join('\n\t\t\t')}`;
@@ -573,7 +573,7 @@ export async function render_response({
 		'content-type': 'text/html'
 	});
 
-	if (state.prerendering || state.prerender_default) {
+	if (state.prerendering || state.prerender_default === true) {
 		// TODO read headers set with setHeaders and convert into http-equiv where possible
 		const csp_headers = csp.csp_provider.get_meta();
 		if (csp_headers) {
