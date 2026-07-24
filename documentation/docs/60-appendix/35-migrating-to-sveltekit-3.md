@@ -139,7 +139,7 @@ import { goto, pushState, replaceState } from '$app/navigation';
 ---pushState('/foo', state);---
 +++goto('/foo', { shallow: true, state });+++
 
----replace('/bar', state);---
+---replaceState('/bar', state);---
 +++goto('/bar', { shallow: true, replace: true, state });+++
 ```
 
@@ -320,7 +320,7 @@ The `getRequest` and `setResponse` helpers from `@sveltejs/kit/node` are now syn
 ```js
 ---const request = await getRequest(req);---
 ---await setResponse(res, response);---
-+++const request = getRequest(req);---
++++const request = getRequest(req);+++
 +++setResponse(res, response);+++
 ```
 
