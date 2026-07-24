@@ -129,6 +129,22 @@ The deprecated `base`, `assets`, and `resolveRoute` exports have been removed fr
 
 The `Pathname` and `Asset` types have also been renamed to `Path` and `AssetPath`, and the leading `/` has been removed from those types — so `asset('/foo.png')` should now be `asset('foo.png')`, and pathnames passed to `resolve` no longer start with `/` (e.g. `resolve('blog/hello-world')`). Only route ids start with `/` now.
 
+## Changes to shallow routing
+
+`pushState/replaceState` are deprecated in favor of `goto`:
+
+```js
+import { goto, pushState, replaceState } from '$app/navigation';
+
+---pushState('/foo', state);---
++++goto('/foo', { shallow: true, state });+++
+
+---replace('/bar', state);---
++++goto('/bar', { shallow: true, replace: true, state });+++
+```
+
+Shallow routing now triggers navigation hooks (`before/after/onNavigate`). You can filter them out by checking the `shallow` property of the object passed to those navigation hooks.
+
 ## External redirects must be opted into
 
 `redirect(...)` to an external URL is now forbidden by default. To redirect to an external destination, pass an `external` option — either `true` to allow any external URL (except `javascript:` URLs, which are always blocked), or an array of allowed origins (through which you can allow `javascript:` URLs).
