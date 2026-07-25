@@ -2,11 +2,13 @@
 title: Page state & shallow routing
 ---
 
-As you navigate around a SvelteKit app, you create _history entries_. Clicking the back and forward buttons traverses through this list of entries, re-running any `load` functions and replacing page components as necessary.
+As you navigate around a SvelteKit app, you create _history entries_. Clicking the back and forward buttons traverses through this list of entries, re-running any `load` functions, replacing page components, and updating the scroll position and focused element as necessary.
 
-Sometimes, it's useful to create history entries _without_ performing a full navigation. For example, you might want to show a modal dialog that the user can dismiss by navigating back. This is particularly valuable on mobile devices, where swipe gestures are often more natural than interacting directly with the UI. In these cases, a modal that is _not_ associated with a history entry can be a source of frustration, as a user may swipe backwards in an attempt to dismiss it and find themselves on the wrong page.
+Sometimes, it's useful to create history entries _without_ performing a full navigation. We call this _shallow routing_.
 
-SvelteKit makes this possible with the [`goto`]($app-navigation#goto) function, which allows you to associate state with a history entry without navigating by using its `shallow: true` option. For example, to implement a history-driven modal:
+For example, you might want to show a modal dialog that the user can dismiss by navigating back. This is particularly valuable on mobile devices, where swipe gestures are often more natural than interacting directly with the UI. In these cases, a modal that is _not_ associated with a history entry can be a source of frustration, as a user may swipe backwards in an attempt to dismiss it and find themselves on the wrong page.
+
+SvelteKit makes this possible with the [`goto`]($app-navigation#goto) function, which allows you to associate state with a history entry without navigating with the `shallow: true` option:
 
 ```svelte
 <!--- file: +page.svelte --->
@@ -30,22 +32,23 @@ SvelteKit makes this possible with the [`goto`]($app-navigation#goto) function, 
 {/if}
 ```
 
-Because the navigation doesn't run `load` functions, switch to a different `+page.svelte`, or (by default) reset scroll and focus, we call this _shallow routing_.
-
-State can be accessed through the [page object]($app-state#page) as `page.state`. You can make page state type-safe by declaring an [`App.PageState`](types#PageState) interface (usually in `src/app.d.ts`).
+State is globally accessible via the [page object]($app-state#page) as `page.state`. You can make page state type-safe by declaring an [`App.PageState`](types#PageState) interface (usually in `src/app.d.ts`).
 
 The modal can be dismissed by navigating back (unsetting `page.state.showModal`) or by interacting with it in a way that causes the `close` callback to run, which will navigate back programmatically.
 
-You can also update the visible URL during a shallow navigation:
+You can also update the contents of the browser's URL bar during a shallow navigation:
 
 ```js
 import { goto } from '$app/navigation';
+const state = { active: true };
 // ---cut---
-goto('/photos/1', {
-	shallow: true,
-	state: { showModal: true }
+goto('/another/page', {
+	state,
+	shallow: true
 });
 ```
+
+> [!NOTE] If the user reloads, they will land on `/another/page`, _not_ the currently rendered page — see [Caveats](#caveats).
 
 Regardless of whether you choose to update the visible URL or not, [`beforeNavigate`]($app-navigation#beforeNavigate), [`onNavigate`]($app-navigation#onNavigate) and [`afterNavigate`]($app-navigation#afterNavigate) will run with `navigation.type === 'goto'` and `navigation.shallow === true`.
 
@@ -66,7 +69,7 @@ Once shallow routing is active, `page.shallow` becomes a `{ url, params, route }
 
 A regular `goto` call without `shallow: true`, or a standard link click, exits shallow routing.
 
-> [!NOTE]
+> [!LEGACY]
 > In SvelteKit 2 this functionality was achieved using `pushState` and `replaceState`, which are now deprecated. Use `goto` with `shallow: true` instead, and use the `replace` option when replacing the current history entry.
 
 ## Routing options
@@ -172,8 +175,6 @@ For this to work, you need to load the data that the `+page.svelte` expects. A c
 
 ## Caveats
 
-During server-side rendering, `page.state` is always an empty object.
+Shallow routing requires JavaScript. Be mindful when using it and try to think of sensible fallback behaviour in case JavaScript isn't available.
 
-Shallow routing is a feature that requires JavaScript to work. Be mindful when using it and try to think of sensible fallback behavior in case JavaScript isn't available.
-
-If you navigate to another page via shallow routing, reloading on that route will not start the app in shallow routing mode. Instead, the actual page on that URL is loaded - in the above example, you would land on `src/routes/photos/[id]/+page.svelte` instead of `src/routes/photos/+page.svelte`. On the server, this is unavoidable (because history state isn't available at that point), and hence it would mean too much of a UI flicker if it changed the page and entered shallow routing once JavaScript is loaded. This is regardless of the `persistState` option.
+The server has no awareness of history state. As such, `page.state` is an empty object during SSR, and a reload will navigate directly to the prior `page.shallow.url` if it exists. In other words, if `page.shallow.url.pathname` is `/photos/123` before the reload, after the reload `page.url.pathname` will be `/photos/123` and `page.shallow` will be `null`, regardless of the `persistState` option. (This only applies to the initial page load, to avoid a flickering UI when the client app starts.)
