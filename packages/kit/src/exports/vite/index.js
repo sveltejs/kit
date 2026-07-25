@@ -227,7 +227,6 @@ function kit({ svelte_config }) {
 
 	/**
 	 * The posix-ified root of the project based on the Vite configuration.
-	 * Populated after Vite plugins' `config` hooks run
 	 * @type {string}
 	 */
 	let root;
