@@ -30,12 +30,11 @@ SvelteKit makes this possible with the [`goto`]($app-navigation#goto) function, 
 {/if}
 ```
 
-Because the navigation doesn't run `load` functions or switch to a different `+page.svelte`, we call this **shallow routing**.
+Because the navigation doesn't run `load` functions, switch to a different `+page.svelte`, or (by default) reset scroll and focus, we call this _shallow routing_.
 
 State can be accessed through the [page object]($app-state#page) as `page.state`. You can make page state type-safe by declaring an [`App.PageState`](types#PageState) interface (usually in `src/app.d.ts`).
 
 The modal can be dismissed by navigating back (unsetting `page.state.showModal`) or by interacting with it in a way that causes the `close` callback to run, which will navigate back programmatically.
-
 
 You can also update the visible URL during a shallow navigation:
 
@@ -50,7 +49,7 @@ goto('/photos/1', {
 
 Regardless of whether you choose to update the visible URL or not, [`beforeNavigate`]($app-navigation#beforeNavigate), [`onNavigate`]($app-navigation#onNavigate) and [`afterNavigate`]($app-navigation#afterNavigate) will run with `navigation.type === 'goto'` and `navigation.shallow === true`.
 
-Once shallow routing is active, `page.shallow` is set with the visible URL, parameters and route id. `page.url`, `page.params` and `page.route` continue to describe the page that was last rendered as a result of an actual navigation.
+Once shallow routing is active, `page.shallow` becomes a `{ url, params, route }` object describing the page that _would_ be rendered if the user were to navigate there (which would happen if, for example, they reloaded the page). `page.url`, `page.params` and `page.route` continue to describe the page that is currently rendered.
 
 ```svelte
 <!--- file: +page.svelte --->
