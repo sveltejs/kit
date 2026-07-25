@@ -42,17 +42,11 @@ export const config = {
 };
 ```
 
-The following options apply to all functions:
+You can set the following options:
 
-- `runtime`: `'edge'`, `'nodejs20.x'` or `'nodejs22.x'`. By default, the adapter will select the `'nodejs<version>.x'` corresponding to the Node version your project is configured to use on the Vercel dashboard
-  > [!NOTE] This option is deprecated and will be removed in a future version, at which point all your functions will use whichever Node version is specified in the project configuration on Vercel
-- `regions`: an array of [edge network regions](https://vercel.com/docs/concepts/edge-network/regions) (defaulting to `["iad1"]` for serverless functions) or `'all'` if `runtime` is `edge` (its default). Note that multiple regions for serverless functions are only supported on Enterprise plans
+- `runtime`: `'nodejs22.x'`, `'nodejs24.x'` or `bun1.x`. By default, the adapter will select the runtime used for the build, which corresponds to the Node version your project is configured to use on the Vercel dashboard unless you [build the app with Bun](https://bun.com/docs/guides/ecosystem/vite)
+- `regions`: an array of [edge network regions](https://vercel.com/docs/concepts/edge-network/regions) (defaulting to `["iad1"]`). Note that multiple regions for serverless functions are only supported on Enterprise plans
 - `split`: if `true`, causes a route to be deployed as an individual function. If `split` is set to `true` at the adapter level, all routes will be deployed as individual functions
-
-Additionally, the following option applies to edge functions:
-- `external`: an array of dependencies that Rolldown should treat as external when bundling functions. This should only be used to exclude optional dependencies that will not run outside Node
-
-And the following option apply to serverless functions:
 - `memory`: the amount of memory available to the function. Defaults to `1024` Mb, and can be decreased to `128` Mb or [increased](https://vercel.com/docs/concepts/limits/overview#serverless-function-memory) in 64Mb increments up to `3008` Mb on Pro or Enterprise accounts
 - `maxDuration`: [maximum execution duration](https://vercel.com/docs/functions/runtimes#max-duration) of the function. Defaults to `10` seconds for Hobby accounts, `15` for Pro and `900` for Enterprise
 - `isr`: configuration Incremental Static Regeneration, described below

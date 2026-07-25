@@ -123,18 +123,34 @@ const formatter = new Intl.ListFormat('en-gb', { type: 'disjunction' });
 
 /** @returns {RuntimeKey} */
 function get_default_runtime() {
-	// TODO may someday need to auto-detect Bun, but this will be complicated because you may want to run your build
-	// with Bun but not have your serverless runtime be in Bun. Vercel will likely have to attach something to `globalThis` or similar
-	// to tell us what the bun configuration is.
-	const major = Number(process.version.slice(1).split('.')[0]);
+	// if the user ran e.g. `bunx --bun vite build`, infer that they want to run the app in Bun
+	if (process.versions.bun) {
+		const major = process.versions.bun.split('.')[0];
+		if (major !== '1') {
+			throw new Error(
+				`Unsupported Bun version: ${major}. Please use Bun 1.x to build your project, or explicitly specify a runtime in your adapter configuration.`
+			);
+		}
 
-	if (!valid_node_versions.includes(major)) {
-		throw new Error(
-			`Unsupported Node.js version: ${process.version}. Please use Node ${formatter.format(valid_node_versions.map((v) => `${v}`))} to build your project, or explicitly specify a runtime in your adapter configuration.`
-		);
+		return `bun${major}.x`;
 	}
 
-	return `nodejs${/** @type {22 | 24} */ (major)}.x`;
+	// otherwise, default to the version of Node specified in the project config
+	if (process.versions.node) {
+		const major = Number(process.versions.node.split('.')[0]);
+
+		if (!valid_node_versions.includes(major)) {
+			throw new Error(
+				`Unsupported Node.js version: ${process.version}. Please use Node ${formatter.format(valid_node_versions.map((v) => `${v}`))} to build your project, or explicitly specify a runtime in your adapter configuration.`
+			);
+		}
+
+		return `nodejs${/** @type {22 | 24} */ (major)}.x`;
+	}
+
+	throw new Error(
+		'Could not auto-detect a runtime. Please explicity specify a runtime in your adapter configuration'
+	);
 }
 
 const valid_runtimes = /** @type {const} */ (['nodejs22.x', 'nodejs24.x', 'bun1.x']);
