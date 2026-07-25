@@ -42,8 +42,9 @@ const rolldown_config = {
 
 /** @type {import('./index.js').default} **/
 const plugin = function (defaults = {}) {
-	if ('edge' in defaults) {
-		throw new Error("{ edge: true } has been removed in favour of { runtime: 'edge' }");
+	// @ts-ignore TODO remove this in a future version
+	if ('edge' in defaults || defaults.runtime === 'edge') {
+		throw new Error('The `edge` runtime is no longer supported');
 	}
 
 	return {
@@ -120,99 +121,6 @@ const plugin = function (defaults = {}) {
 				}
 			}
 
-			let warned = false;
-
-			/**
-			 * @param {string} name
-			 * @param {import('./index.js').EdgeConfig} config
-			 * @param {import('@sveltejs/kit').RouteDefinition<import('./index.js').EdgeConfig>[]} routes
-			 */
-			async function generate_edge_function(name, config, routes) {
-				if (!warned) {
-					warned = true;
-					builder.log.warn(
-						`The \`runtime: 'edge'\` option is deprecated, and will be removed in a future version of adapter-vercel`
-					);
-				}
-
-				const tmp = builder.getBuildDirectory(`vercel-tmp/${name}`);
-				const relativePath = path.posix.relative(tmp, builder.getServerDirectory());
-
-				builder.copy(`${files}/edge.js`, `${tmp}/edge.js`, {
-					replace: {
-						SERVER: `${relativePath}/index.js`,
-						MANIFEST: './manifest.js'
-					}
-				});
-
-				write(
-					`${tmp}/manifest.js`,
-					`export const manifest = ${builder.generateManifest({ relativePath, routes })};\n`
-				);
-
-				try {
-					const outdir = `${dirs.functions}/${name}.func`;
-
-					const build_config = {
-						...rolldown_config,
-						external: [...rolldown_config.external, ...(config.external || [])]
-					};
-
-					await Promise.all([
-						build({
-							...build_config,
-							input: `${tmp}/edge.js`,
-							output: {
-								...build_config.output,
-								file: `${outdir}/index.js`
-							}
-						}),
-						builder.hasServerInstrumentationFile() &&
-							build({
-								...build_config,
-								input: `${builder.getServerDirectory()}/instrumentation.server.js`,
-								output: {
-									...build_config.output,
-									file: `${outdir}/instrumentation.server.js`
-								}
-							})
-					]);
-
-					if (builder.hasServerInstrumentationFile()) {
-						builder.instrument({
-							entrypoint: `${outdir}/index.js`,
-							instrumentation: `${outdir}/instrumentation.server.js`,
-							module: {
-								generateText: generate_traced_edge_module
-							}
-						});
-					}
-				} catch (err) {
-					throw new Error(
-						'Bundling edge function with Rolldown failed' +
-							(err instanceof Error ? `: ${err.message}` : ''),
-						{ cause: err }
-					);
-				}
-
-				write(
-					`${dirs.functions}/${name}.func/.vc-config.json`,
-					JSON.stringify(
-						{
-							runtime: config.runtime,
-							regions: config.regions,
-							entrypoint: 'index.js',
-							framework: {
-								slug: 'sveltekit',
-								version: VERSION
-							}
-						},
-						null,
-						'\t'
-					)
-				);
-			}
-
 			/** @type {Map<string, { i: number, config: import('./index.js').Config, routes: import('@sveltejs/kit').RouteDefinition<import('./index.js').Config>[] }>} */
 			const groups = new Map();
 
@@ -231,6 +139,12 @@ const plugin = function (defaults = {}) {
 			// group routes by config
 			for (const route of builder.routes) {
 				const runtime = resolve_runtime(defaults.runtime, route.config.runtime);
+
+				// @ts-ignore TODO remove this in a future version
+				if (runtime === 'edge') {
+					throw new Error('The `edge` runtime is no longer supported');
+				}
+
 				const config = { ...defaults, ...route.config, runtime };
 
 				if (is_prerendered(route)) {
@@ -242,12 +156,6 @@ const plugin = function (defaults = {}) {
 
 				if (config.isr) {
 					const directory = path.relative('.', builder.config.kit.files.routes + route.id);
-
-					if (runtime === 'edge') {
-						throw new Error(
-							`${directory}: Routes using \`isr\` must use a Node.js or Bun runtime (for example 'nodejs24.x' or 'experimental_bun1.x')`
-						);
-					}
 
 					if (config.isr.allowQuery?.includes('__pathname')) {
 						throw new Error(
@@ -307,13 +215,10 @@ const plugin = function (defaults = {}) {
 			const singular = groups.size === 1;
 
 			for (const group of groups.values()) {
-				const generate_function =
-					group.config.runtime === 'edge' ? generate_edge_function : generate_serverless_function;
-
 				// generate one function for the group
 				const name = singular ? `${INTERNAL}/catchall` : `${INTERNAL}/${group.i}`;
 
-				await generate_function(
+				await generate_serverless_function(
 					name,
 					/** @type {any} */ (group.config),
 					/** @type {import('@sveltejs/kit').RouteDefinition<any>[]} */ (group.routes)
@@ -329,10 +234,8 @@ const plugin = function (defaults = {}) {
 				// by SvelteKit rather than Vercel
 
 				const runtime = resolve_runtime(defaults.runtime);
-				const generate_function =
-					runtime === 'edge' ? generate_edge_function : generate_serverless_function;
 
-				await generate_function(
+				await generate_serverless_function(
 					`${INTERNAL}/catchall`,
 					/** @type {any} */ ({ ...defaults, runtime }),
 					[]
@@ -449,14 +352,7 @@ const plugin = function (defaults = {}) {
 				// Create a separate edge function just for server-side route resolution.
 				// By omitting all routes we're ensuring it's small (the routes will still be available
 				// to the route resolution, because it does not rely on the server routing manifest)
-				await generate_edge_function(
-					`${builder.config.kit.appDir}/route`,
-					{
-						external: 'external' in defaults ? defaults.external : undefined,
-						runtime: 'edge'
-					},
-					[]
-				);
+				await generate_serverless_function(`${builder.config.kit.appDir}/route`, {}, []);
 
 				static_config.routes.push({
 					src: `${builder.config.kit.paths.base}/(|.+/)__route\\.js`,
@@ -480,11 +376,10 @@ const plugin = function (defaults = {}) {
 	};
 };
 
-/** @param {import('./index.js').EdgeConfig & import('./index.js').ServerlessConfig} config */
+/** @param {import('./index.js').ServerlessConfig} config */
 function hash_config(config) {
 	return [
 		config.runtime ?? '',
-		config.external ?? '',
 		config.regions ?? '',
 		config.memory ?? '',
 		config.maxDuration ?? '',
@@ -819,25 +714,6 @@ function is_prerendered(route) {
 		route.prerender === true ||
 		(route.prerender === 'auto' && route.segments.every((segment) => !segment.dynamic))
 	);
-}
-
-/**
- * @param {{ instrumentation: string; start: string }} opts
- */
-function generate_traced_edge_module({ instrumentation, start }) {
-	return `\
-import './${instrumentation}';
-const promise = import('./${start}');
-
-/**
- * @param {import('http').IncomingMessage} req
- * @param {import('http').ServerResponse} res
- */
-export default async (req, res) => {
-	const { default: handler } = await promise;
-	return handler(req, res);
-}
-`;
 }
 
 export default plugin;
