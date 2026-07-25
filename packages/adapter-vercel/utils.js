@@ -149,7 +149,7 @@ function get_default_runtime() {
 	}
 
 	throw new Error(
-		'Could not auto-detect a runtime. Please explicity specify a runtime in your adapter configuration'
+		'Could not auto-detect a runtime. Please explicitly specify a runtime in your adapter configuration.'
 	);
 }
 
