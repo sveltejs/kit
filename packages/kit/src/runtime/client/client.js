@@ -2450,7 +2450,9 @@ let warned_on_push_state = false;
 let warned_on_replace_state_function = false;
 
 /**
- * Allows you to navigate programmatically to a given route, with options such as keeping the current element focused. Pass `null` to update `page.state` without changing the URL.
+ * Allows you to navigate programmatically to a given route, with control over details such as whether scroll and focus are reset
+ * (as they would be with a regular navigation) or preserved.
+ *
  * Returns a Promise that resolves when SvelteKit navigates (or fails to navigate, in which case the promise rejects) or the state change has been applied.
  *
  * Unless `shallow` is `true`, `goto` is intended for navigations to routes that belong to the app.
