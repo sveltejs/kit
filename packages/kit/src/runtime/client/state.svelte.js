@@ -62,7 +62,7 @@ if (!DEV && BROWSER) {
 	}
 
 	/** @type {() => Promise<boolean>} */
-	function check() {
+	updated.check = function check() {
 		if (updated.current) return Promise.resolve(true);
 		if (checking) return checking;
 
@@ -81,13 +81,7 @@ if (!DEV && BROWSER) {
 				}
 
 				const data = await res.json();
-				const new_update = data.version !== version;
-
-				if (new_update) {
-					updated.current = true;
-				}
-
-				return new_update;
+				return (updated.current ||= data.version !== version);
 			} catch {
 				return false;
 			} finally {
@@ -95,11 +89,9 @@ if (!DEV && BROWSER) {
 				if (interval && !updated.current) timeout = window.setTimeout(check, interval);
 			}
 		})());
-	}
+	};
 
-	if (interval) timeout = window.setTimeout(check, interval);
-
-	updated.check = check;
+	if (interval) timeout = window.setTimeout(updated.check, interval);
 }
 
 /**
