@@ -2507,19 +2507,16 @@ export async function goto(url, opts = {}) {
 	const intent = await resolve_intent(url, 'goto');
 
 	if (opts.shallow) {
-		// Untrack to avoid triggering outer reactive contexts because we access page.X inside
-		return untrack(() =>
-			update_state(
-				intent,
-				opts.state ?? {},
-				{
-					replace,
-					persist_state: opts.persistState ?? false,
-					noscroll: opts.noScroll ?? true,
-					keepfocus: opts.keepFocus ?? true
-				},
-				'goto'
-			)
+		return update_state(
+			intent,
+			opts.state ?? {},
+			{
+				replace,
+				persist_state: opts.persistState ?? false,
+				noscroll: opts.noScroll ?? true,
+				keepfocus: opts.keepFocus ?? true
+			},
+			'goto'
 		);
 	}
 
