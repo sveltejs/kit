@@ -40,6 +40,8 @@ The modal can be dismissed by navigating back (unsetting `page.state.showModal`)
 You can also update the visible URL during a shallow navigation:
 
 ```js
+import { goto } from '$app/navigation';
+// ---cut---
 goto('/photos/1', {
 	shallow: true,
 	state: { showModal: true }
@@ -70,18 +72,22 @@ A regular `goto` call without `shallow: true`, or a standard link click, exits s
 
 ## Routing options
 
-By default, the above examples create a new navigation entry in the history stack. If you don't want that, you can replace the existing navigation entry instead: 
+By default, the above examples create a new navigation entry in the history stack. If you don't want that, you can replace the existing navigation entry instead:
 
 ```js
+import { goto } from '$app/navigation';
+// ---cut---
 goto(url, {
 	state,
 	replace: true
 });
 ```
 
-By default, state set with `goto` is not restored after a reload. To change that, use `persistState`:  
+By default, state set with `goto` is not restored after a reload. To change that, use `persistState`:
 
 ```js
+import { goto } from '$app/navigation';
+// ---cut---
 goto(url, {
 	state,
 	persistState: true
@@ -91,6 +97,8 @@ goto(url, {
 Shallow navigations preserve the current scroll position and focused element by default. You can opt out of either behavior with `noScroll: false` or `keepFocus: false`:
 
 ```js
+import { goto } from '$app/navigation';
+// ---cut---
 goto(url, {
 	shallow: true,
 	noScroll: false,
