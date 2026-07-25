@@ -149,7 +149,7 @@ export function count_non_ssi_comments(str) {
  * @returns {boolean}
  */
 export function renders_prerendered_output(state) {
-	return !!state.prerendering || (DEV && state.prerender_default === true);
+	return !!state.prerendering || (__SVELTEKIT_DEV__ && state.prerender_default === true);
 }
 
 /**
