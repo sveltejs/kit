@@ -2450,6 +2450,34 @@ let warned_on_push_state = false;
 let warned_on_replace_state_function = false;
 
 /**
+ * @param {string | URL} url
+ * @param {'goto' | 'pushState' | 'replaceState'} caller
+ */
+async function resolve_intent(url, caller) {
+	const resolved = new URL(resolve_url(url));
+
+	if (resolved.origin !== origin) {
+		throw new Error(
+			DEV
+				? `Cannot use \`${caller}\` with an external URL. Use \`window.location = "${url}"\` instead`
+				: `${caller}: invalid URL`
+		);
+	}
+
+	const intent = await get_navigation_intent(resolved, false);
+
+	if (!intent) {
+		throw new Error(
+			DEV
+				? `Cannot use \`${caller}\` with a URL that does not resolve to a route within the app. Use \`window.location = "${url}"\` instead`
+				: `${caller}: invalid URL`
+		);
+	}
+
+	return intent;
+}
+
+/**
  * Allows you to navigate programmatically to a given route, with control over details such as whether scroll and focus are reset
  * (as they would be with a regular navigation) or preserved.
  *
@@ -2476,38 +2504,19 @@ export async function goto(url, opts = {}) {
 
 	const replace = opts.replace ?? opts.replaceState ?? false;
 
-	url = new URL(resolve_url(url));
-
-	if (url.origin !== origin) {
-		throw new Error(
-			DEV
-				? `Cannot use \`goto\` with an external URL. Use \`window.location = "${url}"\` instead`
-				: 'goto: invalid URL'
-		);
-	}
-
-	const intent = await get_navigation_intent(url, false);
-
-	if (!intent) {
-		throw new Error(
-			DEV
-				? `Cannot use \`goto\` with a URL that does not resolve to a route within the app. Use \`window.location = "${url}"\` instead`
-				: 'goto: invalid URL'
-		);
-	}
+	const intent = await resolve_intent(url, 'goto');
 
 	if (opts.shallow) {
 		// Untrack to avoid triggering outer reactive contexts because we access page.X inside
 		return untrack(() =>
 			update_state(
-				url,
+				intent,
 				opts.state ?? {},
 				{
 					replace,
 					persist_state: opts.persistState ?? false,
 					noscroll: opts.noScroll ?? true,
-					keepfocus: opts.keepFocus ?? true,
-					intent
+					keepfocus: opts.keepFocus ?? true
 				},
 				'goto'
 			)
@@ -2522,7 +2531,7 @@ export async function goto(url, opts = {}) {
 	}
 
 	return _goto(
-		url,
+		intent.url,
 		{ ...opts, replace, refreshAll: opts.refreshAll ?? opts.invalidateAll },
 		0,
 		{},
@@ -2720,14 +2729,13 @@ export async function pushState(url, state) {
 		);
 	}
 
-	// Untrack to avoid triggering outer reactive contexts because we access page.X inside
-	await untrack(() =>
-		update_state(
-			url,
-			state,
-			{ replace: false, persist_state: false, noscroll: true, keepfocus: true },
-			'pushState'
-		)
+	const intent = await resolve_intent(url, 'pushState');
+
+	await update_state(
+		intent,
+		state,
+		{ replace: false, persist_state: false, noscroll: true, keepfocus: true },
+		'pushState'
 	);
 }
 
@@ -2751,29 +2759,30 @@ export async function replaceState(url, state) {
 		);
 	}
 
-	// Untrack to avoid triggering outer reactive contexts because we access page.X inside
-	await untrack(() =>
-		update_state(
-			url,
-			state,
-			{ replace: true, persist_state: false, noscroll: true, keepfocus: true },
-			'replaceState'
-		)
+	const intent = await resolve_intent(url, 'replaceState');
+
+	await update_state(
+		intent,
+		state,
+		{ replace: true, persist_state: false, noscroll: true, keepfocus: true },
+		'replaceState'
 	);
 }
 
 /**
- * @param {string | URL} url
+ * @param {NavigationIntent} intent
  * @param {App.PageState} state
- * @param {{ replace: boolean; persist_state: boolean; noscroll: boolean; keepfocus: boolean; intent?: NavigationIntent }} options
+ * @param {{ replace: boolean; persist_state: boolean; noscroll: boolean; keepfocus: boolean; }} options
  * @param {'goto' | 'pushState' | 'replaceState'} caller
  */
 async function update_state(
-	url,
+	intent,
 	state,
-	{ replace, persist_state, noscroll, keepfocus, intent },
+	{ replace, persist_state, noscroll, keepfocus },
 	caller
 ) {
+	const url = intent.url;
+
 	if (DEV) {
 		if (!started) {
 			throw new Error(`Cannot call ${caller}(...) before router is initialized`);
@@ -2788,12 +2797,9 @@ async function update_state(
 		}
 	}
 
-	const resolved = resolve_url(url);
 	const nav =
 		// For backwards compatibility we don't trigger navigation hooks etc for push/replaceState
-		caller === 'goto'
-			? _before_navigate({ url: resolved, type: 'goto', intent, shallow: true })
-			: undefined;
+		caller === 'goto' ? _before_navigate({ url, type: 'goto', intent, shallow: true }) : undefined;
 
 	if (!nav && caller === 'goto') return;
 
@@ -2823,7 +2829,7 @@ async function update_state(
 	};
 
 	const fn = replace ? history.replaceState : history.pushState;
-	fn.call(history, entry, '', resolved);
+	fn.call(history, entry, '', url);
 	set_history_options(current_history_index, entry[HISTORY_METADATA_KEY]);
 
 	if (!replace) {
@@ -2857,7 +2863,7 @@ async function update_state(
 	page.shallow = {
 		params: intent?.params ?? null,
 		route: intent ? { id: intent.route.id } : null,
-		url: resolved
+		url
 	};
 
 	if (!nav) return;
@@ -2872,7 +2878,7 @@ async function update_state(
 		return;
 	}
 
-	reset_scroll_and_focus(resolved, noscroll ? scroll_state() : null, keepfocus, activeElement);
+	reset_scroll_and_focus(url, noscroll ? scroll_state() : null, keepfocus, activeElement);
 
 	is_navigating = false;
 	nav.fulfil(undefined);
