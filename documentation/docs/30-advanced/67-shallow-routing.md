@@ -48,7 +48,7 @@ goto('/another/page', {
 });
 ```
 
-> [!NOTE] If the user reloads, they will land on `/another/page`, _not_ the currently rendered page — see [Caveats](#caveats).
+> [!NOTE] If the user reloads, they will land on `/another/page`, _not_ the currently rendered page — see [Caveats](#Caveats).
 
 Regardless of whether you choose to update the visible URL or not, [`beforeNavigate`]($app-navigation#beforeNavigate), [`onNavigate`]($app-navigation#onNavigate) and [`afterNavigate`]($app-navigation#afterNavigate) will run with `navigation.type === 'goto'` and `navigation.shallow === true`.
 
