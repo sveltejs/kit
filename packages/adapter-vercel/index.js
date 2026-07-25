@@ -4,41 +4,9 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { VERSION } from '@sveltejs/kit';
 import { nodeFileTrace } from '@vercel/nft';
-import { build } from 'rolldown';
 import { get_pathname, parse_isr_expiration, pattern_to_src, resolve_runtime } from './utils.js';
 
-const name = '@sveltejs/adapter-vercel';
 const INTERNAL = '![-]'; // this name is guaranteed not to conflict with user routes
-
-// https://vercel.com/docs/functions/edge-functions/edge-runtime#compatible-node.js-modules
-const compatible_node_modules = ['async_hooks', 'events', 'buffer', 'assert', 'util'];
-
-/** @satisfies {import('rolldown').BuildOptions} */
-const rolldown_config = {
-	platform: 'browser',
-	resolve: {
-		conditionNames: [
-			// Vercel's Edge runtime key https://runtime-keys.proposal.wintercg.org/#edge-light
-			'edge-light',
-			// re-include these since they are included by default when no conditions are specified
-			'import',
-			'browser',
-			'default'
-		]
-	},
-	external: [...compatible_node_modules, ...compatible_node_modules.map((id) => `node:${id}`)],
-	transform: {
-		// minimum Node.js version supported is v14.6.0 that is mapped to ES2019
-		// https://edge-runtime.vercel.app/features/polyfills
-		// TODO verify the latest ES version the edge runtime supports
-		target: 'es2022'
-	},
-	output: {
-		sourcemap: true,
-		banner: () => 'globalThis.global = globalThis;',
-		codeSplitting: false
-	}
-};
 
 /** @type {import('./index.js').default} **/
 const plugin = function (defaults = {}) {
@@ -48,16 +16,9 @@ const plugin = function (defaults = {}) {
 	}
 
 	return {
-		name,
+		name: '@sveltejs/adapter-vercel',
 		/** @param {import('@sveltejs/kit').Builder} builder */
 		async adapt(builder) {
-			if (!builder.routes) {
-				throw new Error(
-					'@sveltejs/adapter-vercel >=2.x (possibly installed through @sveltejs/adapter-auto) requires @sveltejs/kit version 1.5 or higher. ' +
-						'Either downgrade the adapter or upgrade @sveltejs/kit'
-				);
-			}
-
 			const dir = '.vercel/output';
 			const tmp = builder.getBuildDirectory('vercel-tmp');
 
