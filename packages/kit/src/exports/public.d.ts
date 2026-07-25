@@ -1237,6 +1237,47 @@ export interface NavigationTarget<
 	scroll: { x: number; y: number } | null;
 }
 
+export interface GotoOptions {
+	/**
+	 * If `true`, replaces the current history entry rather than creating a new one.
+	 * @default false
+	 */
+	replace?: boolean;
+	/** @deprecated Use `replace` instead. */
+	replaceState?: boolean;
+	/**
+	 * If `true`, updates the URL and `page.state` without navigating.
+	 * @default false
+	 */
+	shallow?: boolean;
+	/**
+	 * If `true`, preserves the browser's scroll position.
+	 * @default false, or true when `shallow` is true
+	 */
+	noScroll?: boolean;
+	/**
+	 * If `true`, keeps the currently focused element focused.
+	 * @default false, or true when `shallow` is true
+	 */
+	keepFocus?: boolean;
+	/**
+	 * If `true`, reruns all `load` functions and queries of the page.
+	 * @default false
+	 */
+	refreshAll?: boolean;
+	/** Causes any `load` functions to rerun if they depend on one of the URLs. */
+	invalidate?: Array<string | URL | ((url: URL) => boolean)>;
+	/** @deprecated Use `refreshAll` instead. */
+	invalidateAll?: boolean;
+	/** An optional object that will be available as `page.state`. */
+	state?: App.PageState;
+	/**
+	 * If `true`, `page.state` will be restored after a full page reload.
+	 * @default false
+	 */
+	persistState?: boolean;
+}
+
 /**
  * - `enter`: The app has hydrated/started
  * - `form`: The user submitted a `<form method="GET">`
@@ -1258,6 +1299,8 @@ export interface NavigationBase {
 	 * - `popstate`: Navigation was triggered by back/forward navigation
 	 */
 	type: NavigationType;
+	/** Whether this is a shallow navigation. */
+	shallow: boolean;
 	/**
 	 * Where navigation was triggered from
 	 */
@@ -1426,9 +1469,20 @@ export interface Page<
 	 */
 	data: App.PageData & Record<string, any>;
 	/**
-	 * The page state, which can be manipulated using the [`pushState`](https://svelte.dev/docs/kit/$app-navigation#pushState) and [`replaceState`](https://svelte.dev/docs/kit/$app-navigation#replaceState) functions from `$app/navigation`.
+	 * The page state, which can be manipulated using [`goto`](https://svelte.dev/docs/kit/$app-navigation#goto) from `$app/navigation`.
 	 */
 	state: App.PageState;
+	/**
+	 * Information about the target of the current shallow navigation, or `null` if no shallow navigation has occurred.
+	 */
+	shallow: {
+		/** Parameters of the target route, or `null` if the URL does not resolve to a route. */
+		params: AppLayoutParams<'/'> | null;
+		/** Info about the target route, or `null` if the URL does not resolve to a route. */
+		route: { id: AppRouteId } | null;
+		/** The normalized URL passed to `goto(..., { shallow: true })`. */
+		url: ReadonlyURL;
+	} | null;
 	/**
 	 * Filled only after a form submission. See [form actions](https://svelte.dev/docs/kit/form-actions) for more info.
 	 */
