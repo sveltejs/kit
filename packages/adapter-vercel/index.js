@@ -99,12 +99,11 @@ const plugin = function (defaults = {}) {
 
 			// group routes by config
 			for (const route of builder.routes) {
-				const runtime = resolve_runtime(defaults.runtime, route.config.runtime);
-
-				// @ts-ignore TODO remove this in a future version
-				if (runtime === 'edge') {
+				if (route.config.runtime === 'edge') {
 					throw new Error('The `edge` runtime is no longer supported');
 				}
+
+				const runtime = resolve_runtime(defaults.runtime, route.config.runtime);
 
 				const config = { ...defaults, ...route.config, runtime };
 
