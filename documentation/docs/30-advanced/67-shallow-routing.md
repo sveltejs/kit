@@ -75,6 +75,7 @@ By default, the above examples create a new navigation entry in the history stac
 
 ```js
 import { goto } from '$app/navigation';
+const url = new URL('https://example.com');
 // ---cut---
 goto(url, {
 	state,
@@ -86,6 +87,7 @@ By default, state set with `goto` is not restored after a reload. To change that
 
 ```js
 import { goto } from '$app/navigation';
+const url = new URL('https://example.com');
 // ---cut---
 goto(url, {
 	state,
@@ -97,6 +99,7 @@ Shallow navigations preserve the current scroll position and focused element by 
 
 ```js
 import { goto } from '$app/navigation';
+const url = new URL('https://example.com');
 // ---cut---
 goto(url, {
 	shallow: true,
