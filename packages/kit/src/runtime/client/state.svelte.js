@@ -63,12 +63,13 @@ if (!DEV && BROWSER) {
 
 	/** @type {() => Promise<boolean>} */
 	updated.check = function check() {
-		if (updated.current) return Promise.resolve(true);
-		if (checking) return checking;
-
 		window.clearTimeout(timeout);
 
-		return (checking = (async () => {
+		if (updated.current) {
+			return Promise.resolve(true);
+		}
+
+		return (checking ??= (async () => {
 			try {
 				const res = await fetch(`${assets}/${__SVELTEKIT_APP_VERSION_FILE__}`, {
 					headers: {
