@@ -1489,7 +1489,7 @@ test.describe('goto', () => {
 		await page.click('button');
 
 		const message = process.env.DEV
-			? 'Cannot use `goto` with an external URL. Use `window.location = "https://example.com/"` instead'
+			? 'Cannot use `goto` with an external URL. Use `window.location = "https://example.com"` instead'
 			: 'goto: invalid URL';
 		await expect(page.locator('p')).toHaveText(message);
 	});
