@@ -6,13 +6,13 @@ Service workers act as proxy servers that handle network requests inside your ap
 
 In SvelteKit, if you have a `src/service-worker/index.ts` file it will be bundled and automatically registered.
 
-> [!NOTE] `src/service-worker.ts` or `.js` is also valid, but see the section on [type safety](#type-safety) below
+> [!NOTE] `src/service-worker.ts` or `.js` is also valid, but see the section on [type safety](#Type-safety) below
 
 ## Inside the service worker
 
 For the service worker to do anything useful, you will likely need to import some stuff:
 
-- [`$app/service-worker`]($app-service-worker) exports `self` which is just `globalThis` typed as [`ServiceWorkerGlobalScope`](https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerGlobalScope) (provided you follow [these steps](#type-safety)), so that your `fetch` events are typed correctly
+- [`$app/service-worker`]($app-service-worker) exports `self` which is just `globalThis` typed as [`ServiceWorkerGlobalScope`](https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerGlobalScope) (provided you follow [these steps](#Type-safety)), so that your `fetch` events are typed correctly
 - [`$app/env`]($app-env) exports `version`, which is useful for creating deployment-scoped caches
 - [`$app/manifest`]($app-manifest) exports `immutable` build files, your `assets`, and any `prerendered` content, allowing you to populate your caches
 
