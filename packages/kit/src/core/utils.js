@@ -112,3 +112,18 @@ export function list_files(dir, filter) {
 
 	return files;
 }
+
+/**
+ * Truncates a string in the middle with an ellipsis if it exceeds maxLength.
+ * @param {string} str
+ * @param {number} maxLength
+ * @returns {string}
+ */
+export function truncate_middle(str, maxLength) {
+	if (typeof str !== 'string' || str.length <= maxLength || maxLength <= 3) {
+		return str;
+	}
+	const charsToShow = Math.ceil((maxLength - 3) / 2);
+	const backChars = Math.floor((maxLength - 3) / 2);
+	return `${str.slice(0, charsToShow)}...${str.slice(str.length - backChars)}`;
+}
