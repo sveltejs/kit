@@ -1,5 +1,4 @@
 import { Adapter } from '@sveltejs/kit';
-import './ambient.js';
 import { RuntimeConfigKey } from './utils.js';
 
 export default function plugin(config?: Config): Adapter;
