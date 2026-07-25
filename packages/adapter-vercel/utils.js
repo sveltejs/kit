@@ -113,7 +113,7 @@ export function parse_isr_expiration(value, route_id) {
  * @returns {RuntimeKey}
  */
 export function resolve_runtime(default_key, override_key) {
-	const key = (override_key ?? default_key ?? get_default_runtime()).replace('experimental_', '');
+	const key = override_key ?? default_key ?? get_default_runtime();
 	assert_is_valid_runtime(key);
 	return key;
 }
@@ -167,5 +167,4 @@ function assert_is_valid_runtime(key) {
 	}
 }
 
-/** @typedef {Exclude<RuntimeKey, 'bun1.x'> | 'experimental_bun1.x'} RuntimeConfigKey */
 /** @typedef {typeof valid_runtimes[number]} RuntimeKey */
