@@ -2455,8 +2455,7 @@ let warned_on_replace_state_function = false;
  *
  * Returns a Promise that resolves when SvelteKit navigates (or fails to navigate, in which case the promise rejects) or the state change has been applied.
  *
- * Unless `shallow` is `true`, `goto` is intended for navigations to routes that belong to the app.
- * If the URL does not resolve to a route within the app, the returned promise will reject unless `shallow` is `true`.
+ * `goto` is intended for navigations to routes that belong to the app, and will reject if a route cannot be resolved.
  * For external URLs, use `window.location = url` to perform a full-page navigation instead of calling `goto(url)`.
  *
  * @param {string | URL} url Where to navigate to. Note that if you've set [`config.paths.base`](https://svelte.dev/docs/kit/configuration#paths) and the URL is root-relative, you need to prepend the base path if you want to navigate within the app.
@@ -2487,6 +2486,16 @@ export async function goto(url, opts = {}) {
 		);
 	}
 
+	const intent = await get_navigation_intent(url, false);
+
+	if (!intent) {
+		throw new Error(
+			DEV
+				? `Cannot use \`goto\` with a URL that does not resolve to a route within the app. Use \`window.location = "${url}"\` instead`
+				: 'goto: invalid URL'
+		);
+	}
+
 	if (opts.shallow) {
 		// Untrack to avoid triggering outer reactive contexts because we access page.X inside
 		return untrack(() =>
@@ -2497,20 +2506,11 @@ export async function goto(url, opts = {}) {
 					replace,
 					persist_state: opts.persistState ?? false,
 					noscroll: opts.noScroll ?? true,
-					keepfocus: opts.keepFocus ?? true
+					keepfocus: opts.keepFocus ?? true,
+					intent
 				},
 				'goto'
 			)
-		);
-	}
-
-	const intent = await get_navigation_intent(url, false);
-
-	if (!intent) {
-		throw new Error(
-			DEV
-				? `Cannot use \`goto\` with a URL that does not resolve to a route within the app. Use \`window.location = "${url}"\` instead`
-				: 'goto: invalid URL'
 		);
 	}
 
@@ -2765,10 +2765,15 @@ export async function replaceState(url, state) {
 /**
  * @param {string | URL} url
  * @param {App.PageState} state
- * @param {{ replace: boolean; persist_state: boolean; noscroll: boolean; keepfocus: boolean }} options
+ * @param {{ replace: boolean; persist_state: boolean; noscroll: boolean; keepfocus: boolean; intent?: NavigationIntent }} options
  * @param {'goto' | 'pushState' | 'replaceState'} caller
  */
-async function update_state(url, state, { replace, persist_state, noscroll, keepfocus }, caller) {
+async function update_state(
+	url,
+	state,
+	{ replace, persist_state, noscroll, keepfocus, intent },
+	caller
+) {
 	if (DEV) {
 		if (!started) {
 			throw new Error(`Cannot call ${caller}(...) before router is initialized`);
@@ -2784,7 +2789,6 @@ async function update_state(url, state, { replace, persist_state, noscroll, keep
 	}
 
 	const resolved = resolve_url(url);
-	const intent = await get_navigation_intent(resolved, false);
 	const nav =
 		// For backwards compatibility we don't trigger navigation hooks etc for push/replaceState
 		caller === 'goto'
