@@ -8,13 +8,13 @@ import {
 } from '@playwright/test';
 import { IncomingMessage, ServerResponse } from 'node:http';
 import '../types/index.d.ts';
-import { AfterNavigate, BeforeNavigate } from '@sveltejs/kit';
+import { AfterNavigate, BeforeNavigate, GotoOptions } from '@sveltejs/kit';
 
 export const test: TestType<
 	Omit<PlaywrightTestArgs, 'page'> &
 		PlaywrightTestOptions & {
 			app: {
-				goto(url: string, opts?: { replaceState?: boolean }): Promise<void>;
+				goto(url: string, opts?: GotoOptions): Promise<void>;
 				invalidate(url: string): Promise<void>;
 				beforeNavigate(fn: (navigation: BeforeNavigate) => void | boolean): void;
 				afterNavigate(fn: (navigation: AfterNavigate) => void): void;
