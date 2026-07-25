@@ -1,6 +1,5 @@
 /** @import { ServerHooks } from 'types' */
 import * as devalue from 'devalue';
-import { DEV } from 'esm-env';
 import { text } from '@sveltejs/kit';
 import { ENDPOINT_METHODS } from '../../constants.js';
 
