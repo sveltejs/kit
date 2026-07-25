@@ -63,6 +63,7 @@ if (!DEV && BROWSER) {
 
 	/** @type {() => Promise<boolean>} */
 	function check() {
+		if (updated.current) return Promise.resolve(true);
 		if (checking) return checking;
 
 		window.clearTimeout(timeout);
