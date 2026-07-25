@@ -1,5 +1,67 @@
 # @sveltejs/kit
 
+## 3.0.0-next.12
+
+### Major Changes
+
+- breaking: rename `Pathname` type to `Path` and `Asset` to `AssetPath` ([#16430](https://github.com/sveltejs/kit/pull/16430))
+  breaking: remove leading `/` from `Path` and `AssetPath`
+- breaking: write tsconfig to `node_modules/$app/tsconfig` ([#16458](https://github.com/sveltejs/kit/pull/16458))
+
+- breaking: error on `event.url`, `event.params` and `event.route` access inside queries ([#16452](https://github.com/sveltejs/kit/pull/16452))
+
+- breaking: delete `$service-worker` module ([#16450](https://github.com/sveltejs/kit/pull/16450))
+
+- breaking: detect new deployments on data, remote, and form action responses, tab focus, and visibility change, and default `version.pollInterval` to 1 hour ([#16496](https://github.com/sveltejs/kit/pull/16496))
+
+### Minor Changes
+
+- feat: add `$app/manifest` module with `immutable`, `assets`, `prerendered`, and `routes` exports ([#16372](https://github.com/sveltejs/kit/pull/16372))
+
+- feat: validate that all remote form fields were created with form.fields.foo.as(...) ([#16331](https://github.com/sveltejs/kit/pull/16331))
+
+- feat: make `$app/paths` importable in service workers ([#16441](https://github.com/sveltejs/kit/pull/16441))
+
+- feat: `$app/service-worker` module ([#16458](https://github.com/sveltejs/kit/pull/16458))
+
+- feat: better tsconfig validation ([#16458](https://github.com/sveltejs/kit/pull/16458))
+
+- fix: default cookies to `secure` to `false` during development ([#16462](https://github.com/sveltejs/kit/pull/16462))
+
+### Patch Changes
+
+- fix: allow `undefined` values to be passed to form field `.as(...)` where applicable ([#15681](https://github.com/sveltejs/kit/pull/15681))
+
+- fix: include queries refreshed from within another query in the serialized response ([#16461](https://github.com/sveltejs/kit/pull/16461))
+
+- fix: generate sourcemaps for remote modules ([#16440](https://github.com/sveltejs/kit/pull/16440))
+
+- fix: avoid empty getElementById() call on hash routing navigation ([#16448](https://github.com/sveltejs/kit/pull/16448))
+
+- fix: warn if hook files are spelled as "hook" instead of "hooks" ([#16483](https://github.com/sveltejs/kit/pull/16483))
+
+- chore: deprecate the `alias` option ([#16470](https://github.com/sveltejs/kit/pull/16470))
+
+- fix: prevent infinite loops when server-side queries refresh each other in a cycle during the single-flight drain ([#16461](https://github.com/sveltejs/kit/pull/16461))
+
+- fix: populate `version` in service workers ([#16434](https://github.com/sveltejs/kit/pull/16434))
+
+- fix: resolve remote modules as external during dev prebundling so packages can re-export remote functions ([#16426](https://github.com/sveltejs/kit/pull/16426))
+
+- fix: refetch route-tracking server data when navigating away from an error page ([#16381](https://github.com/sveltejs/kit/pull/16381))
+
+- fix: serialize `query(...).set(...)`/`query(...).refresh()` values into the rendered HTML when called from within a query during SSR ([#16461](https://github.com/sveltejs/kit/pull/16461))
+
+- fix: fall back to the page's form actions when a sibling endpoint has no POST handler ([#16349](https://github.com/sveltejs/kit/pull/16349))
+
+- fix: return a lightweight 404 instead of rendering the error page for subresource requests ([#16463](https://github.com/sveltejs/kit/pull/16463))
+
+- fix: preserve stripped path prefixes by making trailing-slash redirects relative ([#16431](https://github.com/sveltejs/kit/pull/16431))
+
+- chore: deduplicate type-stripping logic in `tweak_types` ([#16454](https://github.com/sveltejs/kit/pull/16454))
+
+- fix: more informative error message when running a command inside a query or prerender function ([`eb5c973`](https://github.com/sveltejs/kit/commit/eb5c9737b6d74c53f572b3e047faa5947052ced2))
+
 ## 3.0.0-next.11
 
 ### Major Changes

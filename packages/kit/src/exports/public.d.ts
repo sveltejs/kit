@@ -824,13 +824,7 @@ export interface KitConfig {
 		 */
 		resolution?: 'client' | 'server';
 	};
-	serviceWorker?: {
-		/**
-		 * Determine which files in your `static` directory will be available in `$service-worker.files`.
-		 * @default (filename) => !/\.DS_Store/.test(filename)
-		 */
-		files?: (file: string) => boolean;
-	} & (
+	serviceWorker?:
 		| {
 				/**
 				 * Whether to automatically register the service worker, if it exists.
@@ -848,8 +842,7 @@ export interface KitConfig {
 				 * @default true
 				 */
 				register?: false;
-		  }
-	);
+		  };
 	/**
 	 * Options for enabling [OpenTelemetry](https://opentelemetry.io/) tracing for SvelteKit operations.
 	 * @default { server: false }
@@ -861,6 +854,9 @@ export interface KitConfig {
 		 */
 		server?: boolean;
 	};
+	/**
+	 * @deprecated Add configuration to `tsconfig.json` directly
+	 */
 	typescript?: {
 		/**
 		 * A function that allows you to edit the generated `tsconfig.json`. You can mutate the config (recommended) or return a new one.
@@ -875,9 +871,9 @@ export interface KitConfig {
 	};
 	/**
 	 * Client-side navigation can be buggy if you deploy a new version of your app while people are using it. If the code for the new page is already loaded, it may have stale content; if it isn't, the app's route manifest may point to a JavaScript file that no longer exists.
-	 * SvelteKit helps you solve this problem through version management.
+	 * SvelteKit helps you solve this problem through version management. The current version is included in data, remote, and form action responses via the `x-sveltekit-version` header, so SvelteKit can detect new deployments without polling — for example when a navigation triggers a server `load` function, or when a remote function is called. SvelteKit also checks for new versions when the tab regains focus or becomes visible.
 	 * If SvelteKit encounters an error while loading the page and detects that a new version has been deployed (using the `name` specified here, which defaults to a timestamp of the build) it will fall back to traditional full-page navigation.
-	 * Not all navigations will result in an error though, for example if the JavaScript for the next page is already loaded. If you still want to force a full-page navigation in these cases, use techniques such as setting the `pollInterval` and then using `beforeNavigate`:
+	 * Not all navigations will result in an error though, for example if the JavaScript for the next page is already loaded. If you still want to force a full-page navigation in these cases, use `beforeNavigate`:
 	 * ```html
 	 * /// file: +layout.svelte
 	 * <script>
@@ -892,7 +888,7 @@ export interface KitConfig {
 	 * </script>
 	 * ```
 	 *
-	 * If you set `pollInterval` to a non-zero value, SvelteKit will poll for new versions in the background and set the value of [`updated.current`](https://svelte.dev/docs/kit/$app-state#updated) `true` when it detects one.
+	 * In addition to these checks, SvelteKit polls for new versions on an interval and sets [`updated.current`](https://svelte.dev/docs/kit/$app-state#updated) to `true` when it detects one. Set `pollInterval` to `0` to disable polling (the header- and event-based checks will still run).
 	 */
 	version?: {
 		/**
@@ -919,8 +915,8 @@ export interface KitConfig {
 		 */
 		name?: string;
 		/**
-		 * The interval in milliseconds to poll for version changes. If this is `0`, no polling occurs.
-		 * @default 0
+		 * The interval in milliseconds to poll for version changes. If this is `0`, no polling occurs. SvelteKit also checks for new versions on server responses (via the `x-sveltekit-version` header) and when the tab regains focus or becomes visible, so polling is only needed for long-lived sessions on a single page.
+		 * @default 3600000
 		 */
 		pollInterval?: number;
 	};

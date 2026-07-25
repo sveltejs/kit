@@ -10,6 +10,7 @@ import { runtime_directory } from './utils.js';
 import { resolve_entry } from '../utils/filesystem.js';
 import { handle_issues, validate } from '../exports/internal/env.js';
 import { get_config_aliases } from '../exports/vite/utils.js';
+import { get_runner } from '../runner.js';
 
 /**
  * @typedef {'public' | 'private'} EnvType
@@ -52,12 +53,14 @@ export async function load_explicit_env(kit, file, root, mode) {
 	/** @type {Record<string, EnvVarConfig<any>>} */
 	let variables;
 
+	const runner = get_runner(server);
+
 	/** @type {import('../runtime/app/env/internal.js')} */ (
-		await server.ssrLoadModule(`${runtime_directory}/app/env/internal.js`)
+		await runner.import(`${runtime_directory}/app/env/internal.js`)
 	).set_building();
 
 	try {
-		({ variables } = await server.ssrLoadModule(file));
+		({ variables } = await runner.import(file));
 
 		if (!variables || typeof variables !== 'object') {
 			throw new Error(`${file} must export a variables object`);
@@ -262,7 +265,11 @@ export function create_sveltekit_env_service_worker(
 	return dedent`
 		import { env } from '${base}/${app_dir}/env.js';
 
-		${global} = { env, version: ${JSON.stringify(version)} };
+		${global} = {
+			base: location.pathname.split('/').slice(0, -1).join('/'),
+			env,
+			version: ${JSON.stringify(version)}
+		};
 	`;
 }
 
@@ -291,6 +298,7 @@ export function create_sveltekit_env_service_worker_dev(variables, env, version,
 
 	return dedent`
 		${global} = {
+			base: location.pathname.split('/').slice(0, -1).join('/'),
 			env: {
 				${properties.join(',\n\t\t') || '// empty'}
 			},

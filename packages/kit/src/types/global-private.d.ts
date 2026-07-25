@@ -6,6 +6,8 @@ declare global {
 	const __SVELTEKIT_APP_VERSION__: string;
 	const __SVELTEKIT_APP_VERSION_FILE__: string;
 	const __SVELTEKIT_APP_VERSION_POLL_INTERVAL__: number;
+	/** True if version checks are enabled (i.e. `bundleStrategy !== 'inline'`) */
+	const __SVELTEKIT_APP_VERSION_CHECKS_ENABLED__: boolean;
 	/**
 	 * True if the user ran `vite dev`. This is different from `esm-env` because
 	 * it is influenced by `NODE_ENV` which can still be true during `vite preview`

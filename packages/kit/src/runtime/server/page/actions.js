@@ -7,7 +7,7 @@ import { HttpError, Redirect, ActionFailure, SvelteKitError } from '@sveltejs/ki
 import { with_request_store, merge_tracing } from '@sveltejs/kit/internal/server';
 import { normalize_error } from '../../../utils/error.js';
 import { is_form_content_type, negotiate } from '../../../utils/http.js';
-import { create_replacer } from '../utils.js';
+import { create_replacer, with_version_header } from '../utils.js';
 import { handle_error_and_jsonify } from '../errors.js';
 import { record_span } from '../../telemetry/record_span.js';
 
@@ -95,7 +95,7 @@ export async function handle_action_json_request(event, event_state, options, se
 			});
 		} else {
 			// no data returned — use 204 No Content (without a body, per the spec)
-			return new Response(null, { status: 204 });
+			return with_version_header(new Response(null, { status: 204 }));
 		}
 	} catch (e) {
 		const err = normalize_error(e);
@@ -148,7 +148,7 @@ export function action_json_redirect(redirect) {
  * @param {ResponseInit} [init]
  */
 function action_json(data, init) {
-	return json(data, init);
+	return with_version_header(json(data, init));
 }
 
 /**

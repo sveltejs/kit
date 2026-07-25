@@ -939,6 +939,8 @@ test.describe('data-sveltekit attributes', () => {
 		expect(requests.length).toBe(2);
 
 		requests.length = 0;
+		// park the mouse so the previous phase's cursor position can't trigger a preload after hydration
+		await page.mouse.move(0, 0);
 		await page.goto('/data-sveltekit/preload-data');
 		await page.locator('#two').hover();
 		await page.locator('#two').dispatchEvent('touchstart');
@@ -949,6 +951,7 @@ test.describe('data-sveltekit attributes', () => {
 		expect(requests.length).toBe(2);
 
 		requests.length = 0;
+		await page.mouse.move(0, 0);
 		await page.goto('/data-sveltekit/preload-data');
 		await page.locator('#three').hover();
 		await page.locator('#three').dispatchEvent('touchstart');
@@ -959,6 +962,7 @@ test.describe('data-sveltekit attributes', () => {
 		expect(requests.length).toBe(0);
 
 		requests.length = 0;
+		await page.mouse.move(0, 0);
 		await page.goto('/data-sveltekit/preload-data');
 		await page.locator('#tap').hover();
 		await page.locator('#tap').dispatchEvent('touchstart');
@@ -969,6 +973,7 @@ test.describe('data-sveltekit attributes', () => {
 		expect(requests.length).toBe(2);
 
 		requests.length = 0;
+		await page.mouse.move(0, 0);
 		await page.goto('/data-sveltekit/preload-data');
 		await page.locator('#dynamic').hover();
 		await page.locator('#dynamic').dispatchEvent('touchstart');

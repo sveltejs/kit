@@ -15,6 +15,6 @@
 		},
 		"types": ["node"]
 	},
-	"include": ["./**/*.js", "./**/*.ts", ".svelte-kit/non-ambient.d.ts"],
+	"include": ["./**/*.js", "./**/*.ts", ".svelte-kit/non-ambient.d.ts", "node_modules/$app/types"],
 	"exclude": ["..svelte-kit/**"]
 }

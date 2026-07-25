@@ -6,7 +6,7 @@ import { app, _goto, live_query_map, query_map, query_responses } from '../clien
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import { untrack } from 'svelte';
 import { create_remote_key, split_remote_key } from '../../shared.js';
-import { navigating, page } from '../state.svelte.js';
+import { navigating, page, notify_version } from '../state.svelte.js';
 
 /** Indicates a query function, as opposed to a query instance */
 export const QUERY_FUNCTION_ID = Symbol('sveltekit.query_function_id');
@@ -112,6 +112,9 @@ export function get_remote_request_headers() {
  */
 export async function remote_request(url, init) {
 	const response = await fetch(url, init);
+
+	// detect new deployments from the response header
+	notify_version(response.headers.get('x-sveltekit-version'));
 
 	if (!response.ok) {
 		const result = await response.json().catch(() => ({

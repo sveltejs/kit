@@ -142,15 +142,13 @@ const get_defaults = (prefix = '') => ({
 		},
 		version: {
 			name: Date.now().toString(),
-			pollInterval: 0
+			pollInterval: 3_600_000
 		}
 	}
 });
 
 test('fills in defaults', () => {
 	const validated = validate_config({});
-
-	assert.equal(validated.kit.serviceWorker.files(''), true);
 
 	remove_keys(validated, ([, v]) => typeof v === 'function');
 
@@ -211,8 +209,6 @@ test('fills in partial blanks', () => {
 			}
 		}
 	});
-
-	assert.equal(validated.kit.serviceWorker.files(''), true);
 
 	remove_keys(validated, ([, v]) => typeof v === 'function');
 

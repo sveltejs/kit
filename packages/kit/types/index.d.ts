@@ -796,13 +796,7 @@ declare module '@sveltejs/kit' {
 			 */
 			resolution?: 'client' | 'server';
 		};
-		serviceWorker?: {
-			/**
-			 * Determine which files in your `static` directory will be available in `$service-worker.files`.
-			 * @default (filename) => !/\.DS_Store/.test(filename)
-			 */
-			files?: (file: string) => boolean;
-		} & (
+		serviceWorker?:
 			| {
 					/**
 					 * Whether to automatically register the service worker, if it exists.
@@ -820,8 +814,7 @@ declare module '@sveltejs/kit' {
 					 * @default true
 					 */
 					register?: false;
-			  }
-		);
+			  };
 		/**
 		 * Options for enabling [OpenTelemetry](https://opentelemetry.io/) tracing for SvelteKit operations.
 		 * @default { server: false }
@@ -833,6 +826,9 @@ declare module '@sveltejs/kit' {
 			 */
 			server?: boolean;
 		};
+		/**
+		 * @deprecated Add configuration to `tsconfig.json` directly
+		 */
 		typescript?: {
 			/**
 			 * A function that allows you to edit the generated `tsconfig.json`. You can mutate the config (recommended) or return a new one.
@@ -847,9 +843,9 @@ declare module '@sveltejs/kit' {
 		};
 		/**
 		 * Client-side navigation can be buggy if you deploy a new version of your app while people are using it. If the code for the new page is already loaded, it may have stale content; if it isn't, the app's route manifest may point to a JavaScript file that no longer exists.
-		 * SvelteKit helps you solve this problem through version management.
+		 * SvelteKit helps you solve this problem through version management. The current version is included in data, remote, and form action responses via the `x-sveltekit-version` header, so SvelteKit can detect new deployments without polling — for example when a navigation triggers a server `load` function, or when a remote function is called. SvelteKit also checks for new versions when the tab regains focus or becomes visible.
 		 * If SvelteKit encounters an error while loading the page and detects that a new version has been deployed (using the `name` specified here, which defaults to a timestamp of the build) it will fall back to traditional full-page navigation.
-		 * Not all navigations will result in an error though, for example if the JavaScript for the next page is already loaded. If you still want to force a full-page navigation in these cases, use techniques such as setting the `pollInterval` and then using `beforeNavigate`:
+		 * Not all navigations will result in an error though, for example if the JavaScript for the next page is already loaded. If you still want to force a full-page navigation in these cases, use `beforeNavigate`:
 		 * ```html
 		 * /// file: +layout.svelte
 		 * <script>
@@ -864,7 +860,7 @@ declare module '@sveltejs/kit' {
 		 * </script>
 		 * ```
 		 *
-		 * If you set `pollInterval` to a non-zero value, SvelteKit will poll for new versions in the background and set the value of [`updated.current`](https://svelte.dev/docs/kit/$app-state#updated) `true` when it detects one.
+		 * In addition to these checks, SvelteKit polls for new versions on an interval and sets [`updated.current`](https://svelte.dev/docs/kit/$app-state#updated) to `true` when it detects one. Set `pollInterval` to `0` to disable polling (the header- and event-based checks will still run).
 		 */
 		version?: {
 			/**
@@ -891,8 +887,8 @@ declare module '@sveltejs/kit' {
 			 */
 			name?: string;
 			/**
-			 * The interval in milliseconds to poll for version changes. If this is `0`, no polling occurs.
-			 * @default 0
+			 * The interval in milliseconds to poll for version changes. If this is `0`, no polling occurs. SvelteKit also checks for new versions on server responses (via the `x-sveltekit-version` header) and when the tab regains focus or becomes visible, so polling is only needed for long-lived sessions on a single page.
+			 * @default 3600000
 			 */
 			pollInterval?: number;
 		};
@@ -3616,6 +3612,19 @@ declare module '$app/server' {
 	export {};
 }
 
+declare module '$app/service-worker' {
+	/**
+	 * The execution context of a service worker. This export exists to make it easier to
+	 * use service workers with the correct types, provided the importing module is governed
+	 * by a `tsconfig.json` that extends [`$app/tsconfig/service-worker`](https://svelte.dev/docs/kit/$app-tsconfig-service-worker).
+	 *
+	 */
+	// @ts-ignore
+	export const self: ServiceWorkerGlobalScope;
+
+	export {};
+}
+
 declare module '$app/state' {
 	/**
 	 * A read-only reactive object with information about the current page, serving several use cases:
@@ -3667,7 +3676,7 @@ declare module '$app/state' {
 		complete: null;
 	};
 	/**
-	 * A read-only reactive value that's initially `false`. If [`version.pollInterval`](https://svelte.dev/docs/kit/configuration#version) is a non-zero value, SvelteKit will poll for new versions of the app and update `current` to `true` when it detects one. `updated.check()` will force an immediate check, regardless of polling.
+	 * A read-only reactive value that's initially `false`. SvelteKit checks for new versions on data, remote, and form action responses (via the `x-sveltekit-version` header), when the tab regains focus or becomes visible, and on a poll interval (see [`version.pollInterval`](https://svelte.dev/docs/kit/configuration#version)). `updated.current` is set to `true` when a new version is detected. `updated.check()` will force an immediate check, regardless of polling.
 	 * */
 	export const updated: {
 		get current(): boolean;
@@ -3760,35 +3769,6 @@ declare module '$app/manifest' {
 	 * An array of objects with an `id` property representing the routes in your app.
 	 */
 	export const routes: Array<{ id: import('$app/types').RouteId }>;
-}
-
-/**
- * This module is only available to [service workers](https://svelte.dev/docs/kit/service-workers).
- */
-declare module '$service-worker' {
-	/**
-	 * The `base` path of the deployment. Typically this is equivalent to `config.paths.base`, but it is calculated from `location.pathname` meaning that it will continue to work correctly if the site is deployed to a subdirectory.
-	 * Note that there is a `base` but no `assets`, since service workers cannot be used if `config.paths.assets` is specified.
-	 */
-	export const base: string;
-	/**
-	 * An array of URL strings representing the files generated by Vite, suitable for caching with `cache.addAll(build)`.
-	 * During development, this is an empty array.
-	 */
-	export const build: string[];
-	/**
-	 * An array of URL strings representing the files in your static directory, or whatever directory is specified by `config.files.assets`. You can customize which files are included from `static` directory using [`config.serviceWorker.files`](https://svelte.dev/docs/kit/configuration#serviceWorker)
-	 */
-	export const files: string[];
-	/**
-	 * An array of pathnames corresponding to prerendered pages and endpoints.
-	 * During development, this is an empty array.
-	 */
-	export const prerendered: string[];
-	/**
-	 * See [`config.version`](https://svelte.dev/docs/kit/configuration#version). It's useful for generating unique cache names inside your service worker, so that a later deployment of your app can invalidate old caches.
-	 */
-	export const version: string;
 }
 
 /**

@@ -51,8 +51,6 @@ function get_pathnames_for_trailing_slash(pathname, route) {
 // people could use to type their own components.
 // The T generic is needed or else there's a "all declarations must have identical type parameters" error.
 const template = `
-${GENERATED_COMMENT}
-
 declare module "svelte/elements" {
 	export interface HTMLAttributes<T> {
 		'data-sveltekit-keepfocus'?: true | false | '' | undefined | null;
@@ -72,16 +70,15 @@ declare module "svelte/elements" {
 		'data-sveltekit-replacestate'?: true | false | '' | undefined | null;
 	}
 }
-
-export {};
 `;
 
 /**
  * Generate app types interface extension
  * @param {import('types').ManifestData} manifest_data
  * @param {import('types').ValidatedKitConfig} config
+ * @param {string} dir
  */
-function generate_app_types(manifest_data, config) {
+function generate_app_types(manifest_data, config, dir) {
 	/** @type {Map<string, string>} */
 	const matcher_types = new Map();
 
@@ -96,7 +93,7 @@ function generate_app_types(manifest_data, config) {
 					resolve_entry(config.files.params) ??
 					config.files.params.replace(/\.(js|ts)$/, '') + '.js';
 
-				return posixify(path.relative(config.outDir, params_file));
+				return posixify(path.relative(dir, params_file));
 			};
 
 			type = `import('@sveltejs/kit').MatcherParam<(typeof import('${path_to_params()}').params)[${JSON.stringify(matcher)}]>`;
@@ -253,13 +250,22 @@ function generate_app_types(manifest_data, config) {
 }
 
 /**
- * Writes non-ambient declarations to the output directory
+ * Writes `node_modules/$app/types/index.d.ts`. This file contains
+ * declarations for `$app/types` and `svelte/elements`, and
+ * imports `env.ts` which declares `$app/env/(public|private)`
  * @param {import('types').ValidatedKitConfig} config
  * @param {import('types').ManifestData} manifest_data
+ * @param {string} root
  */
-export function write_non_ambient(config, manifest_data) {
-	const app_types = generate_app_types(manifest_data, config);
-	const content = [template, app_types].join('\n\n');
+export function write_app_types(config, manifest_data, root) {
+	const dir = path.join(root, 'node_modules/$app/types');
 
-	write_if_changed(path.join(config.outDir, 'non-ambient.d.ts'), content);
+	const content = [
+		GENERATED_COMMENT,
+		`import '@sveltejs/kit';\nimport './env';`,
+		generate_app_types(manifest_data, config, dir),
+		template.trim()
+	].join('\n\n');
+
+	write_if_changed(path.join(dir, 'index.d.ts'), content);
 }

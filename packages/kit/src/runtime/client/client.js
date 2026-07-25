@@ -40,7 +40,7 @@ import {
 	validate_load_response
 } from '../shared.js';
 import { get_message, get_status } from '../../utils/error.js';
-import { page, update, navigating, updated } from './state.svelte.js';
+import { page, update, navigating, updated, notify_version } from './state.svelte.js';
 import { payload } from './payload.js';
 import { add_data_suffix, add_resolution_suffix } from '../pathname.js';
 import { noop_span } from '../telemetry/noop.js';
@@ -2987,11 +2987,17 @@ function _start_router() {
 			history.scrollRestoration = 'auto';
 		}
 	});
-
 	addEventListener('visibilitychange', () => {
 		if (document.visibilityState === 'hidden') {
 			persist_state();
+		} else {
+			// the tab just became visible — a good time to check for a new deployment
+			void updated.check();
 		}
+	});
+
+	addEventListener('focus', () => {
+		void updated.check();
 	});
 
 	// @ts-expect-error this isn't supported everywhere yet
@@ -3467,6 +3473,9 @@ async function load_data(url, invalid) {
 	// use window.fetch directly to allow using a 3rd party-patched fetch implementation
 	const fetcher = DEV ? dev_fetch : window.fetch;
 	const res = await fetcher(data_url.href, {});
+
+	// detect new deployments from the response header
+	notify_version(res.headers.get('x-sveltekit-version'));
 
 	if (!res.ok) {
 		// error message is a JSON-stringified string which devalue can't handle at the top level
