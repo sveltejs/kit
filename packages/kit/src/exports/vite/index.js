@@ -1108,9 +1108,10 @@ function kit({ svelte_config }) {
 				]
 			},
 			handler(id) {
-				if (!immutable) {
-					const manifest = vite_client_manifest ?? vite_server_manifest;
-					immutable = collect_immutable(manifest, kit.appDir, `${out}/client`);
+				if (!manifest_data_code) {
+					// the client build computes `immutable`, unless it was skipped
+					// because every route has `csr: false`
+					immutable ??= collect_immutable(vite_server_manifest, kit.appDir, new Set());
 
 					manifest_data_code = dedent`
 					export const immutable = [
@@ -1694,11 +1695,37 @@ function kit({ svelte_config }) {
 					read(`${out}/client/.vite/manifest.json`)
 				));
 
+				/**
+				 * @param {string} entry
+				 * @param {boolean} [add_dynamic_css]
+				 */
+				const deps_of = (entry, add_dynamic_css = false) =>
+					find_deps(vite_manifest, posixify(path.relative(root, entry)), add_dynamic_css, root);
+
+				// the inline bundle and stylesheet are deleted further down, after
+				// being inlined into the page, so they must not appear in `immutable`
+				/** @type {Set<string>} */
+				const inlined = new Set();
+				/** @type {Rolldown.OutputAsset | undefined} */
+				let inline_style;
+
+				if (kit.output.bundleStrategy === 'inline') {
+					inline_style = /** @type {Rolldown.OutputAsset | undefined} */ (
+						client_chunks.find(
+							(chunk) =>
+								chunk.type === 'asset' && chunk.names.length === 1 && chunk.names[0] === 'style.css'
+						)
+					);
+
+					inlined.add(deps_of(`${runtime_directory}/client/bundle.js`).file);
+					if (inline_style) inlined.add(inline_style.fileName);
+				}
+
 				// Replace manifest placeholders in client output. `immutable` is
 				// computed from the Vite client manifest, `assets` and `routes`
 				// from `manifest_data`. `prerendered` is left as a placeholder
 				// for now — it's replaced after prerendering completes.
-				const immutable = collect_immutable(vite_manifest, kit.appDir, `${out}/client`);
+				immutable = collect_immutable(vite_manifest, kit.appDir, inlined);
 
 				replace_manifest_placeholder_variables(client_chunks, `${out}/client`, {
 					immutable,
@@ -1709,13 +1736,6 @@ function kit({ svelte_config }) {
 				// Now that the client build is done, replace the `build` sentinel
 				// in the SSR output with the real build files
 				replace_manifest_placeholder_strings(`${out}/server`, { immutable });
-
-				/**
-				 * @param {string} entry
-				 * @param {boolean} [add_dynamic_css]
-				 */
-				const deps_of = (entry, add_dynamic_css = false) =>
-					find_deps(vite_manifest, posixify(path.relative(root, entry)), add_dynamic_css, root);
 
 				const has_explicit_dynamic_public_env = Object.values(explicit_env_config ?? {}).some(
 					(variable) => variable.public && !variable.static
@@ -1804,25 +1824,16 @@ function kit({ svelte_config }) {
 					};
 
 					if (svelte_config.kit.output.bundleStrategy === 'inline') {
-						const style = /** @type {Rolldown.OutputAsset} */ (
-							client_chunks.find(
-								(chunk) =>
-									chunk.type === 'asset' &&
-									chunk.names.length === 1 &&
-									chunk.names[0] === 'style.css'
-							)
-						);
-
 						build_data.client.inline = {
 							script: read(`${out}/client/${start.file}`),
-							style: /** @type {string | undefined} */ (style?.source)
+							style: /** @type {string | undefined} */ (inline_style?.source)
 						};
 
 						// the bundle and stylesheet are inlined into the page, so the
 						// emitted files are never loaded
 						fs.unlinkSync(`${out}/client/${start.file}`);
 						fs.rmSync(`${out}/client/${start.file}.map`, { force: true });
-						if (style) fs.unlinkSync(`${out}/client/${style.fileName}`);
+						if (inline_style) fs.unlinkSync(`${out}/client/${inline_style.fileName}`);
 					}
 				}
 
@@ -2067,18 +2078,18 @@ function find_overridden_config(config, resolved_config, enforced_config, path, 
  *
  * @param {Manifest} manifest
  * @param {string} app_dir
- * @param {string} client_out
+ * @param {Set<string>} inlined files deleted from the output after being inlined into the page
  * @returns {Array<{ path: string }>}
  */
-const collect_immutable = (manifest, app_dir, client_out) => {
+const collect_immutable = (manifest, app_dir, inlined) => {
 	const prefix = `${app_dir}/immutable`;
 
 	/** @type {Set<string>} */
-	const candidates = new Set();
+	const files = new Set();
 
 	/** @param {string} file */
 	const add = (file) => {
-		if (file.startsWith(prefix)) candidates.add(file);
+		if (file.startsWith(prefix) && !inlined.has(file)) files.add(file);
 	};
 
 	for (const key in manifest) {
@@ -2088,15 +2099,7 @@ const collect_immutable = (manifest, app_dir, client_out) => {
 		if (assets) for (let i = 0; i < assets.length; i++) add(assets[i]);
 	}
 
-	/** @type {Array<{ path: string }>} */
-	const immutable = [];
-
-	for (const path of candidates) {
-		// inlined files are deleted from the output (`bundleStrategy: 'inline'`)
-		if (fs.existsSync(`${client_out}/${path}`)) immutable.push({ path });
-	}
-
-	return immutable;
+	return Array.from(files, (path) => ({ path }));
 };
 
 /**
