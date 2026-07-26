@@ -501,12 +501,11 @@ async function _start(_app, _target, data) {
 	default_layout_loader = _app.nodes[0];
 	default_error_loader = _app.nodes[1];
 
-	const [root_layout, root_error] = await Promise.all([
-		default_layout_loader(),
-		default_error_loader()
-	]);
+	const [root_layout] = await Promise.all([default_layout_loader(), default_error_loader()]);
 
-	const tree = new RenderNode(root_layout.component, root_error.component);
+	// the root boundary stays unarmed: the root +error.svelte renders inside the root
+	// layout, at the boundary of the node below it
+	const tree = new RenderNode(root_layout.component, undefined);
 
 	props = new Props({
 		page,
@@ -1018,7 +1017,29 @@ async function get_navigation_result_from_branch({
 	let data = {};
 	let data_changed = !page;
 
+	let error_components;
+	if (errors) {
+		let last_idx = -1;
+		error_components = await Promise.all(
+			// eslint-disable-next-line @typescript-eslint/await-thenable
+			branch
+				.map((b, i) => {
+					if (i === 0) return undefined;
+					if (!b) return null;
+
+					i--;
+					while (i > last_idx + 1 && !errors[i]) i -= 1;
+					last_idx = i;
+					return errors[i]?.()
+						.then((e) => e.component)
+						.catch(() => undefined);
+				})
+				.filter((e) => e !== null)
+		);
+	}
+
 	let current_node = result.props.tree;
+	let current_depth = 1;
 
 	/** @type {RenderNode | undefined} */
 	let previous_node = props.tree;
@@ -1054,12 +1075,9 @@ async function get_navigation_result_from_branch({
 			const next = branch[next_index];
 
 			if (next) {
-				const error_loader =
-					errors?.slice(0, next_index + 1).findLast((x) => x) ?? default_error_loader;
-
 				current_node = current_node.child = new RenderNode(
 					next.node.component,
-					(await error_loader()).component
+					error_components?.[current_depth++]
 				);
 
 				previous_node = previous_node?.child;

@@ -982,6 +982,7 @@ test.describe('server error boundaries', () => {
 		await expect(page.locator('#message')).toContainText(
 			'render error (500 Internal Error, on /server-error-boundary)'
 		);
+		await expect(page.locator('#nested-layout')).toHaveCount(0);
 	});
 
 	test('catches nested server render error and shows nested +error.svelte', async ({ page }) => {
