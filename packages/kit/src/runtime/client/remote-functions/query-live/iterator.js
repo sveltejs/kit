@@ -37,7 +37,10 @@ export async function* create_live_iterator(
 			error: response.statusText
 		}));
 
-		throw new HttpError(result.status ?? response.status ?? 500, result.error);
+		throw new HttpError(
+			result.error?.status ?? result.status ?? response.status ?? 500,
+			result.error
+		);
 	}
 
 	if (response.headers.get('content-type')?.includes('application/json')) {
