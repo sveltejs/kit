@@ -2193,15 +2193,16 @@ async function navigate({
 		} else {
 			apply_navigation_result(navigation_result);
 
-			// Reset any boundaries that failed on a previous navigation now that the
-			// new props are applied, otherwise the stale `+error.svelte` stays
-			// mounted above the new route's content. See sveltejs/kit#15694.
-			for (const reset_boundary of resetters) {
-				reset_boundary();
-			}
-			resetters.clear();
-
-			commit_promise = settled();
+			// Reset any boundaries that failed on a previous navigation once the new
+			// props have flushed, otherwise the stale `+error.svelte` stays mounted
+			// above the new route's content. Resetting before the flush would re-render
+			// the old content, at a depth the new tree may not have. See sveltejs/kit#15694.
+			commit_promise = settled().then(() => {
+				for (const reset_boundary of resetters) {
+					reset_boundary();
+				}
+				resetters.clear();
+			});
 		}
 
 		has_navigated = true;
