@@ -117,7 +117,7 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 					return await fetch(request);
 				}
 
-				if (has_prerendered_path(manifest, paths.base + decoded)) {
+				if (has_prerendered_path(manifest, decoded)) {
 					// The path of something prerendered could match a different route
 					// that is still in the manifest, leading to the wrong route being loaded.
 					// We therefore bail early here. The prerendered logic is different for
