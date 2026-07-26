@@ -11,6 +11,7 @@ import { posixify } from '../../../utils/os.js';
  * @param {typeof import('vite')} vite
  * @param {string} out
  * @param {Array<{ hash: string, file: string }>} remotes
+ * @param {Map<string, string>} remote_original_by_hash
  * @param {ServerMetadata} metadata
  * @param {string} cwd
  * @param {(Rolldown.OutputAsset | Rolldown.OutputChunk)[]} server_chunks
@@ -20,6 +21,7 @@ export async function treeshake_prerendered_remotes(
 	vite,
 	out,
 	remotes,
+	remote_original_by_hash,
 	metadata,
 	cwd,
 	server_chunks,
@@ -45,11 +47,11 @@ export async function treeshake_prerendered_remotes(
 
 		if (prerendered.length === 0) continue; // nothing to treeshake
 
-		// remove file extension
-		const remote_filename = path.basename(remote.file).split('.').slice(0, -1).join('.');
+		const original_id = remote_original_by_hash.get(remote.hash);
+		if (!original_id) continue;
 
 		const remote_chunk = server_chunks.find((chunk) => {
-			return chunk.name === remote_filename;
+			return chunk.type === 'chunk' && chunk.moduleIds.includes(original_id);
 		});
 
 		if (!remote_chunk) continue;
@@ -116,13 +118,14 @@ export async function treeshake_prerendered_remotes(
 			})
 		);
 
-		for (const output of bundle.output) {
-			if (output.type !== 'chunk' || output.name !== 'treeshaken') return;
-
-			fs.writeFileSync(chunk_path, output.code);
+		const chunk = bundle.output.find(
+			(output) => output.type === 'chunk' && output.name === 'treeshaken'
+		);
+		if (chunk && chunk.type === 'chunk') {
+			fs.writeFileSync(chunk_path, chunk.code);
 
 			const chunk_sourcemap = bundle.output.find(
-				(o) => o.type === 'asset' && o.fileName === output.fileName + '.map'
+				(output) => output.type === 'asset' && output.fileName === chunk.fileName + '.map'
 			);
 			if (chunk_sourcemap && chunk_sourcemap.type === 'asset') {
 				fs.writeFileSync(chunk_path + '.map', chunk_sourcemap.source);

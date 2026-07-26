@@ -23,6 +23,19 @@ test.describe('remote functions', () => {
 		expect(code.includes('const with_read = prerender(')).toBe(false);
 	});
 
+	test('non-dynamic prerendered remote functions with colliding basenames are treeshaken', () => {
+		test.skip(!!process.env.DEV, 'only applicable after build');
+		const chunks = path.join(root, '.svelte-kit', 'output', 'server', 'chunks');
+		const code = fs
+			.readdirSync(chunks)
+			.filter((file) => file.endsWith('.js'))
+			.map((file) => fs.readFileSync(path.join(chunks, file), 'utf8'))
+			.join('\n');
+
+		expect(code).not.toContain('++invocations');
+		expect(code).not.toContain('() => "hello"');
+	});
+
 	test("form doesn't refresh queries when not a remote request", async ({ page }) => {
 		await page.goto(`/remote/form/noop-refresh-non-enhanced/${Date.now()}${Math.random()}`);
 
