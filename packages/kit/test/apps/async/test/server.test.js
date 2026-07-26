@@ -29,9 +29,8 @@ test.describe('remote functions', () => {
 			path.join(root, '.svelte-kit', 'output', 'server', 'manifest.js'),
 			'utf8'
 		);
-		const remotes = code.match(/remotes: \{([\s\S]*?)\n\t\t\},/)?.[1] ?? '';
 		const hashes = [
-			...remotes.matchAll(/'([a-z0-9]+)': __memo\(\(\) => import\('\.\/chunks\/remote-/g)
+			...code.matchAll(/'([a-z0-9]+)': __memo\(\(\) => import\('\.\/chunks\/remote-/g)
 		].map((match) => match[1]);
 
 		expect(hashes.length).toBeGreaterThan(0);
