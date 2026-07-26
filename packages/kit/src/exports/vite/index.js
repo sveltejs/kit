@@ -1021,7 +1021,7 @@ function kit({ svelte_config }) {
 	/** @type {Prerendered} */
 	let prerendered;
 
-	/** @type {Set<string>} */
+	/** @type {Array<{ path: string }>} */
 	let immutable;
 	/** @type {string} */
 	let manifest_data_code;
@@ -1114,9 +1114,7 @@ function kit({ svelte_config }) {
 
 					manifest_data_code = dedent`
 					export const immutable = [
-						${Array.from(immutable)
-							.map((file) => s({ path: file }))
-							.join(',\n')}
+						${immutable.map((entry) => s(entry)).join(',\n')}
 					];
 
 					export const assets = [
@@ -1703,16 +1701,14 @@ function kit({ svelte_config }) {
 				const immutable = collect_immutable(vite_manifest, kit.appDir, `${out}/client`);
 
 				replace_manifest_placeholder_variables(client_chunks, `${out}/client`, {
-					immutable: Array.from(immutable).map((file) => ({ path: file })),
+					immutable,
 					assets: manifest_data.assets.map((asset) => ({ path: asset.file })),
 					routes: manifest_data.routes.map((route) => ({ id: route.id }))
 				});
 
 				// Now that the client build is done, replace the `build` sentinel
 				// in the SSR output with the real build files
-				replace_manifest_placeholder_strings(`${out}/server`, {
-					immutable: Array.from(immutable).map((file) => ({ path: file }))
-				});
+				replace_manifest_placeholder_strings(`${out}/server`, { immutable });
 
 				/**
 				 * @param {string} entry
@@ -2066,23 +2062,42 @@ function find_overridden_config(config, resolved_config, enforced_config, path, 
 }
 
 /**
- * Collects the content-hashed files of a Vite manifest for the `immutable`
- * export of `$app/manifest`.
+ * Collects the content-hashed files of a Vite manifest, in the shape of
+ * `$app/manifest`'s `immutable` export.
  *
  * @param {Manifest} manifest
  * @param {string} app_dir
  * @param {string} client_out
- * @returns {Set<string>}
+ * @returns {Array<{ path: string }>}
  */
-const collect_immutable = (manifest, app_dir, client_out) =>
-	new Set(
-		Object.values(manifest)
-			.flatMap(({ file, css = [], assets = [] }) => [file, ...css, ...assets])
-			// inlined files are deleted from the output (`bundleStrategy: 'inline'`)
-			.filter(
-				(file) => file.startsWith(`${app_dir}/immutable`) && fs.existsSync(`${client_out}/${file}`)
-			)
-	);
+const collect_immutable = (manifest, app_dir, client_out) => {
+	const prefix = `${app_dir}/immutable`;
+
+	/** @type {Set<string>} */
+	const candidates = new Set();
+
+	/** @param {string} file */
+	const add = (file) => {
+		if (file.startsWith(prefix)) candidates.add(file);
+	};
+
+	for (const key in manifest) {
+		const { file, css, assets } = manifest[key];
+		add(file);
+		if (css) for (let i = 0; i < css.length; i++) add(css[i]);
+		if (assets) for (let i = 0; i < assets.length; i++) add(assets[i]);
+	}
+
+	/** @type {Array<{ path: string }>} */
+	const immutable = [];
+
+	for (const path of candidates) {
+		// inlined files are deleted from the output (`bundleStrategy: 'inline'`)
+		if (fs.existsSync(`${client_out}/${path}`)) immutable.push({ path });
+	}
+
+	return immutable;
+};
 
 /**
  * Creates the `$app/manifest` data module. During development, real values
