@@ -23,6 +23,21 @@ test.describe('remote functions', () => {
 		expect(code.includes('const with_read = prerender(')).toBe(false);
 	});
 
+	test("doesn't duplicate remote modules in the generated manifest", () => {
+		test.skip(!!process.env.DEV, 'only applicable after build');
+		const code = fs.readFileSync(
+			path.join(root, '.svelte-kit', 'output', 'server', 'manifest.js'),
+			'utf8'
+		);
+		const remotes = code.match(/remotes: \{([\s\S]*?)\n\t\t\},/)?.[1] ?? '';
+		const hashes = [
+			...remotes.matchAll(/'([a-z0-9]+)': __memo\(\(\) => import\('\.\/chunks\/remote-/g)
+		].map((match) => match[1]);
+
+		expect(hashes.length).toBeGreaterThan(0);
+		expect(new Set(hashes).size).toBe(hashes.length);
+	});
+
 	test("form doesn't refresh queries when not a remote request", async ({ page }) => {
 		await page.goto(`/remote/form/noop-refresh-non-enhanced/${Date.now()}${Math.random()}`);
 
