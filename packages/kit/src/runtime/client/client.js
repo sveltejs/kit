@@ -1059,10 +1059,11 @@ async function get_navigation_result_from_branch({
 			// eslint-disable-next-line @typescript-eslint/await-thenable
 			branch
 				.map((b, i) => {
-					if (i === 0) return undefined;
+					if (i === 0) return undefined; // root layout wraps root error component, not the other way around
 					if (!b) return null;
 
 					i--;
+					// find the closest error component up to the previous branch
 					while (i > last_idx + 1 && !errors[i]) i -= 1;
 					last_idx = i;
 					return errors[i]?.()
