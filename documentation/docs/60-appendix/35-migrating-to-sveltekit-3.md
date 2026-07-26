@@ -2,7 +2,9 @@
 title: Migrating to SvelteKit v3
 ---
 
-SvelteKit 3 contains many small breaking changes, most of which you probably won't notice. The minimum dependency versions have been raised, a number of long-deprecated APIs have been removed, and configuration has moved from `svelte.config.js` into the Vite plugin. This guide lists every breaking change and how to migrate.
+SvelteKit 3 is a significant upgrade to the framework. Among other things, the minimum dependency versions have been raised, a number of deprecated APIs have been removed, and configuration has moved from `svelte.config.js` into the Vite plugin. This guide lists every breaking change and how to migrate. It's a lot, but most should be straightforward and the migration script will help you with many of them.
+
+TODO migration script command + little explanation.
 
 We highly recommend upgrading to the most recent 2.x version before upgrading to 3.0, and take advantage of its deprecating warnings before upgrading.
 
