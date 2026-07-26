@@ -152,8 +152,8 @@ Shallow routing now triggers navigation hooks (`before/after/onNavigate`). You c
 ```js
 import { redirect } from '@sveltejs/kit';
 
----throw redirect(307, 'https://example.com');---
-+++throw redirect(307, 'https://example.com', { external: true });+++
+---redirect(307, 'https://example.com');---
++++redirect(307, 'https://example.com', { external: true });+++
 ```
 
 ## `invalidateAll` is deprecated in favour of `refreshAll`
