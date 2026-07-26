@@ -893,9 +893,9 @@ function kit({ svelte_config }) {
 					file
 				};
 
-				if (!remotes.some((existing) => existing.hash === remote.hash)) remotes.push(remote);
-
 				if (this.environment.config.consumer !== 'client') {
+					remotes.push(remote);
+
 					// we need to add an `await Promise.resolve()` because if the user imports this function
 					// on the client AND in a load function when loading the client module we will trigger
 					// an import during dev. During a link preload, the module can be mistakenly
