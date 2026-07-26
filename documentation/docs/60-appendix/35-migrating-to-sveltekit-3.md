@@ -20,7 +20,7 @@ Update the versions in your `package.json` and run your package manager's instal
 
 ## Configuration is now passed to the Vite plugin
 
-`svelte.config.js` is no longer supported. SvelteKit configuration must now be passed to the `sveltekit()` Vite plugin in `vite.config.js`, and the `kit` prefix is dropped — options that used to live under `config.kit.*` are now top-level options of the plugin. They are places alongside other options such as `compilerOptions` for Svelte.
+`svelte.config.js` is no longer supported. SvelteKit configuration must now be passed to the `sveltekit()` Vite plugin in `vite.config.js`, and the `kit` prefix is dropped — options that used to live under `config.kit.*` are now top-level options of the plugin. They are placed alongside other options such as `compilerOptions` for Svelte.
 
 To migrate, move the contents of `svelte.config.js` into the `sveltekit()` plugin call and delete `svelte.config.js`:
 
