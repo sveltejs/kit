@@ -1022,7 +1022,7 @@ function kit({ svelte_config }) {
 	let prerendered;
 
 	/** @type {Set<string>} */
-	let build_files;
+	let immutable;
 	/** @type {string} */
 	let manifest_data_code;
 
@@ -1108,29 +1108,13 @@ function kit({ svelte_config }) {
 				]
 			},
 			handler(id) {
-				if (!build_files) {
-					build_files = new Set();
+				if (!immutable) {
 					const manifest = vite_client_manifest ?? vite_server_manifest;
-					for (const key in manifest) {
-						const { file, css = [], assets = [] } = manifest[key];
-						build_files.add(file);
-						css.forEach((file) => build_files.add(file));
-						assets.forEach((file) => build_files.add(file));
-					}
-
-					if (kit.output.bundleStrategy === 'inline') {
-						// the bundle and stylesheet are inlined into the page and their files
-						// deleted, so they must not appear in the list of cacheable assets
-						for (const file of build_files) {
-							if (!fs.existsSync(`${out}/client/${file}`)) {
-								build_files.delete(file);
-							}
-						}
-					}
+					immutable = collect_immutable(manifest, kit.appDir, `${out}/client`);
 
 					manifest_data_code = dedent`
 					export const immutable = [
-						${Array.from(build_files)
+						${Array.from(immutable)
 							.map((file) => s({ path: file }))
 							.join(',\n')}
 					];
@@ -1716,25 +1700,7 @@ function kit({ svelte_config }) {
 				// computed from the Vite client manifest, `assets` and `routes`
 				// from `manifest_data`. `prerendered` is left as a placeholder
 				// for now — it's replaced after prerendering completes.
-				/** @type {Set<string>} */
-				const immutable = new Set();
-
-				/** @param {string} file */
-				const add_immutable = (file) => {
-					if (
-						file.startsWith(`${kit.appDir}/immutable`) &&
-						fs.existsSync(`${out}/client/${file}`)
-					) {
-						immutable.add(file);
-					}
-				};
-
-				for (const key in vite_manifest) {
-					const { file, css = [], assets = [] } = vite_manifest[key];
-					add_immutable(file);
-					css.forEach(add_immutable);
-					assets.forEach(add_immutable);
-				}
+				const immutable = collect_immutable(vite_manifest, kit.appDir, `${out}/client`);
 
 				replace_manifest_placeholder_variables(client_chunks, `${out}/client`, {
 					immutable: Array.from(immutable).map((file) => ({ path: file })),
@@ -2098,6 +2064,25 @@ function find_overridden_config(config, resolved_config, enforced_config, path, 
 	}
 	return out;
 }
+
+/**
+ * Collects the content-hashed files of a Vite manifest for the `immutable`
+ * export of `$app/manifest`.
+ *
+ * @param {Manifest} manifest
+ * @param {string} app_dir
+ * @param {string} client_out
+ * @returns {Set<string>}
+ */
+const collect_immutable = (manifest, app_dir, client_out) =>
+	new Set(
+		Object.values(manifest)
+			.flatMap(({ file, css = [], assets = [] }) => [file, ...css, ...assets])
+			// inlined files are deleted from the output (`bundleStrategy: 'inline'`)
+			.filter(
+				(file) => file.startsWith(`${app_dir}/immutable`) && fs.existsSync(`${client_out}/${file}`)
+			)
+	);
 
 /**
  * Creates the `$app/manifest` data module. During development, real values
