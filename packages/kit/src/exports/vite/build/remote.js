@@ -118,12 +118,11 @@ export async function treeshake_prerendered_remotes(
 			})
 		);
 
-		// the build has a single entry and externalized imports, so its output
-		// is the treeshaken chunk plus, when sourcemaps are enabled, its map
+		// the only possible outputs are the treeshaken chunk and, with sourcemaps, its map
 		for (const output of bundle.output) {
-			if (output.type === 'chunk' && output.name === 'treeshaken') {
+			if (output.type === 'chunk') {
 				fs.writeFileSync(chunk_path, output.code);
-			} else if (output.type === 'asset' && output.fileName.endsWith('.map')) {
+			} else {
 				fs.writeFileSync(chunk_path + '.map', output.source);
 			}
 		}
