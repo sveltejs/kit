@@ -180,9 +180,9 @@ export const validate_kit_options = object({
 		base: validate('', (input, keypath) => {
 			assert_string(input, keypath);
 
-			if (input !== '' && (input.endsWith('/') || !input.startsWith('/'))) {
+			if (input !== '.' && input !== '' && (input.endsWith('/') || !input.startsWith('/'))) {
 				throw new Error(
-					`${keypath} option must either be the empty string or a root-relative path that starts but doesn't end with '/'. See https://svelte.dev/docs/kit/configuration#paths`
+					`${keypath} option must either be the empty string, a dot for relative paths in prerendered/static site generation or a root-relative path that starts but doesn't end with '/'. See https://svelte.dev/docs/kit/configuration#paths`
 				);
 			}
 
