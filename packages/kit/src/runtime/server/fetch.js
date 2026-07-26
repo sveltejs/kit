@@ -142,11 +142,9 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 					request.headers.set('accept', '*/*');
 				}
 
-				if (!request.headers.has('accept-language')) {
-					request.headers.set(
-						'accept-language',
-						/** @type {string} */ (event.request.headers.get('accept-language'))
-					);
+				const accept_language = event.request.headers.get('accept-language');
+				if (accept_language && !request.headers.has('accept-language')) {
+					request.headers.set('accept-language', accept_language);
 				}
 
 				const response = await internal_fetch(request, options, manifest, state);
