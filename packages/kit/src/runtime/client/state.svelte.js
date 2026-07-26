@@ -9,6 +9,7 @@ export const page = new (class Page {
 	error = $state.raw(null);
 	params = $state.raw({});
 	route = $state.raw({ id: null });
+	shallow = $state.raw(null);
 	state = $state.raw({});
 	status = $state.raw(-1);
 	url = $state.raw(new URL('a:'));

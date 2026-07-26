@@ -14,6 +14,18 @@ declare global {
 			count?: number;
 		}
 	}
+
+	interface Window {
+		shallow_navigation_log: Array<{
+			hook: string;
+			params?: Record<string, unknown> | null;
+			path?: string;
+			route?: string | null;
+			state?: string | null;
+			type?: string;
+			shallow?: boolean;
+		}>;
+	}
 }
 
 export {};
