@@ -156,6 +156,8 @@ export async function render_response({
 			)
 		);
 
+		props.form = form_value;
+
 		let current_node = props.tree;
 		let data = props.page.data;
 
