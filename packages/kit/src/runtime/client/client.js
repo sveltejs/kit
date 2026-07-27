@@ -1,7 +1,6 @@
 /** @import { RouteId } from '$app/types' */
 /** @import { RemoteFunctionDataNode, ServerNodesResponse, ServerRedirectNode } from 'types' */
 /** @import { NavigationIntent } from './types.js' */
-/** @import { RenderNode } from '../types.js' */
 /** @import { CacheEntry } from './remote-functions/cache.svelte.js' */
 /** @import { Query } from './remote-functions/query/instance.svelte.js' */
 /** @import { LiveQuery } from './remote-functions/query-live/instance.svelte.js' */
@@ -47,6 +46,7 @@ import { noop_span } from '../telemetry/noop.js';
 import { read_ndjson } from './ndjson.js';
 import RootModern from '../components/root.svelte';
 import { asClassComponent } from 'svelte/legacy';
+import { Props, RenderNode } from '../props.svelte.js';
 
 const Root = asClassComponent(RootModern);
 
@@ -101,10 +101,8 @@ const history_info = storage.get(HISTORY_INFO_KEY) ?? {};
  */
 const snapshots = storage.get(SNAPSHOT_KEY) ?? {};
 
-/**
- * @deprecated this is a temporary measure to avoid a regression, replace with nested `RenderNode` classes
- */
-let current_tree = /** @type {RenderNode} */ ({});
+/** @type {Props} */
+let props;
 
 if (DEV && BROWSER) {
 	let warned = false;
@@ -472,8 +470,18 @@ export async function start(_app, _target, hydrate) {
 	// connectivity errors after initialisation don't nuke the app
 	default_layout_loader = _app.nodes[0];
 	default_error_loader = _app.nodes[1];
-	void default_layout_loader();
-	void default_error_loader();
+
+	const [root_layout, root_error] = await Promise.all([
+		default_layout_loader(),
+		default_error_loader()
+	]);
+
+	props = new Props(
+		page,
+		components,
+		(_, reset) => resetters.add(reset),
+		new RenderNode(root_layout.component, root_error.component)
+	);
 
 	const history_metadata = get_history_metadata();
 	current_history_index = history_metadata?.historyIndex ?? 0;
@@ -608,7 +616,7 @@ async function _invalidate(reset_page_state = true) {
 	}
 	navigation_result.props.page.shallow = prev_shallow;
 	update(navigation_result.props.page);
-	current_tree = navigation_result.props.tree;
+	update_tree(props.tree, navigation_result.props.tree);
 	current = { ...navigation_result.state, nav: current.nav };
 	reset_invalidation();
 	root.$set(navigation_result.props);
@@ -777,7 +785,7 @@ async function _preload_data(intent) {
 						return fork(() => {
 							root.$set(result.props);
 							update(result.props.page);
-							current_tree = result.props.tree;
+							update_tree(props.tree, result.props.tree);
 						});
 					} catch {
 						// if it errors, it's because the experimental flag isn't enabled in Svelte
@@ -836,12 +844,12 @@ async function initialize(result, target, hydrate) {
 	}
 
 	update(/** @type {import('@sveltejs/kit').Page} */ (result.props.page));
-	current_tree = result.props.tree;
+	update_tree(props.tree, result.props.tree);
 
 	// TODO: use mount()
 	root = new Root({
 		target,
-		props: { ...result.props, components, onerror: (_, reset) => resetters.add(reset) },
+		props,
 		hydrate,
 		// Svelte 5 specific: asynchronously instantiate the component, i.e. don't call flushSync
 		sync: false,
@@ -950,18 +958,13 @@ async function get_navigation_result_from_branch({
 	let current_node = result.props.tree;
 
 	/** @type {RenderNode | undefined} */
-	let previous_node = current_tree;
+	let previous_node = props.tree;
 
 	for (let i = 0; i < branch.length; i += 1) {
 		const node = branch[i];
 		const prev = current.branch[i];
 
 		if (!node) continue;
-
-		const error_loader = errors?.slice(0, i + 1).findLast((x) => x) ?? default_error_loader;
-
-		current_node.error = (await error_loader()).component;
-		current_node.component = node.node.component;
 
 		if (
 			// if an ancestor node in this path changed, `data_changed` is already true and the
@@ -980,8 +983,12 @@ async function get_navigation_result_from_branch({
 		data = current_node.data;
 
 		if (i < branch.length - 1) {
-			current_node.child = /** @type {import('../types.js').RenderNode} */ ({});
-			current_node = current_node.child;
+			const error_loader = errors?.slice(0, i + 2).findLast((x) => x) ?? default_error_loader;
+
+			current_node = current_node.child = new RenderNode(
+				branch[i + 1].node.component,
+				(await error_loader()).component
+			);
 
 			previous_node = previous_node?.child;
 		}
@@ -2091,8 +2098,8 @@ async function navigate({
 			resetters.clear();
 		} else {
 			rendering_error = null; // TODO this can break with forks, rethink for SvelteKit 3 where we can assume Svelte 5
+			update_tree(props.tree, navigation_result.props.tree);
 			root.$set(navigation_result.props);
-			current_tree = navigation_result.props.tree;
 			// Reset any boundaries that failed on a previous navigation now that the
 			// new props are applied, otherwise the stale `+error.svelte` stays
 			// mounted above the new route's content. See sveltejs/kit#15694.
@@ -2953,8 +2960,8 @@ export async function set_nearest_error_page(error) {
 		current = { ...navigation_result.state, nav: current.nav };
 
 		root.$set(navigation_result.props);
-		current_tree = navigation_result.props.tree;
 		update(navigation_result.props.page);
+		update_tree(props.tree, navigation_result.props.tree);
 
 		void tick().then(() => reset_focus(current.url));
 	}
@@ -3807,4 +3814,8 @@ if (DEV) {
 			}
 		});
 	}
+}
+
+function update_tree(node, next) {
+	props.tree.child = next.child;
 }
