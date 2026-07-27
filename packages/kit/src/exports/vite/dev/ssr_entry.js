@@ -7,6 +7,6 @@ import { manifest } from './ssr_manifest.js';
 /** @type {InternalServer} */
 const server = new Server(manifest);
 
-const handler = await init_server(server, env);
+const handle = await init_server(server, env);
 
-export default handler;
+export default handle;

@@ -46,14 +46,7 @@ declare module '@sveltejs/kit' {
 		 */
 		emulate?: () => MaybePromise<Emulator>;
 		/**
-		 * The path to a module whose default export is a [`CustomHandler`](https://svelte.dev/docs/kit/writing-adapters#Providing-a-custom-handler),
-		 * used in place of SvelteKit's own request handler. This lets the adapter run the same glue
-		 * code during `vite dev` as it does in production, so that development more closely reflects
-		 * the deployed app.
-		 *
-		 * The module is part of the Vite app, so it can use `$app/...` imports and other Vite features.
-		 * Specify it with [`import.meta.resolve`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/import.meta/resolve):
-		 *
+		 * The path to a module whose default export is a [custom handler](https://svelte.dev/docs/kit/writing-adapters#Providing-a-custom-handler).
 		 * ```js
 		 * /** @type {import('@sveltejs/kit').Adapter} *\/
 		 * const adapter = {
@@ -75,31 +68,17 @@ declare module '@sveltejs/kit' {
 	}
 
 	/**
-	 * Creates the function that handles requests during development, in place of SvelteKit's own.
-	 * Specified via an adapter's [`customHandler`](https://svelte.dev/docs/kit/writing-adapters#Providing-a-custom-handler)
-	 * path.
-	 *
-	 * The `server` is already initialised — you don't need to call `server.init(...)`. The `options`
-	 * passed to your handler are ready to forward to `server.respond`, so the simplest possible
-	 * handler is a passthrough:
-	 *
-	 * ```js
-	 * /** @type {import('@sveltejs/kit').CustomHandler} *\/
-	 * export default (server) => (request, options) => server.respond(request, options);
-	 * ```
-	 *
 	 * Typically you would intercept platform-specific requests and add platform-specific data:
 	 *
 	 * ```js
-	 * /** @type {import('@sveltejs/kit').CustomHandler} *\/
-	 * export default (server) => {
-	 * 	return (request, options) => {
-	 * 		if (new URL(request.url).pathname === '/_platform/image') {
-	 * 			return new Response('intercepted');
-	 * 		}
+	 * export default async function (server, env) {
+	 * 	await server.init({ env });
 	 *
+	 * 	return (request) => {
 	 * 		return server.respond(request, {
-	 * 			...options,
+	 * 			getClientAddress() {
+	 * 				throw new Error('Could not determine clientAddress');
+	 * 			},
 	 * 			platform: {
 	 * 				// the shape of `App.Platform`
 	 * 			}
@@ -109,9 +88,11 @@ declare module '@sveltejs/kit' {
 	 * ```
 	 * @since 3.0.0
 	 */
-	export type CustomHandler = (
-		server: Server
-	) => MaybePromise<(request: Request, options: RequestOptions) => MaybePromise<Response>>;
+	export type SSRHandler = (
+		server: Server,
+		/** Environment variables loaded by Vite */
+		env: Record<string, string | undefined>
+	) => Promise<(request: Request, options: Omit<RequestOptions, 'platform'>) => Promise<Response>>;
 
 	export type LoadProperties<input extends Record<string, any> | void> = input extends void
 		? undefined // needs to be undefined, because void will break intellisense
@@ -1820,7 +1801,7 @@ declare module '@sveltejs/kit' {
 
 	export interface ServerInitOptions {
 		/** A map of environment variables. */
-		env: Record<string, string>;
+		env: Record<string, string | undefined>;
 		/** A function that turns an asset filename into a `ReadableStream`. Required for the `read` export from `$app/server` to work. */
 		read?: (file: string) => MaybePromise<ReadableStream | null>;
 	}
@@ -1831,7 +1812,7 @@ declare module '@sveltejs/kit' {
 	export interface SSRManifest {
 		/** The directory where SvelteKit keeps its stuff, including static assets (such as JS and CSS) and internally-used routes. */
 		appDir: string;
-		/** The `base` and `appDir` settings combined without a leading slash. */
+		/** The `base` and `appDir` settings combined, without a leading slash. */
 		appPath: string;
 		/** Static files from `config.files.assets` and the service worker (if any). */
 		assets: Set<string>;
@@ -3566,9 +3547,9 @@ declare module '$app/server' {
 		 *
 		 * */
 		function live<Output>(fn: (arg: void) => RemoteLiveQueryUserFunctionReturnType<Output>): RemoteLiveQueryFunction<void, Output>;
-
+		
 		function live<Input, Output>(validate: "unchecked", fn: (arg: Input) => RemoteLiveQueryUserFunctionReturnType<Output>): RemoteLiveQueryFunction<Input, Output>;
-
+		
 		function live<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => RemoteLiveQueryUserFunctionReturnType<Output>): RemoteLiveQueryFunction<StandardSchemaV1.InferInput<Schema>, Output, StandardSchemaV1.InferOutput<Schema>>;
 	}
 	/**

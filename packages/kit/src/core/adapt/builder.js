@@ -138,7 +138,8 @@ export function create_builder({
 				env,
 				out_dir: config.kit.outDir,
 				origin: config.kit.paths.origin || 'http://sveltekit-prerender',
-				assets: config.kit.files.assets
+				assets: config.kit.files.assets,
+				customHandler: config.adapter?.customHandler
 			});
 
 			if (existsSync(dest)) {

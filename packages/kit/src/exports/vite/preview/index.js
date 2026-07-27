@@ -1,6 +1,6 @@
 /** @import { NextHandleFunction } from 'connect' */
 /** @import { PreviewServer, ResolvedConfig } from 'vite' */
-/** @import { ValidatedConfig, ServerInternalModule, ServerModule } from 'types' */
+/** @import { ValidatedConfig, ServerInternalModule } from 'types' */
 import fs from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -40,18 +40,21 @@ export async function preview(vite, vite_config, svelte_config) {
 	/** @type {ServerInternalModule} */
 	const { set_assets } = await import(pathToFileURL(join(dir, 'internal.js')).href);
 
-	/** @type {ServerModule} */
-	const { Server } = await import(pathToFileURL(join(dir, 'index.js')).href);
+	/** @type {typeof import('@sveltejs/kit').Server} */
+	const Server = (await import(pathToFileURL(join(dir, 'server.js')).href)).Server;
 
-	const { manifest } = await import(pathToFileURL(join(dir, 'manifest.js')).href);
+	/** @type {import('@sveltejs/kit').SSRManifest} */
+	const manifest = (await import(pathToFileURL(join(dir, 'manifest.js')).href)).manifest;
 
 	set_assets(assets);
 
 	const server = new Server(manifest);
 
+	const env = loadEnv(vite_config.mode, svelte_config.kit.env.dir, '');
+
 	try {
 		await server.init({
-			env: loadEnv(vite_config.mode, svelte_config.kit.env.dir, ''),
+			env,
 			read: (file) => createReadableStream(`${dir}/${file}`)
 		});
 	} catch (error) {
@@ -62,7 +65,13 @@ export async function preview(vite, vite_config, svelte_config) {
 		throw error;
 	}
 
-	const emulator = await svelte_config.kit.adapter?.emulate?.();
+	let respond = server.respond;
+
+	if (svelte_config.adapter?.customHandler) {
+		/** @type {import('@sveltejs/kit').SSRHandler} */
+		const handler = await import(pathToFileURL(`${dir}/server/index.js`).href);
+		respond = await handler(server, env);
+	}
 
 	return () => {
 		// Remove the base middleware. It screws with the URL.
@@ -211,20 +220,12 @@ export async function preview(vite, vite_config, svelte_config) {
 
 			setResponse(
 				res,
-				await server.respond(request, {
+				await respond(request, {
 					getClientAddress: () => {
 						const { remoteAddress } = req.socket;
 						if (remoteAddress) return remoteAddress;
 						throw new Error('Could not determine clientAddress');
-					},
-					read: (file) => {
-						if (file in manifest._.server_assets) {
-							return fs.readFileSync(join(dir, file));
-						}
-
-						return fs.readFileSync(join(svelte_config.kit.files.assets, file));
-					},
-					emulator
+					}
 				})
 			);
 		});

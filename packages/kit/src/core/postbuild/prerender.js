@@ -1,3 +1,5 @@
+/** @import { Server } from '@sveltejs/kit' */
+/** @import { InternalServer } from 'types' */
 import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -56,7 +58,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 	set_env(env);
 
 	/** @type {import('types').ServerModule} */
-	const { Server } = await import(pathToFileURL(`${out}/server/index.js`).href);
+	const { Server } = await import(pathToFileURL(`${out}/server/server.js`).href);
 
 	const throw_handled = () => {
 		throw new Error('__handled__');
@@ -150,7 +152,8 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 			env,
 			out_dir: config.outDir,
 			origin: prerender_origin,
-			assets: config.files.assets
+			assets: config.files.assets,
+			customHandler: config.adapter?.customHandler
 		});
 
 		const file = output_filename('/', true);
@@ -301,29 +304,38 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 
 		const request = new Request(prerender_origin + encoded);
 
-		const response = await server.respond(request, {
-			getClientAddress() {
-				throw new Error('Cannot read clientAddress during prerendering');
-			},
-			prerendering: {
-				dependencies,
-				remote_responses
-			},
-			read: (file) => {
-				// stuff we just wrote
-				const filepath = saved.get(file);
-				if (filepath) return readFileSync(filepath);
+		server.respond = (request, options) => {
+			return original_respond(request, {
+				...options,
+				prerendering: {
+					dependencies,
+					remote_responses
+				},
+				read: (file) => {
+					// stuff we just wrote
+					const filepath = saved.get(file);
+					if (filepath) return readFileSync(filepath);
 
-				// Static assets emitted during build
-				if (file.startsWith(config.appDir)) {
-					return readFileSync(`${out}/server/${file}`);
+					// Static assets emitted during build
+					if (file.startsWith(config.appDir)) {
+						return readFileSync(`${out}/server/${file}`);
+					}
+
+					// stuff in `static`
+					return readFileSync(join(config.files.assets, file));
+				},
+				emulator
+			});
+		};
+
+		const response = await /** @type {Server['respond']} */ (custom_respond ?? server.respond)(
+			request,
+			{
+				getClientAddress() {
+					throw new Error('Cannot read clientAddress during prerendering');
 				}
-
-				// stuff in `static`
-				return readFileSync(join(config.files.assets, file));
-			},
-			emulator
-		});
+			}
+		);
 
 		const encoded_id = response.headers.get('x-sveltekit-routeid');
 		const decoded_id = encoded_id && decode_uri(encoded_id);
@@ -593,6 +605,18 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 		env,
 		read: (file) => createReadableStream(`${config.outDir}/output/server/${file}`)
 	});
+
+	const original_respond = server.respond;
+
+	/** @type {Server['respond'] | undefined} */
+	let custom_respond;
+
+	if (config.adapter?.customHandler) {
+		/** @type {import('@sveltejs/kit').SSRHandler} */
+		const handler = await import(pathToFileURL(`${out}/server/index.js`).href);
+		/** @type {InternalServer['respond']} */
+		custom_respond = await handler(server, env);
+	}
 
 	log.info('Prerendering');
 

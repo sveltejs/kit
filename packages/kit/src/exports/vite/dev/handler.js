@@ -11,12 +11,5 @@ export default async function (server, env) {
 		read: (file) => createReadableStream(file)
 	});
 
-	return (request, address) => {
-		return server.respond(request, {
-			getClientAddress() {
-				if (!address) throw new Error('Could not determine clientAddress');
-				return address;
-			}
-		});
-	};
+	return server.respond;
 }

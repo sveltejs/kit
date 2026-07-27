@@ -70,7 +70,7 @@ import { SVELTE_KIT_ASSETS } from '../../constants.js';
 import { get_runner } from '../../runner.js';
 
 const dev_ssr_entry = posixify(path.join(import.meta.dirname, 'dev/ssr_entry.js'));
-const dev_default_handler = posixify(path.join(import.meta.dirname, 'dev/handler.js'));
+const default_handler = posixify(path.join(import.meta.dirname, 'dev/handler.js'));
 
 /** @type {import('./types.js').EnforcedConfig} */
 const enforced_config = {
@@ -597,7 +597,7 @@ function kit({ svelte_config }) {
 
 				if (id === sveltekit_dev_handler) {
 					const custom_handler = kit.adapter?.customHandler;
-					if (!custom_handler) return dev_default_handler;
+					if (!custom_handler) return default_handler;
 
 					const filepath = custom_handler.startsWith('file://')
 						? fileURLToPath(custom_handler)
@@ -1311,11 +1311,15 @@ function kit({ svelte_config }) {
 
 					/** @type {Record<string, string>} */
 					const server_input = {
-						index: `${runtime_directory}/server/index.js`,
+						server: `${runtime_directory}/server/index.js`,
 						internal: `${out_dir}/generated/server/internal.js`,
 						env: '__sveltekit/env',
 						['remote-entry']: `${runtime_directory}/app/server/remote/index.js`
 					};
+
+					if (kit.adapter?.customHandler) {
+						server_input.index = kit.adapter.customHandler;
+					}
 
 					// add entry points for every endpoint...
 					manifest_data.routes.forEach((route) => {

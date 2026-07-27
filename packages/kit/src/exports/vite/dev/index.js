@@ -295,7 +295,12 @@ export function dev(vite, vite_config, svelte_config, remotes, root, set_manifes
 					await runner.import(sveltekit_dev_server)
 				).default;
 
-				const rendered = await handle(request, req.socket.remoteAddress);
+				const rendered = await handle(request, {
+					getClientAddress() {
+						if (!req.socket.remoteAddress) throw new Error('Could not determine clientAddress');
+						return req.socket.remoteAddress;
+					}
+				});
 
 				if (rendered.status === 404) {
 					// @ts-expect-error
