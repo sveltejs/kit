@@ -1,4 +1,4 @@
-minimumReleaseAge: 2880
+minimumReleaseAge: 10080
 minimumReleaseAgeExclude:
   - '@sveltejs/*'
   - svelte
@@ -10,6 +10,7 @@ minimumReleaseAgeExclude:
   - svelte-check
   - esm-env
 blockExoticSubdeps: true
+trustPolicy: no-downgrade
 linkWorkspacePackages: true
 shellEmulator: true
 engineStrict: true
