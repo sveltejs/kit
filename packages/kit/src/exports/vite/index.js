@@ -64,13 +64,6 @@ import { process_config, split_config, validate_config } from '../../core/config
 import { treeshake_prerendered_remotes } from './build/remote.js';
 import { get_runner } from '../../runner.js';
 
-/**
- * The posix-ified root of the project based on the Vite configuration.
- * Populated after Vite plugins' `config` hooks run
- * @type {string}
- */
-let root;
-
 /** @type {import('./types.js').EnforcedConfig} */
 const enforced_config = {
 	appType: true,
@@ -123,7 +116,7 @@ const warning_preprocessor = {
 				const fixed = basename.replace('.svelte', '(.server).js/ts');
 
 				const message =
-					`\n${styleText(['bold', 'red'], path.relative(root, filename))}\n` +
+					`\n${styleText(['bold', 'red'], path.relative(process.cwd(), filename))}\n` +
 					`\`${match[1]}\` will be ignored — move it to ${fixed} instead. See https://svelte.dev/docs/kit/page-options for more information.`;
 
 				if (!warned.has(message)) {
@@ -140,7 +133,7 @@ const warning_preprocessor = {
 
 		if (basename.startsWith('+layout.') && !has_children(content, true)) {
 			const message =
-				`\n${styleText(['bold', 'red'], path.relative(root, filename))}\n` +
+				`\n${styleText(['bold', 'red'], path.relative(process.cwd(), filename))}\n` +
 				'`<slot />` or `{@render ...}` tag' +
 				' missing — inner content will not be rendered';
 
@@ -206,51 +199,12 @@ export async function sveltekit(config) {
 		inline_vps_config.compilerOptions = svelte_config.compilerOptions;
 	}
 
-	return [
-		plugin_root(),
-		...vite_plugin_svelte.svelte(inline_vps_config),
-		...kit({
-			svelte_config
-		})
-	];
+	return [...vite_plugin_svelte.svelte(inline_vps_config), ...kit({ svelte_config })];
 }
 
 /** @param {UserConfig | ResolvedConfig} vite_config */
 function resolve_root(vite_config) {
 	return posixify(vite_config.root ? path.resolve(vite_config.root) : process.cwd());
-}
-
-/**
- * @return {Plugin}
- */
-function plugin_root() {
-	return {
-		name: 'vite-plugin-sveltekit-resolve-svelte-config',
-		// make sure it runs first
-		enforce: 'pre',
-		config: {
-			order: 'pre',
-			handler(config) {
-				root = resolve_root(config);
-
-				const config_file = ['svelte.config.js', 'svelte.config.ts'].find((file) =>
-					fs.existsSync(path.join(root, file))
-				);
-				if (config_file) {
-					throw new Error(
-						`${config_file} is no longer used. Please pass configuration via the \`sveltekit(...)\` plugin in your Vite config.`
-					);
-				}
-			}
-		},
-		// TODO: do we even need to set `root` based on the final Vite config?
-		configResolved: {
-			order: 'pre',
-			handler(config) {
-				root = resolve_root(config);
-			}
-		}
-	};
 }
 
 /**
@@ -270,6 +224,12 @@ function plugin_root() {
 function kit({ svelte_config }) {
 	/** @type {typeof import('vite')} */
 	let vite;
+
+	/**
+	 * The posix-ified root of the project based on the Vite configuration.
+	 * @type {string}
+	 */
+	let root;
 
 	/** @type {ValidatedKitConfig} */
 	let kit;
@@ -323,6 +283,27 @@ function kit({ svelte_config }) {
 
 	/** @type {string} name for `globalThis.__sveltekit_xxx` */
 	let kit_global;
+
+	/** @type {Plugin} */
+	const plugin_resolve_root = {
+		name: 'vite-plugin-sveltekit-resolve-root',
+		// make sure it runs first
+		enforce: 'pre',
+		config: {
+			order: 'pre',
+			handler(config) {
+				root = resolve_root(config);
+
+				for (const file of ['svelte.config.js', 'svelte.config.ts']) {
+					if (fs.existsSync(path.join(root, file))) {
+						throw new Error(
+							`${file} is no longer used. Please pass configuration via the \`sveltekit(...)\` plugin in your Vite config.`
+						);
+					}
+				}
+			}
+		}
+	};
 
 	/** @type {Plugin} */
 	const plugin_setup = {
@@ -2054,6 +2035,7 @@ function kit({ svelte_config }) {
 	return /** @type {Plugin[]} */ (
 		[
 			svelte_config.kit.adapter?.vite?.plugins,
+			plugin_resolve_root,
 			plugin_setup,
 			plugin_remote_guard,
 			plugin_remote,
