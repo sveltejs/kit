@@ -71,7 +71,7 @@ describe('record_span', () => {
 	});
 
 	test('HttpError sets correct attributes and re-throw, does set status for >=500', async () => {
-		const error = new HttpError(500, 'Found but badly');
+		const error = new HttpError({ status: 500, message: 'Found but badly' });
 		const error_fn = vi.fn(() => Promise.reject(error));
 
 		await expect(
@@ -99,7 +99,7 @@ describe('record_span', () => {
 	});
 
 	test('HttpError sets correct attributes and re-throws, does not set status for <500', async () => {
-		const error = new HttpError(404, 'Not found');
+		const error = new HttpError({ status: 404, message: 'Not found' });
 		const error_fn = vi.fn(() => Promise.reject(error));
 
 		await expect(

@@ -91,7 +91,7 @@ export class LiveQuery {
 				// the query failed during SSR — seed the failed state (mirroring `fail()`,
 				// minus its terminal `#done`), so the main loop still connects as usual
 				// and the query can recover
-				const error = new HttpError(node.e.status, node.e);
+				const error = new HttpError(node.e);
 				this.#loading = false;
 				this.#error = error.body;
 
@@ -417,7 +417,7 @@ export class LiveQuery {
 			route: { id: null },
 			url: new URL(location.href)
 		});
-		this.fail(new HttpError(error.status, error));
+		this.fail(new HttpError(error));
 	}
 
 	get [Symbol.toStringTag]() {

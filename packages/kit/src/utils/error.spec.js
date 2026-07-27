@@ -8,7 +8,7 @@ describe('get_status', () => {
 	});
 
 	it('falls back to HttpError status', () => {
-		const error = new HttpError(403, { message: 'forbidden' });
+		const error = new HttpError({ status: 403, message: 'forbidden' });
 		expect(get_status({ message: 'forbidden' }, error)).toBe(403);
 	});
 
@@ -22,7 +22,7 @@ describe('get_status', () => {
 	});
 
 	it('works with a single HttpError argument', () => {
-		const error = new HttpError(418, { message: 'teapot' });
+		const error = new HttpError({ status: 418, message: 'teapot' });
 		expect(get_status(error)).toBe(418);
 	});
 
