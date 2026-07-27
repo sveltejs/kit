@@ -1,3 +1,4 @@
+/** @import { RemoteFunctionResponse } from 'types' */
 import { app_dir, base } from '$app/paths/internal/client';
 import { app } from '../../client.js';
 import { notify_version } from '../../state.svelte.js';
@@ -31,16 +32,17 @@ export async function* create_live_iterator(
 	notify_version(response.headers.get('x-sveltekit-version'));
 
 	if (!response.ok) {
+		/** @type {RemoteFunctionResponse} */
 		const result = await response.json().catch(() => ({
 			type: 'error',
-			status: response.status,
-			error: response.statusText
+			error: { status: response.status, message: response.statusText }
 		}));
 
-		throw new HttpError(
-			result.error?.status ?? result.status ?? response.status ?? 500,
-			result.error
-		);
+		if (result.type === 'error') {
+			throw new HttpError(result.error.status, result.error);
+		}
+
+		throw new HttpError(response.status, response.statusText);
 	}
 
 	if (response.headers.get('content-type')?.includes('application/json')) {
