@@ -82,9 +82,9 @@ let rendering_error = null;
  * navigation away from a render error would leave the stale `+error.svelte`
  * mounted. The boundary's `onerror` populates this array; `navigate` drains it
  * after applying the new props. See sveltejs/kit#15694.
- * @type {Array<(() => void) | undefined>}
+ * @type {Set<() => void>}
  */
-const resetters = [];
+const resetters = new Set();
 
 // We track information associated with each history entry in sessionStorage,
 // rather than on history.state itself, because when navigation is driven by
@@ -841,7 +841,7 @@ async function initialize(result, target, hydrate) {
 	// TODO: use mount()
 	root = new Root({
 		target,
-		props: { ...result.props, components, resetters },
+		props: { ...result.props, components, onerror: (_, reset) => resetters.add(reset) },
 		hydrate,
 		// Svelte 5 specific: asynchronously instantiate the component, i.e. don't call flushSync
 		sync: false,
@@ -2086,9 +2086,9 @@ async function navigate({
 			// first `await`, so reset any previously-failed boundaries now so the
 			// stale `+error.svelte` is torn down. See sveltejs/kit#15694.
 			for (const reset of resetters) {
-				reset?.();
+				reset();
 			}
-			resetters.length = 0;
+			resetters.clear();
 		} else {
 			rendering_error = null; // TODO this can break with forks, rethink for SvelteKit 3 where we can assume Svelte 5
 			root.$set(navigation_result.props);
@@ -2097,9 +2097,9 @@ async function navigate({
 			// new props are applied, otherwise the stale `+error.svelte` stays
 			// mounted above the new route's content. See sveltejs/kit#15694.
 			for (const reset of resetters) {
-				reset?.();
+				reset();
 			}
-			resetters.length = 0;
+			resetters.clear();
 			// Check for sync rendering error
 			if (rendering_error) {
 				Object.assign(navigation_result.props.page, rendering_error);

@@ -7,12 +7,12 @@
 		page: Page;
 		tree: RenderNode;
 		components: any[];
-		resetters: Array<(() => void) | undefined>;
+		onerror: (error: unknown, reset: () => void) => void;
 		form?: any;
 		error?: App.Error;
 	}
 
-	const { page, components, resetters, tree, form, error }: Props = $props();
+	const { page, components, onerror, tree, form, error }: Props = $props();
 
 	let mounted = $state(false);
 	let navigated = $state(false);
@@ -33,7 +33,7 @@
 	{const Error = $derived(n.error)}
 	{const data = $derived(n.data)}
 
-	<svelte:boundary onerror={(_, reset) => (resetters[depth] = reset)}>
+	<svelte:boundary {onerror}>
 		{#if n.child}
 			<!-- svelte-ignore binding_property_non_reactive -->
 			<Component bind:this={components[depth]} {data} {form} params={page.params}>
