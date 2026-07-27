@@ -1,4 +1,3 @@
-/** @import { RenderNode } from '../../types.js' */
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
 import { isRedirect, text } from '@sveltejs/kit';
@@ -20,6 +19,7 @@ import * as env from '__sveltekit/env';
 import { collect_remote_data } from '../remote-functions.js';
 import Root from '../../components/root.svelte';
 import { render } from 'svelte/server';
+import { RenderNode } from '../../props.svelte.js';
 
 // TODO rename this function/module
 
@@ -139,7 +139,7 @@ export async function render_response({
 			components: [],
 			resetters: [],
 			form: form_value,
-			tree: /** @type {RenderNode} */ ({}),
+			tree: new RenderNode(await branch[0].node.component(), error_components[1]), // TODO tidy up
 			error,
 			page: {
 				error,
@@ -162,16 +162,13 @@ export async function render_response({
 
 			data = { ...data, ...node.data };
 
-			// TODO this is undefined sometimes... where does the default error component come from?
-			const error = error_components?.slice(0, i + 1).findLast((x) => x);
-
-			current_node.error = error;
-			current_node.component = await node.node.component?.();
 			current_node.data = data;
 
 			if (i < branch.length - 1) {
-				current_node.child = /** @type {import('../../types.js').RenderNode} */ ({});
-				current_node = current_node.child;
+				current_node = current_node.child = new RenderNode(
+					await branch[i + 1].node.component?.(), // TODO tidy up
+					error_components[i + 2]
+				);
 			}
 		}
 

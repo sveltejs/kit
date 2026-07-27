@@ -1,16 +1,6 @@
 <script lang="ts">
 	import { afterNavigate } from '$app/navigation';
-	import type { Page } from '@sveltejs/kit';
-	import type { RenderNode } from '../types.js';
-
-	interface Props {
-		page: Page;
-		tree: RenderNode;
-		components: any[];
-		onerror: (error: unknown, reset: () => void) => void;
-		form?: any;
-		error?: App.Error;
-	}
+	import type { Props, RenderNode } from '../props.svelte.js';
 
 	const { page, components, onerror, tree, form, error }: Props = $props();
 
@@ -33,7 +23,11 @@
 	{const Error = $derived(n.error)}
 	{const data = $derived(n.data)}
 
-	<svelte:boundary {onerror}>
+	{#snippet failed(error: unknown)}
+		<Error {error} />
+	{/snippet}
+
+	<svelte:boundary {onerror} failed={n.error ? failed : undefined}>
 		{#if n.child}
 			<!-- svelte-ignore binding_property_non_reactive -->
 			<Component bind:this={components[depth]} {data} {form} params={page.params}>
@@ -43,10 +37,6 @@
 			<!-- svelte-ignore binding_property_non_reactive -->
 			<Component bind:this={components[depth]} {data} {form} params={page.params} {error} />
 		{/if}
-
-		{#snippet failed(error)}
-			<Error {error} />
-		{/snippet}
 	</svelte:boundary>
 {/snippet}
 
