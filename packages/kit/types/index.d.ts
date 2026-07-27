@@ -834,7 +834,7 @@ declare module '@sveltejs/kit' {
 			 * A function that allows you to edit the generated `tsconfig.json`. You can mutate the config (recommended) or return a new one.
 			 * This is useful for extending a shared `tsconfig.json` in a monorepo root, for example.
 			 *
-			 * Note that any paths configured here should be relative to the generated config file, which is written to `.svelte-kit/tsconfig.json`.
+			 * Note that any paths configured here should be relative to the generated config file, which is written to `node_modules/$app/tsconfig/tsconfig.json`.
 			 *
 			 * @default (config) => config
 			 * @since 1.3.0
@@ -1367,10 +1367,7 @@ declare module '@sveltejs/kit' {
 	}
 
 	export type Navigation =
-		| NavigationExternal
-		| NavigationFormSubmit
-		| NavigationPopState
-		| NavigationLink;
+		NavigationExternal | NavigationFormSubmit | NavigationPopState | NavigationLink;
 
 	/**
 	 * The argument passed to [`beforeNavigate`](https://svelte.dev/docs/kit/$app-navigation#beforeNavigate) callbacks.
@@ -1475,8 +1472,7 @@ declare module '@sveltejs/kit' {
 	 * A param matcher definition passed to [`defineParams`](https://svelte.dev/docs/kit/@sveltejs-kit#defineParams).
 	 */
 	export type ParamDefinition =
-		| ((param: string) => ParamValue | undefined)
-		| StandardSchemaV1<string, ParamValue>;
+		((param: string) => ParamValue | undefined) | StandardSchemaV1<string, ParamValue>;
 
 	/**
 	 * The return type of [`defineParams`](https://svelte.dev/docs/kit/@sveltejs-kit#defineParams).
@@ -1579,8 +1575,7 @@ declare module '@sveltejs/kit' {
 		};
 
 	export type RequestedResult<Validated, Output> =
-		| QueryRequestedResult<Validated, Output>
-		| LiveQueryRequestedResult<Validated, Output>;
+		QueryRequestedResult<Validated, Output> | LiveQueryRequestedResult<Validated, Output>;
 
 	export interface RequestEvent<
 		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
@@ -2709,20 +2704,11 @@ declare module '@sveltejs/kit' {
 	type PrerenderHttpErrorHandlerValue = 'fail' | 'warn' | 'ignore' | PrerenderHttpErrorHandler;
 	type PrerenderMissingIdHandlerValue = 'fail' | 'warn' | 'ignore' | PrerenderMissingIdHandler;
 	type PrerenderUnseenRoutesHandlerValue =
-		| 'fail'
-		| 'warn'
-		| 'ignore'
-		| PrerenderUnseenRoutesHandler;
+		'fail' | 'warn' | 'ignore' | PrerenderUnseenRoutesHandler;
 	type PrerenderEntryGeneratorMismatchHandlerValue =
-		| 'fail'
-		| 'warn'
-		| 'ignore'
-		| PrerenderEntryGeneratorMismatchHandler;
+		'fail' | 'warn' | 'ignore' | PrerenderEntryGeneratorMismatchHandler;
 	type PrerenderInvalidUrlHandlerValue =
-		| 'fail'
-		| 'warn'
-		| 'ignore'
-		| PrerenderInvalidUrlHandler;
+		'fail' | 'warn' | 'ignore' | PrerenderInvalidUrlHandler;
 
 	export type PrerenderOption = boolean | 'auto';
 
