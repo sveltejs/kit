@@ -167,7 +167,7 @@ export async function render_response({
 			if (i < branch.length - 1) {
 				current_node = current_node.child = new RenderNode(
 					await branch[i + 1].node.component?.(), // TODO tidy up
-					error_components[i + 2]
+					error_components?.slice(0, i + 2).findLast((x) => x)
 				);
 			}
 		}

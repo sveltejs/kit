@@ -23,11 +23,7 @@
 	{const Error = $derived(n.error)}
 	{const data = $derived(n.data)}
 
-	{#snippet failed(error: unknown)}
-		<Error {error} />
-	{/snippet}
-
-	<svelte:boundary {onerror} failed={n.error ? failed : undefined}>
+	<svelte:boundary {onerror}>
 		{#if n.child}
 			<!-- svelte-ignore binding_property_non_reactive -->
 			<Component bind:this={components[depth]} {data} {form} params={page.params}>
@@ -37,6 +33,10 @@
 			<!-- svelte-ignore binding_property_non_reactive -->
 			<Component bind:this={components[depth]} {data} {form} params={page.params} {error} />
 		{/if}
+
+		{#snippet failed(error: unknown)}
+			<Error {error} />
+		{/snippet}
 	</svelte:boundary>
 {/snippet}
 
