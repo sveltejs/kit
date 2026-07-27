@@ -20,7 +20,7 @@ export default defineConfig({
 				name: 'test-adapter',
 				adapt(builder) {
 					builder.instrument({
-						entrypoint: `${builder.getServerDirectory()}/index.js`,
+						entrypoint: `${builder.getServerDirectory()}/server.js`,
 						instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`,
 						module: {
 							exports: ['Server']
