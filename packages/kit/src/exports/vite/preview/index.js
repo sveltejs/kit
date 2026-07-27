@@ -1,6 +1,6 @@
 /** @import { NextHandleFunction } from 'connect' */
 /** @import { PreviewServer, ResolvedConfig } from 'vite' */
-/** @import { ValidatedConfig, ServerInternalModule } from 'types' */
+/** @import { ValidatedConfig, ServerInternalModule, InternalServer } from 'types' */
 import fs from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -65,12 +65,26 @@ export async function preview(vite, vite_config, svelte_config) {
 		throw error;
 	}
 
-	let respond = server.respond.bind(server);
+	const emulator = await svelte_config.kit.adapter?.emulate?.();
+
+	const original_respond = server.respond.bind(server);
+
+	server.respond = async (request, options) => {
+		return await /** @type {InternalServer['respond']} */ (original_respond)(request, {
+			...options,
+			// @ts-expect-error this is only needed for prerender
+			read: undefined,
+			emulator
+		});
+	};
+
+	/** @type {import('@sveltejs/kit').Server['respond'] | undefined} */
+	let custom_respond;
 
 	if (svelte_config.adapter?.customHandler) {
 		/** @type {import('@sveltejs/kit').SSRHandler} */
 		const handler = await import(pathToFileURL(`${dir}/server/index.js`).href);
-		respond = await handler(server, env);
+		custom_respond = await handler(server, env);
 	}
 
 	return () => {
@@ -220,7 +234,7 @@ export async function preview(vite, vite_config, svelte_config) {
 
 			setResponse(
 				res,
-				await respond(request, {
+				await (custom_respond ?? server.respond)(request, {
 					getClientAddress: () => {
 						const { remoteAddress } = req.socket;
 						if (remoteAddress) return remoteAddress;
