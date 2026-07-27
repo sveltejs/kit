@@ -11,5 +11,5 @@ export default async function (server, env) {
 		read: (file) => createReadableStream(file)
 	});
 
-	return server.respond;
+	return (request, options) => server.respond(request, options);
 }
