@@ -29,6 +29,9 @@ export class Query {
 	/** @type {Array<(old: T) => T>} */
 	#overrides = $state([]);
 
+	// plain (non-reactive) so a batch snapshot can never hide a reset from #get_promise
+	#stale = false;
+
 	/** @type {T | undefined} */
 	#current = $derived.by(() => {
 		// don't reduce undefined value
@@ -78,7 +81,11 @@ export class Query {
 	}
 
 	#get_promise() {
-		void untrack(() => (this.#promise ??= this.#run()));
+		void untrack(() => {
+			if (this.#promise === null || this.#stale) {
+				this.#promise = this.#run();
+			}
+		});
 		return /** @type {Promise<T>} */ (this.#promise);
 	}
 
@@ -98,6 +105,7 @@ export class Query {
 	}
 
 	#run() {
+		this.#stale = false;
 		this.#loading = true;
 
 		const { promise, resolve, reject } = Promise.withResolvers();
@@ -237,6 +245,7 @@ export class Query {
 		this.#loading = false;
 		this.#error = undefined;
 		this.#raw = value;
+		this.#stale = false;
 		this.#promise = Promise.resolve();
 	}
 
@@ -253,6 +262,7 @@ export class Query {
 		const promise = Promise.reject(error);
 
 		promise.catch(noop);
+		this.#stale = false;
 		this.#promise = promise;
 	}
 
@@ -283,6 +293,7 @@ export class Query {
 	 * rendered queries to get fresh data
 	 */
 	reset() {
+		this.#stale = true;
 		this.#promise = null;
 		delete query_responses[this.#key];
 	}
