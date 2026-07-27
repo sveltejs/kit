@@ -3487,19 +3487,19 @@ async function load_data(url, invalid) {
 	notify_version(res.headers.get('x-sveltekit-version'));
 
 	if (!res.ok) {
-		// error message is a JSON-stringified string which devalue can't handle at the top level
 		// turn it into a HttpError to not call handleError on the client again (was already handled on the server)
 		// if `__data.json` doesn't exist or the server has an internal error,
 		// avoid parsing the HTML error page as a JSON
-		let message = 'Internal Error';
+		/** @type {App.Error} */
+		let error = { status: res.status, message: 'Internal Error' };
 
 		if (res.headers.get('content-type')?.includes('application/json')) {
-			message = await res.json();
+			error = { status: res.status, ...(await res.json()) };
 		} else if (res.status === 404) {
-			message = 'Not Found';
+			error.message = 'Not Found';
 		}
 
-		throw new HttpError({ status: res.status, message });
+		throw new HttpError(error);
 	}
 
 	return new Promise((resolve, reject) => {
