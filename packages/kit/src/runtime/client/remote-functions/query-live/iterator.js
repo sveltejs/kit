@@ -1,3 +1,4 @@
+/** @import { RemoteFunctionResponse } from 'types' */
 import { app_dir, base } from '$app/paths/internal/client';
 import { app } from '../../client.js';
 import { notify_version } from '../../state.svelte.js';
@@ -31,15 +32,13 @@ export async function* create_live_iterator(
 	notify_version(response.headers.get('x-sveltekit-version'));
 
 	if (!response.ok) {
-		const result = await response.json().catch(() => ({
-			type: 'error',
-			status: response.status,
-			error: response.statusText
-		}));
+		/** @type {RemoteFunctionResponse | undefined} */
+		const result = await response.json().catch(() => undefined);
 
 		throw new HttpError(
-			result.error?.status ?? result.status ?? response.status ?? 500,
-			result.error
+			result?.type === 'error'
+				? result.error
+				: { status: response.status, message: response.statusText }
 		);
 	}
 
@@ -47,7 +46,7 @@ export async function* create_live_iterator(
 		// we can end up here if we e.g. redirect in `handle`
 		const result = await response.json();
 		await handle_side_channel_response(result);
-		throw new HttpError(500, 'Invalid query.live response');
+		throw new HttpError({ status: 500, message: 'Invalid query.live response' });
 	}
 
 	if (!response.body) {
@@ -66,7 +65,7 @@ export async function* create_live_iterator(
 			}
 
 			await handle_side_channel_response(node);
-			throw new HttpError(500, 'Invalid query.live response');
+			throw new HttpError({ status: 500, message: 'Invalid query.live response' });
 		}
 	} finally {
 		try {

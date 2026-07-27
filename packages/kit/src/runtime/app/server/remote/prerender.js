@@ -118,7 +118,7 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 
 				if (prerendered) {
 					if (prerendered.type === 'error') {
-						throw new HttpError(prerendered.error.status, prerendered.error);
+						throw new HttpError(prerendered.error);
 					}
 
 					return parse_remote_response(prerendered.data, state.transport)._;
