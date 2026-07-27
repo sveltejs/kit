@@ -1,3 +1,4 @@
+/** @type {import('./$types').PageServerLoad} */
 export async function load({ fetch }) {
 	const response = await fetch('/basepath/fetch-prerendered/shadowed/static');
 	const text = await response.text();
