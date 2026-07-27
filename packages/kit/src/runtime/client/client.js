@@ -980,14 +980,19 @@ async function get_navigation_result_from_branch({
 		data = current_node.data;
 
 		if (i < branch.length - 1) {
-			const error_loader = errors?.slice(0, i + 2).findLast((x) => x) ?? default_error_loader;
+			const next = branch[i + 1];
 
-			current_node = current_node.child = new RenderNode(
-				branch[i + 1].node.component,
-				(await error_loader()).component
-			);
+			if (next) {
+				console.log(branch, i);
+				const error_loader = errors?.slice(0, i + 2).findLast((x) => x) ?? default_error_loader;
 
-			previous_node = previous_node?.child;
+				current_node = current_node.child = new RenderNode(
+					next.node.component,
+					(await error_loader()).component
+				);
+
+				previous_node = previous_node?.child;
+			}
 		}
 	}
 
@@ -3825,5 +3830,12 @@ function apply_navigation_result(result) {
 	update(result.props.page);
 	props.tree.data = result.props.tree.data;
 	props.tree.child = result.props.tree.child;
-	props.form = result.props.form;
+
+	if ('form' in result.props) {
+		props.form = result.props.form;
+	}
+
+	if ('error' in result.props) {
+		props.error = result.props.error;
+	}
 }
