@@ -90,7 +90,7 @@ export function error(status, message, properties) {
 			);
 		}
 
-		({ message, properties } = message);
+		({ message, ...properties } = message);
 	}
 
 	throw new HttpError({ ...properties, status, message: message ?? `Error: ${status}` });
