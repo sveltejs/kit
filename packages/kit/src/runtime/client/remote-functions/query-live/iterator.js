@@ -37,14 +37,14 @@ export async function* create_live_iterator(
 			error: response.statusText
 		}));
 
-		throw new HttpError(result.status ?? response.status ?? 500, result.error);
+		throw new HttpError(result.error);
 	}
 
 	if (response.headers.get('content-type')?.includes('application/json')) {
 		// we can end up here if we e.g. redirect in `handle`
 		const result = await response.json();
 		await handle_side_channel_response(result);
-		throw new HttpError(500, 'Invalid query.live response');
+		throw new HttpError({ status: 500, message: 'Invalid query.live response' });
 	}
 
 	if (!response.body) {
@@ -63,7 +63,7 @@ export async function* create_live_iterator(
 			}
 
 			await handle_side_channel_response(node);
-			throw new HttpError(500, 'Invalid query.live response');
+			throw new HttpError({ status: 500, message: 'Invalid query.live response' });
 		}
 	} finally {
 		try {

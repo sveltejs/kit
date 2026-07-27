@@ -86,7 +86,7 @@ export function pin_while_resolving(cache_map, cache, id, payload, then) {
  */
 export function unwrap_node(node) {
 	if (node.e) {
-		throw new HttpError(node.e.status, node.e);
+		throw new HttpError(node.e);
 	}
 
 	return node.v;
@@ -123,16 +123,13 @@ export async function remote_request(url, init) {
 			error: response.statusText
 		}));
 
-		throw new HttpError(
-			result.error?.status ?? result.status ?? response.status ?? 500,
-			result.error
-		);
+		throw new HttpError(result.error);
 	}
 
 	const result = /** @type {RemoteFunctionResponse} */ (await response.json());
 
 	if (result.type === 'error') {
-		throw new HttpError(result.error.status, result.error);
+		throw new HttpError(result.error);
 	}
 
 	const data = /** @type {RemoteFunctionData} */ (
@@ -147,7 +144,7 @@ export async function remote_request(url, init) {
 	function refresh(key, entry, result) {
 		if (entry?.resource) {
 			if (result.e) {
-				entry.resource.fail(new HttpError(result.e.status, result.e));
+				entry.resource.fail(new HttpError(result.e));
 			} else {
 				entry.resource.set(result.v);
 			}
@@ -201,7 +198,7 @@ export async function handle_side_channel_response(response) {
 	}
 
 	if (response.type === 'error') {
-		throw new HttpError(response.error.status, response.error);
+		throw new HttpError(response.error);
 	}
 
 	return response;

@@ -29,8 +29,8 @@ export { defineParams } from './params.js';
  * @param {number} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
  * @param {string} [message] The error message.
  * @overload
- * @param {number} status
- * @param {string} [message]
+ * @param {{ status: number; message: string } extends App.Error ? number : never} status
+ * @param {{ status: number; message: string } extends App.Error ? string : never} [message]
  * @return {never}
  * @throws {import('./public.js').HttpError} This error instructs SvelteKit to initiate HTTP error handling.
  * @throws {Error} If the provided status is invalid (not between 400 and 599).
@@ -93,7 +93,7 @@ export function error(status, message, properties) {
 		({ message, properties } = message);
 	}
 
-	throw new HttpError(status, message, properties);
+	throw new HttpError({ ...properties, status, message: message ?? `Error: ${status}` });
 }
 
 /**

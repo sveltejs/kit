@@ -1401,7 +1401,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 
 		if (server_data_node?.type === 'error') {
 			// rethrow and catch below
-			throw new HttpError(server_data_node.error.status, server_data_node.error);
+			throw new HttpError(server_data_node.error);
 		}
 
 		return load_node({
@@ -3491,16 +3491,15 @@ async function load_data(url, invalid) {
 		// turn it into a HttpError to not call handleError on the client again (was already handled on the server)
 		// if `__data.json` doesn't exist or the server has an internal error,
 		// avoid parsing the HTML error page as a JSON
-		/** @type {string | undefined} */
-		let message;
+		let message = 'Internal Error';
+
 		if (res.headers.get('content-type')?.includes('application/json')) {
 			message = await res.json();
 		} else if (res.status === 404) {
 			message = 'Not Found';
-		} else if (res.status === 500) {
-			message = 'Internal Error';
 		}
-		throw new HttpError(res.status, message);
+
+		throw new HttpError({ status: res.status, message });
 	}
 
 	return new Promise((resolve, reject) => {
