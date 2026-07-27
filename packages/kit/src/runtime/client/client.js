@@ -2902,14 +2902,10 @@ export async function applyAction(result) {
 		// this brings Svelte's view of the world in line with SvelteKit's
 		// after use:enhance reset the form....
 		props.form = null;
-		// root.$set({
-		// 	form: null
-		// });
 
 		// ...so that setting the `form` prop takes effect and isn't ignored
 		await tick();
 		props.form = result.data;
-		// root.$set({ form: result.data });
 
 		if (result.type === 'success') {
 			reset_focus(/** @type {URL} */ (page.url));
