@@ -39,7 +39,7 @@ import {
 	validate_load_response
 } from '../shared.js';
 import { get_message, get_status } from '../../utils/error.js';
-import { page, update, navigating, updated, notify_version } from './state.svelte.js';
+import { page, navigating, updated, notify_version } from './state.svelte.js';
 import { payload } from './payload.js';
 import { add_data_suffix, add_resolution_suffix } from '../pathname.js';
 import { noop_span } from '../telemetry/noop.js';
@@ -63,14 +63,6 @@ export { load_css };
 const ICON_REL_ATTRIBUTES = new Set(['icon', 'shortcut icon', 'apple-touch-icon']);
 
 let errored = false;
-/**
- * Set via transformError, reset and read at the end of navigate.
- * Necessary because a navigation might succeed loading but during rendering
- * an error occurs, at which point the navigation result needs to be overridden with the error result.
- * TODO this is all very hacky, rethink for SvelteKit 3 where we can assume Svelte 5 and do an overhaul of client.js
- * @type {{ error: App.Error, status: number } | null}
- */
-let rendering_error = null;
 
 /**
  * `reset` functions for `<svelte:boundary>`s in the generated root that have
@@ -348,9 +340,6 @@ let has_navigated = false;
 
 let force_invalidation = false;
 
-/** @type {import('svelte').SvelteComponent} */
-let root;
-
 /** @type {number} keeping track of the history index in order to prevent popstate navigation events if needed */
 let current_history_index;
 
@@ -613,11 +602,8 @@ async function _invalidate(reset_page_state = true) {
 	}
 	navigation_result.props.page.shallow = prev_shallow;
 	apply_navigation_result(navigation_result);
-	// update(navigation_result.props.page);
-	// update_tree(props.tree, navigation_result.props.tree);
 	current = { ...navigation_result.state, nav: current.nav };
 	reset_invalidation();
-	// root.$set(navigation_result.props);
 
 	// only wait for promises that are connected to queries that still exist
 	/** @type {Promise<any>[]} */
@@ -782,9 +768,6 @@ async function _preload_data(intent) {
 					try {
 						return fork(() => {
 							apply_navigation_result(result);
-							// root.$set(result.props);
-							// update(result.props.page);
-							// update_tree(props.tree, result.props.tree);
 						});
 					} catch {
 						// if it errors, it's because the experimental flag isn't enabled in Svelte
@@ -852,9 +835,8 @@ async function initialize(result, target, should_hydrate) {
 		props,
 		transformError: /** @param {unknown} e */ async (e) => {
 			const error = await handle_error(e, current.nav);
-			rendering_error = { error, status: error.status };
 			page.error = error;
-			page.status = rendering_error.status;
+			page.status = error.status;
 			return error;
 		}
 	});
@@ -2104,11 +2086,8 @@ async function navigate({
 			}
 			resetters.clear();
 		} else {
-			// rendering_error = null; // TODO this can break with forks, rethink for SvelteKit 3 where we can assume Svelte 5
-
 			apply_navigation_result(navigation_result);
-			// update_tree(props.tree, navigation_result.props.tree);
-			// root.$set(navigation_result.props);
+
 			// Reset any boundaries that failed on a previous navigation now that the
 			// new props are applied, otherwise the stale `+error.svelte` stays
 			// mounted above the new route's content. See sveltejs/kit#15694.
@@ -2116,11 +2095,6 @@ async function navigate({
 				reset();
 			}
 			resetters.clear();
-			// Check for sync rendering error
-			// if (rendering_error) {
-			// 	Object.assign(navigation_result.props.page, rendering_error);
-			// }
-			update(navigation_result.props.page);
 
 			commit_promise = settled();
 		}
@@ -2138,11 +2112,6 @@ async function navigate({
 		// a new navigation happened while we were waiting for the DOM to update, so abort
 		nav.reject(new Error('navigation aborted'));
 		return;
-	}
-
-	// Check for async rendering error
-	if (navigation_result.props.page && rendering_error) {
-		Object.assign(navigation_result.props.page, rendering_error);
 	}
 
 	reset_scroll_and_focus(url, noscroll ? scroll_state() : popped?.scroll, keepfocus, activeElement);
@@ -2970,9 +2939,6 @@ export async function set_nearest_error_page(error) {
 
 		current = { ...navigation_result.state, nav: current.nav };
 
-		// root.$set(navigation_result.props);
-		// update(navigation_result.props.page);
-		// update_tree(props.tree, navigation_result.props.tree);
 		apply_navigation_result(navigation_result);
 
 		void tick().then(() => reset_focus(current.url));
@@ -3832,7 +3798,8 @@ if (DEV) {
  * @param {NavigationFinished} result
  */
 function apply_navigation_result(result) {
-	update(result.props.page);
+	Object.assign(page, result.props.page);
+
 	props.tree.data = result.props.tree.data;
 	props.tree.child = result.props.tree.child;
 

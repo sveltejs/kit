@@ -100,10 +100,3 @@ if (!DEV && BROWSER) {
 
 	updated.check = check;
 }
-
-/**
- * @param {import('@sveltejs/kit').Page} new_page
- */
-export function update(new_page) {
-	Object.assign(page, new_page);
-}

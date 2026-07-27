@@ -45,10 +45,10 @@ export class RenderNode {
 	error;
 
 	/** @type {Record<string, any>} */
-	data;
+	data = $state.raw({});
 
-	/** @type {RenderNode | null} */
-	child;
+	/** @type {RenderNode | undefined} */
+	child = $state.raw();
 
 	/**
 	 *
@@ -58,8 +58,5 @@ export class RenderNode {
 	constructor(component, error) {
 		this.component = component;
 		this.error = error;
-
-		this.data = $state.raw({});
-		this.child = $state.raw(null);
 	}
 }
