@@ -315,9 +315,9 @@ export function dev(vite, vite_config, svelte_config, remotes, root, set_manifes
 				}
 			} catch (e) {
 				const error = coalesce_to_error(e);
-				if (process.env.DEBUG) console.error(error);
 				res.statusCode = 500;
 				fix_stack_trace(error);
+				console.error(styleText(['bold', 'red'], error.message));
 				res.end(error.stack || error.message); // handle `stackless` errors
 			}
 		});
