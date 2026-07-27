@@ -980,11 +980,16 @@ async function get_navigation_result_from_branch({
 		data = current_node.data;
 
 		if (i < branch.length - 1) {
-			const next = branch[i + 1];
+			let next_index = i + 1;
+			while (next_index < branch.length && !branch[next_index]) {
+				next_index += 1;
+			}
+
+			const next = branch[next_index];
 
 			if (next) {
-				console.log(branch, i);
-				const error_loader = errors?.slice(0, i + 2).findLast((x) => x) ?? default_error_loader;
+				const error_loader =
+					errors?.slice(0, next_index + 1).findLast((x) => x) ?? default_error_loader;
 
 				current_node = current_node.child = new RenderNode(
 					next.node.component,
