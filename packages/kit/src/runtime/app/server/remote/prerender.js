@@ -1,5 +1,5 @@
 /** @import { RemoteResource, RemotePrerenderFunction } from '@sveltejs/kit' */
-/** @import { RemotePrerenderInputsGenerator, RemotePrerenderInternals, MaybePromise } from 'types' */
+/** @import { RemoteFunctionResponse, RemotePrerenderInputsGenerator, RemotePrerenderInternals, MaybePromise } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { json, error } from '@sveltejs/kit';
 import { get_request_store } from '@sveltejs/kit/internal/server';
@@ -109,10 +109,10 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 						throw new Error('Prerendered response not found');
 					}
 
-					const prerendered = /** @type {RemoteFunctionResponse} */ await response.json();
+					const prerendered = /** @type {RemoteFunctionResponse} */ (await response.json());
 
 					if (prerendered.type === 'error') {
-						error(prerendered.status, prerendered.error);
+						error(prerendered.error.status, prerendered.error);
 					}
 
 					return parse_remote_response(prerendered.data, state.transport)._;

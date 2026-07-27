@@ -947,7 +947,7 @@ function kit({ svelte_config }) {
 					file
 				};
 
-				remotes.push(remote);
+				if (this.environment.name === 'ssr') remotes.push(remote);
 
 				if (this.environment.config.consumer !== 'client') {
 					// we need to add an `await Promise.resolve()` because if the user imports this function
