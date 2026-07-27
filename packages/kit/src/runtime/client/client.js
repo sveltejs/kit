@@ -1401,7 +1401,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 
 		if (server_data_node?.type === 'error') {
 			// rethrow and catch below
-			throw new HttpError(server_data_node.error.status, server_data_node.error);
+			throw new HttpError(server_data_node.error);
 		}
 
 		return load_node({
@@ -3487,20 +3487,19 @@ async function load_data(url, invalid) {
 	notify_version(res.headers.get('x-sveltekit-version'));
 
 	if (!res.ok) {
-		// error message is a JSON-stringified string which devalue can't handle at the top level
 		// turn it into a HttpError to not call handleError on the client again (was already handled on the server)
 		// if `__data.json` doesn't exist or the server has an internal error,
 		// avoid parsing the HTML error page as a JSON
-		/** @type {string | undefined} */
-		let message;
+		/** @type {App.Error} */
+		let error = { status: res.status, message: 'Internal Error' };
+
 		if (res.headers.get('content-type')?.includes('application/json')) {
-			message = await res.json();
+			error = { status: res.status, ...(await res.json()) };
 		} else if (res.status === 404) {
-			message = 'Not Found';
-		} else if (res.status === 500) {
-			message = 'Internal Error';
+			error.message = 'Not Found';
 		}
-		throw new HttpError(res.status, message);
+
+		throw new HttpError(error);
 	}
 
 	return new Promise((resolve, reject) => {

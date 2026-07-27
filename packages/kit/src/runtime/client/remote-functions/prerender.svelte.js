@@ -172,7 +172,7 @@ class Prerender {
 				});
 				this.#loading = false;
 				this.#error = error;
-				throw new HttpError(error.status, error); // so that transformError doesn't transform it again
+				throw new HttpError(error); // so that transformError doesn't transform it again
 			}
 		);
 
