@@ -65,7 +65,7 @@ export async function preview(vite, vite_config, svelte_config) {
 		throw error;
 	}
 
-	let respond = server.respond;
+	let respond = server.respond.bind(server);
 
 	if (svelte_config.adapter?.customHandler) {
 		/** @type {import('@sveltejs/kit').SSRHandler} */

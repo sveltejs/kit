@@ -305,30 +305,27 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 		const request = new Request(prerender_origin + encoded);
 
 		server.respond = (request, options) => {
-			return original_respond.apply(server, [
-				request,
-				{
-					...options,
-					prerendering: {
-						dependencies,
-						remote_responses
-					},
-					read: (file) => {
-						// stuff we just wrote
-						const filepath = saved.get(file);
-						if (filepath) return readFileSync(filepath);
+			return original_respond(request, {
+				...options,
+				prerendering: {
+					dependencies,
+					remote_responses
+				},
+				read: (file) => {
+					// stuff we just wrote
+					const filepath = saved.get(file);
+					if (filepath) return readFileSync(filepath);
 
-						// Static assets emitted during build
-						if (file.startsWith(config.appDir)) {
-							return readFileSync(`${out}/server/${file}`);
-						}
+					// Static assets emitted during build
+					if (file.startsWith(config.appDir)) {
+						return readFileSync(`${out}/server/${file}`);
+					}
 
-						// stuff in `static`
-						return readFileSync(join(config.files.assets, file));
-					},
-					emulator
-				}
-			]);
+					// stuff in `static`
+					return readFileSync(join(config.files.assets, file));
+				},
+				emulator
+			});
 		};
 
 		const response = await /** @type {Server['respond']} */ (custom_respond ?? server.respond)(
@@ -609,16 +606,16 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 		read: (file) => createReadableStream(`${config.outDir}/output/server/${file}`)
 	});
 
-	const original_respond = server.respond;
+	const original_respond = server.respond.bind(server);
 
 	/** @type {Server['respond'] | undefined} */
 	let custom_respond;
 
 	if (config.adapter?.customHandler) {
 		/** @type {import('@sveltejs/kit').SSRHandler} */
-		const handler = await import(pathToFileURL(`${out}/server/index.js`).href);
+		const init_server = await import(pathToFileURL(`${out}/server/index.js`).href);
 		/** @type {InternalServer['respond']} */
-		custom_respond = await handler(server, env);
+		custom_respond = await init_server(server, env);
 	}
 
 	log.info('Prerendering');

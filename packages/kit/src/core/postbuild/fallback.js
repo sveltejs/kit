@@ -34,31 +34,28 @@ async function generate_fallback({ manifest_path, env, out_dir, origin, assets, 
 	const server = new Server(manifest);
 	await server.init({ env });
 
-	const original_respond = server.respond;
+	const original_respond = server.respond.bind(server);
 
 	/** @type {import('@sveltejs/kit').Server['respond'] | undefined} */
 	let custom_respond;
 
 	if (customHandler) {
 		/** @type {import('@sveltejs/kit').SSRHandler} */
-		const handler = await import(pathToFileURL(`${server_root}/server/index.js`).href);
+		const init_server = await import(pathToFileURL(`${server_root}/server/index.js`).href);
 		/** @type {InternalServer['respond']} */
-		custom_respond = await handler(server, env);
+		custom_respond = await init_server(server, env);
 	}
 
 	server.respond = (request, options) => {
-		return original_respond.apply(server, [
-			request,
-			{
-				...options,
-				prerendering: {
-					fallback: true,
-					dependencies: new Map(),
-					remote_responses: new Map()
-				},
-				read: (file) => readFileSync(join(assets, file))
-			}
-		]);
+		return original_respond(request, {
+			...options,
+			prerendering: {
+				fallback: true,
+				dependencies: new Map(),
+				remote_responses: new Map()
+			},
+			read: (file) => readFileSync(join(assets, file))
+		});
 	};
 
 	const response = await /** @type {import('@sveltejs/kit').Server['respond']} */ (
