@@ -112,6 +112,7 @@ export function get_remote_request_headers() {
  */
 export async function remote_request(url, init) {
 	const response = await fetch(url, init);
+	const status = response.status;
 
 	// detect new deployments from the response header
 	notify_version(response.headers.get('x-sveltekit-version'));
@@ -119,14 +120,14 @@ export async function remote_request(url, init) {
 	if (!response.ok) {
 		const result = await response.json().catch(() => ({
 			type: 'error',
-			status: response.status,
+			status,
 			error: {
-				status: response.status,
+				status,
 				message: response.statusText
 			}
 		}));
 
-		throw new HttpError(result.error);
+		throw new HttpError({ status, ...result.error });
 	}
 
 	const result = /** @type {RemoteFunctionResponse} */ (await response.json());
