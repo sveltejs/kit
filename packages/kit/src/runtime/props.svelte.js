@@ -11,7 +11,7 @@ export class Props {
 	/** @type {any} */
 	form;
 
-	/** @type {App.Error | null} */
+	/** @type {App.Error | undefined} */
 	error;
 
 	/** @type {RenderNode} */
@@ -29,8 +29,8 @@ export class Props {
 	constructor(page, components, onerror, tree) {
 		this.page = page;
 		this.components = components;
-		this.form = $state.raw(null);
-		this.error = $state.raw(null);
+		this.form = $state.raw();
+		this.error = $state.raw();
 		this.tree = tree;
 
 		this.onerror = onerror;
