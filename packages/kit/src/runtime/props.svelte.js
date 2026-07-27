@@ -1,12 +1,19 @@
 /** @import { Component } from 'svelte'; */
 /** @import { Page } from '@sveltejs/kit'; */
 
+import { noop } from '../utils/functions.js';
+
 export class Props {
 	/** @type {Page} */
 	page;
 
-	/** @type {Array<Record<string, any>>} */
-	components;
+	/**
+	 * An array of the `+layout.svelte` and `+page.svelte` component instances
+	 * that currently live on the page — used for capturing and restoring snapshots.
+	 * It's updated/manipulated through `bind:this` in `Root.svelte`.
+	 * @type {Array<Record<string, any>>}
+	 */
+	components = [];
 
 	/** @type {any} */
 	form;
@@ -22,18 +29,16 @@ export class Props {
 
 	/**
 	 * @param {Page} page
-	 * @param {Array<Record<string, any>>} components
-	 * @param {(error: unknown, reset: () => void) => void} onerror
 	 * @param {RenderNode} tree
+	 * @param {(error: unknown, reset: () => void) => void} onerror
 	 */
-	constructor(page, components, onerror, tree) {
+	constructor(page, tree, onerror = noop) {
 		this.page = page;
-		this.components = components;
+		this.tree = tree;
+		this.onerror = onerror;
+
 		this.form = $state.raw();
 		this.error = $state.raw();
-		this.tree = tree;
-
-		this.onerror = onerror;
 	}
 }
 

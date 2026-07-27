@@ -276,14 +276,6 @@ export const prerender_responses = {};
 /** @type {Array<((url: URL) => boolean)>} */
 const invalidated = [];
 
-/**
- * An array of the `+layout.svelte` and `+page.svelte` component instances
- * that currently live on the page — used for capturing and restoring snapshots.
- * It's updated/manipulated through `bind:this` in `Root.svelte`.
- * @type {import('svelte').SvelteComponent[]}
- */
-const components = [];
-
 /** @type {{id: string, token: {}, promise: Promise<import('./types.js').NavigationResult>, fork: Promise<import('svelte').Fork | null> | null} | null} */
 let load_cache = null;
 
@@ -462,12 +454,9 @@ export async function start(_app, _target, data) {
 		default_error_loader()
 	]);
 
-	props = new Props(
-		page,
-		components,
-		(_, reset) => resetters.add(reset),
-		new RenderNode(root_layout.component, root_error.component)
-	);
+	const tree = new RenderNode(root_layout.component, root_error.component);
+
+	props = new Props(page, tree, (_, reset) => resetters.add(reset));
 
 	const history_metadata = get_history_metadata();
 	current_history_index = history_metadata?.historyIndex ?? 0;
@@ -634,15 +623,15 @@ function reset_invalidation() {
 
 /** @param {number} index */
 function capture_snapshot(index) {
-	if (components.some((c) => c?.snapshot)) {
-		snapshots[index] = components.map((c) => c?.snapshot?.capture());
+	if (props.components.some((c) => c?.snapshot)) {
+		snapshots[index] = props.components.map((c) => c?.snapshot?.capture());
 	}
 }
 
 /** @param {number} index */
 function restore_snapshot(index) {
 	snapshots[index]?.forEach((value, i) => {
-		components[i]?.snapshot?.restore(value);
+		props.components[i]?.snapshot?.restore(value);
 	});
 }
 

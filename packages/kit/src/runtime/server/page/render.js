@@ -1,3 +1,4 @@
+/** @import { Component } from 'svelte'; */
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
 import { isRedirect, text } from '@sveltejs/kit';
@@ -19,7 +20,7 @@ import * as env from '__sveltekit/env';
 import { collect_remote_data } from '../remote-functions.js';
 import Root from '../../components/root.svelte';
 import { render } from 'svelte/server';
-import { RenderNode } from '../../props.svelte.js';
+import { Props, RenderNode } from '../../props.svelte.js';
 
 // TODO rename this function/module
 
@@ -134,25 +135,26 @@ export async function render_response({
 	}
 
 	if (page_config.ssr) {
-		/** @type {Record<string, any>} */
-		const props = {
-			components: [],
-			resetters: [],
-			form: form_value,
-			tree: new RenderNode(await branch[0].node.component(), error_components[1]), // TODO tidy up
+		const page = {
 			error,
-			page: {
-				error,
-				params: /** @type {Record<string, any>} */ (event.params),
-				route: event.route,
-				status,
-				url: event.url,
-				data: {},
-				form: form_value,
-				shallow: null,
-				state: {}
-			}
+			params: /** @type {Record<string, any>} */ (event.params),
+			route: event.route,
+			status,
+			url: event.url,
+			data: {},
+			form: form_value,
+			shallow: null,
+			state: {}
 		};
+
+		const props = new Props(
+			page,
+			new RenderNode(
+				// TODO tidy up
+				/** @type {Component} */ (await branch[0].node.component?.()),
+				/** @type {Component} */ (error_components?.[1])
+			)
+		);
 
 		let current_node = props.tree;
 		let data = props.page.data;
@@ -166,8 +168,9 @@ export async function render_response({
 
 			if (i < branch.length - 1) {
 				current_node = current_node.child = new RenderNode(
-					await branch[i + 1].node.component?.(), // TODO tidy up
-					error_components?.slice(0, i + 2).findLast((x) => x)
+					// TODO tidy up
+					/** @type {Component} */ (await branch[i + 1].node.component?.()),
+					/** @type {Component} */ (error_components?.slice(0, i + 2).findLast((x) => x))
 				);
 			}
 		}
