@@ -1,11 +1,11 @@
 /** @import { RouteId } from '$app/types' */
 /** @import { RemoteFunctionDataNode, ServerNodesResponse, ServerRedirectNode } from 'types' */
-/** @import { NavigationIntent } from './types.js' */
+/** @import { NavigationFinished, NavigationIntent } from './types.js' */
 /** @import { CacheEntry } from './remote-functions/cache.svelte.js' */
 /** @import { Query } from './remote-functions/query/instance.svelte.js' */
 /** @import { LiveQuery } from './remote-functions/query-live/instance.svelte.js' */
 import { BROWSER, DEV } from 'esm-env';
-import { settled, tick, fork, onMount } from 'svelte';
+import { settled, tick, fork, onMount, hydrate, mount } from 'svelte';
 import { HttpError, Redirect, SvelteKitError } from '@sveltejs/kit/internal';
 import { decode_pathname, strip_hash, make_trackable, normalize_path } from '../../utils/url.js';
 import { dev_fetch, initial_fetch, lock_fetch, subsequent_fetch, unlock_fetch } from './fetcher.js';
@@ -44,11 +44,8 @@ import { payload } from './payload.js';
 import { add_data_suffix, add_resolution_suffix } from '../pathname.js';
 import { noop_span } from '../telemetry/noop.js';
 import { read_ndjson } from './ndjson.js';
-import RootModern from '../components/root.svelte';
-import { asClassComponent } from 'svelte/legacy';
+import Root from '../components/root.svelte';
 import { Props, RenderNode } from '../props.svelte.js';
-
-const Root = asClassComponent(RootModern);
 
 /**
  * @typedef {{
@@ -430,9 +427,9 @@ set_match_implementation(async (url) => {
 /**
  * @param {import('./types.js').SvelteKitApp} _app
  * @param {HTMLElement} _target
- * @param {Parameters<typeof _hydrate>[1]} [hydrate]
+ * @param {Parameters<typeof _hydrate>[1]} [data]
  */
-export async function start(_app, _target, hydrate) {
+export async function start(_app, _target, data) {
 	if (DEV && _target === document.body) {
 		console.warn(
 			'Placing %sveltekit.body% directly inside <body> is not recommended, as your app may break for users who have certain browser extensions installed.\n\nConsider wrapping it in an element:\n\n<div style="display: contents">\n  %sveltekit.body%\n</div>'
@@ -530,10 +527,10 @@ export async function start(_app, _target, hydrate) {
 		}
 	}
 
-	if (hydrate) {
+	if (data) {
 		restore_scroll();
 
-		await _hydrate(target, hydrate);
+		await _hydrate(target, data);
 	} else {
 		await navigate({
 			type: 'enter',
@@ -615,11 +612,12 @@ async function _invalidate(reset_page_state = true) {
 		navigation_result.props.page.state = prev_state;
 	}
 	navigation_result.props.page.shallow = prev_shallow;
-	update(navigation_result.props.page);
-	update_tree(props.tree, navigation_result.props.tree);
+	apply_navigation_result(navigation_result);
+	// update(navigation_result.props.page);
+	// update_tree(props.tree, navigation_result.props.tree);
 	current = { ...navigation_result.state, nav: current.nav };
 	reset_invalidation();
-	root.$set(navigation_result.props);
+	// root.$set(navigation_result.props);
 
 	// only wait for promises that are connected to queries that still exist
 	/** @type {Promise<any>[]} */
@@ -783,9 +781,10 @@ async function _preload_data(intent) {
 				if (lc === load_cache && result.type === 'loaded') {
 					try {
 						return fork(() => {
-							root.$set(result.props);
-							update(result.props.page);
-							update_tree(props.tree, result.props.tree);
+							apply_navigation_result(result);
+							// root.$set(result.props);
+							// update(result.props.page);
+							// update_tree(props.tree, result.props.tree);
 						});
 					} catch {
 						// if it errors, it's because the experimental flag isn't enabled in Svelte
@@ -819,9 +818,9 @@ async function _preload_code(url) {
 /**
  * @param {import('./types.js').NavigationFinished} result
  * @param {HTMLElement} target
- * @param {boolean} hydrate
+ * @param {boolean} should_hydrate
  */
-async function initialize(result, target, hydrate) {
+async function initialize(result, target, should_hydrate) {
 	if (__SVELTEKIT_DEV__ && result.state.error && document.querySelector('vite-error-overlay'))
 		return;
 
@@ -843,16 +842,14 @@ async function initialize(result, target, hydrate) {
 		if (style) style.remove();
 	}
 
-	update(/** @type {import('@sveltejs/kit').Page} */ (result.props.page));
-	update_tree(props.tree, result.props.tree);
+	apply_navigation_result(result);
 
-	// TODO: use mount()
-	root = new Root({
+	// TODO treeshake `hydrate` in csr mode
+	const render = should_hydrate ? hydrate : mount;
+
+	render(Root, {
 		target,
 		props,
-		hydrate,
-		// Svelte 5 specific: asynchronously instantiate the component, i.e. don't call flushSync
-		sync: false,
 		transformError: /** @param {unknown} e */ async (e) => {
 			const error = await handle_error(e, current.nav);
 			rendering_error = { error, status: error.status };
@@ -866,7 +863,7 @@ async function initialize(result, target, hydrate) {
 	// which causes component script blocks to run asynchronously
 	void (await Promise.resolve());
 
-	if (hydrate) {
+	if (should_hydrate) {
 		/** @type {import('@sveltejs/kit').AfterNavigate} */
 		const navigation = {
 			from: null,
@@ -2097,9 +2094,11 @@ async function navigate({
 			}
 			resetters.clear();
 		} else {
-			rendering_error = null; // TODO this can break with forks, rethink for SvelteKit 3 where we can assume Svelte 5
-			update_tree(props.tree, navigation_result.props.tree);
-			root.$set(navigation_result.props);
+			// rendering_error = null; // TODO this can break with forks, rethink for SvelteKit 3 where we can assume Svelte 5
+
+			apply_navigation_result(navigation_result);
+			// update_tree(props.tree, navigation_result.props.tree);
+			// root.$set(navigation_result.props);
 			// Reset any boundaries that failed on a previous navigation now that the
 			// new props are applied, otherwise the stale `+error.svelte` stays
 			// mounted above the new route's content. See sveltejs/kit#15694.
@@ -2108,9 +2107,9 @@ async function navigate({
 			}
 			resetters.clear();
 			// Check for sync rendering error
-			if (rendering_error) {
-				Object.assign(navigation_result.props.page, rendering_error);
-			}
+			// if (rendering_error) {
+			// 	Object.assign(navigation_result.props.page, rendering_error);
+			// }
 			update(navigation_result.props.page);
 
 			commit_promise = settled();
@@ -2921,15 +2920,17 @@ export async function applyAction(result) {
 		page.status = result.status;
 
 		/** @type {Record<string, any>} */
-		root.$set({
-			// this brings Svelte's view of the world in line with SvelteKit's
-			// after use:enhance reset the form....
-			form: null
-		});
+		// this brings Svelte's view of the world in line with SvelteKit's
+		// after use:enhance reset the form....
+		props.form = null;
+		// root.$set({
+		// 	form: null
+		// });
 
 		// ...so that setting the `form` prop takes effect and isn't ignored
 		await tick();
-		root.$set({ form: result.data });
+		props.form = result.data;
+		// root.$set({ form: result.data });
 
 		if (result.type === 'success') {
 			reset_focus(/** @type {URL} */ (page.url));
@@ -2959,9 +2960,10 @@ export async function set_nearest_error_page(error) {
 
 		current = { ...navigation_result.state, nav: current.nav };
 
-		root.$set(navigation_result.props);
-		update(navigation_result.props.page);
-		update_tree(props.tree, navigation_result.props.tree);
+		// root.$set(navigation_result.props);
+		// update(navigation_result.props.page);
+		// update_tree(props.tree, navigation_result.props.tree);
+		apply_navigation_result(navigation_result);
 
 		void tick().then(() => reset_focus(current.url));
 	}
@@ -3389,7 +3391,7 @@ async function _hydrate(
 
 	/** @type {import('./types.js').NavigationFinished | undefined} */
 	let result;
-	let hydrate = true;
+	let should_hydrate = true;
 
 	try {
 		const branch_promises = node_ids.map(async (n, i) => {
@@ -3455,7 +3457,7 @@ async function _hydrate(
 		});
 
 		target.textContent = '';
-		hydrate = false;
+		should_hydrate = false;
 	}
 
 	// Exit early when we encounter a redirect while loading the root error page.
@@ -3467,7 +3469,7 @@ async function _hydrate(
 		result.props.page.state = history_metadata?.persistState ? history_metadata.state : {};
 	}
 
-	await initialize(result, target, hydrate);
+	await initialize(result, target, should_hydrate);
 }
 
 /**
@@ -3816,6 +3818,12 @@ if (DEV) {
 	}
 }
 
-function update_tree(node, next) {
-	props.tree.child = next.child;
+/**
+ * @param {NavigationFinished} result
+ */
+function apply_navigation_result(result) {
+	update(result.props.page);
+	props.tree.data = result.props.tree.data;
+	props.tree.child = result.props.tree.child;
+	props.form = result.props.form;
 }
