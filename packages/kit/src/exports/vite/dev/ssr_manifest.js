@@ -23,7 +23,7 @@ await load_and_validate_params({
 /** @type {SSRManifest} */
 export const manifest = {
 	appDir: __SVELTEKIT_APP_DIR__,
-	appPath: `${__SVELTEKIT_PATHS_BASE__}/${__SVELTEKIT_APP_DIR__}`,
+	appPath: `${__SVELTEKIT_PATHS_BASE__.slice(1)}${__SVELTEKIT_PATHS_BASE__ ? '/' : ''}${__SVELTEKIT_APP_DIR__}`,
 	assets: new Set(dev.manifest_data.assets.map((asset) => asset.file)),
 	mimeTypes: get_mime_lookup(dev.manifest_data),
 	_: {
@@ -127,7 +127,6 @@ export const manifest = {
 
 					for (const dep of deps) {
 						if (isCSSRequest(dep.url) && !vite_css_query_regex.test(dep.url)) {
-							// if (isCSSRequest(dep.url) && !vite_css_query_regex.test(dep.url)) {
 							const inline_css_url = dep.url.includes('?')
 								? dep.url.replace('?', '?inline&')
 								: dep.url + '?inline';

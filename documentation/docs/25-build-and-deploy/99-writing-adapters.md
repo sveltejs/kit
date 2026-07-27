@@ -40,6 +40,8 @@ export default function (options) {
 				// Return `false if it can't, or throw a descriptive error.
 			}
 		},
+		// TODO
+		customHandler: import.meta.resolve('./my-handler.js'),
 		vite: {
 			plugins: [
 				// add plugins here to integrate with Vite
@@ -51,7 +53,7 @@ export default function (options) {
 }
 ```
 
-Of these, `name` and `adapt` are required. `emulate`, `vite.plugins` and `supports` are optional.
+Of these, `name` and `adapt` are required. `emulate`, `customHandler`, `vite.plugins` and `supports` are optional.
 
 Within the `adapt` method, there are a number of things that an adapter should do:
 
@@ -67,69 +69,41 @@ Within the `adapt` method, there are a number of things that an adapter should d
 
 Where possible, we recommend putting the adapter output under the `build/` directory with any intermediate output placed under `.svelte-kit/[adapter-name]`.
 
-## Configuring the development and preview experience
+## Custom request handler
 
-By default, SvelteKit runs your server code through a Node.js runtime when running `vite dev` and `vite preview`. You can change this behaviour by adding a Vite plugin that has a `configureServer` and `configurePreviewServer` hook to route requests to [a different runtime](https://vite.dev/guide/api-environment-runtimes).
-
-The main Vite server environment SvelteKit uses is named `ssr`. You can change its settings by referencing it in the `config` hook of a Vite plugin.
+You can add a `customHandler` property set to the path of a module that initialises the server and handles requests:
 
 ```js
-// @errors: 2304 1005 1109
-config(userConfig) {
-	userConfig.environments = {
-		ssr: {
-			// ...
-		}
-	}
-}
+/** @type {import('@sveltejs/kit').Adapter} */
+const adapter = {
+	name: 'adapter-package-name',
+	adapt() {},
+	customHandler: import.meta.resolve('./handler.js')
+};
 ```
 
-You can also define a custom server entry during development by adding a Vite plugin which resolves the `sveltekit:server-entry` ID to your own module.
+The default export of the module is given an instance of `Server`. TODO
 
 ```js
-// @errors: 1005 1128
-{
-	name: 'vite-plugin-name-it-yourself',
-	applyToEnvironment(environment) {
-		return environment.name === 'ssr';
-	},
-	resolveId: {
-		filter: {
-			id: /^sveltekit:server-entry$/
-		},
-		handler(id) {
-			return this.resolve(import.meta.resolve('./path-to-your-server.js'));
-		}
-	}
-}
-```
-
-This module should instantiate the server with your app's manifest, initialise environment variables and the `read` implementation, and export a `fetch` handler which receives a `Request` and returns a `Response`:
-
-```js
-import { env } from 'sveltekit:env';
-import { Server } from 'sveltekit:server';
-import { manifest } from 'sveltekit:server-manifest';
-
-const server = new Server(manifest);
-
-await server.init({
-	env,
-	read: (file) => { /* implement how your platform retrieves file contents */ }
-});
-
-/**
- * @param {Request} request
- * @returns {Promise<Response>}
- */
-export async function fetch(request) {
-	return await server.respond(request, {
-		getClientAddress: () => {
-			return request.headers.get('how-your-platform-exposes-the-remote-address')
+/// file: handler.js
+/** @type {import('@sveltejs/kit').CustomHandler} */
+export default async (server, env) => {
+	await server.init({
+		env,
+		read: () => {
+			// how your platform reads files
 		}
 	});
-}
 
-// Without this, server file changes will invalidate the entire Vite server module graph:
-import.meta.hot?.accept();
+	return (request, address) => {
+		return server.respond(request, {
+			getClientAddress() {
+				return address;
+			},
+			platform: {
+				// the shape of `App.Platform`
+			}
+		});
+	};
+};
 ```

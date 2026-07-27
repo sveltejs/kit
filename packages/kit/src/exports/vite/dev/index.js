@@ -21,21 +21,24 @@ import {
 } from '../utils.js';
 import { escape_html } from '../../../utils/escape.js';
 import { fix_stack_trace } from './sourcemaps.js';
-import { sveltekit_dev_init } from '../module_ids.js';
+import { sveltekit_dev_server } from '../module_ids.js';
 import { get_runner } from '../../../runner.js';
+
+export const dev_context = posixify(path.join(import.meta.dirname, 'context.js'));
 
 /**
  * @param {import('vite').ViteDevServer} vite
  * @param {import('vite').ResolvedConfig} vite_config
  * @param {import('types').ValidatedConfig} svelte_config
+ * @param {import('types').RemoteChunk[]} remotes
  * @param {string} root The project root directory
  * @param {(manifest_data: import('types').ManifestData) => void} set_manifest_data
  * @return {() => void}
  */
-export function dev(vite, vite_config, svelte_config, root, set_manifest_data) {
+export function dev(vite, vite_config, svelte_config, remotes, root, set_manifest_data) {
 	sync.init(svelte_config, root);
 
-	/** @type {import('types').ManifestData} */
+	/** @type {import('types').ManifestData | undefined} */
 	let manifest_data;
 
 	/** @type {Error | null} */
@@ -106,6 +109,7 @@ export function dev(vite, vite_config, svelte_config, root, set_manifest_data) {
 	watch('add', () => debounce(update_manifest));
 	watch('unlink', () => debounce(update_manifest));
 	watch('change', (file) => {
+		if (!manifest_data) return;
 		// Don't run for a single file if the whole manifest is about to get updated
 		// Unless it's a file where the trailing slash page option might have changed
 		if (timeout || !/\+(page|layout|server).*$/.test(file)) return;
@@ -169,6 +173,8 @@ export function dev(vite, vite_config, svelte_config, root, set_manifest_data) {
 
 	vite.environments.ssr.hot.on('vite:error', vite.hot.send);
 
+	const adapter_supports_instrumentation = svelte_config.kit.adapter?.supports?.instrumentation?.();
+
 	return () => {
 		const serve_static_middleware = vite.middlewares.stack.find(
 			(middleware) =>
@@ -228,6 +234,30 @@ export function dev(vite, vite_config, svelte_config, root, set_manifest_data) {
 					return;
 				}
 
+				const runner = get_runner(vite);
+
+				// resolve the instrumentation file per request so that changes to it
+				// are picked up on new requests
+				/** @type {string | null} */
+				const resolved_instrumentation = resolve_entry(
+					path.join(svelte_config.kit.files.src, 'instrumentation.server')
+				);
+
+				if (resolved_instrumentation) {
+					if (svelte_config.kit.adapter && adapter_supports_instrumentation) {
+						throw new Error(
+							`${resolved_instrumentation} is unsupported in ${svelte_config.kit.adapter.name}.`
+						);
+					}
+
+					await runner.import(resolved_instrumentation);
+				}
+
+				const request = getRequest({
+					base,
+					request: req
+				});
+
 				if (manifest_error) {
 					console.error(styleText(['bold', 'red'], manifest_error.message));
 
@@ -250,21 +280,22 @@ export function dev(vite, vite_config, svelte_config, root, set_manifest_data) {
 					return;
 				}
 
-				const request = getRequest({
-					base,
-					request: req
-				});
+				if (!manifest_data) throw new Error('Failed to update the manifest');
 
-				const runner = get_runner(vite);
+				// set the context on every request in case the user has hmr disabled
+				const context = /** @type {typeof import('./context.js')} */ (
+					await runner.import(dev_context)
+				).dev.context;
+				context.vite = vite;
+				context.svelte_config = svelte_config;
+				context.remotes = remotes;
+				context.manifest_data = manifest_data;
 
-				/** @type {{ fetch(request: Request): Promise<Response> }} */
-				const server_entry = await runner.import(sveltekit_dev_init);
+				const handle = /** @type {typeof import('./ssr_entry.js')} */ (
+					await runner.import(sveltekit_dev_server)
+				).default;
 
-				if (req.socket.remoteAddress) {
-					request.headers.set('x-sveltekit-remote-address', req.socket.remoteAddress);
-				}
-
-				const rendered = await server_entry.fetch(request);
+				const rendered = await handle(request, req.socket.remoteAddress);
 
 				if (rendered.status === 404) {
 					// @ts-expect-error

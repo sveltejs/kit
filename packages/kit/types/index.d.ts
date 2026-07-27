@@ -45,6 +45,26 @@ declare module '@sveltejs/kit' {
 		 * during dev, build and prerendering.
 		 */
 		emulate?: () => MaybePromise<Emulator>;
+		/**
+		 * The path to a module whose default export is a [`CustomHandler`](https://svelte.dev/docs/kit/writing-adapters#Providing-a-custom-handler),
+		 * used in place of SvelteKit's own request handler. This lets the adapter run the same glue
+		 * code during `vite dev` as it does in production, so that development more closely reflects
+		 * the deployed app.
+		 *
+		 * The module is part of the Vite app, so it can use `$app/...` imports and other Vite features.
+		 * Specify it with [`import.meta.resolve`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/import.meta/resolve):
+		 *
+		 * ```js
+		 * /** @type {import('@sveltejs/kit').Adapter} *\/
+		 * const adapter = {
+		 * 	name: 'my-adapter',
+		 * 	adapt() {},
+		 * 	customHandler: import.meta.resolve('./handler.js')
+		 * };
+		 * ```
+		 * @since 3.0.0
+		 */
+		customHandler?: string;
 		vite?: {
 			/**
 			 * Plugins provided by the adapter are placed before any of SvelteKit's own plugins.
@@ -53,6 +73,45 @@ declare module '@sveltejs/kit' {
 			plugins?: Plugin[];
 		};
 	}
+
+	/**
+	 * Creates the function that handles requests during development, in place of SvelteKit's own.
+	 * Specified via an adapter's [`customHandler`](https://svelte.dev/docs/kit/writing-adapters#Providing-a-custom-handler)
+	 * path.
+	 *
+	 * The `server` is already initialised — you don't need to call `server.init(...)`. The `options`
+	 * passed to your handler are ready to forward to `server.respond`, so the simplest possible
+	 * handler is a passthrough:
+	 *
+	 * ```js
+	 * /** @type {import('@sveltejs/kit').CustomHandler} *\/
+	 * export default (server) => (request, options) => server.respond(request, options);
+	 * ```
+	 *
+	 * Typically you would intercept platform-specific requests and add platform-specific data:
+	 *
+	 * ```js
+	 * /** @type {import('@sveltejs/kit').CustomHandler} *\/
+	 * export default (server) => {
+	 * 	return (request, options) => {
+	 * 		if (new URL(request.url).pathname === '/_platform/image') {
+	 * 			return new Response('intercepted');
+	 * 		}
+	 *
+	 * 		return server.respond(request, {
+	 * 			...options,
+	 * 			platform: {
+	 * 				// the shape of `App.Platform`
+	 * 			}
+	 * 		});
+	 * 	};
+	 * };
+	 * ```
+	 * @since 3.0.0
+	 */
+	export type CustomHandler = (
+		server: Server
+	) => MaybePromise<(request: Request, options: RequestOptions) => MaybePromise<Response>>;
 
 	export type LoadProperties<input extends Record<string, any> | void> = input extends void
 		? undefined // needs to be undefined, because void will break intellisense
@@ -3507,9 +3566,9 @@ declare module '$app/server' {
 		 *
 		 * */
 		function live<Output>(fn: (arg: void) => RemoteLiveQueryUserFunctionReturnType<Output>): RemoteLiveQueryFunction<void, Output>;
-		
+
 		function live<Input, Output>(validate: "unchecked", fn: (arg: Input) => RemoteLiveQueryUserFunctionReturnType<Output>): RemoteLiveQueryFunction<Input, Output>;
-		
+
 		function live<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => RemoteLiveQueryUserFunctionReturnType<Output>): RemoteLiveQueryFunction<StandardSchemaV1.InferInput<Schema>, Output, StandardSchemaV1.InferOutput<Schema>>;
 	}
 	/**
@@ -3834,59 +3893,6 @@ declare module '$app/types' {
 	 * A union of all the filenames of assets contained in your `static` directory, relative to the `base` path.
 	 */
 	export type AssetPath = ReturnType<AppTypes['AssetPath']>;
-}
-
-/**
- * Exports the `Server` class for creating custom server entry points.
- * @example
- * ```js
- * import { env } from 'sveltekit:env';
- * import { Server } from 'sveltekit:server';
- * import { manifest } from 'sveltekit:server-manifest';
- *
- * const server = new Server(manifest);
- *
- * await server.init({ env });
- * ```
- */
-declare module 'sveltekit:server' {
-	export { Server } from '@sveltejs/kit';
-}
-
-/**
- * Exports the SSR manifest used to initialise the server.
- * @example
- * ```js
- * import { env } from 'sveltekit:env';
- * import { Server } from 'sveltekit:server';
- * import { manifest } from 'sveltekit:server-manifest';
- *
- * const server = new Server(manifest);
- *
- * await server.init({ env });
- * ```
- */
-declare module 'sveltekit:server-manifest' {
-	import { SSRManifest } from '@sveltejs/kit';
-
-	export const manifest: SSRManifest;
-}
-
-/**
- * Exports the environment variables loaded by Vite. Used when initialising the server.
- * @example
- * ```js
- * import { env } from 'sveltekit:env';
- * import { Server } from 'sveltekit:server';
- * import { manifest } from 'sveltekit:server-manifest';
- *
- * const server = new Server(manifest);
- *
- * await server.init({ env });
- * ```
- */
-declare module 'sveltekit:env' {
-	export const env: Record<string, string>;
 }
 
 //# sourceMappingURL=index.d.ts.map

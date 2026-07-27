@@ -71,6 +71,19 @@ export interface Adapter {
 	 * during dev, build and prerendering.
 	 */
 	emulate?: () => MaybePromise<Emulator>;
+	/**
+	 * The path to a module whose default export is a [custom handler](https://svelte.dev/docs/kit/writing-adapters#Providing-a-custom-handler).
+	 * ```js
+	 * /** @type {import('@sveltejs/kit').Adapter} *\/
+	 * const adapter = {
+	 * 	name: 'my-adapter',
+	 * 	adapt() {},
+	 * 	customHandler: import.meta.resolve('./handler.js')
+	 * };
+	 * ```
+	 * @since 3.0.0
+	 */
+	customHandler?: string;
 	vite?: {
 		/**
 		 * Plugins provided by the adapter are placed before any of SvelteKit's own plugins.
@@ -79,6 +92,33 @@ export interface Adapter {
 		plugins?: Plugin[];
 	};
 }
+
+/**
+ * Typically you would intercept platform-specific requests and add platform-specific data:
+ *
+ * ```js
+ * export default async function (server, env) {
+ * 	await server.init({ env });
+ *
+ * 	return (request) => {
+ * 		return server.respond(request, {
+ * 			getClientAddress() {
+ * 				throw new Error('Could not determine clientAddress');
+ * 			},
+ * 			platform: {
+ * 				// the shape of `App.Platform`
+ * 			}
+ * 		});
+ * 	};
+ * };
+ * ```
+ * @since 3.0.0
+ */
+export type SSRHandler = (
+	server: Server,
+	/** Environment variables loaded by Vite */
+	env: Record<string, string | undefined>
+) => Promise<(request: Request, address: string | undefined) => Promise<Response>>;
 
 export type LoadProperties<input extends Record<string, any> | void> = input extends void
 	? undefined // needs to be undefined, because void will break intellisense
@@ -1791,7 +1831,7 @@ export class Server {
 
 export interface ServerInitOptions {
 	/** A map of environment variables. */
-	env: Record<string, string>;
+	env: Record<string, string | undefined>;
 	/** A function that turns an asset filename into a `ReadableStream`. Required for the `read` export from `$app/server` to work. */
 	read?: (file: string) => MaybePromise<ReadableStream | null>;
 }
@@ -1802,7 +1842,7 @@ export interface ServerInitOptions {
 export interface SSRManifest {
 	/** The directory where SvelteKit keeps its stuff, including static assets (such as JS and CSS) and internally-used routes. */
 	appDir: string;
-	/** The `base` and `appDir` settings combined without a leading slash. */
+	/** The `base` and `appDir` settings combined, without a leading slash. */
 	appPath: string;
 	/** Static files from `config.files.assets` and the service worker (if any). */
 	assets: Set<string>;

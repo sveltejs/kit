@@ -1557,3 +1557,7 @@ test.describe('Streaming', () => {
 		expect(error).toBeUndefined();
 	});
 });
+
+// TODO: test adapter intercepted request
+
+// TODO: test adapter modified request

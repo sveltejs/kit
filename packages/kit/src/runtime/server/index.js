@@ -105,23 +105,25 @@ export class Server {
 
 				this.#options.hooks = {
 					handle: module.handle || (({ event, resolve }) => resolve(event)),
-					handleError:
-						module.handleError ||
-						(({ error }) => {
-							if (error instanceof SvelteKitError) {
+					handleError: (args) => {
+						/** @type {string} */
+						let message = '';
+						let stack = '';
+
+						if (!module.handleError) {
+							if (args.error instanceof SvelteKitError) {
 								// don't log stack traces for 404s etc, it's all internal gubbins
 								return;
 							}
 
-							/** @type {string} */
-							let message = '';
-							let stack = '';
-
-							let e = error;
+							let e = args.error;
 							while (e instanceof Error) {
-								if (e.stack) {
+								if (__SVELTEKIT_DEV__) {
 									message ||= e.message;
-									stack += e.stack;
+									if (e.stack) stack += e.stack;
+								}
+
+								if (e.stack) {
 									console.error(e.stack);
 								}
 								e = e.cause;
@@ -130,19 +132,27 @@ export class Server {
 							if (e) {
 								const original_message = String(e);
 								console.error(original_message);
-								if (import.meta.hot && original_message) message = original_message;
+								if (__SVELTEKIT_DEV__ && original_message) message = original_message;
 							}
+						} else if (args.error instanceof Error) {
+							message = args.error.message;
+							stack = args.error.stack ?? '';
+						}
 
-							if (import.meta.hot && message) {
-								import.meta.hot.send('vite:error', {
-									type: 'error',
-									err: {
-										message,
-										stack: stack.replace(`Error: ${message}\n`, '')
-									}
-								});
-							}
-						}),
+						if (__SVELTEKIT_DEV__ && message) {
+							import.meta.hot?.send('vite:error', {
+								type: 'error',
+								err: {
+									message,
+									stack: stack.replace(`Error: ${message}\n`, '')
+								}
+							});
+						}
+
+						if (module.handleError) {
+							return module.handleError(args);
+						}
+					},
 					handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request)),
 					handleValidationError:
 						module.handleValidationError ||
