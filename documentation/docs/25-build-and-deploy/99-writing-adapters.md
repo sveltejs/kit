@@ -41,7 +41,7 @@ export default function (options) {
 			}
 		},
 		// TODO
-		customHandler: import.meta.resolve('./my-handler.js'),
+		customHandler: import.meta.resolve('./handler.js'),
 		vite: {
 			plugins: [
 				// add plugins here to integrate with Vite
@@ -95,11 +95,9 @@ export default async (server, env) => {
 		}
 	});
 
-	return (request, address) => {
+	return (request, options) => {
 		return server.respond(request, {
-			getClientAddress() {
-				return address;
-			},
+			...options,
 			platform: {
 				// the shape of `App.Platform`
 			}
