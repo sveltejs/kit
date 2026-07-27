@@ -79,7 +79,7 @@ catalog:
   # `kit` and `package` cannot follow the catalog version because they require it
   # for generating types and TypeScript can have breaking changes in minors
   typescript: ^6.0.3
-  valibot: ^1.2.0
+  valibot: ^1.4.2
   vite: ^8.1.5
   wrangler: ^4.103.0
 
