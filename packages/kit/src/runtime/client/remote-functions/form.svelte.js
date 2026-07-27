@@ -70,14 +70,28 @@ export function form(id) {
 	function create_instance(key) {
 		const action_id_without_key = id;
 		const action_id = id + (key != undefined ? `/${JSON.stringify(key)}` : '');
+		const action = '/remote=' + encodeURIComponent(action_id);
+
+		/** @type {string} */
+		let cached_search = '';
+		/** @type {string} */
+		let cached_query = '';
 
 		/** @returns {string} */
 		function get_action() {
-			const search = new URLSearchParams(page.url.search);
-			search.delete('/remote');
+			if (page.url.search !== cached_search) {
+				cached_search = page.url.search;
 
-			const query = search.toString();
-			return `?${query ? `${query}&` : ''}/remote=${encodeURIComponent(action_id)}`;
+				if (page.url.search) {
+					const params = new URLSearchParams(page.url.search);
+					params.delete('/remote');
+					cached_query = params.toString();
+				} else {
+					cached_query = '';
+				}
+			}
+
+			return `?${cached_query && `${cached_query}&`}${action}`;
 		}
 
 		// the output of a non-enhanced submission that resulted in this page —
