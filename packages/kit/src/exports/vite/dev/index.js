@@ -1,6 +1,7 @@
 /** @import { ViteDevServer } from 'vite' */
 import fs from 'node:fs';
 import path from 'node:path';
+import process from 'node:process';
 import { URL } from 'node:url';
 import { styleText } from 'node:util';
 import sirv from 'sirv';
@@ -291,11 +292,11 @@ export function dev(vite, vite_config, svelte_config, remotes, root, set_manifes
 				context.remotes = remotes;
 				context.manifest_data = manifest_data;
 
-				const handle = /** @type {typeof import('./ssr_entry.js')} */ (
+				const respond = /** @type {typeof import('./ssr_entry.js')} */ (
 					await runner.import(sveltekit_dev_server)
 				).default;
 
-				const rendered = await handle(request, {
+				const rendered = await respond(request, {
 					getClientAddress() {
 						if (!req.socket.remoteAddress) throw new Error('Could not determine clientAddress');
 						return req.socket.remoteAddress;
@@ -314,6 +315,7 @@ export function dev(vite, vite_config, svelte_config, remotes, root, set_manifes
 				}
 			} catch (e) {
 				const error = coalesce_to_error(e);
+				if (process.env.DEBUG) console.error(error);
 				res.statusCode = 500;
 				fix_stack_trace(error);
 				res.end(error.stack || error.message); // handle `stackless` errors
