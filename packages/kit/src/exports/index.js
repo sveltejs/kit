@@ -76,6 +76,12 @@ export function error(status, body, properties) {
 		throw new Error(`HTTP error status codes must be between 400 and 599 — ${status} is invalid`);
 	}
 
+	if (DEV && body !== undefined && typeof body !== 'string') {
+		console.warn(
+			'Passing an `App.Error` body as the second argument is deprecated — pass the `message` as the second argument, and any additional properties as the third'
+		);
+	}
+
 	throw new HttpError(status, body, properties);
 }
 
