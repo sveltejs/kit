@@ -120,7 +120,10 @@ export async function remote_request(url, init) {
 		const result = await response.json().catch(() => ({
 			type: 'error',
 			status: response.status,
-			error: response.statusText
+			error: {
+				status: response.status,
+				message: response.statusText
+			}
 		}));
 
 		throw new HttpError(result.error);
