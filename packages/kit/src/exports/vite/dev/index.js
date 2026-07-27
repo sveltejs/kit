@@ -245,7 +245,7 @@ export function dev(vite, vite_config, svelte_config, remotes, root, set_manifes
 				);
 
 				if (resolved_instrumentation) {
-					if (svelte_config.kit.adapter && adapter_supports_instrumentation) {
+					if (svelte_config.kit.adapter && !adapter_supports_instrumentation) {
 						throw new Error(
 							`${resolved_instrumentation} is unsupported in ${svelte_config.kit.adapter.name}.`
 						);
