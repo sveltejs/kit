@@ -47,15 +47,18 @@ async function generate_fallback({ manifest_path, env, out_dir, origin, assets, 
 	}
 
 	server.respond = (request, options) => {
-		return original_respond(request, {
-			...options,
-			prerendering: {
-				fallback: true,
-				dependencies: new Map(),
-				remote_responses: new Map()
-			},
-			read: (file) => readFileSync(join(assets, file))
-		});
+		return original_respond.apply(server, [
+			request,
+			{
+				...options,
+				prerendering: {
+					fallback: true,
+					dependencies: new Map(),
+					remote_responses: new Map()
+				},
+				read: (file) => readFileSync(join(assets, file))
+			}
+		]);
 	};
 
 	const response = await /** @type {import('@sveltejs/kit').Server['respond']} */ (

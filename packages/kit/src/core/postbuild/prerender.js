@@ -305,27 +305,30 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 		const request = new Request(prerender_origin + encoded);
 
 		server.respond = (request, options) => {
-			return original_respond(request, {
-				...options,
-				prerendering: {
-					dependencies,
-					remote_responses
-				},
-				read: (file) => {
-					// stuff we just wrote
-					const filepath = saved.get(file);
-					if (filepath) return readFileSync(filepath);
+			return original_respond.apply(server, [
+				request,
+				{
+					...options,
+					prerendering: {
+						dependencies,
+						remote_responses
+					},
+					read: (file) => {
+						// stuff we just wrote
+						const filepath = saved.get(file);
+						if (filepath) return readFileSync(filepath);
 
-					// Static assets emitted during build
-					if (file.startsWith(config.appDir)) {
-						return readFileSync(`${out}/server/${file}`);
-					}
+						// Static assets emitted during build
+						if (file.startsWith(config.appDir)) {
+							return readFileSync(`${out}/server/${file}`);
+						}
 
-					// stuff in `static`
-					return readFileSync(join(config.files.assets, file));
-				},
-				emulator
-			});
+						// stuff in `static`
+						return readFileSync(join(config.files.assets, file));
+					},
+					emulator
+				}
+			]);
 		};
 
 		const response = await /** @type {Server['respond']} */ (custom_respond ?? server.respond)(
