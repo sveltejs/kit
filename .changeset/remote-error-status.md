@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-chore: read the error status from `App.Error` in the remaining remote-response readers
+fix: read the error status of `App.Error` in the `prerender` and `query.live` remote functions
