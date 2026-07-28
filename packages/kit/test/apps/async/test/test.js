@@ -263,6 +263,19 @@ test.describe('remote functions', () => {
 		await page.getByText('This is your custom error page saying: "oops"').waitFor();
 	});
 
+	test('form error falls through a throwing +error.svelte to the one above', async ({ page }) => {
+		await page.goto('/remote/form/throwing-error-page');
+
+		await page.fill('input', 'unexpected error');
+		await page.getByText('set message').click();
+
+		await page
+			.getByText(
+				'This is your custom error page saying: "error page render error (500 Internal Error, on /remote/form/throwing-error-page)"'
+			)
+			.waitFor();
+	});
+
 	test('form redirects', async ({ page }) => {
 		await page.goto('/remote/form/redirect');
 
