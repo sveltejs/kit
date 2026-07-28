@@ -8,8 +8,8 @@ This module contains TypeScript configuration tailored for your app. Your own co
 /// file: tsconfig.json
 {
 	"extends": "$app/tsconfig",
-	"includes": ["src", "test"],
-	"excludes": ["src/service-worker"]
+	"include": ["src", "test"],
+	"exclude": ["src/service-worker"]
 }
 ```
 

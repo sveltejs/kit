@@ -159,7 +159,7 @@ test.describe('remote functions', () => {
 	});
 
 	test('form works', async ({ page, javaScriptEnabled }) => {
-		await page.goto(`/remote/form/basic-${javaScriptEnabled}`);
+		await page.goto(`/remote/form/basic-${javaScriptEnabled}?existing=value`);
 
 		if (javaScriptEnabled) {
 			await expect(page.getByText('message.current:')).toHaveText('message.current: initial');
@@ -169,8 +169,22 @@ test.describe('remote functions', () => {
 			'set_message.submitted: false'
 		);
 
+		const form = page.locator('[data-unscoped]');
+		await expect(form).toHaveAttribute('action', /^\?existing=value&\/remote=/);
+
+		if (javaScriptEnabled) {
+			await test.step('updates the form action when the URL query changes', async () => {
+				await page.getByRole('link', { name: 'update URL query' }).click();
+				await expect(page).toHaveURL((url) => url.searchParams.get('later') === 'updated');
+				await expect(form).toHaveAttribute('action', /later=updated&\/remote=/);
+			});
+		}
+
 		await page.fill('[data-unscoped] input', 'hello');
 		await page.getByText('set message').click();
+		await test.step('preserves URL query', async () => {
+			await expect(page).toHaveURL((url) => url.searchParams.get('existing') === 'value');
+		});
 
 		if (javaScriptEnabled) {
 			await expect(page.getByText('set_message.pending:')).toHaveText('set_message.pending: 1');

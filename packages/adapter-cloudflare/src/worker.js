@@ -18,8 +18,7 @@ const version_file = `${app_path}/version.json`;
 let origin;
 
 const initialized = server.init({
-	// @ts-expect-error env contains environment variables and bindings
-	env,
+	env: /** @type {Record<string, string>} */ (env),
 	read: async (file) => {
 		const url = `${origin}/${file}`;
 		const response = await /** @type {{ ASSETS: { fetch: typeof fetch } }} */ (env).ASSETS.fetch(

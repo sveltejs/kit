@@ -1,7 +1,7 @@
 /** @import { EnvVarConfig, KitConfig } from '@sveltejs/kit' */
 /** @import { Options, SvelteConfig } from '@sveltejs/vite-plugin-svelte' */
 /** @import { PreprocessorGroup } from 'svelte/compiler' */
-/** @import { BuildData, ManifestData, Prerendered, ServerMetadata, RemoteInternals, ValidatedConfig, ValidatedKitConfig } from 'types' */
+/** @import { BuildData, ManifestData, Prerendered, RemoteChunk, RemoteInternals, ServerMetadata, ValidatedConfig, ValidatedKitConfig } from 'types' */
 /** @import { Manifest, Plugin, ResolvedConfig, Rolldown, UserConfig, ViteDevServer } from 'vite' */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -431,7 +431,9 @@ function kit({ svelte_config }) {
 							// this does not affect app code, just handling of imported libraries that use $app or $env
 							'$app',
 							'$env'
-						]
+						],
+						// avoid Vite dev server reloading the first time a page is requested
+						include: ['@sveltejs/kit > devalue', '@sveltejs/kit > esm-env']
 					},
 					ssr: {
 						noExternal: [
@@ -835,7 +837,7 @@ function kit({ svelte_config }) {
 	/** @type {ViteDevServer} */
 	let dev_server;
 
-	/** @type {Array<{ hash: string, file: string }>} */
+	/** @type {RemoteChunk[]} */
 	const remotes = [];
 
 	/** @type {Map<string, string>} Maps remote hash -> original module id */
@@ -893,7 +895,7 @@ function kit({ svelte_config }) {
 					file
 				};
 
-				remotes.push(remote);
+				if (this.environment.name === 'ssr') remotes.push(remote);
 
 				if (this.environment.config.consumer !== 'client') {
 					// we need to add an `await Promise.resolve()` because if the user imports this function
@@ -2085,11 +2087,7 @@ function find_overridden_config(config, resolved_config, enforced_config, path, 
 			const resolved = resolved_config[key];
 
 			if (enforced === true) {
-				// Normalize path separators before comparing to avoid false positives on Windows,
-				// where config values like `root` may use backslashes while SvelteKit uses forward slashes.
-				const a = typeof config[key] === 'string' ? posixify(config[key]) : config[key];
-				const b = typeof resolved === 'string' ? posixify(resolved) : resolved;
-				if (a !== b) {
+				if (comparable(config[key]) !== comparable(resolved)) {
 					out.push(path + key);
 				}
 			} else {
@@ -2098,6 +2096,17 @@ function find_overridden_config(config, resolved_config, enforced_config, path, 
 		}
 	}
 	return out;
+}
+
+/**
+ * Normalizes a config value for comparison, since Windows paths may use backslashes
+ * and differ in casing (e.g. the drive letter) depending on where they came from.
+ * @param {any} value
+ */
+function comparable(value) {
+	if (typeof value !== 'string') return value;
+	const normalized = posixify(value);
+	return process.platform === 'win32' ? normalized.toLowerCase() : normalized;
 }
 
 /**

@@ -51,7 +51,11 @@ describe('remote_request transport error handling', () => {
 				status: 401,
 				statusText: 'Unauthorized',
 				json: () =>
-					Promise.resolve({ type: 'error', status: 401, error: { message: 'unauthorized' } })
+					Promise.resolve({
+						type: 'error',
+						status: 401,
+						error: { status: 401, message: 'unauthorized' }
+					})
 			})
 		);
 

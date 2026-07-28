@@ -6,7 +6,7 @@ import process from 'node:process';
 const server = new Server(manifest);
 
 await server.init({
-	env: /** @type {Record<string, string>} */ (process.env),
+	env: process.env,
 	read: createReadableStream
 });
 
