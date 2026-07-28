@@ -94,9 +94,6 @@ export default defineConfig({
 		},
 		cors: {
 			origin: '*'
-		},
-		hmr: {
-			overlay: process.env.PLAYWRIGHT_TEST !== '1'
 		}
 	},
 	test: {
