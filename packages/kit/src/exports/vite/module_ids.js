@@ -11,7 +11,6 @@ export const service_worker = '\0virtual:service-worker';
 
 /** Used to construct `$app/manifest` */
 export const sveltekit_manifest_data = '\0virtual:__sveltekit/manifest-data';
-/** The environment variables loaded by Vite, used to initialise the dev server instance */
 
 /** Resolves to the adapter's `customHandler`, falling back to SvelteKit's default handler */
 export const sveltekit_dev_handler = '__sveltekit/dev-handler';
