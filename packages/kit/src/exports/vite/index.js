@@ -431,7 +431,9 @@ function kit({ svelte_config }) {
 							// this does not affect app code, just handling of imported libraries that use $app or $env
 							'$app',
 							'$env'
-						]
+						],
+						// avoid Vite dev server reloading the first time a page is requested
+						include: ['@sveltejs/kit > devalue', '@sveltejs/kit > esm-env']
 					},
 					ssr: {
 						noExternal: [
