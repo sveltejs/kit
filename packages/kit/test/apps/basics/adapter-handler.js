@@ -1,9 +1,4 @@
 /** @import { SSRHandler } from '@sveltejs/kit' */
-import { createReadableStream } from '@sveltejs/kit/node';
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-const dir = dirname(fileURLToPath(import.meta.url));
 
 /**
  * Custom handler for the test adapter. Intercepts requests to
@@ -11,12 +6,7 @@ const dir = dirname(fileURLToPath(import.meta.url));
  * for every other route beneath `/adapter/custom-handler`.
  * @type {SSRHandler}
  */
-export default async function handler(server, env) {
-	await server.init({
-		env,
-		read: (file) => createReadableStream(resolve(dir, file))
-	});
-
+export default async function handler(server) {
 	return async (request, options) => {
 		const { pathname } = new URL(request.url);
 

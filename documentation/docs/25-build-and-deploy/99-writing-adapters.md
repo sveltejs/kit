@@ -95,13 +95,17 @@ export default function (options) {
 };
 ```
 
-The handler file should export a default function that calls `server.init` with an implementation for [`read`]($app-server#read) (if it supports it). It should also return a function which returns a `Response` or calls `server.respond` with any [platform-specific context](types#Platform).
+The handler file should export a default function that returns a request handler. The should return a `Response` such as by calling `server.respond` along with any [platform-specific context](types#Platform). Optionally, you can pass a different set of environment variables or `read` implementation to `server.init` if your platform supports it.
 
 ```js
 /// file: src/handler.js
 // @errors: 2322
 /** @type {import('@sveltejs/kit').SSRHandler} */
 export default async function handler(server, env) {
+	// perform setup work here
+
+	// this is optional. Since `server.init` only runs once, the default
+	// implementation will be used instead if it's not been called already
 	await server.init({
 		env,
 		read: (file) => {
@@ -110,6 +114,8 @@ export default async function handler(server, env) {
 	});
 
 	return async (request, options) => {
+		// custom request/response handling logic goes here
+
 		return await server.respond(request, {
 			...options,
 			platform: {

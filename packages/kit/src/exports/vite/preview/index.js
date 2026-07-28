@@ -78,12 +78,13 @@ export async function preview(vite, vite_config, svelte_config) {
 			/** @type {{ default: SSRHandler }} */
 			const { default: handler } = await import(pathToFileURL(`${dir}/index.js`).href);
 			custom_respond = await handler(server, env);
-		} else {
-			await server.init({
-				env,
-				read: (file) => createReadableStream(`${dir}/${file}`)
-			});
 		}
+
+		// fallback if init hasn't been called yet
+		await server.init({
+			env,
+			read: (file) => createReadableStream(`${dir}/${file}`)
+		});
 	} catch (error) {
 		// Vite erases the error message when starting the preview server so we store
 		// it in the stack instead. This ensures errors thrown using `stackless`

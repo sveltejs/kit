@@ -8,7 +8,7 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 import { styleText } from 'node:util';
 import sirv from 'sirv';
 import { isCSSRequest, loadEnv, buildErrorMessage } from 'vite';
-import { getRequest, setResponse } from '../../../exports/node/index.js';
+import { createReadableStream, getRequest, setResponse } from '../../../exports/node/index.js';
 import { coalesce_to_error } from '../../../utils/error.js';
 import { resolve_entry } from '../../../utils/filesystem.js';
 import { load_and_validate_params } from '../../../utils/params.js';
@@ -596,6 +596,8 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, s
 				).default;
 
 				const respond = await init_server(server, env);
+				// fallback in case the custom handler didn't run init
+				await server.init({ env, read: (file) => createReadableStream(file) });
 
 				const request = getRequest({
 					base,

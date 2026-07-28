@@ -31,7 +31,6 @@ async function generate_fallback({ manifest_path, env, out_dir, origin, assets, 
 	set_building();
 
 	const server = new Server(manifest);
-	await server.init({ env });
 
 	const original_respond = server.respond.bind(server);
 
@@ -45,6 +44,13 @@ async function generate_fallback({ manifest_path, env, out_dir, origin, assets, 
 		);
 		custom_respond = await init_server(server, env);
 	}
+	// fallback if init hasn't been called yet
+	await server.init({
+		env,
+		read: (file) => {
+			throw new Error(`Cannot call \`read\` for ${file} while prerendering a fallback page`);
+		}
+	});
 
 	server.respond = (request, options) => {
 		return original_respond(request, {

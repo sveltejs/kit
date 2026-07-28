@@ -600,10 +600,6 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 	// only run the server after the `should_prerender` check so that we
 	// don't run the user's init hook unnecessarily
 	const server = new Server(manifest);
-	await server.init({
-		env,
-		read: (file) => createReadableStream(`${config.outDir}/output/server/${file}`)
-	});
 
 	const original_respond = server.respond.bind(server);
 
@@ -615,6 +611,11 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 		const { default: init_server } = await import(pathToFileURL(`${out}/server/index.js`).href);
 		custom_respond = await init_server(server, env);
 	}
+	// fallback if init hasn't been called yet
+	await server.init({
+		env,
+		read: (file) => createReadableStream(`${config.outDir}/output/server/${file}`)
+	});
 
 	log.info('Prerendering');
 
