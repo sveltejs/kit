@@ -23,6 +23,29 @@ test.describe('remote functions', () => {
 		expect(code.includes('const with_read = prerender(')).toBe(false);
 	});
 
+	test('non-dynamic prerendered remote functions with colliding basenames are treeshaken', () => {
+		test.skip(!!process.env.DEV, 'only applicable after build');
+
+		const chunks = path.join(root, '.svelte-kit', 'output', 'server', 'chunks');
+
+		const code = fs
+			.globSync(`${chunks}/*.js`)
+			.map((file) => fs.readFileSync(file, 'utf-8'))
+			.join('\n');
+
+		const maps = fs
+			.globSync(`${chunks}/*.js.map`)
+			.map((file) => fs.readFileSync(file, 'utf-8'))
+			.join('\n');
+
+		expect(code).not.toContain('++invocations');
+		expect(code).not.toContain("() => 'hello'");
+
+		// check that we didn't accidentally delete the code we're treeshaking
+		expect(maps).toContain('++invocations');
+		expect(maps).toContain("() => 'hello'");
+	});
+
 	test("doesn't duplicate remote modules in the generated manifest", () => {
 		test.skip(!!process.env.DEV, 'only applicable after build');
 		const code = fs.readFileSync(

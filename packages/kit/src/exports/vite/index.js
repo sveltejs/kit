@@ -1945,6 +1945,7 @@ function kit({ svelte_config }) {
 				vite,
 				out,
 				remotes,
+				remote_original_by_hash,
 				metadata,
 				process.cwd(),
 				server_chunks,
