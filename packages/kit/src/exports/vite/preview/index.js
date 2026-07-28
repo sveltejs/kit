@@ -234,7 +234,9 @@ export async function preview(vite, vite_config, svelte_config) {
 
 			setResponse(
 				res,
-				await (custom_respond ?? server.respond)(request, {
+				await /** @type {import('@sveltejs/kit').Server['respond']} */ (
+					custom_respond ?? server.respond
+				)(request, {
 					getClientAddress: () => {
 						const { remoteAddress } = req.socket;
 						if (remoteAddress) return remoteAddress;

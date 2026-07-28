@@ -1811,7 +1811,7 @@ export interface ServerInitOptions {
 export interface SSRManifest {
 	/** The directory where SvelteKit keeps its stuff, including static assets (such as JS and CSS) and internally-used routes. */
 	appDir: string;
-	/** The `base` and `appDir` settings combined, without a leading slash. */
+	/** The `base` and `appDir` settings combined without a leading slash. */
 	appPath: string;
 	/** Static files from `config.files.assets` and the service worker (if any). */
 	assets: Set<string>;

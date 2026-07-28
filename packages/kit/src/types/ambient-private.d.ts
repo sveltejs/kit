@@ -54,16 +54,11 @@ declare module '__sveltekit/manifest-data' {
 	export const routes: Array<{ id: string }>;
 }
 
-/** The environment variables loaded by Vite, used to initialise the development server */
-declare module '__sveltekit/dev-env' {
-	export const env: Record<string, string>;
-}
-
 /** Resolves to the adapter's `customHandler`, falling back to SvelteKit's default handler */
 declare module '__sveltekit/dev-handler' {
 	// eslint-disable-next-line no-duplicate-imports
 	import { SSRHandler } from '@sveltejs/kit';
 
-	const create_handler: SSRHandler;
-	export default create_handler;
+	const init_server: SSRHandler;
+	export default init_server;
 }
