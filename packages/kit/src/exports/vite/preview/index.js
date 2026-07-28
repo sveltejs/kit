@@ -1,6 +1,6 @@
 /** @import { NextHandleFunction } from 'connect' */
 /** @import { PreviewServer, ResolvedConfig } from 'vite' */
-/** @import { ValidatedConfig, ServerInternalModule, InternalServer } from 'types' */
+/** @import { ValidatedConfig, ServerInternalModule, InternalServer, ServerModule } from 'types' */
 import fs from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -40,8 +40,8 @@ export async function preview(vite, vite_config, svelte_config) {
 	/** @type {ServerInternalModule} */
 	const { set_assets } = await import(pathToFileURL(join(dir, 'internal.js')).href);
 
-	/** @type {typeof import('@sveltejs/kit').Server} */
-	const Server = (await import(pathToFileURL(join(dir, 'server.js')).href)).Server;
+	/** @type {ServerModule} */
+	const { Server } = await import(pathToFileURL(join(dir, 'server.js')).href);
 
 	/** @type {import('@sveltejs/kit').SSRManifest} */
 	const manifest = (await import(pathToFileURL(join(dir, 'manifest.js')).href)).manifest;
