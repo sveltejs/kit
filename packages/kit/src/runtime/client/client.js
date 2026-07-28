@@ -3060,7 +3060,7 @@ export async function set_nearest_error_page(error) {
 			params: current.params,
 			branch: branch.slice(0, error_load.idx).concat(error_load.node),
 			error,
-			// do not set errors, we haven't changed the page so the previous ones are still current
+			errors: route.errors,
 			route
 		});
 
