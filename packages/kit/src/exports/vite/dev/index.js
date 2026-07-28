@@ -30,6 +30,7 @@ import { SCHEME } from '../../../utils/url.js';
 import { check_feature } from '../../../utils/features.js';
 import { escape_html } from '../../../utils/escape.js';
 import { get_runner } from '../../../runner.js';
+import { sveltekit_dev_handler } from '../module_ids.js';
 
 // vite-specifc queries that we should skip handling for css urls
 const vite_css_query_regex = /(?:\?|&)(?:raw|url|inline)(?:&|$)/;
@@ -590,8 +591,8 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, s
 					});
 				};
 
-				const init_server = /** @type {typeof import('__sveltekit/dev-handler')} */ (
-					await runner.import('__sveltekit/dev-handler')
+				const init_server = /** @type {typeof import('__sveltekit/dev-handler.js')} */ (
+					await runner.import(sveltekit_dev_handler)
 				).default;
 
 				const respond = await init_server(server, env);

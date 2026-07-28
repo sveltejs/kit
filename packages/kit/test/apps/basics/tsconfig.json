@@ -6,5 +6,12 @@
 		"resolveJsonModule": true
 	},
 	"extends": "$app/tsconfig",
-	"include": ["src", "unit-test", "test"]
+	"include": [
+		"src",
+		"unit-test",
+		"test",
+		"playwright.config.js",
+		"adapter-handler.js",
+		"vite.config.js"
+	]
 }
