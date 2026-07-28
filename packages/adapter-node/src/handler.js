@@ -31,7 +31,7 @@ if (isNaN(body_size_limit)) {
 const asset_dir = `${dir}/client${base}`;
 
 await server.init({
-	env: /** @type {Record<string, string>} */ (process.env),
+	env: process.env,
 	read: (file) => createReadableStream(`${asset_dir}/${file}`)
 });
 
