@@ -1,7 +1,6 @@
 /** @import { ViteDevServer } from 'vite' */
 import fs from 'node:fs';
 import path from 'node:path';
-import process from 'node:process';
 import { URL } from 'node:url';
 import { styleText } from 'node:util';
 import sirv from 'sirv';
