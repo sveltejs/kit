@@ -405,12 +405,33 @@ set_match_implementation(async (url) => {
 	return null;
 });
 
+let embedded_start = Promise.resolve();
+
+/**
+ * TODO this indirection is a grotesque workaround for the fact that multiple apps
+ * can operate on the same shared mutable state. This is fundamentally unsound,
+ * and the `start`/`_start` distinction does not fix it, but it does get the
+ * tests passing. We need to rethink this whole thing but not right now
+ * @param {import('./types.js').SvelteKitApp} _app
+ * @param {HTMLElement} _target
+ * @param {Parameters<typeof _hydrate>[1]} [data]
+ */
+export function start(_app, _target, data) {
+	if (__SVELTEKIT_EMBEDDED__) {
+		const start_promise = embedded_start.then(() => _start(_app, _target, data));
+		embedded_start = start_promise.catch(noop);
+		return start_promise;
+	}
+
+	return _start(_app, _target, data);
+}
+
 /**
  * @param {import('./types.js').SvelteKitApp} _app
  * @param {HTMLElement} _target
  * @param {Parameters<typeof _hydrate>[1]} [data]
  */
-export async function start(_app, _target, data) {
+async function _start(_app, _target, data) {
 	if (DEV && _target === document.body) {
 		console.warn(
 			'Placing %sveltekit.body% directly inside <body> is not recommended, as your app may break for users who have certain browser extensions installed.\n\nConsider wrapping it in an element:\n\n<div style="display: contents">\n  %sveltekit.body%\n</div>'
