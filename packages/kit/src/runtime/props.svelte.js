@@ -28,17 +28,20 @@ export class Props {
 	onerror;
 
 	/**
+	 * Every prop must be passed here so a construction site cannot silently omit a new field
 	 * @param {Page} page
 	 * @param {RenderNode} tree
+	 * @param {any} form
+	 * @param {App.Error | undefined} error
 	 * @param {(error: unknown, reset: () => void) => void} onerror
 	 */
-	constructor(page, tree, onerror = noop) {
+	constructor(page, tree, form, error, onerror = noop) {
 		this.page = page;
 		this.tree = tree;
 		this.onerror = onerror;
 
-		this.form = $state.raw();
-		this.error = $state.raw();
+		this.form = $state.raw(form);
+		this.error = $state.raw(error);
 	}
 }
 

@@ -374,7 +374,7 @@ let invalidation_token;
 const preload_tokens = new Set();
 
 /** @type {Promise<void> | null} */
-export let pending_invalidate;
+let pending_invalidate;
 
 /**
  * @type {Map<string, Map<string, CacheEntry<Query<any>>>>}
@@ -477,7 +477,7 @@ async function _start(_app, _target, data) {
 
 	const tree = new RenderNode(root_layout.component, root_error.component);
 
-	props = new Props(page, tree, (_, reset) => resetters.add(reset));
+	props = new Props(page, tree, undefined, undefined, (_, reset) => resetters.add(reset));
 
 	const history_metadata = get_history_metadata();
 	current_history_index = history_metadata?.historyIndex ?? 0;

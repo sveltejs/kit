@@ -153,11 +153,10 @@ export async function render_response({
 				// TODO tidy up
 				/** @type {Component} */ (await branch[0].node.component?.()),
 				/** @type {Component} */ (error_components?.[1])
-			)
+			),
+			form_value,
+			error ?? undefined
 		);
-
-		props.form = form_value;
-		props.error = error ?? undefined;
 
 		let current_node = props.tree;
 		let data = props.page.data;
