@@ -2099,7 +2099,7 @@ const collect_immutable = (manifest, app_dir, inlined) => {
 
 	return Array.from(files, (path) => ({ path }));
 };
-  
+
 /**
  * Normalizes a config value for comparison, since Windows paths may use backslashes
  * and differ in casing (e.g. the drive letter) depending on where they came from.
