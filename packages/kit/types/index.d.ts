@@ -60,27 +60,7 @@ declare module '@sveltejs/kit' {
 	}
 
 	/**
-	 * A function that calls `server.init` with an implementation for [`read`](https://svelte.dev/docs/kit/$app-server#read) (if it supports it). It should also return a function which returns a `Response` or calls `server.respond` with any [platform-specific context](https://svelte.dev/docs/kit/types#Platform).
-	 *
-	 * ```js
-	 * export default async function (server, env) {
-	 * 	await server.init({
-	 * 		env,
-	 * 		read: (file) => {
-	 * 			// how your platform reads files
-	 * 		},
-	 * 	});
-	 *
-	 * 	return async (request, options) => {
-	 * 		return await server.respond(request, {
-	 * 			...options,
-	 * 			platform: {
-	 * 				// the shape of `App.Platform`
-	 * 			}
-	 * 		});
-	 * 	};
-	 * };
-	 * ```
+	 * The [custom handler](https://svelte.dev/docs/kit/writing-adapters#Custom-request-handler) an adapter can specify to customise request handling. It is expected to call `server.init` with an implementation for [`read`](https://svelte.dev/docs/kit/$app-server#read) (if it supports it) and return a function which returns a `Response` or calls `server.respond` with any [platform-specific context](https://svelte.dev/docs/kit/types#Platform).
 	 * @since 3.0.0
 	 */
 	export type SSRHandler = (
