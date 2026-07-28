@@ -39,17 +39,6 @@ export function validate_load_response(data, location_description) {
 	}
 }
 
-/**
- * Try to `devalue.stringify` the data object using the provided transport encoders.
- * @param {any} data
- * @param {Transport} transport
- */
-export function stringify(data, transport) {
-	const encoders = Object.fromEntries(Object.entries(transport).map(([k, v]) => [k, v.encode]));
-
-	return devalue.stringify(data, encoders);
-}
-
 const object_proto_names = /* @__PURE__ */ Object.getOwnPropertyNames(Object.prototype)
 	.sort()
 	.join('\0');

@@ -1,9 +1,11 @@
 /** @import { RemoteResource, RemotePrerenderFunction } from '@sveltejs/kit' */
 /** @import { RemotePrerenderInputsGenerator, RemotePrerenderInternals, MaybePromise } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
+import * as devalue from 'devalue';
 import { json, error } from '@sveltejs/kit';
 import { get_request_store } from '@sveltejs/kit/internal/server';
-import { stringify, stringify_remote_arg } from '../../../shared.js';
+import { stringify_remote_arg } from '../../../shared.js';
+import { app } from '../../../server/app.js';
 import { noop } from '../../../../utils/functions.js';
 import { app_dir, base } from '$app/paths/internal/server';
 import {
@@ -135,7 +137,7 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 			const result = await promise;
 
 			if (state.prerendering) {
-				const body = { type: 'result', data: stringify({ _: result }, state.transport) };
+				const body = { type: 'result', data: devalue.stringify({ _: result }, app.encoders) };
 				state.prerendering.dependencies.set(url, {
 					body: JSON.stringify(body),
 					response: json(body)

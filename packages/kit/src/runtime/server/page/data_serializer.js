@@ -1,8 +1,9 @@
 import * as devalue from 'devalue';
 import { compact } from '../../../utils/array.js';
 import { create_async_iterator } from '../../../utils/streaming.js';
-import { clarify_devalue_error, get_encoders, get_global_name, serialize_uses } from '../utils.js';
+import { clarify_devalue_error, get_global_name, serialize_uses } from '../utils.js';
 import { handle_error_and_jsonify } from '../errors.js';
+import { app } from '../app.js';
 
 /**
  * If the serialized data contains promises, `chunks` will be an
@@ -135,7 +136,7 @@ export function server_data_serializer_json(event, event_state, options) {
 	const iterator = create_async_iterator();
 
 	const reducers = {
-		...get_encoders(options.hooks.transport),
+		...app.encoders,
 		/** @param {any} thing */
 		Promise: (thing) => {
 			if (typeof thing?.then !== 'function') {

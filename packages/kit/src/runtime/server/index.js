@@ -130,10 +130,11 @@ export class Server {
 					transport: module.transport || {}
 				};
 
+				const transporters = Object.entries(this.#options.hooks.transport);
+
 				set_app({
-					decoders: module.transport
-						? Object.fromEntries(Object.entries(module.transport).map(([k, v]) => [k, v.decode]))
-						: {}
+					decoders: Object.fromEntries(transporters.map(([k, v]) => [k, v.decode])),
+					encoders: Object.fromEntries(transporters.map(([k, v]) => [k, v.encode]))
 				});
 
 				if (module.init) {
@@ -155,7 +156,8 @@ export class Server {
 					};
 
 					set_app({
-						decoders: {}
+						decoders: {},
+						encoders: {}
 					});
 				} else {
 					throw e;
