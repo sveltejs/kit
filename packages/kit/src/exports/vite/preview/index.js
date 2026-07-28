@@ -50,33 +50,24 @@ export async function preview(vite, vite_config, svelte_config) {
 
 	const server = new Server(manifest);
 
-	const env = loadEnv(vite_config.mode, svelte_config.kit.env.dir, '');
-
-	try {
-		await server.init({
-			env,
-			read: (file) => createReadableStream(`${dir}/${file}`)
-		});
-	} catch (error) {
-		// Vite erases the error message when starting the preview server so we store
-		// it in the stack instead. This ensures errors thrown using `stackless`
-		// are still readable
-		if (error instanceof Error) error.stack = error.message;
-		throw error;
-	}
-
-	const emulator = await svelte_config.kit.adapter?.emulate?.();
-
 	const original_respond = server.respond.bind(server);
+	const emulator = await svelte_config.kit.adapter?.emulate?.();
 
 	server.respond = async (request, options) => {
 		return await /** @type {InternalServer['respond']} */ (original_respond)(request, {
 			...options,
-			// @ts-expect-error this is only needed for prerender
-			read: undefined,
+			read: (file) => {
+				if (file in manifest._.server_assets) {
+					return fs.readFileSync(join(dir, file));
+				}
+
+				return fs.readFileSync(join(svelte_config.kit.files.assets, file));
+			},
 			emulator
 		});
 	};
+
+	const env = loadEnv(vite_config.mode, svelte_config.kit.env.dir, '');
 
 	/** @type {import('@sveltejs/kit').Server['respond'] | undefined} */
 	let custom_respond;
@@ -85,6 +76,19 @@ export async function preview(vite, vite_config, svelte_config) {
 		/** @type {{ default: import('@sveltejs/kit').SSRHandler }} */
 		const { default: handler } = await import(pathToFileURL(`${dir}/index.js`).href);
 		custom_respond = await handler(server, env);
+	} else {
+		try {
+			await server.init({
+				env,
+				read: (file) => createReadableStream(`${dir}/${file}`)
+			});
+		} catch (error) {
+			// Vite erases the error message when starting the preview server so we store
+			// it in the stack instead. This ensures errors thrown using `stackless`
+			// are still readable
+			if (error instanceof Error) error.stack = error.message;
+			throw error;
+		}
 	}
 
 	return () => {
