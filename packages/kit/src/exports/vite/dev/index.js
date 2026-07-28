@@ -4,6 +4,8 @@ import path from 'node:path';
 import { URL } from 'node:url';
 import { styleText } from 'node:util';
 import sirv from 'sirv';
+import { sveltekit_dev_server } from '../module_ids.js';
+import { fix_stack_trace } from './sourcemaps.js';
 import { getRequest, setResponse } from '../../../exports/node/index.js';
 import { coalesce_to_error } from '../../../utils/error.js';
 import { resolve_entry } from '../../../utils/filesystem.js';
@@ -20,8 +22,6 @@ import {
 	remote_module_pattern
 } from '../utils.js';
 import { escape_html } from '../../../utils/escape.js';
-import { fix_stack_trace } from './sourcemaps.js';
-import { sveltekit_dev_server } from '../module_ids.js';
 import { get_runner } from '../../../runner.js';
 
 export const dev_context = posixify(path.join(import.meta.dirname, 'context.js'));
