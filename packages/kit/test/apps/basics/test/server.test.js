@@ -507,6 +507,15 @@ test.describe('Endpoints', () => {
 });
 
 test.describe('Errors', () => {
+	test('uses the handleError status for the fallback page served to error-page sub-requests', async ({
+		request
+	}) => {
+		const response = await request.get('/errors/handle-error-status-fallback', {
+			headers: { 'x-sveltekit-error': 'true' }
+		});
+		expect(response.status()).toBe(503);
+	});
+
 	test('invalid route response is handled', async ({ request }) => {
 		const response = await request.get('/errors/invalid-route-response');
 
