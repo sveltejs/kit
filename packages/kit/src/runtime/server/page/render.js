@@ -157,6 +157,7 @@ export async function render_response({
 		);
 
 		props.form = form_value;
+		props.error = error ?? undefined;
 
 		let current_node = props.tree;
 		let data = props.page.data;
