@@ -1,7 +1,7 @@
 /** @import { EnvVarConfig, KitConfig } from '@sveltejs/kit' */
 /** @import { Options, SvelteConfig } from '@sveltejs/vite-plugin-svelte' */
 /** @import { PreprocessorGroup } from 'svelte/compiler' */
-/** @import { BuildData, ManifestData, Prerendered, ServerMetadata, RemoteInternals, ValidatedConfig, ValidatedKitConfig } from 'types' */
+/** @import { BuildData, ManifestData, Prerendered, RemoteChunk, RemoteInternals, ServerMetadata, ValidatedConfig, ValidatedKitConfig } from 'types' */
 /** @import { Manifest, Plugin, ResolvedConfig, Rolldown, UserConfig, ViteDevServer } from 'vite' */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -835,7 +835,7 @@ function kit({ svelte_config }) {
 	/** @type {ViteDevServer} */
 	let dev_server;
 
-	/** @type {Array<{ hash: string, file: string }>} */
+	/** @type {RemoteChunk[]} */
 	const remotes = [];
 
 	/** @type {Map<string, string>} Maps remote hash -> original module id */
