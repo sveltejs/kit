@@ -173,8 +173,6 @@ export function dev(vite, vite_config, svelte_config, remotes, root, set_manifes
 
 	vite.environments.ssr.hot.on('vite:error', vite.hot.send);
 
-	const adapter_supports_instrumentation = svelte_config.kit.adapter?.supports?.instrumentation?.();
-
 	return () => {
 		const serve_static_middleware = vite.middlewares.stack.find(
 			(middleware) =>
@@ -310,7 +308,6 @@ export function dev(vite, vite_config, svelte_config, remotes, root, set_manifes
 				const error = coalesce_to_error(e);
 				res.statusCode = 500;
 				fix_stack_trace(error);
-				console.error(styleText(['bold', 'red'], error.message));
 				res.end(error.stack || error.message); // handle `stackless` errors
 			}
 		});
