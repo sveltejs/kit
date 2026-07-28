@@ -1,5 +1,4 @@
 /** @import { Server } from '@sveltejs/kit' */
-/** @import { InternalServer } from 'types' */
 import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -614,7 +613,6 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 	if (config.adapter?.customHandler) {
 		/** @type {{ default: import('@sveltejs/kit').SSRHandler }} */
 		const { default: init_server } = await import(pathToFileURL(`${out}/server/index.js`).href);
-		/** @type {InternalServer['respond']} */
 		custom_respond = await init_server(server, env);
 	}
 

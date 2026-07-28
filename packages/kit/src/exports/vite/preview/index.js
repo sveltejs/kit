@@ -1,6 +1,6 @@
 /** @import { NextHandleFunction } from 'connect' */
 /** @import { PreviewServer, ResolvedConfig } from 'vite' */
-/** @import { ValidatedConfig, ServerInternalModule, InternalServer, ServerModule } from 'types' */
+/** @import { ValidatedConfig, ServerInternalModule, ServerModule } from 'types' */
 import fs from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -54,7 +54,7 @@ export async function preview(vite, vite_config, svelte_config) {
 	const emulator = await svelte_config.kit.adapter?.emulate?.();
 
 	server.respond = async (request, options) => {
-		return await /** @type {InternalServer['respond']} */ (original_respond)(request, {
+		return await original_respond(request, {
 			...options,
 			read: (file) => {
 				if (file in manifest._.server_assets) {

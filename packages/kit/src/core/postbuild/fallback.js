@@ -1,4 +1,3 @@
-/** @import { InternalServer } from 'types' */
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -44,7 +43,6 @@ async function generate_fallback({ manifest_path, env, out_dir, origin, assets, 
 		const { default: init_server } = await import(
 			pathToFileURL(`${server_root}/server/index.js`).href
 		);
-		/** @type {InternalServer['respond']} */
 		custom_respond = await init_server(server, env);
 	}
 
