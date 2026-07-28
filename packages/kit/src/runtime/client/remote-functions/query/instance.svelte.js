@@ -70,7 +70,7 @@ export class Query {
 			delete query_responses[key];
 
 			if (node.e) {
-				this.fail(new HttpError(node.e.status, node.e));
+				this.fail(new HttpError(node.e));
 			} else {
 				this.set(/** @type {T} */ (node.v));
 			}
@@ -152,7 +152,7 @@ export class Query {
 					this.#loading = false;
 				});
 
-				reject(new HttpError(error.status, error)); // so that transformError doesn't transform it again
+				reject(new HttpError(error)); // so that transformError doesn't transform it again
 			});
 
 		return promise;

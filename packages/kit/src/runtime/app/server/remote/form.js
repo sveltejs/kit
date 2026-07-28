@@ -146,7 +146,15 @@ export function form(validate_or_fn, maybe_fn) {
 		Object.defineProperty(instance, '__', { value: __ });
 
 		Object.defineProperty(instance, 'action', {
-			get: () => `?/remote=${__.key ? `${__.id}/${encodeURIComponent(__.key)}` : __.id}`,
+			get: () => {
+				const search = new URLSearchParams(get_request_store().event.url.search);
+				search.delete('/remote');
+
+				const query = search.toString();
+				const action_id = __.key ? `${__.id}/${encodeURIComponent(__.key)}` : __.id;
+
+				return `?${query ? `${query}&` : ''}/remote=${action_id}`;
+			},
 			enumerable: true
 		});
 

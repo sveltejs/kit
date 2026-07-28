@@ -2,19 +2,11 @@
 
 export class HttpError {
 	/**
-	 * @param {number} status
-	 * @param {Omit<App.Error, 'status'> | string | undefined} body
-	 * @param {Omit<App.Error, 'status' | 'message'>} [properties]
+	 * @param {App.Error} error
 	 */
-	constructor(status, body, properties) {
-		this.status = status;
-		if (typeof body === 'string') {
-			this.body = { ...properties, message: body, status };
-		} else if (body) {
-			this.body = { ...body, status };
-		} else {
-			this.body = { message: `Error: ${status}`, status };
-		}
+	constructor(error) {
+		this.status = error.status;
+		this.body = error;
 	}
 
 	toString() {
