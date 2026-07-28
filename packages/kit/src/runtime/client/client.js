@@ -62,6 +62,7 @@ import { read_ndjson } from './ndjson.js';
 import Root from '../components/root.svelte';
 import { Props, RenderNode } from '../props.svelte.js';
 import { init_transport, parse, stringify } from '#app/internal/transport';
+import { build_error_chain } from '../error-chain.js';
 
 /**
  * @typedef {{
@@ -1052,27 +1053,9 @@ async function get_navigation_result_from_branch({
 	let data = {};
 	let data_changed = !page;
 
-	let error_components;
-	if (errors) {
-		let last_idx = -1;
-		error_components = await Promise.all(
-			// eslint-disable-next-line @typescript-eslint/await-thenable
-			branch
-				.map((b, i) => {
-					if (i === 0) return undefined; // root layout wraps root error component, not the other way around
-					if (!b) return null;
-
-					i--;
-					// find the closest error component up to the previous branch
-					while (i > last_idx + 1 && !errors[i]) i -= 1;
-					last_idx = i;
-					return errors[i]?.()
-						.then((e) => e.component)
-						.catch(() => undefined);
-				})
-				.filter((e) => e !== null)
-		);
-	}
+	const error_components =
+		errors &&
+		(await build_error_chain(branch, errors, (loader) => loader().then((e) => e.component)));
 
 	let current_node = result.props.tree;
 	let current_depth = 1;
