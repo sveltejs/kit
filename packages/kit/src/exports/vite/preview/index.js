@@ -47,9 +47,6 @@ export async function preview(vite, vite_config, svelte_config) {
 	/** @type {SSRManifest} */
 	const manifest = (await import(pathToFileURL(join(dir, 'manifest.js')).href)).manifest;
 
-	/** @type {{ default: SSRHandler }} */
-	const { default: handler } = await import(pathToFileURL(`${dir}/index.js`).href);
-
 	set_assets(assets);
 
 	const server = new Server(manifest);
@@ -78,6 +75,8 @@ export async function preview(vite, vite_config, svelte_config) {
 		const env = loadEnv(vite_config.mode, svelte_config.kit.env.dir, '');
 
 		if (svelte_config.kit.adapter?.customHandler) {
+			/** @type {{ default: SSRHandler }} */
+			const { default: handler } = await import(pathToFileURL(`${dir}/index.js`).href);
 			custom_respond = await handler(server, env);
 		} else {
 			await server.init({
