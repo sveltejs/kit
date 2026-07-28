@@ -637,6 +637,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, s
 				const error = coalesce_to_error(e);
 				res.statusCode = 500;
 				fix_stack_trace(error);
+				console.error(styleText(['bold', 'red'], String(error)));
 				res.end(error.stack || error.message); // handle `stackless` errors
 			}
 		});
