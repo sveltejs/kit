@@ -46,15 +46,7 @@ declare module '@sveltejs/kit' {
 		 */
 		emulate?: () => MaybePromise<Emulator>;
 		/**
-		 * The path to a module whose default export is a [custom handler](https://svelte.dev/docs/kit/writing-adapters#Providing-a-custom-handler).
-		 * ```js
-		 * /** @type {import('@sveltejs/kit').Adapter} *\/
-		 * const adapter = {
-		 * 	name: 'my-adapter',
-		 * 	adapt() {},
-		 * 	customHandler: import.meta.resolve('./handler.js')
-		 * };
-		 * ```
+		 * The path to a module whose default export is a [custom handler](https://svelte.dev/docs/kit/writing-adapters#Custom-request-handler).
 		 * @since 3.0.0
 		 */
 		customHandler?: string;
@@ -68,17 +60,20 @@ declare module '@sveltejs/kit' {
 	}
 
 	/**
-	 * Typically you would intercept platform-specific requests and add platform-specific data:
+	 * A function that calls `server.init` with an implementation for [`read`](https://svelte.dev/docs/kit/$app-server#read) (if it supports it). It should also return a function which returns a `Response` or calls `server.respond` with any [platform-specific context](https://svelte.dev/docs/kit/types#Platform).
 	 *
 	 * ```js
 	 * export default async function (server, env) {
-	 * 	await server.init({ env });
+	 * 	await server.init({
+	 * 		env,
+	 * 		read: (file) => {
+	 * 			// how your platform reads files
+	 * 		},
+	 * 	});
 	 *
-	 * 	return (request) => {
-	 * 		return server.respond(request, {
-	 * 			getClientAddress() {
-	 * 				throw new Error('Could not determine clientAddress');
-	 * 			},
+	 * 	return async (request, options) => {
+	 * 		return await server.respond(request, {
+	 * 			...options,
 	 * 			platform: {
 	 * 				// the shape of `App.Platform`
 	 * 			}
@@ -1407,7 +1402,10 @@ declare module '@sveltejs/kit' {
 	}
 
 	export type Navigation =
-		NavigationExternal | NavigationFormSubmit | NavigationPopState | NavigationLink;
+		| NavigationExternal
+		| NavigationFormSubmit
+		| NavigationPopState
+		| NavigationLink;
 
 	/**
 	 * The argument passed to [`beforeNavigate`](https://svelte.dev/docs/kit/$app-navigation#beforeNavigate) callbacks.
@@ -1512,7 +1510,8 @@ declare module '@sveltejs/kit' {
 	 * A param matcher definition passed to [`defineParams`](https://svelte.dev/docs/kit/@sveltejs-kit#defineParams).
 	 */
 	export type ParamDefinition =
-		((param: string) => ParamValue | undefined) | StandardSchemaV1<string, ParamValue>;
+		| ((param: string) => ParamValue | undefined)
+		| StandardSchemaV1<string, ParamValue>;
 
 	/**
 	 * The return type of [`defineParams`](https://svelte.dev/docs/kit/@sveltejs-kit#defineParams).
@@ -1615,7 +1614,8 @@ declare module '@sveltejs/kit' {
 		};
 
 	export type RequestedResult<Validated, Output> =
-		QueryRequestedResult<Validated, Output> | LiveQueryRequestedResult<Validated, Output>;
+		| QueryRequestedResult<Validated, Output>
+		| LiveQueryRequestedResult<Validated, Output>;
 
 	export interface RequestEvent<
 		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,

@@ -75,10 +75,12 @@ You can customise your server's initialisation and request handling by adding a 
 
 ```js
 /** @type {import('@sveltejs/kit').Adapter} */
-const adapter = {
+export default {
 	name: 'adapter-package-name',
-	adapt() {},
-	customHandler: import.meta.resolve('./src/handler.js')
+	adapt(builder) {
+		// adapter implementation
+	},
+	+++customHandler: import.meta.resolve('./src/handler.js')+++
 };
 ```
 
@@ -87,7 +89,7 @@ The handler file should export a default function that calls `server.init` with 
 ```js
 /// file: src/handler.js
 /** @type {import('@sveltejs/kit').SSRHandler} */
-export default async (server, env) => {
+export default async function (server, env) {
 	await server.init({
 		env,
 		read: (file) => {
