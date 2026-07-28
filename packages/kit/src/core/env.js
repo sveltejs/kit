@@ -10,6 +10,7 @@ import { runtime_directory } from './utils.js';
 import { resolve_entry } from '../utils/filesystem.js';
 import { handle_issues, validate } from '../exports/internal/env.js';
 import { get_config_aliases } from '../exports/vite/utils.js';
+import { get_runner } from '../runner.js';
 
 /**
  * @typedef {'public' | 'private'} EnvType
@@ -52,12 +53,14 @@ export async function load_explicit_env(kit, file, root, mode) {
 	/** @type {Record<string, EnvVarConfig<any>>} */
 	let variables;
 
+	const runner = get_runner(server);
+
 	/** @type {import('../runtime/app/env/internal.js')} */ (
-		await server.ssrLoadModule(`${runtime_directory}/app/env/internal.js`)
+		await runner.import(`${runtime_directory}/app/env/internal.js`)
 	).set_building();
 
 	try {
-		({ variables } = await server.ssrLoadModule(file));
+		({ variables } = await runner.import(file));
 
 		if (!variables || typeof variables !== 'object') {
 			throw new Error(`${file} must export a variables object`);
@@ -238,25 +241,35 @@ export function create_sveltekit_env_public(variables, env, prelude) {
  * `env.js`. If there are none, values are inlined.
  * @param {Record<string, EnvVarConfig<any>> | null} variables
  * @param {Record<string, string>} env
+ * @param {string} version
  * @param {string} global
  * @param {string} base
  * @param {string} app_dir
  */
-export function create_sveltekit_env_service_worker(variables, env, global, base, app_dir) {
+export function create_sveltekit_env_service_worker(
+	variables,
+	env,
+	version,
+	global,
+	base,
+	app_dir
+) {
 	const has_dynamic_public_env = Object.values(variables ?? {}).some(
 		(config) => config.public && !config.static
 	);
 
 	if (!has_dynamic_public_env) {
-		return create_sveltekit_env_service_worker_dev(variables, env, global);
+		return create_sveltekit_env_service_worker_dev(variables, env, version, global);
 	}
 
 	return dedent`
 		import { env } from '${base}/${app_dir}/env.js';
 
-		globalThis.__SVELTEKIT_EXPERIMENTAL_EXPLICIT_ENVIRONMENT_VARIABLES__ = true;
-
-		${global} = { env };
+		${global} = {
+			base: location.pathname.split('/').slice(0, -1).join('/'),
+			env,
+			version: ${JSON.stringify(version)}
+		};
 	`;
 }
 
@@ -264,9 +277,10 @@ export function create_sveltekit_env_service_worker(variables, env, global, base
  * Creates the `__sveltekit/env/service-worker` module used in development
  * @param {Record<string, EnvVarConfig<any>> | null} variables
  * @param {Record<string, string>} env
+ * @param {string} version
  * @param {string} global
  */
-export function create_sveltekit_env_service_worker_dev(variables, env, global) {
+export function create_sveltekit_env_service_worker_dev(variables, env, version, global) {
 	/** @type {string[]} */
 	const properties = [];
 
@@ -283,12 +297,12 @@ export function create_sveltekit_env_service_worker_dev(variables, env, global) 
 	handle_issues(issues);
 
 	return dedent`
-		globalThis.__SVELTEKIT_EXPERIMENTAL_EXPLICIT_ENVIRONMENT_VARIABLES__ = true;
-
 		${global} = {
+			base: location.pathname.split('/').slice(0, -1).join('/'),
 			env: {
 				${properties.join(',\n\t\t') || '// empty'}
-			}
+			},
+			version: ${JSON.stringify(version)}
 		};
 	`;
 }

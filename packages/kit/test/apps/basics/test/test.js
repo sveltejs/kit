@@ -319,6 +319,33 @@ test.describe('Load', () => {
 		}
 	});
 
+	test('POST fetches with non-string bodies are not serialized', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		await page.goto('/load/serialization-post-body-object');
+
+		expect(await page.textContent('h1')).toBe('A=1');
+
+		if (!javaScriptEnabled) {
+			expect(await page.locator('script[data-sveltekit-fetched]').count()).toBe(0);
+		}
+	});
+
+	test('POST fetches with non-string bodies do not reuse responses serialized for other requests', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		await page.goto('/load/serialization-post-body-collision');
+
+		expect(await page.textContent('h1')).toBe('POST:a=1');
+		expect(await page.textContent('p')).toBe('GET');
+
+		if (!javaScriptEnabled) {
+			expect(await page.locator('script[data-sveltekit-fetched]').count()).toBe(1);
+		}
+	});
+
 	test('fetches using an arraybuffer serialized with b64', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/load/fetch-arraybuffer-b64');
 
@@ -744,6 +771,45 @@ test.describe('$app/env', () => {
 	test('includes version', async ({ page }) => {
 		await page.goto('/app-environment');
 		expect(await page.textContent('h1')).toBe('TEST_VERSION');
+	});
+});
+
+test.describe('$app/manifest', () => {
+	test('exposes routes', async ({ page }) => {
+		await page.goto('/app-manifest');
+		const routes = JSON.parse((await page.textContent('[data-name="routes"] pre')) ?? '');
+		const ids = routes.map((/** @type {any} */ r) => r.id);
+		expect(ids).toContain('/');
+		expect(ids).toContain('/app-manifest');
+		expect(ids).toContain('/routing');
+	});
+
+	test('exposes static assets', async ({ page }) => {
+		await page.goto('/app-manifest');
+		const assets = JSON.parse((await page.textContent('[data-name="assets"] pre')) ?? '');
+		const paths = assets.map((/** @type {any} */ a) => a.path);
+		expect(paths).toContain('favicon.png');
+		expect(paths).toContain('static.json');
+	});
+
+	test('exposes immutable assets', async ({ page }) => {
+		test.skip(!!process.env.DEV, 'only known after build');
+		await page.goto('/app-manifest');
+		const immutable = JSON.parse((await page.textContent('[data-name="immutable"] pre')) ?? '');
+		const paths = immutable.map((/** @type {any} */ a) => a.path);
+		expect(paths.length).toBeGreaterThan(0);
+		// should only include immutable chunks
+		expect(paths.every((/** @type {string} */ f) => f.includes('_app/immutable/'))).toBe(true);
+	});
+
+	test('exposes prerendered paths', async ({ page }) => {
+		test.skip(!!process.env.DEV, 'prerendered paths are only known after build');
+		await page.goto('/app-manifest');
+		const prerendered = JSON.parse((await page.textContent('[data-name="prerendered"] pre')) ?? '');
+		const paths = prerendered.map((/** @type {any} */ a) => a.path);
+		// the test app prerenders '*' — some known prerendered routes
+		expect(paths.length).toBeGreaterThan(0);
+		expect(paths).toContain('prerendering/no-ssr');
 	});
 });
 

@@ -2,12 +2,13 @@ import { execSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
-import { assert, expect, test } from 'vitest';
+import { assert, describe, expect, test } from 'vitest';
 import { rimraf } from '../../../utils/filesystem.js';
 import create_manifest_data from '../create_manifest_data/index.js';
 import { tweak_types, write_all_types } from './index.js';
-import { write_non_ambient } from '../write_non_ambient.js';
+import { write_app_types } from '../write_app_types.js';
 import { validate_config } from '../../config/index.js';
+import { write_env } from '../write_env.js';
 
 const cwd = path.join(import.meta.dirname, 'test');
 
@@ -32,10 +33,11 @@ function run_test(dir) {
 	});
 
 	write_all_types(initial, manifest, root);
-	write_non_ambient(initial.kit, manifest);
+	write_app_types(initial.kit, manifest, root);
+	write_env('', {}, root);
 }
 
-test('Creates correct $types', { timeout: 60000 }, () => {
+describe('Creates correct $types', () => {
 	// To save us from creating a real SvelteKit project for each of the tests,
 	// we first run the type generation directly for each test case, and then
 	// call `tsc` to check that the generated types are valid.
@@ -44,17 +46,20 @@ test('Creates correct $types', { timeout: 60000 }, () => {
 		.filter((dir) => fs.statSync(`${cwd}/${dir}`).isDirectory());
 
 	for (const dir of directories) {
-		run_test(dir);
-		try {
-			// we skip lib check if MATRIX_VITE is set and not 'current' because overrides for vite can cause type mismatches
-			const skipLibCheck = process.env.MATRIX_VITE != null && process.env.MATRIX_VITE !== 'current';
-			execSync(`pnpm testtypes${skipLibCheck ? ' --skipLibCheck' : ''}`, {
-				cwd: path.join(cwd, dir)
-			});
-		} catch (e) {
-			console.error(/** @type {any} */ (e).stdout.toString());
-			throw new Error(`${dir} type tests failed`, { cause: e });
-		}
+		test(dir, { timeout: 60000 }, () => {
+			run_test(dir);
+			try {
+				// we skip lib check if MATRIX_VITE is set and not 'current' because overrides for vite can cause type mismatches
+				const skipLibCheck =
+					process.env.MATRIX_VITE != null && process.env.MATRIX_VITE !== 'current';
+				execSync(`pnpm testtypes${skipLibCheck ? ' --skipLibCheck' : ''}`, {
+					cwd: path.join(cwd, dir)
+				});
+			} catch (e) {
+				console.error(/** @type {any} */ (e).stdout.toString());
+				throw e;
+			}
+		});
 	}
 });
 

@@ -30,6 +30,13 @@ test.describe('remote functions', () => {
 		const response = await response_promise;
 		expect(response.headers()['cache-control']).toBe('private, no-store');
 	});
+
+	test('packages can re-export remote functions', async ({ page }) => {
+		await page.goto('/remote-lib');
+		await expect(page.locator('h1')).toHaveText('lib says hello');
+		await page.getByRole('button', { name: 'call remote function' }).click();
+		await expect(page.locator('p')).toHaveText('lib says client');
+	});
 });
 
 // have to run in serial because commands mutate in-memory data on the server (should fix this at some point)
@@ -81,6 +88,90 @@ test.describe('remote function mutations', () => {
 		await expect(page.locator('#ssr-batch-result-2')).toHaveText('Walk the dog');
 		await expect(page.locator('#ssr-batch-result-3')).toHaveText('Not found');
 		expect(request_count).toBe(0);
+	});
+
+	test('query.set from within a query during SSR inlines the set values', async ({ page }) => {
+		await page.goto('/remote/query-set-inline');
+
+		// start counting after navigation, so we only observe requests triggered by
+		// creating the `get_thing(id)` resources — they should reuse the inlined values
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.click('#show');
+		await expect(page.locator('#thing-1')).toHaveText('one');
+		await expect(page.locator('#thing-2')).toHaveText('two');
+		await expect(page.locator('#thing-3')).toHaveText('three');
+		await page.waitForTimeout(100); // allow all requests to finish (there shouldn't be any)
+		expect(request_count).toBe(0);
+	});
+
+	test('query.refresh from within a query during SSR inlines the refreshed values', async ({
+		page
+	}) => {
+		await page.goto('/remote/query-set-inline/refresh');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.click('#show');
+		await expect(page.locator('#thing-1')).toHaveText('one');
+		await expect(page.locator('#thing-2')).toHaveText('two');
+		await expect(page.locator('#thing-3')).toHaveText('three');
+		await page.waitForTimeout(100); // allow all requests to finish (there shouldn't be any)
+		expect(request_count).toBe(0);
+	});
+
+	test('a lazily-run refreshed query that refreshes another is included in the single-flight response', async ({
+		page
+	}) => {
+		await page.goto('/remote/nested-refresh');
+		await expect(page.locator('#a')).toHaveText('0');
+		await expect(page.locator('#b')).toHaveText('0');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		// `bump` refreshes `get_a`; when `get_a` runs on the server it refreshes
+		// `get_b`, which is added to the single-flight set mid-collection. Both must
+		// come back in the command response, so `#b` updates without an extra request.
+		await page.click('#bump');
+		await expect(page.locator('#a')).toHaveText('5');
+		await expect(page.locator('#b')).toHaveText('50');
+		await page.waitForTimeout(100); // allow all requests to finish
+		expect(request_count).toBe(1); // only the command itself — no separate refetch of get_b
+	});
+
+	test('a query re-refreshed by another query during collection is cached, not re-run', async ({
+		page
+	}) => {
+		await page.goto('/remote/re-refresh');
+		await expect(page.locator('#value')).toHaveText('0');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		// `bump` refreshes `get_value` (which sees 10) and `driver`. When `driver`
+		// runs during collection it bumps the value to 11 and re-refreshes `get_value`.
+		// `get_value` has already been processed once this drain, so the re-refresh is
+		// cached rather than re-run — the client keeps the first (10) value. This is
+		// what prevents A → B → A refresh cycles from looping forever.
+		await page.click('#bump');
+		await expect(page.locator('#value')).toHaveText('10');
+		await page.waitForTimeout(100); // allow all requests to finish
+		expect(request_count).toBe(1); // only the command — no separate refetch
+	});
+
+	test('queries that refresh each other in a cycle do not loop forever', async ({ page }) => {
+		await page.goto('/remote/refresh-cycle');
+		await expect(page.locator('#value')).toHaveText('0');
+
+		// `get_a` refreshes `get_b` and `get_b` refreshes `get_a`. Without cycle
+		// detection in the drain phase the command response would never settle, so
+		// `#value` would stay at 0 and this assertion would time out.
+		await page.click('#bump');
+
+		await expect(page.locator('#value')).toHaveText('1');
 	});
 
 	test('hydrated query errors are reused', async ({ page }) => {
@@ -419,7 +510,7 @@ test.describe('remote function mutations', () => {
 	test('fields.set updates DOM before validate', async ({ page }) => {
 		await page.goto('/remote/form/imperative');
 
-		const input = page.locator('input[name="message"]');
+		const input = page.locator('input[name^="message"]');
 		await input.fill('123');
 
 		await page.locator('#set-and-validate').click();
@@ -981,8 +1072,8 @@ test.describe('remote function mutations', () => {
 
 		const form1 = page.locator('form').nth(0);
 
-		const text = form1.locator('input[name="text_field"]');
-		const checkbox = form1.locator('input[name="b:checkbox_field"]');
+		const text = form1.locator('input[name^="text_field"]');
+		const checkbox = form1.locator('input[name^="b:checkbox_field"]');
 
 		// initial values rendered correctly
 		await expect(text).toHaveValue('Example text');
@@ -1061,7 +1152,7 @@ test.describe('remote function mutations', () => {
 		page
 	}) => {
 		await page.goto('/remote/form/native-result');
-		await page.locator('#plain input[name="message"]').fill('hello');
+		await page.locator('#plain input[name^="message"]').fill('hello');
 		await page.click('#plain button');
 
 		// wait for the page resulting from the full-page POST to hydrate
@@ -1073,20 +1164,20 @@ test.describe('remote function mutations', () => {
 		page
 	}) => {
 		await page.goto('/remote/form/native-result');
-		await page.locator('#plain input[name="message"]').fill('ab');
+		await page.locator('#plain input[name^="message"]').fill('ab');
 		await page.click('#plain button');
 
 		// wait for the page resulting from the full-page POST to hydrate
 		await expect(page.locator('#hydrated')).toHaveText('true');
 		await expect(page.locator('#issue')).toHaveText('too short');
-		await expect(page.locator('#plain input[name="message"]')).toHaveValue('ab');
+		await expect(page.locator('#plain input[name^="message"]')).toHaveValue('ab');
 	});
 
 	test('keyed form result from a native (non-enhanced) submission survives hydration', async ({
 		page
 	}) => {
 		await page.goto('/remote/form/native-result');
-		await page.locator('#keyed input[name="message"]').fill('hello');
+		await page.locator('#keyed input[name^="message"]').fill('hello');
 		await page.click('#keyed button');
 
 		// wait for the page resulting from the full-page POST to hydrate
@@ -1100,7 +1191,7 @@ test.describe('remote function mutations', () => {
 		page
 	}) => {
 		await page.goto('/remote/form/native-result');
-		await page.locator('#keyed-slash input[name="message"]').fill('hello');
+		await page.locator('#keyed-slash input[name^="message"]').fill('hello');
 		await page.click('#keyed-slash button');
 
 		// wait for the page resulting from the full-page POST to hydrate
@@ -1126,7 +1217,7 @@ test.describe('remote function mutations', () => {
 
 	test('form submission with element id `reset` resets the form', async ({ page }) => {
 		await page.goto('/remote/form/reset-id');
-		await page.locator('[name="message"]').fill('short');
+		await page.locator('[name^="message"]').fill('short');
 		await page.click('button');
 
 		await expect(page.locator('.error')).toHaveText('too short');
@@ -1134,11 +1225,11 @@ test.describe('remote function mutations', () => {
 		await page.click('[type="reset"]');
 		await expect(page.locator('.error')).toHaveCount(0);
 
-		await page.locator('[name="message"]').fill('long enough');
+		await page.locator('[name^="message"]').fill('long enough');
 		await page.click('button');
 
 		await expect(page.locator('#result')).toHaveText('long enough');
-		await expect(page.locator('[name="message"]')).toBeEmpty();
+		await expect(page.locator('[name^="message"]')).toBeEmpty();
 	});
 });
 

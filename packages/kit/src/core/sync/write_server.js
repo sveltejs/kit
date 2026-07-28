@@ -1,11 +1,10 @@
 import path from 'node:path';
-import { styleText } from 'node:util';
 import { hash } from '../../utils/hash.js';
 import { resolve_entry } from '../../utils/filesystem.js';
 import { posixify } from '../../utils/os.js';
 import { s } from '../../utils/misc.js';
 import { load_error_page, load_template } from '../config/index.js';
-import { write_if_changed } from './utils.js';
+import { check_spelling, write_if_changed } from './utils.js';
 import { escape_html } from '../../utils/escape.js';
 
 /**
@@ -54,6 +53,7 @@ export const options = {
 			)},
 		error
 	},
+	version: ${s(config.kit.version.name)},
 	version_hash: ${s(hash(config.kit.version.name))}
 };
 
@@ -83,10 +83,6 @@ export async function get_hooks() {
 export { set_assets, set_building, set_fix_stack_trace, set_manifest, set_prerendering, set_read_implementation };
 `;
 
-// TODO need to re-run this whenever src/app.html or src/error.html are
-// created or changed, or src/service-worker.js is created or deleted.
-// Also, need to check that updating hooks.server.js works
-
 /**
  * Write server configuration to disk
  * @param {import('types').ValidatedConfig} config
@@ -97,15 +93,14 @@ export function write_server(config, output, root) {
 	const server_hooks_file = resolve_entry(config.kit.files.hooks.server);
 	const universal_hooks_file = resolve_entry(config.kit.files.hooks.universal);
 
-	const typo = resolve_entry('src/+hooks.server');
-	if (typo) {
-		console.log(
-			styleText(
-				['bold', 'yellow'],
-				`Unexpected + prefix. Did you mean ${typo.split('/').at(-1)?.slice(1)}?` +
-					` at ${path.resolve(typo)}`
-			)
-		);
+	if (!server_hooks_file) {
+		check_spelling('src/hooks.server', 'src/+hooks.server', 'Unexpected + prefix');
+		check_spelling('src/hooks.server', 'src/hook.server', 'Missing s suffix');
+	}
+
+	if (!universal_hooks_file) {
+		check_spelling('src/hooks', 'src/+hooks', 'Unexpected + prefix');
+		check_spelling('src/hooks', 'src/hook', 'Missing s suffix');
 	}
 
 	/** @param {string} file */

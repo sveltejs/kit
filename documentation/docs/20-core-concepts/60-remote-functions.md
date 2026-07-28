@@ -35,7 +35,7 @@ export default defineConfig({
 
 ## Overview
 
-Remote functions are exported from a `.remote.js` or `.remote.ts` file, and come in four flavours: `query`, `form`, `command` and `prerender`. On the client, the exported functions are transformed to `fetch` wrappers that invoke their counterparts on the server via a generated HTTP endpoint. Remote files can be placed anywhere in your `src` directory (except inside the `src/lib/server` directory), and third party libraries can provide them, too.
+Remote functions are exported from a _remote module_, which is a file whose name includes a `remote` segment (e.g. `remote.ts` or `data.remote.ts`). They come in four flavours: `query`, `form`, `command` and `prerender`. On the client, the exported functions are transformed to `fetch` wrappers that invoke their counterparts on the server via a generated HTTP endpoint. Remote modules can be placed anywhere in your `src` directory (except inside a `server` directory — files here [cannot be imported into client-side code](server-only-modules)), and third-party libraries can provide them too.
 
 ## query
 
@@ -162,7 +162,7 @@ export const getPost = query(v.string(), async (slug) => {
 });
 ```
 
-Both the argument and the return value are serialized with [devalue](https://github.com/sveltejs/devalue), which handles types like `Date` and `Map` (and custom types defined in your [transport hook](hooks#Universal-hooks-transport)) in addition to JSON.
+Both the argument and the return value are serialized with [devalue](https://github.com/sveltejs/devalue), which handles types like `Date` and `Map` (and custom types defined in your [transport hook](hooks#transport)) in addition to JSON.
 
 > [!NOTE] For `query` and `prerender` arguments (but not return values), objects, maps, and sets are sorted so that instances with the same members result in the same cache key. For example, `getPosts({ limit: 10, offset: 10 })` and `getPosts({ offset: 10, limit: 10 })` will result in the same cache key. If order is important to you, you'll have to use an array.
 
@@ -1236,7 +1236,7 @@ As long as _you're_ not passing invalid data to your remote functions, there are
 - the function signature changed between deployments, and some users are currently on an older version of your app
 - someone is trying to attack your site by poking your exposed endpoints with bad data
 
-In the second case, we don't want to give the attacker any help, so SvelteKit will generate a generic [400 Bad Request](https://http.dog/400) response. You can control the message by implementing the [`handleValidationError`](hooks#Server-hooks-handleValidationError) server hook, which, like [`handleError`](hooks#Shared-hooks-handleError), must return an [`App.Error`](errors#Type-safety) (which defaults to `{ message: string }`):
+In the second case, we don't want to give the attacker any help, so SvelteKit will generate a generic [400 Bad Request](https://http.dog/400) response. You can control the message by implementing the [`handleValidationError`](hooks#handleValidationError) server hook, which, like [`handleError`](hooks#handleError), must return an [`App.Error`](errors#Type-safety) (which defaults to `{ message: string }`):
 
 ```js
 /// file: src/hooks.server.js
@@ -1302,7 +1302,8 @@ const getUser = query(async () => {
 Note that some properties of `RequestEvent` are different inside remote functions:
 
 - you cannot set headers (other than writing cookies, and then only inside `form` and `command` functions)
-- `route`, `params` and `url` relate to the page the remote function was called from, _not_ the URL of the endpoint SvelteKit creates for the remote function. Never use them to determine whether or not a user is authorized to access certain data, as these values are part of the request which could be manipulated. Queries are also not re-run when the user navigates (unless the argument to the query changes as a result of navigation), and so you should be mindful of how you use these values.
+- inside `query` functions (including `query.batch` and `query.live`), accessing `route`, `params` or `url` throws an error. Queries are cached by their arguments and are not re-run when the user navigates, so results depending on these values would go stale without the cache noticing. Pass values from the page as arguments to the query instead. You can still derive trusted context from cookies or headers in the [`handle`](hooks#handle) hook and put it on `locals`, but note that for query requests `handle` sees the URL of the remote endpoint, not of the page
+- in `form` and `command` functions, `route`, `params` and `url` relate to the page the remote function was called from, _not_ the URL of the endpoint SvelteKit creates for the remote function. Never use them to determine whether or not a user is authorized to access certain data, as these values are part of the request which could be manipulated
 
 ## Redirects
 

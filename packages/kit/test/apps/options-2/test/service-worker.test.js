@@ -28,7 +28,8 @@ test('build /basepath/service-worker.js', async ({ baseURL, request }) => {
 	const self = {
 		addEventListener: () => {},
 		base: null,
-		build: null,
+		/** @type {null | Array<{ path: string }>} */
+		immutable: null,
 		image_src: undefined
 	};
 
@@ -39,8 +40,8 @@ test('build /basepath/service-worker.js', async ({ baseURL, request }) => {
 		pathname
 	});
 
-	expect(self.base).toBe('/basepath');
-	expect(self.build?.[0]).toMatch(/\/basepath\/_app\/immutable\/bundle\.[\w-]+\.js/);
+	expect(self.base).toBe('/basepath/');
+	expect(self.immutable?.[0].path).toMatch(/^_app\/immutable\/bundle\.[\w-]+\.js/);
 	expect(self.image_src).toMatch(/\/basepath\/_app\/immutable\/assets\/image\.[\w-]+\.jpg/);
 });
 

@@ -4,12 +4,7 @@ import { negotiate } from '../../utils/http.js';
 import { escape_html } from '../../utils/escape.js';
 import { stackless } from '../../utils/error.js';
 import { dedent } from '../../core/sync/utils.js';
-import {
-	app_server,
-	app_env_private,
-	service_worker,
-	sveltekit_env_private
-} from './module_ids.js';
+import { app_server, app_env_private, sveltekit_env_private } from './module_ids.js';
 import { styleText } from 'node:util';
 
 /**
@@ -143,12 +138,12 @@ export function normalize_id(id, aliases, cwd) {
 		return '$app/env/private';
 	}
 
-	if (id === service_worker) {
-		return '$service-worker';
-	}
-
 	return posixify(id);
 }
+
+export const remote_module_pattern = /[/.]remote(\.[^/]+)+$/;
+export const server_only_module_pattern = /[/.]server(\.[^/]+)+$/;
+export const server_only_directory_pattern = /\/server\//;
 
 export const strip_virtual_prefix = /** @param {string} id */ (id) => id.replace('\0virtual:', '');
 

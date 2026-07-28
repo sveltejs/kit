@@ -1,3 +1,4 @@
+/** @import {} from 'deno' */
 import { Server } from '0SERVER';
 import { manifest } from 'MANIFEST';
 
@@ -11,7 +12,6 @@ const server = new Server(manifest);
 let origin;
 
 const initialized = server.init({
-	// @ts-ignore
 	env: Deno.env.toObject(),
 	read: async (file) => {
 		const url = `${origin}/${file}`;
@@ -31,8 +31,10 @@ const initialized = server.init({
 export default async function handler(request, context) {
 	if (!origin) {
 		origin = new URL(request.url).origin;
-		await initialized;
 	}
+
+	// always await initialization to prevent race condition with concurrent requests
+	await initialized;
 
 	return server.respond(request, {
 		platform: { context },

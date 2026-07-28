@@ -1,6 +1,7 @@
 /** @import { SvelteConfig } from '@sveltejs/vite-plugin-svelte' */
 /** @import { ValidatedKitConfig } from 'types' */
 /** @import { Validator } from './types.js' */
+import { styleText } from 'node:util';
 
 const directives = object({
 	'child-src': string_array(),
@@ -77,17 +78,21 @@ export const validate_kit_options = object({
 		return input;
 	}),
 
-	alias: validate({}, (input, keypath) => {
-		if (typeof input !== 'object') {
-			throw new Error(`${keypath} should be an object`);
-		}
+	alias: deprecate(
+		validate({}, (input, keypath) => {
+			if (typeof input !== 'object') {
+				throw new Error(`${keypath} should be an object`);
+			}
 
-		for (const key in input) {
-			assert_string(input[key], `${keypath}.${key}`);
-		}
+			for (const key in input) {
+				assert_string(input[key], `${keypath}.${key}`);
+			}
 
-		return input;
-	}),
+			return input;
+		}),
+		(keypath) =>
+			`The \`${keypath}\` option is deprecated, and will be removed in a future version of SvelteKit. Use subpath imports instead: https://svelte.dev/docs/kit/$lib`
+	),
 
 	appDir: validate('_app', (input, keypath) => {
 		assert_string(input, keypath);
@@ -270,47 +275,50 @@ export const validate_kit_options = object({
 	}),
 
 	serviceWorker: object({
+		files: removed(),
 		register: boolean(true),
 		// options could be undefined but if it is defined we only validate that
 		// it's an object since the type comes from the browser itself
-		options: validate(undefined, object({}, true)),
-		files: fun((filename) => !/\.DS_Store/.test(filename))
+		options: validate(undefined, object({}, true))
 	}),
 
 	tracing: object({
 		server: boolean(false)
 	}),
 
-	typescript: object({
-		config: fun((config) => config)
-	}),
+	typescript: deprecate(
+		object({
+			config: fun((config) => config)
+		}),
+		(keypath) => {
+			return `The \`${keypath}\` option is deprecated, and will be removed in a future version. Add configuration to tsconfig.json directly`;
+		}
+	),
 
 	version: object({
 		name: string(Date.now().toString()),
-		pollInterval: number(0)
+		pollInterval: number(3_600_000)
 	})
 });
 
-// /**
-//  * @param {Validator} fn
-//  * @param {(keypath: string) => string} get_message
-//  * @returns {Validator}
-//  */
-// function deprecate(
-// 	fn,
-// 	get_message = (keypath) =>
-// 		`The \`${keypath}\` option is deprecated, and will be removed in a future version`
-// ) {
-// 	return (input, keypath) => {
-//		keypath = remove_kit_prefix(keypath);
-//
-// 		if (input !== undefined) {
-// 			console.warn(styleText(['bold', 'yellow'], get_message(keypath)));
-// 		}
+/**
+ * @param {Validator} fn
+ * @param {(keypath: string) => string} get_message
+ * @returns {Validator}
+ */
+function deprecate(
+	fn,
+	get_message = (keypath) =>
+		`The \`${keypath}\` option is deprecated, and will be removed in a future version`
+) {
+	return (input, keypath) => {
+		if (input !== undefined) {
+			console.warn(styleText(['bold', 'yellow'], get_message(keypath)));
+		}
 
-// 		return fn(input, keypath);
-// 	};
-// }
+		return fn(input, keypath);
+	};
+}
 
 // Derive the names of SvelteKit's own config options from the schema, so they
 // stay in sync automatically. These are used to separate Kit's options from

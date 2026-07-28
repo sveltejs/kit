@@ -6,6 +6,8 @@ declare global {
 	const __SVELTEKIT_APP_VERSION__: string;
 	const __SVELTEKIT_APP_VERSION_FILE__: string;
 	const __SVELTEKIT_APP_VERSION_POLL_INTERVAL__: number;
+	/** True if version checks are enabled (i.e. `bundleStrategy !== 'inline'`) */
+	const __SVELTEKIT_APP_VERSION_CHECKS_ENABLED__: boolean;
 	/**
 	 * True if the user ran `vite dev`. This is different from `esm-env` because
 	 * it is influenced by `NODE_ENV` which can still be true during `vite preview`
@@ -42,6 +44,16 @@ declare global {
 	 * Whether the `experimental.async` flag is applied
 	 */
 	const __SVELTEKIT_SUPPORTS_ASYNC__: boolean;
+	/**
+	 * Manifest data placeholders used by `$app/manifest`. During build, these
+	 * are bare identifiers (fake globals) that the bundler leaves as unresolved
+	 * references. They are replaced with real values by scanning the output
+	 * chunks after each build completes.
+	 */
+	const __SVELTEKIT_MANIFEST_IMMUTABLE__: string[];
+	const __SVELTEKIT_MANIFEST_ASSETS__: string[];
+	const __SVELTEKIT_MANIFEST_PRERENDERED__: string[];
+	const __SVELTEKIT_MANIFEST_ROUTES__: { id: string }[];
 	/**
 	 * This makes the use of specific features visible at both dev and build time, in such a
 	 * way that we can error when they are not supported by the target platform.

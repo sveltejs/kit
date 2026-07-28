@@ -31,7 +31,7 @@ if (isNaN(body_size_limit)) {
 const asset_dir = `${dir}/client${base}`;
 
 await server.init({
-	env: /** @type {Record<string, string>} */ (process.env),
+	env: process.env,
 	read: (file) => createReadableStream(`${asset_dir}/${file}`)
 });
 
@@ -60,6 +60,19 @@ function serve(path, client = false) {
 		: undefined;
 }
 
+/**
+ * Relative reference from `from` to `to`, which must differ only by a trailing slash.
+ * Keep in sync with the copy in `packages/kit/src/utils/url.js`
+ * @param {string} from
+ * @param {string} to
+ * @returns {string}
+ */
+function relative_pathname(from, to) {
+	const segment = to.replace(/\/$/, '').split('/').at(-1);
+
+	return from.endsWith('/') ? `../${segment}` : `${segment}/`;
+}
+
 // required because the static file server ignores trailing slashes
 /** @returns {import('polka').Middleware} */
 function serve_prerendered() {
@@ -79,9 +92,9 @@ function serve_prerendered() {
 		}
 
 		// remove or add trailing slash as appropriate
-		let location = pathname.at(-1) === '/' ? pathname.slice(0, -1) : pathname + '/';
-		if (prerendered.has(location)) {
-			if (query) location += search;
+		const inverted = pathname.at(-1) === '/' ? pathname.slice(0, -1) : pathname + '/';
+		if (prerendered.has(inverted)) {
+			const location = relative_pathname(pathname, inverted) + (query ? search : '');
 			res.writeHead(308, { location }).end();
 		} else {
 			void next();
