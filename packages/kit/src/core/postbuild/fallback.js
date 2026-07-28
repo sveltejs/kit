@@ -40,8 +40,10 @@ async function generate_fallback({ manifest_path, env, out_dir, origin, assets, 
 	let custom_respond;
 
 	if (customHandler) {
-		/** @type {import('@sveltejs/kit').SSRHandler} */
-		const init_server = await import(pathToFileURL(`${server_root}/server/index.js`).href);
+		/** @type {{ default: import('@sveltejs/kit').SSRHandler }} */
+		const { default: init_server } = await import(
+			pathToFileURL(`${server_root}/server/index.js`).href
+		);
 		/** @type {InternalServer['respond']} */
 		custom_respond = await init_server(server, env);
 	}

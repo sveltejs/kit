@@ -612,8 +612,8 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 	let custom_respond;
 
 	if (config.adapter?.customHandler) {
-		/** @type {import('@sveltejs/kit').SSRHandler} */
-		const init_server = await import(pathToFileURL(`${out}/server/index.js`).href);
+		/** @type {{ default: import('@sveltejs/kit').SSRHandler }} */
+		const { default: init_server } = await import(pathToFileURL(`${out}/server/index.js`).href);
 		/** @type {InternalServer['respond']} */
 		custom_respond = await init_server(server, env);
 	}

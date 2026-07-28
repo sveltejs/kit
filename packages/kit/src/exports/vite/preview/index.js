@@ -81,9 +81,9 @@ export async function preview(vite, vite_config, svelte_config) {
 	/** @type {import('@sveltejs/kit').Server['respond'] | undefined} */
 	let custom_respond;
 
-	if (svelte_config.adapter?.customHandler) {
-		/** @type {import('@sveltejs/kit').SSRHandler} */
-		const handler = await import(pathToFileURL(`${dir}/server/index.js`).href);
+	if (svelte_config.kit.adapter?.customHandler) {
+		/** @type {{ default: import('@sveltejs/kit').SSRHandler }} */
+		const { default: handler } = await import(pathToFileURL(`${dir}/index.js`).href);
 		custom_respond = await handler(server, env);
 	}
 
