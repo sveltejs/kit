@@ -4,7 +4,6 @@ import path from 'node:path';
 import { URL } from 'node:url';
 import { styleText } from 'node:util';
 import sirv from 'sirv';
-import { sveltekit_dev_server } from '../module_ids.js';
 import { fix_stack_trace } from './sourcemaps.js';
 import { getRequest, setResponse } from '../../../exports/node/index.js';
 import { coalesce_to_error } from '../../../utils/error.js';
@@ -23,6 +22,8 @@ import {
 } from '../utils.js';
 import { escape_html } from '../../../utils/escape.js';
 import { get_runner } from '../../../runner.js';
+
+const dev_ssr_entry = posixify(path.join(import.meta.dirname, 'ssr_entry.js'));
 
 export const dev_context = posixify(path.join(import.meta.dirname, 'context.js'));
 
@@ -284,7 +285,7 @@ export function dev(vite, vite_config, svelte_config, remotes, root, set_manifes
 				context.manifest_data = manifest_data;
 
 				const respond = /** @type {typeof import('./ssr_entry.js')} */ (
-					await runner.import(sveltekit_dev_server)
+					await runner.import(dev_ssr_entry)
 				).default;
 
 				const rendered = await respond(request, {

@@ -15,7 +15,6 @@ export const sveltekit_manifest_data = '\0virtual:__sveltekit/manifest-data';
 export const sveltekit_dev_env = '\0virtual:__sveltekit/dev-env';
 
 /** Resolves to the adapter's `customHandler`, falling back to SvelteKit's default handler */
-export const sveltekit_dev_server = '__sveltekit/dev-server.js';
 export const sveltekit_dev_handler = '__sveltekit/dev-handler';
 
 export const app_server = posixify(

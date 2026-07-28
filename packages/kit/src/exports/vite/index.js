@@ -58,7 +58,6 @@ import {
 	sveltekit_env_public_client,
 	sveltekit_env_public_server,
 	sveltekit_dev_env,
-	sveltekit_dev_server,
 	sveltekit_dev_handler
 } from './module_ids.js';
 import { import_peer } from '../../utils/import.js';
@@ -69,7 +68,6 @@ import { treeshake_prerendered_remotes } from './build/remote.js';
 import { SVELTE_KIT_ASSETS } from '../../constants.js';
 import { get_runner } from '../../runner.js';
 
-const dev_ssr_entry = posixify(path.join(import.meta.dirname, 'dev/ssr_entry.js'));
 const default_handler = posixify(path.join(import.meta.dirname, 'dev/handler.js'));
 
 /** @type {import('./types.js').EnforcedConfig} */
@@ -589,13 +587,9 @@ function kit({ svelte_config }) {
 
 		resolveId: {
 			filter: {
-				id: [exactRegex(sveltekit_dev_server), exactRegex(sveltekit_dev_handler)]
+				id: [exactRegex(sveltekit_dev_handler)]
 			},
 			handler(id) {
-				if (id === sveltekit_dev_server) {
-					return dev_ssr_entry;
-				}
-
 				if (id === sveltekit_dev_handler) {
 					const custom_handler = kit.adapter?.customHandler;
 					if (!custom_handler) return default_handler;
