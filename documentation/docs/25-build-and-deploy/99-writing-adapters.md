@@ -40,7 +40,7 @@ export default function (options) {
 				// Return `false if it can't, or throw a descriptive error.
 			}
 		},
-		// TODO
+		// Specify the path of a module to customise request handling
 		customHandler: import.meta.resolve('./handler.js'),
 		vite: {
 			plugins: [
@@ -71,32 +71,32 @@ Where possible, we recommend putting the adapter output under the `build/` direc
 
 ## Custom request handler
 
-You can add a `customHandler` property set to the path of a module that initialises the server and handles requests:
+You can customise your server's initialisation and request handling by adding a `customHandler` property with a path to your handler file.
 
 ```js
 /** @type {import('@sveltejs/kit').Adapter} */
 const adapter = {
 	name: 'adapter-package-name',
 	adapt() {},
-	customHandler: import.meta.resolve('./handler.js')
+	customHandler: import.meta.resolve('./src/handler.js')
 };
 ```
 
-The default export of the module is given an instance of `Server`. TODO
+The handler file should export a default function that calls `server.init` with an implementation for [`read`]($app-server#read) (if it supports it). It should also return a function which returns a `Response` or calls `server.respond` with any [platform-specific context](types#Platform).
 
 ```js
-/// file: handler.js
-/** @type {import('@sveltejs/kit').CustomHandler} */
+/// file: src/handler.js
+/** @type {import('@sveltejs/kit').SSRHandler} */
 export default async (server, env) => {
 	await server.init({
 		env,
-		read: () => {
+		read: (file) => {
 			// how your platform reads files
 		}
 	});
 
-	return (request, options) => {
-		return server.respond(request, {
+	return async (request, options) => {
+		return await server.respond(request, {
 			...options,
 			platform: {
 				// the shape of `App.Platform`
