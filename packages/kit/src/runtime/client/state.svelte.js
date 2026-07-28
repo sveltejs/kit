@@ -94,10 +94,3 @@ if (!DEV && BROWSER) {
 
 	if (interval) timeout = window.setTimeout(updated.check, interval);
 }
-
-/**
- * @param {import('@sveltejs/kit').Page} new_page
- */
-export function update(new_page) {
-	Object.assign(page, new_page);
-}
