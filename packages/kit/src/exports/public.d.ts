@@ -91,8 +91,7 @@ export interface Adapter {
  */
 export type SSRHandler = (
 	server: Server,
-	/** Environment variables loaded by Vite */
-	env: Record<string, string | undefined>
+	env: Record<string, string>
 ) => Promise<(request: Request, options: Omit<RequestOptions, 'platform'>) => Promise<Response>>;
 
 export type LoadProperties<input extends Record<string, any> | void> = input extends void
