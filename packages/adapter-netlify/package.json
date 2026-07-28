@@ -52,6 +52,7 @@
 	"devDependencies": {
 		"@netlify/edge-functions": "^3.0.8",
 		"@sveltejs/kit": "workspace:^",
+		"@types/deno": "^2.7.0",
 		"@types/node": "catalog:",
 		"typescript": "catalog:",
 		"vitest": "catalog:"

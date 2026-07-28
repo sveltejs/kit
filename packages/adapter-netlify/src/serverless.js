@@ -11,7 +11,7 @@ export function init(manifest) {
 
 	/** @type {Promise<void> | null} */
 	let init_promise = server.init({
-		env: /** @type {Record<string, string>} */ (process.env),
+		env: process.env,
 		read: (file) => createReadableStream(`.netlify/server/${file}`)
 	});
 
