@@ -993,4 +993,14 @@ test.describe('server error boundaries', () => {
 		// The nested layout should still be visible
 		await expect(page.locator('#nested-layout')).toBeVisible();
 	});
+
+	test('layout render error skips the +error.svelte the layout wraps', async ({ page }) => {
+		await page.goto('/server-error-boundary/layout-throws');
+		await expect(page.locator('#message')).toContainText(
+			'layout render error (500 Internal Error, on /server-error-boundary/layout-throws)'
+		);
+		// the sibling +error.svelte is wrapped by the layout that crashed, so it must not render
+		await expect(page.locator('#layout-throws-error-message')).toHaveCount(0);
+		await expect(page.locator('#nested-layout')).toHaveCount(0);
+	});
 });
