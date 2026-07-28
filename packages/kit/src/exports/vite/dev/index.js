@@ -1,5 +1,6 @@
-/** @import { RequestEvent } from '@sveltejs/kit' */
-/** @import { PrerenderOption, UniversalNode } from 'types' */
+/** @import { RequestEvent, SSRManifest } from '@sveltejs/kit' */
+/** @import { EnvironmentModuleNode, ErrorPayload, ResolvedConfig, ViteDevServer } from 'vite' */
+/** @import { ManifestData, PrerenderOption, RemoteChunk, ServerModule, SSRNode, UniversalNode, ValidatedConfig } from 'types' */
 import process from 'node:process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -35,12 +36,12 @@ import { get_runner } from '../../../runner.js';
 const vite_css_query_regex = /(?:\?|&)(?:raw|url|inline)(?:&|$)/;
 
 /**
- * @param {import('vite').ViteDevServer} vite
- * @param {import('vite').ResolvedConfig} vite_config
- * @param {import('types').ValidatedConfig} svelte_config
- * @param {() => Array<{ hash: string, file: string }>} get_remotes
+ * @param {ViteDevServer} vite
+ * @param {ResolvedConfig} vite_config
+ * @param {ValidatedConfig} svelte_config
+ * @param {() => RemoteChunk[]} get_remotes
  * @param {string} root The project root directory
- * @param {(manifest_data: import('types').ManifestData) => void} set_manifest_data
+ * @param {(manifest_data: ManifestData) => void} set_manifest_data
  * @return {Promise<Promise<() => void>>}
  */
 export async function dev(vite, vite_config, svelte_config, get_remotes, root, set_manifest_data) {
@@ -72,9 +73,9 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, s
 
 	sync.init(svelte_config, root);
 
-	/** @type {import('types').ManifestData} */
+	/** @type {ManifestData} */
 	let manifest_data;
-	/** @type {import('@sveltejs/kit').SSRManifest} */
+	/** @type {SSRManifest} */
 	let manifest;
 
 	/** @type {Error | null} */
@@ -104,7 +105,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, s
 			// we need a more considered approach
 			vite.hot.send({
 				type: 'error',
-				err: /** @type {import('vite').ErrorPayload['err']} */ ({
+				err: /** @type {ErrorPayload['err']} */ ({
 					...err,
 					// these properties are non-enumerable and will
 					// not be serialized unless we explicitly include them
@@ -211,7 +212,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, s
 				),
 				nodes: manifest_data.nodes.map((node, index) => {
 					return async () => {
-						/** @type {import('types').SSRNode} */
+						/** @type {SSRNode} */
 						const result = {};
 						result.index = index;
 						result.universal_id = node.universal;
@@ -222,7 +223,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, s
 						result.stylesheets = [];
 						result.fonts = [];
 
-						/** @type {import('vite').EnvironmentModuleNode[]} */
+						/** @type {EnvironmentModuleNode[]} */
 						const module_nodes = [];
 
 						if (node.component) {
@@ -256,7 +257,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, s
 						// in dev we inline all styles to avoid FOUC. this gets populated lazily so that
 						// components/stylesheets loaded via import() during `load` are included
 						result.inline_styles = async () => {
-							/** @type {Set<import('vite').EnvironmentModuleNode>} */
+							/** @type {Set<EnvironmentModuleNode>} */
 							const deps = new Set();
 
 							for (const module_node of module_nodes) {
@@ -556,7 +557,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, s
 				}
 
 				// we have to import `Server` before calling `set_assets`
-				const { Server } = /** @type {import('types').ServerModule} */ (
+				const { Server } = /** @type {ServerModule} */ (
 					await runner.import(`${get_runtime_base(root)}/server/index.js`)
 				);
 
@@ -658,9 +659,9 @@ function remove_static_middlewares(server) {
 }
 
 /**
- * @param {import('vite').ViteDevServer} vite
- * @param {import('vite').EnvironmentModuleNode} node
- * @param {Set<import('vite').EnvironmentModuleNode>} deps
+ * @param {ViteDevServer} vite
+ * @param {EnvironmentModuleNode} node
+ * @param {Set<EnvironmentModuleNode>} deps
  */
 async function find_deps(vite, node, deps) {
 	// since `transformResult.deps` contains URLs instead of `ModuleNode`s, this process is asynchronous.
@@ -668,7 +669,7 @@ async function find_deps(vite, node, deps) {
 	/** @type {Promise<void>[]} */
 	const branches = [];
 
-	/** @param {import('vite').EnvironmentModuleNode} node */
+	/** @param {EnvironmentModuleNode} node */
 	async function add(node) {
 		if (!deps.has(node)) {
 			deps.add(node);
@@ -723,7 +724,7 @@ function has_correct_case(file, assets) {
 
 /**
  * Invalidates a module in all environments.
- * @param {import('vite').ViteDevServer} server
+ * @param {ViteDevServer} server
  * @param {string} id
  * @returns {void}
  */
