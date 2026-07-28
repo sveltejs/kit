@@ -71,16 +71,27 @@ Where possible, we recommend putting the adapter output under the `build/` direc
 
 ## Custom request handler
 
-You can customise your server's initialisation and request handling by adding a `customHandler` property with a path to your handler file.
+You can customise your server's initialisation and request handling by adding a `customHandler` property resolved to the path of your handler file.
 
 ```js
-/** @type {import('@sveltejs/kit').Adapter} */
-export default {
-	name: 'adapter-package-name',
-	adapt(builder) {
-		// adapter implementation
-	},
-	+++customHandler: import.meta.resolve('./src/handler.js')+++
+// @errors: 2322
+// @filename: ambient.d.ts
+type AdapterSpecificOptions = any;
+
+// @filename: index.js
+// ---cut---
+/** @param {AdapterSpecificOptions} options */
+export default function (options) {
+	/** @type {import('@sveltejs/kit').Adapter} */
+	const adapter = {
+		name: 'adapter-package-name',
+		async adapt(builder) {
+			// adapter implementation
+		},
+		+++customHandler: import.meta.resolve('./src/handler.js')+++
+	}
+
+	return adapter;
 };
 ```
 
@@ -105,5 +116,5 @@ export default async function (server, env) {
 			}
 		});
 	};
-};
+}
 ```
