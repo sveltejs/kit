@@ -99,7 +99,7 @@ test.describe('a11y', () => {
 			.toBe(0);
 	});
 
-	test('keepfocus works', async ({ page }) => {
+	test('reset: false preserves focus', async ({ page }) => {
 		await page.goto('/keepfocus');
 
 		await Promise.all([

@@ -53,8 +53,6 @@ function get_pathnames_for_trailing_slash(pathname, route) {
 const template = `
 declare module "svelte/elements" {
 	export interface HTMLAttributes<T> {
-		'data-sveltekit-keepfocus'?: true | false | '' | undefined | null;
-		'data-sveltekit-noscroll'?: true | false | '' | undefined | null;
 		'data-sveltekit-preload-code'?:
 			| true
 			| false
@@ -68,6 +66,7 @@ declare module "svelte/elements" {
 		'data-sveltekit-preload-data'?: true | false | '' | 'hover' | 'tap' | undefined | null;
 		'data-sveltekit-reload'?: true | false | '' | undefined | null;
 		'data-sveltekit-replacestate'?: true | false | '' | undefined | null;
+		'data-sveltekit-reset'?: true | false | '' | undefined | null;
 	}
 }
 `;

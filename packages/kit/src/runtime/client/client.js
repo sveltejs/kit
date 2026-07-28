@@ -54,8 +54,7 @@ import { Props, RenderNode } from '../props.svelte.js';
  *   pageUrl?: string;
  *   state: Record<string, any>;
  *   persistState: boolean;
- *   noScrollIndex: number;
- *   keepFocusIndex: number;
+ *   resetIndex: number;
  * }} HistoryMetadata
  */
 
@@ -80,7 +79,7 @@ const resetters = new Set();
 // popstate it's too late to access the options or update the focus position associated with the
 // state we're navigating from
 /**
- * @type {Record<number, { scroll?: { x: number; y: number }; noScrollIndex?: number; keepFocusIndex?: number }>}
+ * @type {Record<number, { scroll?: { x: number; y: number }; resetIndex?: number }>}
  */
 const history_info = storage.get(HISTORY_INFO_KEY) ?? {};
 
@@ -142,20 +141,19 @@ function capture_scroll(index) {
 
 /**
  * @param {number} index
- * @param {Pick<HistoryMetadata, 'noScrollIndex' | 'keepFocusIndex'>} options
+ * @param {Pick<HistoryMetadata, 'resetIndex'>} options
  */
 function set_history_options(index, options) {
 	history_info[index] = {
 		...history_info[index],
-		noScrollIndex: options.noScrollIndex,
-		keepFocusIndex: options.keepFocusIndex
+		resetIndex: options.resetIndex
 	};
 }
 
-/** @param {boolean | undefined} keepfocus */
-function blur_active_element(keepfocus) {
+/** @param {boolean} reset */
+function blur_active_element(reset) {
 	if (
-		!keepfocus &&
+		reset &&
 		document.activeElement instanceof HTMLElement &&
 		document.activeElement !== document.body
 	) {
@@ -166,10 +164,10 @@ function blur_active_element(keepfocus) {
 /**
  * @param {URL} url
  * @param {{ x: number; y: number } | null | undefined} scroll
- * @param {boolean | undefined} keepfocus
+ * @param {boolean} reset
  * @param {Element | null} active_element
  */
-function reset_scroll_and_focus(url, scroll, keepfocus, active_element) {
+function reset_scroll_and_focus(url, scroll, reset, active_element) {
 	/** @type {Element | null} */
 	let deep_linked = null;
 
@@ -186,7 +184,7 @@ function reset_scroll_and_focus(url, scroll, keepfocus, active_element) {
 	const changed_focus =
 		document.activeElement !== active_element && document.activeElement !== document.body;
 
-	if (!keepfocus && !changed_focus) {
+	if (reset && !changed_focus) {
 		reset_focus(url, !deep_linked);
 	}
 
@@ -339,10 +337,7 @@ let current_history_index;
 let current_navigation_index;
 
 /** @type {number} */
-let current_noscroll_index;
-
-/** @type {number} */
-let current_keepfocus_index;
+let current_reset_index;
 
 /**
  * @param {any} [state]
@@ -482,17 +477,12 @@ async function _start(_app, _target, data) {
 	const history_metadata = get_history_metadata();
 	current_history_index = history_metadata?.historyIndex ?? 0;
 	current_navigation_index = history_metadata?.navigationIndex ?? 0;
-	current_noscroll_index = history_metadata?.noScrollIndex ?? 0;
-	current_keepfocus_index = history_metadata?.keepFocusIndex ?? 0;
+	current_reset_index = history_metadata?.resetIndex ?? 0;
 
 	if (!current_history_index) {
 		// we use Date.now() as an offset so that cross-document navigations
 		// within the app don't result in data loss
-		current_history_index =
-			current_navigation_index =
-			current_noscroll_index =
-			current_keepfocus_index =
-				Date.now();
+		current_history_index = current_navigation_index = current_reset_index = Date.now();
 
 		// create initial history entry, so we can return here
 		history.replaceState(
@@ -503,8 +493,7 @@ async function _start(_app, _target, data) {
 					navigationIndex: current_navigation_index,
 					state: {},
 					persistState: false,
-					noScrollIndex: current_history_index,
-					keepFocusIndex: current_history_index
+					resetIndex: current_history_index
 				}
 			},
 			''
@@ -666,7 +655,7 @@ function persist_state() {
 
 /**
  * @param {string | URL} url
- * @param {{ replace?: boolean; noScroll?: boolean; keepFocus?: boolean; refreshAll?: boolean; invalidate?: Array<string | URL | ((url: URL) => boolean)>; state?: Record<string, any>; persistState?: boolean }} options
+ * @param {{ replace?: boolean; reset?: boolean; refreshAll?: boolean; invalidate?: Array<string | URL | ((url: URL) => boolean)>; state?: Record<string, any>; persistState?: boolean }} options
  * @param {number} redirect_count
  * @param {{}} [nav_token]
  * @param {NavigationIntent | undefined} [intent] navigation intent, when already known by the caller (avoids recomputing it)
@@ -687,8 +676,7 @@ export async function _goto(url, options, redirect_count, nav_token, intent) {
 	await navigate({
 		type: 'goto',
 		url: resolve_url(url),
-		keepfocus: options.keepFocus,
-		noscroll: options.noScroll,
+		reset: options.reset,
 		replace_state: options.replace,
 		state: options.state,
 		persist_state: options.persistState,
@@ -1811,8 +1799,7 @@ function _before_navigate({ url, type, intent, delta, event, scroll, shallow = f
  *     delta: number;
  *     shallow: { params: Record<string, string> | null; route: { id: string } | null; url: URL } | null;
  *   };
- *   keepfocus?: boolean;
- *   noscroll?: boolean;
+ *   reset?: boolean;
  *   replace_state?: boolean;
  *   state?: Record<string, any>;
  *   persist_state?: boolean;
@@ -1829,8 +1816,7 @@ async function navigate({
 	type,
 	url,
 	popped,
-	keepfocus,
-	noscroll,
+	reset = true,
 	replace_state,
 	state = {},
 	persist_state = false,
@@ -1940,8 +1926,7 @@ async function navigate({
 				type,
 				url: new URL(navigation_result.location, url),
 				popped,
-				keepfocus,
-				noscroll,
+				reset,
 				replace_state,
 				state,
 				persist_state,
@@ -1992,8 +1977,7 @@ async function navigate({
 		// this is a new navigation, rather than a popstate
 		const change = replace_state ? 0 : 1;
 		if (type !== 'enter') {
-			if (!noscroll) current_noscroll_index += 1;
-			if (!keepfocus) current_keepfocus_index += 1;
+			if (reset) current_reset_index += 1;
 		}
 
 		const entry = {
@@ -2002,8 +1986,7 @@ async function navigate({
 				navigationIndex: (current_navigation_index += change),
 				state,
 				persistState: persist_state,
-				noScrollIndex: current_noscroll_index,
-				keepFocusIndex: current_keepfocus_index
+				resetIndex: current_reset_index
 			})
 		};
 
@@ -2082,7 +2065,7 @@ async function navigate({
 
 		// Remove focus before updating the component tree, so that blur/focusout
 		// handlers fire while the old component's data is still valid (#14575)
-		blur_active_element(keepfocus);
+		blur_active_element(reset);
 
 		const fork = load_cache_fork && (await load_cache_fork);
 
@@ -2091,8 +2074,8 @@ async function navigate({
 			// `fork.commit()` applies the preloaded state synchronously before the
 			// first `await`, so reset any previously-failed boundaries now so the
 			// stale `+error.svelte` is torn down. See sveltejs/kit#15694.
-			for (const reset of resetters) {
-				reset();
+			for (const reset_boundary of resetters) {
+				reset_boundary();
 			}
 			resetters.clear();
 		} else {
@@ -2101,8 +2084,8 @@ async function navigate({
 			// Reset any boundaries that failed on a previous navigation now that the
 			// new props are applied, otherwise the stale `+error.svelte` stays
 			// mounted above the new route's content. See sveltejs/kit#15694.
-			for (const reset of resetters) {
-				reset();
+			for (const reset_boundary of resetters) {
+				reset_boundary();
 			}
 			resetters.clear();
 
@@ -2124,7 +2107,7 @@ async function navigate({
 		return;
 	}
 
-	reset_scroll_and_focus(url, noscroll ? scroll_state() : popped?.scroll, keepfocus, activeElement);
+	reset_scroll_and_focus(url, reset ? popped?.scroll : scroll_state(), reset, activeElement);
 
 	is_navigating = false;
 
@@ -2508,8 +2491,7 @@ export async function goto(url, opts = {}) {
 			{
 				replace,
 				persist_state: opts.persistState ?? false,
-				noscroll: opts.noScroll ?? true,
-				keepfocus: opts.keepFocus ?? true
+				reset: opts.reset ?? false
 			},
 			'goto'
 		);
@@ -2726,7 +2708,7 @@ export async function pushState(url, state) {
 	await update_state(
 		intent,
 		state,
-		{ replace: false, persist_state: false, noscroll: true, keepfocus: true },
+		{ replace: false, persist_state: false, reset: false },
 		'pushState'
 	);
 }
@@ -2756,7 +2738,7 @@ export async function replaceState(url, state) {
 	await update_state(
 		intent,
 		state,
-		{ replace: true, persist_state: false, noscroll: true, keepfocus: true },
+		{ replace: true, persist_state: false, reset: false },
 		'replaceState'
 	);
 }
@@ -2764,15 +2746,10 @@ export async function replaceState(url, state) {
 /**
  * @param {NavigationIntent} intent
  * @param {App.PageState} state
- * @param {{ replace: boolean; persist_state: boolean; noscroll: boolean; keepfocus: boolean; }} options
+ * @param {{ replace: boolean; persist_state: boolean; reset: boolean; }} options
  * @param {'goto' | 'pushState' | 'replaceState'} caller
  */
-async function update_state(
-	intent,
-	state,
-	{ replace, persist_state, noscroll, keepfocus },
-	caller
-) {
+async function update_state(intent, state, { replace, persist_state, reset }, caller) {
 	const url = intent.url;
 
 	if (DEV) {
@@ -2805,8 +2782,7 @@ async function update_state(
 	}
 
 	if (!replace) capture_scroll(current_history_index);
-	if (!noscroll) current_noscroll_index += 1;
-	if (!keepfocus) current_keepfocus_index += 1;
+	if (reset) current_reset_index += 1;
 
 	const entry = {
 		[HISTORY_METADATA_KEY]: /** @satisfies {HistoryMetadata} */ ({
@@ -2815,8 +2791,7 @@ async function update_state(
 			pageUrl: page.url.href,
 			state,
 			persistState: persist_state,
-			noScrollIndex: current_noscroll_index,
-			keepFocusIndex: current_keepfocus_index
+			resetIndex: current_reset_index
 		})
 	};
 
@@ -2849,7 +2824,7 @@ async function update_state(
 		}
 	}
 
-	blur_active_element(keepfocus);
+	blur_active_element(reset);
 
 	page.state = state;
 	page.shallow = {
@@ -2870,7 +2845,7 @@ async function update_state(
 		return;
 	}
 
-	reset_scroll_and_focus(url, noscroll ? scroll_state() : null, keepfocus, activeElement);
+	reset_scroll_and_focus(url, reset ? null : scroll_state(), reset, activeElement);
 
 	is_navigating = false;
 	nav.fulfil(undefined);
@@ -3094,8 +3069,7 @@ function _start_router() {
 			// history metadata here because the hashchange event will occur after history.state was updated
 			hash_navigating = {
 				.../** @type {HistoryMetadata} */ (get_history_metadata()),
-				noScrollIndex: current_noscroll_index + (options.noscroll ? 0 : 1),
-				keepFocusIndex: current_keepfocus_index + (options.keepfocus ? 0 : 1)
+				resetIndex: current_reset_index + (options.reset ? 1 : 0)
 			};
 
 			capture_scroll(current_history_index);
@@ -3123,8 +3097,7 @@ function _start_router() {
 		await navigate({
 			type: 'link',
 			url,
-			keepfocus: options.keepfocus,
-			noscroll: options.noscroll,
+			reset: options.reset,
 			replace_state: options.replace_state ?? url.href === location.href,
 			event
 		});
@@ -3170,8 +3143,7 @@ function _start_router() {
 		void navigate({
 			type: 'form',
 			url,
-			keepfocus: options.keepfocus,
-			noscroll: options.noscroll,
+			reset: options.reset,
 			replace_state: options.replace_state ?? url.href === location.href,
 			event
 		});
@@ -3192,11 +3164,8 @@ function _start_router() {
 			if (history_index === current_history_index) return;
 
 			const delta = history_index - current_history_index;
-			const no_scroll_index = history_metadata.noScrollIndex;
-			const keep_focus_index = history_metadata.keepFocusIndex;
-			const noscroll = no_scroll_index === (source_info?.noScrollIndex ?? current_noscroll_index);
-			const keepfocus =
-				keep_focus_index === (source_info?.keepFocusIndex ?? current_keepfocus_index);
+			const reset_index = history_metadata.resetIndex;
+			const reset = reset_index !== (source_info?.resetIndex ?? current_reset_index);
 			const scroll = history_info[history_index]?.scroll;
 			const state = history_metadata.state;
 			const url = new URL(history_metadata.pageUrl ?? location.href);
@@ -3228,7 +3197,7 @@ function _start_router() {
 				// exception is if we haven't navigated yet, since we could have
 				// got here after a modal navigation then a reload
 
-				blur_active_element(keepfocus);
+				blur_active_element(reset);
 
 				if (state !== page.state) {
 					page.state = state;
@@ -3240,17 +3209,15 @@ function _start_router() {
 
 				capture_scroll(current_history_index);
 				current_history_index = history_index;
-				current_noscroll_index = no_scroll_index;
-				current_keepfocus_index = keep_focus_index;
-				if (!noscroll && scroll) scrollTo(scroll.x, scroll.y);
+				current_reset_index = reset_index;
+				if (reset && scroll) scrollTo(scroll.x, scroll.y);
 				return;
 			}
 
 			await navigate({
 				type: 'popstate',
 				url,
-				keepfocus,
-				noscroll,
+				reset,
 				popped: {
 					state,
 					scroll,
@@ -3260,8 +3227,7 @@ function _start_router() {
 				accept: () => {
 					current_history_index = history_index;
 					current_navigation_index = navigation_index;
-					current_noscroll_index = no_scroll_index;
-					current_keepfocus_index = keep_focus_index;
+					current_reset_index = reset_index;
 				},
 				block: () => {
 					history.go(-delta);
@@ -3292,8 +3258,7 @@ function _start_router() {
 		if (hash_navigating) {
 			const history_metadata = hash_navigating;
 			hash_navigating = null;
-			current_noscroll_index = history_metadata.noScrollIndex;
-			current_keepfocus_index = history_metadata.keepFocusIndex;
+			current_reset_index = history_metadata.resetIndex;
 			history.replaceState(
 				{
 					...history.state,
