@@ -479,6 +479,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, s
 
 	const env = loadEnv(vite_config.mode, svelte_config.kit.env.dir, '');
 	const emulator = await svelte_config.kit.adapter?.emulate?.();
+	const adapter_supports_instrumentation = svelte_config.kit.adapter?.supports?.instrumentation?.();
 
 	/** @type {Promise<void> | undefined} */
 	let init_manifest;
@@ -547,11 +548,19 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, s
 					return;
 				}
 
+				// resolve the instrumentation file per request so that changes to it
+				// are picked up on new requests
 				const resolved_instrumentation = resolve_entry(
 					path.join(svelte_config.kit.files.src, 'instrumentation.server')
 				);
 
 				if (resolved_instrumentation) {
+					if (svelte_config.kit.adapter && !adapter_supports_instrumentation) {
+						throw new Error(
+							`${resolved_instrumentation} is unsupported in ${svelte_config.kit.adapter.name}.`
+						);
+					}
+
 					await runner.import(resolved_instrumentation);
 				}
 
