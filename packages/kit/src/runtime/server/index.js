@@ -139,7 +139,7 @@ export class Server {
 							stack = args.error.stack ?? '';
 						}
 
-						if (__SVELTEKIT_DEV__ && message) {
+						if (__SVELTEKIT_DEV__ && !(args.error instanceof SvelteKitError) && message) {
 							import.meta.hot?.send('vite:error', {
 								type: 'error',
 								err: {
