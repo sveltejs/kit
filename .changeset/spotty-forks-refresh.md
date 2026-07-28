@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: refetch queries after a redirect when the cached query survives the navigation
+fix: refetch queries after a refreshAll navigation when the cached query survives it
