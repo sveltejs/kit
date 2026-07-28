@@ -867,7 +867,7 @@ function kit({ svelte_config }) {
 	/** @type {ViteDevServer} */
 	let dev_server;
 
-	/** @type {Array<{ hash: string, file: string }} */
+	/** @type {Array<{ hash: string, file: string }>} */
 	const remotes = [];
 
 	/** @type {Map<string, string>} Maps remote hash -> original module id */
