@@ -1,4 +1,3 @@
-/** @import { Component } from 'svelte' */
 /** @import { ActionResult, RequestEvent, SSRManifest } from '@sveltejs/kit' */
 /** @import { PageNodeIndexes, RequestState, RequiredResolveOptions, ServerDataNode, SSRNode, SSROptions, SSRState } from 'types' */
 import { text } from '@sveltejs/kit';
@@ -7,6 +6,7 @@ import { compact } from '../../../utils/array.js';
 import { get_status, normalize_error } from '../../../utils/error.js';
 import { noop } from '../../../utils/functions.js';
 import { add_data_suffix } from '../../pathname.js';
+import { build_error_chain } from '../../error-chain.js';
 import { redirect_response } from '../utils.js';
 import { static_error_page, handle_error_and_jsonify } from '../errors.js';
 import {
@@ -398,35 +398,10 @@ export async function render_page(
  * @param {PageNodeIndexes} page
  * @param {SSRManifest} manifest
  */
-async function load_error_components(ssr, branch, page, manifest) {
-	/** @type {Array<Component | undefined> | undefined} */
-	let error_components;
+function load_error_components(ssr, branch, page, manifest) {
+	if (!ssr) return undefined;
 
-	if (ssr) {
-		let last_idx = -1;
-		error_components = await Promise.all(
-			// eslint-disable-next-line @typescript-eslint/await-thenable
-			branch
-				.map((b, i) => {
-					if (i === 0) return undefined; // root layout wraps root error component, not the other way around
-					if (!b) return null;
-
-					i--;
-					// Find the closest error component up to the previous branch
-					while (i > last_idx + 1 && page.errors[i] === undefined) i -= 1;
-					last_idx = i;
-
-					const idx = page.errors[i];
-					if (idx == null) return undefined;
-
-					return manifest._.nodes[idx]?.()
-						.then((e) => e.component?.())
-						.catch(() => undefined);
-				})
-				// filter out indexes where there was no branch, but keep indexes where there was a branch but no error component
-				.filter((e) => e !== null)
-		);
-	}
-
-	return error_components;
+	return build_error_chain(branch, page.errors, (idx) =>
+		manifest._.nodes[idx]?.().then((e) => e.component?.())
+	);
 }
