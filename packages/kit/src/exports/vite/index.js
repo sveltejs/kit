@@ -269,7 +269,6 @@ function kit({ svelte_config }) {
 
 	/** @type {string | null} */
 	let service_worker_entry_file;
-
 	/** @type {string} */
 	let normalized_cwd;
 	/** @type {Array<{ alias: string, path: string }>} */
@@ -386,6 +385,8 @@ function kit({ svelte_config }) {
 				const client_hooks = resolve_entry(kit.files.hooks.client);
 				if (client_hooks) allow.add(path.dirname(client_hooks));
 
+				const generated = path.posix.join(out_dir, 'generated');
+
 				// dev and preview config can be shared
 				/** @type {UserConfig} */
 				const new_config = {
@@ -399,7 +400,7 @@ function kit({ svelte_config }) {
 					},
 					resolve: {
 						alias: [
-							{ find: '__SERVER__', replacement: `${out_dir}/generated/server` },
+							{ find: '__SERVER__', replacement: `${generated}/server` },
 							{ find: '$app', replacement: `${runtime_directory}/app` },
 							{ find: '$env', replacement: `${runtime_directory}/env` },
 							{
