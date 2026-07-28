@@ -13,24 +13,22 @@
  * @returns {Promise<Array<Component | undefined>>}
  */
 export function build_error_chain(branch, errors, load) {
+	/** @type {Array<Promise<Component | undefined> | undefined>} */
+	const chain = [undefined];
 	let last_idx = -1;
 
-	return Promise.all(
-		// depths with no error page contribute `undefined` rather than a promise
-		// eslint-disable-next-line @typescript-eslint/await-thenable
-		branch
-			.map((node, i) => {
-				if (i === 0) return undefined;
-				if (!node) return null;
+	for (let i = 1; i < branch.length; i += 1) {
+		if (!branch[i]) continue;
 
-				i -= 1;
-				while (i > last_idx + 1 && errors[i] == null) i -= 1;
-				last_idx = i;
+		let j = i - 1;
+		while (j > last_idx + 1 && errors[j] == null) j -= 1;
+		last_idx = j;
 
-				const error = errors[i];
-				return error == null ? undefined : load(error)?.catch(() => undefined);
-			})
-			// drop the empty slots, keep the depths that simply have no error page
-			.filter((component) => component !== null)
-	);
+		const error = errors[j];
+		chain.push(error == null ? undefined : load(error)?.catch(() => undefined));
+	}
+
+	// depths with no error page contribute `undefined` rather than a promise
+	// eslint-disable-next-line @typescript-eslint/await-thenable
+	return Promise.all(chain);
 }
