@@ -16,6 +16,8 @@ export function build_error_chain(branch, errors, load) {
 	let last_idx = -1;
 
 	return Promise.all(
+		// depths with no error page contribute `undefined` rather than a promise
+		// eslint-disable-next-line @typescript-eslint/await-thenable
 		branch
 			.map((node, i) => {
 				if (i === 0) return undefined;
