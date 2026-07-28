@@ -6,6 +6,9 @@
 	"type": "module",
 	"scripts": {
 		"test:kit": "pnpm run --dir packages/kit test",
+		"test:kit:unit": "vitest run packages/kit packages/kit/test/apps/*",
+		"test:kit:dev": "pnpm run --dir packages/kit test:dev",
+		"test:kit:build": "pnpm run --dir packages/kit test:build",
 		"test:cross-platform:dev": "pnpm run --dir packages/kit test:cross-platform:dev",
 		"test:cross-platform:build": "pnpm run --dir packages/kit test:cross-platform:build",
 		"test:server-side-route-resolution:dev": "pnpm run --dir packages/kit test:server-side-route-resolution:dev",
@@ -14,6 +17,7 @@
 		"test:svelte-async:build": "pnpm run --dir packages/kit test:svelte-async:build",
 		"test:vite-ecosystem-ci": "pnpm --dir packages/kit test",
 		"test:others": "pnpm -r --filter='./packages/*' --filter=!./packages/kit/ --workspace-concurrency=1 test",
+		"test:unit": "vitest run",
 		"check": "pnpm -r prepublishOnly && pnpm -r check",
 		"lint": "pnpm -r lint && echo '\nRunning eslint...' && eslint --cache --cache-location node_modules/.eslintcache 'packages/**/*.js'",
 		"format": "pnpm -r format",

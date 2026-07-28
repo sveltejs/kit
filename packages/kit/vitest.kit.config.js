@@ -1,6 +1,5 @@
 import { fileURLToPath } from 'node:url';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
-import { defineConfig } from 'vitest/config';
 
 // this file needs a custom name so that the numerous test subprojects don't all pick it up
 /** @param {string} specifier */
@@ -13,7 +12,7 @@ const exclude = [
 	'**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*'
 ];
 
-export default defineConfig({
+export default /** @satisfies {import('vitest/config').ViteUserConfig} */ ({
 	plugins: [svelte({ compilerOptions: { hmr: false, experimental: { async: true } } })],
 	define: {
 		__SVELTEKIT_SERVER_TRACING_ENABLED__: false
@@ -38,7 +37,7 @@ export default defineConfig({
 			{
 				extends: true,
 				test: {
-					name: 'server',
+					name: 'kit-server-dev',
 					environment: 'node',
 					include: ['src/**/*.spec.js'],
 					exclude: [...exclude, 'src/**/*.svelte.spec.js']
@@ -47,7 +46,19 @@ export default defineConfig({
 			{
 				extends: true,
 				test: {
-					name: 'client',
+					name: 'kit-server-preview',
+					environment: 'node',
+					env: {
+						DEV: 'true'
+					},
+					include: ['src/runtime/server/page/csp.spec.js', 'src/runtime/server/cookie.spec.js'],
+					exclude: [...exclude, 'src/**/*.svelte.spec.js']
+				}
+			},
+			{
+				extends: true,
+				test: {
+					name: 'kit-client-runtime',
 					environment: 'jsdom',
 					include: ['src/**/*.svelte.spec.js'],
 					exclude,

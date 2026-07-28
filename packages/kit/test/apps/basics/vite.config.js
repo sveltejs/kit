@@ -96,6 +96,7 @@ export default defineConfig({
 		}
 	},
 	test: {
+		name: 'kit-client-import',
 		expect: { requireAssertions: true },
 		browser: {
 			enabled: true,

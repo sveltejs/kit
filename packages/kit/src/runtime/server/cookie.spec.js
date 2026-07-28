@@ -37,7 +37,7 @@ const cookies_setup = ({ href, headers } = {}) => {
 	return result;
 };
 
-describe.skipIf(process.env.NODE_ENV === 'production')('cookies in dev', () => {
+describe.skipIf(!process.env.DEV)('cookies in dev', () => {
 	beforeAll(() => {
 		vi.stubGlobal('__SVELTEKIT_DEV__', true);
 	});
@@ -72,7 +72,7 @@ describe.skipIf(process.env.NODE_ENV === 'production')('cookies in dev', () => {
 	});
 });
 
-describe.skipIf(process.env.NODE_ENV !== 'production')('cookies in prod', () => {
+describe.skipIf(!!process.env.DEV)('cookies in prod', () => {
 	beforeAll(() => {
 		vi.stubGlobal('__SVELTEKIT_DEV__', false);
 	});

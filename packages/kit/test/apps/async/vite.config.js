@@ -27,6 +27,7 @@ export default defineConfig({
 		}
 	},
 	test: {
+		name: 'kit-build',
 		include: ['unit-test/**/node.spec.js']
 	}
 });

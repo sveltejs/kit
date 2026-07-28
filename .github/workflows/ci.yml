@@ -55,12 +55,32 @@ jobs:
         include:
           - node-version: 22
             os: ubuntu-latest
+            vite: 'current'
+            mode: 'unit'
+          - node-version: 24
+            os: ubuntu-latest
+            vite: 'current'
+            mode: 'unit'
+          - node-version: 22
+            os: ubuntu-latest
             e2e-browser: 'chromium'
             vite: 'current'
+            mode: 'dev'
           - node-version: 24
             os: ubuntu-latest
             e2e-browser: 'chromium'
             vite: 'current'
+            mode: 'dev'
+          - node-version: 22
+            os: ubuntu-latest
+            e2e-browser: 'chromium'
+            vite: 'current'
+            mode: 'build'
+          - node-version: 24
+            os: ubuntu-latest
+            e2e-browser: 'chromium'
+            vite: 'current'
+            mode: 'build'
           # - node-version: 24
           #   os: ubuntu-latest
           #   e2e-browser: 'chromium'
@@ -89,20 +109,20 @@ jobs:
           os: ${{ matrix.os }}
           e2e-browser: ${{ matrix.e2e-browser }}
       - run: pnpm run sync-all
-      - run: pnpm test:kit
+      - run: pnpm test:kit:${{ matrix.mode }}
       - name: Print flaky test report
         run: node scripts/print-flaky-test-report.js
       - name: Archive test results
         if: failure()
         shell: bash
-        run: find packages -type d -name test-results -not -empty | tar -czf test-results.tar.gz --files-from=-
+        run: find packages -type d -name test-results -not -empty | tar -czf test-results-${{ matrix.mode }}.tar.gz --files-from=-
       - name: Upload test results
         if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           retention-days: 3
-          name: test-failure-${{ github.run_id }}-${{ matrix.os }}-${{ matrix.node-version }}-${{ matrix.e2e-browser }}-vite-${{matrix.vite}}
-          path: test-results.tar.gz
+          name: test-failure-${{ matrix.mode }}-${{ github.run_id }}-${{ matrix.os }}-${{ matrix.node-version }}-${{ matrix.e2e-browser }}-vite-${{matrix.vite}}
+          path: test-results-${{ matrix.mode }}.tar.gz
   test-kit-cross-browser:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
