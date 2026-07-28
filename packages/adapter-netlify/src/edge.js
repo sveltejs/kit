@@ -1,3 +1,4 @@
+/** @import {} from 'deno' */
 import { Server } from '0SERVER';
 import { manifest } from 'MANIFEST';
 
@@ -11,7 +12,6 @@ const server = new Server(manifest);
 let origin;
 
 const initialized = server.init({
-	// @ts-ignore
 	env: Deno.env.toObject(),
 	read: async (file) => {
 		const url = `${origin}/${file}`;
