@@ -68,6 +68,38 @@ export async function preview(vite, vite_config, svelte_config) {
 
 	const emulator = await svelte_config.kit.adapter?.emulate?.();
 
+	// The custom/default handler's `init_server` function performs one-time setup work
+	// (see the `SSRHandler` contract), so it must run once at startup rather than per
+	// request. We map each incoming `Request` to its originating Node request so that the
+	// long-lived `respond` closure can still resolve the per-request client address.
+	/** @type {{ default: SSRHandler }} */
+	const { default: init_server } = await import(pathToFileURL(`${dir}/handler.js`).href);
+
+	/** @type {WeakMap<Request, import('node:http').IncomingMessage>} */
+	const request_sockets = new WeakMap();
+
+	const respond = await init_server({
+		respond: (request, options) => {
+			const req = request_sockets.get(request);
+			return server.respond(request, {
+				...options,
+				getClientAddress: () => {
+					const remoteAddress = req?.socket.remoteAddress;
+					if (remoteAddress) return remoteAddress;
+					throw new Error('Could not determine clientAddress');
+				},
+				read: (file) => {
+					if (file in manifest._.server_assets) {
+						return fs.readFileSync(join(dir, file));
+					}
+
+					return fs.readFileSync(join(svelte_config.kit.files.assets, file));
+				},
+				emulator
+			});
+		}
+	});
+
 	return () => {
 		// Remove the base middleware. It screws with the URL.
 		// It also only lets through requests beginning with the base path, so that requests beginning
@@ -213,28 +245,7 @@ export async function preview(vite, vite_config, svelte_config) {
 				request: req
 			});
 
-			/** @type {{ default: SSRHandler }} */
-			const { default: init_server } = await import(pathToFileURL(`${dir}/handler.js`).href);
-			const respond = await init_server({
-				respond: (request, options) => {
-					return server.respond(request, {
-						...options,
-						getClientAddress: () => {
-							const { remoteAddress } = req.socket;
-							if (remoteAddress) return remoteAddress;
-							throw new Error('Could not determine clientAddress');
-						},
-						read: (file) => {
-							if (file in manifest._.server_assets) {
-								return fs.readFileSync(join(dir, file));
-							}
-
-							return fs.readFileSync(join(svelte_config.kit.files.assets, file));
-						},
-						emulator
-					});
-				}
-			});
+			request_sockets.set(request, req);
 
 			setResponse(res, await respond(request));
 		});
