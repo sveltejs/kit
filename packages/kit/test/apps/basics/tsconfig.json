@@ -11,7 +11,7 @@
 		"unit-test",
 		"test",
 		"playwright.config.js",
-		"adapter-handler.js",
+		"adapter-handler.ts",
 		"vite.config.js"
 	]
 }

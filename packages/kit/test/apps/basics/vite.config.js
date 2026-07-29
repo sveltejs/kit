@@ -38,7 +38,7 @@ export default defineConfig({
 					read: () => true,
 					instrumentation: () => true
 				},
-				customHandler: import.meta.resolve('./adapter-handler.js')
+				customHandler: import.meta.resolve('./adapter-handler.ts')
 			},
 
 			compilerOptions: {
