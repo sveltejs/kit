@@ -1,12 +1,11 @@
 /** @import { RouteId } from '$app/types' */
 /** @import { RemoteFunctionDataNode, ServerNodesResponse, ServerRedirectNode } from 'types' */
-/** @import { NavigationIntent } from './types.js' */
-/** @import { RenderNode } from '../types.js' */
+/** @import { NavigationFinished, NavigationIntent } from './types.js' */
 /** @import { CacheEntry } from './remote-functions/cache.svelte.js' */
 /** @import { Query } from './remote-functions/query/instance.svelte.js' */
 /** @import { LiveQuery } from './remote-functions/query-live/instance.svelte.js' */
 import { BROWSER, DEV } from 'esm-env';
-import { settled, tick, fork, onMount } from 'svelte';
+import { settled, tick, fork, onMount, hydrate, mount } from 'svelte';
 import { HttpError, Redirect, SvelteKitError } from '@sveltejs/kit/internal';
 import { decode_pathname, strip_hash, make_trackable, normalize_path } from '../../utils/url.js';
 import { dev_fetch, initial_fetch, lock_fetch, subsequent_fetch, unlock_fetch } from './fetcher.js';
@@ -40,15 +39,13 @@ import {
 	validate_load_response
 } from '../shared.js';
 import { get_message, get_status } from '../../utils/error.js';
-import { page, update, navigating, updated, notify_version } from './state.svelte.js';
+import { page, navigating, updated, notify_version } from './state.svelte.js';
 import { payload } from './payload.js';
 import { add_data_suffix, add_resolution_suffix } from '../pathname.js';
 import { noop_span } from '../telemetry/noop.js';
 import { read_ndjson } from './ndjson.js';
-import RootModern from '../components/root.svelte';
-import { asClassComponent } from 'svelte/legacy';
-
-const Root = asClassComponent(RootModern);
+import Root from '../components/root.svelte';
+import { Props, RenderNode } from '../props.svelte.js';
 
 /**
  * @typedef {{
@@ -57,8 +54,7 @@ const Root = asClassComponent(RootModern);
  *   pageUrl?: string;
  *   state: Record<string, any>;
  *   persistState: boolean;
- *   noScrollIndex: number;
- *   keepFocusIndex: number;
+ *   resetIndex: number;
  * }} HistoryMetadata
  */
 
@@ -66,14 +62,6 @@ export { load_css };
 const ICON_REL_ATTRIBUTES = new Set(['icon', 'shortcut icon', 'apple-touch-icon']);
 
 let errored = false;
-/**
- * Set via transformError, reset and read at the end of navigate.
- * Necessary because a navigation might succeed loading but during rendering
- * an error occurs, at which point the navigation result needs to be overridden with the error result.
- * TODO this is all very hacky, rethink for SvelteKit 3 where we can assume Svelte 5 and do an overhaul of client.js
- * @type {{ error: App.Error, status: number } | null}
- */
-let rendering_error = null;
 
 /**
  * `reset` functions for `<svelte:boundary>`s in the generated root that have
@@ -82,16 +70,16 @@ let rendering_error = null;
  * navigation away from a render error would leave the stale `+error.svelte`
  * mounted. The boundary's `onerror` populates this array; `navigate` drains it
  * after applying the new props. See sveltejs/kit#15694.
- * @type {Array<(() => void) | undefined>}
+ * @type {Set<() => void>}
  */
-const resetters = [];
+const resetters = new Set();
 
 // We track information associated with each history entry in sessionStorage,
 // rather than on history.state itself, because when navigation is driven by
 // popstate it's too late to access the options or update the focus position associated with the
 // state we're navigating from
 /**
- * @type {Record<number, { scroll?: { x: number; y: number }; noScrollIndex?: number; keepFocusIndex?: number }>}
+ * @type {Record<number, { scroll?: { x: number; y: number }; resetIndex?: number }>}
  */
 const history_info = storage.get(HISTORY_INFO_KEY) ?? {};
 
@@ -101,10 +89,8 @@ const history_info = storage.get(HISTORY_INFO_KEY) ?? {};
  */
 const snapshots = storage.get(SNAPSHOT_KEY) ?? {};
 
-/**
- * @deprecated this is a temporary measure to avoid a regression, replace with nested `RenderNode` classes
- */
-let current_tree = /** @type {RenderNode} */ ({});
+/** @type {Props} */
+let props;
 
 if (DEV && BROWSER) {
 	let warned = false;
@@ -155,20 +141,19 @@ function capture_scroll(index) {
 
 /**
  * @param {number} index
- * @param {Pick<HistoryMetadata, 'noScrollIndex' | 'keepFocusIndex'>} options
+ * @param {Pick<HistoryMetadata, 'resetIndex'>} options
  */
 function set_history_options(index, options) {
 	history_info[index] = {
 		...history_info[index],
-		noScrollIndex: options.noScrollIndex,
-		keepFocusIndex: options.keepFocusIndex
+		resetIndex: options.resetIndex
 	};
 }
 
-/** @param {boolean | undefined} keepfocus */
-function blur_active_element(keepfocus) {
+/** @param {boolean} reset */
+function blur_active_element(reset) {
 	if (
-		!keepfocus &&
+		reset &&
 		document.activeElement instanceof HTMLElement &&
 		document.activeElement !== document.body
 	) {
@@ -179,10 +164,10 @@ function blur_active_element(keepfocus) {
 /**
  * @param {URL} url
  * @param {{ x: number; y: number } | null | undefined} scroll
- * @param {boolean | undefined} keepfocus
+ * @param {boolean} reset
  * @param {Element | null} active_element
  */
-function reset_scroll_and_focus(url, scroll, keepfocus, active_element) {
+function reset_scroll_and_focus(url, scroll, reset, active_element) {
 	/** @type {Element | null} */
 	let deep_linked = null;
 
@@ -199,7 +184,7 @@ function reset_scroll_and_focus(url, scroll, keepfocus, active_element) {
 	const changed_focus =
 		document.activeElement !== active_element && document.activeElement !== document.body;
 
-	if (!keepfocus && !changed_focus) {
+	if (reset && !changed_focus) {
 		reset_focus(url, !deep_linked);
 	}
 
@@ -289,14 +274,6 @@ export const prerender_responses = {};
 /** @type {Array<((url: URL) => boolean)>} */
 const invalidated = [];
 
-/**
- * An array of the `+layout.svelte` and `+page.svelte` component instances
- * that currently live on the page — used for capturing and restoring snapshots.
- * It's updated/manipulated through `bind:this` in `Root.svelte`.
- * @type {import('svelte').SvelteComponent[]}
- */
-const components = [];
-
 /** @type {{id: string, token: {}, promise: Promise<import('./types.js').NavigationResult>, fork: Promise<import('svelte').Fork | null> | null} | null} */
 let load_cache = null;
 
@@ -353,9 +330,6 @@ let has_navigated = false;
 
 let force_invalidation = false;
 
-/** @type {import('svelte').SvelteComponent} */
-let root;
-
 /** @type {number} keeping track of the history index in order to prevent popstate navigation events if needed */
 let current_history_index;
 
@@ -363,10 +337,7 @@ let current_history_index;
 let current_navigation_index;
 
 /** @type {number} */
-let current_noscroll_index;
-
-/** @type {number} */
-let current_keepfocus_index;
+let current_reset_index;
 
 /**
  * @param {any} [state]
@@ -398,7 +369,7 @@ let invalidation_token;
 const preload_tokens = new Set();
 
 /** @type {Promise<void> | null} */
-export let pending_invalidate;
+let pending_invalidate;
 
 /**
  * @type {Map<string, Map<string, CacheEntry<Query<any>>>>}
@@ -429,12 +400,33 @@ set_match_implementation(async (url) => {
 	return null;
 });
 
+let embedded_start = Promise.resolve();
+
+/**
+ * TODO this indirection is a grotesque workaround for the fact that multiple apps
+ * can operate on the same shared mutable state. This is fundamentally unsound,
+ * and the `start`/`_start` distinction does not fix it, but it does get the
+ * tests passing. We need to rethink this whole thing but not right now
+ * @param {import('./types.js').SvelteKitApp} _app
+ * @param {HTMLElement} _target
+ * @param {Parameters<typeof _hydrate>[1]} [data]
+ */
+export function start(_app, _target, data) {
+	if (__SVELTEKIT_EMBEDDED__) {
+		const start_promise = embedded_start.then(() => _start(_app, _target, data));
+		embedded_start = start_promise.catch(noop);
+		return start_promise;
+	}
+
+	return _start(_app, _target, data);
+}
+
 /**
  * @param {import('./types.js').SvelteKitApp} _app
  * @param {HTMLElement} _target
- * @param {Parameters<typeof _hydrate>[1]} [hydrate]
+ * @param {Parameters<typeof _hydrate>[1]} [data]
  */
-export async function start(_app, _target, hydrate) {
+async function _start(_app, _target, data) {
 	if (DEV && _target === document.body) {
 		console.warn(
 			'Placing %sveltekit.body% directly inside <body> is not recommended, as your app may break for users who have certain browser extensions installed.\n\nConsider wrapping it in an element:\n\n<div style="display: contents">\n  %sveltekit.body%\n</div>'
@@ -472,23 +464,31 @@ export async function start(_app, _target, hydrate) {
 	// connectivity errors after initialisation don't nuke the app
 	default_layout_loader = _app.nodes[0];
 	default_error_loader = _app.nodes[1];
-	void default_layout_loader();
-	void default_error_loader();
+
+	const [root_layout, root_error] = await Promise.all([
+		default_layout_loader(),
+		default_error_loader()
+	]);
+
+	const tree = new RenderNode(root_layout.component, root_error.component);
+
+	props = new Props({
+		page,
+		tree,
+		form: undefined,
+		error: undefined,
+		onerror: (_, reset) => resetters.add(reset)
+	});
 
 	const history_metadata = get_history_metadata();
 	current_history_index = history_metadata?.historyIndex ?? 0;
 	current_navigation_index = history_metadata?.navigationIndex ?? 0;
-	current_noscroll_index = history_metadata?.noScrollIndex ?? 0;
-	current_keepfocus_index = history_metadata?.keepFocusIndex ?? 0;
+	current_reset_index = history_metadata?.resetIndex ?? 0;
 
 	if (!current_history_index) {
 		// we use Date.now() as an offset so that cross-document navigations
 		// within the app don't result in data loss
-		current_history_index =
-			current_navigation_index =
-			current_noscroll_index =
-			current_keepfocus_index =
-				Date.now();
+		current_history_index = current_navigation_index = current_reset_index = Date.now();
 
 		// create initial history entry, so we can return here
 		history.replaceState(
@@ -499,8 +499,7 @@ export async function start(_app, _target, hydrate) {
 					navigationIndex: current_navigation_index,
 					state: {},
 					persistState: false,
-					noScrollIndex: current_history_index,
-					keepFocusIndex: current_history_index
+					resetIndex: current_history_index
 				}
 			},
 			''
@@ -522,10 +521,10 @@ export async function start(_app, _target, hydrate) {
 		}
 	}
 
-	if (hydrate) {
+	if (data) {
 		restore_scroll();
 
-		await _hydrate(target, hydrate);
+		await _hydrate(target, data);
 	} else {
 		await navigate({
 			type: 'enter',
@@ -607,11 +606,9 @@ async function _invalidate(reset_page_state = true) {
 		navigation_result.props.page.state = prev_state;
 	}
 	navigation_result.props.page.shallow = prev_shallow;
-	update(navigation_result.props.page);
-	current_tree = navigation_result.props.tree;
+	apply_navigation_result(navigation_result);
 	current = { ...navigation_result.state, nav: current.nav };
 	reset_invalidation();
-	root.$set(navigation_result.props);
 
 	// only wait for promises that are connected to queries that still exist
 	/** @type {Promise<any>[]} */
@@ -642,15 +639,15 @@ function reset_invalidation() {
 
 /** @param {number} index */
 function capture_snapshot(index) {
-	if (components.some((c) => c?.snapshot)) {
-		snapshots[index] = components.map((c) => c?.snapshot?.capture());
+	if (props.components.some((c) => c?.snapshot)) {
+		snapshots[index] = props.components.map((c) => c?.snapshot?.capture());
 	}
 }
 
 /** @param {number} index */
 function restore_snapshot(index) {
 	snapshots[index]?.forEach((value, i) => {
-		components[i]?.snapshot?.restore(value);
+		props.components[i]?.snapshot?.restore(value);
 	});
 }
 
@@ -664,7 +661,7 @@ function persist_state() {
 
 /**
  * @param {string | URL} url
- * @param {{ replace?: boolean; noScroll?: boolean; keepFocus?: boolean; refreshAll?: boolean; invalidate?: Array<string | URL | ((url: URL) => boolean)>; state?: Record<string, any>; persistState?: boolean }} options
+ * @param {{ replace?: boolean; reset?: boolean; refreshAll?: boolean; invalidate?: Array<string | URL | ((url: URL) => boolean)>; state?: Record<string, any>; persistState?: boolean }} options
  * @param {number} redirect_count
  * @param {{}} [nav_token]
  * @param {NavigationIntent | undefined} [intent] navigation intent, when already known by the caller (avoids recomputing it)
@@ -685,8 +682,7 @@ export async function _goto(url, options, redirect_count, nav_token, intent) {
 	await navigate({
 		type: 'goto',
 		url: resolve_url(url),
-		keepfocus: options.keepFocus,
-		noscroll: options.noScroll,
+		reset: options.reset,
 		replace_state: options.replace,
 		state: options.state,
 		persist_state: options.persistState,
@@ -775,9 +771,7 @@ async function _preload_data(intent) {
 				if (lc === load_cache && result.type === 'loaded') {
 					try {
 						return fork(() => {
-							root.$set(result.props);
-							update(result.props.page);
-							current_tree = result.props.tree;
+							apply_navigation_result(result);
 						});
 					} catch {
 						// if it errors, it's because the experimental flag isn't enabled in Svelte
@@ -811,9 +805,9 @@ async function _preload_code(url) {
 /**
  * @param {import('./types.js').NavigationFinished} result
  * @param {HTMLElement} target
- * @param {boolean} hydrate
+ * @param {boolean} should_hydrate
  */
-async function initialize(result, target, hydrate) {
+async function initialize(result, target, should_hydrate) {
 	if (__SVELTEKIT_DEV__ && result.state.error && document.querySelector('vite-error-overlay'))
 		return;
 
@@ -835,21 +829,18 @@ async function initialize(result, target, hydrate) {
 		if (style) style.remove();
 	}
 
-	update(/** @type {import('@sveltejs/kit').Page} */ (result.props.page));
-	current_tree = result.props.tree;
+	apply_navigation_result(result);
 
-	// TODO: use mount()
-	root = new Root({
+	// TODO treeshake `hydrate` in csr mode
+	const render = should_hydrate ? hydrate : mount;
+
+	render(Root, {
 		target,
-		props: { ...result.props, components, resetters },
-		hydrate,
-		// Svelte 5 specific: asynchronously instantiate the component, i.e. don't call flushSync
-		sync: false,
+		props,
 		transformError: /** @param {unknown} e */ async (e) => {
 			const error = await handle_error(e, current.nav);
-			rendering_error = { error, status: error.status };
 			page.error = error;
-			page.status = rendering_error.status;
+			page.status = error.status;
 			return error;
 		}
 	});
@@ -858,7 +849,7 @@ async function initialize(result, target, hydrate) {
 	// which causes component script blocks to run asynchronously
 	void (await Promise.resolve());
 
-	if (hydrate) {
+	if (should_hydrate) {
 		/** @type {import('@sveltejs/kit').AfterNavigate} */
 		const navigation = {
 			from: null,
@@ -950,18 +941,13 @@ async function get_navigation_result_from_branch({
 	let current_node = result.props.tree;
 
 	/** @type {RenderNode | undefined} */
-	let previous_node = current_tree;
+	let previous_node = props.tree;
 
 	for (let i = 0; i < branch.length; i += 1) {
 		const node = branch[i];
 		const prev = current.branch[i];
 
 		if (!node) continue;
-
-		const error_loader = errors?.slice(0, i + 1).findLast((x) => x) ?? default_error_loader;
-
-		current_node.error = (await error_loader()).component;
-		current_node.component = node.node.component;
 
 		if (
 			// if an ancestor node in this path changed, `data_changed` is already true and the
@@ -980,10 +966,24 @@ async function get_navigation_result_from_branch({
 		data = current_node.data;
 
 		if (i < branch.length - 1) {
-			current_node.child = /** @type {import('../types.js').RenderNode} */ ({});
-			current_node = current_node.child;
+			let next_index = i + 1;
+			while (next_index < branch.length && !branch[next_index]) {
+				next_index += 1;
+			}
 
-			previous_node = previous_node?.child;
+			const next = branch[next_index];
+
+			if (next) {
+				const error_loader =
+					errors?.slice(0, next_index + 1).findLast((x) => x) ?? default_error_loader;
+
+				current_node = current_node.child = new RenderNode(
+					next.node.component,
+					(await error_loader()).component
+				);
+
+				previous_node = previous_node?.child;
+			}
 		}
 	}
 
@@ -1805,8 +1805,7 @@ function _before_navigate({ url, type, intent, delta, event, scroll, shallow = f
  *     delta: number;
  *     shallow: { params: Record<string, string> | null; route: { id: string } | null; url: URL } | null;
  *   };
- *   keepfocus?: boolean;
- *   noscroll?: boolean;
+ *   reset?: boolean;
  *   replace_state?: boolean;
  *   state?: Record<string, any>;
  *   persist_state?: boolean;
@@ -1823,8 +1822,7 @@ async function navigate({
 	type,
 	url,
 	popped,
-	keepfocus,
-	noscroll,
+	reset = true,
 	replace_state,
 	state = {},
 	persist_state = false,
@@ -1934,8 +1932,7 @@ async function navigate({
 				type,
 				url: new URL(navigation_result.location, url),
 				popped,
-				keepfocus,
-				noscroll,
+				reset,
 				replace_state,
 				state,
 				persist_state,
@@ -1986,8 +1983,7 @@ async function navigate({
 		// this is a new navigation, rather than a popstate
 		const change = replace_state ? 0 : 1;
 		if (type !== 'enter') {
-			if (!noscroll) current_noscroll_index += 1;
-			if (!keepfocus) current_keepfocus_index += 1;
+			if (reset) current_reset_index += 1;
 		}
 
 		const entry = {
@@ -1996,8 +1992,7 @@ async function navigate({
 				navigationIndex: (current_navigation_index += change),
 				state,
 				persistState: persist_state,
-				noScrollIndex: current_noscroll_index,
-				keepFocusIndex: current_keepfocus_index
+				resetIndex: current_reset_index
 			})
 		};
 
@@ -2076,7 +2071,7 @@ async function navigate({
 
 		// Remove focus before updating the component tree, so that blur/focusout
 		// handlers fire while the old component's data is still valid (#14575)
-		blur_active_element(keepfocus);
+		blur_active_element(reset);
 
 		const fork = load_cache_fork && (await load_cache_fork);
 
@@ -2085,26 +2080,20 @@ async function navigate({
 			// `fork.commit()` applies the preloaded state synchronously before the
 			// first `await`, so reset any previously-failed boundaries now so the
 			// stale `+error.svelte` is torn down. See sveltejs/kit#15694.
-			for (const reset of resetters) {
-				reset?.();
+			for (const reset_boundary of resetters) {
+				reset_boundary();
 			}
-			resetters.length = 0;
+			resetters.clear();
 		} else {
-			rendering_error = null; // TODO this can break with forks, rethink for SvelteKit 3 where we can assume Svelte 5
-			root.$set(navigation_result.props);
-			current_tree = navigation_result.props.tree;
+			apply_navigation_result(navigation_result);
+
 			// Reset any boundaries that failed on a previous navigation now that the
 			// new props are applied, otherwise the stale `+error.svelte` stays
 			// mounted above the new route's content. See sveltejs/kit#15694.
-			for (const reset of resetters) {
-				reset?.();
+			for (const reset_boundary of resetters) {
+				reset_boundary();
 			}
-			resetters.length = 0;
-			// Check for sync rendering error
-			if (rendering_error) {
-				Object.assign(navigation_result.props.page, rendering_error);
-			}
-			update(navigation_result.props.page);
+			resetters.clear();
 
 			commit_promise = settled();
 		}
@@ -2124,12 +2113,7 @@ async function navigate({
 		return;
 	}
 
-	// Check for async rendering error
-	if (navigation_result.props.page && rendering_error) {
-		Object.assign(navigation_result.props.page, rendering_error);
-	}
-
-	reset_scroll_and_focus(url, noscroll ? scroll_state() : popped?.scroll, keepfocus, activeElement);
+	reset_scroll_and_focus(url, reset ? popped?.scroll : scroll_state(), reset, activeElement);
 
 	is_navigating = false;
 
@@ -2447,6 +2431,7 @@ export function disableScrollHandling() {
 let warned_on_invalidate_all = false;
 let warned_on_replace_state = false;
 let warned_on_push_state = false;
+let warned_on_reset = false;
 let warned_on_replace_state_function = false;
 
 /**
@@ -2495,11 +2480,19 @@ export async function goto(url, opts = {}) {
 		throw new Error('Cannot call goto(...) on the server');
 	}
 
-	if (DEV && 'replaceState' in opts && !warned_on_replace_state) {
-		warned_on_replace_state = true;
-		console.warn(
-			`The \`goto(..., { replaceState: ${opts.replaceState} })\` option has been deprecated in favour of \`replace\``
-		);
+	if (DEV) {
+		if ('replaceState' in opts && !warned_on_replace_state) {
+			warned_on_replace_state = true;
+			console.warn(
+				`The \`goto(..., { replaceState: ${opts.replaceState} })\` option has been deprecated in favour of \`replace\``
+			);
+		}
+
+		if ('noScroll' in opts || 'keepFocus' in opts) {
+			throw new Error(
+				`The \`goto(..., { noScroll: true, keepFocus: true })\` options have been replaced by \`reset: false\``
+			);
+		}
 	}
 
 	const replace = opts.replace ?? opts.replaceState ?? false;
@@ -2513,8 +2506,7 @@ export async function goto(url, opts = {}) {
 			{
 				replace,
 				persist_state: opts.persistState ?? false,
-				noscroll: opts.noScroll ?? true,
-				keepfocus: opts.keepFocus ?? true
+				reset: opts.reset ?? false
 			},
 			'goto'
 		);
@@ -2731,7 +2723,7 @@ export async function pushState(url, state) {
 	await update_state(
 		intent,
 		state,
-		{ replace: false, persist_state: false, noscroll: true, keepfocus: true },
+		{ replace: false, persist_state: false, reset: false },
 		'pushState'
 	);
 }
@@ -2761,7 +2753,7 @@ export async function replaceState(url, state) {
 	await update_state(
 		intent,
 		state,
-		{ replace: true, persist_state: false, noscroll: true, keepfocus: true },
+		{ replace: true, persist_state: false, reset: false },
 		'replaceState'
 	);
 }
@@ -2769,15 +2761,10 @@ export async function replaceState(url, state) {
 /**
  * @param {NavigationIntent} intent
  * @param {App.PageState} state
- * @param {{ replace: boolean; persist_state: boolean; noscroll: boolean; keepfocus: boolean; }} options
+ * @param {{ replace: boolean; persist_state: boolean; reset: boolean; }} options
  * @param {'goto' | 'pushState' | 'replaceState'} caller
  */
-async function update_state(
-	intent,
-	state,
-	{ replace, persist_state, noscroll, keepfocus },
-	caller
-) {
+async function update_state(intent, state, { replace, persist_state, reset }, caller) {
 	const url = intent.url;
 
 	if (DEV) {
@@ -2810,8 +2797,7 @@ async function update_state(
 	}
 
 	if (!replace) capture_scroll(current_history_index);
-	if (!noscroll) current_noscroll_index += 1;
-	if (!keepfocus) current_keepfocus_index += 1;
+	if (reset) current_reset_index += 1;
 
 	const entry = {
 		[HISTORY_METADATA_KEY]: /** @satisfies {HistoryMetadata} */ ({
@@ -2820,8 +2806,7 @@ async function update_state(
 			pageUrl: page.url.href,
 			state,
 			persistState: persist_state,
-			noScrollIndex: current_noscroll_index,
-			keepFocusIndex: current_keepfocus_index
+			resetIndex: current_reset_index
 		})
 	};
 
@@ -2854,7 +2839,7 @@ async function update_state(
 		}
 	}
 
-	blur_active_element(keepfocus);
+	blur_active_element(reset);
 
 	page.state = state;
 	page.shallow = {
@@ -2875,7 +2860,7 @@ async function update_state(
 		return;
 	}
 
-	reset_scroll_and_focus(url, noscroll ? scroll_state() : null, keepfocus, activeElement);
+	reset_scroll_and_focus(url, reset ? null : scroll_state(), reset, activeElement);
 
 	is_navigating = false;
 	nav.fulfil(undefined);
@@ -2914,15 +2899,13 @@ export async function applyAction(result) {
 		page.status = result.status;
 
 		/** @type {Record<string, any>} */
-		root.$set({
-			// this brings Svelte's view of the world in line with SvelteKit's
-			// after use:enhance reset the form....
-			form: null
-		});
+		// this brings Svelte's view of the world in line with SvelteKit's
+		// after use:enhance reset the form....
+		props.form = null;
 
 		// ...so that setting the `form` prop takes effect and isn't ignored
 		await tick();
-		root.$set({ form: result.data });
+		props.form = result.data;
 
 		if (result.type === 'success') {
 			reset_focus(/** @type {URL} */ (page.url));
@@ -2952,9 +2935,7 @@ export async function set_nearest_error_page(error) {
 
 		current = { ...navigation_result.state, nav: current.nav };
 
-		root.$set(navigation_result.props);
-		current_tree = navigation_result.props.tree;
-		update(navigation_result.props.page);
+		apply_navigation_result(navigation_result);
 
 		void tick().then(() => reset_focus(current.url));
 	}
@@ -3103,8 +3084,7 @@ function _start_router() {
 			// history metadata here because the hashchange event will occur after history.state was updated
 			hash_navigating = {
 				.../** @type {HistoryMetadata} */ (get_history_metadata()),
-				noScrollIndex: current_noscroll_index + (options.noscroll ? 0 : 1),
-				keepFocusIndex: current_keepfocus_index + (options.keepfocus ? 0 : 1)
+				resetIndex: current_reset_index + (options.reset ? 1 : 0)
 			};
 
 			capture_scroll(current_history_index);
@@ -3132,8 +3112,7 @@ function _start_router() {
 		await navigate({
 			type: 'link',
 			url,
-			keepfocus: options.keepfocus,
-			noscroll: options.noscroll,
+			reset: options.reset,
 			replace_state: options.replace_state ?? url.href === location.href,
 			event
 		});
@@ -3179,8 +3158,7 @@ function _start_router() {
 		void navigate({
 			type: 'form',
 			url,
-			keepfocus: options.keepfocus,
-			noscroll: options.noscroll,
+			reset: options.reset,
 			replace_state: options.replace_state ?? url.href === location.href,
 			event
 		});
@@ -3201,11 +3179,8 @@ function _start_router() {
 			if (history_index === current_history_index) return;
 
 			const delta = history_index - current_history_index;
-			const no_scroll_index = history_metadata.noScrollIndex;
-			const keep_focus_index = history_metadata.keepFocusIndex;
-			const noscroll = no_scroll_index === (source_info?.noScrollIndex ?? current_noscroll_index);
-			const keepfocus =
-				keep_focus_index === (source_info?.keepFocusIndex ?? current_keepfocus_index);
+			const reset_index = history_metadata.resetIndex;
+			const reset = reset_index !== (source_info?.resetIndex ?? current_reset_index);
 			const scroll = history_info[history_index]?.scroll;
 			const state = history_metadata.state;
 			const url = new URL(history_metadata.pageUrl ?? location.href);
@@ -3237,7 +3212,7 @@ function _start_router() {
 				// exception is if we haven't navigated yet, since we could have
 				// got here after a modal navigation then a reload
 
-				blur_active_element(keepfocus);
+				blur_active_element(reset);
 
 				if (state !== page.state) {
 					page.state = state;
@@ -3249,17 +3224,15 @@ function _start_router() {
 
 				capture_scroll(current_history_index);
 				current_history_index = history_index;
-				current_noscroll_index = no_scroll_index;
-				current_keepfocus_index = keep_focus_index;
-				if (!noscroll && scroll) scrollTo(scroll.x, scroll.y);
+				current_reset_index = reset_index;
+				if (reset && scroll) scrollTo(scroll.x, scroll.y);
 				return;
 			}
 
 			await navigate({
 				type: 'popstate',
 				url,
-				keepfocus,
-				noscroll,
+				reset,
 				popped: {
 					state,
 					scroll,
@@ -3269,8 +3242,7 @@ function _start_router() {
 				accept: () => {
 					current_history_index = history_index;
 					current_navigation_index = navigation_index;
-					current_noscroll_index = no_scroll_index;
-					current_keepfocus_index = keep_focus_index;
+					current_reset_index = reset_index;
 				},
 				block: () => {
 					history.go(-delta);
@@ -3301,8 +3273,7 @@ function _start_router() {
 		if (hash_navigating) {
 			const history_metadata = hash_navigating;
 			hash_navigating = null;
-			current_noscroll_index = history_metadata.noScrollIndex;
-			current_keepfocus_index = history_metadata.keepFocusIndex;
+			current_reset_index = history_metadata.resetIndex;
 			history.replaceState(
 				{
 					...history.state,
@@ -3382,7 +3353,7 @@ async function _hydrate(
 
 	/** @type {import('./types.js').NavigationFinished | undefined} */
 	let result;
-	let hydrate = true;
+	let should_hydrate = true;
 
 	try {
 		const branch_promises = node_ids.map(async (n, i) => {
@@ -3448,7 +3419,7 @@ async function _hydrate(
 		});
 
 		target.textContent = '';
-		hydrate = false;
+		should_hydrate = false;
 	}
 
 	// Exit early when we encounter a redirect while loading the root error page.
@@ -3460,7 +3431,7 @@ async function _hydrate(
 		result.props.page.state = history_metadata?.persistState ? history_metadata.state : {};
 	}
 
-	await initialize(result, target, hydrate);
+	await initialize(result, target, should_hydrate);
 }
 
 /**
@@ -3805,5 +3776,23 @@ if (DEV) {
 				location.reload();
 			}
 		});
+	}
+}
+
+/**
+ * @param {NavigationFinished} result
+ */
+function apply_navigation_result(result) {
+	Object.assign(page, result.props.page);
+
+	props.tree.data = result.props.tree.data;
+	props.tree.child = result.props.tree.child;
+
+	if ('form' in result.props) {
+		props.form = result.props.form;
+	}
+
+	if ('error' in result.props) {
+		props.error = result.props.error;
 	}
 }

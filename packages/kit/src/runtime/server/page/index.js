@@ -2,7 +2,7 @@
 /** @import { ActionResult, RequestEvent, SSRManifest } from '@sveltejs/kit' */
 /** @import { PageNodeIndexes, RequestState, RequiredResolveOptions, ServerDataNode, SSRNode, SSROptions, SSRState } from 'types' */
 import { text } from '@sveltejs/kit';
-import { HttpError, Redirect } from '@sveltejs/kit/internal';
+import { Redirect } from '@sveltejs/kit/internal';
 import { compact } from '../../../utils/array.js';
 import { get_status, normalize_error } from '../../../utils/error.js';
 import { noop } from '../../../utils/functions.js';
@@ -386,7 +386,6 @@ export async function render_page(
 			options,
 			manifest,
 			state,
-			status: e instanceof HttpError ? e.status : 500,
 			error: e,
 			resolve_opts
 		});

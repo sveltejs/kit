@@ -40,16 +40,22 @@ import {
  * @returns {InternalRemoteFormIssue[]}
  */
 function merge_with_server_issues(form_data, current_issues, client_issues) {
+	const client_names = new Set(client_issues.map((issue) => issue.name));
+
 	const merged = [
-		...current_issues.filter(
-			(issue) => issue.server && !client_issues.some((i) => i.name === issue.name)
-		),
+		...current_issues.filter((issue) => issue.server && !client_names.has(issue.name)),
 		...client_issues
 	];
 
-	const keys = Array.from(form_data.keys());
+	/** @type {Map<string, number>} */
+	const positions = new Map();
+	let i = 0;
+	for (const key of form_data.keys()) {
+		if (!positions.has(key)) positions.set(key, i);
+		i++;
+	}
 
-	return merged.sort((a, b) => keys.indexOf(a.name) - keys.indexOf(b.name));
+	return merged.sort((a, b) => (positions.get(a.name) ?? -1) - (positions.get(b.name) ?? -1));
 }
 
 /**
