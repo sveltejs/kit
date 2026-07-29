@@ -1,4 +1,4 @@
-/** @import { Server, SSRHandler, SSRManifest } from '@sveltejs/kit' */
+/** @import { SSRHandler, SSRManifest } from '@sveltejs/kit' */
 /** @import { NextHandleFunction } from 'connect' */
 /** @import { PreviewServer, ResolvedConfig } from 'vite' */
 /** @import { ValidatedConfig, ServerInternalModule, ServerModule } from 'types' */
@@ -51,26 +51,6 @@ export async function preview(vite, vite_config, svelte_config) {
 
 	const server = new Server(manifest);
 
-	const original_respond = server.respond.bind(server);
-	const emulator = await svelte_config.kit.adapter?.emulate?.();
-
-	server.respond = async (request, options) => {
-		return await original_respond(request, {
-			...options,
-			read: (file) => {
-				if (file in manifest._.server_assets) {
-					return fs.readFileSync(join(dir, file));
-				}
-
-				return fs.readFileSync(join(svelte_config.kit.files.assets, file));
-			},
-			emulator
-		});
-	};
-
-	/** @type {Server['respond'] | undefined} */
-	let respond;
-
 	try {
 		const env = loadEnv(vite_config.mode, svelte_config.kit.env.dir, '');
 
@@ -78,11 +58,6 @@ export async function preview(vite, vite_config, svelte_config) {
 			env,
 			read: (file) => createReadableStream(`${dir}/${file}`)
 		});
-
-		/** @type {{ default: SSRHandler }} */
-		const { default: handler } = await import(pathToFileURL(`${dir}/handler.js`).href);
-
-		respond = await handler(server);
 	} catch (error) {
 		// Vite erases the error message when starting the preview server so we store
 		// it in the stack instead. This ensures errors thrown using `stackless`
@@ -90,6 +65,8 @@ export async function preview(vite, vite_config, svelte_config) {
 		if (error instanceof Error) error.stack = error.message;
 		throw error;
 	}
+
+	const emulator = await svelte_config.kit.adapter?.emulate?.();
 
 	return () => {
 		// Remove the base middleware. It screws with the URL.
@@ -236,16 +213,30 @@ export async function preview(vite, vite_config, svelte_config) {
 				request: req
 			});
 
-			setResponse(
-				res,
-				await respond(request, {
-					getClientAddress: () => {
-						const { remoteAddress } = req.socket;
-						if (remoteAddress) return remoteAddress;
-						throw new Error('Could not determine clientAddress');
-					}
-				})
-			);
+			/** @type {{ default: SSRHandler }} */
+			const { default: init_server } = await import(pathToFileURL(`${dir}/handler.js`).href);
+			const respond = await init_server({
+				respond: (request, options) => {
+					return server.respond(request, {
+						...options,
+						getClientAddress: () => {
+							const { remoteAddress } = req.socket;
+							if (remoteAddress) return remoteAddress;
+							throw new Error('Could not determine clientAddress');
+						},
+						read: (file) => {
+							if (file in manifest._.server_assets) {
+								return fs.readFileSync(join(dir, file));
+							}
+
+							return fs.readFileSync(join(svelte_config.kit.files.assets, file));
+						},
+						emulator
+					});
+				}
+			});
+
+			setResponse(res, await respond(request));
 		});
 	};
 }

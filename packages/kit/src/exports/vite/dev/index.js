@@ -582,34 +582,39 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, s
 				set_assets(assets);
 
 				const server = new Server(manifest);
-				const original_respond = server.respond.bind(server);
-				server.respond = (request, options) => {
-					return original_respond(request, {
-						...options,
-						read: (file) => {
-							if (file in manifest._.server_assets) {
-								return fs.readFileSync(from_fs(file));
-							}
-
-							return fs.readFileSync(path.join(svelte_config.kit.files.assets, file));
-						},
-						before_handle: async (event, config, prerender, handle) => {
-							// we need to use .run because .enterWith() is not supported in Cloudflare Workers
-							// see https://blog.cloudflare.com/workers-node-js-asynclocalstorage/
-							return await async_local_storage.run({ event, config, prerender }, handle);
-						},
-						emulator
-					});
-				};
 
 				const handler =
 					svelte_config.kit.adapter?.customHandler ??
 					`${get_runtime_base(root)}/server/default-handler.js`;
-				const init_server = (await runner.import(handler)).default;
 
 				await server.init({ env, read: (file) => createReadableStream(file) });
 
-				const respond = await init_server(server);
+				/** @type {import('../../../runtime/server/default-handler.js')} */
+				const { default: init_server } = await runner.import(handler);
+
+				const respond = await init_server({
+					respond: (request, options) => {
+						return server.respond(request, {
+							...options,
+							getClientAddress: () => {
+								throw new Error('Cannot read clientAddress during prerendering');
+							},
+							read: (file) => {
+								if (file in manifest._.server_assets) {
+									return fs.readFileSync(from_fs(file));
+								}
+
+								return fs.readFileSync(path.join(svelte_config.kit.files.assets, file));
+							},
+							before_handle: async (event, config, prerender, handle) => {
+								// we need to use .run because .enterWith() is not supported in Cloudflare Workers
+								// see https://blog.cloudflare.com/workers-node-js-asynclocalstorage/
+								return await async_local_storage.run({ event, config, prerender }, handle);
+							},
+							emulator
+						});
+					}
+				});
 
 				const request = getRequest({
 					base,
@@ -638,13 +643,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, s
 					return;
 				}
 
-				const rendered = await respond(request, {
-					getClientAddress: () => {
-						const { remoteAddress } = req.socket;
-						if (remoteAddress) return remoteAddress;
-						throw new Error('Could not determine clientAddress');
-					}
-				});
+				const rendered = await respond(request);
 
 				if (rendered.status === 404) {
 					// @ts-expect-error
