@@ -1,13 +1,12 @@
-/** @import { SSRHandler } from '@sveltejs/kit' */
+import type { SSRHandler } from '@sveltejs/kit';
 
 /**
  * Custom handler for the test adapter. Intercepts requests to
  * `/adapter/custom-handler/intercepted` and adds a header to responses
  * for every other route beneath `/adapter/custom-handler`.
- * @type {SSRHandler}
  */
-export default async function handler(server) {
-	return async (request, options) => {
+const handler: SSRHandler = async (server) => {
+	return async (request) => {
 		const { pathname } = new URL(request.url);
 
 		if (pathname === '/adapter/custom-handler/intercepted') {
@@ -16,7 +15,7 @@ export default async function handler(server) {
 			});
 		}
 
-		const response = await server.respond(request, options);
+		const response = await server.respond(request);
 
 		if (pathname.startsWith('/adapter/custom-handler')) {
 			const headers = new Headers(response.headers);
@@ -31,4 +30,6 @@ export default async function handler(server) {
 
 		return response;
 	};
-}
+};
+
+export default handler;
