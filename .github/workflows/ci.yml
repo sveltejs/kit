@@ -43,6 +43,12 @@ jobs:
         with:
           persist-credentials: false
       - uses: ./.github/actions/node-setup
+      - name: Cache eslint
+        id: eslint-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: ./node_modules/.eslintcache
+          key: eslint-${{ hashFiles('pnpm-lock.yaml') }}
       - run: pnpm run lint
       - run: cd packages/kit && pnpm prepublishOnly && { [ "`git status --porcelain=v1`" == "" ] || (echo "Generated types have changed — please run prepublishOnly locally and commit the changes after you have reviewed them"; git diff; exit 1); }
       - run: pnpm run check
