@@ -102,7 +102,14 @@ export default defineConfig({
 		browser: {
 			enabled: true,
 			provider: playwright(),
-			instances: [{ browser: /** @type {import('vitest/node').BrowserInstanceOption['browser']} */ (process.env.KIT_E2E_BROWSER) || 'chromium' }],
+			instances: [
+				{
+					browser:
+						/** @type {import('vitest/node').BrowserInstanceOption['browser']} */ (
+							process.env.KIT_E2E_BROWSER
+						) || 'chromium'
+				}
+			],
 			headless: true
 		},
 		include: ['unit-test/**/*.spec.js']
