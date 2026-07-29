@@ -79,7 +79,7 @@
 		"test:integration": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test",
 		"test:dev": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:dev",
 		"test:build": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:build",
-		"test:cross-platform:dev": "vitest run packages/kit && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:cross-platform:dev",
+		"test:cross-platform:dev": "pnpm test:unit && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:cross-platform:dev",
 		"test:cross-platform:build": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:cross-platform:build",
 		"test:server-side-route-resolution:dev": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:server-side-route-resolution:dev",
 		"test:server-side-route-resolution:build": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:server-side-route-resolution:build",
