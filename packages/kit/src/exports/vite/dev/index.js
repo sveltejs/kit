@@ -597,7 +597,9 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, s
 						return server.respond(request, {
 							...options,
 							getClientAddress: () => {
-								throw new Error('Cannot read clientAddress during prerendering');
+								const { remoteAddress } = req.socket;
+								if (remoteAddress) return remoteAddress;
+								throw new Error('Could not determine clientAddress');
 							},
 							read: (file) => {
 								if (file in manifest._.server_assets) {
