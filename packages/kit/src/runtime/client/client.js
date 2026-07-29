@@ -2425,6 +2425,7 @@ export function disableScrollHandling() {
 let warned_on_invalidate_all = false;
 let warned_on_replace_state = false;
 let warned_on_push_state = false;
+let warned_on_reset = false;
 let warned_on_replace_state_function = false;
 
 /**
@@ -2473,11 +2474,19 @@ export async function goto(url, opts = {}) {
 		throw new Error('Cannot call goto(...) on the server');
 	}
 
-	if (DEV && 'replaceState' in opts && !warned_on_replace_state) {
-		warned_on_replace_state = true;
-		console.warn(
-			`The \`goto(..., { replaceState: ${opts.replaceState} })\` option has been deprecated in favour of \`replace\``
-		);
+	if (DEV) {
+		if ('replaceState' in opts && !warned_on_replace_state) {
+			warned_on_replace_state = true;
+			console.warn(
+				`The \`goto(..., { replaceState: ${opts.replaceState} })\` option has been deprecated in favour of \`replace\``
+			);
+		}
+
+		if ('noScroll' in opts || 'keepFocus' in opts) {
+			throw new Error(
+				`The \`goto(..., { noScroll: true, keepFocus: true })\` options have been replaced by \`reset: false\``
+			);
+		}
 	}
 
 	const replace = opts.replace ?? opts.replaceState ?? false;
