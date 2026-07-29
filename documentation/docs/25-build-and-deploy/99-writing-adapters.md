@@ -106,6 +106,9 @@ export default async function handler(server) {
 
 	return async (request) => {
 		// custom request/response handling logic goes here
+		if (new URL(request.url).pathname === '/_ping') {
+			return new Response('pong');
+		}
 
 		return await server.respond(request, {
 			platform: {
