@@ -101,23 +101,13 @@ The handler file should export a default function that returns a request handler
 /// file: src/handler.js
 // @errors: 2322
 /** @type {import('@sveltejs/kit').SSRHandler} */
-export default async function handler(server, env) {
+export default async function handler(server) {
 	// perform setup work here
 
-	// this is optional. Since `server.init` only runs once, the default
-	// implementation will be used instead if it's not been called already
-	await server.init({
-		env,
-		read: (file) => {
-			// how your platform reads files
-		}
-	});
-
-	return async (request, options) => {
+	return async (request) => {
 		// custom request/response handling logic goes here
 
 		return await server.respond(request, {
-			...options,
 			platform: {
 				// the shape of `App.Platform`
 			}
