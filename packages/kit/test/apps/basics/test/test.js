@@ -802,6 +802,14 @@ test.describe('$app/manifest', () => {
 		expect(paths.every((/** @type {string} */ f) => f.includes('_app/immutable/'))).toBe(true);
 	});
 
+	test('only exposes immutable chunks to the service worker', async ({ request }) => {
+		test.skip(!!process.env.DEV, 'only known after build');
+		const body = await (await request.get('/service-worker.js')).text();
+		expect(body).toContain('_app/immutable/');
+		// the manifest chunk has a fixed filename and must not be cached as if it were immutable
+		expect(body).not.toContain('_app/manifest.js');
+	});
+
 	test('exposes prerendered paths', async ({ page }) => {
 		test.skip(!!process.env.DEV, 'prerendered paths are only known after build');
 		await page.goto('/app-manifest');
