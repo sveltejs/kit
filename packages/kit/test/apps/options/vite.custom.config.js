@@ -60,6 +60,7 @@ const config = {
 		}
 	},
 	test: {
+		name: 'kit-vitest',
 		include: ['./unit-test/*.spec.js']
 	}
 };
