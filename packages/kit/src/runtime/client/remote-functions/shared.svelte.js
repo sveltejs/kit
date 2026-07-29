@@ -197,7 +197,7 @@ export async function remote_request(url, init) {
 export async function handle_side_channel_response(response) {
 	if (response.type === 'redirect') {
 		// Use internal version to allow redirects to external URLs
-		await _goto(response.location, {}, 0);
+		await _goto(response.location);
 		throw new Redirect(307, response.location);
 	}
 
