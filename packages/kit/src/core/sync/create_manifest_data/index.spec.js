@@ -211,17 +211,23 @@ test('encodes invalid characters', () => {
 	const quote = { component: 'samples/encoding/[x+22]/+page.svelte' };
 	const hash = { component: 'samples/encoding/[x+23]/+page.svelte' };
 	const question_mark = { component: 'samples/encoding/[x+3f]/+page.svelte' };
+	const open_bracket = { component: 'samples/encoding/[x+5b]/+page.svelte' };
+	const close_bracket = { component: 'samples/encoding/[x+5d]/+page.svelte' };
 
 	expect(nodes.map(simplify_node)).toEqual([
 		default_layout,
 		default_error,
 		quote,
 		hash,
-		question_mark
+		question_mark,
+		open_bracket,
+		close_bracket
 	]);
 
 	expect(routes.map((p) => p.pattern.toString())).toEqual(
-		[/^\/$/, /^\/%3[Ff]\/?$/, /^\/%23\/?$/, /^\/"\/?$/].map((pattern) => pattern.toString())
+		[/^\/$/, /^\/\]\/?$/, /^\/\[\/?$/, /^\/%3[Ff]\/?$/, /^\/%23\/?$/, /^\/"\/?$/].map((pattern) =>
+			pattern.toString()
+		)
 	);
 });
 

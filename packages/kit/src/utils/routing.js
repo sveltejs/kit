@@ -1,4 +1,5 @@
 import { BROWSER } from 'esm-env';
+import { escape_for_regexp } from './regex.js';
 
 const param_pattern = /^(\[)?(\.\.\.)?([\w-]+)(?:=([\w-]+))?(\])?$/;
 
@@ -243,21 +244,25 @@ export function exec(match, params, matchers) {
 	return result;
 }
 
+/**
+ * `decode_pathname` leaves these characters untouched, so routes have to match their encoded forms
+ * @type {Record<string, string>}
+ */
+const encoded = {
+	'%': '%25',
+	'/': '%2[Ff]',
+	'?': '%3[Ff]',
+	'#': '%23'
+};
+
 /** @param {string} str */
 function escape(str) {
-	return (
-		str
-			.normalize()
-			// escape [ and ] before escaping other characters, since they are used in the replacements
-			.replace(/[[\]]/g, '\\$&')
-			// replace %, /, ? and # with their encoded versions because decode_pathname leaves them untouched
-			.replace(/%/g, '%25')
-			.replace(/\//g, '%2[Ff]')
-			.replace(/\?/g, '%3[Ff]')
-			.replace(/#/g, '%23')
-			// escape characters that have special meaning in regex
-			.replace(/[.*+?^${}()|\\]/g, '\\$&')
-	);
+	// the replacements in `encoded` are regex source themselves, so they must not be escaped again
+	return str
+		.normalize()
+		.split(/([%/?#])/)
+		.map((part, i) => (i % 2 ? encoded[part] : escape_for_regexp(part)))
+		.join('');
 }
 
 const basic_param_pattern = /\[(\[)?(\.\.\.)?([\w-]+?)(?:=([\w-]+))?\]\]?/g;
