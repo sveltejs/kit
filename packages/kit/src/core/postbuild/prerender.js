@@ -1,3 +1,4 @@
+/** @import { SSRHandler } from '@sveltejs/kit' */
 import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -56,7 +57,10 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 	set_env(env);
 
 	/** @type {import('types').ServerModule} */
-	const { Server } = await import(pathToFileURL(`${out}/server/index.js`).href);
+	const { Server } = await import(pathToFileURL(`${out}/server/server.js`).href);
+
+	/** @type {{ default: SSRHandler }} */
+	const { default: init_server } = await import(pathToFileURL(`${out}/server/handler.js`).href);
 
 	const throw_handled = () => {
 		throw new Error('__handled__');
@@ -262,6 +266,13 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 	/** @type {Map<string, Promise<any>>} */
 	const remote_responses = new Map();
 
+	// the custom/default handler's setup phase must run only once (per the `SSRHandler`
+	// contract), so `respond` is created a single time below. Per-visit state (the
+	// `dependencies` map) is threaded through to the shared handler via this `WeakMap`,
+	// keyed on the `Request` that flows into `server.respond`.
+	/** @type {WeakMap<Request, Map<string, import('types').PrerenderDependency>>} */
+	const dependencies_by_request = new WeakMap();
+
 	/** @type {Map<string, Set<string>>} */
 	const expected_hashlinks = new Map();
 
@@ -301,29 +312,11 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 
 		const request = new Request(prerender_origin + encoded);
 
-		const response = await server.respond(request, {
-			getClientAddress() {
-				throw new Error('Cannot read clientAddress during prerendering');
-			},
-			prerendering: {
-				dependencies,
-				remote_responses
-			},
-			read: (file) => {
-				// stuff we just wrote
-				const filepath = saved.get(file);
-				if (filepath) return readFileSync(filepath);
+		// thread the per-visit `dependencies` map through to the shared `respond`
+		// handler (created once, after `server.init` below)
+		dependencies_by_request.set(request, dependencies);
 
-				// Static assets emitted during build
-				if (file.startsWith(config.appDir)) {
-					return readFileSync(`${out}/server/${file}`);
-				}
-
-				// stuff in `static`
-				return readFileSync(join(config.files.assets, file));
-			},
-			emulator
-		});
+		const response = await respond(request);
 
 		const encoded_id = response.headers.get('x-sveltekit-routeid');
 		const decoded_id = encoded_id && decode_uri(encoded_id);
@@ -592,6 +585,38 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 	await server.init({
 		env,
 		read: (file) => createReadableStream(`${config.outDir}/output/server/${file}`)
+	});
+
+	// create the custom/default handler once, honouring the `SSRHandler`
+	// "setup runs once" contract. Per-visit `dependencies` are looked up from
+	// `dependencies_by_request` using the `Request` passed to `server.respond`.
+	const respond = await init_server({
+		respond: (request, options) => {
+			return server.respond(request, {
+				...options,
+				getClientAddress() {
+					throw new Error('Cannot read clientAddress during prerendering');
+				},
+				prerendering: {
+					dependencies: dependencies_by_request.get(request) ?? new Map(),
+					remote_responses
+				},
+				read: (file) => {
+					// stuff we just wrote
+					const filepath = saved.get(file);
+					if (filepath) return readFileSync(filepath);
+
+					// Static assets emitted during build
+					if (file.startsWith(config.appDir)) {
+						return readFileSync(`${out}/server/${file}`);
+					}
+
+					// stuff in `static`
+					return readFileSync(join(config.files.assets, file));
+				},
+				emulator
+			});
+		}
 	});
 
 	log.info('Prerendering');

@@ -40,6 +40,8 @@ export default function (options) {
 				// Return `false if it can't, or throw a descriptive error.
 			}
 		},
+		// Specify the path of a module to customise request handling
+		customHandler: import.meta.resolve('./handler.js'),
 		vite: {
 			plugins: [
 				// add plugins here to integrate with Vite
@@ -51,7 +53,7 @@ export default function (options) {
 }
 ```
 
-Of these, `name` and `adapt` are required. `emulate`, `vite.plugins` and `supports` are optional.
+Of these, `name` and `adapt` are required. `emulate`, `customHandler`, `vite.plugins` and `supports` are optional.
 
 Within the `adapt` method, there are a number of things that an adapter should do:
 
@@ -66,3 +68,53 @@ Within the `adapt` method, there are a number of things that an adapter should d
 - Put the user's static files and the generated JS/CSS in the correct location for the target platform
 
 Where possible, we recommend putting the adapter output under the `build/` directory with any intermediate output placed under `.svelte-kit/[adapter-name]`.
+
+## Custom request handler
+
+You can customise your server's initialisation and request handling by adding a `customHandler` property resolved to the path of your handler file.
+
+```js
+// @errors: 2322
+// @filename: ambient.d.ts
+type AdapterSpecificOptions = any;
+
+// @filename: index.js
+// ---cut---
+/** @param {AdapterSpecificOptions} options */
+export default function (options) {
+	/** @type {import('@sveltejs/kit').Adapter} */
+	const adapter = {
+		name: 'adapter-package-name',
+		async adapt(builder) {
+			// adapter implementation
+		},
+		+++customHandler: import.meta.resolve('./src/handler.js')+++
+	}
+
+	return adapter;
+};
+```
+
+The handler file should export a default function that returns a request handler. The should return a `Response` such as by calling `server.respond` along with any [platform-specific context](types#Platform).
+
+```js
+/// file: src/handler.js
+// @errors: 2322
+/** @type {import('@sveltejs/kit').SSRHandler} */
+export default async function handler(server) {
+	// perform setup work here
+
+	return async (request) => {
+		// custom request/response handling logic goes here
+		if (new URL(request.url).pathname === '/_ping') {
+			return new Response('pong');
+		}
+
+		return await server.respond(request, {
+			platform: {
+				// the shape of `App.Platform`
+			}
+		});
+	};
+}
+```
