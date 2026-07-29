@@ -46,10 +46,9 @@ function serve(path, client = false) {
 				gzip: PRECOMPRESS,
 				brotli: PRECOMPRESS,
 				setHeaders: (res, pathname) => {
-					// `sirv` sets `Vary` from its options rather than from the file it resolved. An
-					// extensionless pathname can still resolve to a compressed `index.html`
-					const extension = extname(pathname);
-					if (PRECOMPRESS && extension && !compressed_extensions.has(extension)) {
+					// `sirv` sets `Vary` from its options rather than from the file it resolved, and
+					// resolves an extensionless pathname to `index.html`
+					if (PRECOMPRESS && !compressed_extensions.has(extname(pathname) || '.html')) {
 						res.removeHeader('vary');
 					}
 

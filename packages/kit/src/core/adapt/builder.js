@@ -121,7 +121,7 @@ export function create_builder({
 				})
 			);
 
-			return files.map(posixify);
+			return files;
 		},
 
 		findServerAssets(route_data) {
