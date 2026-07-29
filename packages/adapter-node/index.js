@@ -1,4 +1,5 @@
 import { readFileSync, writeFileSync } from 'node:fs';
+import { extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { rolldown } from 'rolldown';
 
@@ -26,12 +27,19 @@ export default function (opts = {}) {
 			builder.writeClient(`${out}/client${builder.config.kit.paths.base}`);
 			builder.writePrerendered(`${out}/prerendered${builder.config.kit.paths.base}`);
 
+			/** @type {Set<string>} */
+			const compressed_extensions = new Set();
+
 			if (precompress) {
 				builder.log.minor('Compressing assets');
-				await Promise.all([
+				const compressed = await Promise.all([
 					builder.compress(`${out}/client`),
 					builder.compress(`${out}/prerendered`)
 				]);
+
+				for (const file of compressed.flat()) {
+					compressed_extensions.add(extname(file));
+				}
 			}
 
 			builder.log.minor('Building server');
@@ -54,7 +62,8 @@ export default function (opts = {}) {
 				[
 					`export const manifest = ${builder.generateManifest({ relativePath: './' })};`,
 					`export const prerendered = new Set(${JSON.stringify(builder.prerendered.paths)});`,
-					`export const base = ${JSON.stringify(builder.config.kit.paths.base)};`
+					`export const base = ${JSON.stringify(builder.config.kit.paths.base)};`,
+					`export const compressed_extensions = new Set(${JSON.stringify([...compressed_extensions])});`
 				].join('\n\n')
 			);
 
