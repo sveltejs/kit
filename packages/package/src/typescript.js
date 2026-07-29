@@ -40,7 +40,7 @@ export async function emit_dts(input, output, final_output, cwd, alias, files, t
 		svelteShimsPath: no_svelte_3
 			? require.resolve('svelte2tsx/svelte-shims-v4.d.ts')
 			: require.resolve('svelte2tsx/svelte-shims.d.ts'),
-		declarationDir: path.relative(cwd, tmp),
+		declarationDir: tmp,
 		tsconfig
 	});
 
