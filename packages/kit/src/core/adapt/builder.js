@@ -109,7 +109,7 @@ export function create_builder({
 
 		async compress(directory) {
 			if (!existsSync(directory)) {
-				return;
+				return [];
 			}
 
 			const files = list_files(directory, (file) => extensions.includes(extname(file))).map(
@@ -119,6 +119,8 @@ export function create_builder({
 			await Promise.all(
 				files.flatMap((file) => [compress_file(file, 'gz'), compress_file(file, 'br')])
 			);
+
+			return files;
 		},
 
 		findServerAssets(route_data) {

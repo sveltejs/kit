@@ -71,11 +71,21 @@ test('compress files', async () => {
 		rmSync(target + '.br', { force: true });
 		rmSync(target + '.gz', { force: true });
 	}
-	await builder.compress(dirname(targets[0]));
+	const compressed = await builder.compress(dirname(targets[0]));
 	for (const target of targets) {
 		assert.ok(existsSync(target + '.br'));
 		assert.ok(existsSync(target + '.gz'));
 	}
+	assert.deepEqual([...compressed].sort(), [...targets].sort());
+});
+
+test('compress returns nothing for a directory that does not exist', async () => {
+	// @ts-expect-error - we don't need the whole config for this test
+	const builder = create_builder({
+		route_data: []
+	});
+
+	assert.deepEqual(await builder.compress('does/not/exist'), []);
 });
 
 test('instrument generates facade with posix paths', () => {
