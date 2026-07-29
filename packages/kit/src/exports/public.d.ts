@@ -86,10 +86,12 @@ export interface Adapter {
 }
 
 /**
- * The [custom handler](https://svelte.dev/docs/kit/writing-adapters#Custom-request-handler) an adapter can specify to customise request handling. It is expected to return a function which returns a `Response` or calls `server.respond` with any [platform-specific context](https://svelte.dev/docs/kit/types#Platform). Optionally, it can call `server.init` with a different set of environment variables or an implementation for [`read`](https://svelte.dev/docs/kit/$app-server#read) if the platform supports it.
+ * The [custom handler](https://svelte.dev/docs/kit/writing-adapters#Custom-request-handler) an adapter can specify to customise request handling. It is expected to return a function which returns a `Response` or calls `server.respond` with any [platform-specific context](https://svelte.dev/docs/kit/types#Platform).
  * @since 3.0.0
  */
-export type SSRHandler = (server: Server) => MaybePromise<(request: Request) => Promise<Response>>;
+export type SSRHandler = (server: {
+	respond: (request: Request, options?: Pick<RequestOptions, 'platform'>) => Promise<Response>;
+}) => MaybePromise<(request: Request) => Promise<Response>>;
 
 export type LoadProperties<input extends Record<string, any> | void> = input extends void
 	? undefined // needs to be undefined, because void will break intellisense
@@ -1405,7 +1407,10 @@ export interface NavigationLink extends NavigationBase {
 }
 
 export type Navigation =
-	NavigationExternal | NavigationFormSubmit | NavigationPopState | NavigationLink;
+	| NavigationExternal
+	| NavigationFormSubmit
+	| NavigationPopState
+	| NavigationLink;
 
 /**
  * The argument passed to [`beforeNavigate`](https://svelte.dev/docs/kit/$app-navigation#beforeNavigate) callbacks.
@@ -1510,7 +1515,8 @@ export type ParamValue = string | number | boolean | bigint;
  * A param matcher definition passed to [`defineParams`](https://svelte.dev/docs/kit/@sveltejs-kit#defineParams).
  */
 export type ParamDefinition =
-	((param: string) => ParamValue | undefined) | StandardSchemaV1<string, ParamValue>;
+	| ((param: string) => ParamValue | undefined)
+	| StandardSchemaV1<string, ParamValue>;
 
 /**
  * The return type of [`defineParams`](https://svelte.dev/docs/kit/@sveltejs-kit#defineParams).
@@ -1615,7 +1621,8 @@ export type LiveQueryRequestedResult<Validated, Output> = Iterable<
 	};
 
 export type RequestedResult<Validated, Output> =
-	QueryRequestedResult<Validated, Output> | LiveQueryRequestedResult<Validated, Output>;
+	| QueryRequestedResult<Validated, Output>
+	| LiveQueryRequestedResult<Validated, Output>;
 
 export interface RequestEvent<
 	Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,

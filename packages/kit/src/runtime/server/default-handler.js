@@ -2,7 +2,5 @@
 
 /** @type {SSRHandler} */
 export default function (server) {
-	return (request) => {
-		return server.respond(request, {});
-	};
+	return (request) => server.respond(request);
 }
