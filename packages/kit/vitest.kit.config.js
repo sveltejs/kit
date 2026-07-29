@@ -46,7 +46,7 @@ export default /** @satisfies {import('vitest/config').ViteUserConfig} */ ({
 			{
 				extends: true,
 				test: {
-					name: 'kit-server-preview',
+					name: 'kit-server-build',
 					environment: 'node',
 					env: {
 						DEV: 'true'

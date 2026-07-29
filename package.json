@@ -6,7 +6,7 @@
 	"type": "module",
 	"scripts": {
 		"test:kit": "pnpm run --dir packages/kit test",
-		"test:kit:unit": "vitest run --project=kit-\\*",
+		"test:kit:unit": "vitest run packages/kit",
 		"test:kit:dev": "pnpm run --dir packages/kit test:dev",
 		"test:kit:build": "pnpm run --dir packages/kit test:build",
 		"test:cross-platform:dev": "pnpm run --dir packages/kit test:cross-platform:dev",
