@@ -661,7 +661,7 @@ function persist_state() {
 
 /**
  * @param {string | URL} url
- * @param {{ type?: import('@sveltejs/kit').NavigationType; replace?: boolean; reset?: boolean; refreshAll?: boolean; invalidate?: Array<string | URL | ((url: URL) => boolean)>; state?: Record<string, any>; persistState?: boolean }} [options]
+ * @param {{ type?: import('@sveltejs/kit').NavigationType; replace?: boolean; reset?: boolean; refreshAll?: boolean; invalidate?: Array<string | URL | ((url: URL) => boolean)>; state?: Record<string, any>; persistState?: boolean; event?: Event }} [options]
  * @param {number} [redirect_count]
  * @param {{}} [nav_token]
  * @param {NavigationIntent | undefined} [intent] navigation intent, when already known by the caller (avoids recomputing it)
@@ -686,6 +686,7 @@ export async function _goto(url, options = {}, redirect_count = 0, nav_token = {
 		replace_state: options.replace,
 		state: options.state,
 		persist_state: options.persistState,
+		event: options.event,
 		redirect_count,
 		nav_token,
 		intent,
@@ -3114,7 +3115,8 @@ function _start_router() {
 			type: 'link',
 			reset: options.reset,
 			replace: options.replace_state ?? !changed,
-			refreshAll: !changed
+			refreshAll: !changed,
+			event
 		});
 	});
 
