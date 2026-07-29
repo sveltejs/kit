@@ -41,8 +41,6 @@ test.describe('remote functions', () => {
 		await a.click();
 		const t2 = /** @type {string} */ (await a.textContent());
 
-		console.error({ t1, t2 });
-
 		expect(+t1).not.toBeNaN();
 		expect(+t2).toBeGreaterThan(+t1);
 	});
