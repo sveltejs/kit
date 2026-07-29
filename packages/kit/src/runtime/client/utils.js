@@ -168,6 +168,19 @@ export function get_router_options(element) {
 	let el = element;
 
 	while (el && el !== document.documentElement) {
+		if (DEV) {
+			for (const name of ['keepfocus', 'noscroll']) {
+				const value = el.getAttribute(`data-sveltekit-${name}`);
+				if (value !== null && !warned.has(el)) {
+					warned.add(el);
+					console.warn(
+						`\`data-sveltekit-${name}="true"\` has been replaced with \`data-sveltekit-reset="false"\``
+					);
+					console.log(el);
+				}
+			}
+		}
+
 		if (preload_code === null) preload_code = link_option(el, 'preload-code');
 		if (preload_data === null) preload_data = link_option(el, 'preload-data');
 		if (reload === null) reload = link_option(el, 'reload');
