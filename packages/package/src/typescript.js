@@ -35,14 +35,23 @@ export async function emit_dts(input, output, final_output, cwd, alias, files, t
 		// Not all version specs are valid semver, e.g. "latest" or "next" or catalog references
 		no_svelte_3 = true;
 	}
-	await emitDts({
-		libRoot: input,
-		svelteShimsPath: no_svelte_3
-			? require.resolve('svelte2tsx/svelte-shims-v4.d.ts')
-			: require.resolve('svelte2tsx/svelte-shims.d.ts'),
-		declarationDir: path.relative(cwd, tmp),
-		tsconfig
-	});
+	const svelte_shims_path = no_svelte_3
+		? require.resolve('svelte2tsx/svelte-shims-v4.d.ts')
+		: require.resolve('svelte2tsx/svelte-shims.d.ts');
+	const package_tsconfig = await create_package_tsconfig(input, cwd, files, tsconfig);
+
+	try {
+		await emitDts({
+			libRoot: input,
+			svelteShimsPath: svelte_shims_path,
+			declarationDir: path.relative(cwd, tmp),
+			tsconfig: package_tsconfig ?? tsconfig
+		});
+	} finally {
+		if (package_tsconfig) {
+			fs.rmSync(package_tsconfig, { force: true });
+		}
+	}
 
 	const handwritten = new Set();
 
@@ -86,6 +95,110 @@ export async function emit_dts(input, output, final_output, cwd, alias, files, t
 	}
 
 	rimraf(tmp);
+}
+
+/**
+ * @param {string} input
+ * @param {string} cwd
+ * @param {import('./types.js').File[]} files
+ * @param {string | undefined} tsconfig
+ */
+async function create_package_tsconfig(input, cwd, files, tsconfig) {
+	const app_types = path.join(cwd, 'node_modules/$app/types/index.d.ts');
+
+	if (!fs.existsSync(app_types) || !uses_app_server(input, files)) {
+		return;
+	}
+
+	const ts = await try_load_ts();
+	const config_filename = find_config_file(input, tsconfig, ts);
+
+	if (!config_filename) {
+		return;
+	}
+
+	const { error, config } = ts.readConfigFile(config_filename, ts.sys.readFile);
+
+	if (error) {
+		return;
+	}
+
+	const { options } = ts.parseJsonConfigFileContent(
+		config,
+		ts.sys,
+		path.dirname(config_filename),
+		{ sourceMap: false },
+		config_filename
+	);
+	const types = Array.from(new Set([...(options.types ?? []), '$app/types']));
+	const relative_config = posixify(path.relative(cwd, config_filename));
+	const package_tsconfig = path.join(
+		cwd,
+		`.svelte-package-${Date.now()}-${Math.random().toString(16).slice(2)}.json`
+	);
+
+	write(
+		package_tsconfig,
+		JSON.stringify(
+			{
+				extends: relative_config.startsWith('.') ? relative_config : `./${relative_config}`,
+				compilerOptions: { types }
+			},
+			null,
+			'\t'
+		)
+	);
+
+	return package_tsconfig;
+}
+
+/**
+ * @param {string} input
+ * @param {import('./types.js').File[]} files
+ */
+function uses_app_server(input, files) {
+	return files.some((file) => {
+		if (!file.is_svelte && !/\.[cm]?[jt]s$/.test(file.name)) {
+			return false;
+		}
+
+		return fs.readFileSync(path.join(input, file.name), 'utf8').includes('$app/server');
+	});
+}
+
+/**
+ * @param {string} input
+ * @param {string | undefined} tsconfig
+ * @param {import('typescript')} ts
+ */
+function find_config_file(input, tsconfig, ts) {
+	if (tsconfig) {
+		return fs.existsSync(tsconfig) ? tsconfig : undefined;
+	}
+
+	const jsconfig_file = ts.findConfigFile(input, ts.sys.fileExists, 'jsconfig.json');
+	const tsconfig_file = ts.findConfigFile(input, ts.sys.fileExists, 'tsconfig.json');
+
+	if (!tsconfig_file) {
+		return jsconfig_file;
+	}
+
+	if (jsconfig_file && is_subpath(path.dirname(tsconfig_file), path.dirname(jsconfig_file))) {
+		return jsconfig_file;
+	}
+
+	return tsconfig_file;
+}
+
+/**
+ * @param {string} parent
+ * @param {string} child
+ */
+function is_subpath(parent, child) {
+	const relative = path.relative(parent, child);
+	return (
+		relative === '' || (!!relative && !relative.startsWith('..') && !path.isAbsolute(relative))
+	);
 }
 
 /**

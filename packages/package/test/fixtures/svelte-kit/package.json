@@ -5,6 +5,7 @@
 	"type": "module",
 	"description": "SvelteKit library project",
 	"peerDependencies": {
+		"@sveltejs/kit": "^3.0.0",
 		"svelte": "^4.0.0"
 	},
 	"imports": {
