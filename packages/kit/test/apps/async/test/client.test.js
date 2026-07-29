@@ -1265,8 +1265,6 @@ test.describe('client error boundaries', () => {
 	test('layout render error renders the same +error.svelte as SSR', async ({ page, app }) => {
 		await page.goto('/');
 		await app.goto('/server-error-boundary/layout-throws');
-		// must match the server-rendered result: the root +error.svelte, not the
-		// sibling +error.svelte wrapped by the layout that crashed
 		await expect(page.locator('#message')).toContainText(
 			'layout render error (500 Internal Error, on /server-error-boundary/layout-throws)'
 		);
