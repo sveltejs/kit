@@ -191,14 +191,14 @@ function find_config_file(input, tsconfig, ts) {
 }
 
 /**
+ * Returns true when `child` is nested inside `parent`.
+ *
  * @param {string} parent
  * @param {string} child
  */
 function is_subpath(parent, child) {
 	const relative = path.relative(parent, child);
-	return (
-		relative === '' || (!!relative && !relative.startsWith('..') && !path.isAbsolute(relative))
-	);
+	return !!relative && !relative.startsWith('..') && !path.isAbsolute(relative);
 }
 
 /**
