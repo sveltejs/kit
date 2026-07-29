@@ -22,3 +22,16 @@ test('does not set X-Accel-Buffering header on other responses', async ({ reques
 	const response = await request.get('/');
 	expect(response.headers()['x-accel-buffering']).toBeUndefined();
 });
+
+test('serves static files with the Content-Type from the manifest', async ({ request }) => {
+	// https://github.com/sveltejs/kit/issues/13753
+	const response = await request.get('/test.ico');
+	expect(response.status()).toBe(200);
+	expect(response.headers()['content-type']).toBe('image/x-icon');
+});
+
+test('serves static HTML with a charset', async ({ request }) => {
+	const response = await request.get('/page.html');
+	expect(response.status()).toBe(200);
+	expect(response.headers()['content-type']).toBe('text/html;charset=utf-8');
+});
