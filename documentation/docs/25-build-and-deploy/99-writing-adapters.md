@@ -104,15 +104,6 @@ The handler file should export a default function that returns a request handler
 export default async function handler(server, env) {
 	// perform setup work here
 
-	// this is optional. Since `server.init` only runs once, the default
-	// implementation will be used instead if it's not been called already
-	await server.init({
-		env,
-		read: (file) => {
-			// how your platform reads files
-		}
-	});
-
 	return async (request, options) => {
 		// custom request/response handling logic goes here
 
