@@ -603,7 +603,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, s
 				};
 
 				const handler =
-					svelte_config.kit.adapter.customHandler ??
+					svelte_config.kit.adapter?.customHandler ??
 					`${get_runtime_base(root)}/server/default-handler.js`;
 				const init_server = (await runner.import(handler)).default;
 
