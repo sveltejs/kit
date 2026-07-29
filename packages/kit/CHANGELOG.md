@@ -1,5 +1,63 @@
 # @sveltejs/kit
 
+## 3.0.0-next.13
+
+### Major Changes
+
+- breaking: replace the `noScroll` and `keepFocus` options of `goto` with a single `reset` option, and the `data-sveltekit-noscroll` and `data-sveltekit-keepfocus` attributes with `data-sveltekit-reset` ([#16558](https://github.com/sveltejs/kit/pull/16558))
+
+- breaking: deprecate `error(status, {...})` in favour of `error(status, message, {...})` ([#16540](https://github.com/sveltejs/kit/pull/16540))
+
+### Minor Changes
+
+- feat: add shallow routing to `goto` and deprecate `pushState` and `replaceState` ([#16449](https://github.com/sveltejs/kit/pull/16449))
+
+- feat: preserve page state set through `goto(..., { state, persistState: true })` across reloads ([#16449](https://github.com/sveltejs/kit/pull/16449))
+
+### Patch Changes
+
+- chore: deduplicate repeated CSP directive handling ([#16498](https://github.com/sveltejs/kit/pull/16498))
+
+- fix: avoid Vite dev server reload on initial page request ([#16553](https://github.com/sveltejs/kit/pull/16553))
+
+- fix: don't set a `null` `accept-language` header on internal `fetch` sub-requests when the incoming request has none ([#16527](https://github.com/sveltejs/kit/pull/16527))
+
+- fix: correctly detect prerendered paths in server `fetch` when `paths.base` is set ([#16525](https://github.com/sveltejs/kit/pull/16525))
+
+- fix: don't duplicate remote modules in the generated manifest ([#16532](https://github.com/sveltejs/kit/pull/16532))
+
+- fix: exclude inlined files from the page's `$app/manifest` immutable list ([#16531](https://github.com/sveltejs/kit/pull/16531))
+
+- perf: avoid quadratic remote form issue merging ([#16493](https://github.com/sveltejs/kit/pull/16493))
+
+- fix: don't attempt to serialize fetch responses when the request body is not a string or TypedArray ([#16501](https://github.com/sveltejs/kit/pull/16501))
+
+- fix: read the error status of `App.Error` in the `prerender` and `query.live` remote functions ([#16529](https://github.com/sveltejs/kit/pull/16529))
+
+- fix: propagate errors from prerendered remote responses instead of re-running the function ([#16535](https://github.com/sveltejs/kit/pull/16535))
+
+- fix: respect the status returned from `handleError` on the fallback error page served to error-page sub-requests ([#16528](https://github.com/sveltejs/kit/pull/16528))
+
+- fix: skip unnecessary `version.json` checks if `updated.current` is already `true` ([#16518](https://github.com/sveltejs/kit/pull/16518))
+
+- fix: allow generation of $app/tsconfig without TypeScript installed ([#16534](https://github.com/sveltejs/kit/pull/16534))
+
+- perf: use a `Set` to check element ids when validating fragment links during prerendering ([#16494](https://github.com/sveltejs/kit/pull/16494))
+
+- fix: only include `_app/immutable` files in `$app/manifest`'s `immutable` in the service worker ([#16531](https://github.com/sveltejs/kit/pull/16531))
+
+- fix: log errors caught by the Vite dev server handler ([#16550](https://github.com/sveltejs/kit/pull/16550))
+
+- fix: resolve `root` per instance of the SvelteKit Vite plugin ([#16513](https://github.com/sveltejs/kit/pull/16513))
+
+- fix: ignore path casing differences when warning about overridden Vite config on Windows ([#16545](https://github.com/sveltejs/kit/pull/16545))
+
+- fix: preserve the current URL search parameters when submitting a remote form without JavaScript ([#16373](https://github.com/sveltejs/kit/pull/16373))
+
+- fix: treeshake prerendered remote functions in the right chunks ([#16533](https://github.com/sveltejs/kit/pull/16533))
+
+- fix: error during development if the adapter does not support instrumentation and it exists ([#16548](https://github.com/sveltejs/kit/pull/16548))
+
 ## 3.0.0-next.12
 
 ### Major Changes
