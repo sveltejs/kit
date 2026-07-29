@@ -1012,7 +1012,6 @@ test.describe('server error boundaries', () => {
 		await expect(page.locator('#message')).toContainText(
 			'layout render error (500 Internal Error, on /server-error-boundary/layout-throws)'
 		);
-		// the sibling +error.svelte is wrapped by the layout that crashed, so it must not render
 		await expect(page.locator('#layout-throws-error-message')).toHaveCount(0);
 		await expect(page.locator('#nested-layout')).toHaveCount(0);
 	});

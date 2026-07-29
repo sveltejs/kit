@@ -504,8 +504,7 @@ async function _start(_app, _target, data) {
 
 	const [root_layout] = await Promise.all([default_layout_loader(), default_error_loader()]);
 
-	// the root boundary stays unarmed: the root +error.svelte renders inside the root
-	// layout, at the boundary of the node below it
+	// the root boundary stays unarmed: the root +error.svelte renders at the node below it
 	const tree = new RenderNode(root_layout.component, undefined);
 
 	props = new Props({
@@ -2176,10 +2175,9 @@ async function navigate({
 		} else {
 			apply_navigation_result(navigation_result);
 
-			// Reset any boundaries that failed on a previous navigation once the new
-			// props have flushed, otherwise the stale `+error.svelte` stays mounted
-			// above the new route's content. Resetting before the flush would re-render
-			// the old content, at a depth the new tree may not have. See sveltejs/kit#15694.
+			// Reset boundaries that failed on a previous navigation once the new props have
+			// flushed (see sveltejs/kit#15694). Resetting first re-renders the old content at
+			// a depth the new tree may not have, stranding the stale `+error.svelte`.
 			commit_promise = settled().then(() => {
 				for (const reset_boundary of resetters) {
 					reset_boundary();

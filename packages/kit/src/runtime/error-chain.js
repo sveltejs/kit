@@ -4,8 +4,7 @@
  * Resolves the `+error.svelte` component that guards each node of `branch`, aligned to the
  * branch with its empty slots removed. A node is guarded by the closest error page declared
  * at or above it, except the root layout, which wraps the root error component rather than
- * being wrapped by it. The client and the server must agree on this, or the same render
- * error produces a different error page depending on whether it happened during SSR.
+ * being wrapped by it.
  * @template T
  * @param {Array<unknown>} branch
  * @param {Array<T | undefined | null>} errors the error page declared at each depth, if any
