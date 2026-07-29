@@ -461,6 +461,21 @@ describe('resolve_route', () => {
 			route: '/[...catch-all=some-matcher]',
 			params: { 'catch-all': 'a/b' },
 			expected: '/a/b'
+		},
+		{
+			route: '/[x+2e]well-known/[one]',
+			params: { one: 'one' },
+			expected: '/.well-known/one'
+		},
+		{
+			route: '/[u+0041]/[one]',
+			params: { one: 'one' },
+			expected: '/A/one'
+		},
+		{
+			route: '/blog/[one]',
+			params: { one: '[x+2f]' },
+			expected: '/blog/[x+2f]'
 		}
 	];
 
