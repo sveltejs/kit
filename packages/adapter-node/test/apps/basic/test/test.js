@@ -22,3 +22,21 @@ test('does not set X-Accel-Buffering header on other responses', async ({ reques
 	const response = await request.get('/');
 	expect(response.headers()['x-accel-buffering']).toBeUndefined();
 });
+
+test('sets Vary on assets that were precompressed', async ({ request }) => {
+	const response = await request.get('/data.json');
+	expect(response.status()).toBe(200);
+	expect(response.headers()['vary']).toBe('Accept-Encoding');
+});
+
+test('does not set Vary on assets that were not precompressed', async ({ request }) => {
+	const response = await request.get('/test.ico');
+	expect(response.status()).toBe(200);
+	expect(response.headers()['vary']).toBeUndefined();
+});
+
+test('sets Vary on prerendered pages reached without an extension', async ({ request }) => {
+	const response = await request.get('/');
+	expect(response.status()).toBe(200);
+	expect(response.headers()['vary']).toBe('Accept-Encoding');
+});
