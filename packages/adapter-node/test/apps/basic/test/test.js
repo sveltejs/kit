@@ -35,8 +35,10 @@ test('does not set Vary on assets that were not precompressed', async ({ request
 	expect(response.headers()['vary']).toBeUndefined();
 });
 
-test('sets Vary on prerendered pages reached without an extension', async ({ request }) => {
-	const response = await request.get('/');
+// an extensionless pathname can still resolve to a precompressed `index.html`
+test('sets Vary on assets reached without an extension', async ({ request }) => {
+	const response = await request.get('/sub/');
 	expect(response.status()).toBe(200);
+	expect(response.headers()['content-type']).toBe('text/html;charset=utf-8');
 	expect(response.headers()['vary']).toBe('Accept-Encoding');
 });
