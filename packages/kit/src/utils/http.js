@@ -57,12 +57,13 @@ export function negotiate(accept, types) {
 }
 
 /**
- * Returns `true` if the request contains a `content-type` header with the given type
- * @param {Request} request
+ * Returns `true` if a `content-type` header value is one of the given types, ignoring
+ * parameters such as `charset` and comparing case-insensitively
+ * @param {string | null | undefined} header
  * @param  {...string} types
  */
-function is_content_type(request, ...types) {
-	const type = request.headers.get('content-type')?.split(';', 1)[0].trim() ?? '';
+export function matches_content_type(header, ...types) {
+	const type = header?.split(';', 1)[0].trim() ?? '';
 	return types.includes(type.toLowerCase());
 }
 
@@ -72,8 +73,8 @@ function is_content_type(request, ...types) {
 export function is_form_content_type(request) {
 	// These content types must be protected against CSRF
 	// https://developer.mozilla.org/en-US/docs/Web/API/HTMLFormElement/enctype
-	return is_content_type(
-		request,
+	return matches_content_type(
+		request.headers.get('content-type'),
 		'application/x-www-form-urlencoded',
 		'multipart/form-data',
 		'text/plain',
