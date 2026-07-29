@@ -2431,7 +2431,6 @@ export function disableScrollHandling() {
 let warned_on_invalidate_all = false;
 let warned_on_replace_state = false;
 let warned_on_push_state = false;
-let warned_on_reset = false;
 let warned_on_replace_state_function = false;
 
 /**
