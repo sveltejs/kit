@@ -253,7 +253,7 @@ export interface Builder {
 	/**
 	 * Compress files in `directory` with gzip and brotli, where appropriate. Generates `.gz` and `.br` files alongside the originals.
 	 * @param {string} directory The directory containing the files to be compressed
-	 * @returns The absolute paths of the files that were compressed
+	 * @returns an array of the files in `directory` that were compressed
 	 */
 	compress: (directory: string) => Promise<string[]>;
 }

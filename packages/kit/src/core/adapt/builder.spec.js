@@ -76,10 +76,10 @@ test('compress files', async () => {
 		assert.ok(existsSync(target + '.br'));
 		assert.ok(existsSync(target + '.gz'));
 	}
-	assert.deepEqual([...compressed].sort(), [...targets].sort());
+	assert.deepEqual(compressed.sort(), ['foo.css', 'foo.md', 'foo.mdx']);
 });
 
-test('compress returns nothing for a directory that does not exist', async () => {
+test('compress returns an empty array for a directory that does not exist', async () => {
 	// @ts-expect-error - we don't need the whole config for this test
 	const builder = create_builder({
 		route_data: []

@@ -112,15 +112,16 @@ export function create_builder({
 				return [];
 			}
 
-			const files = list_files(directory, (file) => extensions.includes(extname(file))).map(
-				(file) => resolve(directory, file)
-			);
+			const files = list_files(directory, (file) => extensions.includes(extname(file)));
 
 			await Promise.all(
-				files.flatMap((file) => [compress_file(file, 'gz'), compress_file(file, 'br')])
+				files.flatMap((file) => {
+					const abs = resolve(directory, file);
+					return [compress_file(abs, 'gz'), compress_file(abs, 'br')];
+				})
 			);
 
-			return files;
+			return files.map(posixify);
 		},
 
 		findServerAssets(route_data) {
