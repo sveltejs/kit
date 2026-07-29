@@ -108,7 +108,6 @@ export default async function handler(server) {
 		// custom request/response handling logic goes here
 
 		return await server.respond(request, {
-			...options,
 			platform: {
 				// the shape of `App.Platform`
 			}
