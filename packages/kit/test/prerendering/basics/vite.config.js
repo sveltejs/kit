@@ -39,6 +39,7 @@ const config = {
 	},
 
 	test: {
+		name: 'kit-prerendering-basics',
 		globalSetup: path.join(import.meta.dirname, 'globalSetup.js')
 	}
 };
