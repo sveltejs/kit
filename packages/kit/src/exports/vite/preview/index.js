@@ -69,22 +69,20 @@ export async function preview(vite, vite_config, svelte_config) {
 	};
 
 	/** @type {Server['respond'] | undefined} */
-	let custom_respond;
+	let respond;
 
 	try {
 		const env = loadEnv(vite_config.mode, svelte_config.kit.env.dir, '');
 
-		if (svelte_config.kit.adapter?.customHandler) {
-			/** @type {{ default: SSRHandler }} */
-			const { default: handler } = await import(pathToFileURL(`${dir}/index.js`).href);
-			custom_respond = await handler(server, env);
-		}
-
-		// fallback if init hasn't been called yet
 		await server.init({
 			env,
 			read: (file) => createReadableStream(`${dir}/${file}`)
 		});
+
+		/** @type {{ default: SSRHandler }} */
+		const { default: handler } = await import(pathToFileURL(`${dir}/handler.js`).href);
+
+		respond = await handler(server);
 	} catch (error) {
 		// Vite erases the error message when starting the preview server so we store
 		// it in the stack instead. This ensures errors thrown using `stackless`
@@ -240,7 +238,7 @@ export async function preview(vite, vite_config, svelte_config) {
 
 			setResponse(
 				res,
-				await /** @type {Server['respond']} */ (custom_respond ?? server.respond)(request, {
+				await respond(request, {
 					getClientAddress: () => {
 						const { remoteAddress } = req.socket;
 						if (remoteAddress) return remoteAddress;

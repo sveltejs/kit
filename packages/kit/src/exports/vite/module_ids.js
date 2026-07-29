@@ -12,9 +12,6 @@ export const service_worker = '\0virtual:service-worker';
 /** Used to construct `$app/manifest` */
 export const sveltekit_manifest_data = '\0virtual:__sveltekit/manifest-data';
 
-/** Resolves to the adapter's `customHandler`, falling back to SvelteKit's default handler */
-export const sveltekit_dev_handler = '__sveltekit/dev-handler.js';
-
 export const app_server = posixify(
 	fileURLToPath(new URL('../../runtime/app/server/index.js', import.meta.url))
 );

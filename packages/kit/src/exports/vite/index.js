@@ -6,7 +6,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
-import { fileURLToPath } from 'node:url';
 import { styleText } from 'node:util';
 import MagicString from 'magic-string';
 import { loadEnv } from 'vite';
@@ -56,8 +55,7 @@ import {
 	sveltekit_env_service_worker,
 	sveltekit_manifest_data,
 	sveltekit_env_public_client,
-	sveltekit_env_public_server,
-	sveltekit_dev_handler
+	sveltekit_env_public_server
 } from './module_ids.js';
 import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
@@ -65,8 +63,6 @@ import { should_ignore, has_children } from './static_analysis/utils.js';
 import { process_config, split_config, validate_config } from '../../core/config/index.js';
 import { treeshake_prerendered_remotes } from './build/remote.js';
 import { get_runner } from '../../runner.js';
-
-const default_handler = posixify(path.join(import.meta.dirname, 'dev/handler.js'));
 
 /** @type {import('./types.js').EnforcedConfig} */
 const enforced_config = {
@@ -565,32 +561,6 @@ function kit({ svelte_config }) {
 						${list}
 					`
 				);
-			}
-		}
-	};
-
-	/** @type {Plugin} */
-	const plugin_dev_ssr = {
-		name: 'vite-plugin-sveltekit-dev-ssr',
-		apply: 'serve',
-
-		applyToEnvironment(environment) {
-			return environment.config.consumer === 'server';
-		},
-
-		resolveId: {
-			filter: {
-				id: [exactRegex(sveltekit_dev_handler)]
-			},
-			handler() {
-				const custom_handler = kit.adapter?.customHandler;
-				if (!custom_handler) return default_handler;
-
-				const filepath = custom_handler.startsWith('file://')
-					? fileURLToPath(custom_handler)
-					: path.resolve(root, custom_handler);
-
-				return posixify(filepath);
 			}
 		}
 	};
@@ -1290,14 +1260,11 @@ function kit({ svelte_config }) {
 					/** @type {Record<string, string>} */
 					const server_input = {
 						server: `${runtime_directory}/server/index.js`,
+						handler: kit.adapter?.customHandler ?? `${runtime_directory}/server/default-handler.js`,
 						internal: `${out_dir}/generated/server/internal.js`,
 						env: '__sveltekit/env',
 						['remote-entry']: `${runtime_directory}/app/server/remote/index.js`
 					};
-
-					if (kit.adapter?.customHandler) {
-						server_input.index = kit.adapter.customHandler;
-					}
 
 					// add entry points for every endpoint...
 					manifest_data.routes.forEach((route) => {
@@ -2073,7 +2040,6 @@ function kit({ svelte_config }) {
 			svelte_config.kit.adapter?.vite?.plugins,
 			plugin_resolve_root,
 			plugin_setup,
-			plugin_dev_ssr,
 			plugin_remote_guard,
 			plugin_remote,
 			plugin_virtual_modules,

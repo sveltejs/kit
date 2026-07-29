@@ -31,7 +31,6 @@ import { SCHEME } from '../../../utils/url.js';
 import { check_feature } from '../../../utils/features.js';
 import { escape_html } from '../../../utils/escape.js';
 import { get_runner } from '../../../runner.js';
-import { sveltekit_dev_handler } from '../module_ids.js';
 
 // vite-specifc queries that we should skip handling for css urls
 const vite_css_query_regex = /(?:\?|&)(?:raw|url|inline)(?:&|$)/;
@@ -603,13 +602,14 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, s
 					});
 				};
 
-				const init_server = /** @type {typeof import('__sveltekit/dev-handler.js')} */ (
-					await runner.import(sveltekit_dev_handler)
-				).default;
+				const handler =
+					svelte_config.kit.adapter.customHandler ??
+					`${get_runtime_base(root)}/server/default-handler.js`;
+				const init_server = (await runner.import(handler)).default;
 
-				const respond = await init_server(server, env);
-				// fallback in case the custom handler didn't run init
 				await server.init({ env, read: (file) => createReadableStream(file) });
+
+				const respond = await init_server(server);
 
 				const request = getRequest({
 					base,
