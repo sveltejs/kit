@@ -104,7 +104,7 @@ jobs:
           pnpm install --no-frozen-lockfile
           git checkout pnpm-lock.yaml pnpm-workspace.yaml # revert changes to pnpm files to avoid cache key changes
           pnpm --dir packages/kit ls vite
-      - if: matrix.e2e-browser != 'chromium'
+      - if: matrix.mode != 'unit'
         uses: ./.github/actions/playwright-setup
         with:
           os: ${{ matrix.os }}
