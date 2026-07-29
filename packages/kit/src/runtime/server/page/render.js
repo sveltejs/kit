@@ -11,7 +11,11 @@ import { uneval_action_response } from './actions.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import { SCHEME } from '../../../utils/url.js';
 import { create_server_routing_response, generate_route_object } from './server_routing.js';
-import { add_data_suffix, add_resolution_suffix } from '../../pathname.js';
+import {
+	add_data_suffix,
+	add_resolution_suffix,
+	route_id_resolution_pathname
+} from '../../pathname.js';
 import { try_get_request_store, with_request_store } from '@sveltejs/kit/internal/server';
 import { text_encoder } from '../../utils.js';
 import { count_non_ssi_comments, create_replacer, get_global_name } from '../utils.js';
@@ -391,6 +395,21 @@ export async function render_response({
 				pathname,
 				create_server_routing_response(route, event.params, new URL(pathname, event.url), client)
 			);
+
+			// Prerender a route-ID-keyed `/_app/routes/<id>/__route.js` module alongside the
+			// pathname-keyed one above, so that `preloadCode(id)` can resolve a route ID without
+			// hitting the server. This is required, not merely an optimisation: a fully
+			// prerendered route is filtered out of `manifest._.routes` (see `generateManifest`
+			// in core/adapt/builder.js), so on a host with no SvelteKit server there is nothing
+			// left to answer a resolution request for it at runtime.
+			if (route) {
+				const id_pathname = paths.base + route_id_resolution_pathname(paths.app_dir, route.id);
+
+				state.prerendering.dependencies.set(
+					id_pathname,
+					create_server_routing_response(route, {}, new URL(id_pathname, event.url), client)
+				);
+			}
 		}
 
 		const blocks = [];

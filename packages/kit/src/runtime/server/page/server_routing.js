@@ -85,6 +85,25 @@ export async function resolve_route(resolved_path, url, manifest) {
 }
 
 /**
+ * Resolve a route-ID resolution request (`/_app/routes/<id>/__route.js`) to a
+ * JS module containing the route's node loaders. Params are always `{}` since
+ * this endpoint exists to support `preloadCode(routeId)`, which doesn't need them.
+ * @param {string} route_id
+ * @param {URL} url
+ * @param {SSRManifest} manifest
+ * @returns {Response}
+ */
+export function resolve_route_by_id(route_id, url, manifest) {
+	if (!manifest._.client?.routes) {
+		return text('Server-side route resolution disabled', { status: 400 });
+	}
+
+	const route = manifest._.client.routes.find((r) => r.id === route_id) ?? null;
+
+	return create_server_routing_response(route, {}, url, manifest._.client).response;
+}
+
+/**
  * @param {import('types').SSRClientRoute | null} route
  * @param {Partial<Record<string, string>>} params
  * @param {URL} url

@@ -24,9 +24,11 @@ export const test = base.extend({
 
 			afterNavigate: () => page.evaluate(() => afterNavigate(() => {})),
 
-			preloadCode: (pathname) => page.evaluate((pathname) => preloadCode(pathname), pathname),
+			preloadCode: (id) => page.evaluate((id) => preloadCode(id), id),
 
-			preloadData: (url) => page.evaluate((url) => preloadData(url), url)
+			preloadData: (url) => page.evaluate((url) => preloadData(url), url),
+
+			match: (url) => page.evaluate((url) => match(url), url)
 		});
 	},
 
