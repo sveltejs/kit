@@ -2,7 +2,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { createRequire } from 'node:module';
 import semver from 'semver';
-import { posixify, mkdirp, rimraf, walk } from './filesystem.js';
+import { posixify, relative_path, mkdirp, rimraf, walk } from './filesystem.js';
 import { resolve_aliases, write } from './utils.js';
 import { emitDts } from 'svelte2tsx';
 import { load_pkg_json } from './config.js';
@@ -45,7 +45,7 @@ export async function emit_dts(input, output, final_output, cwd, alias, files, t
 			libRoot: input,
 			svelteShimsPath: svelte_shims_path,
 			declarationDir: path.relative(cwd, tmp),
-			tsconfig: package_tsconfig ?? tsconfig
+			tsconfig: package_tsconfig ? path.basename(package_tsconfig) : tsconfig
 		});
 	} finally {
 		if (package_tsconfig) {
@@ -104,9 +104,7 @@ export async function emit_dts(input, output, final_output, cwd, alias, files, t
  * @param {string | undefined} tsconfig
  */
 async function create_package_tsconfig(input, cwd, files, tsconfig) {
-	const app_types = path.join(cwd, 'node_modules/$app/types/index.d.ts');
-
-	if (!fs.existsSync(app_types) || !uses_app_server(input, files)) {
+	if (!uses_app_server(input, files)) {
 		return;
 	}
 
@@ -130,8 +128,16 @@ async function create_package_tsconfig(input, cwd, files, tsconfig) {
 		{ sourceMap: false },
 		config_filename
 	);
-	const types = Array.from(new Set([...(options.types ?? []), '$app/types']));
-	const relative_config = posixify(path.relative(cwd, config_filename));
+	const types = Array.from(
+		new Set([
+			...(options.types ?? []).map((type) => {
+				if (!type.startsWith('.')) return type;
+				return relative_path(cwd, path.resolve(path.dirname(config_filename), type));
+			}),
+			'@sveltejs/kit'
+		])
+	);
+	const relative_config = relative_path(cwd, config_filename);
 	const package_tsconfig = path.join(
 		cwd,
 		`.svelte-package-${Date.now()}-${Math.random().toString(16).slice(2)}.json`
@@ -141,7 +147,7 @@ async function create_package_tsconfig(input, cwd, files, tsconfig) {
 		package_tsconfig,
 		JSON.stringify(
 			{
-				extends: relative_config.startsWith('.') ? relative_config : `./${relative_config}`,
+				extends: relative_config,
 				compilerOptions: { types }
 			},
 			null,

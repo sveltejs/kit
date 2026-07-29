@@ -22,6 +22,16 @@ export function posixify(str) {
 }
 
 /**
+ * Like `path.relative`, but always posixified and with a leading `./` if necessary.
+ * @param {string} from
+ * @param {string} to
+ */
+export function relative_path(from, to) {
+	const result = posixify(path.relative(from, to));
+	return result.startsWith('.') ? result : `./${result}`;
+}
+
+/**
  * Get a list of all files in a directory
  * @param {string} cwd - the directory to walk
  * @param {boolean} [dirs] - whether to include directories in the result

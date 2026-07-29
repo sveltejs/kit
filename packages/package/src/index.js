@@ -60,6 +60,16 @@ async function do_build(options, analyse_code) {
 		);
 	}
 
+	// Temporary tsconfigs can cause declaration emit to mirror the temp path inside itself.
+	const relative_temp = path.relative(options.cwd, temp);
+	const nested_temp_root =
+		relative_temp && !relative_temp.startsWith('..') && !path.isAbsolute(relative_temp)
+			? path.join(temp, relative_temp.split(path.sep)[0])
+			: undefined;
+	if (nested_temp_root && nested_temp_root !== temp && fs.existsSync(nested_temp_root)) {
+		rimraf(nested_temp_root);
+	}
+
 	if (!options.preserve_output) {
 		rimraf(output);
 	}

@@ -166,7 +166,10 @@ test('create package with SvelteComponentTyped for backwards compatibility', asy
 
 test('Custom lib folder with #lib import', async () => {
 	const cwd = join(import.meta.dirname, 'fixtures', 'svelte-kit');
-	await test_make_package('svelte-kit', { input: resolve(cwd, 'src/kitlib') });
+	await test_make_package('svelte-kit', {
+		input: resolve(cwd, 'src/kitlib'),
+		tsconfig: '../svelte-kit-relative-types/jsconfig.json'
+	});
 });
 
 test('create package with declaration map', async () => {
