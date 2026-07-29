@@ -476,6 +476,16 @@ describe('resolve_route', () => {
 			route: '/blog/[one]',
 			params: { one: '[x+2f]' },
 			expected: '/blog/[x+2f]'
+		},
+		{
+			route: '/[x+2f]/[one]',
+			params: { one: 'one' },
+			expected: '/%2F/one'
+		},
+		{
+			route: '/[x+23]/[one]',
+			params: { one: 'one' },
+			expected: '/%23/one'
 		}
 	];
 

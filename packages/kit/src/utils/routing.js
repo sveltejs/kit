@@ -15,6 +15,18 @@ function decode_escape_sequence(code) {
 }
 
 /**
+ * Encodes the characters that `decode_pathname` leaves untouched, so that a decoded
+ * escape sequence still matches the pattern `parse_route_id` builds for it
+ * @param {string} str
+ */
+function encode_pathname_chars(str) {
+	return str.replace(
+		/[%/?#]/g,
+		(char) => '%' + char.charCodeAt(0).toString(16).toUpperCase().padStart(2, '0')
+	);
+}
+
+/**
  * Creates the regex pattern, extracts parameter names, and generates types for a route
  * @param {string} id
  */
@@ -293,7 +305,7 @@ export function resolve_route(id, params) {
 		segments
 			.map((segment) =>
 				segment.replace(segment_pattern, (_, escape_type, escape_code, optional, rest, name) => {
-					if (escape_type) return decode_escape_sequence(escape_code);
+					if (escape_type) return encode_pathname_chars(decode_escape_sequence(escape_code));
 
 					const value = params[name];
 
