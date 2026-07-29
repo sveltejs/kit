@@ -101,7 +101,7 @@ The handler file should export a default function that returns a request handler
 /// file: src/handler.js
 // @errors: 2322
 /** @type {import('@sveltejs/kit').SSRHandler} */
-export default async function handler(server, env) {
+export default async function handler(server) {
 	// perform setup work here
 
 	return async (request, options) => {
