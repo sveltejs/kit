@@ -17,7 +17,6 @@ import { server_data_serializer } from './data_serializer.js';
  *   options: import('types').SSROptions;
  *   manifest: import('@sveltejs/kit').SSRManifest;
  *   state: import('types').SSRState;
- *   status: number;
  *   error: unknown;
  *   resolve_opts: import('types').RequiredResolveOptions;
  * }} opts
@@ -28,14 +27,13 @@ export async function respond_with_error({
 	options,
 	manifest,
 	state,
-	status,
 	error,
 	resolve_opts
 }) {
 	// reroute to the fallback page to prevent an infinite chain of requests.
 	if (event.request.headers.get('x-sveltekit-error')) {
 		const transformed = await handle_error_and_jsonify(event, event_state, options, error);
-		return static_error_page(options, status, transformed.message);
+		return static_error_page(options, transformed.status, transformed.message);
 	}
 
 	/** @type {import('./types.js').Fetched[]} */

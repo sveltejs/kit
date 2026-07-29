@@ -8,7 +8,8 @@
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync",
 		"check": "svelte-kit sync && tsc && svelte-check",
-		"test": "svelte-kit sync && vitest run",
+		"test": "pnpm test:build",
+		"test:build": "svelte-kit sync && vitest run",
 		"test:cross-platform": "pnpm test"
 	},
 	"devDependencies": {

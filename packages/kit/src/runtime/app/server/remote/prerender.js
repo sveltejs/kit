@@ -1,7 +1,8 @@
 /** @import { RemoteResource, RemotePrerenderFunction } from '@sveltejs/kit' */
 /** @import { RemoteFunctionResponse, RemotePrerenderInputsGenerator, RemotePrerenderInternals, MaybePromise } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
-import { json, error } from '@sveltejs/kit';
+import { json } from '@sveltejs/kit';
+import { HttpError } from '@sveltejs/kit/internal';
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import { stringify, stringify_remote_arg } from '../../../shared.js';
 import { noop } from '../../../../utils/functions.js';
@@ -99,25 +100,28 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 			const url = `${base}/${app_dir}/remote/${id}${payload ? `/${payload}` : ''}`;
 
 			if (!state.prerendering && !__SVELTEKIT_DEV__ && !event.isRemoteRequest) {
+				/** @type {RemoteFunctionResponse | undefined} */
+				let prerendered;
+
 				try {
 					// TODO adapters can provide prerendered data more efficiently than
 					// fetching from the public internet
 					// `request.url` rather than `event.url`, which throws inside queries
 					const response = await fetch(new URL(url, event.request.url).href);
 
-					if (!response.ok) {
-						throw new Error('Prerendered response not found');
+					if (response.ok) {
+						prerendered = /** @type {RemoteFunctionResponse} */ (await response.json());
 					}
+				} catch {
+					// not available prerendered, fallback to normal function
+				}
 
-					const prerendered = /** @type {RemoteFunctionResponse} */ (await response.json());
-
+				if (prerendered) {
 					if (prerendered.type === 'error') {
-						error(prerendered.error.status, prerendered.error);
+						throw new HttpError(prerendered.error);
 					}
 
 					return parse_remote_response(prerendered.data, state.transport)._;
-				} catch {
-					// not available prerendered, fallback to normal function
 				}
 			}
 

@@ -100,7 +100,7 @@ goto(url, {
 });
 ```
 
-Shallow navigations preserve the current scroll position and focused element by default. You can opt out of either behavior with `noScroll: false` or `keepFocus: false`:
+Shallow navigations preserve the current scroll position and focused element by default. You can opt out of this behavior with `reset: true`:
 
 ```js
 import { goto } from '$app/navigation';
@@ -108,8 +108,7 @@ const url = new URL('https://example.com');
 // ---cut---
 goto(url, {
 	shallow: true,
-	noScroll: false,
-	keepFocus: false
+	reset: true
 });
 ```
 

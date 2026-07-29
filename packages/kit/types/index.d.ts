@@ -1237,15 +1237,14 @@ declare module '@sveltejs/kit' {
 		 */
 		shallow?: boolean;
 		/**
-		 * If `true`, preserves the browser's scroll position.
-		 * @default false, or true when `shallow` is true
+		 * If `true`, resets the scroll position (to the top of the page, or to the element
+		 * matching the URL's `#hash` if there is one) and resets focus (to the `<body>`, or the
+		 * `autofocus` element if there is one) once the navigation completes.
+		 *
+		 * If `false`, the current scroll position and focused element are left alone.
+		 * @default true, or false when `shallow` is true
 		 */
-		noScroll?: boolean;
-		/**
-		 * If `true`, keeps the currently focused element focused.
-		 * @default false, or true when `shallow` is true
-		 */
-		keepFocus?: boolean;
+		reset?: boolean;
 		/**
 		 * If `true`, reruns all `load` functions and queries of the page.
 		 * @default false
