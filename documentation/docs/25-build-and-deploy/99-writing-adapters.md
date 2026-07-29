@@ -104,7 +104,7 @@ The handler file should export a default function that returns a request handler
 export default async function handler(server) {
 	// perform setup work here
 
-	return async (request, options) => {
+	return async (request) => {
 		// custom request/response handling logic goes here
 
 		return await server.respond(request, {
