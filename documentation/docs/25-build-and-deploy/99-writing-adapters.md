@@ -95,7 +95,7 @@ export default function (options) {
 };
 ```
 
-The handler file should export a default function that returns a request handler. The should return a `Response` such as by calling `server.respond` along with any [platform-specific context](types#Platform). Optionally, you can pass a different set of environment variables or `read` implementation to `server.init` if your platform supports it.
+The handler file should export a default function that returns a request handler. The should return a `Response` such as by calling `server.respond` along with any [platform-specific context](types#Platform).
 
 ```js
 /// file: src/handler.js
