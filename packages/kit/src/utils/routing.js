@@ -260,7 +260,7 @@ function escape(str) {
 	);
 }
 
-const basic_param_pattern = /\[(\[)?(\.\.\.)?([\w-]+?)(?:=([\w-]+))?\]\]?/g;
+export const basic_param_pattern = /\[(\[)?(\.\.\.)?([\w-]+?)(?:=([\w-]+))?\]\]?/g;
 
 /**
  * Populate a route ID with params to resolve a pathname.

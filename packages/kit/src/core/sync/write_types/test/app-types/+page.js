@@ -106,5 +106,15 @@ pathname = 'path-a/trailing-slash/never/layout/inside';
 
 // Test trailing-slash - always (endpoint) and never (page)
 pathname = 'path-a/trailing-slash/mixed';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 pathname = 'path-a/trailing-slash/mixed/';
+
+// Test optional params, which can be omitted
+pathname = 'about';
+pathname = 'en/about';
+pathname = 'deep';
+pathname = 'en/deep';
+pathname = 'en/gb/deep';
+
+// Test multiple params in a single segment
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+pathname = 'multi-param/1-2';

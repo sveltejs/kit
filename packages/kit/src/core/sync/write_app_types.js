@@ -4,15 +4,31 @@ import { resolve_entry } from '../../utils/filesystem.js';
 import { posixify } from '../../utils/os.js';
 import { write_if_changed } from './utils.js';
 import { s } from '../../utils/misc.js';
-import { get_route_segments } from '../../utils/routing.js';
+import { basic_param_pattern, get_route_segments } from '../../utils/routing.js';
 
-const replace_optional_params = (/** @type {string} */ id) =>
-	id.replace(/\/\[\[[^\]]+\]\]/g, '${string}');
-const replace_required_params = (/** @type {string} */ id) =>
-	id.replace(/\/\[[^\]]+\]/g, '/${string}');
-/** Convert route ID to pathname by removing layout groups */
-const remove_group_segments = (/** @type {string} */ id) => {
-	return '/' + get_route_segments(id).join('/');
+const optional_param_pattern = /^\[\[[\w-]+(?:=[\w-]+)?\]\]$/;
+
+/**
+ * Convert a route ID to a pathname (relative to the base path) in which each param
+ * is replaced with `${string}`
+ * @param {string} id
+ */
+const get_pathname_pattern = (id) => {
+	let pathname = '';
+	let separator = '';
+
+	for (const segment of get_route_segments(id)) {
+		if (optional_param_pattern.test(segment)) {
+			// the segment can be absent, so `${string}` absorbs the adjacent `/`. TypeScript does not
+			// match a literal against two consecutive placeholders, so only add one
+			if (!pathname.endsWith('${string}')) pathname += '${string}';
+		} else {
+			pathname += separator + segment.replace(basic_param_pattern, '${string}');
+			separator = '/';
+		}
+	}
+
+	return pathname;
 };
 
 /**
@@ -192,8 +208,7 @@ function generate_app_types(manifest_data, config, dir) {
 	}
 
 	for (const route of manifest_data.routes) {
-		const pathname = remove_group_segments(route.id);
-		let normalized_pathname = pathname.slice(1);
+		const pathname = get_pathname_pattern(route.id);
 
 		/** @type {(path: string) => string} */
 		let serialise = s;
@@ -207,11 +222,10 @@ function generate_app_types(manifest_data, config, dir) {
 
 			dynamic_routes.push(route_type);
 
-			normalized_pathname = replace_required_params(replace_optional_params(pathname)).slice(1);
 			serialise = (p) => `\`${p}\` & {}`;
 		}
 
-		for (const p of get_pathnames_for_trailing_slash(normalized_pathname, route)) {
+		for (const p of get_pathnames_for_trailing_slash(pathname, route)) {
 			pathnames.add(serialise(p));
 		}
 
