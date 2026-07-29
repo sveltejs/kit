@@ -53,12 +53,3 @@ declare module '__sveltekit/manifest-data' {
 	export const prerendered: Array<{ path: string }>;
 	export const routes: Array<{ id: string }>;
 }
-
-/** Resolves to the adapter's `customHandler`, falling back to SvelteKit's default handler */
-declare module '__sveltekit/dev-handler.js' {
-	// eslint-disable-next-line no-duplicate-imports
-	import { SSRHandler } from '@sveltejs/kit';
-
-	const init_server: SSRHandler;
-	export default init_server;
-}
