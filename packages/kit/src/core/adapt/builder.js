@@ -94,10 +94,7 @@ export function create_builder({
 
 			if (contains(output, target) || contains(target, output)) {
 				throw new Error(
-					`Cannot delete ${target}, because it overlaps with ${output}, which SvelteKit copies the build output from. ` +
-						'Change the directory your adapter writes to (`publish` in netlify.toml, `out` for adapter-node, ' +
-						'`pages`/`assets` for adapter-static, `assets.directory` or `pages_build_output_dir` in your Wrangler config) ' +
-						'so that the two do not overlap.'
+					`Cannot delete ${target}, because it overlaps with ${output}, which SvelteKit copies the build output from`
 				);
 			}
 
