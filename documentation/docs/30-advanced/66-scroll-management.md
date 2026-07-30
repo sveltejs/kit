@@ -21,7 +21,7 @@ Since only your app knows which element scrolls, you can manage the container yo
 	/** @type {import('./$types').Snapshot<number>} */
 	export const snapshot = {
 		capture: () => container.scrollTop,
-		restore: (top) => (container.scrollTop = top)
+		restore: (top) => container.scrollTo({ top, behavior: 'instant' })
 	};
 
 	afterNavigate((navigation) => {
@@ -40,4 +40,4 @@ On every navigation, `capture` saves the container's scroll position against the
 
 Note that `afterNavigate` callbacks can't tell whether a navigation used [`data-sveltekit-noscroll`](link-options#data-sveltekit-noscroll) or `goto`'s `noScroll` option, so the container is also reset on those navigations.
 
-> [!NOTE] Passing [`behavior: 'instant'`](https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollTo) makes the reset immediate even if the container has [`scroll-behavior: smooth`](https://developer.mozilla.org/en-US/docs/Web/CSS/scroll-behavior) in CSS, which would otherwise animate it on every navigation.
+> [!NOTE] Passing [`behavior: 'instant'`](https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollTo) makes the reset and the restore immediate even if the container has [`scroll-behavior: smooth`](https://developer.mozilla.org/en-US/docs/Web/CSS/scroll-behavior) in CSS, which would otherwise animate them.
