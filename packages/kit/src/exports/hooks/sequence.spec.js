@@ -9,31 +9,15 @@ const dummy_event = /** @type {RequestEvent} */ ({
 });
 
 test('runs without a request store', async () => {
-	/** @type {string[]} */
-	const order = [];
-
 	const handler = sequence(
-		async ({ event, resolve }) => {
-			order.push('1a');
-			const response = await resolve(event);
-			order.push('1b');
-			return response;
-		},
-		async ({ event, resolve }) => {
-			order.push('2a');
-			const response = await resolve(event);
-			order.push('2b');
-			return response;
-		}
+		async ({ event, resolve }) => resolve(event),
+		async ({ event, resolve }) => resolve(event)
 	);
 
 	const response = new Response();
+	const event = /** @type {RequestEvent} */ ({});
 
-	assert.equal(
-		await handler({ event: dummy_event, resolve: () => Promise.resolve(response) }),
-		response
-	);
-	expect(order).toEqual(['1a', '2a', '2b', '1b']);
+	assert.equal(await handler({ event, resolve: () => Promise.resolve(response) }), response);
 });
 
 test('applies handlers in sequence', async () => {
