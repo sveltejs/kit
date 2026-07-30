@@ -402,7 +402,10 @@ export async function render_response({
 			// prerendered route is filtered out of `manifest._.routes` (see `generateManifest`
 			// in core/adapt/builder.js), so on a host with no SvelteKit server there is nothing
 			// left to answer a resolution request for it at runtime.
-			if (route) {
+			// `dependencies` is per-page, so without this we'd regenerate once per prerendered page
+			if (route && !state.prerendering.resolved_route_ids.has(route.id)) {
+				state.prerendering.resolved_route_ids.add(route.id);
+
 				const id_pathname = paths.base + route_id_resolution_pathname(paths.app_dir, route.id);
 
 				state.prerendering.dependencies.set(
