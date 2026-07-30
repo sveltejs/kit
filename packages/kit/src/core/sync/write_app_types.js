@@ -5,7 +5,7 @@ import { posixify } from '../../utils/os.js';
 import { write_if_changed } from './utils.js';
 import { s } from '../../utils/misc.js';
 import { get_route_segments } from '../../utils/routing.js';
-import { get_app_routes, is_app_route } from './create_manifest_data/index.js';
+import { is_app_route } from './create_manifest_data/index.js';
 
 const replace_optional_params = (/** @type {string} */ id) =>
 	id.replace(/\/\[\[[^\]]+\]\]/g, '${string}');
@@ -144,6 +144,9 @@ function generate_app_types(manifest_data, config, dir) {
 	const pathnames = new Set();
 
 	/** @type {string[]} */
+	const app_route_ids = [];
+
+	/** @type {string[]} */
 	const dynamic_routes = [];
 
 	/** @type {string[]} */
@@ -193,6 +196,10 @@ function generate_app_types(manifest_data, config, dir) {
 	}
 
 	for (const route of manifest_data.routes) {
+		if (is_app_route(route)) {
+			app_route_ids.push(s(route.id));
+		}
+
 		const pathname = remove_group_segments(route.id);
 		let normalized_pathname = pathname.slice(1);
 
@@ -238,11 +245,7 @@ function generate_app_types(manifest_data, config, dir) {
 	return [
 		'declare module "$app/types" {',
 		'\texport interface AppTypes {',
-		`\t\tRouteId(): ${
-			get_app_routes(manifest_data)
-				.map((route) => s(route.id))
-				.join(' | ') || 'never'
-		};`,
+		`\t\tRouteId(): ${app_route_ids.join(' | ') || 'never'};`,
 		`\t\tRouteParams(): {\n\t\t\t${dynamic_routes.join(';\n\t\t\t')}\n\t\t};`,
 		`\t\tLayoutParams(): {\n\t\t\t${layouts.join(';\n\t\t\t')}\n\t\t};`,
 		`\t\tPath(): ${Array.from(pathnames).join(' | ')};`,

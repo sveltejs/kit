@@ -52,14 +52,6 @@ export function is_app_route(route) {
 }
 
 /**
- * Returns the routes that `$app/manifest` exposes and that `RouteId` is generated from.
- * @param {import('types').ManifestData} manifest_data
- */
-export function get_app_routes(manifest_data) {
-	return manifest_data.routes.filter(is_app_route).map((route) => ({ id: route.id }));
-}
-
-/**
  * Returns a list of files in the `static` directory.
  * @param {import('types').ValidatedConfig} config
  */
