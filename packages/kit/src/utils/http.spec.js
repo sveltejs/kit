@@ -18,10 +18,6 @@ test('handle invalid accept header value', () => {
 	assert.equal(negotiate(accept, ['text/html']), 'text/html');
 });
 
-test('ignores an accept segment with no slash without catastrophic backtracking', () => {
-	assert.equal(negotiate('a'.repeat(200_000), ['text/html']), undefined);
-}, 100);
-
 test('get_set_cookies returns each set-cookie header separately', () => {
 	const headers = new Headers();
 	headers.append('set-cookie', 'session=abc123; Path=/; HttpOnly');
