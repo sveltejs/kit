@@ -152,10 +152,10 @@ export function requested(query, limit) {
 	for (const payload of skipped) {
 		record_failure(
 			payload,
-			new HttpError(
-				400,
-				`Requested refresh was rejected because it exceeded requested(${__.name}, ${limit}) limit`
-			)
+			new HttpError({
+				status: 400,
+				message: `Requested refresh was rejected because it exceeded requested(${__.name}, ${limit}) limit`
+			})
 		);
 	}
 

@@ -97,6 +97,14 @@ describe('parse_route_id', () => {
 			params: [
 				{ name: 'catch-all', matcher: 'some-matcher', optional: false, rest: true, chained: true }
 			]
+		},
+		'/[x+5b]': {
+			pattern: /^\/\[\/?$/,
+			params: []
+		},
+		'/[x+5d]': {
+			pattern: /^\/\]\/?$/,
+			params: []
 		}
 	};
 
@@ -461,6 +469,31 @@ describe('resolve_route', () => {
 			route: '/[...catch-all=some-matcher]',
 			params: { 'catch-all': 'a/b' },
 			expected: '/a/b'
+		},
+		{
+			route: '/[x+2e]well-known/[one]',
+			params: { one: 'one' },
+			expected: '/.well-known/one'
+		},
+		{
+			route: '/[u+0041]/[one]',
+			params: { one: 'one' },
+			expected: '/A/one'
+		},
+		{
+			route: '/blog/[one]',
+			params: { one: '[x+2f]' },
+			expected: '/blog/[x+2f]'
+		},
+		{
+			route: '/[x+2f]/[one]',
+			params: { one: 'one' },
+			expected: '/%2F/one'
+		},
+		{
+			route: '/[x+23]/[one]',
+			params: { one: 'one' },
+			expected: '/%23/one'
 		}
 	];
 

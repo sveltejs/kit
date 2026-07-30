@@ -100,7 +100,7 @@ export function prerender(id) {
 
 				if (result.redirect) {
 					// Use internal version to allow redirects to external URLs
-					void _goto(result.redirect, {}, 0);
+					void _goto(result.redirect);
 					return;
 				}
 
@@ -172,7 +172,7 @@ class Prerender {
 				});
 				this.#loading = false;
 				this.#error = error;
-				throw new HttpError(error.status, error); // so that transformError doesn't transform it again
+				throw new HttpError(error); // so that transformError doesn't transform it again
 			}
 		);
 

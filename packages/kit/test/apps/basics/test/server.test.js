@@ -507,6 +507,15 @@ test.describe('Endpoints', () => {
 });
 
 test.describe('Errors', () => {
+	test('uses the handleError status for the fallback page served to error-page sub-requests', async ({
+		request
+	}) => {
+		const response = await request.get('/errors/handle-error-status-fallback', {
+			headers: { 'x-sveltekit-error': 'true' }
+		});
+		expect(response.status()).toBe(503);
+	});
+
 	test('invalid route response is handled', async ({ request }) => {
 		const response = await request.get('/errors/invalid-route-response');
 
@@ -742,6 +751,18 @@ test.describe('Load', () => {
 		await expect(page.locator('p')).toHaveText('1');
 	});
 
+	test('does not forward accept-language to internal fetch when the request has none', async ({
+		request
+	}) => {
+		// unlike browsers and undici, the `request` fixture sends no accept-language header
+		const html = await (await request.get('/load/fetch-request-headers')).text();
+		const headers = JSON.parse(
+			/** @type {RegExpMatchArray} */ (/<pre>(.+?)<\/pre>/s.exec(html))[1]
+		);
+		expect(headers.accept).toBe('*/*');
+		expect(headers['accept-language']).toBeUndefined();
+	});
+
 	test('includes origin header on non-GET internal request', async ({ page, baseURL }) => {
 		await page.goto('/load/fetch-origin-internal');
 		expect(await page.textContent('h1')).toBe(`origin: ${new URL(baseURL).origin}`);
@@ -967,6 +988,16 @@ test.describe('Miscellaneous', () => {
 	test('serves prerendered non-latin pages', async ({ request }) => {
 		const response = await request.get('/prerendering/中文');
 		expect(response.status()).toBe(200);
+	});
+
+	test('does not send x-sveltekit-version header on document responses', async ({ page }) => {
+		const response = await page.goto('/');
+		expect(response?.headers()['x-sveltekit-version']).toBeUndefined();
+	});
+
+	test('sends x-sveltekit-version header on data responses', async ({ request }) => {
+		const response = await request.get('/__data.json');
+		expect(response.headers()['x-sveltekit-version']).toBeTruthy();
 	});
 });
 

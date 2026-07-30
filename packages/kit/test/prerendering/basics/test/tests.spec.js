@@ -258,9 +258,9 @@ test('prerendered.paths omits trailing slashes for endpoints', () => {
 	const content = read('service-worker.js');
 
 	for (const path of [
-		'/trailing-slash/page/',
-		'/trailing-slash/page/__data.json',
-		'/trailing-slash/standalone-endpoint.json'
+		'trailing-slash/page/',
+		'trailing-slash/page/__data.json',
+		'trailing-slash/standalone-endpoint.json'
 	]) {
 		expect(content, `Missing ${path}`).toMatch(`"${path}"`);
 	}
@@ -279,6 +279,11 @@ test('prerenders paths with optional parameters with empty values', () => {
 test('crawls links that start with config.paths.origin', () => {
 	const content = read('prerender-origin/dynamic.html');
 	expect(content).toBeTruthy();
+});
+
+test('crawls pages whose content-type has a charset parameter', () => {
+	expect(read('content-type-charset.html')).toBeTruthy();
+	expect(read('content-type-charset/dynamic.html')).toBeTruthy();
 });
 
 test('identifies missing ids', () => {

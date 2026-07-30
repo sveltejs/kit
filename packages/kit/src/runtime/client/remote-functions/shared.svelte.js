@@ -6,7 +6,7 @@ import { app, _goto, live_query_map, query_map, query_responses } from '../clien
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import { untrack } from 'svelte';
 import { create_remote_key, split_remote_key } from '../../shared.js';
-import { navigating, page } from '../state.svelte.js';
+import { navigating, page, notify_version } from '../state.svelte.js';
 
 /** Indicates a query function, as opposed to a query instance */
 export const QUERY_FUNCTION_ID = Symbol('sveltekit.query_function_id');
@@ -86,7 +86,7 @@ export function pin_while_resolving(cache_map, cache, id, payload, then) {
  */
 export function unwrap_node(node) {
 	if (node.e) {
-		throw new HttpError(node.e.status, node.e);
+		throw new HttpError(node.e);
 	}
 
 	return node.v;
@@ -112,24 +112,28 @@ export function get_remote_request_headers() {
  */
 export async function remote_request(url, init) {
 	const response = await fetch(url, init);
+	const status = response.status;
+
+	// detect new deployments from the response header
+	notify_version(response.headers.get('x-sveltekit-version'));
 
 	if (!response.ok) {
 		const result = await response.json().catch(() => ({
 			type: 'error',
-			status: response.status,
-			error: response.statusText
+			status,
+			error: {
+				status,
+				message: response.statusText
+			}
 		}));
 
-		throw new HttpError(
-			result.error?.status ?? result.status ?? response.status ?? 500,
-			result.error
-		);
+		throw new HttpError({ status, ...result.error });
 	}
 
 	const result = /** @type {RemoteFunctionResponse} */ (await response.json());
 
 	if (result.type === 'error') {
-		throw new HttpError(result.error.status, result.error);
+		throw new HttpError(result.error);
 	}
 
 	const data = /** @type {RemoteFunctionData} */ (
@@ -144,7 +148,7 @@ export async function remote_request(url, init) {
 	function refresh(key, entry, result) {
 		if (entry?.resource) {
 			if (result.e) {
-				entry.resource.fail(new HttpError(result.e.status, result.e));
+				entry.resource.fail(new HttpError(result.e));
 			} else {
 				entry.resource.set(result.v);
 			}
@@ -193,12 +197,12 @@ export async function remote_request(url, init) {
 export async function handle_side_channel_response(response) {
 	if (response.type === 'redirect') {
 		// Use internal version to allow redirects to external URLs
-		await _goto(response.location, {}, 0);
+		await _goto(response.location);
 		throw new Redirect(307, response.location);
 	}
 
 	if (response.type === 'error') {
-		throw new HttpError(response.error.status, response.error);
+		throw new HttpError(response.error);
 	}
 
 	return response;

@@ -14,8 +14,8 @@ import { BROWSER } from 'esm-env';
  * A read-only reactive object with information about the current page, serving several use cases:
  * - retrieving the combined `data` of all pages/layouts anywhere in your component tree (also see [loading data](https://svelte.dev/docs/kit/load))
  * - retrieving the current value of the `form` prop anywhere in your component tree (also see [form actions](https://svelte.dev/docs/kit/form-actions))
- * - retrieving the page state that was set through `goto`, `pushState` or `replaceState` (also see [goto](https://svelte.dev/docs/kit/$app-navigation#goto) and [shallow routing](https://svelte.dev/docs/kit/shallow-routing))
- * - retrieving metadata such as the URL you're on, the current route and its parameters, and whether or not there was an error
+ * - retrieving the page state that was set through `goto` (also see [goto](https://svelte.dev/docs/kit/$app-navigation#goto) and [shallow routing](https://svelte.dev/docs/kit/shallow-routing))
+ * - retrieving metadata such as the URL you're on, the current route and its parameters, the target of a shallow navigation, and whether or not there was an error
  *
  * ```svelte
  * <!--- file: +layout.svelte --->
@@ -58,7 +58,7 @@ export const page = BROWSER ? client_page : server_page;
 export const navigating = BROWSER ? client_navigating : server_navigating;
 
 /**
- * A read-only reactive value that's initially `false`. If [`version.pollInterval`](https://svelte.dev/docs/kit/configuration#version) is a non-zero value, SvelteKit will poll for new versions of the app and update `current` to `true` when it detects one. `updated.check()` will force an immediate check, regardless of polling.
+ * A read-only reactive value that's initially `false`. SvelteKit checks for new versions on data, remote, and form action responses (via the `x-sveltekit-version` header), when the tab regains focus or becomes visible, and on a poll interval (see [`version.pollInterval`](https://svelte.dev/docs/kit/configuration#version)). `updated.current` is set to `true` when a new version is detected. `updated.check()` will force an immediate check, regardless of polling.
  * @type {{ get current(): boolean; check(): Promise<boolean>; }}
  */
 export const updated = BROWSER ? client_updated : server_updated;

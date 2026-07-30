@@ -31,7 +31,7 @@ if (isNaN(body_size_limit)) {
 const asset_dir = `${dir}/client${base}`;
 
 await server.init({
-	env: /** @type {Record<string, string>} */ (process.env),
+	env: process.env,
 	read: (file) => createReadableStream(`${asset_dir}/${file}`)
 });
 
@@ -45,17 +45,21 @@ function serve(path, client = false) {
 				etag: true,
 				gzip: PRECOMPRESS,
 				brotli: PRECOMPRESS,
-				setHeaders: client
-					? (res, pathname) => {
-							// only apply to build directory, not e.g. version.json
-							if (
-								pathname.startsWith(`/${manifest.appPath}/immutable/`) &&
-								res.statusCode === 200
-							) {
-								res.setHeader('cache-control', 'public,max-age=31536000,immutable');
-							}
-						}
-					: undefined
+				setHeaders: (res, pathname) => {
+					// `sirv` uses its own bundled `mrmime`, which the manifest's added types never reach
+					let type = manifest.mimeTypes[pathname.slice(pathname.lastIndexOf('.'))];
+					if (type === 'text/html') type += ';charset=utf-8';
+					if (type) res.setHeader('content-type', type);
+
+					// only apply to build directory, not e.g. version.json
+					if (
+						client &&
+						pathname.startsWith(`/${manifest.appPath}/immutable/`) &&
+						res.statusCode === 200
+					) {
+						res.setHeader('cache-control', 'public,max-age=31536000,immutable');
+					}
+				}
 			})
 		: undefined;
 }

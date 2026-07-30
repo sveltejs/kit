@@ -796,13 +796,7 @@ declare module '@sveltejs/kit' {
 			 */
 			resolution?: 'client' | 'server';
 		};
-		serviceWorker?: {
-			/**
-			 * Determine which files in your `static` directory will be available in `$service-worker.files`.
-			 * @default (filename) => !/\.DS_Store/.test(filename)
-			 */
-			files?: (file: string) => boolean;
-		} & (
+		serviceWorker?:
 			| {
 					/**
 					 * Whether to automatically register the service worker, if it exists.
@@ -820,8 +814,7 @@ declare module '@sveltejs/kit' {
 					 * @default true
 					 */
 					register?: false;
-			  }
-		);
+			  };
 		/**
 		 * Options for enabling [OpenTelemetry](https://opentelemetry.io/) tracing for SvelteKit operations.
 		 * @default { server: false }
@@ -833,12 +826,15 @@ declare module '@sveltejs/kit' {
 			 */
 			server?: boolean;
 		};
+		/**
+		 * @deprecated Add configuration to `tsconfig.json` directly
+		 */
 		typescript?: {
 			/**
 			 * A function that allows you to edit the generated `tsconfig.json`. You can mutate the config (recommended) or return a new one.
 			 * This is useful for extending a shared `tsconfig.json` in a monorepo root, for example.
 			 *
-			 * Note that any paths configured here should be relative to the generated config file, which is written to `.svelte-kit/tsconfig.json`.
+			 * Note that any paths configured here should be relative to the generated config file, which is written to `node_modules/$app/tsconfig/tsconfig.json`.
 			 *
 			 * @default (config) => config
 			 * @since 1.3.0
@@ -847,9 +843,9 @@ declare module '@sveltejs/kit' {
 		};
 		/**
 		 * Client-side navigation can be buggy if you deploy a new version of your app while people are using it. If the code for the new page is already loaded, it may have stale content; if it isn't, the app's route manifest may point to a JavaScript file that no longer exists.
-		 * SvelteKit helps you solve this problem through version management.
+		 * SvelteKit helps you solve this problem through version management. The current version is included in data, remote, and form action responses via the `x-sveltekit-version` header, so SvelteKit can detect new deployments without polling — for example when a navigation triggers a server `load` function, or when a remote function is called. SvelteKit also checks for new versions when the tab regains focus or becomes visible.
 		 * If SvelteKit encounters an error while loading the page and detects that a new version has been deployed (using the `name` specified here, which defaults to a timestamp of the build) it will fall back to traditional full-page navigation.
-		 * Not all navigations will result in an error though, for example if the JavaScript for the next page is already loaded. If you still want to force a full-page navigation in these cases, use techniques such as setting the `pollInterval` and then using `beforeNavigate`:
+		 * Not all navigations will result in an error though, for example if the JavaScript for the next page is already loaded. If you still want to force a full-page navigation in these cases, use `beforeNavigate`:
 		 * ```html
 		 * /// file: +layout.svelte
 		 * <script>
@@ -864,7 +860,7 @@ declare module '@sveltejs/kit' {
 		 * </script>
 		 * ```
 		 *
-		 * If you set `pollInterval` to a non-zero value, SvelteKit will poll for new versions in the background and set the value of [`updated.current`](https://svelte.dev/docs/kit/$app-state#updated) `true` when it detects one.
+		 * In addition to these checks, SvelteKit polls for new versions on an interval and sets [`updated.current`](https://svelte.dev/docs/kit/$app-state#updated) to `true` when it detects one. Set `pollInterval` to `0` to disable polling (the header- and event-based checks will still run).
 		 */
 		version?: {
 			/**
@@ -891,8 +887,8 @@ declare module '@sveltejs/kit' {
 			 */
 			name?: string;
 			/**
-			 * The interval in milliseconds to poll for version changes. If this is `0`, no polling occurs.
-			 * @default 0
+			 * The interval in milliseconds to poll for version changes. If this is `0`, no polling occurs. SvelteKit also checks for new versions on server responses (via the `x-sveltekit-version` header) and when the tab regains focus or becomes visible, so polling is only needed for long-lived sessions on a single page.
+			 * @default 3600000
 			 */
 			pollInterval?: number;
 		};
@@ -1213,6 +1209,46 @@ declare module '@sveltejs/kit' {
 		scroll: { x: number; y: number } | null;
 	}
 
+	export interface GotoOptions {
+		/**
+		 * If `true`, replaces the current history entry rather than creating a new one.
+		 * @default false
+		 */
+		replace?: boolean;
+		/** @deprecated Use `replace` instead. */
+		replaceState?: boolean;
+		/**
+		 * If `true`, updates the URL and `page.state` without navigating.
+		 * @default false
+		 */
+		shallow?: boolean;
+		/**
+		 * If `true`, resets the scroll position (to the top of the page, or to the element
+		 * matching the URL's `#hash` if there is one) and resets focus (to the `<body>`, or the
+		 * `autofocus` element if there is one) once the navigation completes.
+		 *
+		 * If `false`, the current scroll position and focused element are left alone.
+		 * @default true, or false when `shallow` is true
+		 */
+		reset?: boolean;
+		/**
+		 * If `true`, reruns all `load` functions and queries of the page.
+		 * @default false
+		 */
+		refreshAll?: boolean;
+		/** Causes any `load` functions to rerun if they depend on one of the URLs. */
+		invalidate?: Array<string | URL | ((url: URL) => boolean)>;
+		/** @deprecated Use `refreshAll` instead. */
+		invalidateAll?: boolean;
+		/** An optional object that will be available as `page.state`. */
+		state?: App.PageState;
+		/**
+		 * If `true`, `page.state` will be restored after a full page reload.
+		 * @default false
+		 */
+		persistState?: boolean;
+	}
+
 	/**
 	 * - `enter`: The app has hydrated/started
 	 * - `form`: The user submitted a `<form method="GET">`
@@ -1234,6 +1270,8 @@ declare module '@sveltejs/kit' {
 		 * - `popstate`: Navigation was triggered by back/forward navigation
 		 */
 		type: NavigationType;
+		/** Whether this is a shallow navigation. */
+		shallow: boolean;
 		/**
 		 * Where navigation was triggered from
 		 */
@@ -1328,10 +1366,7 @@ declare module '@sveltejs/kit' {
 	}
 
 	export type Navigation =
-		| NavigationExternal
-		| NavigationFormSubmit
-		| NavigationPopState
-		| NavigationLink;
+		NavigationExternal | NavigationFormSubmit | NavigationPopState | NavigationLink;
 
 	/**
 	 * The argument passed to [`beforeNavigate`](https://svelte.dev/docs/kit/$app-navigation#beforeNavigate) callbacks.
@@ -1402,9 +1437,20 @@ declare module '@sveltejs/kit' {
 		 */
 		data: App.PageData & Record<string, any>;
 		/**
-		 * The page state, which can be manipulated using the [`pushState`](https://svelte.dev/docs/kit/$app-navigation#pushState) and [`replaceState`](https://svelte.dev/docs/kit/$app-navigation#replaceState) functions from `$app/navigation`.
+		 * The page state, which can be manipulated using [`goto`](https://svelte.dev/docs/kit/$app-navigation#goto) from `$app/navigation`.
 		 */
 		state: App.PageState;
+		/**
+		 * Information about the target of the current shallow navigation, or `null` if no shallow navigation has occurred.
+		 */
+		shallow: {
+			/** Parameters of the target route, or `null` if the URL does not resolve to a route. */
+			params: AppLayoutParams<'/'> | null;
+			/** Info about the target route, or `null` if the URL does not resolve to a route. */
+			route: { id: AppRouteId } | null;
+			/** The normalized URL passed to `goto(..., { shallow: true })`. */
+			url: ReadonlyURL;
+		} | null;
 		/**
 		 * Filled only after a form submission. See [form actions](https://svelte.dev/docs/kit/form-actions) for more info.
 		 */
@@ -1425,8 +1471,7 @@ declare module '@sveltejs/kit' {
 	 * A param matcher definition passed to [`defineParams`](https://svelte.dev/docs/kit/@sveltejs-kit#defineParams).
 	 */
 	export type ParamDefinition =
-		| ((param: string) => ParamValue | undefined)
-		| StandardSchemaV1<string, ParamValue>;
+		((param: string) => ParamValue | undefined) | StandardSchemaV1<string, ParamValue>;
 
 	/**
 	 * The return type of [`defineParams`](https://svelte.dev/docs/kit/@sveltejs-kit#defineParams).
@@ -1529,8 +1574,7 @@ declare module '@sveltejs/kit' {
 		};
 
 	export type RequestedResult<Validated, Output> =
-		| QueryRequestedResult<Validated, Output>
-		| LiveQueryRequestedResult<Validated, Output>;
+		QueryRequestedResult<Validated, Output> | LiveQueryRequestedResult<Validated, Output>;
 
 	export interface RequestEvent<
 		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
@@ -1711,7 +1755,7 @@ declare module '@sveltejs/kit' {
 
 	export interface ServerInitOptions {
 		/** A map of environment variables. */
-		env: Record<string, string>;
+		env: Record<string, string | undefined>;
 		/** A function that turns an asset filename into a `ReadableStream`. Required for the `read` export from `$app/server` to work. */
 		read?: (file: string) => MaybePromise<ReadableStream | null>;
 	}
@@ -2659,20 +2703,11 @@ declare module '@sveltejs/kit' {
 	type PrerenderHttpErrorHandlerValue = 'fail' | 'warn' | 'ignore' | PrerenderHttpErrorHandler;
 	type PrerenderMissingIdHandlerValue = 'fail' | 'warn' | 'ignore' | PrerenderMissingIdHandler;
 	type PrerenderUnseenRoutesHandlerValue =
-		| 'fail'
-		| 'warn'
-		| 'ignore'
-		| PrerenderUnseenRoutesHandler;
+		'fail' | 'warn' | 'ignore' | PrerenderUnseenRoutesHandler;
 	type PrerenderEntryGeneratorMismatchHandlerValue =
-		| 'fail'
-		| 'warn'
-		| 'ignore'
-		| PrerenderEntryGeneratorMismatchHandler;
+		'fail' | 'warn' | 'ignore' | PrerenderEntryGeneratorMismatchHandler;
 	type PrerenderInvalidUrlHandlerValue =
-		| 'fail'
-		| 'warn'
-		| 'ignore'
-		| PrerenderInvalidUrlHandler;
+		'fail' | 'warn' | 'ignore' | PrerenderInvalidUrlHandler;
 
 	export type PrerenderOption = boolean | 'auto';
 
@@ -2717,42 +2752,43 @@ declare module '@sveltejs/kit' {
 	 * return an error response without invoking `handleError`.
 	 * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
 	 * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
-	 * @param body An object that conforms to the App.Error type. If a string is passed, it will be used as the message property.
+	 * @param message The error message.
 	 * @throws {import('./public.js').HttpError} This error instructs SvelteKit to initiate HTTP error handling.
 	 * @throws {Error} If the provided status is invalid (not between 400 and 599).
 	 */
-	export function error(status: number, body: Omit<App.Error, "status"> & {
-		status?: App.Error["status"];
-	}): never;
-	/**
-	 * Throws an error with a HTTP status code and an optional message.
-	 * When called during request handling, this will cause SvelteKit to
-	 * return an error response without invoking `handleError`.
-	 * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
-	 * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
-	 * @param body The error message.
-	 * @throws {import('./public.js').HttpError} This error instructs SvelteKit to initiate HTTP error handling.
-	 * @throws {Error} If the provided status is invalid (not between 400 and 599).
-	 */
-	export function error(status: number, body: {
+	export function error(status: {
 		status: number;
 		message: string;
-	} extends App.Error ? string | void | undefined : never): never;
+	} extends App.Error ? number : never, message?: string | undefined): never;
 	/**
 	 * Throws an error with a HTTP status code and an optional message.
 	 * When called during request handling, this will cause SvelteKit to
 	 * return an error response without invoking `handleError`.
 	 * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
 	 * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
-	 * @param body The error message.
+	 * @param message The error message.
 	 * @param properties Additional properties of the App.Error type.
 	 * @throws {import('./public.js').HttpError} This error instructs SvelteKit to initiate HTTP error handling.
 	 * @throws {Error} If the provided status is invalid (not between 400 and 599).
 	 */
-	export function error(status: number, body: string, properties: {
+	export function error(status: number, message: string, properties: {
 		status: number;
 		message: string;
 	} extends App.Error ? never : Omit<App.Error, "status" | "message">): never;
+	/**
+	 * Throws an error with a HTTP status code and an optional message.
+	 * When called during request handling, this will cause SvelteKit to
+	 * return an error response without invoking `handleError`.
+	 * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
+	 * @deprecated Passing an `App.Error` body as the second argument is deprecated — pass the `message` as the second argument, and any additional properties as the third
+	 * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
+	 * @param body An object that conforms to the App.Error type. If a string is passed, it will be used as the message property.
+	 * @throws {import('./public.js').HttpError} This error instructs SvelteKit to initiate HTTP error handling.
+	 * @throws {Error} If the provided status is invalid (not between 400 and 599).
+	 */
+	export function error(status: number, properties: Omit<App.Error, "status"> & {
+		status?: App.Error["status"];
+	}): never;
 	/**
 	 * Checks whether this is an error thrown by {@link error}.
 	 * @param status The status to filter for.
@@ -3130,25 +3166,18 @@ declare module '$app/navigation' {
 	 * */
 	export function disableScrollHandling(): void;
 	/**
-	 * Allows you to navigate programmatically to a given route, with options such as keeping the current element focused.
-	 * Returns a Promise that resolves when SvelteKit navigates (or fails to navigate, in which case the promise rejects) to the specified `url`.
+	 * Allows you to navigate programmatically to a given route, with control over details such as whether scroll and focus are reset
+	 * (as they would be with a regular navigation) or preserved.
 	 *
-	 * `goto` is intended for navigations to routes that belong to the app.
-	 * If the URL does not resolve to a route within the app, the returned promise will reject.
+	 * Returns a Promise that resolves when SvelteKit navigates (or fails to navigate, in which case the promise rejects) or the state change has been applied.
+	 *
+	 * `goto` is intended for navigations to routes that belong to the app, and will reject if a route cannot be resolved.
 	 * For external URLs, use `window.location = url` to perform a full-page navigation instead of calling `goto(url)`.
 	 *
 	 * @param url Where to navigate to. Note that if you've set [`config.paths.base`](https://svelte.dev/docs/kit/configuration#paths) and the URL is root-relative, you need to prepend the base path if you want to navigate within the app.
-	 * @param {Object} opts Options related to the navigation
+	 * @param opts Options related to the navigation
 	 * */
-	export function goto(url: string | URL, opts?: {
-		replaceState?: boolean | undefined;
-		noScroll?: boolean | undefined;
-		keepFocus?: boolean | undefined;
-		refreshAll?: boolean | undefined;
-		invalidate?: (string | URL | ((url: URL) => boolean))[] | undefined;
-		invalidateAll?: boolean | undefined;
-		state?: App.PageState | undefined;
-	}): Promise<void>;
+	export function goto(url: string | URL, opts?: import("@sveltejs/kit").GotoOptions): Promise<void>;
 	/**
 	 * Causes any `load` functions belonging to the currently active page to re-run if they depend on the `url` in question, via `fetch` or `depends`. Returns a `Promise` that resolves when the page is subsequently updated.
 	 *
@@ -3216,15 +3245,17 @@ declare module '$app/navigation' {
 	 * */
 	export function preloadCode(pathname: string): Promise<void>;
 	/**
-	 * Programmatically create a new history entry with the given `page.state`. To use the current URL, you can pass `''` as the first argument. Used for [shallow routing](https://svelte.dev/docs/kit/shallow-routing).
+	 * Programmatically create a new history entry with the given `page.state`. Used for [shallow routing](https://svelte.dev/docs/kit/shallow-routing).
 	 *
+	 * @deprecated Use `goto(url, { state, shallow: true })` instead.
 	 * */
-	export function pushState(url: string | URL, state: App.PageState): void;
+	export function pushState(url: string | URL, state: App.PageState): Promise<void>;
 	/**
-	 * Programmatically replace the current history entry with the given `page.state`. To use the current URL, you can pass `''` as the first argument. Used for [shallow routing](https://svelte.dev/docs/kit/shallow-routing).
+	 * Programmatically replace the current history entry with the given `page.state`. Used for [shallow routing](https://svelte.dev/docs/kit/shallow-routing).
 	 *
+	 * @deprecated Use `goto(url, { state, shallow: true, replace: true })` instead.
 	 * */
-	export function replaceState(url: string | URL, state: App.PageState): void;
+	export function replaceState(url: string | URL, state: App.PageState): Promise<void>;
 	type MaybePromise<T> = T | Promise<T>;
 
 	export {};
@@ -3568,13 +3599,26 @@ declare module '$app/server' {
 	export {};
 }
 
+declare module '$app/service-worker' {
+	/**
+	 * The execution context of a service worker. This export exists to make it easier to
+	 * use service workers with the correct types, provided the importing module is governed
+	 * by a `tsconfig.json` that extends [`$app/tsconfig/service-worker`](https://svelte.dev/docs/kit/$app-tsconfig-service-worker).
+	 *
+	 */
+	// @ts-ignore
+	export const self: ServiceWorkerGlobalScope;
+
+	export {};
+}
+
 declare module '$app/state' {
 	/**
 	 * A read-only reactive object with information about the current page, serving several use cases:
 	 * - retrieving the combined `data` of all pages/layouts anywhere in your component tree (also see [loading data](https://svelte.dev/docs/kit/load))
 	 * - retrieving the current value of the `form` prop anywhere in your component tree (also see [form actions](https://svelte.dev/docs/kit/form-actions))
-	 * - retrieving the page state that was set through `goto`, `pushState` or `replaceState` (also see [goto](https://svelte.dev/docs/kit/$app-navigation#goto) and [shallow routing](https://svelte.dev/docs/kit/shallow-routing))
-	 * - retrieving metadata such as the URL you're on, the current route and its parameters, and whether or not there was an error
+	 * - retrieving the page state that was set through `goto` (also see [goto](https://svelte.dev/docs/kit/$app-navigation#goto) and [shallow routing](https://svelte.dev/docs/kit/shallow-routing))
+	 * - retrieving metadata such as the URL you're on, the current route and its parameters, the target of a shallow navigation, and whether or not there was an error
 	 *
 	 * ```svelte
 	 * <!--- file: +layout.svelte --->
@@ -3619,7 +3663,7 @@ declare module '$app/state' {
 		complete: null;
 	};
 	/**
-	 * A read-only reactive value that's initially `false`. If [`version.pollInterval`](https://svelte.dev/docs/kit/configuration#version) is a non-zero value, SvelteKit will poll for new versions of the app and update `current` to `true` when it detects one. `updated.check()` will force an immediate check, regardless of polling.
+	 * A read-only reactive value that's initially `false`. SvelteKit checks for new versions on data, remote, and form action responses (via the `x-sveltekit-version` header), when the tab regains focus or becomes visible, and on a poll interval (see [`version.pollInterval`](https://svelte.dev/docs/kit/configuration#version)). `updated.current` is set to `true` when a new version is detected. `updated.check()` will force an immediate check, regardless of polling.
 	 * */
 	export const updated: {
 		get current(): boolean;
@@ -3675,7 +3719,7 @@ declare namespace App {
 	export interface PageData {}
 
 	/**
-	 * The shape of the `page.state` object, which can be manipulated using the [`pushState`](https://svelte.dev/docs/kit/$app-navigation#pushState) and [`replaceState`](https://svelte.dev/docs/kit/$app-navigation#replaceState) functions from `$app/navigation`.
+	 * The shape of the `page.state` object, which can be manipulated using [`goto`](https://svelte.dev/docs/kit/$app-navigation#goto).
 	 */
 	// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 	export interface PageState {}
@@ -3712,35 +3756,6 @@ declare module '$app/manifest' {
 	 * An array of objects with an `id` property representing the routes in your app.
 	 */
 	export const routes: Array<{ id: import('$app/types').RouteId }>;
-}
-
-/**
- * This module is only available to [service workers](https://svelte.dev/docs/kit/service-workers).
- */
-declare module '$service-worker' {
-	/**
-	 * The `base` path of the deployment. Typically this is equivalent to `config.paths.base`, but it is calculated from `location.pathname` meaning that it will continue to work correctly if the site is deployed to a subdirectory.
-	 * Note that there is a `base` but no `assets`, since service workers cannot be used if `config.paths.assets` is specified.
-	 */
-	export const base: string;
-	/**
-	 * An array of URL strings representing the files generated by Vite, suitable for caching with `cache.addAll(build)`.
-	 * During development, this is an empty array.
-	 */
-	export const build: string[];
-	/**
-	 * An array of URL strings representing the files in your static directory, or whatever directory is specified by `config.files.assets`. You can customize which files are included from `static` directory using [`config.serviceWorker.files`](https://svelte.dev/docs/kit/configuration#serviceWorker)
-	 */
-	export const files: string[];
-	/**
-	 * An array of pathnames corresponding to prerendered pages and endpoints.
-	 * During development, this is an empty array.
-	 */
-	export const prerendered: string[];
-	/**
-	 * See [`config.version`](https://svelte.dev/docs/kit/configuration#version). It's useful for generating unique cache names inside your service worker, so that a later deployment of your app can invalidate old caches.
-	 */
-	export const version: string;
 }
 
 /**

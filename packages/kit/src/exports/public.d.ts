@@ -824,13 +824,7 @@ export interface KitConfig {
 		 */
 		resolution?: 'client' | 'server';
 	};
-	serviceWorker?: {
-		/**
-		 * Determine which files in your `static` directory will be available in `$service-worker.files`.
-		 * @default (filename) => !/\.DS_Store/.test(filename)
-		 */
-		files?: (file: string) => boolean;
-	} & (
+	serviceWorker?:
 		| {
 				/**
 				 * Whether to automatically register the service worker, if it exists.
@@ -848,8 +842,7 @@ export interface KitConfig {
 				 * @default true
 				 */
 				register?: false;
-		  }
-	);
+		  };
 	/**
 	 * Options for enabling [OpenTelemetry](https://opentelemetry.io/) tracing for SvelteKit operations.
 	 * @default { server: false }
@@ -861,12 +854,15 @@ export interface KitConfig {
 		 */
 		server?: boolean;
 	};
+	/**
+	 * @deprecated Add configuration to `tsconfig.json` directly
+	 */
 	typescript?: {
 		/**
 		 * A function that allows you to edit the generated `tsconfig.json`. You can mutate the config (recommended) or return a new one.
 		 * This is useful for extending a shared `tsconfig.json` in a monorepo root, for example.
 		 *
-		 * Note that any paths configured here should be relative to the generated config file, which is written to `.svelte-kit/tsconfig.json`.
+		 * Note that any paths configured here should be relative to the generated config file, which is written to `node_modules/$app/tsconfig/tsconfig.json`.
 		 *
 		 * @default (config) => config
 		 * @since 1.3.0
@@ -875,9 +871,9 @@ export interface KitConfig {
 	};
 	/**
 	 * Client-side navigation can be buggy if you deploy a new version of your app while people are using it. If the code for the new page is already loaded, it may have stale content; if it isn't, the app's route manifest may point to a JavaScript file that no longer exists.
-	 * SvelteKit helps you solve this problem through version management.
+	 * SvelteKit helps you solve this problem through version management. The current version is included in data, remote, and form action responses via the `x-sveltekit-version` header, so SvelteKit can detect new deployments without polling — for example when a navigation triggers a server `load` function, or when a remote function is called. SvelteKit also checks for new versions when the tab regains focus or becomes visible.
 	 * If SvelteKit encounters an error while loading the page and detects that a new version has been deployed (using the `name` specified here, which defaults to a timestamp of the build) it will fall back to traditional full-page navigation.
-	 * Not all navigations will result in an error though, for example if the JavaScript for the next page is already loaded. If you still want to force a full-page navigation in these cases, use techniques such as setting the `pollInterval` and then using `beforeNavigate`:
+	 * Not all navigations will result in an error though, for example if the JavaScript for the next page is already loaded. If you still want to force a full-page navigation in these cases, use `beforeNavigate`:
 	 * ```html
 	 * /// file: +layout.svelte
 	 * <script>
@@ -892,7 +888,7 @@ export interface KitConfig {
 	 * </script>
 	 * ```
 	 *
-	 * If you set `pollInterval` to a non-zero value, SvelteKit will poll for new versions in the background and set the value of [`updated.current`](https://svelte.dev/docs/kit/$app-state#updated) `true` when it detects one.
+	 * In addition to these checks, SvelteKit polls for new versions on an interval and sets [`updated.current`](https://svelte.dev/docs/kit/$app-state#updated) to `true` when it detects one. Set `pollInterval` to `0` to disable polling (the header- and event-based checks will still run).
 	 */
 	version?: {
 		/**
@@ -919,8 +915,8 @@ export interface KitConfig {
 		 */
 		name?: string;
 		/**
-		 * The interval in milliseconds to poll for version changes. If this is `0`, no polling occurs.
-		 * @default 0
+		 * The interval in milliseconds to poll for version changes. If this is `0`, no polling occurs. SvelteKit also checks for new versions on server responses (via the `x-sveltekit-version` header) and when the tab regains focus or becomes visible, so polling is only needed for long-lived sessions on a single page.
+		 * @default 3600000
 		 */
 		pollInterval?: number;
 	};
@@ -1241,6 +1237,46 @@ export interface NavigationTarget<
 	scroll: { x: number; y: number } | null;
 }
 
+export interface GotoOptions {
+	/**
+	 * If `true`, replaces the current history entry rather than creating a new one.
+	 * @default false
+	 */
+	replace?: boolean;
+	/** @deprecated Use `replace` instead. */
+	replaceState?: boolean;
+	/**
+	 * If `true`, updates the URL and `page.state` without navigating.
+	 * @default false
+	 */
+	shallow?: boolean;
+	/**
+	 * If `true`, resets the scroll position (to the top of the page, or to the element
+	 * matching the URL's `#hash` if there is one) and resets focus (to the `<body>`, or the
+	 * `autofocus` element if there is one) once the navigation completes.
+	 *
+	 * If `false`, the current scroll position and focused element are left alone.
+	 * @default true, or false when `shallow` is true
+	 */
+	reset?: boolean;
+	/**
+	 * If `true`, reruns all `load` functions and queries of the page.
+	 * @default false
+	 */
+	refreshAll?: boolean;
+	/** Causes any `load` functions to rerun if they depend on one of the URLs. */
+	invalidate?: Array<string | URL | ((url: URL) => boolean)>;
+	/** @deprecated Use `refreshAll` instead. */
+	invalidateAll?: boolean;
+	/** An optional object that will be available as `page.state`. */
+	state?: App.PageState;
+	/**
+	 * If `true`, `page.state` will be restored after a full page reload.
+	 * @default false
+	 */
+	persistState?: boolean;
+}
+
 /**
  * - `enter`: The app has hydrated/started
  * - `form`: The user submitted a `<form method="GET">`
@@ -1262,6 +1298,8 @@ export interface NavigationBase {
 	 * - `popstate`: Navigation was triggered by back/forward navigation
 	 */
 	type: NavigationType;
+	/** Whether this is a shallow navigation. */
+	shallow: boolean;
 	/**
 	 * Where navigation was triggered from
 	 */
@@ -1356,10 +1394,7 @@ export interface NavigationLink extends NavigationBase {
 }
 
 export type Navigation =
-	| NavigationExternal
-	| NavigationFormSubmit
-	| NavigationPopState
-	| NavigationLink;
+	NavigationExternal | NavigationFormSubmit | NavigationPopState | NavigationLink;
 
 /**
  * The argument passed to [`beforeNavigate`](https://svelte.dev/docs/kit/$app-navigation#beforeNavigate) callbacks.
@@ -1430,9 +1465,20 @@ export interface Page<
 	 */
 	data: App.PageData & Record<string, any>;
 	/**
-	 * The page state, which can be manipulated using the [`pushState`](https://svelte.dev/docs/kit/$app-navigation#pushState) and [`replaceState`](https://svelte.dev/docs/kit/$app-navigation#replaceState) functions from `$app/navigation`.
+	 * The page state, which can be manipulated using [`goto`](https://svelte.dev/docs/kit/$app-navigation#goto) from `$app/navigation`.
 	 */
 	state: App.PageState;
+	/**
+	 * Information about the target of the current shallow navigation, or `null` if no shallow navigation has occurred.
+	 */
+	shallow: {
+		/** Parameters of the target route, or `null` if the URL does not resolve to a route. */
+		params: AppLayoutParams<'/'> | null;
+		/** Info about the target route, or `null` if the URL does not resolve to a route. */
+		route: { id: AppRouteId } | null;
+		/** The normalized URL passed to `goto(..., { shallow: true })`. */
+		url: ReadonlyURL;
+	} | null;
 	/**
 	 * Filled only after a form submission. See [form actions](https://svelte.dev/docs/kit/form-actions) for more info.
 	 */
@@ -1453,8 +1499,7 @@ export type ParamValue = string | number | boolean | bigint;
  * A param matcher definition passed to [`defineParams`](https://svelte.dev/docs/kit/@sveltejs-kit#defineParams).
  */
 export type ParamDefinition =
-	| ((param: string) => ParamValue | undefined)
-	| StandardSchemaV1<string, ParamValue>;
+	((param: string) => ParamValue | undefined) | StandardSchemaV1<string, ParamValue>;
 
 /**
  * The return type of [`defineParams`](https://svelte.dev/docs/kit/@sveltejs-kit#defineParams).
@@ -1559,8 +1604,7 @@ export type LiveQueryRequestedResult<Validated, Output> = Iterable<
 	};
 
 export type RequestedResult<Validated, Output> =
-	| QueryRequestedResult<Validated, Output>
-	| LiveQueryRequestedResult<Validated, Output>;
+	QueryRequestedResult<Validated, Output> | LiveQueryRequestedResult<Validated, Output>;
 
 export interface RequestEvent<
 	Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
@@ -1741,7 +1785,7 @@ export class Server {
 
 export interface ServerInitOptions {
 	/** A map of environment variables. */
-	env: Record<string, string>;
+	env: Record<string, string | undefined>;
 	/** A function that turns an asset filename into a `ReadableStream`. Required for the `read` export from `$app/server` to work. */
 	read?: (file: string) => MaybePromise<ReadableStream | null>;
 }

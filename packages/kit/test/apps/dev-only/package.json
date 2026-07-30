@@ -8,7 +8,8 @@
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync",
 		"check": "svelte-kit sync && tsc && svelte-check",
-		"test": "DEV=true playwright test"
+		"test": "pnpm test:dev",
+		"test:dev": "DEV=true playwright test"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",

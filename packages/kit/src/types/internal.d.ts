@@ -496,6 +496,7 @@ export interface SSROptions {
 		}): string;
 		error(values: { message: string; status: number }): string;
 	};
+	version: string;
 	version_hash: string;
 }
 
@@ -658,15 +659,10 @@ export interface RemotePrerenderInternals extends BaseRemoteInternals {
 }
 
 export type RemoteAnyQueryInternals =
-	| RemoteQueryInternals
-	| RemoteQueryBatchInternals
-	| RemoteQueryLiveInternals;
+	RemoteQueryInternals | RemoteQueryBatchInternals | RemoteQueryLiveInternals;
 
 export type RemoteInternals =
-	| RemoteAnyQueryInternals
-	| RemoteCommandInternals
-	| RemoteFormInternals
-	| RemotePrerenderInternals;
+	RemoteAnyQueryInternals | RemoteCommandInternals | RemoteFormInternals | RemotePrerenderInternals;
 
 export interface InternalRemoteFormIssue extends RemoteFormIssue {
 	name: string;

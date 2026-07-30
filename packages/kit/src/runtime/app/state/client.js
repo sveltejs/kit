@@ -20,6 +20,9 @@ export const page = {
 	get route() {
 		return _page.route;
 	},
+	get shallow() {
+		return _page.shallow;
+	},
 	get state() {
 		return _page.state;
 	},

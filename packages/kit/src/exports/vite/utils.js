@@ -2,14 +2,10 @@ import path from 'node:path';
 import { posixify } from '../../utils/os.js';
 import { negotiate } from '../../utils/http.js';
 import { escape_html } from '../../utils/escape.js';
+import { escape_for_regexp } from '../../utils/regex.js';
 import { stackless } from '../../utils/error.js';
 import { dedent } from '../../core/sync/utils.js';
-import {
-	app_server,
-	app_env_private,
-	service_worker,
-	sveltekit_env_private
-} from './module_ids.js';
+import { app_server, app_env_private, sveltekit_env_private } from './module_ids.js';
 import { styleText } from 'node:util';
 
 /**
@@ -47,13 +43,6 @@ export function get_config_aliases(config, root) {
 	}
 
 	return alias;
-}
-
-/**
- * @param {string} str
- */
-function escape_for_regexp(str) {
-	return str.replace(/[.*+?^${}()|[\]\\]/g, (match) => '\\' + match);
 }
 
 /**
@@ -141,10 +130,6 @@ export function normalize_id(id, aliases, cwd) {
 
 	if (id === app_env_private || id === sveltekit_env_private) {
 		return '$app/env/private';
-	}
-
-	if (id === service_worker) {
-		return '$service-worker';
 	}
 
 	return posixify(id);
