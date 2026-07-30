@@ -782,6 +782,7 @@ test.describe('$app/manifest', () => {
 		expect(ids).toContain('/');
 		expect(ids).toContain('/app-manifest');
 		expect(ids).toContain('/routing');
+		expect(ids).not.toContain('/app-manifest/not-a-page');
 	});
 
 	test('exposes static assets', async ({ page }) => {
