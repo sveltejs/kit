@@ -37,13 +37,13 @@ test.describe('remote functions', () => {
 
 		const a = page.locator('#count');
 
-		expect(await a.textContent()).toBe('0');
+		await expect(a).toHaveText('0');
 
 		await page.locator('#increment').click();
-		expect(await a.textContent()).toBe('0');
+		await expect(a).toHaveText('0');
 
 		await a.click();
-		expect(await a.textContent()).toBe('1');
+		await expect(a).toHaveText('1');
 	});
 
 	test('packages can re-export remote functions', async ({ page }) => {
