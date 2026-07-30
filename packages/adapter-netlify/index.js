@@ -123,7 +123,7 @@ function generate_serverless_functions({ builder, publish, split }) {
 	builder.writeServer('.netlify/v1/server');
 
 	const replace = {
-		'0SERVER': './server/server.js' // digit prefix prevents CJS build from using this as a variable name, which would also get replaced
+		'0SERVER': './server/index.js' // digit prefix prevents CJS build from using this as a variable name, which would also get replaced
 	};
 
 	builder.copy(files, '.netlify/v1', { replace, filter: (file) => !file.endsWith('edge.js') });
@@ -365,7 +365,7 @@ async function generate_edge_functions({ builder }) {
 
 	builder.copy(`${files}/edge.js`, `${tmp}/entry.js`, {
 		replace: {
-			'0SERVER': `${relativePath}/server.js`,
+			'0SERVER': `${relativePath}/index.js`,
 			MANIFEST: './manifest.js'
 		}
 	});

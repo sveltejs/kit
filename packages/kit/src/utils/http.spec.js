@@ -17,3 +17,7 @@ test('handle invalid accept header value', () => {
 	const accept = 'text/html,*';
 	assert.equal(negotiate(accept, ['text/html']), 'text/html');
 });
+
+test('ignores an accept segment with no slash without catastrophic backtracking', () => {
+	assert.equal(negotiate('a'.repeat(200_000), ['text/html']), undefined);
+}, 100);
