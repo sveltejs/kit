@@ -23,4 +23,4 @@ A `string[]` array of prerendered pages. Empty during dev. Use [`prerendered`]($
 
 ## version
 
-The value of [`config.version.name`](configuration#version), used for populating caches. Use [`version`]($app/env#version) from `$app/env` instead.
+The value of [`config.version.name`](configuration#version), used for populating caches. Use [`version`]($app-env#version) from `$app/env` instead.

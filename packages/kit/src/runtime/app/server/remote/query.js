@@ -575,12 +575,6 @@ function create_live_query_resource(__, payload, event, state, get_generator) {
 
 			return Promise.resolve();
 		},
-		/** @ts-expect-error This method no longer exists */
-		run() {
-			throw new Error(
-				'`.run()` has been removed from live queries. Use `for await (const value of liveQuery())` instead.'
-			);
-		},
 		/** @type {Promise<any>['then']} */
 		then(onfulfilled, onrejected) {
 			return get_promise().then(onfulfilled, onrejected);

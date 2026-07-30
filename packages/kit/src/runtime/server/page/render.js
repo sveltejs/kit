@@ -1,4 +1,4 @@
-/** @import { RenderNode } from '../../types.js' */
+/** @import { Component } from 'svelte'; */
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
 import { isRedirect, text } from '@sveltejs/kit';
@@ -20,6 +20,7 @@ import * as env from '__sveltekit/env';
 import { collect_remote_data } from '../remote-functions.js';
 import Root from '../../components/root.svelte';
 import { render } from 'svelte/server';
+import { Props, RenderNode } from '../../props.svelte.js';
 
 // TODO rename this function/module
 
@@ -134,24 +135,28 @@ export async function render_response({
 	}
 
 	if (page_config.ssr) {
-		/** @type {Record<string, any>} */
-		const props = {
-			components: [],
-			resetters: [],
-			form: form_value,
-			tree: /** @type {RenderNode} */ ({}),
+		const page = {
 			error,
-			page: {
-				error,
-				params: /** @type {Record<string, any>} */ (event.params),
-				route: event.route,
-				status,
-				url: event.url,
-				data: {},
-				form: form_value,
-				state: {}
-			}
+			params: /** @type {Record<string, any>} */ (event.params),
+			route: event.route,
+			status,
+			url: event.url,
+			data: {},
+			form: form_value,
+			shallow: null,
+			state: {}
 		};
+
+		const props = new Props({
+			page,
+			tree: new RenderNode(
+				// TODO tidy up
+				/** @type {Component} */ (await branch[0].node.component?.()),
+				/** @type {Component} */ (error_components?.[1])
+			),
+			form: form_value,
+			error: error ?? undefined
+		});
 
 		let current_node = props.tree;
 		let data = props.page.data;
@@ -161,16 +166,14 @@ export async function render_response({
 
 			data = { ...data, ...node.data };
 
-			// TODO this is undefined sometimes... where does the default error component come from?
-			const error = error_components?.slice(0, i + 1).findLast((x) => x);
-
-			current_node.error = error;
-			current_node.component = await node.node.component?.();
 			current_node.data = data;
 
 			if (i < branch.length - 1) {
-				current_node.child = /** @type {import('../../types.js').RenderNode} */ ({});
-				current_node = current_node.child;
+				current_node = current_node.child = new RenderNode(
+					// TODO tidy up
+					/** @type {Component} */ (await branch[i + 1].node.component?.()),
+					/** @type {Component} */ (error_components?.slice(0, i + 2).findLast((x) => x))
+				);
 			}
 		}
 

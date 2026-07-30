@@ -265,7 +265,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 	/** @type {Map<string, Set<string>>} */
 	const expected_hashlinks = new Map();
 
-	/** @type {Map<string, string[]>} */
+	/** @type {Map<string, Set<string>>} */
 	const actual_hashlinks = new Map();
 
 	/**
@@ -394,7 +394,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 				handle_invalid_url({ href, referrer: decoded });
 			}
 
-			actual_hashlinks.set(decoded, ids);
+			actual_hashlinks.set(decoded, new Set(ids));
 
 			/** @param {string} href */
 			const removePrerenderOrigin = (href) => {
@@ -646,7 +646,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 		// ignore fragment links to pages that were not prerendered
 		if (!hashlinks) continue;
 
-		if (!hashlinks.includes(id) && !SPECIAL_HASHLINKS.has(id)) {
+		if (!hashlinks.has(id) && !SPECIAL_HASHLINKS.has(id)) {
 			handle_missing_id({ id, path, referrers: Array.from(referrers) });
 		}
 	}

@@ -20,6 +20,8 @@
 
 <hr />
 
+<a href="?existing=value&later=updated">update URL query</a>
+
 <form data-unscoped {...set_message}>
 	{#if set_message.fields.message.issues()}
 		<p>{set_message.fields.message.issues()?.[0].message}</p>

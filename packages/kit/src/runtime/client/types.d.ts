@@ -1,4 +1,3 @@
-import { SvelteComponent } from 'svelte';
 import {
 	ClientHooks,
 	CSRPageNode,
@@ -10,7 +9,7 @@ import {
 	Uses
 } from 'types';
 import { Page, ParamMatcher } from '@sveltejs/kit';
-import { RenderNode } from '../types.js';
+import { RenderNode } from '../props.svelte.js';
 
 export interface SvelteKitApp {
 	/**

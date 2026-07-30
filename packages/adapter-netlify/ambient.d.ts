@@ -1,7 +1,7 @@
 declare global {
 	namespace App {
 		export interface Platform {
-			context: import('@netlify/functions').Context;
+			context: import('@netlify/types').Context;
 		}
 	}
 }

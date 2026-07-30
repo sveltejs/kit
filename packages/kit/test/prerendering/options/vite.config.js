@@ -2,7 +2,7 @@ import * as path from 'node:path';
 import { sveltekit } from '@sveltejs/kit/vite';
 import adapter from '../../../../adapter-static/index.js';
 
-/** @type {import('vite').UserConfig} */
+/** @type {import('vitest/config').ViteUserConfig} */
 const config = {
 	build: {
 		minify: false
@@ -45,6 +45,9 @@ const config = {
 		fs: {
 			allow: [path.resolve('../../../src')]
 		}
+	},
+	test: {
+		name: 'kit-prerendering-options'
 	}
 };
 

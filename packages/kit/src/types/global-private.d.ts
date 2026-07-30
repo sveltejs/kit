@@ -53,7 +53,7 @@ declare global {
 	const __SVELTEKIT_MANIFEST_IMMUTABLE__: string[];
 	const __SVELTEKIT_MANIFEST_ASSETS__: string[];
 	const __SVELTEKIT_MANIFEST_PRERENDERED__: string[];
-	const __SVELTEKIT_MANIFEST_ROUTES__: { id: string }[];
+	const __SVELTEKIT_MANIFEST_ROUTES__: Array<{ id: string }>;
 	/**
 	 * This makes the use of specific features visible at both dev and build time, in such a
 	 * way that we can error when they are not supported by the target platform.

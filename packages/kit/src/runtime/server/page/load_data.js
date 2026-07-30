@@ -334,14 +334,24 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 						);
 					}
 
+					const request_body =
+						input instanceof Request && cloned_body
+							? await stream_to_string(cloned_body)
+							: init?.body;
+
+					if (
+						request_body &&
+						typeof request_body !== 'string' &&
+						!ArrayBuffer.isView(request_body)
+					) {
+						// requests whose body can't be hashed aren't serialized — the browser repeats the fetch
+						return;
+					}
+
 					fetched.push({
 						url: same_origin ? url.href.slice(event.url.origin.length) : url.href,
 						method: event.request.method,
-						request_body: /** @type {string | ArrayBufferView | undefined} */ (
-							input instanceof Request && cloned_body
-								? await stream_to_string(cloned_body)
-								: init?.body
-						),
+						request_body: /** @type {string | ArrayBufferView | null | undefined} */ (request_body),
 						request_headers: cloned_headers,
 						response_body: body,
 						response,

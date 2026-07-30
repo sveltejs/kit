@@ -604,7 +604,6 @@ export async function internal_respond(request, options, manifest, state) {
 					options,
 					manifest,
 					state,
-					status: 400,
 					error: new SvelteKitError(
 						400,
 						'Malformed URI',
@@ -781,7 +780,6 @@ export async function internal_respond(request, options, manifest, state) {
 					options,
 					manifest,
 					state,
-					status: 404,
 					error: new SvelteKitError(404, 'Not Found', `Not found: ${event.url.pathname}`),
 					resolve_opts
 				});
