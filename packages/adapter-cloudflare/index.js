@@ -119,7 +119,7 @@ export default function (options = {}) {
 					// will be interpreted as escape characters and create an incorrect import path.
 					// We also need to ensure the relative imports start with ./ since Wrangler
 					// errors if a relative import looks like a package import
-					SERVER: `./${posixify(path.relative(worker_dest_dir, builder.getServerDirectory()))}/server.js`,
+					SERVER: `./${posixify(path.relative(worker_dest_dir, builder.getServerDirectory()))}/index.js`,
 					MANIFEST: `./${posixify(path.relative(worker_dest_dir, tmp))}/manifest.js`,
 					ASSETS: assets_binding
 				}

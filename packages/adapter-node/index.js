@@ -90,7 +90,7 @@ export default function (opts = {}) {
 						// resolve the app's server and manifest, generated above
 						name: 'adapter-node-resolve-app',
 						resolveId(id) {
-							if (id === 'SERVER') return `${server}/server.js`;
+							if (id === 'SERVER') return `${server}/index.js`;
 							if (id === 'MANIFEST') return `${server}/manifest.js`;
 						}
 					},
