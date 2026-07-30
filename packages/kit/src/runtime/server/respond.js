@@ -277,7 +277,7 @@ export async function internal_respond(request, options, manifest, state) {
 		});
 	}
 
-	if (!remote_id || !manifest._.reroute_middleware) {
+	if (!remote_id && !manifest._.reroute_middleware) {
 		const prerendering_reroute_state = state.prerendering?.inside_reroute;
 		try {
 			// For the duration or a reroute, disable the prerendering state as reroute could call API endpoints
