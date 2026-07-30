@@ -188,7 +188,7 @@ const plugin = function (defaults = {}) {
 					continue: true
 				});
 
-				const dir = `${dirs.functions}/reroute.func`;
+				const dir = `${dirs.functions}/sveltekit-middleware-reroute.func`;
 
 				builder.copy(`${files}/reroute.js`, `${tmp}/index.js`, {
 					replace: {
