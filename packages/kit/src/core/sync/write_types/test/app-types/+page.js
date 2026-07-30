@@ -124,5 +124,11 @@ pathname = 'multi-param/1-2';
 
 // Test rest params, which can match zero segments
 pathname = 'files';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 pathname = 'files/a/b';
+
+// Test escape sequences, which are expanded
+pathname = '.well-known';
+// @ts-expect-error the route id's escape sequence is not part of the pathname
+pathname = '[x+2e]well-known';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+pathname = '@someone';

@@ -4,15 +4,21 @@ import { resolve_entry } from '../../utils/filesystem.js';
 import { posixify } from '../../utils/os.js';
 import { write_if_changed } from './utils.js';
 import { s } from '../../utils/misc.js';
-import { basic_param_pattern, get_route_segments } from '../../utils/routing.js';
+import {
+	decode_escape_sequence,
+	encode_pathname_chars,
+	get_route_segments,
+	segment_pattern
+} from '../../utils/routing.js';
 
 const optional_param_pattern = /^\[\[[\w-]+(?:=[\w-]+)?\]\]$/;
 const rest_param_pattern = /^\[\.\.\.[\w-]+(?:=[\w-]+)?\]$/;
 
 /**
  * Convert a route ID to the pathnames it can match (relative to the base path), in which each
- * param is replaced with `${string}`. A param that fills an entire segment can be absent, so it
- * contributes a pathname with the segment and one without, rather than one that absorbs the `/`
+ * param is replaced with `${string}` and each escape sequence is expanded. A param that fills an
+ * entire segment can be absent, so it contributes a pathname with the segment and one without,
+ * rather than one that absorbs the `/`
  * @param {string} id
  */
 const get_pathname_patterns = (id) => {
@@ -20,7 +26,11 @@ const get_pathname_patterns = (id) => {
 
 	for (const segment of get_route_segments(id)) {
 		const omittable = optional_param_pattern.test(segment) || rest_param_pattern.test(segment);
-		const content = omittable ? '${string}' : segment.replace(basic_param_pattern, '${string}');
+		const content = omittable
+			? '${string}'
+			: segment.replace(segment_pattern, (_, escape_type, escape_code) =>
+					escape_type ? encode_pathname_chars(decode_escape_sequence(escape_code)) : '${string}'
+				);
 
 		pathnames = pathnames.flatMap((pathname) => {
 			const joined = pathname === '' ? content : `${pathname}/${content}`;
