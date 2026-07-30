@@ -42,3 +42,11 @@ test('sets Vary on assets reached without an extension', async ({ request }) => 
 	expect(response.headers()['content-type']).toBe('text/html;charset=utf-8');
 	expect(response.headers()['vary']).toBe('Accept-Encoding');
 });
+
+// a dot in the final path segment looks like an extension but isn't one
+test('sets Vary on assets reached via a dotted path segment', async ({ request }) => {
+	const response = await request.get('/v1.0/');
+	expect(response.status()).toBe(200);
+	expect(response.headers()['content-type']).toBe('text/html;charset=utf-8');
+	expect(response.headers()['vary']).toBe('Accept-Encoding');
+});

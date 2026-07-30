@@ -5,7 +5,7 @@ import sirv from 'sirv';
 import { parse as polka_url_parser } from '@polka/url';
 import { getRequest, setResponse, createReadableStream } from '@sveltejs/kit/node';
 import { Server } from 'SERVER';
-import { manifest, prerendered, base, compressed_extensions } from 'MANIFEST';
+import { manifest, prerendered, base, uncompressed_extensions } from 'MANIFEST';
 import { dir } from './dir.js';
 import { env, env_prefix } from './env.js';
 import { parse_as_bytes } from './utils.js';
@@ -46,9 +46,8 @@ function serve(path, client = false) {
 				gzip: PRECOMPRESS,
 				brotli: PRECOMPRESS,
 				setHeaders: (res, pathname) => {
-					// `sirv` sets `Vary` from its options rather than from the file it resolved, and
-					// resolves an extensionless pathname to `index.html`
-					if (PRECOMPRESS && !compressed_extensions.has(extname(pathname) || '.html')) {
+					// `sirv` sets `Vary` from its options rather than from the file it resolved
+					if (PRECOMPRESS && uncompressed_extensions.has(extname(pathname))) {
 						res.removeHeader('vary');
 					}
 
