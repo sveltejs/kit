@@ -1,11 +1,5 @@
 # @sveltejs/kit
 
-## 2.70.2
-
-### Patch Changes
-
-- fix: prevent quadratic backtracking in `Accept` header content negotiation ([#1](https://github.com/homebase-garage/igeclouds.github.io/pull/1))
-
 ## 2.70.1
 
 ### Patch Changes
