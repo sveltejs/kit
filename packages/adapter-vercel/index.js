@@ -56,15 +56,15 @@ const plugin = function (defaults = {}) {
 				const dir = `${dirs.functions}/${name}.func`;
 
 				const relativePath = path.posix.relative(tmp, builder.getServerDirectory());
-				builder.copy(`${files}/serverless.js`, `${tmp}/server.js`, {
+				builder.copy(`${files}/serverless.js`, `${tmp}/index.js`, {
 					replace: {
-						SERVER: `${relativePath}/server.js`,
+						SERVER: `${relativePath}/index.js`,
 						MANIFEST: './manifest.js'
 					}
 				});
 				if (builder.hasServerInstrumentationFile()) {
 					builder.instrument({
-						entrypoint: `${tmp}/server.js`,
+						entrypoint: `${tmp}/index.js`,
 						instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`
 					});
 				}
@@ -74,7 +74,7 @@ const plugin = function (defaults = {}) {
 					`export const manifest = ${builder.generateManifest({ relativePath, routes })};\n`
 				);
 
-				await create_function_bundle(builder, `${tmp}/server.js`, dir, config);
+				await create_function_bundle(builder, `${tmp}/index.js`, dir, config);
 
 				for (const asset of builder.findServerAssets(routes)) {
 					// TODO use symlinks, once Build Output API supports doing so

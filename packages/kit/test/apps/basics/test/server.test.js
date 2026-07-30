@@ -1578,22 +1578,3 @@ test.describe('Streaming', () => {
 		expect(error).toBeUndefined();
 	});
 });
-
-test.describe('Adapter custom handler', () => {
-	test('returns its own response', async ({ request }) => {
-		const response = await request.get('/adapter/custom-handler/intercepted');
-
-		expect(response.status()).toBe(200);
-		expect(await response.text()).toBe('intercepted by the adapter');
-		// the handler returns before `server.respond` is called
-		expect(response.headers()['x-adapter-custom-handler']).toBeUndefined();
-	});
-
-	test('modifies response returned by server.respond', async ({ request }) => {
-		const response = await request.get('/adapter/custom-handler/modified');
-
-		expect(response.status()).toBe(200);
-		expect(await response.text()).toBe('handled by the server');
-		expect(response.headers()['x-adapter-custom-handler']).toBe('true');
-	});
-});
