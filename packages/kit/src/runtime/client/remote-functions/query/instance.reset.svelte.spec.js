@@ -9,7 +9,7 @@ vi.mock(new URL('../../client.js', import.meta.url).pathname, () => ({
 	query_map: new Map(),
 	query_responses: {},
 	live_query_map: new Map(),
-	goto: () => {},
+	_goto: () => {},
 	handle_error: (/** @type {unknown} */ e) => e
 }));
 
