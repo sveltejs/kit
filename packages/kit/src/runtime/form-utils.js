@@ -1,4 +1,3 @@
-/** @import { RemoteForm } from '@sveltejs/kit' */
 /** @import { BinaryFormMeta, InternalRemoteFormIssue } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 
@@ -11,21 +10,58 @@ import { SvelteKitError } from '@sveltejs/kit/internal';
 const decoder = new TextDecoder();
 
 /**
- * Sets a value in a nested object using a path string, mutating the original object
+ * Sets a parsed form field value in a nested object, mutating the original object.
  * @param {Record<string, any>} object
- * @param {string} path_string
+ * @param {{ name: string; type: 'number' | 'boolean' | null }} field
  * @param {any} value
  */
-export function set_nested_value(object, path_string, value) {
-	if (path_string.startsWith('n:')) {
-		path_string = path_string.slice(2);
-		value = value === '' ? undefined : parseFloat(value);
-	} else if (path_string.startsWith('b:')) {
-		path_string = path_string.slice(2);
-		value = value === 'on';
+export function set_nested_value(object, field, value) {
+	deep_set(object, split_path(field.name), value);
+}
+
+/**
+ * Separates a form field's path from the metadata encoded in its name.
+ * @param {string} form_id
+ * @param {string} key
+ * @returns {{ name: string; type: 'number' | 'boolean' | null; is_array: boolean }}
+ */
+export function parse_form_key(form_id, key) {
+	const suffix = '/' + form_id;
+	let name = key;
+
+	if (!name.endsWith(suffix)) {
+		throw new Error(`Form contained a field that wasn't created with form.fields.as(...): ${name}`);
 	}
 
-	deep_set(object, split_path(path_string), value);
+	name = name.slice(0, -suffix.length);
+
+	/** @type {'number' | 'boolean' | null} */
+	let type = null;
+
+	if (name.startsWith('n:')) {
+		name = name.slice(2);
+		type = 'number';
+	} else if (name.startsWith('b:')) {
+		name = name.slice(2);
+		type = 'boolean';
+	}
+
+	const is_array = name.endsWith('[]');
+	if (is_array) name = name.slice(0, -2);
+
+	return { name, type, is_array };
+}
+
+/**
+ * @param {'number' | 'boolean' | null} type
+ * @param {any} value
+ * @returns {any}
+ */
+export function coerce_form_value(type, value) {
+	if (Array.isArray(value)) return value.map((value) => coerce_form_value(type, value));
+	if (type === 'number') return value === '' ? undefined : parseFloat(value);
+	if (type === 'boolean') return value === 'on';
+	return value;
 }
 
 /** Pass this to set_nested_value to delete the last part of the given path */
@@ -33,38 +69,36 @@ export const DELETE_KEY = {};
 
 /**
  * Convert `FormData` into a POJO
+ * @param {string} form_id
  * @param {FormData} data
  */
-export function convert_formdata(data) {
+export function convert_formdata(form_id, data) {
 	/** @type {Record<string, any>} */
 	const result = {};
 
-	for (let key of data.keys()) {
-		const is_array = key.endsWith('[]');
+	for (const field_name of data.keys()) {
 		/** @type {any[]} */
-		let values = data.getAll(key);
+		const values = data.getAll(field_name);
 
-		if (is_array) key = key.slice(0, -2);
+		const field = parse_form_key(form_id, field_name);
 
 		// an empty `<input type="file">` will submit a non-existent file, bizarrely
-		values = values.filter(
+		const entries = values.filter(
 			(entry) => typeof entry === 'string' || entry.name !== '' || entry.size > 0
 		);
-		if (values.length === 0 && !is_array) continue;
+		if (entries.length === 0 && !field.is_array) continue;
 
-		if (key.startsWith('n:')) {
-			key = key.slice(2);
-			values = values.map((v) => (v === '' ? undefined : parseFloat(/** @type {string} */ (v))));
-		} else if (key.startsWith('b:')) {
-			key = key.slice(2);
-			values = values.map((v) => v === 'on');
+		if (entries.length > 1 && !field.is_array) {
+			throw new Error(
+				`Form cannot contain duplicated keys — "${field.name}" has ${entries.length} values`
+			);
 		}
 
-		if (values.length > 1 && !is_array) {
-			throw new Error(`Form cannot contain duplicated keys — "${key}" has ${values.length} values`);
-		}
-
-		set_nested_value(result, key, is_array ? values : values[0]);
+		set_nested_value(
+			result,
+			field,
+			coerce_form_value(field.type, field.is_array ? entries : entries[0])
+		);
 	}
 
 	return result;
@@ -140,12 +174,13 @@ export function serialize_binary_form(data, meta) {
 
 /**
  * @param {Request} request
+ * @param {string} form_id
  * @returns {Promise<{ data: Record<string, any>; meta: BinaryFormMeta; form_data: FormData | null }>}
  */
-export async function deserialize_binary_form(request) {
+export async function deserialize_binary_form(request, form_id) {
 	if (request.headers.get('content-type') !== BINARY_FORM_CONTENT_TYPE) {
 		const form_data = await request.formData();
-		return { data: convert_formdata(form_data), meta: {}, form_data };
+		return { data: convert_formdata(form_id, form_data), meta: {}, form_data };
 	}
 	if (!request.body) {
 		throw deserialize_error('no body');
@@ -628,6 +663,10 @@ function get_type_prefix(field_type, is_array, input_value) {
  */
 function deep_clone(value) {
 	if (value !== null && typeof value === 'object') {
+		if (value instanceof Date) {
+			return new Date(value.getTime());
+		}
+
 		if (value instanceof File) {
 			return value;
 		}
@@ -650,16 +689,21 @@ function deep_clone(value) {
 
 /**
  * Creates a proxy-based field accessor for form data
+ * @param {{
+ * 	form_id: string,
+ * 	get: () => Record<string, any>,
+ * 	set: (path: (string | number)[], value: any) => void,
+ * 	get_issues: (path?: (string | number)[], all?: boolean) => Record<string, InternalRemoteFormIssue[]>,
+ * 	get_touched: () => Record<string, boolean>,
+ * 	get_dirty: () => Record<string, boolean>
+ * }} context - Form context, including value accessors and form metadata
  * @param {any} target - Function or empty POJO
- * @param {() => Record<string, any>} get_input - Function to get current input data
- * @param {(path: (string | number)[], value: any) => void} set_input - Function to set input data
- * @param {(path?: (string | number)[], all?: boolean) => Record<string, InternalRemoteFormIssue[]>} get_issues - Function to get current issues
  * @param {(string | number)[]} path - Current access path
  * @returns {any} Proxy object with name(), value(), and issues() methods
  */
-export function create_field_proxy(target, get_input, set_input, get_issues, path = []) {
+export function create_field_proxy(context, target = {}, path = []) {
 	const get_value = () => {
-		const value = deep_get(get_input(), path);
+		const value = deep_get(context.get(), path);
 		return deep_clone(value);
 	};
 
@@ -669,29 +713,27 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 
 			// Handle array access like jobs[0]
 			if (/^\d+$/.test(prop)) {
-				return create_field_proxy({}, get_input, set_input, get_issues, [
-					...path,
-					parseInt(prop, 10)
-				]);
+				return create_field_proxy(context, {}, [...path, parseInt(prop, 10)]);
 			}
 
 			const key = build_path_string(path);
+			const next = [...path, prop];
 
 			if (prop === 'set') {
 				const set_func = function (/** @type {any} */ newValue) {
-					set_input(path, newValue);
+					context.set(path, newValue);
 					return newValue;
 				};
-				return create_field_proxy(set_func, get_input, set_input, get_issues, [...path, prop]);
+				return create_field_proxy(context, set_func, next);
 			}
 
 			if (prop === 'value') {
-				return create_field_proxy(get_value, get_input, set_input, get_issues, [...path, prop]);
+				return create_field_proxy(context, get_value, next);
 			}
 
 			if (prop === 'issues' || prop === 'allIssues') {
 				const issues_func = () => {
-					const all_issues = get_issues(path, prop === 'allIssues')[key === '' ? '$' : key];
+					const all_issues = context.get_issues(path, prop === 'allIssues')[key === '' ? '$' : key];
 
 					if (prop === 'allIssues') {
 						return all_issues?.map((issue) => ({
@@ -710,7 +752,35 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 					return issues?.length ? issues : undefined;
 				};
 
-				return create_field_proxy(issues_func, get_input, set_input, get_issues, [...path, prop]);
+				return create_field_proxy(context, issues_func, next);
+			}
+
+			if (prop === 'touched' || prop === 'dirty') {
+				const fn = () => {
+					const object = prop === 'dirty' ? context.get_dirty() : context.get_touched();
+
+					if (key === '') {
+						return Object.keys(object).length > 0;
+					}
+
+					if (Object.hasOwn(object, key)) {
+						return true;
+					}
+
+					for (const candidate in object) {
+						if (!Object.hasOwn(object, candidate)) continue;
+						if (!candidate.startsWith(key)) continue;
+
+						const next = candidate[key.length];
+						if (next === '.' || next === '[') {
+							return true;
+						}
+					}
+
+					return false;
+				};
+
+				return create_field_proxy(context, fn, next);
 			}
 
 			if (prop === 'as') {
@@ -724,14 +794,14 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 						type === 'select multiple' ||
 						(type === 'checkbox' && typeof input_value === 'string');
 
-					const prefix = get_type_prefix(type, is_array, input_value);
+					const type_prefix = get_type_prefix(type, is_array, input_value);
 
 					// Base properties for all input types
 					/** @type {Record<string, any>} */
 					const base_props = {
-						name: prefix + key + (is_array ? '[]' : ''),
+						name: type_prefix + key + (is_array ? '[]' : '') + '/' + context.form_id,
 						get 'aria-invalid'() {
-							const issues = get_issues();
+							const issues = context.get_issues();
 							return key in issues ? 'true' : undefined;
 						}
 					};
@@ -876,11 +946,11 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 					});
 				};
 
-				return create_field_proxy(as_func, get_input, set_input, get_issues, [...path, 'as']);
+				return create_field_proxy(context, as_func, next);
 			}
 
 			// Handle property access (nested fields)
-			return create_field_proxy({}, get_input, set_input, get_issues, [...path, prop]);
+			return create_field_proxy(context, {}, next);
 		}
 	});
 }
@@ -902,43 +972,4 @@ export function build_path_string(path) {
 	}
 
 	return result;
-}
-
-/**
- * @param {RemoteForm<any, any>} instance
- * @deprecated remove in 3.0
- */
-export function throw_on_old_property_access(instance) {
-	Object.defineProperty(instance, 'field', {
-		value: (/** @type {string} */ name) => {
-			const new_name = name.endsWith('[]') ? name.slice(0, -2) : name;
-			throw new Error(
-				`\`form.field\` has been removed: Instead of \`<input name={form.field('${name}')} />\` do \`<input {...form.fields.${new_name}.as(type)} />\``
-			);
-		}
-	});
-
-	for (const property of ['input', 'issues']) {
-		Object.defineProperty(instance, property, {
-			get() {
-				const new_name = property === 'issues' ? 'issues' : 'value';
-				return new Proxy(
-					{},
-					{
-						get(_, prop) {
-							const prop_string = typeof prop === 'string' ? prop : String(prop);
-							const old =
-								prop_string.includes('[') || prop_string.includes('.')
-									? `['${prop_string}']`
-									: `.${prop_string}`;
-							const replacement = `.${prop_string}.${new_name}()`;
-							throw new Error(
-								`\`form.${property}\` has been removed: Instead of \`form.${property}${old}\` write \`form.fields${replacement}\``
-							);
-						}
-					}
-				);
-			}
-		});
-	}
 }

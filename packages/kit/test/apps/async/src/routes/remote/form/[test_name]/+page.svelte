@@ -3,10 +3,10 @@
 
 	const { params } = $props();
 
-	const message = get_message(params.test_name);
+	const message = $derived(get_message(params.test_name));
 
-	const scoped = set_message.for(`scoped:${params.test_name}`);
-	const enhanced = set_message.for(`enhanced:${params.test_name}`);
+	const scoped = $derived(set_message.for(`scoped:${params.test_name}`));
+	const enhanced = $derived(set_message.for(`enhanced:${params.test_name}`));
 
 	let submit_result = $state('none');
 	let imperative_submit_result = $state('none');
@@ -19,6 +19,8 @@
 <p>await get_message(): {await message}</p>
 
 <hr />
+
+<a href="?existing=value&later=updated">update URL query</a>
 
 <form data-unscoped {...set_message}>
 	{#if set_message.fields.message.issues()}

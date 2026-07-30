@@ -1,10 +1,16 @@
 import { getRequestEvent, query } from '$app/server';
 
 export const get_event = query(() => {
-	const { route, url } = getRequestEvent();
+	const event = getRequestEvent();
+	const results: string[] = [];
 
-	return {
-		route,
-		url
-	};
+	for (const property of ['url', 'params', 'route'] as const) {
+		try {
+			results.push(`${property}: ${String(event[property])}`);
+		} catch (error) {
+			results.push((error as Error).message);
+		}
+	}
+
+	return results.join(' | ');
 });

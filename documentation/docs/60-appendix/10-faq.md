@@ -16,7 +16,7 @@ If you'd like to include your application's version number or other information 
 
 ```ts
 // @errors: 2732
-/// file: svelte.config.js
+/// file: vite.config.js
 import pkg from './package.json' with { type: 'json' };
 ```
 
@@ -31,7 +31,7 @@ Here are a few things to keep in mind when checking if a library is packaged cor
 - `main` should be defined if `exports` is not. It should be either a CommonJS or ESM file and adhere to the previous bullet. If a `module` field is defined, it should refer to an ESM file.
 - Svelte components should be distributed as uncompiled `.svelte` files with any JS in the package written as ESM only. Custom script and style languages, like TypeScript and SCSS, should be preprocessed as vanilla JS and CSS respectively. We recommend using [`svelte-package`](./packaging) for packaging Svelte libraries, which will do this for you.
 
-Libraries work best in the browser with Vite when they distribute an ESM version, especially if they are dependencies of a Svelte component library. You may wish to suggest to library authors that they provide an ESM version. However, CommonJS (CJS) dependencies should work as well since, by default, [`vite-plugin-svelte` will ask Vite to pre-bundle them](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/faq.md#what-is-going-on-with-vite-and-pre-bundling-dependencies) using `esbuild` to convert them to ESM.
+Libraries work best in the browser with Vite when they distribute an ESM version, especially if they are dependencies of a Svelte component library. You may wish to suggest to library authors that they provide an ESM version. However, CommonJS (CJS) dependencies should work as well since, by default, [`vite-plugin-svelte` will ask Vite to pre-bundle them](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/faq.md#what-is-going-on-with-vite-and-pre-bundling-dependencies) using `rolldown` to convert them to ESM.
 
 If you are still encountering issues we recommend searching both [the Vite issue tracker](https://github.com/vitejs/vite/issues) and the issue tracker of the library in question. Sometimes issues can be worked around by fiddling with the [`optimizeDeps`](https://vitejs.dev/config/#dep-optimization-options) or [`ssr`](https://vitejs.dev/config/#ssr-options) config values though we recommend this as only a short-term workaround in favor of fixing the library in question.
 
@@ -70,7 +70,7 @@ If you need access to the `document` or `window` variables or otherwise need cod
 ```js
 /// <reference types="@sveltejs/kit" />
 // ---cut---
-import { browser } from '$app/environment';
+import { browser } from '$app/env';
 
 if (browser) {
 	// client-only code here
@@ -115,7 +115,7 @@ Finally, you may also consider using an `{#await}` block:
 ```svelte
 <!--- file: index.svelte --->
 <script>
-	import { browser } from '$app/environment';
+	import { browser } from '$app/env';
 
 	const promise = browser
 		? import('./BrowserComponent.svelte')
@@ -151,13 +151,16 @@ export function GET({ params, url }) {
 
 ## How do I use middleware?
 
-`adapter-node` builds a middleware that you can use with your own server for production mode. In dev, you can add middleware to Vite by using a Vite plugin. For example:
+`@sveltejs/adapter-node` builds a middleware that you can use with your own server for production mode. In dev, you can add middleware to Vite by using a Vite plugin. For example:
 
 ```js
+// @errors: 2307
 /// file: vite.config.js
+import adapter from '@sveltejs/adapter-node';
 import { sveltekit } from '@sveltejs/kit/vite';
+import { defineConfig } from 'vite';
 
-/** @type {import('vite').Plugin} */
++++/** @type {import('vite').Plugin} */
 const myPlugin = {
 	name: 'log-request-middleware',
 	configureServer(server) {
@@ -166,14 +169,16 @@ const myPlugin = {
 			next();
 		});
 	}
-};
+};+++
 
-/** @type {import('vite').UserConfig} */
-const config = {
-	plugins: [myPlugin, sveltekit()]
-};
-
-export default config;
+export default defineConfig({
+	plugins: [
+		+++myPlugin,+++
+		sveltekit({
+			adapter: adapter()
+		})
+	]
+});
 ```
 
 See [Vite's `configureServer` docs](https://vitejs.dev/guide/api-plugin.html#configureserver) for more details including how to control ordering.

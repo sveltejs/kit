@@ -1,5 +1,35 @@
 # @sveltejs/package
 
+## 3.0.0-next.3
+
+### Minor Changes
+
+- feat: transform import aliases into relative imports in files ([#16360](https://github.com/sveltejs/kit/pull/16360))
+
+## 3.0.0-next.2
+
+### Minor Changes
+
+- feat: warn when using a `.server.` file or file inside a `server` directory without importing a server-only module ([#16266](https://github.com/sveltejs/kit/pull/16266))
+
+## 3.0.0-next.1
+### Patch Changes
+
+
+- fix: declare typescript as an optional peer dependency so svelte-package works under strict node-linkers ([#16073](https://github.com/sveltejs/kit/pull/16073))
+
+## 3.0.0-next.0
+### Major Changes
+
+
+- breaking: require Node 22 or newer ([#12548](https://github.com/sveltejs/kit/pull/12548))
+
+
+### Patch Changes
+
+
+- chore: remove dependency on kleur ([#12548](https://github.com/sveltejs/kit/pull/12548))
+
 ## 2.5.8
 ### Patch Changes
 

@@ -1,11 +1,7 @@
 import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { stripVTControlCharacters } from 'node:util';
 import { assert, expect, test } from 'vitest';
-import { validate_config, load_config, split_config } from './index.js';
-import process from 'node:process';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = join(__filename, '..');
+import { validate_config, split_config } from './index.js';
 
 /**
  * mutates and remove keys from an object when check callback returns true
@@ -19,6 +15,32 @@ function remove_keys(o, check) {
 		if (check([key, o[key]])) delete o[key];
 		const nested = typeof o[key] === 'object' && !Array.isArray(o[key]);
 		if (nested) remove_keys(o[key], check);
+	}
+}
+
+/**
+ * @param {() => void} fn
+ * @param {RegExp} pattern
+ */
+function assert_logs_error_and_throws(fn, pattern) {
+	const original_log = console.log;
+	/** @type {string[]} */
+	const logs = [];
+	console.log = (...args) => {
+		logs.push(args.join(' '));
+	};
+
+	try {
+		assert.throws(fn);
+	} finally {
+		console.log = original_log;
+	}
+
+	const has_match = logs.some((log) => pattern.test(stripVTControlCharacters(log).trim()));
+	if (!has_match) {
+		throw new Error(
+			`Expected console.log to match ${pattern}, but got:\n${logs.map((log) => JSON.stringify(stripVTControlCharacters(log).trim())).join('\n')}`
+		);
 	}
 }
 
@@ -59,7 +81,6 @@ const directive_defaults = {
 const get_defaults = (prefix = '') => ({
 	extensions: ['.svelte'],
 	kit: {
-		adapter: null,
 		alias: {},
 		appDir: '_app',
 		csp: {
@@ -68,22 +89,16 @@ const get_defaults = (prefix = '') => ({
 			reportOnly: directive_defaults
 		},
 		csrf: {
-			checkOrigin: true,
+			checkOrigin: undefined,
 			trustedOrigins: []
 		},
 		embedded: false,
 		env: {
-			dir: process.cwd(),
-			publicPrefix: 'PUBLIC_',
-			privatePrefix: ''
+			dir: prefix
 		},
 		experimental: {
-			tracing: { server: false },
-			instrumentation: { server: false },
-			explicitEnvironmentVariables: false,
 			remoteFunctions: false,
-			forkPreloads: false,
-			handleRenderingErrors: false
+			forkPreloads: false
 		},
 		files: {
 			src: join(prefix, 'src'),
@@ -93,7 +108,6 @@ const get_defaults = (prefix = '') => ({
 				server: join(prefix, 'src/hooks.server'),
 				universal: join(prefix, 'src/hooks')
 			},
-			lib: join(prefix, 'src/lib'),
 			params: join(prefix, 'src/params'),
 			routes: join(prefix, 'src/routes'),
 			serviceWorker: join(prefix, 'src/service-worker'),
@@ -102,7 +116,7 @@ const get_defaults = (prefix = '') => ({
 		},
 		inlineStyleThreshold: 0,
 		moduleExtensions: ['.js', '.ts'],
-		output: { preloadStrategy: 'modulepreload', bundleStrategy: 'split' },
+		output: { bundleStrategy: 'split', preloadStrategy: undefined, linkHeaderPreload: false },
 		outDir: join(prefix, '.svelte-kit'),
 		router: {
 			type: 'pathname',
@@ -112,29 +126,29 @@ const get_defaults = (prefix = '') => ({
 			options: undefined,
 			register: true
 		},
+		tracing: { server: false },
 		typescript: {},
 		paths: {
 			base: '',
 			assets: '',
+			origin: undefined,
 			relative: true
 		},
 		prerender: {
 			concurrency: 1,
 			crawl: true,
 			entries: ['*'],
-			origin: 'http://sveltekit-prerender'
+			origin: undefined
 		},
 		version: {
 			name: Date.now().toString(),
-			pollInterval: 0
+			pollInterval: 3_600_000
 		}
 	}
 });
 
 test('fills in defaults', () => {
 	const validated = validate_config({});
-
-	assert.equal(validated.kit.serviceWorker.files(''), true);
 
 	remove_keys(validated, ([, v]) => typeof v === 'function');
 
@@ -145,18 +159,18 @@ test('fills in defaults', () => {
 });
 
 test('errors on invalid values', () => {
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				// @ts-expect-error - given value expected to throw
 				appDir: 42
 			}
 		});
-	}, /^config\.kit\.appDir should be a string, if specified$/);
+	}, /^config\.appDir should be a string, if specified$/);
 });
 
 test('errors on invalid nested values', () => {
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				files: {
@@ -165,7 +179,7 @@ test('errors on invalid nested values', () => {
 				}
 			}
 		});
-	}, /^Unexpected option config\.kit\.files\.potato$/);
+	}, /^Unexpected option config\.files\.potato$/);
 });
 
 test('does not error on invalid top-level values', () => {
@@ -177,7 +191,7 @@ test('does not error on invalid top-level values', () => {
 });
 
 test('errors on extension without leading .', () => {
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			extensions: ['blah']
 		});
@@ -196,8 +210,6 @@ test('fills in partial blanks', () => {
 		}
 	});
 
-	assert.equal(validated.kit.serviceWorker.files(''), true);
-
 	remove_keys(validated, ([, v]) => typeof v === 'function');
 
 	const config = get_defaults();
@@ -207,48 +219,48 @@ test('fills in partial blanks', () => {
 	expect(validated).toEqual(config);
 });
 
-test('fails if kit.appDir is blank', () => {
-	assert.throws(() => {
+test('fails if appDir is blank', () => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				appDir: ''
 			}
 		});
-	}, /^config\.kit\.appDir cannot be empty$/);
+	}, /^config\.appDir cannot be empty$/);
 });
 
-test('fails if kit.appDir is only slash', () => {
-	assert.throws(() => {
+test('fails if appDir is only slash', () => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				appDir: '/'
 			}
 		});
-	}, /^config\.kit\.appDir cannot start or end with '\/'. See https:\/\/svelte\.dev\/docs\/kit\/configuration$/);
+	}, /^config\.appDir cannot start or end with '\/'. See https:\/\/svelte\.dev\/docs\/kit\/configuration$/);
 });
 
-test('fails if kit.appDir starts with slash', () => {
-	assert.throws(() => {
+test('fails if appDir starts with slash', () => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				appDir: '/_app'
 			}
 		});
-	}, /^config\.kit\.appDir cannot start or end with '\/'. See https:\/\/svelte\.dev\/docs\/kit\/configuration$/);
+	}, /^config\.appDir cannot start or end with '\/'. See https:\/\/svelte\.dev\/docs\/kit\/configuration$/);
 });
 
-test('fails if kit.appDir ends with slash', () => {
-	assert.throws(() => {
+test('fails if appDir ends with slash', () => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				appDir: '_app/'
 			}
 		});
-	}, /^config\.kit\.appDir cannot start or end with '\/'. See https:\/\/svelte\.dev\/docs\/kit\/configuration$/);
+	}, /^config\.appDir cannot start or end with '\/'. See https:\/\/svelte\.dev\/docs\/kit\/configuration$/);
 });
 
 test('fails if paths.base is not root-relative', () => {
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				paths: {
@@ -257,11 +269,11 @@ test('fails if paths.base is not root-relative', () => {
 				}
 			}
 		});
-	}, /^config\.kit\.paths\.base option must either be the empty string or a root-relative path that starts but doesn't end with '\/'. See https:\/\/svelte\.dev\/docs\/kit\/configuration#paths$/);
+	}, /^config\.paths\.base option must either be the empty string or a root-relative path that starts but doesn't end with '\/'. See https:\/\/svelte\.dev\/docs\/kit\/configuration#paths$/);
 });
 
 test("fails if paths.base ends with '/'", () => {
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				paths: {
@@ -269,11 +281,11 @@ test("fails if paths.base ends with '/'", () => {
 				}
 			}
 		});
-	}, /^config\.kit\.paths\.base option must either be the empty string or a root-relative path that starts but doesn't end with '\/'. See https:\/\/svelte\.dev\/docs\/kit\/configuration#paths$/);
+	}, /^config\.paths\.base option must either be the empty string or a root-relative path that starts but doesn't end with '\/'. See https:\/\/svelte\.dev\/docs\/kit\/configuration#paths$/);
 });
 
 test('fails if paths.assets is relative', () => {
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				paths: {
@@ -282,11 +294,11 @@ test('fails if paths.assets is relative', () => {
 				}
 			}
 		});
-	}, /^config\.kit\.paths\.assets option must be an absolute path, if specified. See https:\/\/svelte\.dev\/docs\/kit\/configuration#paths$/);
+	}, /^config\.paths\.assets option must be an absolute path, if specified. See https:\/\/svelte\.dev\/docs\/kit\/configuration#paths$/);
 });
 
 test('fails if paths.assets has trailing slash', () => {
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				paths: {
@@ -294,11 +306,77 @@ test('fails if paths.assets has trailing slash', () => {
 				}
 			}
 		});
-	}, /^config\.kit\.paths\.assets option must not end with '\/'. See https:\/\/svelte\.dev\/docs\/kit\/configuration#paths$/);
+	}, /^config\.paths\.assets option must not end with '\/'. See https:\/\/svelte\.dev\/docs\/kit\/configuration#paths$/);
+});
+
+test('fails if paths.origin is not a valid origin', () => {
+	assert_logs_error_and_throws(() => {
+		validate_config({
+			kit: {
+				paths: {
+					origin: 'not an origin'
+				}
+			}
+		});
+	}, /^config.paths.origin must be a valid origin \(e\.g\. 'https:\/\/my-site\.com'\)\. 'not an origin' could not be parsed as a URL$/);
+});
+
+test('fails if paths.origin uses an unsupported protocol', () => {
+	assert_logs_error_and_throws(() => {
+		validate_config({
+			kit: {
+				paths: {
+					// ftp:// is a parseable URL whose origin equals the input, so without
+					// a protocol check it would slip through validation.
+					origin: 'ftp://example.com'
+				}
+			}
+		});
+	}, /^config.paths.origin must be a valid origin — only 'http' and 'https' protocols are supported, received 'ftp:'$/);
+});
+
+test('fails if paths.origin contains a path', () => {
+	assert_logs_error_and_throws(() => {
+		validate_config({
+			kit: {
+				paths: {
+					origin: 'https://example.com/path'
+				}
+			}
+		});
+	}, /^config.paths.origin must be a valid origin — received 'https:\/\/example\.com\/path' which contains a path, query, or hash\. Use the bare origin 'https:\/\/example\.com' instead$/);
+});
+
+test('passes if paths.origin is a valid origin', () => {
+	const validated = validate_config({
+		kit: {
+			paths: {
+				origin: 'https://example.com'
+			}
+		}
+	});
+	assert.equal(validated.kit.paths.origin, 'https://example.com');
+});
+
+test('defaults paths.origin to undefined', () => {
+	const validated = validate_config({});
+	assert.equal(validated.kit.paths.origin, undefined);
+});
+
+test('fails if paths.origin is the empty string', () => {
+	assert_logs_error_and_throws(() => {
+		validate_config({
+			kit: {
+				paths: {
+					origin: ''
+				}
+			}
+		});
+	}, /^config.paths.origin must be a valid origin \(e\.g\. 'https:\/\/my-site\.com'\)\. '' could not be parsed as a URL$/);
 });
 
 test('fails if prerender.entries are invalid', () => {
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				prerender: {
@@ -307,7 +385,20 @@ test('fails if prerender.entries are invalid', () => {
 				}
 			}
 		});
-	}, /^Each member of config\.kit.prerender.entries must be either '\*' or an absolute path beginning with '\/' — saw 'foo'$/);
+	}, /^Each member of config.prerender.entries must be either '\*' or an absolute path beginning with '\/' — saw 'foo'$/);
+});
+
+test('fails if prerender.origin is set', () => {
+	assert_logs_error_and_throws(() => {
+		validate_config({
+			kit: {
+				prerender: {
+					// @ts-expect-error - option has been removed
+					origin: 'https://example.com'
+				}
+			}
+		});
+	}, /^`config.prerender.origin` has been removed in favour of `config.paths.origin`$/);
 });
 
 /**
@@ -335,6 +426,7 @@ validate_paths(
 	{
 		base: '/path/to/base',
 		assets: '',
+		origin: undefined,
 		relative: true
 	}
 );
@@ -347,6 +439,7 @@ validate_paths(
 	{
 		base: '',
 		assets: 'https://cdn.example.com',
+		origin: undefined,
 		relative: true
 	}
 );
@@ -360,83 +453,16 @@ validate_paths(
 	{
 		base: '/path/to/base',
 		assets: 'https://cdn.example.com',
+		origin: undefined,
 		relative: true
 	}
 );
-
-test('load default config (esm)', async () => {
-	const cwd = join(__dirname, 'fixtures/default');
-
-	const config = await load_config({ cwd });
-	remove_keys(config, ([, v]) => typeof v === 'function');
-
-	const defaults = get_defaults(cwd + '/');
-	defaults.kit.version.name = config.kit.version.name;
-
-	expect(config).toEqual(defaults);
-});
-
-test('load default config (esm) with .ts extensions', async () => {
-	const cwd = join(__dirname, 'fixtures/typescript');
-
-	const config = await load_config({ cwd });
-	remove_keys(config, ([, v]) => typeof v === 'function');
-
-	const defaults = get_defaults(cwd + '/');
-	defaults.kit.version.name = config.kit.version.name;
-
-	expect(config).toEqual(defaults);
-});
-
-test('load .js config when both .js and .ts configs are present', async () => {
-	const cwd = join(__dirname, 'fixtures/multiple');
-
-	const config = await load_config({ cwd });
-	remove_keys(config, ([, v]) => typeof v === 'function');
-
-	const defaults = get_defaults(cwd + '/');
-	defaults.kit.version.name = config.kit.version.name;
-
-	expect(config).toEqual(defaults);
-});
-
-test('load config from Vite plugin API', async () => {
-	const cwd = join(__dirname, 'fixtures/vite-inline');
-	const original_cwd = process.cwd();
-
-	process.chdir(cwd);
-
-	try {
-		const config = await load_config({ cwd });
-		expect(config?.kit.paths.base).toBe('/from-vite');
-	} finally {
-		process.chdir(original_cwd);
-	}
-});
-
-test('errors on loading config with incorrect default export', async () => {
-	let message = null;
-
-	try {
-		const cwd = join(__dirname, 'fixtures', 'export-string');
-		await load_config({ cwd });
-	} catch (/** @type {any} */ e) {
-		message = e.message;
-	}
-
-	assert.equal(
-		message,
-		'The Svelte config file must have a configuration object as its default export. See https://svelte.dev/docs/kit/configuration'
-	);
-});
 
 test('accepts valid tracing values', () => {
 	assert.doesNotThrow(() => {
 		validate_config({
 			kit: {
-				experimental: {
-					tracing: { server: true }
-				}
+				tracing: { server: true }
 			}
 		});
 	});
@@ -444,9 +470,7 @@ test('accepts valid tracing values', () => {
 	assert.doesNotThrow(() => {
 		validate_config({
 			kit: {
-				experimental: {
-					tracing: { server: false }
-				}
+				tracing: { server: false }
 			}
 		});
 	});
@@ -454,51 +478,67 @@ test('accepts valid tracing values', () => {
 	assert.doesNotThrow(() => {
 		validate_config({
 			kit: {
-				experimental: {
-					tracing: undefined
-				}
+				tracing: undefined
 			}
 		});
 	});
 });
 
 test('errors on invalid tracing values', () => {
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
-				experimental: {
-					// @ts-expect-error - given value expected to throw
-					tracing: true
-				}
+				// @ts-expect-error - given value expected to throw
+				tracing: true
 			}
 		});
-	}, /^config\.kit\.experimental\.tracing should be an object$/);
+	}, /^config\.tracing should be an object$/);
 
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
-				experimental: {
-					// @ts-expect-error - given value expected to throw
-					tracing: 'server'
-				}
+				// @ts-expect-error - given value expected to throw
+				tracing: 'server'
 			}
 		});
-	}, /^config\.kit\.experimental\.tracing should be an object$/);
+	}, /^config\.tracing should be an object$/);
 
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
+		validate_config({
+			kit: {
+				// @ts-expect-error - given value expected to throw
+				tracing: { server: 'invalid' }
+			}
+		});
+	}, /^config\.tracing\.server should be true or false, if specified$/);
+});
+
+test('errors on removed experimental.tracing and experimental.instrumentation', () => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				experimental: {
-					// @ts-expect-error - given value expected to throw
-					tracing: { server: 'invalid' }
+					// @ts-expect-error - removed option expected to throw
+					tracing: { server: true }
 				}
 			}
 		});
-	}, /^config\.kit\.experimental\.tracing\.server should be true or false, if specified$/);
+	}, /`config\.experimental\.tracing` has been removed/);
+
+	assert_logs_error_and_throws(() => {
+		validate_config({
+			kit: {
+				experimental: {
+					// @ts-expect-error - removed option expected to throw
+					instrumentation: { server: true }
+				}
+			}
+		});
+	}, /`config\.experimental\.instrumentation` has been removed/);
 });
 
 test('errors on invalid forkPreloads values', () => {
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				experimental: {
@@ -507,9 +547,9 @@ test('errors on invalid forkPreloads values', () => {
 				}
 			}
 		});
-	}, /^config\.kit\.experimental\.forkPreloads should be true or false, if specified$/);
+	}, /^config\.experimental\.forkPreloads should be true or false, if specified$/);
 
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				experimental: {
@@ -518,19 +558,7 @@ test('errors on invalid forkPreloads values', () => {
 				}
 			}
 		});
-	}, /^config\.kit\.experimental\.forkPreloads should be true or false, if specified$/);
-});
-
-test('uses src prefix for other kit.files options', async () => {
-	const cwd = join(__dirname, 'fixtures/custom-src');
-
-	const config = await load_config({ cwd });
-	remove_keys(config, ([, v]) => typeof v === 'function');
-
-	const defaults = get_defaults(cwd + '/');
-	defaults.kit.version.name = config.kit.version.name;
-
-	expect(config.kit.files.lib).toEqual(join(cwd, 'source/lib'));
+	}, /^config\.experimental\.forkPreloads should be true or false, if specified$/);
 });
 
 test('split_config keeps SvelteKit options under the `kit` namespace', () => {

@@ -159,10 +159,18 @@ export type HttpMethod = 'GET' | 'HEAD' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 
 export interface Logger {
 	(msg: string): void;
 	success(msg: string): void;
+	/** Print a bold red message to stderr */
 	error(msg: string): void;
+	/** Print a bold yellow message to stderr */
 	warn(msg: string): void;
+	/** Print faded text to stdout if `verbose === true` */
 	minor(msg: string): void;
+	/** Print to stdout if `verbose === true` */
 	info(msg: string): void;
+	/** Print to stderr without formatting */
+	err(msg: string): void;
+	/** Print a bold red message, followed by a stack trace for each error (following `.cause` chains) */
+	prettyError(error: unknown, caller?: string): void;
 }
 
 export type MaybePromise<T> = T | Promise<T>;
@@ -231,20 +239,11 @@ export interface PrerenderInvalidUrlHandler {
 export type PrerenderHttpErrorHandlerValue = 'fail' | 'warn' | 'ignore' | PrerenderHttpErrorHandler;
 export type PrerenderMissingIdHandlerValue = 'fail' | 'warn' | 'ignore' | PrerenderMissingIdHandler;
 export type PrerenderUnseenRoutesHandlerValue =
-	| 'fail'
-	| 'warn'
-	| 'ignore'
-	| PrerenderUnseenRoutesHandler;
+	'fail' | 'warn' | 'ignore' | PrerenderUnseenRoutesHandler;
 export type PrerenderEntryGeneratorMismatchHandlerValue =
-	| 'fail'
-	| 'warn'
-	| 'ignore'
-	| PrerenderEntryGeneratorMismatchHandler;
+	'fail' | 'warn' | 'ignore' | PrerenderEntryGeneratorMismatchHandler;
 export type PrerenderInvalidUrlHandlerValue =
-	| 'fail'
-	| 'warn'
-	| 'ignore'
-	| PrerenderInvalidUrlHandler;
+	'fail' | 'warn' | 'ignore' | PrerenderInvalidUrlHandler;
 
 export type PrerenderOption = boolean | 'auto';
 

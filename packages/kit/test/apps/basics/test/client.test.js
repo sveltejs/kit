@@ -76,7 +76,7 @@ test.describe('Load', () => {
 		expect(await page.textContent('h1')).toBe('layout loads: 5');
 		expect(await page.textContent('h2')).toBe('x: b: 3');
 
-		await page.click('button:has-text("invalidate all")');
+		await page.click('button:has-text("refresh all")');
 		await page.waitForFunction('window.invalidated');
 		expect(await page.textContent('h1')).toBe('layout loads: 6');
 		expect(await page.textContent('h2')).toBe('x: b: 4');
@@ -412,7 +412,8 @@ test.describe('SPA mode / no SSR', () => {
 	test('cannot use browser-only global on page because of ssr config in +page.js', async ({
 		page
 	}) => {
-		await page.goto('/no-ssr/ssr-page-config/layout/overwrite');
+		// the Vite error overlay that appears prevents body.started from being added
+		await page.goto('/no-ssr/ssr-page-config/layout/overwrite', { wait_for_started: false });
 		await expect(page.locator('p')).toHaveText(
 			'This is your custom error page saying: "document is not defined (500 Internal Error)"'
 		);
@@ -421,88 +422,6 @@ test.describe('SPA mode / no SSR', () => {
 	test('afterNavigate is only called once during start', async ({ page }) => {
 		await page.goto('/no-ssr/after-navigate');
 		await expect(page.locator('p')).toHaveText('enter 1');
-	});
-});
-
-// TODO SvelteKit 3: remove these tests
-test.describe('$app/stores', () => {
-	test('can use $app/stores from anywhere on client', async ({ page }) => {
-		await page.goto('/store/client-access');
-		await expect(page.locator('h1')).toHaveText('undefined');
-		await page.locator('button').click();
-		await expect(page.locator('h1')).toHaveText('/store/client-access');
-	});
-
-	test('$page.data does not update if data is unchanged', async ({ page, app }) => {
-		await page.goto('/store/data/store-update/a');
-		await app.goto('/store/data/store-update/b');
-		await expect(page.locator('p')).toHaveText('$page.data was updated 0 time(s)');
-	});
-
-	test('$page.data does update if keys did not change but data did', async ({ page, app }) => {
-		await page.goto('/store/data/store-update/same-keys/same');
-		await app.goto('/store/data/store-update/same-keys');
-		await expect(page.locator('p')).toHaveText('$page.data was updated 1 time(s)');
-	});
-
-	test('$page.data does update if keys did not change but data did (2)', async ({ page, app }) => {
-		await page.goto('/store/data/store-update/same-keys/same-deep/nested');
-		await app.goto('/store/data/store-update/same-keys');
-		await expect(page.locator('p')).toHaveText('$page.data was updated 1 time(s)');
-	});
-
-	test('page subscribers are notified when invalidate is called', async ({ page }) => {
-		await page.goto('/store/subscribe');
-		await expect(page.locator('p')).toHaveText('1');
-		await page.locator('button', { hasText: 'invalidate' }).click();
-		await expect(page.locator('p')).toHaveText('2');
-		await page.locator('button', { hasText: 'invalidate' }).click();
-		await expect(page.locator('p')).toHaveText('3');
-	});
-
-	test('page subscribers are notified when replaceState is called', async ({ page }) => {
-		await page.goto('/store/subscribe');
-		await expect(page.locator('p')).toHaveText('1');
-		await page.locator('button', { hasText: 'replaceState' }).click();
-		await expect(page.locator('p')).toHaveText('2');
-		await page.locator('button', { hasText: 'replaceState' }).click();
-		await expect(page.locator('p')).toHaveText('3');
-	});
-
-	test('page subscribers are notified when pushState is called', async ({ page }) => {
-		await page.goto('/store/subscribe');
-		await expect(page.locator('p')).toHaveText('1');
-		await page.locator('button', { hasText: 'pushState' }).click();
-		await expect(page.locator('p')).toHaveText('2');
-		await page.locator('button', { hasText: 'pushState' }).click();
-		await expect(page.locator('p')).toHaveText('3');
-	});
-
-	test('page subscribers are notified when goto is called', async ({ page }) => {
-		await page.goto('/store/subscribe');
-		await expect(page.locator('p')).toHaveText('1');
-		await page.locator('button', { hasText: 'goto' }).click();
-		await expect(page.locator('p')).toHaveText('2');
-		await page.locator('button', { hasText: 'goto' }).click();
-		await expect(page.locator('p')).toHaveText('3');
-	});
-
-	test('page subscribers are notified when applyAction is called', async ({ page }) => {
-		await page.goto('/store/subscribe');
-		await expect(page.locator('p')).toHaveText('1');
-		await page.locator('button', { hasText: 'applyAction' }).click();
-		await expect(page.locator('p')).toHaveText('2');
-		await page.locator('button', { hasText: 'applyAction' }).click();
-		await expect(page.locator('p')).toHaveText('3');
-	});
-
-	test('page subscribers are notified only once after popstate', async ({ page }) => {
-		await page.goto('/store/subscribe');
-		await expect(page.locator('p')).toHaveText('1');
-		await page.locator('button', { hasText: 'pushState' }).click();
-		await expect(page.locator('p')).toHaveText('2');
-		await page.goBack();
-		await expect(page.locator('p')).toHaveText('3');
 	});
 });
 
@@ -611,19 +530,21 @@ test.describe('Invalidation', () => {
 		request,
 		baseURL
 	}) => {
-		const res = await request.post(baseURL + '/load/invalidation/forced/reset-states');
+		const res = await request.post(baseURL + '/load/invalidation/forced/reset-states', {
+			headers: { origin: 'https://trusted.example.com' }
+		});
 		expect(res.ok()).toBe(true);
 
 		await page.goto('/load/invalidation/forced');
 		expect(await page.textContent('h1')).toBe('a: 0, b: 0');
 
-		await page.click('button.invalidateall');
+		await page.click('button.refreshall');
 		await page.evaluate(
 			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
 		);
 		expect(await page.textContent('h1')).toBe('a: 1, b: 1');
 
-		await page.click('button.invalidateall');
+		await page.click('button.refreshall');
 		await page.evaluate(
 			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
 		);
@@ -635,7 +556,9 @@ test.describe('Invalidation', () => {
 		request,
 		baseURL
 	}) => {
-		const res = await request.post(baseURL + '/load/invalidation/forced-goto/reset-states');
+		const res = await request.post(baseURL + '/load/invalidation/forced-goto/reset-states', {
+			headers: { origin: 'https://trusted.example.com' }
+		});
 		expect(res.ok()).toBe(true);
 		await page.goto('/load/invalidation/forced-goto');
 		expect(await page.textContent('h1')).toBe('a: 0, b: 0');
@@ -671,7 +594,7 @@ test.describe('Invalidation', () => {
 		await expect(btn).toHaveText('2');
 	});
 
-	test('invalidateAll persists through redirects', async ({ page }) => {
+	test('refreshAll persists through redirects', async ({ page }) => {
 		await page.goto('/load/invalidation/multiple/redirect');
 		await page.locator('button.redirect').click();
 		await expect(page.locator('p.redirect-state')).toHaveText('Redirect state: done');
@@ -876,7 +799,7 @@ test.describe('Invalidation', () => {
 		await expect(page.getByText('updated')).toBeVisible();
 	});
 
-	test('goto after invalidation does not reset state', async ({ page }) => {
+	test('goto after invalidate does not reset state', async ({ page }) => {
 		await page.goto('/load/invalidation/invalidate-then-goto');
 		const layout = await page.textContent('p.layout');
 		const _page = await page.textContent('p.page');
@@ -900,6 +823,31 @@ test.describe('Invalidation', () => {
 		const next_page_2 = await page.textContent('p.page');
 		expect(next_layout_2).toBe(next_layout_1);
 		expect(next_page_2).not.toBe(next_page_1);
+	});
+
+	test('refreshAll finishing after navigation does not apply stale data', async ({
+		page,
+		clicknav
+	}) => {
+		await page.goto('/load/invalidation/during-navigation/a');
+		await expect(page.locator('[data-testid="scores"]')).toHaveText('1 - 1');
+
+		await clicknav('[data-testid="nav-b-refresh"]');
+		await expect(page.locator('[data-testid="scores"]')).toHaveText('2 - 2');
+
+		await page.waitForTimeout(400);
+		await expect(page.locator('[data-testid="scores"]')).toHaveText('2 - 2');
+	});
+
+	test('refreshAll finishing before navigation ends does not prevent navigation', async ({
+		page,
+		clicknav
+	}) => {
+		await page.goto('/load/invalidation/during-navigation/b');
+		await expect(page.locator('[data-testid="scores"]')).toHaveText('2 - 2');
+
+		await clicknav('[data-testid="nav-a-refresh"]');
+		await expect(page.locator('[data-testid="scores"]')).toHaveText('1 - 1');
 	});
 });
 
@@ -991,6 +939,8 @@ test.describe('data-sveltekit attributes', () => {
 		expect(requests.length).toBe(2);
 
 		requests.length = 0;
+		// park the mouse so the previous phase's cursor position can't trigger a preload after hydration
+		await page.mouse.move(0, 0);
 		await page.goto('/data-sveltekit/preload-data');
 		await page.locator('#two').hover();
 		await page.locator('#two').dispatchEvent('touchstart');
@@ -1001,6 +951,7 @@ test.describe('data-sveltekit attributes', () => {
 		expect(requests.length).toBe(2);
 
 		requests.length = 0;
+		await page.mouse.move(0, 0);
 		await page.goto('/data-sveltekit/preload-data');
 		await page.locator('#three').hover();
 		await page.locator('#three').dispatchEvent('touchstart');
@@ -1011,6 +962,7 @@ test.describe('data-sveltekit attributes', () => {
 		expect(requests.length).toBe(0);
 
 		requests.length = 0;
+		await page.mouse.move(0, 0);
 		await page.goto('/data-sveltekit/preload-data');
 		await page.locator('#tap').hover();
 		await page.locator('#tap').dispatchEvent('touchstart');
@@ -1021,6 +973,7 @@ test.describe('data-sveltekit attributes', () => {
 		expect(requests.length).toBe(2);
 
 		requests.length = 0;
+		await page.mouse.move(0, 0);
 		await page.goto('/data-sveltekit/preload-data');
 		await page.locator('#dynamic').hover();
 		await page.locator('#dynamic').dispatchEvent('touchstart');
@@ -1245,17 +1198,17 @@ test.describe('data-sveltekit attributes', () => {
 		await expect(request_promise).rejects.toThrow();
 	});
 
-	test('data-sveltekit-noscroll', async ({ page, clicknav }) => {
-		await page.goto('/data-sveltekit/noscroll');
+	test('data-sveltekit-reset', async ({ page, clicknav }) => {
+		await page.goto('/data-sveltekit/reset');
 		// await page.evaluate(() => window.scrollTo(0, 1000));
 		await clicknav('#one');
 		expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(1000);
 
-		await page.goto('/data-sveltekit/noscroll');
+		await page.goto('/data-sveltekit/reset');
 		await clicknav('#two');
 		expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(1000);
 
-		await page.goto('/data-sveltekit/noscroll');
+		await page.goto('/data-sveltekit/reset');
 		// await page.evaluate(() => window.scrollTo(0, 1000));
 		await clicknav('#three');
 		expect(await page.evaluate(() => window.scrollY)).toBe(0);
@@ -1418,6 +1371,16 @@ test.describe('Streaming', () => {
 		expect(page.locator('p.fail')).toBeVisible();
 	});
 
+	test('Catches rejected streamed server data after another load delays data serialization', async ({
+		page
+	}) => {
+		await page.goto('/streaming');
+		await page.click('[href="/streaming/server/delayed-rejection"]');
+
+		await expect(page.locator('p.eager')).toHaveText('eager');
+		await expect(page.locator('p.fail')).toHaveText('delayed rejection (500 Internal Error)');
+	});
+
 	// TODO `vite preview` buffers responses, causing these tests to fail
 	if (process.env.DEV) {
 		test('Works for universal load functions (direct hit)', async ({ page }) => {
@@ -1506,7 +1469,7 @@ test.describe('Assets', () => {
 				/** @type {HTMLLinkElement[]} */
 				const links = Array.from(document.head.querySelectorAll('link[rel=stylesheet]'));
 
-				for (let i = 0; i < links.length; ) {
+				for (let i = 0; i < links.length;) {
 					const link = links.shift();
 					const asset_name = link?.href.split('/').at(-1);
 					if (asset_name && links.some((link) => link.href.includes(asset_name))) {
@@ -1526,9 +1489,52 @@ test.describe('goto', () => {
 		await page.click('button');
 
 		const message = process.env.DEV
-			? 'Cannot use `goto` with an external URL. Use `window.location = "https://example.com/"` instead'
+			? 'Cannot use `goto` with an external URL. Use `window.location = "https://example.com"` instead'
 			: 'goto: invalid URL';
 		await expect(page.locator('p')).toHaveText(message);
+	});
+
+	test('goto fails with a URL that does not resolve to a route', async ({ page }) => {
+		await page.goto('/goto/no-such-route');
+		await page.click('button');
+
+		await expect(page.locator('p')).toContainText(
+			process.env.DEV
+				? 'Cannot use `goto` with a URL that does not resolve to a route within the app'
+				: 'goto: invalid URL'
+		);
+	});
+
+	test('supports the deprecated replaceState option', async ({ app, page }) => {
+		/** @type {string[]} */
+		const warnings = [];
+		page.on('console', (message) => {
+			if (message.type() === 'warning') warnings.push(message.text());
+		});
+
+		await page.goto('/goto/testentry');
+		await app.goto('/goto/teststart');
+		await app.goto('/goto/testfinish', { replaceState: true });
+		await page.goBack();
+		await expect(page).toHaveURL('/goto/testentry');
+
+		expect(warnings.filter((warning) => warning.includes('replaceState'))).toEqual(
+			process.env.DEV
+				? [
+						'The `goto(..., { replaceState: true })` option has been deprecated in favour of `replace`'
+					]
+				: []
+		);
+	});
+
+	test('persists state through redirects when persistState is true', async ({ app, page }) => {
+		await page.goto('/goto/teststart');
+		await app.goto('/goto/loadreplace1', { state: { active: true }, persistState: true });
+		await expect(page).toHaveURL('/goto/testfinish');
+		await expect(page.locator('p')).toHaveText('active: true');
+
+		await page.reload();
+		await expect(page.locator('p')).toHaveText('active: true');
 	});
 
 	test.describe('navigation and redirects should be consistent between web native and sveltekit based', () => {
@@ -1562,11 +1568,11 @@ test.describe('goto', () => {
 			test.describe('without replace', () => {
 				const expectGoback = makeExpectGoback(nonexistentPage, testStartPage);
 
-				test('app.goto', async ({ app, page }) => {
-					// navigating to nonexistent page causes playwright's page context to be destroyed
-					// thus this call throws an error unless caught
-					await app.goto(nonexistentPage, { replaceState: false }).catch(() => {});
-					await expectGoback(page);
+				test('app.goto rejects and does not navigate', async ({ app, page }) => {
+					// `goto` is only for routes within the app; navigating to a
+					// non-existent route rejects and leaves the URL unchanged
+					await expect(app.goto(nonexistentPage, { replace: false })).rejects.toBeTruthy();
+					await expect(page).toHaveURL(testStartPage);
 				});
 
 				test('location.assign', async ({ page }) => {
@@ -1580,11 +1586,11 @@ test.describe('goto', () => {
 			test.describe('with replace', () => {
 				const expectGoback = makeExpectGoback(nonexistentPage, testEntryPage);
 
-				test('app.goto', async ({ app, page }) => {
-					// navigating to nonexistent page causes playwright's page context to be destroyed
-					// thus this call throws an error unless caught
-					await app.goto(nonexistentPage, { replaceState: true }).catch(() => {});
-					await expectGoback(page);
+				test('app.goto rejects and does not navigate', async ({ app, page }) => {
+					// `goto` is only for routes within the app; navigating to a
+					// non-existent route rejects and leaves the URL unchanged
+					await expect(app.goto(nonexistentPage, { replace: true })).rejects.toBeTruthy();
+					await expect(page).toHaveURL(testStartPage);
 				});
 
 				test('location.replace', async ({ page }) => {
@@ -1598,7 +1604,7 @@ test.describe('goto', () => {
 
 		test.describe('redirect after invalidation', () => {
 			test.beforeEach(async ({ app }) => {
-				await app.goto(`${testStartPage}?redirect`, { replaceState: true });
+				await app.goto(`${testStartPage}?redirect`, { replace: true });
 			});
 
 			const expectGoback = makeExpectGoback(testFinishPage, testEntryPage);
@@ -1621,7 +1627,7 @@ test.describe('goto', () => {
 				const expectGoback = makeExpectGoback(testFinishPage, testStartPage);
 
 				test('app.goto', async ({ app, page }) => {
-					await app.goto(loadReplacePage, { replaceState: false });
+					await app.goto(loadReplacePage, { replace: false });
 
 					await expectGoback(page);
 				});
@@ -1639,7 +1645,7 @@ test.describe('goto', () => {
 				const expectGoback = makeExpectGoback(testFinishPage, testEntryPage);
 
 				test('app.goto', async ({ app, page }) => {
-					await app.goto(loadReplacePage, { replaceState: true });
+					await app.goto(loadReplacePage, { replace: true });
 
 					await expectGoback(page);
 				});
@@ -1677,67 +1683,384 @@ test.describe('untrack', () => {
 });
 
 test.describe('Shallow routing', () => {
-	test('Pushes state to the current URL', async ({ page }) => {
+	test('Adds state without changing the current URL', async ({ page }) => {
 		await page.goto('/shallow-routing/push-state');
 		await expect(page.locator('p')).toHaveText('active: false');
 
 		await page.locator('[data-id="one"]').click();
 		await expect(page.locator('p')).toHaveText('active: true');
+		await expect(page.locator('[data-id="shallow"]')).toHaveText(
+			'/shallow-routing/push-state /shallow-routing/push-state {}'
+		);
+		expect(await page.evaluate(() => window.shallow_navigation_log)).toEqual([
+			{
+				hook: 'before',
+				params: {},
+				path: '/shallow-routing/push-state',
+				route: '/shallow-routing/push-state',
+				shallow: true,
+				type: 'goto'
+			},
+			{
+				hook: 'on',
+				shallow: true,
+				type: 'goto'
+			},
+			{
+				hook: 'after',
+				shallow: true,
+				state: 'active: true',
+				type: 'goto'
+			},
+			{
+				hook: 'complete'
+			}
+		]);
 
 		await page.goBack();
 		await expect(page.locator('p')).toHaveText('active: false');
+		await expect(page.locator('[data-id="shallow"]')).toHaveText('null');
 	});
 
-	test('Pushes state to a new URL', async ({ baseURL, page }) => {
+	test('Shallow navigates to a new URL', async ({ baseURL, page }) => {
 		await page.goto('/shallow-routing/push-state');
 		await expect(page.locator('p')).toHaveText('active: false');
 
 		await page.locator('[data-id="two"]').click();
-		expect(page.url()).toBe(`${baseURL}/shallow-routing/push-state/a`);
+		await expect(page).toHaveURL(`${baseURL}/shallow-routing/push-state/a`);
 		await expect(page.locator('h1')).toHaveText('parent');
 		await expect(page.locator('p')).toHaveText('active: true');
+		await expect(page.locator('[data-id="shallow"]')).toHaveText(
+			'/shallow-routing/push-state/a /shallow-routing/push-state/a {}'
+		);
+
+		// Reload should mean we don't do shallow routing and instead show the real page
+		await page.reload();
+		await expect(page.locator('h1')).toHaveText('a');
+		await expect(page.locator('p')).toHaveText('active: false');
+		await expect(page.locator('[data-id="shallow"]')).toHaveText('null');
+
+		await page.goBack();
+		await expect(page).toHaveURL(`${baseURL}/shallow-routing/push-state`);
+		await expect(page.locator('h1')).toHaveText('parent');
+		await expect(page.locator('p')).toHaveText('active: false');
+
+		// Going forward again should reactivate shallow routing
+		await page.goForward();
+		await expect(page).toHaveURL(`${baseURL}/shallow-routing/push-state/a`);
+		await expect(page.locator('h1')).toHaveText('parent');
+		await expect(page.locator('p')).toHaveText('active: true');
+		await expect(page.locator('[data-id="shallow"]')).toHaveText(
+			'/shallow-routing/push-state/a /shallow-routing/push-state/a {}'
+		);
 
 		await page.reload();
 		await expect(page.locator('h1')).toHaveText('a');
 		await expect(page.locator('p')).toHaveText('active: false');
+		await expect(page.locator('[data-id="shallow"]')).toHaveText('null');
 
+		await page.locator('[data-id="shallow-b"]').click();
+		await expect(page).toHaveURL(`${baseURL}/shallow-routing/push-state/b`);
+		await expect(page.locator('h1')).toHaveText('a');
+		await expect(page.locator('p')).toHaveText('active: true');
+
+		// After reload + pushState + back, we should reactivate shallow routing
 		await page.goBack();
-		expect(page.url()).toBe(`${baseURL}/shallow-routing/push-state`);
-		await expect(page.locator('h1')).toHaveText('parent');
-		await expect(page.locator('p')).toHaveText('active: false');
-
-		await page.goForward();
-		expect(page.url()).toBe(`${baseURL}/shallow-routing/push-state/a`);
+		await expect(page).toHaveURL(`${baseURL}/shallow-routing/push-state/a`);
 		await expect(page.locator('h1')).toHaveText('parent');
 		await expect(page.locator('p')).toHaveText('active: true');
+		await expect(page.locator('[data-id="shallow"]')).toHaveText(
+			'/shallow-routing/push-state/a /shallow-routing/push-state/a {}'
+		);
 	});
 
-	test('Invalidates the correct route after pushing state to a new URL', async ({
+	test('Exposes the shallow target and runs navigation lifecycle hooks', async ({
 		baseURL,
 		page
 	}) => {
 		await page.goto('/shallow-routing/push-state');
+		await page.locator('[data-id="params"]').click();
+
+		await expect(page).toHaveURL(`${baseURL}/shallow-routing/push-state/hello`);
+		await expect(page.locator('h1')).toHaveText('parent');
+		await expect(page.locator('[data-id="shallow"]')).toHaveText(
+			'/shallow-routing/push-state/hello /shallow-routing/push-state/[param] {"param":"hello"}'
+		);
+		await expect(page.locator('[data-id="resolved"]')).toHaveText('active: true');
+		await expect.poll(() => page.evaluate(() => window.shallow_navigation_log.length)).toBe(4);
+
+		expect(await page.evaluate(() => window.shallow_navigation_log)).toEqual([
+			{
+				hook: 'before',
+				params: { param: 'hello' },
+				path: '/shallow-routing/push-state/hello',
+				route: '/shallow-routing/push-state/[param]',
+				shallow: true,
+				type: 'goto'
+			},
+			{ hook: 'on', shallow: true, type: 'goto' },
+			{ hook: 'after', shallow: true, state: 'active: true', type: 'goto' },
+			{ hook: 'complete' }
+		]);
+	});
+
+	test('Can cancel a shallow navigation', async ({ baseURL, page }) => {
+		await page.goto('/shallow-routing/push-state');
+		await page.locator('[data-id="cancel"]').click();
+
+		await expect(page).toHaveURL(`${baseURL}/shallow-routing/push-state`);
+		await expect(page.locator('p')).toHaveText('active: false');
+		await expect(page.locator('[data-id="shallow"]')).toHaveText('null');
+		expect(await page.evaluate(() => window.shallow_navigation_log)).toEqual([
+			{
+				hook: 'before',
+				params: {},
+				path: '/shallow-routing/push-state',
+				route: '/shallow-routing/push-state',
+				shallow: true,
+				type: 'goto'
+			}
+		]);
+	});
+
+	test('Adds state and does not restore it by default', async ({ baseURL, page }) => {
+		await page.goto('/shallow-routing/push-state');
+		await page.locator('[data-id="state-only"]').click();
+
+		await expect(page).toHaveURL(`${baseURL}/shallow-routing/push-state`);
+		await expect(page.locator('p')).toHaveText('active: true');
+		await expect(page.locator('[data-id="shallow"]')).toHaveText(
+			'/shallow-routing/push-state /shallow-routing/push-state {}'
+		);
+
+		await page.reload();
+		await expect(page.locator('p')).toHaveText('active: false');
+		await expect(page.locator('[data-id="shallow"]')).toHaveText('null');
+	});
+
+	test('Restores state-only updates when persistState is true', async ({ page }) => {
+		await page.goto('/shallow-routing/push-state');
+		await page.locator('[data-id="state-only-persist"]').click();
+		await expect(page.locator('p')).toHaveText('active: true');
+
+		await page.reload();
+		await expect(page.locator('p')).toHaveText('active: true');
+	});
+
+	test('Restores shallow state when persistState is true', async ({ page }) => {
+		await page.goto('/shallow-routing/push-state');
+		await page.locator('[data-id="shallow-persist"]').click();
+		await expect(page.locator('p')).toHaveText('active: true');
+
+		await page.reload();
+		await expect(page.locator('h1')).toHaveText('a');
+		await expect(page.locator('p')).toHaveText('active: true');
+	});
+
+	test('Does not restore regular goto state by default', async ({ page }) => {
+		await page.goto('/shallow-routing/push-state');
+		await page.locator('[data-id="goto-state"]').click();
+		await expect(page.locator('p')).toHaveText('active: true');
+
+		await page.reload();
+		await expect(page.locator('p')).toHaveText('active: false');
+	});
+
+	test('Restores regular goto state when persistState is true', async ({ page }) => {
+		await page.goto('/shallow-routing/push-state');
+		await page.locator('[data-id="goto-persist"]').click();
+		await expect(page.locator('p')).toHaveText('active: true');
+
+		await page.reload();
+		await expect(page.locator('p')).toHaveText('active: true');
+	});
+
+	test('Keeps the current shallow routing context when adding state', async ({ page }) => {
+		await page.goto('/shallow-routing/push-state');
+		await page.locator('[data-id="two"]').click();
+		await expect(page.locator('[data-id="shallow"]')).toHaveText(
+			'/shallow-routing/push-state/a /shallow-routing/push-state/a {}'
+		);
+
+		await page.evaluate(() => (window.shallow_navigation_log = []));
+		await page.locator('[data-id="one"]').click();
+		await expect(page.locator('[data-id="shallow"]')).toHaveText(
+			'/shallow-routing/push-state/a /shallow-routing/push-state/a {}'
+		);
+		expect(await page.evaluate(() => window.shallow_navigation_log.length)).toBeGreaterThan(0);
+
+		await page.goBack();
+		await page.goForward();
+		await expect(page.locator('[data-id="shallow"]')).toHaveText(
+			'/shallow-routing/push-state/a /shallow-routing/push-state/a {}'
+		);
+	});
+
+	test('Ends the current shallow routing context with a regular goto', async ({ page }) => {
+		await page.goto('/shallow-routing/push-state');
+		await page.locator('[data-id="two"]').click();
+		await expect(page.locator('[data-id="shallow"]')).toHaveText(
+			'/shallow-routing/push-state/a /shallow-routing/push-state/a {}'
+		);
+
+		await page.evaluate(() => (window.shallow_navigation_log = []));
+		await page.locator('[data-id="end-shallow"]').click();
+		await expect(page.locator('[data-id="shallow"]')).toHaveText('null');
+		expect(await page.evaluate(() => window.shallow_navigation_log)).toEqual([]);
+		expect(new URL(page.url()).pathname).toBe('/shallow-routing/push-state');
+
+		await page.goBack();
+		await expect(page.locator('[data-id="shallow"]')).toHaveText(
+			'/shallow-routing/push-state/a /shallow-routing/push-state/a {}'
+		);
+		await expect.poll(() => page.evaluate(() => window.shallow_navigation_log.length)).toBe(4);
+		expect(await page.evaluate(() => window.shallow_navigation_log)).toEqual([
+			{
+				hook: 'before',
+				params: {},
+				path: '/shallow-routing/push-state/a',
+				route: '/shallow-routing/push-state/a',
+				shallow: true,
+				type: 'popstate'
+			},
+			{ hook: 'on', shallow: true, type: 'popstate' },
+			{ hook: 'after', shallow: true, state: 'active: true', type: 'popstate' },
+			{ hook: 'complete' }
+		]);
+		await page.goForward();
+		await expect(page.locator('[data-id="shallow"]')).toHaveText('null');
+	});
+
+	test('Invalidates the rendered route after a shallow navigation', async ({ baseURL, page }) => {
+		await page.goto('/shallow-routing/push-state');
 		await expect(page.locator('p')).toHaveText('active: false');
 
-		const now = /** @type {string} */ (await page.locator('span').textContent());
+		const now = /** @type {string} */ (await page.locator('[data-id="now"]').textContent());
 
 		await page.locator('[data-id="two"]').click();
-		expect(page.url()).toBe(`${baseURL}/shallow-routing/push-state/a`);
+		await expect(page).toHaveURL(`${baseURL}/shallow-routing/push-state/a`);
 
-		await page.locator('[data-id="invalidate"]').click();
+		await page.locator('[data-id="refresh"]').click();
 		await expect(page.locator('h1')).toHaveText('parent');
-		await expect(page.locator('span')).not.toHaveText(now);
+		await expect(page.locator('[data-id="now"]')).not.toHaveText(now);
 	});
 
 	test('Does not navigate when going back to shallow route', async ({ baseURL, page }) => {
 		await page.goto('/shallow-routing/push-state');
 		await page.locator('[data-id="two"]').click();
+		await expect(page).toHaveURL(`${baseURL}/shallow-routing/push-state/a`);
 		await page.goBack();
 		await page.goForward();
 
-		expect(page.url()).toBe(`${baseURL}/shallow-routing/push-state/a`);
+		await expect(page).toHaveURL(`${baseURL}/shallow-routing/push-state/a`);
 		await expect(page.locator('h1')).toHaveText('parent');
 		await expect(page.locator('p')).toHaveText('active: true');
+	});
+
+	test('Preserves shallow navigation options across history entries', async ({ page }) => {
+		await page.goto('/shallow-routing/push-state');
+		const input = page.locator('[data-id="options-focus"]');
+		const defaults = page.locator('[data-id="options-default"]');
+		const disabled = page.locator('[data-id="options-false"]');
+
+		await input.focus();
+		await page.evaluate(() => window.scrollTo(0, 500));
+		await defaults.click();
+
+		await expect(page).toHaveURL(/\?options=default$/);
+		await expect
+			.poll(() =>
+				page.evaluate(() => ({
+					focus: document.activeElement?.getAttribute('data-id'),
+					y: scrollY
+				}))
+			)
+			.toEqual({ focus: 'options-default', y: 500 });
+
+		await disabled.click();
+
+		await expect(page).toHaveURL(/\?options=false$/);
+		await expect
+			.poll(() => page.evaluate(() => ({ focus: document.activeElement?.tagName, y: scrollY })))
+			.toEqual({ focus: 'BODY', y: 0 });
+
+		await input.focus();
+		await page.evaluate(() => window.scrollTo(0, 700));
+		await page.goBack();
+		await expect(page).toHaveURL(/\?options=default$/);
+		await expect
+			.poll(() => page.evaluate(() => ({ focus: document.activeElement?.tagName, y: scrollY })))
+			.toEqual({ focus: 'BODY', y: 500 });
+
+		await input.focus();
+		await page.evaluate(() => window.scrollTo(0, 300));
+
+		await page.goForward();
+		await expect(page).toHaveURL(/\?options=false$/);
+		await expect
+			.poll(() => page.evaluate(() => ({ focus: document.activeElement?.tagName, y: scrollY })))
+			.toEqual({ focus: 'BODY', y: 700 });
+	});
+
+	test('Preserves scroll and focus across popstate unless an intervening navigation resets them', async ({
+		app,
+		page
+	}) => {
+		for (const shallow of [true, false]) {
+			const prefix = shallow ? 'shallow' : 'regular';
+			const input = page.locator('[data-id="options-focus"]');
+			const state = () =>
+				page.evaluate(() => ({
+					focus: document.activeElement?.getAttribute('data-id') ?? document.activeElement?.tagName,
+					y: scrollY
+				}));
+
+			await page.goto('/shallow-routing/push-state');
+			await input.focus();
+			await page.evaluate(() => scrollTo(0, 500));
+
+			await app.goto(`?${prefix}=a`, { shallow, reset: false });
+			await expect.poll(state).toEqual({ focus: 'options-focus', y: 500 });
+
+			await page.evaluate(() => scrollTo(0, 700));
+			await page.goBack();
+			await expect(page).not.toHaveURL(new RegExp(`${prefix}=a`));
+			await expect.poll(state).toEqual({ focus: 'options-focus', y: 700 });
+
+			await page.evaluate(() => scrollTo(0, 300));
+			await page.goForward();
+			await expect(page).toHaveURL(new RegExp(`${prefix}=a`));
+			await expect.poll(state).toEqual({ focus: 'options-focus', y: 300 });
+
+			await page.reload();
+			await input.focus();
+			await page.evaluate(() => scrollTo(0, 350));
+			await page.goBack();
+			await expect(page).not.toHaveURL(new RegExp(`${prefix}=a`));
+			await expect.poll(state).toEqual({ focus: 'options-focus', y: 350 });
+
+			await page.evaluate(() => scrollTo(0, 400));
+			await page.goForward();
+			await expect(page).toHaveURL(new RegExp(`${prefix}=a`));
+			await expect.poll(state).toEqual({ focus: 'options-focus', y: 400 });
+
+			await app.goto(`?${prefix}=b`, { shallow, reset: true });
+			await input.focus();
+			await page.evaluate(() => scrollTo(0, 700));
+			await app.goto(`?${prefix}=c`, { shallow, reset: false });
+			await expect.poll(state).toEqual({ focus: 'options-focus', y: 700 });
+
+			await page.evaluate(() => scrollTo(0, 900));
+			await page.evaluate(() => history.go(-2));
+			await expect(page).toHaveURL(new RegExp(`${prefix}=a`));
+			await expect.poll(state).toEqual({ focus: 'BODY', y: 400 });
+
+			await input.focus();
+			await page.evaluate(() => scrollTo(0, 400));
+			await page.evaluate(() => history.go(2));
+			await expect(page).toHaveURL(new RegExp(`${prefix}=c`));
+			await expect.poll(state).toEqual({ focus: 'BODY', y: 900 });
+		}
 	});
 
 	test('Replaces state on the current URL', async ({ baseURL, page, clicknav }) => {
@@ -1746,46 +2069,178 @@ test.describe('Shallow routing', () => {
 
 		await page.locator('[data-id="one"]').click();
 		await expect(page.locator('p')).toHaveText('active: true');
+		await expect(page.locator('[data-id="shallow"]')).toHaveText('/shallow-routing/replace-state');
+		expect(await page.evaluate(() => window.shallow_navigation_log)).toEqual([
+			{
+				hook: 'before',
+				shallow: true,
+				type: 'goto'
+			},
+			{
+				hook: 'on',
+				shallow: true,
+				type: 'goto'
+			},
+			{
+				hook: 'after',
+				shallow: true,
+				type: 'goto'
+			}
+		]);
 
 		await page.goBack();
-		expect(page.url()).toBe(`${baseURL}/shallow-routing/replace-state/b`);
+		await expect(page).toHaveURL(`${baseURL}/shallow-routing/replace-state/b`);
 		await expect(page.locator('h1')).toHaveText('b');
 
 		await page.goForward();
-		expect(page.url()).toBe(`${baseURL}/shallow-routing/replace-state`);
+		await expect(page).toHaveURL(`${baseURL}/shallow-routing/replace-state`);
 		await expect(page.locator('h1')).toHaveText('parent');
 		await expect(page.locator('p')).toHaveText('active: true');
 	});
 
-	test('Replaces state on a new URL', async ({ baseURL, page, clicknav }) => {
+	test('Shallow navigates and replaces the current history entry', async ({
+		baseURL,
+		page,
+		clicknav
+	}) => {
 		await page.goto('/shallow-routing/replace-state/b');
 		await clicknav('[href="/shallow-routing/replace-state"]');
 
 		await page.locator('[data-id="two"]').click();
 		await expect(page.locator('p')).toHaveText('active: true');
+		await expect.poll(() => page.evaluate(() => window.shallow_navigation_log.length)).toBe(3);
+		expect(await page.evaluate(() => window.shallow_navigation_log)).toEqual([
+			{ hook: 'before', shallow: true, type: 'goto' },
+			{ hook: 'on', shallow: true, type: 'goto' },
+			{ hook: 'after', shallow: true, type: 'goto' }
+		]);
+
+		await page.evaluate(() => (window.shallow_navigation_log = []));
+		await page.locator('[data-id="one"]').click();
+		await expect(page.locator('[data-id="shallow"]')).toHaveText(
+			'/shallow-routing/replace-state/a'
+		);
+		expect(await page.evaluate(() => window.shallow_navigation_log.length)).toBeGreaterThan(0);
 
 		await page.goBack();
-		expect(page.url()).toBe(`${baseURL}/shallow-routing/replace-state/b`);
+		await expect(page).toHaveURL(`${baseURL}/shallow-routing/replace-state/b`);
 		await expect(page.locator('h1')).toHaveText('b');
 
 		await page.goForward();
-		expect(page.url()).toBe(`${baseURL}/shallow-routing/replace-state/a`);
+		await expect(page).toHaveURL(`${baseURL}/shallow-routing/replace-state/a`);
 		await expect(page.locator('h1')).toHaveText('parent');
 		await expect(page.locator('p')).toHaveText('active: true');
 	});
 
-	test('pushState does not loop infinitely in $effect', async ({ page }) => {
+	test('Restores replaced state on reload', async ({ baseURL, page }) => {
+		await page.goto('/shallow-routing/replace-state');
+		await page.locator('[data-id="state-only"]').click();
+
+		await expect(page).toHaveURL(`${baseURL}/shallow-routing/replace-state`);
+		await expect(page.locator('p')).toHaveText('active: true');
+		await expect(page.locator('[data-id="shallow"]')).toHaveText('/shallow-routing/replace-state');
+
+		await page.reload();
+		await expect(page.locator('p')).toHaveText('active: true');
+	});
+
+	test('Ends a replaced shallow routing context with a regular goto', async ({ page }) => {
+		await page.goto('/shallow-routing/replace-state');
+		await page.locator('[data-id="two"]').click();
+		await expect(page.locator('[data-id="shallow"]')).toHaveText(
+			'/shallow-routing/replace-state/a'
+		);
+
+		await page.evaluate(() => (window.shallow_navigation_log = []));
+		await page.locator('[data-id="end-shallow"]').click();
+		await expect(page.locator('[data-id="shallow"]')).toHaveText('null');
+		expect(await page.evaluate(() => window.shallow_navigation_log)).toEqual([]);
+		expect(new URL(page.url()).pathname).toBe('/shallow-routing/replace-state');
+	});
+
+	test('pushState remains functional and does not loop infinitely in $effect', async ({ page }) => {
+		/** @type {string[]} */
+		const warnings = [];
+		page.on('console', (message) => {
+			if (message.type() === 'warning') warnings.push(message.text());
+		});
+
 		await page.goto('/shallow-routing/push-state/effect');
 		await expect(page.locator('p')).toHaveText('count: 0');
 		await page.locator('button').click();
 		await expect(page.locator('p')).toHaveText('count: 1');
+		expect(warnings.filter((warning) => warning.includes('pushState(...)'))).toEqual(
+			process.env.DEV
+				? ['`pushState(...)` is deprecated. Use `goto(url, { state, shallow: true })` instead.']
+				: []
+		);
 	});
 
-	test('replaceState does not loop infinitely in $effect', async ({ page }) => {
+	test('replaceState remains functional and does not loop infinitely in $effect', async ({
+		page
+	}) => {
+		/** @type {string[]} */
+		const warnings = [];
+		page.on('console', (message) => {
+			if (message.type() === 'warning') warnings.push(message.text());
+		});
+
 		await page.goto('/shallow-routing/replace-state/effect');
 		await expect(page.locator('p')).toHaveText('count: 0');
 		await page.locator('button').click();
 		await expect(page.locator('p')).toHaveText('count: 1');
+		expect(warnings.filter((warning) => warning.includes('replaceState(...)'))).toEqual(
+			process.env.DEV
+				? [
+						'`replaceState(...)` is deprecated. Use `goto(url, { state, shallow: true, replace: true })` instead.'
+					]
+				: []
+		);
+	});
+
+	test('refreshAll reruns load functions without resetting page.state', async ({ page }) => {
+		await page.goto('/shallow-routing/refresh');
+		await expect(page.locator('p')).toHaveText('active: false');
+
+		const now = /** @type {string} */ (await page.locator('span').textContent());
+
+		await page.locator('[data-id="activate"]').click();
+		await expect(page.locator('p')).toHaveText('active: true');
+
+		await page.locator('[data-id="refreshAll"]').click();
+		await page.evaluate(() => window.promise);
+		await expect(page.locator('p')).toHaveText('active: true');
+		await expect(page.locator('span')).not.toHaveText(now);
+	});
+
+	test('invalidate resets page.state', async ({ page }) => {
+		await page.goto('/shallow-routing/refresh');
+		await expect(page.locator('p')).toHaveText('active: false');
+
+		const now = /** @type {string} */ (await page.locator('span').textContent());
+
+		await page.locator('[data-id="activate"]').click();
+		await expect(page.locator('p')).toHaveText('active: true');
+
+		await page.locator('[data-id="invalidate"]').click();
+		await page.evaluate(() => window.promise);
+		await expect(page.locator('p')).toHaveText('active: false');
+		await expect(page.locator('span')).not.toHaveText(now);
+	});
+
+	test('invalidateAll resets page.state', async ({ page }) => {
+		await page.goto('/shallow-routing/refresh');
+		await expect(page.locator('p')).toHaveText('active: false');
+
+		const now = /** @type {string} */ (await page.locator('span').textContent());
+
+		await page.locator('[data-id="activate"]').click();
+		await expect(page.locator('p')).toHaveText('active: true');
+
+		await page.locator('[data-id="invalidateAll"]').click();
+		await page.evaluate(() => window.promise);
+		await expect(page.locator('p')).toHaveText('active: false');
+		await expect(page.locator('span')).not.toHaveText(now);
 	});
 });
 

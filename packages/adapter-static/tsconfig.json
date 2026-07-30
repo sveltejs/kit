@@ -11,5 +11,5 @@
 		},
 		"types": ["node"]
 	},
-	"include": ["index.js", "internal.d.ts", "test/utils.js"]
+	"include": ["index.js", "test/utils.js"]
 }

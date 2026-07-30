@@ -4,4 +4,6 @@
 	const q = failing();
 </script>
 
-<div id="q-error">{q.error ? `${q.error.status}: ${q.error.body?.message}` : 'none'}</div>
+<div id="q-error">
+	{q.error ? `${q.error.status}: ${q.error.message}` : 'none'}
+</div>

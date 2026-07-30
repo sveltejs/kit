@@ -1,9 +1,9 @@
 <script>
-	import { pushState } from '$app/navigation';
+	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 
 	function handleClick() {
-		pushState('', { active: true });
+		goto('', { shallow: true, state: { active: true } });
 	}
 </script>
 
@@ -13,8 +13,8 @@
 	<p>#{n}</p>
 {/each}
 
-<button id="shallow-button" type="button" on:click={handleClick}>Shallow</button>
+<button id="shallow-button" type="button" onclick={handleClick}>Shallow</button>
 
 {#if page.state.active}
-	<button id="back-button" type="button" on:click={() => history.back()}>Back</button>
+	<button id="back-button" type="button" onclick={() => history.back()}>Back</button>
 {/if}

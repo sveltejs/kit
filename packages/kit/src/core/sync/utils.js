@@ -1,12 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { mkdirp } from '../../utils/filesystem.js';
-import { import_peer } from '../../utils/import.js';
-
-/** @type {{ VERSION: string }} */
-const { VERSION } = await import_peer('svelte/compiler');
-
-const [MAJOR, MINOR] = VERSION.split('.').map(Number);
+import { styleText } from 'node:util';
+import { mkdirp, resolve_entry } from '../../utils/filesystem.js';
 
 /** @type {Map<string, string>} */
 const previous_contents = new Map();
@@ -75,11 +70,21 @@ export function dedent(strings, ...values) {
 	return str;
 }
 
-export function isSvelte5Plus() {
-	return MAJOR >= 5;
-}
+/**
+ * @param {string} original
+ * @param {string} typo The common misspelling to check for
+ * @param {string} description What was wrong with the filename
+ */
+export function check_spelling(original, typo, description) {
+	const misspelled = resolve_entry(typo);
+	if (!misspelled) return;
 
-// TODO 3.0 remove this once we can bump the peerDep range
-export function supportsTrustedTypes() {
-	return (MAJOR === 5 && MINOR >= 51) || MAJOR > 5;
+	const corrected = path.basename(misspelled).replace(path.basename(typo), path.basename(original));
+
+	console.warn(
+		styleText(
+			['bold', 'yellow'],
+			`${description}. Did you mean ${corrected}?` + ` at ${path.resolve(misspelled)}`
+		)
+	);
 }

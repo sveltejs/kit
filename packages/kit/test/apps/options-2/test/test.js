@@ -61,6 +61,11 @@ test.describe('paths', () => {
 		expect(new URL(page.url()).pathname).toBe('/basepath/hello');
 	});
 
+	test('serves a prerendered page for a server-side fetch of its path', async ({ page }) => {
+		await page.goto('/basepath/fetch-prerendered');
+		expect(await page.textContent('h1')).toBe('200 true');
+	});
+
 	test('query remote function from client accounts for base path', async ({
 		page,
 		javaScriptEnabled
@@ -162,6 +167,60 @@ test.describe("bundleStrategy: 'single'", () => {
 	test('serialization works with streaming', async ({ page }) => {
 		await page.goto('/basepath/serialization-stream');
 		await expect(page.locator('h1', { hasText: 'It works!' })).toBeVisible();
+	});
+});
+
+test.describe('Link header preload', () => {
+	test.skip(({ javaScriptEnabled }) => javaScriptEnabled || !!process.env.DEV);
+
+	test('injects Link headers', async ({ request }) => {
+		const response = await request.get('/basepath/asset-preload');
+
+		const header = response.headers()['link'];
+
+		expect(header).toContain('rel="modulepreload"');
+		expect(header).toContain('as="font"');
+	});
+
+	test('does not inject Link headers on prerendered pages', async ({ request }) => {
+		const response = await request.get('/basepath/asset-preload/prerendered');
+
+		const header = response.headers()['link'];
+		expect(header).toBeUndefined();
+	});
+
+	test('injects <link> tags on prerendered pages', async ({ request }) => {
+		const response = await request.get('/basepath/asset-preload/prerendered');
+
+		const body = await response.text();
+
+		expect(body).toContain('rel="modulepreload"');
+		expect(body).toContain('as="font"');
+	});
+
+	test('does not inject <link> tags on non-prerendered pages', async ({ request }) => {
+		const response = await request.get('/basepath/asset-preload');
+
+		const body = await response.text();
+
+		expect(body).not.toContain('rel="modulepreload"');
+		expect(body).not.toContain('as="font"');
+	});
+});
+
+test.describe('$app/env', () => {
+	// regression test for https://github.com/sveltejs/kit/issues/15971:
+	// importing `$app/env` before the router is initialized (e.g. in
+	// hooks.client.js) must not throw `__SVELTEKIT_APP_VERSION__ is not defined`
+	test('version is defined when imported during client init', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		test.skip(!javaScriptEnabled || !process.env.DEV);
+
+		await page.goto('/basepath', { wait_for_started: false });
+		await expect(page.locator('body.started')).toBeVisible();
+		expect(await page.pageErrors()).toHaveLength(0);
 	});
 });
 

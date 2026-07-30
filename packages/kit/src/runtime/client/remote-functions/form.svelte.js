@@ -4,7 +4,14 @@
 import { app_dir, base } from '$app/paths/internal/client';
 import { DEV } from 'esm-env';
 import { HttpError } from '@sveltejs/kit/internal';
-import { query_responses, _goto, set_nearest_error_page, invalidateAll } from '../client.js';
+import {
+	query_responses,
+	_goto,
+	set_nearest_error_page,
+	handle_error,
+	refreshAll
+} from '../client.js';
+import { page } from '../state.svelte.js';
 import { tick } from 'svelte';
 import { categorize_updates, remote_request } from './shared.svelte.js';
 import { createAttachmentKey } from 'svelte/attachments';
@@ -14,12 +21,14 @@ import {
 	create_field_proxy,
 	deep_set,
 	set_nested_value,
-	throw_on_old_property_access,
 	build_path_string,
 	normalize_issue,
 	serialize_binary_form,
+	deep_get,
 	DELETE_KEY,
-	BINARY_FORM_CONTENT_TYPE
+	BINARY_FORM_CONTENT_TYPE,
+	parse_form_key,
+	coerce_form_value
 } from '../../form-utils.js';
 
 /**
@@ -31,16 +40,22 @@ import {
  * @returns {InternalRemoteFormIssue[]}
  */
 function merge_with_server_issues(form_data, current_issues, client_issues) {
+	const client_names = new Set(client_issues.map((issue) => issue.name));
+
 	const merged = [
-		...current_issues.filter(
-			(issue) => issue.server && !client_issues.some((i) => i.name === issue.name)
-		),
+		...current_issues.filter((issue) => issue.server && !client_names.has(issue.name)),
 		...client_issues
 	];
 
-	const keys = Array.from(form_data.keys());
+	/** @type {Map<string, number>} */
+	const positions = new Map();
+	let i = 0;
+	for (const key of form_data.keys()) {
+		if (!positions.has(key)) positions.set(key, i);
+		i++;
+	}
 
-	return merged.sort((a, b) => keys.indexOf(a.name) - keys.indexOf(b.name));
+	return merged.sort((a, b) => (positions.get(a.name) ?? -1) - (positions.get(b.name) ?? -1));
 }
 
 /**
@@ -61,7 +76,29 @@ export function form(id) {
 	function create_instance(key) {
 		const action_id_without_key = id;
 		const action_id = id + (key != undefined ? `/${JSON.stringify(key)}` : '');
-		const action = '?/remote=' + encodeURIComponent(action_id);
+		const action = '/remote=' + encodeURIComponent(action_id);
+
+		/** @type {string} */
+		let cached_search = '';
+		/** @type {string} */
+		let cached_query = '';
+
+		/** @returns {string} */
+		function get_action() {
+			if (page.url.search !== cached_search) {
+				cached_search = page.url.search;
+
+				if (page.url.search) {
+					const params = new URLSearchParams(page.url.search);
+					params.delete('/remote');
+					cached_query = params.toString();
+				} else {
+					cached_query = '';
+				}
+			}
+
+			return `?${cached_query && `${cached_query}&`}${action}`;
+		}
 
 		// the output of a non-enhanced submission that resulted in this page —
 		// consume it so the form's state survives hydration (form outputs are
@@ -104,15 +141,21 @@ export function form(id) {
 		let element = null;
 
 		/** @type {Record<string, boolean>} */
-		let touched = {};
+		let touched = $state({});
+
+		/** @type {Record<string, boolean>} */
+		let dirty = $state({});
+
+		/** @type {Record<string, boolean>} */
+		let can_validate = {};
 
 		let submitted = $state(false);
 
 		/** @type {InternalRemoteFormIssue[] | null} */
 		let unread_issues = null;
 
-		/** @type {string | null} */
-		let previous_submitter_name = null;
+		/** @type {{ name: string; type: 'number' | 'boolean' | null; is_array: boolean } | null} */
+		let previous_submitter = null;
 
 		/**
 		 * In dev, warn if there are validation issues going unread
@@ -148,8 +191,8 @@ export function form(id) {
 		 * @returns {Record<string, any>}
 		 */
 		function convert(form_data) {
-			const data = convert_formdata(form_data);
-			if (key !== undefined && !form_data.has('id')) {
+			const data = convert_formdata(action_id_without_key, form_data);
+			if (key !== undefined && !('id' in data)) {
 				data.id = key;
 			}
 			return data;
@@ -215,14 +258,14 @@ export function form(id) {
 
 					// if the developer took control of updates via `.updates(...)` (even with
 					// no arguments), or the server performed explicit refreshes, don't invalidateAll
-					const should_invalidate = refreshes === null && !response.r;
+					const should_refresh = refreshes === null && !response.r;
 
 					if (response.redirect) {
 						// Use internal version to allow redirects to external URLs
 						void _goto(
 							response.redirect,
 							{
-								invalidateAll: should_invalidate
+								refreshAll: should_refresh
 							},
 							0
 						);
@@ -232,8 +275,8 @@ export function form(id) {
 					const succeeded = raw_issues.length === 0;
 
 					if (succeeded) {
-						if (should_invalidate) {
-							void invalidateAll();
+						if (should_refresh) {
+							void refreshAll();
 						}
 					} else {
 						if (DEV) {
@@ -296,22 +339,6 @@ export function form(id) {
 					{},
 					{
 						...descriptors,
-						data: {
-							get() {
-								// TODO 3.0 remove
-								throw new Error(
-									`The \`data\` property has been removed from the \`enhance\` callback argument. Use \`instance.fields.value()\` instead.`
-								);
-							}
-						},
-						form: {
-							get() {
-								// TODO 3.0 remove
-								throw new Error(
-									`The \`form\` property has been removed from the \`enhance\` callback argument. To get the current \`<form>\` element, use \`instance.element\` instead.`
-								);
-							}
-						},
 						element: {
 							value: form
 						},
@@ -357,7 +384,10 @@ export function form(id) {
 		const instance = {};
 
 		instance.method = 'POST';
-		instance.action = action;
+		Object.defineProperty(instance, 'action', {
+			get: get_action,
+			enumerable: true
+		});
 
 		instance[createAttachmentKey()] = (/** @type {HTMLFormElement} */ form) => {
 			if (element) {
@@ -373,6 +403,8 @@ export function form(id) {
 			element = form;
 
 			touched = {};
+			dirty = {};
+			can_validate = {};
 
 			/** @param {SubmitEvent} event */
 			const handle_submit = async (event) => {
@@ -407,26 +439,30 @@ export function form(id) {
 				const form_data = new FormData(form, event.submitter);
 
 				if (
-					previous_submitter_name !== null &&
-					!Array.from(form_data.keys()).map(strip_prefix).includes(previous_submitter_name)
+					previous_submitter !== null &&
+					!Array.from(form_data.keys())
+						.map((k) => parse_form_key(action_id_without_key, k).name)
+						.includes(previous_submitter.name)
 				) {
-					// Strip any `n:`/`b:` type prefix before clearing, otherwise
-					// `set_nested_value` would coerce `undefined` to `NaN`/`false`
-					// instead of clearing the previously-submitted value.
-					set_nested_value(input, previous_submitter_name, undefined);
+					set_nested_value(input, previous_submitter, undefined);
 				}
 
 				if (event.submitter) {
 					const name = event.submitter.getAttribute('name');
+
+					/** @type {null | ReturnType<typeof parse_form_key>} */
+					let submitter = null;
+
 					const value = /** @type {any} */ (event.submitter).value;
 
 					if (name !== null && value !== undefined) {
-						set_nested_value(input, name, value);
+						submitter = parse_form_key(action_id_without_key, name);
+						set_nested_value(input, submitter, coerce_form_value(submitter.type, value));
 					}
 
-					previous_submitter_name = strip_prefix(name);
+					previous_submitter = submitter;
 				} else {
-					previous_submitter_name = null;
+					previous_submitter = null;
 				}
 
 				if (DEV) {
@@ -446,9 +482,14 @@ export function form(id) {
 					await enhance_callback(create_enhance_callback_instance(form, form_data));
 				} catch (e) {
 					const error =
-						e instanceof HttpError ? e.body : { message: /** @type {any} */ (e).message };
-					const status = e instanceof HttpError ? e.status : 500;
-					void set_nearest_error_page(error, status);
+						e instanceof HttpError
+							? e.body
+							: await handle_error(e, {
+									params: {},
+									route: { id: null },
+									url: new URL(location.href)
+								});
+					void set_nearest_error_page(error);
 				} finally {
 					pending_count--;
 				}
@@ -460,17 +501,14 @@ export function form(id) {
 				// but that makes the types unnecessarily awkward
 				const element = /** @type {HTMLInputElement} */ (e.target);
 
-				let name = element.name;
+				const name = element.name;
 				if (!name) return;
 
-				const is_array = name.endsWith('[]');
-				if (is_array) name = name.slice(0, -2);
+				const field = parse_form_key(action_id_without_key, name);
 
 				const is_file = element.type === 'file';
 
-				touched[name] = true;
-
-				if (is_array) {
+				if (field.is_array) {
 					let value;
 
 					if (element.tagName === 'SELECT') {
@@ -480,7 +518,7 @@ export function form(id) {
 						);
 					} else {
 						const elements = /** @type {HTMLInputElement[]} */ (
-							Array.from(form.querySelectorAll(`[name="${name}[]"]`))
+							Array.from(form.querySelectorAll(`[name="${name}"]`))
 						);
 
 						if (DEV) {
@@ -501,7 +539,7 @@ export function form(id) {
 						}
 					}
 
-					set_nested_value(input, name, value);
+					set_nested_value(input, field, value);
 				} else if (is_file) {
 					if (DEV && element.multiple) {
 						throw new Error(
@@ -512,21 +550,19 @@ export function form(id) {
 					const file = /** @type {HTMLInputElement & { files: FileList }} */ (element).files[0];
 
 					if (file) {
-						set_nested_value(input, name, file);
+						set_nested_value(input, field, file);
 					} else {
-						set_nested_value(input, name, DELETE_KEY);
+						set_nested_value(input, field, DELETE_KEY);
 					}
 				} else {
 					set_nested_value(
 						input,
-						name,
+						field,
 						element.type === 'checkbox' && !element.checked ? null : element.value
 					);
 				}
 
-				name = strip_prefix(name);
-
-				touched[name] = true;
+				dirty[field.name] = true;
 			};
 
 			const handle_reset = async () => {
@@ -534,38 +570,43 @@ export function form(id) {
 				// the inputs are actually updated (so that it can be cancelled)
 				await tick();
 
-				input = convert_formdata(new FormData(form));
+				input = convert_formdata(action_id_without_key, new FormData(form));
 				raw_issues = [];
 				touched = {};
+				dirty = {};
+				can_validate = {};
+				submitted = false;
+			};
+
+			/** @param {Event} e */
+			const handle_focusout = (e) => {
+				const name = /** @type {HTMLInputElement} */ (e.target).name;
+				if (!name) return;
+
+				const field = parse_form_key(action_id_without_key, name);
+
+				touched[field.name] = true;
+
+				if (Object.hasOwn(dirty, field.name)) {
+					can_validate[field.name] = true;
+				}
 			};
 
 			form.addEventListener('submit', handle_submit);
 			form.addEventListener('input', handle_input);
+			form.addEventListener('focusout', handle_focusout);
 			form.addEventListener('reset', handle_reset);
 
 			return () => {
 				form.removeEventListener('submit', handle_submit);
 				form.removeEventListener('input', handle_input);
+				form.removeEventListener('focusout', handle_focusout);
 				form.removeEventListener('reset', handle_reset);
 				element = null;
 			};
 		};
 
 		let validate_id = 0;
-
-		// TODO 3.0 remove
-		if (DEV) {
-			throw_on_old_property_access(instance);
-
-			Object.defineProperty(instance, 'buttonProps', {
-				get() {
-					throw new Error(
-						'`form.buttonProps` has been removed: Instead of `<button {...form.buttonProps}>, use `<button {...form.fields.action.as("submit", "value")}>`.' +
-							' See the PR for more info: https://github.com/sveltejs/kit/pull/14622'
-					);
-				}
-			});
-		}
 
 		Object.defineProperties(instance, {
 			element: {
@@ -602,20 +643,25 @@ export function form(id) {
 			},
 			fields: {
 				get: () =>
-					create_field_proxy(
-						{},
-						() => input,
-						(path, value) => {
+					create_field_proxy({
+						form_id: action_id_without_key,
+						get: () => input,
+						set: (path, value) => {
 							if (path.length === 0) {
 								input = value;
-							} else {
+							} else if (value !== deep_get(input, path)) {
 								deep_set(input, path.map(String), value);
 
 								const key = build_path_string(path);
-								touched[key] = true;
+
+								if (element) {
+									touched[key] = true;
+									dirty[key] = true;
+									can_validate[key] = true;
+								}
 							}
 						},
-						(path, all) => {
+						get_issues: (path, all) => {
 							if (DEV && unread_issues !== null && path !== undefined) {
 								unread_issues = unread_issues.filter((issue) => {
 									return (
@@ -626,8 +672,10 @@ export function form(id) {
 							}
 
 							return issues;
-						}
-					)
+						},
+						get_touched: () => touched,
+						get_dirty: () => dirty
+					})
 			},
 			result: {
 				get: () => result
@@ -652,7 +700,7 @@ export function form(id) {
 			},
 			validate: {
 				/** @type {RemoteForm<any, any>['validate']} */
-				value: async ({ includeUntouched = false, preflightOnly = false } = {}) => {
+				value: async ({ all = false, preflightOnly = false } = {}) => {
 					if (!element) return;
 
 					const id = ++validate_id;
@@ -703,8 +751,8 @@ export function form(id) {
 						array = /** @type {InternalRemoteFormIssue[]} */ (result._);
 					}
 
-					if (!includeUntouched && !submitted) {
-						array = array.filter((issue) => touched[issue.name]);
+					if (!all && !submitted) {
+						array = array.filter((issue) => can_validate[issue.name]);
 					}
 
 					const is_server_validation = !validated?.issues && !preflightOnly;
@@ -794,14 +842,4 @@ function validate_form_data(form_data, enctype) {
 			}
 		}
 	}
-}
-
-/**
- * Remove the `n:` or `b:` prefix from a field name
- * @template {string | null} T
- * @param {T} name
- * @returns {T}
- */
-function strip_prefix(name) {
-	return /** @type {T} */ (name && name.replace(/^[nb]:/, ''));
 }

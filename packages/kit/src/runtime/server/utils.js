@@ -1,14 +1,7 @@
 /** @import { ServerHooks } from 'types' */
 import * as devalue from 'devalue';
-import { DEV } from 'esm-env';
-import { json, text } from '@sveltejs/kit';
-import { HttpError } from '@sveltejs/kit/internal';
-import { with_request_store } from '@sveltejs/kit/internal/server';
-import { coalesce_to_error, get_message, get_status } from '../../utils/error.js';
-import { negotiate } from '../../utils/http.js';
-import { fix_stack_trace } from '../shared-server.js';
+import { text } from '@sveltejs/kit';
 import { ENDPOINT_METHODS } from '../../constants.js';
-import { escape_html } from '../../utils/escape.js';
 
 /**
  * @param {Partial<Record<import('types').HttpMethod, any>>} mod
@@ -46,80 +39,6 @@ export function get_global_name(options) {
 }
 
 /**
- * Return as a response that renders the error.html
- *
- * @param {import('types').SSROptions} options
- * @param {number} status
- * @param {string} message
- */
-export function static_error_page(options, status, message) {
-	let page = options.templates.error({ status, message: escape_html(message) });
-
-	if (__SVELTEKIT_DEV__) {
-		// inject Vite HMR client, for easier debugging
-		page = page.replace('</head>', '<script type="module" src="/@vite/client"></script></head>');
-	}
-
-	return text(page, {
-		headers: { 'content-type': 'text/html; charset=utf-8' },
-		status
-	});
-}
-
-/**
- * @param {import('@sveltejs/kit').RequestEvent} event
- * @param {import('types').RequestState} state
- * @param {import('types').SSROptions} options
- * @param {unknown} error
- */
-export async function handle_fatal_error(event, state, options, error) {
-	error = error instanceof HttpError ? error : coalesce_to_error(error);
-	const status = get_status(error);
-	const body = await handle_error_and_jsonify(event, state, options, error);
-
-	// ideally we'd use sec-fetch-dest instead, but Safari — quelle surprise — doesn't support it
-	const type = negotiate(event.request.headers.get('accept') || 'text/html', [
-		'application/json',
-		'text/html'
-	]);
-
-	if (event.isDataRequest || type === 'application/json') {
-		return json(body, {
-			status
-		});
-	}
-
-	return static_error_page(options, status, body.message);
-}
-
-/**
- * @param {import('@sveltejs/kit').RequestEvent} event
- * @param {import('types').RequestState} state
- * @param {import('types').SSROptions} options
- * @param {any} error
- * @returns {Promise<App.Error>}
- */
-export async function handle_error_and_jsonify(event, state, options, error) {
-	if (error instanceof HttpError) {
-		// @ts-expect-error custom user errors may not have a message field if App.Error is overwritten
-		return { message: 'Unknown Error', ...error.body };
-	}
-
-	if (__SVELTEKIT_DEV__ && typeof error == 'object') {
-		fix_stack_trace(error);
-	}
-
-	const status = get_status(error);
-	const message = get_message(error);
-
-	return (
-		(await with_request_store({ event, state }, () =>
-			options.hooks.handleError({ error, event, status, message })
-		)) ?? { message }
-	);
-}
-
-/**
  * @param {number} status
  * @param {string} location
  */
@@ -128,6 +47,16 @@ export function redirect_response(status, location) {
 		status,
 		headers: { location }
 	});
+	return response;
+}
+
+/**
+ * @param {Response} response
+ */
+export function with_version_header(response) {
+	if (__SVELTEKIT_APP_VERSION_CHECKS_ENABLED__) {
+		response.headers.set('x-sveltekit-version', __SVELTEKIT_APP_VERSION__);
+	}
 	return response;
 }
 
@@ -186,59 +115,6 @@ export function has_prerendered_path(manifest, pathname) {
 		manifest._.prerendered_routes.has(pathname) ||
 		(pathname.at(-1) === '/' && manifest._.prerendered_routes.has(pathname.slice(0, -1)))
 	);
-}
-
-/**
- * Formats the error into a nice message with sanitized stack trace
- * @param {number} status
- * @param {Error} error
- * @param {import('@sveltejs/kit').RequestEvent} event
- */
-export function format_server_error(status, error, event) {
-	const formatted_text = `\n\x1b[1;31m[${status}] ${event.request.method} ${event.url.pathname}\x1b[0m`;
-
-	if (status === 404) {
-		return formatted_text;
-	}
-
-	return `${formatted_text}\n${DEV ? clean_up_stack_trace(error) : error.stack}`;
-}
-
-/**
- * In dev, tidy up stack traces by making paths relative to the current project directory
- * @param {string} file
- */
-let relative = (file) => file;
-
-if (DEV) {
-	try {
-		const path = await import('node:path');
-		const process = await import('node:process');
-
-		relative = (file) => path.relative(process.cwd(), file);
-	} catch {
-		// do nothing
-	}
-}
-
-/**
- * Provides a refined stack trace by excluding lines following the last occurrence of a line containing +page. +layout. or +server.
- * @param {Error} error
- */
-export function clean_up_stack_trace(error) {
-	const stack_trace = (error.stack?.split('\n') ?? []).map((line) => {
-		return line.replace(/\((.+)(:\d+:\d+)\)$/, (_, file, loc) => `(${relative(file)}${loc})`);
-	});
-
-	// progressive enhancement for people who haven't configured kit.files.src to something else
-	const last_line_from_src_code = stack_trace.findLastIndex((line) => /\(src[\\/]/.test(line));
-
-	if (last_line_from_src_code === -1) {
-		// default to the whole stack trace
-		return error.stack;
-	}
-
-	return stack_trace.slice(0, last_line_from_src_code + 1).join('\n');
 }
 
 /**

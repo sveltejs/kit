@@ -4,9 +4,9 @@ import { BROWSER, DEV } from 'esm-env';
  * Matches a URI scheme. See https://www.rfc-editor.org/rfc/rfc3986#section-3.1
  * @type {RegExp}
  */
-export const SCHEME = /^[a-z][a-z\d+\-.]+:/i;
+export const SCHEME = /^[a-z][a-z\d+\-.]*:/i;
 
-const internal = new URL('sveltekit-internal://');
+const internal = new URL('a://');
 
 /**
  * @param {string} base
@@ -25,6 +25,36 @@ export function resolve(base, path) {
 /** @param {string} path */
 export function is_root_relative(path) {
 	return path[0] === '/' && path[1] !== '/';
+}
+
+/**
+ * Relative reference from `from` to `to`, which must differ only by a trailing slash
+ * @param {string} from
+ * @param {string} to
+ * @returns {string}
+ */
+export function relative_pathname(from, to) {
+	const segment = to.replace(/\/$/, '').split('/').at(-1);
+
+	return from.endsWith('/') ? `../${segment}` : `${segment}/`;
+}
+
+/**
+ * @param {string} location
+ * @param {string} allowed
+ */
+export function matches_external_allowlist_entry(location, allowed) {
+	if (location === allowed) return true;
+
+	try {
+		const allow = new URL(allowed);
+		const loc = new URL(location, allow);
+
+		// this is stricter than `loc.origin === allow.origin`, which can fail in `blob:` cases
+		return loc.protocol === allow.protocol && loc.host === allow.host;
+	} catch {
+		return false;
+	}
 }
 
 /**

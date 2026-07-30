@@ -1,7 +1,7 @@
 /** @import { RemoteQueryFunction } from '@sveltejs/kit' */
 import { app_dir, base } from '$app/paths/internal/client';
-import { goto } from '../client.js';
-import { get_remote_request_headers, QUERY_FUNCTION_ID, remote_request } from './shared.svelte.js';
+import { _goto } from '../client.js';
+import { QUERY_FUNCTION_ID, remote_request } from './shared.svelte.js';
 import { QueryProxy } from './query/proxy.js';
 import { HttpError } from '@sveltejs/kit/internal';
 
@@ -30,8 +30,7 @@ export function query_batch(id) {
 				// but in different forks/async contexts and in the same macrotask?
 				// If so this would potentially be buggy
 				const headers = {
-					'Content-Type': 'application/json',
-					...get_remote_request_headers()
+					'Content-Type': 'application/json'
 				};
 
 				// Wait for the next macrotask - don't use microtask as Svelte runtime uses these to collect changes and flush them,
@@ -50,7 +49,8 @@ export function query_batch(id) {
 						});
 
 						if (response.redirect) {
-							await goto(response.redirect);
+							// Use internal version to allow redirects to external URLs
+							await _goto(response.redirect, {}, 0);
 
 							// settle all batched promises (with `undefined`, like a redirect
 							// from a non-batched query) so that callers don't hang forever
@@ -71,7 +71,7 @@ export function query_batch(id) {
 
 							for (const { resolve, reject } of resolvers) {
 								if (result.type === 'error') {
-									reject(new HttpError(result.status, result.error));
+									reject(new HttpError(result.error));
 								} else {
 									resolve(result.data);
 								}

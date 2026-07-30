@@ -39,7 +39,9 @@ export async function handle({ event, resolve }) {
 }
 
 /** @type {import('@sveltejs/kit').HandleValidationError} */
-export const handleValidationError = ({ issues }) => {
+export const handleValidationError = ({ issues, event }) => {
+	// must not throw, even when validation failed inside a query
+	void event.url.pathname;
 	return { message: issues[0].message };
 };
 
@@ -53,16 +55,4 @@ export const handleError = ({ error: e, event, status, message }) => {
 	const error = /** @type {Error} */ (e);
 
 	return { message: `${error.message} (${status} ${message}, on ${event.url.pathname})` };
-};
-
-// TODO: remove in SvelteKit 3.0
-// @ts-ignore this doesn't exist in old Node
-Promise.withResolvers ??= () => {
-	/** @type {{ promise: Promise<any>, resolve: (value: any) => void, reject: (reason?: any) => void }} */
-	const d = {};
-	d.promise = new Promise((resolve, reject) => {
-		d.resolve = resolve;
-		d.reject = reject;
-	});
-	return d;
 };

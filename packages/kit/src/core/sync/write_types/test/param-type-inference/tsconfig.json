@@ -3,16 +3,17 @@
 		"allowJs": true,
 		"checkJs": true,
 		"noEmit": true,
-		"target": "es2022",
-		"module": "es2022",
+		"target": "esnext",
+		"module": "esnext",
 		"moduleResolution": "bundler",
 		"paths": {
 			"@sveltejs/kit": ["../../../../../exports/public"],
 			"types": ["../../../../../types/internal"],
-			"$app/types": ["../../../../../types/ambient.d.ts"]
+			"$app/types": ["../../../../../types/ambient.d.ts"],
+			"$app/paths/types.js": ["../../../../../runtime/app/paths/types.d.ts"]
 		},
 		"types": ["node"]
 	},
-	"include": ["./**/*.js", "./**/*.ts", ".svelte-kit/non-ambient.d.ts"],
+	"include": ["./**/*.js", "./**/*.ts", ".svelte-kit/non-ambient.d.ts", "node_modules/$app/types"],
 	"exclude": ["..svelte-kit/**"]
 }

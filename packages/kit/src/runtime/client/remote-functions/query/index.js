@@ -1,7 +1,7 @@
 /** @import { RemoteQueryFunction } from '@sveltejs/kit' */
 import { app_dir, base } from '$app/paths/internal/client';
-import { goto, query_map } from '../../client.js';
-import { get_remote_request_headers, QUERY_FUNCTION_ID, remote_request } from '../shared.svelte.js';
+import { _goto, query_map } from '../../client.js';
+import { QUERY_FUNCTION_ID, remote_request } from '../shared.svelte.js';
 import { DEV } from 'esm-env';
 import { QueryProxy } from './proxy.js';
 
@@ -26,10 +26,11 @@ export function query(id) {
 		return new QueryProxy(id, arg, async (payload) => {
 			const url = `${base}/${app_dir}/remote/${id}${payload ? `?payload=${payload}` : ''}`;
 
-			const result = await remote_request(url, { headers: get_remote_request_headers() });
+			const result = await remote_request(url);
 
 			if (result.redirect) {
-				await goto(result.redirect);
+				// Use internal version to allow redirects to external URLs
+				await _goto(result.redirect, {}, 0);
 			}
 		});
 	};

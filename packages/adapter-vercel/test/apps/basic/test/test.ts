@@ -116,3 +116,24 @@ test('client-side navigation to prerendered routes works', async ({ page }) => {
 	await page.click('a[href="/prerendered"]');
 	await expect(page.locator('h1')).toContainText('this page is prerendered');
 });
+
+test('missing immutable asset returns 404 with no-store cache-control', async ({ request }) => {
+	// https://github.com/sveltejs/kit/pull/16077 — the 404 must not inherit the
+	// immutable `max-age=31536000` header, otherwise it's cached for a year
+	const response = await request.get('/_app/immutable/chunks/nonexistent.js');
+	expect(response.status()).toBe(404);
+	expect(response.headers()['cache-control']).toBe('no-store');
+});
+
+test('valid immutable asset is still cached immutably', async ({ page, request }) => {
+	await page.goto('/');
+	// immutable assets are preloaded via <link rel="modulepreload">, not <script src>
+	const href = await page
+		.locator('link[rel="modulepreload"][href*="/_app/immutable/"]')
+		.first()
+		.getAttribute('href');
+	expect(href).toBeTruthy();
+	const response = await request.get(href!.replace(/^\.\//, '/'));
+	expect(response.ok()).toBe(true);
+	expect(response.headers()['cache-control']).toBe('public, immutable, max-age=31536000');
+});

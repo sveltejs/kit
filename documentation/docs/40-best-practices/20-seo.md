@@ -62,17 +62,19 @@ export async function GET() {
 An unfortunate reality of modern web development is that it is sometimes necessary to create an [Accelerated Mobile Pages (AMP)](https://amp.dev/) version of your site. In SvelteKit this can be done by setting the [`inlineStyleThreshold`](configuration#inlineStyleThreshold) option...
 
 ```js
-/// file: svelte.config.js
-/** @type {import('@sveltejs/kit').Config} */
-const config = {
-	kit: {
-		// since <link rel="stylesheet"> isn't
-		// allowed, inline all styles
-		inlineStyleThreshold: Infinity
-	}
-};
+/// file: vite.config.js
+import { defineConfig } from 'vite';
+import { sveltekit } from '@sveltejs/kit/vite';
 
-export default config;
+export default defineConfig({
+	plugins: [
+		sveltekit({
+			// since <link rel="stylesheet"> isn't
+			// allowed, inline all styles
+			inlineStyleThreshold: Infinity
+		})
+	]
+});
 ```
 
 ...disabling `csr` in your root `+layout.js`/`+layout.server.js`...

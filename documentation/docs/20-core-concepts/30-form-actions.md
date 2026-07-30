@@ -107,11 +107,11 @@ Each action receives a `RequestEvent` object, allowing you to read the data with
 ```js
 /// file: src/routes/login/+page.server.js
 // @filename: ambient.d.ts
-declare module '$lib/server/db';
+declare module '#lib/server/db';
 
 // @filename: index.js
 // ---cut---
-import * as db from '$lib/server/db';
+import * as db from '#lib/server/db';
 
 /** @type {import('./$types').PageServerLoad} */
 export async function load({ cookies }) {
@@ -165,15 +165,17 @@ export const actions = {
 
 If the request couldn't be processed because of invalid data, you can return validation errors — along with the previously submitted form values — back to the user so that they can try again. The `fail` function lets you return an HTTP status code (typically 400 or 422, in the case of validation errors) along with the data. The status code is available through `page.status` and the data through `form`:
 
+When using `use:enhance` (or making a `fetch` request with the `accept: application/json` header), the HTTP response status code will match the status code passed to `fail`. When an action returns data, the response will have status 200, and when it returns nothing (i.e. `undefined`), the response will have status 204. This makes it easier to track form submission outcomes using observability tools.
+
 ```js
 /// file: src/routes/login/+page.server.js
 // @filename: ambient.d.ts
-declare module '$lib/server/db';
+declare module '#lib/server/db';
 
 // @filename: index.js
 // ---cut---
 +++import { fail } from '@sveltejs/kit';+++
-import * as db from '$lib/server/db';
+import * as db from '#lib/server/db';
 
 /** @satisfies {import('./$types').Actions} */
 export const actions = {
@@ -232,12 +234,12 @@ Redirects (and errors) work exactly the same as in [`load`](load#Redirects):
 // @errors: 2345
 /// file: src/routes/login/+page.server.js
 // @filename: ambient.d.ts
-declare module '$lib/server/db';
+declare module '#lib/server/db';
 
 // @filename: index.js
 // ---cut---
 import { fail, +++redirect+++ } from '@sveltejs/kit';
-import * as db from '$lib/server/db';
+import * as db from '#lib/server/db';
 
 /** @satisfies {import('./$types').Actions} */
 export const actions = {
@@ -431,7 +433,7 @@ We can also implement progressive enhancement ourselves, without `use:enhance`, 
 ```svelte
 <!--- file: src/routes/login/+page.svelte --->
 <script>
-	import { invalidateAll, goto } from '$app/navigation';
+	import { refreshAll, goto } from '$app/navigation';
 	import { applyAction, deserialize } from '$app/forms';
 
 	/** @type {import('./$types').PageProps} */
@@ -451,8 +453,8 @@ We can also implement progressive enhancement ourselves, without `use:enhance`, 
 		const result = deserialize(await response.text());
 
 		if (result.type === 'success') {
-			// rerun all `load` functions, following the successful update
-			await invalidateAll();
+			// rerun all `load` functions and queries, following the successful update
+			await refreshAll();
 		}
 
 		applyAction(result);
@@ -520,7 +522,7 @@ Some forms don't need to `POST` data to the server — search inputs, for exampl
 </form>
 ```
 
-Submitting this form will navigate to `/search?q=...` and invoke your load function but will not invoke an action. As with `<a>` elements, you can set the [`data-sveltekit-reload`](link-options#data-sveltekit-reload), [`data-sveltekit-replacestate`](link-options#data-sveltekit-replacestate), [`data-sveltekit-keepfocus`](link-options#data-sveltekit-keepfocus) and [`data-sveltekit-noscroll`](link-options#data-sveltekit-noscroll) attributes on the `<form>` to control the router's behaviour.
+Submitting this form will navigate to `/search?q=...` and invoke your load function but will not invoke an action. As with `<a>` elements, you can set the [`data-sveltekit-reload`](link-options#data-sveltekit-reload), [`data-sveltekit-replacestate`](link-options#data-sveltekit-replacestate) and [`data-sveltekit-reset`](link-options#data-sveltekit-reset) attributes on the `<form>` to control the router's behaviour.
 
 ## Further reading
 

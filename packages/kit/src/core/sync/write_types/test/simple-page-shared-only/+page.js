@@ -4,7 +4,7 @@ export function load() {
 	};
 }
 
-/** @type {import('./.svelte-kit/types/src/core/sync/write_types/test/simple-page-shared-only/$types').PageData} */
+/** @type {import('./.svelte-kit/types/$types').PageData} */
 const data = {
 	shared: 'asd'
 };

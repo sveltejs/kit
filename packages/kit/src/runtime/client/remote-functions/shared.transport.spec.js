@@ -9,18 +9,35 @@ vi.mock(new URL('../client.js', import.meta.url).pathname, () => ({
 	query_map: new Map(),
 	query_responses: {},
 	live_query_map: new Map(),
-	goto: () => {}
+	_goto: () => {}
 }));
 
 // Mock `state.svelte.js` — imports `navigating` and `page` which are reactive
 // Svelte state only available in a full SvelteKit runtime.
 vi.mock(new URL('../state.svelte.js', import.meta.url).pathname, () => ({
 	navigating: { current: null },
-	page: { url: new URL('http://localhost/') }
+	page: { url: new URL('http://localhost/') },
+	notify_version: () => {}
 }));
 
 const { remote_request } = await import('./shared.svelte.js');
 const { HttpError } = await import('@sveltejs/kit/internal');
+
+/**
+ * Build a mock fetch Response. `remote_request` reads `response.headers` before
+ * anything else, so every mock needs a `headers` object.
+ * @param {Partial<Response> & { json?: () => Promise<any> }} props
+ */
+function mock_response(props) {
+	return Promise.resolve({
+		headers: new Headers(),
+		ok: true,
+		status: 200,
+		statusText: 'OK',
+		json: () => Promise.resolve({}),
+		...props
+	});
+}
 
 describe('remote_request transport error handling', () => {
 	beforeEach(() => {
@@ -29,12 +46,16 @@ describe('remote_request transport error handling', () => {
 
 	test('non-OK response with JSON error body preserves status and error body', async () => {
 		vi.stubGlobal('fetch', () =>
-			Promise.resolve({
+			mock_response({
 				ok: false,
 				status: 401,
 				statusText: 'Unauthorized',
 				json: () =>
-					Promise.resolve({ type: 'error', status: 401, error: { message: 'unauthorized' } })
+					Promise.resolve({
+						type: 'error',
+						status: 401,
+						error: { status: 401, message: 'unauthorized' }
+					})
 			})
 		);
 
@@ -45,7 +66,7 @@ describe('remote_request transport error handling', () => {
 
 	test('non-OK response with non-JSON body falls back to response.status and statusText', async () => {
 		vi.stubGlobal('fetch', () =>
-			Promise.resolve({
+			mock_response({
 				ok: false,
 				status: 503,
 				statusText: 'Service Unavailable',
@@ -63,10 +84,7 @@ describe('remote_request transport error handling', () => {
 		const body = JSON.stringify({ type: 'result', data: null });
 
 		vi.stubGlobal('fetch', () =>
-			Promise.resolve({
-				ok: true,
-				status: 200,
-				statusText: 'OK',
+			mock_response({
 				json: () => Promise.resolve(JSON.parse(body))
 			})
 		);

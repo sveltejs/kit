@@ -1,13 +1,14 @@
+/** @import { SSRHandler } from '@sveltejs/kit' */
 import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { installPolyfills } from '../../exports/node/polyfills.js';
-import { mkdirp, posixify, walk } from '../../utils/filesystem.js';
+import { mkdirp, walk } from '../../utils/filesystem.js';
+import { posixify } from '../../utils/os.js';
 import { noop } from '../../utils/functions.js';
 import { decode_uri, is_root_relative, resolve } from '../../utils/url.js';
 import { escape_html } from '../../utils/escape.js';
 import { logger } from '../utils.js';
-import { load_config } from '../config/index.js';
+import { extract_svelte_config, load_vite_config } from '../config/index.js';
 import { get_route_segments } from '../../utils/routing.js';
 import { queue } from './queue.js';
 import { crawl } from './crawl.js';
@@ -16,7 +17,7 @@ import * as devalue from 'devalue';
 import { createReadableStream } from '@sveltejs/kit/node';
 import generate_fallback from './fallback.js';
 import { stringify_remote_arg } from '../../runtime/shared.js';
-import { filter_env } from '../../utils/env.js';
+import { log_response } from '../../exports/vite/utils.js';
 
 export default forked(import.meta.url, prerender);
 
@@ -33,51 +34,88 @@ const SPECIAL_HASHLINKS = new Set(['', 'top']);
  *   manifest_path: string;
  *   metadata: import('types').ServerMetadata;
  *   verbose: boolean;
- *   env: Record<string, string>
+ *   env: Record<string, string>;
+ *   vite_config_file: string | undefined;
  * }} opts
  */
-async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
+async function prerender({ hash, out, manifest_path, metadata, verbose, env, vite_config_file }) {
 	/** @type {import('@sveltejs/kit').SSRManifest} */
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
 	/** @type {import('types').ServerInternalModule} */
 	const internal = await import(pathToFileURL(`${out}/server/internal.js`).href);
 
-	// configure `import { building } from '$app/environment'` and `$app/env` —
+	// configure `import { building } from `$app/env` —
 	// essential we do this before analysing the code
 	internal.set_building();
 	internal.set_prerendering();
 
+	// `set_env` and `Server` live in modules that import the user's `src/env` config. We import them
+	// *after* `set_building()` so that `building`-dependent expressions resolve correctly
 	/** @type {import('__sveltekit/env')} */
 	const { set_env } = await import(pathToFileURL(`${out}/server/env.js`).href);
 	set_env(env);
 
 	/** @type {import('types').ServerModule} */
-	const { Server } = await import(pathToFileURL(`${out}/server/index.js`).href);
+	const { Server } = await import(pathToFileURL(`${out}/server/server.js`).href);
+
+	/** @type {{ default: SSRHandler }} */
+	const { default: init_server } = await import(pathToFileURL(`${out}/server/handler.js`).href);
+
+	const throw_handled = () => {
+		throw new Error('__handled__');
+	};
 
 	/**
 	 * @template {{message: string}} T
 	 * @template {Omit<T, 'message'>} K
-	 * @param {import('types').Logger} log
-	 * @param {'fail' | 'warn' | 'ignore' | ((details: T) => void)} input
+	 * @param {string} name
+	 * @param {'fail' | 'warn' | 'ignore' | undefined | ((details: T) => void)} input
 	 * @param {(details: K) => string} format
-	 * @returns {(details: K) => void}
+	 * @returns {(details: K & { error?: unknown }) => void}
 	 */
-	function normalise_error_handler(log, input, format) {
+	function normalise_error_handler(name, input, format) {
+		/**
+		 * @param {any} details
+		 */
+		function log_failure(details) {
+			const message = format(details);
+			log.error(`\n${message}\n`);
+		}
+
 		switch (input) {
 			case 'fail':
 				return (details) => {
-					throw new Error(format(details));
+					log_failure(details);
+					throw_handled();
 				};
 			case 'warn':
-				return (details) => {
-					log.error(format(details));
-				};
+				return log_failure;
 			case 'ignore':
 				return noop;
+			case undefined: {
+				return (details) => {
+					log_failure(details);
+
+					log.err(
+						`To suppress or handle this error, implement \`${name}\` in https://svelte.dev/docs/kit/configuration#prerender\n`
+					);
+
+					throw_handled();
+				};
+			}
 			default:
-				// @ts-expect-error TS thinks T might be of a different kind, but it's not
-				return (details) => input({ ...details, message: format(details) });
+				return (details) => {
+					const message = format(details);
+
+					try {
+						// @ts-expect-error TS thinks T might be of a different kind, but it's not
+						input({ ...details, message });
+					} catch (error) {
+						log.prettyError(error, import.meta.dirname);
+						throw_handled();
+					}
+				};
 		}
 	}
 
@@ -104,15 +142,18 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 	/** @type {Set<string>} */
 	const prerendered_routes = new Set();
 
-	/** @type {import('types').ValidatedKitConfig} */
-	const config = (await load_config()).kit;
+	const vite_config = await load_vite_config(vite_config_file);
+
+	const config = extract_svelte_config(vite_config).kit;
+
+	const prerender_origin = config.paths.origin || 'http://sveltekit-prerender';
 
 	if (hash) {
 		const fallback = await generate_fallback({
 			manifest_path,
 			env,
 			out_dir: config.outDir,
-			origin: config.prerender.origin,
+			origin: prerender_origin,
 			assets: config.files.assets
 		});
 
@@ -132,54 +173,59 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 	/** @type {import('types').Logger} */
 	const log = logger({ verbose });
 
-	installPolyfills();
-
 	/** @type {Map<string, string>} */
 	const saved = new Map();
 
 	const handle_http_error = normalise_error_handler(
-		log,
+		'handleHttpError',
 		config.prerender.handleHttpError,
 		({ status, path, referrer, referenceType }) => {
-			const message =
-				status === 404 && !path.startsWith(config.paths.base)
-					? `${path} does not begin with \`base\`, which is configured in \`paths.base\` and can be imported from \`$app/paths\` - see https://svelte.dev/docs/kit/configuration#paths for more info`
-					: path;
+			let message = `Failed to prerender ${path}`;
 
-			return `${status} ${message}${referrer ? ` (${referenceType} from ${referrer})` : ''}`;
+			if (status === 404) {
+				if (!path.startsWith(config.paths.base)) {
+					message = referrer ? `${path} (${referenceType} from ${referrer})` : path;
+
+					message += ` does not begin with \`base\`. You can fix this by using \`resolve('${path}')\` from \`$app/paths\`. The base path is configurable from \`paths.base\``;
+				} else if (referrer) {
+					message = `${path} was ${referenceType} from ${referrer}`;
+				}
+			}
+
+			return message;
 		}
 	);
 
 	const handle_missing_id = normalise_error_handler(
-		log,
+		'handleMissingId',
 		config.prerender.handleMissingId,
 		({ path, id, referrers }) => {
 			return (
-				`The following pages contain links to ${path}#${id}, but no element with id="${id}" exists on ${path} - see the \`handleMissingId\` option in https://svelte.dev/docs/kit/configuration#prerender for more info:` +
+				`The following pages contain links to ${path}#${id}, but no element with id="${id}" exists on ${path}:` +
 				referrers.map((l) => `\n  - ${l}`).join('')
 			);
 		}
 	);
 
 	const handle_entry_generator_mismatch = normalise_error_handler(
-		log,
+		'handleEntryGeneratorMismatch',
 		config.prerender.handleEntryGeneratorMismatch,
 		({ generatedFromId, entry, matchedId }) => {
-			return `The entries export from ${generatedFromId} generated entry ${entry}, which was matched by ${matchedId} - see the \`handleEntryGeneratorMismatch\` option in https://svelte.dev/docs/kit/configuration#prerender for more info.`;
+			return `The entries export from ${generatedFromId} generated entry ${entry}, which was matched by ${matchedId === entry ? 'a static route' : matchedId}`;
 		}
 	);
 
 	const handle_not_prerendered_route = normalise_error_handler(
-		log,
+		'handleUnseenRoutes',
 		config.prerender.handleUnseenRoutes,
 		({ routes }) => {
 			const list = routes.map((id) => `  - ${id}`).join('\n');
-			return `The following routes were marked as prerenderable, but were not prerendered because they were not found while crawling your app:\n${list}\n\nSee the \`handleUnseenRoutes\` option in https://svelte.dev/docs/kit/configuration#prerender for more info.`;
+			return `The following routes were marked as prerenderable, but were not prerendered because they were not found while crawling your app:\n${list}`;
 		}
 	);
 
 	const handle_invalid_url = normalise_error_handler(
-		log,
+		'handleInvalidUrl',
 		config.prerender.handleInvalidUrl,
 		({ href, referrer }) => {
 			return `Invalid URL ${href}${referrer ? ` (linked from ${referrer})` : ''}`;
@@ -220,10 +266,17 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 	/** @type {Map<string, Promise<any>>} */
 	const remote_responses = new Map();
 
+	// the custom/default handler's setup phase must run only once (per the `SSRHandler`
+	// contract), so `respond` is created a single time below. Per-visit state (the
+	// `dependencies` map) is threaded through to the shared handler via this `WeakMap`,
+	// keyed on the `Request` that flows into `server.respond`.
+	/** @type {WeakMap<Request, Map<string, import('types').PrerenderDependency>>} */
+	const dependencies_by_request = new WeakMap();
+
 	/** @type {Map<string, Set<string>>} */
 	const expected_hashlinks = new Map();
 
-	/** @type {Map<string, string[]>} */
+	/** @type {Map<string, Set<string>>} */
 	const actual_hashlinks = new Map();
 
 	/**
@@ -257,29 +310,13 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 		/** @type {Map<string, import('types').PrerenderDependency>} */
 		const dependencies = new Map();
 
-		const response = await server.respond(new Request(config.prerender.origin + encoded), {
-			getClientAddress() {
-				throw new Error('Cannot read clientAddress during prerendering');
-			},
-			prerendering: {
-				dependencies,
-				remote_responses
-			},
-			read: (file) => {
-				// stuff we just wrote
-				const filepath = saved.get(file);
-				if (filepath) return readFileSync(filepath);
+		const request = new Request(prerender_origin + encoded);
 
-				// Static assets emitted during build
-				if (file.startsWith(config.appDir)) {
-					return readFileSync(`${out}/server/${file}`);
-				}
+		// thread the per-visit `dependencies` map through to the shared `respond`
+		// handler (created once, after `server.init` below)
+		dependencies_by_request.set(request, dependencies);
 
-				// stuff in `static`
-				return readFileSync(join(config.files.assets, file));
-			},
-			emulator
-		});
+		const response = await respond(request);
 
 		const encoded_id = response.headers.get('x-sveltekit-routeid');
 		const decoded_id = encoded_id && decode_uri(encoded_id);
@@ -293,6 +330,10 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 				entry: decoded,
 				matchedId: decoded_id
 			});
+		}
+
+		if (response.status !== 204) {
+			log_response(response.status, request);
 		}
 
 		const body = Buffer.from(await response.arrayBuffer());
@@ -346,14 +387,14 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 				handle_invalid_url({ href, referrer: decoded });
 			}
 
-			actual_hashlinks.set(decoded, ids);
+			actual_hashlinks.set(decoded, new Set(ids));
 
 			/** @param {string} href */
 			const removePrerenderOrigin = (href) => {
-				if (href.startsWith(config.prerender.origin)) {
-					if (href === config.prerender.origin) return '/';
-					if (href.at(config.prerender.origin.length) !== '/') return href;
-					return href.slice(config.prerender.origin.length);
+				if (href.startsWith(prerender_origin)) {
+					if (href === prerender_origin) return '/';
+					if (href.at(prerender_origin.length) !== '/') return href;
+					return href.slice(prerender_origin.length);
 				}
 				return href;
 			};
@@ -425,8 +466,6 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 				if (!headers['x-sveltekit-normalize']) {
 					mkdirp(dirname(dest));
 
-					log.warn(`${response.status} ${decoded} -> ${location}`);
-
 					writeFileSync(
 						dest,
 						`<script>location.href=${devalue.uneval(
@@ -473,7 +512,6 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 
 			mkdirp(dir);
 
-			log.info(`${response.status} ${decoded}`);
 			writeFileSync(dest, body);
 			written.add(file);
 
@@ -489,7 +527,12 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 
 			prerendered.paths.push(decoded);
 		} else if (response_type !== OK) {
-			handle_http_error({ status: response.status, path: decoded, referrer, referenceType });
+			handle_http_error({
+				status: response.status,
+				path: decoded,
+				referrer,
+				referenceType
+			});
 		}
 
 		manifest.assets.add(file);
@@ -513,14 +556,8 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 		}
 	}
 
-	// the user's remote function modules may reference environment variables,
-	// `read` or the `manifest` at the top-level so we need to set them before
-	// evaluating those modules to avoid potential runtime errors
-	const { publicPrefix: public_prefix, privatePrefix: private_prefix } = config.env;
-	const private_env = filter_env(env, private_prefix, public_prefix);
-	const public_env = filter_env(env, public_prefix, private_prefix);
-	internal.set_private_env(private_env);
-	internal.set_public_env(public_env);
+	// the user's remote function modules may reference `read` or the `manifest` at the top-level
+	// so we need to set them before evaluating those modules to avoid potential runtime errors
 	internal.set_manifest(manifest);
 	internal.set_read_implementation((file) => createReadableStream(`${out}/server/${file}`));
 
@@ -548,6 +585,38 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 	await server.init({
 		env,
 		read: (file) => createReadableStream(`${config.outDir}/output/server/${file}`)
+	});
+
+	// create the custom/default handler once, honouring the `SSRHandler`
+	// "setup runs once" contract. Per-visit `dependencies` are looked up from
+	// `dependencies_by_request` using the `Request` passed to `server.respond`.
+	const respond = await init_server({
+		respond: (request, options) => {
+			return server.respond(request, {
+				...options,
+				getClientAddress() {
+					throw new Error('Cannot read clientAddress during prerendering');
+				},
+				prerendering: {
+					dependencies: dependencies_by_request.get(request) ?? new Map(),
+					remote_responses
+				},
+				read: (file) => {
+					// stuff we just wrote
+					const filepath = saved.get(file);
+					if (filepath) return readFileSync(filepath);
+
+					// Static assets emitted during build
+					if (file.startsWith(config.appDir)) {
+						return readFileSync(`${out}/server/${file}`);
+					}
+
+					// stuff in `static`
+					return readFileSync(join(config.files.assets, file));
+				},
+				emulator
+			});
+		}
 	});
 
 	log.info('Prerendering');
@@ -602,7 +671,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 		// ignore fragment links to pages that were not prerendered
 		if (!hashlinks) continue;
 
-		if (!hashlinks.includes(id) && !SPECIAL_HASHLINKS.has(id)) {
+		if (!hashlinks.has(id) && !SPECIAL_HASHLINKS.has(id)) {
 			handle_missing_id({ id, path, referrers: Array.from(referrers) });
 		}
 	}

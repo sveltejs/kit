@@ -1,26 +1,24 @@
+/** @import { SSRHandler, SSRManifest } from '@sveltejs/kit' */
+/** @import { NextHandleFunction } from 'connect' */
+/** @import { PreviewServer, ResolvedConfig } from 'vite' */
+/** @import { ValidatedConfig, ServerInternalModule, ServerModule } from 'types' */
 import fs from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { lookup } from 'mrmime';
+import { lookup } from '../../../utils/mime.js';
 import sirv from 'sirv';
 import { loadEnv, normalizePath } from 'vite';
 import { createReadableStream, getRequest, setResponse } from '../../../exports/node/index.js';
-import { installPolyfills } from '../../../exports/node/polyfills.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import { is_chrome_devtools_request, not_found } from '../utils.js';
-
-/** @typedef {import('http').IncomingMessage} Req */
-/** @typedef {import('http').ServerResponse} Res */
-/** @typedef {(req: Req, res: Res, next: () => void) => void} Handler */
+import { stackless } from '../../../utils/error.js';
 
 /**
- * @param {import('vite').PreviewServer} vite
- * @param {import('vite').ResolvedConfig} vite_config
- * @param {import('types').ValidatedConfig} svelte_config
+ * @param {PreviewServer} vite
+ * @param {ResolvedConfig} vite_config
+ * @param {ValidatedConfig} svelte_config
  */
 export async function preview(vite, vite_config, svelte_config) {
-	installPolyfills();
-
 	const { paths } = svelte_config.kit;
 	const base = paths.base;
 	const assets = paths.assets ? SVELTE_KIT_ASSETS : paths.base;
@@ -31,8 +29,8 @@ export async function preview(vite, vite_config, svelte_config) {
 
 	const dir = join(svelte_config.kit.outDir, 'output/server');
 
-	if (!fs.existsSync(dir)) {
-		throw new Error(`Server files not found at ${dir}, did you run \`build\` first?`);
+	if (!fs.existsSync(`${dir}/manifest.js`)) {
+		throw stackless(`Server files not found at ${dir}, did you run \`build\` first?`);
 	}
 
 	const instrumentation = join(dir, 'instrumentation.server.js');
@@ -40,21 +38,24 @@ export async function preview(vite, vite_config, svelte_config) {
 		await import(pathToFileURL(instrumentation).href);
 	}
 
-	/** @type {import('types').ServerInternalModule} */
+	/** @type {ServerInternalModule} */
 	const { set_assets } = await import(pathToFileURL(join(dir, 'internal.js')).href);
 
-	/** @type {import('types').ServerModule} */
-	const { Server } = await import(pathToFileURL(join(dir, 'index.js')).href);
+	/** @type {ServerModule} */
+	const { Server } = await import(pathToFileURL(join(dir, 'server.js')).href);
 
-	const { manifest } = await import(pathToFileURL(join(dir, 'manifest.js')).href);
+	/** @type {SSRManifest} */
+	const manifest = (await import(pathToFileURL(join(dir, 'manifest.js')).href)).manifest;
 
 	set_assets(assets);
 
 	const server = new Server(manifest);
 
 	try {
+		const env = loadEnv(vite_config.mode, svelte_config.kit.env.dir, '');
+
 		await server.init({
-			env: loadEnv(vite_config.mode, svelte_config.kit.env.dir, ''),
+			env,
 			read: (file) => createReadableStream(`${dir}/${file}`)
 		});
 	} catch (error) {
@@ -66,6 +67,38 @@ export async function preview(vite, vite_config, svelte_config) {
 	}
 
 	const emulator = await svelte_config.kit.adapter?.emulate?.();
+
+	// The custom/default handler's `init_server` function performs one-time setup work
+	// (see the `SSRHandler` contract), so it must run once at startup rather than per
+	// request. We map each incoming `Request` to its originating Node request so that the
+	// long-lived `respond` closure can still resolve the per-request client address.
+	/** @type {{ default: SSRHandler }} */
+	const { default: init_server } = await import(pathToFileURL(`${dir}/handler.js`).href);
+
+	/** @type {WeakMap<Request, import('node:http').IncomingMessage>} */
+	const request_sockets = new WeakMap();
+
+	const respond = await init_server({
+		respond: (request, options) => {
+			const req = request_sockets.get(request);
+			return server.respond(request, {
+				...options,
+				getClientAddress: () => {
+					const remoteAddress = req?.socket.remoteAddress;
+					if (remoteAddress) return remoteAddress;
+					throw new Error('Could not determine clientAddress');
+				},
+				read: (file) => {
+					if (file in manifest._.server_assets) {
+						return fs.readFileSync(join(dir, file));
+					}
+
+					return fs.readFileSync(join(svelte_config.kit.files.assets, file));
+				},
+				emulator
+			});
+		}
+	});
 
 	return () => {
 		// Remove the base middleware. It screws with the URL.
@@ -207,36 +240,21 @@ export async function preview(vite, vite_config, svelte_config) {
 		vite.middlewares.use(async (req, res) => {
 			const host = req.headers[':authority'] || req.headers.host;
 
-			const request = await getRequest({
+			const request = getRequest({
 				base: `${protocol}://${host}`,
 				request: req
 			});
 
-			await setResponse(
-				res,
-				await server.respond(request, {
-					getClientAddress: () => {
-						const { remoteAddress } = req.socket;
-						if (remoteAddress) return remoteAddress;
-						throw new Error('Could not determine clientAddress');
-					},
-					read: (file) => {
-						if (file in manifest._.server_assets) {
-							return fs.readFileSync(join(dir, file));
-						}
+			request_sockets.set(request, req);
 
-						return fs.readFileSync(join(svelte_config.kit.files.assets, file));
-					},
-					emulator
-				})
-			);
+			setResponse(res, await respond(request));
 		});
 	};
 }
 
 /**
  * @param {string} dir
- * @returns {Handler}
+ * @returns {NextHandleFunction}
  */
 const mutable = (dir) =>
 	fs.existsSync(dir)
@@ -248,8 +266,8 @@ const mutable = (dir) =>
 
 /**
  * @param {string} scope
- * @param {Handler} handler
- * @returns {Handler}
+ * @param {NextHandleFunction} handler
+ * @returns {NextHandleFunction}
  */
 function scoped(scope, handler) {
 	if (scope === '') return handler;

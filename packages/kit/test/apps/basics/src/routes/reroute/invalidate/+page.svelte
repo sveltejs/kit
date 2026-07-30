@@ -1,10 +1,10 @@
 <script>
-	import { invalidateAll } from '$app/navigation';
+	import { refreshAll } from '$app/navigation';
 
 	export let data;
 </script>
 
-<button on:click={async () => await invalidateAll()}>Invalidate</button>
+<button onclick={async () => await refreshAll()}>Refresh</button>
 
 {#if data.request}
 	<p>data request: {data.request}</p>

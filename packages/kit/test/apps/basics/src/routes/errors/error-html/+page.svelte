@@ -10,6 +10,6 @@
 	}
 </script>
 
-<button on:click={() => fail('unexpected')}>Unexpected</button>
-<button on:click={() => fail('expected')}>Expected</button>
-<button on:click={() => fail('redirect')}>Redirect</button>
+<button onclick={() => fail('unexpected')}>Unexpected</button>
+<button onclick={() => fail('expected')}>Expected</button>
+<button onclick={() => fail('redirect')}>Redirect</button>

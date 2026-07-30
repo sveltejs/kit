@@ -99,11 +99,11 @@ test.describe('a11y', () => {
 			.toBe(0);
 	});
 
-	test('keepfocus works', async ({ page }) => {
+	test('reset: false preserves focus', async ({ page }) => {
 		await page.goto('/keepfocus');
 
 		await Promise.all([
-			page.type('#input', 'bar'),
+			page.locator('#input').pressSequentially('bar', { delay: 100 }),
 			page.waitForFunction(() => window.location.search === '?foo=bar')
 		]);
 		await expect(page.locator('#input')).toBeFocused();
@@ -284,11 +284,11 @@ test.describe('Navigation lifecycle functions', () => {
 
 	test('onNavigate calls callback', async ({ page, clicknav }) => {
 		await page.goto('/navigation-lifecycle/on-navigate/a');
-		expect(await page.textContent('h1')).toBe('undefined -> undefined (...) false');
+		expect(await page.textContent('h1')).toBe('undefined -> undefined (...) false false');
 
 		await clicknav('[href="/navigation-lifecycle/on-navigate/b"]');
 		expect(await page.textContent('h1')).toBe(
-			'/navigation-lifecycle/on-navigate/a -> /navigation-lifecycle/on-navigate/b (link) true'
+			'/navigation-lifecycle/on-navigate/a -> /navigation-lifecycle/on-navigate/b (link) false true'
 		);
 	});
 
@@ -926,6 +926,18 @@ test.describe('Prefetching', () => {
 		await app.preloadData('/routing/preloading/preload-error');
 		await app.goto('/routing/preloading/preload-error');
 		await expect(page.locator('p')).toHaveText('hello');
+	});
+
+	test('preloads errors', async ({ page }) => {
+		await page.goto('/routing/preloading/error');
+
+		await expect(page.locator('p')).toHaveText('undefined undefined undefined');
+
+		page.locator('button', { hasText: '404' }).click();
+		await expect(page.locator('p')).toHaveText('error 404 Not found');
+
+		page.locator('button', { hasText: '500' }).click();
+		await expect(page.locator('p')).toHaveText('error 500 Oopsie (500 Internal Error)');
 	});
 });
 

@@ -34,6 +34,7 @@ export default [
 			'**/dist',
 			'**/.custom-out-dir',
 			'packages/adapter-*/files',
+			'!packages/adapter-vercel/files',
 			'packages/kit/src/core/config/fixtures/multiple', // dir contains svelte config with multiple extensions tripping eslint
 			'packages/kit/types/index.d.ts', // generated file
 			'packages/*/test/**/build/**',
@@ -45,7 +46,9 @@ export default [
 	{
 		languageOptions: {
 			parserOptions: {
-				projectService: true
+				projectService: {
+					allowDefaultProject: ['packages/kit/src/runtime/app/service-worker/index.js']
+				}
 			}
 		},
 		rules: {
@@ -53,6 +56,17 @@ export default [
 			'@typescript-eslint/no-unused-expressions': 'off',
 			'@typescript-eslint/require-await': 'error',
 			'@typescript-eslint/no-floating-promises': 'error',
+			'@typescript-eslint/no-misused-promises': [
+				'error',
+				{
+					// we turn these off because it's common to pass an async callback to
+					// a synchronous callback parameter such as `setTimeout(...)`
+					checksVoidReturn: {
+						arguments: false,
+						properties: false
+					}
+				}
+			],
 			'@typescript-eslint/no-unused-vars': [
 				'error',
 				{
@@ -69,8 +83,8 @@ export default [
 		ignores: [
 			'packages/adapter-cloudflare/test/apps/**/*',
 			'packages/adapter-netlify/test/apps/**/*',
-			'packages/adapter-node/rollup.config.js',
 			'packages/adapter-node/smoke.spec_disabled.js',
+			'packages/adapter-node/test/apps/**/*',
 			'packages/adapter-static/test/apps/**/*',
 			'packages/adapter-vercel/test/apps/**/*',
 			'packages/kit/src/core/sync/create_manifest_data/test/samples/**/*',

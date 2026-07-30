@@ -1,4 +1,4 @@
-import { RemoteFunctionData } from 'types';
+import { SvelteKitPayload } from 'types';
 
 declare global {
 	const __SVELTEKIT_ADAPTER_NAME__: string;
@@ -6,6 +6,8 @@ declare global {
 	const __SVELTEKIT_APP_VERSION__: string;
 	const __SVELTEKIT_APP_VERSION_FILE__: string;
 	const __SVELTEKIT_APP_VERSION_POLL_INTERVAL__: number;
+	/** True if version checks are enabled (i.e. `bundleStrategy !== 'inline'`) */
+	const __SVELTEKIT_APP_VERSION_CHECKS_ENABLED__: boolean;
 	/**
 	 * True if the user ran `vite dev`. This is different from `esm-env` because
 	 * it is influenced by `NODE_ENV` which can still be true during `vite preview`
@@ -15,13 +17,13 @@ declare global {
 	const __SVELTEKIT_PATHS_ASSETS__: string;
 	const __SVELTEKIT_PATHS_BASE__: string;
 	const __SVELTEKIT_PATHS_RELATIVE__: boolean;
-	/** True if `config.kit.experimental.instrumentation.server` is `true` */
+	/** True if `config.tracing.server` is `true` */
 	const __SVELTEKIT_SERVER_TRACING_ENABLED__: boolean;
-	/** True if `config.kit.experimental.forkPreloads` is `true` */
+	/** True if `config.experimental.forkPreloads` is `true` */
 	const __SVELTEKIT_FORK_PRELOADS__: boolean;
-	/** True if `config.kit.router.resolution === 'client'` */
+	/** True if `config.router.resolution === 'client'` */
 	const __SVELTEKIT_CLIENT_ROUTING__: boolean;
-	/** True if `config.kit.router.type === 'hash'` */
+	/** True if `config.router.type === 'hash'` */
 	const __SVELTEKIT_HASH_ROUTING__: boolean;
 	/**
 	 * True if any node in the manifest has a server load function.
@@ -33,21 +35,25 @@ declare global {
 	 * Used for treeshaking universal load code from client bundles when no universal loads exist.
 	 */
 	const __SVELTEKIT_HAS_UNIVERSAL_LOAD__: boolean;
-	/** The `__sveltekit_abc123` object in the init `<script>` */
-	const __SVELTEKIT_PAYLOAD__: {
-		/** The basepath, usually relative to the current page */
-		base: string;
-		/** Path to externally-hosted assets */
-		assets?: string;
-		/** Public environment variables */
-		env?: Record<string, string>;
-		/** Serialized data from query/form/command functions */
-		data?: RemoteFunctionData;
-		/** Create a placeholder promise */
-		defer?: (id: number) => Promise<any>;
-		/** Resolve a placeholder promise */
-		resolve?: (data: { id: number; data: any; error: any }) => void;
-	};
+	/**
+	 * The `__sveltekit_abc123` object in the init `<script>`.
+	 * Should only be used when bundleStrategy !== 'inline' to avoid SvelteKit runtime changing on every build, preventing cacheability.
+	 */
+	const __SVELTEKIT_PAYLOAD__: SvelteKitPayload;
+	/**
+	 * Whether the `experimental.async` flag is applied
+	 */
+	const __SVELTEKIT_SUPPORTS_ASYNC__: boolean;
+	/**
+	 * Manifest data placeholders used by `$app/manifest`. During build, these
+	 * are bare identifiers (fake globals) that the bundler leaves as unresolved
+	 * references. They are replaced with real values by scanning the output
+	 * chunks after each build completes.
+	 */
+	const __SVELTEKIT_MANIFEST_IMMUTABLE__: string[];
+	const __SVELTEKIT_MANIFEST_ASSETS__: string[];
+	const __SVELTEKIT_MANIFEST_PRERENDERED__: string[];
+	const __SVELTEKIT_MANIFEST_ROUTES__: { id: string }[];
 	/**
 	 * This makes the use of specific features visible at both dev and build time, in such a
 	 * way that we can error when they are not supported by the target platform.
@@ -63,8 +69,6 @@ declare global {
 	 * to throw an error if the feature would fail in production.
 	 */
 	var __SVELTEKIT_TRACK__: (label: string) => void;
-	var __SVELTEKIT_EXPERIMENTAL_USE_TRANSFORM_ERROR__: boolean;
-	var __SVELTEKIT_EXPERIMENTAL_EXPLICIT_ENVIRONMENT_VARIABLES__: boolean;
 	var Bun: object;
 	var Deno: object;
 }
