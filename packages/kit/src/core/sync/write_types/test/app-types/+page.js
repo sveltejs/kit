@@ -7,8 +7,11 @@ id = '/foo/[bar]/[baz]';
 id = '/(group)/path-a';
 
 // @ts-expect-error
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 id = '/nope';
+
+// @ts-expect-error `/foo` is a directory with no `+page` or `+server`, so it is not a route
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+id = '/foo';
 
 /** @type {import('$app/types').RouteParams<'/foo/[bar]/[baz]'>} */
 const params = {

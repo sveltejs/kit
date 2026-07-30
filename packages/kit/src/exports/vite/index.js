@@ -46,6 +46,7 @@ import analyse from '../../core/postbuild/analyse.js';
 import { s } from '../../utils/misc.js';
 import { hash } from '../../utils/hash.js';
 import { dedent } from '../../core/sync/utils.js';
+import { get_app_routes } from '../../core/sync/create_manifest_data/index.js';
 import { get_import_aliases, get_hash_import_keys } from '../../utils/imports.js';
 import {
 	app_env_private,
@@ -1129,7 +1130,9 @@ function kit({ svelte_config }) {
 					];
 
 					export const routes = [
-						${manifest_data.routes.map((route) => s({ id: route.id })).join(',\n')}
+						${get_app_routes(manifest_data)
+							.map((route) => s(route))
+							.join(',\n')}
 					];
 					`;
 				}
@@ -1571,7 +1574,7 @@ function kit({ svelte_config }) {
 			// the client build and after prerendering respectively.
 			replace_manifest_placeholder_variables(server_chunks, `${out}/server`, {
 				assets: manifest_data.assets.map((asset) => ({ path: asset.file })),
-				routes: manifest_data.routes.map((route) => ({ id: route.id }))
+				routes: get_app_routes(manifest_data)
 			});
 
 			const verbose = builder.config.logLevel === 'info';
@@ -1733,7 +1736,7 @@ function kit({ svelte_config }) {
 				replace_manifest_placeholder_variables(client_chunks, `${out}/client`, {
 					immutable,
 					assets: manifest_data.assets.map((asset) => ({ path: asset.file })),
-					routes: manifest_data.routes.map((route) => ({ id: route.id }))
+					routes: get_app_routes(manifest_data)
 				});
 
 				// Now that the client build is done, replace the `build` sentinel
@@ -2145,7 +2148,11 @@ const create_manifest_data_module = (is_build, manifest_data) => {
 	// In dev, `manifest_data` may not be set yet on the very first load,
 	// but `configureServer` (which calls `sync.create`) runs before any
 	// module is served, so it will be set by the time this is called.
-	const routes = manifest_data?.routes.map((route) => s({ id: route.id })).join(',\n') ?? '';
+	const routes = manifest_data
+		? get_app_routes(manifest_data)
+				.map((route) => s(route))
+				.join(',\n')
+		: '';
 	const assets = manifest_data?.assets.map((asset) => s({ path: asset.file })).join(',\n') ?? '';
 
 	return dedent`

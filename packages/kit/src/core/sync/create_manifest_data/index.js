@@ -42,6 +42,24 @@ export default function create_manifest_data({
 }
 
 /**
+ * Whether the router can match this route. `manifest_data.routes` also contains an entry for
+ * every other directory in `src/routes`, so that layouts and params can be resolved, and those
+ * ids never reach `event.route.id`.
+ * @param {import('types').RouteData} route
+ */
+export function is_app_route(route) {
+	return !!(route.page || route.endpoint);
+}
+
+/**
+ * Returns the routes that `$app/manifest` exposes and that `RouteId` is generated from.
+ * @param {import('types').ManifestData} manifest_data
+ */
+export function get_app_routes(manifest_data) {
+	return manifest_data.routes.filter(is_app_route).map((route) => ({ id: route.id }));
+}
+
+/**
  * Returns a list of files in the `static` directory.
  * @param {import('types').ValidatedConfig} config
  */

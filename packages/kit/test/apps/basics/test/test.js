@@ -782,6 +782,8 @@ test.describe('$app/manifest', () => {
 		expect(ids).toContain('/');
 		expect(ids).toContain('/app-manifest');
 		expect(ids).toContain('/routing');
+		// `/accessibility` only holds a layout and child routes, so it isn't a route itself
+		expect(ids).not.toContain('/accessibility');
 	});
 
 	test('exposes static assets', async ({ page }) => {
