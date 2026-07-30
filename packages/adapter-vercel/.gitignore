@@ -1,2 +1,4 @@
 .DS_Store
 node_modules
+/files/*.js
+!files/serverless.js

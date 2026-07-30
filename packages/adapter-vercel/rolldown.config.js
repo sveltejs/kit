@@ -1,6 +1,6 @@
 import { rmSync } from 'node:fs';
 
-const EXTERNAL = new Set(['0SERVER', 'MANIFEST', '__HOOKS__']);
+const EXTERNAL = new Set(['__HOOKS__']);
 
 /**
  * @param {string} filepath
@@ -21,19 +21,18 @@ function clearOutput(filepath) {
 
 /** @type {import('rolldown').RolldownOptions} */
 const config = {
+	platform: 'node',
 	input: {
-		serverless: 'src/serverless.js',
-		edge: 'src/edge.js',
 		reroute: 'src/reroute.js'
 	},
 	output: {
-		dir: 'files',
-		format: 'esm'
+		file: 'files/reroute.js',
+		format: 'esm',
+		codeSplitting: false
 	},
-	plugins: [clearOutput('files')],
+	plugins: [clearOutput('files/reroute.js')],
 	external: (id) => EXTERNAL.has(id) || id.startsWith('node:'),
-	preserveEntrySignatures: 'exports-only',
-	platform: 'node'
+	preserveEntrySignatures: 'exports-only'
 };
 
 export default config;

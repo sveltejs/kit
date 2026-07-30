@@ -33,12 +33,15 @@
 		"index.d.ts"
 	],
 	"scripts": {
+		"dev": "rolldown -cw",
+		"build": "rolldown -c",
 		"lint": "prettier --check .",
 		"format": "pnpm lint --write",
 		"check": "tsc",
 		"test:unit": "vitest run",
 		"test:build": "cd test/apps/basic && pnpm build",
-		"test": "pnpm test:unit && pnpm test:build"
+		"test": "pnpm test:unit && pnpm test:build",
+		"prepublishOnly": "pnpm build"
 	},
 	"dependencies": {
 		"@vercel/nft": "^1.10.2"
@@ -46,6 +49,7 @@
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",
 		"@types/node": "catalog:",
+		"rolldown": "catalog:",
 		"typescript": "catalog:",
 		"vitest": "catalog:"
 	},

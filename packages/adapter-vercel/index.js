@@ -47,6 +47,8 @@ const plugin = function (defaults = {}) {
 
 			builder.log.minor('Generating serverless function...');
 
+			let reroute_middleware = false;
+
 			/**
 			 * @param {string} name
 			 * @param {import('./index.js').ServerlessConfig} config
@@ -71,7 +73,7 @@ const plugin = function (defaults = {}) {
 
 				write(
 					`${tmp}/manifest.js`,
-					`export const manifest = ${builder.generateManifest({ relativePath, routes })};\n`
+					`export const manifest = ${builder.generateManifest({ relativePath, routes, rerouteMiddleware: reroute_middleware })};\n`
 				);
 
 				await create_function_bundle(builder, `${tmp}/index.js`, dir, config);
@@ -173,6 +175,31 @@ const plugin = function (defaults = {}) {
 			}
 
 			const singular = groups.size === 1;
+
+			/** @type {string | void} */
+			let reroute_path;
+
+			if (!singular && (reroute_path = await builder.getReroutePath?.())) {
+				builder.log('Generating middleware to run reroute before split functions...');
+
+				static_config.routes.push({
+					src: '/.*',
+					middlewarePath: 'reroute',
+					continue: true
+				});
+
+				const dir = `${dirs.functions}/reroute.func`;
+
+				builder.copy(`${files}/reroute.js`, `${tmp}/index.js`, {
+					replace: {
+						__HOOKS__: reroute_path
+					}
+				});
+
+				await create_function_bundle(builder, `${tmp}/index.js`, dir, defaults);
+
+				reroute_middleware = true;
+			}
 
 			for (const group of groups.values()) {
 				// generate one function for the group
