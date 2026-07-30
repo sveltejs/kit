@@ -1,9 +1,14 @@
 /** @import { Handle, RequestEvent, ResolveOptions } from '@sveltejs/kit' */
+/** @import { RecordSpan } from 'types' */
 import {
 	merge_tracing,
-	get_request_store,
+	try_get_request_store,
 	with_request_store
 } from '@sveltejs/kit/internal/server';
+import { noop_span } from '../../runtime/telemetry/noop.js';
+
+/** @type {RecordSpan} */
+const noop_record_span = ({ fn }) => fn(noop_span);
 
 /**
  * A helper function for sequencing multiple `handle` calls in a middleware-like manner.
@@ -83,7 +88,8 @@ export function sequence(...handlers) {
 	if (!length) return ({ event, resolve }) => resolve(event);
 
 	return ({ event, resolve }) => {
-		const { state } = get_request_store();
+		const store = try_get_request_store();
+		const record_span = store?.state.tracing.record_span ?? noop_record_span;
 		return apply_handle(0, event, {});
 
 		/**
@@ -95,49 +101,51 @@ export function sequence(...handlers) {
 		function apply_handle(i, event, parent_options) {
 			const handle = handlers[i];
 
-			return state.tracing.record_span({
+			return record_span({
 				name: `sveltekit.handle.sequenced.${handle.name ? handle.name : i}`,
 				attributes: {},
 				fn: async (current) => {
 					const traced_event = merge_tracing(event, current);
-					return await with_request_store({ event: traced_event, state }, () =>
-						handle({
-							event: traced_event,
-							resolve: (event, options) => {
-								/** @type {ResolveOptions['transformPageChunk']} */
-								const transformPageChunk = async ({ html, done }) => {
-									if (options?.transformPageChunk) {
-										html = (await options.transformPageChunk({ html, done })) ?? '';
-									}
+					return await with_request_store(
+						store && { event: traced_event, state: store.state },
+						() =>
+							handle({
+								event: traced_event,
+								resolve: (event, options) => {
+									/** @type {ResolveOptions['transformPageChunk']} */
+									const transformPageChunk = async ({ html, done }) => {
+										if (options?.transformPageChunk) {
+											html = (await options.transformPageChunk({ html, done })) ?? '';
+										}
 
-									if (parent_options?.transformPageChunk) {
-										html = (await parent_options.transformPageChunk({ html, done })) ?? '';
-									}
+										if (parent_options?.transformPageChunk) {
+											html = (await parent_options.transformPageChunk({ html, done })) ?? '';
+										}
 
-									return html;
-								};
+										return html;
+									};
 
-								/** @type {ResolveOptions['filterSerializedResponseHeaders']} */
-								const filterSerializedResponseHeaders =
-									parent_options?.filterSerializedResponseHeaders ??
-									options?.filterSerializedResponseHeaders;
+									/** @type {ResolveOptions['filterSerializedResponseHeaders']} */
+									const filterSerializedResponseHeaders =
+										parent_options?.filterSerializedResponseHeaders ??
+										options?.filterSerializedResponseHeaders;
 
-								/** @type {ResolveOptions['preload']} */
-								const preload = parent_options?.preload ?? options?.preload;
+									/** @type {ResolveOptions['preload']} */
+									const preload = parent_options?.preload ?? options?.preload;
 
-								return i < length - 1
-									? apply_handle(i + 1, event, {
-											transformPageChunk,
-											filterSerializedResponseHeaders,
-											preload
-										})
-									: resolve(event, {
-											transformPageChunk,
-											filterSerializedResponseHeaders,
-											preload
-										});
-							}
-						})
+									return i < length - 1
+										? apply_handle(i + 1, event, {
+												transformPageChunk,
+												filterSerializedResponseHeaders,
+												preload
+											})
+										: resolve(event, {
+												transformPageChunk,
+												filterSerializedResponseHeaders,
+												preload
+											});
+								}
+							})
 					);
 				}
 			});
