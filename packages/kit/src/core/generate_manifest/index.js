@@ -94,6 +94,12 @@ export function generate_manifest({
 		mime_types[ext] ??= mime_lookup(ext) || '';
 	}
 
+	// record extensions that only exist in prerendered output, e.g. a prerendered favicon.ico
+	for (const pathname of prerendered) {
+		const ext = path.extname(pathname);
+		if (ext) mime_types[ext] ??= mime_lookup(ext) || '';
+	}
+
 	// prettier-ignore
 	// String representation of
 	/** @template {import('@sveltejs/kit').SSRManifest} T */
