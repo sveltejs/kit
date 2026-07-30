@@ -56,6 +56,17 @@ test('copy files', () => {
 	rmSync(dest, { force: true, recursive: true });
 });
 
+test('refuses to delete the build output', () => {
+	const outDir = join(import.meta.dirname, 'fixtures/basic/.svelte-kit');
+
+	// @ts-expect-error - we don't need the whole config for this test
+	const builder = create_builder({ config: { kit: { outDir } }, route_data: [] });
+
+	expect(() => builder.rimraf(join(outDir, 'output/client'))).toThrow('Cannot delete');
+	expect(() => builder.rimraf(outDir)).toThrow('Cannot delete');
+	expect(() => builder.rimraf(join(outDir, 'netlify-tmp'))).not.toThrow();
+});
+
 test('compress files', async () => {
 	// @ts-expect-error - we don't need the whole config for this test
 	const builder = create_builder({

@@ -110,7 +110,7 @@ type UnpackValidationError<T> =
 export interface Builder {
 	/** Print messages to the console. `log.info` and `log.minor` are silent unless Vite's `logLevel` is `info`. */
 	log: Logger;
-	/** Remove `dir` and all its contents. */
+	/** Remove `dir` and all its contents. Throws if `dir` overlaps with `${config.kit.outDir}/output`, which `writeClient`, `writeServer` and `writePrerendered` copy from. */
 	rimraf: (dir: string) => void;
 	/** Create `dir` and any required parent directories. */
 	mkdirp: (dir: string) => void;

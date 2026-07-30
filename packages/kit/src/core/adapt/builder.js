@@ -6,7 +6,7 @@
 import { loadEnv } from 'vite';
 import * as devalue from 'devalue';
 import { createReadStream, createWriteStream, existsSync, statSync } from 'node:fs';
-import { extname, resolve, join, dirname, relative } from 'node:path';
+import { extname, resolve, join, dirname, relative, sep, isAbsolute } from 'node:path';
 import { pipeline } from 'node:stream';
 import { promisify, styleText } from 'node:util';
 import zlib from 'node:zlib';
@@ -87,7 +87,22 @@ export function create_builder({
 
 	return {
 		log,
-		rimraf,
+		/** @param {string} dir */
+		rimraf(dir) {
+			const target = resolve(dir);
+			const output = resolve(config.kit.outDir, 'output');
+
+			if (contains(output, target) || contains(target, output)) {
+				throw new Error(
+					`Cannot delete ${target}, because it overlaps with ${output}, which SvelteKit copies the build output from. ` +
+						'Change the directory your adapter writes to (`publish` in netlify.toml, `out` for adapter-node, ' +
+						'`pages`/`assets` for adapter-static, `assets.directory` or `pages_build_output_dir` in your Wrangler config) ' +
+						'so that the two do not overlap.'
+				);
+			}
+
+			rimraf(target);
+		},
 		mkdirp,
 		copy,
 
@@ -261,6 +276,16 @@ export function create_builder({
 			write(entrypoint, facade);
 		}
 	};
+}
+
+/**
+ * Whether `b` is `a` or lives inside it
+ * @param {string} a
+ * @param {string} b
+ */
+function contains(a, b) {
+	const path = relative(a, b);
+	return path === '' || (path !== '..' && !path.startsWith(`..${sep}`) && !isAbsolute(path));
 }
 
 /**
