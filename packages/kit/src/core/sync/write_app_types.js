@@ -7,6 +7,7 @@ import { s } from '../../utils/misc.js';
 import { basic_param_pattern, get_route_segments } from '../../utils/routing.js';
 
 const optional_param_pattern = /^\[\[[\w-]+(?:=[\w-]+)?\]\]$/;
+const rest_param_pattern = /^\[\.\.\.[\w-]+(?:=[\w-]+)?\]$/;
 
 /**
  * Convert a route ID to the pathnames it can match (relative to the base path), in which each
@@ -18,12 +19,12 @@ const get_pathname_patterns = (id) => {
 	let pathnames = [''];
 
 	for (const segment of get_route_segments(id)) {
-		const optional = optional_param_pattern.test(segment);
-		const content = optional ? '${string}' : segment.replace(basic_param_pattern, '${string}');
+		const omittable = optional_param_pattern.test(segment) || rest_param_pattern.test(segment);
+		const content = omittable ? '${string}' : segment.replace(basic_param_pattern, '${string}');
 
 		pathnames = pathnames.flatMap((pathname) => {
 			const joined = pathname === '' ? content : `${pathname}/${content}`;
-			return optional ? [joined, pathname] : [joined];
+			return omittable ? [joined, pathname] : [joined];
 		});
 	}
 

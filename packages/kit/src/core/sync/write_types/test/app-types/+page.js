@@ -120,5 +120,9 @@ pathname = 'xyzabout';
 pathname = 'xyzdeep';
 
 // Test multiple params in a single segment
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 pathname = 'multi-param/1-2';
+
+// Test rest params, which can match zero segments
+pathname = 'files';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+pathname = 'files/a/b';
