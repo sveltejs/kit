@@ -33,16 +33,17 @@ test.describe('remote functions', () => {
 
 	test('clicking a link to the current page refreshes active queries', async ({ page }) => {
 		await page.goto('/remote/link-refresh');
+		await page.locator('#reset').click();
 
-		const a = page.locator('#now');
+		const a = page.locator('#count');
 
-		const t1 = /** @type {string} */ (await a.textContent());
-		await new Promise((f) => setTimeout(f, 50)); // belt and braces
+		expect(await a.textContent()).toBe('0');
+
+		await page.locator('#increment').click();
+		expect(await a.textContent()).toBe('0');
+
 		await a.click();
-		const t2 = /** @type {string} */ (await a.textContent());
-
-		expect(+t1).not.toBeNaN();
-		expect(+t2).toBeGreaterThan(+t1);
+		expect(await a.textContent()).toBe('1');
 	});
 
 	test('packages can re-export remote functions', async ({ page }) => {

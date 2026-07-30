@@ -1,3 +1,15 @@
-import { query } from '$app/server';
+import { command, query } from '$app/server';
 
-export const now = query(() => Date.now());
+let count = 0;
+
+export const reset = command(() => {
+	count = 0;
+	get_count().refresh();
+});
+
+export const increment = command(() => {
+	count += 1;
+	// don't refresh!
+});
+
+export const get_count = query(() => count);
