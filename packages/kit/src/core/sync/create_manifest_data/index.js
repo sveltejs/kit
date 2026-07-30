@@ -85,7 +85,7 @@ function resolve_params(config, cwd) {
  */
 function create_routes_and_nodes(cwd, config, fallback) {
 	/** @type {import('types').RouteData[]} */
-	const routes = [];
+	let routes = [];
 
 	const routes_base = posixify(path.relative(cwd, config.kit.files.routes));
 
@@ -439,6 +439,11 @@ function create_routes_and_nodes(cwd, config, fallback) {
 			throw new Error(`${current_node.component} references missing segment "${parent_id}"`);
 		}
 	}
+
+	// remove route objects with no route file
+	routes = routes.filter(
+		(route) => route.page || route.endpoint || route.leaf || route.layout || route.error
+	);
 
 	// add parents to error nodes so that we can compute which page options apply to them
 	for (const route of routes) {

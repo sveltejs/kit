@@ -1129,7 +1129,10 @@ function kit({ svelte_config }) {
 					];
 
 					export const routes = [
-						${manifest_data.routes.map((route) => s({ id: route.id })).join(',\n')}
+						${manifest_data.routes
+							.filter((route) => route.page || route.endpoint || route.leaf)
+							.map((route) => s({ id: route.id }))
+							.join(',\n')}
 					];
 					`;
 				}
@@ -2144,7 +2147,11 @@ const create_manifest_data_module = (is_build, manifest_data) => {
 	// In dev, `manifest_data` may not be set yet on the very first load,
 	// but `configureServer` (which calls `sync.create`) runs before any
 	// module is served, so it will be set by the time this is called.
-	const routes = manifest_data?.routes.map((route) => s({ id: route.id })).join(',\n') ?? '';
+	const routes =
+		manifest_data?.routes
+			.filter((route) => route.page || route.endpoint || route.leaf)
+			.map((route) => s({ id: route.id }))
+			.join(',\n') ?? '';
 	const assets = manifest_data?.assets.map((asset) => s({ path: asset.file })).join(',\n') ?? '';
 
 	return dedent`
