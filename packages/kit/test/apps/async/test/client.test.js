@@ -37,7 +37,7 @@ test.describe('remote functions', () => {
 		const a = page.locator('#now');
 
 		const t1 = /** @type {string} */ (await a.textContent());
-		await new Promise((f) => setTimeout(f, 5)); // belt and braces
+		await new Promise((f) => setTimeout(f, 50)); // belt and braces
 		await a.click();
 		const t2 = /** @type {string} */ (await a.textContent());
 
