@@ -51,6 +51,11 @@ function serve(path, client = false) {
 						res.removeHeader('vary');
 					}
 
+					// `sirv` uses its own bundled `mrmime`, which the manifest's added types never reach
+					let type = manifest.mimeTypes[pathname.slice(pathname.lastIndexOf('.'))];
+					if (type === 'text/html') type += ';charset=utf-8';
+					if (type) res.setHeader('content-type', type);
+
 					// only apply to build directory, not e.g. version.json
 					if (
 						client &&

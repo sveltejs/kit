@@ -18,6 +18,8 @@ We'll introduce these files in a moment in more detail, but here are a few simpl
 * All files run on the client except `+server` files
 * `+layout` and `+error` files apply to subdirectories as well as the directory they live in
 
+> [!NOTE] When navigating from page A to B, SvelteKit preserves the components that are common to both of them — [see here](state-management#Component-and-page-state-is-preserved) for more detail.
+
 ## +page
 
 ### +page.svelte

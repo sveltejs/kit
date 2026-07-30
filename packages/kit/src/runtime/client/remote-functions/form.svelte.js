@@ -262,13 +262,9 @@ export function form(id) {
 
 					if (response.redirect) {
 						// Use internal version to allow redirects to external URLs
-						void _goto(
-							response.redirect,
-							{
-								refreshAll: should_refresh
-							},
-							0
-						);
+						void _goto(response.redirect, {
+							refreshAll: should_refresh
+						});
 						return true;
 					}
 
