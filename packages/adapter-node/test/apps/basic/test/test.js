@@ -30,6 +30,14 @@ test('serves static files with the Content-Type from the manifest', async ({ req
 	expect(response.headers()['content-type']).toBe('image/x-icon');
 });
 
+test('serves prerendered endpoints with the Content-Type from the manifest', async ({
+	request
+}) => {
+	const response = await request.get('/prerendered.ico');
+	expect(response.status()).toBe(200);
+	expect(response.headers()['content-type']).toBe('image/x-icon');
+});
+
 test('serves static HTML with a charset', async ({ request }) => {
 	const response = await request.get('/page.html');
 	expect(response.status()).toBe(200);
