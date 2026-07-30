@@ -661,13 +661,13 @@ function persist_state() {
 
 /**
  * @param {string | URL} url
- * @param {{ replace?: boolean; reset?: boolean; refreshAll?: boolean; invalidate?: Array<string | URL | ((url: URL) => boolean)>; state?: Record<string, any>; persistState?: boolean }} options
- * @param {number} redirect_count
+ * @param {{ type?: import('@sveltejs/kit').NavigationType; replace?: boolean; reset?: boolean; refreshAll?: boolean; invalidate?: Array<string | URL | ((url: URL) => boolean)>; state?: Record<string, any>; persistState?: boolean; event?: Event }} [options]
+ * @param {number} [redirect_count]
  * @param {{}} [nav_token]
  * @param {NavigationIntent | undefined} [intent] navigation intent, when already known by the caller (avoids recomputing it)
  * @returns {Promise<void>}
  */
-export async function _goto(url, options, redirect_count, nav_token, intent) {
+export async function _goto(url, options = {}, redirect_count = 0, nav_token = {}, intent) {
 	/** @type {Set<string>} */
 	let query_keys;
 	/** @type {Set<string>} */
@@ -680,12 +680,13 @@ export async function _goto(url, options, redirect_count, nav_token, intent) {
 	}
 
 	await navigate({
-		type: 'goto',
+		type: options.type ?? 'goto',
 		url: resolve_url(url),
 		reset: options.reset,
 		replace_state: options.replace,
 		state: options.state,
 		persist_state: options.persistState,
+		event: options.event,
 		redirect_count,
 		nav_token,
 		intent,
@@ -1607,7 +1608,7 @@ async function load_root_error_page({ error, url, route }) {
 		// client-side navigation if the root layout loader throws a redirect while
 		// rendering the default error page
 		if (error instanceof Redirect) {
-			await _goto(new URL(error.location, location.href), {}, 0);
+			await _goto(new URL(error.location, location.href));
 			return;
 		}
 
@@ -2892,7 +2893,7 @@ export async function applyAction(result) {
 	if (result.type === 'error') {
 		await set_nearest_error_page(result.error);
 	} else if (result.type === 'redirect') {
-		await _goto(result.location, { refreshAll: true }, 0);
+		await _goto(result.location, { refreshAll: true });
 	} else {
 		page.form = result.data;
 		page.status = result.status;
@@ -3108,11 +3109,13 @@ function _start_router() {
 			setTimeout(fulfil, 100); // fallback for edge case where rAF doesn't fire because e.g. tab was backgrounded
 		});
 
-		await navigate({
+		const changed = url.href !== location.href;
+
+		await _goto(url, {
 			type: 'link',
-			url,
 			reset: options.reset,
-			replace_state: options.replace_state ?? url.href === location.href,
+			replace: options.replace_state ?? !changed,
+			refreshAll: !changed,
 			event
 		});
 	});

@@ -100,7 +100,7 @@ export function prerender(id) {
 
 				if (result.redirect) {
 					// Use internal version to allow redirects to external URLs
-					void _goto(result.redirect, {}, 0);
+					void _goto(result.redirect);
 					return;
 				}
 

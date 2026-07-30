@@ -1,7 +1,7 @@
 /** @import { EnvVarConfig, KitConfig } from '@sveltejs/kit' */
 /** @import { Options, SvelteConfig } from '@sveltejs/vite-plugin-svelte' */
 /** @import { PreprocessorGroup } from 'svelte/compiler' */
-/** @import { BuildData, ManifestData, Prerendered, RemoteChunk, RemoteInternals, ServerMetadata, ValidatedConfig, ValidatedKitConfig } from 'types' */
+/** @import { Asset, BuildData, ManifestData, Prerendered, RemoteChunk, RemoteInternals, RouteData, ServerMetadata, ValidatedConfig, ValidatedKitConfig } from 'types' */
 /** @import { Manifest, Plugin, ResolvedConfig, Rolldown, UserConfig, ViteDevServer } from 'vite' */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -1121,7 +1121,7 @@ function kit({ svelte_config }) {
 					];
 
 					export const assets = [
-						${manifest_data.assets.map((asset) => s({ path: asset.file })).join(',\n')}
+						${stringify_assets(manifest_data.assets)}
 					];
 
 					export const prerendered = [
@@ -1129,7 +1129,7 @@ function kit({ svelte_config }) {
 					];
 
 					export const routes = [
-						${manifest_data.routes.map((route) => s({ id: route.id })).join(',\n')}
+						${stringify_routes(manifest_data.routes)}
 					];
 					`;
 				}
@@ -2113,6 +2113,27 @@ function comparable(value) {
 }
 
 /**
+ * @param {Asset[] | undefined} assets
+ * @returns {string}
+ */
+function stringify_assets(assets) {
+	return assets?.map((asset) => s({ path: asset.file })).join(',\n') ?? '';
+}
+
+/**
+ * @param {RouteData[] | undefined} routes
+ * @returns {string}
+ */
+function stringify_routes(routes) {
+	return (
+		routes
+			?.filter((route) => route.page || route.endpoint || route.leaf)
+			.map((route) => s({ id: route.id }))
+			.join(',\n') ?? ''
+	);
+}
+
+/**
  * Creates the `$app/manifest` data module. During development, real values
  * are emitted for `assets` and `routes` (the only data known at that point).
  *
@@ -2144,20 +2165,17 @@ const create_manifest_data_module = (is_build, manifest_data) => {
 	// In dev, `manifest_data` may not be set yet on the very first load,
 	// but `configureServer` (which calls `sync.create`) runs before any
 	// module is served, so it will be set by the time this is called.
-	const routes = manifest_data?.routes.map((route) => s({ id: route.id })).join(',\n') ?? '';
-	const assets = manifest_data?.assets.map((asset) => s({ path: asset.file })).join(',\n') ?? '';
-
 	return dedent`
 		// empty during dev
 		export const immutable = [];
 		export const prerendered = [];
 
 		export const assets = [
-			${assets}
+			${stringify_assets(manifest_data?.assets)}
 		];
 
 		export const routes = [
-			${routes}
+			${stringify_routes(manifest_data?.routes)}
 		];
 	`;
 };
