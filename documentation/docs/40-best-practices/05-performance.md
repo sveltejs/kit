@@ -67,7 +67,7 @@ We recommend running the latest version of Svelte. Svelte 5 is smaller and faste
 
 Try to minimize the number of third-party scripts running in the browser. For example, instead of using JavaScript-based analytics consider using server-side implementations, such as those offered by many platforms with SvelteKit adapters including [Cloudflare](https://www.cloudflare.com/web-analytics/), [Netlify](https://docs.netlify.com/monitor-sites/site-analytics/), and [Vercel](https://vercel.com/docs/analytics).
 
-To run third party scripts in a web worker (which avoids blocking the main thread), use [Partytown's SvelteKit integration](https://partytown.builder.io/sveltekit).
+To run third party scripts in a web worker (which avoids blocking the main thread), use [Partytown's SvelteKit integration](https://partytown.qwik.dev/sveltekit/).
 
 ### Selective loading
 
