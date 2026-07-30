@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: remove paths without layout files from `LayoutParams`
+fix: exclude routes without a page or endpoint from `routes` in `$app/manifest`, and remove directories with no route files from `LayoutParams`

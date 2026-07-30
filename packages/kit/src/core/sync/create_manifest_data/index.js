@@ -42,6 +42,16 @@ export default function create_manifest_data({
 }
 
 /**
+ * Whether the router can match this route. `manifest_data.routes` also contains an entry for
+ * every other directory in `src/routes`, so that layouts and params can be resolved, and those
+ * ids never reach `event.route.id`.
+ * @param {import('types').RouteData} route
+ */
+export function is_app_route(route) {
+	return !!(route.page || route.endpoint);
+}
+
+/**
  * Returns a list of files in the `static` directory.
  * @param {import('types').ValidatedConfig} config
  */
@@ -441,9 +451,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 	}
 
 	// remove route objects with no route file
-	routes = routes.filter(
-		(route) => route.page || route.endpoint || route.leaf || route.layout || route.error
-	);
+	routes = routes.filter((route) => route.endpoint || route.leaf || route.layout || route.error);
 
 	// add parents to error nodes so that we can compute which page options apply to them
 	for (const route of routes) {

@@ -82,10 +82,12 @@ type RouteParams<T extends RouteId> = { /* generated */ } | Record<string, never
 
 A utility for getting the parameters associated with a given layout, which is similar to `RouteParams` but also includes optional parameters for any child route.
 
+Unlike `RouteId`, this accepts any directory in `src/routes`, since a layout can live in a directory that has no `+page` or `+server` of its own.
+
 <div class="ts-block">
 
 ```dts
-type RouteParams<T extends RouteId> = { /* generated */ } | Record<string, never>;
+type LayoutParams<T extends '/' | '/my-route' | '/my-other-route'> = { /* generated */ };
 ```
 
 </div>
