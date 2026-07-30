@@ -419,7 +419,19 @@ async function generate_reroute_middleware({ builder, reroute_path }) {
 		}
 	});
 
-	await bundle_edge_function({ builder, name: 'reroute', reroute_middleware: false });
+	const path = '/*';
+	const excluded_paths = await get_excluded_paths(tmp, builder);
+
+	await build({
+		...rolldown_config,
+		input: `${tmp}/entry.js`,
+		output: {
+			...rolldown_config.output,
+			file: `${netlify_framework_edge_path}/${FUNCTION_PREFIX}reroute.js`
+		}
+	});
+
+	add_edge_function_config({ builder, path, name: 'reroute', excluded_paths });
 }
 
 /**
@@ -439,14 +451,91 @@ async function bundle_edge_function({ builder, name, reroute_middleware }) {
 	});
 	writeFileSync(`${tmp}/manifest.js`, `export const manifest = ${manifest};\n`);
 
+	const path = '/*';
+	const excluded_paths = await get_excluded_paths(tmp, builder);
+
+	await Promise.all([
+		build({
+			...rolldown_config,
+			input: `${tmp}/entry.js`,
+			output: {
+				...rolldown_config.output,
+				file: `${netlify_framework_edge_path}/${FUNCTION_PREFIX}${name}.js`
+			}
+		}),
+		builder.hasServerInstrumentationFile() &&
+			build({
+				...rolldown_config,
+				input: `${builder.getServerDirectory()}/instrumentation.server.js`,
+				output: {
+					...rolldown_config.output,
+					file: `${netlify_framework_edge_path}/${FUNCTION_PREFIX}instrumentation.server.js`
+				}
+			})
+	]);
+
+	if (builder.hasServerInstrumentationFile()) {
+		builder.instrument({
+			entrypoint: `${netlify_framework_edge_path}/${FUNCTION_PREFIX}${name}.js`,
+			instrumentation: `${netlify_framework_edge_path}/${FUNCTION_PREFIX}instrumentation.server.js`,
+			start: `${netlify_framework_edge_path}/${FUNCTION_PREFIX}start.js`
+		});
+	}
+
+	add_edge_function_config({ builder, path, name, excluded_paths });
+}
+
+/**
+ * Adds edge function configuration to the Frameworks API config file `config.json`
+ * https://docs.netlify.com/build/frameworks/frameworks-api/#netlifyv1edge-functions
+ * @param {{ builder: Builder, path: string, name: string, excluded_paths: string[] }} params
+ */
+function add_edge_function_config({ path, name, excluded_paths }) {
+	const config = JSON.parse(readFileSync(netlify_framework_config_path, 'utf-8'));
+
+	// https://docs.netlify.com/build/frameworks/frameworks-api/#configuration-options-1
+	const edge_function_config = {
+		function: `${FUNCTION_PREFIX}${name}`,
+		name: `SvelteKit server for ${name}`,
+		generator: generator_string,
+		path,
+		excludedPath: excluded_paths
+	};
+
+	if (Array.isArray(config.edge_functions)) {
+		config.edge_functions.push(edge_function_config);
+	} else {
+		config.edge_functions = [edge_function_config];
+	}
+
+	writeFileSync(netlify_framework_config_path, s(config));
+}
+
+/** @type {string[]} */
+let excluded_paths;
+
+/**
+ *
+ * @param {string} tmp
+ * @param {Builder} builder
+ * @returns {Promise<string[]>}
+ */
+async function get_excluded_paths(tmp, builder) {
+	if (excluded_paths) return excluded_paths;
+
+	const relativePath = posix.relative(tmp, builder.getServerDirectory());
+	const manifest = builder.generateManifest({
+		relativePath
+	});
+	writeFileSync(`${tmp}/manifest.js`, `export const manifest = ${manifest};\n`);
+
 	/** @type {{ assets: Set<string> }} */
 	// we have to prepend the file:// protocol because Windows doesn't support absolute path imports
 	const { assets } = (await import(`file://${tmp}/manifest.js`)).manifest;
 
-	const path = '/*';
 	// We only need to specify paths without the trailing slash because
 	// Netlify will handle the optional trailing slash for us
-	const excluded_paths = [
+	excluded_paths = [
 		// Contains static files
 		`/${builder.getAppPath()}/immutable/*`,
 		`/${builder.getAppPath()}/version.json`,
@@ -465,55 +554,5 @@ async function bundle_edge_function({ builder, name, reroute_middleware }) {
 		'/.netlify/*'
 	];
 
-	await Promise.all([
-		build({
-			...rolldown_config,
-			input: `${tmp}/entry.js`,
-			output: {
-				...rolldown_config.output,
-				file: `${netlify_framework_edge_path}/${FUNCTION_PREFIX}render.js`
-			}
-		}),
-		builder.hasServerInstrumentationFile() &&
-			build({
-				...rolldown_config,
-				input: `${builder.getServerDirectory()}/instrumentation.server.js`,
-				output: {
-					...rolldown_config.output,
-					file: `${netlify_framework_edge_path}/${FUNCTION_PREFIX}instrumentation.server.js`
-				}
-			})
-	]);
-
-	if (builder.hasServerInstrumentationFile()) {
-		builder.instrument({
-			entrypoint: `${netlify_framework_edge_path}/${FUNCTION_PREFIX}render.js`,
-			instrumentation: `${netlify_framework_edge_path}/${FUNCTION_PREFIX}instrumentation.server.js`,
-			start: `${netlify_framework_edge_path}/${FUNCTION_PREFIX}start.js`
-		});
-	}
-
-	add_edge_function_config({ builder, path, excluded_paths });
-}
-
-/**
- * Adds edge function configuration to the Frameworks API config file `config.json`
- * https://docs.netlify.com/build/frameworks/frameworks-api/#netlifyv1edge-functions
- * @param {{ builder: Builder, path: string, excluded_paths: string[] }} params
- */
-function add_edge_function_config({ path, excluded_paths }) {
-	const config = JSON.parse(readFileSync(netlify_framework_config_path, 'utf-8'));
-
-	// https://docs.netlify.com/build/frameworks/frameworks-api/#configuration-options-1
-	config.edge_functions = [
-		{
-			function: `${FUNCTION_PREFIX}render`,
-			name: 'SvelteKit server',
-			generator: generator_string,
-			path,
-			excludedPath: excluded_paths
-		}
-	];
-
-	writeFileSync(netlify_framework_config_path, s(config));
+	return excluded_paths;
 }
