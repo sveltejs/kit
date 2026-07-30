@@ -156,7 +156,7 @@ export async function render_response({
 			tree: new RenderNode(
 				// TODO tidy up
 				/** @type {Component} */ (await branch[0].node.component?.()),
-				error_components?.[0]
+				undefined
 			),
 			form: form_value,
 			error: error ?? undefined
