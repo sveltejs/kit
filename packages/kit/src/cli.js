@@ -75,10 +75,10 @@ if (!command) {
 }
 
 if (command === 'sync') {
-	// create placeholder node_modules/$app/tsconfig/tsconfig.json if necessary, to squelch warnings.
+	// create placeholder node_modules/$app/tsconfig.json if necessary, to squelch warnings.
 	// this isn't bulletproof — if someone has some esoteric config, it will continue
 	// to harmlessly warn — but we handle the 90% case and clean up after ourselves
-	const dir = 'node_modules/$app/tsconfig';
+	const dir = 'node_modules/$app';
 	const base_tsconfig = `${dir}/tsconfig.json`;
 	const base_tsconfig_json = '{}';
 
