@@ -106,20 +106,24 @@ export function resolve_route_by_id(route_id, url, manifest) {
 		return text('Server-side route resolution disabled', { status: 400 });
 	}
 
-	const route = manifest._.client.routes.find((r) => r.id === route_id);
+	try {
+		const route = manifest._.client.routes.find((r) => r.id === route_id);
 
-	if (route) {
-		return create_server_routing_response(route, {}, url, manifest._.client).response;
+		if (route) {
+			return create_server_routing_response(route, {}, url, manifest._.client).response;
+		}
+
+		// `client.routes` only contains routes with a `+page`, so a miss above doesn't mean the
+		// route doesn't exist — it might be a `+server.js`-only route. `_.routes` includes those
+		// (with `page: null`), so we can distinguish "exists but has no code" from "unknown".
+		if (manifest._.routes.some((r) => r.id === route_id && !r.page)) {
+			return text('export const endpoint_only = true;', { headers: js_headers() });
+		}
+
+		return create_server_routing_response(null, {}, url, manifest._.client).response;
+	} catch {
+		return text('Error resolving route', { status: 500 });
 	}
-
-	// `client.routes` only contains routes with a `+page`, so a miss above doesn't mean the
-	// route doesn't exist — it might be a `+server.js`-only route. `_.routes` includes those
-	// (with `page: null`), so we can distinguish "exists but has no code" from "unknown".
-	if (manifest._.routes.some((r) => r.id === route_id && !r.page)) {
-		return text('export const endpoint_only = true;', { headers: js_headers() });
-	}
-
-	return create_server_routing_response(null, {}, url, manifest._.client).response;
 }
 
 function js_headers() {

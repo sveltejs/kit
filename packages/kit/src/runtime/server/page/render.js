@@ -398,11 +398,7 @@ export async function render_response({
 
 			// Prerender a route-ID-keyed `/_app/routes/<id>/__route.js` module alongside the
 			// pathname-keyed one above, so that `preloadCode(id)` can resolve a route ID without
-			// hitting the server. This is required, not merely an optimisation: a fully
-			// prerendered route is filtered out of `manifest._.routes` (see `generateManifest`
-			// in core/adapt/builder.js), so on a host with no SvelteKit server there is nothing
-			// left to answer a resolution request for it at runtime.
-			// `dependencies` is per-page, so without this we'd regenerate once per prerendered page
+			// hitting the server.
 			if (route && !state.prerendering.resolved_route_ids.has(route.id)) {
 				state.prerendering.resolved_route_ids.add(route.id);
 

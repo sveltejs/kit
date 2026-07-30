@@ -849,7 +849,7 @@ async function load_route_by_id(id) {
 	}
 
 	if (module.endpoint_only) {
-		// the route exists, it just has no code — cache that so we don't ask again
+		// The route exists, it just has no code to preload.
 		route_id_cache.set(id, ENDPOINT_ONLY);
 		return ENDPOINT_ONLY;
 	}
@@ -2788,11 +2788,8 @@ export async function preloadCode(id) {
 
 	if (!route) {
 		if (DEV) {
-			// NOTE: still a warning rather than an error. Under server resolution we now know for
-			// certain that the id is unknown (endpoint-only routes are reported separately, above),
-			// but under client routing we can't tell the two apart — endpoint-only routes are
-			// deliberately absent from the client manifest. Throwing in one mode and warning in the
-			// other would make behaviour depend on a config option, so both warn.
+			// warn rather than throw, since under client routing an endpoint-only route id is
+			// indistinguishable from a typo — the client manifest only contains routes with a `+page`
 			let message = `'${id}' did not match any route`;
 
 			if (__SVELTEKIT_CLIENT_ROUTING__) {
