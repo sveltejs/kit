@@ -451,9 +451,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 	}
 
 	// remove route objects with no route file
-	routes = routes.filter(
-		(route) => route.page || route.endpoint || route.leaf || route.layout || route.error
-	);
+	routes = routes.filter((route) => route.endpoint || route.leaf || route.layout || route.error);
 
 	// add parents to error nodes so that we can compute which page options apply to them
 	for (const route of routes) {
