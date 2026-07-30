@@ -1242,7 +1242,8 @@ function kit({ svelte_config }) {
 
 					/** @type {Record<string, string>} */
 					const server_input = {
-						index: `${runtime_directory}/server/index.js`,
+						server: `${runtime_directory}/server/index.js`,
+						handler: kit.adapter?.customHandler ?? `${runtime_directory}/server/default-handler.js`,
 						internal: `${out_dir}/generated/server/internal.js`,
 						env: '__sveltekit/env',
 						['remote-entry']: `${runtime_directory}/app/server/remote/index.js`

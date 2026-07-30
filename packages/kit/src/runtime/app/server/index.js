@@ -1,6 +1,7 @@
 import { read_implementation, manifest } from '../../server/internal.js';
 import { assets } from '$app/paths/internal/server';
 import { base64_decode } from '../../utils.js';
+import { from_fs } from '../../../utils/vite.js';
 
 /**
  * Read the contents of an imported asset from the filesystem
@@ -63,7 +64,7 @@ export function read(asset) {
 		const length = manifest._.server_assets[file];
 		const type = manifest.mimeTypes[file.slice(file.lastIndexOf('.'))];
 
-		return new Response(read_implementation(file), {
+		return new Response(read_implementation(__SVELTEKIT_DEV__ ? from_fs(file) : file), {
 			headers: {
 				'Content-Length': '' + length,
 				'Content-Type': type

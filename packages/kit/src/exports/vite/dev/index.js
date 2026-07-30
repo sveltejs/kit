@@ -1,6 +1,6 @@
 /** @import { RequestEvent, SSRManifest } from '@sveltejs/kit' */
 /** @import { EnvironmentModuleNode, ErrorPayload, ResolvedConfig, ViteDevServer } from 'vite' */
-/** @import { ManifestData, PrerenderOption, RemoteChunk, ServerModule, SSRNode, UniversalNode, ValidatedConfig } from 'types' */
+/** @import { ManifestData, PrerenderOption, RemoteChunk, SSRNode, UniversalNode, ValidatedConfig } from 'types' */
 import process from 'node:process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -568,23 +568,54 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, s
 				}
 
 				// we have to import `Server` before calling `set_assets`
-				const { Server } = /** @type {ServerModule} */ (
-					await runner.import(`${get_runtime_base(root)}/server/index.js`)
-				);
+				/** @type {import('types').ServerModule} */
+				const { Server } = await runner.import(`${get_runtime_base(root)}/server/index.js`);
 
+				/** @type {typeof import('../../../runtime/server/internal.js')} */
 				const { set_fix_stack_trace } = await runner.import(
 					`${get_runtime_base(root)}/server/internal.js`
 				);
 				set_fix_stack_trace(fix_stack_trace);
 
+				/** @type {typeof import('$app/paths/internal/server')} */
 				const { set_assets } = await runner.import('$app/paths/internal/server');
 				set_assets(assets);
 
 				const server = new Server(manifest);
 
-				await server.init({
-					env,
-					read: (file) => createReadableStream(from_fs(file))
+				const handler =
+					svelte_config.kit.adapter?.customHandler ??
+					`${get_runtime_base(root)}/server/default-handler.js`;
+
+				await server.init({ env, read: (file) => createReadableStream(file) });
+
+				/** @type {import('../../../runtime/server/default-handler.js')} */
+				const { default: init_server } = await runner.import(handler);
+
+				const respond = await init_server({
+					respond: (request, options) => {
+						return server.respond(request, {
+							...options,
+							getClientAddress: () => {
+								const { remoteAddress } = req.socket;
+								if (remoteAddress) return remoteAddress;
+								throw new Error('Could not determine clientAddress');
+							},
+							read: (file) => {
+								if (file in manifest._.server_assets) {
+									return fs.readFileSync(from_fs(file));
+								}
+
+								return fs.readFileSync(path.join(svelte_config.kit.files.assets, file));
+							},
+							before_handle: async (event, config, prerender, handle) => {
+								// we need to use .run because .enterWith() is not supported in Cloudflare Workers
+								// see https://blog.cloudflare.com/workers-node-js-asynclocalstorage/
+								return await async_local_storage.run({ event, config, prerender }, handle);
+							},
+							emulator
+						});
+					}
 				});
 
 				const request = getRequest({
@@ -614,26 +645,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, s
 					return;
 				}
 
-				const rendered = await server.respond(request, {
-					getClientAddress: () => {
-						const { remoteAddress } = req.socket;
-						if (remoteAddress) return remoteAddress;
-						throw new Error('Could not determine clientAddress');
-					},
-					read: (file) => {
-						if (file in manifest._.server_assets) {
-							return fs.readFileSync(from_fs(file));
-						}
-
-						return fs.readFileSync(path.join(svelte_config.kit.files.assets, file));
-					},
-					before_handle: async (event, config, prerender, handle) => {
-						// we need to use .run because .enterWith() is not supported in Cloudflare Workers
-						// see https://blog.cloudflare.com/workers-node-js-asynclocalstorage/
-						return await async_local_storage.run({ event, config, prerender }, handle);
-					},
-					emulator
-				});
+				const rendered = await respond(request);
 
 				if (rendered.status === 404) {
 					// @ts-expect-error

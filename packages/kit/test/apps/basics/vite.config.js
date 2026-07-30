@@ -20,7 +20,7 @@ export default defineConfig({
 				name: 'test-adapter',
 				adapt(builder) {
 					builder.instrument({
-						entrypoint: `${builder.getServerDirectory()}/index.js`,
+						entrypoint: `${builder.getServerDirectory()}/server.js`,
 						instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`,
 						module: {
 							exports: ['Server']
@@ -37,7 +37,8 @@ export default defineConfig({
 				supports: {
 					read: () => true,
 					instrumentation: () => true
-				}
+				},
+				customHandler: import.meta.resolve('./adapter-handler.ts')
 			},
 
 			compilerOptions: {
@@ -101,7 +102,14 @@ export default defineConfig({
 		browser: {
 			enabled: true,
 			provider: playwright(),
-			instances: [{ browser: process.env.KIT_E2E_BROWSER || 'chromium' }],
+			instances: [
+				{
+					browser:
+						/** @type {import('vitest/node').BrowserInstanceOption['browser']} */ (
+							process.env.KIT_E2E_BROWSER
+						) || 'chromium'
+				}
+			],
 			headless: true
 		},
 		include: ['unit-test/**/*.spec.js']
