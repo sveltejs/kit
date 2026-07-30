@@ -3754,8 +3754,8 @@ declare module '$app/manifest' {
 	 */
 	export const prerendered: Array<{ path: import('$app/types').Path }>;
 	/**
-	 * A route in your app, along with its capabilities. `page` is `true` if the route has a `+page`,
-	 * `endpoint` is `true` if it has a `+server`. A route that has both has both set to `true`.
+	 * A route in your app, along with its capabilities. `page` indicates the presence of a `+page`,
+	 * while `endpoint` indicates the presence of a `+server`. Both are `true` when both files exist.
 	 */
 	export type ManifestRoute =
 		| {
