@@ -11,6 +11,7 @@ import {
 	handle_error,
 	refreshAll
 } from '../client.js';
+import { page } from '../state.svelte.js';
 import { tick } from 'svelte';
 import { categorize_updates, remote_request } from './shared.svelte.js';
 import { createAttachmentKey } from 'svelte/attachments';
@@ -39,16 +40,22 @@ import {
  * @returns {InternalRemoteFormIssue[]}
  */
 function merge_with_server_issues(form_data, current_issues, client_issues) {
+	const client_names = new Set(client_issues.map((issue) => issue.name));
+
 	const merged = [
-		...current_issues.filter(
-			(issue) => issue.server && !client_issues.some((i) => i.name === issue.name)
-		),
+		...current_issues.filter((issue) => issue.server && !client_names.has(issue.name)),
 		...client_issues
 	];
 
-	const keys = Array.from(form_data.keys());
+	/** @type {Map<string, number>} */
+	const positions = new Map();
+	let i = 0;
+	for (const key of form_data.keys()) {
+		if (!positions.has(key)) positions.set(key, i);
+		i++;
+	}
 
-	return merged.sort((a, b) => keys.indexOf(a.name) - keys.indexOf(b.name));
+	return merged.sort((a, b) => (positions.get(a.name) ?? -1) - (positions.get(b.name) ?? -1));
 }
 
 /**
@@ -69,7 +76,29 @@ export function form(id) {
 	function create_instance(key) {
 		const action_id_without_key = id;
 		const action_id = id + (key != undefined ? `/${JSON.stringify(key)}` : '');
-		const action = '?/remote=' + encodeURIComponent(action_id);
+		const action = '/remote=' + encodeURIComponent(action_id);
+
+		/** @type {string} */
+		let cached_search = '';
+		/** @type {string} */
+		let cached_query = '';
+
+		/** @returns {string} */
+		function get_action() {
+			if (page.url.search !== cached_search) {
+				cached_search = page.url.search;
+
+				if (page.url.search) {
+					const params = new URLSearchParams(page.url.search);
+					params.delete('/remote');
+					cached_query = params.toString();
+				} else {
+					cached_query = '';
+				}
+			}
+
+			return `?${cached_query && `${cached_query}&`}${action}`;
+		}
 
 		// the output of a non-enhanced submission that resulted in this page —
 		// consume it so the form's state survives hydration (form outputs are
@@ -233,13 +262,9 @@ export function form(id) {
 
 					if (response.redirect) {
 						// Use internal version to allow redirects to external URLs
-						void _goto(
-							response.redirect,
-							{
-								refreshAll: should_refresh
-							},
-							0
-						);
+						void _goto(response.redirect, {
+							refreshAll: should_refresh
+						});
 						return true;
 					}
 
@@ -355,7 +380,10 @@ export function form(id) {
 		const instance = {};
 
 		instance.method = 'POST';
-		instance.action = action;
+		Object.defineProperty(instance, 'action', {
+			get: get_action,
+			enumerable: true
+		});
 
 		instance[createAttachmentKey()] = (/** @type {HTMLFormElement} */ form) => {
 			if (element) {

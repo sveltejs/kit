@@ -78,29 +78,27 @@ Sometimes you don't want navigation to create a new entry in the browser's sessi
 
 ...will replace the current `history` entry rather than creating a new one with `pushState` when the link is clicked.
 
-## data-sveltekit-keepfocus
+## data-sveltekit-reset
 
-Sometimes you don't want [focus to be reset](accessibility#Focus-management) after navigation. For example, maybe you have a search form that submits as the user is typing, and you want to keep focus on the text input.  Adding a `data-sveltekit-keepfocus` attribute to it...
+When navigating to internal links, SvelteKit mirrors the browser's default navigation behaviour: it will change the scroll position to 0,0 so that the user is at the very top left of the page (unless the link includes a `#hash`, in which case it will scroll to the element with a matching ID), and [reset focus](accessibility#Focus-management).
+
+In certain cases, you may wish to disable this behaviour. Adding a `data-sveltekit-reset="false"` attribute to a link...
 
 ```html
-<form data-sveltekit-keepfocus>
+<a href="path" data-sveltekit-reset="false">Path</a>
+```
+
+...will preserve the current scroll position and focused element after the link is clicked.
+
+The attribute can also be used on a `<form method="GET">` — for example a search form that submits as the user is typing, where you want to keep focus on the text input:
+
+```html
+<form data-sveltekit-reset="false">
 	<input type="text" name="query">
 </form>
 ```
 
-...will cause the currently focused element to retain focus after navigation. In general, avoid using this attribute on links, since the focused element would be the `<a>` tag (and not a previously focused element) and screen reader and other assistive technology users often expect focus to be moved after a navigation. You should also only use this attribute on elements that still exist after navigation. If the element no longer exists, the user's focus will be lost, making for a confusing experience for assistive technology users.
-
-## data-sveltekit-noscroll
-
-When navigating to internal links, SvelteKit mirrors the browser's default navigation behaviour: it will change the scroll position to 0,0 so that the user is at the very top left of the page (unless the link includes a `#hash`, in which case it will scroll to the element with a matching ID).
-
-In certain cases, you may wish to disable this behaviour. Adding a `data-sveltekit-noscroll` attribute to a link...
-
-```html
-<a href="path" data-sveltekit-noscroll>Path</a>
-```
-
-...will prevent scrolling after the link is clicked.
+In general, avoid preserving focus on links, since the focused element would be the `<a>` tag (and not a previously focused element) and screen reader and other assistive technology users often expect focus to be moved after a navigation. You should also only use this attribute on elements that still exist after navigation. If the element no longer exists, the user's focus will be lost, making for a confusing experience for assistive technology users.
 
 ## data-sveltekit-scroll-container
 

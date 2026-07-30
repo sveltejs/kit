@@ -507,6 +507,15 @@ test.describe('Endpoints', () => {
 });
 
 test.describe('Errors', () => {
+	test('uses the handleError status for the fallback page served to error-page sub-requests', async ({
+		request
+	}) => {
+		const response = await request.get('/errors/handle-error-status-fallback', {
+			headers: { 'x-sveltekit-error': 'true' }
+		});
+		expect(response.status()).toBe(503);
+	});
+
 	test('invalid route response is handled', async ({ request }) => {
 		const response = await request.get('/errors/invalid-route-response');
 
@@ -740,6 +749,18 @@ test.describe('Load', () => {
 	test('fetch reads universal load assets on the server', async ({ page }) => {
 		await page.goto('/load/fetch-asset');
 		await expect(page.locator('p')).toHaveText('1');
+	});
+
+	test('does not forward accept-language to internal fetch when the request has none', async ({
+		request
+	}) => {
+		// unlike browsers and undici, the `request` fixture sends no accept-language header
+		const html = await (await request.get('/load/fetch-request-headers')).text();
+		const headers = JSON.parse(
+			/** @type {RegExpMatchArray} */ (/<pre>(.+?)<\/pre>/s.exec(html))[1]
+		);
+		expect(headers.accept).toBe('*/*');
+		expect(headers['accept-language']).toBeUndefined();
 	});
 
 	test('includes origin header on non-GET internal request', async ({ page, baseURL }) => {

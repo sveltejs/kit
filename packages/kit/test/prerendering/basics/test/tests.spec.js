@@ -281,6 +281,11 @@ test('crawls links that start with config.paths.origin', () => {
 	expect(content).toBeTruthy();
 });
 
+test('crawls pages whose content-type has a charset parameter', () => {
+	expect(read('content-type-charset.html')).toBeTruthy();
+	expect(read('content-type-charset/dynamic.html')).toBeTruthy();
+});
+
 test('identifies missing ids', () => {
 	const missing_ids_file = fileURLToPath(new URL('../missing_ids/index.jsonl', import.meta.url));
 	const missing_ids_content = fs.readFileSync(missing_ids_file, 'utf-8');

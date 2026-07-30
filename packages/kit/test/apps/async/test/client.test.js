@@ -31,6 +31,21 @@ test.describe('remote functions', () => {
 		expect(response.headers()['cache-control']).toBe('private, no-store');
 	});
 
+	test('clicking a link to the current page refreshes active queries', async ({ page }) => {
+		await page.goto('/remote/link-refresh');
+		await page.locator('#reset').click();
+
+		const a = page.locator('#count');
+
+		await expect(a).toHaveText('0');
+
+		await page.locator('#increment').click();
+		await expect(a).toHaveText('0');
+
+		await a.click();
+		await expect(a).toHaveText('1');
+	});
+
 	test('packages can re-export remote functions', async ({ page }) => {
 		await page.goto('/remote-lib');
 		await expect(page.locator('h1')).toHaveText('lib says hello');

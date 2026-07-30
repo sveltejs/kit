@@ -2,7 +2,6 @@
 import process from 'node:process';
 import fs from 'node:fs';
 import path from 'node:path';
-import ts from 'typescript';
 import { styleText } from 'node:util';
 import { write_if_changed } from '../utils.js';
 import {
@@ -14,6 +13,14 @@ import {
 	remove_trailing_slashstar,
 	validate_resolved_config
 } from './utils.js';
+
+/** @type {import('typescript')} */
+let ts;
+try {
+	ts = await import('typescript');
+} catch {
+	// The user has not installed TypeScript.
+}
 
 /**
  * Generates the tsconfig that the user's tsconfig inherits from.
@@ -78,12 +85,18 @@ export function write_tsconfig(kit, root) {
  * @param {ValidatedKitConfig['typescript']['config']} [transform] TODO get rid of this
  */
 function write_parent_tsconfig(root, dir, id, config, example, transform) {
-	const out_file = path.join(root, `node_modules/${id}/tsconfig.json`);
+	// simplified tsconfig resolvers (e.g. Playwright's) only find `${id}.json`, not `${id}/tsconfig.json`
+	const out_file = path.join(root, `node_modules/${id}.json`);
 
 	let normalized = normalize_config(out_file, config);
 	normalized = transform?.(normalized) ?? normalized;
 
 	write_if_changed(out_file, JSON.stringify(normalized, null, '\t'));
+
+	if (!ts) {
+		// The user has not installed TypeScript. Skip validation of config.
+		return;
+	}
 
 	const user_config = load_user_tsconfig(dir);
 

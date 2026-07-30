@@ -53,6 +53,10 @@ export const handleError = ({ event, error: e, status, message }) => {
 		};
 	}
 
+	if (event.url.pathname === '/errors/handle-error-status-fallback') {
+		return { status: 503, message };
+	}
+
 	return event.url.pathname.endsWith('404-fallback')
 		? undefined
 		: { message: `${error.message} (${status} ${message})` };

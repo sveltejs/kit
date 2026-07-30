@@ -69,6 +69,8 @@ Once shallow routing is active, `page.shallow` becomes a `{ url, params, route }
 
 A regular `goto` call without `shallow: true`, or a standard link click, exits shallow routing.
 
+Navigating back or forward to a shallow entry restores its `page.state` and `page.shallow`. The rendered page, and therefore `page.url`, is still the one the user was on when `goto` was called. To navigate to the visible URL, call `goto(page.shallow.url)` without `shallow: true`.
+
 > [!LEGACY]
 > In SvelteKit 2 this functionality was achieved using `pushState` and `replaceState`, which are now deprecated. Use `goto` with `shallow: true` instead, and use the `replace` option when replacing the current history entry.
 
@@ -100,7 +102,7 @@ goto(url, {
 });
 ```
 
-Shallow navigations preserve the current scroll position and focused element by default. You can opt out of either behavior with `noScroll: false` or `keepFocus: false`:
+Shallow navigations preserve the current scroll position and focused element by default. You can opt out of this behavior with `reset: true`:
 
 ```js
 import { goto } from '$app/navigation';
@@ -108,8 +110,7 @@ const url = new URL('https://example.com');
 // ---cut---
 goto(url, {
 	shallow: true,
-	noScroll: false,
-	keepFocus: false
+	reset: true
 });
 ```
 

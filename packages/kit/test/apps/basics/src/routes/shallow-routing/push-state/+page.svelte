@@ -75,8 +75,7 @@
 	>
 	<button
 		data-id="options-false"
-		onclick={() => goto('?options=false', { shallow: true, noScroll: false, keepFocus: false })}
-		>disabled options</button
+		onclick={() => goto('?options=false', { shallow: true, reset: true })}>disabled options</button
 	>
 </div>
 

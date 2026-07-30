@@ -253,8 +253,9 @@ export interface Builder {
 	/**
 	 * Compress files in `directory` with gzip and brotli, where appropriate. Generates `.gz` and `.br` files alongside the originals.
 	 * @param {string} directory The directory containing the files to be compressed
+	 * @returns an array of the files in `directory` that were compressed
 	 */
-	compress: (directory: string) => Promise<void>;
+	compress: (directory: string) => Promise<string[]>;
 }
 
 /**
@@ -862,7 +863,7 @@ export interface KitConfig {
 		 * A function that allows you to edit the generated `tsconfig.json`. You can mutate the config (recommended) or return a new one.
 		 * This is useful for extending a shared `tsconfig.json` in a monorepo root, for example.
 		 *
-		 * Note that any paths configured here should be relative to the generated config file, which is written to `.svelte-kit/tsconfig.json`.
+		 * Note that any paths configured here should be relative to the generated config file, which is written to `node_modules/$app/tsconfig.json`.
 		 *
 		 * @default (config) => config
 		 * @since 1.3.0
@@ -1251,15 +1252,14 @@ export interface GotoOptions {
 	 */
 	shallow?: boolean;
 	/**
-	 * If `true`, preserves the browser's scroll position.
-	 * @default false, or true when `shallow` is true
+	 * If `true`, resets the scroll position (to the top of the page, or to the element
+	 * matching the URL's `#hash` if there is one) and resets focus (to the `<body>`, or the
+	 * `autofocus` element if there is one) once the navigation completes.
+	 *
+	 * If `false`, the current scroll position and focused element are left alone.
+	 * @default true, or false when `shallow` is true
 	 */
-	noScroll?: boolean;
-	/**
-	 * If `true`, keeps the currently focused element focused.
-	 * @default false, or true when `shallow` is true
-	 */
-	keepFocus?: boolean;
+	reset?: boolean;
 	/**
 	 * If `true`, reruns all `load` functions and queries of the page.
 	 * @default false
@@ -1395,10 +1395,7 @@ export interface NavigationLink extends NavigationBase {
 }
 
 export type Navigation =
-	| NavigationExternal
-	| NavigationFormSubmit
-	| NavigationPopState
-	| NavigationLink;
+	NavigationExternal | NavigationFormSubmit | NavigationPopState | NavigationLink;
 
 /**
  * The argument passed to [`beforeNavigate`](https://svelte.dev/docs/kit/$app-navigation#beforeNavigate) callbacks.
@@ -1503,8 +1500,7 @@ export type ParamValue = string | number | boolean | bigint;
  * A param matcher definition passed to [`defineParams`](https://svelte.dev/docs/kit/@sveltejs-kit#defineParams).
  */
 export type ParamDefinition =
-	| ((param: string) => ParamValue | undefined)
-	| StandardSchemaV1<string, ParamValue>;
+	((param: string) => ParamValue | undefined) | StandardSchemaV1<string, ParamValue>;
 
 /**
  * The return type of [`defineParams`](https://svelte.dev/docs/kit/@sveltejs-kit#defineParams).
@@ -1609,8 +1605,7 @@ export type LiveQueryRequestedResult<Validated, Output> = Iterable<
 	};
 
 export type RequestedResult<Validated, Output> =
-	| QueryRequestedResult<Validated, Output>
-	| LiveQueryRequestedResult<Validated, Output>;
+	QueryRequestedResult<Validated, Output> | LiveQueryRequestedResult<Validated, Output>;
 
 export interface RequestEvent<
 	Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
@@ -1791,7 +1786,7 @@ export class Server {
 
 export interface ServerInitOptions {
 	/** A map of environment variables. */
-	env: Record<string, string>;
+	env: Record<string, string | undefined>;
 	/** A function that turns an asset filename into a `ReadableStream`. Required for the `read` export from `$app/server` to work. */
 	read?: (file: string) => MaybePromise<ReadableStream | null>;
 }
