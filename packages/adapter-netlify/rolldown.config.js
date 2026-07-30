@@ -1,5 +1,7 @@
 import { rmSync } from 'node:fs';
 
+const EXTERNAL = new Set(['0SERVER', 'MANIFEST', '__HOOKS__']);
+
 /**
  * @param {string} filepath
  * @returns {import('rolldown').Plugin}
@@ -28,7 +30,7 @@ const config = {
 		format: 'esm'
 	},
 	plugins: [clearOutput('files')],
-	external: (id) => id === '0SERVER' || id === 'MANIFEST' || id.startsWith('node:'),
+	external: (id) => EXTERNAL.has(id) || id.startsWith('node:'),
 	preserveEntrySignatures: 'exports-only',
 	platform: 'node'
 };

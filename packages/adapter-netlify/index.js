@@ -1,3 +1,5 @@
+/** @import { Builder, RouteDefinition } from '@sveltejs/kit' */
+
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -92,14 +94,24 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 			builder.log.minor('Writing Netlify config...');
 			write_frameworks_config({ builder });
 
+			let reroute_middleware = false;
+
 			if (edge) {
 				if (split) {
 					throw new Error('Cannot use `split: true` alongside `edge: true`');
 				}
 
-				await generate_edge_functions({ builder });
+				await generate_edge_functions({ builder, reroute_middleware });
 			} else {
-				generate_serverless_functions({ builder, split, publish });
+				/** @type {string | void} */
+				let reroute_path;
+
+				if (split && (reroute_path = await builder.getReroutePath?.())) {
+					await generate_reroute_middleware({ builder, reroute_path });
+					reroute_middleware = true;
+				}
+
+				generate_serverless_functions({ builder, split, publish, reroute_middleware });
 			}
 		},
 
@@ -111,12 +123,13 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 }
 
 /**
- * @param { object } params
- * @param {import('@sveltejs/kit').Builder} params.builder
- * @param { string } params.publish
- * @param { boolean } params.split
+ * @param {object} params
+ * @param {Builder} params.builder
+ * @param {string} params.publish
+ * @param {boolean} params.split
+ * @param {boolean} params.reroute_middleware
  */
-function generate_serverless_functions({ builder, publish, split }) {
+function generate_serverless_functions({ builder, publish, split, reroute_middleware }) {
 	// https://docs.netlify.com/build/frameworks/frameworks-api/#netlifyv1functions
 	builder.mkdirp(netlify_framework_serverless_path);
 
@@ -180,7 +193,8 @@ function generate_serverless_functions({ builder, publish, split }) {
 				builder,
 				routes,
 				patterns,
-				name
+				name,
+				reroute_middleware
 			});
 		}
 
@@ -189,14 +203,16 @@ function generate_serverless_functions({ builder, publish, split }) {
 			routes: [],
 			patterns: ['/*'],
 			name: `${FUNCTION_PREFIX}catch-all`,
-			exclude: Array.from(seen)
+			exclude: Array.from(seen),
+			reroute_middleware
 		});
 	} else {
 		generate_serverless_function({
 			builder,
 			routes: undefined,
 			patterns: ['/*'],
-			name: `${FUNCTION_PREFIX}render`
+			name: `${FUNCTION_PREFIX}render`,
+			reroute_middleware: false
 		});
 	}
 
@@ -227,7 +243,7 @@ function get_netlify_config() {
 /**
  * Writes the Netlify Frameworks API config file
  * https://docs.netlify.com/build/frameworks/frameworks-api/
- * @param {{ builder: import('@sveltejs/kit').Builder }} params
+ * @param {{ builder: Builder }} params
  */
 function write_frameworks_config({ builder }) {
 	// https://docs.netlify.com/build/frameworks/frameworks-api/#headers
@@ -250,17 +266,26 @@ function write_frameworks_config({ builder }) {
 /**
  *
  * @param {{
- *   builder: import('@sveltejs/kit').Builder,
- *   routes: import('@sveltejs/kit').RouteDefinition[] | undefined,
+ *   builder: Builder,
+ *   routes: RouteDefinition[] | undefined,
  *   patterns: string[],
  *   name: string,
- *   exclude?: string[]
+ *   exclude?: string[],
+ *   reroute_middleware: boolean
  * }} opts
  */
-function generate_serverless_function({ builder, routes, patterns, name, exclude }) {
+function generate_serverless_function({
+	builder,
+	routes,
+	patterns,
+	name,
+	exclude,
+	reroute_middleware
+}) {
 	const manifest = builder.generateManifest({
 		relativePath: '../server',
-		routes
+		routes,
+		rerouteMiddleware: reroute_middleware
 	});
 
 	const fn = generate_serverless_function_module(manifest);
@@ -349,10 +374,11 @@ const rolldown_config = {
 };
 
 /**
- * @param { object } params
- * @param {import('@sveltejs/kit').Builder} params.builder
+ * @param {object} params
+ * @param {Builder} params.builder
+ * @param {boolean} params.reroute_middleware
  */
-async function generate_edge_functions({ builder }) {
+async function generate_edge_functions({ builder, reroute_middleware }) {
 	const tmp = builder.getBuildDirectory('netlify-tmp');
 	builder.rimraf(tmp);
 	builder.mkdirp(tmp);
@@ -370,10 +396,47 @@ async function generate_edge_functions({ builder }) {
 		}
 	});
 
-	const manifest = builder.generateManifest({
-		relativePath
+	await bundle_edge_function({ builder, name: 'render', reroute_middleware });
+}
+
+/**
+ * @param {object} params
+ * @param {Builder} params.builder
+ * @param {string} params.reroute_path
+ */
+async function generate_reroute_middleware({ builder, reroute_path }) {
+	builder.log.minor('Generating edge middleware to run reroute before split functions...');
+
+	const tmp = builder.getBuildDirectory('netlify-tmp');
+	builder.rimraf(tmp);
+	builder.mkdirp(tmp);
+
+	builder.mkdirp('.netlify/edge-functions');
+
+	builder.copy(`${files}/reroute.js`, `${tmp}/entry.js`, {
+		replace: {
+			__HOOKS__: reroute_path
+		}
 	});
 
+	await bundle_edge_function({ builder, name: 'reroute', reroute_middleware: false });
+}
+
+/**
+ *
+ * @param {object} params
+ * @param {Builder} params.builder
+ * @param {string} params.name
+ * @param {boolean} params.reroute_middleware
+ */
+async function bundle_edge_function({ builder, name, reroute_middleware }) {
+	const tmp = builder.getBuildDirectory('netlify-tmp');
+
+	const relativePath = posix.relative(tmp, builder.getServerDirectory());
+	const manifest = builder.generateManifest({
+		relativePath,
+		rerouteMiddleware: reroute_middleware
+	});
 	writeFileSync(`${tmp}/manifest.js`, `export const manifest = ${manifest};\n`);
 
 	/** @type {{ assets: Set<string> }} */
@@ -436,7 +499,7 @@ async function generate_edge_functions({ builder }) {
 /**
  * Adds edge function configuration to the Frameworks API config file `config.json`
  * https://docs.netlify.com/build/frameworks/frameworks-api/#netlifyv1edge-functions
- * @param {{ builder: import('@sveltejs/kit').Builder, path: string, excluded_paths: string[] }} params
+ * @param {{ builder: Builder, path: string, excluded_paths: string[] }} params
  */
 function add_edge_function_config({ path, excluded_paths }) {
 	const config = JSON.parse(readFileSync(netlify_framework_config_path, 'utf-8'));
