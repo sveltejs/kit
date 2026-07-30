@@ -69,7 +69,7 @@ Once shallow routing is active, `page.shallow` becomes a `{ url, params, route }
 
 A regular `goto` call without `shallow: true`, or a standard link click, exits shallow routing.
 
-Navigating back or forward to a shallow entry restores its `page.state`, and `page.shallow` again describes the entry's URL. `page.url` continues to describe the page that renders, which is the one the user was on when `goto` was called. To have the visible URL drive `load`, call `goto` without `shallow: true`.
+Navigating back or forward to a shallow entry restores its `page.state` and `page.shallow`. The rendered page, and therefore `page.url`, is still the one the user was on when `goto` was called. To navigate to the visible URL, call `goto(page.shallow.url)` without `shallow: true`.
 
 > [!LEGACY]
 > In SvelteKit 2 this functionality was achieved using `pushState` and `replaceState`, which are now deprecated. Use `goto` with `shallow: true` instead, and use the `replace` option when replacing the current history entry.
