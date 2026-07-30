@@ -36,11 +36,18 @@ export default [
 			'packages/adapter-*/files',
 			'!packages/adapter-vercel/files',
 			'packages/kit/src/core/config/fixtures/multiple', // dir contains svelte config with multiple extensions tripping eslint
+			'packages/kit/src/core/sync/create_manifest_data/test/samples/**/*',
 			'packages/kit/types/index.d.ts', // generated file
+			'packages/*/test/apps/**/*',
 			'packages/*/test/**/build/**',
-			'packages/package/test/fixtures/typescript-svelte-config/expected',
+			'packages/kit/test/build-errors/**/*',
+			'packages/kit/test/prerendering/**/*',
+			'packages/test-redirect-importer/index.js',
 			'packages/package/test/errors/**/*',
-			'packages/package/test/fixtures/**/*'
+			'packages/package/test/fixtures/**/*',
+			'packages/package/test/watch/expected/**/*',
+			'packages/package/test/watch/package/**/*',
+			'packages/adapter-node/smoke.spec_disabled.js'
 		]
 	},
 	{
@@ -79,20 +86,6 @@ export default [
 					ignoreRestSiblings: true
 				}
 			]
-		},
-		ignores: [
-			'packages/adapter-cloudflare/test/apps/**/*',
-			'packages/adapter-netlify/test/apps/**/*',
-			'packages/adapter-node/smoke.spec_disabled.js',
-			'packages/adapter-node/test/apps/**/*',
-			'packages/adapter-static/test/apps/**/*',
-			'packages/adapter-vercel/test/apps/**/*',
-			'packages/kit/src/core/sync/create_manifest_data/test/samples/**/*',
-			'packages/kit/test/apps/**/*',
-			'packages/kit/test/build-errors/**/*',
-			'packages/kit/test/prerendering/**/*',
-			'packages/test-redirect-importer/index.js',
-			'packages/adapter-netlify/test/preview.js'
-		]
+		}
 	}
 ];
