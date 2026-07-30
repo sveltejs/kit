@@ -97,6 +97,14 @@ describe('parse_route_id', () => {
 			params: [
 				{ name: 'catch-all', matcher: 'some-matcher', optional: false, rest: true, chained: true }
 			]
+		},
+		'/[x+5b]': {
+			pattern: /^\/\[\/?$/,
+			params: []
+		},
+		'/[x+5d]': {
+			pattern: /^\/\]\/?$/,
+			params: []
 		}
 	};
 
