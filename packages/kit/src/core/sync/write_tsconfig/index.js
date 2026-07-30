@@ -47,6 +47,7 @@ export function write_tsconfig(kit, root) {
 				...ESSENTIAL_OPTIONS,
 				...RECOMMENDED_OPTIONS
 			},
+			include: [],
 			exclude: [kit.files.serviceWorker]
 		},
 		{
@@ -100,13 +101,15 @@ function write_parent_tsconfig(root, dir, id, config, example, transform) {
 	const user_config = load_user_tsconfig(dir);
 
 	if (user_config && modified_since_last_check(user_config.file)) {
+		const relative = path.relative(process.cwd(), user_config.file);
+
 		// now that we've written the parent config, we can resolve the
 		// user config and validate that nothing important was overwritten
 		if (!extends_id(user_config.options, id)) {
 			console.warn(
 				styleText(
 					['bold', 'yellow'],
-					`${path.relative(process.cwd(), user_config.file)} should extend SvelteKit's built-in configuration:`
+					`${relative} should extend SvelteKit's built-in configuration:`
 				)
 			);
 
@@ -115,8 +118,12 @@ function write_parent_tsconfig(root, dir, id, config, example, transform) {
 			return;
 		}
 
-		const resolved = ts.parseJsonConfigFileContent(user_config.options, ts.sys, dir).options;
-		const warnings = validate_resolved_config(resolved, config.compilerOptions);
+		const resolved = ts.parseJsonConfigFileContent(user_config.options, ts.sys, dir);
+		const warnings = validate_resolved_config(resolved.options, config.compilerOptions);
+
+		if (resolved.raw.include?.length === 0) {
+			warnings.push(`Missing "include" array`);
+		}
 
 		if (warnings.length > 0) {
 			console.warn(
