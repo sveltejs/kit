@@ -114,6 +114,10 @@ pathname = 'en/about';
 pathname = 'deep';
 pathname = 'en/deep';
 pathname = 'en/gb/deep';
+// @ts-expect-error an omitted optional param does not merge into the next segment
+pathname = 'xyzabout';
+// @ts-expect-error
+pathname = 'xyzdeep';
 
 // Test multiple params in a single segment
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

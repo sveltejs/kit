@@ -9,26 +9,25 @@ import { basic_param_pattern, get_route_segments } from '../../utils/routing.js'
 const optional_param_pattern = /^\[\[[\w-]+(?:=[\w-]+)?\]\]$/;
 
 /**
- * Convert a route ID to a pathname (relative to the base path) in which each param
- * is replaced with `${string}`
+ * Convert a route ID to the pathnames it can match (relative to the base path), in which each
+ * param is replaced with `${string}`. A param that fills an entire segment can be absent, so it
+ * contributes a pathname with the segment and one without, rather than one that absorbs the `/`
  * @param {string} id
  */
-const get_pathname_pattern = (id) => {
-	let pathname = '';
-	let separator = '';
+const get_pathname_patterns = (id) => {
+	let pathnames = [''];
 
 	for (const segment of get_route_segments(id)) {
-		if (optional_param_pattern.test(segment)) {
-			// the segment can be absent, so `${string}` absorbs the adjacent `/`. TypeScript does not
-			// match a literal against two consecutive placeholders, so only add one
-			if (!pathname.endsWith('${string}')) pathname += '${string}';
-		} else {
-			pathname += separator + segment.replace(basic_param_pattern, '${string}');
-			separator = '/';
-		}
+		const optional = optional_param_pattern.test(segment);
+		const content = optional ? '${string}' : segment.replace(basic_param_pattern, '${string}');
+
+		pathnames = pathnames.flatMap((pathname) => {
+			const joined = pathname === '' ? content : `${pathname}/${content}`;
+			return optional ? [joined, pathname] : [joined];
+		});
 	}
 
-	return pathname;
+	return [...new Set(pathnames)];
 };
 
 /**
@@ -208,8 +207,6 @@ function generate_app_types(manifest_data, config, dir) {
 	}
 
 	for (const route of manifest_data.routes) {
-		const pathname = get_pathname_pattern(route.id);
-
 		/** @type {(path: string) => string} */
 		let serialise = s;
 
@@ -225,8 +222,10 @@ function generate_app_types(manifest_data, config, dir) {
 			serialise = (p) => `\`${p}\` & {}`;
 		}
 
-		for (const p of get_pathnames_for_trailing_slash(pathname, route)) {
-			pathnames.add(serialise(p));
+		for (const pathname of get_pathname_patterns(route.id)) {
+			for (const p of get_pathnames_for_trailing_slash(pathname, route)) {
+				pathnames.add(serialise(p));
+			}
 		}
 
 		let layout_type = 'Record<string, never>';
