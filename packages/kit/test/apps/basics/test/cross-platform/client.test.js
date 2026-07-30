@@ -885,6 +885,24 @@ test.describe('Prefetching', () => {
 		expect(requests.filter((r) => r.includes('__route.js'))).toEqual([]);
 	});
 
+	test('preloadCode caches endpoint-only route ids', async ({ page, app }) => {
+		await page.goto('/routing/a');
+
+		// first call discovers that `/set-cookie` exists but has no `+page`
+		await app.preloadCode('/set-cookie');
+
+		/** @type {string[]} */
+		const requests = [];
+		page.on('request', (r) => {
+			requests.push(r.url());
+		});
+
+		// the second call must be answered from the cache, without asking the server again
+		await app.preloadCode('/set-cookie');
+
+		expect(requests.filter((r) => r.includes('__route.js'))).toEqual([]);
+	});
+
 	if (process.env.DEV) {
 		test('warns when preloadCode is called with an unknown route id', async ({ page, app }) => {
 			await page.goto('/routing/a');
@@ -897,7 +915,32 @@ test.describe('Prefetching', () => {
 
 			await app.preloadCode('/does-not-exist-[at]-all');
 
-			expect(warnings.join('\n')).toMatch('did not match any page routes');
+			expect(warnings.join('\n')).toMatch('did not match any route');
+		});
+
+		test('warns when preloadCode is called with an endpoint-only route id', async ({
+			page,
+			app
+		}) => {
+			await page.goto('/routing/a');
+
+			/** @type {string[]} */
+			const warnings = [];
+			page.on('console', (msg) => {
+				if (msg.type() === 'warning') warnings.push(msg.text());
+			});
+
+			// `/set-cookie` is a `+server.js` with no `+page`, so there is no code to preload
+			await app.preloadCode('/set-cookie');
+
+			if (process.env.ROUTER_RESOLUTION) {
+				// under server resolution the endpoint tells us the route exists but has no page
+				expect(warnings.join('\n')).toMatch('has no `+page`');
+			} else {
+				// under client routing, endpoint-only routes aren't in the client manifest at all,
+				// so they're indistinguishable from an unknown id
+				expect(warnings.join('\n')).toMatch('did not match any route');
+			}
 		});
 
 		if (!process.env.ROUTER_RESOLUTION) {

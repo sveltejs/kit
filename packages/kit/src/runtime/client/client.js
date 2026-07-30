@@ -301,11 +301,18 @@ function discard_load_cache() {
 const reroute_cache = new Map();
 
 /**
+ * Sentinel for a route that exists but has no code to preload, i.e. a `+server.js` with no
+ * `+page`. Cached like a parsed route so that repeated `preloadCode(id)` calls for the same
+ * id don't re-request it.
+ */
+const ENDPOINT_ONLY = Symbol('endpoint only');
+
+/**
  * Cache of route ID -> parsed route for server-side route resolution.
  * Populated whenever a server route resolution occurs (`match`, link preloading,
  * hydration), so that `preloadCode(id)` doesn't need an extra server round trip.
  * Lives until full page reload.
- * @type {Map<string, import('types').CSRRoute>}
+ * @type {Map<string, import('types').CSRRoute | typeof ENDPOINT_ONLY>}
  */
 const route_id_cache = new Map();
 
@@ -819,14 +826,14 @@ async function _preload_data(intent) {
 }
 
 /**
- * Fetch and parse the route with the given ID from the server-side
- * route resolution endpoint. Returns `undefined` if the route doesn't exist.
- * Only used when `router.resolution === 'server'`.
+ * Fetch and parse the route with the given ID from the server-side route resolution endpoint.
+ * Returns `ENDPOINT_ONLY` if the route exists but has no code to preload, or `undefined` if
+ * there is no such route. Only used when `router.resolution === 'server'`.
  * @param {string} id
- * @returns {Promise<import('types').CSRRoute | undefined>}
+ * @returns {Promise<import('types').CSRRoute | typeof ENDPOINT_ONLY | undefined>}
  */
 async function load_route_by_id(id) {
-	/** @type {{ route?: import('types').CSRRouteServer }} */
+	/** @type {{ route?: import('types').CSRRouteServer, endpoint_only?: boolean }} */
 	let module;
 
 	try {
@@ -839,6 +846,12 @@ async function load_route_by_id(id) {
 		// host, fallback HTML with the wrong MIME type) and the import rejects —
 		// treat it the same as an unknown route rather than surfacing a cryptic error
 		return;
+	}
+
+	if (module.endpoint_only) {
+		// the route exists, it just has no code — cache that so we don't ask again
+		route_id_cache.set(id, ENDPOINT_ONLY);
+		return ENDPOINT_ONLY;
 	}
 
 	if (!module.route) return;
@@ -2753,7 +2766,7 @@ export async function preloadCode(id) {
 		);
 	}
 
-	/** @type {import('types').CSRRoute | undefined} */
+	/** @type {import('types').CSRRoute | typeof ENDPOINT_ONLY | undefined} */
 	let route;
 
 	if (__SVELTEKIT_CLIENT_ROUTING__) {
@@ -2762,17 +2775,29 @@ export async function preloadCode(id) {
 		route = route_id_cache.get(id) ?? (await load_route_by_id(id));
 	}
 
+	if (route === ENDPOINT_ONLY) {
+		if (DEV) {
+			console.warn(
+				`'${id}' has no \`+page\`, so there is no code to preload. If you meant to warm up an ` +
+					`endpoint, request it with \`fetch\` instead.`
+			);
+		}
+
+		return;
+	}
+
 	if (!route) {
 		if (DEV) {
-			// TODO: this is a warning rather than an error because `$app/manifest`'s
-			// `routes` export includes endpoint-only (+server.js) routes, which have no
-			// code to preload and are indistinguishable from nonexistent ids on the
-			// client. Revisit if/when `$app/manifest.routes` is filtered or annotated
-			// (see https://github.com/sveltejs/kit/issues/16511) — at that point unknown
-			// ids could error again.
-			let message = `'${id}' did not match any page routes (note that endpoint-only routes have no code to preload)`;
+			// NOTE: still a warning rather than an error. Under server resolution we now know for
+			// certain that the id is unknown (endpoint-only routes are reported separately, above),
+			// but under client routing we can't tell the two apart — endpoint-only routes are
+			// deliberately absent from the client manifest. Throwing in one mode and warning in the
+			// other would make behaviour depend on a config option, so both warn.
+			let message = `'${id}' did not match any route`;
 
 			if (__SVELTEKIT_CLIENT_ROUTING__) {
+				message += ` (note that routes without a \`+page\` have no code to preload)`;
+
 				// the most common migration mistake is passing a pathname, which used to work
 				const candidates = [id];
 				if (base && id.startsWith(base)) candidates.push(id.slice(base.length) || '/');

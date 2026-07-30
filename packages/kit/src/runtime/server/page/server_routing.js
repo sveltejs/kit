@@ -88,6 +88,14 @@ export async function resolve_route(resolved_path, url, manifest) {
  * Resolve a route-ID resolution request (`/_app/routes/<id>/__route.js`) to a
  * JS module containing the route's node loaders. Params are always `{}` since
  * this endpoint exists to support `preloadCode(routeId)`, which doesn't need them.
+ *
+ * The module has one of three shapes, which the client uses to tell three cases apart:
+ *
+ * - `export const route = {...}` — a page route, with loaders to import
+ * - `export const endpoint_only = true` — a real route with no `+page`, so there is
+ *   nothing to preload, but the client can cache that fact and stop asking
+ * - an empty module — no such route
+ *
  * @param {string} route_id
  * @param {URL} url
  * @param {SSRManifest} manifest
@@ -98,9 +106,26 @@ export function resolve_route_by_id(route_id, url, manifest) {
 		return text('Server-side route resolution disabled', { status: 400 });
 	}
 
-	const route = manifest._.client.routes.find((r) => r.id === route_id) ?? null;
+	const route = manifest._.client.routes.find((r) => r.id === route_id);
 
-	return create_server_routing_response(route, {}, url, manifest._.client).response;
+	if (route) {
+		return create_server_routing_response(route, {}, url, manifest._.client).response;
+	}
+
+	// `client.routes` only contains routes with a `+page`, so a miss above doesn't mean the
+	// route doesn't exist — it might be a `+server.js`-only route. `_.routes` includes those
+	// (with `page: null`), so we can distinguish "exists but has no code" from "unknown".
+	if (manifest._.routes.some((r) => r.id === route_id && !r.page)) {
+		return text('export const endpoint_only = true;', { headers: js_headers() });
+	}
+
+	return create_server_routing_response(null, {}, url, manifest._.client).response;
+}
+
+function js_headers() {
+	return new Headers({
+		'content-type': 'application/javascript; charset=utf-8'
+	});
 }
 
 /**
@@ -111,9 +136,7 @@ export function resolve_route_by_id(route_id, url, manifest) {
  * @returns {{response: Response, body: string}}
  */
 export function create_server_routing_response(route, params, url, client) {
-	const headers = new Headers({
-		'content-type': 'application/javascript; charset=utf-8'
-	});
+	const headers = js_headers();
 
 	if (route) {
 		const csr_route = generate_route_object(route, url, client);
