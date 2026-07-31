@@ -3,7 +3,7 @@
 
 import { json, error } from '@sveltejs/kit';
 import { Redirect, SvelteKitError } from '@sveltejs/kit/internal';
-import { with_request_store, merge_tracing } from '@sveltejs/kit/internal/server';
+import { with_request_store } from '@sveltejs/kit/internal/server';
 import { app_dir, base } from '$app/paths/internal/server';
 import { is_form_content_type } from '../../utils/http.js';
 import { create_remote_key, parse_remote_arg, split_remote_key, stringify } from '../shared.js';
@@ -11,7 +11,7 @@ import { handle_error_and_jsonify } from './errors.js';
 import { normalize_error } from '../../utils/error.js';
 import { check_incorrect_fail_use } from './page/actions.js';
 import { DEV } from 'esm-env';
-import { record_span } from '../telemetry/record_span.js';
+import { record_traced_span } from '../telemetry/record_span.js';
 import { deserialize_binary_form } from '../form-utils.js';
 import { with_version_header } from './utils.js';
 
@@ -24,15 +24,20 @@ const KEEP_ALIVE_INTERVAL = 30_000;
 
 /** @type {typeof handle_remote_call_internal} */
 export async function handle_remote_call(event, state, options, manifest, id) {
-	return record_span({
+	return record_traced_span({
 		name: 'sveltekit.remote.call',
 		attributes: {
 			'sveltekit.remote.call.id': id
 		},
-		fn: async (current) => {
-			const traced_event = merge_tracing(event, current);
-			const response = await with_request_store({ event: traced_event, state }, () =>
-				handle_remote_call_internal(traced_event, state, options, manifest, id)
+		event,
+		state,
+		fn: async (traced_event) => {
+			const response = await handle_remote_call_internal(
+				traced_event,
+				state,
+				options,
+				manifest,
+				id
 			);
 			return with_version_header(response);
 		}
@@ -515,17 +520,14 @@ function create_requested_map(refreshes) {
 
 /** @type {typeof handle_remote_form_post_internal} */
 export async function handle_remote_form_post(event, state, manifest, id) {
-	return record_span({
+	return record_traced_span({
 		name: 'sveltekit.remote.form.post',
 		attributes: {
 			'sveltekit.remote.form.post.id': id
 		},
-		fn: (current) => {
-			const traced_event = merge_tracing(event, current);
-			return with_request_store({ event: traced_event, state }, () =>
-				handle_remote_form_post_internal(traced_event, state, manifest, id)
-			);
-		}
+		event,
+		state,
+		fn: (traced_event) => handle_remote_form_post_internal(traced_event, state, manifest, id)
 	});
 }
 
