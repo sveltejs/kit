@@ -477,6 +477,11 @@ test.describe('Load', () => {
 		expect(await page.textContent('h1')).toBe('the answer is 42');
 	});
 
+	test('handleFetch sees changes made to the event in handle', async ({ page }) => {
+		await page.goto('/load/single-event-identity');
+		expect(await page.textContent('h1')).toBe('yes');
+	});
+
 	test('makes credentialed fetches to endpoints by default', async ({
 		page,
 		clicknav,

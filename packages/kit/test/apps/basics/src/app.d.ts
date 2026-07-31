@@ -7,6 +7,7 @@ declare global {
 			params: Record<string, any>;
 			url?: URL;
 			message?: string;
+			written_in_handle?: string;
 		}
 
 		interface PageState {

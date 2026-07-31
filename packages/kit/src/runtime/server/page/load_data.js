@@ -2,7 +2,7 @@ import { DEV } from 'esm-env';
 import { noop } from '../../../utils/functions.js';
 import { disable_search, make_trackable } from '../../../utils/url.js';
 import { validate_depends, validate_load_response } from '../../shared.js';
-import { with_request_store, merge_tracing } from '@sveltejs/kit/internal/server';
+import { with_request_store } from '@sveltejs/kit/internal/server';
 import { record_span } from '../../telemetry/record_span.js';
 import { base64_encode } from '../../utils.js';
 import { NULL_BODY_STATUS } from '../constants.js';
@@ -82,94 +82,95 @@ export async function load_server_data({ event, event_state, state, node, parent
 			'http.route': event.route.id || 'unknown'
 		},
 		fn: async (current) => {
-			const traced_event = merge_tracing(event, current);
-			const result = await with_request_store({ event: traced_event, state: event_state }, () =>
-				load.call(null, {
-					...traced_event,
-					fetch: (info, init) => {
-						const url = new URL(info instanceof Request ? info.url : info, event.url);
+			const result = await with_request_store(
+				{ event, state: event_state, tracing: { current } },
+				() =>
+					load.call(null, {
+						...event,
+						fetch: (info, init) => {
+							const url = new URL(info instanceof Request ? info.url : info, event.url);
 
-						if (DEV && done && !uses.dependencies.has(url.href)) {
-							console.warn(
-								`${node.server_id}: Calling \`event.fetch(...)\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the dependency is invalidated`
-							);
-						}
+							if (DEV && done && !uses.dependencies.has(url.href)) {
+								console.warn(
+									`${node.server_id}: Calling \`event.fetch(...)\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the dependency is invalidated`
+								);
+							}
 
-						// Note: server fetches are not added to uses.depends due to security concerns
-						return event.fetch(info, init);
-					},
-					/** @param {string[]} deps */
-					depends: (...deps) => {
-						for (const dep of deps) {
-							const { href } = new URL(dep, event.url);
+							// Note: server fetches are not added to uses.depends due to security concerns
+							return event.fetch(info, init);
+						},
+						/** @param {string[]} deps */
+						depends: (...deps) => {
+							for (const dep of deps) {
+								const { href } = new URL(dep, event.url);
 
-							if (DEV) {
-								validate_depends(node.server_id || 'missing route ID', dep);
+								if (DEV) {
+									validate_depends(node.server_id || 'missing route ID', dep);
 
-								if (done && !uses.dependencies.has(href)) {
+									if (done && !uses.dependencies.has(href)) {
+										console.warn(
+											`${node.server_id}: Calling \`depends(...)\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the dependency is invalidated`
+										);
+									}
+								}
+
+								uses.dependencies.add(href);
+							}
+						},
+						params: new Proxy(event.params, {
+							get: (target, key) => {
+								if (DEV && done && typeof key === 'string' && !uses.params.has(key)) {
 									console.warn(
-										`${node.server_id}: Calling \`depends(...)\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the dependency is invalidated`
+										`${node.server_id}: Accessing \`params.${String(
+											key
+										)}\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the param changes`
 									);
 								}
-							}
 
-							uses.dependencies.add(href);
-						}
-					},
-					params: new Proxy(event.params, {
-						get: (target, key) => {
-							if (DEV && done && typeof key === 'string' && !uses.params.has(key)) {
+								if (is_tracking) {
+									uses.params.add(key);
+								}
+								return target[/** @type {string} */ (key)];
+							}
+						}),
+						parent: async () => {
+							if (DEV && done && !uses.parent) {
 								console.warn(
-									`${node.server_id}: Accessing \`params.${String(
-										key
-									)}\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the param changes`
+									`${node.server_id}: Calling \`parent(...)\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when parent data changes`
 								);
 							}
 
 							if (is_tracking) {
-								uses.params.add(key);
+								uses.parent = true;
 							}
-							return target[/** @type {string} */ (key)];
-						}
-					}),
-					parent: async () => {
-						if (DEV && done && !uses.parent) {
-							console.warn(
-								`${node.server_id}: Calling \`parent(...)\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when parent data changes`
-							);
-						}
+							return parent();
+						},
+						route: new Proxy(event.route, {
+							get: (target, key) => {
+								if (DEV && done && typeof key === 'string' && !uses.route) {
+									console.warn(
+										`${node.server_id}: Accessing \`route.${String(
+											key
+										)}\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the route changes`
+									);
+								}
 
-						if (is_tracking) {
-							uses.parent = true;
-						}
-						return parent();
-					},
-					route: new Proxy(event.route, {
-						get: (target, key) => {
-							if (DEV && done && typeof key === 'string' && !uses.route) {
-								console.warn(
-									`${node.server_id}: Accessing \`route.${String(
-										key
-									)}\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the route changes`
-								);
+								if (is_tracking) {
+									uses.route = true;
+								}
+								return target[/** @type {'id'} */ (key)];
 							}
-
-							if (is_tracking) {
-								uses.route = true;
+						}),
+						url,
+						untrack(fn) {
+							is_tracking = false;
+							try {
+								return fn();
+							} finally {
+								is_tracking = true;
 							}
-							return target[/** @type {'id'} */ (key)];
 						}
-					}),
-					url,
-					untrack(fn) {
-						is_tracking = false;
-						try {
-							return fn();
-						} finally {
-							is_tracking = true;
-						}
-					}
-				})
+					})
 			);
 
 			return result;
@@ -233,10 +234,9 @@ export async function load_data({
 			'http.route': event.route.id || 'unknown'
 		},
 		fn: async (current) => {
-			const traced_event = merge_tracing(event, current);
 			const child_state = { ...event_state, is_in_universal_load: true };
 
-			return await with_request_store({ event: traced_event, state: child_state }, () =>
+			return await with_request_store({ event, state: child_state, tracing: { current } }, () =>
 				load.call(null, {
 					url: event.url,
 					params: event.params,
@@ -247,7 +247,7 @@ export async function load_data({
 					depends: noop,
 					parent,
 					untrack: (fn) => fn(),
-					tracing: traced_event.tracing
+					tracing: event.tracing
 				})
 			);
 		}

@@ -1,9 +1,5 @@
 /** @import { Handle, RequestEvent, ResolveOptions } from '@sveltejs/kit' */
-import {
-	merge_tracing,
-	get_request_store,
-	with_request_store
-} from '@sveltejs/kit/internal/server';
+import { get_request_store, with_request_store } from '@sveltejs/kit/internal/server';
 
 /**
  * A helper function for sequencing multiple `handle` calls in a middleware-like manner.
@@ -99,10 +95,9 @@ export function sequence(...handlers) {
 				name: `sveltekit.handle.sequenced.${handle.name ? handle.name : i}`,
 				attributes: {},
 				fn: async (current) => {
-					const traced_event = merge_tracing(event, current);
-					return await with_request_store({ event: traced_event, state }, () =>
+					return await with_request_store({ event, state, tracing: { current } }, () =>
 						handle({
-							event: traced_event,
+							event,
 							resolve: (event, options) => {
 								/** @type {ResolveOptions['transformPageChunk']} */
 								const transformPageChunk = async ({ html, done }) => {

@@ -61,8 +61,19 @@ export function get_request_store() {
 	return result;
 }
 
-export function try_get_request_store() {
+function get_raw_store() {
 	return sync_store ?? als?.getStore() ?? null;
+}
+
+/** @returns {RequestStore | null} */
+export function try_get_request_store() {
+	const store = get_raw_store();
+	return store?.event && store.state ? store : null;
+}
+
+/** Reads the active span through stores that hide the event, such as during `resolve` */
+export function try_get_tracing() {
+	return get_raw_store()?.tracing;
 }
 
 /**
@@ -72,6 +83,12 @@ export function try_get_request_store() {
  */
 export function with_request_store(store, fn) {
 	try {
+		// nested stores that don't set a span keep attributing to the active one
+		if (store && !store.tracing) {
+			const tracing = try_get_tracing();
+			if (tracing) store.tracing = tracing;
+		}
+
 		sync_store = store;
 		return als ? als.run(store, fn) : fn();
 	} finally {

@@ -2,7 +2,7 @@
 import { DEV } from 'esm-env';
 import { json, text } from '@sveltejs/kit';
 import { Redirect, SvelteKitError } from '@sveltejs/kit/internal';
-import { merge_tracing, with_request_store } from '@sveltejs/kit/internal/server';
+import { try_get_tracing, with_request_store } from '@sveltejs/kit/internal/server';
 import { base, app_dir } from '$app/paths/internal/server';
 import { is_endpoint_request, render_endpoint } from './endpoint.js';
 import { render_page } from './page/index.js';
@@ -484,30 +484,35 @@ export async function internal_respond(request, options, manifest, state) {
 				'sveltekit.is_sub_request': event.isSubRequest
 			},
 			fn: async (root_span) => {
-				const traced_event = {
-					...event,
-					tracing: {
-						enabled: __SVELTEKIT_SERVER_TRACING_ENABLED__,
-						root: root_span,
-						current: root_span
+				const tracing = {
+					enabled: __SVELTEKIT_SERVER_TRACING_ENABLED__,
+					root: root_span,
+					get current() {
+						return try_get_tracing()?.current ?? root_span;
 					}
 				};
+				event.tracing = tracing;
 
-				return await with_request_store({ event: traced_event, state: event_state }, () =>
-					options.hooks.handle({
-						event: traced_event,
-						resolve: (event, opts) => {
-							return record_span({
-								name: 'sveltekit.resolve',
-								attributes: {
-									'http.route': event.route.id || 'unknown'
-								},
-								fn: (resolve_span) => {
-									// counter-intuitively, we need to clear the event, so that it's not
-									// e.g. accessible when loading modules needed to handle the request
-									return with_request_store(null, () =>
-										resolve(merge_tracing(event, resolve_span), page_nodes, opts).then(
-											(response) => {
+				return await with_request_store(
+					{ event, state: event_state, tracing: { current: root_span } },
+					() =>
+						options.hooks.handle({
+							event,
+							resolve: (event, opts) => {
+								return record_span({
+									name: 'sveltekit.resolve',
+									attributes: {
+										'http.route': event.route.id || 'unknown'
+									},
+									fn: (resolve_span) => {
+										// counter-intuitively, we need to clear the event, so that it's not
+										// e.g. accessible when loading modules needed to handle the request
+										const tracing_store = /** @type {import('types').RequestStore} */ ({
+											tracing: { current: resolve_span }
+										});
+
+										return with_request_store(tracing_store, () =>
+											resolve(event, page_nodes, opts).then((response) => {
 												// add headers/cookies here, rather than inside `resolve`, so that we
 												// can do it once for all responses instead of once per `return`
 												for (const key in headers) {
@@ -528,13 +533,12 @@ export async function internal_respond(request, options, manifest, state) {
 												});
 
 												return response;
-											}
-										)
-									);
-								}
-							});
-						}
-					})
+											})
+										);
+									}
+								});
+							}
+						})
 				);
 			}
 		});

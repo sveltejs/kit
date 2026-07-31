@@ -4,7 +4,7 @@ import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
 import { json } from '@sveltejs/kit';
 import { HttpError, Redirect, ActionFailure, SvelteKitError } from '@sveltejs/kit/internal';
-import { with_request_store, merge_tracing } from '@sveltejs/kit/internal/server';
+import { with_request_store } from '@sveltejs/kit/internal/server';
 import { normalize_error } from '../../../utils/error.js';
 import { is_form_content_type, negotiate } from '../../../utils/http.js';
 import { create_replacer, with_version_header } from '../utils.js';
@@ -281,10 +281,9 @@ async function call_action(event, event_state, actions) {
 			'http.route': event.route.id || 'unknown'
 		},
 		fn: async (current) => {
-			const traced_event = merge_tracing(event, current);
-
-			const result = await with_request_store({ event: traced_event, state: event_state }, () =>
-				action(traced_event)
+			const result = await with_request_store(
+				{ event, state: event_state, tracing: { current } },
+				() => action(event)
 			);
 
 			if (result instanceof ActionFailure) {

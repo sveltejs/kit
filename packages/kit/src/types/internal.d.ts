@@ -748,6 +748,9 @@ export interface RequestState {
 export interface RequestStore {
 	event: RequestEvent;
 	state: RequestState;
+	tracing?: {
+		current: Span;
+	};
 }
 
 /** Type of the `__sveltekit_abc123` object in the init `<script>` */

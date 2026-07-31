@@ -186,6 +186,13 @@ export const handle = sequence(
 		return resolve(event);
 	},
 	async ({ event, resolve }) => {
+		if (event.url.pathname === '/load/single-event-identity') {
+			// reassignment, not mutation: only visible in handleFetch if the event is not copied
+			event.locals = { ...event.locals, written_in_handle: 'yes' };
+		}
+		return resolve(event);
+	},
+	async ({ event, resolve }) => {
 		if (event.url.pathname.startsWith('/get-request-event/')) {
 			const e = getRequestEvent();
 
@@ -204,7 +211,11 @@ export const handle = sequence(
 );
 
 /** @type {import('@sveltejs/kit').HandleFetch} */
-export async function handleFetch({ request, fetch }) {
+export async function handleFetch({ event, request, fetch }) {
+	if (request.url.endsWith('/load/single-event-identity/echo')) {
+		request.headers.set('x-written-in-handle', event.locals.written_in_handle ?? 'missing');
+	}
+
 	if (request.url.endsWith('/server-fetch-request.json')) {
 		request = new Request(
 			request.url.replace('/server-fetch-request.json', '/server-fetch-request-modified.json'),

@@ -3,7 +3,7 @@
 
 import { json, error } from '@sveltejs/kit';
 import { Redirect, SvelteKitError } from '@sveltejs/kit/internal';
-import { with_request_store, merge_tracing } from '@sveltejs/kit/internal/server';
+import { with_request_store } from '@sveltejs/kit/internal/server';
 import { app_dir, base } from '$app/paths/internal/server';
 import { is_form_content_type } from '../../utils/http.js';
 import { create_remote_key, parse_remote_arg, split_remote_key, stringify } from '../shared.js';
@@ -30,9 +30,8 @@ export async function handle_remote_call(event, state, options, manifest, id) {
 			'sveltekit.remote.call.id': id
 		},
 		fn: async (current) => {
-			const traced_event = merge_tracing(event, current);
-			const response = await with_request_store({ event: traced_event, state }, () =>
-				handle_remote_call_internal(traced_event, state, options, manifest, id)
+			const response = await with_request_store({ event, state, tracing: { current } }, () =>
+				handle_remote_call_internal(event, state, options, manifest, id)
 			);
 			return with_version_header(response);
 		}
@@ -521,9 +520,8 @@ export async function handle_remote_form_post(event, state, manifest, id) {
 			'sveltekit.remote.form.post.id': id
 		},
 		fn: (current) => {
-			const traced_event = merge_tracing(event, current);
-			return with_request_store({ event: traced_event, state }, () =>
-				handle_remote_form_post_internal(traced_event, state, manifest, id)
+			return with_request_store({ event, state, tracing: { current } }, () =>
+				handle_remote_form_post_internal(event, state, manifest, id)
 			);
 		}
 	});
