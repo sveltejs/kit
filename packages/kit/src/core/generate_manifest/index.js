@@ -21,7 +21,7 @@ import { uneval } from 'devalue';
  *   routes: import('types').RouteData[];
  *   remotes: RemoteChunk[];
  *   root: string;
- *   reroute_middleware: boolean;
+ *   reroute_middleware?: boolean;
  * }} opts
  */
 export function generate_manifest({
@@ -31,7 +31,7 @@ export function generate_manifest({
 	routes,
 	remotes,
 	root,
-	reroute_middleware
+	reroute_middleware = false
 }) {
 	/**
 	 * @type {Map<any, number>} The new index of each node in the filtered nodes array

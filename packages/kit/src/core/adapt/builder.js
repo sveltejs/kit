@@ -185,7 +185,7 @@ export function create_builder({
 					: route_data.filter((route) => prerender_map.get(route.id) !== true),
 				remotes,
 				root: vite_config.root,
-				reroute_middleware: rerouteMiddleware ?? false
+				reroute_middleware: rerouteMiddleware
 			});
 		},
 
