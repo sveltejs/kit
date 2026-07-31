@@ -253,8 +253,9 @@ declare module '@sveltejs/kit' {
 		/**
 		 * Compress files in `directory` with gzip and brotli, where appropriate. Generates `.gz` and `.br` files alongside the originals.
 		 * @param directory The directory containing the files to be compressed
+		 * @returns an array of the files in `directory` that were compressed
 		 */
-		compress: (directory: string) => Promise<void>;
+		compress: (directory: string) => Promise<string[]>;
 	}
 
 	/**
@@ -862,7 +863,7 @@ declare module '@sveltejs/kit' {
 			 * A function that allows you to edit the generated `tsconfig.json`. You can mutate the config (recommended) or return a new one.
 			 * This is useful for extending a shared `tsconfig.json` in a monorepo root, for example.
 			 *
-			 * Note that any paths configured here should be relative to the generated config file, which is written to `node_modules/$app/tsconfig/tsconfig.json`.
+			 * Note that any paths configured here should be relative to the generated config file, which is written to `node_modules/$app/tsconfig.json`.
 			 *
 			 * @default (config) => config
 			 * @since 1.3.0
@@ -3848,10 +3849,12 @@ declare module '$app/types' {
 
 	/**
 	 * A utility for getting the parameters associated with a given layout, which is similar to `RouteParams` but also includes optional parameters for any child route.
+	 *
+	 * Unlike `RouteId`, this accepts any directory in `src/routes`, since a layout can live in a directory that has no `+page` or `+server` of its own.
 	 */
-	export type LayoutParams<T extends RouteId> = T extends keyof ReturnType<AppTypes['LayoutParams']>
-		? ReturnType<AppTypes['LayoutParams']>[T]
-		: Record<string, never>;
+	export type LayoutParams<T extends keyof ReturnType<AppTypes['LayoutParams']>> = ReturnType<
+		AppTypes['LayoutParams']
+	>[T];
 
 	/**
 	 * A union of all valid paths in your app, relative to the `base` path.

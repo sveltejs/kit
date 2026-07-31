@@ -41,6 +41,7 @@ import {
 } from './utils.js';
 import { stackless } from '../../utils/error.js';
 import { write_client_manifest } from '../../core/sync/write_client_manifest.js';
+import { is_app_route } from '../../core/sync/create_manifest_data/index.js';
 import prerender from '../../core/postbuild/prerender.js';
 import analyse from '../../core/postbuild/analyse.js';
 import { s } from '../../utils/misc.js';
@@ -2127,7 +2128,7 @@ function stringify_assets(assets) {
 function stringify_routes(routes) {
 	return (
 		routes
-			?.filter((route) => route.page || route.endpoint || route.leaf)
+			?.filter(is_app_route)
 			.map((route) => s({ id: route.id }))
 			.join(',\n') ?? ''
 	);
