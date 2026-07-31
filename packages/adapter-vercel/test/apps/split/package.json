@@ -1,5 +1,5 @@
 {
-	"name": "test-vercel-basic",
+	"name": "test-vercel-split",
 	"version": "0.0.1",
 	"private": true,
 	"scripts": {
