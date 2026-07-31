@@ -9,7 +9,13 @@ import { record_span } from '../telemetry/record_span.js';
 export function create_request_state(options, hooks) {
 	// Request state is created once for each top-level request.
 	return {
-		...options,
+		getClientAddress: options.getClientAddress,
+		platform: options.platform,
+		read: options.read,
+		before_handle: options.before_handle,
+		emulator: options.emulator,
+		prerendering: options.prerendering,
+		prerender_default: undefined,
 		error: false,
 		depth: 0,
 		handleValidationError: hooks.handleValidationError,
@@ -29,7 +35,8 @@ export function create_request_state(options, hooks) {
 		is_in_remote_form_or_command: false,
 		is_in_remote_query: false,
 		is_in_remote_prerender: false,
-		is_in_render: false
+		is_in_render: false,
+		original_event: undefined
 	};
 }
 
