@@ -6,7 +6,7 @@
 import { loadEnv } from 'vite';
 import * as devalue from 'devalue';
 import { createReadStream, createWriteStream, existsSync, statSync } from 'node:fs';
-import { extname, resolve, join, dirname, relative, sep, isAbsolute } from 'node:path';
+import { extname, resolve, join, dirname, relative, isAbsolute } from 'node:path';
 import { pipeline } from 'node:stream';
 import { promisify, styleText } from 'node:util';
 import zlib from 'node:zlib';
@@ -282,7 +282,7 @@ export function create_builder({
  */
 function contains(a, b) {
 	const path = relative(a, b);
-	return path === '' || (path !== '..' && !path.startsWith(`..${sep}`) && !isAbsolute(path));
+	return !path.startsWith('..') && !isAbsolute(path);
 }
 
 /**
