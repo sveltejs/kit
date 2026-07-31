@@ -1,8 +1,8 @@
-/** @import { RequestState, ServerHooks } from 'types' */
+/** @import { InternalRequestOptions, RequestState, ServerHooks } from 'types' */
 import { record_span } from '../telemetry/record_span.js';
 
 /**
- * @param {Parameters<import('types').InternalServer['respond']>[1]} options
+ * @param {InternalRequestOptions} options
  * @param {ServerHooks} hooks
  * @returns {RequestState}
  */

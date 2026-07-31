@@ -258,16 +258,13 @@ export async function load_data({
 
 /**
  * @param {Pick<import('@sveltejs/kit').RequestEvent, 'fetch' | 'url' | 'request' | 'route'>} event
- * @param {import('types').RequestState['prerendering'] | Pick<import('types').RequestState, 'getClientAddress' | 'error' | 'depth' | 'prerendering'>} prerendering
+ * @param {import('types').PrerenderOptions | undefined} prerendering
  * @param {import('./types.js').Fetched[]} fetched
  * @param {boolean} csr
  * @param {Pick<Required<import('@sveltejs/kit').ResolveOptions>, 'filterSerializedResponseHeaders'>} resolve_opts
  * @returns {typeof fetch}
  */
 export function create_universal_fetch(event, prerendering, fetched, csr, resolve_opts) {
-	const prerendering_options =
-		prerendering && 'getClientAddress' in prerendering ? prerendering.prerendering : prerendering;
-
 	/**
 	 * @param {URL | RequestInfo} input
 	 * @param {RequestInit} [init]
@@ -289,9 +286,9 @@ export function create_universal_fetch(event, prerendering, fetched, csr, resolv
 		let dependency;
 
 		if (same_origin) {
-			if (prerendering_options) {
+			if (prerendering) {
 				dependency = { response, body: null };
-				prerendering_options.dependencies.set(url.pathname, dependency);
+				prerendering.dependencies.set(url.pathname, dependency);
 			}
 		} else if (url.protocol === 'https:' || url.protocol === 'http:') {
 			// simulate CORS errors and "no access to body in no-cors mode" server-side for consistency with client-side behaviour

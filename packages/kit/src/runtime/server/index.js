@@ -182,7 +182,7 @@ export class Server {
 
 	/**
 	 * @param {Request} request
-	 * @param {Parameters<import('types').InternalServer['respond']>[1]} options
+	 * @param {import('types').InternalRequestOptions} options
 	 */
 	async respond(request, options) {
 		const response = await respond(
