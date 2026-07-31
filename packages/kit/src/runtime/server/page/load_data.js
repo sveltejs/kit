@@ -238,7 +238,7 @@ export async function load_data({
 					params: event.params,
 					data: server_data_node?.data ?? null,
 					route: event.route,
-					fetch: create_universal_fetch(event, state, fetched, csr, resolve_opts),
+					fetch: create_universal_fetch(event, state.prerendering, fetched, csr, resolve_opts),
 					setHeaders: event.setHeaders,
 					depends: noop,
 					parent,
@@ -258,13 +258,16 @@ export async function load_data({
 
 /**
  * @param {Pick<import('@sveltejs/kit').RequestEvent, 'fetch' | 'url' | 'request' | 'route'>} event
- * @param {import('types').RequestState} state
+ * @param {import('types').RequestState['prerendering'] | Pick<import('types').RequestState, 'getClientAddress' | 'error' | 'depth' | 'prerendering'>} prerendering
  * @param {import('./types.js').Fetched[]} fetched
  * @param {boolean} csr
  * @param {Pick<Required<import('@sveltejs/kit').ResolveOptions>, 'filterSerializedResponseHeaders'>} resolve_opts
  * @returns {typeof fetch}
  */
-export function create_universal_fetch(event, state, fetched, csr, resolve_opts) {
+export function create_universal_fetch(event, prerendering, fetched, csr, resolve_opts) {
+	const prerendering_options =
+		prerendering && 'getClientAddress' in prerendering ? prerendering.prerendering : prerendering;
+
 	/**
 	 * @param {URL | RequestInfo} input
 	 * @param {RequestInit} [init]
@@ -286,9 +289,9 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 		let dependency;
 
 		if (same_origin) {
-			if (state.prerendering) {
+			if (prerendering_options) {
 				dependency = { response, body: null };
-				state.prerendering.dependencies.set(url.pathname, dependency);
+				prerendering_options.dependencies.set(url.pathname, dependency);
 			}
 		} else if (url.protocol === 'https:' || url.protocol === 'http:') {
 			// simulate CORS errors and "no access to body in no-cors mode" server-side for consistency with client-side behaviour
