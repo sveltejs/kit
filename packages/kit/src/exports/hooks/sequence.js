@@ -115,17 +115,21 @@ export function sequence(...handlers) {
 								resolve: (event, options) => {
 									/** @type {ResolveOptions} */
 									const merged = {
-										transformPageChunk: async ({ html, done }) => {
-											if (options?.transformPageChunk) {
-												html = (await options.transformPageChunk({ html, done })) ?? '';
-											}
+										transformPageChunk:
+											options?.transformPageChunk || parent_options?.transformPageChunk
+												? async ({ html, done }) => {
+														if (options?.transformPageChunk) {
+															html = (await options.transformPageChunk({ html, done })) ?? '';
+														}
 
-											if (parent_options?.transformPageChunk) {
-												html = (await parent_options.transformPageChunk({ html, done })) ?? '';
-											}
+														if (parent_options?.transformPageChunk) {
+															html =
+																(await parent_options.transformPageChunk({ html, done })) ?? '';
+														}
 
-											return html;
-										},
+														return html;
+													}
+												: undefined,
 										filterSerializedResponseHeaders:
 											parent_options?.filterSerializedResponseHeaders ??
 											options?.filterSerializedResponseHeaders,
