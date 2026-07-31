@@ -175,27 +175,6 @@ importers:
         specifier: 'catalog:'
         version: 4.1.10(@opentelemetry/api@1.9.0)(@types/node@22.19.19)(@vitest/browser-playwright@4.1.10)(jsdom@29.1.1)(vite@8.1.5(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0))
 
-  packages/adapter-cloudflare/test/apps/pages:
-    devDependencies:
-      '@sveltejs/kit':
-        specifier: workspace:^
-        version: link:../../../../kit
-      '@sveltejs/vite-plugin-svelte':
-        specifier: 'catalog:'
-        version: 7.0.0(svelte@5.56.3(@typescript-eslint/types@8.61.1))(vite@8.1.5(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0))
-      server-side-dep:
-        specifier: file:server-side-dep
-        version: file:packages/adapter-cloudflare/test/apps/pages/server-side-dep
-      svelte:
-        specifier: 'catalog:'
-        version: 5.56.3(@typescript-eslint/types@8.61.1)
-      vite:
-        specifier: 'catalog:'
-        version: 8.1.5(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0)
-      wrangler:
-        specifier: 'catalog:'
-        version: 4.103.0(@cloudflare/workers-types@4.20260621.1)
-
   packages/adapter-cloudflare/test/apps/workers:
     devDependencies:
       '@sveltejs/kit':
@@ -3829,9 +3808,6 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
 
-  server-side-dep@file:packages/adapter-cloudflare/test/apps/pages/server-side-dep:
-    resolution: {directory: packages/adapter-cloudflare/test/apps/pages/server-side-dep, type: directory}
-
   server-side-dep@file:packages/adapter-cloudflare/test/apps/workers/server-side-dep:
     resolution: {directory: packages/adapter-cloudflare/test/apps/workers/server-side-dep, type: directory}
 
@@ -6436,8 +6412,6 @@ snapshots:
   semiver@1.1.0: {}
 
   semver@7.8.5: {}
-
-  server-side-dep@file:packages/adapter-cloudflare/test/apps/pages/server-side-dep: {}
 
   server-side-dep@file:packages/adapter-cloudflare/test/apps/workers/server-side-dep: {}
 
