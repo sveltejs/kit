@@ -186,13 +186,6 @@ export const handle = sequence(
 		return resolve(event);
 	},
 	async ({ event, resolve }) => {
-		if (event.url.pathname === '/load/single-event-identity') {
-			// reassignment, not mutation: only visible in handleFetch if the event is not copied
-			event.locals = { ...event.locals, written_in_handle: 'yes' };
-		}
-		return resolve(event);
-	},
-	async ({ event, resolve }) => {
 		if (event.url.pathname.startsWith('/get-request-event/')) {
 			const e = getRequestEvent();
 
@@ -200,7 +193,8 @@ export const handle = sequence(
 				throw new Error('event !== e');
 			}
 
-			e.locals.message = 'hello from hooks.server.js';
+			// reassignment, not mutation: only visible in handleFetch if the event is never copied
+			e.locals = { ...e.locals, message: 'hello from hooks.server.js' };
 		}
 
 		return resolve(event, {
@@ -212,8 +206,8 @@ export const handle = sequence(
 
 /** @type {import('@sveltejs/kit').HandleFetch} */
 export async function handleFetch({ event, request, fetch }) {
-	if (request.url.endsWith('/load/single-event-identity/echo')) {
-		request.headers.set('x-written-in-handle', event.locals.written_in_handle ?? 'missing');
+	if (event.url.pathname === '/get-request-event/via-fetch') {
+		request.headers.set('x-message', event.locals.message ?? 'missing');
 	}
 
 	if (request.url.endsWith('/server-fetch-request.json')) {

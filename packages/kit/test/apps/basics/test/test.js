@@ -477,11 +477,6 @@ test.describe('Load', () => {
 		expect(await page.textContent('h1')).toBe('the answer is 42');
 	});
 
-	test('handleFetch sees changes made to the event in handle', async ({ page }) => {
-		await page.goto('/load/single-event-identity');
-		expect(await page.textContent('h1')).toBe('yes');
-	});
-
 	test('makes credentialed fetches to endpoints by default', async ({
 		page,
 		clicknav,
@@ -1608,6 +1603,11 @@ test.describe('getRequestEvent', () => {
 
 		await page.goto('/get-request-event/with-error');
 		expect(await page.textContent('h1')).toBe('Crashing now (500 hello from hooks.server.js)');
+	});
+
+	test('handleFetch sees what handle wrote to the event', async ({ page }) => {
+		await page.goto('/get-request-event/via-fetch');
+		expect(await page.textContent('h1')).toBe('hello from hooks.server.js');
 	});
 });
 

@@ -1,12 +1,12 @@
 /** @import { RequestEvent } from '@sveltejs/kit' */
-/** @import { RequestStore } from 'types' */
+/** @import { RequestStore, TracingStore } from 'types' */
 /** @import { AsyncLocalStorage } from 'node:async_hooks' */
 import { IN_WEBCONTAINER } from '../../../runtime/server/constants.js';
 
-/** @type {RequestStore | null} */
+/** @type {RequestStore | TracingStore | null} */
 let sync_store = null;
 
-/** @type {AsyncLocalStorage<RequestStore | null> | null} */
+/** @type {AsyncLocalStorage<RequestStore | TracingStore | null> | null} */
 let als;
 
 import('node:async_hooks')
@@ -68,7 +68,7 @@ function get_raw_store() {
 /** @returns {RequestStore | null} */
 export function try_get_request_store() {
 	const store = get_raw_store();
-	return store?.event && store.state ? store : null;
+	return store?.event ? store : null;
 }
 
 /** Reads the active span through stores that hide the event, such as during `resolve` */
@@ -78,7 +78,7 @@ export function try_get_tracing() {
 
 /**
  * @template T
- * @param {RequestStore | null} store
+ * @param {RequestStore | TracingStore | null} store
  * @param {() => T} fn
  */
 export function with_request_store(store, fn) {

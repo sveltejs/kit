@@ -204,6 +204,8 @@ export async function internal_respond(request, options, manifest, state) {
 		cookies,
 		// @ts-expect-error `fetch` needs to be created after the `event` itself
 		fetch: null,
+		// @ts-expect-error `tracing` needs the root span, which is created during `handle`
+		tracing: null,
 		getClientAddress:
 			state.getClientAddress ||
 			(() => {
@@ -484,15 +486,15 @@ export async function internal_respond(request, options, manifest, state) {
 				'sveltekit.is_sub_request': event.isSubRequest
 			},
 			fn: async (root_span) => {
-				const tracing = {
+				event.tracing = {
 					enabled: __SVELTEKIT_SERVER_TRACING_ENABLED__,
 					root: root_span,
 					get current() {
 						return try_get_tracing()?.current ?? root_span;
 					}
 				};
-				event.tracing = tracing;
 
+				// the explicit span stops sub-requests from inheriting the parent request's span
 				return await with_request_store(
 					{ event, state: event_state, tracing: { current: root_span } },
 					() =>
@@ -505,13 +507,9 @@ export async function internal_respond(request, options, manifest, state) {
 										'http.route': event.route.id || 'unknown'
 									},
 									fn: (resolve_span) => {
-										// counter-intuitively, we need to clear the event, so that it's not
+										// counter-intuitively, we need to hide the event, so that it's not
 										// e.g. accessible when loading modules needed to handle the request
-										const tracing_store = /** @type {import('types').RequestStore} */ ({
-											tracing: { current: resolve_span }
-										});
-
-										return with_request_store(tracing_store, () =>
+										return with_request_store({ tracing: { current: resolve_span } }, () =>
 											resolve(event, page_nodes, opts).then((response) => {
 												// add headers/cookies here, rather than inside `resolve`, so that we
 												// can do it once for all responses instead of once per `return`
