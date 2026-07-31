@@ -106,7 +106,6 @@ declare module '$app/manifest' {
 	 * be filtered independently:
 	 *
 	 * ```js
-	 * // @noErrors
 	 * import { routes } from '$app/manifest';
 	 *
 	 * const pages = routes.filter((route) => route.page);
