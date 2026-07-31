@@ -99,6 +99,8 @@ export function sequence(...handlers) {
 		 * @returns {Promise<Response>}
 		 */
 		function apply_handle(i, event, parent_options) {
+			if (i === length) return resolve(event, parent_options);
+
 			const handle = handlers[i];
 
 			return record_span({
@@ -131,9 +133,7 @@ export function sequence(...handlers) {
 										preload: parent_options?.preload ?? options?.preload
 									};
 
-									return i < length - 1
-										? apply_handle(i + 1, event, merged)
-										: resolve(event, merged);
+									return apply_handle(i + 1, event, merged);
 								}
 							})
 					);
