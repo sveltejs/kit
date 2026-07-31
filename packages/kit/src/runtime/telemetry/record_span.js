@@ -71,10 +71,10 @@ export async function record_span({ name, attributes, fn }) {
  * @template T
  * @param {{
  *   name: string;
- *   attributes: Parameters<RecordSpan>[0]['attributes'];
+ *   attributes: Record<string, any>;
  *   event: RequestEvent;
  *   state: RequestState;
- *   fn: (event: RequestEvent, current: Span) => Promise<T>;
+ *   fn: (traced_event: RequestEvent, current: Span) => Promise<T>;
  * }} options
  * @returns {Promise<T>}
  */
