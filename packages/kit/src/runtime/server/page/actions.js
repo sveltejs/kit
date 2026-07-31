@@ -4,12 +4,11 @@ import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
 import { json } from '@sveltejs/kit';
 import { HttpError, Redirect, ActionFailure, SvelteKitError } from '@sveltejs/kit/internal';
-import { with_request_store, merge_tracing } from '@sveltejs/kit/internal/server';
 import { normalize_error } from '../../../utils/error.js';
 import { is_form_content_type, negotiate } from '../../../utils/http.js';
 import { create_replacer, with_version_header } from '../utils.js';
 import { handle_error_and_jsonify } from '../errors.js';
-import { record_span } from '../../telemetry/record_span.js';
+import { record_traced_span } from '../../telemetry/record_span.js';
 
 /** @param {RequestEvent} event */
 export function is_action_json_request(event) {
@@ -274,18 +273,16 @@ async function call_action(event, event_state, actions) {
 		);
 	}
 
-	return record_span({
+	return record_traced_span({
 		name: 'sveltekit.form_action',
 		attributes: {
 			'sveltekit.form_action.name': name,
 			'http.route': event.route.id || 'unknown'
 		},
-		fn: async (current) => {
-			const traced_event = merge_tracing(event, current);
-
-			const result = await with_request_store({ event: traced_event, state: event_state }, () =>
-				action(traced_event)
-			);
+		event,
+		state: event_state,
+		fn: async (traced_event, current) => {
+			const result = await action(traced_event);
 
 			if (result instanceof ActionFailure) {
 				current.setAttributes({

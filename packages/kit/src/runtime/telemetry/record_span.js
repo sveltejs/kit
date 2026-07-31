@@ -1,5 +1,8 @@
-/** @import { RecordSpan } from 'types' */
+/** @import { RequestEvent } from '@sveltejs/kit' */
+/** @import { Span } from '@opentelemetry/api' */
+/** @import { RecordSpan, RequestState } from 'types' */
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
+import { merge_tracing, with_request_store } from '@sveltejs/kit/internal/server';
 import { noop_span } from './noop.js';
 import { otel } from './otel.js';
 
@@ -60,6 +63,28 @@ export async function record_span({ name, attributes, fn }) {
 			throw error;
 		} finally {
 			span.end();
+		}
+	});
+}
+
+/**
+ * @template T
+ * @param {{
+ *   name: string;
+ *   attributes: Parameters<RecordSpan>[0]['attributes'];
+ *   event: RequestEvent;
+ *   state: RequestState;
+ *   fn: (event: RequestEvent, current: Span) => Promise<T>;
+ * }} options
+ * @returns {Promise<T>}
+ */
+export function record_traced_span({ name, attributes, event, state, fn }) {
+	return record_span({
+		name,
+		attributes,
+		fn: (current) => {
+			const traced_event = merge_tracing(event, current);
+			return with_request_store({ event: traced_event, state }, () => fn(traced_event, current));
 		}
 	});
 }
