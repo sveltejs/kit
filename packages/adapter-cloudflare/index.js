@@ -48,7 +48,7 @@ export default function (options = {}) {
 			}
 			if (wrangler_config.assets?.directory) {
 				// wrangler doesn't resolve `assets.directory` to an absolute path unlike
-				// `main` and `pages_build_output_dir` so we need to do it ourselves here
+				// `main` so we need to do it ourselves here
 				const parent_dir = wrangler_config.configPath
 					? path.dirname(path.resolve(wrangler_config.configPath))
 					: process.cwd();
@@ -71,9 +71,9 @@ export default function (options = {}) {
 			const assets_dest = `${dest}${builder.config.kit.paths.base}`;
 			builder.mkdirp(assets_dest);
 			if (wrangler_config.assets?.not_found_handling === '404-page') {
-				// generate plaintext 404.html first which can then be overridden by prerendering, if the user defined such a page.
+				// generate plaintext 404.html first which can then be overridden by
+				// prerendering, if the user defined such a page.
 				// This file is served when a request fails to match an asset.
-				// If we're building for Cloudflare Pages, it's only served when a request matches an entry in `routes.exclude`
 				const fallback = path.join(assets_dest, '404.html');
 				if (options.fallback === 'spa') {
 					await builder.generateFallback(fallback);
