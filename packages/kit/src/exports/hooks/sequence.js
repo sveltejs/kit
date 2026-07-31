@@ -133,17 +133,11 @@ export function sequence(...handlers) {
 									/** @type {ResolveOptions['preload']} */
 									const preload = parent_options?.preload ?? options?.preload;
 
+									const merged = { transformPageChunk, filterSerializedResponseHeaders, preload };
+
 									return i < length - 1
-										? apply_handle(i + 1, event, {
-												transformPageChunk,
-												filterSerializedResponseHeaders,
-												preload
-											})
-										: resolve(event, {
-												transformPageChunk,
-												filterSerializedResponseHeaders,
-												preload
-											});
+										? apply_handle(i + 1, event, merged)
+										: resolve(event, merged);
 								}
 							})
 					);
