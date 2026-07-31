@@ -1,4 +1,6 @@
-import { ORIGINAL_PATH_PARAM } from '../runtime/shared.js';
+/** @import { Reroute } from '@sveltejs/kit' */
+
+import { ORIGINAL_PATH_HEADER } from '../runtime/shared.js';
 import { normalizeUrl } from './index.js';
 
 /**
@@ -13,28 +15,31 @@ import { normalizeUrl } from './index.js';
  * import { reroute } from '__HOOKS__';
  *
  * export default function middleware(request) {
- *   return applyReroute(request.url, reroute);
+ *   return applyReroute(request, reroute);
  * }
  * ```
- * @param {string} url
- * @param {import("@sveltejs/kit").Reroute} reroute
- * @returns {Promise<URL>}
- * @since 2.51.0
+ * @param {Request} request
+ * @param {Reroute} reroute
+ * @returns {Promise<Request>}
+ * @since 3.0.0
  */
-export async function applyReroute(url, reroute) {
-	const url_copy = new URL(url);
-	url_copy.searchParams.set(ORIGINAL_PATH_PARAM, url_copy.pathname);
+export async function applyReroute(request, reroute) {
+	const url = new URL(request.url);
 
 	const { url: normalized_url, denormalize } = normalizeUrl(url);
 	const resolved_path = await reroute({ url: normalized_url, fetch });
 
+	let new_request;
+
 	// bail out if there were no changes to the pathname
-	if (!resolved_path || resolved_path === url_copy.pathname) {
-		// we always return a URL with the x-sveltekit-original-path param set
-		// so that the requester can't fake it
-		return url_copy;
+	if (!resolved_path || resolved_path === normalized_url.pathname) {
+		new_request = new Request(request);
+	} else {
+		new_request = new Request(denormalize(resolved_path), request);
 	}
 
-	url_copy.pathname = resolved_path;
-	return denormalize(url_copy);
+	// we always set the header so that the requester can't fake it
+	new_request.headers.set(ORIGINAL_PATH_HEADER, url.pathname);
+
+	return new_request;
 }

@@ -21,9 +21,9 @@ export const TRAILING_SLASH_PARAM = 'x-sveltekit-trailing-slash';
 
 /**
  * If an adapter enables running reroute early in its own server, the original
- * pathname is stored in this query parameter
+ * pathname is stored in this header
  */
-export const ORIGINAL_PATH_PARAM = 'x-sveltekit-original-path';
+export const ORIGINAL_PATH_HEADER = 'x-sveltekit-original-path';
 
 /**
  * @param {any} data

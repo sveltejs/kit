@@ -2935,6 +2935,7 @@ declare module '@sveltejs/kit' {
 }
 
 declare module '@sveltejs/kit/adapter' {
+	import type { Reroute } from '@sveltejs/kit';
 	/**
 	 * If your deployment platform supports splitting your app into multiple functions,
 	 * you should run this in a middleware that runs before the main handler
@@ -2947,12 +2948,12 @@ declare module '@sveltejs/kit/adapter' {
 	 * import { reroute } from '__HOOKS__';
 	 *
 	 * export default function middleware(request) {
-	 *   return applyReroute(request.url, reroute);
+	 *   return applyReroute(request, reroute);
 	 * }
 	 * ```
-	 * @since 2.51.0
+	 * @since 3.0.0
 	 */
-	export function applyReroute(url: string, reroute: import("@sveltejs/kit").Reroute): Promise<URL>;
+	export function applyReroute(request: Request, reroute: Reroute): Promise<Request>;
 
 	export {};
 }

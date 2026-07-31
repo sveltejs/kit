@@ -6,12 +6,12 @@ import { applyReroute } from '@sveltejs/kit/adapter';
  * @returns {Promise<Response>}
  */
 export default async function middleware(request) {
-	const resolved_url = await applyReroute(request.url, reroute);
+	const new_request = await applyReroute(request, reroute);
 
 	// taken from https://github.com/vercel/vercel/blob/main/packages/functions/src/middleware.ts#L106
 	return new Response(null, {
 		headers: {
-			'x-middleware-rewrite': String(resolved_url)
+			'x-middleware-rewrite': new_request.url
 		}
 	});
 }

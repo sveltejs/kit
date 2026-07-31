@@ -24,7 +24,7 @@ import { create_fetch } from './fetch.js';
 import { PageNodes } from '../../utils/page_nodes.js';
 import { validate_server_exports } from '../../utils/exports.js';
 import { action_json_redirect, is_action_json_request } from './page/actions.js';
-import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM, ORIGINAL_PATH_PARAM } from '../shared.js';
+import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM, ORIGINAL_PATH_HEADER } from '../shared.js';
 import { get_public_env } from './env_module.js';
 import { resolve_route } from './page/server_routing.js';
 import { validateHeaders } from './validate-headers.js';
@@ -94,9 +94,9 @@ export async function internal_respond(request, options, manifest, state) {
 
 	// If reroute ran in an edge middleware, Vercel doesn't change the request URL, but Netlify does.
 	// So, we always restore the original URL pathname to standardise the behaviour
-	if (manifest._.reroute_middleware && url.searchParams.has(ORIGINAL_PATH_PARAM)) {
-		url.pathname = /** @type {string} */ (url.searchParams.get(ORIGINAL_PATH_PARAM));
-		url.searchParams.delete(ORIGINAL_PATH_PARAM);
+	if (manifest._.reroute_middleware && request.headers.has(ORIGINAL_PATH_HEADER)) {
+		url.pathname = /** @type {string} */ (request.headers.get(ORIGINAL_PATH_HEADER));
+		request.headers.delete(ORIGINAL_PATH_HEADER);
 	}
 
 	const is_route_resolution_request = has_resolution_suffix(url.pathname);
