@@ -112,28 +112,24 @@ export function sequence(...handlers) {
 							handle({
 								event: traced_event,
 								resolve: (event, options) => {
-									/** @type {ResolveOptions['transformPageChunk']} */
-									const transformPageChunk = async ({ html, done }) => {
-										if (options?.transformPageChunk) {
-											html = (await options.transformPageChunk({ html, done })) ?? '';
-										}
+									/** @type {ResolveOptions} */
+									const merged = {
+										transformPageChunk: async ({ html, done }) => {
+											if (options?.transformPageChunk) {
+												html = (await options.transformPageChunk({ html, done })) ?? '';
+											}
 
-										if (parent_options?.transformPageChunk) {
-											html = (await parent_options.transformPageChunk({ html, done })) ?? '';
-										}
+											if (parent_options?.transformPageChunk) {
+												html = (await parent_options.transformPageChunk({ html, done })) ?? '';
+											}
 
-										return html;
+											return html;
+										},
+										filterSerializedResponseHeaders:
+											parent_options?.filterSerializedResponseHeaders ??
+											options?.filterSerializedResponseHeaders,
+										preload: parent_options?.preload ?? options?.preload
 									};
-
-									/** @type {ResolveOptions['filterSerializedResponseHeaders']} */
-									const filterSerializedResponseHeaders =
-										parent_options?.filterSerializedResponseHeaders ??
-										options?.filterSerializedResponseHeaders;
-
-									/** @type {ResolveOptions['preload']} */
-									const preload = parent_options?.preload ?? options?.preload;
-
-									const merged = { transformPageChunk, filterSerializedResponseHeaders, preload };
 
 									return i < length - 1
 										? apply_handle(i + 1, event, merged)
