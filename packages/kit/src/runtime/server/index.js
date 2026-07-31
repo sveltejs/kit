@@ -1,6 +1,7 @@
 import { noop } from '../../utils/functions.js';
 import { IN_WEBCONTAINER } from './constants.js';
 import { respond } from './respond.js';
+import { create_request_state } from './state.js';
 import { options, get_hooks } from '__SERVER__/internal.js';
 import { set_read_implementation, set_manifest, fix_stack_trace } from './internal.js';
 import { set_env } from '__sveltekit/env';
@@ -181,14 +182,15 @@ export class Server {
 
 	/**
 	 * @param {Request} request
-	 * @param {import('types').RequestOptions} options
+	 * @param {Parameters<import('types').InternalServer['respond']>[1]} options
 	 */
 	async respond(request, options) {
-		const response = await respond(request, this.#options, this.#manifest, {
-			...options,
-			error: false,
-			depth: 0
-		});
+		const response = await respond(
+			request,
+			this.#options,
+			this.#manifest,
+			create_request_state(options, this.#options.hooks)
+		);
 
 		if (DEV) {
 			const error = decoded_responses.get(response);

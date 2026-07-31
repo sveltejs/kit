@@ -11,7 +11,7 @@ import { fork_state_for_subrequest } from './state.js';
  *   event: import('@sveltejs/kit').RequestEvent;
  *   options: import('types').SSROptions;
  *   manifest: import('@sveltejs/kit').SSRManifest;
- *   state: import('types').SSRState;
+ *   state: import('types').RequestState;
  *   get_cookie_header: (url: URL, header: string | null) => string;
  *   set_internal: (name: string, value: string, opts: import('./page/types.js').Cookie['options']) => void;
  * }} opts
@@ -195,7 +195,7 @@ function normalize_fetch_input(info, init, url) {
  * @param {Request} request
  * @param {import('types').SSROptions} options
  * @param {import('@sveltejs/kit').SSRManifest} manifest
- * @param {import('types').SSRState} state
+ * @param {import('types').RequestState} state
  * @returns {Promise<Response>}
  */
 async function internal_fetch(request, options, manifest, state) {

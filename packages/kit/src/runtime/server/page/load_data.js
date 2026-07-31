@@ -12,14 +12,13 @@ import { get_node_type } from '../utils.js';
  * Calls the user's server `load` function.
  * @param {{
  *   event: import('@sveltejs/kit').RequestEvent;
- *   event_state: import('types').RequestState;
- *   state: import('types').SSRState;
+ *   state: import('types').RequestState;
  *   node: import('types').SSRNode | undefined;
  *   parent: () => Promise<Record<string, any>>;
  * }} opts
  * @returns {Promise<import('types').ServerDataNode | null>}
  */
-export async function load_server_data({ event, event_state, state, node, parent }) {
+export async function load_server_data({ event, state, node, parent }) {
 	if (!node?.server) return null;
 
 	let is_tracking = true;
@@ -83,7 +82,7 @@ export async function load_server_data({ event, event_state, state, node, parent
 		},
 		fn: async (current) => {
 			const traced_event = merge_tracing(event, current);
-			const result = await with_request_store({ event: traced_event, state: event_state }, () =>
+			const result = await with_request_store({ event: traced_event, state }, () =>
 				load.call(null, {
 					...traced_event,
 					fetch: (info, init) => {
@@ -194,25 +193,23 @@ export async function load_server_data({ event, event_state, state, node, parent
  * Calls the user's `load` function.
  * @param {{
  *   event: import('@sveltejs/kit').RequestEvent;
- *   event_state: import('types').RequestState;
+ *   state: import('types').RequestState;
  *   fetched: import('./types.js').Fetched[];
  *   node: import('types').SSRNode | undefined;
  *   parent: () => Promise<Record<string, any>>;
  *   resolve_opts: import('types').RequiredResolveOptions;
  *   server_data_promise: Promise<import('types').ServerDataNode | null>;
- *   state: import('types').SSRState;
  *   csr: boolean;
  * }} opts
  * @returns {Promise<Record<string, any | Promise<any>> | null>}
  */
 export async function load_data({
 	event,
-	event_state,
+	state,
 	fetched,
 	node,
 	parent,
 	server_data_promise,
-	state,
 	resolve_opts,
 	csr
 }) {
@@ -235,7 +232,7 @@ export async function load_data({
 		fn: async (current) => {
 			const traced_event = merge_tracing(event, current);
 
-			return await with_request_store({ event: traced_event, state: event_state }, () =>
+			return await with_request_store({ event: traced_event, state }, () =>
 				load.call(null, {
 					url: event.url,
 					params: event.params,
@@ -261,7 +258,7 @@ export async function load_data({
 
 /**
  * @param {Pick<import('@sveltejs/kit').RequestEvent, 'fetch' | 'url' | 'request' | 'route'>} event
- * @param {import('types').SSRState} state
+ * @param {import('types').RequestState} state
  * @param {import('./types.js').Fetched[]} fetched
  * @param {boolean} csr
  * @param {Pick<Required<import('@sveltejs/kit').ResolveOptions>, 'filterSerializedResponseHeaders'>} resolve_opts

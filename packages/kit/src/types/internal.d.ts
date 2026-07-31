@@ -537,38 +537,6 @@ export interface SSRClientRoute {
 	leaf: [has_server_load: boolean, node_id: number];
 }
 
-export interface SSRState {
-	getClientAddress(): string;
-	/**
-	 * True if we're currently attempting to render an error page.
-	 */
-	error: boolean;
-	/**
-	 * Allows us to prevent `event.fetch` from making infinitely looping internal requests.
-	 */
-	depth: number;
-	platform?: any;
-	prerendering?: PrerenderOptions;
-	/**
-	 * When fetching data from a +server.js endpoint in `load`, the page's
-	 * prerender option is inherited by the endpoint, unless overridden.
-	 */
-	prerender_default?: PrerenderOption;
-	/** @internal reads from the filesystem when user code tries to fetch a static asset */
-	read?: (file: string) => Buffer<ArrayBuffer>;
-	/**
-	 * Used to set up `__SVELTEKIT_TRACK__` which checks if a used feature is supported.
-	 * E.g. if `read` from `$app/server` is used, it checks whether the route's config is compatible.
-	 */
-	before_handle?: (
-		event: RequestEvent,
-		config: Record<string, any>,
-		prerender: PrerenderOption,
-		handle: () => Promise<Response>
-	) => Promise<Response>;
-	emulator?: Emulator;
-}
-
 export type StrictBody = string | ArrayBufferView;
 
 export interface Uses {
@@ -682,7 +650,35 @@ export type RecordSpan = <T>(options: {
  * used for tracking things like remote function calls
  */
 export interface RequestState {
-	readonly prerendering: PrerenderOptions | undefined;
+	readonly getClientAddress: () => string;
+	readonly platform?: any;
+	/** @internal reads from the filesystem when user code tries to fetch a static asset */
+	readonly read?: (file: string) => Buffer<ArrayBuffer>;
+	/**
+	 * Used to set up `__SVELTEKIT_TRACK__` which checks if a used feature is supported.
+	 * E.g. if `read` from `$app/server` is used, it checks whether the route's config is compatible.
+	 */
+	readonly before_handle?: (
+		event: RequestEvent,
+		config: Record<string, any>,
+		prerender: PrerenderOption,
+		handle: () => Promise<Response>
+	) => Promise<Response>;
+	readonly emulator?: Emulator;
+	prerendering?: PrerenderOptions;
+	/**
+	 * When fetching data from a +server.js endpoint in `load`, the page's
+	 * prerender option is inherited by the endpoint, unless overridden.
+	 */
+	prerender_default?: PrerenderOption;
+	/**
+	 * True if we're currently attempting to render an error page.
+	 */
+	error: boolean;
+	/**
+	 * Allows us to prevent `event.fetch` from making infinitely looping internal requests.
+	 */
+	depth: number;
 	readonly handleValidationError: ServerHooks['handleValidationError'];
 	readonly tracing: {
 		record_span: RecordSpan;
