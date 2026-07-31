@@ -85,12 +85,11 @@ const noop_record_span = ({ fn }) => fn(noop_span);
  */
 export function sequence(...handlers) {
 	const length = handlers.length;
-	if (!length) return ({ event, resolve }) => resolve(event);
 
 	return ({ event, resolve }) => {
 		const store = try_get_request_store();
 		const record_span = store?.state.tracing.record_span ?? noop_record_span;
-		return apply_handle(0, event, {});
+		return apply_handle(0, event, undefined);
 
 		/**
 		 * @param {number} i
