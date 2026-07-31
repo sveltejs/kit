@@ -226,9 +226,6 @@ function generate_app_types(manifest_data, config, dir) {
 			app_route_ids.push(s(route.id));
 		}
 
-		const pathname = remove_group_segments(route.id);
-		let normalized_pathname = pathname.slice(1);
-
 		/** @type {(path: string) => string} */
 		let serialise = s;
 
