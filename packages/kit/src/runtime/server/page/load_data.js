@@ -82,8 +82,8 @@ export async function load_server_data({ event, event_state, state, node, parent
 		},
 		event,
 		state: event_state,
-		fn: async (traced_event) => {
-			const result = await load.call(null, {
+		fn: async (traced_event) =>
+			load.call(null, {
 				...traced_event,
 				fetch: (info, init) => {
 					const url = new URL(info instanceof Request ? info.url : info, event.url);
@@ -168,10 +168,7 @@ export async function load_server_data({ event, event_state, state, node, parent
 						is_tracking = true;
 					}
 				}
-			});
-
-			return result;
-		}
+			})
 	});
 
 	if (DEV) {
@@ -234,8 +231,8 @@ export async function load_data({
 		},
 		event,
 		state: child_state,
-		fn: async (traced_event) => {
-			return await load.call(null, {
+		fn: async (traced_event) =>
+			load.call(null, {
 				url: event.url,
 				params: event.params,
 				data: server_data_node?.data ?? null,
@@ -246,8 +243,7 @@ export async function load_data({
 				parent,
 				untrack: (fn) => fn(),
 				tracing: traced_event.tracing
-			});
-		}
+			})
 	});
 
 	if (DEV) {
