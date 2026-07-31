@@ -28,17 +28,21 @@ export class Props {
 	onerror;
 
 	/**
-	 * @param {Page} page
-	 * @param {RenderNode} tree
-	 * @param {(error: unknown, reset: () => void) => void} onerror
+	 * @param {{
+	 *   page: Page;
+	 *   tree: RenderNode;
+	 *   form: any;
+	 *   error: App.Error | undefined;
+	 *   onerror?: (error: unknown, reset: () => void) => void;
+	 * }} props
 	 */
-	constructor(page, tree, onerror = noop) {
+	constructor({ page, tree, form, error, onerror = noop }) {
 		this.page = page;
 		this.tree = tree;
 		this.onerror = onerror;
 
-		this.form = $state.raw();
-		this.error = $state.raw();
+		this.form = $state.raw(form);
+		this.error = $state.raw(error);
 	}
 }
 

@@ -50,7 +50,7 @@ export function query_batch(id) {
 
 						if (response.redirect) {
 							// Use internal version to allow redirects to external URLs
-							await _goto(response.redirect, {}, 0);
+							await _goto(response.redirect);
 
 							// settle all batched promises (with `undefined`, like a redirect
 							// from a non-batched query) so that callers don't hang forever

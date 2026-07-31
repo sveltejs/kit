@@ -1,7 +1,7 @@
 /** @import { EnvVarConfig, KitConfig } from '@sveltejs/kit' */
 /** @import { Options, SvelteConfig } from '@sveltejs/vite-plugin-svelte' */
 /** @import { PreprocessorGroup } from 'svelte/compiler' */
-/** @import { BuildData, ManifestData, Prerendered, RemoteChunk, RemoteInternals, ServerMetadata, ValidatedConfig, ValidatedKitConfig } from 'types' */
+/** @import { Asset, BuildData, ManifestData, Prerendered, RemoteChunk, RemoteInternals, RouteData, ServerMetadata, ValidatedConfig, ValidatedKitConfig } from 'types' */
 /** @import { Manifest, Plugin, ResolvedConfig, Rolldown, UserConfig, ViteDevServer } from 'vite' */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -41,6 +41,7 @@ import {
 } from './utils.js';
 import { stackless } from '../../utils/error.js';
 import { write_client_manifest } from '../../core/sync/write_client_manifest.js';
+import { is_app_route } from '../../core/sync/create_manifest_data/index.js';
 import prerender from '../../core/postbuild/prerender.js';
 import analyse from '../../core/postbuild/analyse.js';
 import { s } from '../../utils/misc.js';
@@ -1023,8 +1024,8 @@ function kit({ svelte_config }) {
 	/** @type {Prerendered} */
 	let prerendered;
 
-	/** @type {Set<string>} */
-	let build_files;
+	/** @type {Array<{ path: string }>} */
+	let immutable;
 	/** @type {string} */
 	let manifest_data_code;
 
@@ -1110,35 +1111,18 @@ function kit({ svelte_config }) {
 				]
 			},
 			handler(id) {
-				if (!build_files) {
-					build_files = new Set();
-					const manifest = vite_client_manifest ?? vite_server_manifest;
-					for (const key in manifest) {
-						const { file, css = [], assets = [] } = manifest[key];
-						build_files.add(file);
-						css.forEach((file) => build_files.add(file));
-						assets.forEach((file) => build_files.add(file));
-					}
-
-					if (kit.output.bundleStrategy === 'inline') {
-						// the bundle and stylesheet are inlined into the page and their files
-						// deleted, so they must not appear in the list of cacheable assets
-						for (const file of build_files) {
-							if (!fs.existsSync(`${out}/client/${file}`)) {
-								build_files.delete(file);
-							}
-						}
-					}
+				if (!manifest_data_code) {
+					// the client build computes `immutable`, unless it was skipped
+					// because every route has `csr: false`
+					immutable ??= collect_immutable(vite_server_manifest, kit.appDir, new Set());
 
 					manifest_data_code = dedent`
 					export const immutable = [
-						${Array.from(build_files)
-							.map((file) => s({ path: file }))
-							.join(',\n')}
+						${immutable.map((entry) => s(entry)).join(',\n')}
 					];
 
 					export const assets = [
-						${manifest_data.assets.map((asset) => s({ path: asset.file })).join(',\n')}
+						${stringify_assets(manifest_data.assets)}
 					];
 
 					export const prerendered = [
@@ -1146,7 +1130,7 @@ function kit({ svelte_config }) {
 					];
 
 					export const routes = [
-						${manifest_data.routes.map((route) => s({ id: route.id })).join(',\n')}
+						${stringify_routes(manifest_data.routes)}
 					];
 					`;
 				}
@@ -1714,48 +1698,47 @@ function kit({ svelte_config }) {
 					read(`${out}/client/.vite/manifest.json`)
 				));
 
-				// Replace manifest placeholders in client output. `immutable` is
-				// computed from the Vite client manifest, `assets` and `routes`
-				// from `manifest_data`. `prerendered` is left as a placeholder
-				// for now — it's replaced after prerendering completes.
-				/** @type {Set<string>} */
-				const immutable = new Set();
-
-				/** @param {string} file */
-				const add_immutable = (file) => {
-					if (
-						file.startsWith(`${kit.appDir}/immutable`) &&
-						fs.existsSync(`${out}/client/${file}`)
-					) {
-						immutable.add(file);
-					}
-				};
-
-				for (const key in vite_manifest) {
-					const { file, css = [], assets = [] } = vite_manifest[key];
-					add_immutable(file);
-					css.forEach(add_immutable);
-					assets.forEach(add_immutable);
-				}
-
-				replace_manifest_placeholder_variables(client_chunks, `${out}/client`, {
-					immutable: Array.from(immutable).map((file) => ({ path: file })),
-					assets: manifest_data.assets.map((asset) => ({ path: asset.file })),
-					routes: manifest_data.routes.map((route) => ({ id: route.id }))
-				});
-
-				// Now that the client build is done, replace the `build` sentinel
-				// in the SSR output with the real build files
-				replace_manifest_placeholder_strings(`${out}/server`, {
-					immutable: Array.from(immutable).map((file) => ({ path: file }))
-				});
-
 				/**
 				 * @param {string} entry
 				 * @param {boolean} [add_dynamic_css]
 				 */
 				const deps_of = (entry, add_dynamic_css = false) =>
 					find_deps(vite_manifest, posixify(path.relative(root, entry)), add_dynamic_css, root);
+
+				// the inline bundle and stylesheet are deleted further down, after
+				// being inlined into the page, so they must not appear in `immutable`
+				/** @type {Set<string>} */
+				const inlined = new Set();
+				/** @type {Rolldown.OutputAsset | undefined} */
+				let inline_style;
+
+				if (kit.output.bundleStrategy === 'inline') {
+					inline_style = /** @type {Rolldown.OutputAsset | undefined} */ (
+						client_chunks.find(
+							(chunk) =>
+								chunk.type === 'asset' && chunk.names.length === 1 && chunk.names[0] === 'style.css'
+						)
+					);
+
+					inlined.add(deps_of(`${runtime_directory}/client/bundle.js`).file);
+					if (inline_style) inlined.add(inline_style.fileName);
+				}
+
+				// Replace manifest placeholders in client output. `immutable` is
+				// computed from the Vite client manifest, `assets` and `routes`
+				// from `manifest_data`. `prerendered` is left as a placeholder
+				// for now — it's replaced after prerendering completes.
+				immutable = collect_immutable(vite_manifest, kit.appDir, inlined);
+
+				replace_manifest_placeholder_variables(client_chunks, `${out}/client`, {
+					immutable,
+					assets: manifest_data.assets.map((asset) => ({ path: asset.file })),
+					routes: manifest_data.routes.map((route) => ({ id: route.id }))
+				});
+
+				// Now that the client build is done, replace the `build` sentinel
+				// in the SSR output with the real build files
+				replace_manifest_placeholder_strings(`${out}/server`, { immutable });
 
 				const has_explicit_dynamic_public_env = Object.values(explicit_env_config ?? {}).some(
 					(variable) => variable.public && !variable.static
@@ -1844,25 +1827,16 @@ function kit({ svelte_config }) {
 					};
 
 					if (svelte_config.kit.output.bundleStrategy === 'inline') {
-						const style = /** @type {Rolldown.OutputAsset} */ (
-							client_chunks.find(
-								(chunk) =>
-									chunk.type === 'asset' &&
-									chunk.names.length === 1 &&
-									chunk.names[0] === 'style.css'
-							)
-						);
-
 						build_data.client.inline = {
 							script: read(`${out}/client/${start.file}`),
-							style: /** @type {string | undefined} */ (style?.source)
+							style: /** @type {string | undefined} */ (inline_style?.source)
 						};
 
 						// the bundle and stylesheet are inlined into the page, so the
 						// emitted files are never loaded
 						fs.unlinkSync(`${out}/client/${start.file}`);
 						fs.rmSync(`${out}/client/${start.file}.map`, { force: true });
-						if (style) fs.unlinkSync(`${out}/client/${style.fileName}`);
+						if (inline_style) fs.unlinkSync(`${out}/client/${inline_style.fileName}`);
 					}
 				}
 
@@ -2099,6 +2073,36 @@ function find_overridden_config(config, resolved_config, enforced_config, path, 
 }
 
 /**
+ * Collects the content-hashed files of a Vite manifest, in the shape of
+ * `$app/manifest`'s `immutable` export.
+ *
+ * @param {Manifest} manifest
+ * @param {string} app_dir
+ * @param {Set<string>} inlined files deleted from the output after being inlined into the page
+ * @returns {Array<{ path: string }>}
+ */
+const collect_immutable = (manifest, app_dir, inlined) => {
+	const prefix = `${app_dir}/immutable`;
+
+	/** @type {Set<string>} */
+	const files = new Set();
+
+	/** @param {string} file */
+	const add = (file) => {
+		if (file.startsWith(prefix) && !inlined.has(file)) files.add(file);
+	};
+
+	for (const key in manifest) {
+		const { file, css, assets } = manifest[key];
+		add(file);
+		if (css) for (let i = 0; i < css.length; i++) add(css[i]);
+		if (assets) for (let i = 0; i < assets.length; i++) add(assets[i]);
+	}
+
+	return Array.from(files, (path) => ({ path }));
+};
+
+/**
  * Normalizes a config value for comparison, since Windows paths may use backslashes
  * and differ in casing (e.g. the drive letter) depending on where they came from.
  * @param {any} value
@@ -2107,6 +2111,27 @@ function comparable(value) {
 	if (typeof value !== 'string') return value;
 	const normalized = posixify(value);
 	return process.platform === 'win32' ? normalized.toLowerCase() : normalized;
+}
+
+/**
+ * @param {Asset[] | undefined} assets
+ * @returns {string}
+ */
+function stringify_assets(assets) {
+	return assets?.map((asset) => s({ path: asset.file })).join(',\n') ?? '';
+}
+
+/**
+ * @param {RouteData[] | undefined} routes
+ * @returns {string}
+ */
+function stringify_routes(routes) {
+	return (
+		routes
+			?.filter(is_app_route)
+			.map((route) => s({ id: route.id }))
+			.join(',\n') ?? ''
+	);
 }
 
 /**
@@ -2141,20 +2166,17 @@ const create_manifest_data_module = (is_build, manifest_data) => {
 	// In dev, `manifest_data` may not be set yet on the very first load,
 	// but `configureServer` (which calls `sync.create`) runs before any
 	// module is served, so it will be set by the time this is called.
-	const routes = manifest_data?.routes.map((route) => s({ id: route.id })).join(',\n') ?? '';
-	const assets = manifest_data?.assets.map((asset) => s({ path: asset.file })).join(',\n') ?? '';
-
 	return dedent`
 		// empty during dev
 		export const immutable = [];
 		export const prerendered = [];
 
 		export const assets = [
-			${assets}
+			${stringify_assets(manifest_data?.assets)}
 		];
 
 		export const routes = [
-			${routes}
+			${stringify_routes(manifest_data?.routes)}
 		];
 	`;
 };

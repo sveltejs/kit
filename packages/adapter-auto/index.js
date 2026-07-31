@@ -135,7 +135,7 @@ async function get_adapter() {
 	};
 }
 
-/** @type {() => Adapter} */
+/** @type {import('./index.js').default} */
 export default () => ({
 	name: '@sveltejs/adapter-auto',
 	adapt: async (builder) => {

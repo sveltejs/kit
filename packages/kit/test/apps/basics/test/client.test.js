@@ -1198,17 +1198,17 @@ test.describe('data-sveltekit attributes', () => {
 		await expect(request_promise).rejects.toThrow();
 	});
 
-	test('data-sveltekit-noscroll', async ({ page, clicknav }) => {
-		await page.goto('/data-sveltekit/noscroll');
+	test('data-sveltekit-reset', async ({ page, clicknav }) => {
+		await page.goto('/data-sveltekit/reset');
 		// await page.evaluate(() => window.scrollTo(0, 1000));
 		await clicknav('#one');
 		expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(1000);
 
-		await page.goto('/data-sveltekit/noscroll');
+		await page.goto('/data-sveltekit/reset');
 		await clicknav('#two');
 		expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(1000);
 
-		await page.goto('/data-sveltekit/noscroll');
+		await page.goto('/data-sveltekit/reset');
 		// await page.evaluate(() => window.scrollTo(0, 1000));
 		await clicknav('#three');
 		expect(await page.evaluate(() => window.scrollY)).toBe(0);
@@ -2019,7 +2019,7 @@ test.describe('Shallow routing', () => {
 			await input.focus();
 			await page.evaluate(() => scrollTo(0, 500));
 
-			await app.goto(`?${prefix}=a`, { shallow, noScroll: true, keepFocus: true });
+			await app.goto(`?${prefix}=a`, { shallow, reset: false });
 			await expect.poll(state).toEqual({ focus: 'options-focus', y: 500 });
 
 			await page.evaluate(() => scrollTo(0, 700));
@@ -2044,10 +2044,10 @@ test.describe('Shallow routing', () => {
 			await expect(page).toHaveURL(new RegExp(`${prefix}=a`));
 			await expect.poll(state).toEqual({ focus: 'options-focus', y: 400 });
 
-			await app.goto(`?${prefix}=b`, { shallow, noScroll: false, keepFocus: false });
+			await app.goto(`?${prefix}=b`, { shallow, reset: true });
 			await input.focus();
 			await page.evaluate(() => scrollTo(0, 700));
-			await app.goto(`?${prefix}=c`, { shallow, noScroll: true, keepFocus: true });
+			await app.goto(`?${prefix}=c`, { shallow, reset: false });
 			await expect.poll(state).toEqual({ focus: 'options-focus', y: 700 });
 
 			await page.evaluate(() => scrollTo(0, 900));

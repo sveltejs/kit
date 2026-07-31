@@ -129,6 +129,10 @@ test('create package with javascript', async () => {
 	await test_make_package('javascript');
 });
 
+test('create package with the only jsconfig above the package root', async () => {
+	await test_make_package('config-above-root/lib');
+});
+
 test('create package with typescript using esnext', async () => {
 	await test_make_package('typescript-esnext');
 });

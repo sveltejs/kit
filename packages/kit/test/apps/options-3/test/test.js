@@ -29,6 +29,11 @@ test.describe("bundleStrategy: 'inline'", () => {
 		expect(content).not.toMatch(/immutable\/(?:bundle|assets\/style)/);
 	});
 
+	test('omits inlined files from the page manifest', async ({ page }) => {
+		await page.goto('/app-manifest');
+		expect(await page.textContent('pre')).not.toMatch(/immutable\/(?:bundle|assets\/style)/);
+	});
+
 	test('still emits version.json', () => {
 		expect(fs.existsSync(`${client}/_app/version.json`)).toBe(true);
 	});

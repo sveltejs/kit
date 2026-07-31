@@ -5,6 +5,7 @@ import { posixify } from '../../utils/os.js';
 import { write_if_changed } from './utils.js';
 import { s } from '../../utils/misc.js';
 import { get_route_segments } from '../../utils/routing.js';
+import { is_app_route } from './create_manifest_data/index.js';
 
 const replace_optional_params = (/** @type {string} */ id) =>
 	id.replace(/\/\[\[[^\]]+\]\]/g, '${string}');
@@ -53,8 +54,6 @@ function get_pathnames_for_trailing_slash(pathname, route) {
 const template = `
 declare module "svelte/elements" {
 	export interface HTMLAttributes<T> {
-		'data-sveltekit-keepfocus'?: true | false | '' | undefined | null;
-		'data-sveltekit-noscroll'?: true | false | '' | undefined | null;
 		'data-sveltekit-preload-code'?:
 			| true
 			| false
@@ -68,6 +67,7 @@ declare module "svelte/elements" {
 		'data-sveltekit-preload-data'?: true | false | '' | 'hover' | 'tap' | undefined | null;
 		'data-sveltekit-reload'?: true | false | '' | undefined | null;
 		'data-sveltekit-replacestate'?: true | false | '' | undefined | null;
+		'data-sveltekit-reset'?: true | false | '' | undefined | null;
 	}
 }
 `;
@@ -144,6 +144,9 @@ function generate_app_types(manifest_data, config, dir) {
 	const pathnames = new Set();
 
 	/** @type {string[]} */
+	const app_route_ids = [];
+
+	/** @type {string[]} */
 	const dynamic_routes = [];
 
 	/** @type {string[]} */
@@ -193,6 +196,10 @@ function generate_app_types(manifest_data, config, dir) {
 	}
 
 	for (const route of manifest_data.routes) {
+		if (is_app_route(route)) {
+			app_route_ids.push(s(route.id));
+		}
+
 		const pathname = remove_group_segments(route.id);
 		let normalized_pathname = pathname.slice(1);
 
@@ -204,9 +211,9 @@ function generate_app_types(manifest_data, config, dir) {
 				const type = get_matcher_type(p.matcher);
 				return `${/^\w+$/.test(p.name) ? p.name : `'${p.name}'`}${p.optional ? '?:' : ':'} ${type}${p.optional ? ' | undefined' : ''}`;
 			});
-			const route_type = `${s(route.id)}: { ${params.join('; ')} }`;
-
-			dynamic_routes.push(route_type);
+			if (is_app_route(route)) {
+				dynamic_routes.push(`${s(route.id)}: { ${params.join('; ')} }`);
+			}
 
 			normalized_pathname = replace_required_params(replace_optional_params(pathname)).slice(1);
 			serialise = (p) => `\`${p}\` & {}`;
@@ -238,7 +245,7 @@ function generate_app_types(manifest_data, config, dir) {
 	return [
 		'declare module "$app/types" {',
 		'\texport interface AppTypes {',
-		`\t\tRouteId(): ${manifest_data.routes.map((r) => s(r.id)).join(' | ')};`,
+		`\t\tRouteId(): ${app_route_ids.join(' | ') || 'never'};`,
 		`\t\tRouteParams(): {\n\t\t\t${dynamic_routes.join(';\n\t\t\t')}\n\t\t};`,
 		`\t\tLayoutParams(): {\n\t\t\t${layouts.join(';\n\t\t\t')}\n\t\t};`,
 		`\t\tPath(): ${Array.from(pathnames).join(' | ')};`,
