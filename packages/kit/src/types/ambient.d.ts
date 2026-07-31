@@ -121,10 +121,12 @@ declare module '$app/types' {
 
 	/**
 	 * A utility for getting the parameters associated with a given layout, which is similar to `RouteParams` but also includes optional parameters for any child route.
+	 *
+	 * Unlike `RouteId`, this accepts any directory in `src/routes`, since a layout can live in a directory that has no `+page` or `+server` of its own.
 	 */
-	export type LayoutParams<T extends RouteId> = T extends keyof ReturnType<AppTypes['LayoutParams']>
-		? ReturnType<AppTypes['LayoutParams']>[T]
-		: Record<string, never>;
+	export type LayoutParams<T extends keyof ReturnType<AppTypes['LayoutParams']>> = ReturnType<
+		AppTypes['LayoutParams']
+	>[T];
 
 	/**
 	 * A union of all valid paths in your app, relative to the `base` path.
