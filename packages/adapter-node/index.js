@@ -7,6 +7,7 @@ const files = fileURLToPath(new URL('./files', import.meta.url).href);
 
 /** @param {string} str */
 function escape_regex(str) {
+	// TODO replace with `RegExp.escape(str)` when we require Node >= 24
 	return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
