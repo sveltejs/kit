@@ -206,7 +206,7 @@ export const handle = sequence(
 
 /** @type {import('@sveltejs/kit').HandleFetch} */
 export async function handleFetch({ event, request, fetch }) {
-	if (event.url.pathname === '/get-request-event/via-fetch') {
+	if (event.url.pathname.startsWith('/get-request-event/via-')) {
 		request.headers.set('x-message', event.locals.message ?? 'missing');
 	}
 

@@ -5,7 +5,6 @@ import { once } from '../../../utils/functions.js';
 import { server_data_serializer_json } from '../page/data_serializer.js';
 import { load_server_data } from '../page/load_data.js';
 import { handle_error_and_jsonify } from '../errors.js';
-import { normalize_path } from '../../../utils/url.js';
 import { text_encoder } from '../../utils.js';
 import { with_version_header } from '../utils.js';
 
@@ -17,7 +16,6 @@ import { with_version_header } from '../utils.js';
  * @param {import('@sveltejs/kit').SSRManifest} manifest
  * @param {import('types').SSRState} state
  * @param {boolean[] | undefined} invalidated_data_nodes
- * @param {import('types').TrailingSlash} trailing_slash
  * @returns {Promise<Response>}
  */
 export async function render_data(
@@ -27,8 +25,7 @@ export async function render_data(
 	options,
 	manifest,
 	state,
-	invalidated_data_nodes,
-	trailing_slash
+	invalidated_data_nodes
 ) {
 	if (!route.page) {
 		// requesting /__data.json should fail for a +server.js
@@ -40,11 +37,6 @@ export async function render_data(
 		const invalidated = invalidated_data_nodes ?? node_ids.map(() => true);
 
 		let aborted = false;
-
-		const url = new URL(event.url);
-		url.pathname = normalize_path(url.pathname, trailing_slash);
-
-		const new_event = { ...event, url };
 
 		const functions = node_ids.map((n, i) => {
 			return once(async () => {
@@ -59,7 +51,7 @@ export async function render_data(
 					const node = n == undefined ? n : await manifest._.nodes[n]();
 					// load this. for the child, return as is. for the final result, stream things
 					return load_server_data({
-						event: new_event,
+						event,
 						event_state,
 						state,
 						node,

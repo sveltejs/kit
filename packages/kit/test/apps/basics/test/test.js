@@ -1609,6 +1609,18 @@ test.describe('getRequestEvent', () => {
 		await page.goto('/get-request-event/via-fetch');
 		expect(await page.textContent('h1')).toBe('hello from hooks.server.js');
 	});
+
+	test('handleFetch sees what a server load wrote during a data request', async ({
+		app,
+		page,
+		javaScriptEnabled
+	}) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/get-request-event/via-fetch');
+		await app.goto('/get-request-event/via-data');
+		expect(await page.textContent('h1')).toBe('hello from the server load');
+	});
 });
 
 test.describe('params prop', () => {

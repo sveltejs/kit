@@ -423,6 +423,9 @@ export async function internal_respond(request, options, manifest, state) {
 						}
 					});
 				}
+			} else {
+				// a data request can't follow a redirect, so normalize the path in place
+				url.pathname = normalize_path(url.pathname, trailing_slash);
 			}
 
 			if (state.before_handle || state.emulator?.platform) {
@@ -654,8 +657,7 @@ export async function internal_respond(request, options, manifest, state) {
 						options,
 						manifest,
 						state,
-						invalidated_data_nodes,
-						trailing_slash
+						invalidated_data_nodes
 					);
 				} else {
 					let endpoint;
