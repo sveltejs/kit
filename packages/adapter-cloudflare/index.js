@@ -146,7 +146,7 @@ export default function (options = {}) {
 				/** @type {App.Platform} */
 				const platform = {
 					env: proxy.env,
-					// @ts-expect-error cloudflare type discrepencies
+					// @ts-expect-error cloudflare type discrepancies
 					ctx: proxy.ctx,
 					context: proxy.ctx, // deprecated in favor of ctx
 					caches: proxy.caches,
