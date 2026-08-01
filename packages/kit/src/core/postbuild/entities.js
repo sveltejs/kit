@@ -2252,7 +2252,7 @@ export function decode(str) {
 			// mirror the HTML parser, which replaces invalid numeric references with U+FFFD
 			return Number.isInteger(codepoint) && codepoint <= 0x10ffff
 				? String.fromCodePoint(codepoint)
-				: '�';
+				: '\ufffd';
 		})
 		.replace(named, (_match, entity) => entities[entity]);
 }
