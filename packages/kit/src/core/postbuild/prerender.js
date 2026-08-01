@@ -202,6 +202,14 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 		return file;
 	}
 
+	/**
+	 * @param {string} path
+	 */
+	function strip_base_only_trailing_slash(path) {
+		const base_root = `${config.paths.base}/`;
+		return path === base_root && base_root.length > 1 ? config.paths.base : path;
+	}
+
 	const files = new Set(walk(`${out}/client`).map(posixify));
 	files.add(`${config.appDir}/env.js`);
 
@@ -445,7 +453,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 							location: resolved
 						});
 
-						prerendered.paths.push(decoded);
+						prerendered.paths.push(strip_base_only_trailing_slash(decoded));
 					}
 				}
 			} else {
@@ -487,7 +495,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 				});
 			}
 
-			prerendered.paths.push(decoded);
+			prerendered.paths.push(strip_base_only_trailing_slash(decoded));
 		} else if (response_type !== OK) {
 			handle_http_error({ status: response.status, path: decoded, referrer, referenceType });
 		}
