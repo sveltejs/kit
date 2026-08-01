@@ -1,7 +1,7 @@
-import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { mkdirp, walk } from '../../utils/filesystem.js';
+import { walk } from '../../utils/filesystem.js';
 import { posixify } from '../../utils/os.js';
 import { noop } from '../../utils/functions.js';
 import { decode_uri, is_root_relative, resolve } from '../../utils/url.js';
@@ -157,7 +157,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 		const file = output_filename('/', true);
 		const dest = `${config.outDir}/output/prerendered/pages/${file}`;
 
-		mkdirp(dirname(dest));
+		mkdirSync(dirname(dest), { recursive: true });
 		writeFileSync(dest, fallback);
 
 		prerendered.pages.set('/', { file });
@@ -476,7 +476,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 				}
 
 				if (!headers['x-sveltekit-normalize']) {
-					mkdirp(dirname(dest));
+					mkdirSync(dirname(dest), { recursive: true });
 
 					writeFileSync(
 						dest,
@@ -522,7 +522,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 				);
 			}
 
-			mkdirp(dir);
+			mkdirSync(dir, { recursive: true });
 
 			writeFileSync(dest, body);
 			written.add(file);

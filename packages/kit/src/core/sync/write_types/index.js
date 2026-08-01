@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import MagicString from 'magic-string';
-import { rimraf, walk, resolve_entry } from '../../../utils/filesystem.js';
+import { walk, resolve_entry } from '../../../utils/filesystem.js';
 import { compact } from '../../../utils/array.js';
 import { posixify } from '../../../utils/os.js';
 import { ts } from '../ts.js';
@@ -49,7 +49,7 @@ export function write_all_types(config, manifest_data, root) {
 		for (const file of walk(types_dir)) {
 			const dir = path.dirname(file);
 			if (!expected_directories.has(dir)) {
-				rimraf(path.join(types_dir, file));
+				fs.rmSync(path.join(types_dir, file), { force: true, recursive: true });
 			}
 		}
 	}

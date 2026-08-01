@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { rolldown } from 'rolldown';
@@ -19,9 +19,9 @@ export default function (opts = {}) {
 		async adapt(builder) {
 			const tmp = builder.getBuildDirectory('adapter-node');
 
-			builder.rimraf(out);
-			builder.rimraf(tmp);
-			builder.mkdirp(tmp);
+			rmSync(out, { force: true, recursive: true });
+			rmSync(tmp, { force: true, recursive: true });
+			mkdirSync(tmp, { recursive: true });
 
 			builder.log.minor('Copying assets');
 			const written = [

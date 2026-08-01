@@ -121,9 +121,15 @@ type UnpackValidationError<T> =
 export interface Builder {
 	/** Print messages to the console. `log.info` and `log.minor` are silent unless Vite's `logLevel` is `info`. */
 	log: Logger;
-	/** Remove `dir` and all its contents. */
+	/**
+	 * Remove `dir` and all its contents.
+	 * @deprecated Use `fs.rmSync(dir, { force: true, recursive: true })` instead
+	 */
 	rimraf: (dir: string) => void;
-	/** Create `dir` and any required parent directories. */
+	/**
+	 * Create `dir` and any required parent directories.
+	 * @deprecated Use `fs.mkdirSync(dir, { recursive: true })` instead
+	 */
 	mkdirp: (dir: string) => void;
 
 	/** The fully resolved SvelteKit config. */
