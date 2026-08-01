@@ -59,32 +59,6 @@ export function validate_worker_settings(wrangler_config) {
 }
 
 /**
- * Extracts the redirect source from each line of a [_redirects](https://developers.cloudflare.com/pages/configuration/redirects/)
- * file so we can exclude them in [_routes.json](https://developers.cloudflare.com/pages/functions/routing/#create-a-_routesjson-file)
- * to ensure the redirect is invoked instead of the Cloudflare Worker.
- * @param {string} file_contents
- * @returns {string[]}
- */
-export function parse_redirects(file_contents) {
-	/** @type {string[]} */
-	const redirects = [];
-
-	for (const line of file_contents.split('\n')) {
-		const content = line.trim();
-		if (!content || content.startsWith('#')) continue;
-
-		const [pathname] = line.split(' ');
-		// pathnames with placeholders are not supported
-		if (!pathname || pathname.includes('/:')) {
-			throw new Error(`The following _redirects rule cannot be excluded by _routes.json: ${line}`);
-		}
-		redirects.push(pathname);
-	}
-
-	return redirects;
-}
-
-/**
  * Adds header rules to the contents of a `_headers` file
  * @param {string} url
  * @param {string[]} rules

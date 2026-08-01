@@ -1,10 +1,12 @@
+import { existsSync } from 'node:fs';
 import { describe, test, vi, expect } from 'vitest';
 import {
 	is_building_for_cloudflare_pages,
 	validate_worker_settings,
-	parse_redirects,
 	append_headers
 } from './utils.js';
+
+vi.mock('node:fs', () => ({ existsSync: vi.fn(() => false) }));
 
 describe('detects Cloudflare Pages project', () => {
 	test('by default', () => {
@@ -38,6 +40,18 @@ describe('detects Cloudflare Pages project', () => {
 				/** @type {import('wrangler').Unstable_Config} */ ({
 					configPath: 'wrangler.jsonc',
 					pages_build_output_dir: 'dist'
+				})
+			)
+		).toBe(true);
+	});
+
+	test('leftover _routes.json file', () => {
+		vi.mocked(existsSync).mockReturnValueOnce(true);
+		expect(
+			is_building_for_cloudflare_pages(
+				/** @type {import('wrangler').Unstable_Config} */ ({
+					configPath: 'wrangler.jsonc',
+					main: 'dist/index.js'
 				})
 			)
 		).toBe(true);
@@ -191,33 +205,5 @@ describe('_headers', () => {
   X-Custom-Rule: value
 `.trim()
 		);
-	});
-});
-
-describe('_redirects', () => {
-	test('parses sources', () => {
-		const redirects = parse_redirects(
-			`
-/home301 / 301
-/notrailing/ /nottrailing 301
-
-/blog/* https://blog.my.domain/:splat
-`.trim()
-		);
-
-		expect(redirects).toEqual(['/home301', '/notrailing/', '/blog/*']);
-	});
-
-	test('ignores comments while parsing', () => {
-		const redirects = parse_redirects(
-			`
-# This is a comment
-/home301 / 301
-  # Indented comment
-/blog/* https://blog.my.domain/:splat
-`.trim()
-		);
-
-		expect(redirects).toEqual(['/home301', '/blog/*']);
 	});
 });
