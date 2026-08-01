@@ -199,30 +199,28 @@ function normalize_fetch_input(info, init, url) {
  * @returns {Promise<Response>}
  */
 async function internal_fetch(request, options, manifest, state) {
+	if (request.signal?.aborted) {
+		throw new DOMException('The operation was aborted.', 'AbortError');
+	}
+
 	const subrequest_state = fork_state_for_subrequest(state);
 
-	if (request.signal) {
-		if (request.signal.aborted) {
-			throw new DOMException('The operation was aborted.', 'AbortError');
-		}
-
-		let remove_abort_listener = noop;
-		/** @type {Promise<never>} */
-		const abort_promise = new Promise((_, reject) => {
-			const on_abort = () => {
-				reject(new DOMException('The operation was aborted.', 'AbortError'));
-			};
-			request.signal.addEventListener('abort', on_abort, { once: true });
-			remove_abort_listener = () => request.signal.removeEventListener('abort', on_abort);
-		});
-
-		const result = await Promise.race([
-			respond(request, options, manifest, subrequest_state),
-			abort_promise
-		]);
-		remove_abort_listener();
-		return result;
-	} else {
+	if (!request.signal) {
 		return await respond(request, options, manifest, subrequest_state);
 	}
+
+	let remove_abort_listener = noop;
+	/** @type {Promise<never>} */
+	const abort_promise = new Promise((_, reject) => {
+		const on_abort = () => {
+			reject(new DOMException('The operation was aborted.', 'AbortError'));
+		};
+		request.signal.addEventListener('abort', on_abort, { once: true });
+		remove_abort_listener = () => request.signal.removeEventListener('abort', on_abort);
+	});
+
+	return Promise.race([
+		respond(request, options, manifest, subrequest_state),
+		abort_promise
+	]).finally(remove_abort_listener);
 }

@@ -507,17 +507,17 @@ export async function internal_respond(request, options, manifest, state) {
 													response.headers.set(key, /** @type {string} */ (value));
 												}
 
-											add_cookies_to_headers(response.headers, new_cookies.values());
+												add_cookies_to_headers(response.headers, new_cookies.values());
 
-											if (state.prerendering && event.route.id !== null) {
-												response.headers.set('x-sveltekit-routeid', encodeURI(event.route.id));
-											}
+												if (state.prerendering && event.route.id !== null) {
+													response.headers.set('x-sveltekit-routeid', encodeURI(event.route.id));
+												}
 
-											resolve_span.setAttributes({
-												'http.response.status_code': response.status,
-												'http.response.body.size':
-													response.headers.get('content-length') || 'unknown'
-											});
+												resolve_span.setAttributes({
+													'http.response.status_code': response.status,
+													'http.response.body.size':
+														response.headers.get('content-length') || 'unknown'
+												});
 
 												return response;
 											}

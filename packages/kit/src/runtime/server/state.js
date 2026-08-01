@@ -1,6 +1,27 @@
 /** @import { InternalRequestOptions, RequestState, ServerHooks } from 'types' */
 import { record_span } from '../telemetry/record_span.js';
 
+/** Per-request caches and context flags — never carried into a fork. */
+function transient_fields() {
+	return {
+		remote: {
+			data: null,
+			explicit: null,
+			implicit: null,
+			forms: null,
+			requested: null,
+			batches: null,
+			live_iterators: null
+		},
+		is_in_remote_function: false,
+		is_in_remote_form_or_command: false,
+		is_in_remote_query: false,
+		is_in_remote_prerender: false,
+		is_in_render: false,
+		original_event: undefined
+	};
+}
+
 /**
  * @param {InternalRequestOptions} options
  * @param {ServerHooks} hooks
@@ -22,21 +43,7 @@ export function create_request_state(options, hooks) {
 		tracing: {
 			record_span
 		},
-		remote: {
-			data: null,
-			explicit: null,
-			implicit: null,
-			forms: null,
-			requested: null,
-			batches: null,
-			live_iterators: null
-		},
-		is_in_remote_function: false,
-		is_in_remote_form_or_command: false,
-		is_in_remote_query: false,
-		is_in_remote_prerender: false,
-		is_in_render: false,
-		original_event: undefined
+		...transient_fields()
 	};
 }
 
@@ -45,24 +52,9 @@ export function create_request_state(options, hooks) {
  * @returns {RequestState}
  */
 export function fork_state_for_subrequest(state) {
-	// Sub-requests inherit request state while resetting caches and context flags.
 	return {
 		...state,
 		depth: state.depth + 1,
-		remote: {
-			data: null,
-			explicit: null,
-			implicit: null,
-			forms: null,
-			requested: null,
-			batches: null,
-			live_iterators: null
-		},
-		is_in_remote_function: false,
-		is_in_remote_form_or_command: false,
-		is_in_remote_query: false,
-		is_in_remote_prerender: false,
-		is_in_render: false,
-		original_event: undefined
+		...transient_fields()
 	};
 }
