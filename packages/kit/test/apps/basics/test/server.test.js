@@ -1088,21 +1088,24 @@ test.describe('$app/env', () => {
 });
 
 test.describe('tracing', () => {
-	// Helper function to find the resolve.root span deep in the handle.child chain
 	/**
 	 * @param {import('../../../types.js').SpanTree} span
+	 * @param {(span: import('../../../types.js').SpanTree) => boolean} predicate
 	 * @returns {import('../../../types.js').SpanTree | null}
 	 */
-	function find_resolve_root_span(span) {
-		if (span.name === 'sveltekit.resolve') {
+	function find_span(span, predicate) {
+		if (predicate(span)) {
 			return span;
 		}
 		for (const child of span.children || []) {
-			const found = find_resolve_root_span(child);
+			const found = find_span(child, predicate);
 			if (found) return found;
 		}
 		return null;
 	}
+
+	/** @param {import('../../../types.js').SpanTree} span */
+	const find_resolve_root_span = (span) => find_span(span, (s) => s.name === 'sveltekit.resolve');
 
 	function rand() {
 		// node 18 doesn't have crypto.randomUUID() and we run tests in node 18
@@ -1197,6 +1200,23 @@ test.describe('tracing', () => {
 				}
 			]
 		});
+	});
+
+	test('tracing.current in a server load is the load span', async ({ page, read_traces }) => {
+		const test_id = rand();
+		await page.goto(`/tracing/current?test_id=${test_id}`);
+		const traces = read_traces(test_id);
+		expect(traces.length).toBeGreaterThan(0);
+
+		// the attributes set via tracing.current land on the load span, not the root
+		const load_span = find_span(
+			traces[0],
+			(s) => s.attributes['sveltekit.load.node_id'] === 'src/routes/tracing/current/+page.server.js'
+		);
+		expect(load_span).not.toBeNull();
+		expect(load_span?.attributes.current_matches_otel).toBe(true);
+		expect(load_span?.attributes.current_matches_otel_after_await).toBe(true);
+		expect(traces[0].attributes.current_matches_otel).toBeUndefined();
 	});
 
 	test('correct spans are created for HttpError', async ({ page, read_traces }) => {

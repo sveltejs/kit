@@ -2,7 +2,7 @@
 import { DEV } from 'esm-env';
 import { json, text } from '@sveltejs/kit';
 import { Redirect, SvelteKitError } from '@sveltejs/kit/internal';
-import { try_get_tracing, with_request_store } from '@sveltejs/kit/internal/server';
+import { with_request_store } from '@sveltejs/kit/internal/server';
 import { base, app_dir } from '$app/paths/internal/server';
 import { is_endpoint_request, render_endpoint } from './endpoint.js';
 import { render_page } from './page/index.js';
@@ -39,7 +39,7 @@ import {
 import { server_data_serializer } from './page/data_serializer.js';
 import { get_remote_id, handle_remote_call } from './remote-functions.js';
 import { record_span } from '../telemetry/record_span.js';
-import { otel } from '../telemetry/otel.js';
+import { otel, trace } from '../telemetry/otel.js';
 
 /** @type {import('types').RequiredResolveOptions['transformPageChunk']} */
 const default_transform = ({ html }) => html;
@@ -490,53 +490,50 @@ export async function internal_respond(request, options, manifest, state) {
 					enabled: __SVELTEKIT_SERVER_TRACING_ENABLED__,
 					root: root_span,
 					get current() {
-						return try_get_tracing()?.current ?? root_span;
+						return trace?.getActiveSpan() ?? root_span;
 					}
 				};
 
-				// the explicit span stops sub-requests from inheriting the parent request's span
-				return await with_request_store(
-					{ event, state: event_state, tracing: { current: root_span } },
-					() =>
-						options.hooks.handle({
-							event,
-							resolve: (event, opts) => {
-								return record_span({
-									name: 'sveltekit.resolve',
-									attributes: {
-										'http.route': event.route.id || 'unknown'
-									},
-									fn: (resolve_span) => {
-										// counter-intuitively, we need to hide the event, so that it's not
-										// e.g. accessible when loading modules needed to handle the request
-										return with_request_store({ tracing: { current: resolve_span } }, () =>
-											resolve(event, page_nodes, opts).then((response) => {
-												// add headers/cookies here, rather than inside `resolve`, so that we
-												// can do it once for all responses instead of once per `return`
-												for (const key in headers) {
-													const value = headers[key];
-													response.headers.set(key, /** @type {string} */ (value));
-												}
+				return await with_request_store({ event, state: event_state }, () =>
+					options.hooks.handle({
+						event,
+						resolve: (event, opts) => {
+							return record_span({
+								name: 'sveltekit.resolve',
+								attributes: {
+									'http.route': event.route.id || 'unknown'
+								},
+								fn: (resolve_span) => {
+									// counter-intuitively, we need to clear the event, so that it's not
+									// e.g. accessible when loading modules needed to handle the request
+									return with_request_store(null, () =>
+										resolve(event, page_nodes, opts).then((response) => {
+											// add headers/cookies here, rather than inside `resolve`, so that we
+											// can do it once for all responses instead of once per `return`
+											for (const key in headers) {
+												const value = headers[key];
+												response.headers.set(key, /** @type {string} */ (value));
+											}
 
-												add_cookies_to_headers(response.headers, new_cookies.values());
+											add_cookies_to_headers(response.headers, new_cookies.values());
 
-												if (state.prerendering && event.route.id !== null) {
-													response.headers.set('x-sveltekit-routeid', encodeURI(event.route.id));
-												}
+											if (state.prerendering && event.route.id !== null) {
+												response.headers.set('x-sveltekit-routeid', encodeURI(event.route.id));
+											}
 
-												resolve_span.setAttributes({
-													'http.response.status_code': response.status,
-													'http.response.body.size':
-														response.headers.get('content-length') || 'unknown'
-												});
+											resolve_span.setAttributes({
+												'http.response.status_code': response.status,
+												'http.response.body.size':
+													response.headers.get('content-length') || 'unknown'
+											});
 
-												return response;
-											})
-										);
-									}
-								});
-							}
-						})
+											return response;
+										})
+									);
+								}
+							});
+						}
+					})
 				);
 			}
 		});

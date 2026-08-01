@@ -81,9 +81,8 @@ export async function load_server_data({ event, event_state, state, node, parent
 			'sveltekit.load.environment': 'server',
 			'http.route': event.route.id || 'unknown'
 		},
-		fn: async (current) => {
-			const store = { event, state: event_state, tracing: { current } };
-			const result = await with_request_store(store, () =>
+		fn: async () =>
+			with_request_store({ event, state: event_state }, () =>
 				load.call(null, {
 					...event,
 					fetch: (info, init) => {
@@ -170,10 +169,7 @@ export async function load_server_data({ event, event_state, state, node, parent
 						}
 					}
 				})
-			);
-
-			return result;
-		}
+			)
 	});
 
 	if (DEV) {
@@ -232,10 +228,10 @@ export async function load_data({
 			'sveltekit.load.environment': 'server',
 			'http.route': event.route.id || 'unknown'
 		},
-		fn: async (current) => {
+		fn: async () => {
 			const child_state = { ...event_state, is_in_universal_load: true };
 
-			return await with_request_store({ event, state: child_state, tracing: { current } }, () =>
+			return await with_request_store({ event, state: child_state }, () =>
 				load.call(null, {
 					url: event.url,
 					params: event.params,

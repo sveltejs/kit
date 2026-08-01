@@ -748,18 +748,6 @@ export interface RequestState {
 export interface RequestStore {
 	event: RequestEvent;
 	state: RequestState;
-	tracing?: {
-		current: Span;
-	};
-}
-
-/** Carries the active span through scopes that must hide the event, such as `resolve` */
-export interface TracingStore {
-	event?: undefined;
-	state?: undefined;
-	tracing: {
-		current: Span;
-	};
 }
 
 /** Type of the `__sveltekit_abc123` object in the init `<script>` */

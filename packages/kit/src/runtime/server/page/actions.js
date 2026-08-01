@@ -281,10 +281,7 @@ async function call_action(event, event_state, actions) {
 			'http.route': event.route.id || 'unknown'
 		},
 		fn: async (current) => {
-			const result = await with_request_store(
-				{ event, state: event_state, tracing: { current } },
-				() => action(event)
-			);
+			const result = await with_request_store({ event, state: event_state }, () => action(event));
 
 			if (result instanceof ActionFailure) {
 				current.setAttributes({

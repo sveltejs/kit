@@ -1,12 +1,12 @@
 /** @import { RequestEvent } from '@sveltejs/kit' */
-/** @import { RequestStore, TracingStore } from 'types' */
+/** @import { RequestStore } from 'types' */
 /** @import { AsyncLocalStorage } from 'node:async_hooks' */
 import { IN_WEBCONTAINER } from '../../../runtime/server/constants.js';
 
-/** @type {RequestStore | TracingStore | null} */
+/** @type {RequestStore | null} */
 let sync_store = null;
 
-/** @type {AsyncLocalStorage<RequestStore | TracingStore | null> | null} */
+/** @type {AsyncLocalStorage<RequestStore | null> | null} */
 let als;
 
 import('node:async_hooks')
@@ -61,34 +61,17 @@ export function get_request_store() {
 	return result;
 }
 
-function get_raw_store() {
-	return sync_store ?? als?.getStore() ?? null;
-}
-
-/** @returns {RequestStore | null} */
 export function try_get_request_store() {
-	const store = get_raw_store();
-	return store?.event ? store : null;
-}
-
-/** Reads the active span through stores that hide the event, such as during `resolve` */
-export function try_get_tracing() {
-	return get_raw_store()?.tracing;
+	return sync_store ?? als?.getStore() ?? null;
 }
 
 /**
  * @template T
- * @param {RequestStore | TracingStore | null} store
+ * @param {RequestStore | null} store
  * @param {() => T} fn
  */
 export function with_request_store(store, fn) {
 	try {
-		// nested stores that don't set a span keep attributing to the active one
-		if (store && !store.tracing) {
-			const tracing = try_get_tracing();
-			if (tracing) store.tracing = tracing;
-		}
-
 		sync_store = store;
 		return als ? als.run(store, fn) : fn();
 	} finally {
