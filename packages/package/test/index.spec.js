@@ -37,8 +37,8 @@ async function test_make_package(path, options) {
 		...options
 	});
 
-	const expected_files = /** @type {string[]} */ (fs.readdirSync(ewd, { recursive: true })).sort();
-	const actual_files = /** @type {string[]} */ (fs.readdirSync(output, { recursive: true })).sort();
+	const expected_files = fs.readdirSync(ewd, { encoding: 'utf-8', recursive: true }).sort();
+	const actual_files = fs.readdirSync(output, { encoding: 'utf-8', recursive: true }).sort();
 
 	expect(actual_files).toEqual(expected_files);
 

@@ -53,11 +53,13 @@ export async function emit_dts(input, output, final_output, cwd, alias, files, t
 		}
 	}
 
-	// resolve $lib alias (TODO others), copy into package dir
-	for (const file of fs
+	const generated = fs
 		.readdirSync(tmp, { recursive: true, withFileTypes: true })
 		.filter((entry) => entry.isFile())
-		.map((entry) => path.relative(tmp, path.join(entry.parentPath, entry.name)))) {
+		.map((entry) => path.relative(tmp, path.join(entry.parentPath, entry.name)));
+
+	// resolve $lib alias (TODO others), copy into package dir
+	for (const file of generated) {
 		const normalized = posixify(file);
 
 		if (handwritten.has(normalized)) {
