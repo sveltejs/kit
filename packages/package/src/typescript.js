@@ -54,9 +54,8 @@ export async function emit_dts(input, output, final_output, cwd, alias, files, t
 	}
 
 	const generated = fs
-		.readdirSync(tmp, { recursive: true, withFileTypes: true })
-		.filter((entry) => entry.isFile())
-		.map((entry) => path.relative(tmp, path.join(entry.parentPath, entry.name)));
+		.readdirSync(tmp, { encoding: 'utf-8', recursive: true })
+		.filter((file) => fs.statSync(path.join(tmp, file)).isFile());
 
 	// resolve $lib alias (TODO others), copy into package dir
 	for (const file of generated) {

@@ -143,9 +143,8 @@ export function write(file, contents) {
  */
 export function scan(input, extensions) {
 	return fs
-		.readdirSync(input, { recursive: true, withFileTypes: true })
-		.filter((entry) => entry.isFile())
-		.map((entry) => path.relative(input, path.join(entry.parentPath, entry.name)))
+		.readdirSync(input, { encoding: 'utf-8', recursive: true })
+		.filter((file) => fs.statSync(path.join(input, file)).isFile())
 		.map((file) => analyze(file, extensions));
 }
 

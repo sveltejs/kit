@@ -65,7 +65,7 @@ async function do_build(options, analyse_code) {
 	}
 
 	fs.mkdirSync(output, { recursive: true });
-	fs.cpSync(temp, output, { recursive: true });
+	fs.cpSync(temp, output, { recursive: true, dereference: true });
 
 	console.log(
 		styleText(
@@ -326,7 +326,9 @@ async function process_file(
 
 		analyse_code(file.name, contents);
 		write(dest, contents);
-	} else {
-		if (fs.existsSync(filename)) fs.cpSync(filename, dest);
+	} else if (fs.existsSync(filename)) {
+		// copyFileSync rather than cpSync: cpSync with dereference errors on symlinked sources
+		fs.mkdirSync(path.dirname(dest), { recursive: true });
+		fs.copyFileSync(filename, dest);
 	}
 }
