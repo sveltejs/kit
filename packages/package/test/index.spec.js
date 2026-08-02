@@ -7,7 +7,6 @@ import { test, expect } from 'vitest';
 
 import { build, watch } from '../src/index.js';
 import { load_config } from '../src/config.js';
-import { rimraf, walk } from '../src/filesystem.js';
 import { _create_validator } from '../src/validate.js';
 import { resolve_aliases } from '../src/utils.js';
 
@@ -38,8 +37,8 @@ async function test_make_package(path, options) {
 		...options
 	});
 
-	const expected_files = walk(ewd, true);
-	const actual_files = walk(output, true);
+	const expected_files = /** @type {string[]} */ (fs.readdirSync(ewd, { recursive: true })).sort();
+	const actual_files = /** @type {string[]} */ (fs.readdirSync(output, { recursive: true })).sort();
 
 	expect(actual_files).toEqual(expected_files);
 
@@ -118,7 +117,7 @@ for (const dir of fs.readdirSync(join(import.meta.dirname, 'errors'))) {
 					throw new Error('All error test must be handled', { cause: error });
 			}
 		} finally {
-			rimraf(output);
+			fs.rmSync(output, { force: true, recursive: true });
 		}
 	});
 }
@@ -534,7 +533,7 @@ test('does not warn about server files that import a .ts file which imports $app
 
 test('create package with preserved output', async () => {
 	const output = join(import.meta.dirname, 'fixtures', 'preserve-output', 'dist');
-	rimraf(output);
+	fs.rmSync(output, { force: true, recursive: true });
 	fs.mkdirSync(join(output, 'assets'), { recursive: true });
 	fs.writeFileSync(join(output, 'assets', 'theme.css'), ':root { color: red }');
 	await test_make_package('preserve-output', { preserve_output: true });

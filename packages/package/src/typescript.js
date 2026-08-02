@@ -2,7 +2,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { createRequire } from 'node:module';
 import semver from 'semver';
-import { posixify, mkdirp, rimraf, walk } from './filesystem.js';
+import { posixify } from './filesystem.js';
 import { resolve_aliases, write } from './utils.js';
 import { emitDts } from 'svelte2tsx';
 import { load_pkg_json } from './config.js';
@@ -22,8 +22,8 @@ import { load_pkg_json } from './config.js';
  */
 export async function emit_dts(input, output, final_output, cwd, alias, files, tsconfig) {
 	const tmp = `${output}/__package_types_tmp__`;
-	rimraf(tmp);
-	mkdirp(tmp);
+	fs.rmSync(tmp, { force: true, recursive: true });
+	fs.mkdirSync(tmp, { recursive: true });
 
 	const require = createRequire(import.meta.url);
 	const pkg = load_pkg_json(cwd);
@@ -54,7 +54,10 @@ export async function emit_dts(input, output, final_output, cwd, alias, files, t
 	}
 
 	// resolve $lib alias (TODO others), copy into package dir
-	for (const file of walk(tmp)) {
+	for (const file of fs
+		.readdirSync(tmp, { recursive: true, withFileTypes: true })
+		.filter((entry) => entry.isFile())
+		.map((entry) => path.relative(tmp, path.join(entry.parentPath, entry.name)))) {
 		const normalized = posixify(file);
 
 		if (handwritten.has(normalized)) {
@@ -85,7 +88,7 @@ export async function emit_dts(input, output, final_output, cwd, alias, files, t
 		write(path.join(output, normalized), source);
 	}
 
-	rimraf(tmp);
+	fs.rmSync(tmp, { force: true, recursive: true });
 }
 
 /**

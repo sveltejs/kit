@@ -3,7 +3,7 @@ import * as path from 'node:path';
 import { styleText } from 'node:util';
 import chokidar from 'chokidar';
 import { preprocess } from 'svelte/compiler';
-import { copy, mkdirp, posixify, rimraf } from './filesystem.js';
+import { posixify } from './filesystem.js';
 import {
 	analyze,
 	resolve_aliases,
@@ -35,8 +35,8 @@ async function do_build(options, analyse_code) {
 		throw new Error(`${path.relative('.', input)} does not exist`);
 	}
 
-	rimraf(temp);
-	mkdirp(temp);
+	fs.rmSync(temp, { force: true, recursive: true });
+	fs.mkdirSync(temp, { recursive: true });
 
 	const files = scan(input, extensions);
 
@@ -61,11 +61,11 @@ async function do_build(options, analyse_code) {
 	}
 
 	if (!options.preserve_output) {
-		rimraf(output);
+		fs.rmSync(output, { force: true, recursive: true });
 	}
 
-	mkdirp(output);
-	copy(temp, output);
+	fs.mkdirSync(output, { recursive: true });
+	fs.cpSync(temp, output, { recursive: true });
 
 	console.log(
 		styleText(
@@ -327,6 +327,6 @@ async function process_file(
 		analyse_code(file.name, contents);
 		write(dest, contents);
 	} else {
-		copy(filename, dest);
+		if (fs.existsSync(filename)) fs.cpSync(filename, dest);
 	}
 }
