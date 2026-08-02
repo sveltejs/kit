@@ -21,7 +21,7 @@ const help = `
   Usage: svelte-package [options]
 
   Options:
-    --input, -i <input>         Input directory
+    --input, -i <input>        Input directory
     --output, -o <output>      Output directory (default: dist)
     --preserve-output, -p      Do not delete the output directory before packaging
     --types, -t                Emit type declarations (default: true)
