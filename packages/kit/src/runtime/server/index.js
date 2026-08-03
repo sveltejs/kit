@@ -203,10 +203,15 @@ export class Server {
 
 		if (decoded_responses.has(response)) {
 			// The body was already decoded by `fetch`, so we need to strip
-			// these headers to avoid as `ERR_CONTENT_DECODING_FAILED` error
+			// these headers to avoid as `ERR_CONTENT_DECODING_FAILED` error.
+			// `fetch` only decodes when a `content-encoding` is present, so we
+			// only strip the headers in that case to avoid discarding a valid
+			// `content-length` (e.g. for uncompressed or 206 range responses).
 			const headers = new Headers(response.headers);
-			headers.delete('content-encoding');
-			headers.delete('content-length');
+			if (headers.has('content-encoding')) {
+				headers.delete('content-encoding');
+				headers.delete('content-length');
+			}
 
 			return new Response(response.body, {
 				status: response.status,
