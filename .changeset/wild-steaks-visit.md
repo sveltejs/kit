@@ -1,5 +1,5 @@
 ---
-'@sveltejs/kit': major
+'@sveltejs/kit': minor
 ---
 
-breaking: strip `content-encoding` and `content-length` headers when returning responses created with `fetch`
+feat: warn when naively proxying requests that result in responses with a `content-encoding` header
