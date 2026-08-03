@@ -1107,8 +1107,9 @@ test.describe('remote function mutations', () => {
 		await expect(text).toHaveValue('Updated text');
 		await expect(checkbox).not.toBeChecked();
 
-		// reset the values for the client tests
+		// reset the values for the other tests, awaited so the page can't close mid-request
 		await page.click('#reset-values');
+		await expect(text).toHaveValue('Example text');
 	});
 
 	test('.as(type, value) updates when field.set() is called', async ({ page }) => {
