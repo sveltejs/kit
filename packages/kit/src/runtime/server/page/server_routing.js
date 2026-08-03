@@ -110,7 +110,7 @@ export function resolve_route_by_id(route_id, url, manifest) {
 		const route = manifest._.client.routes.find((r) => r.id === route_id);
 
 		if (route) {
-			return create_server_routing_response(route, {}, url, manifest._.client).response;
+			return create_server_routing_response(route, null, url, manifest._.client).response;
 		}
 
 		// `client.routes` only contains routes with a `+page`, so a miss above doesn't mean the
@@ -120,7 +120,7 @@ export function resolve_route_by_id(route_id, url, manifest) {
 			return text('export const endpoint_only = true;', { headers: js_headers() });
 		}
 
-		return create_server_routing_response(null, {}, url, manifest._.client).response;
+		return create_server_routing_response(null, null, url, manifest._.client).response;
 	} catch {
 		return text('Error resolving route', { status: 500 });
 	}
@@ -134,22 +134,25 @@ function js_headers() {
 
 /**
  * @param {import('types').SSRClientRoute | null} route
- * @param {Partial<Record<string, string>>} params
+ * @param {Partial<Record<string, string>> | null} params
  * @param {URL} url
  * @param {NonNullable<SSRManifest['_']['client']>} client
  * @returns {{response: Response, body: string}}
  */
 export function create_server_routing_response(route, params, url, client) {
 	const headers = js_headers();
+	let body = '';
 
 	if (route) {
 		const csr_route = generate_route_object(route, url, client);
-		const body = `${create_css_import(route, url, client)}\nexport const route = ${csr_route}; export const params = ${JSON.stringify(params)};`;
+		body = `${create_css_import(route, url, client)}export const route = ${csr_route};`;
 
-		return { response: text(body, { headers }), body };
-	} else {
-		return { response: text('', { headers }), body: '' };
+		if (params !== null) {
+			body += `\nexport const params = ${JSON.stringify(params)}`;
+		}
 	}
+
+	return { response: text(body, { headers }), body };
 }
 
 /**
@@ -178,5 +181,5 @@ function create_css_import(route, url, client) {
 
 	if (!css) return '';
 
-	return `${create_client_import(client.start, url)}.then(x => x.load_css([${css}]));`;
+	return `${create_client_import(client.start, url)}.then(x => x.load_css([${css}]));\n`;
 }
