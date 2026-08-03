@@ -67,31 +67,17 @@ export class Server {
 				const result = read(file);
 				if (result instanceof ReadableStream) {
 					return result;
-				} else {
-					return new ReadableStream({
-						async start(controller) {
-							try {
-								const stream = await Promise.resolve(result);
-								if (!stream) {
-									controller.close();
-									return;
-								}
-
-								const reader = stream.getReader();
-
-								while (true) {
-									const { done, value } = await reader.read();
-									if (done) break;
-									controller.enqueue(value);
-								}
-
-								controller.close();
-							} catch (error) {
-								controller.error(error);
-							}
-						}
-					});
 				}
+
+				// TODO remove the cast once TypeScript's lib includes `ReadableStream.from`
+				return /** @type {ReadableStream} */ (
+					/** @type {any} */ (ReadableStream).from(
+						(async function* () {
+							const stream = await result;
+							if (stream) yield* stream;
+						})()
+					)
+				);
 			};
 
 			set_read_implementation(wrapped_read);
