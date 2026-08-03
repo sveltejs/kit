@@ -344,7 +344,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, s
 		}
 
 		let prelude = '';
-		let start = 0;
+		let start = -1;
 		let end = 0;
 
 		const lines = error.stack
@@ -363,7 +363,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, s
 
 				if (fs.existsSync(file)) {
 					if (!file.includes('node_modules') && !file.includes(SRC_ROOT)) {
-						start ||= i;
+						if (start === -1) start = i;
 						end = i + 1;
 					}
 
@@ -372,7 +372,9 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, s
 
 				return line;
 			})
-			.slice(start, end);
+			// if no user-code frame was found, keep only the prelude (message/header)
+			// lines and drop everything else so the message isn't duplicated
+			.slice(start === -1 ? end : start, end);
 
 		return (error.stack = prelude + lines.join('\n'));
 	}
