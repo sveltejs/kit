@@ -5,6 +5,7 @@ import { rimraf, walk, resolve_entry } from '../../../utils/filesystem.js';
 import { compact } from '../../../utils/array.js';
 import { posixify } from '../../../utils/os.js';
 import { ts } from '../ts.js';
+import { is_page_route } from '../create_manifest_data/index.js';
 const remove_relative_parent_traversals = (/** @type {string} */ path) =>
 	path.replace(/\.\.\//g, '');
 const is_whitespace = (/** @type {string} */ char) => /\s/.test(char);
@@ -278,7 +279,9 @@ function update_types(config, routes, route, root, to_delete = new Set()) {
 		let all_pages_have_load = true;
 		/** @type {import('types').RouteParam[]} */
 		const layout_params = [];
-		const ids = ['RouteId'];
+		// a layout can live in a directory that has no `+page` of its own, in which case its own id
+		// is never the matched route — a request to a colocated `+server` doesn't execute layouts
+		const ids = is_page_route(route) ? ['RouteId'] : [];
 
 		route.layout.child_pages?.forEach((page) => {
 			const leaf = routes.get(page);
@@ -312,7 +315,7 @@ function update_types(config, routes, route, root, to_delete = new Set()) {
 			ids.push('null');
 		}
 
-		declarations.push(`type LayoutRouteId = ${ids.join(' | ')}`);
+		declarations.push(`type LayoutRouteId = ${ids.join(' | ') || 'never'}`);
 
 		declarations.push(
 			'type LayoutParams = RouteParams & ' + generate_params_type(layout_params, outdir, config)

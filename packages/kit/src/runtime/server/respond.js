@@ -1,4 +1,4 @@
-/** @import { RequestState, SSRNode } from 'types' */
+/** @import { SSRNode } from 'types' */
 import { DEV } from 'esm-env';
 import { json, text } from '@sveltejs/kit';
 import { Redirect, SvelteKitError } from '@sveltejs/kit/internal';
@@ -40,6 +40,7 @@ import { server_data_serializer } from './page/data_serializer.js';
 import { get_remote_id, handle_remote_call } from './remote-functions.js';
 import { record_span } from '../telemetry/record_span.js';
 import { otel } from '../telemetry/otel.js';
+import { create_request_state } from './state.js';
 
 /** @type {import('types').RequiredResolveOptions['transformPageChunk']} */
 const default_transform = ({ html }) => html;
@@ -174,30 +175,7 @@ export async function internal_respond(request, options, manifest, state) {
 		url
 	);
 
-	/** @type {RequestState} */
-	const event_state = {
-		prerendering: state.prerendering,
-		transport: options.hooks.transport,
-		handleValidationError: options.hooks.handleValidationError,
-		tracing: {
-			record_span
-		},
-		remote: {
-			data: null,
-			explicit: null,
-			implicit: null,
-			forms: null,
-			requested: null,
-			batches: null,
-			live_iterators: null
-		},
-		is_in_remote_function: false,
-		is_in_remote_form_or_command: false,
-		is_in_remote_query: false,
-		is_in_remote_prerender: false,
-		is_in_render: false,
-		is_in_universal_load: false
-	};
+	const event_state = create_request_state(state, options.hooks);
 
 	/** @type {import('@sveltejs/kit').RequestEvent} */
 	const event = {

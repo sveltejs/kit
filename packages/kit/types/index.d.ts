@@ -225,8 +225,9 @@ declare module '@sveltejs/kit' {
 		/**
 		 * Compress files in `directory` with gzip and brotli, where appropriate. Generates `.gz` and `.br` files alongside the originals.
 		 * @param directory The directory containing the files to be compressed
+		 * @returns an array of the files in `directory` that were compressed
 		 */
-		compress: (directory: string) => Promise<void>;
+		compress: (directory: string) => Promise<string[]>;
 	}
 
 	/**
@@ -834,7 +835,7 @@ declare module '@sveltejs/kit' {
 			 * A function that allows you to edit the generated `tsconfig.json`. You can mutate the config (recommended) or return a new one.
 			 * This is useful for extending a shared `tsconfig.json` in a monorepo root, for example.
 			 *
-			 * Note that any paths configured here should be relative to the generated config file, which is written to `node_modules/$app/tsconfig/tsconfig.json`.
+			 * Note that any paths configured here should be relative to the generated config file, which is written to `node_modules/$app/tsconfig.json`.
 			 *
 			 * @default (config) => config
 			 * @since 1.3.0
@@ -3753,9 +3754,41 @@ declare module '$app/manifest' {
 	 */
 	export const prerendered: Array<{ path: import('$app/types').Path }>;
 	/**
-	 * An array of objects with an `id` property representing the routes in your app.
+	 * A route in your app, along with its capabilities. `page` indicates the presence of a `+page`,
+	 * while `endpoint` indicates the presence of a `+server`. Both are `true` when both files exist.
 	 */
-	export const routes: Array<{ id: import('$app/types').RouteId }>;
+	export type ManifestRoute =
+		| {
+				id: Exclude<import('$app/types').PageRouteId, import('$app/types').EndpointRouteId>;
+				page: true;
+				endpoint: false;
+		  }
+		| {
+				id: Exclude<import('$app/types').EndpointRouteId, import('$app/types').PageRouteId>;
+				page: false;
+				endpoint: true;
+		  }
+		| {
+				id: Extract<import('$app/types').PageRouteId, import('$app/types').EndpointRouteId>;
+				page: true;
+				endpoint: true;
+		  };
+	/**
+	 * An array of objects representing the routes in your app. Only routes that the router can match
+	 * are included — directories that merely hold a `+layout` are not routes of their own.
+	 *
+	 * Each object has an `id`, plus `page` and `endpoint` booleans describing whether the route has a
+	 * `+page` and/or a `+server`. Both are `true` for a route that has both, so the capabilities can
+	 * be filtered independently:
+	 *
+	 * ```js
+	 * import { routes } from '$app/manifest';
+	 *
+	 * const pages = routes.filter((route) => route.page);
+	 * const endpoints = routes.filter((route) => route.endpoint);
+	 * ```
+	 */
+	export const routes: ManifestRoute[];
 }
 
 /**
@@ -3769,6 +3802,8 @@ declare module '$app/types' {
 		// These are all functions so that we can leverage function overloads to get the correct type.
 		// Using the return types directly would error with a "not the same type" error.
 		// https://www.typescriptlang.org/docs/handbook/declaration-merging.html#merging-interfaces
+		PageRouteId(): string;
+		EndpointRouteId(): string;
 		RouteId(): string;
 		RouteParams(): Record<string, Record<string, string>>;
 		LayoutParams(): Record<string, Record<string, string>>;
@@ -3778,7 +3813,21 @@ declare module '$app/types' {
 	}
 
 	/**
-	 * A union of all the route IDs in your app. Used for `page.route.id` and `event.route.id`.
+	 * A union of the route IDs in your app that have a `+page`.
+	 *
+	 * A route ID can be in both `PageRouteId` and `EndpointRouteId`, if its directory contains both a `+page` and a `+server`.
+	 */
+	export type PageRouteId = ReturnType<AppTypes['PageRouteId']>;
+
+	/**
+	 * A union of the route IDs in your app that have a `+server`.
+	 *
+	 * A route ID can be in both `PageRouteId` and `EndpointRouteId`, if its directory contains both a `+page` and a `+server`.
+	 */
+	export type EndpointRouteId = ReturnType<AppTypes['EndpointRouteId']>;
+
+	/**
+	 * A union of all the route IDs in your app — the union of `PageRouteId` and `EndpointRouteId`. Used for `page.route.id` and `event.route.id`.
 	 */
 	export type RouteId = ReturnType<AppTypes['RouteId']>;
 
@@ -3795,11 +3844,14 @@ declare module '$app/types' {
 		: Record<string, never>;
 
 	/**
+	 * The route IDs accepted by `LayoutParams`. Like `RouteId`, these preserve route groups and `[param]` syntax, but they identify directories containing layouts rather than matchable routes.
+	 */
+	type LayoutParamsId = keyof ReturnType<AppTypes['LayoutParams']>;
+
+	/**
 	 * A utility for getting the parameters associated with a given layout, which is similar to `RouteParams` but also includes optional parameters for any child route.
 	 */
-	export type LayoutParams<T extends RouteId> = T extends keyof ReturnType<AppTypes['LayoutParams']>
-		? ReturnType<AppTypes['LayoutParams']>[T]
-		: Record<string, never>;
+	export type LayoutParams<T extends LayoutParamsId> = ReturnType<AppTypes['LayoutParams']>[T];
 
 	/**
 	 * A union of all valid paths in your app, relative to the `base` path.

@@ -17,6 +17,7 @@ import { createReadableStream } from '@sveltejs/kit/node';
 import generate_fallback from './fallback.js';
 import { stringify_remote_arg } from '../../runtime/shared.js';
 import { log_response } from '../../exports/vite/utils.js';
+import { matches_content_type } from '../../utils/http.js';
 
 export default forked(import.meta.url, prerender);
 
@@ -387,7 +388,11 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 		const headers = Object.fromEntries(response.headers);
 
 		// if it's a 200 HTML response, crawl it. Skip error responses, as we don't save those
-		if (response.ok && config.prerender.crawl && headers['content-type'] === 'text/html') {
+		if (
+			response.ok &&
+			config.prerender.crawl &&
+			matches_content_type(headers['content-type'], 'text/html')
+		) {
 			const { ids, hrefs, invalid } = crawl(body.toString(), decoded);
 
 			for (const href of invalid) {
@@ -444,7 +449,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 		const headers = Object.fromEntries(response.headers);
 
 		const type = headers['content-type'];
-		const is_html = response_type === REDIRECT || type === 'text/html';
+		const is_html = response_type === REDIRECT || matches_content_type(type, 'text/html');
 
 		if (!is_html && response.status === 200 && decoded.slice(config.paths.base.length + 1) === '') {
 			throw new Error(

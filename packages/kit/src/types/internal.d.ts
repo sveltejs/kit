@@ -537,7 +537,6 @@ export interface SSRClientRoute {
 }
 
 export interface SSRState {
-	fallback?: string;
 	getClientAddress(): string;
 	/**
 	 * True if we're currently attempting to render an error page.

@@ -4,6 +4,7 @@ import { respond } from './respond.js';
 import * as paths from '$app/paths/internal/server';
 import { read_implementation } from './internal.js';
 import { has_prerendered_path } from './utils.js';
+import { fork_state_for_subrequest } from './state.js';
 
 /**
  * @param {{
@@ -198,6 +199,8 @@ function normalize_fetch_input(info, init, url) {
  * @returns {Promise<Response>}
  */
 async function internal_fetch(request, options, manifest, state) {
+	const subrequest_state = fork_state_for_subrequest(state);
+
 	if (request.signal) {
 		if (request.signal.aborted) {
 			throw new DOMException('The operation was aborted.', 'AbortError');
@@ -214,18 +217,12 @@ async function internal_fetch(request, options, manifest, state) {
 		});
 
 		const result = await Promise.race([
-			respond(request, options, manifest, {
-				...state,
-				depth: state.depth + 1
-			}),
+			respond(request, options, manifest, subrequest_state),
 			abort_promise
 		]);
 		remove_abort_listener();
 		return result;
 	} else {
-		return await respond(request, options, manifest, {
-			...state,
-			depth: state.depth + 1
-		});
+		return await respond(request, options, manifest, subrequest_state);
 	}
 }
