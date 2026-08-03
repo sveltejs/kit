@@ -208,6 +208,7 @@ test('succeeds when routes does not exist', () => {
 test('encodes invalid characters', () => {
 	const { nodes, routes } = create('samples/encoding');
 
+	const emoji = { component: 'samples/encoding/[u+1f600]/+page.svelte' };
 	const quote = { component: 'samples/encoding/[x+22]/+page.svelte' };
 	const hash = { component: 'samples/encoding/[x+23]/+page.svelte' };
 	const question_mark = { component: 'samples/encoding/[x+3f]/+page.svelte' };
@@ -217,6 +218,7 @@ test('encodes invalid characters', () => {
 	expect(nodes.map(simplify_node)).toEqual([
 		default_layout,
 		default_error,
+		emoji,
 		quote,
 		hash,
 		question_mark,
@@ -225,8 +227,8 @@ test('encodes invalid characters', () => {
 	]);
 
 	expect(routes.map((p) => p.pattern.toString())).toEqual(
-		[/^\/$/, /^\/\]\/?$/, /^\/\[\/?$/, /^\/%3[Ff]\/?$/, /^\/%23\/?$/, /^\/"\/?$/].map((pattern) =>
-			pattern.toString()
+		[/^\/$/, /^\/\]\/?$/, /^\/\[\/?$/, /^\/%3[Ff]\/?$/, /^\/%23\/?$/, /^\/"\/?$/, /^\/😀\/?$/].map(
+			(pattern) => pattern.toString()
 		)
 	);
 });
