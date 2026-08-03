@@ -1,19 +1,11 @@
-/** @import { Tracer, SpanStatusCode, PropagationAPI, ContextAPI, TraceAPI } from '@opentelemetry/api' */
+/** @import { Tracer, SpanStatusCode, PropagationAPI, ContextAPI } from '@opentelemetry/api' */
 
 /** @type {Promise<{ tracer: Tracer, SpanStatusCode: typeof SpanStatusCode, propagation: PropagationAPI, context: ContextAPI }> | null} */
 export let otel = null;
 
-/**
- * Synchronously readable once `otel` has resolved, which is guaranteed
- * before any span exists — `record_span` awaits `otel` first.
- * @type {TraceAPI | null}
- */
-export let trace = null;
-
 if (__SVELTEKIT_SERVER_TRACING_ENABLED__) {
 	otel = import('@opentelemetry/api')
 		.then((module) => {
-			trace = module.trace;
 			return {
 				tracer: module.trace.getTracer('sveltekit'),
 				propagation: module.propagation,

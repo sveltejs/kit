@@ -29,8 +29,8 @@ export async function handle_remote_call(event, state, options, manifest, id) {
 		attributes: {
 			'sveltekit.remote.call.id': id
 		},
-		fn: async () => {
-			const response = await with_request_store({ event, state }, () =>
+		fn: async (current) => {
+			const response = await with_request_store({ event, state, tracing: { current } }, () =>
 				handle_remote_call_internal(event, state, options, manifest, id)
 			);
 			return with_version_header(response);
@@ -519,10 +519,11 @@ export async function handle_remote_form_post(event, state, manifest, id) {
 		attributes: {
 			'sveltekit.remote.form.post.id': id
 		},
-		fn: () =>
-			with_request_store({ event, state }, () =>
+		fn: (current) => {
+			return with_request_store({ event, state, tracing: { current } }, () =>
 				handle_remote_form_post_internal(event, state, manifest, id)
-			)
+			);
+		}
 	});
 }
 

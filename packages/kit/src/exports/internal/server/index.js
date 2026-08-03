@@ -10,7 +10,8 @@ export {
 	with_request_store,
 	getRequestEvent,
 	get_request_store,
-	try_get_request_store
+	try_get_request_store,
+	try_get_tracing
 } from './event.js';
 
 export { init_remote_functions } from './remote-functions.js';

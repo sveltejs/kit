@@ -94,8 +94,8 @@ export function sequence(...handlers) {
 			return state.tracing.record_span({
 				name: `sveltekit.handle.sequenced.${handle.name ? handle.name : i}`,
 				attributes: {},
-				fn: async () =>
-					with_request_store({ event, state }, () =>
+				fn: async (current) => {
+					return await with_request_store({ event, state, tracing: { current } }, () =>
 						handle({
 							event,
 							resolve: (event, options) => {
@@ -133,7 +133,8 @@ export function sequence(...handlers) {
 										});
 							}
 						})
-					)
+					);
+				}
 			});
 		}
 	};
