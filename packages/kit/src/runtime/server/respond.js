@@ -413,7 +413,9 @@ export async function internal_respond(request, options, manifest, state) {
 					prerender = node.prerender ?? prerender;
 				} else if (page_nodes) {
 					config = page_nodes.get_config() ?? config;
-					prerender = state.prerender_default = page_nodes.prerender();
+					prerender = page_nodes.prerender();
+					// data requests never reach render_page, so this assignment is what covers them
+					state.prerender_default = prerender;
 				}
 
 				if (state.emulator?.platform) {

@@ -6,7 +6,7 @@ import { with_request_store, merge_tracing } from '@sveltejs/kit/internal/server
 import { record_span } from '../../telemetry/record_span.js';
 import { base64_encode } from '../../utils.js';
 import { NULL_BODY_STATUS } from '../constants.js';
-import { get_node_type } from '../utils.js';
+import { get_node_type, renders_prerendered_output } from '../utils.js';
 
 /**
  * Calls the user's server `load` function.
@@ -67,7 +67,7 @@ export async function load_server_data({ event, event_state, state, node, parent
 		}
 	);
 
-	if (state.prerendering || state.prerender_default === true) {
+	if (renders_prerendered_output(state)) {
 		disable_search(url);
 	}
 

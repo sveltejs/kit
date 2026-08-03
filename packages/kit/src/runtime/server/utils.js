@@ -141,6 +141,17 @@ export function count_non_ssi_comments(str) {
 }
 
 /**
+ * Whether the response should be rendered as prerendered output, either because we're
+ * inside the prerendering pass at build time or because the page is prerenderable
+ * and dev output should match the build
+ * @param {import('types').SSRState} state
+ * @returns {boolean}
+ */
+export function renders_prerendered_output(state) {
+	return !!state.prerendering || (__SVELTEKIT_DEV__ && state.prerender_default === true);
+}
+
+/**
  * Creates a serialiser for non-arbitrary POJOs using the app's transport hook
  * @param {ServerHooks['transport']} transport
  * @returns {(thing: unknown) => string | undefined}
