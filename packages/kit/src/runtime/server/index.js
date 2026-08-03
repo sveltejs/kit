@@ -13,6 +13,26 @@ let init_promise;
 /** @type {Promise<void> | null} */
 let current = null;
 
+/**
+ * Responses that were created with our monkey-patched `fetch`, which may need
+ * to have their `content-encoding` and `content-length` headers removed
+ * if returned directly (i.e. `fetch` is being used to proxy a request)
+ * @type {WeakSet<Response>}
+ */
+const decoded_responses = new WeakSet();
+
+const fetch = globalThis.fetch;
+
+/**
+ * @param {RequestInfo | URL} info
+ * @param {RequestInit} [init]
+ */
+globalThis.fetch = async (info, init) => {
+	const response = await fetch(info, init);
+	decoded_responses.add(response);
+	return response;
+};
+
 export class Server {
 	/** @type {import('types').SSROptions} */
 	#options;
@@ -174,11 +194,27 @@ export class Server {
 	 * @param {Request} request
 	 * @param {import('types').RequestOptions} options
 	 */
-	respond(request, options) {
-		return respond(request, this.#options, this.#manifest, {
+	async respond(request, options) {
+		const response = await respond(request, this.#options, this.#manifest, {
 			...options,
 			error: false,
 			depth: 0
 		});
+
+		if (decoded_responses.has(response)) {
+			// The body was already decoded by `fetch`, so we need to strip
+			// these headers to avoid as `ERR_CONTENT_DECODING_FAILED` error
+			const headers = new Headers(response.headers);
+			headers.delete('content-encoding');
+			headers.delete('content-length');
+
+			return new Response(response.body, {
+				status: response.status,
+				statusText: response.statusText,
+				headers
+			});
+		}
+
+		return response;
 	}
 }
