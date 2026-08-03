@@ -106,6 +106,19 @@ const enforced_config = {
 
 const options_regex = /(export\s+const\s+(prerender|csr|ssr|trailingSlash))\s*=/s;
 
+const removed_modules = [
+	{
+		pattern: /^\$lib(?:\/.*|\?.*)?$/,
+		message:
+			"`$lib` has been removed. Use `#lib` instead: https://svelte.dev/docs/kit/$lib. To keep using `$lib`, add `alias: { '$lib': 'src/lib' }` to your SvelteKit config."
+	},
+	{
+		pattern: /^\$service-worker(?:\?.*)?$/,
+		message:
+			'`$service-worker` has been removed. Use `immutable`, `assets` and `prerendered` from `$app/manifest`, `version` from `$app/env`, and `resolve(...)` from `$app/paths` instead: https://svelte.dev/docs/kit/$service-worker'
+	}
+];
+
 /** @type {Set<string>} */
 const warned = new Set();
 
@@ -315,6 +328,17 @@ function kit({ svelte_config }) {
 		name: 'vite-plugin-sveltekit-setup',
 		api: {
 			options: svelte_config
+		},
+		resolveId: {
+			filter: { id: removed_modules.map(({ pattern }) => pattern) },
+			async handler(id, importer, options) {
+				const resolved = await this.resolve(id, importer, { ...options, skipSelf: true });
+				if (resolved) return resolved;
+
+				for (const { pattern, message } of removed_modules) {
+					if (pattern.test(id)) throw stackless(message);
+				}
+			}
 		},
 
 		/**
