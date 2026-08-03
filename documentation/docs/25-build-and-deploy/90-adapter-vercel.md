@@ -201,7 +201,7 @@ Projects created before a certain date may default to using an older Node versio
 
 ### Individual functions and `reroute`
 
-If the `split` option is set to `true` for a route, or at the adapter level, the [`reroute`](hooks#reroute) function will be deployed as a middleware that runs before any individual function.
+When deploying multiple serverless functions, the [`reroute`](hooks#reroute) hook will be deployed as a middleware that runs before any individual function.
 
 ## Troubleshooting
 

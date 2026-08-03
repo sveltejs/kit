@@ -101,7 +101,7 @@ Additionally, you can add your own Netlify functions by creating a directory for
 
 ### Individual functions and `reroute`
 
-If the `split` option is set to `true` for a route, or at the adapter level, the [`reroute`](hooks#reroute) function will be deployed as an edge middleware that runs before any individual function.
+If the adapter `split` option is set to `true`, the [`reroute`](hooks#reroute) hook will be deployed as an edge middleware that runs before any individual function.
 
 ## Troubleshooting
 
