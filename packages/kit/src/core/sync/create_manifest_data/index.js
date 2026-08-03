@@ -42,13 +42,31 @@ export default function create_manifest_data({
 }
 
 /**
- * Whether the router can match this route. `manifest_data.routes` also contains an entry for
- * every other directory in `src/routes`, so that layouts and params can be resolved, and those
- * ids never reach `event.route.id`.
+ * Whether this route has a `+page`. Independent of `is_endpoint_route` — a route can be both.
  * @param {import('types').RouteData} route
+ * @returns {boolean}
+ */
+export function is_page_route(route) {
+	return !!route.page;
+}
+
+/**
+ * Whether this route has a `+server`. Independent of `is_page_route` — a route can be both.
+ * @param {import('types').RouteData} route
+ * @returns {boolean}
+ */
+export function is_endpoint_route(route) {
+	return !!route.endpoint;
+}
+
+/**
+ * Whether the router can match this route. `manifest_data.routes` also contains entries for
+ * directories with layouts or errors, which never reach `event.route.id`.
+ * @param {import('types').RouteData} route
+ * @returns {boolean}
  */
 export function is_app_route(route) {
-	return !!(route.page || route.endpoint);
+	return is_page_route(route) || is_endpoint_route(route);
 }
 
 /**
@@ -135,7 +153,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 						);
 					}
 
-					return String.fromCharCode(parseInt(code, 16));
+					return String.fromCodePoint(parseInt(code, 16));
 				}
 			});
 

@@ -1,4 +1,4 @@
-import { text_encoder } from '../../utils.js';
+import { base64_encode, text_encoder } from '../../utils.js';
 
 /**
  * SHA-256 hashing function adapted from https://bitwiseshiftleft.github.io/sjcl
@@ -102,7 +102,7 @@ export function sha256(data) {
 	const bytes = new Uint8Array(out.buffer);
 	reverse_endianness(bytes);
 
-	return btoa(String.fromCharCode(...bytes));
+	return base64_encode(bytes);
 }
 
 /** The SHA-256 initialization vector */

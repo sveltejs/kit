@@ -23,6 +23,13 @@ test('validate_param_matchers throws for unknown matchers', () => {
 	);
 });
 
+test('validate_param_matchers ignores inherited properties', () => {
+	assert.throws(
+		() => validate_param_matchers({}, new Set(['toString']), 'params.js'),
+		/No matcher found for parameter 'toString'/
+	);
+});
+
 test('load_and_validate_params loads and validates params', async () => {
 	const params = await load_and_validate_params({
 		routes: [

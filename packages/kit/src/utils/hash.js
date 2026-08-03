@@ -20,3 +20,24 @@ export function hash(...values) {
 
 	return (hash >>> 0).toString(36);
 }
+
+/**
+ * Hash of the headers and body a `fetch` was called with. The server-side serializer and the
+ * client-side cache lookup must produce identical values for cached responses to be found.
+ * @param {HeadersInit | undefined} headers
+ * @param {import('types').StrictBody | null | undefined} body
+ */
+export function hash_request(headers, body) {
+	/** @type {import('types').StrictBody[]} */
+	const values = [];
+
+	if (headers) {
+		values.push([...new Headers(headers)].join(','));
+	}
+
+	if (body) {
+		values.push(body);
+	}
+
+	return hash(...values);
+}
