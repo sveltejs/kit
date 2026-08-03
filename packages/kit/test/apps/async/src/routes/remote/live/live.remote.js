@@ -1,27 +1,10 @@
 import { command, form, getRequestEvent, query, requested } from '$app/server';
 import { per_session } from '../per-session.js';
 
-// All mutable state is stored per browser session (keyed by the `count_session`
-// cookie set in `hooks.server.js`) so that tests running in parallel against the
-// same server — e.g. test.js loading this route in the no-js project while
-// client.test.js asserts exact counter values — don't clobber each other.
-/** @type {Map<string, number>} */
-const counts = new Map();
-
-function get_count_value() {
-	return counts.get(session_id()) ?? 0;
-}
-
-/** @param {number} value */
-function set_count_value(value) {
-	counts.set(session_id(), value);
-}
-
-function session_id() {
-	return getRequestEvent().cookies.get('count_session') ?? 'default';
-}
-
-const session_stats = per_session(() => ({
+// all mutable state is per browser session so tests running in parallel against
+// the same server can't clobber each other's counters
+const session = per_session(() => ({
+	count: 0,
 	drop_next: false,
 	active_connections: 0,
 	cleanup_count: 0,
@@ -61,13 +44,12 @@ function wait_for_change(signal) {
 export const get_count = query.live(async function* () {
 	const signal = getRequestEvent().request.signal;
 	// capture the session once; getRequestEvent() may not be available after awaits
-	const id = session_id();
-	const state = session_stats();
+	const state = session();
 
 	state.active_connections += 1;
 
 	try {
-		yield counts.get(id) ?? 0;
+		yield state.count;
 
 		while (true) {
 			const status = await wait_for_change(signal);
@@ -81,7 +63,7 @@ export const get_count = query.live(async function* () {
 				throw new Error('stream dropped');
 			}
 
-			yield counts.get(id) ?? 0;
+			yield state.count;
 		}
 	} finally {
 		state.active_connections -= 1;
@@ -90,15 +72,16 @@ export const get_count = query.live(async function* () {
 });
 
 export const get_finite_count = query.live(async function* () {
-	session_stats().finite_connection_count += 1;
-	yield get_count_value();
+	const state = session();
+	state.finite_connection_count += 1;
+	yield state.count;
 });
 
 export const get_duplicate_payload = query.live(async function* () {
 	const signal = getRequestEvent().request.signal;
-	const id = session_id();
+	const state = session();
 
-	yield { count: counts.get(id) ?? 0 };
+	yield { count: state.count };
 
 	while (true) {
 		const status = await wait_for_change(signal);
@@ -107,17 +90,17 @@ export const get_duplicate_payload = query.live(async function* () {
 			return;
 		}
 
-		yield { count: counts.get(id) ?? 0 };
+		yield { count: state.count };
 	}
 });
 
 export const increment = command(() => {
-	set_count_value(get_count_value() + 1);
+	session().count += 1;
 	notify();
 });
 
 export const reset = command(() => {
-	set_count_value(0);
+	session().count = 0;
 	notify();
 });
 
@@ -126,7 +109,7 @@ export const notify_only = command(() => {
 });
 
 export const drop = command(() => {
-	session_stats().drop_next = true;
+	session().drop_next = true;
 	notify();
 });
 
@@ -135,7 +118,7 @@ export const reconnect_live = command(() => {
 });
 
 export const reconnect_requested_live = command(async () => {
-	const state = session_stats();
+	const state = session();
 	await requested(get_count, 5).reconnectAll();
 	state.requested_reconnect_count += 1;
 });
@@ -144,13 +127,4 @@ export const reconnect_live_form = form('unchecked', async () => {
 	get_count().reconnect();
 });
 
-export const get_stats = query(() => {
-	const state = session_stats();
-	return {
-		active_connections: state.active_connections,
-		cleanup_count: state.cleanup_count,
-		finite_connection_count: state.finite_connection_count,
-		requested_reconnect_count: state.requested_reconnect_count,
-		count: get_count_value()
-	};
-});
+export const get_stats = query(() => session());

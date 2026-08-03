@@ -2,11 +2,7 @@
 export async function handle({ event, resolve }) {
 	// isolates the in-memory count in count.remote.js per browser session
 	if (!event.cookies.get('count_session')) {
-		event.cookies.set('count_session', crypto.randomUUID(), {
-			path: '/',
-			httpOnly: true,
-			sameSite: 'lax'
-		});
+		event.cookies.set('count_session', crypto.randomUUID(), { path: '/' });
 	}
 
 	return resolve(event, {

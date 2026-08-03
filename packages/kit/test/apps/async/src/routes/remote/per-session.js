@@ -2,8 +2,7 @@ import { getRequestEvent } from '$app/server';
 
 /**
  * Returns an accessor for state keyed by the `count_session` cookie from
- * `hooks.server.js`, so tests running in parallel projects/workers against the
- * same server (and CI retries) can't see each other's mutations.
+ * `hooks.server.js`, isolating it per test (and per CI retry).
  * @template T
  * @param {() => T} init
  * @returns {() => T}

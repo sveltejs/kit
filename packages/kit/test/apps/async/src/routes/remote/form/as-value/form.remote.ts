@@ -39,14 +39,9 @@ const default_values: Array<Omit<v.InferOutput<typeof ValueSchema>, 'hidden'>> =
 	}
 ];
 
-type SessionState = {
-	values: typeof default_values;
-	hidden_values: { string?: string; number?: number; boolean?: boolean };
-};
-
-const session = per_session((): SessionState => ({
+const session = per_session(() => ({
 	values: structuredClone(default_values),
-	hidden_values: {}
+	hidden_values: {} as { string?: string; number?: number; boolean?: boolean }
 }));
 
 export const get_values = query(() => session().values);

@@ -7,9 +7,7 @@ import * as v from 'valibot';
 /** @type {Map<string, number>} */
 const counts = new Map();
 
-function session_id() {
-	return getRequestEvent().cookies.get('count_session') ?? 'default';
-}
+const session_id = () => getRequestEvent().cookies.get('count_session') ?? 'default';
 
 export const get_count = query(() => counts.get(session_id()) ?? 0);
 

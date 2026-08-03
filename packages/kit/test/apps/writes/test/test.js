@@ -38,7 +38,7 @@ test.describe('Filesystem updates', () => {
 	}
 
 	test('Components are not double-mounted', async ({ page, javaScriptEnabled }) => {
-		// the file on disk is shared with the no-js project running in parallel — its
+		// js-only: the file on disk is shared with the parallel no-js project, whose
 		// writes would trigger HMR updates that remount the component mid-assertion
 		test.skip(!javaScriptEnabled);
 
