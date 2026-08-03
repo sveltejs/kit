@@ -2763,14 +2763,9 @@ export async function preloadCode(id) {
 		);
 	}
 
-	/** @type {import('types').CSRRoute | typeof ENDPOINT_ONLY | undefined} */
-	let route;
-
-	if (__SVELTEKIT_CLIENT_ROUTING__) {
-		route = routes.find((r) => r.id === id);
-	} else {
-		route = route_id_cache.get(id) ?? (await load_route_by_id(id));
-	}
+	const route = __SVELTEKIT_CLIENT_ROUTING__
+		? routes.find((r) => r.id === id)
+		: (route_id_cache.get(id) ?? (await load_route_by_id(id)));
 
 	if (route === ENDPOINT_ONLY) {
 		if (DEV) {
