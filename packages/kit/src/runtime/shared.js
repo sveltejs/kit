@@ -1,6 +1,6 @@
 /** @import { Transport } from '@sveltejs/kit' */
 import * as devalue from 'devalue';
-import { base64_decode, base64_encode, text_encoder } from './utils.js';
+import { base64_decode, base64_encode, text_decoder, text_encoder } from './utils.js';
 
 /**
  * @param {string} route_id
@@ -331,6 +331,7 @@ export async function stringify_command_arg(value, transport) {
  */
 function url_friendly_base64_encode(string) {
 	const bytes = text_encoder.encode(string);
+	// TODO replace with `bytes.toBase64({ alphabet: 'base64url', omitPadding: true })` when we require Node >= 25
 	return base64_encode(bytes).replaceAll('=', '').replaceAll('+', '-').replaceAll('/', '_');
 }
 
@@ -342,7 +343,8 @@ function url_friendly_base64_encode(string) {
 export function parse_remote_arg(string, transport) {
 	if (!string) return undefined;
 
-	const json_string = new TextDecoder().decode(
+	const json_string = text_decoder.decode(
+		// TODO replace with `Uint8Array.fromBase64(string, { alphabet: 'base64url' })` when we require Node >= 25
 		// no need to add back `=` characters, atob can handle it
 		base64_decode(string.replaceAll('-', '+').replaceAll('_', '/'))
 	);

@@ -785,6 +785,27 @@ test.describe('$app/manifest', () => {
 		expect(ids).not.toContain('/app-manifest/not-a-page');
 	});
 
+	test('exposes route capabilities', async ({ page }) => {
+		await page.goto('/app-manifest');
+		const routes = JSON.parse((await page.textContent('[data-name="routes"] pre')) ?? '');
+
+		// only a `+page.svelte`
+		expect(routes).toContainEqual({ id: '/app-manifest', page: true, endpoint: false });
+		// only a `+server.js`
+		expect(routes).toContainEqual({ id: '/answer.json', page: false, endpoint: true });
+		// both a `+page.svelte` and a `+server.js`
+		expect(routes).toContainEqual({
+			id: '/endpoint-output/fallback-with-page',
+			page: true,
+			endpoint: true
+		});
+
+		// every route has at least one capability
+		for (const route of routes) {
+			expect(route.page || route.endpoint).toBe(true);
+		}
+	});
+
 	test('exposes static assets', async ({ page }) => {
 		await page.goto('/app-manifest');
 		const assets = JSON.parse((await page.textContent('[data-name="assets"] pre')) ?? '');

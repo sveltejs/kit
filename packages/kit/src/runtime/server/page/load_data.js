@@ -331,7 +331,7 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 
 					const request_body =
 						input instanceof Request && cloned_body
-							? await stream_to_string(cloned_body)
+							? await new Response(cloned_body).text()
 							: init?.body;
 
 					if (
@@ -366,16 +366,7 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 					const [a, b] = response.body.tee();
 
 					void (async () => {
-						let result = new Uint8Array();
-
-						for await (const chunk of a) {
-							const combined = new Uint8Array(result.length + chunk.length);
-
-							combined.set(result, 0);
-							combined.set(chunk, result.length);
-
-							result = combined;
-						}
+						const result = new Uint8Array(await new Response(a).arrayBuffer());
 
 						if (dependency) {
 							dependency.body = new Uint8Array(result);
@@ -490,22 +481,4 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 		response.catch(noop);
 		return response;
 	};
-}
-
-/**
- * @param {ReadableStream<Uint8Array>} stream
- */
-async function stream_to_string(stream) {
-	let result = '';
-	const reader = stream.getReader();
-	const decoder = new TextDecoder();
-	while (true) {
-		const { done, value } = await reader.read();
-		if (done) {
-			result += decoder.decode();
-			break;
-		}
-		result += decoder.decode(value, { stream: true });
-	}
-	return result;
 }
