@@ -936,7 +936,12 @@ test.describe('$app/state', () => {
 		clicknav,
 		javaScriptEnabled
 	}) => {
-		await page.goto('/state/data/foo?reset=true');
+		if (!javaScriptEnabled) {
+			// only the no-js run consumes the server-side `is_first` state; with js the
+			// sequence below runs on the isolated client copy, and resetting the server
+			// copy here would corrupt the no-js twin running in the parallel project
+			await page.goto('/state/data/foo?reset=true');
+		}
 		const stuff1 = { foo: { bar: 'Custom layout' }, name: 'SvelteKit', value: 123 };
 		const stuff2 = { ...stuff1, foo: true, number: 2 };
 		const stuff3 = { ...stuff2 };
