@@ -81,6 +81,12 @@ export default {
 			pathname.startsWith(immutable)
 		) {
 			res = await env.ASSETS.fetch(req);
+			// `_headers` applies cache regardless of status, so we need to ensure an
+			// error response does not get cached
+			if (res.status >= 400) {
+				res = new Response(res.body, res); // headers from ASSETS are immutable. see https://developers.cloudflare.com/workers/examples/alter-headers/
+				res.headers.set('cache-control', 'no-store');
+			}
 		} else if (location && prerendered.has(location)) {
 			// trailing slash redirect for prerendered pages
 			if (search) location += search;
