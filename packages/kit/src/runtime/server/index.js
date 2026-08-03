@@ -2,7 +2,7 @@ import { noop } from '../../utils/functions.js';
 import { IN_WEBCONTAINER } from './constants.js';
 import { respond } from './respond.js';
 import { options, get_hooks } from '__SERVER__/internal.js';
-import { set_read_implementation, set_manifest } from './internal.js';
+import { set_read_implementation, set_manifest, fix_stack_trace } from './internal.js';
 import { set_env } from '__sveltekit/env';
 import { set_app } from './app.js';
 import { SvelteKitError } from '@sveltejs/kit/internal';
@@ -17,21 +17,33 @@ let current = null;
  * Responses that were created with our monkey-patched `fetch`, which may need
  * to have their `content-encoding` and `content-length` headers removed
  * if returned directly (i.e. `fetch` is being used to proxy a request)
- * @type {WeakSet<Response>}
+ * @type {WeakMap<Response, Error>}
  */
-const decoded_responses = new WeakSet();
+const decoded_responses = new WeakMap();
 
-const fetch = globalThis.fetch;
+if (__SVELTEKIT_DEV__) {
+	const fetch = globalThis.fetch;
 
-/**
- * @param {RequestInfo | URL} info
- * @param {RequestInit} [init]
- */
-globalThis.fetch = async (info, init) => {
-	const response = await fetch(info, init);
-	decoded_responses.add(response);
-	return response;
-};
+	/**
+	 * @param {RequestInfo | URL} info
+	 * @param {RequestInit} [init]
+	 */
+	globalThis.fetch = async (info, init) => {
+		const response = await fetch(info, init);
+		const encoding = response.headers.get('content-encoding');
+
+		if (encoding) {
+			decoded_responses.set(
+				response,
+				new Error(
+					`Cannot return \`fetch(...)\` directly from a handler if the response has a \`Content-Encoding: ${encoding}\` header. The body has already been decoded`
+				)
+			);
+		}
+
+		return response;
+	};
+}
 
 export class Server {
 	/** @type {import('types').SSROptions} */
@@ -201,23 +213,9 @@ export class Server {
 			depth: 0
 		});
 
-		if (decoded_responses.has(response)) {
-			// The body was already decoded by `fetch`, so we need to strip
-			// these headers to avoid as `ERR_CONTENT_DECODING_FAILED` error.
-			// `fetch` only decodes when a `content-encoding` is present, so we
-			// only strip the headers in that case to avoid discarding a valid
-			// `content-length` (e.g. for uncompressed or 206 range responses).
-			const headers = new Headers(response.headers);
-			if (headers.has('content-encoding')) {
-				headers.delete('content-encoding');
-				headers.delete('content-length');
-			}
-
-			return new Response(response.body, {
-				status: response.status,
-				statusText: response.statusText,
-				headers
-			});
+		if (__SVELTEKIT_DEV__) {
+			const error = decoded_responses.get(response);
+			if (error) console.error(fix_stack_trace(error));
 		}
 
 		return response;
