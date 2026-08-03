@@ -190,7 +190,7 @@ if (!process.env.CI) {
 		const config = await load_config();
 		process.chdir(original_cwd);
 
-		const { watcher, ready, settled } = await watch({
+		const { watcher, settled } = await watch({
 			cwd,
 			input: 'src/lib',
 			output: 'package',
@@ -224,8 +224,6 @@ if (!process.env.CI) {
 		}
 
 		try {
-			await ready;
-
 			// completes initial build
 			compare('index.js');
 

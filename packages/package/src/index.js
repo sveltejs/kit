@@ -221,7 +221,6 @@ export async function watch(options) {
 
 	return {
 		watcher,
-		ready: Promise.resolve(),
 		settled: () =>
 			new Promise((fulfil, reject) => {
 				fulfillers.push(fulfil);
