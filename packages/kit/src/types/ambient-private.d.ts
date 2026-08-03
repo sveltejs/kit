@@ -51,5 +51,5 @@ declare module '__sveltekit/manifest-data' {
 	export const immutable: Array<{ path: string }>;
 	export const assets: Array<{ path: string }>;
 	export const prerendered: Array<{ path: string }>;
-	export const routes: Array<{ id: string }>;
+	export const routes: Array<{ id: string; page: boolean; endpoint: boolean }>;
 }
