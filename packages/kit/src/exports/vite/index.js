@@ -41,12 +41,16 @@ import {
 } from './utils.js';
 import { stackless } from '../../utils/error.js';
 import { write_client_manifest } from '../../core/sync/write_client_manifest.js';
-import { is_app_route } from '../../core/sync/create_manifest_data/index.js';
 import prerender from '../../core/postbuild/prerender.js';
 import analyse from '../../core/postbuild/analyse.js';
 import { s } from '../../utils/misc.js';
 import { hash } from '../../utils/hash.js';
 import { dedent } from '../../core/sync/utils.js';
+import {
+	is_app_route,
+	is_endpoint_route,
+	is_page_route
+} from '../../core/sync/create_manifest_data/index.js';
 import { get_import_aliases, get_hash_import_keys } from '../../utils/imports.js';
 import {
 	app_env_private,
@@ -1571,7 +1575,7 @@ function kit({ svelte_config }) {
 			// the client build and after prerendering respectively.
 			replace_manifest_placeholder_variables(server_chunks, `${out}/server`, {
 				assets: manifest_data.assets.map((asset) => ({ path: asset.file })),
-				routes: manifest_data.routes.map((route) => ({ id: route.id }))
+				routes: get_manifest_routes(manifest_data.routes)
 			});
 
 			const verbose = builder.config.logLevel === 'info';
@@ -1733,7 +1737,7 @@ function kit({ svelte_config }) {
 				replace_manifest_placeholder_variables(client_chunks, `${out}/client`, {
 					immutable,
 					assets: manifest_data.assets.map((asset) => ({ path: asset.file })),
-					routes: manifest_data.routes.map((route) => ({ id: route.id }))
+					routes: get_manifest_routes(manifest_data.routes)
 				});
 
 				// Now that the client build is done, replace the `build` sentinel
@@ -2123,15 +2127,26 @@ function stringify_assets(assets) {
 
 /**
  * @param {RouteData[] | undefined} routes
+ * @returns {Array<{ id: string; page: boolean; endpoint: boolean }>}
+ */
+function get_manifest_routes(routes) {
+	return (
+		routes?.filter(is_app_route).map((route) => ({
+			id: route.id,
+			page: is_page_route(route),
+			endpoint: is_endpoint_route(route)
+		})) ?? []
+	);
+}
+
+/**
+ * @param {RouteData[] | undefined} routes
  * @returns {string}
  */
 function stringify_routes(routes) {
-	return (
-		routes
-			?.filter(is_app_route)
-			.map((route) => s({ id: route.id }))
-			.join(',\n') ?? ''
-	);
+	return get_manifest_routes(routes)
+		.map((route) => s(route))
+		.join(',\n');
 }
 
 /**
@@ -2192,7 +2207,7 @@ const create_manifest_data_module = (is_build, manifest_data) => {
  *   immutable?: Array<{ path: string }>;
  *   assets?: Array<{ path: string }>;
  *   prerendered?: Array<{ path: string }>;
- *   routes?: Array<{ id: string }>;
+ *   routes?: Array<{ id: string; page: boolean; endpoint: boolean }>;
  * }} values
  */
 const replace_manifest_placeholder_variables = (chunks, output_dir, values) => {
