@@ -1224,9 +1224,9 @@ function kit({ svelte_config }) {
 		}
 	};
 
-	/** @type {Array<Rolldown.OutputChunk | Rolldown.OutputAsset>} */
+	/** @type {Rolldown.RolldownOutput['output']} */
 	let server_chunks_from_watched_build;
-	/** @type {Array<Rolldown.OutputChunk | Rolldown.OutputAsset>} */
+	/** @type {Rolldown.RolldownOutput['output']} */
 	let client_chunks_from_watched_build;
 	/** @type {() => Promise<void> | undefined} */
 	let finalise;
@@ -1555,9 +1555,13 @@ function kit({ svelte_config }) {
 		generateBundle(_options, bundle) {
 			if (this.meta.watchMode) {
 				if (this.environment.name === 'ssr') {
-					server_chunks_from_watched_build = Object.values(bundle);
+					server_chunks_from_watched_build = /** @type {Rolldown.RolldownOutput['output']} */ (
+						Object.values(bundle)
+					);
 				} else if (this.environment.name === 'client') {
-					client_chunks_from_watched_build = Object.values(bundle);
+					client_chunks_from_watched_build = /** @type {Rolldown.RolldownOutput['output']} */ (
+						Object.values(bundle)
+					);
 				}
 			}
 
@@ -1584,7 +1588,8 @@ function kit({ svelte_config }) {
 			});
 
 			const server_build = await builder.build(builder.environments.ssr);
-			const server_chunks = await normalise_build(server_build, server_chunks_from_watched_build);
+			const server_chunks =
+				(await normalise_build(server_build)) ?? server_chunks_from_watched_build;
 
 			// Replace manifest placeholders in SSR output. `assets` and `routes`
 			// are known from `manifest_data`. `immutable` and `prerendered` are not
@@ -1686,7 +1691,8 @@ function kit({ svelte_config }) {
 				}
 
 				const client_build = await builder.build(builder.environments.client);
-				const client_chunks = await normalise_build(client_build, client_chunks_from_watched_build);
+				const client_chunks =
+					(await normalise_build(client_build)) ?? client_chunks_from_watched_build;
 
 				// We use `build.ssrEmitAssets` so that asset URLs created from
 				// imports in server-only modules correspond to files in the build,
@@ -2306,10 +2312,9 @@ const replace_manifest_placeholder_strings = (dir, values) => {
 
 /**
  * @param {Rolldown.RolldownOutput | Rolldown.RolldownOutput[] | Rolldown.RolldownWatcher} build The return value of builder.build
- * @param {Array<Rolldown.OutputChunk | Rolldown.OutputAsset>} bundle_from_watched_build The bundle returned from the generateBundle hook during a build with watch mode
- * @returns {Promise<Rolldown.RolldownOutput['output']>} The output chunks from a build
+ * @returns {Promise<Rolldown.RolldownOutput['output'] | null>} The output chunks from the build or `null` if watch mode is enabled
  */
-async function normalise_build(build, bundle_from_watched_build) {
+async function normalise_build(build) {
 	if ('output' in build) {
 		return build.output;
 	}
@@ -2329,5 +2334,5 @@ async function normalise_build(build, bundle_from_watched_build) {
 
 	await bundle.promise;
 
-	return /** @type {Rolldown.RolldownOutput['output']} */ (bundle_from_watched_build);
+	return null;
 }
