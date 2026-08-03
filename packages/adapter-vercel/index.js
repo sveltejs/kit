@@ -184,7 +184,7 @@ const plugin = function (defaults = {}) {
 
 				static_config.routes.push({
 					src: '/.*',
-					middlewarePath: 'reroute',
+					middlewarePath: 'sveltekit-middleware-reroute',
 					continue: true
 				});
 
