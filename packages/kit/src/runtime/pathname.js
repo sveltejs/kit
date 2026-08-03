@@ -58,7 +58,7 @@ const ROUTES_PREFIX = '/routes';
  * @returns {string}
  */
 export function route_id_resolution_pathname(app_dir, route_id) {
-	return `/${app_dir}${ROUTES_PREFIX}${route_id === '/' ? '' : route_id}`;
+	return add_resolution_suffix(`/${app_dir}${ROUTES_PREFIX}${route_id === '/' ? '' : route_id}`);
 }
 
 /**

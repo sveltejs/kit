@@ -91,8 +91,6 @@ export async function internal_respond(request, options, manifest, state) {
 	/** URL but stripped from the potential `/__data.json` suffix and its search param  */
 	const url = new URL(request.url);
 
-	/** Whether this is a `/${app_dir}/routes/<route_id>/__route.js` request, used by `preloadCode` */
-	const is_route_id_resolution_request = is_route_id_resolution_path(url.pathname, base, app_dir);
 	const is_route_resolution_request = has_resolution_suffix(url.pathname);
 	const is_data_request = has_data_suffix(url.pathname);
 	const remote_id = get_remote_id(url);
@@ -142,12 +140,16 @@ export async function internal_respond(request, options, manifest, state) {
 
 	let skip_route_resolution = false;
 
+	/** Whether this is a `/${app_dir}/routes/<route_id>/__route.js` request, used by `preloadCode` */
+	let is_route_id_resolution_request = false;
+
 	if (is_route_resolution_request) {
 		/**
 		 * If the request is for a route resolution, first modify the URL, then continue as normal
 		 * for path resolution, then return the route object as a JS file.
 		 */
 		url.pathname = strip_resolution_suffix(url.pathname);
+		is_route_id_resolution_request = is_route_id_resolution_path(url.pathname, base, app_dir);
 	} else if (is_data_request) {
 		url.pathname =
 			strip_data_suffix(url.pathname) +
@@ -358,15 +360,15 @@ export async function internal_respond(request, options, manifest, state) {
 		resolved_path = resolved_path.slice(base.length) || '/';
 	}
 
-	if (is_route_id_resolution_request) {
-		return resolve_route_by_id(
-			extract_route_id(resolved_path, app_dir),
-			new URL(request.url),
-			manifest
-		);
-	}
-
 	if (is_route_resolution_request) {
+		if (is_route_id_resolution_request) {
+			return resolve_route_by_id(
+				extract_route_id(resolved_path, app_dir),
+				new URL(request.url),
+				manifest
+			);
+		}
+
 		return resolve_route(resolved_path, new URL(request.url), manifest);
 	}
 

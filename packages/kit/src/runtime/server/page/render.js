@@ -395,7 +395,7 @@ export async function render_response({
 				create_server_routing_response(route, event.params, new URL(pathname, event.url), client)
 			);
 
-			// Prerender a route-ID-keyed `/_app/routes/<id>` module alongside the
+			// Prerender a route-ID-keyed `/_app/routes/<id>/__route.js` module alongside the
 			// pathname-keyed one above, so that `preloadCode(id)` can resolve a route ID without
 			// hitting the server.
 			if (route && !state.prerendering.resolved_route_ids.has(route.id)) {
