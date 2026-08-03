@@ -271,7 +271,7 @@ if (!process.env.CI) {
 			expect(fs.existsSync(join(cwd, 'package/sub/c.js'))).toBe(false);
 			expect(fs.existsSync(join(cwd, 'package/sub2/c.js'))).toBe(true);
 		} finally {
-			await watcher.close();
+			watcher.close();
 
 			remove('src/lib/Test.svelte');
 			remove('src/lib/a.js');
