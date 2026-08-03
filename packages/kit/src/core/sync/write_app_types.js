@@ -10,7 +10,7 @@ import {
 	get_route_segments,
 	segment_pattern
 } from '../../utils/routing.js';
-import { is_app_route } from './create_manifest_data/index.js';
+import { is_app_route, is_endpoint_route, is_page_route } from './create_manifest_data/index.js';
 
 const optional_param_pattern = /^\[\[[\w-]+(?:=[\w-]+)?\]\]$/;
 const rest_param_pattern = /^\[\.\.\.[\w-]+(?:=[\w-]+)?\]$/;
@@ -170,6 +170,12 @@ function generate_app_types(manifest_data, config, dir) {
 	const pathnames = new Set();
 
 	/** @type {string[]} */
+	const page_route_ids = [];
+
+	/** @type {string[]} */
+	const endpoint_route_ids = [];
+
+	/** @type {string[]} */
 	const app_route_ids = [];
 
 	/** @type {string[]} */
@@ -180,15 +186,17 @@ function generate_app_types(manifest_data, config, dir) {
 
 	/** @type {Map<string, Map<string, { optional: boolean, matchers: Set<string> | null }>>} */
 	const layout_params_by_route = new Map(
-		manifest_data.routes.map((route) => [
-			route.id,
-			new Map(
-				route.params.map((p) => [
-					p.name,
-					{ optional: p.optional, matchers: p.matcher ? new Set([p.matcher]) : null }
-				])
-			)
-		])
+		manifest_data.routes
+			.filter((route) => route.layout)
+			.map((route) => [
+				route.id,
+				new Map(
+					route.params.map((p) => [
+						p.name,
+						{ optional: p.optional, matchers: p.matcher ? new Set([p.matcher]) : null }
+					])
+				)
+			])
 	);
 
 	for (const route of manifest_data.routes) {
@@ -222,9 +230,11 @@ function generate_app_types(manifest_data, config, dir) {
 	}
 
 	for (const route of manifest_data.routes) {
-		if (is_app_route(route)) {
-			app_route_ids.push(s(route.id));
-		}
+		const id = s(route.id);
+
+		if (is_page_route(route)) page_route_ids.push(id);
+		if (is_endpoint_route(route)) endpoint_route_ids.push(id);
+		if (is_app_route(route)) app_route_ids.push(id);
 
 		/** @type {(path: string) => string} */
 		let serialise = s;
@@ -234,6 +244,7 @@ function generate_app_types(manifest_data, config, dir) {
 				const type = get_matcher_type(p.matcher);
 				return `${/^\w+$/.test(p.name) ? p.name : `'${p.name}'`}${p.optional ? '?:' : ':'} ${type}${p.optional ? ' | undefined' : ''}`;
 			});
+
 			if (is_app_route(route)) {
 				dynamic_routes.push(`${s(route.id)}: { ${params.join('; ')} }`);
 			}
@@ -261,7 +272,7 @@ function generate_app_types(manifest_data, config, dir) {
 			if (params.length > 0) layout_type = `{ ${params} }`;
 		}
 
-		layouts.push(`${s(route.id)}: ${layout_type}`);
+		if (route.layout) layouts.push(`${s(route.id)}: ${layout_type}`);
 	}
 
 	const assets = manifest_data.assets.map((asset) => s(asset.file));
@@ -269,6 +280,8 @@ function generate_app_types(manifest_data, config, dir) {
 	return [
 		'declare module "$app/types" {',
 		'\texport interface AppTypes {',
+		`\t\tPageRouteId(): ${page_route_ids.join(' | ') || 'never'};`,
+		`\t\tEndpointRouteId(): ${endpoint_route_ids.join(' | ') || 'never'};`,
 		`\t\tRouteId(): ${app_route_ids.join(' | ') || 'never'};`,
 		`\t\tRouteParams(): {\n\t\t\t${dynamic_routes.join(';\n\t\t\t')}\n\t\t};`,
 		`\t\tLayoutParams(): {\n\t\t\t${layouts.join(';\n\t\t\t')}\n\t\t};`,
