@@ -261,6 +261,17 @@ if (!process.env.CI) {
 			await settled();
 			expect(fs.existsSync(join(cwd, 'package/a.js'))).toBe(false);
 			expect(fs.existsSync(join(cwd, 'package/a.d.ts'))).toBe(false);
+
+			// removes outputs when a directory is renamed
+			fs.mkdirSync(join(cwd, 'src/lib/sub'));
+			write('src/lib/sub/c.js', "export const c = 'c';");
+			await settled();
+			expect(fs.existsSync(join(cwd, 'package/sub/c.js'))).toBe(true);
+
+			fs.renameSync(join(cwd, 'src/lib/sub'), join(cwd, 'src/lib/sub2'));
+			await settled();
+			expect(fs.existsSync(join(cwd, 'package/sub/c.js'))).toBe(false);
+			expect(fs.existsSync(join(cwd, 'package/sub2/c.js'))).toBe(true);
 		} finally {
 			await watcher.close();
 
@@ -268,6 +279,8 @@ if (!process.env.CI) {
 			remove('src/lib/a.js');
 			remove('src/lib/b.ts');
 			remove('src/lib/post-error.svelte');
+			fs.rmSync(join(cwd, 'src/lib/sub'), { recursive: true, force: true });
+			fs.rmSync(join(cwd, 'src/lib/sub2'), { recursive: true, force: true });
 		}
 	}, 30_000);
 }

@@ -105,33 +105,46 @@ export async function watch(options) {
 	/** @type {Map<string, import('typescript').CompilerOptions>} */
 	const tsconfig_cache = new Map();
 
+	/**
+	 * @param {string} name
+	 * @param {string} type
+	 */
+	function enqueue(name, type) {
+		const file = analyze(name, extensions);
+
+		if (!pending.some((event) => event.type === type && event.file.name === file.name)) {
+			pending.push({ file, type });
+		}
+
+		if (
+			file.name.endsWith('tsconfig.json') ||
+			file.name.endsWith('jsconfig.json') ||
+			(options.tsconfig && posixify(path.join(input, name)) === posixify(options.tsconfig))
+		) {
+			tsconfig_cache.clear();
+		}
+	}
+
 	const watcher = fs.watch(input, { recursive: true }, (_, filename) => {
 		if (filename !== null) {
 			const name = posixify(filename);
 			const stats = fs.statSync(path.join(input, filename), { throwIfNoEntry: false });
-			let type;
 
-			if (stats?.isFile()) {
+			if (stats) {
+				if (!stats.isFile()) return;
 				known_files.add(name);
-				type = 'change';
-			} else if (!stats && known_files.delete(name)) {
-				type = 'unlink';
+				enqueue(name, 'change');
+			} else if (known_files.delete(name)) {
+				enqueue(name, 'unlink');
 			} else {
-				return;
-			}
+				// a removed directory only fires an event for itself, not for the files inside it
+				const children = [...known_files].filter((child) => child.startsWith(name + '/'));
+				if (children.length === 0) return;
 
-			const file = analyze(name, extensions);
-
-			if (!pending.some((event) => event.type === type && event.file.name === file.name)) {
-				pending.push({ file, type });
-			}
-
-			if (
-				file.name.endsWith('tsconfig.json') ||
-				file.name.endsWith('jsconfig.json') ||
-				(options.tsconfig && posixify(path.join(input, filename)) === posixify(options.tsconfig))
-			) {
-				tsconfig_cache.clear();
+				for (const child of children) {
+					known_files.delete(child);
+					enqueue(child, 'unlink');
+				}
 			}
 		}
 
