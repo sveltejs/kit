@@ -92,7 +92,6 @@ export async function watch(options) {
 
 	/** @type {Array<{ file: import('./types.js').File, type: string }>} */
 	const pending = [];
-	const pending_keys = new Set();
 
 	// Remember files because deleted paths cannot be stat-ed to distinguish them from directories.
 	const known_files = new Set(scan(input, extensions).map((file) => file.name));
@@ -112,8 +111,6 @@ export async function watch(options) {
 			const stats = fs.statSync(path.join(input, filename), { throwIfNoEntry: false });
 			let type;
 
-			if (stats?.isDirectory()) return;
-
 			if (stats?.isFile()) {
 				known_files.add(name);
 				type = 'change';
@@ -124,11 +121,9 @@ export async function watch(options) {
 			}
 
 			const file = analyze(name, extensions);
-			const key = `${type}\0${file.name}`;
 
-			if (!pending_keys.has(key)) {
+			if (!pending.some((event) => event.type === type && event.file.name === file.name)) {
 				pending.push({ file, type });
-				pending_keys.add(key);
 			}
 
 			if (
@@ -146,7 +141,6 @@ export async function watch(options) {
 
 			const events = pending.slice();
 			pending.length = 0;
-			pending_keys.clear();
 
 			let errored = false;
 
@@ -211,11 +205,10 @@ export async function watch(options) {
 			fulfillers.forEach((fn) => fn());
 		}, 100);
 	});
-	const ready = Promise.resolve();
 
 	return {
 		watcher,
-		ready,
+		ready: Promise.resolve(),
 		settled: () =>
 			new Promise((fulfil, reject) => {
 				fulfillers.push(fulfil);
