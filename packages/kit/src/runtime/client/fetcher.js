@@ -1,6 +1,6 @@
 import { BROWSER, DEV } from 'esm-env';
 import { noop } from '../../utils/functions.js';
-import { hash } from '../../utils/hash.js';
+import { hash_request } from '../../utils/hash.js';
 import { base64_decode } from '../utils.js';
 
 let loading = 0;
@@ -172,18 +172,7 @@ function build_selector(resource, opts) {
 			return null;
 		}
 
-		/** @type {import('types').StrictBody[]} */
-		const values = [];
-
-		if (opts.headers) {
-			values.push([...new Headers(opts.headers)].join(','));
-		}
-
-		if (body) {
-			values.push(/** @type {import('types').StrictBody} */ (body));
-		}
-
-		selector += `[data-hash="${hash(...values)}"]`;
+		selector += `[data-hash="${hash_request(opts.headers, body)}"]`;
 	}
 
 	return selector;
