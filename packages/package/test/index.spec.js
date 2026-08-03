@@ -181,7 +181,7 @@ test('create package with tsconfig specified', async () => {
 	await test_make_package('tsconfig-specified', { tsconfig: 'tsconfig.build.json' });
 });
 
-// chokidar doesn't fire events in github actions :shrug:
+// File watching is unreliable in GitHub Actions
 if (!process.env.CI) {
 	test('watches for changes', async () => {
 		const cwd = join(import.meta.dirname, 'watch');
@@ -255,6 +255,12 @@ if (!process.env.CI) {
 			write('src/lib/post-error.svelte', '<button on:click={foo}>click me</button>');
 			await settled();
 			compare('post-error.svelte');
+
+			// removes outputs when a source file is deleted
+			remove('src/lib/a.js');
+			await settled();
+			expect(fs.existsSync(join(cwd, 'package/a.js'))).toBe(false);
+			expect(fs.existsSync(join(cwd, 'package/a.d.ts'))).toBe(false);
 		} finally {
 			await watcher.close();
 

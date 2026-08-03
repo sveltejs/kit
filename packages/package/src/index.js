@@ -1,7 +1,6 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { styleText } from 'node:util';
-import chokidar from 'chokidar';
 import { preprocess } from 'svelte/compiler';
 import { copy, mkdirp, posixify, rimraf } from './filesystem.js';
 import {
@@ -93,6 +92,10 @@ export async function watch(options) {
 
 	/** @type {Array<{ file: import('./types.js').File, type: string }>} */
 	const pending = [];
+	const pending_keys = new Set();
+
+	// Remember files because deleted paths cannot be stat-ed to distinguish them from directories.
+	const known_files = new Set(scan(input, extensions).map((file) => file.name));
 
 	/** @type {Array<(value?: any) => void>} */
 	const fulfillers = [];
@@ -103,21 +106,38 @@ export async function watch(options) {
 	/** @type {Map<string, import('typescript').CompilerOptions>} */
 	const tsconfig_cache = new Map();
 
-	const watcher = chokidar.watch(input, { ignoreInitial: true });
-	/** @type {Promise<void>} */
-	const ready = new Promise((resolve) => watcher.on('ready', resolve));
+	const watcher = fs.watch(input, { recursive: true }, (_, filename) => {
+		if (filename !== null) {
+			const name = posixify(filename);
+			const stats = fs.statSync(path.join(input, filename), { throwIfNoEntry: false });
+			let type;
 
-	watcher.on('all', (type, filepath) => {
-		const file = analyze(path.relative(input, filepath), extensions);
+			if (stats?.isDirectory()) return;
 
-		pending.push({ file, type });
+			if (stats?.isFile()) {
+				known_files.add(name);
+				type = 'change';
+			} else if (!stats && known_files.delete(name)) {
+				type = 'unlink';
+			} else {
+				return;
+			}
 
-		if (
-			file.name.endsWith('tsconfig.json') ||
-			file.name.endsWith('jsconfig.json') ||
-			(options.tsconfig && posixify(filepath) === posixify(options.tsconfig))
-		) {
-			tsconfig_cache.clear();
+			const file = analyze(name, extensions);
+			const key = `${type}\0${file.name}`;
+
+			if (!pending_keys.has(key)) {
+				pending.push({ file, type });
+				pending_keys.add(key);
+			}
+
+			if (
+				file.name.endsWith('tsconfig.json') ||
+				file.name.endsWith('jsconfig.json') ||
+				(options.tsconfig && posixify(path.join(input, filename)) === posixify(options.tsconfig))
+			) {
+				tsconfig_cache.clear();
+			}
 		}
 
 		clearTimeout(timeout);
@@ -126,6 +146,7 @@ export async function watch(options) {
 
 			const events = pending.slice();
 			pending.length = 0;
+			pending_keys.clear();
 
 			let errored = false;
 
@@ -151,7 +172,7 @@ export async function watch(options) {
 					console.log(`Removed ${file.dest}`);
 				}
 
-				if (type === 'add' || type === 'change') {
+				if (type === 'change') {
 					console.log(`Processing ${file.name}`);
 					try {
 						await process_file(
@@ -190,6 +211,7 @@ export async function watch(options) {
 			fulfillers.forEach((fn) => fn());
 		}, 100);
 	});
+	const ready = Promise.resolve();
 
 	return {
 		watcher,
