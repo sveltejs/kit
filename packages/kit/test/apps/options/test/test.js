@@ -174,7 +174,8 @@ test.describe('trailingSlash', () => {
 
 		// also wait for network processing to complete, see
 		// https://playwright.dev/docs/network#network-events
-		await app.preloadCode('/path-base/preloading/preloaded');
+		// route IDs are never prefixed with `paths.base`
+		await app.preloadCode('/preloading/preloaded');
 
 		// svelte request made is environment dependent
 		if (process.env.DEV) {

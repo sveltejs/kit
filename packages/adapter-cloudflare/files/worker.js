@@ -1,7 +1,6 @@
 import { Server } from 'SERVER';
 import { manifest, prerendered, base_path } from 'MANIFEST';
 import { env } from 'cloudflare:workers';
-import * as Cache from 'worktop/cfw.cache';
 
 const server = new Server(manifest);
 
@@ -50,11 +49,6 @@ export default {
 		// always await initialization to prevent race condition with concurrent requests
 		await initialized;
 
-		// skip cache if "cache-control: no-cache" in request
-		let pragma = req.headers.get('cache-control') || '';
-		let res = !pragma.includes('no-cache') && (await Cache.lookup(req));
-		if (res) return res;
-
 		let { pathname, search } = new URL(req.url);
 		try {
 			pathname = decodeURIComponent(pathname);
@@ -80,36 +74,38 @@ export default {
 			pathname === version_file ||
 			pathname.startsWith(immutable)
 		) {
-			res = await env.ASSETS.fetch(req);
-		} else if (location && prerendered.has(location)) {
-			// trailing slash redirect for prerendered pages
+			let res = await env.ASSETS.fetch(req);
+			// `_headers` applies cache regardless of status, so we need to ensure an
+			// error response does not get cached
+			if (res.status >= 400) {
+				res = new Response(res.body, res); // headers from ASSETS are immutable. see https://developers.cloudflare.com/workers/examples/alter-headers/
+				res.headers.set('cache-control', 'no-store');
+			}
+			return res;
+		}
+
+		// trailing slash redirect for prerendered pages
+		if (location && prerendered.has(location)) {
 			if (search) location += search;
-			res = new Response('', {
+			return new Response('', {
 				status: 308,
 				headers: {
 					location
 				}
 			});
-		} else {
-			// dynamically-generated pages
-			res = await server.respond(req, {
-				platform: {
-					env,
-					ctx,
-					// @ts-expect-error webworker types from worktop are not compatible with Cloudflare Workers types
-					caches,
-					// @ts-expect-error the type is correct but ts is confused because platform.cf uses the type from index.ts while req.cf uses the type from index.d.ts
-					cf: req.cf
-				},
-				getClientAddress() {
-					return /** @type {string} */ (req.headers.get('cf-connecting-ip'));
-				}
-			});
 		}
 
-		// write to `Cache` only if response is not an error,
-		// let `Cache.save` handle the Cache-Control and Vary headers
-		pragma = res.headers.get('cache-control') || '';
-		return pragma && res.status < 400 ? Cache.save(req, res, ctx) : res;
+		// dynamically-generated pages
+		return await server.respond(req, {
+			platform: {
+				env,
+				ctx,
+				caches,
+				cf: req.cf
+			},
+			getClientAddress() {
+				return /** @type {string} */ (req.headers.get('cf-connecting-ip'));
+			}
+		});
 	}
 };

@@ -263,6 +263,9 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 	/** @type {Map<string, Promise<any>>} */
 	const remote_responses = new Map();
 
+	/** @type {Set<string>} */
+	const resolved_route_ids = new Set();
+
 	/** @type {Map<string, Set<string>>} */
 	const expected_hashlinks = new Map();
 
@@ -308,7 +311,8 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 			},
 			prerendering: {
 				dependencies,
-				remote_responses
+				remote_responses,
+				resolved_route_ids
 			},
 			read: (file) => {
 				// stuff we just wrote

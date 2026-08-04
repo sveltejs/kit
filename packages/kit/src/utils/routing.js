@@ -11,8 +11,8 @@ const escape_sequence_pattern = /\[([ux])\+([^\]]+)\]/;
  * Decodes the codepoints of an `[x+nn]` or `[u+nnnn]` escape sequence
  * @param {string} code the sequence without its `[x+`/`[u+` prefix or `]` suffix
  */
-function decode_escape_sequence(code) {
-	return String.fromCharCode(...code.split('-').map((codepoint) => parseInt(codepoint, 16)));
+export function decode_escape_sequence(code) {
+	return String.fromCodePoint(...code.split('-').map((codepoint) => parseInt(codepoint, 16)));
 }
 
 /**
@@ -20,7 +20,7 @@ function decode_escape_sequence(code) {
  * escape sequence still matches the pattern `parse_route_id` builds for it
  * @param {string} str
  */
-function encode_pathname_chars(str) {
+export function encode_pathname_chars(str) {
 	return str.replace(
 		/[%/?#]/g,
 		(char) => '%' + char.charCodeAt(0).toString(16).toUpperCase().padStart(2, '0')
@@ -280,7 +280,7 @@ const basic_param_pattern = /\[(\[)?(\.\.\.)?([\w-]+?)(?:=([\w-]+))?\]\]?/g;
 
 // escape sequences are expanded in the same pass as the params, so that a param
 // value containing `[x+2f]` is not itself expanded
-const segment_pattern = new RegExp(
+export const segment_pattern = new RegExp(
 	`${escape_sequence_pattern.source}|${basic_param_pattern.source}`,
 	'g'
 );

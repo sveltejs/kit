@@ -73,3 +73,15 @@ test('errors when trying to access non-serialized request headers on the server'
 		/Failed to get response header "content-type" — it must be included by the `filterSerializedResponseHeaders` option/
 	);
 });
+
+test('errors when trying to access non-serialized set-cookie headers on the server', async () => {
+	const fetch = create_fetch({
+		// eslint-disable-next-line @typescript-eslint/require-await
+		fetch: async () => new Response('foo', { headers: { 'set-cookie': 'a=1' } })
+	});
+	const response = await fetch('https://domain-a.com');
+	assert.throws(
+		() => response.headers.getSetCookie(),
+		/Failed to get response header "set-cookie" — it must be included by the `filterSerializedResponseHeaders` option/
+	);
+});
