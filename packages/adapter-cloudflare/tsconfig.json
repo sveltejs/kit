@@ -8,6 +8,8 @@
 		"paths": {
 			"@sveltejs/kit": ["../kit/types/index"]
 		},
+		// playwright and worker types are a mess
+		"skipLibCheck": true,
 		// taken from the Cloudflare Workers TypeScript template https://github.com/cloudflare/workers-sdk/blob/main/packages/create-cloudflare/templates/hello-world/ts/tsconfig.json
 		"target": "es2024",
 		"lib": ["es2024"],

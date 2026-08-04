@@ -1,7 +1,9 @@
 {
 	"extends": "../tsconfig.json",
 	"compilerOptions": {
-		"types": ["@cloudflare/workers-types"]
+		"types": ["@cloudflare/workers-types"],
+		// worker types are full of typescript errors we can't fix
+		"skipLibCheck": true
 	},
 	"include": ["worker.js", "internal.d.ts"]
 }
