@@ -1,5 +1,15 @@
 # @sveltejs/package
 
+## 3.0.0-next.4
+
+### Patch Changes
+
+- chore: remove dependency on sade ([#16619](https://github.com/sveltejs/kit/pull/16619))
+
+- fix: import resolved peer dependencies as file URLs so project-relative resolution works on Windows ([#16618](https://github.com/sveltejs/kit/pull/16618))
+
+- fix: emit declarations when the tsconfig lives above the package root ([#16568](https://github.com/sveltejs/kit/pull/16568))
+
 ## 3.0.0-next.3
 
 ### Minor Changes

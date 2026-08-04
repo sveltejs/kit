@@ -1,5 +1,61 @@
 # @sveltejs/kit
 
+## 3.0.0-next.14
+
+### Major Changes
+
+- breaking: refresh all load functions/queries when clicking a link to the current URL ([#16572](https://github.com/sveltejs/kit/pull/16572))
+
+- breaking: only include routes with a `+page` or `+server` in `RouteId` ([#16580](https://github.com/sveltejs/kit/pull/16580))
+
+- breaking: require Node 22.17 ([#16597](https://github.com/sveltejs/kit/pull/16597))
+
+- breaking: `preloadCode` now takes a route ID (e.g. `/blog/[slug]`) instead of a pathname. Route IDs are not prefixed with `paths.base` ([#16576](https://github.com/sveltejs/kit/pull/16576))
+
+- breaking: remove deprecated `.run()` method from live queries ([#16573](https://github.com/sveltejs/kit/pull/16573))
+
+### Minor Changes
+
+- feat: return the list of compressed files from `builder.compress` ([#16566](https://github.com/sveltejs/kit/pull/16566))
+
+- feat: add `page` and `endpoint` booleans to `$app/manifest`'s `routes`, and export a `ManifestRoute` type ([#16594](https://github.com/sveltejs/kit/pull/16594))
+
+- feat: add `PageRouteId` and `EndpointRouteId` to `$app/types` ([#16594](https://github.com/sveltejs/kit/pull/16594))
+
+### Patch Changes
+
+- fix: generate valid `Path` types for routes with optional or rest params, several params in one segment, or escape sequences ([#16577](https://github.com/sveltejs/kit/pull/16577))
+
+- fix: decode all numeric character references, including above `ffff`, when crawling prerendered pages ([#16611](https://github.com/sveltejs/kit/pull/16611))
+
+- chore: deduplicate request hashing for serialized fetch responses ([#16499](https://github.com/sveltejs/kit/pull/16499))
+
+- fix: don't treat `Object.prototype` members as param matchers during validation ([#16612](https://github.com/sveltejs/kit/pull/16612))
+
+- fix: exclude routes without a page or endpoint from `routes` in `$app/manifest`, and remove directories with no route files from `LayoutParams` ([#16588](https://github.com/sveltejs/kit/pull/16588))
+
+- chore: reuse base64 and text decoding helpers ([#16608](https://github.com/sveltejs/kit/pull/16608))
+
+- fix: record the mime types of prerendered paths in the server manifest ([#16564](https://github.com/sveltejs/kit/pull/16564))
+
+- chore: only generate each route's resolution module once when prerendering ([#16576](https://github.com/sveltejs/kit/pull/16576))
+
+- fix: expand `[x+nn]` and `[u+nnnn]` escape sequences when resolving a route id to a pathname ([#16570](https://github.com/sveltejs/kit/pull/16570))
+
+- fix: allow routes to contain `[` and `]` via the `[x+5b]` and `[x+5d]` escapes ([#16569](https://github.com/sveltejs/kit/pull/16569))
+
+- chore: remove the dead `SSRState.fallback` field and name the server state fork semantics ([#16598](https://github.com/sveltejs/kit/pull/16598))
+
+- fix: import resolved peer dependencies as file URLs so project-relative resolution works on Windows ([#16618](https://github.com/sveltejs/kit/pull/16618))
+
+- fix: write generated tsconfig to `node_modules/$app/tsconfig.json` so that tools with simplified tsconfig resolution can find it ([#16589](https://github.com/sveltejs/kit/pull/16589))
+
+- fix: prerender and crawl pages whose `content-type` header carries a `charset` parameter ([#16567](https://github.com/sveltejs/kit/pull/16567))
+
+- fix: stream promised `read` results lazily instead of eagerly buffering them ([#16622](https://github.com/sveltejs/kit/pull/16622))
+
+- fix: correctly decode `[u+nnnn]` escape sequences above `ffff` ([#16611](https://github.com/sveltejs/kit/pull/16611))
+
 ## 3.0.0-next.13
 
 ### Major Changes
