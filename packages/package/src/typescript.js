@@ -55,13 +55,11 @@ export async function emit_dts(input, output, final_output, cwd, alias, files, t
 
 	// resolve $lib alias (TODO others), copy into package dir
 	for (const file of walk(tmp)) {
-		const normalized = posixify(file);
-
-		if (handwritten.has(normalized)) {
-			console.warn(`Using $lib/${normalized} instead of generated .d.ts file`);
+		if (handwritten.has(file)) {
+			console.warn(`Using $lib/${file} instead of generated .d.ts file`);
 		}
 
-		let source = fs.readFileSync(path.join(tmp, normalized), 'utf8');
+		let source = fs.readFileSync(path.join(tmp, file), 'utf8');
 		if (file.endsWith('.d.ts.map')) {
 			// Because we put the .d.ts files in a temporary directory, the relative path needs to be adjusted
 			const parsed = JSON.parse(source);
@@ -70,8 +68,8 @@ export async function emit_dts(input, output, final_output, cwd, alias, files, t
 					posixify(
 						path.join(
 							path.relative(
-								path.dirname(path.join(final_output, normalized)),
-								path.dirname(path.join(input, normalized))
+								path.dirname(path.join(final_output, file)),
+								path.dirname(path.join(input, file))
 							),
 							path.basename(source)
 						)
@@ -80,9 +78,9 @@ export async function emit_dts(input, output, final_output, cwd, alias, files, t
 				source = JSON.stringify(parsed);
 			}
 		} else {
-			source = resolve_aliases(input, normalized, source, alias);
+			source = resolve_aliases(input, file, source, alias);
 		}
-		write(path.join(output, normalized), source);
+		write(path.join(output, file), source);
 	}
 
 	fs.rmSync(tmp, { force: true, recursive: true });
