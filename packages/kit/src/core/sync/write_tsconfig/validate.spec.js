@@ -36,4 +36,25 @@ describe('validate_exclusions', () => {
 
 		assert.deepEqual(warnings, ['"src/service-worker" should be added to the "exclude" array']);
 	});
+
+	test('does not warn if service worker is absent', () => {
+		const warnings = validate_exclusions(
+			[],
+			'/path/to/project',
+			['/path/to/project/src/service-worker'],
+			[]
+		);
+
+		assert.deepEqual(warnings, []);
+	});
+
+	test('detects windows-style exclusions', () => {
+		const warnings = validate_exclusions(
+			[],
+			'C:/project',
+			['C:\\project\\src\\service-worker'],
+			['C:/project/src/service-worker/index.ts']
+		);
+		assert.deepEqual(warnings, ['"src/service-worker" should be added to the "exclude" array']);
+	});
 });
