@@ -6,6 +6,7 @@ import { set_read_implementation, set_manifest, fix_stack_trace } from './intern
 import { set_env } from '__sveltekit/env';
 import { set_app } from './app.js';
 import { SvelteKitError } from '@sveltejs/kit/internal';
+import { DEV } from 'esm-env';
 
 /** @type {Promise<any>} */
 let init_promise;
@@ -213,7 +214,7 @@ export class Server {
 			depth: 0
 		});
 
-		if (__SVELTEKIT_DEV__) {
+		if (DEV) {
 			const error = decoded_responses.get(response);
 			if (error) console.error(fix_stack_trace(error));
 		}
