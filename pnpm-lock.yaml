@@ -144,6 +144,49 @@ importers:
         specifier: 'catalog:'
         version: 4.1.10(@opentelemetry/api@1.9.0)(@types/node@22.19.19)(@vitest/browser-playwright@4.1.10)(jsdom@29.1.1)(vite@8.1.5(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0))
 
+  packages/adapter-bun:
+    dependencies:
+      bun-types:
+        specifier: ^1.3.14
+        version: 1.3.14
+      rolldown:
+        specifier: ^1.2.0
+        version: 1.2.0
+    devDependencies:
+      '@playwright/test':
+        specifier: 'catalog:'
+        version: 1.61.1
+      '@sveltejs/kit':
+        specifier: workspace:^
+        version: link:../kit
+      '@types/node':
+        specifier: 'catalog:'
+        version: 22.19.19
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.10(@opentelemetry/api@1.9.0)(@types/node@22.19.19)(@vitest/browser-playwright@4.1.10)(jsdom@29.1.1)(vite@8.1.5(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0))
+
+  packages/adapter-bun/test/apps/basic:
+    devDependencies:
+      '@playwright/test':
+        specifier: 'catalog:'
+        version: 1.61.1
+      '@sveltejs/kit':
+        specifier: workspace:^
+        version: link:../../../../kit
+      '@sveltejs/vite-plugin-svelte':
+        specifier: 'catalog:'
+        version: 7.0.0(svelte@5.56.3(@typescript-eslint/types@8.61.1))(vite@8.1.5(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0))
+      svelte:
+        specifier: 'catalog:'
+        version: 5.56.3(@typescript-eslint/types@8.61.1)
+      vite:
+        specifier: 'catalog:'
+        version: 8.1.5(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0)
+
   packages/adapter-cloudflare:
     dependencies:
       '@cloudflare/workers-types':
@@ -3024,6 +3067,9 @@ packages:
     resolution: {integrity: sha512-JZyDyq3D4AUifKTPOB7DELf6XsB3WdPuNxCtob1vFXPsSXhdAiHBWJ/tJ8HAc9aH84BK+5JFZLNkJKx3G9kzQg==}
     engines: {node: 20 || >=22}
 
+  bun-types@1.3.14:
+    resolution: {integrity: sha512-4N0ig0fEomHt5R0KCFWjovxow98rIoRwKolrYdCcknNwMekCXRnWEUvgu5soYV8QXtVsrUD8B95MBOZGPvr6KQ==}
+
   cac@7.0.0:
     resolution: {integrity: sha512-tixWYgm5ZoOD+3g6UTea91eow5z6AAHaho3g0V9CNSNb45gM8SmflpAc+GRd1InC4AqN/07Unrgp56Y94N9hJQ==}
     engines: {node: '>=20.19.0'}
@@ -5662,6 +5708,10 @@ snapshots:
   brace-expansion@5.0.8:
     dependencies:
       balanced-match: 4.0.4
+
+  bun-types@1.3.14:
+    dependencies:
+      '@types/node': 22.19.19
 
   cac@7.0.0: {}
 

@@ -16,6 +16,7 @@ engineStrict: true
 
 packages:
   - packages/*
+  - packages/adapter-bun/test/apps/*
   - packages/adapter-cloudflare/test/apps/*
   - packages/adapter-netlify/test/apps/*
   - packages/adapter-node/test/apps/*

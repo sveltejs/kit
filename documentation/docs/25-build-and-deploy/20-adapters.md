@@ -9,6 +9,7 @@ Official adapters exist for a variety of platforms — these are documented on t
 - [`@sveltejs/adapter-cloudflare`](adapter-cloudflare) for Cloudflare Workers and Cloudflare Pages
 - [`@sveltejs/adapter-netlify`](adapter-netlify) for Netlify
 - [`@sveltejs/adapter-node`](adapter-node) for Node servers
+- [`@sveltejs/adapter-bun`](adapter-bun) for Bun servers
 - [`@sveltejs/adapter-static`](adapter-static) for static site generation (SSG)
 - [`@sveltejs/adapter-vercel`](adapter-vercel) for Vercel
 
