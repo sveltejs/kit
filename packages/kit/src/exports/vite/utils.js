@@ -152,7 +152,11 @@ export function normalize_id(id, aliases, cwd) {
 }
 
 export const remote_module_pattern = /[/.]remote(\.[^/]+)+$/;
-/** @type {Map<string, boolean>} */
+
+/**
+ * A cache of directories that
+ * @type {Map<string, boolean>}
+ */
 const remote_module_cache = new Map();
 
 /**
@@ -166,29 +170,36 @@ export function is_remote_module(id) {
 	if (!remote_module_pattern.test(id)) return false;
 	if (!id.includes('node_modules')) return true;
 
-	const directory = path.dirname(id);
-	const cached = remote_module_cache.get(directory);
+	return can_export_remote_module(path.dirname(id));
+}
+
+/**
+ * @param {string} directory
+ * @returns {boolean}
+ */
+function can_export_remote_module(directory) {
+	let cached = remote_module_cache.get(directory);
 	if (cached !== undefined) return cached;
 
-	let current = directory;
+	let pkg;
 
-	while (true) {
-		try {
-			const package_json = JSON.parse(fs.readFileSync(path.join(current, 'package.json'), 'utf8'));
+	try {
+		pkg = JSON.parse(fs.readFileSync(path.join(directory, 'package.json'), 'utf8'));
+	} catch {}
 
-			if (package_json.peerDependencies?.['@sveltejs/kit']) {
-				remote_module_cache.set(directory, true);
-				return true;
-			}
-		} catch {}
+	if (pkg?.peerDependencies?.['@sveltejs/kit']) {
+		cached = true;
+	} else {
+		const parent = path.dirname(directory);
 
-		const parent = path.dirname(current);
-		if (path.basename(current) === 'node_modules' || parent === current) break;
-		current = parent;
+		cached =
+			path.basename(directory) === 'node_modules' || parent === directory
+				? false // base case
+				: can_export_remote_module(parent); // recurse
 	}
 
-	remote_module_cache.set(directory, false);
-	return false;
+	remote_module_cache.set(directory, cached);
+	return cached;
 }
 
 export const server_only_module_pattern = /[/.]server(\.[^/]+)+$/;
