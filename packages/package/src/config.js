@@ -1,6 +1,7 @@
 import path from 'node:path';
 import process from 'node:process';
 import fs from 'node:fs';
+import { pathToFileURL } from 'node:url';
 
 /**
  * Loads and validates the SvelteKit config
@@ -39,7 +40,7 @@ export function load_pkg_json(cwd = process.cwd()) {
  */
 async function import_peer(dependency, root) {
 	try {
-		return await import(/* @vite-ignore */ resolve_peer(dependency, root));
+		return await import(/* @vite-ignore */ pathToFileURL(resolve_peer(dependency, root)).href);
 	} catch {
 		return await import(/* @vite-ignore */ dependency);
 	}

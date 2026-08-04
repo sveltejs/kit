@@ -451,6 +451,24 @@ importers:
         specifier: 'catalog:'
         version: 8.1.5(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0)
 
+  packages/adapter-vercel/test/apps/split:
+    devDependencies:
+      '@sveltejs/kit':
+        specifier: workspace:*
+        version: link:../../../../kit
+      '@sveltejs/vite-plugin-svelte':
+        specifier: 'catalog:'
+        version: 7.0.0(svelte@5.56.3(@typescript-eslint/types@8.61.1))(vite@8.1.5(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0))
+      svelte:
+        specifier: 'catalog:'
+        version: 5.56.3(@typescript-eslint/types@8.61.1)
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+      vite:
+        specifier: 'catalog:'
+        version: 8.1.5(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0)
+
   packages/amp:
     devDependencies:
       '@sveltejs/kit':
@@ -1415,9 +1433,6 @@ importers:
       chokidar:
         specifier: ^5.0.0
         version: 5.0.0
-      sade:
-        specifier: ^1.8.1
-        version: 1.8.1
       semver:
         specifier: ^7.8.5
         version: 7.8.5

@@ -46,6 +46,7 @@ export function relative_pathname(from, to) {
 export function matches_external_allowlist_entry(location, allowed) {
 	if (location === allowed) return true;
 
+	// TODO replace the try/catch with `URL.parse` when browser support allows (Chrome 126, Firefox 126, Safari 18)
 	try {
 		const allow = new URL(allowed);
 		const loc = new URL(location, allow);

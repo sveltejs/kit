@@ -12,7 +12,7 @@ const escape_sequence_pattern = /\[([ux])\+([^\]]+)\]/;
  * @param {string} code the sequence without its `[x+`/`[u+` prefix or `]` suffix
  */
 export function decode_escape_sequence(code) {
-	return String.fromCharCode(...code.split('-').map((codepoint) => parseInt(codepoint, 16)));
+	return String.fromCodePoint(...code.split('-').map((codepoint) => parseInt(codepoint, 16)));
 }
 
 /**
