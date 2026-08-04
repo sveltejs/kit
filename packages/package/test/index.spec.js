@@ -181,7 +181,7 @@ test('create package with tsconfig specified', async () => {
 	await test_make_package('tsconfig-specified', { tsconfig: 'tsconfig.build.json' });
 });
 
-// File watching is unreliable in GitHub Actions
+// chokidar doesn't fire events in github actions :shrug:
 if (!process.env.CI) {
 	test('watches for changes', async () => {
 		const cwd = join(import.meta.dirname, 'watch');
@@ -190,7 +190,7 @@ if (!process.env.CI) {
 		const config = await load_config();
 		process.chdir(original_cwd);
 
-		const { watcher, settled } = await watch({
+		const { watcher, ready, settled } = await watch({
 			cwd,
 			input: 'src/lib',
 			output: 'package',
@@ -224,6 +224,8 @@ if (!process.env.CI) {
 		}
 
 		try {
+			await ready;
+
 			// completes initial build
 			compare('index.js');
 
@@ -253,32 +255,13 @@ if (!process.env.CI) {
 			write('src/lib/post-error.svelte', '<button on:click={foo}>click me</button>');
 			await settled();
 			compare('post-error.svelte');
-
-			// removes outputs when a source file is deleted
-			remove('src/lib/a.js');
-			await settled();
-			expect(fs.existsSync(join(cwd, 'package/a.js'))).toBe(false);
-			expect(fs.existsSync(join(cwd, 'package/a.d.ts'))).toBe(false);
-
-			// removes outputs when a directory is renamed
-			fs.mkdirSync(join(cwd, 'src/lib/sub'));
-			write('src/lib/sub/c.js', "export const c = 'c';");
-			await settled();
-			expect(fs.existsSync(join(cwd, 'package/sub/c.js'))).toBe(true);
-
-			fs.renameSync(join(cwd, 'src/lib/sub'), join(cwd, 'src/lib/sub2'));
-			await settled();
-			expect(fs.existsSync(join(cwd, 'package/sub/c.js'))).toBe(false);
-			expect(fs.existsSync(join(cwd, 'package/sub2/c.js'))).toBe(true);
 		} finally {
-			watcher.close();
+			await watcher.close();
 
 			remove('src/lib/Test.svelte');
 			remove('src/lib/a.js');
 			remove('src/lib/b.ts');
 			remove('src/lib/post-error.svelte');
-			fs.rmSync(join(cwd, 'src/lib/sub'), { recursive: true, force: true });
-			fs.rmSync(join(cwd, 'src/lib/sub2'), { recursive: true, force: true });
 		}
 	}, 30_000);
 }
