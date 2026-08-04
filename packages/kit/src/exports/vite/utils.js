@@ -154,7 +154,7 @@ export function normalize_id(id, aliases, cwd) {
 export const remote_module_pattern = /[/.]remote(\.[^/]+)+$/;
 
 /**
- * A cache of directories that
+ * A cache of which directories can export remote modules
  * @type {Map<string, boolean>}
  */
 const remote_module_cache = new Map();
