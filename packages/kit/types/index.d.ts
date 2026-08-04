@@ -3133,6 +3133,7 @@ declare module '$app/forms' {
 }
 
 declare module '$app/navigation' {
+	import type { RouteId } from '$app/types';
 	/**
 	 * A lifecycle function that runs the supplied `callback` when the current component mounts, and also whenever we navigate to a URL.
 	 *
@@ -3238,13 +3239,24 @@ declare module '$app/navigation' {
 	 * Programmatically imports the code for routes that haven't yet been fetched.
 	 * Typically, you might call this to speed up subsequent navigation.
 	 *
-	 * You can specify routes by any matching pathname such as `/about` (to match `src/routes/about/+page.svelte`) or `/blog/*` (to match `src/routes/blog/[slug]/+page.svelte`).
+	 * Takes a route ID such as `/about` or `/blog/[slug]`. Unlike pathnames, route IDs
+	 * are never prefixed with the app's [base path](https://svelte.dev/docs/kit/configuration#paths).
+	 * If you have a pathname rather than a route ID, you can convert it with
+	 * [`match`](https://svelte.dev/docs/kit/$app-paths#match) from `$app/paths`:
+	 *
+	 * ```js
+	 * import { match } from '$app/paths';
+	 * import { preloadCode } from '$app/navigation';
+	 *
+	 * const matched = await match('/blog/hello-world');
+	 * if (matched) await preloadCode(matched.id);
+	 * ```
 	 *
 	 * Unlike `preloadData`, this won't call `load` functions.
 	 * Returns a Promise that resolves when the modules have been imported.
 	 *
 	 * */
-	export function preloadCode(pathname: string): Promise<void>;
+	export function preloadCode(id: RouteId): Promise<void>;
 	/**
 	 * Programmatically create a new history entry with the given `page.state`. Used for [shallow routing](https://svelte.dev/docs/kit/shallow-routing).
 	 *
