@@ -11,5 +11,8 @@ export function posixify(str) {
  * @param {string} cwd - the directory to walk
  */
 export function walk(cwd) {
-	return fs.globSync('**', { cwd }).filter((file) => fs.statSync(path.join(cwd, file)).isFile());
+	return fs
+		.readdirSync(cwd, { recursive: true })
+		.map((file) => posixify(/** @type {string} */ (file)))
+		.filter((file) => fs.statSync(path.join(cwd, file)).isFile());
 }
