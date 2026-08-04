@@ -94,11 +94,6 @@ function write_parent_tsconfig(root, id, config, transform) {
 	normalized = transform?.(normalized) ?? normalized;
 
 	write_if_changed(out_file, JSON.stringify(normalized, null, '\t'));
-
-	if (!ts) {
-		// The user has not installed TypeScript. Skip validation of config.
-		return;
-	}
 }
 
 /**
@@ -110,6 +105,11 @@ function write_parent_tsconfig(root, id, config, transform) {
  * @param {any} options.example What to print if the user config does _not_ extend the generated config
  */
 function validate_config(dir, options) {
+	if (!ts) {
+		// The user has not installed TypeScript. Skip validation of config.
+		return;
+	}
+
 	const user_config = load_user_tsconfig(dir);
 	if (!user_config || !modified_since_last_check(user_config.file)) return;
 
