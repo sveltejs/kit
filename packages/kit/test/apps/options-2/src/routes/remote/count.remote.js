@@ -2,12 +2,12 @@ import { building, dev } from '$app/env';
 import { command, form, getRequestEvent, prerender, query } from '$app/server';
 import * as v from 'valibot';
 
-// count is keyed by the `count_session` cookie from hooks.server.js so the
+// count is keyed by the `session` cookie from hooks.server.js so the
 // parallel tests that read and set it can't see each other's mutations
 /** @type {Map<string, number>} */
 const counts = new Map();
 
-const session_id = () => getRequestEvent().cookies.get('count_session') ?? 'default';
+const session_id = () => getRequestEvent().cookies.get('session') ?? 'default';
 
 export const get_count = query(() => counts.get(session_id()) ?? 0);
 

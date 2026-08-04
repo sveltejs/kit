@@ -1,8 +1,8 @@
 /** @type {import("@sveltejs/kit").Handle} */
 export async function handle({ event, resolve }) {
 	// isolates the in-memory count in count.remote.js per browser session
-	if (!event.cookies.get('count_session')) {
-		event.cookies.set('count_session', crypto.randomUUID(), { path: '/' });
+	if (!event.cookies.get('session')) {
+		event.cookies.set('session', crypto.randomUUID(), { path: '/' });
 	}
 
 	return resolve(event, {
