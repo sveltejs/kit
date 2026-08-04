@@ -5,7 +5,7 @@ import { command, getRequestEvent, query } from '$app/server';
 const sessions = new Map();
 
 function session() {
-	const id = getRequestEvent().cookies.get('count_session') ?? 'refresh-cycle-default';
+	const id = getRequestEvent().cookies.get('session') ?? 'refresh-cycle-default';
 	let state = sessions.get(id);
 	if (!state) {
 		state = { value: 0 };
