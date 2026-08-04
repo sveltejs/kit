@@ -1,6 +1,6 @@
 import { rmSync } from 'node:fs';
 
-const EXTERNAL = new Set(['0SERVER', 'MANIFEST', 'REROUTE']);
+const EXTERNAL = new Set(['0SERVER', 'MANIFEST']);
 
 /**
  * @param {string} filepath
@@ -22,9 +22,7 @@ function clearOutput(filepath) {
 /** @type {import('rolldown').RolldownOptions} */
 const config = {
 	input: {
-		serverless: 'src/serverless.js',
-		edge: 'src/edge.js',
-		reroute: 'src/reroute.js'
+		serverless: 'src/serverless.js'
 	},
 	output: {
 		dir: 'files',

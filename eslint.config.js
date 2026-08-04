@@ -35,7 +35,9 @@ export default [
 			'**/.custom-out-dir',
 			'packages/adapter-*/files/**/*',
 			'!packages/adapter-cloudflare/files',
-			'!packages/adapter-vercel/files/serverless.js',
+			'!packages/adapter-netlify/files/edge.js',
+			'!packages/adapter-netlify/files/reroute.js',
+			'!packages/adapter-vercel/files',
 			'packages/kit/src/core/config/fixtures/multiple', // dir contains svelte config with multiple extensions tripping eslint
 			'packages/kit/src/core/sync/create_manifest_data/test/samples/**/*',
 			'packages/kit/types/index.d.ts', // generated file

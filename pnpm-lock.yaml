@@ -420,9 +420,6 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 22.19.19
-      rolldown:
-        specifier: 'catalog:'
-        version: 1.2.0
       typescript:
         specifier: 'catalog:'
         version: 6.0.3

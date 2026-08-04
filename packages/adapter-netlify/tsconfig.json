@@ -11,5 +11,12 @@
 		},
 		"types": ["node"]
 	},
-	"include": ["*.js", "src/**/*.js", "internal.d.ts", "test/utils.js"]
+	"include": [
+		"*.js",
+		"src/**/*.js",
+		"files/edge.js",
+		"files/reroute.js",
+		"internal.d.ts",
+		"test/utils.js"
+	]
 }
