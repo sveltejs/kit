@@ -102,7 +102,7 @@ export function validate_paths(warnings, base, expected, actual) {
  * @param {string[]} files
  */
 export function validate_exclusions(warnings, dir, exclusions, files) {
-	const missing_exclusions = exclusions.filter((exclusion) => {
+	const missing_exclusions = exclusions.map(posixify).filter((exclusion) => {
 		return files.some(
 			(f) => f === exclusion || f.startsWith(exclusion + '/') || f.startsWith(exclusion + '.')
 		);
