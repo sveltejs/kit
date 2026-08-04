@@ -16,6 +16,8 @@ import * as devalue from 'devalue';
 import { createReadableStream } from '@sveltejs/kit/node';
 import generate_fallback from './fallback.js';
 import { stringify_remote_arg } from '../../runtime/shared.js';
+import { log_response } from '../../exports/vite/utils.js';
+import { matches_content_type } from '../../utils/http.js';
 
 export default forked(import.meta.url, prerender);
 
@@ -57,29 +59,60 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 	/** @type {import('types').ServerModule} */
 	const { Server } = await import(pathToFileURL(`${out}/server/index.js`).href);
 
+	const throw_handled = () => {
+		throw new Error('__handled__');
+	};
+
 	/**
 	 * @template {{message: string}} T
 	 * @template {Omit<T, 'message'>} K
-	 * @param {import('types').Logger} log
-	 * @param {'fail' | 'warn' | 'ignore' | ((details: T) => void)} input
+	 * @param {string} name
+	 * @param {'fail' | 'warn' | 'ignore' | undefined | ((details: T) => void)} input
 	 * @param {(details: K) => string} format
-	 * @returns {(details: K) => void}
+	 * @returns {(details: K & { error?: unknown }) => void}
 	 */
-	function normalise_error_handler(log, input, format) {
+	function normalise_error_handler(name, input, format) {
+		/**
+		 * @param {any} details
+		 */
+		function log_failure(details) {
+			const message = format(details);
+			log.error(`\n${message}\n`);
+		}
+
 		switch (input) {
 			case 'fail':
 				return (details) => {
-					throw new Error(format(details));
+					log_failure(details);
+					throw_handled();
 				};
 			case 'warn':
-				return (details) => {
-					log.error(format(details));
-				};
+				return log_failure;
 			case 'ignore':
 				return noop;
+			case undefined: {
+				return (details) => {
+					log_failure(details);
+
+					log.err(
+						`To suppress or handle this error, implement \`${name}\` in https://svelte.dev/docs/kit/configuration#prerender\n`
+					);
+
+					throw_handled();
+				};
+			}
 			default:
-				// @ts-expect-error TS thinks T might be of a different kind, but it's not
-				return (details) => input({ ...details, message: format(details) });
+				return (details) => {
+					const message = format(details);
+
+					try {
+						// @ts-expect-error TS thinks T might be of a different kind, but it's not
+						input({ ...details, message });
+					} catch (error) {
+						log.prettyError(error, import.meta.dirname);
+						throw_handled();
+					}
+				};
 		}
 	}
 
@@ -141,48 +174,55 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 	const saved = new Map();
 
 	const handle_http_error = normalise_error_handler(
-		log,
+		'handleHttpError',
 		config.prerender.handleHttpError,
 		({ status, path, referrer, referenceType }) => {
-			const message =
-				status === 404 && !path.startsWith(config.paths.base)
-					? `${path} does not begin with \`base\`. You can fix this by using \`resolve('${path}')\` from \`$app/paths\`. The base path is configurable from \`paths.base\` - see https://svelte.dev/docs/kit/configuration#paths for more info`
-					: path;
+			let message = `Failed to prerender ${path}`;
 
-			return `${status} ${message}${referrer ? ` (${referenceType} from ${referrer})` : ''}`;
+			if (status === 404) {
+				if (!path.startsWith(config.paths.base)) {
+					message = referrer ? `${path} (${referenceType} from ${referrer})` : path;
+
+					message += ` does not begin with \`base\`. You can fix this by using \`resolve('${path}')\` from \`$app/paths\`. The base path is configurable from \`paths.base\``;
+				} else if (referrer) {
+					message = `${path} was ${referenceType} from ${referrer}`;
+				}
+			}
+
+			return message;
 		}
 	);
 
 	const handle_missing_id = normalise_error_handler(
-		log,
+		'handleMissingId',
 		config.prerender.handleMissingId,
 		({ path, id, referrers }) => {
 			return (
-				`The following pages contain links to ${path}#${id}, but no element with id="${id}" exists on ${path} - see the \`handleMissingId\` option in https://svelte.dev/docs/kit/configuration#prerender for more info:` +
+				`The following pages contain links to ${path}#${id}, but no element with id="${id}" exists on ${path}:` +
 				referrers.map((l) => `\n  - ${l}`).join('')
 			);
 		}
 	);
 
 	const handle_entry_generator_mismatch = normalise_error_handler(
-		log,
+		'handleEntryGeneratorMismatch',
 		config.prerender.handleEntryGeneratorMismatch,
 		({ generatedFromId, entry, matchedId }) => {
-			return `The entries export from ${generatedFromId} generated entry ${entry}, which was matched by ${matchedId} - see the \`handleEntryGeneratorMismatch\` option in https://svelte.dev/docs/kit/configuration#prerender for more info.`;
+			return `The entries export from ${generatedFromId} generated entry ${entry}, which was matched by ${matchedId === entry ? 'a static route' : matchedId}`;
 		}
 	);
 
 	const handle_not_prerendered_route = normalise_error_handler(
-		log,
+		'handleUnseenRoutes',
 		config.prerender.handleUnseenRoutes,
 		({ routes }) => {
 			const list = routes.map((id) => `  - ${id}`).join('\n');
-			return `The following routes were marked as prerenderable, but were not prerendered because they were not found while crawling your app:\n${list}\n\nSee the \`handleUnseenRoutes\` option in https://svelte.dev/docs/kit/configuration#prerender for more info.`;
+			return `The following routes were marked as prerenderable, but were not prerendered because they were not found while crawling your app:\n${list}`;
 		}
 	);
 
 	const handle_invalid_url = normalise_error_handler(
-		log,
+		'handleInvalidUrl',
 		config.prerender.handleInvalidUrl,
 		({ href, referrer }) => {
 			return `Invalid URL ${href}${referrer ? ` (linked from ${referrer})` : ''}`;
@@ -223,10 +263,13 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 	/** @type {Map<string, Promise<any>>} */
 	const remote_responses = new Map();
 
+	/** @type {Set<string>} */
+	const resolved_route_ids = new Set();
+
 	/** @type {Map<string, Set<string>>} */
 	const expected_hashlinks = new Map();
 
-	/** @type {Map<string, string[]>} */
+	/** @type {Map<string, Set<string>>} */
 	const actual_hashlinks = new Map();
 
 	/**
@@ -260,13 +303,16 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 		/** @type {Map<string, import('types').PrerenderDependency>} */
 		const dependencies = new Map();
 
-		const response = await server.respond(new Request(prerender_origin + encoded), {
+		const request = new Request(prerender_origin + encoded);
+
+		const response = await server.respond(request, {
 			getClientAddress() {
 				throw new Error('Cannot read clientAddress during prerendering');
 			},
 			prerendering: {
 				dependencies,
-				remote_responses
+				remote_responses,
+				resolved_route_ids
 			},
 			read: (file) => {
 				// stuff we just wrote
@@ -296,6 +342,10 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 				entry: decoded,
 				matchedId: decoded_id
 			});
+		}
+
+		if (response.status !== 204) {
+			log_response(response.status, request);
 		}
 
 		const body = Buffer.from(await response.arrayBuffer());
@@ -342,14 +392,18 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 		const headers = Object.fromEntries(response.headers);
 
 		// if it's a 200 HTML response, crawl it. Skip error responses, as we don't save those
-		if (response.ok && config.prerender.crawl && headers['content-type'] === 'text/html') {
+		if (
+			response.ok &&
+			config.prerender.crawl &&
+			matches_content_type(headers['content-type'], 'text/html')
+		) {
 			const { ids, hrefs, invalid } = crawl(body.toString(), decoded);
 
 			for (const href of invalid) {
 				handle_invalid_url({ href, referrer: decoded });
 			}
 
-			actual_hashlinks.set(decoded, ids);
+			actual_hashlinks.set(decoded, new Set(ids));
 
 			/** @param {string} href */
 			const removePrerenderOrigin = (href) => {
@@ -399,7 +453,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 		const headers = Object.fromEntries(response.headers);
 
 		const type = headers['content-type'];
-		const is_html = response_type === REDIRECT || type === 'text/html';
+		const is_html = response_type === REDIRECT || matches_content_type(type, 'text/html');
 
 		if (!is_html && response.status === 200 && decoded.slice(config.paths.base.length + 1) === '') {
 			throw new Error(
@@ -427,8 +481,6 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 
 				if (!headers['x-sveltekit-normalize']) {
 					mkdirp(dirname(dest));
-
-					log.warn(`${response.status} ${decoded} -> ${location}`);
 
 					writeFileSync(
 						dest,
@@ -476,7 +528,6 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 
 			mkdirp(dir);
 
-			log.info(`${response.status} ${decoded}`);
 			writeFileSync(dest, body);
 			written.add(file);
 
@@ -492,7 +543,12 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 
 			prerendered.paths.push(decoded);
 		} else if (response_type !== OK) {
-			handle_http_error({ status: response.status, path: decoded, referrer, referenceType });
+			handle_http_error({
+				status: response.status,
+				path: decoded,
+				referrer,
+				referenceType
+			});
 		}
 
 		manifest.assets.add(file);
@@ -599,7 +655,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 		// ignore fragment links to pages that were not prerendered
 		if (!hashlinks) continue;
 
-		if (!hashlinks.includes(id) && !SPECIAL_HASHLINKS.has(id)) {
+		if (!hashlinks.has(id) && !SPECIAL_HASHLINKS.has(id)) {
 			handle_missing_id({ id, path, referrers: Array.from(referrers) });
 		}
 	}

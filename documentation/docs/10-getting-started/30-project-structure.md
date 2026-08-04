@@ -13,11 +13,13 @@ my-project/
 │ │ └ [your param matchers]
 │ ├ routes/
 │ │ └ [your routes]
+│ ├ service-worker/
+│ │ ├ index.js
+│ │ └ tsconfig.json
 │ ├ app.html
 │ ├ error.html
 │ ├ hooks.client.js
 │ ├ hooks.server.js
-│ ├ service-worker.js
 │ └ instrumentation.server.js
 ├ static/
 │ └ [your static assets]
@@ -36,7 +38,7 @@ You'll also find common files like `.gitignore` and `.npmrc` (and `.prettierrc` 
 
 The `src` directory contains the meat of your project. Everything except `src/routes` and `src/app.html` is optional.
 
-- `lib` contains your library code (utilities and components), which can be imported via the [`$lib`]($lib) alias, or packaged up for distribution using [`svelte-package`](packaging)
+- `lib` contains your library code (utilities and components), which can be imported via the [`#lib`]($lib) alias, or packaged up for distribution using [`svelte-package`](packaging)
   - directories named `server`, at any depth, mark any code within as [server only](server-only-modules). SvelteKit will prevent you from importing these in client code.
 - `params` contains any [param matchers](advanced-routing#Matching) your app needs
 - `routes` contains the [routes](routing) of your application. You can also colocate other components that are only used within a single route here
@@ -52,7 +54,7 @@ The `src` directory contains the meat of your project. Everything except `src/ro
   - `%sveltekit.error.message%` — the error message
 - `hooks.client.js` contains your client [hooks](hooks)
 - `hooks.server.js` contains your server [hooks](hooks)
-- `service-worker.js` contains your [service worker](service-workers)
+- `service-worker` contains your [service worker](service-workers)
 - `instrumentation.server.js` contains your [observability](observability) setup and instrumentation code
   - Requires adapter support. If your adapter supports it, it is guaranteed to run prior to loading and running your application code.
 

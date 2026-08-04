@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "3.0.0-next.8",
+	"version": "3.0.0-next.14",
 	"description": "SvelteKit is the fastest way to build Svelte apps",
 	"keywords": [
 		"framework",
@@ -34,7 +34,7 @@
 		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"@types/connect": "catalog:",
 		"@types/node": "catalog:",
-		"dts-buddy": "^0.8.1",
+		"dts-buddy": "^0.8.3",
 		"jsdom": "catalog:",
 		"rolldown": "catalog:",
 		"svelte": "catalog:",
@@ -77,15 +77,15 @@
 		"format": "prettier --config ../../.prettierrc --write .",
 		"test": "pnpm test:unit && pnpm test:integration",
 		"test:integration": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test",
-		"test:cross-platform:dev": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:cross-platform:dev",
-		"test:cross-platform:build": "pnpm test:unit && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:cross-platform:build",
+		"test:dev": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:dev",
+		"test:build": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:build",
+		"test:cross-platform:dev": "pnpm test:unit && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:cross-platform:dev",
+		"test:cross-platform:build": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:cross-platform:build",
 		"test:server-side-route-resolution:dev": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:server-side-route-resolution:dev",
-		"test:server-side-route-resolution:build": "pnpm test:unit && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:server-side-route-resolution:build",
+		"test:server-side-route-resolution:build": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:server-side-route-resolution:build",
 		"test:svelte-async:dev": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:svelte-async:dev",
-		"test:svelte-async:build": "pnpm test:unit && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:svelte-async:build",
-		"test:unit:dev": "vitest --config kit.vitest.config.js run",
-		"test:unit:prod": "NODE_ENV=production vitest --config kit.vitest.config.js run csp.spec.js cookie.spec.js",
-		"test:unit": "pnpm test:unit:dev && pnpm test:unit:prod",
+		"test:svelte-async:build": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:svelte-async:build",
+		"test:unit": "vitest run ./",
 		"prepublishOnly": "pnpm generate:types",
 		"generate:version": "node scripts/generate-version.js",
 		"generate:types": "node scripts/generate-dts.js"
@@ -136,6 +136,10 @@
 			"types": "./types/index.d.ts",
 			"import": "./src/exports/hooks/index.js"
 		},
+		"./env": {
+			"types": "./types/index.d.ts",
+			"import": "./src/exports/env/index.js"
+		},
 		"./vite": {
 			"types": "./types/index.d.ts",
 			"import": "./src/exports/vite/index.js"
@@ -143,6 +147,6 @@
 	},
 	"types": "types/index.d.ts",
 	"engines": {
-		"node": ">=22"
+		"node": ">=22.17"
 	}
 }

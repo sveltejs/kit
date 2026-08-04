@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { forked } from '../../utils/fork.js';
+import { stackless } from '../../utils/error.js';
 
 export default forked(import.meta.url, generate_fallback);
 
@@ -38,7 +39,8 @@ async function generate_fallback({ manifest_path, env, out_dir, origin, assets }
 		prerendering: {
 			fallback: true,
 			dependencies: new Map(),
-			remote_responses: new Map()
+			remote_responses: new Map(),
+			resolved_route_ids: new Set()
 		},
 		read: (file) => readFileSync(join(assets, file))
 	});
@@ -47,5 +49,5 @@ async function generate_fallback({ manifest_path, env, out_dir, origin, assets }
 		return await response.text();
 	}
 
-	throw new Error(`Could not create a fallback page — failed with status ${response.status}`);
+	throw stackless('Could not create a fallback page');
 }

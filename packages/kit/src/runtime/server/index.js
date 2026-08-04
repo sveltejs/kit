@@ -2,10 +2,10 @@ import { noop } from '../../utils/functions.js';
 import { IN_WEBCONTAINER } from './constants.js';
 import { respond } from './respond.js';
 import { options, get_hooks } from '__SERVER__/internal.js';
-import { format_server_error } from './utils.js';
-import { set_read_implementation, set_manifest } from '__sveltekit/server';
+import { set_read_implementation, set_manifest } from './internal.js';
 import { set_env } from '__sveltekit/env';
 import { set_app } from './app.js';
+import { SvelteKitError } from '@sveltejs/kit/internal';
 
 /** @type {Promise<any>} */
 let init_promise;
@@ -67,31 +67,17 @@ export class Server {
 				const result = read(file);
 				if (result instanceof ReadableStream) {
 					return result;
-				} else {
-					return new ReadableStream({
-						async start(controller) {
-							try {
-								const stream = await Promise.resolve(result);
-								if (!stream) {
-									controller.close();
-									return;
-								}
-
-								const reader = stream.getReader();
-
-								while (true) {
-									const { done, value } = await reader.read();
-									if (done) break;
-									controller.enqueue(value);
-								}
-
-								controller.close();
-							} catch (error) {
-								controller.error(error);
-							}
-						}
-					});
 				}
+
+				// TODO remove the cast once TypeScript's lib includes `ReadableStream.from`
+				return /** @type {ReadableStream} */ (
+					/** @type {any} */ (ReadableStream).from(
+						(async function* () {
+							const stream = await result;
+							if (stream) yield* stream;
+						})()
+					)
+				);
 			};
 
 			set_read_implementation(wrapped_read);
@@ -107,13 +93,23 @@ export class Server {
 					handle: module.handle || (({ event, resolve }) => resolve(event)),
 					handleError:
 						module.handleError ||
-						(({ status, error, event }) => {
-							const error_message = format_server_error(
-								status,
-								/** @type {Error} */ (error),
-								event
-							);
-							console.error(error_message);
+						(({ error }) => {
+							if (error instanceof SvelteKitError) {
+								// don't log stack traces for 404s etc, it's all internal gubbins
+								return;
+							}
+
+							let e = error;
+							while (e instanceof Error) {
+								if (e.stack) {
+									console.error(e.stack);
+								}
+								e = e.cause;
+							}
+
+							if (e) {
+								console.error(String(e));
+							}
 						}),
 					handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request)),
 					handleValidationError:
@@ -164,7 +160,7 @@ export class Server {
 	 * @param {Request} request
 	 * @param {import('types').RequestOptions} options
 	 */
-	async respond(request, options) {
+	respond(request, options) {
 		return respond(request, this.#options, this.#manifest, {
 			...options,
 			error: false,

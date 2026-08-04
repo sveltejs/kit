@@ -4,11 +4,12 @@
  * stream closes.
  * @param {ReadableStreamDefaultReader<Uint8Array>} reader
  * @param {string} delimiter
+ * @param {TextDecoderOptions} [options]
  */
-export async function* read_stream(reader, delimiter) {
+export async function* read_stream(reader, delimiter, options) {
 	let done = false;
 	let buffer = '';
-	const decoder = new TextDecoder();
+	const decoder = new TextDecoder(undefined, options);
 
 	while (true) {
 		let split = buffer.indexOf(delimiter);

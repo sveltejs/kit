@@ -8,7 +8,7 @@ import * as devalue from 'devalue';
 import { createReadStream, createWriteStream, existsSync, statSync } from 'node:fs';
 import { extname, resolve, join, dirname, relative } from 'node:path';
 import { pipeline } from 'node:stream';
-import { promisify, styleText } from 'node:util';
+import { promisify } from 'node:util';
 import zlib from 'node:zlib';
 import { copy, rimraf, mkdirp } from '../../utils/filesystem.js';
 import { posixify } from '../../utils/os.js';
@@ -109,16 +109,19 @@ export function create_builder({
 
 		async compress(directory) {
 			if (!existsSync(directory)) {
-				return;
+				return [];
 			}
 
-			const files = list_files(directory, (file) => extensions.includes(extname(file))).map(
-				(file) => resolve(directory, file)
-			);
+			const files = list_files(directory, (file) => extensions.includes(extname(file)));
 
 			await Promise.all(
-				files.flatMap((file) => [compress_file(file, 'gz'), compress_file(file, 'br')])
+				files.flatMap((file) => {
+					const abs = resolve(directory, file);
+					return [compress_file(abs, 'gz'), compress_file(abs, 'br')];
+				})
 			);
+
+			return files;
 		},
 
 		findServerAssets(route_data) {
@@ -142,11 +145,8 @@ export function create_builder({
 			});
 
 			if (existsSync(dest)) {
-				console.log(
-					styleText(
-						['bold', 'yellow'],
-						`Overwriting ${dest} with fallback page. Consider using a different name for the fallback.`
-					)
+				log.warn(
+					`\nOverwriting ${dest} with fallback page. Consider using a different name for the fallback.\n`
 				);
 			}
 

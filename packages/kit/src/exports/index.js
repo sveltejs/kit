@@ -27,10 +27,10 @@ export { defineParams } from './params.js';
  * return an error response without invoking `handleError`.
  * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
  * @param {number} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
- * @param {Omit<App.Error, 'status'> & { status?: App.Error['status'] }} body An object that conforms to the App.Error type. If a string is passed, it will be used as the message property.
+ * @param {string} [message] The error message.
  * @overload
- * @param {number} status
- * @param {Omit<App.Error, 'status'> & { status?: App.Error['status'] }} body
+ * @param {{ status: number; message: string } extends App.Error ? number : never} status
+ * @param {{ status: number; message: string } extends App.Error ? string : never} [message]
  * @return {never}
  * @throws {import('./public.js').HttpError} This error instructs SvelteKit to initiate HTTP error handling.
  * @throws {Error} If the provided status is invalid (not between 400 and 599).
@@ -41,25 +41,11 @@ export { defineParams } from './params.js';
  * return an error response without invoking `handleError`.
  * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
  * @param {number} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
- * @param {{ status: number; message: string } extends App.Error ? string | void | undefined : never} body The error message.
- * @overload
- * @param {number} status
- * @param {{ status: number; message: string } extends App.Error ? string | void | undefined : never} body
- * @return {never}
- * @throws {import('./public.js').HttpError} This error instructs SvelteKit to initiate HTTP error handling.
- * @throws {Error} If the provided status is invalid (not between 400 and 599).
- */
-/**
- * Throws an error with a HTTP status code and an optional message.
- * When called during request handling, this will cause SvelteKit to
- * return an error response without invoking `handleError`.
- * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
- * @param {number} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
- * @param {string} body The error message.
+ * @param {string} message The error message.
  * @param {{ status: number; message: string } extends App.Error ? never : Omit<App.Error, 'status' | 'message'>} properties Additional properties of the App.Error type.
  * @overload
  * @param {number} status
- * @param {string} body
+ * @param {string} message
  * @param {{ status: number; message: string } extends App.Error ? never : Omit<App.Error, 'status' | 'message'>} properties
  * @return {never}
  * @throws {import('./public.js').HttpError} This error instructs SvelteKit to initiate HTTP error handling.
@@ -70,19 +56,44 @@ export { defineParams } from './params.js';
  * When called during request handling, this will cause SvelteKit to
  * return an error response without invoking `handleError`.
  * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
+ * @deprecated Passing an `App.Error` body as the second argument is deprecated — pass the `message` as the second argument, and any additional properties as the third
+ * @param {number} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
+ * @param {Omit<App.Error, 'status'> & { status?: App.Error['status'] }} body An object that conforms to the App.Error type. If a string is passed, it will be used as the message property.
+ * @overload
+ * @param {number} status
+ * @param {Omit<App.Error, 'status'> & { status?: App.Error['status'] }} properties
+ * @return {never}
+ * @throws {import('./public.js').HttpError} This error instructs SvelteKit to initiate HTTP error handling.
+ * @throws {Error} If the provided status is invalid (not between 400 and 599).
+ */
+/**
+ * Throws an error with a HTTP status code and an optional message.
+ * When called during request handling, this will cause SvelteKit to
+ * return an error response without invoking `handleError`.
+ * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
  * @param {any} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
- * @param {any} [body] An object that conforms to the App.Error type. If a string is passed, it will be used as the message property.
+ * @param {any} [message] A string, or (deprecated) a partial App.Error object
  * @param {any} [properties] Additional properties of the App.Error type when passing a string message.
  * @return {never}
  * @throws {import('./public.js').HttpError} This error instructs SvelteKit to initiate HTTP error handling.
  * @throws {Error} If the provided status is invalid (not between 400 and 599).
  */
-export function error(status, body, properties) {
+export function error(status, message, properties) {
 	if ((!BROWSER || DEV) && (isNaN(status) || status < 400 || status > 599)) {
 		throw new Error(`HTTP error status codes must be between 400 and 599 — ${status} is invalid`);
 	}
 
-	throw new HttpError(status, body, properties);
+	if (message !== undefined && typeof message !== 'string') {
+		if (DEV) {
+			console.warn(
+				'Passing an `App.Error` body as the second argument is deprecated — pass the `message` as the second argument, and any additional properties as the third'
+			);
+		}
+
+		({ message, ...properties } = message);
+	}
+
+	throw new HttpError({ ...properties, status, message: message ?? `Error: ${status}` });
 }
 
 /**
@@ -234,7 +245,7 @@ export function isActionFailure(e) {
  * ```ts
  * import { invalid } from '@sveltejs/kit';
  * import { form } from '$app/server';
- * import { tryLogin } from '$lib/server/auth';
+ * import { tryLogin } from '#lib/server/auth';
  * import * as v from 'valibot';
  *
  * export const login = form(

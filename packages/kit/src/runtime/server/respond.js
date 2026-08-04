@@ -1,4 +1,4 @@
-/** @import { RequestState, SSRNode } from 'types' */
+/** @import { SSRNode } from 'types' */
 import { DEV } from 'esm-env';
 import { json, text } from '@sveltejs/kit';
 import { Redirect, SvelteKitError } from '@sveltejs/kit/internal';
@@ -9,13 +9,14 @@ import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
 import { respond_with_error } from './page/respond_with_error.js';
 import { get_self_origin, is_csrf_forbidden, is_remote_forbidden } from './csrf.js';
+import { has_prerendered_path, method_not_allowed, redirect_response } from './utils.js';
+import { handle_fatal_error } from './errors.js';
 import {
-	handle_fatal_error,
-	has_prerendered_path,
-	method_not_allowed,
-	redirect_response
-} from './utils.js';
-import { decode_pathname, disable_search, normalize_path } from '../../utils/url.js';
+	decode_pathname,
+	disable_search,
+	normalize_path,
+	relative_pathname
+} from '../../utils/url.js';
 import { find_route } from '../../utils/routing.js';
 import { redirect_json_response, render_data } from './data/index.js';
 import { add_cookies_to_headers, get_cookies } from './cookie.js';
@@ -25,20 +26,23 @@ import { validate_server_exports } from '../../utils/exports.js';
 import { action_json_redirect, is_action_json_request } from './page/actions.js';
 import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM } from '../shared.js';
 import { get_public_env } from './env_module.js';
-import { resolve_route } from './page/server_routing.js';
+import { resolve_route, resolve_route_by_id } from './page/server_routing.js';
 import { validateHeaders } from './validate-headers.js';
 import {
 	add_data_suffix,
 	add_resolution_suffix,
+	extract_route_id,
 	has_data_suffix,
 	has_resolution_suffix,
+	is_route_id_resolution_path,
 	strip_data_suffix,
 	strip_resolution_suffix
 } from '../pathname.js';
 import { server_data_serializer } from './page/data_serializer.js';
-import { get_remote_id, handle_remote_call } from './remote.js';
+import { get_remote_id, handle_remote_call } from './remote-functions.js';
 import { record_span } from '../telemetry/record_span.js';
 import { otel } from '../telemetry/otel.js';
+import { create_request_state } from './state.js';
 
 /** @type {import('types').RequiredResolveOptions['transformPageChunk']} */
 const default_transform = ({ html }) => html;
@@ -48,6 +52,28 @@ const default_filter = () => false;
 
 /** @type {import('types').RequiredResolveOptions['preload']} */
 const default_preload = ({ type }) => type === 'js' || type === 'css';
+
+// `Sec-Fetch-Dest` values for subresource requests that can never render an HTML error page
+// https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Sec-Fetch-Dest
+const non_html_fetch_destinations = new Set([
+	'audio',
+	'audioworklet',
+	'font',
+	'image',
+	'json',
+	'manifest',
+	'paintworklet',
+	'report',
+	'script',
+	'serviceworker',
+	'sharedworker',
+	'style',
+	'track',
+	'video',
+	'webidentity',
+	'worker',
+	'xslt'
+]);
 
 const page_methods = new Set(['GET', 'HEAD', 'POST']);
 
@@ -113,12 +139,18 @@ export async function internal_respond(request, options, manifest, state) {
 	/** @type {boolean[] | undefined} */
 	let invalidated_data_nodes;
 
+	let skip_route_resolution = false;
+
+	/** Whether this is a `/${app_dir}/routes/<route_id>/__route.js` request, used by `preloadCode` */
+	let is_route_id_resolution_request = false;
+
 	if (is_route_resolution_request) {
 		/**
 		 * If the request is for a route resolution, first modify the URL, then continue as normal
 		 * for path resolution, then return the route object as a JS file.
 		 */
 		url.pathname = strip_resolution_suffix(url.pathname);
+		is_route_id_resolution_request = is_route_id_resolution_path(url.pathname, base, app_dir);
 	} else if (is_data_request) {
 		url.pathname =
 			strip_data_suffix(url.pathname) +
@@ -130,8 +162,15 @@ export async function internal_respond(request, options, manifest, state) {
 			.map((node) => node === '1');
 		url.searchParams.delete(INVALIDATED_PARAM);
 	} else if (remote_id) {
-		url.pathname = request.headers.get('x-sveltekit-pathname') ?? base;
-		url.search = request.headers.get('x-sveltekit-search') ?? '';
+		// query clients don't send these headers, leaving `event.url` as the endpoint URL
+		const pathname = request.headers.get('x-sveltekit-pathname');
+
+		if (pathname === null) {
+			skip_route_resolution = true;
+		} else {
+			url.pathname = pathname;
+			url.search = request.headers.get('x-sveltekit-search') ?? '';
+		}
 	}
 
 	/** @type {Record<string, string>} */
@@ -142,29 +181,7 @@ export async function internal_respond(request, options, manifest, state) {
 		url
 	);
 
-	/** @type {RequestState} */
-	const event_state = {
-		prerendering: state.prerendering,
-		transport: options.hooks.transport,
-		handleValidationError: options.hooks.handleValidationError,
-		tracing: {
-			record_span
-		},
-		remote: {
-			data: null,
-			explicit: null,
-			implicit: null,
-			forms: null,
-			requested: null,
-			batches: null,
-			live_iterators: null
-		},
-		is_in_remote_function: false,
-		is_in_remote_form_or_command: false,
-		is_in_remote_query: false,
-		is_in_render: false,
-		is_in_universal_load: false
-	};
+	const event_state = create_request_state(state, options.hooks);
 
 	/** @type {import('@sveltejs/kit').RequestEvent} */
 	const event = {
@@ -237,7 +254,8 @@ export async function internal_respond(request, options, manifest, state) {
 	/** @type {string | null} */
 	let resolved_path = url.pathname;
 
-	if (!remote_id) {
+	// `reroute` hooks receive pathnames, so they must not run for route-ID resolution requests
+	if (!remote_id && !is_route_id_resolution_request) {
 		const prerendering_reroute_state = state.prerendering?.inside_reroute;
 		try {
 			// For the duration or a reroute, disable the prerendering state as reroute could call API endpoints
@@ -321,6 +339,14 @@ export async function internal_respond(request, options, manifest, state) {
 	}
 
 	if (is_route_resolution_request) {
+		if (is_route_id_resolution_request) {
+			return resolve_route_by_id(
+				extract_route_id(resolved_path, app_dir),
+				new URL(request.url),
+				manifest
+			);
+		}
+
 		return resolve_route(resolved_path, new URL(request.url), manifest);
 	}
 
@@ -335,7 +361,7 @@ export async function internal_respond(request, options, manifest, state) {
 		return text('Not found', { status: 404, headers });
 	}
 
-	if (!state.prerendering?.fallback) {
+	if (!state.prerendering?.fallback && !skip_route_resolution) {
 		try {
 			const matchers = await manifest._.matchers();
 			const result = find_route(resolved_path, manifest._.routes, matchers);
@@ -382,10 +408,9 @@ export async function internal_respond(request, options, manifest, state) {
 						status: 308,
 						headers: {
 							'x-sveltekit-normalize': '1',
+							// relative so (possibly invisible) path prefixes are preserved
 							location:
-								// ensure paths starting with '//' are not treated as protocol-relative
-								(normalized.startsWith('//') ? url.origin + normalized : normalized) +
-								(url.search === '?' ? '' : url.search)
+								relative_pathname(url.pathname, normalized) + (url.search === '?' ? '' : url.search)
 						}
 					});
 				}
@@ -572,7 +597,6 @@ export async function internal_respond(request, options, manifest, state) {
 					options,
 					manifest,
 					state,
-					status: 400,
 					error: new SvelteKitError(
 						400,
 						'Malformed URI',
@@ -635,13 +659,12 @@ export async function internal_respond(request, options, manifest, state) {
 					) {
 						endpoint = await route.endpoint();
 
-						// Prefer rendering the page if the endpoint can't handle this GET or HEAD request
-						if (route.page && (method === 'GET' || method === 'HEAD')) {
-							const endpoint_can_handle = !!(
-								endpoint.GET ||
-								endpoint.fallback ||
-								(method === 'HEAD' && endpoint.HEAD)
-							);
+						// Prefer rendering the page if the endpoint can't handle this GET, HEAD, or POST request
+						if (route.page && (method === 'GET' || method === 'HEAD' || method === 'POST')) {
+							const endpoint_can_handle =
+								method === 'POST'
+									? !!(endpoint.POST || endpoint.fallback)
+									: !!(endpoint.GET || endpoint.fallback || (method === 'HEAD' && endpoint.HEAD));
 							if (!endpoint_can_handle) {
 								endpoint = undefined;
 							}
@@ -758,13 +781,19 @@ export async function internal_respond(request, options, manifest, state) {
 					);
 				}
 
+				if (non_html_fetch_destinations.has(event.request.headers.get('sec-fetch-dest') ?? '')) {
+					return text('Not Found', {
+						status: 404,
+						headers: { vary: 'Sec-Fetch-Dest' }
+					});
+				}
+
 				return await respond_with_error({
 					event,
 					event_state,
 					options,
 					manifest,
 					state,
-					status: 404,
 					error: new SvelteKitError(404, 'Not Found', `Not found: ${event.url.pathname}`),
 					resolve_opts
 				});

@@ -74,16 +74,6 @@ export class LiveQueryProxy {
 		return this.#get_cached_query().done;
 	}
 
-	/**
-	 * @deprecated Use `for await (const value of liveQuery())` instead.
-	 * @returns {AsyncGenerator<T>}
-	 */
-	run() {
-		throw new Error(
-			'`.run()` has been removed from live queries. Use `for await (const value of liveQuery())` instead.'
-		);
-	}
-
 	reconnect() {
 		return this.#get_cached_query().reconnect();
 	}

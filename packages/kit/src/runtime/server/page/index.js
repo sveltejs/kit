@@ -2,12 +2,13 @@
 /** @import { ActionResult, RequestEvent, SSRManifest } from '@sveltejs/kit' */
 /** @import { PageNodeIndexes, RequestState, RequiredResolveOptions, ServerDataNode, SSRNode, SSROptions, SSRState } from 'types' */
 import { text } from '@sveltejs/kit';
-import { HttpError, Redirect } from '@sveltejs/kit/internal';
+import { Redirect } from '@sveltejs/kit/internal';
 import { compact } from '../../../utils/array.js';
 import { get_status, normalize_error } from '../../../utils/error.js';
 import { noop } from '../../../utils/functions.js';
 import { add_data_suffix } from '../../pathname.js';
-import { redirect_response, static_error_page, handle_error_and_jsonify } from '../utils.js';
+import { redirect_response } from '../utils.js';
+import { static_error_page, handle_error_and_jsonify } from '../errors.js';
 import {
 	handle_action_json_request,
 	handle_action_request,
@@ -19,7 +20,7 @@ import { load_data, load_server_data } from './load_data.js';
 import { render_response } from './render.js';
 import { respond_with_error } from './respond_with_error.js';
 import { DEV } from 'esm-env';
-import { get_remote_action, handle_remote_form_post } from '../remote.js';
+import { get_remote_action, handle_remote_form_post } from '../remote-functions.js';
 import { PageNodes } from '../../../utils/page_nodes.js';
 
 /**
@@ -385,7 +386,6 @@ export async function render_page(
 			options,
 			manifest,
 			state,
-			status: e instanceof HttpError ? e.status : 500,
 			error: e,
 			resolve_opts
 		});

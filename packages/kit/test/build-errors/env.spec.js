@@ -44,6 +44,23 @@ test('$app/env/private is not importable from the service worker', { timeout }, 
 				timeout,
 				env
 			}),
-		/.*Cannot import \$app\/env\/private into service-worker code.*/gs
+		/.*Cannot import \$app\/env\/private into code that runs in the browser.*/gs
 	);
 });
+
+test(
+	'$app/forms, $app/navigation and $app/state are not importable from the service worker',
+	{ timeout },
+	() => {
+		assert.throws(
+			() =>
+				execSync('pnpm build', {
+					cwd: path.join(import.meta.dirname, 'apps/service-worker-invalid-app-imports'),
+					stdio: 'pipe',
+					timeout,
+					env
+				}),
+			/.*Cannot import \$app\/forms, \$app\/navigation, \$app\/state into service-worker code.*/gs
+		);
+	}
+);

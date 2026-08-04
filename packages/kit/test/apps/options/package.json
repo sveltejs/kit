@@ -9,12 +9,14 @@
 		"prepare": "svelte-kit sync -c vite.custom.config.js",
 		"check": "svelte-kit sync -c vite.custom.config.js && tsc && svelte-check --config vite.custom.config.js",
 		"test": "pnpm test:dev && pnpm test:build",
-		"test:dev": "DEV=true playwright test && DEV=true PATHS_ASSETS=https://cdn.example.com/stuff playwright test",
+		"test:vitest": "vitest run --config vite.custom.config.js",
+		"test:paths-relative:dev": "DEV=true playwright test",
+		"test:paths-assets:dev": "DEV=true PATHS_ASSETS=https://cdn.example.com/stuff playwright test",
+		"test:dev": "pnpm test:vitest && pnpm test:paths-relative:dev && pnpm test:paths-assets:dev",
 		"test:paths-relative:build": "playwright test",
 		"test:paths-absolute:build": "PATHS_RELATIVE=false playwright test",
 		"test:paths-assets:build": "PATHS_ASSETS=https://cdn.example.com/stuff playwright test",
 		"test:build": "pnpm test:paths-relative:build && pnpm test:paths-absolute:build && pnpm test:paths-assets:build",
-		"test:unit": "vitest run --config vite.custom.config.js",
 		"test:server-side-route-resolution:dev": "rm -rf test/errors.json && DEV=true ROUTER_RESOLUTION=server playwright test",
 		"test:server-side-route-resolution:build": "rm -rf test/errors.json && ROUTER_RESOLUTION=server playwright test"
 	},
@@ -27,6 +29,9 @@
 		"typescript": "catalog:",
 		"vite": "catalog:",
 		"vitest": "catalog:"
+	},
+	"imports": {
+		"#lib/*": "./source/components/*"
 	},
 	"type": "module"
 }

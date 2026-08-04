@@ -1,17 +1,19 @@
 /** @import { EnvVarConfig, KitConfig } from '@sveltejs/kit' */
 /** @import { Options, SvelteConfig } from '@sveltejs/vite-plugin-svelte' */
 /** @import { PreprocessorGroup } from 'svelte/compiler' */
-/** @import { BuildData, ManifestData, Prerendered, ServerMetadata, RemoteInternals, ValidatedConfig, ValidatedKitConfig } from 'types' */
+/** @import { Asset, BuildData, ManifestData, Prerendered, RemoteChunk, RemoteInternals, RouteData, ServerMetadata, ValidatedConfig, ValidatedKitConfig } from 'types' */
 /** @import { Manifest, Plugin, ResolvedConfig, Rolldown, UserConfig, ViteDevServer } from 'vite' */
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { styleText } from 'node:util';
+import MagicString from 'magic-string';
 import { loadEnv } from 'vite';
 import { exactRegex, prefixRegex } from 'rolldown/filter';
 
 import { copy, mkdirp, read, resolve_entry, rimraf } from '../../utils/filesystem.js';
 import { posixify } from '../../utils/os.js';
+import { to_fs } from '../../utils/vite.js';
 import {
 	create_sveltekit_env,
 	create_sveltekit_env_public,
@@ -22,19 +24,20 @@ import {
 	create_exported_declarations
 } from '../../core/env.js';
 import * as sync from '../../core/sync/sync.js';
-import { create_assets } from '../../core/sync/create_manifest_data/index.js';
 import { load_and_validate_params } from '../../utils/params.js';
 import { runtime_directory, logger } from '../../core/utils.js';
 import { generate_manifest } from '../../core/generate_manifest/index.js';
 import { build_server_nodes } from './build/build_server.js';
 import { find_deps, resolve_symlinks } from './build/utils.js';
-import { dev } from './dev/index.js';
+import { dev, invalidate_module } from './dev/index.js';
 import { preview } from './preview/index.js';
 import {
 	error_for_missing_config,
 	get_config_aliases,
 	normalize_id,
-	strip_virtual_prefix
+	remote_module_pattern,
+	server_only_directory_pattern,
+	server_only_module_pattern
 } from './utils.js';
 import { stackless } from '../../utils/error.js';
 import { write_client_manifest } from '../../core/sync/write_client_manifest.js';
@@ -44,13 +47,18 @@ import { s } from '../../utils/misc.js';
 import { hash } from '../../utils/hash.js';
 import { dedent } from '../../core/sync/utils.js';
 import {
+	is_app_route,
+	is_endpoint_route,
+	is_page_route
+} from '../../core/sync/create_manifest_data/index.js';
+import { get_import_aliases, get_hash_import_keys } from '../../utils/imports.js';
+import {
 	app_env_private,
 	app_server,
-	service_worker,
 	sveltekit_env,
 	sveltekit_env_private,
 	sveltekit_env_service_worker,
-	sveltekit_server,
+	sveltekit_manifest_data,
 	sveltekit_env_public_client,
 	sveltekit_env_public_server
 } from './module_ids.js';
@@ -59,13 +67,7 @@ import { compact } from '../../utils/array.js';
 import { should_ignore, has_children } from './static_analysis/utils.js';
 import { process_config, split_config, validate_config } from '../../core/config/index.js';
 import { treeshake_prerendered_remotes } from './build/remote.js';
-
-/**
- * The posix-ified root of the project based on the Vite configuration.
- * Populated after Vite plugins' `config` hooks run
- * @type {string}
- */
-let root;
+import { get_runner } from '../../runner.js';
 
 /** @type {import('./types.js').EnforcedConfig} */
 const enforced_config = {
@@ -97,14 +99,27 @@ const enforced_config = {
 	resolve: {
 		alias: {
 			$app: true,
-			$env: true,
-			$lib: true,
-			'$service-worker': true
+			$env: true
 		}
 	}
 };
 
 const options_regex = /(export\s+const\s+(prerender|csr|ssr|trailingSlash))\s*=/s;
+
+const removed_modules = [
+	{
+		name: '$lib',
+		pattern: /^\$lib(?:\/.*|\?.*)?$/,
+		message:
+			"`$lib` has been removed. Use `#lib` instead: https://svelte.dev/docs/kit/$lib. To keep using `$lib`, add `alias: { '$lib': 'src/lib' }` to your SvelteKit config."
+	},
+	{
+		name: '$service-worker',
+		pattern: /^\$service-worker(?:\?.*)?$/,
+		message:
+			'`$service-worker` has been removed. Use `immutable`, `assets` and `prerendered` from `$app/manifest`, `version` from `$app/env`, and `resolve(...)` from `$app/paths` instead: https://svelte.dev/docs/kit/$service-worker'
+	}
+];
 
 /** @type {Set<string>} */
 const warned = new Set();
@@ -121,7 +136,7 @@ const warning_preprocessor = {
 				const fixed = basename.replace('.svelte', '(.server).js/ts');
 
 				const message =
-					`\n${styleText(['bold', 'red'], path.relative(root, filename))}\n` +
+					`\n${styleText(['bold', 'red'], path.relative(process.cwd(), filename))}\n` +
 					`\`${match[1]}\` will be ignored — move it to ${fixed} instead. See https://svelte.dev/docs/kit/page-options for more information.`;
 
 				if (!warned.has(message)) {
@@ -138,7 +153,7 @@ const warning_preprocessor = {
 
 		if (basename.startsWith('+layout.') && !has_children(content, true)) {
 			const message =
-				`\n${styleText(['bold', 'red'], path.relative(root, filename))}\n` +
+				`\n${styleText(['bold', 'red'], path.relative(process.cwd(), filename))}\n` +
 				'`<slot />` or `{@render ...}` tag' +
 				' missing — inner content will not be rendered';
 
@@ -204,51 +219,12 @@ export async function sveltekit(config) {
 		inline_vps_config.compilerOptions = svelte_config.compilerOptions;
 	}
 
-	return [
-		plugin_root(),
-		...vite_plugin_svelte.svelte(inline_vps_config),
-		...kit({
-			svelte_config
-		})
-	];
+	return [...vite_plugin_svelte.svelte(inline_vps_config), ...kit({ svelte_config })];
 }
 
 /** @param {UserConfig | ResolvedConfig} vite_config */
 function resolve_root(vite_config) {
 	return posixify(vite_config.root ? path.resolve(vite_config.root) : process.cwd());
-}
-
-/**
- * @return {Plugin}
- */
-function plugin_root() {
-	return {
-		name: 'vite-plugin-sveltekit-resolve-svelte-config',
-		// make sure it runs first
-		enforce: 'pre',
-		config: {
-			order: 'pre',
-			handler(config) {
-				root = resolve_root(config);
-
-				const config_file = ['svelte.config.js', 'svelte.config.ts'].find((file) =>
-					fs.existsSync(path.join(root, file))
-				);
-				if (config_file) {
-					throw new Error(
-						`${config_file} is no longer used. Please pass configuration via the \`sveltekit(...)\` plugin in your Vite config.`
-					);
-				}
-			}
-		},
-		// TODO: do we even need to set `root` based on the final Vite config?
-		configResolved: {
-			order: 'pre',
-			handler(config) {
-				root = resolve_root(config);
-			}
-		}
-	};
 }
 
 /**
@@ -268,6 +244,12 @@ function plugin_root() {
 function kit({ svelte_config }) {
 	/** @type {typeof import('vite')} */
 	let vite;
+
+	/**
+	 * The posix-ified root of the project based on the Vite configuration.
+	 * @type {string}
+	 */
+	let root;
 
 	/** @type {ValidatedKitConfig} */
 	let kit;
@@ -299,15 +281,16 @@ function kit({ svelte_config }) {
 
 	/** @type {string | null} */
 	let service_worker_entry_file;
-	/** @type {import('node:path').ParsedPath} */
-	let parsed_service_worker;
-
 	/** @type {string} */
 	let normalized_cwd;
-	/** @type {string} */
-	let normalized_lib;
+	/** @type {Array<{ alias: string, path: string }>} */
+	let normalized_aliases;
 	/** @type {string} */
 	let normalized_node_modules;
+	/** @type {string} */
+	let normalized_routes;
+	/** @type {string} */
+	let normalized_assets;
 	/**
 	 * A map showing which features (such as `$app/server:read`) are defined
 	 * in which chunks, so that we can later determine which routes use which features
@@ -322,10 +305,51 @@ function kit({ svelte_config }) {
 	let kit_global;
 
 	/** @type {Plugin} */
+	const plugin_resolve_root = {
+		name: 'vite-plugin-sveltekit-resolve-root',
+		// make sure it runs first
+		enforce: 'pre',
+		config: {
+			order: 'pre',
+			handler(config) {
+				root = resolve_root(config);
+
+				for (const file of ['svelte.config.js', 'svelte.config.ts']) {
+					if (fs.existsSync(path.join(root, file))) {
+						throw new Error(
+							`${file} is no longer used. Please pass configuration via the \`sveltekit(...)\` plugin in your Vite config.`
+						);
+					}
+				}
+			}
+		}
+	};
+
+	/** @type {Plugin} */
 	const plugin_setup = {
 		name: 'vite-plugin-sveltekit-setup',
 		api: {
 			options: svelte_config
+		},
+		resolveId: {
+			filter: { id: removed_modules.map(({ pattern }) => pattern) },
+			async handler(id, importer, options) {
+				const resolved = await this.resolve(id, importer, { ...options, skipSelf: true });
+				if (resolved) return resolved;
+
+				const aliases = svelte_config.kit.alias;
+				for (const { name, pattern, message } of removed_modules) {
+					if (!pattern.test(id)) continue;
+
+					// If the user re-added an alias for this module (as the migration message
+					// suggests), a failed resolution means a genuine missing file rather than
+					// use of the removed module. Let Vite report the real "not found" error
+					// instead of the misleading migration message.
+					if (name in aliases || `${name}/*` in aliases) return;
+
+					throw stackless(message);
+				}
+			}
 		},
 
 		/**
@@ -353,11 +377,21 @@ function kit({ svelte_config }) {
 				vite = await import_peer('vite', root);
 
 				normalized_cwd = vite.normalizePath(root);
-				normalized_lib = vite.normalizePath(kit.files.lib);
+				normalized_aliases = get_import_aliases(root, vite.normalizePath.bind(vite));
 				normalized_node_modules = vite.normalizePath(path.resolve(root, 'node_modules'));
+				normalized_routes = vite.normalizePath(path.resolve(root, kit.files.routes));
+				normalized_assets = vite.normalizePath(path.resolve(root, kit.files.assets));
+
+				// Add `#`-prefixed import keys to the enforced config so users are warned
+				// if they try to set them in their Vite config's resolve.alias
+				const enforced_alias = /** @type {Record<string, true>} */ (
+					/** @type {any} */ (enforced_config.resolve).alias
+				);
+				for (const key of get_hash_import_keys(root)) {
+					enforced_alias[key] = true;
+				}
 
 				const allow = new Set([
-					kit.files.lib,
 					kit.files.routes,
 					kit.files.src,
 					kit.outDir,
@@ -373,6 +407,11 @@ function kit({ svelte_config }) {
 					path.resolve(vite.searchForWorkspaceRoot(process.cwd()), 'node_modules')
 				]);
 
+				// Add directories from `#`-prefixed package.json imports to the allow list
+				for (const { path: alias_path } of normalized_aliases) {
+					allow.add(alias_path);
+				}
+
 				// We can only add directories to the allow list, so we find out
 				// if there's a client hooks file and pass its directory
 				const client_hooks = resolve_entry(kit.files.hooks.client);
@@ -383,11 +422,23 @@ function kit({ svelte_config }) {
 				// dev and preview config can be shared
 				/** @type {UserConfig} */
 				const new_config = {
+					environments: {
+						ssr: {
+							build: {
+								sourcemap:
+									config.environments?.ssr?.build?.sourcemap ?? config.build?.sourcemap ?? true
+							}
+						}
+					},
 					resolve: {
 						alias: [
 							{ find: '__SERVER__', replacement: `${generated}/server` },
 							{ find: '$app', replacement: `${runtime_directory}/app` },
 							{ find: '$env', replacement: `${runtime_directory}/env` },
+							{
+								find: '__sveltekit/server',
+								replacement: `${runtime_directory}/server/internal.js`
+							},
 							...get_config_aliases(kit, root)
 						]
 					},
@@ -420,7 +471,9 @@ function kit({ svelte_config }) {
 							// this does not affect app code, just handling of imported libraries that use $app or $env
 							'$app',
 							'$env'
-						]
+						],
+						// avoid Vite dev server reloading the first time a page is requested
+						include: ['@sveltejs/kit > devalue', '@sveltejs/kit > esm-env']
 					},
 					ssr: {
 						noExternal: [
@@ -439,30 +492,33 @@ function kit({ svelte_config }) {
 					}
 				};
 
+				// externalize .remote.js files to stop dependency tracing during prebundling
 				if (kit.experimental.remoteFunctions) {
-					// treat .remote.js files as empty for the purposes of prebundling
-					const remote_id_filter = new RegExp(
-						`.remote(${kit.moduleExtensions.join('|')})$`.replaceAll('.', '\\.')
-					);
 					// @ts-expect-error optimizeDeps is already set above
 					new_config.optimizeDeps.rolldownOptions ??= {};
 					// @ts-expect-error
 					new_config.optimizeDeps.rolldownOptions.plugins ??= [];
 					// @ts-expect-error
-					new_config.optimizeDeps.rolldownOptions.plugins.push({
-						name: 'vite-plugin-sveltekit-setup:optimize-remote-functions',
-						load: {
-							filter: { id: remote_id_filter },
-							handler() {
-								return '';
+					new_config.optimizeDeps.rolldownOptions.plugins.push(
+						/** @type {Rolldown.Plugin} */ ({
+							name: 'vite-plugin-sveltekit-setup:optimize-remote-functions',
+							resolveId: {
+								filter: { id: remote_module_pattern },
+								async handler(id, importer) {
+									const resolved = await this.resolve(id, importer, { skipSelf: true });
+									if (!resolved) return { id, external: true };
+									// a servable /@fs url; 'absolute' stops rolldown relativizing it in the deps bundle
+									return { id: to_fs(resolved.id), external: 'absolute' };
+								}
 							}
-						}
-					});
+						})
+					);
 				}
 
 				const define = {
 					__SVELTEKIT_APP_DIR__: s(posixify(kit.appDir)),
 					__SVELTEKIT_APP_VERSION__: s(kit.version.name),
+					__SVELTEKIT_APP_VERSION_CHECKS_ENABLED__: s(kit.output.bundleStrategy !== 'inline'),
 					__SVELTEKIT_EMBEDDED__: s(kit.embedded),
 					__SVELTEKIT_FORK_PRELOADS__: s(kit.experimental.forkPreloads),
 					__SVELTEKIT_PATHS_ASSETS__: s(kit.paths.assets),
@@ -474,7 +530,6 @@ function kit({ svelte_config }) {
 					__SVELTEKIT_SUPPORTS_ASYNC__: s(
 						svelte_config.compilerOptions?.experimental?.async ?? false
 					),
-					__SVELTEKIT_ROOT__: s(root),
 					__SVELTEKIT_DEV__: s(!is_build)
 				};
 
@@ -529,6 +584,24 @@ function kit({ svelte_config }) {
 		 */
 		configResolved(config) {
 			vite_config = config;
+
+			const unsupported_plugins = vite_config.plugins.filter((plugin) => plugin.transformIndexHtml);
+			if (unsupported_plugins.length) {
+				const verbose = vite_config.logLevel === 'info';
+				const log = logger({ verbose });
+
+				const list = unsupported_plugins
+					.map((plugin) => `  - ${plugin.name || '(missing plugin name)'}`)
+					.join('\n');
+
+				log.warn(
+					dedent`
+						The following plugins may not work correctly because they use the \`transformIndexHtml\` hook which is not supported:
+
+						${list}
+					`
+				);
+			}
 		}
 	};
 
@@ -565,14 +638,10 @@ function kit({ svelte_config }) {
 					);
 
 					for (const id of [sveltekit_env, sveltekit_env_public_client]) {
-						const module = server.moduleGraph.getModuleById(id);
-
-						if (module) {
-							server.moduleGraph.invalidateModule(module);
-						}
+						invalidate_module(server, id);
 					}
 
-					server.ws.send({ type: 'full-reload' });
+					server.hot.send({ type: 'full-reload' });
 				}
 			});
 		},
@@ -583,16 +652,11 @@ function kit({ svelte_config }) {
 
 		resolveId: {
 			filter: {
-				id: [exactRegex('$service-worker'), prefixRegex('__sveltekit/')]
+				id: [prefixRegex('__sveltekit/')]
 			},
 			handler(id) {
 				if (id === '__sveltekit/manifest') {
 					return `${out_dir}/generated/client-optimized/app.js`;
-				}
-
-				if (id === '$service-worker') {
-					// ids with :$ don't work with reverse proxies like nginx
-					return `\0virtual:${id.substring(1)}`;
 				}
 
 				if (id === '__sveltekit/remote') {
@@ -606,19 +670,18 @@ function kit({ svelte_config }) {
 		load: {
 			filter: {
 				id: [
-					exactRegex(service_worker),
 					exactRegex(sveltekit_env),
 					exactRegex(sveltekit_env_private),
 					exactRegex(sveltekit_env_public_client),
 					exactRegex(sveltekit_env_public_server),
 					exactRegex(sveltekit_env_service_worker),
-					exactRegex(sveltekit_server)
+					exactRegex(sveltekit_manifest_data)
 				]
 			},
 			handler(id) {
 				switch (id) {
-					case service_worker:
-						return create_service_worker_module(svelte_config);
+					case sveltekit_manifest_data:
+						return create_manifest_data_module(is_build, manifest_data);
 
 					case sveltekit_env:
 						return create_sveltekit_env(explicit_env_config, env, explicit_env_entry, !is_build);
@@ -645,27 +708,17 @@ function kit({ svelte_config }) {
 							? create_sveltekit_env_service_worker(
 									explicit_env_config,
 									env,
+									kit.version.name,
 									kit_global,
 									kit.paths.base,
 									kit.appDir
 								)
-							: create_sveltekit_env_service_worker_dev(explicit_env_config, env, kit_global);
-
-					case sveltekit_server: {
-						return dedent`
-							export let read_implementation = null;
-
-							export let manifest = null;
-
-							export function set_read_implementation(fn) {
-								read_implementation = fn;
-							}
-
-							export function set_manifest(_) {
-								manifest = _;
-							}
-						`;
-					}
+							: create_sveltekit_env_service_worker_dev(
+									explicit_env_config,
+									env,
+									kit.version.name,
+									kit_global
+								);
 				}
 			}
 		}
@@ -673,14 +726,10 @@ function kit({ svelte_config }) {
 
 	/** @type {Map<string, Set<string>>} */
 	const import_map = new Map();
-	// Matches any ID that has .server. in its filename
-	const server_only_module_pattern = /\.server\.[^/]+$/;
-	// Matches any ID that has /server/ in its path
-	const server_only_directory_pattern = /\/server\//;
 
 	/**
 	 * Ensures that client-side code can't accidentally import server-side code,
-	 * whether in `*.server.js` files, `$app/server`, `$lib/server`, or `$app/env/private`
+	 * whether in `*.server.js` files, `$app/server`, any `/server/` directory, or `$app/env/private`
 	 * @type {Plugin}
 	 */
 	const plugin_guard = {
@@ -691,7 +740,8 @@ function kit({ svelte_config }) {
 		enforce: 'pre',
 
 		applyToEnvironment(environment) {
-			return environment.name !== 'serviceWorker';
+			// the import map is only read for client-side violations in `load`, so skip other environments
+			return environment.config.consumer === 'client';
 		},
 
 		resolveId: {
@@ -706,7 +756,7 @@ function kit({ svelte_config }) {
 					const resolved = await this.resolve(id, importer, { ...options, skipSelf: true });
 
 					if (resolved) {
-						const normalized = normalize_id(resolved.id, normalized_lib, normalized_cwd);
+						const normalized = normalize_id(resolved.id, normalized_aliases, normalized_cwd);
 
 						let importers = import_map.get(normalized);
 
@@ -715,7 +765,7 @@ function kit({ svelte_config }) {
 							import_map.set(normalized, importers);
 						}
 
-						importers.add(normalize_id(importer, normalized_lib, normalized_cwd));
+						importers.add(normalize_id(importer, normalized_aliases, normalized_cwd));
 					}
 				}
 			}
@@ -731,19 +781,21 @@ function kit({ svelte_config }) {
 				]
 			},
 			handler(id) {
-				if (this.environment.config.consumer !== 'client') return;
+				const normalized = normalize_id(id, normalized_aliases, normalized_cwd);
+
+				let is_server_only = normalized === '$app/env/private' || normalized === '$app/server';
 
 				// skip .server.js files outside the cwd or in node_modules, as the filename might not mean 'server-only module' in this context
-				const is_internal =
-					id.startsWith(normalized_cwd) && !id.startsWith(normalized_node_modules);
+				if (id.startsWith(normalized_cwd) && !id.startsWith(normalized_node_modules)) {
+					// e.g. `server.ts` or `foo.server.ts`
+					is_server_only ||= server_only_module_pattern.test(id);
 
-				const normalized = normalize_id(id, normalized_lib, normalized_cwd);
-
-				const is_server_only =
-					normalized === '$app/env/private' ||
-					normalized === '$app/server' ||
-					(normalized.startsWith('$lib/') && server_only_directory_pattern.test(id)) ||
-					(is_internal && server_only_module_pattern.test(id));
+					// e.g. `server/foo.ts`, unless in `src/routes` or `static`
+					is_server_only ||=
+						server_only_directory_pattern.test(id) &&
+						!id.startsWith(normalized_routes + '/') &&
+						!id.startsWith(normalized_assets + '/');
+				}
 
 				if (!is_server_only) return;
 
@@ -759,6 +811,10 @@ function kit({ svelte_config }) {
 
 				if (manifest_data.hooks.client) entrypoints.add(manifest_data.hooks.client);
 				if (manifest_data.hooks.universal) entrypoints.add(manifest_data.hooks.universal);
+
+				if (service_worker_entry_file) {
+					entrypoints.add(posixify(path.relative(root, service_worker_entry_file)));
+				}
 
 				// Walk up the import graph from the server-only module, looking for a chain
 				// that leads back to a client entrypoint. We search all candidates (not just
@@ -794,6 +850,10 @@ function kit({ svelte_config }) {
 				const chain = find_chain(normalized, [normalized]);
 
 				if (chain) {
+					if (chain.some((id) => remote_module_pattern.test(id))) {
+						error_for_missing_config('remote functions', 'experimental.remoteFunctions', 'true');
+					}
+
 					const pyramid = chain
 						.reverse()
 						.map((id, i) => {
@@ -817,7 +877,7 @@ function kit({ svelte_config }) {
 	/** @type {ViteDevServer} */
 	let dev_server;
 
-	/** @type {Array<{ hash: string, file: string }>} */
+	/** @type {RemoteChunk[]} */
 	const remotes = [];
 
 	/** @type {Map<string, string>} Maps remote hash -> original module id */
@@ -864,109 +924,115 @@ function kit({ svelte_config }) {
 			dev_server = _dev_server;
 		},
 
-		async transform(code, id) {
-			const normalized = normalize_id(id, normalized_lib, normalized_cwd);
-			if (!svelte_config.kit.moduleExtensions.some((ext) => normalized.endsWith(`.remote${ext}`))) {
-				return;
-			}
+		transform: {
+			filter: {
+				id: remote_module_pattern
+			},
+			async handler(code, id) {
+				const file = posixify(path.relative(root, id));
+				const remote = {
+					hash: hash(file),
+					file
+				};
 
-			const file = posixify(path.relative(root, id));
-			const remote = {
-				hash: hash(file),
-				file
-			};
+				if (this.environment.name === 'ssr') remotes.push(remote);
 
-			remotes.push(remote);
+				if (this.environment.config.consumer !== 'client') {
+					// we need to add an `await Promise.resolve()` because if the user imports this function
+					// on the client AND in a load function when loading the client module we will trigger
+					// an import during dev. During a link preload, the module can be mistakenly
+					// loaded and transformed twice and the first time all its exports would be undefined
+					// triggering a dev server error. By adding a microtask we ensure that the module is fully loaded
+					const ms = new MagicString(code);
 
-			if (this.environment.config.consumer !== 'client') {
-				// we need to add an `await Promise.resolve()` because if the user imports this function
-				// on the client AND in a load function when loading the client module we will trigger
-				// an ssrLoadModule during dev. During a link preload, the module can be mistakenly
-				// loaded and transformed twice and the first time all its exports would be undefined
-				// triggering a dev server error. By adding a microtask we ensure that the module is fully loaded
+					// Extra newlines to prevent syntax errors around missing semicolons or comments
+					ms.append(
+						'\n\n' +
+							dedent`
+								import * as $$_self_$$ from './${path.basename(id)}';
+								import { init_remote_functions as $$_init_$$ } from '@sveltejs/kit/internal/server';
 
-				// Extra newlines to prevent syntax errors around missing semicolons or comments
-				code +=
-					'\n\n' +
-					dedent`
-					import * as $$_self_$$ from './${path.basename(id)}';
-					import { init_remote_functions as $$_init_$$ } from '@sveltejs/kit/internal/server';
+								${dev_server ? 'await Promise.resolve()' : ''}
 
-					${dev_server ? 'await Promise.resolve()' : ''}
+								$$_init_$$($$_self_$$, ${s(file)}, ${s(remote.hash)});
 
-					$$_init_$$($$_self_$$, ${s(file)}, ${s(remote.hash)});
+								for (const [name, fn] of Object.entries($$_self_$$)) {
+									fn.__.id = ${s(remote.hash)} + '/' + name;
+									fn.__.name = name;
+								}
+							`
+					);
 
-					for (const [name, fn] of Object.entries($$_self_$$)) {
-						fn.__.id = ${s(remote.hash)} + '/' + name;
-						fn.__.name = name;
+					// Emit a dedicated entry chunk for this remote in SSR builds (prod only)
+					if (!dev_server) {
+						remote_original_by_hash.set(remote.hash, id);
+						if (!emitted_remote_hashes.has(remote.hash)) {
+							this.emitFile({
+								type: 'chunk',
+								id: `\0sveltekit-remote:${remote.hash}`,
+								name: `remote-${remote.hash}`
+							});
+							emitted_remote_hashes.add(remote.hash);
+						}
 					}
-				`;
 
-				// Emit a dedicated entry chunk for this remote in SSR builds (prod only)
-				if (!dev_server) {
-					remote_original_by_hash.set(remote.hash, id);
-					if (!emitted_remote_hashes.has(remote.hash)) {
-						this.emitFile({
-							type: 'chunk',
-							id: `\0sveltekit-remote:${remote.hash}`,
-							name: `remote-${remote.hash}`
-						});
-						emitted_remote_hashes.add(remote.hash);
+					return {
+						code: ms.toString(),
+						map: ms.generateMap({ hires: 'boundary' })
+					};
+				}
+
+				// For the client, read the exports and create a new module that only contains fetch functions with the correct metadata
+
+				/** @type {Map<string, RemoteInternals['type']>} */
+				const map = new Map();
+
+				// in dev, load the server module here (which will result in this hook
+				// being called again with `opts.ssr === true` if the module isn't
+				// already loaded) so we can determine what it exports
+				if (dev_server) {
+					const module = await get_runner(dev_server).import(id);
+
+					for (const [name, value] of Object.entries(module)) {
+						const type = value?.__?.type;
+						if (type) {
+							map.set(name, type);
+						}
 					}
 				}
 
-				return code;
-			}
+				// in prod, we already built and analysed the server code before
+				// building the client code, so `remotes` is populated
+				else if (build_metadata?.remotes) {
+					const exports = build_metadata?.remotes.get(remote.hash);
+					if (!exports) throw new Error('Expected to find metadata for remote file ' + id);
 
-			// For the client, read the exports and create a new module that only contains fetch functions with the correct metadata
-
-			/** @type {Map<string, RemoteInternals['type']>} */
-			const map = new Map();
-
-			// in dev, load the server module here (which will result in this hook
-			// being called again with `opts.ssr === true` if the module isn't
-			// already loaded) so we can determine what it exports
-			if (dev_server) {
-				const module = await dev_server.ssrLoadModule(id);
-
-				for (const [name, value] of Object.entries(module)) {
-					const type = value?.__?.type;
-					if (type) {
-						map.set(name, type);
+					for (const [name, value] of exports) {
+						map.set(name, value.type);
 					}
 				}
-			}
 
-			// in prod, we already built and analysed the server code before
-			// building the client code, so `remotes` is populated
-			else if (build_metadata?.remotes) {
-				const exports = build_metadata?.remotes.get(remote.hash);
-				if (!exports) throw new Error('Expected to find metadata for remote file ' + id);
+				const { namespace, declarations, reexports } = create_exported_declarations(
+					map.keys(),
+					(name, ns) => `${ns}.${map.get(name)}('${remote.hash}/${name}')`,
+					'__remote'
+				);
 
-				for (const [name, value] of exports) {
-					map.set(name, value.type);
+				let result = `import * as ${namespace} from '__sveltekit/remote';\n\n${declarations.join('\n')}`;
+				if (reexports.length > 0) {
+					result += `\nexport { ${reexports.join(', ')} };`;
 				}
+				result += '\n';
+
+				if (dev_server) {
+					result += `\nimport.meta.hot?.accept();\n`;
+				}
+
+				return {
+					code: result,
+					map: null
+				};
 			}
-
-			const { namespace, declarations, reexports } = create_exported_declarations(
-				map.keys(),
-				(name, ns) => `${ns}.${map.get(name)}('${remote.hash}/${name}')`,
-				'__remote'
-			);
-
-			let result = `import * as ${namespace} from '__sveltekit/remote';\n\n${declarations.join('\n')}`;
-			if (reexports.length > 0) {
-				result += `\nexport { ${reexports.join(', ')} };`;
-			}
-			result += '\n';
-
-			if (dev_server) {
-				result += `\nimport.meta.hot?.accept();\n`;
-			}
-
-			return {
-				code: result
-			};
 		}
 	};
 
@@ -997,10 +1063,10 @@ function kit({ svelte_config }) {
 	/** @type {Prerendered} */
 	let prerendered;
 
-	/** @type {Set<string>} */
-	let build_files;
+	/** @type {Array<{ path: string }>} */
+	let immutable;
 	/** @type {string} */
-	let service_worker_code;
+	let manifest_data_code;
 
 	/**
 	 * Creates the service worker virtual modules
@@ -1011,7 +1077,6 @@ function kit({ svelte_config }) {
 
 		config(config) {
 			service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
-			parsed_service_worker = path.parse(kit.files.serviceWorker);
 
 			if (!service_worker_entry_file) return;
 
@@ -1066,98 +1131,55 @@ function kit({ svelte_config }) {
 			return environment.name === 'serviceWorker';
 		},
 
-		resolveId(id, importer) {
-			// If importing from a service-worker, only allow $service-worker & $app/env/public, but none of the other virtual modules.
-			// This check won't catch transitive imports, but it will warn when the import comes from a service-worker directly.
-			// Transitive imports will be caught during the build.
-			if (importer) {
-				const parsed_importer = path.parse(importer);
-
-				const importer_is_service_worker =
-					parsed_importer.dir === parsed_service_worker.dir &&
-					parsed_importer.name === parsed_service_worker.name;
-
-				if (
-					importer_is_service_worker &&
-					id !== '$service-worker' &&
-					id !== 'virtual:$app/env/public' &&
-					id !== '__sveltekit/env/service-worker'
-				) {
-					throw new Error(
-						`Cannot import ${normalize_id(
-							id,
-							normalized_lib,
-							normalized_cwd
-						)} into service-worker code. Only the modules $service-worker and $app/env/public are available in service workers.`
-					);
-				}
-			}
-
-			if (id.startsWith('$app/') || id === '$service-worker') {
-				// ids with :$ don't work with reverse proxies like nginx
-				return `\0virtual:${id.substring(1)}`;
-			}
-
-			if (id.startsWith('__sveltekit')) {
+		resolveId: {
+			filter: {
+				id: [prefixRegex('__sveltekit/')]
+			},
+			handler(id) {
 				return `\0virtual:${id}`;
 			}
 		},
 
 		load: {
 			filter: {
-				id: [prefixRegex('\0virtual:')]
+				id: [
+					exactRegex('\0virtual:app/manifest'),
+					exactRegex(sveltekit_manifest_data),
+					exactRegex(sveltekit_env_service_worker),
+					exactRegex(sveltekit_env_public_client)
+				]
 			},
 			handler(id) {
-				if (!build_files) {
-					build_files = new Set();
-					const manifest = vite_client_manifest ?? vite_server_manifest;
-					for (const key in manifest) {
-						const { file, css = [], assets = [] } = manifest[key];
-						build_files.add(file);
-						css.forEach((file) => build_files.add(file));
-						assets.forEach((file) => build_files.add(file));
-					}
+				if (!manifest_data_code) {
+					// the client build computes `immutable`, unless it was skipped
+					// because every route has `csr: false`
+					immutable ??= collect_immutable(vite_server_manifest, kit.appDir, new Set());
 
-					if (kit.output.bundleStrategy === 'inline') {
-						// the bundle and stylesheet are inlined into the page and their files
-						// deleted, so they must not appear in the list of cacheable assets
-						for (const file of build_files) {
-							if (!fs.existsSync(`${out}/client/${file}`)) {
-								build_files.delete(file);
-							}
-						}
-					}
-
-					// in a service worker, `location` is the location of the service worker itself,
-					// which is guaranteed to be `<base>/service-worker.js`
-					const base = "location.pathname.split('/').slice(0, -1).join('/')";
-
-					service_worker_code = dedent`
-					export const base = /*@__PURE__*/ ${base};
-
-					export const build = [
-						${Array.from(build_files)
-							.map((file) => `base + ${s(`/${file}`)}`)
-							.join(',\n')}
+					manifest_data_code = dedent`
+					export const immutable = [
+						${immutable.map((entry) => s(entry)).join(',\n')}
 					];
 
-					export const files = [
-						${manifest_data.assets
-							.filter((asset) => kit.serviceWorker.files(asset.file))
-							.map((asset) => `base + ${s(`/${asset.file}`)}`)
-							.join(',\n')}
+					export const assets = [
+						${stringify_assets(manifest_data.assets)}
 					];
 
 					export const prerendered = [
-						${prerendered.paths.map((path) => `base + ${s(path.replace(kit.paths.base, ''))}`).join(',\n')}
+						${prerendered.paths.map((path) => s({ path: path.replace(kit.paths.base, '').slice(1) })).join(',\n')}
 					];
 
-					export const version = ${s(kit.version.name)};
+					export const routes = [
+						${stringify_routes(manifest_data.routes)}
+					];
 					`;
 				}
 
-				if (id === service_worker) {
-					return service_worker_code;
+				if (id === '\0virtual:app/manifest') {
+					return `export { immutable, assets, prerendered, routes } from '__sveltekit/manifest-data';`;
+				}
+
+				if (id === sveltekit_manifest_data) {
+					return manifest_data_code;
 				}
 
 				if (id === sveltekit_env_service_worker) {
@@ -1165,11 +1187,17 @@ function kit({ svelte_config }) {
 						? create_sveltekit_env_service_worker(
 								explicit_env_config,
 								env,
+								kit.version.name,
 								kit_global,
 								kit.paths.base,
 								kit.appDir
 							)
-						: create_sveltekit_env_service_worker_dev(explicit_env_config, env, kit_global);
+						: create_sveltekit_env_service_worker_dev(
+								explicit_env_config,
+								env,
+								kit.version.name,
+								kit_global
+							);
 				}
 
 				if (id === sveltekit_env_public_client) {
@@ -1179,13 +1207,31 @@ function kit({ svelte_config }) {
 						`const env = ${kit_global}.env;`
 					);
 				}
+			}
+		},
 
-				const normalized_cwd = vite.normalizePath(vite_config.root);
-				const normalized_lib = vite.normalizePath(kit.files.lib);
-				const relative = normalize_id(id, normalized_lib, normalized_cwd);
-				const stripped = strip_virtual_prefix(relative);
+		generateBundle(_, bundle) {
+			const invalid_modules = new Set();
+			const modules = new Map([
+				[`${runtime_directory}/app/forms.js`, '$app/forms'],
+				[`${runtime_directory}/app/navigation.js`, '$app/navigation'],
+				[`${runtime_directory}/app/state/index.js`, '$app/state']
+			]);
+
+			for (const output of Object.values(bundle)) {
+				if (output.type !== 'chunk') continue;
+
+				for (const id of output.moduleIds) {
+					const module = modules.get(id);
+					if (module) invalid_modules.add(module);
+				}
+			}
+
+			if (invalid_modules.size > 0) {
 				throw new Error(
-					`Cannot import ${stripped} into service-worker code. Only the modules $service-worker and $app/env/public are available in service workers.`
+					`Cannot import ${Array.from(modules.values())
+						.filter((module) => invalid_modules.has(module))
+						.join(', ')} into service-worker code.`
 				);
 			}
 		}
@@ -1197,17 +1243,19 @@ function kit({ svelte_config }) {
 		applyToEnvironment(environment) {
 			return !!service_worker_entry_file && environment.config.consumer === 'client';
 		},
-		transform(code, id) {
-			if (id !== service_worker_entry_file) return;
+		transform: {
+			handler(code, id) {
+				if (id !== service_worker_entry_file) return;
 
-			// prepend the service worker with an import that configures
-			// `env`, in case `$app/env/public` is imported. In production
-			// this is required: dynamic public env vars aren't known at
-			// build time, so `env.js` is loaded at runtime. In dev, the
-			// imported module just inlines the current values instead.
-			return {
-				code: `import '__sveltekit/env/service-worker';\n${code}`
-			};
+				// prepend the service worker with an import that configures
+				// `env`, in case `$app/env/public` is imported. In production
+				// this is required: dynamic public env vars aren't known at
+				// build time, so `env.js` is loaded at runtime. In dev, the
+				// imported module just inlines the current values instead.
+				return {
+					code: `import '__sveltekit/env/service-worker';\n${code}`
+				};
+			}
 		}
 	};
 
@@ -1391,9 +1439,26 @@ function kit({ svelte_config }) {
 										output: {
 											format: inline ? 'iife' : 'esm',
 											entryFileNames: `${app_immutable}/[name].[hash].js`,
-											chunkFileNames: `${app_immutable}/chunks/[hash].js`,
+											chunkFileNames: (/** @type {Rolldown.PreRenderedChunk} */ chunk_info) => {
+												// The manifest data chunk gets a fixed (non-hashed) filename so
+												// that importers' content hashes are stable regardless of the
+												// manifest content — this breaks the content-hash feedback loop
+												if (chunk_info.name === 'sveltekit-manifest') {
+													return `${kit.appDir}/manifest.js`;
+												}
+												return `${app_immutable}/chunks/[hash].js`;
+											},
 											codeSplitting:
-												svelte_config.kit.output.bundleStrategy === 'split' ? undefined : false
+												svelte_config.kit.output.bundleStrategy === 'split'
+													? {
+															groups: [
+																{
+																	name: 'sveltekit-manifest',
+																	test: sveltekit_manifest_data
+																}
+															]
+														}
+													: false
 										},
 										// This silences Rolldown warnings about not supporting `import.meta`
 										// for the `iife` output format. We don't care because it's
@@ -1472,7 +1537,18 @@ function kit({ svelte_config }) {
 		 * @see https://vitejs.dev/guide/api-plugin.html#configureserver
 		 */
 		async configureServer(server) {
-			return await dev(server, vite_config, svelte_config, () => remotes, root);
+			return await dev(
+				server,
+				vite_config,
+				svelte_config,
+				() => remotes,
+				root,
+				(data) => {
+					manifest_data = data;
+					// Invalidate the manifest data module so it reloads with new routes/files
+					invalidate_module(server, sveltekit_manifest_data);
+				}
+			);
 		},
 
 		/**
@@ -1527,6 +1603,15 @@ function kit({ svelte_config }) {
 			const { output: server_chunks } = /** @type {Rolldown.RolldownOutput} */ (
 				await builder.build(builder.environments.ssr)
 			);
+
+			// Replace manifest placeholders in SSR output. `assets` and `routes`
+			// are known from `manifest_data`. `immutable` and `prerendered` are not
+			// known yet — they get sentinel strings that are replaced after
+			// the client build and after prerendering respectively.
+			replace_manifest_placeholder_variables(server_chunks, `${out}/server`, {
+				assets: manifest_data.assets.map((asset) => ({ path: asset.file })),
+				routes: get_manifest_routes(manifest_data.routes)
+			});
 
 			const verbose = builder.config.logLevel === 'info';
 			const log = logger({ verbose });
@@ -1659,6 +1744,41 @@ function kit({ svelte_config }) {
 				const deps_of = (entry, add_dynamic_css = false) =>
 					find_deps(vite_manifest, posixify(path.relative(root, entry)), add_dynamic_css, root);
 
+				// the inline bundle and stylesheet are deleted further down, after
+				// being inlined into the page, so they must not appear in `immutable`
+				/** @type {Set<string>} */
+				const inlined = new Set();
+				/** @type {Rolldown.OutputAsset | undefined} */
+				let inline_style;
+
+				if (kit.output.bundleStrategy === 'inline') {
+					inline_style = /** @type {Rolldown.OutputAsset | undefined} */ (
+						client_chunks.find(
+							(chunk) =>
+								chunk.type === 'asset' && chunk.names.length === 1 && chunk.names[0] === 'style.css'
+						)
+					);
+
+					inlined.add(deps_of(`${runtime_directory}/client/bundle.js`).file);
+					if (inline_style) inlined.add(inline_style.fileName);
+				}
+
+				// Replace manifest placeholders in client output. `immutable` is
+				// computed from the Vite client manifest, `assets` and `routes`
+				// from `manifest_data`. `prerendered` is left as a placeholder
+				// for now — it's replaced after prerendering completes.
+				immutable = collect_immutable(vite_manifest, kit.appDir, inlined);
+
+				replace_manifest_placeholder_variables(client_chunks, `${out}/client`, {
+					immutable,
+					assets: manifest_data.assets.map((asset) => ({ path: asset.file })),
+					routes: get_manifest_routes(manifest_data.routes)
+				});
+
+				// Now that the client build is done, replace the `build` sentinel
+				// in the SSR output with the real build files
+				replace_manifest_placeholder_strings(`${out}/server`, { immutable });
+
 				const has_explicit_dynamic_public_env = Object.values(explicit_env_config ?? {}).some(
 					(variable) => variable.public && !variable.static
 				);
@@ -1746,25 +1866,16 @@ function kit({ svelte_config }) {
 					};
 
 					if (svelte_config.kit.output.bundleStrategy === 'inline') {
-						const style = /** @type {Rolldown.OutputAsset} */ (
-							client_chunks.find(
-								(chunk) =>
-									chunk.type === 'asset' &&
-									chunk.names.length === 1 &&
-									chunk.names[0] === 'style.css'
-							)
-						);
-
 						build_data.client.inline = {
 							script: read(`${out}/client/${start.file}`),
-							style: /** @type {string | undefined} */ (style?.source)
+							style: /** @type {string | undefined} */ (inline_style?.source)
 						};
 
 						// the bundle and stylesheet are inlined into the page, so the
 						// emitted files are never loaded
 						fs.unlinkSync(`${out}/client/${start.file}`);
 						fs.rmSync(`${out}/client/${start.file}.map`, { force: true });
-						if (style) fs.unlinkSync(`${out}/client/${style.fileName}`);
+						if (inline_style) fs.unlinkSync(`${out}/client/${inline_style.fileName}`);
 					}
 				}
 
@@ -1798,21 +1909,56 @@ function kit({ svelte_config }) {
 			}
 
 			// ...and prerender
-			const prerender_results = await prerender({
-				hash: kit.router.type === 'hash',
-				out,
-				manifest_path,
-				metadata,
-				verbose,
-				env,
-				vite_config_file: vite_config.configFile
-			});
+			let prerender_results;
+			try {
+				prerender_results = await prerender({
+					hash: kit.router.type === 'hash',
+					out,
+					manifest_path,
+					metadata,
+					verbose,
+					env,
+					vite_config_file: vite_config.configFile
+				});
+
+				// this silly hack is necessary to ensure that stderr from prerender is flushed before we continue
+				await new Promise((f) => setTimeout(f, 0));
+			} catch (e) {
+				if (e instanceof Error && e.message === '__handled__') {
+					// error details are already logged inside `prerender`, don't duplicate them
+					throw stackless('Prerendering failed');
+				} else {
+					// Unforeseen error, rethrow as-is
+					throw e;
+				}
+			}
+
 			prerendered = prerender_results.prerendered;
+
+			// Replace the `prerendered` sentinel in both SSR and client output
+			// with the real prerendered paths. The other sentinels (`build`)
+			// were already replaced after the client build.
+			const prerendered_paths = prerendered.paths.map((p) => {
+				return { path: p.replace(kit.paths.base, '').slice(1) };
+			});
+
+			replace_manifest_placeholder_strings(`${out}/server`, { prerendered: prerendered_paths });
+			replace_manifest_placeholder_strings(`${out}/client`, { prerendered: prerendered_paths });
+
+			// For `inline` strategy, the entry file was deleted and read into
+			// `build_data.client.inline.script` — replace the sentinel there too
+			if (build_data.client?.inline?.script) {
+				build_data.client.inline.script = build_data.client.inline.script.replaceAll(
+					'"__sveltekit_manifest_prerendered__"',
+					JSON.stringify(prerendered_paths)
+				);
+			}
 
 			await treeshake_prerendered_remotes(
 				vite,
 				out,
 				remotes,
+				remote_original_by_hash,
 				metadata,
 				process.cwd(),
 				server_chunks,
@@ -1877,7 +2023,7 @@ function kit({ svelte_config }) {
 						explicit_env_config
 					);
 				} else {
-					console.log(styleText(['bold', 'yellow'], '\nNo adapter specified'));
+					log.warn('\nNo adapter specified');
 
 					const link = styleText(['bold', 'cyan'], 'https://svelte.dev/docs/kit/adapters');
 					console.log(
@@ -1905,6 +2051,7 @@ function kit({ svelte_config }) {
 	return /** @type {Plugin[]} */ (
 		[
 			svelte_config.kit.adapter?.vite?.plugins,
+			plugin_resolve_root,
 			plugin_setup,
 			plugin_remote_guard,
 			plugin_remote,
@@ -1953,11 +2100,7 @@ function find_overridden_config(config, resolved_config, enforced_config, path, 
 			const resolved = resolved_config[key];
 
 			if (enforced === true) {
-				// Normalize path separators before comparing to avoid false positives on Windows,
-				// where config values like `root` may use backslashes while SvelteKit uses forward slashes.
-				const a = typeof config[key] === 'string' ? posixify(config[key]) : config[key];
-				const b = typeof resolved === 'string' ? posixify(resolved) : resolved;
-				if (a !== b) {
+				if (comparable(config[key]) !== comparable(resolved)) {
 					out.push(path + key);
 				}
 			} else {
@@ -1969,21 +2112,213 @@ function find_overridden_config(config, resolved_config, enforced_config, path, 
 }
 
 /**
- * @param {ValidatedConfig} config
+ * Collects the content-hashed files of a Vite manifest, in the shape of
+ * `$app/manifest`'s `immutable` export.
+ *
+ * @param {Manifest} manifest
+ * @param {string} app_dir
+ * @param {Set<string>} inlined files deleted from the output after being inlined into the page
+ * @returns {Array<{ path: string }>}
  */
-const create_service_worker_module = (config) => dedent`
-	if (typeof self === 'undefined' || self instanceof ServiceWorkerGlobalScope === false) {
-		throw new Error('This module can only be imported inside a service worker');
+const collect_immutable = (manifest, app_dir, inlined) => {
+	const prefix = `${app_dir}/immutable`;
+
+	/** @type {Set<string>} */
+	const files = new Set();
+
+	/** @param {string} file */
+	const add = (file) => {
+		if (file.startsWith(prefix) && !inlined.has(file)) files.add(file);
+	};
+
+	for (const key in manifest) {
+		const { file, css, assets } = manifest[key];
+		add(file);
+		if (css) for (let i = 0; i < css.length; i++) add(css[i]);
+		if (assets) for (let i = 0; i < assets.length; i++) add(assets[i]);
 	}
 
-	export const base = location.pathname.split('/').slice(0, -1).join('/');
-	export const build = [];
-	export const files = [
-		${create_assets(config)
-			.filter((asset) => config.kit.serviceWorker.files(asset.file))
-			.map((asset) => `${s(`${config.kit.paths.base}/${asset.file}`)}`)
-			.join(',\n')}
-	];
-	export const prerendered = [];
-	export const version = ${s(config.kit.version.name)};
-`;
+	return Array.from(files, (path) => ({ path }));
+};
+
+/**
+ * Normalizes a config value for comparison, since Windows paths may use backslashes
+ * and differ in casing (e.g. the drive letter) depending on where they came from.
+ * @param {any} value
+ */
+function comparable(value) {
+	if (typeof value !== 'string') return value;
+	const normalized = posixify(value);
+	return process.platform === 'win32' ? normalized.toLowerCase() : normalized;
+}
+
+/**
+ * @param {Asset[] | undefined} assets
+ * @returns {string}
+ */
+function stringify_assets(assets) {
+	return assets?.map((asset) => s({ path: asset.file })).join(',\n') ?? '';
+}
+
+/**
+ * @param {RouteData[] | undefined} routes
+ * @returns {Array<{ id: string; page: boolean; endpoint: boolean }>}
+ */
+function get_manifest_routes(routes) {
+	return (
+		routes?.filter(is_app_route).map((route) => ({
+			id: route.id,
+			page: is_page_route(route),
+			endpoint: is_endpoint_route(route)
+		})) ?? []
+	);
+}
+
+/**
+ * @param {RouteData[] | undefined} routes
+ * @returns {string}
+ */
+function stringify_routes(routes) {
+	return get_manifest_routes(routes)
+		.map((route) => s(route))
+		.join(',\n');
+}
+
+/**
+ * Creates the `$app/manifest` data module. During development, real values
+ * are emitted for `assets` and `routes` (the only data known at that point).
+ *
+ * During build, bare identifier placeholders (fake globals) are emitted.
+ * The bundler leaves these as unresolved global references in the output,
+ * which are then replaced with real values by scanning the output chunks
+ * after each build completes. This avoids the content-hash feedback loop:
+ * the manifest data lives in its own chunk with a fixed filename, so
+ * importers' hashes are stable regardless of the manifest content.
+ *
+ * @param {boolean} is_build
+ * @param {ManifestData | undefined} manifest_data
+ * @returns {string}
+ */
+const create_manifest_data_module = (is_build, manifest_data) => {
+	if (is_build) {
+		// Bare identifiers (fake globals) — the bundler leaves these as
+		// unresolved global references in the output. They are replaced
+		// with real values by `replace_manifest_placeholder_variables`
+		// after each build completes.
+		return dedent`
+			export const immutable = __SVELTEKIT_MANIFEST_IMMUTABLE__;
+			export const assets = __SVELTEKIT_MANIFEST_ASSETS__;
+			export const prerendered = __SVELTEKIT_MANIFEST_PRERENDERED__;
+			export const routes = __SVELTEKIT_MANIFEST_ROUTES__;
+		`;
+	}
+
+	// In dev, `manifest_data` may not be set yet on the very first load,
+	// but `configureServer` (which calls `sync.create`) runs before any
+	// module is served, so it will be set by the time this is called.
+	return dedent`
+		// empty during dev
+		export const immutable = [];
+		export const prerendered = [];
+
+		export const assets = [
+			${stringify_assets(manifest_data?.assets)}
+		];
+
+		export const routes = [
+			${stringify_routes(manifest_data?.routes)}
+		];
+	`;
+};
+
+/**
+ * Replaces manifest data placeholder identifiers in output chunks with real
+ * values, or strings that are valid JS (so thecode doesn't crash during prerendering)
+ * but findable on disk for later replacement by `replace_manifest_placeholder_strings`.
+ *
+ * @param {Rolldown.RolldownOutput['output']} chunks
+ * @param {string} output_dir
+ * @param {{
+ *   immutable?: Array<{ path: string }>;
+ *   assets?: Array<{ path: string }>;
+ *   prerendered?: Array<{ path: string }>;
+ *   routes?: Array<{ id: string; page: boolean; endpoint: boolean }>;
+ * }} values
+ */
+const replace_manifest_placeholder_variables = (chunks, output_dir, values) => {
+	/** @type {Record<string, string>} */
+	const replacements = {
+		__SVELTEKIT_MANIFEST_IMMUTABLE__: JSON.stringify(
+			values.immutable ?? '__sveltekit_manifest_build__'
+		),
+		__SVELTEKIT_MANIFEST_ASSETS__: JSON.stringify(values.assets ?? '__sveltekit_manifest_files__'),
+		__SVELTEKIT_MANIFEST_PRERENDERED__: JSON.stringify(
+			values.prerendered ?? '__sveltekit_manifest_prerendered__'
+		),
+		__SVELTEKIT_MANIFEST_ROUTES__: JSON.stringify(values.routes ?? '__sveltekit_manifest_routes__')
+	};
+
+	for (const chunk of chunks) {
+		if (chunk.type !== 'chunk') continue;
+		if (!chunk.code.includes('__SVELTEKIT_MANIFEST_')) continue;
+
+		let code = chunk.code;
+
+		for (const [identifier, replacement] of Object.entries(replacements)) {
+			code = code.replaceAll(identifier, replacement);
+		}
+
+		const file_path = `${output_dir}/${chunk.fileName}`;
+		fs.writeFileSync(file_path, code);
+	}
+};
+
+/**
+ * Replaces manifest sentinel strings in files on disk with real values.
+ * This is used for values that weren't known when the first replacement
+ * pass ran (e.g. `build` wasn't known until after the client build,
+ * `prerendered` wasn't known until after prerendering).
+ *
+ * @param {string} dir Directory to scan for .js files
+ * @param {{
+ *   immutable?: Array<{ path: string }>;
+ *   prerendered?: Array<{ path: string }>;
+ * }} values
+ */
+const replace_manifest_placeholder_strings = (dir, values) => {
+	/** @type {Record<string, string>} */
+	const replacements = {};
+
+	if (values.immutable !== undefined) {
+		replacements['__sveltekit_manifest_build__'] = JSON.stringify(values.immutable);
+	}
+	if (values.prerendered !== undefined) {
+		replacements['__sveltekit_manifest_prerendered__'] = JSON.stringify(values.prerendered);
+	}
+
+	for (const file of fs.readdirSync(dir)) {
+		const file_path = `${dir}/${file}`;
+		const stat = fs.statSync(file_path);
+
+		if (stat.isDirectory()) {
+			replace_manifest_placeholder_strings(file_path, values);
+			continue;
+		}
+
+		if (!file.endsWith('.js')) continue;
+
+		let code = read(file_path);
+		let changed = false;
+
+		for (const [sentinel, replacement] of Object.entries(replacements)) {
+			if (code.includes(sentinel)) {
+				code = code.replaceAll(`"${sentinel}"`, replacement);
+				changed = true;
+			}
+		}
+
+		if (changed) {
+			fs.writeFileSync(file_path, code);
+		}
+	}
+};

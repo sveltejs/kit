@@ -75,19 +75,19 @@ if (!command) {
 }
 
 if (command === 'sync') {
-	// create placeholder .svelte-kit/tsconfig.json if necessary, to squelch warnings.
+	// create placeholder node_modules/$app/tsconfig.json if necessary, to squelch warnings.
 	// this isn't bulletproof — if someone has some esoteric config, it will continue
 	// to harmlessly warn — but we handle the 90% case and clean up after ourselves
-	const sveltekit_dir = '.svelte-kit';
-	const base_tsconfig = `${sveltekit_dir}/tsconfig.json`;
+	const dir = 'node_modules/$app';
+	const base_tsconfig = `${dir}/tsconfig.json`;
 	const base_tsconfig_json = '{}';
 
-	const sveltekit_dir_exists = fs.existsSync(sveltekit_dir);
+	const sveltekit_dir_exists = fs.existsSync(dir);
 	const base_tsconfig_exists = fs.existsSync(base_tsconfig);
 
 	if (!base_tsconfig_exists) {
 		try {
-			fs.mkdirSync('.svelte-kit');
+			fs.mkdirSync(dir, { recursive: true });
 		} catch {
 			// ignore
 		}
@@ -100,7 +100,7 @@ if (command === 'sync') {
 		const sveltekit_config = extract_svelte_config(vite_config);
 
 		const sync = await import('./core/sync/sync.js');
-		sync.all_types(sveltekit_config);
+		sync.all_types(sveltekit_config, vite_config.root);
 
 		const explicit_env_entry = resolve_explicit_env_entry(sveltekit_config.kit);
 		await sync.env(sveltekit_config.kit, explicit_env_entry, vite_config.root, values.mode);
@@ -113,8 +113,8 @@ if (command === 'sync') {
 			fs.unlinkSync(base_tsconfig);
 		}
 
-		if (!sveltekit_dir_exists && fs.readdirSync(sveltekit_dir).length === 0) {
-			fs.rmSync(sveltekit_dir, { recursive: true });
+		if (!sveltekit_dir_exists && fs.readdirSync(dir).length === 0) {
+			fs.rmSync(dir, { recursive: true });
 		}
 	}
 } else {

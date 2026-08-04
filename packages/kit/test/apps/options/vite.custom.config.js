@@ -28,7 +28,6 @@ const config = {
 			files: {
 				src: 'source',
 				assets: 'public',
-				lib: 'source/components',
 				routes: 'source/pages',
 				appTemplate: 'source/template.html',
 				hooks: {
@@ -52,11 +51,6 @@ const config = {
 			},
 			router: {
 				resolution: /** @type {'client' | 'server'} */ (process.env.ROUTER_RESOLUTION) || 'client'
-			},
-			typescript: {
-				config(config) {
-					config.include.push('../vite.custom.config.js', '../playwright.config.js');
-				}
 			}
 		})
 	],
@@ -66,6 +60,7 @@ const config = {
 		}
 	},
 	test: {
+		name: 'kit-vitest',
 		include: ['./unit-test/*.spec.js']
 	}
 };

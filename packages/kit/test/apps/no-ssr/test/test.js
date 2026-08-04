@@ -22,6 +22,26 @@ test('universal pages/layouts are not executed on the server', async ({ page }) 
 	await expect(page.locator('p')).toHaveText('pathname: /browser-globals');
 });
 
+test('refetches route-dependent server data after an error page', async ({ page, app }) => {
+	await page.goto('/');
+	await expect(page.locator('#server-route-id')).toHaveText('/');
+
+	let failed = false;
+	await page.route('**/__data.json*', (route) => {
+		if (failed) return route.continue();
+		failed = true;
+		return route.fulfill({ status: 500, body: 'nope' });
+	});
+
+	await app.goto('/a');
+	expect(await page.textContent('h1')).toBe('500');
+
+	await page.unroute('**/__data.json*');
+
+	await app.goto('/b');
+	await expect(page.locator('#server-route-id')).toHaveText('/b');
+});
+
 test('displays error.html when root layout load() throws in SPA mode', async ({ page }) => {
 	await page.goto('/root-layout-error', { wait_for_started: false });
 	await expect(page.locator('#error-status')).toHaveText('500');

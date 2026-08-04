@@ -89,7 +89,7 @@ The `goto`, `prefetch` and `prefetchRoutes` imports from `@sapper/app` should be
 
 The `stores` import from `@sapper/app` should be replaced — see the [Stores](migrating#Pages-and-layouts-Stores) section below.
 
-Any files you previously imported from directories in `src/node_modules` will need to be replaced with [`$lib`]($lib) imports.
+Any files you previously imported from directories in `src/node_modules` will need to be replaced with [`#lib`]($lib) imports.
 
 ### Preload
 
@@ -134,7 +134,7 @@ This caused problems and is no longer the case in SvelteKit. Instead, relative U
 ### &lt;a&gt; attributes
 
 - `sapper:prefetch` is now `data-sveltekit-preload-data`
-- `sapper:noscroll` is now `data-sveltekit-noscroll`
+- `sapper:noscroll` is now `data-sveltekit-reset="false"`
 
 ## Endpoints
 
@@ -150,7 +150,7 @@ See [integrations](./integrations) for detailed information about integrations.
 
 ### HTML minifier
 
-Sapper includes `html-minifier` by default. SvelteKit does not include this, but you can add it as a prod dependency and then use it through a [hook](hooks#Server-hooks-handle):
+Sapper includes `html-minifier` by default. SvelteKit does not include this, but you can add it as a prod dependency and then use it through a [hook](hooks#handle):
 
 ```js
 // @filename: ambient.d.ts

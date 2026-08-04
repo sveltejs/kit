@@ -107,11 +107,11 @@ Each action receives a `RequestEvent` object, allowing you to read the data with
 ```js
 /// file: src/routes/login/+page.server.js
 // @filename: ambient.d.ts
-declare module '$lib/server/db';
+declare module '#lib/server/db';
 
 // @filename: index.js
 // ---cut---
-import * as db from '$lib/server/db';
+import * as db from '#lib/server/db';
 
 /** @type {import('./$types').PageServerLoad} */
 export async function load({ cookies }) {
@@ -170,12 +170,12 @@ When using `use:enhance` (or making a `fetch` request with the `accept: applicat
 ```js
 /// file: src/routes/login/+page.server.js
 // @filename: ambient.d.ts
-declare module '$lib/server/db';
+declare module '#lib/server/db';
 
 // @filename: index.js
 // ---cut---
 +++import { fail } from '@sveltejs/kit';+++
-import * as db from '$lib/server/db';
+import * as db from '#lib/server/db';
 
 /** @satisfies {import('./$types').Actions} */
 export const actions = {
@@ -234,12 +234,12 @@ Redirects (and errors) work exactly the same as in [`load`](load#Redirects):
 // @errors: 2345
 /// file: src/routes/login/+page.server.js
 // @filename: ambient.d.ts
-declare module '$lib/server/db';
+declare module '#lib/server/db';
 
 // @filename: index.js
 // ---cut---
 import { fail, +++redirect+++ } from '@sveltejs/kit';
-import * as db from '$lib/server/db';
+import * as db from '#lib/server/db';
 
 /** @satisfies {import('./$types').Actions} */
 export const actions = {
@@ -522,7 +522,7 @@ Some forms don't need to `POST` data to the server — search inputs, for exampl
 </form>
 ```
 
-Submitting this form will navigate to `/search?q=...` and invoke your load function but will not invoke an action. As with `<a>` elements, you can set the [`data-sveltekit-reload`](link-options#data-sveltekit-reload), [`data-sveltekit-replacestate`](link-options#data-sveltekit-replacestate), [`data-sveltekit-keepfocus`](link-options#data-sveltekit-keepfocus) and [`data-sveltekit-noscroll`](link-options#data-sveltekit-noscroll) attributes on the `<form>` to control the router's behaviour.
+Submitting this form will navigate to `/search?q=...` and invoke your load function but will not invoke an action. As with `<a>` elements, you can set the [`data-sveltekit-reload`](link-options#data-sveltekit-reload), [`data-sveltekit-replacestate`](link-options#data-sveltekit-replacestate) and [`data-sveltekit-reset`](link-options#data-sveltekit-reset) attributes on the `<form>` to control the router's behaviour.
 
 ## Further reading
 

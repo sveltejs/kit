@@ -61,7 +61,7 @@ export function load(event) {
 }
 ```
 
-> [!NOTE] If you don't handle 404 cases, they will appear in [`handleError`](hooks#Shared-hooks-handleError)
+> [!NOTE] If you don't handle 404 cases, they will appear in [`handleError`](hooks#handleError)
 
 ## Optional parameters
 
@@ -289,7 +289,7 @@ Not all use cases are suited for layout grouping, nor should you feel compelled 
 ```svelte
 <!--- file: src/routes/nested/route/+layout@.svelte --->
 <script>
-	import ReusableLayout from '$lib/ReusableLayout.svelte';
+	import ReusableLayout from '#lib/ReusableLayout.svelte';
 	let { data, children } = $props();
 </script>
 
@@ -301,12 +301,12 @@ Not all use cases are suited for layout grouping, nor should you feel compelled 
 ```js
 /// file: src/routes/nested/route/+layout.js
 // @filename: ambient.d.ts
-declare module "$lib/reusable-load-function" {
+declare module "#lib/reusable-load-function" {
 	export function reusableLoad(event: import('@sveltejs/kit').LoadEvent): Promise<Record<string, any>>;
 }
 // @filename: index.js
 // ---cut---
-import { reusableLoad } from '$lib/reusable-load-function';
+import { reusableLoad } from '#lib/reusable-load-function';
 
 /** @type {import('./$types').PageLoad} */
 export function load(event) {

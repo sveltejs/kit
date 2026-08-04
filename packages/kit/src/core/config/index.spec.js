@@ -1,4 +1,5 @@
 import { join } from 'node:path';
+import { stripVTControlCharacters } from 'node:util';
 import { assert, expect, test } from 'vitest';
 import { validate_config, split_config } from './index.js';
 
@@ -14,6 +15,32 @@ function remove_keys(o, check) {
 		if (check([key, o[key]])) delete o[key];
 		const nested = typeof o[key] === 'object' && !Array.isArray(o[key]);
 		if (nested) remove_keys(o[key], check);
+	}
+}
+
+/**
+ * @param {() => void} fn
+ * @param {RegExp} pattern
+ */
+function assert_logs_error_and_throws(fn, pattern) {
+	const original_log = console.log;
+	/** @type {string[]} */
+	const logs = [];
+	console.log = (...args) => {
+		logs.push(args.join(' '));
+	};
+
+	try {
+		assert.throws(fn);
+	} finally {
+		console.log = original_log;
+	}
+
+	const has_match = logs.some((log) => pattern.test(stripVTControlCharacters(log).trim()));
+	if (!has_match) {
+		throw new Error(
+			`Expected console.log to match ${pattern}, but got:\n${logs.map((log) => JSON.stringify(stripVTControlCharacters(log).trim())).join('\n')}`
+		);
 	}
 }
 
@@ -81,7 +108,6 @@ const get_defaults = (prefix = '') => ({
 				server: join(prefix, 'src/hooks.server'),
 				universal: join(prefix, 'src/hooks')
 			},
-			lib: join(prefix, 'src/lib'),
 			params: join(prefix, 'src/params'),
 			routes: join(prefix, 'src/routes'),
 			serviceWorker: join(prefix, 'src/service-worker'),
@@ -116,15 +142,13 @@ const get_defaults = (prefix = '') => ({
 		},
 		version: {
 			name: Date.now().toString(),
-			pollInterval: 0
+			pollInterval: 3_600_000
 		}
 	}
 });
 
 test('fills in defaults', () => {
 	const validated = validate_config({});
-
-	assert.equal(validated.kit.serviceWorker.files(''), true);
 
 	remove_keys(validated, ([, v]) => typeof v === 'function');
 
@@ -135,7 +159,7 @@ test('fills in defaults', () => {
 });
 
 test('errors on invalid values', () => {
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				// @ts-expect-error - given value expected to throw
@@ -146,7 +170,7 @@ test('errors on invalid values', () => {
 });
 
 test('errors on invalid nested values', () => {
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				files: {
@@ -167,7 +191,7 @@ test('does not error on invalid top-level values', () => {
 });
 
 test('errors on extension without leading .', () => {
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			extensions: ['blah']
 		});
@@ -186,8 +210,6 @@ test('fills in partial blanks', () => {
 		}
 	});
 
-	assert.equal(validated.kit.serviceWorker.files(''), true);
-
 	remove_keys(validated, ([, v]) => typeof v === 'function');
 
 	const config = get_defaults();
@@ -198,7 +220,7 @@ test('fills in partial blanks', () => {
 });
 
 test('fails if appDir is blank', () => {
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				appDir: ''
@@ -208,7 +230,7 @@ test('fails if appDir is blank', () => {
 });
 
 test('fails if appDir is only slash', () => {
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				appDir: '/'
@@ -218,7 +240,7 @@ test('fails if appDir is only slash', () => {
 });
 
 test('fails if appDir starts with slash', () => {
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				appDir: '/_app'
@@ -228,7 +250,7 @@ test('fails if appDir starts with slash', () => {
 });
 
 test('fails if appDir ends with slash', () => {
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				appDir: '_app/'
@@ -238,7 +260,7 @@ test('fails if appDir ends with slash', () => {
 });
 
 test('fails if paths.base is not root-relative', () => {
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				paths: {
@@ -251,7 +273,7 @@ test('fails if paths.base is not root-relative', () => {
 });
 
 test("fails if paths.base ends with '/'", () => {
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				paths: {
@@ -263,7 +285,7 @@ test("fails if paths.base ends with '/'", () => {
 });
 
 test('fails if paths.assets is relative', () => {
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				paths: {
@@ -276,7 +298,7 @@ test('fails if paths.assets is relative', () => {
 });
 
 test('fails if paths.assets has trailing slash', () => {
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				paths: {
@@ -288,7 +310,7 @@ test('fails if paths.assets has trailing slash', () => {
 });
 
 test('fails if paths.origin is not a valid origin', () => {
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				paths: {
@@ -300,7 +322,7 @@ test('fails if paths.origin is not a valid origin', () => {
 });
 
 test('fails if paths.origin uses an unsupported protocol', () => {
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				paths: {
@@ -314,7 +336,7 @@ test('fails if paths.origin uses an unsupported protocol', () => {
 });
 
 test('fails if paths.origin contains a path', () => {
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				paths: {
@@ -342,7 +364,7 @@ test('defaults paths.origin to undefined', () => {
 });
 
 test('fails if paths.origin is the empty string', () => {
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				paths: {
@@ -354,7 +376,7 @@ test('fails if paths.origin is the empty string', () => {
 });
 
 test('fails if prerender.entries are invalid', () => {
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				prerender: {
@@ -367,7 +389,7 @@ test('fails if prerender.entries are invalid', () => {
 });
 
 test('fails if prerender.origin is set', () => {
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				prerender: {
@@ -463,7 +485,7 @@ test('accepts valid tracing values', () => {
 });
 
 test('errors on invalid tracing values', () => {
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				// @ts-expect-error - given value expected to throw
@@ -472,7 +494,7 @@ test('errors on invalid tracing values', () => {
 		});
 	}, /^config\.tracing should be an object$/);
 
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				// @ts-expect-error - given value expected to throw
@@ -481,7 +503,7 @@ test('errors on invalid tracing values', () => {
 		});
 	}, /^config\.tracing should be an object$/);
 
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				// @ts-expect-error - given value expected to throw
@@ -492,7 +514,7 @@ test('errors on invalid tracing values', () => {
 });
 
 test('errors on removed experimental.tracing and experimental.instrumentation', () => {
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				experimental: {
@@ -503,7 +525,7 @@ test('errors on removed experimental.tracing and experimental.instrumentation', 
 		});
 	}, /`config\.experimental\.tracing` has been removed/);
 
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				experimental: {
@@ -516,7 +538,7 @@ test('errors on removed experimental.tracing and experimental.instrumentation', 
 });
 
 test('errors on invalid forkPreloads values', () => {
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				experimental: {
@@ -527,7 +549,7 @@ test('errors on invalid forkPreloads values', () => {
 		});
 	}, /^config\.experimental\.forkPreloads should be true or false, if specified$/);
 
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				experimental: {

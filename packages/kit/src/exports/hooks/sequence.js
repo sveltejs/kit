@@ -73,6 +73,8 @@ import {
  * first post-processing
  * ```
  *
+ * Calling `resolve` invokes the next handler in the sequence (or SvelteKit itself, if it is the last one). To pass data between handlers, use `event.locals`.
+ *
  * @param {...Handle} handlers The chain of `handle` functions
  * @returns {Handle}
  */

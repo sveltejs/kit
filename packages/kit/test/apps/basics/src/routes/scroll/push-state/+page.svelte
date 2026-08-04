@@ -1,9 +1,9 @@
 <script>
-	import { pushState } from '$app/navigation';
+	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 
 	function handleClick() {
-		pushState('', { active: true });
+		goto('', { shallow: true, state: { active: true } });
 	}
 </script>
 

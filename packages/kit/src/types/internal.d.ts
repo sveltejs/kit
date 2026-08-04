@@ -47,7 +47,7 @@ export interface ServerInternalModule {
 	set_prerendering(): void;
 	set_read_implementation(implementation: (path: string) => ReadableStream): void;
 	set_version(version: string): void;
-	set_fix_stack_trace(fix_stack_trace: (error: unknown) => string): void;
+	set_fix_stack_trace(fix_stack_trace: (error: Error) => void): void;
 	get_hooks: () => Promise<Record<string, any>>;
 }
 
@@ -239,6 +239,8 @@ export interface PrerenderOptions {
 	dependencies: Map<string, PrerenderDependency>;
 	/** Results of remote `prerender` functions, shared across the whole prerender run so that each only executes once */
 	remote_responses: Map<string, Promise<any>>;
+	/** Route IDs whose resolution module has been emitted, shared across the whole prerender run so that each only generates once */
+	resolved_route_ids: Set<string>;
 	/** True for the duration of a call to the `reroute` hook */
 	inside_reroute?: boolean;
 }
@@ -394,7 +396,7 @@ export interface ServerErrorNode {
 }
 
 export interface ServerMetadataRoute {
-	config: any;
+	config: Record<string, any>;
 	api: {
 		methods: Array<HttpMethod | '*'>;
 	};
@@ -426,7 +428,7 @@ export interface UniversalNode {
 	ssr?: boolean;
 	csr?: boolean;
 	trailingSlash?: TrailingSlash;
-	config?: any;
+	config?: Record<string, any>;
 	entries?: PrerenderEntryGenerator;
 }
 
@@ -437,7 +439,7 @@ export interface ServerNode {
 	csr?: boolean;
 	trailingSlash?: TrailingSlash;
 	actions?: Actions;
-	config?: any;
+	config?: Record<string, any>;
 	entries?: PrerenderEntryGenerator;
 }
 
@@ -496,6 +498,7 @@ export interface SSROptions {
 		}): string;
 		error(values: { message: string; status: number }): string;
 	};
+	version: string;
 	version_hash: string;
 }
 
@@ -511,7 +514,7 @@ export type RemotePrerenderInputsGenerator<Input = any> = () => MaybePromise<Inp
 export type SSREndpoint = Partial<Record<HttpMethod, RequestHandler>> & {
 	prerender?: PrerenderOption;
 	trailingSlash?: TrailingSlash;
-	config?: any;
+	config?: Record<string, any>;
 	entries?: PrerenderEntryGenerator;
 	fallback?: RequestHandler;
 };
@@ -535,7 +538,6 @@ export interface SSRClientRoute {
 }
 
 export interface SSRState {
-	fallback?: string;
 	getClientAddress(): string;
 	/**
 	 * True if we're currently attempting to render an error page.
@@ -560,7 +562,7 @@ export interface SSRState {
 	 */
 	before_handle?: (
 		event: RequestEvent,
-		config: any,
+		config: Record<string, any>,
 		prerender: PrerenderOption,
 		handle: () => Promise<Response>
 	) => Promise<Response>;
@@ -646,7 +648,7 @@ export interface RemoteFormInternals extends BaseRemoteInternals {
 	 * For keyed (`form.for(key)`) instances: the id as the client computes it
 	 * (the key is JSON-stringified but not URI-encoded, unlike `id`)
 	 */
-	action_id?: string;
+	key?: string;
 	fn(body: Record<string, any>, meta: BinaryFormMeta, form_data: FormData | null): Promise<any>;
 }
 
@@ -658,15 +660,10 @@ export interface RemotePrerenderInternals extends BaseRemoteInternals {
 }
 
 export type RemoteAnyQueryInternals =
-	| RemoteQueryInternals
-	| RemoteQueryBatchInternals
-	| RemoteQueryLiveInternals;
+	RemoteQueryInternals | RemoteQueryBatchInternals | RemoteQueryLiveInternals;
 
 export type RemoteInternals =
-	| RemoteAnyQueryInternals
-	| RemoteCommandInternals
-	| RemoteFormInternals
-	| RemotePrerenderInternals;
+	RemoteAnyQueryInternals | RemoteCommandInternals | RemoteFormInternals | RemotePrerenderInternals;
 
 export interface InternalRemoteFormIssue extends RemoteFormIssue {
 	name: string;
@@ -700,8 +697,11 @@ export interface RequestState {
 		 */
 		implicit: null | Map<RemoteInternals, Record<string, () => MaybePromise<any>>>;
 		/**
-		 * Data that is explicitly included because of a `set(...)` or `refresh()`.
-		 * This is always awaited
+		 * Data that is explicitly included because of a `set(...)`, `refresh()` or
+		 * `reconnect()`. The stored function is invoked lazily at the end of the
+		 * request by `collect_remote_data`; if the query was already read (and thus
+		 * cached) earlier in the request, invoking it does no additional work. This
+		 * is always awaited and serialized.
 		 */
 		explicit: null | Map<
 			string,
@@ -736,8 +736,14 @@ export interface RequestState {
 	readonly is_in_remote_function: boolean;
 	readonly is_in_remote_form_or_command: boolean;
 	readonly is_in_remote_query: boolean;
+	readonly is_in_remote_prerender: boolean;
 	readonly is_in_render: boolean;
 	readonly is_in_universal_load: boolean;
+	/**
+	 * The event before `derive_remote_function_event` hid or stubbed properties.
+	 * Hooks like `handleValidationError` receive this so `url` etc. stay accessible
+	 */
+	readonly original_event?: RequestEvent;
 }
 
 export interface RequestStore {

@@ -4,5 +4,6 @@
 		"checkJs": true,
 		"noEmit": true
 	},
-	"extends": "./.svelte-kit/tsconfig.json"
+	"include": ["src", "test", "vite.config.js", "globalSetup.js"],
+	"extends": "$app/tsconfig"
 }

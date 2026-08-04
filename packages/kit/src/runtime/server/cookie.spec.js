@@ -1,6 +1,8 @@
 import process from 'node:process';
-import { assert, expect, test, describe, beforeAll } from 'vitest';
+import { assert, expect, test, describe, beforeAll, vi } from 'vitest';
 import { domain_matches, path_matches, get_cookies } from './cookie.js';
+
+vi.stubGlobal('__SVELTEKIT_DEV__', undefined);
 
 const domains = {
 	positive: [
@@ -35,10 +37,9 @@ const cookies_setup = ({ href, headers } = {}) => {
 	return result;
 };
 
-describe.skipIf(process.env.NODE_ENV === 'production')('cookies in dev', () => {
+describe.skipIf(!process.env.DEV)('cookies in dev', () => {
 	beforeAll(() => {
-		// @ts-expect-error
-		globalThis.__SVELTEKIT_DEV__ = true;
+		vi.stubGlobal('__SVELTEKIT_DEV__', true);
 	});
 
 	test('throws if cookie name/value exceeds 4,096 bytes', () => {
@@ -55,12 +56,25 @@ describe.skipIf(process.env.NODE_ENV === 'production')('cookies in dev', () => {
 
 		expect(() => cookies.set('a', 'a'.repeat(4095), { path: '/' })).not.toThrow();
 	});
+
+	test('secure defaults to false when served over http (e.g. --host)', () => {
+		const { cookies, new_cookies } = cookies_setup({ href: 'http://192.168.0.1:5173' });
+		cookies.set('a', 'b', { path: '/' });
+		const opts = new_cookies.get('/?a')?.options;
+		assert.equal(opts?.secure, false);
+	});
+
+	test('secure defaults to false even when served over https', () => {
+		const { cookies, new_cookies } = cookies_setup({ href: 'https://192.168.0.1:5173' });
+		cookies.set('a', 'b', { path: '/' });
+		const opts = new_cookies.get('/?a')?.options;
+		assert.equal(opts?.secure, false);
+	});
 });
 
-describe.skipIf(process.env.NODE_ENV !== 'production')('cookies in prod', () => {
+describe.skipIf(!!process.env.DEV)('cookies in prod', () => {
 	beforeAll(() => {
-		// @ts-expect-error
-		globalThis.__SVELTEKIT_DEV__ = false;
+		vi.stubGlobal('__SVELTEKIT_DEV__', false);
 	});
 
 	domains.positive.forEach(([hostname, constraint]) => {
@@ -124,6 +138,13 @@ describe.skipIf(process.env.NODE_ENV !== 'production')('cookies in prod', () => 
 		cookies.set('a', 'b', { path: '/' });
 		const opts = new_cookies.get('/?a')?.options;
 		assert.equal(opts?.secure, false);
+	});
+
+	test('secure defaults to true on http on a non-localhost host', () => {
+		const { cookies, new_cookies } = cookies_setup({ href: 'http://192.168.0.1:5173' });
+		cookies.set('a', 'b', { path: '/' });
+		const opts = new_cookies.get('/?a')?.options;
+		assert.equal(opts?.secure, true);
 	});
 
 	test('overridden defaults when set is called', () => {
@@ -210,6 +231,14 @@ describe.skipIf(process.env.NODE_ENV !== 'production')('cookies in prod', () => 
 			{ name: 'a', value: 'bar' },
 			{ name: 'b', value: 'baz' }
 		]);
+	});
+
+	test('get with a custom decode is not served from the cached default parse', () => {
+		const { cookies } = cookies_setup({ headers: { cookie: 'enc=hello%20world' } });
+
+		expect(cookies.get('enc')).toEqual('hello world');
+		expect(cookies.get('enc', { decode: (value) => value })).toEqual('hello%20world');
+		expect(cookies.get('enc')).toEqual('hello world');
 	});
 
 	test("set_internal isn't affected by defaults", () => {

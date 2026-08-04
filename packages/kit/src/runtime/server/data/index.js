@@ -4,9 +4,10 @@ import { normalize_error } from '../../../utils/error.js';
 import { once } from '../../../utils/functions.js';
 import { server_data_serializer_json } from '../page/data_serializer.js';
 import { load_server_data } from '../page/load_data.js';
-import { handle_error_and_jsonify } from '../utils.js';
+import { handle_error_and_jsonify } from '../errors.js';
 import { normalize_path } from '../../../utils/url.js';
 import { text_encoder } from '../../utils.js';
+import { with_version_header } from '../utils.js';
 
 /**
  * @param {import('@sveltejs/kit').RequestEvent} event
@@ -31,9 +32,7 @@ export async function render_data(
 ) {
 	if (!route.page) {
 		// requesting /__data.json should fail for a +server.js
-		return new Response(undefined, {
-			status: 404
-		});
+		return with_version_header(new Response(undefined, { status: 404 }));
 	}
 
 	try {
@@ -123,26 +122,28 @@ export async function render_data(
 			return json_response(data);
 		}
 
-		return new Response(
-			new ReadableStream({
-				async start(controller) {
-					controller.enqueue(text_encoder.encode(data));
-					for await (const chunk of chunks) {
-						controller.enqueue(text_encoder.encode(chunk));
-					}
-					controller.close();
-				},
+		return with_version_header(
+			new Response(
+				new ReadableStream({
+					async start(controller) {
+						controller.enqueue(text_encoder.encode(data));
+						for await (const chunk of chunks) {
+							controller.enqueue(text_encoder.encode(chunk));
+						}
+						controller.close();
+					},
 
-				type: 'bytes'
-			}),
-			{
-				headers: {
-					// we use a proprietary content type to prevent buffering.
-					// the `text` prefix makes it inspectable
-					'content-type': 'text/sveltekit-data',
-					'cache-control': 'private, no-store'
+					type: 'bytes'
+				}),
+				{
+					headers: {
+						// we use a proprietary content type to prevent buffering.
+						// the `text` prefix makes it inspectable
+						'content-type': 'text/sveltekit-data',
+						'cache-control': 'private, no-store'
+					}
 				}
-			}
+			)
 		);
 	} catch (e) {
 		const error = normalize_error(e);
@@ -161,13 +162,15 @@ export async function render_data(
  * @param {number} [status]
  */
 function json_response(json, status = 200) {
-	return text(typeof json === 'string' ? json : JSON.stringify(json), {
-		status,
-		headers: {
-			'content-type': 'application/json',
-			'cache-control': 'private, no-store'
-		}
-	});
+	return with_version_header(
+		text(typeof json === 'string' ? json : JSON.stringify(json), {
+			status,
+			headers: {
+				'content-type': 'application/json',
+				'cache-control': 'private, no-store'
+			}
+		})
+	);
 }
 
 /**

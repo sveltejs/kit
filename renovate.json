@@ -8,11 +8,37 @@
 	"pin": {
 		"enabled": false
 	},
-	"ignoreDeps": ["@types/node"],
+	"ignoreDeps": [
+		"@types/node"
+	],
 	"packageRules": [
 		{
-			"matchPackageNames": ["vite"],
-			"matchUpdateTypes": ["major"],
+			"matchDatasources": [
+				"npm"
+			],
+			"minimumReleaseAge": "2 days"
+		},
+		{
+			"matchPackageNames": [
+				"@sveltejs/**",
+				"svelte",
+				"esrap",
+				"devalue",
+				"dts-buddy",
+				"zimmerframe",
+				"prettier-plugin-svelte",
+				"svelte-check",
+				"esm-env"
+			],
+			"minimumReleaseAge": "0 days"
+		},
+		{
+			"matchPackageNames": [
+				"vite"
+			],
+			"matchUpdateTypes": [
+				"major"
+			],
 			"enabled": false
 		}
 	]

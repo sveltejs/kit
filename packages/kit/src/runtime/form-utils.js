@@ -3,28 +3,63 @@
 
 import { DEV } from 'esm-env';
 import * as devalue from 'devalue';
-import { text_encoder } from './utils.js';
+import { text_decoder, text_encoder } from './utils.js';
 import { noop } from '../utils/functions.js';
 import { SvelteKitError } from '@sveltejs/kit/internal';
 
-const decoder = new TextDecoder();
-
 /**
- * Sets a value in a nested object using a path string, mutating the original object
+ * Sets a parsed form field value in a nested object, mutating the original object.
  * @param {Record<string, any>} object
- * @param {string} path_string
+ * @param {{ name: string; type: 'number' | 'boolean' | null }} field
  * @param {any} value
  */
-export function set_nested_value(object, path_string, value) {
-	if (path_string.startsWith('n:')) {
-		path_string = path_string.slice(2);
-		value = value === '' ? undefined : parseFloat(value);
-	} else if (path_string.startsWith('b:')) {
-		path_string = path_string.slice(2);
-		value = value === 'on';
+export function set_nested_value(object, field, value) {
+	deep_set(object, split_path(field.name), value);
+}
+
+/**
+ * Separates a form field's path from the metadata encoded in its name.
+ * @param {string} form_id
+ * @param {string} key
+ * @returns {{ name: string; type: 'number' | 'boolean' | null; is_array: boolean }}
+ */
+export function parse_form_key(form_id, key) {
+	const suffix = '/' + form_id;
+	let name = key;
+
+	if (!name.endsWith(suffix)) {
+		throw new Error(`Form contained a field that wasn't created with form.fields.as(...): ${name}`);
 	}
 
-	deep_set(object, split_path(path_string), value);
+	name = name.slice(0, -suffix.length);
+
+	/** @type {'number' | 'boolean' | null} */
+	let type = null;
+
+	if (name.startsWith('n:')) {
+		name = name.slice(2);
+		type = 'number';
+	} else if (name.startsWith('b:')) {
+		name = name.slice(2);
+		type = 'boolean';
+	}
+
+	const is_array = name.endsWith('[]');
+	if (is_array) name = name.slice(0, -2);
+
+	return { name, type, is_array };
+}
+
+/**
+ * @param {'number' | 'boolean' | null} type
+ * @param {any} value
+ * @returns {any}
+ */
+export function coerce_form_value(type, value) {
+	if (Array.isArray(value)) return value.map((value) => coerce_form_value(type, value));
+	if (type === 'number') return value === '' ? undefined : parseFloat(value);
+	if (type === 'boolean') return value === 'on';
+	return value;
 }
 
 /** Pass this to set_nested_value to delete the last part of the given path */
@@ -32,38 +67,36 @@ export const DELETE_KEY = {};
 
 /**
  * Convert `FormData` into a POJO
+ * @param {string} form_id
  * @param {FormData} data
  */
-export function convert_formdata(data) {
+export function convert_formdata(form_id, data) {
 	/** @type {Record<string, any>} */
 	const result = {};
 
-	for (let key of data.keys()) {
-		const is_array = key.endsWith('[]');
+	for (const field_name of data.keys()) {
 		/** @type {any[]} */
-		let values = data.getAll(key);
+		const values = data.getAll(field_name);
 
-		if (is_array) key = key.slice(0, -2);
+		const field = parse_form_key(form_id, field_name);
 
 		// an empty `<input type="file">` will submit a non-existent file, bizarrely
-		values = values.filter(
+		const entries = values.filter(
 			(entry) => typeof entry === 'string' || entry.name !== '' || entry.size > 0
 		);
-		if (values.length === 0 && !is_array) continue;
+		if (entries.length === 0 && !field.is_array) continue;
 
-		if (key.startsWith('n:')) {
-			key = key.slice(2);
-			values = values.map((v) => (v === '' ? undefined : parseFloat(/** @type {string} */ (v))));
-		} else if (key.startsWith('b:')) {
-			key = key.slice(2);
-			values = values.map((v) => v === 'on');
+		if (entries.length > 1 && !field.is_array) {
+			throw new Error(
+				`Form cannot contain duplicated keys — "${field.name}" has ${entries.length} values`
+			);
 		}
 
-		if (values.length > 1 && !is_array) {
-			throw new Error(`Form cannot contain duplicated keys — "${key}" has ${values.length} values`);
-		}
-
-		set_nested_value(result, key, is_array ? values : values[0]);
+		set_nested_value(
+			result,
+			field,
+			coerce_form_value(field.type, field.is_array ? entries : entries[0])
+		);
 	}
 
 	return result;
@@ -139,12 +172,13 @@ export function serialize_binary_form(data, meta) {
 
 /**
  * @param {Request} request
+ * @param {string} form_id
  * @returns {Promise<{ data: Record<string, any>; meta: BinaryFormMeta; form_data: FormData | null }>}
  */
-export async function deserialize_binary_form(request) {
+export async function deserialize_binary_form(request, form_id) {
 	if (request.headers.get('content-type') !== BINARY_FORM_CONTENT_TYPE) {
 		const form_data = await request.formData();
-		return { data: convert_formdata(form_data), meta: {}, form_data };
+		return { data: convert_formdata(form_id, form_data), meta: {}, form_data };
 	}
 	if (!request.body) {
 		throw deserialize_error('no body');
@@ -247,7 +281,7 @@ export async function deserialize_binary_form(request) {
 		const file_offsets_buffer = await get_buffer(HEADER_BYTES + data_length, file_offsets_length);
 		if (!file_offsets_buffer) throw deserialize_error('file offset table too short');
 
-		const parsed_offsets = JSON.parse(decoder.decode(file_offsets_buffer));
+		const parsed_offsets = JSON.parse(text_decoder.decode(file_offsets_buffer));
 
 		if (
 			!Array.isArray(parsed_offsets) ||
@@ -262,7 +296,7 @@ export async function deserialize_binary_form(request) {
 
 	/** @type {Array<{ offset: number, size: number }>} */
 	const file_spans = [];
-	const [data, meta] = devalue.parse(decoder.decode(data_buffer), {
+	const [data, meta] = devalue.parse(text_decoder.decode(data_buffer), {
 		File: ([name, type, size, last_modified, index]) => {
 			if (
 				typeof name !== 'string' ||
@@ -452,7 +486,7 @@ class LazyFile {
 		});
 	}
 	async text() {
-		return decoder.decode(await this.arrayBuffer());
+		return text_decoder.decode(await this.arrayBuffer());
 	}
 }
 
@@ -653,18 +687,21 @@ function deep_clone(value) {
 
 /**
  * Creates a proxy-based field accessor for form data
+ * @param {{
+ * 	form_id: string,
+ * 	get: () => Record<string, any>,
+ * 	set: (path: (string | number)[], value: any) => void,
+ * 	get_issues: (path?: (string | number)[], all?: boolean) => Record<string, InternalRemoteFormIssue[]>,
+ * 	get_touched: () => Record<string, boolean>,
+ * 	get_dirty: () => Record<string, boolean>
+ * }} context - Form context, including value accessors and form metadata
  * @param {any} target - Function or empty POJO
- * @param {() => Record<string, any>} get - Function to get current input data
- * @param {(path: (string | number)[], value: any) => void} set - Function to set input data
- * @param {(path?: (string | number)[], all?: boolean) => Record<string, InternalRemoteFormIssue[]>} get_issues - Function to get current issues
- * @param {() => Record<string, boolean>} get_touched - Function to get touched fields
- * @param {() => Record<string, boolean>} get_dirty - Function to get dirty fields
  * @param {(string | number)[]} path - Current access path
  * @returns {any} Proxy object with name(), value(), and issues() methods
  */
-export function create_field_proxy(target, get, set, get_issues, get_touched, get_dirty, path) {
+export function create_field_proxy(context, target = {}, path = []) {
 	const get_value = () => {
-		const value = deep_get(get(), path);
+		const value = deep_get(context.get(), path);
 		return deep_clone(value);
 	};
 
@@ -674,10 +711,7 @@ export function create_field_proxy(target, get, set, get_issues, get_touched, ge
 
 			// Handle array access like jobs[0]
 			if (/^\d+$/.test(prop)) {
-				return create_field_proxy({}, get, set, get_issues, get_touched, get_dirty, [
-					...path,
-					parseInt(prop, 10)
-				]);
+				return create_field_proxy(context, {}, [...path, parseInt(prop, 10)]);
 			}
 
 			const key = build_path_string(path);
@@ -685,20 +719,19 @@ export function create_field_proxy(target, get, set, get_issues, get_touched, ge
 
 			if (prop === 'set') {
 				const set_func = function (/** @type {any} */ newValue) {
-					set(path, newValue);
+					context.set(path, newValue);
 					return newValue;
 				};
-
-				return create_field_proxy(set_func, get, set, get_issues, get_touched, get_dirty, next);
+				return create_field_proxy(context, set_func, next);
 			}
 
 			if (prop === 'value') {
-				return create_field_proxy(get_value, get, set, get_issues, get_touched, get_dirty, next);
+				return create_field_proxy(context, get_value, next);
 			}
 
 			if (prop === 'issues' || prop === 'allIssues') {
 				const issues_func = () => {
-					const all_issues = get_issues(path, prop === 'allIssues')[key === '' ? '$' : key];
+					const all_issues = context.get_issues(path, prop === 'allIssues')[key === '' ? '$' : key];
 
 					if (prop === 'allIssues') {
 						return all_issues?.map((issue) => ({
@@ -717,12 +750,12 @@ export function create_field_proxy(target, get, set, get_issues, get_touched, ge
 					return issues?.length ? issues : undefined;
 				};
 
-				return create_field_proxy(issues_func, get, set, get_issues, get_touched, get_dirty, next);
+				return create_field_proxy(context, issues_func, next);
 			}
 
 			if (prop === 'touched' || prop === 'dirty') {
 				const fn = () => {
-					const object = prop === 'dirty' ? get_dirty() : get_touched();
+					const object = prop === 'dirty' ? context.get_dirty() : context.get_touched();
 
 					if (key === '') {
 						return Object.keys(object).length > 0;
@@ -745,7 +778,7 @@ export function create_field_proxy(target, get, set, get_issues, get_touched, ge
 					return false;
 				};
 
-				return create_field_proxy(fn, get, set, get_issues, get_touched, get_dirty, next);
+				return create_field_proxy(context, fn, next);
 			}
 
 			if (prop === 'as') {
@@ -759,14 +792,14 @@ export function create_field_proxy(target, get, set, get_issues, get_touched, ge
 						type === 'select multiple' ||
 						(type === 'checkbox' && typeof input_value === 'string');
 
-					const prefix = get_type_prefix(type, is_array, input_value);
+					const type_prefix = get_type_prefix(type, is_array, input_value);
 
 					// Base properties for all input types
 					/** @type {Record<string, any>} */
 					const base_props = {
-						name: prefix + key + (is_array ? '[]' : ''),
+						name: type_prefix + key + (is_array ? '[]' : '') + '/' + context.form_id,
 						get 'aria-invalid'() {
-							const issues = get_issues();
+							const issues = context.get_issues();
 							return key in issues ? 'true' : undefined;
 						}
 					};
@@ -911,11 +944,11 @@ export function create_field_proxy(target, get, set, get_issues, get_touched, ge
 					});
 				};
 
-				return create_field_proxy(as_func, get, set, get_issues, get_touched, get_dirty, next);
+				return create_field_proxy(context, as_func, next);
 			}
 
 			// Handle property access (nested fields)
-			return create_field_proxy({}, get, set, get_issues, get_touched, get_dirty, next);
+			return create_field_proxy(context, {}, next);
 		}
 	});
 }

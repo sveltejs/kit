@@ -334,14 +334,24 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 						);
 					}
 
+					const request_body =
+						input instanceof Request && cloned_body
+							? await new Response(cloned_body).text()
+							: init?.body;
+
+					if (
+						request_body &&
+						typeof request_body !== 'string' &&
+						!ArrayBuffer.isView(request_body)
+					) {
+						// requests whose body can't be hashed aren't serialized — the browser repeats the fetch
+						return;
+					}
+
 					fetched.push({
 						url: same_origin ? url.href.slice(event.url.origin.length) : url.href,
 						method: event.request.method,
-						request_body: /** @type {string | ArrayBufferView | undefined} */ (
-							input instanceof Request && cloned_body
-								? await stream_to_string(cloned_body)
-								: init?.body
-						),
+						request_body: /** @type {string | ArrayBufferView | null | undefined} */ (request_body),
 						request_headers: cloned_headers,
 						response_body: body,
 						response,
@@ -361,16 +371,7 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 					const [a, b] = response.body.tee();
 
 					void (async () => {
-						let result = new Uint8Array();
-
-						for await (const chunk of a) {
-							const combined = new Uint8Array(result.length + chunk.length);
-
-							combined.set(result, 0);
-							combined.set(chunk, result.length);
-
-							result = combined;
-						}
+						const result = new Uint8Array(await new Response(a).arrayBuffer());
 
 						if (dependency) {
 							dependency.body = new Uint8Array(result);
@@ -465,12 +466,27 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 					const included = resolve_opts.filterSerializedResponseHeaders(lower, value);
 					if (!included) {
 						throw new Error(
-							`Failed to get response header "${lower}" — it must be included by the \`filterSerializedResponseHeaders\` option: https://svelte.dev/docs/kit/hooks#Server-hooks-handle (at ${event.route.id})`
+							`Failed to get response header "${lower}" — it must be included by the \`filterSerializedResponseHeaders\` option: https://svelte.dev/docs/kit/hooks#handle (at ${event.route.id})`
 						);
 					}
 				}
 
 				return value;
+			};
+
+			const get_set_cookie = response.headers.getSetCookie;
+			response.headers.getSetCookie = () => {
+				const values = get_set_cookie.call(response.headers);
+				for (const value of values) {
+					const included = resolve_opts.filterSerializedResponseHeaders('set-cookie', value);
+					if (!included) {
+						throw new Error(
+							`Failed to get response header "set-cookie" — it must be included by the \`filterSerializedResponseHeaders\` option: https://svelte.dev/docs/kit/hooks#handle (at ${event.route.id})`
+						);
+					}
+				}
+
+				return values;
 			};
 		}
 
@@ -485,22 +501,4 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 		response.catch(noop);
 		return response;
 	};
-}
-
-/**
- * @param {ReadableStream<Uint8Array>} stream
- */
-async function stream_to_string(stream) {
-	let result = '';
-	const reader = stream.getReader();
-	const decoder = new TextDecoder();
-	while (true) {
-		const { done, value } = await reader.read();
-		if (done) {
-			result += decoder.decode();
-			break;
-		}
-		result += decoder.decode(value, { stream: true });
-	}
-	return result;
 }
