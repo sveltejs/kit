@@ -176,11 +176,11 @@ const plugin = function (defaults = {}) {
 
 			const singular = groups.size === 1;
 
-			/** @type {string | void} */
-			let reroute_path;
-
-			if (!singular && (reroute_path = await builder.getReroutePath?.())) {
+			if (!singular && (await builder.hasRerouteHook())) {
 				builder.log('Generating middleware to run reroute before split functions...');
+
+				const reroute_path = `${tmp}/reroute.js`;
+				await builder.generateRerouteModule(reroute_path);
 
 				static_config.routes.push({
 					src: '/.*',
@@ -192,7 +192,7 @@ const plugin = function (defaults = {}) {
 
 				builder.copy(`${files}/reroute.js`, `${tmp}/index.js`, {
 					replace: {
-						__HOOKS__: reroute_path
+						REROUTE: reroute_path
 					}
 				});
 

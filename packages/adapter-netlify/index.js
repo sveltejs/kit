@@ -103,10 +103,14 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 
 				await generate_edge_functions({ builder, reroute_middleware });
 			} else {
-				/** @type {string | void} */
-				let reroute_path;
+				if (split && (await builder.hasRerouteHook())) {
+					const tmp = builder.getBuildDirectory('netlify-tmp');
+					builder.rimraf(tmp);
+					builder.mkdirp(tmp);
 
-				if (split && (reroute_path = await builder.getReroutePath?.())) {
+					const reroute_path = `${tmp}/reroute.js`;
+					await builder.generateRerouteModule(reroute_path);
+
 					await generate_reroute_middleware({ builder, reroute_path });
 					reroute_middleware = true;
 				}

@@ -151,29 +151,6 @@ declare module '@sveltejs/kit' {
 		getServerDirectory: () => string;
 		/** Get the application path including any configured `base` path, e.g. `my-base-path/_app`. */
 		getAppPath: () => string;
-		/**
-		 * Get the fully resolved path to the file containing the `reroute` hook if it exists.
-		 * @example
-		 * ```js
-		 * const reroutePath = builder.getReroutePath();
-		 * if (split && reroutePath) {
-		 *   // generate a server-side manifest with the `rerouteMiddleware` option set to `true`
-		 *   fs.writeFileSync(
-		 *     `${output}/manifest.js`,
-		 *     `export const manifest = ${builder.generateManifest({ relativePath, routes, rerouteMiddleware: true })};\n`
-		 *   );
-		 *
-		 *   // create a middleware that imports and runs the `reroute` hook
-		 *   builder.copy(`${files}/reroute.js`, `${output}/entry.js`, {
-		 *     replace: {
-		 *       __HOOKS__: reroutePath
-		 *     }
-		 *   });
-		 * }
-		 * ```
-		 * @since 3.0.0
-		 */
-		getReroutePath: () => Promise<string | void>;
 
 		/**
 		 * Write client assets to `dest`.
@@ -256,7 +233,52 @@ declare module '@sveltejs/kit' {
 		 * @returns an array of the files in `directory` that were compressed
 		 */
 		compress: (directory: string) => Promise<string[]>;
+
+		/**
+		 * Check if the `reroute` hook exists.
+		 * @returns true if the `reroute` hook exists, false otherwise
+		 * @since 3.0.0
+		 */
+		hasRerouteHook: () => Promise<boolean>;
+
+		/**
+		 * Generate a module that exports an `applyReroute` function.
+		 *
+		 * If your deployment platform supports splitting your app into multiple serverless
+		 * functions, you should create a middleware that runs `applyReroute` on the
+		 * request to invoke the correct serverless function. You also need to
+		 * [generate a server-side manifest](https://svelte.dev/docs/kit/@sveltejs-kit#Builder)
+		 * with the `rerouteMiddleware` option set to `true`.
+		 * @example
+		 * ```js
+		 * if (split && await builder.hasRerouteHook()) {
+		 *   // generate a server-side manifest with the `rerouteMiddleware` option set to `true`
+		 *   fs.writeFileSync(
+		 *     `${output}/manifest.js`,
+		 *     `export const manifest = ${builder.generateManifest({ relativePath, routes, rerouteMiddleware: true })};\n`
+		 *   );
+		 *
+		 *   const reroutePath = `${output}/reroute.js`;
+		 *   await builder.generateRerouteModule(reroutePath);
+		 *
+		 *   // create a middleware that applies `reroute` to the request
+		 *   builder.copy(`${files}/reroute.js`, `${output}/entry.js`, {
+		 *     replace: {
+		 *       __HOOKS__: reroutePath
+		 *     }
+		 *   });
+		 * }
+		 * ```
+		 * @since 3.0.0
+		 */
+		generateRerouteModule: (dest: string) => Promise<void>;
 	}
+
+	/**
+	 * Runs `reroute` and applies URL changes to a copy of the provided request.
+	 * @since 3.0.0
+	 */
+	export type ApplyReroute = (request: Request) => Promise<Request>;
 
 	/**
 	 * An extension of [`vite-plugin-svelte`'s options](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/config.md#svelte-options).
@@ -2931,30 +2953,6 @@ declare module '@sveltejs/kit' {
 		denormalize: (url?: string | URL) => URL;
 	};
 	export const VERSION: string;
-
-	export {};
-}
-
-declare module '@sveltejs/kit/adapter' {
-	import type { Reroute } from '@sveltejs/kit';
-	/**
-	 * If your deployment platform supports splitting your app into multiple functions,
-	 * you should run this in a middleware that runs before the main handler
-	 * to reroute the request to the correct function and [generate a server-side manifest](https://svelte.dev/docs/kit/@sveltejs-kit#Builder)
-	 * with the `rerouteMiddleware` option set to `true`.
-	 * @example
-	 * ```js
-	 * import { applyReroute } from '@sveltejs/kit/adapter';
-	 * // replace __HOOKS__ with the path to the reroute hook obtained from `builder.getReroutePath()`
-	 * import { reroute } from '__HOOKS__';
-	 *
-	 * export default function middleware(request) {
-	 *   return applyReroute(request, reroute);
-	 * }
-	 * ```
-	 * @since 3.0.0
-	 */
-	export function applyReroute(request: Request, reroute: Reroute): Promise<Request>;
 
 	export {};
 }

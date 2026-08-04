@@ -1,13 +1,13 @@
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
-/** @import { Builder } from '@sveltejs/kit' */
-/** @import { ResolvedConfig } from 'vite' */
-/** @import { RouteDefinition, EnvVarConfig } from '@sveltejs/kit' */
+/** @import { ResolvedConfig, Rolldown } from 'vite' */
+/** @import { Builder, RouteDefinition, EnvVarConfig } from '@sveltejs/kit' */
 /** @import { RouteData, ValidatedConfig, BuildData, ServerMetadata, ServerMetadataRoute, Prerendered, PrerenderMap, Logger, RemoteChunk } from 'types' */
-import { loadEnv } from 'vite';
+import { build, loadEnv } from 'vite';
 import * as devalue from 'devalue';
 import { createReadStream, createWriteStream, existsSync, statSync } from 'node:fs';
 import { extname, resolve, join, dirname, relative } from 'node:path';
 import { pipeline } from 'node:stream';
+import { pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
 import zlib from 'node:zlib';
 import { copy, rimraf, mkdirp } from '../../utils/filesystem.js';
@@ -208,17 +208,6 @@ export function create_builder({
 			return build_data.app_path;
 		},
 
-		async getReroutePath() {
-			const hooks = build_data.manifest_data.hooks.universal;
-			if (!hooks) return;
-
-			const hooks_path = `${config.kit.outDir}/output/server/${build_data.server_manifest[hooks].file}`;
-			const has_reroute_hook = existsSync(hooks_path) && !!(await import(hooks_path)).reroute;
-			if (has_reroute_hook) {
-				return hooks_path;
-			}
-		},
-
 		writeClient(dest) {
 			return copy(`${config.kit.outDir}/output/client`, dest, {
 				// avoid making vite build artefacts public
@@ -285,6 +274,44 @@ export function create_builder({
 
 			rimraf(entrypoint);
 			write(entrypoint, facade);
+		},
+
+		async hasRerouteHook() {
+			const hooks_path = get_hooks_path(build_data, config);
+			if (!hooks_path) return false;
+
+			return !!(await import(pathToFileURL(hooks_path).href)).reroute;
+		},
+
+		async generateRerouteModule(dest) {
+			const hooks_path = get_hooks_path(build_data, config);
+			if (!hooks_path) return;
+
+			const bundle = /** @type {Rolldown.RolldownOutput} */ (
+				await build({
+					configFile: false,
+					build: {
+						write: false,
+						ssr: true,
+						target: 'esnext',
+						rolldownOptions: {
+							resolve: {
+								alias: {
+									__HOOKS__: hooks_path
+								}
+							},
+							input: {
+								reroute: import.meta.resolve('./reroute.js')
+							},
+							output: {
+								codeSplitting: false
+							}
+						}
+					}
+				})
+			);
+
+			write(dest, bundle.output[0].code);
 		}
 	};
 }
@@ -338,4 +365,16 @@ function create_instrumentation_facade({ instrumentation, start, exports }) {
 		.join('\n');
 
 	return `${import_instrumentation}\n${parts}`;
+}
+
+/**
+ * @param {BuildData} build_data
+ * @param {ValidatedConfig} config
+ * @returns {string | false}
+ */
+function get_hooks_path(build_data, config) {
+	const hooks = build_data.manifest_data.hooks.universal;
+	if (!hooks) return false;
+
+	return `${config.kit.outDir}/output/server/${build_data.server_manifest[hooks].file}`;
 }

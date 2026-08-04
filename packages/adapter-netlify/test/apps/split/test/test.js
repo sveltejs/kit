@@ -43,3 +43,7 @@ test('edge middleware runs reroute before split function', async ({ page }) => {
 	await page.goto('/en/reroute');
 	await expect(page.locator('p')).toContainText('/en/reroute');
 });
+
+// TODO: test remote function works
+
+// TODO: test preloadCode works
