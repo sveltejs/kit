@@ -21,7 +21,7 @@ let current = null;
  */
 const decoded_responses = new WeakMap();
 
-if (__SVELTEKIT_DEV__) {
+if (DEV) {
 	const fetch = globalThis.fetch;
 
 	/**
