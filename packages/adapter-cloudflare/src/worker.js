@@ -52,7 +52,11 @@ export default {
 
 		// skip cache if "cache-control: no-cache" in request
 		let pragma = req.headers.get('cache-control') || '';
-		let res = !pragma.includes('no-cache') && (await Cache.lookup(req));
+		// Only cache GET requests: worktop's Cache.lookup converts HEAD→GET
+		// but preserves Content-Length: 0 with a null body, which causes
+		// Cloudflare's cache.match to throw a 500. Since Cache.save only
+		// writes GET responses to the cache, HEAD is never cached anyway.
+		let res = req.method === 'GET' && !pragma.includes('no-cache') && (await Cache.lookup(req));
 		if (res) return res;
 
 		let { pathname, search } = new URL(req.url);
