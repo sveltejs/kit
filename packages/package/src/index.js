@@ -138,12 +138,13 @@ export async function watch(options) {
 				enqueue(name, 'unlink');
 			} else {
 				// a removed directory only fires an event for itself, not for the files inside it
-				const children = [...known_files].filter((child) => child.startsWith(name + '/'));
-				if (children.length === 0) return;
+				const prefix = name + '/';
 
-				for (const child of children) {
-					known_files.delete(child);
-					enqueue(child, 'unlink');
+				for (const child of known_files) {
+					if (child.startsWith(prefix)) {
+						known_files.delete(child);
+						enqueue(child, 'unlink');
+					}
 				}
 			}
 		}
