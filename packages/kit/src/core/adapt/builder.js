@@ -14,6 +14,7 @@ import { copy, rimraf, mkdirp } from '../../utils/filesystem.js';
 import { posixify } from '../../utils/os.js';
 import { generate_manifest } from '../generate_manifest/index.js';
 import { get_route_segments } from '../../utils/routing.js';
+import { s } from '../../utils/misc.js';
 import generate_fallback from '../postbuild/fallback.js';
 import { write } from '../sync/utils.js';
 import { list_files } from '../utils.js';
@@ -307,6 +308,12 @@ export function create_builder({
 								codeSplitting: false
 							}
 						}
+					},
+					define: {
+						__SVELTEKIT_APP_DIR__: s(posixify(config.kit.appDir)),
+						__SVELTEKIT_PATHS_ASSETS__: s(config.kit.paths.assets),
+						__SVELTEKIT_PATHS_BASE__: s(config.kit.paths.base),
+						__SVELTEKIT_PATHS_RELATIVE__: s(config.kit.paths.relative)
 					}
 				})
 			);
