@@ -32,6 +32,7 @@ import {
 	add_data_suffix,
 	add_resolution_suffix,
 	extract_route_id,
+	get_remote_id,
 	has_data_suffix,
 	has_resolution_suffix,
 	is_route_id_resolution_path,
@@ -39,7 +40,7 @@ import {
 	strip_resolution_suffix
 } from '../pathname.js';
 import { server_data_serializer } from './page/data_serializer.js';
-import { get_remote_id, handle_remote_call } from './remote-functions.js';
+import { handle_remote_call } from './remote-functions.js';
 import { record_span } from '../telemetry/record_span.js';
 import { otel } from '../telemetry/otel.js';
 import { create_request_state } from './state.js';
@@ -104,7 +105,7 @@ export async function internal_respond(request, options, manifest, state) {
 
 	const is_route_resolution_request = has_resolution_suffix(url.pathname);
 	const is_data_request = has_data_suffix(url.pathname);
-	const remote_id = get_remote_id(url);
+	const remote_id = get_remote_id(url, base, app_dir);
 
 	if (!__SVELTEKIT_DEV__) {
 		const request_origin = request.headers.get('origin');

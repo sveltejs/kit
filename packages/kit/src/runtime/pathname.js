@@ -84,3 +84,16 @@ export function is_route_id_resolution_path(pathname, base, app_dir) {
 export function extract_route_id(pathname, app_dir) {
 	return pathname.slice(`/${app_dir}${ROUTES_PREFIX}`.length) || '/';
 }
+
+/**
+ * @param {URL} url
+ * @param {string} base
+ * @param {string} app_dir
+ * @returns {string | false}
+ */
+export function get_remote_id(url, base, app_dir) {
+	return (
+		url.pathname.startsWith(`${base}/${app_dir}/remote/`) &&
+		url.pathname.replace(`${base}/${app_dir}/remote/`, '')
+	);
+}

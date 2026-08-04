@@ -1,7 +1,10 @@
 import { normalizeUrl } from '../../exports/index.js';
-import { has_resolution_suffix, is_route_id_resolution_path } from '../../runtime/pathname.js';
+import {
+	get_remote_id,
+	has_resolution_suffix,
+	is_route_id_resolution_path
+} from '../../runtime/pathname.js';
 import { ORIGINAL_PATH_HEADER } from '../../runtime/shared.js';
-import { get_remote_id } from '../../runtime/server/remote-functions.js';
 import { app_dir, base } from '$app/paths/internal/server';
 import { reroute } from '__HOOKS__';
 
@@ -12,7 +15,7 @@ import { reroute } from '__HOOKS__';
 export async function applyReroute(request) {
 	const url = new URL(request.url);
 
-	const remote_id = get_remote_id(url);
+	const remote_id = get_remote_id(url, base, app_dir);
 	/** Whether this is a `/${app_dir}/routes/<route_id>/__route.js` request, used by `preloadCode` */
 	const is_route_id_resolution_request =
 		has_resolution_suffix(url.pathname) && is_route_id_resolution_path(url.pathname, base, app_dir);
