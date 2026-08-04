@@ -10,7 +10,6 @@ import { load_config } from '../src/config.js';
 import { _create_validator } from '../src/validate.js';
 import { resolve_aliases } from '../src/utils.js';
 import { walk } from '../src/filesystem.js';
-import { execFileSync } from 'node:child_process';
 
 const original_cwd = process.cwd();
 
