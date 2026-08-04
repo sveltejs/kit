@@ -1433,9 +1433,6 @@ importers:
       chokidar:
         specifier: ^5.0.0
         version: 5.0.0
-      sade:
-        specifier: ^1.8.1
-        version: 1.8.1
       semver:
         specifier: ^7.8.5
         version: 7.8.5
