@@ -239,6 +239,8 @@ export interface PrerenderOptions {
 	dependencies: Map<string, PrerenderDependency>;
 	/** Results of remote `prerender` functions, shared across the whole prerender run so that each only executes once */
 	remote_responses: Map<string, Promise<any>>;
+	/** Route IDs whose resolution module has been emitted, shared across the whole prerender run so that each only generates once */
+	resolved_route_ids: Set<string>;
 	/** True for the duration of a call to the `reroute` hook */
 	inside_reroute?: boolean;
 }

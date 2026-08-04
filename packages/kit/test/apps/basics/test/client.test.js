@@ -266,7 +266,12 @@ test.describe('Load', () => {
 		expect(requests.filter((r) => !r.includes('/__route.js'))).toEqual([]);
 	});
 
-	test('use correct cache result when fetching same url multiple times', async ({ page }) => {
+	test('use correct cache result when fetching same url multiple times', async ({
+		page,
+		request
+	}) => {
+		// reset so the assertion also holds when the test is retried
+		await request.get('/load/fetch-same-url/data.json?reset');
 		await page.goto('/load/fetch-same-url');
 		expect(await page.textContent('h1')).toBe('the result is 1,2,3');
 	});
@@ -466,11 +471,12 @@ test.describe('Invalidation', () => {
 	}) => {
 		await page.goto('/load/unchanged/isolated/a');
 		expect(await page.textContent('h1')).toBe('slug: a');
-		expect(await page.textContent('h2')).toBe('count: 0');
+		const count = await page.textContent('h2');
+		expect(count).toMatch(/^count: \d+$/);
 
 		await clicknav('[href="/load/unchanged/isolated/b"]');
 		expect(await page.textContent('h1')).toBe('slug: b');
-		expect(await page.textContent('h2')).toBe('count: 0');
+		expect(await page.textContent('h2')).toBe(count);
 	});
 
 	test('+layout.server.js re-runs when await parent() is called from downstream load function', async ({
@@ -479,15 +485,15 @@ test.describe('Invalidation', () => {
 	}) => {
 		await page.goto('/load/unchanged-parent/uses-parent/a');
 		expect(await page.textContent('h1')).toBe('slug: a');
-		expect(await page.textContent('h2')).toBe('count: 0');
-		expect(await page.textContent('h3')).toBe('doubled: 0');
+		const count = Number((await page.textContent('h2'))?.replace('count: ', ''));
+		expect(await page.textContent('h3')).toBe(`doubled: ${count * 2}`);
 
 		await clicknav('[href="/load/unchanged-parent/uses-parent/b"]');
 		expect(await page.textContent('h1')).toBe('slug: b');
-		expect(await page.textContent('h2')).toBe('count: 0');
+		expect(await page.textContent('h2')).toBe(`count: ${count}`);
 
 		// this looks wrong, but is actually the intended behaviour (the increment side-effect in a GET would be a bug in a real app)
-		expect(await page.textContent('h3')).toBe('doubled: 2');
+		expect(await page.textContent('h3')).toBe(`doubled: ${(count + 1) * 2}`);
 	});
 
 	test('load function re-runs when searchParams change', async ({ page, clicknav }) => {
@@ -517,7 +523,7 @@ test.describe('Invalidation', () => {
 		page,
 		clicknav
 	}) => {
-		await page.goto('/load/invalidation/search-params/server?tracked=0');
+		await page.goto('/load/invalidation/search-params/server?tracked=0&reset');
 		expect(await page.textContent('span')).toBe('count: 0');
 		await clicknav('[data-id="tracked"]');
 		expect(await page.textContent('span')).toBe('count: 1');

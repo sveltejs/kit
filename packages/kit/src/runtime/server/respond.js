@@ -26,13 +26,15 @@ import { validate_server_exports } from '../../utils/exports.js';
 import { action_json_redirect, is_action_json_request } from './page/actions.js';
 import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM, ORIGINAL_PATH_HEADER } from '../shared.js';
 import { get_public_env } from './env_module.js';
-import { resolve_route } from './page/server_routing.js';
+import { resolve_route, resolve_route_by_id } from './page/server_routing.js';
 import { validateHeaders } from './validate-headers.js';
 import {
 	add_data_suffix,
 	add_resolution_suffix,
+	extract_route_id,
 	has_data_suffix,
 	has_resolution_suffix,
+	is_route_id_resolution_path,
 	strip_data_suffix,
 	strip_resolution_suffix
 } from '../pathname.js';
@@ -149,12 +151,16 @@ export async function internal_respond(request, options, manifest, state) {
 
 	let skip_route_resolution = false;
 
+	/** Whether this is a `/${app_dir}/routes/<route_id>/__route.js` request, used by `preloadCode` */
+	let is_route_id_resolution_request = false;
+
 	if (is_route_resolution_request) {
 		/**
 		 * If the request is for a route resolution, first modify the URL, then continue as normal
 		 * for path resolution, then return the route object as a JS file.
 		 */
 		url.pathname = strip_resolution_suffix(url.pathname);
+		is_route_id_resolution_request = is_route_id_resolution_path(url.pathname, base, app_dir);
 	} else if (is_data_request) {
 		url.pathname =
 			strip_data_suffix(url.pathname) +
@@ -255,7 +261,8 @@ export async function internal_respond(request, options, manifest, state) {
 		});
 	}
 
-	if (!remote_id && !manifest._.reroute_middleware) {
+	// `reroute` hooks receive pathnames, so they must not run for route-ID resolution requests
+	if (!remote_id && !is_route_id_resolution_request && !manifest._.reroute_middleware) {
 		const prerendering_reroute_state = state.prerendering?.inside_reroute;
 		try {
 			// For the duration or a reroute, disable the prerendering state as reroute could call API endpoints
@@ -339,6 +346,14 @@ export async function internal_respond(request, options, manifest, state) {
 	}
 
 	if (is_route_resolution_request) {
+		if (is_route_id_resolution_request) {
+			return resolve_route_by_id(
+				extract_route_id(resolved_path, app_dir),
+				new URL(request.url),
+				manifest
+			);
+		}
+
 		return resolve_route(resolved_path, new URL(request.url), manifest);
 	}
 

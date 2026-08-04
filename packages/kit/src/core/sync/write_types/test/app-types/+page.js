@@ -209,5 +209,29 @@ pathname = 'path-a/trailing-slash/never/layout/inside';
 
 // Test trailing-slash - always (endpoint) and never (page)
 pathname = 'path-a/trailing-slash/mixed';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 pathname = 'path-a/trailing-slash/mixed/';
+
+// Test optional params, which can be omitted
+pathname = 'about';
+pathname = 'en/about';
+pathname = 'deep';
+pathname = 'en/deep';
+pathname = 'en/gb/deep';
+// @ts-expect-error an omitted optional param does not merge into the next segment
+pathname = 'xyzabout';
+// @ts-expect-error
+pathname = 'xyzdeep';
+
+// Test multiple params in a single segment
+pathname = 'multi-param/1-2';
+
+// Test rest params, which can match zero segments
+pathname = 'files';
+pathname = 'files/a/b';
+
+// Test escape sequences, which are expanded
+pathname = '.well-known';
+// @ts-expect-error the route id's escape sequence is not part of the pathname
+pathname = '[x+2e]well-known';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+pathname = '@someone';

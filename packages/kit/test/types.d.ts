@@ -18,8 +18,9 @@ export const test: TestType<
 				invalidate(url: string): Promise<void>;
 				beforeNavigate(fn: (navigation: BeforeNavigate) => void | boolean): void;
 				afterNavigate(fn: (navigation: AfterNavigate) => void): void;
-				preloadCode(pathname: string): Promise<void>;
+				preloadCode(id: string): Promise<void>;
 				preloadData(url: string): Promise<void>;
+				match(url: string): Promise<{ id: string; params: Record<string, string> } | null>;
 			};
 			clicknav(
 				selector: string,
