@@ -21,12 +21,7 @@ import * as sync from '../../../core/sync/sync.js';
 import { get_mime_lookup, get_runtime_base } from '../../../core/utils.js';
 import '../../../utils/mime.js'; // extend mrmime with additional types (affects sirv too)
 import { compact } from '../../../utils/array.js';
-import {
-	is_chrome_devtools_request,
-	log_response,
-	not_found,
-	remote_module_pattern
-} from '../utils.js';
+import { is_chrome_devtools_request, is_remote_module, log_response, not_found } from '../utils.js';
 import { SCHEME } from '../../../utils/url.js';
 import { check_feature } from '../../../utils/features.js';
 import { escape_html } from '../../../utils/escape.js';
@@ -391,7 +386,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, s
 				file.startsWith(svelte_config.kit.files.routes + path.sep) ||
 				file.startsWith(svelte_config.kit.files.assets + path.sep) ||
 				(params_file && file === params_file) ||
-				remote_module_pattern.test(file) ||
+				is_remote_module(file) ||
 				// in contrast to server hooks, client hooks are written to the client manifest
 				// and therefore need rebuilding when they are added/removed
 				file.startsWith(svelte_config.kit.files.hooks.client)
