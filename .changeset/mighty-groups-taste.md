@@ -2,4 +2,4 @@
 '@sveltejs/kit': minor
 ---
 
-feat: add `applyReroute` and `builder.getReroutePath` helpers for running `reroute` in a middleware before the main handler
+feat: add `builder.hasRerouteHook` and `builder.generateRerouteModule` helpers for running `reroute` in a middleware before the main handler
