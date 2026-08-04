@@ -1,7 +1,6 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { styleText } from 'node:util';
-import chokidar from 'chokidar';
 import { preprocess } from 'svelte/compiler';
 import { copy, mkdirp, posixify, rimraf } from './filesystem.js';
 import {
@@ -91,8 +90,11 @@ export async function watch(options) {
 
 	console.log(message);
 
-	/** @type {Array<{ file: import('./types.js').File, type: string }>} */
+	/** @type {Array<{ file: import('./types.js').File, type: 'change' | 'unlink' }>} */
 	const pending = [];
+
+	// Remember files because deleted paths cannot be stat-ed to distinguish them from directories.
+	const known_files = new Set(scan(input, extensions).map((file) => file.name));
 
 	/** @type {Array<(value?: any) => void>} */
 	const fulfillers = [];
@@ -103,21 +105,48 @@ export async function watch(options) {
 	/** @type {Map<string, import('typescript').CompilerOptions>} */
 	const tsconfig_cache = new Map();
 
-	const watcher = chokidar.watch(input, { ignoreInitial: true });
-	/** @type {Promise<void>} */
-	const ready = new Promise((resolve) => watcher.on('ready', resolve));
+	/**
+	 * @param {string} name
+	 * @param {'change' | 'unlink'} type
+	 */
+	function enqueue(name, type) {
+		const file = analyze(name, extensions);
 
-	watcher.on('all', (type, filepath) => {
-		const file = analyze(path.relative(input, filepath), extensions);
-
-		pending.push({ file, type });
+		if (!pending.some((event) => event.type === type && event.file.name === file.name)) {
+			pending.push({ file, type });
+		}
 
 		if (
 			file.name.endsWith('tsconfig.json') ||
 			file.name.endsWith('jsconfig.json') ||
-			(options.tsconfig && posixify(filepath) === posixify(options.tsconfig))
+			(options.tsconfig && posixify(path.join(input, name)) === posixify(options.tsconfig))
 		) {
 			tsconfig_cache.clear();
+		}
+	}
+
+	const watcher = fs.watch(input, { recursive: true }, (_, filename) => {
+		if (filename !== null) {
+			const name = posixify(filename);
+			const stats = fs.statSync(path.join(input, filename), { throwIfNoEntry: false });
+
+			if (stats) {
+				if (!stats.isFile()) return;
+				known_files.add(name);
+				enqueue(name, 'change');
+			} else if (known_files.delete(name)) {
+				enqueue(name, 'unlink');
+			} else {
+				// a removed directory only fires an event for itself, not for the files inside it
+				const prefix = name + '/';
+
+				for (const child of known_files) {
+					if (child.startsWith(prefix)) {
+						known_files.delete(child);
+						enqueue(child, 'unlink');
+					}
+				}
+			}
 		}
 
 		clearTimeout(timeout);
@@ -151,7 +180,7 @@ export async function watch(options) {
 					console.log(`Removed ${file.dest}`);
 				}
 
-				if (type === 'add' || type === 'change') {
+				if (type === 'change') {
 					console.log(`Processing ${file.name}`);
 					try {
 						await process_file(
@@ -193,7 +222,6 @@ export async function watch(options) {
 
 	return {
 		watcher,
-		ready,
 		settled: () =>
 			new Promise((fulfil, reject) => {
 				fulfillers.push(fulfil);
