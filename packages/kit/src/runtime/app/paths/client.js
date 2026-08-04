@@ -92,7 +92,7 @@ export function resolve(...args) {
  * ```
  * @since 2.52.0
  *
- * @param {URL | (string & {})} url
+ * @param {URL | string} url
  * @returns {Promise<{ [K in RouteId]: { id: K; params: RouteParams<K>; } }[RouteId] | null>}
  */
 export function match(url) {

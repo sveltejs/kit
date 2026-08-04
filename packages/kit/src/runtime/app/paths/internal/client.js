@@ -9,7 +9,7 @@ export const hash_routing = __SVELTEKIT_HASH_ROUTING__;
 /**
  * We make this configurable per-environment so that it's possible to import `$app/paths`
  * into a service worker without importing the entire client
- * @param {URL | (string & {})} _url
+ * @param {URL | string} _url
  * @returns {Promise<{ [K in RouteId]: { id: K; params: import('$app/types').RouteParams<K>; } }[RouteId] | null>}
  */
 // eslint-disable-next-line @typescript-eslint/require-await
