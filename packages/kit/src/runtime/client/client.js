@@ -21,7 +21,7 @@ import {
 	scroll_state,
 	load_css
 } from './utils.js';
-import { base, set_match_implementation } from '$app/paths/internal/client';
+import { base, app_dir, set_match_implementation } from '$app/paths/internal/client';
 import * as devalue from 'devalue';
 import {
 	HISTORY_INFO_KEY,
@@ -41,7 +41,11 @@ import {
 import { get_message, get_status } from '../../utils/error.js';
 import { page, navigating, updated, notify_version } from './state.svelte.js';
 import { payload } from './payload.js';
-import { add_data_suffix, add_resolution_suffix } from '../pathname.js';
+import {
+	add_data_suffix,
+	add_resolution_suffix,
+	route_id_resolution_pathname
+} from '../pathname.js';
 import { noop_span } from '../telemetry/noop.js';
 import { read_ndjson } from './ndjson.js';
 import Root from '../components/root.svelte';
@@ -293,6 +297,35 @@ function discard_load_cache() {
  * which is cached per the JS spec.
  */
 const reroute_cache = new Map();
+
+/**
+ * Sentinel for a route that exists but has no code to preload, i.e. a `+server.js` with no
+ * `+page`. Cached like a parsed route so that repeated `preloadCode(id)` calls for the same
+ * id don't re-request it.
+ */
+const ENDPOINT_ONLY = Symbol('endpoint only');
+
+/**
+ * Cache of route ID -> parsed route for server-side route resolution.
+ * Populated whenever a server route resolution occurs (`match`, link preloading,
+ * hydration), so that `preloadCode(id)` doesn't need an extra server round trip.
+ * Lives until full page reload.
+ * @type {Map<string, import('types').CSRRoute | typeof ENDPOINT_ONLY>}
+ */
+const route_id_cache = new Map();
+
+/**
+ * Parse a server-provided route and record it in `route_id_cache`, so that a subsequent
+ * `preloadCode(id)` for the same route doesn't need another server round trip. Always use
+ * this rather than calling `parse_server_route` directly.
+ * @param {import('types').CSRRouteServer} server_route
+ * @returns {import('types').CSRRoute}
+ */
+function parse_and_cache_server_route(server_route) {
+	const route = parse_server_route(server_route, app.nodes);
+	route_id_cache.set(route.id, route);
+	return route;
+}
 
 /**
  * Note on before_navigate_callbacks, on_navigate_callbacks and after_navigate_callbacks:
@@ -788,6 +821,53 @@ async function _preload_data(intent) {
 }
 
 /**
+ * Fetch and parse the route with the given ID from the server-side route resolution endpoint.
+ * Returns `ENDPOINT_ONLY` if the route exists but has no code to preload, or `undefined` if
+ * there is no such route. Only used when `router.resolution === 'server'`.
+ * @param {string} id
+ * @returns {Promise<import('types').CSRRoute | typeof ENDPOINT_ONLY | undefined>}
+ */
+async function load_route_by_id(id) {
+	/** @type {{ route?: import('types').CSRRouteServer, endpoint_only?: boolean }} */
+	let module;
+
+	try {
+		module = await import(
+			/* @vite-ignore */
+			base + route_id_resolution_pathname(app_dir, id)
+		);
+	} catch {
+		// if there's no module at that path the response is a 404 (or, on a static
+		// host, fallback HTML with the wrong MIME type) and the import rejects —
+		// treat it the same as an unknown route rather than surfacing a cryptic error
+		return;
+	}
+
+	if (module.endpoint_only) {
+		// The route exists, it just has no code to preload.
+		route_id_cache.set(id, ENDPOINT_ONLY);
+		return ENDPOINT_ONLY;
+	}
+
+	if (!module.route) return;
+
+	return parse_and_cache_server_route(module.route);
+}
+
+/**
+ * Import the modules for a route's layout and leaf nodes, without running `load` functions.
+ * @param {import('types').CSRRoute} route
+ * @returns {Promise<void>}
+ */
+async function load_route_nodes(route) {
+	await Promise.all(
+		/** @type {[has_server_load: boolean, node_loader: import('types').CSRPageNodeLoader][]} */ (
+			[...route.layouts, route.leaf].filter(Boolean)
+		).map(([, node_loader]) => node_loader())
+	);
+}
+
+/**
  * @param {URL} url
  * @returns {Promise<void>}
  */
@@ -795,11 +875,7 @@ async function _preload_code(url) {
 	const route = (await get_navigation_intent(url, false))?.route;
 
 	if (route) {
-		await Promise.all(
-			/** @type {[has_server_load: boolean, node_loader: import('types').CSRPageNodeLoader][]} */ (
-				[...route.layouts, route.leaf].filter(Boolean)
-			).map((load) => load[1]())
-		);
+		await load_route_nodes(route);
 	}
 }
 
@@ -1730,7 +1806,7 @@ export async function get_navigation_intent(url, invalidating) {
 		return {
 			id: get_page_key(url),
 			invalidating,
-			route: parse_server_route(route, app.nodes),
+			route: parse_and_cache_server_route(route),
 			params,
 			url
 		};
@@ -2657,45 +2733,76 @@ export async function preloadData(href) {
  * Programmatically imports the code for routes that haven't yet been fetched.
  * Typically, you might call this to speed up subsequent navigation.
  *
- * You can specify routes by any matching pathname such as `/about` (to match `src/routes/about/+page.svelte`) or `/blog/*` (to match `src/routes/blog/[slug]/+page.svelte`).
+ * Takes a route ID such as `/about` or `/blog/[slug]`. Unlike pathnames, route IDs
+ * are never prefixed with the app's [base path](https://svelte.dev/docs/kit/configuration#paths).
+ * If you have a pathname rather than a route ID, you can convert it with
+ * [`match`](https://svelte.dev/docs/kit/$app-paths#match) from `$app/paths`:
+ *
+ * ```js
+ * import { match } from '$app/paths';
+ * import { preloadCode } from '$app/navigation';
+ *
+ * const matched = await match('/blog/hello-world');
+ * if (matched) await preloadCode(matched.id);
+ * ```
  *
  * Unlike `preloadData`, this won't call `load` functions.
  * Returns a Promise that resolves when the modules have been imported.
  *
- * @param {string} pathname
+ * @param {RouteId} id
  * @returns {Promise<void>}
  */
-export async function preloadCode(pathname) {
+export async function preloadCode(id) {
 	if (!BROWSER) {
 		throw new Error('Cannot call preloadCode(...) on the server');
 	}
 
-	// `current.url` is null until the first navigation/hydration completes, so fall back
-	// to `location` to support calling `preloadCode` during initial page load (#13297)
-	const url = new URL(pathname, current.url ?? location.href);
-
-	if (DEV) {
-		if (!pathname.startsWith('/')) {
-			throw new Error(
-				'argument passed to preloadCode must be a pathname (i.e. "/about" rather than "http://example.com/about"'
-			);
-		}
-
-		if (!pathname.startsWith(base)) {
-			throw new Error(
-				`pathname passed to preloadCode must start with \`paths.base\` (i.e. "${base}${pathname}" rather than "${pathname}")`
-			);
-		}
-
-		if (__SVELTEKIT_CLIENT_ROUTING__) {
-			const rerouted = await get_rerouted_url(url);
-			if (!rerouted || !routes.find((route) => route.exec(get_url_path(rerouted)))) {
-				throw new Error(`'${pathname}' did not match any routes`);
-			}
-		}
+	if (DEV && id[0] !== '/') {
+		throw new Error(
+			`argument passed to preloadCode must be a route ID (i.e. "/blog/[slug]" rather than "blog/[slug]")`
+		);
 	}
 
-	return _preload_code(url);
+	const route = __SVELTEKIT_CLIENT_ROUTING__
+		? routes.find((r) => r.id === id)
+		: (route_id_cache.get(id) ?? (await load_route_by_id(id)));
+
+	if (route === ENDPOINT_ONLY) {
+		if (DEV) {
+			console.warn(
+				`'${id}' has no \`+page\`, so there is no code to preload. If you meant to warm up an ` +
+					`endpoint, request it with \`fetch\` instead.`
+			);
+		}
+
+		return;
+	}
+
+	if (!route) {
+		if (DEV) {
+			// warn rather than throw, since under client routing an endpoint-only route id is
+			// indistinguishable from a typo — the client manifest only contains routes with a `+page`
+			let message = `'${id}' did not match any route`;
+
+			if (__SVELTEKIT_CLIENT_ROUTING__) {
+				message += ` (note that routes without a \`+page\` have no code to preload)`;
+
+				// the most common migration mistake is passing a pathname, which used to work
+				const candidates = [id];
+				if (base && id.startsWith(base)) candidates.push(id.slice(base.length) || '/');
+
+				if (candidates.some((path) => routes.some((r) => r.exec(path)))) {
+					message += `. It does match as a pathname — use \`match(...)\` from \`$app/paths\` to convert a pathname into a route ID`;
+				}
+			}
+
+			console.warn(message);
+		}
+
+		return;
+	}
+
+	await load_route_nodes(route);
 }
 
 /**
@@ -3346,7 +3453,7 @@ async function _hydrate(
 	} else {
 		// undefined in case of 404
 		if (server_route) {
-			parsed_route = route = parse_server_route(server_route, app.nodes);
+			parsed_route = route = parse_and_cache_server_route(server_route);
 		} else {
 			route = { id: null };
 			params = {};

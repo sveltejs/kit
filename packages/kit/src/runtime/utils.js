@@ -1,6 +1,7 @@
 import { BROWSER } from 'esm-env';
 
 export const text_encoder = new TextEncoder();
+export const text_decoder = new TextDecoder();
 
 /**
  * Like node's path.relative, but without using node
@@ -28,6 +29,7 @@ export function get_relative_path(from, to) {
  * @returns {string}
  */
 export function base64_encode(bytes) {
+	// TODO replace with `bytes.toBase64()` when we require Node >= 25
 	// Using `Buffer` is faster than iterating
 	if (!BROWSER && globalThis.Buffer) {
 		return globalThis.Buffer.from(bytes).toString('base64');
@@ -47,6 +49,7 @@ export function base64_encode(bytes) {
  * @returns {Uint8Array}
  */
 export function base64_decode(encoded) {
+	// TODO replace with `Uint8Array.fromBase64(encoded)` when we require Node >= 25
 	// Using `Buffer` is faster than iterating
 	if (!BROWSER && globalThis.Buffer) {
 		const buffer = globalThis.Buffer.from(encoded, 'base64');
