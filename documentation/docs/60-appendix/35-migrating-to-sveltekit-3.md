@@ -232,6 +232,16 @@ If you have a `server/` directory that is meant to be importable from client cod
 
 ## Modules and imports
 
+### `$service-worker` has been removed
+
+Use `immutable`, `assets` and `prerendered` from `$app/manifest` in place of `build`, `files` and `prerendered`. `version` now comes from `$app/env`, and `resolve(...)` from `$app/paths` replaces `base`.
+
+```js
+---import { build, files, version } from '$service-worker';---
++++import { immutable, assets } from '$app/manifest';
+import { version } from '$app/env';+++
+```
+
 ### `@sveltejs/kit/node/polyfills` has been removed
 
 The `@sveltejs/kit/node/polyfills` module (and the Node global shims in `adapter-node`/`adapter-netlify`) have been removed. They were only needed for older Node versions, which are no longer supported. Remove any `import '@sveltejs/kit/node/polyfills'` statements from your custom server code.
