@@ -23,6 +23,34 @@ test('does not set X-Accel-Buffering header on other responses', async ({ reques
 	expect(response.headers()['x-accel-buffering']).toBeUndefined();
 });
 
+test('sets Vary on assets that were precompressed', async ({ request }) => {
+	const response = await request.get('/data.json');
+	expect(response.status()).toBe(200);
+	expect(response.headers()['vary']).toBe('Accept-Encoding');
+});
+
+test('does not set Vary on assets that were not precompressed', async ({ request }) => {
+	const response = await request.get('/test.ico');
+	expect(response.status()).toBe(200);
+	expect(response.headers()['vary']).toBeUndefined();
+});
+
+// an extensionless pathname can still resolve to a precompressed `index.html`
+test('sets Vary on assets reached without an extension', async ({ request }) => {
+	const response = await request.get('/sub/');
+	expect(response.status()).toBe(200);
+	expect(response.headers()['content-type']).toBe('text/html;charset=utf-8');
+	expect(response.headers()['vary']).toBe('Accept-Encoding');
+});
+
+// a dot in the final path segment looks like an extension but isn't one
+test('sets Vary on assets reached via a dotted path segment', async ({ request }) => {
+	const response = await request.get('/v1.0/');
+	expect(response.status()).toBe(200);
+	expect(response.headers()['content-type']).toBe('text/html;charset=utf-8');
+	expect(response.headers()['vary']).toBe('Accept-Encoding');
+});
+
 test('serves static files with the Content-Type from the manifest', async ({ request }) => {
 	// https://github.com/sveltejs/kit/issues/13753
 	const response = await request.get('/test.ico');

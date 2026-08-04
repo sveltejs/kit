@@ -149,9 +149,6 @@ importers:
       '@cloudflare/workers-types':
         specifier: ^4.20260621.1
         version: 4.20260621.1
-      worktop:
-        specifier: 0.8.0-next.18
-        version: 0.8.0-next.18
       wrangler:
         specifier: ^4.67.0
         version: 4.103.0(@cloudflare/workers-types@4.20260621.1)
@@ -165,9 +162,6 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 22.19.19
-      rolldown:
-        specifier: 'catalog:'
-        version: 1.2.0
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -451,6 +445,24 @@ importers:
         specifier: 'catalog:'
         version: 8.1.5(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0)
 
+  packages/adapter-vercel/test/apps/split:
+    devDependencies:
+      '@sveltejs/kit':
+        specifier: workspace:*
+        version: link:../../../../kit
+      '@sveltejs/vite-plugin-svelte':
+        specifier: 'catalog:'
+        version: 7.0.0(svelte@5.56.3(@typescript-eslint/types@8.61.1))(vite@8.1.5(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0))
+      svelte:
+        specifier: 'catalog:'
+        version: 5.56.3(@typescript-eslint/types@8.61.1)
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+      vite:
+        specifier: 'catalog:'
+        version: 8.1.5(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0)
+
   packages/amp:
     devDependencies:
       '@sveltejs/kit':
@@ -475,8 +487,8 @@ importers:
         specifier: ^0.1.5
         version: 0.1.5(svelte@5.56.3(@typescript-eslint/types@8.61.1))
       vite-imagetools:
-        specifier: ^10.0.1
-        version: 10.0.1(@types/node@22.19.19)(vite@8.1.5(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0))
+        specifier: ^11.0.0
+        version: 11.0.0(@types/node@22.19.19)(vite@8.1.5(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0))
       zimmerframe:
         specifier: ^1.1.2
         version: 1.1.2
@@ -1197,6 +1209,48 @@ importers:
         specifier: 'catalog:'
         version: 8.1.5(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0)
 
+  packages/kit/test/build-errors/apps/removed-lib-import:
+    devDependencies:
+      '@sveltejs/kit':
+        specifier: workspace:^
+        version: link:../../../..
+      '@sveltejs/vite-plugin-svelte':
+        specifier: 'catalog:'
+        version: 7.0.0(svelte@5.56.3(@typescript-eslint/types@8.61.1))(vite@8.1.5(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0))
+      svelte:
+        specifier: 'catalog:'
+        version: 5.56.3(@typescript-eslint/types@8.61.1)
+      svelte-check:
+        specifier: 'catalog:'
+        version: 4.7.0(picomatch@4.0.5)(svelte@5.56.3(@typescript-eslint/types@8.61.1))(typescript@6.0.3)
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+      vite:
+        specifier: 'catalog:'
+        version: 8.1.5(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0)
+
+  packages/kit/test/build-errors/apps/removed-service-worker-import:
+    devDependencies:
+      '@sveltejs/kit':
+        specifier: workspace:^
+        version: link:../../../..
+      '@sveltejs/vite-plugin-svelte':
+        specifier: 'catalog:'
+        version: 7.0.0(svelte@5.56.3(@typescript-eslint/types@8.61.1))(vite@8.1.5(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0))
+      svelte:
+        specifier: 'catalog:'
+        version: 5.56.3(@typescript-eslint/types@8.61.1)
+      svelte-check:
+        specifier: 'catalog:'
+        version: 4.7.0(picomatch@4.0.5)(svelte@5.56.3(@typescript-eslint/types@8.61.1))(typescript@6.0.3)
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+      vite:
+        specifier: 'catalog:'
+        version: 8.1.5(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0)
+
   packages/kit/test/build-errors/apps/server-only-folder:
     devDependencies:
       '@sveltejs/kit':
@@ -1415,9 +1469,6 @@ importers:
       chokidar:
         specifier: ^5.0.0
         version: 5.0.0
-      sade:
-        specifier: ^1.8.1
-        version: 1.8.1
       semver:
         specifier: ^7.8.5
         version: 7.8.5
@@ -3396,8 +3447,8 @@ packages:
     resolution: {integrity: sha512-Hs59xBNfUIunMFgWAbGX5cq6893IbWg4KnrjbYwX3tx0ztorVgTDA6B2sxf8ejHJ4wz8BqGUMYlnzNBer5NvGg==}
     engines: {node: '>= 4'}
 
-  imagetools-core@10.0.0:
-    resolution: {integrity: sha512-wirG+oESU1QTORt+fqR6DAsVMgW5CXgrRaGgf1lo4hu/3q6269GfHBmYpVWzmMIuHM/H01QcaWrHR6kHCC7bOw==}
+  imagetools-core@11.0.0:
+    resolution: {integrity: sha512-BaNX7im/o7PqGmck3/wElRx4xugnJYIMtPfOIAHEd2ZV1ZyalewE0H9nm/czZcjdtsgxVW7IzL0oJQn6J8kZuA==}
     engines: {node: '>=22.0.0'}
 
   import-in-the-middle@3.0.0:
@@ -4082,11 +4133,11 @@ packages:
       typescript:
         optional: true
 
-  vite-imagetools@10.0.1:
-    resolution: {integrity: sha512-JfM1rUSLQoPAA+8RB9TFxxpfSjmBpLTkU5zaSFPlWYlgfc3g2gFfYH+u+HghqNy+6HCw6zJBmq+2exx6pMJFOg==}
+  vite-imagetools@11.0.0:
+    resolution: {integrity: sha512-9mMuI/gum/hg7OT2VUfVJvolmACJbc1kStMmm0ydoUHX+3jsj1zvsbmI0DYt2K8u2Tex6kiTuj86xDuIYNgV2A==}
     engines: {node: '>=22.0.0'}
     peerDependencies:
-      vite: '>=7.0.0'
+      vite: '>=8.0.0'
 
   vite@8.1.5:
     resolution: {integrity: sha512-7ULLwsCdYx/nRyrpiEwvqb5TFHrMVZyBt+rg/OAXT7rgj/z+DtTDyKFeLAdDkubDVDKD8jOsndmy7m55XcfUsw==}
@@ -4220,10 +4271,6 @@ packages:
     resolution: {integrity: sha512-Re5pl6pdowt3ZmWUzGlOuB7jbRIIPetgKalmo4cYmucQnVhpo7/3e4MfpekbhLi2EhZZz5EY9NWRu8zFzuEZew==}
     engines: {node: '>=16'}
     hasBin: true
-
-  worktop@0.8.0-next.18:
-    resolution: {integrity: sha512-+TvsA6VAVoMC3XDKR5MoC/qlLqDixEfOBysDEKnPIPou/NvoPWCAuXHXMsswwlvmEuvX56lQjvELLyLuzTKvRw==}
-    engines: {node: '>=12'}
 
   wrangler@4.103.0:
     resolution: {integrity: sha512-3Lv1P5t2xcSEkSTKtG+Lz+3JFryuU7YPLkaCUj7gNe+CJsjZJLtUwqsh1x595QBxkIbCE0GAvDx2DCJUU4+oqw==}
@@ -6042,7 +6089,7 @@ snapshots:
 
   ignore@7.0.5: {}
 
-  imagetools-core@10.0.0: {}
+  imagetools-core@11.0.0: {}
 
   import-in-the-middle@3.0.0:
     dependencies:
@@ -6715,10 +6762,10 @@ snapshots:
     optionalDependencies:
       typescript: 6.0.3
 
-  vite-imagetools@10.0.1(@types/node@22.19.19)(vite@8.1.5(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0)):
+  vite-imagetools@11.0.0(@types/node@22.19.19)(vite@8.1.5(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0)):
     dependencies:
       '@rollup/pluginutils': 5.4.0
-      imagetools-core: 10.0.0
+      imagetools-core: 11.0.0
       sharp: 0.35.3(@types/node@22.19.19)
       vite: 8.1.5(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0)
     transitivePeerDependencies:
@@ -6814,11 +6861,6 @@ snapshots:
       '@cloudflare/workerd-linux-64': 1.20260617.1
       '@cloudflare/workerd-linux-arm64': 1.20260617.1
       '@cloudflare/workerd-windows-64': 1.20260617.1
-
-  worktop@0.8.0-next.18:
-    dependencies:
-      mrmime: 2.0.0
-      regexparam: 3.0.0
 
   wrangler@4.103.0(@cloudflare/workers-types@4.20260621.1):
     dependencies:

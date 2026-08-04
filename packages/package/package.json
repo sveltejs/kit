@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/package",
-	"version": "3.0.0-next.3",
+	"version": "3.0.0-next.4",
 	"description": "The fastest way to build Svelte packages",
 	"repository": {
 		"type": "git",
@@ -21,7 +21,6 @@
 	"type": "module",
 	"dependencies": {
 		"chokidar": "^5.0.0",
-		"sade": "^1.8.1",
 		"semver": "^7.8.5",
 		"svelte2tsx": "~0.7.56"
 	},

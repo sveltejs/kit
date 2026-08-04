@@ -5,10 +5,113 @@ let id;
 id = '/';
 id = '/foo/[bar]/[baz]';
 id = '/(group)/path-a';
+id = '/(group)/path-a/trailing-slash/always/endpoint'; // endpoint-only
+id = '/(group)/path-a/trailing-slash/mixed'; // page and endpoint
+
+// @ts-expect-error
+id = '/nope';
+
+// @ts-expect-error `/foo` is a directory with no `+page` or `+server`, so it is not a route
+id = '/foo';
+
+// @ts-expect-error a directory with only a `+layout` is not a route either
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+id = '/(group)/path-a/trailing-slash/always/layout';
+
+/** @type {import('$app/types').PageRouteId} */
+let page_id;
+
+page_id = '/(group)/path-a'; // okay
+page_id = '/(group)/path-a/trailing-slash/mixed'; // okay, has both a `+page` and a `+server`
+
+// @ts-expect-error `/(group)/path-a/trailing-slash/always/endpoint` only has a `+server`
+page_id = '/(group)/path-a/trailing-slash/always/endpoint';
+
+// @ts-expect-error `/foo` is a directory with no `+page` or `+server`
+page_id = '/foo';
 
 // @ts-expect-error
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-id = '/nope';
+page_id = '/nope';
+
+/** @type {import('$app/types').EndpointRouteId} */
+let endpoint_id;
+
+endpoint_id = '/(group)/path-a/trailing-slash/always/endpoint'; // okay
+endpoint_id = '/(group)/path-a/trailing-slash/mixed'; // okay, has both a `+page` and a `+server`
+
+// @ts-expect-error `/(group)/path-a` only has a `+page`
+endpoint_id = '/(group)/path-a';
+
+// @ts-expect-error `/foo` is a directory with no `+page` or `+server`
+endpoint_id = '/foo';
+
+// @ts-expect-error
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+endpoint_id = '/nope';
+
+// a directory with only a `+layout` is not a route, but `LayoutParams` still accepts it
+/** @type {import('$app/types').LayoutParams<'/(group)/path-a/trailing-slash/always/layout'>} */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const layoutOnlyParams = {};
+
+// endpoints have params too
+/** @type {import('$app/types').RouteParams<'/(group)/path-a/trailing-slash/always/endpoint'>} */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const endpointParams = {};
+
+/** @type {import('$app/manifest').ManifestRoute[]} */
+const manifest_routes = [
+	{ id: '/(group)/path-a', page: true, endpoint: false },
+	{ id: '/(group)/path-a/trailing-slash/always/endpoint', page: false, endpoint: true },
+	{ id: '/(group)/path-a/trailing-slash/mixed', page: true, endpoint: true }
+];
+
+/** @type {import('$app/manifest').ManifestRoute[]} */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const impossible_manifest_routes = [
+	// @ts-expect-error a route always has a page and/or an endpoint
+	{ id: '/(group)/path-a', page: false, endpoint: false },
+	// @ts-expect-error `/(group)/path-a` has no endpoint
+	{ id: '/(group)/path-a', page: true, endpoint: true },
+	// @ts-expect-error the capability booleans are required
+	{ id: '/(group)/path-a' }
+];
+
+for (const route of manifest_routes) {
+	if (route.page && !route.endpoint) {
+		/** @type {Exclude<import('$app/types').PageRouteId, import('$app/types').EndpointRouteId>} */
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		const page_only_id = route.id;
+
+		/** @type {import('$app/types').EndpointRouteId} */
+		// @ts-expect-error a page-only route ID is never an endpoint route ID
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		const not_an_endpoint_id = route.id;
+	} else if (!route.page && route.endpoint) {
+		/** @type {Exclude<import('$app/types').EndpointRouteId, import('$app/types').PageRouteId>} */
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		const endpoint_only_id = route.id;
+
+		/** @type {import('$app/types').PageRouteId} */
+		// @ts-expect-error an endpoint-only route ID is never a page route ID
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		const not_a_page_id = route.id;
+	} else {
+		/** @type {Extract<import('$app/types').PageRouteId, import('$app/types').EndpointRouteId>} */
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		const dual_id = route.id;
+
+		// a dual route ID belongs to both capability unions
+		/** @type {import('$app/types').PageRouteId} */
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		const also_a_page_id = route.id;
+
+		/** @type {import('$app/types').EndpointRouteId} */
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		const also_an_endpoint_id = route.id;
+	}
+}
 
 /** @type {import('$app/types').RouteParams<'/foo/[bar]/[baz]'>} */
 const params = {
@@ -62,10 +165,10 @@ withMatcherLayoutParams.locale = 'en'; // okay
 withMatcherLayoutParams.locale = 'nb'; // okay
 withMatcherLayoutParamsWithUndefined.locale = 'nb'; // okay
 
+// @ts-expect-error `/matcher-test` does not contain a layout
 /** @type {import('$app/types').LayoutParams<'/matcher-test'>} */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const matcherParentLayoutParams = {};
-
-matcherParentLayoutParams.locale = 'fr'; // any string
 
 /** @type {import('$app/types').Path} */
 let pathname;
@@ -106,5 +209,29 @@ pathname = 'path-a/trailing-slash/never/layout/inside';
 
 // Test trailing-slash - always (endpoint) and never (page)
 pathname = 'path-a/trailing-slash/mixed';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 pathname = 'path-a/trailing-slash/mixed/';
+
+// Test optional params, which can be omitted
+pathname = 'about';
+pathname = 'en/about';
+pathname = 'deep';
+pathname = 'en/deep';
+pathname = 'en/gb/deep';
+// @ts-expect-error an omitted optional param does not merge into the next segment
+pathname = 'xyzabout';
+// @ts-expect-error
+pathname = 'xyzdeep';
+
+// Test multiple params in a single segment
+pathname = 'multi-param/1-2';
+
+// Test rest params, which can match zero segments
+pathname = 'files';
+pathname = 'files/a/b';
+
+// Test escape sequences, which are expanded
+pathname = '.well-known';
+// @ts-expect-error the route id's escape sequence is not part of the pathname
+pathname = '[x+2e]well-known';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+pathname = '@someone';

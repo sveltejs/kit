@@ -46,6 +46,11 @@ import analyse from '../../core/postbuild/analyse.js';
 import { s } from '../../utils/misc.js';
 import { hash } from '../../utils/hash.js';
 import { dedent } from '../../core/sync/utils.js';
+import {
+	is_app_route,
+	is_endpoint_route,
+	is_page_route
+} from '../../core/sync/create_manifest_data/index.js';
 import { get_import_aliases, get_hash_import_keys } from '../../utils/imports.js';
 import {
 	app_env_private,
@@ -100,6 +105,21 @@ const enforced_config = {
 };
 
 const options_regex = /(export\s+const\s+(prerender|csr|ssr|trailingSlash))\s*=/s;
+
+const removed_modules = [
+	{
+		name: '$lib',
+		pattern: /^\$lib(?:\/.*|\?.*)?$/,
+		message:
+			"`$lib` has been removed. Use `#lib` instead: https://svelte.dev/docs/kit/$lib. To keep using `$lib`, add `alias: { '$lib': 'src/lib' }` to your SvelteKit config."
+	},
+	{
+		name: '$service-worker',
+		pattern: /^\$service-worker(?:\?.*)?$/,
+		message:
+			'`$service-worker` has been removed. Use `immutable`, `assets` and `prerendered` from `$app/manifest`, `version` from `$app/env`, and `resolve(...)` from `$app/paths` instead: https://svelte.dev/docs/kit/$service-worker'
+	}
+];
 
 /** @type {Set<string>} */
 const warned = new Set();
@@ -310,6 +330,26 @@ function kit({ svelte_config }) {
 		name: 'vite-plugin-sveltekit-setup',
 		api: {
 			options: svelte_config
+		},
+		resolveId: {
+			filter: { id: removed_modules.map(({ pattern }) => pattern) },
+			async handler(id, importer, options) {
+				const resolved = await this.resolve(id, importer, { ...options, skipSelf: true });
+				if (resolved) return resolved;
+
+				const aliases = svelte_config.kit.alias;
+				for (const { name, pattern, message } of removed_modules) {
+					if (!pattern.test(id)) continue;
+
+					// If the user re-added an alias for this module (as the migration message
+					// suggests), a failed resolution means a genuine missing file rather than
+					// use of the removed module. Let Vite report the real "not found" error
+					// instead of the misleading migration message.
+					if (name in aliases || `${name}/*` in aliases) return;
+
+					throw stackless(message);
+				}
+			}
 		},
 
 		/**
@@ -1570,7 +1610,7 @@ function kit({ svelte_config }) {
 			// the client build and after prerendering respectively.
 			replace_manifest_placeholder_variables(server_chunks, `${out}/server`, {
 				assets: manifest_data.assets.map((asset) => ({ path: asset.file })),
-				routes: manifest_data.routes.map((route) => ({ id: route.id }))
+				routes: get_manifest_routes(manifest_data.routes)
 			});
 
 			const verbose = builder.config.logLevel === 'info';
@@ -1732,7 +1772,7 @@ function kit({ svelte_config }) {
 				replace_manifest_placeholder_variables(client_chunks, `${out}/client`, {
 					immutable,
 					assets: manifest_data.assets.map((asset) => ({ path: asset.file })),
-					routes: manifest_data.routes.map((route) => ({ id: route.id }))
+					routes: get_manifest_routes(manifest_data.routes)
 				});
 
 				// Now that the client build is done, replace the `build` sentinel
@@ -2122,15 +2162,26 @@ function stringify_assets(assets) {
 
 /**
  * @param {RouteData[] | undefined} routes
+ * @returns {Array<{ id: string; page: boolean; endpoint: boolean }>}
+ */
+function get_manifest_routes(routes) {
+	return (
+		routes?.filter(is_app_route).map((route) => ({
+			id: route.id,
+			page: is_page_route(route),
+			endpoint: is_endpoint_route(route)
+		})) ?? []
+	);
+}
+
+/**
+ * @param {RouteData[] | undefined} routes
  * @returns {string}
  */
 function stringify_routes(routes) {
-	return (
-		routes
-			?.filter((route) => route.page || route.endpoint || route.leaf)
-			.map((route) => s({ id: route.id }))
-			.join(',\n') ?? ''
-	);
+	return get_manifest_routes(routes)
+		.map((route) => s(route))
+		.join(',\n');
 }
 
 /**
@@ -2191,7 +2242,7 @@ const create_manifest_data_module = (is_build, manifest_data) => {
  *   immutable?: Array<{ path: string }>;
  *   assets?: Array<{ path: string }>;
  *   prerendered?: Array<{ path: string }>;
- *   routes?: Array<{ id: string }>;
+ *   routes?: Array<{ id: string; page: boolean; endpoint: boolean }>;
  * }} values
  */
 const replace_manifest_placeholder_variables = (chunks, output_dir, values) => {
