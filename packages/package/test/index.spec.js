@@ -9,6 +9,8 @@ import { build, watch } from '../src/index.js';
 import { load_config } from '../src/config.js';
 import { _create_validator } from '../src/validate.js';
 import { resolve_aliases } from '../src/utils.js';
+import { walk } from '../src/filesystem.js';
+import { execFileSync } from 'node:child_process';
 
 const original_cwd = process.cwd();
 
@@ -37,22 +39,20 @@ async function test_make_package(path, options) {
 		...options
 	});
 
-	const expected_files = fs.readdirSync(ewd, { encoding: 'utf-8', recursive: true }).sort();
-	const actual_files = fs.readdirSync(output, { encoding: 'utf-8', recursive: true }).sort();
+	const expected_files = walk(ewd).sort();
+	const actual_files = walk(output).sort();
 
 	expect(actual_files).toEqual(expected_files);
 
 	const extensions = ['.json', '.svelte', '.ts', 'js', '.map'];
 	for (const file of actual_files) {
-		const pathname = join(output, file);
-		if (fs.statSync(pathname).isDirectory()) continue;
 		expect(expected_files.includes(file), `Did not expect ${file} in ${path}`).toBeTruthy();
 
 		const expected = fs.readFileSync(join(ewd, file));
 		const actual = fs.readFileSync(join(output, file));
 		const err_msg = `Expected equal file contents for ${file} in ${path}`;
 
-		if (extensions.some((ext) => pathname.endsWith(ext))) {
+		if (extensions.some((ext) => file.endsWith(ext))) {
 			const expected_content = await format(file, expected.toString('utf-8'));
 			const actual_content = await format(file, actual.toString('utf-8'));
 			expect(actual_content, err_msg).toBe(expected_content);

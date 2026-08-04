@@ -1,7 +1,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { VERSION } from 'svelte/compiler';
-import { posixify } from './filesystem.js';
+import { posixify, walk } from './filesystem.js';
 
 const is_svelte_5_plus = Number(VERSION.split('.')[0]) >= 5;
 
@@ -142,10 +142,7 @@ export function write(file, contents) {
  * @returns {import('./types.js').File[]}
  */
 export function scan(input, extensions) {
-	return fs
-		.readdirSync(input, { encoding: 'utf-8', recursive: true })
-		.filter((file) => fs.statSync(path.join(input, file)).isFile())
-		.map((file) => analyze(file, extensions));
+	return walk(input).map((file) => analyze(file, extensions));
 }
 
 /**

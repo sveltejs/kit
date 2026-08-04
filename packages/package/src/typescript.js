@@ -2,7 +2,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { createRequire } from 'node:module';
 import semver from 'semver';
-import { posixify } from './filesystem.js';
+import { posixify, walk } from './filesystem.js';
 import { resolve_aliases, write } from './utils.js';
 import { emitDts } from 'svelte2tsx';
 import { load_pkg_json } from './config.js';
@@ -53,12 +53,8 @@ export async function emit_dts(input, output, final_output, cwd, alias, files, t
 		}
 	}
 
-	const generated = fs
-		.readdirSync(tmp, { encoding: 'utf-8', recursive: true })
-		.filter((file) => fs.statSync(path.join(tmp, file)).isFile());
-
 	// resolve $lib alias (TODO others), copy into package dir
-	for (const file of generated) {
+	for (const file of walk(tmp)) {
 		const normalized = posixify(file);
 
 		if (handwritten.has(normalized)) {
