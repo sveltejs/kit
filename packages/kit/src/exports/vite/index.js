@@ -11,7 +11,7 @@ import MagicString from 'magic-string';
 import { loadEnv } from 'vite';
 import { exactRegex, prefixRegex } from 'rolldown/filter';
 
-import { copy, mkdirp, read, resolve_entry, rimraf } from '../../utils/filesystem.js';
+import { copy, read, resolve_entry } from '../../utils/filesystem.js';
 import { posixify } from '../../utils/os.js';
 import { to_fs } from '../../utils/vite.js';
 import {
@@ -1590,9 +1590,9 @@ function kit({ svelte_config }) {
 		async buildApp(builder) {
 			// clears the output directories
 			if (!builder.config.build.watch) {
-				rimraf(out);
+				fs.rmSync(out, { force: true, recursive: true });
 			}
-			mkdirp(out);
+			fs.mkdirSync(out, { recursive: true });
 
 			await load_and_validate_params({
 				routes: manifest_data.routes,
