@@ -1,9 +1,4 @@
 {
-	"compilerOptions": {
-		"allowJs": true,
-		"checkJs": true,
-		"esModuleInterop": true,
-		"resolveJsonModule": true
-	},
-	"extends": "$app/tsconfig"
+	"extends": "$app/tsconfig",
+	"include": ["src", "test", "*.js"]
 }
