@@ -4,16 +4,42 @@ import { resolve_entry } from '../../utils/filesystem.js';
 import { posixify } from '../../utils/os.js';
 import { write_if_changed } from './utils.js';
 import { s } from '../../utils/misc.js';
-import { get_route_segments } from '../../utils/routing.js';
+import {
+	decode_escape_sequence,
+	encode_pathname_chars,
+	get_route_segments,
+	segment_pattern
+} from '../../utils/routing.js';
 import { is_app_route, is_endpoint_route, is_page_route } from './create_manifest_data/index.js';
 
-const replace_optional_params = (/** @type {string} */ id) =>
-	id.replace(/\/\[\[[^\]]+\]\]/g, '${string}');
-const replace_required_params = (/** @type {string} */ id) =>
-	id.replace(/\/\[[^\]]+\]/g, '/${string}');
-/** Convert route ID to pathname by removing layout groups */
-const remove_group_segments = (/** @type {string} */ id) => {
-	return '/' + get_route_segments(id).join('/');
+const optional_param_pattern = /^\[\[[\w-]+(?:=[\w-]+)?\]\]$/;
+const rest_param_pattern = /^\[\.\.\.[\w-]+(?:=[\w-]+)?\]$/;
+
+/**
+ * Convert a route ID to the pathnames it can match (relative to the base path), in which each
+ * param is replaced with `${string}` and each escape sequence is expanded. A param that fills an
+ * entire segment can be absent, so it contributes a pathname with the segment and one without,
+ * rather than one that absorbs the `/`
+ * @param {string} id
+ */
+const get_pathname_patterns = (id) => {
+	let pathnames = [''];
+
+	for (const segment of get_route_segments(id)) {
+		const omittable = optional_param_pattern.test(segment) || rest_param_pattern.test(segment);
+		const content = omittable
+			? '${string}'
+			: segment.replace(segment_pattern, (_, escape_type, escape_code) =>
+					escape_type ? encode_pathname_chars(decode_escape_sequence(escape_code)) : '${string}'
+				);
+
+		pathnames = pathnames.flatMap((pathname) => {
+			const joined = pathname === '' ? content : `${pathname}/${content}`;
+			return omittable ? [joined, pathname] : [joined];
+		});
+	}
+
+	return [...new Set(pathnames)];
 };
 
 /**
@@ -210,9 +236,6 @@ function generate_app_types(manifest_data, config, dir) {
 		if (is_endpoint_route(route)) endpoint_route_ids.push(id);
 		if (is_app_route(route)) app_route_ids.push(id);
 
-		const pathname = remove_group_segments(route.id);
-		let normalized_pathname = pathname.slice(1);
-
 		/** @type {(path: string) => string} */
 		let serialise = s;
 
@@ -226,12 +249,13 @@ function generate_app_types(manifest_data, config, dir) {
 				dynamic_routes.push(`${s(route.id)}: { ${params.join('; ')} }`);
 			}
 
-			normalized_pathname = replace_required_params(replace_optional_params(pathname)).slice(1);
 			serialise = (p) => `\`${p}\` & {}`;
 		}
 
-		for (const p of get_pathnames_for_trailing_slash(normalized_pathname, route)) {
-			pathnames.add(serialise(p));
+		for (const pathname of get_pathname_patterns(route.id)) {
+			for (const p of get_pathnames_for_trailing_slash(pathname, route)) {
+				pathnames.add(serialise(p));
+			}
 		}
 
 		let layout_type = 'Record<string, never>';
