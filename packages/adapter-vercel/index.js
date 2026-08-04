@@ -189,14 +189,15 @@ const plugin = function (defaults = {}) {
 				});
 
 				const dir = `${dirs.functions}/sveltekit-middleware-reroute.func`;
+				const entry = `${tmp}/index.js`;
 
-				builder.copy(`${files}/reroute.js`, `${tmp}/index.js`, {
+				builder.copy(`${files}/reroute.js`, entry, {
 					replace: {
 						REROUTE: reroute_path
 					}
 				});
 
-				await create_function_bundle(builder, `${tmp}/index.js`, dir, defaults);
+				await create_function_bundle(builder, entry, dir, defaults);
 
 				reroute_middleware = true;
 			}

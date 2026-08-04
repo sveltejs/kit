@@ -1,6 +1,6 @@
 import { rmSync } from 'node:fs';
 
-const EXTERNAL = new Set(['__HOOKS__']);
+const EXTERNAL = new Set(['REROUTE']);
 
 /**
  * @param {string} filepath

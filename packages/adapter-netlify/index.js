@@ -104,14 +104,7 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 				await generate_edge_functions({ builder, reroute_middleware });
 			} else {
 				if (split && (await builder.hasRerouteHook())) {
-					const tmp = builder.getBuildDirectory('netlify-tmp');
-					builder.rimraf(tmp);
-					builder.mkdirp(tmp);
-
-					const reroute_path = `${tmp}/reroute.js`;
-					await builder.generateRerouteModule(reroute_path);
-
-					await generate_reroute_middleware({ builder, reroute_path });
+					await generate_reroute_middleware(builder);
 					reroute_middleware = true;
 				}
 
@@ -404,11 +397,9 @@ async function generate_edge_functions({ builder, reroute_middleware }) {
 }
 
 /**
- * @param {object} params
- * @param {Builder} params.builder
- * @param {string} params.reroute_path
+ * @param {Builder} builder
  */
-async function generate_reroute_middleware({ builder, reroute_path }) {
+async function generate_reroute_middleware(builder) {
 	builder.log.minor('Generating edge middleware to run reroute before split functions...');
 
 	const tmp = builder.getBuildDirectory('netlify-tmp');
@@ -417,9 +408,12 @@ async function generate_reroute_middleware({ builder, reroute_path }) {
 
 	builder.mkdirp('.netlify/edge-functions');
 
+	const reroute_path = `${tmp}/reroute.js`;
+	await builder.generateRerouteModule(reroute_path);
+
 	builder.copy(`${files}/reroute.js`, `${tmp}/entry.js`, {
 		replace: {
-			__HOOKS__: reroute_path
+			REROUTE: reroute_path
 		}
 	});
 
