@@ -1,3 +1,5 @@
+import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { expect, test } from 'vitest';
 import { validate_config } from '../../core/config/index.js';
@@ -6,6 +8,7 @@ import { dedent } from '../../core/sync/utils.js';
 import {
 	error_for_missing_config,
 	get_config_aliases,
+	is_remote_module,
 	remote_module_pattern,
 	server_only_directory_pattern,
 	server_only_module_pattern
@@ -60,6 +63,61 @@ test('recognizes remote module filenames', () => {
 	expect(remote_module_pattern.test('dir/module.remote.test.js')).toBe(true);
 	expect(remote_module_pattern.test('dir/module.remotely.js')).toBe(false);
 	expect(remote_module_pattern.test('dir/remote/module.js')).toBe(false);
+});
+
+test('recognizes remote modules', () => {
+	const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'sveltekit-remote-module-'));
+
+	/**
+	 * @param {string} directory
+	 * @param {Record<string, unknown>} contents
+	 * @returns {void}
+	 */
+	function write_package_json(directory, contents) {
+		fs.mkdirSync(directory, { recursive: true });
+		fs.writeFileSync(path.join(directory, 'package.json'), JSON.stringify(contents));
+	}
+
+	try {
+		expect(is_remote_module(path.join(temp, 'src', 'remote.js'))).toBe(true);
+		expect(is_remote_module(path.join(temp, 'src', 'remotely.js'))).toBe(false);
+		expect(is_remote_module('C:\\app\\src\\remote.js')).toBe(true);
+
+		const plain = path.join(temp, 'node_modules', 'plain');
+		write_package_json(plain, {
+			dependencies: {
+				'@sveltejs/kit': '*'
+			}
+		});
+		expect(is_remote_module(path.join(plain, 'dist', 'remote.js'))).toBe(false);
+
+		const with_peer = path.join(temp, 'node_modules', 'with-peer');
+		write_package_json(with_peer, {
+			peerDependencies: {
+				'@sveltejs/kit': '*'
+			}
+		});
+		expect(is_remote_module(path.join(with_peer, 'dist', 'remote.js'))).toBe(true);
+
+		const with_stub = path.join(temp, 'node_modules', 'with-stub');
+		write_package_json(with_stub, {
+			peerDependencies: {
+				'@sveltejs/kit': '*'
+			}
+		});
+		write_package_json(path.join(with_stub, 'dist'), {});
+		expect(is_remote_module(path.join(with_stub, 'dist', 'jwks', 'remote.js'))).toBe(true);
+
+		const pnpm_package = path.join(temp, 'node_modules', '.pnpm', 'x@1', 'node_modules', 'x');
+		write_package_json(pnpm_package, {
+			peerDependencies: {
+				'@sveltejs/kit': '*'
+			}
+		});
+		expect(is_remote_module(path.join(pnpm_package, 'dist', 'remote.js'))).toBe(true);
+	} finally {
+		fs.rmSync(temp, { recursive: true, force: true });
+	}
 });
 
 test('error_for_missing_config - simple single level config', () => {

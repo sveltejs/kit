@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import path from 'node:path';
 import { posixify } from '../../utils/os.js';
 import { negotiate } from '../../utils/http.js';
@@ -136,6 +137,56 @@ export function normalize_id(id, aliases, cwd) {
 }
 
 export const remote_module_pattern = /[/.]remote(\.[^/]+)+$/;
+
+/**
+ * A cache of which directories can export remote modules
+ * @type {Map<string, boolean>}
+ */
+const remote_module_cache = new Map();
+
+/**
+ * Whether `id` is a remote module. Files in node_modules only count if the
+ * package they belong to has a peer dependency on `@sveltejs/kit`
+ * @param {string} id
+ * @returns {boolean}
+ */
+export function is_remote_module(id) {
+	id = posixify(id);
+	if (!remote_module_pattern.test(id)) return false;
+	if (!id.includes('node_modules')) return true;
+
+	return can_export_remote_module(path.dirname(id));
+}
+
+/**
+ * @param {string} directory
+ * @returns {boolean}
+ */
+function can_export_remote_module(directory) {
+	let cached = remote_module_cache.get(directory);
+	if (cached !== undefined) return cached;
+
+	let pkg;
+
+	try {
+		pkg = JSON.parse(fs.readFileSync(path.join(directory, 'package.json'), 'utf8'));
+	} catch {}
+
+	if (pkg?.peerDependencies?.['@sveltejs/kit']) {
+		cached = true;
+	} else {
+		const parent = path.dirname(directory);
+
+		cached =
+			path.basename(directory) === 'node_modules' || parent === directory
+				? false // base case
+				: can_export_remote_module(parent); // recurse
+	}
+
+	remote_module_cache.set(directory, cached);
+	return cached;
+}
+
 export const server_only_module_pattern = /[/.]server(\.[^/]+)+$/;
 export const server_only_directory_pattern = /\/server\//;
 

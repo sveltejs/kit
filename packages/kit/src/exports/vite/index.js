@@ -34,6 +34,7 @@ import { preview } from './preview/index.js';
 import {
 	error_for_missing_config,
 	get_config_aliases,
+	is_remote_module,
 	normalize_id,
 	remote_module_pattern,
 	server_only_directory_pattern,
@@ -507,6 +508,7 @@ function kit({ svelte_config }) {
 								async handler(id, importer) {
 									const resolved = await this.resolve(id, importer, { skipSelf: true });
 									if (!resolved) return { id, external: true };
+									if (!is_remote_module(resolved.id)) return;
 									// a servable /@fs url; 'absolute' stops rolldown relativizing it in the deps bundle
 									return { id: to_fs(resolved.id), external: 'absolute' };
 								}
@@ -929,6 +931,8 @@ function kit({ svelte_config }) {
 				id: remote_module_pattern
 			},
 			async handler(code, id) {
+				if (!is_remote_module(id)) return;
+
 				const file = posixify(path.relative(root, id));
 				const remote = {
 					hash: hash(file),

@@ -52,6 +52,11 @@ test.describe('remote functions', () => {
 		await page.getByRole('button', { name: 'call remote function' }).click();
 		await expect(page.locator('p')).toHaveText('lib says client');
 	});
+
+	test('packages can contain ordinary remote.js files', async ({ page }) => {
+		await page.goto('/plain-lib');
+		await expect(page.locator('p')).toHaveText('key set for https://example.com/jwks');
+	});
 });
 
 // have to run in serial because commands mutate in-memory data on the server (should fix this at some point)
