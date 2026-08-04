@@ -1,5 +1,5 @@
 import type { Adapter } from '@sveltejs/kit';
-import type { Serve, TLSOptions } from 'bun';
+import type { CompileBuildOptions, Serve, TLSOptions } from 'bun';
 import './ambient.js';
 
 declare global {
@@ -16,17 +16,12 @@ type ServerOptions = Omit<
 	tls?: TLSOptions | TLSOptions[];
 };
 
-interface CompileOptions {
+interface CompileOptions extends Omit<CompileBuildOptions, 'outfile'> {
 	/**
 	 * The executable path, relative to the project root.
 	 * @default `${out}/app`
 	 */
 	outfile?: string;
-	/**
-	 * A Bun executable target such as `bun-linux-x64` or `bun-windows-x64-baseline`.
-	 * By default, Bun compiles for the current platform.
-	 */
-	target?: string;
 	/** Include Bun bytecode to improve startup time. */
 	bytecode?: boolean;
 	/** Minify the server bundle before compiling it. */

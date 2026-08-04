@@ -51,4 +51,4 @@ jobs:
         working-directory: packages/adapter-bun/test/apps/basic
         env:
           COMPILE: 'true'
-        run: pnpm build
+        run: bun run --bun build

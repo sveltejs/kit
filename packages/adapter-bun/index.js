@@ -1,5 +1,4 @@
 import { readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
-import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { rolldown } from 'rolldown';
 
@@ -225,15 +224,16 @@ function serialize(value) {
  * @param {string[]} assets
  * @returns {Promise<void>}
  */
-function compile_executable(out, options, assets) {
+async function compile_executable(out, options, assets) {
+	if (typeof Bun === 'undefined') {
+		throw new Error(
+			'Compiling an executable requires running the SvelteKit build with Bun. Use `bun run --bun build`.'
+		);
+	}
+
 	const outfile = options.outfile ?? `${out}/app`;
 	const entrypoint = `${out}/adapter-bun-compile.js`;
-	const args = ['build', '--compile'];
-
-	if (options.target) args.push(`--target=${options.target}`);
-	if (options.bytecode) args.push('--bytecode');
-	if (options.minify) args.push('--minify');
-	if (options.sourcemap) args.push('--sourcemap=linked');
+	const { bytecode, minify, sourcemap, outfile: _, ...compile } = options;
 
 	const unique_assets = [...new Set(assets)];
 	const imports = unique_assets.map(
@@ -255,27 +255,21 @@ function compile_executable(out, options, assets) {
 		].join('\n')
 	);
 
-	args.push(entrypoint, `--outfile=${outfile}`);
+	try {
+		const result = await Bun.build({
+			entrypoints: [entrypoint],
+			compile: { ...compile, outfile },
+			bytecode,
+			minify,
+			sourcemap: sourcemap ? 'linked' : undefined
+		});
 
-	return new Promise((resolve, reject) => {
-		const child = spawn('bun', args, { stdio: 'inherit' });
-		child.on('error', (error) => {
-			rmSync(entrypoint, { force: true });
-			reject(new Error('Could not run Bun to compile the server executable', { cause: error }));
-		});
-		child.on('exit', (code, signal) => {
-			rmSync(entrypoint, { force: true });
-			if (code === 0) {
-				resolve();
-			} else {
-				reject(
-					new Error(
-						`Bun executable compilation failed${signal ? ` with signal ${signal}` : ` with exit code ${code}`}`
-					)
-				);
-			}
-		});
-	});
+		if (!result.success) {
+			throw new AggregateError(result.logs, 'Bun executable compilation failed');
+		}
+	} finally {
+		rmSync(entrypoint, { force: true });
+	}
 }
 
 /** @param {string} str */

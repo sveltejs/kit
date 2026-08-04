@@ -88,7 +88,13 @@ Set `compile: true` to additionally generate `build/app`, a single executable co
 adapter({ compile: true });
 ```
 
-Only the executable is required at runtime. It is specific to the platform on which it was built. Advanced options can select another Bun target and enable minification, bytecode, or source maps:
+The adapter uses the [`Bun.build`](https://bun.com/reference/bun/build) JavaScript API directly. Because Vite normally respects its Node.js shebang, run the build with Bun's `--bun` flag when compilation is enabled:
+
+```sh
+bun run --bun build
+```
+
+Only the executable is required at runtime. It is specific to the platform on which it was built. Advanced options can select another Bun target and enable minification, bytecode, source maps, or other [`compile` options](https://bun.com/reference/bun/CompileBuildOptions):
 
 ```js
 adapter({
@@ -102,7 +108,7 @@ adapter({
 });
 ```
 
-The `bun` executable must be available while the SvelteKit build runs. Native dependencies and cross-compilation have the same constraints as [`bun build --compile`](https://bun.com/docs/bundler/executables).
+Native dependencies and cross-compilation have the same constraints as [Bun's single-file executables](https://bun.com/docs/bundler/executables).
 
 ## Environment variables
 
