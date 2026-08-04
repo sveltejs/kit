@@ -90,7 +90,7 @@ export async function watch(options) {
 
 	console.log(message);
 
-	/** @type {Array<{ file: import('./types.js').File, type: string }>} */
+	/** @type {Array<{ file: import('./types.js').File, type: 'change' | 'unlink' }>} */
 	const pending = [];
 
 	// Remember files because deleted paths cannot be stat-ed to distinguish them from directories.
@@ -107,7 +107,7 @@ export async function watch(options) {
 
 	/**
 	 * @param {string} name
-	 * @param {string} type
+	 * @param {'change' | 'unlink'} type
 	 */
 	function enqueue(name, type) {
 		const file = analyze(name, extensions);
