@@ -1,6 +1,7 @@
 /** @import ts from 'typescript' */
 import path from 'node:path';
 import { ESSENTIAL_OPTIONS, remove_trailing_slashstar } from './utils.js';
+import { posixify } from '../../../utils/os.js';
 
 const formatter = new Intl.ListFormat('en-gb', { type: 'conjunction' });
 
@@ -109,7 +110,7 @@ export function validate_exclusions(warnings, dir, exclusions, files) {
 
 	if (missing_exclusions.length > 0) {
 		warnings.push(
-			`${join(missing_exclusions.map((file) => path.relative(dir, file)))} should be added to the "exclude" array`
+			`${join(missing_exclusions.map((file) => posixify(path.relative(dir, file))))} should be added to the "exclude" array`
 		);
 	}
 
