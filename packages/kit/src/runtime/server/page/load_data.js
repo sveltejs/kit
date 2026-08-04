@@ -473,6 +473,21 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 
 				return value;
 			};
+
+			const get_set_cookie = response.headers.getSetCookie;
+			response.headers.getSetCookie = () => {
+				const values = get_set_cookie.call(response.headers);
+				for (const value of values) {
+					const included = resolve_opts.filterSerializedResponseHeaders('set-cookie', value);
+					if (!included) {
+						throw new Error(
+							`Failed to get response header "set-cookie" — it must be included by the \`filterSerializedResponseHeaders\` option: https://svelte.dev/docs/kit/hooks#handle (at ${event.route.id})`
+						);
+					}
+				}
+
+				return values;
+			};
 		}
 
 		return proxy;
