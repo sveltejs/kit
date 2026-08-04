@@ -1,5 +1,4 @@
 /** @import { Builder, RouteDefinition } from '@sveltejs/kit' */
-
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { fileURLToPath } from 'node:url';
