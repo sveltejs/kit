@@ -56,7 +56,8 @@
 		"check": "tsc",
 		"check:all": "tsc && pnpm -r --filter=\"./**\" check",
 		"format": "pnpm lint --write",
-		"test": "vitest run"
+		"test": "vitest run",
+		"test:unit": "vitest run"
 	},
 	"exports": {
 		"./package.json": "./package.json"

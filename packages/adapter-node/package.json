@@ -36,6 +36,7 @@
 		"dev": "rolldown -cw",
 		"build": "rolldown -c",
 		"test": "vitest run",
+		"test:unit": "vitest run",
 		"check": "tsc",
 		"lint": "prettier --check .",
 		"format": "pnpm lint --write",

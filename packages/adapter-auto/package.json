@@ -36,7 +36,8 @@
 		"lint": "prettier --check .",
 		"format": "pnpm lint --write",
 		"check": "tsc",
-		"test": "vitest run"
+		"test": "vitest run",
+		"test:unit": "vitest run"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",

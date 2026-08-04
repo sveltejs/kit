@@ -17,6 +17,7 @@
 		"test:svelte-async:build": "pnpm run --dir packages/kit test:svelte-async:build",
 		"test:vite-ecosystem-ci": "pnpm --dir packages/kit test",
 		"test:others": "pnpm -r --filter='./packages/*' --filter=!./packages/kit/ --workspace-concurrency=1 test",
+		"test:others:unit": "pnpm -r --filter=\"./packages/*\" --filter=\"!./packages/kit\" --workspace-concurrency=1 test:unit",
 		"test:unit": "vitest run",
 		"check": "pnpm -r prepublishOnly && pnpm -r check",
 		"lint": "pnpm -r lint && echo '\nRunning eslint...' && eslint --cache --cache-location node_modules/.eslintcache 'packages/**/*.{js,d.ts}'",

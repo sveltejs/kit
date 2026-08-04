@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join, posix } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { builtinModules } from 'node:module';
 import process from 'node:process';
 import toml from '@iarna/toml';
@@ -377,8 +377,7 @@ async function generate_edge_functions({ builder }) {
 	writeFileSync(`${tmp}/manifest.js`, `export const manifest = ${manifest};\n`);
 
 	/** @type {{ assets: Set<string> }} */
-	// we have to prepend the file:// protocol because Windows doesn't support absolute path imports
-	const { assets } = (await import(`file://${tmp}/manifest.js`)).manifest;
+	const { assets } = (await import(pathToFileURL(`${tmp}/manifest.js`).href)).manifest;
 
 	const path = '/*';
 	// We only need to specify paths without the trailing slash because
