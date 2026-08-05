@@ -149,9 +149,6 @@ importers:
       bun-types:
         specifier: ^1.3.14
         version: 1.3.14
-      rolldown:
-        specifier: ^1.2.0
-        version: 1.2.0
     devDependencies:
       '@playwright/test':
         specifier: 'catalog:'
@@ -162,6 +159,9 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 22.19.19
+      rolldown:
+        specifier: ^1.2.0
+        version: 1.2.0
       typescript:
         specifier: 'catalog:'
         version: 6.0.3

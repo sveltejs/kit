@@ -24,7 +24,8 @@ export default defineConfig({
 });
 ```
 
-Build your app with `bun run build`, then start it with:
+The adapter uses Bun's bundler and must run inside Bun. Build your app with `bun run --bun build`,
+then start it with:
 
 ```sh
 bun ./build
@@ -88,7 +89,8 @@ Set `compile: true` to additionally generate `build/app`, a single executable co
 adapter({ compile: true });
 ```
 
-The adapter uses the [`Bun.build`](https://bun.com/reference/bun/build) JavaScript API directly. Because Vite normally respects its Node.js shebang, run the build with Bun's `--bun` flag when compilation is enabled:
+The adapter uses the [`Bun.build`](https://bun.com/reference/bun/build) JavaScript API directly. The
+`--bun` flag is required because Vite normally respects its Node.js shebang:
 
 ```sh
 bun run --bun build

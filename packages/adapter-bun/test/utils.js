@@ -7,7 +7,7 @@ export const config = {
 	forbidOnly: !!process.env.CI,
 	timeout: process.env.CI ? 45000 : 15000,
 	webServer: {
-		command: 'pnpm build && pnpm preview',
+		command: 'bun run --bun build && bun run preview',
 		port: 4174
 	},
 	retries: process.env.CI ? 2 : number_from_env('KIT_E2E_RETRIES', 0),

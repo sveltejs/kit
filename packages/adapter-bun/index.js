@@ -1,13 +1,7 @@
 import { readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { rolldown } from 'rolldown';
 
 const files = fileURLToPath(new URL('./files', import.meta.url).href);
-
-/** @param {string} str */
-function escape_regex(str) {
-	return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
 
 /** @type {import('./index.js').default} */
 export default function (opts = {}) {
@@ -22,6 +16,12 @@ export default function (opts = {}) {
 	return {
 		name: '@sveltejs/adapter-bun',
 		async adapt(builder) {
+			if (typeof Bun === 'undefined') {
+				throw new Error(
+					'adapter-bun requires running the SvelteKit build with Bun. Use `bun run --bun build`.'
+				);
+			}
+
 			const tmp = builder.getBuildDirectory('adapter-bun');
 			const base = builder.config.kit.paths.base;
 
@@ -73,82 +73,68 @@ export default function (opts = {}) {
 			);
 			writeFileSync(server_options_file, `export default ${serialize(serverOptions)};\n`);
 
-			/** @type {Record<string, string>} */
-			const input = {
-				index: `${entries}/index.js`,
-				handler: `${entries}/handler.js`
-			};
+			const entrypoints = [`${entries}/index.js`, `${entries}/handler.js`, dir_id];
 
 			if (builder.hasServerInstrumentationFile()) {
-				input['instrumentation.server'] = `${server}/instrumentation.server.js`;
+				entrypoints.push(`${server}/instrumentation.server.js`);
 			}
 
-			const bundle = await rolldown({
-				input,
+			const result = await Bun.build({
+				entrypoints,
+				outdir: out,
+				target: 'bun',
+				format: 'esm',
+				conditions: ['bun', 'node'],
+				sourcemap: 'linked',
+				splitting: true,
+				naming: {
+					entry: '[name].[ext]',
+					chunk: 'server/chunks/[name]-[hash].[ext]'
+				},
 				external: [
 					'bun',
-					/^bun:/,
-					// dependencies could have deep exports, so we need a regex
-					...Object.keys(pkg.dependencies || {}).map((d) => new RegExp(`^${d}(\\/.*)?$`))
+					'bun:*',
+					...Object.keys(pkg.dependencies || {}).flatMap((dependency) => [
+						dependency,
+						`${dependency}/*`
+					])
 				],
-				platform: 'node',
-				resolve: {
-					conditionNames: ['bun', 'node']
-				},
-				experimental: {
-					nativeMagicString: true
-				},
 				plugins: [
 					{
-						name: 'adapter-bun-resolve-app',
-						resolveId(id) {
-							if (id === 'SERVER') return `${server}/index.js`;
-							if (id === 'MANIFEST') return `${server}/manifest.js`;
-							if (id === 'SERVER_OPTIONS') return server_options_file;
-						}
-					},
-					{
-						name: 'adapter-bun-replace-constants',
-						transform: {
-							filter: { id: new RegExp(escape_regex(entries)) },
-							handler(_code, _id, { magicString }) {
-								if (!magicString) {
-									throw new Error('experimental.nativeMagicString is not enabled');
+						name: 'adapter-bun',
+						setup(build) {
+							build.onResolve({ filter: /^(SERVER|MANIFEST|SERVER_OPTIONS)$/ }, ({ path }) => {
+								if (path === 'SERVER') return { path: `${server}/index.js` };
+								if (path === 'MANIFEST') return { path: `${server}/manifest.js` };
+								return { path: server_options_file };
+							});
+
+							build.onLoad({ filter: /[\\/]adapter-bun[\\/]entries[\\/].*\.js$/ }, ({ path }) => {
+								let contents = readFileSync(path, 'utf8');
+								if (posixify(path) === dir_id) {
+									// Bun places shared modules two levels below the output directory
+									contents = contents.replace(
+										'dirname(fileURLToPath(import.meta.url))',
+										"fileURLToPath(new URL('../../', import.meta.url))"
+									);
 								}
-								magicString
+								contents = contents
 									.replace(/\bENV_PREFIX\b/g, JSON.stringify(envPrefix))
 									.replace(/\bPRECOMPRESS\b/g, JSON.stringify(precompress))
 									.replace(
 										/\bORIGIN\b/g,
 										JSON.stringify(builder.config.kit.paths.origin) || 'undefined'
 									);
-								return {
-									code: magicString,
-									map: magicString.generateMap().toString()
-								};
-							}
+								return { contents, loader: 'js' };
+							});
 						}
 					}
 				]
 			});
 
-			await bundle.write({
-				dir: out,
-				format: 'esm',
-				sourcemap: true,
-				codeSplitting: {
-					groups: [
-						{
-							name: 'dir',
-							test: dir_id
-						}
-					]
-				},
-				chunkFileNames(chunk) {
-					if (chunk.name === 'dir') return '[name].js';
-					return 'server/chunks/[name]-[hash].js';
-				}
-			});
+			if (!result.success) {
+				throw new AggregateError(result.logs, 'Bun server build failed');
+			}
 
 			if (builder.hasServerInstrumentationFile()) {
 				builder.instrument({
@@ -229,12 +215,6 @@ function serialize(value) {
  * @returns {Promise<void>}
  */
 async function compile_executable(out, options, assets) {
-	if (typeof Bun === 'undefined') {
-		throw new Error(
-			'Compiling an executable requires running the SvelteKit build with Bun. Use `bun run --bun build`.'
-		);
-	}
-
 	const entrypoint = `${out}/adapter-bun-compile.js`;
 
 	const unique_assets = [...new Set(assets)];
