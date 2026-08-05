@@ -68,6 +68,12 @@ The `$lib` alias is no longer generated automatically by SvelteKit. It is replac
 ```
 
 ```js
+// @filename: ambient.d.ts
+declare module '#lib/foo.js' {
+	export const foo: number;
+}
+// @filename: index.js
+// ---cut---
 ---import { foo } from '$lib/foo.js';---
 +++import { foo } from '#lib/foo.js';+++
 ```
@@ -176,6 +182,8 @@ Calling `invalidate(All)` during an in-flight navigation no longer aborts that n
 `handleError` can now return a `status` property to override the response status code, and `App.Error` now always includes a `status: number` property. `status` is a reserved key on the returned object and is set by the framework — if your `App.Error` type previously declared its own `status` field for other purposes, rename it.
 
 ```js
+/** @type {import('@sveltejs/kit').HandleServerError} */
+// ---cut---
 export async function handleError({ error, event, status, message }) {
 	return {
 		+++status: 418,+++
@@ -283,6 +291,9 @@ The `delta` property on navigation events (`beforeNavigate`/`afterNavigate`/`onN
 `preloadData(...)` now returns `{ type: 'error', status, error }` when the target page fails to load, instead of returning `{ type: 'loaded' }` with a 200 status. The `'redirect'` result now also includes the correct `status`. Add an `error` branch to any code that consumes the result:
 
 ```js
+import { preloadData } from '$app/navigation';
+const url = '/somewhere';
+// ---cut---
 const result = await preloadData(url);
 
 if (result.type === 'loaded') {
@@ -311,7 +322,11 @@ SvelteKit now uses `cookie` v2, which requires cookie names to contain only ASCI
 
 When setting a cookie without an explicit `path`, the path now defaults to `'/'` (the whole site) rather than the current request path. This matches what most developers expect. If you relied on the previous implicit behaviour, pass an explicit `path`:
 
-```js
+```ts
+declare const cookies: import('@sveltejs/kit').Cookies;
+declare const name: string;
+declare const value: string;
+// ---cut---
 cookies.set(name, value, +++{ path: '/some/path' }+++);
 ```
 
@@ -328,13 +343,6 @@ Enhanced form action responses now use the HTTP status code passed to `fail(...)
 ### `getRequest` and `setResponse` are synchronous
 
 The `getRequest` and `setResponse` helpers from `@sveltejs/kit/node` are now synchronous and no longer return Promises. Remove `await` from calls in custom Node servers or adapters:
-
-```js
----const request = await getRequest(req);---
----await setResponse(res, response);---
-+++const request = getRequest(req);+++
-+++setResponse(res, response);+++
-```
 
 ### `handle`'s `resolve` always returns a `Promise`
 
@@ -366,6 +374,8 @@ Cross-origin form submissions that omit a `Content-Type` header are now rejected
 SvelteKit no longer sets `access-control-allow-origin: *` on every static asset request in development. CORS is now delegated to Vite's built-in middleware. If you rely on cross-origin access to static assets in dev, configure it in your Vite config:
 
 ```js
+import { defineConfig } from 'vite';
+// ---cut---
 export default defineConfig({
 	server: {
 +++		cors: { origin: '*' }+++
@@ -394,12 +404,22 @@ The `preloadStrategy` option has been removed. `modulepreload` is always used. R
 `prerender.origin` has been removed in favour of `paths.origin`, which is also used as the trusted self-origin for CSRF checks on form submissions and remote function calls. The `adapter-node` `ORIGIN` environment variable has also been removed — set `paths.origin` in your config instead.
 
 ```js
-prerender: {
-	---origin: 'https://example.com'---
-},
-+++paths: {
-	origin: 'https://example.com'
-},+++
+/// file: vite.config.js
+import { defineConfig } from 'vite';
+import { sveltekit } from '@sveltejs/kit/vite';
+
+export default defineConfig({
+	plugins: [
+		sveltekit({
+			prerender: {
+				---origin: 'https://example.com'---
+			},
+			paths: {
+				+++origin: 'https://example.com'+++
+			}
+		})
+	]
+});
 ```
 
 ### `output.linkHeaderPreload`
