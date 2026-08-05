@@ -114,6 +114,16 @@ const query_pattern = /\?.*$/s;
 export function normalize_id(id, aliases, cwd) {
 	id = id.replace(query_pattern, '');
 
+	// check before the cwd is removed — in a user's app these modules live
+	// inside `node_modules`, i.e. within the cwd
+	if (id === app_server) {
+		return '$app/server';
+	}
+
+	if (id === app_env_private || id === sveltekit_env_private) {
+		return '$app/env/private';
+	}
+
 	for (const { alias, path } of aliases) {
 		if (id === path || id.startsWith(path + '/')) {
 			id = id.replace(path, alias);
@@ -123,14 +133,6 @@ export function normalize_id(id, aliases, cwd) {
 
 	if (id.startsWith(cwd)) {
 		id = path.relative(cwd, id);
-	}
-
-	if (id === app_server) {
-		return '$app/server';
-	}
-
-	if (id === app_env_private || id === sveltekit_env_private) {
-		return '$app/env/private';
 	}
 
 	return posixify(id);

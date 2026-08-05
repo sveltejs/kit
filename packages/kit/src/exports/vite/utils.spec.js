@@ -8,11 +8,13 @@ import { dedent } from '../../core/sync/utils.js';
 import {
 	error_for_missing_config,
 	get_config_aliases,
+	normalize_id,
 	is_remote_module,
 	remote_module_pattern,
 	server_only_directory_pattern,
 	server_only_module_pattern
 } from './utils.js';
+import { app_server, app_env_private } from './module_ids.js';
 
 test('transform kit.alias to resolve.alias', () => {
 	const config = validate_config({
@@ -45,6 +47,15 @@ test('transform kit.alias to resolve.alias', () => {
 		{ find: /^\$regexChar$/.toString(), replacement: 'windows/path' },
 		{ find: /^\$regexChar\/(.+)$/.toString(), replacement: 'windows/path/$1' }
 	]);
+});
+
+test('normalizes special module ids that live inside the cwd', () => {
+	// in a user's app, kit is installed within the project root, so the
+	// special module ids must be recognized before the cwd is removed
+	const cwd = app_server.slice(0, app_server.indexOf('/src/runtime'));
+
+	expect(normalize_id(app_server, [], cwd)).toBe('$app/server');
+	expect(normalize_id(app_env_private, [], cwd)).toBe('$app/env/private');
 });
 
 test('recognizes server-only module filenames', () => {
