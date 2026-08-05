@@ -1,5 +1,6 @@
-import { describe, expect, test } from 'vitest';
+import { beforeEach, describe, expect, test } from 'vitest';
 import { parse_remote_arg, stringify_command_arg, stringify_remote_arg } from './shared.js';
+import { init_transport } from '#app/internal/transport';
 
 class Thing {
 	/** @param {number} a @param {number} z */
@@ -29,33 +30,31 @@ function set(items) {
 }
 
 describe('stringify_remote_arg', () => {
+	beforeEach(() => {
+		init_transport({});
+	});
+
 	test('produces the same key for reordered plain object properties', () => {
-		const a = stringify_remote_arg({ limit: 10, offset: 20 }, {});
-		const b = stringify_remote_arg({ offset: 20, limit: 10 }, {});
+		const a = stringify_remote_arg({ limit: 10, offset: 20 });
+		const b = stringify_remote_arg({ offset: 20, limit: 10 });
 
 		expect(a).toBe(b);
 	});
 
 	test('produces the same key for reordered nested plain object properties', () => {
-		const a = stringify_remote_arg(
-			{
-				filter: {
-					range: { min: 1, max: 5 },
-					tags: ['a', 'b']
-				}
-			},
-			{}
-		);
+		const a = stringify_remote_arg({
+			filter: {
+				range: { min: 1, max: 5 },
+				tags: ['a', 'b']
+			}
+		});
 
-		const b = stringify_remote_arg(
-			{
-				filter: {
-					tags: ['a', 'b'],
-					range: { max: 5, min: 1 }
-				}
-			},
-			{}
-		);
+		const b = stringify_remote_arg({
+			filter: {
+				tags: ['a', 'b'],
+				range: { max: 5, min: 1 }
+			}
+		});
 
 		expect(a).toBe(b);
 	});
@@ -64,7 +63,7 @@ describe('stringify_remote_arg', () => {
 		const a = Object.assign(Object.create(null), { limit: 10, offset: 20 });
 		const b = Object.assign(Object.create(null), { offset: 20, limit: 10 });
 
-		expect(stringify_remote_arg(a, {})).toBe(stringify_remote_arg(b, {}));
+		expect(stringify_remote_arg(a)).toBe(stringify_remote_arg(b));
 	});
 
 	test('produces the same key for reordered Map entries', () => {
@@ -78,8 +77,7 @@ describe('stringify_remote_arg', () => {
 					])
 				],
 				['first', { nested: { z: 1, a: 2 } }]
-			]),
-			{}
+			])
 		);
 
 		const b = stringify_remote_arg(
@@ -92,8 +90,7 @@ describe('stringify_remote_arg', () => {
 						['y', { c: 3, d: 4 }]
 					])
 				]
-			]),
-			{}
+			])
 		);
 
 		expect(a).toBe(b);
@@ -116,8 +113,7 @@ describe('stringify_remote_arg', () => {
 					],
 					['c', { z: 1, y: 2 }]
 				])
-			]),
-			{}
+			])
 		);
 
 		const b = stringify_remote_arg(
@@ -136,28 +132,27 @@ describe('stringify_remote_arg', () => {
 					['a', { a: 1, b: 2 }],
 					['b', { x: 1, y: 2 }]
 				])
-			]),
-			{}
+			])
 		);
 
 		expect(a).toBe(b);
 	});
 
 	test('produces the same key for transported values nested inside Maps and Sets', () => {
+		init_transport(transport);
+
 		const a = stringify_remote_arg(
 			map([
 				['second', set([new Thing(4, 5), new Thing(2, 3)])],
 				['first', new Thing(1, 2)]
-			]),
-			transport
+			])
 		);
 
 		const b = stringify_remote_arg(
 			map([
 				['first', new Thing(1, 2)],
 				['second', set([new Thing(2, 3), new Thing(4, 5)])]
-			]),
-			transport
+			])
 		);
 
 		expect(a).toBe(b);
@@ -172,7 +167,7 @@ describe('stringify_remote_arg', () => {
 			}
 		};
 
-		stringify_remote_arg(value, {});
+		stringify_remote_arg(value);
 
 		expect(Object.keys(value)).toEqual(['z', 'nested']);
 		expect(Object.keys(value.nested)).toEqual(['b', 'a']);
@@ -186,7 +181,7 @@ describe('stringify_remote_arg', () => {
 		// @ts-expect-error
 		value.self = value;
 
-		const parsed = parse_remote_arg(stringify_remote_arg(value, {}), {});
+		const parsed = parse_remote_arg(stringify_remote_arg(value));
 
 		expect(parsed.self).toBe(parsed);
 		expect(parsed.items[0]).toBe(parsed.items[1]);
@@ -200,7 +195,7 @@ describe('stringify_remote_arg', () => {
 			url: new URL('https://example.com/?a=1')
 		};
 
-		const parsed = parse_remote_arg(stringify_remote_arg(value, {}), {});
+		const parsed = parse_remote_arg(stringify_remote_arg(value));
 
 		expect(parsed.date.toISOString()).toBe('2024-01-01T00:00:00.000Z');
 		expect(Array.from(parsed.buffer)).toEqual([3, 1, 2]);
@@ -208,7 +203,7 @@ describe('stringify_remote_arg', () => {
 	});
 
 	test('rejects RegExp arguments', () => {
-		expect(() => stringify_remote_arg(/a/, {})).toThrow(
+		expect(() => stringify_remote_arg(/a/)).toThrow(
 			'Regular expressions are not valid remote function arguments'
 		);
 	});
@@ -216,16 +211,14 @@ describe('stringify_remote_arg', () => {
 	test('rejects class instances via devalue', () => {
 		class Thing {}
 
-		expect(() => stringify_remote_arg(new Thing(), {})).toThrow(
-			'Cannot stringify arbitrary non-POJOs'
-		);
+		expect(() => stringify_remote_arg(new Thing())).toThrow('Cannot stringify arbitrary non-POJOs');
 	});
 
 	test('round-trips sparse arrays while sorting nested plain objects', () => {
 		const value = [];
 		value[1_000_000] = { b: 2, a: 1 };
 
-		const parsed = parse_remote_arg(stringify_remote_arg(value, {}), {});
+		const parsed = parse_remote_arg(stringify_remote_arg(value));
 
 		expect(parsed).toHaveLength(1_000_001);
 		expect(0 in parsed).toBe(false);
@@ -235,24 +228,21 @@ describe('stringify_remote_arg', () => {
 
 describe('stringify_command_arg', () => {
 	test('preserves input ordering', async () => {
-		const a = await stringify_command_arg({ limit: 10, offset: 20 }, {});
-		const b = await stringify_command_arg({ offset: 20, limit: 10 }, {});
+		const a = await stringify_command_arg({ limit: 10, offset: 20 });
+		const b = await stringify_command_arg({ offset: 20, limit: 10 });
 
 		expect(a).not.toBe(b);
 	});
 
 	test('serializes files', async () => {
-		const serialized = await stringify_command_arg(
-			{
-				myfile: new File(['hello'], 'hello.md', {
-					type: 'text/markdown',
-					lastModified: -1
-				})
-			},
-			{}
-		);
+		const serialized = await stringify_command_arg({
+			myfile: new File(['hello'], 'hello.md', {
+				type: 'text/markdown',
+				lastModified: -1
+			})
+		});
 
-		const parsed = parse_remote_arg(serialized, {});
+		const parsed = parse_remote_arg(serialized);
 
 		expect(parsed.myfile).toBeInstanceOf(File);
 		expect(parsed.myfile.name).toBe('hello.md');
@@ -261,11 +251,11 @@ describe('stringify_command_arg', () => {
 
 describe('parse_remote_arg', () => {
 	test('returns undefined for an empty payload', () => {
-		expect(parse_remote_arg('', {})).toBeUndefined();
+		expect(parse_remote_arg('')).toBeUndefined();
 	});
 
 	test('parses remote-arg reducer payloads without transport decoders', () => {
-		const parsed = parse_remote_arg(stringify_remote_arg({ z: 1, nested: { b: 2, a: 1 } }, {}), {});
+		const parsed = parse_remote_arg(stringify_remote_arg({ z: 1, nested: { b: 2, a: 1 } }));
 
 		expect(parsed).toEqual({ nested: { a: 1, b: 2 }, z: 1 });
 	});
@@ -275,7 +265,7 @@ describe('parse_remote_arg', () => {
 		// @ts-expect-error
 		value.self = value;
 
-		const parsed = parse_remote_arg(stringify_remote_arg(value, {}), {});
+		const parsed = parse_remote_arg(stringify_remote_arg(value));
 
 		expect(parsed.self).toBe(parsed);
 		expect(Object.keys(parsed)).toEqual(['a', 'self', 'z']);
@@ -299,7 +289,7 @@ describe('parse_remote_arg', () => {
 			['first', { nested: { z: 1, a: 2 } }]
 		]);
 
-		const parsed = parse_remote_arg(stringify_remote_arg(value, {}), {});
+		const parsed = parse_remote_arg(stringify_remote_arg(value));
 
 		expect(parsed).toBeInstanceOf(Map);
 		expect(Array.from(parsed.keys())).toEqual(['first', 'second']);
@@ -334,7 +324,7 @@ describe('parse_remote_arg', () => {
 			])
 		]);
 
-		const parsed = parse_remote_arg(stringify_remote_arg(value, {}), {});
+		const parsed = parse_remote_arg(stringify_remote_arg(value));
 
 		expect(parsed).toBeInstanceOf(Set);
 
@@ -354,12 +344,14 @@ describe('parse_remote_arg', () => {
 	});
 
 	test('round-trips transport values nested inside Maps and Sets', () => {
+		init_transport(transport);
+
 		const value = map([
 			['second', set([new Thing(4, 5), new Thing(2, 3)])],
 			['first', new Thing(1, 2)]
 		]);
 
-		const parsed = parse_remote_arg(stringify_remote_arg(value, transport), transport);
+		const parsed = parse_remote_arg(stringify_remote_arg(value));
 
 		expect(parsed).toBeInstanceOf(Map);
 		expect(Array.from(parsed.keys())).toEqual(['first', 'second']);
@@ -380,7 +372,7 @@ describe('parse_remote_arg', () => {
 			nested: Object.assign(Object.create(null), { b: 2, a: 1 })
 		});
 
-		const parsed = parse_remote_arg(stringify_remote_arg(value, {}), {});
+		const parsed = parse_remote_arg(stringify_remote_arg(value));
 
 		expect(Object.getPrototypeOf(parsed)).toBeNull();
 		expect(Object.getPrototypeOf(parsed.nested)).toBeNull();

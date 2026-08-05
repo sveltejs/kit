@@ -158,7 +158,7 @@ export interface ServerHooks {
 	handleError: HandleServerError;
 	handleValidationError: HandleValidationError;
 	reroute: Reroute;
-	transport: Transport;
+	transport?: Transport;
 	init?: ServerInit;
 }
 
@@ -683,7 +683,6 @@ export type RecordSpan = <T>(options: {
  */
 export interface RequestState {
 	readonly prerendering: PrerenderOptions | undefined;
-	readonly transport: ServerHooks['transport'];
 	readonly handleValidationError: ServerHooks['handleValidationError'];
 	readonly tracing: {
 		record_span: RecordSpan;

@@ -10,7 +10,6 @@ import { HttpError } from '@sveltejs/kit/internal';
 vi.mock(new URL('../client.js', import.meta.url).pathname, async () => {
 	const { HttpError } = await import('@sveltejs/kit/internal');
 	return {
-		app: { hooks: { transport: {} }, decoders: {}, encoders: {} },
 		query_map: new Map(),
 		query_responses: {},
 		live_query_map: new Map(),

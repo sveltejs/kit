@@ -3,6 +3,7 @@ import { compact } from '../../../utils/array.js';
 import { create_async_iterator } from '../../../utils/streaming.js';
 import { clarify_devalue_error, get_global_name, serialize_uses } from '../utils.js';
 import { handle_error_and_jsonify } from '../errors.js';
+import { encoders } from '#app/internal/transport';
 
 /**
  * If the serialized data contains promises, `chunks` will be an
@@ -64,8 +65,8 @@ export function server_data_serializer(event, event_state, options) {
 
 				return `${global}.defer(${id})`;
 			} else {
-				for (const key in options.hooks.transport) {
-					const encoded = options.hooks.transport[key].encode(thing);
+				for (const key in encoders) {
+					const encoded = encoders[key](thing);
 					if (encoded) {
 						return `app.decode('${key}', ${devalue.uneval(encoded, replacer)})`;
 					}
@@ -135,9 +136,7 @@ export function server_data_serializer_json(event, event_state, options) {
 	const iterator = create_async_iterator();
 
 	const reducers = {
-		...Object.fromEntries(
-			Object.entries(options.hooks.transport).map(([key, value]) => [key, value.encode])
-		),
+		...encoders,
 		/** @param {any} thing */
 		Promise: (thing) => {
 			if (typeof thing?.then !== 'function') {
