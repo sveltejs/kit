@@ -36,7 +36,7 @@ export function init_transport(transport) {
 
 	/** @param {unknown} thing */
 	const replacer = (thing) => {
-		for (const key in transport) {
+		for (const key of Object.keys(transport)) {
 			const encoded = transport[key].encode(thing);
 			if (encoded) {
 				return `app.decode('${key}', ${devalue.uneval(encoded, replacer)})`;
