@@ -21,7 +21,6 @@
 		"@sveltejs/adapter-node": "workspace:*",
 		"@sveltejs/adapter-static": "workspace:*",
 		"@sveltejs/adapter-vercel": "workspace:*",
-		"@sveltejs/amp": "workspace:*",
 		"@sveltejs/enhanced-img": "workspace:*",
 		"@sveltejs/kit": "workspace:*",
 		"@sveltejs/package": "workspace:*",

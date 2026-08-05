@@ -7,11 +7,7 @@ const config = {
 		minify: false
 	},
 	clearScreen: false,
-	plugins: [
-		sveltekit({
-			inlineStyleThreshold: Infinity
-		})
-	],
+	plugins: [sveltekit()],
 	server: {
 		fs: {
 			allow: [path.resolve('../../../src')]
