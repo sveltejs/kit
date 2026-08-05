@@ -160,10 +160,10 @@ export async function internal_respond(request, options, manifest, state) {
 		 * If the request is for a route resolution, first modify the URL, then continue as normal
 		 * for path resolution, then return the route object as a JS file.
 		 */
-		url.pathname = strip_resolution_suffix(url.pathname);
+		resolved_path = url.pathname = strip_resolution_suffix(url.pathname);
 		is_route_id_resolution_request = is_route_id_resolution_path(url.pathname, base, app_dir);
 	} else if (is_data_request) {
-		url.pathname =
+		resolved_path = url.pathname =
 			strip_data_suffix(url.pathname) +
 				(url.searchParams.get(TRAILING_SLASH_PARAM) === '1' ? '/' : '') || '/';
 		url.searchParams.delete(TRAILING_SLASH_PARAM);
@@ -179,7 +179,7 @@ export async function internal_respond(request, options, manifest, state) {
 		if (pathname === null) {
 			skip_route_resolution = true;
 		} else {
-			url.pathname = pathname;
+			resolved_path = url.pathname = pathname;
 			url.search = request.headers.get('x-sveltekit-search') ?? '';
 		}
 	}
