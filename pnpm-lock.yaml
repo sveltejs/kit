@@ -22,7 +22,7 @@ catalogs:
       specifier: ^2.8.0
       version: 2.9.0
     '@playwright/test':
-      specifier: ~1.62.0
+      specifier: ^1.62.0
       version: 1.62.1
     '@polka/url':
       specifier: ^1.0.0-next.28

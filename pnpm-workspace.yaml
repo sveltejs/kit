@@ -52,9 +52,7 @@ catalog:
   '@fontsource/libre-barcode-128-text': ^5.1.0
   '@opentelemetry/sdk-node': ^0.221.0
   '@opentelemetry/sdk-trace-node': ^2.8.0
-  # pin playwright because ^1.62.0 can't recognise our $app/types tsconfig
-  # extend setting and it throws an error
-  '@playwright/test': ~1.62.0
+  '@playwright/test': ^1.62.0
   '@polka/url': ^1.0.0-next.28
   '@sveltejs/eslint-config': ^10.0.3
   '@sveltejs/vite-plugin-svelte': ^7.0.0
