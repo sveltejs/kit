@@ -683,7 +683,6 @@ export type RecordSpan = <T>(options: {
  */
 export interface RequestState {
 	readonly prerendering: PrerenderOptions | undefined;
-	readonly transport: ServerHooks['transport'];
 	readonly handleValidationError: ServerHooks['handleValidationError'];
 	readonly tracing: {
 		record_span: RecordSpan;
