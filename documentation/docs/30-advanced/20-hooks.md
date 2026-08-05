@@ -177,18 +177,32 @@ export function handleValidationError({ issues }) {
 
 Be thoughtful about what information you expose here, as the most likely reason for validation to fail is that someone is sending malicious requests to your server.
 
+The object you return here becomes the body of an [expected error](errors#Expected-errors), which means it subsequently passes through [`handleError`](hooks#handleError) as an error with a `kind` of `'expected'`.
+
 ## handleError
 
 > [!NOTE] Can be added to `src/hooks.server.js` and `src/hooks.client.js`
 
-If an [unexpected error](errors#Unexpected-errors) is thrown during loading, rendering, or from an endpoint, this function will be called with the `error`, `event`, `status` code and `message`. This allows for two things:
+This function is called for _every_ error thrown while loading, rendering, or responding to a request. This allows for two things:
 
 - you can log the error
-- you can generate a custom representation of the error that is safe to show to users, omitting sensitive details like messages and stack traces. The returned value, which defaults to `{ message }`, becomes the value of `page.error`.
+- you can generate a custom representation of the error that is safe to show to users, omitting sensitive details like messages and stack traces. The returned value becomes the value of `page.error`.
 
-For errors thrown from your code (or library code called by your code) the status will be 500 and the message will be "Internal Error". While `error.message` may contain sensitive information that should not be exposed to users, `message` is safe (albeit meaningless to the average user).
+Alongside the `event`, the hook receives a `kind` discriminant that tells you where the error came from, and the `error` itself:
 
-To add more information to the `page.error` object in a type-safe way, you can customize the expected shape by declaring an `App.Error` interface (which must include `message: string`, to guarantee sensible fallback behavior). This allows you to — for example — append a tracking ID for users to quote in correspondence with your technical support staff:
+| `kind`         | thrown by                           | `error`                                                              | defaults to                                  |
+| -------------- | ----------------------------------- | -------------------------------------------------------------------- | -------------------------------------------- |
+| `'expected'`   | [`error(...)`](@sveltejs-kit#error) | the error body, which matches [`App.Error`](types#Error)             | the error body itself                        |
+| `'unexpected'` | your code, or code it calls         | the thrown value, which may contain information unsafe to expose     | `{ status: 500, message: 'Internal Error' }` |
+| `'framework'`  | SvelteKit — 404s, 405s, 413s...     | `{ status, message }`, where `message` is safe text like `Not Found` | that same `{ status, message }`              |
+
+Errors from [`handleValidationError`](hooks#handleValidationError) arrive as _expected_ errors. Redirects are not errors, and never reach the hook.
+
+The hook returns an object matching [`App.Error`](types#Error), in which `status` and `message` are **optional** — return them only to override the defaults in the table above. Any property you omit is inherited from the caught error, so returning `{}` (or nothing at all) leaves the error untouched, while returning `{ status: 404 }` changes only the status.
+
+> [!NOTE] If you augment `App.Error` with additional _required_ properties, the hook must return them.
+
+To add more information to the `page.error` object in a type-safe way, you can customize the expected shape by declaring an `App.Error` interface (which must include `status: number` and `message: string`, to guarantee sensible fallback behavior). This allows you to — for example — append a tracking ID for users to quote in correspondence with your technical support staff:
 
 ```ts
 /// file: src/app.d.ts
@@ -220,14 +234,28 @@ import * as Sentry from '@sentry/sveltekit';
 Sentry.init({/*...*/})
 
 /** @type {import('@sveltejs/kit').HandleServerError} */
-export async function handleError({ error, event, status, message }) {
+export async function handleError({ kind, error, event }) {
+	if (kind === 'expected') {
+		// you created this error with `error(...)`, so it already
+		// matches `App.Error` — pass it through unchanged
+		return error;
+	}
+
 	const errorId = crypto.randomUUID();
+
+	if (kind === 'framework') {
+		// a 404 (or similar) — `error.status` and `error.message` are safe to
+		// expose, so we keep them and just add our own property
+		return { ...error, errorId };
+	}
 
 	// example integration with https://sentry.io/
 	Sentry.captureException(error, {
 		extra: { event, errorId, status }
 	});
 
+	// `status` and `message` are optional — we only override `message`,
+	// so the status stays at its default of 500
 	return {
 		message: 'Whoops!',
 		errorId
@@ -251,12 +279,20 @@ import * as Sentry from '@sentry/sveltekit';
 Sentry.init({/*...*/})
 
 /** @type {import('@sveltejs/kit').HandleClientError} */
-export async function handleError({ error, event, status, message }) {
+export async function handleError({ kind, error, event }) {
+	if (kind === 'expected') {
+		return error;
+	}
+
 	const errorId = crypto.randomUUID();
+
+	if (kind === 'framework') {
+		return { ...error, errorId };
+	}
 
 	// example integration with https://sentry.io/
 	Sentry.captureException(error, {
-		extra: { event, errorId, status }
+		extra: { event, errorId }
 	});
 
 	return {
@@ -268,7 +304,7 @@ export async function handleError({ error, event, status, message }) {
 
 > [!NOTE] In `src/hooks.client.js`, the type of `handleError` is `HandleClientError` instead of `HandleServerError`, and `event` is a `NavigationEvent` rather than a `RequestEvent`.
 
-This function is not called for _expected_ errors (those thrown with the [`error`](@sveltejs-kit#error) function imported from `@sveltejs/kit`).
+Errors that were already transformed by the server-side hook are not passed to the client-side hook a second time.
 
 During development, if an error occurs because of a syntax error in your Svelte code, the passed in error has a `frame` property appended highlighting the location of the error.
 

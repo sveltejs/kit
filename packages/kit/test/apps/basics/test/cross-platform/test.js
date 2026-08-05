@@ -301,14 +301,21 @@ test.describe('Errors', () => {
 		expect(await get_computed_style('h1', 'color')).toBe('rgb(255, 0, 0)');
 	});
 
-	test('404', async ({ page }) => {
+	test('404', async ({ page, read_errors }) => {
 		const response = await page.goto('/why/would/anyone/fetch/this/url');
 
 		expect(await page.textContent('footer')).toBe('Custom layout');
+		// the hook only sees the safe message for framework errors, not the
+		// detailed `Not found: /why/would/anyone/fetch/this/url`
 		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "Not found: /why/would/anyone/fetch/this/url (404 Not Found)"'
+			'This is your custom error page saying: "Not Found (404 Not Found)"'
 		);
 		expect(/** @type {Response} */ (response).status()).toBe(404);
+
+		expect(read_errors('/why/would/anyone/fetch/this/url')).toEqual({
+			kind: 'framework',
+			error: { status: 404, message: 'Not Found' }
+		});
 	});
 
 	test('server-side error from load() is a string', async ({ page }) => {
@@ -346,11 +353,41 @@ test.describe('Errors', () => {
 		expect(/** @type {Response} */ (response).status()).toBe(404);
 	});
 
+	test('expected errors reach the handleError hook', async ({ page, read_errors }) => {
+		const response = await page.goto('/errors/kind/expected');
+
+		expect(read_errors('/errors/kind/expected')).toEqual({
+			kind: 'expected',
+			error: { status: 403, message: 'expected error' }
+		});
+
+		expect(await page.textContent('#message')).toBe(
+			'This is your custom error page saying: "expected error"'
+		);
+		expect(/** @type {Response} */ (response).status()).toBe(403);
+	});
+
+	test('unexpected errors reach the handleError hook', async ({ page, read_errors }) => {
+		const response = await page.goto('/errors/kind/unexpected');
+
+		const { kind, error } = read_errors('/errors/kind/unexpected');
+		expect(kind).toBe('unexpected');
+		expect(error.message).toBe('unexpected error');
+
+		expect(await page.textContent('#message')).toBe(
+			'This is your custom error page saying: "unexpected error (500 Internal Error)"'
+		);
+		expect(/** @type {Response} */ (response).status()).toBe(500);
+	});
+
 	test('error in endpoint', async ({ page, read_errors }) => {
 		const res = await page.goto('/errors/endpoint');
 
+		const { kind, error } = read_errors('/errors/endpoint.json');
+		expect(kind).toBe('unexpected');
+
 		// should include stack trace
-		const lines = read_errors('/errors/endpoint.json').stack.split('\n');
+		const lines = error.stack.split('\n');
 		expect(lines[0]).toMatch('nope');
 
 		if (process.env.DEV) {
@@ -366,8 +403,11 @@ test.describe('Errors', () => {
 	test('error in shadow endpoint', async ({ page, read_errors }) => {
 		const res = await page.goto('/errors/endpoint-shadow');
 
+		const { kind, error } = read_errors('/errors/endpoint-shadow');
+		expect(kind).toBe('unexpected');
+
 		// should include stack trace
-		const lines = read_errors('/errors/endpoint-shadow').stack.split('\n');
+		const lines = error.stack.split('\n');
 		expect(lines[0]).toMatch('nope');
 
 		if (process.env.DEV) {
@@ -383,7 +423,10 @@ test.describe('Errors', () => {
 	test('not ok response from shadow endpoint', async ({ page, read_errors }) => {
 		const res = await page.goto('/errors/endpoint-shadow-not-ok');
 
-		expect(read_errors('/errors/endpoint-shadow-not-ok')).toBeUndefined();
+		expect(read_errors('/errors/endpoint-shadow-not-ok')).toEqual({
+			kind: 'expected',
+			error: { status: 555, message: 'Error: 555' }
+		});
 
 		expect(res && res.status()).toBe(555);
 		expect(await page.textContent('#message')).toBe(
@@ -414,9 +457,10 @@ test.describe('Errors', () => {
 			JSON.stringify({ status: 500, message: 'oops (500 Internal Error)' }, null, '  ')
 		);
 
-		const { status, name, message, stack, fancy } = read_errors(
-			'/errors/page-endpoint/get-implicit'
-		);
+		const { kind, error } = read_errors('/errors/page-endpoint/get-implicit');
+		expect(kind).toBe('unexpected');
+
+		const { status, name, message, stack, fancy } = error;
 		expect(status).toBe(undefined);
 		expect(name).toBe('FancyError');
 		expect(message).toBe('oops');
@@ -439,8 +483,10 @@ test.describe('Errors', () => {
 			JSON.stringify({ status: 400, message: 'oops' }, null, '  ')
 		);
 
-		const error = read_errors('/errors/page-endpoint/get-explicit');
-		expect(error).toBe(undefined);
+		expect(read_errors('/errors/page-endpoint/get-explicit')).toEqual({
+			kind: 'expected',
+			error: { status: 400, message: 'oops' }
+		});
 	});
 
 	test('page endpoint POST unexpected error message is preserved', async ({
@@ -457,9 +503,10 @@ test.describe('Errors', () => {
 			JSON.stringify({ status: 500, message: 'oops (500 Internal Error)' }, null, '  ')
 		);
 
-		const { status, name, message, stack, fancy } = read_errors(
-			'/errors/page-endpoint/post-implicit'
-		);
+		const { kind, error } = read_errors('/errors/page-endpoint/post-implicit');
+		expect(kind).toBe('unexpected');
+
+		const { status, name, message, stack, fancy } = error;
 
 		expect(status).toBe(undefined);
 		expect(name).toBe('FancyError');
@@ -485,8 +532,10 @@ test.describe('Errors', () => {
 			JSON.stringify({ status: 400, message: 'oops' }, null, '  ')
 		);
 
-		const error = read_errors('/errors/page-endpoint/post-explicit');
-		expect(error).toBe(undefined);
+		expect(read_errors('/errors/page-endpoint/post-explicit')).toEqual({
+			kind: 'expected',
+			error: { status: 400, message: 'oops' }
+		});
 	});
 });
 
@@ -554,7 +603,9 @@ test.describe('Redirects', () => {
 
 		if (!javaScriptEnabled) {
 			// handleError is not invoked for client-side navigation
-			const lines = read_errors('/redirect/missing-status/a').stack.split('\n');
+			const { kind, error } = read_errors('/redirect/missing-status/a');
+			expect(kind).toBe('unexpected');
+			const lines = error.stack.split('\n');
 			expect(lines[0]).toBe(`Error: ${message}`);
 		}
 	});

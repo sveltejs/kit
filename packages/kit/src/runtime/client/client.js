@@ -8,7 +8,7 @@
 /** @import { LiveQuery } from './remote-functions/query-live/instance.svelte.js' */
 import { BROWSER, DEV } from 'esm-env';
 import { settled, tick, fork, onMount, hydrate, mount } from 'svelte';
-import { HttpError, Redirect, SvelteKitError } from '@sveltejs/kit/internal';
+import { HttpError, Redirect, SvelteKitError, HandledHttpError } from '@sveltejs/kit/internal';
 import { decode_pathname, strip_hash, make_trackable, normalize_path } from '../../utils/url.js';
 import { dev_fetch, initial_fetch, lock_fetch, subsequent_fetch, unlock_fetch } from './fetcher.js';
 import { parse_routes, parse_server_route } from './parse.js';
@@ -48,7 +48,7 @@ import {
 	validate_depends,
 	validate_load_response
 } from '../shared.js';
-import { get_message, get_status } from '../../utils/error.js';
+
 import { page, navigating, updated, notify_version } from './state.svelte.js';
 import { payload } from './payload.js';
 import {
@@ -1519,7 +1519,7 @@ async function load_route({ id, invalidating, url, params, route, preload, actio
 
 		if (server_data_node?.type === 'error') {
 			// rethrow and catch below
-			throw new HttpError(server_data_node.error);
+			throw new HandledHttpError(server_data_node.error);
 		}
 
 		return load_node({
@@ -1574,7 +1574,7 @@ async function load_route({ id, invalidating, url, params, route, preload, actio
 					// the client error handler; it should've already been handled on the server
 					error = /** @type {import('types').ServerErrorNode} */ (err).error;
 				} else if (err instanceof HttpError) {
-					error = err.body;
+					error = await handle_error(err, { params, url, route: { id: route.id } });
 				} else {
 					// Referenced node could have been removed due to redeploy, check
 					if (await updated.check()) {
@@ -2513,20 +2513,37 @@ function setup_preload() {
  * @returns {Promise<App.Error>}
  */
 export async function handle_error(error, event) {
-	if (error instanceof HttpError) {
+	if (error instanceof HandledHttpError) {
 		return error.body;
 	}
 
-	if (DEV) {
+	/** @type {import('@sveltejs/kit').CaughtError} */
+	let caught;
+
+	if (error instanceof HttpError) {
+		caught = { kind: 'expected', error: error.body };
+	} else if (error instanceof SvelteKitError) {
+		caught = { kind: 'framework', error: { status: error.status, message: error.text } };
+	} else {
+		caught = { kind: 'unexpected', error };
+	}
+
+	if (DEV && caught.kind !== 'expected') {
 		errored = true;
 		console.warn('The next HMR update will cause the page to reload');
 	}
 
-	const status = get_status(error);
-	const message = get_message(error);
-	const app_error = (await app.hooks.handleError({ error, event, status, message })) ?? { message };
+	/** @type {App.Error} */
+	const fallback =
+		caught.kind === 'unexpected'
+			? /** @type {App.Error} */ ({ status: 500, message: 'Internal Error' })
+			: /** @type {App.Error} */ (caught.error);
 
-	return { ...app_error, status: get_status(app_error, error) };
+	const app_error = await app.hooks.handleError({ ...caught, event });
+
+	// the hook returns only the properties it wants to override; anything it omits
+	// (including by returning nothing at all) is inherited from the caught error
+	return { ...fallback, ...app_error };
 }
 
 /**
@@ -3719,7 +3736,6 @@ async function load_data(url, invalid) {
 	notify_version(res.headers.get('x-sveltekit-version'));
 
 	if (!res.ok) {
-		// turn it into a HttpError to not call handleError on the client again (was already handled on the server)
 		// if `__data.json` doesn't exist or the server has an internal error,
 		// avoid parsing the HTML error page as a JSON
 		/** @type {App.Error} */
@@ -3731,7 +3747,7 @@ async function load_data(url, invalid) {
 			error.message = 'Not Found';
 		}
 
-		throw new HttpError(error);
+		throw new HandledHttpError(error);
 	}
 
 	return new Promise((resolve, reject) => {

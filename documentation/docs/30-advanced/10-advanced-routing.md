@@ -61,7 +61,7 @@ export function load(event) {
 }
 ```
 
-> [!NOTE] If you don't handle 404 cases, they will appear in [`handleError`](hooks#handleError)
+> [!NOTE] If you don't handle 404 cases, they will appear in [`handleError`](hooks#handleError) as [framework errors](errors#Framework-errors), with a `kind` of `'framework'`. Otherwise, they will appear with a `kind` of `'expected'`.
 
 ## Optional parameters
 

@@ -148,10 +148,19 @@ export const test = base.extend({
 	read_errors: async ({}, use) => {
 		/** @param {string} path */
 		function read_errors(path) {
-			const errors =
-				fs.existsSync('test/errors.json') &&
-				JSON.parse(fs.readFileSync('test/errors.json', 'utf8'));
-			return errors[path];
+			if (!fs.existsSync('test/errors.jsonl')) return;
+
+			const records = fs.readFileSync('test/errors.jsonl', 'utf8').split('\n');
+			records.pop(); // ignore a trailing partial record if this races an append
+
+			const match = records
+				.map((line) => JSON.parse(line))
+				.findLast((error) => error.path === path);
+
+			if (match) {
+				const { path: _, ...error } = match;
+				return error;
+			}
 		}
 
 		await use(read_errors);

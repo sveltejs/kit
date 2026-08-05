@@ -3,7 +3,7 @@
 /** @import { InternalRemoteFormIssue } from 'types' */
 import { app_dir, base } from '$app/paths/internal/client';
 import { DEV } from 'esm-env';
-import { HttpError } from '@sveltejs/kit/internal';
+
 import {
 	query_responses,
 	_goto,
@@ -478,14 +478,11 @@ export function form(id) {
 
 					await enhance_callback(create_enhance_callback_instance(form, form_data));
 				} catch (e) {
-					const error =
-						e instanceof HttpError
-							? e.body
-							: await handle_error(e, {
-									params: {},
-									route: { id: null },
-									url: new URL(location.href)
-								});
+					const error = await handle_error(e, {
+						params: {},
+						route: { id: null },
+						url: new URL(location.href)
+					});
 					void set_nearest_error_page(error);
 				} finally {
 					pending_count--;

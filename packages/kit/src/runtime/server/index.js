@@ -9,6 +9,7 @@ import { SvelteKitError } from '@sveltejs/kit/internal';
 import { init_tracing } from '@sveltejs/kit/internal/server';
 import { DEV } from 'esm-env';
 import { init_transport } from '#app/internal/transport';
+import { set_app } from './app.js';
 
 /** @type {Promise<any>} */
 let init_promise;
@@ -130,8 +131,8 @@ export class Server {
 					handle: module.handle || (({ event, resolve }) => resolve(event)),
 					handleError:
 						module.handleError ||
-						(({ error }) => {
-							if (error instanceof SvelteKitError) {
+						(({ kind, error }) => {
+							if (kind !== 'unexpected') {
 								// don't log stack traces for 404s etc, it's all internal gubbins
 								return;
 							}
