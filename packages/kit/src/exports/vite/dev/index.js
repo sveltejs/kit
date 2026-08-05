@@ -21,12 +21,7 @@ import * as sync from '../../../core/sync/sync.js';
 import { get_mime_lookup, get_runtime_base } from '../../../core/utils.js';
 import '../../../utils/mime.js'; // extend mrmime with additional types (affects sirv too)
 import { compact } from '../../../utils/array.js';
-import {
-	is_chrome_devtools_request,
-	log_response,
-	not_found,
-	remote_module_pattern
-} from '../utils.js';
+import { is_chrome_devtools_request, is_remote_module, log_response, not_found } from '../utils.js';
 import { SCHEME } from '../../../utils/url.js';
 import { check_feature } from '../../../utils/features.js';
 import { escape_html } from '../../../utils/escape.js';
@@ -344,14 +339,17 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, s
 			return;
 		}
 
+		let prelude = '';
+		let start = -1;
 		let end = 0;
 
-		error.stack = error.stack
+		const lines = error.stack
 			.replaceAll('\0', '') // remove null bytes from e.g. virtual module IDs, or the response will fail
 			.split('\n')
 			.map((line, i) => {
-				const match = /^ {4}at (?:[^ ]+ \((.+)\)|(.+))$/.exec(line);
+				const match = /^ {4}at (?:[^(]+ \((.+)\)|(.+))$/.exec(line);
 				if (!match) {
+					prelude += line + '\n';
 					end = i + 1;
 					return line;
 				}
@@ -361,6 +359,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, s
 
 				if (fs.existsSync(file)) {
 					if (!file.includes('node_modules') && !file.includes(SRC_ROOT)) {
+						if (start === -1) start = i;
 						end = i + 1;
 					}
 
@@ -369,10 +368,11 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, s
 
 				return line;
 			})
-			.slice(0, end)
-			.join('\n');
+			// if no user-code frame was found, keep only the prelude (message/header)
+			// lines and drop everything else so the message isn't duplicated
+			.slice(start === -1 ? end : start, end);
 
-		return error.stack;
+		return (error.stack = prelude + lines.join('\n'));
 	}
 
 	const params_file = resolve_entry(svelte_config.kit.files.params);
@@ -387,7 +387,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, s
 				file.startsWith(svelte_config.kit.files.routes + path.sep) ||
 				file.startsWith(svelte_config.kit.files.assets + path.sep) ||
 				(params_file && file === params_file) ||
-				remote_module_pattern.test(file) ||
+				is_remote_module(file) ||
 				// in contrast to server hooks, client hooks are written to the client manifest
 				// and therefore need rebuilding when they are added/removed
 				file.startsWith(svelte_config.kit.files.hooks.client)

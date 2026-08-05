@@ -22,8 +22,8 @@ const plugin = function (defaults = {}) {
 			const dir = '.vercel/output';
 			const tmp = builder.getBuildDirectory('vercel-tmp');
 
-			builder.rimraf(dir);
-			builder.rimraf(tmp);
+			fs.rmSync(dir, { force: true, recursive: true });
+			fs.rmSync(tmp, { force: true, recursive: true });
 
 			if (fs.existsSync('vercel.json')) {
 				const vercel_file = fs.readFileSync('vercel.json', 'utf-8');
@@ -243,7 +243,7 @@ const plugin = function (defaults = {}) {
 				const target = path.join(dirs.functions, INTERNAL, 'catchall.func');
 
 				// Ensure the parent directory exists before symlinking
-				builder.mkdirp(path.join(dirs.functions, app_path));
+				fs.mkdirSync(path.join(dirs.functions, app_path), { recursive: true });
 
 				const relative = path.relative(path.dirname(remote_symlink_path), target);
 
@@ -266,7 +266,7 @@ const plugin = function (defaults = {}) {
 				if (isr) {
 					const isr_name = route.id.slice(1) || '__root__'; // should we check that __root__ isn't a route?
 					const base = `${dirs.functions}/${isr_name}`;
-					builder.mkdirp(base);
+					fs.mkdirSync(base, { recursive: true });
 
 					const target = `${dirs.functions}/${name}.func`;
 					const relative = path.relative(path.dirname(base), target);
@@ -317,7 +317,7 @@ const plugin = function (defaults = {}) {
 					const target = path.join(dirs.functions, `${name}.func`); // The actual function directory e.g., .vercel/output/functions/![-].func
 
 					// Ensure the directory for the data endpoint symlink exists (e.g., functions/index/)
-					builder.mkdirp(base_dir);
+					fs.mkdirSync(base_dir, { recursive: true });
 
 					// Calculate relative paths FROM the directory containing the symlink TO the target
 					const relative_for_main = path.relative(path.dirname(main_symlink_path), target);

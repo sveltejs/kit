@@ -704,9 +704,12 @@ importers:
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
         version: 7.0.0(svelte@5.56.3(@typescript-eslint/types@8.61.1))(vite@8.1.5(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0))
+      e2e-test-dep-plain:
+        specifier: file:./_test_dependencies/plain-lib
+        version: file:packages/kit/test/apps/async/_test_dependencies/plain-lib
       e2e-test-dep-remote:
         specifier: file:./_test_dependencies/remote-lib
-        version: file:packages/kit/test/apps/async/_test_dependencies/remote-lib
+        version: file:packages/kit/test/apps/async/_test_dependencies/remote-lib(@sveltejs/kit@packages+kit)
       svelte:
         specifier: 'catalog:'
         version: 5.56.3(@typescript-eslint/types@8.61.1)
@@ -3193,8 +3196,13 @@ packages:
   e2e-test-dep-cjs-only@file:packages/kit/test/apps/dev-only/_test_dependencies/cjs-only:
     resolution: {directory: packages/kit/test/apps/dev-only/_test_dependencies/cjs-only, type: directory}
 
+  e2e-test-dep-plain@file:packages/kit/test/apps/async/_test_dependencies/plain-lib:
+    resolution: {directory: packages/kit/test/apps/async/_test_dependencies/plain-lib, type: directory}
+
   e2e-test-dep-remote@file:packages/kit/test/apps/async/_test_dependencies/remote-lib:
     resolution: {directory: packages/kit/test/apps/async/_test_dependencies/remote-lib, type: directory}
+    peerDependencies:
+      '@sveltejs/kit': '*'
 
   emoji-regex@8.0.0:
     resolution: {integrity: sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A==}
@@ -5806,7 +5814,11 @@ snapshots:
 
   e2e-test-dep-cjs-only@file:packages/kit/test/apps/dev-only/_test_dependencies/cjs-only: {}
 
-  e2e-test-dep-remote@file:packages/kit/test/apps/async/_test_dependencies/remote-lib: {}
+  e2e-test-dep-plain@file:packages/kit/test/apps/async/_test_dependencies/plain-lib: {}
+
+  e2e-test-dep-remote@file:packages/kit/test/apps/async/_test_dependencies/remote-lib(@sveltejs/kit@packages+kit):
+    dependencies:
+      '@sveltejs/kit': link:packages/kit
 
   emoji-regex@8.0.0: {}
 

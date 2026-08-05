@@ -2,7 +2,7 @@ import { mkdtempSync, writeFileSync, readdirSync, mkdirSync, readFileSync } from
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { assert, expect, beforeEach, test } from 'vitest';
-import { copy, mkdirp, resolve_entry } from './filesystem.js';
+import { copy, resolve_entry } from './filesystem.js';
 
 /** @type {string} */
 let source_dir;
@@ -23,7 +23,7 @@ beforeEach(() => {
  */
 const write = (file, contents) => {
 	const filepath = join(source_dir, file);
-	mkdirp(dirname(filepath));
+	mkdirSync(dirname(filepath), { recursive: true });
 	writeFileSync(filepath, contents);
 };
 

@@ -204,17 +204,25 @@ test.describe('trailingSlash', () => {
 
 		/** @type {string[]} */
 		let requests = [];
-		page.on('request', (r) => requests.push(new URL(r.url()).pathname));
+		page.on('request', (r) => {
+			const { pathname } = new URL(r.url());
+			// chromium fetches the favicon lazily, at an arbitrary point after load
+			if (pathname !== '/path-base/favicon.png') requests.push(pathname);
+		});
 
 		await page.hover('a[href="/path-base/preloading/code"]');
-		await page.waitForTimeout(100);
 
 		// svelte request made is environment dependent
 		if (process.env.DEV) {
-			expect(requests.filter((req) => req.endsWith('.svelte')).length).toBe(1);
+			await expect.poll(() => requests.filter((req) => req.endsWith('.svelte')).length).toBe(1);
 		} else {
-			expect(requests.filter((req) => req.endsWith('.js')).length).toBeGreaterThan(0);
+			await expect
+				.poll(() => requests.filter((req) => req.endsWith('.js')).length)
+				.toBeGreaterThan(0);
 		}
+
+		// let the preload finish before asserting that the click adds no requests
+		await page.waitForLoadState('networkidle');
 
 		requests = [];
 		await page.click('a[href="/path-base/preloading/code"]');

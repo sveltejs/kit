@@ -152,10 +152,9 @@ test.describe('Navigation lifecycle functions', () => {
 		await page.goto('/navigation-lifecycle/before-navigate/prevent-navigation');
 
 		await page.click('[href="/navigation-lifecycle/before-navigate/a"]');
-		await page.waitForLoadState('networkidle');
 
+		await expect(page.locator('pre')).toHaveText('1 false link');
 		expect(page.url()).toBe(baseURL + '/navigation-lifecycle/before-navigate/prevent-navigation');
-		expect(await page.innerHTML('pre')).toBe('1 false link');
 	});
 
 	test('beforeNavigate prevents navigation to external', async ({ page, baseURL }) => {
@@ -312,16 +311,20 @@ test.describe('Navigation lifecycle functions', () => {
 
 		await clicknav('[href="/navigation-lifecycle/before-navigate/event/b"]');
 
-		expect(logs).toEqual([
-			'click /navigation-lifecycle/before-navigate/event/a -> /navigation-lifecycle/before-navigate/event/b'
-		]);
+		await expect
+			.poll(() => logs)
+			.toEqual([
+				'click /navigation-lifecycle/before-navigate/event/a -> /navigation-lifecycle/before-navigate/event/b'
+			]);
 
 		await page.goBack();
 
-		expect(logs).toEqual([
-			'click /navigation-lifecycle/before-navigate/event/a -> /navigation-lifecycle/before-navigate/event/b',
-			'popstate /navigation-lifecycle/before-navigate/event/b -> /navigation-lifecycle/before-navigate/event/a'
-		]);
+		await expect
+			.poll(() => logs)
+			.toEqual([
+				'click /navigation-lifecycle/before-navigate/event/a -> /navigation-lifecycle/before-navigate/event/b',
+				'popstate /navigation-lifecycle/before-navigate/event/b -> /navigation-lifecycle/before-navigate/event/a'
+			]);
 	});
 
 	test('scroll state is provided on initial page load', async ({ page }) => {
@@ -549,11 +552,11 @@ test.describe('Scrolling', () => {
 
 		await page.goBack();
 		await page.waitForURL('/anchor#last-anchor-2');
-		expect(await page.evaluate(() => scrollY)).toEqual(originalScrollY);
+		await expect.poll(() => page.evaluate(() => scrollY)).toBe(originalScrollY);
 
 		await page.goBack();
 		await page.waitForURL('/anchor');
-		expect(await page.evaluate(() => scrollY)).toEqual(0);
+		await expect.poll(() => page.evaluate(() => scrollY)).toBe(0);
 	});
 
 	test('scroll is restored after hitting the back button for an in-app cross-document navigation', async ({

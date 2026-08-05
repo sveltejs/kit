@@ -4,13 +4,20 @@
 /** @import { RouteData, ValidatedConfig, BuildData, ServerMetadata, ServerMetadataRoute, Prerendered, PrerenderMap, Logger, RemoteChunk } from 'types' */
 import { build, loadEnv } from 'vite';
 import * as devalue from 'devalue';
-import { createReadStream, createWriteStream, existsSync, statSync } from 'node:fs';
+import {
+	createReadStream,
+	createWriteStream,
+	existsSync,
+	mkdirSync,
+	rmSync,
+	statSync
+} from 'node:fs';
 import { extname, resolve, join, dirname, relative } from 'node:path';
 import { pipeline } from 'node:stream';
 import { pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
 import zlib from 'node:zlib';
-import { copy, rimraf, mkdirp } from '../../utils/filesystem.js';
+import { copy } from '../../utils/filesystem.js';
 import { posixify } from '../../utils/os.js';
 import { generate_manifest } from '../generate_manifest/index.js';
 import { get_route_segments } from '../../utils/routing.js';
@@ -100,8 +107,8 @@ export function create_builder({
 
 	return {
 		log,
-		rimraf,
-		mkdirp,
+		rimraf: (dir) => rmSync(dir, { force: true, recursive: true }),
+		mkdirp: (dir) => mkdirSync(dir, { recursive: true }),
 		copy,
 
 		config,
@@ -273,7 +280,7 @@ export function create_builder({
 							exports: module.exports
 						});
 
-			rimraf(entrypoint);
+			rmSync(entrypoint, { force: true, recursive: true });
 			write(entrypoint, facade);
 		},
 

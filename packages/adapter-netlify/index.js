@@ -1,5 +1,5 @@
 /** @import { Builder, RouteDefinition } from '@sveltejs/kit' */
-import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { builtinModules } from 'node:module';
@@ -61,19 +61,19 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 			const publish = get_publish_directory(netlify_config, builder) || 'build';
 
 			// empty out existing build directories
-			builder.rimraf(publish);
-			builder.rimraf('.netlify/v1');
+			rmSync(publish, { force: true, recursive: true });
+			rmSync('.netlify/v1', { force: true, recursive: true });
 
 			// clean up legacy directories from older adapter versions to avoid
 			// gnarly edge cases when an existing project is upgraded to this version
-			builder.rimraf('.netlify/edge-functions');
-			builder.rimraf('.netlify/server');
-			builder.rimraf('.netlify/package.json');
-			builder.rimraf('.netlify/serverless.js');
+			rmSync('.netlify/edge-functions', { force: true, recursive: true });
+			rmSync('.netlify/server', { force: true, recursive: true });
+			rmSync('.netlify/package.json', { force: true, recursive: true });
+			rmSync('.netlify/serverless.js', { force: true, recursive: true });
 			if (existsSync('.netlify/functions-internal')) {
 				for (const file of readdirSync('.netlify/functions-internal')) {
 					if (file.startsWith(FUNCTION_PREFIX)) {
-						builder.rimraf(join('.netlify/functions-internal', file));
+						rmSync(join('.netlify/functions-internal', file), { force: true, recursive: true });
 					}
 				}
 			}
@@ -127,7 +127,7 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
  */
 function generate_serverless_functions({ builder, publish, split, reroute_middleware }) {
 	// https://docs.netlify.com/build/frameworks/frameworks-api/#netlifyv1functions
-	builder.mkdirp(netlify_framework_serverless_path);
+	mkdirSync(netlify_framework_serverless_path, { recursive: true });
 
 	builder.writeServer('.netlify/v1/server');
 
@@ -255,7 +255,7 @@ function write_frameworks_config({ builder }) {
 		]
 	};
 
-	builder.mkdirp('.netlify/v1');
+	mkdirSync('.netlify/v1', { recursive: true });
 	writeFileSync(netlify_framework_config_path, s(config));
 }
 
@@ -376,11 +376,11 @@ const rolldown_config = {
  */
 async function generate_edge_functions({ builder, reroute_middleware }) {
 	const tmp = builder.getBuildDirectory('netlify-tmp');
-	builder.rimraf(tmp);
-	builder.mkdirp(tmp);
+	rmSync(tmp, { force: true, recursive: true });
+	mkdirSync(tmp, { recursive: true });
 
 	// https://docs.netlify.com/build/frameworks/frameworks-api/#edge-functions
-	builder.mkdirp('.netlify/v1/edge-functions');
+	mkdirSync('.netlify/v1/edge-functions', { recursive: true });
 
 	builder.log.minor('Generating Edge Function...');
 	const relativePath = posix.relative(tmp, builder.getServerDirectory());

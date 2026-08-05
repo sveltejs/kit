@@ -11,7 +11,7 @@ import MagicString from 'magic-string';
 import { loadEnv } from 'vite';
 import { exactRegex, prefixRegex } from 'rolldown/filter';
 
-import { copy, mkdirp, read, resolve_entry, rimraf } from '../../utils/filesystem.js';
+import { copy, read, resolve_entry } from '../../utils/filesystem.js';
 import { posixify } from '../../utils/os.js';
 import { to_fs } from '../../utils/vite.js';
 import {
@@ -34,6 +34,7 @@ import { preview } from './preview/index.js';
 import {
 	error_for_missing_config,
 	get_config_aliases,
+	is_remote_module,
 	normalize_id,
 	remote_module_pattern,
 	server_only_directory_pattern,
@@ -507,6 +508,7 @@ function kit({ svelte_config }) {
 								async handler(id, importer) {
 									const resolved = await this.resolve(id, importer, { skipSelf: true });
 									if (!resolved) return { id, external: true };
+									if (!is_remote_module(resolved.id)) return;
 									// a servable /@fs url; 'absolute' stops rolldown relativizing it in the deps bundle
 									return { id: to_fs(resolved.id), external: 'absolute' };
 								}
@@ -929,6 +931,8 @@ function kit({ svelte_config }) {
 				id: remote_module_pattern
 			},
 			async handler(code, id) {
+				if (!is_remote_module(id)) return;
+
 				const file = posixify(path.relative(root, id));
 				const remote = {
 					hash: hash(file),
@@ -1590,9 +1594,9 @@ function kit({ svelte_config }) {
 		async buildApp(builder) {
 			// clears the output directories
 			if (!builder.config.build.watch) {
-				rimraf(out);
+				fs.rmSync(out, { force: true, recursive: true });
 			}
-			mkdirp(out);
+			fs.mkdirSync(out, { recursive: true });
 
 			await load_and_validate_params({
 				routes: manifest_data.routes,
