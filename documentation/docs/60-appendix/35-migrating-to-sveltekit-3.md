@@ -2,57 +2,47 @@
 title: Migrating to SvelteKit v3
 ---
 
-SvelteKit 3 is a significant upgrade to the framework. Among other things, the minimum dependency versions have been raised, a number of deprecated APIs have been removed, and configuration has moved from `svelte.config.js` into the Vite plugin. This guide lists every breaking change and how to migrate. It's a lot, but most should be straightforward and the migration script will help you with many of them.
+SvelteKit 3 removes some legacy features, moves configuration out of `svelte.config.js` into the Vite plugin, and raises the minimum version of certain dependencies. For many of these breaking changes, you can automatically migrate:
 
-TODO migration script command + little explanation.
+```bash
+npx sv migrate sveltekit-3
+```
 
-We highly recommend upgrading to the most recent 2.x version before upgrading to 3.0, and take advantage of its deprecating warnings before upgrading.
+We recommend upgrading to the most recent 2.x version before upgrading to 3.0 so that you can take advantage of targeted deprecation warnings.
 
 ## Updated dependency requirements
 
-SvelteKit 3 raises the minimum supported versions of its dependencies:
+SvelteKit 3 requires the following minimum versions:
 
-- **Node** 22 or newer
-- **TypeScript** 6 or newer
-- **Svelte** 5.56.4 or newer
-- **Vite** 8.0.12 or newer (the first Vite 8 release bundling stable `rolldown` 1.0.0)
-- **`@sveltejs/vite-plugin-svelte`** v7 or newer
+- Node v22.17
+- TypeScript v6
+- Svelte v5.56.4
+- Vite v8.0.12 (the first Vite 8 release bundling stable `rolldown` v1)
+- `@sveltejs/vite-plugin-svelte` v7
 
 Update the versions in your `package.json` and run your package manager's install command.
 
 ## Configuration is now passed to the Vite plugin
 
-`svelte.config.js` is no longer supported. SvelteKit configuration must now be passed to the `sveltekit()` Vite plugin in `vite.config.js`, and the `kit` prefix is dropped — options that used to live under `config.kit.*` are now top-level options of the plugin. They are placed alongside other options such as `compilerOptions` for Svelte.
-
-To migrate, move the contents of `svelte.config.js` into the `sveltekit()` plugin call and delete `svelte.config.js`:
+Instead of declaring project configuration in `svelte.config.js`, it must now be passed to the `sveltekit` Vite plugin in `vite.config.js`. Options that previously lived under `config.kit.*` are now top-level plugin options, alongside things like `compilerOptions`:
 
 ```js
-// --- svelte.config.js (deleted) ---
-import adapterVercel from '@sveltejs/adapter-vercel';
-
-/** @type {import('@sveltejs/kit').Config} */
-const config = {
-	compilerOptions: { experimental: { async: true }},
-	kit: {
-		adapter: adapterVercel()
-	}
-};
-export default config;
-
-// --- vite.config.js ---
-import { sveltekit } from '@sveltejs/kit/vite';
-import adapterVercel from '@sveltejs/adapter-vercel';
+/// file: vite.config.js
 import { defineConfig } from 'vite';
+import { sveltekit } from '@sveltejs/kit/vite';
+import adapter from '@sveltejs/adapter-auto';
 
 export default defineConfig({
 	plugins: [
-		sveltekit(+++{
++++		sveltekit({
 			compilerOptions: { experimental: { async: true }},
-			adapter: adapterVercel()
-		}+++)
+			adapter: adapter()
+		})+++
 	]
 });
 ```
+
+See [Configuration](configuration) for further examples.
 
 ## `$lib` is replaced by `#lib`
 
