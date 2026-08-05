@@ -181,7 +181,7 @@ describe('stringify_remote_arg', () => {
 		// @ts-expect-error
 		value.self = value;
 
-		const parsed = parse_remote_arg(stringify_remote_arg(value), {});
+		const parsed = parse_remote_arg(stringify_remote_arg(value));
 
 		expect(parsed.self).toBe(parsed);
 		expect(parsed.items[0]).toBe(parsed.items[1]);
@@ -195,7 +195,7 @@ describe('stringify_remote_arg', () => {
 			url: new URL('https://example.com/?a=1')
 		};
 
-		const parsed = parse_remote_arg(stringify_remote_arg(value), {});
+		const parsed = parse_remote_arg(stringify_remote_arg(value));
 
 		expect(parsed.date.toISOString()).toBe('2024-01-01T00:00:00.000Z');
 		expect(Array.from(parsed.buffer)).toEqual([3, 1, 2]);
@@ -218,7 +218,7 @@ describe('stringify_remote_arg', () => {
 		const value = [];
 		value[1_000_000] = { b: 2, a: 1 };
 
-		const parsed = parse_remote_arg(stringify_remote_arg(value), {});
+		const parsed = parse_remote_arg(stringify_remote_arg(value));
 
 		expect(parsed).toHaveLength(1_000_001);
 		expect(0 in parsed).toBe(false);
@@ -242,7 +242,7 @@ describe('stringify_command_arg', () => {
 			})
 		});
 
-		const parsed = parse_remote_arg(serialized, {});
+		const parsed = parse_remote_arg(serialized);
 
 		expect(parsed.myfile).toBeInstanceOf(File);
 		expect(parsed.myfile.name).toBe('hello.md');
@@ -251,11 +251,11 @@ describe('stringify_command_arg', () => {
 
 describe('parse_remote_arg', () => {
 	test('returns undefined for an empty payload', () => {
-		expect(parse_remote_arg('', {})).toBeUndefined();
+		expect(parse_remote_arg('')).toBeUndefined();
 	});
 
 	test('parses remote-arg reducer payloads without transport decoders', () => {
-		const parsed = parse_remote_arg(stringify_remote_arg({ z: 1, nested: { b: 2, a: 1 } }), {});
+		const parsed = parse_remote_arg(stringify_remote_arg({ z: 1, nested: { b: 2, a: 1 } }));
 
 		expect(parsed).toEqual({ nested: { a: 1, b: 2 }, z: 1 });
 	});
@@ -265,7 +265,7 @@ describe('parse_remote_arg', () => {
 		// @ts-expect-error
 		value.self = value;
 
-		const parsed = parse_remote_arg(stringify_remote_arg(value), {});
+		const parsed = parse_remote_arg(stringify_remote_arg(value));
 
 		expect(parsed.self).toBe(parsed);
 		expect(Object.keys(parsed)).toEqual(['a', 'self', 'z']);
@@ -289,7 +289,7 @@ describe('parse_remote_arg', () => {
 			['first', { nested: { z: 1, a: 2 } }]
 		]);
 
-		const parsed = parse_remote_arg(stringify_remote_arg(value), {});
+		const parsed = parse_remote_arg(stringify_remote_arg(value));
 
 		expect(parsed).toBeInstanceOf(Map);
 		expect(Array.from(parsed.keys())).toEqual(['first', 'second']);
@@ -324,7 +324,7 @@ describe('parse_remote_arg', () => {
 			])
 		]);
 
-		const parsed = parse_remote_arg(stringify_remote_arg(value), {});
+		const parsed = parse_remote_arg(stringify_remote_arg(value));
 
 		expect(parsed).toBeInstanceOf(Set);
 
@@ -351,7 +351,7 @@ describe('parse_remote_arg', () => {
 			['first', new Thing(1, 2)]
 		]);
 
-		const parsed = parse_remote_arg(stringify_remote_arg(value), transport);
+		const parsed = parse_remote_arg(stringify_remote_arg(value));
 
 		expect(parsed).toBeInstanceOf(Map);
 		expect(Array.from(parsed.keys())).toEqual(['first', 'second']);
@@ -372,7 +372,7 @@ describe('parse_remote_arg', () => {
 			nested: Object.assign(Object.create(null), { b: 2, a: 1 })
 		});
 
-		const parsed = parse_remote_arg(stringify_remote_arg(value), {});
+		const parsed = parse_remote_arg(stringify_remote_arg(value));
 
 		expect(Object.getPrototypeOf(parsed)).toBeNull();
 		expect(Object.getPrototypeOf(parsed.nested)).toBeNull();

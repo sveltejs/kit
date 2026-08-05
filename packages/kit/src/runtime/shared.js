@@ -1,7 +1,6 @@
-/** @import { Transport } from '@sveltejs/kit' */
 import * as devalue from 'devalue';
 import { base64_decode, base64_encode, text_decoder, text_encoder } from './utils.js';
-import { encoders } from '#app/internal';
+import { decoders, encoders } from '#app/internal';
 
 /**
  * @param {string} route_id
@@ -38,17 +37,6 @@ export function validate_load_response(data, location_description) {
 			}, but must return a plain object at the top level (i.e. \`return {...}\`)`
 		);
 	}
-}
-
-/**
- * Try to `devalue.stringify` the data object using the provided transport encoders.
- * @param {any} data
- * @param {Transport} transport
- */
-export function stringify(data, transport) {
-	const encoders = Object.fromEntries(Object.entries(transport).map(([k, v]) => [k, v.encode]));
-
-	return devalue.stringify(data, encoders);
 }
 
 const object_proto_names = /* @__PURE__ */ Object.getOwnPropertyNames(Object.prototype)
@@ -184,8 +172,7 @@ function create_remote_arg_reducers(sort) {
 	return all_reducers;
 }
 
-/** @param {Transport} transport */
-function create_remote_arg_revivers(transport) {
+function create_remote_arg_revivers() {
 	const remote_fns_revivers = {
 		/** @type {(value: unknown) => unknown} */
 		[remote_object]: (value) => value,
@@ -249,11 +236,7 @@ function create_remote_arg_revivers(transport) {
 		}
 	};
 
-	const user_revivers = Object.fromEntries(
-		Object.entries(transport).map(([k, v]) => [k, v.decode])
-	);
-
-	const all_revivers = { ...user_revivers, ...remote_fns_revivers };
+	const all_revivers = { ...decoders, ...remote_fns_revivers };
 
 	/** @type {(data: string) => unknown} */
 	const parse = (data) => devalue.parse(data, all_revivers);
@@ -334,9 +317,8 @@ function url_friendly_base64_encode(string) {
 /**
  * Parses the argument (if any) for a remote function
  * @param {string} string
- * @param {Transport} transport
  */
-export function parse_remote_arg(string, transport) {
+export function parse_remote_arg(string) {
 	if (!string) return undefined;
 
 	const json_string = text_decoder.decode(
@@ -345,7 +327,7 @@ export function parse_remote_arg(string, transport) {
 		base64_decode(string.replaceAll('-', '+').replaceAll('_', '/'))
 	);
 
-	return devalue.parse(json_string, create_remote_arg_revivers(transport));
+	return devalue.parse(json_string, create_remote_arg_revivers());
 }
 
 /**

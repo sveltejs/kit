@@ -3,7 +3,7 @@
 import { expect, test, vi } from 'vitest';
 import { HttpError } from '@sveltejs/kit/internal';
 import { prerender } from './prerender.js';
-import { stringify } from '../../../shared.js';
+import { stringify } from '#app/internal';
 
 const store = vi.hoisted(() => ({ current: /** @type {any} */ (null) }));
 
@@ -69,7 +69,7 @@ test('propagates an error response instead of running the function', async () =>
 test('parses a prerendered result without running the function', async () => {
 	const { fn, wrapper } = setup(
 		() =>
-			new Response(JSON.stringify({ type: 'result', data: stringify({ _: 'prerendered' }, {}) }), {
+			new Response(JSON.stringify({ type: 'result', data: stringify({ _: 'prerendered' }) }), {
 				status: 200
 			})
 	);

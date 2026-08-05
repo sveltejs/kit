@@ -5,15 +5,10 @@ import { json } from '@sveltejs/kit';
 import { HttpError } from '@sveltejs/kit/internal';
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import { stringify_remote_arg } from '../../../shared.js';
-import { stringify } from '#app/internal';
+import { parse, stringify } from '#app/internal';
 import { noop } from '../../../../utils/functions.js';
 import { app_dir, base } from '$app/paths/internal/server';
-import {
-	create_validator,
-	get_response,
-	parse_remote_response,
-	run_remote_function
-} from './shared.js';
+import { create_validator, get_response, run_remote_function } from './shared.js';
 
 /**
  * Creates a remote prerender function. When called from the browser, the function will be invoked on the server via a `fetch` call.
@@ -122,7 +117,7 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 						throw new HttpError(prerendered.error);
 					}
 
-					return parse_remote_response(prerendered.data, state.transport)._;
+					return parse(prerendered.data)._;
 				}
 			}
 
