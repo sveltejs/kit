@@ -2060,6 +2060,9 @@ async function navigate({
 	if (popped) {
 		state = popped.state;
 	} else {
+		// we immediately serialize-then-parse to ensure that the value is
+		// serializable, and to prevent the developer from dangerously
+		// relying on the identity of the serialized objects
 		const serialized_state = stringify(state);
 		state = parse(serialized_state);
 
@@ -2902,6 +2905,8 @@ async function update_state(intent, state, { replace, persist_state, reset }, ca
 
 	if (!replace) capture_scroll(current_history_index);
 	if (reset) current_reset_index += 1;
+
+	// as above, serialize-then-parse to prevent bugs
 	const serialized_state = stringify(state);
 	state = parse(serialized_state);
 
