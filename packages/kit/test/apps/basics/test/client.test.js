@@ -1729,6 +1729,29 @@ test.describe('Shallow routing', () => {
 		await expect(page.locator('[data-id="shallow"]')).toHaveText('null');
 	});
 
+	test('serializes custom objects in state', async ({ page }) => {
+		await page.goto('/shallow-routing/push-state/foo');
+		await expect(page.locator('[data-testid=foo]')).toHaveText('foo: nope');
+		await expect(page.locator('[data-testid=count]')).toHaveText('count: nope');
+
+		await page.locator('[data-id=shallow]').click();
+		await expect(page.locator('[data-testid=foo]')).toHaveText('foo: it works?!');
+		await expect(page.locator('[data-testid=count]')).toHaveText('count: 0');
+
+		// State is round-tripped before it becomes page.state, so it cannot retain $state reactivity.
+		await page.getByText('bump count').click();
+		await expect(page.locator('[data-testid=count]')).toHaveText('count: 0');
+
+		await page.goBack();
+		await expect(page.locator('[data-testid=foo]')).toHaveText('foo: nope');
+
+		await page.goForward();
+		await expect(page.locator('[data-testid=foo]')).toHaveText('foo: it works?!');
+
+		await page.locator('[data-id=full]').click();
+		await expect(page.locator('[data-testid=foo]')).toHaveText('foo: it works?!');
+	});
+
 	test('Shallow navigates to a new URL', async ({ baseURL, page }) => {
 		await page.goto('/shallow-routing/push-state');
 		await expect(page.locator('p')).toHaveText('active: false');
