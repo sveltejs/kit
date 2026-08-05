@@ -5,11 +5,15 @@ import { create_universal_fetch } from './load_data.js';
  * @param {Partial<Pick<import('@sveltejs/kit').RequestEvent, 'fetch' | 'url' | 'request' | 'route'>>} event
  */
 function create_fetch(event) {
+	// @ts-expect-error
 	// eslint-disable-next-line @typescript-eslint/require-await
-	event.fetch = event.fetch || (async () => new Response('foo'));
-	event.request = event.request || new Request('doesnt:matter');
-	event.route = event.route || { id: 'foo' };
-	event.url = event.url || new URL('https://domain-a.com');
+	event.fetch ||= async () => new Response('foo');
+	// @ts-expect-error
+	event.request ||= new Request('doesnt:matter');
+	// @ts-expect-error
+	event.route ||= { id: 'foo' };
+	// @ts-expect-error
+	event.url ||= new URL('https://domain-a.com');
 	return create_universal_fetch(
 		/** @type {Pick<import('@sveltejs/kit').RequestEvent, 'fetch' | 'url' | 'request' | 'route'>} */ (
 			event

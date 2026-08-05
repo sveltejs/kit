@@ -10,7 +10,6 @@ export function create_request_state(state, hooks) {
 	// Request state is rebuilt fresh, resetting remote caches and context flags.
 	return {
 		prerendering: state.prerendering,
-		transport: hooks.transport,
 		handleValidationError: hooks.handleValidationError,
 		tracing: {
 			record_span

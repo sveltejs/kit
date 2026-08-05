@@ -4,9 +4,9 @@ import { respond } from './respond.js';
 import { options, get_hooks } from '__SERVER__/internal.js';
 import { set_read_implementation, set_manifest, fix_stack_trace } from './internal.js';
 import { set_env } from '__sveltekit/env';
-import { set_app } from './app.js';
 import { SvelteKitError } from '@sveltejs/kit/internal';
 import { DEV } from 'esm-env';
+import { init_transport } from '#app/internal/transport';
 
 /** @type {Promise<any>} */
 let init_promise;
@@ -151,15 +151,10 @@ export class Server {
 							console.error('Remote function schema validation failed:', issues);
 							return { message: 'Bad Request', status: 400 };
 						}),
-					reroute: module.reroute || noop,
-					transport: module.transport || {}
+					reroute: module.reroute || noop
 				};
 
-				set_app({
-					decoders: module.transport
-						? Object.fromEntries(Object.entries(module.transport).map(([k, v]) => [k, v.decode]))
-						: {}
-				});
+				init_transport(module.transport ?? {});
 
 				if (module.init) {
 					await module.init();
@@ -175,13 +170,8 @@ export class Server {
 						handleValidationError: () => {
 							return { message: 'Bad Request' };
 						},
-						reroute: noop,
-						transport: {}
+						reroute: noop
 					};
-
-					set_app({
-						decoders: {}
-					});
 				} else {
 					throw e;
 				}
