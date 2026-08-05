@@ -33,8 +33,8 @@
 		"ambient.d.ts"
 	],
 	"scripts": {
-		"dev": "rolldown -cw",
-		"build": "rolldown -c",
+		"dev": "bun --watch build.js",
+		"build": "bun build.js",
 		"test": "vitest run",
 		"check": "tsc",
 		"lint": "prettier --check .",
@@ -45,7 +45,6 @@
 		"@playwright/test": "catalog:",
 		"@sveltejs/kit": "workspace:^",
 		"@types/node": "catalog:",
-		"rolldown": "^1.2.0",
 		"typescript": "catalog:",
 		"vitest": "catalog:"
 	},

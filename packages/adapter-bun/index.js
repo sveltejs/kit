@@ -111,7 +111,7 @@ export default function (opts = {}) {
 
 							build.onLoad({ filter: /[\\/]adapter-bun[\\/]entries[\\/].*\.js$/ }, ({ path }) => {
 								let contents = readFileSync(path, 'utf8');
-								if (posixify(path) === dir_id) {
+								if (contents.includes('dirname(fileURLToPath(import.meta.url))')) {
 									// Bun places shared modules two levels below the output directory
 									contents = contents.replace(
 										'dirname(fileURLToPath(import.meta.url))',

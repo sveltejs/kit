@@ -159,9 +159,6 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 22.19.19
-      rolldown:
-        specifier: ^1.2.0
-        version: 1.2.0
       typescript:
         specifier: 'catalog:'
         version: 6.0.3

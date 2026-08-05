@@ -13,8 +13,8 @@
 		"types": ["bun-types", "node"]
 	},
 	"include": [
+		"build.js",
 		"index.js",
-		"rolldown.config.js",
 		"vitest.config.js",
 		"src/**/*.js",
 		"src/**/*.ts",
