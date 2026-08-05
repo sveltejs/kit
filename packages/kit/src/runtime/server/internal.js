@@ -4,8 +4,6 @@ import { restore, save } from './dev.js';
 const read_implementation_key = Symbol.for('sveltekit.read_implementation');
 const manifest_key = Symbol.for('sveltekit.manifest');
 
-// Vite's development module runner clears its module cache before it reevaluates page entries.
-// Keep this per-process implementation available while those entries are evaluated.
 export let read_implementation = /** @type {((path: string) => ReadableStream<any>) | null} */ (
 	(__SVELTEKIT_DEV__ && restore(read_implementation_key)) ?? null
 );
