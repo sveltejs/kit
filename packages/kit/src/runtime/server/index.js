@@ -4,7 +4,6 @@ import { respond } from './respond.js';
 import { options, get_hooks } from '__SERVER__/internal.js';
 import { set_read_implementation, set_manifest, fix_stack_trace } from './internal.js';
 import { set_env } from '__sveltekit/env';
-import { set_app } from './app.js';
 import { SvelteKitError } from '@sveltejs/kit/internal';
 import { DEV } from 'esm-env';
 import { init_transport } from '#app/internal/transport';
@@ -158,12 +157,6 @@ export class Server {
 
 				init_transport(module.transport ?? {});
 
-				set_app({
-					decoders: module.transport
-						? Object.fromEntries(Object.entries(module.transport).map(([k, v]) => [k, v.decode]))
-						: {}
-				});
-
 				if (module.init) {
 					await module.init();
 				}
@@ -181,10 +174,6 @@ export class Server {
 						reroute: noop,
 						transport: {}
 					};
-
-					set_app({
-						decoders: {}
-					});
 				} else {
 					throw e;
 				}
