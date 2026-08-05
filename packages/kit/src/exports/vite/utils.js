@@ -1,7 +1,9 @@
+import fs from 'node:fs';
 import path from 'node:path';
 import { posixify } from '../../utils/os.js';
 import { negotiate } from '../../utils/http.js';
 import { escape_html } from '../../utils/escape.js';
+import { escape_for_regexp } from '../../utils/regex.js';
 import { stackless } from '../../utils/error.js';
 import { dedent } from '../../core/sync/utils.js';
 import { app_server, app_env_private, sveltekit_env_private } from './module_ids.js';
@@ -42,13 +44,6 @@ export function get_config_aliases(config, root) {
 	}
 
 	return alias;
-}
-
-/**
- * @param {string} str
- */
-function escape_for_regexp(str) {
-	return str.replace(/[.*+?^${}()|[\]\\]/g, (match) => '\\' + match);
 }
 
 /**
@@ -119,6 +114,16 @@ const query_pattern = /\?.*$/s;
 export function normalize_id(id, aliases, cwd) {
 	id = id.replace(query_pattern, '');
 
+	// check before the cwd is removed — in a user's app these modules live
+	// inside `node_modules`, i.e. within the cwd
+	if (id === app_server) {
+		return '$app/server';
+	}
+
+	if (id === app_env_private || id === sveltekit_env_private) {
+		return '$app/env/private';
+	}
+
 	for (const { alias, path } of aliases) {
 		if (id === path || id.startsWith(path + '/')) {
 			id = id.replace(path, alias);
@@ -130,19 +135,61 @@ export function normalize_id(id, aliases, cwd) {
 		id = path.relative(cwd, id);
 	}
 
-	if (id === app_server) {
-		return '$app/server';
-	}
-
-	if (id === app_env_private || id === sveltekit_env_private) {
-		return '$app/env/private';
-	}
-
 	return posixify(id);
 }
 
-export const remote_module_pattern = /[/.]remote(\.[^/]+)+$/;
-export const server_only_module_pattern = /[/.]server(\.[^/]+)+$/;
+export const remote_module_pattern = /[/.]remote\.[^/]+$/;
+
+/**
+ * A cache of which directories can export remote modules
+ * @type {Map<string, boolean>}
+ */
+const remote_module_cache = new Map();
+
+/**
+ * Whether `id` is a remote module. Files in node_modules only count if the
+ * package they belong to has a peer dependency on `@sveltejs/kit`
+ * @param {string} id
+ * @returns {boolean}
+ */
+export function is_remote_module(id) {
+	id = posixify(id);
+	if (!remote_module_pattern.test(id)) return false;
+	if (!id.includes('node_modules')) return true;
+
+	return can_export_remote_module(path.dirname(id));
+}
+
+/**
+ * @param {string} directory
+ * @returns {boolean}
+ */
+function can_export_remote_module(directory) {
+	let cached = remote_module_cache.get(directory);
+	if (cached !== undefined) return cached;
+
+	let pkg;
+
+	try {
+		pkg = JSON.parse(fs.readFileSync(path.join(directory, 'package.json'), 'utf8'));
+	} catch {}
+
+	if (pkg?.peerDependencies?.['@sveltejs/kit']) {
+		cached = true;
+	} else {
+		const parent = path.dirname(directory);
+
+		cached =
+			path.basename(directory) === 'node_modules' || parent === directory
+				? false // base case
+				: can_export_remote_module(parent); // recurse
+	}
+
+	remote_module_cache.set(directory, cached);
+	return cached;
+}
+
+export const server_only_module_pattern = /[/.]server\.[^/]+$/;
 export const server_only_directory_pattern = /\/server\//;
 
 export const strip_virtual_prefix = /** @param {string} id */ (id) => id.replace('\0virtual:', '');

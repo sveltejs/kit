@@ -25,7 +25,7 @@ export function collect_matcher_names(routes) {
  */
 export function validate_param_matchers(params, names, file) {
 	for (const name of names) {
-		if (!(name in params)) {
+		if (!Object.hasOwn(params, name)) {
 			throw new Error(`No matcher found for parameter '${name}'${file ? ` in ${file}` : ''}`);
 		}
 	}

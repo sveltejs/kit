@@ -38,10 +38,14 @@ test.describe('Filesystem updates', () => {
 	}
 
 	test('Components are not double-mounted', async ({ page, javaScriptEnabled }) => {
+		// js-only: the file on disk is shared with the parallel no-js project, whose
+		// writes would trigger HMR updates that remount the component mid-assertion
+		test.skip(!javaScriptEnabled);
+
 		const file = fileURLToPath(new URL('../src/routes/double-mount/+page.svelte', import.meta.url));
 		const contents = fs.readFileSync(file, 'utf-8');
 
-		const mounted = javaScriptEnabled ? 1 : 0;
+		const mounted = 1;
 
 		try {
 			// we write to the file, to trigger HMR invalidation

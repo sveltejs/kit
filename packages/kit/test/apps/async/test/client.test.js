@@ -31,11 +31,31 @@ test.describe('remote functions', () => {
 		expect(response.headers()['cache-control']).toBe('private, no-store');
 	});
 
+	test('clicking a link to the current page refreshes active queries', async ({ page }) => {
+		await page.goto('/remote/link-refresh');
+		await page.locator('#reset').click();
+
+		const a = page.locator('#count');
+
+		await expect(a).toHaveText('0');
+
+		await page.locator('#increment').click();
+		await expect(a).toHaveText('0');
+
+		await a.click();
+		await expect(a).toHaveText('1');
+	});
+
 	test('packages can re-export remote functions', async ({ page }) => {
 		await page.goto('/remote-lib');
 		await expect(page.locator('h1')).toHaveText('lib says hello');
 		await page.getByRole('button', { name: 'call remote function' }).click();
 		await expect(page.locator('p')).toHaveText('lib says client');
+	});
+
+	test('packages can contain ordinary remote.js files', async ({ page }) => {
+		await page.goto('/plain-lib');
+		await expect(page.locator('p')).toHaveText('key set for https://example.com/jwks');
 	});
 });
 
@@ -879,8 +899,6 @@ test.describe('remote function mutations', () => {
 		// iteration breaks after 3 values
 		await expect(page.locator('#for-await-count')).toHaveText('3');
 		await expect(page.locator('#for-await-values')).toHaveText('0,1,2');
-
-		await page.click('#reset');
 	});
 
 	test('for await consumers continue receiving values across refreshAll-triggered reconnects', async ({
@@ -905,8 +923,6 @@ test.describe('remote function mutations', () => {
 		// this value never arrived and the loop hung.
 		await page.click('#increment');
 		await expect(page.locator('#stream-log')).toContainText('1');
-
-		await page.click('#reset');
 	});
 
 	test('refreshAll resolves while a live query is offline', async ({ page, context }) => {
@@ -1021,7 +1037,6 @@ test.describe('remote function mutations', () => {
 	test.describe('isomorphic query caching', () => {
 		test('await in event handler shares cache with simultaneous awaits', async ({ page }) => {
 			await page.goto('/remote/isomorphic-caching');
-			await page.click('#reset');
 
 			await page.click('#await-dedupe');
 			await expect(page.locator('#dedupe')).toHaveText('dedupe ok');
@@ -1050,12 +1065,6 @@ test.describe('remote function mutations', () => {
 
 		// the query resource should report the 403 status from the hook
 		await expect(page.locator('#status')).toHaveText('403');
-
-		// clean up the cookie so other tests aren't affected
-		await page.click('#clear-btn');
-		await page.evaluate(() => {
-			document.cookie = 'deny-remote=; path=/; max-age=0';
-		});
 	});
 
 	test('form.for() with enhance does not duplicate requests', async ({ page }) => {
@@ -1091,9 +1100,6 @@ test.describe('remote function mutations', () => {
 		// the input value should reflect the updated data
 		await expect(text).toHaveValue('Updated text');
 		await expect(checkbox).not.toBeChecked();
-
-		// reset the values for the client tests
-		await page.click('#reset-values');
 	});
 
 	test('.as(type, value) updates when field.set() is called', async ({ page }) => {

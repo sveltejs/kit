@@ -9,7 +9,7 @@ on:
         default: ''
 
 permissions:
-  contents: write
+  contents: read # to fetch code (actions/checkout); `{}` would strip it from the called workflows too
 
 jobs:
   vercel:
@@ -28,11 +28,12 @@ jobs:
     uses: ./.github/workflows/platform-tests-node.yml
     with:
       sha: ${{ inputs.sha }}
-    secrets: inherit
 
   report-status:
     if: always()
     needs: [vercel, netlify, node]
+    permissions:
+      contents: write # to create the repository_dispatch event
     runs-on: ubuntu-latest
     steps:
       - name: Determine outcome

@@ -239,6 +239,8 @@ export interface PrerenderOptions {
 	dependencies: Map<string, PrerenderDependency>;
 	/** Results of remote `prerender` functions, shared across the whole prerender run so that each only executes once */
 	remote_responses: Map<string, Promise<any>>;
+	/** Route IDs whose resolution module has been emitted, shared across the whole prerender run so that each only generates once */
+	resolved_route_ids: Set<string>;
 	/** True for the duration of a call to the `reroute` hook */
 	inside_reroute?: boolean;
 }
@@ -536,7 +538,6 @@ export interface SSRClientRoute {
 }
 
 export interface SSRState {
-	fallback?: string;
 	getClientAddress(): string;
 	/**
 	 * True if we're currently attempting to render an error page.
@@ -659,15 +660,10 @@ export interface RemotePrerenderInternals extends BaseRemoteInternals {
 }
 
 export type RemoteAnyQueryInternals =
-	| RemoteQueryInternals
-	| RemoteQueryBatchInternals
-	| RemoteQueryLiveInternals;
+	RemoteQueryInternals | RemoteQueryBatchInternals | RemoteQueryLiveInternals;
 
 export type RemoteInternals =
-	| RemoteAnyQueryInternals
-	| RemoteCommandInternals
-	| RemoteFormInternals
-	| RemotePrerenderInternals;
+	RemoteAnyQueryInternals | RemoteCommandInternals | RemoteFormInternals | RemotePrerenderInternals;
 
 export interface InternalRemoteFormIssue extends RemoteFormIssue {
 	name: string;

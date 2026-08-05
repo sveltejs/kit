@@ -2,8 +2,9 @@ import fs from 'node:fs';
 import process from 'node:process';
 import { parseArgs, styleText } from 'node:util';
 import { extract_svelte_config, load_vite_config } from './core/config/index.js';
-import { coalesce_to_error } from './utils/error.js';
 import { resolve_explicit_env_entry } from './core/env.js';
+import { coalesce_to_error } from './utils/error.js';
+import { import_peer } from './utils/import.js';
 
 /** @param {unknown} e */
 function handle_error(e) {
@@ -75,10 +76,10 @@ if (!command) {
 }
 
 if (command === 'sync') {
-	// create placeholder node_modules/$app/tsconfig/tsconfig.json if necessary, to squelch warnings.
+	// create placeholder node_modules/$app/tsconfig.json if necessary, to squelch warnings.
 	// this isn't bulletproof — if someone has some esoteric config, it will continue
 	// to harmlessly warn — but we handle the 90% case and clean up after ourselves
-	const dir = 'node_modules/$app/tsconfig';
+	const dir = 'node_modules/$app';
 	const base_tsconfig = `${dir}/tsconfig.json`;
 	const base_tsconfig_json = '{}';
 
@@ -96,14 +97,16 @@ if (command === 'sync') {
 	}
 
 	try {
-		const vite_config = await load_vite_config(values.config);
+		const vite = /** @type {import('vite')} */ (await import_peer('vite', process.cwd()));
+
+		const vite_config = await load_vite_config(values.config, vite);
 		const sveltekit_config = extract_svelte_config(vite_config);
 
 		const sync = await import('./core/sync/sync.js');
 		sync.all_types(sveltekit_config, vite_config.root);
 
 		const explicit_env_entry = resolve_explicit_env_entry(sveltekit_config.kit);
-		await sync.env(sveltekit_config.kit, explicit_env_entry, vite_config.root, values.mode);
+		await sync.env(vite, sveltekit_config.kit, explicit_env_entry, vite_config.root, values.mode);
 	} catch (error) {
 		handle_error(error);
 	} finally {

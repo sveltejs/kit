@@ -30,7 +30,7 @@ export function query(id) {
 
 			if (result.redirect) {
 				// Use internal version to allow redirects to external URLs
-				await _goto(result.redirect, {}, 0);
+				await _goto(result.redirect);
 			}
 		});
 	};

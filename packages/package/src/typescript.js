@@ -2,7 +2,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { createRequire } from 'node:module';
 import semver from 'semver';
-import { posixify, mkdirp, rimraf, walk } from './filesystem.js';
+import { posixify, walk } from './filesystem.js';
 import { resolve_aliases, write } from './utils.js';
 import { emitDts } from 'svelte2tsx';
 import { load_pkg_json } from './config.js';
@@ -22,8 +22,8 @@ import { load_pkg_json } from './config.js';
  */
 export async function emit_dts(input, output, final_output, cwd, alias, files, tsconfig) {
 	const tmp = `${output}/__package_types_tmp__`;
-	rimraf(tmp);
-	mkdirp(tmp);
+	fs.rmSync(tmp, { force: true, recursive: true });
+	fs.mkdirSync(tmp, { recursive: true });
 
 	const require = createRequire(import.meta.url);
 	const pkg = load_pkg_json(cwd);
@@ -40,7 +40,7 @@ export async function emit_dts(input, output, final_output, cwd, alias, files, t
 		svelteShimsPath: no_svelte_3
 			? require.resolve('svelte2tsx/svelte-shims-v4.d.ts')
 			: require.resolve('svelte2tsx/svelte-shims.d.ts'),
-		declarationDir: path.relative(cwd, tmp),
+		declarationDir: tmp,
 		tsconfig
 	});
 
@@ -55,13 +55,11 @@ export async function emit_dts(input, output, final_output, cwd, alias, files, t
 
 	// resolve $lib alias (TODO others), copy into package dir
 	for (const file of walk(tmp)) {
-		const normalized = posixify(file);
-
-		if (handwritten.has(normalized)) {
-			console.warn(`Using $lib/${normalized} instead of generated .d.ts file`);
+		if (handwritten.has(file)) {
+			console.warn(`Using $lib/${file} instead of generated .d.ts file`);
 		}
 
-		let source = fs.readFileSync(path.join(tmp, normalized), 'utf8');
+		let source = fs.readFileSync(path.join(tmp, file), 'utf8');
 		if (file.endsWith('.d.ts.map')) {
 			// Because we put the .d.ts files in a temporary directory, the relative path needs to be adjusted
 			const parsed = JSON.parse(source);
@@ -70,8 +68,8 @@ export async function emit_dts(input, output, final_output, cwd, alias, files, t
 					posixify(
 						path.join(
 							path.relative(
-								path.dirname(path.join(final_output, normalized)),
-								path.dirname(path.join(input, normalized))
+								path.dirname(path.join(final_output, file)),
+								path.dirname(path.join(input, file))
 							),
 							path.basename(source)
 						)
@@ -80,12 +78,12 @@ export async function emit_dts(input, output, final_output, cwd, alias, files, t
 				source = JSON.stringify(parsed);
 			}
 		} else {
-			source = resolve_aliases(input, normalized, source, alias);
+			source = resolve_aliases(input, file, source, alias);
 		}
-		write(path.join(output, normalized), source);
+		write(path.join(output, file), source);
 	}
 
-	rimraf(tmp);
+	fs.rmSync(tmp, { force: true, recursive: true });
 }
 
 /**

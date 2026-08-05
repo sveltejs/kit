@@ -1,20 +1,9 @@
 <script>
-	import { get_value, get_call_count, reset } from './isomorphic.remote.js';
+	import { get_value, get_call_count } from './isomorphic.remote.js';
 
 	let call_count = $state('-');
 	let dedupe_status = $state('idle');
 </script>
-
-<button
-	id="reset"
-	onclick={async () => {
-		await reset();
-		call_count = '-';
-		dedupe_status = 'idle';
-	}}
->
-	reset server-side counters
-</button>
 
 <p>call count: <span id="call-count">{call_count}</span></p>
 

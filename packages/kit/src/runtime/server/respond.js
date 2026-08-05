@@ -1,4 +1,4 @@
-/** @import { RequestState, SSRNode } from 'types' */
+/** @import { SSRNode } from 'types' */
 import { DEV } from 'esm-env';
 import { json, text } from '@sveltejs/kit';
 import { Redirect, SvelteKitError } from '@sveltejs/kit/internal';
@@ -26,13 +26,15 @@ import { validate_server_exports } from '../../utils/exports.js';
 import { action_json_redirect, is_action_json_request } from './page/actions.js';
 import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM } from '../shared.js';
 import { get_public_env } from './env_module.js';
-import { resolve_route } from './page/server_routing.js';
+import { resolve_route, resolve_route_by_id } from './page/server_routing.js';
 import { validateHeaders } from './validate-headers.js';
 import {
 	add_data_suffix,
 	add_resolution_suffix,
+	extract_route_id,
 	has_data_suffix,
 	has_resolution_suffix,
+	is_route_id_resolution_path,
 	strip_data_suffix,
 	strip_resolution_suffix
 } from '../pathname.js';
@@ -40,6 +42,7 @@ import { server_data_serializer } from './page/data_serializer.js';
 import { get_remote_id, handle_remote_call } from './remote-functions.js';
 import { record_span } from '../telemetry/record_span.js';
 import { otel } from '../telemetry/otel.js';
+import { create_request_state } from './state.js';
 
 /** @type {import('types').RequiredResolveOptions['transformPageChunk']} */
 const default_transform = ({ html }) => html;
@@ -138,12 +141,16 @@ export async function internal_respond(request, options, manifest, state) {
 
 	let skip_route_resolution = false;
 
+	/** Whether this is a `/${app_dir}/routes/<route_id>/__route.js` request, used by `preloadCode` */
+	let is_route_id_resolution_request = false;
+
 	if (is_route_resolution_request) {
 		/**
 		 * If the request is for a route resolution, first modify the URL, then continue as normal
 		 * for path resolution, then return the route object as a JS file.
 		 */
 		url.pathname = strip_resolution_suffix(url.pathname);
+		is_route_id_resolution_request = is_route_id_resolution_path(url.pathname, base, app_dir);
 	} else if (is_data_request) {
 		url.pathname =
 			strip_data_suffix(url.pathname) +
@@ -174,30 +181,7 @@ export async function internal_respond(request, options, manifest, state) {
 		url
 	);
 
-	/** @type {RequestState} */
-	const event_state = {
-		prerendering: state.prerendering,
-		transport: options.hooks.transport,
-		handleValidationError: options.hooks.handleValidationError,
-		tracing: {
-			record_span
-		},
-		remote: {
-			data: null,
-			explicit: null,
-			implicit: null,
-			forms: null,
-			requested: null,
-			batches: null,
-			live_iterators: null
-		},
-		is_in_remote_function: false,
-		is_in_remote_form_or_command: false,
-		is_in_remote_query: false,
-		is_in_remote_prerender: false,
-		is_in_render: false,
-		is_in_universal_load: false
-	};
+	const event_state = create_request_state(state, options.hooks);
 
 	/** @type {import('@sveltejs/kit').RequestEvent} */
 	const event = {
@@ -270,7 +254,8 @@ export async function internal_respond(request, options, manifest, state) {
 	/** @type {string | null} */
 	let resolved_path = url.pathname;
 
-	if (!remote_id) {
+	// `reroute` hooks receive pathnames, so they must not run for route-ID resolution requests
+	if (!remote_id && !is_route_id_resolution_request) {
 		const prerendering_reroute_state = state.prerendering?.inside_reroute;
 		try {
 			// For the duration or a reroute, disable the prerendering state as reroute could call API endpoints
@@ -354,6 +339,14 @@ export async function internal_respond(request, options, manifest, state) {
 	}
 
 	if (is_route_resolution_request) {
+		if (is_route_id_resolution_request) {
+			return resolve_route_by_id(
+				extract_route_id(resolved_path, app_dir),
+				new URL(request.url),
+				manifest
+			);
+		}
+
 		return resolve_route(resolved_path, new URL(request.url), manifest);
 	}
 
@@ -604,7 +597,6 @@ export async function internal_respond(request, options, manifest, state) {
 					options,
 					manifest,
 					state,
-					status: 400,
 					error: new SvelteKitError(
 						400,
 						'Malformed URI',
@@ -781,7 +773,6 @@ export async function internal_respond(request, options, manifest, state) {
 					options,
 					manifest,
 					state,
-					status: 404,
 					error: new SvelteKitError(404, 'Not Found', `Not found: ${event.url.pathname}`),
 					resolve_opts
 				});

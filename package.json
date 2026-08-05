@@ -6,6 +6,9 @@
 	"type": "module",
 	"scripts": {
 		"test:kit": "pnpm run --dir packages/kit test",
+		"test:kit:unit": "vitest run packages/kit",
+		"test:kit:dev": "pnpm run --dir packages/kit test:dev",
+		"test:kit:build": "pnpm run --dir packages/kit test:build",
 		"test:cross-platform:dev": "pnpm run --dir packages/kit test:cross-platform:dev",
 		"test:cross-platform:build": "pnpm run --dir packages/kit test:cross-platform:build",
 		"test:server-side-route-resolution:dev": "pnpm run --dir packages/kit test:server-side-route-resolution:dev",
@@ -14,8 +17,9 @@
 		"test:svelte-async:build": "pnpm run --dir packages/kit test:svelte-async:build",
 		"test:vite-ecosystem-ci": "pnpm --dir packages/kit test",
 		"test:others": "pnpm -r --filter='./packages/*' --filter=!./packages/kit/ --workspace-concurrency=1 test",
+		"test:unit": "vitest run",
 		"check": "pnpm -r prepublishOnly && pnpm -r check",
-		"lint": "pnpm -r lint && echo '\nRunning eslint...' && eslint --cache --cache-location node_modules/.eslintcache 'packages/**/*.js'",
+		"lint": "pnpm -r lint && echo '\nRunning eslint...' && eslint --cache --cache-location node_modules/.eslintcache 'packages/**/*.{js,d.ts}'",
 		"format": "pnpm -r format",
 		"precommit": "pnpm format && pnpm lint",
 		"changeset:version": "changeset version && pnpm -r generate:version && git add --all",
@@ -33,7 +37,7 @@
 		"prettier-plugin-svelte": "catalog:",
 		"vitest": "catalog:"
 	},
-	"packageManager": "pnpm@11.15.1+sha512.81350b07e53c9538a02f1f2303b4290fa2d7be04e56e2a970c4cc4b417dc761de196edabd49d55c7dc9580db81007c44143e4e3d7e462b3000d23c255122d065",
+	"packageManager": "pnpm@11.19.0+sha512.7881f3ed590d472c4a955e2b88b2121791116066dcc88cbca3849ec9b60f1bbaa6d2ccb221fa91da4e1c65bef2bcbe379365aea7ac539c7bf86dedc3a1b22dce",
 	"engines": {
 		"pnpm": ">=11.0.0"
 	}

@@ -7,8 +7,8 @@ export async function handle({ event, resolve }) {
 	// state in `routes/remote/query-command.remote.js` is isolated per test.
 	// Without this, tests running in parallel (different Playwright workers)
 	// against the same server clobber each other's state and flake.
-	if (!event.cookies.get('count_session')) {
-		event.cookies.set('count_session', crypto.randomUUID(), {
+	if (!event.cookies.get('session')) {
+		event.cookies.set('session', crypto.randomUUID(), {
 			path: '/',
 			httpOnly: true,
 			sameSite: 'lax'

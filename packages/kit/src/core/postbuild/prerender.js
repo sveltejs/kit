@@ -1,7 +1,7 @@
-import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { mkdirp, walk } from '../../utils/filesystem.js';
+import { walk } from '../../utils/filesystem.js';
 import { posixify } from '../../utils/os.js';
 import { noop } from '../../utils/functions.js';
 import { decode_uri, is_root_relative, resolve } from '../../utils/url.js';
@@ -17,6 +17,7 @@ import { createReadableStream } from '@sveltejs/kit/node';
 import generate_fallback from './fallback.js';
 import { stringify_remote_arg } from '../../runtime/shared.js';
 import { log_response } from '../../exports/vite/utils.js';
+import { matches_content_type } from '../../utils/http.js';
 
 export default forked(import.meta.url, prerender);
 
@@ -156,7 +157,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 		const file = output_filename('/', true);
 		const dest = `${config.outDir}/output/prerendered/pages/${file}`;
 
-		mkdirp(dirname(dest));
+		mkdirSync(dirname(dest), { recursive: true });
 		writeFileSync(dest, fallback);
 
 		prerendered.pages.set('/', { file });
@@ -262,10 +263,13 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 	/** @type {Map<string, Promise<any>>} */
 	const remote_responses = new Map();
 
+	/** @type {Set<string>} */
+	const resolved_route_ids = new Set();
+
 	/** @type {Map<string, Set<string>>} */
 	const expected_hashlinks = new Map();
 
-	/** @type {Map<string, string[]>} */
+	/** @type {Map<string, Set<string>>} */
 	const actual_hashlinks = new Map();
 
 	/**
@@ -307,7 +311,8 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 			},
 			prerendering: {
 				dependencies,
-				remote_responses
+				remote_responses,
+				resolved_route_ids
 			},
 			read: (file) => {
 				// stuff we just wrote
@@ -387,14 +392,18 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 		const headers = Object.fromEntries(response.headers);
 
 		// if it's a 200 HTML response, crawl it. Skip error responses, as we don't save those
-		if (response.ok && config.prerender.crawl && headers['content-type'] === 'text/html') {
+		if (
+			response.ok &&
+			config.prerender.crawl &&
+			matches_content_type(headers['content-type'], 'text/html')
+		) {
 			const { ids, hrefs, invalid } = crawl(body.toString(), decoded);
 
 			for (const href of invalid) {
 				handle_invalid_url({ href, referrer: decoded });
 			}
 
-			actual_hashlinks.set(decoded, ids);
+			actual_hashlinks.set(decoded, new Set(ids));
 
 			/** @param {string} href */
 			const removePrerenderOrigin = (href) => {
@@ -444,7 +453,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 		const headers = Object.fromEntries(response.headers);
 
 		const type = headers['content-type'];
-		const is_html = response_type === REDIRECT || type === 'text/html';
+		const is_html = response_type === REDIRECT || matches_content_type(type, 'text/html');
 
 		if (!is_html && response.status === 200 && decoded.slice(config.paths.base.length + 1) === '') {
 			throw new Error(
@@ -471,7 +480,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 				}
 
 				if (!headers['x-sveltekit-normalize']) {
-					mkdirp(dirname(dest));
+					mkdirSync(dirname(dest), { recursive: true });
 
 					writeFileSync(
 						dest,
@@ -517,7 +526,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 				);
 			}
 
-			mkdirp(dir);
+			mkdirSync(dir, { recursive: true });
 
 			writeFileSync(dest, body);
 			written.add(file);
@@ -646,7 +655,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 		// ignore fragment links to pages that were not prerendered
 		if (!hashlinks) continue;
 
-		if (!hashlinks.includes(id) && !SPECIAL_HASHLINKS.has(id)) {
+		if (!hashlinks.has(id) && !SPECIAL_HASHLINKS.has(id)) {
 			handle_missing_id({ id, path, referrers: Array.from(referrers) });
 		}
 	}

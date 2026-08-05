@@ -1,11 +1,12 @@
 import { escape_html } from '../../../utils/escape.js';
+import { base64_encode } from '../../utils.js';
 import { sha256 } from './crypto.js';
 
 const array = new Uint8Array(16);
 
 function generate_nonce() {
 	crypto.getRandomValues(array);
-	return btoa(String.fromCharCode(...array));
+	return base64_encode(array);
 }
 
 const quoted = new Set([
@@ -53,19 +54,19 @@ class BaseProvider {
 	#directives;
 
 	/** @type {Set<import('types').Csp.Source>} */
-	#script_src;
+	#script_src = new Set();
 
 	/** @type {Set<import('types').Csp.Source>} */
-	#script_src_elem;
+	#script_src_elem = new Set();
 
 	/** @type {Set<import('types').Csp.Source>} */
-	#style_src;
+	#style_src = new Set();
 
 	/** @type {Set<import('types').Csp.Source>} */
-	#style_src_attr;
+	#style_src_attr = new Set();
 
 	/** @type {Set<import('types').Csp.Source>} */
-	#style_src_elem;
+	#style_src_elem = new Set();
 
 	/** @type {boolean} */
 	script_needs_nonce;
@@ -90,12 +91,6 @@ class BaseProvider {
 
 		const d = this.#directives;
 
-		this.#script_src = new Set();
-		this.#script_src_elem = new Set();
-		this.#style_src = new Set();
-		this.#style_src_attr = new Set();
-		this.#style_src_elem = new Set();
-
 		const effective_script_src = d['script-src'] || d['default-src'];
 		const script_src_elem = d['script-src-elem'];
 		const effective_style_src = d['style-src'] || d['default-src'];
@@ -117,32 +112,25 @@ class BaseProvider {
 
 			// ...and add unsafe-inline so we can inject <style> elements
 			// Note that 'unsafe-inline' is ignored if either a hash or nonce value is present in the source list, so we remove those during dev when injecting unsafe-inline
-			if (effective_style_src && !effective_style_src.includes('unsafe-inline')) {
-				d['style-src'] = [
-					...effective_style_src.filter(
-						(value) => !(value.startsWith('sha256-') || value.startsWith('nonce-'))
-					),
-					'unsafe-inline'
-				];
-			}
+			/**
+			 * @template {'style-src' | 'style-src-attr' | 'style-src-elem'} K
+			 * @param {K} key
+			 * @param {import('types').CspDirectives[K]} directive
+			 */
+			const add_unsafe_inline = (key, directive) => {
+				if (directive && !directive.includes('unsafe-inline')) {
+					d[key] = /** @type {import('types').CspDirectives[K]} */ ([
+						...directive.filter(
+							(value) => !(value.startsWith('sha256-') || value.startsWith('nonce-'))
+						),
+						'unsafe-inline'
+					]);
+				}
+			};
 
-			if (style_src_attr && !style_src_attr.includes('unsafe-inline')) {
-				d['style-src-attr'] = [
-					...style_src_attr.filter(
-						(value) => !(value.startsWith('sha256-') || value.startsWith('nonce-'))
-					),
-					'unsafe-inline'
-				];
-			}
-
-			if (style_src_elem && !style_src_elem.includes('unsafe-inline')) {
-				d['style-src-elem'] = [
-					...style_src_elem.filter(
-						(value) => !(value.startsWith('sha256-') || value.startsWith('nonce-'))
-					),
-					'unsafe-inline'
-				];
-			}
+			add_unsafe_inline('style-src', effective_style_src);
+			add_unsafe_inline('style-src-attr', style_src_attr);
+			add_unsafe_inline('style-src-elem', style_src_elem);
 		}
 
 		/** @param {(import('types').Csp.Source | import('types').Csp.ActionSource)[] | undefined} directive */
@@ -175,13 +163,16 @@ class BaseProvider {
 		this.#nonce = nonce;
 	}
 
-	/** @param {string} content */
-	add_script(content) {
-		if (!this.#script_needs_csp) return;
+	/**
+	 * @param {string} content
+	 * @returns {`nonce-${string}` | `sha256-${string}`}
+	 */
+	#get_source(content) {
+		return this.#use_hashes ? `sha256-${sha256(content)}` : `nonce-${this.#nonce}`;
+	}
 
-		/** @type {`nonce-${string}` | `sha256-${string}`} */
-		const source = this.#use_hashes ? `sha256-${sha256(content)}` : `nonce-${this.#nonce}`;
-
+	/** @param {`nonce-${string}` | `sha256-${string}`} source */
+	#add_script_source(source) {
 		if (this.#script_src_needs_csp) {
 			this.#script_src.add(source);
 		}
@@ -191,15 +182,17 @@ class BaseProvider {
 		}
 	}
 
+	/** @param {string} content */
+	add_script(content) {
+		if (!this.#script_needs_csp) return;
+
+		this.#add_script_source(this.#get_source(content));
+	}
+
 	/** @param {`sha256-${string}`[]} hashes */
 	add_script_hashes(hashes) {
 		for (const hash of hashes) {
-			if (this.#script_src_needs_csp) {
-				this.#script_src.add(hash);
-			}
-			if (this.#script_src_elem_needs_csp) {
-				this.#script_src_elem.add(hash);
-			}
+			this.#add_script_source(hash);
 		}
 	}
 
@@ -207,8 +200,7 @@ class BaseProvider {
 	add_style(content) {
 		if (!this.#style_needs_csp) return;
 
-		/** @type {`nonce-${string}` | `sha256-${string}`} */
-		const source = this.#use_hashes ? `sha256-${sha256(content)}` : `nonce-${this.#nonce}`;
+		const source = this.#get_source(content);
 
 		if (this.#style_src_needs_csp) {
 			this.#style_src.add(source);
@@ -251,40 +243,34 @@ class BaseProvider {
 
 		const directives = { ...this.#directives };
 
-		if (this.#style_src.size > 0) {
-			directives['style-src'] = [
-				...(directives['style-src'] || directives['default-src'] || []),
-				...this.#style_src
-			];
-		}
+		/**
+		 * @template {'style-src' | 'style-src-attr' | 'style-src-elem' | 'script-src' | 'script-src-elem'} K
+		 * @param {K} key
+		 * @param {Set<import('types').Csp.Source>} sources
+		 * @param {import('types').CspDirectives[K]} [base]
+		 */
+		const merge_sources = (key, sources, base) => {
+			if (sources.size > 0) {
+				directives[key] = /** @type {import('types').CspDirectives[K]} */ ([
+					...(base || []),
+					...sources
+				]);
+			}
+		};
 
-		if (this.#style_src_attr.size > 0) {
-			directives['style-src-attr'] = [
-				...(directives['style-src-attr'] || []),
-				...this.#style_src_attr
-			];
-		}
-
-		if (this.#style_src_elem.size > 0) {
-			directives['style-src-elem'] = [
-				...(directives['style-src-elem'] || []),
-				...this.#style_src_elem
-			];
-		}
-
-		if (this.#script_src.size > 0) {
-			directives['script-src'] = [
-				...(directives['script-src'] || directives['default-src'] || []),
-				...this.#script_src
-			];
-		}
-
-		if (this.#script_src_elem.size > 0) {
-			directives['script-src-elem'] = [
-				...(directives['script-src-elem'] || []),
-				...this.#script_src_elem
-			];
-		}
+		merge_sources(
+			'style-src',
+			this.#style_src,
+			directives['style-src'] || directives['default-src']
+		);
+		merge_sources('style-src-attr', this.#style_src_attr, directives['style-src-attr']);
+		merge_sources('style-src-elem', this.#style_src_elem, directives['style-src-elem']);
+		merge_sources(
+			'script-src',
+			this.#script_src,
+			directives['script-src'] || directives['default-src']
+		);
+		merge_sources('script-src-elem', this.#script_src_elem, directives['script-src-elem']);
 
 		for (const key in directives) {
 			if (is_meta && (key === 'frame-ancestors' || key === 'report-uri' || key === 'sandbox')) {
@@ -300,13 +286,11 @@ class BaseProvider {
 
 			const directive = [key];
 			if (Array.isArray(value)) {
-				value.forEach((value) => {
-					if (quoted.has(value) || crypto_pattern.test(value)) {
-						directive.push(`'${value}'`);
-					} else {
-						directive.push(value);
-					}
-				});
+				for (const source of value) {
+					directive.push(
+						quoted.has(source) || crypto_pattern.test(source) ? `'${source}'` : source
+					);
+				}
 			}
 
 			header.push(directive.join(' '));
@@ -337,17 +321,17 @@ class CspReportOnlyProvider extends BaseProvider {
 	constructor(use_hashes, directives, nonce) {
 		super(use_hashes, directives, nonce);
 
-		if (Object.values(directives).filter((v) => !!v).length > 0) {
-			// If we're generating content-security-policy-report-only,
-			// if there are any directives, we need a report-uri or report-to (or both)
-			// else it's just an expensive noop.
-			const has_report_to = directives['report-to']?.length ?? 0 > 0;
-			const has_report_uri = directives['report-uri']?.length ?? 0 > 0;
-			if (!has_report_to && !has_report_uri) {
-				throw Error(
-					'`content-security-policy-report-only` must be specified with either the `report-to` or `report-uri` directives, or both'
-				);
-			}
+		// If we're generating content-security-policy-report-only,
+		// if there are any directives, we need a report-uri or report-to (or both)
+		// else it's just an expensive noop.
+		if (
+			Object.values(directives).some((v) => !!v) &&
+			!directives['report-to']?.length &&
+			!directives['report-uri']?.length
+		) {
+			throw Error(
+				'`content-security-policy-report-only` must be specified with either the `report-to` or `report-uri` directives, or both'
+			);
 		}
 	}
 }

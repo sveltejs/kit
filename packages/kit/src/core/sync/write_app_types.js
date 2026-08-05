@@ -4,15 +4,42 @@ import { resolve_entry } from '../../utils/filesystem.js';
 import { posixify } from '../../utils/os.js';
 import { write_if_changed } from './utils.js';
 import { s } from '../../utils/misc.js';
-import { get_route_segments } from '../../utils/routing.js';
+import {
+	decode_escape_sequence,
+	encode_pathname_chars,
+	get_route_segments,
+	segment_pattern
+} from '../../utils/routing.js';
+import { is_app_route, is_endpoint_route, is_page_route } from './create_manifest_data/index.js';
 
-const replace_optional_params = (/** @type {string} */ id) =>
-	id.replace(/\/\[\[[^\]]+\]\]/g, '${string}');
-const replace_required_params = (/** @type {string} */ id) =>
-	id.replace(/\/\[[^\]]+\]/g, '/${string}');
-/** Convert route ID to pathname by removing layout groups */
-const remove_group_segments = (/** @type {string} */ id) => {
-	return '/' + get_route_segments(id).join('/');
+const optional_param_pattern = /^\[\[[\w-]+(?:=[\w-]+)?\]\]$/;
+const rest_param_pattern = /^\[\.\.\.[\w-]+(?:=[\w-]+)?\]$/;
+
+/**
+ * Convert a route ID to the pathnames it can match (relative to the base path), in which each
+ * param is replaced with `${string}` and each escape sequence is expanded. A param that fills an
+ * entire segment can be absent, so it contributes a pathname with the segment and one without,
+ * rather than one that absorbs the `/`
+ * @param {string} id
+ */
+const get_pathname_patterns = (id) => {
+	let pathnames = [''];
+
+	for (const segment of get_route_segments(id)) {
+		const omittable = optional_param_pattern.test(segment) || rest_param_pattern.test(segment);
+		const content = omittable
+			? '${string}'
+			: segment.replace(segment_pattern, (_, escape_type, escape_code) =>
+					escape_type ? encode_pathname_chars(decode_escape_sequence(escape_code)) : '${string}'
+				);
+
+		pathnames = pathnames.flatMap((pathname) => {
+			const joined = pathname === '' ? content : `${pathname}/${content}`;
+			return omittable ? [joined, pathname] : [joined];
+		});
+	}
+
+	return [...new Set(pathnames)];
 };
 
 /**
@@ -53,8 +80,6 @@ function get_pathnames_for_trailing_slash(pathname, route) {
 const template = `
 declare module "svelte/elements" {
 	export interface HTMLAttributes<T> {
-		'data-sveltekit-keepfocus'?: true | false | '' | undefined | null;
-		'data-sveltekit-noscroll'?: true | false | '' | undefined | null;
 		'data-sveltekit-preload-code'?:
 			| true
 			| false
@@ -68,6 +93,7 @@ declare module "svelte/elements" {
 		'data-sveltekit-preload-data'?: true | false | '' | 'hover' | 'tap' | undefined | null;
 		'data-sveltekit-reload'?: true | false | '' | undefined | null;
 		'data-sveltekit-replacestate'?: true | false | '' | undefined | null;
+		'data-sveltekit-reset'?: true | false | '' | undefined | null;
 	}
 }
 `;
@@ -144,6 +170,15 @@ function generate_app_types(manifest_data, config, dir) {
 	const pathnames = new Set();
 
 	/** @type {string[]} */
+	const page_route_ids = [];
+
+	/** @type {string[]} */
+	const endpoint_route_ids = [];
+
+	/** @type {string[]} */
+	const app_route_ids = [];
+
+	/** @type {string[]} */
 	const dynamic_routes = [];
 
 	/** @type {string[]} */
@@ -151,15 +186,17 @@ function generate_app_types(manifest_data, config, dir) {
 
 	/** @type {Map<string, Map<string, { optional: boolean, matchers: Set<string> | null }>>} */
 	const layout_params_by_route = new Map(
-		manifest_data.routes.map((route) => [
-			route.id,
-			new Map(
-				route.params.map((p) => [
-					p.name,
-					{ optional: p.optional, matchers: p.matcher ? new Set([p.matcher]) : null }
-				])
-			)
-		])
+		manifest_data.routes
+			.filter((route) => route.layout)
+			.map((route) => [
+				route.id,
+				new Map(
+					route.params.map((p) => [
+						p.name,
+						{ optional: p.optional, matchers: p.matcher ? new Set([p.matcher]) : null }
+					])
+				)
+			])
 	);
 
 	for (const route of manifest_data.routes) {
@@ -193,8 +230,11 @@ function generate_app_types(manifest_data, config, dir) {
 	}
 
 	for (const route of manifest_data.routes) {
-		const pathname = remove_group_segments(route.id);
-		let normalized_pathname = pathname.slice(1);
+		const id = s(route.id);
+
+		if (is_page_route(route)) page_route_ids.push(id);
+		if (is_endpoint_route(route)) endpoint_route_ids.push(id);
+		if (is_app_route(route)) app_route_ids.push(id);
 
 		/** @type {(path: string) => string} */
 		let serialise = s;
@@ -204,16 +244,18 @@ function generate_app_types(manifest_data, config, dir) {
 				const type = get_matcher_type(p.matcher);
 				return `${/^\w+$/.test(p.name) ? p.name : `'${p.name}'`}${p.optional ? '?:' : ':'} ${type}${p.optional ? ' | undefined' : ''}`;
 			});
-			const route_type = `${s(route.id)}: { ${params.join('; ')} }`;
 
-			dynamic_routes.push(route_type);
+			if (is_app_route(route)) {
+				dynamic_routes.push(`${s(route.id)}: { ${params.join('; ')} }`);
+			}
 
-			normalized_pathname = replace_required_params(replace_optional_params(pathname)).slice(1);
 			serialise = (p) => `\`${p}\` & {}`;
 		}
 
-		for (const p of get_pathnames_for_trailing_slash(normalized_pathname, route)) {
-			pathnames.add(serialise(p));
+		for (const pathname of get_pathname_patterns(route.id)) {
+			for (const p of get_pathnames_for_trailing_slash(pathname, route)) {
+				pathnames.add(serialise(p));
+			}
 		}
 
 		let layout_type = 'Record<string, never>';
@@ -230,7 +272,7 @@ function generate_app_types(manifest_data, config, dir) {
 			if (params.length > 0) layout_type = `{ ${params} }`;
 		}
 
-		layouts.push(`${s(route.id)}: ${layout_type}`);
+		if (route.layout) layouts.push(`${s(route.id)}: ${layout_type}`);
 	}
 
 	const assets = manifest_data.assets.map((asset) => s(asset.file));
@@ -238,7 +280,9 @@ function generate_app_types(manifest_data, config, dir) {
 	return [
 		'declare module "$app/types" {',
 		'\texport interface AppTypes {',
-		`\t\tRouteId(): ${manifest_data.routes.map((r) => s(r.id)).join(' | ')};`,
+		`\t\tPageRouteId(): ${page_route_ids.join(' | ') || 'never'};`,
+		`\t\tEndpointRouteId(): ${endpoint_route_ids.join(' | ') || 'never'};`,
+		`\t\tRouteId(): ${app_route_ids.join(' | ') || 'never'};`,
 		`\t\tRouteParams(): {\n\t\t\t${dynamic_routes.join(';\n\t\t\t')}\n\t\t};`,
 		`\t\tLayoutParams(): {\n\t\t\t${layouts.join(';\n\t\t\t')}\n\t\t};`,
 		`\t\tPath(): ${Array.from(pathnames).join(' | ')};`,

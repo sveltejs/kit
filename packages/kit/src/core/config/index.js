@@ -120,13 +120,12 @@ export function load_error_page(config) {
 
 /**
  * @param {string} [config]
+ * @param {typeof import('vite')} [vite]
  */
-export async function load_vite_config(config) {
-	const { resolveConfig } = /** @type {import('vite')} */ (
-		await import_peer('vite', process.cwd())
-	);
+export async function load_vite_config(config, vite) {
+	vite ??= /** @type {import('vite')} */ (await import_peer('vite', process.cwd()));
 
-	return resolveConfig({ configFile: config }, 'build', process.env.MODE ?? 'production');
+	return vite.resolveConfig({ configFile: config }, 'build', process.env.MODE ?? 'production');
 }
 
 /**

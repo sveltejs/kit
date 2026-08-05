@@ -1,5 +1,5 @@
 import { escape_html } from '../../../utils/escape.js';
-import { hash } from '../../../utils/hash.js';
+import { hash_request } from '../../../utils/hash.js';
 
 /**
  * Inside a script element, only `</script` and `<!--` hold special meaning to the HTML parser.
@@ -78,18 +78,7 @@ export function serialize_data(fetched, filter, prerendering = false) {
 	}
 
 	if (fetched.request_headers || fetched.request_body) {
-		/** @type {import('types').StrictBody[]} */
-		const values = [];
-
-		if (fetched.request_headers) {
-			values.push([...new Headers(fetched.request_headers)].join(','));
-		}
-
-		if (fetched.request_body) {
-			values.push(fetched.request_body);
-		}
-
-		attrs.push(`data-hash="${hash(...values)}"`);
+		attrs.push(`data-hash="${hash_request(fetched.request_headers, fetched.request_body)}"`);
 	}
 
 	// Compute the time the response should be cached, taking into account max-age and age.

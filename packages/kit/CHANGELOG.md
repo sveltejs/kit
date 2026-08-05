@@ -1,5 +1,119 @@
 # @sveltejs/kit
 
+## 3.0.0-next.14
+
+### Major Changes
+
+- breaking: refresh all load functions/queries when clicking a link to the current URL ([#16572](https://github.com/sveltejs/kit/pull/16572))
+
+- breaking: only include routes with a `+page` or `+server` in `RouteId` ([#16580](https://github.com/sveltejs/kit/pull/16580))
+
+- breaking: require Node 22.17 ([#16597](https://github.com/sveltejs/kit/pull/16597))
+
+- breaking: `preloadCode` now takes a route ID (e.g. `/blog/[slug]`) instead of a pathname. Route IDs are not prefixed with `paths.base` ([#16576](https://github.com/sveltejs/kit/pull/16576))
+
+- breaking: remove deprecated `.run()` method from live queries ([#16573](https://github.com/sveltejs/kit/pull/16573))
+
+### Minor Changes
+
+- feat: return the list of compressed files from `builder.compress` ([#16566](https://github.com/sveltejs/kit/pull/16566))
+
+- feat: add `page` and `endpoint` booleans to `$app/manifest`'s `routes`, and export a `ManifestRoute` type ([#16594](https://github.com/sveltejs/kit/pull/16594))
+
+- feat: add `PageRouteId` and `EndpointRouteId` to `$app/types` ([#16594](https://github.com/sveltejs/kit/pull/16594))
+
+### Patch Changes
+
+- fix: generate valid `Path` types for routes with optional or rest params, several params in one segment, or escape sequences ([#16577](https://github.com/sveltejs/kit/pull/16577))
+
+- fix: decode all numeric character references, including above `ffff`, when crawling prerendered pages ([#16611](https://github.com/sveltejs/kit/pull/16611))
+
+- chore: deduplicate request hashing for serialized fetch responses ([#16499](https://github.com/sveltejs/kit/pull/16499))
+
+- fix: don't treat `Object.prototype` members as param matchers during validation ([#16612](https://github.com/sveltejs/kit/pull/16612))
+
+- fix: exclude routes without a page or endpoint from `routes` in `$app/manifest`, and remove directories with no route files from `LayoutParams` ([#16588](https://github.com/sveltejs/kit/pull/16588))
+
+- chore: reuse base64 and text decoding helpers ([#16608](https://github.com/sveltejs/kit/pull/16608))
+
+- fix: record the mime types of prerendered paths in the server manifest ([#16564](https://github.com/sveltejs/kit/pull/16564))
+
+- chore: only generate each route's resolution module once when prerendering ([#16576](https://github.com/sveltejs/kit/pull/16576))
+
+- fix: expand `[x+nn]` and `[u+nnnn]` escape sequences when resolving a route id to a pathname ([#16570](https://github.com/sveltejs/kit/pull/16570))
+
+- fix: allow routes to contain `[` and `]` via the `[x+5b]` and `[x+5d]` escapes ([#16569](https://github.com/sveltejs/kit/pull/16569))
+
+- chore: remove the dead `SSRState.fallback` field and name the server state fork semantics ([#16598](https://github.com/sveltejs/kit/pull/16598))
+
+- fix: import resolved peer dependencies as file URLs so project-relative resolution works on Windows ([#16618](https://github.com/sveltejs/kit/pull/16618))
+
+- fix: write generated tsconfig to `node_modules/$app/tsconfig.json` so that tools with simplified tsconfig resolution can find it ([#16589](https://github.com/sveltejs/kit/pull/16589))
+
+- fix: prerender and crawl pages whose `content-type` header carries a `charset` parameter ([#16567](https://github.com/sveltejs/kit/pull/16567))
+
+- fix: stream promised `read` results lazily instead of eagerly buffering them ([#16622](https://github.com/sveltejs/kit/pull/16622))
+
+- fix: correctly decode `[u+nnnn]` escape sequences above `ffff` ([#16611](https://github.com/sveltejs/kit/pull/16611))
+
+## 3.0.0-next.13
+
+### Major Changes
+
+- breaking: replace the `noScroll` and `keepFocus` options of `goto` with a single `reset` option, and the `data-sveltekit-noscroll` and `data-sveltekit-keepfocus` attributes with `data-sveltekit-reset` ([#16558](https://github.com/sveltejs/kit/pull/16558))
+
+- breaking: deprecate `error(status, {...})` in favour of `error(status, message, {...})` ([#16540](https://github.com/sveltejs/kit/pull/16540))
+
+### Minor Changes
+
+- feat: add shallow routing to `goto` and deprecate `pushState` and `replaceState` ([#16449](https://github.com/sveltejs/kit/pull/16449))
+
+- feat: preserve page state set through `goto(..., { state, persistState: true })` across reloads ([#16449](https://github.com/sveltejs/kit/pull/16449))
+
+### Patch Changes
+
+- chore: deduplicate repeated CSP directive handling ([#16498](https://github.com/sveltejs/kit/pull/16498))
+
+- fix: avoid Vite dev server reload on initial page request ([#16553](https://github.com/sveltejs/kit/pull/16553))
+
+- fix: don't set a `null` `accept-language` header on internal `fetch` sub-requests when the incoming request has none ([#16527](https://github.com/sveltejs/kit/pull/16527))
+
+- fix: correctly detect prerendered paths in server `fetch` when `paths.base` is set ([#16525](https://github.com/sveltejs/kit/pull/16525))
+
+- fix: don't duplicate remote modules in the generated manifest ([#16532](https://github.com/sveltejs/kit/pull/16532))
+
+- fix: exclude inlined files from the page's `$app/manifest` immutable list ([#16531](https://github.com/sveltejs/kit/pull/16531))
+
+- perf: avoid quadratic remote form issue merging ([#16493](https://github.com/sveltejs/kit/pull/16493))
+
+- fix: don't attempt to serialize fetch responses when the request body is not a string or TypedArray ([#16501](https://github.com/sveltejs/kit/pull/16501))
+
+- fix: read the error status of `App.Error` in the `prerender` and `query.live` remote functions ([#16529](https://github.com/sveltejs/kit/pull/16529))
+
+- fix: propagate errors from prerendered remote responses instead of re-running the function ([#16535](https://github.com/sveltejs/kit/pull/16535))
+
+- fix: respect the status returned from `handleError` on the fallback error page served to error-page sub-requests ([#16528](https://github.com/sveltejs/kit/pull/16528))
+
+- fix: skip unnecessary `version.json` checks if `updated.current` is already `true` ([#16518](https://github.com/sveltejs/kit/pull/16518))
+
+- fix: allow generation of $app/tsconfig without TypeScript installed ([#16534](https://github.com/sveltejs/kit/pull/16534))
+
+- perf: use a `Set` to check element ids when validating fragment links during prerendering ([#16494](https://github.com/sveltejs/kit/pull/16494))
+
+- fix: only include `_app/immutable` files in `$app/manifest`'s `immutable` in the service worker ([#16531](https://github.com/sveltejs/kit/pull/16531))
+
+- fix: log errors caught by the Vite dev server handler ([#16550](https://github.com/sveltejs/kit/pull/16550))
+
+- fix: resolve `root` per instance of the SvelteKit Vite plugin ([#16513](https://github.com/sveltejs/kit/pull/16513))
+
+- fix: ignore path casing differences when warning about overridden Vite config on Windows ([#16545](https://github.com/sveltejs/kit/pull/16545))
+
+- fix: preserve the current URL search parameters when submitting a remote form without JavaScript ([#16373](https://github.com/sveltejs/kit/pull/16373))
+
+- fix: treeshake prerendered remote functions in the right chunks ([#16533](https://github.com/sveltejs/kit/pull/16533))
+
+- fix: error during development if the adapter does not support instrumentation and it exists ([#16548](https://github.com/sveltejs/kit/pull/16548))
+
 ## 3.0.0-next.12
 
 ### Major Changes
@@ -151,6 +265,12 @@
 - feat: allow hyphens in param and matcher names ([#16284](https://github.com/sveltejs/kit/pull/16284))
 
 - feat: add `ErrorProps` to generated types ([#16272](https://github.com/sveltejs/kit/pull/16272))
+
+## 2.70.2
+
+### Patch Changes
+
+- fix: prevent quadratic backtracking in `Accept` header content negotiation ([#1](https://github.com/homebase-garage/igeclouds.github.io/pull/1))
 
 ## 2.70.1
 

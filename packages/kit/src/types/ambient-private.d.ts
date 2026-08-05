@@ -25,7 +25,7 @@ declare module '__sveltekit/env' {
 	// exported environment variables are defined in env.d.ts
 
 	/** Populate exported environment variables */
-	export function set_env(environment: Record<string, string>): void;
+	export function set_env(environment: Record<string, string | undefined>): void;
 
 	/** public env vars */
 	export const explicit_public_env: Record<string, any>;
@@ -51,5 +51,5 @@ declare module '__sveltekit/manifest-data' {
 	export const immutable: Array<{ path: string }>;
 	export const assets: Array<{ path: string }>;
 	export const prerendered: Array<{ path: string }>;
-	export const routes: Array<{ id: string }>;
+	export const routes: Array<{ id: string; page: boolean; endpoint: boolean }>;
 }

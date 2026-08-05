@@ -61,6 +61,11 @@ test.describe('paths', () => {
 		expect(new URL(page.url()).pathname).toBe('/basepath/hello');
 	});
 
+	test('serves a prerendered page for a server-side fetch of its path', async ({ page }) => {
+		await page.goto('/basepath/fetch-prerendered');
+		expect(await page.textContent('h1')).toBe('200 true');
+	});
+
 	test('query remote function from client accounts for base path', async ({
 		page,
 		javaScriptEnabled
