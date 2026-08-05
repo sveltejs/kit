@@ -1,5 +1,5 @@
 import type { Adapter } from '@sveltejs/kit';
-import type { CompileBuildOptions, Serve, TLSOptions } from 'bun';
+import type { BuildConfig, Serve, TLSOptions } from 'bun';
 import './ambient.js';
 
 declare global {
@@ -16,19 +16,9 @@ type ServerOptions = Omit<
 	tls?: TLSOptions | TLSOptions[];
 };
 
-interface CompileOptions extends Omit<CompileBuildOptions, 'outfile'> {
-	/**
-	 * The executable path, relative to the project root.
-	 * @default `${out}/app`
-	 */
-	outfile?: string;
-	/** Include Bun bytecode to improve startup time. */
-	bytecode?: boolean;
-	/** Minify the server bundle before compiling it. */
-	minify?: boolean;
-	/** Generate a source map alongside the executable. */
-	sourcemap?: boolean;
-}
+type CompileOptions = Omit<BuildConfig, 'entrypoints' | 'compile'> & {
+	compile: NonNullable<BuildConfig['compile']>;
+};
 
 interface AdapterOptions {
 	/**
@@ -53,6 +43,7 @@ interface AdapterOptions {
 	serverOptions?: ServerOptions;
 	/**
 	 * Compile the build into a single executable containing the server and static assets.
+	 * Pass Bun build options directly for advanced configuration. The generated entrypoint is reserved.
 	 * @default false
 	 */
 	compile?: boolean | CompileOptions;

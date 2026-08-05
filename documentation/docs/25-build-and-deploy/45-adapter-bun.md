@@ -94,16 +94,18 @@ The adapter uses the [`Bun.build`](https://bun.com/reference/bun/build) JavaScri
 bun run --bun build
 ```
 
-Only the executable is required at runtime. It is specific to the platform on which it was built. Advanced options can select another Bun target and enable minification, bytecode, source maps, or other [`compile` options](https://bun.com/reference/bun/CompileBuildOptions):
+With the default options, only the executable is required at runtime. It is specific to the platform on which it was built. For advanced configuration, pass [`Bun.BuildConfig`](https://bun.com/reference/bun/BuildConfig) options directly. The adapter supplies the generated `entrypoints`, so that property is not configurable. Options such as code splitting may emit additional runtime files:
 
 ```js
 adapter({
 	compile: {
-		outfile: 'build/my-app',
-		target: 'bun-linux-x64',
+		compile: {
+			outfile: 'build/my-app',
+			target: 'bun-linux-x64'
+		},
 		minify: true,
 		bytecode: true,
-		sourcemap: true
+		sourcemap: 'linked'
 	}
 });
 ```

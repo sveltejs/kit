@@ -162,18 +162,22 @@ export default function (opts = {}) {
 
 			if (compile) {
 				builder.log.minor('Compiling executable');
-				await compile_executable(out, compile === true ? {} : compile, [
-					...client_files.map((file) => `client/${file}`),
-					...client_compressed.flatMap((file) => [
-						`client/${posixify(file)}.br`,
-						`client/${posixify(file)}.gz`
-					]),
-					...prerendered_files.map((file) => `prerendered/${file}`),
-					...prerendered_compressed.flatMap((file) => [
-						`prerendered/${posixify(file)}.br`,
-						`prerendered/${posixify(file)}.gz`
-					])
-				]);
+				await compile_executable(
+					out,
+					compile === true ? { compile: { outfile: `${out}/app` } } : compile,
+					[
+						...client_files.map((file) => `client/${file}`),
+						...client_compressed.flatMap((file) => [
+							`client/${posixify(file)}.br`,
+							`client/${posixify(file)}.gz`
+						]),
+						...prerendered_files.map((file) => `prerendered/${file}`),
+						...prerendered_compressed.flatMap((file) => [
+							`prerendered/${posixify(file)}.br`,
+							`prerendered/${posixify(file)}.gz`
+						])
+					]
+				);
 			}
 		},
 
@@ -231,9 +235,7 @@ async function compile_executable(out, options, assets) {
 		);
 	}
 
-	const outfile = options.outfile ?? `${out}/app`;
 	const entrypoint = `${out}/adapter-bun-compile.js`;
-	const { bytecode, minify, sourcemap, outfile: _, ...compile } = options;
 
 	const unique_assets = [...new Set(assets)];
 	const imports = unique_assets.map(
@@ -257,11 +259,8 @@ async function compile_executable(out, options, assets) {
 
 	try {
 		const result = await Bun.build({
-			entrypoints: [entrypoint],
-			compile: { ...compile, outfile },
-			bytecode,
-			minify,
-			sourcemap: sourcemap ? 'linked' : undefined
+			...options,
+			entrypoints: [entrypoint]
 		});
 
 		if (!result.success) {
