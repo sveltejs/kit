@@ -1,4 +1,3 @@
-import { statSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -7,13 +6,7 @@ const files = fileURLToPath(new URL('./files', import.meta.url).href);
 
 /** @type {import('./index.js').default} */
 export default function (opts = {}) {
-	const {
-		out = 'build',
-		precompress = true,
-		envPrefix = '',
-		serverOptions = {},
-		compile = false
-	} = opts;
+	const { out = 'build', envPrefix = '', serverOptions = {}, compile = false } = opts;
 
 	return {
 		name: '@sveltejs/adapter-bun',
@@ -40,19 +33,6 @@ export default function (opts = {}) {
 				base
 			);
 
-			/** @type {string[]} */
-			let client_compressed = [];
-			/** @type {string[]} */
-			let prerendered_compressed = [];
-			if (precompress) {
-				builder.log.minor('Compressing assets');
-				[client_compressed, prerendered_compressed] = await Promise.all([
-					builder.compress(`${out}/client`),
-					builder.compress(`${out}/prerendered`)
-				]);
-			}
-			const compressed_files = [...client_compressed, ...prerendered_compressed];
-
 			builder.log.minor(compile ? 'Compiling executable' : 'Building server');
 
 			const pkg = JSON.parse(await readFile('package.json', 'utf8'));
@@ -71,7 +51,6 @@ export default function (opts = {}) {
 					`export const manifest = ${builder.generateManifest({ relativePath: './' })};`,
 					`export const client_files = new Set(${JSON.stringify(client_files)});`,
 					`export const prerendered_files = new Set(${JSON.stringify(prerendered_files)});`,
-					`export const compressed_files = new Set(${JSON.stringify(compressed_files)});`,
 					`export const prerendered_paths = new Set(${JSON.stringify(builder.prerendered.paths)});`
 				].join('\n\n'),
 				[server_options_file]: `export default ${serialize(serverOptions)};\n`
@@ -101,15 +80,7 @@ export default function (opts = {}) {
 			if (compile_options) {
 				const assets = [
 					...client_files.map((file) => `client/${file}`),
-					...client_compressed.flatMap((file) => [
-						`client/${posixify(file)}.br`,
-						`client/${posixify(file)}.gz`
-					]),
-					...prerendered_files.map((file) => `prerendered/${file}`),
-					...prerendered_compressed.flatMap((file) => [
-						`prerendered/${posixify(file)}.br`,
-						`prerendered/${posixify(file)}.gz`
-					])
+					...prerendered_files.map((file) => `prerendered/${file}`)
 				];
 				const compile_file = `${out}/adapter-bun-compile.js`;
 				virtual_files[compile_file] = create_compile_entrypoint(
@@ -145,7 +116,6 @@ export default function (opts = {}) {
 						}
 						contents = contents
 							.replace(/\bENV_PREFIX\b/g, JSON.stringify(envPrefix))
-							.replace(/\bPRECOMPRESS\b/g, JSON.stringify(precompress))
 							.replace(
 								/\bORIGIN\b/g,
 								JSON.stringify(builder.config.kit.paths.origin) || 'undefined'
@@ -237,10 +207,7 @@ function create_compile_entrypoint(out, assets, entrypoint, instrumentation) {
 		(file, index) =>
 			`import asset_${index} from ${JSON.stringify(posixify(resolve(out, file)))} with { type: 'file' };`
 	);
-	const entries = unique_assets.map((file, index) => [
-		file,
-		`{ path: asset_${index}, lastModified: ${Math.trunc(statSync(`${out}/${file}`).mtimeMs)} }`
-	]);
+	const entries = unique_assets.map((file, index) => [file, `asset_${index}`]);
 	return [
 		...imports,
 		`globalThis[Symbol.for('sveltekit.adapter-bun.assets')] = new Map([${entries

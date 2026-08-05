@@ -4,7 +4,6 @@ import './ambient.js';
 
 declare global {
 	const ENV_PREFIX: string;
-	const PRECOMPRESS: boolean;
 	const ORIGIN: string | undefined;
 }
 
@@ -26,11 +25,6 @@ interface AdapterOptions {
 	 * @default 'build'
 	 */
 	out?: string;
-	/**
-	 * Enables precompressing assets and prerendered pages with gzip and brotli.
-	 * @default true
-	 */
-	precompress?: boolean;
 	/**
 	 * A prefix for the environment variables used to configure the production server.
 	 */

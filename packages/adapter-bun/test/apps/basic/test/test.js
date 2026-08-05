@@ -17,41 +17,50 @@ test('provides Bun request context', async ({ request }) => {
 });
 
 test('serves static files with Bun file responses', async ({ request }) => {
-	const response = await request.get('/data.json', {
-		headers: { 'accept-encoding': 'identity' }
-	});
+	const response = await request.get('/data.json');
 	expect(response.status()).toBe(200);
-	expect(response.headers()['content-type']).toBe('application/json');
-	expect(response.headers()['accept-ranges']).toBe('bytes');
-	expect(response.headers()['vary']).toBe('Accept-Encoding');
+	expect(response.headers()['content-type']).toContain('application/json');
 	expect(await response.json()).toEqual({ message: 'hello from a static file' });
+
+	const head = await request.head('/data.json');
+	expect(head.status()).toBe(200);
+	expect(head.headers()['content-length']).toBe(response.headers()['content-length']);
+	expect(await head.text()).toBe('');
 });
 
 test('supports ranges and conditional requests for static files', async ({ request }) => {
-	const initial = await request.get('/data.json', {
-		headers: { 'accept-encoding': 'identity' }
-	});
-	const etag = initial.headers()['etag'];
+	const initial = await request.get('/data.json');
 	const last_modified = initial.headers()['last-modified'];
 	const body = await initial.text();
-	expect(etag).toBeTruthy();
 	expect(last_modified).toBeTruthy();
 
-	const not_modified = await request.get('/data.json', {
-		headers: { 'accept-encoding': 'identity', 'if-none-match': etag }
-	});
-	expect(not_modified.status()).toBe(304);
 	const not_modified_since = await request.get('/data.json', {
-		headers: { 'accept-encoding': 'identity', 'if-modified-since': last_modified }
+		headers: { 'if-modified-since': last_modified }
 	});
 	expect(not_modified_since.status()).toBe(304);
 
 	const range = await request.get('/data.json', {
-		headers: { 'accept-encoding': 'identity', range: 'bytes=0-3' }
+		headers: { range: 'bytes=0-3' }
 	});
 	expect(range.status()).toBe(206);
+	expect(range.headers()['accept-ranges']).toBe('bytes');
 	expect(range.headers()['content-range']).toBe(`bytes 0-3/${body.length}`);
 	expect(await range.text()).toBe(body.slice(0, 4));
+});
+
+test('serves URL-encoded static filenames', async ({ request }) => {
+	const response = await request.get('/encoded%20name.txt');
+	expect(response.status()).toBe(200);
+	expect(await response.text()).toBe('hello from an encoded filename\n');
+});
+
+test('caches immutable client assets', async ({ request }) => {
+	const page = await request.get('/');
+	const asset = /["']([^"']*_app\/immutable\/[^"']+)["']/.exec(await page.text())?.[1];
+	expect(asset).toBeTruthy();
+
+	const asset_response = await request.get(/** @type {string} */ (asset));
+	expect(asset_response.headers()['cache-control']).toBe('public,max-age=31536000,immutable');
 });
 
 test('does not serve static files for non-GET requests', async ({ request }) => {

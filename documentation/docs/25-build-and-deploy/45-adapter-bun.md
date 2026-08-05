@@ -33,7 +33,7 @@ bun ./build
 
 The default output directory is `build`. Production dependencies are externalised in the same way as with [`adapter-node`](adapter-node): packages in `dependencies` must be installed alongside the build, while packages in `devDependencies` are bundled into it.
 
-Client assets and prerendered pages are served with Bun-native file responses. This includes streaming and range requests, conditional requests using `ETag` and `Last-Modified`, correct MIME types, immutable caching for hashed SvelteKit assets, and optional precompressed Brotli and gzip files.
+Client assets and prerendered pages are served through Bun's native `routes` and file responses. This includes streaming and range requests, conditional requests using `Last-Modified`, correct MIME types, and immutable caching for hashed SvelteKit assets.
 
 ## Options
 
@@ -51,7 +51,6 @@ export default defineConfig({
 		sveltekit({
 			adapter: adapter({
 				out: 'build',
-				precompress: true,
 				envPrefix: '',
 				serverOptions: {
 					idleTimeout: 30
@@ -66,10 +65,6 @@ export default defineConfig({
 ### out
 
 The directory to build the server to. It defaults to `build`.
-
-### precompress
-
-Precompresses assets and prerendered pages with gzip and Brotli. It defaults to `true`. The server selects the best supported representation from the request's `Accept-Encoding` header.
 
 ### envPrefix
 
@@ -216,4 +211,4 @@ const server = Bun.serve({
 console.log(`Listening on ${server.url}`);
 ```
 
-When using a custom server, implement lifecycle behavior such as signal handling yourself. The handler still serves static and prerendered files and reads the proxy-header environment variables described above.
+When using a custom server, implement lifecycle behavior such as signal handling and static file serving yourself. The handler only serves dynamic SvelteKit requests and reads the proxy-header environment variables described above.

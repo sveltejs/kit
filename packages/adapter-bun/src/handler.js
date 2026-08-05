@@ -1,7 +1,7 @@
 import { Server } from 'SERVER';
 import { manifest } from 'MANIFEST';
+import { asset_path } from './assets.js';
 import { env, env_prefix, number_env } from './env.js';
-import { asset_path, serve_static } from './static.js';
 
 const server = new Server(manifest);
 const origin = ORIGIN;
@@ -26,16 +26,6 @@ await server.init({
  */
 export async function handler(request, bun_server) {
 	const url = new URL(request.url);
-
-	let pathname;
-	try {
-		pathname = decodeURIComponent(url.pathname);
-	} catch {
-		return new Response('Bad Request', { status: 400 });
-	}
-
-	const static_response = await serve_static(request, pathname);
-	if (static_response) return static_response;
 
 	let request_origin = origin;
 	try {

@@ -2,6 +2,7 @@ import process from 'node:process';
 import server_options from 'SERVER_OPTIONS';
 import { handler } from './handler.js';
 import { boolean_env, env, number_env } from './env.js';
+import { routes } from './static.js';
 import { parse_as_bytes } from './utils.js';
 
 const options = { ...server_options };
@@ -75,6 +76,7 @@ if (unix && options.http3) {
 }
 
 options.fetch = handler;
+options.routes = routes;
 
 export const server = Bun.serve(
 	/** @type {import('bun').Serve.Options<undefined>} */ (/** @type {unknown} */ (options))
