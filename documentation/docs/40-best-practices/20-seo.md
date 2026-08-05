@@ -56,7 +56,3 @@ export async function GET() {
 	);
 }
 ```
-
-### AMP
-
-In May 2020, Google [announced](https://developers.google.com/search/blog/2020/05/evaluating-page-experience) that it would remove the AMP requirement for receiving a better search ranking.
