@@ -1,16 +1,15 @@
 /** @import { RequestEvent, ActionResult, Actions } from '@sveltejs/kit' */
-/** @import { SSROptions, SSRNode, ServerNode, ServerHooks } from 'types' */
-import * as devalue from 'devalue';
+/** @import { SSROptions, SSRNode, ServerNode } from 'types' */
 import { DEV } from 'esm-env';
 import { json } from '@sveltejs/kit';
 import { HttpError, Redirect, ActionFailure, SvelteKitError } from '@sveltejs/kit/internal';
 import { with_request_store, merge_tracing } from '@sveltejs/kit/internal/server';
 import { normalize_error } from '../../../utils/error.js';
 import { is_form_content_type, negotiate } from '../../../utils/http.js';
-import { create_replacer, with_version_header } from '../utils.js';
+import { with_version_header } from '../utils.js';
 import { handle_error_and_jsonify } from '../errors.js';
 import { record_span } from '../../telemetry/record_span.js';
-import { stringify } from '#app/internal';
+import { stringify, uneval } from '#app/internal';
 
 /** @param {RequestEvent} event */
 export function is_action_json_request(event) {
@@ -73,7 +72,7 @@ export async function handle_action_json_request(event, event_state, options, se
 					// @ts-expect-error we assign a string to what is supposed to be an object. That's ok
 					// because we don't use the object outside, and this way we have better code navigation
 					// through knowing where the related interface is used.
-					data: stringify_action_response(data.data, /** @type {string} */ (event.route.id))
+					data: try_serialize(data.data, stringify, /** @type {string} */ (event.route.id))
 				},
 				{
 					status: data.status
@@ -84,7 +83,7 @@ export async function handle_action_json_request(event, event_state, options, se
 				type: 'success',
 				status: 200,
 				// @ts-expect-error see comment above
-				data: stringify_action_response(data, /** @type {string} */ (event.route.id))
+				data: try_serialize(data, stringify, /** @type {string} */ (event.route.id))
 			});
 		} else {
 			// no data returned — use 204 No Content (without a body, per the spec)
@@ -307,21 +306,9 @@ function validate_action_return(data) {
  * Try to `devalue.uneval` the data object, and if it fails, return a proper Error with context
  * @param {any} data
  * @param {string} route_id
- * @param {ServerHooks['transport']} transport
  */
-export function uneval_action_response(data, route_id, transport) {
-	const replacer = create_replacer(transport);
-
-	return try_serialize(data, (value) => devalue.uneval(value, replacer), route_id);
-}
-
-/**
- * Try to `devalue.stringify` the data object, and if it fails, return a proper Error with context
- * @param {any} data
- * @param {string} route_id
- */
-function stringify_action_response(data, route_id) {
-	return try_serialize(data, (value) => stringify(value), route_id);
+export function uneval_action_response(data, route_id) {
+	return try_serialize(data, uneval, route_id);
 }
 
 /**

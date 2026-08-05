@@ -18,13 +18,14 @@ import {
 } from '../../pathname.js';
 import { try_get_request_store, with_request_store } from '@sveltejs/kit/internal/server';
 import { text_encoder } from '../../utils.js';
-import { count_non_ssi_comments, create_replacer, get_global_name } from '../utils.js';
+import { count_non_ssi_comments, get_global_name } from '../utils.js';
 import { handle_error_and_jsonify } from '../errors.js';
 import * as env from '__sveltekit/env';
 import { collect_remote_data } from '../remote-functions.js';
 import Root from '../../components/root.svelte';
 import { render } from 'svelte/server';
 import { Props, RenderNode } from '../../props.svelte.js';
+import { uneval } from '#app/internal';
 
 // TODO rename this function/module
 
@@ -522,7 +523,7 @@ export async function render_response({
 
 		const serialized_data =
 			Object.keys(remote_data).length > 0
-				? `${global}.data = ${devalue.uneval(remote_data, create_replacer(options.hooks.transport))};\n\n\t\t\t\t\t\t`
+				? `${global}.data = ${uneval(remote_data)};\n\n\t\t\t\t\t\t`
 				: '';
 
 		// `client.app` is a proxy for `bundleStrategy === 'split'`

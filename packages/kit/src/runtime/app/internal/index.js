@@ -2,6 +2,11 @@
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
 
+/** @type {(thing: any) => string} */
+export let uneval = () => {
+	throw new Error(DEV ? 'called uneval before init_transport' : '');
+};
+
 /** @type {(data: any) => string} */
 export let stringify = () => {
 	throw new Error(DEV ? 'called stringify before init_transport' : '');
@@ -25,9 +30,20 @@ export let decoders = {};
 export function init_transport(transport) {
 	const transporters = Object.entries(transport);
 
+	/** @param {unknown} thing */
+	const replacer = (thing) => {
+		for (const key in transport) {
+			const encoded = transport[key].encode(thing);
+			if (encoded) {
+				return `app.decode('${key}', ${devalue.uneval(encoded, replacer)})`;
+			}
+		}
+	};
+
 	encoders = Object.fromEntries(transporters.map(([k, v]) => [k, v.encode]));
 	decoders = Object.fromEntries(transporters.map(([k, v]) => [k, v.decode]));
 
+	uneval = (data) => devalue.uneval(data, replacer);
 	stringify = (data) => devalue.stringify(data, encoders);
 	parse = (data) => devalue.parse(data, decoders);
 }
