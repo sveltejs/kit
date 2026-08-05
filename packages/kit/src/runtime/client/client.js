@@ -50,6 +50,7 @@ import { noop_span } from '../telemetry/noop.js';
 import { read_ndjson } from './ndjson.js';
 import Root from '../components/root.svelte';
 import { Props, RenderNode } from '../props.svelte.js';
+import { init_transport } from '#app/internal';
 
 /**
  * @typedef {{
@@ -486,6 +487,8 @@ async function _start(_app, _target, data) {
 	}
 
 	app = _app;
+
+	init_transport(app.hooks.transport ?? {});
 
 	await _app.hooks.init?.();
 

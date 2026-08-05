@@ -4,7 +4,8 @@
 import { json } from '@sveltejs/kit';
 import { HttpError } from '@sveltejs/kit/internal';
 import { get_request_store } from '@sveltejs/kit/internal/server';
-import { stringify, stringify_remote_arg } from '../../../shared.js';
+import { stringify_remote_arg } from '../../../shared.js';
+import { stringify } from '#app/internal';
 import { noop } from '../../../../utils/functions.js';
 import { app_dir, base } from '$app/paths/internal/server';
 import {
@@ -89,7 +90,7 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 	/** @type {RemotePrerenderFunction<Input, Output> & { __: RemotePrerenderInternals }} */
 	const wrapper = (arg) => {
 		const { event, state } = get_request_store();
-		const payload = stringify_remote_arg(arg, state.transport);
+		const payload = stringify_remote_arg(arg);
 
 		// `get_response` (as opposed to bare `get_cache`) also registers the call in the
 		// implicit lookup, so that the result is inlined into the page payload (`data.p`)
@@ -146,7 +147,7 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 			const result = await promise;
 
 			if (state.prerendering) {
-				const body = { type: 'result', data: stringify({ _: result }, state.transport) };
+				const body = { type: 'result', data: stringify({ _: result }) };
 				state.prerendering.dependencies.set(url, {
 					body: JSON.stringify(body),
 					response: json(body)

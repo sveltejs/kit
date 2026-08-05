@@ -10,6 +10,7 @@ import { is_form_content_type, negotiate } from '../../../utils/http.js';
 import { create_replacer, with_version_header } from '../utils.js';
 import { handle_error_and_jsonify } from '../errors.js';
 import { record_span } from '../../telemetry/record_span.js';
+import { stringify } from '#app/internal';
 
 /** @param {RequestEvent} event */
 export function is_action_json_request(event) {
@@ -72,11 +73,7 @@ export async function handle_action_json_request(event, event_state, options, se
 					// @ts-expect-error we assign a string to what is supposed to be an object. That's ok
 					// because we don't use the object outside, and this way we have better code navigation
 					// through knowing where the related interface is used.
-					data: stringify_action_response(
-						data.data,
-						/** @type {string} */ (event.route.id),
-						options.hooks.transport
-					)
+					data: stringify_action_response(data.data, /** @type {string} */ (event.route.id))
 				},
 				{
 					status: data.status
@@ -87,11 +84,7 @@ export async function handle_action_json_request(event, event_state, options, se
 				type: 'success',
 				status: 200,
 				// @ts-expect-error see comment above
-				data: stringify_action_response(
-					data,
-					/** @type {string} */ (event.route.id),
-					options.hooks.transport
-				)
+				data: stringify_action_response(data, /** @type {string} */ (event.route.id))
 			});
 		} else {
 			// no data returned — use 204 No Content (without a body, per the spec)
@@ -326,14 +319,9 @@ export function uneval_action_response(data, route_id, transport) {
  * Try to `devalue.stringify` the data object, and if it fails, return a proper Error with context
  * @param {any} data
  * @param {string} route_id
- * @param {ServerHooks['transport']} transport
  */
-function stringify_action_response(data, route_id, transport) {
-	const encoders = Object.fromEntries(
-		Object.entries(transport).map(([key, value]) => [key, value.encode])
-	);
-
-	return try_serialize(data, (value) => devalue.stringify(value, encoders), route_id);
+function stringify_action_response(data, route_id) {
+	return try_serialize(data, (value) => stringify(value), route_id);
 }
 
 /**

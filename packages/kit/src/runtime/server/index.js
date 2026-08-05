@@ -7,6 +7,7 @@ import { set_env } from '__sveltekit/env';
 import { set_app } from './app.js';
 import { SvelteKitError } from '@sveltejs/kit/internal';
 import { DEV } from 'esm-env';
+import { init_transport } from '#app/internal';
 
 /** @type {Promise<any>} */
 let init_promise;
@@ -154,6 +155,8 @@ export class Server {
 					reroute: module.reroute || noop,
 					transport: module.transport || {}
 				};
+
+				init_transport(module.transport ?? {});
 
 				set_app({
 					decoders: module.transport

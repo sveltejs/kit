@@ -48,7 +48,7 @@ export function command(id) {
 				const response = await remote_request(`${base}/${app_dir}/remote/${id}`, {
 					method: 'POST',
 					body: JSON.stringify({
-						payload: await stringify_command_arg(arg, app.hooks.transport),
+						payload: await stringify_command_arg(arg),
 						refreshes: Array.from(refreshes ?? [])
 					}),
 					headers
