@@ -36,23 +36,8 @@ export function normalize_error(error) {
 }
 
 /**
- * @param {any} transformed
- * @param {any} [error]
- */
-export function get_status(transformed, error) {
-	const err = error ?? transformed;
-	const status = err instanceof HttpError || err instanceof SvelteKitError ? err.status : 500;
-
-	if (error == null || typeof transformed?.status !== 'number') {
-		return status;
-	} else {
-		return transformed.status;
-	}
-}
-
-/**
  * @param {unknown} error
  */
-export function get_message(error) {
-	return error instanceof SvelteKitError ? error.text : 'Internal Error';
+export function get_status(error) {
+	return error instanceof HttpError || error instanceof SvelteKitError ? error.status : 500;
 }

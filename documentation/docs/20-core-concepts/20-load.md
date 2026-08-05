@@ -453,7 +453,7 @@ export function load({ locals }) {
 
 Calling `error(...)` will throw an exception, making it easy to stop execution from inside helper functions.
 
-If an [_unexpected_](errors#Unexpected-errors) error is thrown, SvelteKit will invoke [`handleError`](hooks#handleError) and treat it as a 500 Internal Error.
+Every error — expected or otherwise — is passed to the [`handleError`](hooks#handleError) hook. An [_unexpected_](errors#Unexpected-errors) error is treated as a 500 Internal Error unless the hook says otherwise.
 
 > [!NOTE] [In SvelteKit 1.x](migrating-to-sveltekit-2#redirect-and-error-are-no-longer-thrown-by-you) you had to `throw` the error yourself
 
