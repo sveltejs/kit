@@ -1475,7 +1475,7 @@ test.describe('Assets', () => {
 				/** @type {HTMLLinkElement[]} */
 				const links = Array.from(document.head.querySelectorAll('link[rel=stylesheet]'));
 
-				for (let i = 0; i < links.length; ) {
+				for (let i = 0; i < links.length;) {
 					const link = links.shift();
 					const asset_name = link?.href.split('/').at(-1);
 					if (asset_name && links.some((link) => link.href.includes(asset_name))) {

@@ -239,20 +239,11 @@ export interface PrerenderInvalidUrlHandler {
 export type PrerenderHttpErrorHandlerValue = 'fail' | 'warn' | 'ignore' | PrerenderHttpErrorHandler;
 export type PrerenderMissingIdHandlerValue = 'fail' | 'warn' | 'ignore' | PrerenderMissingIdHandler;
 export type PrerenderUnseenRoutesHandlerValue =
-	| 'fail'
-	| 'warn'
-	| 'ignore'
-	| PrerenderUnseenRoutesHandler;
+	'fail' | 'warn' | 'ignore' | PrerenderUnseenRoutesHandler;
 export type PrerenderEntryGeneratorMismatchHandlerValue =
-	| 'fail'
-	| 'warn'
-	| 'ignore'
-	| PrerenderEntryGeneratorMismatchHandler;
+	'fail' | 'warn' | 'ignore' | PrerenderEntryGeneratorMismatchHandler;
 export type PrerenderInvalidUrlHandlerValue =
-	| 'fail'
-	| 'warn'
-	| 'ignore'
-	| PrerenderInvalidUrlHandler;
+	'fail' | 'warn' | 'ignore' | PrerenderInvalidUrlHandler;
 
 export type PrerenderOption = boolean | 'auto';
 
