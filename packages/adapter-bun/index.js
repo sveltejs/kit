@@ -59,19 +59,8 @@ export default function (opts = {}) {
 			builder.copy(files, entries);
 
 			const dir_id = `${entries}/dir.js`;
+			const manifest_file = `${server}/adapter-bun-manifest.js`;
 			const server_options_file = `${server}/adapter-bun-options.js`;
-
-			writeFileSync(
-				`${server}/manifest.js`,
-				[
-					`export const manifest = ${builder.generateManifest({ relativePath: './' })};`,
-					`export const client_files = new Set(${JSON.stringify(client_files)});`,
-					`export const prerendered_files = new Set(${JSON.stringify(prerendered_files)});`,
-					`export const compressed_files = new Set(${JSON.stringify(compressed_files)});`,
-					`export const prerendered_paths = new Set(${JSON.stringify(builder.prerendered.paths)});`
-				].join('\n\n')
-			);
-			writeFileSync(server_options_file, `export default ${serialize(serverOptions)};\n`);
 
 			const entrypoints = [`${entries}/index.js`, `${entries}/handler.js`, dir_id];
 
@@ -81,6 +70,16 @@ export default function (opts = {}) {
 
 			const result = await Bun.build({
 				entrypoints,
+				files: {
+					[manifest_file]: [
+						`export const manifest = ${builder.generateManifest({ relativePath: './' })};`,
+						`export const client_files = new Set(${JSON.stringify(client_files)});`,
+						`export const prerendered_files = new Set(${JSON.stringify(prerendered_files)});`,
+						`export const compressed_files = new Set(${JSON.stringify(compressed_files)});`,
+						`export const prerendered_paths = new Set(${JSON.stringify(builder.prerendered.paths)});`
+					].join('\n\n'),
+					[server_options_file]: `export default ${serialize(serverOptions)};\n`
+				},
 				outdir: out,
 				target: 'bun',
 				format: 'esm',
@@ -105,8 +104,8 @@ export default function (opts = {}) {
 						setup(build) {
 							build.onResolve({ filter: /^(SERVER|MANIFEST|SERVER_OPTIONS)$/ }, ({ path }) => {
 								if (path === 'SERVER') return { path: `${server}/index.js` };
-								if (path === 'MANIFEST') return { path: `${server}/manifest.js` };
-								return { path: server_options_file };
+								if (path === 'MANIFEST') return { path: manifest_file };
+								if (path === 'SERVER_OPTIONS') return { path: server_options_file };
 							});
 
 							build.onLoad({ filter: /[\\/]adapter-bun[\\/]entries[\\/].*\.js$/ }, ({ path }) => {
