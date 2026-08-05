@@ -1,0 +1,21 @@
+{
+	"name": "test-adapter-node-instrumentation",
+	"version": "0.0.1",
+	"private": true,
+	"type": "module",
+	"imports": {
+		"#lib/*": "./src/lib/*"
+	},
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"prepare": "svelte-kit sync || echo ''",
+		"test": "MY_BASE_URL=https://api.example pnpm build && node test/boot.js"
+	},
+	"devDependencies": {
+		"@sveltejs/kit": "workspace:^",
+		"@sveltejs/vite-plugin-svelte": "catalog:",
+		"svelte": "catalog:",
+		"vite": "catalog:"
+	}
+}

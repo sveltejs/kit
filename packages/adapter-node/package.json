@@ -35,11 +35,13 @@
 	"scripts": {
 		"dev": "rolldown -cw",
 		"build": "rolldown -c",
-		"test": "vitest run",
+		"test": "pnpm test:unit && pnpm test:apps",
 		"check": "tsc",
 		"lint": "prettier --check .",
 		"format": "pnpm lint --write",
-		"prepublishOnly": "pnpm build"
+		"prepublishOnly": "pnpm build",
+		"test:unit": "vitest run",
+		"test:apps": "pnpm build && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test"
 	},
 	"devDependencies": {
 		"@polka/url": "catalog:",
