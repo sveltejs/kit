@@ -23,12 +23,16 @@ export let encoders = {};
 /** @type {Record<string, (data: any) => any>} */
 export let decoders = {};
 
+export let has_custom_transporters = false;
+
 /**
  *
  * @param {Transport} transport
  */
 export function init_transport(transport) {
 	const transporters = Object.entries(transport);
+
+	has_custom_transporters = transporters.length > 0;
 
 	/** @param {unknown} thing */
 	const replacer = (thing) => {

@@ -25,7 +25,7 @@ import { collect_remote_data } from '../remote-functions.js';
 import Root from '../../components/root.svelte';
 import { render } from 'svelte/server';
 import { Props, RenderNode } from '../../props.svelte.js';
-import { uneval } from '#app/internal/transport';
+import { has_custom_transporters, uneval } from '#app/internal/transport';
 
 // TODO rename this function/module
 
@@ -432,7 +432,7 @@ export async function render_response({
 
 			let app_declaration = '';
 
-			if (Object.keys(options.hooks.transport).length > 0) {
+			if (has_custom_transporters) {
 				if (client.inline) {
 					app_declaration = `const app = ${global}.app.app;`;
 				} else if (client.app) {

@@ -151,8 +151,7 @@ export class Server {
 							console.error('Remote function schema validation failed:', issues);
 							return { message: 'Bad Request', status: 400 };
 						}),
-					reroute: module.reroute || noop,
-					transport: module.transport || {}
+					reroute: module.reroute || noop
 				};
 
 				init_transport(module.transport ?? {});
@@ -171,8 +170,7 @@ export class Server {
 						handleValidationError: () => {
 							return { message: 'Bad Request' };
 						},
-						reroute: noop,
-						transport: {}
+						reroute: noop
 					};
 				} else {
 					throw e;
