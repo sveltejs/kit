@@ -138,7 +138,7 @@ export function normalize_id(id, aliases, cwd) {
 	return posixify(id);
 }
 
-export const remote_module_pattern = /[/.]remote(\.[^/]+)+$/;
+export const remote_module_pattern = /[/.]remote\.[^/]+$/;
 
 /**
  * A cache of which directories can export remote modules
@@ -189,7 +189,7 @@ function can_export_remote_module(directory) {
 	return cached;
 }
 
-export const server_only_module_pattern = /[/.]server(\.[^/]+)+$/;
+export const server_only_module_pattern = /[/.]server\.[^/]+$/;
 export const server_only_directory_pattern = /\/server\//;
 
 export const strip_virtual_prefix = /** @param {string} id */ (id) => id.replace('\0virtual:', '');
