@@ -39,7 +39,6 @@ function setup(fetch_impl) {
 		),
 		state: /** @type {RequestState} */ (
 			/** @type {unknown} */ ({
-				transport: {},
 				remote: {},
 				prerendering: undefined,
 				is_in_remote_query: false
