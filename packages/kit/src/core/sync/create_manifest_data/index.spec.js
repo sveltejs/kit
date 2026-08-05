@@ -1,12 +1,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { assert, expect, test } from 'vitest';
+import { assert, expect, test, vi } from 'vitest';
 import create_manifest_data from './index.js';
 import { sort_routes } from './sort.js';
 import { validate_config } from '../../config/index.js';
 
-const cwd = fileURLToPath(new URL('./test', import.meta.url));
+const cwd = path.join(import.meta.dirname, 'test');
 
 /**
  * @param {string} dir
@@ -110,6 +109,31 @@ test('creates routes', () => {
 	]);
 });
 
+test('assigns deterministic node indices regardless of readdirSync order', () => {
+	// `readdirSync` order is not guaranteed and differs between runtimes (e.g. Node
+	// returns entries alphabetically, Bun in directory order). Node indices are assigned
+	// from the traversal order, so an unsorted result could make the SSR and client
+	// manifests disagree. Simulate a runtime that returns entries in reverse order and
+	// assert the output matches the normal (sorted) run.
+	const expected = create('samples/basic');
+
+	const actual_readdir = fs.readdirSync;
+	const spy = vi.spyOn(fs, 'readdirSync').mockImplementation((...args) => {
+		const result = /** @type {string[]} */ (
+			/** @type {unknown} */ (actual_readdir(.../** @type {[any, any]} */ (args)))
+		);
+		return /** @type {any} */ ([...result].sort().reverse());
+	});
+
+	try {
+		const actual = create('samples/basic');
+		expect(actual.nodes.map(simplify_node)).toEqual(expected.nodes.map(simplify_node));
+		expect(actual.routes.map(simplify_route)).toEqual(expected.routes.map(simplify_route));
+	} finally {
+		spy.mockRestore();
+	}
+});
+
 const symlink_survived_git = fs
 	.lstatSync(path.join(cwd, 'samples/symlinks/routes/foo'))
 	.isSymbolicLink();
@@ -184,20 +208,28 @@ test('succeeds when routes does not exist', () => {
 test('encodes invalid characters', () => {
 	const { nodes, routes } = create('samples/encoding');
 
+	const emoji = { component: 'samples/encoding/[u+1f600]/+page.svelte' };
 	const quote = { component: 'samples/encoding/[x+22]/+page.svelte' };
 	const hash = { component: 'samples/encoding/[x+23]/+page.svelte' };
 	const question_mark = { component: 'samples/encoding/[x+3f]/+page.svelte' };
+	const open_bracket = { component: 'samples/encoding/[x+5b]/+page.svelte' };
+	const close_bracket = { component: 'samples/encoding/[x+5d]/+page.svelte' };
 
 	expect(nodes.map(simplify_node)).toEqual([
 		default_layout,
 		default_error,
+		emoji,
 		quote,
 		hash,
-		question_mark
+		question_mark,
+		open_bracket,
+		close_bracket
 	]);
 
 	expect(routes.map((p) => p.pattern.toString())).toEqual(
-		[/^\/$/, /^\/%3[Ff]\/?$/, /^\/%23\/?$/, /^\/"\/?$/].map((pattern) => pattern.toString())
+		[/^\/$/, /^\/\]\/?$/, /^\/\[\/?$/, /^\/%3[Ff]\/?$/, /^\/%23\/?$/, /^\/"\/?$/, /^\/😀\/?$/].map(
+			(pattern) => pattern.toString()
+		)
 	);
 });
 
@@ -249,8 +281,14 @@ test('sorts routes with rest correctly', () => {
 		default_layout,
 		default_error,
 		{
+			component: 'samples/rest/a/+page.svelte'
+		},
+		{
 			component: 'samples/rest/a/[...rest]/+page.svelte',
 			server: 'samples/rest/a/[...rest]/+page.server.js'
+		},
+		{
+			component: 'samples/rest/b/+page.svelte'
 		},
 		{
 			component: 'samples/rest/b/[...rest]/+page.svelte',
@@ -265,21 +303,27 @@ test('sorts routes with rest correctly', () => {
 		},
 		{
 			id: '/a',
-			pattern: '/^/a/?$/'
+			pattern: '/^/a/?$/',
+			page: {
+				layouts: [0],
+				errors: [1],
+				leaf: 2
+			}
 		},
 		{
 			id: '/a/[...rest]',
 			pattern: '/^/a(?:/([^]*))?/?$/',
-			page: { layouts: [0], errors: [1], leaf: 2 }
+			page: { layouts: [0], errors: [1], leaf: 3 }
 		},
 		{
 			id: '/b',
-			pattern: '/^/b/?$/'
+			pattern: '/^/b/?$/',
+			page: { layouts: [0], errors: [1], leaf: 4 }
 		},
 		{
 			id: '/b/[...rest]',
 			pattern: '/^/b(?:/([^]*))?/?$/',
-			page: { layouts: [0], errors: [1], leaf: 3 }
+			page: { layouts: [0], errors: [1], leaf: 5 }
 		}
 	]);
 });
@@ -333,7 +377,13 @@ test('optional parameters', () => {
 			component: 'samples/optional/[[optional]]/+page.svelte'
 		},
 		{
+			component: 'samples/optional/nested/[[optional]]/+page.svelte'
+		},
+		{
 			component: 'samples/optional/nested/[[optional]]/sub/+page.svelte'
+		},
+		{
+			component: 'samples/optional/nested/+page.svelte'
 		},
 		{
 			component: 'samples/optional/prefix[[suffix]]/+page.svelte'
@@ -350,7 +400,16 @@ test('optional parameters', () => {
 			pattern: '/^/([^/]*)?bar/?$/',
 			endpoint: { file: 'samples/optional/[[foo]]bar/+server.js', page_options: {} }
 		},
-		{ id: '/nested', pattern: '/^/nested/?$/' },
+		{
+			id: '/nested',
+			pattern: '/^/nested/?$/',
+			page: {
+				layouts: [0],
+				errors: [1],
+				// see above, linux/windows difference -> find the index dynamically
+				leaf: nodes.findIndex((node) => node.component?.includes('nested'))
+			}
+		},
 		{
 			id: '/nested/[[optional]]/sub',
 			pattern: '/^/nested(?:/([^/]+))?/sub/?$/',
@@ -358,10 +417,19 @@ test('optional parameters', () => {
 				layouts: [0],
 				errors: [1],
 				// see above, linux/windows difference -> find the index dynamically
+				leaf: nodes.findIndex((node) => node.component?.includes('nested/[[optional]]/sub'))
+			}
+		},
+		{
+			id: '/nested/[[optional]]',
+			pattern: '/^/nested(?:/([^/]+))?/?$/',
+			page: {
+				layouts: [0],
+				errors: [1],
+				// see above, linux/windows difference -> find the index dynamically
 				leaf: nodes.findIndex((node) => node.component?.includes('nested/[[optional]]'))
 			}
 		},
-		{ id: '/nested/[[optional]]', pattern: '/^/nested(?:/([^/]+))?/?$/' },
 		{
 			id: '/prefix[[suffix]]',
 			pattern: '/^/prefix([^/]*)?/?$/',
@@ -390,6 +458,7 @@ test('nested optionals', () => {
 	expect(nodes.map(simplify_node)).toEqual([
 		default_layout,
 		default_error,
+		{ component: 'samples/nested-optionals/[[a]]/+page.svelte' },
 		{ component: 'samples/nested-optionals/[[a]]/[[b]]/+page.svelte' }
 	]);
 
@@ -409,7 +478,12 @@ test('nested optionals', () => {
 		},
 		{
 			id: '/[[a]]',
-			pattern: '/^(?:/([^/]+))?/?$/'
+			pattern: '/^(?:/([^/]+))?/?$/',
+			page: {
+				layouts: [0],
+				errors: [1],
+				leaf: nodes.findIndex((node) => node.component?.includes('/[[a]]'))
+			}
 		}
 	]);
 });
@@ -451,7 +525,11 @@ test('group preceding optional parameters', () => {
 		},
 		{
 			id: '/[[optional]]',
-			pattern: '/^(?:/([^/]+))?/?$/'
+			pattern: '/^(?:/([^/]+))?/?$/',
+			endpoint: {
+				file: 'samples/optional-group/[[optional]]/+server.js',
+				page_options: {}
+			}
 		}
 	]);
 });
@@ -507,10 +585,6 @@ test('optional parameters inside a group adjacent to another route', () => {
 	]);
 
 	expect(routes.map(simplify_route)).toEqual([
-		{
-			id: '/(group)',
-			pattern: '/^/$/'
-		},
 		{
 			id: '/',
 			pattern: '/^/$/',
@@ -830,38 +904,20 @@ test('errors on invalid named layout reference', () => {
 	);
 });
 
-test('creates param matchers', () => {
-	const { matchers } = create('samples/basic'); // directory doesn't matter for the test
+test('creates params file path', () => {
+	const { params } = create('samples/basic');
 
-	expect(matchers).toEqual({
-		foo: path.join('params', 'foo.js'),
-		bar: path.join('params', 'bar.js')
-	});
+	expect(params).toBe('params.js');
 });
 
-test('errors on param matchers with bad names', () => {
-	const boogaloo = path.resolve(cwd, 'params', 'boo-galoo.js');
-	fs.writeFileSync(boogaloo, '');
-	try {
-		assert.throws(() => create('samples/basic'), /Matcher names can only have/);
-	} finally {
-		fs.unlinkSync(boogaloo);
-	}
-});
+test('returns null params when file is missing', () => {
+	const params_file = path.resolve(cwd, 'params.js');
 
-test('errors on duplicate matchers', () => {
-	const ts_foo = path.resolve(cwd, 'params', 'foo.ts');
-	fs.writeFileSync(ts_foo, '');
+	fs.renameSync(params_file, params_file + '.bak');
 	try {
-		assert.throws(() => {
-			create('samples/basic', {
-				kit: {
-					moduleExtensions: ['.js', '.ts']
-				}
-			});
-		}, /Duplicate matchers/);
+		expect(create('samples/basic').params).toBeNull();
 	} finally {
-		fs.unlinkSync(ts_foo);
+		fs.renameSync(params_file + '.bak', params_file);
 	}
 });
 

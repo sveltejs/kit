@@ -1,8 +1,6 @@
-import path from 'node:path';
+import { check_spelling, dedent, write_if_changed } from './utils.js';
 import { relative_path, resolve_entry } from '../../utils/filesystem.js';
 import { s } from '../../utils/misc.js';
-import { dedent, isSvelte5Plus, write_if_changed } from './utils.js';
-import colors from 'kleur';
 
 /**
  * Writes the client manifest to disk. The manifest is used to power the router. It contains the
@@ -123,16 +121,9 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 	const client_hooks_file = resolve_entry(kit.files.hooks.client);
 	const universal_hooks_file = resolve_entry(kit.files.hooks.universal);
 
-	const typo = resolve_entry('src/+hooks.client');
-	if (typo) {
-		console.log(
-			colors
-				.bold()
-				.yellow(
-					`Unexpected + prefix. Did you mean ${typo.split('/').at(-1)?.slice(1)}?` +
-						` at ${path.resolve(typo)}`
-				)
-		);
+	if (!client_hooks_file) {
+		check_spelling('src/hooks.client', 'src/+hooks.client', 'Unexpected + prefix');
+		check_spelling('src/hooks.client', 'src/hook.client', 'Missing s suffix');
 	}
 
 	// Stringified version of
@@ -140,11 +131,6 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 	write_if_changed(
 		`${output}/app.js`,
 		dedent`
-			// in dev, this makes Vite inject its client as this module's first dependency,
-			// so that global constant replacements are installed before any other module
-			// (including user hooks) evaluates. In build it's inert.
-			import.meta.hot;
-
 			${
 				client_hooks_file
 					? `import * as client_hooks from '${relative_path(output, client_hooks_file)}';`
@@ -182,28 +168,19 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 
 			export const decode = (type, value) => decoders[type](value);
 
-			export { default as root } from '../root.${isSvelte5Plus() ? 'js' : 'svelte'}';
-
 			export const get_error_template = () => import('../shared/error-template.js').then(m => m.default);
 		`
 	);
 
 	if (client_routing) {
-		// write matchers to a separate module so that we don't
-		// need to worry about name conflicts
-		const imports = [];
-		const matchers = [];
+		const uses_matchers = manifest_data.routes.some((route) =>
+			route.params.some((param) => param.matcher)
+		);
 
-		for (const key in manifest_data.matchers) {
-			const src = manifest_data.matchers[key];
-
-			imports.push(`import { match as ${key} } from ${s(relative_path(output, src))};`);
-			matchers.push(key);
-		}
-
-		const module = imports.length
-			? `${imports.join('\n')}\n\nexport const matchers = { ${matchers.join(', ')} };`
-			: 'export const matchers = {};';
+		const module =
+			!manifest_data.params || !uses_matchers
+				? 'export const matchers = {};'
+				: `import { params as matchers } from ${s(relative_path(output, manifest_data.params))};\n\nexport { matchers };`;
 
 		write_if_changed(`${output}/matchers.js`, module);
 	}

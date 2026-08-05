@@ -1,21 +1,50 @@
-/** @import { PromiseWithResolvers } from '../../utils/promise.js' */
 import { noop } from '../../utils/functions.js';
-import { with_resolvers } from '../../utils/promise.js';
 import { IN_WEBCONTAINER } from './constants.js';
 import { respond } from './respond.js';
-import { set_private_env, set_public_env } from '../shared-server.js';
 import { options, get_hooks } from '__SERVER__/internal.js';
-import { filter_env } from '../../utils/env.js';
-import { format_server_error } from './utils.js';
-import { set_read_implementation, set_manifest } from '__sveltekit/server';
+import { set_read_implementation, set_manifest, fix_stack_trace } from './internal.js';
 import { set_env } from '__sveltekit/env';
-import { set_app } from './app.js';
+import { SvelteKitError } from '@sveltejs/kit/internal';
+import { DEV } from 'esm-env';
+import { init_transport } from '#app/internal/transport';
 
 /** @type {Promise<any>} */
 let init_promise;
 
 /** @type {Promise<void> | null} */
 let current = null;
+
+/**
+ * Responses that were created with our monkey-patched `fetch`, which may need
+ * to have their `content-encoding` and `content-length` headers removed
+ * if returned directly (i.e. `fetch` is being used to proxy a request)
+ * @type {WeakMap<Response, Error>}
+ */
+const decoded_responses = new WeakMap();
+
+if (DEV) {
+	const fetch = globalThis.fetch;
+
+	/**
+	 * @param {RequestInfo | URL} info
+	 * @param {RequestInit} [init]
+	 */
+	globalThis.fetch = async (info, init) => {
+		const response = await fetch(info, init);
+		const encoding = response.headers.get('content-encoding');
+
+		if (encoding) {
+			decoded_responses.set(
+				response,
+				new Error(
+					`Cannot return \`fetch(...)\` directly from a handler if the response has a \`Content-Encoding: ${encoding}\` header. The body has already been decoded`
+				)
+			);
+		}
+
+		return response;
+	};
+}
 
 export class Server {
 	/** @type {import('types').SSROptions} */
@@ -31,13 +60,15 @@ export class Server {
 		this.#manifest = manifest;
 
 		// Since AsyncLocalStorage is not working in webcontainers, we don't reset `sync_store`
-		// in `src/exports/internal/event.js` and handle only one request at a time.
+		// in `src/exports/internal/server/event.js` and handle only one request at a time.
 		if (IN_WEBCONTAINER) {
 			const respond = this.respond.bind(this);
 
 			/** @type {typeof respond} */
 			this.respond = async (...args) => {
-				const { promise, resolve } = /** @type {PromiseWithResolvers<void>} */ (with_resolvers());
+				const { promise, resolve } = /** @type {PromiseWithResolvers<void>} */ (
+					Promise.withResolvers()
+				);
 
 				const previous = current;
 				current = promise;
@@ -59,10 +90,6 @@ export class Server {
 		// been done already.
 
 		// set env, in case it's used in initialisation
-		const { env_public_prefix, env_private_prefix } = this.#options;
-
-		set_private_env(filter_env(env, env_private_prefix, env_public_prefix));
-		set_public_env(filter_env(env, env_public_prefix, env_private_prefix));
 		set_env(env);
 
 		if (read) {
@@ -73,31 +100,17 @@ export class Server {
 				const result = read(file);
 				if (result instanceof ReadableStream) {
 					return result;
-				} else {
-					return new ReadableStream({
-						async start(controller) {
-							try {
-								const stream = await Promise.resolve(result);
-								if (!stream) {
-									controller.close();
-									return;
-								}
-
-								const reader = stream.getReader();
-
-								while (true) {
-									const { done, value } = await reader.read();
-									if (done) break;
-									controller.enqueue(value);
-								}
-
-								controller.close();
-							} catch (error) {
-								controller.error(error);
-							}
-						}
-					});
 				}
+
+				// TODO remove the cast once TypeScript's lib includes `ReadableStream.from`
+				return /** @type {ReadableStream} */ (
+					/** @type {any} */ (ReadableStream).from(
+						(async function* () {
+							const stream = await result;
+							if (stream) yield* stream;
+						})()
+					)
+				);
 			};
 
 			set_read_implementation(wrapped_read);
@@ -113,30 +126,35 @@ export class Server {
 					handle: module.handle || (({ event, resolve }) => resolve(event)),
 					handleError:
 						module.handleError ||
-						(({ status, error, event }) => {
-							const error_message = format_server_error(
-								status,
-								/** @type {Error} */ (error),
-								event
-							);
-							console.error(error_message);
+						(({ error }) => {
+							if (error instanceof SvelteKitError) {
+								// don't log stack traces for 404s etc, it's all internal gubbins
+								return;
+							}
+
+							let e = error;
+							while (e instanceof Error) {
+								if (e.stack) {
+									console.error(e.stack);
+								}
+								e = e.cause;
+							}
+
+							if (e) {
+								console.error(String(e));
+							}
 						}),
 					handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request)),
 					handleValidationError:
 						module.handleValidationError ||
 						(({ issues }) => {
 							console.error('Remote function schema validation failed:', issues);
-							return { message: 'Bad Request' };
+							return { message: 'Bad Request', status: 400 };
 						}),
-					reroute: module.reroute || noop,
-					transport: module.transport || {}
+					reroute: module.reroute || noop
 				};
 
-				set_app({
-					decoders: module.transport
-						? Object.fromEntries(Object.entries(module.transport).map(([k, v]) => [k, v.decode]))
-						: {}
-				});
+				init_transport(module.transport ?? {});
 
 				if (module.init) {
 					await module.init();
@@ -152,13 +170,8 @@ export class Server {
 						handleValidationError: () => {
 							return { message: 'Bad Request' };
 						},
-						reroute: noop,
-						transport: {}
+						reroute: noop
 					};
-
-					set_app({
-						decoders: {}
-					});
 				} else {
 					throw e;
 				}
@@ -171,10 +184,17 @@ export class Server {
 	 * @param {import('types').RequestOptions} options
 	 */
 	async respond(request, options) {
-		return respond(request, this.#options, this.#manifest, {
+		const response = await respond(request, this.#options, this.#manifest, {
 			...options,
 			error: false,
 			depth: 0
 		});
+
+		if (DEV) {
+			const error = decoded_responses.get(response);
+			if (error) console.error(fix_stack_trace(error));
+		}
+
+		return response;
 	}
 }

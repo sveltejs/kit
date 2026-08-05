@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-auto",
-	"version": "7.0.1",
+	"version": "8.0.0-next.2",
 	"description": "Automatically chooses the SvelteKit adapter for your current environment, if possible.",
 	"keywords": [
 		"adapter",
@@ -28,7 +28,6 @@
 	},
 	"types": "index.d.ts",
 	"files": [
-		"files",
 		"index.js",
 		"index.d.ts",
 		"adapters.js"
@@ -46,6 +45,6 @@
 		"vitest": "catalog:"
 	},
 	"peerDependencies": {
-		"@sveltejs/kit": "^2.0.0"
+		"@sveltejs/kit": "^3.0.0-next.0"
 	}
 }

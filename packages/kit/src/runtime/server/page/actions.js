@@ -1,14 +1,15 @@
 /** @import { RequestEvent, ActionResult, Actions } from '@sveltejs/kit' */
-/** @import { SSROptions, SSRNode, ServerNode, ServerHooks } from 'types' */
-import * as devalue from 'devalue';
+/** @import { SSROptions, SSRNode, ServerNode } from 'types' */
 import { DEV } from 'esm-env';
 import { json } from '@sveltejs/kit';
 import { HttpError, Redirect, ActionFailure, SvelteKitError } from '@sveltejs/kit/internal';
 import { with_request_store, merge_tracing } from '@sveltejs/kit/internal/server';
-import { get_status, normalize_error } from '../../../utils/error.js';
+import { normalize_error } from '../../../utils/error.js';
 import { is_form_content_type, negotiate } from '../../../utils/http.js';
-import { create_replacer, handle_error_and_jsonify } from '../utils.js';
+import { with_version_header } from '../utils.js';
+import { handle_error_and_jsonify } from '../errors.js';
 import { record_span } from '../../telemetry/record_span.js';
+import { stringify, uneval } from '#app/internal/transport';
 
 /** @param {RequestEvent} event */
 export function is_action_json_request(event) {
@@ -36,13 +37,15 @@ export async function handle_action_json_request(event, event_state, options, se
 			`POST method not allowed. No form actions exist for ${DEV ? `the page at ${event.route.id}` : 'this page'}`
 		);
 
+		const error = await handle_error_and_jsonify(event, event_state, options, no_actions_error);
+
 		return action_json(
 			{
 				type: 'error',
-				error: await handle_error_and_jsonify(event, event_state, options, no_actions_error)
+				error
 			},
 			{
-				status: no_actions_error.status,
+				status: error.status,
 				headers: {
 					// https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405
 					// "The server must generate an Allow header field in a 405 status code response"
@@ -62,29 +65,29 @@ export async function handle_action_json_request(event, event_state, options, se
 		}
 
 		if (data instanceof ActionFailure) {
-			return action_json({
-				type: 'failure',
-				status: data.status,
-				// @ts-expect-error we assign a string to what is supposed to be an object. That's ok
-				// because we don't use the object outside, and this way we have better code navigation
-				// through knowing where the related interface is used.
-				data: stringify_action_response(
-					data.data,
-					/** @type {string} */ (event.route.id),
-					options.hooks.transport
-				)
-			});
-		} else {
+			return action_json(
+				{
+					type: 'failure',
+					status: data.status,
+					// @ts-expect-error we assign a string to what is supposed to be an object. That's ok
+					// because we don't use the object outside, and this way we have better code navigation
+					// through knowing where the related interface is used.
+					data: try_serialize(data.data, stringify, /** @type {string} */ (event.route.id))
+				},
+				{
+					status: data.status
+				}
+			);
+		} else if (data) {
 			return action_json({
 				type: 'success',
-				status: data ? 200 : 204,
+				status: 200,
 				// @ts-expect-error see comment above
-				data: stringify_action_response(
-					data,
-					/** @type {string} */ (event.route.id),
-					options.hooks.transport
-				)
+				data: try_serialize(data, stringify, /** @type {string} */ (event.route.id))
 			});
+		} else {
+			// no data returned — use 204 No Content (without a body, per the spec)
+			return with_version_header(new Response(null, { status: 204 }));
 		}
 	} catch (e) {
 		const err = normalize_error(e);
@@ -93,18 +96,20 @@ export async function handle_action_json_request(event, event_state, options, se
 			return action_json_redirect(err);
 		}
 
+		const transformed = await handle_error_and_jsonify(
+			event,
+			event_state,
+			options,
+			check_incorrect_fail_use(err)
+		);
+
 		return action_json(
 			{
 				type: 'error',
-				error: await handle_error_and_jsonify(
-					event,
-					event_state,
-					options,
-					check_incorrect_fail_use(err)
-				)
+				error: transformed
 			},
 			{
-				status: get_status(err)
+				status: transformed.status
 			}
 		);
 	}
@@ -135,7 +140,7 @@ export function action_json_redirect(redirect) {
  * @param {ResponseInit} [init]
  */
 function action_json(data, init) {
-	return json(data, init);
+	return with_version_header(json(data, init));
 }
 
 /**
@@ -163,6 +168,7 @@ export async function handle_action_request(event, event_state, server) {
 		});
 		return {
 			type: 'error',
+			// We're lying a bit with the types here; this will be transformed into a proper App.Error object later
 			error: new SvelteKitError(
 				405,
 				'Method Not Allowed',
@@ -207,6 +213,7 @@ export async function handle_action_request(event, event_state, server) {
 
 		return {
 			type: 'error',
+			// @ts-expect-error We're lying a bit with the types here; this will be transformed into a proper App.Error object later
 			error: check_incorrect_fail_use(err)
 		};
 	}
@@ -243,10 +250,11 @@ async function call_action(event, event_state, actions) {
 		}
 	}
 
-	const action = actions[name];
-	if (!action) {
+	if (!Object.hasOwn(actions, name)) {
 		throw new SvelteKitError(404, 'Not Found', `No action with name '${name}' found`);
 	}
+
+	const action = actions[name];
 
 	if (!is_form_content_type(event.request)) {
 		throw new SvelteKitError(
@@ -298,26 +306,9 @@ function validate_action_return(data) {
  * Try to `devalue.uneval` the data object, and if it fails, return a proper Error with context
  * @param {any} data
  * @param {string} route_id
- * @param {ServerHooks['transport']} transport
  */
-export function uneval_action_response(data, route_id, transport) {
-	const replacer = create_replacer(transport);
-
-	return try_serialize(data, (value) => devalue.uneval(value, replacer), route_id);
-}
-
-/**
- * Try to `devalue.stringify` the data object, and if it fails, return a proper Error with context
- * @param {any} data
- * @param {string} route_id
- * @param {ServerHooks['transport']} transport
- */
-function stringify_action_response(data, route_id, transport) {
-	const encoders = Object.fromEntries(
-		Object.entries(transport).map(([key, value]) => [key, value.encode])
-	);
-
-	return try_serialize(data, (value) => devalue.stringify(value, encoders), route_id);
+export function uneval_action_response(data, route_id) {
+	return try_serialize(data, uneval, route_id);
 }
 
 /**

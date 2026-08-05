@@ -1,10 +1,10 @@
 import fs from 'node:fs';
 import process from 'node:process';
-import { parseArgs } from 'node:util';
-import colors from 'kleur';
-import { load_config } from './core/config/index.js';
-import { coalesce_to_error } from './utils/error.js';
+import { parseArgs, styleText } from 'node:util';
+import { extract_svelte_config, load_vite_config } from './core/config/index.js';
 import { resolve_explicit_env_entry } from './core/env.js';
+import { coalesce_to_error } from './utils/error.js';
+import { import_peer } from './utils/import.js';
 
 /** @param {unknown} e */
 function handle_error(e) {
@@ -12,9 +12,9 @@ function handle_error(e) {
 
 	if (error.name === 'SyntaxError') throw error;
 
-	console.error(colors.bold().red(`> ${error.message}`));
+	console.error(styleText(['bold', 'red'], `> ${error.message}`));
 	if (error.stack) {
-		console.error(colors.gray(error.stack.split('\n').slice(1).join('\n')));
+		console.error(styleText('grey', error.stack.split('\n').slice(1).join('\n')));
 	}
 
 	process.exit(1);
@@ -26,14 +26,15 @@ const help = `
   Usage: svelte-kit <command> [options]
 
   Commands:
-    sync        Synchronise generated type definitions
+    sync                   Synchronise generated type definitions
 
   Options:
-    --version, -v   Show version number
-    --help, -h      Show this help message
+    --version, -v          Show version number
+    --help, -h             Show this help message
 
   Sync Options:
-    --mode <mode>   Specify a mode for loading environment variables (default: development)
+    --config, -c <config>  Specify a custom Vite config file
+    --mode <mode>          Specify a mode for loading environment variables (default: development)
 `;
 
 let parsed;
@@ -42,14 +43,15 @@ try {
 		options: {
 			version: { type: 'boolean', short: 'v' },
 			help: { type: 'boolean', short: 'h' },
-			mode: { type: 'string', default: 'development' }
+			mode: { type: 'string', default: 'development' },
+			config: { type: 'string', short: 'c', default: undefined }
 		},
 		allowPositionals: true,
 		strict: true
 	});
 } catch (err) {
 	const error = /** @type {Error} */ (err);
-	console.error(colors.bold().red(`> ${error.message}`));
+	console.error(styleText(['bold', 'red'], `> ${error.message}`));
 	console.log(help);
 	process.exit(1);
 }
@@ -74,19 +76,19 @@ if (!command) {
 }
 
 if (command === 'sync') {
-	// create placeholder .svelte-kit/tsconfig.json if necessary, to squelch warnings.
+	// create placeholder node_modules/$app/tsconfig.json if necessary, to squelch warnings.
 	// this isn't bulletproof — if someone has some esoteric config, it will continue
 	// to harmlessly warn — but we handle the 90% case and clean up after ourselves
-	const sveltekit_dir = '.svelte-kit';
-	const base_tsconfig = `${sveltekit_dir}/tsconfig.json`;
+	const dir = 'node_modules/$app';
+	const base_tsconfig = `${dir}/tsconfig.json`;
 	const base_tsconfig_json = '{}';
 
-	const sveltekit_dir_exists = fs.existsSync(sveltekit_dir);
+	const sveltekit_dir_exists = fs.existsSync(dir);
 	const base_tsconfig_exists = fs.existsSync(base_tsconfig);
 
 	if (!base_tsconfig_exists) {
 		try {
-			fs.mkdirSync('.svelte-kit');
+			fs.mkdirSync(dir, { recursive: true });
 		} catch {
 			// ignore
 		}
@@ -95,12 +97,16 @@ if (command === 'sync') {
 	}
 
 	try {
-		const config = await load_config();
-		const sync = await import('./core/sync/sync.js');
-		sync.all_types(config, values.mode);
+		const vite = /** @type {import('vite')} */ (await import_peer('vite', process.cwd()));
 
-		const explicit_env_entry = resolve_explicit_env_entry(config.kit);
-		await sync.env(config.kit, explicit_env_entry, values.mode);
+		const vite_config = await load_vite_config(values.config, vite);
+		const sveltekit_config = extract_svelte_config(vite_config);
+
+		const sync = await import('./core/sync/sync.js');
+		sync.all_types(sveltekit_config, vite_config.root);
+
+		const explicit_env_entry = resolve_explicit_env_entry(sveltekit_config.kit);
+		await sync.env(vite, sveltekit_config.kit, explicit_env_entry, vite_config.root, values.mode);
 	} catch (error) {
 		handle_error(error);
 	} finally {
@@ -110,12 +116,12 @@ if (command === 'sync') {
 			fs.unlinkSync(base_tsconfig);
 		}
 
-		if (!sveltekit_dir_exists && fs.readdirSync(sveltekit_dir).length === 0) {
-			fs.rmSync(sveltekit_dir, { recursive: true });
+		if (!sveltekit_dir_exists && fs.readdirSync(dir).length === 0) {
+			fs.rmSync(dir, { recursive: true });
 		}
 	}
 } else {
-	console.error(colors.bold().red(`> Unknown command: ${command}`));
+	console.error(styleText(['bold', 'red'], `> Unknown command: ${command}`));
 	console.log(help);
 	process.exit(1);
 }

@@ -33,19 +33,28 @@ export default [
 			'**/test-results',
 			'**/dist',
 			'**/.custom-out-dir',
-			'packages/adapter-*/files',
+			'packages/adapter-node/files',
 			'packages/kit/src/core/config/fixtures/multiple', // dir contains svelte config with multiple extensions tripping eslint
+			'packages/kit/src/core/sync/create_manifest_data/test/samples/**/*',
 			'packages/kit/types/index.d.ts', // generated file
+			'packages/*/test/apps/**/*',
 			'packages/*/test/**/build/**',
-			'packages/package/test/fixtures/typescript-svelte-config/expected',
+			'packages/kit/test/build-errors/**/*',
+			'packages/kit/test/prerendering/**/*',
+			'packages/test-redirect-importer/index.js',
 			'packages/package/test/errors/**/*',
-			'packages/package/test/fixtures/**/*'
+			'packages/package/test/fixtures/**/*',
+			'packages/package/test/watch/expected/**/*',
+			'packages/package/test/watch/package/**/*',
+			'packages/adapter-node/smoke.spec_disabled.js'
 		]
 	},
 	{
 		languageOptions: {
 			parserOptions: {
-				projectService: true
+				projectService: {
+					allowDefaultProject: ['packages/kit/src/runtime/app/service-worker/index.js']
+				}
 			}
 		},
 		rules: {
@@ -53,6 +62,17 @@ export default [
 			'@typescript-eslint/no-unused-expressions': 'off',
 			'@typescript-eslint/require-await': 'error',
 			'@typescript-eslint/no-floating-promises': 'error',
+			'@typescript-eslint/no-misused-promises': [
+				'error',
+				{
+					// we turn these off because it's common to pass an async callback to
+					// a synchronous callback parameter such as `setTimeout(...)`
+					checksVoidReturn: {
+						arguments: false,
+						properties: false
+					}
+				}
+			],
 			'@typescript-eslint/no-unused-vars': [
 				'error',
 				{
@@ -65,20 +85,6 @@ export default [
 					ignoreRestSiblings: true
 				}
 			]
-		},
-		ignores: [
-			'packages/adapter-cloudflare/test/apps/**/*',
-			'packages/adapter-netlify/test/apps/**/*',
-			'packages/adapter-node/rollup.config.js',
-			'packages/adapter-node/smoke.spec_disabled.js',
-			'packages/adapter-static/test/apps/**/*',
-			'packages/adapter-vercel/test/apps/**/*',
-			'packages/kit/src/core/sync/create_manifest_data/test/samples/**/*',
-			'packages/kit/test/apps/**/*',
-			'packages/kit/test/build-errors/**/*',
-			'packages/kit/test/prerendering/**/*',
-			'packages/test-redirect-importer/index.js',
-			'packages/adapter-netlify/test/preview.js'
-		]
+		}
 	}
 ];

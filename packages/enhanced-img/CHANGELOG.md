@@ -1,5 +1,35 @@
 # @sveltejs/enhanced-img
 
+## 1.0.0-next.3
+
+### Patch Changes
+
+- chore: bump `vite-imagetools` to v11 ([#16630](https://github.com/sveltejs/kit/pull/16630))
+
+## 1.0.0-next.2
+
+### Patch Changes
+
+- chore: replace the `$lib` alias with `#lib` in docs ([#16360](https://github.com/sveltejs/kit/pull/16360))
+
+## 1.0.0-next.1
+### Major Changes
+
+
+- breaking: require `vite@^8.0.12`, the first Vite 8 release bundling stable `rolldown` 1.0.0 ([#16134](https://github.com/sveltejs/kit/pull/16134))
+
+## 1.0.0-next.0
+### Major Changes
+
+
+- breaking: require Node 22 or newer ([#12548](https://github.com/sveltejs/kit/pull/12548))
+
+
+### Minor Changes
+
+
+- breaking: require Vite 8 and `vite-plugin-svelte` 7 ([#15542](https://github.com/sveltejs/kit/pull/15542))
+
 ## 0.11.0
 ### Minor Changes
 

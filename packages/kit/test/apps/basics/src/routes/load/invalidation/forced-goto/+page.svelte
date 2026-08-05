@@ -1,5 +1,5 @@
 <script>
-	import { invalidateAll, goto } from '$app/navigation';
+	import { refreshAll, goto } from '$app/navigation';
 
 	/** @type {import('./$types').PageData} */
 	export let data;
@@ -8,15 +8,15 @@
 <h1>a: {data.a}, b: {data.b}</h1>
 
 <button
-	class="invalidateall"
-	on:click={() => {
-		window.promise = invalidateAll();
-	}}>invalidate</button
+	class="refreshall"
+	onclick={() => {
+		window.promise = refreshAll();
+	}}>refresh</button
 >
 
 <button
 	class="goto"
-	on:click={() => {
+	onclick={() => {
 		window.promise = goto('/load/invalidation/forced-goto?test', { invalidateAll: true });
 	}}>goto</button
 >

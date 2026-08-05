@@ -152,10 +152,10 @@ export function requested(query, limit) {
 	for (const payload of skipped) {
 		record_failure(
 			payload,
-			new HttpError(
-				400,
-				`Requested refresh was rejected because it exceeded requested(${__.name}, ${limit}) limit`
-			)
+			new HttpError({
+				status: 400,
+				message: `Requested refresh was rejected because it exceeded requested(${__.name}, ${limit}) limit`
+			})
 		);
 	}
 
@@ -163,7 +163,7 @@ export function requested(query, limit) {
 		*[Symbol.iterator]() {
 			for (const payload of selected) {
 				try {
-					const parsed = parse_remote_arg(payload, state.transport);
+					const parsed = parse_remote_arg(payload);
 					const validated = __.validate(parsed);
 
 					if (is_thenable(validated)) {
@@ -183,7 +183,7 @@ export function requested(query, limit) {
 		async *[Symbol.asyncIterator]() {
 			yield* race_all(selected, async (payload) => {
 				try {
-					const parsed = parse_remote_arg(payload, state.transport);
+					const parsed = parse_remote_arg(payload);
 					const validated = await __.validate(parsed);
 					return { arg: validated, query: __.bind(payload, validated) };
 				} catch (error) {

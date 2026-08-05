@@ -2,56 +2,36 @@
 /** @import { EnvVarConfig } from '@sveltejs/kit' */
 /** @import { ValidatedKitConfig } from 'types' */
 import path from 'node:path';
-import process from 'node:process';
-import * as vite from 'vite';
 import * as devalue from 'devalue';
 import { GENERATED_COMMENT } from '../constants.js';
 import { dedent } from './sync/utils.js';
-import { runtime_base, runtime_directory } from './utils.js';
+import { runtime_directory } from './utils.js';
 import { resolve_entry } from '../utils/filesystem.js';
 import { handle_issues, validate } from '../exports/internal/env.js';
 import { get_config_aliases } from '../exports/vite/utils.js';
+import { get_runner } from '../runner.js';
 
 /**
  * @typedef {'public' | 'private'} EnvType
  */
-
-let warned = false;
 
 /**
  * @param {import('types').ValidatedKitConfig} config
  * @returns {string | null}
  */
 export function resolve_explicit_env_entry(config) {
-	const resolved = resolve_entry(path.join(config.files.src, 'env'));
-
-	if (resolved) {
-		if (config.experimental.explicitEnvironmentVariables) {
-			return resolved;
-		}
-
-		if (!warned) {
-			console.warn(
-				`${path.relative(process.cwd(), resolved)} requires the \`experimental.explicitEnvironmentVariables\` flag to be set`
-			);
-			warned = true;
-		}
-	} else if (config.experimental.explicitEnvironmentVariables) {
-		console.warn(
-			'experimental.explicitEnvironmentVariables was set, but no src/env.ts or src/env.js file could be found'
-		);
-	}
-
-	return null;
+	return resolve_entry(path.join(config.files.src, 'env')) ?? null;
 }
 
 /**
+ * @param {typeof import('vite')} vite
  * @param {ValidatedKitConfig} kit
  * @param {string | null} file
+ * @param {string} root
  * @param {string} mode
  * @returns {Promise<Record<string, EnvVarConfig<any>> | null>}
  */
-export async function load_explicit_env(kit, file, mode) {
+export async function load_explicit_env(vite, kit, file, root, mode) {
 	if (!file) return null;
 
 	const server = await vite.createServer({
@@ -59,12 +39,13 @@ export async function load_explicit_env(kit, file, mode) {
 		logLevel: 'silent',
 		mode,
 		define: {
+			__SVELTEKIT_PAYLOAD__: 'undefined', // coming in through static import in env/internal.js but will end up unused
 			__SVELTEKIT_APP_VERSION__: JSON.stringify(kit.version.name) // needed by $app/env
 		},
 		resolve: {
 			alias: [
 				{ find: '$app/env', replacement: `${runtime_directory}/app/env` },
-				...get_config_aliases(kit)
+				...get_config_aliases(kit, root)
 			]
 		}
 	});
@@ -72,12 +53,14 @@ export async function load_explicit_env(kit, file, mode) {
 	/** @type {Record<string, EnvVarConfig<any>>} */
 	let variables;
 
+	const runner = get_runner(vite, server);
+
 	/** @type {import('../runtime/app/env/internal.js')} */ (
-		await server.ssrLoadModule(`${runtime_directory}/app/env/internal.js`)
+		await runner.import(`${runtime_directory}/app/env/internal.js`)
 	).set_building();
 
 	try {
-		({ variables } = await server.ssrLoadModule(file));
+		({ variables } = await runner.import(file));
 
 		if (!variables || typeof variables !== 'object') {
 			throw new Error(`${file} must export a variables object`);
@@ -111,61 +94,13 @@ export async function load_explicit_env(kit, file, mode) {
 }
 
 /**
- * @param {string} id
- * @param {Record<string, string>} env
- * @param {boolean} disabled
- * @returns {string}
- */
-export function create_static_module(id, env, disabled) {
-	/** @type {string[]} */
-	const statements = [];
-
-	if (disabled) {
-		statements.push(
-			`throw new Error('Cannot import \`${id}\` when \`experimental.explicitEnvironmentVariables\` is enabled. Use \`${id.replace('$env/static', '$app/env')}\` instead.');`
-		);
-	}
-
-	for (const key in env) {
-		if (!valid_identifier.test(key) || reserved.has(key)) {
-			continue;
-		}
-
-		const comment = `/** @type {import('${id}').${key}} */`;
-		const declaration = `export const ${key} = ${JSON.stringify(env[key])};`;
-
-		statements.push(`${comment}\n${declaration}`);
-	}
-
-	return GENERATED_COMMENT + statements.join('\n\n');
-}
-
-/**
- * @param {EnvType} type
- * @param {Record<string, string> | undefined} dev_values If in a development mode, values to pre-populate the module with.
- * @param {boolean} disabled
- */
-export function create_dynamic_module(type, dev_values, disabled) {
-	const prelude = disabled
-		? `throw new Error('Cannot import \`$env/dynamic/${type}\` when \`experimental.explicitEnvironmentVariables\` is enabled. Use \`$app/env/${type}\` instead.');\n\n`
-		: '';
-
-	if (dev_values) {
-		const keys = Object.entries(dev_values).map(
-			([k, v]) => `${JSON.stringify(k)}: ${JSON.stringify(v)}`
-		);
-		return `${prelude}export const env = {\n${keys.join(',\n')}\n}`;
-	}
-	return `${prelude}export { ${type}_env as env } from '${runtime_base}/shared-server.js';`;
-}
-
-/**
  * Creates the `__sveltekit/env` module
  * @param {Record<string, EnvVarConfig<any> | undefined> | null} variables
  * @param {Record<string, string>} env
  * @param {string | null} entry
+ * @param {boolean} is_dev
  */
-export function create_sveltekit_env(variables, env, entry) {
+export function create_sveltekit_env(variables, env, entry, is_dev) {
 	const imports = entry
 		? [
 				`import { variables } from ${JSON.stringify(entry)};`,
@@ -218,6 +153,19 @@ export function create_sveltekit_env(variables, env, entry) {
 				handle_issues(issues);
 			}`
 	];
+
+	// In dev, initialise the env immediately. Tools like `vite-node` load modules
+	// through the Vite config but don't run the SvelteKit dev server, which is what
+	// normally calls `set_env`. Without this, dynamic env vars imported from
+	// `$app/env/public` and `$app/env/private` would be `undefined` in such contexts.
+	if (is_dev) {
+		/** @type {Record<string, string>} */
+		const dev_env = {};
+		for (const name of Object.keys(variables ?? {})) {
+			if (name in env) dev_env[name] = env[name];
+		}
+		blocks.push(`set_env(${devalue.uneval(dev_env)});`);
+	}
 
 	const module = blocks.join('\n\n');
 
@@ -288,13 +236,51 @@ export function create_sveltekit_env_public(variables, env, prelude) {
 }
 
 /**
- * Creates the `__sveltekit/env/service-worker` module used in development
- * (but not in prod, which goes through build_service_worker instead)
+ * Creates the `__sveltekit/env/service-worker` module used in production. When an app uses
+ * dynamic public env vars, they're loaded at runtime via an import of the prerendered
+ * `env.js`. If there are none, values are inlined.
  * @param {Record<string, EnvVarConfig<any>> | null} variables
  * @param {Record<string, string>} env
+ * @param {string} version
+ * @param {string} global
+ * @param {string} base
+ * @param {string} app_dir
+ */
+export function create_sveltekit_env_service_worker(
+	variables,
+	env,
+	version,
+	global,
+	base,
+	app_dir
+) {
+	const has_dynamic_public_env = Object.values(variables ?? {}).some(
+		(config) => config.public && !config.static
+	);
+
+	if (!has_dynamic_public_env) {
+		return create_sveltekit_env_service_worker_dev(variables, env, version, global);
+	}
+
+	return dedent`
+		import { env } from '${base}/${app_dir}/env.js';
+
+		${global} = {
+			base: location.pathname.split('/').slice(0, -1).join('/'),
+			env,
+			version: ${JSON.stringify(version)}
+		};
+	`;
+}
+
+/**
+ * Creates the `__sveltekit/env/service-worker` module used in development
+ * @param {Record<string, EnvVarConfig<any>> | null} variables
+ * @param {Record<string, string>} env
+ * @param {string} version
  * @param {string} global
  */
-export function create_sveltekit_env_service_worker_dev(variables, env, global) {
+export function create_sveltekit_env_service_worker_dev(variables, env, version, global) {
 	/** @type {string[]} */
 	const properties = [];
 
@@ -311,12 +297,12 @@ export function create_sveltekit_env_service_worker_dev(variables, env, global) 
 	handle_issues(issues);
 
 	return dedent`
-		globalThis.__SVELTEKIT_EXPERIMENTAL_EXPLICIT_ENVIRONMENT_VARIABLES__ = true;
-
 		${global} = {
+			base: location.pathname.split('/').slice(0, -1).join('/'),
 			env: {
 				${properties.join(',\n\t\t') || '// empty'}
-			}
+			},
+			version: ${JSON.stringify(version)}
 		};
 	`;
 }
@@ -327,61 +313,6 @@ function create_jsdoc(description) {
 		.split('\n')
 		.map((line) => ` * ${line.replaceAll('*/', '*\\/')}`)
 		.join('\n')}\n */`;
-}
-
-/**
- * @param {EnvType} id
- * @param {import('types').Env} env
- * @returns {string}
- */
-export function create_static_types(id, env) {
-	const declarations = Object.keys(env[id])
-		.filter((k) => valid_identifier.test(k))
-		.map((k) => `export const ${k}: string;`);
-
-	return dedent`
-		declare module '$env/static/${id}' {
-			${declarations.join('\n')}
-		}
-	`;
-}
-
-/**
- * @param {EnvType} id
- * @param {import('types').Env} env
- * @param {{
- * 	public_prefix: string;
- * 	private_prefix: string;
- * }} prefixes
- * @returns {string}
- */
-export function create_dynamic_types(id, env, { public_prefix, private_prefix }) {
-	const properties = Object.keys(env[id])
-		.filter((k) => valid_identifier.test(k))
-		.map((k) => `${k}: string;`);
-
-	const public_prefixed = `[key: \`${public_prefix}\${string}\`]`;
-	const private_prefixed = `[key: \`${private_prefix}\${string}\`]`;
-
-	if (id === 'private') {
-		if (public_prefix) {
-			properties.push(`${public_prefixed}: undefined;`);
-		}
-		properties.push(`${private_prefixed}: string | undefined;`);
-	} else {
-		if (private_prefix) {
-			properties.push(`${private_prefixed}: undefined;`);
-		}
-		properties.push(`${public_prefixed}: string | undefined;`);
-	}
-
-	return dedent`
-		declare module '$env/dynamic/${id}' {
-			export const env: {
-				${properties.join('\n')}
-			}
-		}
-	`;
 }
 
 /**
@@ -459,3 +390,73 @@ export const reserved = new Set([
 ]);
 
 export const valid_identifier = /^[a-zA-Z_$][a-zA-Z0-9_$]*$/;
+
+/**
+ * Generates `export const` declarations (and, for reserved-word names that need
+ * aliasing, `const` + re-export specifiers) for a set of named exports.
+ *
+ * For regular names, emits a single efficient `export const name = expr;` statement.
+ * For reserved-word names (e.g. `delete`, `class`), emits `const alias = expr;` plus
+ * a re-export specifier (`alias as name`), since reserved words can't be `const`
+ * binding names but CAN appear in export specifiers.
+ *
+ * You can do evil things like `export { c as class }`. In order to import/re-export
+ * these, you need to alias the binding, then un-alias it when re-exporting:
+ *
+ *   const _0 = ...; // safe binding name
+ *   export { _0 as class }; // valid — `class` is allowed in export specifiers
+ *
+ * Aliases are chosen to avoid collisions with any of the supplied names. The
+ * namespace binding (used to hold the imported module) is likewise chosen to
+ * avoid collisions.
+ *
+ * @param {Iterable<string>} names — the export names
+ * @param {(name: string, namespace: string) => string} build_expression —
+ *   called for each name to produce the right-hand side of the declaration;
+ *   receives the chosen namespace binding so it can reference the imported module
+ * @param {string} namespace_prefix — the preferred binding name for the namespace
+ *   (suffixed with a number if it collides with any export name)
+ * @returns {{ namespace: string, declarations: string[], reexports: string[] }}
+ */
+export function create_exported_declarations(names, build_expression, namespace_prefix) {
+	/** @type {Set<string>} */
+	const set = new Set(names);
+
+	let namespace = namespace_prefix;
+	let namespace_index = 0;
+	while (set.has(namespace)) {
+		namespace = `${namespace_prefix}${namespace_index++}`;
+	}
+
+	let alias_index = 0;
+	/** @type {Map<string, string>} */
+	const aliases = new Map();
+
+	for (const name of set) {
+		if (!reserved.has(name)) continue;
+
+		let alias = `_${alias_index++}`;
+		while (set.has(alias)) {
+			alias = `_${alias_index++}`;
+		}
+		aliases.set(name, alias);
+	}
+
+	/** @type {string[]} */
+	const declarations = [];
+	/** @type {string[]} */
+	const reexports = [];
+
+	for (const name of set) {
+		const alias = aliases.get(name);
+		const expr = build_expression(name, namespace);
+		if (alias) {
+			declarations.push(`const ${alias} = ${expr};`);
+			reexports.push(`${alias} as ${name}`);
+		} else {
+			declarations.push(`export const ${name} = ${expr};`);
+		}
+	}
+
+	return { namespace, declarations, reexports };
+}

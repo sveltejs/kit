@@ -38,7 +38,8 @@ export function forked(module, callback) {
 			const worker = new Worker(fileURLToPath(module), {
 				env: {
 					...process.env,
-					SVELTEKIT_FORK: 'true'
+					SVELTEKIT_FORK: 'true',
+					FORCE_COLOR: '1'
 				}
 			});
 
@@ -60,9 +61,13 @@ export function forked(module, callback) {
 				}
 			);
 
+			worker.once('error', reject);
+
 			worker.on('exit', (code) => {
 				if (code) {
-					reject(new Error(`Failed with code ${code}`));
+					const error = new Error(`Failed with code ${code}`);
+					error.stack = error.message;
+					reject(error);
 				}
 			});
 		});

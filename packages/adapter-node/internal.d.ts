@@ -1,13 +1,12 @@
 declare module 'MANIFEST' {
 	import { SSRManifest } from '@sveltejs/kit';
+
+	export const base: string;
+	export const uncompressed_extensions: Set<string>;
 	export const manifest: SSRManifest;
+	export const prerendered: Set<string>;
 }
 
 declare module 'SERVER' {
 	export { Server } from '@sveltejs/kit';
 }
-
-declare const BASE: string;
-declare const ENV_PREFIX: string;
-declare const PRECOMPRESS: boolean;
-declare const PRERENDERED: Set<string>;

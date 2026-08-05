@@ -99,11 +99,11 @@ test.describe('a11y', () => {
 			.toBe(0);
 	});
 
-	test('keepfocus works', async ({ page }) => {
+	test('reset: false preserves focus', async ({ page }) => {
 		await page.goto('/keepfocus');
 
 		await Promise.all([
-			page.type('#input', 'bar'),
+			page.locator('#input').pressSequentially('bar', { delay: 100 }),
 			page.waitForFunction(() => window.location.search === '?foo=bar')
 		]);
 		await expect(page.locator('#input')).toBeFocused();
@@ -152,10 +152,9 @@ test.describe('Navigation lifecycle functions', () => {
 		await page.goto('/navigation-lifecycle/before-navigate/prevent-navigation');
 
 		await page.click('[href="/navigation-lifecycle/before-navigate/a"]');
-		await page.waitForLoadState('networkidle');
 
+		await expect(page.locator('pre')).toHaveText('1 false link');
 		expect(page.url()).toBe(baseURL + '/navigation-lifecycle/before-navigate/prevent-navigation');
-		expect(await page.innerHTML('pre')).toBe('1 false link');
 	});
 
 	test('beforeNavigate prevents navigation to external', async ({ page, baseURL }) => {
@@ -284,11 +283,11 @@ test.describe('Navigation lifecycle functions', () => {
 
 	test('onNavigate calls callback', async ({ page, clicknav }) => {
 		await page.goto('/navigation-lifecycle/on-navigate/a');
-		expect(await page.textContent('h1')).toBe('undefined -> undefined (...) false');
+		expect(await page.textContent('h1')).toBe('undefined -> undefined (...) false false');
 
 		await clicknav('[href="/navigation-lifecycle/on-navigate/b"]');
 		expect(await page.textContent('h1')).toBe(
-			'/navigation-lifecycle/on-navigate/a -> /navigation-lifecycle/on-navigate/b (link) true'
+			'/navigation-lifecycle/on-navigate/a -> /navigation-lifecycle/on-navigate/b (link) false true'
 		);
 	});
 
@@ -312,16 +311,20 @@ test.describe('Navigation lifecycle functions', () => {
 
 		await clicknav('[href="/navigation-lifecycle/before-navigate/event/b"]');
 
-		expect(logs).toEqual([
-			'click /navigation-lifecycle/before-navigate/event/a -> /navigation-lifecycle/before-navigate/event/b'
-		]);
+		await expect
+			.poll(() => logs)
+			.toEqual([
+				'click /navigation-lifecycle/before-navigate/event/a -> /navigation-lifecycle/before-navigate/event/b'
+			]);
 
 		await page.goBack();
 
-		expect(logs).toEqual([
-			'click /navigation-lifecycle/before-navigate/event/a -> /navigation-lifecycle/before-navigate/event/b',
-			'popstate /navigation-lifecycle/before-navigate/event/b -> /navigation-lifecycle/before-navigate/event/a'
-		]);
+		await expect
+			.poll(() => logs)
+			.toEqual([
+				'click /navigation-lifecycle/before-navigate/event/a -> /navigation-lifecycle/before-navigate/event/b',
+				'popstate /navigation-lifecycle/before-navigate/event/b -> /navigation-lifecycle/before-navigate/event/a'
+			]);
 	});
 
 	test('scroll state is provided on initial page load', async ({ page }) => {
@@ -549,11 +552,11 @@ test.describe('Scrolling', () => {
 
 		await page.goBack();
 		await page.waitForURL('/anchor#last-anchor-2');
-		expect(await page.evaluate(() => scrollY)).toEqual(originalScrollY);
+		await expect.poll(() => page.evaluate(() => scrollY)).toBe(originalScrollY);
 
 		await page.goBack();
 		await page.waitForURL('/anchor');
-		expect(await page.evaluate(() => scrollY)).toEqual(0);
+		await expect.poll(() => page.evaluate(() => scrollY)).toBe(0);
 	});
 
 	test('scroll is restored after hitting the back button for an in-app cross-document navigation', async ({
@@ -838,11 +841,127 @@ test.describe('Prefetching', () => {
 				throw new Error('Error was not thrown');
 			} catch (/** @type {any} */ e) {
 				expect(e.message).toMatch(
-					'argument passed to preloadCode must be a pathname (i.e. "/about" rather than "http://example.com/about"'
+					'argument passed to preloadCode must be a route ID (i.e. "/blog/[slug]" rather than "blog/[slug]")'
 				);
 			}
 		}
 	});
+
+	test('prefetches code programmatically with a dynamic route id', async ({ page, app }) => {
+		await page.goto('/routing/a');
+
+		await app.preloadCode('/routing/[slug]');
+
+		/** @type {string[]} */
+		const requests = [];
+		page.on('request', (r) => {
+			requests.push(r.url());
+		});
+
+		// the reliable, mode-independent assertion: navigating to a matching page
+		// afterwards must not fetch any additional JS modules for the route
+		await app.goto('/routing/preloaded-by-id');
+		expect(await page.textContent('h1')).toBe('preloaded-by-id');
+
+		expect(requests.filter((r) => r.endsWith('.js') && !r.includes('__route.js'))).toEqual([]);
+	});
+
+	test('preloadCode after match does not re-request route resolution', async ({ page, app }) => {
+		await page.goto('/routing/a');
+
+		const matched = await app.match('/routing/matched-by-id');
+		expect(matched?.id).toBe('/routing/[slug]');
+
+		/** @type {string[]} */
+		const requests = [];
+		page.on('request', (r) => {
+			requests.push(r.url());
+		});
+
+		await app.preloadCode(/** @type {string} */ (matched?.id));
+
+		// with server-side route resolution the loaders were cached during `match`,
+		// so no additional `__route.js` request may occur. In client-resolution mode
+		// this is trivially true (no `__route.js` requests exist at all) — the test is
+		// meaningful under the `test:server-side-route-resolution:*` suites, so don't
+		// remove it from the matrix
+		expect(requests.filter((r) => r.includes('__route.js'))).toEqual([]);
+	});
+
+	test('preloadCode caches endpoint-only route ids', async ({ page, app }) => {
+		await page.goto('/routing/a');
+
+		// first call discovers that `/set-cookie` exists but has no `+page`
+		await app.preloadCode('/set-cookie');
+
+		/** @type {string[]} */
+		const requests = [];
+		page.on('request', (r) => {
+			requests.push(r.url());
+		});
+
+		// the second call must be answered from the cache, without asking the server again
+		await app.preloadCode('/set-cookie');
+
+		expect(requests.filter((r) => r.includes('__route.js'))).toEqual([]);
+	});
+
+	if (process.env.DEV) {
+		test('warns when preloadCode is called with an unknown route id', async ({ page, app }) => {
+			await page.goto('/routing/a');
+
+			/** @type {string[]} */
+			const warnings = [];
+			page.on('console', (msg) => {
+				if (msg.type() === 'warning') warnings.push(msg.text());
+			});
+
+			await app.preloadCode('/does-not-exist-[at]-all');
+
+			expect(warnings.join('\n')).toMatch('did not match any route');
+		});
+
+		test('warns when preloadCode is called with an endpoint-only route id', async ({
+			page,
+			app
+		}) => {
+			await page.goto('/routing/a');
+
+			/** @type {string[]} */
+			const warnings = [];
+			page.on('console', (msg) => {
+				if (msg.type() === 'warning') warnings.push(msg.text());
+			});
+
+			// `/set-cookie` is a `+server.js` with no `+page`, so there is no code to preload
+			await app.preloadCode('/set-cookie');
+
+			if (process.env.ROUTER_RESOLUTION) {
+				// under server resolution the endpoint tells us the route exists but has no page
+				expect(warnings.join('\n')).toMatch('has no `+page`');
+			} else {
+				// under client routing, endpoint-only routes aren't in the client manifest at all,
+				// so they're indistinguishable from an unknown id
+				expect(warnings.join('\n')).toMatch('did not match any route');
+			}
+		});
+
+		if (!process.env.ROUTER_RESOLUTION) {
+			test('hints at `match` when preloadCode is called with a pathname', async ({ page, app }) => {
+				await page.goto('/routing/a');
+
+				/** @type {string[]} */
+				const warnings = [];
+				page.on('console', (msg) => {
+					if (msg.type() === 'warning') warnings.push(msg.text());
+				});
+
+				await app.preloadCode('/routing/some-slug');
+
+				expect(warnings.join('\n')).toMatch('match(');
+			});
+		}
+	}
 
 	test('prefetches data programmatically', async ({ baseURL, page, app }) => {
 		await page.goto('/routing/a');
@@ -926,6 +1045,18 @@ test.describe('Prefetching', () => {
 		await app.preloadData('/routing/preloading/preload-error');
 		await app.goto('/routing/preloading/preload-error');
 		await expect(page.locator('p')).toHaveText('hello');
+	});
+
+	test('preloads errors', async ({ page }) => {
+		await page.goto('/routing/preloading/error');
+
+		await expect(page.locator('p')).toHaveText('undefined undefined undefined');
+
+		page.locator('button', { hasText: '404' }).click();
+		await expect(page.locator('p')).toHaveText('error 404 Not found');
+
+		page.locator('button', { hasText: '500' }).click();
+		await expect(page.locator('p')).toHaveText('error 500 Oopsie (500 Internal Error)');
 	});
 });
 

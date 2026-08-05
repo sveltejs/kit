@@ -1,54 +1,29 @@
-/** @import { BuildOptions } from 'esbuild' */
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
-import { nodeFileTrace } from '@vercel/nft';
-import esbuild from 'esbuild';
-import { get_pathname, parse_isr_expiration, pattern_to_src, resolve_runtime } from './utils.js';
 import { VERSION } from '@sveltejs/kit';
+import { nodeFileTrace } from '@vercel/nft';
+import { get_pathname, parse_isr_expiration, pattern_to_src, resolve_runtime } from './utils.js';
 
-/**
- * @template T
- * @template {keyof T} K
- * @typedef {Partial<Omit<T, K>> & Required<Pick<T, K>>} PartialExcept
- */
-
-/**
- * We use a custom `Builder` type here to support the minimum version of SvelteKit.
- * @typedef {PartialExcept<import('@sveltejs/kit').Builder, 'log' | 'rimraf' | 'mkdirp' | 'config' | 'prerendered' | 'routes' | 'createEntries' | 'findServerAssets' | 'generateFallback' | 'generateEnvModule' | 'generateManifest' | 'getBuildDirectory' | 'getClientDirectory' | 'getServerDirectory' | 'getAppPath' | 'writeClient' | 'writePrerendered' | 'writePrerendered' | 'writeServer' | 'copy' | 'compress'>} Builder2_4_0
- */
-
-const name = '@sveltejs/adapter-vercel';
 const INTERNAL = '![-]'; // this name is guaranteed not to conflict with user routes
-
-const [kit_major, kit_minor] = VERSION.split('.');
-
-// https://vercel.com/docs/functions/edge-functions/edge-runtime#compatible-node.js-modules
-const compatible_node_modules = ['async_hooks', 'events', 'buffer', 'assert', 'util'];
 
 /** @type {import('./index.js').default} **/
 const plugin = function (defaults = {}) {
-	if ('edge' in defaults) {
-		throw new Error("{ edge: true } has been removed in favour of { runtime: 'edge' }");
+	// @ts-ignore TODO remove this in a future version
+	if ('edge' in defaults || defaults.runtime === 'edge') {
+		throw new Error('The `edge` runtime is no longer supported');
 	}
 
 	return {
-		name,
-		/** @param {Builder2_4_0} builder */
+		name: '@sveltejs/adapter-vercel',
+		/** @param {import('@sveltejs/kit').Builder} builder */
 		async adapt(builder) {
-			if (!builder.routes) {
-				throw new Error(
-					'@sveltejs/adapter-vercel >=2.x (possibly installed through @sveltejs/adapter-auto) requires @sveltejs/kit version 1.5 or higher. ' +
-						'Either downgrade the adapter or upgrade @sveltejs/kit'
-				);
-			}
-
 			const dir = '.vercel/output';
 			const tmp = builder.getBuildDirectory('vercel-tmp');
 
-			builder.rimraf(dir);
-			builder.rimraf(tmp);
+			fs.rmSync(dir, { force: true, recursive: true });
+			fs.rmSync(tmp, { force: true, recursive: true });
 
 			if (fs.existsSync('vercel.json')) {
 				const vercel_file = fs.readFileSync('vercel.json', 'utf-8');
@@ -87,8 +62,8 @@ const plugin = function (defaults = {}) {
 						MANIFEST: './manifest.js'
 					}
 				});
-				if (builder.hasServerInstrumentationFile?.()) {
-					builder.instrument?.({
+				if (builder.hasServerInstrumentationFile()) {
+					builder.instrument({
 						entrypoint: `${tmp}/index.js`,
 						instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`
 					});
@@ -105,153 +80,6 @@ const plugin = function (defaults = {}) {
 					// TODO use symlinks, once Build Output API supports doing so
 					builder.copy(`${builder.getServerDirectory()}/${asset}`, `${dir}/${asset}`);
 				}
-			}
-
-			let warned = false;
-
-			/**
-			 * @param {string} name
-			 * @param {import('./index.js').EdgeConfig} config
-			 * @param {import('@sveltejs/kit').RouteDefinition<import('./index.js').EdgeConfig>[]} routes
-			 */
-			async function generate_edge_function(name, config, routes) {
-				if (!warned) {
-					warned = true;
-					builder.log.warn(
-						`The \`runtime: 'edge'\` option is deprecated, and will be removed in a future version of adapter-vercel`
-					);
-				}
-
-				const tmp = builder.getBuildDirectory(`vercel-tmp/${name}`);
-				const relativePath = path.posix.relative(tmp, builder.getServerDirectory());
-
-				builder.copy(`${files}/edge.js`, `${tmp}/edge.js`, {
-					replace: {
-						SERVER: `${relativePath}/index.js`,
-						MANIFEST: './manifest.js'
-					}
-				});
-
-				write(
-					`${tmp}/manifest.js`,
-					`export const manifest = ${builder.generateManifest({ relativePath, routes })};\n`
-				);
-
-				try {
-					const outdir = `${dirs.functions}/${name}.func`;
-					/** @type {BuildOptions} */
-					const esbuild_config = {
-						// minimum Node.js version supported is v14.6.0 that is mapped to ES2019
-						// https://edge-runtime.vercel.app/features/polyfills
-						// TODO verify the latest ES version the edge runtime supports
-						target: 'es2020',
-						bundle: true,
-						platform: 'browser',
-						conditions: [
-							// Vercel's Edge runtime key https://runtime-keys.proposal.wintercg.org/#edge-light
-							'edge-light',
-							// re-include these since they are included by default when no conditions are specified
-							// https://esbuild.github.io/api/#conditions
-							'module'
-						],
-						format: 'esm',
-						external: [
-							...compatible_node_modules,
-							...compatible_node_modules.map((id) => `node:${id}`),
-							...(config.external || [])
-						],
-						sourcemap: 'linked',
-						banner: { js: 'globalThis.global = globalThis;' },
-						loader: {
-							'.wasm': 'copy',
-							'.woff': 'copy',
-							'.woff2': 'copy',
-							'.ttf': 'copy',
-							'.eot': 'copy',
-							'.otf': 'copy'
-						}
-					};
-					const result = await esbuild.build({
-						entryPoints: [`${tmp}/edge.js`],
-						outfile: `${outdir}/index.js`,
-						...esbuild_config
-					});
-
-					let instrumentation_result;
-					if (builder.hasServerInstrumentationFile?.()) {
-						instrumentation_result = await esbuild.build({
-							entryPoints: [`${builder.getServerDirectory()}/instrumentation.server.js`],
-							outfile: `${outdir}/instrumentation.server.js`,
-							...esbuild_config
-						});
-
-						builder.instrument?.({
-							entrypoint: `${outdir}/index.js`,
-							instrumentation: `${outdir}/instrumentation.server.js`,
-							module: {
-								generateText: generate_traced_edge_module
-							}
-						});
-					}
-
-					const warnings = instrumentation_result
-						? [...result.warnings, ...instrumentation_result.warnings]
-						: result.warnings;
-
-					if (warnings.length > 0) {
-						const formatted = await esbuild.formatMessages(warnings, {
-							kind: 'warning',
-							color: true
-						});
-
-						console.error(formatted.join('\n'));
-					}
-				} catch (err) {
-					const error = /** @type {import('esbuild').BuildFailure} */ (err);
-					for (const e of error.errors) {
-						for (const node of e.notes) {
-							const match =
-								/The package "(.+)" wasn't found on the file system but is built into node/.exec(
-									node.text
-								);
-
-							if (match) {
-								node.text = `Cannot use "${match[1]}" when deploying to Vercel Edge Functions.`;
-							}
-						}
-					}
-
-					const formatted = await esbuild.formatMessages(error.errors, {
-						kind: 'error',
-						color: true
-					});
-
-					console.error(formatted.join('\n'));
-
-					throw new Error(
-						`Bundling with esbuild failed with ${error.errors.length} ${
-							error.errors.length === 1 ? 'error' : 'errors'
-						}`,
-						{ cause: err }
-					);
-				}
-
-				write(
-					`${dirs.functions}/${name}.func/.vc-config.json`,
-					JSON.stringify(
-						{
-							runtime: config.runtime,
-							regions: config.regions,
-							entrypoint: 'index.js',
-							framework: {
-								slug: 'sveltekit',
-								version: VERSION
-							}
-						},
-						null,
-						'\t'
-					)
-				);
 			}
 
 			/** @type {Map<string, { i: number, config: import('./index.js').Config, routes: import('@sveltejs/kit').RouteDefinition<import('./index.js').Config>[] }>} */
@@ -271,7 +99,12 @@ const plugin = function (defaults = {}) {
 
 			// group routes by config
 			for (const route of builder.routes) {
+				if (route.config.runtime === 'edge') {
+					throw new Error('The `edge` runtime is no longer supported');
+				}
+
 				const runtime = resolve_runtime(defaults.runtime, route.config.runtime);
+
 				const config = { ...defaults, ...route.config, runtime };
 
 				if (is_prerendered(route)) {
@@ -283,12 +116,6 @@ const plugin = function (defaults = {}) {
 
 				if (config.isr) {
 					const directory = path.relative('.', builder.config.kit.files.routes + route.id);
-
-					if (runtime === 'edge') {
-						throw new Error(
-							`${directory}: Routes using \`isr\` must use a Node.js or Bun runtime (for example 'nodejs24.x' or 'experimental_bun1.x')`
-						);
-					}
 
 					if (config.isr.allowQuery?.includes('__pathname')) {
 						throw new Error(
@@ -348,13 +175,10 @@ const plugin = function (defaults = {}) {
 			const singular = groups.size === 1;
 
 			for (const group of groups.values()) {
-				const generate_function =
-					group.config.runtime === 'edge' ? generate_edge_function : generate_serverless_function;
-
 				// generate one function for the group
 				const name = singular ? `${INTERNAL}/catchall` : `${INTERNAL}/${group.i}`;
 
-				await generate_function(
+				await generate_serverless_function(
 					name,
 					/** @type {any} */ (group.config),
 					/** @type {import('@sveltejs/kit').RouteDefinition<any>[]} */ (group.routes)
@@ -370,10 +194,8 @@ const plugin = function (defaults = {}) {
 				// by SvelteKit rather than Vercel
 
 				const runtime = resolve_runtime(defaults.runtime);
-				const generate_function =
-					runtime === 'edge' ? generate_edge_function : generate_serverless_function;
 
-				await generate_function(
+				await generate_serverless_function(
 					`${INTERNAL}/catchall`,
 					/** @type {any} */ ({ ...defaults, runtime }),
 					[]
@@ -393,7 +215,7 @@ const plugin = function (defaults = {}) {
 				const target = path.join(dirs.functions, INTERNAL, 'catchall.func');
 
 				// Ensure the parent directory exists before symlinking
-				builder.mkdirp(path.join(dirs.functions, app_path));
+				fs.mkdirSync(path.join(dirs.functions, app_path), { recursive: true });
 
 				const relative = path.relative(path.dirname(remote_symlink_path), target);
 
@@ -416,7 +238,7 @@ const plugin = function (defaults = {}) {
 				if (isr) {
 					const isr_name = route.id.slice(1) || '__root__'; // should we check that __root__ isn't a route?
 					const base = `${dirs.functions}/${isr_name}`;
-					builder.mkdirp(base);
+					fs.mkdirSync(base, { recursive: true });
 
 					const target = `${dirs.functions}/${name}.func`;
 					const relative = path.relative(path.dirname(base), target);
@@ -467,7 +289,7 @@ const plugin = function (defaults = {}) {
 					const target = path.join(dirs.functions, `${name}.func`); // The actual function directory e.g., .vercel/output/functions/![-].func
 
 					// Ensure the directory for the data endpoint symlink exists (e.g., functions/index/)
-					builder.mkdirp(base_dir);
+					fs.mkdirSync(base_dir, { recursive: true });
 
 					// Calculate relative paths FROM the directory containing the symlink TO the target
 					const relative_for_main = path.relative(path.dirname(main_symlink_path), target);
@@ -486,17 +308,15 @@ const plugin = function (defaults = {}) {
 				}
 			}
 
-			// optional chaining to support older versions that don't have this setting yet
-			if (builder.config.kit.router?.resolution === 'server') {
-				// Create a separate edge function just for server-side route resolution.
+			if (builder.config.kit.router.resolution === 'server') {
+				// Create a separate serverless function just for server-side route resolution.
 				// By omitting all routes we're ensuring it's small (the routes will still be available
 				// to the route resolution, because it does not rely on the server routing manifest)
-				await generate_edge_function(
+				const runtime = resolve_runtime(defaults.runtime);
+
+				await generate_serverless_function(
 					`${builder.config.kit.appDir}/route`,
-					{
-						external: 'external' in defaults ? defaults.external : undefined,
-						runtime: 'edge'
-					},
+					/** @type {any} */ ({ ...defaults, runtime }),
 					[]
 				);
 
@@ -516,28 +336,16 @@ const plugin = function (defaults = {}) {
 		},
 
 		supports: {
-			read: ({ config, route }) => {
-				const runtime = config.runtime ?? defaults.runtime;
-
-				// TODO bump peer dep in next adapter major to simplify this
-				if (runtime === 'edge' && kit_major === '2' && kit_minor < '25') {
-					throw new Error(
-						`${name}: Cannot use \`read\` from \`$app/server\` in route \`${route.id}\` configured with \`runtime: 'edge'\` and SvelteKit < 2.25.0`
-					);
-				}
-
-				return true;
-			},
+			read: () => true,
 			instrumentation: () => true
 		}
 	};
 };
 
-/** @param {import('./index.js').EdgeConfig & import('./index.js').ServerlessConfig} config */
+/** @param {import('./index.js').ServerlessConfig} config */
 function hash_config(config) {
 	return [
 		config.runtime ?? '',
-		config.external ?? '',
 		config.regions ?? '',
 		config.memory ?? '',
 		config.maxDuration ?? '',
@@ -561,7 +369,7 @@ function write(file, data) {
 
 // This function is duplicated in adapter-static
 /**
- * @param {Builder2_4_0} builder
+ * @param {import('@sveltejs/kit').Builder} builder
  * @param {import('./index.js').Config} config
  * @param {string} dir
  */
@@ -703,7 +511,7 @@ function static_vercel_config(builder, config, dir) {
 }
 
 /**
- * @param {Builder2_4_0} builder
+ * @param {import('@sveltejs/kit').Builder} builder
  * @param {string} entry
  * @param {string} dir
  * @param {import('./index.js').ServerlessConfig} config
@@ -824,18 +632,10 @@ async function create_function_bundle(builder, entry, dir, config) {
 }
 
 /**
- *
- * @param {Builder2_4_0} builder
- * @param {any} vercel_config
+ * @param {import('@sveltejs/kit').Builder} builder
+ * @param {any} vercel_config see https://vercel.com/docs/project-configuration/vercel-json
  */
 function validate_vercel_json(builder, vercel_config) {
-	if (builder.routes.length > 0 && !builder.routes[0].api) {
-		// bail — we're on an older SvelteKit version that doesn't
-		// populate `route.api.methods`, so we can't check
-		// to see if cron paths are valid
-		return;
-	}
-
 	const crons = /** @type {Array<unknown>} */ (
 		Array.isArray(vercel_config?.crons) ? vercel_config.crons : []
 	);
@@ -880,25 +680,6 @@ function is_prerendered(route) {
 		route.prerender === true ||
 		(route.prerender === 'auto' && route.segments.every((segment) => !segment.dynamic))
 	);
-}
-
-/**
- * @param {{ instrumentation: string; start: string }} opts
- */
-function generate_traced_edge_module({ instrumentation, start }) {
-	return `\
-import './${instrumentation}';
-const promise = import('./${start}');
-
-/**
- * @param {import('http').IncomingMessage} req
- * @param {import('http').ServerResponse} res
- */
-export default async (req, res) => {
-	const { default: handler } = await promise;
-	return handler(req, res);
-}
-`;
 }
 
 export default plugin;

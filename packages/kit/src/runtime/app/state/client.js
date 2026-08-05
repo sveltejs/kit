@@ -1,10 +1,8 @@
-import { DEV } from 'esm-env';
 import {
 	page as _page,
 	navigating as _navigating,
 	updated as _updated
 } from '../../client/state.svelte.js';
-import { stores } from '../../client/client.js';
 
 export const page = {
 	get data() {
@@ -21,6 +19,9 @@ export const page = {
 	},
 	get route() {
 		return _page.route;
+	},
+	get shallow() {
+		return _page.shallow;
 	},
 	get state() {
 		return _page.state;
@@ -47,26 +48,16 @@ export const navigating = {
 		return _navigating.current ? _navigating.current.willUnload : null;
 	},
 	get delta() {
-		return _navigating.current ? _navigating.current.delta : null;
+		return _navigating.current?.type === 'popstate' ? _navigating.current.delta : null;
 	},
 	get complete() {
 		return _navigating.current ? _navigating.current.complete : null;
 	}
 };
 
-// TODO: remove in 3.0
-if (DEV) {
-	Object.defineProperty(navigating, 'current', {
-		get() {
-			// between 2.12.0 and 2.12.1 `navigating.current` existed
-			throw new Error('Replace navigating.current.<prop> with navigating.<prop>');
-		}
-	});
-}
-
 export const updated = {
 	get current() {
 		return _updated.current;
 	},
-	check: stores.updated.check
+	check: _updated.check
 };

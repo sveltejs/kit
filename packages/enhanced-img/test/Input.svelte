@@ -39,7 +39,7 @@
 	alt="event handler test"
 />
 
-<enhanced:img src="$lib/dev.png" alt="alias test" />
+<enhanced:img src="#lib/dev.png" alt="alias test" />
 
 <enhanced:img src="/src/dev.png" alt="absolute path test" />
 

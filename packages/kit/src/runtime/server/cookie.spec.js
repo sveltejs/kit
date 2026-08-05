@@ -1,8 +1,8 @@
-import { assert, expect, test, describe, beforeAll } from 'vitest';
+import process from 'node:process';
+import { assert, expect, test, describe, beforeAll, vi } from 'vitest';
 import { domain_matches, path_matches, get_cookies } from './cookie.js';
-import { installPolyfills } from '@sveltejs/kit/node/polyfills';
 
-installPolyfills();
+vi.stubGlobal('__SVELTEKIT_DEV__', undefined);
 
 const domains = {
 	positive: [
@@ -37,10 +37,9 @@ const cookies_setup = ({ href, headers } = {}) => {
 	return result;
 };
 
-describe('cookies in dev', () => {
+describe.skipIf(!process.env.DEV)('cookies in dev', () => {
 	beforeAll(() => {
-		// @ts-expect-error
-		globalThis.__SVELTEKIT_DEV__ = true;
+		vi.stubGlobal('__SVELTEKIT_DEV__', true);
 	});
 
 	test('throws if cookie name/value exceeds 4,096 bytes', () => {
@@ -57,12 +56,25 @@ describe('cookies in dev', () => {
 
 		expect(() => cookies.set('a', 'a'.repeat(4095), { path: '/' })).not.toThrow();
 	});
+
+	test('secure defaults to false when served over http (e.g. --host)', () => {
+		const { cookies, new_cookies } = cookies_setup({ href: 'http://192.168.0.1:5173' });
+		cookies.set('a', 'b', { path: '/' });
+		const opts = new_cookies.get('/?a')?.options;
+		assert.equal(opts?.secure, false);
+	});
+
+	test('secure defaults to false even when served over https', () => {
+		const { cookies, new_cookies } = cookies_setup({ href: 'https://192.168.0.1:5173' });
+		cookies.set('a', 'b', { path: '/' });
+		const opts = new_cookies.get('/?a')?.options;
+		assert.equal(opts?.secure, false);
+	});
 });
 
-describe('cookies in prod', () => {
+describe.skipIf(!!process.env.DEV)('cookies in prod', () => {
 	beforeAll(() => {
-		// @ts-expect-error
-		globalThis.__SVELTEKIT_DEV__ = false;
+		vi.stubGlobal('__SVELTEKIT_DEV__', false);
 	});
 
 	domains.positive.forEach(([hostname, constraint]) => {
@@ -91,6 +103,16 @@ describe('cookies in prod', () => {
 		assert.isUndefined(cookies.get('a'));
 	});
 
+	test('getAll should not include deleted cookies', () => {
+		const { cookies } = cookies_setup({ headers: { cookie: 'session=abc' } });
+		cookies.set('session', 'abc', { path: '/' });
+		expect(cookies.getAll()).toEqual([{ name: 'session', value: 'abc' }]);
+
+		cookies.delete('session', { path: '/' });
+		assert.isUndefined(cookies.get('session'));
+		expect(cookies.getAll()).toEqual([]);
+	});
+
 	test('default values when set is called', () => {
 		const { cookies, new_cookies } = cookies_setup();
 		cookies.set('a', 'b', { path: '/' });
@@ -116,6 +138,13 @@ describe('cookies in prod', () => {
 		cookies.set('a', 'b', { path: '/' });
 		const opts = new_cookies.get('/?a')?.options;
 		assert.equal(opts?.secure, false);
+	});
+
+	test('secure defaults to true on http on a non-localhost host', () => {
+		const { cookies, new_cookies } = cookies_setup({ href: 'http://192.168.0.1:5173' });
+		cookies.set('a', 'b', { path: '/' });
+		const opts = new_cookies.get('/?a')?.options;
+		assert.equal(opts?.secure, true);
 	});
 
 	test('overridden defaults when set is called', () => {
@@ -202,6 +231,14 @@ describe('cookies in prod', () => {
 			{ name: 'a', value: 'bar' },
 			{ name: 'b', value: 'baz' }
 		]);
+	});
+
+	test('get with a custom decode is not served from the cached default parse', () => {
+		const { cookies } = cookies_setup({ headers: { cookie: 'enc=hello%20world' } });
+
+		expect(cookies.get('enc')).toEqual('hello world');
+		expect(cookies.get('enc', { decode: (value) => value })).toEqual('hello%20world');
+		expect(cookies.get('enc')).toEqual('hello world');
 	});
 
 	test("set_internal isn't affected by defaults", () => {
@@ -291,5 +328,47 @@ describe('cookies in prod', () => {
 		const duplicate = all.find((c) => c.name === 'duplicate');
 
 		expect(duplicate?.value).toEqual('foobar_value');
+	});
+});
+
+describe('cookies.parse', () => {
+	const { cookies } = cookies_setup();
+
+	test('parses a cookie', () => {
+		assert.deepEqual(cookies.parse('foo=bar'), {
+			name: 'foo',
+			value: 'bar'
+		});
+	});
+
+	test('ignores invalid properties', () => {
+		assert.deepEqual(cookies.parse('foo=bar; samesite=laxative'), {
+			name: 'foo',
+			value: 'bar'
+		});
+	});
+
+	test('ignores unknown properties', () => {
+		assert.deepEqual(cookies.parse('foo=bar; potato=salad'), {
+			name: 'foo',
+			value: 'bar'
+		});
+	});
+
+	test('converts expires', () => {
+		const date = new Date();
+
+		assert.deepEqual(cookies.parse(`foo=bar; expires=${date.toISOString()}`), {
+			name: 'foo',
+			value: 'bar',
+			expires: date
+		});
+	});
+
+	test('includes trailing = characters', () => {
+		assert.deepEqual(cookies.parse('foo=bar=baz='), {
+			name: 'foo',
+			value: 'bar=baz='
+		});
 	});
 });

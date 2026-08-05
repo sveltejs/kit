@@ -11,40 +11,17 @@ During development, and at build time, variables defined in a `.env` or `.env.lo
 API_KEY=19f401ba-e8b0-48c4-8c77-b0ebb26d97fe
 ```
 
-By default, every environment variable is implicitly available inside your app via the following modules:
-
-- [`$env/static/private`]($env-static-private)
-- [`$env/static/public`]($env-static-public)
-- [`$env/dynamic/private`]($env-dynamic-private)
-- [`$env/dynamic/public`]($env-dynamic-public)
-
-## Explicit environment variables
-
-As of SvelteKit 2.63, you can opt into _explicit_ environment variables, in which case you instead import environment variables from these modules:
+After following the setup below, they can be imported via the following modules:
 
 - [`$app/env/private`]($app-env-private)
 - [`$app/env/public`]($app-env-public)
 
-Additionally, the [`$app/environment`]($app-environment) module is renamed to [`$app/env`]($app-env).
-
-> [!NOTE] Explicit environment variables will become the default in SvelteKit 3. The `$env/*` modules, along with `$app/environment`, will be removed.
+> [!LEGACY]
+> The `$env/*` modules, along with `$app/environment` were deprecated in SvelteKit 3 (and will be removed in SvelteKit 4) in favour of explicit environment variables that were added in SvelteKit 2.62 as an experimental option.
 
 ### Setup
 
-To opt in, update your configuration...
-
-```js
-/// file: svelte.config.js
-export default {
-	kit: {
-		experimental: {
-			+++explicitEnvironmentVariables: true+++
-		}
-	}
-};
-```
-
-...and add a `src/env.ts` (or `src/env.js`) file that exports a `variables` object:
+Add a `src/env.ts` (or `src/env.js`) file that exports a `variables` object:
 
 ```ts
 /// file: src/env.ts
@@ -144,6 +121,23 @@ export const variables = defineEnvVars({
 });
 ```
 
+If you don't want to bring in a schema library, you can pass a function that returns the (possibly transformed) value, or throws an error explaining the problem:
+
+```ts
+/// file: src/env.ts
+import { defineEnvVars } from '@sveltejs/kit/env';
+
+export const variables = defineEnvVars({
+	GOOGLE_ANALYTICS_ID: {
+		public: true,
+		schema: (value) => {
+			if (!value?.startsWith('G-')) throw new Error('expected a Google Analytics ID');
+			return value;
+		}
+	}
+});
+```
+
 If a value is invalid, the app will fail to start (or build). To opt out of one or the other, use [`building`]($app-env#building) from `$app/env` along with a validator that accepts an optional value:
 
 ```ts
@@ -190,7 +184,7 @@ Because this variable is `static`, the `<DebugOverlay>` component shown here wil
 ```svelte
 <script>
 	import { SHOW_DEBUG_OVERLAY } from '$app/env/public';
-	import DebugOverlay from '$lib/components/DebugOverlay.svelte';
+	import DebugOverlay from '#lib/components/DebugOverlay.svelte';
 </script>
 
 {#if SHOW_DEBUG_OVERLAY}

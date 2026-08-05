@@ -1,8 +1,4 @@
 {
-	"compilerOptions": {
-		"allowJs": true,
-		"checkJs": true,
-		"noEmit": true
-	},
-	"extends": "./.svelte-kit/tsconfig.json"
+	"extends": "$app/tsconfig",
+	"include": ["src", "test", "*.js"]
 }

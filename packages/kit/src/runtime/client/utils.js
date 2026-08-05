@@ -1,11 +1,5 @@
 import { BROWSER, DEV } from 'esm-env';
-import { writable } from 'svelte/store';
-import { assets } from '$app/paths';
-import { version } from '$app/env';
-import { noop } from '../../utils/functions.js';
 import { PRELOAD_PRIORITIES } from './constants.js';
-
-/* global __SVELTEKIT_APP_VERSION_FILE__, __SVELTEKIT_APP_VERSION_POLL_INTERVAL__ */
 
 export const origin = BROWSER ? location.origin : '';
 
@@ -35,12 +29,11 @@ const warned = new WeakSet();
 /** @typedef {keyof typeof valid_link_options} LinkOptionName */
 
 const valid_link_options = /** @type {const} */ ({
-	'preload-code': ['', 'off', 'false', 'tap', 'hover', 'viewport', 'eager'],
-	'preload-data': ['', 'off', 'false', 'tap', 'hover'],
-	keepfocus: ['', 'true', 'off', 'false'],
-	noscroll: ['', 'true', 'off', 'false'],
-	reload: ['', 'true', 'off', 'false'],
-	replacestate: ['', 'true', 'off', 'false']
+	'preload-code': ['', 'false', 'tap', 'hover', 'viewport', 'eager'],
+	'preload-data': ['', 'false', 'tap', 'hover'],
+	reload: ['', 'true', 'false'],
+	replacestate: ['', 'true', 'false'],
+	reset: ['', 'true', 'false']
 });
 
 /**
@@ -129,6 +122,7 @@ export function get_link_info(a, base, uses_hash_router) {
 	/** @type {URL | undefined} */
 	let url;
 
+	// TODO replace the try/catch with `URL.parse` when browser support allows (Chrome 126, Firefox 126, Safari 18)
 	try {
 		url = new URL(a instanceof SVGAElement ? a.href.baseVal : a.href, document.baseURI);
 
@@ -156,12 +150,6 @@ export function get_link_info(a, base, uses_hash_router) {
  * @param {HTMLFormElement | HTMLAnchorElement | SVGAElement} element
  */
 export function get_router_options(element) {
-	/** @type {ValidLinkOptions<'keepfocus'> | null} */
-	let keepfocus = null;
-
-	/** @type {ValidLinkOptions<'noscroll'> | null} */
-	let noscroll = null;
-
 	/** @type {ValidLinkOptions<'preload-code'> | null} */
 	let preload_code = null;
 
@@ -174,16 +162,31 @@ export function get_router_options(element) {
 	/** @type {ValidLinkOptions<'replacestate'> | null} */
 	let replace_state = null;
 
+	/** @type {ValidLinkOptions<'reset'> | null} */
+	let reset = null;
+
 	/** @type {Element} */
 	let el = element;
 
 	while (el && el !== document.documentElement) {
+		if (DEV) {
+			for (const name of ['keepfocus', 'noscroll']) {
+				const value = el.getAttribute(`data-sveltekit-${name}`);
+				if (value !== null && !warned.has(el)) {
+					warned.add(el);
+					console.warn(
+						`\`data-sveltekit-${name}="true"\` has been replaced with \`data-sveltekit-reset="false"\``
+					);
+					console.log(el);
+				}
+			}
+		}
+
 		if (preload_code === null) preload_code = link_option(el, 'preload-code');
 		if (preload_data === null) preload_data = link_option(el, 'preload-data');
-		if (keepfocus === null) keepfocus = link_option(el, 'keepfocus');
-		if (noscroll === null) noscroll = link_option(el, 'noscroll');
 		if (reload === null) reload = link_option(el, 'reload');
 		if (replace_state === null) replace_state = link_option(el, 'replacestate');
+		if (reset === null) reset = link_option(el, 'reset');
 
 		el = /** @type {Element} */ (parent_element(el));
 	}
@@ -194,7 +197,6 @@ export function get_router_options(element) {
 			case '':
 			case 'true':
 				return true;
-			case 'off':
 			case 'false':
 				return false;
 			default:
@@ -203,103 +205,11 @@ export function get_router_options(element) {
 	}
 
 	return {
-		preload_code: levels[preload_code ?? 'off'],
-		preload_data: levels[preload_data ?? 'off'],
-		keepfocus: get_option_state(keepfocus),
-		noscroll: get_option_state(noscroll),
+		preload_code: levels[preload_code ?? 'false'],
+		preload_data: levels[preload_data ?? 'false'],
 		reload: get_option_state(reload),
-		replace_state: get_option_state(replace_state)
-	};
-}
-
-/** @param {any} value */
-export function notifiable_store(value) {
-	const store = writable(value);
-	let ready = true;
-
-	function notify() {
-		ready = true;
-		store.update((val) => val);
-	}
-
-	/** @param {any} new_value */
-	function set(new_value) {
-		ready = false;
-		store.set(new_value);
-	}
-
-	/** @param {(value: any) => void} run */
-	function subscribe(run) {
-		/** @type {any} */
-		let old_value;
-		return store.subscribe((new_value) => {
-			if (old_value === undefined || (ready && new_value !== old_value)) {
-				run((old_value = new_value));
-			}
-		});
-	}
-
-	return { notify, set, subscribe };
-}
-
-export const updated_listener = {
-	v: noop
-};
-
-export function create_updated_store() {
-	const { set, subscribe } = writable(false);
-
-	if (__SVELTEKIT_DEV__ || !BROWSER) {
-		return {
-			subscribe,
-			// eslint-disable-next-line @typescript-eslint/require-await
-			check: async () => false
-		};
-	}
-
-	const interval = __SVELTEKIT_APP_VERSION_POLL_INTERVAL__;
-
-	/** @type {NodeJS.Timeout} */
-	let timeout;
-
-	/** @type {() => Promise<boolean>} */
-	async function check() {
-		clearTimeout(timeout);
-
-		if (interval) timeout = setTimeout(check, interval);
-
-		try {
-			const res = await fetch(`${assets}/${__SVELTEKIT_APP_VERSION_FILE__}`, {
-				headers: {
-					pragma: 'no-cache',
-					'cache-control': 'no-cache'
-				}
-			});
-
-			if (!res.ok) {
-				return false;
-			}
-
-			const data = await res.json();
-			const updated = data.version !== version;
-
-			if (updated) {
-				set(true);
-				updated_listener.v();
-				clearTimeout(timeout);
-			}
-
-			return updated;
-		} catch {
-			return false;
-		}
-	}
-
-	if (interval) timeout = setTimeout(check, interval);
-
-	return {
-		subscribe,
-		check
+		replace_state: get_option_state(replace_state),
+		reset: get_option_state(reset) ?? true
 	};
 }
 

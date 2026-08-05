@@ -1,6 +1,6 @@
 /** @typedef {Record<string, string[]>} Query */
 
-/** @param {URLSearchParams} query */
+/** @param {import("@sveltejs/kit").ReadonlyURLSearchParams} query */
 export function to_pojo(query) {
 	/** @type {Query}*/
 	const values = {};

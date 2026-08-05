@@ -5,7 +5,7 @@
 </script>
 
 <button
-	on:click={async () => {
+	onclick={async () => {
 		try {
 			await goto('https://example.com');
 		} catch (e) {

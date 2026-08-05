@@ -16,11 +16,11 @@
 </script>
 
 <p>Hi</p>
-<button on:click={() => request('GET')}>GET</button>
-<button on:click={() => request('PUT')}>PUT</button>
-<button on:click={() => request('PATCH')}>PATCH</button>
-<button on:click={() => request('POST')}>POST</button>
-<button on:click={() => request('DELETE')}>DELETE</button>
+<button onclick={() => request('GET')}>GET</button>
+<button onclick={() => request('PUT')}>PUT</button>
+<button onclick={() => request('PATCH')}>PATCH</button>
+<button onclick={() => request('POST')}>POST</button>
+<button onclick={() => request('DELETE')}>DELETE</button>
 <pre>{result}</pre>
 
 <form method="POST" use:enhance>

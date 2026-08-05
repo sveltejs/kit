@@ -30,16 +30,24 @@ export function coalesce_to_error(err) {
  * @param {unknown} error
  */
 export function normalize_error(error) {
-	return /** @type {import('../exports/internal/index.js').Redirect | HttpError | SvelteKitError | Error} */ (
+	return /** @type {import('../exports/internal/shared.js').Redirect | HttpError | SvelteKitError | Error} */ (
 		error
 	);
 }
 
 /**
- * @param {unknown} error
+ * @param {any} transformed
+ * @param {any} [error]
  */
-export function get_status(error) {
-	return error instanceof HttpError || error instanceof SvelteKitError ? error.status : 500;
+export function get_status(transformed, error) {
+	const err = error ?? transformed;
+	const status = err instanceof HttpError || err instanceof SvelteKitError ? err.status : 500;
+
+	if (error == null || typeof transformed?.status !== 'number') {
+		return status;
+	} else {
+		return transformed.status;
+	}
 }
 
 /**

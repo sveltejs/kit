@@ -8,7 +8,8 @@
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync",
 		"check": "svelte-kit sync && tsc && svelte-check",
-		"test": "playwright test"
+		"test": "pnpm test:build",
+		"test:build": "playwright test"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-node": "workspace:^",
@@ -18,6 +19,10 @@
 		"svelte-check": "catalog:",
 		"typescript": "catalog:",
 		"vite": "catalog:"
+	},
+	"imports": {
+		"#lib": "./src/lib/index.js",
+		"#lib/*": "./src/lib/*"
 	},
 	"type": "module"
 }

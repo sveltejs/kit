@@ -6,11 +6,10 @@ import { tick } from 'svelte';
 // virtual module that only exists during a real SvelteKit build. We only need
 // the cache `Map`s and a stub `app` for the proxy's interaction with the cache.
 vi.mock(new URL('../../client.js', import.meta.url).pathname, () => ({
-	app: { hooks: { transport: {} }, decoders: {} },
 	query_map: new Map(),
 	query_responses: {},
 	live_query_map: new Map(),
-	goto: () => Promise.resolve()
+	_goto: () => Promise.resolve()
 }));
 
 vi.mock(new URL('./instance.svelte.js', import.meta.url).pathname, () => {

@@ -1,21 +1,18 @@
-import './shims.js';
 import fs from 'node:fs';
-import path from 'node:path';
+import path, { extname } from 'node:path';
 import process from 'node:process';
 import sirv from 'sirv';
 import { parse as polka_url_parser } from '@polka/url';
 import { getRequest, setResponse, createReadableStream } from '@sveltejs/kit/node';
 import { Server } from 'SERVER';
-import { manifest } from 'MANIFEST';
-import { dir, env, env_prefix } from './env.js';
-import { parse_as_bytes, parse_origin } from '../utils.js';
-
-const prerendered = PRERENDERED;
+import { manifest, prerendered, base, uncompressed_extensions } from 'MANIFEST';
+import { dir } from './dir.js';
+import { env, env_prefix } from './env.js';
+import { parse_as_bytes } from './utils.js';
 
 const server = new Server(manifest);
 
-// parse_origin validates ORIGIN and throws descriptive errors for invalid values
-const origin = parse_origin(env('ORIGIN', undefined));
+const origin = ORIGIN;
 
 const xff_depth = parseInt(env('XFF_DEPTH', '1'));
 const address_header = env('ADDRESS_HEADER', '').toLowerCase();
@@ -31,10 +28,10 @@ if (isNaN(body_size_limit)) {
 	);
 }
 
-const asset_dir = `${dir}/client${BASE}`;
+const asset_dir = `${dir}/client${base}`;
 
 await server.init({
-	env: /** @type {Record<string, string>} */ (process.env),
+	env: process.env,
 	read: (file) => createReadableStream(`${asset_dir}/${file}`)
 });
 
@@ -48,19 +45,41 @@ function serve(path, client = false) {
 				etag: true,
 				gzip: PRECOMPRESS,
 				brotli: PRECOMPRESS,
-				setHeaders: client
-					? (res, pathname) => {
-							// only apply to build directory, not e.g. version.json
-							if (
-								pathname.startsWith(`/${manifest.appPath}/immutable/`) &&
-								res.statusCode === 200
-							) {
-								res.setHeader('cache-control', 'public,max-age=31536000,immutable');
-							}
-						}
-					: undefined
+				setHeaders: (res, pathname) => {
+					// `sirv` sets `Vary` from its options rather than from the file it resolved
+					if (PRECOMPRESS && uncompressed_extensions.has(extname(pathname))) {
+						res.removeHeader('vary');
+					}
+
+					// `sirv` uses its own bundled `mrmime`, which the manifest's added types never reach
+					let type = manifest.mimeTypes[pathname.slice(pathname.lastIndexOf('.'))];
+					if (type === 'text/html') type += ';charset=utf-8';
+					if (type) res.setHeader('content-type', type);
+
+					// only apply to build directory, not e.g. version.json
+					if (
+						client &&
+						pathname.startsWith(`/${manifest.appPath}/immutable/`) &&
+						res.statusCode === 200
+					) {
+						res.setHeader('cache-control', 'public,max-age=31536000,immutable');
+					}
+				}
 			})
 		: undefined;
+}
+
+/**
+ * Relative reference from `from` to `to`, which must differ only by a trailing slash.
+ * Keep in sync with the copy in `packages/kit/src/utils/url.js`
+ * @param {string} from
+ * @param {string} to
+ * @returns {string}
+ */
+function relative_pathname(from, to) {
+	const segment = to.replace(/\/$/, '').split('/').at(-1);
+
+	return from.endsWith('/') ? `../${segment}` : `${segment}/`;
 }
 
 // required because the static file server ignores trailing slashes
@@ -82,9 +101,9 @@ function serve_prerendered() {
 		}
 
 		// remove or add trailing slash as appropriate
-		let location = pathname.at(-1) === '/' ? pathname.slice(0, -1) : pathname + '/';
-		if (prerendered.has(location)) {
-			if (query) location += search;
+		const inverted = pathname.at(-1) === '/' ? pathname.slice(0, -1) : pathname + '/';
+		if (prerendered.has(inverted)) {
+			const location = relative_pathname(pathname, inverted) + (query ? search : '');
 			res.writeHead(308, { location }).end();
 		} else {
 			void next();
@@ -96,10 +115,24 @@ function serve_prerendered() {
 const ssr = async (req, res) => {
 	/** @type {Request} */
 	let request;
+	let request_origin = origin;
+
+	if (!request_origin) {
+		try {
+			request_origin = get_origin(req.headers);
+		} catch (error) {
+			console.error(
+				`Could not determine request origin: ${error instanceof Error ? error.message : String(error)}`
+			);
+			res.statusCode = 400;
+			res.end('Bad Request');
+			return;
+		}
+	}
 
 	try {
-		request = await getRequest({
-			base: origin || get_origin(req.headers),
+		request = getRequest({
+			base: request_origin,
 			request: req,
 			bodySizeLimit: body_size_limit
 		});
@@ -162,7 +195,7 @@ const ssr = async (req, res) => {
 		response.headers.set('x-accel-buffering', 'no');
 	}
 
-	await setResponse(res, response);
+	setResponse(res, response);
 };
 
 /** @param {import('polka').Middleware[]} handlers */

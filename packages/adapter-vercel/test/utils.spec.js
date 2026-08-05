@@ -176,12 +176,12 @@ describe('parse_isr_expiration', () => {
 
 describe('resolve_runtime', () => {
 	test('prefers override_key over default_key', () => {
-		const result = resolve_runtime('nodejs20.x', 'experimental_bun1.x');
+		const result = resolve_runtime('nodejs20.x', 'bun1.x');
 		assert.equal(result, 'bun1.x');
 	});
 
 	test('uses default_key when override_key is undefined', () => {
-		const result = resolve_runtime('experimental_bun1.x');
+		const result = resolve_runtime('bun1.x');
 		assert.equal(result, 'bun1.x');
 	});
 

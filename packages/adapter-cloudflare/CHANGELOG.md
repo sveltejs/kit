@@ -1,5 +1,62 @@
 # @sveltejs/adapter-cloudflare
 
+## 8.0.0-next.4
+
+### Patch Changes
+
+- fix: avoid caching immutable asset 404s ([#16627](https://github.com/sveltejs/kit/pull/16627))
+- Updated dependencies [[`c3f58bb`](https://github.com/sveltejs/kit/commit/c3f58bb0eb6bde790897f1e8b89019bc39a062e5), [`b655dc7`](https://github.com/sveltejs/kit/commit/b655dc7cf043ff01d53e494e9744e548bb3ad9fd), [`a70cc4f`](https://github.com/sveltejs/kit/commit/a70cc4f2ca24e7099c898456085ffe18d191657e), [`b325afb`](https://github.com/sveltejs/kit/commit/b325afb509b54445f678348e88ea2bf0152f4cec), [`e76b3d7`](https://github.com/sveltejs/kit/commit/e76b3d778bacb429fdb40a41b13ff04b54d97c1f), [`58f47eb`](https://github.com/sveltejs/kit/commit/58f47eb94016c5405829667bbc873e027c7b363c), [`fe9d8d9`](https://github.com/sveltejs/kit/commit/fe9d8d939b6d1a07b2957104fda6a1123f5eebd3), [`0c7bbd7`](https://github.com/sveltejs/kit/commit/0c7bbd7bd4a346c560e7cbf9b39ba8bda7c718f0), [`08d7e2a`](https://github.com/sveltejs/kit/commit/08d7e2a1b327d4e68c217f6e7d6b305732c82b1b), [`f70f679`](https://github.com/sveltejs/kit/commit/f70f679143d4330b6d3b7d0e690145b5487df97f), [`0624b26`](https://github.com/sveltejs/kit/commit/0624b2678efd41223f70972f7bff2d81d4a5c7f9), [`0624b26`](https://github.com/sveltejs/kit/commit/0624b2678efd41223f70972f7bff2d81d4a5c7f9), [`f4222ad`](https://github.com/sveltejs/kit/commit/f4222adc504a7041b50325424a3eb86af02961ed), [`089628b`](https://github.com/sveltejs/kit/commit/089628b0d9637578085ad61b5786cd1c4476e399), [`d8617b3`](https://github.com/sveltejs/kit/commit/d8617b3f2f08144f6acfc7c636b89d62b982a33d), [`c7369a1`](https://github.com/sveltejs/kit/commit/c7369a148169dfd51af150c461ff266977b6befd), [`5e5e592`](https://github.com/sveltejs/kit/commit/5e5e592f093d05c6ea30a41a0ebf543829069c5f), [`60057c1`](https://github.com/sveltejs/kit/commit/60057c1d2a1e6429e5f315d587ebc01baef6dc94), [`f70f679`](https://github.com/sveltejs/kit/commit/f70f679143d4330b6d3b7d0e690145b5487df97f), [`38f1528`](https://github.com/sveltejs/kit/commit/38f15289e249942275eab1281516702de08b7a30), [`40092f3`](https://github.com/sveltejs/kit/commit/40092f34aa063d033fc7a4d1d6fb1c10abd8cbf6), [`ff4247e`](https://github.com/sveltejs/kit/commit/ff4247e2376862207dd9df7317f39d8bb8dd9ee4), [`79a5de5`](https://github.com/sveltejs/kit/commit/79a5de581fc1bb708879678b8295706221ba0f0f), [`a70cc4f`](https://github.com/sveltejs/kit/commit/a70cc4f2ca24e7099c898456085ffe18d191657e)]:
+  - @sveltejs/kit@3.0.0-next.14
+
+## 8.0.0-next.3
+
+### Patch Changes
+
+- chore: bump `@cloudflare/workers-types` to `4.20260621.1` ([#16455](https://github.com/sveltejs/kit/pull/16455))
+- Updated dependencies [[`adc4c5b`](https://github.com/sveltejs/kit/commit/adc4c5be542ecf7da93ee8d0e90e9d13b952998b), [`ecb0701`](https://github.com/sveltejs/kit/commit/ecb0701b8826e41229f84922f37c12099c66d3bc), [`4b4cc60`](https://github.com/sveltejs/kit/commit/4b4cc60990fa940236639a6cecb6c8efe4287bfa), [`7390dbe`](https://github.com/sveltejs/kit/commit/7390dbe6ef8dff0a1cd923f96daef462a3ce68f2), [`2e71340`](https://github.com/sveltejs/kit/commit/2e713407deb22965777afb01cb8215013ef8bfd3), [`c87bc3a`](https://github.com/sveltejs/kit/commit/c87bc3ac7830f8ee4e76254c9315adcc79ff6a99), [`af15c6c`](https://github.com/sveltejs/kit/commit/af15c6cab2fbfe6bae51dc1fa77a9271df996a47), [`c6fa431`](https://github.com/sveltejs/kit/commit/c6fa43157ae0dbaa9fc61b7e8d2db673e1f9f893), [`bfe4dea`](https://github.com/sveltejs/kit/commit/bfe4deae006f61347b5a5dce7747ec96692e97f9), [`df7dc72`](https://github.com/sveltejs/kit/commit/df7dc7219451bcc86a93e93188d78d664973d9ae), [`5ae11a1`](https://github.com/sveltejs/kit/commit/5ae11a119667c1b24e3b6d17f4b538032ddf1ab1), [`781205c`](https://github.com/sveltejs/kit/commit/781205c41cc5696eb862e5c13356c301a0368983), [`c87bc3a`](https://github.com/sveltejs/kit/commit/c87bc3ac7830f8ee4e76254c9315adcc79ff6a99), [`a1bfeb9`](https://github.com/sveltejs/kit/commit/a1bfeb9de906ae140b9cdc7d7eeaf0ee652a7bcc), [`c87bc3a`](https://github.com/sveltejs/kit/commit/c87bc3ac7830f8ee4e76254c9315adcc79ff6a99), [`9f0127d`](https://github.com/sveltejs/kit/commit/9f0127d4eee3f17dc1db1d2b99b1ca5fc80af784), [`4b4cc60`](https://github.com/sveltejs/kit/commit/4b4cc60990fa940236639a6cecb6c8efe4287bfa), [`8f5b9c7`](https://github.com/sveltejs/kit/commit/8f5b9c72ae930b3b93ef9e1b9ecb9e52664e1d74), [`c9b5544`](https://github.com/sveltejs/kit/commit/c9b554448633e1839e8c0f16c374b00a5ce4d1b6), [`fe1d4a4`](https://github.com/sveltejs/kit/commit/fe1d4a4d68d1d7a3925004fe804209ff54091e34), [`4b4cc60`](https://github.com/sveltejs/kit/commit/4b4cc60990fa940236639a6cecb6c8efe4287bfa), [`5f78e95`](https://github.com/sveltejs/kit/commit/5f78e953ae3966c23a01194dd200f5c57f723e40), [`25510fc`](https://github.com/sveltejs/kit/commit/25510fc79484363277d062e01f2b872f17a473f5), [`c99a6cf`](https://github.com/sveltejs/kit/commit/c99a6cfb7fec133aa85a6de59b43fc442aedc41a), [`17a45ca`](https://github.com/sveltejs/kit/commit/17a45cadb9356403b82c170f0d0027a1ba085667), [`2ca20c3`](https://github.com/sveltejs/kit/commit/2ca20c3ee7348836757dc6f3469217e46957766b), [`eb5c973`](https://github.com/sveltejs/kit/commit/eb5c9737b6d74c53f572b3e047faa5947052ced2)]:
+  - @sveltejs/kit@3.0.0-next.12
+
+## 8.0.0-next.2
+
+### Patch Changes
+
+- fix: allow prerelease versions of SvelteKit 3 to satisfy the peer dependency range ([#16286](https://github.com/sveltejs/kit/pull/16286))
+- Updated dependencies [[`737d119`](https://github.com/sveltejs/kit/commit/737d119730ec163832f838b3813c9cbb75dd799f), [`fa78efb`](https://github.com/sveltejs/kit/commit/fa78efb626031497eecc3a88fa7b6f6da36eca0f), [`07c207e`](https://github.com/sveltejs/kit/commit/07c207ed919570d4ed4954f751056b4f838abdea), [`a47071b`](https://github.com/sveltejs/kit/commit/a47071bb6581fe5f6df4cc47b80e9f0f594624e5), [`14d7d5a`](https://github.com/sveltejs/kit/commit/14d7d5abd9cd8462e4c79ed6a5c10bc43258e97a), [`5c38e51`](https://github.com/sveltejs/kit/commit/5c38e515db7fbb92e5ae01db84b4f0040a02f187), [`0702baa`](https://github.com/sveltejs/kit/commit/0702baa58b2a4600e83b55ef4a85e9cbe3391a4f), [`e1938c6`](https://github.com/sveltejs/kit/commit/e1938c62348b8ccc83e186b1acad76a0a10cc9ea), [`8293144`](https://github.com/sveltejs/kit/commit/8293144b6fbfff9f97cdb1d2224a5eaa04c84fc4), [`f76d7d9`](https://github.com/sveltejs/kit/commit/f76d7d91e18a0afd1f6798c095eb8c170c108cff), [`ab5c253`](https://github.com/sveltejs/kit/commit/ab5c253efb2546ead74db4c8c9b4c7639d97e0ed), [`b557b1b`](https://github.com/sveltejs/kit/commit/b557b1ba76903e1fb0fc3bb87bddc5420332137a), [`4a513e2`](https://github.com/sveltejs/kit/commit/4a513e27ab2ad44dae0c6a4a6c8deda840008530)]:
+  - @sveltejs/kit@3.0.0-next.8
+
+## 8.0.0-next.1
+### Patch Changes
+
+
+- fix: avoid overriding user's existing `_headers` rules ([#16183](https://github.com/sveltejs/kit/pull/16183))
+
+- Updated dependencies [[`3c434fb`](https://github.com/sveltejs/kit/commit/3c434fbf12822e19bea833a2084b329590ccf5b1), [`a9284e8`](https://github.com/sveltejs/kit/commit/a9284e8e627b1b0a8d3772c53310c41056e556b1), [`3726a7a`](https://github.com/sveltejs/kit/commit/3726a7a67c949a160283df7db6033b440e229171), [`f9d2240`](https://github.com/sveltejs/kit/commit/f9d22409aa0fca0f5035aead811fe6907f63c293), [`a9284e8`](https://github.com/sveltejs/kit/commit/a9284e8e627b1b0a8d3772c53310c41056e556b1), [`7c040ba`](https://github.com/sveltejs/kit/commit/7c040ba28e98ecbf38acbbf93653fc6c33a506ba), [`223eaad`](https://github.com/sveltejs/kit/commit/223eaadca55c6e73096cd605759d6c7366f260a2), [`223eaad`](https://github.com/sveltejs/kit/commit/223eaadca55c6e73096cd605759d6c7366f260a2), [`3b907d4`](https://github.com/sveltejs/kit/commit/3b907d449a42f9d763cf8eaa6ac5a88975137011), [`fd628a5`](https://github.com/sveltejs/kit/commit/fd628a57348d25fb433f63778e0239892ebb1da2), [`223eaad`](https://github.com/sveltejs/kit/commit/223eaadca55c6e73096cd605759d6c7366f260a2), [`6c1d035`](https://github.com/sveltejs/kit/commit/6c1d03535b09f670164eb22f05405c17120149f1), [`178eac0`](https://github.com/sveltejs/kit/commit/178eac007e648f3235bc45d926cfc029ddf8de07), [`c6562a9`](https://github.com/sveltejs/kit/commit/c6562a92cb908058cab3fabad075a94ad9cc6e39), [`8eca2ab`](https://github.com/sveltejs/kit/commit/8eca2ab8b4760456a782d7a29f83f24a15fac177), [`61cf188`](https://github.com/sveltejs/kit/commit/61cf188e38725b041d0411c6074ad2649a7c42b4)]:
+  - @sveltejs/kit@3.0.0-next.6
+
+## 8.0.0-next.0
+### Major Changes
+
+
+- breaking: upgrade `@cloudflare/workers-types` to 4.20260219.0 ([#15347](https://github.com/sveltejs/kit/pull/15347))
+
+
+- breaking: upgrade minimum `wrangler` version to ^4.67.0 ([#15347](https://github.com/sveltejs/kit/pull/15347))
+
+
+- breaking: remove `platform.context` in favour of `platform.ctx` ([#15347](https://github.com/sveltejs/kit/pull/15347))
+
+
+- breaking: require SvelteKit 3 ([#15506](https://github.com/sveltejs/kit/pull/15506))
+
+
+### Patch Changes
+
+
+- chore: check the `WORKERS_CI` environment variable to determine if we're building for Cloudflare Workers ([#13733](https://github.com/sveltejs/kit/pull/13733))
+
+- Updated dependencies [[`fa335bd`](https://github.com/sveltejs/kit/commit/fa335bd8af3a982d68c4d34b813b68887dc7cce8), [`3031d89`](https://github.com/sveltejs/kit/commit/3031d89087d49297e89b6566108a1a1105c38475), [`cb9d416`](https://github.com/sveltejs/kit/commit/cb9d416d05266b6237f2856fb94df5b8a9b04279), [`caf3a18`](https://github.com/sveltejs/kit/commit/caf3a18de6581ab7d454d6fa8ad37ebdbdef95e6), [`4777827`](https://github.com/sveltejs/kit/commit/4777827246727045cf0209399751377564e7951d), [`a2792e2`](https://github.com/sveltejs/kit/commit/a2792e2cdc2dee91c20c7bfd921a104b539abae5), [`ba36148`](https://github.com/sveltejs/kit/commit/ba36148577ed0bc2675034a3d57001d71d328cd1), [`48e8710`](https://github.com/sveltejs/kit/commit/48e8710889b348a039322e05f3d2672327d56184), [`e2f3075`](https://github.com/sveltejs/kit/commit/e2f3075ef299b91175fae116e6a76269002029cf), [`047d6a0`](https://github.com/sveltejs/kit/commit/047d6a0f1c3fd1bc6f90a81177a2834b023a64b3), [`87603d1`](https://github.com/sveltejs/kit/commit/87603d13d009cada171c9b5d5daad5adad4f72de), [`096962c`](https://github.com/sveltejs/kit/commit/096962c47b0b0f63acd0d539d3973797e4867487), [`d545970`](https://github.com/sveltejs/kit/commit/d54597018308068aea5268e6c45b26398cd57607), [`e2f3075`](https://github.com/sveltejs/kit/commit/e2f3075ef299b91175fae116e6a76269002029cf), [`d06affc`](https://github.com/sveltejs/kit/commit/d06affc9246c676fc32b644efc0bbf53b42bc67d), [`8af47eb`](https://github.com/sveltejs/kit/commit/8af47eb06f9a1a883058de059ccf81aab4e85627), [`e2f3075`](https://github.com/sveltejs/kit/commit/e2f3075ef299b91175fae116e6a76269002029cf), [`5c4d130`](https://github.com/sveltejs/kit/commit/5c4d130ea2953464d8b4b462eb5aa4641aa78da1), [`3f11f35`](https://github.com/sveltejs/kit/commit/3f11f35125c5b3625891f0d00d9c7c826e6eaea2), [`caf3a18`](https://github.com/sveltejs/kit/commit/caf3a18de6581ab7d454d6fa8ad37ebdbdef95e6), [`8823037`](https://github.com/sveltejs/kit/commit/8823037b4a341013cc40a9bb688ee23bda3dbb04), [`1d76212`](https://github.com/sveltejs/kit/commit/1d76212740f59ed58839ef569899c653870834fd), [`0dc0548`](https://github.com/sveltejs/kit/commit/0dc0548307a439b6a6f24b14405366ced213f828), [`00d81fa`](https://github.com/sveltejs/kit/commit/00d81fab618435bac95b1bacb5e9734b61ba1af6)]:
+  - @sveltejs/kit@3.0.0-next.0
+
 ## 7.2.9
 ### Patch Changes
 

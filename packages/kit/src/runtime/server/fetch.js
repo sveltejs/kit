@@ -1,10 +1,10 @@
-import * as set_cookie_parser from 'set-cookie-parser';
+import { parseSetCookie } from 'cookie';
 import { noop } from '../../utils/functions.js';
-import { get_set_cookies } from '../../utils/http.js';
 import { respond } from './respond.js';
 import * as paths from '$app/paths/internal/server';
-import { read_implementation } from '__sveltekit/server';
+import { read_implementation } from './internal.js';
 import { has_prerendered_path } from './utils.js';
+import { fork_state_for_subrequest } from './state.js';
 
 /**
  * @param {{
@@ -83,9 +83,8 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 
 				// handle fetch requests for static assets. e.g. prebaked data, etc.
 				// we need to support everything the browser's fetch supports
-				const prefix = paths.assets || paths.base;
 				const filename = (
-					decoded.startsWith(prefix) ? decoded.slice(prefix.length) : decoded
+					decoded.startsWith(paths.assets) ? decoded.slice(paths.assets.length) : decoded
 				).slice(1);
 				const filename_html = `${filename}/index.html`; // path may also match path/index.html
 
@@ -119,7 +118,7 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 					return await fetch(request);
 				}
 
-				if (has_prerendered_path(manifest, paths.base + decoded)) {
+				if (has_prerendered_path(manifest, decoded)) {
 					// The path of something prerendered could match a different route
 					// that is still in the manifest, leading to the wrong route being loaded.
 					// We therefore bail early here. The prerendered logic is different for
@@ -144,27 +143,23 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 					request.headers.set('accept', '*/*');
 				}
 
-				if (!request.headers.has('accept-language')) {
-					request.headers.set(
-						'accept-language',
-						/** @type {string} */ (event.request.headers.get('accept-language'))
-					);
+				const accept_language = event.request.headers.get('accept-language');
+				if (accept_language && !request.headers.has('accept-language')) {
+					request.headers.set('accept-language', accept_language);
 				}
 
 				const response = await internal_fetch(request, options, manifest, state);
 
-				for (const str of get_set_cookies(response.headers)) {
-					const { name, value, ...options } = set_cookie_parser.parseString(str, {
-						decodeValues: false
-					});
+				for (const str of response.headers.getSetCookie()) {
+					const { name, value, ...options } = parseSetCookie(str, { decode: (v) => v });
 
 					const path = options.path ?? (url.pathname.split('/').slice(0, -1).join('/') || '/');
 
 					// options.sameSite is string, something more specific is required - type cast is safe
-					set_internal(name, value, {
+					set_internal(name, /** @type {string} */ (value), {
 						path,
 						encode: (value) => value,
-						.../** @type {import('cookie').CookieSerializeOptions} */ (options)
+						.../** @type {import('cookie').SerializeOptions} */ (options)
 					});
 				}
 
@@ -204,6 +199,8 @@ function normalize_fetch_input(info, init, url) {
  * @returns {Promise<Response>}
  */
 async function internal_fetch(request, options, manifest, state) {
+	const subrequest_state = fork_state_for_subrequest(state);
+
 	if (request.signal) {
 		if (request.signal.aborted) {
 			throw new DOMException('The operation was aborted.', 'AbortError');
@@ -220,18 +217,12 @@ async function internal_fetch(request, options, manifest, state) {
 		});
 
 		const result = await Promise.race([
-			respond(request, options, manifest, {
-				...state,
-				depth: state.depth + 1
-			}),
+			respond(request, options, manifest, subrequest_state),
 			abort_promise
 		]);
 		remove_abort_listener();
 		return result;
 	} else {
-		return await respond(request, options, manifest, {
-			...state,
-			depth: state.depth + 1
-		});
+		return await respond(request, options, manifest, subrequest_state);
 	}
 }

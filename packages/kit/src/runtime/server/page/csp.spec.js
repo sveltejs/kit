@@ -1,14 +1,8 @@
-import { webcrypto } from 'node:crypto';
-import { assert, beforeAll, test, describe } from 'vitest';
+import process from 'node:process';
+import { assert, test, describe, beforeAll } from 'vitest';
 import { Csp } from './csp.js';
 
-// TODO: remove after bumping peer dependency to require Node 20
-if (!globalThis.crypto) {
-	// @ts-expect-error
-	globalThis.crypto = webcrypto;
-}
-
-describe('CSPs in dev', () => {
+describe.skipIf(!process.env.DEV)('CSPs in dev', () => {
 	beforeAll(() => {
 		// @ts-expect-error
 		globalThis.__SVELTEKIT_DEV__ = true;
@@ -48,6 +42,7 @@ describe('CSPs in dev', () => {
 		);
 	});
 
+	// TODO: re-enable when we support strict-dynamic in dev again
 	test.skip('removes strict-dynamic', () => {
 		['default-src', 'script-src'].forEach((name) => {
 			const csp = new Csp(
@@ -74,7 +69,7 @@ describe('CSPs in dev', () => {
 	});
 });
 
-describe('CSPs in prod', () => {
+describe.skipIf(!!process.env.DEV)('CSPs in prod', () => {
 	beforeAll(() => {
 		// @ts-expect-error
 		globalThis.__SVELTEKIT_DEV__ = false;

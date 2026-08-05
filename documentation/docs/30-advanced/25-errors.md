@@ -6,7 +6,7 @@ Errors are an inevitable fact of software development. SvelteKit handles errors 
 
 ## Error objects
 
-SvelteKit distinguishes between expected and unexpected errors, both of which are represented as simple `{ message: string }` objects by default.
+SvelteKit distinguishes between expected and unexpected errors, both of which are represented as simple `{ status: number, message: string }` objects by default.
 
 You can add additional properties, like a `code` or a tracking `id`, as shown in the examples below. (When using TypeScript this requires you to redefine the `Error` type as described in  [type safety](errors#Type-safety)).
 
@@ -17,44 +17,39 @@ An _expected_ error is one created with the [`error`](@sveltejs-kit#error) helpe
 ```js
 /// file: src/routes/blog/[slug]/+page.server.js
 // @filename: ambient.d.ts
-declare module '$lib/server/database' {
+declare module '#lib/server/database' {
 	export function getPost(slug: string): Promise<{ title: string, content: string } | undefined>
 }
 
 // @filename: index.js
 // ---cut---
 import { error } from '@sveltejs/kit';
-import * as db from '$lib/server/database';
+import * as db from '#lib/server/database';
 
 /** @type {import('./$types').PageServerLoad} */
 export async function load({ params }) {
 	const post = await db.getPost(params.slug);
 
 	if (!post) {
-		error(404, {
-			message: 'Not found'
-		});
+		error(404, 'Not found');
 	}
 
 	return { post };
 }
 ```
 
-This throws an exception that SvelteKit catches, causing it to set the response status code to 404 and render an [`+error.svelte`](routing#error) component, where `page.error` is the object provided as the second argument to `error(...)`.
+This throws an exception that SvelteKit catches, causing it to set the response status code to 404 and render an [`+error.svelte`](routing#error) component, where the `error` is an `App.Error` object with the provided `status` and `message`.
 
 ```svelte
 <!--- file: src/routes/+error.svelte --->
 <script>
-	import { page } from '$app/state';
+	let { error } = $props();
 </script>
 
-<h1>{page.error.message}</h1>
+<h1>{error.message}</h1>
 ```
 
-> [!LEGACY]
-> `$app/state` was added in SvelteKit 2.12. If you're using an earlier version or are using Svelte 4, use `$app/stores` instead.
-
-You can add extra properties to the error object if needed...
+You can add extra properties to the error object if needed:
 
 ```js
 // @filename: ambient.d.ts
@@ -71,19 +66,9 @@ export {}
 // @filename: index.js
 import { error } from '@sveltejs/kit';
 // ---cut---
-error(404, {
-	message: 'Not found',
+error(404, 'Not found', {
 	+++code: 'NOT_FOUND'+++
 });
-```
-
-...otherwise, for convenience, you can pass a string as the second argument:
-
-```js
-import { error } from '@sveltejs/kit';
-// ---cut---
----error(404, { message: 'Not found' });---
-+++error(404, 'Not found');+++
 ```
 
 > [!NOTE] [In SvelteKit 1.x](migrating-to-sveltekit-2#redirect-and-error-are-no-longer-thrown-by-you) you had to `throw` the `error` yourself
@@ -95,55 +80,41 @@ An _unexpected_ error is any other exception that occurs while handling a reques
 By default, unexpected errors are printed to the console (or, in production, your server logs), while the error that is exposed to the user has a generic shape:
 
 ```json
-{ "message": "Internal Error" }
+{ "status": 500, "message": "Internal Error" }
 ```
 
-Unexpected errors will go through the [`handleError`](hooks#handleError) hook, where you can add your own error handling — for example, sending errors to a reporting service, or returning a custom error object which becomes `page.error`.
+Unexpected errors will go through the [`handleError`](hooks#handleError) hook, where you can add your own error handling — for example, sending errors to a reporting service, or returning a custom error object which becomes the `error` prop passed to `+error.svelte`.
 
-## Rendering errors
-
-Ordinarily, if an error happens during server-side rendering (for example inside a component's `<script>` block or template), SvelteKit will return a 500 error page.
-
-Since SvelteKit 2.54 and Svelte 5.53, you can change this by enabling the experimental `handleRenderingErrors` option in your config:
+You can override the HTTP status code used in the response by returning a `status` property:
 
 ```js
-/// file: svelte.config.js
-// @errors: 2353
-/** @type {import('@sveltejs/kit').Config} */
-const config = {
-	kit: {
-		experimental: {
-			handleRenderingErrors: true
-		}
+/// file: src/hooks.server.js
+// Assuming you have this ...
+class NotFound extends Error {}
+
+/** @type {import('@sveltejs/kit').HandleServerError} */
+export function handleError({ error, event, status, message }) {
+	// ... you can do this
+	if (error instanceof NotFound) {
+		return {
+			status: 404,
+			message: 'Not found'
+		};
 	}
-};
 
-export default config;
+	return { message: 'Something went wrong' };
+}
 ```
 
-When this is enabled, SvelteKit will wrap your route components in an error boundary. If an error occurs during rendering, the nearest [`+error.svelte`](routing#error) page will be shown, just as if the error had occurred in a `load` function.
+## Error boundaries
 
-The error is first passed to [`handleError`](hooks#handleError), allowing you to report it and transform it, before the resulting object is passed to the `+error.svelte` component.
-
-> [!NOTE]
-> Since rendering errors occur after the page has started rendering, and multiple boundaries could in parallel catch distinct errors, the [`page`]($app-state#page) object (and its `error` property) will not be updated. Instead, the error is passed directly to the `+error.svelte` component as a prop.
-
-```svelte
-<!--- file: +error.svelte --->
-<script>
-	let { error } = $props();
-</script>
-
-<h1>{error.message}</h1>
-```
-
-The same applies for other error boundaries you define in your code:
+Errors that occur during `load` or rendering (for example inside a component's `<script>` block or template) bubble up to the nearest `+error.svelte` component. To handle errors at a more granular level, you can use a [`<svelte:boundary>`](../svelte/svelte-boundary):
 
 ```svelte
 <svelte:boundary>
 	...
 	{#snippet failed(error: App.Error)}
-		<!-- error went through handleError and is of type App.Error -->
+		<!-- error went through the `handleError` hook and is of type `App.Error` -->
 		{error.message}
 	{/snippet}
 </svelte:boundary>
@@ -194,7 +165,7 @@ declare global {
 export {};
 ```
 
-This interface always includes a `message: string` property.
+This interface always includes `status: number` and `message: string` properties.
 
 ## Further reading
 

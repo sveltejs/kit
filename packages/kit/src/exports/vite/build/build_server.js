@@ -1,7 +1,6 @@
 /** @import { AssetDependencies, ManifestData, SSRNode, ValidatedKitConfig } from 'types' */
-/** @import { Manifest, Rollup } from 'vite' */
+/** @import { Manifest, Rolldown } from 'vite' */
 import fs from 'node:fs';
-import { mkdirp } from '../../../utils/filesystem.js';
 import {
 	create_function_as_string,
 	filter_fonts,
@@ -22,7 +21,8 @@ import { escape_for_interpolation } from '../../../utils/escape.js';
  * @param {Manifest} server_manifest
  * @param {Manifest | null} client_manifest
  * @param {string} assets_path
- * @param {(Rollup.OutputAsset | Rollup.OutputChunk)[]} chunks
+ * @param {(Rolldown.OutputAsset | Rolldown.OutputChunk)[]} chunks
+ * @param {string} root
  * @returns {void}
  */
 export function build_server_nodes(
@@ -32,10 +32,11 @@ export function build_server_nodes(
 	server_manifest,
 	client_manifest,
 	assets_path,
-	chunks
+	chunks,
+	root
 ) {
-	mkdirp(`${out}/server/nodes`);
-	mkdirp(`${out}/server/stylesheets`);
+	fs.mkdirSync(`${out}/server/nodes`, { recursive: true });
+	fs.mkdirSync(`${out}/server/stylesheets`, { recursive: true });
 
 	/**
 	 * Stylesheet names and their contents which are below the inline threshold
@@ -141,7 +142,7 @@ export function build_server_nodes(
 			exports.push(
 				'let component_cache;',
 				`export const component = async () => component_cache ??= (await import('../${
-					resolve_symlinks(server_manifest, node.component).chunk.file
+					resolve_symlinks(server_manifest, node.component, root).chunk.file
 				}')).default;`
 			);
 		}
@@ -156,7 +157,7 @@ export function build_server_nodes(
 				exports.push(`export const universal = ${s(node.page_options, null, 2)};`);
 			} else {
 				imports.push(
-					`import * as universal from '../${resolve_symlinks(server_manifest, node.universal).chunk.file}';`
+					`import * as universal from '../${resolve_symlinks(server_manifest, node.universal, root).chunk.file}';`
 				);
 				// TODO: when building for analysis, explain why the file was loaded on the server if we fail to load it
 				exports.push('export { universal };');
@@ -166,7 +167,7 @@ export function build_server_nodes(
 
 		if (node.server) {
 			imports.push(
-				`import * as server from '../${resolve_symlinks(server_manifest, node.server).chunk.file}';`
+				`import * as server from '../${resolve_symlinks(server_manifest, node.server, root).chunk.file}';`
 			);
 			exports.push('export { server };');
 			exports.push(`export const server_id = ${s(node.server)};`);
@@ -176,18 +177,18 @@ export function build_server_nodes(
 			/** @type {AssetDependencies | undefined} */
 			let component;
 			if (node.component) {
-				component = find_deps(server_manifest, node.component, true);
+				component = find_deps(server_manifest, node.component, true, root);
 			}
 
 			/** @type {AssetDependencies | undefined} */
 			let universal;
 			if (node.universal) {
-				universal = find_deps(server_manifest, node.universal, true);
+				universal = find_deps(server_manifest, node.universal, true, root);
 			}
 
 			if (client_manifest) {
 				const entry_path = `${out_dir}/generated/client-optimized/nodes/${i}.js`;
-				const entry = find_deps(client_manifest, entry_path, true);
+				const entry = find_deps(client_manifest, entry_path, true, root);
 
 				// Eagerly load client stylesheets and fonts imported by the SSR-ed page to avoid FOUC.
 				// However, if it is not used during SSR (not present in the server manifest),
