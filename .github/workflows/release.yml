@@ -26,7 +26,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
       - name: Setup Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
@@ -37,7 +37,7 @@ jobs:
 
       - name: Create Release Pull Request or Publish to npm
         id: changesets
-        uses: changesets/action@c47fa68bd43bb8ae0bae7e558622593deebf5955 # v2.0.0-next.3
+        uses: changesets/action@2d9f7af6402422be60d377f151c7618011bba45a # v2.0.0-next.4
         with:
           # This expects you to have a script called release which does a build for your packages and calls changeset publish
           publish-script: pnpm changeset:release

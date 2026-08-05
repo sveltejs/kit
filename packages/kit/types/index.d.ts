@@ -3331,7 +3331,7 @@ declare module '$app/navigation' {
 }
 
 declare module '$app/paths' {
-	import type { AssetPath, RouteIdWithSearchOrHash, PathnameWithSearchOrHash, ResolvedPathname, Path, RouteId, RouteParams } from '$app/types';
+	import type { AssetPath, RouteIdWithSearchOrHash, PathnameWithSearchOrHash, ResolvedPathname, RouteId, RouteParams } from '$app/types';
 	/**
 	 * Resolve the URL of an asset in your `static` directory, by prefixing it with [`config.paths.assets`](https://svelte.dev/docs/kit/configuration#paths) if configured, or otherwise by prefixing it with the base path.
 	 *
@@ -3388,7 +3388,7 @@ declare module '$app/paths' {
 	 * @since 2.52.0
 	 *
 	 * */
-	export function match(url: Path | URL | (string & {})): Promise<{ [K in RouteId]: {
+	export function match(url: URL | string): Promise<{ [K in RouteId]: {
 		id: K;
 		params: RouteParams<K>;
 	}; }[RouteId] | null>;

@@ -151,7 +151,6 @@ const content_type = request.headers.get('content-type')?.split(';', 1)[0];
 - `adapter-*` - Platform adapters (node, cloudflare, netlify, vercel, static, auto)
 - `@sveltejs/package` - Package building utilities
 - `@sveltejs/enhanced-img` - Enhanced image component
-- `@sveltejs/amp` - AMP support
 
 ## Troubleshooting
 
