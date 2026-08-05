@@ -1,11 +1,16 @@
 /** @import { Transport } from '@sveltejs/kit' */
 import * as devalue from 'devalue';
+import { DEV } from 'esm-env';
 
 /** @type {(data: any) => string} */
-export let stringify = () => '';
+export let stringify = () => {
+	throw new Error(DEV ? 'called stringify before init_transport' : '');
+};
 
 /** @type {(data: string) => any} */
-export let parse = () => {};
+export let parse = () => {
+	throw new Error(DEV ? 'called parse before init_transport' : '');
+};
 
 /** @type {Record<string, (data: any) => any>} */
 export let encoders = {};
