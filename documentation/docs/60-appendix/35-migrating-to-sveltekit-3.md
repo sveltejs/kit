@@ -222,7 +222,7 @@ This means `*.remote.*.ts` now works the same way `*.server.*.ts` always has, an
 
 ### Server-only directories
 
-Any directory named `server` in the path is now treated as server-only everywhere in the project, not just `$lib/server`; with the exception of `src/routes` and the assets directory.
+Any directory named `server` in the path is now treated as server-only everywhere in the project, not just `src/lib/server`; with the exception of `src/routes` and the assets directory.
 
 If you have a `server/` directory that is meant to be importable from client code, rename it. Otherwise this change simply expands protection against accidentally importing server code into the browser.
 
