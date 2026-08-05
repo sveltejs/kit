@@ -2,7 +2,6 @@
 /** @import { EnvVarConfig } from '@sveltejs/kit' */
 /** @import { ValidatedKitConfig } from 'types' */
 import path from 'node:path';
-import * as vite from 'vite';
 import * as devalue from 'devalue';
 import { GENERATED_COMMENT } from '../constants.js';
 import { dedent } from './sync/utils.js';
@@ -25,13 +24,14 @@ export function resolve_explicit_env_entry(config) {
 }
 
 /**
+ * @param {typeof import('vite')} vite
  * @param {ValidatedKitConfig} kit
  * @param {string | null} file
  * @param {string} root
  * @param {string} mode
  * @returns {Promise<Record<string, EnvVarConfig<any>> | null>}
  */
-export async function load_explicit_env(kit, file, root, mode) {
+export async function load_explicit_env(vite, kit, file, root, mode) {
 	if (!file) return null;
 
 	const server = await vite.createServer({
@@ -53,7 +53,7 @@ export async function load_explicit_env(kit, file, root, mode) {
 	/** @type {Record<string, EnvVarConfig<any>>} */
 	let variables;
 
-	const runner = get_runner(server);
+	const runner = get_runner(vite, server);
 
 	/** @type {import('../runtime/app/env/internal.js')} */ (
 		await runner.import(`${runtime_directory}/app/env/internal.js`)
