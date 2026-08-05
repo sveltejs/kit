@@ -1,5 +1,6 @@
-import { rmSync, statSync, writeFileSync } from 'node:fs';
+import { statSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const files = fileURLToPath(new URL('./files', import.meta.url).href);
@@ -52,7 +53,7 @@ export default function (opts = {}) {
 			}
 			const compressed_files = [...client_compressed, ...prerendered_compressed];
 
-			builder.log.minor('Building server');
+			builder.log.minor(compile ? 'Compiling executable' : 'Building server');
 
 			const pkg = JSON.parse(await readFile('package.json', 'utf8'));
 			const server = builder.getServerDirectory();
@@ -62,29 +63,25 @@ export default function (opts = {}) {
 			const dir_id = `${entries}/dir.js`;
 			const manifest_file = `${server}/adapter-bun-manifest.js`;
 			const server_options_file = `${server}/adapter-bun-options.js`;
+			const instrumentation = builder.hasServerInstrumentationFile()
+				? `${server}/instrumentation.server.js`
+				: undefined;
+			const virtual_files = {
+				[manifest_file]: [
+					`export const manifest = ${builder.generateManifest({ relativePath: './' })};`,
+					`export const client_files = new Set(${JSON.stringify(client_files)});`,
+					`export const prerendered_files = new Set(${JSON.stringify(prerendered_files)});`,
+					`export const compressed_files = new Set(${JSON.stringify(compressed_files)});`,
+					`export const prerendered_paths = new Set(${JSON.stringify(builder.prerendered.paths)});`
+				].join('\n\n'),
+				[server_options_file]: `export default ${serialize(serverOptions)};\n`
+			};
 
+			const compile_options = compile === true ? { compile: { outfile: `${out}/app` } } : compile;
 			const entrypoints = [`${entries}/index.js`, `${entries}/handler.js`, dir_id];
-
-			if (builder.hasServerInstrumentationFile()) {
-				entrypoints.push(`${server}/instrumentation.server.js`);
-			}
-
-			const result = await Bun.build({
-				entrypoints,
-				files: {
-					[manifest_file]: [
-						`export const manifest = ${builder.generateManifest({ relativePath: './' })};`,
-						`export const client_files = new Set(${JSON.stringify(client_files)});`,
-						`export const prerendered_files = new Set(${JSON.stringify(prerendered_files)});`,
-						`export const compressed_files = new Set(${JSON.stringify(compressed_files)});`,
-						`export const prerendered_paths = new Set(${JSON.stringify(builder.prerendered.paths)});`
-					].join('\n\n'),
-					[server_options_file]: `export default ${serialize(serverOptions)};\n`
-				},
+			/** @type {Omit<import('bun').BuildConfig, 'entrypoints'>} */
+			let build_options = {
 				outdir: out,
-				target: 'bun',
-				format: 'esm',
-				conditions: ['bun', 'node'],
 				sourcemap: 'linked',
 				splitting: true,
 				naming: {
@@ -98,48 +95,84 @@ export default function (opts = {}) {
 						dependency,
 						`${dependency}/*`
 					])
-				],
-				plugins: [
-					{
-						name: 'adapter-bun',
-						setup(build) {
-							build.onResolve({ filter: /^(SERVER|MANIFEST|SERVER_OPTIONS)$/ }, ({ path }) => {
-								if (path === 'SERVER') return { path: `${server}/index.js` };
-								if (path === 'MANIFEST') return { path: manifest_file };
-								if (path === 'SERVER_OPTIONS') return { path: server_options_file };
-							});
+				]
+			};
 
-							build.onLoad(
-								{ filter: /[\\/]adapter-bun[\\/]entries[\\/].*\.js$/ },
-								async ({ path }) => {
-									let contents = await readFile(path, 'utf8');
-									if (contents.includes('dirname(fileURLToPath(import.meta.url))')) {
-										// Bun places shared modules two levels below the output directory
-										contents = contents.replace(
-											'dirname(fileURLToPath(import.meta.url))',
-											"fileURLToPath(new URL('../../', import.meta.url))"
-										);
-									}
-									contents = contents
-										.replace(/\bENV_PREFIX\b/g, JSON.stringify(envPrefix))
-										.replace(/\bPRECOMPRESS\b/g, JSON.stringify(precompress))
-										.replace(
-											/\bORIGIN\b/g,
-											JSON.stringify(builder.config.kit.paths.origin) || 'undefined'
-										);
-									return { contents, loader: 'js' };
-								}
+			if (compile_options) {
+				const assets = [
+					...client_files.map((file) => `client/${file}`),
+					...client_compressed.flatMap((file) => [
+						`client/${posixify(file)}.br`,
+						`client/${posixify(file)}.gz`
+					]),
+					...prerendered_files.map((file) => `prerendered/${file}`),
+					...prerendered_compressed.flatMap((file) => [
+						`prerendered/${posixify(file)}.br`,
+						`prerendered/${posixify(file)}.gz`
+					])
+				];
+				const compile_file = `${out}/adapter-bun-compile.js`;
+				virtual_files[compile_file] = create_compile_entrypoint(
+					out,
+					assets,
+					`${entries}/index.js`,
+					instrumentation
+				);
+				entrypoints.splice(0, entrypoints.length, compile_file);
+				build_options = compile_options;
+			} else if (instrumentation) {
+				entrypoints.push(instrumentation);
+			}
+
+			const adapter_plugin = {
+				name: 'adapter-bun',
+				/** @param {import('bun').PluginBuilder} build */
+				setup(build) {
+					build.onResolve({ filter: /^(SERVER|MANIFEST|SERVER_OPTIONS)$/ }, ({ path }) => {
+						if (path === 'SERVER') return { path: `${server}/index.js` };
+						if (path === 'MANIFEST') return { path: manifest_file };
+						if (path === 'SERVER_OPTIONS') return { path: server_options_file };
+					});
+
+					build.onLoad({ filter: /[\\/]adapter-bun[\\/]entries[\\/].*\.js$/ }, async ({ path }) => {
+						let contents = await readFile(path, 'utf8');
+						if (contents.includes('dirname(fileURLToPath(import.meta.url))')) {
+							// Bun places shared modules two levels below the output directory
+							contents = contents.replace(
+								'dirname(fileURLToPath(import.meta.url))',
+								"fileURLToPath(new URL('../../', import.meta.url))"
 							);
 						}
-					}
-				]
+						contents = contents
+							.replace(/\bENV_PREFIX\b/g, JSON.stringify(envPrefix))
+							.replace(/\bPRECOMPRESS\b/g, JSON.stringify(precompress))
+							.replace(
+								/\bORIGIN\b/g,
+								JSON.stringify(builder.config.kit.paths.origin) || 'undefined'
+							);
+						return { contents, loader: 'js' };
+					});
+				}
+			};
+
+			const result = await Bun.build({
+				target: 'bun',
+				format: 'esm',
+				conditions: ['bun', 'node'],
+				...build_options,
+				entrypoints,
+				files: {
+					...build_options.files,
+					...virtual_files
+				},
+				plugins: [...(build_options.plugins ?? []), adapter_plugin]
 			});
 
 			if (!result.success) {
 				throw new AggregateError(result.logs, 'Bun server build failed');
 			}
 
-			if (builder.hasServerInstrumentationFile()) {
+			if (instrumentation && !compile) {
 				builder.instrument({
 					entrypoint: `${out}/index.js`,
 					instrumentation: `${out}/instrumentation.server.js`,
@@ -147,26 +180,6 @@ export default function (opts = {}) {
 						exports: ['hostname', 'port', 'server', 'unix']
 					}
 				});
-			}
-
-			if (compile) {
-				builder.log.minor('Compiling executable');
-				await compile_executable(
-					out,
-					compile === true ? { compile: { outfile: `${out}/app` } } : compile,
-					[
-						...client_files.map((file) => `client/${file}`),
-						...client_compressed.flatMap((file) => [
-							`client/${posixify(file)}.br`,
-							`client/${posixify(file)}.gz`
-						]),
-						...prerendered_files.map((file) => `prerendered/${file}`),
-						...prerendered_compressed.flatMap((file) => [
-							`prerendered/${posixify(file)}.br`,
-							`prerendered/${posixify(file)}.gz`
-						])
-					]
-				);
 			}
 		},
 
@@ -213,45 +226,31 @@ function serialize(value) {
 
 /**
  * @param {string} out
- * @param {NonNullable<Exclude<import('./index.js').AdapterOptions['compile'], boolean>>} options
  * @param {string[]} assets
- * @returns {Promise<void>}
+ * @param {string} entrypoint
+ * @param {string | undefined} instrumentation
+ * @returns {string}
  */
-async function compile_executable(out, options, assets) {
-	const entrypoint = `${out}/adapter-bun-compile.js`;
-
+function create_compile_entrypoint(out, assets, entrypoint, instrumentation) {
 	const unique_assets = [...new Set(assets)];
 	const imports = unique_assets.map(
 		(file, index) =>
-			`import asset_${index} from ${JSON.stringify(`./${file}`)} with { type: 'file' };`
+			`import asset_${index} from ${JSON.stringify(posixify(resolve(out, file)))} with { type: 'file' };`
 	);
 	const entries = unique_assets.map((file, index) => [
 		file,
 		`{ path: asset_${index}, lastModified: ${Math.trunc(statSync(`${out}/${file}`).mtimeMs)} }`
 	]);
-	writeFileSync(
-		entrypoint,
-		[
-			...imports,
-			`globalThis[Symbol.for('sveltekit.adapter-bun.assets')] = new Map([${entries
-				.map(([file, identifier]) => `[${JSON.stringify(file)}, ${identifier}]`)
-				.join(',')}]);`,
-			`await import('./index.js');`
-		].join('\n')
-	);
-
-	try {
-		const result = await Bun.build({
-			...options,
-			entrypoints: [entrypoint]
-		});
-
-		if (!result.success) {
-			throw new AggregateError(result.logs, 'Bun executable compilation failed');
-		}
-	} finally {
-		rmSync(entrypoint, { force: true });
-	}
+	return [
+		...imports,
+		`globalThis[Symbol.for('sveltekit.adapter-bun.assets')] = new Map([${entries
+			.map(([file, identifier]) => `[${JSON.stringify(file)}, ${identifier}]`)
+			.join(',')}]);`,
+		instrumentation && `await import(${JSON.stringify(instrumentation)});`,
+		`await import(${JSON.stringify(entrypoint)});`
+	]
+		.filter(Boolean)
+		.join('\n');
 }
 
 /** @param {string} str */

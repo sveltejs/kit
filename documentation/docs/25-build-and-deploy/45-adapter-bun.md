@@ -83,7 +83,9 @@ Provides JSON-serializable defaults for `Bun.serve`. This is useful for settings
 
 ### compile
 
-Set `compile: true` to additionally generate `build/app`, a single executable containing the Bun runtime, your server code, client assets, and prerendered pages:
+Set `compile: true` to generate `build/app`, a single executable containing the Bun runtime, your
+server code, client assets, and prerendered pages. In this mode, the adapter builds the executable
+directly instead of generating the JavaScript server files:
 
 ```js
 adapter({ compile: true });
