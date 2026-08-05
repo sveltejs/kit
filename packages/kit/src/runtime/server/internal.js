@@ -1,26 +1,25 @@
 /** @import { SSRManifest } from '@sveltejs/kit'; */
+import { restore, save } from './dev.js';
 
 const read_implementation_key = Symbol.for('sveltekit.read_implementation');
 const manifest_key = Symbol.for('sveltekit.manifest');
-const state = /** @type {Record<symbol, unknown>} */ (/** @type {unknown} */ (globalThis));
 
 // Vite's development module runner clears its module cache before it reevaluates page entries.
 // Keep this per-process implementation available while those entries are evaluated.
 export let read_implementation = /** @type {((path: string) => ReadableStream<any>) | null} */ (
-	__SVELTEKIT_DEV__ ? (state[read_implementation_key] ?? null) : null
+	(__SVELTEKIT_DEV__ && restore(read_implementation_key)) ?? null
 );
 
-export let manifest = /** @type {SSRManifest} */ (__SVELTEKIT_DEV__ ? state[manifest_key] : null);
+export let manifest = /** @type {SSRManifest} */ (
+	(__SVELTEKIT_DEV__ && restore(manifest_key)) ?? null
+);
 
 /**
  * @param {(path: string) => ReadableStream<any>} fn
  */
 export function set_read_implementation(fn) {
 	read_implementation = fn;
-
-	if (__SVELTEKIT_DEV__) {
-		state[read_implementation_key] = fn;
-	}
+	if (__SVELTEKIT_DEV__) save(read_implementation_key, fn);
 }
 
 /**
@@ -29,10 +28,7 @@ export function set_read_implementation(fn) {
  */
 export function set_manifest(value) {
 	manifest = value;
-
-	if (__SVELTEKIT_DEV__) {
-		state[manifest_key] = value;
-	}
+	if (__SVELTEKIT_DEV__) save(manifest_key, value);
 }
 
 export { fix_stack_trace, set_fix_stack_trace } from './sourcemaps.js';
