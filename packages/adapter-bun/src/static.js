@@ -47,9 +47,10 @@ function file_route(directory, relative, client) {
 	}
 
 	const path = asset_path(directory, relative);
+	const file = Bun.file(path);
 	return {
-		GET: new Response(Bun.file(path), { headers }),
-		HEAD: new Response(Bun.file(path), { headers })
+		GET: new Response(file, { headers }),
+		HEAD: new Response(file, { headers })
 	};
 }
 
