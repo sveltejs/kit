@@ -28,7 +28,7 @@ const config = {
 		dir: 'files',
 		format: 'esm'
 	},
-	plugins: [clearOutput('files')],
+	plugins: [clearOutput('files/serverless.js')],
 	external: (id) => EXTERNAL.has(id) || id.startsWith('node:'),
 	preserveEntrySignatures: 'exports-only',
 	platform: 'node'
