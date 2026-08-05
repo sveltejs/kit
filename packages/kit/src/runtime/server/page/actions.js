@@ -9,7 +9,7 @@ import { is_form_content_type, negotiate } from '../../../utils/http.js';
 import { with_version_header } from '../utils.js';
 import { handle_error_and_jsonify } from '../errors.js';
 import { record_span } from '../../telemetry/record_span.js';
-import { stringify, uneval } from '#app/internal';
+import { stringify, uneval } from '#app/internal/transport';
 
 /** @param {RequestEvent} event */
 export function is_action_json_request(event) {

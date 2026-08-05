@@ -3,7 +3,7 @@
 import { expect, test, vi } from 'vitest';
 import { HttpError } from '@sveltejs/kit/internal';
 import { prerender } from './prerender.js';
-import { init_transport, stringify } from '#app/internal';
+import { init_transport, stringify } from '#app/internal/transport';
 
 init_transport({});
 

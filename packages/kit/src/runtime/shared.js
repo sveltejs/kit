@@ -1,6 +1,6 @@
 import * as devalue from 'devalue';
 import { base64_decode, base64_encode, text_decoder, text_encoder } from './utils.js';
-import { decoders, encoders } from '#app/internal';
+import { decoders, encoders } from '#app/internal/transport';
 
 /**
  * @param {string} route_id

@@ -50,7 +50,7 @@ import { noop_span } from '../telemetry/noop.js';
 import { read_ndjson } from './ndjson.js';
 import Root from '../components/root.svelte';
 import { Props, RenderNode } from '../props.svelte.js';
-import { init_transport } from '#app/internal';
+import { init_transport } from '#app/internal/transport';
 
 /**
  * @typedef {{

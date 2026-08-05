@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test } from 'vitest';
 import { parse_remote_arg, stringify_command_arg, stringify_remote_arg } from './shared.js';
-import { init_transport } from '#app/internal';
+import { init_transport } from '#app/internal/transport';
 
 class Thing {
 	/** @param {number} a @param {number} z */

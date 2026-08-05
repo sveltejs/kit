@@ -7,7 +7,7 @@ import { with_request_store, merge_tracing } from '@sveltejs/kit/internal/server
 import { app_dir, base } from '$app/paths/internal/server';
 import { is_form_content_type } from '../../utils/http.js';
 import { create_remote_key, parse_remote_arg, split_remote_key } from '../shared.js';
-import { stringify } from '#app/internal';
+import { stringify } from '#app/internal/transport';
 import { handle_error_and_jsonify } from './errors.js';
 import { normalize_error } from '../../utils/error.js';
 import { check_incorrect_fail_use } from './page/actions.js';

@@ -25,7 +25,7 @@ import { collect_remote_data } from '../remote-functions.js';
 import Root from '../../components/root.svelte';
 import { render } from 'svelte/server';
 import { Props, RenderNode } from '../../props.svelte.js';
-import { uneval } from '#app/internal';
+import { uneval } from '#app/internal/transport';
 
 // TODO rename this function/module
 
