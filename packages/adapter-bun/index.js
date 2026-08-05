@@ -1,4 +1,5 @@
-import { readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { rmSync, statSync, writeFileSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 
 const files = fileURLToPath(new URL('./files', import.meta.url).href);
@@ -53,7 +54,7 @@ export default function (opts = {}) {
 
 			builder.log.minor('Building server');
 
-			const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
+			const pkg = JSON.parse(await readFile('package.json', 'utf8'));
 			const server = builder.getServerDirectory();
 			const entries = posixify(`${tmp}/entries`);
 			builder.copy(files, entries);
@@ -108,24 +109,27 @@ export default function (opts = {}) {
 								if (path === 'SERVER_OPTIONS') return { path: server_options_file };
 							});
 
-							build.onLoad({ filter: /[\\/]adapter-bun[\\/]entries[\\/].*\.js$/ }, ({ path }) => {
-								let contents = readFileSync(path, 'utf8');
-								if (contents.includes('dirname(fileURLToPath(import.meta.url))')) {
-									// Bun places shared modules two levels below the output directory
-									contents = contents.replace(
-										'dirname(fileURLToPath(import.meta.url))',
-										"fileURLToPath(new URL('../../', import.meta.url))"
-									);
+							build.onLoad(
+								{ filter: /[\\/]adapter-bun[\\/]entries[\\/].*\.js$/ },
+								async ({ path }) => {
+									let contents = await readFile(path, 'utf8');
+									if (contents.includes('dirname(fileURLToPath(import.meta.url))')) {
+										// Bun places shared modules two levels below the output directory
+										contents = contents.replace(
+											'dirname(fileURLToPath(import.meta.url))',
+											"fileURLToPath(new URL('../../', import.meta.url))"
+										);
+									}
+									contents = contents
+										.replace(/\bENV_PREFIX\b/g, JSON.stringify(envPrefix))
+										.replace(/\bPRECOMPRESS\b/g, JSON.stringify(precompress))
+										.replace(
+											/\bORIGIN\b/g,
+											JSON.stringify(builder.config.kit.paths.origin) || 'undefined'
+										);
+									return { contents, loader: 'js' };
 								}
-								contents = contents
-									.replace(/\bENV_PREFIX\b/g, JSON.stringify(envPrefix))
-									.replace(/\bPRECOMPRESS\b/g, JSON.stringify(precompress))
-									.replace(
-										/\bORIGIN\b/g,
-										JSON.stringify(builder.config.kit.paths.origin) || 'undefined'
-									);
-								return { contents, loader: 'js' };
-							});
+							);
 						}
 					}
 				]
