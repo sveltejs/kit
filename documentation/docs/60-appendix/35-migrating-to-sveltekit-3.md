@@ -377,7 +377,7 @@ export default defineConfig({
 
 ### Remote functions require an opt-in
 
-Files matching `*.remote.ts`/`*.remote.js` now error during development and builds unless `experimental.remoteFunctions` is enabled. As such they are now reserved for remote functions.
+Files with a `remote` segment in the name now error during development and builds unless `experimental.remoteFunctions` is enabled. As such they are now reserved for remote functions.
 
 ### `event.url`, `event.params`, and `event.route` cannot be accessed inside queries
 
