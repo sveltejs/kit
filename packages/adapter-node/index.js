@@ -1,6 +1,7 @@
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { createRequire, isBuiltin } from 'node:module';
 import { extname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { rolldown } from 'rolldown';
 
 const files = fileURLToPath(new URL('./files', import.meta.url).href);
@@ -137,7 +138,7 @@ export default function (opts = {}) {
 				]
 			});
 
-			await bundle.write({
+			const bundled = await bundle.write({
 				dir: out,
 				format: 'esm',
 				sourcemap: true,
@@ -154,6 +155,40 @@ export default function (opts = {}) {
 					return 'server/chunks/[name]-[hash].js';
 				}
 			});
+
+			// Anything not in `dependencies` is bundled, so a bare import left in the output
+			// resolves against a deployment that will not contain it. That is fatal but silent:
+			// the build succeeds and the server dies as the module is evaluated, which for
+			// `instrumentation.server.js` is before it can log anything at all.
+			const require_from_project = createRequire(pathToFileURL('package.json'));
+			const emitted = new Set(bundled.output.map((chunk) => chunk.fileName));
+
+			/** @type {string[]} */
+			const unresolvable = [];
+
+			for (const chunk of bundled.output) {
+				if (chunk.type !== 'chunk') continue;
+
+				for (const source of [...chunk.imports, ...chunk.dynamicImports]) {
+					// imports of our own chunks are relative but reported without a leading `./`
+					if (emitted.has(source) || /^[./]/.test(source) || isBuiltin(source)) continue;
+
+					try {
+						require_from_project.resolve(source);
+					} catch {
+						unresolvable.push(`  ${source} (imported by ${chunk.fileName})`);
+					}
+				}
+			}
+
+			if (unresolvable.length > 0) {
+				throw new Error(
+					'The build contains imports that resolve to no installed package, so the server ' +
+						`would fail to start with ERR_MODULE_NOT_FOUND:\n${unresolvable.join('\n')}\n\n` +
+						'If these are optional dependencies, add them to "dependencies" so they are ' +
+						'installed alongside the build, or stop importing them.'
+				);
+			}
 
 			if (builder.hasServerInstrumentationFile()) {
 				builder.instrument({
