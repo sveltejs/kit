@@ -94,7 +94,7 @@ export async function internal_respond(request, options, manifest, state) {
 
 	const is_route_resolution_request = has_resolution_suffix(url.pathname);
 	const is_data_request = has_data_suffix(url.pathname);
-	const remote_id = get_remote_id(url, base, app_dir);
+	const remote_id = get_remote_id(url);
 
 	if (!__SVELTEKIT_DEV__) {
 		const request_origin = request.headers.get('origin');
