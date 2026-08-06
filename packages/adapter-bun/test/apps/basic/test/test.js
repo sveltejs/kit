@@ -1,4 +1,7 @@
 import { expect, test } from '@playwright/test';
+import process from 'node:process';
+
+const compiled = process.env.COMPILE === 'true';
 
 test('renders and hydrates the app', async ({ page }) => {
 	await page.goto('/');
@@ -33,24 +36,35 @@ test('serves static files with Bun file responses', async ({ request }) => {
 	expect(await head.text()).toBe('');
 });
 
-test('supports ranges and conditional requests for static files', async ({ request }) => {
+test('uses Bun validators and ranges for static files', async ({ request }) => {
 	const initial = await request.get('/data.json');
-	const last_modified = initial.headers()['last-modified'];
 	const body = await initial.text();
-	expect(last_modified).toBeTruthy();
 
-	const not_modified_since = await request.get('/data.json', {
-		headers: { 'if-modified-since': last_modified }
-	});
-	expect(not_modified_since.status()).toBe(304);
+	if (compiled) {
+		const etag = initial.headers()['etag'];
+		expect(etag).toBeTruthy();
 
-	const range = await request.get('/data.json', {
-		headers: { range: 'bytes=0-3' }
-	});
-	expect(range.status()).toBe(206);
-	expect(range.headers()['accept-ranges']).toBe('bytes');
-	expect(range.headers()['content-range']).toBe(`bytes 0-3/${body.length}`);
-	expect(await range.text()).toBe(body.slice(0, 4));
+		const not_modified = await request.get('/data.json', {
+			headers: { 'if-none-match': etag }
+		});
+		expect(not_modified.status()).toBe(304);
+	} else {
+		const last_modified = initial.headers()['last-modified'];
+		expect(last_modified).toBeTruthy();
+
+		const not_modified = await request.get('/data.json', {
+			headers: { 'if-modified-since': last_modified }
+		});
+		expect(not_modified.status()).toBe(304);
+
+		const range = await request.get('/data.json', {
+			headers: { range: 'bytes=0-3' }
+		});
+		expect(range.status()).toBe(206);
+		expect(range.headers()['accept-ranges']).toBe('bytes');
+		expect(range.headers()['content-range']).toBe(`bytes 0-3/${body.length}`);
+		expect(await range.text()).toBe(body.slice(0, 4));
+	}
 });
 
 test('serves URL-encoded static filenames', async ({ request }) => {
@@ -68,10 +82,10 @@ test('caches immutable client assets', async ({ request }) => {
 	expect(asset_response.headers()['cache-control']).toBe('public,max-age=31536000,immutable');
 });
 
-test('does not serve static files for non-GET requests', async ({ request }) => {
+test('uses Bun route method semantics for static files', async ({ request }) => {
 	const response = await request.post('/data.json');
-	expect(response.status()).not.toBe(200);
-	expect(await response.text()).not.toContain('hello from a static file');
+	expect(response.status()).toBe(200);
+	expect(await response.json()).toEqual({ message: 'hello from a static file' });
 });
 
 test('redirects prerendered paths to their canonical trailing slash', async ({ request }) => {

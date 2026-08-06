@@ -1,18 +1,9 @@
 import { join } from 'node:path';
 import { dir } from './dir.js';
 
-const embedded_files = /** @type {Map<string, EmbeddedAsset> | undefined} */ (
+const embedded_files = /** @type {Map<string, string> | undefined} */ (
 	/** @type {any} */ (globalThis)[Symbol.for('sveltekit.adapter-bun.assets')]
 );
-
-/**
- * @typedef {object} EmbeddedAsset
- * @property {string} path
- * @property {number} size
- * @property {string} type
- * @property {string} lastModified
- * @property {string} etag
- */
 
 /**
  * @param {'client' | 'prerendered'} directory
@@ -20,13 +11,13 @@ const embedded_files = /** @type {Map<string, EmbeddedAsset> | undefined} */ (
  * @returns {string}
  */
 export function asset_path(directory, relative) {
-	return embedded_asset(directory, relative)?.path ?? join(dir, directory, relative);
+	return embedded_asset(directory, relative) ?? join(dir, directory, relative);
 }
 
 /**
  * @param {'client' | 'prerendered'} directory
  * @param {string} relative
- * @returns {EmbeddedAsset | undefined}
+ * @returns {string | undefined}
  */
 export function embedded_asset(directory, relative) {
 	return embedded_files?.get(`${directory}/${relative}`);

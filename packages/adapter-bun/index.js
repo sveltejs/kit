@@ -81,7 +81,7 @@ export default function (opts = {}) {
 					...prerendered_files.map((file) => `prerendered/${file}`)
 				];
 				const compile_file = `${out}/adapter-bun-compile.js`;
-				virtual_files[compile_file] = await create_compile_entrypoint(
+				virtual_files[compile_file] = create_compile_entrypoint(
 					out,
 					assets,
 					`${entries}/index.js`,
@@ -249,34 +249,19 @@ function serialize(value) {
  * @param {string[]} assets
  * @param {string} entrypoint
  * @param {string | undefined} instrumentation
- * @returns {Promise<string>}
+ * @returns {string}
  */
-async function create_compile_entrypoint(out, assets, entrypoint, instrumentation) {
+function create_compile_entrypoint(out, assets, entrypoint, instrumentation) {
 	const unique_assets = [...new Set(assets)];
-	const metadata = [];
-	for (const file of unique_assets) {
-		const source = Bun.file(resolve(out, file));
-		const hash = new Bun.CryptoHasher('sha256').update(await source.arrayBuffer()).digest('hex');
-		metadata.push({
-			file,
-			size: source.size,
-			type: source.type,
-			lastModified: new Date(source.lastModified).toUTCString(),
-			etag: `"${hash}"`
-		});
-	}
 	const imports = unique_assets.map(
 		(file, index) =>
 			`import asset_${index} from ${JSON.stringify(posixify(resolve(out, file)))} with { type: 'file' };`
 	);
-	const entries = metadata.map(({ file, ...metadata }, index) => [
-		file,
-		`{ path: asset_${index}, ...${JSON.stringify(metadata)} }`
-	]);
+	const entries = unique_assets.map((file, index) => [file, `asset_${index}`]);
 	return [
 		...imports,
 		`globalThis[Symbol.for('sveltekit.adapter-bun.assets')] = new Map([${entries
-			.map(([file, value]) => `[${JSON.stringify(file)}, ${value}]`)
+			.map(([file, identifier]) => `[${JSON.stringify(file)}, ${identifier}]`)
 			.join(',')}]);`,
 		instrumentation && `await import(${JSON.stringify(instrumentation)});`,
 		`await import(${JSON.stringify(entrypoint)});`

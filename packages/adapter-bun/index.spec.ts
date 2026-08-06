@@ -68,6 +68,21 @@ describe('Bun build options', () => {
 		expect(options.entrypoints).toHaveLength(1);
 	});
 
+	test('embeds executable assets without generating metadata', async () => {
+		await adapter({ compile: true }).adapt(
+			builder({ client_files: ['data.json'], prerendered_files: ['prerendered/index.html'] })
+		);
+
+		const source = build.mock.calls[0][0].files['build/adapter-bun-compile.js'];
+		expect(source).toContain("with { type: 'file' }");
+		expect(source).toContain('["client/data.json", asset_0]');
+		expect(source).toContain('["prerendered/prerendered/index.html", asset_1]');
+		expect(source).not.toContain('{ path:');
+		expect(source).not.toContain('size');
+		expect(source).not.toContain('lastModified');
+		expect(source).not.toContain('etag');
+	});
+
 	test('preserves an explicit outdir for split executables', async () => {
 		await adapter({
 			compile: {
@@ -100,7 +115,10 @@ describe('Bun build options', () => {
 	});
 });
 
-function builder() {
+function builder({
+	client_files = [],
+	prerendered_files = []
+}: { client_files?: string[]; prerendered_files?: string[] } = {}) {
 	return {
 		config: { kit: { paths: { base: '', origin: undefined } } },
 		prerendered: { paths: [] },
@@ -109,8 +127,8 @@ function builder() {
 		getServerDirectory: () => '.svelte-kit/output/server',
 		rimraf() {},
 		mkdirp() {},
-		writeClient: () => [],
-		writePrerendered: () => [],
+		writeClient: () => client_files,
+		writePrerendered: () => prerendered_files,
 		copy() {},
 		generateManifest: () => '{}',
 		hasServerInstrumentationFile: () => false
