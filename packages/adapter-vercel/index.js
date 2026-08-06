@@ -51,19 +51,18 @@ const plugin = function (defaults = {}) {
 			 * @param {string} name
 			 * @param {import('./index.js').ServerlessConfig} config
 			 * @param {import('@sveltejs/kit').RouteDefinition<import('./index.js').Config>[]} routes
-			 * @param {string} [handler]
+			 * @param {string} [proxy]
 			 */
-			async function generate_serverless_function(
-				name,
-				config,
-				routes,
-				handler = `${files}/serverless.js`
-			) {
+			async function generate_serverless_function(name, config, routes, proxy) {
 				const dir = `${dirs.functions}/${name}.func`;
 				const entrypoint = `${tmp}/index.js`;
 
+				if (proxy) {
+					builder.copy(proxy, entrypoint);
+				}
+
 				const relativePath = path.posix.relative(tmp, builder.getServerDirectory());
-				builder.copy(handler, entrypoint, {
+				builder.copy(`${files}/serverless.js`, proxy ? `${tmp}/serverless.js` : entrypoint, {
 					replace: {
 						SERVER: `${relativePath}/index.js`,
 						MANIFEST: './manifest.js'
