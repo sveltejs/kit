@@ -17,6 +17,9 @@ const quoted = new Set([
 	'none',
 	'strict-dynamic',
 	'report-sample',
+	'report-sha256',
+	'report-sha384',
+	'report-sha512',
 	'wasm-unsafe-eval',
 	'script'
 ]);

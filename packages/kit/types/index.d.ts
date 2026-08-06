@@ -2216,7 +2216,12 @@ declare module '@sveltejs/kit' {
 	// SOFTWARE.
 
 	namespace Csp {
-		type ActionSource = 'strict-dynamic' | 'report-sample';
+		type ActionSource =
+			| 'strict-dynamic'
+			| 'report-sample'
+			| 'report-sha256'
+			| 'report-sha384'
+			| 'report-sha512';
 		type BaseSource =
 			| 'self'
 			| 'unsafe-eval'

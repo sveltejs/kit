@@ -580,4 +580,22 @@ describe.skipIf(process.env.NODE_ENV !== 'production')('CSPs in prod', () => {
 		assert.ok(header.includes("'strict-dynamic'"));
 		assert.ok(header.includes("'unsafe-inline'"));
 	});
+
+	test('quotes report-sha* hash-reporting keywords', () => {
+		const csp = new Csp(
+			{
+				mode: 'nonce',
+				directives: {
+					'script-src': ['self', 'report-sha256', 'report-sha384', 'report-sha512']
+				},
+				reportOnly: {}
+			},
+			{ prerender: false }
+		);
+
+		assert.equal(
+			csp.csp_provider.get_header(),
+			"script-src 'self' 'report-sha256' 'report-sha384' 'report-sha512'"
+		);
+	});
 });
