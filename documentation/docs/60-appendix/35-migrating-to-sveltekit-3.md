@@ -49,6 +49,7 @@ See [Configuration](configuration) for further examples.
 The `$lib` alias is no longer generated automatically by SvelteKit. It is replaced by a `#lib` alias that you declare in the [`imports`](https://nodejs.org/api/packages.html#subpath-imports) field of your `package.json`, leveraging Node's built-in subpath imports (which Vite and TypeScript resolve natively).
 
 ```json
+/// file: package.json
 {
 	"imports": {
 		"#lib": "./src/lib/index.js",
@@ -74,7 +75,7 @@ To migrate, find-and-replace `$lib` with `#lib` across your codebase, add the `i
 
 ## Param matchers live in a single `params.js/ts` file
 
-Param matchers are no longer files inside the `src/params/` directory. Declare all matchers in a single `src/params.js` (or `src/params.ts`) file using the `defineParams` helper. A matcher can be a function that returns a parsed value (or `undefined` to not match), or a [Standard Schema](https://standardschema.dev).
+Param matchers are no longer files inside the `src/params` directory. Declare all matchers in a single `src/params.js` (or `src/params.ts`) file using the `defineParams` helper. A matcher can be a function that returns a parsed value (or `undefined`, if the param is not match), or a [Standard Schema](https://standardschema.dev).
 
 ```js
 // --- src/params/integer.js (deleted) ---
