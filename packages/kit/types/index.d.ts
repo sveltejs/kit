@@ -3026,7 +3026,7 @@ declare module '@sveltejs/kit' {
 	}>;
 	export const VERSION: string;
 	class HttpError_1 {
-
+		
 		constructor(status: number, body: {
 			message: string;
 		} extends App.Error ? (App.Error | string | undefined) : App.Error);
@@ -3035,7 +3035,7 @@ declare module '@sveltejs/kit' {
 		toString(): string;
 	}
 	class Redirect_1 {
-
+		
 		constructor(status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308, location: string);
 		status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308;
 		location: string;
@@ -3668,9 +3668,9 @@ declare module '$app/server' {
 		 *
 		 * */
 		function live<Output>(fn: (arg: void) => RemoteLiveQueryUserFunctionReturnType<Output>): RemoteLiveQueryFunction<void, Output>;
-
+		
 		function live<Input, Output>(validate: "unchecked", fn: (arg: Input) => RemoteLiveQueryUserFunctionReturnType<Output>): RemoteLiveQueryFunction<Input, Output>;
-
+		
 		function live<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => RemoteLiveQueryUserFunctionReturnType<Output>): RemoteLiveQueryFunction<StandardSchemaV1.InferInput<Schema>, Output, StandardSchemaV1.InferOutput<Schema>>;
 	}
 	/**
@@ -3837,11 +3837,11 @@ declare module '$app/state' {
 
 declare module '$app/stores' {
 	export function getStores(): {
-
+		
 		page: typeof page;
-
+		
 		navigating: typeof navigating;
-
+		
 		updated: typeof updated;
 	};
 	/**
