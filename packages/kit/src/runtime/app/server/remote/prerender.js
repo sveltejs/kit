@@ -2,7 +2,6 @@
 /** @import { RemotePrerenderInputsGenerator, RemotePrerenderInternals, MaybePromise } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { json, error } from '@sveltejs/kit';
-import { DEV } from 'esm-env';
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import { stringify, stringify_remote_arg } from '../../../shared.js';
 import { noop } from '../../../../utils/functions.js';
@@ -99,7 +98,7 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 			const id = __.id;
 			const url = `${base}/${app_dir}/remote/${id}${payload ? `/${payload}` : ''}`;
 
-			if (!state.prerendering && !DEV && !event.isRemoteRequest) {
+			if (!state.prerendering && !__SVELTEKIT_DEV__ && !event.isRemoteRequest) {
 				try {
 					// TODO adapters can provide prerendered data more efficiently than
 					// fetching from the public internet

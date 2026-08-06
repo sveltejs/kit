@@ -8,7 +8,9 @@ export { sequence } from './sequence.js';
  * @template {Record<string, EnvVarConfig<any>>} T
  * @param {T} variables
  * @returns {T}
+ * @deprecated Import `defineEnvVars` from `@sveltejs/kit/env` instead
  */
 export function defineEnvVars(variables) {
+	console.warn(`\`defineEnvVars\` has moved — import it from \`@sveltejs/kit/env\` instead`);
 	return variables;
 }

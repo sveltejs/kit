@@ -1,5 +1,37 @@
 # @sveltejs/kit
 
+## 2.70.2
+
+### Patch Changes
+
+- fix: prevent quadratic backtracking in `Accept` header content negotiation ([#1](https://github.com/homebase-garage/igeclouds.github.io/pull/1))
+
+## 2.70.1
+
+### Patch Changes
+
+- docs: update links to hooks documentation ([#16417](https://github.com/sveltejs/kit/pull/16417))
+
+## 2.70.0
+
+### Minor Changes
+
+- feat: move `defineEnvVars` to `@sveltejs/kit/env` ([#16378](https://github.com/sveltejs/kit/pull/16378))
+
+### Patch Changes
+
+- fix: enable CSRF protection in builds with a non-production `NODE_ENV` value ([#16313](https://github.com/sveltejs/kit/pull/16313))
+
+## 2.69.3
+
+### Patch Changes
+
+- fix: detect destructured `load` and `actions` exports during type generation ([#16329](https://github.com/sveltejs/kit/pull/16329))
+
+- fix: ensure CSS URL references are absolute when `paths.relative` is `false` ([#16315](https://github.com/sveltejs/kit/pull/16315))
+
+- fix: align MAX_COOKIE_SIZE with RFC 6265bis ([#16322](https://github.com/sveltejs/kit/pull/16322))
+
 ## 2.69.2
 
 ### Patch Changes

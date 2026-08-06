@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "2.69.2",
+	"version": "2.70.2",
 	"description": "SvelteKit is the fastest way to build Svelte apps",
 	"keywords": [
 		"framework",
@@ -132,6 +132,10 @@
 		"./hooks": {
 			"types": "./types/index.d.ts",
 			"import": "./src/exports/hooks/index.js"
+		},
+		"./env": {
+			"types": "./types/index.d.ts",
+			"import": "./src/exports/env/index.js"
 		},
 		"./vite": {
 			"types": "./types/index.d.ts",

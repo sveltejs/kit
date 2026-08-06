@@ -165,6 +165,24 @@ test.describe("bundleStrategy: 'single'", () => {
 	});
 });
 
+test.describe('CSRF', () => {
+	test('blocks cross-origin form submissions when custom NODE_ENV is set', async ({ baseURL }) => {
+		test.skip(!!process.env.DEV);
+
+		const res = await fetch(`${baseURL}/basepath`, {
+			method: 'POST',
+			headers: {
+				'content-type': 'application/x-www-form-urlencoded',
+				origin: 'https://evil.example'
+			},
+			body: 'foo=bar'
+		});
+
+		expect(res.status).toBe(403);
+		expect(await res.text()).toBe('Cross-site POST form submissions are forbidden');
+	});
+});
+
 test.describe('Vite', () => {
 	// regression test for https://github.com/sveltejs/kit/issues/13249:
 	// user `define`s referenced at the top level of hooks.client.js must be
