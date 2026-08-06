@@ -301,19 +301,18 @@ function generate_serverless_function_module(manifest, type) {
 import { applyReroute } from '@sveltejs/kit/adapter';
 import { init } from '../serverless.js';
 
+const original_url_header = \`x-sveltekit-original-url-\${process.env.NETLIFY_FUNCTIONS_TOKEN}\`
+
 const respond = init(${manifest});
 
 export default async (request, context) => {
 	const catch_all_response = await respond(request, context);
-	console.log({ request });
-	console.log({ request_id: context.requestId });
 
 	return await applyReroute(catch_all_response, async (url) => {
 		const rerouted_request = new Request(url, request);
-		// rerouted_request.headers.set('x-sveltekit-original-url', request.url);
+		rerouted_request.headers.set(original_url_header, request.url);
 
 		const rerouted_response = await fetch(rerouted_request);
-		console.log({ rerouted_response });
 
 		const response = new Response(rerouted_response.body, rerouted_response);
 		response.headers.delete('content-encoding');
@@ -328,11 +327,18 @@ export default async (request, context) => {
 		return `\
 import { init } from '../serverless.js';
 
+const original_url_header = \`x-sveltekit-original-url-\${process.env.NETLIFY_FUNCTIONS_TOKEN}\`
+
 const respond = init(${manifest});
 
 export default async (request, context) => {
-	const response = await respond(request, context);
-	return response;
+	if (request.headers.has(original_url_header)) {
+		const original_url = request.headers.get(original_url_header);
+		request = new Request(original_url, request);
+		request.headers.delete(original_url_header);
+	}
+
+	return await respond(request, context);
 };
 `;
 	}
