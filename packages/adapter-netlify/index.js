@@ -288,21 +288,22 @@ function generate_serverless_function({ builder, routes, patterns, name, exclude
  */
 function generate_serverless_function_module(manifest, catch_all) {
 	if (catch_all) {
+		// Netlify encodes the response body but `fetch` automatically decodes it
+		// so we need to remove the `content-encoding` header to allow Netlify
+		// to correctly re-encode it on the way out.
 		return `\
 import { applyReroute } from '@sveltejs/kit/adapter';
 import { init } from '../serverless.js';
 
-const ssr_handler = init(${manifest});
+const respond = init(${manifest});
 
 export default async (request, context) => {
-	const response = await ssr_handler(request, context);
-	console.log({ request });
+	const response = await respond(request, context);
 	return await applyReroute(response, async (url) => {
-		const rerouted_response = await fetch(url, request);
-		const cloned_response = new Response(rerouted_response.body, rerouted_response);
-		cloned_response.headers.delete('content-encoding');
-		console.log({ cloned_response });
-		return cloned_response;
+		const rerouted = await fetch(url, request);
+		const cloned = new Response(rerouted.body, rerouted);
+		cloned.headers.delete('content-encoding');
+		return cloned;
 	});
 };
 `;
