@@ -1,5 +1,5 @@
 /** @type {import("@sveltejs/kit").HandleServerError} */
-export function handleError(input) {
-	if (input.kind !== 'unexpected') return input.error;
-	return { message: /**@type{any}*/ (input.error).message };
+export function handleError({ kind, error }) {
+	if (kind !== 'unexpected') return error;
+	return { message: /**@type{any}*/ (error).message };
 }
