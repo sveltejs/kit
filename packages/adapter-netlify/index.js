@@ -1,4 +1,3 @@
-/** @import { Builder, RouteDefinition } from '@sveltejs/kit' */
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -112,10 +111,10 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 }
 
 /**
- * @param {object} params
- * @param {Builder} params.builder
- * @param {string} params.publish
- * @param {boolean} params.split
+ * @param { object } params
+ * @param {import('@sveltejs/kit').Builder} params.builder
+ * @param { string } params.publish
+ * @param { boolean } params.split
  */
 function generate_serverless_functions({ builder, publish, split }) {
 	// https://docs.netlify.com/build/frameworks/frameworks-api/#netlifyv1functions
@@ -228,7 +227,7 @@ function get_netlify_config() {
 /**
  * Writes the Netlify Frameworks API config file
  * https://docs.netlify.com/build/frameworks/frameworks-api/
- * @param {{ builder: Builder }} params
+ * @param {{ builder: import('@sveltejs/kit').Builder }} params
  */
 function write_frameworks_config({ builder }) {
 	// https://docs.netlify.com/build/frameworks/frameworks-api/#headers
@@ -251,11 +250,11 @@ function write_frameworks_config({ builder }) {
 /**
  *
  * @param {{
- *   builder: Builder,
- *   routes: RouteDefinition[] | undefined,
+ *   builder: import('@sveltejs/kit').Builder,
+ *   routes: import('@sveltejs/kit').RouteDefinition[] | undefined,
  *   patterns: string[],
  *   name: string,
- *   exclude?: string[],
+ *   exclude?: string[]
  * }} opts
  */
 function generate_serverless_function({ builder, routes, patterns, name, exclude }) {
@@ -264,7 +263,7 @@ function generate_serverless_function({ builder, routes, patterns, name, exclude
 		routes
 	});
 
-	const fn = generate_serverless_function_module(manifest);
+	const fn = generate_serverless_function_module(manifest, !routes?.length);
 	const config = generate_config_export(patterns, exclude);
 
 	if (builder.hasServerInstrumentationFile()) {
@@ -284,9 +283,29 @@ function generate_serverless_function({ builder, routes, patterns, name, exclude
 
 /**
  * @param {string} manifest
+ * @param {boolean} catch_all
  * @returns {string}
  */
-function generate_serverless_function_module(manifest) {
+function generate_serverless_function_module(manifest, catch_all) {
+	if (catch_all) {
+		// Netlify rewrites can cause an endless loop because it will re-run the same
+		// function but with the rewritten URL. Therefore, we use `context.next` instead
+		// to specifically invoke the next function in the chain with the rewritten URL
+		return `\
+import { applyReroute } from '@sveltejs/kit/adapter';
+import { init } from '../serverless.js';
+
+const ssr_handler = init(${manifest});
+
+export default {
+	async fetch(request, context) {
+		const response = await ssr_handler(request, context);
+		return applyReroute(response, (url) => context.next(new Request(url, request)));
+	},
+};
+`;
+	}
+
 	return `\
 import { init } from '../serverless.js';
 
@@ -350,8 +369,8 @@ const rolldown_config = {
 };
 
 /**
- * @param {object} params
- * @param {Builder} params.builder
+ * @param { object } params
+ * @param {import('@sveltejs/kit').Builder} params.builder
  */
 async function generate_edge_functions({ builder }) {
 	const tmp = builder.getBuildDirectory('netlify-tmp');
@@ -371,106 +390,20 @@ async function generate_edge_functions({ builder }) {
 		}
 	});
 
-	await bundle_edge_function({ builder, name: 'render' });
-}
-
-/**
- * @param {object} params
- * @param {Builder} params.builder
- * @param {string} params.name
- */
-async function bundle_edge_function({ builder, name }) {
-	const tmp = builder.getBuildDirectory('netlify-tmp');
-
-	const relativePath = posix.relative(tmp, builder.getServerDirectory());
-	const manifest = builder.generateManifest({ relativePath });
-	writeFileSync(`${tmp}/manifest.js`, `export const manifest = ${manifest};\n`);
-
-	const path = '/*';
-	const excluded_paths = await get_excluded_paths(tmp, builder);
-
-	await Promise.all([
-		build({
-			...rolldown_config,
-			input: `${tmp}/entry.js`,
-			output: {
-				...rolldown_config.output,
-				file: `${netlify_framework_edge_path}/${FUNCTION_PREFIX}${name}.js`
-			}
-		}),
-		builder.hasServerInstrumentationFile() &&
-			build({
-				...rolldown_config,
-				input: `${builder.getServerDirectory()}/instrumentation.server.js`,
-				output: {
-					...rolldown_config.output,
-					file: `${netlify_framework_edge_path}/${FUNCTION_PREFIX}instrumentation.server.js`
-				}
-			})
-	]);
-
-	if (builder.hasServerInstrumentationFile()) {
-		builder.instrument({
-			entrypoint: `${netlify_framework_edge_path}/${FUNCTION_PREFIX}${name}.js`,
-			instrumentation: `${netlify_framework_edge_path}/${FUNCTION_PREFIX}instrumentation.server.js`,
-			start: `${netlify_framework_edge_path}/${FUNCTION_PREFIX}start.js`
-		});
-	}
-
-	add_edge_function_config({ builder, path, name, excluded_paths });
-}
-
-/**
- * Adds edge function configuration to the Frameworks API config file `config.json`
- * https://docs.netlify.com/build/frameworks/frameworks-api/#netlifyv1edge-functions
- * @param {{ builder: Builder, path: string, name: string, excluded_paths: string[] }} params
- */
-function add_edge_function_config({ path, name, excluded_paths }) {
-	const config = JSON.parse(readFileSync(netlify_framework_config_path, 'utf-8'));
-
-	// https://docs.netlify.com/build/frameworks/frameworks-api/#configuration-options-1
-	const edge_function_config = {
-		function: `${FUNCTION_PREFIX}${name}`,
-		name: `SvelteKit server for ${name}`,
-		generator: generator_string,
-		path,
-		excludedPath: excluded_paths
-	};
-
-	if (Array.isArray(config.edge_functions)) {
-		config.edge_functions.push(edge_function_config);
-	} else {
-		config.edge_functions = [edge_function_config];
-	}
-
-	writeFileSync(netlify_framework_config_path, s(config));
-}
-
-/** @type {string[]} */
-let excluded_paths;
-
-/**
- *
- * @param {string} tmp
- * @param {Builder} builder
- * @returns {Promise<string[]>}
- */
-async function get_excluded_paths(tmp, builder) {
-	if (excluded_paths) return excluded_paths;
-
-	const relativePath = posix.relative(tmp, builder.getServerDirectory());
 	const manifest = builder.generateManifest({
 		relativePath
 	});
+
 	writeFileSync(`${tmp}/manifest.js`, `export const manifest = ${manifest};\n`);
 
 	/** @type {{ assets: Set<string> }} */
 	// we have to prepend the file:// protocol because Windows doesn't support absolute path imports
 	const { assets } = (await import(`file://${tmp}/manifest.js`)).manifest;
 
+	const path = '/*';
 	// We only need to specify paths without the trailing slash because
 	// Netlify will handle the optional trailing slash for us
-	excluded_paths = [
+	const excluded_paths = [
 		// Contains static files
 		`/${builder.getAppPath()}/immutable/*`,
 		`/${builder.getAppPath()}/version.json`,
@@ -489,5 +422,55 @@ async function get_excluded_paths(tmp, builder) {
 		'/.netlify/*'
 	];
 
-	return excluded_paths;
+	await Promise.all([
+		build({
+			...rolldown_config,
+			input: `${tmp}/entry.js`,
+			output: {
+				...rolldown_config.output,
+				file: `${netlify_framework_edge_path}/${FUNCTION_PREFIX}render.js`
+			}
+		}),
+		builder.hasServerInstrumentationFile() &&
+			build({
+				...rolldown_config,
+				input: `${builder.getServerDirectory()}/instrumentation.server.js`,
+				output: {
+					...rolldown_config.output,
+					file: `${netlify_framework_edge_path}/${FUNCTION_PREFIX}instrumentation.server.js`
+				}
+			})
+	]);
+
+	if (builder.hasServerInstrumentationFile()) {
+		builder.instrument({
+			entrypoint: `${netlify_framework_edge_path}/${FUNCTION_PREFIX}render.js`,
+			instrumentation: `${netlify_framework_edge_path}/${FUNCTION_PREFIX}instrumentation.server.js`,
+			start: `${netlify_framework_edge_path}/${FUNCTION_PREFIX}start.js`
+		});
+	}
+
+	add_edge_function_config({ builder, path, excluded_paths });
+}
+
+/**
+ * Adds edge function configuration to the Frameworks API config file `config.json`
+ * https://docs.netlify.com/build/frameworks/frameworks-api/#netlifyv1edge-functions
+ * @param {{ builder: import('@sveltejs/kit').Builder, path: string, excluded_paths: string[] }} params
+ */
+function add_edge_function_config({ path, excluded_paths }) {
+	const config = JSON.parse(readFileSync(netlify_framework_config_path, 'utf-8'));
+
+	// https://docs.netlify.com/build/frameworks/frameworks-api/#configuration-options-1
+	config.edge_functions = [
+		{
+			function: `${FUNCTION_PREFIX}render`,
+			name: 'SvelteKit server',
+			generator: generator_string,
+			path,
+			excludedPath: excluded_paths
+		}
+	];
+
+	writeFileSync(netlify_framework_config_path, s(config));
 }
