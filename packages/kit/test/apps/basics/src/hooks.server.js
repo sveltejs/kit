@@ -41,20 +41,20 @@ export const handleError = ({ event, kind, error }) => {
 			path: event.url.pathname,
 			kind,
 			error:
-				kind === 'unexpected' ? error_to_pojo(/** @type {Error} */ (input.error)) : input.error
+				kind === 'unexpected' ? error_to_pojo(/** @type {Error} */ (error)) : error
 		}) + '\n'
 	);
 
 	if (kind === 'expected') {
 		// so that `error(...)` bodies reach the page verbatim
-		return input.error;
+		return error;
 	}
 
-	const status = kind === 'framework' ? input.error.status : 500;
+	const status = kind === 'framework' ? error.status : 500;
 	const detail =
-		kind === 'framework' ? input.error.message : /** @type {Error} */ (input.error).message;
+		kind === 'framework' ? error.message : /** @type {Error} */ (error).message;
 
-	let message = kind === 'framework' ? input.error.message : 'Internal Error';
+	let message = kind === 'framework' ? error.message : 'Internal Error';
 
 	if (event.url.pathname.startsWith('/get-request-event/')) {
 		const ev = getRequestEvent();
