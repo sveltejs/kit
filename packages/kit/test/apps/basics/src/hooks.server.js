@@ -29,8 +29,7 @@ export function error_to_pojo(error) {
 }
 
 /** @type {import('@sveltejs/kit').HandleServerError} */
-export const handleError = (input) => {
-	const { event, kind } = input;
+export const handleError = ({ event, kind, error }) => {
 
 	// TODO we do this because there's no other way (that i'm aware of)
 	// to communicate errors back to the test suite. even if we could
