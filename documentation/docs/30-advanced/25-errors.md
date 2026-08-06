@@ -40,7 +40,7 @@ export async function load({ params }) {
 
 This throws an exception that SvelteKit catches, causing it to set the response status code to 404 and render an [`+error.svelte`](routing#error) component, where the `error` is an `App.Error` object with the provided `status` and `message`.
 
-On its way there, the error passes through the [`handleError`](hooks#handleError) hook with a `kind` of `'expected'`. Since the shape of an expected error is determined by you, it is considered safe to expose, and the hook can pass it through unchanged.
+On its way there, the error passes through the [`handleError`](hooks#handleError) hook with `kind: 'expected'`. Since the shape of an expected error is determined by you, it is considered safe to expose, and the hook can pass it through unchanged.
 
 ```svelte
 <!--- file: src/routes/+error.svelte --->
