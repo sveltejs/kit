@@ -196,7 +196,7 @@ Alongside the `event`, the hook receives a `kind` discriminant that tells you wh
 | `'unexpected'` | your code, or code it calls         | the thrown value, which may contain information unsafe to expose     | `{ status: 500, message: 'Internal Error' }` |
 | `'framework'`  | SvelteKit — 404s, 405s, 413s...     | `{ status, message }`, where `message` is safe text like `Not Found` | that same `{ status, message }`              |
 
-Errors from [`handleValidationError`](hooks#handleValidationError) arrive as _expected_ errors. Redirects are not errors, and never reach the hook.
+Errors from [`handleValidationError`](#handleValidationError) arrive as _expected_ errors. Redirects are not errors, and never reach the hook.
 
 The hook returns an object matching [`App.Error`](types#Error), in which `status` and `message` are **optional** — return them only to override the defaults in the table above. Any property you omit is inherited from the caught error, so returning `{}` (or nothing at all) leaves the error untouched, while returning `{ status: 404 }` changes only the status.
 
