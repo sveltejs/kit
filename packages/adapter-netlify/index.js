@@ -180,7 +180,8 @@ function generate_serverless_functions({ builder, publish, split }) {
 				builder,
 				routes,
 				patterns,
-				name
+				name,
+				type: 'split'
 			});
 		}
 
@@ -189,6 +190,7 @@ function generate_serverless_functions({ builder, publish, split }) {
 			routes: [],
 			patterns: ['/*'],
 			name: `${FUNCTION_PREFIX}catch-all`,
+			type: 'catch-all',
 			exclude: Array.from(seen)
 		});
 	} else {
@@ -196,7 +198,8 @@ function generate_serverless_functions({ builder, publish, split }) {
 			builder,
 			routes: undefined,
 			patterns: ['/*'],
-			name: `${FUNCTION_PREFIX}render`
+			name: `${FUNCTION_PREFIX}render`,
+			type: 'singular'
 		});
 	}
 
@@ -247,6 +250,8 @@ function write_frameworks_config({ builder }) {
 	writeFileSync(netlify_framework_config_path, s(config));
 }
 
+/** @typedef {'singular' | 'split' | 'catch-all'} ServerlessFunctionType */
+
 /**
  *
  * @param {{
@@ -254,16 +259,17 @@ function write_frameworks_config({ builder }) {
  *   routes: import('@sveltejs/kit').RouteDefinition[] | undefined,
  *   patterns: string[],
  *   name: string,
+ *   type: ServerlessFunctionType,
  *   exclude?: string[]
  * }} opts
  */
-function generate_serverless_function({ builder, routes, patterns, name, exclude }) {
+function generate_serverless_function({ builder, routes, patterns, name, type, exclude }) {
 	const manifest = builder.generateManifest({
 		relativePath: '../server',
 		routes
 	});
 
-	const fn = generate_serverless_function_module(manifest, !routes?.length);
+	const fn = generate_serverless_function_module(manifest, type);
 	const config = generate_config_export(patterns, exclude);
 
 	if (builder.hasServerInstrumentationFile()) {
@@ -283,13 +289,13 @@ function generate_serverless_function({ builder, routes, patterns, name, exclude
 
 /**
  * @param {string} manifest
- * @param {boolean} catch_all
+ * @param {ServerlessFunctionType} type
  * @returns {string}
  */
-function generate_serverless_function_module(manifest, catch_all) {
-	if (catch_all) {
-		// Netlify encodes the response body but `fetch` automatically decodes it
-		// so we need to remove the `content-encoding` header to allow Netlify
+function generate_serverless_function_module(manifest, type) {
+	if (type === 'catch-all') {
+		// Netlify encodes the response body but `fetch` automatically decodes it.
+		// So, we need to remove the `content-encoding` header to allow Netlify
 		// to correctly re-encode it on the way out.
 		return `\
 import { applyReroute } from '@sveltejs/kit/adapter';
@@ -298,13 +304,35 @@ import { init } from '../serverless.js';
 const respond = init(${manifest});
 
 export default async (request, context) => {
-	const response = await respond(request, context);
-	return await applyReroute(response, async (url) => {
-		const rerouted = await fetch(url, request);
-		const cloned = new Response(rerouted.body, rerouted);
-		cloned.headers.delete('content-encoding');
-		return cloned;
+	const catch_all_response = await respond(request, context);
+	console.log({ request });
+	console.log({ request_id: context.requestId });
+
+	return await applyReroute(catch_all_response, async (url) => {
+		const rerouted_request = new Request(url, request);
+		// rerouted_request.headers.set('x-sveltekit-original-url', request.url);
+
+		const rerouted_response = await fetch(rerouted_request);
+		console.log({ rerouted_response });
+
+		const response = new Response(rerouted_response.body, rerouted_response);
+		response.headers.delete('content-encoding');
+
+		return response;
 	});
+};
+`;
+	}
+
+	if (type === 'split') {
+		return `\
+import { init } from '../serverless.js';
+
+const respond = init(${manifest});
+
+export default async (request, context) => {
+	const response = await respond(request, context);
+	return response;
 };
 `;
 	}
