@@ -3,12 +3,11 @@
 import { DEV } from 'esm-env';
 import { json } from '@sveltejs/kit';
 import { HttpError, Redirect, ActionFailure, SvelteKitError } from '@sveltejs/kit/internal';
-import { with_request_store, merge_tracing } from '@sveltejs/kit/internal/server';
+import { with_request_store, merge_tracing, record_span } from '@sveltejs/kit/internal/server';
 import { normalize_error } from '../../../utils/error.js';
 import { is_form_content_type, negotiate } from '../../../utils/http.js';
 import { with_version_header } from '../utils.js';
 import { handle_error_and_jsonify } from '../errors.js';
-import { record_span } from '../../telemetry/record_span.js';
 import { stringify, uneval } from '#app/internal/transport';
 
 /** @param {RequestEvent} event */

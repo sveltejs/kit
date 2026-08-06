@@ -2,7 +2,12 @@
 import { DEV } from 'esm-env';
 import { json, text } from '@sveltejs/kit';
 import { Redirect, SvelteKitError } from '@sveltejs/kit/internal';
-import { merge_tracing, with_request_store } from '@sveltejs/kit/internal/server';
+import {
+	merge_tracing,
+	otel,
+	record_span,
+	with_request_store
+} from '@sveltejs/kit/internal/server';
 import { base, app_dir } from '$app/paths/internal/server';
 import { is_endpoint_request, render_endpoint } from './endpoint.js';
 import { render_page } from './page/index.js';
@@ -40,8 +45,6 @@ import {
 } from '../pathname.js';
 import { server_data_serializer } from './page/data_serializer.js';
 import { get_remote_id, handle_remote_call } from './remote-functions.js';
-import { record_span } from '../telemetry/record_span.js';
-import { otel } from '../telemetry/otel.js';
 
 /** @type {import('types').RequiredResolveOptions['transformPageChunk']} */
 const default_transform = ({ html }) => html;

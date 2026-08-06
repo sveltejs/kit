@@ -17,13 +17,10 @@ vi.mock(import('@sveltejs/kit/internal/server'), async (actualPromise) => {
 	const actual = await actualPromise();
 	return {
 		...actual,
+		record_span: /** @type {import('types').RecordSpan} */ (({ fn }) => fn(noop_span)),
 		get_request_store: () => ({
 			event: dummy_event,
-			state: /** @type {RequestState} */ ({
-				tracing: {
-					record_span: ({ fn }) => fn(noop_span)
-				}
-			})
+			state: /** @type {RequestState} */ (/** @type {unknown} */ ({}))
 		})
 	};
 });

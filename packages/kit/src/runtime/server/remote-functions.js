@@ -3,7 +3,7 @@
 
 import { json, error } from '@sveltejs/kit';
 import { Redirect, SvelteKitError } from '@sveltejs/kit/internal';
-import { with_request_store, merge_tracing } from '@sveltejs/kit/internal/server';
+import { with_request_store, merge_tracing, record_span } from '@sveltejs/kit/internal/server';
 import { app_dir, base } from '$app/paths/internal/server';
 import { is_form_content_type } from '../../utils/http.js';
 import { create_remote_key, parse_remote_arg, split_remote_key } from '../shared.js';
@@ -12,7 +12,6 @@ import { handle_error_and_jsonify } from './errors.js';
 import { normalize_error } from '../../utils/error.js';
 import { check_incorrect_fail_use } from './page/actions.js';
 import { DEV } from 'esm-env';
-import { record_span } from '../telemetry/record_span.js';
 import { deserialize_binary_form } from '../form-utils.js';
 import { with_version_header } from './utils.js';
 

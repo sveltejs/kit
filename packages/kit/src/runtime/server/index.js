@@ -6,6 +6,7 @@ import { options, get_hooks } from '__SERVER__/internal.js';
 import { set_read_implementation, set_manifest, fix_stack_trace } from './internal.js';
 import { set_env } from '__sveltekit/env';
 import { SvelteKitError } from '@sveltejs/kit/internal';
+import { init_tracing } from '@sveltejs/kit/internal/server';
 import { DEV } from 'esm-env';
 import { init_transport } from '#app/internal/transport';
 
@@ -89,6 +90,8 @@ export class Server {
 		// Take care: Some adapters may have to call `Server.init` per-request to set env vars,
 		// so anything that shouldn't be rerun should be wrapped in an `if` block to make sure it hasn't
 		// been done already.
+
+		init_tracing(__SVELTEKIT_SERVER_TRACING_ENABLED__);
 
 		// set env, in case it's used in initialisation
 		set_env(env);

@@ -2,6 +2,7 @@
 import {
 	merge_tracing,
 	get_request_store,
+	record_span,
 	with_request_store
 } from '@sveltejs/kit/internal/server';
 
@@ -95,7 +96,7 @@ export function sequence(...handlers) {
 		function apply_handle(i, event, parent_options) {
 			const handle = handlers[i];
 
-			return state.tracing.record_span({
+			return record_span({
 				name: `sveltekit.handle.sequenced.${handle.name ? handle.name : i}`,
 				attributes: {},
 				fn: async (current) => {

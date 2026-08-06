@@ -1,5 +1,4 @@
 /** @import { InternalRequestOptions, RequestState, ServerHooks } from 'types' */
-import { record_span } from '../telemetry/record_span.js';
 
 /** Per-request caches and context flags — never carried into a fork. */
 function transient_fields() {
@@ -40,9 +39,6 @@ export function create_request_state(options, hooks) {
 		error: false,
 		depth: 0,
 		handleValidationError: hooks.handleValidationError,
-		tracing: {
-			record_span
-		},
 		...transient_fields()
 	};
 }
