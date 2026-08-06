@@ -7,13 +7,6 @@ declare global {
 	const ORIGIN: string | undefined;
 }
 
-type ServerOptions = Omit<
-	Serve.BaseServeOptions<undefined> & Serve.HostnamePortServeOptions<undefined>,
-	'fetch' | 'routes' | 'websocket' | 'error' | 'tls' | 'http3' | 'http1'
-> & {
-	unix?: string;
-};
-
 type CompileOptions = Omit<BuildConfig, 'entrypoints' | 'compile' | 'target' | 'format'> & {
 	compile: Exclude<NonNullable<BuildConfig['compile']>, false>;
 };
@@ -45,7 +38,17 @@ interface AdapterOptions {
 	 * The options must be JSON-serializable. Use `build/handler.js` with a custom
 	 * `Bun.serve` call for routes, WebSockets, or custom error handling.
 	 */
-	serverOptions?: ServerOptions;
+	serverOptions?: Pick<
+		Serve.Options<never>,
+		| 'development'
+		| 'hostname'
+		| 'port'
+		| 'idleTimeout'
+		| 'maxRequestBodySize'
+		| 'reusePort'
+		| 'unix'
+		| 'ipv6Only'
+	>;
 	/**
 	 * Compile the build into a single executable containing the server and static assets.
 	 * Pass Bun build options directly for advanced configuration. The generated entrypoint,

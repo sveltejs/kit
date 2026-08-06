@@ -1,3 +1,5 @@
+import type { Serve } from 'bun';
+
 declare module 'MANIFEST' {
 	import type { SSRManifest } from '@sveltejs/kit';
 
@@ -6,7 +8,7 @@ declare module 'MANIFEST' {
 
 declare module 'ROUTES' {
 	export function asset_path(file: string): string;
-	export const routes: import('bun').Serve.Routes<undefined, string>;
+	export const routes: Serve.Routes<never, string>;
 }
 
 declare module 'SERVER' {
@@ -15,7 +17,7 @@ declare module 'SERVER' {
 
 declare module 'SERVER_OPTIONS' {
 	const options: Pick<
-		import('bun').Serve.Options<undefined>,
+		Serve.Options<never>,
 		| 'development'
 		| 'hostname'
 		| 'port'

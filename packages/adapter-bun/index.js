@@ -47,7 +47,7 @@ export default function (opts = {}) {
 				: undefined;
 			const virtual_files = {
 				[manifest_file]: `export const manifest = ${builder.generateManifest({ relativePath: './' })};\n`,
-				[server_options_file]: `export default ${serialize(serverOptions)};\n`
+				[server_options_file]: `export default ${JSON.stringify(serverOptions)};\n`
 			};
 
 			const compile_options = normalize_compile_options(compile, out);
@@ -218,30 +218,6 @@ function build_error(logs, cause) {
 function with_base(files, base) {
 	const prefix = base.slice(1);
 	return files.map((file) => posixify(prefix ? `${prefix}/${file}` : file));
-}
-
-/**
- * @param {unknown} value
- * @returns {string}
- */
-function serialize(value) {
-	try {
-		const serialized = JSON.stringify(value, (_key, item) => {
-			if (typeof item === 'function' || typeof item === 'symbol' || typeof item === 'bigint') {
-				throw new TypeError(`serverOptions must be JSON-serializable, received ${typeof item}`);
-			}
-			if (typeof item === 'number' && !Number.isFinite(item)) {
-				throw new TypeError('serverOptions must contain only finite numbers');
-			}
-			return item;
-		});
-		if (serialized === undefined) {
-			throw new TypeError('serverOptions must be a JSON-serializable object');
-		}
-		return serialized;
-	} catch (error) {
-		throw new Error('Could not serialize adapter-bun serverOptions', { cause: error });
-	}
 }
 
 /**
