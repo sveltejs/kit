@@ -166,13 +166,8 @@ export interface Builder {
 	 * @param opts
 	 * @param opts.relativePath  A relative path to the base directory of the server build output
 	 * @param opts.routes
-	 * @param opts.rerouteMiddleware Optional. True if the `reroute` hook will run in a middleware before the main handler using the [`applyReroute`](https://svelte.dev/docs/kit/@sveltejs-kit-adapter#applyReroute) function
 	 */
-	generateManifest: (opts: {
-		relativePath: string;
-		routes?: RouteDefinition[];
-		rerouteMiddleware?: boolean;
-	}) => string;
+	generateManifest: (opts: { relativePath: string; routes?: RouteDefinition[] }) => string;
 
 	/**
 	 * Resolve a path to the `name` directory inside `outDir`, e.g. `/path/to/.svelte-kit/my-adapter`.
@@ -268,52 +263,7 @@ export interface Builder {
 	 * @returns an array of the files in `directory` that were compressed
 	 */
 	compress: (directory: string) => Promise<string[]>;
-
-	/**
-	 * Check if the `reroute` hook exists.
-	 * @returns true if the `reroute` hook exists, false otherwise
-	 * @since 3.0.0
-	 */
-	hasRerouteHook: () => Promise<boolean>;
-
-	/**
-	 * Generate a module that exports an `applyReroute` function.
-	 *
-	 * If your deployment platform supports splitting your app into multiple serverless
-	 * functions, you should create a middleware that runs `applyReroute` on the
-	 * request to invoke the correct serverless function. You also need to
-	 * [generate a server-side manifest](https://svelte.dev/docs/kit/@sveltejs-kit#Builder)
-	 * with the `rerouteMiddleware` option set to `true`.
-	 * @example
-	 * ```js
-	 * if (split && await builder.hasRerouteHook()) {
-	 *   // generate a server-side manifest with the `rerouteMiddleware` option set to `true`
-	 *   fs.writeFileSync(
-	 *     `${output}/manifest.js`,
-	 *     `export const manifest = ${builder.generateManifest({ relativePath, routes, rerouteMiddleware: true })};\n`
-	 *   );
-	 *
-	 *   const reroutePath = `${output}/reroute.js`;
-	 *   await builder.generateRerouteModule(reroutePath);
-	 *
-	 *   // create a middleware that applies `reroute` to the request
-	 *   builder.copy(`${files}/reroute.js`, `${output}/entry.js`, {
-	 *     replace: {
-	 *       __HOOKS__: reroutePath
-	 *     }
-	 *   });
-	 * }
-	 * ```
-	 * @since 3.0.0
-	 */
-	generateRerouteModule: (dest: string) => Promise<void>;
 }
-
-/**
- * Runs `reroute` and applies URL changes to a copy of the provided request.
- * @since 3.0.0
- */
-export type ApplyReroute = (request: Request) => Promise<Request>;
 
 /**
  * An extension of [`vite-plugin-svelte`'s options](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/config.md#svelte-options).
@@ -1871,8 +1821,6 @@ export interface SSRManifest {
 		matchers: () => Promise<Record<string, ParamMatcher>>;
 		/** A `[file]: size` map of all assets imported by server code. */
 		server_assets: Record<string, number>;
-		/** True if the `reroute` hook will run in a middleware before the main handler */
-		reroute_middleware: boolean;
 	};
 }
 

@@ -567,6 +567,10 @@ export interface SSRState {
 		handle: () => Promise<Response>
 	) => Promise<Response>;
 	emulator?: Emulator;
+	/**
+	 * The rerouted URL pathname (only if it differs from the original pathname).
+	 */
+	rerouted_path: string | null;
 }
 
 export type StrictBody = string | ArrayBufferView;

@@ -1,8 +1,8 @@
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
-/** @import { ResolvedConfig, Rolldown } from 'vite' */
+/** @import { ResolvedConfig } from 'vite' */
 /** @import { Builder, RouteDefinition, EnvVarConfig } from '@sveltejs/kit' */
 /** @import { RouteData, ValidatedConfig, BuildData, ServerMetadata, ServerMetadataRoute, Prerendered, PrerenderMap, Logger, RemoteChunk } from 'types' */
-import { build, loadEnv } from 'vite';
+import { loadEnv } from 'vite';
 import * as devalue from 'devalue';
 import {
 	createReadStream,
@@ -14,14 +14,12 @@ import {
 } from 'node:fs';
 import { extname, resolve, join, dirname, relative } from 'node:path';
 import { pipeline } from 'node:stream';
-import { pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
 import zlib from 'node:zlib';
 import { copy } from '../../utils/filesystem.js';
 import { posixify } from '../../utils/os.js';
 import { generate_manifest } from '../generate_manifest/index.js';
 import { get_route_segments } from '../../utils/routing.js';
-import { s } from '../../utils/misc.js';
 import generate_fallback from '../postbuild/fallback.js';
 import { write } from '../sync/utils.js';
 import { list_files } from '../utils.js';
@@ -186,7 +184,7 @@ export function create_builder({
 			write(`${dest}/env.js`, `export const env=${payload}`);
 		},
 
-		generateManifest({ relativePath, routes: subset, rerouteMiddleware }) {
+		generateManifest({ relativePath, routes: subset }) {
 			return generate_manifest({
 				build_data,
 				prerendered: prerendered.paths,
@@ -195,8 +193,7 @@ export function create_builder({
 					? subset.map((route) => /** @type {import('types').RouteData} */ (lookup.get(route)))
 					: route_data.filter((route) => prerender_map.get(route.id) !== true),
 				remotes,
-				root: vite_config.root,
-				reroute_middleware: rerouteMiddleware
+				root: vite_config.root
 			});
 		},
 
@@ -282,50 +279,6 @@ export function create_builder({
 
 			rmSync(entrypoint, { force: true, recursive: true });
 			write(entrypoint, facade);
-		},
-
-		async hasRerouteHook() {
-			const hooks_path = get_hooks_path(build_data, config);
-			if (!hooks_path) return false;
-
-			return !!(await import(pathToFileURL(hooks_path).href)).reroute;
-		},
-
-		async generateRerouteModule(dest) {
-			const hooks_path = get_hooks_path(build_data, config);
-			if (!hooks_path) return;
-
-			const bundle = /** @type {Rolldown.RolldownOutput} */ (
-				await build({
-					configFile: false,
-					build: {
-						write: false,
-						ssr: true,
-						target: 'esnext',
-						rolldownOptions: {
-							resolve: {
-								alias: {
-									__HOOKS__: hooks_path
-								}
-							},
-							input: {
-								reroute: import.meta.resolve('./reroute.js')
-							},
-							output: {
-								codeSplitting: false
-							}
-						}
-					},
-					define: {
-						__SVELTEKIT_APP_DIR__: s(posixify(config.kit.appDir)),
-						__SVELTEKIT_PATHS_ASSETS__: s(config.kit.paths.assets),
-						__SVELTEKIT_PATHS_BASE__: s(config.kit.paths.base),
-						__SVELTEKIT_PATHS_RELATIVE__: s(config.kit.paths.relative)
-					}
-				})
-			);
-
-			write(dest, bundle.output[0].code);
 		}
 	};
 }
@@ -379,16 +332,4 @@ function create_instrumentation_facade({ instrumentation, start, exports }) {
 		.join('\n');
 
 	return `${import_instrumentation}\n${parts}`;
-}
-
-/**
- * @param {BuildData} build_data
- * @param {ValidatedConfig} config
- * @returns {string | false}
- */
-function get_hooks_path(build_data, config) {
-	const hooks = build_data.manifest_data.hooks.universal;
-	if (!hooks) return false;
-
-	return `${config.kit.outDir}/output/server/${build_data.server_manifest[hooks].file}`;
 }

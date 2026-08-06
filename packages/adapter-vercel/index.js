@@ -47,18 +47,23 @@ const plugin = function (defaults = {}) {
 
 			builder.log.minor('Generating serverless function...');
 
-			let reroute_middleware = false;
-
 			/**
 			 * @param {string} name
 			 * @param {import('./index.js').ServerlessConfig} config
 			 * @param {import('@sveltejs/kit').RouteDefinition<import('./index.js').Config>[]} routes
+			 * @param {string} [handler]
 			 */
-			async function generate_serverless_function(name, config, routes) {
+			async function generate_serverless_function(
+				name,
+				config,
+				routes,
+				handler = `${files}/serverless.js`
+			) {
 				const dir = `${dirs.functions}/${name}.func`;
+				const entrypoint = `${tmp}/index.js`;
 
 				const relativePath = path.posix.relative(tmp, builder.getServerDirectory());
-				builder.copy(`${files}/serverless.js`, `${tmp}/index.js`, {
+				builder.copy(handler, entrypoint, {
 					replace: {
 						SERVER: `${relativePath}/index.js`,
 						MANIFEST: './manifest.js'
@@ -66,17 +71,17 @@ const plugin = function (defaults = {}) {
 				});
 				if (builder.hasServerInstrumentationFile()) {
 					builder.instrument({
-						entrypoint: `${tmp}/index.js`,
+						entrypoint,
 						instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`
 					});
 				}
 
 				write(
 					`${tmp}/manifest.js`,
-					`export const manifest = ${builder.generateManifest({ relativePath, routes, rerouteMiddleware: reroute_middleware })};\n`
+					`export const manifest = ${builder.generateManifest({ relativePath, routes })};\n`
 				);
 
-				await create_function_bundle(builder, `${tmp}/index.js`, dir, config);
+				await create_function_bundle(builder, entrypoint, dir, config);
 
 				for (const asset of builder.findServerAssets(routes)) {
 					// TODO use symlinks, once Build Output API supports doing so
@@ -176,41 +181,11 @@ const plugin = function (defaults = {}) {
 
 			const singular = groups.size === 1;
 
-			if (!singular && (await builder.hasRerouteHook())) {
-				builder.log('Generating middleware to run reroute before split functions...');
-
-				const reroute_path = `${tmp}/reroute.js`;
-				await builder.generateRerouteModule(reroute_path);
-
-				static_config.routes.push({
-					src: '/.*',
-					middlewarePath: 'sveltekit-middleware-reroute',
-					continue: true
-				});
-
-				const dir = `${dirs.functions}/sveltekit-middleware-reroute.func`;
-				const entry = `${tmp}/index.js`;
-
-				builder.copy(`${files}/reroute.js`, entry, {
-					replace: {
-						REROUTE: reroute_path
-					}
-				});
-
-				await create_function_bundle(builder, entry, dir, defaults);
-
-				reroute_middleware = true;
-			}
-
 			for (const group of groups.values()) {
 				// generate one function for the group
 				const name = singular ? `${INTERNAL}/catchall` : `${INTERNAL}/${group.i}`;
 
-				await generate_serverless_function(
-					name,
-					/** @type {any} */ (group.config),
-					/** @type {import('@sveltejs/kit').RouteDefinition<any>[]} */ (group.routes)
-				);
+				await generate_serverless_function(name, group.config, group.routes);
 
 				for (const route of group.routes) {
 					functions.set(route.pattern.toString(), name);
@@ -225,8 +200,9 @@ const plugin = function (defaults = {}) {
 
 				await generate_serverless_function(
 					`${INTERNAL}/catchall`,
-					/** @type {any} */ ({ ...defaults, runtime }),
-					[]
+					{ ...defaults, runtime },
+					[],
+					`${files}/catch-all.js`
 				);
 			}
 

@@ -21,7 +21,6 @@ import { uneval } from 'devalue';
  *   routes: import('types').RouteData[];
  *   remotes: RemoteChunk[];
  *   root: string;
- *   reroute_middleware?: boolean;
  * }} opts
  */
 export function generate_manifest({
@@ -30,8 +29,7 @@ export function generate_manifest({
 	relative_path,
 	routes,
 	remotes,
-	root,
-	reroute_middleware = false
+	root
 }) {
 	/**
 	 * @type {Map<any, number>} The new index of each node in the filtered nodes array
@@ -145,8 +143,7 @@ export function generate_manifest({
 							: 'return {};'
 					}
 				},
-				server_assets: ${s(files)},
-				reroute_middleware: ${reroute_middleware}
+				server_assets: ${s(files)}
 			}
 		}
 	`;

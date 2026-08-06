@@ -327,8 +327,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, s
 					}
 
 					return module.params;
-				},
-				reroute_middleware: false
+				}
 			}
 		};
 	}

@@ -15,7 +15,6 @@
 		"*.js",
 		"src/**/*.js",
 		"files/edge.js",
-		"files/reroute.js",
 		"internal.d.ts",
 		"test/utils.js"
 	]

@@ -1,3 +1,4 @@
+/** @import { SSRState } from 'types' */
 import { noop } from '../../utils/functions.js';
 import { IN_WEBCONTAINER } from './constants.js';
 import { respond } from './respond.js';
@@ -7,6 +8,7 @@ import { set_env } from '__sveltekit/env';
 import { set_app } from './app.js';
 import { SvelteKitError } from '@sveltejs/kit/internal';
 import { DEV } from 'esm-env';
+import { REROUTED_PATHNAME_HEADER } from '../shared.js';
 
 /** @type {Promise<any>} */
 let init_promise;
@@ -194,15 +196,23 @@ export class Server {
 	 * @param {import('types').RequestOptions} options
 	 */
 	async respond(request, options) {
-		const response = await respond(request, this.#options, this.#manifest, {
+		/** @type {SSRState} */
+		const ssr_state = {
 			...options,
 			error: false,
-			depth: 0
-		});
+			depth: 0,
+			rerouted_path: null
+		};
+
+		const response = await respond(request, this.#options, this.#manifest, ssr_state);
 
 		if (DEV) {
 			const error = decoded_responses.get(response);
 			if (error) console.error(fix_stack_trace(error));
+		}
+
+		if (ssr_state.rerouted_path) {
+			response.headers.set(REROUTED_PATHNAME_HEADER, ssr_state.rerouted_path);
 		}
 
 		return response;

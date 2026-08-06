@@ -93,21 +93,14 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 			builder.log.minor('Writing Netlify config...');
 			write_frameworks_config({ builder });
 
-			let reroute_middleware = false;
-
 			if (edge) {
 				if (split) {
 					throw new Error('Cannot use `split: true` alongside `edge: true`');
 				}
 
-				await generate_edge_functions({ builder, reroute_middleware });
+				await generate_edge_functions({ builder });
 			} else {
-				if (split && (await builder.hasRerouteHook())) {
-					await generate_reroute_middleware(builder);
-					reroute_middleware = true;
-				}
-
-				generate_serverless_functions({ builder, split, publish, reroute_middleware });
+				generate_serverless_functions({ builder, split, publish });
 			}
 		},
 
@@ -123,9 +116,8 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
  * @param {Builder} params.builder
  * @param {string} params.publish
  * @param {boolean} params.split
- * @param {boolean} params.reroute_middleware
  */
-function generate_serverless_functions({ builder, publish, split, reroute_middleware }) {
+function generate_serverless_functions({ builder, publish, split }) {
 	// https://docs.netlify.com/build/frameworks/frameworks-api/#netlifyv1functions
 	mkdirSync(netlify_framework_serverless_path, { recursive: true });
 
@@ -189,8 +181,7 @@ function generate_serverless_functions({ builder, publish, split, reroute_middle
 				builder,
 				routes,
 				patterns,
-				name,
-				reroute_middleware
+				name
 			});
 		}
 
@@ -199,16 +190,14 @@ function generate_serverless_functions({ builder, publish, split, reroute_middle
 			routes: [],
 			patterns: ['/*'],
 			name: `${FUNCTION_PREFIX}catch-all`,
-			exclude: Array.from(seen),
-			reroute_middleware
+			exclude: Array.from(seen)
 		});
 	} else {
 		generate_serverless_function({
 			builder,
 			routes: undefined,
 			patterns: ['/*'],
-			name: `${FUNCTION_PREFIX}render`,
-			reroute_middleware: false
+			name: `${FUNCTION_PREFIX}render`
 		});
 	}
 
@@ -267,21 +256,12 @@ function write_frameworks_config({ builder }) {
  *   patterns: string[],
  *   name: string,
  *   exclude?: string[],
- *   reroute_middleware: boolean
  * }} opts
  */
-function generate_serverless_function({
-	builder,
-	routes,
-	patterns,
-	name,
-	exclude,
-	reroute_middleware
-}) {
+function generate_serverless_function({ builder, routes, patterns, name, exclude }) {
 	const manifest = builder.generateManifest({
 		relativePath: '../server',
-		routes,
-		rerouteMiddleware: reroute_middleware
+		routes
 	});
 
 	const fn = generate_serverless_function_module(manifest);
@@ -372,9 +352,8 @@ const rolldown_config = {
 /**
  * @param {object} params
  * @param {Builder} params.builder
- * @param {boolean} params.reroute_middleware
  */
-async function generate_edge_functions({ builder, reroute_middleware }) {
+async function generate_edge_functions({ builder }) {
 	const tmp = builder.getBuildDirectory('netlify-tmp');
 	rmSync(tmp, { force: true, recursive: true });
 	mkdirSync(tmp, { recursive: true });
@@ -392,60 +371,19 @@ async function generate_edge_functions({ builder, reroute_middleware }) {
 		}
 	});
 
-	await bundle_edge_function({ builder, name: 'render', reroute_middleware });
+	await bundle_edge_function({ builder, name: 'render' });
 }
 
 /**
- * @param {Builder} builder
- */
-async function generate_reroute_middleware(builder) {
-	builder.log.minor('Generating edge middleware to run reroute before split functions...');
-
-	const tmp = builder.getBuildDirectory('netlify-tmp');
-	builder.rimraf(tmp);
-	builder.mkdirp(tmp);
-
-	builder.mkdirp('.netlify/edge-functions');
-
-	const reroute_path = `${tmp}/reroute.js`;
-	await builder.generateRerouteModule(reroute_path);
-
-	builder.copy(`${files}/reroute.js`, `${tmp}/entry.js`, {
-		replace: {
-			REROUTE: reroute_path
-		}
-	});
-
-	const path = '/*';
-	const excluded_paths = await get_excluded_paths(tmp, builder);
-
-	await build({
-		...rolldown_config,
-		input: `${tmp}/entry.js`,
-		output: {
-			...rolldown_config.output,
-			file: `${netlify_framework_edge_path}/${FUNCTION_PREFIX}reroute.js`
-		}
-	});
-
-	add_edge_function_config({ builder, path, name: 'reroute', excluded_paths });
-}
-
-/**
- *
  * @param {object} params
  * @param {Builder} params.builder
  * @param {string} params.name
- * @param {boolean} params.reroute_middleware
  */
-async function bundle_edge_function({ builder, name, reroute_middleware }) {
+async function bundle_edge_function({ builder, name }) {
 	const tmp = builder.getBuildDirectory('netlify-tmp');
 
 	const relativePath = posix.relative(tmp, builder.getServerDirectory());
-	const manifest = builder.generateManifest({
-		relativePath,
-		rerouteMiddleware: reroute_middleware
-	});
+	const manifest = builder.generateManifest({ relativePath });
 	writeFileSync(`${tmp}/manifest.js`, `export const manifest = ${manifest};\n`);
 
 	const path = '/*';

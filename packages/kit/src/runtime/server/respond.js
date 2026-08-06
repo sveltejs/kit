@@ -24,7 +24,7 @@ import { create_fetch } from './fetch.js';
 import { PageNodes } from '../../utils/page_nodes.js';
 import { validate_server_exports } from '../../utils/exports.js';
 import { action_json_redirect, is_action_json_request } from './page/actions.js';
-import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM, ORIGINAL_PATH_HEADER } from '../shared.js';
+import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM } from '../shared.js';
 import { get_public_env } from './env_module.js';
 import { resolve_route, resolve_route_by_id } from './page/server_routing.js';
 import { validateHeaders } from './validate-headers.js';
@@ -93,16 +93,6 @@ export async function internal_respond(request, options, manifest, state) {
 	/** URL but stripped from the potential `/__data.json` suffix and its search param  */
 	const url = new URL(request.url);
 
-	/** @type {string | null} */
-	let resolved_path = url.pathname;
-
-	// If reroute ran in an edge middleware, Vercel doesn't change the request URL, but Netlify does.
-	// So, we always restore the original URL pathname to standardise the behaviour
-	if (manifest._.reroute_middleware && request.headers.has(ORIGINAL_PATH_HEADER)) {
-		url.pathname = /** @type {string} */ (request.headers.get(ORIGINAL_PATH_HEADER));
-		request.headers.delete(ORIGINAL_PATH_HEADER);
-	}
-
 	const is_route_resolution_request = has_resolution_suffix(url.pathname);
 	const is_data_request = has_data_suffix(url.pathname);
 	const remote_id = get_remote_id(url, base, app_dir);
@@ -160,10 +150,10 @@ export async function internal_respond(request, options, manifest, state) {
 		 * If the request is for a route resolution, first modify the URL, then continue as normal
 		 * for path resolution, then return the route object as a JS file.
 		 */
-		resolved_path = url.pathname = strip_resolution_suffix(url.pathname);
+		url.pathname = strip_resolution_suffix(url.pathname);
 		is_route_id_resolution_request = is_route_id_resolution_path(url.pathname, base, app_dir);
 	} else if (is_data_request) {
-		resolved_path = url.pathname =
+		url.pathname =
 			strip_data_suffix(url.pathname) +
 				(url.searchParams.get(TRAILING_SLASH_PARAM) === '1' ? '/' : '') || '/';
 		url.searchParams.delete(TRAILING_SLASH_PARAM);
@@ -179,7 +169,7 @@ export async function internal_respond(request, options, manifest, state) {
 		if (pathname === null) {
 			skip_route_resolution = true;
 		} else {
-			resolved_path = url.pathname = pathname;
+			url.pathname = pathname;
 			url.search = request.headers.get('x-sveltekit-search') ?? '';
 		}
 	}
@@ -262,8 +252,11 @@ export async function internal_respond(request, options, manifest, state) {
 		});
 	}
 
+	/** @type {string | null} */
+	let resolved_path = url.pathname;
+
 	// `reroute` hooks receive pathnames, so they must not run for route-ID resolution requests
-	if (!remote_id && !is_route_id_resolution_request && !manifest._.reroute_middleware) {
+	if (!remote_id && !is_route_id_resolution_request) {
 		const prerendering_reroute_state = state.prerendering?.inside_reroute;
 		try {
 			// For the duration or a reroute, disable the prerendering state as reroute could call API endpoints
@@ -273,6 +266,10 @@ export async function internal_respond(request, options, manifest, state) {
 			// reroute could alter the given URL, so we pass a copy
 			resolved_path =
 				(await options.hooks.reroute({ url: new URL(url), fetch: event.fetch })) ?? url.pathname;
+
+			if (!manifest._.routes.length && resolved_path !== url.pathname) {
+				state.rerouted_path = resolved_path;
+			}
 		} catch {
 			return text('Internal Server Error', {
 				status: 500
