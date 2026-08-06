@@ -6,7 +6,7 @@ Errors are an inevitable fact of software development. SvelteKit handles errors 
 
 ## Error objects
 
-Every error passes through the [`handleError`](hooks#handleError) hook — which can log it and customise it — before it is rendered. The hook's `kind` property identifies where the error came from: your app (`'app'`), SvelteKit (`'framework'`) or an unknown source (`'unknown'`). By default, all are represented as simple `{ status: number, message: string }` objects.
+Every error passes through the [`handleError`](hooks#handleError) hook — which can log it and customise it — before it is rendered. The hook's `kind` property identifies where the error came from: your app (`'app'`), SvelteKit (`'framework'`), validation of a [remote function](remote-functions) argument (`'validation'`) or an unknown source (`'unknown'`). By default, all are represented as simple `{ status: number, message: string }` objects.
 
 You can add additional properties, like a `code` or a tracking `id`, as shown in the examples below. (When using TypeScript this requires you to redefine the `Error` type as described in  [type safety](errors#Type-safety)).
 
