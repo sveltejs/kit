@@ -294,7 +294,7 @@ import { init } from '../serverless.js';
 
 const ssr_handler = init(${manifest});
 
-export default async (request, context) {
+export default async (request, context) => {
 	const response = await ssr_handler(request, context);
 	return await applyReroute(response, (url) => fetch(url, request));
 };
