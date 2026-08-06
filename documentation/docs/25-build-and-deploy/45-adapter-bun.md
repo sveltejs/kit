@@ -34,6 +34,8 @@ bun ./build
 The default output directory is `build`. Production dependencies are externalised in the same way as with [`adapter-node`](adapter-node): packages in `dependencies` must be installed alongside the build, while packages in `devDependencies` are bundled into it.
 
 Client assets and prerendered pages are served through Bun's native `routes` and file responses. This includes streaming and range requests, conditional requests using `Last-Modified`, correct MIME types, and immutable caching for hashed SvelteKit assets.
+File responses are intentionally not buffered at startup: Bun can use `sendfile(2)` where available,
+keeps memory usage bounded for large assets, and retains native range and conditional-request handling.
 
 ## Options
 
@@ -74,6 +76,11 @@ Adds a prefix to all environment variables read by the production server. For ex
 
 Provides JSON-serializable defaults for `Bun.serve`. This is useful for settings such as `hostname`, `port`, `reusePort`, `ipv6Only`, `idleTimeout`, `development`, `maxRequestBodySize`, `tls`, `http3`, and `http1`. Environment variables override these defaults.
 
+TLS certificate, private-key, and CA values in `serverOptions` must be PEM strings or arrays of PEM
+strings. Use the TLS environment variables below when you want to configure file paths at deployment
+time. Other JSON-serializable Bun TLS settings, including mTLS, ALPN, and cipher settings, can be
+passed directly.
+
 `fetch`, `routes`, `websocket`, and `error` handlers cannot be serialized. To use those APIs, create a [custom server](#Custom-server).
 
 ### compile
@@ -110,6 +117,10 @@ adapter({
 ```
 
 Native dependencies and cross-compilation have the same constraints as [Bun's single-file executables](https://bun.com/docs/bundler/executables).
+The adapter reserves the top-level Bun build `target` and `format` because generated servers always
+run as Bun ESM. Set the executable target inside `compile.target`, as shown above. Minification,
+sourcemaps, and bytecode remain opt-in. Advanced compile options without an explicit `outfile` or
+`outdir` use `build/app`.
 
 ## Environment variables
 
@@ -180,6 +191,20 @@ The `platform` property contains the original `Request` and Bun `Server`:
 export function GET({ platform }) {
 	const address = platform.server.requestIP(platform.request);
 	return Response.json(address);
+}
+```
+
+The server object also exposes Bun's native operational metrics. Applications can publish them
+through their own authenticated endpoint or instrumentation without the adapter reserving a URL:
+
+```js
+/** @type {import('./$types').RequestHandler} */
+export function GET({ platform }) {
+	return Response.json({
+		pendingRequests: platform.server.pendingRequests,
+		pendingWebSockets: platform.server.pendingWebSockets,
+		chatSubscribers: platform.server.subscriberCount('chat')
+	});
 }
 ```
 

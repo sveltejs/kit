@@ -14,6 +14,11 @@ test('provides Bun request context', async ({ request }) => {
 	expect(body.address).toBeTruthy();
 	expect(body.request).toBe(true);
 	expect(body.server).toBe(true);
+	expect(typeof body.id).toBe('string');
+	expect(body.protocol).toBe('http');
+	expect(body.pendingRequests).toBeGreaterThanOrEqual(1);
+	expect(body.pendingWebSockets).toBe(0);
+	expect(body.subscribers).toBe(0);
 });
 
 test('serves static files with Bun file responses', async ({ request }) => {

@@ -1,4 +1,4 @@
-import { dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { resolve } from 'node:path';
 
-export const dir = dirname(fileURLToPath(import.meta.url));
+// Bun places shared modules in <out>/server/chunks.
+export const dir = resolve(import.meta.dir, '../..');

@@ -1,8 +1,6 @@
-import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
 
-const files = fileURLToPath(new URL('./files', import.meta.url).href);
+const files = resolve(import.meta.dirname, 'files');
 
 /** @type {import('./index.js').default} */
 export default function (opts = {}) {
@@ -35,7 +33,7 @@ export default function (opts = {}) {
 
 			builder.log.minor(compile ? 'Compiling executable' : 'Building server');
 
-			const pkg = JSON.parse(await readFile('package.json', 'utf8'));
+			const pkg = await Bun.file('package.json').json();
 			const server = builder.getServerDirectory();
 			const entries = posixify(`${tmp}/entries`);
 			builder.copy(files, entries);
@@ -56,7 +54,7 @@ export default function (opts = {}) {
 				[server_options_file]: `export default ${serialize(serverOptions)};\n`
 			};
 
-			const compile_options = compile === true ? { compile: { outfile: `${out}/app` } } : compile;
+			const compile_options = normalize_compile_options(compile, out);
 			const entrypoints = [`${entries}/index.js`, `${entries}/handler.js`, dir_id];
 			/** @type {Omit<import('bun').BuildConfig, 'entrypoints'>} */
 			let build_options = {
@@ -83,7 +81,7 @@ export default function (opts = {}) {
 					...prerendered_files.map((file) => `prerendered/${file}`)
 				];
 				const compile_file = `${out}/adapter-bun-compile.js`;
-				virtual_files[compile_file] = create_compile_entrypoint(
+				virtual_files[compile_file] = await create_compile_entrypoint(
 					out,
 					assets,
 					`${entries}/index.js`,
@@ -106,15 +104,7 @@ export default function (opts = {}) {
 					});
 
 					build.onLoad({ filter: /[\\/]adapter-bun[\\/]entries[\\/].*\.js$/ }, async ({ path }) => {
-						let contents = await readFile(path, 'utf8');
-						if (contents.includes('dirname(fileURLToPath(import.meta.url))')) {
-							// Bun places shared modules two levels below the output directory
-							contents = contents.replace(
-								'dirname(fileURLToPath(import.meta.url))',
-								"fileURLToPath(new URL('../../', import.meta.url))"
-							);
-						}
-						contents = contents
+						const contents = (await Bun.file(path).text())
 							.replace(/\bENV_PREFIX\b/g, JSON.stringify(envPrefix))
 							.replace(
 								/\bORIGIN\b/g,
@@ -125,21 +115,29 @@ export default function (opts = {}) {
 				}
 			};
 
-			const result = await Bun.build({
-				target: 'bun',
-				format: 'esm',
-				conditions: ['bun', 'node'],
-				...build_options,
-				entrypoints,
-				files: {
-					...build_options.files,
-					...virtual_files
-				},
-				plugins: [...(build_options.plugins ?? []), adapter_plugin]
-			});
+			let result;
+			try {
+				result = await Bun.build({
+					...build_options,
+					target: 'bun',
+					format: 'esm',
+					conditions: merge_conditions(build_options.conditions),
+					entrypoints,
+					files: {
+						...build_options.files,
+						...virtual_files
+					},
+					plugins: [adapter_plugin, ...(build_options.plugins ?? [])]
+				});
+			} catch (error) {
+				if (error instanceof AggregateError) {
+					throw build_error(error.errors, error);
+				}
+				throw new Error('Bun server build failed', { cause: error });
+			}
 
 			if (!result.success) {
-				throw new AggregateError(result.logs, 'Bun server build failed');
+				throw build_error(result.logs);
 			}
 
 			if (instrumentation && !compile) {
@@ -158,6 +156,58 @@ export default function (opts = {}) {
 			instrumentation: () => true
 		}
 	};
+}
+
+/**
+ * @param {false | true | import('./index.js').CompileOptions} compile
+ * @param {string} out
+ * @returns {Omit<import('bun').BuildConfig, 'entrypoints'> | undefined}
+ */
+function normalize_compile_options(compile, out) {
+	if (!compile) return;
+
+	const outfile = `${out}/app`;
+	if (compile === true) return { compile: { outfile } };
+
+	const options = { ...compile };
+	if (!options.compile) {
+		throw new Error('adapter-bun compile options must enable Bun executable compilation');
+	}
+
+	if (options.outdir === undefined) {
+		if (options.compile === true) {
+			options.compile = { outfile };
+		} else if (typeof options.compile === 'string') {
+			options.compile = { target: options.compile, outfile };
+		} else if (options.compile.outfile === undefined) {
+			options.compile = { outfile, ...options.compile };
+		}
+	}
+
+	return options;
+}
+
+/**
+ * @param {string | string[] | undefined} configured
+ * @returns {string[]}
+ */
+function merge_conditions(configured) {
+	const conditions =
+		configured === undefined ? [] : Array.isArray(configured) ? configured : [configured];
+	return [...new Set(['bun', 'node', ...conditions])];
+}
+
+/**
+ * @param {Array<{ message?: string }>} logs
+ * @param {unknown} [cause]
+ */
+function build_error(logs, cause) {
+	const details = logs
+		.map((log) => log.message)
+		.filter(Boolean)
+		.join('\n');
+	const message = details ? `Bun server build failed:\n${details}` : 'Bun server build failed';
+	return new AggregateError(logs, message, { cause });
 }
 
 /**
@@ -199,19 +249,34 @@ function serialize(value) {
  * @param {string[]} assets
  * @param {string} entrypoint
  * @param {string | undefined} instrumentation
- * @returns {string}
+ * @returns {Promise<string>}
  */
-function create_compile_entrypoint(out, assets, entrypoint, instrumentation) {
+async function create_compile_entrypoint(out, assets, entrypoint, instrumentation) {
 	const unique_assets = [...new Set(assets)];
+	const metadata = [];
+	for (const file of unique_assets) {
+		const source = Bun.file(resolve(out, file));
+		const hash = new Bun.CryptoHasher('sha256').update(await source.arrayBuffer()).digest('hex');
+		metadata.push({
+			file,
+			size: source.size,
+			type: source.type,
+			lastModified: new Date(source.lastModified).toUTCString(),
+			etag: `"${hash}"`
+		});
+	}
 	const imports = unique_assets.map(
 		(file, index) =>
 			`import asset_${index} from ${JSON.stringify(posixify(resolve(out, file)))} with { type: 'file' };`
 	);
-	const entries = unique_assets.map((file, index) => [file, `asset_${index}`]);
+	const entries = metadata.map(({ file, ...metadata }, index) => [
+		file,
+		`{ path: asset_${index}, ...${JSON.stringify(metadata)} }`
+	]);
 	return [
 		...imports,
 		`globalThis[Symbol.for('sveltekit.adapter-bun.assets')] = new Map([${entries
-			.map(([file, identifier]) => `[${JSON.stringify(file)}, ${identifier}]`)
+			.map(([file, value]) => `[${JSON.stringify(file)}, ${value}]`)
 			.join(',')}]);`,
 		instrumentation && `await import(${JSON.stringify(instrumentation)});`,
 		`await import(${JSON.stringify(entrypoint)});`

@@ -9,14 +9,21 @@ declare global {
 
 type ServerOptions = Omit<
 	Serve.BaseServeOptions<undefined> & Serve.HostnamePortServeOptions<undefined>,
-	'fetch' | 'routes' | 'websocket' | 'error'
+	'fetch' | 'routes' | 'websocket' | 'error' | 'tls'
 > & {
 	unix?: string;
-	tls?: TLSOptions | TLSOptions[];
+	tls?: JSONTLSOptions | JSONTLSOptions[];
 };
 
-type CompileOptions = Omit<BuildConfig, 'entrypoints' | 'compile'> & {
-	compile: NonNullable<BuildConfig['compile']>;
+type JSONTLSOptions = Omit<TLSOptions, 'ca' | 'cert' | 'key' | 'ALPNProtocols'> & {
+	ca?: string | string[];
+	cert?: string | string[];
+	key?: string | string[];
+	ALPNProtocols?: string;
+};
+
+type CompileOptions = Omit<BuildConfig, 'entrypoints' | 'compile' | 'target' | 'format'> & {
+	compile: Exclude<NonNullable<BuildConfig['compile']>, false>;
 };
 
 interface AdapterOptions {
@@ -49,7 +56,9 @@ interface AdapterOptions {
 	serverOptions?: ServerOptions;
 	/**
 	 * Compile the build into a single executable containing the server and static assets.
-	 * Pass Bun build options directly for advanced configuration. The generated entrypoint is reserved.
+	 * Pass Bun build options directly for advanced configuration. The generated entrypoint,
+	 * top-level target, and module format are reserved. If neither an outfile nor outdir is
+	 * specified, the executable is written to `<out>/app`.
 	 * @default false
 	 */
 	compile?: boolean | CompileOptions;

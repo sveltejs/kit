@@ -2,12 +2,16 @@ import { devices } from '@playwright/test';
 import process from 'node:process';
 import { number_from_env } from '../../../test-utils/index.js';
 
+const compiled = process.env.COMPILE === 'true';
+
 /** @type {import('@playwright/test').PlaywrightTestConfig} */
 export const config = {
 	forbidOnly: !!process.env.CI,
 	timeout: process.env.CI ? 45000 : 15000,
 	webServer: {
-		command: 'bun run --bun build && bun run preview',
+		command: compiled
+			? 'bun run --bun build && MY_CUSTOM_PORT=4174 ./build/app'
+			: 'bun run --bun build && bun run preview',
 		port: 4174
 	},
 	retries: process.env.CI ? 2 : number_from_env('KIT_E2E_RETRIES', 0),
@@ -20,7 +24,7 @@ export const config = {
 		...devices['Desktop Chrome'],
 		screenshot: 'only-on-failure',
 		trace: 'retain-on-failure',
-		channel: 'chromium'
+		channel: process.env.KIT_E2E_BROWSER ?? 'chromium'
 	},
 	workers: process.env.CI ? 2 : number_from_env('KIT_E2E_WORKERS', undefined),
 	reporter: 'list',
