@@ -954,7 +954,7 @@ declare module '@sveltejs/kit' {
 		[Kind in keyof CaughtErrorMap]: {
 			/** Identifies the category and origin of the error */
 			kind: Kind;
-			/** The caught error. Its type and safety depend on `kind`; narrow on `kind` before using it */
+			/** The caught error. Its type depends on `kind` */
 			error: CaughtErrorMap[Kind];
 		};
 	}[keyof CaughtErrorMap];
