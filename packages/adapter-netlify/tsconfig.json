@@ -11,11 +11,6 @@
 		},
 		"types": ["node"]
 	},
-	"include": [
-		"*.js",
-		"src/**/*.js",
-		"files/edge.js",
-		"internal.d.ts",
-		"test/utils.js"
-	]
+
+	"include": ["*.js", "files", "internal.d.ts", "test/utils.js"]
 }

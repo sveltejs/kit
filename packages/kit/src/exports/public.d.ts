@@ -1621,7 +1621,7 @@ export interface RequestEvent<
 	/**
 	 * Get or set cookies related to the current request
 	 */
-	cookies: Cookies;
+	readonly cookies: Cookies;
 	/**
 	 * `fetch` is equivalent to the [native `fetch` web API](https://developer.mozilla.org/en-US/docs/Web/API/fetch), with a few additional features:
 	 *
@@ -1633,15 +1633,15 @@ export interface RequestEvent<
 	 *
 	 * You can learn more about making credentialed requests with cookies [here](https://svelte.dev/docs/kit/load#Cookies).
 	 */
-	fetch: typeof fetch;
+	readonly fetch: typeof fetch;
 	/**
 	 * The client's IP address, set by the adapter.
 	 */
-	getClientAddress: () => string;
+	readonly getClientAddress: () => string;
 	/**
 	 * Contains custom data that was added to the request within the [`server handle hook`](https://svelte.dev/docs/kit/hooks#handle).
 	 */
-	locals: App.Locals;
+	readonly locals: App.Locals;
 	/**
 	 * The parameters of the current route - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object.
 	 *
@@ -1650,19 +1650,19 @@ export interface RequestEvent<
 	 * the remote function was called from, _not_ the URL of the endpoint SvelteKit creates for the remote function. Never use it
 	 * to determine whether or not a user is authorized to access certain data, as these values are part of the request which could be manipulated.
 	 */
-	params: Params;
+	readonly params: Params;
 	/**
 	 * Additional data made available through the adapter.
 	 */
-	platform: Readonly<App.Platform> | undefined;
+	readonly platform: Readonly<App.Platform> | undefined;
 	/**
 	 * The original request object.
 	 */
-	request: Request;
+	readonly request: Request;
 	/**
 	 * Info about the current route.
 	 */
-	route: {
+	readonly route: {
 		/**
 		 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
 		 *
@@ -1695,7 +1695,7 @@ export interface RequestEvent<
 	 *
 	 * You cannot add a `set-cookie` header with `setHeaders` — use the [`cookies`](https://svelte.dev/docs/kit/@sveltejs-kit#Cookies) API instead.
 	 */
-	setHeaders: (headers: Record<string, string>) => void;
+	readonly setHeaders: (headers: Record<string, string>) => void;
 	/**
 	 * The requested URL.
 	 *
@@ -1704,22 +1704,22 @@ export interface RequestEvent<
 	 * the remote function was called from, _not_ the URL of the endpoint SvelteKit creates for the remote function. Never use it
 	 * to determine whether or not a user is authorized to access certain data, as these values are part of the request which could be manipulated.
 	 */
-	url: URL;
+	readonly url: URL;
 	/**
 	 * `true` if the request comes from the client asking for `+page/layout.server.js` data. The `url` property will be stripped of the internal information
 	 * related to the data request in this case. Use this property instead if the distinction is important to you.
 	 */
-	isDataRequest: boolean;
+	readonly isDataRequest: boolean;
 	/**
 	 * `true` for `+server.js` calls coming from SvelteKit without the overhead of actually making an HTTP request. This happens when you make same-origin `fetch` requests on the server.
 	 */
-	isSubRequest: boolean;
+	readonly isSubRequest: boolean;
 
 	/**
 	 * Access to spans for tracing. If tracing is not enabled, these spans will do nothing.
 	 * @since 2.31.0
 	 */
-	tracing: {
+	readonly tracing: {
 		/** Whether tracing is enabled. */
 		enabled: boolean;
 		/** The root span for the request. This span is named `sveltekit.handle.root`. */
@@ -1732,7 +1732,7 @@ export interface RequestEvent<
 	 * `true` if the request comes from the client via a remote function. The `url` property will be stripped of the internal information
 	 * related to the data request in this case. Use this property instead if the distinction is important to you.
 	 */
-	isRemoteRequest: boolean;
+	readonly isRemoteRequest: boolean;
 }
 
 /**

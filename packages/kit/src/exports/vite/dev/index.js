@@ -8,7 +8,6 @@ import { URL } from 'node:url';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { styleText } from 'node:util';
 import sirv from 'sirv';
-import { isCSSRequest, loadEnv, buildErrorMessage } from 'vite';
 import { createReadableStream, getRequest, setResponse } from '../../../exports/node/index.js';
 import { coalesce_to_error } from '../../../utils/error.js';
 import { resolve_entry } from '../../../utils/filesystem.js';
@@ -31,7 +30,8 @@ import { get_runner } from '../../../runner.js';
 const vite_css_query_regex = /(?:\?|&)(?:raw|url|inline)(?:&|$)/;
 
 /**
- * @param {ViteDevServer} vite
+ * @param {typeof import('vite')} vite the peer resolved vite module
+ * @param {ViteDevServer} vite_dev_server
  * @param {ResolvedConfig} vite_config
  * @param {ValidatedConfig} svelte_config
  * @param {() => RemoteChunk[]} get_remotes
@@ -39,7 +39,15 @@ const vite_css_query_regex = /(?:\?|&)(?:raw|url|inline)(?:&|$)/;
  * @param {(manifest_data: ManifestData) => void} set_manifest_data
  * @return {Promise<Promise<() => void>>}
  */
-export async function dev(vite, vite_config, svelte_config, get_remotes, root, set_manifest_data) {
+export async function dev(
+	vite,
+	vite_dev_server,
+	vite_config,
+	svelte_config,
+	get_remotes,
+	root,
+	set_manifest_data
+) {
 	/** @type {AsyncLocalStorage<{ event: RequestEvent, config: any, prerender: PrerenderOption }>} */
 	const async_local_storage = new AsyncLocalStorage();
 
@@ -76,7 +84,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, s
 	/** @type {Error | null} */
 	let manifest_error = null;
 
-	const runner = get_runner(vite);
+	const runner = get_runner(vite, vite_dev_server);
 
 	/**
 	 * @param {string} url
@@ -86,19 +94,19 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, s
 		try {
 			return await runner.import(url);
 		} catch (/** @type {any} */ err) {
-			const msg = buildErrorMessage(err, [
+			const msg = vite.buildErrorMessage(err, [
 				styleText('red', `Internal server error: ${err.message}`)
 			]);
 
-			if (!vite.config.logger.hasErrorLogged(err)) {
-				vite.config.logger.error(msg, { error: err });
+			if (!vite_dev_server.config.logger.hasErrorLogged(err)) {
+				vite_dev_server.config.logger.error(msg, { error: err });
 			}
 
 			// TODO this is inadequate — it doesn't reliably show the overlay on every page load,
 			// and when it does appear it may immediately vanish. `vite.hot.send` broadcasts
 			// to all connected clients, even ones that are unaffected by the error.
 			// we need a more considered approach
-			vite.hot.send({
+			vite_dev_server.hot.send({
 				type: 'error',
 				err: /** @type {ErrorPayload['err']} */ ({
 					...err,
@@ -119,7 +127,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, s
 
 		const module = await loud_ssr_load_module(url);
 
-		const module_node = await vite.environments.ssr.moduleGraph.getModuleByUrl(url);
+		const module_node = await vite_dev_server.environments.ssr.moduleGraph.getModuleByUrl(url);
 		if (!module_node) throw new Error(`Could not find node for ${url}`);
 
 		return { module, module_node, url };
@@ -139,13 +147,13 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, s
 
 			if (manifest_error) {
 				manifest_error = null;
-				vite.hot.send({ type: 'full-reload' });
+				vite_dev_server.hot.send({ type: 'full-reload' });
 			}
 		} catch (error) {
 			manifest_error = /** @type {Error} */ (error);
 
 			console.error(styleText(['bold', 'red'], manifest_error.message));
-			vite.hot.send({
+			vite_dev_server.hot.send({
 				type: 'error',
 				err: {
 					message: manifest_error.message ?? 'Invalid routes',
@@ -256,14 +264,14 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, s
 							const deps = new Set();
 
 							for (const module_node of module_nodes) {
-								await find_deps(vite, module_node, deps);
+								await find_deps(vite_dev_server, module_node, deps);
 							}
 
 							/** @type {Record<string, string>} */
 							const styles = {};
 
 							for (const dep of deps) {
-								if (isCSSRequest(dep.url) && !vite_css_query_regex.test(dep.url)) {
+								if (vite.isCSSRequest(dep.url) && !vite_css_query_regex.test(dep.url)) {
 									const inlineCssUrl = dep.url.includes('?')
 										? dep.url.replace('?', '?inline&')
 										: dep.url + '?inline';
@@ -381,7 +389,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, s
 	 * @param {(file: string) => void} cb
 	 */
 	const watch = (event, cb) => {
-		vite.watcher.on(event, (file) => {
+		vite_dev_server.watcher.on(event, (file) => {
 			if (
 				file.startsWith(svelte_config.kit.files.routes + path.sep) ||
 				file.startsWith(svelte_config.kit.files.assets + path.sep) ||
@@ -429,14 +437,14 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, s
 	// kit defaults to src/app.html, so unless user changed that to index.html
 	// send the vite client a full-reload event without path being set
 	if (appTemplate !== 'index.html') {
-		vite.watcher.on('change', (file) => {
+		vite_dev_server.watcher.on('change', (file) => {
 			if (file === appTemplate) {
-				vite.hot.send({ type: 'full-reload' });
+				vite_dev_server.hot.send({ type: 'full-reload' });
 			}
 		});
 	}
 
-	vite.watcher.on('all', (_, file) => {
+	vite_dev_server.watcher.on('all', (_, file) => {
 		if (
 			file === appTemplate ||
 			file === errorTemplate ||
@@ -455,8 +463,8 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, s
 		extensions: []
 	});
 
-	vite.middlewares.use((req, res, next) => {
-		const base = `${vite.config.server.https ? 'https' : 'http'}://${
+	vite_dev_server.middlewares.use((req, res, next) => {
+		const base = `${vite_dev_server.config.server.https ? 'https' : 'http'}://${
 			req.headers[':authority'] || req.headers.host
 		}`;
 
@@ -478,23 +486,23 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, s
 		next();
 	});
 
-	const env = loadEnv(vite_config.mode, svelte_config.kit.env.dir, '');
+	const env = vite.loadEnv(vite_config.mode, svelte_config.kit.env.dir, '');
 	const emulator = await svelte_config.kit.adapter?.emulate?.();
 
 	/** @type {Promise<void> | undefined} */
 	let init_manifest;
 
 	return () => {
-		const serve_static_middleware = vite.middlewares.stack.find(
+		const serve_static_middleware = vite_dev_server.middlewares.stack.find(
 			(middleware) =>
 				/** @type {Function} */ (middleware.handle).name === 'viteServeStaticMiddleware'
 		);
 
 		// Vite will give a 403 on URLs like /test, /static, and /package.json preventing us from
 		// serving routes with those names. See https://github.com/vitejs/vite/issues/7363
-		remove_static_middlewares(vite.middlewares);
+		remove_static_middlewares(vite_dev_server.middlewares);
 
-		vite.middlewares.use(async (req, res) => {
+		vite_dev_server.middlewares.use(async (req, res) => {
 			// Vite throws a Cannot read properties of undefined (reading 'wrapDynamicImport')
 			// if you try to run ssr.runner.import before the server has started so
 			// we do it inside here to avoid that
@@ -504,7 +512,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, s
 			const original_url = req.url;
 			req.url = req.originalUrl;
 			try {
-				const base = `${vite.config.server.https ? 'https' : 'http'}://${
+				const base = `${vite_dev_server.config.server.https ? 'https' : 'http'}://${
 					req.headers[':authority'] || req.headers.host
 				}`;
 

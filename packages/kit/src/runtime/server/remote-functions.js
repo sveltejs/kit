@@ -5,7 +5,8 @@ import { json, error } from '@sveltejs/kit';
 import { Redirect, SvelteKitError } from '@sveltejs/kit/internal';
 import { with_request_store, merge_tracing } from '@sveltejs/kit/internal/server';
 import { is_form_content_type } from '../../utils/http.js';
-import { create_remote_key, parse_remote_arg, split_remote_key, stringify } from '../shared.js';
+import { create_remote_key, parse_remote_arg, split_remote_key } from '../shared.js';
+import { stringify } from '#app/internal/transport';
 import { handle_error_and_jsonify } from './errors.js';
 import { normalize_error } from '../../utils/error.js';
 import { check_incorrect_fail_use } from './page/actions.js';
@@ -58,7 +59,6 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 
 	/** @type {RemoteInternals} */
 	const internals = fn.__;
-	const transport = options.hooks.transport;
 
 	event.tracing.current.setAttributes({
 		'sveltekit.remote.call.type': internals.type,
@@ -86,7 +86,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 					new URL(event.request.url).searchParams.get('payload')
 				);
 
-				const generator = internals.run(event, state, parse_remote_arg(payload, transport));
+				const generator = internals.run(event, state, parse_remote_arg(payload));
 
 				const encoder = new TextEncoder();
 
@@ -155,7 +155,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 									}
 
 									// only send changed data
-									if (result !== (result = stringify(value, transport))) {
+									if (result !== (result = stringify(value))) {
 										send(controller, {
 											type: 'result',
 											result
@@ -213,9 +213,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 				/** @type {{ payloads: string[] }} */
 				const { payloads } = await event.request.json();
 
-				const args = await Promise.all(
-					payloads.map((payload) => parse_remote_arg(payload, transport))
-				);
+				const args = await Promise.all(payloads.map((payload) => parse_remote_arg(payload)));
 
 				data._ = await with_request_store({ event, state }, () => internals.run(args, options));
 
@@ -265,7 +263,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 					return json(
 						/** @type {RemoteFunctionResponse} */ ({
 							type: 'result',
-							data: stringify(data, transport)
+							data: stringify(data)
 						}),
 						{ headers }
 					);
@@ -278,7 +276,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 				/** @type {{ payload: string, refreshes?: string[] }} */
 				const { payload, refreshes } = await event.request.json();
 				state.remote.requested = create_requested_map(refreshes);
-				const arg = parse_remote_arg(payload, transport);
+				const arg = parse_remote_arg(payload);
 
 				data._ = await with_request_store(
 					{ event, state: { ...state, is_in_remote_form_or_command: true } },
@@ -290,7 +288,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 
 			case 'prerender': {
 				data._ = await with_request_store({ event, state }, () =>
-					fn(parse_remote_arg(additional_args, transport))
+					fn(parse_remote_arg(additional_args))
 				);
 
 				break;
@@ -302,9 +300,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 					new URL(event.request.url).searchParams.get('payload')
 				);
 
-				data._ = await with_request_store({ event, state }, () =>
-					fn(parse_remote_arg(payload, transport))
-				);
+				data._ = await with_request_store({ event, state }, () => fn(parse_remote_arg(payload)));
 
 				break;
 			}
@@ -315,7 +311,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 		return json(
 			/** @type {RemoteFunctionResponse} */ ({
 				type: 'result',
-				data: stringify(data, transport)
+				data: stringify(data)
 			}),
 			{ headers }
 		);
@@ -326,7 +322,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			return json(
 				/** @type {RemoteFunctionResponse} */ ({
 					type: 'result',
-					data: stringify(data, transport)
+					data: stringify(data)
 				}),
 				{ headers }
 			);

@@ -18,13 +18,14 @@ import {
 } from '../../pathname.js';
 import { try_get_request_store, with_request_store } from '@sveltejs/kit/internal/server';
 import { text_encoder } from '../../utils.js';
-import { count_non_ssi_comments, create_replacer, get_global_name } from '../utils.js';
+import { count_non_ssi_comments, get_global_name } from '../utils.js';
 import { handle_error_and_jsonify } from '../errors.js';
 import * as env from '__sveltekit/env';
 import { collect_remote_data } from '../remote-functions.js';
 import Root from '../../components/root.svelte';
 import { render } from 'svelte/server';
 import { Props, RenderNode } from '../../props.svelte.js';
+import { has_custom_transporters, uneval } from '#app/internal/transport';
 
 // TODO rename this function/module
 
@@ -431,7 +432,7 @@ export async function render_response({
 
 			let app_declaration = '';
 
-			if (Object.keys(options.hooks.transport).length > 0) {
+			if (has_custom_transporters) {
 				if (client.inline) {
 					app_declaration = `const app = ${global}.app.app;`;
 				} else if (client.app) {
@@ -482,8 +483,7 @@ export async function render_response({
 			if (form_value) {
 				serialized.form = uneval_action_response(
 					form_value,
-					/** @type {string} */ (event.route.id),
-					options.hooks.transport
+					/** @type {string} */ (event.route.id)
 				);
 			}
 
@@ -522,7 +522,7 @@ export async function render_response({
 
 		const serialized_data =
 			Object.keys(remote_data).length > 0
-				? `${global}.data = ${devalue.uneval(remote_data, create_replacer(options.hooks.transport))};\n\n\t\t\t\t\t\t`
+				? `${global}.data = ${uneval(remote_data)};\n\n\t\t\t\t\t\t`
 				: '';
 
 		// `client.app` is a proxy for `bundleStrategy === 'split'`

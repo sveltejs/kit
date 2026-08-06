@@ -619,7 +619,7 @@ function kit({ svelte_config }) {
 
 		async configResolved(config) {
 			explicit_env_entry = resolve_explicit_env_entry(kit);
-			explicit_env_config = await sync.env(kit, explicit_env_entry, config.root, config.mode);
+			explicit_env_config = await sync.env(vite, kit, explicit_env_entry, config.root, config.mode);
 		},
 
 		configureServer(server) {
@@ -633,6 +633,7 @@ function kit({ svelte_config }) {
 				if (file === explicit_env_entry || file === resolved) {
 					explicit_env_entry = resolved;
 					explicit_env_config = await sync.env(
+						vite,
 						kit,
 						explicit_env_entry,
 						vite_config.root,
@@ -995,7 +996,7 @@ function kit({ svelte_config }) {
 				// being called again with `opts.ssr === true` if the module isn't
 				// already loaded) so we can determine what it exports
 				if (dev_server) {
-					const module = await get_runner(dev_server).import(id);
+					const module = await get_runner(vite, dev_server).import(id);
 
 					for (const [name, value] of Object.entries(module)) {
 						const type = value?.__?.type;
@@ -1542,6 +1543,7 @@ function kit({ svelte_config }) {
 		 */
 		async configureServer(server) {
 			return await dev(
+				vite,
 				server,
 				vite_config,
 				svelte_config,

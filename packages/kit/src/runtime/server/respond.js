@@ -198,7 +198,12 @@ export async function internal_respond(request, options, manifest, state) {
 			}),
 		locals: {},
 		params: {},
-		platform: state.platform,
+		platform: state.emulator?.platform
+			? await state.emulator.platform({
+					config: {},
+					prerender: !!state.prerendering?.fallback
+				})
+			: state.platform,
 		request,
 		route: { id: null },
 		setHeaders: (new_headers) => {
@@ -236,6 +241,7 @@ export async function internal_respond(request, options, manifest, state) {
 		isRemoteRequest: !!remote_id
 	};
 
+	// @ts-expect-error this has to be assigned lazily
 	event.fetch = create_fetch({
 		event,
 		options,
@@ -244,13 +250,6 @@ export async function internal_respond(request, options, manifest, state) {
 		get_cookie_header,
 		set_internal
 	});
-
-	if (state.emulator?.platform) {
-		event.platform = await state.emulator.platform({
-			config: {},
-			prerender: !!state.prerendering?.fallback
-		});
-	}
 
 	/** @type {string | null} */
 	let resolved_path = url.pathname;
@@ -373,7 +372,9 @@ export async function internal_respond(request, options, manifest, state) {
 
 			if (result) {
 				route = result.route;
+				// @ts-expect-error this has to be assigned lazily
 				event.route = { id: route.id };
+				// @ts-expect-error this has to be assigned lazily
 				event.params = result.params;
 			}
 		} catch (e) {
@@ -437,6 +438,7 @@ export async function internal_respond(request, options, manifest, state) {
 				}
 
 				if (state.emulator?.platform) {
+					// @ts-expect-error this has to be assigned lazily
 					event.platform = await state.emulator.platform({ config, prerender });
 				}
 
@@ -804,6 +806,7 @@ export async function internal_respond(request, options, manifest, state) {
 				throw new Error('Cannot use `cookies.set(...)` after the response has been generated');
 			};
 
+			// @ts-expect-error this has to be assigned lazily
 			event.setHeaders = () => {
 				throw new Error('Cannot use `setHeaders(...)` after the response has been generated');
 			};

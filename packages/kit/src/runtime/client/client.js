@@ -9,7 +9,7 @@ import { settled, tick, fork, onMount, hydrate, mount } from 'svelte';
 import { HttpError, Redirect, SvelteKitError } from '@sveltejs/kit/internal';
 import { decode_pathname, strip_hash, make_trackable, normalize_path } from '../../utils/url.js';
 import { dev_fetch, initial_fetch, lock_fetch, subsequent_fetch, unlock_fetch } from './fetcher.js';
-import { parse, parse_server_route } from './parse.js';
+import { parse_routes, parse_server_route } from './parse.js';
 import * as storage from './session-storage.js';
 import {
 	find_anchor,
@@ -50,13 +50,14 @@ import { noop_span } from '../telemetry/noop.js';
 import { read_ndjson } from './ndjson.js';
 import Root from '../components/root.svelte';
 import { Props, RenderNode } from '../props.svelte.js';
+import { init_transport, parse, stringify } from '#app/internal/transport';
 
 /**
  * @typedef {{
  *   historyIndex: number;
  *   navigationIndex: number;
  *   pageUrl?: string;
- *   state: Record<string, any>;
+ *   state: string;
  *   persistState: boolean;
  *   resetIndex: number;
  * }} HistoryMetadata
@@ -487,9 +488,11 @@ async function _start(_app, _target, data) {
 
 	app = _app;
 
+	init_transport(app.hooks.transport ?? {});
+
 	await _app.hooks.init?.();
 
-	routes = __SVELTEKIT_CLIENT_ROUTING__ ? parse(_app) : [];
+	routes = __SVELTEKIT_CLIENT_ROUTING__ ? parse_routes(_app) : [];
 	container = __SVELTEKIT_EMBEDDED__ ? _target : document.documentElement;
 	target = _target;
 
@@ -530,7 +533,7 @@ async function _start(_app, _target, data) {
 				[HISTORY_METADATA_KEY]: {
 					historyIndex: current_history_index,
 					navigationIndex: current_navigation_index,
-					state: {},
+					state: stringify({}),
 					persistState: false,
 					resetIndex: current_history_index
 				}
@@ -563,7 +566,7 @@ async function _start(_app, _target, data) {
 			type: 'enter',
 			url: resolve_url(app.hash ? decode_hash(new URL(location.href)) : location.href),
 			replace_state: true,
-			state: history_metadata?.persistState ? history_metadata.state : {},
+			state: history_metadata?.persistState ? parse(history_metadata.state) : {},
 			persist_state: history_metadata?.persistState ?? false
 		});
 
@@ -2054,10 +2057,17 @@ async function navigate({
 		url.pathname = navigation_result.props.page.url.pathname;
 	}
 
-	state = popped ? popped.state : state;
+	if (popped) {
+		state = popped.state;
+	} else {
+		// we immediately serialize-then-parse to ensure that the value is
+		// serializable, and to prevent the developer from dangerously
+		// relying on the identity of the serialized objects
+		const serialized_state = stringify(state);
+		state = parse(serialized_state);
 
-	if (!popped) {
-		// this is a new navigation, rather than a popstate
+		// Store the serialized state so the browser history can preserve custom transport values.
+		// This is a new navigation, rather than a popstate.
 		const change = replace_state ? 0 : 1;
 		if (type !== 'enter') {
 			if (reset) current_reset_index += 1;
@@ -2067,7 +2077,7 @@ async function navigate({
 			[HISTORY_METADATA_KEY]: /** @satisfies {HistoryMetadata} */ ({
 				historyIndex: (current_history_index += change),
 				navigationIndex: (current_navigation_index += change),
-				state,
+				state: serialized_state,
 				persistState: persist_state,
 				resetIndex: current_reset_index
 			})
@@ -2874,18 +2884,8 @@ export async function replaceState(url, state) {
 async function update_state(intent, state, { replace, persist_state, reset }, caller) {
 	const url = intent.url;
 
-	if (DEV) {
-		if (!started) {
-			throw new Error(`Cannot call ${caller}(...) before router is initialized`);
-		}
-
-		try {
-			// use `devalue.stringify` as a convenient way to ensure we exclude values that can't be properly rehydrated, such as custom class instances
-			devalue.stringify(state);
-		} catch (error) {
-			// @ts-expect-error
-			throw new Error(`Could not serialize state${error.path}`, { cause: error });
-		}
+	if (DEV && !started) {
+		throw new Error(`Cannot call ${caller}(...) before router is initialized`);
 	}
 
 	const nav =
@@ -2906,12 +2906,16 @@ async function update_state(intent, state, { replace, persist_state, reset }, ca
 	if (!replace) capture_scroll(current_history_index);
 	if (reset) current_reset_index += 1;
 
+	// as above, serialize-then-parse to prevent bugs
+	const serialized_state = stringify(state);
+	state = parse(serialized_state);
+
 	const entry = {
 		[HISTORY_METADATA_KEY]: /** @satisfies {HistoryMetadata} */ ({
 			historyIndex: (current_history_index += replace ? 0 : 1),
 			navigationIndex: current_navigation_index,
 			pageUrl: page.url.href,
-			state,
+			state: serialized_state,
 			persistState: persist_state,
 			resetIndex: current_reset_index
 		})
@@ -3291,7 +3295,7 @@ function _start_router() {
 			const reset_index = history_metadata.resetIndex;
 			const reset = reset_index !== (source_info?.resetIndex ?? current_reset_index);
 			const scroll = history_info[history_index]?.scroll;
-			const state = history_metadata.state;
+			const state = parse(history_metadata.state);
 			const url = new URL(history_metadata.pageUrl ?? location.href);
 			const navigation_index = history_metadata.navigationIndex;
 			const is_hash_change =
@@ -3537,7 +3541,7 @@ async function _hydrate(
 
 	if (result.props.page) {
 		const history_metadata = get_history_metadata();
-		result.props.page.state = history_metadata?.persistState ? history_metadata.state : {};
+		result.props.page.state = history_metadata?.persistState ? parse(history_metadata.state) : {};
 	}
 
 	await initialize(result, target, should_hydrate);

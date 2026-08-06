@@ -37,16 +37,6 @@ export const RECOMMENDED_OPTIONS = {
 };
 
 /**
- * Validates that a tsconfig contains `"extends": "<id>"`
- * @param {any} options
- * @param {string} id
- */
-export function extends_id(options, id) {
-	const o = options.extends;
-	return Array.isArray(o) ? o.includes(id) : o === id;
-}
-
-/**
  * Makes paths relative to the output file
  * @param {string} out
  * @param {any} config
@@ -74,57 +64,6 @@ export function normalize_config(out, config, transform) {
 	};
 
 	return transform?.(normalized) ?? normalized;
-}
-
-/**
- * @param {any} resolved
- * @param {any} options
- */
-export function validate_resolved_config(resolved, options) {
-	const warnings = [];
-
-	const join = (/** @type {string[]} */ array) =>
-		array
-			.map((v) => JSON.stringify(v))
-			.join(', ')
-			.replace(/, ([^,]*)$/, ' and $1');
-
-	const missing_types = options.types?.filter(
-		(/** @type {string} */ type) => !resolved.types?.includes(type)
-	);
-
-	if (missing_types.length > 0) {
-		warnings.push(`"types" was overwritten. It must include ${join(missing_types)}`);
-	}
-
-	if (options.paths) {
-		/** @type {Set<string>} */
-		const mismatch = new Set();
-
-		for (const [k, expected] of Object.entries(options.paths)) {
-			const actual = resolved.paths?.[k]?.map((/** @type {string} */ x) =>
-				path.resolve(/** @type {string} */ (resolved.pathsBasePath), x)
-			);
-
-			if (JSON.stringify(expected) !== JSON.stringify(actual)) {
-				mismatch.add(remove_trailing_slashstar(k));
-			}
-		}
-
-		if (mismatch.size > 0) {
-			const joined = join([...mismatch]);
-
-			warnings.push(`"paths" was overwritten. Imports from ${joined} may not typecheck`);
-		}
-	}
-
-	for (const key in ESSENTIAL_OPTIONS) {
-		if (resolved[key] !== options[key]) {
-			warnings.push(`"${key}" was overwritten. It should be ${JSON.stringify(options[key])}`);
-		}
-	}
-
-	return warnings;
 }
 
 /**

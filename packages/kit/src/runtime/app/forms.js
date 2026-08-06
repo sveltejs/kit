@@ -1,10 +1,9 @@
-import * as devalue from 'devalue';
-import { BROWSER, DEV } from 'esm-env';
+import { DEV } from 'esm-env';
 import { noop } from '../../utils/functions.js';
 import { refreshAll } from './navigation.js';
-import { app as client_app, applyAction, handle_error } from '../client/client.js';
-import { app as server_app } from '../server/app.js';
+import { applyAction, handle_error } from '../client/client.js';
 import { notify_version } from '../client/state.svelte.js';
+import { parse } from '#app/internal/transport';
 
 export { applyAction };
 
@@ -38,9 +37,7 @@ export function deserialize(result) {
 	const parsed = JSON.parse(result);
 
 	if (parsed.data) {
-		// the decoders should never be initialised at the top-level because `app`
-		// will not be initialised yet if `output.bundleStrategy` is 'single' or 'inline'
-		parsed.data = devalue.parse(parsed.data, BROWSER ? client_app.decoders : server_app.decoders);
+		parsed.data = parse(parsed.data);
 	}
 
 	return parsed;
