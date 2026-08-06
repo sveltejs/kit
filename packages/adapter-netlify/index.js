@@ -298,10 +298,11 @@ export default async (request, context) => {
 	const response = await ssr_handler(request, context);
 	console.log({ request });
 	return await applyReroute(response, async (url) => {
-		request.headers.delete('accept-encoding');
-		const res = await fetch(url, request);
-		console.log({ res });
-		return res;
+		const rerouted_response = await fetch(url, request);
+		const cloned_response = new Response(rerouted_response.body, rerouted_response);
+		cloned_response.headers.delete('content-encoding');
+		console.log({ cloned_response });
+		return cloned_response;
 	});
 };
 `;
