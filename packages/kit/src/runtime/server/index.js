@@ -5,10 +5,8 @@ import { create_request_state } from './state.js';
 import { options, get_hooks } from '__SERVER__/internal.js';
 import { set_read_implementation, set_manifest, fix_stack_trace } from './internal.js';
 import { set_env } from '__sveltekit/env';
-import { SvelteKitError } from '@sveltejs/kit/internal';
 import { DEV } from 'esm-env';
 import { init_transport } from '#app/internal/transport';
-import { set_app } from './app.js';
 
 /** @type {Promise<any>} */
 let init_promise;
