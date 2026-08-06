@@ -264,7 +264,7 @@ function generate_serverless_function({ builder, routes, patterns, name, exclude
 	});
 
 	const fn = generate_serverless_function_module(manifest);
-	const config = generate_config_export(patterns, exclude);
+	const config = generate_config_export(name, patterns, exclude);
 
 	if (builder.hasServerInstrumentationFile()) {
 		writeFileSync(`${netlify_framework_serverless_path}/${name}.mjs`, fn);
@@ -296,17 +296,18 @@ export default init(${manifest});
 const generator_string = `@sveltejs/adapter-netlify@${adapter_version}`;
 
 /**
+ * @param {string} name The name that shows up in the logs & metrics functions list
  * @param {string[]} patterns
  * @param {string[]} [exclude]
  * @returns {string}
  */
-function generate_config_export(patterns, exclude = []) {
+function generate_config_export(name, patterns, exclude = []) {
 	// TODO: add a human friendly name for the function https://docs.netlify.com/build/frameworks/frameworks-api/#configuration-options-2
 
 	// https://docs.netlify.com/build/frameworks/frameworks-api/#configuration-options-2
 	return `\
 export const config = {
-	name: 'SvelteKit server',
+	name: ${JSON.stringify(name)},
 	generator: '${generator_string}',
 	path: [${patterns.map(s).join(', ')}],
 	excludedPath: [${['/.netlify/*', ...exclude].map(s).join(', ')}],
