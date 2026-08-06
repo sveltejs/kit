@@ -315,7 +315,10 @@ export default async (request, context) => {
 		const rerouted_response = await fetch(rerouted_request);
 
 		const response = new Response(rerouted_response.body, rerouted_response);
-		response.headers.delete('content-encoding');
+		if (response.headers.has('content-encoding')) {
+			response.headers.delete('content-encoding');
+			response.headers.delete('content-length');
+		}
 
 		return response;
 	});
