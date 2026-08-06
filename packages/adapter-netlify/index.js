@@ -299,6 +299,7 @@ export default async (request, context) => {
 	return await applyReroute(response, async (url) => {
 		console.log({ url });
 		const res = await fetch(url, request);
+		res.headers.delete('content-encoding');
 		console.log({ res });
 		return res;
 	});
