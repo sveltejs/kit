@@ -13,8 +13,7 @@ const expected = new Set([
 	'ADDRESS_HEADER',
 	'PROTOCOL_HEADER',
 	'HOST_HEADER',
-	'PORT_HEADER',
-	'SHUTDOWN_TIMEOUT'
+	'PORT_HEADER'
 ]);
 
 export const env_prefix = ENV_PREFIX;
