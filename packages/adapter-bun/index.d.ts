@@ -1,5 +1,5 @@
 import type { Adapter } from '@sveltejs/kit';
-import type { BuildConfig, Serve, TLSOptions } from 'bun';
+import type { BuildConfig, Serve } from 'bun';
 import './ambient.js';
 
 declare global {
@@ -9,17 +9,9 @@ declare global {
 
 type ServerOptions = Omit<
 	Serve.BaseServeOptions<undefined> & Serve.HostnamePortServeOptions<undefined>,
-	'fetch' | 'routes' | 'websocket' | 'error' | 'tls'
+	'fetch' | 'routes' | 'websocket' | 'error' | 'tls' | 'http3' | 'http1'
 > & {
 	unix?: string;
-	tls?: JSONTLSOptions | JSONTLSOptions[];
-};
-
-type JSONTLSOptions = Omit<TLSOptions, 'ca' | 'cert' | 'key' | 'ALPNProtocols'> & {
-	ca?: string | string[];
-	cert?: string | string[];
-	key?: string | string[];
-	ALPNProtocols?: string;
 };
 
 type CompileOptions = Omit<BuildConfig, 'entrypoints' | 'compile' | 'target' | 'format'> & {

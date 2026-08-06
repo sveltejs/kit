@@ -33,9 +33,6 @@ describe('Bun build options', () => {
 		const user_plugin = { name: 'user-plugin', setup() {} };
 		await adapter({
 			out: 'dist',
-			serverOptions: {
-				tls: { cert: 'certificate', key: ['private key'], requestCert: true }
-			},
 			compile: {
 				compile: { target: 'bun-linux-x64' },
 				conditions: ['custom', 'bun'],
@@ -60,9 +57,6 @@ describe('Bun build options', () => {
 		expect(options.files['virtual:user']).toBe('export default true');
 		expect(options.files['.svelte-kit/output/server/adapter-bun-manifest.js']).not.toBe(
 			'invalid manifest'
-		);
-		expect(options.files['.svelte-kit/output/server/adapter-bun-options.js']).toContain(
-			'"requestCert":true'
 		);
 		expect(options).toMatchObject({
 			target: 'bun',

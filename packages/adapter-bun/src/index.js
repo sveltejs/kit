@@ -3,11 +3,13 @@ import server_options from 'SERVER_OPTIONS';
 import { handler } from './handler.js';
 import { boolean_env, env, number_env } from './env.js';
 import { routes } from './static.js';
-import { get_tls_options } from './tls.js';
 import { parse_as_bytes } from './utils.js';
 
 const options = { ...server_options };
 delete options.fetch;
+delete options.tls;
+delete options.http3;
+delete options.http1;
 
 export const unix = env('SOCKET_PATH', /** @type {string | undefined} */ (options.unix));
 export const hostname = env(
@@ -57,24 +59,6 @@ if (!Number.isSafeInteger(body_size_limit) || body_size_limit < 0) {
 	);
 }
 options.maxRequestBodySize = body_size_limit;
-
-const http3 = boolean_env('HTTP3', /** @type {boolean | undefined} */ (options.http3));
-const http1 = boolean_env('HTTP1', /** @type {boolean | undefined} */ (options.http1));
-if (http3 !== undefined) options.http3 = http3;
-if (http1 !== undefined) options.http1 = http1;
-
-const tls = get_tls_options(options.tls);
-if (tls) options.tls = tls;
-
-if (options.http3 && !options.tls) {
-	throw new Error('HTTP3 requires TLS_CERT and TLS_KEY or TLS server options');
-}
-if (options.http1 === false && !options.http3) {
-	throw new Error('HTTP1=false requires HTTP3=true');
-}
-if (unix && options.http3) {
-	throw new Error('HTTP3 cannot be used with SOCKET_PATH');
-}
 
 options.fetch = handler;
 options.routes = routes;

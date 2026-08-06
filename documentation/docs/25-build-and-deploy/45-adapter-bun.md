@@ -74,14 +74,9 @@ Adds a prefix to all environment variables read by the production server. For ex
 
 ### serverOptions
 
-Provides JSON-serializable defaults for `Bun.serve`. This is useful for settings such as `hostname`, `port`, `reusePort`, `ipv6Only`, `idleTimeout`, `development`, `maxRequestBodySize`, `tls`, `http3`, and `http1`. Environment variables override these defaults.
+Provides JSON-serializable defaults for `Bun.serve`. This is useful for settings such as `hostname`, `port`, `reusePort`, `ipv6Only`, `idleTimeout`, `development`, and `maxRequestBodySize`. Environment variables override these defaults.
 
-TLS certificate, private-key, and CA values in `serverOptions` must be PEM strings or arrays of PEM
-strings. Use the TLS environment variables below when you want to configure file paths at deployment
-time. Other JSON-serializable Bun TLS settings, including mTLS, ALPN, and cipher settings, can be
-passed directly.
-
-`fetch`, `routes`, `websocket`, and `error` handlers cannot be serialized. To use those APIs, create a [custom server](#Custom-server).
+`fetch`, `routes`, `websocket`, `error`, `tls`, `http3`, and `http1` cannot be configured this way. To use those APIs, create a [custom server](#Custom-server).
 
 ### compile
 
@@ -156,19 +151,6 @@ On `SIGINT` or `SIGTERM`, the server stops accepting connections and waits for i
 ### `DEVELOPMENT`
 
 Set `DEVELOPMENT=true` to enable Bun's contextual server error pages. It defaults to `false` in the generated production server.
-
-### TLS and HTTP/3
-
-Use `TLS_CERT` and `TLS_KEY` to provide certificate and private-key file paths. Each value may instead be a JSON array of file paths. The following additional variables are available:
-
-- `TLS_CA`
-- `TLS_PASSPHRASE`
-- `TLS_SERVER_NAME`
-- `TLS_DH_PARAMS_FILE`
-- `TLS_LOW_MEMORY_MODE`
-- `TLS_SECURE_OPTIONS`
-
-Set `HTTP3=true` to enable Bun's experimental HTTP/3 support. This requires TLS and cannot be combined with `SOCKET_PATH`. Set `HTTP1=false` together with `HTTP3=true` for an HTTP/3-only listener.
 
 ### Proxy headers
 
