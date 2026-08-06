@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { HttpError, SvelteKitError } from '@sveltejs/kit/internal';
-import { get_status } from './error.js';
+import { add_deprecated_handle_error_properties, get_status } from './error.js';
 
 describe('get_status', () => {
 	it('returns the status of an HttpError', () => {
@@ -18,5 +18,24 @@ describe('get_status', () => {
 	it('returns 500 for non-errors', () => {
 		expect(get_status({ status: 404 })).toBe(500);
 		expect(get_status(undefined)).toBe(500);
+	});
+});
+
+describe('add_deprecated_handle_error_properties', () => {
+	it('adds non-enumerable accessors that warn and return the fallback values', () => {
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+		const input = add_deprecated_handle_error_properties(
+			{ kind: 'unexpected', error: new Error('nope') },
+			{ status: 500, message: 'Internal Error' }
+		);
+
+		expect(Object.keys(input)).toEqual(['kind', 'error']);
+		expect(/** @type {any} */ (input).status).toBe(500);
+		expect(/** @type {any} */ (input).message).toBe('Internal Error');
+		expect(warn).toHaveBeenCalledTimes(2);
+		expect(warn.mock.calls[0][0]).toContain('Use `error.status`');
+		expect(warn.mock.calls[1][0]).toContain('Use `error.message`');
+
+		warn.mockRestore();
 	});
 });

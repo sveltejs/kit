@@ -198,7 +198,7 @@ Alongside the `event`, the hook receives a `kind` discriminant that tells you wh
 
 Errors from [`handleValidationError`](#handleValidationError) arrive as _expected_ errors. Redirects are not errors, and never reach the hook.
 
-The hook returns an object matching [`App.Error`](types#Error), in which `status` and `message` are optional — return them only to override the defaults in the table above. Any property you omit is inherited from the caught error, so returning `{}` (or nothing at all) leaves the error untouched, while returning `{ status: 404 }` changes only the status.
+The hook returns an object matching [`App.Error`](types#Error), in which `status` and `message` are optional — return them only to override the defaults in the table above.
 
 > [!NOTE] If you augment `App.Error` with additional _required_ properties, the hook must return them.
 
