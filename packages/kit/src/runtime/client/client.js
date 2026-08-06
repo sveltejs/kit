@@ -40,6 +40,7 @@ import {
 	restore_navigation_snapshot
 } from './snapshots.js';
 import { validate_page_exports } from '../../utils/exports.js';
+import { add_deprecated_handle_error_properties } from '../../utils/error.js';
 import { noop } from '../../utils/functions.js';
 import {
 	INVALIDATED_PARAM,
@@ -2536,7 +2537,10 @@ export async function handle_error(error, event) {
 	const fallback =
 		caught.kind === 'unexpected' ? { status: 500, message: 'Internal Error' } : caught.error;
 
-	const app_error = await app.hooks.handleError({ ...caught, event });
+	const input = { ...caught, event };
+	if (DEV) add_deprecated_handle_error_properties(input, fallback);
+
+	const app_error = await app.hooks.handleError(input);
 
 	// the hook returns only the properties it wants to override; anything it omits
 	// (including by returning nothing at all) is inherited from the caught error

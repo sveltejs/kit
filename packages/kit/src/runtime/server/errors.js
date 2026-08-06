@@ -1,7 +1,7 @@
 import { json, text } from '@sveltejs/kit';
-import { HttpError, SvelteKitError } from '@sveltejs/kit/internal';
+import { HandledHttpError, HttpError, SvelteKitError } from '@sveltejs/kit/internal';
 import { with_request_store } from '@sveltejs/kit/internal/server';
-import { coalesce_to_error } from '../../utils/error.js';
+import { add_deprecated_handle_error_properties, coalesce_to_error } from '../../utils/error.js';
 import { negotiate } from '../../utils/http.js';
 import { fix_stack_trace } from './internal.js';
 import { escape_html } from '../../utils/escape.js';
@@ -39,6 +39,10 @@ export async function handle_fatal_error(event, state, options, error) {
  * @returns {App.Error | Promise<App.Error>}
  */
 export function handle_error_and_jsonify(event, state, options, error) {
+	if (error instanceof HandledHttpError) {
+		return error.body;
+	}
+
 	/** @type {import('@sveltejs/kit').CaughtError} */
 	let caught;
 
@@ -47,13 +51,13 @@ export function handle_error_and_jsonify(event, state, options, error) {
 	} else if (error instanceof SvelteKitError) {
 		caught = { kind: 'framework', error: { status: error.status, message: error.text } };
 	} else {
+		caught = { kind: 'unexpected', error };
+
 		let e = error;
 		while (e instanceof Error) {
 			fix_stack_trace(e);
 			e = e.cause;
 		}
-
-		caught = { kind: 'unexpected', error };
 	}
 
 	const fallback =
@@ -72,9 +76,10 @@ export function handle_error_and_jsonify(event, state, options, error) {
 	// TODO 4.0 await this, rather than handling the non-Promise case
 	let result;
 	try {
-		result = with_request_store({ event, state }, () =>
-			options.hooks.handleError({ ...caught, event })
-		);
+		const input = { ...caught, event };
+		if (__SVELTEKIT_DEV__) add_deprecated_handle_error_properties(input, fallback);
+
+		result = with_request_store({ event, state }, () => options.hooks.handleError(input));
 	} catch (hook_error) {
 		log_handle_error_hook_failure(error, hook_error);
 		return { status: fallback.status, message: 'Internal Error' };
