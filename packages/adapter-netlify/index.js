@@ -288,9 +288,6 @@ function generate_serverless_function({ builder, routes, patterns, name, exclude
  */
 function generate_serverless_function_module(manifest, catch_all) {
 	if (catch_all) {
-		// Netlify rewrites can cause an endless loop because it will re-run the same
-		// function but with the rewritten URL. Therefore, we use `context.next` instead
-		// to specifically invoke the next function in the chain with the rewritten URL
 		return `\
 import { applyReroute } from '@sveltejs/kit/adapter';
 import { init } from '../serverless.js';
@@ -300,7 +297,7 @@ const ssr_handler = init(${manifest});
 export default {
 	async fetch(request, context) {
 		const response = await ssr_handler(request, context);
-		return applyReroute(response, (url) => context.next(new Request(url, request)));
+		return applyReroute(response, (url) => fetch(new Request(url, request)));
 	},
 };
 `;
