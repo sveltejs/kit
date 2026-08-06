@@ -4,6 +4,7 @@
 import { json, error } from '@sveltejs/kit';
 import { Redirect, SvelteKitError } from '@sveltejs/kit/internal';
 import { with_request_store, merge_tracing } from '@sveltejs/kit/internal/server';
+import { app_dir, base } from '$app/paths/internal/server';
 import { is_form_content_type } from '../../utils/http.js';
 import { create_remote_key, parse_remote_arg, split_remote_key } from '../shared.js';
 import { stringify } from '#app/internal/transport';
@@ -602,6 +603,16 @@ async function handle_remote_form_post_internal(event, state, manifest, id) {
 			error: check_incorrect_fail_use(err)
 		};
 	}
+}
+
+/**
+ * @param {URL} url
+ */
+export function get_remote_id(url) {
+	return (
+		url.pathname.startsWith(`${base}/${app_dir}/remote/`) &&
+		url.pathname.replace(`${base}/${app_dir}/remote/`, '')
+	);
 }
 
 /**
