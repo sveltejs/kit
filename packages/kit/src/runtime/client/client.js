@@ -2442,11 +2442,8 @@ export async function handle_error(error, event) {
 		console.warn('The next HMR update will cause the page to reload');
 	}
 
-	/** @type {App.Error} */
 	const fallback =
-		caught.kind === 'unexpected'
-			? /** @type {App.Error} */ ({ status: 500, message: 'Internal Error' })
-			: /** @type {App.Error} */ (caught.error);
+		caught.kind === 'unexpected' ? { status: 500, message: 'Internal Error' } : caught.error;
 
 	const app_error = await app.hooks.handleError({ ...caught, event });
 
