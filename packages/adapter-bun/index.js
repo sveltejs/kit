@@ -332,9 +332,7 @@ function create_routes({
 				`export const asset_path = (file) => assets.get(file);`
 			]
 		: [`export const asset_path = (file) => join(dir, file);`];
-	const declarations = [];
 	const entries = [];
-	let redirect_index = 0;
 
 	for (const [route, value] of routes) {
 		if ('asset' in value) {
@@ -358,19 +356,12 @@ function create_routes({
 			continue;
 		}
 
-		const identifier = `redirect_${redirect_index++}`;
-		declarations.push(
-			`const ${identifier} = (request) => new Response(null, { status: 308, headers: { location: ${JSON.stringify(value.location)} + new URL(request.url).search } });`
+		entries.push(
+			`${JSON.stringify(route)}: Response.redirect(${JSON.stringify(value.location)}, 308)`
 		);
-		entries.push(`${JSON.stringify(route)}: { GET: ${identifier}, HEAD: ${identifier} }`);
 	}
 
-	return [
-		...imports,
-		...asset_path,
-		...declarations,
-		`export const routes = {${entries.join(',')}};`
-	].join('\n');
+	return [...imports, ...asset_path, `export const routes = {${entries.join(',\n')}};`].join('\n');
 }
 
 /**
