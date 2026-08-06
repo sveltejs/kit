@@ -177,7 +177,7 @@ export function handleValidationError({ issues }) {
 
 Be thoughtful about what information you expose here, as the most likely reason for validation to fail is that someone is sending malicious requests to your server.
 
-The object you return here becomes the body of an [expected error](errors#Expected-errors), which means it subsequently passes through [`handleError`](hooks#handleError) as an error with a `kind` of `'expected'`.
+The object you return here becomes the body of an [expected error](errors#Expected-errors), which means it subsequently passes through [`handleError`](hooks#handleError) as an error with `kind: 'expected'`.
 
 ## handleError
 
