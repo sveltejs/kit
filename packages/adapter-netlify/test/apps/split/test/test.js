@@ -40,8 +40,8 @@ test('_redirects are copied to publish directory', () => {
 test('edge middleware runs reroute before split function', async ({ page }) => {
 	await page.goto('/reroute');
 	await expect(page.locator('p')).toContainText('/reroute');
-	await page.goto('/en/reroute');
-	await expect(page.locator('p')).toContainText('/en/reroute');
+	await page.goto('/en/reroute?hello=world');
+	await expect(page.locator('p')).toContainText('/en/reroute?hello=world');
 });
 
 // TODO: test remote function works
