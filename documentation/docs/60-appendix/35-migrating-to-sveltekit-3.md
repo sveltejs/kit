@@ -58,75 +58,62 @@ The `$lib` alias is no longer generated automatically by SvelteKit. It is replac
 }
 ```
 
-```js
-// @filename: ambient.d.ts
-declare module '#lib/foo.js' {
-	export const foo: number;
-}
-// @filename: index.js
-// ---cut---
----import { foo } from '$lib/foo.js';---
-+++import { foo } from '#lib/foo.js';+++
-```
-
 Consequently, the `kit.files.lib` configuration option has also been removed — `src/lib` is no longer special-cased by SvelteKit.
 
 To migrate, find-and-replace `$lib` with `#lib` across your codebase, add the `imports` entry above to `package.json`, and remove any `files.lib` config.
 
 ## Param matchers live in a single `params.js/ts` file
 
-Param matchers are no longer files inside the `src/params` directory. Declare all matchers in a single `src/params.js` (or `src/params.ts`) file using the `defineParams` helper. A matcher can be a function that returns a parsed value (or `undefined`, if the param is not match), or a [Standard Schema](https://standardschema.dev).
+Param matchers are no longer files inside the `src/params` directory. Declare all matchers in a single `src/params.js` (or `src/params.ts`) file using the `defineParams` helper. A matcher can be a function that returns a parsed value (or `undefined`, if the param does not match), or a [Standard Schema](https://standardschema.dev).
 
 ```js
-// --- src/params/integer.js (deleted) ---
-export function match(param) {
-	return /^\d+$/.test(param);
-}
-
-// --- src/params.js ---
+/// file: src/params.js
 import { defineParams } from '@sveltejs/kit';
 import * as v from 'valibot';
 
 export const params = defineParams({
-	integer: v.pipe(v.string(), v.toNumber()), // schema variant
-	fruit: (param) => (param === 'apple' || param === 'orange' ? param : undefined) // function variant
+	// schema variant
+	integer: v.pipe(v.string(), v.toNumber()),
+
+	// function variant
+	fruit: (param) => {
+		if (param === 'apple' || param === 'orange') {
+			return param;
+		}
+	}
 });
 ```
 
-To migrate, consolidate every `src/params/*.js` file into `src/params.js`/`params.ts`. When a matcher returns a parsed value (or a Standard Schema is used), the route `params` are now typed with the output type.
+To migrate, consolidate every `src/params/*.js` file into `src/params.js`/`params.ts`. See [Matching](advanced-routing#Matching) for more details.
 
 ## `$app/stores` has been removed
 
-`$app/stores` (the `$page`, `$navigating`, and `$updated` stores) has been removed. Use `$app/state` instead, which is based on the Svelte 5 runes API and provides fine-grained, non-store values.
+The `$app/stores` module (which exports the `$page`, `$navigating`, and `$updated` stores) has been removed. Use [`$app/state`]($app-state) instead, which provides fine-grained Svelte 5 [state](../svelte/$state).
 
 ```svelte
 <script>
-	---import { page } from '$app/stores';---
-+++import { page } from '$app/state';+++
+	import { page } from +++'$app/state'+++;
 </script>
 
----{$page.data}---
-+++{page.data}+++
+<p>current pathname: {page.url.pathname}</p>
 ```
 
-Replace `$app/stores` imports with `$app/state` and remove the `$` prefix when reading values.
+Replace `$app/stores` imports with `$app/state` and remove the `$` prefix when reading values (i.e. `page` rather than `$page`).
 
 ## `base`, `assets`, and `resolveRoute` removed from `$app/paths`
 
-The deprecated `base`, `assets`, and `resolveRoute` exports have been removed from `$app/paths`. Use the replacements that were introduced in SvelteKit 2.26:
+The deprecated `base`, `assets`, and `resolveRoute` exports have been removed from [`$app/paths`]($app-paths). Use the replacements that were introduced in SvelteKit 2.26:
 
-- `resolveRoute(id, params)` → `resolve(id, params)` (also accepts a plain pathname)
-- `assets + '/foo.png'` → `asset('foo.png')`
+- replace `base + resolveRoute(id, params)` with `resolve(id, params)` (also accepts a plain pathname)
+- replace `assets + '/foo.png'` with `asset('foo.png')`
 
 ```js
----import { base, resolveRoute } from '$app/paths';---
-+++import { resolve } from '$app/paths';+++
+import { resolve } from '$app/paths';
 
----const path = base + resolveRoute('/blog/[slug]', { slug });---
-+++const path = resolve('/blog/[slug]', { slug });+++
+const path = resolve('/blog/[slug]', { slug });
 ```
 
-The `Pathname` and `Asset` types have also been renamed to `Path` and `AssetPath`, and the leading `/` has been removed from those types — so `asset('/foo.png')` should now be `asset('foo.png')`, and pathnames passed to `resolve` no longer start with `/` (e.g. `resolve('blog/hello-world')`). Only route ids start with `/` now.
+The `Pathname` and `Asset` types have also been renamed to `Path` and `AssetPath`, and the leading `/` has been removed from those types — so `asset('/foo.png')` should now be `asset('foo.png')`, and pathnames passed to `resolve` no longer start with `/` (e.g. `resolve('blog/hello-world')`). Only route IDs start with `/` now.
 
 ## Changes to shallow routing
 
