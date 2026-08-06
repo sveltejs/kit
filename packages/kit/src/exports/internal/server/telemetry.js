@@ -1,6 +1,6 @@
 /** @import { Tracer, SpanStatusCode, PropagationAPI, ContextAPI } from '@opentelemetry/api' */
 /** @import { RecordSpan } from 'types' */
-import { HttpError, Redirect } from '@sveltejs/kit/internal';
+import { HttpError, Redirect } from '../shared.js';
 import { noop_span } from '../../../runtime/telemetry/noop.js';
 
 // Import this module by its bare specifier so bundled and external code share its state.
@@ -75,7 +75,7 @@ export async function record_span({ name, attributes, fn }) {
 				span.recordException({
 					name: error.name,
 					message: error.message,
-					stack: error.stack
+					...(error.stack !== undefined && { stack: error.stack })
 				});
 				span.setStatus({
 					code: SpanStatusCode.ERROR,
