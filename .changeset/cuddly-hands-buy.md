@@ -1,6 +1,6 @@
 ---
-'@sveltejs/adapter-netlify': major
-'@sveltejs/adapter-vercel': major
+'@sveltejs/adapter-netlify': patch
+'@sveltejs/adapter-vercel': patch
 ---
 
-fix: run `reroute` in an edge middleware if the app has been split into multiple functions
+fix: correctly apply `reroute` results for apps configured with split serverless functions
