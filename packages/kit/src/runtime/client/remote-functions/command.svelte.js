@@ -1,7 +1,8 @@
 /** @import { RemoteCommand, RemoteQueryUpdate } from '@sveltejs/kit' */
 import { app_dir, base } from '$app/paths/internal/client';
 import { app } from '../client.js';
-import { stringify_command_arg } from '../../shared.js';
+import { create_remote_arg_reducers } from '../../shared.js';
+import { BINARY_FORM_CONTENT_TYPE, serialize_binary_form } from '../../form-utils.js';
 import { get_remote_request_headers, categorize_updates, remote_request } from './shared.svelte.js';
 
 /**
@@ -31,7 +32,7 @@ export function command(id) {
 		// No one should call commands during rendering, but this is belt and braces.
 		// Do this here, after Svelte's reactivity context is gone.
 		const headers = {
-			'Content-Type': 'application/json',
+			'Content-Type': BINARY_FORM_CONTENT_TYPE,
 			...get_remote_request_headers()
 		};
 
@@ -45,12 +46,15 @@ export function command(id) {
 					throw updates_error;
 				}
 
+				const { blob } = serialize_binary_form(
+					arg,
+					{ remote_refreshes: Array.from(refreshes ?? []) },
+					create_remote_arg_reducers(app.hooks.transport, false, new Map())
+				);
+
 				const response = await remote_request(`${base}/${app_dir}/remote/${id}`, {
 					method: 'POST',
-					body: JSON.stringify({
-						payload: await stringify_command_arg(arg, app.hooks.transport),
-						refreshes: Array.from(refreshes ?? [])
-					}),
+					body: blob,
 					headers
 				});
 
