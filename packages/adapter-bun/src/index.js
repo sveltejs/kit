@@ -3,20 +3,10 @@ import server_options from 'SERVER_OPTIONS';
 import { handler } from './handler.js';
 import { boolean_env, env, number_env } from './env.js';
 import { routes } from './static.js';
-import { parse_as_bytes } from './utils.js';
 
-const options = { ...server_options };
-delete options.fetch;
-delete options.tls;
-delete options.http3;
-delete options.http1;
+const options = /** @type {import('bun').Serve.Options<undefined>} */ ({ ...server_options });
 
-export const unix = env('SOCKET_PATH', /** @type {string | undefined} */ (options.unix));
-export const hostname = env(
-	'HOST',
-	/** @type {string | undefined} */ (options.hostname) ?? '0.0.0.0'
-);
-export const port = env('PORT', options.port === undefined ? '3000' : String(options.port));
+export const unix = env('SOCKET_PATH', options.unix);
 
 if (unix) {
 	options.unix = unix;
@@ -26,23 +16,13 @@ if (unix) {
 	delete options.ipv6Only;
 } else {
 	delete options.unix;
-	options.hostname = hostname;
-	options.port = port;
-	options.reusePort = boolean_env(
-		'REUSE_PORT',
-		/** @type {boolean | undefined} */ (options.reusePort)
-	);
-	options.ipv6Only = boolean_env(
-		'IPV6_ONLY',
-		/** @type {boolean | undefined} */ (options.ipv6Only)
-	);
+	options.hostname = env('HOST', options.hostname);
+	options.port = env('PORT', options.port ? String(options.port) : undefined);
+	options.reusePort = boolean_env('REUSE_PORT', options.reusePort);
+	options.ipv6Only = boolean_env('IPV6_ONLY', options.ipv6Only);
 }
 
-options.idleTimeout = number_env(
-	'IDLE_TIMEOUT',
-	/** @type {number | undefined} */ (options.idleTimeout),
-	{ max: 255 }
-);
+options.idleTimeout = number_env('IDLE_TIMEOUT', options.idleTimeout, { max: 255 });
 const development = boolean_env('DEVELOPMENT');
 if (development !== undefined) {
 	options.development = development;
@@ -50,26 +30,16 @@ if (development !== undefined) {
 	options.development = false;
 }
 
-const body_size_limit = parse_as_bytes(
-	env('BODY_SIZE_LIMIT', String(options.maxRequestBodySize ?? '512K')) || ''
-);
-if (!Number.isSafeInteger(body_size_limit) || body_size_limit < 0) {
-	throw new Error(
-		`Invalid BODY_SIZE_LIMIT: ${JSON.stringify(env('BODY_SIZE_LIMIT'))}. Please provide a non-negative integer with an optional K, M, or G suffix.`
-	);
-}
-options.maxRequestBodySize = body_size_limit;
+options.maxRequestBodySize = number_env('BODY_SIZE_LIMIT', options.maxRequestBodySize);
 
 options.fetch = handler;
 options.routes = routes;
 
-export const server = Bun.serve(
-	/** @type {import('bun').Serve.Options<undefined>} */ (/** @type {unknown} */ (options))
-);
+export const server = Bun.serve(options);
 
 console.log(unix ? `Listening on ${unix}` : `Listening on ${server.url}`);
 
-const shutdown_timeout = number_env('SHUTDOWN_TIMEOUT', 30) ?? 30;
+const shutdown_timeout = number_env('SHUTDOWN_TIMEOUT') ?? 30;
 let shutting_down = false;
 
 /** @param {'SIGINT' | 'SIGTERM'} reason */
@@ -83,7 +53,7 @@ async function graceful_shutdown(reason) {
 		void server.stop(true);
 	}, shutdown_timeout * 1000);
 
-	await server.stop(false);
+	await server.stop();
 	clearTimeout(timeout);
 	// @ts-expect-error custom events cannot be typed
 	process.emit('sveltekit:shutdown', reason);

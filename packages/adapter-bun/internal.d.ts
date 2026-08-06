@@ -12,6 +12,16 @@ declare module 'SERVER' {
 }
 
 declare module 'SERVER_OPTIONS' {
-	const options: Record<string, unknown>;
+	const options: Pick<
+		import('bun').Serve.Options<undefined>,
+		| 'development'
+		| 'hostname'
+		| 'port'
+		| 'idleTimeout'
+		| 'maxRequestBodySize'
+		| 'reusePort'
+		| 'unix'
+		| 'ipv6Only'
+	>;
 	export default options;
 }
