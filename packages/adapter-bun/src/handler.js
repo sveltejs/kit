@@ -66,27 +66,30 @@ export async function handler(request, bun_server) {
  */
 function get_origin(request, url) {
 	const protocol = decodeURIComponent(
-		(protocol_header ? request.headers.get(protocol_header) : null) || url.protocol.slice(0, -1)
+		(protocol_header ? request.headers.get(protocol_header) : null) ?? url.protocol.slice(0, -1)
 	);
 	if (protocol.includes(':')) {
 		throw new Error(
-			`The ${protocol_header} header specified ${protocol}, which is invalid because it includes \`:\``
+			`The ${protocol_header} header specified ${protocol} which is an invalid because it includes \`:\`. It should only contain the protocol scheme (e.g. \`https\`)`
 		);
 	}
 
 	const host =
-		(host_header ? request.headers.get(host_header) : null) ||
-		request.headers.get('host') ||
+		(host_header ? request.headers.get(host_header) : null) ??
+		request.headers.get('host') ??
 		url.host;
 	if (!host) {
+		const header_names = host_header ? `${host_header} or host headers` : 'host header';
 		throw new Error(
-			`The request must include a ${host_header ? `${host_header} or host` : 'host'} header`
+			`Could not determine host. The request must have a value provided by the ${header_names}`
 		);
 	}
 
 	const port = port_header ? request.headers.get(port_header) : null;
-	if (port && !/^\d+$/.test(port)) {
-		throw new Error(`The ${port_header} header specified an invalid port: ${port}`);
+	if (port && isNaN(+port)) {
+		throw new Error(
+			`The ${port_header} header specified ${port} which is an invalid port because it is not a number. The value should only contain the port number (e.g. 443)`
+		);
 	}
 
 	const value = port ? `${protocol}://${host}:${port}` : `${protocol}://${host}`;
@@ -103,15 +106,20 @@ function get_client_address(request, bun_server) {
 		const value = request.headers.get(address_header);
 		if (value === null) {
 			throw new Error(
-				`Address header was specified with ${env_prefix + 'ADDRESS_HEADER'}=${address_header} but is absent from request`
+				`Address header was specified with ${env_prefix}ADDRESS_HEADER=${address_header} but is absent from request`
 			);
 		}
 
 		if (address_header === 'x-forwarded-for') {
 			const addresses = value.split(',');
+
+			if (xff_depth < 1) {
+				throw new Error(`${env_prefix}XFF_DEPTH must be a positive integer`);
+			}
+
 			if (xff_depth > addresses.length) {
 				throw new Error(
-					`${env_prefix + 'XFF_DEPTH'} is ${xff_depth}, but only found ${addresses.length} addresses`
+					`${env_prefix}XFF_DEPTH is ${xff_depth}, but only found ${addresses.length} addresses`
 				);
 			}
 			return addresses[addresses.length - xff_depth].trim();
