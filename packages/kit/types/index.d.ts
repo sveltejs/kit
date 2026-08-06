@@ -2915,7 +2915,16 @@ declare module '@sveltejs/kit' {
 
 declare module '@sveltejs/kit/adapter' {
 	/**
-	 * Returns the rerouted pathname
+	 * Helps a catch-all request handler pass the request to a different handler if
+	 * the `reroute` hook has returned a URL pathname that's different from the
+	 * incoming request.
+	 *
+	 * If your adapter is capable of deploying multiple serverless functions, it's a
+	 * good idea to also deploy a "catch-all" one to handle uncaught requests.
+	 * Running this in that function allows the app's `reroute` hook to rewrite
+	 * the request URL and invoke the next appropriate serverless function, if any.
+	 * @param response The response returned from the SvelteKit `server.respond` function
+	 * @param next Your platform-specific implementation for invoking the next handler with a different request URL
 	 * @since 3.0.0
 	 */
 	export function applyReroute(response: Response, next: (url: URL) => Response | Promise<Response>): Response | Promise<Response>;
