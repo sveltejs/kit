@@ -56,11 +56,8 @@ export function handle_error_and_jsonify(event, state, options, error) {
 		caught = { kind: 'unexpected', error };
 	}
 
-	/** @type {App.Error} */
 	const fallback =
-		caught.kind === 'unexpected'
-			? /** @type {App.Error} */ ({ status: 500, message: 'Internal Error' })
-			: /** @type {App.Error} */ (caught.error);
+		caught.kind === 'unexpected' ? { status: 500, message: 'Internal Error' } : caught.error;
 
 	/**
 	 * The hook returns only the properties it wants to override; anything it omits
