@@ -3046,12 +3046,11 @@ declare module '@sveltejs/kit' {
 }
 
 declare module '@sveltejs/kit/env' {
-	import type { EnvVarConfig } from '@sveltejs/kit';
 	/**
 	 * Utility for defining [environment variables](https://svelte.dev/docs/kit/environment-variables),
 	 * which are made available via `$app/env/public` and `$app/env/private`.
 	 * */
-	export function defineEnvVars<T extends Record<string, EnvVarConfig<any>>>(variables: T): T;
+	export function defineEnvVars<T extends Record<string, import("@sveltejs/kit").EnvVarConfig<any>>>(variables: T): T;
 
 	export {};
 }
