@@ -664,7 +664,7 @@ export interface RequestState {
 		handle: () => Promise<Response>
 	) => Promise<Response>;
 	readonly emulator?: Emulator;
-	prerendering?: PrerenderOptions;
+	readonly prerendering?: PrerenderOptions;
 	/**
 	 * When fetching data from a +server.js endpoint in `load`, the page's
 	 * prerender option is inherited by the endpoint, unless overridden.
@@ -677,7 +677,7 @@ export interface RequestState {
 	/**
 	 * Allows us to prevent `event.fetch` from making infinitely looping internal requests.
 	 */
-	depth: number;
+	readonly depth: number;
 	readonly handleValidationError: ServerHooks['handleValidationError'];
 	readonly tracing: {
 		record_span: RecordSpan;

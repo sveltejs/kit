@@ -28,7 +28,7 @@ function transient_fields() {
  * @returns {RequestState}
  */
 export function create_request_state(options, hooks) {
-	// Request state is created once for each top-level request.
+	// every field is initialized up front so the object shape stays stable
 	return {
 		getClientAddress: options.getClientAddress,
 		platform: options.platform,
