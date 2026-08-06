@@ -40,21 +40,26 @@ export default function (opts = {}) {
 
 			const dir_id = `${entries}/dir.js`;
 			const manifest_file = `${server}/adapter-bun-manifest.js`;
+			const routes_file = `${server}/adapter-bun-routes.js`;
 			const server_options_file = `${server}/adapter-bun-options.js`;
 			const instrumentation = builder.hasServerInstrumentationFile()
 				? `${server}/instrumentation.server.js`
 				: undefined;
 			const virtual_files = {
-				[manifest_file]: [
-					`export const manifest = ${builder.generateManifest({ relativePath: './' })};`,
-					`export const client_files = new Set(${JSON.stringify(client_files)});`,
-					`export const prerendered_files = new Set(${JSON.stringify(prerendered_files)});`,
-					`export const prerendered_paths = new Set(${JSON.stringify(builder.prerendered.paths)});`
-				].join('\n\n'),
+				[manifest_file]: `export const manifest = ${builder.generateManifest({ relativePath: './' })};\n`,
 				[server_options_file]: `export default ${serialize(serverOptions)};\n`
 			};
 
 			const compile_options = normalize_compile_options(compile, out);
+			virtual_files[routes_file] = create_routes({
+				out,
+				client_files,
+				prerendered_files,
+				prerendered_paths: builder.prerendered.paths,
+				app_path: builder.getAppPath(),
+				dir_id,
+				embed: compile_options !== undefined
+			});
 			const entrypoints = [`${entries}/index.js`, `${entries}/handler.js`, dir_id];
 			/** @type {Omit<import('bun').BuildConfig, 'entrypoints'>} */
 			let build_options = {
@@ -76,14 +81,8 @@ export default function (opts = {}) {
 			};
 
 			if (compile_options) {
-				const assets = [
-					...client_files.map((file) => `client/${file}`),
-					...prerendered_files.map((file) => `prerendered/${file}`)
-				];
 				const compile_file = `${out}/adapter-bun-compile.js`;
 				virtual_files[compile_file] = create_compile_entrypoint(
-					out,
-					assets,
 					`${entries}/index.js`,
 					instrumentation
 				);
@@ -97,9 +96,10 @@ export default function (opts = {}) {
 				name: 'adapter-bun',
 				/** @param {import('bun').PluginBuilder} build */
 				setup(build) {
-					build.onResolve({ filter: /^(SERVER|MANIFEST|SERVER_OPTIONS)$/ }, ({ path }) => {
+					build.onResolve({ filter: /^(SERVER|MANIFEST|ROUTES|SERVER_OPTIONS)$/ }, ({ path }) => {
 						if (path === 'SERVER') return { path: `${server}/index.js` };
 						if (path === 'MANIFEST') return { path: manifest_file };
+						if (path === 'ROUTES') return { path: routes_file };
 						if (path === 'SERVER_OPTIONS') return { path: server_options_file };
 					});
 
@@ -245,29 +245,166 @@ function serialize(value) {
 }
 
 /**
- * @param {string} out
- * @param {string[]} assets
  * @param {string} entrypoint
  * @param {string | undefined} instrumentation
  * @returns {string}
  */
-function create_compile_entrypoint(out, assets, entrypoint, instrumentation) {
-	const unique_assets = [...new Set(assets)];
-	const imports = unique_assets.map(
-		(file, index) =>
-			`import asset_${index} from ${JSON.stringify(posixify(resolve(out, file)))} with { type: 'file' };`
-	);
-	const entries = unique_assets.map((file, index) => [file, `asset_${index}`]);
+function create_compile_entrypoint(entrypoint, instrumentation) {
 	return [
-		...imports,
-		`globalThis[Symbol.for('sveltekit.adapter-bun.assets')] = new Map([${entries
-			.map(([file, identifier]) => `[${JSON.stringify(file)}, ${identifier}]`)
-			.join(',')}]);`,
 		instrumentation && `await import(${JSON.stringify(instrumentation)});`,
 		`await import(${JSON.stringify(entrypoint)});`
 	]
 		.filter(Boolean)
 		.join('\n');
+}
+
+/**
+ * @param {object} options
+ * @param {string} options.out
+ * @param {string[]} options.client_files
+ * @param {string[]} options.prerendered_files
+ * @param {string[]} options.prerendered_paths
+ * @param {string} options.app_path
+ * @param {string} options.dir_id
+ * @param {boolean} options.embed
+ * @returns {string}
+ */
+function create_routes({
+	out,
+	client_files,
+	prerendered_files,
+	prerendered_paths,
+	app_path,
+	dir_id,
+	embed
+}) {
+	/** @type {Map<string, { asset: string; immutable: boolean } | { location: string }>} */
+	const routes = new Map();
+	const prerendered_file_set = new Set(prerendered_files);
+
+	for (const file of client_files) {
+		routes.set(encode_pathname(`/${file}`), {
+			asset: `client/${file}`,
+			immutable: file.startsWith(`${app_path}/immutable/`)
+		});
+	}
+
+	for (const pathname of prerendered_paths) {
+		const file = find_prerendered_file(pathname, prerendered_file_set);
+		const route = encode_pathname(pathname);
+		if (file && !routes.has(route)) {
+			routes.set(route, { asset: `prerendered/${file}`, immutable: false });
+		}
+	}
+
+	for (const pathname of prerendered_paths) {
+		const inverted = pathname.endsWith('/') ? pathname.slice(0, -1) : `${pathname}/`;
+		if (!inverted) continue;
+
+		const route = encode_pathname(inverted);
+		if (routes.has(route)) continue;
+		routes.set(route, {
+			location: relative_pathname(route, encode_pathname(pathname))
+		});
+	}
+
+	const assets = [
+		...client_files.map((file) => `client/${file}`),
+		...prerendered_files.map((file) => `prerendered/${file}`)
+	];
+	const unique_assets = [...new Set(assets)];
+	const identifiers = new Map(unique_assets.map((file, index) => [file, `asset_${index}`]));
+	const imports = embed
+		? unique_assets.map(
+				(file, index) =>
+					`import asset_${index} from ${JSON.stringify(posixify(resolve(out, file)))} with { type: 'file' };`
+			)
+		: [
+				`import { join } from 'node:path';`,
+				`import { dir } from ${JSON.stringify(posixify(dir_id))};`
+			];
+	const asset_entries = unique_assets.map(
+		(file) => `[${JSON.stringify(file)}, ${identifiers.get(file)}]`
+	);
+	const asset_path = embed
+		? [
+				`const assets = new Map([${asset_entries.join(',')}]);`,
+				`export const asset_path = (file) => assets.get(file);`
+			]
+		: [`export const asset_path = (file) => join(dir, file);`];
+	const declarations = [];
+	const entries = [];
+	let redirect_index = 0;
+
+	for (const [route, value] of routes) {
+		if ('asset' in value) {
+			const identifier = identifiers.get(value.asset);
+			const file = embed ? identifier : `asset_path(${JSON.stringify(value.asset)})`;
+			const response = `Bun.file(${file})`;
+			if (!embed && !value.immutable) {
+				entries.push(`${JSON.stringify(route)}: ${response}`);
+				continue;
+			}
+
+			/** @type {Record<string, string>} */
+			const headers = {};
+			if (embed) headers['content-type'] = Bun.file(value.asset).type;
+			if (value.immutable) {
+				headers['cache-control'] = 'public,max-age=31536000,immutable';
+			}
+			entries.push(
+				`${JSON.stringify(route)}: new Response(${response}, { headers: ${JSON.stringify(headers)} })`
+			);
+			continue;
+		}
+
+		const identifier = `redirect_${redirect_index++}`;
+		declarations.push(
+			`const ${identifier} = (request) => new Response(null, { status: 308, headers: { location: ${JSON.stringify(value.location)} + new URL(request.url).search } });`
+		);
+		entries.push(`${JSON.stringify(route)}: { GET: ${identifier}, HEAD: ${identifier} }`);
+	}
+
+	return [
+		...imports,
+		...asset_path,
+		...declarations,
+		`export const routes = {${entries.join(',')}};`
+	].join('\n');
+}
+
+/**
+ * @param {string} pathname
+ * @param {Set<string>} prerendered_files
+ * @returns {string | undefined}
+ */
+function find_prerendered_file(pathname, prerendered_files) {
+	const relative = pathname.slice(1);
+	return (
+		relative.endsWith('/')
+			? [`${relative}index.html`]
+			: [relative, `${relative}.html`, `${relative}/index.html`]
+	).find((candidate) => prerendered_files.has(candidate));
+}
+
+/**
+ * Relative reference from `from` to `to`, which must differ only by a trailing slash.
+ * Keep in sync with the copy in `packages/kit/src/utils/url.js`.
+ * @param {string} from
+ * @param {string} to
+ * @returns {string}
+ */
+function relative_pathname(from, to) {
+	const segment = to.replace(/\/$/, '').split('/').at(-1);
+	return from.endsWith('/') ? `../${segment}` : `${segment}/`;
+}
+
+/**
+ * @param {string} pathname
+ * @returns {string}
+ */
+function encode_pathname(pathname) {
+	return pathname.split('/').map(encodeURIComponent).join('/');
 }
 
 /** @param {string} str */

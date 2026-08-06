@@ -1,10 +1,12 @@
 declare module 'MANIFEST' {
 	import type { SSRManifest } from '@sveltejs/kit';
 
-	export const client_files: Set<string>;
 	export const manifest: SSRManifest;
-	export const prerendered_files: Set<string>;
-	export const prerendered_paths: Set<string>;
+}
+
+declare module 'ROUTES' {
+	export function asset_path(file: string): string;
+	export const routes: import('bun').Serve.Routes<undefined, string>;
 }
 
 declare module 'SERVER' {

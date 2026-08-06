@@ -13,7 +13,7 @@ const result = await Bun.build({
 		chunk: 'chunks/[name]-[hash].[ext]'
 	},
 	// resolved at adapt time
-	external: ['MANIFEST', 'SERVER', 'SERVER_OPTIONS']
+	external: ['MANIFEST', 'ROUTES', 'SERVER', 'SERVER_OPTIONS']
 });
 
 if (!result.success) {

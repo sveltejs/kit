@@ -1,6 +1,6 @@
 import { Server } from 'SERVER';
 import { manifest } from 'MANIFEST';
-import { asset_path } from './assets.js';
+import { asset_path } from 'ROUTES';
 import { env, env_prefix, number_env } from './env.js';
 
 const server = new Server(manifest);
@@ -14,7 +14,7 @@ const xff_depth = number_env('XFF_DEPTH', 1, { min: 1 }) ?? 1;
 
 await server.init({
 	env: Bun.env,
-	read: (file) => Bun.file(asset_path('client', file)).stream()
+	read: (file) => Bun.file(asset_path(`client/${file}`)).stream()
 });
 
 /**

@@ -1,8 +1,8 @@
 import process from 'node:process';
 import server_options from 'SERVER_OPTIONS';
+import { routes } from 'ROUTES';
 import { handler } from './handler.js';
 import { boolean_env, env, number_env } from './env.js';
-import { routes } from './static.js';
 
 const options = /** @type {import('bun').Serve.Options<undefined>} */ ({ ...server_options });
 
