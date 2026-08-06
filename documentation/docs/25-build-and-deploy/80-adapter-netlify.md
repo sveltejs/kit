@@ -97,12 +97,6 @@ Additionally, you can add your own Netlify functions by creating a directory for
 	directory = "functions"
 ```
 
-## Notes
-
-### Individual functions and `reroute`
-
-If the adapter `split` option is set to `true`, the [`reroute`](hooks#reroute) hook will be deployed as an edge middleware that runs before any individual function.
-
 ## Troubleshooting
 
 ### Accessing the file system
