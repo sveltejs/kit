@@ -18,6 +18,6 @@ export function applyReroute(response, next) {
 	const rerouted_pathname = response.headers.get(REROUTED_PATHNAME_HEADER);
 	if (!rerouted_pathname) return response;
 
-	const url = new URL(rerouted_pathname);
+	const url = new URL(rerouted_pathname, response.url);
 	return next(url);
 }
