@@ -54,7 +54,7 @@ export function create_request_state(options, hooks) {
 export function fork_state_for_subrequest(state) {
 	return {
 		...state,
-		depth: state.depth + 1,
-		...transient_fields()
+		...transient_fields(),
+		depth: state.depth + 1
 	};
 }
