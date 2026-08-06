@@ -26,7 +26,19 @@ interface AdapterOptions {
 	 */
 	out?: string;
 	/**
-	 * A prefix for the environment variables used to configure the production server.
+	 * If you need to change the name of the environment variables used to configure
+	 * the deployment (for example, to deconflict with environment variables you
+	 * don't control), you can specify a prefix:
+	 *
+	 * ```js
+	 * envPrefix: 'MY_CUSTOM_'
+	 * ```
+	 *
+	 * ```sh
+	 * MY_CUSTOM_HOST=127.0.0.1 \
+	 * MY_CUSTOM_PORT=4000 \
+	 * node build
+	 * ```
 	 */
 	envPrefix?: string;
 	/**
