@@ -202,14 +202,13 @@ The hook returns an object matching [`App.Error`](types#Error), in which `status
 
 > [!NOTE] If you augment `App.Error` with additional _required_ properties, the hook must return them.
 
-To add more information to the `page.error` object in a type-safe way, you can customize the expected shape by declaring an `App.Error` interface (which must include `status: number` and `message: string`, to guarantee sensible fallback behavior). This allows you to — for example — append a tracking ID for users to quote in correspondence with your technical support staff:
+To add more information to the `page.error` object in a type-safe way, augment the existing `App.Error` interface with your additional properties. The built-in `status` and `message` properties are already present and do not need to be redeclared. For example, you can add a tracking ID for users to quote when contacting support:
 
 ```ts
 /// file: src/app.d.ts
 declare global {
 	namespace App {
 		interface Error {
-			message: string;
 			errorId: string;
 		}
 	}
@@ -251,7 +250,7 @@ export async function handleError({ kind, error, event }) {
 
 	// example integration with https://sentry.io/
 	Sentry.captureException(error, {
-		extra: { event, errorId, status }
+		extra: { event, errorId }
 	});
 
 	// `status` and `message` are optional — we only override `message`,
