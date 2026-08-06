@@ -1,5 +1,10 @@
 import { json, text } from '@sveltejs/kit';
-import { HandledHttpError, HttpError, SvelteKitError } from '@sveltejs/kit/internal';
+import {
+	HandledHttpError,
+	HttpError,
+	SvelteKitError,
+	ValidationError
+} from '@sveltejs/kit/internal';
 import { with_request_store } from '@sveltejs/kit/internal/server';
 import { add_deprecated_handle_error_properties, coalesce_to_error } from '../../utils/error.js';
 import { negotiate } from '../../utils/http.js';
@@ -50,6 +55,11 @@ export function handle_error_and_jsonify(event, state, options, error) {
 		caught = { kind: 'expected', error: error.body };
 	} else if (error instanceof SvelteKitError) {
 		caught = { kind: 'framework', error: { status: error.status, message: error.text } };
+	} else if (error instanceof ValidationError) {
+		caught = {
+			kind: 'validation',
+			error: { status: 400, message: 'Bad Request', issues: error.issues }
+		};
 	} else {
 		caught = { kind: 'unexpected', error };
 
@@ -61,7 +71,11 @@ export function handle_error_and_jsonify(event, state, options, error) {
 	}
 
 	const fallback =
-		caught.kind === 'unexpected' ? { status: 500, message: 'Internal Error' } : caught.error;
+		caught.kind === 'unexpected'
+			? { status: 500, message: 'Internal Error' }
+			: caught.kind === 'validation'
+				? { status: caught.error.status, message: caught.error.message }
+				: caught.error;
 
 	/**
 	 * The hook returns only the properties it wants to override; anything it omits

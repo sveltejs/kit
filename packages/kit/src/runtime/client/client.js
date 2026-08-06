@@ -2427,7 +2427,7 @@ export async function handle_error(error, event) {
 		return error.body;
 	}
 
-	/** @type {import('@sveltejs/kit').CaughtError} */
+	/** @type {import('@sveltejs/kit').ClientCaughtError} */
 	let caught;
 
 	if (error instanceof HttpError) {

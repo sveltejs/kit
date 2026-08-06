@@ -1,7 +1,7 @@
 /** @import { RequestEvent } from '@sveltejs/kit' */
 /** @import { RequestState } from 'types' */
 import { expect, test, vi } from 'vitest';
-import { HandledHttpError } from '@sveltejs/kit/internal';
+import { HandledHttpError, ValidationError } from '@sveltejs/kit/internal';
 import { prerender } from './prerender.js';
 import { init_transport, stringify } from '#app/internal/transport';
 
@@ -78,6 +78,26 @@ test('propagates an error response instead of running the function', async () =>
 
 	expect(transformed).toBe(rejection.body);
 	expect(handleError).not.toHaveBeenCalled();
+});
+
+test('passes validation errors to handleError without exposing issues by default', async () => {
+	setup(() => new Response());
+	const issues = [{ message: 'Expected a string' }];
+	const handleError = vi.fn();
+
+	const transformed = await handle_error_and_jsonify(
+		store.current.event,
+		store.current.state,
+		/** @type {any} */ ({ hooks: { handleError } }),
+		new ValidationError(issues)
+	);
+
+	expect(handleError).toHaveBeenCalledWith({
+		kind: 'validation',
+		error: { status: 400, message: 'Bad Request', issues },
+		event: store.current.event
+	});
+	expect(transformed).toEqual({ status: 400, message: 'Bad Request' });
 });
 
 test('parses a prerendered result without running the function', async () => {
