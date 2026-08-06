@@ -297,7 +297,7 @@ const ssr_handler = init(${manifest});
 export default {
 	async fetch(request, context) {
 		const response = await ssr_handler(request, context);
-		return applyReroute(response, (url) => fetch(new Request(url, request)));
+		return await applyReroute(response, (url) => fetch(url, request));
 	},
 };
 `;
