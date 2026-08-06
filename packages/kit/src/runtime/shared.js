@@ -20,12 +20,6 @@ export const INVALIDATED_PARAM = 'x-sveltekit-invalidated';
 export const TRAILING_SLASH_PARAM = 'x-sveltekit-trailing-slash';
 
 /**
- * If an an adapter deploys a catch-all serverless function, the rerouted URL
- * pathname is stored in this header.
- */
-export const REROUTED_PATHNAME_HEADER = 'x-sveltekit-rerouted-pathname';
-
-/**
  * @param {any} data
  * @param {string} [location_description]
  */

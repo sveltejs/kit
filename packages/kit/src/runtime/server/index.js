@@ -1,13 +1,12 @@
 /** @import { SSRState } from 'types' */
 import { noop } from '../../utils/functions.js';
-import { IN_WEBCONTAINER } from './constants.js';
+import { IN_WEBCONTAINER, REROUTED_URL_HEADER } from './constants.js';
 import { respond } from './respond.js';
 import { options, get_hooks } from '__SERVER__/internal.js';
 import { set_read_implementation, set_manifest, fix_stack_trace } from './internal.js';
 import { set_env } from '__sveltekit/env';
 import { SvelteKitError } from '@sveltejs/kit/internal';
 import { DEV } from 'esm-env';
-import { REROUTED_PATHNAME_HEADER } from '../shared.js';
 import { init_transport } from '#app/internal/transport';
 
 /** @type {Promise<any>} */
@@ -191,7 +190,7 @@ export class Server {
 			...options,
 			error: false,
 			depth: 0,
-			rerouted_path: null
+			rerouted_url: null
 		};
 
 		const response = await respond(request, this.#options, this.#manifest, ssr_state);
@@ -201,8 +200,8 @@ export class Server {
 			if (error) console.error(fix_stack_trace(error));
 		}
 
-		if (ssr_state.rerouted_path) {
-			response.headers.set(REROUTED_PATHNAME_HEADER, ssr_state.rerouted_path);
+		if (ssr_state.rerouted_url) {
+			response.headers.set(REROUTED_URL_HEADER, ssr_state.rerouted_url);
 		}
 
 		return response;

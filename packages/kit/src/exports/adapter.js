@@ -1,4 +1,4 @@
-import { REROUTED_PATHNAME_HEADER } from '../runtime/shared.js';
+import { REROUTED_URL_HEADER } from '../runtime/server/constants.js';
 
 /**
  * Helps a catch-all request handler pass the request to a different handler if
@@ -15,9 +15,8 @@ import { REROUTED_PATHNAME_HEADER } from '../runtime/shared.js';
  * @since 3.0.0
  */
 export function applyReroute(response, next) {
-	const rerouted_pathname = response.headers.get(REROUTED_PATHNAME_HEADER);
-	if (!rerouted_pathname) return response;
+	const rerouted_url = response.headers.get(REROUTED_URL_HEADER);
+	if (!rerouted_url) return response;
 
-	const url = new URL(rerouted_pathname, response.url);
-	return next(url);
+	return next(new URL(rerouted_url));
 }
