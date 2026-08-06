@@ -85,7 +85,7 @@ By default, unexpected errors are printed to the console (or, in production, you
 { "status": 500, "message": "Internal Error" }
 ```
 
-Like expected errors, unexpected errors go through the [`handleError`](hooks#handleError) hook — with a `kind` of `'unexpected'` — where you can add your own error handling, for example sending errors to a reporting service, or returning a custom error object which becomes the `error` prop passed to `+error.svelte`. Unlike expected errors, the value you receive is the raw thrown value, and nothing about it is exposed unless you choose to expose it.
+Like expected errors, unexpected errors go through the [`handleError`](hooks#handleError) hook — with `kind: 'unexpected'` — where you can add your own error handling, for example sending errors to a reporting service, or returning a custom error object which becomes the `error` prop passed to `+error.svelte`. Unlike expected errors, the value you receive is the raw thrown value, and nothing about it is exposed unless you choose to expose it.
 
 Anything you return overrides the defaults, so you can — for example — use the type of the thrown error to determine the HTTP status code used in the response:
 
