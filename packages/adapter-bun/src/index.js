@@ -39,26 +39,21 @@ export const server = Bun.serve(options);
 
 console.log(unix ? `Listening on ${unix}` : `Listening on ${server.url}`);
 
-const shutdown_timeout = number_env('SHUTDOWN_TIMEOUT') ?? 30;
 let shutting_down = false;
 
 /** @param {'SIGINT' | 'SIGTERM'} reason */
 async function graceful_shutdown(reason) {
-	if (shutting_down) return;
+	if (shutting_down) return process.exit(1);
 	shutting_down = true;
 
-	let forced = false;
-	const timeout = setTimeout(() => {
-		forced = true;
-		void server.stop(true);
-	}, shutdown_timeout * 1000);
-
+	if (server.pendingRequests !== 0) {
+		console.log(`Waiting for ${server.pendingRequests} requests to finish before shutting down...`);
+		console.log('Press Ctrl+C again to force shutdown.');
+	}
 	await server.stop();
-	clearTimeout(timeout);
+
 	// @ts-expect-error custom events cannot be typed
 	process.emit('sveltekit:shutdown', reason);
-
-	if (forced) console.warn(`Forced shutdown after ${shutdown_timeout} seconds`);
 }
 
 process.on('SIGTERM', () => void graceful_shutdown('SIGTERM'));
