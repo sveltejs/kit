@@ -60,9 +60,7 @@ describe('remote_request transport error handling', () => {
 
 		await expect(remote_request('/x')).rejects.toSatisfy((e) => {
 			return (
-				e instanceof HandledHttpError &&
-				e.status === 401 &&
-				e.body?.message === 'unauthorized'
+				e instanceof HandledHttpError && e.status === 401 && e.body?.message === 'unauthorized'
 			);
 		});
 	});

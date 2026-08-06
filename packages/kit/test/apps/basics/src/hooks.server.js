@@ -30,7 +30,6 @@ export function error_to_pojo(error) {
 
 /** @type {import('@sveltejs/kit').HandleServerError} */
 export const handleError = ({ event, kind, error }) => {
-
 	// TODO we do this because there's no other way (that i'm aware of)
 	// to communicate errors back to the test suite. even if we could
 	// capture stderr, attributing an error to a specific request
@@ -40,8 +39,7 @@ export const handleError = ({ event, kind, error }) => {
 		JSON.stringify({
 			path: event.url.pathname,
 			kind,
-			error:
-				kind === 'unexpected' ? error_to_pojo(/** @type {Error} */ (error)) : error
+			error: kind === 'unexpected' ? error_to_pojo(/** @type {Error} */ (error)) : error
 		}) + '\n'
 	);
 
@@ -51,8 +49,7 @@ export const handleError = ({ event, kind, error }) => {
 	}
 
 	const status = kind === 'framework' ? error.status : 500;
-	const detail =
-		kind === 'framework' ? error.message : /** @type {Error} */ (error).message;
+	const detail = kind === 'framework' ? error.message : /** @type {Error} */ (error).message;
 
 	let message = kind === 'framework' ? error.message : 'Internal Error';
 
