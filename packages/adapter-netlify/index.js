@@ -296,10 +296,10 @@ const ssr_handler = init(${manifest});
 
 export default async (request, context) => {
 	const response = await ssr_handler(request, context);
+	console.log({ request });
 	return await applyReroute(response, async (url) => {
-		console.log({ url });
+		request.headers.delete('accept-encoding');
 		const res = await fetch(url, request);
-		res.headers.delete('content-encoding');
 		console.log({ res });
 		return res;
 	});
