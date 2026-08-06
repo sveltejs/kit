@@ -3,7 +3,9 @@
 import { expect, test, vi } from 'vitest';
 import { HttpError } from '@sveltejs/kit/internal';
 import { prerender } from './prerender.js';
-import { stringify } from '../../../shared.js';
+import { init_transport, stringify } from '#app/internal/transport';
+
+init_transport({});
 
 const store = vi.hoisted(() => ({ current: /** @type {any} */ (null) }));
 
@@ -37,7 +39,6 @@ function setup(fetch_impl) {
 		),
 		state: /** @type {RequestState} */ (
 			/** @type {unknown} */ ({
-				transport: {},
 				remote: {},
 				prerendering: undefined,
 				is_in_remote_query: false
@@ -69,7 +70,7 @@ test('propagates an error response instead of running the function', async () =>
 test('parses a prerendered result without running the function', async () => {
 	const { fn, wrapper } = setup(
 		() =>
-			new Response(JSON.stringify({ type: 'result', data: stringify({ _: 'prerendered' }, {}) }), {
+			new Response(JSON.stringify({ type: 'result', data: stringify({ _: 'prerendered' }) }), {
 				status: 200
 			})
 	);

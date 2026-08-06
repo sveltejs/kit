@@ -1,6 +1,5 @@
 /** @import { RemoteCommand, RemoteQueryUpdate } from '@sveltejs/kit' */
 import { app_dir, base } from '$app/paths/internal/client';
-import { app } from '../client.js';
 import { stringify_command_arg } from '../../shared.js';
 import { get_remote_request_headers, categorize_updates, remote_request } from './shared.svelte.js';
 
@@ -48,7 +47,7 @@ export function command(id) {
 				const response = await remote_request(`${base}/${app_dir}/remote/${id}`, {
 					method: 'POST',
 					body: JSON.stringify({
-						payload: await stringify_command_arg(arg, app.hooks.transport),
+						payload: await stringify_command_arg(arg),
 						refreshes: Array.from(refreshes ?? [])
 					}),
 					headers

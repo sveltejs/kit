@@ -91,6 +91,9 @@
 		"generate:types": "node scripts/generate-dts.js"
 	},
 	"imports": {
+		"#app/internal/transport": {
+			"default": "./src/runtime/app/internal/transport.js"
+		},
 		"#app/paths": {
 			"workerd": "./src/runtime/app/paths/server.js",
 			"browser": "./src/runtime/app/paths/client.js",

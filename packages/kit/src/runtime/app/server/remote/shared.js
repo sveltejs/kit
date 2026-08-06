@@ -1,6 +1,5 @@
 /** @import { RequestEvent } from '@sveltejs/kit' */
-/** @import { ServerHooks, MaybePromise, RequestState, RemoteInternals, RequestStore, RemoteLiveQueryUserFunctionReturnType } from 'types' */
-import { parse } from 'devalue';
+/** @import { MaybePromise, RequestState, RemoteInternals, RequestStore, RemoteLiveQueryUserFunctionReturnType } from 'types' */
 import { error } from '@sveltejs/kit';
 import { with_request_store, get_request_store } from '@sveltejs/kit/internal/server';
 
@@ -78,20 +77,6 @@ export async function get_response(internals, payload, state, get_result) {
 	}
 
 	return (cache[payload] ??= get_result());
-}
-
-/**
- * @param {any} data
- * @param {ServerHooks['transport']} transport
- */
-export function parse_remote_response(data, transport) {
-	/** @type {Record<string, any>} */
-	const revivers = {};
-	for (const key in transport) {
-		revivers[key] = transport[key].decode;
-	}
-
-	return parse(data, revivers);
 }
 
 /**

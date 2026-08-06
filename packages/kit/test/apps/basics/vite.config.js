@@ -101,7 +101,13 @@ export default defineConfig({
 		browser: {
 			enabled: true,
 			provider: playwright(),
-			instances: [{ browser: process.env.KIT_E2E_BROWSER || 'chromium' }],
+			instances: [
+				{
+					browser:
+						/** @type {"chromium" | "firefox" | "webkit"} */ (process.env.KIT_E2E_BROWSER) ||
+						'chromium'
+				}
+			],
 			headless: true
 		},
 		include: ['unit-test/**/*.spec.js']

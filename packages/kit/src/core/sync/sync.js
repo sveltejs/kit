@@ -102,13 +102,14 @@ export function all_types(config, root) {
 
 /**
  * Generate modules and types for explicit env vars
+ * @param {typeof import('vite')} vite
  * @param {import('types').ValidatedKitConfig} kit
  * @param {string | null} entry
  * @param {string} root The Vite root
  * @param {string} mode The Vite mode
  */
-export async function env(kit, entry, root, mode) {
-	const env_config = await load_explicit_env(kit, entry, root, mode);
+export async function env(vite, kit, entry, root, mode) {
+	const env_config = await load_explicit_env(vite, kit, entry, root, mode);
 
 	write_env(entry, env_config, root);
 
