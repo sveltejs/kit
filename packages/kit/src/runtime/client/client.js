@@ -2537,17 +2537,18 @@ export function snapshot(options) {
 		let stack = new Error().stack?.split('\n') ?? [];
 		if (stack[0]?.trim() === 'Error') stack = stack.slice(1);
 
-		// Strip Vite query strings so snapshots survive module invalidation and dependency updates.
-		stack = stack.map((frame) => frame.replace(/\?[^)\s]*(?=:\d+:\d+\)?$)/, ''));
-		const trace = stack.join('\n');
+		// frames above the callsite differ between hydration and client-side re-mounting
+		let frame = stack[1] ?? stack[0];
+		// strip Vite query strings so snapshots survive module invalidation and dependency updates
+		frame = frame?.replace(/\?[^)\s]*(?=:\d+:\d+\)?$)/, '');
 
-		if (!trace) {
+		if (!frame) {
 			throw new Error(
 				'Could not generate a snapshot id from the stack trace. Pass an `id` instead.'
 			);
 		}
 
-		id = hash(trace);
+		id = hash(frame);
 	}
 
 	const registration = { ...options, id };
