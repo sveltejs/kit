@@ -18,6 +18,7 @@ import {
 	get_router_options,
 	is_external_url,
 	origin,
+	scroll_to,
 	scroll_state,
 	load_css
 } from './utils.js';
@@ -178,11 +179,11 @@ function reset_scroll_and_focus(url, scroll, reset, active_element) {
 
 	if (autoscroll) {
 		if (scroll) {
-			scrollTo(scroll.x, scroll.y);
+			scroll_to(scroll.x, scroll.y);
 		} else if ((deep_linked = get_hash_element(url))) {
 			deep_linked.scrollIntoView();
 		} else {
-			scrollTo(0, 0);
+			scroll_to(0, 0);
 		}
 	}
 
@@ -553,7 +554,7 @@ async function _start(_app, _target, data) {
 	function restore_scroll() {
 		if (scroll) {
 			history.scrollRestoration = 'manual';
-			scrollTo(scroll.x, scroll.y);
+			scroll_to(scroll.x, scroll.y);
 		}
 	}
 
@@ -3179,7 +3180,7 @@ function _start_router() {
 				// /#top and click on a link that goes to /#top. In those cases just go to
 				// the top of the page, and avoid a history change.
 				if (hash === '' || (hash === 'top' && a.ownerDocument.getElementById('top') === null)) {
-					scrollTo({ top: 0 });
+					scroll_to({ top: 0 });
 				} else {
 					const element = a.ownerDocument.getElementById(decodeURIComponent(hash));
 					if (element) {
@@ -3338,7 +3339,7 @@ function _start_router() {
 				capture_scroll(current_history_index);
 				current_history_index = history_index;
 				current_reset_index = reset_index;
-				if (reset && scroll) scrollTo(scroll.x, scroll.y);
+				if (reset && scroll) scroll_to(scroll.x, scroll.y);
 				return;
 			}
 
@@ -3705,7 +3706,7 @@ function reset_focus(url, scroll = true) {
 
 				// If scroll management has already happened earlier, we need to restore
 				// the scroll position after setting the sequential focus navigation starting point
-				if (scroll) scrollTo(x, y);
+				if (scroll) scroll_to(x, y);
 				resetting_focus = false;
 			});
 		} else {
