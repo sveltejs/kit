@@ -5,9 +5,7 @@ export default {
 	meta: {
 		type: 'problem',
 		docs: {
-			description: 'require dynamic imports of computed file paths to go through pathToFileURL',
-			category: 'Possible Errors',
-			recommended: true
+			description: 'require dynamic imports of computed file paths to go through pathToFileURL'
 		},
 		schema: [],
 		messages: {
