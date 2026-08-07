@@ -1,7 +1,7 @@
 import adapter from '../index.js';
 
 adapter({
-	compile: {
+	buildOptions: {
 		compile: { target: 'bun-linux-x64' },
 		minify: true,
 		bytecode: true
@@ -9,14 +9,13 @@ adapter({
 });
 
 adapter({
-	compile: {
-		// @ts-expect-error false does not compile an executable
+	buildOptions: {
 		compile: false
 	}
 });
 
 adapter({
-	compile: {
+	buildOptions: {
 		compile: true,
 		// @ts-expect-error the adapter reserves the Bun runtime target
 		target: 'node'

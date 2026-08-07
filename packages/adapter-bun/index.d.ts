@@ -48,7 +48,7 @@ interface AdapterOptions {
 	 * Build the server and static assets.
 	 * Pass Bun build options directly for advanced configuration. The generated entrypoint,
 	 * top-level target, and module format are reserved. If neither an outfile nor outdir is
-	 * specified, the executable is written to `<out>/app`.
+	 * specified, the executable is written to `<out>/server`.
 	 * @default false
 	 */
 	buildOptions?: Pick<

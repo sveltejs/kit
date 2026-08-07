@@ -10,7 +10,7 @@ export const config = {
 	timeout: process.env.CI ? 45000 : 15000,
 	webServer: {
 		command: compiled
-			? 'bun run --bun build && MY_CUSTOM_PORT=4174 ./build/app'
+			? 'bun run --bun build && MY_CUSTOM_PORT=4174 ./build/server'
 			: 'bun run --bun build && bun run preview',
 		port: 4174
 	},
