@@ -84,6 +84,14 @@ The `$lib` alias is no longer generated automatically by SvelteKit. It is replac
 
 ...and replace `$lib` with `#lib` across your codebase.
 
+## `$app/environment` (renamed)
+
+The `$app/environment` module has been renamed to [`$app/env`]($app-env). It can now be imported inside your service worker, where previously if you needed to access `version` you would use the now-removed [`$service-worker`](#$service-worker-(removed)) module.
+
+## `$app/manifest`
+
+A new [`$app/manifest`]($app-manifest) module gives you access to metadata about your app. You can import this anywhere in your app, including in service workers for offline caching purposes, for which you would previously use the now-removed [`$service-worker`](#$service-worker-(removed)) module.
+
 ## `$app/navigation`
 
 ### Changes to shallow routing
@@ -171,7 +179,7 @@ The `Pathname` and `Asset` types have also been renamed to `Path` and `AssetPath
 
 ### Service workers can now import `$app/paths`
 
-See the section on [service workers](#Service-workers) below for more details.
+Previously, you needed to import `base` from the now-removed [`$service-worker`](#$service-worker-(removed)) module. You can now use [`asset(...)`]($app-paths#asset) and [`resolve(...)`]($app-paths#resolve) from `$app/paths`.
 
 ## `$app/service-worker`
 
@@ -216,6 +224,22 @@ Your service worker needs to be part of a separate TypeScript project, otherwise
 	"extends": "$app/tsconfig/service-worker"
 }
 ```
+
+## `$env/...` (deprecated)
+
+The various `$env/...` modules have been deprecated in favour of `$app/env/private` and `$app/env/public`. See [Environment variables](#Environment-variables), below.
+
+## `$service-worker` (removed)
+
+The `$service-worker` module has been removed. Import `version` from [`$app/env`]($app-env), `assets`, `immutable` and `prerendered` from [`$app/manifest`]($app-manifest), and `resolved` from [`$app/paths`]($app-paths) instead.
+
+## `@sveltejs/kit/hooks`
+
+The `defineEnvVars` function has moved from `@sveltejs/kit/hooks` to `@sveltejs/kit/env`.
+
+## `@sveltejs/kit/node/polyfills` (removed)
+
+The `@sveltejs/kit/node/polyfills` module (and the Node global shims in `adapter-node` and `adapter-netlify`) applied to Node versions that are no longer supported. Remove any `import '@sveltejs/kit/node/polyfills'` statements from your custom server code.
 
 ## Environment variables
 
@@ -353,30 +377,7 @@ Previously, any module inside `src/lib/server` was treated as server-only. This 
 
 Route `config` exported from a universal `+page.js` or `+layout.js` now takes precedence over `config` exported from the corresponding `+page.server.js` or `+layout.server.js`, matching how other page options are resolved. If you export `config` from both, move the canonical export to the universal file or consolidate them.
 
-## Modules and imports
-
-### `$service-worker` has been removed
-
-Use `immutable`, `assets` and `prerendered` from `$app/manifest` in place of `build`, `files` and `prerendered`. `version` now comes from `$app/env`, and `resolve(...)` from `$app/paths` replaces `base`.
-
-```js
----import { build, files, version } from '$service-worker';---
-+++import { immutable, assets } from '$app/manifest';
-import { version } from '$app/env';+++
-```
-
-### `@sveltejs/kit/node/polyfills` has been removed
-
-The `@sveltejs/kit/node/polyfills` module (and the Node global shims in `adapter-node`/`adapter-netlify`) have been removed. They were only needed for older Node versions, which are no longer supported. Remove any `import '@sveltejs/kit/node/polyfills'` statements from your custom server code.
-
-### `defineEnvVars` moved to `@sveltejs/kit/env`
-
-`defineEnvVars` is no longer exported from `@sveltejs/kit/hooks`. Import it from `@sveltejs/kit/env` instead.
-
-```js
----import { defineEnvVars } from '@sveltejs/kit/hooks';---
-+++import { defineEnvVars } from '@sveltejs/kit/env';+++
-```
+## Misc
 
 ### `data-sveltekit-*` uses `false` instead of `'off'`
 
