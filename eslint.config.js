@@ -29,13 +29,13 @@ export default [
 		// code that runs in Node, where dynamic imports of absolute paths
 		// need `pathToFileURL` to work on Windows
 		files: [
-			'packages/kit/src/core/**/*.js',
-			'packages/kit/src/exports/vite/**/*.js',
-			'packages/kit/src/utils/**/*.js',
+			'packages/kit/src/**/*.js',
 			'packages/adapter-*/*.js',
 			'packages/adapter-*/src/**/*.js',
 			'packages/package/src/**/*.js'
 		],
+		// the client runtime's dynamic imports are resolved by vite, not Node
+		ignores: ['packages/kit/src/runtime/**'],
 		plugins: {
 			'kit-node-custom': {
 				rules: {

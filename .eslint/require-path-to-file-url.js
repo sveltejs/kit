@@ -41,9 +41,11 @@ export default {
 
 			if (node.type === 'CallExpression' || node.type === 'NewExpression') {
 				const callee = node.callee;
+				if (callee.type !== 'Identifier') return false;
+
+				// single-argument new URL(path) misparses absolute windows paths just like import(), so require a base
 				return (
-					(callee.type === 'Identifier' && callee.name === 'pathToFileURL') ||
-					(callee.type === 'Identifier' && callee.name === 'URL')
+					callee.name === 'pathToFileURL' || (callee.name === 'URL' && node.arguments.length > 1)
 				);
 			}
 
@@ -64,7 +66,13 @@ export default {
 
 				const def = variable?.defs[0];
 
-				if (variable?.defs.length === 1 && def?.type === 'Variable' && def.node.init) {
+				if (
+					variable?.defs.length === 1 &&
+					def?.type === 'Variable' &&
+					def.node.init &&
+					// a reassignment after a safe initializer would not be seen here
+					variable.references.every((ref) => !ref.isWrite() || ref.init)
+				) {
 					return is_safe(def.node.init, depth + 1);
 				}
 			}
