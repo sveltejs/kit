@@ -36,12 +36,11 @@ import { has_custom_transporters, uneval } from '#app/internal/transport';
  *   fetched: Array<import('./types.js').Fetched>;
  *   options: import('types').SSROptions;
  *   manifest: import('@sveltejs/kit').SSRManifest;
- *   state: import('types').SSRState;
  *   page_config: { ssr: boolean; csr: boolean };
  *   status: number;
  *   error: App.Error | null;
  *   event: import('@sveltejs/kit').RequestEvent;
- *   event_state: import('types').RequestState;
+ *   state: import('types').RequestState;
  *   resolve_opts: import('types').RequiredResolveOptions;
  *   action_result?: import('@sveltejs/kit').ActionResult;
  *   data_serializer: import('./types.js').ServerDataSerializer;
@@ -53,12 +52,11 @@ export async function render_response({
 	fetched,
 	options,
 	manifest,
-	state,
 	page_config,
 	status,
 	error = null,
 	event,
-	event_state,
+	state,
 	resolve_opts,
 	action_result,
 	data_serializer,
@@ -184,7 +182,7 @@ export async function render_response({
 
 		props.page.data = data;
 
-		const render_state = { ...event_state, is_in_render: true };
+		const render_state = { ...state, is_in_render: true };
 
 		const render_opts = {
 			context: new Map([
@@ -518,7 +516,7 @@ export async function render_response({
 			args.push(`{\n${indent}\t${hydrate.join(`,\n${indent}\t`)}\n${indent}}`);
 		}
 
-		const remote_data = await collect_remote_data({}, event, event_state, options);
+		const remote_data = await collect_remote_data({}, event, state, options);
 
 		const serialized_data =
 			Object.keys(remote_data).length > 0

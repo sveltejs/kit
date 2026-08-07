@@ -1,19 +1,9 @@
-/** @import { RequestState, ServerHooks, SSRState } from 'types' */
+/** @import { InternalRequestOptions, RequestState, ServerHooks } from 'types' */
 import { record_span } from '../telemetry/record_span.js';
 
-/**
- * @param {SSRState} state
- * @param {ServerHooks} hooks
- * @returns {RequestState}
- */
-export function create_request_state(state, hooks) {
-	// Request state is rebuilt fresh, resetting remote caches and context flags.
+/** Per-request caches and context flags — never carried into a fork. */
+function transient_fields() {
 	return {
-		prerendering: state.prerendering,
-		handleValidationError: hooks.handleValidationError,
-		tracing: {
-			record_span
-		},
 		remote: {
 			data: null,
 			explicit: null,
@@ -28,15 +18,43 @@ export function create_request_state(state, hooks) {
 		is_in_remote_query: false,
 		is_in_remote_prerender: false,
 		is_in_render: false,
-		is_in_universal_load: false
+		original_event: undefined
 	};
 }
 
 /**
- * @param {SSRState} state
- * @returns {SSRState}
+ * @param {InternalRequestOptions} options
+ * @param {ServerHooks} hooks
+ * @returns {RequestState}
+ */
+export function create_request_state(options, hooks) {
+	// every field is initialized up front so the object shape stays stable
+	return {
+		getClientAddress: options.getClientAddress,
+		platform: options.platform,
+		read: options.read,
+		before_handle: options.before_handle,
+		emulator: options.emulator,
+		prerendering: options.prerendering,
+		prerender_default: undefined,
+		error: false,
+		depth: 0,
+		handleValidationError: hooks.handleValidationError,
+		tracing: {
+			record_span
+		},
+		...transient_fields()
+	};
+}
+
+/**
+ * @param {RequestState} state
+ * @returns {RequestState}
  */
 export function fork_state_for_subrequest(state) {
-	// Sub-requests inherit all server state except for the incremented depth.
-	return { ...state, depth: state.depth + 1 };
+	return {
+		...state,
+		...transient_fields(),
+		depth: state.depth + 1
+	};
 }
