@@ -56,18 +56,17 @@ The following options are obsolete and should be removed from your `vite.config.
 - `experimental.tracing` is now a top level `tracing` option ([details](#Tracing-is-no-longer-experimental))
 - `preloadStrategy` is removed — `modulepreload` is now supported everywhere and so is always used
 - `prerender.origin` is removed in favour of `paths.origin`
-- `checkOrigin` TODO
-- TODO others
+- `csrf.checkOrigin` is removed in favour of `csrf.trustedOrigins`
 
 ### Added options
 
 - `output.linkHeaderPreload` determines whether to use `Link` HTTP headers to preload resources like `.js` and `.css` files rather than injecting `<link>` elements in the rendered HTML. This can cause issues when the headers grow too large, so SvelteKit 3 uses `<link>` elements by default instead.
-- `trustedOrigins` TODO
+- `csrf.trustedOrigins` allows you to specify external origins that are allowed to make form submissions.
 - `paths.origin` replaces `prerender.origin`, and should reflect your app's public-facing origin if it can't reliably be derived from request headers (for example because it's behind a reverse proxy). It will be used for CSRF checks on form submissions and remote function calls. If using `adapter-node`, this replaces the `ORIGIN` environment variable.
 
 ### Changed options
 
-- `version.pollInterval` now defaults to one hour, meaning SvelteKit will periodically check for new deployments and set [`updated.current`]($app-state#updated) to `true` accordingly. Previously, no polling occurred by default. TODO explain passive detection as well
+- `version.pollInterval` now defaults to one hour, meaning SvelteKit will periodically check for new deployments and set [`updated.current`]($app-state#updated) to `true` accordingly. Previously, no polling occurred by default.
 
 ## `$lib` is now `#lib`
 
@@ -196,6 +195,17 @@ A new [`$app/service-worker`]($app-service-worker) provides type-safe access to 
 const url = +++new URL(page.url.href);+++
 url.searchParams.set('q', 'svelte');
 ```
+
+### `updated` updates automatically
+
+The `updated.current` property becomes `true` when SvelteKit detects that a new version of the app has been deployed. Previously, this would only happen following a manual `updated.check()`, or after a failed navigation. In SvelteKit 3 it happens more frequently:
+
+- on any navigation that results in data being fetched from the server
+- on any remote function call
+- when the window becomes visible or focused (e.g. when switching back from another tab)
+- after a polling interval (which now defaults to one hour)
+
+Note that if you use a feature like Vercel's [skew protection](adapter-vercel#Skew-protection), passive detection on navigation and remote functions may report false negatives, since the request will be handled by the earlier deployment. Polling and event-based checks will still work, since they bypass skew protection.
 
 ## `$app/stores` (removed)
 
