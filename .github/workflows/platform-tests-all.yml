@@ -34,7 +34,7 @@ jobs:
     needs: [vercel, netlify, node]
     permissions:
       contents: write # to create the repository_dispatch event
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     steps:
       - name: Determine outcome
         id: outcome

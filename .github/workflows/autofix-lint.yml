@@ -23,7 +23,7 @@ jobs:
           contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association)
         )
       )
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     steps:
       - name: Check permissions and get PR head
         if: github.event_name != 'workflow_dispatch'

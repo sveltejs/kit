@@ -37,7 +37,7 @@ permissions:
 
 jobs:
   lint-all:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -54,11 +54,11 @@ jobs:
       matrix:
         include:
           - node-version: 22
-            os: ubuntu-latest
+            os: ubuntu-slim
             vite: 'current'
             mode: 'unit'
           - node-version: 24
-            os: ubuntu-latest
+            os: ubuntu-slim
             vite: 'current'
             mode: 'unit'
           - node-version: 22
@@ -249,7 +249,7 @@ jobs:
           name: test-failure-svelte-async-${{ matrix.mode }}-${{ github.run_id }}
           path: test-results-svelte-async-${{ matrix.mode }}.tar.gz
   test-others:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     strategy:
       matrix:
         node-version: [22, 24]
