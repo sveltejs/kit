@@ -55,14 +55,15 @@ The following options are obsolete and should be removed from your `vite.config.
 - `experimental.instrumentation` is no longer required ([details](#Tracing-is-no-longer-experimental))
 - `experimental.tracing` is now a top level `tracing` option ([details](#Tracing-is-no-longer-experimental))
 - `preloadStrategy` is removed — `modulepreload` is now supported everywhere and so is always used
+- `prerender.origin` is removed in favour of `paths.origin`
 - `checkOrigin` TODO
 - TODO others
 
 ### Added options
 
-- `output.linkHeaderPreload` TODO
+- `output.linkHeaderPreload` determines whether to use `Link` HTTP headers to preload resources like `.js` and `.css` files rather than injecting `<link>` elements in the rendered HTML. This can cause issues when the headers grow too large, so SvelteKit 3 uses `<link>` elements by default instead.
 - `trustedOrigins` TODO
-- `paths.origin` TODO
+- `paths.origin` replaces `prerender.origin`, and should reflect your app's public-facing origin if it can't reliably be derived from request headers (for example because it's behind a reverse proxy). It will be used for CSRF checks on form submissions and remote function calls. If using `adapter-node`, this replaces the `ORIGIN` environment variable.
 
 ### Changed options
 
@@ -237,9 +238,107 @@ The `$service-worker` module has been removed. Import `version` from [`$app/env`
 
 The `defineEnvVars` function has moved from `@sveltejs/kit/hooks` to `@sveltejs/kit/env`.
 
+## `@sveltejs/kit/node`
+
+The [`getRequest`](@sveltejs-kit-node#getRequest) and [`setResponse`](@sveltejs-kit-node#setResponse) helpers are now synchronous and no longer return Promises. Remove `await` from calls in custom Node servers or adapters.
+
 ## `@sveltejs/kit/node/polyfills` (removed)
 
 The `@sveltejs/kit/node/polyfills` module (and the Node global shims in `adapter-node` and `adapter-netlify`) applied to Node versions that are no longer supported. Remove any `import '@sveltejs/kit/node/polyfills'` statements from your custom server code.
+
+## Security
+
+### `csrf.checkOrigin` replaced by `csrf.trustedOrigins`
+
+The deprecated `csrf.checkOrigin` option has been removed. CSRF protection is always on; instead of disabling it with `checkOrigin: false`, allow trusted cross-origin hosts with `csrf.trustedOrigins`.
+
+```js
+/// file: vite.config.js
+import { defineConfig } from 'vite';
+import { sveltekit } from '@sveltejs/kit/vite';
+// ---cut---
+export default defineConfig({
+	plugins: [
+		sveltekit({
+			csrf: {
+				---checkOrigin: false---
+				+++trustedOrigins: ['https://trusted-site.com']+++
+			}
+		})
+	]
+});
+```
+
+### Cross-origin form submissions require a `Content-Type` header
+
+Cross-origin mutative requests that omit a `Content-Type` header are now rejected as CSRF. Ensure cross-origin form submissions include a `Content-Type` header, or add the origin to `csrf.trustedOrigins`.
+
+### CORS for static assets in development is handled by Vite
+
+SvelteKit no longer sets `access-control-allow-origin: *` on every static asset request in development. CORS is now delegated to Vite's built-in middleware. If you rely on cross-origin access to static assets in dev, configure it in your Vite config:
+
+```js
+/// file: vite.config.js
+import { defineConfig } from 'vite';
+// ---cut---
+export default defineConfig({
+	server: {
++++		cors: { origin: '*' }+++
+	}
+});
+```
+
+## Cookies
+
+### Updated to `cookie` v2
+
+SvelteKit now uses [`cookie`](https://npmx.dev/package/cookie) v2, which involves certain changes:
+
+- cookie names can only contain ASCII characters. Non-ASCII characters (including Latin-1 Supplement characters like `á`) are rejected
+- the `CookieSerializeOptions` type has been renamed to `SerializeOptions`
+- the `CookieParseOptions` type has been renamed to `ParseOptions`
+
+### The cookie `path` option defaults to `'/'`
+
+When setting a cookie without an explicit `path`, the path now defaults to `'/'` rather than the current request path, meaning the cookie applies to the entire site. This matches what most developers expect. You can pass an explicit `path` if necessary:
+
+```ts
+declare const cookies: import('@sveltejs/kit').Cookies;
+declare const name: string;
+declare const value: string;
+// ---cut---
+cookies.set(name, value, +++{ path: '/some/path' }+++);
+```
+
+## Error handling
+
+### `App.Error` always includes `status`
+
+An `App.Error` object, such as the `error` prop of an `+error.svelte` component, has a `status` property reflecting the HTTP status of the error that caused it (e.g. 404 for a Not Found error, or 500 for a generic internal error), in addition to `message` and whatever properties you define in your [`app.d.ts`](types#app.d.ts) file.
+
+### `error(...)` arguments changed
+
+Previously, the second argument to [`error(...)`](@sveltejs-kit#error) could be either the `message` as a `string`, or an object containing `message` alongside any additional properties defined in `app.d.ts` (such as a tracking `code`).
+
+Now, the second argument must always be a `string`. If there are additional properties, they must be passed as a third argument.
+
+### `handleValidationError` is removed
+
+Validation errors are now passed to [`handleError`](hooks#handleError), with `kind: 'validation'`.
+
+### `handleError` receives all errors
+
+In SvelteKit 2, `handleError` was not called in the case of _expected_ errors, which is to say those created with the [`error(...)`](@sveltejs-kit#error) helper. In SvelteKit 3, _all_ errors are passed to `handleError`. See the [docs](hooks#handleError) for more information.
+
+### `handleError` can influence the status code
+
+If you need to control the HTTP status code used to render a page in the case of an error, you can do so by returning a `status` property from `handleError` alongside any other required properties of `App.Error`.
+
+### Rendering errors are now handled
+
+Errors thrown during rendering are now always routed through `handleError` and then passed to the nearest [error boundary](../svelte/svelte-boundary). Error boundaries are automatically created for each of your `+error.svelte` components.
+
+If you have an async `handleError` hook in `hooks.client.ts`, enable `compilerOptions.experimental.async` in the `sveltekit(...)` plugin options of your Vite config so it can be awaited during rendering.
 
 ## Environment variables
 
@@ -278,36 +377,6 @@ import { redirect } from '@sveltejs/kit';
 // ---cut---
 redirect(307, 'https://example.com', +++{ external: true }+++);
 ```
-
-## Error handling
-
-### `App.Error` always includes `status`
-
-An `App.Error` object, such as the `error` prop of an `+error.svelte` component, has a `status` property reflecting the HTTP status of the error that caused it (e.g. 404 for a Not Found error, or 500 for a generic internal error), in addition to `message` and whatever properties you define in your [`app.d.ts`](types#app.d.ts) file.
-
-### `error(...)` arguments changed
-
-Previously, the second argument to [`error(...)`](@sveltejs-kit#error) could be either the `message` as a `string`, or an object containing `message` alongside any additional properties defined in `app.d.ts` (such as a tracking `code`).
-
-Now, the second argument must always be a `string`. If there are additional properties, they must be passed as a third argument.
-
-### `handleValidationError` is removed
-
-Validation errors are now passed to [`handleError`](hooks#handleError), with `kind: 'validation'`.
-
-### `handleError` receives all errors
-
-In SvelteKit 2, `handleError` was not called in the case of _expected_ errors, which is to say those created with the [`error(...)`](@sveltejs-kit#error) helper. In SvelteKit 3, _all_ errors are passed to `handleError`. See the [docs](hooks#handleError) for more information.
-
-### `handleError` can influence the status code
-
-If you need to control the HTTP status code used to render a page in the case of an error, you can do so by returning a `status` property from `handleError` alongside any other required properties of `App.Error`.
-
-### Rendering errors are now handled
-
-Errors thrown during rendering are now always routed through `handleError` and then passed to the nearest [error boundary](../svelte/svelte-boundary). Error boundaries are automatically created for each of your `+error.svelte` components.
-
-If you have an async `handleError` hook in `hooks.client.ts`, enable `compilerOptions.experimental.async` in the `sveltekit(...)` plugin options of your Vite config so it can be awaited during rendering.
 
 ## Tracing is no longer experimental
 
@@ -402,24 +471,6 @@ const url = +++new URL(+++page.url.href+++);+++
 url.searchParams.set('q', 'svelte');
 ```
 
-## Cookies
-
-### Cookie names must be ASCII
-
-SvelteKit now uses `cookie` v2, which requires cookie names to contain only ASCII characters. Non-ASCII characters (including Latin-1 Supplement characters like `á`) are rejected. Rename any non-ASCII cookie names to ASCII equivalents. If you depended on the `CookieSerializeOptions`/`CookieParseOptions` types, import `SerializeOptions`/`ParseOptions` from `cookie` instead.
-
-### The cookie `path` option defaults to `'/'`
-
-When setting a cookie without an explicit `path`, the path now defaults to `'/'` (the whole site) rather than the current request path. This matches what most developers expect. If you relied on the previous implicit behaviour, pass an explicit `path`:
-
-```ts
-declare const cookies: import('@sveltejs/kit').Cookies;
-declare const name: string;
-declare const value: string;
-// ---cut---
-cookies.set(name, value, +++{ path: '/some/path' }+++);
-```
-
 ## Responses and error handling
 
 ### 204 responses return no content
@@ -430,94 +481,20 @@ Returning a `204` (or any empty `2xx`) response from a `+server.js` handler now 
 
 Enhanced form action responses now use the HTTP status code passed to `fail(...)` instead of always returning `200`. If you inspect status codes on enhanced form submissions (for example in a `use:enhance` callback or in tests), they now reflect the value passed to `fail`.
 
-### `getRequest` and `setResponse` are synchronous
-
-The `getRequest` and `setResponse` helpers from `@sveltejs/kit/node` are now synchronous and no longer return Promises. Remove `await` from calls in custom Node servers or adapters:
-
 ### `handle`'s `resolve` always returns a `Promise`
 
-The `resolve` function passed to `handle` is now typed to always return a `Promise<Response>` rather than `MaybePromise<Response>`. If you wrap `resolve` in a custom function that returns a bare `Response`, make the wrapper `async` or wrap the return value in `Promise.resolve(...)`.
-
-### `form.error` is typed as `App.Error | undefined`
-
-The `error` property on remote function resources (queries, live queries, forms, prerender functions) is now typed as `App.Error | undefined` rather than `any`. Because all errors are transformed through `handleError` before surfacing, the value is always `App.Error`-shaped.
-
-## Security
-
-### `csrf.checkOrigin` replaced by `csrf.trustedOrigins`
-
-The deprecated `csrf.checkOrigin` option has been removed. CSRF protection is always on; instead of disabling it with `checkOrigin: false`, allowlist trusted cross-origin hosts with `csrf.trustedOrigins`.
-
-```js
-csrf: {
-	---checkOrigin: false---
-	+++trustedOrigins: ['https://trusted-site.com']+++
-}
-```
-
-### Cross-origin form submissions require a `Content-Type` header
-
-Cross-origin form submissions that omit a `Content-Type` header are now rejected as CSRF, where previously they were allowed through ([#16347](https://github.com/sveltejs/kit/pull/16347)). Ensure cross-origin form submissions include a `Content-Type` header, or add the origin to `csrf.trustedOrigins`.
-
-### CORS for static assets in development is handled by Vite
-
-SvelteKit no longer sets `access-control-allow-origin: *` on every static asset request in development. CORS is now delegated to Vite's built-in middleware. If you rely on cross-origin access to static assets in dev, configure it in your Vite config:
-
-```js
-import { defineConfig } from 'vite';
-// ---cut---
-export default defineConfig({
-	server: {
-+++		cors: { origin: '*' }+++
-	}
-});
-```
+The `resolve` function passed to `handle` is now typed to always return a `Promise<Response>` rather than `MaybePromise<Response>`.
 
 ## Remote functions
 
-### Remote functions require an opt-in
+### Remote module filenames are reserved
 
-Files with a `remote` segment in the name now error during development and builds unless `experimental.remoteFunctions` is enabled. As such they are now reserved for remote functions.
+Files with a `remote` segment in the name will cause an error unless `experimental.remoteFunctions` is enabled.
 
 ### `event.url`, `event.params`, and `event.route` cannot be accessed inside queries
 
 Accessing `event.url`, `event.params`, or `event.route` inside a remote `query` function now throws an error. These properties are not meaningful in the context of a remote function (which can be called from anywhere). Pass any values you need explicitly as arguments to the function.
 
-## Removed and reorganised configuration options
+### Errors are typed as `App.Error | undefined`
 
-### `output.preloadStrategy` removed
-
-The `preloadStrategy` option has been removed. `modulepreload` is always used. Remove `output.preloadStrategy` from your config.
-
-### `prerender.origin` replaced by `paths.origin`
-
-`prerender.origin` has been removed in favour of `paths.origin`, which is also used as the trusted self-origin for CSRF checks on form submissions and remote function calls. The `adapter-node` `ORIGIN` environment variable has also been removed — set `paths.origin` in your config instead.
-
-```js
-/// file: vite.config.js
-import { defineConfig } from 'vite';
-import { sveltekit } from '@sveltejs/kit/vite';
-
-export default defineConfig({
-	plugins: [
-		sveltekit({
-			prerender: {
-				---origin: 'https://example.com'---
-			},
-			paths: {
-				+++origin: 'https://example.com'+++
-			}
-		})
-	]
-});
-```
-
-### `output.linkHeaderPreload`
-
-Preloading via the `Link` response header is no longer the default (it broke common self-hosted reverse proxies). Dynamically rendered pages now preload via `<link>` elements in the HTML instead. If you relied on the `Link` header, opt back in:
-
-```js
-output: {
-+++	linkHeaderPreload: true+++
-}
-```
+The `error` property on remote function resources (queries, live queries, forms, prerender functions) is now typed as `App.Error | undefined` rather than `any`, as the error is always transformed by `handleError`.
