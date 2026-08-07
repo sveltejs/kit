@@ -648,6 +648,7 @@ test.describe('Errors', () => {
 		expect(res_json?.status()).toBe(405);
 		expect(await res_json.json()).toEqual({
 			type: 'error',
+			location: '/errors/missing-actions',
 			error: {
 				message: process.env.DEV
 					? 'POST method not allowed. No form actions exist for the page at /errors/missing-actions (405 Method Not Allowed)'
