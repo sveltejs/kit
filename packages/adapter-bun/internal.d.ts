@@ -1,5 +1,3 @@
-import type { Serve } from 'bun';
-
 declare module 'MANIFEST' {
 	import type { SSRManifest } from '@sveltejs/kit';
 
@@ -17,7 +15,7 @@ declare module 'SERVER' {
 
 declare module 'SERVER_OPTIONS' {
 	const options: Pick<
-		Serve.Options<never>,
+		import('bun').Serve.Options<never>,
 		| 'development'
 		| 'hostname'
 		| 'port'

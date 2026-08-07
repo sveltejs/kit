@@ -13,7 +13,6 @@
 		"types": ["bun-types", "node"]
 	},
 	"include": [
-		"build.js",
 		"index.js",
 		"index.spec.ts",
 		"vitest.config.js",

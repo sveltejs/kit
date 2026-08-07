@@ -1,10 +1,29 @@
-import { resolve } from 'node:path';
+import { resolve, posix } from 'node:path';
+import { readdir } from 'node:fs/promises';
 
-const files = resolve(import.meta.dirname, 'files');
+/**
+ * @param {string} path
+ * @returns {Promise<{abs: string, rel: string}[]>}
+ */
+async function read_files_recursive(path) {
+	try {
+		const entries = await readdir(path, { recursive: true, withFileTypes: true });
+		return entries
+			.filter((entry) => entry.isFile())
+			.map((entry) => {
+				const abs = resolve(entry.parentPath, entry.name);
+				const rel = posix.relative(path, abs);
+				return { abs, rel };
+			})
+			.filter(({ rel }) => rel.split('/').every((segment) => !segment.startsWith('.')));
+	} catch {
+		return [];
+	}
+}
 
 /** @type {import('./index.js').default} */
 export default function (opts = {}) {
-	const { out = 'build', envPrefix = '', serverOptions = {}, compile = false } = opts;
+	const { out = 'build', envPrefix = '', serverOptions = {}, buildOptions = {} } = opts;
 
 	return {
 		name: '@sveltejs/adapter-bun',
@@ -15,86 +34,39 @@ export default function (opts = {}) {
 				);
 			}
 
-			const tmp = builder.getBuildDirectory('adapter-bun');
-			const base = builder.config.kit.paths.base;
-
 			builder.rimraf(out);
-			builder.rimraf(tmp);
-			builder.mkdirp(tmp);
-			builder.mkdirp(`${out}/client${base}`);
-			builder.mkdirp(`${out}/prerendered${base}`);
 
-			builder.log.minor('Copying assets');
-			const client_files = with_base(builder.writeClient(`${out}/client${base}`), base);
-			const prerendered_files = with_base(
-				builder.writePrerendered(`${out}/prerendered${base}`),
-				base
-			);
+			builder.log.minor('Building server');
 
-			builder.log.minor(compile ? 'Compiling executable' : 'Building server');
+			const entrypoints = [resolve(import.meta.dirname, 'src', 'index.js')];
 
-			const pkg = await Bun.file('package.json').json();
+			if (builder.hasServerInstrumentationFile()) {
+				if (buildOptions.compile) {
+					throw new Error(
+						'Instrumentation is not yet supported when using the Bun adapter with `compile: true`.'
+					);
+				}
+				entrypoints.push(`${builder.config.kit.outDir}/output/server/instrumentation.server.js`);
+			}
+
 			const server = builder.getServerDirectory();
-			const entries = posixify(`${tmp}/entries`);
-			builder.copy(files, entries);
 
-			const dir_id = `${entries}/dir.js`;
 			const manifest_file = `${server}/adapter-bun-manifest.js`;
 			const routes_file = `${server}/adapter-bun-routes.js`;
 			const server_options_file = `${server}/adapter-bun-options.js`;
-			const instrumentation = builder.hasServerInstrumentationFile()
-				? `${server}/instrumentation.server.js`
-				: undefined;
 			const virtual_files = {
 				[manifest_file]: `export const manifest = ${builder.generateManifest({ relativePath: './' })};\n`,
-				[server_options_file]: `export default ${JSON.stringify(serverOptions)};\n`
+				[server_options_file]: `export default ${JSON.stringify(serverOptions)};\n`,
+				[routes_file]: await create_routes({
+					builder,
+					out,
+					embed: !!buildOptions.compile
+				})
 			};
 
-			const compile_options = normalize_compile_options(compile, out);
-			virtual_files[routes_file] = create_routes({
-				out,
-				client_files,
-				prerendered_files,
-				prerendered_paths: builder.prerendered.paths,
-				app_path: builder.getAppPath(),
-				dir_id,
-				embed: compile_options !== undefined
-			});
-			const entrypoints = [`${entries}/index.js`, `${entries}/handler.js`, dir_id];
-			/** @type {Omit<import('bun').BuildConfig, 'entrypoints'>} */
-			let build_options = {
-				outdir: out,
-				sourcemap: 'linked',
-				splitting: true,
-				naming: {
-					entry: '[name].[ext]',
-					chunk: 'server/chunks/[name]-[hash].[ext]'
-				},
-				external: [
-					'bun',
-					'bun:*',
-					...Object.keys(pkg.dependencies || {}).flatMap((dependency) => [
-						dependency,
-						`${dependency}/*`
-					])
-				]
-			};
-
-			if (compile_options) {
-				const compile_file = `${out}/adapter-bun-compile.js`;
-				virtual_files[compile_file] = create_compile_entrypoint(
-					`${entries}/index.js`,
-					instrumentation
-				);
-				entrypoints.splice(0, entrypoints.length, compile_file);
-				build_options = compile_options;
-			} else if (instrumentation) {
-				entrypoints.push(instrumentation);
-			}
-
+			/** @type {import('bun').BunPlugin} */
 			const adapter_plugin = {
 				name: 'adapter-bun',
-				/** @param {import('bun').PluginBuilder} build */
 				setup(build) {
 					build.onResolve({ filter: /^(SERVER|MANIFEST|ROUTES|SERVER_OPTIONS)$/ }, ({ path }) => {
 						if (path === 'SERVER') return { path: `${server}/index.js` };
@@ -102,268 +74,164 @@ export default function (opts = {}) {
 						if (path === 'ROUTES') return { path: routes_file };
 						if (path === 'SERVER_OPTIONS') return { path: server_options_file };
 					});
-
-					build.onLoad({ filter: /[\\/]adapter-bun[\\/]entries[\\/].*\.js$/ }, async ({ path }) => {
-						const contents = (await Bun.file(path).text())
-							.replace(/\bENV_PREFIX\b/g, JSON.stringify(envPrefix))
-							.replace(
-								/\bORIGIN\b/g,
-								JSON.stringify(builder.config.kit.paths.origin) || 'undefined'
-							);
-						return { contents, loader: 'js' };
-					});
 				}
 			};
 
-			let result;
-			try {
-				result = await Bun.build({
-					...build_options,
-					target: 'bun',
-					format: 'esm',
-					conditions: merge_conditions(build_options.conditions),
-					entrypoints,
-					files: {
-						...build_options.files,
-						...virtual_files
-					},
-					plugins: [adapter_plugin, ...(build_options.plugins ?? [])]
-				});
-			} catch (error) {
-				if (error instanceof AggregateError) {
-					throw build_error(error.errors, error);
-				}
-				throw new Error('Bun server build failed', { cause: error });
-			}
-
+			const result = await Bun.build({
+				...buildOptions,
+				entrypoints,
+				target: 'bun',
+				format: 'esm',
+				naming: '[name].[ext]',
+				plugins: [adapter_plugin],
+				define: {
+					ENV_PREFIX: JSON.stringify(envPrefix),
+					ORIGIN: JSON.stringify(builder.config.kit.paths.origin) || 'undefined'
+				},
+				conditions: ['bun', 'node'],
+				throw: false,
+				files: virtual_files,
+				outdir: out,
+				compile: buildOptions.compile
+					? {
+							outfile: 'server',
+							...(typeof buildOptions.compile === 'string' ? { target: buildOptions.compile } : {}),
+							...(typeof buildOptions.compile === 'object' ? buildOptions.compile : {})
+						}
+					: false
+			});
 			if (!result.success) {
-				throw build_error(result.logs);
-			}
-
-			if (instrumentation && !compile) {
-				builder.instrument({
-					entrypoint: `${out}/index.js`,
-					instrumentation: `${out}/instrumentation.server.js`,
-					module: {
-						exports: ['hostname', 'port', 'server', 'unix']
+				for (const log of result.logs) {
+					switch (log.level) {
+						case 'error':
+							builder.log.error(log.message);
+							break;
+						case 'warning':
+							builder.log.warn(log.message);
+							break;
+						default:
+							builder.log.info(log.message);
 					}
-				});
+				}
+				throw new AggregateError(result.logs);
 			}
 		},
 
 		supports: {
-			read: () => true,
+			read: () => false,
 			instrumentation: () => true
 		}
 	};
 }
 
 /**
- * @param {false | true | import('./index.js').CompileOptions} compile
- * @param {string} out
- * @returns {Omit<import('bun').BuildConfig, 'entrypoints'> | undefined}
- */
-function normalize_compile_options(compile, out) {
-	if (!compile) return;
-
-	const outfile = `${out}/app`;
-	if (compile === true) return { compile: { outfile } };
-
-	const options = { ...compile };
-	if (!options.compile) {
-		throw new Error('adapter-bun compile options must enable Bun executable compilation');
-	}
-
-	if (options.outdir === undefined) {
-		if (options.compile === true) {
-			options.compile = { outfile };
-		} else if (typeof options.compile === 'string') {
-			options.compile = { target: options.compile, outfile };
-		} else if (options.compile.outfile === undefined) {
-			options.compile = { outfile, ...options.compile };
-		}
-	}
-
-	return options;
-}
-
-/**
- * @param {string | string[] | undefined} configured
- * @returns {string[]}
- */
-function merge_conditions(configured) {
-	const conditions =
-		configured === undefined ? [] : Array.isArray(configured) ? configured : [configured];
-	return [...new Set(['bun', 'node', ...conditions])];
-}
-
-/**
- * @param {Array<{ message?: string }>} logs
- * @param {unknown} [cause]
- */
-function build_error(logs, cause) {
-	const details = logs
-		.map((log) => log.message)
-		.filter(Boolean)
-		.join('\n');
-	const message = details ? `Bun server build failed:\n${details}` : 'Bun server build failed';
-	return new AggregateError(logs, message, { cause });
-}
-
-/**
- * @param {string[]} files
- * @param {string} base
- * @returns {string[]}
- */
-function with_base(files, base) {
-	const prefix = base.slice(1);
-	return files.map((file) => posixify(prefix ? `${prefix}/${file}` : file));
-}
-
-/**
- * @param {string} entrypoint
- * @param {string | undefined} instrumentation
- * @returns {string}
- */
-function create_compile_entrypoint(entrypoint, instrumentation) {
-	return [
-		instrumentation && `await import(${JSON.stringify(instrumentation)});`,
-		`await import(${JSON.stringify(entrypoint)});`
-	]
-		.filter(Boolean)
-		.join('\n');
-}
-
-/**
  * @param {object} options
+ * @param {import('@sveltejs/kit').Builder} options.builder
  * @param {string} options.out
- * @param {string[]} options.client_files
- * @param {string[]} options.prerendered_files
- * @param {string[]} options.prerendered_paths
- * @param {string} options.app_path
- * @param {string} options.dir_id
  * @param {boolean} options.embed
- * @returns {string}
+ * @returns {Promise<string>}
  */
-function create_routes({
-	out,
-	client_files,
-	prerendered_files,
-	prerendered_paths,
-	app_path,
-	dir_id,
-	embed
-}) {
-	/** @type {Map<string, { asset: string; immutable: boolean } | { location: string }>} */
-	const routes = new Map();
-	const prerendered_file_set = new Set(prerendered_files);
+async function create_routes({ builder, out, embed }) {
+	const app_path = builder.getAppPath();
+	const base = builder.config.kit.paths.base || '/';
+	const builtFiles = `${builder.config.kit.outDir}/output`;
 
-	for (const file of client_files) {
-		routes.set(encode_pathname(`/${file}`), {
-			asset: `client/${file}`,
-			immutable: file.startsWith(`${app_path}/immutable/`)
-		});
-	}
+	console.log('app_path', app_path);
 
-	for (const pathname of prerendered_paths) {
-		const file = find_prerendered_file(pathname, prerendered_file_set);
-		const route = encode_pathname(pathname);
-		if (file && !routes.has(route)) {
-			routes.set(route, { asset: `prerendered/${file}`, immutable: false });
+	const client_files = embed
+		? await read_files_recursive(`${builtFiles}/client`)
+		: builder
+				.writeClient(`${out}/client`)
+				.map((rel) => ({ rel, abs: resolve(`${out}/client`, rel) }));
+
+	const prerendered_files = embed
+		? (
+				await Promise.all([
+					read_files_recursive(`${builtFiles}/prerendered/pages`),
+					read_files_recursive(`${builtFiles}/prerendered/dependencies`),
+					read_files_recursive(`${builtFiles}/prerendered/data`)
+				])
+			).flat()
+		: builder
+				.writePrerendered(`${out}/prerendered`)
+				.map((rel) => ({ rel, abs: resolve(`${out}/prerendered`, rel) }));
+
+	/** @type {string[]} */
+	const asset_imports = [];
+
+	/**
+	 * @param {string} abspath
+	 * @returns {string}
+	 */
+	function make_asset(abspath) {
+		const relpath = posix.relative(out, abspath);
+		if (embed) {
+			const assetId = `asset_${asset_imports.length}`;
+			asset_imports.push(
+				`import ${assetId} from ${JSON.stringify(abspath)} with { type: 'file' };`
+			);
+			return assetId;
+		} else {
+			return `resolve(import.meta.dir, ${JSON.stringify(relpath)})`;
 		}
 	}
 
-	for (const pathname of prerendered_paths) {
-		const inverted = pathname.endsWith('/') ? pathname.slice(0, -1) : `${pathname}/`;
-		if (!inverted) continue;
+	/**
+	 * @param {string} abspath
+	 * @param {boolean} [immutable]
+	 * @returns {string}
+	 */
+	function make_response(abspath, immutable = false) {
+		const bunFileStr = `Bun.file(${make_asset(abspath)})`;
 
-		const route = encode_pathname(inverted);
-		if (routes.has(route)) continue;
-		routes.set(route, {
-			location: relative_pathname(route, encode_pathname(pathname))
-		});
+		if (!embed && !immutable) return bunFileStr;
+
+		/** @type {Record<string, string>} */
+		const headers = {};
+		if (embed) headers['content-type'] = Bun.file(abspath).type;
+		if (immutable) headers['cache-control'] = 'public,max-age=31536000,immutable';
+
+		return `new Response(${bunFileStr}, { headers: ${JSON.stringify(headers)} })`;
 	}
 
-	const assets = [
-		...client_files.map((file) => `client/${file}`),
-		...prerendered_files.map((file) => `prerendered/${file}`)
-	];
-	const unique_assets = [...new Set(assets)];
-	const identifiers = new Map(unique_assets.map((file, index) => [file, `asset_${index}`]));
-	const imports = embed
-		? unique_assets.map(
-				(file, index) =>
-					`import asset_${index} from ${JSON.stringify(posixify(resolve(out, file)))} with { type: 'file' };`
-			)
-		: [
-				`import { join } from 'node:path';`,
-				`import { dir } from ${JSON.stringify(posixify(dir_id))};`
-			];
-	const asset_entries = unique_assets.map(
-		(file) => `[${JSON.stringify(file)}, ${identifiers.get(file)}]`
-	);
-	const asset_path = embed
-		? [
-				`const assets = new Map([${asset_entries.join(',')}]);`,
-				`export const asset_path = (file) => assets.get(file);`
-			]
-		: [`export const asset_path = (file) => join(dir, file);`];
+	/** @type {Array<{ path: string; value: string }>} */
 	const entries = [];
 
-	for (const [route, value] of routes) {
-		if ('asset' in value) {
-			const identifier = identifiers.get(value.asset);
-			const file = embed ? identifier : `asset_path(${JSON.stringify(value.asset)})`;
-			const response = `Bun.file(${file})`;
-			if (!embed && !value.immutable) {
-				entries.push(`${JSON.stringify(route)}: ${response}`);
-				continue;
-			}
-
-			/** @type {Record<string, string>} */
-			const headers = {};
-			if (embed) headers['content-type'] = Bun.file(value.asset).type;
-			if (value.immutable) {
-				headers['cache-control'] = 'public,max-age=31536000,immutable';
-			}
-			entries.push(
-				`${JSON.stringify(route)}: new Response(${response}, { headers: ${JSON.stringify(headers)} })`
-			);
-			continue;
-		}
-
-		entries.push(
-			`${JSON.stringify(route)}: Response.redirect(${JSON.stringify(value.location)}, 308)`
-		);
+	for (const { rel, abs } of client_files) {
+		const path = posix.join(base, rel);
+		const immutable = path.startsWith(`/${app_path}/immutable/`);
+		entries.push({ path: rel, value: make_response(abs, immutable) });
 	}
 
-	return [...imports, ...asset_path, `export const routes = {${entries.join(',\n')}};`].join('\n');
-}
+	for (const [path, { file }] of builder.prerendered.pages) {
+		const fileIdx = prerendered_files.findIndex((f) => f.rel === file);
+		if (fileIdx === -1)
+			throw new Error(`Could not find prerendered page ${file} for route ${path}`);
+		const { abs } = prerendered_files.splice(fileIdx, 1)[0];
+		entries.push({ path, value: make_response(abs) });
 
-/**
- * @param {string} pathname
- * @param {Set<string>} prerendered_files
- * @returns {string | undefined}
- */
-function find_prerendered_file(pathname, prerendered_files) {
-	const relative = pathname.slice(1);
-	return (
-		relative.endsWith('/')
-			? [`${relative}index.html`]
-			: [relative, `${relative}.html`, `${relative}/index.html`]
-	).find((candidate) => prerendered_files.has(candidate));
-}
+		const inverted = path.endsWith('/') ? path.slice(0, -1) : `${path}/`;
+		if (inverted) {
+			entries.push({
+				path: inverted,
+				value: `Response.redirect(${JSON.stringify(posix.join(base, path))}, 308)`
+			});
+		}
+	}
 
-/**
- * Relative reference from `from` to `to`, which must differ only by a trailing slash.
- * Keep in sync with the copy in `packages/kit/src/utils/url.js`.
- * @param {string} from
- * @param {string} to
- * @returns {string}
- */
-function relative_pathname(from, to) {
-	const segment = to.replace(/\/$/, '').split('/').at(-1);
-	return from.endsWith('/') ? `../${segment}` : `${segment}/`;
+	for (const { abs, rel } of prerendered_files) {
+		entries.push({ path: rel, value: make_response(abs) });
+	}
+
+	const asset_path = [`export const asset_path = (file) => join(import.meta.dir, file);`];
+
+	const imports = embed ? [] : [`import { join, resolve } from 'node:path';`];
+
+	const routes = entries.map(
+		(entry) => `${JSON.stringify(encode_pathname(posix.join(base, entry.path)))}: ${entry.value}`
+	);
+
+	return [...imports, ...asset_path, `export const routes = {${routes.join(',\n')}};`].join('\n');
 }
 
 /**
@@ -372,9 +240,4 @@ function relative_pathname(from, to) {
  */
 function encode_pathname(pathname) {
 	return pathname.split('/').map(encodeURIComponent).join('/');
-}
-
-/** @param {string} str */
-function posixify(str) {
-	return str.replace(/\\/g, '/');
 }

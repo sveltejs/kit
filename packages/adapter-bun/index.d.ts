@@ -1,15 +1,10 @@
 import type { Adapter } from '@sveltejs/kit';
-import type { BuildConfig, Serve } from 'bun';
 import './ambient.js';
 
 declare global {
 	const ENV_PREFIX: string;
 	const ORIGIN: string | undefined;
 }
-
-type CompileOptions = Omit<BuildConfig, 'entrypoints' | 'compile' | 'target' | 'format'> & {
-	compile: Exclude<NonNullable<BuildConfig['compile']>, false>;
-};
 
 interface AdapterOptions {
 	/**
@@ -39,7 +34,7 @@ interface AdapterOptions {
 	 * `Bun.serve` call for routes, WebSockets, or custom error handling.
 	 */
 	serverOptions?: Pick<
-		Serve.Options<never>,
+		import('bun').Serve.Options<never>,
 		| 'development'
 		| 'hostname'
 		| 'port'
@@ -50,13 +45,25 @@ interface AdapterOptions {
 		| 'ipv6Only'
 	>;
 	/**
-	 * Compile the build into a single executable containing the server and static assets.
+	 * Build the server and static assets.
 	 * Pass Bun build options directly for advanced configuration. The generated entrypoint,
 	 * top-level target, and module format are reserved. If neither an outfile nor outdir is
 	 * specified, the executable is written to `<out>/app`.
 	 * @default false
 	 */
-	compile?: boolean | CompileOptions;
+	buildOptions?: Pick<
+		import('bun').BuildConfig,
+		| 'splitting'
+		| 'sourcemap'
+		| 'minify'
+		| 'bytecode'
+		| 'banner'
+		| 'footer'
+		| 'drop'
+		| 'features'
+		| 'optimizeImports'
+		| 'compile'
+	>;
 }
 
 export default function plugin(options?: AdapterOptions): Adapter;
