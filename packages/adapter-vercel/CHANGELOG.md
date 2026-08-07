@@ -1,5 +1,13 @@
 # @sveltejs/adapter-vercel
 
+## 7.0.0-next.6
+
+### Patch Changes
+
+- fix: match sibling `.html__route.js` route resolution requests ([#16674](https://github.com/sveltejs/kit/pull/16674))
+- Updated dependencies [[`10b2c64`](https://github.com/sveltejs/kit/commit/10b2c6419378b0340728f66d60c3fd824ae64c56)]:
+  - @sveltejs/kit@3.0.0-next.16
+
 ## 7.0.0-next.5
 
 ### Major Changes

@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 3.0.0-next.16
+
+### Patch Changes
+
+- fix: generate route resolution modules as siblings of `.html` pages ([#16674](https://github.com/sveltejs/kit/pull/16674))
+
 ## 3.0.0-next.15
 
 ### Major Changes
