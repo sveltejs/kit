@@ -32,6 +32,7 @@ import {
 } from './constants.js';
 import { validate_page_exports } from '../../utils/exports.js';
 import { noop } from '../../utils/functions.js';
+import { hash } from '../../utils/hash.js';
 import {
 	INVALIDATED_PARAM,
 	TRAILING_SLASH_PARAM,
@@ -2538,13 +2539,15 @@ export function snapshot(options) {
 
 		// Strip Vite query strings so snapshots survive module invalidation and dependency updates.
 		stack = stack.map((frame) => frame.replace(/\?[^)\s]*(?=:\d+:\d+\)?$)/, ''));
-		id = stack.join('\n');
+		const trace = stack.join('\n');
 
-		if (!id) {
+		if (!trace) {
 			throw new Error(
 				'Could not generate a snapshot id from the stack trace. Pass an `id` instead.'
 			);
 		}
+
+		id = hash(trace);
 	}
 
 	const registration = { ...options, id };
