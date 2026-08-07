@@ -41,7 +41,7 @@ vi.mock(import('@opentelemetry/api'), async (original) => {
 	};
 });
 
-init_tracing(true);
+init_tracing();
 
 test('otel is defined when tracing is enabled', () => {
 	expect(otel).not.toBeNull();

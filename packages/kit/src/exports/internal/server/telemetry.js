@@ -8,17 +8,9 @@ import { noop_span } from '../../../runtime/telemetry/noop.js';
 /** @type {Promise<{ tracer: Tracer, SpanStatusCode: typeof SpanStatusCode, propagation: PropagationAPI, context: ContextAPI }> | null} */
 export let otel = null;
 
-/**
- * @param {boolean} enabled
- * @returns {void}
- */
-export function init_tracing(enabled) {
-	if (!enabled) {
-		otel = null;
-		return;
-	}
-
-	otel = import('@opentelemetry/api')
+/** @returns {void} */
+export function init_tracing() {
+	otel ??= import('@opentelemetry/api')
 		.then((module) => {
 			return {
 				tracer: module.trace.getTracer('sveltekit'),

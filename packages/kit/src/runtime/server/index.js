@@ -91,7 +91,7 @@ export class Server {
 		// so anything that shouldn't be rerun should be wrapped in an `if` block to make sure it hasn't
 		// been done already.
 
-		init_tracing(__SVELTEKIT_SERVER_TRACING_ENABLED__);
+		if (__SVELTEKIT_SERVER_TRACING_ENABLED__) init_tracing();
 
 		// set env, in case it's used in initialisation
 		set_env(env);
