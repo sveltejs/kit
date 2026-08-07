@@ -101,7 +101,9 @@ export default defineConfig({
 		browser: {
 			enabled: true,
 			provider: playwright({
-				launchOptions: { channel: 'chrome' }
+				launchOptions: {
+					channel: process.env.KIT_E2E_BROWSER === 'chromium' ? 'chrome' : undefined
+				}
 			}),
 			instances: [
 				{
