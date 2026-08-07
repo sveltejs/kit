@@ -1474,6 +1474,75 @@ test.describe('Actions', () => {
 		expect(response.status()).toBe(404);
 	});
 
+	test('cross-page action success navigates to action page', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		await page.goto('/actions/cross-page/source');
+
+		await page
+			.locator(javaScriptEnabled ? 'button.submit-success' : 'button.native-success')
+			.click();
+
+		await expect(page.locator('pre.destination-form')).toHaveText(
+			JSON.stringify({ source: 'destination', username: 'paolo' })
+		);
+		await expect(page.locator('span.status')).toHaveText('200');
+
+		const url = new URL(page.url());
+		expect(url.pathname).toBe('/actions/cross-page/destination');
+		// enhanced submissions strip the `?/name` param; native ones can't
+		expect(url.search).toBe(javaScriptEnabled ? '' : '?/success');
+	});
+
+	test('cross-page action failure navigates with failure data and status', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		await page.goto('/actions/cross-page/source');
+
+		await page
+			.locator(javaScriptEnabled ? 'button.submit-failure' : 'button.native-failure')
+			.click();
+
+		await expect(page.locator('pre.destination-form')).toHaveText(
+			JSON.stringify({ problem: 'invalid', username: 'paolo' })
+		);
+		await expect(page.locator('span.status')).toHaveText('400');
+
+		const url = new URL(page.url());
+		expect(url.pathname).toBe('/actions/cross-page/destination');
+		expect(url.search).toBe(javaScriptEnabled ? '' : '?/failure');
+	});
+
+	test('cross-page action redirect is followed', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/actions/cross-page/source');
+
+		await page
+			.locator(javaScriptEnabled ? 'button.submit-redirect' : 'button.native-redirect')
+			.click();
+
+		await expect(page.locator('h1.redirected')).toHaveText('redirected');
+		expect(new URL(page.url()).pathname).toBe('/actions/cross-page/redirected');
+	});
+
+	test('cross-page action error renders the destination error boundary', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		await page.goto('/actions/cross-page/source');
+
+		await page.locator(javaScriptEnabled ? 'button.submit-error' : 'button.native-error').click();
+
+		await expect(page.locator('h1.destination-error')).toHaveText(
+			'destination error: cross-page action error'
+		);
+
+		const url = new URL(page.url());
+		expect(url.pathname).toBe('/actions/cross-page/destination');
+		expect(url.search).toBe(javaScriptEnabled ? '?throw-in-load=' : '?throw-in-load&/error');
+	});
+
 	for (const name of ['toString', 'constructor', '__proto__', 'hasOwnProperty']) {
 		test(`submitting to a form action named '${name}' (an Object.prototype member) returns http status code 404`, async ({
 			baseURL,

@@ -29,6 +29,7 @@ export function is_action_json_request(event) {
  */
 export async function handle_action_json_request(event, state, options, server) {
 	const actions = server?.actions;
+	const location = get_action_location(event.url);
 
 	if (!actions) {
 		const no_actions_error = new SvelteKitError(
@@ -42,7 +43,8 @@ export async function handle_action_json_request(event, state, options, server) 
 		return action_json(
 			{
 				type: 'error',
-				error
+				error,
+				location
 			},
 			{
 				status: error.status,
@@ -69,6 +71,7 @@ export async function handle_action_json_request(event, state, options, server) 
 				{
 					type: 'failure',
 					status: data.status,
+					location,
 					// @ts-expect-error we assign a string to what is supposed to be an object. That's ok
 					// because we don't use the object outside, and this way we have better code navigation
 					// through knowing where the related interface is used.
@@ -82,12 +85,16 @@ export async function handle_action_json_request(event, state, options, server) 
 			return action_json({
 				type: 'success',
 				status: 200,
+				location,
 				// @ts-expect-error see comment above
 				data: try_serialize(data, stringify, /** @type {string} */ (event.route.id))
 			});
 		} else {
-			// no data returned — use 204 No Content (without a body, per the spec)
-			return with_version_header(new Response(null, { status: 204 }));
+			return action_json({
+				type: 'success',
+				status: 204,
+				location
+			});
 		}
 	} catch (e) {
 		const err = normalize_error(e);
@@ -106,13 +113,30 @@ export async function handle_action_json_request(event, state, options, server) 
 		return action_json(
 			{
 				type: 'error',
-				error: transformed
+				error: transformed,
+				location
 			},
 			{
 				status: transformed.status
 			}
 		);
 	}
+}
+
+/**
+ * @param {URL} url
+ */
+export function get_action_location(url) {
+	const location = new URL(url);
+
+	for (const key of location.searchParams.keys()) {
+		if (key.startsWith('/')) {
+			location.searchParams.delete(key);
+			break;
+		}
+	}
+
+	return location.pathname + location.search;
 }
 
 /**
@@ -158,6 +182,7 @@ export function is_action_request(event) {
  */
 export async function handle_action_request(event, state, server) {
 	const actions = server?.actions;
+	const location = get_action_location(event.url);
 
 	if (!actions) {
 		// TODO should this be a different error altogether?
@@ -168,6 +193,7 @@ export async function handle_action_request(event, state, server) {
 		});
 		return {
 			type: 'error',
+			location,
 			// We're lying a bit with the types here; this will be transformed into a proper App.Error object later
 			error: new SvelteKitError(
 				405,
@@ -190,12 +216,14 @@ export async function handle_action_request(event, state, server) {
 			return {
 				type: 'failure',
 				status: data.status,
+				location,
 				data: data.data
 			};
 		} else {
 			return {
 				type: 'success',
 				status: 200,
+				location,
 				// @ts-expect-error this will be removed upon serialization, so `undefined` is the same as omission
 				data
 			};
@@ -213,6 +241,7 @@ export async function handle_action_request(event, state, server) {
 
 		return {
 			type: 'error',
+			location,
 			// @ts-expect-error We're lying a bit with the types here; this will be transformed into a proper App.Error object later
 			error: check_incorrect_fail_use(err)
 		};
