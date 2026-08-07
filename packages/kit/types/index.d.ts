@@ -95,9 +95,15 @@ declare module '@sveltejs/kit' {
 	export interface Builder {
 		/** Print messages to the console. `log.info` and `log.minor` are silent unless Vite's `logLevel` is `info`. */
 		log: Logger;
-		/** Remove `dir` and all its contents. */
+		/**
+		 * Remove `dir` and all its contents.
+		 * @deprecated Use `fs.rmSync(dir, { force: true, recursive: true })` instead
+		 */
 		rimraf: (dir: string) => void;
-		/** Create `dir` and any required parent directories. */
+		/**
+		 * Create `dir` and any required parent directories.
+		 * @deprecated Use `fs.mkdirSync(dir, { recursive: true })` instead
+		 */
 		mkdirp: (dir: string) => void;
 
 		/** The fully resolved SvelteKit config. */
@@ -1584,7 +1590,7 @@ declare module '@sveltejs/kit' {
 		/**
 		 * Get or set cookies related to the current request
 		 */
-		cookies: Cookies;
+		readonly cookies: Cookies;
 		/**
 		 * `fetch` is equivalent to the [native `fetch` web API](https://developer.mozilla.org/en-US/docs/Web/API/fetch), with a few additional features:
 		 *
@@ -1596,15 +1602,15 @@ declare module '@sveltejs/kit' {
 		 *
 		 * You can learn more about making credentialed requests with cookies [here](https://svelte.dev/docs/kit/load#Cookies).
 		 */
-		fetch: typeof fetch;
+		readonly fetch: typeof fetch;
 		/**
 		 * The client's IP address, set by the adapter.
 		 */
-		getClientAddress: () => string;
+		readonly getClientAddress: () => string;
 		/**
 		 * Contains custom data that was added to the request within the [`server handle hook`](https://svelte.dev/docs/kit/hooks#handle).
 		 */
-		locals: App.Locals;
+		readonly locals: App.Locals;
 		/**
 		 * The parameters of the current route - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object.
 		 *
@@ -1613,19 +1619,19 @@ declare module '@sveltejs/kit' {
 		 * the remote function was called from, _not_ the URL of the endpoint SvelteKit creates for the remote function. Never use it
 		 * to determine whether or not a user is authorized to access certain data, as these values are part of the request which could be manipulated.
 		 */
-		params: Params;
+		readonly params: Params;
 		/**
 		 * Additional data made available through the adapter.
 		 */
-		platform: Readonly<App.Platform> | undefined;
+		readonly platform: Readonly<App.Platform> | undefined;
 		/**
 		 * The original request object.
 		 */
-		request: Request;
+		readonly request: Request;
 		/**
 		 * Info about the current route.
 		 */
-		route: {
+		readonly route: {
 			/**
 			 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
 			 *
@@ -1658,7 +1664,7 @@ declare module '@sveltejs/kit' {
 		 *
 		 * You cannot add a `set-cookie` header with `setHeaders` — use the [`cookies`](https://svelte.dev/docs/kit/@sveltejs-kit#Cookies) API instead.
 		 */
-		setHeaders: (headers: Record<string, string>) => void;
+		readonly setHeaders: (headers: Record<string, string>) => void;
 		/**
 		 * The requested URL.
 		 *
@@ -1667,22 +1673,22 @@ declare module '@sveltejs/kit' {
 		 * the remote function was called from, _not_ the URL of the endpoint SvelteKit creates for the remote function. Never use it
 		 * to determine whether or not a user is authorized to access certain data, as these values are part of the request which could be manipulated.
 		 */
-		url: URL;
+		readonly url: URL;
 		/**
 		 * `true` if the request comes from the client asking for `+page/layout.server.js` data. The `url` property will be stripped of the internal information
 		 * related to the data request in this case. Use this property instead if the distinction is important to you.
 		 */
-		isDataRequest: boolean;
+		readonly isDataRequest: boolean;
 		/**
 		 * `true` for `+server.js` calls coming from SvelteKit without the overhead of actually making an HTTP request. This happens when you make same-origin `fetch` requests on the server.
 		 */
-		isSubRequest: boolean;
+		readonly isSubRequest: boolean;
 
 		/**
 		 * Access to spans for tracing. If tracing is not enabled, these spans will do nothing.
 		 * @since 2.31.0
 		 */
-		tracing: {
+		readonly tracing: {
 			/** Whether tracing is enabled. */
 			enabled: boolean;
 			/** The root span for the request. This span is named `sveltekit.handle.root`. */
@@ -1695,7 +1701,7 @@ declare module '@sveltejs/kit' {
 		 * `true` if the request comes from the client via a remote function. The `url` property will be stripped of the internal information
 		 * related to the data request in this case. Use this property instead if the distinction is important to you.
 		 */
-		isRemoteRequest: boolean;
+		readonly isRemoteRequest: boolean;
 	}
 
 	/**
@@ -3133,6 +3139,7 @@ declare module '$app/forms' {
 }
 
 declare module '$app/navigation' {
+	import type { RouteId } from '$app/types';
 	/**
 	 * A lifecycle function that runs the supplied `callback` when the current component mounts, and also whenever we navigate to a URL.
 	 *
@@ -3238,13 +3245,24 @@ declare module '$app/navigation' {
 	 * Programmatically imports the code for routes that haven't yet been fetched.
 	 * Typically, you might call this to speed up subsequent navigation.
 	 *
-	 * You can specify routes by any matching pathname such as `/about` (to match `src/routes/about/+page.svelte`) or `/blog/*` (to match `src/routes/blog/[slug]/+page.svelte`).
+	 * Takes a route ID such as `/about` or `/blog/[slug]`. Unlike pathnames, route IDs
+	 * are never prefixed with the app's [base path](https://svelte.dev/docs/kit/configuration#paths).
+	 * If you have a pathname rather than a route ID, you can convert it with
+	 * [`match`](https://svelte.dev/docs/kit/$app-paths#match) from `$app/paths`:
+	 *
+	 * ```js
+	 * import { match } from '$app/paths';
+	 * import { preloadCode } from '$app/navigation';
+	 *
+	 * const matched = await match('/blog/hello-world');
+	 * if (matched) await preloadCode(matched.id);
+	 * ```
 	 *
 	 * Unlike `preloadData`, this won't call `load` functions.
 	 * Returns a Promise that resolves when the modules have been imported.
 	 *
 	 * */
-	export function preloadCode(pathname: string): Promise<void>;
+	export function preloadCode(id: RouteId): Promise<void>;
 	/**
 	 * Programmatically create a new history entry with the given `page.state`. Used for [shallow routing](https://svelte.dev/docs/kit/shallow-routing).
 	 *
@@ -3263,7 +3281,7 @@ declare module '$app/navigation' {
 }
 
 declare module '$app/paths' {
-	import type { AssetPath, RouteIdWithSearchOrHash, PathnameWithSearchOrHash, ResolvedPathname, Path, RouteId, RouteParams } from '$app/types';
+	import type { AssetPath, RouteIdWithSearchOrHash, PathnameWithSearchOrHash, ResolvedPathname, RouteId, RouteParams } from '$app/types';
 	/**
 	 * Resolve the URL of an asset in your `static` directory, by prefixing it with [`config.paths.assets`](https://svelte.dev/docs/kit/configuration#paths) if configured, or otherwise by prefixing it with the base path.
 	 *
@@ -3320,7 +3338,7 @@ declare module '$app/paths' {
 	 * @since 2.52.0
 	 *
 	 * */
-	export function match(url: Path | URL | (string & {})): Promise<{ [K in RouteId]: {
+	export function match(url: URL | string): Promise<{ [K in RouteId]: {
 		id: K;
 		params: RouteParams<K>;
 	}; }[RouteId] | null>;

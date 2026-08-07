@@ -24,9 +24,11 @@ export const test = base.extend({
 
 			afterNavigate: () => page.evaluate(() => afterNavigate(() => {})),
 
-			preloadCode: (pathname) => page.evaluate((pathname) => preloadCode(pathname), pathname),
+			preloadCode: (id) => page.evaluate((id) => preloadCode(id), id),
 
-			preloadData: (url) => page.evaluate((url) => preloadData(url), url)
+			preloadData: (url) => page.evaluate((url) => preloadData(url), url),
+
+			match: (url) => page.evaluate((url) => match(url), url)
 		});
 	},
 
@@ -269,7 +271,7 @@ const test_browser = /** @type {keyof typeof known_devices} */ (
 const test_browser_device = known_devices[test_browser]
 	? {
 			...known_devices[test_browser],
-			channel: test_browser === 'chromium' ? 'chromium' : undefined
+			channel: test_browser === 'chromium' ? 'chrome' : undefined
 		}
 	: undefined;
 

@@ -1,4 +1,4 @@
-/** @import { RequestState, SSRNode } from 'types' */
+/** @import { SSRNode } from 'types' */
 import { DEV } from 'esm-env';
 import { json, text } from '@sveltejs/kit';
 import { Redirect, SvelteKitError } from '@sveltejs/kit/internal';
@@ -26,13 +26,15 @@ import { validate_server_exports } from '../../utils/exports.js';
 import { action_json_redirect, is_action_json_request } from './page/actions.js';
 import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM } from '../shared.js';
 import { get_public_env } from './env_module.js';
-import { resolve_route } from './page/server_routing.js';
+import { resolve_route, resolve_route_by_id } from './page/server_routing.js';
 import { validateHeaders } from './validate-headers.js';
 import {
 	add_data_suffix,
 	add_resolution_suffix,
+	extract_route_id,
 	has_data_suffix,
 	has_resolution_suffix,
+	is_route_id_resolution_path,
 	strip_data_suffix,
 	strip_resolution_suffix
 } from '../pathname.js';
@@ -82,7 +84,7 @@ export const respond = propagate_context(internal_respond);
  * @param {Request} request
  * @param {import('types').SSROptions} options
  * @param {import('@sveltejs/kit').SSRManifest} manifest
- * @param {import('types').SSRState} state
+ * @param {import('types').RequestState} state
  * @returns {Promise<Response>}
  */
 export async function internal_respond(request, options, manifest, state) {
@@ -138,12 +140,16 @@ export async function internal_respond(request, options, manifest, state) {
 
 	let skip_route_resolution = false;
 
+	/** Whether this is a `/${app_dir}/routes/<route_id>/__route.js` request, used by `preloadCode` */
+	let is_route_id_resolution_request = false;
+
 	if (is_route_resolution_request) {
 		/**
 		 * If the request is for a route resolution, first modify the URL, then continue as normal
 		 * for path resolution, then return the route object as a JS file.
 		 */
 		url.pathname = strip_resolution_suffix(url.pathname);
+		is_route_id_resolution_request = is_route_id_resolution_path(url.pathname, base, app_dir);
 	} else if (is_data_request) {
 		url.pathname =
 			strip_data_suffix(url.pathname) +
@@ -174,31 +180,6 @@ export async function internal_respond(request, options, manifest, state) {
 		url
 	);
 
-	/** @type {RequestState} */
-	const event_state = {
-		prerendering: state.prerendering,
-		transport: options.hooks.transport,
-		handleValidationError: options.hooks.handleValidationError,
-		tracing: {
-			record_span
-		},
-		remote: {
-			data: null,
-			explicit: null,
-			implicit: null,
-			forms: null,
-			requested: null,
-			batches: null,
-			live_iterators: null
-		},
-		is_in_remote_function: false,
-		is_in_remote_form_or_command: false,
-		is_in_remote_query: false,
-		is_in_remote_prerender: false,
-		is_in_render: false,
-		is_in_universal_load: false
-	};
-
 	/** @type {import('@sveltejs/kit').RequestEvent} */
 	const event = {
 		cookies,
@@ -213,7 +194,12 @@ export async function internal_respond(request, options, manifest, state) {
 			}),
 		locals: {},
 		params: {},
-		platform: state.platform,
+		platform: state.emulator?.platform
+			? await state.emulator.platform({
+					config: {},
+					prerender: !!state.prerendering?.fallback
+				})
+			: state.platform,
 		request,
 		route: { id: null },
 		setHeaders: (new_headers) => {
@@ -251,6 +237,7 @@ export async function internal_respond(request, options, manifest, state) {
 		isRemoteRequest: !!remote_id
 	};
 
+	// @ts-expect-error this has to be assigned lazily
 	event.fetch = create_fetch({
 		event,
 		options,
@@ -260,17 +247,11 @@ export async function internal_respond(request, options, manifest, state) {
 		set_internal
 	});
 
-	if (state.emulator?.platform) {
-		event.platform = await state.emulator.platform({
-			config: {},
-			prerender: !!state.prerendering?.fallback
-		});
-	}
-
 	/** @type {string | null} */
 	let resolved_path = url.pathname;
 
-	if (!remote_id) {
+	// `reroute` hooks receive pathnames, so they must not run for route-ID resolution requests
+	if (!remote_id && !is_route_id_resolution_request) {
 		const prerendering_reroute_state = state.prerendering?.inside_reroute;
 		try {
 			// For the duration or a reroute, disable the prerendering state as reroute could call API endpoints
@@ -339,7 +320,7 @@ export async function internal_respond(request, options, manifest, state) {
 				statusText: response.statusText
 			});
 		} catch (error) {
-			return await handle_fatal_error(event, event_state, options, error);
+			return await handle_fatal_error(event, state, options, error);
 		}
 	}
 
@@ -354,6 +335,14 @@ export async function internal_respond(request, options, manifest, state) {
 	}
 
 	if (is_route_resolution_request) {
+		if (is_route_id_resolution_request) {
+			return resolve_route_by_id(
+				extract_route_id(resolved_path, app_dir),
+				new URL(request.url),
+				manifest
+			);
+		}
+
 		return resolve_route(resolved_path, new URL(request.url), manifest);
 	}
 
@@ -375,11 +364,13 @@ export async function internal_respond(request, options, manifest, state) {
 
 			if (result) {
 				route = result.route;
+				// @ts-expect-error this has to be assigned lazily
 				event.route = { id: route.id };
+				// @ts-expect-error this has to be assigned lazily
 				event.params = result.params;
 			}
 		} catch (e) {
-			return await handle_fatal_error(event, event_state, options, e);
+			return await handle_fatal_error(event, state, options, e);
 		}
 	}
 
@@ -439,6 +430,7 @@ export async function internal_respond(request, options, manifest, state) {
 				}
 
 				if (state.emulator?.platform) {
+					// @ts-expect-error this has to be assigned lazily
 					event.platform = await state.emulator.platform({ config, prerender });
 				}
 
@@ -461,10 +453,10 @@ export async function internal_respond(request, options, manifest, state) {
 				add_cookies_to_headers(response.headers, new_cookies.values());
 				return response;
 			} catch (err) {
-				return await handle_fatal_error(event, event_state, options, err);
+				return await handle_fatal_error(event, state, options, err);
 			}
 		}
-		return await handle_fatal_error(event, event_state, options, e);
+		return await handle_fatal_error(event, state, options, e);
 	}
 
 	async function handle() {
@@ -493,7 +485,7 @@ export async function internal_respond(request, options, manifest, state) {
 					}
 				};
 
-				return await with_request_store({ event: traced_event, state: event_state }, () =>
+				return await with_request_store({ event: traced_event, state }, () =>
 					options.hooks.handle({
 						event: traced_event,
 						resolve: (event, opts) => {
@@ -600,10 +592,9 @@ export async function internal_respond(request, options, manifest, state) {
 			if (resolved_path === null) {
 				return await respond_with_error({
 					event,
-					event_state,
+					state,
 					options,
 					manifest,
-					state,
 					error: new SvelteKitError(
 						400,
 						'Malformed URI',
@@ -616,10 +607,9 @@ export async function internal_respond(request, options, manifest, state) {
 			if (options.hash_routing || state.prerendering?.fallback) {
 				return await render_response({
 					event,
-					event_state,
+					state,
 					options,
 					manifest,
-					state,
 					page_config: { ssr: false, csr: true },
 					status: 200,
 					error: null,
@@ -633,12 +623,12 @@ export async function internal_respond(request, options, manifest, state) {
 					],
 					fetched: [],
 					resolve_opts,
-					data_serializer: server_data_serializer(event, event_state, options)
+					data_serializer: server_data_serializer(event, state, options)
 				});
 			}
 
 			if (remote_id) {
-				return await handle_remote_call(event, event_state, options, manifest, remote_id);
+				return await handle_remote_call(event, state, options, manifest, remote_id);
 			}
 
 			if (route) {
@@ -650,11 +640,10 @@ export async function internal_respond(request, options, manifest, state) {
 				if (is_data_request) {
 					response = await render_data(
 						event,
-						event_state,
+						state,
 						route,
 						options,
 						manifest,
-						state,
 						invalidated_data_nodes,
 						trailing_slash
 					);
@@ -679,18 +668,17 @@ export async function internal_respond(request, options, manifest, state) {
 					}
 
 					if (endpoint) {
-						response = await render_endpoint(event, event_state, endpoint, state);
+						response = await render_endpoint(event, state, endpoint);
 					} else if (route.page) {
 						if (!page_nodes) {
 							throw new Error('page_nodes not found. This should never happen');
 						} else if (page_methods.has(method)) {
 							response = await render_page(
 								event,
-								event_state,
+								state,
 								route.page,
 								options,
 								manifest,
-								state,
 								page_nodes,
 								resolve_opts
 							);
@@ -776,10 +764,9 @@ export async function internal_respond(request, options, manifest, state) {
 
 				return await respond_with_error({
 					event,
-					event_state,
+					state,
 					options,
 					manifest,
-					state,
 					error: new SvelteKitError(404, 'Not Found', `Not found: ${event.url.pathname}`),
 					resolve_opts
 				});
@@ -800,12 +787,13 @@ export async function internal_respond(request, options, manifest, state) {
 			// and I don't even know how to describe it. need to investigate at some point
 
 			// HttpError from endpoint can end up here - TODO should it be handled there instead?
-			return await handle_fatal_error(event, event_state, options, e);
+			return await handle_fatal_error(event, state, options, e);
 		} finally {
 			event.cookies.set = () => {
 				throw new Error('Cannot use `cookies.set(...)` after the response has been generated');
 			};
 
+			// @ts-expect-error this has to be assigned lazily
 			event.setHeaders = () => {
 				throw new Error('Cannot use `setHeaders(...)` after the response has been generated');
 			};

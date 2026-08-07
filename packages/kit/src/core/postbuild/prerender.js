@@ -1,7 +1,7 @@
-import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { mkdirp, walk } from '../../utils/filesystem.js';
+import { walk } from '../../utils/filesystem.js';
 import { posixify } from '../../utils/os.js';
 import { noop } from '../../utils/functions.js';
 import { decode_uri, is_root_relative, resolve } from '../../utils/url.js';
@@ -157,7 +157,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 		const file = output_filename('/', true);
 		const dest = `${config.outDir}/output/prerendered/pages/${file}`;
 
-		mkdirp(dirname(dest));
+		mkdirSync(dirname(dest), { recursive: true });
 		writeFileSync(dest, fallback);
 
 		prerendered.pages.set('/', { file });
@@ -263,6 +263,9 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 	/** @type {Map<string, Promise<any>>} */
 	const remote_responses = new Map();
 
+	/** @type {Set<string>} */
+	const resolved_route_ids = new Set();
+
 	/** @type {Map<string, Set<string>>} */
 	const expected_hashlinks = new Map();
 
@@ -308,7 +311,8 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 			},
 			prerendering: {
 				dependencies,
-				remote_responses
+				remote_responses,
+				resolved_route_ids
 			},
 			read: (file) => {
 				// stuff we just wrote
@@ -476,7 +480,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 				}
 
 				if (!headers['x-sveltekit-normalize']) {
-					mkdirp(dirname(dest));
+					mkdirSync(dirname(dest), { recursive: true });
 
 					writeFileSync(
 						dest,
@@ -522,7 +526,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 				);
 			}
 
-			mkdirp(dir);
+			mkdirSync(dir, { recursive: true });
 
 			writeFileSync(dest, body);
 			written.add(file);
@@ -625,14 +629,10 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 		}
 	}
 
-	const transport = (await internal.get_hooks()).transport ?? {};
 	for (const internals of prerender_functions) {
 		if (internals.has_arg) {
 			for (const arg of (await internals.inputs?.()) ?? []) {
-				void enqueue(
-					null,
-					remote_prefix + internals.id + '/' + stringify_remote_arg(arg, transport)
-				);
+				void enqueue(null, remote_prefix + internals.id + '/' + stringify_remote_arg(arg));
 			}
 		} else {
 			void enqueue(null, remote_prefix + internals.id);

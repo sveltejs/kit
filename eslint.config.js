@@ -33,8 +33,7 @@ export default [
 			'**/test-results',
 			'**/dist',
 			'**/.custom-out-dir',
-			'packages/adapter-*/files',
-			'!packages/adapter-vercel/files',
+			'packages/adapter-node/files',
 			'packages/kit/src/core/config/fixtures/multiple', // dir contains svelte config with multiple extensions tripping eslint
 			'packages/kit/src/core/sync/create_manifest_data/test/samples/**/*',
 			'packages/kit/types/index.d.ts', // generated file

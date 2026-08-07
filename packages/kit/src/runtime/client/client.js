@@ -9,7 +9,7 @@ import { settled, tick, fork, onMount, hydrate, mount } from 'svelte';
 import { HttpError, Redirect, SvelteKitError } from '@sveltejs/kit/internal';
 import { decode_pathname, strip_hash, make_trackable, normalize_path } from '../../utils/url.js';
 import { dev_fetch, initial_fetch, lock_fetch, subsequent_fetch, unlock_fetch } from './fetcher.js';
-import { parse, parse_server_route } from './parse.js';
+import { parse_routes, parse_server_route } from './parse.js';
 import * as storage from './session-storage.js';
 import {
 	find_anchor,
@@ -21,7 +21,7 @@ import {
 	scroll_state,
 	load_css
 } from './utils.js';
-import { base, set_match_implementation } from '$app/paths/internal/client';
+import { base, app_dir, set_match_implementation } from '$app/paths/internal/client';
 import * as devalue from 'devalue';
 import {
 	HISTORY_INFO_KEY,
@@ -41,18 +41,23 @@ import {
 import { get_message, get_status } from '../../utils/error.js';
 import { page, navigating, updated, notify_version } from './state.svelte.js';
 import { payload } from './payload.js';
-import { add_data_suffix, add_resolution_suffix } from '../pathname.js';
+import {
+	add_data_suffix,
+	add_resolution_suffix,
+	route_id_resolution_pathname
+} from '../pathname.js';
 import { noop_span } from '../telemetry/noop.js';
 import { read_ndjson } from './ndjson.js';
 import Root from '../components/root.svelte';
 import { Props, RenderNode } from '../props.svelte.js';
+import { init_transport, parse, stringify } from '#app/internal/transport';
 
 /**
  * @typedef {{
  *   historyIndex: number;
  *   navigationIndex: number;
  *   pageUrl?: string;
- *   state: Record<string, any>;
+ *   state: string;
  *   persistState: boolean;
  *   resetIndex: number;
  * }} HistoryMetadata
@@ -295,6 +300,35 @@ function discard_load_cache() {
 const reroute_cache = new Map();
 
 /**
+ * Sentinel for a route that exists but has no code to preload, i.e. a `+server.js` with no
+ * `+page`. Cached like a parsed route so that repeated `preloadCode(id)` calls for the same
+ * id don't re-request it.
+ */
+const ENDPOINT_ONLY = Symbol('endpoint only');
+
+/**
+ * Cache of route ID -> parsed route for server-side route resolution.
+ * Populated whenever a server route resolution occurs (`match`, link preloading,
+ * hydration), so that `preloadCode(id)` doesn't need an extra server round trip.
+ * Lives until full page reload.
+ * @type {Map<string, import('types').CSRRoute | typeof ENDPOINT_ONLY>}
+ */
+const route_id_cache = new Map();
+
+/**
+ * Parse a server-provided route and record it in `route_id_cache`, so that a subsequent
+ * `preloadCode(id)` for the same route doesn't need another server round trip. Always use
+ * this rather than calling `parse_server_route` directly.
+ * @param {import('types').CSRRouteServer} server_route
+ * @returns {import('types').CSRRoute}
+ */
+function parse_and_cache_server_route(server_route) {
+	const route = parse_server_route(server_route, app.nodes);
+	route_id_cache.set(route.id, route);
+	return route;
+}
+
+/**
  * Note on before_navigate_callbacks, on_navigate_callbacks and after_navigate_callbacks:
  * do not re-assign as some closures keep references to these Sets
  */
@@ -454,9 +488,11 @@ async function _start(_app, _target, data) {
 
 	app = _app;
 
+	init_transport(app.hooks.transport ?? {});
+
 	await _app.hooks.init?.();
 
-	routes = __SVELTEKIT_CLIENT_ROUTING__ ? parse(_app) : [];
+	routes = __SVELTEKIT_CLIENT_ROUTING__ ? parse_routes(_app) : [];
 	container = __SVELTEKIT_EMBEDDED__ ? _target : document.documentElement;
 	target = _target;
 
@@ -497,7 +533,7 @@ async function _start(_app, _target, data) {
 				[HISTORY_METADATA_KEY]: {
 					historyIndex: current_history_index,
 					navigationIndex: current_navigation_index,
-					state: {},
+					state: stringify({}),
 					persistState: false,
 					resetIndex: current_history_index
 				}
@@ -530,7 +566,7 @@ async function _start(_app, _target, data) {
 			type: 'enter',
 			url: resolve_url(app.hash ? decode_hash(new URL(location.href)) : location.href),
 			replace_state: true,
-			state: history_metadata?.persistState ? history_metadata.state : {},
+			state: history_metadata?.persistState ? parse(history_metadata.state) : {},
 			persist_state: history_metadata?.persistState ?? false
 		});
 
@@ -788,6 +824,53 @@ async function _preload_data(intent) {
 }
 
 /**
+ * Fetch and parse the route with the given ID from the server-side route resolution endpoint.
+ * Returns `ENDPOINT_ONLY` if the route exists but has no code to preload, or `undefined` if
+ * there is no such route. Only used when `router.resolution === 'server'`.
+ * @param {string} id
+ * @returns {Promise<import('types').CSRRoute | typeof ENDPOINT_ONLY | undefined>}
+ */
+async function load_route_by_id(id) {
+	/** @type {{ route?: import('types').CSRRouteServer, endpoint_only?: boolean }} */
+	let module;
+
+	try {
+		module = await import(
+			/* @vite-ignore */
+			base + route_id_resolution_pathname(app_dir, id)
+		);
+	} catch {
+		// if there's no module at that path the response is a 404 (or, on a static
+		// host, fallback HTML with the wrong MIME type) and the import rejects —
+		// treat it the same as an unknown route rather than surfacing a cryptic error
+		return;
+	}
+
+	if (module.endpoint_only) {
+		// The route exists, it just has no code to preload.
+		route_id_cache.set(id, ENDPOINT_ONLY);
+		return ENDPOINT_ONLY;
+	}
+
+	if (!module.route) return;
+
+	return parse_and_cache_server_route(module.route);
+}
+
+/**
+ * Import the modules for a route's layout and leaf nodes, without running `load` functions.
+ * @param {import('types').CSRRoute} route
+ * @returns {Promise<void>}
+ */
+async function load_route_nodes(route) {
+	await Promise.all(
+		/** @type {[has_server_load: boolean, node_loader: import('types').CSRPageNodeLoader][]} */ (
+			[...route.layouts, route.leaf].filter(Boolean)
+		).map(([, node_loader]) => node_loader())
+	);
+}
+
+/**
  * @param {URL} url
  * @returns {Promise<void>}
  */
@@ -795,11 +878,7 @@ async function _preload_code(url) {
 	const route = (await get_navigation_intent(url, false))?.route;
 
 	if (route) {
-		await Promise.all(
-			/** @type {[has_server_load: boolean, node_loader: import('types').CSRPageNodeLoader][]} */ (
-				[...route.layouts, route.leaf].filter(Boolean)
-			).map((load) => load[1]())
-		);
+		await load_route_nodes(route);
 	}
 }
 
@@ -1730,7 +1809,7 @@ export async function get_navigation_intent(url, invalidating) {
 		return {
 			id: get_page_key(url),
 			invalidating,
-			route: parse_server_route(route, app.nodes),
+			route: parse_and_cache_server_route(route),
 			params,
 			url
 		};
@@ -1978,10 +2057,17 @@ async function navigate({
 		url.pathname = navigation_result.props.page.url.pathname;
 	}
 
-	state = popped ? popped.state : state;
+	if (popped) {
+		state = popped.state;
+	} else {
+		// we immediately serialize-then-parse to ensure that the value is
+		// serializable, and to prevent the developer from dangerously
+		// relying on the identity of the serialized objects
+		const serialized_state = stringify(state);
+		state = parse(serialized_state);
 
-	if (!popped) {
-		// this is a new navigation, rather than a popstate
+		// Store the serialized state so the browser history can preserve custom transport values.
+		// This is a new navigation, rather than a popstate.
 		const change = replace_state ? 0 : 1;
 		if (type !== 'enter') {
 			if (reset) current_reset_index += 1;
@@ -1991,7 +2077,7 @@ async function navigate({
 			[HISTORY_METADATA_KEY]: /** @satisfies {HistoryMetadata} */ ({
 				historyIndex: (current_history_index += change),
 				navigationIndex: (current_navigation_index += change),
-				state,
+				state: serialized_state,
 				persistState: persist_state,
 				resetIndex: current_reset_index
 			})
@@ -2657,45 +2743,76 @@ export async function preloadData(href) {
  * Programmatically imports the code for routes that haven't yet been fetched.
  * Typically, you might call this to speed up subsequent navigation.
  *
- * You can specify routes by any matching pathname such as `/about` (to match `src/routes/about/+page.svelte`) or `/blog/*` (to match `src/routes/blog/[slug]/+page.svelte`).
+ * Takes a route ID such as `/about` or `/blog/[slug]`. Unlike pathnames, route IDs
+ * are never prefixed with the app's [base path](https://svelte.dev/docs/kit/configuration#paths).
+ * If you have a pathname rather than a route ID, you can convert it with
+ * [`match`](https://svelte.dev/docs/kit/$app-paths#match) from `$app/paths`:
+ *
+ * ```js
+ * import { match } from '$app/paths';
+ * import { preloadCode } from '$app/navigation';
+ *
+ * const matched = await match('/blog/hello-world');
+ * if (matched) await preloadCode(matched.id);
+ * ```
  *
  * Unlike `preloadData`, this won't call `load` functions.
  * Returns a Promise that resolves when the modules have been imported.
  *
- * @param {string} pathname
+ * @param {RouteId} id
  * @returns {Promise<void>}
  */
-export async function preloadCode(pathname) {
+export async function preloadCode(id) {
 	if (!BROWSER) {
 		throw new Error('Cannot call preloadCode(...) on the server');
 	}
 
-	// `current.url` is null until the first navigation/hydration completes, so fall back
-	// to `location` to support calling `preloadCode` during initial page load (#13297)
-	const url = new URL(pathname, current.url ?? location.href);
-
-	if (DEV) {
-		if (!pathname.startsWith('/')) {
-			throw new Error(
-				'argument passed to preloadCode must be a pathname (i.e. "/about" rather than "http://example.com/about"'
-			);
-		}
-
-		if (!pathname.startsWith(base)) {
-			throw new Error(
-				`pathname passed to preloadCode must start with \`paths.base\` (i.e. "${base}${pathname}" rather than "${pathname}")`
-			);
-		}
-
-		if (__SVELTEKIT_CLIENT_ROUTING__) {
-			const rerouted = await get_rerouted_url(url);
-			if (!rerouted || !routes.find((route) => route.exec(get_url_path(rerouted)))) {
-				throw new Error(`'${pathname}' did not match any routes`);
-			}
-		}
+	if (DEV && id[0] !== '/') {
+		throw new Error(
+			`argument passed to preloadCode must be a route ID (i.e. "/blog/[slug]" rather than "blog/[slug]")`
+		);
 	}
 
-	return _preload_code(url);
+	const route = __SVELTEKIT_CLIENT_ROUTING__
+		? routes.find((r) => r.id === id)
+		: (route_id_cache.get(id) ?? (await load_route_by_id(id)));
+
+	if (route === ENDPOINT_ONLY) {
+		if (DEV) {
+			console.warn(
+				`'${id}' has no \`+page\`, so there is no code to preload. If you meant to warm up an ` +
+					`endpoint, request it with \`fetch\` instead.`
+			);
+		}
+
+		return;
+	}
+
+	if (!route) {
+		if (DEV) {
+			// warn rather than throw, since under client routing an endpoint-only route id is
+			// indistinguishable from a typo — the client manifest only contains routes with a `+page`
+			let message = `'${id}' did not match any route`;
+
+			if (__SVELTEKIT_CLIENT_ROUTING__) {
+				message += ` (note that routes without a \`+page\` have no code to preload)`;
+
+				// the most common migration mistake is passing a pathname, which used to work
+				const candidates = [id];
+				if (base && id.startsWith(base)) candidates.push(id.slice(base.length) || '/');
+
+				if (candidates.some((path) => routes.some((r) => r.exec(path)))) {
+					message += `. It does match as a pathname — use \`match(...)\` from \`$app/paths\` to convert a pathname into a route ID`;
+				}
+			}
+
+			console.warn(message);
+		}
+
+		return;
+	}
+
+	await load_route_nodes(route);
 }
 
 /**
@@ -2767,18 +2884,8 @@ export async function replaceState(url, state) {
 async function update_state(intent, state, { replace, persist_state, reset }, caller) {
 	const url = intent.url;
 
-	if (DEV) {
-		if (!started) {
-			throw new Error(`Cannot call ${caller}(...) before router is initialized`);
-		}
-
-		try {
-			// use `devalue.stringify` as a convenient way to ensure we exclude values that can't be properly rehydrated, such as custom class instances
-			devalue.stringify(state);
-		} catch (error) {
-			// @ts-expect-error
-			throw new Error(`Could not serialize state${error.path}`, { cause: error });
-		}
+	if (DEV && !started) {
+		throw new Error(`Cannot call ${caller}(...) before router is initialized`);
 	}
 
 	const nav =
@@ -2799,12 +2906,16 @@ async function update_state(intent, state, { replace, persist_state, reset }, ca
 	if (!replace) capture_scroll(current_history_index);
 	if (reset) current_reset_index += 1;
 
+	// as above, serialize-then-parse to prevent bugs
+	const serialized_state = stringify(state);
+	state = parse(serialized_state);
+
 	const entry = {
 		[HISTORY_METADATA_KEY]: /** @satisfies {HistoryMetadata} */ ({
 			historyIndex: (current_history_index += replace ? 0 : 1),
 			navigationIndex: current_navigation_index,
 			pageUrl: page.url.href,
-			state,
+			state: serialized_state,
 			persistState: persist_state,
 			resetIndex: current_reset_index
 		})
@@ -3184,7 +3295,7 @@ function _start_router() {
 			const reset_index = history_metadata.resetIndex;
 			const reset = reset_index !== (source_info?.resetIndex ?? current_reset_index);
 			const scroll = history_info[history_index]?.scroll;
-			const state = history_metadata.state;
+			const state = parse(history_metadata.state);
 			const url = new URL(history_metadata.pageUrl ?? location.href);
 			const navigation_index = history_metadata.navigationIndex;
 			const is_hash_change =
@@ -3346,7 +3457,7 @@ async function _hydrate(
 	} else {
 		// undefined in case of 404
 		if (server_route) {
-			parsed_route = route = parse_server_route(server_route, app.nodes);
+			parsed_route = route = parse_and_cache_server_route(server_route);
 		} else {
 			route = { id: null };
 			params = {};
@@ -3430,7 +3541,7 @@ async function _hydrate(
 
 	if (result.props.page) {
 		const history_metadata = get_history_metadata();
-		result.props.page.state = history_metadata?.persistState ? history_metadata.state : {};
+		result.props.page.state = history_metadata?.persistState ? parse(history_metadata.state) : {};
 	}
 
 	await initialize(result, target, should_hydrate);

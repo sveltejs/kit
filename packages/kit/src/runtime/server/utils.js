@@ -1,5 +1,3 @@
-/** @import { ServerHooks } from 'types' */
-import * as devalue from 'devalue';
 import { text } from '@sveltejs/kit';
 import { ENDPOINT_METHODS } from '../../constants.js';
 
@@ -138,22 +136,4 @@ export function get_node_type(node_id) {
  */
 export function count_non_ssi_comments(str) {
 	return (str.match(/<!--(?!#)/g) ?? []).length;
-}
-
-/**
- * Creates a serialiser for non-arbitrary POJOs using the app's transport hook
- * @param {ServerHooks['transport']} transport
- * @returns {(thing: unknown) => string | undefined}
- */
-export function create_replacer(transport) {
-	/** @param {unknown} thing */
-	const replacer = (thing) => {
-		for (const key in transport) {
-			const encoded = transport[key].encode(thing);
-			if (encoded) {
-				return `app.decode('${key}', ${devalue.uneval(encoded, replacer)})`;
-			}
-		}
-	};
-	return replacer;
 }

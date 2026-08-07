@@ -1,7 +1,8 @@
 import { query, command, requested } from '$app/server';
 import * as v from 'valibot';
+import { per_session } from '../../per-session.js';
 
-let count = 0;
+const session = per_session(() => ({ count: 0 }));
 
 export const get_transformed_data = query(
 	v.pipe(
@@ -9,12 +10,12 @@ export const get_transformed_data = query(
 		v.transform((n) => String(n)) // Transforms number to string
 	),
 	(transformed_value) => {
-		return `Count for ${transformed_value} is ${count}`;
+		return `Count for ${transformed_value} is ${session().count}`;
 	}
 );
 
 export const update_data = command(async () => {
-	count++;
+	session().count++;
 
 	await requested(get_transformed_data, 1).refreshAll();
 });

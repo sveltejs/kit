@@ -1,4 +1,4 @@
-import { copyFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
@@ -72,15 +72,15 @@ export default function (options = {}) {
 			const files = fileURLToPath(new URL('./files', import.meta.url).href);
 			const tmp = builder.getBuildDirectory('cloudflare-tmp');
 
-			builder.rimraf(dest);
-			builder.rimraf(worker_dest);
+			rmSync(dest, { force: true, recursive: true });
+			rmSync(worker_dest, { force: true, recursive: true });
 
-			builder.mkdirp(dest);
-			builder.mkdirp(tmp);
+			mkdirSync(dest, { recursive: true });
+			mkdirSync(tmp, { recursive: true });
 
 			// client assets and prerendered pages
 			const assets_dest = `${dest}${builder.config.kit.paths.base}`;
-			builder.mkdirp(assets_dest);
+			mkdirSync(assets_dest, { recursive: true });
 			if (
 				building_for_cloudflare_pages ||
 				wrangler_config.assets?.not_found_handling === '404-page'

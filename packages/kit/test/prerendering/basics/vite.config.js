@@ -19,6 +19,9 @@ const config = {
 			paths: {
 				origin: 'http://prerender.origin'
 			},
+			router: {
+				resolution: 'server'
+			},
 			prerender: {
 				handleHttpError: 'warn',
 				handleMissingId: ({ id }) => {

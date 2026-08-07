@@ -100,8 +100,18 @@ export default defineConfig({
 		expect: { requireAssertions: true },
 		browser: {
 			enabled: true,
-			provider: playwright(),
-			instances: [{ browser: process.env.KIT_E2E_BROWSER || 'chromium' }],
+			provider: playwright({
+				launchOptions: {
+					channel: process.env.KIT_E2E_BROWSER === 'chromium' ? 'chrome' : undefined
+				}
+			}),
+			instances: [
+				{
+					browser:
+						/** @type {"chromium" | "firefox" | "webkit"} */ (process.env.KIT_E2E_BROWSER) ||
+						'chromium'
+				}
+			],
 			headless: true
 		},
 		include: ['unit-test/**/*.spec.js']

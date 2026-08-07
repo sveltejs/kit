@@ -153,7 +153,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 						);
 					}
 
-					return String.fromCharCode(parseInt(code, 16));
+					return String.fromCodePoint(parseInt(code, 16));
 				}
 			});
 

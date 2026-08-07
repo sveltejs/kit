@@ -1,3 +1,4 @@
+import { rmSync } from 'node:fs';
 import path from 'node:path';
 import { platforms } from './platforms.js';
 
@@ -72,8 +73,8 @@ ${dynamic_routes.map((route) => `  - ${path.posix.join(prefix, route.id)}`).join
 				precompress
 			} = options ?? platform?.defaults ?? /** @type {import('./index.js').AdapterOptions} */ ({});
 
-			builder.rimraf(assets);
-			builder.rimraf(pages);
+			rmSync(assets, { force: true, recursive: true });
+			rmSync(pages, { force: true, recursive: true });
 
 			builder.generateEnvModule();
 			builder.writeClient(assets);

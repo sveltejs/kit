@@ -12,14 +12,13 @@ import { get_node_type } from '../utils.js';
  * Calls the user's server `load` function.
  * @param {{
  *   event: import('@sveltejs/kit').RequestEvent;
- *   event_state: import('types').RequestState;
- *   state: import('types').SSRState;
+ *   state: import('types').RequestState;
  *   node: import('types').SSRNode | undefined;
  *   parent: () => Promise<Record<string, any>>;
  * }} opts
  * @returns {Promise<import('types').ServerDataNode | null>}
  */
-export async function load_server_data({ event, event_state, state, node, parent }) {
+export async function load_server_data({ event, state, node, parent }) {
 	if (!node?.server) return null;
 
 	let is_tracking = true;
@@ -83,7 +82,7 @@ export async function load_server_data({ event, event_state, state, node, parent
 		},
 		fn: async (current) => {
 			const traced_event = merge_tracing(event, current);
-			const result = await with_request_store({ event: traced_event, state: event_state }, () =>
+			const result = await with_request_store({ event: traced_event, state }, () =>
 				load.call(null, {
 					...traced_event,
 					fetch: (info, init) => {
@@ -194,25 +193,23 @@ export async function load_server_data({ event, event_state, state, node, parent
  * Calls the user's `load` function.
  * @param {{
  *   event: import('@sveltejs/kit').RequestEvent;
- *   event_state: import('types').RequestState;
+ *   state: import('types').RequestState;
  *   fetched: import('./types.js').Fetched[];
  *   node: import('types').SSRNode | undefined;
  *   parent: () => Promise<Record<string, any>>;
  *   resolve_opts: import('types').RequiredResolveOptions;
  *   server_data_promise: Promise<import('types').ServerDataNode | null>;
- *   state: import('types').SSRState;
  *   csr: boolean;
  * }} opts
  * @returns {Promise<Record<string, any | Promise<any>> | null>}
  */
 export async function load_data({
 	event,
-	event_state,
+	state,
 	fetched,
 	node,
 	parent,
 	server_data_promise,
-	state,
 	resolve_opts,
 	csr
 }) {
@@ -234,15 +231,14 @@ export async function load_data({
 		},
 		fn: async (current) => {
 			const traced_event = merge_tracing(event, current);
-			const child_state = { ...event_state, is_in_universal_load: true };
 
-			return await with_request_store({ event: traced_event, state: child_state }, () =>
+			return await with_request_store({ event: traced_event, state }, () =>
 				load.call(null, {
 					url: event.url,
 					params: event.params,
 					data: server_data_node?.data ?? null,
 					route: event.route,
-					fetch: create_universal_fetch(event, state, fetched, csr, resolve_opts),
+					fetch: create_universal_fetch(event, state.prerendering, fetched, csr, resolve_opts),
 					setHeaders: event.setHeaders,
 					depends: noop,
 					parent,
@@ -262,13 +258,13 @@ export async function load_data({
 
 /**
  * @param {Pick<import('@sveltejs/kit').RequestEvent, 'fetch' | 'url' | 'request' | 'route'>} event
- * @param {import('types').SSRState} state
+ * @param {import('types').PrerenderOptions | undefined} prerendering
  * @param {import('./types.js').Fetched[]} fetched
  * @param {boolean} csr
  * @param {Pick<Required<import('@sveltejs/kit').ResolveOptions>, 'filterSerializedResponseHeaders'>} resolve_opts
  * @returns {typeof fetch}
  */
-export function create_universal_fetch(event, state, fetched, csr, resolve_opts) {
+export function create_universal_fetch(event, prerendering, fetched, csr, resolve_opts) {
 	/**
 	 * @param {URL | RequestInfo} input
 	 * @param {RequestInit} [init]
@@ -290,9 +286,9 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 		let dependency;
 
 		if (same_origin) {
-			if (state.prerendering) {
+			if (prerendering) {
 				dependency = { response, body: null };
-				state.prerendering.dependencies.set(url.pathname, dependency);
+				prerendering.dependencies.set(url.pathname, dependency);
 			}
 		} else if (url.protocol === 'https:' || url.protocol === 'http:') {
 			// simulate CORS errors and "no access to body in no-cors mode" server-side for consistency with client-side behaviour
@@ -336,7 +332,7 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 
 					const request_body =
 						input instanceof Request && cloned_body
-							? await stream_to_string(cloned_body)
+							? await new Response(cloned_body).text()
 							: init?.body;
 
 					if (
@@ -371,16 +367,7 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 					const [a, b] = response.body.tee();
 
 					void (async () => {
-						let result = new Uint8Array();
-
-						for await (const chunk of a) {
-							const combined = new Uint8Array(result.length + chunk.length);
-
-							combined.set(result, 0);
-							combined.set(chunk, result.length);
-
-							result = combined;
-						}
+						const result = new Uint8Array(await new Response(a).arrayBuffer());
 
 						if (dependency) {
 							dependency.body = new Uint8Array(result);
@@ -482,6 +469,21 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 
 				return value;
 			};
+
+			const get_set_cookie = response.headers.getSetCookie;
+			response.headers.getSetCookie = () => {
+				const values = get_set_cookie.call(response.headers);
+				for (const value of values) {
+					const included = resolve_opts.filterSerializedResponseHeaders('set-cookie', value);
+					if (!included) {
+						throw new Error(
+							`Failed to get response header "set-cookie" — it must be included by the \`filterSerializedResponseHeaders\` option: https://svelte.dev/docs/kit/hooks#handle (at ${event.route.id})`
+						);
+					}
+				}
+
+				return values;
+			};
 		}
 
 		return proxy;
@@ -495,22 +497,4 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 		response.catch(noop);
 		return response;
 	};
-}
-
-/**
- * @param {ReadableStream<Uint8Array>} stream
- */
-async function stream_to_string(stream) {
-	let result = '';
-	const reader = stream.getReader();
-	const decoder = new TextDecoder();
-	while (true) {
-		const { done, value } = await reader.read();
-		if (done) {
-			result += decoder.decode();
-			break;
-		}
-		result += decoder.decode(value, { stream: true });
-	}
-	return result;
 }

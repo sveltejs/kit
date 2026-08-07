@@ -1,9 +1,4 @@
 {
-	"compilerOptions": {
-		"allowJs": true,
-		"checkJs": true,
-		"noEmit": true
-	},
 	"extends": "$app/tsconfig",
 	"include": ["source", "test", "vite.custom.config.js", "playwright.config.js"]
 }

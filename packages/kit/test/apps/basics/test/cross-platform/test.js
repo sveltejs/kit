@@ -804,7 +804,7 @@ test.describe('Routing', () => {
 		await clicknav('[href="/routing/a"]');
 
 		await page.goBack();
-		expect(await page.textContent('h1')).toBe('Great success!');
+		await expect(page.locator('h1')).toHaveText('Great success!');
 	});
 
 	test('focus works if page load has hash', async ({ page, browserName }) => {
