@@ -874,8 +874,33 @@ test.describe('Shadowed pages', () => {
 			}
 		});
 
-		expect(response.status()).toBe(204);
-		expect(await response.text()).toBe('');
+		expect(response.status()).toBe(200);
+		expect(await response.json()).toEqual({
+			type: 'success',
+			status: 204,
+			location: '/shadowed/simple/post'
+		});
+	});
+
+	test('action response includes the stripped landing location', async ({ baseURL, request }) => {
+		const response = await request.post(
+			'/actions/cross-page/destination?redirectTo=%2Fdashboard&/failure',
+			{
+				form: { username: 'paolo' },
+				headers: {
+					accept: 'application/json',
+					origin: new URL(baseURL).origin
+				}
+			}
+		);
+
+		expect(response.status()).toBe(400);
+		expect(await response.json()).toEqual({
+			type: 'failure',
+			status: 400,
+			location: '/actions/cross-page/destination?redirectTo=%2Fdashboard',
+			data: '[{"problem":1,"username":2},"invalid","paolo"]'
+		});
 	});
 
 	test('Action fail() returns matching HTTP status code', async ({ baseURL, request }) => {

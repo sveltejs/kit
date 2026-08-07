@@ -50,6 +50,8 @@ We can also invoke the action from other pages (for example if there's a login w
 </form>
 ```
 
+Submitting this form takes you to `/login`, whether the action succeeds or fails — that's what the browser does, and [`use:enhance`](#Progressive-enhancement-use:enhance) emulates it. If you'd rather stay where you are and handle the result in place, there's a recipe for that in the [progressive enhancement](#Progressive-enhancement-use:enhance) section.
+
 ## Named actions
 
 Instead of one `default` action, a page can have as many named actions as it needs:
@@ -361,12 +363,36 @@ The easiest way to progressively enhance a form is to add the `use:enhance` acti
 
 Without an argument, `use:enhance` will emulate the browser-native behaviour, just without the full-page reloads. It will:
 
-- update the `form` property, `page.form` and `page.status` on a successful or invalid response, but only if the action is on the same page you're submitting from. For example, if your form looks like `<form action="/somewhere/else" ..>`, the `form` prop and the `page.form` state will _not_ be updated. This is because in the native form submission case you would be redirected to the page the action is on. If you want to have them updated either way, use [`applyAction`](#Progressive-enhancement-Customising-use:enhance)
+- if the action is on the page you're submitting from, emulate a reload of the current page — updating the `form` property, `page.form` and `page.status` on a successful or invalid response
+- if the action is on a different page (for example `<form action="/somewhere/else" ..>`), navigate to the action's URL on a successful _or_ invalid response, populating that page's `form` property and `page.status`, just as a native submission would. A new history entry is pushed
 - reset the `<form>` element
-- invalidate all data using `invalidateAll` on a successful response
+- refresh all data using `refreshAll` on a successful response
 - call `goto` on a redirect response
-- render the nearest `+error` boundary if an error occurs
+- render the nearest `+error` boundary if an unexpected error occurs — the boundary nearest the _action's_ route, if the action is on a different page
 - [reset focus](accessibility#Focus-management) to the appropriate element
+
+> [!NOTE] Two details are worth knowing about the URL:
+>
+> Where a submission lands is `result.location` — the form's `action` with the `?/actionName` parameter removed, since that parameter has done its job once the action has run. `action="/login?/do-login"` lands on `/login`, and any other query parameters are kept, so `action="/login?redirectTo=/dashboard&/do-login"` lands on `/login?redirectTo=/dashboard`. The destination's `load` functions see that URL via `url.search`.
+>
+> Two consequences worth knowing:
+>
+> - A _relative_ action replaces the entire query string as a side effect of URL resolution — `action="?/delete"` on `/items?page=2` resolves to `/items?/delete`, so both enhanced and native submissions drop `page=2`. Write `action="?page=2&/delete"` to preserve it.
+> - Without JavaScript the browser can't strip anything, so an unenhanced submission leaves you on the raw action URL (`/login?/do-login`). Reloading that URL is a plain `GET`, which doesn't re-run the action and renders the page normally, so the difference is cosmetic — but a `load` function can observe a different `url.search` depending on whether JavaScript is available.
+
+If you don't want a cross-page submission to navigate — a common need for login or newsletter widgets that live in a layout and post to another page's action — pass `navigate: false` to `update`, which gives you the same behaviour as SvelteKit 2:
+
+```svelte
+<form
+	method="POST"
+	action="/other/page?/subscribe"
+	use:enhance={() => async ({ update }) => {
+		await update({ navigate: false });
+	}}
+>
+```
+
+The result is applied to the page you're on: `form`, `page.form` and `page.status` are updated, and error results render the current route's nearest `+error` boundary.
 
 ### Customising use:enhance
 
@@ -392,7 +418,7 @@ To customise the behaviour, you can provide a `SubmitFunction` that runs immedia
 
 You can use these functions to show and hide loading UI, and so on.
 
-If you return a callback, you override the default post-submission behavior. To get it back, call `update`, which accepts `invalidateAll` and `reset` parameters, or use `applyAction` on the result:
+If you return a callback, you override the default post-submission behavior. To get it back, call `update`, which accepts `navigate`, `refreshAll` and `reset` parameters, or use `applyAction` on the result:
 
 ```svelte
 /// file: src/routes/login/+page.svelte
@@ -418,13 +444,21 @@ If you return a callback, you override the default post-submission behavior. To 
 >
 ```
 
-The behaviour of `applyAction(result)` depends on `result.type`:
+> [!NOTE] `update` accepts these options:
+>
+> - `reset: false` if you don't want the `<form>` values to be reset after a successful submission
+> - `refreshAll` controls whether all data is refreshed after submission. It defaults to `true` for successful results and `false` for failures. When the submission navigates to another page, setting it to `false` does _not_ prevent the destination's own `load` functions from running — it only allows shared layout data to be reused. `invalidateAll` is a deprecated alias for `refreshAll`
+> - `navigate: false` applies a non-redirect result to the current page instead of navigating to `result.location`. Redirects are always followed
 
-- `success`, `failure` — sets `page.status` to `result.status` and updates `form` and `page.form` to `result.data` (regardless of where you are submitting from, in contrast to `update` from `enhance`)
-- `redirect` — calls `goto(result.location, { invalidateAll: true })`
-- `error` — renders the nearest `+error` boundary with `result.error`
+The behaviour of `applyAction(result)` depends on `result.type` and on `result.location` — the page the submission should land on. The server includes it in every action response, so `applyAction` can do what the browser would do:
+
+- `success`, `failure` — if `result.location` is a different page, navigates there and renders it with the result, populating that page's `form` property and `page.status`. Otherwise sets `page.status` to `result.status` and updates `form` and `page.form` to `result.data`
+- `redirect` — calls `goto(result.location, { refreshAll: true })`
+- `error` — renders the nearest `+error` boundary with `result.error`. If `result.location` is a different page, it navigates there first, so the boundary is the one nearest the _destination's_ route
 
 In all cases, [focus will be reset](accessibility#Focus-management).
+
+> [!NOTE] Like `update`, `applyAction` accepts a `navigate: false` option. It applies non-redirect results to the current page and resolves error boundaries against the current route, however `result.location` is set. Redirects are always followed.
 
 ### Custom event listener
 

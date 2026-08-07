@@ -1462,6 +1462,145 @@ test.describe('Actions', () => {
 		await page.evaluate('window.svelte_tick()');
 		await expect(pre).toHaveText('prop: 1, state: 1');
 	});
+
+	test('cross-page action navigation is client-side', async ({ page }) => {
+		await page.goto('/actions/cross-page/source');
+		await page.evaluate(() => (window.nav_marker = true));
+
+		await page.locator('button.submit-success').click();
+
+		await expect(page.locator('pre.destination-form')).toHaveText(
+			JSON.stringify({ source: 'destination', username: 'paolo' })
+		);
+		expect(await page.evaluate(() => window.nav_marker)).toBe(true);
+	});
+
+	test('same-page action drops query params omitted from the action', async ({ page }) => {
+		await page.goto('/actions/cross-page/same-page?page=2');
+		await page.locator('button.submit-relative').click();
+
+		await expect(page.locator('pre.form-json')).toHaveText(
+			JSON.stringify({ where: '/actions/cross-page/same-page' })
+		);
+
+		const url = new URL(page.url());
+		expect(url.pathname).toBe('/actions/cross-page/same-page');
+		expect(url.search).toBe('');
+	});
+
+	test('semantically identical action query refreshes without navigating', async ({ page }) => {
+		await page.goto('/actions/cross-page/same-page?a=1&b=2');
+		const loaded_at = await page.locator('pre.loaded-at').textContent();
+		await page.evaluate(() => (window.nav_marker = true));
+
+		await page.locator('button.submit-reordered').click();
+
+		await expect(page.locator('pre.form-json')).toHaveText(
+			JSON.stringify({ where: '/actions/cross-page/same-page' })
+		);
+		await expect(page.locator('pre.loaded-at')).not.toHaveText(loaded_at);
+		expect(await page.evaluate(() => window.nav_marker)).toBe(true);
+		expect(new URL(page.url()).search).toBe('?a=1&b=2');
+	});
+
+	test('failures do not refresh by default but can opt in', async ({ page }) => {
+		await page.goto('/actions/cross-page/same-page');
+		let loaded_at = await page.locator('pre.loaded-at').textContent();
+
+		await page.locator('button.submit-failure').click();
+		await expect(page.locator('pre.form-json')).toHaveText(JSON.stringify({ failed: true }));
+		await expect(page.locator('pre.loaded-at')).toHaveText(loaded_at);
+
+		loaded_at = await page.locator('pre.loaded-at').textContent();
+		await page.locator('button.submit-failure-refresh').click();
+		await expect(page.locator('pre.form-json')).toHaveText(JSON.stringify({ failed: true }));
+		await expect(page.locator('pre.loaded-at')).not.toHaveText(loaded_at);
+	});
+
+	test('cross-page refresh defaults depend on the result type', async ({ page }) => {
+		await page.goto('/actions/cross-page/source');
+		let layout_loaded_at = await page.locator('pre.layout-loaded-at').textContent();
+
+		await page.locator('button.submit-failure').click();
+		await expect(page.locator('pre.destination-form')).toHaveText(
+			JSON.stringify({ problem: 'invalid', username: 'paolo' })
+		);
+		await expect(page.locator('pre.layout-loaded-at')).toHaveText(layout_loaded_at);
+
+		await page.goto('/actions/cross-page/source');
+		layout_loaded_at = await page.locator('pre.layout-loaded-at').textContent();
+		await page.locator('button.submit-success').click();
+		await expect(page.locator('pre.layout-loaded-at')).not.toHaveText(layout_loaded_at);
+	});
+
+	test('cross-page action navigation strips only the named-action param', async ({ page }) => {
+		await page.goto('/actions/cross-page/source');
+		await page.locator('button.submit-extra-params').click();
+
+		await expect(page.locator('pre.destination-form')).toHaveText(
+			JSON.stringify({ source: 'destination', username: 'paolo' })
+		);
+
+		const url = new URL(page.url());
+		expect(url.pathname).toBe('/actions/cross-page/destination');
+		expect(url.searchParams.get('redirectTo')).toBe('/dashboard');
+		expect([...url.searchParams.keys()].some((key) => key.startsWith('/'))).toBe(false);
+
+		// the destination's `load` sees the stripped URL
+		await expect(page.locator('pre.load-search')).toHaveText('?redirectTo=%2Fdashboard');
+	});
+
+	test('cross-page action navigation pushes a history entry', async ({ page }) => {
+		await page.goto('/actions/cross-page/source');
+		await page.locator('button.submit-success').click();
+
+		await expect(page.locator('pre.destination-form')).toHaveText(
+			JSON.stringify({ source: 'destination', username: 'paolo' })
+		);
+
+		await page.goBack();
+		await expect(page.locator('h1.source')).toHaveText('source');
+		expect(new URL(page.url()).pathname).toBe('/actions/cross-page/source');
+
+		// form data is ephemeral — going forward again renders the destination without it
+		await page.goForward();
+		await expect(page.locator('pre.destination-form')).toHaveText(JSON.stringify(null));
+	});
+
+	for (const [name, selector, redirect_selector] of [
+		['update', 'button.submit-stay', 'button.submit-redirect-stay'],
+		['applyAction', 'button.submit-stay-apply-action', 'button.submit-redirect-stay-apply-action']
+	]) {
+		test(`${name} navigate option applies the result to the current page`, async ({ page }) => {
+			await page.goto('/actions/cross-page/source');
+			await page.locator(selector).click();
+
+			await expect(page.locator('pre.source-form')).toHaveText(
+				JSON.stringify({ problem: 'invalid', username: 'paolo' })
+			);
+			expect(new URL(page.url()).pathname).toBe('/actions/cross-page/source');
+		});
+
+		test(`${name} navigate option does not suppress redirects`, async ({ page }) => {
+			await page.goto('/actions/cross-page/source');
+			await page.locator(redirect_selector).click();
+
+			await expect(page.locator('h1.redirected')).toHaveText('redirected');
+			expect(new URL(page.url()).pathname).toBe('/actions/cross-page/redirected');
+		});
+	}
+
+	test('update({ refreshAll: false }) still navigates to the cross-page action', async ({
+		page
+	}) => {
+		await page.goto('/actions/cross-page/refreshall-false');
+		await page.locator('button.submit-success').click();
+
+		await expect(page.locator('pre.destination-form')).toHaveText(
+			JSON.stringify({ source: 'destination', username: 'paolo' })
+		);
+		expect(new URL(page.url()).pathname).toBe('/actions/cross-page/destination');
+	});
 });
 
 test.describe('Assets', () => {
