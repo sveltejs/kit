@@ -1,3 +1,4 @@
+import { HttpError, SvelteKitError } from '@sveltejs/kit/internal';
 import { DEV } from 'esm-env';
 import { noop } from '../../utils/functions.js';
 import { refreshAll } from './navigation.js';
@@ -205,9 +206,40 @@ export function enhance(form_element, submit = noop) {
 			if (response.status === 204) {
 				result = { type: 'success', status: 204 };
 			} else {
-				result = deserialize(await response.text());
-				if (result.type === 'error' || result.type === 'failure') {
-					result.status = response.status;
+				const text = await response.text();
+
+				/** @type {any} */
+				let parsed;
+				try {
+					// an empty body carries no result for an error response
+					parsed = text === '' && !response.ok ? undefined : deserialize(text);
+				} catch (error) {
+					// only an error response may have a non-ActionResult body, e.g. an HTML error page
+					if (response.ok) throw error;
+				}
+
+				if (
+					parsed?.type === 'success' ||
+					parsed?.type === 'failure' ||
+					parsed?.type === 'redirect' ||
+					parsed?.type === 'error'
+				) {
+					result = parsed;
+					if (result.type === 'error' || result.type === 'failure') {
+						result.status = response.status;
+					}
+				} else if (!response.ok) {
+					// the action never ran, e.g. the CSRF check or a proxy rejected the request.
+					// an `App.Error`-shaped body is an expected error, anything else goes through `handleError`
+					throw parsed && typeof parsed === 'object' && typeof parsed.message === 'string'
+						? new HttpError({ ...parsed, status: response.status })
+						: new SvelteKitError(
+								response.status,
+								response.statusText,
+								typeof parsed === 'string' ? parsed : response.statusText
+							);
+				} else {
+					result = parsed;
 				}
 			}
 		} catch (error) {
