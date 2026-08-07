@@ -10,7 +10,7 @@ npx sv migrate sveltekit-3
 
 We recommend upgrading to the most recent 2.x version before upgrading to 3.0 so that you can take advantage of targeted deprecation warnings.
 
-## Updated dependency requirements
+## Updated dependencies
 
 SvelteKit 3 requires the following minimum versions:
 
@@ -186,9 +186,20 @@ Previously, you needed to import `base` from the now-removed [`$service-worker`]
 
 A new [`$app/service-worker`]($app-service-worker) provides type-safe access to the service worker execution context in your `src/service-worker/index.ts`, provided you have a `src/service-worker/tsconfig.json` that extends [`$app/tsconfig/service-worker`](#$app-tsconfig-service-worker).
 
+## `$app/state`
+
+### `page.url` is now readonly
+
+`page.url` is now typed as a `ReadonlyURL` with `ReadonlyURLSearchParams`, so mutating it — e.g. `page.url.searchParams.set(...)` or assigning to `page.url.pathname` — is now a type error. If you need a mutable URL, copy it first:
+
+```js
+const url = +++new URL(page.url.href);+++
+url.searchParams.set('q', 'svelte');
+```
+
 ## `$app/stores` (removed)
 
-The `$app/stores` module (which exports the `$page`, `$navigating`, and `$updated` stores) has been removed. Use [`$app/state`]($app-state) instead, which provides fine-grained Svelte 5 [state](../svelte/$state).
+The `$app/stores` module (which exports the `$page`, `$navigating`, and `$updated` stores) has been removed. Use [`$app/state`]($app-state) instead, which provides fine-grained Svelte 5 [state](../svelte/$state), and remove the `$` prefix when reading values (i.e. `page` rather than `$page`):
 
 ```svelte
 <script>
@@ -197,8 +208,6 @@ The `$app/stores` module (which exports the `$page`, `$navigating`, and `$update
 
 <p>current pathname: {page.url.pathname}</p>
 ```
-
-Replace `$app/stores` imports with `$app/state` and remove the `$` prefix when reading values (i.e. `page` rather than `$page`).
 
 ## `$app/tsconfig`
 
@@ -233,6 +242,12 @@ The various `$env/...` modules have been deprecated in favour of `$app/env/priva
 ## `$service-worker` (removed)
 
 The `$service-worker` module has been removed. Import `version` from [`$app/env`]($app-env), `assets`, `immutable` and `prerendered` from [`$app/manifest`]($app-manifest), and `resolved` from [`$app/paths`]($app-paths) instead.
+
+## `@sveltejs/kit`
+
+### `error`, `isHttpError`, `redirect`, and `isRedirect` refer to public types
+
+`error`, `isHttpError`, `redirect`, and `isRedirect` now refer to the public types rather than the internal classes. If you were importing the internal `HttpError`/`Redirect` classes from `@sveltejs/kit/internal`, or doing `instanceof` checks against them, use `isHttpError`/`isRedirect` from `@sveltejs/kit` instead.
 
 ## `@sveltejs/kit/hooks`
 
@@ -340,13 +355,17 @@ Errors thrown during rendering are now always routed through `handleError` and t
 
 If you have an async `handleError` hook in `hooks.client.ts`, enable `compilerOptions.experimental.async` in the `sveltekit(...)` plugin options of your Vite config so it can be awaited during rendering.
 
+### Form action responses use the `fail` status code
+
+Enhanced form action responses now use the HTTP status code passed to `fail(...)` instead of always returning `200`. If you inspect status codes on enhanced form submissions (for example in a `use:enhance` callback or in tests), they now reflect the value passed to `fail`.
+
 ## Environment variables
 
 TODO
 
-## Param matchers live in a single `params.ts` file
+## Params
 
-Param matchers are no longer files inside the `src/params` directory. Declare all matchers in a single `src/params.ts` (or `src/params.js`) file using the `defineParams` helper. A matcher can be a function that returns a parsed value (or `undefined`, if the param does not match), or a [Standard Schema](https://standardschema.dev).
+[Param matchers](advanced-routing#Matching) are no longer files inside the `src/params` directory. Declare all matchers in a single `src/params.ts` (or `src/params.js`) file using the `defineParams` helper. A matcher can be a function that returns a parsed value (or `undefined`, if the param does not match), or a [Standard Schema](https://standardschema.dev).
 
 ```js
 /// file: src/params.js
@@ -366,21 +385,11 @@ export const params = defineParams({
 });
 ```
 
-See [Matching](advanced-routing#Matching) for more details.
+## Observability
 
-## External redirects must be opted into
+Server-side [instrumentation](observability) now happens automatically if a `src/instrumentation.server.js` file exists.
 
-To [`redirect`](@sveltejs-kit#redirect) to an external URL you must now pass an `external` option — either `true` to allow any external URL (except `javascript:` URLs, which remain blocked), or an array of allowed origins (which _can_ include `javascript:` URLs).
-
-```js
-import { redirect } from '@sveltejs/kit';
-// ---cut---
-redirect(307, 'https://example.com', +++{ external: true }+++);
-```
-
-## Tracing is no longer experimental
-
-Server-side [OpenTelemetry tracing](observability) is no longer configured under the `experimental.tracing` and `experimental.instrumentation` flags. `src/instrumentation.server.js` is now included in the build automatically when it exists, and tracing is configured at the top level via `tracing.server`:
+To opt into [OpenTelemetry](https://opentelemetry.io/) tracing, add `tracing.server` configuration:
 
 ```js
 import { defineConfig } from 'vite';
@@ -428,25 +437,66 @@ For adapter authors, there are some additional changes:
 - `builder.createEntries` has been removed — use `builder.writeClient`, `builder.writeServer` and `builder.writePrerendered` directly
 - TODO
 
+## Responses
 
+### 204 responses return no content
 
-## Routing and project structure
+Returning a `204` (or any empty `2xx`) response from a `+server.js` handler now results in a response with no body, per the HTTP spec, rather than a SvelteKit envelope. Code that consumed the body of such responses needs to handle the empty body.
 
-### Consistent special filename patterns
+### `handle`'s `resolve` always returns a `Promise`
+
+The `resolve` function passed to `handle` is now typed to always return a `Promise<Response>` rather than `MaybePromise<Response>`.
+
+## Server-only modules
+
+### Files
 
 Server-only modules are now designated by a filename with a `server` segment, rather than a `.server.` infix — in other words, `stuff.server.ts`, `stuff.server.test.ts` and `server.ts` are all treated as server-only modules, whereas `server.ts` previously was not.
 
-Similarly, a `remote` segment in a filename designates a remote module — `stuff.remote.ts`, `stuff.remote.test.ts` and `remote.ts` are all remote modules.
-
-### Server-only directories
+### Directories
 
 Previously, any module inside `src/lib/server` was treated as server-only. This treatment now applies to _any_ `server` directory in the project with the exception of `src/routes` and your `static` directory.
 
-### Universal `config` takes precedence over server `config`
+## Remote functions
 
-Route `config` exported from a universal `+page.js` or `+layout.js` now takes precedence over `config` exported from the corresponding `+page.server.js` or `+layout.server.js`, matching how other page options are resolved. If you export `config` from both, move the canonical export to the universal file or consolidate them.
+Remove functions are still considered experimental — opt in via the `experimental.remoteFunctions` flag alongside `compilerOptions.experimental.async`:
 
-## Misc
+```js
+/// file: vite.config.js
+import { defineConfig } from 'vite';
+import { sveltekit } from '@sveltejs/kit/vite';
+// ---cut---
+export default defineConfig({
+	plugins: [
+		sveltekit({
+			compilerOptions: {
+				experimental: {
+					+++async: true+++
+				}
+			},
+			experimental: {
+				+++remoteFunctions: true+++
+			}
+		})
+	]
+});
+```
+
+### Remote module filenames
+
+As with server-only modules, a `remote` segment in a filename designates a remote module — `stuff.remote.ts`, `stuff.remote.test.ts` and `remote.ts` are all remote modules.
+
+If `experimental.remoteFunctions` is not enabled, the existence of these files will cause an error.
+
+### `event.url`, `event.params`, and `event.route` cannot be accessed inside queries
+
+Accessing `event.url`, `event.params`, or `event.route` inside a remote `query` function now throws an error. These properties are not meaningful in the context of a remote function (which can be called from anywhere). Pass any values you need explicitly as arguments to the function.
+
+### Errors are typed as `App.Error | undefined`
+
+The `error` property on remote function resources (queries, live queries, forms, prerender functions) is now typed as `App.Error | undefined` rather than `any`, as the error is always transformed by `handleError`.
+
+## Miscellaneous
 
 ### `data-sveltekit-*` uses `false` instead of `'off'`
 
@@ -457,44 +507,16 @@ The `'off'` value for `data-sveltekit-*` link attributes has been removed in fav
 +++<a href="..." data-sveltekit-preload-data="false">+++
 ```
 
-### `error`, `isHttpError`, `redirect`, and `isRedirect` refer to public types
+### External redirects must be opted into
 
-`error`, `isHttpError`, `redirect`, and `isRedirect` now refer to the public types rather than the internal classes. If you were importing the internal `HttpError`/`Redirect` classes from `@sveltejs/kit/internal`, or doing `instanceof` checks against them, use `isHttpError`/`isRedirect` from `@sveltejs/kit` instead.
-
-
-### `page.url` is now immutable on the type level
-
-`page.url` (from `$app/state`) is now typed as a `ReadonlyURL` with `ReadonlyURLSearchParams`, so mutating it — e.g. `page.url.searchParams.set(...)` or assigning to `page.url.pathname` — is now a type error. If you need a mutable URL, copy it first:
+To [`redirect`](@sveltejs-kit#redirect) to an external URL you must now pass an `external` option — either `true` to allow any external URL (except `javascript:` URLs, which remain blocked), or an array of allowed origins (which _can_ include `javascript:` URLs).
 
 ```js
-const url = +++new URL(+++page.url.href+++);+++
-url.searchParams.set('q', 'svelte');
+import { redirect } from '@sveltejs/kit';
+// ---cut---
+redirect(307, 'https://example.com', +++{ external: true }+++);
 ```
 
-## Responses and error handling
+### Universal `config` takes precedence over server `config`
 
-### 204 responses return no content
-
-Returning a `204` (or any empty `2xx`) response from a `+server.js` handler now results in a response with no body, per the HTTP spec, rather than a SvelteKit envelope. Code that consumed the body of such responses needs to handle the empty body.
-
-### Form action responses use the `fail` status code
-
-Enhanced form action responses now use the HTTP status code passed to `fail(...)` instead of always returning `200`. If you inspect status codes on enhanced form submissions (for example in a `use:enhance` callback or in tests), they now reflect the value passed to `fail`.
-
-### `handle`'s `resolve` always returns a `Promise`
-
-The `resolve` function passed to `handle` is now typed to always return a `Promise<Response>` rather than `MaybePromise<Response>`.
-
-## Remote functions
-
-### Remote module filenames are reserved
-
-Files with a `remote` segment in the name will cause an error unless `experimental.remoteFunctions` is enabled.
-
-### `event.url`, `event.params`, and `event.route` cannot be accessed inside queries
-
-Accessing `event.url`, `event.params`, or `event.route` inside a remote `query` function now throws an error. These properties are not meaningful in the context of a remote function (which can be called from anywhere). Pass any values you need explicitly as arguments to the function.
-
-### Errors are typed as `App.Error | undefined`
-
-The `error` property on remote function resources (queries, live queries, forms, prerender functions) is now typed as `App.Error | undefined` rather than `any`, as the error is always transformed by `handleError`.
+Route `config` exported from a universal `+page.js` or `+layout.js` now takes precedence over `config` exported from the corresponding `+page.server.js` or `+layout.server.js`, matching how other page options are resolved. If you export `config` from both, move the canonical export to the universal file or consolidate them.
