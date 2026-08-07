@@ -1722,6 +1722,7 @@ function kit({ svelte_config }) {
 							s(has_universal_load);
 					}
 
+					// TODO: handle rerun
 					const client_build = await builder.build(builder.environments.client);
 					const client_chunks =
 						(await normalise_build(client_build)) ?? client_chunks_from_watched_build;
@@ -2026,6 +2027,7 @@ function kit({ svelte_config }) {
 							};
 						};
 
+						// TODO: handle rerun
 						const service_worker_build = await builder.build(builder.environments.serviceWorker);
 						await normalise_build(service_worker_build);
 					}
@@ -2442,17 +2444,13 @@ async function normalise_build(build) {
 	/** @type {PromiseWithResolvers<void>} */
 	const bundling = Promise.withResolvers();
 
-	build.on('event', async (event) => {
+	build.on('event', (event) => {
 		if (event.code === 'ERROR') {
 			return bundling.reject(event.error);
 		}
 
 		if (event.code === 'BUNDLE_END') {
 			return bundling.resolve();
-		}
-
-		if (event.code === 'END') {
-			return await build.close();
 		}
 	});
 
