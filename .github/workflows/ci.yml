@@ -63,27 +63,27 @@ jobs:
             mode: 'unit'
           - node-version: 22
             os: ubuntu-latest
-            e2e-browser: 'chrome'
+            e2e-browser: 'chromium'
             vite: 'current'
             mode: 'dev'
           - node-version: 24
             os: ubuntu-latest
-            e2e-browser: 'chrome'
+            e2e-browser: 'chromium'
             vite: 'current'
             mode: 'dev'
           - node-version: 22
             os: ubuntu-latest
-            e2e-browser: 'chrome'
+            e2e-browser: 'chromium'
             vite: 'current'
             mode: 'build'
           - node-version: 24
             os: ubuntu-latest
-            e2e-browser: 'chrome'
+            e2e-browser: 'chromium'
             vite: 'current'
             mode: 'build'
           # - node-version: 24
           #   os: ubuntu-latest
-          #   e2e-browser: 'chrome'
+          #   e2e-browser: 'chromium'
           #   vite: 'beta'
     env:
       KIT_E2E_BROWSER: ${{matrix.e2e-browser}}
@@ -128,7 +128,7 @@ jobs:
         include:
           - node-version: 24
             os: windows-latest
-            e2e-browser: 'chrome'
+            e2e-browser: 'chromium'
             mode: 'dev'
           - node-version: 24
             os: ubuntu-latest
@@ -140,7 +140,7 @@ jobs:
             mode: 'dev'
           - node-version: 24
             os: windows-latest
-            e2e-browser: 'chrome'
+            e2e-browser: 'chromium'
             mode: 'build'
           - node-version: 24
             os: ubuntu-latest
@@ -160,7 +160,7 @@ jobs:
       - uses: ./.github/actions/node-setup
         with:
           node-version: ${{ matrix.node-version }}
-      - if: matrix.e2e-browser != 'chrome'
+      - if: matrix.e2e-browser != 'chromium'
         uses: ./.github/actions/playwright-setup
         with:
           os: ${{ matrix.os }}
