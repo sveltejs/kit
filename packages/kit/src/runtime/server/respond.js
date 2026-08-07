@@ -429,7 +429,7 @@ export async function internal_respond(request, options, manifest, state) {
 					prerender = node.prerender ?? prerender;
 				} else if (page_nodes) {
 					config = page_nodes.get_config() ?? config;
-					prerender = page_nodes.prerender();
+					prerender = state.prerender_default = page_nodes.prerender();
 				}
 
 				if (state.emulator?.platform) {
