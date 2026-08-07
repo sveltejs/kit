@@ -55,8 +55,6 @@ function clone(element) {
 	return /** @type {T} */ (HTMLElement.prototype.cloneNode.call(element));
 }
 
-
-
 /**
  * This action enhances a `<form>` element that otherwise would work without JavaScript.
  *
