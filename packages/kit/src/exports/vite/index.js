@@ -2074,42 +2074,13 @@ function kit({ svelte_config }) {
 			}
 
 			let building_again = false;
-
-			const clean_up = async () => {
+			const rerun = () => {
 				building_again = true;
-
-				// these are reset once per plugin initialisation or when the config hook
-				// runs. However, those don't re-run on watch mode, so we need to
-				// re-initialise them manually here
-				manifest_data = sync.all(svelte_config, root).manifest_data;
-				service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
-				immutable = null;
-				tracked_features = {};
-				remotes = [];
-				remote_original_by_hash.clear();
-				emitted_remote_hashes.clear();
-				explicit_env_entry = resolve_explicit_env_entry(kit);
-				explicit_env_config = await sync.env(
-					vite,
-					kit,
-					explicit_env_entry,
-					vite_config.root,
-					vite_config.mode
-				);
-				import_map.clear();
-				manifest_data_code = null;
-				finalise = null;
-
-				await load_and_validate_params({
-					routes: manifest_data.routes,
-					params_path: manifest_data.params,
-					root
-				});
 			};
 
 			// `vite build --watch`
-			server_build.on('change', clean_up);
-			server_build.on('restart', clean_up);
+			server_build.on('change', rerun);
+			server_build.on('restart', rerun);
 
 			/** @type {PromiseWithResolvers<void>} */
 			const task = Promise.withResolvers();
@@ -2117,7 +2088,39 @@ function kit({ svelte_config }) {
 			server_build.on('event', async (event) => {
 				if (event.code === 'BUNDLE_START') {
 					fs.mkdirSync(out, { recursive: true });
+
+					// these are set once per plugin initialisation or when the config hook
+					// runs. However, those don't re-run during watch mode. So, we need to
+					// re-initialise them manually here
+					manifest_data = sync.all(svelte_config, root).manifest_data;
+					service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
+					immutable = null;
+					tracked_features = {};
+					remotes = [];
+					remote_original_by_hash.clear();
+					emitted_remote_hashes.clear();
+					explicit_env_entry = resolve_explicit_env_entry(kit);
+					explicit_env_config = await sync.env(
+						vite,
+						kit,
+						explicit_env_entry,
+						vite_config.root,
+						vite_config.mode
+					);
+					import_map.clear();
+					manifest_data_code = null;
+					finalise = null;
+
+					await load_and_validate_params({
+						routes: manifest_data.routes,
+						params_path: manifest_data.params,
+						root
+					});
 					return;
+				}
+
+				if (event.code === 'ERROR') {
+					return task.reject();
 				}
 
 				if (event.code === 'BUNDLE_END') {
