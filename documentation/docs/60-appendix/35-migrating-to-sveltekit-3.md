@@ -237,7 +237,7 @@ Your service worker needs to be part of a separate TypeScript project, otherwise
 
 ## `$env/...` (deprecated)
 
-The various `$env/...` modules have been deprecated in favour of `$app/env/private` and `$app/env/public`. See [Environment variables](#Environment-variables), below.
+The various `$env/...` modules have been deprecated in favour of `$app/env/private` and `$app/env/public` — see [Environment variables](environment-variables) for more details.
 
 ## `$service-worker` (removed)
 
@@ -313,9 +313,9 @@ SvelteKit now uses [`cookie`](https://npmx.dev/package/cookie) v2, which involve
 - the `CookieSerializeOptions` type has been renamed to `SerializeOptions`
 - the `CookieParseOptions` type has been renamed to `ParseOptions`
 
-### The cookie `path` option defaults to `'/'`
+### Paths default to `'/'`
 
-When setting a cookie without an explicit `path`, the path now defaults to `'/'` rather than the current request path, meaning the cookie applies to the entire site. This matches what most developers expect. You can pass an explicit `path` if necessary:
+When setting a cookie without an explicit `path` (which was previously forbidden), the path defaults to `'/'` rather than the current request path, meaning the cookie applies to the entire site. This matches what most developers expect. You can pass an explicit `path` if necessary:
 
 ```ts
 declare const cookies: import('@sveltejs/kit').Cookies;
@@ -358,10 +358,6 @@ If you have an async `handleError` hook in `hooks.client.ts`, enable `compilerOp
 ### Form action responses use the `fail` status code
 
 Enhanced form action responses now use the HTTP status code passed to `fail(...)` instead of always returning `200`. If you inspect status codes on enhanced form submissions (for example in a `use:enhance` callback or in tests), they now reflect the value passed to `fail`.
-
-## Environment variables
-
-TODO
 
 ## Params
 
