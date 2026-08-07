@@ -22,7 +22,9 @@ SvelteKit 3 requires the following minimum versions:
 
 Update the versions in your `package.json` and run your package manager's install command.
 
-## Configuration is now passed to the Vite plugin
+## Configuration
+
+### svelte.config.js is no longer supported
 
 Instead of declaring project configuration in `svelte.config.js`, it must now be passed to the `sveltekit` Vite plugin in `vite.config.js`. Options that previously lived under `config.kit.*` are now top-level plugin options, alongside things like `compilerOptions`:
 
@@ -42,7 +44,14 @@ export default defineConfig({
 });
 ```
 
-See [Configuration](configuration) for further examples.
+See the [configuration docs](configuration) for further examples.
+
+### Removed options
+
+The following options are obsolete and should be removed from your `vite.config.js`:
+
+- `files.lib` (see [`$lib is now `#lib`](#$lib-is-now-lib))
+- TODO others
 
 ## `$lib` is now `#lib`
 
