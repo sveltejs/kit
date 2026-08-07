@@ -3,10 +3,16 @@ import { imagetools } from 'vite-imagetools';
 import { image_plugin } from './vite-plugin.js';
 
 /**
+ * @typedef {{cache?: CacheOptions}} EnhancedImageOptions
+ * @typedef {{enabled?: boolean, directory?: string, retention?: number}} CacheOptions
+ */
+
+/**
+ * @param { EnhancedImageOptions } opts
  * @returns {import('vite').Plugin[]}
  */
-export function enhancedImages() {
-	const imagetools_instance = imagetools_plugin();
+export function enhancedImages(opts = {}) {
+	const imagetools_instance = imagetools_plugin(opts);
 	return !process.versions.webcontainer
 		? [image_plugin(imagetools_instance), imagetools_instance]
 		: [];
@@ -26,7 +32,11 @@ function fallback_format(meta) {
 	return 'jpg';
 }
 
-function imagetools_plugin() {
+/**
+ * @param { EnhancedImageOptions } opts
+ * @returns {import('vite').Plugin}
+ */
+function imagetools_plugin(opts = {}) {
 	/** @type {Partial<import('vite-imagetools').VitePluginOptions>} */
 	const imagetools_opts = {
 		defaultDirectives: async ({ pathname, searchParams: qs }, metadata) => {
@@ -51,6 +61,14 @@ function imagetools_plugin() {
 		},
 		namedExports: false
 	};
+
+	if (opts.cache) {
+		imagetools_opts.cache = {
+			enabled: opts.cache.enabled,
+			dir: opts.cache.directory,
+			retention: opts.cache.retention
+		};
+	}
 
 	// TODO: should we make formats or sizes configurable besides just letting people override defaultDirectives?
 	// TODO: generate img rather than picture if only a single format is provided
