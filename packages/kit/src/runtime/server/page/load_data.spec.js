@@ -18,7 +18,7 @@ function create_fetch(event) {
 		/** @type {Pick<import('@sveltejs/kit').RequestEvent, 'fetch' | 'url' | 'request' | 'route'>} */ (
 			event
 		),
-		{ getClientAddress: () => '', error: false, depth: 0 },
+		undefined,
 		[],
 		true,
 		{

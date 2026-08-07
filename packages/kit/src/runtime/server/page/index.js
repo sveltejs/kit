@@ -1,6 +1,6 @@
 /** @import { Component } from 'svelte' */
 /** @import { ActionResult, RequestEvent, SSRManifest } from '@sveltejs/kit' */
-/** @import { PageNodeIndexes, RequestState, RequiredResolveOptions, ServerDataNode, SSRNode, SSROptions, SSRState } from 'types' */
+/** @import { PageNodeIndexes, RequestState, RequiredResolveOptions, ServerDataNode, SSRNode, SSROptions } from 'types' */
 import { text } from '@sveltejs/kit';
 import { Redirect } from '@sveltejs/kit/internal';
 import { compact } from '../../../utils/array.js';
@@ -30,25 +30,15 @@ const MAX_DEPTH = 10;
 
 /**
  * @param {RequestEvent} event
- * @param {RequestState} event_state
+ * @param {RequestState} state
  * @param {PageNodeIndexes} page
  * @param {SSROptions} options
  * @param {SSRManifest} manifest
- * @param {SSRState} state
  * @param {import('../../../utils/page_nodes.js').PageNodes} nodes
  * @param {RequiredResolveOptions} resolve_opts
  * @returns {Promise<Response>}
  */
-export async function render_page(
-	event,
-	event_state,
-	page,
-	options,
-	manifest,
-	state,
-	nodes,
-	resolve_opts
-) {
+export async function render_page(event, state, page, options, manifest, nodes, resolve_opts) {
 	if (state.depth > MAX_DEPTH) {
 		// infinite request cycle detected
 		return text(`Not found: ${event.url.pathname}`, {
@@ -58,7 +48,7 @@ export async function render_page(
 
 	if (is_action_json_request(event)) {
 		const node = await manifest._.nodes[page.leaf]();
-		return handle_action_json_request(event, event_state, options, node?.server);
+		return handle_action_json_request(event, state, options, node?.server);
 	}
 
 	try {
@@ -72,11 +62,11 @@ export async function render_page(
 		if (is_action_request(event)) {
 			const remote_id = get_remote_action(event.url);
 			if (remote_id) {
-				action_result = await handle_remote_form_post(event, event_state, manifest, remote_id);
+				action_result = await handle_remote_form_post(event, state, manifest, remote_id);
 			} else {
 				// for action requests, first call handler in +page.server.js
 				// (this also determines status code)
-				action_result = await handle_action_request(event, event_state, leaf_node.server);
+				action_result = await handle_action_request(event, state, leaf_node.server);
 			}
 
 			if (action_result?.type === 'redirect') {
@@ -156,12 +146,11 @@ export async function render_page(
 				status,
 				error: null,
 				event,
-				event_state,
+				state,
 				options,
 				manifest,
-				state,
 				resolve_opts,
-				data_serializer: server_data_serializer(event, event_state, options)
+				data_serializer: server_data_serializer(event, state, options)
 			});
 		}
 
@@ -171,10 +160,10 @@ export async function render_page(
 		/** @type {Error | null} */
 		let load_error = null;
 
-		const data_serializer = server_data_serializer(event, event_state, options);
+		const data_serializer = server_data_serializer(event, state, options);
 		const data_serializer_json =
 			state.prerendering && should_prerender_data
-				? server_data_serializer_json(event, event_state, options)
+				? server_data_serializer_json(event, state, options)
 				: null;
 
 		/** @type {Array<Promise<ServerDataNode | null>>} */
@@ -194,7 +183,6 @@ export async function render_page(
 
 					const server_data = await load_server_data({
 						event,
-						event_state,
 						state,
 						node,
 						parent: async () => {
@@ -229,7 +217,7 @@ export async function render_page(
 				try {
 					return await load_data({
 						event,
-						event_state,
+						state,
 						fetched,
 						node,
 						parent: async () => {
@@ -241,7 +229,6 @@ export async function render_page(
 						},
 						resolve_opts,
 						server_data_promise: server_promises[i],
-						state,
 						csr
 					});
 				} catch (e) {
@@ -284,7 +271,7 @@ export async function render_page(
 						return redirect_response(err.status, err.location);
 					}
 
-					const error = await handle_error_and_jsonify(event, event_state, options, err);
+					const error = await handle_error_and_jsonify(event, state, options, err);
 					const status = error.status;
 
 					while (i--) {
@@ -307,10 +294,9 @@ export async function render_page(
 
 							return await render_response({
 								event,
-								event_state,
+								state,
 								options,
 								manifest,
-								state,
 								resolve_opts,
 								page_config: {
 									ssr: nodes.ssr(),
@@ -355,10 +341,9 @@ export async function render_page(
 
 		return await render_response({
 			event,
-			event_state,
+			state,
 			options,
 			manifest,
-			state,
 			resolve_opts,
 			page_config: {
 				csr,
@@ -369,7 +354,7 @@ export async function render_page(
 			branch: compact(branch),
 			action_result,
 			fetched,
-			data_serializer: !ssr ? server_data_serializer(event, event_state, options) : data_serializer,
+			data_serializer: !ssr ? server_data_serializer(event, state, options) : data_serializer,
 			error_components: await load_error_components(ssr, branch, page, manifest)
 		});
 	} catch (e) {
@@ -382,10 +367,9 @@ export async function render_page(
 		// but the page failed to render, or that a prerendering error occurred
 		return await respond_with_error({
 			event,
-			event_state,
+			state,
 			options,
 			manifest,
-			state,
 			error: e,
 			resolve_opts
 		});
