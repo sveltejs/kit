@@ -100,7 +100,9 @@ export default defineConfig({
 		expect: { requireAssertions: true },
 		browser: {
 			enabled: true,
-			provider: playwright(),
+			provider: playwright({
+				launchOptions: { channel: 'chrome' }
+			}),
 			instances: [
 				{
 					browser:

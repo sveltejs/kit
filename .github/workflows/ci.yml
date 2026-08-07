@@ -63,27 +63,27 @@ jobs:
             mode: 'unit'
           - node-version: 22
             os: ubuntu-latest
-            e2e-browser: 'chromium'
+            e2e-browser: 'chrome'
             vite: 'current'
             mode: 'dev'
           - node-version: 24
             os: ubuntu-latest
-            e2e-browser: 'chromium'
+            e2e-browser: 'chrome'
             vite: 'current'
             mode: 'dev'
           - node-version: 22
             os: ubuntu-latest
-            e2e-browser: 'chromium'
+            e2e-browser: 'chrome'
             vite: 'current'
             mode: 'build'
           - node-version: 24
             os: ubuntu-latest
-            e2e-browser: 'chromium'
+            e2e-browser: 'chrome'
             vite: 'current'
             mode: 'build'
           # - node-version: 24
           #   os: ubuntu-latest
-          #   e2e-browser: 'chromium'
+          #   e2e-browser: 'chrome'
           #   vite: 'beta'
     env:
       KIT_E2E_BROWSER: ${{matrix.e2e-browser}}
@@ -104,11 +104,6 @@ jobs:
           pnpm install --no-frozen-lockfile
           git checkout pnpm-lock.yaml pnpm-workspace.yaml # revert changes to pnpm files to avoid cache key changes
           pnpm --dir packages/kit ls vite
-      - if: matrix.mode != 'unit'
-        uses: ./.github/actions/playwright-setup
-        with:
-          os: ${{ matrix.os }}
-          e2e-browser: ${{ matrix.e2e-browser }}
       - run: pnpm run sync-all
       - run: pnpm test:kit:${{ matrix.mode }}
       - name: Print flaky test report
@@ -133,7 +128,7 @@ jobs:
         include:
           - node-version: 24
             os: windows-latest
-            e2e-browser: 'chromium'
+            e2e-browser: 'chrome'
             mode: 'dev'
           - node-version: 24
             os: ubuntu-latest
@@ -145,7 +140,7 @@ jobs:
             mode: 'dev'
           - node-version: 24
             os: windows-latest
-            e2e-browser: 'chromium'
+            e2e-browser: 'chrome'
             mode: 'build'
           - node-version: 24
             os: ubuntu-latest
@@ -165,7 +160,8 @@ jobs:
       - uses: ./.github/actions/node-setup
         with:
           node-version: ${{ matrix.node-version }}
-      - uses: ./.github/actions/playwright-setup
+      - if: matrix.e2e-browser != 'chrome'
+        uses: ./.github/actions/playwright-setup
         with:
           os: ${{ matrix.os }}
           e2e-browser: ${{ matrix.e2e-browser }}
@@ -199,7 +195,6 @@ jobs:
         with:
           persist-credentials: false
       - uses: ./.github/actions/node-setup
-      - uses: ./.github/actions/playwright-setup
       - run: pnpm run sync-all
       - run: pnpm test:server-side-route-resolution:${{ matrix.mode }}
       - name: Print flaky test report
@@ -232,7 +227,6 @@ jobs:
       - uses: ./.github/actions/node-setup
         with:
           node-version: ${{ matrix.node-version }}
-      - uses: ./.github/actions/playwright-setup
       - run: pnpm run sync-all
       - run: pnpm test:svelte-async:${{ matrix.mode }}
       - name: Print flaky test report
@@ -260,6 +254,5 @@ jobs:
       - uses: ./.github/actions/node-setup
         with:
           node-version: ${{ matrix.node-version }}
-      - uses: ./.github/actions/playwright-setup
       - run: cd packages/kit && pnpm prepublishOnly
       - run: pnpm run test:others

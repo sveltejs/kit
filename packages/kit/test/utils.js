@@ -260,18 +260,18 @@ export const test = base.extend({
 });
 
 const known_devices = {
-	chromium: devices['Desktop Chrome'],
+	chrome: devices['Desktop Chrome'],
 	firefox: devices['Desktop Firefox'],
 	webkit: devices['Desktop Safari']
 };
 const test_browser = /** @type {keyof typeof known_devices} */ (
-	process.env.KIT_E2E_BROWSER || 'chromium'
+	process.env.KIT_E2E_BROWSER || 'chrome'
 );
 
 const test_browser_device = known_devices[test_browser]
 	? {
 			...known_devices[test_browser],
-			channel: test_browser === 'chromium' ? 'chromium' : undefined
+			channel: test_browser === 'chrome' ? 'chrome' : undefined
 		}
 	: undefined;
 
