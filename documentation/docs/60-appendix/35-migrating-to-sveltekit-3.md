@@ -52,8 +52,8 @@ The following options are obsolete and should be removed from your `vite.config.
 
 - `files.lib` ([details](#$lib-is-now-lib))
 - `experimental.handleRenderingErrors` is no longer required ([details](#Error-handling-Rendering-errors-are-now-handled))
-- `experimental.instrumentation` is no longer required ([details](#Tracing-is-no-longer-experimental))
-- `experimental.tracing` is now a top level `tracing` option ([details](#Tracing-is-no-longer-experimental))
+- `experimental.instrumentation` is no longer required ([details](#Observability))
+- `experimental.tracing` is now a top level `tracing` option ([details](#Observability))
 - `preloadStrategy` is removed — `modulepreload` is now supported everywhere and so is always used
 - `prerender.origin` is removed in favour of `paths.origin`
 - `csrf.checkOrigin` is removed in favour of `csrf.trustedOrigins`
@@ -123,9 +123,9 @@ Additionally, calling `invalidateAll()` or `invalidate(...)` during an in-flight
 
 ### `goto` options are updated
 
-In addition to the new `shallow` option described [above](#$app-navigation-changes-Changes-to-shallow-routing), various [`goto`]($app-navigation#goto) options have changed:
+In addition to the new `shallow` option described [above](#$app-navigation-Changes-to-shallow-routing), various [`goto`]($app-navigation#goto) options have changed:
 
-- `invalidateAll` is now `refreshAll`, to mirror the [above change]($app-navigation-changes-invalidateAll-is-deprecated-in-favour-of-refreshAll)
+- `invalidateAll` is now `refreshAll`, to mirror the [above change](#$app-navigation-invalidateAll-is-deprecated-in-favour-of-refreshAll)
 - `keepFocus: true` and `noScroll: true` have been combined as `reset: false`
 - `replaceState` is now `replace`
 
@@ -137,7 +137,7 @@ In addition to the new `shallow` option described [above](#$app-navigation-chang
 
 The `delta` property on navigation events ([`beforeNavigate`]($app-navigation#beforeNavigate), [`onNavigate`]($app-navigation#onNavigate) and [`afterNavigate`]($app-navigation#afterNavigate)) now only exists for `popstate` navigations (back/forward). It is `undefined` for all other navigation types.
 
-### `preloadData` can return an `'error'` result
+### `preloadData` can return an `error` result
 
 `preloadData(...)` now returns `{ type: 'error', status, error }` when the target page fails to load, instead of returning `{ type: 'loaded' }` with a 200 status. The `'redirect'` result now also includes the correct `status`. Add an `error` branch to any code that consumes the result:
 
@@ -459,9 +459,9 @@ For adapter authors, there are some additional changes:
 
 Returning a `204` (or any empty `2xx`) response from a `+server.js` handler now results in a response with no body, per the HTTP spec, rather than a SvelteKit envelope. Code that consumed the body of such responses needs to handle the empty body.
 
-### `handle`'s `resolve` always returns a `Promise`
+### `resolve` always returns a `Promise`
 
-The `resolve` function passed to `handle` is now typed to always return a `Promise<Response>` rather than `MaybePromise<Response>`.
+The `resolve` function passed to [`handle`](hooks#handle) is now typed to always return a `Promise<Response>` rather than `MaybePromise<Response>`.
 
 ## Server-only modules
 
