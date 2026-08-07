@@ -50,6 +50,16 @@ describe('normalizeUrl', () => {
 		assert.equal(denormalize().href, original.href);
 		assert.equal(denormalize('/baz').href, 'http://example.com/baz/__route.js');
 	});
+
+	it('should normalize route requests for .html pages', () => {
+		const original = new URL('http://example.com/foo.html__route.js');
+		const { url, wasNormalized, denormalize } = normalizeUrl(original);
+
+		assert.equal(wasNormalized, true);
+		assert.equal(url.pathname, '/foo.html');
+		assert.equal(denormalize('/baz.html').href, 'http://example.com/baz.html__route.js');
+		assert.equal(denormalize('/baz').href, 'http://example.com/baz/__route.js');
+	});
 });
 
 describe('redirect', () => {

@@ -29,6 +29,13 @@ test('prerenders /', () => {
 	expect(content).toMatch('<h1>hello</h1>');
 });
 
+test('prerenders route resolution modules alongside .html pages', () => {
+	assert.isTrue(fs.statSync(`${build}/page.html`).isFile());
+	expect(read('page.html__route.js')).toContain('export const');
+	assert.isFalse(fs.existsSync(`${build}/page.html/__route.js`));
+	assert.isTrue(fs.statSync(`${build}/prerendering-true/__route.js`).isFile());
+});
+
 test('renders a redirect', () => {
 	const content = read('redirect.html');
 	assert.equal(
