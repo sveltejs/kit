@@ -16,7 +16,7 @@ export const config = {
 		baseURL: process.env.DEPLOYMENT_URL,
 		screenshot: 'only-on-failure',
 		trace: 'retain-on-failure',
-		channel: 'chromium'
+		channel: 'chrome'
 	},
 	workers: process.env.CI ? 2 : undefined,
 	reporter: 'list',

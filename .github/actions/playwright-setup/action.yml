@@ -9,7 +9,6 @@ inputs:
   e2e-browser:
     description: 'E2E browser'
     required: true
-    default: 'chromium  --no-shell'
 
 runs:
   using: 'composite'
