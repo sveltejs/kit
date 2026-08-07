@@ -91,7 +91,7 @@ export class Server {
 		// so anything that shouldn't be rerun should be wrapped in an `if` block to make sure it hasn't
 		// been done already.
 
-		if (__SVELTEKIT_SERVER_TRACING_ENABLED__) init_tracing();
+		if (__SVELTEKIT_SERVER_TRACING_ENABLED__) init_tracing(import('@opentelemetry/api'));
 
 		// set env, in case it's used in initialisation
 		set_env(env);

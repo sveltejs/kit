@@ -8,9 +8,15 @@ import { noop_span } from '../../../runtime/telemetry/noop.js';
 /** @type {Promise<{ tracer: Tracer, SpanStatusCode: typeof SpanStatusCode, propagation: PropagationAPI, context: ContextAPI }> | null} */
 export let otel = null;
 
-/** @returns {void} */
-export function init_tracing() {
-	otel ??= import('@opentelemetry/api')
+/**
+ * The caller passes in `import('@opentelemetry/api')` so the import lives behind
+ * `__SVELTEKIT_SERVER_TRACING_ENABLED__` in the bundled runtime and is eliminated
+ * from builds with tracing disabled, where the package may not be installed.
+ * @param {Promise<typeof import('@opentelemetry/api')>} api
+ * @returns {void}
+ */
+export function init_tracing(api) {
+	otel ??= api
 		.then((module) => {
 			return {
 				tracer: module.trace.getTracer('sveltekit'),
@@ -67,6 +73,7 @@ export async function record_span({ name, attributes, fn }) {
 				span.recordException({
 					name: error.name,
 					message: error.message,
+					// conditional so this compiles under consumers' `exactOptionalPropertyTypes`
 					...(error.stack !== undefined && { stack: error.stack })
 				});
 				span.setStatus({
