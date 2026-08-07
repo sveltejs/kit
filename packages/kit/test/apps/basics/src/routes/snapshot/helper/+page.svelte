@@ -9,10 +9,7 @@
 	let order = $state([]);
 
 	snapshot({
-		capture: () => {
-			order.length = 0;
-			return message;
-		},
+		capture: () => message,
 		restore: (value) => {
 			message = value;
 			order.push('restore');

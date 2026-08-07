@@ -712,11 +712,6 @@ function capture_navigation_snapshot(index) {
 	);
 }
 
-/** @param {number} index */
-function delete_navigation_snapshot(index) {
-	delete navigation_snapshots[index];
-}
-
 /**
  * @param {number} index
  * @param {Set<SnapshotRegistration>} [reset_registrations]
@@ -2112,7 +2107,7 @@ async function navigate({
 	capture_scroll(previous_history_index);
 	capture_snapshot(previous_navigation_index);
 	if (replace_state) {
-		delete_navigation_snapshot(previous_history_index);
+		delete navigation_snapshots[previous_history_index];
 	} else {
 		capture_navigation_snapshot(previous_history_index);
 	}
@@ -2555,8 +2550,12 @@ export function snapshot(options) {
 	const registration = { ...options, id };
 
 	onMount(() => {
-		if (DEV && Array.from(snapshot_registrations).some((snapshot) => snapshot.id === id)) {
-			throw new Error(`A snapshot with id "${id}" is already registered. Pass a unique \`id\`.`);
+		if (DEV && Array.from(snapshot_registrations).some((existing) => existing.id === id)) {
+			throw new Error(
+				options.id === undefined
+					? 'snapshot() was called multiple times from the same call site. Pass a unique `id` to distinguish the instances.'
+					: `A snapshot with id "${options.id}" is already registered. Pass a unique \`id\`.`
+			);
 		}
 
 		if (started && !is_navigating && !updating) {
@@ -3026,7 +3025,7 @@ async function update_state(intent, state, { replace, persist_state, reset }, ca
 	}
 
 	if (replace) {
-		delete_navigation_snapshot(current_history_index);
+		delete navigation_snapshots[current_history_index];
 	} else {
 		capture_scroll(current_history_index);
 		capture_navigation_snapshot(current_history_index);
