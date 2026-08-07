@@ -1490,7 +1490,7 @@ test.describe('Actions', () => {
 
 	test('semantically identical action query refreshes without navigating', async ({ page }) => {
 		await page.goto('/actions/cross-page/same-page?a=1&b=2');
-		const loaded_at = await page.locator('pre.loaded-at').textContent();
+		const loaded_at = await page.locator('pre.loaded-at').innerText();
 		await page.evaluate(() => (window.nav_marker = true));
 
 		await page.locator('button.submit-reordered').click();
@@ -1505,13 +1505,13 @@ test.describe('Actions', () => {
 
 	test('failures do not refresh by default but can opt in', async ({ page }) => {
 		await page.goto('/actions/cross-page/same-page');
-		let loaded_at = await page.locator('pre.loaded-at').textContent();
+		let loaded_at = await page.locator('pre.loaded-at').innerText();
 
 		await page.locator('button.submit-failure').click();
 		await expect(page.locator('pre.form-json')).toHaveText(JSON.stringify({ failed: true }));
 		await expect(page.locator('pre.loaded-at')).toHaveText(loaded_at);
 
-		loaded_at = await page.locator('pre.loaded-at').textContent();
+		loaded_at = await page.locator('pre.loaded-at').innerText();
 		await page.locator('button.submit-failure-refresh').click();
 		await expect(page.locator('pre.form-json')).toHaveText(JSON.stringify({ failed: true }));
 		await expect(page.locator('pre.loaded-at')).not.toHaveText(loaded_at);
@@ -1519,7 +1519,7 @@ test.describe('Actions', () => {
 
 	test('cross-page refresh defaults depend on the result type', async ({ page }) => {
 		await page.goto('/actions/cross-page/source');
-		let layout_loaded_at = await page.locator('pre.layout-loaded-at').textContent();
+		let layout_loaded_at = await page.locator('pre.layout-loaded-at').innerText();
 
 		await page.locator('button.submit-failure').click();
 		await expect(page.locator('pre.destination-form')).toHaveText(
@@ -1528,7 +1528,7 @@ test.describe('Actions', () => {
 		await expect(page.locator('pre.layout-loaded-at')).toHaveText(layout_loaded_at);
 
 		await page.goto('/actions/cross-page/source');
-		layout_loaded_at = await page.locator('pre.layout-loaded-at').textContent();
+		layout_loaded_at = await page.locator('pre.layout-loaded-at').innerText();
 		await page.locator('button.submit-success').click();
 		await expect(page.locator('pre.layout-loaded-at')).not.toHaveText(layout_loaded_at);
 	});
