@@ -84,72 +84,7 @@ The `$lib` alias is no longer generated automatically by SvelteKit. It is replac
 
 ...and replace `$lib` with `#lib` across your codebase.
 
-## Param matchers live in a single `params.ts` file
-
-Param matchers are no longer files inside the `src/params` directory. Declare all matchers in a single `src/params.ts` (or `src/params.js`) file using the `defineParams` helper. A matcher can be a function that returns a parsed value (or `undefined`, if the param does not match), or a [Standard Schema](https://standardschema.dev).
-
-```js
-/// file: src/params.js
-import { defineParams } from '@sveltejs/kit';
-import * as v from 'valibot';
-
-export const params = defineParams({
-	// schema variant
-	integer: v.pipe(v.string(), v.toNumber()),
-
-	// function variant
-	fruit: (param) => {
-		if (param === 'apple' || param === 'orange') {
-			return param;
-		}
-	}
-});
-```
-
-See [Matching](advanced-routing#Matching) for more details.
-
-## `$app/stores` has been removed
-
-The `$app/stores` module (which exports the `$page`, `$navigating`, and `$updated` stores) has been removed. Use [`$app/state`]($app-state) instead, which provides fine-grained Svelte 5 [state](../svelte/$state).
-
-```svelte
-<script>
-	import { page } from +++'$app/state'+++;
-</script>
-
-<p>current pathname: {page.url.pathname}</p>
-```
-
-Replace `$app/stores` imports with `$app/state` and remove the `$` prefix when reading values (i.e. `page` rather than `$page`).
-
-## `$app/paths` changes
-
-### `base`, `assets`, and `resolveRoute` removed
-
-The deprecated `base`, `assets`, and `resolveRoute` exports have been removed from [`$app/paths`]($app-paths). Use [`asset`]($app-paths#asset) and [`resolve`]($app-paths#resolve) instead:
-
-```js
-let base = '';
-let assets = '';
-let slug = '';
-import { asset, resolve } from '$app/paths';
-// ---cut---
-// instead of this...
----const pathname = base + resolveRoute('/blog/[slug]', { slug });---
----const file = assets + '/foo.png';---
-
-// ...do this:
-+++const pathname = resolve('/blog/[slug]', { slug });+++
-+++const file = asset('foo.png');+++
-```
-
-The `Pathname` and `Asset` types have also been renamed to `Path` and `AssetPath`, and the leading `/` has been removed from those types — so `asset('/foo.png')` should now be `asset('foo.png')`, and pathnames passed to `resolve` no longer start with `/` (e.g. `resolve('blog/hello-world')`). Only route IDs start with `/` now.
-
-### Service workers can now import `$app/paths`
-
-See the section on [service workers](#Service-workers) below for more details.
-
-## `$app/navigation` changes
+## `$app/navigation`
 
 ### Changes to shallow routing
 
@@ -210,6 +145,105 @@ if (result.type === 'loaded') {
 	// do something in case of an error
 }+++
 ```
+
+## `$app/paths`
+
+### `base`, `assets`, and `resolveRoute` removed
+
+The deprecated `base`, `assets`, and `resolveRoute` exports have been removed from [`$app/paths`]($app-paths). Use [`asset`]($app-paths#asset) and [`resolve`]($app-paths#resolve) instead:
+
+```js
+let base = '';
+let assets = '';
+let slug = '';
+import { asset, resolve } from '$app/paths';
+// ---cut---
+// instead of this...
+---const pathname = base + resolveRoute('/blog/[slug]', { slug });---
+---const file = assets + '/foo.png';---
+
+// ...do this:
++++const pathname = resolve('/blog/[slug]', { slug });+++
++++const file = asset('foo.png');+++
+```
+
+The `Pathname` and `Asset` types have also been renamed to `Path` and `AssetPath`, and the leading `/` has been removed from those types — so `asset('/foo.png')` should now be `asset('foo.png')`, and pathnames passed to `resolve` no longer start with `/` (e.g. `resolve('blog/hello-world')`). Only route IDs start with `/` now.
+
+### Service workers can now import `$app/paths`
+
+See the section on [service workers](#Service-workers) below for more details.
+
+## `$app/service-worker`
+
+A new [`$app/service-worker`]($app-service-worker) provides type-safe access to the service worker execution context in your `src/service-worker/index.ts`, provided you have a `src/service-worker/tsconfig.json` that extends [`$app/tsconfig/service-worker`](#$app-tsconfig-service-worker).
+
+## `$app/stores` (removed)
+
+The `$app/stores` module (which exports the `$page`, `$navigating`, and `$updated` stores) has been removed. Use [`$app/state`]($app-state) instead, which provides fine-grained Svelte 5 [state](../svelte/$state).
+
+```svelte
+<script>
+	import { page } from +++'$app/state'+++;
+</script>
+
+<p>current pathname: {page.url.pathname}</p>
+```
+
+Replace `$app/stores` imports with `$app/state` and remove the `$` prefix when reading values (i.e. `page` rather than `$page`).
+
+## `$app/tsconfig`
+
+Your project's `tsconfig.json` should now extend `$app/tsconfig` rather than `./.svelte-kit/tsconfig.json`. It should also specify `include` and `exclude` arrays, as `$app/tsconfig` does not specify these:
+
+```json
+/// file: tsconfig.json
+{
+	"extends": "$app/tsconfig",
+	"include": ["src", "test", "*"],
+	"exclude": ["src/service-worker"]
+}
+```
+
+Some essential `compilerOptions` (`isolatedModules` and `verbatimModuleSyntax`) are included in `$app/tsconfig`, alongside various options that are strongly recommend but which can be overridden in your own config.
+
+## `$app/tsconfig/service-worker`
+
+Your service worker needs to be part of a separate TypeScript project, otherwise the types for things like `fetch` events will be incorrect. To do this, exclude the service worker from your project's root `tsconfig.json`, and add a `src/service-worker/tsconfig.json` that extends `$app/tsconfig/service-worker`:
+
+```json
+/// file: src/service-worker/tsconfig.json
+{
+	"extends": "$app/tsconfig/service-worker"
+}
+```
+
+## Environment variables
+
+TODO
+
+## Param matchers live in a single `params.ts` file
+
+Param matchers are no longer files inside the `src/params` directory. Declare all matchers in a single `src/params.ts` (or `src/params.js`) file using the `defineParams` helper. A matcher can be a function that returns a parsed value (or `undefined`, if the param does not match), or a [Standard Schema](https://standardschema.dev).
+
+```js
+/// file: src/params.js
+import { defineParams } from '@sveltejs/kit';
+import * as v from 'valibot';
+
+export const params = defineParams({
+	// schema variant
+	integer: v.pipe(v.string(), v.toNumber()),
+
+	// function variant
+	fruit: (param) => {
+		if (param === 'apple' || param === 'orange') {
+			return param;
+		}
+	}
+});
+```
+
+See [Matching](advanced-routing#Matching) for more details.
 
 ## External redirects must be opted into
 
