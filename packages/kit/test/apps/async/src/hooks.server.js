@@ -38,18 +38,17 @@ export async function handle({ event, resolve }) {
 	return resolve(event);
 }
 
-/** @type {import('@sveltejs/kit').HandleValidationError} */
-export const handleValidationError = ({ issues, event }) => {
-	// must not throw, even when validation failed inside a query
-	void event.url.pathname;
-	return { message: issues[0].message };
-};
-
 /** @type {import('@sveltejs/kit').HandleServerError} */
 export const handleError = (input) => {
 	// helps us catch sveltekit redirects thrown in component code
 	if (isRedirect(input.error)) {
 		throw new Error("Redirects shouldn't trigger the handleError hook");
+	}
+
+	if (input.kind === 'validation') {
+		// must not throw, even when validation failed inside a query
+		void input.event.url.pathname;
+		return { message: input.error.issues[0].message };
 	}
 
 	if (input.kind !== 'unexpected') return input.error;
