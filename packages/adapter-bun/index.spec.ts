@@ -9,7 +9,7 @@ vi.mock('node:fs/promises', async (import_original) => {
 });
 
 const { build, file } = vi.hoisted(() => {
-	const build = vi.fn(async (_options: any) => ({ success: true, logs: [], outputs: [] }));
+	const build = vi.fn((_options: any) => ({ success: true, logs: [], outputs: [] }));
 	const file = vi.fn((path: string) => ({
 		type: path.endsWith('.html')
 			? 'text/html;charset=utf-8'
@@ -50,13 +50,18 @@ describe('Bun build options', () => {
 	});
 
 	test('shares Bun files between directory routes and server reads', async () => {
-		await adapter().adapt(
-			builder({
-				client_files: ['data.json', 'encoded name.txt', '_app/immutable/assets/read.txt'],
-				prerendered_files: ['prerendered/index.html'],
-				prerendered_pages: [['/prerendered/', { file: 'prerendered/index.html' }]]
-			})
-		);
+		const active_route = { id: '/read', prerender: false };
+		const prerendered_route = { id: '/prerendered', prerender: true };
+		const test_builder = builder({
+			client_files: ['data.json', 'encoded name.txt', '_app/immutable/assets/read.txt'],
+			prerendered_files: ['prerendered/index.html'],
+			prerendered_pages: [['/prerendered/', { file: 'prerendered/index.html' }]],
+			routes: [active_route, prerendered_route],
+			server_assets: ['_app/immutable/assets/read.txt']
+		});
+
+		await adapter().adapt(test_builder);
+		expect(test_builder.findServerAssets).toHaveBeenCalledWith([active_route]);
 
 		const source = build.mock.calls[0][0].files['.svelte-kit/output/server/adapter-bun-routes.js'];
 		expect(source).toContain(
@@ -69,6 +74,10 @@ describe('Bun build options', () => {
 		expect(source).toContain(
 			'["prerendered/prerendered/index.html", Bun.file(resolve(import.meta.dir, "prerendered/prerendered/index.html"))]'
 		);
+		expect(source).toContain(
+			'export const server_assets = new Map([["_app/immutable/assets/read.txt", files.get("client/_app/immutable/assets/read.txt")]])'
+		);
+		expect(source).not.toContain('["data.json", files.get("client/data.json")]');
 		expect(source).not.toContain('asset_path');
 	});
 
@@ -80,7 +89,8 @@ describe('Bun build options', () => {
 
 		await adapter({ buildOptions: { compile: true } }).adapt(
 			builder({
-				prerendered_pages: [['/prerendered/', { file: 'prerendered/index.html' }]]
+				prerendered_pages: [['/prerendered/', { file: 'prerendered/index.html' }]],
+				server_assets: ['_app/immutable/assets/read.txt']
 			})
 		);
 
@@ -90,6 +100,9 @@ describe('Bun build options', () => {
 		expect(source).toContain("with { type: 'file' }");
 		expect(source).toContain('["client/data.json", Bun.file(asset_0)]');
 		expect(source).toContain('["client/_app/immutable/assets/read.txt", Bun.file(asset_1)]');
+		expect(source).toContain(
+			'["_app/immutable/assets/read.txt", files.get("client/_app/immutable/assets/read.txt")]'
+		);
 		expect(source).toContain('"/data.json": new Response(files.get("client/data.json")');
 		expect(source).not.toContain('asset_path');
 	});
@@ -121,7 +134,7 @@ describe('Bun build options', () => {
 
 test('the runtime reader reuses the generated Bun file', () => {
 	const source = readFileSync(new URL('./src/handler.js', import.meta.url), 'utf8');
-	expect(source).toContain('const asset = files.get(`client/${file}`)');
+	expect(source).toContain('const asset = server_assets.get(file)');
 	expect(source).toContain('return asset.stream()');
 	expect(source).not.toContain('Bun.file(');
 	expect(source).not.toContain('asset_path');
@@ -138,7 +151,7 @@ function mock_embedded_files({
 	dependencies?: string[];
 	data?: string[];
 }) {
-	vi.mocked(readdir).mockImplementation(async (path) => {
+	vi.mocked(readdir).mockImplementation((path) => {
 		const directory = String(path);
 		const files = directory.endsWith('/client')
 			? client
@@ -164,21 +177,27 @@ function builder({
 	client_files = [],
 	prerendered_files = [],
 	prerendered_pages = [],
+	routes = [],
+	server_assets = [],
 	app_path = '_app'
 }: {
 	client_files?: string[];
 	prerendered_files?: string[];
 	prerendered_pages?: Array<[string, { file: string }]>;
+	routes?: Array<{ id: string; prerender: boolean | string }>;
+	server_assets?: string[];
 	app_path?: string;
 } = {}) {
 	return {
 		config: { kit: { outDir: '.svelte-kit', paths: { base: '', origin: undefined } } },
+		routes,
 		prerendered: { pages: new Map(prerendered_pages) },
 		log: { minor() {}, error() {}, warn() {}, info() {} },
 		getServerDirectory: () => '.svelte-kit/output/server',
 		rimraf() {},
 		writeClient: () => client_files,
 		writePrerendered: () => prerendered_files,
+		findServerAssets: vi.fn(() => server_assets),
 		generateManifest: () => '{}',
 		getAppPath: () => app_path,
 		hasServerInstrumentationFile: () => false

@@ -229,6 +229,12 @@ async function create_routes({ builder, out, embed }) {
 
 	const imports = embed ? [] : [`import { resolve } from 'node:path';`];
 	const files = `export const files = new Map([${file_entries.join(',\n')}]);`;
+	const server_assets = builder.findServerAssets(
+		builder.routes.filter((route) => route.prerender !== true)
+	);
+	const readable_files = `export const server_assets = new Map([${server_assets
+		.map((file) => `[${JSON.stringify(file)}, files.get(${JSON.stringify(`client/${file}`)})]`)
+		.join(',\n')}]);`;
 
 	const routes = entries.map(
 		(entry) => `${JSON.stringify(encode_pathname(posix.join(base, entry.path)))}: ${entry.value}`
@@ -238,6 +244,7 @@ async function create_routes({ builder, out, embed }) {
 		...imports,
 		...asset_imports,
 		files,
+		readable_files,
 		`export const routes = {${routes.join(',\n')}};`
 	].join('\n');
 }

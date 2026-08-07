@@ -1,6 +1,6 @@
 import { Server } from 'SERVER';
 import { manifest } from 'MANIFEST';
-import { files } from 'ROUTES';
+import { server_assets } from 'ROUTES';
 import { env, env_prefix, number_env } from './env.js';
 
 const server = new Server(manifest);
@@ -14,11 +14,7 @@ const xff_depth = number_env('XFF_DEPTH', 1, { min: 1 }) ?? 1;
 
 await server.init({
 	env: Bun.env,
-	read: (file) => {
-		const asset = files.get(`client/${file}`);
-		if (!asset) throw new Error(`Could not find server asset ${file}`);
-		return asset.stream();
-	}
+	read: (file) => server_assets.get(file)?.stream() ?? null
 });
 
 /**
