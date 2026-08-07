@@ -23,11 +23,11 @@ export function is_action_json_request(event) {
 
 /**
  * @param {RequestEvent} event
- * @param {import('types').RequestState} event_state
+ * @param {import('types').RequestState} state
  * @param {SSROptions} options
  * @param {SSRNode['server'] | undefined} server
  */
-export async function handle_action_json_request(event, event_state, options, server) {
+export async function handle_action_json_request(event, state, options, server) {
 	const actions = server?.actions;
 
 	if (!actions) {
@@ -37,7 +37,7 @@ export async function handle_action_json_request(event, event_state, options, se
 			`POST method not allowed. No form actions exist for ${DEV ? `the page at ${event.route.id}` : 'this page'}`
 		);
 
-		const error = await handle_error_and_jsonify(event, event_state, options, no_actions_error);
+		const error = await handle_error_and_jsonify(event, state, options, no_actions_error);
 
 		return action_json(
 			{
@@ -58,7 +58,7 @@ export async function handle_action_json_request(event, event_state, options, se
 	check_named_default_separate(actions);
 
 	try {
-		const data = await call_action(event, event_state, actions);
+		const data = await call_action(event, state, actions);
 
 		if (DEV) {
 			validate_action_return(data);
@@ -98,7 +98,7 @@ export async function handle_action_json_request(event, event_state, options, se
 
 		const transformed = await handle_error_and_jsonify(
 			event,
-			event_state,
+			state,
 			options,
 			check_incorrect_fail_use(err)
 		);
@@ -152,11 +152,11 @@ export function is_action_request(event) {
 
 /**
  * @param {RequestEvent} event
- * @param {import('types').RequestState} event_state
+ * @param {import('types').RequestState} state
  * @param {SSRNode['server'] | undefined} server
  * @returns {Promise<ActionResult>}
  */
-export async function handle_action_request(event, event_state, server) {
+export async function handle_action_request(event, state, server) {
 	const actions = server?.actions;
 
 	if (!actions) {
@@ -180,7 +180,7 @@ export async function handle_action_request(event, event_state, server) {
 	check_named_default_separate(actions);
 
 	try {
-		const data = await call_action(event, event_state, actions);
+		const data = await call_action(event, state, actions);
 
 		if (DEV) {
 			validate_action_return(data);
@@ -232,11 +232,11 @@ function check_named_default_separate(actions) {
 
 /**
  * @param {RequestEvent} event
- * @param {import('types').RequestState} event_state
+ * @param {import('types').RequestState} state
  * @param {NonNullable<ServerNode['actions']>} actions
  * @throws {Redirect | HttpError | SvelteKitError | Error}
  */
-async function call_action(event, event_state, actions) {
+async function call_action(event, state, actions) {
 	const url = new URL(event.request.url);
 
 	let name = 'default';
@@ -275,7 +275,7 @@ async function call_action(event, event_state, actions) {
 		fn: async (current) => {
 			const traced_event = merge_tracing(event, current);
 
-			const result = await with_request_store({ event: traced_event, state: event_state }, () =>
+			const result = await with_request_store({ event: traced_event, state }, () =>
 				action(traced_event)
 			);
 
