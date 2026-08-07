@@ -125,15 +125,18 @@ export async function render_response({
 
 			base = segments.map(() => '..').join('/') || '.';
 
-			// resolve e.g. '../..' against current location, then remove trailing slash
-			base_expression = `new URL(${s(base)}, location).pathname.slice(0, -1)`;
+			// resolve e.g. '../..' against current location, then remove trailing slash.
+			// Guard against non-http(s) protocols (e.g. data: or about:srcdoc used in iframes)
+			// where new URL(..., location) throws a TypeError during hydration.
+			base_expression = `['about:', 'data:'].includes(location.protocol) ? '' : new URL(${s(base)}, location).pathname.slice(0, -1)`;
 
 			if (!paths.assets || (paths.assets[0] === '/' && paths.assets !== SVELTE_KIT_ASSETS)) {
 				assets = base;
 			}
 		} else if (options.hash_routing) {
-			// we have to assume that we're in the right place
-			base_expression = "new URL('.', location).pathname.slice(0, -1)";
+			// we have to assume that we're in the right place.
+			// Guard against non-http(s) protocols where new URL(..., location) throws.
+			base_expression = "['about:', 'data:'].includes(location.protocol) ? '' : new URL('.', location).pathname.slice(0, -1)";
 		}
 	}
 

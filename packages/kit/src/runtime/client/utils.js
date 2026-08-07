@@ -1,7 +1,10 @@
 import { BROWSER, DEV } from 'esm-env';
 import { PRELOAD_PRIORITIES } from './constants.js';
 
-export const origin = BROWSER ? location.origin : '';
+// For data: and about: URLs (e.g. iframe srcdoc), location.origin returns the
+// string "null" which breaks origin comparisons. Fall back to empty string.
+export const origin =
+	BROWSER && location.protocol !== 'data:' && location.protocol !== 'about:' ? location.origin : '';
 
 /** @param {string | URL} url */
 export function resolve_url(url) {
