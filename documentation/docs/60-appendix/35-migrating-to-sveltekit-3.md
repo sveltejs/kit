@@ -50,12 +50,27 @@ See the [configuration docs](configuration) for further examples.
 
 The following options are obsolete and should be removed from your `vite.config.js`:
 
-- `files.lib` (see [`$lib is now `#lib`](#$lib-is-now-lib))
+- `files.lib` ([details](#$lib-is-now-lib))
+- `experimental.handleRenderingErrors` is no longer required ([details](#Error-handling-Rendering-errors-are-now-handled))
+- `experimental.instrumentation` is no longer required ([details](#Tracing-is-no-longer-experimental))
+- `experimental.tracing` is now a top level `tracing` option ([details](#Tracing-is-no-longer-experimental))
+- `preloadStrategy` is removed — `modulepreload` is now supported everywhere and so is always used
+- `checkOrigin` TODO
 - TODO others
+
+### Added options
+
+- `output.linkHeaderPreload` TODO
+- `trustedOrigins` TODO
+- `paths.origin` TODO
+
+### Changed options
+
+- `version.pollInterval` now defaults to one hour, meaning SvelteKit will periodically check for new deployments and set [`updated.current`]($app-state#updated) to `true` accordingly. Previously, no polling occurred by default. TODO explain passive detection as well
 
 ## `$lib` is now `#lib`
 
-The `$lib` alias is no longer generated automatically by SvelteKit. It is replaced by a `#lib` alias that you declare in the [`imports`](https://nodejs.org/api/packages.html#subpath-imports) field of your `package.json`, leveraging Node's built-in subpath imports (which Vite and TypeScript resolve natively).
+The `$lib` alias is no longer generated automatically by SvelteKit. It is replaced by a `#lib` alias that you declare in the [`imports`](https://nodejs.org/api/packages.html#subpath-imports) field of your `package.json`, leveraging Node's built-in subpath imports (which Vite and TypeScript resolve natively). Add this to your `package.json`...
 
 ```json
 /// file: package.json
@@ -67,9 +82,7 @@ The `$lib` alias is no longer generated automatically by SvelteKit. It is replac
 }
 ```
 
-Consequently, the `kit.files.lib` configuration option has also been removed — `src/lib` is no longer special-cased by SvelteKit.
-
-To migrate, find-and-replace `$lib` with `#lib` across your codebase, add the `imports` entry above to `package.json`, and remove any `files.lib` config.
+...and replace `$lib` with `#lib` across your codebase.
 
 ## Param matchers live in a single `params.ts` file
 
@@ -93,7 +106,7 @@ export const params = defineParams({
 });
 ```
 
-To migrate, consolidate every `src/params/*.js` file into `src/params.js`/`params.ts`. See [Matching](advanced-routing#Matching) for more details.
+See [Matching](advanced-routing#Matching) for more details.
 
 ## `$app/stores` has been removed
 
@@ -163,23 +176,40 @@ Shallow routing now triggers navigation hooks ([`beforeNavigate`]($app-navigatio
 
 `invalidateAll` is deprecated in favour of [`refreshAll`]($app-navigation#refreshAll). The difference is that `refreshAll` does _not_ reset `page.state` to an empty object, which is usually what you want when using [shallow routing](shallow-routing).
 
-```js
-import { +++refreshAll+++ } from '$app/navigation';
-
----await invalidateAll();---
-+++await refreshAll();+++
-```
-
-Calling `invalidate(All)` during an in-flight navigation no longer aborts that navigation.
+Additionally, calling `invalidateAll()` or `invalidate(...)` during an in-flight navigation no longer aborts that navigation.
 
 ### `goto` options are updated
 
-In addition to the new `shallow` option described [above]($app-navigation-changes-Changes-to-shallow-routing), various [`goto`]($app-navigation#goto) options have changed:
+In addition to the new `shallow` option described [above](#$app-navigation-changes-Changes-to-shallow-routing), various [`goto`]($app-navigation#goto) options have changed:
 
 - `invalidateAll` is now `refreshAll`, to mirror the [above change]($app-navigation-changes-invalidateAll-is-deprecated-in-favour-of-refreshAll)
 - `keepFocus: true` and `noScroll: true` have been combined as `reset: false`
 - `replaceState` is now `replace`
 
+### `goto` rejects for URLs that don't resolve to a route
+
+`goto(...)` now rejects when called with a URL that does not resolve to a route within the app, matching the existing behaviour for external URLs. To navigate to an external URL, use `window.location.href = url`.
+
+### `delta` only exists for `popstate` navigations
+
+The `delta` property on navigation events ([`beforeNavigate`]($app-navigation#beforeNavigate), [`onNavigate`]($app-navigation#onNavigate) and [`afterNavigate`]($app-navigation#afterNavigate)) now only exists for `popstate` navigations (back/forward). It is `undefined` for all other navigation types.
+
+### `preloadData` can return an `'error'` result
+
+`preloadData(...)` now returns `{ type: 'error', status, error }` when the target page fails to load, instead of returning `{ type: 'loaded' }` with a 200 status. The `'redirect'` result now also includes the correct `status`. Add an `error` branch to any code that consumes the result:
+
+```js
+import { preloadData } from '$app/navigation';
+const url = '/somewhere';
+// ---cut---
+const result = await preloadData(url);
+
+if (result.type === 'loaded') {
+	// ...
++++} else if (result.type === 'error') {
+	// do something in case of an error
+}+++
+```
 
 ## External redirects must be opted into
 
@@ -216,8 +246,6 @@ In SvelteKit 2, `handleError` was not called in the case of _expected_ errors, w
 If you need to control the HTTP status code used to render a page in the case of an error, you can do so by returning a `status` property from `handleError` alongside any other required properties of `App.Error`.
 
 ### Rendering errors are now handled
-
-The `experimental.handleRenderingErrors` flag has been removed and should be deleted from your config.
 
 Errors thrown during rendering are now always routed through `handleError` and then passed to the nearest [error boundary](../svelte/svelte-boundary). Error boundaries are automatically created for each of your `+error.svelte` components.
 
@@ -329,32 +357,6 @@ The `'off'` value for `data-sveltekit-*` link attributes has been removed in fav
 
 `error`, `isHttpError`, `redirect`, and `isRedirect` now refer to the public types rather than the internal classes. If you were importing the internal `HttpError`/`Redirect` classes from `@sveltejs/kit/internal`, or doing `instanceof` checks against them, use `isHttpError`/`isRedirect` from `@sveltejs/kit` instead.
 
-## Navigation and data loading
-
-### `goto` rejects for URLs that don't resolve to a route
-
-`goto(...)` now rejects when called with a URL that does not resolve to a route within the app, matching the existing behaviour for external URLs. Ensure `goto` targets correspond to real routes. To navigate to an external URL, use `window.location.href = url`.
-
-### `delta` only exists for `popstate` navigations
-
-The `delta` property on navigation events (`beforeNavigate`/`afterNavigate`/`onNavigate`) now only exists for `popstate` navigations (back/forward). It is `undefined` for all other navigation types.
-
-### `preloadData` can return an `'error'` result
-
-`preloadData(...)` now returns `{ type: 'error', status, error }` when the target page fails to load, instead of returning `{ type: 'loaded' }` with a 200 status. The `'redirect'` result now also includes the correct `status`. Add an `error` branch to any code that consumes the result:
-
-```js
-import { preloadData } from '$app/navigation';
-const url = '/somewhere';
-// ---cut---
-const result = await preloadData(url);
-
-if (result.type === 'loaded') {
-	// ...
-} +++else if (result.type === 'error') {
-	// do something in case of an error
-}+++
-```
 
 ### `page.url` is now immutable on the type level
 
