@@ -2534,13 +2534,17 @@ export function snapshot(options) {
 
 	let id = options.id;
 	if (id === undefined) {
+		// restore any lowered third-party limit, else every callsite collapses to one id
+		const limit = Error.stackTraceLimit;
+		if (typeof limit === 'number' && limit < 3) Error.stackTraceLimit = 3;
 		let stack = new Error().stack?.split('\n') ?? [];
+		if (typeof limit === 'number' && limit < 3) Error.stackTraceLimit = limit;
+
 		if (stack[0]?.trim() === 'Error') stack = stack.slice(1);
 
-		// frames above the callsite differ between hydration and client-side re-mounting
-		let frame = stack[1] ?? stack[0];
-		// strip Vite query strings so snapshots survive module invalidation and dependency updates
-		frame = frame?.replace(/\?[^)\s]*(?=:\d+:\d+\)?$)/, '');
+		// only the callsite frame is stable: frames above it differ between hydration and
+		// re-mounting, and Vite query strings (stripped here) change on module invalidation
+		const frame = stack[1]?.replace(/\?[^)\s]*(?=:\d+:\d+\)?$)/, '');
 
 		if (!frame) {
 			throw new Error(
