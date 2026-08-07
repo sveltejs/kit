@@ -44,7 +44,7 @@ export default defineConfig({
 
 See [Configuration](configuration) for further examples.
 
-## `$lib` is replaced by `#lib`
+## `$lib` is now `#lib`
 
 The `$lib` alias is no longer generated automatically by SvelteKit. It is replaced by a `#lib` alias that you declare in the [`imports`](https://nodejs.org/api/packages.html#subpath-imports) field of your `package.json`, leveraging Node's built-in subpath imports (which Vite and TypeScript resolve natively).
 
@@ -62,9 +62,9 @@ Consequently, the `kit.files.lib` configuration option has also been removed —
 
 To migrate, find-and-replace `$lib` with `#lib` across your codebase, add the `imports` entry above to `package.json`, and remove any `files.lib` config.
 
-## Param matchers live in a single `params.js/ts` file
+## Param matchers live in a single `params.ts` file
 
-Param matchers are no longer files inside the `src/params` directory. Declare all matchers in a single `src/params.js` (or `src/params.ts`) file using the `defineParams` helper. A matcher can be a function that returns a parsed value (or `undefined`, if the param does not match), or a [Standard Schema](https://standardschema.dev).
+Param matchers are no longer files inside the `src/params` directory. Declare all matchers in a single `src/params.ts` (or `src/params.js`) file using the `defineParams` helper. A matcher can be a function that returns a parsed value (or `undefined`, if the param does not match), or a [Standard Schema](https://standardschema.dev).
 
 ```js
 /// file: src/params.js
@@ -100,51 +100,59 @@ The `$app/stores` module (which exports the `$page`, `$navigating`, and `$update
 
 Replace `$app/stores` imports with `$app/state` and remove the `$` prefix when reading values (i.e. `page` rather than `$page`).
 
-## `base`, `assets`, and `resolveRoute` removed from `$app/paths`
+## `$app/paths` changes
 
-The deprecated `base`, `assets`, and `resolveRoute` exports have been removed from [`$app/paths`]($app-paths). Use the replacements that were introduced in SvelteKit 2.26:
+### `base`, `assets`, and `resolveRoute` removed
 
-- replace `base + resolveRoute(id, params)` with `resolve(id, params)` (also accepts a plain pathname)
-- replace `assets + '/foo.png'` with `asset('foo.png')`
+The deprecated `base`, `assets`, and `resolveRoute` exports have been removed from [`$app/paths`]($app-paths). Use [`asset`]($app-paths#asset) and [`resolve`]($app-paths#resolve) instead:
 
 ```js
-import { resolve } from '$app/paths';
+let base = '';
+let assets = '';
+let slug = '';
+import { asset, resolve } from '$app/paths';
+// ---cut---
+// instead of this...
+---const pathname = base + resolveRoute('/blog/[slug]', { slug });---
+---const file = assets + '/foo.png';---
 
-const path = resolve('/blog/[slug]', { slug });
+// ...do this:
++++const pathname = resolve('/blog/[slug]', { slug });+++
++++const file = asset('foo.png');+++
 ```
 
 The `Pathname` and `Asset` types have also been renamed to `Path` and `AssetPath`, and the leading `/` has been removed from those types — so `asset('/foo.png')` should now be `asset('foo.png')`, and pathnames passed to `resolve` no longer start with `/` (e.g. `resolve('blog/hello-world')`). Only route IDs start with `/` now.
 
-## Changes to shallow routing
+### Service workers can now import `$app/paths`
 
-`pushState/replaceState` are deprecated in favor of `goto`:
+See the section on [service workers](#Service-workers) below for more details.
+
+## `$app/navigation` changes
+
+### Changes to shallow routing
+
+For [shallow routing](shallow-routing), `pushState/replaceState` are deprecated in favor of [`goto`]($app-navigation#goto):
 
 ```js
-import { goto, pushState, replaceState } from '$app/navigation';
-
+const state = {};
+import { goto } from '$app/navigation';
+// ---cut---
+// instead of this...
 ---pushState('/foo', state);---
-+++goto('/foo', { shallow: true, state });+++
-
 ---replaceState('/bar', state);---
+
+// ...do this:
++++goto('/foo', { shallow: true, state });+++
 +++goto('/bar', { shallow: true, replace: true, state });+++
 ```
 
-Shallow routing now triggers navigation hooks (`before/after/onNavigate`). You can filter them out by checking the `shallow` property of the object passed to those navigation hooks.
+A new `persistState: true` option will cause `page.state` to be reapplied following a page reload.
 
-## External redirects must be opted into
+Shallow routing now triggers navigation hooks ([`beforeNavigate`]($app-navigation#beforeNavigate), [`onNavigate`]($app-navigation#onNavigate) and [`afterNavigate`]($app-navigation#afterNavigate)). You can filter them out by checking the `shallow` property of the object passed to those navigation hooks.
 
-`redirect(...)` to an external URL is now forbidden by default. To redirect to an external destination, pass an `external` option — either `true` to allow any external URL (except `javascript:` URLs, which are always blocked), or an array of allowed origins (through which you can allow `javascript:` URLs).
+### `invalidateAll` is deprecated in favour of `refreshAll`
 
-```js
-import { redirect } from '@sveltejs/kit';
-
----redirect(307, 'https://example.com');---
-+++redirect(307, 'https://example.com', { external: true });+++
-```
-
-## `invalidateAll` is deprecated in favour of `refreshAll`
-
-`invalidateAll` is deprecated in favour of `refreshAll`. The difference is that `refreshAll` does _not_ reset `page.state` to an empty object, which is usually what you want when using [shallow routing](shallow-routing). The `goto(..., { invalidateAll })` option is likewise deprecated in favour of `refreshAll`.
+`invalidateAll` is deprecated in favour of [`refreshAll`]($app-navigation#refreshAll). The difference is that `refreshAll` does _not_ reset `page.state` to an empty object, which is usually what you want when using [shallow routing](shallow-routing).
 
 ```js
 import { +++refreshAll+++ } from '$app/navigation';
@@ -154,6 +162,25 @@ import { +++refreshAll+++ } from '$app/navigation';
 ```
 
 Calling `invalidate(All)` during an in-flight navigation no longer aborts that navigation.
+
+### `goto` options are updated
+
+In addition to the new `shallow` option described [above]($app-navigation-changes-Changes-to-shallow-routing), various [`goto`]($app-navigation#goto) options have changed:
+
+- `invalidateAll` is now `refreshAll`, to mirror the [above change]($app-navigation-changes-invalidateAll-is-deprecated-in-favour-of-refreshAll)
+- `keepFocus: true` and `noScroll: true` have been combined as `reset: false`
+- `replaceState` is now `replace`
+
+
+## External redirects must be opted into
+
+To [`redirect`](@sveltejs-kit#redirect) to an external URL you must now pass an `external` option — either `true` to allow any external URL (except `javascript:` URLs, which remain blocked), or an array of allowed origins (which _can_ include `javascript:` URLs).
+
+```js
+import { redirect } from '@sveltejs/kit';
+// ---cut---
+redirect(307, 'https://example.com', +++{ external: true }+++);
+```
 
 ## `handleError` can influence the status code
 
