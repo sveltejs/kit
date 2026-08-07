@@ -1,4 +1,5 @@
 export const SNAPSHOT_KEY = 'sveltekit:snapshot';
+export const NAVIGATION_SNAPSHOT_KEY = 'sveltekit:navigation-snapshot';
 export const HISTORY_INFO_KEY = 'sveltekit:history-info';
 export const HISTORY_METADATA_KEY = 'sveltekit:metadata';
 

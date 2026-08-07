@@ -26,6 +26,7 @@ import * as devalue from 'devalue';
 import {
 	HISTORY_INFO_KEY,
 	HISTORY_METADATA_KEY,
+	NAVIGATION_SNAPSHOT_KEY,
 	PRELOAD_PRIORITIES,
 	SNAPSHOT_KEY
 } from './constants.js';
@@ -63,6 +64,10 @@ import { init_transport, parse, stringify } from '#app/internal/transport';
  * }} HistoryMetadata
  */
 
+/**
+ * @typedef {{ id: string; capture: () => any; restore: (value: any) => void; reset?: () => void }} SnapshotRegistration
+ */
+
 export { load_css };
 const ICON_REL_ATTRIBUTES = new Set(['icon', 'shortcut icon', 'apple-touch-icon']);
 
@@ -93,6 +98,13 @@ const history_info = storage.get(HISTORY_INFO_KEY) ?? {};
  * @type {Record<string, any[]>}
  */
 const snapshots = storage.get(SNAPSHOT_KEY) ?? {};
+
+// Function snapshots use history indexes so shallow entries have distinct state.
+/** @type {Record<string, Record<string, string>>} */
+const navigation_snapshots = storage.get(NAVIGATION_SNAPSHOT_KEY) ?? {};
+
+/** @type {Set<SnapshotRegistration>} */
+const snapshot_registrations = new Set();
 
 /** @type {Props} */
 let props;
@@ -206,6 +218,7 @@ function clear_onward_history(current_history_index, current_navigation_index) {
 	let i = current_history_index + 1;
 	while (history_info[i]) {
 		delete history_info[i];
+		delete navigation_snapshots[i];
 		i += 1;
 	}
 
@@ -687,12 +700,57 @@ function restore_snapshot(index) {
 	});
 }
 
+/** @param {number} index */
+function capture_navigation_snapshot(index) {
+	if (snapshot_registrations.size === 0) {
+		delete navigation_snapshots[index];
+		return;
+	}
+
+	navigation_snapshots[index] = Object.fromEntries(
+		Array.from(snapshot_registrations, ({ id, capture }) => [id, stringify(capture())])
+	);
+}
+
+/** @param {number} index */
+function delete_navigation_snapshot(index) {
+	delete navigation_snapshots[index];
+}
+
+/**
+ * @param {number} index
+ * @param {Set<SnapshotRegistration>} [reset_registrations]
+ */
+function restore_navigation_snapshot(index, reset_registrations) {
+	const values = navigation_snapshots[index];
+
+	for (const registration of snapshot_registrations) {
+		if (values && Object.hasOwn(values, registration.id)) {
+			registration.restore(parse(values[registration.id]));
+		} else if (reset_registrations?.has(registration)) {
+			registration.reset?.();
+		}
+	}
+}
+
+/** @param {Set<SnapshotRegistration>} registrations */
+function reset_navigation_snapshots(registrations) {
+	for (const registration of snapshot_registrations) {
+		if (registrations.has(registration)) {
+			registration.reset?.();
+		}
+	}
+}
+
 function persist_state() {
 	capture_scroll(current_history_index);
 	storage.set(HISTORY_INFO_KEY, history_info);
 
 	capture_snapshot(current_navigation_index);
 	storage.set(SNAPSHOT_KEY, snapshots);
+
+	capture_navigation_snapshot(current_history_index);
+	storage.set(NAVIGATION_SNAPSHOT_KEY, navigation_snapshots);
 }
 
 /**
@@ -947,6 +1005,7 @@ async function initialize(result, target, should_hydrate) {
 	}
 
 	restore_snapshot(current_navigation_index);
+	restore_navigation_snapshot(current_history_index);
 
 	started = true;
 }
@@ -1943,6 +2002,7 @@ async function navigate({
 	// store this before calling `accept()`, which may change the index
 	const previous_history_index = current_history_index;
 	const previous_navigation_index = current_navigation_index;
+	const previous_snapshot_registrations = new Set(snapshot_registrations);
 
 	accept();
 
@@ -2051,6 +2111,11 @@ async function navigate({
 
 	capture_scroll(previous_history_index);
 	capture_snapshot(previous_navigation_index);
+	if (replace_state) {
+		delete_navigation_snapshot(previous_history_index);
+	} else {
+		capture_navigation_snapshot(previous_history_index);
+	}
 
 	// ensure the url pathname matches the page's trailing slash option
 	if (navigation_result.props.page.url.pathname !== url.pathname) {
@@ -2217,6 +2282,9 @@ async function navigate({
 
 	if (type === 'popstate') {
 		restore_snapshot(current_navigation_index);
+		restore_navigation_snapshot(current_history_index, previous_snapshot_registrations);
+	} else {
+		reset_navigation_snapshots(previous_snapshot_registrations);
 	}
 
 	navigating.current = null;
@@ -2449,6 +2517,59 @@ function add_navigation_callback(callbacks, callback) {
 
 		return () => {
 			callbacks.delete(callback);
+		};
+	});
+}
+
+/**
+ * A lifecycle function that captures state before navigating and restores it when traversing history.
+ *
+ * By default, the snapshot `id` is generated from the call site. Pass an explicit `id` to keep snapshots stable across deployments or distinguish multiple uses of a shared helper.
+ *
+ * The optional `reset` callback runs when a new history entry is created. Captured values are serialized with the app's transport hook.
+ *
+ * `snapshot` must be called during a component initialization. It remains active as long as the component is mounted.
+ * @template T
+ * @param {{ id?: string; capture: () => T; restore: (value: T) => void; reset?: () => void }} options
+ * @returns {void}
+ */
+export function snapshot(options) {
+	if (!BROWSER) return;
+
+	let id = options.id;
+	if (id === undefined) {
+		let stack = new Error().stack?.split('\n') ?? [];
+		if (stack[0]?.trim() === 'Error') stack = stack.slice(1);
+
+		// Strip Vite query strings so snapshots survive module invalidation and dependency updates.
+		stack = stack.map((frame) => frame.replace(/\?[^)\s]*(?=:\d+:\d+\)?$)/, ''));
+		id = stack.join('\n');
+
+		if (!id) {
+			throw new Error(
+				'Could not generate a snapshot id from the stack trace. Pass an `id` instead.'
+			);
+		}
+	}
+
+	const registration = { ...options, id };
+
+	onMount(() => {
+		if (DEV && Array.from(snapshot_registrations).some((snapshot) => snapshot.id === id)) {
+			throw new Error(`A snapshot with id "${id}" is already registered. Pass a unique \`id\`.`);
+		}
+
+		if (started && !is_navigating && !updating) {
+			const values = navigation_snapshots[current_history_index];
+			if (values && Object.hasOwn(values, id)) {
+				registration.restore(parse(values[id]));
+			}
+		}
+
+		snapshot_registrations.add(registration);
+
+		return () => {
+			snapshot_registrations.delete(registration);
 		};
 	});
 }
@@ -2883,6 +3004,7 @@ export async function replaceState(url, state) {
  */
 async function update_state(intent, state, { replace, persist_state, reset }, caller) {
 	const url = intent.url;
+	const previous_snapshot_registrations = new Set(snapshot_registrations);
 
 	if (DEV && !started) {
 		throw new Error(`Cannot call ${caller}(...) before router is initialized`);
@@ -2903,7 +3025,12 @@ async function update_state(intent, state, { replace, persist_state, reset }, ca
 		updating = true;
 	}
 
-	if (!replace) capture_scroll(current_history_index);
+	if (replace) {
+		delete_navigation_snapshot(current_history_index);
+	} else {
+		capture_scroll(current_history_index);
+		capture_navigation_snapshot(current_history_index);
+	}
 	if (reset) current_reset_index += 1;
 
 	// as above, serialize-then-parse to prevent bugs
@@ -2959,33 +3086,37 @@ async function update_state(intent, state, { replace, persist_state, reset }, ca
 		url
 	};
 
-	if (!nav) return;
+	if (nav) {
+		const { activeElement } = document;
 
-	const { activeElement } = document;
+		await settled();
 
-	await settled();
+		if (navigation_token !== nav_token) {
+			// a new navigation happened while we were waiting for the DOM to update, so abort
+			nav.reject(new Error('navigation aborted'));
+			return;
+		}
 
-	if (navigation_token !== nav_token) {
-		// a new navigation happened while we were waiting for the DOM to update, so abort
-		nav.reject(new Error('navigation aborted'));
-		return;
+		reset_scroll_and_focus(url, reset ? null : scroll_state(), reset, activeElement);
+
+		is_navigating = false;
+		nav.fulfil(undefined);
+
+		if (nav.navigation.to) {
+			nav.navigation.to.scroll = scroll_state();
+		}
+
+		after_navigate_callbacks.forEach((fn) =>
+			fn(/** @type {import('@sveltejs/kit').AfterNavigate} */ (nav.navigation))
+		);
 	}
 
-	reset_scroll_and_focus(url, reset ? null : scroll_state(), reset, activeElement);
+	reset_navigation_snapshots(previous_snapshot_registrations);
 
-	is_navigating = false;
-	nav.fulfil(undefined);
-
-	if (nav.navigation.to) {
-		nav.navigation.to.scroll = scroll_state();
+	if (nav) {
+		navigating.current = null;
+		updating = false;
 	}
-
-	after_navigate_callbacks.forEach((fn) =>
-		fn(/** @type {import('@sveltejs/kit').AfterNavigate} */ (nav.navigation))
-	);
-
-	navigating.current = null;
-	updating = false;
 }
 
 /**
@@ -3320,6 +3451,8 @@ function _start_router() {
 				: null;
 
 			if (shallow) {
+				const previous_snapshot_registrations = new Set(snapshot_registrations);
+
 				// We don't need to navigate, we just need to update scroll and/or state.
 				// This happens with hash links and `pushState`/`replaceState`. The
 				// exception is if we haven't navigated yet, since we could have
@@ -3336,9 +3469,11 @@ function _start_router() {
 				update_url(url);
 
 				capture_scroll(current_history_index);
+				capture_navigation_snapshot(current_history_index);
 				current_history_index = history_index;
 				current_reset_index = reset_index;
 				if (reset && scroll) scrollTo(scroll.x, scroll.y);
+				restore_navigation_snapshot(current_history_index, previous_snapshot_registrations);
 				return;
 			}
 
