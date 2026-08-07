@@ -1553,19 +1553,15 @@ async function load_route({ id, invalidating, url, params, route, preload, actio
 					error = await handle_error(err, { params, url, route: { id: route.id } });
 				}
 
-				const error_load = await load_nearest_error_page(i, branch, errors);
-				if (error_load) {
-					return get_navigation_result_from_branch({
-						url,
-						params,
-						branch: branch.slice(0, error_load.idx).concat(error_load.node),
-						errors,
-						error,
-						route
-					});
-				} else {
-					return await server_fallback(url, { id: route.id }, error);
-				}
+				return load_route_error({
+					i,
+					branch,
+					errors,
+					error,
+					url,
+					params,
+					route
+				});
 			}
 		} else {
 			// push an empty slot so we can rewind past gaps to the
@@ -1577,20 +1573,16 @@ async function load_route({ id, invalidating, url, params, route, preload, actio
 	if (action_result?.type === 'error') {
 		// render the nearest error boundary of the route the action belongs to,
 		// as a native form submission would
-		const error_load = await load_nearest_error_page(loaders.length, branch, errors);
-		if (error_load) {
-			return get_navigation_result_from_branch({
-				url,
-				params,
-				branch: branch.slice(0, error_load.idx).concat(error_load.node),
-				errors,
-				error: action_result.error,
-				status: action_result.status,
-				route
-			});
-		}
-
-		return await server_fallback(url, { id: route.id }, action_result.error);
+		return load_route_error({
+			i: loaders.length,
+			branch,
+			errors,
+			error: action_result.error,
+			status: action_result.status,
+			url,
+			params,
+			route
+		});
 	}
 
 	return get_navigation_result_from_branch({
@@ -1639,6 +1631,35 @@ async function load_nearest_error_page(i, branch, errors) {
 			}
 		}
 	}
+}
+
+/**
+ * @param {{
+ *   i: number;
+ *   branch: Array<import('./types.js').BranchNode | undefined>;
+ *   errors: Array<import('types').CSRPageNodeLoader | undefined>;
+ *   error: App.Error;
+ *   status?: number;
+ *   url: URL;
+ *   params: Record<string, string>;
+ *   route: import('./types.js').NavigationIntent['route'];
+ * }} opts
+ */
+async function load_route_error({ i, branch, errors, error, status, url, params, route }) {
+	const error_load = await load_nearest_error_page(i, branch, errors);
+	if (error_load) {
+		return get_navigation_result_from_branch({
+			url,
+			params,
+			branch: branch.slice(0, error_load.idx).concat(error_load.node),
+			errors,
+			error,
+			status,
+			route
+		});
+	}
+
+	return server_fallback(url, { id: route.id }, error);
 }
 
 /**
@@ -3022,21 +3043,15 @@ async function update_state(intent, state, { replace, persist_state, reset }, ca
 }
 
 /**
- * Applies an `ActionResult` the way the browser would.
- *
- * For redirects it navigates to the redirect location. For every other result it navigates to
- * `result.location` — the page the submission should land on — populating that page's `form`
- * property and `page.status`, or rendering that route's nearest error page for `error` results.
- * When `result.location` is the page you're already on, this updates it in place instead of
- * navigating. Pass `navigate: false` to update the current page in place for non-redirect results.
- * Redirects are always followed.
+ * Updates the `form` property of the current page with the given data and updates `page.status`.
+ * In case of an error, it renders the nearest error page. In case of a redirect, it navigates to
+ * the redirect location.
  * @template {Record<string, unknown> | undefined} Success
  * @template {Record<string, unknown> | undefined} Failure
  * @param {import('@sveltejs/kit').ActionResult<Success, Failure>} result
- * @param {{ navigate?: boolean }} [options]
  * @returns {Promise<void>}
  */
-export async function applyAction(result, options) {
+export async function applyAction(result) {
 	if (!BROWSER) {
 		throw new Error('Cannot call applyAction(...) on the server');
 	}
@@ -3044,19 +3059,6 @@ export async function applyAction(result, options) {
 	if (result.type === 'redirect') {
 		await _goto(result.location, { refreshAll: true });
 		return;
-	}
-
-	if (options?.navigate !== false && result.location !== undefined) {
-		if (!is_current_location(result.location)) {
-			// emulate the browser: render the destination page (or its nearest error
-			// boundary) with this result
-			await apply_action_navigation(result.location, result, result.type === 'success');
-			return;
-		}
-
-		if (result.type === 'success') {
-			await refreshAll();
-		}
 	}
 
 	if (result.type === 'error') {

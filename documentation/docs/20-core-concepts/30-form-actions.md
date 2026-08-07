@@ -450,15 +450,13 @@ If you return a callback, you override the default post-submission behavior. To 
 > - `refreshAll` controls whether all data is refreshed after submission. It defaults to `true` for successful results and `false` for failures. When the submission navigates to another page, setting it to `false` does _not_ prevent the destination's own `load` functions from running — it only allows shared layout data to be reused. `invalidateAll` is a deprecated alias for `refreshAll`
 > - `navigate: false` applies a non-redirect result to the current page instead of navigating to `result.location`. Redirects are always followed
 
-The behaviour of `applyAction(result)` depends on `result.type` and on `result.location` — the page the submission should land on. The server includes it in every action response, so `applyAction` can do what the browser would do:
+The behaviour of `applyAction(result)` depends on `result.type`:
 
-- `success`, `failure` — if `result.location` is a different page, navigates there and renders it with the result, populating that page's `form` property and `page.status`. Otherwise sets `page.status` to `result.status` and updates `form` and `page.form` to `result.data`
+- `success`, `failure` — sets `page.status` to `result.status` and updates `form` and `page.form` to `result.data`
 - `redirect` — calls `goto(result.location, { refreshAll: true })`
-- `error` — renders the nearest `+error` boundary with `result.error`. If `result.location` is a different page, it navigates there first, so the boundary is the one nearest the _destination's_ route
+- `error` — renders the current route's nearest `+error` boundary with `result.error`
 
-In all cases, [focus will be reset](accessibility#Focus-management).
-
-> [!NOTE] Like `update`, `applyAction` accepts a `navigate: false` option. It applies non-redirect results to the current page and resolves error boundaries against the current route, however `result.location` is set. Redirects are always followed.
+In all cases, [focus will be reset](accessibility#Focus-management). `applyAction` does not navigate to the `location` of a non-redirect result or refresh data. Use `update` to get the complete default enhanced behavior, including carrying form data and status into a cross-page navigation. When implementing enhancement manually, inspect `result.location` and use [`goto`](../$app-navigation#goto) or [`refreshAll`](../$app-navigation#refreshAll) as appropriate.
 
 ### Custom event listener
 
@@ -486,12 +484,15 @@ We can also implement progressive enhancement ourselves, without `use:enhance`, 
 		/** @type {import('@sveltejs/kit').ActionResult} */
 		const result = deserialize(await response.text());
 
-		if (result.type === 'success') {
-			// rerun all `load` functions and queries, following the successful update
-			await refreshAll();
+		if (result.type !== 'redirect' && result.location !== undefined) {
+			if (result.location === location.pathname + location.search) {
+				if (result.type === 'success') await refreshAll();
+			} else {
+				await goto(result.location, { refreshAll: result.type === 'success' });
+			}
 		}
 
-		applyAction(result);
+		await applyAction(result);
 	}
 </script>
 

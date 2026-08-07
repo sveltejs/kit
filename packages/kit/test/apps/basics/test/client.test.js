@@ -1567,28 +1567,23 @@ test.describe('Actions', () => {
 		await expect(page.locator('pre.destination-form')).toHaveText(JSON.stringify(null));
 	});
 
-	for (const [name, selector, redirect_selector] of [
-		['update', 'button.submit-stay', 'button.submit-redirect-stay'],
-		['applyAction', 'button.submit-stay-apply-action', 'button.submit-redirect-stay-apply-action']
-	]) {
-		test(`${name} navigate option applies the result to the current page`, async ({ page }) => {
-			await page.goto('/actions/cross-page/source');
-			await page.locator(selector).click();
+	test('update navigate option applies the result to the current page', async ({ page }) => {
+		await page.goto('/actions/cross-page/source');
+		await page.locator('button.submit-stay').click();
 
-			await expect(page.locator('pre.source-form')).toHaveText(
-				JSON.stringify({ problem: 'invalid', username: 'paolo' })
-			);
-			expect(new URL(page.url()).pathname).toBe('/actions/cross-page/source');
-		});
+		await expect(page.locator('pre.source-form')).toHaveText(
+			JSON.stringify({ problem: 'invalid', username: 'paolo' })
+		);
+		expect(new URL(page.url()).pathname).toBe('/actions/cross-page/source');
+	});
 
-		test(`${name} navigate option does not suppress redirects`, async ({ page }) => {
-			await page.goto('/actions/cross-page/source');
-			await page.locator(redirect_selector).click();
+	test('update navigate option does not suppress redirects', async ({ page }) => {
+		await page.goto('/actions/cross-page/source');
+		await page.locator('button.submit-redirect-stay').click();
 
-			await expect(page.locator('h1.redirected')).toHaveText('redirected');
-			expect(new URL(page.url()).pathname).toBe('/actions/cross-page/redirected');
-		});
-	}
+		await expect(page.locator('h1.redirected')).toHaveText('redirected');
+		expect(new URL(page.url()).pathname).toBe('/actions/cross-page/redirected');
+	});
 
 	test('update({ refreshAll: false }) still navigates to the cross-page action', async ({
 		page

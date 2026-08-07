@@ -1,5 +1,5 @@
 <script>
-	import { applyAction, enhance } from '$app/forms';
+	import { enhance } from '$app/forms';
 
 	/** @type {any} */
 	export let form;
@@ -74,33 +74,10 @@
 
 <form
 	method="POST"
-	action="/actions/cross-page/destination?/failure"
-	use:enhance={() =>
-		async ({ result }) => {
-			await applyAction(result, { navigate: false });
-		}}
->
-	<input name="username" type="text" value="paolo" />
-	<button class="submit-stay-apply-action">Submit</button>
-</form>
-
-<form
-	method="POST"
 	action="/actions/cross-page/destination?/redirect"
 	use:enhance={() =>
 		async ({ update }) =>
 			update({ navigate: false })}
 >
 	<button class="submit-redirect-stay">Submit redirect</button>
-</form>
-
-<form
-	method="POST"
-	action="/actions/cross-page/destination?/redirect"
-	use:enhance={() =>
-		async ({ result }) => {
-			await applyAction(result, { navigate: false });
-		}}
->
-	<button class="submit-redirect-stay-apply-action">Submit redirect</button>
 </form>

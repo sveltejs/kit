@@ -1945,8 +1945,7 @@ export type Actions<
  * Success and failure results carry the root-relative `pathname + search` of the action URL, with
  * the `?/actionName` parameter removed. Redirect results carry the redirect target. Server-generated
  * error results also carry the action location, while client-generated errors such as network
- * failures do not. [`applyAction`](https://svelte.dev/docs/kit/$app-forms#applyAction) navigates to
- * the location when present, or updates the current page in place.
+ * failures do not. `update` uses this location to emulate native form navigation.
  */
 export type ActionResult<
 	Success extends Record<string, unknown> | undefined = Record<string, any>,

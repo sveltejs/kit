@@ -121,24 +121,17 @@ export function enhance(form_element, submit = noop) {
 				: undefined;
 
 		if (destination === undefined) {
-			if (should_refresh_all) {
+			if (should_refresh_all && result.type !== 'redirect') {
 				await refreshAll();
 			}
 
-			await applyAction(result, { navigate: false });
+			await applyAction(result);
 			return;
 		}
 
-		if (result.type === 'success' || result.type === 'failure') {
-			// emulate the browser: navigate to where the submission lands, rendering that
-			// page with this result
-			await apply_action_navigation(destination, result, should_refresh_all);
-			return;
-		}
-
-		// cross-page `error` results are handled by `applyAction`, which renders the error
-		// page nearest the destination's route
-		await applyAction(result, { navigate });
+		// emulate the browser: navigate to where the submission lands, rendering that
+		// page with this result
+		await apply_action_navigation(destination, result, should_refresh_all);
 	};
 
 	/** @param {SubmitEvent} event */

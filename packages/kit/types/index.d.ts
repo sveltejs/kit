@@ -1902,8 +1902,7 @@ declare module '@sveltejs/kit' {
 	 * Success and failure results carry the root-relative `pathname + search` of the action URL, with
 	 * the `?/actionName` parameter removed. Redirect results carry the redirect target. Server-generated
 	 * error results also carry the action location, while client-generated errors such as network
-	 * failures do not. [`applyAction`](https://svelte.dev/docs/kit/$app-forms#applyAction) navigates to
-	 * the location when present, or updates the current page in place.
+	 * failures do not. `update` uses this location to emulate native form navigation.
 	 */
 	export type ActionResult<
 		Success extends Record<string, unknown> | undefined = Record<string, any>,
@@ -3142,18 +3141,11 @@ declare module '$app/forms' {
 		destroy(): void;
 	};
 	/**
-	 * Applies an `ActionResult` the way the browser would.
-	 *
-	 * For redirects it navigates to the redirect location. For every other result it navigates to
-	 * `result.location` — the page the submission should land on — populating that page's `form`
-	 * property and `page.status`, or rendering that route's nearest error page for `error` results.
-	 * When `result.location` is the page you're already on, this updates it in place instead of
-	 * navigating. Pass `navigate: false` to update the current page in place for non-redirect results.
-	 * Redirects are always followed.
+	 * Updates the `form` property of the current page with the given data and updates `page.status`.
+	 * In case of an error, it renders the nearest error page. In case of a redirect, it navigates to
+	 * the redirect location.
 	 * */
-	export function applyAction<Success extends Record<string, unknown> | undefined, Failure extends Record<string, unknown> | undefined>(result: import("@sveltejs/kit").ActionResult<Success, Failure>, options?: {
-		navigate?: boolean;
-	}): Promise<void>;
+	export function applyAction<Success extends Record<string, unknown> | undefined, Failure extends Record<string, unknown> | undefined>(result: import("@sveltejs/kit").ActionResult<Success, Failure>): Promise<void>;
 
 	export {};
 }
