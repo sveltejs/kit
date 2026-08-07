@@ -1451,9 +1451,7 @@ test.describe('Actions', () => {
 		});
 		const { type, error } = await response.json();
 		expect(type).toBe('error');
-		expect(error.message).toBe(
-			'Form actions expect form-encoded data — received application/json (415 Unsupported Media Type)'
-		);
+		expect(error.message).toBe('Unsupported Media Type (415 Unsupported Media Type)');
 		expect(response.status()).toBe(415);
 	});
 
@@ -1470,7 +1468,7 @@ test.describe('Actions', () => {
 		});
 		const { type, error } = await response.json();
 		expect(type).toBe('error');
-		expect(error.message).toBe("No action with name 'doesnt-exist' found (404 Not Found)");
+		expect(error.message).toBe('Not Found (404 Not Found)');
 		expect(response.status()).toBe(404);
 	});
 
@@ -1491,7 +1489,7 @@ test.describe('Actions', () => {
 			);
 			const { type, error } = await response.json();
 			expect(type).toBe('error');
-			expect(error.message).toBe(`No action with name '${name}' found (404 Not Found)`);
+			expect(error.message).toBe('Not Found (404 Not Found)');
 			expect(response.status()).toBe(404);
 		});
 	}

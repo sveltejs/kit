@@ -552,14 +552,18 @@ test.describe('Errors', () => {
 		}
 	});
 
-	test('returns a lightweight 404 for subresource requests', async ({ request }) => {
-		const response = await request.get('/errors/does-not-exist-subresource', {
+	test('returns a lightweight 404 for subresource requests', async ({ request, read_errors }) => {
+		// distinct from the path used by the test below, which _does_ invoke the hook
+		const response = await request.get('/errors/does-not-exist-lightweight-subresource', {
 			headers: { 'sec-fetch-dest': 'image' }
 		});
 
 		expect(response.status()).toBe(404);
 		expect(await response.text()).toBe('Not Found');
 		expect(response.headers()['vary']).toContain('Sec-Fetch-Dest');
+
+		// lightweight 404s bypass the handleError hook
+		expect(read_errors('/errors/does-not-exist-lightweight-subresource')).toBe(undefined);
 	});
 
 	test('renders the error page for document and fetch requests', async ({ request }) => {
@@ -596,8 +600,10 @@ test.describe('Errors', () => {
 				}
 			});
 
-			const error = read_errors('/errors/endpoint-throw-error');
-			expect(error).toBe(undefined);
+			expect(read_errors('/errors/endpoint-throw-error')).toEqual({
+				kind: 'expected',
+				error: { status: 401, message: 'You shall not pass' }
+			});
 
 			expect(res.status()).toBe(401);
 			expect(await res.text()).toContain(
@@ -609,8 +615,10 @@ test.describe('Errors', () => {
 		{
 			const res = await request.get('/errors/endpoint-throw-error');
 
-			const error = read_errors('/errors/endpoint-throw-error');
-			expect(error).toBe(undefined);
+			expect(read_errors('/errors/endpoint-throw-error')).toEqual({
+				kind: 'expected',
+				error: { status: 401, message: 'You shall not pass' }
+			});
 
 			expect(res.status()).toBe(401);
 			expect(await res.json()).toEqual({
@@ -649,9 +657,7 @@ test.describe('Errors', () => {
 		expect(await res_json.json()).toEqual({
 			type: 'error',
 			error: {
-				message: process.env.DEV
-					? 'POST method not allowed. No form actions exist for the page at /errors/missing-actions (405 Method Not Allowed)'
-					: 'POST method not allowed. No form actions exist for this page (405 Method Not Allowed)',
+				message: 'Method Not Allowed (405 Method Not Allowed)',
 				status: 405
 			}
 		});

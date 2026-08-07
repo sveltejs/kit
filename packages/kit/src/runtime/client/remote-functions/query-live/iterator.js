@@ -4,7 +4,7 @@ import { app } from '../../client.js';
 import { notify_version } from '../../state.svelte.js';
 import { handle_side_channel_response } from '../shared.svelte.js';
 import * as devalue from 'devalue';
-import { HttpError } from '@sveltejs/kit/internal';
+import { HttpError, HandledHttpError } from '@sveltejs/kit/internal';
 import { noop } from '../../../../utils/functions.js';
 import { read_sse } from '../../sse.js';
 
@@ -35,11 +35,9 @@ export async function* create_live_iterator(
 		/** @type {RemoteFunctionResponse | undefined} */
 		const result = await response.json().catch(() => undefined);
 
-		throw new HttpError(
-			result?.type === 'error'
-				? result.error
-				: { status: response.status, message: response.statusText }
-		);
+		throw result?.type === 'error'
+			? new HandledHttpError(result.error)
+			: new HttpError({ status: response.status, message: response.statusText });
 	}
 
 	if (response.headers.get('content-type')?.includes('application/json')) {

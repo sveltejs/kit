@@ -811,6 +811,26 @@ test.describe.serial('Errors', () => {
 		await clicknav('button:text-is("Redirect")');
 		expect(page.url()).toBe(baseURL + '/load');
 	});
+
+	test('expected errors reach the client handleError hook', async ({ page, clicknav }) => {
+		await page.goto('/errors/kind');
+		await clicknav('[href="/errors/kind/expected"]');
+
+		expect(await page.textContent('#message')).toBe(
+			'This is your custom error page saying: "client expected"'
+		);
+		expect(await page.textContent('h1')).toBe('403');
+	});
+
+	test('unexpected errors reach the client handleError hook', async ({ page, clicknav }) => {
+		await page.goto('/errors/kind');
+		await clicknav('[href="/errors/kind/unexpected"]');
+
+		expect(await page.textContent('#message')).toBe(
+			'This is your custom error page saying: "client unexpected"'
+		);
+		expect(await page.textContent('h1')).toBe('500');
+	});
 });
 
 test.describe('Prefetching', () => {
