@@ -78,7 +78,7 @@ export async function render_response({
 	}
 
 	const { client } = manifest._;
-	const integrity_map = client.integrity;
+	const integrity_map = client?.integrity;
 
 	const modulepreloads = new Set(client?.imports);
 	const stylesheets = new Set(client?.stylesheets);

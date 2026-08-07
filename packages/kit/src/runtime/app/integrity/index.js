@@ -7,7 +7,7 @@ import { initial_base } from '$app/paths/internal/server';
  * @returns {string | undefined}
  */
 function server_integrity(url) {
-	const integrity_map = manifest?._.client.integrity;
+	const integrity_map = manifest?._.client?.integrity;
 	if (!integrity_map) return undefined;
 
 	// Integrity map keys are like "_app/immutable/assets/foo.abc123.js"

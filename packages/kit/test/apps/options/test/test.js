@@ -127,7 +127,7 @@ test.describe('subresourceIntegrity', () => {
 
 		// Extract URLs from the inline boot script's import() calls
 		const script_match = html.match(/<script[^>]*>([\s\S]*?)<\/script>/);
-		expect(script_match).not.toBeNull();
+		if (!script_match) throw new Error('no inline boot script found');
 		const import_urls = [...script_match[1].matchAll(/import\("([^"]+)"\)/g)].map((m) => m[1]);
 		expect(import_urls.length).toBeGreaterThan(0);
 
@@ -144,11 +144,10 @@ test.describe('subresourceIntegrity', () => {
 		const link_tags = html.match(/<link[^>]+>/g) ?? [];
 		const links_with_integrity = link_tags
 			.filter((tag) => tag.includes('integrity='))
-			.map((tag) => {
-				const href = tag.match(/href="([^"]+)"/)?.[1];
-				const integrity = tag.match(/integrity="([^"]+)"/)?.[1];
-				return { href, integrity };
-			})
+			.map((tag) => ({
+				href: tag.match(/href="([^"]+)"/)?.[1] ?? '',
+				integrity: tag.match(/integrity="([^"]+)"/)?.[1] ?? ''
+			}))
 			.filter((l) => l.href && l.integrity);
 
 		expect(links_with_integrity.length).toBeGreaterThan(0);
@@ -172,12 +171,12 @@ test.describe('subresourceIntegrity', () => {
 
 		// The page renders the hash from $app/integrity into #hash
 		const hash_match = html.match(/<p id="hash">([^<]+)<\/p>/);
-		expect(hash_match).not.toBeNull();
+		if (!hash_match) throw new Error('no #hash element found');
 		expect(hash_match[1]).toMatch(/^sha384-[A-Za-z0-9+/=]+$/);
 
 		// The page renders a <script> tag with integrity attribute
 		const script_match = html.match(/<script[^>]*src="([^"]+)"[^>]*integrity="([^"]+)"[^>]*>/);
-		expect(script_match).not.toBeNull();
+		if (!script_match) throw new Error('no script tag with integrity found');
 		expect(script_match[1]).toContain('bootstrap');
 		expect(script_match[2]).toMatch(/^sha384-[A-Za-z0-9+/=]+$/);
 
