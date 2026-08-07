@@ -118,7 +118,7 @@ export default function (opts = {}) {
 		},
 
 		supports: {
-			read: () => false,
+			read: () => true,
 			instrumentation: () => true
 		}
 	};
@@ -135,8 +135,6 @@ async function create_routes({ builder, out, embed }) {
 	const app_path = builder.getAppPath();
 	const base = builder.config.kit.paths.base || '/';
 	const builtFiles = `${builder.config.kit.outDir}/output`;
-
-	console.log('app_path', app_path);
 
 	const client_files = embed
 		? await read_files_recursive(`${builtFiles}/client`)
@@ -158,40 +156,43 @@ async function create_routes({ builder, out, embed }) {
 
 	/** @type {string[]} */
 	const asset_imports = [];
+	/** @type {string[]} */
+	const file_entries = [];
 
 	/**
+	 * @param {string} file
 	 * @param {string} abspath
 	 * @returns {string}
 	 */
-	function make_asset(abspath) {
+	function make_file(file, abspath) {
 		const relpath = posix.relative(out, abspath);
+		let asset;
 		if (embed) {
-			const assetId = `asset_${asset_imports.length}`;
-			asset_imports.push(
-				`import ${assetId} from ${JSON.stringify(abspath)} with { type: 'file' };`
-			);
-			return assetId;
+			asset = `asset_${asset_imports.length}`;
+			asset_imports.push(`import ${asset} from ${JSON.stringify(abspath)} with { type: 'file' };`);
 		} else {
-			return `resolve(import.meta.dir, ${JSON.stringify(relpath)})`;
+			asset = `resolve(import.meta.dir, ${JSON.stringify(relpath)})`;
 		}
+
+		file_entries.push(`[${JSON.stringify(file)}, Bun.file(${asset})]`);
+		return `files.get(${JSON.stringify(file)})`;
 	}
 
 	/**
+	 * @param {string} file
 	 * @param {string} abspath
 	 * @param {boolean} [immutable]
 	 * @returns {string}
 	 */
-	function make_response(abspath, immutable = false) {
-		const bunFileStr = `Bun.file(${make_asset(abspath)})`;
-
-		if (!embed && !immutable) return bunFileStr;
+	function make_response(file, abspath, immutable = false) {
+		if (!embed && !immutable) return file;
 
 		/** @type {Record<string, string>} */
 		const headers = {};
 		if (embed) headers['content-type'] = Bun.file(abspath).type;
 		if (immutable) headers['cache-control'] = 'public,max-age=31536000,immutable';
 
-		return `new Response(${bunFileStr}, { headers: ${JSON.stringify(headers)} })`;
+		return `new Response(${file}, { headers: ${JSON.stringify(headers)} })`;
 	}
 
 	/** @type {Array<{ path: string; value: string }>} */
@@ -200,15 +201,17 @@ async function create_routes({ builder, out, embed }) {
 	for (const { rel, abs } of client_files) {
 		const path = posix.join(base, rel);
 		const immutable = path.startsWith(`/${app_path}/immutable/`);
-		entries.push({ path: rel, value: make_response(abs, immutable) });
+		const file = make_file(`client/${rel}`, abs);
+		entries.push({ path: rel, value: make_response(file, abs, immutable) });
 	}
 
 	for (const [path, { file }] of builder.prerendered.pages) {
 		const fileIdx = prerendered_files.findIndex((f) => f.rel === file);
 		if (fileIdx === -1)
 			throw new Error(`Could not find prerendered page ${file} for route ${path}`);
-		const { abs } = prerendered_files.splice(fileIdx, 1)[0];
-		entries.push({ path, value: make_response(abs) });
+		const { abs, rel } = prerendered_files.splice(fileIdx, 1)[0];
+		const bun_file = make_file(`prerendered/${rel}`, abs);
+		entries.push({ path, value: make_response(bun_file, abs) });
 
 		const inverted = path.endsWith('/') ? path.slice(0, -1) : `${path}/`;
 		if (inverted) {
@@ -220,18 +223,23 @@ async function create_routes({ builder, out, embed }) {
 	}
 
 	for (const { abs, rel } of prerendered_files) {
-		entries.push({ path: rel, value: make_response(abs) });
+		const file = make_file(`prerendered/${rel}`, abs);
+		entries.push({ path: rel, value: make_response(file, abs) });
 	}
 
-	const asset_path = [`export const asset_path = (file) => join(import.meta.dir, file);`];
-
-	const imports = embed ? [] : [`import { join, resolve } from 'node:path';`];
+	const imports = embed ? [] : [`import { resolve } from 'node:path';`];
+	const files = `export const files = new Map([${file_entries.join(',\n')}]);`;
 
 	const routes = entries.map(
 		(entry) => `${JSON.stringify(encode_pathname(posix.join(base, entry.path)))}: ${entry.value}`
 	);
 
-	return [...imports, ...asset_path, `export const routes = {${routes.join(',\n')}};`].join('\n');
+	return [
+		...imports,
+		...asset_imports,
+		files,
+		`export const routes = {${routes.join(',\n')}};`
+	].join('\n');
 }
 
 /**

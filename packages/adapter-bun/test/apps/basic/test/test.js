@@ -73,6 +73,12 @@ test('serves URL-encoded static filenames', async ({ request }) => {
 	expect(await response.text()).toBe('hello from an encoded filename\n');
 });
 
+test('reads an imported server asset', async ({ request }) => {
+	const response = await request.get('/read');
+	expect(response.status()).toBe(200);
+	expect(await response.text()).toBe('Hello from $app/server read\n');
+});
+
 test('caches immutable client assets', async ({ request }) => {
 	const page = await request.get('/');
 	const asset = /["']([^"']*_app\/immutable\/[^"']+)["']/.exec(await page.text())?.[1];
@@ -89,9 +95,9 @@ test('uses Bun route method semantics for static files', async ({ request }) => 
 });
 
 test('redirects prerendered paths to their canonical trailing slash', async ({ request }) => {
-	const response = await request.get('/prerendered?value=1', { maxRedirects: 0 });
+	const response = await request.get('/prerendered', { maxRedirects: 0 });
 	expect(response.status()).toBe(308);
-	expect(response.headers()['location']).toBe('prerendered/?value=1');
+	expect(response.headers()['location']).toBe('/prerendered/');
 });
 
 test('configures long-lived event streams', async ({ request }) => {

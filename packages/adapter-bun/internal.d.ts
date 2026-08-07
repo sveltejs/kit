@@ -5,7 +5,7 @@ declare module 'MANIFEST' {
 }
 
 declare module 'ROUTES' {
-	export function asset_path(file: string): string;
+	export const files: Map<string, import('bun').BunFile>;
 	export const routes: Serve.Routes<never, string>;
 }
 
