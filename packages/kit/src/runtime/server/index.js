@@ -1,7 +1,7 @@
-/** @import { SSRState } from 'types' */
 import { noop } from '../../utils/functions.js';
 import { IN_WEBCONTAINER, REROUTED_URL_HEADER } from './constants.js';
 import { respond } from './respond.js';
+import { create_request_state } from './state.js';
 import { options, get_hooks } from '__SERVER__/internal.js';
 import { set_read_implementation, set_manifest, fix_stack_trace } from './internal.js';
 import { set_env } from '__sveltekit/env';
@@ -182,26 +182,20 @@ export class Server {
 
 	/**
 	 * @param {Request} request
-	 * @param {import('types').RequestOptions} options
+	 * @param {import('types').InternalRequestOptions} options
 	 */
 	async respond(request, options) {
-		/** @type {SSRState} */
-		const ssr_state = {
-			...options,
-			error: false,
-			depth: 0,
-			rerouted_url: null
-		};
+		const request_state = create_request_state(options, this.#options.hooks);
 
-		const response = await respond(request, this.#options, this.#manifest, ssr_state);
+		const response = await respond(request, this.#options, this.#manifest, request_state);
 
 		if (DEV) {
 			const error = decoded_responses.get(response);
 			if (error) console.error(fix_stack_trace(error));
 		}
 
-		if (ssr_state.rerouted_url) {
-			response.headers.set(REROUTED_URL_HEADER, ssr_state.rerouted_url);
+		if (request_state.rerouted_url) {
+			response.headers.set(REROUTED_URL_HEADER, request_state.rerouted_url);
 		}
 
 		return response;

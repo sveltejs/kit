@@ -42,7 +42,7 @@
 		"test": "pnpm test:unit && pnpm test:e2e"
 	},
 	"dependencies": {
-		"@cloudflare/workers-types": "^4.20260621.1"
+		"@cloudflare/workers-types": "^5.20260730.1"
 	},
 	"devDependencies": {
 		"@playwright/test": "catalog:",
@@ -53,6 +53,6 @@
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^3.0.0-next.0",
-		"wrangler": "^4.67.0"
+		"wrangler": "^4.118.0"
 	}
 }

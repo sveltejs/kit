@@ -42,7 +42,6 @@ import { server_data_serializer } from './page/data_serializer.js';
 import { get_remote_id, handle_remote_call } from './remote-functions.js';
 import { record_span } from '../telemetry/record_span.js';
 import { otel } from '../telemetry/otel.js';
-import { create_request_state } from './state.js';
 
 /** @type {import('types').RequiredResolveOptions['transformPageChunk']} */
 const default_transform = ({ html }) => html;
@@ -85,7 +84,7 @@ export const respond = propagate_context(internal_respond);
  * @param {Request} request
  * @param {import('types').SSROptions} options
  * @param {import('@sveltejs/kit').SSRManifest} manifest
- * @param {import('types').SSRState} state
+ * @param {import('types').RequestState} state
  * @returns {Promise<Response>}
  */
 export async function internal_respond(request, options, manifest, state) {
@@ -180,8 +179,6 @@ export async function internal_respond(request, options, manifest, state) {
 		request,
 		url
 	);
-
-	const event_state = create_request_state(state, options.hooks);
 
 	/** @type {import('@sveltejs/kit').RequestEvent} */
 	const event = {
@@ -332,7 +329,7 @@ export async function internal_respond(request, options, manifest, state) {
 				statusText: response.statusText
 			});
 		} catch (error) {
-			return await handle_fatal_error(event, event_state, options, error);
+			return await handle_fatal_error(event, state, options, error);
 		}
 	}
 
@@ -382,7 +379,7 @@ export async function internal_respond(request, options, manifest, state) {
 				event.params = result.params;
 			}
 		} catch (e) {
-			return await handle_fatal_error(event, event_state, options, e);
+			return await handle_fatal_error(event, state, options, e);
 		}
 	}
 
@@ -465,10 +462,10 @@ export async function internal_respond(request, options, manifest, state) {
 				add_cookies_to_headers(response.headers, new_cookies.values());
 				return response;
 			} catch (err) {
-				return await handle_fatal_error(event, event_state, options, err);
+				return await handle_fatal_error(event, state, options, err);
 			}
 		}
-		return await handle_fatal_error(event, event_state, options, e);
+		return await handle_fatal_error(event, state, options, e);
 	}
 
 	async function handle() {
@@ -497,7 +494,7 @@ export async function internal_respond(request, options, manifest, state) {
 					}
 				};
 
-				return await with_request_store({ event: traced_event, state: event_state }, () =>
+				return await with_request_store({ event: traced_event, state }, () =>
 					options.hooks.handle({
 						event: traced_event,
 						resolve: (event, opts) => {
@@ -604,10 +601,9 @@ export async function internal_respond(request, options, manifest, state) {
 			if (resolved_path === null) {
 				return await respond_with_error({
 					event,
-					event_state,
+					state,
 					options,
 					manifest,
-					state,
 					error: new SvelteKitError(
 						400,
 						'Malformed URI',
@@ -620,10 +616,9 @@ export async function internal_respond(request, options, manifest, state) {
 			if (options.hash_routing || state.prerendering?.fallback) {
 				return await render_response({
 					event,
-					event_state,
+					state,
 					options,
 					manifest,
-					state,
 					page_config: { ssr: false, csr: true },
 					status: 200,
 					error: null,
@@ -637,12 +632,12 @@ export async function internal_respond(request, options, manifest, state) {
 					],
 					fetched: [],
 					resolve_opts,
-					data_serializer: server_data_serializer(event, event_state, options)
+					data_serializer: server_data_serializer(event, state, options)
 				});
 			}
 
 			if (remote_id) {
-				return await handle_remote_call(event, event_state, options, manifest, remote_id);
+				return await handle_remote_call(event, state, options, manifest, remote_id);
 			}
 
 			if (route) {
@@ -654,11 +649,10 @@ export async function internal_respond(request, options, manifest, state) {
 				if (is_data_request) {
 					response = await render_data(
 						event,
-						event_state,
+						state,
 						route,
 						options,
 						manifest,
-						state,
 						invalidated_data_nodes,
 						trailing_slash
 					);
@@ -683,18 +677,17 @@ export async function internal_respond(request, options, manifest, state) {
 					}
 
 					if (endpoint) {
-						response = await render_endpoint(event, event_state, endpoint, state);
+						response = await render_endpoint(event, state, endpoint);
 					} else if (route.page) {
 						if (!page_nodes) {
 							throw new Error('page_nodes not found. This should never happen');
 						} else if (page_methods.has(method)) {
 							response = await render_page(
 								event,
-								event_state,
+								state,
 								route.page,
 								options,
 								manifest,
-								state,
 								page_nodes,
 								resolve_opts
 							);
@@ -780,10 +773,9 @@ export async function internal_respond(request, options, manifest, state) {
 
 				return await respond_with_error({
 					event,
-					event_state,
+					state,
 					options,
 					manifest,
-					state,
 					error: new SvelteKitError(404, 'Not Found', `Not found: ${event.url.pathname}`),
 					resolve_opts
 				});
@@ -804,7 +796,7 @@ export async function internal_respond(request, options, manifest, state) {
 			// and I don't even know how to describe it. need to investigate at some point
 
 			// HttpError from endpoint can end up here - TODO should it be handled there instead?
-			return await handle_fatal_error(event, event_state, options, e);
+			return await handle_fatal_error(event, state, options, e);
 		} finally {
 			event.cookies.set = () => {
 				throw new Error('Cannot use `cookies.set(...)` after the response has been generated');
