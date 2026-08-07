@@ -54,4 +54,3 @@ jobs:
       - uses: ./.github/actions/platform-test
         with:
           test-app-dir: packages/adapter-node/test/apps/basic
-          os: ${{ matrix.os }}

@@ -83,7 +83,7 @@ catalog:
   # unit test deps that should be upgraded together
   '@vitest/browser-playwright': ^4.1.10
   vitest: ^4.1.10
-  jsdom: ^29.1.1
+  jsdom: ^30.0.0
 catalogs:
   # these show up in the ci.yml like `vite: 'beta'`, etc.
   vite-baseline:

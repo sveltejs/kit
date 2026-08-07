@@ -100,7 +100,11 @@ export default defineConfig({
 		expect: { requireAssertions: true },
 		browser: {
 			enabled: true,
-			provider: playwright(),
+			provider: playwright({
+				launchOptions: {
+					channel: process.env.KIT_E2E_BROWSER === 'chromium' ? 'chrome' : undefined
+				}
+			}),
 			instances: [
 				{
 					browser:
