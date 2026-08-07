@@ -182,66 +182,105 @@ import { redirect } from '@sveltejs/kit';
 redirect(307, 'https://example.com', +++{ external: true }+++);
 ```
 
-## `handleError` can influence the status code
+## Error handling
 
-`handleError` can now return a `status` property to override the response status code, and `App.Error` now always includes a `status: number` property. `status` is a reserved key on the returned object and is set by the framework — if your `App.Error` type previously declared its own `status` field for other purposes, rename it.
+### `App.Error` always includes `status`
 
-```js
-/** @type {import('@sveltejs/kit').HandleServerError} */
-// ---cut---
-export async function handleError({ error, event, status, message }) {
-	return {
-		+++status: 418,+++
-		message: 'something went wrong'
-	};
-}
-```
+An `App.Error` object, such as the `error` prop of an `+error.svelte` component, has a `status` property reflecting the HTTP status of the error that caused it (e.g. 404 for a Not Found error, or 500 for a generic internal error), in addition to `message` and whatever properties you define in your [`app.d.ts`](types#app.d.ts) file.
 
-## Rendering errors now handled
+### `error(...)` arguments changed
 
-The `experimental.handleRenderingErrors` flag has been removed; errors thrown during rendering are now always routed through `handleError` and then passed to the nearest error boundary, which can also be a `+error.svelte`. Remove the flag from your config. If your client `handleError` hook is `async`, enable `compilerOptions.experimental.async` in the SvelteKit plugin options so it can be awaited during rendering.
+Previously, the second argument to [`error(...)`](@sveltejs-kit#error) could be either the `message` as a `string`, or an object containing `message` alongside any additional properties defined in `app.d.ts` (such as a tracking `code`).
+
+Now, the second argument must always be a `string`. If there are additional properties, they must be passed as a third argument.
+
+### `handleValidationError` is removed
+
+Validation errors are now passed to [`handleError`](hooks#handleError), with `kind: 'validation'`.
+
+### `handleError` receives all errors
+
+In SvelteKit 2, `handleError` was not called in the case of _expected_ errors, which is to say those created with the [`error(...)`](@sveltejs-kit#error) helper. In SvelteKit 3, _all_ errors are passed to `handleError`. See the [docs](hooks#handleError) for more information.
+
+### `handleError` can influence the status code
+
+If you need to control the HTTP status code used to render a page in the case of an error, you can do so by returning a `status` property from `handleError` alongside any other required properties of `App.Error`.
+
+### Rendering errors are now handled
+
+The `experimental.handleRenderingErrors` flag has been removed and should be deleted from your config.
+
+Errors thrown during rendering are now always routed through `handleError` and then passed to the nearest [error boundary](../svelte/svelte-boundary). Error boundaries are automatically created for each of your `+error.svelte` components.
+
+If you have an async `handleError` hook in `hooks.client.ts`, enable `compilerOptions.experimental.async` in the `sveltekit(...)` plugin options of your Vite config so it can be awaited during rendering.
 
 ## Tracing is no longer experimental
 
-Server-side tracing is no longer configured under `experimental.tracing`/`experimental.instrumentation`. `src/instrumentation.server.js` is now included in the build automatically when it exists, and tracing is configured at the top level via `tracing.server`.
+Server-side [OpenTelemetry tracing](observability) is no longer configured under the `experimental.tracing` and `experimental.instrumentation` flags. `src/instrumentation.server.js` is now included in the build automatically when it exists, and tracing is configured at the top level via `tracing.server`:
 
 ```js
-experimental: {
-	---tracing: { server: true }---
-}
-+++tracing: {
-	server: true
-}+++
+import { defineConfig } from 'vite';
+import { sveltekit } from '@sveltejs/kit/vite';
+/// file: vite.config.js
+// ---cut---
+export default defineConfig({
+	plugins: [
+		sveltekit({
+			+++tracing: { server: true }+++
+		})
+	]
+});
 ```
 
 ## Adapters
 
-All first-party adapters now require SvelteKit 3. The deprecated `builder.createEntries` method has also been removed from the `Builder` object passed to adapters — use `builder.writeClient`/`builder.writeServer`/`builder.writePrerendered` directly.
+All first-party adapters now require SvelteKit 3, alongside these adapter-specific changes:
 
-Adapter-specific breaking changes:
+### `adapter-cloudflare`
 
-- **`adapter-cloudflare`** — minimum `wrangler` is now `^4.67.0`; `@cloudflare/workers-types` upgraded; `platform.context` removed in favour of `platform.ctx`.
-- **`adapter-node`** — bundled with `rolldown`; the `ORIGIN` environment variable is removed (use `paths.origin` in config).
-- **`adapter-netlify`** — output now conforms to the stable [Netlify Frameworks API](https://docs.netlify.com/build/frameworks/frameworks-api/); deploying/previewing with the Netlify CLI requires `v17.31.0` or later (`npm i -g netlify-cli@latest`); edge function build target is `es2022`.
-- **`adapter-vercel`** — edge function build target is now `es2022`; edge functions are bundled with `rolldown`.
+  - minimum `wrangler` is now `^4.67.0`
+  - `@cloudflare/workers-types` upgraded
+  - `platform.context` removed in favour of `platform.ctx`
+
+### `adapter-node`
+
+  - bundling now happens with `rolldown`
+  - the `ORIGIN` environment variable is removed (set `paths.origin` in your Vite config instead)
+
+### `adapter-netlify`
+
+  - output now conforms to the stable [Netlify Frameworks API](https://docs.netlify.com/build/frameworks/frameworks-api/)
+  - deploying/previewing with the Netlify CLI requires `v17.31.0` or later (`npm i -g netlify-cli@latest`)
+  - edge function build target is `es2022`
+
+### `adapter-vercel`
+
+  - the `edge` runtime is no longer supported
+
+### Adapter API changes
+
+For adapter authors, there are some additional changes:
+
+- `builder.createEntries` has been removed — use `builder.writeClient`, `builder.writeServer` and `builder.writePrerendered` directly
+- TODO
+
+
 
 ## Routing and project structure
 
 ### Consistent special filename patterns
 
-Special filenames are now matched on a _segment_ basis rather than only via the `*.server.*` / `*.remote.*` infix. A `server` segment anywhere in a file's path makes it server-only, and a `remote` segment anywhere in the path makes it a remote module.
+Server-only modules are now designated by a filename with a `server` segment, rather than a `.server.` infix — in other words, `stuff.server.ts`, `stuff.server.test.ts` and `server.ts` are all treated as server-only modules, whereas `server.ts` previously was not.
 
-This means `*.remote.*.ts` now works the same way `*.server.*.ts` always has, and bare files named `server.ts` or `remote.ts` are now treated as special (previously they were not). If you have a file named `server.ts` or `remote.ts` that should _not_ be treated as server-only/remote, rename it.
+Similarly, a `remote` segment in a filename designates a remote module — `stuff.remote.ts`, `stuff.remote.test.ts` and `remote.ts` are all remote modules.
 
 ### Server-only directories
 
-Any directory named `server` in the path is now treated as server-only everywhere in the project, not just `src/lib/server`; with the exception of `src/routes` and the assets directory.
-
-If you have a `server/` directory that is meant to be importable from client code, rename it. Otherwise this change simply expands protection against accidentally importing server code into the browser.
+Previously, any module inside `src/lib/server` was treated as server-only. This treatment now applies to _any_ `server` directory in the project with the exception of `src/routes` and your `static` directory.
 
 ### Universal `config` takes precedence over server `config`
 
-`config` exported from a universal `+page.js`/`+layout.js` now takes precedence over `config` exported from the corresponding `+page.server.js`/`+layout.server.js`, matching how other page options are resolved. If you export `config` from both, move the canonical export to the universal file or consolidate them.
+Route `config` exported from a universal `+page.js` or `+layout.js` now takes precedence over `config` exported from the corresponding `+page.server.js` or `+layout.server.js`, matching how other page options are resolved. If you export `config` from both, move the canonical export to the universal file or consolidate them.
 
 ## Modules and imports
 
