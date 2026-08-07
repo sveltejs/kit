@@ -12,7 +12,7 @@ import { with_version_header } from '../utils.js';
 /**
  * @param {import('@sveltejs/kit').RequestEvent} event
  * @param {import('types').RequestState} event_state
- * @param {import('types').SSRRoute} route
+ * @param {{ page: Pick<import('types').PageNodeIndexes, 'layouts' | 'leaf'> | null }} route
  * @param {import('types').SSROptions} options
  * @param {import('@sveltejs/kit').SSRManifest} manifest
  * @param {import('types').SSRState} state
