@@ -28,8 +28,16 @@ function to_path(urlPath) {
 
 /**
  * @param {string} urlPath
+ * @returns {string}
+ */
+function to_directory_path(urlPath) {
+	return encode_pathname(`${posix.join(base, urlPath).replace(/\/$/, '')}/`);
+}
+
+/**
+ * @param {string} urlPath
  * @param {string} [filePath]
- * @returns {[string, RouteHandler]}
+ * @returns {Array<[string, RouteHandler]>}
  */
 export function client_asset(urlPath, filePath = urlPath) {
 	const file = Bun.file(embed ? filePath : resolve(dir, 'client', filePath));
@@ -41,7 +49,24 @@ export function client_asset(urlPath, filePath = urlPath) {
 		headers['cache-control'] = 'public,max-age=31536000,immutable';
 	}
 
-	return [to_path(urlPath), { GET: new Response(file, { headers }) }];
+	/** @type {Array<[string, RouteHandler]>} */
+	const entries = [[to_path(urlPath), { GET: new Response(file, { headers }) }]];
+
+	if (urlPath.endsWith('/index.html') || urlPath === 'index.html') {
+		const directory = urlPath.slice(0, -'index.html'.length);
+		entries.push([to_directory_path(directory), { GET: new Response(file, { headers }) }]);
+	}
+
+	return entries;
+}
+
+/**
+ * @param {string} urlPath
+ * @param {string} [filePath]
+ * @returns {import('bun').BunFile}
+ */
+export function server_asset(urlPath, filePath = urlPath) {
+	return Bun.file(embed ? filePath : resolve(dir, 'client', urlPath));
 }
 
 /**
@@ -58,7 +83,7 @@ export function prerendered_asset(urlPath, filePath = urlPath) {
 /**
  * @param {string} urlPath
  * @param {string} filePath
- * @returns {[[string, RouteHandler], [string, RouteHandler]]}
+ * @returns {Array<[string, RouteHandler]>}
  */
 export function prerendered_page(urlPath, filePath) {
 	/**
@@ -75,12 +100,15 @@ export function prerendered_page(urlPath, filePath) {
 	const headers = { 'content-type': file.type };
 
 	const inverted = urlPath.endsWith('/') ? urlPath.slice(0, -1) : `${urlPath}/`;
+	/** @type {Array<[string, RouteHandler]>} */
+	const entries = [[encode_pathname(urlPath), { GET: new Response(file, { headers }) }]];
+
+	if (inverted) {
+		entries.push([encode_pathname(inverted), { GET: handle_redirect }]);
+	}
 
 	// path already contains base, no need to call to_path here
-	return [
-		[encode_pathname(urlPath), { GET: new Response(file, { headers }) }],
-		[encode_pathname(inverted), { GET: handle_redirect }]
-	];
+	return entries;
 }
 
 /**

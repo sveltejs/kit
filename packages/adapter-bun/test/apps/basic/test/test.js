@@ -42,6 +42,20 @@ test('serves static files with Bun file responses', async ({ request }) => {
 	expect(await head.text()).toBe('');
 });
 
+test('serves static directory indexes', async ({ request }) => {
+	const response = await request.get('/sub/');
+	expect(response.status()).toBe(200);
+	expect(response.headers()['content-type']).toBe('text/html;charset=utf-8');
+	expect(await response.text()).toContain('Static directory index');
+});
+
+test('serves prerendered non-HTML endpoints', async ({ request }) => {
+	const response = await request.get('/prerendered.ico');
+	expect(response.status()).toBe(200);
+	expect(response.headers()['content-type']).toBe('image/x-icon');
+	expect(await response.body()).toEqual(Buffer.from([0, 0, 1, 0]));
+});
+
 test('uses Bun validators and ranges for static files', async ({ request }) => {
 	const initial = await request.get('/data.json');
 	const body = await initial.text();
@@ -79,7 +93,9 @@ test('serves URL-encoded static filenames', async ({ request }) => {
 	expect(await response.text()).toBe('hello from an encoded filename\n');
 });
 
-test('serves filenames with a literal asterisk without creating a wildcard route', async ({ request }) => {
+test('serves filenames with a literal asterisk without creating a wildcard route', async ({
+	request
+}) => {
 	const asset = await request.get('/asterisk*.txt');
 	expect(asset.status()).toBe(200);
 	expect(await asset.text()).toBe('literal asterisk\n');

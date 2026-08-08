@@ -70,8 +70,8 @@ describe('Bun build options', () => {
 		expect(test_builder.findServerAssets).toHaveBeenCalledWith([active_route]);
 
 		const source = build.mock.calls[0][0].files[routes_file];
-		expect(source).toContain('client_asset("data.json")');
-		expect(source).toContain('client_asset("_app/immutable/assets/read.txt")');
+		expect(source).toContain('...client_asset("data.json")');
+		expect(source).toContain('...client_asset("_app/immutable/assets/read.txt")');
 		expect(source).toContain('...prerendered_page("/prerendered/", "prerendered/index.html")');
 		expect(source).toContain(
 			'export const server_assets = new Map([["_app/immutable/assets/read.txt", server_asset("_app/immutable/assets/read.txt")]])'
@@ -95,9 +95,24 @@ describe('Bun build options', () => {
 		const source = options.files[routes_file];
 		expect(options.compile).toEqual({ outfile: 'server' });
 		expect(source).toContain("with { type: 'file' }");
-		expect(source).toContain('client_asset("data.json", asset_0)');
-		expect(source).toContain('client_asset("_app/immutable/assets/read.txt", asset_1)');
-		expect(source).toContain('server_asset("_app/immutable/assets/read.txt")');
+		expect(source).toContain('...client_asset("data.json", asset_0)');
+		expect(source).toContain('...client_asset("_app/immutable/assets/read.txt", asset_1)');
+		expect(source).toContain('server_asset("_app/immutable/assets/read.txt", asset_1)');
+	});
+
+	test('maps prerendered non-HTML assets into compiled executables', async () => {
+		mock_embedded_files({
+			pages: ['prerendered/index.html', 'prerendered.ico']
+		});
+
+		await adapter({ buildOptions: { compile: true } }).adapt(
+			builder({
+				prerendered_pages: [['/prerendered/', { file: 'prerendered/index.html' }]]
+			})
+		);
+
+		const source = build.mock.calls[0][0].files[routes_file];
+		expect(source).toContain('prerendered_asset("prerendered.ico", asset_1)');
 	});
 
 	test('preserves dotfiles other than Vite build metadata in executables', async () => {
@@ -107,7 +122,7 @@ describe('Bun build options', () => {
 
 		const source = build.mock.calls[0][0].files[routes_file];
 		expect(source).toContain('assetlinks.json');
-		expect(source).toContain('client_asset(".well-known/assetlinks.json", asset_0)');
+		expect(source).toContain('...client_asset(".well-known/assetlinks.json", asset_0)');
 		expect(source).not.toContain('.vite/manifest.json');
 	});
 

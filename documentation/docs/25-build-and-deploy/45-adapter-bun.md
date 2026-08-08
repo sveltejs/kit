@@ -149,11 +149,11 @@ Set `IPV6_ONLY=true` to enable `IPV6_V6ONLY` on an IPv6 listener.
 
 The maximum request body size in bytes. It supports `K`, `M`, and `G` suffixes and defaults to `512K`.
 
-### `IDLE_TIMEOUT` and `SHUTDOWN_TIMEOUT`
+### `IDLE_TIMEOUT`
 
 `IDLE_TIMEOUT` sets Bun's connection inactivity timeout in seconds. It must be between `0` and `255`; `0` disables the timeout. The adapter automatically disables the timeout for server-sent event responses.
 
-On `SIGINT` or `SIGTERM`, the server stops accepting connections and waits for in-flight requests. `SHUTDOWN_TIMEOUT` controls how many seconds it waits before forcefully closing active connections and defaults to `30`.
+On `SIGINT` or `SIGTERM`, the server stops accepting connections and waits for in-flight requests. Send a second signal to force the process to exit immediately.
 
 ### `DEVELOPMENT`
 

@@ -154,11 +154,6 @@ async function get_embed_entries({ builder, server_assets }) {
 		read_files_recursive(`${builtFiles}/prerendered/data`)
 	]);
 
-	console.assert(
-		builder.prerendered.pages.size === pr_pages.length,
-		'Mismatch between prerendered pages and files'
-	);
-
 	const assets = [...cl_files, ...pr_pages, ...pr_deps, ...pr_data];
 
 	const imports = assets.map(({ abs }, i) => {
@@ -167,15 +162,23 @@ async function get_embed_entries({ builder, server_assets }) {
 
 	let offset = 0;
 	const cl_entries = cl_files.map(({ rel }, i) => {
-		return `client_asset(${JSON.stringify(rel)}, asset_${offset + i})`;
+		return `...client_asset(${JSON.stringify(rel)}, asset_${offset + i})`;
 	});
 
 	offset += cl_files.length;
+	const prerendered_pages_files = new Set(
+		[...builder.prerendered.pages].map(([_, { file }]) => file)
+	);
 	const pr_pages_entries = [...builder.prerendered.pages].map(([path, { file }]) => {
 		const fileIdx = pr_pages.findIndex((f) => f.rel === file);
 		if (fileIdx === -1)
 			throw new Error(`Could not find prerendered page ${file} for route ${path}`);
 		return `...prerendered_page(${JSON.stringify(path)}, asset_${offset + fileIdx})`;
+	});
+	const pr_page_assets_entries = pr_pages.flatMap(({ rel }, i) => {
+		return prerendered_pages_files.has(rel)
+			? []
+			: [`prerendered_asset(${JSON.stringify(rel)}, asset_${offset + i})`];
 	});
 
 	offset += pr_pages.length;
@@ -189,11 +192,17 @@ async function get_embed_entries({ builder, server_assets }) {
 
 	return {
 		imports,
-		entries: [...cl_entries, ...pr_pages_entries, ...pr_assets_entries, ...pr_redirects],
+		entries: [
+			...cl_entries,
+			...pr_pages_entries,
+			...pr_page_assets_entries,
+			...pr_assets_entries,
+			...pr_redirects
+		],
 		server_assets: server_assets.map((file) => {
 			const idx = assets.findIndex((f) => f.rel === file);
 			if (idx === -1) throw new Error(`Could not find server asset ${file}`);
-			return `Bun.file(asset_${idx})`;
+			return `server_asset(${JSON.stringify(file)}, asset_${idx})`;
 		})
 	};
 }
@@ -210,7 +219,7 @@ function get_no_embed_entries({ builder, server_assets, out }) {
 	const prerendered_files = builder.writePrerendered(`${out}/prerendered`);
 
 	const cl_entries = client_files.map((filePath) => {
-		return `client_asset(${JSON.stringify(filePath)})`;
+		return `...client_asset(${JSON.stringify(filePath)})`;
 	});
 
 	const prerendered_pages = [...builder.prerendered.pages];
@@ -234,7 +243,7 @@ function get_no_embed_entries({ builder, server_assets, out }) {
 		imports: [],
 		entries: [...cl_entries, ...pr_pages_entries, ...pr_assets_entries, ...pr_redirects],
 		server_assets: server_assets.map((file) => {
-			return `Bun.file(resolve(dir, 'client', ${JSON.stringify(file)}))`;
+			return `server_asset(${JSON.stringify(file)})`;
 		})
 	};
 }
@@ -247,7 +256,9 @@ function get_no_embed_entries({ builder, server_assets, out }) {
  * @returns {Promise<string>}
  */
 async function create_routes({ builder, out, embed }) {
-	const server_assets = builder.findServerAssets(builder.routes);
+	const server_assets = builder.findServerAssets(
+		builder.routes.filter((route) => route.prerender !== true)
+	);
 
 	const {
 		imports,
@@ -259,7 +270,7 @@ async function create_routes({ builder, out, embed }) {
 
 	return [
 		`// eslint-disable-next-line @typescript-eslint/no-unused-vars`,
-		`import { client_asset, prerendered_asset, prerendered_page, prerendered_redirect } from './routes-util.js';`,
+		`import { client_asset, prerendered_asset, prerendered_page, prerendered_redirect, server_asset } from './routes-util.js';`,
 		...imports,
 		`export const routes = Object.fromEntries([${entries.join(',\n')}]);`,
 		`export const server_assets = new Map([${resolved_server_assets
