@@ -41,8 +41,7 @@ export function client_asset(urlPath, filePath = urlPath) {
 		headers['cache-control'] = 'public,max-age=31536000,immutable';
 	}
 
-	const resp = new Response(file, { headers });
-	return [to_path(urlPath), { GET: resp, HEAD: resp }];
+	return [to_path(urlPath), { GET: new Response(file, { headers }) }];
 }
 
 /**
@@ -53,8 +52,7 @@ export function client_asset(urlPath, filePath = urlPath) {
 export function prerendered_asset(urlPath, filePath = urlPath) {
 	const file = Bun.file(embed ? filePath : resolve(dir, 'prerendered', filePath));
 	const headers = { 'content-type': file.type };
-	const resp = new Response(file, { headers });
-	return [to_path(urlPath), { GET: resp, HEAD: resp }];
+	return [to_path(urlPath), { GET: new Response(file, { headers }) }];
 }
 
 /**
@@ -78,12 +76,10 @@ export function prerendered_page(urlPath, filePath) {
 
 	const inverted = urlPath.endsWith('/') ? urlPath.slice(0, -1) : `${urlPath}/`;
 
-	const resp = new Response(file, { headers });
-
 	// path already contains base, no need to call to_path here
 	return [
-		[encode_pathname(urlPath), { GET: resp, HEAD: resp }],
-		[encode_pathname(inverted), { GET: handle_redirect, HEAD: handle_redirect }]
+		[encode_pathname(urlPath), { GET: new Response(file, { headers }) }],
+		[encode_pathname(inverted), { GET: handle_redirect }]
 	];
 }
 
@@ -94,8 +90,6 @@ export function prerendered_page(urlPath, filePath) {
  * @returns {[string, RouteHandler]}
  */
 export function prerendered_redirect(urlPath, status, location) {
-	const resp = new Response(null, { status, headers: { location } });
-
 	// path already contains base, no need to call to_path here
-	return [encode_pathname(urlPath), { GET: resp, HEAD: resp }];
+	return [encode_pathname(urlPath), { GET: new Response(null, { status, headers: { location } }) }];
 }
