@@ -17,7 +17,7 @@ if (unix) {
 } else {
 	delete options.unix;
 	options.hostname = env('HOST', options.hostname);
-	options.port = env('PORT', options.port ? String(options.port) : undefined);
+	options.port = env('PORT', options.port !== undefined ? String(options.port) : undefined);
 	options.reusePort = boolean_env('REUSE_PORT', options.reusePort);
 	options.ipv6Only = boolean_env('IPV6_ONLY', options.ipv6Only);
 }
