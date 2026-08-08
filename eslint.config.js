@@ -1,5 +1,6 @@
 import svelte_config from '@sveltejs/eslint-config';
 import noRuntimeToExportsImports from './.eslint/no-runtime-to-exports-imports.js';
+import requirePathToFileURL from './.eslint/require-path-to-file-url.js';
 
 /** @type {import('eslint').Linter.Config[]} */
 export default [
@@ -22,6 +23,28 @@ export default [
 		},
 		rules: {
 			'kit-custom/no-runtime-to-exports-imports': 'error'
+		}
+	},
+	{
+		// code that runs in Node, where dynamic imports of absolute paths
+		// need `pathToFileURL` to work on Windows
+		files: [
+			'packages/kit/src/**/*.js',
+			'packages/adapter-*/*.js',
+			'packages/adapter-*/src/**/*.js',
+			'packages/package/src/**/*.js'
+		],
+		// the client runtime's dynamic imports are resolved by vite, not Node
+		ignores: ['packages/kit/src/runtime/**'],
+		plugins: {
+			'kit-node-custom': {
+				rules: {
+					'require-path-to-file-url': requirePathToFileURL
+				}
+			}
+		},
+		rules: {
+			'kit-node-custom/require-path-to-file-url': 'error'
 		}
 	},
 	{

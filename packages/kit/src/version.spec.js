@@ -4,11 +4,10 @@ import { assert, describe, it } from 'vitest';
 
 // runs the version generation as a side-effect of importing
 import '../scripts/generate-version.js';
-import { join } from 'node:path';
 
 describe('@sveltejs/kit VERSION', () => {
 	it('should be the exact version from package.json', async () => {
-		const { VERSION } = await import(join(import.meta.dirname, 'version.js'));
+		const { VERSION } = await import(new URL('./version.js', import.meta.url).href);
 		const pkg = JSON.parse(
 			readFileSync(fileURLToPath(new URL('../package.json', import.meta.url)), 'utf-8')
 		);
