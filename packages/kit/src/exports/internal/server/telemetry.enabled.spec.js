@@ -1,11 +1,7 @@
 /** @import { Span, Tracer } from '@opentelemetry/api' */
 import { describe, test, expect, vi, beforeEach } from 'vitest';
-import { record_span } from './record_span.js';
+import { init_tracing, otel, record_span } from './telemetry.js';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
-
-vi.hoisted(() => {
-	vi.stubGlobal('__SVELTEKIT_SERVER_TRACING_ENABLED__', true);
-});
 
 const { tracer, span } = vi.hoisted(() => {
 	const mock_span = /** @type {Span} */ (
@@ -31,22 +27,24 @@ const { tracer, span } = vi.hoisted(() => {
 	return { tracer: mock_tracer, span: mock_span };
 });
 
-vi.mock(import('./otel.js'), async (original) => {
-	const { otel: unresolved_otel } = await original();
-	const otel = await unresolved_otel;
-
-	if (otel === null) {
-		throw new Error('Problem setting up tests; otel is null');
-	}
+vi.mock(import('@opentelemetry/api'), async (original) => {
+	const api = await original();
 
 	return {
-		otel: Promise.resolve({
-			tracer,
-			SpanStatusCode: otel.SpanStatusCode,
-			propagation: otel.propagation,
-			context: otel.context
-		})
+		...api,
+		trace: /** @type {typeof api.trace} */ (
+			/** @type {unknown} */ ({
+				...api.trace,
+				getTracer: () => tracer
+			})
+		)
 	};
+});
+
+init_tracing(import('@opentelemetry/api'));
+
+test('otel is defined when tracing is enabled', () => {
+	expect(otel).not.toBeNull();
 });
 
 describe('record_span', () => {

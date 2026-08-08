@@ -1,5 +1,39 @@
 # @sveltejs/adapter-node
 
+## 6.0.0-next.8
+
+### Major Changes
+
+- chore: migrate from rollup to rolldown
+
+- breaking: require SvelteKit 3
+
+- breaking: add `kit.paths.origin` config option, remove `kit.prerender.origin` and the `adapter-node` `ORIGIN` environment variable
+
+- breaking: require `vite@^8.0.12`, the first Vite 8 release bundling stable `rolldown` 1.0.0
+
+### Minor Changes
+
+- feat: better error logging
+
+### Patch Changes
+
+- fix: serve static files with the Content-Type recorded in the manifest
+
+- chore: use `node:fs` instead of deprecated `builder.rimraf` and `builder.mkdirp` ([#16286](https://github.com/sveltejs/kit/pull/16286))
+
+- fix: allow prerelease versions of SvelteKit 3 to satisfy the peer dependency range
+
+- fix: correctly bundle entrypoints on Windows
+
+- fix: preserve stripped path prefixes by making trailing-slash redirects relative
+
+- chore: bump Rolldown to `1.2.0`
+
+- fix: don't send `Vary: Accept-Encoding` for assets that were never precompressed
+- Updated dependencies [[`bbd1e2f`](https://github.com/sveltejs/kit/commit/bbd1e2fcc9af58edb9846393b081be61df4789d5), [`e21d27b`](https://github.com/sveltejs/kit/commit/e21d27ba490c89da98dbad24fca364d0163137c4), [`6044d05`](https://github.com/sveltejs/kit/commit/6044d055031bc17deedc069dc4016565364bd4f4), [`7fb611f`](https://github.com/sveltejs/kit/commit/7fb611fb604e4d74cd889f5fe21ccd255f876382), [`9f06b3a`](https://github.com/sveltejs/kit/commit/9f06b3ac78be30d27b07fc00ea40bda493c573aa), [`8763327`](https://github.com/sveltejs/kit/commit/87633271ce40ac0839be9468598e965bde3cad51), [`7dc2379`](https://github.com/sveltejs/kit/commit/7dc23798cde97b5616049ba8d443a07e8c558bdc), [`a70c3eb`](https://github.com/sveltejs/kit/commit/a70c3eb31fe1e28f1532c84ec569ec7099da3344), [`89f49c7`](https://github.com/sveltejs/kit/commit/89f49c70b7fb4883cf704d2fb57d2d8595790ad2), [`f36b3a4`](https://github.com/sveltejs/kit/commit/f36b3a4cd307bd8c89e03fa191becc175e7b3077), [`1144a63`](https://github.com/sveltejs/kit/commit/1144a63d318c3c3255d06b374bb7a656a469fabf), [`9f06b3a`](https://github.com/sveltejs/kit/commit/9f06b3ac78be30d27b07fc00ea40bda493c573aa)]:
+  - @sveltejs/kit@3.0.0-next.15
+
 ## 6.0.0-next.7
 
 ### Patch Changes

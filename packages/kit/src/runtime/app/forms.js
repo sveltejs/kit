@@ -1,7 +1,12 @@
 import { DEV } from 'esm-env';
 import { noop } from '../../utils/functions.js';
 import { refreshAll } from './navigation.js';
-import { applyAction, handle_error } from '../client/client.js';
+import {
+	applyAction,
+	apply_action_navigation,
+	handle_error,
+	is_current_location
+} from '../client/client.js';
 import { notify_version } from '../client/state.svelte.js';
 import { parse } from '#app/internal/transport';
 
@@ -30,10 +35,6 @@ export { applyAction };
  * @returns {import('@sveltejs/kit').ActionResult<Success, Failure>}
  */
 export function deserialize(result) {
-	if (result === '') {
-		return { type: 'success', status: 204, data: undefined };
-	}
-
 	const parsed = JSON.parse(result);
 
 	if (parsed.data) {
@@ -63,17 +64,18 @@ function clone(element) {
  * If a function is returned, that function is called with the response from the server.
  * If nothing is returned, the fallback will be used.
  *
- * If this function or its return value isn't set, it
- * - falls back to updating the `form` prop with the returned data if the action is on the same page as the form
- * - updates `page.status`
- * - resets the `<form>` element and invalidates all data in case of successful submission with no redirect response
+ * If this function or its return value isn't set, it emulates the browser-native behaviour, just without the full-page reload. It
+ * - resets the `<form>` element and refreshes all data in case of a successful submission with no redirect response
+ * - updates the `form` prop, `page.form` and `page.status` if the action is on the same page as the form
+ * - navigates to the page the submission lands on — populating that page's `form` prop and `page.status` — on success and failure if that isn't the current page, just as a native form submission would, but with the `?/actionName` param stripped from the destination URL
  * - redirects in case of a redirect response
- * - redirects to the nearest error page in case of an unexpected error
+ * - renders the nearest error page in case of an unexpected error — the one nearest the action's route, if the action is on a different page
  *
  * If you provide a custom function with a callback and want to use the default behavior, invoke `update` in your callback.
  * It accepts an options object
  * - `reset: false` if you don't want the `<form>` values to be reset after a successful submission
- * - `invalidateAll: false` if you don't want the action to call `invalidateAll` after submission
+ * - `refreshAll` to control whether all data is refreshed after submission; it defaults to `true` for successes and `false` for failures
+ * - `navigate: false` to apply non-redirect results to the current page rather than navigating to `result.location`; redirects are always followed
  * @template {Record<string, unknown> | undefined} Success
  * @template {Record<string, unknown> | undefined} Failure
  * @param {HTMLFormElement} form_element The form element
@@ -86,37 +88,50 @@ export function enhance(form_element, submit = noop) {
 
 	/**
 	 * @param {{
-	 *   action: URL;
-	 *   invalidateAll?: boolean;
 	 *   result: import('@sveltejs/kit').ActionResult;
-	 *   reset?: boolean
+	 *   reset?: boolean;
+	 *   refreshAll?: boolean;
+	 *   invalidateAll?: boolean;
+	 *   navigate?: boolean;
 	 * }} opts
 	 */
 	const fallback_callback = async ({
-		action,
 		result,
 		reset = true,
-		invalidateAll: shouldInvalidateAll = true
+		refreshAll: should_refresh_all,
+		invalidateAll: deprecated_invalidate_all,
+		navigate = true
 	}) => {
-		if (result.type === 'success') {
-			if (reset) {
-				// We call reset from the prototype to avoid DOM clobbering
-				HTMLFormElement.prototype.reset.call(form_element);
-			}
-			if (shouldInvalidateAll) {
-				await refreshAll();
-			}
+		if (DEV && deprecated_invalidate_all !== undefined) {
+			console.warn(
+				'The `update({ invalidateAll })` option has been deprecated in favour of `update({ refreshAll })`'
+			);
 		}
 
-		// For success/failure results, only apply action if it belongs to the
-		// current page, otherwise `form` will be updated erroneously
-		if (
-			location.origin + location.pathname === action.origin + action.pathname ||
-			result.type === 'redirect' ||
-			result.type === 'error'
-		) {
-			await applyAction(result);
+		should_refresh_all ??= deprecated_invalidate_all ?? result.type === 'success';
+
+		if (result.type === 'success' && reset) {
+			// We call reset from the prototype to avoid DOM clobbering
+			HTMLFormElement.prototype.reset.call(form_element);
 		}
+
+		const destination =
+			navigate && result.type !== 'redirect' && !is_current_location(result.location)
+				? result.location
+				: undefined;
+
+		if (destination === undefined) {
+			if (should_refresh_all && result.type !== 'redirect') {
+				await refreshAll();
+			}
+
+			await applyAction(result);
+			return;
+		}
+
+		// emulate the browser: navigate to where the submission lands, rendering that
+		// page with this result
+		await apply_action_navigation(destination, result, should_refresh_all);
 	};
 
 	/** @param {SubmitEvent} event */
@@ -202,13 +217,9 @@ export function enhance(form_element, submit = noop) {
 			// detect new deployments from the response header
 			notify_version(response.headers.get('x-sveltekit-version'));
 
-			if (response.status === 204) {
-				result = { type: 'success', status: 204 };
-			} else {
-				result = deserialize(await response.text());
-				if (result.type === 'error' || result.type === 'failure') {
-					result.status = response.status;
-				}
+			result = deserialize(await response.text());
+			if (result.type === 'error' || result.type === 'failure') {
+				result.status = response.status;
 			}
 		} catch (error) {
 			if (/** @type {any} */ (error)?.name === 'AbortError') return;
@@ -228,10 +239,11 @@ export function enhance(form_element, submit = noop) {
 			formElement: form_element,
 			update: (opts) =>
 				fallback_callback({
-					action,
 					result,
 					reset: opts?.reset,
-					invalidateAll: opts?.invalidateAll
+					refreshAll: opts?.refreshAll,
+					invalidateAll: opts?.invalidateAll,
+					navigate: opts?.navigate
 				}),
 			// @ts-expect-error generic constraints stuff we don't care about
 			result

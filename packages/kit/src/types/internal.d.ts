@@ -684,9 +684,6 @@ export interface RequestState {
 	 */
 	readonly depth: number;
 	readonly handleValidationError: ServerHooks['handleValidationError'];
-	readonly tracing: {
-		record_span: RecordSpan;
-	};
 	readonly remote: {
 		/** Resolved query/prerender data, populated by `await myQuery()` or `myQuery.set(...)` */
 		data: null | Map<RemoteInternals, Record<string, MaybePromise<any>>>;
