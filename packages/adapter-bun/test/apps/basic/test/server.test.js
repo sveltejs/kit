@@ -20,14 +20,14 @@ test('provides the original request and Bun server on platform', async ({ reques
 test('runs server instrumentation before accepting requests', async ({ request }) => {
 	const response = await request.get('/instrumented');
 	expect(response.status()).toBe(200);
-	expect(await response.text()).toBe('instrumentation-ready');
+	expect(await response.text()).toBe('true');
 });
 
 test('serves static files and implements HEAD natively', async ({ request }) => {
 	const response = await request.get('/data.json');
 	expect(response.status()).toBe(200);
 	expect(response.headers()['content-type']).toContain('application/json');
-	expect(await response.json()).toEqual({ source: 'static' });
+	expect(await response.json()).toEqual({ message: 'hello from a static file' });
 
 	const head = await request.head('/data.json');
 	expect(head.status()).toBe(200);
@@ -38,7 +38,7 @@ test('serves static files and implements HEAD natively', async ({ request }) => 
 for (const [url, content_type, body] of [
 	['/sub/', 'text/html;charset=utf-8', 'directory index'],
 	['/encoded%20name.txt', 'text/plain;charset=utf-8', 'encoded filename'],
-	['/.well-known/adapter-bun.txt', 'text/plain;charset=utf-8', 'well-known asset']
+	['/.well-known/adapter-bun.txt', 'text/plain;charset=utf-8', 'adapter bun']
 ]) {
 	test(`serves ${url} with its MIME type`, async ({ request }) => {
 		const response = await request.get(url);
@@ -76,7 +76,7 @@ test('uses Bun conditional requests and byte ranges for filesystem assets', asyn
 test('serves prerendered pages, endpoints, and canonical redirects', async ({ request }) => {
 	const page = await request.get('/prerendered/');
 	expect(page.status()).toBe(200);
-	expect(await page.text()).toContain('Prerendered by SvelteKit');
+	expect(await page.text()).toContain('Prerendered');
 
 	const icon = await request.get('/prerendered.ico');
 	expect(icon.status()).toBe(200);
@@ -93,13 +93,13 @@ test('uses SvelteKit for non-GET requests that share a static pathname', async (
 		headers: { origin: 'http://localhost:4174' }
 	});
 	expect(response.status()).toBe(200);
-	expect(await response.json()).toEqual({ source: 'endpoint' });
+	expect(await response.json()).toEqual({ message: 'hello from a server endpoint' });
 });
 
 test('makes imported assets available to $app/server read', async ({ request }) => {
 	const response = await request.get('/read');
 	expect(response.status()).toBe(200);
-	expect(await response.text()).toBe('server-readable asset\n');
+	expect(await response.text()).toBe('Hello from $app/server read\n');
 });
 
 test('sets immutable caching only on generated immutable assets', async ({ request }) => {
