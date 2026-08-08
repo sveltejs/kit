@@ -94,7 +94,7 @@ export function find_deps(manifest, entry, add_dynamic_css, root) {
 		imports: Array.from(imports),
 		stylesheets: Array.from(stylesheets),
 		// TODO do we need this separately?
-		fonts: filter_fonts(assets),
+		fonts: filter_fonts(assets, manifest),
 		stylesheet_map
 	};
 }
@@ -116,12 +116,36 @@ export function resolve_symlinks(manifest, file, root) {
 	return { chunk, file };
 }
 
+/** @type {WeakMap<import('vite').Manifest, Map<string, string>>} */
+const source_maps = new WeakMap();
+
 /**
  * @param {string[]} assets
- * @returns {string[]}
+ * @param {import('vite').Manifest} manifest
+ * @returns {import('types').FontDependency[]}
  */
-export function filter_fonts(assets) {
-	return assets.filter((asset) => /\.(woff2?|ttf|otf)$/.test(asset));
+export function filter_fonts(assets, manifest) {
+	let sources = source_maps.get(manifest);
+
+	if (!sources) {
+		sources = new Map();
+		source_maps.set(manifest, sources);
+
+		// identical files are emitted once but can have several sources — keep the first
+		for (const key of Object.keys(manifest).sort()) {
+			const { file, src } = manifest[key];
+			if (src && !sources.has(file)) {
+				sources.set(file, src);
+			}
+		}
+	}
+
+	return assets
+		.filter((asset) => /\.(woff2?|ttf|otf)$/.test(asset))
+		.map((file) => {
+			const src = sources.get(file) ?? file;
+			return { file, name: path.basename(src) };
+		});
 }
 
 /**
