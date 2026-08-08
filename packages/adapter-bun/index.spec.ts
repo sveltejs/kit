@@ -72,8 +72,12 @@ describe('Bun build options', () => {
 		const source = build.mock.calls[0][0].files[routes_file];
 		expect(source).toContain(`const dir = dirname(Bun.main);`);
 		expect(source).toContain('const file_0 = Bun.file(resolve(dir, "client/data.json"))');
-		expect(source).toContain('"/data.json": file_0');
-		expect(source).toContain('new Response(file_2, { headers:');
+		expect(source).toContain('"/data.json": file_response(file_0, "/data.json"');
+		expect(source).toContain('"/_app/immutable/assets/read.txt": file_response(file_2');
+		expect(source).toContain("import { manifest } from 'MANIFEST';");
+		expect(source).toContain(
+			"manifest.mimeTypes[pathname.slice(pathname.lastIndexOf('.'))] || fallback"
+		);
 		expect(source).toContain(
 			'const file_3 = Bun.file(resolve(dir, "prerendered/prerendered/index.html"))'
 		);
@@ -106,7 +110,7 @@ describe('Bun build options', () => {
 		expect(source).toContain('const file_0 = Bun.file(asset_0)');
 		expect(source).toContain('const file_1 = Bun.file(asset_1)');
 		expect(source).toContain('["_app/immutable/assets/read.txt", file_1]');
-		expect(source).toContain('"/data.json": new Response(file_0');
+		expect(source).toContain('"/data.json": file_response(file_0, "/data.json"');
 		expect(source).not.toContain('export const files');
 		expect(source).not.toContain('files.get');
 		expect(source).not.toContain('asset_path');
@@ -134,10 +138,21 @@ describe('Bun build options', () => {
 		);
 
 		const source = build.mock.calls[0][0].files[routes_file];
-		expect(source).toContain('"/base/prerendered/": file_0');
+		expect(source).toContain('"/base/prerendered/": file_response(file_0, "/base/prerendered/"');
 		expect(source).toContain('"/base/prerendered": (request) => Response.redirect');
 		expect(source).toContain('new URL(request.url).search');
 		expect(source).not.toContain('/base/base/');
+	});
+
+	test('serves prerendered redirects from their original paths', async () => {
+		await adapter().adapt(
+			builder({
+				prerendered_redirects: [['/old', { status: 301, location: '/new' }]]
+			})
+		);
+
+		const source = build.mock.calls[0][0].files[routes_file];
+		expect(source).toContain('"/old": Response.redirect("/new", 301)');
 	});
 
 	test('passes supported advanced build options to Bun', async () => {
@@ -245,6 +260,7 @@ function builder({
 	client_files = [],
 	prerendered_files = [],
 	prerendered_pages = [],
+	prerendered_redirects = [],
 	routes = [],
 	server_assets = [],
 	app_path = '_app',
@@ -254,6 +270,7 @@ function builder({
 	client_files?: string[];
 	prerendered_files?: string[];
 	prerendered_pages?: Array<[string, { file: string }]>;
+	prerendered_redirects?: Array<[string, { status: number; location: string }]>;
 	routes?: Array<{ id: string; prerender: boolean | string }>;
 	server_assets?: string[];
 	app_path?: string;
@@ -263,7 +280,10 @@ function builder({
 	return {
 		config: { kit: { outDir: '.svelte-kit', paths: { base, origin: undefined } } },
 		routes,
-		prerendered: { pages: new Map(prerendered_pages) },
+		prerendered: {
+			pages: new Map(prerendered_pages),
+			redirects: new Map(prerendered_redirects)
+		},
 		log: { minor() {}, error() {}, warn() {}, info() {} },
 		getServerDirectory: () => '.svelte-kit/output/server',
 		rimraf() {},
