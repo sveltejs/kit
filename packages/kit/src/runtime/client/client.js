@@ -99,6 +99,7 @@ const history_info = storage.get(HISTORY_INFO_KEY) ?? {};
 /**
  * navigation index -> any
  * @type {Record<string, any[]>}
+ * @deprecated TODO 4.0 get rid of this
  */
 const snapshots = storage.get(SNAPSHOT_KEY) ?? {};
 
@@ -688,7 +689,10 @@ function reset_invalidation() {
 
 let warned_snapshot_export = false;
 
-/** @param {number} index */
+/**
+ * @param {number} index
+ * @deprecated TODO 4.0 get rid of this
+ */
 function capture_snapshot(index) {
 	if (props.components.some((c) => c?.snapshot)) {
 		if (DEV && !warned_snapshot_export) {
@@ -701,7 +705,10 @@ function capture_snapshot(index) {
 	}
 }
 
-/** @param {number} index */
+/**
+ * @param {number} index
+ * @deprecated TODO 4.0 get rid of this
+ */
 function restore_snapshot(index) {
 	snapshots[index]?.forEach((value, i) => {
 		props.components[i]?.snapshot?.restore(value);
