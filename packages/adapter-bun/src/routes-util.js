@@ -4,6 +4,10 @@ import { dirname, resolve, posix } from 'node:path';
 const dir = dirname(Bun.main);
 
 /**
+ * @typedef {import('bun').Serve.Routes<never, string>[string]} RouteHandler
+ */
+
+/**
  * @param {string} pathname
  * @returns {string}
  */
@@ -22,7 +26,7 @@ function to_path(urlPath) {
 /**
  * @param {string} urlPath
  * @param {string} [filePath]
- * @returns {[string, Response]}
+ * @returns {[string, RouteHandler]}
  */
 export function client_asset(urlPath, filePath = urlPath) {
 	const file = Bun.file(embed ? filePath : resolve(dir, 'client', filePath));
@@ -34,24 +38,26 @@ export function client_asset(urlPath, filePath = urlPath) {
 		headers['cache-control'] = 'public,max-age=31536000,immutable';
 	}
 
-	return [to_path(urlPath), new Response(file, { headers })];
+	const resp = new Response(file, { headers });
+	return [to_path(urlPath), { GET: resp, HEAD: resp }];
 }
 
 /**
  * @param {string} urlPath
  * @param {string} [filePath]
- * @returns {[string, Response]}
+ * @returns {[string, RouteHandler]}
  */
 export function prerendered_asset(urlPath, filePath = urlPath) {
 	const file = Bun.file(embed ? filePath : resolve(dir, 'prerendered', filePath));
 	const headers = { 'content-type': file.type };
-	return [to_path(urlPath), new Response(file, { headers })];
+	const resp = new Response(file, { headers });
+	return [to_path(urlPath), { GET: resp, HEAD: resp }];
 }
 
 /**
  * @param {string} urlPath
  * @param {string} filePath
- * @returns {[[string, Response], [string, function]]}
+ * @returns {[[string, RouteHandler], [string, RouteHandler]]}
  */
 export function prerendered_page(urlPath, filePath) {
 	/**
@@ -69,10 +75,12 @@ export function prerendered_page(urlPath, filePath) {
 
 	const inverted = urlPath.endsWith('/') ? urlPath.slice(0, -1) : `${urlPath}/`;
 
+	const resp = new Response(file, { headers });
+
 	// path already contains base, no need to call to_path here
 	return [
-		[encode_pathname(urlPath), new Response(file, { headers })],
-		[encode_pathname(inverted), handle_redirect]
+		[encode_pathname(urlPath), { GET: resp, HEAD: resp }],
+		[encode_pathname(inverted), { GET: handle_redirect, HEAD: handle_redirect }]
 	];
 }
 
@@ -80,9 +88,11 @@ export function prerendered_page(urlPath, filePath) {
  * @param {string} urlPath
  * @param {number} status
  * @param {string} location
- * @returns {[string, Response]}
+ * @returns {[string, RouteHandler]}
  */
 export function prerendered_redirect(urlPath, status, location) {
+	const resp = new Response(null, { status, headers: { location } });
+
 	// path already contains base, no need to call to_path here
-	return [encode_pathname(urlPath), Response.redirect(location, status)];
+	return [encode_pathname(urlPath), { GET: resp, HEAD: resp }];
 }
