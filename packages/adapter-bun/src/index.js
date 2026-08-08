@@ -6,7 +6,7 @@ import { boolean_env, env, number_env } from './env.js';
 
 const options = /** @type {import('bun').Serve.Options<undefined>} */ ({ ...server_options });
 
-export const unix = env('SOCKET_PATH', options.unix);
+const unix = env('SOCKET_PATH', options.unix);
 
 if (unix) {
 	options.unix = unix;
@@ -35,7 +35,7 @@ options.maxRequestBodySize = number_env('BODY_SIZE_LIMIT', options.maxRequestBod
 options.fetch = handler;
 options.routes = routes;
 
-export const server = Bun.serve(options);
+const server = Bun.serve(options);
 
 console.log(unix ? `Listening on ${unix}` : `Listening on ${server.url}`);
 
