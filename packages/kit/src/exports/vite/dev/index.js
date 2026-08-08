@@ -428,7 +428,7 @@ export async function dev(
 		// Don't run for a single file if the whole manifest is about to get updated
 		// Unless it's a file where the trailing slash page option might have changed
 		if (timeout || !/\+(page|layout|server).*$/.test(file)) return;
-		sync.update(svelte_config, manifest_data, file, root);
+		if (!sync.update(svelte_config, manifest_data, file, root)) debounce(update_manifest);
 	});
 
 	const { appTemplate, errorTemplate, serviceWorker, hooks } = svelte_config.kit.files;
