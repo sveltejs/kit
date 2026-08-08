@@ -1,3 +1,4 @@
+// kept separate from public.d.ts so generated $types can resolve these without pulling in the runtime graph
 import type { MaybePromise } from '../../../types/private.js';
 /**
  * When calling a form action via fetch, the response will be one of these shapes.

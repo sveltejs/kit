@@ -3224,7 +3224,7 @@ declare module '$app/navigation' {
 	 * Returns a Promise that resolves when the modules have been imported.
 	 *
 	 * */
-	export function preloadCode(id: AppRouteId): Promise<void>;
+	export function preloadCode(id: import("$app/types").RouteId): Promise<void>;
 	/**
 	 * Programmatically create a new history entry with the given `page.state`. Used for [shallow routing](https://svelte.dev/docs/kit/shallow-routing).
 	 *

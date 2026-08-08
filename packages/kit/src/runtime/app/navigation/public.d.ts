@@ -1,20 +1,6 @@
 import type { LayoutParams as AppLayoutParams, RouteId as AppRouteId } from '$app/types';
 
-export {
-	afterNavigate,
-	beforeNavigate,
-	disableScrollHandling,
-	goto,
-	invalidate,
-	invalidateAll,
-	refreshAll,
-	onNavigate,
-	preloadCode,
-	preloadData,
-	pushState,
-	replaceState,
-	snapshot
-} from './index.js';
+export * from './index.js';
 
 /**
  * Information about the target of a specific navigation.

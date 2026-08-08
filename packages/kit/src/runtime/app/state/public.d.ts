@@ -4,7 +4,7 @@ import type {
 	RouteId as AppRouteId
 } from '$app/types';
 
-export { page, navigating, updated } from './index.js';
+export * from './index.js';
 
 export type ReadonlyURLSearchParams = Omit<URLSearchParams, 'set' | 'append' | 'delete' | 'sort'>;
 

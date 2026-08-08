@@ -1,6 +1,6 @@
+/** @import { LoadEvent, NavigationEvent } from '@sveltejs/kit' */
 /** @import { ActionResult } from '$app/forms' */
 /** @import { AfterNavigate, BeforeNavigate, GotoOptions, Navigation, NavigationTarget, NavigationType, OnNavigate } from '$app/navigation' */
-/** @import { RouteId } from '$app/types' */
 /** @import { RemoteFunctionDataNode, ServerNodesResponse, ServerRedirectNode } from 'types' */
 /** @import { NavigationFinished, NavigationIntent } from './types.js' */
 /** @import { CacheEntry } from './remote-functions/cache.svelte.js' */
@@ -357,7 +357,7 @@ const on_navigate_callbacks = new Set();
 /** @type {Set<(navigation: AfterNavigate) => void>} */
 const after_navigate_callbacks = new Set();
 
-/** @type {import('./types.js').NavigationState & { nav: import('@sveltejs/kit').NavigationEvent }} */
+/** @type {import('./types.js').NavigationState & { nav: NavigationEvent }} */
 let current = {
 	branch: [],
 	error: null,
@@ -442,7 +442,7 @@ set_match_implementation(async (url) => {
 
 	if (intent) {
 		return {
-			id: /** @type {RouteId} */ (intent.route.id),
+			id: /** @type {import('$app/types').RouteId} */ (intent.route.id),
 			params: intent.params
 		};
 	}
@@ -924,7 +924,7 @@ async function initialize(result, target, should_hydrate) {
 	if (__SVELTEKIT_DEV__ && result.state.error && document.querySelector('vite-error-overlay'))
 		return;
 
-	/** @type {import('@sveltejs/kit').NavigationEvent} */
+	/** @type {NavigationEvent} */
 	const nav = {
 		params: current.params,
 		route: { id: current.route?.id ?? null },
@@ -1186,7 +1186,7 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 			}
 		}
 
-		/** @type {import('@sveltejs/kit').LoadEvent} */
+		/** @type {LoadEvent} */
 		const load_input = {
 			tracing: { enabled: false, root: noop_span, current: noop_span },
 			route: new Proxy(route, {
@@ -2509,7 +2509,7 @@ function setup_preload() {
 
 /**
  * @param {unknown} error
- * @param {import('@sveltejs/kit').NavigationEvent} event
+ * @param {NavigationEvent} event
  * @returns {Promise<App.Error>}
  */
 export async function handle_error(error, event) {
@@ -2850,7 +2850,7 @@ export async function preloadData(href) {
  * Unlike `preloadData`, this won't call `load` functions.
  * Returns a Promise that resolves when the modules have been imported.
  *
- * @param {RouteId} id
+ * @param {import('$app/types').RouteId} id
  * @returns {Promise<void>}
  */
 export async function preloadCode(id) {
