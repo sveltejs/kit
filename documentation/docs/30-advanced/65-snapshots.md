@@ -30,7 +30,15 @@ To do this, call `snapshot` from `$app/navigation` during component initializati
 
 When you navigate away from this page — including via [shallow routing](shallow-routing) — the `capture` function is called immediately before the page updates, and the returned value is associated with the current entry in the browser's history stack. If you navigate back, the `restore` function is called with the stored value as soon as the page is updated.
 
-By default, the snapshot `id` is generated from the call site. Pass an explicit `id` to keep snapshots stable across deployments or distinguish multiple uses of a shared helper.
+Snapshots must have a unique ID in order to survive across component remounts and page reloads. By default, this is generated from the stack trace when `snapshot(...)` is called, but you can also explicitly provide an `id` to (for example) keep snapshots stable across deployments, even if the stack trace differs because of changes to the source code, or to distinguish snapshots created via a shared wrapper function or in multiple instances of the same component:
+
+```js
+snapshot({
+	+++id: 'comment',+++
+	capture: () => comment,
+	restore: (value) => (comment = value)
+});
+```
 
 The optional `reset` callback runs on navigations where there is no captured value to restore, such as when a new history entry is created.
 
