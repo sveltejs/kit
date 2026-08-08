@@ -3,6 +3,7 @@ import process from 'node:process';
 import { number_from_env } from '../../../test-utils/index.js';
 
 const compiled = process.env.COMPILE === 'true';
+const port = 4174;
 
 /** @type {import('@playwright/test').PlaywrightTestConfig} */
 export const config = {
@@ -10,16 +11,12 @@ export const config = {
 	timeout: process.env.CI ? 45000 : 15000,
 	webServer: {
 		command: compiled
-			? 'bun run --bun build && MY_CUSTOM_PORT=4174 ./build/server'
+			? `bun run --bun build && MY_CUSTOM_PORT=${port} ./build/server`
 			: 'bun run --bun build && bun run preview',
-		port: 4174
+		port
 	},
 	retries: process.env.CI ? 2 : number_from_env('KIT_E2E_RETRIES', 0),
-	projects: [
-		{
-			name: 'chromium'
-		}
-	],
+	projects: [{ name: 'chromium' }],
 	use: {
 		...devices['Desktop Chrome'],
 		screenshot: 'only-on-failure',

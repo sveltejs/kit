@@ -14,11 +14,10 @@
 	},
 	"include": [
 		"index.js",
-		"index.spec.ts",
 		"vitest.config.js",
 		"src/**/*.js",
-		"src/**/*.ts",
-		"test/utils.js",
+		"test/*.js",
+		"test/*.ts",
 		"tests/**/*.js",
 		"tests/**/*.ts",
 		"./internal.d.ts"

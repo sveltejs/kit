@@ -17,7 +17,7 @@ const buildOptions =
 				},
 				minify: true,
 				bytecode: true,
-				sourcemap: 'linked'
+				sourcemap: /** @type {const} */ ('linked')
 			}
 		: process.env.COMPILE === 'true'
 			? { compile: true }

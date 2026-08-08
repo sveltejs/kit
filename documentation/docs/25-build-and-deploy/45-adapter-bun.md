@@ -2,11 +2,17 @@
 title: Bun servers
 ---
 
-To generate a standalone [Bun](https://bun.com/) server, use [`adapter-bun`](https://github.com/sveltejs/kit/tree/main/packages/adapter-bun). The generated server uses [`Bun.serve`](https://bun.com/docs/runtime/http/server) and `Bun.file` directly.
+[`adapter-bun`](https://github.com/sveltejs/kit/tree/main/packages/adapter-bun) builds a SvelteKit application into a standalone [Bun](https://bun.com/) server. The generated server uses `Bun.serve` for requests and Bun file responses for client assets, prerendered output, and files read with [`$app/server`](https://svelte.dev/docs/kit/$app-server#read).
 
 ## Usage
 
-Install with `bun add -D @sveltejs/adapter-bun`, then add the adapter to your `vite.config.js`:
+Install the adapter:
+
+```sh
+bun add -D @sveltejs/adapter-bun
+```
+
+Configure it in `vite.config.js`:
 
 ```js
 // @errors: 2307 2554
@@ -24,22 +30,25 @@ export default defineConfig({
 });
 ```
 
-The adapter uses Bun's bundler and must run inside Bun. Build your app with `bun run --bun build`,
-then start it with:
+The adapter calls Bun's build API, so the production build itself must run in Bun. The `--bun` flag overrides Vite's Node.js shebang:
+
+```sh
+bun run --bun build
+```
+
+The default build is written to `build`. Start it with:
 
 ```sh
 bun ./build
 ```
 
-The default output directory is `build`. Production dependencies are externalised in the same way as with [`adapter-node`](adapter-node): packages in `dependencies` must be installed alongside the build, while packages in `devDependencies` are bundled into it.
+The JavaScript server, client files, and prerendered files in the output directory are all required at runtime. Application imports are processed according to Bun's bundler behavior.
 
-Client assets and prerendered pages are served through Bun's native `routes` and file responses. This includes streaming and range requests, conditional requests using `Last-Modified`, correct MIME types, and immutable caching for hashed SvelteKit assets.
-File responses are intentionally not buffered at startup: Bun can use `sendfile(2)` where available,
-keeps memory usage bounded for large assets, and retains native range and conditional-request handling.
+Client assets and prerendered output are registered as native Bun routes. Only `GET` and the corresponding automatic `HEAD` requests are served by those routes; other methods continue to SvelteKit. Bun supplies MIME types, conditional-request validators, byte ranges for filesystem-backed files, and streaming without buffering every asset in memory. Files below SvelteKit's `immutable` directory receive `Cache-Control: public,max-age=31536000,immutable`.
+
+> [!NOTE] Bun treats `*` in a route pathname as a wildcard. The adapter rejects client and prerendered filenames that contain a literal `*`; rename those files before building.
 
 ## Options
-
-The adapter accepts these options:
 
 ```js
 // @errors: 2307 2554
@@ -68,24 +77,48 @@ export default defineConfig({
 
 ### out
 
-The directory to build the server to. It defaults to `build`.
+The output directory. It defaults to `build`.
 
 ### envPrefix
 
-Adds a prefix to all environment variables read by the production server. For example, with `envPrefix: 'MY_'`, configure the server with `MY_HOST`, `MY_PORT`, and `MY_REUSE_PORT`.
+A prefix for every deployment environment variable documented below. This is useful when the unprefixed names conflict with variables managed by your host:
+
+```js
+adapter({ envPrefix: 'MY_APP_' });
+```
+
+```sh
+MY_APP_HOST=127.0.0.1 MY_APP_PORT=4000 bun ./build
+```
+
+When a prefix is configured, the server fails at startup if it finds an unknown environment variable with that prefix. This catches collisions and misspellings.
 
 ### serverOptions
 
-Provides JSON-serializable defaults for `Bun.serve`. This is useful for settings such as `hostname`, `port`, `reusePort`, `ipv6Only`, `idleTimeout`, `development`, and `maxRequestBodySize`. Environment variables override these defaults.
+JSON-serializable defaults passed to `Bun.serve`. The supported properties are:
 
-`fetch`, `routes`, `websocket`, `error`, `tls`, `http3`, and `http1` cannot be configured this way. The adapter does not generate a reusable request-handler entrypoint, so applications that require these options need a custom Bun integration instead of the generated server.
+- `hostname`
+- `port`
+- `unix`
+- `reusePort`
+- `ipv6Only`
+- `idleTimeout`
+- `maxRequestBodySize`
+- `development`
+
+Environment variables take precedence over these defaults. A configured Unix socket takes precedence over `hostname`, `port`, `reusePort`, and `ipv6Only`.
+
+The generated server owns `fetch` and `routes`. It does not expose `websocket`, `error`, TLS, HTTP/3, or HTTP/1 configuration through `serverOptions`. Use a custom Bun integration if your application requires those `Bun.serve` options.
 
 ### buildOptions
 
-Pass options to Bun's build API through `buildOptions`. Set `buildOptions.compile: true` to generate
-`build/server`, a single executable containing the Bun runtime, your
-server code, client assets, and prerendered pages. In this mode, the adapter builds the executable
-directly instead of generating the JavaScript server files:
+Advanced Bun build settings can be supplied with `buildOptions`. The adapter currently accepts `sourcemap`, `minify`, `bytecode`, `banner`, `footer`, `drop`, `features`, `optimizeImports`, and `compile`.
+
+The generated entrypoint, output directory, top-level `target`, and module `format` are reserved. Generated servers target Bun and use ESM. Source maps default to `external`; set `sourcemap: 'none'` to disable them.
+
+#### Compiled executables
+
+Set `compile: true` to generate a single executable at `<out>/server`:
 
 ```js
 adapter({
@@ -95,20 +128,21 @@ adapter({
 });
 ```
 
-The adapter uses the [`Bun.build`](https://bun.com/reference/bun/build) JavaScript API directly. The
-`--bun` flag is required because Vite normally respects its Node.js shebang:
+Build and run it without a separately installed Bun runtime:
 
 ```sh
 bun run --bun build
+./build/server
 ```
 
-With the default options, only the executable is required at runtime. It is specific to the platform on which it was built. For advanced configuration, pass [`Bun.BuildConfig`](https://bun.com/reference/bun/BuildConfig) options directly. The adapter supplies the generated `entrypoints`, so that property is not configurable. Options such as code splitting may emit additional runtime files:
+The executable embeds the server code, client assets, prerendered output, and Bun runtime. `compile` can also be a Bun target string, which keeps the default `server` filename, or an options object. To change the executable name or cross-compile, provide an options object:
 
 ```js
 adapter({
+	out: 'dist',
 	buildOptions: {
 		compile: {
-			outfile: 'my-app',
+			outfile: 'application',
 			target: 'bun-linux-x64'
 		},
 		minify: true,
@@ -118,81 +152,97 @@ adapter({
 });
 ```
 
-Native dependencies and cross-compilation have the same constraints as [Bun's single-file executables](https://bun.com/docs/bundler/executables).
-The adapter reserves the top-level Bun build `target` and `format` because generated servers always
-run as Bun ESM. Set the executable target inside `buildOptions.compile.target`, as shown above.
-Source maps default to `external`; set `sourcemap: 'none'` to disable them. Minification and bytecode
-remain opt-in. Compile options without an explicit `outfile` use `<out>/server`.
+The result in this example is `dist/application`. Platform targets, native dependencies, and other limitations follow [Bun's executable compilation rules](https://bun.com/docs/bundler/executables).
 
 ## Environment variables
 
-In production, Bun automatically reads `.env` files. All of the following variables can be prefixed using `envPrefix`.
+Bun loads `.env` files automatically. If `envPrefix` is set, add that prefix to each name in this section.
 
-### `PORT`, `HOST`, and `SOCKET_PATH`
+### Listener
 
-The server listens on `0.0.0.0:3000` by default. Configure a TCP listener with `HOST` and `PORT`, or set `SOCKET_PATH` to use a Unix domain socket instead:
+`HOST` and `PORT` configure the TCP listener. Without either value or a `serverOptions` default, Bun uses its own listener defaults.
 
 ```sh
 HOST=127.0.0.1 PORT=4000 bun ./build
+```
+
+`SOCKET_PATH` selects a Unix domain socket instead. When it is present, TCP-only options are ignored:
+
+```sh
 SOCKET_PATH=/tmp/sveltekit.sock bun ./build
 ```
 
-On Linux, `SOCKET_PATH` may begin with a null byte to use an abstract namespace socket.
+`REUSE_PORT` enables Bun's `reusePort` option and `IPV6_ONLY` enables `ipv6Only`. Boolean variables accept `1`, `true`, `yes`, and `on`, or `0`, `false`, `no`, and `off`, without regard to letter case.
 
-### `REUSE_PORT` and `IPV6_ONLY`
+### Request limits and diagnostics
 
-Set `REUSE_PORT=true` to let multiple Bun processes bind the same port. The operating system load balances requests between them. `SO_REUSEPORT` is supported on Linux; macOS and Windows ignore it.
+`BODY_SIZE_LIMIT` controls `Bun.serve`'s `maxRequestBodySize`. It defaults to `512K`. The value must resolve to a whole number of bytes and may use a case-insensitive binary `K`, `M`, or `G` suffix, such as `768K` or `1.5M`.
 
-Set `IPV6_ONLY=true` to enable `IPV6_V6ONLY` on an IPv6 listener.
+`IDLE_TIMEOUT` sets Bun's per-request inactivity timeout in seconds. It must be an integer from `0` through `255`; `0` disables the timeout. The generated handler disables the timeout for responses whose content type starts with `text/event-stream` and also adds `X-Accel-Buffering: no`.
 
-### `BODY_SIZE_LIMIT`
+`DEVELOPMENT` enables Bun's development-mode error pages. It defaults to `false` for the generated server.
 
-The maximum request body size in bytes. It supports `K`, `M`, and `G` suffixes and defaults to `512K`.
+### Public origin behind a proxy
 
-### `IDLE_TIMEOUT`
+If [`paths.origin`](configuration#paths) is configured, that value is the trusted origin for every request. Otherwise, the adapter derives the origin from the incoming request URL and `Host` header.
 
-`IDLE_TIMEOUT` sets Bun's connection inactivity timeout in seconds. It must be between `0` and `255`; `0` disables the timeout. The adapter automatically disables the timeout for server-sent event responses.
-
-On `SIGINT` or `SIGTERM`, the server stops accepting connections and waits for in-flight requests. Send a second signal to force the process to exit immediately.
-
-### `DEVELOPMENT`
-
-Set `DEVELOPMENT=true` to enable Bun's contextual server error pages. It defaults to `false` in the generated production server.
-
-### Proxy headers
-
-When [`paths.origin`](configuration#paths) is not configured, the adapter derives the request origin from Bun's request URL and the `host` header. Set `PROTOCOL_HEADER`, `HOST_HEADER`, and `PORT_HEADER` when a trusted reverse proxy exposes the public origin through other headers:
+Behind a trusted reverse proxy, `PROTOCOL_HEADER`, `HOST_HEADER`, and `PORT_HEADER` name headers that contain the public scheme, host, and port:
 
 ```sh
-PROTOCOL_HEADER=x-forwarded-proto HOST_HEADER=x-forwarded-host bun ./build
+PROTOCOL_HEADER=x-forwarded-proto \
+HOST_HEADER=x-forwarded-host \
+PORT_HEADER=x-forwarded-port \
+bun ./build
 ```
 
-Set `ADDRESS_HEADER` to the trusted proxy header containing the client address. If it is `x-forwarded-for`, set `XFF_DEPTH` to the number of trusted proxies and the adapter will select the address from the right-hand side of the list.
+The protocol header must contain only a scheme such as `https`, without a colon. The port header must contain a number. Invalid values produce a `400 Bad Request` response.
 
-Only use these variables behind a trusted proxy because clients can spoof forwarded headers.
+> [!CAUTION] Only trust forwarded headers when requests can reach the server through a proxy you control. A direct client can spoof these headers.
 
-## Platform-specific context
+### Client addresses behind a proxy
 
-The `platform` property contains the original `Request` and Bun `Server`:
+[`event.getClientAddress()`](https://svelte.dev/docs/kit/@sveltejs-kit#RequestEvent) uses `server.requestIP(request).address` by default. Set `ADDRESS_HEADER` to the name of a trusted proxy header when the direct peer is a proxy:
+
+```sh
+ADDRESS_HEADER=true-client-ip bun ./build
+```
+
+For `x-forwarded-for`, also set `XFF_DEPTH` to the number of trusted proxies. The default depth is `1`, and the adapter selects from the right side of the comma-separated list so client-supplied entries to the left cannot change the trusted result:
+
+```sh
+ADDRESS_HEADER=x-forwarded-for XFF_DEPTH=2 bun ./build
+```
+
+`XFF_DEPTH` must be an integer of at least `1`. `getClientAddress()` throws if the configured header is absent or contains fewer addresses than the configured depth.
+
+## Platform API
+
+The request event's `platform` property exposes the original Web API request received by Bun and the Bun server instance:
 
 ```js
 /** @type {import('./$types').RequestHandler} */
-export function GET({ platform }) {
-	const address = platform.server.requestIP(platform.request);
-	return Response.json(address);
-}
-```
-
-The server object also exposes Bun's native operational metrics. Applications can publish them
-through their own authenticated endpoint or instrumentation without the adapter reserving a URL:
-
-```js
-/** @type {import('./$types').RequestHandler} */
-export function GET({ platform }) {
+export function GET({ getClientAddress, platform }) {
 	return Response.json({
+		address: getClientAddress(),
+		requestUrl: platform.request.url,
+		serverId: platform.server.id,
 		pendingRequests: platform.server.pendingRequests,
-		pendingWebSockets: platform.server.pendingWebSockets,
-		chatSubscribers: platform.server.subscriberCount('chat')
+		pendingWebSockets: platform.server.pendingWebSockets
 	});
 }
 ```
+
+`platform.request` remains the original request even when the adapter normalizes the request URL to a configured or proxy-derived public origin before passing it to SvelteKit.
+
+## Graceful shutdown
+
+On `SIGINT` or `SIGTERM`, the generated server calls `server.stop()`. Bun stops accepting new connections and the adapter waits for pending requests before emitting a `sveltekit:shutdown` process event with the signal name:
+
+```js
+process.on('sveltekit:shutdown', async (reason) => {
+	await jobs.stop();
+	await db.close();
+});
+```
+
+Sending a second shutdown signal forces the process to exit with status `1`.
