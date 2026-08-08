@@ -2009,6 +2009,7 @@ export type SubmitFunction<
 
 /**
  * The type of `export const snapshot` exported from a page or layout component.
+ * @deprecated Use the [`snapshot`](https://svelte.dev/docs/kit/$app-navigation#snapshot) helper from `$app/navigation` instead.
  */
 export interface Snapshot<T = any> {
 	capture: () => T;

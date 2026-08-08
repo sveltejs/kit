@@ -686,9 +686,17 @@ function reset_invalidation() {
 	force_invalidation = false;
 }
 
+let warned_snapshot_export = false;
+
 /** @param {number} index */
 function capture_snapshot(index) {
 	if (props.components.some((c) => c?.snapshot)) {
+		if (DEV && !warned_snapshot_export) {
+			warned_snapshot_export = true;
+			console.warn(
+				'`export const snapshot` is deprecated. Use the `snapshot` helper from `$app/navigation` instead.'
+			);
+		}
 		snapshots[index] = props.components.map((c) => c?.snapshot?.capture());
 	}
 }

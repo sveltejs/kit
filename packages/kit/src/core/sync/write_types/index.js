@@ -232,6 +232,7 @@ function update_types(config, routes, route, root, to_delete = new Set()) {
 			'type OptionalUnion<U extends Record<string, any>, A extends keyof U = U extends U ? keyof U : never> = U extends unknown ? { [P in Exclude<A, keyof U>]?: never } & U : never;',
 
 			// Re-export `Snapshot` from @sveltejs/kit — in future we could use this to infer <T> from the return type of `snapshot.capture`
+			'/** @deprecated Use the `snapshot` helper from `$app/navigation` instead. */',
 			'export type Snapshot<T = any> = Kit.Snapshot<T>;',
 
 			'export type ErrorProps = { error: App.Error };'
