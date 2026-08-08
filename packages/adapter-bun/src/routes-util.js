@@ -61,7 +61,7 @@ export function prerendered_page(urlPath, filePath) {
 	function handle_redirect(req) {
 		const url = new URL(req.url);
 		const location = `${urlPath}${url.search}`;
-		return new Response(null, { status: 301, headers: { location } });
+		return new Response(null, { status: 308, headers: { location } });
 	}
 
 	const file = Bun.file(embed ? filePath : resolve(dir, 'prerendered', filePath));
