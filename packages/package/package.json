@@ -29,10 +29,11 @@
 		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"@types/node": "catalog:",
 		"@types/semver": "catalog:",
+		"@typescript/native": "catalog:",
 		"prettier": "catalog:",
 		"svelte": "catalog:",
 		"svelte-preprocess": "catalog:",
-		"typescript": "catalog:",
+		"typescript": "^6.0.3",
 		"vite": "catalog:",
 		"vitest": "catalog:"
 	},
@@ -53,8 +54,8 @@
 	],
 	"scripts": {
 		"lint": "prettier --check .",
-		"check": "tsc",
-		"check:all": "tsc && pnpm -r --filter=\"./**\" check",
+		"check": "node node_modules/@typescript/native/bin/tsc",
+		"check:all": "node node_modules/@typescript/native/bin/tsc && pnpm -r --filter=\"./**\" check",
 		"format": "pnpm lint --write",
 		"test": "vitest run",
 		"test:unit": "vitest run"

@@ -8,7 +8,7 @@ import { get_pathname, parse_isr_expiration, pattern_to_src, resolve_runtime } f
 
 const INTERNAL = '![-]'; // this name is guaranteed not to conflict with user routes
 
-/** @type {import('./index.js').default} **/
+/** @type {typeof import('./index.js').default} **/
 const plugin = function (defaults = {}) {
 	// @ts-ignore TODO remove this in a future version
 	if ('edge' in defaults || defaults.runtime === 'edge') {
