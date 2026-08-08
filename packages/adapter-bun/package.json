@@ -27,19 +27,16 @@
 	},
 	"types": "index.d.ts",
 	"files": [
-		"files",
+		"src/*.js",
 		"index.js",
 		"index.d.ts",
 		"ambient.d.ts"
 	],
 	"scripts": {
-		"dev": "bun --watch build.js",
-		"build": "bun build.js",
 		"test": "vitest run",
 		"check": "tsc",
 		"lint": "prettier --check .",
-		"format": "pnpm lint --write",
-		"prepublishOnly": "pnpm build"
+		"format": "pnpm lint --write"
 	},
 	"devDependencies": {
 		"@playwright/test": "catalog:",

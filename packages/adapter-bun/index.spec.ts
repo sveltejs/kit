@@ -45,7 +45,6 @@ describe('Bun build options', () => {
 			outdir: 'build',
 			compile: false
 		});
-		expect(options.entrypoints).toHaveLength(1);
 		expect(options.plugins[0].name).toBe('adapter-bun');
 	});
 
@@ -107,6 +106,34 @@ describe('Bun build options', () => {
 		expect(source).not.toContain('asset_path');
 	});
 
+	test('preserves dotfiles other than Vite build metadata in executables', async () => {
+		mock_embedded_files({ client: ['.vite/manifest.json', '.well-known/assetlinks.json'] });
+
+		await adapter({ buildOptions: { compile: true } }).adapt(builder());
+
+		const source = build.mock.calls[0][0].files['.svelte-kit/output/server/adapter-bun-routes.js'];
+		expect(source).toContain('assetlinks.json');
+		expect(source).toContain('"/.well-known/assetlinks.json"');
+		expect(source).not.toContain('.vite/manifest.json');
+	});
+
+	test('does not duplicate the base path for prerendered pages', async () => {
+		await adapter().adapt(
+			builder({
+				base: '/base',
+				app_path: 'base/_app',
+				prerendered_files: ['prerendered/index.html'],
+				prerendered_pages: [['/base/prerendered/', { file: 'prerendered/index.html' }]]
+			})
+		);
+
+		const source = build.mock.calls[0][0].files['.svelte-kit/output/server/adapter-bun-routes.js'];
+		expect(source).toContain('"/base/prerendered/": file_0');
+		expect(source).toContain('"/base/prerendered": (request) => Response.redirect');
+		expect(source).toContain('new URL(request.url).search');
+		expect(source).not.toContain('/base/base/');
+	});
+
 	test('passes supported advanced build options to Bun', async () => {
 		mock_embedded_files({ client: ['data.json'] });
 
@@ -138,6 +165,7 @@ describe('Bun build options', () => {
 
 		expect(build.mock.calls[0][0].entrypoints).toEqual([
 			new URL('./src/index.js', import.meta.url).pathname,
+			new URL('./src/handler.js', import.meta.url).pathname,
 			'.svelte-kit/output/server/instrumentation.server.js'
 		]);
 		expect(test_builder.instrument).toHaveBeenCalledWith({
@@ -168,6 +196,14 @@ test('the runtime reader reuses the generated Bun file', () => {
 	expect(source).toContain('server_assets.get(file)?.stream() ?? null');
 	expect(source).not.toContain('Bun.file(');
 	expect(source).not.toContain('asset_path');
+});
+
+test('publishes the runtime sources without a stale build lifecycle', () => {
+	const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8'));
+	expect(pkg.files).toContain('src/*.js');
+	expect(pkg.files).not.toContain('files');
+	expect(pkg.scripts.build).toBeUndefined();
+	expect(pkg.scripts.prepublishOnly).toBeUndefined();
 });
 
 function mock_embedded_files({
@@ -210,6 +246,7 @@ function builder({
 	routes = [],
 	server_assets = [],
 	app_path = '_app',
+	base = '',
 	instrumentation = false
 }: {
 	client_files?: string[];
@@ -218,10 +255,11 @@ function builder({
 	routes?: Array<{ id: string; prerender: boolean | string }>;
 	server_assets?: string[];
 	app_path?: string;
+	base?: string;
 	instrumentation?: boolean;
 } = {}) {
 	return {
-		config: { kit: { outDir: '.svelte-kit', paths: { base: '', origin: undefined } } },
+		config: { kit: { outDir: '.svelte-kit', paths: { base, origin: undefined } } },
 		routes,
 		prerendered: { pages: new Map(prerendered_pages) },
 		log: { minor() {}, error() {}, warn() {}, info() {} },

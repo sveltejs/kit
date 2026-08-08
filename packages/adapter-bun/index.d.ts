@@ -53,7 +53,6 @@ interface AdapterOptions {
 	 */
 	buildOptions?: Pick<
 		import('bun').BuildConfig,
-		| 'splitting'
 		| 'sourcemap'
 		| 'minify'
 		| 'bytecode'

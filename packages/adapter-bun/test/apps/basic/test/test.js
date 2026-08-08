@@ -79,6 +79,12 @@ test('serves URL-encoded static filenames', async ({ request }) => {
 	expect(await response.text()).toBe('hello from an encoded filename\n');
 });
 
+test('serves dotfiles from the static directory', async ({ request }) => {
+	const response = await request.get('/.well-known/adapter-bun.txt');
+	expect(response.status()).toBe(200);
+	expect(await response.text()).toBe('adapter bun\n');
+});
+
 test('reads an imported server asset', async ({ request }) => {
 	const response = await request.get('/read');
 	expect(response.status()).toBe(200);
@@ -101,9 +107,9 @@ test('uses Bun route method semantics for static files', async ({ request }) => 
 });
 
 test('redirects prerendered paths to their canonical trailing slash', async ({ request }) => {
-	const response = await request.get('/prerendered', { maxRedirects: 0 });
+	const response = await request.get('/prerendered?source=test', { maxRedirects: 0 });
 	expect(response.status()).toBe(308);
-	expect(response.headers()['location']).toBe('/prerendered/');
+	expect(response.headers()['location']).toBe('/prerendered/?source=test');
 });
 
 test('configures long-lived event streams', async ({ request }) => {

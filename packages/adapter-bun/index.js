@@ -15,7 +15,7 @@ async function read_files_recursive(path) {
 				const rel = posix.relative(path, abs);
 				return { abs, rel };
 			})
-			.filter(({ rel }) => rel.split('/').every((segment) => !segment.startsWith('.')));
+			.filter(({ rel }) => rel.split('/').every((segment) => segment !== '.vite'));
 	} catch {
 		return [];
 	}
@@ -39,11 +39,6 @@ export default function (opts = {}) {
 			builder.log.minor('Building server');
 
 			const server = builder.getServerDirectory();
-			const adapter_entrypoint = resolve(import.meta.dirname, 'src', 'index.js');
-			const instrumentation = builder.hasServerInstrumentationFile()
-				? `${server}/instrumentation.server.js`
-				: undefined;
-			const entrypoints = [adapter_entrypoint];
 
 			const manifest_file = `${server}/adapter-bun-manifest.js`;
 			const routes_file = `${server}/adapter-bun-routes.js`;
@@ -57,18 +52,23 @@ export default function (opts = {}) {
 					embed: !!buildOptions.compile
 				})
 			};
+			const src_dir = resolve(import.meta.dirname, 'src');
+			const index_file = resolve(src_dir, 'index.js');
+			const start_file = resolve(src_dir, 'start.js');
+
+			const instrumentation = builder.hasServerInstrumentationFile()
+				? `${server}/instrumentation.server.js`
+				: undefined;
 
 			if (instrumentation) {
-				if (buildOptions.compile) {
-					const instrumented_entrypoint = `${server}/adapter-bun-instrumented.js`;
-					virtual_files[instrumented_entrypoint] = [
-						`import './instrumentation.server.js';`,
-						`await import(${JSON.stringify(adapter_entrypoint)});`
-					].join('\n');
-					entrypoints[0] = instrumented_entrypoint;
-				} else {
-					entrypoints.push(instrumentation);
-				}
+				// Virtually rename index.js to start.js
+				virtual_files[start_file] = await Bun.file(index_file).text();
+
+				// Virtually create a new index.js that imports the instrumentation and then starts the server
+				virtual_files[index_file] = [
+					`import ${JSON.stringify(instrumentation)};`,
+					`await import(${JSON.stringify(start_file)});`
+				].join('\n');
 			}
 
 			/** @type {import('bun').BunPlugin} */
@@ -86,10 +86,15 @@ export default function (opts = {}) {
 
 			const result = await Bun.build({
 				...buildOptions,
-				entrypoints,
+				splitting: true,
+				entrypoints: [index_file],
 				target: 'bun',
 				format: 'esm',
-				naming: '[name].[ext]',
+				naming: {
+					entry: '[name].[ext]',
+					chunk: 'server/chunks/[name]-[hash].[ext]',
+					asset: 'server/assets/[name]-[hash].[ext]'
+				},
 				plugins: [adapter_plugin],
 				define: {
 					ENV_PREFIX: JSON.stringify(envPrefix),
@@ -121,16 +126,6 @@ export default function (opts = {}) {
 					}
 				}
 				throw new AggregateError(result.logs);
-			}
-
-			if (instrumentation && !buildOptions.compile) {
-				builder.instrument({
-					entrypoint: `${out}/index.js`,
-					instrumentation: `${out}/instrumentation.server.js`,
-					module: {
-						exports: ['server', 'unix']
-					}
-				});
 			}
 		},
 
@@ -184,7 +179,7 @@ async function create_routes({ builder, out, embed }) {
 	 * @returns {string}
 	 */
 	function make_file(file, abspath) {
-		const relpath = posix.relative(out, abspath);
+		const relpath = posix.relative(resolve(out), abspath);
 		let asset;
 		if (embed) {
 			asset = `asset_${asset_imports.length}`;
@@ -223,7 +218,7 @@ async function create_routes({ builder, out, embed }) {
 		const path = posix.join(base, rel);
 		const immutable = path.startsWith(`/${app_path}/immutable/`);
 		const file = make_file(`client/${rel}`, abs);
-		entries.push({ path: rel, value: make_response(file, abs, immutable) });
+		entries.push({ path, value: make_response(file, abs, immutable) });
 	}
 
 	for (const [path, { file }] of builder.prerendered.pages) {
@@ -238,14 +233,14 @@ async function create_routes({ builder, out, embed }) {
 		if (inverted) {
 			entries.push({
 				path: inverted,
-				value: `Response.redirect(${JSON.stringify(posix.join(base, path))}, 308)`
+				value: `(request) => Response.redirect(${JSON.stringify(encode_pathname(path))} + new URL(request.url).search, 308)`
 			});
 		}
 	}
 
 	for (const { abs, rel } of prerendered_files) {
 		const file = make_file(`prerendered/${rel}`, abs);
-		entries.push({ path: rel, value: make_response(file, abs) });
+		entries.push({ path: posix.join(base, rel), value: make_response(file, abs) });
 	}
 
 	const imports = embed ? [] : [`import { resolve } from 'node:path';`];
@@ -261,7 +256,7 @@ async function create_routes({ builder, out, embed }) {
 		.join(',\n')}]);`;
 
 	const routes = entries.map(
-		(entry) => `${JSON.stringify(encode_pathname(posix.join(base, entry.path)))}: ${entry.value}`
+		(entry) => `${JSON.stringify(encode_pathname(entry.path))}: ${entry.value}`
 	);
 
 	return [
