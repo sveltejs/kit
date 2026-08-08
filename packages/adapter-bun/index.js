@@ -41,8 +41,11 @@ export default function (opts = {}) {
 			const server = builder.getServerDirectory();
 
 			const manifest_file = `${server}/adapter-bun-manifest.js`;
-			const routes_file = `${server}/adapter-bun-routes.js`;
 			const server_options_file = `${server}/adapter-bun-options.js`;
+			const src_dir = resolve(import.meta.dirname, 'src');
+			const index_file = resolve(src_dir, 'index.js');
+			const routes_file = resolve(src_dir, 'routes.js');
+
 			const virtual_files = {
 				[manifest_file]: `export const manifest = ${builder.generateManifest({ relativePath: './' })};\n`,
 				[server_options_file]: `export default ${JSON.stringify(serverOptions)};\n`,
@@ -52,19 +55,14 @@ export default function (opts = {}) {
 					embed: !!buildOptions.compile
 				})
 			};
-			const src_dir = resolve(import.meta.dirname, 'src');
-			const index_file = resolve(src_dir, 'index.js');
-			const start_file = resolve(src_dir, 'start.js');
 
 			const instrumentation = builder.hasServerInstrumentationFile()
 				? `${server}/instrumentation.server.js`
 				: undefined;
 
 			if (instrumentation) {
-				// Virtually rename index.js to start.js
+				const start_file = resolve(src_dir, 'start.js'); // Virtual only
 				virtual_files[start_file] = await Bun.file(index_file).text();
-
-				// Virtually create a new index.js that imports the instrumentation and then starts the server
 				virtual_files[index_file] = [
 					`import ${JSON.stringify(instrumentation)};`,
 					`await import(${JSON.stringify(start_file)});`
@@ -87,6 +85,7 @@ export default function (opts = {}) {
 			const result = await Bun.build({
 				...buildOptions,
 				splitting: true,
+				sourcemap: 'external',
 				entrypoints: [index_file],
 				target: 'bun',
 				format: 'esm',
@@ -148,6 +147,9 @@ async function create_routes({ builder, out, embed }) {
 	const base = builder.config.kit.paths.base || '/';
 	const builtFiles = `${builder.config.kit.outDir}/output`;
 
+	const imports = embed ? [] : [`import { dirname, resolve } from 'node:path';`];
+	const declarations = embed ? [] : [`const dir = dirname(Bun.main);`];
+
 	const client_files = embed
 		? await read_files_recursive(`${builtFiles}/client`)
 		: builder
@@ -185,7 +187,7 @@ async function create_routes({ builder, out, embed }) {
 			asset = `asset_${asset_imports.length}`;
 			asset_imports.push(`import ${asset} from ${JSON.stringify(abspath)} with { type: 'file' };`);
 		} else {
-			asset = `resolve(import.meta.dir, ${JSON.stringify(relpath)})`;
+			asset = `resolve(dir, ${JSON.stringify(relpath)})`;
 		}
 
 		const identifier = `file_${file_entries.length}`;
@@ -243,7 +245,6 @@ async function create_routes({ builder, out, embed }) {
 		entries.push({ path: posix.join(base, rel), value: make_response(file, abs) });
 	}
 
-	const imports = embed ? [] : [`import { resolve } from 'node:path';`];
 	const server_assets = builder.findServerAssets(
 		builder.routes.filter((route) => route.prerender !== true)
 	);
@@ -262,6 +263,7 @@ async function create_routes({ builder, out, embed }) {
 	return [
 		...imports,
 		...asset_imports,
+		...declarations,
 		...file_entries,
 		readable_files,
 		`export const routes = {${routes.join(',\n')}};`
