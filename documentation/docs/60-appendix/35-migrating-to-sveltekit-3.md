@@ -88,6 +88,10 @@ The `$lib` alias is no longer generated automatically by SvelteKit. It is replac
 
 The `$app/environment` module has been renamed to [`$app/env`]($app-env). It can now be imported inside your service worker, where previously if you needed to access `version` you would use the now-removed [`$service-worker`](#$service-worker-(removed)) module.
 
+## `$app/forms`
+
+Forms with [`use:enhance`]($app-forms#enhance) that specify an `action` on a different page will navigate to that page upon submission, rather than staying on the current page. This ensures that the enhanced behaviour more closely matches the native, non-enhanced behaviour.
+
 ## `$app/manifest`
 
 A new [`$app/manifest`]($app-manifest) module gives you access to metadata about your app. You can import this anywhere in your app, including in service workers for offline caching purposes, for which you would previously use the now-removed [`$service-worker`](#$service-worker-(removed)) module.
