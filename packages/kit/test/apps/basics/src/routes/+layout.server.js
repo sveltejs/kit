@@ -7,7 +7,11 @@ if (JSON.parse(SOME_JSON).answer !== 42) {
 }
 
 /** @type {import('./$types').LayoutServerLoad} */
-export async function load({ cookies, locals, fetch }) {
+export async function load({ cookies, locals, fetch, setHeaders }) {
+	if (locals.url?.pathname === '/errors/error-page-setheaders') {
+		setHeaders({ 'cache-control': 'private, max-age=60' });
+	}
+
 	if (locals.url?.pathname === '/non-existent-route') {
 		await fetch('/prerendering/prerendered-endpoint/api').then((r) => r.json());
 	}
