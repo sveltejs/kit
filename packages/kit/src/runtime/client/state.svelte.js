@@ -1,8 +1,10 @@
+/** @import { Navigation } from '$app/navigation' */
+/** @import { Page } from '$app/state' */
 import { version } from '$app/env';
 import { assets } from '$app/paths/internal/client';
 import { BROWSER, DEV } from 'esm-env';
 
-/** @type {import('$app/state').Page} */
+/** @type {Page} */
 export const page = new (class Page {
 	data = $state.raw({});
 	form = $state.raw(null);
@@ -16,7 +18,7 @@ export const page = new (class Page {
 })();
 
 export const navigating = new (class Navigating {
-	/** @type {import('$app/navigation').Navigation | null} */
+	/** @type {Navigation | null} */
 	current = $state.raw(null);
 })();
 

@@ -1,3 +1,4 @@
+/** @import { ActionResult, SubmitFunction } from './types.js' */
 import { DEV } from 'esm-env';
 import { noop } from '../../../utils/functions.js';
 import { refreshAll } from '../navigation/index.js';
@@ -32,7 +33,7 @@ export { applyAction };
  * @template {Record<string, unknown> | undefined} Success
  * @template {Record<string, unknown> | undefined} Failure
  * @param {string} result
- * @returns {import('$app/forms').ActionResult<Success, Failure>}
+ * @returns {ActionResult<Success, Failure>}
  */
 export function deserialize(result) {
 	const parsed = JSON.parse(result);
@@ -79,7 +80,7 @@ function clone(element) {
  * @template {Record<string, unknown> | undefined} Success
  * @template {Record<string, unknown> | undefined} Failure
  * @param {HTMLFormElement} form_element The form element
- * @param {import('$app/forms').SubmitFunction<Success, Failure>} submit Submit callback
+ * @param {SubmitFunction<Success, Failure>} submit Submit callback
  */
 export function enhance(form_element, submit = noop) {
 	if (DEV && clone(form_element).method !== 'post') {
@@ -88,7 +89,7 @@ export function enhance(form_element, submit = noop) {
 
 	/**
 	 * @param {{
-	 *   result: import('$app/forms').ActionResult;
+	 *   result: ActionResult;
 	 *   reset?: boolean;
 	 *   refreshAll?: boolean;
 	 *   invalidateAll?: boolean;
@@ -182,7 +183,7 @@ export function enhance(form_element, submit = noop) {
 			})) ?? fallback_callback;
 		if (cancelled) return;
 
-		/** @type {import('$app/forms').ActionResult} */
+		/** @type {ActionResult} */
 		let result;
 
 		try {

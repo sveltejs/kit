@@ -2770,7 +2770,7 @@ declare module '$app/forms' {
 	 * }
 	 * ```
 	 * */
-	export function deserialize<Success extends Record<string, unknown> | undefined, Failure extends Record<string, unknown> | undefined>(result: string): import("$app/forms").ActionResult<Success, Failure>;
+	export function deserialize<Success extends Record<string, unknown> | undefined, Failure extends Record<string, unknown> | undefined>(result: string): ActionResult<Success, Failure>;
 	/**
 	 * This action enhances a `<form>` element that otherwise would work without JavaScript.
 	 *
@@ -2795,7 +2795,7 @@ declare module '$app/forms' {
 	 * @param form_element The form element
 	 * @param submit Submit callback
 	 */
-	export function enhance<Success extends Record<string, unknown> | undefined, Failure extends Record<string, unknown> | undefined>(form_element: HTMLFormElement, submit?: import("$app/forms").SubmitFunction<Success, Failure>): {
+	export function enhance<Success extends Record<string, unknown> | undefined, Failure extends Record<string, unknown> | undefined>(form_element: HTMLFormElement, submit?: SubmitFunction<Success, Failure>): {
 		destroy(): void;
 	};
 	/**
@@ -2857,7 +2857,7 @@ declare module '$app/forms' {
 	 * In case of an error, it renders the nearest error page. In case of a redirect, it navigates to
 	 * the redirect location.
 	 * */
-	export function applyAction<Success extends Record<string, unknown> | undefined, Failure extends Record<string, unknown> | undefined>(result: import("$app/forms").ActionResult<Success, Failure>): Promise<void>;
+	export function applyAction<Success extends Record<string, unknown> | undefined, Failure extends Record<string, unknown> | undefined>(result: ActionResult<Success, Failure>): Promise<void>;
 	type MaybePromise<T> = T | Promise<T>;
 
 	export {};
@@ -3115,7 +3115,7 @@ declare module '$app/navigation' {
 	 *
 	 * `afterNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
 	 * */
-	export function afterNavigate(callback: (navigation: import("$app/navigation").AfterNavigate) => void): void;
+	export function afterNavigate(callback: (navigation: AfterNavigate) => void): void;
 	/**
 	 * A navigation interceptor that triggers before we navigate to a URL, whether by clicking a link, calling `goto(...)`, or using the browser back/forward controls.
 	 *
@@ -3127,7 +3127,7 @@ declare module '$app/navigation' {
 	 *
 	 * `beforeNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
 	 * */
-	export function beforeNavigate(callback: (navigation: import("$app/navigation").BeforeNavigate) => void): void;
+	export function beforeNavigate(callback: (navigation: BeforeNavigate) => void): void;
 	/**
 	 * A lifecycle function that runs the supplied `callback` immediately before we navigate to a new URL except during full-page navigations.
 	 *
@@ -3137,7 +3137,7 @@ declare module '$app/navigation' {
 	 *
 	 * `onNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
 	 * */
-	export function onNavigate(callback: (navigation: import("$app/navigation").OnNavigate) => MaybePromise<(() => void) | void>): void;
+	export function onNavigate(callback: (navigation: OnNavigate) => MaybePromise<(() => void) | void>): void;
 	/**
 	 * If called when the page is being updated following a navigation (in `onMount` or `afterNavigate` or an action, for example), this disables SvelteKit's built-in scroll handling.
 	 * This is generally discouraged, since it breaks user expectations.
@@ -3155,7 +3155,7 @@ declare module '$app/navigation' {
 	 * @param url Where to navigate to. Note that if you've set [`config.paths.base`](https://svelte.dev/docs/kit/configuration#paths) and the URL is root-relative, you need to prepend the base path if you want to navigate within the app.
 	 * @param opts Options related to the navigation
 	 * */
-	export function goto(url: string | URL, opts?: import("$app/navigation").GotoOptions): Promise<void>;
+	export function goto(url: string | URL, opts?: GotoOptions): Promise<void>;
 	/**
 	 * Causes any `load` functions belonging to the currently active page to re-run if they depend on the `url` in question, via `fetch` or `depends`. Returns a `Promise` that resolves when the page is subsequently updated.
 	 *
@@ -3604,6 +3604,7 @@ declare module '$app/service-worker' {
 declare module '$app/state' {
 	import type { ReadonlyURL } from '@sveltejs/kit';
 	import type { LayoutParams as AppLayoutParams, ResolvedPathname, RouteId as AppRouteId } from '$app/types';
+	import type { Navigation } from '$app/navigation';
 	/**
 	 * The shape of the [`page`](https://svelte.dev/docs/kit/$app-state#page) reactive object.
 	 */
@@ -3696,12 +3697,12 @@ declare module '$app/state' {
 	 * On the server, values can only be read during rendering (in other words _not_ in e.g. `load` functions). In the browser, the values can be read at any time.
 	 *
 	 * */
-	export const page: import("$app/state").Page;
+	export const page: Page;
 	/**
 	 * A read-only object representing an in-progress navigation, with `from`, `to`, `type` and (if `type === 'popstate'`) `delta` properties.
 	 * Values are `null` when no navigation is occurring, or during server rendering.
 	 * */
-	export const navigating: import("$app/navigation").Navigation | {
+	export const navigating: Navigation | {
 		from: null;
 		to: null;
 		type: null;
