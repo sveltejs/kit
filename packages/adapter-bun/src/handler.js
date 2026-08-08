@@ -18,8 +18,7 @@ await server.init({
 });
 
 /**
- * The Bun-native SvelteKit request handler. Import it from `build/handler.js`
- * when an application needs to construct `Bun.serve` itself.
+ * The Bun-native SvelteKit request handler used by the generated server.
  * @param {Request} request
  * @param {import('bun').Server<undefined>} bun_server
  * @returns {Promise<Response>}

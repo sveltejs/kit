@@ -3,14 +3,20 @@ import { readdir } from 'node:fs/promises';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import adapter from './index.js';
 
+const index_file = new URL('./src/index.js', import.meta.url).pathname;
+const routes_file = new URL('./src/routes.js', import.meta.url).pathname;
+const start_file = new URL('./src/start.js', import.meta.url).pathname;
+
 vi.mock('node:fs/promises', async (import_original) => {
 	const actual = await import_original<typeof import('node:fs/promises')>();
 	return { ...actual, readdir: vi.fn() };
 });
 
-const { build, file } = vi.hoisted(() => {
+const { adapter_entrypoint, build, file } = vi.hoisted(() => {
+	const adapter_entrypoint = '// adapter entrypoint';
 	const build = vi.fn((_options: any) => ({ success: true, logs: [], outputs: [] }));
 	const file = vi.fn((path: string) => ({
+		text: () => adapter_entrypoint,
 		type: path.endsWith('.html')
 			? 'text/html;charset=utf-8'
 			: path.endsWith('.json')
@@ -18,7 +24,7 @@ const { build, file } = vi.hoisted(() => {
 				: 'text/plain;charset=utf-8'
 	}));
 	vi.stubGlobal('Bun', { build, file });
-	return { build, file };
+	return { adapter_entrypoint, build, file };
 });
 
 beforeEach(() => {
@@ -43,6 +49,7 @@ describe('Bun build options', () => {
 			format: 'esm',
 			conditions: ['bun', 'node'],
 			outdir: 'build',
+			sourcemap: 'external',
 			compile: false
 		});
 		expect(options.plugins[0].name).toBe('adapter-bun');
@@ -62,14 +69,13 @@ describe('Bun build options', () => {
 		await adapter().adapt(test_builder);
 		expect(test_builder.findServerAssets).toHaveBeenCalledWith([active_route]);
 
-		const source = build.mock.calls[0][0].files['.svelte-kit/output/server/adapter-bun-routes.js'];
-		expect(source).toContain(
-			'const file_0 = Bun.file(resolve(import.meta.dir, "client/data.json"))'
-		);
+		const source = build.mock.calls[0][0].files[routes_file];
+		expect(source).toContain(`const dir = dirname(Bun.main);`);
+		expect(source).toContain('const file_0 = Bun.file(resolve(dir, "client/data.json"))');
 		expect(source).toContain('"/data.json": file_0');
 		expect(source).toContain('new Response(file_2, { headers:');
 		expect(source).toContain(
-			'const file_3 = Bun.file(resolve(import.meta.dir, "prerendered/prerendered/index.html"))'
+			'const file_3 = Bun.file(resolve(dir, "prerendered/prerendered/index.html"))'
 		);
 		expect(source).toContain(
 			'export const server_assets = new Map([["_app/immutable/assets/read.txt", file_2]])'
@@ -94,7 +100,7 @@ describe('Bun build options', () => {
 		);
 
 		const options = build.mock.calls[0][0];
-		const source = options.files['.svelte-kit/output/server/adapter-bun-routes.js'];
+		const source = options.files[routes_file];
 		expect(options.compile).toEqual({ outfile: 'server' });
 		expect(source).toContain("with { type: 'file' }");
 		expect(source).toContain('const file_0 = Bun.file(asset_0)');
@@ -111,7 +117,7 @@ describe('Bun build options', () => {
 
 		await adapter({ buildOptions: { compile: true } }).adapt(builder());
 
-		const source = build.mock.calls[0][0].files['.svelte-kit/output/server/adapter-bun-routes.js'];
+		const source = build.mock.calls[0][0].files[routes_file];
 		expect(source).toContain('assetlinks.json');
 		expect(source).toContain('"/.well-known/assetlinks.json"');
 		expect(source).not.toContain('.vite/manifest.json');
@@ -127,7 +133,7 @@ describe('Bun build options', () => {
 			})
 		);
 
-		const source = build.mock.calls[0][0].files['.svelte-kit/output/server/adapter-bun-routes.js'];
+		const source = build.mock.calls[0][0].files[routes_file];
 		expect(source).toContain('"/base/prerendered/": file_0');
 		expect(source).toContain('"/base/prerendered": (request) => Response.redirect');
 		expect(source).toContain('new URL(request.url).search');
@@ -163,18 +169,13 @@ describe('Bun build options', () => {
 
 		await adapter({ out: 'dist' }).adapt(test_builder);
 
-		expect(build.mock.calls[0][0].entrypoints).toEqual([
-			new URL('./src/index.js', import.meta.url).pathname,
-			new URL('./src/handler.js', import.meta.url).pathname,
-			'.svelte-kit/output/server/instrumentation.server.js'
-		]);
-		expect(test_builder.instrument).toHaveBeenCalledWith({
-			entrypoint: 'dist/index.js',
-			instrumentation: 'dist/instrumentation.server.js',
-			module: {
-				exports: ['server', 'unix']
-			}
-		});
+		const options = build.mock.calls[0][0];
+		expect(options.entrypoints).toEqual([index_file]);
+		expect(options.files[index_file]).toBe(
+			`import ".svelte-kit/output/server/instrumentation.server.js";\nawait import(${JSON.stringify(start_file)});`
+		);
+		expect(options.files[start_file]).toBe(adapter_entrypoint);
+		expect(test_builder.instrument).not.toHaveBeenCalled();
 	});
 
 	test('runs server instrumentation before starting a compiled executable', async () => {
@@ -183,10 +184,11 @@ describe('Bun build options', () => {
 		await adapter({ buildOptions: { compile: true } }).adapt(test_builder);
 
 		const options = build.mock.calls[0][0];
-		expect(options.entrypoints).toEqual(['.svelte-kit/output/server/adapter-bun-instrumented.js']);
-		expect(options.files[options.entrypoints[0]]).toBe(
-			`import './instrumentation.server.js';\nawait import(${JSON.stringify(new URL('./src/index.js', import.meta.url).pathname)});`
+		expect(options.entrypoints).toEqual([index_file]);
+		expect(options.files[index_file]).toBe(
+			`import ".svelte-kit/output/server/instrumentation.server.js";\nawait import(${JSON.stringify(start_file)});`
 		);
+		expect(options.files[start_file]).toBe(adapter_entrypoint);
 		expect(test_builder.instrument).not.toHaveBeenCalled();
 	});
 });

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
-import { boolean_env, number_env } from './env.js';
+import { boolean_env, bytes_env, number_env } from './env.js';
 
 vi.hoisted(() => {
 	vi.stubGlobal('ENV_PREFIX', '');
@@ -46,5 +46,29 @@ describe('number_env', () => {
 	test('rejects non-integers', () => {
 		vi.stubEnv('OPTION', '1.5');
 		expect(() => number_env('OPTION')).toThrow('expected a non-negative integer');
+	});
+});
+
+describe('bytes_env', () => {
+	afterEach(() => vi.unstubAllEnvs());
+
+	test.each([
+		['0', 0],
+		['512', 512],
+		['512K', 512 * 1024],
+		['1.5M', 1.5 * 1024 * 1024],
+		['2g', 2 * 1024 * 1024 * 1024]
+	])('parses %s as a byte count', (value, expected) => {
+		vi.stubEnv('OPTION', value);
+		expect(bytes_env('OPTION')).toBe(expected);
+	});
+
+	test('uses the fallback when the variable is not set', () => {
+		expect(bytes_env('OPTION', 512 * 1024)).toBe(512 * 1024);
+	});
+
+	test.each(['', '-1', '1KB', 'one', '0.1'])('rejects invalid byte counts', (value) => {
+		vi.stubEnv('OPTION', value);
+		expect(() => bytes_env('OPTION')).toThrow('Invalid value for environment variable OPTION');
 	});
 });

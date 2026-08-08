@@ -2,7 +2,7 @@ import process from 'node:process';
 import server_options from 'SERVER_OPTIONS';
 import { routes } from 'ROUTES';
 import { handler } from './handler.js';
-import { boolean_env, env, number_env } from './env.js';
+import { boolean_env, bytes_env, env, number_env } from './env.js';
 
 const options = /** @type {import('bun').Serve.Options<undefined>} */ ({ ...server_options });
 
@@ -30,7 +30,7 @@ if (development !== undefined) {
 	options.development = false;
 }
 
-options.maxRequestBodySize = number_env('BODY_SIZE_LIMIT', options.maxRequestBodySize);
+options.maxRequestBodySize = bytes_env('BODY_SIZE_LIMIT', options.maxRequestBodySize ?? 512 * 1024);
 
 options.fetch = handler;
 options.routes = routes;

@@ -89,3 +89,35 @@ export function number_env(name, fallback, limits = {}) {
 
 	return number;
 }
+
+/**
+ * @param {string} name
+ * @param {number | undefined} [fallback]
+ * @returns {number | undefined}
+ */
+export function bytes_env(name, fallback) {
+	const value = env(name);
+	if (value === undefined) return fallback;
+	if (!/^(?:\d+(?:\.\d*)?|\.\d+)(?:[KMG])?$/i.test(value)) {
+		throw new Error(
+			`Invalid value for environment variable ${env_prefix + name}: ${JSON.stringify(value)} (expected a non-negative number with an optional K, M, or G suffix)`
+		);
+	}
+
+	const suffix = value.at(-1)?.toUpperCase();
+	const multiplier =
+		{
+			K: 1024,
+			M: 1024 * 1024,
+			G: 1024 * 1024 * 1024
+		}[/** @type {'K' | 'M' | 'G'} */ (suffix)] ?? 1;
+	const number = Number(multiplier === 1 ? value : value.slice(0, -1)) * multiplier;
+
+	if (!Number.isSafeInteger(number)) {
+		throw new Error(
+			`Invalid value for environment variable ${env_prefix + name}: ${JSON.stringify(value)} (expected a non-negative number of whole bytes)`
+		);
+	}
+
+	return number;
+}

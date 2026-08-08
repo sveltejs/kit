@@ -38,10 +38,6 @@ jobs:
         with:
           bun-version: 1.3.14
 
-      - name: Build adapter-bun files
-        working-directory: packages/adapter-bun
-        run: pnpm prepublishOnly
-
       - uses: ./.github/actions/platform-test
         with:
           test-app-dir: packages/adapter-bun/test/apps/basic

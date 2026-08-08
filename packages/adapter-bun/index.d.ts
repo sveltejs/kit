@@ -24,14 +24,13 @@ interface AdapterOptions {
 	 * ```sh
 	 * MY_CUSTOM_HOST=127.0.0.1 \
 	 * MY_CUSTOM_PORT=4000 \
-	 * node build
+	 * bun ./build
 	 * ```
 	 */
 	envPrefix?: string;
 	/**
 	 * Default options passed to `Bun.serve`. Environment variables take precedence.
-	 * The options must be JSON-serializable. Use `build/handler.js` with a custom
-	 * `Bun.serve` call for routes, WebSockets, or custom error handling.
+	 * The options must be JSON-serializable.
 	 */
 	serverOptions?: Pick<
 		import('bun').Serve.Options<never>,
@@ -45,10 +44,10 @@ interface AdapterOptions {
 		| 'ipv6Only'
 	>;
 	/**
-	 * Build the server and static assets.
 	 * Pass Bun build options directly for advanced configuration. The generated entrypoint,
-	 * top-level target, and module format are reserved. If neither an outfile nor outdir is
-	 * specified, the executable is written to `<out>/server`.
+	 * output directory, top-level target, and module format are reserved. Set `compile` to
+	 * create an executable; if it does not specify an outfile, the executable is written to
+	 * `<out>/server`.
 	 * @default false
 	 */
 	buildOptions?: Pick<

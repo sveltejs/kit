@@ -1,4 +1,4 @@
-import { resolve, posix } from 'node:path';
+import { relative, resolve, posix } from 'node:path';
 import { readdir } from 'node:fs/promises';
 
 /**
@@ -12,7 +12,7 @@ async function read_files_recursive(path) {
 			.filter((entry) => entry.isFile())
 			.map((entry) => {
 				const abs = resolve(entry.parentPath, entry.name);
-				const rel = posix.relative(path, abs);
+				const rel = posixify(relative(path, abs));
 				return { abs, rel };
 			})
 			.filter(({ rel }) => rel.split('/').every((segment) => segment !== '.vite'));
@@ -85,7 +85,7 @@ export default function (opts = {}) {
 			const result = await Bun.build({
 				...buildOptions,
 				splitting: true,
-				sourcemap: 'external',
+				sourcemap: buildOptions.sourcemap ?? 'external',
 				entrypoints: [index_file],
 				target: 'bun',
 				format: 'esm',
@@ -181,7 +181,7 @@ async function create_routes({ builder, out, embed }) {
 	 * @returns {string}
 	 */
 	function make_file(file, abspath) {
-		const relpath = posix.relative(resolve(out), abspath);
+		const relpath = posixify(relative(resolve(out), abspath));
 		let asset;
 		if (embed) {
 			asset = `asset_${asset_imports.length}`;
@@ -276,4 +276,9 @@ async function create_routes({ builder, out, embed }) {
  */
 function encode_pathname(pathname) {
 	return pathname.split('/').map(encodeURIComponent).join('/');
+}
+
+/** @param {string} path */
+function posixify(path) {
+	return path.replace(/\\/g, '/');
 }

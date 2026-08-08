@@ -57,7 +57,9 @@ export default defineConfig({
 				serverOptions: {
 					idleTimeout: 30
 				},
-				compile: false
+				buildOptions: {
+					sourcemap: 'external'
+				}
 			})
 		})
 	]
@@ -76,16 +78,21 @@ Adds a prefix to all environment variables read by the production server. For ex
 
 Provides JSON-serializable defaults for `Bun.serve`. This is useful for settings such as `hostname`, `port`, `reusePort`, `ipv6Only`, `idleTimeout`, `development`, and `maxRequestBodySize`. Environment variables override these defaults.
 
-`fetch`, `routes`, `websocket`, `error`, `tls`, `http3`, and `http1` cannot be configured this way. To use those APIs, create a [custom server](#Custom-server).
+`fetch`, `routes`, `websocket`, `error`, `tls`, `http3`, and `http1` cannot be configured this way. The adapter does not generate a reusable request-handler entrypoint, so applications that require these options need a custom Bun integration instead of the generated server.
 
-### compile
+### buildOptions
 
-Set `compile: true` to generate `build/app`, a single executable containing the Bun runtime, your
+Pass options to Bun's build API through `buildOptions`. Set `buildOptions.compile: true` to generate
+`build/server`, a single executable containing the Bun runtime, your
 server code, client assets, and prerendered pages. In this mode, the adapter builds the executable
 directly instead of generating the JavaScript server files:
 
 ```js
-adapter({ compile: true });
+adapter({
+	buildOptions: {
+		compile: true
+	}
+});
 ```
 
 The adapter uses the [`Bun.build`](https://bun.com/reference/bun/build) JavaScript API directly. The
@@ -99,9 +106,9 @@ With the default options, only the executable is required at runtime. It is spec
 
 ```js
 adapter({
-	compile: {
+	buildOptions: {
 		compile: {
-			outfile: 'build/my-app',
+			outfile: 'my-app',
 			target: 'bun-linux-x64'
 		},
 		minify: true,
@@ -113,9 +120,9 @@ adapter({
 
 Native dependencies and cross-compilation have the same constraints as [Bun's single-file executables](https://bun.com/docs/bundler/executables).
 The adapter reserves the top-level Bun build `target` and `format` because generated servers always
-run as Bun ESM. Set the executable target inside `compile.target`, as shown above. Minification,
-sourcemaps, and bytecode remain opt-in. Advanced compile options without an explicit `outfile` or
-`outdir` use `build/app`.
+run as Bun ESM. Set the executable target inside `buildOptions.compile.target`, as shown above.
+Source maps default to `external`; set `sourcemap: 'none'` to disable them. Minification and bytecode
+remain opt-in. Compile options without an explicit `outfile` use `<out>/server`.
 
 ## Environment variables
 
@@ -189,33 +196,3 @@ export function GET({ platform }) {
 	});
 }
 ```
-
-## Custom server
-
-The build contains `index.js`, which starts the default server, and `handler.js`, which exports the Bun-native SvelteKit request handler. Import the handler when you need Bun routes, WebSockets, custom error handling, or other `Bun.serve` options that cannot be represented as JSON:
-
-```js
-/// file: server.js
-import { handler } from './build/handler.js';
-
-const server = Bun.serve({
-	port: 3000,
-	routes: {
-		'/health': new Response('ok')
-	},
-	websocket: {
-		message(socket, message) {
-			socket.send(message);
-		}
-	},
-	fetch: handler,
-	error(error) {
-		console.error(error);
-		return new Response('Internal Server Error', { status: 500 });
-	}
-});
-
-console.log(`Listening on ${server.url}`);
-```
-
-When using a custom server, implement lifecycle behavior such as signal handling and static file serving yourself. The handler only serves dynamic SvelteKit requests and reads the proxy-header environment variables described above.
