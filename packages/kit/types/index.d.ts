@@ -1630,14 +1630,6 @@ declare module '@sveltejs/kit' {
 		restore: (snapshot: T) => void;
 	}
 
-	export type ReadonlyURLSearchParams = Omit<URLSearchParams, 'set' | 'append' | 'delete' | 'sort'>;
-
-	export type ReadonlyURL = Readonly<
-		Omit<URL, 'searchParams'> & {
-			searchParams: ReadonlyURLSearchParams;
-		}
-	>;
-
 	// If T is unknown or has an index signature, the types below will recurse indefinitely and create giant unions that TS can't handle
 	type WillRecurseIndefinitely<T> = unknown extends T ? true : string extends keyof T ? true : false;
 
@@ -3602,9 +3594,16 @@ declare module '$app/service-worker' {
 }
 
 declare module '$app/state' {
-	import type { ReadonlyURL } from '@sveltejs/kit';
 	import type { LayoutParams as AppLayoutParams, ResolvedPathname, RouteId as AppRouteId } from '$app/types';
 	import type { Navigation } from '$app/navigation';
+	export type ReadonlyURLSearchParams = Omit<URLSearchParams, 'set' | 'append' | 'delete' | 'sort'>;
+
+	export type ReadonlyURL = Readonly<
+		Omit<URL, 'searchParams'> & {
+			searchParams: ReadonlyURLSearchParams;
+		}
+	>;
+
 	/**
 	 * The shape of the [`page`](https://svelte.dev/docs/kit/$app-state#page) reactive object.
 	 */

@@ -1,4 +1,3 @@
-import type { ReadonlyURL } from '@sveltejs/kit';
 import type {
 	LayoutParams as AppLayoutParams,
 	ResolvedPathname,
@@ -6,6 +5,14 @@ import type {
 } from '$app/types';
 
 export { page, navigating, updated } from './index.js';
+
+export type ReadonlyURLSearchParams = Omit<URLSearchParams, 'set' | 'append' | 'delete' | 'sort'>;
+
+export type ReadonlyURL = Readonly<
+	Omit<URL, 'searchParams'> & {
+		searchParams: ReadonlyURLSearchParams;
+	}
+>;
 
 /**
  * The shape of the [`page`](https://svelte.dev/docs/kit/$app-state#page) reactive object.

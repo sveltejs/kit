@@ -1669,14 +1669,6 @@ export interface Snapshot<T = any> {
 	restore: (snapshot: T) => void;
 }
 
-export type ReadonlyURLSearchParams = Omit<URLSearchParams, 'set' | 'append' | 'delete' | 'sort'>;
-
-export type ReadonlyURL = Readonly<
-	Omit<URL, 'searchParams'> & {
-		searchParams: ReadonlyURLSearchParams;
-	}
->;
-
 // If T is unknown or has an index signature, the types below will recurse indefinitely and create giant unions that TS can't handle
 type WillRecurseIndefinitely<T> = unknown extends T ? true : string extends keyof T ? true : false;
 
