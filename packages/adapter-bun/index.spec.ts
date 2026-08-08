@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import adapter from './index.js';
 
 const index_file = new URL('./src/index.js', import.meta.url).pathname;
+const options_file = new URL('./src/options.js', import.meta.url).pathname;
 const routes_file = new URL('./src/routes.js', import.meta.url).pathname;
 const start_file = new URL('./src/start.js', import.meta.url).pathname;
 
@@ -53,6 +54,20 @@ describe('Bun build options', () => {
 			compile: false
 		});
 		expect(options.plugins[0].name).toBe('adapter-bun');
+	});
+
+	test('provides runtime constants without globally replacing application identifiers', async () => {
+		await adapter({ envPrefix: 'MY_', serverOptions: { port: 4000 } }).adapt(
+			builder({ origin: 'https://example.com' })
+		);
+
+		const options = build.mock.calls[0][0];
+		expect(options.define).toBeUndefined();
+		expect(options.files[options_file]).toBe(
+			'export default {"port":4000};\n' +
+				'export const env_prefix = "MY_";\n' +
+				'export const origin = "https://example.com";'
+		);
 	});
 
 	test('shares Bun files between directory routes and server reads', async () => {
@@ -262,6 +277,7 @@ function builder({
 	server_assets = [],
 	app_path = '_app',
 	base = '',
+	origin,
 	instrumentation = false
 }: {
 	client_files?: string[];
@@ -272,10 +288,11 @@ function builder({
 	server_assets?: string[];
 	app_path?: string;
 	base?: string;
+	origin?: string;
 	instrumentation?: boolean;
 } = {}) {
 	return {
-		config: { kit: { outDir: '.svelte-kit', paths: { base, origin: undefined } } },
+		config: { kit: { outDir: '.svelte-kit', paths: { base, origin } } },
 		routes,
 		prerendered: {
 			pages: new Map(prerendered_pages),

@@ -50,8 +50,10 @@ export default function (opts = {}) {
 				[manifest_file]:
 					`export const manifest = ${builder.generateManifest({ relativePath: './' })};\n` +
 					`export const base = ${JSON.stringify(builder.config.kit.paths.base || '/')};\n` +
-					`export const embed = ${JSON.stringify(!!buildOptions.compile)};\n`,
-				[server_options_file]: `export default ${JSON.stringify(serverOptions)};\n`,
+					`export const embed = ${JSON.stringify(!!buildOptions.compile)};\n` +
+					`export const env_prefix = ${JSON.stringify(envPrefix)};\n` +
+					`export const origin = ${JSON.stringify(builder.config.kit.paths.origin) || 'undefined'};`,
+				[server_options_file]: [`export default ${JSON.stringify(serverOptions)};`].join('\n'),
 				[routes_file]: await create_routes({
 					builder,
 					out,
@@ -98,10 +100,6 @@ export default function (opts = {}) {
 					asset: 'server/assets/[name]-[hash].[ext]'
 				},
 				plugins: [adapter_plugin],
-				define: {
-					ENV_PREFIX: JSON.stringify(envPrefix),
-					ORIGIN: JSON.stringify(builder.config.kit.paths.origin) || 'undefined'
-				},
 				conditions: ['bun', 'node'],
 				throw: false,
 				files: virtual_files,

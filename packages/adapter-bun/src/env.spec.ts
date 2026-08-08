@@ -1,9 +1,7 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { boolean_env, bytes_env, number_env } from './env.js';
 
-vi.hoisted(() => {
-	vi.stubGlobal('ENV_PREFIX', '');
-});
+vi.mock('SERVER_OPTIONS', () => ({ env_prefix: '' }));
 
 describe('boolean_env', () => {
 	afterEach(() => vi.unstubAllEnvs());

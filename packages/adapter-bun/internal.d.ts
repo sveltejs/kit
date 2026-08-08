@@ -2,6 +2,8 @@ declare module 'MANIFEST' {
 	export const manifest: import('@sveltejs/kit').SSRManifest;
 	export const base: string;
 	export const embed: boolean;
+	export const env_prefix: string;
+	export const origin: string | undefined;
 }
 
 declare module 'ROUTES' {

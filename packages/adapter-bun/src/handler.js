@@ -1,10 +1,9 @@
 import { Server } from 'SERVER';
-import { manifest } from 'MANIFEST';
+import { manifest, origin, env_prefix } from 'MANIFEST';
 import { server_assets } from 'ROUTES';
-import { env, env_prefix, number_env } from './env.js';
+import { env, number_env } from './env.js';
 
 const server = new Server(manifest);
-const origin = ORIGIN;
 
 const address_header = env('ADDRESS_HEADER', '')?.toLowerCase();
 const protocol_header = env('PROTOCOL_HEADER', '')?.toLowerCase();

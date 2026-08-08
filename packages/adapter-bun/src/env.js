@@ -1,4 +1,5 @@
 import process from 'node:process';
+import { env_prefix } from 'MANIFEST';
 
 const expected = new Set([
 	'SOCKET_PATH',
@@ -15,8 +16,6 @@ const expected = new Set([
 	'HOST_HEADER',
 	'PORT_HEADER'
 ]);
-
-export const env_prefix = ENV_PREFIX;
 
 if (env_prefix) {
 	for (const name in process.env) {
