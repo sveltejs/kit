@@ -11,5 +11,5 @@ export {
 	preloadData,
 	pushState,
 	replaceState
-} from '../client/client.js';
-export { snapshot } from '../client/snapshots.js';
+} from '../../client/client.js';
+export { snapshot } from '../../client/snapshots.js';

@@ -1,13 +1,13 @@
 import { DEV } from 'esm-env';
-import { noop } from '../../utils/functions.js';
-import { refreshAll } from './navigation.js';
+import { noop } from '../../../utils/functions.js';
+import { refreshAll } from '../navigation/index.js';
 import {
 	applyAction,
 	apply_action_navigation,
 	handle_error,
 	is_current_location
-} from '../client/client.js';
-import { notify_version } from '../client/state.svelte.js';
+} from '../../client/client.js';
+import { notify_version } from '../../client/state.svelte.js';
 import { parse } from '#app/internal/transport';
 
 export { applyAction };
@@ -32,7 +32,7 @@ export { applyAction };
  * @template {Record<string, unknown> | undefined} Success
  * @template {Record<string, unknown> | undefined} Failure
  * @param {string} result
- * @returns {import('@sveltejs/kit').ActionResult<Success, Failure>}
+ * @returns {import('$app/forms').ActionResult<Success, Failure>}
  */
 export function deserialize(result) {
 	const parsed = JSON.parse(result);
@@ -79,7 +79,7 @@ function clone(element) {
  * @template {Record<string, unknown> | undefined} Success
  * @template {Record<string, unknown> | undefined} Failure
  * @param {HTMLFormElement} form_element The form element
- * @param {import('@sveltejs/kit').SubmitFunction<Success, Failure>} submit Submit callback
+ * @param {import('$app/forms').SubmitFunction<Success, Failure>} submit Submit callback
  */
 export function enhance(form_element, submit = noop) {
 	if (DEV && clone(form_element).method !== 'post') {
@@ -88,7 +88,7 @@ export function enhance(form_element, submit = noop) {
 
 	/**
 	 * @param {{
-	 *   result: import('@sveltejs/kit').ActionResult;
+	 *   result: import('$app/forms').ActionResult;
 	 *   reset?: boolean;
 	 *   refreshAll?: boolean;
 	 *   invalidateAll?: boolean;
@@ -182,7 +182,7 @@ export function enhance(form_element, submit = noop) {
 			})) ?? fallback_callback;
 		if (cancelled) return;
 
-		/** @type {import('@sveltejs/kit').ActionResult} */
+		/** @type {import('$app/forms').ActionResult} */
 		let result;
 
 		try {

@@ -1218,8 +1218,8 @@ function kit({ svelte_config }) {
 		generateBundle(_, bundle) {
 			const invalid_modules = new Set();
 			const modules = new Map([
-				[`${runtime_directory}/app/forms.js`, '$app/forms'],
-				[`${runtime_directory}/app/navigation.js`, '$app/navigation'],
+				[`${runtime_directory}/app/forms/index.js`, '$app/forms'],
+				[`${runtime_directory}/app/navigation/index.js`, '$app/navigation'],
 				[`${runtime_directory}/app/state/index.js`, '$app/state']
 			]);
 

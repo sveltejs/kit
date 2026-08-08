@@ -45,14 +45,14 @@ import { BROWSER } from 'esm-env';
  *
  * On the server, values can only be read during rendering (in other words _not_ in e.g. `load` functions). In the browser, the values can be read at any time.
  *
- * @type {import('@sveltejs/kit').Page}
+ * @type {import('$app/state').Page}
  */
 export const page = BROWSER ? client_page : server_page;
 
 /**
  * A read-only object representing an in-progress navigation, with `from`, `to`, `type` and (if `type === 'popstate'`) `delta` properties.
  * Values are `null` when no navigation is occurring, or during server rendering.
- * @type {import('@sveltejs/kit').Navigation | { from: null, to: null, type: null, willUnload: null, delta: null, complete: null }}
+ * @type {import('$app/navigation').Navigation | { from: null, to: null, type: null, willUnload: null, delta: null, complete: null }}
  */
 // @ts-expect-error
 export const navigating = BROWSER ? client_navigating : server_navigating;

@@ -2,7 +2,7 @@ import { version } from '$app/env';
 import { assets } from '$app/paths/internal/client';
 import { BROWSER, DEV } from 'esm-env';
 
-/** @type {import('@sveltejs/kit').Page} */
+/** @type {import('$app/state').Page} */
 export const page = new (class Page {
 	data = $state.raw({});
 	form = $state.raw(null);
@@ -16,7 +16,7 @@ export const page = new (class Page {
 })();
 
 export const navigating = new (class Navigating {
-	/** @type {import('@sveltejs/kit').Navigation | null} */
+	/** @type {import('$app/navigation').Navigation | null} */
 	current = $state.raw(null);
 })();
 

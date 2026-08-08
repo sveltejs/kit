@@ -346,13 +346,13 @@ function parse_and_cache_server_route(server_route) {
  * Note on before_navigate_callbacks, on_navigate_callbacks and after_navigate_callbacks:
  * do not re-assign as some closures keep references to these Sets
  */
-/** @type {Set<(navigation: import('@sveltejs/kit').BeforeNavigate) => void>} */
+/** @type {Set<(navigation: import('$app/navigation').BeforeNavigate) => void>} */
 const before_navigate_callbacks = new Set();
 
-/** @type {Set<(navigation: import('@sveltejs/kit').OnNavigate) => import('types').MaybePromise<(() => void) | void>>} */
+/** @type {Set<(navigation: import('$app/navigation').OnNavigate) => import('types').MaybePromise<(() => void) | void>>} */
 const on_navigate_callbacks = new Set();
 
-/** @type {Set<(navigation: import('@sveltejs/kit').AfterNavigate) => void>} */
+/** @type {Set<(navigation: import('$app/navigation').AfterNavigate) => void>} */
 const after_navigate_callbacks = new Set();
 
 /** @type {import('./types.js').NavigationState & { nav: import('@sveltejs/kit').NavigationEvent }} */
@@ -727,7 +727,7 @@ function persist_state() {
 
 /**
  * @param {string | URL} url
- * @param {{ type?: import('@sveltejs/kit').NavigationType; replace?: boolean; reset?: boolean; refreshAll?: boolean; invalidate?: Array<string | URL | ((url: URL) => boolean)>; state?: Record<string, any>; persistState?: boolean; event?: Event; action_result?: import('@sveltejs/kit').ActionResult }} [options]
+ * @param {{ type?: import('$app/navigation').NavigationType; replace?: boolean; reset?: boolean; refreshAll?: boolean; invalidate?: Array<string | URL | ((url: URL) => boolean)>; state?: Record<string, any>; persistState?: boolean; event?: Event; action_result?: import('$app/forms').ActionResult }} [options]
  * @param {number} [redirect_count]
  * @param {{}} [nav_token]
  * @param {NavigationIntent | undefined} [intent] navigation intent, when already known by the caller (avoids recomputing it)
@@ -961,7 +961,7 @@ async function initialize(result, target, should_hydrate) {
 	void (await Promise.resolve());
 
 	if (should_hydrate) {
-		/** @type {import('@sveltejs/kit').AfterNavigate} */
+		/** @type {import('$app/navigation').AfterNavigate} */
 		const navigation = {
 			from: null,
 			to: {
@@ -1398,7 +1398,7 @@ function diff_search_params(old_url, new_url) {
 
 /**
  * @overload
- * @param {import('./types.js').NavigationIntent & { action_result?: import('@sveltejs/kit').ActionResult }} intent
+ * @param {import('./types.js').NavigationIntent & { action_result?: import('$app/forms').ActionResult }} intent
  * @returns {Promise<import('./types.js').NavigationResult | undefined>}
  */
 /**
@@ -1407,7 +1407,7 @@ function diff_search_params(old_url, new_url) {
  * @returns {Promise<import('./types.js').NavigationResult>}
  */
 /**
- * @param {import('./types.js').NavigationIntent & { preload?: {}; action_result?: import('@sveltejs/kit').ActionResult }} intent
+ * @param {import('./types.js').NavigationIntent & { preload?: {}; action_result?: import('$app/forms').ActionResult }} intent
  * @returns {Promise<import('./types.js').NavigationResult | undefined>}
  */
 async function load_route({ id, invalidating, url, params, route, preload, action_result }) {
@@ -1916,7 +1916,7 @@ function get_page_key(url) {
 /**
  * @param {{
  *   url: URL;
- *   type: import('@sveltejs/kit').Navigation["type"];
+ *   type: import('$app/navigation').Navigation["type"];
  *   intent?: import('./types.js').NavigationIntent;
  *   delta?: number;
  *   event?: PopStateEvent | MouseEvent;
@@ -1960,7 +1960,7 @@ function _before_navigate({ url, type, intent, delta, event, scroll, shallow = f
 
 /**
  * @param {{
- *   type: import('@sveltejs/kit').NavigationType;
+ *   type: import('$app/navigation').NavigationType;
  *   url: URL;
  *   popped?: {
  *     state: Record<string, any>;
@@ -1978,7 +1978,7 @@ function _before_navigate({ url, type, intent, delta, event, scroll, shallow = f
  *   block?: () => void;
  *   event?: Event;
  *   intent?: NavigationIntent | undefined;
- *   action_result?: import('@sveltejs/kit').ActionResult;
+ *   action_result?: import('$app/forms').ActionResult;
  * }} opts
  * @returns {Promise<void>}
  */
@@ -2206,7 +2206,7 @@ async function navigate({
 			await Promise.all(
 				// eslint-disable-next-line @typescript-eslint/await-thenable -- we need to await because they can be asynchronous
 				Array.from(on_navigate_callbacks, (fn) =>
-					fn(/** @type {import('@sveltejs/kit').OnNavigate} */ (nav.navigation))
+					fn(/** @type {import('$app/navigation').OnNavigate} */ (nav.navigation))
 				)
 			)
 		).filter(/** @returns {value is () => void} */ (value) => typeof value === 'function');
@@ -2232,7 +2232,7 @@ async function navigate({
 					route: { id: navigation_result.state.route?.id ?? null },
 					url: navigation_result.state.url
 				}
-			: /** @type {import('@sveltejs/kit').NavigationTarget} */ (nav.navigation.to);
+			: /** @type {import('$app/navigation').NavigationTarget} */ (nav.navigation.to);
 		current = {
 			...navigation_result.state,
 			nav: {
@@ -2303,7 +2303,7 @@ async function navigate({
 	}
 
 	after_navigate_callbacks.forEach((fn) =>
-		fn(/** @type {import('@sveltejs/kit').AfterNavigate} */ (nav.navigation))
+		fn(/** @type {import('$app/navigation').AfterNavigate} */ (nav.navigation))
 	);
 
 	if (type === 'popstate') {
@@ -2550,7 +2550,7 @@ function add_navigation_callback(callbacks, callback) {
  * A lifecycle function that runs the supplied `callback` when the current component mounts, and also whenever we navigate to a URL.
  *
  * `afterNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
- * @param {(navigation: import('@sveltejs/kit').AfterNavigate) => void} callback
+ * @param {(navigation: import('$app/navigation').AfterNavigate) => void} callback
  * @returns {void}
  */
 export function afterNavigate(callback) {
@@ -2567,7 +2567,7 @@ export function afterNavigate(callback) {
  * If the navigation will (if not cancelled) cause the document to unload — in other words `'leave'` navigations and `'link'` navigations where `navigation.to.route === null` — `navigation.willUnload` is `true`.
  *
  * `beforeNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
- * @param {(navigation: import('@sveltejs/kit').BeforeNavigate) => void} callback
+ * @param {(navigation: import('$app/navigation').BeforeNavigate) => void} callback
  * @returns {void}
  */
 export function beforeNavigate(callback) {
@@ -2582,7 +2582,7 @@ export function beforeNavigate(callback) {
  * If a function (or a `Promise` that resolves to a function) is returned from the callback, it will be called once the DOM has updated.
  *
  * `onNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
- * @param {(navigation: import('@sveltejs/kit').OnNavigate) => import('types').MaybePromise<(() => void) | void>} callback
+ * @param {(navigation: import('$app/navigation').OnNavigate) => import('types').MaybePromise<(() => void) | void>} callback
  * @returns {void}
  */
 export function onNavigate(callback) {
@@ -2651,7 +2651,7 @@ async function resolve_intent(url, caller) {
  * For external URLs, use `window.location = url` to perform a full-page navigation instead of calling `goto(url)`.
  *
  * @param {string | URL} url Where to navigate to. Note that if you've set [`config.paths.base`](https://svelte.dev/docs/kit/configuration#paths) and the URL is root-relative, you need to prepend the base path if you want to navigate within the app.
- * @param {import('@sveltejs/kit').GotoOptions} [opts] Options related to the navigation
+ * @param {import('$app/navigation').GotoOptions} [opts] Options related to the navigation
  * @returns {Promise<void>}
  */
 export async function goto(url, opts = {}) {
@@ -3034,7 +3034,7 @@ async function update_state(intent, state, { replace, persist_state, reset }, ca
 			await Promise.all(
 				// eslint-disable-next-line @typescript-eslint/await-thenable -- we need to await because they can be asynchronous
 				Array.from(on_navigate_callbacks, (fn) =>
-					fn(/** @type {import('@sveltejs/kit').OnNavigate} */ (nav.navigation))
+					fn(/** @type {import('$app/navigation').OnNavigate} */ (nav.navigation))
 				)
 			)
 		).filter(/** @returns {value is () => void} */ (value) => typeof value === 'function');
@@ -3079,7 +3079,7 @@ async function update_state(intent, state, { replace, persist_state, reset }, ca
 		}
 
 		after_navigate_callbacks.forEach((fn) =>
-			fn(/** @type {import('@sveltejs/kit').AfterNavigate} */ (nav.navigation))
+			fn(/** @type {import('$app/navigation').AfterNavigate} */ (nav.navigation))
 		);
 	}
 
@@ -3097,7 +3097,7 @@ async function update_state(intent, state, { replace, persist_state, reset }, ca
  * the redirect location.
  * @template {Record<string, unknown> | undefined} Success
  * @template {Record<string, unknown> | undefined} Failure
- * @param {import('@sveltejs/kit').ActionResult<Success, Failure>} result
+ * @param {import('$app/forms').ActionResult<Success, Failure>} result
  * @returns {Promise<void>}
  */
 export async function applyAction(result) {
@@ -3164,7 +3164,7 @@ export function is_current_location(value) {
  * Navigate to where a form submission should land, rendering that page with the given result
  * — what the browser would do for a native submission.
  * @param {string} location
- * @param {import('@sveltejs/kit').ActionResult} result
+ * @param {import('$app/forms').ActionResult} result
  * @param {boolean} refresh_all
  * @returns {Promise<void>}
  */
@@ -3221,7 +3221,7 @@ function _start_router() {
 
 			// If we're navigating, beforeNavigate was already called. If we end up in here during navigation,
 			// it's due to an external or full-page-reload link, for which we don't want to call the hook again.
-			/** @type {import('@sveltejs/kit').BeforeNavigate} */
+			/** @type {import('$app/navigation').BeforeNavigate} */
 			const navigation = {
 				...nav.navigation,
 				cancel: () => {
@@ -3924,7 +3924,7 @@ function reset_focus(url, scroll = true) {
 }
 
 /**
- * @template {import('@sveltejs/kit').NavigationType} T
+ * @template {import('$app/navigation').NavigationType} T
  * @param {import('./types.js').NavigationState} current
  * @param {import('./types.js').NavigationIntent | undefined} intent
  * @param {URL | null} url
@@ -3956,7 +3956,7 @@ function create_navigation(
 	// Handle any errors off-chain so that it doesn't show up as an unhandled rejection
 	complete.catch(noop);
 
-	/** @type {(import('@sveltejs/kit').Navigation | import('@sveltejs/kit').AfterNavigate) & { type: T }} */
+	/** @type {(import('$app/navigation').Navigation | import('$app/navigation').AfterNavigate) & { type: T }} */
 	const navigation = /** @type {any} */ ({
 		from: {
 			params: current.params,

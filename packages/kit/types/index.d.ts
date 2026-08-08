@@ -5,7 +5,7 @@ declare module '@sveltejs/kit' {
 	import type { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
 	import type { StandardSchemaV1 } from '@standard-schema/spec';
 	import type { Plugin } from 'vite';
-	import type { RouteId as AppRouteId, LayoutParams as AppLayoutParams, ResolvedPathname } from '$app/types';
+	import type { RouteId as AppRouteId, LayoutParams as AppLayoutParams } from '$app/types';
 	// @ts-ignore this is an optional peer dependency so could be missing. Written like this so dts-buddy preserves the ts-ignore
 	type Span = import('@opentelemetry/api').Span;
 
@@ -1177,294 +1177,6 @@ declare module '@sveltejs/kit' {
 	}
 
 	/**
-	 * Information about the target of a specific navigation.
-	 */
-	export interface NavigationTarget<
-		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
-		RouteId extends AppRouteId | null = AppRouteId | null
-	> {
-		/**
-		 * Parameters of the target page - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object.
-		 * Is `null` if the target is not part of the SvelteKit app (could not be resolved to a route).
-		 */
-		params: Params | null;
-		/**
-		 * Info about the target route
-		 */
-		route: {
-			/**
-			 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
-			 */
-			id: RouteId | null;
-		};
-		/**
-		 * The URL that is navigated to
-		 */
-		url: URL;
-		/**
-		 * The scroll position associated with this navigation.
-		 *
-		 * For the `from` target, this is the scroll position at the moment of navigation.
-		 *
-		 * For the `to` target, this represents the scroll position that will be or was restored:
-		 * - In `beforeNavigate` and `onNavigate`, this is only available for `popstate` navigations (back/forward button)
-		 *   and will be `null` for other navigation types, since the final scroll position isn't known
-		 *   ahead of time.
-		 * - In `afterNavigate`, this is always the scroll position that was applied after the navigation
-		 *   completed.
-		 */
-		scroll: { x: number; y: number } | null;
-	}
-
-	export interface GotoOptions {
-		/**
-		 * If `true`, replaces the current history entry rather than creating a new one.
-		 * @default false
-		 */
-		replace?: boolean;
-		/** @deprecated Use `replace` instead. */
-		replaceState?: boolean;
-		/**
-		 * If `true`, updates the URL and `page.state` without navigating.
-		 * @default false
-		 */
-		shallow?: boolean;
-		/**
-		 * If `true`, resets the scroll position (to the top of the page, or to the element
-		 * matching the URL's `#hash` if there is one) and resets focus (to the `<body>`, or the
-		 * `autofocus` element if there is one) once the navigation completes.
-		 *
-		 * If `false`, the current scroll position and focused element are left alone.
-		 * @default true, or false when `shallow` is true
-		 */
-		reset?: boolean;
-		/**
-		 * If `true`, reruns all `load` functions and queries of the page.
-		 * @default false
-		 */
-		refreshAll?: boolean;
-		/** Causes any `load` functions to rerun if they depend on one of the URLs. */
-		invalidate?: Array<string | URL | ((url: URL) => boolean)>;
-		/** @deprecated Use `refreshAll` instead. */
-		invalidateAll?: boolean;
-		/** An optional object that will be available as `page.state`. */
-		state?: App.PageState;
-		/**
-		 * If `true`, `page.state` will be restored after a full page reload.
-		 * @default false
-		 */
-		persistState?: boolean;
-	}
-
-	/**
-	 * - `enter`: The app has hydrated/started
-	 * - `form`: The user submitted a `<form method="GET">`
-	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
-	 * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
-	 * - `link`: Navigation was triggered by a link click
-	 * - `popstate`: Navigation was triggered by back/forward navigation
-	 */
-	export type NavigationType = 'enter' | 'form' | 'leave' | 'link' | 'goto' | 'popstate';
-
-	export interface NavigationBase {
-		/**
-		 * The type of navigation:
-		 * - `enter`: The app has hydrated/started
-		 * - `form`: The user submitted a `<form method="GET">`
-		 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
-		 * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
-		 * - `link`: Navigation was triggered by a link click
-		 * - `popstate`: Navigation was triggered by back/forward navigation
-		 */
-		type: NavigationType;
-		/** Whether this is a shallow navigation. */
-		shallow: boolean;
-		/**
-		 * Where navigation was triggered from
-		 */
-		from: NavigationTarget | null;
-		/**
-		 * Where navigation is going to/has gone to
-		 */
-		to: NavigationTarget | null;
-		/**
-		 * Whether or not the navigation will result in the page being unloaded (i.e. not a client-side navigation).
-		 */
-		willUnload: boolean;
-		/**
-		 * A promise that resolves once the navigation is complete, and rejects if the navigation
-		 * fails or is aborted. In the case of a `willUnload` navigation, the promise will never resolve
-		 */
-		complete: Promise<void>;
-	}
-
-	/**
-	 * The navigation that occurs when the app starts/hydrates
-	 */
-	export interface NavigationEnter extends NavigationBase {
-		type: 'enter';
-
-		/**
-		 * In case of a history back/forward navigation, the number of steps to go back/forward
-		 */
-		delta?: undefined;
-
-		/**
-		 * Dispatched `Event` object when navigation occurred by `popstate` or `link`.
-		 */
-		event?: undefined;
-	}
-
-	export type NavigationExternal = NavigationGoto | NavigationLeave;
-
-	/**
-	 * A navigation triggered by a `goto(...)` call or a redirect
-	 */
-	export interface NavigationGoto extends NavigationBase {
-		type: 'goto';
-	}
-
-	/**
-	 * A navigation triggered by the tab being closed, or the user navigating to a different document
-	 */
-	export interface NavigationLeave extends NavigationBase {
-		type: 'leave';
-	}
-
-	/**
-	 * A navigation triggered by a `<form method="GET">`
-	 */
-	export interface NavigationFormSubmit extends NavigationBase {
-		type: 'form';
-
-		/**
-		 * The `SubmitEvent` that caused the navigation
-		 */
-		event: SubmitEvent;
-	}
-
-	/**
-	 * A navigation triggered by back/forward navigation
-	 */
-	export interface NavigationPopState extends NavigationBase {
-		type: 'popstate';
-
-		/**
-		 * In case of a history back/forward navigation, the number of steps to go back/forward
-		 */
-		delta: number;
-
-		/**
-		 * The `PopStateEvent` that caused the navigation
-		 */
-		event: PopStateEvent;
-	}
-
-	/**
-	 * A navigation triggered by a link click
-	 */
-	export interface NavigationLink extends NavigationBase {
-		type: 'link';
-
-		/**
-		 * The `PointerEvent` that caused the navigation
-		 */
-		event: PointerEvent;
-	}
-
-	export type Navigation =
-		NavigationExternal | NavigationFormSubmit | NavigationPopState | NavigationLink;
-
-	/**
-	 * The argument passed to [`beforeNavigate`](https://svelte.dev/docs/kit/$app-navigation#beforeNavigate) callbacks.
-	 */
-	export type BeforeNavigate = Navigation & {
-		/**
-		 * Call this to prevent the navigation from starting.
-		 */
-		cancel: () => void;
-	};
-
-	/**
-	 * The argument passed to [`onNavigate`](https://svelte.dev/docs/kit/$app-navigation#onNavigate) callbacks.
-	 */
-	export type OnNavigate = Navigation & {
-		type: Exclude<NavigationType, 'enter' | 'leave'>;
-		/**
-		 * Since `onNavigate` callbacks are called immediately before a client-side navigation, they will never be called with a navigation that unloads the page.
-		 */
-		willUnload: false;
-	};
-
-	/**
-	 * The argument passed to [`afterNavigate`](https://svelte.dev/docs/kit/$app-navigation#afterNavigate) callbacks.
-	 */
-	export type AfterNavigate = (Navigation | NavigationEnter) & {
-		type: Exclude<NavigationType, 'leave'>;
-		/**
-		 * Since `afterNavigate` callbacks are called after a navigation completes, they will never be called with a navigation that unloads the page.
-		 */
-		willUnload: false;
-	};
-
-	/**
-	 * The shape of the [`page`](https://svelte.dev/docs/kit/$app-state#page) reactive object.
-	 */
-	export interface Page<
-		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
-		RouteId extends AppRouteId | null = AppRouteId | null
-	> {
-		/**
-		 * The URL of the current page.
-		 */
-		url: ReadonlyURL & { readonly pathname: ResolvedPathname | (string & {}) };
-		/**
-		 * The parameters of the current page - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object.
-		 */
-		params: Params;
-		/**
-		 * Info about the current route.
-		 */
-		route: {
-			/**
-			 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
-			 */
-			id: RouteId;
-		};
-		/**
-		 * HTTP status code of the current page.
-		 */
-		status: number;
-		/**
-		 * The error object of the current page, if any. Filled from the `handleError` hooks.
-		 */
-		error: App.Error | null;
-		/**
-		 * The merged result of all data from all `load` functions on the current page. You can type a common denominator through `App.PageData`.
-		 */
-		data: App.PageData & Record<string, any>;
-		/**
-		 * The page state, which can be manipulated using [`goto`](https://svelte.dev/docs/kit/$app-navigation#goto) from `$app/navigation`.
-		 */
-		state: App.PageState;
-		/**
-		 * Information about the target of the current shallow navigation, or `null` if no shallow navigation has occurred.
-		 */
-		shallow: {
-			/** Parameters of the target route, or `null` if the URL does not resolve to a route. */
-			params: AppLayoutParams<'/'> | null;
-			/** Info about the target route, or `null` if the URL does not resolve to a route. */
-			route: { id: AppRouteId } | null;
-			/** The normalized URL passed to `goto(..., { shallow: true })`. */
-			url: ReadonlyURL;
-		} | null;
-		/**
-		 * Filled only after a form submission. See [form actions](https://svelte.dev/docs/kit/form-actions) for more info.
-		 */
-		form: any;
-	}
-
-	/**
 	 * The shape of a param matcher. See [matching](https://svelte.dev/docs/kit/advanced-routing#Matching) for more info.
 	 */
 	export type ParamMatcher<Output = any> = StandardSchemaV1<string, Output>;
@@ -1890,30 +1602,6 @@ declare module '@sveltejs/kit' {
 	> = Record<string, Action<Params, OutputData, RouteId>>;
 
 	/**
-	 * When calling a form action via fetch, the response will be one of these shapes.
-	 * ```svelte
-	 * <form method="post" use:enhance={() => {
-	 *   return ({ result }) => {
-	 * 		// result is of type ActionResult
-	 *   };
-	 * }}
-	 * ```
-	 *
-	 * Success and failure results carry the root-relative `pathname + search` of the action URL, with
-	 * the `?/actionName` parameter removed. Redirect results carry the redirect target. Server-generated
-	 * error results also carry the action location, while client-generated errors such as network
-	 * failures do not. `update` uses this location to emulate native form navigation.
-	 */
-	export type ActionResult<
-		Success extends Record<string, unknown> | undefined = Record<string, any>,
-		Failure extends Record<string, unknown> | undefined = Record<string, any>
-	> =
-		| { type: 'success'; status: number; data?: Success; location: string }
-		| { type: 'failure'; status: number; data?: Failure; location: string }
-		| { type: 'redirect'; status: number; location: string }
-		| { type: 'error'; status?: number; error: App.Error; location?: string };
-
-	/**
 	 * The object returned by the [`error`](https://svelte.dev/docs/kit/@sveltejs-kit#error) function.
 	 */
 	export interface HttpError {
@@ -1932,37 +1620,6 @@ declare module '@sveltejs/kit' {
 		/** The location to redirect to. */
 		location: string;
 	}
-
-	export type SubmitFunction<
-		Success extends Record<string, unknown> | undefined = Record<string, any>,
-		Failure extends Record<string, unknown> | undefined = Record<string, any>
-	> = (input: {
-		action: URL;
-		formData: FormData;
-		formElement: HTMLFormElement;
-		controller: AbortController;
-		submitter: HTMLElement | null;
-		cancel: () => void;
-	}) => MaybePromise<
-		| void
-		| ((opts: {
-				formData: FormData;
-				formElement: HTMLFormElement;
-				action: URL;
-				result: ActionResult<Success, Failure>;
-				/**
-				 * Call this to get the default behavior of a form submission response.
-				 * @param options Set `reset: false` if you don't want the `<form>` values to be reset after a successful submission. `refreshAll` defaults to `true` for successful results and `false` for failures. When the submission navigates, setting it to `false` still runs the destination's `load` functions but may reuse shared layout data. Set `navigate: false` to apply non-redirect results to the current page instead of navigating to `result.location`. Redirects are always followed.
-				 */
-				update: (options?: {
-					reset?: boolean;
-					refreshAll?: boolean;
-					navigate?: boolean;
-					/** @deprecated Use `refreshAll` instead. */
-					invalidateAll?: boolean;
-				}) => Promise<void>;
-		  }) => MaybePromise<void>)
-	>;
 
 	/**
 	 * The type of `export const snapshot` exported from a page or layout component.
@@ -3096,6 +2753,61 @@ declare module '$app/env' {
 
 declare module '$app/forms' {
 	/**
+	 * When calling a form action via fetch, the response will be one of these shapes.
+	 * ```svelte
+	 * <form method="post" use:enhance={() => {
+	 *   return ({ result }) => {
+	 * 		// result is of type ActionResult
+	 *   };
+	 * }}
+	 * ```
+	 *
+	 * Success and failure results carry the root-relative `pathname + search` of the action URL, with
+	 * the `?/actionName` parameter removed. Redirect results carry the redirect target. Server-generated
+	 * error results also carry the action location, while client-generated errors such as network
+	 * failures do not. `update` uses this location to emulate native form navigation.
+	 */
+	export type ActionResult<
+		Success extends Record<string, unknown> | undefined = Record<string, any>,
+		Failure extends Record<string, unknown> | undefined = Record<string, any>
+	> =
+		| { type: 'success'; status: number; data?: Success; location: string }
+		| { type: 'failure'; status: number; data?: Failure; location: string }
+		| { type: 'redirect'; status: number; location: string }
+		| { type: 'error'; status?: number; error: App.Error; location?: string };
+
+	export type SubmitFunction<
+		Success extends Record<string, unknown> | undefined = Record<string, any>,
+		Failure extends Record<string, unknown> | undefined = Record<string, any>
+	> = (input: {
+		action: URL;
+		formData: FormData;
+		formElement: HTMLFormElement;
+		controller: AbortController;
+		submitter: HTMLElement | null;
+		cancel: () => void;
+	}) => MaybePromise<
+		| void
+		| ((opts: {
+				formData: FormData;
+				formElement: HTMLFormElement;
+				action: URL;
+				result: ActionResult<Success, Failure>;
+				/**
+				 * Call this to get the default behavior of a form submission response.
+				 * @param options Set `reset: false` if you don't want the `<form>` values to be reset after a successful submission. `refreshAll` defaults to `true` for successful results and `false` for failures. When the submission navigates, setting it to `false` still runs the destination's `load` functions but may reuse shared layout data. Set `navigate: false` to apply non-redirect results to the current page instead of navigating to `result.location`. Redirects are always followed.
+				 */
+				update: (options?: {
+					reset?: boolean;
+					refreshAll?: boolean;
+					navigate?: boolean;
+					/** @deprecated Use `refreshAll` instead. */
+					invalidateAll?: boolean;
+				}) => Promise<void>;
+		  }) => MaybePromise<void>)
+	>;
+	type MaybePromise<T> = T | Promise<T>;
+	/**
 	 * Use this function to deserialize the response from a form submission.
 	 * Usage:
 	 *
@@ -3113,7 +2825,7 @@ declare module '$app/forms' {
 	 * }
 	 * ```
 	 * */
-	export function deserialize<Success extends Record<string, unknown> | undefined, Failure extends Record<string, unknown> | undefined>(result: string): import("@sveltejs/kit").ActionResult<Success, Failure>;
+	export function deserialize<Success extends Record<string, unknown> | undefined, Failure extends Record<string, unknown> | undefined>(result: string): import("$app/forms").ActionResult<Success, Failure>;
 	/**
 	 * This action enhances a `<form>` element that otherwise would work without JavaScript.
 	 *
@@ -3138,7 +2850,7 @@ declare module '$app/forms' {
 	 * @param form_element The form element
 	 * @param submit Submit callback
 	 */
-	export function enhance<Success extends Record<string, unknown> | undefined, Failure extends Record<string, unknown> | undefined>(form_element: HTMLFormElement, submit?: import("@sveltejs/kit").SubmitFunction<Success, Failure>): {
+	export function enhance<Success extends Record<string, unknown> | undefined, Failure extends Record<string, unknown> | undefined>(form_element: HTMLFormElement, submit?: import("$app/forms").SubmitFunction<Success, Failure>): {
 		destroy(): void;
 	};
 	/**
@@ -3146,13 +2858,243 @@ declare module '$app/forms' {
 	 * In case of an error, it renders the nearest error page. In case of a redirect, it navigates to
 	 * the redirect location.
 	 * */
-	export function applyAction<Success extends Record<string, unknown> | undefined, Failure extends Record<string, unknown> | undefined>(result: import("@sveltejs/kit").ActionResult<Success, Failure>): Promise<void>;
+	export function applyAction<Success extends Record<string, unknown> | undefined, Failure extends Record<string, unknown> | undefined>(result: import("$app/forms").ActionResult<Success, Failure>): Promise<void>;
 
 	export {};
 }
 
 declare module '$app/navigation' {
-	import type { RouteId } from '$app/types';
+	import type { LayoutParams as AppLayoutParams, RouteId as AppRouteId } from '$app/types';
+	/**
+	 * Information about the target of a specific navigation.
+	 */
+	export interface NavigationTarget<
+		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
+		RouteId extends AppRouteId | null = AppRouteId | null
+	> {
+		/**
+		 * Parameters of the target page - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object.
+		 * Is `null` if the target is not part of the SvelteKit app (could not be resolved to a route).
+		 */
+		params: Params | null;
+		/**
+		 * Info about the target route
+		 */
+		route: {
+			/**
+			 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
+			 */
+			id: RouteId | null;
+		};
+		/**
+		 * The URL that is navigated to
+		 */
+		url: URL;
+		/**
+		 * The scroll position associated with this navigation.
+		 *
+		 * For the `from` target, this is the scroll position at the moment of navigation.
+		 *
+		 * For the `to` target, this represents the scroll position that will be or was restored:
+		 * - In `beforeNavigate` and `onNavigate`, this is only available for `popstate` navigations (back/forward button)
+		 *   and will be `null` for other navigation types, since the final scroll position isn't known
+		 *   ahead of time.
+		 * - In `afterNavigate`, this is always the scroll position that was applied after the navigation
+		 *   completed.
+		 */
+		scroll: { x: number; y: number } | null;
+	}
+
+	export interface GotoOptions {
+		/**
+		 * If `true`, replaces the current history entry rather than creating a new one.
+		 * @default false
+		 */
+		replace?: boolean;
+		/** @deprecated Use `replace` instead. */
+		replaceState?: boolean;
+		/**
+		 * If `true`, updates the URL and `page.state` without navigating.
+		 * @default false
+		 */
+		shallow?: boolean;
+		/**
+		 * If `true`, resets the scroll position (to the top of the page, or to the element
+		 * matching the URL's `#hash` if there is one) and resets focus (to the `<body>`, or the
+		 * `autofocus` element if there is one) once the navigation completes.
+		 *
+		 * If `false`, the current scroll position and focused element are left alone.
+		 * @default true, or false when `shallow` is true
+		 */
+		reset?: boolean;
+		/**
+		 * If `true`, reruns all `load` functions and queries of the page.
+		 * @default false
+		 */
+		refreshAll?: boolean;
+		/** Causes any `load` functions to rerun if they depend on one of the URLs. */
+		invalidate?: Array<string | URL | ((url: URL) => boolean)>;
+		/** @deprecated Use `refreshAll` instead. */
+		invalidateAll?: boolean;
+		/** An optional object that will be available as `page.state`. */
+		state?: App.PageState;
+		/**
+		 * If `true`, `page.state` will be restored after a full page reload.
+		 * @default false
+		 */
+		persistState?: boolean;
+	}
+
+	/**
+	 * - `enter`: The app has hydrated/started
+	 * - `form`: The user submitted a `<form method="GET">`
+	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
+	 * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
+	 * - `link`: Navigation was triggered by a link click
+	 * - `popstate`: Navigation was triggered by back/forward navigation
+	 */
+	export type NavigationType = 'enter' | 'form' | 'leave' | 'link' | 'goto' | 'popstate';
+
+	export interface NavigationBase {
+		/**
+		 * The type of navigation:
+		 * - `enter`: The app has hydrated/started
+		 * - `form`: The user submitted a `<form method="GET">`
+		 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
+		 * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
+		 * - `link`: Navigation was triggered by a link click
+		 * - `popstate`: Navigation was triggered by back/forward navigation
+		 */
+		type: NavigationType;
+		/** Whether this is a shallow navigation. */
+		shallow: boolean;
+		/**
+		 * Where navigation was triggered from
+		 */
+		from: NavigationTarget | null;
+		/**
+		 * Where navigation is going to/has gone to
+		 */
+		to: NavigationTarget | null;
+		/**
+		 * Whether or not the navigation will result in the page being unloaded (i.e. not a client-side navigation).
+		 */
+		willUnload: boolean;
+		/**
+		 * A promise that resolves once the navigation is complete, and rejects if the navigation
+		 * fails or is aborted. In the case of a `willUnload` navigation, the promise will never resolve
+		 */
+		complete: Promise<void>;
+	}
+
+	/**
+	 * The navigation that occurs when the app starts/hydrates
+	 */
+	export interface NavigationEnter extends NavigationBase {
+		type: 'enter';
+
+		/**
+		 * In case of a history back/forward navigation, the number of steps to go back/forward
+		 */
+		delta?: undefined;
+
+		/**
+		 * Dispatched `Event` object when navigation occurred by `popstate` or `link`.
+		 */
+		event?: undefined;
+	}
+
+	export type NavigationExternal = NavigationGoto | NavigationLeave;
+
+	/**
+	 * A navigation triggered by a `goto(...)` call or a redirect
+	 */
+	export interface NavigationGoto extends NavigationBase {
+		type: 'goto';
+	}
+
+	/**
+	 * A navigation triggered by the tab being closed, or the user navigating to a different document
+	 */
+	export interface NavigationLeave extends NavigationBase {
+		type: 'leave';
+	}
+
+	/**
+	 * A navigation triggered by a `<form method="GET">`
+	 */
+	export interface NavigationFormSubmit extends NavigationBase {
+		type: 'form';
+
+		/**
+		 * The `SubmitEvent` that caused the navigation
+		 */
+		event: SubmitEvent;
+	}
+
+	/**
+	 * A navigation triggered by back/forward navigation
+	 */
+	export interface NavigationPopState extends NavigationBase {
+		type: 'popstate';
+
+		/**
+		 * In case of a history back/forward navigation, the number of steps to go back/forward
+		 */
+		delta: number;
+
+		/**
+		 * The `PopStateEvent` that caused the navigation
+		 */
+		event: PopStateEvent;
+	}
+
+	/**
+	 * A navigation triggered by a link click
+	 */
+	export interface NavigationLink extends NavigationBase {
+		type: 'link';
+
+		/**
+		 * The `PointerEvent` that caused the navigation
+		 */
+		event: PointerEvent;
+	}
+
+	export type Navigation =
+		NavigationExternal | NavigationFormSubmit | NavigationPopState | NavigationLink;
+
+	/**
+	 * The argument passed to [`beforeNavigate`](https://svelte.dev/docs/kit/$app-navigation#beforeNavigate) callbacks.
+	 */
+	export type BeforeNavigate = Navigation & {
+		/**
+		 * Call this to prevent the navigation from starting.
+		 */
+		cancel: () => void;
+	};
+
+	/**
+	 * The argument passed to [`onNavigate`](https://svelte.dev/docs/kit/$app-navigation#onNavigate) callbacks.
+	 */
+	export type OnNavigate = Navigation & {
+		type: Exclude<NavigationType, 'enter' | 'leave'>;
+		/**
+		 * Since `onNavigate` callbacks are called immediately before a client-side navigation, they will never be called with a navigation that unloads the page.
+		 */
+		willUnload: false;
+	};
+
+	/**
+	 * The argument passed to [`afterNavigate`](https://svelte.dev/docs/kit/$app-navigation#afterNavigate) callbacks.
+	 */
+	export type AfterNavigate = (Navigation | NavigationEnter) & {
+		type: Exclude<NavigationType, 'leave'>;
+		/**
+		 * Since `afterNavigate` callbacks are called after a navigation completes, they will never be called with a navigation that unloads the page.
+		 */
+		willUnload: false;
+	};
 	/**
 	 * A lifecycle function that captures state before navigating and restores it when traversing history.
 	 *
@@ -3173,7 +3115,7 @@ declare module '$app/navigation' {
 	 *
 	 * `afterNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
 	 * */
-	export function afterNavigate(callback: (navigation: import("@sveltejs/kit").AfterNavigate) => void): void;
+	export function afterNavigate(callback: (navigation: import("$app/navigation").AfterNavigate) => void): void;
 	/**
 	 * A navigation interceptor that triggers before we navigate to a URL, whether by clicking a link, calling `goto(...)`, or using the browser back/forward controls.
 	 *
@@ -3185,7 +3127,7 @@ declare module '$app/navigation' {
 	 *
 	 * `beforeNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
 	 * */
-	export function beforeNavigate(callback: (navigation: import("@sveltejs/kit").BeforeNavigate) => void): void;
+	export function beforeNavigate(callback: (navigation: import("$app/navigation").BeforeNavigate) => void): void;
 	/**
 	 * A lifecycle function that runs the supplied `callback` immediately before we navigate to a new URL except during full-page navigations.
 	 *
@@ -3195,7 +3137,7 @@ declare module '$app/navigation' {
 	 *
 	 * `onNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
 	 * */
-	export function onNavigate(callback: (navigation: import("@sveltejs/kit").OnNavigate) => MaybePromise<(() => void) | void>): void;
+	export function onNavigate(callback: (navigation: import("$app/navigation").OnNavigate) => MaybePromise<(() => void) | void>): void;
 	/**
 	 * If called when the page is being updated following a navigation (in `onMount` or `afterNavigate` or an action, for example), this disables SvelteKit's built-in scroll handling.
 	 * This is generally discouraged, since it breaks user expectations.
@@ -3213,7 +3155,7 @@ declare module '$app/navigation' {
 	 * @param url Where to navigate to. Note that if you've set [`config.paths.base`](https://svelte.dev/docs/kit/configuration#paths) and the URL is root-relative, you need to prepend the base path if you want to navigate within the app.
 	 * @param opts Options related to the navigation
 	 * */
-	export function goto(url: string | URL, opts?: import("@sveltejs/kit").GotoOptions): Promise<void>;
+	export function goto(url: string | URL, opts?: import("$app/navigation").GotoOptions): Promise<void>;
 	/**
 	 * Causes any `load` functions belonging to the currently active page to re-run if they depend on the `url` in question, via `fetch` or `depends`. Returns a `Promise` that resolves when the page is subsequently updated.
 	 *
@@ -3290,7 +3232,7 @@ declare module '$app/navigation' {
 	 * Returns a Promise that resolves when the modules have been imported.
 	 *
 	 * */
-	export function preloadCode(id: RouteId): Promise<void>;
+	export function preloadCode(id: AppRouteId): Promise<void>;
 	/**
 	 * Programmatically create a new history entry with the given `page.state`. Used for [shallow routing](https://svelte.dev/docs/kit/shallow-routing).
 	 *
@@ -3660,6 +3602,64 @@ declare module '$app/service-worker' {
 }
 
 declare module '$app/state' {
+	import type { ReadonlyURL } from '@sveltejs/kit';
+	import type { LayoutParams as AppLayoutParams, ResolvedPathname, RouteId as AppRouteId } from '$app/types';
+	/**
+	 * The shape of the [`page`](https://svelte.dev/docs/kit/$app-state#page) reactive object.
+	 */
+	export interface Page<
+		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
+		RouteId extends AppRouteId | null = AppRouteId | null
+	> {
+		/**
+		 * The URL of the current page.
+		 */
+		url: ReadonlyURL & { readonly pathname: ResolvedPathname | (string & {}) };
+		/**
+		 * The parameters of the current page - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object.
+		 */
+		params: Params;
+		/**
+		 * Info about the current route.
+		 */
+		route: {
+			/**
+			 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
+			 */
+			id: RouteId;
+		};
+		/**
+		 * HTTP status code of the current page.
+		 */
+		status: number;
+		/**
+		 * The error object of the current page, if any. Filled from the `handleError` hooks.
+		 */
+		error: App.Error | null;
+		/**
+		 * The merged result of all data from all `load` functions on the current page. You can type a common denominator through `App.PageData`.
+		 */
+		data: App.PageData & Record<string, any>;
+		/**
+		 * The page state, which can be manipulated using [`goto`](https://svelte.dev/docs/kit/$app-navigation#goto) from `$app/navigation`.
+		 */
+		state: App.PageState;
+		/**
+		 * Information about the target of the current shallow navigation, or `null` if no shallow navigation has occurred.
+		 */
+		shallow: {
+			/** Parameters of the target route, or `null` if the URL does not resolve to a route. */
+			params: AppLayoutParams<'/'> | null;
+			/** Info about the target route, or `null` if the URL does not resolve to a route. */
+			route: { id: AppRouteId } | null;
+			/** The normalized URL passed to `goto(..., { shallow: true })`. */
+			url: ReadonlyURL;
+		} | null;
+		/**
+		 * Filled only after a form submission. See [form actions](https://svelte.dev/docs/kit/form-actions) for more info.
+		 */
+		form: any;
+	}
 	/**
 	 * A read-only reactive object with information about the current page, serving several use cases:
 	 * - retrieving the combined `data` of all pages/layouts anywhere in your component tree (also see [loading data](https://svelte.dev/docs/kit/load))
@@ -3696,12 +3696,12 @@ declare module '$app/state' {
 	 * On the server, values can only be read during rendering (in other words _not_ in e.g. `load` functions). In the browser, the values can be read at any time.
 	 *
 	 * */
-	export const page: import("@sveltejs/kit").Page;
+	export const page: import("$app/state").Page;
 	/**
 	 * A read-only object representing an in-progress navigation, with `from`, `to`, `type` and (if `type === 'popstate'`) `delta` properties.
 	 * Values are `null` when no navigation is occurring, or during server rendering.
 	 * */
-	export const navigating: import("@sveltejs/kit").Navigation | {
+	export const navigating: import("$app/navigation").Navigation | {
 		from: null;
 		to: null;
 		type: null;
