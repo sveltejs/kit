@@ -158,6 +158,8 @@ async function create_routes({ builder, out, embed }) {
 	const asset_imports = [];
 	/** @type {string[]} */
 	const file_entries = [];
+	/** @type {Map<string, string>} */
+	const file_identifiers = new Map();
 
 	/**
 	 * @param {string} file
@@ -174,8 +176,10 @@ async function create_routes({ builder, out, embed }) {
 			asset = `resolve(import.meta.dir, ${JSON.stringify(relpath)})`;
 		}
 
-		file_entries.push(`[${JSON.stringify(file)}, Bun.file(${asset})]`);
-		return `files.get(${JSON.stringify(file)})`;
+		const identifier = `file_${file_entries.length}`;
+		file_entries.push(`const ${identifier} = Bun.file(${asset});`);
+		file_identifiers.set(file, identifier);
+		return identifier;
 	}
 
 	/**
@@ -228,12 +232,15 @@ async function create_routes({ builder, out, embed }) {
 	}
 
 	const imports = embed ? [] : [`import { resolve } from 'node:path';`];
-	const files = `export const files = new Map([${file_entries.join(',\n')}]);`;
 	const server_assets = builder.findServerAssets(
 		builder.routes.filter((route) => route.prerender !== true)
 	);
 	const readable_files = `export const server_assets = new Map([${server_assets
-		.map((file) => `[${JSON.stringify(file)}, files.get(${JSON.stringify(`client/${file}`)})]`)
+		.map((file) => {
+			const identifier = file_identifiers.get(`client/${file}`);
+			if (!identifier) throw new Error(`Could not find server asset ${file} in client output`);
+			return `[${JSON.stringify(file)}, ${identifier}]`;
+		})
 		.join(',\n')}]);`;
 
 	const routes = entries.map(
@@ -243,7 +250,7 @@ async function create_routes({ builder, out, embed }) {
 	return [
 		...imports,
 		...asset_imports,
-		files,
+		...file_entries,
 		readable_files,
 		`export const routes = {${routes.join(',\n')}};`
 	].join('\n');

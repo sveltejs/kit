@@ -65,19 +65,19 @@ describe('Bun build options', () => {
 
 		const source = build.mock.calls[0][0].files['.svelte-kit/output/server/adapter-bun-routes.js'];
 		expect(source).toContain(
-			'["client/data.json", Bun.file(resolve(import.meta.dir, "client/data.json"))]'
+			'const file_0 = Bun.file(resolve(import.meta.dir, "client/data.json"))'
 		);
-		expect(source).toContain('"/data.json": files.get("client/data.json")');
+		expect(source).toContain('"/data.json": file_0');
+		expect(source).toContain('new Response(file_2, { headers:');
 		expect(source).toContain(
-			'new Response(files.get("client/_app/immutable/assets/read.txt"), { headers:'
-		);
-		expect(source).toContain(
-			'["prerendered/prerendered/index.html", Bun.file(resolve(import.meta.dir, "prerendered/prerendered/index.html"))]'
+			'const file_3 = Bun.file(resolve(import.meta.dir, "prerendered/prerendered/index.html"))'
 		);
 		expect(source).toContain(
-			'export const server_assets = new Map([["_app/immutable/assets/read.txt", files.get("client/_app/immutable/assets/read.txt")]])'
+			'export const server_assets = new Map([["_app/immutable/assets/read.txt", file_2]])'
 		);
-		expect(source).not.toContain('["data.json", files.get("client/data.json")]');
+		expect(source).not.toContain('["data.json", file_0]');
+		expect(source).not.toContain('export const files');
+		expect(source).not.toContain('files.get');
 		expect(source).not.toContain('asset_path');
 	});
 
@@ -98,12 +98,12 @@ describe('Bun build options', () => {
 		const source = options.files['.svelte-kit/output/server/adapter-bun-routes.js'];
 		expect(options.compile).toEqual({ outfile: 'server' });
 		expect(source).toContain("with { type: 'file' }");
-		expect(source).toContain('["client/data.json", Bun.file(asset_0)]');
-		expect(source).toContain('["client/_app/immutable/assets/read.txt", Bun.file(asset_1)]');
-		expect(source).toContain(
-			'["_app/immutable/assets/read.txt", files.get("client/_app/immutable/assets/read.txt")]'
-		);
-		expect(source).toContain('"/data.json": new Response(files.get("client/data.json")');
+		expect(source).toContain('const file_0 = Bun.file(asset_0)');
+		expect(source).toContain('const file_1 = Bun.file(asset_1)');
+		expect(source).toContain('["_app/immutable/assets/read.txt", file_1]');
+		expect(source).toContain('"/data.json": new Response(file_0');
+		expect(source).not.toContain('export const files');
+		expect(source).not.toContain('files.get');
 		expect(source).not.toContain('asset_path');
 	});
 
@@ -134,8 +134,7 @@ describe('Bun build options', () => {
 
 test('the runtime reader reuses the generated Bun file', () => {
 	const source = readFileSync(new URL('./src/handler.js', import.meta.url), 'utf8');
-	expect(source).toContain('const asset = server_assets.get(file)');
-	expect(source).toContain('return asset.stream()');
+	expect(source).toContain('server_assets.get(file)?.stream() ?? null');
 	expect(source).not.toContain('Bun.file(');
 	expect(source).not.toContain('asset_path');
 });
