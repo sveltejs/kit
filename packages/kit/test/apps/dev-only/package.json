@@ -7,7 +7,7 @@
 		"build": "vite build",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync",
-		"check": "svelte-kit sync && tsc && svelte-check",
+		"check": "svelte-kit sync && tsc && rsvelte-check --tsconfig tsconfig.json",
 		"test": "pnpm test:dev",
 		"test:dev": "DEV=true playwright test"
 	},
@@ -25,7 +25,7 @@
 		"e2e-test-dep-page-universal": "file:./_test_dependencies/cjs-only",
 		"e2e-test-dep-server": "file:./_test_dependencies/cjs-only",
 		"svelte": "catalog:",
-		"svelte-check": "catalog:",
+		"@rsvelte/svelte-check": "catalog:",
 		"typescript": "catalog:",
 		"vite": "catalog:"
 	},
