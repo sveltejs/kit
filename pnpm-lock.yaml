@@ -466,8 +466,8 @@ importers:
         specifier: ^7.0.0
         version: 7.0.0(svelte@5.56.3(@typescript-eslint/types@8.61.1))(vite@8.1.5(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0))
       magic-string:
-        specifier: ^0.30.21
-        version: 0.30.21
+        specifier: ^1.0.0
+        version: 1.1.0
       sharp:
         specifier: ^0.35.3
         version: 0.35.3(@types/node@22.19.19)
@@ -542,8 +542,8 @@ importers:
         specifier: ^1.2.2
         version: 1.2.2
       magic-string:
-        specifier: ^0.30.21
-        version: 0.30.21
+        specifier: ^1.0.0
+        version: 1.1.0
       mrmime:
         specifier: ^2.0.0
         version: 2.0.0
@@ -3652,6 +3652,9 @@ packages:
   magic-string@0.30.21:
     resolution: {integrity: sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ==}
 
+  magic-string@1.1.0:
+    resolution: {integrity: sha512-kS3VHe0nEPST2saQV4Rbkchcd3UBRkVTQHo1D3h/ZTwFDhai/mfKkmtPAtD129EOI7K3HlHIsFOt0WrI2/oU9g==}
+
   mdn-data@2.27.1:
     resolution: {integrity: sha512-9Yubnt3e8A0OKwxYSXyhLymGW4sCufcLG6VdiDdUGVkPhpqLxlvP5vl1983gQjJl3tqbrM731mjaZaP68AgosQ==}
 
@@ -6297,6 +6300,10 @@ snapshots:
   lru-cache@11.5.2: {}
 
   magic-string@0.30.21:
+    dependencies:
+      '@jridgewell/sourcemap-codec': 1.5.5
+
+  magic-string@1.1.0:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.5.5
 
