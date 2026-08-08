@@ -37,7 +37,7 @@ export function client_asset(urlPath, filePath = urlPath) {
 	/** @type {Record<string, string>} */
 	const headers = { 'content-type': file.type };
 
-	if (urlPath.startsWith(`/${manifest.appPath}/immutable/`)) {
+	if (urlPath.startsWith(`${manifest.appDir}/immutable/`)) {
 		headers['cache-control'] = 'public,max-age=31536000,immutable';
 	}
 
