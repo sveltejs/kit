@@ -79,6 +79,15 @@ test('serves URL-encoded static filenames', async ({ request }) => {
 	expect(await response.text()).toBe('hello from an encoded filename\n');
 });
 
+test('serves filenames with a literal asterisk without creating a wildcard route', async ({ request }) => {
+	const asset = await request.get('/asterisk*.txt');
+	expect(asset.status()).toBe(200);
+	expect(await asset.text()).toBe('literal asterisk\n');
+
+	const page = await request.get('/platform');
+	expect(page.status()).toBe(200);
+});
+
 test('serves dotfiles from the static directory', async ({ request }) => {
 	const response = await request.get('/.well-known/adapter-bun.txt');
 	expect(response.status()).toBe(200);
@@ -100,10 +109,12 @@ test('caches immutable client assets', async ({ request }) => {
 	expect(asset_response.headers()['cache-control']).toBe('public,max-age=31536000,immutable');
 });
 
-test('uses Bun route method semantics for static files', async ({ request }) => {
-	const response = await request.post('/data.json');
+test('passes non-GET requests for static paths to SvelteKit', async ({ request }) => {
+	const response = await request.post('/data.json', {
+		headers: { origin: 'http://localhost:4174' }
+	});
 	expect(response.status()).toBe(200);
-	expect(await response.json()).toEqual({ message: 'hello from a static file' });
+	expect(await response.json()).toEqual({ message: 'hello from a server endpoint' });
 });
 
 test('redirects prerendered paths to their canonical trailing slash', async ({ request }) => {

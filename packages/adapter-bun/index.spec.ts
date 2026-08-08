@@ -70,24 +70,12 @@ describe('Bun build options', () => {
 		expect(test_builder.findServerAssets).toHaveBeenCalledWith([active_route]);
 
 		const source = build.mock.calls[0][0].files[routes_file];
-		expect(source).toContain(`const dir = dirname(Bun.main);`);
-		expect(source).toContain('const file_0 = Bun.file(resolve(dir, "client/data.json"))');
-		expect(source).toContain('"/data.json": file_response(file_0, "/data.json"');
-		expect(source).toContain('"/_app/immutable/assets/read.txt": file_response(file_2');
-		expect(source).toContain("import { manifest } from 'MANIFEST';");
+		expect(source).toContain('client_asset("data.json")');
+		expect(source).toContain('client_asset("_app/immutable/assets/read.txt")');
+		expect(source).toContain('...prerendered_page("/prerendered/", "prerendered/index.html")');
 		expect(source).toContain(
-			"manifest.mimeTypes[pathname.slice(pathname.lastIndexOf('.'))] || fallback"
+			'export const server_assets = new Map([["_app/immutable/assets/read.txt", server_asset("_app/immutable/assets/read.txt")]])'
 		);
-		expect(source).toContain(
-			'const file_3 = Bun.file(resolve(dir, "prerendered/prerendered/index.html"))'
-		);
-		expect(source).toContain(
-			'export const server_assets = new Map([["_app/immutable/assets/read.txt", file_2]])'
-		);
-		expect(source).not.toContain('["data.json", file_0]');
-		expect(source).not.toContain('export const files');
-		expect(source).not.toContain('files.get');
-		expect(source).not.toContain('asset_path');
 	});
 
 	test('maps logical paths to embedded Bun files for executables', async () => {
@@ -107,13 +95,9 @@ describe('Bun build options', () => {
 		const source = options.files[routes_file];
 		expect(options.compile).toEqual({ outfile: 'server' });
 		expect(source).toContain("with { type: 'file' }");
-		expect(source).toContain('const file_0 = Bun.file(asset_0)');
-		expect(source).toContain('const file_1 = Bun.file(asset_1)');
-		expect(source).toContain('["_app/immutable/assets/read.txt", file_1]');
-		expect(source).toContain('"/data.json": file_response(file_0, "/data.json"');
-		expect(source).not.toContain('export const files');
-		expect(source).not.toContain('files.get');
-		expect(source).not.toContain('asset_path');
+		expect(source).toContain('client_asset("data.json", asset_0)');
+		expect(source).toContain('client_asset("_app/immutable/assets/read.txt", asset_1)');
+		expect(source).toContain('server_asset("_app/immutable/assets/read.txt")');
 	});
 
 	test('preserves dotfiles other than Vite build metadata in executables', async () => {
@@ -123,7 +107,7 @@ describe('Bun build options', () => {
 
 		const source = build.mock.calls[0][0].files[routes_file];
 		expect(source).toContain('assetlinks.json');
-		expect(source).toContain('"/.well-known/assetlinks.json"');
+		expect(source).toContain('client_asset(".well-known/assetlinks.json", asset_0)');
 		expect(source).not.toContain('.vite/manifest.json');
 	});
 
@@ -138,9 +122,7 @@ describe('Bun build options', () => {
 		);
 
 		const source = build.mock.calls[0][0].files[routes_file];
-		expect(source).toContain('"/base/prerendered/": file_response(file_0, "/base/prerendered/"');
-		expect(source).toContain('"/base/prerendered": (request) => Response.redirect');
-		expect(source).toContain('new URL(request.url).search');
+		expect(source).toContain('...prerendered_page("/base/prerendered/", "prerendered/index.html")');
 		expect(source).not.toContain('/base/base/');
 	});
 
@@ -152,7 +134,7 @@ describe('Bun build options', () => {
 		);
 
 		const source = build.mock.calls[0][0].files[routes_file];
-		expect(source).toContain('"/old": Response.redirect("/new", 301)');
+		expect(source).toContain('prerendered_redirect("/old", 301, "/new")');
 	});
 
 	test('passes supported advanced build options to Bun', async () => {
