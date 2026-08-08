@@ -237,11 +237,11 @@ export function error_for_missing_config(feature_name, path, value) {
  */
 export function log_response(status, request) {
 	const url = new URL(request.url);
-	const log = `[${status}] ${request.method} ${url.href.replace(url.origin, '')}`;
 
-	if (status < 400) {
-		console.log(log);
-	} else {
-		console.error(styleText(['bold', 'red'], log));
-	}
+	let log = `${styleText(status < 400 ? ['cyan'] : ['bold', 'red'], `${status}`)} ${request.method}`;
+
+	// TODO grey out __data.json etc
+	log += ` ${url.href.replace(url.origin, '')}`;
+
+	console.log(log);
 }
