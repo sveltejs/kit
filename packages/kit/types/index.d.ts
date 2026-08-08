@@ -3145,7 +3145,7 @@ declare module '$app/navigation' {
 	 *
 	 * By default, the snapshot `id` is generated from the call site. Pass an explicit `id` to keep snapshots stable across deployments or distinguish multiple uses of a shared helper.
 	 *
-	 * The optional `reset` callback runs when a new history entry is created. Captured values are serialized with the app's transport hook.
+	 * The optional `reset` callback runs on navigations where there is no captured value to restore, such as when a new history entry is created. Captured values are serialized with the app's transport hook.
 	 *
 	 * `snapshot` must be called during a component initialization. It remains active as long as the component is mounted.
 	 * */

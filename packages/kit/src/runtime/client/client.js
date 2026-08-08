@@ -730,7 +730,7 @@ function restore_navigation_snapshot(index, reset_registrations) {
 }
 
 /** @param {Set<SnapshotRegistration>} registrations */
-function reset_navigation_snapshots(registrations) {
+function reset_snapshot_registrations(registrations) {
 	for (const registration of snapshot_registrations) {
 		if (registrations.has(registration)) {
 			registration.reset?.();
@@ -2280,7 +2280,7 @@ async function navigate({
 		restore_snapshot(current_navigation_index);
 		restore_navigation_snapshot(current_history_index, previous_snapshot_registrations);
 	} else {
-		reset_navigation_snapshots(previous_snapshot_registrations);
+		reset_snapshot_registrations(previous_snapshot_registrations);
 	}
 
 	navigating.current = null;
@@ -2518,11 +2518,30 @@ function add_navigation_callback(callbacks, callback) {
 }
 
 /**
+ * @param {string | undefined} stack
+ * @returns {string}
+ */
+function callsite_id(stack) {
+	let frames = stack?.split('\n') ?? [];
+	if (frames[0]?.trim() === 'Error') frames = frames.slice(1);
+
+	// only the callsite frame is stable: frames above it differ between hydration and
+	// re-mounting, and Vite query strings (stripped here) change on module invalidation
+	const frame = frames[1]?.replace(/\?[^)\s]*(?=:\d+:\d+\)?$)/, '');
+
+	if (!frame) {
+		throw new Error('Could not generate a snapshot id from the stack trace. Pass an `id` instead.');
+	}
+
+	return hash(frame);
+}
+
+/**
  * A lifecycle function that captures state before navigating and restores it when traversing history.
  *
  * By default, the snapshot `id` is generated from the call site. Pass an explicit `id` to keep snapshots stable across deployments or distinguish multiple uses of a shared helper.
  *
- * The optional `reset` callback runs when a new history entry is created. Captured values are serialized with the app's transport hook.
+ * The optional `reset` callback runs on navigations where there is no captured value to restore, such as when a new history entry is created. Captured values are serialized with the app's transport hook.
  *
  * `snapshot` must be called during a component initialization. It remains active as long as the component is mounted.
  * @template T
@@ -2536,23 +2555,12 @@ export function snapshot(options) {
 	if (id === undefined) {
 		// restore any lowered third-party limit, else every callsite collapses to one id
 		const limit = Error.stackTraceLimit;
-		if (typeof limit === 'number' && limit < 3) Error.stackTraceLimit = 3;
-		let stack = new Error().stack?.split('\n') ?? [];
-		if (typeof limit === 'number' && limit < 3) Error.stackTraceLimit = limit;
+		const lowered = typeof limit === 'number' && limit < 3;
+		if (lowered) Error.stackTraceLimit = 3;
+		const stack = new Error().stack;
+		if (lowered) Error.stackTraceLimit = limit;
 
-		if (stack[0]?.trim() === 'Error') stack = stack.slice(1);
-
-		// only the callsite frame is stable: frames above it differ between hydration and
-		// re-mounting, and Vite query strings (stripped here) change on module invalidation
-		const frame = stack[1]?.replace(/\?[^)\s]*(?=:\d+:\d+\)?$)/, '');
-
-		if (!frame) {
-			throw new Error(
-				'Could not generate a snapshot id from the stack trace. Pass an `id` instead.'
-			);
-		}
-
-		id = hash(frame);
+		id = callsite_id(stack);
 	}
 
 	const registration = { ...options, id };
@@ -3118,7 +3126,7 @@ async function update_state(intent, state, { replace, persist_state, reset }, ca
 		);
 	}
 
-	reset_navigation_snapshots(previous_snapshot_registrations);
+	reset_snapshot_registrations(previous_snapshot_registrations);
 
 	if (nav) {
 		navigating.current = null;
@@ -3458,8 +3466,6 @@ function _start_router() {
 				: null;
 
 			if (shallow) {
-				const previous_snapshot_registrations = new Set(snapshot_registrations);
-
 				// We don't need to navigate, we just need to update scroll and/or state.
 				// This happens with hash links and `pushState`/`replaceState`. The
 				// exception is if we haven't navigated yet, since we could have
@@ -3480,7 +3486,7 @@ function _start_router() {
 				current_history_index = history_index;
 				current_reset_index = reset_index;
 				if (reset && scroll) scrollTo(scroll.x, scroll.y);
-				restore_navigation_snapshot(current_history_index, previous_snapshot_registrations);
+				restore_navigation_snapshot(current_history_index, snapshot_registrations);
 				return;
 			}
 
