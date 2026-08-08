@@ -26,13 +26,20 @@ import * as devalue from 'devalue';
 import {
 	HISTORY_INFO_KEY,
 	HISTORY_METADATA_KEY,
-	NAVIGATION_SNAPSHOT_KEY,
 	PRELOAD_PRIORITIES,
 	SNAPSHOT_KEY
 } from './constants.js';
+import {
+	capture_navigation_snapshot,
+	delete_navigation_snapshot,
+	init_snapshots,
+	persist_navigation_snapshots,
+	reset_snapshot_registrations,
+	restore_navigation_snapshot,
+	snapshot_registrations
+} from './snapshots.js';
 import { validate_page_exports } from '../../utils/exports.js';
 import { noop } from '../../utils/functions.js';
-import { hash } from '../../utils/hash.js';
 import {
 	INVALIDATED_PARAM,
 	TRAILING_SLASH_PARAM,
@@ -63,10 +70,6 @@ import { init_transport, parse, stringify } from '#app/internal/transport';
  *   persistState: boolean;
  *   resetIndex: number;
  * }} HistoryMetadata
- */
-
-/**
- * @typedef {{ id: string; capture: () => any; restore: (value: any) => void; reset?: () => void }} SnapshotRegistration
  */
 
 export { load_css };
@@ -100,12 +103,7 @@ const history_info = storage.get(HISTORY_INFO_KEY) ?? {};
  */
 const snapshots = storage.get(SNAPSHOT_KEY) ?? {};
 
-// Function snapshots use history indexes so shallow entries have distinct state.
-/** @type {Record<string, Record<string, string>>} */
-const navigation_snapshots = storage.get(NAVIGATION_SNAPSHOT_KEY) ?? {};
-
-/** @type {Set<SnapshotRegistration>} */
-const snapshot_registrations = new Set();
+init_snapshots(() => (started && !is_navigating && !updating ? current_history_index : null));
 
 /** @type {Props} */
 let props;
@@ -219,7 +217,7 @@ function clear_onward_history(current_history_index, current_navigation_index) {
 	let i = current_history_index + 1;
 	while (history_info[i]) {
 		delete history_info[i];
-		delete navigation_snapshots[i];
+		delete_navigation_snapshot(i);
 		i += 1;
 	}
 
@@ -701,43 +699,6 @@ function restore_snapshot(index) {
 	});
 }
 
-/** @param {number} index */
-function capture_navigation_snapshot(index) {
-	if (snapshot_registrations.size === 0) {
-		delete navigation_snapshots[index];
-		return;
-	}
-
-	navigation_snapshots[index] = Object.fromEntries(
-		Array.from(snapshot_registrations, ({ id, capture }) => [id, stringify(capture())])
-	);
-}
-
-/**
- * @param {number} index
- * @param {Set<SnapshotRegistration>} [reset_registrations]
- */
-function restore_navigation_snapshot(index, reset_registrations) {
-	const values = navigation_snapshots[index];
-
-	for (const registration of snapshot_registrations) {
-		if (values && Object.hasOwn(values, registration.id)) {
-			registration.restore(parse(values[registration.id]));
-		} else if (reset_registrations?.has(registration)) {
-			registration.reset?.();
-		}
-	}
-}
-
-/** @param {Set<SnapshotRegistration>} registrations */
-function reset_snapshot_registrations(registrations) {
-	for (const registration of snapshot_registrations) {
-		if (registrations.has(registration)) {
-			registration.reset?.();
-		}
-	}
-}
-
 function persist_state() {
 	capture_scroll(current_history_index);
 	storage.set(HISTORY_INFO_KEY, history_info);
@@ -745,8 +706,7 @@ function persist_state() {
 	capture_snapshot(current_navigation_index);
 	storage.set(SNAPSHOT_KEY, snapshots);
 
-	capture_navigation_snapshot(current_history_index);
-	storage.set(NAVIGATION_SNAPSHOT_KEY, navigation_snapshots);
+	persist_navigation_snapshots(current_history_index);
 }
 
 /**
@@ -2108,7 +2068,7 @@ async function navigate({
 	capture_scroll(previous_history_index);
 	capture_snapshot(previous_navigation_index);
 	if (replace_state) {
-		delete navigation_snapshots[previous_history_index];
+		delete_navigation_snapshot(previous_history_index);
 	} else {
 		capture_navigation_snapshot(previous_history_index);
 	}
@@ -2513,78 +2473,6 @@ function add_navigation_callback(callbacks, callback) {
 
 		return () => {
 			callbacks.delete(callback);
-		};
-	});
-}
-
-/**
- * @param {string | undefined} stack
- * @returns {string}
- */
-function callsite_id(stack) {
-	let frames = stack?.split('\n') ?? [];
-	if (frames[0]?.trim() === 'Error') frames = frames.slice(1);
-
-	// only the callsite frame is stable: frames above it differ between hydration and
-	// re-mounting, and Vite query strings (stripped here) change on module invalidation
-	const frame = frames[1]?.replace(/\?[^)\s]*(?=:\d+:\d+\)?$)/, '');
-
-	if (!frame) {
-		throw new Error('Could not generate a snapshot id from the stack trace. Pass an `id` instead.');
-	}
-
-	return hash(frame);
-}
-
-/**
- * A lifecycle function that captures state before navigating and restores it when traversing history.
- *
- * By default, the snapshot `id` is generated from the call site. Pass an explicit `id` to keep snapshots stable across deployments or distinguish multiple uses of a shared helper.
- *
- * The optional `reset` callback runs on navigations where there is no captured value to restore, such as when a new history entry is created. Captured values are serialized with the app's transport hook.
- *
- * `snapshot` must be called during a component initialization. It remains active as long as the component is mounted.
- * @template T
- * @param {{ id?: string; capture: () => T; restore: (value: T) => void; reset?: () => void }} options
- * @returns {void}
- */
-export function snapshot(options) {
-	if (!BROWSER) return;
-
-	let id = options.id;
-	if (id === undefined) {
-		// restore any lowered third-party limit, else every callsite collapses to one id
-		const limit = Error.stackTraceLimit;
-		const lowered = typeof limit === 'number' && limit < 3;
-		if (lowered) Error.stackTraceLimit = 3;
-		const stack = new Error().stack;
-		if (lowered) Error.stackTraceLimit = limit;
-
-		id = callsite_id(stack);
-	}
-
-	const registration = { ...options, id };
-
-	onMount(() => {
-		if (DEV && Array.from(snapshot_registrations).some((existing) => existing.id === id)) {
-			throw new Error(
-				options.id === undefined
-					? 'snapshot() was called multiple times from the same call site. Pass a unique `id` to distinguish the instances.'
-					: `A snapshot with id "${options.id}" is already registered. Pass a unique \`id\`.`
-			);
-		}
-
-		if (started && !is_navigating && !updating) {
-			const values = navigation_snapshots[current_history_index];
-			if (values && Object.hasOwn(values, id)) {
-				registration.restore(parse(values[id]));
-			}
-		}
-
-		snapshot_registrations.add(registration);
-
-		return () => {
-			snapshot_registrations.delete(registration);
 		};
 	});
 }
@@ -3041,7 +2929,7 @@ async function update_state(intent, state, { replace, persist_state, reset }, ca
 	}
 
 	if (replace) {
-		delete navigation_snapshots[current_history_index];
+		delete_navigation_snapshot(current_history_index);
 	} else {
 		capture_scroll(current_history_index);
 		capture_navigation_snapshot(current_history_index);

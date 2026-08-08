@@ -10,6 +10,6 @@ export {
 	preloadCode,
 	preloadData,
 	pushState,
-	replaceState,
-	snapshot
+	replaceState
 } from '../client/client.js';
+export { snapshot } from '../client/snapshots.js';
