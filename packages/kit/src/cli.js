@@ -97,7 +97,7 @@ if (command === 'sync') {
 	}
 
 	try {
-		const vite = /** @type {import('vite')} */ (await import_peer('vite', process.cwd()));
+		const vite = /** @type {typeof import('vite')} */ (await import_peer('vite', process.cwd()));
 
 		const vite_config = await load_vite_config(values.config, vite);
 		const sveltekit_config = extract_svelte_config(vite_config);

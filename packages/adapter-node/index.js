@@ -11,7 +11,7 @@ function escape_regex(str) {
 	return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-/** @type {import('./index.js').default} */
+/** @type {typeof import('./index.js').default} */
 export default function (opts = {}) {
 	const { out = 'build', precompress = true, envPrefix = '' } = opts;
 

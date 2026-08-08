@@ -215,8 +215,7 @@ export async function dev(
 				),
 				nodes: manifest_data.nodes.map((node, index) => {
 					return async () => {
-						/** @type {SSRNode} */
-						const result = {};
+						const result = /** @type {SSRNode} */ ({});
 						result.index = index;
 						result.universal_id = node.universal;
 						result.server_id = node.server;

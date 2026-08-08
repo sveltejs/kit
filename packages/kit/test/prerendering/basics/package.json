@@ -7,7 +7,7 @@
 		"build": "rm -rf ./missing_ids && mkdir ./missing_ids && vite build",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync",
-		"check": "svelte-kit sync && tsc && svelte-check",
+		"check": "svelte-kit sync && tsc && rsvelte-check --tsconfig tsconfig.json",
 		"test": "pnpm test:build",
 		"test:build": "svelte-kit sync && vitest run",
 		"test:cross-platform": "pnpm test"
@@ -16,7 +16,7 @@
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"svelte": "catalog:",
-		"svelte-check": "catalog:",
+		"@rsvelte/svelte-check": "catalog:",
 		"typescript": "catalog:",
 		"vite": "catalog:",
 		"vitest": "catalog:"
