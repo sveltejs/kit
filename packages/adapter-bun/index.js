@@ -38,18 +38,12 @@ export default function (opts = {}) {
 
 			builder.log.minor('Building server');
 
-			const entrypoints = [resolve(import.meta.dirname, 'src', 'index.js')];
-
-			if (builder.hasServerInstrumentationFile()) {
-				if (buildOptions.compile) {
-					throw new Error(
-						'Instrumentation is not yet supported when using the Bun adapter with `compile: true`.'
-					);
-				}
-				entrypoints.push(`${builder.config.kit.outDir}/output/server/instrumentation.server.js`);
-			}
-
 			const server = builder.getServerDirectory();
+			const adapter_entrypoint = resolve(import.meta.dirname, 'src', 'index.js');
+			const instrumentation = builder.hasServerInstrumentationFile()
+				? `${server}/instrumentation.server.js`
+				: undefined;
+			const entrypoints = [adapter_entrypoint];
 
 			const manifest_file = `${server}/adapter-bun-manifest.js`;
 			const routes_file = `${server}/adapter-bun-routes.js`;
@@ -63,6 +57,19 @@ export default function (opts = {}) {
 					embed: !!buildOptions.compile
 				})
 			};
+
+			if (instrumentation) {
+				if (buildOptions.compile) {
+					const instrumented_entrypoint = `${server}/adapter-bun-instrumented.js`;
+					virtual_files[instrumented_entrypoint] = [
+						`import './instrumentation.server.js';`,
+						`await import(${JSON.stringify(adapter_entrypoint)});`
+					].join('\n');
+					entrypoints[0] = instrumented_entrypoint;
+				} else {
+					entrypoints.push(instrumentation);
+				}
+			}
 
 			/** @type {import('bun').BunPlugin} */
 			const adapter_plugin = {
@@ -114,6 +121,16 @@ export default function (opts = {}) {
 					}
 				}
 				throw new AggregateError(result.logs);
+			}
+
+			if (instrumentation && !buildOptions.compile) {
+				builder.instrument({
+					entrypoint: `${out}/index.js`,
+					instrumentation: `${out}/instrumentation.server.js`,
+					module: {
+						exports: ['server', 'unix']
+					}
+				});
 			}
 		},
 
