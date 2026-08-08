@@ -1,20 +1,9 @@
 {
+	"extends": "$app/tsconfig",
 	"compilerOptions": {
-		"allowJs": true,
-		"checkJs": true,
-		"exactOptionalPropertyTypes": true,
-		"noEmit": true,
-		"strictNullChecks": true,
-		"target": "esnext",
-		"module": "esnext",
-		"moduleResolution": "bundler",
 		"paths": {
 			"@sveltejs/kit": ["../../../../../exports/public"],
-			"types": ["../../../../../types/internal"],
-			"$app/types": ["../../../../../types/ambient.d.ts"]
-		},
-		"types": ["node"]
-	},
-	"include": ["./**/*.js", "./**/*.ts", ".svelte-kit/non-ambient.d.ts", "node_modules/$app/types"],
-	"exclude": ["..svelte-kit/**"]
+			"types": ["../../../../../types/internal"]
+		}
+	}
 }
