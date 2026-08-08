@@ -130,6 +130,37 @@ describe('Bun build options', () => {
 			sourcemap: 'linked'
 		});
 	});
+
+	test('runs server instrumentation before starting the server', async () => {
+		const test_builder = builder({ instrumentation: true });
+
+		await adapter({ out: 'dist' }).adapt(test_builder);
+
+		expect(build.mock.calls[0][0].entrypoints).toEqual([
+			new URL('./src/index.js', import.meta.url).pathname,
+			'.svelte-kit/output/server/instrumentation.server.js'
+		]);
+		expect(test_builder.instrument).toHaveBeenCalledWith({
+			entrypoint: 'dist/index.js',
+			instrumentation: 'dist/instrumentation.server.js',
+			module: {
+				exports: ['server', 'unix']
+			}
+		});
+	});
+
+	test('runs server instrumentation before starting a compiled executable', async () => {
+		const test_builder = builder({ instrumentation: true });
+
+		await adapter({ buildOptions: { compile: true } }).adapt(test_builder);
+
+		const options = build.mock.calls[0][0];
+		expect(options.entrypoints).toEqual(['.svelte-kit/output/server/adapter-bun-instrumented.js']);
+		expect(options.files[options.entrypoints[0]]).toBe(
+			`import './instrumentation.server.js';\nawait import(${JSON.stringify(new URL('./src/index.js', import.meta.url).pathname)});`
+		);
+		expect(test_builder.instrument).not.toHaveBeenCalled();
+	});
 });
 
 test('the runtime reader reuses the generated Bun file', () => {
@@ -178,7 +209,8 @@ function builder({
 	prerendered_pages = [],
 	routes = [],
 	server_assets = [],
-	app_path = '_app'
+	app_path = '_app',
+	instrumentation = false
 }: {
 	client_files?: string[];
 	prerendered_files?: string[];
@@ -186,6 +218,7 @@ function builder({
 	routes?: Array<{ id: string; prerender: boolean | string }>;
 	server_assets?: string[];
 	app_path?: string;
+	instrumentation?: boolean;
 } = {}) {
 	return {
 		config: { kit: { outDir: '.svelte-kit', paths: { base: '', origin: undefined } } },
@@ -199,6 +232,7 @@ function builder({
 		findServerAssets: vi.fn(() => server_assets),
 		generateManifest: () => '{}',
 		getAppPath: () => app_path,
-		hasServerInstrumentationFile: () => false
+		hasServerInstrumentationFile: () => instrumentation,
+		instrument: vi.fn()
 	} as any;
 }

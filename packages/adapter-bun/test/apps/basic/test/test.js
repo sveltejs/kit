@@ -24,6 +24,12 @@ test('provides Bun request context', async ({ request }) => {
 	expect(body.subscribers).toBe(0);
 });
 
+test('runs server instrumentation before starting the server', async ({ request }) => {
+	const response = await request.get('/instrumented');
+	expect(response.status()).toBe(200);
+	expect(await response.text()).toBe('true');
+});
+
 test('serves static files with Bun file responses', async ({ request }) => {
 	const response = await request.get('/data.json');
 	expect(response.status()).toBe(200);
