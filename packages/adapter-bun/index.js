@@ -141,9 +141,10 @@ export default function (opts = {}) {
 /**
  * @param {object} options
  * @param {import('@sveltejs/kit').Builder} options.builder
- * @returns {Promise<{imports: string[], entries: string[]}>}
+ * @param {string[]} options.server_assets
+ * @returns {Promise<{imports: string[], entries: string[], server_assets: string[]}>}
  */
-async function get_embed_entries({ builder }) {
+async function get_embed_entries({ builder, server_assets }) {
 	const builtFiles = `${builder.config.kit.outDir}/output`;
 
 	const [cl_files, pr_pages, pr_deps, pr_data] = await Promise.all([
@@ -153,41 +154,58 @@ async function get_embed_entries({ builder }) {
 		read_files_recursive(`${builtFiles}/prerendered/data`)
 	]);
 
+	console.assert(
+		builder.prerendered.pages.size === pr_pages.length,
+		'Mismatch between prerendered pages and files'
+	);
+
 	const assets = [...cl_files, ...pr_pages, ...pr_deps, ...pr_data];
 
 	const imports = assets.map(({ abs }, i) => {
 		return `import asset_${i} from ${JSON.stringify(abs)} with { type: 'file' };`;
 	});
 
+	let offset = 0;
 	const cl_entries = cl_files.map(({ rel }, i) => {
-		return `client_asset(${JSON.stringify(rel)}, asset_${i})`;
+		return `client_asset(${JSON.stringify(rel)}, asset_${offset + i})`;
 	});
+
+	offset += cl_files.length;
 	const pr_pages_entries = [...builder.prerendered.pages].map(([path, { file }]) => {
 		const fileIdx = pr_pages.findIndex((f) => f.rel === file);
 		if (fileIdx === -1)
 			throw new Error(`Could not find prerendered page ${file} for route ${path}`);
-		return `...prerendered_page(${JSON.stringify(path)}, asset_${cl_files.length + fileIdx})`;
+		return `...prerendered_page(${JSON.stringify(path)}, asset_${offset + fileIdx})`;
 	});
+
+	offset += pr_pages.length;
 	const pr_assets_entries = [...pr_deps, ...pr_data].map(({ rel }, i) => {
-		return `prerendered_asset(${JSON.stringify(rel)}, asset_${cl_files.length + pr_pages.length + i})`;
+		return `prerendered_asset(${JSON.stringify(rel)}, asset_${offset + i})`;
 	});
+
 	const pr_redirects = [...builder.prerendered.redirects].map(([src, { status, location }]) => {
 		return `prerendered_redirect(${JSON.stringify(src)}, ${status}, ${JSON.stringify(location)})`;
 	});
 
 	return {
 		imports,
-		entries: [...cl_entries, ...pr_pages_entries, ...pr_assets_entries, ...pr_redirects]
+		entries: [...cl_entries, ...pr_pages_entries, ...pr_assets_entries, ...pr_redirects],
+		server_assets: server_assets.map((file) => {
+			const idx = assets.findIndex((f) => f.rel === file);
+			if (idx === -1) throw new Error(`Could not find server asset ${file}`);
+			return `Bun.file(asset_${idx})`;
+		})
 	};
 }
 
 /**
  * @param {object} options
  * @param {import('@sveltejs/kit').Builder} options.builder
+ * @param {string[]} options.server_assets
  * @param {string} options.out
- * @returns {{imports: string[], entries: string[]}}
+ * @returns {{imports: string[], entries: string[], server_assets: string[]}}
  */
-function get_no_embed_entries({ builder, out }) {
+function get_no_embed_entries({ builder, server_assets, out }) {
 	const client_files = builder.writeClient(`${out}/client`);
 	const prerendered_files = builder.writePrerendered(`${out}/prerendered`);
 
@@ -214,7 +232,10 @@ function get_no_embed_entries({ builder, out }) {
 
 	return {
 		imports: [],
-		entries: [...cl_entries, ...pr_pages_entries, ...pr_assets_entries, ...pr_redirects]
+		entries: [...cl_entries, ...pr_pages_entries, ...pr_assets_entries, ...pr_redirects],
+		server_assets: server_assets.map((file) => {
+			return `Bun.file(resolve(dir, 'client', ${JSON.stringify(file)}))`;
+		})
 	};
 }
 
@@ -226,16 +247,24 @@ function get_no_embed_entries({ builder, out }) {
  * @returns {Promise<string>}
  */
 async function create_routes({ builder, out, embed }) {
-	const { imports, entries } = embed
-		? await get_embed_entries({ builder })
-		: get_no_embed_entries({ builder, out });
+	const server_assets = builder.findServerAssets(builder.routes);
+
+	const {
+		imports,
+		entries,
+		server_assets: resolved_server_assets
+	} = embed
+		? await get_embed_entries({ builder, server_assets })
+		: get_no_embed_entries({ builder, out, server_assets });
 
 	return [
 		`// eslint-disable-next-line @typescript-eslint/no-unused-vars`,
 		`import { client_asset, prerendered_asset, prerendered_page, prerendered_redirect } from './routes-util.js';`,
 		...imports,
 		`export const routes = Object.fromEntries([${entries.join(',\n')}]);`,
-		`export const server_assets = new Map();`
+		`export const server_assets = new Map([${resolved_server_assets
+			.map((file, i) => `[${JSON.stringify(server_assets[i])}, ${file}]`)
+			.join(',\n')}]);`
 	].join('\n');
 }
 
