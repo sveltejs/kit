@@ -14,7 +14,16 @@ import { parse, stringify } from '#app/internal/transport';
 const navigation_snapshots = storage.get(NAVIGATION_SNAPSHOT_KEY) ?? {};
 
 /** @type {Set<SnapshotRegistration>} */
-export const snapshot_registrations = new Set();
+const snapshot_registrations = new Set();
+
+/**
+ * The registrations mounted right now. Take before navigating and pass to
+ * `restore_navigation_snapshot` — only these are eligible for `reset`.
+ * @returns {Set<SnapshotRegistration>}
+ */
+export function current_registrations() {
+	return new Set(snapshot_registrations);
+}
 
 // injected by client.js: the live history index while the router is idle, null mid-navigation
 /** @type {() => number | null} */
@@ -48,15 +57,6 @@ export function restore_navigation_snapshot(index, reset_registrations) {
 		if (values && Object.hasOwn(values, registration.id)) {
 			registration.restore(parse(values[registration.id]));
 		} else if (reset_registrations?.has(registration)) {
-			registration.reset?.();
-		}
-	}
-}
-
-/** @param {Set<SnapshotRegistration>} registrations */
-export function reset_snapshot_registrations(registrations) {
-	for (const registration of snapshot_registrations) {
-		if (registrations.has(registration)) {
 			registration.reset?.();
 		}
 	}

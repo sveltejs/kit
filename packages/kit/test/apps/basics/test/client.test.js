@@ -1366,6 +1366,33 @@ test.describe('Snapshots', () => {
 		await expect(page.locator('[data-testid="order"]')).toHaveText('afterNavigate,restore');
 	});
 
+	test('starts fresh when a pushed entry reuses an abandoned history index', async ({
+		page,
+		clicknav
+	}) => {
+		await page.goto('/snapshot/stale/a');
+		await clicknav('[href="/snapshot/stale/b"]');
+
+		await page.locator('[data-testid="toggle"]').click();
+		await page.locator('[data-testid="stale-input"]').fill('abandoned value');
+
+		await clicknav('[href="/snapshot/stale/a"]');
+
+		// jump straight back two entries so the abandoned entry is never revisited
+		const index = await page.evaluate(() => history.state['sveltekit:metadata'].historyIndex);
+		await page.evaluate(() => history.go(-2));
+		await page.waitForFunction(
+			(previous) => history.state['sveltekit:metadata'].historyIndex === previous - 2,
+			index
+		);
+		await page.waitForTimeout(200);
+
+		// pushing reuses the abandoned entry's index, whose snapshot must not leak
+		await clicknav('[href="/snapshot/stale/b"]');
+		await page.locator('[data-testid="toggle"]').click();
+		await expect(page.locator('[data-testid="stale-input"]')).toHaveValue('');
+	});
+
 	test('captures and restores function snapshots on shallow navigations', async ({ page }) => {
 		await page.goto('/snapshot/helper');
 		const input = page.locator('[data-testid="default"]');

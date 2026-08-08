@@ -31,12 +31,11 @@ import {
 } from './constants.js';
 import {
 	capture_navigation_snapshot,
+	current_registrations,
 	delete_navigation_snapshot,
 	init_snapshots,
 	persist_navigation_snapshots,
-	reset_snapshot_registrations,
-	restore_navigation_snapshot,
-	snapshot_registrations
+	restore_navigation_snapshot
 } from './snapshots.js';
 import { validate_page_exports } from '../../utils/exports.js';
 import { noop } from '../../utils/functions.js';
@@ -214,6 +213,8 @@ function reset_scroll_and_focus(url, scroll, reset, active_element) {
 function clear_onward_history(current_history_index, current_navigation_index) {
 	// if we navigated back, then pushed a new state, we can
 	// release memory by pruning the scroll/snapshot lookup
+	// the new entry reuses the first abandoned index, so its slot must start clean
+	delete_navigation_snapshot(current_history_index);
 	let i = current_history_index + 1;
 	while (history_info[i]) {
 		delete history_info[i];
@@ -1958,7 +1959,7 @@ async function navigate({
 	// store this before calling `accept()`, which may change the index
 	const previous_history_index = current_history_index;
 	const previous_navigation_index = current_navigation_index;
-	const previous_snapshot_registrations = new Set(snapshot_registrations);
+	const previous_snapshot_registrations = current_registrations();
 
 	accept();
 
@@ -2238,10 +2239,9 @@ async function navigate({
 
 	if (type === 'popstate') {
 		restore_snapshot(current_navigation_index);
-		restore_navigation_snapshot(current_history_index, previous_snapshot_registrations);
-	} else {
-		reset_snapshot_registrations(previous_snapshot_registrations);
 	}
+	// new and replaced entries have no stored values, so this only resets there
+	restore_navigation_snapshot(current_history_index, previous_snapshot_registrations);
 
 	navigating.current = null;
 
@@ -2907,7 +2907,7 @@ export async function replaceState(url, state) {
  */
 async function update_state(intent, state, { replace, persist_state, reset }, caller) {
 	const url = intent.url;
-	const previous_snapshot_registrations = new Set(snapshot_registrations);
+	const previous_snapshot_registrations = current_registrations();
 
 	if (DEV && !started) {
 		throw new Error(`Cannot call ${caller}(...) before router is initialized`);
@@ -3014,7 +3014,7 @@ async function update_state(intent, state, { replace, persist_state, reset }, ca
 		);
 	}
 
-	reset_snapshot_registrations(previous_snapshot_registrations);
+	restore_navigation_snapshot(current_history_index, previous_snapshot_registrations);
 
 	if (nav) {
 		navigating.current = null;
@@ -3374,7 +3374,7 @@ function _start_router() {
 				current_history_index = history_index;
 				current_reset_index = reset_index;
 				if (reset && scroll) scrollTo(scroll.x, scroll.y);
-				restore_navigation_snapshot(current_history_index, snapshot_registrations);
+				restore_navigation_snapshot(current_history_index, current_registrations());
 				return;
 			}
 
