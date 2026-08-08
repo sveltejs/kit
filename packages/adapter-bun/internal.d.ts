@@ -1,7 +1,7 @@
 declare module 'MANIFEST' {
-	import type { SSRManifest } from '@sveltejs/kit';
-
-	export const manifest: SSRManifest;
+	export const manifest: import('@sveltejs/kit').SSRManifest;
+	export const base: string;
+	export const embed: boolean;
 }
 
 declare module 'ROUTES' {

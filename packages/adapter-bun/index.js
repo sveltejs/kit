@@ -40,14 +40,17 @@ export default function (opts = {}) {
 
 			const server = builder.getServerDirectory();
 
-			const manifest_file = `${server}/adapter-bun-manifest.js`;
-			const server_options_file = `${server}/adapter-bun-options.js`;
 			const src_dir = resolve(import.meta.dirname, 'src');
 			const index_file = resolve(src_dir, 'index.js');
 			const routes_file = resolve(src_dir, 'routes.js');
+			const manifest_file = resolve(src_dir, 'manifest.js');
+			const server_options_file = resolve(src_dir, 'options.js');
 
 			const virtual_files = {
-				[manifest_file]: `export const manifest = ${builder.generateManifest({ relativePath: './' })};\n`,
+				[manifest_file]:
+					`export const manifest = ${builder.generateManifest({ relativePath: './' })};\n` +
+					`export const base = ${builder.config.kit.paths.base || '/'};\n` +
+					`export const embed = ${!!buildOptions.compile};\n`,
 				[server_options_file]: `export default ${JSON.stringify(serverOptions)};\n`,
 				[routes_file]: await create_routes({
 					builder,
@@ -138,6 +141,57 @@ export default function (opts = {}) {
 /**
  * @param {object} options
  * @param {import('@sveltejs/kit').Builder} options.builder
+ * @returns {Promise<string>}
+ */
+async function create_routes_embed({ builder }) {
+	const builtFiles = `${builder.config.kit.outDir}/output`;
+
+	const [cl_files, pr_pages, pr_deps, pr_data] = await Promise.all([
+		read_files_recursive(`${builtFiles}/client`),
+		read_files_recursive(`${builtFiles}/prerendered/pages`),
+		read_files_recursive(`${builtFiles}/prerendered/dependencies`),
+		read_files_recursive(`${builtFiles}/prerendered/data`)
+	]);
+
+	builder.prerendered.pages;
+
+	const assets = [...cl_files, ...pr_pages, ...pr_deps, ...pr_data];
+
+	const asset_imports = assets.map(({ abs }, i) => {
+		return `import asset_${i} from ${JSON.stringify(abs)} with { type: 'file' };`;
+	});
+
+	const cl_entries = cl_files.map(({ rel }, i) => {
+		return `client_asset(${JSON.stringify(rel)}, asset_${i})`;
+	});
+	const pr_pages_entries = [...builder.prerendered.pages].map(([path, { file }]) => {
+		const fileIdx = pr_pages.findIndex((f) => f.rel === file);
+		if (fileIdx === -1)
+			throw new Error(`Could not find prerendered page ${file} for route ${path}`);
+		return `...prerendered_page(${JSON.stringify(path)}, asset_${cl_files.length + fileIdx})`;
+	});
+	const pr_assets_entries = [...pr_deps, ...pr_data].map(({ rel }, i) => {
+		return `prerendered_asset(${JSON.stringify(rel)}, asset_${cl_files.length + pr_pages.length + i})`;
+	});
+	const pr_redirects = [...builder.prerendered.redirects].map(([src, { status, location }]) => {
+		return `prerendered_redirect(${JSON.stringify(src)}, ${status}, ${JSON.stringify(location)})`;
+	});
+
+	return [
+		`import { client_asset, prerendered_asset, prerendered_page, prerendered_redirect } from './routes-util.js';`,
+		...asset_imports,
+		`export const client_routes = Object.fromEntries([${[
+			...cl_entries,
+			...pr_pages_entries,
+			...pr_assets_entries,
+			...pr_redirects
+		].join(',\n')}]);`
+	].join('\n');
+}
+
+/**
+ * @param {object} options
+ * @param {import('@sveltejs/kit').Builder} options.builder
  * @param {string} options.out
  * @param {boolean} options.embed
  * @returns {Promise<string>}
@@ -147,14 +201,17 @@ async function create_routes({ builder, out, embed }) {
 	const base = builder.config.kit.paths.base || '/';
 	const builtFiles = `${builder.config.kit.outDir}/output`;
 
-	const imports = embed ? [] : [`import { dirname, resolve } from 'node:path';`];
+	const imports = [
+		`import { manifest } from 'MANIFEST';`,
+		...(embed ? [] : [`import { dirname, resolve } from 'node:path';`])
+	];
 	const declarations = embed ? [] : [`const dir = dirname(Bun.main);`];
 
 	const client_files = embed
 		? await read_files_recursive(`${builtFiles}/client`)
 		: builder
 				.writeClient(`${out}/client`)
-				.map((rel) => ({ rel, abs: resolve(`${out}/client`, rel) }));
+				.map((rel) => ({ rel, abs: resolve(out, 'client', rel) }));
 
 	const prerendered_files = embed
 		? (
@@ -166,7 +223,7 @@ async function create_routes({ builder, out, embed }) {
 			).flat()
 		: builder
 				.writePrerendered(`${out}/prerendered`)
-				.map((rel) => ({ rel, abs: resolve(`${out}/prerendered`, rel) }));
+				.map((rel) => ({ rel, abs: resolve(out, 'prerendered', rel) }));
 
 	/** @type {string[]} */
 	const asset_imports = [];
@@ -198,19 +255,19 @@ async function create_routes({ builder, out, embed }) {
 
 	/**
 	 * @param {string} file
+	 * @param {string} pathname
 	 * @param {string} abspath
 	 * @param {boolean} [immutable]
 	 * @returns {string}
 	 */
-	function make_response(file, abspath, immutable = false) {
-		if (!embed && !immutable) return file;
-
+	function make_response(file, pathname, abspath, immutable = false) {
 		/** @type {Record<string, string>} */
 		const headers = {};
-		if (embed) headers['content-type'] = Bun.file(abspath).type;
 		if (immutable) headers['cache-control'] = 'public,max-age=31536000,immutable';
 
-		return `new Response(${file}, { headers: ${JSON.stringify(headers)} })`;
+		return `file_response(${file}, ${JSON.stringify(pathname)}, ${JSON.stringify(
+			Bun.file(abspath).type
+		)}, ${JSON.stringify(headers)})`;
 	}
 
 	/** @type {Array<{ path: string; value: string }>} */
@@ -220,7 +277,7 @@ async function create_routes({ builder, out, embed }) {
 		const path = posix.join(base, rel);
 		const immutable = path.startsWith(`/${app_path}/immutable/`);
 		const file = make_file(`client/${rel}`, abs);
-		entries.push({ path, value: make_response(file, abs, immutable) });
+		entries.push({ path, value: make_response(file, path, abs, immutable) });
 	}
 
 	for (const [path, { file }] of builder.prerendered.pages) {
@@ -229,7 +286,7 @@ async function create_routes({ builder, out, embed }) {
 			throw new Error(`Could not find prerendered page ${file} for route ${path}`);
 		const { abs, rel } = prerendered_files.splice(fileIdx, 1)[0];
 		const bun_file = make_file(`prerendered/${rel}`, abs);
-		entries.push({ path, value: make_response(bun_file, abs) });
+		entries.push({ path, value: make_response(bun_file, path, abs) });
 
 		const inverted = path.endsWith('/') ? path.slice(0, -1) : `${path}/`;
 		if (inverted) {
@@ -240,9 +297,14 @@ async function create_routes({ builder, out, embed }) {
 		}
 	}
 
+	for (const [path, { status, location }] of builder.prerendered.redirects) {
+		entries.push({ path, value: `Response.redirect(${JSON.stringify(location)}, ${status})` });
+	}
+
 	for (const { abs, rel } of prerendered_files) {
 		const file = make_file(`prerendered/${rel}`, abs);
-		entries.push({ path: posix.join(base, rel), value: make_response(file, abs) });
+		const path = posix.join(base, rel);
+		entries.push({ path, value: make_response(file, path, abs) });
 	}
 
 	const server_assets = builder.findServerAssets(
@@ -266,6 +328,11 @@ async function create_routes({ builder, out, embed }) {
 		...declarations,
 		...file_entries,
 		readable_files,
+		`function file_response(file, pathname, fallback, headers) {
+			const type = manifest.mimeTypes[pathname.slice(pathname.lastIndexOf('.'))] || fallback;
+			if (type) headers['content-type'] = type;
+			return new Response(file, { headers });
+		}`,
 		`export const routes = {${routes.join(',\n')}};`
 	].join('\n');
 }
