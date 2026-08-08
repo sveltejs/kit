@@ -1273,15 +1273,13 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
  * @param {URL} url
  */
 function resolve_fetch_url(input, init, url) {
-	let requested = input instanceof Request ? input.url : input;
-
 	// we must fixup relative urls so they are resolved from the target page
-	const resolved = new URL(requested, url);
+	const resolved = new URL(input instanceof Request ? input.url : input, url);
 
 	// match ssr serialized data url, which is important to find cached responses
-	if (resolved.origin === url.origin) {
-		requested = resolved.href.slice(url.origin.length);
-	}
+	// (the server serializes the normalized href)
+	const requested =
+		resolved.origin === url.origin ? resolved.href.slice(url.origin.length) : resolved.href;
 
 	// prerendered pages may be served from any origin, so `initial_fetch` urls shouldn't be resolved
 	const promise = started
