@@ -1,4 +1,4 @@
-import { AfterNavigate, BeforeNavigate, GotoOptions } from '@sveltejs/kit';
+import { AfterNavigate, BeforeNavigate, GotoOptions } from '$app/navigation';
 
 declare global {
 	interface Window {

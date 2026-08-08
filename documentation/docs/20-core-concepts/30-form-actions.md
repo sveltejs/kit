@@ -481,7 +481,7 @@ We can also implement progressive enhancement ourselves, without `use:enhance`, 
 			body: data
 		});
 
-		/** @type {import('@sveltejs/kit').ActionResult} */
+		/** @type {import('$app/forms').ActionResult} */
 		const result = deserialize(await response.text());
 
 		if (result.type !== 'redirect' && result.location !== undefined) {
