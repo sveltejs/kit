@@ -164,7 +164,7 @@ export interface Builder {
 	/**
 	 * Generate a server-side manifest to initialise the SvelteKit [server](https://svelte.dev/docs/kit/@sveltejs-kit#Server) with.
 	 * @param opts
-	 * @param opts.relativePath  A relative path to the base directory of the server build output
+	 * @param opts.relativePath A relative path to the base directory of the server build output
 	 */
 	generateManifest: (opts: { relativePath: string; routes?: RouteDefinition[] }) => string;
 

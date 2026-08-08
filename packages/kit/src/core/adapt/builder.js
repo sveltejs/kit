@@ -1,7 +1,6 @@
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
-/** @import { Builder } from '@sveltejs/kit' */
 /** @import { ResolvedConfig } from 'vite' */
-/** @import { RouteDefinition, EnvVarConfig } from '@sveltejs/kit' */
+/** @import { Builder, RouteDefinition, EnvVarConfig } from '@sveltejs/kit' */
 /** @import { RouteData, ValidatedConfig, BuildData, ServerMetadata, ServerMetadataRoute, Prerendered, PrerenderMap, Logger, RemoteChunk } from 'types' */
 import { loadEnv } from 'vite';
 import * as devalue from 'devalue';

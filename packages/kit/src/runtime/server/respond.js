@@ -264,6 +264,15 @@ export async function internal_respond(request, options, manifest, state) {
 			// reroute could alter the given URL, so we pass a copy
 			resolved_path =
 				(await options.hooks.reroute({ url: new URL(url), fetch: event.fetch })) ?? url.pathname;
+
+			if (!manifest._.routes.length && resolved_path !== url.pathname) {
+				state.rerouted_url = denormalise_url({
+					request_url: request.url,
+					resolved_path,
+					is_data_request,
+					is_route_resolution_request
+				}).toString();
+			}
 		} catch {
 			return text('Internal Server Error', {
 				status: 500
@@ -300,12 +309,12 @@ export async function internal_respond(request, options, manifest, state) {
 		!state.prerendering?.fallback &&
 		has_prerendered_path(manifest, resolved_path)
 	) {
-		const url = new URL(request.url);
-		url.pathname = is_data_request
-			? add_data_suffix(resolved_path)
-			: is_route_resolution_request
-				? add_resolution_suffix(resolved_path)
-				: resolved_path;
+		const url = denormalise_url({
+			request_url: request.url,
+			resolved_path,
+			is_data_request,
+			is_route_resolution_request
+		});
 
 		try {
 			// `fetch` automatically decodes the body, so we need to delete the related headers to not break the response
@@ -836,4 +845,27 @@ function propagate_context(fn) {
 			return await fn(req, ...rest);
 		});
 	};
+}
+
+/**
+ * @param {object} opts
+ * @param {string} opts.request_url - The original request URL
+ * @param {string} opts.resolved_path - The resolved pathname
+ * @param {boolean} opts.is_data_request - Whether the request is a data request
+ * @param {boolean} opts.is_route_resolution_request -
+ * @returns {URL}
+ */
+function denormalise_url({
+	request_url,
+	resolved_path,
+	is_data_request,
+	is_route_resolution_request
+}) {
+	const url = new URL(request_url);
+	url.pathname = is_data_request
+		? add_data_suffix(resolved_path)
+		: is_route_resolution_request
+			? add_resolution_suffix(resolved_path)
+			: resolved_path;
+	return url;
 }

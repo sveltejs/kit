@@ -51,12 +51,18 @@ const plugin = function (defaults = {}) {
 			 * @param {string} name
 			 * @param {import('./index.js').ServerlessConfig} config
 			 * @param {import('@sveltejs/kit').RouteDefinition<import('./index.js').Config>[]} routes
+			 * @param {string} [proxy]
 			 */
-			async function generate_serverless_function(name, config, routes) {
+			async function generate_serverless_function(name, config, routes, proxy) {
 				const dir = `${dirs.functions}/${name}.func`;
+				const entrypoint = `${tmp}/index.js`;
+
+				if (proxy) {
+					builder.copy(proxy, entrypoint);
+				}
 
 				const relativePath = path.posix.relative(tmp, builder.getServerDirectory());
-				builder.copy(`${files}/serverless.js`, `${tmp}/index.js`, {
+				builder.copy(`${files}/serverless.js`, proxy ? `${tmp}/serverless.js` : entrypoint, {
 					replace: {
 						SERVER: `${relativePath}/index.js`,
 						MANIFEST: './manifest.js'
@@ -64,7 +70,7 @@ const plugin = function (defaults = {}) {
 				});
 				if (builder.hasServerInstrumentationFile()) {
 					builder.instrument({
-						entrypoint: `${tmp}/index.js`,
+						entrypoint,
 						instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`
 					});
 				}
@@ -74,7 +80,7 @@ const plugin = function (defaults = {}) {
 					`export const manifest = ${builder.generateManifest({ relativePath, routes })};\n`
 				);
 
-				await create_function_bundle(builder, `${tmp}/index.js`, dir, config);
+				await create_function_bundle(builder, entrypoint, dir, config);
 
 				for (const asset of builder.findServerAssets(routes)) {
 					// TODO use symlinks, once Build Output API supports doing so
@@ -178,11 +184,7 @@ const plugin = function (defaults = {}) {
 				// generate one function for the group
 				const name = singular ? `${INTERNAL}/catchall` : `${INTERNAL}/${group.i}`;
 
-				await generate_serverless_function(
-					name,
-					/** @type {any} */ (group.config),
-					/** @type {import('@sveltejs/kit').RouteDefinition<any>[]} */ (group.routes)
-				);
+				await generate_serverless_function(name, group.config, group.routes);
 
 				for (const route of group.routes) {
 					functions.set(route.pattern.toString(), name);
@@ -197,8 +199,9 @@ const plugin = function (defaults = {}) {
 
 				await generate_serverless_function(
 					`${INTERNAL}/catchall`,
-					/** @type {any} */ ({ ...defaults, runtime }),
-					[]
+					{ ...defaults, runtime },
+					[],
+					`${files}/catch-all.js`
 				);
 			}
 

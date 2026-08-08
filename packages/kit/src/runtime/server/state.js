@@ -39,6 +39,7 @@ export function create_request_state(options, hooks) {
 		error: false,
 		depth: 0,
 		handleValidationError: hooks.handleValidationError,
+		rerouted_url: null,
 		...transient_fields()
 	};
 }
