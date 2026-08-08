@@ -14,6 +14,8 @@ export class Query {
 	/** @type {string} */
 	#key;
 
+	/** @type {undefined | true | (() => void)} */
+	#started;
 	/** @type {() => Promise<T>} */
 	#fn;
 	#loading = $state(true);
@@ -97,10 +99,19 @@ export class Query {
 		this.#latest.length = 0;
 	}
 
+	#resolve_started() {
+		if (typeof this.#started === 'function') {
+			this.#started();
+		}
+		this.#started = true;
+	}
+
 	#run() {
 		this.#loading = true;
 
-		const { promise, resolve, reject } = Promise.withResolvers();
+		let { promise, resolve, reject } = /** @type {PromiseWithResolvers<void>} */ (
+			Promise.withResolvers()
+		);
 
 		// the rejection is surfaced via `.error` / the `then` getter for awaiting
 		// consumers — a purely reactive consumer (`.current`) attaches no handler,
@@ -109,7 +120,25 @@ export class Query {
 
 		this.#latest.push(resolve);
 
-		Promise.resolve(this.#fn())
+		Promise.resolve()
+			.then(() => {
+				// Avoid running the query if it is not used yet but withOverride was
+				// called on it already.
+				if (this.#overrides.length && !this.#started) {
+					/** @type {Promise<void>} */
+					const promise = new Promise((res) => {
+						resolve = res;
+					});
+					this.#started = resolve;
+					return promise;
+				}
+			})
+			.then(() => {
+				// Skip fetching if we waited on override and a set() or refresh() happened in the meantime
+				const idx = this.#latest.indexOf(resolve);
+				if (idx === -1) return;
+				return this.#fn();
+			})
 			.then((value) => {
 				// Skip the response if resource was refreshed with a later promise while we were waiting for this one to resolve
 				const idx = this.#latest.indexOf(resolve);
@@ -158,7 +187,16 @@ export class Query {
 		return promise;
 	}
 
+	// Hack because create_remote_function accesses .then right away,
+	// and we don't want to track that as "accessed now start" yet.
+	#first_then_invocation = false;
+
 	get then() {
+		if (this.#first_then_invocation) {
+			this.#resolve_started();
+		} else {
+			this.#first_then_invocation = true;
+		}
 		// TODO this should be unnecessary but due to the bug described
 		// in #start, we need to do this in some circumstances
 		this.start();
@@ -166,6 +204,7 @@ export class Query {
 	}
 
 	get catch() {
+		this.#resolve_started();
 		this.start();
 		this.#then;
 		return (/** @type {any} */ reject) => {
@@ -174,6 +213,7 @@ export class Query {
 	}
 
 	get finally() {
+		this.#resolve_started();
 		this.start();
 		this.#then;
 		return (/** @type {any} */ fn) => {
@@ -191,11 +231,13 @@ export class Query {
 	}
 
 	get current() {
+		this.#resolve_started();
 		this.start();
 		return this.#current;
 	}
 
 	get error() {
+		this.#resolve_started();
 		this.start();
 		return this.#error;
 	}
@@ -204,6 +246,7 @@ export class Query {
 	 * Returns true if the resource is loading or reloading.
 	 */
 	get loading() {
+		this.#resolve_started();
 		this.start();
 		return this.#loading;
 	}
@@ -212,6 +255,7 @@ export class Query {
 	 * Returns true once the resource has been loaded for the first time.
 	 */
 	get ready() {
+		this.#resolve_started();
 		this.start();
 		return this.#ready;
 	}
@@ -238,6 +282,14 @@ export class Query {
 		this.#error = undefined;
 		this.#raw = value;
 		this.#promise = Promise.resolve();
+		// any in-flight-fetches are now outdated
+		for (const latest of this.#latest) {
+			latest(undefined);
+		}
+		this.#latest = [];
+		// resolve potential pending promise to prevent memory leaks (.then() in create_remote_function would never resolve).
+		// It's fine to resolve the promise because it's a noop due to if condition in #fn
+		this.#resolve_started();
 	}
 
 	/** @param {HttpError} error */
