@@ -7,6 +7,8 @@ import { manifest } from '../../server/internal.js';
 import { get_hooks } from '__SERVER__/internal.js';
 import { DEV } from 'esm-env';
 
+export { base, assets, app_dir } from './internal/server.js';
+
 /** @type {import('./client.js').asset} */
 export function asset(file) {
 	// TODO 4.0 remove this

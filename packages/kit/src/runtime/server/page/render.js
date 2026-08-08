@@ -400,7 +400,7 @@ export async function render_response({
 			if (route && !state.prerendering.resolved_route_ids.has(route.id)) {
 				state.prerendering.resolved_route_ids.add(route.id);
 
-				const id_pathname = paths.base + route_id_resolution_pathname(paths.app_dir, route.id);
+				const id_pathname = paths.base + route_id_resolution_pathname(route.id);
 
 				state.prerendering.dependencies.set(
 					id_pathname,

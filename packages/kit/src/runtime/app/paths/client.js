@@ -4,6 +4,8 @@ import { base, assets, hash_routing, match_implementation } from './internal/cli
 import { resolve_route } from '../../../utils/routing.js';
 import { DEV } from 'esm-env';
 
+export { base, assets, app_dir } from './internal/client.js';
+
 /**
  * Resolve the URL of an asset in your `static` directory, by prefixing it with [`config.paths.assets`](https://svelte.dev/docs/kit/configuration#paths) if configured, or otherwise by prefixing it with the base path.
  *
