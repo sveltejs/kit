@@ -57,6 +57,8 @@ export default /** @satisfies {import('vitest/config').ViteUserConfig} */ ({
 			},
 			{
 				extends: true,
+				// resolve the browser build of `svelte` so specs can `mount` components
+				resolve: { conditions: ['browser'] },
 				test: {
 					name: 'kit-client-runtime',
 					environment: 'jsdom',

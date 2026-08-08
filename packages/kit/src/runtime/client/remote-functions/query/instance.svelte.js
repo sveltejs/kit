@@ -78,7 +78,12 @@ export class Query {
 	}
 
 	#get_promise() {
-		void untrack(() => (this.#promise ??= this.#run()));
+		void untrack(() => {
+			// deliberately not `??=`: its compiled write-back would re-commit a stale batch read, undoing reset()
+			if (this.#promise === null) {
+				this.#promise = this.#run();
+			}
+		});
 		return /** @type {Promise<T>} */ (this.#promise);
 	}
 

@@ -9,14 +9,15 @@ export default defineConfig({
 			// prevent Vitest from crawling nested Vite apps in the kit test directory
 			// which do not use Vitest but have a vite.config.js file
 			'!packages/kit',
-			...kit_config.test.projects.map((project) => {
+			...kit_config.test.projects.map(({ test, ...project }) => {
 				return {
+					...project,
 					extends: 'packages/kit/vitest.kit.config.js',
 					root: 'packages/kit',
 					test: {
 						...kit_config.test,
 						// Vitest doesn't support nested project configs so we need to flatten it
-						...project.test
+						...test
 					}
 				};
 			}),

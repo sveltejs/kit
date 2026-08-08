@@ -65,6 +65,7 @@
 	"files": [
 		"src",
 		"!src/**/*.spec.js",
+		"!src/**/*.spec.svelte",
 		"!src/core/**/fixtures",
 		"!src/core/**/test",
 		"types",
