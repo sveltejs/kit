@@ -12,10 +12,7 @@ const dir = dirname(Bun.main);
  * @returns {string}
  */
 function encode_pathname(pathname) {
-	return pathname
-		.split('/')
-		.map((seg) => encodeURIComponent(seg).replace('*', '%2A'))
-		.join('/');
+	return pathname.split('/').map(encodeURIComponent).join('/');
 }
 
 /**
