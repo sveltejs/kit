@@ -3153,6 +3153,21 @@ declare module '$app/forms' {
 declare module '$app/navigation' {
 	import type { RouteId } from '$app/types';
 	/**
+	 * A lifecycle function that captures state before navigating and restores it when traversing history.
+	 *
+	 * By default, the snapshot `id` is generated from the call site. Pass an explicit `id` to keep snapshots stable across deployments or distinguish multiple uses of a shared helper.
+	 *
+	 * The optional `reset` callback runs on navigations where there is no captured value to restore, such as when a new history entry is created. Captured values are serialized with the app's transport hook.
+	 *
+	 * `snapshot` must be called during a component initialization. It remains active as long as the component is mounted.
+	 * */
+	export function snapshot<T>(options: {
+		id?: string;
+		capture: () => T;
+		restore: (value: T) => void;
+		reset?: () => void;
+	}): void;
+	/**
 	 * A lifecycle function that runs the supplied `callback` when the current component mounts, and also whenever we navigate to a URL.
 	 *
 	 * `afterNavigate` must be called during a component initialization. It remains active as long as the component is mounted.
