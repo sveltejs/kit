@@ -4,6 +4,8 @@
 		"paths": {
 			"@sveltejs/kit": ["../../../../../exports/public"],
 			"types": ["../../../../../types/internal"]
-		}
+		},
+		"exactOptionalPropertyTypes": true,
+		"strictNullChecks": true
 	}
 }
