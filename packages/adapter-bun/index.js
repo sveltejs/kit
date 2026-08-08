@@ -21,6 +21,16 @@ async function read_files_recursive(path) {
 	}
 }
 
+/** @param {string[]} files */
+function validate_file_paths(files) {
+	const invalid = files.find((file) => file.includes('*'));
+	if (invalid !== undefined) {
+		throw new Error(
+			`Cannot build with ${JSON.stringify(invalid)} because Bun treats literal \`*\` characters in route paths as wildcards. Rename the file to remove the \`*\` character.`
+		);
+	}
+}
+
 /** @type {import('./index.js').default} */
 export default function (opts = {}) {
 	const { out = 'build', envPrefix = '', serverOptions = {}, buildOptions = {} } = opts;
@@ -153,6 +163,7 @@ async function get_embed_entries({ builder, server_assets }) {
 	]);
 
 	const assets = [...cl_files, ...pr_pages, ...pr_deps, ...pr_data];
+	validate_file_paths(assets.map(({ rel }) => rel));
 
 	const imports = assets.map(({ abs }, i) => {
 		return `import asset_${i} from ${JSON.stringify(abs)} with { type: 'file' };`;
@@ -215,6 +226,7 @@ async function get_embed_entries({ builder, server_assets }) {
 function get_no_embed_entries({ builder, server_assets, out }) {
 	const client_files = builder.writeClient(`${out}/client`);
 	const prerendered_files = builder.writePrerendered(`${out}/prerendered`);
+	validate_file_paths([...client_files, ...prerendered_files]);
 
 	const cl_entries = client_files.map((filePath) => {
 		return `...client_asset(${JSON.stringify(filePath)})`;

@@ -93,17 +93,6 @@ test('serves URL-encoded static filenames', async ({ request }) => {
 	expect(await response.text()).toBe('hello from an encoded filename\n');
 });
 
-test('serves filenames with a literal asterisk without creating a wildcard route', async ({
-	request
-}) => {
-	const asset = await request.get('/asterisk*.txt');
-	expect(asset.status()).toBe(200);
-	expect(await asset.text()).toBe('literal asterisk\n');
-
-	const page = await request.get('/platform');
-	expect(page.status()).toBe(200);
-});
-
 test('serves dotfiles from the static directory', async ({ request }) => {
 	const response = await request.get('/.well-known/adapter-bun.txt');
 	expect(response.status()).toBe(200);

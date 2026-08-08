@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import adapter from './index.js';
 
 const index_file = new URL('./src/index.js', import.meta.url).pathname;
-const options_file = new URL('./src/options.js', import.meta.url).pathname;
+const manifest_file = new URL('./.svelte-kit/output/server/manifest.js', import.meta.url).pathname;
 const routes_file = new URL('./src/routes.js', import.meta.url).pathname;
 const start_file = new URL('./src/start.js', import.meta.url).pathname;
 
@@ -63,11 +63,8 @@ describe('Bun build options', () => {
 
 		const options = build.mock.calls[0][0];
 		expect(options.define).toBeUndefined();
-		expect(options.files[options_file]).toBe(
-			'export default {"port":4000};\n' +
-				'export const env_prefix = "MY_";\n' +
-				'export const origin = "https://example.com";'
-		);
+		expect(options.files[manifest_file]).toContain('export const env_prefix = "MY_";');
+		expect(options.files[manifest_file]).toContain('export const origin = "https://example.com";');
 	});
 
 	test('shares Bun files between directory routes and server reads', async () => {
@@ -139,6 +136,22 @@ describe('Bun build options', () => {
 		expect(source).toContain('assetlinks.json');
 		expect(source).toContain('...client_asset(".well-known/assetlinks.json", asset_0)');
 		expect(source).not.toContain('.vite/manifest.json');
+	});
+
+	test('rejects literal wildcard filenames in regular builds', async () => {
+		await expect(adapter().adapt(builder({ client_files: ['asterisk*.txt'] }))).rejects.toThrow(
+			'Rename the file to remove the `*` character'
+		);
+		expect(build).not.toHaveBeenCalled();
+	});
+
+	test('rejects literal wildcard filenames in compiled executables', async () => {
+		mock_embedded_files({ client: ['asterisk*.txt'] });
+
+		await expect(adapter({ buildOptions: { compile: true } }).adapt(builder())).rejects.toThrow(
+			'Rename the file to remove the `*` character'
+		);
+		expect(build).not.toHaveBeenCalled();
 	});
 
 	test('does not duplicate the base path for prerendered pages', async () => {
