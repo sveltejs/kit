@@ -2753,6 +2753,52 @@ declare module '$app/env' {
 
 declare module '$app/forms' {
 	/**
+	 * Use this function to deserialize the response from a form submission.
+	 * Usage:
+	 *
+	 * ```js
+	 * import { deserialize } from '$app/forms';
+	 *
+	 * async function handleSubmit(event) {
+	 *   const response = await fetch('/form?/action', {
+	 *     method: 'POST',
+	 *     body: new FormData(event.target)
+	 *   });
+	 *
+	 *   const result = deserialize(await response.text());
+	 *   // ...
+	 * }
+	 * ```
+	 * */
+	export function deserialize<Success extends Record<string, unknown> | undefined, Failure extends Record<string, unknown> | undefined>(result: string): import("$app/forms").ActionResult<Success, Failure>;
+	/**
+	 * This action enhances a `<form>` element that otherwise would work without JavaScript.
+	 *
+	 * The `submit` function is called upon submission with the given FormData and the `action` that should be triggered.
+	 * If `cancel` is called, the form will not be submitted.
+	 * You can use the abort `controller` to cancel the submission in case another one starts.
+	 * If a function is returned, that function is called with the response from the server.
+	 * If nothing is returned, the fallback will be used.
+	 *
+	 * If this function or its return value isn't set, it emulates the browser-native behaviour, just without the full-page reload. It
+	 * - resets the `<form>` element and refreshes all data in case of a successful submission with no redirect response
+	 * - updates the `form` prop, `page.form` and `page.status` if the action is on the same page as the form
+	 * - navigates to the page the submission lands on — populating that page's `form` prop and `page.status` — on success and failure if that isn't the current page, just as a native form submission would, but with the `?/actionName` param stripped from the destination URL
+	 * - redirects in case of a redirect response
+	 * - renders the nearest error page in case of an unexpected error — the one nearest the action's route, if the action is on a different page
+	 *
+	 * If you provide a custom function with a callback and want to use the default behavior, invoke `update` in your callback.
+	 * It accepts an options object
+	 * - `reset: false` if you don't want the `<form>` values to be reset after a successful submission
+	 * - `refreshAll` to control whether all data is refreshed after submission; it defaults to `true` for successes and `false` for failures
+	 * - `navigate: false` to apply non-redirect results to the current page rather than navigating to `result.location`; redirects are always followed
+	 * @param form_element The form element
+	 * @param submit Submit callback
+	 */
+	export function enhance<Success extends Record<string, unknown> | undefined, Failure extends Record<string, unknown> | undefined>(form_element: HTMLFormElement, submit?: import("$app/forms").SubmitFunction<Success, Failure>): {
+		destroy(): void;
+	};
+	/**
 	 * When calling a form action via fetch, the response will be one of these shapes.
 	 * ```svelte
 	 * <form method="post" use:enhance={() => {
@@ -2806,59 +2852,13 @@ declare module '$app/forms' {
 				}) => Promise<void>;
 		  }) => MaybePromise<void>)
 	>;
-	type MaybePromise<T> = T | Promise<T>;
-	/**
-	 * Use this function to deserialize the response from a form submission.
-	 * Usage:
-	 *
-	 * ```js
-	 * import { deserialize } from '$app/forms';
-	 *
-	 * async function handleSubmit(event) {
-	 *   const response = await fetch('/form?/action', {
-	 *     method: 'POST',
-	 *     body: new FormData(event.target)
-	 *   });
-	 *
-	 *   const result = deserialize(await response.text());
-	 *   // ...
-	 * }
-	 * ```
-	 * */
-	export function deserialize<Success extends Record<string, unknown> | undefined, Failure extends Record<string, unknown> | undefined>(result: string): import("$app/forms").ActionResult<Success, Failure>;
-	/**
-	 * This action enhances a `<form>` element that otherwise would work without JavaScript.
-	 *
-	 * The `submit` function is called upon submission with the given FormData and the `action` that should be triggered.
-	 * If `cancel` is called, the form will not be submitted.
-	 * You can use the abort `controller` to cancel the submission in case another one starts.
-	 * If a function is returned, that function is called with the response from the server.
-	 * If nothing is returned, the fallback will be used.
-	 *
-	 * If this function or its return value isn't set, it emulates the browser-native behaviour, just without the full-page reload. It
-	 * - resets the `<form>` element and refreshes all data in case of a successful submission with no redirect response
-	 * - updates the `form` prop, `page.form` and `page.status` if the action is on the same page as the form
-	 * - navigates to the page the submission lands on — populating that page's `form` prop and `page.status` — on success and failure if that isn't the current page, just as a native form submission would, but with the `?/actionName` param stripped from the destination URL
-	 * - redirects in case of a redirect response
-	 * - renders the nearest error page in case of an unexpected error — the one nearest the action's route, if the action is on a different page
-	 *
-	 * If you provide a custom function with a callback and want to use the default behavior, invoke `update` in your callback.
-	 * It accepts an options object
-	 * - `reset: false` if you don't want the `<form>` values to be reset after a successful submission
-	 * - `refreshAll` to control whether all data is refreshed after submission; it defaults to `true` for successes and `false` for failures
-	 * - `navigate: false` to apply non-redirect results to the current page rather than navigating to `result.location`; redirects are always followed
-	 * @param form_element The form element
-	 * @param submit Submit callback
-	 */
-	export function enhance<Success extends Record<string, unknown> | undefined, Failure extends Record<string, unknown> | undefined>(form_element: HTMLFormElement, submit?: import("$app/forms").SubmitFunction<Success, Failure>): {
-		destroy(): void;
-	};
 	/**
 	 * Updates the `form` property of the current page with the given data and updates `page.status`.
 	 * In case of an error, it renders the nearest error page. In case of a redirect, it navigates to
 	 * the redirect location.
 	 * */
 	export function applyAction<Success extends Record<string, unknown> | undefined, Failure extends Record<string, unknown> | undefined>(result: import("$app/forms").ActionResult<Success, Failure>): Promise<void>;
+	type MaybePromise<T> = T | Promise<T>;
 
 	export {};
 }
