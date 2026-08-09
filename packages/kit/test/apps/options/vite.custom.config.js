@@ -3,7 +3,7 @@ import * as path from 'node:path';
 import { sveltekit } from '@sveltejs/kit/vite';
 
 /** @type {import('vitest/config').ViteUserConfig} */
-const config = {
+export default {
 	build: {
 		minify: false,
 		assetsInlineLimit: 0
@@ -64,5 +64,3 @@ const config = {
 		include: ['./unit-test/*.spec.js']
 	}
 };
-
-export default config;

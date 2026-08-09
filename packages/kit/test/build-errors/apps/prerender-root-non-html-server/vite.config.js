@@ -2,7 +2,7 @@ import * as path from 'node:path';
 import { sveltekit } from '@sveltejs/kit/vite';
 
 /** @type {import('vite').UserConfig} */
-const config = {
+export default {
 	build: {
 		minify: false
 	},
@@ -19,5 +19,3 @@ const config = {
 		}
 	}
 };
-
-export default config;

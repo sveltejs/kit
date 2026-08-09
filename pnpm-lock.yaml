@@ -28,8 +28,8 @@ catalogs:
       specifier: ^1.0.0-next.28
       version: 1.0.0-next.28
     '@rsvelte/svelte-check':
-      specifier: ^0.5.4
-      version: 0.5.11
+      specifier: ^0.5.14
+      version: 0.5.14
     '@sveltejs/eslint-config':
       specifier: ^10.0.3
       version: 10.0.3
@@ -694,7 +694,7 @@ importers:
     devDependencies:
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
-        version: 0.5.11
+        version: 0.5.14
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../..
@@ -733,7 +733,7 @@ importers:
         version: 2.10.0(@opentelemetry/api@1.9.0)
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
-        version: 0.5.11
+        version: 0.5.14
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../..
@@ -766,7 +766,7 @@ importers:
     devDependencies:
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
-        version: 0.5.11
+        version: 0.5.14
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../..
@@ -817,7 +817,7 @@ importers:
     devDependencies:
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
-        version: 0.5.11
+        version: 0.5.14
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../..
@@ -838,7 +838,7 @@ importers:
     devDependencies:
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
-        version: 0.5.11
+        version: 0.5.14
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../..
@@ -859,7 +859,7 @@ importers:
     devDependencies:
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
-        version: 0.5.11
+        version: 0.5.14
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../..
@@ -880,7 +880,7 @@ importers:
     devDependencies:
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
-        version: 0.5.11
+        version: 0.5.14
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../..
@@ -904,7 +904,7 @@ importers:
         version: 5.1.0
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
-        version: 0.5.11
+        version: 0.5.14
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../..
@@ -928,7 +928,7 @@ importers:
     devDependencies:
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
-        version: 0.5.11
+        version: 0.5.14
       '@sveltejs/adapter-node':
         specifier: workspace:^
         version: link:../../../../adapter-node
@@ -955,7 +955,7 @@ importers:
     devDependencies:
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
-        version: 0.5.11
+        version: 0.5.14
       '@sveltejs/adapter-node':
         specifier: workspace:^
         version: link:../../../../adapter-node
@@ -979,7 +979,7 @@ importers:
     devDependencies:
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
-        version: 0.5.11
+        version: 0.5.14
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../..
@@ -1000,7 +1000,7 @@ importers:
     devDependencies:
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
-        version: 0.5.11
+        version: 0.5.14
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../..
@@ -1027,7 +1027,7 @@ importers:
     devDependencies:
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
-        version: 0.5.11
+        version: 0.5.14
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../../..
@@ -1048,7 +1048,7 @@ importers:
     devDependencies:
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
-        version: 0.5.11
+        version: 0.5.14
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../../..
@@ -1069,7 +1069,7 @@ importers:
     devDependencies:
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
-        version: 0.5.11
+        version: 0.5.14
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../../..
@@ -1090,7 +1090,7 @@ importers:
     devDependencies:
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
-        version: 0.5.11
+        version: 0.5.14
       '@sveltejs/adapter-auto':
         specifier: workspace:^
         version: link:../../../../../adapter-auto
@@ -1114,7 +1114,7 @@ importers:
     devDependencies:
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
-        version: 0.5.11
+        version: 0.5.14
       '@sveltejs/adapter-auto':
         specifier: workspace:^
         version: link:../../../../../adapter-auto
@@ -1136,9 +1136,6 @@ importers:
 
   packages/kit/test/build-errors/apps/prerender-root-non-html-server:
     devDependencies:
-      '@rsvelte/svelte-check':
-        specifier: 'catalog:'
-        version: 0.5.11
       '@sveltejs/adapter-auto':
         specifier: workspace:^
         version: link:../../../../../adapter-auto
@@ -1162,7 +1159,7 @@ importers:
     devDependencies:
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
-        version: 0.5.11
+        version: 0.5.14
       '@sveltejs/adapter-auto':
         specifier: workspace:^
         version: link:../../../../../adapter-auto
@@ -1186,7 +1183,7 @@ importers:
     devDependencies:
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
-        version: 0.5.11
+        version: 0.5.14
       '@sveltejs/adapter-auto':
         specifier: workspace:^
         version: link:../../../../../adapter-auto
@@ -1210,7 +1207,7 @@ importers:
     devDependencies:
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
-        version: 0.5.11
+        version: 0.5.14
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../../..
@@ -1231,7 +1228,7 @@ importers:
     devDependencies:
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
-        version: 0.5.11
+        version: 0.5.14
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../../..
@@ -1252,7 +1249,7 @@ importers:
     devDependencies:
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
-        version: 0.5.11
+        version: 0.5.14
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../../..
@@ -1273,7 +1270,7 @@ importers:
     devDependencies:
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
-        version: 0.5.11
+        version: 0.5.14
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../../..
@@ -1294,7 +1291,7 @@ importers:
     devDependencies:
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
-        version: 0.5.11
+        version: 0.5.14
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../../..
@@ -1315,7 +1312,7 @@ importers:
     devDependencies:
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
-        version: 0.5.11
+        version: 0.5.14
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../../..
@@ -1336,7 +1333,7 @@ importers:
     devDependencies:
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
-        version: 0.5.11
+        version: 0.5.14
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../../..
@@ -1357,7 +1354,7 @@ importers:
     devDependencies:
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
-        version: 0.5.11
+        version: 0.5.14
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../../..
@@ -1393,7 +1390,7 @@ importers:
     devDependencies:
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
-        version: 0.5.11
+        version: 0.5.14
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../../..
@@ -1414,7 +1411,7 @@ importers:
     devDependencies:
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
-        version: 0.5.11
+        version: 0.5.14
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../..
@@ -1438,7 +1435,7 @@ importers:
     devDependencies:
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
-        version: 0.5.11
+        version: 0.5.14
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../..
@@ -1462,7 +1459,7 @@ importers:
     devDependencies:
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
-        version: 0.5.11
+        version: 0.5.14
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../..
@@ -1538,7 +1535,7 @@ importers:
     devDependencies:
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
-        version: 0.5.11
+        version: 0.5.14
       '@sveltejs/adapter-auto':
         specifier: workspace:*
         version: link:../../packages/adapter-auto
@@ -2847,35 +2844,35 @@ packages:
       rollup:
         optional: true
 
-  '@rsvelte/svelte-check-darwin-arm64@0.5.11':
-    resolution: {integrity: sha512-LHAZMVWJ8ElTNkME3Qh13pY0rHrVI7LhcJKT8U4ITYolx2MCvPMQlyB9P8cbwMGaXHpiD6RZP4lRgMYbBHv7rw==}
+  '@rsvelte/svelte-check-darwin-arm64@0.5.14':
+    resolution: {integrity: sha512-etHvrwluWQ4Hib4oMgip9PodMhPa+b01w2igq8Vm9nzNZIjG6m7zN4c4AdDaxgw8BZGBxvhngVsQ6JcGb9lylA==}
     cpu: [arm64]
     os: [darwin]
 
-  '@rsvelte/svelte-check-darwin-x64@0.5.11':
-    resolution: {integrity: sha512-WX7ooX9JzNnXMpS3NxQ23m/7fph4u1HBMWFCRvxhURW4ZnNTuBaoIA9rbeb7qTz0LipS7n2s3lhmj9QkT22M3Q==}
+  '@rsvelte/svelte-check-darwin-x64@0.5.14':
+    resolution: {integrity: sha512-v70HV3A2S7Koim95wpp3DLI9g8zUdJOcWzPcjNj4JTFgKfN6VnQTIEd1VCDMd7LBS+2SU7q7RkOe5iXKq4c8Bg==}
     cpu: [x64]
     os: [darwin]
 
-  '@rsvelte/svelte-check-linux-arm64-gnu@0.5.11':
-    resolution: {integrity: sha512-WyyvyYFmbK9QzPSBVAgULrr3p77a+8yufLssBvsZFT7QAoKvDlkjA4PiYtU/Y9gZWLZkkHk8rsJACiAQy1ZVNg==}
+  '@rsvelte/svelte-check-linux-arm64-gnu@0.5.14':
+    resolution: {integrity: sha512-SEp2YCJWWXWifuO6NwYggog8T6CaJvVX8V4+aB0/kBoa0WehTTkAFKbljxmww0zOr6nh2iHIBuVLKYM6jwxcUw==}
     cpu: [arm64]
     os: [linux]
     libc: [glibc]
 
-  '@rsvelte/svelte-check-linux-x64-gnu@0.5.11':
-    resolution: {integrity: sha512-5VxTITwmyYSG756H+fpSrqcBKkI/3+AYQ2UXaBba6NAfoTqj/soPItjm0whgKiX+KT+2TFuVmXHAkCB+T7CwAw==}
+  '@rsvelte/svelte-check-linux-x64-gnu@0.5.14':
+    resolution: {integrity: sha512-XAybEDEeZXBgmoByIuO5e1YbR1MZGiBd3iyA8Pr+CozD4co17SJFhJHKmJRiJ42wvzOkD0Nib7MJqscXv/caug==}
     cpu: [x64]
     os: [linux]
     libc: [glibc]
 
-  '@rsvelte/svelte-check-win32-x64-msvc@0.5.11':
-    resolution: {integrity: sha512-PZSy6q7+4W4FnH0/TZo/F6DVLj4jMpSOmqG6q5BaYrLoZ8OfdGIbf8fYOLE3eKGQhmsytohnuDcWXBAzEcfqXQ==}
+  '@rsvelte/svelte-check-win32-x64-msvc@0.5.14':
+    resolution: {integrity: sha512-Hq7BYeynEpEM84UC5AA7wI0M3iFONUYrsS8kwWaOhRzsN01r+K1BlXcf+Ixk11WZE6/25zxrsV5ZnnUylmjqIg==}
     cpu: [x64]
     os: [win32]
 
-  '@rsvelte/svelte-check@0.5.11':
-    resolution: {integrity: sha512-V/HdnBBo9F0JEsp2ZVKNes6P5TS1BVgxvrf2bazEy2iFwMoYCRq2MMjKKj5wgJ+UledkXJhQP3JDXj0vbBctBg==}
+  '@rsvelte/svelte-check@0.5.14':
+    resolution: {integrity: sha512-3yQFdWbF2JevlfhPm0DZOC/YIGgSstOv3ts+YZJp2kl/5cax4CZqRFUk6NSJK95Jv9C1mu+SICewygszRKVb6g==}
     hasBin: true
 
   '@sindresorhus/is@7.2.0':
@@ -5557,28 +5554,28 @@ snapshots:
       estree-walker: 2.0.2
       picomatch: 4.0.5
 
-  '@rsvelte/svelte-check-darwin-arm64@0.5.11':
+  '@rsvelte/svelte-check-darwin-arm64@0.5.14':
     optional: true
 
-  '@rsvelte/svelte-check-darwin-x64@0.5.11':
+  '@rsvelte/svelte-check-darwin-x64@0.5.14':
     optional: true
 
-  '@rsvelte/svelte-check-linux-arm64-gnu@0.5.11':
+  '@rsvelte/svelte-check-linux-arm64-gnu@0.5.14':
     optional: true
 
-  '@rsvelte/svelte-check-linux-x64-gnu@0.5.11':
+  '@rsvelte/svelte-check-linux-x64-gnu@0.5.14':
     optional: true
 
-  '@rsvelte/svelte-check-win32-x64-msvc@0.5.11':
+  '@rsvelte/svelte-check-win32-x64-msvc@0.5.14':
     optional: true
 
-  '@rsvelte/svelte-check@0.5.11':
+  '@rsvelte/svelte-check@0.5.14':
     optionalDependencies:
-      '@rsvelte/svelte-check-darwin-arm64': 0.5.11
-      '@rsvelte/svelte-check-darwin-x64': 0.5.11
-      '@rsvelte/svelte-check-linux-arm64-gnu': 0.5.11
-      '@rsvelte/svelte-check-linux-x64-gnu': 0.5.11
-      '@rsvelte/svelte-check-win32-x64-msvc': 0.5.11
+      '@rsvelte/svelte-check-darwin-arm64': 0.5.14
+      '@rsvelte/svelte-check-darwin-x64': 0.5.14
+      '@rsvelte/svelte-check-linux-arm64-gnu': 0.5.14
+      '@rsvelte/svelte-check-linux-x64-gnu': 0.5.14
+      '@rsvelte/svelte-check-win32-x64-msvc': 0.5.14
 
   '@sindresorhus/is@7.2.0': {}
 

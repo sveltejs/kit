@@ -3,7 +3,7 @@ import { sveltekit } from '@sveltejs/kit/vite';
 import adapter from '../../../../adapter-static/index.js';
 
 /** @type {import('vitest/config').ViteUserConfig} */
-const config = {
+export default {
 	build: {
 		minify: false
 	},
@@ -50,5 +50,3 @@ const config = {
 		name: 'kit-prerendering-options'
 	}
 };
-
-export default config;
