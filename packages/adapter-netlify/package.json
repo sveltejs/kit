@@ -51,7 +51,7 @@
 		"@sveltejs/kit": "workspace:^",
 		"@types/deno": "^2.7.0",
 		"@types/node": "catalog:",
-		"typescript": "catalog:",
+		"typescript": "catalog:typescript-native",
 		"vitest": "catalog:"
 	},
 	"peerDependencies": {

@@ -76,7 +76,7 @@ catalog:
   # This version of TypeScript is for apps using it just for type checking.
   # `kit` and `package` cannot follow the catalog version because they require it
   # for generating types and TypeScript can have breaking changes in minors
-  typescript: ^7.0.2
+  typescript: ^6.0.3
   '@typescript/native': npm:typescript@^7.0.2
   valibot: ^1.4.2
   vite: ^8.1.5
@@ -87,6 +87,8 @@ catalog:
   vitest: ^4.1.10
   jsdom: ^30.0.0
 catalogs:
+  typescript-native:
+    typescript: ^7.0.2
   # these show up in the ci.yml like `vite: 'beta'`, etc.
   vite-baseline:
     vite: ^8.0.12

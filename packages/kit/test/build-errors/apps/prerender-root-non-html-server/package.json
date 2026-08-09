@@ -7,7 +7,7 @@
 		"build": "vite build",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync",
-		"check": "svelte-kit sync && tsc"
+		"check": "svelte-kit sync && node node_modules/@typescript/native/bin/tsc"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "workspace:^",
@@ -15,6 +15,7 @@
 		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"svelte": "catalog:",
 		"typescript": "catalog:",
+		"@typescript/native": "catalog:",
 		"vite": "catalog:"
 	},
 	"type": "module"

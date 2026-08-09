@@ -7,7 +7,7 @@
 		"build": "vite build",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync",
-		"check": "svelte-kit sync && tsc && rsvelte-check --tsconfig tsconfig.json",
+		"check": "svelte-kit sync && node node_modules/@typescript/native/bin/tsc && rsvelte-check --tsgo --tsconfig tsconfig.json",
 		"test": "pnpm test:build",
 		"test:build": "svelte-kit sync && pnpm build && vitest run"
 	},
@@ -17,6 +17,7 @@
 		"svelte": "catalog:",
 		"@rsvelte/svelte-check": "catalog:",
 		"typescript": "catalog:",
+		"@typescript/native": "catalog:",
 		"vite": "catalog:",
 		"vitest": "catalog:"
 	},
