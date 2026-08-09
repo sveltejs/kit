@@ -33,6 +33,11 @@ When you navigate away from this page — including via [shallow routing](shallo
 Snapshots must have a unique ID in order to survive across component remounts and page reloads. By default, this is generated from the stack trace when `snapshot(...)` is called, but you can also explicitly provide an `id` to (for example) keep snapshots stable across deployments, even if the stack trace differs because of changes to the source code, or to distinguish snapshots created via a shared wrapper function or in multiple instances of the same component:
 
 ```js
+import { snapshot } from '$app/navigation';
+
+let comment = '';
+
+// ---cut---
 snapshot({
 	+++id: 'comment',+++
 	capture: () => comment,
