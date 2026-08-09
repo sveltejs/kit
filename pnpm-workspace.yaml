@@ -54,7 +54,6 @@ catalog:
   '@opentelemetry/sdk-trace-node': ^2.8.0
   '@playwright/test': ^1.62.0
   '@polka/url': ^1.0.0-next.28
-  '@sveltejs/eslint-config': ^10.0.3
   '@sveltejs/vite-plugin-svelte': ^7.0.0
   '@types/connect': ^3.4.38
   '@types/estree': ^1.0.8

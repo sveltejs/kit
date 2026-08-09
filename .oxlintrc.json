@@ -1,0 +1,228 @@
+{
+	"$schema": "./node_modules/oxlint/configuration_schema.json",
+	"plugins": ["typescript", "unicorn"],
+	"jsPlugins": ["eslint-plugin-n"],
+	"categories": {
+		"correctness": "off"
+	},
+	"options": {
+		"typeAware": true
+	},
+	"env": {
+		"builtin": true,
+		"browser": true,
+		"node": true
+	},
+	"ignorePatterns": [
+		"**/.svelte-kit",
+		"**/.netlify",
+		"**/.vercel",
+		"**/.wrangler",
+		"**/test-results",
+		"**/dist",
+		"**/.custom-out-dir",
+		"packages/adapter-node/files",
+		"packages/kit/src/core/config/fixtures/multiple",
+		"packages/kit/src/core/sync/create_manifest_data/test/samples/**/*",
+		"packages/kit/src/core/sync/write_types/test/*/**/*",
+		"packages/kit/types/index.d.ts",
+		"packages/*/test/apps/**/*",
+		"packages/*/test/**/build/**",
+		"packages/kit/test/build-errors/**/*",
+		"packages/kit/test/prerendering/**/*",
+		"packages/kit/test/types/**/*",
+		"packages/test-redirect-importer/index.js",
+		"packages/package/test/errors/**/*",
+		"packages/package/test/fixtures/**/*",
+		"packages/package/test/watch/**/*",
+		"packages/adapter-node/smoke.spec_disabled.js"
+	],
+	"rules": {
+		"constructor-super": "error",
+		"for-direction": "error",
+		"getter-return": "error",
+		"no-array-constructor": "error",
+		"no-async-promise-executor": "error",
+		"no-case-declarations": "error",
+		"no-class-assign": "error",
+		"no-compare-neg-zero": "error",
+		"no-cond-assign": "error",
+		"no-const-assign": "error",
+		"no-constant-binary-expression": "error",
+		"no-constant-condition": [
+			"error",
+			{
+				"checkLoops": false
+			}
+		],
+		"no-control-regex": "error",
+		"no-debugger": "error",
+		"no-delete-var": "error",
+		"no-dupe-class-members": "error",
+		"no-dupe-else-if": "error",
+		"no-dupe-keys": "error",
+		"no-duplicate-case": "error",
+		"no-duplicate-imports": "error",
+		"no-empty": [
+			"error",
+			{
+				"allowEmptyCatch": true
+			}
+		],
+		"no-empty-character-class": "error",
+		"no-empty-pattern": "error",
+		"no-empty-static-block": "error",
+		"no-ex-assign": "error",
+		"no-extra-boolean-cast": "error",
+		"no-fallthrough": "error",
+		"no-func-assign": "error",
+		"no-global-assign": "error",
+		"no-import-assign": "error",
+		"no-invalid-regexp": "error",
+		"no-irregular-whitespace": "error",
+		"no-loss-of-precision": "error",
+		"no-misleading-character-class": "error",
+		"no-new-native-nonconstructor": "error",
+		"no-nonoctal-decimal-escape": "error",
+		"no-obj-calls": "error",
+		"no-prototype-builtins": "error",
+		"no-redeclare": "error",
+		"no-regex-spaces": "error",
+		"no-restricted-properties": [
+			"error",
+			{
+				"object": "test",
+				"property": "only",
+				"message": "Do not check in test.only tests."
+			}
+		],
+		"no-self-assign": "error",
+		"no-setter-return": "error",
+		"no-shadow-restricted-names": "error",
+		"no-this-before-super": "error",
+		"no-unassigned-vars": "error",
+		"no-unreachable": "error",
+		"no-unsafe-finally": "error",
+		"no-unsafe-negation": "error",
+		"no-unsafe-optional-chaining": "error",
+		"no-unused-labels": "error",
+		"no-unused-private-class-members": "error",
+		"no-unused-vars": [
+			"error",
+			{
+				"args": "all",
+				"argsIgnorePattern": "^_",
+				"caughtErrors": "all",
+				"caughtErrorsIgnorePattern": "^_",
+				"destructuredArrayIgnorePattern": "^_",
+				"varsIgnorePattern": "^_",
+				"ignoreRestSiblings": true
+			}
+		],
+		"no-useless-backreference": "error",
+		"no-useless-catch": "error",
+		"no-useless-escape": "error",
+		"no-var": "error",
+		"no-with": "error",
+		"object-shorthand": ["error", "always"],
+		"prefer-arrow-callback": "error",
+		"prefer-const": [
+			"error",
+			{
+				"destructuring": "all"
+			}
+		],
+		"preserve-caught-error": "error",
+		"require-yield": "error",
+		"use-isnan": "error",
+		"valid-typeof": "error",
+		"n/prefer-global/process": ["error", "never"],
+		"n/prefer-node-protocol": "error",
+		"typescript/array-type": [
+			"error",
+			{
+				"default": "array-simple"
+			}
+		],
+		"typescript/await-thenable": "error",
+		"typescript/no-duplicate-enum-values": "error",
+		"typescript/no-empty-object-type": "error",
+		"typescript/no-extra-non-null-assertion": "error",
+		"typescript/no-floating-promises": "error",
+		"typescript/no-misused-new": "error",
+		"typescript/no-misused-promises": [
+			"error",
+			{
+				"checksVoidReturn": {
+					"arguments": false,
+					"properties": false
+				}
+			}
+		],
+		"typescript/no-namespace": "error",
+		"typescript/no-non-null-asserted-optional-chain": "error",
+		"typescript/no-require-imports": "error",
+		"typescript/no-unnecessary-type-constraint": "error",
+		"typescript/no-unsafe-declaration-merging": "error",
+		"typescript/no-unsafe-function-type": "error",
+		"typescript/no-wrapper-object-types": "error",
+		"typescript/prefer-as-const": "error",
+		"typescript/prefer-namespace-keyword": "error",
+		"typescript/require-await": "error",
+		"typescript/triple-slash-reference": "error"
+	},
+	"overrides": [
+		{
+			"files": ["**/*.ts", "**/*.tsx", "**/*.mts", "**/*.cts"],
+			"rules": {
+				"constructor-super": "off",
+				"getter-return": "off",
+				"no-class-assign": "off",
+				"no-const-assign": "off",
+				"no-dupe-class-members": "off",
+				"no-dupe-keys": "off",
+				"no-func-assign": "off",
+				"no-import-assign": "off",
+				"no-new-native-nonconstructor": "off",
+				"no-obj-calls": "off",
+				"no-redeclare": "off",
+				"no-setter-return": "off",
+				"no-this-before-super": "off",
+				"no-unreachable": "off",
+				"no-unsafe-negation": "off",
+				"no-with": "off",
+				"prefer-rest-params": "error",
+				"prefer-spread": "error"
+			}
+		},
+		{
+			"files": ["packages/kit/src/runtime/**/*.js"],
+			"jsPlugins": [
+				{
+					"name": "kit-custom",
+					"specifier": "./.eslint/kit-custom.js"
+				}
+			],
+			"rules": {
+				"kit-custom/no-runtime-to-exports-imports": "error"
+			}
+		},
+		{
+			"files": [
+				"packages/kit/src/**/*.js",
+				"packages/adapter-*/*.js",
+				"packages/adapter-*/src/**/*.js",
+				"packages/package/src/**/*.js"
+			],
+			"jsPlugins": [
+				{
+					"name": "kit-node-custom",
+					"specifier": "./.eslint/kit-node-custom.js"
+				}
+			],
+			"rules": {
+				"kit-node-custom/require-path-to-file-url": "error"
+			}
+		}
+	]
+}

@@ -1,3 +1,5 @@
+import path from 'node:path';
+
 /**
  * @type {import('eslint').Rule.RuleModule}
  */
@@ -15,6 +17,11 @@ export default {
 	},
 
 	create(context) {
+		// the client runtime's dynamic imports are resolved by Vite, not Node
+		if (context.filename.includes(path.join('packages', 'kit', 'src', 'runtime'))) {
+			return {};
+		}
+
 		/**
 		 * Returns true if the expression is safe to pass to `import()`:
 		 * a static specifier, a relative computed specifier, or a value

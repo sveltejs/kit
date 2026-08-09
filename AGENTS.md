@@ -18,7 +18,7 @@ pnpm build
 # Format code (~15 seconds)
 pnpm run format
 
-# Lint (takes 2-3 minutes, set 5+ min timeout)
+# Lint with oxfmt + oxlint (~5 seconds)
 pnpm run lint
 
 # Type checking (takes 3-4 minutes, set 8+ min timeout)
