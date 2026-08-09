@@ -27,12 +27,9 @@ catalogs:
     '@polka/url':
       specifier: ^1.0.0-next.28
       version: 1.0.0-next.28
-<<<<<<< HEAD
     '@rsvelte/svelte-check':
       specifier: ^0.5.14
       version: 0.5.14
-=======
->>>>>>> @{-1}
     '@sveltejs/eslint-config':
       specifier: ^10.0.3
       version: 10.0.3
@@ -84,9 +81,6 @@ catalogs:
     svelte:
       specifier: ^5.56.3
       version: 5.56.3
-    svelte-check:
-      specifier: ^4.7.5
-      version: 4.7.5
     svelte-preprocess:
       specifier: ^6.0.5
       version: 6.0.5
@@ -705,12 +699,9 @@ importers:
 
   packages/kit/test/apps/async:
     devDependencies:
-<<<<<<< HEAD
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
         version: 0.5.14
-=======
->>>>>>> @{-1}
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../..
@@ -729,9 +720,6 @@ importers:
       svelte:
         specifier: 'catalog:'
         version: 5.56.3(@typescript-eslint/types@8.61.1)
-      svelte-check:
-        specifier: 'catalog:'
-        version: 4.7.5(picomatch@4.0.5)(svelte@5.56.3(@typescript-eslint/types@8.61.1))(typescript@6.0.3)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -753,12 +741,9 @@ importers:
       '@opentelemetry/sdk-trace-node':
         specifier: 'catalog:'
         version: 2.10.0(@opentelemetry/api@1.9.0)
-<<<<<<< HEAD
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
         version: 0.5.14
-=======
->>>>>>> @{-1}
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../..
@@ -774,9 +759,6 @@ importers:
       svelte:
         specifier: 'catalog:'
         version: 5.56.3(@typescript-eslint/types@8.61.1)
-      svelte-check:
-        specifier: 'catalog:'
-        version: 4.7.5(picomatch@4.0.5)(svelte@5.56.3(@typescript-eslint/types@8.61.1))(typescript@6.0.3)
       test-redirect-importer:
         specifier: workspace:*
         version: link:../../../../test-redirect-importer
@@ -795,12 +777,9 @@ importers:
 
   packages/kit/test/apps/dev-only:
     devDependencies:
-<<<<<<< HEAD
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
         version: 0.5.14
-=======
->>>>>>> @{-1}
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../..
@@ -843,9 +822,6 @@ importers:
       svelte:
         specifier: 'catalog:'
         version: 5.56.3(@typescript-eslint/types@8.61.1)
-      svelte-check:
-        specifier: 'catalog:'
-        version: 4.7.5(picomatch@4.0.5)(svelte@5.56.3(@typescript-eslint/types@8.61.1))(typescript@6.0.3)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -855,12 +831,9 @@ importers:
 
   packages/kit/test/apps/embed:
     devDependencies:
-<<<<<<< HEAD
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
         version: 0.5.14
-=======
->>>>>>> @{-1}
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../..
@@ -873,9 +846,6 @@ importers:
       svelte:
         specifier: 'catalog:'
         version: 5.56.3(@typescript-eslint/types@8.61.1)
-      svelte-check:
-        specifier: 'catalog:'
-        version: 4.7.5(picomatch@4.0.5)(svelte@5.56.3(@typescript-eslint/types@8.61.1))(typescript@6.0.3)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -885,12 +855,9 @@ importers:
 
   packages/kit/test/apps/hash-based-routing:
     devDependencies:
-<<<<<<< HEAD
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
         version: 0.5.14
-=======
->>>>>>> @{-1}
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../..
@@ -903,9 +870,6 @@ importers:
       svelte:
         specifier: 'catalog:'
         version: 5.56.3(@typescript-eslint/types@8.61.1)
-      svelte-check:
-        specifier: 'catalog:'
-        version: 4.7.5(picomatch@4.0.5)(svelte@5.56.3(@typescript-eslint/types@8.61.1))(typescript@6.0.3)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -915,12 +879,9 @@ importers:
 
   packages/kit/test/apps/no-csr:
     devDependencies:
-<<<<<<< HEAD
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
         version: 0.5.14
-=======
->>>>>>> @{-1}
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../..
@@ -933,9 +894,6 @@ importers:
       svelte:
         specifier: 'catalog:'
         version: 5.56.3(@typescript-eslint/types@8.61.1)
-      svelte-check:
-        specifier: 'catalog:'
-        version: 4.7.5(picomatch@4.0.5)(svelte@5.56.3(@typescript-eslint/types@8.61.1))(typescript@6.0.3)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -945,12 +903,9 @@ importers:
 
   packages/kit/test/apps/no-ssr:
     devDependencies:
-<<<<<<< HEAD
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
         version: 0.5.14
-=======
->>>>>>> @{-1}
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../..
@@ -963,9 +918,6 @@ importers:
       svelte:
         specifier: 'catalog:'
         version: 5.56.3(@typescript-eslint/types@8.61.1)
-      svelte-check:
-        specifier: 'catalog:'
-        version: 4.7.5(picomatch@4.0.5)(svelte@5.56.3(@typescript-eslint/types@8.61.1))(typescript@6.0.3)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -978,12 +930,9 @@ importers:
       '@fontsource/libre-barcode-128-text':
         specifier: 'catalog:'
         version: 5.1.0
-<<<<<<< HEAD
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
         version: 0.5.14
-=======
->>>>>>> @{-1}
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../..
@@ -996,9 +945,6 @@ importers:
       svelte:
         specifier: 'catalog:'
         version: 5.56.3(@typescript-eslint/types@8.61.1)
-      svelte-check:
-        specifier: 'catalog:'
-        version: 4.7.5(picomatch@4.0.5)(svelte@5.56.3(@typescript-eslint/types@8.61.1))(typescript@6.0.3)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -1011,12 +957,9 @@ importers:
 
   packages/kit/test/apps/options-2:
     devDependencies:
-<<<<<<< HEAD
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
         version: 0.5.14
-=======
->>>>>>> @{-1}
       '@sveltejs/adapter-node':
         specifier: workspace:^
         version: link:../../../../adapter-node
@@ -1032,9 +975,6 @@ importers:
       svelte:
         specifier: 'catalog:'
         version: 5.56.3(@typescript-eslint/types@8.61.1)
-      svelte-check:
-        specifier: 'catalog:'
-        version: 4.7.5(picomatch@4.0.5)(svelte@5.56.3(@typescript-eslint/types@8.61.1))(typescript@6.0.3)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -1047,12 +987,9 @@ importers:
 
   packages/kit/test/apps/options-3:
     devDependencies:
-<<<<<<< HEAD
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
         version: 0.5.14
-=======
->>>>>>> @{-1}
       '@sveltejs/adapter-node':
         specifier: workspace:^
         version: link:../../../../adapter-node
@@ -1068,9 +1005,6 @@ importers:
       svelte:
         specifier: 'catalog:'
         version: 5.56.3(@typescript-eslint/types@8.61.1)
-      svelte-check:
-        specifier: 'catalog:'
-        version: 4.7.5(picomatch@4.0.5)(svelte@5.56.3(@typescript-eslint/types@8.61.1))(typescript@6.0.3)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -1080,12 +1014,9 @@ importers:
 
   packages/kit/test/apps/prerendered-app-error-pages:
     devDependencies:
-<<<<<<< HEAD
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
         version: 0.5.14
-=======
->>>>>>> @{-1}
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../..
@@ -1098,9 +1029,6 @@ importers:
       svelte:
         specifier: 'catalog:'
         version: 5.56.3(@typescript-eslint/types@8.61.1)
-      svelte-check:
-        specifier: 'catalog:'
-        version: 4.7.5(picomatch@4.0.5)(svelte@5.56.3(@typescript-eslint/types@8.61.1))(typescript@6.0.3)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -1110,12 +1038,9 @@ importers:
 
   packages/kit/test/apps/writes:
     devDependencies:
-<<<<<<< HEAD
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
         version: 0.5.14
-=======
->>>>>>> @{-1}
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../..
@@ -1128,9 +1053,6 @@ importers:
       svelte:
         specifier: 'catalog:'
         version: 5.56.3(@typescript-eslint/types@8.61.1)
-      svelte-check:
-        specifier: 'catalog:'
-        version: 4.7.5(picomatch@4.0.5)(svelte@5.56.3(@typescript-eslint/types@8.61.1))(typescript@6.0.3)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -1146,12 +1068,9 @@ importers:
 
   packages/kit/test/build-errors/apps/env-private:
     devDependencies:
-<<<<<<< HEAD
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
         version: 0.5.14
-=======
->>>>>>> @{-1}
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../../..
@@ -1164,9 +1083,6 @@ importers:
       svelte:
         specifier: 'catalog:'
         version: 5.56.3(@typescript-eslint/types@8.61.1)
-      svelte-check:
-        specifier: 'catalog:'
-        version: 4.7.5(picomatch@4.0.5)(svelte@5.56.3(@typescript-eslint/types@8.61.1))(typescript@6.0.3)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -1176,12 +1092,9 @@ importers:
 
   packages/kit/test/build-errors/apps/env-private-dynamic:
     devDependencies:
-<<<<<<< HEAD
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
         version: 0.5.14
-=======
->>>>>>> @{-1}
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../../..
@@ -1194,9 +1107,6 @@ importers:
       svelte:
         specifier: 'catalog:'
         version: 5.56.3(@typescript-eslint/types@8.61.1)
-      svelte-check:
-        specifier: 'catalog:'
-        version: 4.7.5(picomatch@4.0.5)(svelte@5.56.3(@typescript-eslint/types@8.61.1))(typescript@6.0.3)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -1206,12 +1116,9 @@ importers:
 
   packages/kit/test/build-errors/apps/env-private-service-worker:
     devDependencies:
-<<<<<<< HEAD
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
         version: 0.5.14
-=======
->>>>>>> @{-1}
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../../..
@@ -1224,9 +1131,6 @@ importers:
       svelte:
         specifier: 'catalog:'
         version: 5.56.3(@typescript-eslint/types@8.61.1)
-      svelte-check:
-        specifier: 'catalog:'
-        version: 4.7.5(picomatch@4.0.5)(svelte@5.56.3(@typescript-eslint/types@8.61.1))(typescript@6.0.3)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -1236,12 +1140,9 @@ importers:
 
   packages/kit/test/build-errors/apps/prerender-entry-generator-mismatch:
     devDependencies:
-<<<<<<< HEAD
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
         version: 0.5.14
-=======
->>>>>>> @{-1}
       '@sveltejs/adapter-auto':
         specifier: workspace:^
         version: link:../../../../../adapter-auto
@@ -1257,9 +1158,6 @@ importers:
       svelte:
         specifier: 'catalog:'
         version: 5.56.3(@typescript-eslint/types@8.61.1)
-      svelte-check:
-        specifier: 'catalog:'
-        version: 4.7.5(picomatch@4.0.5)(svelte@5.56.3(@typescript-eslint/types@8.61.1))(typescript@6.0.3)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -1269,12 +1167,9 @@ importers:
 
   packages/kit/test/build-errors/apps/prerender-remote-function-error:
     devDependencies:
-<<<<<<< HEAD
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
         version: 0.5.14
-=======
->>>>>>> @{-1}
       '@sveltejs/adapter-auto':
         specifier: workspace:^
         version: link:../../../../../adapter-auto
@@ -1290,9 +1185,6 @@ importers:
       svelte:
         specifier: 'catalog:'
         version: 5.56.3(@typescript-eslint/types@8.61.1)
-      svelte-check:
-        specifier: 'catalog:'
-        version: 4.7.5(picomatch@4.0.5)(svelte@5.56.3(@typescript-eslint/types@8.61.1))(typescript@6.0.3)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -1317,9 +1209,6 @@ importers:
       svelte:
         specifier: 'catalog:'
         version: 5.56.3(@typescript-eslint/types@8.61.1)
-      svelte-check:
-        specifier: 'catalog:'
-        version: 4.7.5(picomatch@4.0.5)(svelte@5.56.3(@typescript-eslint/types@8.61.1))(typescript@6.0.3)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -1329,12 +1218,9 @@ importers:
 
   packages/kit/test/build-errors/apps/prerenderable-incorrect-fragment:
     devDependencies:
-<<<<<<< HEAD
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
         version: 0.5.14
-=======
->>>>>>> @{-1}
       '@sveltejs/adapter-auto':
         specifier: workspace:^
         version: link:../../../../../adapter-auto
@@ -1350,9 +1236,6 @@ importers:
       svelte:
         specifier: 'catalog:'
         version: 5.56.3(@typescript-eslint/types@8.61.1)
-      svelte-check:
-        specifier: 'catalog:'
-        version: 4.7.5(picomatch@4.0.5)(svelte@5.56.3(@typescript-eslint/types@8.61.1))(typescript@6.0.3)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -1362,12 +1245,9 @@ importers:
 
   packages/kit/test/build-errors/apps/prerenderable-not-prerendered:
     devDependencies:
-<<<<<<< HEAD
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
         version: 0.5.14
-=======
->>>>>>> @{-1}
       '@sveltejs/adapter-auto':
         specifier: workspace:^
         version: link:../../../../../adapter-auto
@@ -1383,9 +1263,6 @@ importers:
       svelte:
         specifier: 'catalog:'
         version: 5.56.3(@typescript-eslint/types@8.61.1)
-      svelte-check:
-        specifier: 'catalog:'
-        version: 4.7.5(picomatch@4.0.5)(svelte@5.56.3(@typescript-eslint/types@8.61.1))(typescript@6.0.3)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -1395,12 +1272,9 @@ importers:
 
   packages/kit/test/build-errors/apps/remote-function-without-flag:
     devDependencies:
-<<<<<<< HEAD
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
         version: 0.5.14
-=======
->>>>>>> @{-1}
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../../..
@@ -1413,9 +1287,6 @@ importers:
       svelte:
         specifier: 'catalog:'
         version: 5.56.3(@typescript-eslint/types@8.61.1)
-      svelte-check:
-        specifier: 'catalog:'
-        version: 4.7.5(picomatch@4.0.5)(svelte@5.56.3(@typescript-eslint/types@8.61.1))(typescript@6.0.3)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -1425,12 +1296,9 @@ importers:
 
   packages/kit/test/build-errors/apps/removed-lib-import:
     devDependencies:
-<<<<<<< HEAD
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
         version: 0.5.14
-=======
->>>>>>> @{-1}
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../../..
@@ -1443,9 +1311,6 @@ importers:
       svelte:
         specifier: 'catalog:'
         version: 5.56.3(@typescript-eslint/types@8.61.1)
-      svelte-check:
-        specifier: 'catalog:'
-        version: 4.7.5(picomatch@4.0.5)(svelte@5.56.3(@typescript-eslint/types@8.61.1))(typescript@6.0.3)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -1455,12 +1320,9 @@ importers:
 
   packages/kit/test/build-errors/apps/removed-service-worker-import:
     devDependencies:
-<<<<<<< HEAD
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
         version: 0.5.14
-=======
->>>>>>> @{-1}
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../../..
@@ -1473,9 +1335,6 @@ importers:
       svelte:
         specifier: 'catalog:'
         version: 5.56.3(@typescript-eslint/types@8.61.1)
-      svelte-check:
-        specifier: 'catalog:'
-        version: 4.7.5(picomatch@4.0.5)(svelte@5.56.3(@typescript-eslint/types@8.61.1))(typescript@6.0.3)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -1485,12 +1344,9 @@ importers:
 
   packages/kit/test/build-errors/apps/server-only-folder:
     devDependencies:
-<<<<<<< HEAD
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
         version: 0.5.14
-=======
->>>>>>> @{-1}
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../../..
@@ -1503,9 +1359,6 @@ importers:
       svelte:
         specifier: 'catalog:'
         version: 5.56.3(@typescript-eslint/types@8.61.1)
-      svelte-check:
-        specifier: 'catalog:'
-        version: 4.7.5(picomatch@4.0.5)(svelte@5.56.3(@typescript-eslint/types@8.61.1))(typescript@6.0.3)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -1515,12 +1368,9 @@ importers:
 
   packages/kit/test/build-errors/apps/server-only-folder-dynamic-import:
     devDependencies:
-<<<<<<< HEAD
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
         version: 0.5.14
-=======
->>>>>>> @{-1}
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../../..
@@ -1533,9 +1383,6 @@ importers:
       svelte:
         specifier: 'catalog:'
         version: 5.56.3(@typescript-eslint/types@8.61.1)
-      svelte-check:
-        specifier: 'catalog:'
-        version: 4.7.5(picomatch@4.0.5)(svelte@5.56.3(@typescript-eslint/types@8.61.1))(typescript@6.0.3)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -1545,12 +1392,9 @@ importers:
 
   packages/kit/test/build-errors/apps/server-only-module:
     devDependencies:
-<<<<<<< HEAD
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
         version: 0.5.14
-=======
->>>>>>> @{-1}
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../../..
@@ -1563,9 +1407,6 @@ importers:
       svelte:
         specifier: 'catalog:'
         version: 5.56.3(@typescript-eslint/types@8.61.1)
-      svelte-check:
-        specifier: 'catalog:'
-        version: 4.7.5(picomatch@4.0.5)(svelte@5.56.3(@typescript-eslint/types@8.61.1))(typescript@6.0.3)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -1575,12 +1416,9 @@ importers:
 
   packages/kit/test/build-errors/apps/server-only-module-dynamic-import:
     devDependencies:
-<<<<<<< HEAD
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
         version: 0.5.14
-=======
->>>>>>> @{-1}
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../../..
@@ -1593,9 +1431,6 @@ importers:
       svelte:
         specifier: 'catalog:'
         version: 5.56.3(@typescript-eslint/types@8.61.1)
-      svelte-check:
-        specifier: 'catalog:'
-        version: 4.7.5(picomatch@4.0.5)(svelte@5.56.3(@typescript-eslint/types@8.61.1))(typescript@6.0.3)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -1605,12 +1440,9 @@ importers:
 
   packages/kit/test/build-errors/apps/server-only-shared:
     devDependencies:
-<<<<<<< HEAD
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
         version: 0.5.14
-=======
->>>>>>> @{-1}
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../../..
@@ -1623,9 +1455,6 @@ importers:
       svelte:
         specifier: 'catalog:'
         version: 5.56.3(@typescript-eslint/types@8.61.1)
-      svelte-check:
-        specifier: 'catalog:'
-        version: 4.7.5(picomatch@4.0.5)(svelte@5.56.3(@typescript-eslint/types@8.61.1))(typescript@6.0.3)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -1650,12 +1479,9 @@ importers:
 
   packages/kit/test/build-errors/apps/syntax-error:
     devDependencies:
-<<<<<<< HEAD
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
         version: 0.5.14
-=======
->>>>>>> @{-1}
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../../..
@@ -1668,9 +1494,6 @@ importers:
       svelte:
         specifier: 'catalog:'
         version: 5.56.3(@typescript-eslint/types@8.61.1)
-      svelte-check:
-        specifier: 'catalog:'
-        version: 4.7.5(picomatch@4.0.5)(svelte@5.56.3(@typescript-eslint/types@8.61.1))(typescript@6.0.3)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -1680,12 +1503,9 @@ importers:
 
   packages/kit/test/prerendering/basics:
     devDependencies:
-<<<<<<< HEAD
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
         version: 0.5.14
-=======
->>>>>>> @{-1}
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../..
@@ -1698,9 +1518,6 @@ importers:
       svelte:
         specifier: 'catalog:'
         version: 5.56.3(@typescript-eslint/types@8.61.1)
-      svelte-check:
-        specifier: 'catalog:'
-        version: 4.7.5(picomatch@4.0.5)(svelte@5.56.3(@typescript-eslint/types@8.61.1))(typescript@6.0.3)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -1713,12 +1530,9 @@ importers:
 
   packages/kit/test/prerendering/options:
     devDependencies:
-<<<<<<< HEAD
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
         version: 0.5.14
-=======
->>>>>>> @{-1}
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../..
@@ -1731,9 +1545,6 @@ importers:
       svelte:
         specifier: 'catalog:'
         version: 5.56.3(@typescript-eslint/types@8.61.1)
-      svelte-check:
-        specifier: 'catalog:'
-        version: 4.7.5(picomatch@4.0.5)(svelte@5.56.3(@typescript-eslint/types@8.61.1))(typescript@6.0.3)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -1746,12 +1557,9 @@ importers:
 
   packages/kit/test/prerendering/paths-base:
     devDependencies:
-<<<<<<< HEAD
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
         version: 0.5.14
-=======
->>>>>>> @{-1}
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../..
@@ -1764,9 +1572,6 @@ importers:
       svelte:
         specifier: 'catalog:'
         version: 5.56.3(@typescript-eslint/types@8.61.1)
-      svelte-check:
-        specifier: 'catalog:'
-        version: 4.7.5(picomatch@4.0.5)(svelte@5.56.3(@typescript-eslint/types@8.61.1))(typescript@6.0.3)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -1831,12 +1636,9 @@ importers:
 
   playgrounds/basic:
     devDependencies:
-<<<<<<< HEAD
       '@rsvelte/svelte-check':
         specifier: 'catalog:'
         version: 0.5.14
-=======
->>>>>>> @{-1}
       '@sveltejs/adapter-auto':
         specifier: workspace:*
         version: link:../../packages/adapter-auto
@@ -1882,9 +1684,6 @@ importers:
       svelte:
         specifier: 'catalog:'
         version: 5.56.3(@typescript-eslint/types@8.61.1)
-      svelte-check:
-        specifier: 'catalog:'
-        version: 4.7.5(picomatch@4.0.5)(svelte@5.56.3(@typescript-eslint/types@8.61.1))(typescript@6.0.3)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -3148,7 +2947,6 @@ packages:
       rollup:
         optional: true
 
-<<<<<<< HEAD
   '@rsvelte/svelte-check-darwin-arm64@0.5.14':
     resolution: {integrity: sha512-etHvrwluWQ4Hib4oMgip9PodMhPa+b01w2igq8Vm9nzNZIjG6m7zN4c4AdDaxgw8BZGBxvhngVsQ6JcGb9lylA==}
     cpu: [arm64]
@@ -3180,8 +2978,6 @@ packages:
     resolution: {integrity: sha512-3yQFdWbF2JevlfhPm0DZOC/YIGgSstOv3ts+YZJp2kl/5cax4CZqRFUk6NSJK95Jv9C1mu+SICewygszRKVb6g==}
     hasBin: true
 
-=======
->>>>>>> @{-1}
   '@sindresorhus/is@7.2.0':
     resolution: {integrity: sha512-P1Cz1dWaFfR4IR+U13mqqiGsLFf1KbayybWwdd2vfctdV6hDpUkgCY0nKOLLTMSoRd/jJNjtbqzf13K8DCCXQw==}
     engines: {node: '>=18'}
@@ -3214,10 +3010,6 @@ packages:
       eslint-plugin-svelte: '>= 3'
       typescript: '>= 5 < 7'
       typescript-eslint: '>= 8'
-
-  '@sveltejs/load-config@0.2.2':
-    resolution: {integrity: sha512-K7dsJDQxBOF+f+epuhMactcjK2VP4MRkLKtwSykNtEI+cKVEyzrmmhQ1pmoxI800m4JKcyJ05L2M4yPwAGiBNw==}
-    engines: {node: '>= 18.0.0'}
 
   '@sveltejs/vite-plugin-svelte@7.0.0':
     resolution: {integrity: sha512-ILXmxC7HAsnkK2eslgPetrqqW1BKSL7LktsFgqzNj83MaivMGZzluWq32m25j2mDOjmSKX7GGWahePhuEs7P/g==}
@@ -3560,10 +3352,6 @@ packages:
   chai@6.2.2:
     resolution: {integrity: sha512-NUPRluOfOiTKBKvWPtSD4PhFvWCqOi0BGStNWs57X9js7XGTprSmFoz5F0tWhR4WPjNeR9jXqdC7/UpSJTnlRg==}
     engines: {node: '>=18'}
-
-  chokidar@4.0.3:
-    resolution: {integrity: sha512-Qgzu8kfBvo+cA4962jnP1KkS6Dop5NS6g7R5LFYJr4b8Ub94PPQXUksCw9PvXoeXPRRddRNC5C1JQUR2SMGtnA==}
-    engines: {node: '>= 14.16.0'}
 
   chokidar@5.0.0:
     resolution: {integrity: sha512-TQMmc3w+5AxjpL8iIiwebF73dRDF4fBIieAqGn9RGCWaEVwQ6Fb2cGe31Yns0RRIzii5goJ1Y7xbMwo1TxMplw==}
@@ -4298,10 +4086,6 @@ packages:
     resolution: {integrity: sha512-vYt7UD1U9Wg6138shLtLOvdAu+8DsC/ilFtEVHcH+wydcSpNE20AfSOduf6MkRFahL5FY7X1oU7nKVZFtfq8Fg==}
     engines: {node: '>=6'}
 
-  readdirp@4.1.2:
-    resolution: {integrity: sha512-GDhwkLfywWL2s6vEjyhri+eXmfH6j1L7JE27WhqLeYzoh/A3DBaYGEj2H/HFZCn/kMfim73FXxEJTw06WtxQwg==}
-    engines: {node: '>= 14.18.0'}
-
   readdirp@5.0.0:
     resolution: {integrity: sha512-9u/XQ1pvrQtYyMpZe7DXKv2p5CNvyVwzUB6uhLAnQwHMSgKMBR62lc7AHljaeteeHXn11XTAaLLUVZYVZyuRBQ==}
     engines: {node: '>= 20.19.0'}
@@ -4426,14 +4210,6 @@ packages:
   supports-color@10.2.2:
     resolution: {integrity: sha512-SS+jx45GF1QjgEXQx4NJZV9ImqmO2NPz5FNsIHrsDjh2YsHnawpan7SNQ1o8NuhrbHZy9AZhIoCUiCeaW/C80g==}
     engines: {node: '>=18'}
-
-  svelte-check@4.7.5:
-    resolution: {integrity: sha512-NnkHGCTPH6k4ka1E9IpTuNv40uLArHnX52kLEuaHSGqRlPYTnkbFs529jSWG+y+wDy+v+jA2PQ0soN1umVK+OA==}
-    engines: {node: '>= 18.0.0'}
-    hasBin: true
-    peerDependencies:
-      svelte: ^4.0.0 || ^5.0.0-next.0
-      typescript: ^5.0.0 || ^6.0.0
 
   svelte-eslint-parser@1.8.0:
     resolution: {integrity: sha512-mikR1qwIVy3t5WthUoAXkMwxkXvabZP9FJgdx35Ei7EbGWmctva1Pih16Koeor/bdNNq8NXHlwKGS6NkYTawLg==}
@@ -5881,7 +5657,6 @@ snapshots:
       estree-walker: 2.0.2
       picomatch: 4.0.5
 
-<<<<<<< HEAD
   '@rsvelte/svelte-check-darwin-arm64@0.5.14':
     optional: true
 
@@ -5905,8 +5680,6 @@ snapshots:
       '@rsvelte/svelte-check-linux-x64-gnu': 0.5.14
       '@rsvelte/svelte-check-win32-x64-msvc': 0.5.14
 
-=======
->>>>>>> @{-1}
   '@sindresorhus/is@7.2.0': {}
 
   '@speed-highlight/core@1.2.15': {}
@@ -5938,8 +5711,6 @@ snapshots:
       globals: 17.7.0
       typescript: 6.0.3
       typescript-eslint: 8.58.0(eslint@10.8.0(jiti@2.4.2)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3)
-
-  '@sveltejs/load-config@0.2.2': {}
 
   '@sveltejs/vite-plugin-svelte@7.0.0(svelte@5.56.3(@typescript-eslint/types@8.61.1))(vite@8.1.5(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0))':
     dependencies:
@@ -6279,10 +6050,6 @@ snapshots:
   cac@7.0.0: {}
 
   chai@6.2.2: {}
-
-  chokidar@4.0.3:
-    dependencies:
-      readdirp: 4.1.2
 
   chokidar@5.0.0:
     dependencies:
@@ -6975,8 +6742,6 @@ snapshots:
 
   punycode@2.3.1: {}
 
-  readdirp@4.1.2: {}
-
   readdirp@5.0.0: {}
 
   regexparam@3.0.0: {}
@@ -7167,19 +6932,6 @@ snapshots:
       ansi-regex: 5.0.1
 
   supports-color@10.2.2: {}
-
-  svelte-check@4.7.5(picomatch@4.0.5)(svelte@5.56.3(@typescript-eslint/types@8.61.1))(typescript@6.0.3):
-    dependencies:
-      '@jridgewell/trace-mapping': 0.3.25
-      '@sveltejs/load-config': 0.2.2
-      chokidar: 4.0.3
-      fdir: 6.5.0(picomatch@4.0.5)
-      picocolors: 1.1.1
-      sade: 1.8.1
-      svelte: 5.56.3(@typescript-eslint/types@8.61.1)
-      typescript: 6.0.3
-    transitivePeerDependencies:
-      - picomatch
 
   svelte-eslint-parser@1.8.0(svelte@5.56.3(@typescript-eslint/types@8.61.1)):
     dependencies:
