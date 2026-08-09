@@ -182,7 +182,10 @@ export default function (options = {}) {
 			// we want to invoke `getPlatformProxy` only once, but await it only when it is accessed.
 			// If we would await it here, it would hang indefinitely because the platform proxy only resolves once a request happens
 			const get_emulated = async () => {
-				const proxy = await getPlatformProxy(options.platformProxy);
+				const proxy = await getPlatformProxy({
+					configPath: options.config,
+					...options.platformProxy,
+				});
 				const platform = {
 					env: proxy.env,
 					ctx: proxy.ctx,
@@ -215,6 +218,42 @@ export default function (options = {}) {
 		supports: {
 			read: () => true,
 			instrumentation: () => true
+		},
+		vite: {
+			plugins: [
+				// ...cloudflare({
+				// 	configPath: 'config/wrangler.jsonc',
+				// }),
+				{
+					name: 'vite-plugin-sveltekit-adapter-cloudflare',
+					enforce: 'post',
+					configureServer(server) {
+						return () => {
+							const sveltekit_dev_middleware = server.middlewares.stack.find(
+								(middleware) =>
+									/** @type {Function} */ (middleware.handle).name === 'sveltekitDevMiddleware'
+							);
+							if (!sveltekit_dev_middleware) {
+								throw new Error(
+									'@sveltekit/adapter-cloudflare could not find sveltekitDevMiddleware'
+								);
+							}
+							const handler = /** @type {import('vite').Connect.NextHandleFunction} */ (
+								sveltekit_dev_middleware.handle
+							);
+							/** @type {import('vite').Connect.NextHandleFunction} */
+							sveltekit_dev_middleware.handle = (req, res, next) => {
+								if (req.headers['x-sveltekit-cloudflare-handle']) {
+									delete req.headers['x-sveltekit-cloudflare-handle'];
+									handler(req, res, next);
+									return;
+								}
+								next();
+							};
+						};
+					}
+				}
+			]
 		}
 	};
 }

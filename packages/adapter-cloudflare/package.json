@@ -23,6 +23,10 @@
 			"types": "./index.d.ts",
 			"import": "./index.js"
 		},
+		"./worker": {
+			"types": "./worker.d.ts",
+			"import": "./worker.js"
+		},
 		"./package.json": "./package.json"
 	},
 	"types": "index.d.ts",
@@ -49,10 +53,12 @@
 		"@sveltejs/kit": "workspace:^",
 		"@types/node": "catalog:",
 		"typescript": "catalog:",
+		"vite": "catalog:",
 		"vitest": "catalog:"
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^3.0.0-next.0",
-		"wrangler": "^4.118.0"
+		"@cloudflare/vite-plugin": "^1.51.0",
+		"wrangler": "^4.119.0"
 	}
 }
