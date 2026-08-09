@@ -7,7 +7,7 @@
 		"build": "vite build -c vite.custom.config.js --mode custom",
 		"preview": "vite preview -c vite.custom.config.js",
 		"prepare": "svelte-kit sync -c vite.custom.config.js",
-		"check": "svelte-kit sync -c vite.custom.config.js && tsc && rsvelte-check --config vite.custom.config.js --tsconfig tsconfig.json",
+		"check": "svelte-kit sync -c vite.custom.config.js && node node_modules/@typescript/native/bin/tsc && svelte-check --config vite.custom.config.js",
 		"test": "pnpm test:dev && pnpm test:build",
 		"test:vitest": "vitest run --config vite.custom.config.js",
 		"test:paths-relative:dev": "DEV=true playwright test",
@@ -25,7 +25,8 @@
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"svelte": "catalog:",
-		"@rsvelte/svelte-check": "catalog:",
+		"svelte-check": "catalog:",
+		"@typescript/native": "catalog:",
 		"typescript": "catalog:",
 		"vite": "catalog:",
 		"vitest": "catalog:"

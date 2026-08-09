@@ -8,17 +8,19 @@
 		"build": "vite build",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
-		"check": "svelte-kit sync && rsvelte-check --tsconfig ./jsconfig.json",
-		"check:watch": "svelte-kit sync && rsvelte-check --tsconfig ./jsconfig.json --watch",
+		"check": "svelte-kit sync && pnpm tsc-native && svelte-check --tsconfig ./jsconfig.json",
+		"check:watch": "svelte-kit sync && pnpm tsc-native && svelte-check --tsconfig ./jsconfig.json --watch",
 		"test": "pnpm test:dev && pnpm test:build",
 		"test:dev": "DEV=true playwright test",
-		"test:build": "playwright test"
+		"test:build": "playwright test",
+		"tsc-native": "node node_modules/@typescript/native/bin/tsc"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"svelte": "catalog:",
-		"@rsvelte/svelte-check": "catalog:",
+		"svelte-check": "catalog:",
+		"@typescript/native": "catalog:",
 		"typescript": "catalog:",
 		"vite": "catalog:"
 	}
