@@ -7,8 +7,8 @@
 		"build": "vite build",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync",
-		"check": "svelte-kit sync && node node_modules/@typescript/native/bin/tsc && svelte-check",
-		"check:watch": "svelte-check --watch"
+		"check": "svelte-kit sync && node node_modules/@typescript/native/bin/tsc && svelte-check --tsgo --incremental",
+		"check:watch": "svelte-check --watch --tsgo --incremental"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",
