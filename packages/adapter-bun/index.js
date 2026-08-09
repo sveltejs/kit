@@ -124,16 +124,11 @@ export default function (opts = {}) {
 			});
 			if (!result.success) {
 				for (const log of result.logs) {
-					switch (log.level) {
-						case 'error':
-							builder.log.error(log.message);
-							break;
-						case 'warning':
-							builder.log.warn(log.message);
-							break;
-						default:
-							builder.log.info(log.message);
-					}
+					if (log.level === 'error') console.error(log);
+					else if (log.level === 'warning') console.warn(log);
+					else if (log.level === 'info') console.info(log);
+					else if (log.level === 'debug' || log.level === 'verbose') console.debug(log);
+					else console.log(log);
 				}
 				throw new AggregateError(result.logs);
 			}
