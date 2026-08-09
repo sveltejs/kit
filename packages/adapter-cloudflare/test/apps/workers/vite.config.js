@@ -18,6 +18,7 @@ const config = {
 			config: user_config => {
 				// Assets are handled by SvelteKit
 				delete user_config.assets;
+				user_config.name = 'adapter-cloudflare-test';
 
 				return user_config;
 			}

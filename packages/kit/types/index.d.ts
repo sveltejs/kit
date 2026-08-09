@@ -9,6 +9,9 @@ declare module '@sveltejs/kit' {
 	// @ts-ignore this is an optional peer dependency so could be missing. Written like this so dts-buddy preserves the ts-ignore
 	type Span = import('@opentelemetry/api').Span;
 
+	// @ts-ignore see above
+	type ServerResponse = import('http').ServerResponse;
+
 	type AppErrorWithOptionalStatus = Omit<App.Error, 'status'> & { status?: App.Error['status'] };
 
 	/**
@@ -24,6 +27,12 @@ declare module '@sveltejs/kit' {
 		 * @param builder An object provided by SvelteKit that contains methods for adapting the app
 		 */
 		adapt: (builder: Builder) => MaybePromise<void>;
+		/**
+		 * This function allows adapters to handle the low-level process of transforming a `Response` into
+		 * the format that vite understands.
+		 * @returns Whether the response was handled
+		 */
+		setResponse?: (res: ServerResponse, response: Response) => boolean;
 		/**
 		 * Checks called during dev and build to determine whether specific features will work in production with this adapter.
 		 */

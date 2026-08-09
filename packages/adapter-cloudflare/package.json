@@ -52,13 +52,16 @@
 		"@playwright/test": "catalog:",
 		"@sveltejs/kit": "workspace:^",
 		"@types/node": "catalog:",
+		"@types/ws": "^8.18.1",
+		"miniflare": "5.20260801.0-alpha",
 		"typescript": "catalog:",
 		"vite": "catalog:",
-		"vitest": "catalog:"
+		"vitest": "catalog:",
+		"ws": "^8.21.2"
 	},
 	"peerDependencies": {
-		"@sveltejs/kit": "^3.0.0-next.0",
 		"@cloudflare/vite-plugin": "^1.51.0",
+		"@sveltejs/kit": "^3.0.0-next.0",
 		"wrangler": "^4.119.0"
 	}
 }

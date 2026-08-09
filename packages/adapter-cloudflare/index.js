@@ -10,11 +10,15 @@ import {
 	parse_redirects,
 	append_headers
 } from './utils.js';
+import { ServerResponse } from 'node:http';
+import { coupleWebSocket } from 'miniflare';
+import { WebSocketServer } from 'ws';
 
 const name = '@sveltejs/adapter-cloudflare';
 
 /** @type {import('./index.js').default} */
 export default function (options = {}) {
+	const node_ws_server = new WebSocketServer({ noServer: true });
 	return {
 		name,
 		async adapt(builder) {
@@ -219,6 +223,23 @@ export default function (options = {}) {
 			read: () => true,
 			instrumentation: () => true
 		},
+		setResponse(res, response) {
+			if (!response.webSocket || !res.socket || !(WEBSOCKET_HEAD in res)) return false;
+
+			const socket = res.socket;
+			res.detachSocket(socket);
+			node_ws_server.handleUpgrade(
+				res.req,
+				socket,
+				res[WEBSOCKET_HEAD],
+				(client) => {
+					void coupleWebSocket(client, response.webSocket);
+					node_ws_server.emit('connection', client, res.req);
+				}
+			);
+
+			return true;
+		},
 		vite: {
 			plugins: [
 				// ...cloudflare({
@@ -229,6 +250,37 @@ export default function (options = {}) {
 					enforce: 'post',
 					configureServer(server) {
 						return () => {
+							if (server.httpServer) {
+								const upgrade_listeners = server.httpServer.listeners('upgrade').filter(listener => listener.name !== 'hmrServerWsListener');
+								
+								for (const listener of upgrade_listeners) {
+									server.httpServer.removeListener('upgrade', /** @type {() => void} */ (listener));
+								}
+
+								/**
+								 * @param {import('http').IncomingMessage} req
+								 * @param {import('net').Socket} socket
+								 * @param {Buffer} head
+								 */
+								const upgrade_handler = (req, socket, head) => {
+									if (req.headers['x-sveltekit-cloudflare-handle']) {
+										delete req.headers['x-sveltekit-cloudflare-handle'];
+										req.originalUrl = req.url;
+
+										const res = new ServerResponse(req);
+										res.assignSocket(socket);
+										res[WEBSOCKET_HEAD] = head;
+										handler(req, res);
+										return;
+									}
+									for (const listener of upgrade_listeners) {
+										listener(req, socket, head);
+									}
+								}
+
+								server.httpServer.on('upgrade', upgrade_handler);
+
+							}
 							const sveltekit_dev_middleware = server.middlewares.stack.find(
 								(middleware) =>
 									/** @type {Function} */ (middleware.handle).name === 'sveltekitDevMiddleware'
@@ -238,14 +290,14 @@ export default function (options = {}) {
 									'@sveltekit/adapter-cloudflare could not find sveltekitDevMiddleware'
 								);
 							}
-							const handler = /** @type {import('vite').Connect.NextHandleFunction} */ (
+							const handler = /** @type {import('vite').Connect.SimpleHandleFunction} */ (
 								sveltekit_dev_middleware.handle
 							);
 							/** @type {import('vite').Connect.NextHandleFunction} */
 							sveltekit_dev_middleware.handle = (req, res, next) => {
 								if (req.headers['x-sveltekit-cloudflare-handle']) {
 									delete req.headers['x-sveltekit-cloudflare-handle'];
-									handler(req, res, next);
+									handler(req, res);
 									return;
 								}
 								next();
@@ -257,6 +309,8 @@ export default function (options = {}) {
 		}
 	};
 }
+
+const WEBSOCKET_HEAD = Symbol('websocketHead');
 
 /**
  * @param {string} app_dir

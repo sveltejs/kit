@@ -652,7 +652,13 @@ export async function dev(
 					});
 				} else {
 					log_response(rendered.status, request);
-					setResponse(res, rendered);
+					let adapter_set_response = false;
+					if (svelte_config.kit.adapter?.setResponse) {
+						adapter_set_response = svelte_config.kit.adapter.setResponse(res, rendered);
+					}
+					if (!adapter_set_response) {
+						setResponse(res, rendered);
+					}
 				}
 			} catch (e) {
 				const error = coalesce_to_error(e);

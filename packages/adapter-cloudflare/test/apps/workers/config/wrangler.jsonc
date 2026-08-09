@@ -2,7 +2,7 @@
 // to test that the adapter still resolves the paths correctly
 {
 	"$schema": "../node_modules/wrangler/config-schema.json",
-	"name": "adapter-cloudflare-test",
+	"name": "adapter-cloudflare-test-sveltekit",
 	"main": "../src/worker.ts",
 	"compatibility_date": "2026-06-24",
 	"assets": {
@@ -13,7 +13,8 @@
 		"bindings": [
 			{
 				"name": "DO",
-				"class_name": "DO"
+				"class_name": "DO",
+				"script_name": "adapter-cloudflare-test"
 			}
 		]
 	},
