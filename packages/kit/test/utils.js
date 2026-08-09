@@ -271,7 +271,7 @@ const test_browser = /** @type {keyof typeof known_devices} */ (
 const test_browser_device = known_devices[test_browser]
 	? {
 			...known_devices[test_browser],
-			channel: test_browser === 'chromium' ? 'chrome' : undefined
+			channel: undefined
 		}
 	: undefined;
 
