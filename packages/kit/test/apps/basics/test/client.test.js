@@ -1278,8 +1278,9 @@ test.describe('env', () => {
 		expect(
 			await page.evaluate(
 				() =>
-					/** @type {Window & typeof globalThis & { PUBLIC_DYNAMIC: string }} */ (window)
-						.PUBLIC_DYNAMIC
+					/** @type {Window & typeof globalThis & { PUBLIC_DYNAMIC: string }} */ (
+						window
+					).PUBLIC_DYNAMIC
 			)
 		).toBe('accessible anywhere/evaluated at run time');
 	});

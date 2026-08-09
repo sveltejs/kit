@@ -30,6 +30,7 @@
 		"@types/node": "catalog:",
 		"@types/semver": "catalog:",
 		"prettier": "catalog:",
+		"prettier-plugin-svelte": "catalog:",
 		"svelte": "catalog:",
 		"svelte-preprocess": "catalog:",
 		"typescript": "catalog:",
@@ -52,10 +53,10 @@
 		"src"
 	],
 	"scripts": {
-		"lint": "prettier --check .",
+		"lint": "oxfmt --check .",
 		"check": "tsc",
 		"check:all": "tsc && pnpm -r --filter=\"./**\" check",
-		"format": "pnpm lint --write",
+		"format": "oxfmt --write .",
 		"test": "vitest run",
 		"test:unit": "vitest run"
 	},

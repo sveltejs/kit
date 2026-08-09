@@ -35,8 +35,8 @@
 	],
 	"scripts": {
 		"check": "tsc",
-		"lint": "prettier --check .",
-		"format": "pnpm lint --write",
+		"lint": "oxfmt --check .",
+		"format": "oxfmt --write .",
 		"test:unit": "vitest run",
 		"test:build": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" build",
 		"test": "pnpm test:unit && pnpm test:build"
