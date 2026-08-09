@@ -27,7 +27,7 @@
 				"dts-buddy",
 				"zimmerframe",
 				"prettier-plugin-svelte",
-				"svelte-check",
+				"@rsvelte/svelte-check",
 				"esm-env"
 			],
 			"minimumReleaseAge": "0 days"

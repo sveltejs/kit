@@ -31,7 +31,7 @@
 		"publint": "catalog:",
 		"svelte": "catalog:",
 		"@rsvelte/svelte-check": "catalog:",
-		"typescript": "^6.0.3",
+		"typescript": "catalog:",
 		"valibot": "catalog:",
 		"vite": "catalog:"
 	},

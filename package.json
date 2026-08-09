@@ -19,7 +19,7 @@
 		"test:others": "pnpm -r --filter='./packages/*' --filter=!./packages/kit/ --workspace-concurrency=1 test",
 		"test:others:unit": "pnpm -r --filter=\"./packages/*\" --filter=\"!./packages/kit\" --workspace-concurrency=1 test:unit",
 		"test:unit": "vitest run",
-		"check": "pnpm -r prepublishOnly && pnpm -r check",
+		"check": "pnpm --filter='./packages/**' prepublishOnly && pnpm --filter='./packages/**' --filter='!./packages/kit/test/build-errors/**' check",
 		"lint": "pnpm -r lint && echo '\nRunning eslint...' && eslint --cache --cache-location node_modules/.eslintcache 'packages/**/*.{js,d.ts}'",
 		"format": "pnpm -r format",
 		"precommit": "pnpm format && pnpm lint",

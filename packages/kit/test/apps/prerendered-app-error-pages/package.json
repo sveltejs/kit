@@ -12,13 +12,15 @@
 		"check:watch": "svelte-kit sync && rsvelte-check --tsgo --tsconfig ./jsconfig.json --watch",
 		"test": "pnpm test:dev && pnpm test:build",
 		"test:dev": "DEV=true playwright test",
-		"test:build": "playwright test"
+		"test:build": "playwright test",
+		"tsc-native": "node node_modules/@typescript/native/bin/tsc"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"svelte": "catalog:",
 		"@rsvelte/svelte-check": "catalog:",
+		"@typescript/native": "catalog:",
 		"typescript": "catalog:",
 		"vite": "catalog:"
 	}
