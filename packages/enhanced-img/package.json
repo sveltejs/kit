@@ -49,7 +49,7 @@
 		"@types/node": "catalog:",
 		"rolldown": "catalog:",
 		"svelte": "catalog:",
-		"typescript": "catalog:",
+		"typescript": "catalog:typescript-native",
 		"vite": "catalog:",
 		"vitest": "catalog:"
 	},

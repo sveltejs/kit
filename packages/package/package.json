@@ -54,11 +54,12 @@
 	],
 	"scripts": {
 		"lint": "prettier --check .",
-		"check": "node node_modules/@typescript/native/bin/tsc",
-		"check:all": "node node_modules/@typescript/native/bin/tsc && pnpm -r --filter=\"./**\" check",
+		"check": "pnpm tsc-native",
+		"check:all": "pnpm tsc-native && pnpm -r --filter=\"./**\" check",
 		"format": "pnpm lint --write",
 		"test": "vitest run",
-		"test:unit": "vitest run"
+		"test:unit": "vitest run",
+		"tsc-native": "node node_modules/@typescript/native/bin/tsc"
 	},
 	"exports": {
 		"./package.json": "./package.json"

@@ -42,7 +42,7 @@
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",
 		"@types/node": "catalog:",
-		"typescript": "catalog:",
+		"typescript": "catalog:typescript-native",
 		"vitest": "catalog:"
 	},
 	"peerDependencies": {
