@@ -223,18 +223,24 @@ export default function (options = {}) {
 			read: () => true,
 			instrumentation: () => true
 		},
+		/**
+		 * 
+		 * @param {WebSocketServerResponse} res 
+		 * @param {Response & { webSocket?: import('miniflare').WebSocket }} response 
+		 */
 		setResponse(res, response) {
-			if (!response.webSocket || !res.socket || !(WEBSOCKET_HEAD in res)) return false;
+			if (!response.webSocket || !res.socket || !res[WEBSOCKET_HEAD]) return false;
 
 			const socket = res.socket;
+			const worker_socket = response.webSocket;
 			res.detachSocket(socket);
 			node_ws_server.handleUpgrade(
 				res.req,
 				socket,
 				res[WEBSOCKET_HEAD],
-				(client) => {
-					void coupleWebSocket(client, response.webSocket);
-					node_ws_server.emit('connection', client, res.req);
+				(client_socket) => {
+					void coupleWebSocket(client_socket, worker_socket);
+					node_ws_server.emit('connection', client_socket, res.req);
 				}
 			);
 
@@ -258,7 +264,7 @@ export default function (options = {}) {
 								}
 
 								/**
-								 * @param {import('http').IncomingMessage} req
+								 * @param {import('vite').Connect.IncomingMessage} req
 								 * @param {import('net').Socket} socket
 								 * @param {Buffer} head
 								 */
@@ -269,7 +275,7 @@ export default function (options = {}) {
 
 										const res = new ServerResponse(req);
 										res.assignSocket(socket);
-										res[WEBSOCKET_HEAD] = head;
+										(/** @type {WebSocketServerResponse} */ (res))[WEBSOCKET_HEAD] = head;
 										handler(req, res);
 										return;
 									}
@@ -311,6 +317,7 @@ export default function (options = {}) {
 }
 
 const WEBSOCKET_HEAD = Symbol('websocketHead');
+/** @typedef {import('http').ServerResponse & { [WEBSOCKET_HEAD]?: Buffer }} WebSocketServerResponse */
 
 /**
  * @param {string} app_dir

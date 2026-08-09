@@ -3,7 +3,6 @@ import { handler } from '../../../../worker.js';
 
 export class DO extends DurableObject {
 	async fetch(_req: Request): Promise<Response> {
-		// return new Response('from DO');
 		const { 0: client, 1: server } = new WebSocketPair();
 
 		this.ctx.acceptWebSocket(server);
@@ -19,9 +18,7 @@ export class DO extends DurableObject {
 }
 
 export default {
-	async fetch(request, env) {
+	async fetch(request) {
 		return handler(request);
-		const stub = env.DO.getByName('stub');
-		return stub.fetch(request.url, request);
 	},
 } satisfies ExportedHandler<Cloudflare.Env>;
