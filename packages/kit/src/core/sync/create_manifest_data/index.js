@@ -252,7 +252,11 @@ function create_routes_and_nodes(cwd, config, fallback) {
 				}
 
 				// allow e.g. `+page.stories.svelte` or `+server.test.ts`
-				if (file.name.includes('.test.') || file.name.includes('.spec.') || file.name.includes('.stories.')) {
+				if (
+					file.name.includes('.test.') ||
+					file.name.includes('.spec.') ||
+					file.name.includes('.stories.')
+				) {
 					continue;
 				}
 
