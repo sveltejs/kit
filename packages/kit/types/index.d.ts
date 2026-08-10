@@ -2652,6 +2652,64 @@ declare module '@sveltejs/kit/node' {
 	export {};
 }
 
+declare module '@sveltejs/kit/params' {
+	import type { StandardSchemaV1 } from '@standard-schema/spec';
+	/**
+	 * Define [parameter matchers](https://svelte.dev/docs/kit/advanced-routing#Matching) for your app.
+	 *
+	 * @example
+	 * ```js
+	 * import { defineParams } from '@sveltejs/kit/params';
+	 * import * as v from 'valibot';
+	 *
+	 * export const params = defineParams({
+	 * 	locale: (param) => {
+	 * 		if (param !== 'de' && param !== 'en') return;
+	 * 		return param;
+	 * 	},
+	 * 	number: v.pipe(v.string(), v.toNumber())
+	 * });
+	 * ```
+	 *
+	 * */
+	export function defineParams<T extends Record<string, ParamDefinition>>(definitions: T): DefinedParams<T>;
+
+	export function normalize_param_definition(definition: import("@sveltejs/kit").ParamDefinition): import("@sveltejs/kit").ParamMatcher;
+	/**
+	 * A value that can be parsed from a URL param and losslessly encoded with `String(...)`.
+	 */
+	type ParamValue = string | number | boolean | bigint;
+
+	/**
+	 * A param matcher definition passed to [`defineParams`](https://svelte.dev/docs/kit/@sveltejs-kit#defineParams).
+	 */
+	type ParamDefinition =
+		((param: string) => ParamValue | undefined) | StandardSchemaV1<string, ParamValue>;
+
+	/**
+	 * The return type of [`defineParams`](https://svelte.dev/docs/kit/@sveltejs-kit#defineParams).
+	 */
+	type DefinedParams<T extends Record<string, ParamDefinition>> = {
+		readonly [K in keyof T]: ParamEntry<T[K]>;
+	};
+
+	/**
+	 * Normalizes a property of defineParams (schema or function) to standard schema.
+	 */
+	type ParamEntry<M> =
+		M extends StandardSchemaV1<any, any>
+			? StandardSchemaV1.InferOutput<M> extends ParamValue
+				? StandardSchemaV1<any, M>
+				: StandardSchemaV1<any, never>
+			: M extends (param: string) => infer R
+				? Exclude<R, undefined> extends ParamValue
+					? StandardSchemaV1<any, Exclude<R, undefined>>
+					: StandardSchemaV1<any, never>
+				: never;
+
+	export {};
+}
+
 declare module '@sveltejs/kit/vite' {
 	import type { KitConfig } from '@sveltejs/kit';
 	import type { Options, SvelteConfig } from '@sveltejs/vite-plugin-svelte';
