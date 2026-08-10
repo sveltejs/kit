@@ -439,7 +439,10 @@ declare module '@sveltejs/kit' {
 			 *
 			 * CSRF checks only apply in production, not in local development.
 			 * @default []
-			 * @example ['https://checkout.stripe.com', 'https://accounts.google.com']
+			 * @example
+			 * ```js
+			 * ['https://checkout.stripe.com', 'https://accounts.google.com']
+			 * ```
 			 */
 			trustedOrigins?: string[];
 		};
