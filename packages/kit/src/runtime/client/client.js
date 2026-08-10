@@ -54,7 +54,7 @@ import {
 	add_resolution_suffix,
 	route_id_resolution_pathname
 } from '../pathname.js';
-import { noop_span } from '../telemetry/noop.js';
+import { noop_span } from '../../telemetry.js';
 import { read_ndjson } from './ndjson.js';
 import Root from '../components/root.svelte';
 import { Props, RenderNode } from '../props.svelte.js';
