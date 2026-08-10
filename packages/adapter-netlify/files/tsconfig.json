@@ -7,9 +7,9 @@
 		"module": "node16",
 		"moduleResolution": "node16",
 		"paths": {
-			"@sveltejs/kit": ["../kit/types/index"]
+			"@sveltejs/kit": ["../../kit/types/index"]
 		},
-		"types": ["node"]
+		"types": ["deno"]
 	},
-	"include": ["*.js", "files/serverless.js", "internal.d.ts", "test/utils.js"]
+	"include": ["edge.js", "../internal.d.ts"]
 }
