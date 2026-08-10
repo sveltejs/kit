@@ -22,6 +22,17 @@ async function read_files_recursive(path) {
 	}
 }
 
+/**
+ * Matches sirv's default behaviour in adapter-node: dotfiles are not served,
+ * with an exception for the `.well-known` directory.
+ * @param {string} path
+ */
+function is_dotfile(path) {
+	return path
+		.split('/')
+		.some((segment, i) => segment.startsWith('.') && !(i === 0 && segment === '.well-known'));
+}
+
 /** @param {string[]} files */
 function validate_file_paths(files) {
 	const invalid = files.find((file) => file.includes('*'));
@@ -151,12 +162,14 @@ export default function (opts = {}) {
 async function get_embed_entries({ builder, server_assets }) {
 	const builtFiles = `${builder.config.kit.outDir}/output`;
 
-	const [cl_files, pr_pages, pr_deps, pr_data] = await Promise.all([
+	const [all_cl_files, pr_pages, pr_deps, pr_data] = await Promise.all([
 		read_files_recursive(`${builtFiles}/client`),
 		read_files_recursive(`${builtFiles}/prerendered/pages`),
 		read_files_recursive(`${builtFiles}/prerendered/dependencies`),
 		read_files_recursive(`${builtFiles}/prerendered/data`)
 	]);
+
+	const cl_files = all_cl_files.filter(({ rel }) => !is_dotfile(rel));
 
 	const assets = [...cl_files, ...pr_pages, ...pr_deps, ...pr_data];
 	validate_file_paths(assets.map(({ rel }) => rel));
@@ -220,7 +233,7 @@ async function get_embed_entries({ builder, server_assets }) {
  * @returns {{imports: string[], entries: string[], server_assets: string[]}}
  */
 function get_no_embed_entries({ builder, server_assets, out }) {
-	const client_files = builder.writeClient(`${out}/client`);
+	const client_files = builder.writeClient(`${out}/client`).filter((file) => !is_dotfile(file));
 	const prerendered_files = builder.writePrerendered(`${out}/prerendered`);
 	validate_file_paths([...client_files, ...prerendered_files]);
 

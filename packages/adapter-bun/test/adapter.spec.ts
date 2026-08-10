@@ -266,6 +266,29 @@ describe('generated routes', () => {
 		expect(bun.build).not.toHaveBeenCalled();
 	});
 
+	test('does not register dotfiles apart from .well-known', async () => {
+		const builder = create_builder({
+			client_files: ['.env', '.well-known/security.txt', 'ok.txt']
+		});
+
+		await adapter().adapt(builder);
+
+		const source = bun.build.mock.calls[0][0].files[routes_file];
+		expect(source).not.toContain('.env');
+		expect(source).toContain('...client_asset(".well-known/security.txt")');
+		expect(source).toContain('...client_asset("ok.txt")');
+	});
+
+	test('excludes dotfiles from embedded assets', async () => {
+		mock_files({ client: ['.secret', 'public.txt'] });
+
+		await adapter({ buildOptions: { compile: true } }).adapt(create_builder());
+
+		const source = bun.build.mock.calls[0][0].files[routes_file];
+		expect(source).not.toContain('.secret');
+		expect(source).toContain('...client_asset("public.txt", asset_0)');
+	});
+
 	test('fails when a prerendered page is absent from compiled build output', async () => {
 		await expect(
 			adapter({ buildOptions: { compile: true } }).adapt(
