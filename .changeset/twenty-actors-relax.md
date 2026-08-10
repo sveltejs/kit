@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: correctly build when the `--watch` flag is enabled
+fix: avoid infinite loop when building with `--watch` flag
