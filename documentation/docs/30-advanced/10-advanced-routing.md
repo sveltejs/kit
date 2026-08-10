@@ -75,7 +75,7 @@ A route like `src/routes/fruits/[page]` would match `/fruits/apple`, but it woul
 
 ```js
 /// file: src/params.js
-import { defineParams } from '@sveltejs/kit';
+import { defineParams } from '@sveltejs/kit/params';
 
 export const params = defineParams({
 	fruit: (param) => {
@@ -97,7 +97,7 @@ You can also use a [Standard Schema](https://standardschema.dev) — for example
 
 ```js
 /// file: src/params.js
-import { defineParams } from '@sveltejs/kit';
+import { defineParams } from '@sveltejs/kit/params';
 import * as v from 'valibot';
 
 export const params = defineParams({
