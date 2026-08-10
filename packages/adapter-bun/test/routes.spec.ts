@@ -285,6 +285,7 @@ test('prerendered redirects retain their status and location', async () => {
 	expect(path).toBe('/old%20path');
 	expect((handler as any).GET.status).toBe(307);
 	expect((handler as any).GET.headers.get('location')).toBe('/new');
+	expect((handler as any).HEAD).toBe((handler as any).GET);
 });
 
 async function load_routes({ base = '/', embed = false, appDir = '_app' } = {}) {

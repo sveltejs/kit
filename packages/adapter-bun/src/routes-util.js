@@ -250,9 +250,7 @@ export function prerendered_page(urlPath, filePath, meta) {
  * @returns {Array<[string, RouteHandler]>}
  */
 export function prerendered_redirect(urlPath, status, location) {
+	const response = new Response(null, { status, headers: { location } });
 	// path already contains base, no need to add it here
-	return route_paths(urlPath).map((path) => [
-		path,
-		{ GET: new Response(null, { status, headers: { location } }) }
-	]);
+	return route_paths(urlPath).map((path) => [path, { GET: response, HEAD: response }]);
 }
