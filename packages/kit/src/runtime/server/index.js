@@ -130,7 +130,7 @@ export class Server {
 					handleError:
 						module.handleError ||
 						(({ kind, error }) => {
-							if (kind !== 'unexpected') {
+							if (kind !== 'unknown') {
 								// don't log stack traces for 404s etc, it's all internal gubbins
 								return;
 							}

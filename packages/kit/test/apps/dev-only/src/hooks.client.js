@@ -4,6 +4,6 @@ cjs.cjs();
 
 /** @type {import("@sveltejs/kit").HandleClientError} */
 export function handleError({ kind, error }) {
-	if (kind !== 'unexpected') return error;
+	if (kind !== 'unknown') return error;
 	return { message: /**@type{any}*/ (error).message };
 }

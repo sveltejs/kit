@@ -25,7 +25,7 @@ describe('add_deprecated_handle_error_properties', () => {
 	it('adds non-enumerable accessors that warn and return the fallback values', () => {
 		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 		const input = add_deprecated_handle_error_properties(
-			{ kind: 'unexpected', error: new Error('nope') },
+			{ kind: 'unknown', error: new Error('nope') },
 			{ status: 500, message: 'Internal Error' }
 		);
 

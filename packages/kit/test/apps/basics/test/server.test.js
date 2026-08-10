@@ -601,7 +601,7 @@ test.describe('Errors', () => {
 			});
 
 			expect(read_errors('/errors/endpoint-throw-error')).toEqual({
-				kind: 'expected',
+				kind: 'app',
 				error: { status: 401, message: 'You shall not pass' }
 			});
 
@@ -616,7 +616,7 @@ test.describe('Errors', () => {
 			const res = await request.get('/errors/endpoint-throw-error');
 
 			expect(read_errors('/errors/endpoint-throw-error')).toEqual({
-				kind: 'expected',
+				kind: 'app',
 				error: { status: 401, message: 'You shall not pass' }
 			});
 

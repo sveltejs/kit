@@ -2522,20 +2522,20 @@ export async function handle_error(error, event) {
 	let caught;
 
 	if (error instanceof HttpError) {
-		caught = { kind: 'expected', error: error.body };
+		caught = { kind: 'app', error: error.body };
 	} else if (error instanceof SvelteKitError) {
 		caught = { kind: 'framework', error: { status: error.status, message: error.text } };
 	} else {
-		caught = { kind: 'unexpected', error };
+		caught = { kind: 'unknown', error };
 	}
 
-	if (DEV && caught.kind !== 'expected') {
+	if (DEV && caught.kind !== 'app') {
 		errored = true;
 		console.warn('The next HMR update will cause the page to reload');
 	}
 
 	const fallback =
-		caught.kind === 'unexpected' ? { status: 500, message: 'Internal Error' } : caught.error;
+		caught.kind === 'unknown' ? { status: 500, message: 'Internal Error' } : caught.error;
 
 	const input = { ...caught, event };
 	if (DEV) add_deprecated_handle_error_properties(input, fallback);

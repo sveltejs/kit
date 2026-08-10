@@ -1248,7 +1248,7 @@ export function handleValidationError({ event, issues }) {
 }
 ```
 
-The object you return becomes the body of an [expected error](errors#Expected-errors), which then passes through [`handleError`](hooks#handleError) with `kind: 'expected'`.
+The object you return becomes the body of an [expected error](errors#Expected-errors), which then passes through [`handleError`](hooks#handleError) with `kind: 'app'`.
 
 If you know what you're doing and want to opt out of validation, you can pass the string `'unchecked'` in place of a schema:
 

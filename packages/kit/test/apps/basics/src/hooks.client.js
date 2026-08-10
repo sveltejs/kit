@@ -10,7 +10,7 @@ export function handleError(input) {
 		return { message: `client ${kind}` };
 	}
 
-	if (kind === 'expected') {
+	if (kind === 'app') {
 		return input.error;
 	}
 

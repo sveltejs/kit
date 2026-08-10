@@ -47,11 +47,11 @@ export function handle_error_and_jsonify(event, state, options, error) {
 	let caught;
 
 	if (error instanceof HttpError) {
-		caught = { kind: 'expected', error: error.body };
+		caught = { kind: 'app', error: error.body };
 	} else if (error instanceof SvelteKitError) {
 		caught = { kind: 'framework', error: { status: error.status, message: error.text } };
 	} else {
-		caught = { kind: 'unexpected', error };
+		caught = { kind: 'unknown', error };
 
 		let e = error;
 		while (e instanceof Error) {
@@ -61,7 +61,7 @@ export function handle_error_and_jsonify(event, state, options, error) {
 	}
 
 	const fallback =
-		caught.kind === 'unexpected' ? { status: 500, message: 'Internal Error' } : caught.error;
+		caught.kind === 'unknown' ? { status: 500, message: 'Internal Error' } : caught.error;
 
 	/**
 	 * The hook returns only the properties it wants to override; anything it omits

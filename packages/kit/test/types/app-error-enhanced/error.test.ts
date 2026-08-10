@@ -35,7 +35,7 @@ const handle_error_overrides: [HandleServerError, HandleClientError] = [
 ];
 
 const handle_error_kinds: HandleServerError = ({ kind, error }) => {
-	if (kind === 'expected') {
+	if (kind === 'app') {
 		error satisfies App.Error;
 		return error;
 	}

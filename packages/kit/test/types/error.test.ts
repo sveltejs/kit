@@ -7,7 +7,7 @@ const app_error_without_status: App.Error = { message: 'Unexpected error' };
 
 const handle_error_hooks: [HandleServerError, HandleClientError] = [
 	({ kind, error }) => {
-		if (kind === 'expected') {
+		if (kind === 'app') {
 			error satisfies App.Error;
 			return error;
 		}

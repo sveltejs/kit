@@ -52,7 +52,7 @@ export const handleError = (input) => {
 		throw new Error("Redirects shouldn't trigger the handleError hook");
 	}
 
-	if (input.kind !== 'unexpected') return input.error;
+	if (input.kind !== 'unknown') return input.error;
 
 	const error = /** @type {Error} */ (input.error);
 

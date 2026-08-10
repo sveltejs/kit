@@ -39,11 +39,11 @@ export const handleError = ({ event, kind, error }) => {
 		JSON.stringify({
 			path: event.url.pathname,
 			kind,
-			error: kind === 'unexpected' ? error_to_pojo(/** @type {Error} */ (error)) : error
+			error: kind === 'unknown' ? error_to_pojo(/** @type {Error} */ (error)) : error
 		}) + '\n'
 	);
 
-	if (kind === 'expected') {
+	if (kind === 'app') {
 		// so that `error(...)` bodies reach the page verbatim
 		return error;
 	}

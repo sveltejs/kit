@@ -357,7 +357,7 @@ test.describe('Errors', () => {
 		const response = await page.goto('/errors/kind/expected');
 
 		expect(read_errors('/errors/kind/expected')).toEqual({
-			kind: 'expected',
+			kind: 'app',
 			error: { status: 403, message: 'expected error' }
 		});
 
@@ -371,7 +371,7 @@ test.describe('Errors', () => {
 		const response = await page.goto('/errors/kind/unexpected');
 
 		const { kind, error } = read_errors('/errors/kind/unexpected');
-		expect(kind).toBe('unexpected');
+		expect(kind).toBe('unknown');
 		expect(error.message).toBe('unexpected error');
 
 		expect(await page.textContent('#message')).toBe(
@@ -384,7 +384,7 @@ test.describe('Errors', () => {
 		const res = await page.goto('/errors/endpoint');
 
 		const { kind, error } = read_errors('/errors/endpoint.json');
-		expect(kind).toBe('unexpected');
+		expect(kind).toBe('unknown');
 
 		// should include stack trace
 		const lines = error.stack.split('\n');
@@ -404,7 +404,7 @@ test.describe('Errors', () => {
 		const res = await page.goto('/errors/endpoint-shadow');
 
 		const { kind, error } = read_errors('/errors/endpoint-shadow');
-		expect(kind).toBe('unexpected');
+		expect(kind).toBe('unknown');
 
 		// should include stack trace
 		const lines = error.stack.split('\n');
@@ -424,7 +424,7 @@ test.describe('Errors', () => {
 		const res = await page.goto('/errors/endpoint-shadow-not-ok');
 
 		expect(read_errors('/errors/endpoint-shadow-not-ok')).toEqual({
-			kind: 'expected',
+			kind: 'app',
 			error: { status: 555, message: 'Error: 555' }
 		});
 
@@ -458,7 +458,7 @@ test.describe('Errors', () => {
 		);
 
 		const { kind, error } = read_errors('/errors/page-endpoint/get-implicit');
-		expect(kind).toBe('unexpected');
+		expect(kind).toBe('unknown');
 
 		const { status, name, message, stack, fancy } = error;
 		expect(status).toBe(undefined);
@@ -484,7 +484,7 @@ test.describe('Errors', () => {
 		);
 
 		expect(read_errors('/errors/page-endpoint/get-explicit')).toEqual({
-			kind: 'expected',
+			kind: 'app',
 			error: { status: 400, message: 'oops' }
 		});
 	});
@@ -504,7 +504,7 @@ test.describe('Errors', () => {
 		);
 
 		const { kind, error } = read_errors('/errors/page-endpoint/post-implicit');
-		expect(kind).toBe('unexpected');
+		expect(kind).toBe('unknown');
 
 		const { status, name, message, stack, fancy } = error;
 
@@ -533,7 +533,7 @@ test.describe('Errors', () => {
 		);
 
 		expect(read_errors('/errors/page-endpoint/post-explicit')).toEqual({
-			kind: 'expected',
+			kind: 'app',
 			error: { status: 400, message: 'oops' }
 		});
 	});
@@ -604,7 +604,7 @@ test.describe('Redirects', () => {
 		if (!javaScriptEnabled) {
 			// handleError is not invoked for client-side navigation
 			const { kind, error } = read_errors('/redirect/missing-status/a');
-			expect(kind).toBe('unexpected');
+			expect(kind).toBe('unknown');
 			const lines = error.stack.split('\n');
 			expect(lines[0]).toBe(`Error: ${message}`);
 		}
