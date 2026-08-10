@@ -1,7 +1,7 @@
 import { assert, expect, test, describe } from 'vitest';
 import * as v from 'valibot';
 import { exec, parse_route_id, resolve_route, find_route } from './routing.js';
-import { defineParams } from '@sveltejs/kit';
+import { defineParams } from '@sveltejs/kit/params';
 
 /** @type {import('@sveltejs/kit').ParamMatcher} */
 const number = v.pipe(v.string(), v.toNumber());
