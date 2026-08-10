@@ -25,16 +25,18 @@ export { base, assets, app_dir } from './internal/client.js';
  * @returns {string}
  */
 export function asset(file) {
+	let path = /** @type {string} */ (file);
+
 	// TODO 4.0 remove this
-	if (file[0] === '/') {
+	if (path[0] === '/') {
 		if (DEV) {
-			console.warn(`\`asset('${file}')\` should now be \`asset('${file.slice(1)}')\``);
+			console.warn(`\`asset('${path}')\` should now be \`asset('${path.slice(1)}')\``);
 		}
 
-		file = file.slice(1);
+		path = path.slice(1);
 	}
 
-	return (assets || base) + '/' + file;
+	return (assets || base) + '/' + path;
 }
 
 const pathname_prefix = hash_routing ? '#' : '';
@@ -63,18 +65,20 @@ const pathname_prefix = hash_routing ? '#' : '';
  * @returns {ResolvedPathname}
  */
 export function resolve(...args) {
-	if (args[0][0] === '/') {
-		const [id, params] = args;
+	const [id, params] = /** @type {[string, Record<string, string>?]} */ (args);
 
+	if (id[0] === '/') {
 		// route ID
 		if (id.includes('[') && !params) {
 			throw new Error(`Missing params for dynamic route ID ${id}`);
 		}
 
-		return base + pathname_prefix + resolve_route(args[0], args[1] ?? {});
+		return /** @type {ResolvedPathname} */ (
+			base + pathname_prefix + resolve_route(id, params ?? {})
+		);
 	}
 
-	return base + pathname_prefix + '/' + args[0];
+	return /** @type {ResolvedPathname} */ (base + pathname_prefix + '/' + id);
 }
 
 /**
