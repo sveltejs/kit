@@ -293,7 +293,6 @@ async function create_routes({ builder, out, embed }) {
 		: get_no_embed_entries({ builder, out, server_assets });
 
 	return [
-		`// eslint-disable-next-line @typescript-eslint/no-unused-vars`,
 		`import { client_asset, prerendered_asset, prerendered_page, prerendered_redirect, server_asset } from './routes-util.js';`,
 		...imports,
 		`export const routes = Object.fromEntries([${entries.join(',\n')}]);`,
