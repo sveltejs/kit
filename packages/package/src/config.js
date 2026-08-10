@@ -42,6 +42,7 @@ async function import_peer(dependency, root) {
 	try {
 		return await import(/* @vite-ignore */ pathToFileURL(resolve_peer(dependency, root)).href);
 	} catch {
+		// eslint-disable-next-line kit-node-custom/require-path-to-file-url -- bare package specifier, not a path
 		return await import(/* @vite-ignore */ dependency);
 	}
 }

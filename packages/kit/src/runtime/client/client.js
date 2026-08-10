@@ -29,6 +29,14 @@ import {
 	PRELOAD_PRIORITIES,
 	SNAPSHOT_KEY
 } from './constants.js';
+import {
+	capture_navigation_snapshot,
+	current_registrations,
+	delete_navigation_snapshot,
+	init_snapshots,
+	persist_navigation_snapshots,
+	restore_navigation_snapshot
+} from './snapshots.js';
 import { validate_page_exports } from '../../utils/exports.js';
 import { noop } from '../../utils/functions.js';
 import {
@@ -91,8 +99,11 @@ const history_info = storage.get(HISTORY_INFO_KEY) ?? {};
 /**
  * navigation index -> any
  * @type {Record<string, any[]>}
+ * @deprecated TODO 4.0 get rid of this
  */
 const snapshots = storage.get(SNAPSHOT_KEY) ?? {};
+
+init_snapshots(() => (started && !is_navigating && !updating ? current_history_index : null));
 
 /** @type {Props} */
 let props;
@@ -203,9 +214,12 @@ function reset_scroll_and_focus(url, scroll, reset, active_element) {
 function clear_onward_history(current_history_index, current_navigation_index) {
 	// if we navigated back, then pushed a new state, we can
 	// release memory by pruning the scroll/snapshot lookup
+	// the new entry reuses the first abandoned index, so its slot must start clean
+	delete_navigation_snapshot(current_history_index);
 	let i = current_history_index + 1;
 	while (history_info[i]) {
 		delete history_info[i];
+		delete_navigation_snapshot(i);
 		i += 1;
 	}
 
@@ -673,14 +687,28 @@ function reset_invalidation() {
 	force_invalidation = false;
 }
 
-/** @param {number} index */
+let warned_snapshot_export = false;
+
+/**
+ * @param {number} index
+ * @deprecated TODO 4.0 get rid of this
+ */
 function capture_snapshot(index) {
 	if (props.components.some((c) => c?.snapshot)) {
+		if (DEV && !warned_snapshot_export) {
+			warned_snapshot_export = true;
+			console.warn(
+				'`export const snapshot` is deprecated. Use the `snapshot` helper from `$app/navigation` instead.'
+			);
+		}
 		snapshots[index] = props.components.map((c) => c?.snapshot?.capture());
 	}
 }
 
-/** @param {number} index */
+/**
+ * @param {number} index
+ * @deprecated TODO 4.0 get rid of this
+ */
 function restore_snapshot(index) {
 	snapshots[index]?.forEach((value, i) => {
 		props.components[i]?.snapshot?.restore(value);
@@ -693,11 +721,13 @@ function persist_state() {
 
 	capture_snapshot(current_navigation_index);
 	storage.set(SNAPSHOT_KEY, snapshots);
+
+	persist_navigation_snapshots(current_history_index);
 }
 
 /**
  * @param {string | URL} url
- * @param {{ type?: import('@sveltejs/kit').NavigationType; replace?: boolean; reset?: boolean; refreshAll?: boolean; invalidate?: Array<string | URL | ((url: URL) => boolean)>; state?: Record<string, any>; persistState?: boolean; event?: Event }} [options]
+ * @param {{ type?: import('@sveltejs/kit').NavigationType; replace?: boolean; reset?: boolean; refreshAll?: boolean; invalidate?: Array<string | URL | ((url: URL) => boolean)>; state?: Record<string, any>; persistState?: boolean; event?: Event; action_result?: import('@sveltejs/kit').ActionResult }} [options]
  * @param {number} [redirect_count]
  * @param {{}} [nav_token]
  * @param {NavigationIntent | undefined} [intent] navigation intent, when already known by the caller (avoids recomputing it)
@@ -723,6 +753,7 @@ export async function _goto(url, options = {}, redirect_count = 0, nav_token = {
 		state: options.state,
 		persist_state: options.persistState,
 		event: options.event,
+		action_result: options.action_result,
 		redirect_count,
 		nav_token,
 		intent,
@@ -947,6 +978,7 @@ async function initialize(result, target, should_hydrate) {
 	}
 
 	restore_snapshot(current_navigation_index);
+	restore_navigation_snapshot(current_history_index);
 
 	started = true;
 }
@@ -1366,7 +1398,7 @@ function diff_search_params(old_url, new_url) {
 
 /**
  * @overload
- * @param {import('./types.js').NavigationIntent} intent
+ * @param {import('./types.js').NavigationIntent & { action_result?: import('@sveltejs/kit').ActionResult }} intent
  * @returns {Promise<import('./types.js').NavigationResult | undefined>}
  */
 /**
@@ -1375,11 +1407,11 @@ function diff_search_params(old_url, new_url) {
  * @returns {Promise<import('./types.js').NavigationResult>}
  */
 /**
- * @param {import('./types.js').NavigationIntent & { preload?: {} }} intent
+ * @param {import('./types.js').NavigationIntent & { preload?: {}; action_result?: import('@sveltejs/kit').ActionResult }} intent
  * @returns {Promise<import('./types.js').NavigationResult | undefined>}
  */
-async function load_route({ id, invalidating, url, params, route, preload }) {
-	if (load_cache?.id === id) {
+async function load_route({ id, invalidating, url, params, route, preload, action_result }) {
+	if (!action_result && load_cache?.id === id) {
 		// the preload becomes the real navigation
 		preload_tokens.delete(load_cache.token);
 		return load_cache.promise;
@@ -1388,6 +1420,8 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 	const { errors, layouts, leaf } = route;
 
 	const loaders = [...layouts, leaf];
+	const leaf_index = loaders.length - 1;
+	const action_error = action_result?.type === 'error';
 
 	// preload modules to avoid waterfall, but handle rejections
 	// so they don't get reported to Sentry et al (we don't need
@@ -1406,6 +1440,8 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 
 	if (__SVELTEKIT_HAS_SERVER_LOAD__) {
 		const invalid_server_nodes = loaders.map((loader, i) => {
+			if (action_error && i === leaf_index) return false;
+
 			const previous = current.branch[i];
 
 			const invalid =
@@ -1456,7 +1492,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 	let parent_changed = false;
 
 	const branch_promises = loaders.map(async (loader, i) => {
-		if (!loader) return;
+		if (!loader || (action_error && i === leaf_index)) return;
 
 		/** @type {import('./types.js').BranchNode | undefined} */
 		const previous = current.branch[i];
@@ -1548,25 +1584,36 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 					error = await handle_error(err, { params, url, route: { id: route.id } });
 				}
 
-				const error_load = await load_nearest_error_page(i, branch, errors);
-				if (error_load) {
-					return get_navigation_result_from_branch({
-						url,
-						params,
-						branch: branch.slice(0, error_load.idx).concat(error_load.node),
-						errors,
-						error,
-						route
-					});
-				} else {
-					return await server_fallback(url, { id: route.id }, error);
-				}
+				return load_route_error({
+					i,
+					branch,
+					errors,
+					error,
+					url,
+					params,
+					route
+				});
 			}
 		} else {
 			// push an empty slot so we can rewind past gaps to the
 			// layout that corresponds with an +error.svelte page
 			branch.push(undefined);
 		}
+	}
+
+	if (action_result?.type === 'error') {
+		// render the nearest error boundary of the route the action belongs to,
+		// as a native form submission would
+		return load_route_error({
+			i: loaders.length,
+			branch,
+			errors,
+			error: action_result.error,
+			status: action_result.status,
+			url,
+			params,
+			route
+		});
 	}
 
 	return get_navigation_result_from_branch({
@@ -1576,8 +1623,15 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 		errors,
 		error: null,
 		route,
-		// Reset `form` on navigation, but not invalidation
-		form: invalidating ? undefined : null
+		status: action_result?.status,
+		// `error` results returned above, `redirect` results are never passed here
+		form:
+			action_result?.type === 'success' || action_result?.type === 'failure'
+				? (action_result.data ?? null)
+				: // Reset `form` on navigation, but not invalidation
+					invalidating
+					? undefined
+					: null
 	});
 }
 
@@ -1608,6 +1662,35 @@ async function load_nearest_error_page(i, branch, errors) {
 			}
 		}
 	}
+}
+
+/**
+ * @param {{
+ *   i: number;
+ *   branch: Array<import('./types.js').BranchNode | undefined>;
+ *   errors: Array<import('types').CSRPageNodeLoader | undefined>;
+ *   error: App.Error;
+ *   status?: number;
+ *   url: URL;
+ *   params: Record<string, string>;
+ *   route: import('./types.js').NavigationIntent['route'];
+ * }} opts
+ */
+async function load_route_error({ i, branch, errors, error, status, url, params, route }) {
+	const error_load = await load_nearest_error_page(i, branch, errors);
+	if (error_load) {
+		return get_navigation_result_from_branch({
+			url,
+			params,
+			branch: branch.slice(0, error_load.idx).concat(error_load.node),
+			errors,
+			error,
+			status,
+			route
+		});
+	}
+
+	return server_fallback(url, { id: route.id }, error);
 }
 
 /**
@@ -1894,7 +1977,8 @@ function _before_navigate({ url, type, intent, delta, event, scroll, shallow = f
  *   accept?: () => void;
  *   block?: () => void;
  *   event?: Event;
- *   intent?: NavigationIntent | undefined
+ *   intent?: NavigationIntent | undefined;
+ *   action_result?: import('@sveltejs/kit').ActionResult;
  * }} opts
  * @returns {Promise<void>}
  */
@@ -1911,7 +1995,8 @@ async function navigate({
 	accept = noop,
 	block = noop,
 	event,
-	intent
+	intent,
+	action_result
 }) {
 	const prev_token = navigation_token;
 	const prev_invalidation_token = invalidation_token;
@@ -1943,6 +2028,7 @@ async function navigate({
 	// store this before calling `accept()`, which may change the index
 	const previous_history_index = current_history_index;
 	const previous_navigation_index = current_navigation_index;
+	const previous_snapshot_registrations = current_registrations();
 
 	accept();
 
@@ -1952,7 +2038,7 @@ async function navigate({
 		navigating.current = nav.navigation;
 	}
 
-	let navigation_result = intent && (await load_route(intent));
+	let navigation_result = intent && (await load_route({ ...intent, action_result }));
 
 	if (!navigation_result) {
 		if (is_external_url(url, base, app.hash)) {
@@ -2051,6 +2137,11 @@ async function navigate({
 
 	capture_scroll(previous_history_index);
 	capture_snapshot(previous_navigation_index);
+	if (replace_state) {
+		delete_navigation_snapshot(previous_history_index);
+	} else {
+		capture_navigation_snapshot(previous_history_index);
+	}
 
 	// ensure the url pathname matches the page's trailing slash option
 	if (navigation_result.props.page.url.pathname !== url.pathname) {
@@ -2218,6 +2309,8 @@ async function navigate({
 	if (type === 'popstate') {
 		restore_snapshot(current_navigation_index);
 	}
+	// new and replaced entries have no stored values, so this only resets there
+	restore_navigation_snapshot(current_history_index, previous_snapshot_registrations);
 
 	navigating.current = null;
 
@@ -2883,6 +2976,7 @@ export async function replaceState(url, state) {
  */
 async function update_state(intent, state, { replace, persist_state, reset }, caller) {
 	const url = intent.url;
+	const previous_snapshot_registrations = current_registrations();
 
 	if (DEV && !started) {
 		throw new Error(`Cannot call ${caller}(...) before router is initialized`);
@@ -2903,7 +2997,12 @@ async function update_state(intent, state, { replace, persist_state, reset }, ca
 		updating = true;
 	}
 
-	if (!replace) capture_scroll(current_history_index);
+	if (replace) {
+		delete_navigation_snapshot(current_history_index);
+	} else {
+		capture_scroll(current_history_index);
+		capture_navigation_snapshot(current_history_index);
+	}
 	if (reset) current_reset_index += 1;
 
 	// as above, serialize-then-parse to prevent bugs
@@ -2959,38 +3058,43 @@ async function update_state(intent, state, { replace, persist_state, reset }, ca
 		url
 	};
 
-	if (!nav) return;
+	if (nav) {
+		const { activeElement } = document;
 
-	const { activeElement } = document;
+		await settled();
 
-	await settled();
+		if (navigation_token !== nav_token) {
+			// a new navigation happened while we were waiting for the DOM to update, so abort
+			nav.reject(new Error('navigation aborted'));
+			return;
+		}
 
-	if (navigation_token !== nav_token) {
-		// a new navigation happened while we were waiting for the DOM to update, so abort
-		nav.reject(new Error('navigation aborted'));
-		return;
+		reset_scroll_and_focus(url, reset ? null : scroll_state(), reset, activeElement);
+
+		is_navigating = false;
+		nav.fulfil(undefined);
+
+		if (nav.navigation.to) {
+			nav.navigation.to.scroll = scroll_state();
+		}
+
+		after_navigate_callbacks.forEach((fn) =>
+			fn(/** @type {import('@sveltejs/kit').AfterNavigate} */ (nav.navigation))
+		);
 	}
 
-	reset_scroll_and_focus(url, reset ? null : scroll_state(), reset, activeElement);
+	restore_navigation_snapshot(current_history_index, previous_snapshot_registrations);
 
-	is_navigating = false;
-	nav.fulfil(undefined);
-
-	if (nav.navigation.to) {
-		nav.navigation.to.scroll = scroll_state();
+	if (nav) {
+		navigating.current = null;
+		updating = false;
 	}
-
-	after_navigate_callbacks.forEach((fn) =>
-		fn(/** @type {import('@sveltejs/kit').AfterNavigate} */ (nav.navigation))
-	);
-
-	navigating.current = null;
-	updating = false;
 }
 
 /**
- * This action updates the `form` property of the current page with the given data and updates `page.status`.
- * In case of an error, it redirects to the nearest error page.
+ * Updates the `form` property of the current page with the given data and updates `page.status`.
+ * In case of an error, it renders the nearest error page. In case of a redirect, it navigates to
+ * the redirect location.
  * @template {Record<string, unknown> | undefined} Success
  * @template {Record<string, unknown> | undefined} Failure
  * @param {import('@sveltejs/kit').ActionResult<Success, Failure>} result
@@ -3001,10 +3105,13 @@ export async function applyAction(result) {
 		throw new Error('Cannot call applyAction(...) on the server');
 	}
 
+	if (result.type === 'redirect') {
+		await _goto(result.location, { refreshAll: true });
+		return;
+	}
+
 	if (result.type === 'error') {
 		await set_nearest_error_page(result.error);
-	} else if (result.type === 'redirect') {
-		await _goto(result.location, { refreshAll: true });
 	} else {
 		page.form = result.data;
 		page.status = result.status;
@@ -3022,6 +3129,51 @@ export async function applyAction(result) {
 			reset_focus(/** @type {URL} */ (page.url));
 		}
 	}
+}
+
+/**
+ * Whether a submission should update the current page in place rather than navigating — either
+ * because it lands where we already are, or because the result carries no location at all
+ * (hand-constructed results, which have always applied in place).
+ * @param {string | undefined} value
+ */
+export function is_current_location(value) {
+	if (value === undefined) return true;
+
+	const destination = resolve_url(value);
+	const current = new URL(location.href);
+	if (destination.pathname !== current.pathname) return false;
+
+	const keys = new Set([...destination.searchParams.keys(), ...current.searchParams.keys()]);
+	for (const key of keys) {
+		const destination_values = destination.searchParams.getAll(key).sort();
+		const current_values = current.searchParams.getAll(key).sort();
+
+		if (
+			destination_values.length !== current_values.length ||
+			destination_values.some((value, i) => value !== current_values[i])
+		) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
+/**
+ * Navigate to where a form submission should land, rendering that page with the given result
+ * — what the browser would do for a native submission.
+ * @param {string} location
+ * @param {import('@sveltejs/kit').ActionResult} result
+ * @param {boolean} refresh_all
+ * @returns {Promise<void>}
+ */
+export function apply_action_navigation(location, result, refresh_all) {
+	return _goto(location, {
+		type: 'form',
+		refreshAll: refresh_all,
+		action_result: result
+	});
 }
 
 /**
@@ -3336,9 +3488,11 @@ function _start_router() {
 				update_url(url);
 
 				capture_scroll(current_history_index);
+				capture_navigation_snapshot(current_history_index);
 				current_history_index = history_index;
 				current_reset_index = reset_index;
 				if (reset && scroll) scrollTo(scroll.x, scroll.y);
+				restore_navigation_snapshot(current_history_index, current_registrations());
 				return;
 			}
 

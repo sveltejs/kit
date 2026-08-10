@@ -3,16 +3,15 @@
 
 import { json, error } from '@sveltejs/kit';
 import { Redirect, SvelteKitError } from '@sveltejs/kit/internal';
-import { with_request_store, merge_tracing } from '@sveltejs/kit/internal/server';
+import { with_request_store, merge_tracing, record_span } from '@sveltejs/kit/internal/server';
 import { app_dir, base } from '$app/paths/internal/server';
 import { is_form_content_type } from '../../utils/http.js';
 import { create_remote_key, parse_remote_arg, split_remote_key } from '../shared.js';
 import { stringify } from '#app/internal/transport';
 import { handle_error_and_jsonify } from './errors.js';
 import { normalize_error } from '../../utils/error.js';
-import { check_incorrect_fail_use } from './page/actions.js';
+import { check_incorrect_fail_use, get_action_location } from './page/actions.js';
 import { DEV } from 'esm-env';
-import { record_span } from '../telemetry/record_span.js';
 import { deserialize_binary_form } from '../form-utils.js';
 import { with_version_header } from './utils.js';
 
@@ -533,6 +532,7 @@ export async function handle_remote_form_post(event, state, manifest, id) {
  * @returns {Promise<ActionResult>}
  */
 async function handle_remote_form_post_internal(event, state, manifest, id) {
+	const location = get_action_location(event.url);
 	// `hash` and `name` can never contain a `/`, but the JSON-stringified key of a
 	// keyed (`form.for(key)`) instance can — rejoin the remaining segments
 	const [hash, name, ...rest] = id.split('/');
@@ -552,6 +552,7 @@ async function handle_remote_form_post_internal(event, state, manifest, id) {
 		});
 		return {
 			type: 'error',
+			location,
 			// We're lying a bit with the types here; this will be transformed into a proper App.Error object later
 			error: new SvelteKitError(
 				405,
@@ -584,7 +585,8 @@ async function handle_remote_form_post_internal(event, state, manifest, id) {
 		// It is instead available on `myForm.result`, setting of which happens within the remote `form` function.
 		return {
 			type: 'success',
-			status: 200
+			status: 200,
+			location
 		};
 	} catch (e) {
 		const err = normalize_error(e);
@@ -599,6 +601,7 @@ async function handle_remote_form_post_internal(event, state, manifest, id) {
 
 		return {
 			type: 'error',
+			location,
 			// @ts-expect-error We're lying a bit with the types here; this will be transformed into a proper App.Error object later
 			error: check_incorrect_fail_use(err)
 		};

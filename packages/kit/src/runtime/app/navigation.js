@@ -12,3 +12,4 @@ export {
 	pushState,
 	replaceState
 } from '../client/client.js';
+export { snapshot } from '../client/snapshots.js';
