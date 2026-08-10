@@ -1624,14 +1624,15 @@ function kit({ svelte_config }) {
 
 		async buildApp(builder) {
 			fs.rmSync(out, { force: true, recursive: true });
+			fs.mkdirSync(out, { recursive: true });
 
 			const verbose = builder.config.logLevel === 'info';
 			const log = logger({ verbose });
 
-			let server_build = await builder.build(builder.environments.ssr);
+			let ssr_build = await builder.build(builder.environments.ssr);
 
 			/** @param {Rolldown.RolldownOutput['output']} server_chunks */
-			const process_server_build = async (server_chunks) => {
+			const process_ssr_build = async (server_chunks) => {
 				// Replace manifest placeholders in SSR output. `assets` and `routes`
 				// are known from `manifest_data`. `immutable` and `prerendered` are not
 				// known yet — they get sentinel strings that are replaced after
@@ -2073,23 +2074,21 @@ function kit({ svelte_config }) {
 			};
 
 			// `vite build`
-			server_build = Array.isArray(server_build) ? server_build[0] : server_build;
-			if ('output' in server_build) {
-				fs.mkdirSync(out, { recursive: true });
-
+			ssr_build = Array.isArray(ssr_build) ? ssr_build[0] : ssr_build;
+			if ('output' in ssr_build) {
 				await load_and_validate_params({
 					routes: manifest_data.routes,
 					params_path: manifest_data.params,
 					root
 				});
 
-				return await process_server_build(server_build.output);
+				return await process_ssr_build(ssr_build.output);
 			}
 
 			// `vite build --watch`
 			let rebuild = false;
 
-			const before_server_rerun = async () => {
+			const before_ssr_build_rerun = async () => {
 				rebuild = true;
 
 				// these are set once per plugin initialisation or when the config hook
@@ -2123,19 +2122,19 @@ function kit({ svelte_config }) {
 				});
 			};
 
-			server_build.on('change', before_server_rerun);
-			server_build.on('restart', before_server_rerun);
+			ssr_build.on('change', before_ssr_build_rerun);
+			ssr_build.on('restart', before_ssr_build_rerun);
 
 			/** @type {PromiseWithResolvers<void>} */
 			const task = Promise.withResolvers();
 
-			server_build.on('event', async (event) => {
+			ssr_build.on('event', async (event) => {
 				if (event.code === 'ERROR') {
 					return task.reject();
 				}
 
 				if (event.code === 'BUNDLE_END') {
-					await process_server_build(watch_build_output.get(builder.environments.ssr.name));
+					await process_ssr_build(watch_build_output.get(builder.environments.ssr.name));
 					// buildApp hooks don't rerun in watch mode so we need to run
 					// the deferred steps here on subsequent builds
 					if (rebuild) await finalise?.();
