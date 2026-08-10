@@ -16,7 +16,7 @@ In the simplest case, a page declares a `default` action:
 export const actions = {
 	default: async (event) => {
 		// TODO log the user in
-	}
+	},
 };
 ```
 
@@ -155,6 +155,7 @@ export const actions = {
 
 > [!LEGACY]
 > `PageProps` was added in 2.16.0. In earlier versions, you had to type the `data` and `form` properties individually:
+>
 > ```js
 > /// file: +page.svelte
 > /** @type {{ data: import('./$types').PageData, form: import('./$types').ActionData }} */
@@ -456,7 +457,7 @@ The behaviour of `applyAction(result)` depends on `result.type`:
 - `redirect` — calls `goto(result.location, { refreshAll: true })`
 - `error` — renders the current route's nearest `+error` boundary with `result.error`
 
-In all cases, [focus will be reset](accessibility#Focus-management). `applyAction` does not navigate to the `location` of a non-redirect result or refresh data. Use `update` to get the complete default enhanced behavior, including carrying form data and status into a cross-page navigation. When implementing enhancement manually, inspect `result.location` and use [`goto`](../$app-navigation#goto) or [`refreshAll`](../$app-navigation#refreshAll) as appropriate.
+In all cases, [focus will be reset](accessibility#Focus-management). `applyAction` does not navigate to the `location` of a non-redirect result or refresh data. Use `update` to get the complete default enhanced behavior, including carrying form data and status into a cross-page navigation. When implementing enhancement manually, inspect `result.location` and use [`goto`]($app-navigation#goto) or [`refreshAll`]($app-navigation#refreshAll) as appropriate.
 
 ### Custom event listener
 
@@ -552,7 +553,7 @@ Some forms don't need to `POST` data to the server — search inputs, for exampl
 <form action="/search">
 	<label>
 		Search
-		<input name="q">
+		<input name="q" />
 	</label>
 </form>
 ```
