@@ -47,7 +47,7 @@ snapshot({
 
 The optional `reset` callback runs on navigations where there is no captured value to restore, such as when a new history entry is created.
 
-Captured values are serialized with [devalue](https://github.com/sveltejs/devalue), which handles JSON as well as types like `Date` and `Map`, and values handled by your [`transport`](hooks#Universal-hooks-transport) hook. The serialized data is persisted to `sessionStorage`, which allows the state to be restored when the page is reloaded, or when the user navigates back from a different site.
+Captured values are serialized with [devalue](https://github.com/sveltejs/devalue), which handles JSON, objects such as `Date` and `Map`, and custom types specified in your [`transport`](hooks#transport) hook. The serialized data is persisted to `sessionStorage`, which allows the state to be restored when the page is reloaded, or when the user navigates back from a different site.
 
 > [!NOTE] Avoid returning very large objects from `capture` — once captured, objects will be retained in memory for the duration of the session, and in extreme cases may be too large to persist to `sessionStorage`.
 
