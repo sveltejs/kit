@@ -29,6 +29,14 @@ import {
 	PRELOAD_PRIORITIES,
 	SNAPSHOT_KEY
 } from './constants.js';
+import {
+	capture_navigation_snapshot,
+	current_registrations,
+	delete_navigation_snapshot,
+	init_snapshots,
+	persist_navigation_snapshots,
+	restore_navigation_snapshot
+} from './snapshots.js';
 import { validate_page_exports } from '../../utils/exports.js';
 import { noop } from '../../utils/functions.js';
 import {
@@ -91,8 +99,11 @@ const history_info = storage.get(HISTORY_INFO_KEY) ?? {};
 /**
  * navigation index -> any
  * @type {Record<string, any[]>}
+ * @deprecated TODO 4.0 get rid of this
  */
 const snapshots = storage.get(SNAPSHOT_KEY) ?? {};
+
+init_snapshots(() => (started && !is_navigating && !updating ? current_history_index : null));
 
 /** @type {Props} */
 let props;
@@ -203,9 +214,12 @@ function reset_scroll_and_focus(url, scroll, reset, active_element) {
 function clear_onward_history(current_history_index, current_navigation_index) {
 	// if we navigated back, then pushed a new state, we can
 	// release memory by pruning the scroll/snapshot lookup
+	// the new entry reuses the first abandoned index, so its slot must start clean
+	delete_navigation_snapshot(current_history_index);
 	let i = current_history_index + 1;
 	while (history_info[i]) {
 		delete history_info[i];
+		delete_navigation_snapshot(i);
 		i += 1;
 	}
 
@@ -673,14 +687,28 @@ function reset_invalidation() {
 	force_invalidation = false;
 }
 
-/** @param {number} index */
+let warned_snapshot_export = false;
+
+/**
+ * @param {number} index
+ * @deprecated TODO 4.0 get rid of this
+ */
 function capture_snapshot(index) {
 	if (props.components.some((c) => c?.snapshot)) {
+		if (DEV && !warned_snapshot_export) {
+			warned_snapshot_export = true;
+			console.warn(
+				'`export const snapshot` is deprecated. Use the `snapshot` helper from `$app/navigation` instead.'
+			);
+		}
 		snapshots[index] = props.components.map((c) => c?.snapshot?.capture());
 	}
 }
 
-/** @param {number} index */
+/**
+ * @param {number} index
+ * @deprecated TODO 4.0 get rid of this
+ */
 function restore_snapshot(index) {
 	snapshots[index]?.forEach((value, i) => {
 		props.components[i]?.snapshot?.restore(value);
@@ -693,6 +721,8 @@ function persist_state() {
 
 	capture_snapshot(current_navigation_index);
 	storage.set(SNAPSHOT_KEY, snapshots);
+
+	persist_navigation_snapshots(current_history_index);
 }
 
 /**
@@ -948,6 +978,7 @@ async function initialize(result, target, should_hydrate) {
 	}
 
 	restore_snapshot(current_navigation_index);
+	restore_navigation_snapshot(current_history_index);
 
 	started = true;
 }
@@ -1997,6 +2028,7 @@ async function navigate({
 	// store this before calling `accept()`, which may change the index
 	const previous_history_index = current_history_index;
 	const previous_navigation_index = current_navigation_index;
+	const previous_snapshot_registrations = current_registrations();
 
 	accept();
 
@@ -2105,6 +2137,11 @@ async function navigate({
 
 	capture_scroll(previous_history_index);
 	capture_snapshot(previous_navigation_index);
+	if (replace_state) {
+		delete_navigation_snapshot(previous_history_index);
+	} else {
+		capture_navigation_snapshot(previous_history_index);
+	}
 
 	// ensure the url pathname matches the page's trailing slash option
 	if (navigation_result.props.page.url.pathname !== url.pathname) {
@@ -2272,6 +2309,8 @@ async function navigate({
 	if (type === 'popstate') {
 		restore_snapshot(current_navigation_index);
 	}
+	// new and replaced entries have no stored values, so this only resets there
+	restore_navigation_snapshot(current_history_index, previous_snapshot_registrations);
 
 	navigating.current = null;
 
@@ -2937,6 +2976,7 @@ export async function replaceState(url, state) {
  */
 async function update_state(intent, state, { replace, persist_state, reset }, caller) {
 	const url = intent.url;
+	const previous_snapshot_registrations = current_registrations();
 
 	if (DEV && !started) {
 		throw new Error(`Cannot call ${caller}(...) before router is initialized`);
@@ -2957,7 +2997,12 @@ async function update_state(intent, state, { replace, persist_state, reset }, ca
 		updating = true;
 	}
 
-	if (!replace) capture_scroll(current_history_index);
+	if (replace) {
+		delete_navigation_snapshot(current_history_index);
+	} else {
+		capture_scroll(current_history_index);
+		capture_navigation_snapshot(current_history_index);
+	}
 	if (reset) current_reset_index += 1;
 
 	// as above, serialize-then-parse to prevent bugs
@@ -3013,33 +3058,37 @@ async function update_state(intent, state, { replace, persist_state, reset }, ca
 		url
 	};
 
-	if (!nav) return;
+	if (nav) {
+		const { activeElement } = document;
 
-	const { activeElement } = document;
+		await settled();
 
-	await settled();
+		if (navigation_token !== nav_token) {
+			// a new navigation happened while we were waiting for the DOM to update, so abort
+			nav.reject(new Error('navigation aborted'));
+			return;
+		}
 
-	if (navigation_token !== nav_token) {
-		// a new navigation happened while we were waiting for the DOM to update, so abort
-		nav.reject(new Error('navigation aborted'));
-		return;
+		reset_scroll_and_focus(url, reset ? null : scroll_state(), reset, activeElement);
+
+		is_navigating = false;
+		nav.fulfil(undefined);
+
+		if (nav.navigation.to) {
+			nav.navigation.to.scroll = scroll_state();
+		}
+
+		after_navigate_callbacks.forEach((fn) =>
+			fn(/** @type {import('@sveltejs/kit').AfterNavigate} */ (nav.navigation))
+		);
 	}
 
-	reset_scroll_and_focus(url, reset ? null : scroll_state(), reset, activeElement);
+	restore_navigation_snapshot(current_history_index, previous_snapshot_registrations);
 
-	is_navigating = false;
-	nav.fulfil(undefined);
-
-	if (nav.navigation.to) {
-		nav.navigation.to.scroll = scroll_state();
+	if (nav) {
+		navigating.current = null;
+		updating = false;
 	}
-
-	after_navigate_callbacks.forEach((fn) =>
-		fn(/** @type {import('@sveltejs/kit').AfterNavigate} */ (nav.navigation))
-	);
-
-	navigating.current = null;
-	updating = false;
 }
 
 /**
@@ -3439,9 +3488,11 @@ function _start_router() {
 				update_url(url);
 
 				capture_scroll(current_history_index);
+				capture_navigation_snapshot(current_history_index);
 				current_history_index = history_index;
 				current_reset_index = reset_index;
 				if (reset && scroll) scrollTo(scroll.x, scroll.y);
+				restore_navigation_snapshot(current_history_index, current_registrations());
 				return;
 			}
 
