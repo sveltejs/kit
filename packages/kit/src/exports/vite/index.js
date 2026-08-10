@@ -41,6 +41,7 @@ import {
 	server_only_module_pattern
 } from './utils.js';
 import { stackless } from '../../utils/error.js';
+import { adapt } from '../../core/adapt/index.js';
 import { write_client_manifest } from '../../core/sync/write_client_manifest.js';
 import prerender from '../../core/postbuild/prerender.js';
 import analyse from '../../core/postbuild/analyse.js';
@@ -69,7 +70,6 @@ import { should_ignore, has_children } from './static_analysis/utils.js';
 import { process_config, split_config, validate_config } from '../../core/config/index.js';
 import { treeshake_prerendered_remotes } from './build/remote.js';
 import { get_runner } from '../../runner.js';
-import { adapt } from '../../core/adapt/index.js';
 
 /** @type {import('./types.js').EnforcedConfig} */
 const enforced_config = {
@@ -339,7 +339,7 @@ function kit({ svelte_config }) {
 				const resolved = await this.resolve(id, importer, { ...options, skipSelf: true });
 				if (resolved) return resolved;
 
-				const aliases = kit.alias;
+				const aliases = svelte_config.kit.alias;
 				for (const { name, pattern, message } of removed_modules) {
 					if (!pattern.test(id)) continue;
 
@@ -900,7 +900,7 @@ function kit({ svelte_config }) {
 		name: 'vite-plugin-sveltekit-remote',
 
 		applyToEnvironment(environment) {
-			return kit.experimental.remoteFunctions && environment.name !== 'serviceWorker';
+			return svelte_config.kit.experimental.remoteFunctions && environment.name !== 'serviceWorker';
 		},
 
 		// prevent other plugins from resolving our remote virtual module
@@ -948,7 +948,7 @@ function kit({ svelte_config }) {
 
 				if (this.environment.name === 'ssr') remotes.push(remote);
 
-				if (this.environment.config.consumer === 'server') {
+				if (this.environment.config.consumer !== 'client') {
 					// we need to add an `await Promise.resolve()` because if the user imports this function
 					// on the client AND in a load function when loading the client module we will trigger
 					// an import during dev. During a link preload, the module can be mistakenly
@@ -1058,7 +1058,7 @@ function kit({ svelte_config }) {
 		name: 'vite-plugin-sveltekit-remote-guard',
 
 		applyToEnvironment() {
-			return !kit.experimental.remoteFunctions;
+			return !svelte_config.kit.experimental.remoteFunctions;
 		},
 
 		transform: {
@@ -1276,10 +1276,8 @@ function kit({ svelte_config }) {
 		}
 	};
 
-	/** @type {Rolldown.RolldownOutput['output']} */
-	let server_chunks_from_watched_build;
-	/** @type {Rolldown.RolldownOutput['output']} */
-	let client_chunks_from_watched_build;
+	/** @type {Map<string, Rolldown.RolldownOutput['output']>} */
+	const watch_build_output = new Map();
 	/** @type {(() => Promise<void>) | null} */
 	let finalise = null;
 
@@ -1364,7 +1362,7 @@ function kit({ svelte_config }) {
 					/** @type {Record<string, string>} */
 					const client_input = {};
 
-					if (kit.output.bundleStrategy !== 'split') {
+					if (svelte_config.kit.output.bundleStrategy !== 'split') {
 						client_input['bundle'] = `${runtime_directory}/client/bundle.js`;
 					} else {
 						client_input['entry/start'] = `${runtime_directory}/client/entry.js`;
@@ -1377,7 +1375,7 @@ function kit({ svelte_config }) {
 						});
 					}
 
-					const inline = kit.output.bundleStrategy === 'inline';
+					const inline = svelte_config.kit.output.bundleStrategy === 'inline';
 
 					/** @type {string} */
 					const base = (kit.paths.assets || kit.paths.base) + '/';
@@ -1476,7 +1474,7 @@ function kit({ svelte_config }) {
 												return `${app_immutable}/chunks/[hash].js`;
 											},
 											codeSplitting:
-												kit.output.bundleStrategy === 'split'
+												svelte_config.kit.output.bundleStrategy === 'split'
 													? {
 															groups: [
 																{
@@ -1501,7 +1499,7 @@ function kit({ svelte_config }) {
 								},
 								define: {
 									__SVELTEKIT_PAYLOAD__:
-										kit.output.bundleStrategy !== 'split' ? kit_global : 'undefined'
+										svelte_config.kit.output.bundleStrategy !== 'split' ? kit_global : 'undefined'
 								}
 							}
 						},
@@ -1606,16 +1604,13 @@ function kit({ svelte_config }) {
 		},
 
 		generateBundle(_options, bundle) {
+			// a watched build returns a watcher rather than the build output from
+			// `builder.build` so we need to retrieve it from the generateBundle hook
 			if (this.meta.watchMode) {
-				if (this.environment.name === 'ssr') {
-					server_chunks_from_watched_build = /** @type {Rolldown.RolldownOutput['output']} */ (
-						Object.values(bundle)
-					);
-				} else if (this.environment.name === 'client') {
-					client_chunks_from_watched_build = /** @type {Rolldown.RolldownOutput['output']} */ (
-						Object.values(bundle)
-					);
-				}
+				watch_build_output.set(
+					this.environment.name,
+					/** @type {Rolldown.RolldownOutput['output']} */ (Object.values(bundle))
+				);
 			}
 
 			if (this.environment.config.consumer !== 'client') return;
@@ -1736,8 +1731,11 @@ function kit({ svelte_config }) {
 					}
 
 					const client_build = await builder.build(builder.environments.client);
-					const client_chunks =
-						(await normalise_build(client_build)) ?? client_chunks_from_watched_build;
+					const client_chunks = await normalise_build(
+						builder.environments.client.name,
+						client_build,
+						watch_build_output
+					);
 
 					// We use `build.ssrEmitAssets` so that asset URLs created from
 					// imports in server-only modules correspond to files in the build,
@@ -2040,7 +2038,11 @@ function kit({ svelte_config }) {
 						};
 
 						const service_worker_build = await builder.build(builder.environments.serviceWorker);
-						await normalise_build(service_worker_build);
+						await normalise_build(
+							builder.environments.serviceWorker.name,
+							service_worker_build,
+							watch_build_output
+						);
 					}
 
 					console.log(
@@ -2133,7 +2135,7 @@ function kit({ svelte_config }) {
 				}
 
 				if (event.code === 'BUNDLE_END') {
-					await process_server_build(server_chunks_from_watched_build);
+					await process_server_build(watch_build_output.get(builder.environments.ssr.name));
 					// buildApp hooks don't rerun in watch mode so we need to run
 					// the deferred steps here on subsequent builds
 					if (rebuild) await finalise?.();
@@ -2436,10 +2438,13 @@ const replace_manifest_placeholder_strings = (dir, values) => {
 };
 
 /**
+ * Normalises the build output to a consistent format, handling watch mode and multiple environments
+ * @param {string} name The name of the environment
  * @param {Rolldown.RolldownOutput | Rolldown.RolldownOutput[] | Rolldown.RolldownWatcher} build The return value of builder.build
- * @returns {Promise<Rolldown.RolldownOutput['output'] | null>} The output chunks from the build or `null` if watch mode is enabled
+ * @param {Map<string, Rolldown.RolldownOutput['output']>} build_output_map
+ * @returns {Promise<Rolldown.RolldownOutput['output'] | null>}
  */
-async function normalise_build(build) {
+async function normalise_build(name, build, build_output_map) {
 	if ('output' in build) {
 		return build.output;
 	}
@@ -2465,5 +2470,5 @@ async function normalise_build(build) {
 
 	await bundling.promise;
 
-	return null;
+	return build_output_map.get(name);
 }
