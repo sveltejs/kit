@@ -16,7 +16,7 @@ In the simplest case, a page declares a `default` action:
 export const actions = {
 	default: async (event) => {
 		// TODO log the user in
-	},
+	}
 };
 ```
 
@@ -155,7 +155,6 @@ export const actions = {
 
 > [!LEGACY]
 > `PageProps` was added in 2.16.0. In earlier versions, you had to type the `data` and `form` properties individually:
->
 > ```js
 > /// file: +page.svelte
 > /** @type {{ data: import('./$types').PageData, form: import('./$types').ActionData }} */
@@ -553,7 +552,7 @@ Some forms don't need to `POST` data to the server — search inputs, for exampl
 <form action="/search">
 	<label>
 		Search
-		<input name="q" />
+		<input name="q">
 	</label>
 </form>
 ```
