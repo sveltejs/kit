@@ -232,6 +232,7 @@ export interface PrerenderDependency {
 	body: null | string | Uint8Array;
 }
 
+/** Internal context for the prerendering process */
 export interface PrerenderOptions {
 	cache?: string; // including this here is a bit of a hack, but it makes it easy to add <meta http-equiv>
 	fallback?: boolean;

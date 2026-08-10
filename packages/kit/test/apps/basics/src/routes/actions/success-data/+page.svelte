@@ -4,10 +4,7 @@
 	/** @type {import('./$types').ActionData} */
 	export let form;
 
-	/**
-	 * @type {import('svelte/elements').EventHandler<SubmitEvent, HTMLFormElement>}
-	 * @this {HTMLFormElement}
-	 */
+	/** @type {(this: HTMLFormElement, event: SubmitEvent) => Promise<void>} */
 	async function submit({ submitter }) {
 		const res = await fetch(this.action, {
 			method: 'POST',

@@ -13,7 +13,7 @@ import {
 
 const name = '@sveltejs/adapter-cloudflare';
 
-/** @type {import('./index.js').default} */
+/** @type {typeof import('./index.js').default} */
 export default function (options = {}) {
 	return {
 		name,

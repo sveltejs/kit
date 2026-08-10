@@ -9,7 +9,7 @@ import { DEV } from 'esm-env';
 
 export { base, assets, app_dir } from './internal/server.js';
 
-/** @type {import('./client.js').asset} */
+/** @type {typeof import('./client.js').asset} */
 export function asset(file) {
 	// TODO 4.0 remove this
 	if (file[0] === '/') {
@@ -23,7 +23,7 @@ export function asset(file) {
 	return assets !== base ? `${assets}/${file}` : resolve(file);
 }
 
-/** @type {import('./client.js').resolve} */
+/** @type {typeof import('./client.js').resolve} */
 export function resolve(id, params) {
 	let resolved;
 
@@ -58,7 +58,7 @@ export function resolve(id, params) {
 	return base + resolved;
 }
 
-/** @type {import('./client.js').match} */
+/** @type {typeof import('./client.js').match} */
 export async function match(url) {
 	const store = try_get_request_store();
 
