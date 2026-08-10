@@ -29,6 +29,7 @@ Update the versions in your `package.json` and run your package manager's instal
 Instead of declaring project configuration in `svelte.config.js`, it must now be passed to the `sveltekit` Vite plugin in `vite.config.js`. Options that previously lived under `config.kit.*` are now top-level plugin options, alongside things like `compilerOptions`:
 
 ```js
+// @errors: 2307 ignore adapter auto types missing
 /// file: vite.config.js
 import { defineConfig } from 'vite';
 import { sveltekit } from '@sveltejs/kit/vite';
