@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 3.0.0-next.17
+
+### Major Changes
+
+- breaking: enhanced cross-page form actions now navigate to the action page on success and failure, matching native form behavior ([#16684](https://github.com/sveltejs/kit/pull/16684))
+
+### Minor Changes
+
+- chore: deprecate `export const snapshot` in favour of the `snapshot` helper ([#16687](https://github.com/sveltejs/kit/pull/16687))
+
+- feat: add `snapshot` helper to `$app/navigation` ([#16685](https://github.com/sveltejs/kit/pull/16685))
+
 ## 3.0.0-next.16
 
 ### Patch Changes
