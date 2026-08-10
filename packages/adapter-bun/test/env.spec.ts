@@ -36,20 +36,18 @@ describe('env', () => {
 });
 
 describe('boolean_env', () => {
-	test.each(['1', 'true', 'TRUE', 'yes', 'YES', 'on', 'ON'])('parses %s as true', async (value) => {
-		set_env('OPTION', value);
+	test('parses the accepted truthy and falsy spellings', async () => {
 		const { boolean_env } = await load_env();
-		expect(boolean_env('OPTION')).toBe(true);
-	});
 
-	test.each(['0', 'false', 'FALSE', 'no', 'NO', 'off', 'OFF'])(
-		'parses %s as false',
-		async (value) => {
+		for (const value of ['1', 'true', 'TRUE', 'yes', 'YES', 'on', 'ON']) {
 			set_env('OPTION', value);
-			const { boolean_env } = await load_env();
-			expect(boolean_env('OPTION')).toBe(false);
+			expect(boolean_env('OPTION'), value).toBe(true);
 		}
-	);
+		for (const value of ['0', 'false', 'FALSE', 'no', 'NO', 'off', 'OFF']) {
+			set_env('OPTION', value);
+			expect(boolean_env('OPTION'), value).toBe(false);
+		}
+	});
 
 	test('returns the fallback for an absent variable', async () => {
 		const { boolean_env } = await load_env();
