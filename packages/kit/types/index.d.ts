@@ -2655,41 +2655,25 @@ declare module '@sveltejs/kit/node' {
 declare module '@sveltejs/kit/params' {
 	import type { StandardSchemaV1 } from '@standard-schema/spec';
 	/**
-	 * Define [parameter matchers](https://svelte.dev/docs/kit/advanced-routing#Matching) for your app.
-	 *
-	 * @example
-	 * ```js
-	 * import { defineParams } from '@sveltejs/kit/params';
-	 * import * as v from 'valibot';
-	 *
-	 * export const params = defineParams({
-	 * 	locale: (param) => {
-	 * 		if (param !== 'de' && param !== 'en') return;
-	 * 		return param;
-	 * 	},
-	 * 	number: v.pipe(v.string(), v.toNumber())
-	 * });
-	 * ```
-	 *
-	 * */
-	export function defineParams<T extends Record<string, ParamDefinition>>(definitions: T): DefinedParams<T>;
+	 * The shape of a param matcher. See [matching](https://svelte.dev/docs/kit/advanced-routing#Matching) for more info.
+	 */
+	export type ParamMatcher<Output = any> = StandardSchemaV1<string, Output>;
 
-	export function normalize_param_definition(definition: import("@sveltejs/kit").ParamDefinition): import("@sveltejs/kit").ParamMatcher;
 	/**
 	 * A value that can be parsed from a URL param and losslessly encoded with `String(...)`.
 	 */
-	type ParamValue = string | number | boolean | bigint;
+	export type ParamValue = string | number | boolean | bigint;
 
 	/**
 	 * A param matcher definition passed to [`defineParams`](https://svelte.dev/docs/kit/@sveltejs-kit#defineParams).
 	 */
-	type ParamDefinition =
+	export type ParamDefinition =
 		((param: string) => ParamValue | undefined) | StandardSchemaV1<string, ParamValue>;
 
 	/**
 	 * The return type of [`defineParams`](https://svelte.dev/docs/kit/@sveltejs-kit#defineParams).
 	 */
-	type DefinedParams<T extends Record<string, ParamDefinition>> = {
+	export type DefinedParams<T extends Record<string, ParamDefinition>> = {
 		readonly [K in keyof T]: ParamEntry<T[K]>;
 	};
 
@@ -2706,6 +2690,28 @@ declare module '@sveltejs/kit/params' {
 					? StandardSchemaV1<any, Exclude<R, undefined>>
 					: StandardSchemaV1<any, never>
 				: never;
+
+	/**
+	 * Extracts the param type from a matcher.
+	 */
+	export type MatcherParam<M extends StandardSchemaV1<any, any>> =
+		M extends StandardSchemaV1<any, infer Inner>
+			? Inner extends ParamValue
+				? Inner
+				: Inner extends StandardSchemaV1<any, any>
+					? StandardSchemaV1.InferOutput<Inner> extends ParamValue
+						? StandardSchemaV1.InferOutput<Inner>
+						: never
+					: never
+			: never;
+
+	/**
+	 * Define [parameter matchers](https://svelte.dev/docs/kit/advanced-routing#Matching) for your app.
+	 *
+	 * */
+	export function defineParams<T extends Record<string, ParamDefinition>>(
+		definitions: T
+	): DefinedParams<T>;
 
 	export {};
 }
