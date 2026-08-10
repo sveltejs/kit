@@ -10,12 +10,12 @@ await createBundle({
 		'@sveltejs/kit/node': 'src/exports/node/index.js',
 		'@sveltejs/kit/vite': 'src/exports/vite/index.js',
 		'$app/env': 'src/runtime/app/env/types.d.ts',
-		'$app/forms': 'src/runtime/app/forms.js',
-		'$app/navigation': 'src/runtime/app/navigation.js',
+		'$app/forms': 'src/runtime/app/forms/public.d.ts',
+		'$app/navigation': 'src/runtime/app/navigation/public.d.ts',
 		'$app/paths': 'src/runtime/app/paths/public.d.ts',
 		'$app/server': 'src/runtime/app/server/index.js',
 		'$app/service-worker': 'src/runtime/app/service-worker/index.js',
-		'$app/state': 'src/runtime/app/state/index.js'
+		'$app/state': 'src/runtime/app/state/public.d.ts'
 	},
 	include: ['src'],
 	exclude: ['**/test/**', '**/fixtures/**', '**/*.spec.js'],
