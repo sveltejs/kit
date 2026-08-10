@@ -6,7 +6,7 @@
 		"dev": "vite dev",
 		"build": "vite build",
 		"preview": "wrangler dev dist/index.js --config config/wrangler.jsonc",
-		"prepare": "svelte-kit sync || echo ''",
+		"prepare": "svelte-kit sync || echo ''; wrangler types --config config/wrangler.jsonc || echo ''",
 		"test:dev": "DEV=true playwright test",
 		"test:build": "playwright test",
 		"test": "pnpm test:dev && pnpm test:build"

@@ -10,13 +10,19 @@ import {
 	parse_redirects,
 	append_headers
 } from './utils.js';
-
-const name = '@sveltejs/adapter-cloudflare';
+import { ServerResponse } from 'node:http';
+import { coupleWebSocket } from 'miniflare';
+import { WebSocketServer } from 'ws';
+import { cloudflare } from '@cloudflare/vite-plugin';
+import { exactRegex } from '@rolldown/pluginutils';
+// @ts-expect-error types are private
+import { dedent } from '@sveltejs/kit/internal';
 
 /** @type {import('./index.js').default} */
 export default function (options = {}) {
+	const node_ws_server = new WebSocketServer({ noServer: true });
 	return {
-		name,
+		name: '@sveltejs/adapter-cloudflare',
 		async adapt(builder) {
 			if (
 				existsSync('_routes.json') ||
@@ -182,7 +188,13 @@ export default function (options = {}) {
 			// we want to invoke `getPlatformProxy` only once, but await it only when it is accessed.
 			// If we would await it here, it would hang indefinitely because the platform proxy only resolves once a request happens
 			const get_emulated = async () => {
-				const proxy = await getPlatformProxy(options.platformProxy);
+				// TODO - need access to the vite dev server here
+				// const runner = get_runner(vite, server);
+				// runner.import('cloudflare:workers');
+				const proxy = await getPlatformProxy({
+					configPath: '.svelte-kit/cloudflare-tmp/wrangler.json',
+					...options.platformProxy
+				});
 				const platform = {
 					env: proxy.env,
 					ctx: proxy.ctx,
@@ -215,9 +227,173 @@ export default function (options = {}) {
 		supports: {
 			read: () => true,
 			instrumentation: () => true
+		},
+		/**
+		 *
+		 * @param {WebSocketServerResponse} res
+		 * @param {Response & { webSocket?: import('miniflare').WebSocket }} response
+		 */
+		setResponse(res, response) {
+			if (!response.webSocket || !res.socket || !res[WEBSOCKET_HEAD]) return false;
+
+			const socket = res.socket;
+			const worker_socket = response.webSocket;
+			res.detachSocket(socket);
+			node_ws_server.handleUpgrade(res.req, socket, res[WEBSOCKET_HEAD], (client_socket) => {
+				void coupleWebSocket(client_socket, worker_socket);
+				node_ws_server.emit('connection', client_socket, res.req);
+			});
+
+			return true;
+		},
+		vite: {
+			pre_plugins: [listener_plugin, virtual_modules_plugin(options)],
+			post_plugins: [
+				// Cloudflare's plugin needs to be after SvelteKit so sveltekit's middleware
+				// can read the requests first and ignore them if necessary.
+				...cloudflare({
+					configPath: options.config,
+					config: (user_config) => {
+						// Assets are handled by SvelteKit
+						delete user_config.assets;
+						return user_config;
+					}
+				})
+			]
 		}
 	};
 }
+
+/**
+ * @param {import('./index.js').AdapterOptions} options
+ * @returns {import('vite').Plugin}
+ * */
+function virtual_modules_plugin(options) {
+	const modules = ['cloudflare:workers', 'virtual:todo-name-cloudflare-handler'];
+	/** @type {string} */
+	let out_dir;
+	const { wrangler_config } = validate_wrangler_config(options.config);
+	const worker_name = wrangler_config.name ?? 'worker';
+	// Rename the worker because two workers are running at once
+	wrangler_config.name = worker_name + '-sveltekit';
+	// Point all durable objects at the worker ran by @cloudflare/vite-plugin
+	for (const binding of wrangler_config.durable_objects?.bindings ?? []) {
+		if (binding.script_name === undefined) {
+			binding.script_name = worker_name;
+		}
+	}
+	// squash warnings
+	if (Object.keys(wrangler_config.unsafe).length === 0) {
+		delete /** @type {{ unsafe?: {} }} */ (wrangler_config).unsafe;
+	}
+
+	return {
+		name: 'vite-plugin-sveltekit-adapter-cloudflare-virtual-modules',
+		configResolved(config) {
+			const plugin = config.plugins.find((plugin) => plugin.name === 'vite-plugin-sveltekit-setup');
+			const options = plugin?.api?.options;
+			if (!options) throw new Error('vite-plugin-sveltekit-setup not found');
+			out_dir = options.kit.outDir;
+		},
+		resolveId: {
+			filter: {
+				id: modules.map((m) => exactRegex(m))
+			},
+			handler(id) {
+				return '\0' + id;
+			}
+		},
+		load: {
+			filter: {
+				id: modules.map((m) => exactRegex('\0' + m))
+			},
+			handler(id) {
+				if (id === '\0cloudflare:workers') {
+					return dedent`
+						import { getPlatformProxy } from 'wrangler';
+						import { writeFileSync, mkdirSync } from 'node:fs';
+
+						const tmp_dir = ${JSON.stringify(out_dir + '/cloudflare-tmp')};
+						mkdirSync(tmp_dir, { recursive: true });
+						const tmp_config_file = tmp_dir + '/wrangler.json';
+						writeFileSync(tmp_config_file, ${JSON.stringify(JSON.stringify(wrangler_config))});
+						const proxy = await getPlatformProxy({
+							...${JSON.stringify(options.platformProxy ?? {})},
+							configPath: tmp_config_file
+						});
+						export const env = proxy.env;
+						export const waitUntil = () => {};
+						// TODO - stub other exports
+					`;
+				}
+			}
+		}
+	};
+}
+
+
+const WEBSOCKET_HEAD = Symbol('websocketHead');
+/** @typedef {import('http').ServerResponse & { [WEBSOCKET_HEAD]?: Buffer }} WebSocketServerResponse */
+/** @type {import('vite').Plugin} */
+const listener_plugin = {
+	name: 'vite-plugin-sveltekit-adapter-cloudflare-listeners',
+	enforce: 'post',
+	configureServer(server) {
+		return () => {
+			if (server.httpServer) {
+				const upgrade_listeners = server.httpServer
+					.listeners('upgrade')
+					.filter((listener) => listener.name !== 'hmrServerWsListener');
+
+				for (const listener of upgrade_listeners) {
+					server.httpServer.removeListener('upgrade', /** @type {() => void} */ (listener));
+				}
+
+				/**
+				 * @param {import('vite').Connect.IncomingMessage} req
+				 * @param {import('net').Socket} socket
+				 * @param {Buffer} head
+				 */
+				const upgrade_handler = (req, socket, head) => {
+					if (req.headers['x-sveltekit-cloudflare-handle']) {
+						delete req.headers['x-sveltekit-cloudflare-handle'];
+						req.originalUrl = req.url;
+
+						const res = new ServerResponse(req);
+						res.assignSocket(socket);
+						/** @type {WebSocketServerResponse} */ (res)[WEBSOCKET_HEAD] = head;
+						handler(req, res);
+						return;
+					}
+					for (const listener of upgrade_listeners) {
+						listener(req, socket, head);
+					}
+				};
+
+				server.httpServer.on('upgrade', upgrade_handler);
+			}
+			const sveltekit_dev_middleware = server.middlewares.stack.find(
+				(middleware) =>
+					/** @type {Function} */ (middleware.handle).name === 'sveltekitDevMiddleware'
+			);
+			if (!sveltekit_dev_middleware) {
+				throw new Error('@sveltekit/adapter-cloudflare could not find sveltekitDevMiddleware');
+			}
+			const handler = /** @type {import('vite').Connect.SimpleHandleFunction} */ (
+				sveltekit_dev_middleware.handle
+			);
+			/** @type {import('vite').Connect.NextHandleFunction} */
+			sveltekit_dev_middleware.handle = (req, res, next) => {
+				if (req.headers['x-sveltekit-cloudflare-handle']) {
+					delete req.headers['x-sveltekit-cloudflare-handle'];
+					handler(req, res);
+					return;
+				}
+				next();
+			};
+		};
+	}
+};
 
 /**
  * @param {string} app_dir
@@ -277,7 +453,7 @@ _redirects
  * 	building_for_cloudflare_pages: boolean
  * }}
  */
-function validate_wrangler_config(config_file = undefined) {
+function validate_wrangler_config(config_file) {
 	const wrangler_config = unstable_readConfig({ config: config_file });
 
 	const building_for_cloudflare_pages = is_building_for_cloudflare_pages(wrangler_config);

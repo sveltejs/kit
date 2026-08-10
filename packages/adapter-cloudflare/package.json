@@ -23,6 +23,10 @@
 			"types": "./index.d.ts",
 			"import": "./index.js"
 		},
+		"./worker": {
+			"types": "./worker.d.ts",
+			"import": "./worker.js"
+		},
 		"./package.json": "./package.json"
 	},
 	"types": "index.d.ts",
@@ -46,13 +50,19 @@
 	},
 	"devDependencies": {
 		"@playwright/test": "catalog:",
+		"@rolldown/pluginutils": "^1.0.1",
 		"@sveltejs/kit": "workspace:^",
 		"@types/node": "catalog:",
+		"@types/ws": "^8.18.1",
+		"miniflare": "5.20260801.0-alpha",
 		"typescript": "catalog:",
-		"vitest": "catalog:"
+		"vite": "catalog:",
+		"vitest": "catalog:",
+		"ws": "^8.21.2"
 	},
 	"peerDependencies": {
+		"@cloudflare/vite-plugin": "^1.51.0",
 		"@sveltejs/kit": "^3.0.0-next.0",
-		"wrangler": "^4.118.0"
+		"wrangler": "^4.119.0"
 	}
 }

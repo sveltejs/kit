@@ -35,6 +35,9 @@ export { PrerenderOption } from '../types/private.js';
 // @ts-ignore this is an optional peer dependency so could be missing. Written like this so dts-buddy preserves the ts-ignore
 type Span = import('@opentelemetry/api').Span;
 
+// @ts-ignore see above
+type ServerResponse = import('http').ServerResponse;
+
 type AppErrorWithOptionalStatus = Omit<App.Error, 'status'> & { status?: App.Error['status'] };
 
 /**
@@ -50,6 +53,12 @@ export interface Adapter {
 	 * @param builder An object provided by SvelteKit that contains methods for adapting the app
 	 */
 	adapt: (builder: Builder) => MaybePromise<void>;
+	/**
+	 * This function allows adapters to handle the low-level process of transforming a `Response` into
+	 * the format that vite understands.
+	 * @returns Whether the response was handled
+	 */
+	setResponse?: (res: ServerResponse, response: Response) => boolean;
 	/**
 	 * Checks called during dev and build to determine whether specific features will work in production with this adapter.
 	 */
@@ -73,10 +82,15 @@ export interface Adapter {
 	emulate?: () => MaybePromise<Emulator>;
 	vite?: {
 		/**
-		 * Plugins provided by the adapter are placed before any of SvelteKit's own plugins.
+		 * Vite plugins placed before any of SvelteKit's own plugins.
 		 * @since 3.0.0
 		 */
-		plugins?: Plugin[];
+		pre_plugins?: Plugin[];
+		/**
+		 * Vite plugins placed after any of SvelteKit's own plugins.
+		 * @since 3.0.0
+		 */
+		post_plugins?: Plugin[];
 	};
 }
 

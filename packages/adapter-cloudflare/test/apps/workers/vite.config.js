@@ -11,7 +11,7 @@ const config = {
 			adapter: adapter({
 				config: 'config/wrangler.jsonc'
 			})
-		})
+		}),
 	]
 };
 

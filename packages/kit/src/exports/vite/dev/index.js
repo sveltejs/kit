@@ -502,7 +502,8 @@ export async function dev(
 		// serving routes with those names. See https://github.com/vitejs/vite/issues/7363
 		remove_static_middlewares(vite_dev_server.middlewares);
 
-		vite_dev_server.middlewares.use(async (req, res) => {
+		// eslint-disable-next-line prefer-arrow-callback
+		vite_dev_server.middlewares.use(async function sveltekitDevMiddleware(req, res) {
 			// Vite throws a Cannot read properties of undefined (reading 'wrapDynamicImport')
 			// if you try to run ssr.runner.import before the server has started so
 			// we do it inside here to avoid that
@@ -651,7 +652,13 @@ export async function dev(
 					});
 				} else {
 					log_response(rendered.status, request);
-					setResponse(res, rendered);
+					let adapter_set_response = false;
+					if (svelte_config.kit.adapter?.setResponse) {
+						adapter_set_response = svelte_config.kit.adapter.setResponse(res, rendered);
+					}
+					if (!adapter_set_response) {
+						setResponse(res, rendered);
+					}
 				}
 			} catch (e) {
 				const error = coalesce_to_error(e);

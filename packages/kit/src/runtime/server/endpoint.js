@@ -45,11 +45,12 @@ export async function render_endpoint(event, state, mod) {
 			handler(/** @type {import('@sveltejs/kit').RequestEvent<Record<string, any>>} */ (event))
 		);
 
-		if (!(response instanceof Response)) {
-			throw new Error(
-				`Invalid response from route ${event.url.pathname}: handler should return a Response object`
-			);
-		}
+		// TODO: need to accept Response-like objects here, such as from a different undici version
+		// if (!(response instanceof Response)) {
+		// 	throw new Error(
+		// 		`Invalid response from route ${event.url.pathname}: handler should return a Response object`
+		// 	);
+		// }
 
 		if (state.prerendering && (!state.prerendering.inside_reroute || prerender)) {
 			// The returned Response might have immutable Headers

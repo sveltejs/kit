@@ -2,10 +2,31 @@
 // to test that the adapter still resolves the paths correctly
 {
 	"$schema": "../node_modules/wrangler/config-schema.json",
-	"main": "../dist/index.js",
+	"name": "adapter-cloudflare-test",
+	"main": "../src/worker.ts",
 	"compatibility_date": "2026-06-24",
 	"assets": {
 		"directory": "../dist/public",
 		"binding": "ASSETS"
-	}
+	},
+	"durable_objects": {
+		"bindings": [
+			{
+				"name": "DO",
+				"class_name": "DO"
+			}
+		]
+	},
+	"exports": {
+		"DO": {
+			"type": "durable-object",
+			"storage": "sqlite"
+		}
+	},
+	"kv_namespaces": [
+		{
+			"binding": "KV",
+			"remote": false
+		}
+	]
 }
