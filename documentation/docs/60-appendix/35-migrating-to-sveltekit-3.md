@@ -358,7 +358,7 @@ Now, the second argument must always be a `string`. If there are additional prop
 
 ### `handleValidationError` is removed
 
-Validation errors are now passed to [`handleError`](hooks#handleError), with `kind: 'validation'`.
+Validation errors are now passed to [`handleError`](hooks#handleError) with `kind: 'validation'`. The generic `{ status, message }` `error` object is safe to return, while the validation `issues` are provided separately for logging or custom handling.
 
 ### `handleError` receives all errors
 

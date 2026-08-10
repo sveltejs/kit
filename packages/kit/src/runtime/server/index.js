@@ -129,7 +129,12 @@ export class Server {
 					handle: module.handle || (({ event, resolve }) => resolve(event)),
 					handleError:
 						module.handleError ||
-						(({ kind, error }) => {
+						(({ kind, error, issues }) => {
+							if (kind === 'validation') {
+								console.error('Remote function schema validation failed:', issues);
+								return;
+							}
+
 							if (kind !== 'unknown') {
 								// don't log stack traces for 404s etc, it's all internal gubbins
 								return;
@@ -148,12 +153,6 @@ export class Server {
 							}
 						}),
 					handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request)),
-					handleValidationError:
-						module.handleValidationError ||
-						(({ issues }) => {
-							console.error('Remote function schema validation failed:', issues);
-							return { message: 'Bad Request', status: 400 };
-						}),
 					reroute: module.reroute || noop
 				};
 
@@ -170,9 +169,6 @@ export class Server {
 						},
 						handleError: ({ error }) => console.error(error),
 						handleFetch: ({ request, fetch }) => fetch(request),
-						handleValidationError: () => {
-							return { message: 'Bad Request' };
-						},
 						reroute: noop
 					};
 				} else {
@@ -191,7 +187,7 @@ export class Server {
 			request,
 			this.#options,
 			this.#manifest,
-			create_request_state(options, this.#options.hooks)
+			create_request_state(options)
 		);
 
 		if (DEV) {

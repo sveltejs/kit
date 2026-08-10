@@ -40,8 +40,8 @@ const handle_error_kinds: HandleServerError = ({ kind, error }) => {
 		return error;
 	}
 
-	if (kind === 'framework') {
-		// @ts-expect-error the framework error has no `additional` property
+	if (kind === 'framework' || kind === 'validation') {
+		// @ts-expect-error framework and validation errors have no `additional` property
 		error satisfies App.Error;
 		return { ...error, additional: true };
 	}

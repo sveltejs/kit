@@ -1236,19 +1236,22 @@ As long as _you're_ not passing invalid data to your remote functions, there are
 - the function signature changed between deployments, and some users are currently on an older version of your app
 - someone is trying to attack your site by poking your exposed endpoints with bad data
 
-In the second case, we don't want to give the attacker any help, so SvelteKit will generate a generic [400 Bad Request](https://http.dog/400) response. You can control the message by implementing the [`handleValidationError`](hooks#handleValidationError) server hook, which must return an object matching [`App.Error`](errors#Type-safety) (which defaults to `{ status: number, message: string }`, with `status` defaulting to `400` if you omit it):
+In the second case, we don't want to give the attacker any help, so SvelteKit will generate a generic [400 Bad Request](https://http.dog/400) response. Validation failures pass through the server [`handleError`](hooks#handleError) hook with `kind: 'validation'`, an `error` object containing `{ status, message }`, and the validation `issues`. You can use the issues to log the failure or customise the response:
 
 ```js
 /// file: src/hooks.server.js
-/** @type {import('@sveltejs/kit').HandleValidationError} */
-export function handleValidationError({ event, issues }) {
-	return {
-		message: 'Nice try, hacker!'
-	};
+/** @type {import('@sveltejs/kit').HandleServerError} */
+export function handleError({ kind, issues }) {
+	if (kind === 'validation') {
+		console.error(issues);
+		return {
+			message: 'Nice try, hacker!'
+		};
+	}
 }
 ```
 
-The object you return becomes the body of an [app error](errors#App-errors), which then passes through [`handleError`](hooks#handleError) with `kind: 'app'`.
+Be thoughtful about exposing validation issues, as they may give an attacker useful information. Returning `error` unchanged is safe — unlike `issues`, it only contains the generic status and message.
 
 If you know what you're doing and want to opt out of validation, you can pass the string `'unchecked'` in place of a schema:
 

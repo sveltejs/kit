@@ -143,41 +143,7 @@ export async function handleFetch({ event, request, fetch }) {
 }
 ```
 
-## handleValidationError
 
-> [!NOTE] Can be added to `src/hooks.server.js`
-
-This hook is called when a remote function is called with an argument that does not match the provided [Standard Schema](https://standardschema.dev/). It must return an object matching the shape of [`App.Error`](types#Error).
-
-Say you have a remote function that expects a string as its argument ...
-
-```js
-/// file: todos.remote.js
-import * as v from 'valibot';
-import { query } from '$app/server';
-
-export const getTodo = query(v.string(), (id) => {
-	// implementation...
-});
-```
-
-...but it is called with something that doesn't match the schema — such as a number (e.g. `await getTodos(1)`) — then validation will fail, the server will respond with a [400 status code](https://http.dog/400), and the function will throw with the message 'Bad Request'.
-
-To customise this message and add additional properties to the error object, implement `handleValidationError`:
-
-```js
-/// file: src/hooks.server.js
-/** @type {import('@sveltejs/kit').HandleValidationError} */
-export function handleValidationError({ issues }) {
-	return {
-		message: 'No thank you'
-	};
-}
-```
-
-Be thoughtful about what information you expose here, as the most likely reason for validation to fail is that someone is sending malicious requests to your server.
-
-The object you return here becomes the body of an [app error](errors#App-errors), which means it subsequently passes through [`handleError`](hooks#handleError) as an error with `kind: 'app'`.
 
 ## handleError
 
@@ -196,11 +162,15 @@ Alongside the `event`, the hook receives a `kind` discriminant that tells you wh
 - `'framework'` — the error came from SvelteKit, such as a 404, 405 or 413
   - `error` is `{ status, message }`, where `message` is safe text like `Not Found`
   - defaults to that same `{ status, message }`
+- `'validation'` (server only) — the error came from validating a remote function argument against its [Standard Schema](https://standardschema.dev/)
+  - `error` is `{ status: 400, message: 'Bad Request' }`, and `issues` contains the validation issues
+  - defaults to the `error` object; the issues are not exposed unless you explicitly return them
+  - to access validation-library-specific issue properties, parameterise `HandleServerError` with the issue type, for example `HandleServerError<CustomIssue>`
 - `'unknown'` — we don't know what went wrong; the error was thrown by your code, or code it calls
   - `error` is the thrown value, which may contain information unsafe to expose
   - defaults to `{ status: 500, message: 'Internal Error' }`
 
-The next section, [Errors](errors), explains these categories in more detail. Errors from [`handleValidationError`](#handleValidationError) arrive as _expected_ errors. Redirects are not errors, and never reach the hook.
+The next section, [Errors](errors), explains the other categories in more detail. Redirects are not errors, and never reach the hook.
 
 The hook returns an object matching [`App.Error`](types#Error), in which `status` and `message` are optional — return them only to override the defaults in the list above.
 
