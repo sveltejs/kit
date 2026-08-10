@@ -10,9 +10,9 @@ Every error passes through the [`handleError`](hooks#handleError) hook — which
 
 You can add additional properties, like a `code` or a tracking `id`, as shown in the examples below. (When using TypeScript this requires you to redefine the `Error` type as described in  [type safety](errors#Type-safety)).
 
-## Expected errors
+## App errors
 
-An _expected_ error is one created with the [`error`](@sveltejs-kit#error) helper imported from `@sveltejs/kit`:
+An _app_ error is one created with the [`error`](@sveltejs-kit#error) helper imported from `@sveltejs/kit`:
 
 ```js
 /// file: src/routes/blog/[slug]/+page.server.js
@@ -75,17 +75,17 @@ error(404, 'Not found', {
 
 > [!NOTE] [In SvelteKit 1.x](migrating-to-sveltekit-2#redirect-and-error-are-no-longer-thrown-by-you) you had to `throw` the `error` yourself
 
-## Unexpected errors
+## Unknown errors
 
-An _unexpected_ error is any other exception that occurs while handling a request. Since these can contain sensitive information, unexpected error messages and stack traces are not exposed to users.
+An _unknown_ error is any other exception that occurs while handling a request. Since these can contain sensitive information, unknown error messages and stack traces are not exposed to users.
 
-By default, unexpected errors are printed to the console (or, in production, your server logs), while the error that is exposed to the user has a generic shape:
+By default, unknown errors are printed to the console (or, in production, your server logs), while the error that is exposed to the user has a generic shape:
 
 ```json
 { "status": 500, "message": "Internal Error" }
 ```
 
-Unexpected errors go through the [`handleError`](hooks#handleError) hook with `kind: 'unknown'`, because SvelteKit does not know what went wrong. There you can add your own error handling, for example sending errors to a reporting service, or returning a custom error object which becomes the `error` prop passed to `+error.svelte`. The value you receive is the raw thrown value, and nothing about it is exposed unless you choose to expose it.
+Unknown errors go through the [`handleError`](hooks#handleError) hook with `kind: 'unknown'`, because SvelteKit does not know what went wrong. There you can add your own error handling, for example sending errors to a reporting service, or returning a custom error object which becomes the `error` prop passed to `+error.svelte`. The value you receive is the raw thrown value, and nothing about it is exposed unless you choose to expose it.
 
 Anything you return overrides the defaults, so you can — for example — use the type of the thrown error to determine the HTTP status code used in the response:
 
