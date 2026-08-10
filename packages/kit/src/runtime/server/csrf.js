@@ -22,7 +22,7 @@ export function get_self_origin(paths_origin, url_origin) {
 
 /**
  * Determines whether a non-remote request should be rejected as a cross-site
- * form submission (CSRF). Used by `respond.js` to gate form `POST`/`PUT`/
+ * request forgery (CSRF). Used by `respond.js` to gate form `POST`/`PUT`/
  * `PATCH`/`DELETE` requests whose `Origin` header doesn't match the app's
  * self-origin (and isn't in `trusted_origins`).
  *
