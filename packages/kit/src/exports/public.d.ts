@@ -72,11 +72,18 @@ export interface Adapter {
 	 */
 	emulate?: () => MaybePromise<Emulator>;
 	vite?: {
-		/**
-		 * Plugins provided by the adapter are placed before any of SvelteKit's own plugins.
-		 * @since 3.0.0
-		 */
-		plugins?: Plugin[];
+		plugins?: {
+			/**
+			 * Vite plugins placed before any of SvelteKit's own plugins.
+			 * @since 3.0.0
+			 */
+			pre?: Plugin[];
+			/**
+			 * Vite plugins placed after any of SvelteKit's own plugins.
+			 * @since 3.0.0
+			 */
+			post?: Plugin[];
+		};
 	};
 }
 
@@ -121,9 +128,15 @@ type UnpackValidationError<T> =
 export interface Builder {
 	/** Print messages to the console. `log.info` and `log.minor` are silent unless Vite's `logLevel` is `info`. */
 	log: Logger;
-	/** Remove `dir` and all its contents. */
+	/**
+	 * Remove `dir` and all its contents.
+	 * @deprecated Use `fs.rmSync(dir, { force: true, recursive: true })` instead
+	 */
 	rimraf: (dir: string) => void;
-	/** Create `dir` and any required parent directories. */
+	/**
+	 * Create `dir` and any required parent directories.
+	 * @deprecated Use `fs.mkdirSync(dir, { recursive: true })` instead
+	 */
 	mkdirp: (dir: string) => void;
 
 	/** The fully resolved SvelteKit config. */
@@ -454,7 +467,10 @@ export interface KitConfig {
 		 *
 		 * CSRF checks only apply in production, not in local development.
 		 * @default []
-		 * @example ['https://checkout.stripe.com', 'https://accounts.google.com']
+		 * @example
+		 * ```js
+		 * ['https://checkout.stripe.com', 'https://accounts.google.com']
+		 * ```
 		 */
 		trustedOrigins?: string[];
 	};
@@ -1614,7 +1630,7 @@ export interface RequestEvent<
 	/**
 	 * Get or set cookies related to the current request
 	 */
-	cookies: Cookies;
+	readonly cookies: Cookies;
 	/**
 	 * `fetch` is equivalent to the [native `fetch` web API](https://developer.mozilla.org/en-US/docs/Web/API/fetch), with a few additional features:
 	 *
@@ -1626,15 +1642,15 @@ export interface RequestEvent<
 	 *
 	 * You can learn more about making credentialed requests with cookies [here](https://svelte.dev/docs/kit/load#Cookies).
 	 */
-	fetch: typeof fetch;
+	readonly fetch: typeof fetch;
 	/**
 	 * The client's IP address, set by the adapter.
 	 */
-	getClientAddress: () => string;
+	readonly getClientAddress: () => string;
 	/**
 	 * Contains custom data that was added to the request within the [`server handle hook`](https://svelte.dev/docs/kit/hooks#handle).
 	 */
-	locals: App.Locals;
+	readonly locals: App.Locals;
 	/**
 	 * The parameters of the current route - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object.
 	 *
@@ -1643,19 +1659,19 @@ export interface RequestEvent<
 	 * the remote function was called from, _not_ the URL of the endpoint SvelteKit creates for the remote function. Never use it
 	 * to determine whether or not a user is authorized to access certain data, as these values are part of the request which could be manipulated.
 	 */
-	params: Params;
+	readonly params: Params;
 	/**
 	 * Additional data made available through the adapter.
 	 */
-	platform: Readonly<App.Platform> | undefined;
+	readonly platform: Readonly<App.Platform> | undefined;
 	/**
 	 * The original request object.
 	 */
-	request: Request;
+	readonly request: Request;
 	/**
 	 * Info about the current route.
 	 */
-	route: {
+	readonly route: {
 		/**
 		 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
 		 *
@@ -1688,7 +1704,7 @@ export interface RequestEvent<
 	 *
 	 * You cannot add a `set-cookie` header with `setHeaders` — use the [`cookies`](https://svelte.dev/docs/kit/@sveltejs-kit#Cookies) API instead.
 	 */
-	setHeaders: (headers: Record<string, string>) => void;
+	readonly setHeaders: (headers: Record<string, string>) => void;
 	/**
 	 * The requested URL.
 	 *
@@ -1697,22 +1713,22 @@ export interface RequestEvent<
 	 * the remote function was called from, _not_ the URL of the endpoint SvelteKit creates for the remote function. Never use it
 	 * to determine whether or not a user is authorized to access certain data, as these values are part of the request which could be manipulated.
 	 */
-	url: URL;
+	readonly url: URL;
 	/**
 	 * `true` if the request comes from the client asking for `+page/layout.server.js` data. The `url` property will be stripped of the internal information
 	 * related to the data request in this case. Use this property instead if the distinction is important to you.
 	 */
-	isDataRequest: boolean;
+	readonly isDataRequest: boolean;
 	/**
 	 * `true` for `+server.js` calls coming from SvelteKit without the overhead of actually making an HTTP request. This happens when you make same-origin `fetch` requests on the server.
 	 */
-	isSubRequest: boolean;
+	readonly isSubRequest: boolean;
 
 	/**
 	 * Access to spans for tracing. If tracing is not enabled, these spans will do nothing.
 	 * @since 2.31.0
 	 */
-	tracing: {
+	readonly tracing: {
 		/** Whether tracing is enabled. */
 		enabled: boolean;
 		/** The root span for the request. This span is named `sveltekit.handle.root`. */
@@ -1725,7 +1741,7 @@ export interface RequestEvent<
 	 * `true` if the request comes from the client via a remote function. The `url` property will be stripped of the internal information
 	 * related to the data request in this case. Use this property instead if the distinction is important to you.
 	 */
-	isRemoteRequest: boolean;
+	readonly isRemoteRequest: boolean;
 }
 
 /**
@@ -1935,15 +1951,20 @@ export type Actions<
  *   };
  * }}
  * ```
+ *
+ * Success and failure results carry the root-relative `pathname + search` of the action URL, with
+ * the `?/actionName` parameter removed. Redirect results carry the redirect target. Server-generated
+ * error results also carry the action location, while client-generated errors such as network
+ * failures do not. `update` uses this location to emulate native form navigation.
  */
 export type ActionResult<
 	Success extends Record<string, unknown> | undefined = Record<string, any>,
 	Failure extends Record<string, unknown> | undefined = Record<string, any>
 > =
-	| { type: 'success'; status: number; data?: Success }
-	| { type: 'failure'; status: number; data?: Failure }
+	| { type: 'success'; status: number; data?: Success; location: string }
+	| { type: 'failure'; status: number; data?: Failure; location: string }
 	| { type: 'redirect'; status: number; location: string }
-	| { type: 'error'; status?: number; error: App.Error };
+	| { type: 'error'; status?: number; error: App.Error; location?: string };
 
 /**
  * The object returned by the [`error`](https://svelte.dev/docs/kit/@sveltejs-kit#error) function.
@@ -1984,15 +2005,21 @@ export type SubmitFunction<
 			result: ActionResult<Success, Failure>;
 			/**
 			 * Call this to get the default behavior of a form submission response.
-			 * @param options Set `reset: false` if you don't want the `<form>` values to be reset after a successful submission.
-			 * @param invalidateAll Set `invalidateAll: false` if you don't want the action to call `invalidateAll` after submission.
+			 * @param options Set `reset: false` if you don't want the `<form>` values to be reset after a successful submission. `refreshAll` defaults to `true` for successful results and `false` for failures. When the submission navigates, setting it to `false` still runs the destination's `load` functions but may reuse shared layout data. Set `navigate: false` to apply non-redirect results to the current page instead of navigating to `result.location`. Redirects are always followed.
 			 */
-			update: (options?: { reset?: boolean; invalidateAll?: boolean }) => Promise<void>;
+			update: (options?: {
+				reset?: boolean;
+				refreshAll?: boolean;
+				navigate?: boolean;
+				/** @deprecated Use `refreshAll` instead. */
+				invalidateAll?: boolean;
+			}) => Promise<void>;
 	  }) => MaybePromise<void>)
 >;
 
 /**
  * The type of `export const snapshot` exported from a page or layout component.
+ * @deprecated Use the [`snapshot`](https://svelte.dev/docs/kit/$app-navigation#snapshot) helper from `$app/navigation` instead.
  */
 export interface Snapshot<T = any> {
 	capture: () => T;

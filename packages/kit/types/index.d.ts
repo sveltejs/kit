@@ -46,11 +46,18 @@ declare module '@sveltejs/kit' {
 		 */
 		emulate?: () => MaybePromise<Emulator>;
 		vite?: {
-			/**
-			 * Plugins provided by the adapter are placed before any of SvelteKit's own plugins.
-			 * @since 3.0.0
-			 */
-			plugins?: Plugin[];
+			plugins?: {
+				/**
+				 * Vite plugins placed before any of SvelteKit's own plugins.
+				 * @since 3.0.0
+				 */
+				pre?: Plugin[];
+				/**
+				 * Vite plugins placed after any of SvelteKit's own plugins.
+				 * @since 3.0.0
+				 */
+				post?: Plugin[];
+			};
 		};
 	}
 
@@ -95,9 +102,15 @@ declare module '@sveltejs/kit' {
 	export interface Builder {
 		/** Print messages to the console. `log.info` and `log.minor` are silent unless Vite's `logLevel` is `info`. */
 		log: Logger;
-		/** Remove `dir` and all its contents. */
+		/**
+		 * Remove `dir` and all its contents.
+		 * @deprecated Use `fs.rmSync(dir, { force: true, recursive: true })` instead
+		 */
 		rimraf: (dir: string) => void;
-		/** Create `dir` and any required parent directories. */
+		/**
+		 * Create `dir` and any required parent directories.
+		 * @deprecated Use `fs.mkdirSync(dir, { recursive: true })` instead
+		 */
 		mkdirp: (dir: string) => void;
 
 		/** The fully resolved SvelteKit config. */
@@ -426,7 +439,10 @@ declare module '@sveltejs/kit' {
 			 *
 			 * CSRF checks only apply in production, not in local development.
 			 * @default []
-			 * @example ['https://checkout.stripe.com', 'https://accounts.google.com']
+			 * @example
+			 * ```js
+			 * ['https://checkout.stripe.com', 'https://accounts.google.com']
+			 * ```
 			 */
 			trustedOrigins?: string[];
 		};
@@ -1584,7 +1600,7 @@ declare module '@sveltejs/kit' {
 		/**
 		 * Get or set cookies related to the current request
 		 */
-		cookies: Cookies;
+		readonly cookies: Cookies;
 		/**
 		 * `fetch` is equivalent to the [native `fetch` web API](https://developer.mozilla.org/en-US/docs/Web/API/fetch), with a few additional features:
 		 *
@@ -1596,15 +1612,15 @@ declare module '@sveltejs/kit' {
 		 *
 		 * You can learn more about making credentialed requests with cookies [here](https://svelte.dev/docs/kit/load#Cookies).
 		 */
-		fetch: typeof fetch;
+		readonly fetch: typeof fetch;
 		/**
 		 * The client's IP address, set by the adapter.
 		 */
-		getClientAddress: () => string;
+		readonly getClientAddress: () => string;
 		/**
 		 * Contains custom data that was added to the request within the [`server handle hook`](https://svelte.dev/docs/kit/hooks#handle).
 		 */
-		locals: App.Locals;
+		readonly locals: App.Locals;
 		/**
 		 * The parameters of the current route - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object.
 		 *
@@ -1613,19 +1629,19 @@ declare module '@sveltejs/kit' {
 		 * the remote function was called from, _not_ the URL of the endpoint SvelteKit creates for the remote function. Never use it
 		 * to determine whether or not a user is authorized to access certain data, as these values are part of the request which could be manipulated.
 		 */
-		params: Params;
+		readonly params: Params;
 		/**
 		 * Additional data made available through the adapter.
 		 */
-		platform: Readonly<App.Platform> | undefined;
+		readonly platform: Readonly<App.Platform> | undefined;
 		/**
 		 * The original request object.
 		 */
-		request: Request;
+		readonly request: Request;
 		/**
 		 * Info about the current route.
 		 */
-		route: {
+		readonly route: {
 			/**
 			 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
 			 *
@@ -1658,7 +1674,7 @@ declare module '@sveltejs/kit' {
 		 *
 		 * You cannot add a `set-cookie` header with `setHeaders` — use the [`cookies`](https://svelte.dev/docs/kit/@sveltejs-kit#Cookies) API instead.
 		 */
-		setHeaders: (headers: Record<string, string>) => void;
+		readonly setHeaders: (headers: Record<string, string>) => void;
 		/**
 		 * The requested URL.
 		 *
@@ -1667,22 +1683,22 @@ declare module '@sveltejs/kit' {
 		 * the remote function was called from, _not_ the URL of the endpoint SvelteKit creates for the remote function. Never use it
 		 * to determine whether or not a user is authorized to access certain data, as these values are part of the request which could be manipulated.
 		 */
-		url: URL;
+		readonly url: URL;
 		/**
 		 * `true` if the request comes from the client asking for `+page/layout.server.js` data. The `url` property will be stripped of the internal information
 		 * related to the data request in this case. Use this property instead if the distinction is important to you.
 		 */
-		isDataRequest: boolean;
+		readonly isDataRequest: boolean;
 		/**
 		 * `true` for `+server.js` calls coming from SvelteKit without the overhead of actually making an HTTP request. This happens when you make same-origin `fetch` requests on the server.
 		 */
-		isSubRequest: boolean;
+		readonly isSubRequest: boolean;
 
 		/**
 		 * Access to spans for tracing. If tracing is not enabled, these spans will do nothing.
 		 * @since 2.31.0
 		 */
-		tracing: {
+		readonly tracing: {
 			/** Whether tracing is enabled. */
 			enabled: boolean;
 			/** The root span for the request. This span is named `sveltekit.handle.root`. */
@@ -1695,7 +1711,7 @@ declare module '@sveltejs/kit' {
 		 * `true` if the request comes from the client via a remote function. The `url` property will be stripped of the internal information
 		 * related to the data request in this case. Use this property instead if the distinction is important to you.
 		 */
-		isRemoteRequest: boolean;
+		readonly isRemoteRequest: boolean;
 	}
 
 	/**
@@ -1892,15 +1908,20 @@ declare module '@sveltejs/kit' {
 	 *   };
 	 * }}
 	 * ```
+	 *
+	 * Success and failure results carry the root-relative `pathname + search` of the action URL, with
+	 * the `?/actionName` parameter removed. Redirect results carry the redirect target. Server-generated
+	 * error results also carry the action location, while client-generated errors such as network
+	 * failures do not. `update` uses this location to emulate native form navigation.
 	 */
 	export type ActionResult<
 		Success extends Record<string, unknown> | undefined = Record<string, any>,
 		Failure extends Record<string, unknown> | undefined = Record<string, any>
 	> =
-		| { type: 'success'; status: number; data?: Success }
-		| { type: 'failure'; status: number; data?: Failure }
+		| { type: 'success'; status: number; data?: Success; location: string }
+		| { type: 'failure'; status: number; data?: Failure; location: string }
 		| { type: 'redirect'; status: number; location: string }
-		| { type: 'error'; status?: number; error: App.Error };
+		| { type: 'error'; status?: number; error: App.Error; location?: string };
 
 	/**
 	 * The object returned by the [`error`](https://svelte.dev/docs/kit/@sveltejs-kit#error) function.
@@ -1941,15 +1962,21 @@ declare module '@sveltejs/kit' {
 				result: ActionResult<Success, Failure>;
 				/**
 				 * Call this to get the default behavior of a form submission response.
-				 * @param options Set `reset: false` if you don't want the `<form>` values to be reset after a successful submission.
-				 * @param invalidateAll Set `invalidateAll: false` if you don't want the action to call `invalidateAll` after submission.
+				 * @param options Set `reset: false` if you don't want the `<form>` values to be reset after a successful submission. `refreshAll` defaults to `true` for successful results and `false` for failures. When the submission navigates, setting it to `false` still runs the destination's `load` functions but may reuse shared layout data. Set `navigate: false` to apply non-redirect results to the current page instead of navigating to `result.location`. Redirects are always followed.
 				 */
-				update: (options?: { reset?: boolean; invalidateAll?: boolean }) => Promise<void>;
+				update: (options?: {
+					reset?: boolean;
+					refreshAll?: boolean;
+					navigate?: boolean;
+					/** @deprecated Use `refreshAll` instead. */
+					invalidateAll?: boolean;
+				}) => Promise<void>;
 		  }) => MaybePromise<void>)
 	>;
 
 	/**
 	 * The type of `export const snapshot` exported from a page or layout component.
+	 * @deprecated Use the [`snapshot`](https://svelte.dev/docs/kit/$app-navigation#snapshot) helper from `$app/navigation` instead.
 	 */
 	export interface Snapshot<T = any> {
 		capture: () => T;
@@ -3106,17 +3133,18 @@ declare module '$app/forms' {
 	 * If a function is returned, that function is called with the response from the server.
 	 * If nothing is returned, the fallback will be used.
 	 *
-	 * If this function or its return value isn't set, it
-	 * - falls back to updating the `form` prop with the returned data if the action is on the same page as the form
-	 * - updates `page.status`
-	 * - resets the `<form>` element and invalidates all data in case of successful submission with no redirect response
+	 * If this function or its return value isn't set, it emulates the browser-native behaviour, just without the full-page reload. It
+	 * - resets the `<form>` element and refreshes all data in case of a successful submission with no redirect response
+	 * - updates the `form` prop, `page.form` and `page.status` if the action is on the same page as the form
+	 * - navigates to the page the submission lands on — populating that page's `form` prop and `page.status` — on success and failure if that isn't the current page, just as a native form submission would, but with the `?/actionName` param stripped from the destination URL
 	 * - redirects in case of a redirect response
-	 * - redirects to the nearest error page in case of an unexpected error
+	 * - renders the nearest error page in case of an unexpected error — the one nearest the action's route, if the action is on a different page
 	 *
 	 * If you provide a custom function with a callback and want to use the default behavior, invoke `update` in your callback.
 	 * It accepts an options object
 	 * - `reset: false` if you don't want the `<form>` values to be reset after a successful submission
-	 * - `invalidateAll: false` if you don't want the action to call `invalidateAll` after submission
+	 * - `refreshAll` to control whether all data is refreshed after submission; it defaults to `true` for successes and `false` for failures
+	 * - `navigate: false` to apply non-redirect results to the current page rather than navigating to `result.location`; redirects are always followed
 	 * @param form_element The form element
 	 * @param submit Submit callback
 	 */
@@ -3124,8 +3152,9 @@ declare module '$app/forms' {
 		destroy(): void;
 	};
 	/**
-	 * This action updates the `form` property of the current page with the given data and updates `page.status`.
-	 * In case of an error, it redirects to the nearest error page.
+	 * Updates the `form` property of the current page with the given data and updates `page.status`.
+	 * In case of an error, it renders the nearest error page. In case of a redirect, it navigates to
+	 * the redirect location.
 	 * */
 	export function applyAction<Success extends Record<string, unknown> | undefined, Failure extends Record<string, unknown> | undefined>(result: import("@sveltejs/kit").ActionResult<Success, Failure>): Promise<void>;
 
@@ -3133,6 +3162,22 @@ declare module '$app/forms' {
 }
 
 declare module '$app/navigation' {
+	import type { RouteId } from '$app/types';
+	/**
+	 * A lifecycle function that captures state before navigating and restores it when traversing history.
+	 *
+	 * By default, the snapshot `id` is generated from the call site. Pass an explicit `id` to keep snapshots stable across deployments or distinguish multiple uses of a shared helper.
+	 *
+	 * The optional `reset` callback runs on navigations where there is no captured value to restore, such as when a new history entry is created. Captured values are serialized with the app's transport hook.
+	 *
+	 * `snapshot` must be called during a component initialization. It remains active as long as the component is mounted.
+	 * */
+	export function snapshot<T>(options: {
+		id?: string;
+		capture: () => T;
+		restore: (value: T) => void;
+		reset?: () => void;
+	}): void;
 	/**
 	 * A lifecycle function that runs the supplied `callback` when the current component mounts, and also whenever we navigate to a URL.
 	 *
@@ -3238,13 +3283,24 @@ declare module '$app/navigation' {
 	 * Programmatically imports the code for routes that haven't yet been fetched.
 	 * Typically, you might call this to speed up subsequent navigation.
 	 *
-	 * You can specify routes by any matching pathname such as `/about` (to match `src/routes/about/+page.svelte`) or `/blog/*` (to match `src/routes/blog/[slug]/+page.svelte`).
+	 * Takes a route ID such as `/about` or `/blog/[slug]`. Unlike pathnames, route IDs
+	 * are never prefixed with the app's [base path](https://svelte.dev/docs/kit/configuration#paths).
+	 * If you have a pathname rather than a route ID, you can convert it with
+	 * [`match`](https://svelte.dev/docs/kit/$app-paths#match) from `$app/paths`:
+	 *
+	 * ```js
+	 * import { match } from '$app/paths';
+	 * import { preloadCode } from '$app/navigation';
+	 *
+	 * const matched = await match('/blog/hello-world');
+	 * if (matched) await preloadCode(matched.id);
+	 * ```
 	 *
 	 * Unlike `preloadData`, this won't call `load` functions.
 	 * Returns a Promise that resolves when the modules have been imported.
 	 *
 	 * */
-	export function preloadCode(pathname: string): Promise<void>;
+	export function preloadCode(id: RouteId): Promise<void>;
 	/**
 	 * Programmatically create a new history entry with the given `page.state`. Used for [shallow routing](https://svelte.dev/docs/kit/shallow-routing).
 	 *
@@ -3263,7 +3319,7 @@ declare module '$app/navigation' {
 }
 
 declare module '$app/paths' {
-	import type { AssetPath, RouteIdWithSearchOrHash, PathnameWithSearchOrHash, ResolvedPathname, Path, RouteId, RouteParams } from '$app/types';
+	import type { AssetPath, RouteIdWithSearchOrHash, PathnameWithSearchOrHash, ResolvedPathname, RouteId, RouteParams } from '$app/types';
 	/**
 	 * Resolve the URL of an asset in your `static` directory, by prefixing it with [`config.paths.assets`](https://svelte.dev/docs/kit/configuration#paths) if configured, or otherwise by prefixing it with the base path.
 	 *
@@ -3320,7 +3376,7 @@ declare module '$app/paths' {
 	 * @since 2.52.0
 	 *
 	 * */
-	export function match(url: Path | URL | (string & {})): Promise<{ [K in RouteId]: {
+	export function match(url: URL | string): Promise<{ [K in RouteId]: {
 		id: K;
 		params: RouteParams<K>;
 	}; }[RouteId] | null>;
@@ -3754,9 +3810,41 @@ declare module '$app/manifest' {
 	 */
 	export const prerendered: Array<{ path: import('$app/types').Path }>;
 	/**
-	 * An array of objects with an `id` property representing the routes in your app.
+	 * A route in your app, along with its capabilities. `page` indicates the presence of a `+page`,
+	 * while `endpoint` indicates the presence of a `+server`. Both are `true` when both files exist.
 	 */
-	export const routes: Array<{ id: import('$app/types').RouteId }>;
+	export type ManifestRoute =
+		| {
+				id: Exclude<import('$app/types').PageRouteId, import('$app/types').EndpointRouteId>;
+				page: true;
+				endpoint: false;
+		  }
+		| {
+				id: Exclude<import('$app/types').EndpointRouteId, import('$app/types').PageRouteId>;
+				page: false;
+				endpoint: true;
+		  }
+		| {
+				id: Extract<import('$app/types').PageRouteId, import('$app/types').EndpointRouteId>;
+				page: true;
+				endpoint: true;
+		  };
+	/**
+	 * An array of objects representing the routes in your app. Only routes that the router can match
+	 * are included — directories that merely hold a `+layout` are not routes of their own.
+	 *
+	 * Each object has an `id`, plus `page` and `endpoint` booleans describing whether the route has a
+	 * `+page` and/or a `+server`. Both are `true` for a route that has both, so the capabilities can
+	 * be filtered independently:
+	 *
+	 * ```js
+	 * import { routes } from '$app/manifest';
+	 *
+	 * const pages = routes.filter((route) => route.page);
+	 * const endpoints = routes.filter((route) => route.endpoint);
+	 * ```
+	 */
+	export const routes: ManifestRoute[];
 }
 
 /**
@@ -3770,6 +3858,8 @@ declare module '$app/types' {
 		// These are all functions so that we can leverage function overloads to get the correct type.
 		// Using the return types directly would error with a "not the same type" error.
 		// https://www.typescriptlang.org/docs/handbook/declaration-merging.html#merging-interfaces
+		PageRouteId(): string;
+		EndpointRouteId(): string;
 		RouteId(): string;
 		RouteParams(): Record<string, Record<string, string>>;
 		LayoutParams(): Record<string, Record<string, string>>;
@@ -3779,7 +3869,21 @@ declare module '$app/types' {
 	}
 
 	/**
-	 * A union of all the route IDs in your app. Used for `page.route.id` and `event.route.id`.
+	 * A union of the route IDs in your app that have a `+page`.
+	 *
+	 * A route ID can be in both `PageRouteId` and `EndpointRouteId`, if its directory contains both a `+page` and a `+server`.
+	 */
+	export type PageRouteId = ReturnType<AppTypes['PageRouteId']>;
+
+	/**
+	 * A union of the route IDs in your app that have a `+server`.
+	 *
+	 * A route ID can be in both `PageRouteId` and `EndpointRouteId`, if its directory contains both a `+page` and a `+server`.
+	 */
+	export type EndpointRouteId = ReturnType<AppTypes['EndpointRouteId']>;
+
+	/**
+	 * A union of all the route IDs in your app — the union of `PageRouteId` and `EndpointRouteId`. Used for `page.route.id` and `event.route.id`.
 	 */
 	export type RouteId = ReturnType<AppTypes['RouteId']>;
 
@@ -3796,13 +3900,14 @@ declare module '$app/types' {
 		: Record<string, never>;
 
 	/**
-	 * A utility for getting the parameters associated with a given layout, which is similar to `RouteParams` but also includes optional parameters for any child route.
-	 *
-	 * Unlike `RouteId`, this accepts any directory in `src/routes`, since a layout can live in a directory that has no `+page` or `+server` of its own.
+	 * The route IDs accepted by `LayoutParams`. Like `RouteId`, these preserve route groups and `[param]` syntax, but they identify directories containing layouts rather than matchable routes.
 	 */
-	export type LayoutParams<T extends keyof ReturnType<AppTypes['LayoutParams']>> = ReturnType<
-		AppTypes['LayoutParams']
-	>[T];
+	type LayoutParamsId = keyof ReturnType<AppTypes['LayoutParams']>;
+
+	/**
+	 * A utility for getting the parameters associated with a given layout, which is similar to `RouteParams` but also includes optional parameters for any child route.
+	 */
+	export type LayoutParams<T extends LayoutParamsId> = ReturnType<AppTypes['LayoutParams']>[T];
 
 	/**
 	 * A union of all valid paths in your app, relative to the `base` path.

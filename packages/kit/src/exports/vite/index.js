@@ -11,7 +11,7 @@ import MagicString from 'magic-string';
 import { loadEnv } from 'vite';
 import { exactRegex, prefixRegex } from 'rolldown/filter';
 
-import { copy, mkdirp, read, resolve_entry, rimraf } from '../../utils/filesystem.js';
+import { copy, read, resolve_entry } from '../../utils/filesystem.js';
 import { posixify } from '../../utils/os.js';
 import { to_fs } from '../../utils/vite.js';
 import {
@@ -34,6 +34,7 @@ import { preview } from './preview/index.js';
 import {
 	error_for_missing_config,
 	get_config_aliases,
+	is_remote_module,
 	normalize_id,
 	remote_module_pattern,
 	server_only_directory_pattern,
@@ -41,12 +42,16 @@ import {
 } from './utils.js';
 import { stackless } from '../../utils/error.js';
 import { write_client_manifest } from '../../core/sync/write_client_manifest.js';
-import { is_app_route } from '../../core/sync/create_manifest_data/index.js';
 import prerender from '../../core/postbuild/prerender.js';
 import analyse from '../../core/postbuild/analyse.js';
 import { s } from '../../utils/misc.js';
 import { hash } from '../../utils/hash.js';
 import { dedent } from '../../core/sync/utils.js';
+import {
+	is_app_route,
+	is_endpoint_route,
+	is_page_route
+} from '../../core/sync/create_manifest_data/index.js';
 import { get_import_aliases, get_hash_import_keys } from '../../utils/imports.js';
 import {
 	app_env_private,
@@ -101,6 +106,21 @@ const enforced_config = {
 };
 
 const options_regex = /(export\s+const\s+(prerender|csr|ssr|trailingSlash))\s*=/s;
+
+const removed_modules = [
+	{
+		name: '$lib',
+		pattern: /^\$lib(?:\/.*|\?.*)?$/,
+		message:
+			"`$lib` has been removed. Use `#lib` instead: https://svelte.dev/docs/kit/$lib. To keep using `$lib`, add `alias: { '$lib': 'src/lib' }` to your SvelteKit config."
+	},
+	{
+		name: '$service-worker',
+		pattern: /^\$service-worker(?:\?.*)?$/,
+		message:
+			'`$service-worker` has been removed. Use `immutable`, `assets` and `prerendered` from `$app/manifest`, `version` from `$app/env`, and `resolve(...)` from `$app/paths` instead: https://svelte.dev/docs/kit/$service-worker'
+	}
+];
 
 /** @type {Set<string>} */
 const warned = new Set();
@@ -312,6 +332,26 @@ function kit({ svelte_config }) {
 		api: {
 			options: svelte_config
 		},
+		resolveId: {
+			filter: { id: removed_modules.map(({ pattern }) => pattern) },
+			async handler(id, importer, options) {
+				const resolved = await this.resolve(id, importer, { ...options, skipSelf: true });
+				if (resolved) return resolved;
+
+				const aliases = svelte_config.kit.alias;
+				for (const { name, pattern, message } of removed_modules) {
+					if (!pattern.test(id)) continue;
+
+					// If the user re-added an alias for this module (as the migration message
+					// suggests), a failed resolution means a genuine missing file rather than
+					// use of the removed module. Let Vite report the real "not found" error
+					// instead of the misleading migration message.
+					if (name in aliases || `${name}/*` in aliases) return;
+
+					throw stackless(message);
+				}
+			}
+		},
 
 		/**
 		 * Build the SvelteKit-provided Vite config to be merged with the user's vite.config.js file.
@@ -468,6 +508,7 @@ function kit({ svelte_config }) {
 								async handler(id, importer) {
 									const resolved = await this.resolve(id, importer, { skipSelf: true });
 									if (!resolved) return { id, external: true };
+									if (!is_remote_module(resolved.id)) return;
 									// a servable /@fs url; 'absolute' stops rolldown relativizing it in the deps bundle
 									return { id: to_fs(resolved.id), external: 'absolute' };
 								}
@@ -578,7 +619,7 @@ function kit({ svelte_config }) {
 
 		async configResolved(config) {
 			explicit_env_entry = resolve_explicit_env_entry(kit);
-			explicit_env_config = await sync.env(kit, explicit_env_entry, config.root, config.mode);
+			explicit_env_config = await sync.env(vite, kit, explicit_env_entry, config.root, config.mode);
 		},
 
 		configureServer(server) {
@@ -592,6 +633,7 @@ function kit({ svelte_config }) {
 				if (file === explicit_env_entry || file === resolved) {
 					explicit_env_entry = resolved;
 					explicit_env_config = await sync.env(
+						vite,
 						kit,
 						explicit_env_entry,
 						vite_config.root,
@@ -890,6 +932,8 @@ function kit({ svelte_config }) {
 				id: remote_module_pattern
 			},
 			async handler(code, id) {
+				if (!is_remote_module(id)) return;
+
 				const file = posixify(path.relative(root, id));
 				const remote = {
 					hash: hash(file),
@@ -952,7 +996,7 @@ function kit({ svelte_config }) {
 				// being called again with `opts.ssr === true` if the module isn't
 				// already loaded) so we can determine what it exports
 				if (dev_server) {
-					const module = await get_runner(dev_server).import(id);
+					const module = await get_runner(vite, dev_server).import(id);
 
 					for (const [name, value] of Object.entries(module)) {
 						const type = value?.__?.type;
@@ -1499,6 +1543,7 @@ function kit({ svelte_config }) {
 		 */
 		async configureServer(server) {
 			return await dev(
+				vite,
 				server,
 				vite_config,
 				svelte_config,
@@ -1551,9 +1596,9 @@ function kit({ svelte_config }) {
 		async buildApp(builder) {
 			// clears the output directories
 			if (!builder.config.build.watch) {
-				rimraf(out);
+				fs.rmSync(out, { force: true, recursive: true });
 			}
-			mkdirp(out);
+			fs.mkdirSync(out, { recursive: true });
 
 			await load_and_validate_params({
 				routes: manifest_data.routes,
@@ -1571,7 +1616,7 @@ function kit({ svelte_config }) {
 			// the client build and after prerendering respectively.
 			replace_manifest_placeholder_variables(server_chunks, `${out}/server`, {
 				assets: manifest_data.assets.map((asset) => ({ path: asset.file })),
-				routes: manifest_data.routes.map((route) => ({ id: route.id }))
+				routes: get_manifest_routes(manifest_data.routes)
 			});
 
 			const verbose = builder.config.logLevel === 'info';
@@ -1733,7 +1778,7 @@ function kit({ svelte_config }) {
 				replace_manifest_placeholder_variables(client_chunks, `${out}/client`, {
 					immutable,
 					assets: manifest_data.assets.map((asset) => ({ path: asset.file })),
-					routes: manifest_data.routes.map((route) => ({ id: route.id }))
+					routes: get_manifest_routes(manifest_data.routes)
 				});
 
 				// Now that the client build is done, replace the `build` sentinel
@@ -2011,7 +2056,7 @@ function kit({ svelte_config }) {
 
 	return /** @type {Plugin[]} */ (
 		[
-			svelte_config.kit.adapter?.vite?.plugins,
+			svelte_config.kit.adapter?.vite?.plugins?.pre,
 			plugin_resolve_root,
 			plugin_setup,
 			plugin_remote_guard,
@@ -2021,7 +2066,8 @@ function kit({ svelte_config }) {
 			plugin_service_worker,
 			plugin_service_worker_env,
 			plugin_compile,
-			plugin_adapter
+			plugin_adapter,
+			svelte_config.kit.adapter?.vite?.plugins?.post
 		].filter(Boolean)
 	);
 }
@@ -2123,15 +2169,26 @@ function stringify_assets(assets) {
 
 /**
  * @param {RouteData[] | undefined} routes
+ * @returns {Array<{ id: string; page: boolean; endpoint: boolean }>}
+ */
+function get_manifest_routes(routes) {
+	return (
+		routes?.filter(is_app_route).map((route) => ({
+			id: route.id,
+			page: is_page_route(route),
+			endpoint: is_endpoint_route(route)
+		})) ?? []
+	);
+}
+
+/**
+ * @param {RouteData[] | undefined} routes
  * @returns {string}
  */
 function stringify_routes(routes) {
-	return (
-		routes
-			?.filter(is_app_route)
-			.map((route) => s({ id: route.id }))
-			.join(',\n') ?? ''
-	);
+	return get_manifest_routes(routes)
+		.map((route) => s(route))
+		.join(',\n');
 }
 
 /**
@@ -2192,7 +2249,7 @@ const create_manifest_data_module = (is_build, manifest_data) => {
  *   immutable?: Array<{ path: string }>;
  *   assets?: Array<{ path: string }>;
  *   prerendered?: Array<{ path: string }>;
- *   routes?: Array<{ id: string }>;
+ *   routes?: Array<{ id: string; page: boolean; endpoint: boolean }>;
  * }} values
  */
 const replace_manifest_placeholder_variables = (chunks, output_dir, values) => {

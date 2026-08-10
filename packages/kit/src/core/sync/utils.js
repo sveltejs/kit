@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { styleText } from 'node:util';
-import { mkdirp, resolve_entry } from '../../utils/filesystem.js';
+import { resolve_entry } from '../../utils/filesystem.js';
 
 /** @type {Map<string, string>} */
 const previous_contents = new Map();
@@ -22,7 +22,7 @@ export function write_if_changed(file, code) {
  */
 export function write(file, code) {
 	previous_contents.set(file, code);
-	mkdirp(path.dirname(file));
+	fs.mkdirSync(path.dirname(file), { recursive: true });
 	fs.writeFileSync(file, code);
 }
 

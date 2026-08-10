@@ -7,7 +7,12 @@
 
 	/** @param {'success' | 'failure'} type */
 	function update(type) {
-		applyAction({ type, status: 200, data: { count: count++ } });
+		applyAction({
+			type,
+			status: 200,
+			data: { count: count++ },
+			location: '/actions/enhance'
+		});
 	}
 	function redirect() {
 		applyAction({ type: 'redirect', status: 303, location: '/' });

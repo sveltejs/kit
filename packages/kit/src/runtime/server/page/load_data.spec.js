@@ -5,16 +5,20 @@ import { create_universal_fetch } from './load_data.js';
  * @param {Partial<Pick<import('@sveltejs/kit').RequestEvent, 'fetch' | 'url' | 'request' | 'route'>>} event
  */
 function create_fetch(event) {
+	// @ts-expect-error
 	// eslint-disable-next-line @typescript-eslint/require-await
-	event.fetch = event.fetch || (async () => new Response('foo'));
-	event.request = event.request || new Request('doesnt:matter');
-	event.route = event.route || { id: 'foo' };
-	event.url = event.url || new URL('https://domain-a.com');
+	event.fetch ||= async () => new Response('foo');
+	// @ts-expect-error
+	event.request ||= new Request('doesnt:matter');
+	// @ts-expect-error
+	event.route ||= { id: 'foo' };
+	// @ts-expect-error
+	event.url ||= new URL('https://domain-a.com');
 	return create_universal_fetch(
 		/** @type {Pick<import('@sveltejs/kit').RequestEvent, 'fetch' | 'url' | 'request' | 'route'>} */ (
 			event
 		),
-		{ getClientAddress: () => '', error: false, depth: 0 },
+		undefined,
 		[],
 		true,
 		{
@@ -71,5 +75,17 @@ test('errors when trying to access non-serialized request headers on the server'
 	assert.throws(
 		() => response.headers.get('content-type'),
 		/Failed to get response header "content-type" — it must be included by the `filterSerializedResponseHeaders` option/
+	);
+});
+
+test('errors when trying to access non-serialized set-cookie headers on the server', async () => {
+	const fetch = create_fetch({
+		// eslint-disable-next-line @typescript-eslint/require-await
+		fetch: async () => new Response('foo', { headers: { 'set-cookie': 'a=1' } })
+	});
+	const response = await fetch('https://domain-a.com');
+	assert.throws(
+		() => response.headers.getSetCookie(),
+		/Failed to get response header "set-cookie" — it must be included by the `filterSerializedResponseHeaders` option/
 	);
 });

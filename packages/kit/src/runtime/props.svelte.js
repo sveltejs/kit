@@ -12,6 +12,7 @@ export class Props {
 	 * that currently live on the page — used for capturing and restoring snapshots.
 	 * It's updated/manipulated through `bind:this` in `Root.svelte`.
 	 * @type {Array<Record<string, any>>}
+	 * @deprecated only used for `export const snapshot` — TODO 4.0 get rid
 	 */
 	components = [];
 
