@@ -41,8 +41,11 @@ export default function (options) {
 			}
 		},
 		vite: {
-			plugins: [
-				// add plugins here to integrate with Vite
+			pre_plugins: [
+				// add plugins here...
+			],
+			post_plugins: [
+				// ...or here to integrate with Vite
 			]
 		}
 	};

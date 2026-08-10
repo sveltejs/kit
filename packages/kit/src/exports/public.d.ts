@@ -82,10 +82,15 @@ export interface Adapter {
 	emulate?: () => MaybePromise<Emulator>;
 	vite?: {
 		/**
-		 * Plugins provided by the adapter are placed before any of SvelteKit's own plugins.
+		 * Vite plugins placed before any of SvelteKit's own plugins.
 		 * @since 3.0.0
 		 */
-		plugins?: Plugin[];
+		pre_plugins?: Plugin[];
+		/**
+		 * Vite plugins placed after any of SvelteKit's own plugins.
+		 * @since 3.0.0
+		 */
+		post_plugins?: Plugin[];
 	};
 }
 

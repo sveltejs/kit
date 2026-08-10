@@ -50,6 +50,7 @@
 	},
 	"devDependencies": {
 		"@playwright/test": "catalog:",
+		"@rolldown/pluginutils": "^1.0.1",
 		"@sveltejs/kit": "workspace:^",
 		"@types/node": "catalog:",
 		"@types/ws": "^8.18.1",
