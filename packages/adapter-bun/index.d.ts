@@ -55,6 +55,7 @@ interface AdapterOptions {
 		| 'drop'
 		| 'features'
 		| 'optimizeImports'
+		| 'splitting'
 		| 'compile'
 	>;
 }

@@ -99,7 +99,7 @@ export default function (opts = {}) {
 
 			const result = await Bun.build({
 				...buildOptions,
-				splitting: true,
+				splitting: buildOptions.splitting ?? true,
 				sourcemap: buildOptions.sourcemap ?? 'external',
 				entrypoints: [index_file],
 				target: 'bun',

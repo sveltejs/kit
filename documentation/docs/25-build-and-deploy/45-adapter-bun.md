@@ -112,7 +112,7 @@ The generated server owns `fetch` and `routes`. It does not expose `websocket`, 
 
 ### buildOptions
 
-Advanced Bun build settings can be supplied with `buildOptions`. The adapter currently accepts `sourcemap`, `minify`, `bytecode`, `banner`, `footer`, `drop`, `features`, `optimizeImports`, and `compile`.
+Advanced Bun build settings can be supplied with `buildOptions`. The adapter currently accepts `sourcemap`, `minify`, `bytecode`, `banner`, `footer`, `drop`, `features`, `optimizeImports`, `splitting`, and `compile`. Code splitting is enabled by default; `splitting: false` bundles the server into a single file, which works around [`Bun.build` output path collisions](https://github.com/oven-sh/bun/issues/17674) on applications whose module graph produces identically-hashed chunks.
 
 The generated entrypoint, output directory, top-level `target`, and module `format` are reserved. Generated servers target Bun and use ESM. Source maps default to `external`; set `sourcemap: 'none'` to disable them.
 
