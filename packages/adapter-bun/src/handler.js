@@ -109,10 +109,6 @@ function get_client_address(request, bun_server) {
 		if (address_header === 'x-forwarded-for') {
 			const addresses = value.split(',');
 
-			if (xff_depth < 1) {
-				throw new Error(`${env_prefix}XFF_DEPTH must be a positive integer`);
-			}
-
 			if (xff_depth > addresses.length) {
 				throw new Error(
 					`${env_prefix}XFF_DEPTH is ${xff_depth}, but only found ${addresses.length} addresses`
