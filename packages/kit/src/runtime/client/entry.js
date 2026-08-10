@@ -13,12 +13,12 @@ export function init(payload) {
 	client ??= import('./client-entry.js');
 }
 
-/** @param {Parameters<import('./client-entry.js').start>} args */
+/** @param {Parameters<typeof import('./client-entry.js').start>} args */
 export async function start(...args) {
 	return (await client).start(...args);
 }
 
-/** @param {Parameters<import('./client-entry.js').load_css>} args */
+/** @param {Parameters<typeof import('./client-entry.js').load_css>} args */
 export async function load_css(...args) {
 	return (await client).load_css(...args);
 }

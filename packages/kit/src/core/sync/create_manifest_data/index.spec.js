@@ -35,8 +35,7 @@ const default_error = {
 
 /** @param {import('types').PageNode} node */
 function simplify_node(node) {
-	/** @type {import('types').PageNode} */
-	const simplified = {};
+	const simplified = /** @type {import('types').PageNode} */ ({});
 
 	if (node.component) simplified.component = node.component;
 	if (node.universal) simplified.universal = node.universal;

@@ -21,7 +21,7 @@
 			<svelte:boundary>
 				<span id="batch-result-{idx + 1}">{(await promise)?.title}</span>
 
-				{#snippet failed(error)}
+				{#snippet failed(error: unknown)}
 					<span id="batch-result-{idx + 1}"
 						>Error loading todo {id}: {(error as App.Error).message}</span
 					>

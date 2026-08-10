@@ -1,3 +1,4 @@
+/** @import { Options } from './types.js'*/
 import fs from 'node:fs';
 import process from 'node:process';
 import { parseArgs, styleText } from 'node:util';
@@ -80,7 +81,7 @@ try {
 
 	const packaging = await import('./index.js');
 
-	/** @type {import('./types.js').Options} */
+	/** @type {Options} */
 	const options = {
 		cwd: process.cwd(),
 		input: values.input ?? config.kit?.files?.lib ?? 'src/lib',

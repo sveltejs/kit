@@ -222,82 +222,84 @@ export function form(id) {
 			/** @type {Error | undefined} */
 			let updates_error;
 
-			/** @type {Promise<boolean> & { updates: (...args: RemoteQueryUpdate[]) => Promise<boolean> }} */
-			const promise = (async () => {
-				try {
-					await Promise.resolve();
+			const promise =
+				/** @type {Promise<boolean> & { updates: (...args: RemoteQueryUpdate[]) => Promise<boolean> }} */ (
+					(async () => {
+						try {
+							await Promise.resolve();
 
-					if (updates_error) {
-						throw updates_error;
-					}
-
-					if (should_preflight) {
-						const valid = await preflight(form_data);
-						if (!valid) return false;
-					}
-
-					const { blob } = serialize_binary_form(convert(form_data), {
-						remote_refreshes: Array.from(refreshes ?? [])
-					});
-
-					const response = await remote_request(
-						`${base}/${app_dir}/remote/${action_id_without_key}`,
-						{
-							method: 'POST',
-							headers: {
-								'Content-Type': BINARY_FORM_CONTENT_TYPE,
-								// Forms cannot be called during rendering, so it's save to use location here
-								'x-sveltekit-pathname': location.pathname,
-								'x-sveltekit-search': location.search
-							},
-							body: blob
-						}
-					);
-
-					({ issues: raw_issues = [], result } = response._ ?? {});
-
-					// if the developer took control of updates via `.updates(...)` (even with
-					// no arguments), or the server performed explicit refreshes, don't invalidateAll
-					const should_refresh = refreshes === null && !response.r;
-
-					if (response.redirect) {
-						// Use internal version to allow redirects to external URLs
-						void _goto(response.redirect, {
-							refreshAll: should_refresh
-						});
-						return true;
-					}
-
-					const succeeded = raw_issues.length === 0;
-
-					if (succeeded) {
-						if (should_refresh) {
-							void refreshAll();
-						}
-					} else {
-						if (DEV) {
-							warn_on_missing_issue_reads();
-						}
-					}
-
-					return succeeded;
-				} catch (e) {
-					result = undefined;
-					raw_issues = [];
-					throw e;
-				} finally {
-					overrides?.forEach((fn) => fn());
-
-					void tick().then(() => {
-						if (entry) {
-							entry.count--;
-							if (entry.count === 0) {
-								instances.delete(key);
+							if (updates_error) {
+								throw updates_error;
 							}
+
+							if (should_preflight) {
+								const valid = await preflight(form_data);
+								if (!valid) return false;
+							}
+
+							const { blob } = serialize_binary_form(convert(form_data), {
+								remote_refreshes: Array.from(refreshes ?? [])
+							});
+
+							const response = await remote_request(
+								`${base}/${app_dir}/remote/${action_id_without_key}`,
+								{
+									method: 'POST',
+									headers: {
+										'Content-Type': BINARY_FORM_CONTENT_TYPE,
+										// Forms cannot be called during rendering, so it's save to use location here
+										'x-sveltekit-pathname': location.pathname,
+										'x-sveltekit-search': location.search
+									},
+									body: blob
+								}
+							);
+
+							({ issues: raw_issues = [], result } = response._ ?? {});
+
+							// if the developer took control of updates via `.updates(...)` (even with
+							// no arguments), or the server performed explicit refreshes, don't invalidateAll
+							const should_refresh = refreshes === null && !response.r;
+
+							if (response.redirect) {
+								// Use internal version to allow redirects to external URLs
+								void _goto(response.redirect, {
+									refreshAll: should_refresh
+								});
+								return true;
+							}
+
+							const succeeded = raw_issues.length === 0;
+
+							if (succeeded) {
+								if (should_refresh) {
+									void refreshAll();
+								}
+							} else {
+								if (DEV) {
+									warn_on_missing_issue_reads();
+								}
+							}
+
+							return succeeded;
+						} catch (e) {
+							result = undefined;
+							raw_issues = [];
+							throw e;
+						} finally {
+							overrides?.forEach((fn) => fn());
+
+							void tick().then(() => {
+								if (entry) {
+									entry.count--;
+									if (entry.count === 0) {
+										instances.delete(key);
+									}
+								}
+							});
 						}
-					});
-				}
-			})();
+					})()
+				);
 
 			let updates_called = false;
 			promise.updates = (...args) => {
@@ -376,8 +378,7 @@ export function form(id) {
 			return true;
 		}
 
-		/** @type {RemoteForm<T, U>} */
-		const instance = {};
+		const instance = /** @type {RemoteForm<T, U>} */ ({});
 
 		instance.method = 'POST';
 		Object.defineProperty(instance, 'action', {

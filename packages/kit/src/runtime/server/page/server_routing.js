@@ -20,7 +20,7 @@ export function generate_route_object(route, url, client) {
 		.join(',\n\t\t');
 
 	// stringified version of
-	/** @type {import('types').CSRRouteServer} */
+	/* @type {import('types').CSRRouteServer} */
 	return [
 		`{\n\tid: ${s(route.id)}`,
 		`errors: ${s(route.errors)}`,
