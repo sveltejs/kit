@@ -8,7 +8,7 @@ import {
 	record_span,
 	with_request_store
 } from '@sveltejs/kit/internal/server';
-import { base, app_dir } from '$app/paths/internal/server';
+import { base, app_dir } from '#app/paths';
 import { is_endpoint_request, render_endpoint } from './endpoint.js';
 import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';

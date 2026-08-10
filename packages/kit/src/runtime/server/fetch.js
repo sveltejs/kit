@@ -1,7 +1,7 @@
 import { parseSetCookie } from 'cookie';
 import { noop } from '../../utils/functions.js';
 import { respond } from './respond.js';
-import * as paths from '$app/paths/internal/server';
+import * as paths from '#app/paths';
 import { read_implementation } from './internal.js';
 import { has_prerendered_path } from './utils.js';
 import { fork_state_for_subrequest } from './state.js';

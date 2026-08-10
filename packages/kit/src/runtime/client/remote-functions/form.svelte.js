@@ -1,7 +1,7 @@
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 /** @import { RemoteFormInput, RemoteForm, RemoteQueryUpdate } from '@sveltejs/kit' */
 /** @import { InternalRemoteFormIssue } from 'types' */
-import { app_dir, base } from '$app/paths/internal/client';
+import { app_dir, base } from '#app/paths';
 import { DEV } from 'esm-env';
 import { HttpError } from '@sveltejs/kit/internal';
 import {
