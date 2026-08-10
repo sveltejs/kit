@@ -64,7 +64,7 @@ export async function handler(request, bun_server) {
  */
 function get_origin(request, url) {
 	const protocol = decodeURIComponent(
-		(protocol_header ? request.headers.get(protocol_header) : null) ?? url.protocol.slice(0, -1)
+		(protocol_header && request.headers.get(protocol_header)) || url.protocol.slice(0, -1)
 	);
 	if (!/^https?$/i.test(protocol)) {
 		throw new Error(
@@ -73,9 +73,7 @@ function get_origin(request, url) {
 	}
 
 	const host =
-		(host_header ? request.headers.get(host_header) : null) ??
-		request.headers.get('host') ??
-		url.host;
+		(host_header && request.headers.get(host_header)) || request.headers.get('host') || url.host;
 	if (!host) {
 		const header_names = host_header ? `${host_header} or host headers` : 'host header';
 		throw new Error(

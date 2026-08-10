@@ -88,6 +88,19 @@ test.each([
 	expect(error).toHaveBeenCalledWith(expect.stringContaining(message));
 });
 
+test('falls back past proxy headers that are present but empty', async () => {
+	set_env('APP_PROTOCOL_HEADER', 'x-forwarded-proto');
+	set_env('APP_HOST_HEADER', 'x-forwarded-host');
+	const loaded = await load_handler({ envPrefix: 'APP_' });
+	const request = new Request('http://internal/path', {
+		headers: { 'x-forwarded-proto': '', 'x-forwarded-host': '' }
+	});
+
+	await loaded.handler(request, loaded.bun_server);
+
+	expect(loaded.respond.mock.calls[0][0].url).toBe('http://internal/path');
+});
+
 test('reads a configured client address header', async () => {
 	set_env('APP_ADDRESS_HEADER', 'true-client-ip');
 	const loaded = await load_handler({ envPrefix: 'APP_' });
