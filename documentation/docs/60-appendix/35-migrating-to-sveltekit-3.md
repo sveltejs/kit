@@ -268,6 +268,10 @@ The `$service-worker` module has been removed. Import `version` from [`$app/env`
 
 The `json(...)` and `text(...)` helpers for generating responses are deprecated. Use `Response.json(...)` and `new Response(text)` instead.
 
+### `defineParams` moved to `@sveltejs/kit/params`
+
+The `defineParams` function for creating [param matchers](advanced-routing#Matching), along with the associated types, now live in [`@sveltejs/kit/params`](@sveltejs-kit-params.)
+
 ## `@sveltejs/kit/hooks`
 
 The `defineEnvVars` function has moved from `@sveltejs/kit/hooks` to `@sveltejs/kit/env`.
