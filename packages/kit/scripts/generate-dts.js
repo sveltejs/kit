@@ -12,7 +12,7 @@ await createBundle({
 		'$app/env': 'src/runtime/app/env/types.d.ts',
 		'$app/forms': 'src/runtime/app/forms.js',
 		'$app/navigation': 'src/runtime/app/navigation.js',
-		'$app/paths': 'src/runtime/app/paths/public.js',
+		'$app/paths': 'src/runtime/app/paths/public.d.ts',
 		'$app/server': 'src/runtime/app/server/index.js',
 		'$app/service-worker': 'src/runtime/app/service-worker/index.js',
 		'$app/state': 'src/runtime/app/state/index.js'

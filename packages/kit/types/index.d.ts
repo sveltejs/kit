@@ -3309,7 +3309,80 @@ declare module '$app/navigation' {
 }
 
 declare module '$app/paths' {
-	export { asset, resolve, match } from '#app/paths';
+	import type { AssetPath, RouteIdWithSearchOrHash, PathnameWithSearchOrHash, ResolvedPathname, RouteId, RouteParams } from '$app/types';
+	/**
+	 * Resolve the URL of an asset in your `static` directory, by prefixing it with [`config.paths.assets`](https://svelte.dev/docs/kit/configuration#paths) if configured, or otherwise by prefixing it with the base path.
+	 *
+	 * During server rendering, the base path is relative and depends on the page currently being rendered.
+	 *
+	 * @example
+	 * ```svelte
+	 * <script>
+	 * 	import { asset } from '$app/paths';
+	 * </script>
+	 *
+	 * <img alt="a potato" src={asset('potato.jpg')} />
+	 * ```
+	 * @since 2.26
+	 *
+	 * */
+	export function asset(file: AssetPath): string;
+	/**
+	 * Resolve a pathname by prefixing it with the base path, if any, or resolve a route ID by populating dynamic segments with parameters.
+	 *
+	 * During server rendering, the base path is relative and depends on the page currently being rendered.
+	 *
+	 * @example
+	 * ```js
+	 * import { resolve } from '$app/paths';
+	 *
+	 * // using a pathname
+	 * const resolved = resolve(`blog/hello-world`);
+	 *
+	 * // using a route ID plus parameters
+	 * const resolved = resolve('/blog/[slug]', {
+	 * 	slug: 'hello-world'
+	 * });
+	 * ```
+	 * @since 2.26
+	 *
+	 * */
+	export function resolve<T extends RouteIdWithSearchOrHash | PathnameWithSearchOrHash>(...args: ResolveArgs<T>): ResolvedPathname;
+	/**
+	 * Match a path or URL to a route ID and extracts any parameters.
+	 *
+	 * @example
+	 * ```js
+	 * import { match } from '$app/paths';
+	 *
+	 * const route = await match('blog/hello-world');
+	 *
+	 * if (route?.id === '/blog/[slug]') {
+	 * 	const slug = route.params.slug;
+	 * 	const response = await fetch(`/api/posts/${slug}`);
+	 * 	const post = await response.json();
+	 * }
+	 * ```
+	 * @since 2.52.0
+	 *
+	 * */
+	export function match(url: URL | string): Promise<{ [K in RouteId]: {
+		id: K;
+		params: RouteParams<K>;
+	}; }[RouteId] | null>;
+	type StripSearchOrHash<T extends string> = T extends `${infer U}?${string}`
+		? U
+		: T extends `${infer U}#${string}`
+			? U
+			: T;
+
+	type ResolveArgs<T> = T extends `/${string}`
+		? StripSearchOrHash<T> extends infer U extends RouteId
+			? RouteParams<U> extends Record<string, never>
+				? [route: T]
+				: [route: T, params: RouteParams<U>]
+			: [never]
+		: [pathname: T];
 
 	export {};
 }
