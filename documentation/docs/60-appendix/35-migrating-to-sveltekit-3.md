@@ -538,7 +538,7 @@ The `'off'` value for `data-sveltekit-*` link attributes has been removed in fav
 
 ```svelte
 ---<a href="..." data-sveltekit-preload-data="off">---
-+++<a href="..." data-sveltekit-preload-data={false}>+++
++++<a href="..." data-sveltekit-preload-data="false">+++
 ```
 
 ### External redirects must be opted into
