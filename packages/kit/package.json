@@ -146,6 +146,10 @@
 			"types": "./types/index.d.ts",
 			"import": "./src/exports/env/index.js"
 		},
+		"./params": {
+			"types": "./types/index.d.ts",
+			"import": "./src/exports/params/index.js"
+		},
 		"./vite": {
 			"types": "./types/index.d.ts",
 			"import": "./src/exports/vite/index.js"
