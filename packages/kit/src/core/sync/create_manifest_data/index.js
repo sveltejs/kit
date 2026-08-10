@@ -251,6 +251,11 @@ function create_routes_and_nodes(cwd, config, fallback) {
 					continue;
 				}
 
+				// allow e.g. `+page.stories.svelte` or `+server.test.ts`
+				if (file.name.includes('.test.') || file.name.includes('.spec.') || file.name.includes('.stories.')) {
+					continue;
+				}
+
 				if (file.name.endsWith('.d.ts')) {
 					let name = file.name.slice(0, -5);
 					const ext = valid_extensions.find((ext) => name.endsWith(ext));
