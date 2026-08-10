@@ -41,10 +41,11 @@ function is_dotfile(path) {
  * @returns {Promise<string>}
  */
 async function asset_meta(path, precompress = false) {
-	const hash = Bun.hash(await Bun.file(path).arrayBuffer()).toString(16);
+	const file = Bun.file(path);
+	const hash = Bun.hash(await file.arrayBuffer()).toString(16);
 
-	/** @type {{ hash: string, br?: boolean, gz?: boolean }} */
-	const meta = { hash };
+	/** @type {{ hash: string, mtime: number, br?: boolean, gz?: boolean }} */
+	const meta = { hash, mtime: file.lastModified };
 	if (precompress) {
 		if (await Bun.file(`${path}.br`).exists()) meta.br = true;
 		if (await Bun.file(`${path}.gz`).exists()) meta.gz = true;

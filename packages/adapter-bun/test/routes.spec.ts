@@ -1,6 +1,6 @@
 import { afterEach, expect, test, vi } from 'vitest';
 
-const meta = { hash: 'abc' };
+const meta = { hash: 'abc', mtime: 0 };
 
 afterEach(() => {
 	vi.resetModules();
@@ -101,6 +101,32 @@ test('static routes revalidate against the build-time hash', async () => {
 	expect(stale.status).toBe(200);
 });
 
+test('static routes revalidate by date when the client has no ETag', async () => {
+	const { routes } = await load_routes();
+
+	const route = routes.client_asset('data.json', undefined, meta)[0][1] as any;
+
+	const fresh = route.GET(new Request('http://localhost/data.json'));
+	expect(fresh.headers.get('last-modified')).toBe('Thu, 01 Jan 1970 00:00:00 GMT');
+
+	const dated = route.GET(
+		new Request('http://localhost/data.json', {
+			headers: { 'if-modified-since': 'Thu, 01 Jan 1970 00:00:00 GMT' }
+		})
+	);
+	expect(dated.status).toBe(304);
+
+	const stale_etag_wins = route.GET(
+		new Request('http://localhost/data.json', {
+			headers: {
+				'if-modified-since': 'Thu, 01 Jan 1970 00:00:00 GMT',
+				'if-none-match': '"old"'
+			}
+		})
+	);
+	expect(stale_etag_wins.status).toBe(200);
+});
+
 test('static routes answer HEAD with the same handler', async () => {
 	const { routes } = await load_routes();
 
@@ -113,6 +139,7 @@ test('precompressed variants are negotiated with their own validators', async ()
 
 	const route = routes.client_asset('app.js', undefined, {
 		hash: 'abc',
+		mtime: 0,
 		br: true,
 		gz: true
 	})[0][1] as any;
@@ -147,7 +174,11 @@ test('precompressed variants are negotiated with their own validators', async ()
 test('range requests are served from the identity representation', async () => {
 	const { routes, file } = await load_routes();
 
-	const route = routes.client_asset('app.js', undefined, { hash: 'abc', br: true })[0][1] as any;
+	const route = routes.client_asset('app.js', undefined, {
+		hash: 'abc',
+		mtime: 0,
+		br: true
+	})[0][1] as any;
 	const response = route.GET(
 		new Request('http://localhost/app.js', {
 			headers: { 'accept-encoding': 'br', range: 'bytes=0-9' }

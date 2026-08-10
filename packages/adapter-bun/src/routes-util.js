@@ -5,7 +5,7 @@ const dir = dirname(Bun.main);
 
 /**
  * @typedef {import('bun').Serve.Routes<never, string>[string]} RouteHandler
- * @typedef {{ hash: string, br?: boolean, gz?: boolean }} AssetMeta
+ * @typedef {{ hash: string, mtime: number, br?: boolean, gz?: boolean }} AssetMeta
  */
 
 const CONTENT_ENCODING = { br: 'br', gz: 'gzip' };
@@ -70,17 +70,24 @@ function to_directory_paths(urlPath) {
 }
 
 /**
+ * If-None-Match takes precedence over If-Modified-Since (RFC 9110 §13.1.3);
+ * dates compare at whole-second precision because HTTP dates have none finer.
  * @param {Request} request
  * @param {string} etag
+ * @param {number} mtime
  * @returns {boolean}
  */
-function if_none_match(request, etag) {
+function is_fresh(request, etag, mtime) {
 	const header = request.headers.get('if-none-match');
-	if (header === null) return false;
-	return header.split(',').some((value) => {
-		const tag = value.trim().replace(/^W\//, '');
-		return tag === '*' || tag === etag;
-	});
+	if (header !== null) {
+		return header.split(',').some((value) => {
+			const tag = value.trim().replace(/^W\//, '');
+			return tag === '*' || tag === etag;
+		});
+	}
+
+	const since = Date.parse(request.headers.get('if-modified-since') ?? '');
+	return Number.isFinite(since) && Math.trunc(mtime / 1000) <= Math.trunc(since / 1000);
 }
 
 /**
@@ -113,6 +120,8 @@ function negotiate(accept, meta) {
  * @returns {RouteHandler}
  */
 function file_route(path, headers, meta) {
+	const last_modified = new Date(meta.mtime).toUTCString();
+
 	/** @param {import('bun').BunRequest} request */
 	const handler = (request) => {
 		// Bun serializes Range itself for file bodies; ranges apply to the identity representation
@@ -123,10 +132,10 @@ function file_route(path, headers, meta) {
 		const etag = encoding === null ? `"${meta.hash}"` : `"${meta.hash}-${encoding}"`;
 
 		/** @type {Record<string, string>} */
-		const response_headers = { ...headers, etag };
+		const response_headers = { ...headers, etag, 'last-modified': last_modified };
 		if (meta.br || meta.gz) response_headers['vary'] = 'accept-encoding';
 
-		if (if_none_match(request, etag)) {
+		if (is_fresh(request, etag, meta.mtime)) {
 			return new Response(null, { status: 304, headers: response_headers });
 		}
 		if (encoding === null) {
