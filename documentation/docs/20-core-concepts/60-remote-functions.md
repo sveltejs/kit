@@ -1236,7 +1236,7 @@ As long as _you're_ not passing invalid data to your remote functions, there are
 - the function signature changed between deployments, and some users are currently on an older version of your app
 - someone is trying to attack your site by poking your exposed endpoints with bad data
 
-In the second case, we don't want to give the attacker any help, so SvelteKit will generate a generic [400 Bad Request](https://http.dog/400) response. You can control the message by implementing the [`handleValidationError`](hooks#handleValidationError) server hook, which, like [`handleError`](hooks#handleError), must return an [`App.Error`](errors#Type-safety) (which defaults to `{ message: string }`):
+In the second case, we don't want to give the attacker any help, so SvelteKit will generate a generic [400 Bad Request](https://http.dog/400) response. You can control the message by implementing the [`handleValidationError`](hooks#handleValidationError) server hook, which must return an object matching [`App.Error`](errors#Type-safety) (which defaults to `{ status: number, message: string }`, with `status` defaulting to `400` if you omit it):
 
 ```js
 /// file: src/hooks.server.js
@@ -1247,6 +1247,8 @@ export function handleValidationError({ event, issues }) {
 	};
 }
 ```
+
+The object you return becomes the body of an [app error](errors#App-errors), which then passes through [`handleError`](hooks#handleError) with `kind: 'app'`.
 
 If you know what you're doing and want to opt out of validation, you can pass the string `'unchecked'` in place of a schema:
 

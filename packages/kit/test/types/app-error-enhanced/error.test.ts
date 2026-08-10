@@ -27,9 +27,43 @@ const handle_error_hooks: [
 	() => ({ message: 'Unexpected error' })
 ];
 
+// `status` and `message` are optional in the return (they default to those of the
+// caught error), but augmented properties of `App.Error` remain required
+const handle_error_overrides: [HandleServerError, HandleClientError] = [
+	() => ({ additional: true }),
+	() => ({ additional: true })
+];
+
+const handle_error_kinds: HandleServerError = ({ kind, error }) => {
+	if (kind === 'app') {
+		error satisfies App.Error;
+		return error;
+	}
+
+	if (kind === 'framework') {
+		// @ts-expect-error the framework error has no `additional` property
+		error satisfies App.Error;
+		return { ...error, additional: true };
+	}
+
+	return { additional: true };
+};
+
+// `App.Error` is augmented with a REQUIRED `additional` property, so unlike the default
+// case the hook cannot return nothing — it must supply the augmented properties
+const handle_error_without_return: [HandleServerError, HandleClientError] = [
+	// @ts-expect-error handleError must return the required properties of App.Error
+	() => {},
+	// @ts-expect-error handleError must return the required properties of App.Error
+	() => {}
+];
+
 void app_error;
 void app_error_without_status;
 void handle_error_hooks;
+void handle_error_overrides;
+void handle_error_kinds;
+void handle_error_without_return;
 
 function a() {
 	// @ts-expect-error App.Error requires additional

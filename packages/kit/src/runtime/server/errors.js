@@ -1,7 +1,7 @@
 import { json, text } from '@sveltejs/kit';
-import { HttpError, SvelteKitError } from '@sveltejs/kit/internal';
+import { HandledHttpError, HttpError, SvelteKitError } from '@sveltejs/kit/internal';
 import { with_request_store } from '@sveltejs/kit/internal/server';
-import { coalesce_to_error, get_message, get_status } from '../../utils/error.js';
+import { add_deprecated_handle_error_properties, coalesce_to_error } from '../../utils/error.js';
 import { negotiate } from '../../utils/http.js';
 import { fix_stack_trace } from './internal.js';
 import { escape_html } from '../../utils/escape.js';
@@ -13,7 +13,6 @@ import { escape_html } from '../../utils/escape.js';
  * @param {unknown} error
  */
 export async function handle_fatal_error(event, state, options, error) {
-	error = error instanceof HttpError ? error : coalesce_to_error(error);
 	const body = await handle_error_and_jsonify(event, state, options, error);
 	const status = body.status;
 
@@ -40,29 +39,50 @@ export async function handle_fatal_error(event, state, options, error) {
  * @returns {App.Error | Promise<App.Error>}
  */
 export function handle_error_and_jsonify(event, state, options, error) {
+	if (error instanceof HandledHttpError) {
+		return error.body;
+	}
+
+	/** @type {import('@sveltejs/kit').CaughtError} */
+	let caught;
+
 	if (error instanceof HttpError) {
-		// @ts-expect-error custom user errors may not have a message field if App.Error is overwritten
-		return { message: 'Unknown Error', ...error.body };
+		caught = { kind: 'app', error: error.body };
+	} else if (error instanceof SvelteKitError) {
+		caught = { kind: 'framework', error: { status: error.status, message: error.text } };
+	} else {
+		caught = { kind: 'unknown', error };
+
+		let e = error;
+		while (e instanceof Error) {
+			fix_stack_trace(e);
+			e = e.cause;
+		}
 	}
 
-	let e = error;
-	while (e instanceof Error) {
-		fix_stack_trace(e);
-		e = e.cause;
-	}
+	const fallback =
+		caught.kind === 'unknown' ? { status: 500, message: 'Internal Error' } : caught.error;
 
-	const status = get_status(error);
-	const message = get_message(error);
+	/**
+	 * The hook returns only the properties it wants to override; anything it omits
+	 * (including by returning nothing at all) is inherited from the caught error.
+	 * @param {Awaited<ReturnType<import('@sveltejs/kit').HandleServerError>>} body
+	 * @returns {App.Error}
+	 */
+	function merge(body) {
+		return { ...fallback, ...body };
+	}
 
 	// TODO 4.0 await this, rather than handling the non-Promise case
 	let result;
 	try {
-		result = with_request_store({ event, state }, () =>
-			options.hooks.handleError({ error, event, status, message })
-		) ?? { status, message };
+		const input = { ...caught, event };
+		if (__SVELTEKIT_DEV__) add_deprecated_handle_error_properties(input, fallback);
+
+		result = with_request_store({ event, state }, () => options.hooks.handleError(input));
 	} catch (hook_error) {
 		log_handle_error_hook_failure(error, hook_error);
-		return { status, message: 'Internal Error' };
+		return { status: fallback.status, message: 'Internal Error' };
 	}
 
 	if (result instanceof Promise) {
@@ -76,24 +96,18 @@ export function handle_error_and_jsonify(event, state, options, error) {
 			result.catch((hook_error) => log_handle_error_hook_failure(error, hook_error));
 
 			return {
-				status,
+				status: fallback.status,
 				message: 'Internal Error'
 			};
 		}
 
-		return result.then(
-			(body) => {
-				body ??= { status, message };
-				return { ...body, status: get_status(body, error) };
-			},
-			(hook_error) => {
-				log_handle_error_hook_failure(error, hook_error);
-				return { status, message: 'Internal Error' };
-			}
-		);
+		return result.then(merge, (hook_error) => {
+			log_handle_error_hook_failure(error, hook_error);
+			return { status: fallback.status, message: 'Internal Error' };
+		});
 	}
 
-	return { ...result, status: get_status(result, error) };
+	return merge(result);
 }
 
 /**

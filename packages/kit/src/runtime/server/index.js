@@ -5,7 +5,6 @@ import { create_request_state } from './state.js';
 import { options, get_hooks } from '__SERVER__/internal.js';
 import { set_read_implementation, set_manifest, fix_stack_trace } from './internal.js';
 import { set_env } from '__sveltekit/env';
-import { SvelteKitError } from '@sveltejs/kit/internal';
 import { init_tracing } from '@sveltejs/kit/internal/server';
 import { DEV } from 'esm-env';
 import { init_transport } from '#app/internal/transport';
@@ -130,8 +129,8 @@ export class Server {
 					handle: module.handle || (({ event, resolve }) => resolve(event)),
 					handleError:
 						module.handleError ||
-						(({ error }) => {
-							if (error instanceof SvelteKitError) {
+						(({ kind, error }) => {
+							if (kind !== 'unknown') {
 								// don't log stack traces for 404s etc, it's all internal gubbins
 								return;
 							}
