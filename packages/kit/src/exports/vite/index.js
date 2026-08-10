@@ -875,6 +875,11 @@ function kit({ svelte_config }) {
 				// No chain from this server-only module to a client entrypoint was found —
 				// the module is only imported from server code, which is valid.
 			}
+		},
+
+		// avoid watch mode rebuilds using stale import map data
+		buildEnd() {
+			import_map.clear();
 		}
 	};
 
@@ -943,7 +948,7 @@ function kit({ svelte_config }) {
 
 				if (this.environment.name === 'ssr') remotes.push(remote);
 
-				if (this.environment.config.consumer !== 'client') {
+				if (this.environment.config.consumer === 'server') {
 					// we need to add an `await Promise.resolve()` because if the user imports this function
 					// on the client AND in a load function when loading the client module we will trigger
 					// an import during dev. During a link preload, the module can be mistakenly
@@ -1038,6 +1043,12 @@ function kit({ svelte_config }) {
 					code: result,
 					map: null
 				};
+			}
+		},
+
+		buildEnd() {
+			if (this.environment.config.consumer === 'server') {
+				emitted_remote_hashes.clear();
 			}
 		}
 	};
@@ -1622,6 +1633,8 @@ function kit({ svelte_config }) {
 			const verbose = builder.config.logLevel === 'info';
 			const log = logger({ verbose });
 
+			let server_build = await builder.build(builder.environments.ssr);
+
 			/** @param {Rolldown.RolldownOutput['output']} server_chunks */
 			const process_server_build = async (server_chunks) => {
 				// Replace manifest placeholders in SSR output. `assets` and `routes`
@@ -1722,7 +1735,6 @@ function kit({ svelte_config }) {
 							s(has_universal_load);
 					}
 
-					// TODO: handle rerun
 					const client_build = await builder.build(builder.environments.client);
 					const client_chunks =
 						(await normalise_build(client_build)) ?? client_chunks_from_watched_build;
@@ -2027,7 +2039,6 @@ function kit({ svelte_config }) {
 							};
 						};
 
-						// TODO: handle rerun
 						const service_worker_build = await builder.build(builder.environments.serviceWorker);
 						await normalise_build(service_worker_build);
 					}
@@ -2059,10 +2070,9 @@ function kit({ svelte_config }) {
 				};
 			};
 
-			const server_build = await builder.build(builder.environments.ssr);
-
 			// `vite build`
-			if ('output' in server_build || Array.isArray(server_build)) {
+			server_build = Array.isArray(server_build) ? server_build[0] : server_build;
+			if ('output' in server_build) {
 				fs.mkdirSync(out, { recursive: true });
 
 				await load_and_validate_params({
@@ -2071,56 +2081,53 @@ function kit({ svelte_config }) {
 					root
 				});
 
-				const { output } = 'output' in server_build ? server_build : server_build[0];
-				return await process_server_build(output);
+				return await process_server_build(server_build.output);
 			}
 
-			let building_again = false;
-			const rerun = () => {
-				building_again = true;
+			// `vite build --watch`
+			let rebuild = false;
+
+			const before_server_rerun = async () => {
+				rebuild = true;
+
+				// these are set once per plugin initialisation or when the config hook
+				// runs. However, those don't re-run during watch mode. So, we need to
+				// re-initialise them manually here
+				manifest_data = sync.all(svelte_config, root).manifest_data;
+
+				tracked_features = {};
+
+				remotes = [];
+				remote_original_by_hash.clear();
+				emitted_remote_hashes.clear();
+
+				finalise = null;
+
+				fs.mkdirSync(out, { recursive: true });
+
+				explicit_env_entry = resolve_explicit_env_entry(kit);
+				explicit_env_config = await sync.env(
+					vite,
+					kit,
+					explicit_env_entry,
+					vite_config.root,
+					vite_config.mode
+				);
+
+				await load_and_validate_params({
+					routes: manifest_data.routes,
+					params_path: manifest_data.params,
+					root
+				});
 			};
 
-			// `vite build --watch`
-			server_build.on('change', rerun);
-			server_build.on('restart', rerun);
+			server_build.on('change', before_server_rerun);
+			server_build.on('restart', before_server_rerun);
 
 			/** @type {PromiseWithResolvers<void>} */
 			const task = Promise.withResolvers();
 
 			server_build.on('event', async (event) => {
-				if (event.code === 'BUNDLE_START') {
-					fs.mkdirSync(out, { recursive: true });
-
-					// these are set once per plugin initialisation or when the config hook
-					// runs. However, those don't re-run during watch mode. So, we need to
-					// re-initialise them manually here
-					manifest_data = sync.all(svelte_config, root).manifest_data;
-					service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
-					immutable = null;
-					tracked_features = {};
-					remotes = [];
-					remote_original_by_hash.clear();
-					emitted_remote_hashes.clear();
-					explicit_env_entry = resolve_explicit_env_entry(kit);
-					explicit_env_config = await sync.env(
-						vite,
-						kit,
-						explicit_env_entry,
-						vite_config.root,
-						vite_config.mode
-					);
-					import_map.clear();
-					manifest_data_code = null;
-					finalise = null;
-
-					await load_and_validate_params({
-						routes: manifest_data.routes,
-						params_path: manifest_data.params,
-						root
-					});
-					return;
-				}
-
 				if (event.code === 'ERROR') {
 					return task.reject();
 				}
@@ -2129,7 +2136,7 @@ function kit({ svelte_config }) {
 					await process_server_build(server_chunks_from_watched_build);
 					// buildApp hooks don't rerun in watch mode so we need to run
 					// the deferred steps here on subsequent builds
-					if (building_again) await finalise?.();
+					if (rebuild) await finalise?.();
 					await event.result.close();
 					return task.resolve();
 				}
@@ -2444,12 +2451,14 @@ async function normalise_build(build) {
 	/** @type {PromiseWithResolvers<void>} */
 	const bundling = Promise.withResolvers();
 
-	build.on('event', (event) => {
+	build.on('event', async (event) => {
 		if (event.code === 'ERROR') {
+			await build.close();
 			return bundling.reject(event.error);
 		}
 
 		if (event.code === 'BUNDLE_END') {
+			await build.close();
 			return bundling.resolve();
 		}
 	});
