@@ -2441,7 +2441,7 @@ const replace_manifest_placeholder_strings = (dir, values) => {
  * @param {string} name The name of the environment
  * @param {Rolldown.RolldownOutput | Rolldown.RolldownOutput[] | Rolldown.RolldownWatcher} build The return value of builder.build
  * @param {Map<string, Rolldown.RolldownOutput['output']>} build_output_map
- * @returns {Promise<Rolldown.RolldownOutput['output'] | null>}
+ * @returns {Promise<Rolldown.RolldownOutput['output']>}
  */
 async function normalise_build(name, build, build_output_map) {
 	if ('output' in build) {
