@@ -37,11 +37,20 @@ function is_dotfile(path) {
  * The build-time validator for conditional requests: Bun only generates ETags for
  * in-memory static routes, not file-backed responses, so the adapter ships its own.
  * @param {string} path
+ * @param {boolean} [precompress]
  * @returns {Promise<string>}
  */
-async function asset_meta(path) {
+async function asset_meta(path, precompress = false) {
 	const hash = Bun.hash(await Bun.file(path).arrayBuffer()).toString(16);
-	return JSON.stringify({ hash });
+
+	/** @type {{ hash: string, br?: boolean, gz?: boolean }} */
+	const meta = { hash };
+	if (precompress) {
+		if (await Bun.file(`${path}.br`).exists()) meta.br = true;
+		if (await Bun.file(`${path}.gz`).exists()) meta.gz = true;
+	}
+
+	return JSON.stringify(meta);
 }
 
 /** @param {string[]} files */
@@ -56,7 +65,13 @@ function validate_file_paths(files) {
 
 /** @type {import('./index.js').default} */
 export default function (opts = {}) {
-	const { out = 'build', envPrefix = '', serverOptions = {}, buildOptions = {} } = opts;
+	const {
+		out = 'build',
+		envPrefix = '',
+		precompress = false,
+		serverOptions = {},
+		buildOptions = {}
+	} = opts;
 
 	return {
 		name: '@sveltejs/adapter-bun',
@@ -90,7 +105,9 @@ export default function (opts = {}) {
 				[routes_file]: await create_routes({
 					builder,
 					out,
-					embed: !!buildOptions.compile
+					embed: !!buildOptions.compile,
+					// embedded assets are imported by identity path, so variants cannot ride along
+					precompress: precompress && !buildOptions.compile
 				})
 			};
 
@@ -252,16 +269,21 @@ async function get_embed_entries({ builder, server_assets }) {
  * @param {import('@sveltejs/kit').Builder} options.builder
  * @param {string[]} options.server_assets
  * @param {string} options.out
+ * @param {boolean} options.precompress
  * @returns {Promise<{imports: string[], entries: string[], server_assets: string[]}>}
  */
-async function get_no_embed_entries({ builder, server_assets, out }) {
+async function get_no_embed_entries({ builder, server_assets, out, precompress }) {
 	const client_files = builder.writeClient(`${out}/client`).filter((file) => !is_dotfile(file));
 	const prerendered_files = builder.writePrerendered(`${out}/prerendered`);
 	validate_file_paths([...client_files, ...prerendered_files]);
 
+	if (precompress) {
+		await Promise.all([builder.compress(`${out}/client`), builder.compress(`${out}/prerendered`)]);
+	}
+
 	const cl_entries = await Promise.all(
 		client_files.map(async (filePath) => {
-			return `...client_asset(${JSON.stringify(filePath)}, undefined, ${await asset_meta(`${out}/client/${filePath}`)})`;
+			return `...client_asset(${JSON.stringify(filePath)}, undefined, ${await asset_meta(`${out}/client/${filePath}`, precompress)})`;
 		})
 	);
 
@@ -270,7 +292,7 @@ async function get_no_embed_entries({ builder, server_assets, out }) {
 
 	const pr_pages_entries = await Promise.all(
 		prerendered_pages.map(async ([path, { file }]) => {
-			return `...prerendered_page(${JSON.stringify(path)}, ${JSON.stringify(file)}, ${await asset_meta(`${out}/prerendered/${file}`)})`;
+			return `...prerendered_page(${JSON.stringify(path)}, ${JSON.stringify(file)}, ${await asset_meta(`${out}/prerendered/${file}`, precompress)})`;
 		})
 	);
 
@@ -278,7 +300,7 @@ async function get_no_embed_entries({ builder, server_assets, out }) {
 		prerendered_files
 			.filter((filePath) => !prerendered_pages_files.has(filePath))
 			.map(async (filePath) => {
-				return `...prerendered_asset(${JSON.stringify(filePath)}, undefined, ${await asset_meta(`${out}/prerendered/${filePath}`)})`;
+				return `...prerendered_asset(${JSON.stringify(filePath)}, undefined, ${await asset_meta(`${out}/prerendered/${filePath}`, precompress)})`;
 			})
 	);
 
@@ -300,9 +322,10 @@ async function get_no_embed_entries({ builder, server_assets, out }) {
  * @param {import('@sveltejs/kit').Builder} options.builder
  * @param {string} options.out
  * @param {boolean} options.embed
+ * @param {boolean} options.precompress
  * @returns {Promise<string>}
  */
-async function create_routes({ builder, out, embed }) {
+async function create_routes({ builder, out, embed, precompress }) {
 	validate_file_paths([
 		...builder.prerendered.pages.keys(),
 		...builder.prerendered.redirects.keys()
@@ -318,7 +341,7 @@ async function create_routes({ builder, out, embed }) {
 		server_assets: resolved_server_assets
 	} = embed
 		? await get_embed_entries({ builder, server_assets })
-		: await get_no_embed_entries({ builder, out, server_assets });
+		: await get_no_embed_entries({ builder, out, server_assets, precompress });
 
 	return [
 		`import { client_asset, prerendered_asset, prerendered_page, prerendered_redirect, server_asset } from './routes-util.js';`,

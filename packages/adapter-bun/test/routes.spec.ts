@@ -108,6 +108,57 @@ test('static routes answer HEAD with the same handler', async () => {
 	expect(route.HEAD).toBe(route.GET);
 });
 
+test('precompressed variants are negotiated with their own validators', async () => {
+	const { routes, file } = await load_routes();
+
+	const route = routes.client_asset('app.js', undefined, {
+		hash: 'abc',
+		br: true,
+		gz: true
+	})[0][1] as any;
+
+	const br = route.GET(
+		new Request('http://localhost/app.js', { headers: { 'accept-encoding': 'br, gzip' } })
+	);
+	expect(br.headers.get('content-encoding')).toBe('br');
+	expect(br.headers.get('etag')).toBe('"abc-br"');
+	expect(br.headers.get('vary')).toBe('accept-encoding');
+	expect(file).toHaveBeenLastCalledWith('/app/build/client/app.js.br');
+
+	const gzip = route.GET(
+		new Request('http://localhost/app.js', { headers: { 'accept-encoding': 'br;q=0, gzip' } })
+	);
+	expect(gzip.headers.get('content-encoding')).toBe('gzip');
+	expect(gzip.headers.get('etag')).toBe('"abc-gz"');
+	expect(file).toHaveBeenLastCalledWith('/app/build/client/app.js.gz');
+
+	const identity = route.GET(new Request('http://localhost/app.js'));
+	expect(identity.headers.has('content-encoding')).toBe(false);
+	expect(identity.headers.get('etag')).toBe('"abc"');
+
+	const revalidated = route.GET(
+		new Request('http://localhost/app.js', {
+			headers: { 'accept-encoding': 'br', 'if-none-match': '"abc-br"' }
+		})
+	);
+	expect(revalidated.status).toBe(304);
+});
+
+test('range requests are served from the identity representation', async () => {
+	const { routes, file } = await load_routes();
+
+	const route = routes.client_asset('app.js', undefined, { hash: 'abc', br: true })[0][1] as any;
+	const response = route.GET(
+		new Request('http://localhost/app.js', {
+			headers: { 'accept-encoding': 'br', range: 'bytes=0-9' }
+		})
+	);
+
+	expect(response.headers.has('content-encoding')).toBe(false);
+	expect(response.headers.get('etag')).toBe('"abc"');
+	expect(file).toHaveBeenLastCalledWith('/app/build/client/app.js');
+});
+
 test('embedded routes use the imported asset instead of a filesystem path', async () => {
 	const { routes, file } = await load_routes({ embed: true });
 

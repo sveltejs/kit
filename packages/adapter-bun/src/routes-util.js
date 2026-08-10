@@ -5,8 +5,10 @@ const dir = dirname(Bun.main);
 
 /**
  * @typedef {import('bun').Serve.Routes<never, string>[string]} RouteHandler
- * @typedef {{ hash: string }} AssetMeta
+ * @typedef {{ hash: string, br?: boolean, gz?: boolean }} AssetMeta
  */
+
+const CONTENT_ENCODING = { br: 'br', gz: 'gzip' };
 
 // RFC 3986 pchar minus percent-escapes: characters user agents send raw in a path
 const RAW_PATH_CHAR = /^[A-Za-z0-9\-._~!$&'()+,;=:@]$/;
@@ -82,23 +84,57 @@ function if_none_match(request, etag) {
 }
 
 /**
- * Serves one file with its build-time validator. Registered for GET and HEAD
- * because Bun does not route HEAD requests to a GET handler.
+ * @param {string | null} accept
+ * @param {AssetMeta} meta
+ * @returns {'br' | 'gz' | null}
+ */
+function negotiate(accept, meta) {
+	if (accept === null || (!meta.br && !meta.gz)) return null;
+
+	const accepted = new Set();
+	for (const part of accept.split(',')) {
+		const [name = '', ...params] = part.trim().toLowerCase().split(';');
+		if (params.some((param) => /^q=0(\.0*)?$/.test(param.trim()))) continue;
+		accepted.add(name.trim());
+	}
+
+	if (meta.br && (accepted.has('br') || accepted.has('*'))) return 'br';
+	if (meta.gz && (accepted.has('gzip') || accepted.has('*'))) return 'gz';
+	return null;
+}
+
+/**
+ * Serves one file with its build-time validator and precompressed variants.
+ * Registered for GET and HEAD because Bun does not route HEAD requests to a
+ * GET handler.
  * @param {string} path
  * @param {Record<string, string>} headers
  * @param {AssetMeta} meta
  * @returns {RouteHandler}
  */
 function file_route(path, headers, meta) {
-	const etag = `"${meta.hash}"`;
-
 	/** @param {import('bun').BunRequest} request */
 	const handler = (request) => {
+		// Bun serializes Range itself for file bodies; ranges apply to the identity representation
+		const encoding =
+			request.headers.get('range') === null
+				? negotiate(request.headers.get('accept-encoding'), meta)
+				: null;
+		const etag = encoding === null ? `"${meta.hash}"` : `"${meta.hash}-${encoding}"`;
+
+		/** @type {Record<string, string>} */
 		const response_headers = { ...headers, etag };
+		if (meta.br || meta.gz) response_headers['vary'] = 'accept-encoding';
+
 		if (if_none_match(request, etag)) {
 			return new Response(null, { status: 304, headers: response_headers });
 		}
-		return new Response(Bun.file(path), { headers: response_headers });
+		if (encoding === null) {
+			return new Response(Bun.file(path), { headers: response_headers });
+		}
+
+		response_headers['content-encoding'] = CONTENT_ENCODING[encoding];
+		return new Response(Bun.file(`${path}.${encoding}`), { headers: response_headers });
 	};
 
 	return { GET: handler, HEAD: handler };

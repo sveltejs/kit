@@ -274,6 +274,34 @@ describe('generated routes', () => {
 		expect(bun.build).not.toHaveBeenCalled();
 	});
 
+	test('precompresses assets and marks the variants in the generated routes', async () => {
+		const previous = bun.file.getMockImplementation();
+		bun.file.mockImplementation((path: string) => ({
+			text: async () => '// generated server entrypoint',
+			arrayBuffer: async () => new ArrayBuffer(0),
+			exists: async () => path.endsWith('.br') || path.endsWith('.gz')
+		}));
+		const builder = create_builder({ client_files: ['app.js'] });
+
+		await adapter({ precompress: true }).adapt(builder);
+
+		expect(builder.compress).toHaveBeenCalledWith('build/client');
+		expect(builder.compress).toHaveBeenCalledWith('build/prerendered');
+		const source = bun.build.mock.calls[0][0].files[routes_file];
+		expect(source).toContain(
+			'...client_asset("app.js", undefined, {"hash":"abc","br":true,"gz":true})'
+		);
+		bun.file.mockImplementation(previous!);
+	});
+
+	test('does not compress by default', async () => {
+		const builder = create_builder({ client_files: ['app.js'] });
+
+		await adapter().adapt(builder);
+
+		expect(builder.compress).not.toHaveBeenCalled();
+	});
+
 	test('does not register dotfiles apart from .well-known', async () => {
 		const builder = create_builder({
 			client_files: ['.env', '.well-known/security.txt', 'ok.txt']
@@ -400,6 +428,7 @@ function create_builder({
 		rimraf: vi.fn(),
 		writeClient: vi.fn(() => client_files),
 		writePrerendered: vi.fn(() => prerendered_files),
+		compress: vi.fn(async () => {}),
 		findServerAssets: vi.fn(() => server_assets),
 		generateManifest: vi.fn(() => '{"appDir":"_app"}'),
 		hasServerInstrumentationFile: () => instrumentation,

@@ -44,7 +44,7 @@ bun ./build
 
 The JavaScript server, client files, and prerendered files in the output directory are all required at runtime. Application imports are processed according to Bun's bundler behavior.
 
-Client assets and prerendered output are registered as native Bun routes. Only `GET` and the corresponding automatic `HEAD` requests are served by those routes; other methods continue to SvelteKit. Bun supplies MIME types, conditional-request validators, byte ranges for filesystem-backed files, and streaming without buffering every asset in memory. Files below SvelteKit's `immutable` directory receive `Cache-Control: public,max-age=31536000,immutable`.
+Client assets and prerendered output are registered as native Bun routes. Only `GET` and `HEAD` requests are served by those routes; other methods continue to SvelteKit. Every asset carries an ETag computed during the build, so conditional requests revalidate with an empty `304` response. Bun supplies MIME types, byte ranges for filesystem-backed files, and streaming without buffering every asset in memory. Files below SvelteKit's `immutable` directory receive `Cache-Control: public,max-age=31536000,immutable`.
 
 > [!NOTE] Bun treats `*` in a route pathname as a wildcard. The adapter rejects client and prerendered filenames that contain a literal `*`; rename those files before building.
 
@@ -78,6 +78,10 @@ export default defineConfig({
 ### out
 
 The output directory. It defaults to `build`.
+
+### precompress
+
+Set `precompress: true` to generate `.br` and `.gz` variants of client and prerendered assets during the build. The generated routes negotiate `Accept-Encoding` per request and serve the smallest accepted variant with its own ETag. The option is ignored when `buildOptions.compile` is set, because embedded assets are imported by identity path.
 
 ### envPrefix
 
