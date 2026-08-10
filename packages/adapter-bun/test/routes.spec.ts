@@ -234,6 +234,7 @@ test.each([
 
 		expect(entries[0][0]).toBe(canonical);
 		expect(entries[1][0]).toBe(alternate);
+		expect((entries[1][1] as any).HEAD).toBe((entries[1][1] as any).GET);
 		const response = (entries[1][1] as any).GET(
 			new Request(`http://localhost${alternate}?from=test`)
 		);

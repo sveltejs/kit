@@ -111,9 +111,17 @@ function negotiate(accept, meta) {
 }
 
 /**
+ * Bun does not route HEAD requests to a GET handler, so every function route
+ * registers both methods.
+ * @param {(request: import('bun').BunRequest) => Response} handler
+ * @returns {RouteHandler}
+ */
+function handlers(handler) {
+	return { GET: handler, HEAD: handler };
+}
+
+/**
  * Serves one file with its build-time validator and precompressed variants.
- * Registered for GET and HEAD because Bun does not route HEAD requests to a
- * GET handler.
  * @param {string} path
  * @param {Record<string, string>} headers
  * @param {AssetMeta} meta
@@ -146,7 +154,7 @@ function file_route(path, headers, meta) {
 		return new Response(Bun.file(`${path}.${encoding}`), { headers: response_headers });
 	};
 
-	return { GET: handler, HEAD: handler };
+	return handlers(handler);
 }
 
 /**
@@ -235,7 +243,7 @@ export function prerendered_page(urlPath, filePath, meta) {
 
 	if (inverted) {
 		for (const path of route_paths(inverted)) {
-			entries.push([path, { GET: handle_redirect }]);
+			entries.push([path, handlers(handle_redirect)]);
 		}
 	}
 
