@@ -183,16 +183,16 @@ async function get_embed_entries({ builder, server_assets }) {
 	const pr_page_assets_entries = pr_pages.flatMap(({ rel }, i) => {
 		return prerendered_pages_files.has(rel)
 			? []
-			: [`prerendered_asset(${JSON.stringify(rel)}, asset_${offset + i})`];
+			: [`...prerendered_asset(${JSON.stringify(rel)}, asset_${offset + i})`];
 	});
 
 	offset += pr_pages.length;
 	const pr_assets_entries = [...pr_deps, ...pr_data].map(({ rel }, i) => {
-		return `prerendered_asset(${JSON.stringify(rel)}, asset_${offset + i})`;
+		return `...prerendered_asset(${JSON.stringify(rel)}, asset_${offset + i})`;
 	});
 
 	const pr_redirects = [...builder.prerendered.redirects].map(([src, { status, location }]) => {
-		return `prerendered_redirect(${JSON.stringify(src)}, ${status}, ${JSON.stringify(location)})`;
+		return `...prerendered_redirect(${JSON.stringify(src)}, ${status}, ${JSON.stringify(location)})`;
 	});
 
 	return {
@@ -238,11 +238,11 @@ function get_no_embed_entries({ builder, server_assets, out }) {
 	const pr_assets_entries = prerendered_files
 		.filter((filePath) => !prerendered_pages_files.has(filePath))
 		.map((filePath) => {
-			return `prerendered_asset(${JSON.stringify(filePath)})`;
+			return `...prerendered_asset(${JSON.stringify(filePath)})`;
 		});
 
 	const pr_redirects = [...builder.prerendered.redirects].map(([src, { status, location }]) => {
-		return `prerendered_redirect(${JSON.stringify(src)}, ${status}, ${JSON.stringify(location)})`;
+		return `...prerendered_redirect(${JSON.stringify(src)}, ${status}, ${JSON.stringify(location)})`;
 	});
 
 	return {

@@ -31,6 +31,21 @@ test('client index files are also available at their directory URL', async () =>
 	]);
 });
 
+test('sub-delims stay raw in route paths with a fully-encoded alias', async () => {
+	const { routes } = await load_routes({ base: '/base' });
+
+	expect(routes.client_asset('a&b.txt').map(([path]) => path)).toEqual([
+		'/base/a&b.txt',
+		'/base/a%26b.txt'
+	]);
+});
+
+test('segments starting with a colon are escaped to avoid Bun route parameters', async () => {
+	const { routes } = await load_routes({ base: '/base' });
+
+	expect(routes.client_asset(':tag.txt').map(([path]) => path)).toEqual(['/base/%3Atag.txt']);
+});
+
 test('immutable SvelteKit assets receive a long-lived cache policy', async () => {
 	const { routes } = await load_routes({ appDir: '_app' });
 
@@ -67,7 +82,7 @@ test('prerendered assets use the base path and preserve their content type', asy
 	const { routes, file } = await load_routes({ base: '/base' });
 	file.mockImplementationOnce((path) => ({ path, type: 'image/x-icon' }));
 
-	const [path, handler] = routes.prerendered_asset('icon.ico');
+	const [[path, handler]] = routes.prerendered_asset('icon.ico');
 
 	expect(path).toBe('/base/icon.ico');
 	expect((handler as any).GET.headers.get('content-type')).toBe('image/x-icon');
@@ -101,7 +116,7 @@ test('a prerendered root page has no duplicate alternate route', async () => {
 test('prerendered redirects retain their status and location', async () => {
 	const { routes } = await load_routes();
 
-	const [path, handler] = routes.prerendered_redirect('/old path', 307, '/new');
+	const [[path, handler]] = routes.prerendered_redirect('/old path', 307, '/new');
 
 	expect(path).toBe('/old%20path');
 	expect((handler as any).GET.status).toBe(307);
