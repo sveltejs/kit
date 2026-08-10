@@ -46,11 +46,18 @@ declare module '@sveltejs/kit' {
 		 */
 		emulate?: () => MaybePromise<Emulator>;
 		vite?: {
-			/**
-			 * Plugins provided by the adapter are placed before any of SvelteKit's own plugins.
-			 * @since 3.0.0
-			 */
-			plugins?: Plugin[];
+			plugins?: {
+				/**
+				 * Vite plugins placed before any of SvelteKit's own plugins.
+				 * @since 3.0.0
+				 */
+				pre?: Plugin[];
+				/**
+				 * Vite plugins placed after any of SvelteKit's own plugins.
+				 * @since 3.0.0
+				 */
+				post?: Plugin[];
+			};
 		};
 	}
 
