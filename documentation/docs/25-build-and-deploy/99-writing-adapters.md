@@ -41,9 +41,11 @@ export default function (options) {
 			}
 		},
 		vite: {
-			plugins: [
+			plugins: {
 				// add plugins here to integrate with Vite
-			]
+				pre: [],
+				post: []
+			}
 		}
 	};
 
@@ -51,7 +53,7 @@ export default function (options) {
 }
 ```
 
-Of these, `name` and `adapt` are required. `emulate`, `vite.plugins` and `supports` are optional.
+Of these, `name` and `adapt` are required. `emulate`, `vite`, and `supports` are optional.
 
 Within the `adapt` method, there are a number of things that an adapter should do:
 
