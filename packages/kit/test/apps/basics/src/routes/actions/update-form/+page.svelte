@@ -2,6 +2,7 @@
 	import { applyAction } from '$app/forms';
 	import { refreshAll } from '$app/navigation';
 
+	/** @type {import('../enhance/$types').ActionData} */
 	export let form;
 	let count = 0;
 

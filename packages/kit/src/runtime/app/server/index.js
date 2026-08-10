@@ -1,5 +1,5 @@
 import { read_implementation, manifest } from '../../server/internal.js';
-import { assets } from '$app/paths/internal/server';
+import { assets } from '#app/paths';
 import { base64_decode } from '../../utils.js';
 
 /**

@@ -1,4 +1,5 @@
 import svelte_config from '@sveltejs/eslint-config';
+import noExportsToRuntimeImports from './.eslint/no-exports-to-runtime-imports.js';
 import noRuntimeToExportsImports from './.eslint/no-runtime-to-exports-imports.js';
 import requirePathToFileURL from './.eslint/require-path-to-file-url.js';
 
@@ -10,6 +11,19 @@ export default [
 			'no-undef': 'off',
 			// we have some non-reactive state in our runtime modules, and we don't want to be nagged about it
 			'svelte/prefer-svelte-reactivity': 'off'
+		}
+	},
+	{
+		files: ['packages/kit/src/exports/**/*.js'],
+		plugins: {
+			'kit-exports-custom': {
+				rules: {
+					'no-exports-to-runtime-imports': noExportsToRuntimeImports
+				}
+			}
+		},
+		rules: {
+			'kit-exports-custom/no-exports-to-runtime-imports': 'error'
 		}
 	},
 	{
@@ -59,6 +73,7 @@ export default [
 			'packages/adapter-node/files',
 			'packages/kit/src/core/config/fixtures/multiple', // dir contains svelte config with multiple extensions tripping eslint
 			'packages/kit/src/core/sync/create_manifest_data/test/samples/**/*',
+			'packages/kit/src/core/sync/write_types/test/*/**/*',
 			'packages/kit/types/index.d.ts', // generated file
 			'packages/*/test/apps/**/*',
 			'packages/*/test/**/build/**',

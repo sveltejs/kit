@@ -431,7 +431,7 @@ function process_node(node, outdir, is_page, proxies, root, all_pages_have_load 
 					'type ExtractActionFailure<T> = T extends Kit.ActionFailure<infer X>	? X extends void ? never : X : never;',
 					'type ActionsFailure<T extends Record<string, (...args: any) => any>> = { [Key in keyof T]: Exclude<ExtractActionFailure<Awaited<ReturnType<T[Key]>>>, void>; }[keyof T];',
 					`type ActionsExport = typeof import('${from}').actions`,
-					'export type SubmitFunction = Kit.SubmitFunction<Expand<ActionsSuccess<ActionsExport>>, Expand<ActionsFailure<ActionsExport>>>'
+					"export type SubmitFunction = import('$app/forms').SubmitFunction<Expand<ActionsSuccess<ActionsExport>>, Expand<ActionsFailure<ActionsExport>>>"
 				);
 
 				type = 'Expand<Kit.AwaitedActions<ActionsExport>> | null';

@@ -13,7 +13,7 @@ import {
 } from './utils.js';
 import { extends_id, validate_resolved_config } from './validate.js';
 
-/** @type {import('typescript')} */
+/** @type {typeof import('typescript')} */
 let ts;
 try {
 	ts = await import('typescript');

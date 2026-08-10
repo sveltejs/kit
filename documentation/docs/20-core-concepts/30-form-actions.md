@@ -456,7 +456,7 @@ The behaviour of `applyAction(result)` depends on `result.type`:
 - `redirect` — calls `goto(result.location, { refreshAll: true })`
 - `error` — renders the current route's nearest `+error` boundary with `result.error`
 
-In all cases, [focus will be reset](accessibility#Focus-management). `applyAction` does not navigate to the `location` of a non-redirect result or refresh data. Use `update` to get the complete default enhanced behavior, including carrying form data and status into a cross-page navigation. When implementing enhancement manually, inspect `result.location` and use [`goto`](../$app-navigation#goto) or [`refreshAll`](../$app-navigation#refreshAll) as appropriate.
+In all cases, [focus will be reset](accessibility#Focus-management). `applyAction` does not navigate to the `location` of a non-redirect result or refresh data. Use `update` to get the complete default enhanced behavior, including carrying form data and status into a cross-page navigation. When implementing enhancement manually, inspect `result.location` and use [`goto`]($app-navigation#goto) or [`refreshAll`]($app-navigation#refreshAll) as appropriate.
 
 ### Custom event listener
 
@@ -481,7 +481,7 @@ We can also implement progressive enhancement ourselves, without `use:enhance`, 
 			body: data
 		});
 
-		/** @type {import('@sveltejs/kit').ActionResult} */
+		/** @type {import('$app/forms').ActionResult} */
 		const result = deserialize(await response.text());
 
 		if (result.type !== 'redirect' && result.location !== undefined) {

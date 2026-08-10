@@ -1,5 +1,5 @@
 /** @import { Component } from 'svelte'; */
-/** @import { Page } from '@sveltejs/kit'; */
+/** @import { Page } from '$app/state'; */
 
 import { noop } from '../utils/functions.js';
 

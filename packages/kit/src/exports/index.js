@@ -8,9 +8,10 @@ import {
 	has_resolution_suffix,
 	strip_data_suffix,
 	strip_resolution_suffix
-} from '../runtime/pathname.js';
-import { text_encoder } from '../runtime/utils.js';
+} from '../pathname.js';
 import { validate_redirect_location } from './url.js';
+
+const text_encoder = new TextEncoder();
 
 export { VERSION } from '../version.js';
 export { defineParams } from './params.js';

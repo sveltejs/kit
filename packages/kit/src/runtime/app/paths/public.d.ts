@@ -1,1 +1,1 @@
-export { resolve, asset, match } from './client.js';
+export { asset, resolve, match } from './client.js';
