@@ -62,6 +62,16 @@ test('segments starting with a colon are escaped to avoid Bun route parameters',
 	]);
 });
 
+test('a root deployment registers routes with a leading slash', async () => {
+	const { routes } = await load_routes();
+
+	expect(routes.client_asset('data.json', undefined, meta)[0][0]).toBe('/data.json');
+	expect(routes.client_asset('index.html', undefined, meta).map(([path]) => path)).toEqual([
+		'/index.html',
+		'/'
+	]);
+});
+
 test('immutable SvelteKit assets receive a long-lived cache policy', async () => {
 	const { routes } = await load_routes({ appDir: '_app' });
 
@@ -99,6 +109,11 @@ test('static routes revalidate against the build-time hash', async () => {
 		new Request('http://localhost/data.json', { headers: { 'if-none-match': '"old"' } })
 	);
 	expect(stale.status).toBe(200);
+
+	const wildcard = route.GET(
+		new Request('http://localhost/data.json', { headers: { 'if-none-match': '*' } })
+	);
+	expect(wildcard.status).toBe(304);
 });
 
 test('static routes revalidate by date when the client has no ETag', async () => {
@@ -158,6 +173,11 @@ test('precompressed variants are negotiated with their own validators', async ()
 	expect(gzip.headers.get('content-encoding')).toBe('gzip');
 	expect(gzip.headers.get('etag')).toBe('"abc-gz"');
 	expect(file).toHaveBeenLastCalledWith('/app/build/client/app.js.gz');
+
+	const any = route.GET(
+		new Request('http://localhost/app.js', { headers: { 'accept-encoding': '*' } })
+	);
+	expect(any.headers.get('content-encoding')).toBe('br');
 
 	const identity = route.GET(new Request('http://localhost/app.js'));
 	expect(identity.headers.has('content-encoding')).toBe(false);
@@ -267,7 +287,7 @@ test('prerendered redirects retain their status and location', async () => {
 	expect((handler as any).GET.headers.get('location')).toBe('/new');
 });
 
-async function load_routes({ base = '', embed = false, appDir = '_app' } = {}) {
+async function load_routes({ base = '/', embed = false, appDir = '_app' } = {}) {
 	vi.resetModules();
 	vi.doMock('MANIFEST', () => ({ manifest: { appDir }, base, embed }));
 	const file = vi.fn((path: string) => ({ path, type: 'text/plain;charset=utf-8' }));

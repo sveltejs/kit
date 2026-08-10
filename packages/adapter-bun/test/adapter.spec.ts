@@ -338,6 +338,17 @@ describe('generated routes', () => {
 		expect(source).toContain('...client_asset("ok.txt", undefined, {"hash":"abc","mtime":0})');
 	});
 
+	test('embedded builds tolerate absent output directories but propagate other errors', async () => {
+		vi.mocked(readdir).mockRejectedValue(Object.assign(new Error('missing'), { code: 'ENOENT' }));
+		await adapter({ buildOptions: { compile: true } }).adapt(create_builder());
+		expect(bun.build).toHaveBeenCalledOnce();
+
+		vi.mocked(readdir).mockRejectedValue(Object.assign(new Error('denied'), { code: 'EACCES' }));
+		await expect(
+			adapter({ buildOptions: { compile: true } }).adapt(create_builder())
+		).rejects.toThrow('denied');
+	});
+
 	test('excludes dotfiles from embedded assets', async () => {
 		mock_files({ client: ['.secret', 'public.txt'] });
 

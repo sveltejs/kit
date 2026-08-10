@@ -162,7 +162,9 @@ test('reports when Bun cannot determine the peer address', async () => {
 
 test('disables timeouts and proxy buffering for event streams', async () => {
 	const loaded = await load_handler({
-		response: new Response('data: ready\n\n', { headers: { 'content-type': 'text/event-stream' } })
+		response: new Response('data: ready\n\n', {
+			headers: { 'content-type': 'text/event-stream; charset=utf-8' }
+		})
 	});
 	const request = new Request('http://localhost/events');
 
