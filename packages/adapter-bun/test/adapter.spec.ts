@@ -289,6 +289,17 @@ describe('generated routes', () => {
 		expect(source).toContain('...client_asset("public.txt", asset_0)');
 	});
 
+	test('rejects wildcard characters in prerendered redirect sources', async () => {
+		const builder = create_builder({
+			prerendered_redirects: [['/docs/*', { status: 308, location: '/new' }]]
+		});
+
+		await expect(adapter().adapt(builder)).rejects.toThrow(
+			'Bun treats literal `*` characters in route paths as wildcards'
+		);
+		expect(bun.build).not.toHaveBeenCalled();
+	});
+
 	test('fails when a prerendered page is absent from compiled build output', async () => {
 		await expect(
 			adapter({ buildOptions: { compile: true } }).adapt(

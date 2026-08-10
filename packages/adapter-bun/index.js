@@ -38,7 +38,7 @@ function validate_file_paths(files) {
 	const invalid = files.find((file) => file.includes('*'));
 	if (invalid !== undefined) {
 		throw new Error(
-			`Cannot build with ${JSON.stringify(invalid)} because Bun treats literal \`*\` characters in route paths as wildcards. Rename the file to remove the \`*\` character.`
+			`Cannot build with ${JSON.stringify(invalid)} because Bun treats literal \`*\` characters in route paths as wildcards. Rename the file or route to remove the \`*\` character.`
 		);
 	}
 }
@@ -275,6 +275,11 @@ function get_no_embed_entries({ builder, server_assets, out }) {
  * @returns {Promise<string>}
  */
 async function create_routes({ builder, out, embed }) {
+	validate_file_paths([
+		...builder.prerendered.pages.keys(),
+		...builder.prerendered.redirects.keys()
+	]);
+
 	const server_assets = builder.findServerAssets(
 		builder.routes.filter((route) => route.prerender !== true)
 	);
