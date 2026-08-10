@@ -187,7 +187,10 @@ function update_types(config, routes, route, root, to_delete = new Set()) {
 	const outdir = path.join(config.kit.outDir, 'types', routes_dir, route.id);
 
 	// now generate new types
-	const imports = ["import type * as Kit from '@sveltejs/kit';", "import { MatcherParam } from '@sveltejs/kit/params';"];
+	const imports = [
+		"import type * as Kit from '@sveltejs/kit';",
+		"import { MatcherParam } from '@sveltejs/kit/params';"
+	];
 
 	/** @type {string[]} */
 	const declarations = [];
