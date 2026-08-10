@@ -63,5 +63,5 @@ export async function load_and_validate_params({ routes, params_path, root, load
 		params_path
 	);
 
-	return /** @type {Record<string, import('@sveltejs/kit').ParamMatcher>} */ (module.params);
+	return /** @type {Record<string, ParamMatcher>} */ (module.params);
 }
