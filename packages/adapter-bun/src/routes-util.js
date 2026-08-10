@@ -123,11 +123,12 @@ function handlers(handler) {
 /**
  * Serves one file with its build-time validator and precompressed variants.
  * @param {string} path
- * @param {Record<string, string>} headers
  * @param {AssetMeta} meta
+ * @param {Record<string, string>} [extra_headers]
  * @returns {RouteHandler}
  */
-function file_route(path, headers, meta) {
+function file_route(path, meta, extra_headers = {}) {
+	const content_type = Bun.file(path).type;
 	const last_modified = new Date(meta.mtime).toUTCString();
 
 	/** @param {import('bun').BunRequest} request */
@@ -140,7 +141,12 @@ function file_route(path, headers, meta) {
 		const etag = encoding === null ? `"${meta.hash}"` : `"${meta.hash}-${encoding}"`;
 
 		/** @type {Record<string, string>} */
-		const response_headers = { ...headers, etag, 'last-modified': last_modified };
+		const response_headers = {
+			'content-type': content_type,
+			...extra_headers,
+			etag,
+			'last-modified': last_modified
+		};
 		if (meta.br || meta.gz) response_headers['vary'] = 'accept-encoding';
 
 		if (is_fresh(request, etag, meta.mtime)) {
@@ -164,33 +170,22 @@ function file_route(path, headers, meta) {
  * @returns {Array<[string, RouteHandler]>}
  */
 export function client_asset(urlPath, filePath = urlPath, meta) {
-	const path = embed ? filePath : resolve(dir, 'client', filePath);
+	const immutable = urlPath.startsWith(`${manifest.appDir}/immutable/`);
+	const route = file_route(
+		embed ? filePath : resolve(dir, 'client', filePath),
+		meta,
+		immutable ? { 'cache-control': 'public,max-age=31536000,immutable' } : {}
+	);
 
-	/** @type {Record<string, string>} */
-	const headers = { 'content-type': Bun.file(path).type };
-
-	if (urlPath.startsWith(`${manifest.appDir}/immutable/`)) {
-		headers['cache-control'] = 'public,max-age=31536000,immutable';
-	}
-
-	const route = file_route(path, headers, meta);
-
-	/** @type {Array<[string, RouteHandler]>} */
-	const entries = to_paths(urlPath).map((path) => [path, route]);
-
+	const paths = to_paths(urlPath);
 	if (urlPath.endsWith('/index.html') || urlPath === 'index.html') {
-		const directory = urlPath.slice(0, -'index.html'.length);
-		for (const path of to_directory_paths(directory)) {
-			entries.push([path, route]);
-		}
+		paths.push(...to_directory_paths(urlPath.slice(0, -'index.html'.length)));
 	} else if (urlPath.endsWith('.html')) {
 		// sirv also serves `page.html` at `/page`
-		for (const path of to_paths(urlPath.slice(0, -'.html'.length))) {
-			entries.push([path, route]);
-		}
+		paths.push(...to_paths(urlPath.slice(0, -'.html'.length)));
 	}
 
-	return entries;
+	return paths.map((path) => /** @type {[string, RouteHandler]} */ ([path, route]));
 }
 
 /**
@@ -209,8 +204,7 @@ export function server_asset(urlPath, filePath = urlPath) {
  * @returns {Array<[string, RouteHandler]>}
  */
 export function prerendered_asset(urlPath, filePath = urlPath, meta) {
-	const path = embed ? filePath : resolve(dir, 'prerendered', filePath);
-	const route = file_route(path, { 'content-type': Bun.file(path).type }, meta);
+	const route = file_route(embed ? filePath : resolve(dir, 'prerendered', filePath), meta);
 	return to_paths(urlPath).map((path) => [path, route]);
 }
 
@@ -233,8 +227,7 @@ export function prerendered_page(urlPath, filePath, meta) {
 		return new Response(null, { status: 308, headers: { location } });
 	}
 
-	const path = embed ? filePath : resolve(dir, 'prerendered', filePath);
-	const route = file_route(path, { 'content-type': Bun.file(path).type }, meta);
+	const route = file_route(embed ? filePath : resolve(dir, 'prerendered', filePath), meta);
 
 	const inverted = urlPath.endsWith('/') ? urlPath.slice(0, -1) : `${urlPath}/`;
 	// path already contains base, no need to add it here

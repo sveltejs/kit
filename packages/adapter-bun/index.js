@@ -38,7 +38,7 @@ function is_dotfile(path) {
  * in-memory static routes, not file-backed responses, so the adapter ships its own.
  * @param {string} path
  * @param {boolean} [precompress]
- * @returns {Promise<string>}
+ * @returns {Promise<{ hash: string, mtime: number, br?: boolean, gz?: boolean }>}
  */
 async function asset_meta(path, precompress = false) {
 	const file = Bun.file(path);
@@ -47,11 +47,15 @@ async function asset_meta(path, precompress = false) {
 	/** @type {{ hash: string, mtime: number, br?: boolean, gz?: boolean }} */
 	const meta = { hash, mtime: file.lastModified };
 	if (precompress) {
-		if (await Bun.file(`${path}.br`).exists()) meta.br = true;
-		if (await Bun.file(`${path}.gz`).exists()) meta.gz = true;
+		const [br, gz] = await Promise.all([
+			Bun.file(`${path}.br`).exists(),
+			Bun.file(`${path}.gz`).exists()
+		]);
+		if (br) meta.br = true;
+		if (gz) meta.gz = true;
 	}
 
-	return JSON.stringify(meta);
+	return meta;
 }
 
 /** @param {string[]} files */
@@ -87,6 +91,12 @@ export default function (opts = {}) {
 
 			builder.log.minor('Building server');
 
+			if (precompress && buildOptions.compile) {
+				builder.log.warn(
+					'precompress is ignored with buildOptions.compile: embedded assets are imported by identity path'
+				);
+			}
+
 			const server = builder.getServerDirectory();
 
 			const src_dir = resolve(import.meta.dirname, 'src');
@@ -102,12 +112,11 @@ export default function (opts = {}) {
 					`export const embed = ${JSON.stringify(!!buildOptions.compile)};\n` +
 					`export const env_prefix = ${JSON.stringify(envPrefix)};\n` +
 					`export const origin = ${JSON.stringify(builder.config.kit.paths.origin) || 'undefined'};`,
-				[server_options_file]: [`export default ${JSON.stringify(serverOptions)};`].join('\n'),
+				[server_options_file]: `export default ${JSON.stringify(serverOptions)};`,
 				[routes_file]: await create_routes({
 					builder,
 					out,
 					embed: !!buildOptions.compile,
-					// embedded assets are imported by identity path, so variants cannot ride along
 					precompress: precompress && !buildOptions.compile
 				})
 			};
@@ -203,64 +212,43 @@ async function get_embed_entries({ builder, server_assets }) {
 	const assets = [...cl_files, ...pr_pages, ...pr_deps, ...pr_data];
 	validate_file_paths(assets.map(({ rel }) => rel));
 
+	const asset_index = new Map(assets.map(({ rel }, i) => [rel, i]));
 	const imports = assets.map(({ abs }, i) => {
 		return `import asset_${i} from ${JSON.stringify(abs)} with { type: 'file' };`;
 	});
 
-	let offset = 0;
-	const cl_entries = await Promise.all(
-		cl_files.map(async ({ abs, rel }, i) => {
-			return `...client_asset(${JSON.stringify(rel)}, asset_${offset + i}, ${await asset_meta(abs)})`;
-		})
-	);
+	/**
+	 * @param {{ abs: string, rel: string }} file
+	 * @param {string} helper
+	 * @param {string} [urlPath]
+	 */
+	const entry = async ({ abs, rel }, helper, urlPath = rel) =>
+		`...${helper}(${JSON.stringify(urlPath)}, asset_${asset_index.get(rel)}, ${JSON.stringify(await asset_meta(abs))})`;
 
-	offset += cl_files.length;
-	const prerendered_pages_files = new Set(
-		[...builder.prerendered.pages].map(([_, { file }]) => file)
-	);
-	const pr_pages_entries = await Promise.all(
-		[...builder.prerendered.pages].map(async ([path, { file }]) => {
-			const fileIdx = pr_pages.findIndex((f) => f.rel === file);
-			if (fileIdx === -1)
+	const page_files = new Map(pr_pages.map((file) => [file.rel, file]));
+	const page_rels = new Set([...builder.prerendered.pages].map(([_, { file }]) => file));
+
+	const entries = await Promise.all([
+		...cl_files.map((file) => entry(file, 'client_asset')),
+		...[...builder.prerendered.pages].map(([path, { file }]) => {
+			const page = page_files.get(file);
+			if (page === undefined)
 				throw new Error(`Could not find prerendered page ${file} for route ${path}`);
-			return `...prerendered_page(${JSON.stringify(path)}, asset_${offset + fileIdx}, ${await asset_meta(pr_pages[fileIdx].abs)})`;
-		})
-	);
-	const pr_page_assets_entries = await Promise.all(
-		pr_pages.flatMap(({ abs, rel }, i) => {
-			return prerendered_pages_files.has(rel)
-				? []
-				: [
-						(async () =>
-							`...prerendered_asset(${JSON.stringify(rel)}, asset_${offset + i}, ${await asset_meta(abs)})`)()
-					];
-		})
-	);
-
-	offset += pr_pages.length;
-	const pr_assets_entries = await Promise.all(
-		[...pr_deps, ...pr_data].map(async ({ abs, rel }, i) => {
-			return `...prerendered_asset(${JSON.stringify(rel)}, asset_${offset + i}, ${await asset_meta(abs)})`;
-		})
-	);
-
-	const pr_redirects = [...builder.prerendered.redirects].map(([src, { status, location }]) => {
-		return `...prerendered_redirect(${JSON.stringify(src)}, ${status}, ${JSON.stringify(location)})`;
-	});
+			return entry(page, 'prerendered_page', path);
+		}),
+		...pr_pages
+			.filter(({ rel }) => !page_rels.has(rel))
+			.map((file) => entry(file, 'prerendered_asset')),
+		...[...pr_deps, ...pr_data].map((file) => entry(file, 'prerendered_asset'))
+	]);
 
 	return {
 		imports,
-		entries: [
-			...cl_entries,
-			...pr_pages_entries,
-			...pr_page_assets_entries,
-			...pr_assets_entries,
-			...pr_redirects
-		],
+		entries,
 		server_assets: server_assets.map((file) => {
-			const idx = assets.findIndex((f) => f.rel === file);
-			if (idx === -1) throw new Error(`Could not find server asset ${file}`);
-			return `server_asset(${JSON.stringify(file)}, asset_${idx})`;
+			const idx = asset_index.get(file);
+			if (idx === undefined) throw new Error(`Could not find server asset ${file}`);
+			return `[${JSON.stringify(file)}, server_asset(${JSON.stringify(file)}, asset_${idx})]`;
 		})
 	};
 }
@@ -282,38 +270,31 @@ async function get_no_embed_entries({ builder, server_assets, out, precompress }
 		await Promise.all([builder.compress(`${out}/client`), builder.compress(`${out}/prerendered`)]);
 	}
 
-	const cl_entries = await Promise.all(
-		client_files.map(async (filePath) => {
-			return `...client_asset(${JSON.stringify(filePath)}, undefined, ${await asset_meta(`${out}/client/${filePath}`, precompress)})`;
-		})
-	);
+	/**
+	 * @param {string} helper
+	 * @param {string} urlPath
+	 * @param {string} dir
+	 * @param {string} [filePath]
+	 */
+	const entry = async (helper, urlPath, dir, filePath) =>
+		`...${helper}(${JSON.stringify(urlPath)}, ${JSON.stringify(filePath)}, ${JSON.stringify(await asset_meta(`${out}/${dir}/${filePath ?? urlPath}`, precompress))})`;
 
-	const prerendered_pages = [...builder.prerendered.pages];
-	const prerendered_pages_files = new Set(prerendered_pages.map(([_, { file }]) => file));
+	const pages = [...builder.prerendered.pages];
+	const page_files = new Set(pages.map(([_, { file }]) => file));
 
-	const pr_pages_entries = await Promise.all(
-		prerendered_pages.map(async ([path, { file }]) => {
-			return `...prerendered_page(${JSON.stringify(path)}, ${JSON.stringify(file)}, ${await asset_meta(`${out}/prerendered/${file}`, precompress)})`;
-		})
-	);
-
-	const pr_assets_entries = await Promise.all(
-		prerendered_files
-			.filter((filePath) => !prerendered_pages_files.has(filePath))
-			.map(async (filePath) => {
-				return `...prerendered_asset(${JSON.stringify(filePath)}, undefined, ${await asset_meta(`${out}/prerendered/${filePath}`, precompress)})`;
-			})
-	);
-
-	const pr_redirects = [...builder.prerendered.redirects].map(([src, { status, location }]) => {
-		return `...prerendered_redirect(${JSON.stringify(src)}, ${status}, ${JSON.stringify(location)})`;
-	});
+	const entries = await Promise.all([
+		...client_files.map((file) => entry('client_asset', file, 'client')),
+		...pages.map(([path, { file }]) => entry('prerendered_page', path, 'prerendered', file)),
+		...prerendered_files
+			.filter((file) => !page_files.has(file))
+			.map((file) => entry('prerendered_asset', file, 'prerendered'))
+	]);
 
 	return {
 		imports: [],
-		entries: [...cl_entries, ...pr_pages_entries, ...pr_assets_entries, ...pr_redirects],
+		entries,
 		server_assets: server_assets.map((file) => {
-			return `server_asset(${JSON.stringify(file)})`;
+			return `[${JSON.stringify(file)}, server_asset(${JSON.stringify(file)})]`;
 		})
 	};
 }
@@ -344,13 +325,15 @@ async function create_routes({ builder, out, embed, precompress }) {
 		? await get_embed_entries({ builder, server_assets })
 		: await get_no_embed_entries({ builder, out, server_assets, precompress });
 
+	const redirects = [...builder.prerendered.redirects].map(([src, { status, location }]) => {
+		return `...prerendered_redirect(${JSON.stringify(src)}, ${status}, ${JSON.stringify(location)})`;
+	});
+
 	return [
 		`import { client_asset, prerendered_asset, prerendered_page, prerendered_redirect, server_asset } from './routes-util.js';`,
 		...imports,
-		`export const routes = Object.fromEntries([${entries.join(',\n')}]);`,
-		`export const server_assets = new Map([${resolved_server_assets
-			.map((file, i) => `[${JSON.stringify(server_assets[i])}, ${file}]`)
-			.join(',\n')}]);`
+		`export const routes = Object.fromEntries([${[...entries, ...redirects].join(',\n')}]);`,
+		`export const server_assets = new Map([${resolved_server_assets.join(',\n')}]);`
 	].join('\n');
 }
 

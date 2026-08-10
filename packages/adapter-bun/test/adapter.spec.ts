@@ -304,6 +304,17 @@ describe('generated routes', () => {
 		bun.file.mockImplementation(previous!);
 	});
 
+	test('warns when precompress is combined with compile', async () => {
+		const builder = create_builder();
+
+		await adapter({ precompress: true, buildOptions: { compile: true } }).adapt(builder);
+
+		expect(builder.log.warn).toHaveBeenCalledWith(
+			expect.stringContaining('precompress is ignored')
+		);
+		expect(builder.compress).not.toHaveBeenCalled();
+	});
+
 	test('does not compress by default', async () => {
 		const builder = create_builder({ client_files: ['app.js'] });
 
