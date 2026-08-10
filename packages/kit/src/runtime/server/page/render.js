@@ -2,7 +2,8 @@
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
 import { isRedirect, text } from '@sveltejs/kit';
-import * as paths from '$app/paths/internal/server';
+import * as paths from '#app/paths';
+import { relative } from '$app/paths/internal/server';
 import { hash } from '../../../utils/hash.js';
 import { serialize_data } from './serialize_data.js';
 import { s } from '../../../utils/misc.js';
@@ -114,7 +115,7 @@ export async function render_response({
 	});
 
 	// if appropriate, use relative paths for greater portability
-	if (paths.relative) {
+	if (relative) {
 		if (!state.prerendering?.fallback) {
 			// the relative path depth must reflect the URL the browser is actually at, which
 			// for a data request includes the `__data.json` suffix that was stripped during routing
