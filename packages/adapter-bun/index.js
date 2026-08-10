@@ -16,7 +16,8 @@ async function read_files_recursive(path) {
 				return { abs, rel };
 			})
 			.filter(({ rel }) => rel.split('/').every((segment) => segment !== '.vite'));
-	} catch {
+	} catch (error) {
+		if (/** @type {NodeJS.ErrnoException} */ (error)?.code !== 'ENOENT') throw error;
 		return [];
 	}
 }
