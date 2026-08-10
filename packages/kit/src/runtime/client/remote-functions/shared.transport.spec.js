@@ -5,7 +5,6 @@ import { describe, expect, test, vi, beforeEach } from 'vitest';
 // exists during a real SvelteKit build. We only need stubs for the names that
 // `shared.svelte.js` imports.
 vi.mock(new URL('../client.js', import.meta.url).pathname, () => ({
-	app: { hooks: { transport: {} }, decoders: {} },
 	query_map: new Map(),
 	query_responses: {},
 	live_query_map: new Map(),

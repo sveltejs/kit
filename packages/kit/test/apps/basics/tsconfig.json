@@ -1,10 +1,5 @@
 {
-	"compilerOptions": {
-		"allowJs": true,
-		"checkJs": true,
-		"esModuleInterop": true,
-		"resolveJsonModule": true
-	},
 	"extends": "$app/tsconfig",
-	"include": ["src", "unit-test", "test"]
+	"include": ["src", "unit-test", "test", "*.js"],
+	"exclude": ["src/service-worker.js"]
 }

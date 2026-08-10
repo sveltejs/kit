@@ -1,3 +1,4 @@
+verifyDepsBeforeRun: warn
 minimumReleaseAge: 2880
 minimumReleaseAgeExclude:
   - '@sveltejs/*'
@@ -44,16 +45,14 @@ allowBuilds:
 # wouldn't require publishing a new package version
 # see https://github.com/changesets/changesets/issues/1707
 catalog:
-  '@changesets/cli': 3.0.0-next.10
+  '@changesets/cli': 3.0.0-next.11
   # pin the version of changelog-github because we're using the experimental
   # template feature which can change in a patch version
-  '@changesets/changelog-github': 1.0.0-next.7
+  '@changesets/changelog-github': 1.0.0-next.9
   '@fontsource/libre-barcode-128-text': ^5.1.0
-  '@opentelemetry/sdk-node': ^0.220.0
+  '@opentelemetry/sdk-node': ^0.221.0
   '@opentelemetry/sdk-trace-node': ^2.8.0
-  # pin playwright because ^1.62.0 can't recognise our $app/types tsconfig
-  # extend setting and it throws an error
-  '@playwright/test': ~1.61.0
+  '@playwright/test': ^1.62.0
   '@polka/url': ^1.0.0-next.28
   '@sveltejs/eslint-config': ^10.0.3
   '@sveltejs/vite-plugin-svelte': ^7.0.0
@@ -79,12 +78,12 @@ catalog:
   typescript: ^6.0.3
   valibot: ^1.4.2
   vite: ^8.1.5
-  wrangler: ^4.103.0
+  wrangler: ^4.118.0
 
   # unit test deps that should be upgraded together
   '@vitest/browser-playwright': ^4.1.10
   vitest: ^4.1.10
-  jsdom: ^29.1.1
+  jsdom: ^30.0.0
 catalogs:
   # these show up in the ci.yml like `vite: 'beta'`, etc.
   vite-baseline:

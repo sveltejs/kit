@@ -1,5 +1,46 @@
 # @sveltejs/adapter-netlify
 
+## 7.0.0-next.7
+
+### Patch Changes
+
+- fix: import the generated manifest via `pathToFileURL`, which handles special characters in the project path ([#16649](https://github.com/sveltejs/kit/pull/16649))
+- Updated dependencies [[`c66e589`](https://github.com/sveltejs/kit/commit/c66e589d9ba2dba7577c2c4857c8989dd65c066d), [`0bee0e8`](https://github.com/sveltejs/kit/commit/0bee0e8f2bed771a92a3d6860363cda7c710839a), [`9703b94`](https://github.com/sveltejs/kit/commit/9703b94b51d71ffd5ebbce8229d35695db790f15)]:
+  - @sveltejs/kit@3.0.0-next.17
+
+## 7.0.0-next.6
+
+### Major Changes
+
+- chore: use `rolldown` for edge function bundling
+
+- breaking: write output that conforms to the stable [Netlify Frameworks API](https://docs.netlify.com/build/frameworks/frameworks-api/).
+  
+  Deploying and previewing with Netlify CLI now requires [v17.31.0](https://github.com/netlify/cli/releases/tag/v17.31.0) or later. Run `npm i -g netlify-cli@latest` to upgrade.
+- breaking: require SvelteKit 3
+
+- breaking: edge function build target is now `es2022`
+
+- breaking: require `vite@^8.0.12`, the first Vite 8 release bundling stable `rolldown` 1.0.0
+
+### Patch Changes
+
+- chore: use `node:fs` instead of deprecated `builder.rimraf` and `builder.mkdirp` ([#16286](https://github.com/sveltejs/kit/pull/16286))
+
+- fix: ensure types for `platform.context` work
+
+- fix: include `utils.js` in package.json `files`
+
+- chore: replace @netlify/functions with @netlify/types for the Context type
+
+- fix: provide distinct names for each split serverless function ([#16667](https://github.com/sveltejs/kit/pull/16667))
+
+- fix: await `init` on every request to prevent race condition
+
+- chore: bump Rolldown to `1.2.0`
+- Updated dependencies [[`bbd1e2f`](https://github.com/sveltejs/kit/commit/bbd1e2fcc9af58edb9846393b081be61df4789d5), [`e21d27b`](https://github.com/sveltejs/kit/commit/e21d27ba490c89da98dbad24fca364d0163137c4), [`6044d05`](https://github.com/sveltejs/kit/commit/6044d055031bc17deedc069dc4016565364bd4f4), [`7fb611f`](https://github.com/sveltejs/kit/commit/7fb611fb604e4d74cd889f5fe21ccd255f876382), [`9f06b3a`](https://github.com/sveltejs/kit/commit/9f06b3ac78be30d27b07fc00ea40bda493c573aa), [`8763327`](https://github.com/sveltejs/kit/commit/87633271ce40ac0839be9468598e965bde3cad51), [`7dc2379`](https://github.com/sveltejs/kit/commit/7dc23798cde97b5616049ba8d443a07e8c558bdc), [`a70c3eb`](https://github.com/sveltejs/kit/commit/a70c3eb31fe1e28f1532c84ec569ec7099da3344), [`89f49c7`](https://github.com/sveltejs/kit/commit/89f49c70b7fb4883cf704d2fb57d2d8595790ad2), [`f36b3a4`](https://github.com/sveltejs/kit/commit/f36b3a4cd307bd8c89e03fa191becc175e7b3077), [`1144a63`](https://github.com/sveltejs/kit/commit/1144a63d318c3c3255d06b374bb7a656a469fabf), [`9f06b3a`](https://github.com/sveltejs/kit/commit/9f06b3ac78be30d27b07fc00ea40bda493c573aa)]:
+  - @sveltejs/kit@3.0.0-next.15
+
 ## 7.0.0-next.5
 
 ### Patch Changes

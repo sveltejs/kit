@@ -1,7 +1,6 @@
 /** @import { AssetDependencies, ManifestData, SSRNode, ValidatedKitConfig } from 'types' */
 /** @import { Manifest, Rolldown } from 'vite' */
 import fs from 'node:fs';
-import { mkdirp } from '../../../utils/filesystem.js';
 import {
 	create_function_as_string,
 	filter_fonts,
@@ -36,8 +35,8 @@ export function build_server_nodes(
 	chunks,
 	root
 ) {
-	mkdirp(`${out}/server/nodes`);
-	mkdirp(`${out}/server/stylesheets`);
+	fs.mkdirSync(`${out}/server/nodes`, { recursive: true });
+	fs.mkdirSync(`${out}/server/stylesheets`, { recursive: true });
 
 	/**
 	 * Stylesheet names and their contents which are below the inline threshold

@@ -98,7 +98,7 @@ export function query(validate_or_fn, maybe_fn) {
 		}
 
 		const { event, state } = get_request_store();
-		const payload = stringify_remote_arg(arg, state.transport);
+		const payload = stringify_remote_arg(arg);
 
 		return create_query_resource(__, payload, event, state, () =>
 			run_remote_function(
@@ -197,7 +197,7 @@ function live(validate_or_fn, maybe_fn) {
 		}
 
 		const { event, state } = get_request_store();
-		const payload = stringify_remote_arg(arg, state.transport);
+		const payload = stringify_remote_arg(arg);
 
 		return create_live_query_resource(__, payload, event, state, () =>
 			run(event, state, () => validate(arg))
@@ -376,7 +376,7 @@ function batch(validate_or_fn, maybe_fn) {
 		}
 
 		const { event, state } = get_request_store();
-		const payload = stringify_remote_arg(arg, state.transport);
+		const payload = stringify_remote_arg(arg);
 
 		return create_query_resource(__, payload, event, state, () =>
 			// Collect all the calls to the same query in the same macrotask,

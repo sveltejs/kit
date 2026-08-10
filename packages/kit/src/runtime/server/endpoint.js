@@ -6,12 +6,11 @@ import { method_not_allowed } from './utils.js';
 
 /**
  * @param {import('@sveltejs/kit').RequestEvent} event
- * @param {import('types').RequestState} event_state
+ * @param {import('types').RequestState} state
  * @param {import('types').SSREndpoint} mod
- * @param {import('types').SSRState} state
  * @returns {Promise<Response>}
  */
-export async function render_endpoint(event, event_state, mod, state) {
+export async function render_endpoint(event, state, mod) {
 	const method = /** @type {import('types').HttpMethod} */ (event.request.method);
 
 	let handler = mod[method] || mod.fallback;
@@ -42,7 +41,7 @@ export async function render_endpoint(event, event_state, mod, state) {
 	}
 
 	try {
-		const response = await with_request_store({ event, state: event_state }, () =>
+		const response = await with_request_store({ event, state }, () =>
 			handler(/** @type {import('@sveltejs/kit').RequestEvent<Record<string, any>>} */ (event))
 		);
 

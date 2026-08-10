@@ -1,3 +1,5 @@
+import type { Foo } from '#lib';
+
 declare global {
 	namespace App {
 		interface Locals {
@@ -12,10 +14,12 @@ declare global {
 		interface PageState {
 			active?: boolean;
 			count?: number;
+			foo?: Foo;
 		}
 	}
 
 	interface Window {
+		nav_marker: boolean;
 		shallow_navigation_log: Array<{
 			hook: string;
 			params?: Record<string, unknown> | null;

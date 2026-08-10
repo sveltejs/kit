@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-netlify",
-	"version": "7.0.0-next.5",
+	"version": "7.0.0-next.7",
 	"description": "A SvelteKit adapter that creates a Netlify app",
 	"keywords": [
 		"adapter",
@@ -34,15 +34,12 @@
 		"ambient.d.ts"
 	],
 	"scripts": {
-		"dev": "rolldown -cw",
-		"build": "rolldown -c",
 		"check": "tsc",
 		"lint": "prettier --check .",
 		"format": "pnpm lint --write",
 		"test:unit": "vitest run",
-		"test:build": "pnpm build && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" build",
-		"test": "pnpm test:unit && pnpm test:build",
-		"prepublishOnly": "pnpm build"
+		"test:build": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" build",
+		"test": "pnpm test:unit && pnpm test:build"
 	},
 	"dependencies": {
 		"@iarna/toml": "^2.2.5",

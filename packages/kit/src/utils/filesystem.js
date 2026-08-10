@@ -2,28 +2,6 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { posixify } from './os.js';
 
-/** @param {string} dir */
-export function mkdirp(dir) {
-	try {
-		fs.mkdirSync(dir, { recursive: true });
-	} catch (/** @type {any} */ e) {
-		if (e.code === 'EEXIST') {
-			if (!fs.statSync(dir).isDirectory()) {
-				throw new Error(`Cannot create directory ${dir}, a file already exists at this position`, {
-					cause: e
-				});
-			}
-			return;
-		}
-		throw e;
-	}
-}
-
-/** @param {string} path */
-export function rimraf(path) {
-	fs.rmSync(path, { force: true, recursive: true });
-}
-
 /**
  * @param {string} source
  * @param {string} target
@@ -58,7 +36,7 @@ export function copy(source, target, opts = {}) {
 				go(path.join(from, file), path.join(to, file));
 			});
 		} else {
-			mkdirp(path.dirname(to));
+			fs.mkdirSync(path.dirname(to), { recursive: true });
 
 			if (opts.replace) {
 				const data = fs.readFileSync(from, 'utf-8');

@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import MagicString from 'magic-string';
-import { rimraf, walk, resolve_entry } from '../../../utils/filesystem.js';
+import { walk, resolve_entry } from '../../../utils/filesystem.js';
 import { compact } from '../../../utils/array.js';
 import { posixify } from '../../../utils/os.js';
 import { ts } from '../ts.js';
@@ -49,7 +49,7 @@ export function write_all_types(config, manifest_data, root) {
 		for (const file of walk(types_dir)) {
 			const dir = path.dirname(file);
 			if (!expected_directories.has(dir)) {
-				rimraf(path.join(types_dir, file));
+				fs.rmSync(path.join(types_dir, file), { force: true, recursive: true });
 			}
 		}
 	}
@@ -232,6 +232,7 @@ function update_types(config, routes, route, root, to_delete = new Set()) {
 			'type OptionalUnion<U extends Record<string, any>, A extends keyof U = U extends U ? keyof U : never> = U extends unknown ? { [P in Exclude<A, keyof U>]?: never } & U : never;',
 
 			// Re-export `Snapshot` from @sveltejs/kit — in future we could use this to infer <T> from the return type of `snapshot.capture`
+			'/** @deprecated Use the `snapshot` helper from `$app/navigation` instead. */',
 			'export type Snapshot<T = any> = Kit.Snapshot<T>;',
 
 			'export type ErrorProps = { error: App.Error };'
