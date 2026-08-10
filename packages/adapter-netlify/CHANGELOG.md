@@ -1,5 +1,13 @@
 # @sveltejs/adapter-netlify
 
+## 7.0.0-next.7
+
+### Patch Changes
+
+- fix: import the generated manifest via `pathToFileURL`, which handles special characters in the project path ([#16649](https://github.com/sveltejs/kit/pull/16649))
+- Updated dependencies [[`c66e589`](https://github.com/sveltejs/kit/commit/c66e589d9ba2dba7577c2c4857c8989dd65c066d), [`0bee0e8`](https://github.com/sveltejs/kit/commit/0bee0e8f2bed771a92a3d6860363cda7c710839a), [`9703b94`](https://github.com/sveltejs/kit/commit/9703b94b51d71ffd5ebbce8229d35695db790f15)]:
+  - @sveltejs/kit@3.0.0-next.17
+
 ## 7.0.0-next.6
 
 ### Major Changes
