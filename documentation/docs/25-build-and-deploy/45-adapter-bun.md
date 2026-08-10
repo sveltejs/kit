@@ -245,4 +245,6 @@ process.on('sveltekit:shutdown', async (reason) => {
 });
 ```
 
+Connections that are still open after `SHUTDOWN_TIMEOUT` seconds are closed forcefully, so idle connections such as open event streams cannot delay the shutdown indefinitely. The value must be a non-negative integer and defaults to `30`.
+
 Sending a second shutdown signal forces the process to exit with status `1`.

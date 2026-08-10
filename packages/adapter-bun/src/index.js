@@ -32,6 +32,8 @@ if (development !== undefined) {
 
 options.maxRequestBodySize = bytes_env('BODY_SIZE_LIMIT', options.maxRequestBodySize ?? 512 * 1024);
 
+const shutdown_timeout = number_env('SHUTDOWN_TIMEOUT', 30) ?? 30;
+
 options.fetch = handler;
 options.routes = routes;
 
@@ -50,11 +52,24 @@ async function graceful_shutdown(reason) {
 		console.log(`Waiting for ${server.pendingRequests} requests to finish before shutting down...`);
 		console.log('Press Ctrl+C again to force shutdown.');
 	}
-	await server.stop();
+
+	// stop() waits forever on idle connections such as open event streams, and once it
+	// is pending its promise never settles even after a force-close, so race it instead
+	/** @type {ReturnType<typeof setTimeout> | undefined} */
+	let deadline;
+	const drained = await Promise.race([
+		server.stop().then(() => true),
+		new Promise((resolve) => {
+			deadline = setTimeout(() => resolve(false), shutdown_timeout * 1000);
+		})
+	]);
+	clearTimeout(deadline);
+
+	if (!drained) void server.stop(true);
 
 	// @ts-expect-error custom events cannot be typed
 	process.emit('sveltekit:shutdown', reason);
 }
 
-process.on('SIGTERM', () => void graceful_shutdown('SIGTERM'));
-process.on('SIGINT', () => void graceful_shutdown('SIGINT'));
+process.on('SIGTERM', () => graceful_shutdown('SIGTERM'));
+process.on('SIGINT', () => graceful_shutdown('SIGINT'));

@@ -104,6 +104,26 @@ test.each(['SIGINT', 'SIGTERM'] as const)(
 	}
 );
 
+test('force-closes lingering connections after SHUTDOWN_TIMEOUT', async () => {
+	vi.useFakeTimers();
+	try {
+		const loaded = await load_start({
+			env: { SHUTDOWN_TIMEOUT: '5' },
+			stop: () => new Promise<void>(() => {})
+		});
+
+		const shutdown = loaded.listeners.get('SIGTERM')?.();
+		await vi.advanceTimersByTimeAsync(5000);
+		await shutdown;
+
+		expect(loaded.stop).toHaveBeenCalledTimes(2);
+		expect(loaded.stop).toHaveBeenLastCalledWith(true);
+		expect(loaded.emit).toHaveBeenCalledWith('sveltekit:shutdown', 'SIGTERM');
+	} finally {
+		vi.useRealTimers();
+	}
+});
+
 test('a second shutdown signal forces the process to exit', async () => {
 	let finish_stop: (() => void) | undefined;
 	const loaded = await load_start({

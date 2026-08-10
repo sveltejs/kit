@@ -9,6 +9,7 @@ const expected = new Set([
 	'IPV6_ONLY',
 	'IDLE_TIMEOUT',
 	'BODY_SIZE_LIMIT',
+	'SHUTDOWN_TIMEOUT',
 	'DEVELOPMENT',
 	'XFF_DEPTH',
 	'ADDRESS_HEADER',
