@@ -149,7 +149,7 @@ importers:
     devDependencies:
       '@playwright/test':
         specifier: 'catalog:'
-        version: 1.61.1
+        version: 1.62.1
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../kit
@@ -161,13 +161,13 @@ importers:
         version: 6.0.3
       vitest:
         specifier: 'catalog:'
-        version: 4.1.10(@opentelemetry/api@1.9.0)(@types/node@22.19.19)(@vitest/browser-playwright@4.1.10)(jsdom@29.1.1)(vite@8.1.5(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0))
+        version: 4.1.10(@opentelemetry/api@1.9.0)(@types/node@22.19.19)(@vitest/browser-playwright@4.1.10)(jsdom@30.0.1)(vite@8.1.5(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0))
 
   packages/adapter-bun/test/apps/basic:
     devDependencies:
       '@playwright/test':
         specifier: 'catalog:'
-        version: 1.61.1
+        version: 1.62.1
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../../../kit
