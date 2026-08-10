@@ -2469,5 +2469,5 @@ async function normalise_build(name, build, build_output_map) {
 
 	await bundling.promise;
 
-	return build_output_map.get(name);
+	return /** @type {Rolldown.RolldownOutput['output']} */ (build_output_map.get(name));
 }
