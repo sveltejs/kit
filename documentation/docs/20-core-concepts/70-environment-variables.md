@@ -19,7 +19,7 @@ After following the setup below, they can be imported via the following modules:
 > [!LEGACY]
 > The `$env/*` modules, along with `$app/environment` were deprecated in SvelteKit 3 (and will be removed in SvelteKit 4) in favour of explicit environment variables that were added in SvelteKit 2.62 as an experimental option.
 
-### Setup
+## Setup
 
 Add a `src/env.ts` (or `src/env.js`) file that exports a `variables` object:
 
@@ -36,7 +36,7 @@ Each value in the object passed to [`defineEnvVars`](@sveltejs-kit-env#defineEnv
 
 > [!NOTE] `defineEnvVars` returns its argument unaltered — it exists purely to help with type safety.
 
-### Private variables
+## Private variables
 
 By default, all variables are considered private. For example, you don't want to reveal your `API_KEY`:
 
@@ -59,7 +59,7 @@ import { API_KEY } from '$app/env/private';
 
 The `$app/env/private` module cannot be imported into code that runs in the browser, so that you can't accidentally reveal your secrets in a JavaScript bundle.
 
-### Public variables
+## Public variables
 
 Some variables are perfectly safe — necessary, even — to expose to the browser. For these, we can specify `public: true`:
 
@@ -104,7 +104,7 @@ export const variables = defineEnvVars({
 </html>
 ```
 
-### Validation
+## Validation
 
 You can specify a [Standard Schema](https://standardschema.dev/) validator such as [Zod](https://zod.dev/) or [Valibot](https://valibot.dev/) to check that an environment variable value is correct:
 
@@ -156,7 +156,7 @@ export const variables = defineEnvVars({
 
 You can use validators to make values optional, or transform them (such as turning a string into a boolean, or parsing JSON) — see your validation library's documentation to learn how.
 
-### Static variables
+## Static variables
 
 By default, variables are dynamic. If a variable is configured with `static: true`, it will be inlined into your application code, enabling optimisations like dead-code elimination:
 
@@ -200,7 +200,7 @@ SHOW_DEBUG_OVERLAY=true npm run build
 
 ...then the component will be included and shown.
 
-### Documenting variables
+## Documenting variables
 
 You can document the purpose of an environment variable by adding a `description`:
 
