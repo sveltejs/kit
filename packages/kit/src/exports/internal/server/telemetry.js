@@ -1,7 +1,7 @@
 /** @import { Tracer, SpanStatusCode, PropagationAPI, ContextAPI } from '@opentelemetry/api' */
 /** @import { RecordSpan } from 'types' */
 import { HttpError, Redirect } from '../shared.js';
-import { noop_span } from '../../../runtime/telemetry/noop.js';
+import { noop_span } from '../../../telemetry.js';
 
 // Import this module by its bare specifier so bundled and external code share its state.
 
