@@ -1,5 +1,6 @@
 /** @import { Component } from 'svelte' */
-/** @import { ActionResult, RequestEvent, SSRManifest } from '@sveltejs/kit' */
+/** @import { RequestEvent, SSRManifest } from '@sveltejs/kit' */
+/** @import { ActionResult } from '$app/forms' */
 /** @import { PageNodeIndexes, RequestState, RequiredResolveOptions, ServerDataNode, SSRNode, SSROptions } from 'types' */
 import { text } from '@sveltejs/kit';
 import { Redirect } from '@sveltejs/kit/internal';

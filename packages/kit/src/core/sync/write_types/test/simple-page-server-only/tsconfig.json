@@ -3,6 +3,7 @@
 	"compilerOptions": {
 		"paths": {
 			"@sveltejs/kit": ["../../../../../exports/public"],
+			"$app/forms": ["../../../../../runtime/app/forms/types"],
 			"types": ["../../../../../types/internal"]
 		}
 	}
