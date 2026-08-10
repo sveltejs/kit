@@ -118,6 +118,14 @@ test.each([
 	}
 );
 
+test('redirects to non-ASCII canonical URLs use a percent-encoded location', async () => {
+	const { routes } = await load_routes();
+	const entries = routes.prerendered_page('/café/', 'cafe.html');
+
+	const response = (entries[1][1] as any).GET(new Request('http://localhost/caf%C3%A9'));
+	expect(response.headers.get('location')).toBe('/caf%C3%A9/');
+});
+
 test('a prerendered root page has no duplicate alternate route', async () => {
 	const { routes } = await load_routes();
 

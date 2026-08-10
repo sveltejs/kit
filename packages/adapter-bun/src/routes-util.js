@@ -125,13 +125,15 @@ export function prerendered_asset(urlPath, filePath = urlPath) {
  * @returns {Array<[string, RouteHandler]>}
  */
 export function prerendered_page(urlPath, filePath) {
+	const canonical = encode_pathname(urlPath);
+
 	/**
 	 * @param {import('bun').BunRequest} req
 	 * @returns {Response}
 	 */
 	function handle_redirect(req) {
 		const url = new URL(req.url);
-		const location = `${urlPath}${url.search}`;
+		const location = `${canonical}${url.search}`;
 		return new Response(null, { status: 308, headers: { location } });
 	}
 
