@@ -8,7 +8,7 @@ declare module 'MANIFEST' {
 
 declare module 'ROUTES' {
 	export const server_assets: Map<string, import('bun').BunFile>;
-	export const routes: Serve.Routes<never, string>;
+	export const routes: import('bun').Serve.Routes<never, string>;
 }
 
 declare module 'SERVER' {
