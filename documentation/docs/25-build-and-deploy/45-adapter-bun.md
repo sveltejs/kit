@@ -195,7 +195,7 @@ PORT_HEADER=x-forwarded-port \
 bun ./build
 ```
 
-The protocol header must contain only a scheme such as `https`, without a colon. The port header must contain a number. Invalid values produce a `400 Bad Request` response.
+The protocol header must contain `http` or `https`, without a colon. The port header must contain a number. Invalid values produce a `400 Bad Request` response.
 
 > [!CAUTION] Only trust forwarded headers when requests can reach the server through a proxy you control. A direct client can spoof these headers.
 

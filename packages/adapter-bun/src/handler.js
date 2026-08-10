@@ -66,9 +66,9 @@ function get_origin(request, url) {
 	const protocol = decodeURIComponent(
 		(protocol_header ? request.headers.get(protocol_header) : null) ?? url.protocol.slice(0, -1)
 	);
-	if (protocol.includes(':')) {
+	if (!/^https?$/i.test(protocol)) {
 		throw new Error(
-			`The ${protocol_header} header specified ${protocol} which is an invalid because it includes \`:\`. It should only contain the protocol scheme (e.g. \`https\`)`
+			`The ${protocol_header} header specified ${protocol} which is an invalid protocol scheme. It should only contain the protocol scheme (e.g. \`https\`)`
 		);
 	}
 

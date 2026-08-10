@@ -69,7 +69,8 @@ test('derives the public origin from configured proxy headers', async () => {
 });
 
 test.each([
-	['APP_PROTOCOL_HEADER', 'x-proto', { 'x-proto': 'https%3A' }, 'includes `:`'],
+	['APP_PROTOCOL_HEADER', 'x-proto', { 'x-proto': 'https%3A' }, 'invalid protocol scheme'],
+	['APP_PROTOCOL_HEADER', 'x-proto', { 'x-proto': 'foo' }, 'invalid protocol scheme'],
 	['APP_PORT_HEADER', 'x-port', { 'x-port': 'not-a-port' }, 'invalid port']
 ])('returns 400 for an invalid origin from %s', async (name, value, headers, message) => {
 	set_env(name, value);
