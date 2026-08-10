@@ -1,5 +1,7 @@
 import { afterEach, expect, test, vi } from 'vitest';
 
+const meta = { hash: 'abc' };
+
 afterEach(() => {
 	vi.resetModules();
 	vi.doUnmock('MANIFEST');
@@ -9,24 +11,25 @@ afterEach(() => {
 test('client assets use the configured base and URL-encode path segments', async () => {
 	const { routes, file } = await load_routes({ base: '/base' });
 
-	const entries = routes.client_asset('folder/encoded name#1.txt');
+	const entries = routes.client_asset('folder/encoded name#1.txt', undefined, meta);
 
 	expect(entries).toHaveLength(1);
 	expect(entries[0][0]).toBe('/base/folder/encoded%20name%231.txt');
 	expect(file).toHaveBeenCalledWith('/app/build/client/folder/encoded name#1.txt');
 	expect(entries[0][1]).toHaveProperty('GET');
-	expect((entries[0][1] as any).GET.headers.get('content-type')).toBe('text/plain;charset=utf-8');
+	const response = (entries[0][1] as any).GET(new Request('http://localhost/'));
+	expect(response.headers.get('content-type')).toBe('text/plain;charset=utf-8');
 });
 
 test('client index files are also available at their directory URL', async () => {
 	const { routes } = await load_routes({ base: '/base' });
 
-	expect(routes.client_asset('index.html').map(([path]) => path)).toEqual([
+	expect(routes.client_asset('index.html', undefined, meta).map(([path]) => path)).toEqual([
 		'/base/index.html',
 		'/base/',
 		'/base'
 	]);
-	expect(routes.client_asset('docs/index.html').map(([path]) => path)).toEqual([
+	expect(routes.client_asset('docs/index.html', undefined, meta).map(([path]) => path)).toEqual([
 		'/base/docs/index.html',
 		'/base/docs/',
 		'/base/docs'
@@ -36,7 +39,7 @@ test('client index files are also available at their directory URL', async () =>
 test('other client HTML files are also available without their extension', async () => {
 	const { routes } = await load_routes({ base: '/base' });
 
-	expect(routes.client_asset('page.html').map(([path]) => path)).toEqual([
+	expect(routes.client_asset('page.html', undefined, meta).map(([path]) => path)).toEqual([
 		'/base/page.html',
 		'/base/page'
 	]);
@@ -45,7 +48,7 @@ test('other client HTML files are also available without their extension', async
 test('sub-delims stay raw in route paths with a fully-encoded alias', async () => {
 	const { routes } = await load_routes({ base: '/base' });
 
-	expect(routes.client_asset('a&b.txt').map(([path]) => path)).toEqual([
+	expect(routes.client_asset('a&b.txt', undefined, meta).map(([path]) => path)).toEqual([
 		'/base/a&b.txt',
 		'/base/a%26b.txt'
 	]);
@@ -54,24 +57,62 @@ test('sub-delims stay raw in route paths with a fully-encoded alias', async () =
 test('segments starting with a colon are escaped to avoid Bun route parameters', async () => {
 	const { routes } = await load_routes({ base: '/base' });
 
-	expect(routes.client_asset(':tag.txt').map(([path]) => path)).toEqual(['/base/%3Atag.txt']);
+	expect(routes.client_asset(':tag.txt', undefined, meta).map(([path]) => path)).toEqual([
+		'/base/%3Atag.txt'
+	]);
 });
 
 test('immutable SvelteKit assets receive a long-lived cache policy', async () => {
 	const { routes } = await load_routes({ appDir: '_app' });
 
-	const immutable = (routes.client_asset('_app/immutable/chunk.js')[0][1] as any).GET;
-	const mutable = (routes.client_asset('favicon.ico')[0][1] as any).GET;
+	const request = new Request('http://localhost/');
+	const immutable = (
+		routes.client_asset('_app/immutable/chunk.js', undefined, meta)[0][1] as any
+	).GET(request);
+	const mutable = (routes.client_asset('favicon.ico', undefined, meta)[0][1] as any).GET(request);
 
 	expect(immutable.headers.get('cache-control')).toBe('public,max-age=31536000,immutable');
 	expect(mutable.headers.has('cache-control')).toBe(false);
 });
 
+test('static routes revalidate against the build-time hash', async () => {
+	const { routes } = await load_routes();
+
+	const route = routes.client_asset('data.json', undefined, meta)[0][1] as any;
+
+	const fresh = route.GET(new Request('http://localhost/data.json'));
+	expect(fresh.status).toBe(200);
+	expect(fresh.headers.get('etag')).toBe('"abc"');
+
+	const revalidated = route.GET(
+		new Request('http://localhost/data.json', { headers: { 'if-none-match': '"abc"' } })
+	);
+	expect(revalidated.status).toBe(304);
+	expect(revalidated.headers.get('etag')).toBe('"abc"');
+
+	const weak = route.GET(
+		new Request('http://localhost/data.json', { headers: { 'if-none-match': 'W/"abc", "other"' } })
+	);
+	expect(weak.status).toBe(304);
+
+	const stale = route.GET(
+		new Request('http://localhost/data.json', { headers: { 'if-none-match': '"old"' } })
+	);
+	expect(stale.status).toBe(200);
+});
+
+test('static routes answer HEAD with the same handler', async () => {
+	const { routes } = await load_routes();
+
+	const route = routes.client_asset('data.json', undefined, meta)[0][1] as any;
+	expect(route.HEAD).toBe(route.GET);
+});
+
 test('embedded routes use the imported asset instead of a filesystem path', async () => {
 	const { routes, file } = await load_routes({ embed: true });
 
-	routes.client_asset('asset.txt', '/embedded/client.txt');
-	routes.prerendered_asset('asset.txt', '/embedded/prerendered.txt');
+	routes.client_asset('asset.txt', '/embedded/client.txt', meta);
+	routes.prerendered_asset('asset.txt', '/embedded/prerendered.txt', meta);
 	const server_file = routes.server_asset('asset.txt', '/embedded/server.txt');
 
 	expect(file).toHaveBeenNthCalledWith(1, '/embedded/client.txt');
@@ -93,10 +134,11 @@ test('prerendered assets use the base path and preserve their content type', asy
 	const { routes, file } = await load_routes({ base: '/base' });
 	file.mockImplementationOnce((path) => ({ path, type: 'image/x-icon' }));
 
-	const [[path, handler]] = routes.prerendered_asset('icon.ico');
+	const [[path, handler]] = routes.prerendered_asset('icon.ico', undefined, meta);
 
 	expect(path).toBe('/base/icon.ico');
-	expect((handler as any).GET.headers.get('content-type')).toBe('image/x-icon');
+	const response = (handler as any).GET(new Request('http://localhost/base/icon.ico'));
+	expect(response.headers.get('content-type')).toBe('image/x-icon');
 });
 
 test.each([
@@ -106,7 +148,7 @@ test.each([
 	'prerendered page %s redirects its alternate form %s to the canonical URL',
 	async (canonical, alternate, location) => {
 		const { routes } = await load_routes();
-		const entries = routes.prerendered_page(canonical, 'page.html');
+		const entries = routes.prerendered_page(canonical, 'page.html', meta);
 
 		expect(entries[0][0]).toBe(canonical);
 		expect(entries[1][0]).toBe(alternate);
@@ -120,7 +162,7 @@ test.each([
 
 test('redirects to non-ASCII canonical URLs use a percent-encoded location', async () => {
 	const { routes } = await load_routes();
-	const entries = routes.prerendered_page('/café/', 'cafe.html');
+	const entries = routes.prerendered_page('/café/', 'cafe.html', meta);
 
 	const response = (entries[1][1] as any).GET(new Request('http://localhost/caf%C3%A9'));
 	expect(response.headers.get('location')).toBe('/caf%C3%A9/');
@@ -129,7 +171,7 @@ test('redirects to non-ASCII canonical URLs use a percent-encoded location', asy
 test('a prerendered root page has no duplicate alternate route', async () => {
 	const { routes } = await load_routes();
 
-	expect(routes.prerendered_page('/', 'index.html')).toHaveLength(1);
+	expect(routes.prerendered_page('/', 'index.html', meta)).toHaveLength(1);
 });
 
 test('prerendered redirects retain their status and location', async () => {

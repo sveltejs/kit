@@ -5,6 +5,7 @@ const dir = dirname(Bun.main);
 
 /**
  * @typedef {import('bun').Serve.Routes<never, string>[string]} RouteHandler
+ * @typedef {{ hash: string }} AssetMeta
  */
 
 // RFC 3986 pchar minus percent-escapes: characters user agents send raw in a path
@@ -67,32 +68,72 @@ function to_directory_paths(urlPath) {
 }
 
 /**
+ * @param {Request} request
+ * @param {string} etag
+ * @returns {boolean}
+ */
+function if_none_match(request, etag) {
+	const header = request.headers.get('if-none-match');
+	if (header === null) return false;
+	return header.split(',').some((value) => {
+		const tag = value.trim().replace(/^W\//, '');
+		return tag === '*' || tag === etag;
+	});
+}
+
+/**
+ * Serves one file with its build-time validator. Registered for GET and HEAD
+ * because Bun does not route HEAD requests to a GET handler.
+ * @param {string} path
+ * @param {Record<string, string>} headers
+ * @param {AssetMeta} meta
+ * @returns {RouteHandler}
+ */
+function file_route(path, headers, meta) {
+	const etag = `"${meta.hash}"`;
+
+	/** @param {import('bun').BunRequest} request */
+	const handler = (request) => {
+		const response_headers = { ...headers, etag };
+		if (if_none_match(request, etag)) {
+			return new Response(null, { status: 304, headers: response_headers });
+		}
+		return new Response(Bun.file(path), { headers: response_headers });
+	};
+
+	return { GET: handler, HEAD: handler };
+}
+
+/**
  * @param {string} urlPath
- * @param {string} [filePath]
+ * @param {string | undefined} filePath
+ * @param {AssetMeta} meta
  * @returns {Array<[string, RouteHandler]>}
  */
-export function client_asset(urlPath, filePath = urlPath) {
-	const file = Bun.file(embed ? filePath : resolve(dir, 'client', filePath));
+export function client_asset(urlPath, filePath = urlPath, meta) {
+	const path = embed ? filePath : resolve(dir, 'client', filePath);
 
 	/** @type {Record<string, string>} */
-	const headers = { 'content-type': file.type };
+	const headers = { 'content-type': Bun.file(path).type };
 
 	if (urlPath.startsWith(`${manifest.appDir}/immutable/`)) {
 		headers['cache-control'] = 'public,max-age=31536000,immutable';
 	}
 
+	const route = file_route(path, headers, meta);
+
 	/** @type {Array<[string, RouteHandler]>} */
-	const entries = to_paths(urlPath).map((path) => [path, { GET: new Response(file, { headers }) }]);
+	const entries = to_paths(urlPath).map((path) => [path, route]);
 
 	if (urlPath.endsWith('/index.html') || urlPath === 'index.html') {
 		const directory = urlPath.slice(0, -'index.html'.length);
 		for (const path of to_directory_paths(directory)) {
-			entries.push([path, { GET: new Response(file, { headers }) }]);
+			entries.push([path, route]);
 		}
 	} else if (urlPath.endsWith('.html')) {
 		// sirv also serves `page.html` at `/page`
 		for (const path of to_paths(urlPath.slice(0, -'.html'.length))) {
-			entries.push([path, { GET: new Response(file, { headers }) }]);
+			entries.push([path, route]);
 		}
 	}
 
@@ -110,21 +151,23 @@ export function server_asset(urlPath, filePath = urlPath) {
 
 /**
  * @param {string} urlPath
- * @param {string} [filePath]
+ * @param {string | undefined} filePath
+ * @param {AssetMeta} meta
  * @returns {Array<[string, RouteHandler]>}
  */
-export function prerendered_asset(urlPath, filePath = urlPath) {
-	const file = Bun.file(embed ? filePath : resolve(dir, 'prerendered', filePath));
-	const headers = { 'content-type': file.type };
-	return to_paths(urlPath).map((path) => [path, { GET: new Response(file, { headers }) }]);
+export function prerendered_asset(urlPath, filePath = urlPath, meta) {
+	const path = embed ? filePath : resolve(dir, 'prerendered', filePath);
+	const route = file_route(path, { 'content-type': Bun.file(path).type }, meta);
+	return to_paths(urlPath).map((path) => [path, route]);
 }
 
 /**
  * @param {string} urlPath
  * @param {string} filePath
+ * @param {AssetMeta} meta
  * @returns {Array<[string, RouteHandler]>}
  */
-export function prerendered_page(urlPath, filePath) {
+export function prerendered_page(urlPath, filePath, meta) {
 	const canonical = encode_pathname(urlPath);
 
 	/**
@@ -137,16 +180,13 @@ export function prerendered_page(urlPath, filePath) {
 		return new Response(null, { status: 308, headers: { location } });
 	}
 
-	const file = Bun.file(embed ? filePath : resolve(dir, 'prerendered', filePath));
-	const headers = { 'content-type': file.type };
+	const path = embed ? filePath : resolve(dir, 'prerendered', filePath);
+	const route = file_route(path, { 'content-type': Bun.file(path).type }, meta);
 
 	const inverted = urlPath.endsWith('/') ? urlPath.slice(0, -1) : `${urlPath}/`;
 	// path already contains base, no need to add it here
 	/** @type {Array<[string, RouteHandler]>} */
-	const entries = route_paths(urlPath).map((path) => [
-		path,
-		{ GET: new Response(file, { headers }) }
-	]);
+	const entries = route_paths(urlPath).map((path) => [path, route]);
 
 	if (inverted) {
 		for (const path of route_paths(inverted)) {

@@ -17,11 +17,15 @@ vi.mock('node:fs/promises', async (import_original) => {
 const bun = vi.hoisted(() => ({
 	entrypoint: '// generated server entrypoint',
 	build: vi.fn(async (_options: any): Promise<any> => ({ success: true, logs: [], outputs: [] })),
-	file: vi.fn((_path: string) => ({ text: async () => '// generated server entrypoint' }))
+	file: vi.fn((_path: string) => ({
+		text: async () => '// generated server entrypoint',
+		arrayBuffer: async () => new ArrayBuffer(0)
+	})),
+	hash: vi.fn(() => 0xabcn)
 }));
 
 beforeEach(() => {
-	vi.stubGlobal('Bun', { build: bun.build, file: bun.file });
+	vi.stubGlobal('Bun', { build: bun.build, file: bun.file, hash: bun.hash });
 	vi.mocked(readdir).mockResolvedValue([]);
 });
 
@@ -205,10 +209,12 @@ describe('generated routes', () => {
 
 		expect(builder.findServerAssets).toHaveBeenCalledWith([dynamic]);
 		const source = bun.build.mock.calls[0][0].files[routes_file];
-		expect(source).toContain('...client_asset("data.json")');
-		expect(source).toContain('...client_asset("_app/immutable/read.txt")');
-		expect(source).toContain('...prerendered_page("/page/", "page/index.html")');
-		expect(source).toContain('prerendered_asset("icon.png")');
+		expect(source).toContain('...client_asset("data.json", undefined, {"hash":"abc"})');
+		expect(source).toContain(
+			'...client_asset("_app/immutable/read.txt", undefined, {"hash":"abc"})'
+		);
+		expect(source).toContain('...prerendered_page("/page/", "page/index.html", {"hash":"abc"})');
+		expect(source).toContain('prerendered_asset("icon.png", undefined, {"hash":"abc"})');
 		expect(source).toContain('prerendered_redirect("/old", 301, "/new")');
 		expect(source).toContain(
 			'["_app/immutable/read.txt", server_asset("_app/immutable/read.txt")]'
@@ -225,7 +231,9 @@ describe('generated routes', () => {
 		);
 
 		const source = bun.build.mock.calls[0][0].files[routes_file];
-		expect(source).toContain('...prerendered_page("/base/page/", "page/index.html")');
+		expect(source).toContain(
+			'...prerendered_page("/base/page/", "page/index.html", {"hash":"abc"})'
+		);
 		expect(source).not.toContain('/base/base/');
 	});
 
@@ -246,12 +254,12 @@ describe('generated routes', () => {
 
 		const source = bun.build.mock.calls[0][0].files[routes_file];
 		expect(source).toContain("with { type: 'file' }");
-		expect(source).toContain('...client_asset("data.json", asset_0)');
-		expect(source).toContain('...client_asset(".well-known/asset.txt", asset_1)');
-		expect(source).toContain('...prerendered_page("/page/", asset_3)');
-		expect(source).toContain('prerendered_asset("favicon.ico", asset_4)');
-		expect(source).toContain('prerendered_asset("dependency.json", asset_5)');
-		expect(source).toContain('prerendered_asset("page/__data.json", asset_6)');
+		expect(source).toContain('...client_asset("data.json", asset_0, {"hash":"abc"})');
+		expect(source).toContain('...client_asset(".well-known/asset.txt", asset_1, {"hash":"abc"})');
+		expect(source).toContain('...prerendered_page("/page/", asset_3, {"hash":"abc"})');
+		expect(source).toContain('prerendered_asset("favicon.ico", asset_4, {"hash":"abc"})');
+		expect(source).toContain('prerendered_asset("dependency.json", asset_5, {"hash":"abc"})');
+		expect(source).toContain('prerendered_asset("page/__data.json", asset_6, {"hash":"abc"})');
 		expect(source).toContain('["_app/read.txt", server_asset("_app/read.txt", asset_2)]');
 		expect(source).not.toContain('.vite/manifest.json');
 	});
@@ -275,8 +283,10 @@ describe('generated routes', () => {
 
 		const source = bun.build.mock.calls[0][0].files[routes_file];
 		expect(source).not.toContain('.env');
-		expect(source).toContain('...client_asset(".well-known/security.txt")');
-		expect(source).toContain('...client_asset("ok.txt")');
+		expect(source).toContain(
+			'...client_asset(".well-known/security.txt", undefined, {"hash":"abc"})'
+		);
+		expect(source).toContain('...client_asset("ok.txt", undefined, {"hash":"abc"})');
 	});
 
 	test('excludes dotfiles from embedded assets', async () => {
@@ -286,7 +296,7 @@ describe('generated routes', () => {
 
 		const source = bun.build.mock.calls[0][0].files[routes_file];
 		expect(source).not.toContain('.secret');
-		expect(source).toContain('...client_asset("public.txt", asset_0)');
+		expect(source).toContain('...client_asset("public.txt", asset_0, {"hash":"abc"})');
 	});
 
 	test('rejects wildcard characters in prerendered redirect sources', async () => {
