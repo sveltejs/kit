@@ -187,7 +187,7 @@ function update_types(config, routes, route, root, to_delete = new Set()) {
 	const outdir = path.join(config.kit.outDir, 'types', routes_dir, route.id);
 
 	// now generate new types
-	const imports = ["import type * as Kit from '@sveltejs/kit';"];
+	const imports = ["import type * as Kit from '@sveltejs/kit';", "import { MatcherParam } from '@sveltejs/kit/params';"];
 
 	/** @type {string[]} */
 	const declarations = [];
@@ -613,7 +613,7 @@ function generate_params_type(params, outdir, config) {
 			(param) =>
 				`${/^\w+$/.test(param.name) ? param.name : `'${param.name}'`}${param.optional ? '?' : ''}: ${
 					param.matcher
-						? `Kit.MatcherParam<(typeof import('${params_import}').params)[${JSON.stringify(param.matcher)}]>`
+						? `MatcherParam<(typeof import('${params_import}').params)[${JSON.stringify(param.matcher)}]>`
 						: 'string'
 				}${param.optional ? ' | undefined' : ''}`
 		)
