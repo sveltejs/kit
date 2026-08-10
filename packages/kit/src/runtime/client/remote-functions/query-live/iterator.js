@@ -1,5 +1,5 @@
 /** @import { RemoteFunctionResponse } from 'types' */
-import { app_dir, base } from '$app/paths/internal/client';
+import { app_dir, base } from '#app/paths';
 import { app } from '../../client.js';
 import { notify_version } from '../../state.svelte.js';
 import { handle_side_channel_response } from '../shared.svelte.js';

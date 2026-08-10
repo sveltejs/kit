@@ -97,6 +97,7 @@
 			"default": "./src/runtime/app/internal/transport.js"
 		},
 		"#app/paths": {
+			"types": "./src/runtime/app/paths/internal.d.ts",
 			"workerd": "./src/runtime/app/paths/server.js",
 			"browser": "./src/runtime/app/paths/client.js",
 			"default": "./src/runtime/app/paths/server.js"

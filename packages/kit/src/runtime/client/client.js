@@ -23,7 +23,7 @@ import {
 	scroll_state,
 	load_css
 } from './utils.js';
-import { base, app_dir, set_match_implementation } from '$app/paths/internal/client';
+import { base, set_match_implementation } from '$app/paths/internal/client';
 import * as devalue from 'devalue';
 import {
 	HISTORY_INFO_KEY,
@@ -56,7 +56,7 @@ import {
 	add_resolution_suffix,
 	route_id_resolution_pathname
 } from '../pathname.js';
-import { noop_span } from '../telemetry/noop.js';
+import { noop_span } from '../../telemetry.js';
 import { read_ndjson } from './ndjson.js';
 import Root from '../components/root.svelte';
 import { Props, RenderNode } from '../props.svelte.js';
@@ -870,7 +870,7 @@ async function load_route_by_id(id) {
 	try {
 		module = await import(
 			/* @vite-ignore */
-			base + route_id_resolution_pathname(app_dir, id)
+			base + route_id_resolution_pathname(id)
 		);
 	} catch {
 		// if there's no module at that path the response is a 404 (or, on a static

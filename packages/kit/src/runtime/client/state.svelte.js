@@ -1,7 +1,7 @@
 /** @import { Navigation } from '$app/navigation' */
 /** @import { Page } from '$app/state' */
 import { version } from '$app/env';
-import { assets } from '$app/paths/internal/client';
+import { assets } from '#app/paths';
 import { BROWSER, DEV } from 'esm-env';
 
 /** @type {Page} */

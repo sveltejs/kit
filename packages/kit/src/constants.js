@@ -13,3 +13,6 @@ export const MUTATIVE_METHODS = ['POST', 'PUT', 'PATCH', 'DELETE'];
 export const PAGE_METHODS = ['GET', 'POST', 'HEAD'];
 
 export const SRC_ROOT = import.meta.dirname;
+
+// eslint-disable-next-line n/prefer-global/process
+export const IN_WEBCONTAINER = !!globalThis.process?.versions?.webcontainer;

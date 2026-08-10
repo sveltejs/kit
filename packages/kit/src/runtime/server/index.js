@@ -1,5 +1,5 @@
 import { noop } from '../../utils/functions.js';
-import { IN_WEBCONTAINER } from './constants.js';
+import { IN_WEBCONTAINER } from '../../constants.js';
 import { respond } from './respond.js';
 import { create_request_state } from './state.js';
 import { options, get_hooks } from '__SERVER__/internal.js';

@@ -1,6 +1,6 @@
 import { test, expect, vi } from 'vitest';
 import { otel, record_span } from './telemetry.js';
-import { noop_span } from '../../../runtime/telemetry/noop.js';
+import { noop_span } from '../../../telemetry.js';
 
 test('record_span uses the noop span when tracing is not initialized', async () => {
 	expect(otel).toBeNull();
