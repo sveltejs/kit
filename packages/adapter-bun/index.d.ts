@@ -43,7 +43,7 @@ interface AdapterOptions {
 	 * output directory, top-level target, and module format are reserved. Set `compile` to
 	 * create an executable; if it does not specify an outfile, the executable is written to
 	 * `<out>/server`.
-	 * @default false
+	 * @default {}
 	 */
 	buildOptions?: Pick<
 		import('bun').BuildConfig,
