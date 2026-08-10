@@ -124,11 +124,11 @@ export default function (opts = {}) {
 			});
 			if (!result.success) {
 				for (const log of result.logs) {
-					if (log.level === 'error') console.error(log);
-					else if (log.level === 'warning') console.warn(log);
-					else if (log.level === 'info') console.info(log);
-					else if (log.level === 'debug' || log.level === 'verbose') console.debug(log);
-					else console.log(log);
+					// BuildMessage properties are not enumerable, so console.error(log) prints `{}`
+					const message = log.message ?? String(log);
+					if (log.level === 'error') builder.log.error(message);
+					else if (log.level === 'warning') builder.log.warn(message);
+					else builder.log.info(message);
 				}
 				throw new AggregateError(result.logs);
 			}
