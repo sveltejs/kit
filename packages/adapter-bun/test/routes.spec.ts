@@ -23,11 +23,22 @@ test('client index files are also available at their directory URL', async () =>
 
 	expect(routes.client_asset('index.html').map(([path]) => path)).toEqual([
 		'/base/index.html',
-		'/base/'
+		'/base/',
+		'/base'
 	]);
 	expect(routes.client_asset('docs/index.html').map(([path]) => path)).toEqual([
 		'/base/docs/index.html',
-		'/base/docs/'
+		'/base/docs/',
+		'/base/docs'
+	]);
+});
+
+test('other client HTML files are also available without their extension', async () => {
+	const { routes } = await load_routes({ base: '/base' });
+
+	expect(routes.client_asset('page.html').map(([path]) => path)).toEqual([
+		'/base/page.html',
+		'/base/page'
 	]);
 });
 

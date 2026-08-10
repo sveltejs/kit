@@ -55,7 +55,15 @@ function to_paths(urlPath) {
  * @returns {string[]}
  */
 function to_directory_paths(urlPath) {
-	return route_paths(`${posix.join(base, urlPath).replace(/\/$/, '')}/`);
+	const directory = `${posix.join(base, urlPath).replace(/\/$/, '')}/`;
+	const paths = route_paths(directory);
+
+	// `/dir` serves `dir/index.html` like sirv does in adapter-node
+	if (directory !== '/') {
+		paths.push(...route_paths(directory.slice(0, -1)));
+	}
+
+	return paths;
 }
 
 /**
@@ -79,6 +87,11 @@ export function client_asset(urlPath, filePath = urlPath) {
 	if (urlPath.endsWith('/index.html') || urlPath === 'index.html') {
 		const directory = urlPath.slice(0, -'index.html'.length);
 		for (const path of to_directory_paths(directory)) {
+			entries.push([path, { GET: new Response(file, { headers }) }]);
+		}
+	} else if (urlPath.endsWith('.html')) {
+		// sirv also serves `page.html` at `/page`
+		for (const path of to_paths(urlPath.slice(0, -'.html'.length))) {
 			entries.push([path, { GET: new Response(file, { headers }) }]);
 		}
 	}
