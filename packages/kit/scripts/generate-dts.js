@@ -14,7 +14,7 @@ await createBundle({
 		'$app/forms': 'src/runtime/app/forms/public.d.ts',
 		'$app/navigation': 'src/runtime/app/navigation/public.d.ts',
 		'$app/paths': 'src/runtime/app/paths/public.d.ts',
-		'$app/server': 'src/runtime/app/server/index.js',
+		'$app/server': 'src/runtime/app/server/public.d.ts',
 		'$app/service-worker': 'src/runtime/app/service-worker/index.js',
 		'$app/state': 'src/runtime/app/state/public.d.ts'
 	},
