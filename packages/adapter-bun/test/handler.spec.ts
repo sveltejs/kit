@@ -88,6 +88,19 @@ test.each([
 	expect(error).toHaveBeenCalledWith(expect.stringContaining(message));
 });
 
+test('rejects a present but empty Host header', async () => {
+	const loaded = await load_handler();
+	const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+	const request = new Request('http://internal/path');
+	request.headers.set('host', '');
+
+	const response = await loaded.handler(request, loaded.bun_server);
+
+	expect(response.status).toBe(400);
+	expect(loaded.respond).not.toHaveBeenCalled();
+	expect(error).toHaveBeenCalledWith(expect.stringContaining('Could not determine host'));
+});
+
 test('falls back past proxy headers that are present but empty', async () => {
 	set_env('APP_PROTOCOL_HEADER', 'x-forwarded-proto');
 	set_env('APP_HOST_HEADER', 'x-forwarded-host');

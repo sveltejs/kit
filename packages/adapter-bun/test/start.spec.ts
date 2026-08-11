@@ -114,10 +114,12 @@ test('force-closes lingering connections after SHUTDOWN_TIMEOUT', async () => {
 
 		const shutdown = loaded.listeners.get('SIGTERM')?.();
 		await vi.advanceTimersByTimeAsync(5000);
-		await shutdown;
-
 		expect(loaded.stop).toHaveBeenCalledTimes(2);
 		expect(loaded.stop).toHaveBeenLastCalledWith(true);
+		expect(loaded.emit).not.toHaveBeenCalled();
+
+		await vi.advanceTimersByTimeAsync(1000);
+		await shutdown;
 		expect(loaded.emit).toHaveBeenCalledWith('sveltekit:shutdown', 'SIGTERM');
 	} finally {
 		vi.useRealTimers();

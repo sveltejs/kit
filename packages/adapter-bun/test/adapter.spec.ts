@@ -19,14 +19,19 @@ const bun = vi.hoisted(() => ({
 	build: vi.fn(async (_options: any): Promise<any> => ({ success: true, logs: [], outputs: [] })),
 	file: vi.fn((_path: string) => ({
 		text: async () => '// generated server entrypoint',
-		arrayBuffer: async () => new ArrayBuffer(0),
+		stream: () => new Blob([]).stream(),
 		lastModified: 0
 	})),
-	hash: vi.fn(() => 0xabcn)
+	CryptoHasher: class {
+		update() {}
+		digest() {
+			return 'abc';
+		}
+	}
 }));
 
 beforeEach(() => {
-	vi.stubGlobal('Bun', { build: bun.build, file: bun.file, hash: bun.hash });
+	vi.stubGlobal('Bun', { build: bun.build, file: bun.file, CryptoHasher: bun.CryptoHasher });
 	vi.mocked(readdir).mockResolvedValue([]);
 });
 
@@ -287,7 +292,7 @@ describe('generated routes', () => {
 		const previous = bun.file.getMockImplementation();
 		bun.file.mockImplementation((path: string) => ({
 			text: async () => '// generated server entrypoint',
-			arrayBuffer: async () => new ArrayBuffer(0),
+			stream: () => new Blob([]).stream(),
 			lastModified: 0,
 			exists: async () => path.endsWith('.br') || path.endsWith('.gz')
 		}));
@@ -357,6 +362,25 @@ describe('generated routes', () => {
 		const source = bun.build.mock.calls[0][0].files[routes_file];
 		expect(source).not.toContain('.secret');
 		expect(source).toContain('...client_asset("public.txt", asset_0, {"hash":"abc","mtime":0})');
+	});
+
+	test('rejects route segments starting with a colon', async () => {
+		const builder = create_builder({ client_files: [':tag.txt'] });
+
+		await expect(adapter().adapt(builder)).rejects.toThrow('starts with `:`');
+		expect(bun.build).not.toHaveBeenCalled();
+	});
+
+	test('embedded assets with the same relative path keep distinct imports', async () => {
+		mock_files({ client: ['page.html'], pages: ['page.html'] });
+
+		await adapter({ buildOptions: { compile: true } }).adapt(
+			create_builder({ prerendered_pages: [['/page/', { file: 'page.html' }]] })
+		);
+
+		const source = bun.build.mock.calls[0][0].files[routes_file];
+		expect(source).toContain('...client_asset("page.html", asset_0, {"hash":"abc","mtime":0})');
+		expect(source).toContain('...prerendered_page("/page/", asset_1, {"hash":"abc","mtime":0})');
 	});
 
 	test('rejects wildcard characters in prerendered redirect sources', async () => {

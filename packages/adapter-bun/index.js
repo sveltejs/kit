@@ -33,6 +33,37 @@ function is_dotfile(path) {
 		.some((segment, i) => segment.startsWith('.') && !(i === 0 && segment === '.well-known'));
 }
 
+// bounds open file handles while every asset hashes concurrently
+const MAX_OPEN_FILES = 64;
+let open_files = 0;
+/** @type {Array<() => void>} */
+const file_waiters = [];
+
+/**
+ * Streams the file through the hasher so build memory stays bounded by chunk
+ * size instead of total asset size.
+ * @param {string} path
+ * @returns {Promise<string>}
+ */
+async function hash_file(path) {
+	if (open_files === MAX_OPEN_FILES) {
+		await new Promise((resolve) => {
+			file_waiters.push(() => resolve(undefined));
+		});
+	}
+	open_files++;
+	try {
+		const hasher = new Bun.CryptoHasher('blake2b256');
+		for await (const chunk of Bun.file(path).stream()) {
+			hasher.update(chunk);
+		}
+		return hasher.digest('hex').slice(0, 16);
+	} finally {
+		open_files--;
+		file_waiters.shift()?.();
+	}
+}
+
 /**
  * The build-time validator for conditional requests: Bun only generates ETags for
  * in-memory static routes, not file-backed responses, so the adapter ships its own.
@@ -41,11 +72,10 @@ function is_dotfile(path) {
  * @returns {Promise<{ hash: string, mtime: number, br?: boolean, gz?: boolean }>}
  */
 async function asset_meta(path, precompress = false) {
-	const file = Bun.file(path);
-	const hash = Bun.hash(await file.arrayBuffer()).toString(16);
+	const hash = await hash_file(path);
 
 	/** @type {{ hash: string, mtime: number, br?: boolean, gz?: boolean }} */
-	const meta = { hash, mtime: file.lastModified };
+	const meta = { hash, mtime: Bun.file(path).lastModified };
 	if (precompress) {
 		const [br, gz] = await Promise.all([
 			Bun.file(`${path}.br`).exists(),
@@ -60,11 +90,18 @@ async function asset_meta(path, precompress = false) {
 
 /** @param {string[]} files */
 function validate_file_paths(files) {
-	const invalid = files.find((file) => file.includes('*'));
-	if (invalid !== undefined) {
-		throw new Error(
-			`Cannot build with ${JSON.stringify(invalid)} because Bun treats literal \`*\` characters in route paths as wildcards. Rename the file or route to remove the \`*\` character.`
-		);
+	for (const file of files) {
+		if (file.includes('*')) {
+			throw new Error(
+				`Cannot build with ${JSON.stringify(file)} because Bun treats literal \`*\` characters in route paths as wildcards. Rename the file or route to remove the \`*\` character.`
+			);
+		}
+		// a leading ':' would need percent-encoding, but browsers request the colon raw
+		if (file.split('/').some((segment) => segment.startsWith(':'))) {
+			throw new Error(
+				`Cannot build with ${JSON.stringify(file)} because Bun treats a route segment starting with \`:\` as a parameter. Rename the file or route so no segment starts with \`:\`.`
+			);
+		}
 	}
 }
 
@@ -212,7 +249,8 @@ async function get_embed_entries({ builder, server_assets }) {
 	const assets = [...cl_files, ...pr_pages, ...pr_deps, ...pr_data];
 	validate_file_paths(assets.map(({ rel }) => rel));
 
-	const asset_index = new Map(assets.map(({ rel }, i) => [rel, i]));
+	// keyed by identity: client and prerendered trees can contain the same relative path
+	const asset_index = new Map(assets.map((file, i) => [file, i]));
 	const imports = assets.map(({ abs }, i) => {
 		return `import asset_${i} from ${JSON.stringify(abs)} with { type: 'file' };`;
 	});
@@ -222,8 +260,8 @@ async function get_embed_entries({ builder, server_assets }) {
 	 * @param {string} helper
 	 * @param {string} [urlPath]
 	 */
-	const entry = async ({ abs, rel }, helper, urlPath = rel) =>
-		`...${helper}(${JSON.stringify(urlPath)}, asset_${asset_index.get(rel)}, ${JSON.stringify(await asset_meta(abs))})`;
+	const entry = async (file, helper, urlPath = file.rel) =>
+		`...${helper}(${JSON.stringify(urlPath)}, asset_${asset_index.get(file)}, ${JSON.stringify(await asset_meta(file.abs))})`;
 
 	const page_files = new Map(pr_pages.map((file) => [file.rel, file]));
 	const page_rels = new Set([...builder.prerendered.pages].map(([_, { file }]) => file));
@@ -242,11 +280,15 @@ async function get_embed_entries({ builder, server_assets }) {
 		...[...pr_deps, ...pr_data].map((file) => entry(file, 'prerendered_asset'))
 	]);
 
+	const index_by_rel = new Map(
+		assets.map(({ rel }, i) => /** @type {[string, number]} */ ([rel, i])).reverse()
+	);
+
 	return {
 		imports,
 		entries,
 		server_assets: server_assets.map((file) => {
-			const idx = asset_index.get(file);
+			const idx = index_by_rel.get(file);
 			if (idx === undefined) throw new Error(`Could not find server asset ${file}`);
 			return `[${JSON.stringify(file)}, server_asset(${JSON.stringify(file)}, asset_${idx})]`;
 		})
@@ -332,7 +374,9 @@ async function create_routes({ builder, out, embed, precompress }) {
 	return [
 		`import { client_asset, prerendered_asset, prerendered_page, prerendered_redirect, server_asset } from './routes-util.js';`,
 		...imports,
-		`export const routes = Object.fromEntries([${[...entries, ...redirects].join(',\n')}]);`,
+		// reversed because Object.fromEntries keeps the last duplicate: the first generated
+		// entry for a path must win so exact files beat aliases, like sirv's lookup order
+		`export const routes = Object.fromEntries([${[...entries, ...redirects].join(',\n')}].reverse());`,
 		`export const server_assets = new Map([${resolved_server_assets.join(',\n')}]);`
 	].join('\n');
 }

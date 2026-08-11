@@ -23,10 +23,12 @@ await server.init({
  * @returns {Promise<Response>}
  */
 export async function handler(request, bun_server) {
-	const url = new URL(request.url);
-
 	let request_origin = origin;
+	/** @type {URL} */
+	let url;
 	try {
+		// an empty Host header makes request.url relative, so parsing belongs in the try
+		url = new URL(request.url);
 		request_origin ||= get_origin(request, url);
 	} catch (error) {
 		console.error(
@@ -72,8 +74,9 @@ function get_origin(request, url) {
 		);
 	}
 
+	// an empty forwarded header falls through, but a present-and-empty Host is rejected below
 	const host =
-		(host_header && request.headers.get(host_header)) || request.headers.get('host') || url.host;
+		(host_header && request.headers.get(host_header)) || (request.headers.get('host') ?? url.host);
 	if (!host) {
 		const header_names = host_header ? `${host_header} or host headers` : 'host header';
 		throw new Error(

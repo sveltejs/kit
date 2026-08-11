@@ -54,11 +54,12 @@ test('sub-delims stay raw in route paths with a fully-encoded alias', async () =
 	]);
 });
 
-test('segments starting with a colon are escaped to avoid Bun route parameters', async () => {
+test('route paths use WHATWG serialization, the form user agents send', async () => {
 	const { routes } = await load_routes({ base: '/base' });
 
-	expect(routes.client_asset(':tag.txt', undefined, meta).map(([path]) => path)).toEqual([
-		'/base/%3Atag.txt'
+	expect(routes.client_asset('photo[1]^a|b.png', undefined, meta).map(([path]) => path)).toEqual([
+		'/base/photo[1]^a|b.png',
+		'/base/photo%5B1%5D%5Ea%7Cb.png'
 	]);
 });
 

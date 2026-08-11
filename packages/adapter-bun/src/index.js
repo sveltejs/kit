@@ -65,7 +65,20 @@ async function graceful_shutdown(reason) {
 	]);
 	clearTimeout(deadline);
 
-	if (!drained) void server.stop(true);
+	if (!drained) {
+		// give the force-close a moment to abort in-flight handlers, so shutdown
+		// listeners do not tear down resources those handlers still hold; the stop
+		// promise may never settle, so the timer bounds the wait
+		/** @type {ReturnType<typeof setTimeout> | undefined} */
+		let grace;
+		await Promise.race([
+			server.stop(true),
+			new Promise((resolve) => {
+				grace = setTimeout(resolve, 1000);
+			})
+		]);
+		clearTimeout(grace);
+	}
 
 	// @ts-expect-error custom events cannot be typed
 	process.emit('sveltekit:shutdown', reason);
