@@ -20,7 +20,6 @@ import {
 } from '../types/private.js';
 import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from 'types';
 import { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
-import { StandardSchemaV1 } from '@standard-schema/spec';
 import { Plugin } from 'vite';
 import { RouteId as AppRouteId, LayoutParams as AppLayoutParams } from '$app/types';
 import { ParamMatcher } from '@sveltejs/kit/params';
