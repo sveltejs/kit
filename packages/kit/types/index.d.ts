@@ -2541,7 +2541,7 @@ declare module '@sveltejs/kit/hooks' {
 	 * In the browser, `decode` turns the encoding back into an instance of the custom type.
 	 *
 	 * ```ts
-	 * import type { Transport } from '@sveltejs/kit';
+	 * import type { Transport } from '@sveltejs/kit/hooks';
 	 *
 	 * declare class MyCustomType {
 	 * 	data: any
