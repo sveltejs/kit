@@ -162,15 +162,13 @@ test('reports absent and too-short forwarded address headers', async () => {
 	expect(() => get_client_address()).toThrow('APP_XFF_DEPTH is 3, but only found 2 addresses');
 });
 
-test('reports when Bun cannot determine the peer address', async () => {
+test('returns undefined when Bun cannot determine the peer address', async () => {
 	const loaded = await load_handler();
 	loaded.request_ip.mockReturnValue(null);
 
 	await loaded.handler(new Request('http://localhost/'), loaded.bun_server);
 
-	expect(() => loaded.respond.mock.calls[0][1].getClientAddress()).toThrow(
-		'Could not determine client address'
-	);
+	expect(loaded.respond.mock.calls[0][1].getClientAddress()).toBeUndefined();
 });
 
 test('disables timeouts and proxy buffering for event streams', async () => {

@@ -126,7 +126,7 @@ function get_client_address(request, bun_server) {
 		return value;
 	}
 
-	const address = bun_server.requestIP(request)?.address;
-	if (!address) throw new Error('Could not determine client address');
-	return address;
+	// requestIP() is null over unix sockets; adapter-node returns undefined there too
+	// rather than turning every getClientAddress() call into a 500
+	return /** @type {string} */ (bun_server.requestIP(request)?.address);
 }
