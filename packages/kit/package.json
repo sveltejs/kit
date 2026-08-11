@@ -72,10 +72,10 @@
 		"svelte-kit.js"
 	],
 	"scripts": {
-		"lint": "prettier --config ../../.prettierrc --check .",
+		"lint": "oxfmt --check .",
 		"check": "pnpm tsc-native && pnpm tsc-native --project test/types/tsconfig.json && pnpm tsc-native --project test/types/app-error-enhanced/tsconfig.json",
 		"check:all": "pnpm tsc-native && pnpm -r --filter=\"./**\" check",
-		"format": "prettier --config ../../.prettierrc --write .",
+		"format": "oxfmt --write .",
 		"test": "pnpm test:unit && pnpm test:integration",
 		"test:integration": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test",
 		"test:dev": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:dev",

@@ -58,7 +58,7 @@ jobs:
           # the sha the comment was made on, so a branch updated after the comment isn't run
           ref: ${{ github.event_name == 'workflow_dispatch' && github.ref || steps.pr.outputs.sha }}
       - uses: ./.github/actions/node-setup
-      - name: Run prettier
+      - name: Run oxfmt
         run: pnpm format
       - name: Generate types
         run: pnpm -F @sveltejs/kit generate:types

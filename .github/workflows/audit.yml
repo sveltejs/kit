@@ -2,7 +2,7 @@ name: audit
 
 on:
   schedule:
-    - cron: "0 5 * * *" # daily 5AM
+    - cron: '0 5 * * *' # daily 5AM
 
 env:
   # not needed for audit

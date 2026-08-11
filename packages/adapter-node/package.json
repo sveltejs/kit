@@ -38,8 +38,8 @@
 		"test": "vitest run",
 		"test:unit": "vitest run",
 		"check": "tsc",
-		"lint": "prettier --check .",
-		"format": "pnpm lint --write",
+		"lint": "oxfmt --check .",
+		"format": "oxfmt --write .",
 		"prepublishOnly": "pnpm build"
 	},
 	"devDependencies": {
