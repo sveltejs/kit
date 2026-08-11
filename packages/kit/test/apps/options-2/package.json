@@ -3,7 +3,7 @@
 	"private": true,
 	"version": "0.0.1",
 	"scripts": {
-		"dev": "RUNTIME_ONLY=secret svelte-kit sync && vite dev",
+		"dev": "svelte-kit sync && RUNTIME_ONLY=secret vite dev",
 		"build": "vite build",
 		"preview": "RUNTIME_ONLY=secret vite preview",
 		"check": "svelte-kit sync && node node_modules/@typescript/native/bin/tsc && svelte-check --tsgo --incremental",
