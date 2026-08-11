@@ -87,8 +87,8 @@ The `$lib` alias is no longer generated automatically by SvelteKit. It is replac
 
 ```js
 // @errors: 2307 imported module has no types
----import { foo } from '$lib/foo';--- 
-+++import { foo } from '#lib/foo.js';+++ 
+---import { foo } from '$lib/foo';---
++++import { foo } from '#lib/foo.js';+++
 ```
 
 ## `$app/environment` (renamed)
@@ -281,6 +281,10 @@ The `defineParams` function for creating [param matchers](advanced-routing#Match
 ### Env-related types moved to `@sveltejs/kit/env`
 
 Types like `EnvVarConfig`, used with [`defineEnvVars`](@sveltejs-kit-env#defineEnvVars) hook, now live in `@sveltejs/kit/env`.
+
+### Hooks-related types moved to `@sveltejs/kit/hooks`
+
+Types like `Handle`, which defines the type of your [`handle`](hooks#handle) hook, now live in `@sveltejs/kit/hooks`.
 
 ## `@sveltejs/kit/hooks`
 

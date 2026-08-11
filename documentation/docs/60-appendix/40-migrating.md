@@ -181,7 +181,7 @@ const minification_options = {
 	sortClassName: true
 };
 
-/** @type {import('@sveltejs/kit').Handle} */
+/** @type {import('@sveltejs/kit/hooks').Handle} */
 export async function handle({ event, resolve }) {
 	let page = '';
 
