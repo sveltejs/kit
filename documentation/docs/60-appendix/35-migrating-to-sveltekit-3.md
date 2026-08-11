@@ -270,7 +270,7 @@ The `json(...)` and `text(...)` helpers for generating responses are deprecated.
 
 ### `defineParams` moved to `@sveltejs/kit/params`
 
-The `defineParams` function for creating [param matchers](advanced-routing#Matching), along with the associated types, now live in [`@sveltejs/kit/params`](@sveltejs-kit-params.)
+The `defineParams` function for creating [param matchers](advanced-routing#Matching), along with the associated types, now live in [`@sveltejs/kit/params`](@sveltejs-kit-params).
 
 ## `@sveltejs/kit/hooks`
 
