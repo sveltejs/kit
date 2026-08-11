@@ -36,7 +36,7 @@ test('normalizes the request origin from the Host header', async () => {
 	await loaded.handler(original, loaded.bun_server);
 
 	const [request, options] = loaded.respond.mock.calls[0];
-	expect(request.url).toBe('http://public.example:8080/path?query=yes');
+	expect(request.url).toBe('https://public.example:8080/path?query=yes');
 	expect(options.platform).toEqual({ request: original, server: loaded.bun_server });
 	loaded.request_ip.mockReturnValue({ address: '127.0.0.1', port: 5000, family: 'IPv4' });
 	expect(options.getClientAddress()).toBe('127.0.0.1');
@@ -111,7 +111,7 @@ test('falls back past proxy headers that are present but empty', async () => {
 
 	await loaded.handler(request, loaded.bun_server);
 
-	expect(loaded.respond.mock.calls[0][0].url).toBe('http://internal/path');
+	expect(loaded.respond.mock.calls[0][0].url).toBe('https://internal/path');
 });
 
 test('reads a configured client address header', async () => {

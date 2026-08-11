@@ -188,7 +188,7 @@ SOCKET_PATH=/tmp/sveltekit.sock bun ./build
 
 ### Public origin behind a proxy
 
-If [`paths.origin`](configuration#paths) is configured, that value is the trusted origin for every request. Otherwise, the adapter derives the origin from the incoming request URL and `Host` header.
+If [`paths.origin`](configuration#paths) is configured, that value is the trusted origin for every request. Otherwise, the adapter derives the host from the `Host` header and assumes the scheme is `https`, since production deployments usually terminate TLS upstream. Configure `paths.origin` or `PROTOCOL_HEADER` if that assumption is wrong, for example when serving plain HTTP directly.
 
 Behind a trusted reverse proxy, `PROTOCOL_HEADER`, `HOST_HEADER`, and `PORT_HEADER` name headers that contain the public scheme, host, and port:
 

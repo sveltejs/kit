@@ -66,8 +66,10 @@ export async function handler(request, bun_server) {
  * @returns {string}
  */
 function get_origin(request, url) {
+	// assume TLS terminates upstream, like adapter-node; a plain-HTTP url.protocol would
+	// make the browser's https Origin mismatch the computed origin and fail every CSRF check
 	const protocol = decodeURIComponent(
-		(protocol_header && request.headers.get(protocol_header)) || url.protocol.slice(0, -1)
+		(protocol_header && request.headers.get(protocol_header)) || 'https'
 	);
 	if (!/^https?$/i.test(protocol)) {
 		throw new Error(
