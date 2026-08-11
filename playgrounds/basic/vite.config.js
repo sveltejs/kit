@@ -16,6 +16,10 @@ export default defineConfig({
 			adapter: adapter(),
 			experimental: {
 				remoteFunctions: true
+			},
+
+			router: {
+				resolution: 'server'
 			}
 		})
 	],
