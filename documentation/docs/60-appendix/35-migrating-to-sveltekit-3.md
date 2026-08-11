@@ -281,6 +281,10 @@ The `defineParams` function for creating [param matchers](advanced-routing#Match
 
 Types like `Handle`, which defines the type of your [`handle`](hooks#handle) hook, now live in `@sveltejs/kit/hooks`.
 
+### Env-related types moved to `@sveltejs/kit/env`
+
+Types like `EnvVarConfig`, used with [`defineEnvVars`](@sveltejs-kit-env#defineEnvVars) hook, now live in `@sveltejs/kit/env`.
+
 ## `@sveltejs/kit/hooks`
 
 The `defineEnvVars` function has moved from `@sveltejs/kit/hooks` to `@sveltejs/kit/env`.
