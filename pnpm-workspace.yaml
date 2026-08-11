@@ -12,10 +12,6 @@ minimumReleaseAgeExclude:
   - esm-env
   - vite-imagetools
   - imagetools-core
-  - '@changesets/apply-release-plan@8.0.0-next.11'
-  - '@changesets/assemble-release-plan@7.0.0-next.11'
-  - '@changesets/cli@3.0.0-next.12'
-  - '@changesets/config@4.0.0-next.10'
 blockExoticSubdeps: true
 linkWorkspacePackages: true
 shellEmulator: true
