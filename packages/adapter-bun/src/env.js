@@ -98,9 +98,11 @@ export function number_env(name, fallback, limits = {}) {
 export function bytes_env(name, fallback) {
 	const value = env(name);
 	if (value === undefined) return fallback;
+	// adapter-node documents Infinity as the value that disables the limit
+	if (value === 'Infinity') return Infinity;
 	if (!/^(?:\d+(?:\.\d*)?|\.\d+)(?:[KMG])?$/i.test(value)) {
 		throw new Error(
-			`Invalid value for environment variable ${env_prefix + name}: ${JSON.stringify(value)} (expected a non-negative number with an optional K, M, or G suffix)`
+			`Invalid value for environment variable ${env_prefix + name}: ${JSON.stringify(value)} (expected a non-negative number with an optional K, M, or G suffix, or Infinity)`
 		);
 	}
 

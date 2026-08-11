@@ -118,7 +118,8 @@ describe('bytes_env', () => {
 		['.5K', 512],
 		['512K', 512 * 1024],
 		['1.5M', 1.5 * 1024 * 1024],
-		['2g', 2 * 1024 * 1024 * 1024]
+		['2g', 2 * 1024 * 1024 * 1024],
+		['Infinity', Infinity]
 	])('parses %s as %d bytes', async (value, expected) => {
 		set_env('OPTION', value);
 		const { bytes_env } = await load_env();
