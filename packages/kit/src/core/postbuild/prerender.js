@@ -279,6 +279,10 @@ async function prerender({
 	let progress_line = noop;
 
 	if (is_tty) {
+		// Where possible, provide progress feedback by showing the path we're
+		// currently requesting, then clearing the line once the response comes in.
+		// This avoids the wall of text that happens when you prerender
+		// many pages and log each response
 		let current = false;
 		const stdout_write = process.stdout.write;
 		const stderr_write = process.stderr.write;
@@ -298,6 +302,8 @@ async function prerender({
 		});
 
 		progress_line = (path) => {
+			// If app code writes to stdout or stderr, don't move the cursor to clear
+			// the previous progress log, because that will corrupt things
 			if (current) {
 				moveCursor(process.stdout, 0, -1);
 				clearLine(process.stdout, 0);
