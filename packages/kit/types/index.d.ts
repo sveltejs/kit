@@ -2735,14 +2735,14 @@ declare module '@sveltejs/kit/params' {
 	export type ParamValue = string | number | boolean | bigint;
 
 	/**
-	 * A param matcher definition passed to [`defineParams`](https://svelte.dev/docs/kit/@sveltejs-kit#defineParams).
+	 * A param matcher definition passed to [`defineParams`](https://svelte.dev/docs/kit/@sveltejs-kit-params#defineParams).
 	 */
 	export type ParamDefinition =
 		| ((param: string) => ParamValue | undefined)
 		| StandardSchemaV1<string, ParamValue>;
 
 	/**
-	 * The return type of [`defineParams`](https://svelte.dev/docs/kit/@sveltejs-kit#defineParams).
+	 * The return type of [`defineParams`](https://svelte.dev/docs/kit/@sveltejs-kit-params#defineParams).
 	 */
 	export type DefinedParams<T extends Record<string, ParamDefinition>> = {
 		readonly [K in keyof T]: ParamEntry<T[K]>;
