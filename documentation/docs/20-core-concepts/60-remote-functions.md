@@ -1240,7 +1240,7 @@ In the second case, we don't want to give the attacker any help, so SvelteKit wi
 
 ```js
 /// file: src/hooks.server.js
-/** @type {import('@sveltejs/kit').HandleServerError} */
+/** @type {import('@sveltejs/kit/hooks').HandleServerError} */
 export function handleError({ kind, issues }) {
 	if (kind === 'validation') {
 		console.error(issues);
