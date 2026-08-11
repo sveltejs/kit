@@ -7,6 +7,4 @@ if (process.platform !== 'win32') {
 	fs.symlinkSync('symlink-to', 'symlink-from', 'dir');
 }
 
-try {
-	fs.unlinkSync('test/errors.json');
-} catch {}
+fs.rmSync('test/errors.jsonl', { force: true });

@@ -8,7 +8,7 @@ import { pathToFileURL } from 'node:url';
  * @returns {Promise<import('./types.js').Options['config']>}
  */
 export async function load_config() {
-	const { resolveConfig } = /** @type {import('vite')} */ (
+	const { resolveConfig } = /** @type {typeof import('vite')} */ (
 		await import_peer('vite', process.cwd())
 	);
 

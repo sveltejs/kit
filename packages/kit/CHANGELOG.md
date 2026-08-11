@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 3.0.0-next.18
+
+### Major Changes
+
+- breaking: separate adapter Vite plugins into `pre` and `post` ([#16711](https://github.com/sveltejs/kit/pull/16711))
+
 ## 3.0.0-next.17
 
 ### Major Changes
