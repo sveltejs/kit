@@ -1977,7 +1977,7 @@ declare module '@sveltejs/kit' {
 	 * @param e The object to check.
 	 * @since 2.47.3
 	 */
-	export function isValidationError(e: unknown): e is ActionFailure;
+	export function isValidationError(e: unknown): e is import("$app/server").ValidationError;
 	/**
 	 * Strips possible SvelteKit-internal suffixes and trailing slashes from the URL pathname.
 	 * Returns the normalized URL as well as a method for adding the potential suffix back
