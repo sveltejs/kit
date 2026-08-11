@@ -63,10 +63,10 @@ catalog:
   dropcss: ^1.0.16
   eslint: ^10.8.0
   polka: ^1.0.0-next.28
-  publint: ^0.3.0
-  rolldown: ^1.2.0
   prettier: ^3.9.6
   prettier-plugin-svelte: ^4.1.1
+  publint: ^0.3.0
+  rolldown: ^1.2.0
   semver: ^7.5.4
   sirv-cli: ^3.0.0
   svelte: ^5.56.3

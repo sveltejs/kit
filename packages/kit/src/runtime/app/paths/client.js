@@ -73,8 +73,8 @@ export function resolve(...args) {
 			throw new Error(`Missing params for dynamic route ID ${id}`);
 		}
 
-		return /** @type {ResolvedPathname} */ (
-			base + pathname_prefix + resolve_route(id, params ?? {})
+		return (
+			/** @type {ResolvedPathname} */ (base + pathname_prefix + resolve_route(id, params ?? {}))
 		);
 	}
 
