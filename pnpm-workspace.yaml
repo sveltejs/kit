@@ -39,6 +39,8 @@ packages:
 allowBuilds:
   esbuild: true
   protobufjs: false # postinstall script only prints warnings
+  rolldown: true
+  sharp: true
   svelte-preprocess: false # postinstall script only prints warnings
   workerd: true
 # pnpm catalogs are currently only suitable for dependencies that
