@@ -1,10 +1,11 @@
-/** @import { ActionResult, RemoteForm, RequestEvent, SSRManifest } from '@sveltejs/kit' */
+/** @import { RemoteForm, RequestEvent, SSRManifest } from '@sveltejs/kit' */
+/** @import { ActionResult } from '$app/forms' */
 /** @import { RemoteFormInternals, RemoteFunctionData, RemoteFunctionResponse, RemoteInternals, RequestState, SSROptions } from 'types' */
 
 import { json, error } from '@sveltejs/kit';
 import { Redirect, SvelteKitError } from '@sveltejs/kit/internal';
 import { with_request_store, merge_tracing, record_span } from '@sveltejs/kit/internal/server';
-import { app_dir, base } from '$app/paths/internal/server';
+import { app_dir, base } from '#app/paths';
 import { is_form_content_type } from '../../utils/http.js';
 import { create_remote_key, parse_remote_arg, split_remote_key } from '../shared.js';
 import { stringify } from '#app/internal/transport';

@@ -72,8 +72,7 @@ export function form(validate_or_fn, maybe_fn) {
 	 * @param {string | number | boolean} [key]
 	 */
 	function create_instance(key) {
-		/** @type {RemoteForm<Input, Output>} */
-		const instance = {};
+		const instance = /** @type {RemoteForm<Input, Output>} */ ({});
 
 		instance.method = 'POST';
 
@@ -89,8 +88,8 @@ export function form(validate_or_fn, maybe_fn) {
 			name: '',
 			id: '',
 			fn: async (data, meta, form_data) => {
-				/** @type {{ submission: true, input?: Record<string, any>, issues?: InternalRemoteFormIssue[], result: Output }} */
-				const output = {};
+				const output =
+					/** @type {{ submission: true, input?: Record<string, any>, issues?: InternalRemoteFormIssue[], result: Output }} */ ({});
 
 				// make it possible to differentiate between user submission and programmatic `field.set(...)` updates
 				output.submission = true;

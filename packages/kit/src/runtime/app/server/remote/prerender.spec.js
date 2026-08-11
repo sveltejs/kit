@@ -1,7 +1,7 @@
 /** @import { RequestEvent } from '@sveltejs/kit' */
 /** @import { RequestState } from 'types' */
 import { expect, test, vi } from 'vitest';
-import { HttpError } from '@sveltejs/kit/internal';
+import { HandledHttpError, ValidationError } from '@sveltejs/kit/internal';
 import { prerender } from './prerender.js';
 import { init_transport, stringify } from '#app/internal/transport';
 
@@ -18,6 +18,8 @@ vi.mock(import('@sveltejs/kit/internal/server'), async (actualPromise) => {
 });
 
 vi.stubGlobal('__SVELTEKIT_DEV__', false);
+
+const { handle_error_and_jsonify } = await import('../../../server/errors.js');
 
 /**
  * Creates a prerender function whose self-fetch of the prerendered response
@@ -61,10 +63,42 @@ test('propagates an error response instead of running the function', async () =>
 
 	const rejection = await wrapper().catch((e) => e);
 
-	expect(rejection).toBeInstanceOf(HttpError);
+	expect(rejection).toBeInstanceOf(HandledHttpError);
 	expect(rejection.status).toBe(418);
 	expect(rejection.body).toEqual({ status: 418, message: 'teapot' });
 	expect(fn).not.toHaveBeenCalled();
+
+	const handleError = vi.fn();
+	const transformed = await handle_error_and_jsonify(
+		store.current.event,
+		store.current.state,
+		/** @type {any} */ ({ hooks: { handleError } }),
+		rejection
+	);
+
+	expect(transformed).toBe(rejection.body);
+	expect(handleError).not.toHaveBeenCalled();
+});
+
+test('passes validation errors to handleError without exposing issues by default', async () => {
+	setup(() => new Response());
+	const issues = [{ message: 'Expected a string' }];
+	const handleError = vi.fn();
+
+	const transformed = await handle_error_and_jsonify(
+		store.current.event,
+		store.current.state,
+		/** @type {any} */ ({ hooks: { handleError } }),
+		new ValidationError(issues)
+	);
+
+	expect(handleError).toHaveBeenCalledWith({
+		kind: 'validation',
+		error: { status: 400, message: 'Bad Request' },
+		issues,
+		event: store.current.event
+	});
+	expect(transformed).toEqual({ status: 400, message: 'Bad Request' });
 });
 
 test('parses a prerendered result without running the function', async () => {

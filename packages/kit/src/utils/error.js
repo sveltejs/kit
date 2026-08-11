@@ -36,23 +36,39 @@ export function normalize_error(error) {
 }
 
 /**
- * @param {any} transformed
- * @param {any} [error]
+ * @param {unknown} error
  */
-export function get_status(transformed, error) {
-	const err = error ?? transformed;
-	const status = err instanceof HttpError || err instanceof SvelteKitError ? err.status : 500;
-
-	if (error == null || typeof transformed?.status !== 'number') {
-		return status;
-	} else {
-		return transformed.status;
-	}
+export function get_status(error) {
+	return error instanceof HttpError || error instanceof SvelteKitError ? error.status : 500;
 }
 
 /**
- * @param {unknown} error
+ * Adds development-only compatibility accessors for the former top-level `status` and `message`
+ * properties of the `handleError` hook input.
+ * @template {object} T
+ * @param {T} input
+ * @param {{ status: number; message: string }} fallback
+ * @returns {T}
  */
-export function get_message(error) {
-	return error instanceof SvelteKitError ? error.text : 'Internal Error';
+export function add_deprecated_handle_error_properties(input, fallback) {
+	Object.defineProperties(input, {
+		status: {
+			get() {
+				console.warn(
+					'The `status` property of `handleError` is deprecated. Use `error.status` for expected and framework errors, or `500` for unexpected errors.'
+				);
+				return fallback.status;
+			}
+		},
+		message: {
+			get() {
+				console.warn(
+					"The `message` property of `handleError` is deprecated. Use `error.message` for expected and framework errors, or 'Internal Error' for unexpected errors."
+				);
+				return fallback.message;
+			}
+		}
+	});
+
+	return input;
 }

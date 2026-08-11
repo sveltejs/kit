@@ -1,3 +1,4 @@
+/** @import { ParamMatcher, ParamValue } from '@sveltejs/kit/params' */
 import { BROWSER } from 'esm-env';
 import { escape_for_regexp } from './regex.js';
 
@@ -146,7 +147,7 @@ export function get_route_segments(route) {
 }
 
 /**
- * @param {import('@sveltejs/kit').ParamMatcher} matcher
+ * @param {ParamMatcher} matcher
  * @param {string} value
  * @returns {{ success: true, value: any } | { success: false }}
  */
@@ -178,7 +179,7 @@ function run_matcher(matcher, value) {
 /**
  * @param {RegExpMatchArray} match
  * @param {import('types').RouteParam[]} params
- * @param {Record<string, import('@sveltejs/kit').ParamMatcher>} matchers
+ * @param {Record<string, ParamMatcher>} matchers
  */
 export function exec(match, params, matchers) {
 	/** @type {Record<string, any>} */
@@ -298,7 +299,7 @@ export const segment_pattern = new RegExp(
  * ); // `/blog/hello-world/something/else`
  * ```
  * @param {string} id
- * @param {Record<string, import('@sveltejs/kit').ParamValue | undefined>} params
+ * @param {Record<string, ParamValue | undefined>} params
  * @returns {string}
  */
 export function resolve_route(id, params) {
@@ -360,7 +361,7 @@ export function has_server_load(node) {
  * @template {{pattern: RegExp, params: import('types').RouteParam[]}} Route
  * @param {string} path - The decoded pathname to match
  * @param {Route[]} routes
- * @param {Record<string, import('@sveltejs/kit').ParamMatcher>} matchers
+ * @param {Record<string, ParamMatcher>} matchers
  * @returns {{ route: Route, params: Record<string, any> } | null}
  */
 export function find_route(path, routes, matchers) {

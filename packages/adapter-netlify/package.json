@@ -27,14 +27,14 @@
 	},
 	"types": "index.d.ts",
 	"files": [
-		"files",
+		"files/*.js",
 		"index.js",
 		"utils.js",
 		"index.d.ts",
 		"ambient.d.ts"
 	],
 	"scripts": {
-		"check": "tsc",
+		"check": "tsc && tsc --project files/tsconfig.json",
 		"lint": "oxfmt --check .",
 		"format": "oxfmt --write .",
 		"test:unit": "vitest run",
@@ -51,7 +51,7 @@
 		"@sveltejs/kit": "workspace:^",
 		"@types/deno": "^2.7.0",
 		"@types/node": "catalog:",
-		"typescript": "catalog:",
+		"typescript": "catalog:typescript-native",
 		"vitest": "catalog:"
 	},
 	"peerDependencies": {

@@ -187,7 +187,10 @@ function update_types(config, routes, route, root, to_delete = new Set()) {
 	const outdir = path.join(config.kit.outDir, 'types', routes_dir, route.id);
 
 	// now generate new types
-	const imports = ["import type * as Kit from '@sveltejs/kit';"];
+	const imports = [
+		"import type * as Kit from '@sveltejs/kit';",
+		"import { MatcherParam } from '@sveltejs/kit/params';"
+	];
 
 	/** @type {string[]} */
 	const declarations = [];
@@ -431,7 +434,7 @@ function process_node(node, outdir, is_page, proxies, root, all_pages_have_load 
 					'type ExtractActionFailure<T> = T extends Kit.ActionFailure<infer X>	? X extends void ? never : X : never;',
 					'type ActionsFailure<T extends Record<string, (...args: any) => any>> = { [Key in keyof T]: Exclude<ExtractActionFailure<Awaited<ReturnType<T[Key]>>>, void>; }[keyof T];',
 					`type ActionsExport = typeof import('${from}').actions`,
-					'export type SubmitFunction = Kit.SubmitFunction<Expand<ActionsSuccess<ActionsExport>>, Expand<ActionsFailure<ActionsExport>>>'
+					"export type SubmitFunction = import('$app/forms').SubmitFunction<Expand<ActionsSuccess<ActionsExport>>, Expand<ActionsFailure<ActionsExport>>>"
 				);
 
 				type = 'Expand<Kit.AwaitedActions<ActionsExport>> | null';
@@ -613,7 +616,7 @@ function generate_params_type(params, outdir, config) {
 			(param) =>
 				`${/^\w+$/.test(param.name) ? param.name : `'${param.name}'`}${param.optional ? '?' : ''}: ${
 					param.matcher
-						? `Kit.MatcherParam<(typeof import('${params_import}').params)[${JSON.stringify(param.matcher)}]>`
+						? `MatcherParam<(typeof import('${params_import}').params)[${JSON.stringify(param.matcher)}]>`
 						: 'string'
 				}${param.optional ? ' | undefined' : ''}`
 		)

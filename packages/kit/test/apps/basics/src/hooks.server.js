@@ -29,17 +29,29 @@ export function error_to_pojo(error) {
 }
 
 /** @type {import('@sveltejs/kit').HandleServerError} */
-export const handleError = ({ event, error: e, status, message }) => {
-	const error = /** @type {Error} */ (e);
+export const handleError = ({ event, kind, error }) => {
 	// TODO we do this because there's no other way (that i'm aware of)
 	// to communicate errors back to the test suite. even if we could
 	// capture stderr, attributing an error to a specific request
 	// is trickier when things run concurrently
-	const errors = fs.existsSync('test/errors.json')
-		? JSON.parse(fs.readFileSync('test/errors.json', 'utf8'))
-		: {};
-	errors[event.url.pathname] = error_to_pojo(error);
-	fs.writeFileSync('test/errors.json', JSON.stringify(errors));
+	fs.appendFileSync(
+		'test/errors.jsonl',
+		JSON.stringify({
+			path: event.url.pathname,
+			kind,
+			error: kind === 'unknown' ? error_to_pojo(/** @type {Error} */ (error)) : error
+		}) + '\n'
+	);
+
+	if (kind === 'app') {
+		// so that `error(...)` bodies reach the page verbatim
+		return error;
+	}
+
+	const status = kind === 'framework' ? error.status : 500;
+	const detail = kind === 'framework' ? error.message : /** @type {Error} */ (error).message;
+
+	let message = kind === 'framework' ? error.message : 'Internal Error';
 
 	if (event.url.pathname.startsWith('/get-request-event/')) {
 		const ev = getRequestEvent();
@@ -49,7 +61,7 @@ export const handleError = ({ event, error: e, status, message }) => {
 	if (event.url.pathname === '/errors/handle-error-status') {
 		return {
 			status: 404,
-			message: `${error.message} (${status} ${message})`
+			message: `${detail} (${status} ${message})`
 		};
 	}
 
@@ -58,8 +70,8 @@ export const handleError = ({ event, error: e, status, message }) => {
 	}
 
 	return event.url.pathname.endsWith('404-fallback')
-		? undefined
-		: { message: `${error.message} (${status} ${message})` };
+		? {}
+		: { message: `${detail} (${status} ${message})` };
 };
 
 export const handle = sequence(

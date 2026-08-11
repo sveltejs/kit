@@ -555,7 +555,18 @@ function kit({ svelte_config }) {
 
 					// These Kit dependencies are packaged as CommonJS, which means they must always be externalized.
 					// Without this, the tests will still pass but `pnpm dev` will fail in projects that link `@sveltejs/kit`.
-					/** @type {NonNullable<UserConfig['ssr']>} */ (new_config.ssr).external = ['cookie'];
+					//
+					// `@opentelemetry/api` must be externalized so that `instrumentation.server.js` and the
+					// SvelteKit runtime share a single instance of the module (the global tracer/propagation
+					// is set on that instance — two bundled copies would mean instrumentation hooks are
+					// invisible to the runtime). Externalizing also prevents the bundler from colocating
+					// `@opentelemetry/api` into a shared chunk that also contains application modules, which
+					// would cause those modules to be evaluated before `Server.init()` sets env vars — see
+					// https://github.com/sveltejs/kit/issues/16288
+					/** @type {NonNullable<UserConfig['ssr']>} */ (new_config.ssr).external = [
+						'cookie',
+						'@opentelemetry/api'
+					];
 				}
 
 				// Vite's `define` is a compile-time text replacement, but Vitest strips
@@ -1218,8 +1229,8 @@ function kit({ svelte_config }) {
 		generateBundle(_, bundle) {
 			const invalid_modules = new Set();
 			const modules = new Map([
-				[`${runtime_directory}/app/forms.js`, '$app/forms'],
-				[`${runtime_directory}/app/navigation.js`, '$app/navigation'],
+				[`${runtime_directory}/app/forms/index.js`, '$app/forms'],
+				[`${runtime_directory}/app/navigation/index.js`, '$app/navigation'],
 				[`${runtime_directory}/app/state/index.js`, '$app/state']
 			]);
 
@@ -2056,7 +2067,7 @@ function kit({ svelte_config }) {
 
 	return /** @type {Plugin[]} */ (
 		[
-			svelte_config.kit.adapter?.vite?.plugins,
+			svelte_config.kit.adapter?.vite?.plugins?.pre,
 			plugin_resolve_root,
 			plugin_setup,
 			plugin_remote_guard,
@@ -2066,7 +2077,8 @@ function kit({ svelte_config }) {
 			plugin_service_worker,
 			plugin_service_worker_env,
 			plugin_compile,
-			plugin_adapter
+			plugin_adapter,
+			svelte_config.kit.adapter?.vite?.plugins?.post
 		].filter(Boolean)
 	);
 }

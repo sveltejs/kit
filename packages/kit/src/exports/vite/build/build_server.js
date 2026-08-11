@@ -1,4 +1,4 @@
-/** @import { AssetDependencies, ManifestData, SSRNode, ValidatedKitConfig } from 'types' */
+/** @import { AssetDependencies, ManifestData, ValidatedKitConfig } from 'types' */
 /** @import { Manifest, Rolldown } from 'vite' */
 import fs from 'node:fs';
 import {
@@ -118,7 +118,7 @@ export function build_server_nodes(
 		const imports = [];
 
 		// String representation of
-		/** @type {SSRNode} */
+		/* @type {SSRNode} */
 		/** @type {string[]} */
 		const exports = [`export const index = ${i};`];
 

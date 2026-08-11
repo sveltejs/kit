@@ -1,10 +1,11 @@
+/** @import { ParamMatcher } from '@sveltejs/kit/params' */
 import { assert, expect, test } from 'vitest';
 import {
 	collect_matcher_names,
 	load_and_validate_params,
 	validate_param_matchers
 } from './params.js';
-import { normalize_param_definition } from '../exports/params.js';
+import { normalize_param_definition } from '../exports/params/index.js';
 
 test('collect_matcher_names collects matcher names from routes', () => {
 	const names = collect_matcher_names([
@@ -82,7 +83,7 @@ test('normalize_param_definition propagates thrown errors', () => {
 
 test('normalize_param_definition passes callable standard schemas through untouched', () => {
 	// standard schemas can be callable (e.g. ArkType)
-	const callable = /** @type {import('@sveltejs/kit').ParamMatcher} */ (
+	const callable = /** @type {ParamMatcher} */ (
 		/** @type {unknown} */ (
 			Object.assign(() => 'from-call', {
 				'~standard': {

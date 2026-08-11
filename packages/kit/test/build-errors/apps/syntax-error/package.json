@@ -13,6 +13,7 @@
 		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"svelte": "catalog:",
 		"svelte-check": "catalog:",
+		"@typescript/native": "catalog:",
 		"typescript": "catalog:",
 		"vite": "catalog:"
 	},

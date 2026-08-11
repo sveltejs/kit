@@ -30,7 +30,7 @@ const netlify_framework_edge_path = '.netlify/v1/edge-functions';
 
 const FUNCTION_PREFIX = 'sveltekit-';
 
-/** @type {import('./index.js').default} */
+/** @type {typeof import('./index.js').default} */
 export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 	return {
 		name,

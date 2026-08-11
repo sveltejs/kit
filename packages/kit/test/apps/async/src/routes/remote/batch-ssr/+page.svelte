@@ -22,7 +22,7 @@
 <svelte:boundary>
 	<p id="ssr-batch-result-3">{(await todo_3)?.title}</p>
 
-	{#snippet failed(error)}
+	{#snippet failed(error: unknown)}
 		<p id="ssr-batch-result-3">{get_message(error)}</p>
 	{/snippet}
 </svelte:boundary>

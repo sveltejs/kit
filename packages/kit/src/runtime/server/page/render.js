@@ -2,7 +2,8 @@
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
 import { isRedirect, text } from '@sveltejs/kit';
-import * as paths from '$app/paths/internal/server';
+import * as paths from '#app/paths';
+import { relative } from '$app/paths/internal/server';
 import { hash } from '../../../utils/hash.js';
 import { serialize_data } from './serialize_data.js';
 import { s } from '../../../utils/misc.js';
@@ -42,7 +43,7 @@ import { has_custom_transporters, uneval } from '#app/internal/transport';
  *   event: import('@sveltejs/kit').RequestEvent;
  *   state: import('types').RequestState;
  *   resolve_opts: import('types').RequiredResolveOptions;
- *   action_result?: import('@sveltejs/kit').ActionResult;
+ *   action_result?: import('$app/forms').ActionResult;
  *   data_serializer: import('./types.js').ServerDataSerializer;
  *   error_components?: Array<import('svelte').Component | undefined>
  * }} opts
@@ -62,7 +63,7 @@ export async function render_response({
 	data_serializer,
 	error_components
 }) {
-	if (state.prerendering) {
+	if (state.prerendering || state.prerender_default === true) {
 		if (options.csp.mode === 'nonce') {
 			throw new Error('Cannot use prerendering if config.csp.mode === "nonce"');
 		}
@@ -110,11 +111,11 @@ export async function render_response({
 	let base_expression = s(paths.base);
 
 	const csp = new Csp(options.csp, {
-		prerender: !!state.prerendering
+		prerender: !!(state.prerendering || state.prerender_default === true)
 	});
 
 	// if appropriate, use relative paths for greater portability
-	if (paths.relative) {
+	if (relative) {
 		if (!state.prerendering?.fallback) {
 			// the relative path depth must reflect the URL the browser is actually at, which
 			// for a data request includes the `__data.json` suffix that was stripped during routing
@@ -316,7 +317,7 @@ export async function render_response({
 	 * @param {string[]} attributes
 	 */
 	const add_preload = (path, attributes) => {
-		if (options.link_header_preload && !state.prerendering) {
+		if (options.link_header_preload && !(state.prerendering || state.prerender_default === true)) {
 			link_headers.add(`<${encodeURI(path)}>; ${attributes.join('; ')}; nopush`);
 		} else {
 			head.add_link_tag(path, attributes);
@@ -357,7 +358,11 @@ export async function render_response({
 	if (page_config.ssr && page_config.csr) {
 		body += `\n\t\t\t${fetched
 			.map((item) =>
-				serialize_data(item, resolve_opts.filterSerializedResponseHeaders, !!state.prerendering)
+				serialize_data(
+					item,
+					resolve_opts.filterSerializedResponseHeaders,
+					!!(state.prerendering || state.prerender_default === true)
+				)
 			)
 			.join('\n\t\t\t')}`;
 	}
@@ -369,7 +374,8 @@ export async function render_response({
 		// import the env.js module so that it evaluates before any user code can evaluate.
 		// TODO revert to using top-level await once https://bugs.webkit.org/show_bug.cgi?id=242740 is fixed
 		// https://github.com/sveltejs/kit/pull/11601
-		const load_env_eagerly = client.uses_env_dynamic_public && !!state.prerendering;
+		const load_env_eagerly =
+			client.uses_env_dynamic_public && (state.prerendering || state.prerender_default === true);
 
 		if (load_env_eagerly) {
 			modulepreloads.add(`${paths.app_dir}/env.js`);
@@ -400,7 +406,7 @@ export async function render_response({
 			if (route && !state.prerendering.resolved_route_ids.has(route.id)) {
 				state.prerendering.resolved_route_ids.add(route.id);
 
-				const id_pathname = paths.base + route_id_resolution_pathname(paths.app_dir, route.id);
+				const id_pathname = paths.base + route_id_resolution_pathname(route.id);
 
 				state.prerendering.dependencies.set(
 					id_pathname,
@@ -587,14 +593,14 @@ export async function render_response({
 		'content-type': 'text/html'
 	});
 
-	if (state.prerendering) {
+	if (state.prerendering || state.prerender_default === true) {
 		// TODO read headers set with setHeaders and convert into http-equiv where possible
 		const csp_headers = csp.csp_provider.get_meta();
 		if (csp_headers) {
 			head.add_http_equiv(csp_headers);
 		}
 
-		if (state.prerendering.cache) {
+		if (state.prerendering?.cache) {
 			head.add_http_equiv(
 				`<meta http-equiv="cache-control" content="${state.prerendering.cache}">`
 			);
