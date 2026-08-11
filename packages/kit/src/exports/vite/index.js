@@ -2113,6 +2113,9 @@ function kit({ svelte_config }) {
 				remote_original_by_hash.clear();
 				emitted_remote_hashes.clear();
 
+				immutable = null;
+				manifest_data_code = null;
+
 				finalise = null;
 
 				fs.mkdirSync(out, { recursive: true });
