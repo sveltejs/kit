@@ -1,6 +1,5 @@
 /** @import { SSRManifest } from '@sveltejs/kit'; */
 import { restore, save } from './dev.js';
-import { styleText } from 'node:util';
 import {
 	has_data_suffix,
 	has_resolution_suffix,
@@ -8,6 +7,12 @@ import {
 	strip_resolution_suffix
 } from '../../pathname.js';
 import { has_remote_prefix, strip_remote_prefix } from '../../runtime/server/remote-functions.js';
+
+// using `getBuiltinModule` rather than `import` makes this safe to run in non-Node-compatible environments
+const styleText =
+	// eslint-disable-next-line n/prefer-global/process
+	globalThis.process?.getBuiltinModule?.('node:util')?.styleText ??
+	/** @type {(format: unknown, text: string) => string} */ ((_format, text) => text);
 
 const read_implementation_key = Symbol.for('sveltekit.read_implementation');
 const manifest_key = Symbol.for('sveltekit.manifest');
