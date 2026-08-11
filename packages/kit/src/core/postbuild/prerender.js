@@ -1,5 +1,7 @@
+import process from 'node:process';
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
+import { clearLine, moveCursor } from 'node:readline';
 import { pathToFileURL } from 'node:url';
 import { walk } from '../../utils/filesystem.js';
 import { posixify } from '../../utils/os.js';
@@ -35,9 +37,19 @@ const SPECIAL_HASHLINKS = new Set(['', 'top']);
  *   verbose: boolean;
  *   env: Record<string, string>;
  *   vite_config_file: string | undefined;
+ *   is_tty: boolean | undefined;
  * }} opts
  */
-async function prerender({ hash, out, manifest_path, metadata, verbose, env, vite_config_file }) {
+async function prerender({
+	hash,
+	out,
+	manifest_path,
+	metadata,
+	verbose,
+	env,
+	vite_config_file,
+	is_tty
+}) {
 	/** @type {import('@sveltejs/kit').SSRManifest} */
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
@@ -263,6 +275,39 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 	/** @type {Map<string, Promise<any>>} */
 	const remote_responses = new Map();
 
+	/** @type {(path: string) => void} */
+	let progress_line = noop;
+
+	if (is_tty) {
+		let current = false;
+		const stdout_write = process.stdout.write;
+		const stderr_write = process.stderr.write;
+
+		process.stdout.write = new Proxy(stdout_write, {
+			apply(target, this_arg, args) {
+				current = false;
+				return Reflect.apply(target, this_arg, args);
+			}
+		});
+
+		process.stderr.write = new Proxy(stderr_write, {
+			apply(target, this_arg, args) {
+				current = false;
+				return Reflect.apply(target, this_arg, args);
+			}
+		});
+
+		progress_line = (path) => {
+			if (current) {
+				moveCursor(process.stdout, 0, -1);
+				clearLine(process.stdout, 0);
+			}
+
+			stdout_write.call(process.stdout, `rendering ${path}...\n`);
+			current = true;
+		};
+	}
+
 	/** @type {Set<string>} */
 	const resolved_route_ids = new Set();
 
@@ -302,6 +347,8 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 
 		/** @type {Map<string, import('types').PrerenderDependency>} */
 		const dependencies = new Map();
+
+		progress_line(decoded);
 
 		const request = new Request(prerender_origin + encoded);
 
@@ -344,7 +391,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 			});
 		}
 
-		if (response.status !== 204) {
+		if (response.status >= 400) {
 			log_response(response.status, request);
 		}
 
