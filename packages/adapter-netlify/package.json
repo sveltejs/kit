@@ -44,7 +44,7 @@
 	"dependencies": {
 		"@iarna/toml": "^2.2.5",
 		"@netlify/types": "^2.8.0",
-		"rolldown": "^1.2.0"
+		"rolldown": "^1.2.3"
 	},
 	"devDependencies": {
 		"@netlify/edge-functions": "^3.0.8",
