@@ -15,6 +15,7 @@ import {
 	RemoteQuery,
 	RemoteLiveQuery
 } from '@sveltejs/kit';
+import { RemoteFormIssue, RemoteQuery, RemoteLiveQuery } from '$app/server';
 import {
 	ClientInit,
 	Handle,

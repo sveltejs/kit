@@ -22,7 +22,7 @@
 			"$app/paths": ["./src/runtime/app/paths/public.d.ts"],
 			"$app/paths/internal/client": ["./src/runtime/app/paths/internal/client.js"],
 			"$app/paths/internal/server": ["./src/runtime/app/paths/internal/server.js"],
-			"$app/server": ["./src/runtime/app/server/index.js"],
+			"$app/server": ["./src/runtime/app/server/public.d.ts"],
 			"$app/state": ["./src/runtime/app/state/public.d.ts"],
 			// internal use only
 			"types": ["./src/types/internal.d.ts"]
