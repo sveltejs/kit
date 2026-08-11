@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { isHttpError, type RemoteLiveQuery } from '@sveltejs/kit';
+	import { isHttpError } from '@sveltejs/kit';
+	import type { RemoteLiveQuery } from '$app/server';
 	import {
 		validated_query_no_args,
 		validated_query_with_arg,
@@ -129,7 +130,10 @@
 						await validated_command_with_arg(1);
 						status = 'error';
 					} catch (e) {
-						if (!isHttpError(e) || e.body.message !== 'Input must be a string') {
+						if (
+							!isHttpError(e) ||
+							e.body.message !== 'Input must be a string'
+						) {
 							status = 'wrong error message';
 							return;
 						}
@@ -139,7 +143,10 @@
 							await validated_batch_query_with_validation(123);
 							status = 'error';
 						} catch (e) {
-							if (!isHttpError(e) || e.body.message !== 'Input must be a string') {
+							if (
+								!isHttpError(e) ||
+								e.body.message !== 'Input must be a string'
+							) {
 								status = 'wrong error message';
 								return;
 							}
@@ -161,14 +168,20 @@
 		try {
 			// @ts-expect-error
 			validate_result(await validated_query_with_arg('valid', 'ignored'));
-			// @ts-expect-error
-			validate_result(await read_live(validated_live_query_with_arg('valid', 'ignored')));
-			// @ts-expect-error
-			validate_result(await validated_prerendered_query_with_arg('valid', 'ignored'));
+			validate_result(
+				// @ts-expect-error
+				await read_live(validated_live_query_with_arg('valid', 'ignored'))
+			);
+			validate_result(
+				// @ts-expect-error
+				await validated_prerendered_query_with_arg('valid', 'ignored')
+			);
 			// @ts-expect-error
 			validate_result(await validated_command_with_arg('valid', 'ignored'));
-			// @ts-expect-error
-			validate_result(await validated_batch_query_no_validation('valid', 'ignored'));
+			validate_result(
+				// @ts-expect-error
+				await validated_batch_query_no_validation('valid', 'ignored')
+			);
 
 			status = 'success';
 		} catch {
