@@ -576,7 +576,7 @@ export async function internal_respond(request, options, manifest, state) {
 	/**
 	 * @param {import('@sveltejs/kit').RequestEvent} event
 	 * @param {PageNodes | undefined} page_nodes
-	 * @param {import('@sveltejs/kit').ResolveOptions} [opts]
+	 * @param {import('@sveltejs/kit/hooks').ResolveOptions} [opts]
 	 */
 	async function resolve(event, page_nodes, opts) {
 		try {
