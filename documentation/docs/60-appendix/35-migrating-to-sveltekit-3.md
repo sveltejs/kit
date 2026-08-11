@@ -83,7 +83,12 @@ The `$lib` alias is no longer generated automatically by SvelteKit. It is replac
 }
 ```
 
-...and replace `$lib` with `#lib` across your codebase.
+...and replace `$lib` with `#lib` across your codebase. Note that you will also have to add the module extensions (e.g. `.js` or `.ts`) to these imports.
+
+```js
+---import { foo } from '$lib/foo';--- 
++++import { foo } from '#lib/foo.js';+++ 
+```
 
 ## `$app/environment` (renamed)
 

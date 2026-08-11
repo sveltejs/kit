@@ -1,5 +1,4 @@
 import path from 'node:path';
-import { normalize_import_value, read_package_imports } from '../../../utils/imports.js';
 import { posixify } from '../../../utils/os.js';
 
 /**
@@ -75,27 +74,4 @@ export function remove_trailing_slashstar(file) {
 	} else {
 		return file;
 	}
-}
-
-/**
- * @param {string} root
- */
-export function get_subpath_imports(root) {
-	// Add all `#`-prefixed imports from package.json as path aliases
-	const imports = read_package_imports(root);
-
-	/** @type {Record<string, string>} */
-	const alias = {};
-
-	if (imports) {
-		for (const [key, raw_value] of Object.entries(imports)) {
-			if (!key.startsWith('#')) continue;
-			const value = normalize_import_value(raw_value);
-			if (value) {
-				alias[key] = value;
-			}
-		}
-	}
-
-	return alias;
 }
