@@ -2148,15 +2148,20 @@ function kit({ svelte_config }) {
 				}
 
 				if (event.code === 'BUNDLE_END') {
-					await process_ssr_build(
-						/** @type {Rolldown.RolldownOutput['output']} */ (
-							watch_build_output.get(builder.environments.ssr.name)
-						)
-					);
-					// buildApp hooks don't rerun in watch mode so we need to run
-					// the deferred steps here on subsequent builds
-					if (rebuild) await finalise?.();
-					await event.result.close();
+					try {
+						await process_ssr_build(
+							/** @type {Rolldown.RolldownOutput['output']} */ (
+								watch_build_output.get(builder.environments.ssr.name)
+							)
+						);
+						// buildApp hooks don't rerun in watch mode so we need to run
+						// the deferred steps here on subsequent builds
+						if (rebuild) await finalise?.();
+					} catch (e) {
+						return task.reject(e);
+					} finally {
+						await event.result.close();
+					}
 					return task.resolve();
 				}
 			});
