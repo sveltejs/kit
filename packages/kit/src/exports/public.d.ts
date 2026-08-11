@@ -24,10 +24,7 @@ import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from 'types';
 import { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
 import { StandardSchemaV1 } from '@standard-schema/spec';
 import { Plugin } from 'vite';
-import {
-	RouteId as AppRouteId,
-	LayoutParams as AppLayoutParams
-} from '$app/types';
+import { RouteId as AppRouteId, LayoutParams as AppLayoutParams } from '$app/types';
 import { ParamMatcher } from '@sveltejs/kit/params';
 
 export { PrerenderOption } from '../types/private.js';
@@ -56,10 +53,7 @@ export interface Adapter {
 		 * Test support for `read` from `$app/server`.
 		 * @param details.config The merged adapter-specific route config exported from the route with `export const config`
 		 */
-		read?: (details: {
-			config: Record<string, any>;
-			route: { id: string };
-		}) => boolean;
+		read?: (details: { config: Record<string, any>; route: { id: string } }) => boolean;
 
 		/**
 		 * Test support for `instrumentation.server.js`. To pass, the adapter must support running `instrumentation.server.js` prior to the application code.
@@ -88,19 +82,17 @@ export interface Adapter {
 	};
 }
 
-export type LoadProperties<input extends Record<string, any> | void> =
-	input extends void
-		? undefined // needs to be undefined, because void will break intellisense
-		: input extends Record<string, any>
-			? input
-			: unknown;
+export type LoadProperties<input extends Record<string, any> | void> = input extends void
+	? undefined // needs to be undefined, because void will break intellisense
+	: input extends Record<string, any>
+		? input
+		: unknown;
 
-export type AwaitedActions<T extends Record<string, (...args: any) => any>> =
-	OptionalUnion<
-		{
-			[Key in keyof T]: UnpackValidationError<Awaited<ReturnType<T[Key]>>>;
-		}[keyof T]
-	>;
+export type AwaitedActions<T extends Record<string, (...args: any) => any>> = OptionalUnion<
+	{
+		[Key in keyof T]: UnpackValidationError<Awaited<ReturnType<T[Key]>>>;
+	}[keyof T]
+>;
 
 // Takes a union type and returns a union type where each type also has all properties
 // of all possible types (typed as undefined), making accessing them more ergonomic
@@ -154,9 +146,7 @@ export interface Builder {
 	 * @param fn A function that groups a set of routes into an entry point
 	 * @deprecated removed in 3.0. Use `builder.routes` instead
 	 */
-	createEntries?: (
-		fn: (route: RouteDefinition) => AdapterEntry
-	) => Promise<void>;
+	createEntries?: (fn: (route: RouteDefinition) => AdapterEntry) => Promise<void>;
 
 	/**
 	 * Find all the assets imported by server files belonging to `routes`
@@ -178,10 +168,7 @@ export interface Builder {
 	 * @param opts
 	 * @param opts.relativePath  A relative path to the base directory of the server build output
 	 */
-	generateManifest: (opts: {
-		relativePath: string;
-		routes?: RouteDefinition[];
-	}) => string;
+	generateManifest: (opts: { relativePath: string; routes?: RouteDefinition[] }) => string;
 
 	/**
 	 * Resolve a path to the `name` directory inside `outDir`, e.g. `/path/to/.svelte-kit/my-adapter`.
@@ -267,10 +254,7 @@ export interface Builder {
 					exports: string[];
 			  }
 			| {
-					generateText: (args: {
-						instrumentation: string;
-						start: string;
-					}) => string;
+					generateText: (args: { instrumentation: string; start: string }) => string;
 			  };
 	}) => void;
 
@@ -302,18 +286,13 @@ export interface Cookies {
 	 * @param name the name of the cookie
 	 * @param opts the options, passed directly to `cookie.parseCookie`. See documentation [here](https://github.com/jshttp/cookie?tab=readme-ov-file#cookieparsecookiestr-options)
 	 */
-	get: (
-		name: string,
-		opts?: import('cookie').ParseOptions
-	) => string | undefined;
+	get: (name: string, opts?: import('cookie').ParseOptions) => string | undefined;
 
 	/**
 	 * Gets all cookies that were previously set with `cookies.set`, or from the request headers.
 	 * @param opts the options, passed directly to `cookie.parseCookie`. See documentation [here](https://github.com/jshttp/cookie?tab=readme-ov-file#cookieparsecookiestr-options)
 	 */
-	getAll: (
-		opts?: import('cookie').ParseOptions
-	) => Array<{ name: string; value: string }>;
+	getAll: (opts?: import('cookie').ParseOptions) => Array<{ name: string; value: string }>;
 
 	/**
 	 * Sets a cookie. This will add a `set-cookie` header to the response, but also make the cookie available via `cookies.get` or `cookies.getAll` during the current request.
@@ -325,11 +304,7 @@ export interface Cookies {
 	 * @param value the cookie value
 	 * @param opts the options passed to `cookie.stringifySetCookie` with the SvelteKit defaults described above. See documentation [here](https://github.com/jshttp/cookie?tab=readme-ov-file#cookiestringifysetcookiesetcookieobj-options)
 	 */
-	set: (
-		name: string,
-		value: string,
-		opts: import('cookie').SerializeOptions
-	) => void;
+	set: (name: string, value: string, opts: import('cookie').SerializeOptions) => void;
 
 	/**
 	 * Deletes a cookie by setting its value to an empty string and setting the expiry date in the past.
@@ -376,11 +351,7 @@ export interface Cookies {
 	 * @param value the cookie value
 	 * @param opts the options passed to `cookie.stringifySetCookie` with the SvelteKit defaults described above. See documentation [here](https://github.com/jshttp/cookie?tab=readme-ov-file#cookiestringifysetcookiesetcookieobj-options)
 	 */
-	serialize: (
-		name: string,
-		value: string,
-		opts: import('cookie').SerializeOptions
-	) => string;
+	serialize: (name: string, value: string, opts: import('cookie').SerializeOptions) => string;
 }
 
 /**
@@ -391,10 +362,7 @@ export interface Emulator {
 	 * A function that is called with the current route `config` and `prerender` option
 	 * and returns an `App.Platform` object
 	 */
-	platform?(details: {
-		config: any;
-		prerender: PrerenderOption;
-	}): MaybePromise<App.Platform>;
+	platform?(details: { config: any; prerender: PrerenderOption }): MaybePromise<App.Platform>;
 }
 
 export interface KitConfig {
@@ -974,14 +942,9 @@ export type Load<
 	Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 	InputData extends Record<string, unknown> | null = Record<string, any> | null,
 	ParentData extends Record<string, unknown> = Record<string, any>,
-	OutputData extends Record<string, unknown> | void = Record<
-		string,
-		any
-	> | void,
+	OutputData extends Record<string, unknown> | void = Record<string, any> | void,
 	RouteId extends AppRouteId | null = AppRouteId | null
-> = (
-	event: LoadEvent<Params, InputData, ParentData, RouteId>
-) => MaybePromise<OutputData>;
+> = (event: LoadEvent<Params, InputData, ParentData, RouteId>) => MaybePromise<OutputData>;
 
 /**
  * The generic form of `PageLoadEvent` and `LayoutLoadEvent`. You should import those from `./$types` (see [generated types](https://svelte.dev/docs/kit/types#Generated-types))
@@ -1154,9 +1117,7 @@ export type LiveRequestedEntry<Validated, Output> = {
 	query: RemoteLiveQuery<Output>;
 };
 
-export type QueryRequestedResult<Validated, Output> = Iterable<
-	RequestedEntry<Validated, Output>
-> &
+export type QueryRequestedResult<Validated, Output> = Iterable<RequestedEntry<Validated, Output>> &
 	AsyncIterable<RequestedEntry<Validated, Output>> & {
 		/**
 		 * Call `refresh` on all queries selected by this `requested` invocation.
@@ -1388,9 +1349,7 @@ export type ServerLoad<
 	ParentData extends Record<string, any> = Record<string, any>,
 	OutputData extends Record<string, any> | void = Record<string, any> | void,
 	RouteId extends AppRouteId | null = AppRouteId | null
-> = (
-	event: ServerLoadEvent<Params, ParentData, RouteId>
-) => MaybePromise<OutputData>;
+> = (event: ServerLoadEvent<Params, ParentData, RouteId>) => MaybePromise<OutputData>;
 
 export interface ServerLoadEvent<
 	Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
@@ -1520,11 +1479,7 @@ export interface Snapshot<T = any> {
 }
 
 // If T is unknown or has an index signature, the types below will recurse indefinitely and create giant unions that TS can't handle
-type WillRecurseIndefinitely<T> = unknown extends T
-	? true
-	: string extends keyof T
-		? true
-		: false;
+type WillRecurseIndefinitely<T> = unknown extends T ? true : string extends keyof T ? true : false;
 
 // Input type mappings for form fields
 type InputTypeMap = {
@@ -1561,9 +1516,7 @@ export type RemoteFormFieldType<T> = {
 }[keyof InputTypeMap];
 
 // Input element properties based on type
-type InputElementProps<T extends keyof InputTypeMap> = T extends
-	| 'checkbox'
-	| 'radio'
+type InputElementProps<T extends keyof InputTypeMap> = T extends 'checkbox' | 'radio'
 	? {
 			name: string;
 			type: T;
@@ -1635,13 +1588,7 @@ type ValueOfUnionKey<T, K extends PropertyKey> = T extends unknown
 		: never
 	: never;
 
-export type RemoteFormFieldValue =
-	| string
-	| string[]
-	| number
-	| boolean
-	| File
-	| File[];
+export type RemoteFormFieldValue = string | string[] | number | boolean | File | File[];
 
 type AsArgs<Type extends keyof InputTypeMap, Value> = Type extends 'checkbox'
 	? Value extends string[]
@@ -1662,22 +1609,19 @@ type AsArgs<Type extends keyof InputTypeMap, Value> = Type extends 'checkbox'
 /**
  * Form field accessor type that provides name(), value(), and issues() methods
  */
-export type RemoteFormField<Value extends RemoteFormFieldValue> =
-	RemoteFormFieldMethods<Value> & {
-		/**
-		 * Returns an object that can be spread onto an input element with the correct type attribute,
-		 * aria-invalid attribute if the field is invalid, and appropriate value/checked property getters/setters.
-		 * @example
-		 * ```svelte
-		 * <input {...myForm.fields.myString.as('text')} />
-		 * <input {...myForm.fields.myNumber.as('number')} />
-		 * <input {...myForm.fields.myBoolean.as('checkbox')} />
-		 * ```
-		 */
-		as<T extends RemoteFormFieldType<Value>>(
-			...args: AsArgs<T, Value>
-		): InputElementProps<T>;
-	};
+export type RemoteFormField<Value extends RemoteFormFieldValue> = RemoteFormFieldMethods<Value> & {
+	/**
+	 * Returns an object that can be spread onto an input element with the correct type attribute,
+	 * aria-invalid attribute if the field is invalid, and appropriate value/checked property getters/setters.
+	 * @example
+	 * ```svelte
+	 * <input {...myForm.fields.myString.as('text')} />
+	 * <input {...myForm.fields.myNumber.as('number')} />
+	 * <input {...myForm.fields.myBoolean.as('checkbox')} />
+	 * ```
+	 */
+	as<T extends RemoteFormFieldType<Value>>(...args: AsArgs<T, Value>): InputElementProps<T>;
+};
 
 type RemoteFormFieldContainer<Value> = RemoteFormFieldMethods<Value> & {
 	/** Validation issues belonging to this or any of the fields that belong to it, if any */
@@ -1697,9 +1641,7 @@ type UnknownField<Value> = RemoteFormFieldMethods<Value> & {
 	 * <input {...myForm.fields.myBoolean.as('checkbox')} />
 	 * ```
 	 */
-	as<T extends RemoteFormFieldType<Value>>(
-		...args: AsArgs<T, Value>
-	): InputElementProps<T>;
+	as<T extends RemoteFormFieldType<Value>>(...args: AsArgs<T, Value>): InputElementProps<T>;
 } & {
 	[key: string | number]: UnknownField<any>;
 };
@@ -1747,9 +1689,7 @@ type RecursiveFormFields = RemoteFormFieldContainer<any> & {
 type MaybeArray<T> = T | T[];
 
 export interface RemoteFormInput {
-	[key: string]:
-		| MaybeArray<string | number | boolean | File | RemoteFormInput>
-		| undefined;
+	[key: string]: MaybeArray<string | number | boolean | File | RemoteFormInput> | undefined;
 }
 
 export interface RemoteFormIssue {
@@ -2020,9 +1960,7 @@ export interface EnvVarConfig<T> {
 	 *
 	 * If omitted, the value must be set, but may be an empty string.
 	 */
-	schema?:
-		| StandardSchemaV1<string | undefined, T>
-		| ((value: string | undefined) => T | undefined);
+	schema?: StandardSchemaV1<string | undefined, T> | ((value: string | undefined) => T | undefined);
 	/**
 	 * A description of the variable that will be used for inline documentation on hover.
 	 */

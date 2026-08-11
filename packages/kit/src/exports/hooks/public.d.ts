@@ -34,9 +34,7 @@ type ValidationCaughtError<Issue extends StandardSchemaV1.Issue> = {
  * SvelteKit itself (such as 404s), validation errors, and unknown errors (thrown by your code,
  * or code it calls).
  */
-export type CaughtError<
-	Issue extends StandardSchemaV1.Issue = StandardSchemaV1.Issue
-> =
+export type CaughtError<Issue extends StandardSchemaV1.Issue = StandardSchemaV1.Issue> =
 	| {
 			[Kind in keyof CaughtErrorMap]: {
 				/** Identifies the category and origin of the error */
@@ -66,13 +64,9 @@ export type ClientCaughtError = Exclude<CaughtError, { kind: 'validation' }>;
  *
  * Make sure that this function _never_ throws an error.
  */
-export type HandleServerError<
-	Issue extends StandardSchemaV1.Issue = StandardSchemaV1.Issue
-> = (
+export type HandleServerError<Issue extends StandardSchemaV1.Issue = StandardSchemaV1.Issue> = (
 	input: CaughtError<Issue> & { event: RequestEvent }
-) => MaybePromise<
-	AppErrorWithOptionalDefaults | VoidIfNoRequiredAppErrorProperties
->;
+) => MaybePromise<AppErrorWithOptionalDefaults | VoidIfNoRequiredAppErrorProperties>;
 
 /**
  * The client-side [`handleError`](https://svelte.dev/docs/kit/hooks#handleError) hook runs for every error thrown while navigating, except redirects.
@@ -90,9 +84,7 @@ export type HandleServerError<
  */
 export type HandleClientError = (
 	input: ClientCaughtError & { event: NavigationEvent }
-) => MaybePromise<
-	AppErrorWithOptionalDefaults | VoidIfNoRequiredAppErrorProperties
->;
+) => MaybePromise<AppErrorWithOptionalDefaults | VoidIfNoRequiredAppErrorProperties>;
 
 /**
  * The [`handleFetch`](https://svelte.dev/docs/kit/hooks#handleFetch) hook allows you to modify (or replace) the result of an [`event.fetch`](https://svelte.dev/docs/kit/load#Making-fetch-requests) call that runs on the server (or during prerendering) inside an endpoint, `load`, `action`, `handle`, `handleError` or `reroute`.
@@ -119,10 +111,7 @@ export type ClientInit = () => MaybePromise<void>;
  * The [`reroute`](https://svelte.dev/docs/kit/hooks#reroute) hook allows you to modify the URL before it is used to determine which route to render.
  * @since 2.3.0
  */
-export type Reroute = (event: {
-	url: URL;
-	fetch: typeof fetch;
-}) => MaybePromise<void | string>;
+export type Reroute = (event: { url: URL; fetch: typeof fetch }) => MaybePromise<void | string>;
 
 /**
  * The [`transport`](https://svelte.dev/docs/kit/hooks#transport) hook allows you to transport custom types across the server/client boundary.
@@ -168,10 +157,7 @@ export interface ResolveOptions {
 	 * but they will always be split at sensible boundaries such as `%sveltekit.head%` or layout/page components.
 	 * @param input the html chunk and the info if this is the last chunk
 	 */
-	transformPageChunk?: (input: {
-		html: string;
-		done: boolean;
-	}) => MaybePromise<string | undefined>;
+	transformPageChunk?: (input: { html: string; done: boolean }) => MaybePromise<string | undefined>;
 	/**
 	 * Determines which headers should be included in serialized responses when a `load` function loads a resource with `fetch`.
 	 * By default, none will be included.
@@ -186,10 +172,7 @@ export interface ResolveOptions {
 	 * By default, `js` and `css` files will be preloaded.
 	 * @param input the type of the file and its path
 	 */
-	preload?: (input: {
-		type: 'font' | 'css' | 'js' | 'asset';
-		path: string;
-	}) => boolean;
+	preload?: (input: { type: 'font' | 'css' | 'js' | 'asset'; path: string }) => boolean;
 }
 
 type AppErrorWithOptionalDefaults = Omit<App.Error, 'status' | 'message'> & {
