@@ -32,7 +32,7 @@ export const variables = defineEnvVars({
 });
 ```
 
-Each value in the object passed to [`defineEnvVars`](@sveltejs-kit-env#defineEnvVars) is an [`EnvVarConfig`](@sveltejs-kit#EnvVarConfig) object that configures the environment variable.
+Each value in the object passed to [`defineEnvVars`](@sveltejs-kit-env#defineEnvVars) is an [`EnvVarConfig`](@sveltejs-kit-env#EnvVarConfig) object that configures the environment variable.
 
 > [!NOTE] `defineEnvVars` returns its argument unaltered — it exists purely to help with type safety.
 
