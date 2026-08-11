@@ -86,7 +86,7 @@
 		"test:server-side-route-resolution:build": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:server-side-route-resolution:build",
 		"test:svelte-async:dev": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:svelte-async:dev",
 		"test:svelte-async:build": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:svelte-async:build",
-		"test:unit": "vitest run ./",
+		"test:unit": "vitest run -c vitest.kit.config.js",
 		"tsc-native": "node node_modules/@typescript/native/bin/tsc",
 		"prepublishOnly": "pnpm generate:types",
 		"generate:version": "node scripts/generate-version.js",
