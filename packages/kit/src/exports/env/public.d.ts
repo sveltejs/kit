@@ -30,9 +30,7 @@ export interface EnvVarConfig<T> {
 	 *
 	 * If omitted, the value must be set, but may be an empty string.
 	 */
-	schema?:
-		| StandardSchemaV1<string | undefined, T>
-		| ((value: string | undefined) => T | undefined);
+	schema?: StandardSchemaV1<string | undefined, T> | ((value: string | undefined) => T | undefined);
 	/**
 	 * A description of the variable that will be used for inline documentation on hover.
 	 */
