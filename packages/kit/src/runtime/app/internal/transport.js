@@ -1,4 +1,4 @@
-/** @import { Transport } from '@sveltejs/kit' */
+/** @import { Transport } from '@sveltejs/kit/hooks' */
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
 

@@ -296,7 +296,7 @@ If you need direct, imperative access to the underlying stream of values (rather
 
 ```js
 // @filename: time.remote.ts
-import { RemoteLiveQueryFunction } from '@sveltejs/kit';
+import { RemoteLiveQueryFunction } from '$app/server';
 export declare const getTime: RemoteLiveQueryFunction<undefined, Date>;
 // @errors: 2304
 // @filename: index.js
@@ -1057,7 +1057,7 @@ Unfortunately, life isn't always as simple as the preceding example. The server 
 SvelteKit makes this easy by allowing the client to _request_ that the server updates specific data using `submit().updates` (for `form`) or `myCommand().updates` (for `command`):
 
 ```ts
-import type { RemoteQueryUpdate, RemoteQuery } from '@sveltejs/kit';
+import type { RemoteQueryUpdate, RemoteQuery } from '$app/server';
 interface Post {}
 declare function submit(): Promise<any> & {
 	updates(...updates: RemoteQueryUpdate[]): Promise<any>;
@@ -1112,8 +1112,7 @@ export const createPost = form(
 Additionally, `requested` allows a simple shorthand when all you want to do is refresh the requested query instances:
 
 ```ts
-import type { RemoteQueryFunction } from '@sveltejs/kit';
-import { requested } from '$app/server';
+import { requested, type RemoteQueryFunction } from '$app/server';
 declare const getPosts: RemoteQueryFunction<any, any>;
 // ---cut---
 // this is the same as looping over the result and calling `void query.refresh()`.
@@ -1240,7 +1239,7 @@ In the second case, we don't want to give the attacker any help, so SvelteKit wi
 
 ```js
 /// file: src/hooks.server.js
-/** @type {import('@sveltejs/kit').HandleServerError} */
+/** @type {import('@sveltejs/kit/hooks').HandleServerError} */
 export function handleError({ kind, issues }) {
 	if (kind === 'validation') {
 		console.error(issues);

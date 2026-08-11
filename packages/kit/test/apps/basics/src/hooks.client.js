@@ -2,7 +2,7 @@ import { PUBLIC_DYNAMIC } from '$app/env/public';
 
 window.PUBLIC_DYNAMIC = PUBLIC_DYNAMIC;
 
-/** @type{import("@sveltejs/kit").HandleClientError} */
+/** @type{import("@sveltejs/kit/hooks").HandleClientError} */
 export function handleError(input) {
 	const { kind } = input;
 
