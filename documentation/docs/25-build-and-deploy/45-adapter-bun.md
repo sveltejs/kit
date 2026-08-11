@@ -164,7 +164,7 @@ Bun loads `.env` files automatically. If `envPrefix` is set, add that prefix to 
 
 ### Listener
 
-`HOST` and `PORT` configure the TCP listener. Without either value or a `serverOptions` default, Bun uses its own listener defaults.
+`HOST` and `PORT` configure the TCP listener. Without either value or a `serverOptions` default, the server listens on port `3000`.
 
 ```sh
 HOST=127.0.0.1 PORT=4000 bun ./build

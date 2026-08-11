@@ -28,7 +28,9 @@ if (unix) {
 } else {
 	delete options.unix;
 	options.hostname = env('HOST', options.hostname);
-	options.port = env('PORT', options.port !== undefined ? String(options.port) : undefined);
+	// always set an explicit port: left undefined, Bun.serve reads the unprefixed
+	// BUN_PORT/PORT/NODE_PORT itself, bypassing envPrefix isolation
+	options.port = env('PORT', options.port !== undefined ? String(options.port) : undefined) ?? 3000;
 	options.reusePort = boolean_env('REUSE_PORT', options.reusePort);
 	options.ipv6Only = boolean_env('IPV6_ONLY', options.ipv6Only);
 }

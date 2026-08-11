@@ -18,6 +18,7 @@ test('starts Bun with production defaults and generated request routes', async (
 	expect(loaded.serve).toHaveBeenCalledWith(
 		expect.objectContaining({
 			development: false,
+			port: 3000,
 			maxRequestBodySize: 512 * 1024,
 			fetch: loaded.handler,
 			routes: loaded.routes
