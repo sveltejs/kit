@@ -48,6 +48,7 @@ export interface ServerInternalModule {
 	set_version(version: string): void;
 	set_fix_stack_trace(fix_stack_trace: (error: Error) => void): void;
 	get_hooks: () => Promise<Record<string, any>>;
+	log_response: (status: number, request: Request) => void;
 }
 
 export interface Asset {
