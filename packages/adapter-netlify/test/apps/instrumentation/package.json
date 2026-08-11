@@ -6,7 +6,6 @@
 		"dev": "vite dev",
 		"build": "vite build",
 		"preview": "vite preview",
-		"prepare": "svelte-kit sync || echo ''",
 		"test:platform": "playwright test"
 	},
 	"devDependencies": {
