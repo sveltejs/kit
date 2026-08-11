@@ -26,8 +26,7 @@ export interface AdapterOptions {
 	fallback?: 'plaintext' | 'spa';
 
 	/**
-	 * Only for Cloudflare Pages. Customize the automatically-generated [`_routes.json`](https://developers.cloudflare.com/pages/platform/functions/routing/#create-a-_routesjson-file) file.
-	 * @deprecated
+	 * @deprecated Cloudflare Pages is no longer supported
 	 */
 	routes?: never;
 
