@@ -1,3 +1,5 @@
+/** @import { Builder } from '@sveltejs/kit' */
+/** @import { BunPlugin } from 'bun' */
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -163,7 +165,7 @@ export default function (opts = {}) {
 				].join('\n');
 			}
 
-			/** @type {import('bun').BunPlugin} */
+			/** @type {BunPlugin} */
 			const adapter_plugin = {
 				name: 'adapter-bun',
 				setup(build) {
@@ -222,7 +224,7 @@ export default function (opts = {}) {
 
 /**
  * @param {object} options
- * @param {import('@sveltejs/kit').Builder} options.builder
+ * @param {Builder} options.builder
  * @param {string[]} options.server_assets
  * @returns {Promise<{imports: string[], entries: string[], server_assets: string[]}>}
  */
@@ -287,7 +289,7 @@ async function get_embed_entries({ builder, server_assets }) {
 
 /**
  * @param {object} options
- * @param {import('@sveltejs/kit').Builder} options.builder
+ * @param {Builder} options.builder
  * @param {string[]} options.server_assets
  * @param {string} options.out
  * @param {boolean} options.precompress
@@ -333,7 +335,7 @@ async function get_no_embed_entries({ builder, server_assets, out, precompress }
 
 /**
  * @param {object} options
- * @param {import('@sveltejs/kit').Builder} options.builder
+ * @param {Builder} options.builder
  * @param {string} options.out
  * @param {boolean} options.embed
  * @param {boolean} options.precompress

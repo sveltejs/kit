@@ -1,3 +1,4 @@
+/** @import { Server as BunServer } from 'bun' */
 import { Server } from 'SERVER';
 import { manifest, origin, env_prefix } from 'MANIFEST';
 import { server_assets } from 'ROUTES';
@@ -19,7 +20,7 @@ await server.init({
 /**
  * The Bun-native SvelteKit request handler used by the generated server.
  * @param {Request} request
- * @param {import('bun').Server<undefined>} bun_server
+ * @param {BunServer<undefined>} bun_server
  * @returns {Promise<Response>}
  */
 export async function handler(request, bun_server) {
@@ -97,7 +98,7 @@ function get_origin(request, url) {
 
 /**
  * @param {Request} request
- * @param {import('bun').Server<undefined>} bun_server
+ * @param {BunServer<undefined>} bun_server
  * @returns {string}
  */
 function get_client_address(request, bun_server) {

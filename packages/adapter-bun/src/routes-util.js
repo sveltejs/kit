@@ -1,10 +1,11 @@
+/** @import { BunFile, BunRequest, Serve } from 'bun' */
 import { manifest, base, embed } from 'MANIFEST';
 import path from 'node:path';
 
 const dir = path.dirname(Bun.main);
 
 /**
- * @typedef {import('bun').Serve.Routes<never, string>[string]} RouteHandler
+ * @typedef {Serve.Routes<never, string>[string]} RouteHandler
  * @typedef {{ hash: string, mtime: number, br?: boolean, gz?: boolean }} AssetMeta
  */
 
@@ -103,7 +104,7 @@ function negotiate(accept, meta) {
 /**
  * Bun does not route HEAD requests to a GET function handler, so every route
  * registers both methods.
- * @param {((request: import('bun').BunRequest) => Response) | Response} handler
+ * @param {((request: BunRequest) => Response) | Response} handler
  * @returns {RouteHandler}
  */
 function handlers(handler) {
@@ -121,7 +122,7 @@ function file_route(file, meta, extra_headers = {}) {
 	const content_type = Bun.file(file).type;
 	const last_modified = new Date(meta.mtime).toUTCString();
 
-	/** @param {import('bun').BunRequest} request */
+	/** @param {BunRequest} request */
 	const handler = (request) => {
 		// Bun serializes Range itself for file bodies; ranges apply to the identity representation
 		const encoding =
@@ -181,7 +182,7 @@ export function client_asset(url, filename = url, meta) {
 /**
  * @param {string} url
  * @param {string} [filename]
- * @returns {import('bun').BunFile}
+ * @returns {BunFile}
  */
 export function server_asset(url, filename = url) {
 	return Bun.file(embed ? filename : path.resolve(dir, 'client', url));
@@ -208,7 +209,7 @@ export function prerendered_page(url, filename, meta) {
 	const canonical = encode_pathname(url);
 
 	/**
-	 * @param {import('bun').BunRequest} req
+	 * @param {BunRequest} req
 	 * @returns {Response}
 	 */
 	function handle_redirect(req) {

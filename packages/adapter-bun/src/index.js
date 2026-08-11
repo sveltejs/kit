@@ -1,10 +1,11 @@
+/** @import { Serve } from 'bun' */
 import process from 'node:process';
 import server_options from 'SERVER_OPTIONS';
 import { routes } from 'ROUTES';
 import { handler } from './handler.js';
 import { boolean_env, bytes_env, env, number_env } from './env.js';
 
-const options = /** @type {import('bun').Serve.Options<undefined>} */ ({ ...server_options });
+const options = /** @type {Serve.Options<undefined>} */ ({ ...server_options });
 
 const unix = env('SOCKET_PATH', options.unix);
 
