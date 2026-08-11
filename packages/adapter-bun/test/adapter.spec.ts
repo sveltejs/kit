@@ -1,4 +1,4 @@
-import { readdir } from 'node:fs/promises';
+import fs from 'node:fs';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import adapter from '../index.js';
 
@@ -9,9 +9,10 @@ const routes_file = `${package_dir}/src/routes.js`;
 const options_file = `${package_dir}/src/options.js`;
 const start_file = `${package_dir}/src/start.js`;
 
-vi.mock('node:fs/promises', async (import_original) => {
-	const actual = await import_original<typeof import('node:fs/promises')>();
-	return { ...actual, readdir: vi.fn() };
+vi.mock('node:fs', async (import_original) => {
+	const actual = await import_original<typeof import('node:fs')>();
+	const mocked = { ...actual, readdirSync: vi.fn(), existsSync: vi.fn(), rmSync: vi.fn() };
+	return { ...mocked, default: mocked };
 });
 
 const bun = vi.hoisted(() => ({
@@ -32,7 +33,8 @@ const bun = vi.hoisted(() => ({
 
 beforeEach(() => {
 	vi.stubGlobal('Bun', { build: bun.build, file: bun.file, CryptoHasher: bun.CryptoHasher });
-	vi.mocked(readdir).mockResolvedValue([]);
+	vi.mocked(fs.readdirSync).mockReturnValue([]);
+	vi.mocked(fs.existsSync).mockReturnValue(true);
 });
 
 afterEach(() => {
@@ -63,7 +65,7 @@ describe('Bun build configuration', () => {
 		const builder = create_builder();
 		await adapter().adapt(builder);
 
-		expect(builder.rimraf).toHaveBeenCalledWith('build');
+		expect(fs.rmSync).toHaveBeenCalledWith('build', { recursive: true, force: true });
 		expect(builder.log.minor).toHaveBeenCalledWith('Building server');
 
 		const options = bun.build.mock.calls[0][0];
@@ -289,13 +291,6 @@ describe('generated routes', () => {
 	});
 
 	test('precompresses assets and marks the variants in the generated routes', async () => {
-		const previous = bun.file.getMockImplementation();
-		bun.file.mockImplementation((path: string) => ({
-			text: async () => '// generated server entrypoint',
-			stream: () => new Blob([]).stream(),
-			lastModified: 0,
-			exists: async () => path.endsWith('.br') || path.endsWith('.gz')
-		}));
 		const builder = create_builder({ client_files: ['app.js'] });
 
 		await adapter({ precompress: true }).adapt(builder);
@@ -306,7 +301,6 @@ describe('generated routes', () => {
 		expect(source).toContain(
 			'...client_asset("app.js", undefined, {"hash":"abc","mtime":0,"br":true,"gz":true})'
 		);
-		bun.file.mockImplementation(previous!);
 	});
 
 	test('warns when precompress is combined with compile', async () => {
@@ -343,12 +337,16 @@ describe('generated routes', () => {
 		expect(source).toContain('...client_asset("ok.txt", undefined, {"hash":"abc","mtime":0})');
 	});
 
-	test('embedded builds tolerate absent output directories but propagate other errors', async () => {
-		vi.mocked(readdir).mockRejectedValue(Object.assign(new Error('missing'), { code: 'ENOENT' }));
+	test('embedded builds tolerate absent output directories but propagate readdir errors', async () => {
+		vi.mocked(fs.existsSync).mockReturnValue(false);
 		await adapter({ buildOptions: { compile: true } }).adapt(create_builder());
 		expect(bun.build).toHaveBeenCalledOnce();
+		expect(fs.readdirSync).not.toHaveBeenCalled();
 
-		vi.mocked(readdir).mockRejectedValue(Object.assign(new Error('denied'), { code: 'EACCES' }));
+		vi.mocked(fs.existsSync).mockReturnValue(true);
+		vi.mocked(fs.readdirSync).mockImplementation(() => {
+			throw Object.assign(new Error('denied'), { code: 'EACCES' });
+		});
 		await expect(
 			adapter({ buildOptions: { compile: true } }).adapt(create_builder())
 		).rejects.toThrow('denied');
@@ -422,7 +420,7 @@ function mock_files({
 	dependencies?: string[];
 	data?: string[];
 }) {
-	vi.mocked(readdir).mockImplementation((path) => {
+	vi.mocked(fs.readdirSync).mockImplementation((path) => {
 		const directory = String(path);
 		const files = directory.endsWith('/client')
 			? client
@@ -432,17 +430,15 @@ function mock_files({
 					? dependencies
 					: data;
 
-		return Promise.resolve(
-			files.map((file) => {
-				const segments = file.split('/');
-				const name = /** @type {string} */ segments.pop();
-				return {
-					name,
-					parentPath: [directory, ...segments].join('/'),
-					isFile: () => true
-				};
-			})
-		) as unknown as ReturnType<typeof readdir>;
+		return files.map((file) => {
+			const segments = file.split('/');
+			const name = /** @type {string} */ segments.pop();
+			return {
+				name,
+				parentPath: [directory, ...segments].join('/'),
+				isFile: () => true
+			};
+		}) as unknown as ReturnType<typeof fs.readdirSync>;
 	});
 }
 
@@ -481,7 +477,6 @@ function create_builder({
 			info: vi.fn()
 		},
 		getServerDirectory: () => '.svelte-kit/output/server',
-		rimraf: vi.fn(),
 		writeClient: vi.fn(() => client_files),
 		writePrerendered: vi.fn(() => prerendered_files),
 		compress: vi.fn(async () => {}),

@@ -1,34 +1,30 @@
-import { relative, resolve } from 'node:path';
-import { readdir } from 'node:fs/promises';
+import fs from 'node:fs';
+import path from 'node:path';
 
 /**
- * @param {string} path
- * @returns {Promise<{abs: string, rel: string}[]>}
+ * @param {string} dir
+ * @returns {{abs: string, rel: string}[]}
  */
-async function read_files_recursive(path) {
-	try {
-		const entries = await readdir(path, { recursive: true, withFileTypes: true });
-		return entries
-			.filter((entry) => entry.isFile())
-			.map((entry) => {
-				const abs = resolve(entry.parentPath, entry.name);
-				const rel = posixify(relative(path, abs));
-				return { abs, rel };
-			})
-			.filter(({ rel }) => rel.split('/').every((segment) => segment !== '.vite'));
-	} catch (error) {
-		if (/** @type {NodeJS.ErrnoException} */ (error)?.code !== 'ENOENT') throw error;
-		return [];
-	}
+function read_files_recursive(dir) {
+	if (!fs.existsSync(dir)) return [];
+	return fs
+		.readdirSync(dir, { recursive: true, withFileTypes: true })
+		.filter((entry) => entry.isFile())
+		.map((entry) => {
+			const abs = path.resolve(entry.parentPath, entry.name);
+			const rel = posixify(path.relative(dir, abs));
+			return { abs, rel };
+		})
+		.filter(({ rel }) => rel.split('/').every((segment) => segment !== '.vite'));
 }
 
 /**
  * Matches sirv's default behaviour in adapter-node: dotfiles are not served,
  * with an exception for the `.well-known` directory.
- * @param {string} path
+ * @param {string} file
  */
-function is_dotfile(path) {
-	return path
+function is_dotfile(file) {
+	return file
 		.split('/')
 		.some((segment, i) => segment.startsWith('.') && !(i === 0 && segment === '.well-known'));
 }
@@ -42,10 +38,10 @@ const file_waiters = [];
 /**
  * Streams the file through the hasher so build memory stays bounded by chunk
  * size instead of total asset size.
- * @param {string} path
+ * @param {string} file
  * @returns {Promise<string>}
  */
-async function hash_file(path) {
+async function hash_file(file) {
 	if (open_files === MAX_OPEN_FILES) {
 		await new Promise((resolve) => {
 			file_waiters.push(() => resolve(undefined));
@@ -54,7 +50,7 @@ async function hash_file(path) {
 	open_files++;
 	try {
 		const hasher = new Bun.CryptoHasher('blake2b256');
-		for await (const chunk of Bun.file(path).stream()) {
+		for await (const chunk of Bun.file(file).stream()) {
 			hasher.update(chunk);
 		}
 		return hasher.digest('hex').slice(0, 16);
@@ -67,22 +63,18 @@ async function hash_file(path) {
 /**
  * The build-time validator for conditional requests: Bun only generates ETags for
  * in-memory static routes, not file-backed responses, so the adapter ships its own.
- * @param {string} path
+ * @param {string} file
  * @param {boolean} [precompress]
  * @returns {Promise<{ hash: string, mtime: number, br?: boolean, gz?: boolean }>}
  */
-async function asset_meta(path, precompress = false) {
-	const hash = await hash_file(path);
+async function asset_meta(file, precompress = false) {
+	const hash = await hash_file(file);
 
 	/** @type {{ hash: string, mtime: number, br?: boolean, gz?: boolean }} */
-	const meta = { hash, mtime: Bun.file(path).lastModified };
+	const meta = { hash, mtime: Bun.file(file).lastModified };
 	if (precompress) {
-		const [br, gz] = await Promise.all([
-			Bun.file(`${path}.br`).exists(),
-			Bun.file(`${path}.gz`).exists()
-		]);
-		if (br) meta.br = true;
-		if (gz) meta.gz = true;
+		if (fs.existsSync(`${file}.br`)) meta.br = true;
+		if (fs.existsSync(`${file}.gz`)) meta.gz = true;
 	}
 
 	return meta;
@@ -124,7 +116,7 @@ export default function (opts = {}) {
 				);
 			}
 
-			builder.rimraf(out);
+			fs.rmSync(out, { recursive: true, force: true });
 
 			builder.log.minor('Building server');
 
@@ -136,11 +128,11 @@ export default function (opts = {}) {
 
 			const server = builder.getServerDirectory();
 
-			const src_dir = resolve(import.meta.dirname, 'src');
-			const index_file = resolve(src_dir, 'index.js');
-			const routes_file = resolve(src_dir, 'routes.js');
-			const manifest_file = resolve(server, 'manifest.js');
-			const server_options_file = resolve(src_dir, 'options.js');
+			const src_dir = path.resolve(import.meta.dirname, 'src');
+			const index_file = path.resolve(src_dir, 'index.js');
+			const routes_file = path.resolve(src_dir, 'routes.js');
+			const manifest_file = path.resolve(server, 'manifest.js');
+			const server_options_file = path.resolve(src_dir, 'options.js');
 
 			const virtual_files = {
 				[manifest_file]:
@@ -163,7 +155,7 @@ export default function (opts = {}) {
 				: undefined;
 
 			if (instrumentation) {
-				const start_file = resolve(src_dir, 'start.js'); // Virtual only
+				const start_file = path.resolve(src_dir, 'start.js'); // Virtual only
 				virtual_files[start_file] = await Bun.file(index_file).text();
 				virtual_files[index_file] = [
 					`import ${JSON.stringify(instrumentation)};`,
@@ -235,14 +227,12 @@ export default function (opts = {}) {
  * @returns {Promise<{imports: string[], entries: string[], server_assets: string[]}>}
  */
 async function get_embed_entries({ builder, server_assets }) {
-	const builtFiles = `${builder.config.kit.outDir}/output`;
+	const built_files = `${builder.config.kit.outDir}/output`;
 
-	const [all_cl_files, pr_pages, pr_deps, pr_data] = await Promise.all([
-		read_files_recursive(`${builtFiles}/client`),
-		read_files_recursive(`${builtFiles}/prerendered/pages`),
-		read_files_recursive(`${builtFiles}/prerendered/dependencies`),
-		read_files_recursive(`${builtFiles}/prerendered/data`)
-	]);
+	const all_cl_files = read_files_recursive(`${built_files}/client`);
+	const pr_pages = read_files_recursive(`${built_files}/prerendered/pages`);
+	const pr_deps = read_files_recursive(`${built_files}/prerendered/dependencies`);
+	const pr_data = read_files_recursive(`${built_files}/prerendered/data`);
 
 	const cl_files = all_cl_files.filter(({ rel }) => !is_dotfile(rel));
 
@@ -258,10 +248,10 @@ async function get_embed_entries({ builder, server_assets }) {
 	/**
 	 * @param {{ abs: string, rel: string }} file
 	 * @param {string} helper
-	 * @param {string} [urlPath]
+	 * @param {string} [url]
 	 */
-	const entry = async (file, helper, urlPath = file.rel) =>
-		`...${helper}(${JSON.stringify(urlPath)}, asset_${asset_index.get(file)}, ${JSON.stringify(await asset_meta(file.abs))})`;
+	const entry = async (file, helper, url = file.rel) =>
+		`...${helper}(${JSON.stringify(url)}, asset_${asset_index.get(file)}, ${JSON.stringify(await asset_meta(file.abs))})`;
 
 	const page_files = new Map(pr_pages.map((file) => [file.rel, file]));
 	const page_rels = new Set([...builder.prerendered.pages].map(([_, { file }]) => file));
@@ -314,12 +304,12 @@ async function get_no_embed_entries({ builder, server_assets, out, precompress }
 
 	/**
 	 * @param {string} helper
-	 * @param {string} urlPath
+	 * @param {string} url
 	 * @param {string} dir
-	 * @param {string} [filePath]
+	 * @param {string} [filename]
 	 */
-	const entry = async (helper, urlPath, dir, filePath) =>
-		`...${helper}(${JSON.stringify(urlPath)}, ${JSON.stringify(filePath)}, ${JSON.stringify(await asset_meta(`${out}/${dir}/${filePath ?? urlPath}`, precompress))})`;
+	const entry = async (helper, url, dir, filename) =>
+		`...${helper}(${JSON.stringify(url)}, ${JSON.stringify(filename)}, ${JSON.stringify(await asset_meta(`${out}/${dir}/${filename ?? url}`, precompress))})`;
 
 	const pages = [...builder.prerendered.pages];
 	const page_files = new Set(pages.map(([_, { file }]) => file));
