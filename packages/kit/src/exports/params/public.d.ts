@@ -14,7 +14,8 @@ export type ParamValue = string | number | boolean | bigint;
  * A param matcher definition passed to [`defineParams`](https://svelte.dev/docs/kit/@sveltejs-kit#defineParams).
  */
 export type ParamDefinition =
-	((param: string) => ParamValue | undefined) | StandardSchemaV1<string, ParamValue>;
+	| ((param: string) => ParamValue | undefined)
+	| StandardSchemaV1<string, ParamValue>;
 
 /**
  * The return type of [`defineParams`](https://svelte.dev/docs/kit/@sveltejs-kit#defineParams).

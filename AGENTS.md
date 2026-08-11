@@ -117,7 +117,7 @@ const content_type = request.headers.get('content-type')?.split(';', 1)[0];
 - Type casting when needed: `/** @type {Error} */ (err)`
 - Enable strict mode: `checkJs: true`, `strict: true` in tsconfig.json
 
-### Formatting (via Prettier)
+### Formatting (via oxfmt)
 
 - **Tabs for indentation** (not spaces)
 - **Single quotes** for strings

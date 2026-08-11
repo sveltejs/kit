@@ -31,6 +31,7 @@
 		"@types/semver": "catalog:",
 		"@typescript/native": "catalog:",
 		"prettier": "catalog:",
+		"prettier-plugin-svelte": "catalog:",
 		"svelte": "catalog:",
 		"svelte-preprocess": "catalog:",
 		"typescript": "^6.0.3",
@@ -53,10 +54,10 @@
 		"src"
 	],
 	"scripts": {
-		"lint": "prettier --check .",
+		"lint": "oxfmt --check .",
 		"check": "pnpm tsc-native",
 		"check:all": "pnpm tsc-native && pnpm -r --filter=\"./**\" check",
-		"format": "pnpm lint --write",
+		"format": "oxfmt --write .",
 		"test": "vitest run",
 		"test:unit": "vitest run",
 		"tsc-native": "node node_modules/@typescript/native/bin/tsc"

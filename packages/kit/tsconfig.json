@@ -9,6 +9,7 @@
 		"paths": {
 			"@sveltejs/kit": ["./src/exports/public.d.ts"],
 			"@sveltejs/kit/env": ["./src/exports/env/index.js"],
+			"@sveltejs/kit/params": ["./src/exports/params/public.d.ts"],
 			"@sveltejs/kit/vite": ["./src/exports/vite/index.js"],
 			"@sveltejs/kit/node": ["./src/exports/node/index.js"],
 			"@sveltejs/kit/internal": ["./src/exports/internal/index.js"],
