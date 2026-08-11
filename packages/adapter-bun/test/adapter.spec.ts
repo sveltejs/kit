@@ -179,6 +179,16 @@ describe('Bun build configuration', () => {
 		);
 		expect(files[start_file]).toBe(bun.entrypoint);
 		expect(builder.instrument).not.toHaveBeenCalled();
+
+		// start.js must be its own entrypoint so asset paths resolve from the output root
+		expect(bun.build.mock.calls[0][0].entrypoints).toEqual([index_file, start_file]);
+	});
+
+	test('keeps a single entrypoint when compiling with instrumentation', async () => {
+		const builder = create_builder({ instrumentation: true });
+		await adapter({ buildOptions: { compile: true } }).adapt(builder);
+
+		expect(bun.build.mock.calls[0][0].entrypoints).toEqual([index_file]);
 	});
 
 	test('reports every Bun diagnostic before failing the build', async () => {

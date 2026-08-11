@@ -156,6 +156,8 @@ export default function (opts = {}) {
 				? `${server}/instrumentation.server.js`
 				: undefined;
 
+			const entrypoints = [index_file];
+
 			if (instrumentation) {
 				const start_file = path.resolve(src_dir, 'start.js'); // Virtual only
 				virtual_files[start_file] = await Bun.file(index_file).text();
@@ -163,6 +165,9 @@ export default function (opts = {}) {
 					`import ${JSON.stringify(instrumentation)};`,
 					`await import(${JSON.stringify(start_file)});`
 				].join('\n');
+
+				// as a split chunk, start.js would resolve assets from server/chunks/ instead of the output root
+				if (!buildOptions.compile) entrypoints.push(start_file);
 			}
 
 			/** @type {BunPlugin} */
@@ -182,7 +187,7 @@ export default function (opts = {}) {
 				...buildOptions,
 				splitting: buildOptions.splitting ?? true,
 				sourcemap: buildOptions.sourcemap ?? 'external',
-				entrypoints: [index_file],
+				entrypoints,
 				target: 'bun',
 				format: 'esm',
 				naming: {
