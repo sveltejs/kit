@@ -126,3 +126,44 @@ Now, server-side requests will begin generating traces, which you can view in Ja
 ## `@opentelemetry/api`
 
 SvelteKit uses `@opentelemetry/api` to generate its spans. This is declared as an optional peer dependency so that users not needing traces see no impact on install size or runtime performance. In most cases, if you're configuring your application to collect SvelteKit's spans, you'll end up installing a library like `@opentelemetry/sdk-node` or `@vercel/otel`, which in turn depend on `@opentelemetry/api`, which will satisfy SvelteKit's dependency as well. If you see an error from SvelteKit telling you it can't find `@opentelemetry/api`, it may just be because you haven't set up your trace collection yet. If you _have_ done that and are still seeing the error, you can install `@opentelemetry/api` yourself.
+
+## Bundling caveats
+
+OpenTelemetry auto-instrumentation generally works by intercepting imports and replacing or wrapping a module's exports with instrumented versions. This is what `import-in-the-middle` does in the example above. Because ESM module exports are immutable, the interceptor must be installed before the module being instrumented is evaluated. This is why `instrumentation.server.js` is a special entry point: SvelteKit arranges for it to run before it dynamically imports your application code. The intended order is:
+
+1. `instrumentation.server.js` registers an interceptor for `my-database-library`
+2. Your application imports `my-database-library`
+3. The interceptor observes the import and returns the instrumented exports
+
+Bundling can disrupt this in two ways.
+
+First, a bundler may place code imported by `instrumentation.server.js` and application code in the same shared chunk. Importing that chunk to initialize instrumentation can then evaluate application code before the interceptor has been installed. By the time the application is dynamically imported, the module is already in the ESM module cache and it is too late to instrument it.
+
+Second, a bundler may inline or transform the module you want to instrument. For example, it could replace this:
+
+```js
+import { query } from 'my-database-library';
+```
+
+with code embedded directly in an application chunk, or with an import such as `import { query } from './chunks/abc.js'`. At runtime there is no longer an import of `my-database-library` for the interceptor to observe. Tree-shaking and export rewriting can also change the shape of the module in ways that its OpenTelemetry instrumentation does not recognize.
+
+SvelteKit automatically externalizes `@opentelemetry/api` so that its runtime and your instrumentation share the same module instance. If another library is not being instrumented as expected, tell Vite to leave that library out of the server bundle:
+
+```js
+/// file: vite.config.js
+import { sveltekit } from '@sveltejs/kit/vite';
+import { defineConfig } from 'vite';
+
+export default defineConfig({
+	plugins: [sveltekit()],
+	ssr: {
+		external: ['my-database-library']
+	}
+});
+```
+
+Externalization preserves the bare `my-database-library` import in the server output. Node.js then loads the package at runtime, after `instrumentation.server.js` has registered the interceptor, giving the instrumentation an opportunity to wrap it. Externalize the package being instrumented and any packages whose imports must remain visible to its instrumentation. Do not externalize application source files, and avoid externalizing dependencies indiscriminately, since doing so can change how they are resolved and deployed.
+
+Dependencies needed at runtime must be listed in `dependencies`, rather than `devDependencies`, so that they are available in the deployed application. `adapter-node` also uses this distinction when it bundles the Vite output: it automatically keeps packages listed in `dependencies`, including their deep imports, external from that final bundle. You may still need `ssr.external` to prevent Vite from bundling a package during the earlier SSR build.
+
+The other official adapters do not apply the same `dependencies`-based externalization rule themselves. Some adapters or deployment platforms perform their own tracing or bundling step, while others do not support runtime package imports at all. In those environments, Vite's `ssr.external` setting may not be sufficient or supported. Consult the adapter or platform documentation to verify that the dependency can remain external.

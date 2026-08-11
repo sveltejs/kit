@@ -11,7 +11,7 @@ function escape_regex(str) {
 	return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-/** @type {import('./index.js').default} */
+/** @type {typeof import('./index.js').default} */
 export default function (opts = {}) {
 	const { out = 'build', precompress = true, envPrefix = '' } = opts;
 
@@ -93,7 +93,12 @@ export default function (opts = {}) {
 				input,
 				external: [
 					// dependencies could have deep exports, so we need a regex
-					...Object.keys(pkg.dependencies || {}).map((d) => new RegExp(`^${d}(\\/.*)?$`))
+					...Object.keys(pkg.dependencies || {}).map((d) => new RegExp(`^${d}(\\/.*)?$`)),
+					// `@opentelemetry/api` is an optional peer dependency of `@sveltejs/kit`,
+					// so it's not in `pkg.dependencies` and wouldn't be matched by the regex above.
+					// It must stay external so that `instrumentation.server.js` and the SvelteKit
+					// runtime share a single instance — see https://github.com/sveltejs/kit/issues/16288
+					/^@opentelemetry\/api(\/.*)?$/
 				],
 				platform: 'node',
 				resolve: {

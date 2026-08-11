@@ -1,4 +1,4 @@
-/** @import { InternalRequestOptions, RequestState, ServerHooks } from 'types' */
+/** @import { InternalRequestOptions, RequestState } from 'types' */
 
 /** Per-request caches and context flags — never carried into a fork. */
 function transient_fields() {
@@ -16,17 +16,15 @@ function transient_fields() {
 		is_in_remote_form_or_command: false,
 		is_in_remote_query: false,
 		is_in_remote_prerender: false,
-		is_in_render: false,
-		original_event: undefined
+		is_in_render: false
 	};
 }
 
 /**
  * @param {InternalRequestOptions} options
- * @param {ServerHooks} hooks
  * @returns {RequestState}
  */
-export function create_request_state(options, hooks) {
+export function create_request_state(options) {
 	// every field is initialized up front so the object shape stays stable
 	return {
 		getClientAddress: options.getClientAddress,
@@ -38,7 +36,6 @@ export function create_request_state(options, hooks) {
 		prerender_default: undefined,
 		error: false,
 		depth: 0,
-		handleValidationError: hooks.handleValidationError,
 		rerouted_url: null,
 		...transient_fields()
 	};

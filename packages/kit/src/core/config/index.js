@@ -123,7 +123,7 @@ export function load_error_page(config) {
  * @param {typeof import('vite')} [vite]
  */
 export async function load_vite_config(config, vite) {
-	vite ??= /** @type {import('vite')} */ (await import_peer('vite', process.cwd()));
+	vite ??= /** @type {typeof import('vite')} */ (await import_peer('vite', process.cwd()));
 
 	return vite.resolveConfig({ configFile: config }, 'build', process.env.MODE ?? 'production');
 }

@@ -2,12 +2,12 @@
 /** @import { RemoteFunctionResponse, RemotePrerenderInputsGenerator, RemotePrerenderInternals, MaybePromise } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { json } from '@sveltejs/kit';
-import { HttpError } from '@sveltejs/kit/internal';
+import { HandledHttpError } from '@sveltejs/kit/internal';
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import { stringify_remote_arg } from '../../../shared.js';
 import { parse, stringify } from '#app/internal/transport';
 import { noop } from '../../../../utils/functions.js';
-import { app_dir, base } from '$app/paths/internal/server';
+import { app_dir, base } from '#app/paths';
 import { create_validator, get_response, run_remote_function } from './shared.js';
 
 /**
@@ -114,7 +114,7 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 
 				if (prerendered) {
 					if (prerendered.type === 'error') {
-						throw new HttpError(prerendered.error);
+						throw new HandledHttpError(prerendered.error);
 					}
 
 					return parse(prerendered.data)._;

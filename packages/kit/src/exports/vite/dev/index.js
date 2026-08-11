@@ -215,8 +215,7 @@ export async function dev(
 				),
 				nodes: manifest_data.nodes.map((node, index) => {
 					return async () => {
-						/** @type {SSRNode} */
-						const result = {};
+						const result = /** @type {SSRNode} */ ({});
 						result.index = index;
 						result.universal_id = node.universal;
 						result.server_id = node.server;
@@ -428,7 +427,7 @@ export async function dev(
 		// Don't run for a single file if the whole manifest is about to get updated
 		// Unless it's a file where the trailing slash page option might have changed
 		if (timeout || !/\+(page|layout|server).*$/.test(file)) return;
-		sync.update(svelte_config, manifest_data, file, root);
+		if (!sync.update(svelte_config, manifest_data, file, root)) debounce(update_manifest);
 	});
 
 	const { appTemplate, errorTemplate, serviceWorker, hooks } = svelte_config.kit.files;

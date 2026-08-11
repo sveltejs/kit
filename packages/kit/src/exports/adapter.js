@@ -1,4 +1,4 @@
-import { REROUTED_URL_HEADER } from '../runtime/server/constants.js';
+import { REROUTED_URL_HEADER } from '../constants.js';
 
 /**
  * Helps a catch-all request handler pass the request to a different handler if

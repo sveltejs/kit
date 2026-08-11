@@ -1,11 +1,10 @@
 import { noop } from '../../utils/functions.js';
-import { IN_WEBCONTAINER, REROUTED_URL_HEADER } from './constants.js';
+import { IN_WEBCONTAINER, REROUTED_URL_HEADER } from '../../constants.js';
 import { respond } from './respond.js';
 import { create_request_state } from './state.js';
 import { options, get_hooks } from '__SERVER__/internal.js';
 import { set_read_implementation, set_manifest, fix_stack_trace } from './internal.js';
 import { set_env } from '__sveltekit/env';
-import { SvelteKitError } from '@sveltejs/kit/internal';
 import { init_tracing } from '@sveltejs/kit/internal/server';
 import { DEV } from 'esm-env';
 import { init_transport } from '#app/internal/transport';
@@ -130,8 +129,13 @@ export class Server {
 					handle: module.handle || (({ event, resolve }) => resolve(event)),
 					handleError:
 						module.handleError ||
-						(({ error }) => {
-							if (error instanceof SvelteKitError) {
+						(({ kind, error, issues }) => {
+							if (kind === 'validation') {
+								console.error('Remote function schema validation failed:', issues);
+								return;
+							}
+
+							if (kind !== 'unknown') {
 								// don't log stack traces for 404s etc, it's all internal gubbins
 								return;
 							}
@@ -149,12 +153,6 @@ export class Server {
 							}
 						}),
 					handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request)),
-					handleValidationError:
-						module.handleValidationError ||
-						(({ issues }) => {
-							console.error('Remote function schema validation failed:', issues);
-							return { message: 'Bad Request', status: 400 };
-						}),
 					reroute: module.reroute || noop
 				};
 
@@ -171,9 +169,6 @@ export class Server {
 						},
 						handleError: ({ error }) => console.error(error),
 						handleFetch: ({ request, fetch }) => fetch(request),
-						handleValidationError: () => {
-							return { message: 'Bad Request' };
-						},
 						reroute: noop
 					};
 				} else {
@@ -188,7 +183,7 @@ export class Server {
 	 * @param {import('types').InternalRequestOptions} options
 	 */
 	async respond(request, options) {
-		const request_state = create_request_state(options, this.#options.hooks);
+		const request_state = create_request_state(options);
 
 		const response = await respond(request, this.#options, this.#manifest, request_state);
 

@@ -20,7 +20,7 @@ vi.mock(new URL('../state.svelte.js', import.meta.url).pathname, () => ({
 }));
 
 const { remote_request } = await import('./shared.svelte.js');
-const { HttpError } = await import('@sveltejs/kit/internal');
+const { HttpError, HandledHttpError } = await import('@sveltejs/kit/internal');
 
 /**
  * Build a mock fetch Response. `remote_request` reads `response.headers` before
@@ -59,7 +59,9 @@ describe('remote_request transport error handling', () => {
 		);
 
 		await expect(remote_request('/x')).rejects.toSatisfy((e) => {
-			return e instanceof HttpError && e.status === 401 && e.body?.message === 'unauthorized';
+			return (
+				e instanceof HandledHttpError && e.status === 401 && e.body?.message === 'unauthorized'
+			);
 		});
 	});
 
@@ -74,7 +76,7 @@ describe('remote_request transport error handling', () => {
 		);
 
 		await expect(remote_request('/x')).rejects.toSatisfy((e) => {
-			return e instanceof HttpError && e.status === 503;
+			return e instanceof HttpError && !(e instanceof HandledHttpError) && e.status === 503;
 		});
 	});
 

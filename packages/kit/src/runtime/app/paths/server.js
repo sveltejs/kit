@@ -1,13 +1,15 @@
 import { base, assets, relative } from './internal/server.js';
 import { resolve_route, find_route } from '../../../utils/routing.js';
 import { decode_pathname } from '../../../utils/url.js';
-import { add_data_suffix } from '../../pathname.js';
+import { add_data_suffix } from '../../../pathname.js';
 import { try_get_request_store } from '@sveltejs/kit/internal/server';
 import { manifest } from '../../server/internal.js';
 import { get_hooks } from '__SERVER__/internal.js';
 import { DEV } from 'esm-env';
 
-/** @type {import('./client.js').asset} */
+export { base, assets, app_dir } from './internal/server.js';
+
+/** @type {typeof import('./client.js').asset} */
 export function asset(file) {
 	// TODO 4.0 remove this
 	if (file[0] === '/') {
@@ -21,7 +23,7 @@ export function asset(file) {
 	return assets !== base ? `${assets}/${file}` : resolve(file);
 }
 
-/** @type {import('./client.js').resolve} */
+/** @type {typeof import('./client.js').resolve} */
 export function resolve(id, params) {
 	let resolved;
 
@@ -56,7 +58,7 @@ export function resolve(id, params) {
 	return base + resolved;
 }
 
-/** @type {import('./client.js').match} */
+/** @type {typeof import('./client.js').match} */
 export async function match(url) {
 	const store = try_get_request_store();
 

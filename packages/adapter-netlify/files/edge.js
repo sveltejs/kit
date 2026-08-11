@@ -1,4 +1,3 @@
-/** @import {} from 'deno' */
 import { Server } from '0SERVER';
 import { manifest } from 'MANIFEST';
 
