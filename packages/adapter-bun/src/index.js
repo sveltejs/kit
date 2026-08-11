@@ -33,7 +33,9 @@ if (unix) {
 	options.ipv6Only = boolean_env('IPV6_ONLY', options.ipv6Only);
 }
 
-options.idleTimeout = number_env('IDLE_TIMEOUT', options.idleTimeout, { max: 255 });
+// not IDLE_TIMEOUT: that name means idle-shutdown seconds on adapter-node, and a
+// carried-over value would crash on the 255 cap or silently kill slow requests
+options.idleTimeout = number_env('CONNECTION_IDLE_TIMEOUT', options.idleTimeout, { max: 255 });
 const development = boolean_env('DEVELOPMENT');
 if (development !== undefined) {
 	options.development = development;

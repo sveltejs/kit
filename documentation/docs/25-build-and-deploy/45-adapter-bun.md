@@ -182,7 +182,7 @@ SOCKET_PATH=/tmp/sveltekit.sock bun ./build
 
 `BODY_SIZE_LIMIT` controls `Bun.serve`'s `maxRequestBodySize`. It defaults to `512K`. The value must resolve to a whole number of bytes and may use a case-insensitive binary `K`, `M`, or `G` suffix, such as `768K` or `1.5M`. `Infinity` disables the limit.
 
-`IDLE_TIMEOUT` sets Bun's per-request inactivity timeout in seconds. It must be an integer from `0` through `255`; `0` disables the timeout. The generated handler disables the timeout for responses whose content type starts with `text/event-stream` and also adds `X-Accel-Buffering: no`.
+`CONNECTION_IDLE_TIMEOUT` sets Bun's per-request inactivity timeout in seconds. It must be an integer from `0` through `255`; `0` disables the timeout. The generated handler disables the timeout for responses whose content type starts with `text/event-stream` and also adds `X-Accel-Buffering: no`. It is deliberately not called `IDLE_TIMEOUT`, which on adapter-node means something different (shut the server down after N seconds without requests).
 
 `DEVELOPMENT` enables Bun's development-mode error pages. It defaults to `false` for the generated server.
 

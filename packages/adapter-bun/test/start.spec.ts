@@ -42,7 +42,7 @@ test('environment variables override TCP server defaults', async () => {
 			APP_PORT: '4000',
 			APP_REUSE_PORT: 'true',
 			APP_IPV6_ONLY: 'yes',
-			APP_IDLE_TIMEOUT: '30',
+			APP_CONNECTION_IDLE_TIMEOUT: '30',
 			APP_BODY_SIZE_LIMIT: '2M',
 			APP_DEVELOPMENT: 'on'
 		},
@@ -93,7 +93,7 @@ test('removes a stale socket file before listening', async () => {
 });
 
 test.each([
-	[{ IDLE_TIMEOUT: '256' }, 'between 0 and 255'],
+	[{ CONNECTION_IDLE_TIMEOUT: '256' }, 'between 0 and 255'],
 	[{ BODY_SIZE_LIMIT: '1.1' }, 'whole bytes'],
 	[{ DEVELOPMENT: 'sometimes' }, 'expected a boolean']
 ])('rejects invalid startup environment %j', async (env, message) => {
