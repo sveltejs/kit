@@ -5,7 +5,7 @@
 	"scripts": {
 		"test": "pnpm test:build",
 		"test:build": "vitest run",
-		"test:cross-platform:build": "node -e \"process.platform === 'linux' && process.exit(0)\" || pnpm test:build"
+		"test:cross-platform:build": "node -e \"process.exit(process.platform === 'linux' ? 0 : 1)\" || pnpm test:build"
 	},
 	"type": "module",
 	"devDependencies": {
