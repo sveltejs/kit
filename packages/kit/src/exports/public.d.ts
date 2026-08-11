@@ -1313,7 +1313,8 @@ export type LiveQueryRequestedResult<Validated, Output> = Iterable<
 	};
 
 export type RequestedResult<Validated, Output> =
-	QueryRequestedResult<Validated, Output> | LiveQueryRequestedResult<Validated, Output>;
+	| QueryRequestedResult<Validated, Output>
+	| LiveQueryRequestedResult<Validated, Output>;
 
 export interface RequestEvent<
 	Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,

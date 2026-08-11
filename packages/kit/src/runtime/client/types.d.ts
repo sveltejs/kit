@@ -8,7 +8,7 @@ import {
 	TrailingSlash,
 	Uses
 } from 'types';
-import { ParamMatcher } from '@sveltejs/kit';
+import { ParamMatcher } from '@sveltejs/kit/params';
 import { Page } from '$app/state';
 import { RenderNode } from '../props.svelte.js';
 

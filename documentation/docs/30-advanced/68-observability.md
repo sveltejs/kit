@@ -43,14 +43,14 @@ SvelteKit provides access to the `root` span and the `current` span on the reque
 /// file: #lib/authenticate.ts
 
 // @filename: ambient.d.ts
-declare module '#lib/auth-core' {
+declare module '#lib/auth-core.js' {
 	export function getAuthenticatedUser(): Promise<{ id: string }>
 }
 
 // @filename: index.js
 // ---cut---
 import { getRequestEvent } from '$app/server';
-import { getAuthenticatedUser } from '#lib/auth-core';
+import { getAuthenticatedUser } from '#lib/auth-core.js';
 
 async function authenticate() {
 	const user = await getAuthenticatedUser();
@@ -142,6 +142,7 @@ First, a bundler may place code imported by `instrumentation.server.js` and appl
 Second, a bundler may inline or transform the module you want to instrument. For example, it could replace this:
 
 ```js
+// @errors: 2307 example library
 import { query } from 'my-database-library';
 ```
 
