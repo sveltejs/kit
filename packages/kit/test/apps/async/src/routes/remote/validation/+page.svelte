@@ -130,10 +130,7 @@
 						await validated_command_with_arg(1);
 						status = 'error';
 					} catch (e) {
-						if (
-							!isHttpError(e) ||
-							e.body.message !== 'Input must be a string'
-						) {
+						if (!isHttpError(e) || e.body.message !== 'Input must be a string') {
 							status = 'wrong error message';
 							return;
 						}
@@ -143,10 +140,7 @@
 							await validated_batch_query_with_validation(123);
 							status = 'error';
 						} catch (e) {
-							if (
-								!isHttpError(e) ||
-								e.body.message !== 'Input must be a string'
-							) {
+							if (!isHttpError(e) || e.body.message !== 'Input must be a string') {
 								status = 'wrong error message';
 								return;
 							}
