@@ -2443,10 +2443,7 @@ declare module '@sveltejs/kit' {
 	 * @throws {import('./public.js').HttpError} This error instructs SvelteKit to initiate HTTP error handling.
 	 * @throws {Error} If the provided status is invalid (not between 400 and 599).
 	 */
-	export function error(status: number, message: string, properties: {
-		status: number;
-		message: string;
-	} extends App.Error ? never : Omit<App.Error, "status" | "message">): never;
+	export function error(status: number, message: string, properties: Omit<App.Error, "status" | "message">): never;
 	/**
 	 * Throws an error with a HTTP status code and an optional message.
 	 * When called during request handling, this will cause SvelteKit to
