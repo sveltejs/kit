@@ -1,5 +1,37 @@
 # @sveltejs/kit
 
+## 3.0.0-next.20
+
+### Major Changes
+
+- breaking: move remote function types to `$app/server` ([#16740](https://github.com/sveltejs/kit/pull/16740))
+
+- breaking: remove `#lib` definition from `paths`; requires explicit module extensions as a result ([#16736](https://github.com/sveltejs/kit/pull/16736))
+
+- breaking: move hooks-related types to `@sveltejs/kit/hooks` ([#16737](https://github.com/sveltejs/kit/pull/16737))
+
+- breaking: move env-related types to `@sveltejs/kit/env` ([#16739](https://github.com/sveltejs/kit/pull/16739))
+
+### Minor Changes
+
+- feat: better response logging ([#16744](https://github.com/sveltejs/kit/pull/16744))
+
+### Patch Changes
+
+- chore: bump `mrmime` to 2.0.1 ([#16745](https://github.com/sveltejs/kit/pull/16745))
+
+- chore: bump `@sveltejs/acorn-typescript` to 1.0.12 ([#16745](https://github.com/sveltejs/kit/pull/16745))
+
+- chore: bump `magic-string` to 1.1.0 ([#16745](https://github.com/sveltejs/kit/pull/16745))
+
+- chore: bump `devalue` to 5.9.0 ([#16745](https://github.com/sveltejs/kit/pull/16745))
+
+- chore: bump `cookie` to 2.0.1 ([#16745](https://github.com/sveltejs/kit/pull/16745))
+
+- chore: bump `acorn` to 8.18.0 ([#16745](https://github.com/sveltejs/kit/pull/16745))
+
+- fix: avoid infinite loop when building with `--watch` flag ([#16632](https://github.com/sveltejs/kit/pull/16632))
+
 ## 3.0.0-next.19
 
 ### Major Changes

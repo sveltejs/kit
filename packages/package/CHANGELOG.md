@@ -1,5 +1,11 @@
 # @sveltejs/package
 
+## 3.0.0-next.6
+
+### Patch Changes
+
+- chore: bump `svelte2tsx` to 0.7.59 ([#16745](https://github.com/sveltejs/kit/pull/16745))
+
 ## 3.0.0-next.5
 
 ### Major Changes
