@@ -9,5 +9,6 @@
 	"access": "public",
 	"baseBranch": "version-3",
 	"bumpVersionsWithWorkspaceProtocolOnly": true,
-	"ignore": ["!(@sveltejs/*)"]
+	"ignore": ["!(@sveltejs/*)"],
+	"format": false
 }
