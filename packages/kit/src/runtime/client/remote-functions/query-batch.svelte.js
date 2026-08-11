@@ -1,9 +1,9 @@
 /** @import { RemoteQueryFunction } from '@sveltejs/kit' */
-import { app_dir, base } from '$app/paths/internal/client';
+import { app_dir, base } from '#app/paths';
 import { _goto } from '../client.js';
 import { QUERY_FUNCTION_ID, remote_request } from './shared.svelte.js';
 import { QueryProxy } from './query/proxy.js';
-import { HttpError } from '@sveltejs/kit/internal';
+import { HandledHttpError } from '@sveltejs/kit/internal';
 
 /**
  * @param {string} id
@@ -71,7 +71,7 @@ export function query_batch(id) {
 
 							for (const { resolve, reject } of resolvers) {
 								if (result.type === 'error') {
-									reject(new HttpError(result.error));
+									reject(new HandledHttpError(result.error));
 								} else {
 									resolve(result.data);
 								}

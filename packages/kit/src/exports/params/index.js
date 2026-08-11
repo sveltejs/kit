@@ -1,9 +1,11 @@
+/** @import { ParamDefinition, ParamMatcher } from '@sveltejs/kit/params' */
+
 /**
  * Define [parameter matchers](https://svelte.dev/docs/kit/advanced-routing#Matching) for your app.
  *
  * @example
  * ```js
- * import { defineParams } from '@sveltejs/kit';
+ * import { defineParams } from '@sveltejs/kit/params';
  * import * as v from 'valibot';
  *
  * export const params = defineParams({
@@ -31,8 +33,8 @@ export function defineParams(definitions) {
 }
 
 /**
- * @param {import('@sveltejs/kit').ParamDefinition} definition
- * @returns {import('@sveltejs/kit').ParamMatcher}
+ * @param {ParamDefinition} definition
+ * @returns {ParamMatcher}
  */
 export function normalize_param_definition(definition) {
 	// standard schemas can be callable (e.g. ArkType), so this must be checked before the function case
@@ -45,7 +47,7 @@ export function normalize_param_definition(definition) {
 	}
 
 	if (typeof definition === 'function') {
-		return /** @type {import('@sveltejs/kit').ParamMatcher} */ (
+		return /** @type {ParamMatcher} */ (
 			/** @type {unknown} */ ({
 				'~standard': {
 					validate(/** @type {unknown} */ value) {

@@ -123,7 +123,7 @@ async function try_load_ts() {
  * @param {string | undefined} tsconfig
  * @param {string} filename
  * @param {Map<string, import('typescript').CompilerOptions>} cache
- * @param {import('typescript')} [ts]
+ * @param {typeof import('typescript')} [ts]
  */
 export async function load_tsconfig(tsconfig, filename, cache, ts) {
 	if (!ts) {

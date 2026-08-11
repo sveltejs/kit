@@ -1,3 +1,7 @@
+// TODO get rid of this module — merge the contents into `../client.js`, and expose it to the
+// rest of the codebase as `#app/paths/client`, with an export condition that errors if
+// it is imported on the server
+
 /** @import { RouteId } from '$app/types' */
 import { payload } from '../../../client/payload.js';
 

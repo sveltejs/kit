@@ -1,5 +1,6 @@
 /** @import { SSRManifest } from '@sveltejs/kit' */
-import { base, assets, relative } from '$app/paths/internal/server';
+import { base, assets } from '#app/paths';
+import { relative } from '$app/paths/internal/server';
 import { text } from '@sveltejs/kit';
 import { s } from '../../../utils/misc.js';
 import { find_route } from '../../../utils/routing.js';
@@ -20,7 +21,7 @@ export function generate_route_object(route, url, client) {
 		.join(',\n\t\t');
 
 	// stringified version of
-	/** @type {import('types').CSRRouteServer} */
+	/* @type {import('types').CSRRouteServer} */
 	return [
 		`{\n\tid: ${s(route.id)}`,
 		`errors: ${s(route.errors)}`,

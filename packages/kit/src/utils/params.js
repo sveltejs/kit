@@ -1,3 +1,4 @@
+/** @import { ParamMatcher } from '@sveltejs/kit/params' */
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
@@ -38,7 +39,7 @@ export function validate_param_matchers(params, names, file) {
  *   root: string;
  *   load?: (file: string) => Promise<Record<string, unknown>>;
  * }} opts
- * @returns {Promise<Record<string, import('@sveltejs/kit').ParamMatcher> | null>}
+ * @returns {Promise<Record<string, ParamMatcher> | null>}
  */
 export async function load_and_validate_params({ routes, params_path, root, load }) {
 	const names = collect_matcher_names(routes);
@@ -62,5 +63,5 @@ export async function load_and_validate_params({ routes, params_path, root, load
 		params_path
 	);
 
-	return /** @type {Record<string, import('@sveltejs/kit').ParamMatcher>} */ (module.params);
+	return /** @type {Record<string, ParamMatcher>} */ (module.params);
 }
