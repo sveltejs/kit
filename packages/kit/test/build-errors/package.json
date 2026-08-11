@@ -4,7 +4,7 @@
 	"version": "0.0.0-next.0",
 	"scripts": {
 		"test": "pnpm test:build",
-		"test:build": "vitest run",
+		"test:build": "svelte-kit sync && vitest run",
 		"test:cross-platform:build": "pnpm test:build"
 	},
 	"type": "module",

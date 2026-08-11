@@ -16,7 +16,7 @@
 		"test:server-side-route-resolution:build": "node test/setup.js && PUBLIC_PRERENDERING=false ROUTER_RESOLUTION=server playwright test",
 		"test:svelte-async:dev": "node test/setup.js && DEV=true SVELTE_ASYNC=true playwright test",
 		"test:svelte-async:build": "node test/setup.js && PUBLIC_PRERENDERING=false SVELTE_ASYNC=true playwright test",
-		"test:client-import": "vitest run"
+		"test:client-import": "svelte-kit sync && vitest run"
 	},
 	"devDependencies": {
 		"@opentelemetry/api": "^1.9.0",
