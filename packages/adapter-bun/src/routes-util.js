@@ -12,6 +12,7 @@ const dir = path.dirname(Bun.main);
 const CONTENT_ENCODING = { br: 'br', gz: 'gzip' };
 
 // the URL Standard's path percent-encode set, plus `%` and `\` so they stay literal
+// eslint-disable-next-line no-control-regex -- control characters are part of the encode set
 const ESCAPED_PATH_CHAR = /[\u0000-\u001f\u007f-\u{10ffff} "#<>?`{}%\\]/gu;
 
 /**
