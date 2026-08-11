@@ -5,9 +5,10 @@ await createBundle({
 	output: 'types/index.d.ts',
 	modules: {
 		'@sveltejs/kit': 'src/exports/public.d.ts',
-		'@sveltejs/kit/env': 'src/exports/env/index.js',
+		'@sveltejs/kit/env': 'src/exports/env/public.d.ts',
 		'@sveltejs/kit/hooks': 'src/exports/hooks/index.js',
 		'@sveltejs/kit/node': 'src/exports/node/index.js',
+		'@sveltejs/kit/params': 'src/exports/params/public.d.ts',
 		'@sveltejs/kit/vite': 'src/exports/vite/index.js',
 		'$app/env': 'src/runtime/app/env/types.d.ts',
 		'$app/forms': 'src/runtime/app/forms/public.d.ts',

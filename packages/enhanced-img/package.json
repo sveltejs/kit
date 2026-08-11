@@ -21,9 +21,9 @@
 	"homepage": "https://svelte.dev/docs/kit/images#sveltejs-enhanced-img",
 	"type": "module",
 	"scripts": {
-		"lint": "prettier --check .",
+		"lint": "oxfmt --check .",
 		"check": "tsc",
-		"format": "prettier --write .",
+		"format": "oxfmt --write .",
 		"test": "pnpm test:unit && pnpm test:integration",
 		"test:unit": "vitest run",
 		"test:integration": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test"

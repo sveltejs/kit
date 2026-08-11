@@ -1,4 +1,5 @@
-/** @import { EnvVarConfig, KitConfig } from '@sveltejs/kit' */
+/** @import { KitConfig } from '@sveltejs/kit' */
+/** @import { EnvVarConfig } from '@sveltejs/kit/env' */
 /** @import { Options, SvelteConfig } from '@sveltejs/vite-plugin-svelte' */
 /** @import { PreprocessorGroup } from 'svelte/compiler' */
 /** @import { Asset, BuildData, ManifestData, Prerendered, RemoteChunk, RemoteInternals, RouteData, ServerMetadata, ValidatedConfig, ValidatedKitConfig } from 'types' */
@@ -41,6 +42,7 @@ import {
 	server_only_module_pattern
 } from './utils.js';
 import { stackless } from '../../utils/error.js';
+import { adapt } from '../../core/adapt/index.js';
 import { write_client_manifest } from '../../core/sync/write_client_manifest.js';
 import prerender from '../../core/postbuild/prerender.js';
 import analyse from '../../core/postbuild/analyse.js';
@@ -274,8 +276,8 @@ function kit({ svelte_config }) {
 	/** @type {ManifestData} */
 	let manifest_data;
 
-	/** @type {ServerMetadata | undefined} only set at build time once analysis is finished */
-	let build_metadata = undefined;
+	/** @type {ServerMetadata | null} set at build time once analysis has finished */
+	let build_metadata = null;
 
 	/** @type {UserConfig} */
 	let initial_config;
@@ -297,7 +299,7 @@ function kit({ svelte_config }) {
 	 * in which chunks, so that we can later determine which routes use which features
 	 * @type {Record<string, string[]>}
 	 */
-	const tracked_features = {};
+	let tracked_features = {};
 
 	const sourcemapIgnoreList = /** @param {string} relative_path */ (relative_path) =>
 		relative_path.includes('node_modules') || relative_path.includes(kit.outDir);
@@ -885,6 +887,11 @@ function kit({ svelte_config }) {
 				// No chain from this server-only module to a client entrypoint was found —
 				// the module is only imported from server code, which is valid.
 			}
+		},
+
+		// avoid watch mode rebuilds using stale import map data
+		buildEnd() {
+			import_map.clear();
 		}
 	};
 
@@ -892,7 +899,7 @@ function kit({ svelte_config }) {
 	let dev_server;
 
 	/** @type {RemoteChunk[]} */
-	const remotes = [];
+	let remotes = [];
 
 	/** @type {Map<string, string>} Maps remote hash -> original module id */
 	const remote_original_by_hash = new Map();
@@ -1049,6 +1056,12 @@ function kit({ svelte_config }) {
 					map: null
 				};
 			}
+		},
+
+		buildEnd() {
+			if (this.environment.config.consumer === 'server') {
+				emitted_remote_hashes.clear();
+			}
 		}
 	};
 
@@ -1079,10 +1092,10 @@ function kit({ svelte_config }) {
 	/** @type {Prerendered} */
 	let prerendered;
 
-	/** @type {Array<{ path: string }>} */
-	let immutable;
-	/** @type {string} */
-	let manifest_data_code;
+	/** @type {Array<{ path: string }> | null} */
+	let immutable = null;
+	/** @type {string | null} */
+	let manifest_data_code = null;
 
 	/**
 	 * Creates the service worker virtual modules
@@ -1275,8 +1288,10 @@ function kit({ svelte_config }) {
 		}
 	};
 
-	/** @type {() => Promise<void> | undefined} */
-	let finalise;
+	/** @type {Map<string, Rolldown.RolldownOutput['output']>} */
+	const watch_build_output = new Map();
+	/** @type {(() => Promise<void>) | null} */
+	let finalise = null;
 
 	/** @type {Plugin} */
 	const plugin_compile = {
@@ -1417,6 +1432,12 @@ function kit({ svelte_config }) {
 									}
 
 									handler(warning);
+								},
+								watch: {
+									exclude: [
+										// Ignore all siblings of config.outDir/generated
+										`${out_dir}/generated/**`
+									]
 								}
 							},
 							emptyOutDir: false,
@@ -1594,7 +1615,16 @@ function kit({ svelte_config }) {
 			}
 		},
 
-		generateBundle() {
+		generateBundle(_options, bundle) {
+			// a watched build returns a watcher rather than the build output from
+			// `builder.build` so we need to retrieve it from the generateBundle hook
+			if (this.meta.watchMode) {
+				watch_build_output.set(
+					this.environment.name,
+					/** @type {Rolldown.RolldownOutput['output']} */ (Object.values(bundle))
+				);
+			}
+
 			if (this.environment.config.consumer !== 'client') return;
 
 			this.emitFile({
@@ -1605,298 +1635,43 @@ function kit({ svelte_config }) {
 		},
 
 		async buildApp(builder) {
-			// clears the output directories
-			if (!builder.config.build.watch) {
-				fs.rmSync(out, { force: true, recursive: true });
-			}
+			fs.rmSync(out, { force: true, recursive: true });
 			fs.mkdirSync(out, { recursive: true });
-
-			await load_and_validate_params({
-				routes: manifest_data.routes,
-				params_path: manifest_data.params,
-				root
-			});
-
-			const { output: server_chunks } = /** @type {Rolldown.RolldownOutput} */ (
-				await builder.build(builder.environments.ssr)
-			);
-
-			// Replace manifest placeholders in SSR output. `assets` and `routes`
-			// are known from `manifest_data`. `immutable` and `prerendered` are not
-			// known yet — they get sentinel strings that are replaced after
-			// the client build and after prerendering respectively.
-			replace_manifest_placeholder_variables(server_chunks, `${out}/server`, {
-				assets: manifest_data.assets.map((asset) => ({ path: asset.file })),
-				routes: get_manifest_routes(manifest_data.routes)
-			});
 
 			const verbose = builder.config.logLevel === 'info';
 			const log = logger({ verbose });
 
-			/** @type {Manifest} */
-			vite_server_manifest = JSON.parse(read(`${out}/server/.vite/manifest.json`));
+			let ssr_build = await builder.build(builder.environments.ssr);
 
-			/** @type {BuildData} */
-			const build_data = {
-				app_dir: kit.appDir,
-				app_path: `${kit.paths.base.slice(1)}${kit.paths.base ? '/' : ''}${kit.appDir}`,
-				manifest_data,
-				out_dir: out,
-				service_worker: service_worker_entry_file ? 'service-worker.js' : null, // TODO make file configurable?
-				client: null,
-				server_manifest: vite_server_manifest
-			};
-
-			const manifest_path = `${out}/server/manifest-full.js`;
-			fs.writeFileSync(
-				manifest_path,
-				`export const manifest = ${generate_manifest({
-					build_data,
-					prerendered: [],
-					relative_path: '.',
-					routes: manifest_data.routes,
-					remotes,
-					root
-				})};\n`
-			);
-
-			const assets_path = `${kit.appDir}/immutable/assets`;
-
-			// first, build server nodes without the client manifest so we can analyse it
-			build_server_nodes(
-				out,
-				kit,
-				manifest_data,
-				vite_server_manifest,
-				null,
-				assets_path,
-				server_chunks,
-				root
-			);
-
-			log.info('Analysing routes');
-
-			const { metadata } = await analyse({
-				hash: kit.router.type === 'hash',
-				manifest_path,
-				manifest_data,
-				server_manifest: vite_server_manifest,
-				tracked_features,
-				env,
-				remotes,
-				vite_config_file: vite_config.configFile
-			});
-
-			build_metadata = metadata;
-
-			log.info('Building app');
-
-			// create client build
-			write_client_manifest(
-				kit,
-				manifest_data,
-				`${out_dir}/generated/client-optimized`,
-				metadata.nodes
-			);
-
-			const server_assets = `${out}/server/${assets_path}`;
-			const client_assets = `${out}/client/${assets_path}`;
-
-			const skip_client_build = manifest_data.nodes.every(
-				(node) => node.page_options?.csr === false
-			);
-
-			if (!skip_client_build) {
-				const nodes = Object.values(build_metadata.nodes);
-
-				// Through the finished analysis we can now check if any node has server or universal load functions
-				const has_server_load = nodes.some((node) => node.has_server_load);
-				const has_universal_load = nodes.some((node) => node.has_universal_load);
-
-				if (builder.environments.client.config.define) {
-					builder.environments.client.config.define.__SVELTEKIT_HAS_SERVER_LOAD__ =
-						s(has_server_load);
-					builder.environments.client.config.define.__SVELTEKIT_HAS_UNIVERSAL_LOAD__ =
-						s(has_universal_load);
-				}
-
-				const { output: client_chunks } = /** @type {Rolldown.RolldownOutput} */ (
-					await builder.build(builder.environments.client)
-				);
-
-				// We use `build.ssrEmitAssets` so that asset URLs created from
-				// imports in server-only modules correspond to files in the build,
-				// but we don't want to copy over CSS imports as these are already
-				// accounted for in the client bundle. In most cases it would be
-				// a no-op, but for SSR builds `url(...)` paths are handled
-				// differently (relative for client, absolute for server)
-				// resulting in different hashes, and thus duplication
-				const ssr_stylesheets = new Set(
-					Object.values(vite_server_manifest)
-						.map((chunk) => chunk.css ?? [])
-						.flat()
-				);
-
-				if (fs.existsSync(server_assets)) {
-					for (const file of fs.readdirSync(server_assets)) {
-						const src = `${server_assets}/${file}`;
-						const dest = `${client_assets}/${file}`;
-
-						if (fs.existsSync(dest) || ssr_stylesheets.has(`${assets_path}/${file}`)) {
-							continue;
-						}
-
-						copy(src, dest);
-					}
-				}
-
-				const vite_manifest = (vite_client_manifest = JSON.parse(
-					read(`${out}/client/.vite/manifest.json`)
-				));
-
-				/**
-				 * @param {string} entry
-				 * @param {boolean} [add_dynamic_css]
-				 */
-				const deps_of = (entry, add_dynamic_css = false) =>
-					find_deps(vite_manifest, posixify(path.relative(root, entry)), add_dynamic_css, root);
-
-				// the inline bundle and stylesheet are deleted further down, after
-				// being inlined into the page, so they must not appear in `immutable`
-				/** @type {Set<string>} */
-				const inlined = new Set();
-				/** @type {Rolldown.OutputAsset | undefined} */
-				let inline_style;
-
-				if (kit.output.bundleStrategy === 'inline') {
-					inline_style = /** @type {Rolldown.OutputAsset | undefined} */ (
-						client_chunks.find(
-							(chunk) =>
-								chunk.type === 'asset' && chunk.names.length === 1 && chunk.names[0] === 'style.css'
-						)
-					);
-
-					inlined.add(deps_of(`${runtime_directory}/client/bundle.js`).file);
-					if (inline_style) inlined.add(inline_style.fileName);
-				}
-
-				// Replace manifest placeholders in client output. `immutable` is
-				// computed from the Vite client manifest, `assets` and `routes`
-				// from `manifest_data`. `prerendered` is left as a placeholder
-				// for now — it's replaced after prerendering completes.
-				immutable = collect_immutable(vite_manifest, kit.appDir, inlined);
-
-				replace_manifest_placeholder_variables(client_chunks, `${out}/client`, {
-					immutable,
+			/** @param {Rolldown.RolldownOutput['output']} server_chunks */
+			const process_ssr_build = async (server_chunks) => {
+				// Replace manifest placeholders in SSR output. `assets` and `routes`
+				// are known from `manifest_data`. `immutable` and `prerendered` are not
+				// known yet — they get sentinel strings that are replaced after
+				// the client build and after prerendering respectively.
+				replace_manifest_placeholder_variables(server_chunks, `${out}/server`, {
 					assets: manifest_data.assets.map((asset) => ({ path: asset.file })),
 					routes: get_manifest_routes(manifest_data.routes)
 				});
 
-				// Now that the client build is done, replace the `build` sentinel
-				// in the SSR output with the real build files
-				replace_manifest_placeholder_strings(`${out}/server`, { immutable });
-
-				const has_explicit_dynamic_public_env = Object.values(explicit_env_config ?? {}).some(
-					(variable) => variable.public && !variable.static
+				vite_server_manifest = /** @type {Manifest} */ (
+					JSON.parse(read(`${out}/server/.vite/manifest.json`))
 				);
 
-				// the app only depends on runtime public env if it imports `$app/env/public`
-				// *and* at least one public env var is actually dynamic (non-static)
-				const uses_env_dynamic_public =
-					has_explicit_dynamic_public_env &&
-					client_chunks.some(
-						(chunk) => chunk.type === 'chunk' && chunk.modules[sveltekit_env_public_client]
-					);
+				const manifest_path = `${out}/server/manifest-full.js`;
+				const assets_path = `${kit.appDir}/immutable/assets`;
 
-				if (svelte_config.kit.output.bundleStrategy === 'split') {
-					const start_entry = posixify(path.relative(root, `${runtime_directory}/client/entry.js`));
-					const start = find_deps(vite_manifest, start_entry, false, root);
-					const runtime_entry = resolve_symlinks(vite_manifest, start_entry, root).chunk
-						.dynamicImports?.[0]; // client/entry.js dynamically imports client/client-entry.js
-					if (!runtime_entry) throw new Error('Could not find the client runtime chunk');
-					const runtime = find_deps(vite_manifest, runtime_entry, false, root);
-					const app = deps_of(`${out_dir}/generated/client-optimized/app.js`);
+				/** @type {BuildData} */
+				const build_data = {
+					app_dir: kit.appDir,
+					app_path: `${kit.paths.base.slice(1)}${kit.paths.base ? '/' : ''}${kit.appDir}`,
+					manifest_data,
+					out_dir: out,
+					service_worker: service_worker_entry_file ? 'service-worker.js' : null, // TODO make file configurable?
+					client: null,
+					server_manifest: vite_server_manifest
+				};
 
-					build_data.client = {
-						start: start.file,
-						app: app.file,
-						imports: Array.from(
-							new Set([
-								...start.imports,
-								runtime.file,
-								...runtime.imports,
-								app.file,
-								...app.imports
-							])
-						),
-						stylesheets: [...start.stylesheets, ...runtime.stylesheets, ...app.stylesheets],
-						fonts: [...start.fonts, ...runtime.fonts, ...app.fonts],
-						uses_env_dynamic_public
-					};
-
-					// In case of server-side route resolution, we create a purpose-built route manifest that is
-					// similar to that on the client, with as much information computed upfront so that we
-					// don't need to include any code of the actual routes in the server bundle.
-					if (svelte_config.kit.router.resolution === 'server') {
-						const nodes = manifest_data.nodes.map((node, i) => {
-							if (node.component || node.universal) {
-								const entry = `${out_dir}/generated/client-optimized/nodes/${i}.js`;
-								const deps = deps_of(entry, true);
-								const file = resolve_symlinks(
-									vite_manifest,
-									`${out_dir}/generated/client-optimized/nodes/${i}.js`,
-									root
-								).chunk.file;
-
-								return { file, css: deps.stylesheets };
-							}
-						});
-						build_data.client.nodes = nodes.map((node) => node?.file);
-						build_data.client.css = nodes.map((node) => node?.css);
-
-						build_data.client.routes = compact(
-							manifest_data.routes.map((route) => {
-								if (!route.page) return;
-
-								return {
-									id: route.id,
-									pattern: route.pattern,
-									params: route.params,
-									layouts: route.page.layouts.map((l) =>
-										l !== undefined ? [metadata.nodes[l].has_server_load, l] : undefined
-									),
-									errors: route.page.errors,
-									leaf: [metadata.nodes[route.page.leaf].has_server_load, route.page.leaf]
-								};
-							})
-						);
-					}
-				} else {
-					const start = deps_of(`${runtime_directory}/client/bundle.js`);
-
-					build_data.client = {
-						start: start.file,
-						imports: start.imports,
-						stylesheets: start.stylesheets,
-						fonts: start.fonts,
-						uses_env_dynamic_public
-					};
-
-					if (svelte_config.kit.output.bundleStrategy === 'inline') {
-						build_data.client.inline = {
-							script: read(`${out}/client/${start.file}`),
-							style: /** @type {string | undefined} */ (inline_style?.source)
-						};
-
-						// the bundle and stylesheet are inlined into the page, so the
-						// emitted files are never loaded
-						fs.unlinkSync(`${out}/client/${start.file}`);
-						fs.rmSync(`${out}/client/${start.file}.map`, { force: true });
-						if (inline_style) fs.unlinkSync(`${out}/client/${inline_style.fileName}`);
-					}
-				}
-
-				// regenerate manifest now that we have client entry...
 				fs.writeFileSync(
 					manifest_path,
 					`export const manifest = ${generate_manifest({
@@ -1909,145 +1684,490 @@ function kit({ svelte_config }) {
 					})};\n`
 				);
 
-				// regenerate nodes with the client manifest...
+				// first, build server nodes without the client manifest so we can analyse it
 				build_server_nodes(
 					out,
 					kit,
 					manifest_data,
 					vite_server_manifest,
-					vite_client_manifest,
+					null,
 					assets_path,
-					client_chunks,
+					server_chunks,
 					root
 				);
-			} else {
-				copy(server_assets, client_assets);
-				copy(kit.files.assets, `${out}/client`);
-			}
 
-			// ...and prerender
-			let prerender_results;
-			try {
-				prerender_results = await prerender({
+				log.info('Analysing routes');
+
+				const { metadata } = await analyse({
 					hash: kit.router.type === 'hash',
-					out,
 					manifest_path,
-					metadata,
-					verbose,
+					manifest_data,
+					server_manifest: vite_server_manifest,
+					tracked_features,
 					env,
+					remotes,
 					vite_config_file: vite_config.configFile
 				});
+				build_metadata = metadata;
 
-				// this silly hack is necessary to ensure that stderr from prerender is flushed before we continue
-				await new Promise((f) => setTimeout(f, 0));
-			} catch (e) {
-				if (e instanceof Error && e.message === '__handled__') {
-					// error details are already logged inside `prerender`, don't duplicate them
-					throw stackless('Prerendering failed');
+				log.info('Building app');
+
+				const server_assets = `${out}/server/${assets_path}`;
+				const client_assets = `${out}/client/${assets_path}`;
+
+				const skip_client_build = manifest_data.nodes.every(
+					(node) => node.page_options?.csr === false
+				);
+
+				if (skip_client_build) {
+					copy(server_assets, client_assets);
+					copy(kit.files.assets, `${out}/client`);
 				} else {
-					// Unforeseen error, rethrow as-is
-					throw e;
+					// ...and build the client
+					write_client_manifest(
+						kit,
+						manifest_data,
+						`${out_dir}/generated/client-optimized`,
+						build_metadata.nodes
+					);
+
+					// Through the finished analysis we can now check if any node has server or universal load functions
+					const nodes = Object.values(build_metadata.nodes);
+					const has_server_load = nodes.some((node) => node.has_server_load);
+					const has_universal_load = nodes.some((node) => node.has_universal_load);
+
+					if (builder.environments.client.config.define) {
+						builder.environments.client.config.define.__SVELTEKIT_HAS_SERVER_LOAD__ =
+							s(has_server_load);
+						builder.environments.client.config.define.__SVELTEKIT_HAS_UNIVERSAL_LOAD__ =
+							s(has_universal_load);
+					}
+
+					const client_build = await builder.build(builder.environments.client);
+					const client_chunks = await normalise_build(
+						builder.environments.client.name,
+						client_build,
+						watch_build_output
+					);
+
+					// We use `build.ssrEmitAssets` so that asset URLs created from
+					// imports in server-only modules correspond to files in the build,
+					// but we don't want to copy over CSS imports as these are already
+					// accounted for in the client bundle. In most cases it would be
+					// a no-op, but for SSR builds `url(...)` paths are handled
+					// differently (relative for client, absolute for server)
+					// resulting in different hashes, and thus duplication
+					const ssr_stylesheets = new Set(
+						Object.values(vite_server_manifest)
+							.map((chunk) => chunk.css ?? [])
+							.flat()
+					);
+
+					if (fs.existsSync(server_assets)) {
+						for (const file of fs.readdirSync(server_assets)) {
+							const src = `${server_assets}/${file}`;
+							const dest = `${client_assets}/${file}`;
+
+							if (fs.existsSync(dest) || ssr_stylesheets.has(`${assets_path}/${file}`)) {
+								continue;
+							}
+
+							copy(src, dest);
+						}
+					}
+
+					vite_client_manifest = /** @type {Manifest} */ (
+						JSON.parse(read(`${out}/client/.vite/manifest.json`))
+					);
+
+					/**
+					 * @param {string} entry
+					 * @param {boolean} [add_dynamic_css]
+					 */
+					const deps_of = (entry, add_dynamic_css = false) =>
+						find_deps(
+							/** @type {Manifest} */ (vite_client_manifest),
+							posixify(path.relative(root, entry)),
+							add_dynamic_css,
+							root
+						);
+
+					// the inline bundle and stylesheet are deleted further down, after
+					// being inlined into the page, so they must not appear in `immutable`
+					/** @type {Set<string>} */
+					const inlined = new Set();
+					/** @type {Rolldown.OutputAsset | undefined} */
+					let inline_style;
+
+					if (kit.output.bundleStrategy === 'inline') {
+						inline_style = /** @type {Rolldown.OutputAsset | undefined} */ (
+							client_chunks.find(
+								(chunk) =>
+									chunk.type === 'asset' &&
+									chunk.names.length === 1 &&
+									chunk.names[0] === 'style.css'
+							)
+						);
+
+						inlined.add(deps_of(`${runtime_directory}/client/bundle.js`).file);
+						if (inline_style) inlined.add(inline_style.fileName);
+					}
+
+					// Replace manifest placeholders in client output. `immutable` is
+					// computed from the Vite client manifest, `assets` and `routes`
+					// from `manifest_data`. `prerendered` is left as a placeholder
+					// for now — it's replaced after prerendering completes.
+					immutable = collect_immutable(vite_client_manifest, kit.appDir, inlined);
+
+					replace_manifest_placeholder_variables(client_chunks, `${out}/client`, {
+						immutable,
+						assets: manifest_data.assets.map((asset) => ({ path: asset.file })),
+						routes: get_manifest_routes(manifest_data.routes)
+					});
+
+					// Now that the client build is done, replace the `build` sentinel
+					// in the SSR output with the real build files
+					replace_manifest_placeholder_strings(`${out}/server`, { immutable });
+
+					const has_explicit_dynamic_public_env = Object.values(explicit_env_config ?? {}).some(
+						(variable) => variable.public && !variable.static
+					);
+
+					// the app only depends on runtime public env if it imports `$app/env/public`
+					// *and* at least one public env var is actually dynamic (non-static)
+					const uses_env_dynamic_public =
+						has_explicit_dynamic_public_env &&
+						client_chunks.some(
+							(chunk) => chunk.type === 'chunk' && chunk.modules[sveltekit_env_public_client]
+						);
+
+					if (kit.output.bundleStrategy === 'split') {
+						const start_entry = posixify(
+							path.relative(root, `${runtime_directory}/client/entry.js`)
+						);
+						const start = find_deps(vite_client_manifest, start_entry, false, root);
+						const runtime_entry = resolve_symlinks(vite_client_manifest, start_entry, root).chunk
+							.dynamicImports?.[0]; // client/entry.js dynamically imports client/client-entry.js
+						if (!runtime_entry) throw new Error('Could not find the client runtime chunk');
+						const runtime = find_deps(vite_client_manifest, runtime_entry, false, root);
+						const app = deps_of(`${out_dir}/generated/client-optimized/app.js`);
+
+						build_data.client = {
+							start: start.file,
+							app: app.file,
+							imports: Array.from(
+								new Set([
+									...start.imports,
+									runtime.file,
+									...runtime.imports,
+									app.file,
+									...app.imports
+								])
+							),
+							stylesheets: [...start.stylesheets, ...runtime.stylesheets, ...app.stylesheets],
+							fonts: [...start.fonts, ...runtime.fonts, ...app.fonts],
+							uses_env_dynamic_public
+						};
+
+						// In case of server-side route resolution, we create a purpose-built route manifest that is
+						// similar to that on the client, with as much information computed upfront so that we
+						// don't need to include any code of the actual routes in the server bundle.
+						if (kit.router.resolution === 'server') {
+							const nodes = manifest_data.nodes.map((node, i) => {
+								if (node.component || node.universal) {
+									const entry = `${out_dir}/generated/client-optimized/nodes/${i}.js`;
+									const deps = deps_of(entry, true);
+									const file = resolve_symlinks(
+										/** @type {Manifest} */ (vite_client_manifest),
+										`${out_dir}/generated/client-optimized/nodes/${i}.js`,
+										root
+									).chunk.file;
+
+									return { file, css: deps.stylesheets };
+								}
+							});
+							build_data.client.nodes = nodes.map((node) => node?.file);
+							build_data.client.css = nodes.map((node) => node?.css);
+
+							build_data.client.routes = compact(
+								manifest_data.routes.map((route) => {
+									if (!route.page) return;
+
+									return {
+										id: route.id,
+										pattern: route.pattern,
+										params: route.params,
+										layouts: route.page.layouts.map((l) =>
+											l !== undefined ? [metadata.nodes[l].has_server_load, l] : undefined
+										),
+										errors: route.page.errors,
+										leaf: [metadata.nodes[route.page.leaf].has_server_load, route.page.leaf]
+									};
+								})
+							);
+						}
+					} else {
+						const start = deps_of(`${runtime_directory}/client/bundle.js`);
+
+						build_data.client = {
+							start: start.file,
+							imports: start.imports,
+							stylesheets: start.stylesheets,
+							fonts: start.fonts,
+							uses_env_dynamic_public
+						};
+
+						if (kit.output.bundleStrategy === 'inline') {
+							build_data.client.inline = {
+								script: read(`${out}/client/${start.file}`),
+								style: /** @type {string | undefined} */ (inline_style?.source)
+							};
+
+							// the bundle and stylesheet are inlined into the page, so the
+							// emitted files are never loaded
+							fs.unlinkSync(`${out}/client/${start.file}`);
+							fs.rmSync(`${out}/client/${start.file}.map`, { force: true });
+							if (inline_style) fs.unlinkSync(`${out}/client/${inline_style.fileName}`);
+						}
+					}
+
+					// regenerate manifest now that we have client entry...
+					fs.writeFileSync(
+						manifest_path,
+						`export const manifest = ${generate_manifest({
+							build_data,
+							prerendered: [],
+							relative_path: '.',
+							routes: manifest_data.routes,
+							remotes,
+							root
+						})};\n`
+					);
+
+					// regenerate nodes with the client manifest...
+					build_server_nodes(
+						out,
+						kit,
+						manifest_data,
+						vite_server_manifest,
+						vite_client_manifest,
+						assets_path,
+						client_chunks,
+						root
+					);
 				}
+
+				// ...and prerender
+				let prerender_results;
+				try {
+					prerender_results = await prerender({
+						hash: kit.router.type === 'hash',
+						out,
+						manifest_path,
+						metadata,
+						verbose,
+						env,
+						vite_config_file: vite_config.configFile
+					});
+
+					// this silly hack is necessary to ensure that stderr from prerender is flushed before we continue
+					await new Promise((f) => setTimeout(f, 0));
+				} catch (e) {
+					if (e instanceof Error && e.message === '__handled__') {
+						// error details are already logged inside `prerender`, don't duplicate them
+						throw stackless('Prerendering failed');
+					} else {
+						// Unforeseen error, rethrow as-is
+						throw e;
+					}
+				}
+
+				prerendered = prerender_results.prerendered;
+
+				// Replace the `prerendered` sentinel in both SSR and client output
+				// with the real prerendered paths. The other sentinels (`build`)
+				// were already replaced after the client build.
+				const prerendered_paths = prerendered.paths.map((p) => {
+					return { path: p.replace(kit.paths.base, '').slice(1) };
+				});
+
+				replace_manifest_placeholder_strings(`${out}/server`, { prerendered: prerendered_paths });
+				replace_manifest_placeholder_strings(`${out}/client`, { prerendered: prerendered_paths });
+
+				// For `inline` strategy, the entry file was deleted and read into
+				// `build_data.client.inline.script` — replace the sentinel there too
+				if (build_data.client?.inline?.script) {
+					build_data.client.inline.script = build_data.client.inline.script.replaceAll(
+						'"__sveltekit_manifest_prerendered__"',
+						JSON.stringify(prerendered_paths)
+					);
+				}
+
+				// generate a new manifest that doesn't include prerendered pages
+				fs.writeFileSync(
+					`${out}/server/manifest.js`,
+					`export const manifest = ${generate_manifest({
+						build_data,
+						prerendered: prerendered.paths,
+						relative_path: '.',
+						routes: manifest_data.routes.filter(
+							(route) => prerender_results.prerender_map.get(route.id) !== true
+						),
+						remotes,
+						root
+					})};\n`
+				);
+
+				await treeshake_prerendered_remotes(
+					vite,
+					out,
+					remotes,
+					remote_original_by_hash,
+					metadata,
+					process.cwd(),
+					server_chunks,
+					vite_config.build.sourcemap
+				);
+
+				// defer until after other buildApp hooks have run
+				finalise = async () => {
+					// defer creating the service worker to avoid other plugins from
+					// overwriting it if they run a client environment build
+					if (service_worker_entry_file) {
+						log.info('Building service worker');
+
+						// mirror client settings that we couldn't set per environment in the config hook
+						builder.environments.serviceWorker.config.define =
+							builder.environments.client.config.define;
+						builder.environments.serviceWorker.config.resolve.alias = [
+							...get_config_aliases(kit, vite_config.root)
+						];
+
+						// we have to overwrite this because it can't be configured per environment in the config hook
+						builder.environments.serviceWorker.config.experimental.renderBuiltUrl = (filename) => {
+							return {
+								runtime: `new URL(${JSON.stringify(filename)}, location.href).pathname`
+							};
+						};
+
+						const service_worker_build = await builder.build(builder.environments.serviceWorker);
+						await normalise_build(
+							builder.environments.serviceWorker.name,
+							service_worker_build,
+							watch_build_output
+						);
+					}
+
+					console.log(
+						`\nRun ${styleText(['bold', 'cyan'], 'npm run preview')} to preview your production build locally.`
+					);
+
+					if (kit.adapter) {
+						await adapt(
+							svelte_config,
+							build_data,
+							metadata,
+							prerendered,
+							prerender_results.prerender_map,
+							log,
+							remotes,
+							vite_config,
+							explicit_env_config
+						);
+					} else {
+						log.warn('\nNo adapter specified');
+
+						const link = styleText(['bold', 'cyan'], 'https://svelte.dev/docs/kit/adapters');
+						console.log(
+							`See ${link} to learn how to configure your app to run on the platform of your choosing`
+						);
+					}
+				};
+			};
+
+			// `vite build`
+			ssr_build = Array.isArray(ssr_build) ? ssr_build[0] : ssr_build;
+			if ('output' in ssr_build) {
+				await load_and_validate_params({
+					routes: manifest_data.routes,
+					params_path: manifest_data.params,
+					root
+				});
+
+				return await process_ssr_build(ssr_build.output);
 			}
 
-			prerendered = prerender_results.prerendered;
+			// `vite build --watch`
+			let rebuild = false;
 
-			// Replace the `prerendered` sentinel in both SSR and client output
-			// with the real prerendered paths. The other sentinels (`build`)
-			// were already replaced after the client build.
-			const prerendered_paths = prerendered.paths.map((p) => {
-				return { path: p.replace(kit.paths.base, '').slice(1) };
+			const before_ssr_build_rerun = async () => {
+				rebuild = true;
+
+				// these are set once per plugin initialisation or when the config hook
+				// runs. However, those don't re-run during watch mode. So, we need to
+				// re-initialise them manually here
+				manifest_data = sync.all(svelte_config, root).manifest_data;
+
+				tracked_features = {};
+
+				remotes = [];
+				remote_original_by_hash.clear();
+				emitted_remote_hashes.clear();
+
+				immutable = null;
+				manifest_data_code = null;
+
+				finalise = null;
+
+				fs.mkdirSync(out, { recursive: true });
+
+				explicit_env_entry = resolve_explicit_env_entry(kit);
+				explicit_env_config = await sync.env(
+					vite,
+					kit,
+					explicit_env_entry,
+					vite_config.root,
+					vite_config.mode
+				);
+
+				await load_and_validate_params({
+					routes: manifest_data.routes,
+					params_path: manifest_data.params,
+					root
+				});
+			};
+
+			ssr_build.on('change', before_ssr_build_rerun);
+			ssr_build.on('restart', before_ssr_build_rerun);
+
+			/** @type {PromiseWithResolvers<void>} */
+			const task = Promise.withResolvers();
+
+			ssr_build.on('event', async (event) => {
+				if (event.code === 'ERROR') {
+					return task.reject();
+				}
+
+				if (event.code === 'BUNDLE_END') {
+					try {
+						await process_ssr_build(
+							/** @type {Rolldown.RolldownOutput['output']} */ (
+								watch_build_output.get(builder.environments.ssr.name)
+							)
+						);
+						// buildApp hooks don't rerun in watch mode so we need to run
+						// the deferred steps here on subsequent builds
+						if (rebuild) await finalise?.();
+					} catch (e) {
+						return task.reject(e);
+					} finally {
+						await event.result.close();
+					}
+					return task.resolve();
+				}
 			});
 
-			replace_manifest_placeholder_strings(`${out}/server`, { prerendered: prerendered_paths });
-			replace_manifest_placeholder_strings(`${out}/client`, { prerendered: prerendered_paths });
-
-			// For `inline` strategy, the entry file was deleted and read into
-			// `build_data.client.inline.script` — replace the sentinel there too
-			if (build_data.client?.inline?.script) {
-				build_data.client.inline.script = build_data.client.inline.script.replaceAll(
-					'"__sveltekit_manifest_prerendered__"',
-					JSON.stringify(prerendered_paths)
-				);
-			}
-
-			await treeshake_prerendered_remotes(
-				vite,
-				out,
-				remotes,
-				remote_original_by_hash,
-				metadata,
-				process.cwd(),
-				server_chunks,
-				vite_config.build.sourcemap
-			);
-
-			// generate a new manifest that doesn't include prerendered pages
-			fs.writeFileSync(
-				`${out}/server/manifest.js`,
-				`export const manifest = ${generate_manifest({
-					build_data,
-					prerendered: prerendered.paths,
-					relative_path: '.',
-					routes: manifest_data.routes.filter(
-						(route) => prerender_results.prerender_map.get(route.id) !== true
-					),
-					remotes,
-					root
-				})};\n`
-			);
-
-			// defer the adapt step to run after any buildApp hooks the adapter might have
-			finalise = async () => {
-				// defer creating the service worker too because other plugins might build
-				// the client environment again and overwrite our service worker which
-				// outputs to the same directory
-				if (service_worker_entry_file) {
-					log.info('Building service worker');
-
-					// mirror client settings that we couldn't set per environment in the config hook
-					builder.environments.serviceWorker.config.define =
-						builder.environments.client.config.define;
-					builder.environments.serviceWorker.config.resolve.alias = [
-						...get_config_aliases(kit, vite_config.root)
-					];
-
-					// we have to overwrite this because it can't be configured per environment in the config hook
-					builder.environments.serviceWorker.config.experimental.renderBuiltUrl = (filename) => {
-						return {
-							runtime: `new URL(${JSON.stringify(filename)}, location.href).pathname`
-						};
-					};
-
-					await builder.build(builder.environments.serviceWorker);
-				}
-
-				console.log(
-					`\nRun ${styleText(['bold', 'cyan'], 'npm run preview')} to preview your production build locally.`
-				);
-
-				if (kit.adapter) {
-					const { adapt } = await import('../../core/adapt/index.js');
-					await adapt(
-						svelte_config,
-						build_data,
-						metadata,
-						prerendered,
-						prerender_results.prerender_map,
-						log,
-						remotes,
-						vite_config,
-						explicit_env_config
-					);
-				} else {
-					log.warn('\nNo adapter specified');
-
-					const link = styleText(['bold', 'cyan'], 'https://svelte.dev/docs/kit/adapters');
-					console.log(
-						`See ${link} to learn how to configure your app to run on the platform of your choosing`
-					);
-				}
-			};
+			await task.promise;
 		}
 	};
 
@@ -2340,3 +2460,39 @@ const replace_manifest_placeholder_strings = (dir, values) => {
 		}
 	}
 };
+
+/**
+ * Normalises the build output to a consistent format, handling watch mode and multiple environments
+ * @param {string} name The name of the environment
+ * @param {Rolldown.RolldownOutput | Rolldown.RolldownOutput[] | Rolldown.RolldownWatcher} build The return value of builder.build
+ * @param {Map<string, Rolldown.RolldownOutput['output']>} build_output_map
+ * @returns {Promise<Rolldown.RolldownOutput['output']>}
+ */
+async function normalise_build(name, build, build_output_map) {
+	if ('output' in build) {
+		return build.output;
+	}
+
+	if (Array.isArray(build)) {
+		return build[0].output;
+	}
+
+	/** @type {PromiseWithResolvers<void>} */
+	const bundling = Promise.withResolvers();
+
+	build.on('event', async (event) => {
+		if (event.code === 'ERROR') {
+			await build.close();
+			return bundling.reject(event.error);
+		}
+
+		if (event.code === 'BUNDLE_END') {
+			await build.close();
+			return bundling.resolve();
+		}
+	});
+
+	await bundling.promise;
+
+	return /** @type {Rolldown.RolldownOutput['output']} */ (build_output_map.get(name));
+}

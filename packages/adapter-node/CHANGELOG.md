@@ -1,5 +1,13 @@
 # @sveltejs/adapter-node
 
+## 6.0.0-next.9
+
+### Patch Changes
+
+- fix: externalize `@opentelemetry/api` to prevent bundler chunk colocation between `instrumentation.server.js` and application code ([#16302](https://github.com/sveltejs/kit/pull/16302))
+- Updated dependencies [[`04f9ab4`](https://github.com/sveltejs/kit/commit/04f9ab4f64a25c2fecac65ccd97cf4663eb9c1fa), [`1e198bd`](https://github.com/sveltejs/kit/commit/1e198bdbea745b845d9ae59e6a2d3fc62a404b01), [`813726d`](https://github.com/sveltejs/kit/commit/813726dabdc923ce138452dc8cc91d881e329e5d), [`a115a7b`](https://github.com/sveltejs/kit/commit/a115a7beb9b34d1e43609e96100de48010afc3be), [`031ac69`](https://github.com/sveltejs/kit/commit/031ac69d0d8c7d66c9e61aa43a8c447877eb87ff), [`dc7442c`](https://github.com/sveltejs/kit/commit/dc7442cc622c257e89a7acc9253795a449d51df7), [`19c4478`](https://github.com/sveltejs/kit/commit/19c447850e269807eeb089b595267a0616203afa), [`dc7442c`](https://github.com/sveltejs/kit/commit/dc7442cc622c257e89a7acc9253795a449d51df7), [`dc7442c`](https://github.com/sveltejs/kit/commit/dc7442cc622c257e89a7acc9253795a449d51df7), [`0b3e2b3`](https://github.com/sveltejs/kit/commit/0b3e2b386896cf868328138a66670f19931ebea5), [`c5d0ce2`](https://github.com/sveltejs/kit/commit/c5d0ce2a9e47615c245e8ac57e10ee2120142138)]:
+  - @sveltejs/kit@3.0.0-next.19
+
 ## 6.0.0-next.8
 
 ### Major Changes

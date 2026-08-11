@@ -11,8 +11,8 @@
 		"prepublishOnly": "pnpm run package",
 		"check": "svelte-kit sync && svelte-check --tsgo --incremental",
 		"check:watch": "svelte-kit sync && svelte-check --tsgo --incremental --watch",
-		"format": "prettier --config ../../.prettierrc --write .",
-		"lint": "prettier --config ../../.prettierrc --check ."
+		"format": "oxfmt --write .",
+		"lint": "oxfmt --check ."
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "workspace:*",
@@ -26,8 +26,6 @@
 		"@sveltejs/package": "workspace:*",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"@typescript/native": "catalog:",
-		"prettier": "catalog:",
-		"prettier-plugin-svelte": "catalog:",
 		"publint": "catalog:",
 		"svelte": "catalog:",
 		"svelte-check": "catalog:",

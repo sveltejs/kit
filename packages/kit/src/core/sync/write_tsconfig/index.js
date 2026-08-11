@@ -6,7 +6,6 @@ import { styleText } from 'node:util';
 import { write_if_changed } from '../utils.js';
 import {
 	ESSENTIAL_OPTIONS,
-	get_subpath_imports,
 	normalize_config,
 	RECOMMENDED_OPTIONS,
 	remove_trailing_slashstar
@@ -243,8 +242,7 @@ const alias_value = /^(.+?)((\/\*)|(\.\w+))?$/;
  */
 function get_paths(config, root) {
 	const alias = {
-		...config.alias,
-		...get_subpath_imports(root)
+		...config.alias
 	};
 
 	/** @type {Record<string, string[]>} */

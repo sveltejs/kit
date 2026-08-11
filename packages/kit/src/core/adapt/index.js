@@ -10,7 +10,7 @@ import { create_builder } from './builder.js';
  * @param {import('types').Logger} log
  * @param {import('types').RemoteChunk[]} remotes
  * @param {import('vite').ResolvedConfig} vite_config
- * @param {Record<string, import('@sveltejs/kit').EnvVarConfig<any>> | null} explicit_env_config
+ * @param {Record<string, import('@sveltejs/kit/env').EnvVarConfig<any>> | null} explicit_env_config
  */
 export async function adapt(
 	config,

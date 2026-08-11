@@ -33,9 +33,9 @@
 		"platforms.js"
 	],
 	"scripts": {
-		"lint": "prettier --check .",
+		"lint": "oxfmt --check .",
 		"check": "tsc",
-		"format": "pnpm lint --write",
+		"format": "oxfmt --write .",
 		"test": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test"
 	},
 	"devDependencies": {

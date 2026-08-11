@@ -20,7 +20,6 @@ import {
 	ServerInit,
 	ClientInit,
 	Transport,
-	HandleValidationError,
 	RemoteFormIssue,
 	RemoteQuery,
 	RemoteLiveQuery
@@ -156,7 +155,6 @@ export interface ServerHooks {
 	handleFetch: HandleFetch;
 	handle: Handle;
 	handleError: HandleServerError;
-	handleValidationError: HandleValidationError;
 	reroute: Reroute;
 	transport?: Transport;
 	init?: ServerInit;
@@ -628,10 +626,15 @@ export interface RemotePrerenderInternals extends BaseRemoteInternals {
 }
 
 export type RemoteAnyQueryInternals =
-	RemoteQueryInternals | RemoteQueryBatchInternals | RemoteQueryLiveInternals;
+	| RemoteQueryInternals
+	| RemoteQueryBatchInternals
+	| RemoteQueryLiveInternals;
 
 export type RemoteInternals =
-	RemoteAnyQueryInternals | RemoteCommandInternals | RemoteFormInternals | RemotePrerenderInternals;
+	| RemoteAnyQueryInternals
+	| RemoteCommandInternals
+	| RemoteFormInternals
+	| RemotePrerenderInternals;
 
 export interface InternalRemoteFormIssue extends RemoteFormIssue {
 	name: string;
@@ -679,7 +682,6 @@ export interface RequestState {
 	 * Allows us to prevent `event.fetch` from making infinitely looping internal requests.
 	 */
 	readonly depth: number;
-	readonly handleValidationError: ServerHooks['handleValidationError'];
 	readonly remote: {
 		/** Resolved query/prerender data, populated by `await myQuery()` or `myQuery.set(...)` */
 		data: null | Map<RemoteInternals, Record<string, MaybePromise<any>>>;
@@ -730,11 +732,6 @@ export interface RequestState {
 	readonly is_in_remote_query: boolean;
 	readonly is_in_remote_prerender: boolean;
 	readonly is_in_render: boolean;
-	/**
-	 * The event before `derive_remote_function_event` hid or stubbed properties.
-	 * Hooks like `handleValidationError` receive this so `url` etc. stay accessible
-	 */
-	readonly original_event?: RequestEvent;
 }
 
 export interface RequestStore {

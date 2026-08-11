@@ -12,6 +12,10 @@ minimumReleaseAgeExclude:
   - esm-env
   - vite-imagetools
   - imagetools-core
+  - '@changesets/apply-release-plan@8.0.0-next.11'
+  - '@changesets/assemble-release-plan@7.0.0-next.11'
+  - '@changesets/cli@3.0.0-next.12'
+  - '@changesets/config@4.0.0-next.10'
 blockExoticSubdeps: true
 linkWorkspacePackages: true
 shellEmulator: true
@@ -45,7 +49,7 @@ allowBuilds:
 # wouldn't require publishing a new package version
 # see https://github.com/changesets/changesets/issues/1707
 catalog:
-  '@changesets/cli': 3.0.0-next.11
+  '@changesets/cli': ^3.0.0-next.12
   # pin the version of changelog-github because we're using the experimental
   # template feature which can change in a patch version
   '@changesets/changelog-github': 1.0.0-next.9
@@ -63,10 +67,10 @@ catalog:
   dropcss: ^1.0.16
   eslint: ^10.8.0
   polka: ^1.0.0-next.28
-  publint: ^0.3.0
-  rolldown: ^1.2.0
   prettier: ^3.9.6
   prettier-plugin-svelte: ^4.1.1
+  publint: ^0.3.0
+  rolldown: ^1.2.0
   semver: ^7.5.4
   sirv-cli: ^3.0.0
   svelte: ^5.56.3

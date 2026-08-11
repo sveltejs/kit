@@ -1,5 +1,5 @@
 import { query_responses, handle_error } from '../../client.js';
-import { HttpError, Redirect } from '@sveltejs/kit/internal';
+import { HttpError, Redirect, HandledHttpError } from '@sveltejs/kit/internal';
 import { noop, once } from '../../../../utils/functions.js';
 import { SharedIterator } from '../../../../utils/shared-iterator.js';
 import { tick } from 'svelte';
@@ -91,7 +91,7 @@ export class LiveQuery {
 				// the query failed during SSR — seed the failed state (mirroring `fail()`,
 				// minus its terminal `#done`), so the main loop still connects as usual
 				// and the query can recover
-				const error = new HttpError(node.e);
+				const error = new HandledHttpError(node.e);
 				this.#loading = false;
 				this.#error = error.body;
 
@@ -181,8 +181,8 @@ export class LiveQuery {
 				}
 
 				if (error instanceof HttpError) {
-					// Server intentionally sent an error. Surface it and stop.
-					this.fail(error);
+					// Server or client intentionally produced an error. Surface it and stop.
+					await this.#fail(error);
 					break;
 				}
 
@@ -417,7 +417,7 @@ export class LiveQuery {
 			route: { id: null },
 			url: new URL(location.href)
 		});
-		this.fail(new HttpError(error));
+		this.fail(new HandledHttpError(error));
 	}
 
 	get [Symbol.toStringTag]() {

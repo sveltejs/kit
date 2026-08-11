@@ -6,25 +6,25 @@ Errors are an inevitable fact of software development. SvelteKit handles errors 
 
 ## Error objects
 
-SvelteKit distinguishes between expected and unexpected errors, both of which are represented as simple `{ status: number, message: string }` objects by default.
+Every error passes through the [`handleError`](hooks#handleError) hook — which can log it and customise it — before it is rendered. The hook's `kind` property identifies where the error came from: your app (`'app'`), SvelteKit (`'framework'`), validation of a [remote function](remote-functions) argument (`'validation'`) or an unknown source (`'unknown'`). By default, all are represented as simple `{ status: number, message: string }` objects.
 
 You can add additional properties, like a `code` or a tracking `id`, as shown in the examples below. (When using TypeScript this requires you to redefine the `Error` type as described in  [type safety](errors#Type-safety)).
 
-## Expected errors
+## App errors
 
-An _expected_ error is one created with the [`error`](@sveltejs-kit#error) helper imported from `@sveltejs/kit`:
+An _app_ error is one created with the [`error`](@sveltejs-kit#error) helper imported from `@sveltejs/kit`:
 
 ```js
 /// file: src/routes/blog/[slug]/+page.server.js
 // @filename: ambient.d.ts
-declare module '#lib/server/database' {
+declare module '#lib/server/database.js' {
 	export function getPost(slug: string): Promise<{ title: string, content: string } | undefined>
 }
 
 // @filename: index.js
 // ---cut---
 import { error } from '@sveltejs/kit';
-import * as db from '#lib/server/database';
+import * as db from '#lib/server/database.js';
 
 /** @type {import('./$types').PageServerLoad} */
 export async function load({ params }) {
@@ -39,6 +39,8 @@ export async function load({ params }) {
 ```
 
 This throws an exception that SvelteKit catches, causing it to set the response status code to 404 and render an [`+error.svelte`](routing#error) component, where the `error` is an `App.Error` object with the provided `status` and `message`.
+
+On its way there, the error passes through the [`handleError`](hooks#handleError) hook with `kind: 'app'`. Since the shape of the error is determined by your app, it is considered safe to expose, and the hook can pass it through unchanged.
 
 ```svelte
 <!--- file: src/routes/+error.svelte --->
@@ -73,19 +75,19 @@ error(404, 'Not found', {
 
 > [!NOTE] [In SvelteKit 1.x](migrating-to-sveltekit-2#redirect-and-error-are-no-longer-thrown-by-you) you had to `throw` the `error` yourself
 
-## Unexpected errors
+## Unknown errors
 
-An _unexpected_ error is any other exception that occurs while handling a request. Since these can contain sensitive information, unexpected error messages and stack traces are not exposed to users.
+An _unknown_ error is any other exception that occurs while handling a request. Since these can contain sensitive information, unknown error messages and stack traces are not exposed to users.
 
-By default, unexpected errors are printed to the console (or, in production, your server logs), while the error that is exposed to the user has a generic shape:
+By default, unknown errors are printed to the console (or, in production, your server logs), while the error that is exposed to the user has a generic shape:
 
 ```json
 { "status": 500, "message": "Internal Error" }
 ```
 
-Unexpected errors will go through the [`handleError`](hooks#handleError) hook, where you can add your own error handling — for example, sending errors to a reporting service, or returning a custom error object which becomes the `error` prop passed to `+error.svelte`.
+Unknown errors go through the [`handleError`](hooks#handleError) hook with `kind: 'unknown'`, because SvelteKit does not know what went wrong. There you can add your own error handling, for example sending errors to a reporting service, or returning a custom error object which becomes the `error` prop passed to `+error.svelte`. The value you receive is the raw thrown value, and nothing about it is exposed unless you choose to expose it.
 
-You can override the HTTP status code used in the response by returning a `status` property:
+Anything you return overrides the defaults, so you can — for example — use the type of the thrown error to determine the HTTP status code used in the response:
 
 ```js
 /// file: src/hooks.server.js
@@ -93,18 +95,31 @@ You can override the HTTP status code used in the response by returning a `statu
 class NotFound extends Error {}
 
 /** @type {import('@sveltejs/kit').HandleServerError} */
-export function handleError({ error, event, status, message }) {
-	// ... you can do this
-	if (error instanceof NotFound) {
-		return {
-			status: 404,
-			message: 'Not found'
-		};
+export function handleError({ kind, error, event }) {
+	if (kind === 'unknown') {
+		// ... you can do this
+		if (error instanceof NotFound) {
+			return {
+				status: 404,
+				message: 'Not found'
+			};
+		}
+
+		return { message: 'Something went wrong' };
 	}
 
-	return { message: 'Something went wrong' };
+	// app and framework errors are already safe to expose
+	return error;
 }
 ```
+
+## Framework errors
+
+Some errors are generated by SvelteKit itself rather than by your code — a request for a page that doesn't exist (404), a `POST` request to a page without actions (405), a request body that exceeds the size limit (413), and so on.
+
+These also go through `handleError`, with a `kind` of `'framework'`. The `error` you receive is a `{ status, message }` object whose `message` is a terse but safe description of what went wrong, such as `'Not Found'`, so it can be exposed to users as-is.
+
+If you log errors inside `handleError`, remember that framework errors such as 404s are routine — you will usually want to gate logging on `kind === 'unknown'`.
 
 ## Error boundaries
 
