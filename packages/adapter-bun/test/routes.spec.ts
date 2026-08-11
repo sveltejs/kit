@@ -1,6 +1,10 @@
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { afterEach, expect, test, vi } from 'vitest';
 
 const meta = { hash: 'abc', mtime: 0 };
+// the module resolves assets from its own directory, which is src/ under vitest
+const dir = path.dirname(fileURLToPath(new URL('../src/routes-util.js', import.meta.url)));
 
 afterEach(() => {
 	vi.resetModules();
@@ -15,7 +19,7 @@ test('client assets use the configured base and URL-encode path segments', async
 
 	expect(entries).toHaveLength(1);
 	expect(entries[0][0]).toBe('/base/folder/encoded%20name%231.txt');
-	expect(file).toHaveBeenCalledWith('/app/build/client/folder/encoded name#1.txt');
+	expect(file).toHaveBeenCalledWith(`${dir}/client/folder/encoded name#1.txt`);
 	expect(entries[0][1]).toHaveProperty('GET');
 	const response = (entries[0][1] as any).GET(new Request('http://localhost/'));
 	expect(response.headers.get('content-type')).toBe('text/plain;charset=utf-8');
@@ -166,14 +170,14 @@ test('precompressed variants are negotiated with their own validators', async ()
 	expect(br.headers.get('content-encoding')).toBe('br');
 	expect(br.headers.get('etag')).toBe('"abc-br"');
 	expect(br.headers.get('vary')).toBe('accept-encoding');
-	expect(file).toHaveBeenLastCalledWith('/app/build/client/app.js.br');
+	expect(file).toHaveBeenLastCalledWith(`${dir}/client/app.js.br`);
 
 	const gzip = route.GET(
 		new Request('http://localhost/app.js', { headers: { 'accept-encoding': 'br;q=0, gzip' } })
 	);
 	expect(gzip.headers.get('content-encoding')).toBe('gzip');
 	expect(gzip.headers.get('etag')).toBe('"abc-gz"');
-	expect(file).toHaveBeenLastCalledWith('/app/build/client/app.js.gz');
+	expect(file).toHaveBeenLastCalledWith(`${dir}/client/app.js.gz`);
 
 	const any = route.GET(
 		new Request('http://localhost/app.js', { headers: { 'accept-encoding': '*' } })
@@ -208,7 +212,7 @@ test('range requests are served from the identity representation', async () => {
 
 	expect(response.headers.has('content-encoding')).toBe(false);
 	expect(response.headers.get('etag')).toBe('"abc"');
-	expect(file).toHaveBeenLastCalledWith('/app/build/client/app.js');
+	expect(file).toHaveBeenLastCalledWith(`${dir}/client/app.js`);
 });
 
 test('embedded routes use the imported asset instead of a filesystem path', async () => {
@@ -229,8 +233,8 @@ test('server assets resolve from the client output in regular builds', async () 
 
 	const result = routes.server_asset('nested/read.txt');
 
-	expect(file).toHaveBeenCalledWith('/app/build/client/nested/read.txt');
-	expect(result).toMatchObject({ path: '/app/build/client/nested/read.txt' });
+	expect(file).toHaveBeenCalledWith(`${dir}/client/nested/read.txt`);
+	expect(result).toMatchObject({ path: `${dir}/client/nested/read.txt` });
 });
 
 test('prerendered assets use the base path and preserve their content type', async () => {
@@ -293,7 +297,7 @@ async function load_routes({ base = '/', embed = false, appDir = '_app' } = {}) 
 	vi.resetModules();
 	vi.doMock('MANIFEST', () => ({ manifest: { appDir }, base, embed }));
 	const file = vi.fn((path: string) => ({ path, type: 'text/plain;charset=utf-8' }));
-	vi.stubGlobal('Bun', { main: '/app/build/index.js', file });
+	vi.stubGlobal('Bun', { file });
 
 	return { routes: await import('../src/routes-util.js'), file };
 }

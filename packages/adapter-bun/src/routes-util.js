@@ -1,8 +1,11 @@
 /** @import { BunFile, BunRequest, Serve } from 'bun' */
 import { manifest, base, embed } from 'MANIFEST';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const dir = path.dirname(Bun.main);
+// not Bun.main: when the built server is imported from a wrapper script rather than
+// run directly, Bun.main is the wrapper and every asset path resolves wrong
+const dir = path.dirname(fileURLToPath(import.meta.url));
 
 /**
  * @typedef {Serve.Routes<never, string>[string]} RouteHandler
