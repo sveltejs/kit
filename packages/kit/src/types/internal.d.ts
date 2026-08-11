@@ -19,11 +19,9 @@ import {
 	Emulator,
 	ServerInit,
 	ClientInit,
-	Transport,
-	RemoteFormIssue,
-	RemoteQuery,
-	RemoteLiveQuery
+	Transport
 } from '@sveltejs/kit';
+import { RemoteFormIssue, RemoteQuery, RemoteLiveQuery } from '$app/server';
 import {
 	HttpMethod,
 	MaybePromise,

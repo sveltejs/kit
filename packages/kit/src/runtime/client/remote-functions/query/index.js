@@ -1,4 +1,4 @@
-/** @import { RemoteQueryFunction } from '@sveltejs/kit' */
+/** @import { RemoteQueryFunction } from '$app/server' */
 import { app_dir, base } from '#app/paths';
 import { _goto, query_map } from '../../client.js';
 import { QUERY_FUNCTION_ID, remote_request } from '../shared.svelte.js';
