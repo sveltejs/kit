@@ -2,6 +2,7 @@ import { afterEach, expect, test, vi } from 'vitest';
 
 afterEach(() => {
 	vi.resetModules();
+	vi.doUnmock('node:fs');
 	vi.doUnmock('node:process');
 	vi.doUnmock('MANIFEST');
 	vi.doUnmock('ROUTES');
@@ -79,6 +80,16 @@ test('a Unix socket takes precedence over TCP-only options', async () => {
 	expect(options).not.toHaveProperty('reusePort');
 	expect(options).not.toHaveProperty('ipv6Only');
 	expect(loaded.log).toHaveBeenCalledWith('Listening on /tmp/application.sock');
+});
+
+test('removes a stale socket file before listening', async () => {
+	const statSync = vi.fn(() => ({ size: 0 }));
+	const rmSync = vi.fn();
+	vi.doMock('node:fs', () => ({ default: { statSync, rmSync } }));
+
+	await load_start({ env: { SOCKET_PATH: '/tmp/application.sock' } });
+
+	expect(rmSync).toHaveBeenCalledWith('/tmp/application.sock');
 });
 
 test.each([

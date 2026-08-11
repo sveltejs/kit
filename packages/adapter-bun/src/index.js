@@ -1,4 +1,5 @@
 /** @import { Serve } from 'bun' */
+import fs from 'node:fs';
 import process from 'node:process';
 import server_options from 'SERVER_OPTIONS';
 import { routes } from 'ROUTES';
@@ -15,6 +16,15 @@ if (unix) {
 	delete options.port;
 	delete options.reusePort;
 	delete options.ipv6Only;
+
+	// an unclean shutdown leaves the socket file behind and the next listen would
+	// fail with EADDRINUSE; the zero-size check (same heuristic as adapter-node)
+	// avoids deleting a regular file that happens to sit at this path
+	try {
+		if (fs.statSync(unix).size === 0) fs.rmSync(unix);
+	} catch {
+		// ignore
+	}
 } else {
 	delete options.unix;
 	options.hostname = env('HOST', options.hostname);
