@@ -142,6 +142,7 @@ First, a bundler may place code imported by `instrumentation.server.js` and appl
 Second, a bundler may inline or transform the module you want to instrument. For example, it could replace this:
 
 ```js
+// @errors: 2307 example library
 import { query } from 'my-database-library';
 ```
 
