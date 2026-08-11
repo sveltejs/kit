@@ -277,6 +277,10 @@ The `json(...)` and `text(...)` helpers for generating responses are deprecated.
 
 The `defineParams` function for creating [param matchers](advanced-routing#Matching), along with the associated types, now live in [`@sveltejs/kit/params`](@sveltejs-kit-params).
 
+### Env-related types moved to `@sveltejs/kit/env`
+
+Types like `EnvVarConfig`, used with [`defineEnvVars`](@sveltejs-kit-env#defineEnvVars) hook, now live in `@sveltejs/kit/env`.
+
 ## `@sveltejs/kit/hooks`
 
 The `defineEnvVars` function has moved from `@sveltejs/kit/hooks` to `@sveltejs/kit/env`.
