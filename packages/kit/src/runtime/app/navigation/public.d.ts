@@ -199,7 +199,10 @@ export interface NavigationLink extends NavigationBase {
 }
 
 export type Navigation =
-	NavigationExternal | NavigationFormSubmit | NavigationPopState | NavigationLink;
+	| NavigationExternal
+	| NavigationFormSubmit
+	| NavigationPopState
+	| NavigationLink;
 
 /**
  * The argument passed to [`beforeNavigate`](https://svelte.dev/docs/kit/$app-navigation#beforeNavigate) callbacks.
