@@ -3037,7 +3037,7 @@ declare module '$app/server' {
 		[key: string | number]: UnknownField<any>;
 	};
 
-	type RemoteFormFieldsRoot<Input extends RemoteFormInput_1 | void> =
+	type RemoteFormFieldsRoot<Input extends RemoteFormInput | void> =
 		IsAny<Input> extends true
 			? RecursiveFormFields
 			: Input extends void
@@ -3079,8 +3079,8 @@ declare module '$app/server' {
 
 	type MaybeArray<T> = T | T[];
 
-	interface RemoteFormInput_1 {
-		[key: string]: MaybeArray<string | number | boolean | File | RemoteFormInput_1> | undefined;
+	export interface RemoteFormInput {
+		[key: string]: MaybeArray<string | number | boolean | File | RemoteFormInput> | undefined;
 	}
 
 	export interface RemoteFormIssue {
@@ -3103,18 +3103,18 @@ declare module '$app/server' {
 	 * The type structure mirrors the input data structure for type-safe field access.
 	 * Call `invalid(issue.foo(...), issue.nested.bar(...))` to throw a validation error.
 	 */
-	type InvalidField_1<T> =
+	export type InvalidField<T> =
 		WillRecurseIndefinitely<T> extends true
 			? Record<string | number, any>
 			: NonNullable<T> extends string | number | boolean | File
 				? (message: string) => StandardSchemaV1.Issue
 				: NonNullable<T> extends Array<infer U>
 					? {
-							[K in number]: InvalidField_1<U>;
+							[K in number]: InvalidField<U>;
 						} & ((message: string) => StandardSchemaV1.Issue)
-					: NonNullable<T> extends RemoteFormInput_1
+					: NonNullable<T> extends RemoteFormInput
 						? {
-								[K in keyof T]-?: InvalidField_1<T[K]>;
+								[K in keyof T]-?: InvalidField<T[K]>;
 							} & ((message: string) => StandardSchemaV1.Issue)
 						: Record<string, never>;
 
@@ -3130,9 +3130,9 @@ declare module '$app/server' {
 	 * The form instance as received inside an `enhance` callback. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
 	 */
 	export type RemoteFormEnhanceInstance<
-		Input extends RemoteFormInput_1 | void = RemoteFormInput_1 | void,
+		Input extends RemoteFormInput | void = RemoteFormInput | void,
 		Output = any
-	> = Omit<RemoteForm_1<Input, Output>, 'enhance' | 'element'> & {
+	> = Omit<RemoteForm<Input, Output>, 'enhance' | 'element'> & {
 		readonly element: HTMLFormElement;
 	};
 
@@ -3140,14 +3140,14 @@ declare module '$app/server' {
 	 * The callback passed to a remote form's `enhance` method. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
 	 */
 	export type RemoteFormEnhanceCallback<
-		Input extends RemoteFormInput_1 | void = RemoteFormInput_1 | void,
+		Input extends RemoteFormInput | void = RemoteFormInput | void,
 		Output = any
 	> = (form: RemoteFormEnhanceInstance<Input, Output>) => MaybePromise<void>;
 
 	/**
 	 * The type of a remote `form` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
 	 */
-	type RemoteForm_1<Input extends RemoteFormInput_1 | void, Output> = {
+	export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
 		/** Attachment that sets up an event handler that intercepts the form submission on the client to prevent a full page reload */
 		[attachment: symbol]: (node: HTMLFormElement) => void;
 		method: 'POST';
@@ -3179,9 +3179,9 @@ declare module '$app/server' {
 		 *	{/each}
 		 * ```
 		 */
-		for(id: ExtractId<Input>): Omit<RemoteForm_1<Input, Output>, 'for'>;
+		for(id: ExtractId<Input>): Omit<RemoteForm<Input, Output>, 'for'>;
 		/** Preflight checks */
-		preflight(schema: StandardSchemaV1<Input, any>): RemoteForm_1<Input, Output>;
+		preflight(schema: StandardSchemaV1<Input, any>): RemoteForm<Input, Output>;
 		/** Validate the form contents programmatically */
 		validate(options?: {
 			/**
@@ -3207,7 +3207,7 @@ declare module '$app/server' {
 	/**
 	 * The type of a remote `command` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#command) for full documentation.
 	 */
-	type RemoteCommand_1<Input, Output> = {
+	export type RemoteCommand<Input, Output> = {
 		(arg: undefined extends Input ? Input | void : Input): Promise<Output> & {
 			updates(...updates: RemoteQueryUpdate[]): Promise<Output>;
 		};
@@ -3218,8 +3218,8 @@ declare module '$app/server' {
 	export type RemoteQueryUpdate =
 		| RemoteQuery<any>
 		| RemoteLiveQuery<any>
-		| RemoteQueryFunction_1<any, any>
-		| RemoteLiveQueryFunction_1<any, any>
+		| RemoteQueryFunction<any, any>
+		| RemoteLiveQueryFunction<any, any>
 		| RemoteQueryOverride;
 
 	export type RemoteResource<T> = Promise<T> & {
@@ -3292,7 +3292,7 @@ declare module '$app/server' {
 	/**
 	 * The type of a remote `prerender` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#prerender) for full documentation.
 	 */
-	type RemotePrerenderFunction_1<Input, Output> = (
+	export type RemotePrerenderFunction<Input, Output> = (
 		arg: undefined extends Input ? Input | void : Input
 	) => RemoteResource<Output>;
 
@@ -3308,7 +3308,7 @@ declare module '$app/server' {
 	 * `Input = number` but `Validated = string`). For `'unchecked'` validators and queries
 	 * without arguments it defaults to `Input`.
 	 */
-	type RemoteQueryFunction_1<Input, Output, _Validated = Input> = (
+	export type RemoteQueryFunction<Input, Output, _Validated = Input> = (
 		arg: undefined extends Input ? Input | void : Input
 	) => RemoteQuery<Output>;
 
@@ -3319,7 +3319,7 @@ declare module '$app/server' {
 	 * query's schema has validated and (optionally) transformed it, and matches the type
 	 * yielded by [`requested`](https://svelte.dev/docs/kit/$app-server#requested).
 	 */
-	type RemoteLiveQueryFunction_1<Input, Output, _Validated = Input> = (
+	export type RemoteLiveQueryFunction<Input, Output, _Validated = Input> = (
 		arg: undefined extends Input ? Input | void : Input
 	) => RemoteLiveQuery<Output>;
 
@@ -3346,7 +3346,7 @@ declare module '$app/server' {
 		query: RemoteLiveQuery<Output>;
 	};
 
-	type QueryRequestedResult_1<Validated, Output> = Iterable<RequestedEntry<Validated, Output>> &
+	export type QueryRequestedResult<Validated, Output> = Iterable<RequestedEntry<Validated, Output>> &
 		AsyncIterable<RequestedEntry<Validated, Output>> & {
 			/**
 			 * Call `refresh` on all queries selected by this `requested` invocation.
@@ -3362,7 +3362,7 @@ declare module '$app/server' {
 			refreshAll: () => Promise<void>;
 		};
 
-	type LiveQueryRequestedResult_1<Validated, Output> = Iterable<
+	export type LiveQueryRequestedResult<Validated, Output> = Iterable<
 		LiveRequestedEntry<Validated, Output>
 	> &
 		AsyncIterable<LiveRequestedEntry<Validated, Output>> & {
@@ -3381,8 +3381,8 @@ declare module '$app/server' {
 		};
 
 	export type RequestedResult<Validated, Output> =
-		| QueryRequestedResult_1<Validated, Output>
-		| LiveQueryRequestedResult_1<Validated, Output>;
+		| QueryRequestedResult<Validated, Output>
+		| LiveQueryRequestedResult<Validated, Output>;
 	type RemoteLiveQueryUserFunctionReturnType<Output> = MaybePromise<
 		| AsyncGenerator<Output>
 		| AsyncIterator<Output>
@@ -3644,7 +3644,7 @@ declare module '$app/server' {
 	 * */
 	export function requested<Input, Output, Validated = Input>(query: RemoteLiveQueryFunction<Input, Output, Validated>, limit: number): LiveQueryRequestedResult<Validated, Output>;
 
-	export { RemoteFormInput_1 as RemoteFormInput, InvalidField_1 as InvalidField, RemoteForm_1 as RemoteForm, RemoteCommand_1 as RemoteCommand, RemotePrerenderFunction_1 as RemotePrerenderFunction, RemoteQueryFunction_1 as RemoteQueryFunction, RemoteLiveQueryFunction_1 as RemoteLiveQueryFunction, QueryRequestedResult_1 as QueryRequestedResult, LiveQueryRequestedResult_1 as LiveQueryRequestedResult };
+	export {};
 }
 
 declare module '$app/service-worker' {
