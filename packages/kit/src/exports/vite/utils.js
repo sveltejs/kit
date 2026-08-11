@@ -7,7 +7,6 @@ import { escape_for_regexp } from '../../utils/regex.js';
 import { stackless } from '../../utils/error.js';
 import { dedent } from '../../core/sync/utils.js';
 import { app_server, app_env_private, sveltekit_env_private } from './module_ids.js';
-import { styleText } from 'node:util';
 
 /**
  * Transforms alias to a valid vite.resolve.alias array.
@@ -229,19 +228,4 @@ export function error_for_missing_config(feature_name, path, value) {
 			${result}
 		`
 	);
-}
-
-/**
- * @param {number} status
- * @param {Request} request
- */
-export function log_response(status, request) {
-	const url = new URL(request.url);
-
-	let log = `${styleText(status < 400 ? ['cyan'] : ['bold', 'red'], `${status}`)} ${request.method}`;
-
-	// TODO grey out __data.json etc
-	log += ` ${url.href.replace(url.origin, '')}`;
-
-	console.log(log);
 }

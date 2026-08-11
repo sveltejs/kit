@@ -16,7 +16,6 @@ import * as devalue from 'devalue';
 import { createReadableStream } from '@sveltejs/kit/node';
 import generate_fallback from './fallback.js';
 import { stringify_remote_arg } from '../../runtime/shared.js';
-import { log_response } from '../../exports/vite/utils.js';
 import { matches_content_type } from '../../utils/http.js';
 
 export default forked(import.meta.url, prerender);
@@ -43,12 +42,13 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
 	/** @type {import('types').ServerInternalModule} */
-	const internal = await import(pathToFileURL(`${out}/server/internal.js`).href);
+	const { set_building, set_prerendering, set_manifest, set_read_implementation, log_response } =
+		await import(pathToFileURL(`${out}/server/internal.js`).href);
 
 	// configure `import { building } from `$app/env` —
 	// essential we do this before analysing the code
-	internal.set_building();
-	internal.set_prerendering();
+	set_building();
+	set_prerendering();
 
 	// `set_env` and `Server` live in modules that import the user's `src/env` config. We import them
 	// *after* `set_building()` so that `building`-dependent expressions resolve correctly
@@ -574,8 +574,8 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 
 	// the user's remote function modules may reference `read` or the `manifest` at the top-level
 	// so we need to set them before evaluating those modules to avoid potential runtime errors
-	internal.set_manifest(manifest);
-	internal.set_read_implementation((file) => createReadableStream(`${out}/server/${file}`));
+	set_manifest(manifest);
+	set_read_implementation((file) => createReadableStream(`${out}/server/${file}`));
 
 	/** @type {Array<import('types').RemotePrerenderInternals>} */
 	const prerender_functions = [];
