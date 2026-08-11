@@ -238,6 +238,7 @@ const plugin = function (defaults = {}) {
 				if (isr) {
 					const isr_name = route.id.slice(1) || '__root__'; // should we check that __root__ isn't a route?
 					const base = `${dirs.functions}/${isr_name}`;
+					const has_page = route.page.methods.length > 0;
 					fs.mkdirSync(base, { recursive: true });
 
 					const target = `${dirs.functions}/${name}.func`;
@@ -246,7 +247,9 @@ const plugin = function (defaults = {}) {
 					// create a symlink to the actual function, but use the
 					// route name so that we can derive the correct URL
 					fs.symlinkSync(relative, `${base}.func`);
-					fs.symlinkSync(`../${relative}`, `${base}/__data.json.func`);
+					if (has_page) {
+						fs.symlinkSync(`../${relative}`, `${base}/__data.json.func`);
+					}
 
 					const pathname = get_pathname(route);
 					const json = JSON.stringify(
@@ -256,7 +259,9 @@ const plugin = function (defaults = {}) {
 					);
 
 					write(`${base}.prerender-config.json`, json);
-					write(`${base}/__data.json.prerender-config.json`, json);
+					if (has_page) {
+						write(`${base}/__data.json.prerender-config.json`, json);
+					}
 
 					const q = `?__pathname=/${pathname}`;
 
@@ -265,10 +270,12 @@ const plugin = function (defaults = {}) {
 						dest: `/${isr_name}${q}`
 					});
 
-					static_config.routes.push({
-						src: src + '/__data.json$',
-						dest: `/${isr_name}/__data.json${q}`
-					});
+					if (has_page) {
+						static_config.routes.push({
+							src: src + '/__data.json$',
+							dest: `/${isr_name}/__data.json${q}`
+						});
+					}
 				} else {
 					// Create a symlink for each route to the main function for better observability
 					// (without this, every request appears to go through `/![-]`)
