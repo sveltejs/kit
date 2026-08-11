@@ -12,12 +12,23 @@ minimumReleaseAgeExclude:
   - esm-env
   - vite-imagetools
   - imagetools-core
-  - '@changesets/apply-release-plan@8.0.0-next.11'
-  - '@changesets/assemble-release-plan@7.0.0-next.11'
-  - '@changesets/cli@3.0.0-next.12'
-  - '@changesets/config@4.0.0-next.10'
+  # TODO: remove these when they're older than 2 days
   - miniflare@5.20260804.0-alpha
   - wrangler@4.120.1
+  - '@changesets/apply-release-plan@8.0.0'
+  - '@changesets/assemble-release-plan@7.0.0'
+  - '@changesets/changelog-git@1.0.0'
+  - '@changesets/cli@3.0.0'
+  - '@changesets/config@4.0.0'
+  - '@changesets/errors@1.0.0'
+  - '@changesets/get-dependents-graph@3.0.0'
+  - '@changesets/git@4.0.0'
+  - '@changesets/parse@1.0.0'
+  - '@changesets/pre@3.0.0'
+  - '@changesets/read@1.0.0'
+  - '@changesets/should-skip-package@1.0.0'
+  - '@changesets/types@7.0.0'
+  - '@changesets/write@1.0.0'
 blockExoticSubdeps: true
 linkWorkspacePackages: true
 shellEmulator: true
@@ -51,7 +62,7 @@ allowBuilds:
 # wouldn't require publishing a new package version
 # see https://github.com/changesets/changesets/issues/1707
 catalog:
-  '@changesets/cli': ^3.0.0-next.12
+  '@changesets/cli': ^3.0.0
   # pin the version of changelog-github because we're using the experimental
   # template feature which can change in a patch version
   '@changesets/changelog-github': 1.0.0-next.9

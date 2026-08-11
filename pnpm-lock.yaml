@@ -10,8 +10,8 @@ catalogs:
       specifier: 1.0.0-next.9
       version: 1.0.0-next.9
     '@changesets/cli':
-      specifier: ^3.0.0-next.12
-      version: 3.0.0-next.12
+      specifier: ^3.0.0
+      version: 3.0.0
     '@fontsource/libre-barcode-128-text':
       specifier: ^5.3.0
       version: 5.3.0
@@ -113,7 +113,7 @@ importers:
         version: 1.0.0-next.9
       '@changesets/cli':
         specifier: 'catalog:'
-        version: 3.0.0-next.12
+        version: 3.0.0
       '@playwright/test':
         specifier: 'catalog:'
         version: 1.62.1
@@ -1705,73 +1705,73 @@ packages:
     resolution: {integrity: sha512-ctxtJ/eA+t+6q2++vj5j7FYX3nRu311q1wfYH3xjlLOsczhlhxAg2FWNUXhpGvAw3BWo1xBcvOV6/YLc2r5FJw==}
     hasBin: true
 
-  '@changesets/apply-release-plan@8.0.0-next.11':
-    resolution: {integrity: sha512-PEBXU4RT4TDjqZLlQ8dKAptC/rhRTQHCb35cqNdkZNMUzEngW1HnW9e90RnBuC5I9n9BK6T0aeOVU/Z4Ep9Hdg==}
+  '@changesets/apply-release-plan@8.0.0':
+    resolution: {integrity: sha512-kUd2pbf1w5/AYmBMb0Tt+rkIPCjFJdT0SZMrkOjJT/WV/QbtmvkyB5jkV0oaNPheavprZk+SfUiozUti7TIL2w==}
     engines: {node: ^22.11 || ^24 || >=26}
 
-  '@changesets/assemble-release-plan@7.0.0-next.11':
-    resolution: {integrity: sha512-Ziwfmz4mRybA3nuXgXXRXSsYZJn+gXt2zp46hKEwlfTOXik/O/D4Ex0U9h6HWhm2t4hgsqt5O0StYjhop3P9Fg==}
+  '@changesets/assemble-release-plan@7.0.0':
+    resolution: {integrity: sha512-oEW8BxdA604kGGtDSCiHr5w9Tv4UWe9I2k61IBNZzCOE1kbYaJj4v+lFQNgcEZFkUc2pV/+hASErGDvpJOZCTg==}
     engines: {node: ^22.11 || ^24 || >=26}
 
-  '@changesets/changelog-git@1.0.0-next.9':
-    resolution: {integrity: sha512-v9YatKMVoljRPRPzI9PoxDHxBsLXZs+ndKBts6nOJlRpGHoGyzScOyC2YYce0krYhFxhn+lOiIto/7AOlTFuwA==}
+  '@changesets/changelog-git@1.0.0':
+    resolution: {integrity: sha512-3Dst2Ime2Op5nd4XmWJLPIgp11ZFqJqSkVug9izK6TDcIV4YlhPS4ECbEVR+eGI0bk0r1ItogD4j2Oli87bJrA==}
     engines: {node: ^22.11 || ^24 || >=26}
 
   '@changesets/changelog-github@1.0.0-next.9':
     resolution: {integrity: sha512-xGtpDLiJeQdyoOGNfKIKp09+o41J7KTNJ+QXWq8OqrzFbOCuI+KZC1AlyIDAsjZce3tBYLhu9sQtAMkmRnGOew==}
     engines: {node: ^22.11 || ^24 || >=26}
 
-  '@changesets/cli@3.0.0-next.12':
-    resolution: {integrity: sha512-/KqQB/YyZn6c01PpUkCrFjNUwMuCkMBOJfRiY6R66G88u2YJWYDr9iLP0y/imukkm7axvUPNRDvfdGXMArytfQ==}
+  '@changesets/cli@3.0.0':
+    resolution: {integrity: sha512-V7Gm+GP5OT3mJinMI2YcJD/JyO/a4WChnaMCCzTRhWHgu1zhtsyY7zCjP6n5W6zsgSjJKs+yPmvtREvE0F2g8A==}
     engines: {node: ^22.11 || ^24 || >=26, npm: '>=10.9.0', pnpm: '>=10.0.0', yarn: '>=4.5.2'}
     hasBin: true
 
-  '@changesets/config@4.0.0-next.10':
-    resolution: {integrity: sha512-+4fnpbGlL3igY8Q4H8JXNz/c0rl9bX7VC/3skkzZoXDPENVAbDtlIqYo4jhh7uZVttiicp37Uos0YBEOfCZFcw==}
+  '@changesets/config@4.0.0':
+    resolution: {integrity: sha512-mw95/YrkOuhZZxfnVAA4bSXOFUi+KlhzOBTM8C4x777NhUU6HWIl9Z+K+nME+E4PVsv5NQVQwTfiHihAS1A/ow==}
     engines: {node: ^22.11 || ^24 || >=26}
 
-  '@changesets/errors@1.0.0-next.4':
-    resolution: {integrity: sha512-ZUoabMz+a4t0/Eoz5uUHzufcWfXIlkpCuCUWUMkWErqcCjgB0pwuPWSU2CamhufsG7ZKDUlUoIGVSQWyPc77CA==}
+  '@changesets/errors@1.0.0':
+    resolution: {integrity: sha512-ElN/mEzn6zmETgjwf5MclCMa9ef59sAR0lfO8VSYIsiRvbC2FbLB/92EoYw10Sl0kGixxHFiJZUSv7dA+YpR8g==}
     engines: {node: ^22.11 || ^24 || >=26}
 
   '@changesets/format@0.1.1':
     resolution: {integrity: sha512-OBN/xfe+lcNWCv8P4Ogop9EOTi5QRKd1c2JJfZRBT9AT3AybzDYDfHeX4Y7j20Q4e16BPu3XvcdOe9sPZmTEig==}
     engines: {node: ^22.11 || ^24 || >=26}
 
-  '@changesets/get-dependents-graph@3.0.0-next.9':
-    resolution: {integrity: sha512-zyukhblBz0TO7Ze4rJHS/LN8dLvNpKPGEm3YhYRpZnlRCT+r4X9YtrHJjUFHbnjn2wNRRzzy6eHzsFn43YI3jQ==}
+  '@changesets/get-dependents-graph@3.0.0':
+    resolution: {integrity: sha512-ji/t5wFA1zREKXRUePE6Qi+Qu2UgxCeSSGQrphezwvQZrp49B7sJ+8+wvM0tA7zPeSxYKCojDy3WWgrl+s+awg==}
     engines: {node: ^22.11 || ^24 || >=26}
 
   '@changesets/get-github-info@1.0.0-next.4':
     resolution: {integrity: sha512-Bosh+XOoFvLMzAj301tg6phbrEggBtvEccrnceEvYsKSM7PjcIa32Fy22SU5g+501HZywkdwcAlybdWF+e/zzw==}
     engines: {node: ^22.11 || ^24 || >=26}
 
-  '@changesets/git@4.0.0-next.9':
-    resolution: {integrity: sha512-7WqrwEVpsKZKbBGR7hPRuHTbkIMiDdoyxSsQDOWrmuBh13wDTGaIV6yYQoOs0I3l56khxydm/68v01c/+4g9jQ==}
+  '@changesets/git@4.0.0':
+    resolution: {integrity: sha512-uIEswpPUgzBBqrC0qg13byNaPorzhf05LE2T+gRizEKCXvMsJC6NPJp5iNDSV/gYj4Viqh09UiOF5E7XWeH5lQ==}
     engines: {node: ^22.11 || ^24 || >=26}
 
-  '@changesets/parse@1.0.0-next.10':
-    resolution: {integrity: sha512-ENFmw8Ytq6fNY3O+uC99KDdChZ3dM8PFgth3qi1Ms78GCCHsSgik0ojQwGht5VPsP6WhfTkNqW3fCakFt+euHg==}
+  '@changesets/parse@1.0.0':
+    resolution: {integrity: sha512-P0iaMb9p9CRYZiTgAllEIF9AUMQHIy1G72tKlcIqJp61icZSsKQNiOPdxAMZG8m/DvZwt/oz5xEbTpike//dWg==}
     engines: {node: ^22.11 || ^24 || >=26}
 
-  '@changesets/pre@3.0.0-next.9':
-    resolution: {integrity: sha512-NznGjw/PCDy6d74DusPriYbLZQl6O8cvRwuv/qsSKUTF/9O9+EvJnXTx+wtHS9SLJnJqRaGprQ1EMSkjRRyDGQ==}
+  '@changesets/pre@3.0.0':
+    resolution: {integrity: sha512-Zm/6YliV/a2oeWTqHJf6KxLrQwgcK1i/BRDl2m0EKZvbnxV5fG9QRhwJJGshjsZTUTS6dkfURQ2K6aAvgNw/3Q==}
     engines: {node: ^22.11 || ^24 || >=26}
 
-  '@changesets/read@1.0.0-next.10':
-    resolution: {integrity: sha512-wmhNbv8gnN6Gv6dpFftmqkyy5OTQfFWFlyfwLa7s+b0vMihA5ZYwU/Zd8VN53AsSlYp6k8s4sc43ZJk0zUIkRA==}
+  '@changesets/read@1.0.0':
+    resolution: {integrity: sha512-8TdE2PwG6yArPt5Ozej83Z6iHz1G8BDBKvIEKZ455MccR4K3GNbLR2XqjBxa+5yLFnEd3xAOPXYboBg1pt8stQ==}
     engines: {node: ^22.11 || ^24 || >=26}
 
-  '@changesets/should-skip-package@1.0.0-next.9':
-    resolution: {integrity: sha512-KaDRCnNy+J4Q8vTZIyKGV3wtDyW79bJN7+XBg919ZKneAj7jJpJLIPkVK+MlyGqyWoxhWEcDBRZ3aTjVkx/tnw==}
+  '@changesets/should-skip-package@1.0.0':
+    resolution: {integrity: sha512-pwqoJmbONn1XgXmZXPEExgAaT+HdZLjALFTDgIm+PnS5KeO2nLtzA2/Q+4aMFY14kFMuXKG30MObhvDzWgzDgg==}
     engines: {node: ^22.11 || ^24 || >=26}
 
-  '@changesets/types@7.0.0-next.9':
-    resolution: {integrity: sha512-okzQIKr+HZXZne37+QI0o0GrKNNTinP8jqsSdr2jUXEt8qhiwdG/X2o7aukp4WBtG4R395BOGyJVfaCy+xg7IA==}
+  '@changesets/types@7.0.0':
+    resolution: {integrity: sha512-c5GoiQyt3pxiXjrWSNoP8/GRf4kG+VnKzovx1OQM8dYYALlSwgedmkPmJ+ZqGxqwg9D3Bkj85Uo4KLd5BN3A0w==}
     engines: {node: ^22.11 || ^24 || >=26}
 
-  '@changesets/write@1.0.0-next.9':
-    resolution: {integrity: sha512-vZ7iTrI8FhJydoWla4G9LSk1kJf4yOtA9m3h9Wffvn+0v5DXUe3LrP/7ZBxHlFCu+WY5ypKo+ClLaDvB9I7Zpg==}
+  '@changesets/write@1.0.0':
+    resolution: {integrity: sha512-xCK3/4C7Z7muQB/wguE6HcbjtY9iOtaK9orZKE+7xi573cMGD8rLZz7qlo6IvK7s+SIUIKajzj1l+F1QuP97tw==}
     engines: {node: ^22.11 || ^24 || >=26}
 
   '@clack/core@1.4.3':
@@ -4618,48 +4618,48 @@ snapshots:
     dependencies:
       css-tree: 3.2.1
 
-  '@changesets/apply-release-plan@8.0.0-next.11':
+  '@changesets/apply-release-plan@8.0.0':
     dependencies:
-      '@changesets/config': 4.0.0-next.10
+      '@changesets/config': 4.0.0
       '@changesets/format': 0.1.1
-      '@changesets/git': 4.0.0-next.9
-      '@changesets/should-skip-package': 1.0.0-next.9
-      '@changesets/types': 7.0.0-next.9
+      '@changesets/git': 4.0.0
+      '@changesets/should-skip-package': 1.0.0
+      '@changesets/types': 7.0.0
       import-meta-resolve: 4.2.0
       jsonc-parser: 3.3.1
       semver: 7.8.5
 
-  '@changesets/assemble-release-plan@7.0.0-next.11':
+  '@changesets/assemble-release-plan@7.0.0':
     dependencies:
-      '@changesets/errors': 1.0.0-next.4
-      '@changesets/get-dependents-graph': 3.0.0-next.9
-      '@changesets/should-skip-package': 1.0.0-next.9
-      '@changesets/types': 7.0.0-next.9
+      '@changesets/errors': 1.0.0
+      '@changesets/get-dependents-graph': 3.0.0
+      '@changesets/should-skip-package': 1.0.0
+      '@changesets/types': 7.0.0
       semver: 7.8.5
 
-  '@changesets/changelog-git@1.0.0-next.9':
+  '@changesets/changelog-git@1.0.0':
     dependencies:
-      '@changesets/types': 7.0.0-next.9
+      '@changesets/types': 7.0.0
 
   '@changesets/changelog-github@1.0.0-next.9':
     dependencies:
       '@changesets/get-github-info': 1.0.0-next.4
-      '@changesets/types': 7.0.0-next.9
+      '@changesets/types': 7.0.0
 
-  '@changesets/cli@3.0.0-next.12':
+  '@changesets/cli@3.0.0':
     dependencies:
-      '@changesets/apply-release-plan': 8.0.0-next.11
-      '@changesets/assemble-release-plan': 7.0.0-next.11
-      '@changesets/changelog-git': 1.0.0-next.9
-      '@changesets/config': 4.0.0-next.10
-      '@changesets/errors': 1.0.0-next.4
-      '@changesets/get-dependents-graph': 3.0.0-next.9
-      '@changesets/git': 4.0.0-next.9
-      '@changesets/pre': 3.0.0-next.9
-      '@changesets/read': 1.0.0-next.10
-      '@changesets/should-skip-package': 1.0.0-next.9
-      '@changesets/types': 7.0.0-next.9
-      '@changesets/write': 1.0.0-next.9
+      '@changesets/apply-release-plan': 8.0.0
+      '@changesets/assemble-release-plan': 7.0.0
+      '@changesets/changelog-git': 1.0.0
+      '@changesets/config': 4.0.0
+      '@changesets/errors': 1.0.0
+      '@changesets/get-dependents-graph': 3.0.0
+      '@changesets/git': 4.0.0
+      '@changesets/pre': 3.0.0
+      '@changesets/read': 1.0.0
+      '@changesets/should-skip-package': 1.0.0
+      '@changesets/types': 7.0.0
+      '@changesets/write': 1.0.0
       '@clack/prompts': 1.7.0
       '@manypkg/get-packages': 3.1.0
       '@pnpm/deps.graph-sequencer': 1100.0.1
@@ -4670,65 +4670,65 @@ snapshots:
       semver: 7.8.5
       tinyexec: 1.3.0
 
-  '@changesets/config@4.0.0-next.10':
+  '@changesets/config@4.0.0':
     dependencies:
-      '@changesets/get-dependents-graph': 3.0.0-next.9
-      '@changesets/should-skip-package': 1.0.0-next.9
-      '@changesets/types': 7.0.0-next.9
+      '@changesets/get-dependents-graph': 3.0.0
+      '@changesets/should-skip-package': 1.0.0
+      '@changesets/types': 7.0.0
       '@manypkg/get-packages': 3.1.0
       picomatch: 4.0.5
 
-  '@changesets/errors@1.0.0-next.4': {}
+  '@changesets/errors@1.0.0': {}
 
   '@changesets/format@0.1.1':
     dependencies:
       package-manager-detector: 1.8.0
       tinyexec: 1.3.0
 
-  '@changesets/get-dependents-graph@3.0.0-next.9':
+  '@changesets/get-dependents-graph@3.0.0':
     dependencies:
-      '@changesets/types': 7.0.0-next.9
+      '@changesets/types': 7.0.0
       semver: 7.8.5
 
   '@changesets/get-github-info@1.0.0-next.4':
     dependencies:
       dataloader: 2.2.3
 
-  '@changesets/git@4.0.0-next.9':
+  '@changesets/git@4.0.0':
     dependencies:
-      '@changesets/errors': 1.0.0-next.4
-      '@changesets/types': 7.0.0-next.9
+      '@changesets/errors': 1.0.0
+      '@changesets/types': 7.0.0
       '@manypkg/get-packages': 3.1.0
       picomatch: 4.0.5
       tinyexec: 1.3.0
 
-  '@changesets/parse@1.0.0-next.10':
+  '@changesets/parse@1.0.0':
     dependencies:
-      '@changesets/types': 7.0.0-next.9
+      '@changesets/types': 7.0.0
       yaml: 2.9.0
 
-  '@changesets/pre@3.0.0-next.9':
+  '@changesets/pre@3.0.0':
     dependencies:
-      '@changesets/errors': 1.0.0-next.4
-      '@changesets/types': 7.0.0-next.9
+      '@changesets/errors': 1.0.0
+      '@changesets/types': 7.0.0
       '@manypkg/get-packages': 3.1.0
 
-  '@changesets/read@1.0.0-next.10':
+  '@changesets/read@1.0.0':
     dependencies:
-      '@changesets/git': 4.0.0-next.9
-      '@changesets/parse': 1.0.0-next.10
-      '@changesets/types': 7.0.0-next.9
+      '@changesets/git': 4.0.0
+      '@changesets/parse': 1.0.0
+      '@changesets/types': 7.0.0
 
-  '@changesets/should-skip-package@1.0.0-next.9':
+  '@changesets/should-skip-package@1.0.0':
     dependencies:
-      '@changesets/types': 7.0.0-next.9
+      '@changesets/types': 7.0.0
 
-  '@changesets/types@7.0.0-next.9': {}
+  '@changesets/types@7.0.0': {}
 
-  '@changesets/write@1.0.0-next.9':
+  '@changesets/write@1.0.0':
     dependencies:
       '@changesets/format': 0.1.1
-      '@changesets/types': 7.0.0-next.9
+      '@changesets/types': 7.0.0
       human-id: 4.2.0
 
   '@clack/core@1.4.3':
