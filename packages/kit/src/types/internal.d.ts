@@ -2,28 +2,30 @@ import { Component } from 'svelte';
 import {
 	Config,
 	ServerLoad,
-	Handle,
-	HandleServerError,
 	KitConfig,
 	Load,
 	RequestHandler,
-	ResolveOptions,
 	Server,
 	ServerInitOptions,
-	HandleFetch,
 	Actions,
-	HandleClientError,
-	Reroute,
 	RequestEvent,
 	SSRManifest,
 	Emulator,
-	ServerInit,
-	ClientInit,
-	Transport,
 	RemoteFormIssue,
 	RemoteQuery,
 	RemoteLiveQuery
 } from '@sveltejs/kit';
+import {
+	ClientInit,
+	Handle,
+	HandleClientError,
+	HandleFetch,
+	HandleServerError,
+	Reroute,
+	ResolveOptions,
+	ServerInit,
+	Transport
+} from '@sveltejs/kit/hooks';
 import {
 	HttpMethod,
 	MaybePromise,
