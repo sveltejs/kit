@@ -1,5 +1,33 @@
 # @sveltejs/kit
 
+## 3.0.0-next.19
+
+### Major Changes
+
+- breaking: move `defineParams` and associated types to `@sveltejs/kit/params` ([#16716](https://github.com/sveltejs/kit/pull/16716))
+
+- breaking: run all errors through the `handleError` hook ([#16664](https://github.com/sveltejs/kit/pull/16664))
+
+- breaking: move `Page`, `ReadonlyURL` and `ReadonlyURLSearchParams` from `@sveltejs/kit` to `$app/state` ([#16694](https://github.com/sveltejs/kit/pull/16694))
+
+- breaking: move `BeforeNavigate`, `OnNavigate`, `AfterNavigate`, `Navigation`, `NavigationTarget`, `NavigationType`, `GotoOptions` and the `Navigation*` variant types from `@sveltejs/kit` to `$app/navigation` ([#16694](https://github.com/sveltejs/kit/pull/16694))
+
+- breaking: move `ActionResult` and `SubmitFunction` from `@sveltejs/kit` to `$app/forms` ([#16694](https://github.com/sveltejs/kit/pull/16694))
+
+- breaking: remove `handleValidationError` and pass remote function validation errors to `handleError` with `kind: 'validation'` ([#16672](https://github.com/sveltejs/kit/pull/16672))
+
+### Minor Changes
+
+- feat: ignore files with + prefix if they contain test/spec/stories ([#16715](https://github.com/sveltejs/kit/pull/16715))
+
+### Patch Changes
+
+- fix: rebuild the dev manifest when route files disappear during an incremental update ([#16643](https://github.com/sveltejs/kit/pull/16643))
+
+- fix: externalize `@opentelemetry/api` to prevent bundler chunk colocation between `instrumentation.server.js` and application code ([#16302](https://github.com/sveltejs/kit/pull/16302))
+
+- fix: surface prerender errors during development ([#16507](https://github.com/sveltejs/kit/pull/16507))
+
 ## 3.0.0-next.18
 
 ### Major Changes
