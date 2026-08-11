@@ -94,7 +94,7 @@ Anything you return overrides the defaults, so you can — for example — use t
 // Assuming you have this ...
 class NotFound extends Error {}
 
-/** @type {import('@sveltejs/kit').HandleServerError} */
+/** @type {import('@sveltejs/kit/hooks').HandleServerError} */
 export function handleError({ kind, error, event }) {
 	if (kind === 'unknown') {
 		// ... you can do this

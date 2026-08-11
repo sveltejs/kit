@@ -1,4 +1,5 @@
-/** @import { EnvVarConfig, KitConfig } from '@sveltejs/kit' */
+/** @import { KitConfig } from '@sveltejs/kit' */
+/** @import { EnvVarConfig } from '@sveltejs/kit/env' */
 /** @import { Options, SvelteConfig } from '@sveltejs/vite-plugin-svelte' */
 /** @import { PreprocessorGroup } from 'svelte/compiler' */
 /** @import { Asset, BuildData, ManifestData, Prerendered, RemoteChunk, RemoteInternals, RouteData, ServerMetadata, ValidatedConfig, ValidatedKitConfig } from 'types' */
@@ -1966,7 +1967,8 @@ function kit({ svelte_config }) {
 						metadata,
 						verbose,
 						env,
-						vite_config_file: vite_config.configFile
+						vite_config_file: vite_config.configFile,
+						is_tty: process.stdout.isTTY
 					});
 
 					// this silly hack is necessary to ensure that stderr from prerender is flushed before we continue

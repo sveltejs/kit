@@ -1,7 +1,7 @@
 import { isRedirect } from '@sveltejs/kit';
 import { do_something } from './routes/remote/server-action/action.remote';
 
-/** @type {import('@sveltejs/kit').Handle} */
+/** @type {import('@sveltejs/kit/hooks').Handle} */
 export async function handle({ event, resolve }) {
 	// Assign each browser session a unique id so that the in-memory `count`
 	// state in `routes/remote/query-command.remote.js` is isolated per test.
@@ -38,7 +38,7 @@ export async function handle({ event, resolve }) {
 	return resolve(event);
 }
 
-/** @type {import('@sveltejs/kit').HandleServerError} */
+/** @type {import('@sveltejs/kit/hooks').HandleServerError} */
 export const handleError = (input) => {
 	// helps us catch sveltekit redirects thrown in component code
 	if (isRedirect(input.error)) {
