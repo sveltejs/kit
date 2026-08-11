@@ -30,10 +30,7 @@ declare module '@sveltejs/kit' {
 			 * Test support for `read` from `$app/server`.
 			 * @param details.config The merged adapter-specific route config exported from the route with `export const config`
 			 */
-			read?: (details: {
-				config: Record<string, any>;
-				route: { id: string };
-			}) => boolean;
+			read?: (details: { config: Record<string, any>; route: { id: string } }) => boolean;
 
 			/**
 			 * Test support for `instrumentation.server.js`. To pass, the adapter must support running `instrumentation.server.js` prior to the application code.
@@ -62,19 +59,17 @@ declare module '@sveltejs/kit' {
 		};
 	}
 
-	export type LoadProperties<input extends Record<string, any> | void> =
-		input extends void
-			? undefined // needs to be undefined, because void will break intellisense
-			: input extends Record<string, any>
-				? input
-				: unknown;
+	export type LoadProperties<input extends Record<string, any> | void> = input extends void
+		? undefined // needs to be undefined, because void will break intellisense
+		: input extends Record<string, any>
+			? input
+			: unknown;
 
-	export type AwaitedActions<T extends Record<string, (...args: any) => any>> =
-		OptionalUnion<
-			{
-				[Key in keyof T]: UnpackValidationError<Awaited<ReturnType<T[Key]>>>;
-			}[keyof T]
-		>;
+	export type AwaitedActions<T extends Record<string, (...args: any) => any>> = OptionalUnion<
+		{
+			[Key in keyof T]: UnpackValidationError<Awaited<ReturnType<T[Key]>>>;
+		}[keyof T]
+	>;
 
 	// Takes a union type and returns a union type where each type also has all properties
 	// of all possible types (typed as undefined), making accessing them more ergonomic
@@ -128,9 +123,7 @@ declare module '@sveltejs/kit' {
 		 * @param fn A function that groups a set of routes into an entry point
 		 * @deprecated removed in 3.0. Use `builder.routes` instead
 		 */
-		createEntries?: (
-			fn: (route: RouteDefinition) => AdapterEntry
-		) => Promise<void>;
+		createEntries?: (fn: (route: RouteDefinition) => AdapterEntry) => Promise<void>;
 
 		/**
 		 * Find all the assets imported by server files belonging to `routes`
@@ -151,10 +144,7 @@ declare module '@sveltejs/kit' {
 		 * Generate a server-side manifest to initialise the SvelteKit [server](https://svelte.dev/docs/kit/@sveltejs-kit#Server) with.
 		 * @param opts.relativePath  A relative path to the base directory of the server build output
 		 */
-		generateManifest: (opts: {
-			relativePath: string;
-			routes?: RouteDefinition[];
-		}) => string;
+		generateManifest: (opts: { relativePath: string; routes?: RouteDefinition[] }) => string;
 
 		/**
 		 * Resolve a path to the `name` directory inside `outDir`, e.g. `/path/to/.svelte-kit/my-adapter`.
@@ -239,10 +229,7 @@ declare module '@sveltejs/kit' {
 						exports: string[];
 				  }
 				| {
-						generateText: (args: {
-							instrumentation: string;
-							start: string;
-						}) => string;
+						generateText: (args: { instrumentation: string; start: string }) => string;
 				  };
 		}) => void;
 
@@ -274,18 +261,13 @@ declare module '@sveltejs/kit' {
 		 * @param name the name of the cookie
 		 * @param opts the options, passed directly to `cookie.parseCookie`. See documentation [here](https://github.com/jshttp/cookie?tab=readme-ov-file#cookieparsecookiestr-options)
 		 */
-		get: (
-			name: string,
-			opts?: import('cookie').ParseOptions
-		) => string | undefined;
+		get: (name: string, opts?: import('cookie').ParseOptions) => string | undefined;
 
 		/**
 		 * Gets all cookies that were previously set with `cookies.set`, or from the request headers.
 		 * @param opts the options, passed directly to `cookie.parseCookie`. See documentation [here](https://github.com/jshttp/cookie?tab=readme-ov-file#cookieparsecookiestr-options)
 		 */
-		getAll: (
-			opts?: import('cookie').ParseOptions
-		) => Array<{ name: string; value: string }>;
+		getAll: (opts?: import('cookie').ParseOptions) => Array<{ name: string; value: string }>;
 
 		/**
 		 * Sets a cookie. This will add a `set-cookie` header to the response, but also make the cookie available via `cookies.get` or `cookies.getAll` during the current request.
@@ -297,11 +279,7 @@ declare module '@sveltejs/kit' {
 		 * @param value the cookie value
 		 * @param opts the options passed to `cookie.stringifySetCookie` with the SvelteKit defaults described above. See documentation [here](https://github.com/jshttp/cookie?tab=readme-ov-file#cookiestringifysetcookiesetcookieobj-options)
 		 */
-		set: (
-			name: string,
-			value: string,
-			opts: import('cookie').SerializeOptions
-		) => void;
+		set: (name: string, value: string, opts: import('cookie').SerializeOptions) => void;
 
 		/**
 		 * Deletes a cookie by setting its value to an empty string and setting the expiry date in the past.
@@ -348,11 +326,7 @@ declare module '@sveltejs/kit' {
 		 * @param value the cookie value
 		 * @param opts the options passed to `cookie.stringifySetCookie` with the SvelteKit defaults described above. See documentation [here](https://github.com/jshttp/cookie?tab=readme-ov-file#cookiestringifysetcookiesetcookieobj-options)
 		 */
-		serialize: (
-			name: string,
-			value: string,
-			opts: import('cookie').SerializeOptions
-		) => string;
+		serialize: (name: string, value: string, opts: import('cookie').SerializeOptions) => string;
 	}
 
 	/**
@@ -363,10 +337,7 @@ declare module '@sveltejs/kit' {
 		 * A function that is called with the current route `config` and `prerender` option
 		 * and returns an `App.Platform` object
 		 */
-		platform?(details: {
-			config: any;
-			prerender: PrerenderOption;
-		}): MaybePromise<App.Platform>;
+		platform?(details: { config: any; prerender: PrerenderOption }): MaybePromise<App.Platform>;
 	}
 
 	export interface KitConfig {
@@ -946,14 +917,9 @@ declare module '@sveltejs/kit' {
 		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 		InputData extends Record<string, unknown> | null = Record<string, any> | null,
 		ParentData extends Record<string, unknown> = Record<string, any>,
-		OutputData extends Record<string, unknown> | void = Record<
-			string,
-			any
-		> | void,
+		OutputData extends Record<string, unknown> | void = Record<string, any> | void,
 		RouteId extends AppRouteId | null = AppRouteId | null
-	> = (
-		event: LoadEvent<Params, InputData, ParentData, RouteId>
-	) => MaybePromise<OutputData>;
+	> = (event: LoadEvent<Params, InputData, ParentData, RouteId>) => MaybePromise<OutputData>;
 
 	/**
 	 * The generic form of `PageLoadEvent` and `LayoutLoadEvent`. You should import those from `./$types` (see [generated types](https://svelte.dev/docs/kit/types#Generated-types))
@@ -1126,9 +1092,7 @@ declare module '@sveltejs/kit' {
 		query: RemoteLiveQuery<Output>;
 	};
 
-	export type QueryRequestedResult<Validated, Output> = Iterable<
-		RequestedEntry<Validated, Output>
-	> &
+	export type QueryRequestedResult<Validated, Output> = Iterable<RequestedEntry<Validated, Output>> &
 		AsyncIterable<RequestedEntry<Validated, Output>> & {
 			/**
 			 * Call `refresh` on all queries selected by this `requested` invocation.
@@ -1347,9 +1311,7 @@ declare module '@sveltejs/kit' {
 		ParentData extends Record<string, any> = Record<string, any>,
 		OutputData extends Record<string, any> | void = Record<string, any> | void,
 		RouteId extends AppRouteId | null = AppRouteId | null
-	> = (
-		event: ServerLoadEvent<Params, ParentData, RouteId>
-	) => MaybePromise<OutputData>;
+	> = (event: ServerLoadEvent<Params, ParentData, RouteId>) => MaybePromise<OutputData>;
 
 	export interface ServerLoadEvent<
 		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
@@ -1479,11 +1441,7 @@ declare module '@sveltejs/kit' {
 	}
 
 	// If T is unknown or has an index signature, the types below will recurse indefinitely and create giant unions that TS can't handle
-	type WillRecurseIndefinitely<T> = unknown extends T
-		? true
-		: string extends keyof T
-			? true
-			: false;
+	type WillRecurseIndefinitely<T> = unknown extends T ? true : string extends keyof T ? true : false;
 
 	// Input type mappings for form fields
 	type InputTypeMap = {
@@ -1520,9 +1478,7 @@ declare module '@sveltejs/kit' {
 	}[keyof InputTypeMap];
 
 	// Input element properties based on type
-	type InputElementProps<T extends keyof InputTypeMap> = T extends
-		| 'checkbox'
-		| 'radio'
+	type InputElementProps<T extends keyof InputTypeMap> = T extends 'checkbox' | 'radio'
 		? {
 				name: string;
 				type: T;
@@ -1594,13 +1550,7 @@ declare module '@sveltejs/kit' {
 			: never
 		: never;
 
-	export type RemoteFormFieldValue =
-		| string
-		| string[]
-		| number
-		| boolean
-		| File
-		| File[];
+	export type RemoteFormFieldValue = string | string[] | number | boolean | File | File[];
 
 	type AsArgs<Type extends keyof InputTypeMap, Value> = Type extends 'checkbox'
 		? Value extends string[]
@@ -1621,22 +1571,19 @@ declare module '@sveltejs/kit' {
 	/**
 	 * Form field accessor type that provides name(), value(), and issues() methods
 	 */
-	export type RemoteFormField<Value extends RemoteFormFieldValue> =
-		RemoteFormFieldMethods<Value> & {
-			/**
-			 * Returns an object that can be spread onto an input element with the correct type attribute,
-			 * aria-invalid attribute if the field is invalid, and appropriate value/checked property getters/setters.
-			 * @example
-			 * ```svelte
-			 * <input {...myForm.fields.myString.as('text')} />
-			 * <input {...myForm.fields.myNumber.as('number')} />
-			 * <input {...myForm.fields.myBoolean.as('checkbox')} />
-			 * ```
-			 */
-			as<T extends RemoteFormFieldType<Value>>(
-				...args: AsArgs<T, Value>
-			): InputElementProps<T>;
-		};
+	export type RemoteFormField<Value extends RemoteFormFieldValue> = RemoteFormFieldMethods<Value> & {
+		/**
+		 * Returns an object that can be spread onto an input element with the correct type attribute,
+		 * aria-invalid attribute if the field is invalid, and appropriate value/checked property getters/setters.
+		 * @example
+		 * ```svelte
+		 * <input {...myForm.fields.myString.as('text')} />
+		 * <input {...myForm.fields.myNumber.as('number')} />
+		 * <input {...myForm.fields.myBoolean.as('checkbox')} />
+		 * ```
+		 */
+		as<T extends RemoteFormFieldType<Value>>(...args: AsArgs<T, Value>): InputElementProps<T>;
+	};
 
 	type RemoteFormFieldContainer<Value> = RemoteFormFieldMethods<Value> & {
 		/** Validation issues belonging to this or any of the fields that belong to it, if any */
@@ -1656,9 +1603,7 @@ declare module '@sveltejs/kit' {
 		 * <input {...myForm.fields.myBoolean.as('checkbox')} />
 		 * ```
 		 */
-		as<T extends RemoteFormFieldType<Value>>(
-			...args: AsArgs<T, Value>
-		): InputElementProps<T>;
+		as<T extends RemoteFormFieldType<Value>>(...args: AsArgs<T, Value>): InputElementProps<T>;
 	} & {
 		[key: string | number]: UnknownField<any>;
 	};
@@ -1706,9 +1651,7 @@ declare module '@sveltejs/kit' {
 	type MaybeArray<T> = T | T[];
 
 	export interface RemoteFormInput {
-		[key: string]:
-			| MaybeArray<string | number | boolean | File | RemoteFormInput>
-			| undefined;
+		[key: string]: MaybeArray<string | number | boolean | File | RemoteFormInput> | undefined;
 	}
 
 	export interface RemoteFormIssue {
@@ -1979,9 +1922,7 @@ declare module '@sveltejs/kit' {
 		 *
 		 * If omitted, the value must be set, but may be an empty string.
 		 */
-		schema?:
-			| StandardSchemaV1<string | undefined, T>
-			| ((value: string | undefined) => T | undefined);
+		schema?: StandardSchemaV1<string | undefined, T> | ((value: string | undefined) => T | undefined);
 		/**
 		 * A description of the variable that will be used for inline documentation on hover.
 		 */
@@ -2489,7 +2430,7 @@ declare module '@sveltejs/kit/hooks' {
 	 * It receives an `event` object representing the request and a function called `resolve`, which renders the route and generates a `Response`.
 	 * This allows you to modify response headers or bodies, or bypass SvelteKit entirely (for implementing routes programmatically, for example).
 	 */
-	type Handle_1 = (input: {
+	export type Handle = (input: {
 		event: RequestEvent;
 		resolve: (event: RequestEvent, opts?: ResolveOptions) => Promise<Response>;
 	}) => MaybePromise<Response>;
@@ -2513,9 +2454,7 @@ declare module '@sveltejs/kit/hooks' {
 	 * SvelteKit itself (such as 404s), validation errors, and unknown errors (thrown by your code,
 	 * or code it calls).
 	 */
-	export type CaughtError<
-		Issue extends StandardSchemaV1.Issue = StandardSchemaV1.Issue
-	> =
+	export type CaughtError<Issue extends StandardSchemaV1.Issue = StandardSchemaV1.Issue> =
 		| {
 				[Kind in keyof CaughtErrorMap]: {
 					/** Identifies the category and origin of the error */
@@ -2545,13 +2484,9 @@ declare module '@sveltejs/kit/hooks' {
 	 *
 	 * Make sure that this function _never_ throws an error.
 	 */
-	export type HandleServerError<
-		Issue extends StandardSchemaV1.Issue = StandardSchemaV1.Issue
-	> = (
+	export type HandleServerError<Issue extends StandardSchemaV1.Issue = StandardSchemaV1.Issue> = (
 		input: CaughtError<Issue> & { event: RequestEvent }
-	) => MaybePromise<
-		AppErrorWithOptionalDefaults | VoidIfNoRequiredAppErrorProperties
-	>;
+	) => MaybePromise<AppErrorWithOptionalDefaults | VoidIfNoRequiredAppErrorProperties>;
 
 	/**
 	 * The client-side [`handleError`](https://svelte.dev/docs/kit/hooks#handleError) hook runs for every error thrown while navigating, except redirects.
@@ -2569,9 +2504,7 @@ declare module '@sveltejs/kit/hooks' {
 	 */
 	export type HandleClientError = (
 		input: ClientCaughtError & { event: NavigationEvent }
-	) => MaybePromise<
-		AppErrorWithOptionalDefaults | VoidIfNoRequiredAppErrorProperties
-	>;
+	) => MaybePromise<AppErrorWithOptionalDefaults | VoidIfNoRequiredAppErrorProperties>;
 
 	/**
 	 * The [`handleFetch`](https://svelte.dev/docs/kit/hooks#handleFetch) hook allows you to modify (or replace) the result of an [`event.fetch`](https://svelte.dev/docs/kit/load#Making-fetch-requests) call that runs on the server (or during prerendering) inside an endpoint, `load`, `action`, `handle`, `handleError` or `reroute`.
@@ -2598,10 +2531,7 @@ declare module '@sveltejs/kit/hooks' {
 	 * The [`reroute`](https://svelte.dev/docs/kit/hooks#reroute) hook allows you to modify the URL before it is used to determine which route to render.
 	 * @since 2.3.0
 	 */
-	export type Reroute = (event: {
-		url: URL;
-		fetch: typeof fetch;
-	}) => MaybePromise<void | string>;
+	export type Reroute = (event: { url: URL; fetch: typeof fetch }) => MaybePromise<void | string>;
 
 	/**
 	 * The [`transport`](https://svelte.dev/docs/kit/hooks#transport) hook allows you to transport custom types across the server/client boundary.
@@ -2647,10 +2577,7 @@ declare module '@sveltejs/kit/hooks' {
 		 * but they will always be split at sensible boundaries such as `%sveltekit.head%` or layout/page components.
 		 * @param input the html chunk and the info if this is the last chunk
 		 */
-		transformPageChunk?: (input: {
-			html: string;
-			done: boolean;
-		}) => MaybePromise<string | undefined>;
+		transformPageChunk?: (input: { html: string; done: boolean }) => MaybePromise<string | undefined>;
 		/**
 		 * Determines which headers should be included in serialized responses when a `load` function loads a resource with `fetch`.
 		 * By default, none will be included.
@@ -2665,10 +2592,7 @@ declare module '@sveltejs/kit/hooks' {
 		 * By default, `js` and `css` files will be preloaded.
 		 * @param input the type of the file and its path
 		 */
-		preload?: (input: {
-			type: 'font' | 'css' | 'js' | 'asset';
-			path: string;
-		}) => boolean;
+		preload?: (input: { type: 'font' | 'css' | 'js' | 'asset'; path: string }) => boolean;
 	}
 
 	type AppErrorWithOptionalDefaults = Omit<App.Error, 'status' | 'message'> & {
@@ -2700,7 +2624,7 @@ declare module '@sveltejs/kit/hooks' {
 	 * /// file: src/hooks.server.js
 	 * import { sequence } from '@sveltejs/kit/hooks';
 	 *
-	 * /// type: import('@sveltejs/kit').Handle
+	 * /// type: import('@sveltejs/kit/hooks').Handle
 	 * async function first({ event, resolve }) {
 	 * 	console.log('first pre-processing');
 	 * 	const result = await resolve(event, {
@@ -2719,7 +2643,7 @@ declare module '@sveltejs/kit/hooks' {
 	 * 	return result;
 	 * }
 	 *
-	 * /// type: import('@sveltejs/kit').Handle
+	 * /// type: import('@sveltejs/kit/hooks').Handle
 	 * async function second({ event, resolve }) {
 	 * 	console.log('second pre-processing');
 	 * 	const result = await resolve(event, {
@@ -2763,7 +2687,7 @@ declare module '@sveltejs/kit/hooks' {
 	 * */
 	export function sequence(...handlers: Handle[]): Handle;
 
-	export { Handle_1 as Handle };
+	export {};
 }
 
 declare module '@sveltejs/kit/node' {
