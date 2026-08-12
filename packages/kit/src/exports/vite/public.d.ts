@@ -1,13 +1,20 @@
 import { Adapter } from '@sveltejs/kit';
-import { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
-import { CspDirectives, PrerenderEntryGeneratorMismatchHandlerValue, PrerenderHttpErrorHandlerValue, PrerenderInvalidUrlHandlerValue, PrerenderMissingIdHandlerValue, PrerenderUnseenRoutesHandlerValue } from 'types';
+import { Options } from '@sveltejs/vite-plugin-svelte';
+import {
+	CspDirectives,
+	PrerenderEntryGeneratorMismatchHandlerValue,
+	PrerenderHttpErrorHandlerValue,
+	PrerenderInvalidUrlHandlerValue,
+	PrerenderMissingIdHandlerValue,
+	PrerenderUnseenRoutesHandlerValue
+} from 'types';
 
 export * from './index.js';
 
 /**
  * An extension of [`vite-plugin-svelte`'s options](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/config.md#svelte-options).
  */
-export interface Config extends SvelteConfig {
+export type Config = Omit<Options, 'experimental'> & {
 	/**
 	 * Your [adapter](https://svelte.dev/docs/kit/adapters) is run when executing `vite build`. It determines how the output is converted for different platforms.
 	 * @default undefined
@@ -128,7 +135,7 @@ export interface Config extends SvelteConfig {
 		dir?: string;
 	};
 	/** Experimental features. Here be dragons. These are not subject to semantic versioning, so breaking changes or removal can happen in any release. */
-	experimental?: {
+	experimental?: Options['experimental'] & {
 		/**
 		 * Whether to enable the experimental remote functions feature. This feature is not yet stable and may be changed or removed at any time.
 		 * @default false
@@ -574,4 +581,4 @@ export interface Config extends SvelteConfig {
 		 */
 		pollInterval?: number;
 	};
-}
+};

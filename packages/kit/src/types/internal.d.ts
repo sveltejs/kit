@@ -33,7 +33,7 @@ import {
 import { Span } from '@opentelemetry/api';
 import { PageOptions } from '../exports/vite/static_analysis/types.js';
 import { SharedIterator } from '../utils/shared-iterator.js';
-import { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
+import { Options } from '@sveltejs/vite-plugin-svelte';
 
 export interface ServerModule {
 	Server: typeof InternalServer;
@@ -547,9 +547,13 @@ export interface Uses {
 	search_params: Set<string>;
 }
 
-export type ValidatedConfig = Omit<RecursiveRequired<Config>, keyof SvelteConfig> & SvelteConfig & {
-	extensions: string[];
-};
+// export type ValidatedConfig = Omit<RecursiveRequired<Config>, keyof Options> &
+// 	Options & {
+// 		extensions: string[];
+// 		experimental: RecursiveRequired<Config['experimental']> & Options['experimental'];
+// 	};
+
+export type ValidatedConfig = RecursiveRequired<Config>;
 
 export type BinaryFormMeta = {
 	remote_refreshes?: string[];

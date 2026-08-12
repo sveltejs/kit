@@ -1,5 +1,4 @@
 /** @import { Config } from '@sveltejs/kit/vite' */
-/** @import { Options, SvelteConfig } from '@sveltejs/vite-plugin-svelte' */
 /** @import { ValidatedConfig } from 'types' */
 /** @import { ResolvedConfig } from 'vite' */
 import fs from 'node:fs';
@@ -18,11 +17,11 @@ import { stackless } from '../../utils/error.js';
  * `vite-plugin-svelte`. SvelteKit makes no assumptions about which options
  * `vite-plugin-svelte` accepts — it plucks out its own options and passes
  * everything else along (`vite-plugin-svelte` does its own validation).
- * @param {Config & Omit<Options, 'onwarn'> & Pick<SvelteConfig, 'vitePlugin'>} config
+ * @param {Config} config
  * @returns {{ svelte_config: Config, vite_plugin_svelte_config: Record<string, any> }}
  */
 export function split_config(config) {
-	const { extensions, compilerOptions, vitePlugin, preprocess, ...rest } = config;
+	const { extensions, compilerOptions, preprocess, ...rest } = config;
 
 	/** @type {Config} */
 	const kit = {};
@@ -64,7 +63,7 @@ export function split_config(config) {
 	}
 
 	return {
-		svelte_config: { extensions, compilerOptions, vitePlugin, preprocess, ...kit },
+		svelte_config: { extensions, compilerOptions, preprocess, ...kit },
 		vite_plugin_svelte_config
 	};
 }
@@ -179,7 +178,6 @@ export function validate_config(config) {
 		}
 
 		const validated = validate_options(config, 'config');
-		console.log(validated);
 		const files = validated.files;
 
 		files.hooks.client ??= path.join(files.src, 'hooks.client');

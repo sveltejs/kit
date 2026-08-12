@@ -1,7 +1,6 @@
 /** @import { ValidatedConfig } from 'types' */
 /** @import { Validator } from './types.js' */
 import { styleText } from 'node:util';
-import { noop } from '../../utils/functions.js';
 
 const directives = object({
 	'child-src': string_array(),
@@ -45,6 +44,8 @@ const prerender_handler = validate(undefined, (input, keypath) => {
 
 const vps_config = {
 	compilerOptions: any(),
+	preprocess: any(),
+	onwarn: any(),
 
 	extensions: validate(['.svelte'], (input, keypath) => {
 		if (!Array.isArray(input) || !input.every((page) => typeof page === 'string')) {
@@ -302,7 +303,7 @@ const kit_config = {
 };
 
 /** @type {Validator<ValidatedConfig>} */
-export const validate_options = object({ ...vps_config, ...kit_config }, true);
+export const validate_options = object({ ...vps_config, ...kit_config });
 
 /**
  * @param {Validator} fn

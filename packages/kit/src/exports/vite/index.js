@@ -202,7 +202,6 @@ export async function sveltekit(config) {
 	/** @type {Partial<Options>} */
 	const inline_vps_config = {
 		preprocess: svelte_config.preprocess,
-		...(svelte_config.vitePlugin ?? {}),
 		// pass through any options that SvelteKit doesn't use itself, so that
 		// the options SvelteKit manages always take precedence
 		...split.vite_plugin_svelte_config,
