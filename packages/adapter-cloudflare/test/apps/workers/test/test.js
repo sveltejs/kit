@@ -8,8 +8,14 @@ test('worker', async ({ page }) => {
 });
 
 test('cloudflare:workers', async ({ request }) => {
-	const res = await request.get('/ctx');
+	const res = await request.get('/env');
 	expect(await res.text()).toBe('from wrangler.jsonc');
+});
+
+test('Request.cf', async ({ request }) => {
+	const res = await request.get('cf');
+	const cf = await res.json();
+	expect(cf.colo).toBeDefined();
 });
 
 test('read from $app/server works', async ({ request }) => {
