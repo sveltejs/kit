@@ -26,7 +26,7 @@ async function test_make_package(path, options) {
 	const config = await load_config();
 	process.chdir(original_cwd);
 
-	const input = resolve(cwd, config.kit?.files?.lib ?? 'src/lib');
+	const input = resolve(cwd, config.files?.lib ?? 'src/lib');
 
 	await build({
 		cwd,

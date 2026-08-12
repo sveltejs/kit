@@ -55,6 +55,7 @@ The following options are obsolete and should be removed from your `vite.config.
 - `experimental.handleRenderingErrors` is no longer required ([details](#Error-handling-Rendering-errors-are-now-handled))
 - `experimental.instrumentation` is no longer required ([details](#Observability))
 - `experimental.tracing` is now a top level `tracing` option ([details](#Observability))
+- `vitePlugin` is removed — pass `vite-plugin-svelte` options like `inspector` directly to the plugin instead
 - `preloadStrategy` is removed — `modulepreload` is now supported everywhere and so is always used
 - `prerender.origin` is removed in favour of `paths.origin`
 - `csrf.checkOrigin` is removed in favour of `csrf.trustedOrigins`
