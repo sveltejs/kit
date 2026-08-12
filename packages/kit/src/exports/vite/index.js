@@ -212,7 +212,7 @@ export async function sveltekit(config) {
 	/** @type {Partial<Options>} */
 	const inline_vps_config = {
 		preprocess: svelte_config.preprocess,
-		...(svelte_config.vitePlugin ?? {}),
+		...svelte_config.vitePlugin,
 		// pass through any options that SvelteKit doesn't use itself, so that
 		// the options SvelteKit manages always take precedence
 		...split.vite_plugin_svelte_config,
@@ -1284,7 +1284,9 @@ function kit({ svelte_config }) {
 		configResolved() {
 			if (service_worker_entry_file) {
 				// @ts-expect-error transform is defined in this object
-				plugin_service_worker_env.transform.filter.id = exactRegex(service_worker_entry_file);
+				plugin_service_worker_env.transform.filter = {
+					id: exactRegex(service_worker_entry_file)
+				};
 			}
 		},
 		applyToEnvironment(environment) {
