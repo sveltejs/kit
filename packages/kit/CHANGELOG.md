@@ -4,13 +4,13 @@
 
 ### Patch Changes
 
-- fix: avoid eagerly reading `$app/state` dependencies during module initialization ([#1](https://github.com/homebase-garage/igeclouds.github.io/pull/1))
+- fix: avoid eagerly reading `$app/state` dependencies during module initialization
 
 ## 2.70.2
 
 ### Patch Changes
 
-- fix: prevent quadratic backtracking in `Accept` header content negotiation ([#1](https://github.com/homebase-garage/igeclouds.github.io/pull/1))
+- fix: prevent quadratic backtracking in `Accept` header content negotiation
 
 ## 2.70.1
 
