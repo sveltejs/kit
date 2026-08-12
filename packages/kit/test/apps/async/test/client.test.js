@@ -1332,6 +1332,17 @@ test.describe('client error boundaries', () => {
 		await page.locator('#redirect').click();
 		await expect(result).not.toHaveText('hello world');
 	});
+
+	test('remote form submit resolves after redirect navigation', async ({ page }) => {
+		await page.goto('/remote/form/reset-on-redirect');
+
+		await page.locator('#redirect-other').click();
+		await page.waitForURL('/remote/form/redirect-target/destination');
+
+		await expect
+			.poll(() => page.evaluate(() => sessionStorage.getItem('submit-resolved-pathname')))
+			.toBe('/remote/form/redirect-target/destination');
+	});
 });
 
 test.describe('fork', () => {
