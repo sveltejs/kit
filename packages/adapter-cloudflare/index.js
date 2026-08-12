@@ -1,4 +1,7 @@
-import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+/** @import { Plugin } from 'vite' */
+/** @import { GetPlatformProxyOptions } from 'wrangler' */
+
+import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
@@ -10,27 +13,34 @@ import {
 	parse_redirects,
 	append_headers
 } from './utils.js';
+import { exactRegex } from '@rolldown/pluginutils';
 
 const name = '@sveltejs/adapter-cloudflare';
 
 /** @type {typeof import('./index.js').default} */
 export default function (options = {}) {
+	// Add a random query so we can reliably string-replace the stub
+	const stub_import =
+		import.meta.resolve('./src/virtual-cloudflare-workers.js') + '?' + crypto.randomUUID();
 	return {
 		name,
 		async adapt(builder) {
-			if (existsSync('_routes.json') || existsSync(`${builder.config.files.assets}/_routes.json`)) {
+			if (
+				fs.existsSync('_routes.json') ||
+				fs.existsSync(`${builder.config.files.assets}/_routes.json`)
+			) {
 				throw new Error(
 					"Cloudflare Pages' _routes.json should be configured from the adapter option of the SvelteKit plugin in your vite.config.js. See https://svelte.dev/docs/kit/adapter-cloudflare#Options-routes"
 				);
 			}
 
-			if (existsSync(`${builder.config.files.assets}/_headers`)) {
+			if (fs.existsSync(`${builder.config.files.assets}/_headers`)) {
 				throw new Error(
 					`The _headers file should be placed in the project root rather than the ${builder.config.files.assets} directory`
 				);
 			}
 
-			if (existsSync(`${builder.config.files.assets}/_redirects`)) {
+			if (fs.existsSync(`${builder.config.files.assets}/_redirects`)) {
 				throw new Error(
 					`The _redirects file should be placed in the project root rather than the ${builder.config.files.assets} directory`
 				);
@@ -69,15 +79,17 @@ export default function (options = {}) {
 			const files = fileURLToPath(new URL('./files', import.meta.url).href);
 			const tmp = builder.getBuildDirectory('cloudflare-tmp');
 
-			rmSync(dest, { force: true, recursive: true });
-			rmSync(worker_dest, { force: true, recursive: true });
+			fs.rmSync(dest, { force: true, recursive: true });
+			fs.rmSync(worker_dest, { force: true, recursive: true });
 
-			mkdirSync(dest, { recursive: true });
-			mkdirSync(tmp, { recursive: true });
+			fs.mkdirSync(dest, { recursive: true });
+			fs.mkdirSync(tmp, { recursive: true });
+
+			replace_stub(builder.getServerDirectory(), stub_import);
 
 			// client assets and prerendered pages
 			const assets_dest = `${dest}${builder.config.paths.base}`;
-			mkdirSync(assets_dest, { recursive: true });
+			fs.mkdirSync(assets_dest, { recursive: true });
 			if (
 				building_for_cloudflare_pages ||
 				wrangler_config.assets?.not_found_handling === '404-page'
@@ -89,7 +101,7 @@ export default function (options = {}) {
 				if (options.fallback === 'spa') {
 					await builder.generateFallback(fallback);
 				} else {
-					writeFileSync(fallback, 'Not Found');
+					fs.writeFileSync(fallback, 'Not Found');
 				}
 			}
 			const client_assets = builder.writeClient(assets_dest);
@@ -131,19 +143,19 @@ export default function (options = {}) {
 			const headers_dest = `${dest}/_headers`;
 			/** @type {string | undefined} */
 			let headers;
-			if (existsSync(headers_src)) {
-				headers = readFileSync(headers_src, 'utf-8');
+			if (fs.existsSync(headers_src)) {
+				headers = fs.readFileSync(headers_src, 'utf-8');
 			}
-			writeFileSync(headers_dest, generate_headers(builder.getAppPath(), headers));
+			fs.writeFileSync(headers_dest, generate_headers(builder.getAppPath(), headers));
 
 			// _redirects
 			const redirects_src = '_redirects';
 			const redirects_dest = `${dest}/_redirects`;
-			if (existsSync(redirects_src)) {
-				copyFileSync(redirects_src, redirects_dest);
+			if (fs.existsSync(redirects_src)) {
+				fs.copyFileSync(redirects_src, redirects_dest);
 			}
 			if (builder.prerendered.redirects.size > 0) {
-				writeFileSync(redirects_dest, generate_redirects(builder.prerendered.redirects), {
+				fs.writeFileSync(redirects_dest, generate_redirects(builder.prerendered.redirects), {
 					flag: 'a'
 				});
 			}
@@ -156,12 +168,12 @@ export default function (options = {}) {
 				// Worker but instead let the rules in the `_redirects` file take over.
 				/** @type {string[]} */
 				let redirects = [];
-				if (existsSync(redirects_dest)) {
-					const redirect_rules = readFileSync(redirects_dest, 'utf8');
+				if (fs.existsSync(redirects_dest)) {
+					const redirect_rules = fs.readFileSync(redirects_dest, 'utf8');
 					redirects = parse_redirects(redirect_rules);
 				}
 
-				writeFileSync(
+				fs.writeFileSync(
 					`${dest}/_routes.json`,
 					JSON.stringify(
 						get_routes_json(builder, client_assets, redirects, options.routes ?? {}),
@@ -170,46 +182,59 @@ export default function (options = {}) {
 					)
 				);
 			} else {
-				writeFileSync(`${dest}/.assetsignore`, generate_assetsignore(), { flag: 'a' });
+				fs.writeFileSync(`${dest}/.assetsignore`, generate_assetsignore(), { flag: 'a' });
 			}
-		},
-		emulate() {
-			// we want to invoke `getPlatformProxy` only once, but await it only when it is accessed.
-			// If we would await it here, it would hang indefinitely because the platform proxy only resolves once a request happens
-			const get_emulated = async () => {
-				const proxy = await getPlatformProxy(options.platformProxy);
-				const platform = {
-					env: proxy.env,
-					ctx: proxy.ctx,
-					context: proxy.ctx, // deprecated in favor of ctx
-					caches: proxy.caches,
-					cf: proxy.cf
-				};
-				/** @type {Record<string, any>} */
-				const env = {};
-				const prerender_platform = /** @type {App.Platform} */ (/** @type {unknown} */ ({ env }));
-				for (const key in proxy.env) {
-					Object.defineProperty(env, key, {
-						get: () => {
-							throw new Error(`Cannot access platform.env.${key} in a prerenderable route`);
-						}
-					});
-				}
-				return { platform, prerender_platform };
-			};
-
-			let emulated;
-
-			return {
-				platform: async ({ prerender }) => {
-					emulated ??= await get_emulated();
-					return prerender ? emulated.prerender_platform : emulated.platform;
-				}
-			};
 		},
 		supports: {
 			read: () => true,
 			instrumentation: () => true
+		},
+		vite: {
+			plugins: {
+				pre: [
+					virtual_workers_module(
+						{
+							configPath: options.config,
+							...options.platformProxy
+						},
+						stub_import
+					)
+				]
+			}
+		}
+	};
+}
+
+/**
+ * @param {GetPlatformProxyOptions} options
+ * @param {string} stub_import
+ * @returns {Plugin}
+ */
+function virtual_workers_module(options, stub_import) {
+	const setup = async () => {
+		if (globalThis.__platform_proxy) return;
+		const proxy = await getPlatformProxy(options);
+		globalThis.__platform_proxy = proxy;
+		globalThis.caches = proxy.caches;
+	};
+	return {
+		name: 'vite-plugin-adapter-cloudflare-virtual-workers-module',
+		buildStart: setup,
+		buildEnd: () => {
+			void globalThis.__platform_proxy?.dispose();
+			// @ts-expect-error
+			globalThis.__platform_proxy = undefined;
+		},
+		configureServer: setup,
+		configurePreviewServer: setup,
+		resolveId: {
+			filter: { id: exactRegex('cloudflare:workers') },
+			handler() {
+				return {
+					id: stub_import,
+					external: true
+				};
+			}
 		}
 	};
 }
@@ -292,4 +317,25 @@ function validate_wrangler_config(config_file = undefined) {
 /** @param {string} str */
 function posixify(str) {
 	return str.replace(/\\/g, '/');
+}
+
+/**
+ *
+ * @param {string} directory
+ * @param {string} stub_import
+ */
+function replace_stub(directory, stub_import) {
+	// recurse, find stub_import, replace with "cloudflare:workers"
+	const files = fs.readdirSync(directory);
+	for (const file of files) {
+		const file_path = path.join(directory, file);
+		if (fs.statSync(file_path).isDirectory()) {
+			replace_stub(file_path, stub_import);
+		} else {
+			const contents = fs.readFileSync(file_path, 'utf8');
+			if (contents.includes(stub_import)) {
+				fs.writeFileSync(file_path, contents.replaceAll(stub_import, 'cloudflare:workers'));
+			}
+		}
+	}
 }

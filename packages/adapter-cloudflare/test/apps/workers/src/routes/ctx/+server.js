@@ -1,3 +1,5 @@
-export function GET({ platform }) {
-	return new Response(platform?.ctx.waitUntil ? 'ctx works' : 'ctx does not work');
+import { env } from 'cloudflare:workers';
+
+export function GET() {
+	return new Response(env.FOO);
 }
