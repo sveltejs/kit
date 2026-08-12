@@ -312,12 +312,14 @@ async function prerender({
 			},
 
 			update: (path) => {
-				stdout_write.call(process.stdout, `rendering ${path}...\n`);
+				stdout_write.call(process.stdout, `crawling ${path}\n`);
 				current = true;
 			},
 
 			updated: 0
 		};
+
+		console.log('');
 	}
 
 	/** @type {Set<string>} */
@@ -360,14 +362,16 @@ async function prerender({
 		/** @type {Map<string, import('types').PrerenderDependency>} */
 		const dependencies = new Map();
 
-		if (progress && Date.now() - progress.updated > 50) {
-			progress.updated = Date.now();
-
+		if (progress) {
 			progress.clear();
 			progress.update(decoded);
 
-			// without this, the update will rarely be visible, and progress will appear stuck
-			await new Promise((f) => setTimeout(f, 0));
+			if (Date.now() - progress.updated > 50) {
+				progress.updated = Date.now();
+
+				// without this, the update will rarely be visible, and progress will appear stuck
+				await new Promise((f) => setTimeout(f, 0));
+			}
 		}
 
 		const request = new Request(prerender_origin + encoded);
