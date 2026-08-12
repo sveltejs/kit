@@ -8,6 +8,17 @@ import { fileURLToPath } from 'node:url';
 const dir = path.dirname(fileURLToPath(import.meta.url));
 
 /**
+ * Embedded assets are imported by identity path; on-disk assets live under the
+ * output directory next to this module.
+ * @param {string} subdir
+ * @param {string} filename
+ * @returns {string}
+ */
+function resolve_file(subdir, filename) {
+	return embed ? filename : path.resolve(dir, subdir, filename);
+}
+
+/**
  * @typedef {Serve.Routes<never, string>[string]} RouteHandler
  * @typedef {{ hash: string, mtime: number, br?: boolean, gz?: boolean }} AssetMeta
  */
@@ -56,7 +67,6 @@ function to_directory_paths(url) {
 	const directory = `${path.posix.join(base, url).replace(/\/$/, '')}/`;
 	const paths = route_paths(directory);
 
-	// `/dir` serves `dir/index.html` like sirv does in adapter-node
 	if (directory !== '/') {
 		paths.push(...route_paths(directory.slice(0, -1)));
 	}
@@ -75,10 +85,9 @@ function to_directory_paths(url) {
 function is_fresh(request, etag, mtime) {
 	const header = request.headers.get('if-none-match');
 	if (header !== null) {
-		return header.split(',').some((value) => {
-			const tag = value.trim().replace(/^W\//, '');
-			return tag === '*' || tag === etag;
-		});
+		return header
+			.split(',')
+			.some((value) => ['*', etag].includes(value.trim().replace(/^W\//, '')));
 	}
 
 	const since = Date.parse(request.headers.get('if-modified-since') ?? '');
@@ -116,6 +125,15 @@ function handlers(handler) {
 }
 
 /**
+ * @param {string[]} paths
+ * @param {RouteHandler} route
+ * @returns {Array<[string, RouteHandler]>}
+ */
+function route_entries(paths, route) {
+	return paths.map((route_path) => [route_path, route]);
+}
+
+/**
  * Serves one file with its build-time validator and precompressed variants.
  * @param {string} file
  * @param {AssetMeta} meta
@@ -147,12 +165,13 @@ function file_route(file, meta, extra_headers = {}) {
 		if (is_fresh(request, etag, meta.mtime)) {
 			return new Response(null, { status: 304, headers: response_headers });
 		}
-		if (encoding === null) {
-			return new Response(Bun.file(file), { headers: response_headers });
-		}
 
-		response_headers['content-encoding'] = CONTENT_ENCODING[encoding];
-		return new Response(Bun.file(`${file}.${encoding}`), { headers: response_headers });
+		let body_file = file;
+		if (encoding !== null) {
+			response_headers['content-encoding'] = CONTENT_ENCODING[encoding];
+			body_file = `${file}.${encoding}`;
+		}
+		return new Response(Bun.file(body_file), { headers: response_headers });
 	};
 
 	return handlers(handler);
@@ -167,7 +186,7 @@ function file_route(file, meta, extra_headers = {}) {
 export function client_asset(url, filename = url, meta) {
 	const immutable = url.startsWith(`${manifest.appDir}/immutable/`);
 	const route = file_route(
-		embed ? filename : path.resolve(dir, 'client', filename),
+		resolve_file('client', filename),
 		meta,
 		immutable ? { 'cache-control': 'public,max-age=31536000,immutable' } : {}
 	);
@@ -180,7 +199,7 @@ export function client_asset(url, filename = url, meta) {
 		paths.push(...to_paths(url.slice(0, -'.html'.length)));
 	}
 
-	return paths.map((route_path) => /** @type {[string, RouteHandler]} */ ([route_path, route]));
+	return route_entries(paths, route);
 }
 
 /**
@@ -189,7 +208,7 @@ export function client_asset(url, filename = url, meta) {
  * @returns {BunFile}
  */
 export function server_asset(url, filename = url) {
-	return Bun.file(embed ? filename : path.resolve(dir, 'client', url));
+	return Bun.file(resolve_file('client', filename));
 }
 
 /**
@@ -199,8 +218,8 @@ export function server_asset(url, filename = url) {
  * @returns {Array<[string, RouteHandler]>}
  */
 export function prerendered_asset(url, filename = url, meta) {
-	const route = file_route(embed ? filename : path.resolve(dir, 'prerendered', filename), meta);
-	return to_paths(url).map((route_path) => [route_path, route]);
+	const route = file_route(resolve_file('prerendered', filename), meta);
+	return route_entries(to_paths(url), route);
 }
 
 /**
@@ -210,29 +229,18 @@ export function prerendered_asset(url, filename = url, meta) {
  * @returns {Array<[string, RouteHandler]>}
  */
 export function prerendered_page(url, filename, meta) {
-	const canonical = encode_pathname(url);
-
-	/**
-	 * @param {BunRequest} req
-	 * @returns {Response}
-	 */
-	function handle_redirect(req) {
-		const request_url = new URL(req.url);
-		const location = `${canonical}${request_url.search}`;
-		return new Response(null, { status: 308, headers: { location } });
-	}
-
-	const route = file_route(embed ? filename : path.resolve(dir, 'prerendered', filename), meta);
+	const route = file_route(resolve_file('prerendered', filename), meta);
+	// path already contains base, no need to add it here
+	const entries = route_entries(route_paths(url), route);
 
 	const inverted = url.endsWith('/') ? url.slice(0, -1) : `${url}/`;
-	// path already contains base, no need to add it here
-	/** @type {Array<[string, RouteHandler]>} */
-	const entries = route_paths(url).map((route_path) => [route_path, route]);
-
 	if (inverted) {
-		for (const route_path of route_paths(inverted)) {
-			entries.push([route_path, handlers(handle_redirect)]);
-		}
+		const canonical = encode_pathname(url);
+		const redirect = handlers((req) => {
+			const location = canonical + new URL(req.url).search;
+			return new Response(null, { status: 308, headers: { location } });
+		});
+		entries.push(...route_entries(route_paths(inverted), redirect));
 	}
 
 	return entries;
@@ -247,5 +255,5 @@ export function prerendered_page(url, filename, meta) {
 export function prerendered_redirect(url, status, location) {
 	const route = handlers(new Response(null, { status, headers: { location } }));
 	// path already contains base, no need to add it here
-	return route_paths(url).map((route_path) => [route_path, route]);
+	return route_entries(route_paths(url), route);
 }

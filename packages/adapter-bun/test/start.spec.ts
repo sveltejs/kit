@@ -111,7 +111,7 @@ test.each(['SIGINT', 'SIGTERM'] as const)(
 		expect(loaded.stop).toHaveBeenCalledOnce();
 		expect(loaded.emit).toHaveBeenCalledWith('sveltekit:shutdown', signal);
 		expect(loaded.log).toHaveBeenCalledWith(
-			'Waiting for 2 requests to finish before shutting down...'
+			expect.stringContaining('Waiting for 2 requests to finish before shutting down...')
 		);
 	}
 );

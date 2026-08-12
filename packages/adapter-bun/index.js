@@ -142,7 +142,7 @@ export default function (opts = {}) {
 					`export const base = ${JSON.stringify(builder.config.kit.paths.base || '/')};\n` +
 					`export const embed = ${JSON.stringify(!!buildOptions.compile)};\n` +
 					`export const env_prefix = ${JSON.stringify(envPrefix)};\n` +
-					`export const origin = ${JSON.stringify(builder.config.kit.paths.origin) || 'undefined'};`,
+					`export const origin = ${JSON.stringify(builder.config.kit.paths.origin) ?? 'undefined'};`,
 				[server_options_file]: `export default ${JSON.stringify(serverOptions)};`,
 				[routes_file]: await create_routes({
 					builder,

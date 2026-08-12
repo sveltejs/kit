@@ -6,11 +6,11 @@ import { env, number_env } from './env.js';
 
 const server = new Server(manifest);
 
-const address_header = env('ADDRESS_HEADER', '')?.toLowerCase();
-const protocol_header = env('PROTOCOL_HEADER', '')?.toLowerCase();
-const host_header = env('HOST_HEADER', '')?.toLowerCase();
-const port_header = env('PORT_HEADER', '')?.toLowerCase();
-const xff_depth = number_env('XFF_DEPTH', 1, { min: 1 }) ?? 1;
+const address_header = env('ADDRESS_HEADER', '').toLowerCase();
+const protocol_header = env('PROTOCOL_HEADER', '').toLowerCase();
+const host_header = env('HOST_HEADER', '').toLowerCase();
+const port_header = env('PORT_HEADER', '').toLowerCase();
+const xff_depth = number_env('XFF_DEPTH', 1, { min: 1 });
 
 await server.init({
 	env: Bun.env,
@@ -24,25 +24,8 @@ await server.init({
  * @returns {Promise<Response>}
  */
 export async function handler(request, bun_server) {
-	let request_origin = origin;
-	/** @type {URL} */
-	let url;
-	try {
-		// an empty Host header makes request.url relative, so parsing belongs in the try
-		url = new URL(request.url);
-		request_origin ||= get_origin(request, url);
-	} catch (error) {
-		console.error(
-			`Could not determine request origin: ${error instanceof Error ? error.message : String(error)}`
-		);
-		return new Response('Bad Request', { status: 400 });
-	}
-
-	let normalized_request = request;
-	if (request_origin !== url.origin) {
-		const normalized_url = new URL(url.pathname + url.search, request_origin);
-		normalized_request = new Request(normalized_url, request);
-	}
+	const normalized_request = normalize_request(request);
+	if (normalized_request instanceof Response) return normalized_request;
 
 	const response = await server.respond(normalized_request, {
 		platform: {
@@ -61,13 +44,33 @@ export async function handler(request, bun_server) {
 }
 
 /**
+ * Rewrites the request onto the public origin the user actually requested.
+ * @param {Request} request
+ * @returns {Request | Response}
+ */
+function normalize_request(request) {
+	try {
+		// an empty Host header makes request.url relative, so parsing belongs in the try
+		const url = new URL(request.url);
+		const request_origin = origin || get_origin(request, url);
+		return request_origin === url.origin
+			? request
+			: new Request(request_origin + url.pathname + url.search, request);
+	} catch (error) {
+		console.error(
+			`Could not determine request origin: ${error instanceof Error ? error.message : String(error)}`
+		);
+		return new Response('Bad Request', { status: 400 });
+	}
+}
+
+/**
  * @param {Request} request
  * @param {URL} url
  * @returns {string}
  */
 function get_origin(request, url) {
-	// assume TLS terminates upstream, like adapter-node; a plain-HTTP url.protocol would
-	// make the browser's https Origin mismatch the computed origin and fail every CSRF check
+	// assume TLS terminates upstream, like adapter-node; an http origin would fail CSRF checks
 	const protocol = decodeURIComponent(
 		(protocol_header && request.headers.get(protocol_header)) || 'https'
 	);
@@ -77,13 +80,11 @@ function get_origin(request, url) {
 		);
 	}
 
-	// an empty forwarded header falls through, but a present-and-empty Host is rejected below
 	const host =
 		(host_header && request.headers.get(host_header)) || (request.headers.get('host') ?? url.host);
 	if (!host) {
-		const header_names = host_header ? `${host_header} or host headers` : 'host header';
 		throw new Error(
-			`Could not determine host. The request must have a value provided by the ${header_names}`
+			`Could not determine host from the ${host_header ? `${host_header} or ` : ''}host header`
 		);
 	}
 
@@ -94,8 +95,8 @@ function get_origin(request, url) {
 		);
 	}
 
-	const value = port ? `${protocol}://${host}:${port}` : `${protocol}://${host}`;
-	return new URL(value).origin;
+	// canonicalized so the caller's comparison with url.origin matches (case, default ports)
+	return new URL(`${protocol}://${host}${port ? `:${port}` : ''}`).origin;
 }
 
 /**
@@ -104,29 +105,24 @@ function get_origin(request, url) {
  * @returns {string}
  */
 function get_client_address(request, bun_server) {
-	if (address_header) {
-		const value = request.headers.get(address_header);
-		if (value === null) {
-			throw new Error(
-				`Address header was specified with ${env_prefix}ADDRESS_HEADER=${address_header} but is absent from request`
-			);
-		}
-
-		if (address_header === 'x-forwarded-for') {
-			const addresses = value.split(',');
-
-			if (xff_depth > addresses.length) {
-				throw new Error(
-					`${env_prefix}XFF_DEPTH is ${xff_depth}, but only found ${addresses.length} addresses`
-				);
-			}
-			return addresses[addresses.length - xff_depth].trim();
-		}
-
-		return value;
+	if (!address_header) {
+		// requestIP() is null over unix sockets; undefined matches adapter-node
+		return /** @type {string} */ (bun_server.requestIP(request)?.address);
 	}
 
-	// requestIP() is null over unix sockets; adapter-node returns undefined there too
-	// rather than turning every getClientAddress() call into a 500
-	return /** @type {string} */ (bun_server.requestIP(request)?.address);
+	const value = request.headers.get(address_header);
+	if (value === null) {
+		throw new Error(
+			`Address header was specified with ${env_prefix}ADDRESS_HEADER=${address_header} but is absent from request`
+		);
+	}
+	if (address_header !== 'x-forwarded-for') return value;
+
+	const addresses = value.split(',');
+	if (xff_depth > addresses.length) {
+		throw new Error(
+			`${env_prefix}XFF_DEPTH is ${xff_depth}, but only found ${addresses.length} addresses`
+		);
+	}
+	return addresses[addresses.length - xff_depth].trim();
 }

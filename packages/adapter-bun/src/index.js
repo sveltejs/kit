@@ -30,7 +30,7 @@ if (unix) {
 	options.hostname = env('HOST', options.hostname);
 	// always set an explicit port: left undefined, Bun.serve reads the unprefixed
 	// BUN_PORT/PORT/NODE_PORT itself, bypassing envPrefix isolation
-	options.port = env('PORT', options.port !== undefined ? String(options.port) : undefined) ?? 3000;
+	options.port = env('PORT', options.port?.toString()) ?? 3000;
 	options.reusePort = boolean_env('REUSE_PORT', options.reusePort);
 	options.ipv6Only = boolean_env('IPV6_ONLY', options.ipv6Only);
 }
@@ -38,16 +38,11 @@ if (unix) {
 // not IDLE_TIMEOUT: that name means idle-shutdown seconds on adapter-node, and a
 // carried-over value would crash on the 255 cap or silently kill slow requests
 options.idleTimeout = number_env('CONNECTION_IDLE_TIMEOUT', options.idleTimeout, { max: 255 });
-const development = boolean_env('DEVELOPMENT');
-if (development !== undefined) {
-	options.development = development;
-} else if (options.development === undefined) {
-	options.development = false;
-}
+options.development = boolean_env('DEVELOPMENT') ?? options.development ?? false;
 
 options.maxRequestBodySize = bytes_env('BODY_SIZE_LIMIT', options.maxRequestBodySize ?? 512 * 1024);
 
-const shutdown_timeout = number_env('SHUTDOWN_TIMEOUT', 30) ?? 30;
+const shutdown_timeout = number_env('SHUTDOWN_TIMEOUT', 30);
 
 options.fetch = handler;
 options.routes = routes;
@@ -64,8 +59,10 @@ async function graceful_shutdown(reason) {
 	shutting_down = true;
 
 	if (server.pendingRequests !== 0) {
-		console.log(`Waiting for ${server.pendingRequests} requests to finish before shutting down...`);
-		console.log('Press Ctrl+C again to force shutdown.');
+		console.log(
+			`Waiting for ${server.pendingRequests} requests to finish before shutting down...\n` +
+				'Press Ctrl+C again to force shutdown.'
+		);
 	}
 
 	// stop() waits forever on idle connections such as open event streams, and once it
