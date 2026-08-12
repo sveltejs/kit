@@ -277,6 +277,7 @@ async function prerender({
 
 	/** @type {null | ((path: string) => void)} */
 	let progress_line = null;
+	let last_progress = 0;
 
 	if (is_tty) {
 		// Where possible, provide progress feedback by showing the path we're
@@ -354,7 +355,8 @@ async function prerender({
 		/** @type {Map<string, import('types').PrerenderDependency>} */
 		const dependencies = new Map();
 
-		if (progress_line) {
+		if (progress_line && Date.now() - last_progress > 50) {
+			last_progress = Date.now();
 			progress_line(decoded);
 
 			// without this, the update will rarely be visible, and progress will appear stuck
