@@ -275,8 +275,8 @@ async function prerender({
 	/** @type {Map<string, Promise<any>>} */
 	const remote_responses = new Map();
 
-	/** @type {(path: string) => void} */
-	let progress_line = noop;
+	/** @type {null | { clear: () => void; update: (path: string) => void; updated: number }} */
+	let progress = null;
 
 	if (is_tty) {
 		// Where possible, provide progress feedback by showing the path we're
@@ -301,17 +301,25 @@ async function prerender({
 			}
 		});
 
-		progress_line = (path) => {
-			// If app code writes to stdout or stderr, don't move the cursor to clear
-			// the previous progress log, because that will corrupt things
-			if (current) {
+		progress = {
+			clear: () => {
+				// If app code writes to stdout or stderr, don't move the cursor to clear
+				// the previous progress log, because that will corrupt things
+				if (!current) return;
+
 				moveCursor(process.stdout, 0, -1);
 				clearLine(process.stdout, 0);
-			}
+			},
 
-			stdout_write.call(process.stdout, `rendering ${path}...\n`);
-			current = true;
+			update: (path) => {
+				stdout_write.call(process.stdout, `crawling ${path}\n`);
+				current = true;
+			},
+
+			updated: 0
 		};
+
+		console.log('');
 	}
 
 	/** @type {Set<string>} */
@@ -354,7 +362,17 @@ async function prerender({
 		/** @type {Map<string, import('types').PrerenderDependency>} */
 		const dependencies = new Map();
 
-		progress_line(decoded);
+		if (progress) {
+			progress.clear();
+			progress.update(decoded);
+
+			if (Date.now() - progress.updated > 50) {
+				progress.updated = Date.now();
+
+				// without this, the update will rarely be visible, and progress will appear stuck
+				await new Promise((f) => setTimeout(f, 0));
+			}
+		}
 
 		const request = new Request(prerender_origin + encoded);
 
@@ -693,6 +711,7 @@ async function prerender({
 	}
 
 	await q.done();
+	progress?.clear();
 
 	// handle invalid fragment links
 	for (const [key, referrers] of expected_hashlinks) {
