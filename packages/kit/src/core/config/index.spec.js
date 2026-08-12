@@ -501,6 +501,15 @@ test('errors on invalid forkPreloads values', () => {
 	}, /^config\.experimental\.forkPreloads should be true or false, if specified$/);
 });
 
+test('errors on removed vitePlugin namespace', () => {
+	assert_logs_error_and_throws(() => {
+		validate_config({
+			// @ts-expect-error - removed option expected to throw
+			vitePlugin: { inspector: true }
+		});
+	}, /`config\.vitePlugin` has been removed/);
+});
+
 test('split_config keeps SvelteKit options under the `kit` namespace', () => {
 	const adapter = { name: 'test', adapt: () => {} };
 	const { svelte_config, vite_plugin_svelte_config } = split_config({

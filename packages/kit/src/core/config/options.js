@@ -307,7 +307,12 @@ const options = {
 	version: object({
 		name: string(Date.now().toString()),
 		pollInterval: number(3_600_000)
-	})
+	}),
+
+	vitePlugin: removed(
+		(keypath) =>
+			`\`${keypath}\` has been removed. Pass \`vite-plugin-svelte\` options directly to the \`sveltekit(...)\` Vite plugin`
+	)
 };
 
 /** @type {Validator<ValidatedConfig>} */
