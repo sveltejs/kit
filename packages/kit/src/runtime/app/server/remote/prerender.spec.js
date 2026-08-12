@@ -1,4 +1,4 @@
-/** @import { RequestEvent } from '@sveltejs/kit' */
+/** @import { RequestEvent } from '$app/server' */
 /** @import { RequestState } from 'types' */
 import { expect, test, vi } from 'vitest';
 import { HandledHttpError, ValidationError } from '@sveltejs/kit/internal';

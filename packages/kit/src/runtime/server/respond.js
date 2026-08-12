@@ -183,7 +183,7 @@ export async function internal_respond(request, options, manifest, state) {
 		url
 	);
 
-	/** @type {import('@sveltejs/kit').RequestEvent} */
+	/** @type {import('$app/server').RequestEvent} */
 	const event = {
 		cookies,
 		// @ts-expect-error `fetch` needs to be created after the `event` itself
@@ -574,7 +574,7 @@ export async function internal_respond(request, options, manifest, state) {
 	}
 
 	/**
-	 * @param {import('@sveltejs/kit').RequestEvent} event
+	 * @param {import('$app/server').RequestEvent} event
 	 * @param {PageNodes | undefined} page_nodes
 	 * @param {import('@sveltejs/kit/hooks').ResolveOptions} [opts]
 	 */
