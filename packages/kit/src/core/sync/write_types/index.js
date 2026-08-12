@@ -354,9 +354,7 @@ function update_types(config, routes, route, root, to_delete = new Set()) {
 	}
 
 	if (route.leaf?.server || route.layout?.server || route.endpoint) {
-		exports.push(
-			"export type RequestEvent = import('$app/server').RequestEvent<RouteParams, RouteId>;"
-		);
+		exports.push('export type RequestEvent = Kit.RequestEvent<RouteParams, RouteId>;');
 	}
 
 	const output = [imports.join('\n'), declarations.join('\n'), exports.join('\n')]

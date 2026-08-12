@@ -1,5 +1,4 @@
-/** @import { SSRManifest } from '@sveltejs/kit' */
-/** @import { RequestEvent } from '$app/server' */
+/** @import { RequestEvent, SSRManifest } from '@sveltejs/kit' */
 /** @import { EnvironmentModuleNode, ErrorPayload, ResolvedConfig, ViteDevServer } from 'vite' */
 /** @import { ManifestData, PrerenderOption, RemoteChunk, ServerModule, SSRNode, UniversalNode, ValidatedConfig } from 'types' */
 import process from 'node:process';

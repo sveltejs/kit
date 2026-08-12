@@ -1,6 +1,5 @@
 import { StandardSchemaV1 } from '@standard-schema/spec';
-import { NavigationEvent } from '@sveltejs/kit';
-import { RequestEvent } from '$app/server';
+import { NavigationEvent, RequestEvent } from '@sveltejs/kit';
 import { MaybePromise } from 'types';
 
 export * from './index.js';

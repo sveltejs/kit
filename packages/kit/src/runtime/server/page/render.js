@@ -40,7 +40,7 @@ import { has_custom_transporters, uneval } from '#app/internal/transport';
  *   page_config: { ssr: boolean; csr: boolean };
  *   status: number;
  *   error: App.Error | null;
- *   event: import('$app/server').RequestEvent;
+ *   event: import('@sveltejs/kit').RequestEvent;
  *   state: import('types').RequestState;
  *   resolve_opts: import('types').RequiredResolveOptions;
  *   action_result?: import('$app/forms').ActionResult;
