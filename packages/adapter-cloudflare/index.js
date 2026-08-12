@@ -227,12 +227,6 @@ function virtual_workers_module(options, stub_import) {
 	};
 	return {
 		name: 'vite-plugin-adapter-cloudflare-virtual-workers-module',
-		buildStart: setup,
-		buildEnd: () => {
-			void globalThis.__platform_proxy?.dispose();
-			// @ts-expect-error
-			globalThis.__platform_proxy = undefined;
-		},
 		configureServer: setup,
 		configurePreviewServer: setup,
 		resolveId: {
