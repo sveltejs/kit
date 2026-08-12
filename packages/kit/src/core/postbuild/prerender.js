@@ -275,8 +275,8 @@ async function prerender({
 	/** @type {Map<string, Promise<any>>} */
 	const remote_responses = new Map();
 
-	/** @type {(path: string) => void} */
-	let progress_line = noop;
+	/** @type {null | ((path: string) => void)} */
+	let progress_line = null;
 
 	if (is_tty) {
 		// Where possible, provide progress feedback by showing the path we're
@@ -354,7 +354,12 @@ async function prerender({
 		/** @type {Map<string, import('types').PrerenderDependency>} */
 		const dependencies = new Map();
 
-		progress_line(decoded);
+		if (progress_line) {
+			progress_line(decoded);
+
+			// without this, the update will rarely be visible, and progress will appear stuck
+			await new Promise((f) => setTimeout(f, 0));
+		}
 
 		const request = new Request(prerender_origin + encoded);
 
