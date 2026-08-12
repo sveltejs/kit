@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.70.3
+
+### Patch Changes
+
+- fix: avoid eagerly reading `$app/state` dependencies during module initialization ([#1](https://github.com/homebase-garage/igeclouds.github.io/pull/1))
+
 ## 2.70.2
 
 ### Patch Changes
