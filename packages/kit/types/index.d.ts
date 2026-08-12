@@ -2564,7 +2564,7 @@ declare module '@sveltejs/kit/remote' {
 		| QueryRequestedResult<Validated, Output>
 		| LiveQueryRequestedResult<Validated, Output>;
 	/**
-	 * Checks whether this is an validation error thrown by [`invalid`](https://svelte.dev/docs/kit/@sveltejs-kit#invalid).
+	 * Checks whether this is a validation error thrown by [`invalid`](https://svelte.dev/docs/kit/@sveltejs-kit#invalid).
 	 * @param e The object to check.
 	 * @since 2.47.3
 	 */
