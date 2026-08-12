@@ -2638,6 +2638,19 @@ test.describe('binding_property_non_reactive warn', () => {
 });
 
 test.describe('routing', () => {
+	test('ignores form controls that shadow DOM properties of their form', async ({ page }) => {
+		/** @type {Error[]} */
+		const errors = [];
+		page.on('pageerror', (error) => errors.push(error));
+
+		await page.goto('/routing/clobbered-node-name');
+		await page.locator('#nodeName').hover();
+		await page.locator('#nodeName').dispatchEvent('touchstart');
+		await page.waitForTimeout(100);
+
+		expect(errors).toEqual([]);
+	});
+
 	test('navigating while navigation is in progress sets the correct URL', async ({ page }) => {
 		await page.goto('/routing/long-navigation');
 		await page.click('a[href="/routing"]');
