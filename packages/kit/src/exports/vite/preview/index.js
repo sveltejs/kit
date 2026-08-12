@@ -205,13 +205,13 @@ export async function preview(vite, svelte_config) {
 		vite.middlewares.use(async (req, res) => {
 			const host = req.headers[':authority'] || req.headers.host;
 
-			const request = getRequest({
+			const request = (svelte_config.adapter.getRequest ?? getRequest)({
 				base: `${protocol}://${host}`,
 				request: req,
 				response: res
 			});
 
-			setResponse(
+			(svelte_config.adapter.setResponse ?? setResponse)(
 				res,
 				await server.respond(request, {
 					getClientAddress: () => {
