@@ -14,6 +14,7 @@ import {
 	append_headers
 } from './utils.js';
 import { exactRegex } from '@rolldown/pluginutils';
+import { getRequest } from '@sveltejs/kit/node';
 
 const name = '@sveltejs/adapter-cloudflare';
 
@@ -188,6 +189,13 @@ export default function (options = {}) {
 		supports: {
 			read: () => true,
 			instrumentation: () => true
+		},
+		getRequest(options) {
+			const request = getRequest(options);
+			/** @type {import('@cloudflare/workers-types').Request} */ (
+				/** @type {unknown} */ (request)
+			).cf = globalThis.__platform_proxy?.cf;
+			return request;
 		},
 		vite: {
 			plugins: {
