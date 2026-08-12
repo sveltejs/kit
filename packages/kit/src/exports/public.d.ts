@@ -916,7 +916,7 @@ export interface LoadEvent<
 	 *
 	 * Setting the same header multiple times (even in separate `load` functions) is an error — you can only set a given header once.
 	 *
-	 * You cannot add a `set-cookie` header with `setHeaders` — use the [`cookies`](https://svelte.dev/docs/kit/@sveltejs-kit#Cookies) API in a server-only `load` function instead.
+	 * You cannot add a `set-cookie` header with `setHeaders` — use the [`cookies`](https://svelte.dev/docs/kit/$app-server#Cookies) API in a server-only `load` function instead.
 	 *
 	 * `setHeaders` has no effect when a `load` function runs in the browser.
 	 */
