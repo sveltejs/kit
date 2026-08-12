@@ -266,15 +266,11 @@ export function form(id) {
 							const should_refresh = refreshes === null && !response.r;
 
 							if (response.redirect) {
-								if (is_external_url(resolve_url(response.redirect), base, app.hash)) {
-									// Use internal version to allow redirects to external URLs
-									void _goto(response.redirect, {
-										refreshAll: should_refresh
-									});
-								} else {
-									await _goto(response.redirect, {
-										refreshAll: should_refresh
-									});
+								const url = resolve_url(response.redirect);
+								// _goto allows external redirects; those never resolve, so only await internal ones
+								const navigation = _goto(url, { refreshAll: should_refresh });
+								if (!is_external_url(url, base, app.hash)) {
+									await navigation;
 								}
 								return true;
 							}

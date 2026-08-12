@@ -1,10 +1,5 @@
 <script lang="ts">
 	import { redirect_form, reset_form } from './form.remote';
-
-	redirect_form.enhance(async ({ submit }) => {
-		await submit();
-		sessionStorage.setItem('submit-resolved-pathname', location.pathname);
-	});
 </script>
 
 <form {...reset_form}>
@@ -14,6 +9,11 @@
 
 <div id="result">{reset_form.result}</div>
 
-<form {...redirect_form}>
+<form
+	{...redirect_form.enhance(async ({ submit }) => {
+		await submit();
+		sessionStorage.setItem('submit-resolved-pathname', location.pathname);
+	})}
+>
 	<button id="redirect-other">Redirect to another page</button>
 </form>
