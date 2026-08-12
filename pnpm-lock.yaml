@@ -184,6 +184,9 @@ importers:
       '@cloudflare/workers-types':
         specifier: ^5.20260809.1
         version: 5.20260809.1
+      '@rolldown/pluginutils':
+        specifier: ^1.0.1
+        version: 1.0.1
       wrangler:
         specifier: ^4.118.0
         version: 4.120.1(@cloudflare/workers-types@5.20260809.1)
@@ -191,9 +194,6 @@ importers:
       '@playwright/test':
         specifier: 'catalog:'
         version: 1.62.1
-      '@rolldown/pluginutils':
-        specifier: ^1.0.1
-        version: 1.0.1
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../kit
