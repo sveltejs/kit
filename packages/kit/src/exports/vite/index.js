@@ -1,3 +1,4 @@
+/** @import { TopLevelFilterExpression } from '@rolldown/pluginutils' */
 /** @import { KitConfig } from '@sveltejs/kit' */
 /** @import { EnvVarConfig } from '@sveltejs/kit/env' */
 /** @import { Options, SvelteConfig } from '@sveltejs/vite-plugin-svelte' */
@@ -8,9 +9,17 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { styleText } from 'node:util';
+
+import {
+	and,
+	code,
+	exactRegex,
+	importerId,
+	include,
+	not,
+	prefixRegex
+} from '@rolldown/pluginutils';
 import MagicString from 'magic-string';
-import { loadEnv } from 'vite';
-import { exactRegex, prefixRegex } from 'rolldown/filter';
 
 import { copy, read, resolve_entry } from '../../utils/filesystem.js';
 import { posixify } from '../../utils/os.js';
@@ -203,7 +212,7 @@ export async function sveltekit(config) {
 	/** @type {Partial<Options>} */
 	const inline_vps_config = {
 		preprocess: svelte_config.preprocess,
-		...(svelte_config.vitePlugin ?? {}),
+		...svelte_config.vitePlugin,
 		// pass through any options that SvelteKit doesn't use itself, so that
 		// the options SvelteKit manages always take precedence
 		...split.vite_plugin_svelte_config,
@@ -375,9 +384,9 @@ function kit({ svelte_config }) {
 					? `globalThis.__sveltekit_${version_hash}`
 					: 'globalThis.__sveltekit_dev';
 
-				env = loadEnv(config_env.mode, kit.env.dir, '');
-
 				vite = await import_peer('vite', root);
+
+				env = vite.loadEnv(config_env.mode, kit.env.dir, '');
 
 				normalized_cwd = vite.normalizePath(root);
 				normalized_aliases = get_import_aliases(root, vite.normalizePath.bind(vite));
@@ -668,7 +677,7 @@ function kit({ svelte_config }) {
 
 		resolveId: {
 			filter: {
-				id: [prefixRegex('__sveltekit/')]
+				id: prefixRegex('__sveltekit/')
 			},
 			handler(id) {
 				if (id === '__sveltekit/manifest') {
@@ -761,13 +770,16 @@ function kit({ svelte_config }) {
 		},
 
 		resolveId: {
-			// TODO: use composable filter API here when supported:
-			// https://github.com/vitejs/rolldown-vite/issues/605
-			// filter: ([
-			// 	exclude(importerId(/index\.html$/)),
-			// 	include(importerId(/.+/))
-			// ]),
+			// composable filters are not accepted type-wise but still work during build
+			// see https://github.com/vitejs/rolldown-vite/issues/605
+			filter: /** @type {any} */ (
+				/** @satisfies {TopLevelFilterExpression[]} */ ([
+					include(and(importerId(/.+/), not(importerId(/index\.html$/))))
+				])
+			),
 			async handler(id, importer, options) {
+				// composable filters only work during build so we still need this guard for dev
+				// see https://github.com/vitejs/rolldown-vite/issues/605
 				if (importer && !importer.endsWith('index.html')) {
 					const resolved = await this.resolve(id, importer, { ...options, skipSelf: true });
 
@@ -1162,7 +1174,7 @@ function kit({ svelte_config }) {
 
 		resolveId: {
 			filter: {
-				id: [prefixRegex('__sveltekit/')]
+				id: prefixRegex('__sveltekit/')
 			},
 			handler(id) {
 				return `\0virtual:${id}`;
@@ -1269,13 +1281,19 @@ function kit({ svelte_config }) {
 	/** @type {Plugin} */
 	const plugin_service_worker_env = {
 		name: 'vite-plugin-sveltekit-service-worker-env',
+		configResolved() {
+			if (service_worker_entry_file) {
+				// @ts-expect-error transform is defined in this object
+				plugin_service_worker_env.transform.filter = {
+					id: exactRegex(service_worker_entry_file)
+				};
+			}
+		},
 		applyToEnvironment(environment) {
 			return !!service_worker_entry_file && environment.config.consumer === 'client';
 		},
 		transform: {
-			handler(code, id) {
-				if (id !== service_worker_entry_file) return;
-
+			handler(code) {
 				// prepend the service worker with an import that configures
 				// `env`, in case `$app/env/public` is imported. In production
 				// this is required: dynamic public env vars aren't known at
@@ -1601,17 +1619,26 @@ function kit({ svelte_config }) {
 			return environment.name !== 'serviceWorker';
 		},
 
-		renderChunk(code, chunk) {
-			if (code.includes('__SVELTEKIT_TRACK__')) {
-				return {
-					// Rolldown changes our single quotes to double quotes so we need it in the regex too
-					code: code.replace(/__SVELTEKIT_TRACK__\(['"](.+?)['"]\)/g, (_, label) => {
-						(tracked_features[chunk.name + '.js'] ??= []).push(label);
-						// put extra whitespace at the end of the comment to preserve the source size and avoid interfering with source maps
-						return `/* track ${label}            */`;
-					}),
-					map: null // TODO we may need to generate a sourcemap in future
-				};
+		renderChunk: {
+			// composable filters are not accepted type-wise but still work during build
+			// see https://github.com/vitejs/rolldown-vite/issues/605
+			filter: /** @type {any} */ (
+				/** @satisfies {TopLevelFilterExpression[]} */ ([include(code('__SVELTEKIT_TRACK__'))])
+			),
+			handler(code, chunk) {
+				// composable filters only work during build so we still need this guard for dev
+				// see https://github.com/vitejs/rolldown-vite/issues/605
+				if (code.includes('__SVELTEKIT_TRACK__')) {
+					return {
+						// Rolldown changes our single quotes to double quotes so we need it in the regex too
+						code: code.replace(/__SVELTEKIT_TRACK__\(['"](.+?)['"]\)/g, (_, label) => {
+							(tracked_features[chunk.name + '.js'] ??= []).push(label);
+							// put extra whitespace at the end of the comment to preserve the source size and avoid interfering with source maps
+							return `/* track ${label}            */`;
+						}),
+						map: null // TODO we may need to generate a sourcemap in future
+					};
+				}
 			}
 		},
 

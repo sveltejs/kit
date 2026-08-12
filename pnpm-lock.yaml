@@ -69,9 +69,6 @@ catalogs:
     prettier-plugin-svelte:
       specifier: ^4.1.1
       version: 4.1.1
-    rolldown:
-      specifier: ^1.2.3
-      version: 1.2.3
     sirv-cli:
       specifier: ^3.0.1
       version: 3.0.1
@@ -491,9 +488,6 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 22.19.19
-      rolldown:
-        specifier: 'catalog:'
-        version: 1.2.3
       svelte:
         specifier: 'catalog:'
         version: 5.56.8(@typescript-eslint/types@8.61.1)
@@ -527,6 +521,9 @@ importers:
 
   packages/kit:
     dependencies:
+      '@rolldown/pluginutils':
+        specifier: ^1.0.1
+        version: 1.0.1
       '@standard-schema/spec':
         specifier: ^1.1.0
         version: 1.1.0
@@ -579,9 +576,6 @@ importers:
       jsdom:
         specifier: 'catalog:'
         version: 30.0.1
-      rolldown:
-        specifier: 'catalog:'
-        version: 1.2.3
       svelte:
         specifier: 'catalog:'
         version: 5.56.8(@typescript-eslint/types@8.61.1)
