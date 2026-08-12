@@ -137,6 +137,7 @@ const warned = new Set();
 
 /** @type {PreprocessorGroup} */
 const warning_preprocessor = {
+	name: 'sveltekit:warnings',
 	script: ({ content, filename }) => {
 		if (!filename) return;
 

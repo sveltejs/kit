@@ -546,13 +546,9 @@ export interface Uses {
 	search_params: Set<string>;
 }
 
-// export type ValidatedConfig = Omit<RecursiveRequired<Config>, keyof Options> &
-// 	Options & {
-// 		extensions: string[];
-// 		experimental: RecursiveRequired<Config['experimental']> & Options['experimental'];
-// 	};
-
-export type ValidatedConfig = RecursiveRequired<Config>;
+export type ValidatedConfig = RecursiveRequired<Omit<Config, 'preprocess'>> & {
+	preprocess: Config['preprocess'];
+};
 
 export type BinaryFormMeta = {
 	remote_refreshes?: string[];
