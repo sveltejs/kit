@@ -1,4 +1,4 @@
-/** @import { ValidatedKitConfig } from 'types' */
+/** @import { ValidatedConfig } from 'types' */
 import process from 'node:process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -22,7 +22,7 @@ try {
 
 /**
  * Generates the tsconfig that the user's tsconfig inherits from.
- * @param {import('types').ValidatedKitConfig} kit
+ * @param {ValidatedConfig} kit
  * @param {string} root
  */
 export function write_tsconfig(kit, root) {
@@ -83,7 +83,7 @@ export function write_tsconfig(kit, root) {
  * @param {string} root The project root
  * @param {string} id The id of the generated config
  * @param {any} config The contents of the generated tsconfig, with paths relative to `root`
- * @param {ValidatedKitConfig['typescript']['config']} [transform] TODO get rid of this
+ * @param {ValidatedConfig['typescript']['config']} [transform] TODO get rid of this
  */
 function write_parent_tsconfig(root, id, config, transform) {
 	// simplified tsconfig resolvers (e.g. Playwright's) only find `${id}.json`, not `${id}/tsconfig.json`
@@ -236,7 +236,7 @@ const alias_value = /^(.+?)((\/\*)|(\.\w+))?$/;
  * Generates tsconfig path aliases from kit's aliases and the package.json `imports` field.
  * Related to vite alias creation.
  *
- * @param {import('types').ValidatedKitConfig} config
+ * @param {import('types').ValidatedConfig} config
  * @param {string} root
  * @returns {Record<string, string[]>}
  */

@@ -38,7 +38,7 @@ async function analyse({
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
 	const vite_config = await load_vite_config(vite_config_file);
-	const config = extract_svelte_config(vite_config).kit;
+	const config = extract_svelte_config(vite_config);
 	const server_root = join(config.outDir, 'output');
 
 	/** @type {import('types').ServerInternalModule} */

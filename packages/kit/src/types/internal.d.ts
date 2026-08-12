@@ -1,8 +1,6 @@
 import { Component } from 'svelte';
 import {
-	Config,
 	ServerLoad,
-	KitConfig,
 	Load,
 	RequestHandler,
 	Server,
@@ -12,6 +10,7 @@ import {
 	SSRManifest,
 	Emulator
 } from '@sveltejs/kit';
+import { Config } from '@sveltejs/kit/vite';
 import { RemoteFormIssue, RemoteQuery, RemoteLiveQuery } from '$app/server';
 import {
 	ClientInit,
@@ -34,6 +33,7 @@ import {
 import { Span } from '@opentelemetry/api';
 import { PageOptions } from '../exports/vite/static_analysis/types.js';
 import { SharedIterator } from '../utils/shared-iterator.js';
+import { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
 
 export interface ServerModule {
 	Server: typeof InternalServer;
@@ -477,13 +477,13 @@ export type SSRNodeLoader = () => Promise<SSRNode>;
 
 export interface SSROptions {
 	app_template_contains_nonce: boolean;
-	csp: ValidatedConfig['kit']['csp'];
+	csp: ValidatedConfig['csp'];
 	csrf_check_origin: boolean;
 	csrf_trusted_origins: string[];
 	embedded: boolean;
 	hash_routing: boolean;
 	hooks: ServerHooks;
-	link_header_preload: ValidatedConfig['kit']['output']['linkHeaderPreload'];
+	link_header_preload: ValidatedConfig['output']['linkHeaderPreload'];
 	paths_origin: string | undefined;
 	service_worker: boolean;
 	service_worker_options: RegistrationOptions;
@@ -547,12 +547,9 @@ export interface Uses {
 	search_params: Set<string>;
 }
 
-export type ValidatedConfig = Omit<Config, 'kit'> & {
-	kit: ValidatedKitConfig;
+export type ValidatedConfig = Omit<RecursiveRequired<Config>, keyof SvelteConfig> & SvelteConfig & {
 	extensions: string[];
 };
-
-export type ValidatedKitConfig = RecursiveRequired<KitConfig>;
 
 export type BinaryFormMeta = {
 	remote_refreshes?: string[];

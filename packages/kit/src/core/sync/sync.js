@@ -18,7 +18,7 @@ import { write_env } from './write_env.js';
  * @param {string} root The project root directory
  */
 export function init(config, root) {
-	write_tsconfig(config.kit, root);
+	write_tsconfig(config, root);
 }
 
 /**
@@ -29,12 +29,12 @@ export function init(config, root) {
 export function create(config, root) {
 	const manifest_data = create_manifest_data({ config, cwd: root });
 
-	const output = path.join(config.kit.outDir, 'generated');
+	const output = path.join(config.outDir, 'generated');
 
-	write_client_manifest(config.kit, manifest_data, `${output}/client`);
+	write_client_manifest(config, manifest_data, `${output}/client`);
 	write_server(config, output, root);
 	write_all_types(config, manifest_data, root);
-	write_app_types(config.kit, manifest_data, root);
+	write_app_types(config, manifest_data, root);
 
 	return { manifest_data };
 }
@@ -64,7 +64,7 @@ export function update(config, manifest_data, file, root) {
 		}
 
 		write_types(config, manifest_data, file, root);
-		write_app_types(config.kit, manifest_data, root);
+		write_app_types(config, manifest_data, root);
 	} catch (error) {
 		// A route file can disappear before the watcher delivers its unlink event. In that case,
 		// the manifest is stale and must be rebuilt instead of incrementally updated.
@@ -97,13 +97,13 @@ export function all_types(config, root) {
 	init(config, root);
 	const manifest_data = create_manifest_data({ config, cwd: root });
 	write_all_types(config, manifest_data, root);
-	write_app_types(config.kit, manifest_data, root);
+	write_app_types(config, manifest_data, root);
 }
 
 /**
  * Generate modules and types for explicit env vars
  * @param {typeof import('vite')} vite
- * @param {import('types').ValidatedKitConfig} kit
+ * @param {import('types').ValidatedConfig} kit
  * @param {string | null} entry
  * @param {string} root The Vite root
  * @param {string} mode The Vite mode
@@ -122,5 +122,5 @@ export async function env(vite, kit, entry, root, mode) {
  * @param {string} root The project root directory
  */
 export function server(config, root) {
-	write_server(config, path.join(config.kit.outDir, 'generated'), root);
+	write_server(config, path.join(config.outDir, 'generated'), root);
 }

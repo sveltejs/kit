@@ -1,5 +1,5 @@
 /** @import { SvelteConfig } from '@sveltejs/vite-plugin-svelte' */
-/** @import { ValidatedKitConfig } from 'types' */
+/** @import { ValidatedConfig } from 'types' */
 /** @import { Validator } from './types.js' */
 import { styleText } from 'node:util';
 
@@ -67,7 +67,7 @@ const prerender_handler = validate(undefined, (input, keypath) => {
 	throw new Error(`${keypath} should be "fail", "warn", "ignore" or a custom function`);
 });
 
-/** @type {Validator<ValidatedKitConfig>} */
+/** @type {Validator<ValidatedConfig>} */
 export const validate_kit_options = object({
 	adapter: validate(undefined, (input, keypath) => {
 		if (typeof input !== 'object' || !input.adapt) {

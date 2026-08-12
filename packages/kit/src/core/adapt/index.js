@@ -23,7 +23,7 @@ export async function adapt(
 	vite_config,
 	explicit_env_config
 ) {
-	const { name, adapt } = config.kit.adapter;
+	const { name, adapt } = config.adapter;
 
 	console.log(styleText(['bold', 'cyan'], `\n> Using ${name}`));
 

@@ -153,7 +153,7 @@ async function prerender({
 
 	const vite_config = await load_vite_config(vite_config_file);
 
-	const config = extract_svelte_config(vite_config).kit;
+	const config = extract_svelte_config(vite_config);
 
 	const prerender_origin = config.paths.origin || 'http://sveltekit-prerender';
 
