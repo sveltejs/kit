@@ -847,7 +847,7 @@ When each instance should render different values, pass them as the second argum
 <h1>Todos</h1>
 
 {#each await getTodos() as todo}
-	{@const modify = modifyTodo.for(todo.id)}
+	{const modify = modifyTodo.for(todo.id)}
 	<form {...modify}>
 		<input {...modify.fields.description.as('text', todo.description)} />
 		<button disabled={!!modify.pending}>save changes</button>
