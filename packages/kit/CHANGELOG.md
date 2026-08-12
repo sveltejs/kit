@@ -1,5 +1,21 @@
 # @sveltejs/kit
 
+## 3.0.0-next.21
+
+### Major Changes
+
+- breaking: move remote function types and `isValidationError` to `@sveltejs/kit/remote` ([#16764](https://github.com/sveltejs/kit/pull/16764))
+
+- breaking: move `RequestEvent` and `Cookies` to `$app/server` ([#16751](https://github.com/sveltejs/kit/pull/16751))
+
+### Patch Changes
+
+- fix: correctly implement Vite plugin hook filters ([#16760](https://github.com/sveltejs/kit/pull/16760))
+
+- fix: yield to allow prerender updates to be visible ([#16748](https://github.com/sveltejs/kit/pull/16748))
+
+- fix: don't destroy partial-line app output with the prerender progress line ([#16750](https://github.com/sveltejs/kit/pull/16750))
+
 ## 3.0.0-next.20
 
 ### Major Changes
