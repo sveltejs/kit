@@ -181,12 +181,37 @@ const warning_preprocessor = {
 let vite_plugin_svelte;
 
 /**
- * Returns the SvelteKit Vite plugins.
- * Any options that don't belong to SvelteKit are passed through to `vite-plugin-svelte`.
+ * The SvelteKit Vite plugin, which must be added to your `vite.config.js` file along with your project's configuration:
  *
- * Since version 3.0.0 you must pass [configuration](configuration) directly.
+ * ```js
+ * /// file: vite.config.js
+ * import adapter from '@sveltejs/adapter-auto';
+ * import { sveltekit } from '@sveltejs/kit/vite';
+ * import { defineConfig } from 'vite';
  *
- * Since version 2.62.0 you can pass configuration directly, in which case `svelte.config.js` is ignored.
+ * export default defineConfig({
+ * 	plugins: [
+ * 		sveltekit({
+ * 			compilerOptions: {
+ * 				experimental: {
+ * 					async: true
+ * 				}
+ * 			},
+ * 			adapter: adapter(),
+ * 			experimental: {
+ * 				remoteFunctions: true
+ * 			}
+ * 		})
+ * 	]
+ * });
+ * ```
+ *
+ * As well as SvelteKit, the plugin options are used by other tooling that integrates with Svelte such as editor extensions.
+ *
+ * Any options that don't belong to SvelteKit are passed through to [`vite-plugin-svelte`](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/config.md), so you can set options like `inspector` here too. The `experimental` namespace is shared — SvelteKit reads its own flags and forwards the rest.
+ *
+ * > [!LEGACY]
+ * > Prior to SvelteKit 3, config lived in a `svelte.config.js` file, which is no longer supported. The ability to configure SvelteKit via `vite.config.js` was added in version 2.62.
  *
  * @param {import('./public.js').Config} [config]
  * @returns {Promise<Plugin[]>}
