@@ -6,12 +6,11 @@ import {
 	Server,
 	ServerInitOptions,
 	Actions,
-	RequestEvent,
 	SSRManifest,
 	Emulator
 } from '@sveltejs/kit';
 import { Config } from '@sveltejs/kit/vite';
-import { RemoteFormIssue, RemoteQuery, RemoteLiveQuery } from '$app/server';
+import { RemoteFormIssue, RemoteQuery, RemoteLiveQuery, RequestEvent } from '$app/server';
 import {
 	ClientInit,
 	Handle,

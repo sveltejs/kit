@@ -8,7 +8,7 @@ import { encoders } from '#app/internal/transport';
 /**
  * If the serialized data contains promises, `chunks` will be an
  * async iterable containing their resolutions
- * @param {import('@sveltejs/kit').RequestEvent} event
+ * @param {import('$app/server').RequestEvent} event
  * @param {import('types').RequestState} state
  * @param {import('types').SSROptions} options
  * @returns {import('./types.js').ServerDataSerializer}
@@ -125,7 +125,7 @@ export function server_data_serializer(event, state, options) {
 /**
  * If the serialized data contains promises, `chunks` will be an
  * async iterable containing their resolutions
- * @param {import('@sveltejs/kit').RequestEvent} event
+ * @param {import('$app/server').RequestEvent} event
  * @param {import('types').RequestState} state
  * @param {import('types').SSROptions} options
  * @returns {import('./types.js').ServerDataSerializerJson}

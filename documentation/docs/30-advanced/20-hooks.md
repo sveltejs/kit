@@ -149,10 +149,10 @@ export async function handleFetch({ event, request, fetch }) {
 
 > [!NOTE] Can be added to `src/hooks.server.js` and `src/hooks.client.js`
 
-This function is called for _every_ error thrown while loading, rendering, or responding to a request. This allows for two things:
+This function is called for every error thrown while loading, rendering, or responding to a request. This allows for two things:
 
 - you can log the error
-- you can generate a custom representation of the error that is safe to show to users, omitting sensitive details like messages and stack traces. The returned value becomes the value of `page.error`.
+- you can generate a custom representation of the error that is safe to show to users, omitting sensitive details like messages and stack traces
 
 Alongside the `event`, the hook receives a `kind` discriminant that tells you where the error came from, and the `error` itself:
 
