@@ -30,10 +30,8 @@ test('requests a manifest rebuild if type generation encounters a missing route 
 
 	const config = /** @type {import('types').ValidatedConfig} */ (
 		/** @type {unknown} */ ({
-			kit: {
-				files: { params: path.join(root, 'src/params'), routes },
-				outDir: path.join(root, '.svelte-kit')
-			}
+			files: { params: path.join(root, 'src/params'), routes },
+			outDir: path.join(root, '.svelte-kit')
 		})
 	);
 	const outdir = path.join(config.outDir, 'types', path.relative(root, routes), 'missing');
