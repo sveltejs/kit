@@ -5,27 +5,27 @@ on:
     branches:
       - version-3
     paths-ignore: &paths_ignore
-      - ".changeset/**"
-      - ".githooks/**"
-      - ".github/ISSUE_TEMPLATE/**"
-      - ".github/copilot-instructions.md"
-      - ".github/FUNDING.yml"
-      - ".github/PULL_REQUEST_TEMPLATE.md"
-      - "documentation/**"
-      - "packages/*/CHANGELOG*.md"
-      - "packages/kit/src/types/synthetic/**"
-      - "AGENTS.md"
-      - "CLAUDE.md"
-      - "CONTRIBUTING.md"
-      - "FUNDING.json"
-      - "LICENSE"
-      - "README.md"
+      - '.changeset/**'
+      - '.githooks/**'
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.github/copilot-instructions.md'
+      - '.github/FUNDING.yml'
+      - '.github/PULL_REQUEST_TEMPLATE.md'
+      - 'documentation/**'
+      - 'packages/*/CHANGELOG*.md'
+      - 'packages/kit/src/types/synthetic/**'
+      - 'AGENTS.md'
+      - 'CLAUDE.md'
+      - 'CONTRIBUTING.md'
+      - 'FUNDING.json'
+      - 'LICENSE'
+      - 'README.md'
   pull_request:
     paths-ignore: *paths_ignore
 
 env:
   # we call `pnpm playwright install` instead
-  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
 
 # dedupe push/pull_request runs for the same ref and cancel superseded runs
 concurrency:
@@ -55,32 +55,32 @@ jobs:
         include:
           - node-version: 22
             os: ubuntu-latest
-            vite: "current"
-            mode: "unit"
+            vite: 'current'
+            mode: 'unit'
           - node-version: 24
             os: ubuntu-latest
-            vite: "current"
-            mode: "unit"
+            vite: 'current'
+            mode: 'unit'
           - node-version: 22
             os: ubuntu-latest
-            e2e-browser: "chromium"
-            vite: "current"
-            mode: "dev"
+            e2e-browser: 'chromium'
+            vite: 'current'
+            mode: 'dev'
           - node-version: 24
             os: ubuntu-latest
-            e2e-browser: "chromium"
-            vite: "current"
-            mode: "dev"
+            e2e-browser: 'chromium'
+            vite: 'current'
+            mode: 'dev'
           - node-version: 22
             os: ubuntu-latest
-            e2e-browser: "chromium"
-            vite: "current"
-            mode: "build"
+            e2e-browser: 'chromium'
+            vite: 'current'
+            mode: 'build'
           - node-version: 24
             os: ubuntu-latest
-            e2e-browser: "chromium"
-            vite: "current"
-            mode: "build"
+            e2e-browser: 'chromium'
+            vite: 'current'
+            mode: 'build'
           # - node-version: 24
           #   os: ubuntu-latest
           #   e2e-browser: 'chromium'
@@ -98,8 +98,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - name: setup overrides for matrix.vite
         if: matrix.vite != 'current'
-        run:
-          | # copies catalogs.vite-xxx to overrides in pnpm-workspace.yaml so the subsequent `pnpm install` enforces them
+        run: | # copies catalogs.vite-xxx to overrides in pnpm-workspace.yaml so the subsequent `pnpm install` enforces them
           yq -i '.overrides =.catalogs."vite-${{ matrix.vite }}"' pnpm-workspace.yaml
           pnpm install --no-frozen-lockfile
           git checkout pnpm-lock.yaml pnpm-workspace.yaml # revert changes to pnpm files to avoid cache key changes
@@ -128,28 +127,28 @@ jobs:
         include:
           - node-version: 24
             os: windows-latest
-            e2e-browser: "chromium"
-            mode: "dev"
+            e2e-browser: 'chromium'
+            mode: 'dev'
           - node-version: 24
             os: ubuntu-latest
-            e2e-browser: "firefox"
-            mode: "dev"
+            e2e-browser: 'firefox'
+            mode: 'dev'
           - node-version: 24
             os: macOS-latest
-            e2e-browser: "webkit"
-            mode: "dev"
+            e2e-browser: 'webkit'
+            mode: 'dev'
           - node-version: 24
             os: windows-latest
-            e2e-browser: "chromium"
-            mode: "build"
+            e2e-browser: 'chromium'
+            mode: 'build'
           - node-version: 24
             os: ubuntu-latest
-            e2e-browser: "firefox"
-            mode: "build"
+            e2e-browser: 'firefox'
+            mode: 'build'
           - node-version: 24
             os: macOS-latest
-            e2e-browser: "webkit"
-            mode: "build"
+            e2e-browser: 'webkit'
+            mode: 'build'
     env:
       KIT_E2E_BROWSER: ${{ matrix.e2e-browser }}
     steps:
@@ -187,8 +186,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - mode: "dev"
-          - mode: "build"
+          - mode: 'dev'
+          - mode: 'build'
     steps:
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -217,8 +216,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - mode: "dev"
-          - mode: "build"
+          - mode: 'dev'
+          - mode: 'build'
     steps:
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
