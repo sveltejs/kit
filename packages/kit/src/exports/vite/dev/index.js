@@ -603,7 +603,7 @@ export async function dev(
 					read: (file) => createReadableStream(from_fs(file))
 				});
 
-				const request = getRequest({
+				const request = (svelte_config.adapter.getRequest ?? getRequest)({
 					base,
 					request: req,
 					response: res
@@ -656,11 +656,11 @@ export async function dev(
 					// @ts-expect-error
 					serve_static_middleware.handle(req, res, () => {
 						log_dev_response(rendered.status, format_response(rendered.status, request));
-						setResponse(res, rendered);
+						(svelte_config.adapter.setResponse ?? setResponse)(res, rendered);
 					});
 				} else {
 					log_dev_response(rendered.status, format_response(rendered.status, request));
-					setResponse(res, rendered);
+					(svelte_config.adapter.setResponse ?? setResponse)(res, rendered);
 				}
 			} catch (e) {
 				const error = coalesce_to_error(e);
