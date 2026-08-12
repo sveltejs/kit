@@ -5,7 +5,6 @@ import { app_dir, base } from '#app/paths';
 import { DEV } from 'esm-env';
 
 import {
-	app,
 	query_responses,
 	_goto,
 	set_nearest_error_page,
@@ -13,7 +12,6 @@ import {
 	refreshAll
 } from '../client.js';
 import { page } from '../state.svelte.js';
-import { is_external_url, resolve_url } from '../utils.js';
 import { tick } from 'svelte';
 import { categorize_updates, remote_request } from './shared.svelte.js';
 import { createAttachmentKey } from 'svelte/attachments';
@@ -266,12 +264,10 @@ export function form(id) {
 							const should_refresh = refreshes === null && !response.r;
 
 							if (response.redirect) {
-								const url = resolve_url(response.redirect);
-								// _goto allows external redirects; those never resolve, so only await internal ones
-								const navigation = _goto(url, { refreshAll: should_refresh });
-								if (!is_external_url(url, base, app.hash)) {
-									await navigation;
-								}
+								// Use internal version to allow redirects to external URLs
+								await _goto(response.redirect, {
+									refreshAll: should_refresh
+								});
 								return true;
 							}
 
