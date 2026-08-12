@@ -2,8 +2,8 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 /** @type {boolean} */
 let prerendering;
 try {
+	// @ts-expect-error internal types are not published
 	const { prerendering: prerendering_value } = await import('$app/env/internal');
-	console.log(prerendering_value);
 	prerendering = prerendering_value;
 } catch {
 	// this will throw during analysis, which is when prerendering happens
