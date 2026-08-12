@@ -7,10 +7,10 @@ export default function (options) {
 	return {
 		name: '@sveltejs/adapter-static',
 		async adapt(builder) {
-			if (!options?.fallback && builder.config.kit.router?.type !== 'hash') {
+			if (!options?.fallback && builder.config.router?.type !== 'hash') {
 				const dynamic_routes = builder.routes.filter((route) => route.prerender !== true);
 				if (dynamic_routes.length > 0 && options?.strict !== false) {
-					const prefix = path.relative('.', builder.config.kit.files.routes);
+					const prefix = path.relative('.', builder.config.files.routes);
 					const has_param_routes = builder.routes.some((route) => route.id.includes('['));
 
 					builder.log.error(
@@ -24,10 +24,7 @@ ${dynamic_routes.map((route) => `  - ${path.posix.join(prefix, route.id)}`).join
 						'add `export const prerender = true` to any `+server.js/ts` files that are not fetched by page `load` functions.'
 					];
 
-					if (
-						has_param_routes ||
-						JSON.stringify(builder.config.kit.prerender.entries) !== '["*"]'
-					) {
+					if (has_param_routes || JSON.stringify(builder.config.prerender.entries) !== '["*"]') {
 						let option = 'adjust the `prerender.entries` config option';
 						if (has_param_routes)
 							option += ' (routes with parameters are not part of entry points by default)';
