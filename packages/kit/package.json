@@ -18,6 +18,7 @@
 	"homepage": "https://svelte.dev",
 	"type": "module",
 	"dependencies": {
+		"@rolldown/pluginutils": "^1.0.1",
 		"@standard-schema/spec": "^1.1.0",
 		"@sveltejs/acorn-typescript": "^1.0.12",
 		"acorn": "^8.18.0",
@@ -37,7 +38,6 @@
 		"@types/node": "catalog:",
 		"dts-buddy": "^0.8.3",
 		"jsdom": "catalog:",
-		"rolldown": "catalog:",
 		"svelte": "catalog:",
 		"svelte-preprocess": "catalog:",
 		"typescript": "~6.0.3",
