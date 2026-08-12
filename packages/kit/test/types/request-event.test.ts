@@ -1,4 +1,4 @@
-import { RequestEvent } from '@sveltejs/kit';
+import { RequestEvent } from '$app/server';
 
 declare const event: RequestEvent;
 

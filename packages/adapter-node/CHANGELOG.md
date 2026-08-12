@@ -1,5 +1,21 @@
 # @sveltejs/adapter-node
 
+## 6.0.0-next.10
+
+### Patch Changes
+
+- chore: bump `rolldown` to 1.2.3 ([#16745](https://github.com/sveltejs/kit/pull/16745))
+- Updated dependencies [[`1742811`](https://github.com/sveltejs/kit/commit/1742811562358caf6042bed33c60ce6427a3e831), [`1611c61`](https://github.com/sveltejs/kit/commit/1611c617a1ec1b32e10627c2815fb7e6673f3157), [`b361b81`](https://github.com/sveltejs/kit/commit/b361b815e79828a6b7404d759d0a4c3892814a4e), [`b361b81`](https://github.com/sveltejs/kit/commit/b361b815e79828a6b7404d759d0a4c3892814a4e), [`b361b81`](https://github.com/sveltejs/kit/commit/b361b815e79828a6b7404d759d0a4c3892814a4e), [`b361b81`](https://github.com/sveltejs/kit/commit/b361b815e79828a6b7404d759d0a4c3892814a4e), [`13e7b18`](https://github.com/sveltejs/kit/commit/13e7b186a94b5b8317771d2b1e795b432dcd6faf), [`529346d`](https://github.com/sveltejs/kit/commit/529346d96369f92cdd804be9c4313c598efe34b8), [`b361b81`](https://github.com/sveltejs/kit/commit/b361b815e79828a6b7404d759d0a4c3892814a4e), [`81d6319`](https://github.com/sveltejs/kit/commit/81d6319eef08a765ccd3922790a7aee16e284cc2), [`b361b81`](https://github.com/sveltejs/kit/commit/b361b815e79828a6b7404d759d0a4c3892814a4e), [`69a5bdf`](https://github.com/sveltejs/kit/commit/69a5bdf9f45810eeed2faa089c8d3206463d347e)]:
+  - @sveltejs/kit@3.0.0-next.20
+
+## 6.0.0-next.9
+
+### Patch Changes
+
+- fix: externalize `@opentelemetry/api` to prevent bundler chunk colocation between `instrumentation.server.js` and application code ([#16302](https://github.com/sveltejs/kit/pull/16302))
+- Updated dependencies [[`04f9ab4`](https://github.com/sveltejs/kit/commit/04f9ab4f64a25c2fecac65ccd97cf4663eb9c1fa), [`1e198bd`](https://github.com/sveltejs/kit/commit/1e198bdbea745b845d9ae59e6a2d3fc62a404b01), [`813726d`](https://github.com/sveltejs/kit/commit/813726dabdc923ce138452dc8cc91d881e329e5d), [`a115a7b`](https://github.com/sveltejs/kit/commit/a115a7beb9b34d1e43609e96100de48010afc3be), [`031ac69`](https://github.com/sveltejs/kit/commit/031ac69d0d8c7d66c9e61aa43a8c447877eb87ff), [`dc7442c`](https://github.com/sveltejs/kit/commit/dc7442cc622c257e89a7acc9253795a449d51df7), [`19c4478`](https://github.com/sveltejs/kit/commit/19c447850e269807eeb089b595267a0616203afa), [`dc7442c`](https://github.com/sveltejs/kit/commit/dc7442cc622c257e89a7acc9253795a449d51df7), [`dc7442c`](https://github.com/sveltejs/kit/commit/dc7442cc622c257e89a7acc9253795a449d51df7), [`0b3e2b3`](https://github.com/sveltejs/kit/commit/0b3e2b386896cf868328138a66670f19931ebea5), [`c5d0ce2`](https://github.com/sveltejs/kit/commit/c5d0ce2a9e47615c245e8ac57e10ee2120142138)]:
+  - @sveltejs/kit@3.0.0-next.19
+
 ## 6.0.0-next.8
 
 ### Major Changes

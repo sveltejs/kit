@@ -10,7 +10,7 @@ import { text_encoder } from '../../utils.js';
 import { with_version_header } from '../utils.js';
 
 /**
- * @param {import('@sveltejs/kit').RequestEvent} event
+ * @param {import('$app/server').RequestEvent} event
  * @param {import('types').RequestState} state
  * @param {import('types').SSRRoute} route
  * @param {import('types').SSROptions} options

@@ -10,16 +10,14 @@ test('copy files', () => {
 	const cwd = join(import.meta.dirname, 'fixtures/basic');
 	const outDir = join(cwd, '.svelte-kit');
 
-	/** @type {import('@sveltejs/kit').Config} */
+	/** @type {import('@sveltejs/kit/vite').Config} */
 	const mocked = {
 		extensions: ['.svelte'],
-		kit: {
-			appDir: '_app',
-			files: {
-				assets: join(import.meta.dirname, 'fixtures/basic/static')
-			},
-			outDir
-		}
+		appDir: '_app',
+		files: {
+			assets: join(import.meta.dirname, 'fixtures/basic/static')
+		},
+		outDir
 	};
 
 	const builder = create_builder({

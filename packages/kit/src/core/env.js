@@ -1,6 +1,6 @@
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
-/** @import { EnvVarConfig } from '@sveltejs/kit' */
-/** @import { ValidatedKitConfig } from 'types' */
+/** @import { EnvVarConfig } from '@sveltejs/kit/env' */
+/** @import { ValidatedConfig } from 'types' */
 import path from 'node:path';
 import * as devalue from 'devalue';
 import { GENERATED_COMMENT } from '../constants.js';
@@ -16,7 +16,7 @@ import { get_runner } from '../runner.js';
  */
 
 /**
- * @param {import('types').ValidatedKitConfig} config
+ * @param {ValidatedConfig} config
  * @returns {string | null}
  */
 export function resolve_explicit_env_entry(config) {
@@ -25,7 +25,7 @@ export function resolve_explicit_env_entry(config) {
 
 /**
  * @param {typeof import('vite')} vite
- * @param {ValidatedKitConfig} kit
+ * @param {ValidatedConfig} kit
  * @param {string | null} file
  * @param {string} root
  * @param {string} mode

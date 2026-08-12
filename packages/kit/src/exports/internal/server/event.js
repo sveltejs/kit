@@ -1,4 +1,4 @@
-/** @import { RequestEvent } from '@sveltejs/kit' */
+/** @import { RequestEvent } from '$app/server' */
 /** @import { RequestStore } from 'types' */
 /** @import { AsyncLocalStorage } from 'node:async_hooks' */
 import { IN_WEBCONTAINER } from '../../../constants.js';

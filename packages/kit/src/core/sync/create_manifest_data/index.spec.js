@@ -9,14 +9,14 @@ const cwd = path.join(import.meta.dirname, 'test');
 
 /**
  * @param {string} dir
- * @param {import('@sveltejs/kit').Config} config
+ * @param {import('@sveltejs/kit/vite').Config} config
  */
 const create = (dir, config = {}) => {
 	const initial = validate_config(config);
 
-	initial.kit.files.assets = path.resolve(cwd, 'static');
-	initial.kit.files.params = path.resolve(cwd, 'params');
-	initial.kit.files.routes = path.resolve(cwd, dir);
+	initial.files.assets = path.resolve(cwd, 'static');
+	initial.files.params = path.resolve(cwd, 'params');
+	initial.files.routes = path.resolve(cwd, dir);
 
 	return create_manifest_data({
 		config: /** @type {import('types').ValidatedConfig} */ (initial),

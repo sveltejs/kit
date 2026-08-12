@@ -12,7 +12,7 @@ import { server_data_serializer } from './data_serializer.js';
 
 /**
  * @param {{
- *   event: import('@sveltejs/kit').RequestEvent;
+ *   event: import('$app/server').RequestEvent;
  *   state: import('types').RequestState;
  *   options: import('types').SSROptions;
  *   manifest: import('@sveltejs/kit').SSRManifest;

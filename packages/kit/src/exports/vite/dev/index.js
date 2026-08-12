@@ -1,4 +1,5 @@
-/** @import { RequestEvent, SSRManifest } from '@sveltejs/kit' */
+/** @import { SSRManifest } from '@sveltejs/kit' */
+/** @import { RequestEvent } from '$app/server' */
 /** @import { EnvironmentModuleNode, ErrorPayload, ResolvedConfig, ViteDevServer } from 'vite' */
 /** @import { ManifestData, PrerenderOption, RemoteChunk, ServerModule, SSRNode, UniversalNode, ValidatedConfig } from 'types' */
 import process from 'node:process';
@@ -20,7 +21,7 @@ import * as sync from '../../../core/sync/sync.js';
 import { get_mime_lookup, get_runtime_base } from '../../../core/utils.js';
 import '../../../utils/mime.js'; // extend mrmime with additional types (affects sirv too)
 import { compact } from '../../../utils/array.js';
-import { is_chrome_devtools_request, is_remote_module, log_response, not_found } from '../utils.js';
+import { is_chrome_devtools_request, is_remote_module, not_found } from '../utils.js';
 import { SCHEME } from '../../../utils/url.js';
 import { check_feature } from '../../../utils/features.js';
 import { escape_html } from '../../../utils/escape.js';
@@ -59,7 +60,7 @@ export async function dev(
 			/** @type {string} */ (context.event.route.id),
 			context.config,
 			label,
-			svelte_config.kit.adapter
+			svelte_config.adapter
 		);
 	};
 
@@ -165,29 +166,29 @@ export async function dev(
 		}
 
 		manifest = {
-			appDir: svelte_config.kit.appDir,
-			appPath: svelte_config.kit.appDir,
+			appDir: svelte_config.appDir,
+			appPath: svelte_config.appDir,
 			assets: new Set(manifest_data.assets.map((asset) => asset.file)),
 			mimeTypes: get_mime_lookup(manifest_data),
 			_: {
 				client: {
 					start: `${get_runtime_base(root)}/client/entry.js`,
-					app: `${to_fs(svelte_config.kit.outDir)}/generated/client/app.js`,
+					app: `${to_fs(svelte_config.outDir)}/generated/client/app.js`,
 					imports: [],
 					stylesheets: [],
 					fonts: [],
 					uses_env_dynamic_public: true,
 					nodes:
-						svelte_config.kit.router.resolution === 'client'
+						svelte_config.router.resolution === 'client'
 							? undefined
 							: manifest_data.nodes.map((node, i) => {
 									if (node.component || node.universal) {
-										return `${svelte_config.kit.paths.base}${to_fs(svelte_config.kit.outDir)}/generated/client/nodes/${i}.js`;
+										return `${svelte_config.paths.base}${to_fs(svelte_config.outDir)}/generated/client/nodes/${i}.js`;
 									}
 								}),
 					// `css` is not necessary in dev, as the JS file from `nodes` will reference the CSS file
 					routes:
-						svelte_config.kit.router.resolution === 'client'
+						svelte_config.router.resolution === 'client'
 							? undefined
 							: compact(
 									manifest_data.routes.map((route) => {
@@ -381,7 +382,7 @@ export async function dev(
 		return (error.stack = prelude + lines.join('\n'));
 	}
 
-	const params_file = resolve_entry(svelte_config.kit.files.params);
+	const params_file = resolve_entry(svelte_config.files.params);
 
 	/**
 	 * @param {string} event
@@ -390,13 +391,13 @@ export async function dev(
 	const watch = (event, cb) => {
 		vite_dev_server.watcher.on(event, (file) => {
 			if (
-				file.startsWith(svelte_config.kit.files.routes + path.sep) ||
-				file.startsWith(svelte_config.kit.files.assets + path.sep) ||
+				file.startsWith(svelte_config.files.routes + path.sep) ||
+				file.startsWith(svelte_config.files.assets + path.sep) ||
 				(params_file && file === params_file) ||
 				is_remote_module(file) ||
 				// in contrast to server hooks, client hooks are written to the client manifest
 				// and therefore need rebuilding when they are added/removed
-				file.startsWith(svelte_config.kit.files.hooks.client)
+				file.startsWith(svelte_config.files.hooks.client)
 			) {
 				cb(file);
 			}
@@ -430,7 +431,7 @@ export async function dev(
 		if (!sync.update(svelte_config, manifest_data, file, root)) debounce(update_manifest);
 	});
 
-	const { appTemplate, errorTemplate, serviceWorker, hooks } = svelte_config.kit.files;
+	const { appTemplate, errorTemplate, serviceWorker, hooks } = svelte_config.files;
 
 	// vite client only executes a full reload if the triggering html file path is index.html
 	// kit defaults to src/app.html, so unless user changed that to index.html
@@ -454,8 +455,8 @@ export async function dev(
 		}
 	});
 
-	const assets = svelte_config.kit.paths.assets ? SVELTE_KIT_ASSETS : svelte_config.kit.paths.base;
-	const asset_server = sirv(svelte_config.kit.files.assets, {
+	const assets = svelte_config.paths.assets ? SVELTE_KIT_ASSETS : svelte_config.paths.base;
+	const asset_server = sirv(svelte_config.files.assets, {
 		dev: true,
 		etag: true,
 		maxAge: 0,
@@ -471,10 +472,10 @@ export async function dev(
 
 		if (decoded.startsWith(assets)) {
 			const pathname = decoded.slice(assets.length);
-			const file = svelte_config.kit.files.assets + pathname;
+			const file = svelte_config.files.assets + pathname;
 
 			if (fs.existsSync(file) && !fs.statSync(file).isDirectory()) {
-				if (has_correct_case(file, svelte_config.kit.files.assets)) {
+				if (has_correct_case(file, svelte_config.files.assets)) {
 					req.url = encodeURI(pathname); // don't need query/hash
 					asset_server(req, res);
 					return;
@@ -485,8 +486,8 @@ export async function dev(
 		next();
 	});
 
-	const env = vite.loadEnv(vite_config.mode, svelte_config.kit.env.dir, '');
-	const emulator = await svelte_config.kit.adapter?.emulate?.();
+	const env = vite.loadEnv(vite_config.mode, svelte_config.env.dir, '');
+	const emulator = await svelte_config.adapter?.emulate?.();
 
 	/** @type {Promise<void> | undefined} */
 	let init_manifest;
@@ -517,7 +518,7 @@ export async function dev(
 
 				const decoded = decodeURI(new URL(base + req.url).pathname);
 				const file = posixify(
-					path.resolve(root, decoded.slice(svelte_config.kit.paths.base.length + 1))
+					path.resolve(root, decoded.slice(svelte_config.paths.base.length + 1))
 				);
 				const is_file = fs.existsSync(file) && !fs.statSync(file).isDirectory();
 				const allowed =
@@ -535,18 +536,18 @@ export async function dev(
 					return;
 				}
 
-				if (!decoded.startsWith(svelte_config.kit.paths.base)) {
-					return not_found(req, res, svelte_config.kit.paths.base);
+				if (!decoded.startsWith(svelte_config.paths.base)) {
+					return not_found(req, res, svelte_config.paths.base);
 				}
 
-				if (decoded === svelte_config.kit.paths.base + '/service-worker.js') {
-					const resolved = resolve_entry(svelte_config.kit.files.serviceWorker);
+				if (decoded === svelte_config.paths.base + '/service-worker.js') {
+					const resolved = resolve_entry(svelte_config.files.serviceWorker);
 
 					if (resolved) {
 						res.writeHead(200, {
 							'content-type': 'application/javascript'
 						});
-						res.end(`import '${svelte_config.kit.paths.base}${to_fs(resolved)}';`);
+						res.end(`import '${svelte_config.paths.base}${to_fs(resolved)}';`);
 					} else {
 						res.writeHead(404);
 						res.end('not found');
@@ -558,16 +559,13 @@ export async function dev(
 				// resolve the instrumentation file per request so that changes to it
 				// are picked up on new requests
 				const resolved_instrumentation = resolve_entry(
-					path.join(svelte_config.kit.files.src, 'instrumentation.server')
+					path.join(svelte_config.files.src, 'instrumentation.server')
 				);
 
 				if (resolved_instrumentation) {
-					if (
-						svelte_config.kit.adapter &&
-						!svelte_config.kit.adapter.supports?.instrumentation?.()
-					) {
+					if (svelte_config.adapter && !svelte_config.adapter.supports?.instrumentation?.()) {
 						throw new Error(
-							`${resolved_instrumentation} is unsupported in ${svelte_config.kit.adapter.name}.`
+							`${resolved_instrumentation} is unsupported in ${svelte_config.adapter.name}.`
 						);
 					}
 
@@ -579,7 +577,7 @@ export async function dev(
 					await runner.import(`${get_runtime_base(root)}/server/index.js`)
 				);
 
-				const { set_fix_stack_trace } = await runner.import(
+				const { set_fix_stack_trace, log_response } = await runner.import(
 					`${get_runtime_base(root)}/server/internal.js`
 				);
 				set_fix_stack_trace(fix_stack_trace);
@@ -632,7 +630,7 @@ export async function dev(
 							return fs.readFileSync(from_fs(file));
 						}
 
-						return fs.readFileSync(path.join(svelte_config.kit.files.assets, file));
+						return fs.readFileSync(path.join(svelte_config.files.assets, file));
 					},
 					before_handle: async (event, config, prerender, handle) => {
 						// we need to use .run because .enterWith() is not supported in Cloudflare Workers

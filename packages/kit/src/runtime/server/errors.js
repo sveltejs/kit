@@ -12,7 +12,7 @@ import { fix_stack_trace } from './internal.js';
 import { escape_html } from '../../utils/escape.js';
 
 /**
- * @param {import('@sveltejs/kit').RequestEvent} event
+ * @param {import('$app/server').RequestEvent} event
  * @param {import('types').RequestState} state
  * @param {import('types').SSROptions} options
  * @param {unknown} error
@@ -37,7 +37,7 @@ export async function handle_fatal_error(event, state, options, error) {
 }
 
 /**
- * @param {import('@sveltejs/kit').RequestEvent} event
+ * @param {import('$app/server').RequestEvent} event
  * @param {import('types').RequestState} state
  * @param {import('types').SSROptions} options
  * @param {any} error
@@ -48,7 +48,7 @@ export function handle_error_and_jsonify(event, state, options, error) {
 		return error.body;
 	}
 
-	/** @type {import('@sveltejs/kit').CaughtError} */
+	/** @type {import('@sveltejs/kit/hooks').CaughtError} */
 	let caught;
 
 	if (error instanceof HttpError) {
@@ -77,7 +77,7 @@ export function handle_error_and_jsonify(event, state, options, error) {
 	/**
 	 * The hook returns only the properties it wants to override; anything it omits
 	 * (including by returning nothing at all) is inherited from the caught error.
-	 * @param {Awaited<ReturnType<import('@sveltejs/kit').HandleServerError>>} body
+	 * @param {Awaited<ReturnType<import('@sveltejs/kit/hooks').HandleServerError>>} body
 	 * @returns {App.Error}
 	 */
 	function merge(body) {

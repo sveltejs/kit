@@ -1,5 +1,67 @@
 # @sveltejs/kit
 
+## 3.0.0-next.20
+
+### Major Changes
+
+- breaking: move remote function types to `$app/server` ([#16740](https://github.com/sveltejs/kit/pull/16740))
+
+- breaking: remove `#lib` definition from `paths`; requires explicit module extensions as a result ([#16736](https://github.com/sveltejs/kit/pull/16736))
+
+- breaking: move hooks-related types to `@sveltejs/kit/hooks` ([#16737](https://github.com/sveltejs/kit/pull/16737))
+
+- breaking: move env-related types to `@sveltejs/kit/env` ([#16739](https://github.com/sveltejs/kit/pull/16739))
+
+### Minor Changes
+
+- feat: better response logging ([#16744](https://github.com/sveltejs/kit/pull/16744))
+
+### Patch Changes
+
+- chore: bump `mrmime` to 2.0.1 ([#16745](https://github.com/sveltejs/kit/pull/16745))
+
+- chore: bump `@sveltejs/acorn-typescript` to 1.0.12 ([#16745](https://github.com/sveltejs/kit/pull/16745))
+
+- chore: bump `magic-string` to 1.1.0 ([#16745](https://github.com/sveltejs/kit/pull/16745))
+
+- chore: bump `devalue` to 5.9.0 ([#16745](https://github.com/sveltejs/kit/pull/16745))
+
+- chore: bump `cookie` to 2.0.1 ([#16745](https://github.com/sveltejs/kit/pull/16745))
+
+- chore: bump `acorn` to 8.18.0 ([#16745](https://github.com/sveltejs/kit/pull/16745))
+
+- fix: avoid infinite loop when building with `--watch` flag ([#16632](https://github.com/sveltejs/kit/pull/16632))
+
+## 3.0.0-next.19
+
+### Major Changes
+
+- breaking: move `defineParams` and associated types to `@sveltejs/kit/params` ([#16716](https://github.com/sveltejs/kit/pull/16716))
+
+- breaking: run all errors through the `handleError` hook ([#16664](https://github.com/sveltejs/kit/pull/16664))
+
+- breaking: move `Page`, `ReadonlyURL` and `ReadonlyURLSearchParams` from `@sveltejs/kit` to `$app/state` ([#16694](https://github.com/sveltejs/kit/pull/16694))
+
+- breaking: move `BeforeNavigate`, `OnNavigate`, `AfterNavigate`, `Navigation`, `NavigationTarget`, `NavigationType`, `GotoOptions` and the `Navigation*` variant types from `@sveltejs/kit` to `$app/navigation` ([#16694](https://github.com/sveltejs/kit/pull/16694))
+
+- breaking: move `ActionResult` and `SubmitFunction` from `@sveltejs/kit` to `$app/forms` ([#16694](https://github.com/sveltejs/kit/pull/16694))
+
+- breaking: remove `handleValidationError` and pass remote function validation errors to `handleError` with `kind: 'validation'` ([#16672](https://github.com/sveltejs/kit/pull/16672))
+
+### Minor Changes
+
+- feat: ignore files with + prefix if they contain test/spec/stories ([#16715](https://github.com/sveltejs/kit/pull/16715))
+
+### Patch Changes
+
+- fix: rebuild the dev manifest when route files disappear during an incremental update ([#16643](https://github.com/sveltejs/kit/pull/16643))
+
+- fix: externalize `@opentelemetry/api` to prevent bundler chunk colocation between `instrumentation.server.js` and application code ([#16302](https://github.com/sveltejs/kit/pull/16302))
+
+- fix: surface prerender errors during development ([#16507](https://github.com/sveltejs/kit/pull/16507))
+
+- fix: adjust error overload for optional `App.Error` parameters ([#16725](https://github.com/sveltejs/kit/pull/16725))
+
 ## 3.0.0-next.18
 
 ### Major Changes

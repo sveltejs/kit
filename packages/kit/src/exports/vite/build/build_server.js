@@ -1,4 +1,4 @@
-/** @import { AssetDependencies, ManifestData, ValidatedKitConfig } from 'types' */
+/** @import { AssetDependencies, ManifestData, ValidatedConfig } from 'types' */
 /** @import { Manifest, Rolldown } from 'vite' */
 import fs from 'node:fs';
 import {
@@ -16,7 +16,7 @@ import { escape_for_interpolation } from '../../../utils/escape.js';
 
 /**
  * @param {string} out
- * @param {ValidatedKitConfig} kit
+ * @param {ValidatedConfig} kit
  * @param {ManifestData} manifest_data
  * @param {Manifest} server_manifest
  * @param {Manifest | null} client_manifest

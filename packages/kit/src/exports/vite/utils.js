@@ -7,14 +7,13 @@ import { escape_for_regexp } from '../../utils/regex.js';
 import { stackless } from '../../utils/error.js';
 import { dedent } from '../../core/sync/utils.js';
 import { app_server, app_env_private, sveltekit_env_private } from './module_ids.js';
-import { styleText } from 'node:util';
 
 /**
  * Transforms alias to a valid vite.resolve.alias array.
  *
  * Related to tsconfig path alias creation.
  *
- * @param {import('types').ValidatedKitConfig} config
+ * @param {import('types').ValidatedConfig} config
  * @param {string} root
  */
 export function get_config_aliases(config, root) {
@@ -229,19 +228,4 @@ export function error_for_missing_config(feature_name, path, value) {
 			${result}
 		`
 	);
-}
-
-/**
- * @param {number} status
- * @param {Request} request
- */
-export function log_response(status, request) {
-	const url = new URL(request.url);
-	const log = `[${status}] ${request.method} ${url.href.replace(url.origin, '')}`;
-
-	if (status < 400) {
-		console.log(log);
-	} else {
-		console.error(styleText(['bold', 'red'], log));
-	}
 }

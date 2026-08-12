@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/package",
-	"version": "3.0.0-next.5",
+	"version": "3.0.0-next.6",
 	"description": "The fastest way to build Svelte packages",
 	"repository": {
 		"type": "git",
@@ -22,7 +22,7 @@
 	"dependencies": {
 		"chokidar": "^5.0.0",
 		"semver": "^7.8.5",
-		"svelte2tsx": "~0.7.56"
+		"svelte2tsx": "~0.7.60"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",
@@ -31,6 +31,7 @@
 		"@types/semver": "catalog:",
 		"@typescript/native": "catalog:",
 		"prettier": "catalog:",
+		"prettier-plugin-svelte": "catalog:",
 		"svelte": "catalog:",
 		"svelte-preprocess": "catalog:",
 		"typescript": "^6.0.3",
@@ -53,10 +54,10 @@
 		"src"
 	],
 	"scripts": {
-		"lint": "prettier --check .",
+		"lint": "oxfmt --check .",
 		"check": "pnpm tsc-native",
 		"check:all": "pnpm tsc-native && pnpm -r --filter=\"./**\" check",
-		"format": "pnpm lint --write",
+		"format": "oxfmt --write .",
 		"test": "vitest run",
 		"test:unit": "vitest run",
 		"tsc-native": "node node_modules/@typescript/native/bin/tsc"

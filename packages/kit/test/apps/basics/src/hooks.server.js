@@ -28,7 +28,7 @@ export function error_to_pojo(error) {
 	return { name, message, stack, ...custom };
 }
 
-/** @type {import('@sveltejs/kit').HandleServerError} */
+/** @type {import('@sveltejs/kit/hooks').HandleServerError} */
 export const handleError = ({ event, kind, error }) => {
 	// TODO we do this because there's no other way (that i'm aware of)
 	// to communicate errors back to the test suite. even if we could
@@ -215,7 +215,7 @@ export const handle = sequence(
 	}
 );
 
-/** @type {import('@sveltejs/kit').HandleFetch} */
+/** @type {import('@sveltejs/kit/hooks').HandleFetch} */
 export async function handleFetch({ request, fetch }) {
 	if (request.url.endsWith('/server-fetch-request.json')) {
 		request = new Request(

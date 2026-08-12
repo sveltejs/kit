@@ -1,5 +1,14 @@
-import { error, type HandleClientError, type HandleServerError } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
+import { type HandleClientError, type HandleServerError } from '@sveltejs/kit/hooks';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
+
+declare global {
+	namespace App {
+		interface Error {
+			description?: string;
+		}
+	}
+}
 
 const app_error: App.Error = { status: 500, message: 'Unexpected error' };
 
@@ -98,9 +107,14 @@ function f() {
 	error(400);
 }
 
+function g() {
+	error(400, 'Bad request', { description: 'Invalid request data' });
+}
+
 a;
 b;
 c;
 d;
 e;
 f;
+g;

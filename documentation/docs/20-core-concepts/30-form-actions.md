@@ -109,11 +109,11 @@ Each action receives a `RequestEvent` object, allowing you to read the data with
 ```js
 /// file: src/routes/login/+page.server.js
 // @filename: ambient.d.ts
-declare module '#lib/server/db';
+declare module '#lib/server/db.js';
 
 // @filename: index.js
 // ---cut---
-import * as db from '#lib/server/db';
+import * as db from '#lib/server/db.js';
 
 /** @type {import('./$types').PageServerLoad} */
 export async function load({ cookies }) {
@@ -172,12 +172,12 @@ When using `use:enhance` (or making a `fetch` request with the `accept: applicat
 ```js
 /// file: src/routes/login/+page.server.js
 // @filename: ambient.d.ts
-declare module '#lib/server/db';
+declare module '#lib/server/db.js';
 
 // @filename: index.js
 // ---cut---
 +++import { fail } from '@sveltejs/kit';+++
-import * as db from '#lib/server/db';
+import * as db from '#lib/server/db.js';
 
 /** @satisfies {import('./$types').Actions} */
 export const actions = {
@@ -236,12 +236,12 @@ Redirects (and errors) work exactly the same as in [`load`](load#Redirects):
 // @errors: 2345
 /// file: src/routes/login/+page.server.js
 // @filename: ambient.d.ts
-declare module '#lib/server/db';
+declare module '#lib/server/db.js';
 
 // @filename: index.js
 // ---cut---
 import { fail, +++redirect+++ } from '@sveltejs/kit';
-import * as db from '#lib/server/db';
+import * as db from '#lib/server/db.js';
 
 /** @satisfies {import('./$types').Actions} */
 export const actions = {
@@ -301,7 +301,7 @@ export {};
 
 // @filename: index.js
 // ---cut---
-/** @type {import('@sveltejs/kit').Handle} */
+/** @type {import('@sveltejs/kit/hooks').Handle} */
 export async function handle({ event, resolve }) {
 	event.locals.user = await getUser(event.cookies.get('sessionid'));
 	return resolve(event);

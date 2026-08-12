@@ -66,14 +66,14 @@ If your content is available in multiple languages, you should set the `lang` at
 ```js
 /// file: src/hooks.server.js
 // @filename: utils.ts
-export function get_lang(event: import('@sveltejs/kit').RequestEvent) {
+export function get_lang(event: import('$app/server').RequestEvent) {
 	return 'en';
 }
 
 // @filename: hooks.server.js
 import { get_lang } from './utils';
 // ---cut---
-/** @type {import('@sveltejs/kit').Handle} */
+/** @type {import('@sveltejs/kit/hooks').Handle} */
 export function handle({ event, resolve }) {
 	return resolve(event, {
 		transformPageChunk: ({ html }) => html.replace('%lang%', get_lang(event))

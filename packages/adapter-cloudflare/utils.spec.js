@@ -229,48 +229,46 @@ describe('_routes.json', () => {
 			{
 				getAppPath: () => 'base-path/_app',
 				config: {
-					kit: {
-						appDir: '_app',
-						paths: {
-							base: '/base-path',
-							assets: '',
-							origin: 'http://localhost',
-							relative: true
+					appDir: '_app',
+					paths: {
+						base: '/base-path',
+						assets: '',
+						origin: 'http://localhost',
+						relative: true
+					},
+					alias: {},
+					csrf: {
+						checkOrigin: true,
+						trustedOrigins: []
+					},
+					embedded: false,
+					files: {
+						src: 'src',
+						assets: 'static',
+						hooks: {
+							client: 'src/hooks.client.js',
+							server: 'src/hooks.server.js',
+							universal: 'src/hooks.js'
 						},
-						alias: {},
-						csrf: {
-							checkOrigin: true,
-							trustedOrigins: []
-						},
-						embedded: false,
-						files: {
-							src: 'src',
-							assets: 'static',
-							hooks: {
-								client: 'src/hooks.client.js',
-								server: 'src/hooks.server.js',
-								universal: 'src/hooks.js'
-							},
-							params: 'src/params',
-							routes: 'src/routes',
-							serviceWorker: 'src/service-worker.js',
-							appTemplate: 'src/app.html',
-							errorTemplate: 'src/error.html'
-						},
-						inlineStyleThreshold: 0,
-						moduleExtensions: ['.js', '.ts'],
-						csp: {
-							mode: 'auto',
-							// @ts-ignore
-							directives: {},
-							// @ts-ignore
-							reportOnly: {}
-						},
-						env: {
-							dir: '.'
-						},
-						outDir: '.svelte-kit'
-					}
+						params: 'src/params',
+						routes: 'src/routes',
+						serviceWorker: 'src/service-worker.js',
+						appTemplate: 'src/app.html',
+						errorTemplate: 'src/error.html'
+					},
+					inlineStyleThreshold: 0,
+					moduleExtensions: ['.js', '.ts'],
+					csp: {
+						mode: 'auto',
+						// @ts-ignore
+						directives: {},
+						// @ts-ignore
+						reportOnly: {}
+					},
+					env: {
+						dir: '.'
+					},
+					outDir: '.svelte-kit'
 				},
 				prerendered: {
 					paths: ['/base-path/prerendered'],
@@ -307,48 +305,46 @@ describe('_routes.json', () => {
 				},
 				getAppPath: () => 'base-path/_app',
 				config: {
-					kit: {
-						appDir: '_app',
-						paths: {
-							base: '/base-path',
-							assets: '',
-							origin: 'http://localhost',
-							relative: true
+					appDir: '_app',
+					paths: {
+						base: '/base-path',
+						assets: '',
+						origin: 'http://localhost',
+						relative: true
+					},
+					alias: {},
+					csrf: {
+						checkOrigin: true,
+						trustedOrigins: []
+					},
+					embedded: false,
+					files: {
+						src: 'src',
+						assets: 'static',
+						hooks: {
+							client: 'src/hooks.client.js',
+							server: 'src/hooks.server.js',
+							universal: 'src/hooks.js'
 						},
-						alias: {},
-						csrf: {
-							checkOrigin: true,
-							trustedOrigins: []
-						},
-						embedded: false,
-						files: {
-							src: 'src',
-							assets: 'static',
-							hooks: {
-								client: 'src/hooks.client.js',
-								server: 'src/hooks.server.js',
-								universal: 'src/hooks.js'
-							},
-							params: 'src/params',
-							routes: 'src/routes',
-							serviceWorker: 'src/service-worker.js',
-							appTemplate: 'src/app.html',
-							errorTemplate: 'src/error.html'
-						},
-						inlineStyleThreshold: 0,
-						moduleExtensions: ['.js', '.ts'],
-						csp: {
-							mode: 'auto',
-							// @ts-ignore
-							directives: {},
-							// @ts-ignore
-							reportOnly: {}
-						},
-						env: {
-							dir: '.'
-						},
-						outDir: '.svelte-kit'
-					}
+						params: 'src/params',
+						routes: 'src/routes',
+						serviceWorker: 'src/service-worker.js',
+						appTemplate: 'src/app.html',
+						errorTemplate: 'src/error.html'
+					},
+					inlineStyleThreshold: 0,
+					moduleExtensions: ['.js', '.ts'],
+					csp: {
+						mode: 'auto',
+						// @ts-ignore
+						directives: {},
+						// @ts-ignore
+						reportOnly: {}
+					},
+					env: {
+						dir: '.'
+					},
+					outDir: '.svelte-kit'
 				},
 				prerendered: {
 					paths: Array.from({ length: 100 }, (_, i) => `/base-path/blog/post/${i + 1}`),

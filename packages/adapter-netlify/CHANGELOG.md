@@ -1,5 +1,13 @@
 # @sveltejs/adapter-netlify
 
+## 7.0.0-next.8
+
+### Patch Changes
+
+- chore: bump `rolldown` to 1.2.3 ([#16745](https://github.com/sveltejs/kit/pull/16745))
+- Updated dependencies [[`1742811`](https://github.com/sveltejs/kit/commit/1742811562358caf6042bed33c60ce6427a3e831), [`1611c61`](https://github.com/sveltejs/kit/commit/1611c617a1ec1b32e10627c2815fb7e6673f3157), [`b361b81`](https://github.com/sveltejs/kit/commit/b361b815e79828a6b7404d759d0a4c3892814a4e), [`b361b81`](https://github.com/sveltejs/kit/commit/b361b815e79828a6b7404d759d0a4c3892814a4e), [`b361b81`](https://github.com/sveltejs/kit/commit/b361b815e79828a6b7404d759d0a4c3892814a4e), [`b361b81`](https://github.com/sveltejs/kit/commit/b361b815e79828a6b7404d759d0a4c3892814a4e), [`13e7b18`](https://github.com/sveltejs/kit/commit/13e7b186a94b5b8317771d2b1e795b432dcd6faf), [`529346d`](https://github.com/sveltejs/kit/commit/529346d96369f92cdd804be9c4313c598efe34b8), [`b361b81`](https://github.com/sveltejs/kit/commit/b361b815e79828a6b7404d759d0a4c3892814a4e), [`81d6319`](https://github.com/sveltejs/kit/commit/81d6319eef08a765ccd3922790a7aee16e284cc2), [`b361b81`](https://github.com/sveltejs/kit/commit/b361b815e79828a6b7404d759d0a4c3892814a4e), [`69a5bdf`](https://github.com/sveltejs/kit/commit/69a5bdf9f45810eeed2faa089c8d3206463d347e)]:
+  - @sveltejs/kit@3.0.0-next.20
+
 ## 7.0.0-next.7
 
 ### Patch Changes

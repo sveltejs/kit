@@ -1,5 +1,6 @@
 /** @import { Component } from 'svelte' */
-/** @import { RequestEvent, SSRManifest } from '@sveltejs/kit' */
+/** @import { SSRManifest } from '@sveltejs/kit' */
+/** @import { RequestEvent } from '$app/server' */
 /** @import { ActionResult } from '$app/forms' */
 /** @import { PageNodeIndexes, RequestState, RequiredResolveOptions, ServerDataNode, SSRNode, SSROptions } from 'types' */
 import { text } from '@sveltejs/kit';

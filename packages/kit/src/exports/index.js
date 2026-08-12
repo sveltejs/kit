@@ -42,11 +42,11 @@ export { VERSION } from '../version.js';
  * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
  * @param {number} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
  * @param {string} message The error message.
- * @param {{ status: number; message: string } extends App.Error ? never : Omit<App.Error, 'status' | 'message'>} properties Additional properties of the App.Error type.
+ * @param {keyof Omit<App.Error, 'status' | 'message'> extends never ? never : Omit<App.Error, 'status' | 'message'>} properties Additional properties of the App.Error type.
  * @overload
  * @param {number} status
  * @param {string} message
- * @param {{ status: number; message: string } extends App.Error ? never : Omit<App.Error, 'status' | 'message'>} properties
+ * @param {keyof Omit<App.Error, 'status' | 'message'> extends never ? never : Omit<App.Error, 'status' | 'message'>} properties
  * @return {never}
  * @throws {import('./public.js').HttpError} This error instructs SvelteKit to initiate HTTP error handling.
  * @throws {Error} If the provided status is invalid (not between 400 and 599).
@@ -273,7 +273,7 @@ export function invalid(...issues) {
 /**
  * Checks whether this is an validation error thrown by {@link invalid}.
  * @param {unknown} e The object to check.
- * @return {e is import('./public.js').ActionFailure}
+ * @return {e is import('$app/server').ValidationError}
  * @since 2.47.3
  */
 export function isValidationError(e) {

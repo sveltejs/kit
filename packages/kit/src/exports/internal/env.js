@@ -1,5 +1,5 @@
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
-/** @import { EnvVarConfig } from '@sveltejs/kit' */
+/** @import { EnvVarConfig } from '@sveltejs/kit/env' */
 
 import { stackless } from '../../utils/error.js';
 

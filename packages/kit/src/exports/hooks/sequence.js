@@ -1,4 +1,5 @@
-/** @import { Handle, RequestEvent, ResolveOptions } from '@sveltejs/kit' */
+/** @import { RequestEvent } from '$app/server' */
+/** @import { Handle, ResolveOptions } from '@sveltejs/kit/hooks' */
 import {
 	merge_tracing,
 	get_request_store,
@@ -17,7 +18,7 @@ import {
  * /// file: src/hooks.server.js
  * import { sequence } from '@sveltejs/kit/hooks';
  *
- * /// type: import('@sveltejs/kit').Handle
+ * /// type: import('@sveltejs/kit/hooks').Handle
  * async function first({ event, resolve }) {
  * 	console.log('first pre-processing');
  * 	const result = await resolve(event, {
@@ -36,7 +37,7 @@ import {
  * 	return result;
  * }
  *
- * /// type: import('@sveltejs/kit').Handle
+ * /// type: import('@sveltejs/kit/hooks').Handle
  * async function second({ event, resolve }) {
  * 	console.log('second pre-processing');
  * 	const result = await resolve(event, {
