@@ -191,6 +191,9 @@ importers:
       '@playwright/test':
         specifier: 'catalog:'
         version: 1.62.1
+      '@rolldown/pluginutils':
+        specifier: ^1.0.1
+        version: 1.0.1
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../kit
@@ -200,6 +203,9 @@ importers:
       typescript:
         specifier: catalog:typescript-native
         version: 7.0.2
+      vite:
+        specifier: 'catalog:'
+        version: 8.2.1(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0)
       vitest:
         specifier: 'catalog:'
         version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.19)(@vitest/browser-playwright@4.1.10)(jsdom@30.0.1)(vite@8.2.1(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0))
