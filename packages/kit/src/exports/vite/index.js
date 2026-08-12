@@ -192,12 +192,12 @@ let vite_plugin_svelte;
  * export default defineConfig({
  * 	plugins: [
  * 		sveltekit({
+ * 			adapter: adapter(),
  * 			compilerOptions: {
  * 				experimental: {
  * 					async: true
  * 				}
  * 			},
- * 			adapter: adapter(),
  * 			experimental: {
  * 				remoteFunctions: true
  * 			}
