@@ -42,31 +42,7 @@ const prerender_handler = validate(undefined, (input, keypath) => {
 	throw new Error(`${keypath} should be "fail", "warn", "ignore" or a custom function`);
 });
 
-const vps_config = {
-	compilerOptions: any(),
-	preprocess: any(),
-	onwarn: any(),
-
-	extensions: validate(['.svelte'], (input, keypath) => {
-		if (!Array.isArray(input) || !input.every((page) => typeof page === 'string')) {
-			throw new Error(`${keypath} must be an array of strings`);
-		}
-
-		input.forEach((extension) => {
-			if (extension[0] !== '.') {
-				throw new Error(`Each member of ${keypath} must start with '.' — saw '${extension}'`);
-			}
-
-			if (!/^(\.[a-z0-9]+)+$/i.test(extension)) {
-				throw new Error(`File extensions must be alphanumeric — saw '${extension}'`);
-			}
-		});
-
-		return input;
-	})
-};
-
-const kit_config = {
+const options = {
 	adapter: validate(undefined, (input, keypath) => {
 		if (typeof input !== 'object' || !input.adapt) {
 			const message = `The SvelteKit Vite plugin ${keypath} should be an object with an \`adapt\` method`;
@@ -108,6 +84,8 @@ const kit_config = {
 		return input;
 	}),
 
+	compilerOptions: any(),
+
 	csp: object({
 		mode: list(['auto', 'hash', 'nonce']),
 		directives,
@@ -143,6 +121,24 @@ const kit_config = {
 		},
 		true
 	),
+
+	extensions: validate(['.svelte'], (input, keypath) => {
+		if (!Array.isArray(input) || !input.every((page) => typeof page === 'string')) {
+			throw new Error(`${keypath} must be an array of strings`);
+		}
+
+		input.forEach((extension) => {
+			if (extension[0] !== '.') {
+				throw new Error(`Each member of ${keypath} must start with '.' — saw '${extension}'`);
+			}
+
+			if (!/^(\.[a-z0-9]+)+$/i.test(extension)) {
+				throw new Error(`File extensions must be alphanumeric — saw '${extension}'`);
+			}
+		});
+
+		return input;
+	}),
 
 	files: object({
 		src: string('src'),
@@ -240,6 +236,8 @@ const kit_config = {
 		relative: boolean(true)
 	}),
 
+	preprocess: any(),
+
 	prerender: object({
 		concurrency: number(1),
 		crawl: boolean(true),
@@ -303,7 +301,7 @@ const kit_config = {
 };
 
 /** @type {Validator<ValidatedConfig>} */
-export const validate_options = object({ ...vps_config, ...kit_config });
+export const validate_options = object(options, true);
 
 /**
  * @param {Validator} fn
@@ -367,7 +365,8 @@ export function object(children, allow_unknown = false) {
 		for (const key in input) {
 			if (!(key in children)) {
 				if (allow_unknown) {
-					output[key] = input[key];
+					const value = input[key];
+					if (value !== undefined) output[key] = value;
 				} else {
 					let message = `Unexpected option ${keypath}.${key}`;
 

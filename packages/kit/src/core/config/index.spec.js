@@ -541,8 +541,8 @@ test('split_config keeps Svelte-level options out of the `kit` namespace', () =>
 	expect(svelte_config.extensions).toEqual(['.svelte', '.svx']);
 	expect(svelte_config.compilerOptions).toEqual({ runes: true });
 	expect(svelte_config.preprocess).toBe(preprocess);
-	expect(svelte_config.inspector).toEqual(true);
-	expect(vite_plugin_svelte_config).toEqual({});
+	expect(svelte_config.inspector).toEqual(undefined);
+	expect(vite_plugin_svelte_config).toEqual({ inspector: true });
 });
 
 test('split_config splits the shadowed `experimental` namespace', () => {

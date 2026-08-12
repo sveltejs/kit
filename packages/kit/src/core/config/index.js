@@ -21,19 +21,17 @@ import { stackless } from '../../utils/error.js';
  * @returns {{ svelte_config: Config, vite_plugin_svelte_config: Record<string, any> }}
  */
 export function split_config(config) {
-	const { extensions, compilerOptions, preprocess, ...rest } = config;
-
 	/** @type {Config} */
-	const kit = {};
+	const svelte_config = {};
 
 	/** @type {Record<string, any>} */
 	const vite_plugin_svelte_config = {};
 
-	for (const key in rest) {
+	for (const key in config) {
 		if (key === 'experimental') {
 			// `experimental` is a namespace that both SvelteKit and vite-plugin-svelte
 			// use, so pluck out the flags SvelteKit recognises and pass the rest along
-			const experimental = /** @type {Record<string, any>} */ (rest[key]) ?? {};
+			const experimental = /** @type {Record<string, any>} */ (config[key]) ?? {};
 
 			/** @type {Record<string, any>} */
 			const kit_experimental = {};
@@ -49,21 +47,21 @@ export function split_config(config) {
 			}
 
 			if (Object.keys(kit_experimental).length > 0) {
-				kit.experimental = kit_experimental;
+				svelte_config.experimental = kit_experimental;
 			}
 			if (Object.keys(vps_experimental).length > 0) {
 				vite_plugin_svelte_config.experimental = vps_experimental;
 			}
 		} else if (kit_options.includes(key)) {
 			// @ts-expect-error - we've verified this is one of SvelteKit's own options
-			kit[key] = rest[key];
+			svelte_config[key] = config[key];
 		} else {
-			vite_plugin_svelte_config[key] = /** @type {Record<string, any>} */ (rest)[key];
+			vite_plugin_svelte_config[key] = /** @type {Record<string, any>} */ (config)[key];
 		}
 	}
 
 	return {
-		svelte_config: { extensions, compilerOptions, preprocess, ...kit },
+		svelte_config,
 		vite_plugin_svelte_config
 	};
 }
