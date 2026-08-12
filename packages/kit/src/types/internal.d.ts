@@ -32,7 +32,6 @@ import {
 import { Span } from '@opentelemetry/api';
 import { PageOptions } from '../exports/vite/static_analysis/types.js';
 import { SharedIterator } from '../utils/shared-iterator.js';
-import { Options } from '@sveltejs/vite-plugin-svelte';
 
 export interface ServerModule {
 	Server: typeof InternalServer;
