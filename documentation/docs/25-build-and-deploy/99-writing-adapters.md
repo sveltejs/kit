@@ -13,6 +13,8 @@ type AdapterSpecificOptions = any;
 
 // @filename: index.js
 // ---cut---
+import { getRequest, setResponse } from '@sveltejs/kit/node';
+
 /** @param {AdapterSpecificOptions} options */
 export default function (options) {
 	/** @type {import('@sveltejs/kit').Adapter} */
@@ -40,6 +42,15 @@ export default function (options) {
 				// Return `false if it can't, or throw a descriptive error.
 			}
 		},
+		getRequest(options) {
+			const request = getRequest(options);
+			// modify the Request object here if needed
+			return request;
+		},
+		setResponse(res, response) {
+			// handle WebSockets here, for example
+			setResponse(res, response);
+		},
 		vite: {
 			plugins: {
 				// add plugins here to integrate with Vite
@@ -53,7 +64,7 @@ export default function (options) {
 }
 ```
 
-Of these, `name` and `adapt` are required. `emulate`, `vite`, and `supports` are optional.
+Of these, `name` and `adapt` are required. `emulate`, `vite`, `getRequest`, `setResponse`, and `supports` are optional.
 
 Within the `adapt` method, there are a number of things that an adapter should do:
 
