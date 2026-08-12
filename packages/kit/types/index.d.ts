@@ -703,13 +703,9 @@ declare module '@sveltejs/kit' {
 			: T[K]; // Use the exact type for everything else
 	};
 
-	// export type ValidatedConfig = Omit<RecursiveRequired<Config>, keyof Options> &
-	// 	Options & {
-	// 		extensions: string[];
-	// 		experimental: RecursiveRequired<Config['experimental']> & Options['experimental'];
-	// 	};
-
-	type ValidatedConfig = RecursiveRequired<Config>;
+	type ValidatedConfig = RecursiveRequired<Omit<Config, 'preprocess'>> & {
+		preprocess: Config['preprocess'];
+	};
 	/**
 	 * Throws an error with a HTTP status code and an optional message.
 	 * When called during request handling, this will cause SvelteKit to
