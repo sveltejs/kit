@@ -23,12 +23,26 @@ export async function adapt(
 	vite_config,
 	explicit_env_config
 ) {
-	const { name, adapt } = config.kit.adapter;
+	const { name, adapt } = config.adapter;
 
 	console.log(styleText(['bold', 'cyan'], `\n> Using ${name}`));
 
+	let warned = false;
+
 	const builder = create_builder({
-		config,
+		config: {
+			...config,
+			get kit() {
+				if (!warned) {
+					warned = true;
+					log.warn(
+						`Reading \`config.kit\` inside adapters is deprecated — it should access configuration on the \`config\` object directly. You may need to update your adapter`
+					);
+				}
+
+				return config;
+			}
+		},
 		build_data,
 		server_metadata,
 		route_data: build_data.manifest_data.routes.filter((route) => route.page || route.endpoint),

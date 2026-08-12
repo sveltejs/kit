@@ -12,7 +12,7 @@
 			"@sveltejs/kit/hooks": ["./src/exports/hooks/public.d.ts"],
 			"@sveltejs/kit/params": ["./src/exports/params/public.d.ts"],
 			"@sveltejs/kit/remote": ["./src/exports/remote/public.d.ts"],
-			"@sveltejs/kit/vite": ["./src/exports/vite/index.js"],
+			"@sveltejs/kit/vite": ["./src/exports/vite/public.d.ts"],
 			"@sveltejs/kit/node": ["./src/exports/node/index.js"],
 			"@sveltejs/kit/internal": ["./src/exports/internal/index.js"],
 			"@sveltejs/kit/internal/server": ["./src/exports/internal/server/index.js"],

@@ -101,7 +101,7 @@ declare module "svelte/elements" {
 /**
  * Generate app types interface extension
  * @param {import('types').ManifestData} manifest_data
- * @param {import('types').ValidatedKitConfig} config
+ * @param {import('types').ValidatedConfig} config
  * @param {string} dir
  */
 function generate_app_types(manifest_data, config, dir) {
@@ -297,7 +297,7 @@ function generate_app_types(manifest_data, config, dir) {
  * Writes `node_modules/$app/types/index.d.ts`. This file contains
  * declarations for `$app/types` and `svelte/elements`, and
  * imports `env.ts` which declares `$app/env/(public|private)`
- * @param {import('types').ValidatedKitConfig} config
+ * @param {import('types').ValidatedConfig} config
  * @param {import('types').ManifestData} manifest_data
  * @param {string} root
  */

@@ -153,7 +153,7 @@ async function prerender({
 
 	const vite_config = await load_vite_config(vite_config_file);
 
-	const config = extract_svelte_config(vite_config).kit;
+	const config = extract_svelte_config(vite_config);
 
 	const prerender_origin = config.paths.origin || 'http://sveltekit-prerender';
 
@@ -284,22 +284,25 @@ async function prerender({
 		// This avoids the wall of text that happens when you prerender
 		// many pages and log each response
 		let current = false;
+		let mid_line = false;
 		const stdout_write = process.stdout.write;
 		const stderr_write = process.stderr.write;
 
-		process.stdout.write = new Proxy(stdout_write, {
+		/** @type {ProxyHandler<typeof stdout_write>} */
+		const track_output = {
 			apply(target, this_arg, args) {
-				current = false;
+				const chunk = args[0];
+				if (chunk.length > 0) {
+					current = false;
+					mid_line =
+						typeof chunk === 'string' ? !chunk.endsWith('\n') : chunk[chunk.length - 1] !== 10;
+				}
 				return Reflect.apply(target, this_arg, args);
 			}
-		});
+		};
 
-		process.stderr.write = new Proxy(stderr_write, {
-			apply(target, this_arg, args) {
-				current = false;
-				return Reflect.apply(target, this_arg, args);
-			}
-		});
+		process.stdout.write = new Proxy(stdout_write, track_output);
+		process.stderr.write = new Proxy(stderr_write, track_output);
 
 		progress = {
 			clear: () => {
@@ -312,8 +315,14 @@ async function prerender({
 			},
 
 			update: (path) => {
+				if (mid_line) {
+					// app output ended mid-line — start a fresh one rather than appending to it
+					stdout_write.call(process.stdout, '\n');
+				}
+
 				stdout_write.call(process.stdout, `crawling ${path}\n`);
 				current = true;
+				mid_line = false;
 			},
 
 			updated: 0

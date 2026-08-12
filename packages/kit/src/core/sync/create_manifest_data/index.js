@@ -74,9 +74,9 @@ export function is_app_route(route) {
  * @param {import('types').ValidatedConfig} config
  */
 export function create_assets(config) {
-	return list_files(config.kit.files.assets).map((file) => ({
+	return list_files(config.files.assets).map((file) => ({
 		file,
-		size: fs.statSync(path.resolve(config.kit.files.assets, file)).size,
+		size: fs.statSync(path.resolve(config.files.assets, file)).size,
 		type: lookup(file) || null
 	}));
 }
@@ -86,9 +86,9 @@ export function create_assets(config) {
  * @param {string} cwd
  */
 function create_hooks(config, cwd) {
-	const client = resolve_entry(config.kit.files.hooks.client);
-	const server = resolve_entry(config.kit.files.hooks.server);
-	const universal = resolve_entry(config.kit.files.hooks.universal);
+	const client = resolve_entry(config.files.hooks.client);
+	const server = resolve_entry(config.files.hooks.server);
+	const universal = resolve_entry(config.files.hooks.universal);
 
 	return {
 		client: client && posixify(path.relative(cwd, client)),
@@ -102,7 +102,7 @@ function create_hooks(config, cwd) {
  * @param {string} cwd
  */
 function resolve_params(config, cwd) {
-	const params_file = resolve_entry(config.kit.files.params);
+	const params_file = resolve_entry(config.files.params);
 	return params_file ? posixify(path.relative(cwd, params_file)) : null;
 }
 
@@ -115,15 +115,15 @@ function create_routes_and_nodes(cwd, config, fallback) {
 	/** @type {import('types').RouteData[]} */
 	let routes = [];
 
-	const routes_base = posixify(path.relative(cwd, config.kit.files.routes));
+	const routes_base = posixify(path.relative(cwd, config.files.routes));
 
-	const valid_extensions = [...config.extensions, ...config.kit.moduleExtensions];
+	const valid_extensions = [...config.extensions, ...config.moduleExtensions];
 
 	/** @type {import('types').PageNode[]} */
 	const nodes = [];
 
 	// create route data by processing files in `src/routes`
-	if (fs.existsSync(config.kit.files.routes)) {
+	if (fs.existsSync(config.files.routes)) {
 		/**
 		 * @param {number} depth
 		 * @param {string} id
@@ -280,10 +280,10 @@ function create_routes_and_nodes(cwd, config, fallback) {
 					project_relative,
 					file.name,
 					config.extensions,
-					config.kit.moduleExtensions
+					config.moduleExtensions
 				);
 
-				if (config.kit.router.type === 'hash' && item.kind === 'server') {
+				if (config.router.type === 'hash' && item.kind === 'server') {
 					throw new Error(
 						`Cannot use server-only files in an app with \`router.type === 'hash': ${project_relative}`
 					);

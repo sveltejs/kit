@@ -84,7 +84,7 @@ try {
 	/** @type {Options} */
 	const options = {
 		cwd: process.cwd(),
-		input: values.input ?? config.kit?.files?.lib ?? 'src/lib',
+		input: values.input ?? config.files?.lib ?? 'src/lib',
 		output: values.output,
 		preserve_output: values['preserve-output'],
 		tsconfig: values.tsconfig,

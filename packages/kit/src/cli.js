@@ -105,8 +105,8 @@ if (command === 'sync') {
 		const sync = await import('./core/sync/sync.js');
 		sync.all_types(sveltekit_config, vite_config.root);
 
-		const explicit_env_entry = resolve_explicit_env_entry(sveltekit_config.kit);
-		await sync.env(vite, sveltekit_config.kit, explicit_env_entry, vite_config.root, values.mode);
+		const explicit_env_entry = resolve_explicit_env_entry(sveltekit_config);
+		await sync.env(vite, sveltekit_config, explicit_env_entry, vite_config.root, values.mode);
 	} catch (error) {
 		handle_error(error);
 	} finally {

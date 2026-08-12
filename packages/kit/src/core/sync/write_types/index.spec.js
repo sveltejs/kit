@@ -20,10 +20,10 @@ function run_test(dir) {
 
 	const initial = validate_config({});
 
-	initial.kit.files.assets = path.resolve(cwd, 'static');
-	initial.kit.files.params = path.resolve(cwd, dir, 'params');
-	initial.kit.files.routes = path.resolve(cwd, dir);
-	initial.kit.outDir = path.resolve(cwd, dir, '.svelte-kit');
+	initial.files.assets = path.resolve(cwd, 'static');
+	initial.files.params = path.resolve(cwd, dir, 'params');
+	initial.files.routes = path.resolve(cwd, dir);
+	initial.outDir = path.resolve(cwd, dir, '.svelte-kit');
 
 	const root = path.join(cwd, dir);
 
@@ -33,8 +33,8 @@ function run_test(dir) {
 	});
 
 	write_all_types(initial, manifest, root);
-	write_app_types(initial.kit, manifest, root);
-	write_tsconfig(initial.kit, root);
+	write_app_types(initial, manifest, root);
+	write_tsconfig(initial, root);
 	write_env('', {}, root);
 }
 
