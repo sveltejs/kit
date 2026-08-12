@@ -163,6 +163,16 @@ const options = {
 
 	moduleExtensions: string_array(['.js', '.ts']),
 
+	kit: validate(undefined, (input) => {
+		const keys = Object.keys(input)
+			.map((key) => `\`${key}\``)
+			.join(', ');
+
+		throw new Error(
+			`SvelteKit configuration (${keys}) no longer lives inside a \`kit\` namespace. Pass it directly to the \`sveltekit(...)\` Vite plugin`
+		);
+	}),
+
 	outDir: string('.svelte-kit'),
 
 	output: object({

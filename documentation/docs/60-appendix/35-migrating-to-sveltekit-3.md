@@ -476,6 +476,7 @@ All first-party adapters now require SvelteKit 3, alongside these adapter-specif
 For adapter authors, there are some additional changes:
 
 - adapters can augment the Vite config with additional plugins
+- `builder.config.kit` no longer exists — the configuration now lives at the top level
 - `builder.createEntries` has been removed — use `builder.writeClient`, `builder.writeServer` and `builder.writePrerendered` directly
 - `builder.compress` returns a list of compressed files
 - `builder.mkdirp` and `builder.rimraf` are deprecated in favour of `node:fs` methods
