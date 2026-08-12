@@ -5,7 +5,7 @@ import { s } from '../../utils/misc.js';
 /**
  * Writes the client manifest to disk. The manifest is used to power the router. It contains the
  * list of routes and corresponding Svelte components (i.e. pages and layouts).
- * @param {import('types').ValidatedKitConfig} kit
+ * @param {import('types').ValidatedConfig} kit
  * @param {import('types').ManifestData} manifest_data
  * @param {string} output
  * @param {import('types').ServerMetadata['nodes']} [metadata] If this is omitted, we have to assume that all routes with a `+layout/page.server.js` file have a server load function

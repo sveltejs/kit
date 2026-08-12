@@ -55,6 +55,7 @@ The following options are obsolete and should be removed from your `vite.config.
 - `experimental.handleRenderingErrors` is no longer required ([details](#Error-handling-Rendering-errors-are-now-handled))
 - `experimental.instrumentation` is no longer required ([details](#Observability))
 - `experimental.tracing` is now a top level `tracing` option ([details](#Observability))
+- `vitePlugin` is removed — pass `vite-plugin-svelte` options like `inspector` directly to the plugin instead
 - `preloadStrategy` is removed — `modulepreload` is now supported everywhere and so is always used
 - `prerender.origin` is removed in favour of `paths.origin`
 - `csrf.checkOrigin` is removed in favour of `csrf.trustedOrigins`
@@ -476,6 +477,7 @@ All first-party adapters now require SvelteKit 3, alongside these adapter-specif
 For adapter authors, there are some additional changes:
 
 - adapters can augment the Vite config with additional plugins
+- `builder.config.kit` no longer exists — the configuration now lives at the top level
 - `builder.createEntries` has been removed — use `builder.writeClient`, `builder.writeServer` and `builder.writePrerendered` directly
 - `builder.compress` returns a list of compressed files
 - `builder.mkdirp` and `builder.rimraf` are deprecated in favour of `node:fs` methods

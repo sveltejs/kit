@@ -18,18 +18,16 @@ import { app_server, app_env_private } from './module_ids.js';
 
 test('transform kit.alias to resolve.alias', () => {
 	const config = validate_config({
-		kit: {
-			alias: {
-				simpleKey: 'simple/value',
-				key: 'value',
-				'key/*': 'value/*',
-				$regexChar: 'windows\\path',
-				'$regexChar/*': 'windows\\path\\*'
-			}
+		alias: {
+			simpleKey: 'simple/value',
+			key: 'value',
+			'key/*': 'value/*',
+			$regexChar: 'windows\\path',
+			'$regexChar/*': 'windows\\path\\*'
 		}
 	});
 
-	const aliases = get_config_aliases(config.kit, '.');
+	const aliases = get_config_aliases(config, '.');
 
 	const transformed = aliases.map((entry) => {
 		const replacement = posixify(path.relative('.', entry.replacement));
