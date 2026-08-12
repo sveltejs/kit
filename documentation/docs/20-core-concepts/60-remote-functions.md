@@ -296,7 +296,7 @@ If you need direct, imperative access to the underlying stream of values (rather
 
 ```js
 // @filename: time.remote.ts
-import { RemoteLiveQueryFunction } from '$app/server';
+import type { RemoteLiveQueryFunction } from '@sveltejs/kit/remote';
 export declare const getTime: RemoteLiveQueryFunction<undefined, Date>;
 // @errors: 2304
 // @filename: index.js
@@ -1057,7 +1057,7 @@ Unfortunately, life isn't always as simple as the preceding example. The server 
 SvelteKit makes this easy by allowing the client to _request_ that the server updates specific data using `submit().updates` (for `form`) or `myCommand().updates` (for `command`):
 
 ```ts
-import type { RemoteQueryUpdate, RemoteQuery } from '$app/server';
+import type { RemoteQueryUpdate, RemoteQuery } from '@sveltejs/kit/remote';
 interface Post {}
 declare function submit(): Promise<any> & {
 	updates(...updates: RemoteQueryUpdate[]): Promise<any>;
@@ -1112,7 +1112,8 @@ export const createPost = form(
 Additionally, `requested` allows a simple shorthand when all you want to do is refresh the requested query instances:
 
 ```ts
-import { requested, type RemoteQueryFunction } from '$app/server';
+import { requested } from '$app/server';
+import type { RemoteQueryFunction } from '@sveltejs/kit/remote';
 declare const getPosts: RemoteQueryFunction<any, any>;
 // ---cut---
 // this is the same as looping over the result and calling `void query.refresh()`.

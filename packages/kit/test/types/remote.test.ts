@@ -1,9 +1,5 @@
-import {
-	query,
-	prerender,
-	command,
-	form,
-	requested,
+import { query, prerender, command, form, requested } from '$app/server';
+import type {
 	RemoteForm,
 	RemoteFormEnhanceCallback,
 	RemoteFormEnhanceInstance,
@@ -12,7 +8,7 @@ import {
 	RemoteLiveQueryFunction,
 	RemotePrerenderFunction,
 	RemoteQueryFunction
-} from '$app/server';
+} from '@sveltejs/kit/remote';
 import { StandardSchemaV1 } from '@standard-schema/spec';
 import { invalid } from '@sveltejs/kit';
 

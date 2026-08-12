@@ -9,8 +9,9 @@ import {
 	SSRManifest,
 	Emulator
 } from '@sveltejs/kit';
+import { RemoteFormIssue, RemoteQuery, RemoteLiveQuery } from '@sveltejs/kit/remote';
 import { Config } from '@sveltejs/kit/vite';
-import { RemoteFormIssue, RemoteQuery, RemoteLiveQuery, RequestEvent } from '$app/server';
+import { RequestEvent } from '$app/server';
 import {
 	ClientInit,
 	Handle,
