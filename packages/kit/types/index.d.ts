@@ -5,7 +5,6 @@ declare module '@sveltejs/kit' {
 	import type { Plugin } from 'vite';
 	import type { RouteId as AppRouteId, LayoutParams as AppLayoutParams } from '$app/types';
 	import type { Config } from '@sveltejs/kit/vite';
-	import type { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
 	import type { StandardSchemaV1 } from '@standard-schema/spec';
 	// @ts-ignore this is an optional peer dependency so could be missing. Written like this so dts-buddy preserves the ts-ignore
 	type Span = import('@opentelemetry/api').Span;
@@ -897,9 +896,13 @@ declare module '@sveltejs/kit' {
 			: T[K]; // Use the exact type for everything else
 	};
 
-	type ValidatedConfig = Omit<RecursiveRequired<Config>, keyof SvelteConfig> & SvelteConfig & {
-		extensions: string[];
-	};
+	// export type ValidatedConfig = Omit<RecursiveRequired<Config>, keyof Options> &
+	// 	Options & {
+	// 		extensions: string[];
+	// 		experimental: RecursiveRequired<Config['experimental']> & Options['experimental'];
+	// 	};
+
+	type ValidatedConfig = RecursiveRequired<Config>;
 	/**
 	 * Throws an error with a HTTP status code and an optional message.
 	 * When called during request handling, this will cause SvelteKit to
@@ -1493,12 +1496,12 @@ declare module '@sveltejs/kit/params' {
 
 declare module '@sveltejs/kit/vite' {
 	import type { Adapter } from '@sveltejs/kit';
-	import type { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
+	import type { Options } from '@sveltejs/vite-plugin-svelte';
 	import type { Plugin } from 'vite';
 	/**
 	 * An extension of [`vite-plugin-svelte`'s options](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/config.md#svelte-options).
 	 */
-	export interface Config extends SvelteConfig {
+	export type Config = Omit<Options, 'experimental'> & {
 		/**
 		 * Your [adapter](https://svelte.dev/docs/kit/adapters) is run when executing `vite build`. It determines how the output is converted for different platforms.
 		 * @default undefined
@@ -1619,7 +1622,7 @@ declare module '@sveltejs/kit/vite' {
 			dir?: string;
 		};
 		/** Experimental features. Here be dragons. These are not subject to semantic versioning, so breaking changes or removal can happen in any release. */
-		experimental?: {
+		experimental?: Options['experimental'] & {
 			/**
 			 * Whether to enable the experimental remote functions feature. This feature is not yet stable and may be changed or removed at any time.
 			 * @default false
@@ -2065,7 +2068,7 @@ declare module '@sveltejs/kit/vite' {
 			 */
 			pollInterval?: number;
 		};
-	}
+	};
 	/**
 	 * Returns the SvelteKit Vite plugins.
 	 * Any options that don't belong to SvelteKit are passed through to `vite-plugin-svelte`.
