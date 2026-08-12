@@ -525,6 +525,10 @@ export default defineConfig({
 });
 ```
 
+### Remote function types moved to `@sveltejs/kit/remote`
+
+Types describing remote functions, such as `RemoteQuery`, `RemoteForm` and `RemoteCommand`, now live in `@sveltejs/kit/remote` rather than `@sveltejs/kit`. The `isValidationError` function has also moved there.
+
 ### Remote module filenames
 
 As with server-only modules, a `remote` segment in a filename designates a remote module — `stuff.remote.ts`, `stuff.remote.test.ts` and `remote.ts` are all remote modules.

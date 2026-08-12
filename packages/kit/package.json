@@ -150,6 +150,10 @@
 			"types": "./types/index.d.ts",
 			"import": "./src/exports/params/index.js"
 		},
+		"./remote": {
+			"types": "./types/index.d.ts",
+			"import": "./src/exports/remote/index.js"
+		},
 		"./vite": {
 			"types": "./types/index.d.ts",
 			"import": "./src/exports/vite/index.js"

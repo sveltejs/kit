@@ -11,7 +11,8 @@ import {
 	SSRManifest,
 	Emulator
 } from '@sveltejs/kit';
-import { RemoteFormIssue, RemoteQuery, RemoteLiveQuery, RequestEvent } from '$app/server';
+import { RemoteFormIssue, RemoteQuery, RemoteLiveQuery } from '@sveltejs/kit/remote';
+import { RequestEvent } from '$app/server';
 import {
 	ClientInit,
 	Handle,

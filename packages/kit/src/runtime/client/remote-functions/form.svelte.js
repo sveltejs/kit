@@ -1,5 +1,5 @@
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
-/** @import { RemoteFormInput, RemoteForm, RemoteQueryUpdate } from '$app/server' */
+/** @import { RemoteFormInput, RemoteForm, RemoteQueryUpdate } from '@sveltejs/kit/remote' */
 /** @import { InternalRemoteFormIssue } from 'types' */
 import { app_dir, base } from '#app/paths';
 import { DEV } from 'esm-env';

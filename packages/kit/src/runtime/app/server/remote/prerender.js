@@ -1,4 +1,4 @@
-/** @import { RemoteResource, RemotePrerenderFunction } from '$app/server' */
+/** @import { RemoteResource, RemotePrerenderFunction } from '@sveltejs/kit/remote' */
 /** @import { RemoteFunctionResponse, RemotePrerenderInputsGenerator, RemotePrerenderInternals, MaybePromise } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { json } from '@sveltejs/kit';

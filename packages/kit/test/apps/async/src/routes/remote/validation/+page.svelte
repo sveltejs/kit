@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { isHttpError } from '@sveltejs/kit';
-	import type { RemoteLiveQuery } from '$app/server';
+	import type { RemoteLiveQuery } from '@sveltejs/kit/remote';
 	import {
 		validated_query_no_args,
 		validated_query_with_arg,
