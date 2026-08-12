@@ -9,6 +9,7 @@ minimumReleaseAgeExclude:
   - zimmerframe
   - prettier-plugin-svelte
   - svelte-check
+  - svelte2tsx
   - esm-env
   - vite-imagetools
   - imagetools-core
