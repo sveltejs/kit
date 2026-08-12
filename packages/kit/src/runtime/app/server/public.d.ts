@@ -305,7 +305,7 @@ export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
 	 * Useful when you have multiple forms that use the same remote form action, for example in a loop.
 	 * ```svelte
 	 * {#each todos as todo}
-	 *	{const todoForm = updateTodo.for(todo.id)}
+	 *	{const todoForm = $derived(updateTodo.for(todo.id))}
 	 *	<form {...todoForm}>
 	 *		{#if todoForm.result?.invalid}<p>Invalid data</p>{/if}
 	 *		...
