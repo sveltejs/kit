@@ -7,12 +7,7 @@ import path from 'node:path';
 import process from 'node:process';
 import * as url from 'node:url';
 import { styleText } from 'node:util';
-import {
-	validate_kit_options,
-	kit_options,
-	kit_experimental_options,
-	validate_svelte_options
-} from './options.js';
+import { validate_options, kit_options, kit_experimental_options } from './options.js';
 import { resolve_entry } from '../../utils/filesystem.js';
 import { import_peer } from '../../utils/import.js';
 import { stackless } from '../../utils/error.js';
@@ -183,10 +178,8 @@ export function validate_config(config) {
 			);
 		}
 
-		const validated = /** @type {ValidatedConfig} */ ({
-			...validate_svelte_options(config, 'config'),
-			...validate_kit_options(config, 'config')
-		});
+		const validated = validate_options(config, 'config');
+		console.log(validated);
 		const files = validated.files;
 
 		files.hooks.client ??= path.join(files.src, 'hooks.client');
