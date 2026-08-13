@@ -210,47 +210,23 @@ export async function deserialize_binary_form(request, form_id) {
 	 * @returns {Promise<Uint8Array | null>}
 	 */
 	async function get_buffer(offset, length) {
-		/** @type {Uint8Array} */
-		let start_chunk;
-		let chunk_start = 0;
-		/** @type {number} */
-		let chunk_index;
-		for (chunk_index = 0; ; chunk_index++) {
-			const chunk = await get_chunk(chunk_index);
-			if (!chunk) return null;
+		/** @type {Uint8Array<ArrayBuffer>[]} */
+		const parts = [];
+		let total = 0;
+		for await (const part of read_range(get_chunk, offset, length)) {
+			parts.push(part);
+			total += part.byteLength;
+		}
+		if (total < length || parts.length === 0) return null;
+		// If the buffer is completely contained in one chunk, return the subarray as-is
+		if (parts.length === 1) return parts[0];
 
-			const chunk_end = chunk_start + chunk.byteLength;
-			// If this chunk contains the target offset
-			if (offset >= chunk_start && offset < chunk_end) {
-				start_chunk = chunk;
-				break;
-			}
-			chunk_start = chunk_end;
-		}
-		// If the buffer is completely contained in one chunk, do a subarray
-		if (offset + length <= chunk_start + start_chunk.byteLength) {
-			return start_chunk.subarray(offset - chunk_start, offset + length - chunk_start);
-		}
-		// Otherwise, copy the data into a new buffer
-		const chunks = [start_chunk.subarray(offset - chunk_start)];
-		let cursor = start_chunk.byteLength - offset + chunk_start;
-		while (cursor < length) {
-			chunk_index++;
-			let chunk = await get_chunk(chunk_index);
-			if (!chunk) return null;
-			if (chunk.byteLength > length - cursor) {
-				chunk = chunk.subarray(0, length - cursor);
-			}
-			chunks.push(chunk);
-			cursor += chunk.byteLength;
-		}
 		const buffer = new Uint8Array(length);
-		cursor = 0;
-		for (const chunk of chunks) {
-			buffer.set(chunk, cursor);
-			cursor += chunk.byteLength;
+		let cursor = 0;
+		for (const part of parts) {
+			buffer.set(part, cursor);
+			cursor += part.byteLength;
 		}
-
 		return buffer;
 	}
 
@@ -366,6 +342,32 @@ function deserialize_error(message) {
 	return new SvelteKitError(400, 'Bad Request', `Could not deserialize binary form: ${message}`);
 }
 
+/**
+ * Yields the chunks that make up the byte range `[offset, offset + length)`,
+ * trimmed to its boundaries. Ends early if the underlying data runs out.
+ * @param {(index: number) => Promise<Uint8Array<ArrayBuffer> | undefined>} get_chunk
+ * @param {number} offset
+ * @param {number} length
+ * @returns {AsyncGenerator<Uint8Array<ArrayBuffer>, void, void>}
+ */
+async function* read_range(get_chunk, offset, length) {
+	let chunk_start = 0;
+	for (let index = 0; ; index++) {
+		const chunk = await get_chunk(index);
+		if (!chunk) return;
+
+		const chunk_end = chunk_start + chunk.byteLength;
+		if (chunk_end > offset) {
+			yield chunk.subarray(
+				Math.max(0, offset - chunk_start),
+				Math.min(chunk.byteLength, offset + length - chunk_start)
+			);
+			if (offset + length <= chunk_end) return;
+		}
+		chunk_start = chunk_end;
+	}
+}
+
 /** @implements {File} */
 class LazyFile {
 	/** @type {(index: number) => Promise<Uint8Array<ArrayBuffer> | undefined>} */
@@ -436,49 +438,21 @@ class LazyFile {
 		return file;
 	}
 	stream() {
+		const range = read_range(this.#get_chunk, this.#offset, this.size);
 		let cursor = 0;
-		let chunk_index = 0;
 		return new ReadableStream({
-			start: async (controller) => {
-				let chunk_start = 0;
-				/** @type {Uint8Array} */
-				let start_chunk;
-				for (chunk_index = 0; ; chunk_index++) {
-					const chunk = await this.#get_chunk(chunk_index);
-					if (!chunk) return null;
-
-					const chunk_end = chunk_start + chunk.byteLength;
-					// If this chunk contains the target offset
-					if (this.#offset >= chunk_start && this.#offset < chunk_end) {
-						start_chunk = chunk;
-						break;
-					}
-					chunk_start = chunk_end;
-				}
-				// If the buffer is completely contained in one chunk, do a subarray
-				if (this.#offset + this.size <= chunk_start + start_chunk.byteLength) {
-					controller.enqueue(
-						start_chunk.subarray(this.#offset - chunk_start, this.#offset + this.size - chunk_start)
-					);
-					controller.close();
-				} else {
-					controller.enqueue(start_chunk.subarray(this.#offset - chunk_start));
-					cursor = start_chunk.byteLength - this.#offset + chunk_start;
-				}
-			},
 			pull: async (controller) => {
-				chunk_index++;
-				let chunk = await this.#get_chunk(chunk_index);
-				if (!chunk) {
-					controller.error('incomplete file data');
-					controller.close();
+				const { value, done } = await range.next();
+				if (done) {
+					if (cursor < this.size) {
+						controller.error('incomplete file data');
+					} else {
+						controller.close();
+					}
 					return;
 				}
-				if (chunk.byteLength > this.size - cursor) {
-					chunk = chunk.subarray(0, this.size - cursor);
-				}
-				controller.enqueue(chunk);
-				cursor += chunk.byteLength;
+				cursor += value.byteLength;
+				controller.enqueue(value);
 				if (cursor >= this.size) {
 					controller.close();
 				}
