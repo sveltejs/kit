@@ -62,7 +62,7 @@ import { read_ndjson } from './ndjson.js';
 import Root from '../components/root.svelte';
 import { Props, RenderNode } from '../props.svelte.js';
 import { init_transport, parse, stringify } from '#app/internal/transport';
-import { build_error_chain } from '../error-chain.js';
+import { build_error_chain, nearest_error_pages } from '../error-chain.js';
 
 /**
  * @typedef {{
@@ -1646,24 +1646,20 @@ async function load_route({ id, invalidating, url, params, route, preload, actio
  * @returns {Promise<{idx: number; node: import('./types.js').BranchNode} | undefined>}
  */
 async function load_nearest_error_page(i, branch, errors) {
-	while (i--) {
-		if (errors[i]) {
-			let j = i;
-			while (!branch[j]) j -= 1;
-			try {
-				return {
-					idx: j + 1,
-					node: {
-						node: await /** @type {import('types').CSRPageNodeLoader } */ (errors[i])(),
-						loader: /** @type {import('types').CSRPageNodeLoader } */ (errors[i]),
-						data: {},
-						server: null,
-						universal: null
-					}
-				};
-			} catch {
-				continue;
-			}
+	for (const { error, idx } of nearest_error_pages(i, branch, errors)) {
+		try {
+			return {
+				idx,
+				node: {
+					node: await error(),
+					loader: error,
+					data: {},
+					server: null,
+					universal: null
+				}
+			};
+		} catch {
+			continue;
 		}
 	}
 }
