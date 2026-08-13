@@ -1,5 +1,5 @@
 /** @import { RequestEvent, SSRManifest } from '@sveltejs/kit' */
-/** @import { RemoteForm } from '@sveltejs/kit/remote' */
+/** @import { RemoteForm } from '$app/server' */
 /** @import { ActionResult } from '$app/forms' */
 /** @import { RemoteFormInternals, RemoteFunctionData, RemoteFunctionResponse, RemoteInternals, RequestState, SSROptions } from 'types' */
 

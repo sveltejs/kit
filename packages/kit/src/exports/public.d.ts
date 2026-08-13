@@ -16,6 +16,7 @@ import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from 'types';
 import { Plugin } from 'vite';
 import { RouteId as AppRouteId, LayoutParams as AppLayoutParams } from '$app/types';
 import { ParamMatcher } from '@sveltejs/kit/params';
+import { StandardSchemaV1 } from '@standard-schema/spec';
 
 export { PrerenderOption } from '../types/private.js';
 
@@ -97,6 +98,14 @@ export interface ActionFailure<T = undefined> {
 	status: number;
 	data: T;
 	[uniqueSymbol]: true; // necessary or else UnpackValidationError could wrongly unpack objects with the same shape as ActionFailure
+}
+
+/**
+ * A validation error thrown by `invalid`.
+ */
+export interface ValidationError {
+	/** The validation issues */
+	issues: StandardSchemaV1.Issue[];
 }
 
 type UnpackValidationError<T> =

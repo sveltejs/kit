@@ -287,9 +287,9 @@ Types like `EnvVarConfig`, used with [`defineEnvVars`](@sveltejs-kit-env#defineE
 
 Types like `Handle`, which defines the type of your [`handle`](hooks#handle) hook, now live in `@sveltejs/kit/hooks`.
 
-### Remote function types moved to `@sveltejs/kit/remote`
+### Remote function types moved to `$app/server`
 
-Types describing remote functions, such as `RemoteQuery`, `RemoteForm` and `RemoteCommand`, now live in `@sveltejs/kit/remote`. The `isValidationError` function has also moved there.
+Types describing remote functions, such as `RemoteQuery`, `RemoteForm` and `RemoteCommand`, now live in `$app/server` alongside the functions themselves.
 
 ## `@sveltejs/kit/hooks`
 
