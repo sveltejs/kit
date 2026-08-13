@@ -256,13 +256,13 @@ async function prerender({
 		return file;
 	}
 
-	const files = new Set(walk(`${out}/client`).map(posixify));
+	const files = new Set(walk(`${out}/client`));
 	files.add(`${config.appDir}/env.js`);
 
 	const immutable = `${config.appDir}/immutable`;
 	if (existsSync(`${out}/server/${immutable}`)) {
 		for (const file of walk(`${out}/server/${immutable}`)) {
-			files.add(posixify(`${config.appDir}/immutable/${file}`));
+			files.add(`${config.appDir}/immutable/${file}`);
 		}
 	}
 
