@@ -8,4 +8,4 @@ title: @sveltejs/kit
 
 The following are referenced by the public types documented above, but cannot be imported directly:
 
-> TYPES: Private types
+> TYPES: Private types {depth=3}
