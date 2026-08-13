@@ -81,6 +81,40 @@ test('computes ttl using cache-control and age headers', () => {
 	);
 });
 
+test('hashes string request bodies', () => {
+	const response_body = '';
+	assert.equal(
+		serialize_data(
+			{
+				url: 'foo',
+				method: 'GET',
+				request_body: 'the body',
+				response_body,
+				response: new Response(response_body)
+			},
+			() => false
+		),
+		'<script type="application/json" data-sveltekit-fetched data-url="foo" data-hash="1e82ux8">{"status":200,"statusText":"","headers":{},"body":""}</script>'
+	);
+});
+
+test('excludes request bodies the client cannot hash identically', () => {
+	const response_body = '';
+	assert.equal(
+		serialize_data(
+			{
+				url: 'foo',
+				method: 'GET',
+				request_body: new URLSearchParams({ key: 'value' }),
+				response_body,
+				response: new Response(response_body)
+			},
+			() => false
+		),
+		'<script type="application/json" data-sveltekit-fetched data-url="foo">{"status":200,"statusText":"","headers":{},"body":""}</script>'
+	);
+});
+
 test("doesn't compute ttl when vary * header is present", () => {
 	const raw = 'an "attr" & a \ud800';
 	const escaped = 'an &quot;attr&quot; &amp; a &#55296;';

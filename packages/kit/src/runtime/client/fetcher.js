@@ -1,6 +1,6 @@
 import { BROWSER, DEV } from 'esm-env';
 import { noop } from '../../utils/functions.js';
-import { hash } from '../../utils/hash.js';
+import { fetch_cache_url, fetch_request_hash } from '../shared.js';
 import { base64_decode } from '../utils.js';
 
 let loading = 0;
@@ -157,10 +157,10 @@ export function dev_fetch(resource, opts) {
  * @param {RequestInfo | URL} input
  */
 function requested_url(input) {
-	const resolved = new URL(input instanceof Request ? input.url : input, location.href);
-	return resolved.origin === location.origin
-		? resolved.href.slice(location.origin.length)
-		: resolved.href;
+	return fetch_cache_url(
+		new URL(input instanceof Request ? input.url : input, location.href),
+		location
+	);
 }
 
 /**
@@ -173,19 +173,10 @@ function build_selector(resource, opts) {
 
 	let selector = `script[data-sveltekit-fetched][data-url=${url}]`;
 
-	if (opts?.headers || opts?.body) {
-		/** @type {import('types').StrictBody[]} */
-		const values = [];
+	const request_hash = fetch_request_hash(opts?.headers, opts?.body);
 
-		if (opts.headers) {
-			values.push([...new Headers(opts.headers)].join(','));
-		}
-
-		if (opts.body && (typeof opts.body === 'string' || ArrayBuffer.isView(opts.body))) {
-			values.push(opts.body);
-		}
-
-		selector += `[data-hash="${hash(...values)}"]`;
+	if (request_hash) {
+		selector += `[data-hash="${request_hash}"]`;
 	}
 
 	return selector;

@@ -1,7 +1,7 @@
 import { DEV } from 'esm-env';
 import { noop } from '../../../utils/functions.js';
 import { disable_search, make_trackable } from '../../../utils/url.js';
-import { validate_depends, validate_load_response } from '../../shared.js';
+import { fetch_cache_url, validate_depends, validate_load_response } from '../../shared.js';
 import { with_request_store, merge_tracing } from '@sveltejs/kit/internal/server';
 import { record_span } from '../../telemetry/record_span.js';
 import { base64_encode } from '../../utils.js';
@@ -335,13 +335,12 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 					}
 
 					fetched.push({
-						url: same_origin ? url.href.slice(event.url.origin.length) : url.href,
+						url: fetch_cache_url(url, event.url),
 						method: event.request.method,
-						request_body: /** @type {string | ArrayBufferView | undefined} */ (
+						request_body:
 							input instanceof Request && cloned_body
 								? await stream_to_string(cloned_body)
-								: init?.body
-						),
+								: init?.body,
 						request_headers: cloned_headers,
 						response_body: body,
 						response,

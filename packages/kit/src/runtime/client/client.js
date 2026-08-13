@@ -38,6 +38,7 @@ import {
 	INVALIDATED_PARAM,
 	TRAILING_SLASH_PARAM,
 	create_remote_key,
+	fetch_cache_url,
 	validate_depends,
 	validate_load_response
 } from '../shared.js';
@@ -1074,10 +1075,8 @@ function resolve_fetch_url(input, init, url) {
 	// we must fixup relative urls so they are resolved from the target page
 	const resolved = new URL(input instanceof Request ? input.url : input, url);
 
-	// match the server's serialization of `fetched.url` (see load_data.js): a path for same-origin
-	// urls, so prerendered pages can be served from any origin, the normalized href otherwise
-	const requested =
-		resolved.origin === url.origin ? resolved.href.slice(url.origin.length) : resolved.href;
+	// match the url under which the server serialized the response
+	const requested = fetch_cache_url(resolved, url);
 
 	const promise = started
 		? subsequent_fetch(requested, resolved.href, init)

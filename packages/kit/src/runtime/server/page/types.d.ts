@@ -11,7 +11,7 @@ import { Csp } from './csp.js';
 export interface Fetched {
 	url: string;
 	method: string;
-	request_body?: string | ArrayBufferView | null;
+	request_body?: BodyInit | null;
 	request_headers?: HeadersInit | undefined;
 	response_body: string | undefined;
 	response: Response;

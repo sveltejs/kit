@@ -1,6 +1,41 @@
 /** @import { Transport } from '@sveltejs/kit' */
 import * as devalue from 'devalue';
+import { hash } from '../utils/hash.js';
 import { base64_decode, base64_encode, text_encoder } from './utils.js';
+
+/**
+ * The url under which a `load` `fetch` response is serialized during SSR and found
+ * again by the client: a path for same-origin urls, so prerendered pages can be
+ * served from any origin, the normalized href otherwise
+ * @param {URL} url
+ * @param {{ origin: string }} base the page url
+ */
+export function fetch_cache_url(url, base) {
+	return url.origin === base.origin ? url.href.slice(base.origin.length) : url.href;
+}
+
+/**
+ * Hash of the request headers and body that distinguishes multiple `load` `fetch`es
+ * to the same url. Bodies that can't be hashed identically on the server and in the
+ * client (streams, `FormData`, ...) are excluded on both sides.
+ * @param {HeadersInit | undefined} headers
+ * @param {unknown} body
+ * @returns {string | null}
+ */
+export function fetch_request_hash(headers, body) {
+	/** @type {import('types').StrictBody[]} */
+	const values = [];
+
+	if (headers) {
+		values.push([...new Headers(headers)].join(','));
+	}
+
+	if (body && (typeof body === 'string' || ArrayBuffer.isView(body))) {
+		values.push(body);
+	}
+
+	return values.length > 0 ? hash(...values) : null;
+}
 
 /**
  * @param {string} route_id
