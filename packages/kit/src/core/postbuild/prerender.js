@@ -1,7 +1,6 @@
 import process from 'node:process';
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { clearLine, moveCursor } from 'node:readline';
 import { pathToFileURL } from 'node:url';
 import { walk } from '../../utils/filesystem.js';
 import { posixify } from '../../utils/os.js';
@@ -283,26 +282,31 @@ async function prerender({
 		// currently requesting, then clearing the line once the response comes in.
 		// This avoids the wall of text that happens when you prerender
 		// many pages and log each response
-		let current = false;
-		let mid_line = false;
-		const stdout_write = process.stdout.write;
-		const stderr_write = process.stderr.write;
+		const { stdout, stderr } = process;
 
-		/** @type {ProxyHandler<typeof stdout_write>} */
-		const track_output = {
+		let current = false;
+		let needs_newline = true;
+
+		const write = stdout.write;
+
+		/** @param {string} value */
+		const print = (value) => write.call(stdout, value);
+
+		/** @type {ProxyHandler<typeof stdout.write>} */
+		const intercept = {
 			apply(target, this_arg, args) {
 				const chunk = args[0];
 				if (chunk.length > 0) {
 					current = false;
-					mid_line =
+					needs_newline =
 						typeof chunk === 'string' ? !chunk.endsWith('\n') : chunk[chunk.length - 1] !== 10;
 				}
 				return Reflect.apply(target, this_arg, args);
 			}
 		};
 
-		process.stdout.write = new Proxy(stdout_write, track_output);
-		process.stderr.write = new Proxy(stderr_write, track_output);
+		stdout.write = new Proxy(stdout.write, intercept);
+		stderr.write = new Proxy(stderr.write, intercept);
 
 		progress = {
 			clear: () => {
@@ -310,25 +314,21 @@ async function prerender({
 				// the previous progress log, because that will corrupt things
 				if (!current) return;
 
-				moveCursor(process.stdout, 0, -1);
-				clearLine(process.stdout, 0);
+				print('\x1B[1A'); // move cursor to start of progress update
+				print('\x1B[2K'); // clear current line
 			},
 
 			update: (path) => {
-				if (mid_line) {
-					// app output ended mid-line — start a fresh one rather than appending to it
-					stdout_write.call(process.stdout, '\n');
-				}
+				// if we're in the middle of a line, start a new one
+				if (needs_newline) print('\n');
 
-				stdout_write.call(process.stdout, `crawling ${path}\n`);
+				print(`crawling ${path}\n`);
 				current = true;
-				mid_line = false;
+				needs_newline = false;
 			},
 
 			updated: 0
 		};
-
-		console.log('');
 	}
 
 	/** @type {Set<string>} */
