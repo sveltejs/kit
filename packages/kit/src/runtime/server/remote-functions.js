@@ -15,6 +15,7 @@ import { normalize_error } from '../../utils/error.js';
 import { check_incorrect_fail_use, get_action_location } from './page/actions.js';
 import { DEV } from 'esm-env';
 import { deserialize_binary_form } from '../form-utils.js';
+import { text_encoder } from '../utils.js';
 import { with_version_header } from './utils.js';
 
 /**
@@ -99,8 +100,6 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 
 				const generator = internals.run(live_event, state, parse_remote_arg(payload));
 
-				const encoder = new TextEncoder();
-
 				/** @type {ReturnType<typeof setTimeout> | undefined} */
 				let keep_alive;
 
@@ -117,7 +116,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 						/** @param {string} data */
 						write(data) {
 							if (!open) return;
-							controller.enqueue(encoder.encode(data));
+							controller.enqueue(text_encoder.encode(data));
 							schedule_keep_alive();
 						},
 						close() {
