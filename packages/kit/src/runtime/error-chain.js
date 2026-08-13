@@ -31,3 +31,24 @@ export function build_error_chain(branch, errors, load) {
 	// eslint-disable-next-line @typescript-eslint/await-thenable
 	return Promise.all(chain);
 }
+
+/**
+ * Walks up from the node at index `i` through the `+error.svelte` pages declared strictly
+ * above it, nearest first. Yields each candidate with the branch depth it attaches at,
+ * rewound past empty branch slots, so callers can skip candidates that fail to load.
+ * @template T
+ * @param {number} i
+ * @param {Array<unknown>} branch
+ * @param {Array<T | undefined | null>} errors the error page declared at each depth, if any
+ * @returns {Generator<{ error: T; idx: number }>}
+ */
+export function* nearest_error_pages(i, branch, errors) {
+	while (i--) {
+		const error = errors[i];
+		if (error != null) {
+			let j = i;
+			while (!branch[j]) j -= 1;
+			yield { error, idx: j + 1 };
+		}
+	}
+}
