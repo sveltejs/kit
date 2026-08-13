@@ -116,12 +116,13 @@ function get_raw_body(req, body_size_limit) {
 /**
  * @param {{
  *   request: import('http').IncomingMessage;
+ *   response?: import('http').ServerResponse;
  *   base: string;
  *   bodySizeLimit?: number;
  * }} options
  * @returns {Request}
  */
-export function getRequest({ request, base, bodySizeLimit }) {
+export function getRequest({ request, response, base, bodySizeLimit }) {
 	let headers = /** @type {Record<string, string>} */ (request.headers);
 	if (request.httpVersionMajor >= 2) {
 		// the Request constructor rejects headers with ':' in the name
@@ -140,6 +141,15 @@ export function getRequest({ request, base, bodySizeLimit }) {
 
 	request.once('close', () => {
 		if (request.readableAborted) {
+			controller.abort();
+		}
+	});
+
+	// `readableAborted` stays false once the request has been fully read (or drained),
+	// so a client disconnect must also be detected on the response side. `writableEnded`
+	// rather than `writableFinished` because HTTP/2 marks cancelled streams as finished
+	response?.once('close', () => {
+		if (!response.writableEnded) {
 			controller.abort();
 		}
 	});

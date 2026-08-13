@@ -593,7 +593,8 @@ export async function dev(
 
 				const request = getRequest({
 					base,
-					request: req
+					request: req,
+					response: res
 				});
 
 				if (manifest_error) {

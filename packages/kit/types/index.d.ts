@@ -1418,8 +1418,9 @@ declare module '@sveltejs/kit/hooks' {
 }
 
 declare module '@sveltejs/kit/node' {
-	export function getRequest({ request, base, bodySizeLimit }: {
+	export function getRequest({ request, response, base, bodySizeLimit }: {
 		request: import("http").IncomingMessage;
+		response?: import("http").ServerResponse;
 		base: string;
 		bodySizeLimit?: number;
 	}): Request;
