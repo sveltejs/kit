@@ -4,13 +4,13 @@
 
 ### Patch Changes
 
-- fix: avoid eagerly reading `$app/state` dependencies during module initialization
+- fix: avoid eagerly reading `$app/state` dependencies during module initialization (b61018d0526e827d1ef8cf8e21ef62b92230ae3d)
 
 ## 2.70.2
 
 ### Patch Changes
 
-- fix: prevent quadratic backtracking in `Accept` header content negotiation
+- fix: prevent quadratic backtracking in `Accept` header content negotiation (82712fc02c24b1dcf5b25d7a52129cd8455f04f5)
 
 ## 2.70.1
 
