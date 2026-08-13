@@ -103,8 +103,9 @@ function create_response(req) {
 /**
  * @param {Record<string, string>} [headers]
  * @param {import('stream').PassThrough} [stream]
+ * @param {import('http').ServerResponse} [response]
  */
-function setup_post_request(headers = {}, stream) {
+function setup_post_request(headers = {}, stream, response) {
 	const req = stream ?? new PassThrough();
 	const incoming = /** @type {import('http').IncomingMessage} */ (/** @type {unknown} */ (req));
 	incoming.headers = {
@@ -115,7 +116,7 @@ function setup_post_request(headers = {}, stream) {
 	incoming.url = '/';
 	incoming.httpVersionMajor = 1;
 
-	const request = getRequest({ request: incoming, base: 'http://localhost' });
+	const request = getRequest({ request: incoming, response, base: 'http://localhost' });
 
 	return { req, incoming, request };
 }
@@ -211,6 +212,38 @@ test('does not remove unrelated data listeners when draining', async () => {
 
 	await expect_request_drained(req);
 	expect(unrelated).toHaveBeenCalled();
+});
+
+// https://github.com/sveltejs/kit/issues/16778
+test('aborts the request signal when the response closes before finishing', async () => {
+	const res = /** @type {any} */ (new EventEmitter());
+	res.writableFinished = false;
+
+	const { req, request } = setup_post_request({ 'content-length': '10' }, undefined, res);
+
+	// fully read the body, so the request stream can no longer report the disconnect
+	req.write(Buffer.from('0123456789'));
+	req.end();
+	await request.text();
+
+	res.emit('close');
+
+	expect(request.signal.aborted).toBe(true);
+});
+
+test('does not abort the request signal when the response finishes normally', async () => {
+	const res = /** @type {any} */ (new EventEmitter());
+	res.writableFinished = true;
+
+	const { req, request } = setup_post_request({ 'content-length': '10' }, undefined, res);
+
+	req.write(Buffer.from('0123456789'));
+	req.end();
+	await request.text();
+
+	res.emit('close');
+
+	expect(request.signal.aborted).toBe(false);
 });
 
 // Test for fix of CVE-2026-40073

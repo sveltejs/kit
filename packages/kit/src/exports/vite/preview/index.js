@@ -206,7 +206,8 @@ export async function preview(vite, vite_config, svelte_config) {
 
 			const request = getRequest({
 				base: `${protocol}://${host}`,
-				request: req
+				request: req,
+				response: res
 			});
 
 			setResponse(
