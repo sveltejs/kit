@@ -8,7 +8,7 @@ import { compact } from '../../../utils/array.js';
 import { get_status, normalize_error } from '../../../utils/error.js';
 import { noop } from '../../../utils/functions.js';
 import { add_data_suffix } from '../../pathname.js';
-import { build_error_chain } from '../../error-chain.js';
+import { build_error_chain, nearest_error_pages } from '../../error-chain.js';
 import { redirect_response } from '../utils.js';
 import { static_error_page, handle_error_and_jsonify } from '../errors.js';
 import {
@@ -279,42 +279,36 @@ export async function render_page(event, state, page, options, manifest, nodes, 
 					const error = await handle_error_and_jsonify(event, state, options, err);
 					const status = error.status;
 
-					while (i--) {
-						if (page.errors[i]) {
-							const index = /** @type {number} */ (page.errors[i]);
-							const node = await manifest._.nodes[index]();
+					for (const { error: index, idx } of nearest_error_pages(i, branch, page.errors)) {
+						const node = await manifest._.nodes[index]();
 
-							let j = i;
-							while (!branch[j]) j -= 1;
+						data_serializer.set_max_nodes(idx);
 
-							data_serializer.set_max_nodes(j + 1);
+						const layouts = compact(branch.slice(0, idx));
+						const nodes = new PageNodes(layouts.map((layout) => layout.node));
+						const error_branch = layouts.concat({
+							node,
+							data: null,
+							server_data: null
+						});
 
-							const layouts = compact(branch.slice(0, j + 1));
-							const nodes = new PageNodes(layouts.map((layout) => layout.node));
-							const error_branch = layouts.concat({
-								node,
-								data: null,
-								server_data: null
-							});
-
-							return await render_response({
-								event,
-								state,
-								options,
-								manifest,
-								resolve_opts,
-								page_config: {
-									ssr: nodes.ssr(),
-									csr: nodes.csr()
-								},
-								status,
-								error,
-								error_components: await load_error_components(ssr, error_branch, page, manifest),
-								branch: error_branch,
-								fetched,
-								data_serializer
-							});
-						}
+						return await render_response({
+							event,
+							state,
+							options,
+							manifest,
+							resolve_opts,
+							page_config: {
+								ssr: nodes.ssr(),
+								csr: nodes.csr()
+							},
+							status,
+							error,
+							error_components: await load_error_components(ssr, error_branch, page, manifest),
+							branch: error_branch,
+							fetched,
+							data_serializer
+						});
 					}
 
 					// if we're still here, it means the error happened in the root layout,
