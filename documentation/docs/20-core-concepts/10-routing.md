@@ -330,7 +330,7 @@ If an error is thrown (either `error(...)` or an unexpected error), the response
 
 ### Receiving data
 
-By exporting `POST`/`PUT`/`PATCH`/`DELETE`/`OPTIONS`/`HEAD` handlers, `+server.js` files can be used to create a complete API:
+By exporting `POST`/`PUT`/`PATCH`/`DELETE`/`OPTIONS`/`HEAD`/`QUERY` handlers, `+server.js` files can be used to create a complete API:
 
 ```svelte
 <!--- file: src/routes/add/+page.svelte --->
