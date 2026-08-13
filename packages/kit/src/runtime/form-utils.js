@@ -198,7 +198,9 @@ export async function deserialize_binary_form(request, form_id) {
 
 		let i = chunks.length;
 		while (i <= index) {
-			chunks[i] = reader.read().then((chunk) => chunk.value);
+			// chain reads so only one is ever pending — workerd forbids concurrent reads
+			const previous = chunks[i - 1] ?? Promise.resolve(undefined);
+			chunks[i] = previous.then(() => reader.read()).then((chunk) => chunk.value);
 			i++;
 		}
 		return chunks[index];
