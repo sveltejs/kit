@@ -88,61 +88,93 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 					new URL(event.request.url).searchParams.get('payload')
 				);
 
-				const generator = internals.run(event, state, parse_remote_arg(payload));
+				// aborted by `teardown()`, so unlike the request signal it also fires on
+				// response teardown, which the generator could otherwise never observe
+				const cancellation = new AbortController();
+
+				const live_event = {
+					...event,
+					request: new Request(event.request, { signal: cancellation.signal })
+				};
+
+				const generator = internals.run(live_event, state, parse_remote_arg(payload));
 
 				const encoder = new TextEncoder();
 
-				let closed = false;
-
 				/** @type {ReturnType<typeof setTimeout> | undefined} */
 				let keep_alive;
+
+				// the controller is only reachable through this sink, which goes inert on
+				// close — either side can tear the stream down while `pull` is suspended
+				/** @type {ReturnType<typeof create_sink>} */
+				let sink;
+
+				/** @param {ReadableStreamDefaultController} controller */
+				function create_sink(controller) {
+					let open = true;
+
+					return {
+						/** @param {string} data */
+						write(data) {
+							if (!open) return;
+							controller.enqueue(encoder.encode(data));
+							schedule_keep_alive();
+						},
+						close() {
+							if (!open) return;
+							open = false;
+							controller.close();
+						},
+						/** the platform already closed the controller (stream cancellation) */
+						abandon() {
+							open = false;
+						}
+					};
+				}
 
 				/**
 				 * (Re)schedule the keep-alive comment. Called whenever a message is sent, so
 				 * that a keep-alive is only emitted once `KEEP_ALIVE_INTERVAL` has elapsed
 				 * without any other activity.
-				 * @param {ReadableStreamDefaultController} controller
 				 */
-				function schedule_keep_alive(controller) {
+				function schedule_keep_alive() {
 					clearTimeout(keep_alive);
 					keep_alive = setTimeout(() => {
-						if (closed || event.request.signal.aborted) return;
 						// SSE comments (lines starting with `:`) are ignored by the client
-						controller.enqueue(encoder.encode(': keep-alive\n\n'));
-						schedule_keep_alive(controller);
+						sink.write(': keep-alive\n\n');
 					}, KEEP_ALIVE_INTERVAL);
 				}
 
-				/**
-				 * @param {ReadableStreamDefaultController} controller
-				 * @param {any} payload
-				 */
-				function send(controller, payload) {
-					controller.enqueue(encoder.encode('data: ' + JSON.stringify(payload) + '\n\n'));
-					schedule_keep_alive(controller);
+				/** @param {any} payload */
+				function send(payload) {
+					sink.write('data: ' + JSON.stringify(payload) + '\n\n');
 				}
 
 				/** @type {string | undefined} */
 				let result = undefined;
 
-				async function cancel() {
-					if (closed) return;
-					closed = true;
+				let torn_down = false;
+
+				async function teardown() {
+					if (torn_down) return;
+					torn_down = true;
 					clearTimeout(keep_alive);
+					cancellation.abort();
+					sink.close();
 					await generator.return(undefined);
 				}
 
-				event.request.signal.addEventListener('abort', cancel, { once: true });
+				event.request.signal.addEventListener('abort', teardown, { once: true });
 
 				return new Response(
 					new ReadableStream({
 						start(controller) {
-							schedule_keep_alive(controller);
+							sink = create_sink(controller);
+							schedule_keep_alive();
 						},
-						async pull(controller) {
-							if (event.request.signal.aborted) {
-								await cancel();
-								controller.close();
+						async pull() {
+							if (torn_down || event.request.signal.aborted) {
+								await teardown();
 								return;
 							}
 
@@ -150,15 +182,15 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 								while (true) {
 									const { value, done } = await generator.next();
 
-									if (done) {
-										await cancel();
-										controller.close();
+									// teardown may have started while we were suspended
+									if (done || torn_down) {
+										await teardown();
 										return;
 									}
 
 									// only send changed data
 									if (result !== (result = stringify(value))) {
-										send(controller, {
+										send({
 											type: 'result',
 											result
 										});
@@ -167,9 +199,9 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 									}
 								}
 							} catch (error) {
-								if (!event.request.signal.aborted) {
+								if (!torn_down) {
 									if (error instanceof Redirect) {
-										send(controller, {
+										send({
 											type: 'redirect',
 											location: error.location
 										});
@@ -181,18 +213,20 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 											error
 										);
 
-										send(controller, {
+										send({
 											type: 'error',
 											error: transformed
 										});
 									}
 								}
 
-								await cancel();
-								controller.close();
+								await teardown();
 							}
 						},
-						cancel
+						async cancel() {
+							sink.abandon();
+							await teardown();
+						}
 					}),
 					{
 						headers: {
