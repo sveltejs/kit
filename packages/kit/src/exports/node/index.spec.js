@@ -217,7 +217,7 @@ test('does not remove unrelated data listeners when draining', async () => {
 // https://github.com/sveltejs/kit/issues/16778
 test('aborts the request signal when the response closes before finishing', async () => {
 	const res = /** @type {any} */ (new EventEmitter());
-	res.writableFinished = false;
+	res.writableEnded = false;
 
 	const { req, request } = setup_post_request({ 'content-length': '10' }, undefined, res);
 
@@ -233,7 +233,7 @@ test('aborts the request signal when the response closes before finishing', asyn
 
 test('does not abort the request signal when the response finishes normally', async () => {
 	const res = /** @type {any} */ (new EventEmitter());
-	res.writableFinished = true;
+	res.writableEnded = true;
 
 	const { req, request } = setup_post_request({ 'content-length': '10' }, undefined, res);
 

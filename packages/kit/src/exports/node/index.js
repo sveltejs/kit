@@ -146,9 +146,10 @@ export function getRequest({ request, response, base, bodySizeLimit }) {
 	});
 
 	// `readableAborted` stays false once the request has been fully read (or drained),
-	// so a client disconnect must also be detected on the response side
+	// so a client disconnect must also be detected on the response side. `writableEnded`
+	// rather than `writableFinished` because HTTP/2 marks cancelled streams as finished
 	response?.once('close', () => {
-		if (!response.writableFinished) {
+		if (!response.writableEnded) {
 			controller.abort();
 		}
 	});
