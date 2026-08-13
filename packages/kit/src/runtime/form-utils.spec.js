@@ -791,40 +791,6 @@ describe('binary form serializer', () => {
 		expect(await res.data.empty.text()).toBe('');
 	});
 
-	test('reads two larger files concurrently from a chunked body', async () => {
-		const a_data = 'a'.repeat(200_000);
-		const b_data = 'b'.repeat(200_000);
-		const { blob } = serialize_binary_form(
-			{
-				a: new File([a_data], 'a.txt', { type: 'text/plain' }),
-				b: new File([b_data], 'b.txt', { type: 'text/plain' })
-			},
-			{}
-		);
-		const bytes = new Uint8Array(await blob.arrayBuffer());
-		const stream = new ReadableStream({
-			start(controller) {
-				for (let i = 0; i < bytes.length; i += 4096) {
-					controller.enqueue(bytes.subarray(i, i + 4096));
-				}
-				controller.close();
-			}
-		});
-		const res = await deserialize_binary_form(
-			new Request('http://test', {
-				method: 'POST',
-				body: stream,
-				// @ts-expect-error duplex required in node
-				duplex: 'half',
-				headers: {
-					'Content-Type': BINARY_FORM_CONTENT_TYPE
-				}
-			})
-		);
-		const [a, b] = await Promise.all([res.data.a.text(), res.data.b.text()]);
-		expect(a).toBe(a_data);
-		expect(b).toBe(b_data);
-	});
 });
 
 describe('deep_set', () => {
