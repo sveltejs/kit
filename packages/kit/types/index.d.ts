@@ -828,7 +828,7 @@ declare module '@sveltejs/kit' {
 		complete(entry: { generateManifest(opts: { relativePath: string }): string }): MaybePromise<void>;
 	}
 
-	type HttpMethod = 'GET' | 'HEAD' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'OPTIONS';
+	type HttpMethod = 'GET' | 'HEAD' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'OPTIONS' | 'QUERY';
 
 	interface Logger {
 		(msg: string): void;
