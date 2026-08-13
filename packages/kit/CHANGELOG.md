@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 3.0.0-next.23
+
+### Patch Changes
+
+- fix: only print prerender progress newline when necessary ([#16766](https://github.com/sveltejs/kit/pull/16766))
+
 ## 3.0.0-next.22
 
 ### Patch Changes
