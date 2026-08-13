@@ -484,7 +484,7 @@ const caches = {
 };
 let request = new Request();
 // ---cut---
-const cache = caches.open('foo');
+const myCache = caches.open('foo');
 await myCache.match(request);
 ```
 
