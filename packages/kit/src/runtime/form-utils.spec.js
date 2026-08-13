@@ -774,6 +774,23 @@ describe('binary form serializer', () => {
 		expect(res.data.c.size).toBe(1);
 		expect(await res.data.c.text()).toBe('x');
 	});
+
+	test('reads a zero-length file at the end of the payload', async () => {
+		const { blob } = serialize_binary_form({ empty: new File([], 'empty.txt') }, {});
+		const res = await deserialize_binary_form(
+			new Request('http://test', {
+				method: 'POST',
+				body: blob,
+				headers: {
+					'Content-Type': BINARY_FORM_CONTENT_TYPE,
+					'Content-Length': blob.size.toString()
+				}
+			}),
+			''
+		);
+		expect(res.data.empty.size).toBe(0);
+		expect(await res.data.empty.text()).toBe('');
+	});
 });
 
 describe('deep_set', () => {

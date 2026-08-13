@@ -42,12 +42,12 @@ export function write_all_types(config, manifest_data, root) {
 		posixify(path.relative(root, config.files.routes))
 	);
 	const expected_directories = new Set(
-		manifest_data.routes.map((route) => path.join(routes_dir, route.id))
+		manifest_data.routes.map((route) => path.posix.join(routes_dir, route.id))
 	);
 
 	if (fs.existsSync(types_dir)) {
 		for (const file of walk(types_dir)) {
-			const dir = path.dirname(file);
+			const dir = path.posix.dirname(file);
 			if (!expected_directories.has(dir)) {
 				fs.rmSync(path.join(types_dir, file), { force: true, recursive: true });
 			}
@@ -354,9 +354,7 @@ function update_types(config, routes, route, root, to_delete = new Set()) {
 	}
 
 	if (route.leaf?.server || route.layout?.server || route.endpoint) {
-		exports.push(
-			"export type RequestEvent = import('$app/server').RequestEvent<RouteParams, RouteId>;"
-		);
+		exports.push('export type RequestEvent = Kit.RequestEvent<RouteParams, RouteId>;');
 	}
 
 	const output = [imports.join('\n'), declarations.join('\n'), exports.join('\n')]

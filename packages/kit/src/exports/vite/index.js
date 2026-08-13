@@ -635,7 +635,7 @@ function kit({ svelte_config }) {
 
 			const unsupported_plugins = vite_config.plugins.filter((plugin) => plugin.transformIndexHtml);
 			if (unsupported_plugins.length) {
-				const verbose = vite_config.logLevel === 'info';
+				const verbose = vite_config.logLevel === 'info' || vite_config.logLevel === undefined;
 				const log = logger({ verbose });
 
 				const list = unsupported_plugins
@@ -1689,7 +1689,7 @@ function kit({ svelte_config }) {
 			fs.rmSync(out, { force: true, recursive: true });
 			fs.mkdirSync(out, { recursive: true });
 
-			const verbose = builder.config.logLevel === 'info';
+			const verbose = builder.config.logLevel === 'info' || builder.config.logLevel === undefined;
 			const log = logger({ verbose });
 
 			let ssr_build = await builder.build(builder.environments.ssr);

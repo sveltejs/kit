@@ -10,7 +10,7 @@ import { get_node_type } from '../utils.js';
 /**
  * Calls the user's server `load` function.
  * @param {{
- *   event: import('$app/server').RequestEvent;
+ *   event: import('@sveltejs/kit').RequestEvent;
  *   state: import('types').RequestState;
  *   node: import('types').SSRNode | undefined;
  *   parent: () => Promise<Record<string, any>>;
@@ -191,7 +191,7 @@ export async function load_server_data({ event, state, node, parent }) {
 /**
  * Calls the user's `load` function.
  * @param {{
- *   event: import('$app/server').RequestEvent;
+ *   event: import('@sveltejs/kit').RequestEvent;
  *   state: import('types').RequestState;
  *   fetched: import('./types.js').Fetched[];
  *   node: import('types').SSRNode | undefined;
@@ -256,7 +256,7 @@ export async function load_data({
 }
 
 /**
- * @param {Pick<import('$app/server').RequestEvent, 'fetch' | 'url' | 'request' | 'route'>} event
+ * @param {Pick<import('@sveltejs/kit').RequestEvent, 'fetch' | 'url' | 'request' | 'route'>} event
  * @param {import('types').PrerenderOptions | undefined} prerendering
  * @param {import('./types.js').Fetched[]} fetched
  * @param {boolean} csr

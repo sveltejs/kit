@@ -8,7 +8,7 @@ import { fork_state_for_subrequest } from './state.js';
 
 /**
  * @param {{
- *   event: import('$app/server').RequestEvent;
+ *   event: import('@sveltejs/kit').RequestEvent;
  *   options: import('types').SSROptions;
  *   manifest: import('@sveltejs/kit').SSRManifest;
  *   state: import('types').RequestState;
