@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import adapter from '../index.js';
 
@@ -11,7 +12,13 @@ const start_file = `${package_dir}/src/start.js`;
 
 vi.mock('node:fs', async (import_original) => {
 	const actual = await import_original<typeof import('node:fs')>();
-	const mocked = { ...actual, readdirSync: vi.fn(), existsSync: vi.fn(), rmSync: vi.fn() };
+	const mocked = {
+		...actual,
+		readdirSync: vi.fn(),
+		existsSync: vi.fn(),
+		rmSync: vi.fn(),
+		readFileSync: vi.fn()
+	};
 	return { ...mocked, default: mocked };
 });
 
@@ -28,11 +35,21 @@ const bun = vi.hoisted(() => ({
 		digest() {
 			return 'abc';
 		}
+	},
+	hash: (input: string) => {
+		let hash = 0n;
+		for (const char of input) hash = hash * 31n + BigInt(char.charCodeAt(0));
+		return hash;
 	}
 }));
 
 beforeEach(() => {
-	vi.stubGlobal('Bun', { build: bun.build, file: bun.file, CryptoHasher: bun.CryptoHasher });
+	vi.stubGlobal('Bun', {
+		build: bun.build,
+		file: bun.file,
+		CryptoHasher: bun.CryptoHasher,
+		hash: bun.hash
+	});
 	vi.mocked(fs.readdirSync).mockReturnValue([]);
 	vi.mocked(fs.existsSync).mockReturnValue(true);
 });
@@ -113,7 +130,7 @@ describe('Bun build configuration', () => {
 	test('resolves generated runtime modules through the Bun plugin', async () => {
 		await adapter().adapt(create_builder());
 		const on_resolve = vi.fn();
-		bun.build.mock.calls[0][0].plugins[0].setup({ onResolve: on_resolve });
+		bun.build.mock.calls[0][0].plugins[0].setup({ onResolve: on_resolve, onLoad: vi.fn() });
 
 		expect(on_resolve).toHaveBeenCalledWith(
 			{ filter: /^(SERVER|MANIFEST|ROUTES|SERVER_OPTIONS)$/ },
@@ -126,6 +143,57 @@ describe('Bun build configuration', () => {
 		expect(resolve_module({ path: 'MANIFEST' })).toEqual({ path: manifest_file });
 		expect(resolve_module({ path: 'ROUTES' })).toEqual({ path: routes_file });
 		expect(resolve_module({ path: 'SERVER_OPTIONS' })).toEqual({ path: options_file });
+	});
+
+	test('gives side-effect-only chunks a per-importer identity so their copies cannot collide', async () => {
+		await adapter().adapt(create_builder());
+		const on_resolve = vi.fn();
+		const on_load = vi.fn();
+		bun.build.mock.calls[0][0].plugins[0].setup({ onResolve: on_resolve, onLoad: on_load });
+
+		const chunks_dir = path.resolve('.svelte-kit/output/server/chunks');
+		const resolve_chunk = on_resolve.mock.calls.find(
+			([options]) => String(options.filter) === String(/\.js$/)
+		)![1];
+		const load_chunk = on_load.mock.calls.find(
+			([options]) => options.namespace === 'adapter-bun-side-effect'
+		)![1];
+
+		vi.mocked(fs.readFileSync).mockReturnValue("import './other.js';\nexport {};\n");
+		const first = resolve_chunk({
+			path: './events.js',
+			resolveDir: chunks_dir,
+			importer: `${chunks_dir}/a.js`
+		});
+		const second = resolve_chunk({
+			path: './events.js',
+			resolveDir: chunks_dir,
+			importer: `${chunks_dir}/b.js`
+		});
+		expect(first.namespace).toBe('adapter-bun-side-effect');
+		expect(first.path.startsWith(`${chunks_dir}/events.js?`)).toBe(true);
+		expect(first.path).not.toBe(second.path);
+		expect(fs.readFileSync).toHaveBeenCalledTimes(1);
+
+		const first_load = load_chunk({ path: first.path });
+		const second_load = load_chunk({ path: second.path });
+		expect(first_load.contents).toContain("import './other.js';");
+		expect(first_load.contents).not.toBe(second_load.contents);
+
+		// chunks with real exports keep their shared identity
+		vi.mocked(fs.readFileSync).mockReturnValue('export const x = 1;\n');
+		expect(
+			resolve_chunk({ path: './real.js', resolveDir: chunks_dir, importer: `${chunks_dir}/a.js` })
+		).toBeUndefined();
+
+		// modules outside chunks/ are never rewritten
+		expect(
+			resolve_chunk({
+				path: './index.js',
+				resolveDir: path.resolve('.svelte-kit/output/server'),
+				importer: `${chunks_dir}/a.js`
+			})
+		).toBeUndefined();
 	});
 
 	test('passes supported advanced options while retaining reserved options', async () => {

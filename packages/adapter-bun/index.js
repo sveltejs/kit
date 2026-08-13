@@ -170,6 +170,10 @@ export default function (opts = {}) {
 				if (!buildOptions.compile) entrypoints.push(start_file);
 			}
 
+			const chunks_dir = path.resolve(server, 'chunks');
+			/** @type {Map<string, string | false>} */
+			const side_effect_sources = new Map();
+
 			/** @type {BunPlugin} */
 			const adapter_plugin = {
 				name: 'adapter-bun',
@@ -179,6 +183,36 @@ export default function (opts = {}) {
 						if (path === 'MANIFEST') return { path: manifest_file };
 						if (path === 'ROUTES') return { path: routes_file };
 						if (path === 'SERVER_OPTIONS') return { path: server_options_file };
+					});
+
+					// Side-effect-only chunks (e.g. Svelte's events.js, kit's env re-export) compile to
+					// identical stubs whose content hashes collide on one output path, failing the build
+					// with "Multiple files share the same output path" (oven-sh/bun#37576). Resolving a
+					// distinct identity per importer keeps every emitted copy unique; delete this once
+					// the Bun fix ships.
+					build.onResolve({ filter: /\.js$/ }, (args) => {
+						const file = path.resolve(args.resolveDir, args.path);
+						if (path.dirname(file) !== chunks_dir) return;
+						let source = side_effect_sources.get(file);
+						if (source === undefined) {
+							const text = fs.readFileSync(file, 'utf8');
+							source = /^import\s+["'][^"']+["'];\s*export\s*\{\s*\};?\s*$/.test(text) && text;
+							side_effect_sources.set(file, source);
+						}
+						if (source === false) return;
+						// The `?` suffix keeps dirname(path) inside chunks/ — Bun resolves the synthetic
+						// module's relative imports against that, ignoring onLoad's resolveDir.
+						return {
+							path: `${file}?${Bun.hash(args.importer).toString(16)}`,
+							namespace: 'adapter-bun-side-effect'
+						};
+					});
+					build.onLoad({ filter: /.*/, namespace: 'adapter-bun-side-effect' }, (args) => {
+						const file = args.path.slice(0, args.path.indexOf('?'));
+						return {
+							loader: 'js',
+							contents: `${side_effect_sources.get(file)}\nSymbol.for('adapter-bun:${Bun.hash(args.path).toString(16)}');`
+						};
 					});
 				}
 			};
