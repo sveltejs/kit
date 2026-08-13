@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 3.0.0-next.22
+
+### Patch Changes
+
+- fix: respect Vite default log level ([#16767](https://github.com/sveltejs/kit/pull/16767))
+
 ## 3.0.0-next.21
 
 ### Major Changes
