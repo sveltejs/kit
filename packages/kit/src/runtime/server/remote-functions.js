@@ -15,8 +15,7 @@ import { normalize_error } from '../../utils/error.js';
 import { check_incorrect_fail_use, get_action_location } from './page/actions.js';
 import { DEV } from 'esm-env';
 import { deserialize_binary_form } from '../form-utils.js';
-import { text_encoder } from '../utils.js';
-import { with_version_header } from './utils.js';
+import { stream_from_iterator, with_version_header } from './utils.js';
 
 /**
  * How long (in milliseconds) to wait after the last message was sent before
@@ -24,6 +23,8 @@ import { with_version_header } from './utils.js';
  * an idle timeout from closing an otherwise-quiet `query.live` connection.
  */
 const KEEP_ALIVE_INTERVAL = 30_000;
+
+const KEEP_ALIVE = Symbol('keep-alive');
 
 /** @type {typeof handle_remote_call_internal} */
 export async function handle_remote_call(event, state, options, manifest, id) {
@@ -89,9 +90,18 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 					new URL(event.request.url).searchParams.get('payload')
 				);
 
-				// aborted by `teardown()`, so unlike the request signal it also fires on
-				// response teardown, which the generator could otherwise never observe
+				// aborted whenever the stream is torn down, so unlike the request signal it
+				// also fires on response teardown, which the generator could otherwise
+				// never observe
 				const cancellation = new AbortController();
+
+				if (event.request.signal.aborted) {
+					cancellation.abort();
+				} else {
+					event.request.signal.addEventListener('abort', () => cancellation.abort(), {
+						once: true
+					});
+				}
 
 				const live_event = {
 					...event,
@@ -100,133 +110,79 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 
 				const generator = internals.run(live_event, state, parse_remote_arg(payload));
 
-				/** @type {ReturnType<typeof setTimeout> | undefined} */
-				let keep_alive;
-
-				// the controller is only reachable through this sink, which goes inert on
-				// close — either side can tear the stream down while `pull` is suspended
-				/** @type {ReturnType<typeof create_sink>} */
-				let sink;
-
-				/** @param {ReadableStreamDefaultController} controller */
-				function create_sink(controller) {
-					let open = true;
-
-					return {
-						/** @param {string} data */
-						write(data) {
-							if (!open) return;
-							controller.enqueue(text_encoder.encode(data));
-							schedule_keep_alive();
-						},
-						close() {
-							if (!open) return;
-							open = false;
-							controller.close();
-						},
-						/** the platform already closed the controller (stream cancellation) */
-						abandon() {
-							open = false;
-						}
-					};
-				}
+				/** @param {any} payload */
+				const frame = (payload) => 'data: ' + JSON.stringify(payload) + '\n\n';
 
 				/**
-				 * (Re)schedule the keep-alive comment. Called whenever a message is sent, so
-				 * that a keep-alive is only emitted once `KEEP_ALIVE_INTERVAL` has elapsed
-				 * without any other activity.
+				 * Resolves with the next iterator result, or with `KEEP_ALIVE` once
+				 * `KEEP_ALIVE_INTERVAL` has elapsed without one.
+				 * @param {Promise<IteratorResult<any>>} pending
+				 * @returns {Promise<IteratorResult<any> | typeof KEEP_ALIVE>}
 				 */
-				function schedule_keep_alive() {
-					clearTimeout(keep_alive);
-					keep_alive = setTimeout(() => {
-						// SSE comments (lines starting with `:`) are ignored by the client
-						sink.write(': keep-alive\n\n');
-					}, KEEP_ALIVE_INTERVAL);
-				}
-
-				/** @param {any} payload */
-				function send(payload) {
-					sink.write('data: ' + JSON.stringify(payload) + '\n\n');
+				function next_or_keep_alive(pending) {
+					return new Promise((resolve, reject) => {
+						const timer = setTimeout(() => resolve(KEEP_ALIVE), KEEP_ALIVE_INTERVAL);
+						pending.then(
+							(result) => {
+								clearTimeout(timer);
+								resolve(result);
+							},
+							(error) => {
+								clearTimeout(timer);
+								reject(error);
+							}
+						);
+					});
 				}
 
 				/** @type {string | undefined} */
 				let result = undefined;
 
-				let torn_down = false;
+				// everything the stream sends, as a generator of SSE strings — it holds no
+				// reference to the stream controller, so it cannot touch a dead one
+				async function* frames() {
+					/** @type {Promise<IteratorResult<any>> | null} */
+					let pending = null;
 
-				async function teardown() {
-					if (torn_down) return;
-					torn_down = true;
-					clearTimeout(keep_alive);
-					cancellation.abort();
-					sink.close();
-					await generator.return(undefined);
+					try {
+						while (true) {
+							pending ??= generator.next();
+							const winner = await next_or_keep_alive(pending);
+
+							if (winner === KEEP_ALIVE) {
+								// SSE comments (lines starting with `:`) are ignored by the client
+								yield ': keep-alive\n\n';
+								continue;
+							}
+
+							pending = null;
+
+							if (winner.done) return;
+
+							// only send changed data
+							if (result !== (result = stringify(winner.value))) {
+								yield frame({ type: 'result', result });
+							}
+						}
+					} catch (error) {
+						if (!cancellation.signal.aborted) {
+							if (error instanceof Redirect) {
+								yield frame({ type: 'redirect', location: error.location });
+							} else {
+								yield frame({
+									type: 'error',
+									error: await handle_error_and_jsonify(event, state, options, error)
+								});
+							}
+						}
+					} finally {
+						cancellation.abort();
+						await generator.return(undefined);
+					}
 				}
 
-				event.request.signal.addEventListener('abort', teardown, { once: true });
-
 				return new Response(
-					new ReadableStream({
-						start(controller) {
-							sink = create_sink(controller);
-							schedule_keep_alive();
-						},
-						async pull() {
-							if (torn_down || event.request.signal.aborted) {
-								await teardown();
-								return;
-							}
-
-							try {
-								while (true) {
-									const { value, done } = await generator.next();
-
-									// teardown may have started while we were suspended
-									if (done || torn_down) {
-										await teardown();
-										return;
-									}
-
-									// only send changed data
-									if (result !== (result = stringify(value))) {
-										send({
-											type: 'result',
-											result
-										});
-
-										return;
-									}
-								}
-							} catch (error) {
-								if (!torn_down) {
-									if (error instanceof Redirect) {
-										send({
-											type: 'redirect',
-											location: error.location
-										});
-									} else {
-										const transformed = await handle_error_and_jsonify(
-											event,
-											state,
-											options,
-											error
-										);
-
-										send({
-											type: 'error',
-											error: transformed
-										});
-									}
-								}
-
-								await teardown();
-							}
-						},
-						async cancel() {
-							sink.abandon();
-							await teardown();
-						}
-					}),
+					stream_from_iterator(frames(), () => cancellation.abort()),
 					{
 						headers: {
 							'cache-control': 'private, no-store',

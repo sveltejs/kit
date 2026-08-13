@@ -1,5 +1,39 @@
 import { text } from '@sveltejs/kit';
 import { ENDPOINT_METHODS } from '../../constants.js';
+import { text_encoder } from '../utils.js';
+
+/**
+ * Builds a text stream from an iterator of string chunks. The controller is
+ * confined here so that a chunk arriving after the stream was torn down is
+ * dropped instead of hitting a closed controller — either side can tear the
+ * stream down while `pull` is suspended on `iterator.next()`.
+ * @param {AsyncIterator<string>} iterator
+ * @param {() => void} [oncancel] called when the consumer cancels the stream
+ * @returns {ReadableStream<Uint8Array>}
+ */
+export function stream_from_iterator(iterator, oncancel) {
+	let open = true;
+
+	return new ReadableStream({
+		async pull(controller) {
+			const { value, done } = await iterator.next();
+
+			if (!open) return;
+
+			if (done) {
+				open = false;
+				controller.close();
+			} else {
+				controller.enqueue(text_encoder.encode(value));
+			}
+		},
+		async cancel() {
+			open = false;
+			oncancel?.();
+			await iterator.return?.(undefined);
+		}
+	});
+}
 
 /**
  * @param {Partial<Record<import('types').HttpMethod, any>>} mod
