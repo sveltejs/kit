@@ -12,7 +12,7 @@ import { fix_stack_trace } from './internal.js';
 import { escape_html } from '../../utils/escape.js';
 
 /**
- * @param {import('$app/server').RequestEvent} event
+ * @param {import('@sveltejs/kit').RequestEvent} event
  * @param {import('types').RequestState} state
  * @param {import('types').SSROptions} options
  * @param {unknown} error
@@ -37,7 +37,7 @@ export async function handle_fatal_error(event, state, options, error) {
 }
 
 /**
- * @param {import('$app/server').RequestEvent} event
+ * @param {import('@sveltejs/kit').RequestEvent} event
  * @param {import('types').RequestState} state
  * @param {import('types').SSROptions} options
  * @param {any} error

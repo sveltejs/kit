@@ -287,13 +287,9 @@ Types like `EnvVarConfig`, used with [`defineEnvVars`](@sveltejs-kit-env#defineE
 
 Types like `Handle`, which defines the type of your [`handle`](hooks#handle) hook, now live in `@sveltejs/kit/hooks`.
 
-### Remote function types moved to `@sveltejs/kit/remote`
+### Remote function types moved to `$app/server`
 
-Types describing remote functions, such as `RemoteQuery`, `RemoteForm` and `RemoteCommand`, now live in `@sveltejs/kit/remote`. The `isValidationError` function has also moved there.
-
-### Request-related types moved to `$app/server`
-
-Types like `RequestEvent` and `Cookies`, used by [`getRequestEvent`]($app-server#getRequestEvent), now live in `$app/server`.
+Types describing remote functions, such as `RemoteQuery`, `RemoteForm` and `RemoteCommand`, now live in `$app/server` alongside the functions themselves.
 
 ## `@sveltejs/kit/hooks`
 
@@ -364,7 +360,7 @@ SvelteKit now uses [`cookie`](https://npmx.dev/package/cookie) v2, which involve
 When setting a cookie without an explicit `path` (which was previously forbidden), the path defaults to `'/'` rather than the current request path, meaning the cookie applies to the entire site. This matches what most developers expect. You can pass an explicit `path` if necessary:
 
 ```ts
-declare const cookies: import('$app/server').Cookies;
+declare const cookies: import('@sveltejs/kit').Cookies;
 declare const name: string;
 declare const value: string;
 // ---cut---

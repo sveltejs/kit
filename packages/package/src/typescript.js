@@ -97,6 +97,10 @@ export async function emit_dts(input, output, final_output, cwd, alias, files, t
 export async function transpile_ts(tsconfig, filename, source, cache) {
 	const ts = await try_load_ts();
 	const options = await load_tsconfig(tsconfig, filename, cache, ts);
+	const transformers = options.rewriteRelativeImportExtensions
+		? { before: [rewrite_import_meta_glob_extensions(ts)] }
+		: undefined;
+
 	// transpileModule treats NodeNext as CommonJS because it doesn't read the package.json. Therefore we need to override it.
 	// Also see https://github.com/microsoft/TypeScript/issues/53022 (the filename workaround doesn't work).
 	return ts.transpileModule(source, {
@@ -105,8 +109,105 @@ export async function transpile_ts(tsconfig, filename, source, cache) {
 			module: ts.ModuleKind.ESNext,
 			moduleResolution: ts.ModuleResolutionKind.NodeNext
 		},
-		fileName: filename
+		fileName: filename,
+		transformers
 	}).outputText;
+}
+
+/**
+ * Rewrite relative TypeScript glob patterns because `svelte-package` emits
+ * TypeScript modules as JavaScript.
+ *
+ * @param {typeof import('typescript')} ts
+ * @returns {import('typescript').TransformerFactory<import('typescript').SourceFile>}
+ */
+function rewrite_import_meta_glob_extensions(ts) {
+	return (context) => {
+		/** @param {import('typescript').Node} node */
+		const visit = (node) => {
+			if (!ts.isCallExpression(node) || !is_import_meta_glob(ts, node)) {
+				return ts.visitEachChild(node, visit, context);
+			}
+
+			const [patterns, ...rest] = node.arguments;
+			const rewritten = rewrite_glob_patterns(ts, patterns);
+
+			if (!rewritten || rewritten === patterns) {
+				return ts.visitEachChild(node, visit, context);
+			}
+
+			return ts.visitEachChild(
+				ts.factory.updateCallExpression(node, node.expression, node.typeArguments, [
+					rewritten,
+					...rest
+				]),
+				visit,
+				context
+			);
+		};
+
+		return (source_file) => ts.visitEachChild(source_file, visit, context);
+	};
+}
+
+/**
+ * @param {typeof import('typescript')} ts
+ * @param {import('typescript').CallExpression} call
+ */
+function is_import_meta_glob(ts, call) {
+	const expression = call.expression;
+	return (
+		!call.questionDotToken &&
+		ts.isPropertyAccessExpression(expression) &&
+		!expression.questionDotToken &&
+		expression.name.text === 'glob' &&
+		ts.isMetaProperty(expression.expression) &&
+		expression.expression.keywordToken === ts.SyntaxKind.ImportKeyword &&
+		expression.expression.name.text === 'meta'
+	);
+}
+
+/**
+ * @param {typeof import('typescript')} ts
+ * @param {import('typescript').Expression | undefined} patterns
+ * @returns {import('typescript').Expression | undefined}
+ */
+function rewrite_glob_patterns(ts, patterns) {
+	if (!patterns) return patterns;
+
+	if (ts.isStringLiteralLike(patterns)) {
+		return rewrite_glob_pattern(ts, patterns);
+	}
+
+	if (!ts.isArrayLiteralExpression(patterns)) return patterns;
+	if (!patterns.elements.every((element) => ts.isStringLiteralLike(element))) return patterns;
+
+	const elements = patterns.elements.map((element) =>
+		rewrite_glob_pattern(ts, /** @type {import('typescript').StringLiteralLike} */ (element))
+	);
+
+	if (elements.every((element, index) => element === patterns.elements[index])) return patterns;
+
+	return ts.factory.updateArrayLiteralExpression(patterns, elements);
+}
+
+/**
+ * @param {typeof import('typescript')} ts
+ * @param {import('typescript').StringLiteralLike} pattern
+ */
+function rewrite_glob_pattern(ts, pattern) {
+	const path = pattern.text.startsWith('!') ? pattern.text.slice(1) : pattern.text;
+
+	if (!(path.startsWith('./') || path.startsWith('../')) || !path.endsWith('.ts')) {
+		return pattern;
+	}
+
+	const rewritten = pattern.text.slice(0, -3) + '.js';
+	const literal = ts.isStringLiteral(pattern)
+		? ts.factory.createStringLiteral(rewritten, pattern.getText().startsWith("'"))
+		: ts.factory.createNoSubstitutionTemplateLiteral(rewritten);
+
+	return ts.setTextRange(literal, pattern);
 }
 
 async function try_load_ts() {

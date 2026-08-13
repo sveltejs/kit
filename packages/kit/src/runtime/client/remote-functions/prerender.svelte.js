@@ -1,4 +1,4 @@
-/** @import { RemotePrerenderFunction } from '@sveltejs/kit/remote' */
+/** @import { RemotePrerenderFunction } from '$app/server' */
 import { app_dir, base } from '#app/paths';
 import { version } from '$app/env';
 import * as devalue from 'devalue';

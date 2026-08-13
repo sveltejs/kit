@@ -1,4 +1,4 @@
-/** @import { RequestEvent } from '$app/server' */
+/** @import { RequestEvent } from '@sveltejs/kit' */
 /** @import { RequestState } from 'types' */
 import { assert, expect, test, vi } from 'vitest';
 import { sequence } from './sequence.js';

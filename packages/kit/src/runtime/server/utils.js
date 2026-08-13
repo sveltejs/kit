@@ -59,7 +59,7 @@ export function with_version_header(response) {
 }
 
 /**
- * @param {import('$app/server').RequestEvent} event
+ * @param {import('@sveltejs/kit').RequestEvent} event
  * @param {Error & { path: string }} error
  */
 export function clarify_devalue_error(event, error) {

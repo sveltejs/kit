@@ -5,7 +5,7 @@ import { negotiate } from '../../utils/http.js';
 import { method_not_allowed } from './utils.js';
 
 /**
- * @param {import('$app/server').RequestEvent} event
+ * @param {import('@sveltejs/kit').RequestEvent} event
  * @param {import('types').RequestState} state
  * @param {import('types').SSREndpoint} mod
  * @returns {Promise<Response>}
@@ -42,7 +42,7 @@ export async function render_endpoint(event, state, mod) {
 
 	try {
 		const response = await with_request_store({ event, state }, () =>
-			handler(/** @type {import('$app/server').RequestEvent<Record<string, any>>} */ (event))
+			handler(/** @type {import('@sveltejs/kit').RequestEvent<Record<string, any>>} */ (event))
 		);
 
 		if (!(response instanceof Response)) {
@@ -89,7 +89,7 @@ export async function render_endpoint(event, state, mod) {
 }
 
 /**
- * @param {import('$app/server').RequestEvent} event
+ * @param {import('@sveltejs/kit').RequestEvent} event
  */
 export function is_endpoint_request(event) {
 	const { method, headers } = event.request;

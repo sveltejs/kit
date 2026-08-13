@@ -1,4 +1,4 @@
-/** @import { RequestEvent } from '$app/server' */
+/** @import { RequestEvent } from '@sveltejs/kit' */
 /** @import { Handle, ResolveOptions } from '@sveltejs/kit/hooks' */
 import {
 	merge_tracing,
