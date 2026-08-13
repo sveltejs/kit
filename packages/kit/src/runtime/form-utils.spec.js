@@ -790,7 +790,6 @@ describe('binary form serializer', () => {
 		expect(res.data.empty.size).toBe(0);
 		expect(await res.data.empty.text()).toBe('');
 	});
-
 });
 
 describe('deep_set', () => {
