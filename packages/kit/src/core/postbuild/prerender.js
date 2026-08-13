@@ -3,7 +3,6 @@ import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'no
 import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { walk } from '../../utils/filesystem.js';
-import { posixify } from '../../utils/os.js';
 import { noop } from '../../utils/functions.js';
 import { decode_uri, is_root_relative, resolve } from '../../utils/url.js';
 import { escape_html } from '../../utils/escape.js';
@@ -256,13 +255,13 @@ async function prerender({
 		return file;
 	}
 
-	const files = new Set(walk(`${out}/client`).map(posixify));
+	const files = new Set(walk(`${out}/client`));
 	files.add(`${config.appDir}/env.js`);
 
 	const immutable = `${config.appDir}/immutable`;
 	if (existsSync(`${out}/server/${immutable}`)) {
 		for (const file of walk(`${out}/server/${immutable}`)) {
-			files.add(posixify(`${config.appDir}/immutable/${file}`));
+			files.add(`${config.appDir}/immutable/${file}`);
 		}
 	}
 

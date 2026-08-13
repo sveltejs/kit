@@ -2,10 +2,10 @@ import { lookup } from '../../../utils/mime.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import { styleText } from 'node:util';
-import { resolve_entry } from '../../../utils/filesystem.js';
+import { resolve_entry, walk } from '../../../utils/filesystem.js';
 import { posixify } from '../../../utils/os.js';
 import { parse_route_id } from '../../../utils/routing.js';
-import { list_files, runtime_directory } from '../../utils.js';
+import { runtime_directory } from '../../utils.js';
 import { prevent_conflicts } from './conflict.js';
 import { sort_routes } from './sort.js';
 import {
@@ -74,7 +74,9 @@ export function is_app_route(route) {
  * @param {import('types').ValidatedConfig} config
  */
 export function create_assets(config) {
-	return list_files(config.files.assets).map((file) => ({
+	if (!fs.existsSync(config.files.assets)) return [];
+
+	return [...walk(config.files.assets)].map((file) => ({
 		file,
 		size: fs.statSync(path.resolve(config.files.assets, file)).size,
 		type: lookup(file) || null
