@@ -4,8 +4,8 @@
 declare module '@sveltejs/kit' {
 	import type { Plugin } from 'vite';
 	import type { RouteId as AppRouteId, LayoutParams as AppLayoutParams } from '$app/types';
-	import type { getRequest, setResponse } from '@sveltejs/kit/node';
 	import type { StandardSchemaV1 } from '@standard-schema/spec';
+	import type { getRequest, setResponse } from '@sveltejs/kit/node';
 	import type { Config } from '@sveltejs/kit/vite';
 	// @ts-ignore this is an optional peer dependency so could be missing. Written like this so dts-buddy preserves the ts-ignore
 	type Span = import('@opentelemetry/api').Span;
