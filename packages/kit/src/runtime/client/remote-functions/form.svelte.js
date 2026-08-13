@@ -275,7 +275,7 @@ export function form(id) {
 
 							if (succeeded) {
 								if (should_refresh) {
-									void refreshAll();
+									await refreshAll();
 								}
 							} else {
 								if (DEV) {
