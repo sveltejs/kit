@@ -7,6 +7,7 @@ import { test, expect } from 'vitest';
 
 import { build, watch } from '../src/index.js';
 import { load_config } from '../src/config.js';
+import { transpile_ts } from '../src/typescript.js';
 import { _create_validator } from '../src/validate.js';
 import { resolve_aliases } from '../src/utils.js';
 import { walk } from '../src/filesystem.js';
@@ -141,6 +142,19 @@ test('create package with typescript using nodenext', async () => {
 
 test('create package with .ts extension rewrites, including for aliases', async () => {
 	await test_make_package('typescript-ts-extension-rewrites');
+});
+
+test('does not rewrite import.meta.glob without .ts extension rewrites', async () => {
+	const source = "import './helper.ts';\nimport.meta.glob('./helper*.ts');\n";
+	const output = await transpile_ts(
+		join(import.meta.dirname, '..', 'tsconfig.json'),
+		join(import.meta.dirname, 'fixtures', 'no-ts-extension-rewrites.ts'),
+		source,
+		new Map()
+	);
+
+	expect(output).toContain("import './helper.ts';");
+	expect(output).toContain("import.meta.glob('./helper*.ts');");
 });
 
 // only run this test in newer Node versions
