@@ -5,5 +5,5 @@ export async function load({ fetch, url }) {
 	const res = await fetch(`http://localhost:${port}`);
 
 	const { count } = await res.json();
-	return { count };
+	return { count, port };
 }

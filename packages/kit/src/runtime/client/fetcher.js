@@ -61,7 +61,7 @@ if (DEV && BROWSER) {
 		const method = input instanceof Request ? input.method : init?.method || 'GET';
 
 		if (method !== 'GET') {
-			cache.delete(build_selector(input));
+			cache.delete(build_selector(requested_url(input)));
 		}
 
 		return native_fetch(input, init);
@@ -71,7 +71,7 @@ if (DEV && BROWSER) {
 		const method = input instanceof Request ? input.method : init?.method || 'GET';
 
 		if (method !== 'GET') {
-			cache.delete(build_selector(input));
+			cache.delete(build_selector(requested_url(input)));
 		}
 
 		return native_fetch(input, init);
@@ -149,6 +149,18 @@ export function dev_fetch(resource, opts) {
 		configurable: true
 	});
 	return window.fetch(resource, patched_opts);
+}
+
+/**
+ * Mirror the url normalization in `resolve_fetch_url`, so that non-GET requests
+ * evict the cache entry regardless of how the url is spelled
+ * @param {RequestInfo | URL} input
+ */
+function requested_url(input) {
+	const resolved = new URL(input instanceof Request ? input.url : input, location.href);
+	return resolved.origin === location.origin
+		? resolved.href.slice(location.origin.length)
+		: resolved.href;
 }
 
 /**
