@@ -4,13 +4,6 @@ import { readFileSync, writeFileSync } from 'node:fs';
 await createBundle({
 	output: 'types/index.d.ts',
 	modules: {
-		'@sveltejs/kit': 'src/exports/public.d.ts',
-		'@sveltejs/kit/env': 'src/exports/env/public.d.ts',
-		'@sveltejs/kit/hooks': 'src/exports/hooks/public.d.ts',
-		'@sveltejs/kit/node': 'src/exports/node/index.js',
-		'@sveltejs/kit/params': 'src/exports/params/public.d.ts',
-		'@sveltejs/kit/remote': 'src/exports/remote/public.d.ts',
-		'@sveltejs/kit/vite': 'src/exports/vite/public.d.ts',
 		'$app/env': 'src/runtime/app/env/types.d.ts',
 		'$app/forms': 'src/runtime/app/forms/public.d.ts',
 		'$app/navigation': 'src/runtime/app/navigation/public.d.ts',

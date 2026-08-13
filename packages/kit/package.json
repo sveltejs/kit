@@ -116,7 +116,7 @@
 	"exports": {
 		"./package.json": "./package.json",
 		".": {
-			"types": "./types/index.d.ts",
+			"types": "./src/exports/public.d.ts",
 			"import": "./src/exports/index.js"
 		},
 		"./internal": {
@@ -135,27 +135,27 @@
 			"import": "./src/exports/internal/server/index.js"
 		},
 		"./node": {
-			"types": "./types/index.d.ts",
+			"types": "./src/exports/node/public.d.ts",
 			"import": "./src/exports/node/index.js"
 		},
 		"./hooks": {
-			"types": "./types/index.d.ts",
+			"types": "./src/exports/hooks/public.d.ts",
 			"import": "./src/exports/hooks/index.js"
 		},
 		"./env": {
-			"types": "./types/index.d.ts",
+			"types": "./src/exports/env/public.d.ts",
 			"import": "./src/exports/env/index.js"
 		},
 		"./params": {
-			"types": "./types/index.d.ts",
+			"types": "./src/exports/params/public.d.ts",
 			"import": "./src/exports/params/index.js"
 		},
 		"./remote": {
-			"types": "./types/index.d.ts",
+			"types": "./src/exports/remote/public.d.ts",
 			"import": "./src/exports/remote/index.js"
 		},
 		"./vite": {
-			"types": "./types/index.d.ts",
+			"types": "./src/exports/vite/public.d.ts",
 			"import": "./src/exports/vite/index.js"
 		}
 	},
