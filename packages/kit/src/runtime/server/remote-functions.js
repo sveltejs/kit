@@ -1,7 +1,7 @@
 /** @import { RequestEvent, SSRManifest } from '@sveltejs/kit' */
 /** @import { RemoteForm } from '$app/server' */
 /** @import { ActionResult } from '$app/forms' */
-/** @import { RemoteFormInternals, RemoteFunctionData, RemoteFunctionResponse, RemoteInternals, RequestState, SSROptions } from 'types' */
+/** @import { RemoteFormInternals, RemoteFunctionData, RemoteFunctionResponse, RemoteInternals, RemoteQueryLiveInternals, RequestState, SSROptions } from 'types' */
 
 import { error } from '@sveltejs/kit';
 import { Redirect, SvelteKitError } from '@sveltejs/kit/internal';
@@ -44,13 +44,11 @@ export async function handle_remote_call(event, state, options, manifest, id) {
 }
 
 /**
- * @param {RequestEvent} event
- * @param {RequestState} state
- * @param {SSROptions} options
+ * Looks a remote function up in the manifest by its request id.
  * @param {SSRManifest} manifest
  * @param {string} id
  */
-async function handle_remote_call_internal(event, state, options, manifest, id) {
+async function resolve_remote_function(manifest, id) {
 	const [hash, name, additional_args] = id.split('/');
 	const remotes = manifest._.remotes;
 
@@ -61,8 +59,152 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 
 	if (!fn) error(404);
 
-	/** @type {RemoteInternals} */
-	const internals = fn.__;
+	return { fn, internals: /** @type {RemoteInternals} */ (fn.__), additional_args };
+}
+
+/**
+ * @param {RemoteFunctionData} data
+ * @param {HeadersInit | undefined} headers
+ */
+function result_response(data, headers) {
+	return Response.json(
+		/** @type {RemoteFunctionResponse} */ ({
+			type: 'result',
+			data: stringify(data)
+		}),
+		{ headers }
+	);
+}
+
+/**
+ * Handles a `query.live` call: runs the generator and streams its values as
+ * server-sent events.
+ * @param {RequestEvent} event
+ * @param {RequestState} state
+ * @param {SSROptions} options
+ * @param {RemoteQueryLiveInternals} internals
+ */
+function handle_live_query(event, state, options, internals) {
+	if (event.request.method !== 'GET') {
+		throw new SvelteKitError(
+			405,
+			'Method Not Allowed',
+			`\`query.live\` functions must be invoked via GET request, not ${event.request.method}`
+		);
+	}
+
+	const payload = /** @type {string} */ (new URL(event.request.url).searchParams.get('payload'));
+
+	// aborted whenever the stream is torn down, so unlike the request signal it
+	// also fires on response teardown, which the generator could otherwise
+	// never observe
+	const cancellation = new AbortController();
+
+	if (event.request.signal.aborted) {
+		cancellation.abort();
+	} else {
+		event.request.signal.addEventListener('abort', () => cancellation.abort(), {
+			once: true
+		});
+	}
+
+	const live_event = {
+		...event,
+		request: new Request(event.request, { signal: cancellation.signal })
+	};
+
+	const generator = internals.run(live_event, state, parse_remote_arg(payload));
+
+	/** @param {any} payload */
+	const frame = (payload) => 'data: ' + JSON.stringify(payload) + '\n\n';
+
+	/**
+	 * Resolves with the next iterator result, or with `KEEP_ALIVE` once
+	 * `KEEP_ALIVE_INTERVAL` has elapsed without one.
+	 * @param {Promise<IteratorResult<any>>} pending
+	 * @returns {Promise<IteratorResult<any> | typeof KEEP_ALIVE>}
+	 */
+	function next_or_keep_alive(pending) {
+		return new Promise((resolve, reject) => {
+			const timer = setTimeout(() => resolve(KEEP_ALIVE), KEEP_ALIVE_INTERVAL);
+			pending.then(
+				(result) => {
+					clearTimeout(timer);
+					resolve(result);
+				},
+				(error) => {
+					clearTimeout(timer);
+					reject(error);
+				}
+			);
+		});
+	}
+
+	/** @type {string | undefined} */
+	let result = undefined;
+
+	// everything the stream sends, as a generator of SSE strings — it holds no
+	// reference to the stream controller, so it cannot touch a dead one
+	async function* frames() {
+		/** @type {Promise<IteratorResult<any>> | null} */
+		let pending = null;
+
+		try {
+			while (true) {
+				pending ??= generator.next();
+				const winner = await next_or_keep_alive(pending);
+
+				if (winner === KEEP_ALIVE) {
+					// SSE comments (lines starting with `:`) are ignored by the client
+					yield ': keep-alive\n\n';
+					continue;
+				}
+
+				pending = null;
+
+				if (winner.done) return;
+
+				// only send changed data
+				if (result !== (result = stringify(winner.value))) {
+					yield frame({ type: 'result', result });
+				}
+			}
+		} catch (error) {
+			if (!cancellation.signal.aborted) {
+				if (error instanceof Redirect) {
+					yield frame({ type: 'redirect', location: error.location });
+				} else {
+					yield frame({
+						type: 'error',
+						error: await handle_error_and_jsonify(event, state, options, error)
+					});
+				}
+			}
+		} finally {
+			cancellation.abort();
+			await generator.return(undefined);
+		}
+	}
+
+	return new Response(
+		stream_from_iterator(frames(), () => cancellation.abort()),
+		{
+			headers: {
+				'cache-control': 'private, no-store',
+				'content-type': 'text/event-stream'
+			}
+		}
+	);
+}
+/**
+ * @param {RequestEvent} event
+ * @param {RequestState} state
+ * @param {SSROptions} options
+ * @param {SSRManifest} manifest
+ * @param {string} id
+ */
+async function handle_remote_call_internal(event, state, options, manifest, id) {
+	const { fn, internals, additional_args } = await resolve_remote_function(manifest, id);
 
 	event.tracing.current.setAttributes({
 		'sveltekit.remote.call.type': internals.type,
@@ -77,120 +219,8 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 		const data = {};
 
 		switch (internals.type) {
-			case 'query_live': {
-				if (event.request.method !== 'GET') {
-					throw new SvelteKitError(
-						405,
-						'Method Not Allowed',
-						`\`query.live\` functions must be invoked via GET request, not ${event.request.method}`
-					);
-				}
-
-				const payload = /** @type {string} */ (
-					new URL(event.request.url).searchParams.get('payload')
-				);
-
-				// aborted whenever the stream is torn down, so unlike the request signal it
-				// also fires on response teardown, which the generator could otherwise
-				// never observe
-				const cancellation = new AbortController();
-
-				if (event.request.signal.aborted) {
-					cancellation.abort();
-				} else {
-					event.request.signal.addEventListener('abort', () => cancellation.abort(), {
-						once: true
-					});
-				}
-
-				const live_event = {
-					...event,
-					request: new Request(event.request, { signal: cancellation.signal })
-				};
-
-				const generator = internals.run(live_event, state, parse_remote_arg(payload));
-
-				/** @param {any} payload */
-				const frame = (payload) => 'data: ' + JSON.stringify(payload) + '\n\n';
-
-				/**
-				 * Resolves with the next iterator result, or with `KEEP_ALIVE` once
-				 * `KEEP_ALIVE_INTERVAL` has elapsed without one.
-				 * @param {Promise<IteratorResult<any>>} pending
-				 * @returns {Promise<IteratorResult<any> | typeof KEEP_ALIVE>}
-				 */
-				function next_or_keep_alive(pending) {
-					return new Promise((resolve, reject) => {
-						const timer = setTimeout(() => resolve(KEEP_ALIVE), KEEP_ALIVE_INTERVAL);
-						pending.then(
-							(result) => {
-								clearTimeout(timer);
-								resolve(result);
-							},
-							(error) => {
-								clearTimeout(timer);
-								reject(error);
-							}
-						);
-					});
-				}
-
-				/** @type {string | undefined} */
-				let result = undefined;
-
-				// everything the stream sends, as a generator of SSE strings — it holds no
-				// reference to the stream controller, so it cannot touch a dead one
-				async function* frames() {
-					/** @type {Promise<IteratorResult<any>> | null} */
-					let pending = null;
-
-					try {
-						while (true) {
-							pending ??= generator.next();
-							const winner = await next_or_keep_alive(pending);
-
-							if (winner === KEEP_ALIVE) {
-								// SSE comments (lines starting with `:`) are ignored by the client
-								yield ': keep-alive\n\n';
-								continue;
-							}
-
-							pending = null;
-
-							if (winner.done) return;
-
-							// only send changed data
-							if (result !== (result = stringify(winner.value))) {
-								yield frame({ type: 'result', result });
-							}
-						}
-					} catch (error) {
-						if (!cancellation.signal.aborted) {
-							if (error instanceof Redirect) {
-								yield frame({ type: 'redirect', location: error.location });
-							} else {
-								yield frame({
-									type: 'error',
-									error: await handle_error_and_jsonify(event, state, options, error)
-								});
-							}
-						}
-					} finally {
-						cancellation.abort();
-						await generator.return(undefined);
-					}
-				}
-
-				return new Response(
-					stream_from_iterator(frames(), () => cancellation.abort()),
-					{
-						headers: {
-							'cache-control': 'private, no-store',
-							'content-type': 'text/event-stream'
-						}
-					}
-				);
-			}
+			case 'query_live':
+				return handle_live_query(event, state, options, internals);
 
 			case 'query_batch': {
 				if (event.request.method !== 'POST') {
@@ -251,13 +281,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 
 				if (data._.issues) {
 					// special case — don't serialize refreshes/reconnects
-					return Response.json(
-						/** @type {RemoteFunctionResponse} */ ({
-							type: 'result',
-							data: stringify(data)
-						}),
-						{ headers }
-					);
+					return result_response(data, headers);
 				}
 
 				break;
@@ -299,24 +323,12 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 
 		await collect_remote_data(data, event, state, options);
 
-		return Response.json(
-			/** @type {RemoteFunctionResponse} */ ({
-				type: 'result',
-				data: stringify(data)
-			}),
-			{ headers }
-		);
+		return result_response(data, headers);
 	} catch (error) {
 		if (error instanceof Redirect) {
 			const data = await collect_remote_data({ redirect: error.location }, event, state, options);
 
-			return Response.json(
-				/** @type {RemoteFunctionResponse} */ ({
-					type: 'result',
-					data: stringify(data)
-				}),
-				{ headers }
-			);
+			return result_response(data, headers);
 		}
 
 		const transformed = await handle_error_and_jsonify(event, state, options, error);
