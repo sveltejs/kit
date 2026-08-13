@@ -10,7 +10,7 @@
 
 ### Patch Changes
 
-- fix: prevent quadratic backtracking in `Accept` header content negotiation ([82712fc](https://github.com/sveltejs/kit/commit/82712fc02c24b1dcf5b25d7a52129cd8455f04f5))
+- fix: prevent quadratic backtracking in `Accept` header content negotiation ([`82712fc`](https://github.com/sveltejs/kit/commit/82712fc02c24b1dcf5b25d7a52129cd8455f04f5))
 
 ## 2.70.1
 
