@@ -785,7 +785,8 @@ describe('binary form serializer', () => {
 					'Content-Type': BINARY_FORM_CONTENT_TYPE,
 					'Content-Length': blob.size.toString()
 				}
-			})
+			}),
+			''
 		);
 		expect(res.data.empty.size).toBe(0);
 		expect(await res.data.empty.text()).toBe('');
