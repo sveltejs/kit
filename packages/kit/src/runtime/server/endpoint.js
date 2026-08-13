@@ -25,8 +25,8 @@ export async function render_endpoint(event, state, mod) {
 
 	const prerender = mod.prerender ?? state.prerender_default;
 
-	if (prerender && (mod.POST || mod.PATCH || mod.PUT || mod.DELETE)) {
-		throw new Error('Cannot prerender endpoints that have mutative methods');
+	if (prerender && (mod.POST || mod.PATCH || mod.PUT || mod.DELETE || mod.QUERY)) {
+		throw new Error('Cannot prerender endpoints that have mutative methods or QUERY');
 	}
 
 	if (state.prerendering && !state.prerendering.inside_reroute && !prerender) {

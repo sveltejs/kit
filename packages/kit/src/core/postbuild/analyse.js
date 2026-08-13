@@ -175,9 +175,9 @@ async function analyse({
 function analyse_endpoint(route, mod) {
 	validate_server_exports(mod, route.id);
 
-	if (mod.prerender && (mod.POST || mod.PATCH || mod.PUT || mod.DELETE)) {
+	if (mod.prerender && (mod.POST || mod.PATCH || mod.PUT || mod.DELETE || mod.QUERY)) {
 		throw new Error(
-			`Cannot prerender a +server file with POST, PATCH, PUT, or DELETE (${route.id})`
+			`Cannot prerender a +server file with POST, PATCH, PUT, DELETE, or QUERY (${route.id})`
 		);
 	}
 
