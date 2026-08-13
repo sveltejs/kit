@@ -1074,12 +1074,11 @@ function resolve_fetch_url(input, init, url) {
 	// we must fixup relative urls so they are resolved from the target page
 	const resolved = new URL(input instanceof Request ? input.url : input, url);
 
-	// match ssr serialized data url, which is important to find cached responses
-	// (the server serializes the normalized href)
+	// match the server's serialization of `fetched.url` (see load_data.js): a path for same-origin
+	// urls, so prerendered pages can be served from any origin, the normalized href otherwise
 	const requested =
 		resolved.origin === url.origin ? resolved.href.slice(url.origin.length) : resolved.href;
 
-	// prerendered pages may be served from any origin, so `initial_fetch` urls shouldn't be resolved
 	const promise = started
 		? subsequent_fetch(requested, resolved.href, init)
 		: initial_fetch(requested, init);
