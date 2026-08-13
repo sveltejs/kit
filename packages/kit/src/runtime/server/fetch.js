@@ -191,6 +191,9 @@ function normalize_fetch_input(info, init, url) {
 	return new Request(typeof info === 'string' ? new URL(info, url) : info, init);
 }
 
+// keeps requests reachable while their abort signal is still being awaited
+const pending_subrequests = new Set();
+
 /**
  * @param {Request} request
  * @param {import('types').SSROptions} options
@@ -219,8 +222,15 @@ async function internal_fetch(request, options, manifest, state) {
 		remove_abort_listener = () => request.signal.removeEventListener('abort', on_abort);
 	});
 
+	// nothing else holds `request`, and a collected request never delivers its abort,
+	// which would leave this race pending forever if `respond` also never settles
+	pending_subrequests.add(request);
+
 	return Promise.race([
 		respond(request, options, manifest, subrequest_state),
 		abort_promise
-	]).finally(remove_abort_listener);
+	]).finally(() => {
+		pending_subrequests.delete(request);
+		remove_abort_listener();
+	});
 }
