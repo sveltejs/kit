@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "3.0.0-next.21",
+	"version": "3.0.0-next.22",
 	"description": "SvelteKit is the fastest way to build Svelte apps",
 	"keywords": [
 		"framework",
