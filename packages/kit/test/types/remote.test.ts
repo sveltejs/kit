@@ -1,6 +1,5 @@
 import { query, prerender, command, form, requested } from '$app/server';
-import { StandardSchemaV1 } from '@standard-schema/spec';
-import {
+import type {
 	RemoteForm,
 	RemoteFormEnhanceCallback,
 	RemoteFormEnhanceInstance,
@@ -8,9 +7,10 @@ import {
 	RemoteFormInput,
 	RemoteLiveQueryFunction,
 	RemotePrerenderFunction,
-	RemoteQueryFunction,
-	invalid
-} from '@sveltejs/kit';
+	RemoteQueryFunction
+} from '@sveltejs/kit/remote';
+import { StandardSchemaV1 } from '@standard-schema/spec';
+import { invalid } from '@sveltejs/kit';
 
 const schema: StandardSchemaV1<string> = null as any;
 const schema2: StandardSchemaV1<string, number> = null as any;

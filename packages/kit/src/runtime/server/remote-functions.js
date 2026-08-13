@@ -1,4 +1,5 @@
-/** @import { RemoteForm, RequestEvent, SSRManifest } from '@sveltejs/kit' */
+/** @import { RequestEvent, SSRManifest } from '@sveltejs/kit' */
+/** @import { RemoteForm } from '@sveltejs/kit/remote' */
 /** @import { ActionResult } from '$app/forms' */
 /** @import { RemoteFormInternals, RemoteFunctionData, RemoteFunctionResponse, RemoteInternals, RequestState, SSROptions } from 'types' */
 
@@ -612,11 +613,22 @@ async function handle_remote_form_post_internal(event, state, manifest, id) {
 /**
  * @param {URL} url
  */
+export function has_remote_prefix(url) {
+	return url.pathname.startsWith(`${base}/${app_dir}/remote/`);
+}
+
+/**
+ * @param {URL} url
+ */
+export function strip_remote_prefix(url) {
+	return url.pathname.replace(`${base}/${app_dir}/remote/`, '');
+}
+
+/**
+ * @param {URL} url
+ */
 export function get_remote_id(url) {
-	return (
-		url.pathname.startsWith(`${base}/${app_dir}/remote/`) &&
-		url.pathname.replace(`${base}/${app_dir}/remote/`, '')
-	);
+	return has_remote_prefix(url) && strip_remote_prefix(url);
 }
 
 /**

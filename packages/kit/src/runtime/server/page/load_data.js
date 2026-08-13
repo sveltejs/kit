@@ -260,7 +260,7 @@ export async function load_data({
  * @param {import('types').PrerenderOptions | undefined} prerendering
  * @param {import('./types.js').Fetched[]} fetched
  * @param {boolean} csr
- * @param {Pick<Required<import('@sveltejs/kit').ResolveOptions>, 'filterSerializedResponseHeaders'>} resolve_opts
+ * @param {Pick<Required<import('@sveltejs/kit/hooks').ResolveOptions>, 'filterSerializedResponseHeaders'>} resolve_opts
  * @returns {typeof fetch}
  */
 export function create_universal_fetch(event, prerendering, fetched, csr, resolve_opts) {

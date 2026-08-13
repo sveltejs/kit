@@ -1,4 +1,4 @@
-/** @import { RemoteLiveQuery, RemoteLiveQueryFunction } from '@sveltejs/kit' */
+/** @import { RemoteLiveQuery, RemoteLiveQueryFunction } from '@sveltejs/kit/remote' */
 import { live_query_map } from '../../client.js';
 import { QUERY_FUNCTION_ID } from '../shared.svelte.js';
 import { DEV } from 'esm-env';

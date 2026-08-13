@@ -140,15 +140,15 @@ export function create_builder({
 		},
 
 		async generateFallback(dest) {
-			const manifest_path = `${config.kit.outDir}/output/server/manifest-full.js`;
-			const env = loadEnv(vite_config.mode, config.kit.env.dir, '');
+			const manifest_path = `${config.outDir}/output/server/manifest-full.js`;
+			const env = loadEnv(vite_config.mode, config.env.dir, '');
 
 			const fallback = await generate_fallback({
 				manifest_path,
 				env,
-				out_dir: config.kit.outDir,
-				origin: config.kit.paths.origin || 'http://sveltekit-prerender',
-				assets: config.kit.files.assets
+				out_dir: config.outDir,
+				origin: config.paths.origin || 'http://sveltekit-prerender',
+				assets: config.files.assets
 			});
 
 			if (existsSync(dest)) {
@@ -163,8 +163,8 @@ export function create_builder({
 		generateEnvModule() {
 			if (!build_data.client?.uses_env_dynamic_public) return;
 
-			const dest = `${config.kit.outDir}/output/prerendered/dependencies/${config.kit.appDir}`;
-			const env = loadEnv(vite_config.mode, config.kit.env.dir, '');
+			const dest = `${config.outDir}/output/prerendered/dependencies/${config.appDir}`;
+			const env = loadEnv(vite_config.mode, config.env.dir, '');
 
 			/** @type {Record<string, any>} */
 			const values = {};
@@ -199,15 +199,15 @@ export function create_builder({
 		},
 
 		getBuildDirectory(name) {
-			return `${config.kit.outDir}/${name}`;
+			return `${config.outDir}/${name}`;
 		},
 
 		getClientDirectory() {
-			return `${config.kit.outDir}/output/client`;
+			return `${config.outDir}/output/client`;
 		},
 
 		getServerDirectory() {
-			return `${config.kit.outDir}/output/server`;
+			return `${config.outDir}/output/server`;
 		},
 
 		getAppPath() {
@@ -215,14 +215,14 @@ export function create_builder({
 		},
 
 		writeClient(dest) {
-			return copy(`${config.kit.outDir}/output/client`, dest, {
+			return copy(`${config.outDir}/output/client`, dest, {
 				// avoid making vite build artefacts public
 				filter: (basename) => basename !== '.vite'
 			});
 		},
 
 		writePrerendered(dest) {
-			const source = `${config.kit.outDir}/output/prerendered`;
+			const source = `${config.outDir}/output/prerendered`;
 
 			return [
 				...copy(`${source}/pages`, dest),
@@ -232,11 +232,11 @@ export function create_builder({
 		},
 
 		writeServer(dest) {
-			return copy(`${config.kit.outDir}/output/server`, dest);
+			return copy(`${config.outDir}/output/server`, dest);
 		},
 
 		hasServerInstrumentationFile() {
-			return existsSync(`${config.kit.outDir}/output/server/instrumentation.server.js`);
+			return existsSync(`${config.outDir}/output/server/instrumentation.server.js`);
 		},
 
 		instrument({

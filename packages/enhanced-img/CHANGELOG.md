@@ -1,5 +1,13 @@
 # @sveltejs/enhanced-img
 
+## 1.0.0-next.5
+
+### Patch Changes
+
+- chore: bump `magic-string` to 1.1.0 ([#16745](https://github.com/sveltejs/kit/pull/16745))
+
+- chore: bump `zimmerframe` to 1.1.4 ([#16745](https://github.com/sveltejs/kit/pull/16745))
+
 ## 1.0.0-next.4
 
 ### Major Changes

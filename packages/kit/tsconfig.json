@@ -9,8 +9,10 @@
 		"paths": {
 			"@sveltejs/kit": ["./src/exports/public.d.ts"],
 			"@sveltejs/kit/env": ["./src/exports/env/public.d.ts"],
+			"@sveltejs/kit/hooks": ["./src/exports/hooks/public.d.ts"],
 			"@sveltejs/kit/params": ["./src/exports/params/public.d.ts"],
-			"@sveltejs/kit/vite": ["./src/exports/vite/index.js"],
+			"@sveltejs/kit/remote": ["./src/exports/remote/public.d.ts"],
+			"@sveltejs/kit/vite": ["./src/exports/vite/public.d.ts"],
 			"@sveltejs/kit/node": ["./src/exports/node/index.js"],
 			"@sveltejs/kit/internal": ["./src/exports/internal/index.js"],
 			"@sveltejs/kit/internal/server": ["./src/exports/internal/server/index.js"],
@@ -21,7 +23,7 @@
 			"$app/paths": ["./src/runtime/app/paths/public.d.ts"],
 			"$app/paths/internal/client": ["./src/runtime/app/paths/internal/client.js"],
 			"$app/paths/internal/server": ["./src/runtime/app/paths/internal/server.js"],
-			"$app/server": ["./src/runtime/app/server/index.js"],
+			"$app/server": ["./src/runtime/app/server/public.d.ts"],
 			"$app/state": ["./src/runtime/app/state/public.d.ts"],
 			// internal use only
 			"types": ["./src/types/internal.d.ts"]

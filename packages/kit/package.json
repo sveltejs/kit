@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "3.0.0-next.19",
+	"version": "3.0.0-next.22",
 	"description": "SvelteKit is the fastest way to build Svelte apps",
 	"keywords": [
 		"framework",
@@ -18,18 +18,19 @@
 	"homepage": "https://svelte.dev",
 	"type": "module",
 	"dependencies": {
+		"@rolldown/pluginutils": "^1.0.1",
 		"@standard-schema/spec": "^1.1.0",
-		"@sveltejs/acorn-typescript": "^1.0.10",
-		"acorn": "^8.17.0",
-		"cookie": "^2.0.0",
-		"devalue": "^5.8.1",
+		"@sveltejs/acorn-typescript": "^1.0.12",
+		"acorn": "^8.18.0",
+		"cookie": "^2.0.1",
+		"devalue": "^5.9.0",
 		"esm-env": "^1.2.2",
-		"magic-string": "^0.30.21",
-		"mrmime": "^2.0.0",
+		"magic-string": "^1.1.0",
+		"mrmime": "^2.0.1",
 		"sirv": "^3.0.2"
 	},
 	"devDependencies": {
-		"@opentelemetry/api": "^1.9.0",
+		"@opentelemetry/api": "catalog:",
 		"@playwright/test": "catalog:",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"@types/connect": "catalog:",
@@ -37,7 +38,6 @@
 		"@types/node": "catalog:",
 		"dts-buddy": "^0.8.3",
 		"jsdom": "catalog:",
-		"rolldown": "catalog:",
 		"svelte": "catalog:",
 		"svelte-preprocess": "catalog:",
 		"typescript": "~6.0.3",
@@ -86,7 +86,7 @@
 		"test:server-side-route-resolution:build": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:server-side-route-resolution:build",
 		"test:svelte-async:dev": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:svelte-async:dev",
 		"test:svelte-async:build": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:svelte-async:build",
-		"test:unit": "vitest run ./",
+		"test:unit": "vitest run -c vitest.kit.config.js",
 		"tsc-native": "node node_modules/@typescript/native/bin/tsc",
 		"prepublishOnly": "pnpm generate:types",
 		"generate:version": "node scripts/generate-version.js",
@@ -153,6 +153,10 @@
 		"./params": {
 			"types": "./types/index.d.ts",
 			"import": "./src/exports/params/index.js"
+		},
+		"./remote": {
+			"types": "./types/index.d.ts",
+			"import": "./src/exports/remote/index.js"
 		},
 		"./vite": {
 			"types": "./types/index.d.ts",

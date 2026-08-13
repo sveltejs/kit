@@ -34,7 +34,7 @@ const plugin = function (defaults = {}) {
 			const files = fileURLToPath(new URL('./files', import.meta.url).href);
 
 			const dirs = {
-				static: `${dir}/static${builder.config.kit.paths.base}`,
+				static: `${dir}/static${builder.config.paths.base}`,
 				functions: `${dir}/functions`
 			};
 
@@ -121,7 +121,7 @@ const plugin = function (defaults = {}) {
 				}
 
 				if (config.isr) {
-					const directory = path.relative('.', builder.config.kit.files.routes + route.id);
+					const directory = path.relative('.', builder.config.files.routes + route.id);
 
 					if (config.isr.allowQuery?.includes('__pathname')) {
 						throw new Error(
@@ -205,7 +205,7 @@ const plugin = function (defaults = {}) {
 				);
 			}
 
-			if (builder.config.kit.experimental.remoteFunctions) {
+			if (builder.config.experimental.remoteFunctions) {
 				// Ensure remote functions are always handled by the catchall route, which will be symlinked to /_app/remote.
 				// This stops them from being affected by ISR config from other routes that match /[...rest] (ref: #15085)
 				// and also makes them show as handled by `/_app/remote` in Vercel's observability.
@@ -311,21 +311,21 @@ const plugin = function (defaults = {}) {
 				}
 			}
 
-			if (builder.config.kit.router.resolution === 'server') {
+			if (builder.config.router.resolution === 'server') {
 				// Create a separate serverless function just for server-side route resolution.
 				// By omitting all routes we're ensuring it's small (the routes will still be available
 				// to the route resolution, because it does not rely on the server routing manifest)
 				const runtime = resolve_runtime(defaults.runtime);
 
 				await generate_serverless_function(
-					`${builder.config.kit.appDir}/route`,
+					`${builder.config.appDir}/route`,
 					/** @type {any} */ ({ ...defaults, runtime }),
 					[]
 				);
 
 				static_config.routes.push({
-					src: `${builder.config.kit.paths.base}/(?:.+/|.+\\.html)?__route\\.js`,
-					dest: `${builder.config.kit.paths.base}/${builder.config.kit.appDir}/route`
+					src: `${builder.config.paths.base}/(?:.+/|.+\\.html)?__route\\.js`,
+					dest: `${builder.config.paths.base}/${builder.config.appDir}/route`
 				});
 			}
 
@@ -462,7 +462,7 @@ function static_vercel_config(builder, config, dir) {
 				}
 			],
 			headers: {
-				'Set-Cookie': `__vdpl=${process.env.VERCEL_DEPLOYMENT_ID}; Path=${builder.config.kit.paths.base}/; SameSite=Strict; Secure; HttpOnly`
+				'Set-Cookie': `__vdpl=${process.env.VERCEL_DEPLOYMENT_ID}; Path=${builder.config.paths.base}/; SameSite=Strict; Secure; HttpOnly`
 			},
 			continue: true
 		});
@@ -471,7 +471,7 @@ function static_vercel_config(builder, config, dir) {
 		// allows you to set multiple cookies for a single route. essentially, since we
 		// know that the entry file will be requested immediately, we can set the second
 		// cookie in _that_ response rather than the document response
-		const base = `${dir}/${builder.config.kit.appDir}/immutable/entry`;
+		const base = `${dir}/${builder.config.appDir}/immutable/entry`;
 		const entry = fs.readdirSync(base).find((file) => file.startsWith('start.'));
 
 		if (!entry) {

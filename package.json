@@ -6,7 +6,7 @@
 	"type": "module",
 	"scripts": {
 		"test:kit": "pnpm run --dir packages/kit test",
-		"test:kit:unit": "vitest run packages/kit",
+		"test:kit:unit": "cd packages/kit && vitest run -c vitest.kit.config.js",
 		"test:kit:dev": "pnpm run --dir packages/kit test:dev",
 		"test:kit:build": "pnpm run --dir packages/kit test:build",
 		"test:cross-platform:dev": "pnpm run --dir packages/kit test:cross-platform:dev",
@@ -37,7 +37,7 @@
 		"oxfmt": "^0.62.0",
 		"vitest": "catalog:"
 	},
-	"packageManager": "pnpm@11.19.0+sha512.7881f3ed590d472c4a955e2b88b2121791116066dcc88cbca3849ec9b60f1bbaa6d2ccb221fa91da4e1c65bef2bcbe379365aea7ac539c7bf86dedc3a1b22dce",
+	"packageManager": "pnpm@11.21.0+sha512.521705bce689924eac72f5a3587122f362689ef6571e55ba80076fd637c11132ecffada26fad4ea79c485bfddbfd3d5a2a5b05805a77e893de71ec8a6cca3bb1",
 	"engines": {
 		"pnpm": ">=11.0.0"
 	}

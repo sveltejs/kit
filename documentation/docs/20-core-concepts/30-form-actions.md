@@ -301,7 +301,7 @@ export {};
 
 // @filename: index.js
 // ---cut---
-/** @type {import('@sveltejs/kit').Handle} */
+/** @type {import('@sveltejs/kit/hooks').Handle} */
 export async function handle({ event, resolve }) {
 	event.locals.user = await getUser(event.cookies.get('sessionid'));
 	return resolve(event);

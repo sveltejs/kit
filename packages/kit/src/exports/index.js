@@ -271,16 +271,6 @@ export function invalid(...issues) {
 }
 
 /**
- * Checks whether this is an validation error thrown by {@link invalid}.
- * @param {unknown} e The object to check.
- * @return {e is import('./public.js').ActionFailure}
- * @since 2.47.3
- */
-export function isValidationError(e) {
-	return e instanceof ValidationError;
-}
-
-/**
  * Strips possible SvelteKit-internal suffixes and trailing slashes from the URL pathname.
  * Returns the normalized URL as well as a method for adding the potential suffix back
  * based on a new pathname (possibly including search) or URL.

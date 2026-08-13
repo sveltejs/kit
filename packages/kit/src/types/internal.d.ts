@@ -1,29 +1,28 @@
 import { Component } from 'svelte';
 import {
-	Config,
 	ServerLoad,
-	Handle,
-	HandleServerError,
-	KitConfig,
 	Load,
 	RequestHandler,
-	ResolveOptions,
 	Server,
 	ServerInitOptions,
-	HandleFetch,
 	Actions,
-	HandleClientError,
-	Reroute,
 	RequestEvent,
 	SSRManifest,
-	Emulator,
-	ServerInit,
-	ClientInit,
-	Transport,
-	RemoteFormIssue,
-	RemoteQuery,
-	RemoteLiveQuery
+	Emulator
 } from '@sveltejs/kit';
+import { RemoteFormIssue, RemoteQuery, RemoteLiveQuery } from '@sveltejs/kit/remote';
+import { Config } from '@sveltejs/kit/vite';
+import {
+	ClientInit,
+	Handle,
+	HandleClientError,
+	HandleFetch,
+	HandleServerError,
+	Reroute,
+	ResolveOptions,
+	ServerInit,
+	Transport
+} from '@sveltejs/kit/hooks';
 import {
 	HttpMethod,
 	MaybePromise,
@@ -48,6 +47,7 @@ export interface ServerInternalModule {
 	set_version(version: string): void;
 	set_fix_stack_trace(fix_stack_trace: (error: Error) => void): void;
 	get_hooks: () => Promise<Record<string, any>>;
+	log_response: (status: number, request: Request) => void;
 }
 
 export interface Asset {
@@ -476,13 +476,13 @@ export type SSRNodeLoader = () => Promise<SSRNode>;
 
 export interface SSROptions {
 	app_template_contains_nonce: boolean;
-	csp: ValidatedConfig['kit']['csp'];
+	csp: ValidatedConfig['csp'];
 	csrf_check_origin: boolean;
 	csrf_trusted_origins: string[];
 	embedded: boolean;
 	hash_routing: boolean;
 	hooks: ServerHooks;
-	link_header_preload: ValidatedConfig['kit']['output']['linkHeaderPreload'];
+	link_header_preload: ValidatedConfig['output']['linkHeaderPreload'];
 	paths_origin: string | undefined;
 	service_worker: boolean;
 	service_worker_options: RegistrationOptions;
@@ -546,12 +546,9 @@ export interface Uses {
 	search_params: Set<string>;
 }
 
-export type ValidatedConfig = Omit<Config, 'kit'> & {
-	kit: ValidatedKitConfig;
-	extensions: string[];
+export type ValidatedConfig = RecursiveRequired<Omit<Config, 'preprocess'>> & {
+	preprocess: Config['preprocess'];
 };
-
-export type ValidatedKitConfig = RecursiveRequired<KitConfig>;
 
 export type BinaryFormMeta = {
 	remote_refreshes?: string[];

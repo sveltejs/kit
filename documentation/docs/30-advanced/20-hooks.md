@@ -20,7 +20,7 @@ This function runs every time the SvelteKit server receives a [request](web-stan
 
 ```js
 /// file: src/hooks.server.js
-/** @type {import('@sveltejs/kit').Handle} */
+/** @type {import('@sveltejs/kit/hooks').Handle} */
 export async function handle({ event, resolve }) {
 	if (event.url.pathname.startsWith('/custom')) {
 		return new Response('custom response');
@@ -49,7 +49,7 @@ You can define multiple `handle` functions and execute them with the [`sequence`
 
 ```js
 /// file: src/hooks.server.js
-/** @type {import('@sveltejs/kit').Handle} */
+/** @type {import('@sveltejs/kit/hooks').Handle} */
 export async function handle({ event, resolve }) {
 	const response = await resolve(event, {
 		transformPageChunk: ({ html }) => html.replace('old', 'new'),
@@ -84,7 +84,7 @@ const getUserInformation: (cookie: string | void) => Promise<User>;
 
 // @filename: index.js
 // ---cut---
-/** @type {import('@sveltejs/kit').Handle} */
+/** @type {import('@sveltejs/kit/hooks').Handle} */
 export async function handle({ event, resolve }) {
 	event.locals.user = await getUserInformation(event.cookies.get('sessionid'));
 
@@ -112,7 +112,7 @@ For example, your `load` function might make a request to a public URL like `htt
 
 ```js
 /// file: src/hooks.server.js
-/** @type {import('@sveltejs/kit').HandleFetch} */
+/** @type {import('@sveltejs/kit/hooks').HandleFetch} */
 export async function handleFetch({ request, fetch }) {
 	if (request.url.startsWith('https://api.yourapp.com/')) {
 		// clone the original request, but change the URL
@@ -133,7 +133,7 @@ There is one caveat: if your app and your API are on sibling subdomains — `www
 ```js
 /// file: src/hooks.server.js
 // @errors: 2345
-/** @type {import('@sveltejs/kit').HandleFetch} */
+/** @type {import('@sveltejs/kit/hooks').HandleFetch} */
 export async function handleFetch({ event, request, fetch }) {
 	if (request.url.startsWith('https://api.my-domain.com/')) {
 		request.headers.set('cookie', event.request.headers.get('cookie'));
@@ -149,10 +149,10 @@ export async function handleFetch({ event, request, fetch }) {
 
 > [!NOTE] Can be added to `src/hooks.server.js` and `src/hooks.client.js`
 
-This function is called for _every_ error thrown while loading, rendering, or responding to a request. This allows for two things:
+This function is called for every error thrown while loading, rendering, or responding to a request. This allows for two things:
 
 - you can log the error
-- you can generate a custom representation of the error that is safe to show to users, omitting sensitive details like messages and stack traces. The returned value becomes the value of `page.error`.
+- you can generate a custom representation of the error that is safe to show to users, omitting sensitive details like messages and stack traces
 
 Alongside the `event`, the hook receives a `kind` discriminant that tells you where the error came from, and the `error` itself:
 
@@ -206,7 +206,7 @@ import * as Sentry from '@sentry/sveltekit';
 
 Sentry.init({/*...*/})
 
-/** @type {import('@sveltejs/kit').HandleServerError} */
+/** @type {import('@sveltejs/kit/hooks').HandleServerError} */
 export async function handleError({ kind, error, event }) {
 	if (kind === 'app') {
 		// you created this error with `error(...)`, so it already
@@ -251,7 +251,7 @@ import * as Sentry from '@sentry/sveltekit';
 
 Sentry.init({/*...*/})
 
-/** @type {import('@sveltejs/kit').HandleClientError} */
+/** @type {import('@sveltejs/kit/hooks').HandleClientError} */
 export async function handleError({ kind, error, event }) {
 	if (kind === 'app') {
 		return error;
@@ -296,7 +296,7 @@ This function runs once, when the server is created or the app starts in the bro
 /// file: src/hooks.server.js
 import * as db from '#lib/server/database.js';
 
-/** @type {import('@sveltejs/kit').ServerInit} */
+/** @type {import('@sveltejs/kit/hooks').ServerInit} */
 export async function init() {
 	await db.connect();
 }
@@ -324,7 +324,7 @@ const translated = {
 	'/fr/a-propos': '/fr/about',
 };
 
-/** @type {import('@sveltejs/kit').Reroute} */
+/** @type {import('@sveltejs/kit/hooks').Reroute} */
 export function reroute({ url }) {
 	if (url.pathname in translated) {
 		return translated[url.pathname];
@@ -342,7 +342,7 @@ Since version 2.18, the `reroute` hook can be asynchronous, allowing it to (for 
 // @errors: 2345 2304
 /// file: src/hooks.js
 
-/** @type {import('@sveltejs/kit').Reroute} */
+/** @type {import('@sveltejs/kit/hooks').Reroute} */
 export async function reroute({ url, fetch }) {
 	// Ask a special endpoint within your app about the destination
 	if (url.pathname === '/api/reroute') return;
@@ -369,7 +369,7 @@ This is a collection of _transporters_, which allow you to pass custom types —
 /// file: src/hooks.js
 import { Vector } from '#lib/math.js';
 
-/** @type {import('@sveltejs/kit').Transport} */
+/** @type {import('@sveltejs/kit/hooks').Transport} */
 export const transport = {
 	Vector: {
 		encode: (value) => value instanceof Vector && [value.x, value.y],

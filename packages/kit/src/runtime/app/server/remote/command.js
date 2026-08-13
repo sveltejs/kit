@@ -1,4 +1,4 @@
-/** @import { RemoteCommand } from '@sveltejs/kit' */
+/** @import { RemoteCommand } from '@sveltejs/kit/remote' */
 /** @import { MaybePromise, RemoteCommandInternals } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { get_request_store } from '@sveltejs/kit/internal/server';

@@ -48,7 +48,7 @@ export function handle_error_and_jsonify(event, state, options, error) {
 		return error.body;
 	}
 
-	/** @type {import('@sveltejs/kit').CaughtError} */
+	/** @type {import('@sveltejs/kit/hooks').CaughtError} */
 	let caught;
 
 	if (error instanceof HttpError) {
@@ -77,7 +77,7 @@ export function handle_error_and_jsonify(event, state, options, error) {
 	/**
 	 * The hook returns only the properties it wants to override; anything it omits
 	 * (including by returning nothing at all) is inherited from the caught error.
-	 * @param {Awaited<ReturnType<import('@sveltejs/kit').HandleServerError>>} body
+	 * @param {Awaited<ReturnType<import('@sveltejs/kit/hooks').HandleServerError>>} body
 	 * @returns {App.Error}
 	 */
 	function merge(body) {

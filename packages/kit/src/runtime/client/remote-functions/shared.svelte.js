@@ -1,5 +1,5 @@
 /** @import { RemoteFunctionResponse, RemoteFunctionData, RemoteFunctionDataNode } from 'types' */
-/** @import { RemoteQueryUpdate } from '@sveltejs/kit' */
+/** @import { RemoteQueryUpdate } from '@sveltejs/kit/remote' */
 /** @import { CacheEntry } from './cache.svelte.js' */
 import * as devalue from 'devalue';
 import { app, _goto, live_query_map, query_map, query_responses } from '../client.js';
