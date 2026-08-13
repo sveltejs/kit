@@ -1643,21 +1643,18 @@ async function load_route({ id, invalidating, url, params, route, preload, actio
  * @param {number} i Start index to backtrack from
  * @param {Array<import('./types.js').BranchNode | undefined>} branch Branch to backtrack
  * @param {Array<import('types').CSRPageNodeLoader | undefined>} errors All error pages for this branch
- * @returns {Promise<{idx: number; node: import('./types.js').BranchNode} | undefined>}
+ * @returns {Promise<Array<import('./types.js').BranchNode | undefined> | undefined>} the branch truncated at the error page's depth
  */
 async function load_nearest_error_page(i, branch, errors) {
 	for (const { error, idx } of nearest_error_pages(i, branch, errors)) {
 		try {
-			return {
-				idx,
-				node: {
-					node: await error(),
-					loader: error,
-					data: {},
-					server: null,
-					universal: null
-				}
-			};
+			return branch.slice(0, idx).concat({
+				node: await error(),
+				loader: error,
+				data: {},
+				server: null,
+				universal: null
+			});
 		} catch {
 			continue;
 		}
@@ -1677,12 +1674,12 @@ async function load_nearest_error_page(i, branch, errors) {
  * }} opts
  */
 async function load_route_error({ i, branch, errors, error, status, url, params, route }) {
-	const error_load = await load_nearest_error_page(i, branch, errors);
-	if (error_load) {
+	const error_branch = await load_nearest_error_page(i, branch, errors);
+	if (error_branch) {
 		return get_navigation_result_from_branch({
 			url,
 			params,
-			branch: branch.slice(0, error_load.idx).concat(error_load.node),
+			branch: error_branch,
 			errors,
 			error,
 			status,
@@ -3194,12 +3191,12 @@ export async function set_nearest_error_page(error) {
 	const { branch, route } = current;
 	if (!route) return;
 
-	const error_load = await load_nearest_error_page(current.branch.length, branch, route.errors);
-	if (error_load) {
+	const error_branch = await load_nearest_error_page(current.branch.length, branch, route.errors);
+	if (error_branch) {
 		const navigation_result = await get_navigation_result_from_branch({
 			url,
 			params: current.params,
-			branch: branch.slice(0, error_load.idx).concat(error_load.node),
+			branch: error_branch,
 			error,
 			errors: route.errors,
 			route
