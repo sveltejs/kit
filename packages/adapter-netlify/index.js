@@ -387,8 +387,7 @@ async function generate_edge_functions({ builder }) {
 		// Contains static files
 		`/${builder.getAppPath()}/immutable/*`,
 		`/${builder.getAppPath()}/version.json`,
-		// the root page with a base path and `trailingSlash: 'always'` pages are recorded
-		// with a trailing slash, which Netlify treats as required rather than optional
+		// the base root and `trailingSlash: 'always'` pages are recorded with a trailing slash
 		...builder.prerendered.paths.map((path) => (path === '/' ? path : path.replace(/\/$/, ''))),
 		...Array.from(assets).flatMap((asset) => {
 			if (asset.endsWith('/index.html')) {
