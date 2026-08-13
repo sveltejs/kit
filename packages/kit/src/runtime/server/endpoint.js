@@ -1,6 +1,6 @@
 import { Redirect } from '@sveltejs/kit/internal';
 import { with_request_store } from '@sveltejs/kit/internal/server';
-import { ENDPOINT_METHODS, PAGE_METHODS } from '../../constants.js';
+import { BODY_DEPENDENT_METHODS, ENDPOINT_METHODS, PAGE_METHODS } from '../../constants.js';
 import { negotiate } from '../../utils/http.js';
 import { method_not_allowed } from './utils.js';
 
@@ -25,8 +25,13 @@ export async function render_endpoint(event, state, mod) {
 
 	const prerender = mod.prerender ?? state.prerender_default;
 
-	if (prerender && (mod.POST || mod.PATCH || mod.PUT || mod.DELETE || mod.QUERY)) {
-		throw new Error('Cannot prerender endpoints that have mutative methods or QUERY');
+	if (
+		prerender &&
+		/** @type {import('types').HttpMethod[]} */ (BODY_DEPENDENT_METHODS).some(
+			(method) => mod[method]
+		)
+	) {
+		throw new Error('Cannot prerender endpoints with body-dependent methods');
 	}
 
 	if (state.prerendering && !state.prerendering.inside_reroute && !prerender) {

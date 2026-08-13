@@ -19,6 +19,9 @@ export const ENDPOINT_METHODS = [
 
 export const MUTATIVE_METHODS = ['POST', 'PUT', 'PATCH', 'DELETE'];
 
+/** methods whose responses depend on the request body, so they can never be prerendered */
+export const BODY_DEPENDENT_METHODS = [...MUTATIVE_METHODS, 'QUERY'];
+
 export const PAGE_METHODS = ['GET', 'POST', 'HEAD'];
 
 export const SRC_ROOT = import.meta.dirname;
