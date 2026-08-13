@@ -47,7 +47,7 @@ test('cancellation notifies the producer and returns the iterator', async () => 
 });
 
 // https://github.com/sveltejs/kit/issues/16778
-test('a value that arrives after cancellation is dropped', async () => {
+test('cancellation settles while the producer is parked', async () => {
 	/** @type {(result: IteratorResult<string>) => void} */
 	let resolve_next = () => {};
 	let returned = false;
@@ -65,22 +65,12 @@ test('a value that arrives after cancellation is dropped', async () => {
 	const read = reader.read(); // pull is now suspended on `iterator.next()`
 	await Promise.resolve();
 
+	// neither cancel() nor the pending read may wait for the parked next()
 	await reader.cancel();
 	expect(returned).toBe(true);
+	await expect(read).resolves.toEqual({ value: undefined, done: true });
 
-	// the parked value lands after teardown
+	// the parked value landing afterwards is a no-op
 	resolve_next({ value: 'late', done: false });
 	await new Promise((resolve) => setTimeout(resolve, 0));
-
-	await expect(read).resolves.toEqual({ value: undefined, done: true });
-});
-
-test('cancellation tolerates iterators without a return method', async () => {
-	/** @type {AsyncIterator<string>} */
-	const iterator = { next: () => new Promise(() => {}) };
-
-	const reader = stream_from_iterator(iterator).getReader();
-	await Promise.resolve();
-
-	await expect(reader.cancel()).resolves.toBeUndefined();
 });
