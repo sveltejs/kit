@@ -99,6 +99,11 @@
 			"browser": "./src/runtime/app/env/client.js",
 			"default": "./src/runtime/app/env/server.js"
 		},
+		"#app/env/public": {
+			"workerd": "./src/runtime/app/env/public/server.js",
+			"browser": "./src/runtime/app/env/public/client.js",
+			"default": "./src/runtime/app/env/public/server.js"
+		},
 		"#app/env/server": {
 			"workerd": "./src/runtime/app/env/server.js",
 			"browser": "./src/runtime/invalid-import.js",
@@ -112,11 +117,6 @@
 			"workerd": "./src/runtime/app/paths/server.js",
 			"browser": "./src/runtime/app/paths/client.js",
 			"default": "./src/runtime/app/paths/server.js"
-		},
-		"#app/env/public": {
-			"workerd": "./src/runtime/app/env/public/server.js",
-			"browser": "./src/runtime/app/env/public/client.js",
-			"default": "./src/runtime/app/env/public/server.js"
 		},
 		"#internal": {
 			"workerd": "./src/exports/internal/server/index.js",
