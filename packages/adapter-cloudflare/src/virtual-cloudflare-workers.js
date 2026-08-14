@@ -139,11 +139,20 @@ export function waitUntil() {}
 export const cache = {
 	purge() {}
 };
-export const tracing = {
-	enterSpan() {
-		throw new Error('tracing is not available in dev mode');
-	},
-	startActiveSpan() {
-		throw new Error('tracing is not available in dev mode');
+class Span {
+		get isTraced() { return false; }
+		setAttribute() {}
+		end() {}
 	}
+/** @type {import('@cloudflare/workers-types').Tracing} */
+export const tracing = {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	enterSpan(name, callback, ...args) {
+		return callback(new Span(), ...args);
+	},
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	startActiveSpan(name, callback, ...args) {
+		return callback(new Span(), ...args);
+	},
+	Span,
 };
