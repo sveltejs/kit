@@ -665,28 +665,6 @@ function kit({ svelte_config }) {
 					return `${out_dir}/generated/client-optimized/app.js`;
 				}
 
-				if (id === '__sveltekit/env') {
-					return `${out_dir}/generated/env/config.js`;
-				}
-
-				if (id === '__sveltekit/env/public/client') {
-					return `${out_dir}/generated/env/public/client.js`;
-				}
-
-				if (id === '__sveltekit/env/public/server') {
-					return `${out_dir}/generated/env/public/server.js`;
-				}
-
-				if (id === '__sveltekit/env/private') {
-					return `${out_dir}/generated/env/private/server.js`;
-				}
-
-				if (id === '__sveltekit/env/service-worker') {
-					return is_build
-						? `${out_dir}/generated/env/service-worker-prod.js`
-						: `${out_dir}/generated/env/service-worker-dev.js`;
-				}
-
 				if (id === '__sveltekit/remote') {
 					return `${runtime_directory}/client/remote-functions/index.js`;
 				}
@@ -1136,18 +1114,7 @@ function kit({ svelte_config }) {
 				id: prefixRegex('__sveltekit/')
 			},
 			handler(id) {
-				if (id === '__sveltekit/env/public/client') {
-					return is_build
-						? `${out_dir}/generated/env/public/service-worker-prod.js`
-						: `${out_dir}/generated/env/public/service-worker-dev.js`;
-				}
-
-				if (id === '__sveltekit/env/service-worker') {
-					return is_build
-						? `${out_dir}/generated/env/service-worker-prod.js`
-						: `${out_dir}/generated/env/service-worker-dev.js`;
-				}
-
+				// TODO do we still need this?
 				return `\0virtual:${id}`;
 			}
 		},

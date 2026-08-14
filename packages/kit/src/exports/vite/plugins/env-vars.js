@@ -15,6 +15,7 @@ import { runtime_directory } from '../../../core/utils.js';
 import { s } from '../../../utils/misc.js';
 import { write_if_changed } from '../../../core/sync/utils.js';
 import { hash } from '../../../utils/hash.js';
+import { prefixRegex } from '@rolldown/pluginutils';
 
 /**
  * Generate (and, in dev, maintain) a `${outDir}/generated/env/config.js` module
@@ -30,6 +31,9 @@ export function plugin_env_vars(config) {
 	const out = config.outDir;
 
 	const version_hash = hash(config.version.name);
+
+	/** @type {string} */
+	let out_dir;
 
 	/** @type {Record<string, any>} */
 	let env;
@@ -56,12 +60,12 @@ export function plugin_env_vars(config) {
 		deps = synced.deps;
 
 		write_if_changed(
-			`${out}/generated/env/config.js`,
+			`${out_dir}/generated/env/config.js`,
 			create_sveltekit_env(synced.variables, env, resolved_entry, !is_build)
 		);
 
 		write_if_changed(
-			`${out}/generated/env/public/client.js`,
+			`${out_dir}/generated/env/public/client.js`,
 			create_sveltekit_env_public(
 				synced.variables,
 				env,
@@ -70,7 +74,7 @@ export function plugin_env_vars(config) {
 		);
 
 		write_if_changed(
-			`${out}/generated/env/public/server.js`,
+			`${out_dir}/generated/env/public/server.js`,
 			create_sveltekit_env_public(
 				synced.variables,
 				env,
@@ -79,7 +83,7 @@ export function plugin_env_vars(config) {
 		);
 
 		write_if_changed(
-			`${out}/generated/env/public/service-worker-prod.js`,
+			`${out_dir}/generated/env/public/service-worker-prod.js`,
 			create_sveltekit_env_public(
 				synced.variables,
 				env,
@@ -88,7 +92,7 @@ export function plugin_env_vars(config) {
 		);
 
 		write_if_changed(
-			`${out}/generated/env/public/service-worker-dev.js`,
+			`${out_dir}/generated/env/public/service-worker-dev.js`,
 			create_sveltekit_env_public(
 				synced.variables,
 				env,
@@ -97,12 +101,12 @@ export function plugin_env_vars(config) {
 		);
 
 		write_if_changed(
-			`${out}/generated/env/private/server.js`,
+			`${out_dir}/generated/env/private/server.js`,
 			create_sveltekit_env_private(synced.variables, env)
 		);
 
 		write_if_changed(
-			`${out}/generated/env/service-worker-prod.js`,
+			`${out_dir}/generated/env/service-worker-prod.js`,
 			create_sveltekit_env_service_worker(
 				synced.variables,
 				env,
@@ -114,7 +118,7 @@ export function plugin_env_vars(config) {
 		);
 
 		write_if_changed(
-			`${out}/generated/env/service-worker-dev.js`,
+			`${out_dir}/generated/env/service-worker-dev.js`,
 			create_sveltekit_env_service_worker_dev(
 				synced.variables,
 				env,
@@ -126,21 +130,57 @@ export function plugin_env_vars(config) {
 
 	return {
 		name: 'vite-plugin-sveltekit-env-vars',
+
 		async configResolved(c) {
 			resolved_config = c;
 
 			const vite = await import_peer('vite', c.root);
 			env = vite.loadEnv(c.mode, path.resolve(c.root, dir), '');
 
+			out_dir = path.resolve(c.root, out);
+
 			is_build = c.command === 'build';
 		},
+
 		async buildStart() {
 			resolved_entry = resolve_entry(path.join(resolved_config.root, entry)) ?? null;
 			await generate();
 		},
+
 		async handleHotUpdate(update) {
 			if (!deps.has(update.file)) return;
 			await generate();
+		},
+
+		resolveId: {
+			filter: {
+				id: prefixRegex('__sveltekit/env')
+			},
+			handler(id) {
+				if (id === '__sveltekit/env') {
+					return `${out_dir}/generated/env/config.js`;
+				}
+
+				if (id === '__sveltekit/env/private') {
+					return `${out_dir}/generated/env/private/server.js`;
+				}
+
+				if (id === '__sveltekit/env/public/server') {
+					return `${out_dir}/generated/env/public/server.js`;
+				}
+
+				if (id === '__sveltekit/env/public/client') {
+					return this.environment.name === 'serviceWorker'
+						? `${out_dir}/generated/env/public/service-worker-prod.js`
+						: `${out_dir}/generated/env/public/client.js`;
+				}
+
+				if (id === '__sveltekit/env/service-worker') {
+					return is_build
+						? `${out_dir}/generated/env/service-worker-prod.js`
+						: `${out_dir}/generated/env/service-worker-dev.js`;
+				}
+			}
 		}
 	};
 }
