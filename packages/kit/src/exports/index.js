@@ -11,7 +11,9 @@ import {
 } from '../pathname.js';
 import { validate_redirect_location } from './url.js';
 
-const text_encoder = new TextEncoder();
+// `Symbol.for` because the app's bundled copy of this module must be visible to
+// the `@sveltejs/kit/node` copy resolved from node_modules
+const string_body = Symbol.for('sveltekit.string_body');
 
 export { VERSION } from '../version.js';
 
@@ -153,51 +155,30 @@ export function isRedirect(e) {
 /**
  * Create a JSON `Response` object from the supplied data.
  * @param {any} data The value that will be serialized as JSON.
- * @param {ResponseInit} [init] Options such as `status` and `headers` that will be added to the response. `Content-Type: application/json` and `Content-Length` headers will be added automatically.
+ * @param {ResponseInit} [init] Options such as `status` and `headers` that will be added to the response. A `Content-Type: application/json` header will be added automatically.
  * @deprecated use `Response.json`
  */
 export function json(data, init) {
-	const body = JSON.stringify(data);
-
-	// we can't just do `text(JSON.stringify(data), init)` because
-	// it will set a default `content-type` header. duplicated code
-	// means less duplicated work
 	const headers = new Headers(init?.headers);
-	if (!headers.has('content-length')) {
-		headers.set('content-length', text_encoder.encode(body).byteLength.toString());
-	}
-
 	if (!headers.has('content-type')) {
 		headers.set('content-type', 'application/json');
 	}
 
-	return new Response(body, {
-		...init,
-		headers
-	});
+	return text(JSON.stringify(data), { ...init, headers });
 }
 
 /**
  * Create a `Response` object from the supplied body.
  * @param {string} body The value that will be used as-is.
- * @param {ResponseInit} [init] Options such as `status` and `headers` that will be added to the response. A `Content-Length` header will be added automatically.
+ * @param {ResponseInit} [init] Options such as `status` and `headers` that will be added to the response.
  * @deprecated use `new Response`
  */
 export function text(body, init) {
-	const headers = new Headers(init?.headers);
-	if (!headers.has('content-length')) {
-		const encoded = text_encoder.encode(body);
-		headers.set('content-length', encoded.byteLength.toString());
-		return new Response(encoded, {
-			...init,
-			headers
-		});
-	}
-
-	return new Response(body, {
-		...init,
-		headers
-	});
+	const response = new Response(body, init);
+	// stash the string so `setResponse` can send it with a content-length
+	// instead of streaming it
+	/** @type {any} */ (response)[string_body] = body;
+	return response;
 }
 
 /**

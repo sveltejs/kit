@@ -6,6 +6,11 @@ import { noop } from '../../utils/functions.js';
 /** @type {WeakMap<import('http').IncomingMessage, (chunk: Buffer) => void>} */
 const body_data_listeners = new WeakMap();
 
+// set by the `json` and `text` helpers. `Symbol.for` because the helpers live
+// in the app's bundled copy of the package while this module is resolved from
+// node_modules
+const string_body = Symbol.for('sveltekit.string_body');
+
 /**
  * @param {import('http').IncomingMessage} req
  * @param {number} [body_size_limit]
@@ -222,6 +227,18 @@ export function setResponse(res, response) {
 			res.writeHead(500).end(String(error));
 			return;
 		}
+	}
+
+	const body = /** @type {any} */ (response)[string_body];
+
+	if (typeof body === 'string' && !response.body?.locked) {
+		if (!res.hasHeader('content-length')) {
+			res.setHeader('content-length', Buffer.byteLength(body));
+		}
+
+		res.writeHead(response.status);
+		res.end(body);
+		return;
 	}
 
 	res.writeHead(response.status);

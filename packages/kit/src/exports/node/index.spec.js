@@ -2,6 +2,7 @@ import { EventEmitter, once } from 'node:events';
 import { PassThrough } from 'node:stream';
 import { expect, test, vi } from 'vitest';
 import { getRequest, setResponse } from './index.js';
+import { json, text } from '../index.js';
 
 /**
  * @param {{
@@ -82,18 +83,29 @@ test('rejects request bodies that exceed content-length', async () => {
 });
 
 /**
- * Minimal `ServerResponse` stand-in that emits `finish` when ended.
- * @param {import('http').IncomingMessage} req
+ * Minimal `ServerResponse` stand-in that records headers and body writes and
+ * emits `finish` when ended.
+ * @param {import('http').IncomingMessage} [req]
  */
 function create_response(req) {
 	const res = /** @type {any} */ (new EventEmitter());
 	res.req = req;
 	res.destroyed = false;
-	res.setHeader = () => {};
-	res.getHeaderNames = () => [];
+	/** @type {Map<string, unknown>} */
+	res.headers = new Map();
+	/** @type {unknown[]} */
+	res.chunks = [];
+	res.setHeader = (/** @type {string} */ name, /** @type {unknown} */ value) =>
+		res.headers.set(name.toLowerCase(), value);
+	res.hasHeader = (/** @type {string} */ name) => res.headers.has(name.toLowerCase());
+	res.getHeaderNames = () => [...res.headers.keys()];
 	res.writeHead = () => res;
-	res.write = () => true;
-	res.end = () => {
+	res.write = (/** @type {unknown} */ chunk) => {
+		res.chunks.push(chunk);
+		return true;
+	};
+	res.end = (/** @type {unknown} */ chunk) => {
+		if (chunk !== undefined) res.chunks.push(chunk);
 		res.emit('finish');
 		res.emit('close');
 	};
@@ -244,6 +256,47 @@ test('does not abort the request signal when the response finishes normally', as
 	res.emit('close');
 
 	expect(request.signal.aborted).toBe(false);
+});
+
+test('sends string response bodies in a single write with a content-length', () => {
+	const res = /** @type {any} */ (create_response());
+
+	setResponse(res, json({ snowman: '☃' }));
+
+	const body = '{"snowman":"☃"}';
+	expect(res.headers.get('content-length')).toBe(Buffer.byteLength(body));
+	expect(res.headers.get('content-type')).toBe('application/json');
+	expect(res.chunks).toEqual([body]);
+});
+
+test('does not overwrite an explicit content-length header', () => {
+	const res = /** @type {any} */ (create_response());
+
+	setResponse(res, text('hello', { headers: { 'content-length': '999' } }));
+
+	expect(res.headers.get('content-length')).toBe('999');
+	expect(res.chunks).toEqual(['hello']);
+});
+
+test('streams response bodies without a known string body', async () => {
+	const res = /** @type {any} */ (create_response());
+	const finished = once(res, 'finish');
+
+	setResponse(res, new Response('hello'));
+
+	await finished;
+	expect(res.headers.has('content-length')).toBe(false);
+	expect(Buffer.concat(res.chunks).toString()).toBe('hello');
+});
+
+test('does not resurrect a string body that was already read', async () => {
+	const res = /** @type {any} */ (create_response());
+
+	const response = text('hello');
+	await response.text();
+	setResponse(res, response);
+
+	expect(String(res.chunks[0])).toMatch(/^Fatal error: Response body is locked/);
 });
 
 // Test for fix of CVE-2026-40073
