@@ -1779,6 +1779,7 @@ function kit({ svelte_config }) {
 						kit,
 						manifest_data,
 						`${out_dir}/generated/client-optimized`,
+						root,
 						build_metadata.nodes
 					);
 

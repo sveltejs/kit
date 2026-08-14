@@ -1,3 +1,4 @@
+import path from 'node:path';
 import { check_spelling, dedent, write_if_changed } from './utils.js';
 import { relative_path, resolve_entry } from '../../utils/filesystem.js';
 import { s } from '../../utils/misc.js';
@@ -8,9 +9,10 @@ import { s } from '../../utils/misc.js';
  * @param {import('types').ValidatedConfig} kit
  * @param {import('types').ManifestData} manifest_data
  * @param {string} output
+ * @param {string} root The project root directory
  * @param {import('types').ServerMetadata['nodes']} [metadata] If this is omitted, we have to assume that all routes with a `+layout/page.server.js` file have a server load function
  */
-export function write_client_manifest(kit, manifest_data, output, metadata) {
+export function write_client_manifest(kit, manifest_data, output, root, metadata) {
 	const client_routing = kit.router.resolution === 'client';
 
 	/**
@@ -22,7 +24,7 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 
 		if (node.universal) {
 			declarations.push(
-				`import * as universal from ${s(relative_path(`${output}/nodes`, node.universal))};`,
+				`import * as universal from ${s(relative_path(`${output}/nodes`, path.resolve(root, node.universal)))};`,
 				'export { universal };'
 			);
 		}
@@ -30,7 +32,7 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 		if (node.component) {
 			declarations.push(
 				`export { default as component } from ${s(
-					relative_path(`${output}/nodes`, node.component)
+					relative_path(`${output}/nodes`, path.resolve(root, node.component))
 				)};`
 			);
 		}
@@ -180,7 +182,7 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 		const module =
 			!manifest_data.params || !uses_matchers
 				? 'export const matchers = {};'
-				: `import { params as matchers } from ${s(relative_path(output, manifest_data.params))};\n\nexport { matchers };`;
+				: `import { params as matchers } from ${s(relative_path(output, path.resolve(root, manifest_data.params)))};\n\nexport { matchers };`;
 
 		write_if_changed(`${output}/matchers.js`, module);
 	}
