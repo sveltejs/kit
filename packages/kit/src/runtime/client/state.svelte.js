@@ -2,7 +2,7 @@
 /** @import { Page } from '$app/state' */
 import { version } from '$app/env';
 import { assets } from '#app/paths';
-import { BROWSER, DEV } from 'esm-env';
+import { DEV } from 'esm-env';
 
 /** @type {Page} */
 export const page = new (class Page {
@@ -36,7 +36,7 @@ export const updated = new (class Updated {
  */
 export let notify_version = () => {};
 
-if (!DEV && BROWSER) {
+if (!DEV) {
 	const interval = __SVELTEKIT_APP_VERSION_POLL_INTERVAL__;
 
 	/** @type {number | undefined} */
