@@ -1103,10 +1103,9 @@ function kit({ svelte_config }) {
 
 		resolveId: {
 			filter: {
-				id: prefixRegex('__sveltekit/')
+				id: exactRegex('__sveltekit/manifest-data')
 			},
 			handler(id) {
-				// TODO do we still need this?
 				return `\0virtual:${id}`;
 			}
 		},
