@@ -50,7 +50,7 @@ import {
 	validate_load_response
 } from '../shared.js';
 
-import { page, updated, notify_version, update_page, update_navigating } from '#app/state/client';
+import { page, updated, notify_version, update_page, set_navigation } from '#app/state/client';
 import { payload } from './payload.js';
 import {
 	add_data_suffix,
@@ -2032,7 +2032,7 @@ async function navigate({
 	is_navigating = true;
 
 	if (started && nav.navigation.type !== 'enter') {
-		update_navigating(nav.navigation);
+		set_navigation(nav.navigation);
 	}
 
 	let navigation_result = intent && (await load_route({ ...intent, action_result }));
@@ -2305,7 +2305,7 @@ async function navigate({
 	// new and replaced entries have no stored values, so this only resets there
 	restore_navigation_snapshot(current_history_index, previous_snapshot_registrations);
 
-	update_navigating(null);
+	set_navigation(null);
 
 	updating = false;
 }
@@ -2966,7 +2966,7 @@ async function update_state(intent, state, { replace, persist_state, reset }, ca
 	if (nav) {
 		navigation_token = invalidation_token = nav_token;
 		is_navigating = true;
-		update_navigating(nav.navigation);
+		set_navigation(nav.navigation);
 		updating = true;
 	}
 
@@ -3057,7 +3057,7 @@ async function update_state(intent, state, { replace, persist_state, reset }, ca
 	restore_navigation_snapshot(current_history_index, previous_snapshot_registrations);
 
 	if (nav) {
-		update_navigating(null);
+		set_navigation(null);
 		updating = false;
 	}
 }
@@ -3540,7 +3540,7 @@ function _start_router() {
 		// the navigation away from it was successful.
 		// Info about bfcache here: https://web.dev/bfcache
 		if (event.persisted) {
-			update_navigating(null);
+			set_navigation(null);
 		}
 	});
 

@@ -5,7 +5,7 @@ import { assets } from '#app/paths';
 import { version } from '$app/env';
 
 /** @type {Page} */
-export const _page = new (class Page {
+export const internal_page = new (class Page {
 	data = $state.raw({});
 	form = $state.raw(null);
 	error = $state.raw(null);
@@ -17,23 +17,11 @@ export const _page = new (class Page {
 	url = $state.raw(new URL('a:'));
 })();
 
-const _navigating = new (class Navigating {
-	/** @type {Navigation | null} */
-	current = $state.raw(null);
-})();
-
 /**
  * @param {Partial<Page>} new_page
  */
 export function update_page(new_page) {
-	Object.assign(_page, new_page);
-}
-
-/**
- * @param {Navigation | null} nav
- */
-export function update_navigating(nav) {
-	_navigating.current = nav;
+	Object.assign(internal_page, new_page);
 }
 
 /**
@@ -75,33 +63,43 @@ export function update_navigating(nav) {
  */
 export const page = {
 	get data() {
-		return _page.data;
+		return internal_page.data;
 	},
 	get error() {
-		return _page.error;
+		return internal_page.error;
 	},
 	get form() {
-		return _page.form;
+		return internal_page.form;
 	},
 	get params() {
-		return _page.params;
+		return internal_page.params;
 	},
 	get route() {
-		return _page.route;
+		return internal_page.route;
 	},
 	get shallow() {
-		return _page.shallow;
+		return internal_page.shallow;
 	},
 	get state() {
-		return _page.state;
+		return internal_page.state;
 	},
 	get status() {
-		return _page.status;
+		return internal_page.status;
 	},
 	get url() {
-		return _page.url;
+		return internal_page.url;
 	}
 };
+
+/** @type {Navigation | null} */
+let navigation = $state.raw(null);
+
+/**
+ * @param {Navigation | null} value
+ */
+export function set_navigation(value) {
+	navigation = value;
+}
 
 /**
  * A read-only object representing an in-progress navigation, with `from`, `to`, `type` and (if `type === 'popstate'`) `delta` properties.
@@ -110,23 +108,23 @@ export const page = {
  */
 export const navigating = {
 	get from() {
-		return _navigating.current ? _navigating.current.from : null;
+		return navigation ? navigation.from : null;
 	},
 	get to() {
-		return _navigating.current ? _navigating.current.to : null;
+		return navigation ? navigation.to : null;
 	},
 	get type() {
-		return _navigating.current ? _navigating.current.type : null;
+		return navigation ? navigation.type : null;
 	},
 	get willUnload() {
-		return _navigating.current ? _navigating.current.willUnload : null;
+		return navigation ? navigation.willUnload : null;
 	},
 	// @ts-expect-error TODO not entirely sure what's going on here
 	get delta() {
-		return _navigating.current?.type === 'popstate' ? _navigating.current.delta : null;
+		return navigation?.type === 'popstate' ? navigation.delta : null;
 	},
 	get complete() {
-		return _navigating.current ? _navigating.current.complete : null;
+		return navigation ? navigation.complete : null;
 	}
 };
 
