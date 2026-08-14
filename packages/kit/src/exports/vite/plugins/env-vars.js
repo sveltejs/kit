@@ -147,6 +147,25 @@ export function plugin_env_vars(config, callback) {
 			await generate();
 		},
 
+		configureServer(server) {
+			// `handleHotUpdate` only fires for `change` events on files Vite already knows about,
+			// so it doesn't cover the env entry being created or deleted while the dev server is
+			// running. Watch for those events explicitly, re-resolve the entry, regenerate the
+			// modules and trigger a full reload (mirroring the previous behaviour).
+			const on_entry_add_unlink = async (/** @type {string} */ file) => {
+				const resolved = resolve_entry(path.join(resolved_config.root, entry)) ?? null;
+
+				if (file === resolved_entry || file === resolved) {
+					resolved_entry = resolved;
+					await generate();
+					server.hot.send({ type: 'full-reload' });
+				}
+			};
+
+			server.watcher.on('add', on_entry_add_unlink);
+			server.watcher.on('unlink', on_entry_add_unlink);
+		},
+
 		async handleHotUpdate(update) {
 			if (!deps.has(update.file)) return;
 			await generate();
