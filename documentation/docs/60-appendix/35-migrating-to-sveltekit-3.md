@@ -470,6 +470,12 @@ const value = await env.KV.get('key');
 - `cf` is now a property of the `Request` object:
 ```js
 /// file: src/routes/cf/+server.js
+// @filename: ambient.d.ts
+interface Request {
+  cf: import('@cloudflare/workers-types').IncomingRequestCfProperties;
+}
+// @filename: index.js
+// ---cut---
 export async function GET({ request }) {
 	const { country } = request.cf;
 }
@@ -477,14 +483,9 @@ export async function GET({ request }) {
 - `caches` is now a global variable:
 ```js
 /// file: src/routes/cache/+server.js
-const caches = {
-	async open(name) {
-		return { match(request) {} }
-	}
-};
-let request = new Request();
+let request = new Request('');
 // ---cut---
-const myCache = caches.open('foo');
+const myCache = await caches.open('foo');
 await myCache.match(request);
 ```
 
