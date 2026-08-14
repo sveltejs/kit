@@ -31,7 +31,7 @@ export function create(config, root) {
 
 	const output = path.join(config.outDir, 'generated');
 
-	write_client_manifest(config, manifest_data, `${output}/client`);
+	write_client_manifest(config, manifest_data, `${output}/client`, root);
 	write_server(config, output, root);
 	write_all_types(config, manifest_data, root);
 	write_app_types(config, manifest_data, root);
