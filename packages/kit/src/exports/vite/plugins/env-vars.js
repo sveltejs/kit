@@ -10,7 +10,8 @@ import {
 	create_sveltekit_env_private,
 	create_sveltekit_env_public,
 	create_sveltekit_env_service_worker,
-	create_sveltekit_env_service_worker_dev
+	create_sveltekit_env_service_worker_dev,
+	resolve_env_entry
 } from '../../../core/env.js';
 import { import_peer } from '../../../utils/import.js';
 import { runtime_directory } from '../../../core/utils.js';
@@ -147,7 +148,7 @@ export function plugin_env_vars(config, callback) {
 		},
 
 		async buildStart() {
-			resolved_entry = resolve_entry(path.join(resolved_config.root, entry)) ?? null;
+			resolved_entry = resolve_env_entry(config, resolved_config.root);
 			await generate();
 		},
 
@@ -157,7 +158,7 @@ export function plugin_env_vars(config, callback) {
 			// running. Watch for those events explicitly, re-resolve the entry, regenerate the
 			// modules and trigger a full reload (mirroring the previous behaviour).
 			const on_entry_add_unlink = async (/** @type {string} */ file) => {
-				const resolved = resolve_entry(path.join(resolved_config.root, entry)) ?? null;
+				const resolved = resolve_env_entry(config, resolved_config.root);
 
 				if (file === resolved_entry || file === resolved) {
 					resolved_entry = resolved;
