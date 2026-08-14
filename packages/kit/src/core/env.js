@@ -3,7 +3,6 @@
 /** @import { ValidatedConfig } from 'types' */
 import path from 'node:path';
 import * as devalue from 'devalue';
-import { GENERATED_COMMENT } from '../constants.js';
 import { dedent } from './sync/utils.js';
 import { runtime_directory } from './utils.js';
 import { resolve_entry } from '../utils/filesystem.js';
@@ -155,7 +154,6 @@ export function create_sveltekit_env(variables, env, entry) {
 	handle_issues(issues);
 
 	const blocks = [
-		GENERATED_COMMENT,
 		imports.join('\n'),
 		`const issues = {};`,
 		'export { variables }',
