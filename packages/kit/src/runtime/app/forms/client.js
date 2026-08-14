@@ -8,7 +8,7 @@ import {
 	handle_error,
 	is_current_location
 } from '../../client/client.js';
-import { notify_version } from '../../client/state.svelte.js';
+import { notify_version } from '#app/state/client';
 import { deserialize } from './shared.js';
 
 export { applyAction, deserialize };
