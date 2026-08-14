@@ -112,6 +112,12 @@
 		"#app/internal/transport": {
 			"default": "./src/runtime/app/internal/transport.js"
 		},
+		"#app/navigation": {
+			"types": "./src/runtime/app/navigation/client.js",
+			"workerd": "./src/runtime/app/navigation/server.js",
+			"browser": "./src/runtime/app/navigation/client.js",
+			"default": "./src/runtime/app/navigation/server.js"
+		},
 		"#app/paths": {
 			"types": "./src/runtime/app/paths/internal.d.ts",
 			"workerd": "./src/runtime/app/paths/server.js",

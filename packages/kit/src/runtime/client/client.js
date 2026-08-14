@@ -2605,10 +2605,6 @@ export function onNavigate(callback) {
  * @returns {void}
  */
 export function disableScrollHandling() {
-	if (!BROWSER) {
-		throw new Error('Cannot call disableScrollHandling() on the server');
-	}
-
 	if (DEV && started && !updating) {
 		throw new Error('Can only disable scroll handling during navigation');
 	}
@@ -2665,10 +2661,6 @@ async function resolve_intent(url, caller) {
  * @returns {Promise<void>}
  */
 export async function goto(url, opts = {}) {
-	if (!BROWSER) {
-		throw new Error('Cannot call goto(...) on the server');
-	}
-
 	if (DEV) {
 		if ('replaceState' in opts && !warned_on_replace_state) {
 			warned_on_replace_state = true;
@@ -2737,12 +2729,7 @@ export async function goto(url, opts = {}) {
  * @returns {Promise<void>}
  */
 export function invalidate(resource, keepState = false) {
-	if (!BROWSER) {
-		throw new Error('Cannot call invalidate(...) on the server');
-	}
-
 	push_invalidated(resource);
-
 	return _invalidate(!keepState);
 }
 
@@ -2767,10 +2754,6 @@ function push_invalidated(resource) {
  * @returns {Promise<void>}
  */
 export function invalidateAll() {
-	if (!BROWSER) {
-		throw new Error('Cannot call invalidateAll() on the server');
-	}
-
 	force_invalidation = true;
 	return _invalidate();
 }
@@ -2781,10 +2764,6 @@ export function invalidateAll() {
  * @returns {Promise<void>}
  */
 export function refreshAll() {
-	if (!BROWSER) {
-		throw new Error('Cannot call refreshAll() on the server');
-	}
-
 	force_invalidation = true;
 	return _invalidate(false);
 }
@@ -2802,10 +2781,6 @@ export function refreshAll() {
  * @returns {Promise<({ type: 'loaded'; data: Record<string, any> } | { type: 'redirect'; location: string } | { type: 'error'; error: App.Error }) & { status: number; }>}
  */
 export async function preloadData(href) {
-	if (!BROWSER) {
-		throw new Error('Cannot call preloadData(...) on the server');
-	}
-
 	const url = resolve_url(href);
 	const intent = await get_navigation_intent(url, false);
 
@@ -2866,10 +2841,6 @@ export async function preloadData(href) {
  * @returns {Promise<void>}
  */
 export async function preloadCode(id) {
-	if (!BROWSER) {
-		throw new Error('Cannot call preloadCode(...) on the server');
-	}
-
 	if (DEV && id[0] !== '/') {
 		throw new Error(
 			`argument passed to preloadCode must be a route ID (i.e. "/blog/[slug]" rather than "blog/[slug]")`
@@ -2927,10 +2898,6 @@ export async function preloadCode(id) {
  * @returns {Promise<void>}
  */
 export async function pushState(url, state) {
-	if (!BROWSER) {
-		throw new Error('Cannot call pushState(...) on the server');
-	}
-
 	if (DEV && !warned_on_push_state) {
 		warned_on_push_state = true;
 		console.warn(
@@ -2957,10 +2924,6 @@ export async function pushState(url, state) {
  * @returns {Promise<void>}
  */
 export async function replaceState(url, state) {
-	if (!BROWSER) {
-		throw new Error('Cannot call replaceState(...) on the server');
-	}
-
 	if (DEV && !warned_on_replace_state_function) {
 		warned_on_replace_state_function = true;
 		console.warn(
@@ -3107,6 +3070,7 @@ async function update_state(intent, state, { replace, persist_state, reset }, ca
  * @returns {Promise<void>}
  */
 export async function applyAction(result) {
+	// TODO get rid of this
 	if (!BROWSER) {
 		throw new Error('Cannot call applyAction(...) on the server');
 	}
