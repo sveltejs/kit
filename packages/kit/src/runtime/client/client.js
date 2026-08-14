@@ -653,13 +653,16 @@ async function _invalidate(reset_page_state = true) {
 		return;
 	}
 
-	// Preserve `page.state` when invalidating without resetting it (e.g. `refresh`/`refreshAll`)
+	apply_navigation_result(navigation_result);
+
+	// Preserve `page.state` when invalidating without resetting it (e.g. `refresh`/`refreshAll`).
+	// Must run after `apply_navigation_result`, which overwrites `state`/`shallow` with the fresh
+	// page object's `{}`/`null` values when the page changed.
 	if (!reset_page_state) {
 		update_page({ state: prev_state });
 	}
 
 	update_page({ shallow: prev_shallow });
-	apply_navigation_result(navigation_result);
 	current = { ...navigation_result.state, nav: current.nav };
 	reset_invalidation();
 
