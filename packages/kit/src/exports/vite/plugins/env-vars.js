@@ -17,6 +17,7 @@ import { runtime_directory } from '../../../core/utils.js';
 import { s } from '../../../utils/misc.js';
 import { write_if_changed } from '../../../core/sync/utils.js';
 import { hash } from '../../../utils/hash.js';
+import { posixify } from '../../../utils/os.js';
 import { prefixRegex } from '@rolldown/pluginutils';
 
 /**
@@ -136,7 +137,7 @@ export function plugin_env_vars(config, callback) {
 			const vite = await import_peer('vite', c.root);
 			env = vite.loadEnv(c.mode, path.resolve(c.root, dir), '');
 
-			out_dir = path.resolve(c.root, out);
+			out_dir = posixify(path.resolve(c.root, out));
 
 			is_build = c.command === 'build';
 		},
