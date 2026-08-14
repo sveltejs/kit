@@ -1,7 +1,7 @@
-import { BROWSER, DEV } from 'esm-env';
+import { DEV } from 'esm-env';
 import { PRELOAD_PRIORITIES } from './constants.js';
 
-export const origin = BROWSER ? location.origin : '';
+export const origin = location.origin;
 
 /** @param {string | URL} url */
 export function resolve_url(url) {
