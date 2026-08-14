@@ -28,8 +28,3 @@ export const SRC_ROOT = import.meta.dirname;
 
 // eslint-disable-next-line n/prefer-global/process
 export const IN_WEBCONTAINER = !!globalThis.process?.versions?.webcontainer;
-
-// where `json` and `text` stash the raw body string so `setResponse` can write it
-// with a content-length. `Symbol.for` because the app's server bundle and
-// `@sveltejs/kit/node` are separate copies of the package
-export const STRING_BODY = Symbol.for('sveltekit.string_body');

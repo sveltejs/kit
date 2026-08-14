@@ -2,7 +2,6 @@ import { EventEmitter, once } from 'node:events';
 import { PassThrough } from 'node:stream';
 import { expect, test, vi } from 'vitest';
 import { getRequest, setResponse } from './index.js';
-import { json, text } from '../index.js';
 
 /**
  * @param {{
@@ -256,41 +255,80 @@ test('does not abort the request signal when the response finishes normally', as
 	expect(request.signal.aborted).toBe(false);
 });
 
-test('sends string response bodies in a single write with a content-length', () => {
-	const res = /** @type {any} */ (create_response());
-
-	setResponse(res, json({ snowman: '☃' }));
-
-	const body = '{"snowman":"☃"}';
-	expect(res.headers.get('content-length')).toBe(Buffer.byteLength(body));
-	expect(res.headers.get('content-type')).toBe('application/json');
-	expect(res.chunks).toEqual([body]);
-});
-
-test('does not overwrite an explicit content-length header', () => {
-	const res = /** @type {any} */ (create_response());
-
-	setResponse(res, text('hello', { headers: { 'content-length': '999' } }));
-
-	expect(res.headers.get('content-length')).toBe('999');
-	expect(res.chunks).toEqual(['hello']);
-});
-
-test('streams response bodies without a known string body', async () => {
+test('sends fixed response bodies with a content-length', async () => {
 	const res = /** @type {any} */ (create_response());
 	const finished = once(res, 'finish');
 
-	setResponse(res, new Response('hello'));
+	setResponse(res, Response.json({ snowman: '☃' }));
+
+	await finished;
+	expect(res.headers.get('content-length')).toBe(Buffer.byteLength('{"snowman":"☃"}'));
+	expect(Buffer.concat(res.chunks).toString()).toBe('{"snowman":"☃"}');
+});
+
+test('sends empty fixed bodies with a zero content-length', async () => {
+	const res = /** @type {any} */ (create_response());
+	const finished = once(res, 'finish');
+
+	setResponse(res, new Response(''));
+
+	await finished;
+	expect(res.headers.get('content-length')).toBe(0);
+	expect(res.chunks).toEqual([]);
+});
+
+// proxied responses can carry a transfer-encoding header copied from the
+// upstream hop; adding a content-length next to it would be invalid
+test('does not add a content-length to responses with a transfer-encoding', async () => {
+	const res = /** @type {any} */ (create_response());
+	const finished = once(res, 'finish');
+
+	setResponse(res, new Response('hello', { headers: { 'transfer-encoding': 'chunked' } }));
 
 	await finished;
 	expect(res.headers.has('content-length')).toBe(false);
 	expect(Buffer.concat(res.chunks).toString()).toBe('hello');
 });
 
-test('does not resurrect a string body that was already read', async () => {
+test('does not overwrite an explicit content-length header', async () => {
+	const res = /** @type {any} */ (create_response());
+	const finished = once(res, 'finish');
+
+	setResponse(res, new Response('hello', { headers: { 'content-length': '999' } }));
+
+	await finished;
+	expect(res.headers.get('content-length')).toBe('999');
+	expect(Buffer.concat(res.chunks).toString()).toBe('hello');
+});
+
+test('streams bodies that do not settle within a tick, without a content-length', async () => {
 	const res = /** @type {any} */ (create_response());
 
-	const response = text('hello');
+	let controller = /** @type {ReadableStreamDefaultController} */ (/** @type {any} */ (null));
+	const body = new ReadableStream({
+		start(c) {
+			controller = c;
+			c.enqueue(new TextEncoder().encode('first'));
+		}
+	});
+
+	setResponse(res, new Response(body));
+
+	// headers and the first chunk must go out while the stream is still open
+	await vi.waitFor(() => expect(res.chunks.length).toBe(1));
+	expect(res.headers.has('content-length')).toBe(false);
+
+	const finished = once(res, 'finish');
+	controller.enqueue(new TextEncoder().encode(' second'));
+	controller.close();
+	await finished;
+	expect(Buffer.concat(res.chunks).toString()).toBe('first second');
+});
+
+test('does not send a body that was already read', async () => {
+	const res = /** @type {any} */ (create_response());
+
+	const response = new Response('hello');
 	await response.text();
 	setResponse(res, response);
 

@@ -28,8 +28,6 @@ import { add_cookies_to_headers, get_cookies } from './cookie.js';
 import { create_fetch } from './fetch.js';
 import { PageNodes } from '../../utils/page_nodes.js';
 import { validate_server_exports } from '../../utils/exports.js';
-import { STRING_BODY } from '../../constants.js';
-import { text_encoder } from '../utils.js';
 import { action_json_redirect, is_action_json_request } from './page/actions.js';
 import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM } from '../shared.js';
 import { get_public_env } from './env_module.js';
@@ -514,15 +512,10 @@ export async function internal_respond(request, options, manifest, state) {
 													response.headers.set('x-sveltekit-routeid', encodeURI(event.route.id));
 												}
 
-												const stashed = /** @type {any} */ (response)[STRING_BODY];
 												resolve_span.setAttributes({
 													'http.response.status_code': response.status,
 													'http.response.body.size':
-														response.headers.get('content-length') ??
-														// only pay for encoding when the span is recording
-														(resolve_span.isRecording() && typeof stashed === 'string'
-															? text_encoder.encode(stashed).byteLength.toString()
-															: 'unknown')
+														response.headers.get('content-length') || 'unknown'
 												});
 
 												return response;

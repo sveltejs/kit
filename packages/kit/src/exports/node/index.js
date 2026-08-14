@@ -2,7 +2,6 @@ import { createReadStream } from 'node:fs';
 import { Readable } from 'node:stream';
 import { SvelteKitError } from '../internal/shared.js';
 import { noop } from '../../utils/functions.js';
-import { STRING_BODY } from '../../constants.js';
 
 /** @type {WeakMap<import('http').IncomingMessage, (chunk: Buffer) => void>} */
 const body_data_listeners = new WeakMap();
@@ -225,21 +224,14 @@ export function setResponse(res, response) {
 		}
 	}
 
-	const stashed = /** @type {any} */ (response)[STRING_BODY];
-	const body = typeof stashed === 'string' && !response.body?.locked ? stashed : undefined;
-
-	if (body !== undefined && !res.hasHeader('content-length')) {
-		res.setHeader('content-length', Buffer.byteLength(body));
-	}
-
-	res.writeHead(response.status);
-
-	if (body !== undefined || !response.body) {
-		res.end(body);
+	if (!response.body) {
+		res.writeHead(response.status);
+		res.end();
 		return;
 	}
 
 	if (response.body.locked) {
+		res.writeHead(response.status);
 		res.end(
 			'Fatal error: Response body is locked. ' +
 				"This can happen when the response was already read (for example through 'response.json()' or 'response.text()')."
@@ -267,11 +259,73 @@ export function setResponse(res, response) {
 	res.on('close', cancel);
 	res.on('error', cancel);
 
-	void next();
+	/** @type {Uint8Array<ArrayBuffer>[]} */
+	const buffered = [];
+
+	/** @type {ReturnType<typeof reader.read> | null} */
+	let pending = null;
+
+	void probe();
+
+	// a fixed body (a string, buffer or blob, however constructed) settles all its
+	// reads before the next macrotask, so it can be measured and sent with a
+	// `content-length`; a genuine stream leaves a read pending and only has its
+	// headers delayed by a single tick
+	async function probe() {
+		try {
+			/** @type {Promise<undefined>} */
+			const deadline = new Promise((fulfil) => setImmediate(() => fulfil(undefined)));
+
+			while (buffered.length < 2) {
+				pending = reader.read();
+				const result = await Promise.race([pending, deadline]);
+
+				if (!result) break; // deadline hit — treat the body as a stream
+
+				pending = null;
+
+				if (result.done) {
+					// a `content-length` next to a `transfer-encoding` would be invalid
+					if (!res.hasHeader('content-length') && !res.hasHeader('transfer-encoding')) {
+						res.setHeader(
+							'content-length',
+							buffered.reduce((total, chunk) => total + chunk.byteLength, 0)
+						);
+					}
+					break;
+				}
+
+				buffered.push(result.value);
+			}
+
+			if (res.destroyed) return;
+
+			res.writeHead(response.status);
+			await next();
+		} catch (error) {
+			if (!res.headersSent) res.writeHead(response.status);
+			cancel(error instanceof Error ? error : new Error(String(error)));
+		}
+	}
+
 	async function next() {
 		try {
 			for (;;) {
-				const { done, value } = await reader.read();
+				/** @type {Awaited<ReturnType<typeof reader.read>>} */
+				let result;
+				if (buffered.length > 0) {
+					result = {
+						done: false,
+						value: /** @type {Uint8Array<ArrayBuffer>} */ (buffered.shift())
+					};
+				} else if (pending) {
+					result = await pending;
+					pending = null;
+				} else {
+					result = await reader.read();
+				}
+
+				const { done, value } = result;
 
 				if (done) break;
 
