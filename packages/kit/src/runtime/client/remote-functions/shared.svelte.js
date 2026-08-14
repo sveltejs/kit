@@ -97,7 +97,7 @@ export function get_remote_request_headers() {
 	// even in forks because it's state-based - therefore not using window.location.
 	// Use untrack(...) to Avoid accidental reactive dependency on pathname/search
 	return untrack(() => {
-		const url = navigating.current?.to?.url ?? page.url;
+		const url = navigating?.to?.url ?? page.url;
 
 		return {
 			'x-sveltekit-pathname': url.pathname,
