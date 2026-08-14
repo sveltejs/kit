@@ -225,20 +225,17 @@ export function setResponse(res, response) {
 		}
 	}
 
-	const body = /** @type {any} */ (response)[STRING_BODY];
-	if (typeof body === 'string' && !response.body?.locked) {
-		if (!res.hasHeader('content-length')) {
-			res.setHeader('content-length', Buffer.byteLength(body));
-		}
-		res.writeHead(response.status);
-		res.end(body);
-		return;
+	const stashed = /** @type {any} */ (response)[STRING_BODY];
+	const body = typeof stashed === 'string' && !response.body?.locked ? stashed : undefined;
+
+	if (body !== undefined && !res.hasHeader('content-length')) {
+		res.setHeader('content-length', Buffer.byteLength(body));
 	}
 
 	res.writeHead(response.status);
 
-	if (!response.body) {
-		res.end();
+	if (body !== undefined || !response.body) {
+		res.end(body);
 		return;
 	}
 
