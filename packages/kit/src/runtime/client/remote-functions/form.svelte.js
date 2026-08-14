@@ -133,7 +133,9 @@ export function form(id) {
 			if (await instance.submit()) {
 				await tick();
 				// We call reset from the prototype to avoid DOM clobbering
-				HTMLFormElement.prototype.reset.call(instance.element);
+				if (instance.element.isConnected) {
+					HTMLFormElement.prototype.reset.call(instance.element);
+				}
 			}
 		};
 
@@ -263,7 +265,7 @@ export function form(id) {
 
 							if (response.redirect) {
 								// Use internal version to allow redirects to external URLs
-								void _goto(response.redirect, {
+								await _goto(response.redirect, {
 									refreshAll: should_refresh
 								});
 								return true;
@@ -273,7 +275,7 @@ export function form(id) {
 
 							if (succeeded) {
 								if (should_refresh) {
-									void refreshAll();
+									await refreshAll();
 								}
 							} else {
 								if (DEV) {
