@@ -4,14 +4,13 @@
 	"version": "0.0.1",
 	"type": "module",
 	"scripts": {
-		"dev": "vite dev",
+		"dev": "svelte-kit sync && vite dev",
 		"build": "vite build",
 		"preview": "vite preview",
-		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && node node_modules/@typescript/native/bin/tsc && svelte-check --tsgo --incremental",
 		"test": "pnpm test:dev && pnpm test:build",
 		"test:dev": "DEV=true playwright test",
-		"test:build": "vitest run && playwright test"
+		"test:build": "svelte-kit sync && vitest run && playwright test"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",

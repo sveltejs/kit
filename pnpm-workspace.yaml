@@ -9,6 +9,7 @@ minimumReleaseAgeExclude:
   - zimmerframe
   - prettier-plugin-svelte
   - svelte-check
+  - svelte2tsx
   - esm-env
   - vite-imagetools
   - imagetools-core
@@ -51,13 +52,11 @@ packages:
   - '!.test-tmp/**'
   - playgrounds/*
 allowBuilds:
-  '@parcel/watcher': true
   esbuild: true
-  protobufjs: true
+  protobufjs: false # postinstall script only prints warnings
   rolldown: true
   sharp: true
-  svelte-preprocess: true
-  unix-dgram: true
+  svelte-preprocess: false # postinstall script only prints warnings
   workerd: true
 # pnpm catalogs are currently only suitable for dependencies that
 # wouldn't require publishing a new package version

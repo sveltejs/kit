@@ -1,5 +1,4 @@
-/** @import { SvelteConfig } from '@sveltejs/vite-plugin-svelte' */
-/** @import { ValidatedKitConfig } from 'types' */
+/** @import { ValidatedConfig } from 'types' */
 /** @import { Validator } from './types.js' */
 import { styleText } from 'node:util';
 
@@ -37,38 +36,13 @@ const directives = object({
 	referrer: string_array()
 });
 
-/** @type {Validator<{ extensions: string[] } & SvelteConfig>} */
-export const validate_svelte_options = object(
-	{
-		extensions: validate(['.svelte'], (input, keypath) => {
-			if (!Array.isArray(input) || !input.every((page) => typeof page === 'string')) {
-				throw new Error(`${keypath} must be an array of strings`);
-			}
-
-			input.forEach((extension) => {
-				if (extension[0] !== '.') {
-					throw new Error(`Each member of ${keypath} must start with '.' — saw '${extension}'`);
-				}
-
-				if (!/^(\.[a-z0-9]+)+$/i.test(extension)) {
-					throw new Error(`File extensions must be alphanumeric — saw '${extension}'`);
-				}
-			});
-
-			return input;
-		})
-	},
-	true
-);
-
 const prerender_handler = validate(undefined, (input, keypath) => {
 	if (typeof input === 'function') return input;
 	if (['fail', 'warn', 'ignore'].includes(input)) return input;
 	throw new Error(`${keypath} should be "fail", "warn", "ignore" or a custom function`);
 });
 
-/** @type {Validator<ValidatedKitConfig>} */
-export const validate_kit_options = object({
+const options = {
 	adapter: validate(undefined, (input, keypath) => {
 		if (typeof input !== 'object' || !input.adapt) {
 			const message = `The SvelteKit Vite plugin ${keypath} should be an object with an \`adapt\` method`;
@@ -110,6 +84,8 @@ export const validate_kit_options = object({
 		return input;
 	}),
 
+	compilerOptions: any(),
+
 	csp: object({
 		mode: list(['auto', 'hash', 'nonce']),
 		directives,
@@ -129,18 +105,39 @@ export const validate_kit_options = object({
 		dir: string('')
 	}),
 
-	experimental: object({
-		tracing: removed(
-			(keypath) =>
-				`\`${keypath}\` has been removed. Server-side tracing is now configured via \`tracing.server\``
-		),
-		instrumentation: removed(
-			(keypath) =>
-				`\`${keypath}\` has been removed. \`src/instrumentation.server.js\` is now included in the build automatically when it exists; no opt-in is required`
-		),
-		remoteFunctions: boolean(false),
-		forkPreloads: boolean(false),
-		handleRenderingErrors: removed()
+	experimental: object(
+		{
+			tracing: removed(
+				(keypath) =>
+					`\`${keypath}\` has been removed. Server-side tracing is now configured via \`tracing.server\``
+			),
+			instrumentation: removed(
+				(keypath) =>
+					`\`${keypath}\` has been removed. \`src/instrumentation.server.js\` is now included in the build automatically when it exists; no opt-in is required`
+			),
+			remoteFunctions: boolean(false),
+			forkPreloads: boolean(false),
+			handleRenderingErrors: removed()
+		},
+		true
+	),
+
+	extensions: validate(['.svelte'], (input, keypath) => {
+		if (!Array.isArray(input) || !input.every((page) => typeof page === 'string')) {
+			throw new Error(`${keypath} must be an array of strings`);
+		}
+
+		input.forEach((extension) => {
+			if (extension[0] !== '.') {
+				throw new Error(`Each member of ${keypath} must start with '.' — saw '${extension}'`);
+			}
+
+			if (!/^(\.[a-z0-9]+)+$/i.test(extension)) {
+				throw new Error(`File extensions must be alphanumeric — saw '${extension}'`);
+			}
+		});
+
+		return input;
 	}),
 
 	files: object({
@@ -165,6 +162,16 @@ export const validate_kit_options = object({
 	inlineStyleThreshold: number(0),
 
 	moduleExtensions: string_array(['.js', '.ts']),
+
+	kit: validate(undefined, (input) => {
+		const keys = Object.keys(input)
+			.map((key) => `\`${key}\``)
+			.join(', ');
+
+		throw new Error(
+			`SvelteKit configuration (${keys}) no longer lives inside a \`kit\` namespace. Pass it directly to the \`sveltekit(...)\` Vite plugin`
+		);
+	}),
 
 	outDir: string('.svelte-kit'),
 
@@ -239,6 +246,8 @@ export const validate_kit_options = object({
 		relative: boolean(true)
 	}),
 
+	preprocess: any(),
+
 	prerender: object({
 		concurrency: number(1),
 		crawl: boolean(true),
@@ -298,8 +307,16 @@ export const validate_kit_options = object({
 	version: object({
 		name: string(Date.now().toString()),
 		pollInterval: number(3_600_000)
-	})
-});
+	}),
+
+	vitePlugin: removed(
+		(keypath) =>
+			`\`${keypath}\` has been removed. Pass \`vite-plugin-svelte\` options directly to the \`sveltekit(...)\` Vite plugin`
+	)
+};
+
+/** @type {Validator<ValidatedConfig>} */
+export const validate_options = object(options, true);
 
 /**
  * @param {Validator} fn
@@ -323,7 +340,7 @@ function deprecate(
 // Derive the names of SvelteKit's own config options from the schema, so they
 // stay in sync automatically. These are used to separate Kit's options from
 // `vite-plugin-svelte`'s options when config is passed via the Vite plugin.
-const kit_defaults = validate_kit_options({}, 'config');
+const kit_defaults = validate_options({}, 'config');
 
 /** The names of the options that live under the `kit` namespace */
 export const kit_options = Object.keys(kit_defaults);
@@ -363,7 +380,8 @@ export function object(children, allow_unknown = false) {
 		for (const key in input) {
 			if (!(key in children)) {
 				if (allow_unknown) {
-					output[key] = input[key];
+					const value = input[key];
+					if (value !== undefined) output[key] = value;
 				} else {
 					let message = `Unexpected option ${keypath}.${key}`;
 
@@ -483,6 +501,10 @@ function fun(fallback) {
 		}
 		return input;
 	});
+}
+
+function any() {
+	return validate(undefined, (input) => input);
 }
 
 /**

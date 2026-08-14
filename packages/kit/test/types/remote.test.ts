@@ -1,24 +1,42 @@
-import {
-	query,
-	prerender,
-	command,
-	form,
-	requested,
+import { query, prerender, command, form, requested } from '$app/server';
+import type {
 	RemoteForm,
 	RemoteFormEnhanceCallback,
 	RemoteFormEnhanceInstance,
 	RemoteFormFields,
+	RemoteFormInvalidField,
 	RemoteFormInput,
+	RemoteLiveQueryRequestedEntry,
 	RemoteLiveQueryFunction,
+	RemoteLiveQueryRequestedResult,
 	RemotePrerenderFunction,
+	RemoteQueryRequestedResult,
 	RemoteQueryFunction
 } from '$app/server';
 import { StandardSchemaV1 } from '@standard-schema/spec';
-import { invalid } from '@sveltejs/kit';
+import { invalid, isValidationError } from '@sveltejs/kit';
+import type { ValidationError } from '@sveltejs/kit';
 
 const schema: StandardSchemaV1<string> = null as any;
 const schema2: StandardSchemaV1<string, number> = null as any;
 const schema3: StandardSchemaV1<string | undefined, number> = null as any;
+
+function exported_type_tests(error: unknown) {
+	const field: RemoteFormInvalidField<{ name: string }> = null as any;
+	const entry: RemoteLiveQueryRequestedEntry<void, string> = null as any;
+	const query_result: RemoteQueryRequestedResult<void, string> = null as any;
+	const live_result: RemoteLiveQueryRequestedResult<void, string> = null as any;
+	field.name('Invalid name');
+	entry.query;
+	query_result.refreshAll();
+	live_result.reconnectAll();
+
+	if (isValidationError(error)) {
+		const validation_error: ValidationError = error;
+		validation_error.issues;
+	}
+}
+void exported_type_tests;
 
 function query_tests() {
 	const no_args: RemoteQueryFunction<void, string> = query(() => 'Hello world');

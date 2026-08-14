@@ -62,6 +62,7 @@ import { read_ndjson } from './ndjson.js';
 import Root from '../components/root.svelte';
 import { Props, RenderNode } from '../props.svelte.js';
 import { init_transport, parse, stringify } from '#app/internal/transport';
+import { build_error_chain, nearest_error_pages } from '../error-chain.js';
 
 /**
  * @typedef {{
@@ -518,12 +519,10 @@ async function _start(_app, _target, data) {
 	default_layout_loader = _app.nodes[0];
 	default_error_loader = _app.nodes[1];
 
-	const [root_layout, root_error] = await Promise.all([
-		default_layout_loader(),
-		default_error_loader()
-	]);
+	const [root_layout] = await Promise.all([default_layout_loader(), default_error_loader()]);
 
-	const tree = new RenderNode(root_layout.component, root_error.component);
+	// the root boundary stays unarmed: the root +error.svelte renders at the node below it
+	const tree = new RenderNode(root_layout.component, undefined);
 
 	props = new Props({
 		page,
@@ -1053,7 +1052,12 @@ async function get_navigation_result_from_branch({
 	let data = {};
 	let data_changed = !page;
 
+	const error_components =
+		errors &&
+		(await build_error_chain(branch, errors, (loader) => loader().then((e) => e.component)));
+
 	let current_node = result.props.tree;
+	let current_depth = 1;
 
 	/** @type {RenderNode | undefined} */
 	let previous_node = props.tree;
@@ -1089,12 +1093,9 @@ async function get_navigation_result_from_branch({
 			const next = branch[next_index];
 
 			if (next) {
-				const error_loader =
-					errors?.slice(0, next_index + 1).findLast((x) => x) ?? default_error_loader;
-
 				current_node = current_node.child = new RenderNode(
 					next.node.component,
-					(await error_loader()).component
+					error_components?.[current_depth++]
 				);
 
 				previous_node = previous_node?.child;
@@ -1642,27 +1643,20 @@ async function load_route({ id, invalidating, url, params, route, preload, actio
  * @param {number} i Start index to backtrack from
  * @param {Array<import('./types.js').BranchNode | undefined>} branch Branch to backtrack
  * @param {Array<import('types').CSRPageNodeLoader | undefined>} errors All error pages for this branch
- * @returns {Promise<{idx: number; node: import('./types.js').BranchNode} | undefined>}
+ * @returns {Promise<Array<import('./types.js').BranchNode | undefined> | undefined>} the branch truncated at the error page's depth
  */
 async function load_nearest_error_page(i, branch, errors) {
-	while (i--) {
-		if (errors[i]) {
-			let j = i;
-			while (!branch[j]) j -= 1;
-			try {
-				return {
-					idx: j + 1,
-					node: {
-						node: await /** @type {import('types').CSRPageNodeLoader } */ (errors[i])(),
-						loader: /** @type {import('types').CSRPageNodeLoader } */ (errors[i]),
-						data: {},
-						server: null,
-						universal: null
-					}
-				};
-			} catch {
-				continue;
-			}
+	for (const { error, idx } of nearest_error_pages(i, branch, errors)) {
+		try {
+			return branch.slice(0, idx).concat({
+				node: await error(),
+				loader: error,
+				data: {},
+				server: null,
+				universal: null
+			});
+		} catch {
+			continue;
 		}
 	}
 }
@@ -1680,12 +1674,12 @@ async function load_nearest_error_page(i, branch, errors) {
  * }} opts
  */
 async function load_route_error({ i, branch, errors, error, status, url, params, route }) {
-	const error_load = await load_nearest_error_page(i, branch, errors);
-	if (error_load) {
+	const error_branch = await load_nearest_error_page(i, branch, errors);
+	if (error_branch) {
 		return get_navigation_result_from_branch({
 			url,
 			params,
-			branch: branch.slice(0, error_load.idx).concat(error_load.node),
+			branch: error_branch,
 			errors,
 			error,
 			status,
@@ -2266,15 +2260,15 @@ async function navigate({
 		} else {
 			apply_navigation_result(navigation_result);
 
-			// Reset any boundaries that failed on a previous navigation now that the
-			// new props are applied, otherwise the stale `+error.svelte` stays
-			// mounted above the new route's content. See sveltejs/kit#15694.
-			for (const reset_boundary of resetters) {
-				reset_boundary();
-			}
-			resetters.clear();
-
-			commit_promise = settled();
+			// Reset boundaries that failed on a previous navigation once the new props have
+			// flushed (see sveltejs/kit#15694). Resetting first re-renders the old content at
+			// a depth the new tree may not have, stranding the stale `+error.svelte`.
+			commit_promise = settled().then(() => {
+				for (const reset_boundary of resetters) {
+					reset_boundary();
+				}
+				resetters.clear();
+			});
 		}
 
 		has_navigated = true;
@@ -3197,14 +3191,14 @@ export async function set_nearest_error_page(error) {
 	const { branch, route } = current;
 	if (!route) return;
 
-	const error_load = await load_nearest_error_page(current.branch.length, branch, route.errors);
-	if (error_load) {
+	const error_branch = await load_nearest_error_page(current.branch.length, branch, route.errors);
+	if (error_branch) {
 		const navigation_result = await get_navigation_result_from_branch({
 			url,
 			params: current.params,
-			branch: branch.slice(0, error_load.idx).concat(error_load.node),
+			branch: error_branch,
 			error,
-			// do not set errors, we haven't changed the page so the previous ones are still current
+			errors: route.errors,
 			route
 		});
 

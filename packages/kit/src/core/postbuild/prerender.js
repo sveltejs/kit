@@ -1,10 +1,8 @@
 import process from 'node:process';
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { clearLine, moveCursor } from 'node:readline';
 import { pathToFileURL } from 'node:url';
 import { walk } from '../../utils/filesystem.js';
-import { posixify } from '../../utils/os.js';
 import { noop } from '../../utils/functions.js';
 import { decode_uri, is_root_relative, resolve } from '../../utils/url.js';
 import { escape_html } from '../../utils/escape.js';
@@ -153,7 +151,7 @@ async function prerender({
 
 	const vite_config = await load_vite_config(vite_config_file);
 
-	const config = extract_svelte_config(vite_config).kit;
+	const config = extract_svelte_config(vite_config);
 
 	const prerender_origin = config.paths.origin || 'http://sveltekit-prerender';
 
@@ -257,13 +255,13 @@ async function prerender({
 		return file;
 	}
 
-	const files = new Set(walk(`${out}/client`).map(posixify));
+	const files = new Set(walk(`${out}/client`));
 	files.add(`${config.appDir}/env.js`);
 
 	const immutable = `${config.appDir}/immutable`;
 	if (existsSync(`${out}/server/${immutable}`)) {
 		for (const file of walk(`${out}/server/${immutable}`)) {
-			files.add(posixify(`${config.appDir}/immutable/${file}`));
+			files.add(`${config.appDir}/immutable/${file}`);
 		}
 	}
 
@@ -275,42 +273,60 @@ async function prerender({
 	/** @type {Map<string, Promise<any>>} */
 	const remote_responses = new Map();
 
-	/** @type {(path: string) => void} */
-	let progress_line = noop;
+	/** @type {null | { clear: () => void; update: (path: string) => void; updated: number }} */
+	let progress = null;
 
 	if (is_tty) {
 		// Where possible, provide progress feedback by showing the path we're
 		// currently requesting, then clearing the line once the response comes in.
 		// This avoids the wall of text that happens when you prerender
 		// many pages and log each response
+		const { stdout, stderr } = process;
+
 		let current = false;
-		const stdout_write = process.stdout.write;
-		const stderr_write = process.stderr.write;
+		let needs_newline = true;
 
-		process.stdout.write = new Proxy(stdout_write, {
+		const write = stdout.write;
+
+		/** @param {string} value */
+		const print = (value) => write.call(stdout, value);
+
+		/** @type {ProxyHandler<typeof stdout.write>} */
+		const intercept = {
 			apply(target, this_arg, args) {
-				current = false;
+				const chunk = args[0];
+				if (chunk.length > 0) {
+					current = false;
+					needs_newline =
+						typeof chunk === 'string' ? !chunk.endsWith('\n') : chunk[chunk.length - 1] !== 10;
+				}
 				return Reflect.apply(target, this_arg, args);
 			}
-		});
+		};
 
-		process.stderr.write = new Proxy(stderr_write, {
-			apply(target, this_arg, args) {
-				current = false;
-				return Reflect.apply(target, this_arg, args);
-			}
-		});
+		stdout.write = new Proxy(stdout.write, intercept);
+		stderr.write = new Proxy(stderr.write, intercept);
 
-		progress_line = (path) => {
-			// If app code writes to stdout or stderr, don't move the cursor to clear
-			// the previous progress log, because that will corrupt things
-			if (current) {
-				moveCursor(process.stdout, 0, -1);
-				clearLine(process.stdout, 0);
-			}
+		progress = {
+			clear: () => {
+				// If app code writes to stdout or stderr, don't move the cursor to clear
+				// the previous progress log, because that will corrupt things
+				if (!current) return;
 
-			stdout_write.call(process.stdout, `rendering ${path}...\n`);
-			current = true;
+				print('\x1B[1A'); // move cursor to start of progress update
+				print('\x1B[2K'); // clear current line
+			},
+
+			update: (path) => {
+				// if we're in the middle of a line, start a new one
+				if (needs_newline) print('\n');
+
+				print(`crawling ${path}\n`);
+				current = true;
+				needs_newline = false;
+			},
+
+			updated: 0
 		};
 	}
 
@@ -354,7 +370,17 @@ async function prerender({
 		/** @type {Map<string, import('types').PrerenderDependency>} */
 		const dependencies = new Map();
 
-		progress_line(decoded);
+		if (progress) {
+			progress.clear();
+			progress.update(decoded);
+
+			if (Date.now() - progress.updated > 50) {
+				progress.updated = Date.now();
+
+				// without this, the update will rarely be visible, and progress will appear stuck
+				await new Promise((f) => setTimeout(f, 0));
+			}
+		}
 
 		const request = new Request(prerender_origin + encoded);
 
@@ -693,6 +719,7 @@ async function prerender({
 	}
 
 	await q.done();
+	progress?.clear();
 
 	// handle invalid fragment links
 	for (const [key, referrers] of expected_hashlinks) {

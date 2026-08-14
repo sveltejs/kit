@@ -224,8 +224,6 @@ jobs:
         with:
           persist-credentials: false
       - uses: ./.github/actions/node-setup
-        with:
-          node-version: ${{ matrix.node-version }}
       - run: pnpm run sync-all
       - run: pnpm test:svelte-async:${{ matrix.mode }}
       - name: Print flaky test report

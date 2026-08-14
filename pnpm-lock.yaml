@@ -69,9 +69,6 @@ catalogs:
     prettier-plugin-svelte:
       specifier: ^4.1.1
       version: 4.1.1
-    rolldown:
-      specifier: ^1.2.3
-      version: 1.2.3
     sirv-cli:
       specifier: ^3.0.1
       version: 3.0.1
@@ -531,9 +528,6 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 22.19.19
-      rolldown:
-        specifier: 'catalog:'
-        version: 1.2.3
       svelte:
         specifier: 'catalog:'
         version: 5.56.8(@typescript-eslint/types@8.61.1)
@@ -567,6 +561,9 @@ importers:
 
   packages/kit:
     dependencies:
+      '@rolldown/pluginutils':
+        specifier: ^1.0.1
+        version: 1.0.1
       '@standard-schema/spec':
         specifier: ^1.1.0
         version: 1.1.0
@@ -619,9 +616,6 @@ importers:
       jsdom:
         specifier: 'catalog:'
         version: 30.0.1
-      rolldown:
-        specifier: 'catalog:'
-        version: 1.2.3
       svelte:
         specifier: 'catalog:'
         version: 5.56.8(@typescript-eslint/types@8.61.1)
@@ -1631,8 +1625,8 @@ importers:
         specifier: ^7.8.5
         version: 7.8.5
       svelte2tsx:
-        specifier: ~0.7.59
-        version: 0.7.59(svelte@5.56.8(@typescript-eslint/types@8.61.1))(typescript@6.0.3)
+        specifier: ~0.7.60
+        version: 0.7.60(svelte@5.56.8(@typescript-eslint/types@8.61.1))(typescript@6.0.3)
     devDependencies:
       '@sveltejs/kit':
         specifier: workspace:^
@@ -4285,8 +4279,8 @@ packages:
       typescript:
         optional: true
 
-  svelte2tsx@0.7.59:
-    resolution: {integrity: sha512-Itj7Wz9WIiGFl/uJa58+rf43ajezaljKK/KTOHq5abUjto56xe+o5SOzLwSoeJ5hma9NZEstpZiazFW2q1nZPQ==}
+  svelte2tsx@0.7.60:
+    resolution: {integrity: sha512-aefUopCWAA3AT+6K6PQj5JP19+C2dj31qSh06p+nLjVsizwYqGHtTarvhYsCFWl5tSzrD19GL0s+2FcB3K26Lg==}
     peerDependencies:
       svelte: ^3.55 || ^4.0.0-next.0 || ^4.0 || ^5.0.0-next.0
       typescript: ^4.9.4 || ^5.0.0 || ^6.0.0
@@ -6940,7 +6934,7 @@ snapshots:
       postcss-load-config: 3.1.4(postcss@8.5.26)
       typescript: 6.0.3
 
-  svelte2tsx@0.7.59(svelte@5.56.8(@typescript-eslint/types@8.61.1))(typescript@6.0.3):
+  svelte2tsx@0.7.60(svelte@5.56.8(@typescript-eslint/types@8.61.1))(typescript@6.0.3):
     dependencies:
       dedent-js: 1.0.1
       scule: 1.3.0

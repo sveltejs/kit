@@ -13,7 +13,7 @@ import { app_server, app_env_private, sveltekit_env_private } from './module_ids
  *
  * Related to tsconfig path alias creation.
  *
- * @param {import('types').ValidatedKitConfig} config
+ * @param {import('types').ValidatedConfig} config
  * @param {string} root
  */
 export function get_config_aliases(config, root) {

@@ -35,19 +35,19 @@ const is_whitespace = (/** @type {string} */ char) => /\s/.test(char);
 export function write_all_types(config, manifest_data, root) {
 	if (!ts) return;
 
-	const types_dir = `${config.kit.outDir}/types`;
+	const types_dir = `${config.outDir}/types`;
 
 	// empty out files that no longer need to exist
 	const routes_dir = remove_relative_parent_traversals(
-		posixify(path.relative(root, config.kit.files.routes))
+		posixify(path.relative(root, config.files.routes))
 	);
 	const expected_directories = new Set(
-		manifest_data.routes.map((route) => path.join(routes_dir, route.id))
+		manifest_data.routes.map((route) => path.posix.join(routes_dir, route.id))
 	);
 
 	if (fs.existsSync(types_dir)) {
 		for (const file of walk(types_dir)) {
-			const dir = path.dirname(file);
+			const dir = path.posix.dirname(file);
 			if (!expected_directories.has(dir)) {
 				fs.rmSync(path.join(types_dir, file), { force: true, recursive: true });
 			}
@@ -66,7 +66,7 @@ export function write_all_types(config, manifest_data, root) {
 	for (const route of manifest_data.routes) {
 		if (!route.leaf && !route.layout && !route.endpoint) continue; // nothing to do
 
-		const outdir = path.join(config.kit.outDir, 'types', routes_dir, route.id);
+		const outdir = path.join(config.outDir, 'types', routes_dir, route.id);
 
 		// check if the types are out of date
 		/** @type {string[]} */
@@ -148,7 +148,7 @@ export function write_types(config, manifest_data, file, root) {
 		return;
 	}
 
-	const id = '/' + posixify(path.relative(config.kit.files.routes, path.dirname(file)));
+	const id = '/' + posixify(path.relative(config.files.routes, path.dirname(file)));
 
 	const route = manifest_data.routes.find((route) => route.id === id);
 	if (!route) return;
@@ -182,9 +182,9 @@ function create_routes_map(manifest_data) {
  */
 function update_types(config, routes, route, root, to_delete = new Set()) {
 	const routes_dir = remove_relative_parent_traversals(
-		posixify(path.relative(root, config.kit.files.routes))
+		posixify(path.relative(root, config.files.routes))
 	);
-	const outdir = path.join(config.kit.outDir, 'types', routes_dir, route.id);
+	const outdir = path.join(config.outDir, 'types', routes_dir, route.id);
 
 	// now generate new types
 	const imports = [
@@ -603,8 +603,7 @@ function replace_ext_with_js(file_path) {
 function generate_params_type(params, outdir, config) {
 	const path_to_params = () => {
 		const params_file =
-			resolve_entry(config.kit.files.params) ??
-			config.kit.files.params.replace(/\.(js|ts)$/, '') + '.js';
+			resolve_entry(config.files.params) ?? config.files.params.replace(/\.(js|ts)$/, '') + '.js';
 
 		return posixify(path.relative(outdir, params_file));
 	};

@@ -237,28 +237,20 @@ type ExtractId<Input> = Input extends { id: infer Id }
  * The type structure mirrors the input data structure for type-safe field access.
  * Call `invalid(issue.foo(...), issue.nested.bar(...))` to throw a validation error.
  */
-export type InvalidField<T> =
+export type RemoteFormInvalidField<T> =
 	WillRecurseIndefinitely<T> extends true
 		? Record<string | number, any>
 		: NonNullable<T> extends string | number | boolean | File
 			? (message: string) => StandardSchemaV1.Issue
 			: NonNullable<T> extends Array<infer U>
 				? {
-						[K in number]: InvalidField<U>;
+						[K in number]: RemoteFormInvalidField<U>;
 					} & ((message: string) => StandardSchemaV1.Issue)
 				: NonNullable<T> extends RemoteFormInput
 					? {
-							[K in keyof T]-?: InvalidField<T[K]>;
+							[K in keyof T]-?: RemoteFormInvalidField<T[K]>;
 						} & ((message: string) => StandardSchemaV1.Issue)
 					: Record<string, never>;
-
-/**
- * A validation error thrown by `invalid`.
- */
-export interface ValidationError {
-	/** The validation issues */
-	issues: StandardSchemaV1.Issue[];
-}
 
 /**
  * The form instance as received inside an `enhance` callback. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
@@ -305,7 +297,7 @@ export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
 	 * Useful when you have multiple forms that use the same remote form action, for example in a loop.
 	 * ```svelte
 	 * {#each todos as todo}
-	 *	{@const todoForm = updateTodo.for(todo.id)}
+	 *	{const todoForm = updateTodo.for(todo.id)}
 	 *	<form {...todoForm}>
 	 *		{#if todoForm.result?.invalid}<p>Invalid data</p>{/if}
 	 *		...
@@ -475,12 +467,14 @@ export type RequestedEntry<Validated, Output> = {
  * `RemoteLiveQuery` bound to the client's original cache key, so `reconnect()` targets
  * the correct client subscription.
  */
-export type LiveRequestedEntry<Validated, Output> = {
+export type RemoteLiveQueryRequestedEntry<Validated, Output> = {
 	arg: Validated;
 	query: RemoteLiveQuery<Output>;
 };
 
-export type QueryRequestedResult<Validated, Output> = Iterable<RequestedEntry<Validated, Output>> &
+export type RemoteQueryRequestedResult<Validated, Output> = Iterable<
+	RequestedEntry<Validated, Output>
+> &
 	AsyncIterable<RequestedEntry<Validated, Output>> & {
 		/**
 		 * Call `refresh` on all queries selected by this `requested` invocation.
@@ -496,10 +490,10 @@ export type QueryRequestedResult<Validated, Output> = Iterable<RequestedEntry<Va
 		refreshAll: () => Promise<void>;
 	};
 
-export type LiveQueryRequestedResult<Validated, Output> = Iterable<
-	LiveRequestedEntry<Validated, Output>
+export type RemoteLiveQueryRequestedResult<Validated, Output> = Iterable<
+	RemoteLiveQueryRequestedEntry<Validated, Output>
 > &
-	AsyncIterable<LiveRequestedEntry<Validated, Output>> & {
+	AsyncIterable<RemoteLiveQueryRequestedEntry<Validated, Output>> & {
 		/**
 		 * Call `reconnect` on all live queries selected by this `requested` invocation.
 		 * This is identical to:
@@ -515,5 +509,5 @@ export type LiveQueryRequestedResult<Validated, Output> = Iterable<
 	};
 
 export type RequestedResult<Validated, Output> =
-	| QueryRequestedResult<Validated, Output>
-	| LiveQueryRequestedResult<Validated, Output>;
+	| RemoteQueryRequestedResult<Validated, Output>
+	| RemoteLiveQueryRequestedResult<Validated, Output>;
