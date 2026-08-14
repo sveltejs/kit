@@ -3,7 +3,6 @@
 /** @import { ValidatedConfig } from 'types' */
 import path from 'node:path';
 import * as sync from '../../../core/sync/sync.js';
-import { resolve_entry } from '../../../utils/filesystem.js';
 import {
 	create_sveltekit_env,
 	create_sveltekit_env_dev,
