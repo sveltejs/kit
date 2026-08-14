@@ -15,8 +15,9 @@ import {
 } from './utils.js';
 import { exactRegex } from '@rolldown/pluginutils';
 import { getRequest } from '@sveltejs/kit/node';
+import { cloudflare } from '@cloudflare/vite-plugin';
 
-const name = '@sveltejs/adapter-cloudflare';
+const files = fileURLToPath(new URL('./files', import.meta.url).href);
 
 /** @type {typeof import('./index.js').default} */
 export default function (options = {}) {
@@ -24,7 +25,7 @@ export default function (options = {}) {
 	const stub_import =
 		import.meta.resolve('./src/virtual-cloudflare-workers.js') + '?' + crypto.randomUUID();
 	return {
-		name,
+		name: '@sveltejs/adapter-cloudflare',
 		async adapt(builder) {
 			if (
 				fs.existsSync('_routes.json') ||
@@ -77,7 +78,6 @@ export default function (options = {}) {
 				}
 			}
 
-			const files = fileURLToPath(new URL('./files', import.meta.url).href);
 			const tmp = builder.getBuildDirectory('cloudflare-tmp');
 
 			fs.rmSync(dest, { force: true, recursive: true });
@@ -200,6 +200,7 @@ export default function (options = {}) {
 		vite: {
 			plugins: {
 				pre: [
+					...cloudflare_vite_plugins(options.config),
 					virtual_workers_module(
 						{
 							configPath: options.config,
@@ -211,6 +212,65 @@ export default function (options = {}) {
 			}
 		}
 	};
+}
+
+/**
+ * @param {string | undefined} config_path
+ * @returns {Plugin[]}
+ */
+function cloudflare_vite_plugins(config_path) {
+	/** @type {string} */
+	let out_dir = path.resolve(process.cwd(), '.svelte-kit');
+	return [
+		{
+			name: 'vite-plugin-adapter-cloudflare-disable-workers-build',
+			apply: 'build',
+			config(user_config) {
+				// We need to disable @cloudflare/vite-plugin's buildApp hook,
+				// which is set here: https://github.com/cloudflare/workers-sdk/blob/main/packages/vite-plugin-cloudflare/src/plugins/config.ts#L88
+				// and does not run if config.builder.buildApp is set.
+				if (!user_config.builder?.buildApp) {
+					user_config.builder ??= {};
+					user_config.builder.buildApp = async () => {};
+				}
+			},
+			configResolved(config) {
+				const plugin = config.plugins.find(
+					(plugin) => plugin.name === 'vite-plugin-sveltekit-setup'
+				);
+				const options = plugin?.api?.options;
+				if (!options) throw new Error('vite-plugin-sveltekit-setup not found');
+				out_dir = path.resolve(process.cwd(), options.kit.outDir);
+			}
+		},
+		...cloudflare({
+			configPath: config_path,
+			config: (user_config) => {
+				const worker_contents = fs
+					.readFileSync(`${files}/worker.js`, 'utf8')
+					.replace('SERVER', `../output/server/index.js`)
+					.replace('MANIFEST', '../cloudflare-tmp/manifest.js')
+					.replace('ASSETS', user_config.assets?.binding ?? 'ASSETS');
+				const worker_out = `${out_dir}/cloudflare/worker.js`;
+				fs.writeFileSync(worker_out, worker_contents);
+				user_config.main = worker_out;
+			}
+			// for now, disable all cloudflare plugins during dev & preview
+		}).map((p) => {
+			if (typeof p.apply === 'function') {
+				const old_apply = p.apply;
+				p.apply = (config, env) => {
+					if (env.command !== 'build') return false;
+					return old_apply(config, env);
+				};
+			} else if (p.apply === 'serve') {
+				p.apply = () => false;
+			} else {
+				p.apply = 'build';
+			}
+			return p;
+		})
+	];
 }
 
 /**
