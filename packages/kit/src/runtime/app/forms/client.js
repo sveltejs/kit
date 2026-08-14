@@ -9,9 +9,9 @@ import {
 	is_current_location
 } from '../../client/client.js';
 import { notify_version } from '../../client/state.svelte.js';
+import { deserialize } from './shared.js';
 
-export { applyAction };
-export { deserialize } from './shared.js';
+export { applyAction, deserialize };
 
 /**
  * Shallow clone an element, so that we can access e.g. `form.action` without worrying
