@@ -116,9 +116,8 @@ export async function load_explicit_env(kit, file, root, mode) {
  * @param {Record<string, EnvVarConfig<any> | undefined> | null} variables
  * @param {Record<string, string>} env
  * @param {string | null} entry
- * @param {boolean} is_dev
  */
-export function create_sveltekit_env(variables, env, entry, is_dev) {
+export function create_sveltekit_env(variables, env, entry) {
 	const imports = entry
 		? [
 				`import { variables } from ${JSON.stringify(entry)};`,
@@ -172,22 +171,31 @@ export function create_sveltekit_env(variables, env, entry, is_dev) {
 			}`
 	];
 
+	const module = blocks.join('\n\n');
+
+	return module;
+}
+
+/**
+ * @param {Record<string, EnvVarConfig<any> | undefined> | null} variables
+ * @param {Record<string, string>} env
+ */
+export function create_sveltekit_env_dev(variables, env) {
 	// In dev, initialise the env immediately. Tools like `vite-node` load modules
 	// through the Vite config but don't run the SvelteKit dev server, which is what
 	// normally calls `set_env`. Without this, dynamic env vars imported from
 	// `$app/env/public` and `$app/env/private` would be `undefined` in such contexts.
-	if (is_dev) {
-		/** @type {Record<string, string>} */
-		const dev_env = {};
-		for (const name of Object.keys(variables ?? {})) {
-			if (name in env) dev_env[name] = env[name];
-		}
-		blocks.push(`set_env(${devalue.uneval(dev_env)});`);
+	/** @type {Record<string, string>} */
+	const dev_env = {};
+	for (const name of Object.keys(variables ?? {})) {
+		if (name in env) dev_env[name] = env[name];
 	}
 
-	const module = blocks.join('\n\n');
-
-	return module;
+	return [
+		`import { set_env } from './config.js';`,
+		`set_env(${devalue.uneval(dev_env)});`,
+		`export * from './config.js';`
+	].join('\n\n');
 }
 
 /**
@@ -218,7 +226,7 @@ export function create_sveltekit_env_private(variables, env) {
 
 	handle_issues(issues);
 
-	return `import { dynamic_private_env as env } from '__sveltekit/env';\n\n${exports.join('')}`;
+	return `import { dynamic_private_env as env } from '../config.js';\n\n${exports.join('')}`;
 }
 
 /**

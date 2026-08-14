@@ -5,6 +5,7 @@ import * as sync from '../../../core/sync/sync.js';
 import { resolve_entry } from '../../../utils/filesystem.js';
 import {
 	create_sveltekit_env,
+	create_sveltekit_env_dev,
 	create_sveltekit_env_private,
 	create_sveltekit_env_public,
 	create_sveltekit_env_service_worker,
@@ -59,56 +60,50 @@ export function plugin_env_vars(config) {
 
 		deps = synced.deps;
 
-		write_if_changed(
-			`${out_dir}/generated/env/config.js`,
-			create_sveltekit_env(synced.variables, env, resolved_entry, !is_build)
-		);
+		const vars = synced.variables;
+		const dir = `${out_dir}/generated/env`;
 
 		write_if_changed(
-			`${out_dir}/generated/env/public/client.js`,
+			`${dir}/config.js`,
+			create_sveltekit_env(vars, env, resolved_entry && path.relative(dir, resolved_entry))
+		);
+
+		write_if_changed(`${dir}/config-dev.js`, create_sveltekit_env_dev(vars, env));
+
+		write_if_changed(
+			`${dir}/public/client.js`,
 			create_sveltekit_env_public(
-				synced.variables,
+				vars,
 				env,
-				`import { payload } from ${s(`${runtime_directory}/client/payload.js`)};\nconst env = payload.env;`
+				`import { payload } from ${s(path.relative(`${dir}/client`, `${runtime_directory}/client/payload.js`))};\nconst env = payload.env;`
 			)
 		);
 
 		write_if_changed(
-			`${out_dir}/generated/env/public/server.js`,
-			create_sveltekit_env_public(
-				synced.variables,
-				env,
-				`import { rendered_env as env } from '../config.js';`
-			)
+			`${dir}/public/server.js`,
+			create_sveltekit_env_public(vars, env, `import { rendered_env as env } from '../config.js';`)
 		);
 
 		write_if_changed(
-			`${out_dir}/generated/env/public/service-worker-prod.js`,
+			`${dir}/public/service-worker-prod.js`,
 			create_sveltekit_env_public(
-				synced.variables,
+				vars,
 				env,
 				`const env = globalThis.__sveltekit_${version_hash}.env;`
 			)
 		);
 
 		write_if_changed(
-			`${out_dir}/generated/env/public/service-worker-dev.js`,
-			create_sveltekit_env_public(
-				synced.variables,
-				env,
-				`const env = globalThis.__sveltekit_dev.env;`
-			)
+			`${dir}/public/service-worker-dev.js`,
+			create_sveltekit_env_public(vars, env, `const env = globalThis.__sveltekit_dev.env;`)
 		);
 
-		write_if_changed(
-			`${out_dir}/generated/env/private/server.js`,
-			create_sveltekit_env_private(synced.variables, env)
-		);
+		write_if_changed(`${dir}/private/server.js`, create_sveltekit_env_private(vars, env));
 
 		write_if_changed(
-			`${out_dir}/generated/env/service-worker-prod.js`,
+			`${dir}/service-worker-prod.js`,
 			create_sveltekit_env_service_worker(
-				synced.variables,
+				vars,
 				env,
 				config.version.name,
 				`globalThis.__sveltekit_${version_hash}`,
@@ -118,9 +113,9 @@ export function plugin_env_vars(config) {
 		);
 
 		write_if_changed(
-			`${out_dir}/generated/env/service-worker-dev.js`,
+			`${dir}/service-worker-dev.js`,
 			create_sveltekit_env_service_worker_dev(
-				synced.variables,
+				vars,
 				env,
 				config.version.name,
 				'globalThis.__sveltekit_dev'
@@ -157,28 +152,28 @@ export function plugin_env_vars(config) {
 				id: prefixRegex('__sveltekit/env')
 			},
 			handler(id) {
+				const dir = `${out_dir}/generated/env`;
+
 				if (id === '__sveltekit/env') {
-					return `${out_dir}/generated/env/config.js`;
+					return is_build ? `${dir}/config.js` : `${dir}/config-dev.js`;
 				}
 
 				if (id === '__sveltekit/env/private') {
-					return `${out_dir}/generated/env/private/server.js`;
+					return `${dir}/private/server.js`;
 				}
 
 				if (id === '__sveltekit/env/public/server') {
-					return `${out_dir}/generated/env/public/server.js`;
+					return `${dir}/public/server.js`;
 				}
 
 				if (id === '__sveltekit/env/public/client') {
 					return this.environment.name === 'serviceWorker'
-						? `${out_dir}/generated/env/public/service-worker-prod.js`
-						: `${out_dir}/generated/env/public/client.js`;
+						? `${dir}/public/service-worker-prod.js`
+						: `${dir}/public/client.js`;
 				}
 
 				if (id === '__sveltekit/env/service-worker') {
-					return is_build
-						? `${out_dir}/generated/env/service-worker-prod.js`
-						: `${out_dir}/generated/env/service-worker-dev.js`;
+					return is_build ? `${dir}/service-worker-prod.js` : `${dir}/service-worker-dev.js`;
 				}
 			}
 		}
