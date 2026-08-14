@@ -142,8 +142,14 @@ export function plugin_env_vars(config, callback) {
 			out_dir = posixify(path.resolve(c.root, out));
 
 			is_build = c.command === 'build';
+		},
 
-			resolved_entry = resolve_env_entry(config, c.root);
+		async buildStart() {
+			// we only need to run this once, and not in postbuild forks that
+			// resolve the config without building (analyse/prerender)
+			if (this.environment.name !== 'ssr') return;
+
+			resolved_entry = resolve_env_entry(config, resolved_config.root);
 			await generate();
 		},
 
