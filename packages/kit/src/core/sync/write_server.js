@@ -23,7 +23,7 @@ const server_template = ({
 	has_service_worker,
 	template
 }) => `
-import { set_building, set_prerendering } from '$app/env/internal';
+import { set_building, set_prerendering } from '$app/env/server';
 import { set_assets } from '$app/paths/internal/server';
 import { set_fix_stack_trace, set_manifest, set_read_implementation, log_response } from '__sveltekit/server';
 import error from '../shared/error-template.js';

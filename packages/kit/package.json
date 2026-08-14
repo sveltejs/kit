@@ -93,6 +93,17 @@
 		"generate:types": "node scripts/generate-dts.js"
 	},
 	"imports": {
+		"#app/env": {
+			"types": "./src/runtime/app/env/internal.d.ts",
+			"workerd": "./src/runtime/app/env/server.js",
+			"browser": "./src/runtime/app/env/client.js",
+			"default": "./src/runtime/app/env/server.js"
+		},
+		"#app/env/server": {
+			"workerd": "./src/runtime/app/env/server.js",
+			"browser": "./src/runtime/invalid-import.js",
+			"default": "./src/runtime/app/env/server.js"
+		},
 		"#app/internal/transport": {
 			"default": "./src/runtime/app/internal/transport.js"
 		},

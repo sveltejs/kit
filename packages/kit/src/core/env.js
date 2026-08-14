@@ -55,8 +55,8 @@ export async function load_explicit_env(vite, kit, file, root, mode) {
 
 	const runner = get_runner(vite, server);
 
-	/** @type {typeof import('../runtime/app/env/internal.js')} */ (
-		await runner.import(`${runtime_directory}/app/env/internal.js`)
+	/** @type {typeof import('../runtime/app/env/server.js')} */ (
+		await runner.import(`${runtime_directory}/app/env/server.js`)
 	).set_building();
 
 	try {
