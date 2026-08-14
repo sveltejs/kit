@@ -6,7 +6,9 @@ import { resolve_entry } from '../../../utils/filesystem.js';
 import {
 	create_sveltekit_env,
 	create_sveltekit_env_private,
-	create_sveltekit_env_public
+	create_sveltekit_env_public,
+	create_sveltekit_env_service_worker,
+	create_sveltekit_env_service_worker_dev
 } from '../../../core/env.js';
 import { import_peer } from '../../../utils/import.js';
 import { runtime_directory } from '../../../core/utils.js';
@@ -27,6 +29,8 @@ export function plugin_env_vars(config) {
 	const dir = config.env.dir;
 	const out = config.outDir;
 
+	const version_hash = hash(config.version.name);
+
 	/** @type {Record<string, any>} */
 	let env;
 
@@ -40,9 +44,6 @@ export function plugin_env_vars(config) {
 
 	/** @type {Set<string>} */
 	let deps;
-
-	/** @type {string} */
-	let kit_global;
 
 	async function generate() {
 		const synced = await sync.env(
@@ -78,13 +79,48 @@ export function plugin_env_vars(config) {
 		);
 
 		write_if_changed(
-			`${out}/generated/env/public/service-worker.js`,
-			create_sveltekit_env_public(synced.variables, env, `const env = ${kit_global}.env;`)
+			`${out}/generated/env/public/service-worker-prod.js`,
+			create_sveltekit_env_public(
+				synced.variables,
+				env,
+				`const env = globalThis.__sveltekit_${version_hash}.env;`
+			)
+		);
+
+		write_if_changed(
+			`${out}/generated/env/public/service-worker-dev.js`,
+			create_sveltekit_env_public(
+				synced.variables,
+				env,
+				`const env = globalThis.__sveltekit_dev.env;`
+			)
 		);
 
 		write_if_changed(
 			`${out}/generated/env/private/server.js`,
 			create_sveltekit_env_private(synced.variables, env)
+		);
+
+		write_if_changed(
+			`${out}/generated/env/service-worker-prod.js`,
+			create_sveltekit_env_service_worker(
+				synced.variables,
+				env,
+				config.version.name,
+				`globalThis.__sveltekit_${version_hash}`,
+				config.paths.base,
+				config.appDir
+			)
+		);
+
+		write_if_changed(
+			`${out}/generated/env/service-worker-dev.js`,
+			create_sveltekit_env_service_worker_dev(
+				synced.variables,
+				env,
+				config.version.name,
+				'globalThis.__sveltekit_dev'
+			)
 		);
 	}
 
@@ -97,12 +133,6 @@ export function plugin_env_vars(config) {
 			env = vite.loadEnv(c.mode, dir, '');
 
 			is_build = c.command === 'build';
-
-			const version_hash = hash(config.version.name);
-
-			kit_global = is_build
-				? `globalThis.__sveltekit_${version_hash}`
-				: 'globalThis.__sveltekit_dev';
 		},
 		async buildStart() {
 			resolved_entry = resolve_entry(path.join(resolved_config.root, entry)) ?? null;

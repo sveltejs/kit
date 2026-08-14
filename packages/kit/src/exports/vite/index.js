@@ -23,12 +23,7 @@ import MagicString from 'magic-string';
 import { copy, read, resolve_entry } from '../../utils/filesystem.js';
 import { posixify } from '../../utils/os.js';
 import { to_fs } from '../../utils/vite.js';
-import {
-	resolve_explicit_env_entry,
-	create_sveltekit_env_service_worker,
-	create_sveltekit_env_service_worker_dev,
-	create_exported_declarations
-} from '../../core/env.js';
+import { resolve_explicit_env_entry, create_exported_declarations } from '../../core/env.js';
 import * as sync from '../../core/sync/sync.js';
 import { load_and_validate_params } from '../../utils/params.js';
 import { runtime_directory, logger } from '../../core/utils.js';
@@ -63,7 +58,6 @@ import { get_import_aliases, get_hash_import_keys } from '../../utils/imports.js
 import {
 	app_env_private,
 	app_server,
-	sveltekit_env_service_worker,
 	sveltekit_manifest_data,
 	sveltekit_env_public_client
 } from './module_ids.js';
@@ -687,6 +681,12 @@ function kit({ svelte_config }) {
 					return `${out_dir}/generated/env/private/server.js`;
 				}
 
+				if (id === '__sveltekit/env/service-worker') {
+					return is_build
+						? `${out_dir}/generated/env/service-worker-prod.js`
+						: `${out_dir}/generated/env/service-worker-dev.js`;
+				}
+
 				if (id === '__sveltekit/remote') {
 					return `${runtime_directory}/client/remote-functions/index.js`;
 				}
@@ -697,29 +697,12 @@ function kit({ svelte_config }) {
 
 		load: {
 			filter: {
-				id: [exactRegex(sveltekit_env_service_worker), exactRegex(sveltekit_manifest_data)]
+				id: [exactRegex(sveltekit_manifest_data)]
 			},
 			handler(id) {
 				switch (id) {
 					case sveltekit_manifest_data:
 						return create_manifest_data_module(is_build, manifest_data);
-
-					case sveltekit_env_service_worker:
-						return is_build
-							? create_sveltekit_env_service_worker(
-									explicit_env_config,
-									env,
-									kit.version.name,
-									kit_global,
-									kit.paths.base,
-									kit.appDir
-								)
-							: create_sveltekit_env_service_worker_dev(
-									explicit_env_config,
-									env,
-									kit.version.name,
-									kit_global
-								);
 				}
 			}
 		}
@@ -1157,17 +1140,19 @@ function kit({ svelte_config }) {
 					return `${out_dir}/generated/env/public/service-worker.js`;
 				}
 
+				if (id === '__sveltekit/env/service-worker') {
+					return is_build
+						? `${out_dir}/generated/env/service-worker-prod.js`
+						: `${out_dir}/generated/env/service-worker-dev.js`;
+				}
+
 				return `\0virtual:${id}`;
 			}
 		},
 
 		load: {
 			filter: {
-				id: [
-					exactRegex('\0virtual:app/manifest'),
-					exactRegex(sveltekit_manifest_data),
-					exactRegex(sveltekit_env_service_worker)
-				]
+				id: [exactRegex('\0virtual:app/manifest'), exactRegex(sveltekit_manifest_data)]
 			},
 			handler(id) {
 				if (!manifest_data_code) {
@@ -1200,24 +1185,6 @@ function kit({ svelte_config }) {
 
 				if (id === sveltekit_manifest_data) {
 					return manifest_data_code;
-				}
-
-				if (id === sveltekit_env_service_worker) {
-					return is_build
-						? create_sveltekit_env_service_worker(
-								explicit_env_config,
-								env,
-								kit.version.name,
-								kit_global,
-								kit.paths.base,
-								kit.appDir
-							)
-						: create_sveltekit_env_service_worker_dev(
-								explicit_env_config,
-								env,
-								kit.version.name,
-								kit_global
-							);
 				}
 			}
 		},
@@ -1836,6 +1803,7 @@ function kit({ svelte_config }) {
 					const uses_env_dynamic_public =
 						has_explicit_dynamic_public_env &&
 						client_chunks.some(
+							// TODO need to update this
 							(chunk) => chunk.type === 'chunk' && chunk.modules[sveltekit_env_public_client]
 						);
 
