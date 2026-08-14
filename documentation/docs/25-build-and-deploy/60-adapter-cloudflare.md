@@ -160,7 +160,17 @@ export async function POST({ request, platform }) {
 To make these types available to your app, install [`wrangler`](https://www.npmjs.com/package/wrangler), run [`wrangler types`](https://developers.cloudflare.com/workers/languages/typescript/), and reference them in your `src/app.d.ts`:
 
 ```ts
+// @filename: ambient.d.ts
+import { KVNamespace, DurableObjectNamespace } from '@cloudflare/workers-types';
+
+namespace Cloudflare {
+	export interface Env {
+		YOUR_KV_NAMESPACE: KVNamespace;
+		YOUR_DURABLE_OBJECT_NAMESPACE: DurableObjectNamespace;
+	}
+}
 /// file: src/app.d.ts
+// ---cut---
 
 declare global {
 	namespace App {
