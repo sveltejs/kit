@@ -24,12 +24,9 @@ import { copy, read, resolve_entry } from '../../utils/filesystem.js';
 import { posixify } from '../../utils/os.js';
 import { to_fs } from '../../utils/vite.js';
 import {
-	create_sveltekit_env,
-	create_sveltekit_env_public,
 	resolve_explicit_env_entry,
 	create_sveltekit_env_service_worker,
 	create_sveltekit_env_service_worker_dev,
-	create_sveltekit_env_private,
 	create_exported_declarations
 } from '../../core/env.js';
 import * as sync from '../../core/sync/sync.js';
@@ -66,12 +63,9 @@ import { get_import_aliases, get_hash_import_keys } from '../../utils/imports.js
 import {
 	app_env_private,
 	app_server,
-	sveltekit_env,
-	sveltekit_env_private,
 	sveltekit_env_service_worker,
 	sveltekit_manifest_data,
-	sveltekit_env_public_client,
-	sveltekit_env_public_server
+	sveltekit_env_public_client
 } from './module_ids.js';
 import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
@@ -79,6 +73,7 @@ import { should_ignore, has_children } from './static_analysis/utils.js';
 import { process_config, split_config, validate_config } from '../../core/config/index.js';
 import { treeshake_prerendered_remotes } from './build/remote.js';
 import { get_runner } from '../../runner.js';
+import { plugin_env_vars } from './plugins/env-vars.js';
 
 /** @type {import('./types.js').EnforcedConfig} */
 const enforced_config = {
@@ -663,38 +658,6 @@ function kit({ svelte_config }) {
 	const plugin_virtual_modules = {
 		name: 'vite-plugin-sveltekit-virtual-modules',
 
-		async configResolved(config) {
-			explicit_env_entry = resolve_explicit_env_entry(kit);
-			explicit_env_config = await sync.env(vite, kit, explicit_env_entry, config.root, config.mode);
-		},
-
-		configureServer(server) {
-			server.watcher.on('all', async (_, file) => {
-				if (!file.includes('env')) {
-					return;
-				}
-
-				const resolved = resolve_explicit_env_entry(kit);
-
-				if (file === explicit_env_entry || file === resolved) {
-					explicit_env_entry = resolved;
-					explicit_env_config = await sync.env(
-						vite,
-						kit,
-						explicit_env_entry,
-						vite_config.root,
-						vite_config.mode
-					);
-
-					for (const id of [sveltekit_env, sveltekit_env_public_client]) {
-						invalidate_module(server, id);
-					}
-
-					server.hot.send({ type: 'full-reload' });
-				}
-			});
-		},
-
 		applyToEnvironment(environment) {
 			return environment.name !== 'serviceWorker';
 		},
@@ -708,6 +671,22 @@ function kit({ svelte_config }) {
 					return `${out_dir}/generated/client-optimized/app.js`;
 				}
 
+				if (id === '__sveltekit/env') {
+					return `${out_dir}/generated/env/config.js`;
+				}
+
+				if (id === '__sveltekit/env/public/client') {
+					return `${out_dir}/generated/env/public/client.js`;
+				}
+
+				if (id === '__sveltekit/env/public/server') {
+					return `${out_dir}/generated/env/public/server.js`;
+				}
+
+				if (id === '__sveltekit/env/private') {
+					return `${out_dir}/generated/env/private/server.js`;
+				}
+
 				if (id === '__sveltekit/remote') {
 					return `${runtime_directory}/client/remote-functions/index.js`;
 				}
@@ -718,39 +697,12 @@ function kit({ svelte_config }) {
 
 		load: {
 			filter: {
-				id: [
-					exactRegex(sveltekit_env),
-					exactRegex(sveltekit_env_private),
-					exactRegex(sveltekit_env_public_client),
-					exactRegex(sveltekit_env_public_server),
-					exactRegex(sveltekit_env_service_worker),
-					exactRegex(sveltekit_manifest_data)
-				]
+				id: [exactRegex(sveltekit_env_service_worker), exactRegex(sveltekit_manifest_data)]
 			},
 			handler(id) {
 				switch (id) {
 					case sveltekit_manifest_data:
 						return create_manifest_data_module(is_build, manifest_data);
-
-					case sveltekit_env:
-						return create_sveltekit_env(explicit_env_config, env, explicit_env_entry, !is_build);
-
-					case sveltekit_env_public_client:
-						return create_sveltekit_env_public(
-							explicit_env_config,
-							env,
-							`import { payload } from ${s(`${runtime_directory}/client/payload.js`)};\nconst env = payload.env;`
-						);
-
-					case sveltekit_env_public_server:
-						return create_sveltekit_env_public(
-							explicit_env_config,
-							env,
-							`import { rendered_env as env } from '__sveltekit/env';`
-						);
-
-					case sveltekit_env_private:
-						return create_sveltekit_env_private(explicit_env_config, env);
 
 					case sveltekit_env_service_worker:
 						return is_build
@@ -1201,6 +1153,10 @@ function kit({ svelte_config }) {
 				id: prefixRegex('__sveltekit/')
 			},
 			handler(id) {
+				if (id === '__sveltekit/env/public/client') {
+					return `${out_dir}/generated/env/public/service-worker.js`;
+				}
+
 				return `\0virtual:${id}`;
 			}
 		},
@@ -1210,8 +1166,7 @@ function kit({ svelte_config }) {
 				id: [
 					exactRegex('\0virtual:app/manifest'),
 					exactRegex(sveltekit_manifest_data),
-					exactRegex(sveltekit_env_service_worker),
-					exactRegex(sveltekit_env_public_client)
+					exactRegex(sveltekit_env_service_worker)
 				]
 			},
 			handler(id) {
@@ -1263,14 +1218,6 @@ function kit({ svelte_config }) {
 								kit.version.name,
 								kit_global
 							);
-				}
-
-				if (id === sveltekit_env_public_client) {
-					return create_sveltekit_env_public(
-						explicit_env_config,
-						env,
-						`const env = ${kit_global}.env;`
-					);
 				}
 			}
 		},
@@ -2174,13 +2121,10 @@ function kit({ svelte_config }) {
 				fs.mkdirSync(out, { recursive: true });
 
 				explicit_env_entry = resolve_explicit_env_entry(kit);
-				explicit_env_config = await sync.env(
-					vite,
-					kit,
-					explicit_env_entry,
-					vite_config.root,
-					vite_config.mode
-				);
+
+				const synced = await sync.env(kit, explicit_env_entry, vite_config.root, vite_config.mode);
+
+				explicit_env_config = synced.variables;
 
 				await load_and_validate_params({
 					routes: manifest_data.routes,
@@ -2244,6 +2188,7 @@ function kit({ svelte_config }) {
 			plugin_setup,
 			plugin_remote_guard,
 			plugin_remote,
+			plugin_env_vars(svelte_config),
 			plugin_virtual_modules,
 			process.env.TEST !== 'true' ? plugin_guard : undefined,
 			plugin_service_worker,

@@ -106,7 +106,7 @@ if (command === 'sync') {
 		sync.all_types(sveltekit_config, vite_config.root);
 
 		const explicit_env_entry = resolve_explicit_env_entry(sveltekit_config);
-		await sync.env(vite, sveltekit_config, explicit_env_entry, vite_config.root, values.mode);
+		await sync.env(sveltekit_config, explicit_env_entry, vite_config.root, values.mode);
 	} catch (error) {
 		handle_error(error);
 	} finally {

@@ -10,6 +10,7 @@ import { resolve_entry } from '../utils/filesystem.js';
 import { handle_issues, validate } from '../exports/internal/env.js';
 import { get_config_aliases } from '../exports/vite/utils.js';
 import { get_runner } from '../runner.js';
+import { import_peer } from '../utils/import.js';
 
 /**
  * @typedef {'public' | 'private'} EnvType
@@ -24,15 +25,22 @@ export function resolve_explicit_env_entry(config) {
 }
 
 /**
- * @param {typeof import('vite')} vite
  * @param {ValidatedConfig} kit
  * @param {string | null} file
  * @param {string} root
  * @param {string} mode
- * @returns {Promise<Record<string, EnvVarConfig<any>> | null>}
+ * @returns {Promise<{ variables: Record<string, EnvVarConfig<any>> | null, deps: Set<string> }>}
  */
-export async function load_explicit_env(vite, kit, file, root, mode) {
-	if (!file) return null;
+export async function load_explicit_env(kit, file, root, mode) {
+	/** @type {Set<string>} */
+	const deps = new Set();
+
+	if (!file) {
+		return { variables: null, deps };
+	}
+
+	/** @type {typeof import('vite')} */
+	const vite = await import_peer('vite', root);
 
 	const server = await vite.createServer({
 		configFile: false,
@@ -49,7 +57,15 @@ export async function load_explicit_env(vite, kit, file, root, mode) {
 				{ find: '$app/env', replacement: `${runtime_directory}/app/env` },
 				...get_config_aliases(kit, root)
 			]
-		}
+		},
+		plugins: [
+			{
+				name: 'dependency-scanner',
+				load(id) {
+					deps.add(id);
+				}
+			}
+		]
 	});
 
 	/** @type {Record<string, EnvVarConfig<any>>} */
@@ -92,7 +108,7 @@ export async function load_explicit_env(vite, kit, file, root, mode) {
 		await server.close();
 	}
 
-	return variables;
+	return { variables, deps };
 }
 
 /**
