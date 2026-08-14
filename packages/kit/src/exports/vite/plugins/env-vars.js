@@ -79,7 +79,7 @@ export function plugin_env_vars(config, callback) {
 			create_sveltekit_env_public(
 				vars,
 				env,
-				`import { payload } from ${s(path.relative(`${dir}/client`, `${runtime_directory}/client/payload.js`))};\nconst env = payload.env;`
+				`import { payload } from ${s(posixify(path.relative(`${dir}/public`, `${runtime_directory}/client/payload.js`)))};\nconst env = payload.env;`
 			)
 		);
 
