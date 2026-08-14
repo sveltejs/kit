@@ -45,10 +45,10 @@ export function plugin_env_vars(config) {
 	/** @type {string | null} */
 	let resolved_entry = null;
 
-	let is_build = false;
-
 	/** @type {Set<string>} */
 	let deps;
+
+	let is_build = false;
 
 	async function generate() {
 		const synced = await sync.env(
