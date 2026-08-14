@@ -50,7 +50,7 @@ import {
 	validate_load_response
 } from '../shared.js';
 
-import { page, navigating, updated, notify_version } from './state.svelte.js';
+import { page, updated, notify_version, update_page, set_navigation } from '#app/state/client';
 import { payload } from './payload.js';
 import {
 	add_data_suffix,
@@ -653,12 +653,16 @@ async function _invalidate(reset_page_state = true) {
 		return;
 	}
 
-	// Preserve `page.state` when invalidating without resetting it (e.g. `refresh`/`refreshAll`)
-	if (!reset_page_state) {
-		navigation_result.props.page.state = prev_state;
-	}
-	navigation_result.props.page.shallow = prev_shallow;
 	apply_navigation_result(navigation_result);
+
+	// Preserve `page.state` when invalidating without resetting it (e.g. `refresh`/`refreshAll`).
+	// Must run after `apply_navigation_result`, which overwrites `state`/`shallow` with the fresh
+	// page object's `{}`/`null` values when the page changed.
+	if (!reset_page_state) {
+		update_page({ state: prev_state });
+	}
+
+	update_page({ shallow: prev_shallow });
 	current = { ...navigation_result.state, nav: current.nav };
 	reset_invalidation();
 
@@ -952,8 +956,7 @@ async function initialize(result, target, should_hydrate) {
 		props,
 		transformError: /** @param {unknown} e */ async (e) => {
 			const error = await handle_error(e, current.nav);
-			page.error = error;
-			page.status = error.status;
+			update_page({ error, status: error.status });
 			return error;
 		}
 	});
@@ -1036,7 +1039,7 @@ async function get_navigation_result_from_branch({
 			route
 		},
 		props: {
-			page,
+			page: { ...page },
 			tree: /** @type {RenderNode} */ ({})
 		}
 	};
@@ -2032,7 +2035,7 @@ async function navigate({
 	is_navigating = true;
 
 	if (started && nav.navigation.type !== 'enter') {
-		navigating.current = nav.navigation;
+		set_navigation(nav.navigation);
 	}
 
 	let navigation_result = intent && (await load_route({ ...intent, action_result }));
@@ -2305,7 +2308,7 @@ async function navigate({
 	// new and replaced entries have no stored values, so this only resets there
 	restore_navigation_snapshot(current_history_index, previous_snapshot_registrations);
 
-	navigating.current = null;
+	set_navigation(null);
 
 	updating = false;
 }
@@ -2966,7 +2969,7 @@ async function update_state(intent, state, { replace, persist_state, reset }, ca
 	if (nav) {
 		navigation_token = invalidation_token = nav_token;
 		is_navigating = true;
-		navigating.current = nav.navigation;
+		set_navigation(nav.navigation);
 		updating = true;
 	}
 
@@ -3022,12 +3025,14 @@ async function update_state(intent, state, { replace, persist_state, reset }, ca
 
 	blur_active_element(reset);
 
-	page.state = state;
-	page.shallow = {
-		params: intent?.params ?? null,
-		route: intent ? { id: intent.route.id } : null,
-		url
-	};
+	update_page({
+		state,
+		shallow: {
+			params: intent?.params ?? null,
+			route: intent ? { id: intent.route.id } : null,
+			url
+		}
+	});
 
 	if (nav) {
 		const { activeElement } = document;
@@ -3055,7 +3060,7 @@ async function update_state(intent, state, { replace, persist_state, reset }, ca
 	restore_navigation_snapshot(current_history_index, previous_snapshot_registrations);
 
 	if (nav) {
-		navigating.current = null;
+		set_navigation(null);
 		updating = false;
 	}
 }
@@ -3078,8 +3083,10 @@ export async function applyAction(result) {
 	if (result.type === 'error') {
 		await set_nearest_error_page(result.error);
 	} else {
-		page.form = result.data;
-		page.status = result.status;
+		update_page({
+			form: result.data,
+			status: result.status
+		});
 
 		/** @type {Record<string, any>} */
 		// this brings Svelte's view of the world in line with SvelteKit's
@@ -3444,11 +3451,10 @@ function _start_router() {
 
 				blur_active_element(reset);
 
-				if (state !== page.state) {
-					page.state = state;
-				}
-
-				page.shallow = shallow_target;
+				update_page({
+					state,
+					shallow: shallow_target
+				});
 
 				update_url(url);
 
@@ -3537,7 +3543,7 @@ function _start_router() {
 		// the navigation away from it was successful.
 		// Info about bfcache here: https://web.dev/bfcache
 		if (event.persisted) {
-			navigating.current = null;
+			set_navigation(null);
 		}
 	});
 
@@ -3545,7 +3551,8 @@ function _start_router() {
 	 * @param {URL} url
 	 */
 	function update_url(url) {
-		current.url = page.url = url;
+		current.url = url;
+		update_page({ url });
 	}
 }
 
@@ -4014,7 +4021,7 @@ if (DEV) {
  * @param {NavigationFinished} result
  */
 function apply_navigation_result(result) {
-	Object.assign(page, result.props.page);
+	update_page(result.props.page);
 
 	props.tree.data = result.props.tree.data;
 	props.tree.child = result.props.tree.child;

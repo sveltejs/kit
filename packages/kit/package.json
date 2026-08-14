@@ -130,6 +130,18 @@
 			"browser": "./src/runtime/app/paths/client.js",
 			"default": "./src/runtime/app/paths/server.js"
 		},
+		"#app/state": {
+			"types": "./src/runtime/app/state/client.svelte.js",
+			"workerd": "./src/runtime/app/state/server.js",
+			"browser": "./src/runtime/app/state/client.svelte.js",
+			"default": "./src/runtime/app/state/server.js"
+		},
+		"#app/state/client": {
+			"types": "./src/runtime/app/state/client.svelte.js",
+			"workerd": "./src/runtime/invalid-import.js",
+			"browser": "./src/runtime/app/state/client.svelte.js",
+			"default": "./src/runtime/invalid-import.js"
+		},
 		"#internal": {
 			"workerd": "./src/exports/internal/server/index.js",
 			"browser": "./src/exports/internal/client.js",

@@ -1,5 +1,5 @@
 import { describe, expect, test, vi, beforeEach, afterEach } from 'vitest';
-import { updated, notify_version } from './state.svelte.js';
+import { updated, notify_version, reset_updated } from './client.svelte.js';
 
 // Mock `esm-env` so the version-check logic is initialised. In the test env,
 // `DEV` is true which would skip the `if (!DEV && ...)` block.
@@ -15,10 +15,7 @@ vi.hoisted(() => {
 });
 
 describe('updated', () => {
-	beforeEach(() => {
-		// reset state between tests
-		updated.current = false;
-	});
+	beforeEach(reset_updated);
 
 	afterEach(() => {
 		vi.useRealTimers();
@@ -57,7 +54,7 @@ describe('updated', () => {
 			})
 		);
 
-		const { updated } = await import('./state.svelte.js');
+		const { updated } = await import('./client.svelte.js');
 		expect(await updated.check()).toBe(true);
 		expect(updated.current).toBe(true);
 	});
@@ -120,7 +117,7 @@ describe('updated', () => {
 				})
 		);
 
-		const { updated } = await import('./state.svelte.js');
+		const { updated } = await import('./client.svelte.js');
 		const first = updated.check();
 		expect(resolve_queue).toHaveLength(1);
 

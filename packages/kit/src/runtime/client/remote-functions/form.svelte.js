@@ -11,7 +11,7 @@ import {
 	handle_error,
 	refreshAll
 } from '../client.js';
-import { page } from '../state.svelte.js';
+import { page } from '#app/state/client';
 import { tick } from 'svelte';
 import { categorize_updates, remote_request } from './shared.svelte.js';
 import { createAttachmentKey } from 'svelte/attachments';
