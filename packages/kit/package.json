@@ -109,6 +109,12 @@
 			"browser": "./src/runtime/invalid-import.js",
 			"default": "./src/runtime/app/env/server.js"
 		},
+		"#app/forms": {
+			"types": "./src/runtime/app/forms/client.js",
+			"workerd": "./src/runtime/app/forms/server.js",
+			"browser": "./src/runtime/app/forms/client.js",
+			"default": "./src/runtime/app/forms/server.js"
+		},
 		"#app/internal/transport": {
 			"default": "./src/runtime/app/internal/transport.js"
 		},

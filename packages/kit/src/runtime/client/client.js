@@ -6,7 +6,7 @@
 /** @import { CacheEntry } from './remote-functions/cache.svelte.js' */
 /** @import { Query } from './remote-functions/query/instance.svelte.js' */
 /** @import { LiveQuery } from './remote-functions/query-live/instance.svelte.js' */
-import { BROWSER, DEV } from 'esm-env';
+import { DEV } from 'esm-env';
 import { settled, tick, fork, onMount, hydrate, mount } from 'svelte';
 import { HttpError, Redirect, SvelteKitError, HandledHttpError } from '@sveltejs/kit/internal';
 import { decode_pathname, strip_hash, make_trackable, normalize_path } from '../../utils/url.js';
@@ -112,7 +112,7 @@ init_snapshots(() => (started && !is_navigating && !updating ? current_history_i
 /** @type {Props} */
 let props;
 
-if (DEV && BROWSER) {
+if (DEV) {
 	let warned = false;
 
 	const current_module_url = import.meta.url.split('?')[0]; // remove query params that vite adds to the URL when it is loaded from node_modules
@@ -3070,11 +3070,6 @@ async function update_state(intent, state, { replace, persist_state, reset }, ca
  * @returns {Promise<void>}
  */
 export async function applyAction(result) {
-	// TODO get rid of this
-	if (!BROWSER) {
-		throw new Error('Cannot call applyAction(...) on the server');
-	}
-
 	if (result.type === 'redirect') {
 		await _goto(result.location, { refreshAll: true });
 		return;
