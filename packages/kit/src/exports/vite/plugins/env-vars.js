@@ -101,11 +101,6 @@ export function plugin_env_vars(config, callback) {
 			)
 		);
 
-		write_if_changed(
-			`${dir}/public/service-worker-dev.js`,
-			create_sveltekit_env_public(vars, env, `const env = globalThis.__sveltekit_dev.env;`)
-		);
-
 		write_if_changed(`${dir}/private/server.js`, create_sveltekit_env_private(vars, env));
 
 		write_if_changed(
