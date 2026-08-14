@@ -1137,7 +1137,9 @@ function kit({ svelte_config }) {
 			},
 			handler(id) {
 				if (id === '__sveltekit/env/public/client') {
-					return `${out_dir}/generated/env/public/service-worker.js`;
+					return is_build
+						? `${out_dir}/generated/env/public/service-worker-prod.js`
+						: `${out_dir}/generated/env/public/service-worker-dev.js`;
 				}
 
 				if (id === '__sveltekit/env/service-worker') {

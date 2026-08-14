@@ -130,7 +130,7 @@ export function plugin_env_vars(config) {
 			resolved_config = c;
 
 			const vite = await import_peer('vite', c.root);
-			env = vite.loadEnv(c.mode, dir, '');
+			env = vite.loadEnv(c.mode, path.resolve(c.root, dir), '');
 
 			is_build = c.command === 'build';
 		},
