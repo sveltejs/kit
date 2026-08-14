@@ -22,8 +22,6 @@ const _navigating = new (class Navigating {
 	current = $state.raw(null);
 })();
 
-let _updated = $state(false);
-
 /**
  * @param {Partial<Page>} new_page
  */
@@ -132,6 +130,16 @@ export const navigating = {
 	}
 };
 
+const interval = __SVELTEKIT_APP_VERSION_POLL_INTERVAL__;
+
+/** @type {number | undefined} */
+let timeout;
+
+/** @type {Promise<boolean> | undefined} */
+let checking;
+
+let _updated = $state(false);
+
 /**
  * A read-only reactive value that's initially `false`. SvelteKit checks for new versions on data, remote, and form action responses (via the `x-sveltekit-version` header), when the tab regains focus or becomes visible, and on a poll interval (see [`version.pollInterval`](https://svelte.dev/docs/kit/configuration#version)). `updated.current` is set to `true` when a new version is detected. `updated.check()` will force an immediate check, regardless of polling.
  * @type {{ get current(): boolean; check(): Promise<boolean>; }}
@@ -140,46 +148,9 @@ export const updated = {
 	get current() {
 		return _updated;
 	},
-	check: () => Promise.resolve(false)
-};
+	async check() {
+		if (DEV) return false;
 
-/**
- * Internal: mark `updated.current` as `true` if the given version differs.
- * Called from the server response header path. No-op unless version checks
- * are enabled (assigned below). Not exported on the public `updated` object.
- * @type {(new_version: string | null) => void}
- */
-export let notify_version = () => {};
-
-if (!DEV) {
-	const interval = __SVELTEKIT_APP_VERSION_POLL_INTERVAL__;
-
-	/** @type {number | undefined} */
-	let timeout;
-
-	/** @type {Promise<boolean> | undefined} */
-	let checking;
-
-	if (__SVELTEKIT_APP_VERSION_CHECKS_ENABLED__) {
-		/**
-		 * Mark `updated.current` as `true` if the given version differs from the one
-		 * the app was hydrated with. Called from the server response header path.
-		 * Does NOT reset the poll timer — unlike `check()`, this is a passive observation
-		 * from a single server instance's response, not an explicit version check. The
-		 * poll timer continues on its original schedule as a backstop. This is important
-		 * for platforms that implement skew protection, where `x-sveltekit-version`
-		 * may be out of date — in this case we still need to poll for `version.json`.
-		 * @param {string | null} new_version
-		 */
-		notify_version = (new_version) => {
-			if (new_version && new_version !== version) {
-				_updated = true;
-			}
-		};
-	}
-
-	/** @type {() => Promise<boolean>} */
-	updated.check = function check() {
 		window.clearTimeout(timeout);
 
 		if (_updated) {
@@ -204,12 +175,30 @@ if (!DEV) {
 				return false;
 			} finally {
 				checking = undefined;
-				if (interval && !_updated) timeout = window.setTimeout(check, interval);
+				if (interval && !_updated) timeout = window.setTimeout(updated.check, interval);
 			}
 		})());
-	};
+	}
+};
 
-	if (interval) timeout = window.setTimeout(updated.check, interval);
+if (!DEV && interval) {
+	timeout = window.setTimeout(updated.check, interval);
+}
+
+/**
+ * Mark `updated.current` as `true` if the given version differs from the one
+ * the app was hydrated with. Called from the server response header path.
+ * Does NOT reset the poll timer — unlike `check()`, this is a passive observation
+ * from a single server instance's response, not an explicit version check. The
+ * poll timer continues on its original schedule as a backstop. This is important
+ * for platforms that implement skew protection, where `x-sveltekit-version`
+ * may be out of date — in this case we still need to poll for `version.json`.
+ * @param {string | null} new_version
+ */
+export function notify_version(new_version) {
+	if (__SVELTEKIT_APP_VERSION_CHECKS_ENABLED__ && new_version) {
+		_updated ||= new_version !== version;
+	}
 }
 
 /**
