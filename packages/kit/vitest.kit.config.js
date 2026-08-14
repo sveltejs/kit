@@ -15,7 +15,9 @@ const exclude = [
 export default /** @satisfies {import('vitest/config').ViteUserConfig} */ ({
 	plugins: [svelte({ compilerOptions: { hmr: false, experimental: { async: true } } })],
 	define: {
-		__SVELTEKIT_SERVER_TRACING_ENABLED__: false
+		__SVELTEKIT_SERVER_TRACING_ENABLED__: false,
+		__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: 0,
+		__SVELTEKIT_APP_VERSION_CHECKS_ENABLED__: false
 	},
 	server: {
 		watch: {
