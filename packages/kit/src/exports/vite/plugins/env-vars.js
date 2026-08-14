@@ -145,13 +145,8 @@ export function plugin_env_vars(config, callback) {
 			out_dir = posixify(path.resolve(c.root, out));
 
 			is_build = c.command === 'build';
-		},
 
-		async buildStart() {
-			// we only need to run this once
-			if (this.environment.name !== 'ssr') return;
-
-			resolved_entry = resolve_env_entry(config, resolved_config.root);
+			resolved_entry = resolve_env_entry(config, c.root);
 			await generate();
 		},
 
