@@ -6,7 +6,7 @@ import { app, _goto, live_query_map, query_map, query_responses } from '../clien
 import { HttpError, Redirect, HandledHttpError } from '@sveltejs/kit/internal';
 import { untrack } from 'svelte';
 import { create_remote_key, split_remote_key } from '../../shared.js';
-import { navigating, page, notify_version } from '../state.svelte.js';
+import { navigating, page, notify_version } from '#app/state/client';
 
 /** Indicates a query function, as opposed to a query instance */
 export const QUERY_FUNCTION_ID = Symbol('sveltekit.query_function_id');

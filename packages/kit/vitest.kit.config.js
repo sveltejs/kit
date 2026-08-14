@@ -41,7 +41,7 @@ export default /** @satisfies {import('vitest/config').ViteUserConfig} */ ({
 					name: 'kit-server-dev',
 					environment: 'node',
 					include: ['src/**/*.spec.js'],
-					exclude: [...exclude, 'src/**/*.svelte.spec.js']
+					exclude: [...exclude, 'src/**/*.svelte.spec.js', 'src/runtime/client/**/*.spec.js']
 				}
 			},
 			{
@@ -58,10 +58,13 @@ export default /** @satisfies {import('vitest/config').ViteUserConfig} */ ({
 			},
 			{
 				extends: true,
+				resolve: {
+					conditions: ['browser']
+				},
 				test: {
 					name: 'kit-client-runtime',
 					environment: 'jsdom',
-					include: ['src/**/*.svelte.spec.js'],
+					include: ['src/**/*.svelte.spec.js', 'src/runtime/client/**/*.spec.js'],
 					exclude,
 					// `forks` (child_process) accepts `--expose-gc`; `threads` (worker_threads) does not.
 					pool: 'forks',

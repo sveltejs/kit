@@ -1,26 +1,6 @@
-/** @import { Navigation } from '$app/navigation' */
-/** @import { Page } from '$app/state' */
 import { version } from '$app/env';
 import { assets } from '#app/paths';
 import { DEV } from 'esm-env';
-
-/** @type {Page} */
-export const page = new (class Page {
-	data = $state.raw({});
-	form = $state.raw(null);
-	error = $state.raw(null);
-	params = $state.raw({});
-	route = $state.raw({ id: null });
-	shallow = $state.raw(null);
-	state = $state.raw({});
-	status = $state.raw(-1);
-	url = $state.raw(new URL('a:'));
-})();
-
-export const navigating = new (class Navigating {
-	/** @type {Navigation | null} */
-	current = $state.raw(null);
-})();
 
 export const updated = new (class Updated {
 	current = $state.raw(false);

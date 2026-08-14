@@ -1,10 +1,45 @@
 /** @import { Navigation } from '$app/navigation' */
 /** @import { Page } from '$app/state' */
-import {
-	page as _page,
-	navigating as _navigating,
-	updated as _updated
-} from '../../client/state.svelte.js';
+import { DEV } from 'esm-env';
+import { assets } from '#app/paths';
+import { version } from '$app/env';
+
+/** @type {Page} */
+export const _page = new (class Page {
+	data = $state.raw({});
+	form = $state.raw(null);
+	error = $state.raw(null);
+	params = $state.raw({});
+	route = $state.raw({ id: null });
+	shallow = $state.raw(null);
+	state = $state.raw({});
+	status = $state.raw(-1);
+	url = $state.raw(new URL('a:'));
+})();
+
+const _navigating = new (class Navigating {
+	/** @type {Navigation | null} */
+	current = $state.raw(null);
+})();
+
+const _updated = new (class Updated {
+	current = $state.raw(false);
+	check = () => Promise.resolve(false);
+})();
+
+/**
+ * @param {Partial<Page>} new_page
+ */
+export function update_page(new_page) {
+	Object.assign(_page, new_page);
+}
+
+/**
+ * @param {Navigation | null} nav
+ */
+export function update_navigating(nav) {
+	_navigating.current = nav;
+}
 
 /**
  * A read-only reactive object with information about the current page, serving several use cases:
@@ -110,3 +145,79 @@ export const updated = {
 	},
 	check: _updated.check
 };
+
+/**
+ * Internal: mark `updated.current` as `true` if the given version differs.
+ * Called from the server response header path. No-op unless version checks
+ * are enabled (assigned below). Not exported on the public `updated` object.
+ * @type {(new_version: string | null) => void}
+ */
+export let notify_version = () => {};
+
+if (!DEV) {
+	const interval = __SVELTEKIT_APP_VERSION_POLL_INTERVAL__;
+
+	/** @type {number | undefined} */
+	let timeout;
+
+	/** @type {Promise<boolean> | undefined} */
+	let checking;
+
+	if (__SVELTEKIT_APP_VERSION_CHECKS_ENABLED__) {
+		/**
+		 * Mark `updated.current` as `true` if the given version differs from the one
+		 * the app was hydrated with. Called from the server response header path.
+		 * Does NOT reset the poll timer — unlike `check()`, this is a passive observation
+		 * from a single server instance's response, not an explicit version check. The
+		 * poll timer continues on its original schedule as a backstop. This is important
+		 * for platforms that implement skew protection, where `x-sveltekit-version`
+		 * may be out of date — in this case we still need to poll for `version.json`.
+		 * @param {string | null} new_version
+		 */
+		notify_version = (new_version) => {
+			if (new_version && new_version !== version) {
+				_updated.current = true;
+			}
+		};
+	}
+
+	/** @type {() => Promise<boolean>} */
+	updated.check = function check() {
+		window.clearTimeout(timeout);
+
+		if (updated.current) {
+			return Promise.resolve(true);
+		}
+
+		return (checking ??= (async () => {
+			try {
+				const res = await fetch(`${assets}/${__SVELTEKIT_APP_VERSION_FILE__}`, {
+					headers: {
+						'cache-control': 'no-cache'
+					}
+				});
+
+				if (!res.ok) {
+					return false;
+				}
+
+				const data = await res.json();
+				return (_updated.current ||= data.version !== version);
+			} catch {
+				return false;
+			} finally {
+				checking = undefined;
+				if (interval && !updated.current) timeout = window.setTimeout(check, interval);
+			}
+		})());
+	};
+
+	if (interval) timeout = window.setTimeout(updated.check, interval);
+}
+
+/**
+ * Used for testing
+ */
+export function reset_updated() {
+	_updated.current = false;
+}

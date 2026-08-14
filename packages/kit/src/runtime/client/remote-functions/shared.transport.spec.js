@@ -16,6 +16,7 @@ vi.mock(new URL('../client.js', import.meta.url).pathname, () => ({
 vi.mock(new URL('../state.svelte.js', import.meta.url).pathname, () => ({
 	navigating: { current: null },
 	page: { url: new URL('http://localhost/') },
+	updated: { current: false, check: () => Promise.resolve(false) },
 	notify_version: () => {}
 }));
 
