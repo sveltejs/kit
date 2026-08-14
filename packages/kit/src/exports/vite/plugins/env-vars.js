@@ -52,6 +52,9 @@ export function plugin_env_vars(config, callback) {
 
 	let is_build = false;
 
+	/** @type {Promise<void> | undefined} */
+	let generated;
+
 	async function generate() {
 		const synced = await sync.env(
 			config,
@@ -145,12 +148,13 @@ export function plugin_env_vars(config, callback) {
 		},
 
 		async buildStart() {
-			// we only need to run this once, and not in postbuild forks that
-			// resolve the config without building (analyse/prerender)
-			if (this.environment.name !== 'ssr') return;
-
-			resolved_entry = resolve_env_entry(config, resolved_config.root);
-			await generate();
+			// runs once via the memo — per-process, whichever environment starts first
+			// (environment names vary by adapter), and never in the postbuild forks,
+			// which resolve the config without building
+			await (generated ??= (async () => {
+				resolved_entry = resolve_env_entry(config, resolved_config.root);
+				await generate();
+			})());
 		},
 
 		configureServer(server) {
