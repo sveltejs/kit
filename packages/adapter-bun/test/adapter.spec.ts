@@ -474,7 +474,7 @@ function create_builder({
 	instrumentation?: boolean;
 } = {}) {
 	return {
-		config: { kit: { outDir: '.svelte-kit', paths: { base, origin } } },
+		config: { outDir: '.svelte-kit', paths: { base, origin } },
 		routes,
 		prerendered: {
 			pages: new Map(prerendered_pages),

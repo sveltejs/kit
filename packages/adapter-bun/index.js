@@ -139,10 +139,10 @@ export default function (opts = {}) {
 			const virtual_files = {
 				[manifest_file]:
 					`export const manifest = ${builder.generateManifest({ relativePath: './' })};\n` +
-					`export const base = ${JSON.stringify(builder.config.kit.paths.base || '/')};\n` +
+					`export const base = ${JSON.stringify(builder.config.paths.base || '/')};\n` +
 					`export const embed = ${JSON.stringify(!!buildOptions.compile)};\n` +
 					`export const env_prefix = ${JSON.stringify(envPrefix)};\n` +
-					`export const origin = ${JSON.stringify(builder.config.kit.paths.origin) ?? 'undefined'};`,
+					`export const origin = ${JSON.stringify(builder.config.paths.origin) ?? 'undefined'};`,
 				[server_options_file]: `export default ${JSON.stringify(serverOptions)};`,
 				[routes_file]: await create_routes({
 					builder,
@@ -234,7 +234,7 @@ export default function (opts = {}) {
  * @returns {Promise<{imports: string[], entries: string[], server_assets: string[]}>}
  */
 async function get_embed_entries({ builder, server_assets }) {
-	const built_files = `${builder.config.kit.outDir}/output`;
+	const built_files = `${builder.config.outDir}/output`;
 
 	const all_cl_files = read_files_recursive(`${built_files}/client`);
 	const pr_pages = read_files_recursive(`${built_files}/prerendered/pages`);
