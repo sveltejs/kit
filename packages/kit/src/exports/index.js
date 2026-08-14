@@ -10,10 +10,7 @@ import {
 	strip_resolution_suffix
 } from '../pathname.js';
 import { validate_redirect_location } from './url.js';
-
-// `Symbol.for` because the app's bundled copy of this module must be visible to
-// the `@sveltejs/kit/node` copy resolved from node_modules
-const string_body = Symbol.for('sveltekit.string_body');
+import { STRING_BODY } from '../constants.js';
 
 export { VERSION } from '../version.js';
 
@@ -175,9 +172,7 @@ export function json(data, init) {
  */
 export function text(body, init) {
 	const response = new Response(body, init);
-	// stash the string so `setResponse` can send it with a content-length
-	// instead of streaming it
-	/** @type {any} */ (response)[string_body] = body;
+	/** @type {any} */ (response)[STRING_BODY] = body;
 	return response;
 }
 

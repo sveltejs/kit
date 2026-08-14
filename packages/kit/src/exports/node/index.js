@@ -2,14 +2,10 @@ import { createReadStream } from 'node:fs';
 import { Readable } from 'node:stream';
 import { SvelteKitError } from '../internal/shared.js';
 import { noop } from '../../utils/functions.js';
+import { STRING_BODY } from '../../constants.js';
 
 /** @type {WeakMap<import('http').IncomingMessage, (chunk: Buffer) => void>} */
 const body_data_listeners = new WeakMap();
-
-// set by the `json` and `text` helpers. `Symbol.for` because the helpers live
-// in the app's bundled copy of the package while this module is resolved from
-// node_modules
-const string_body = Symbol.for('sveltekit.string_body');
 
 /**
  * @param {import('http').IncomingMessage} req
@@ -229,13 +225,11 @@ export function setResponse(res, response) {
 		}
 	}
 
-	const body = /** @type {any} */ (response)[string_body];
-
+	const body = /** @type {any} */ (response)[STRING_BODY];
 	if (typeof body === 'string' && !response.body?.locked) {
 		if (!res.hasHeader('content-length')) {
 			res.setHeader('content-length', Buffer.byteLength(body));
 		}
-
 		res.writeHead(response.status);
 		res.end(body);
 		return;

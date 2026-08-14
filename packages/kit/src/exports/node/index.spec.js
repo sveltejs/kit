@@ -91,9 +91,7 @@ function create_response(req) {
 	const res = /** @type {any} */ (new EventEmitter());
 	res.req = req;
 	res.destroyed = false;
-	/** @type {Map<string, unknown>} */
 	res.headers = new Map();
-	/** @type {unknown[]} */
 	res.chunks = [];
 	res.setHeader = (/** @type {string} */ name, /** @type {unknown} */ value) =>
 		res.headers.set(name.toLowerCase(), value);
