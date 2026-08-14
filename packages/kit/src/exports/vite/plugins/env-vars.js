@@ -148,6 +148,9 @@ export function plugin_env_vars(config, callback) {
 		},
 
 		async buildStart() {
+			// we only need to run this once
+			if (this.environment.name !== 'ssr') return;
+
 			resolved_entry = resolve_env_entry(config, resolved_config.root);
 			await generate();
 		},
