@@ -69,7 +69,11 @@ export function plugin_env_vars(config, callback) {
 
 		write_if_changed(
 			`${dir}/config.js`,
-			create_sveltekit_env(vars, env, resolved_entry && posixify(path.relative(dir, resolved_entry)))
+			create_sveltekit_env(
+				vars,
+				env,
+				resolved_entry && posixify(path.relative(dir, resolved_entry))
+			)
 		);
 
 		write_if_changed(`${dir}/config-dev.js`, create_sveltekit_env_dev(vars, env));
@@ -93,7 +97,7 @@ export function plugin_env_vars(config, callback) {
 		);
 
 		write_if_changed(
-			`${dir}/public/service-worker-prod.js`,
+			`${dir}/public/service-worker.js`,
 			create_sveltekit_env_public(
 				vars,
 				env,
@@ -190,7 +194,7 @@ export function plugin_env_vars(config, callback) {
 
 				if (id === '__sveltekit/env/public/client') {
 					return this.environment.name === 'serviceWorker'
-						? `${dir}/public/service-worker-prod.js`
+						? `${dir}/public/service-worker.js`
 						: `${dir}/public/client.js`;
 				}
 
