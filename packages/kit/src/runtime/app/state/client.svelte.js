@@ -22,10 +22,7 @@ const _navigating = new (class Navigating {
 	current = $state.raw(null);
 })();
 
-const _updated = new (class Updated {
-	current = $state.raw(false);
-	check = () => Promise.resolve(false);
-})();
+let _updated = $state(false);
 
 /**
  * @param {Partial<Page>} new_page
@@ -141,9 +138,9 @@ export const navigating = {
  */
 export const updated = {
 	get current() {
-		return _updated.current;
+		return _updated;
 	},
-	check: _updated.check
+	check: () => Promise.resolve(false)
 };
 
 /**
@@ -176,7 +173,7 @@ if (!DEV) {
 		 */
 		notify_version = (new_version) => {
 			if (new_version && new_version !== version) {
-				_updated.current = true;
+				_updated = true;
 			}
 		};
 	}
@@ -185,7 +182,7 @@ if (!DEV) {
 	updated.check = function check() {
 		window.clearTimeout(timeout);
 
-		if (updated.current) {
+		if (_updated) {
 			return Promise.resolve(true);
 		}
 
@@ -202,12 +199,12 @@ if (!DEV) {
 				}
 
 				const data = await res.json();
-				return (_updated.current ||= data.version !== version);
+				return (_updated ||= data.version !== version);
 			} catch {
 				return false;
 			} finally {
 				checking = undefined;
-				if (interval && !updated.current) timeout = window.setTimeout(check, interval);
+				if (interval && !_updated) timeout = window.setTimeout(check, interval);
 			}
 		})());
 	};
@@ -219,5 +216,5 @@ if (!DEV) {
  * Used for testing
  */
 export function reset_updated() {
-	_updated.current = false;
+	_updated = false;
 }
