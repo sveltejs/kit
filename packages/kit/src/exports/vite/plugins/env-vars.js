@@ -1,4 +1,5 @@
 /** @import { Plugin, ResolvedConfig } from 'vite' */
+/** @import { EnvVarConfig } from '@sveltejs/kit/env' */
 /** @import { ValidatedConfig } from 'types' */
 import path from 'node:path';
 import * as sync from '../../../core/sync/sync.js';
@@ -23,9 +24,10 @@ import { prefixRegex } from '@rolldown/pluginutils';
  * derived from `src/env.ts`
  *
  * @param {ValidatedConfig} config
+ * @param {(variables: Record<string, EnvVarConfig<any>> | null) => void} callback
  * @returns {Plugin}
  */
-export function plugin_env_vars(config) {
+export function plugin_env_vars(config, callback) {
 	// grab these values eagerly because they get mutated (TODO stop mutating them)
 	const entry = path.join(config.files.src, 'env');
 	const dir = config.env.dir;
@@ -121,6 +123,8 @@ export function plugin_env_vars(config) {
 				'globalThis.__sveltekit_dev'
 			)
 		);
+
+		callback(vars);
 	}
 
 	return {

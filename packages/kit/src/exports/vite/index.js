@@ -55,12 +55,7 @@ import {
 	is_page_route
 } from '../../core/sync/create_manifest_data/index.js';
 import { get_import_aliases, get_hash_import_keys } from '../../utils/imports.js';
-import {
-	app_env_private,
-	app_server,
-	sveltekit_manifest_data,
-	sveltekit_env_public_client
-} from './module_ids.js';
+import { app_env_private, app_server, sveltekit_manifest_data } from './module_ids.js';
 import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
 import { should_ignore, has_children } from './static_analysis/utils.js';
@@ -641,9 +636,6 @@ function kit({ svelte_config }) {
 			}
 		}
 	};
-
-	/** @type {string | null} */
-	let explicit_env_entry = null;
 
 	/** @type {Record<string, EnvVarConfig<any>> | null} */
 	let explicit_env_config = null;
@@ -1772,8 +1764,8 @@ function kit({ svelte_config }) {
 					const uses_env_dynamic_public =
 						has_explicit_dynamic_public_env &&
 						client_chunks.some(
-							// TODO need to update this
-							(chunk) => chunk.type === 'chunk' && chunk.modules[sveltekit_env_public_client]
+							(chunk) =>
+								chunk.type === 'chunk' && chunk.modules[`${out_dir}/generated/env/public/client.js`]
 						);
 
 					if (kit.output.bundleStrategy === 'split') {
@@ -2057,12 +2049,6 @@ function kit({ svelte_config }) {
 
 				fs.mkdirSync(out, { recursive: true });
 
-				explicit_env_entry = resolve_explicit_env_entry(kit);
-
-				const synced = await sync.env(kit, explicit_env_entry, vite_config.root, vite_config.mode);
-
-				explicit_env_config = synced.variables;
-
 				await load_and_validate_params({
 					routes: manifest_data.routes,
 					params_path: manifest_data.params,
@@ -2125,7 +2111,9 @@ function kit({ svelte_config }) {
 			plugin_setup,
 			plugin_remote_guard,
 			plugin_remote,
-			plugin_env_vars(svelte_config),
+			plugin_env_vars(svelte_config, (vars) => {
+				explicit_env_config = vars;
+			}),
 			plugin_virtual_modules,
 			process.env.TEST !== 'true' ? plugin_guard : undefined,
 			plugin_service_worker,
