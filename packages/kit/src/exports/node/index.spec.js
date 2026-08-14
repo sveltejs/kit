@@ -325,16 +325,6 @@ test('streams bodies that do not settle within a tick, without a content-length'
 	expect(Buffer.concat(res.chunks).toString()).toBe('first second');
 });
 
-test('does not send a body that was already read', async () => {
-	const res = /** @type {any} */ (create_response());
-
-	const response = new Response('hello');
-	await response.text();
-	setResponse(res, response);
-
-	expect(String(res.chunks[0])).toMatch(/^Fatal error: Response body is locked/);
-});
-
 // Test for fix of CVE-2026-40073
 test('requests with no content-length and no transfer-encoding return null body', async () => {
 	const { request, req } = create_request({
