@@ -49,7 +49,7 @@ export function plugin_env_vars(config, callback) {
 	let resolved_entry = null;
 
 	/** @type {Set<string>} */
-	let deps;
+	let deps = new Set();
 
 	let is_build = false;
 
