@@ -31,7 +31,6 @@ import { prefixRegex } from '@rolldown/pluginutils';
  */
 export function plugin_env_vars(config, callback) {
 	// grab these values eagerly because they get mutated (TODO stop mutating them)
-	const entry = path.join(config.files.src, 'env');
 	const dir = config.env.dir;
 	const out = config.outDir;
 
