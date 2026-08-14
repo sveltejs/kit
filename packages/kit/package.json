@@ -94,7 +94,7 @@
 	},
 	"imports": {
 		"#app/env": {
-			"types": "./src/runtime/app/env/internal.d.ts",
+			"types": "./src/runtime/app/env/client.js",
 			"workerd": "./src/runtime/app/env/server.js",
 			"browser": "./src/runtime/app/env/client.js",
 			"default": "./src/runtime/app/env/server.js"
