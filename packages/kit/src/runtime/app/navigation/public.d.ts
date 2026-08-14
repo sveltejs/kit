@@ -1,6 +1,6 @@
 import type { LayoutParams as AppLayoutParams, RouteId as AppRouteId } from '$app/types';
 
-export * from './index.js';
+export * from './client.js';
 
 /**
  * Information about the target of a specific navigation.

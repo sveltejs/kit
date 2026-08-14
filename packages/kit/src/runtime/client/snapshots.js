@@ -1,4 +1,4 @@
-import { BROWSER, DEV } from 'esm-env';
+import { DEV } from 'esm-env';
 import { onMount } from 'svelte';
 import * as storage from './session-storage.js';
 import { NAVIGATION_SNAPSHOT_KEY } from './constants.js';
@@ -105,8 +105,6 @@ function callsite_id(stack) {
  * @returns {void}
  */
 export function snapshot(options) {
-	if (!BROWSER) return;
-
 	let id = options.id;
 	if (id === undefined) {
 		// restore any lowered third-party limit, else every callsite collapses to one id

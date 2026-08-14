@@ -16,5 +16,5 @@ export const app_server = posixify(
 );
 
 export const app_env_private = posixify(
-	fileURLToPath(new URL('../../runtime/app/env/private.js', import.meta.url))
+	fileURLToPath(new URL('../../runtime/app/env/private/index.js', import.meta.url))
 );
