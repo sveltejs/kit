@@ -119,8 +119,7 @@ export function normalize_id(id, aliases, cwd) {
 		return '$app/server';
 	}
 
-	// TODO is this right?
-	if (id === app_env_private || id === '__sveltekit/env/private') {
+	if (id === app_env_private) {
 		return '$app/env/private';
 	}
 
