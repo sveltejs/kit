@@ -91,6 +91,7 @@ export default function (opts = {}) {
 			// will get included in the bundled code
 			const bundle = await rolldown({
 				input,
+				tsconfig: false,
 				external: [
 					// dependencies could have deep exports, so we need a regex
 					...Object.keys(pkg.dependencies || {}).map((d) => new RegExp(`^${d}(\\/.*)?$`)),
