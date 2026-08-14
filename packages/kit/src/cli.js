@@ -1,10 +1,11 @@
 import fs from 'node:fs';
+import path from 'node:path';
 import process from 'node:process';
 import { parseArgs, styleText } from 'node:util';
 import { extract_svelte_config, load_vite_config } from './core/config/index.js';
-import { resolve_explicit_env_entry } from './core/env.js';
 import { coalesce_to_error } from './utils/error.js';
 import { import_peer } from './utils/import.js';
+import { resolve_entry } from './utils/filesystem.js';
 
 /** @param {unknown} e */
 function handle_error(e) {
@@ -105,8 +106,8 @@ if (command === 'sync') {
 		const sync = await import('./core/sync/sync.js');
 		sync.all_types(sveltekit_config, vite_config.root);
 
-		const explicit_env_entry = resolve_explicit_env_entry(sveltekit_config);
-		await sync.env(sveltekit_config, explicit_env_entry, vite_config.root, values.mode);
+		const entry = resolve_entry(path.join(sveltekit_config.files.src, 'env'));
+		await sync.env(sveltekit_config, entry, vite_config.root, values.mode);
 	} catch (error) {
 		handle_error(error);
 	} finally {

@@ -1,12 +1,10 @@
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 /** @import { EnvVarConfig } from '@sveltejs/kit/env' */
 /** @import { ValidatedConfig } from 'types' */
-import path from 'node:path';
 import * as devalue from 'devalue';
 import { GENERATED_COMMENT } from '../constants.js';
 import { dedent } from './sync/utils.js';
 import { runtime_directory } from './utils.js';
-import { resolve_entry } from '../utils/filesystem.js';
 import { handle_issues, validate } from '../exports/internal/env.js';
 import { get_config_aliases } from '../exports/vite/utils.js';
 import { get_runner } from '../runner.js';
@@ -15,14 +13,6 @@ import { import_peer } from '../utils/import.js';
 /**
  * @typedef {'public' | 'private'} EnvType
  */
-
-/**
- * @param {ValidatedConfig} config
- * @returns {string | null}
- */
-export function resolve_explicit_env_entry(config) {
-	return resolve_entry(path.join(config.files.src, 'env')) ?? null;
-}
 
 /**
  * @param {ValidatedConfig} kit
@@ -171,9 +161,7 @@ export function create_sveltekit_env(variables, env, entry) {
 			}`
 	];
 
-	const module = blocks.join('\n\n');
-
-	return module;
+	return blocks.join('\n\n');
 }
 
 /**
