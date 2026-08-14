@@ -214,7 +214,7 @@ export function create_sveltekit_env_private(variables, env) {
 
 	handle_issues(issues);
 
-	return `import { dynamic_private_env as env } from '../config.js';\n\n${exports.join('')}`;
+	return `import { dynamic_private_env as env } from '__sveltekit/env';\n\n${exports.join('')}`;
 }
 
 /**

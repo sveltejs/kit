@@ -84,7 +84,11 @@ export function plugin_env_vars(config, callback) {
 
 		write_if_changed(
 			`${dir}/public/server.js`,
-			create_sveltekit_env_public(vars, env, `import { rendered_env as env } from '../config.js';`)
+			create_sveltekit_env_public(
+				vars,
+				env,
+				`import { rendered_env as env } from '__sveltekit/env';`
+			)
 		);
 
 		write_if_changed(
