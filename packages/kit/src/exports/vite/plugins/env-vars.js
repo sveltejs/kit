@@ -69,7 +69,7 @@ export function plugin_env_vars(config, callback) {
 
 		write_if_changed(
 			`${dir}/config.js`,
-			create_sveltekit_env(vars, env, resolved_entry && path.relative(dir, resolved_entry))
+			create_sveltekit_env(vars, env, resolved_entry && posixify(path.relative(dir, resolved_entry)))
 		);
 
 		write_if_changed(`${dir}/config-dev.js`, create_sveltekit_env_dev(vars, env));
