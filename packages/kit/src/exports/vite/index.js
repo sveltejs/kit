@@ -1770,7 +1770,8 @@ function kit({ svelte_config }) {
 						has_explicit_dynamic_public_env &&
 						client_chunks.some(
 							(chunk) =>
-								chunk.type === 'chunk' && chunk.modules[`${out_dir}/generated/env/public/client.js`]
+								chunk.type === 'chunk' &&
+							chunk.modules[`${out_dir}/generated/build/env/public/client.js`]
 						);
 
 					if (kit.output.bundleStrategy === 'split') {
