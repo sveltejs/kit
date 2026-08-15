@@ -183,7 +183,7 @@ importers:
     dependencies:
       '@cloudflare/vite-plugin':
         specifier: ^1.51.1
-        version: 1.51.1(vite@8.2.1(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0))(wrangler@4.120.1(@cloudflare/workers-types@5.20260809.1))
+        version: 1.51.1(vite@8.2.1(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0))(wrangler@4.120.1(@cloudflare/workers-types@5.20260813.1))
       '@cloudflare/workers-types':
         specifier: ^5.20260813.1
         version: 5.20260813.1
@@ -4855,14 +4855,14 @@ snapshots:
     optionalDependencies:
       workerd: 1.20260804.1
 
-  '@cloudflare/vite-plugin@1.51.1(vite@8.2.1(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0))(wrangler@4.120.1(@cloudflare/workers-types@5.20260809.1))':
+  '@cloudflare/vite-plugin@1.51.1(vite@8.2.1(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0))(wrangler@4.120.1(@cloudflare/workers-types@5.20260813.1))':
     dependencies:
       '@cloudflare/unenv-preset': 2.16.1(unenv@2.0.0-rc.24)(workerd@1.20260801.1)
       miniflare: 5.20260801.1-alpha
       unenv: 2.0.0-rc.24
       vite: 8.2.1(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0)
       workerd: 1.20260801.1
-      wrangler: 4.120.1(@cloudflare/workers-types@5.20260809.1)
+      wrangler: 4.120.1(@cloudflare/workers-types@5.20260813.1)
       ws: 8.21.0
     transitivePeerDependencies:
       - bufferutil
