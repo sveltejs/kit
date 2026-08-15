@@ -662,10 +662,6 @@ function kit({ svelte_config }) {
 					return `${out_dir}/generated/client-optimized/app.js`;
 				}
 
-				if (id === '__sveltekit/remote') {
-					return `${runtime_directory}/client/remote-functions/index.js`;
-				}
-
 				return `\0virtual:${id}`;
 			}
 		},
@@ -987,7 +983,11 @@ function kit({ svelte_config }) {
 					'__remote'
 				);
 
-				let result = `import * as ${namespace} from '__sveltekit/remote';\n\n${declarations.join('\n')}`;
+				const relative = posixify(
+					path.relative(path.dirname(id), `${runtime_directory}/client/remote-functions/index.js`)
+				);
+
+				let result = `import * as ${namespace} from '${relative}';\n\n${declarations.join('\n')}`;
 				if (reexports.length > 0) {
 					result += `\nexport { ${reexports.join(', ')} };`;
 				}
