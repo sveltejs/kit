@@ -1154,6 +1154,21 @@ function kit({ svelte_config }) {
 			}
 		},
 
+		// TODO this really ought to be unnecessary — an environment-specific `define`
+		// would be preferable. For whatever reason (possibly a Vite bug?) that doesn't
+		// work, since instead we replace stuff ourselves
+		transform: {
+			filter: {
+				code: '__SVELTEKIT_PAYLOAD__'
+			},
+			handler(code) {
+				return {
+					code: code.replace('__SVELTEKIT_PAYLOAD__', kit_global),
+					map: null
+				};
+			}
+		},
+
 		generateBundle(_, bundle) {
 			const invalid_modules = new Set();
 			const modules = new Map([
