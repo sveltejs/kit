@@ -1,13 +1,12 @@
 <script lang="ts" module>
-	const pages = import.meta.glob('./**/+page.svelte');
+	import { routes } from '$app/manifest';
 </script>
 
 <h3>Tests</h3>
 <ul style:font-family="sans-serif">
-	{#each Object.keys(pages) as name (name)}
-		{@const href = name.slice(1, -13)}
+	{#each routes as route}
 		<li>
-			<a {href}>{href}</a>
+			<a href={route.id}>{route.id}</a>
 		</li>
 	{/each}
 </ul>

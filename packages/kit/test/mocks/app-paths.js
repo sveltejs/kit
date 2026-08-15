@@ -3,6 +3,8 @@
 // `resolveRoute`). This stub provides no-op/empty values just so vite's import
 // analysis succeeds when spec files transitively import modules that depend on it.
 
+export const app_dir = '_app';
+
 /** @type {'' | `/${string}`} */
 export const base = '';
 

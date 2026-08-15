@@ -1,12 +1,10 @@
-import { BROWSER, DEV } from 'esm-env';
-import { noop } from '../../utils/functions.js';
-import { hash } from '../../utils/hash.js';
+import { DEV } from 'esm-env';
+import { hash_request } from '../../utils/hash.js';
 import { base64_decode } from '../utils.js';
 
 let loading = 0;
 
-/** @type {typeof fetch} */
-const native_fetch = BROWSER ? window.fetch : /** @type {any} */ (noop);
+const native_fetch = window.fetch;
 
 export function lock_fetch() {
 	loading += 1;
@@ -16,7 +14,7 @@ export function unlock_fetch() {
 	loading -= 1;
 }
 
-if (DEV && BROWSER) {
+if (DEV) {
 	let can_inspect_stack_trace = false;
 
 	// detect whether async stack traces work
@@ -66,7 +64,7 @@ if (DEV && BROWSER) {
 
 		return native_fetch(input, init);
 	};
-} else if (BROWSER) {
+} else {
 	window.fetch = (input, init) => {
 		const method = input instanceof Request ? input.method : init?.method || 'GET';
 
@@ -172,18 +170,7 @@ function build_selector(resource, opts) {
 			return null;
 		}
 
-		/** @type {import('types').StrictBody[]} */
-		const values = [];
-
-		if (opts.headers) {
-			values.push([...new Headers(opts.headers)].join(','));
-		}
-
-		if (body) {
-			values.push(/** @type {import('types').StrictBody} */ (body));
-		}
-
-		selector += `[data-hash="${hash(...values)}"]`;
+		selector += `[data-hash="${hash_request(opts.headers, body)}"]`;
 	}
 
 	return selector;

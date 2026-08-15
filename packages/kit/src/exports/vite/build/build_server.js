@@ -1,7 +1,6 @@
-/** @import { AssetDependencies, ManifestData, SSRNode, ValidatedKitConfig } from 'types' */
+/** @import { AssetDependencies, ManifestData, ValidatedConfig } from 'types' */
 /** @import { Manifest, Rolldown } from 'vite' */
 import fs from 'node:fs';
-import { mkdirp } from '../../../utils/filesystem.js';
 import {
 	create_function_as_string,
 	filter_fonts,
@@ -17,7 +16,7 @@ import { escape_for_interpolation } from '../../../utils/escape.js';
 
 /**
  * @param {string} out
- * @param {ValidatedKitConfig} kit
+ * @param {ValidatedConfig} kit
  * @param {ManifestData} manifest_data
  * @param {Manifest} server_manifest
  * @param {Manifest | null} client_manifest
@@ -36,8 +35,8 @@ export function build_server_nodes(
 	chunks,
 	root
 ) {
-	mkdirp(`${out}/server/nodes`);
-	mkdirp(`${out}/server/stylesheets`);
+	fs.mkdirSync(`${out}/server/nodes`, { recursive: true });
+	fs.mkdirSync(`${out}/server/stylesheets`, { recursive: true });
 
 	/**
 	 * Stylesheet names and their contents which are below the inline threshold
@@ -119,7 +118,7 @@ export function build_server_nodes(
 		const imports = [];
 
 		// String representation of
-		/** @type {SSRNode} */
+		/* @type {SSRNode} */
 		/** @type {string[]} */
 		const exports = [`export const index = ${i};`];
 

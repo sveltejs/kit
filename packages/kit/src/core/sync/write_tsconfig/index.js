@@ -1,4 +1,4 @@
-/** @import { ValidatedKitConfig } from 'types' */
+/** @import { ValidatedConfig } from 'types' */
 import process from 'node:process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -6,15 +6,13 @@ import { styleText } from 'node:util';
 import { write_if_changed } from '../utils.js';
 import {
 	ESSENTIAL_OPTIONS,
-	extends_id,
-	get_subpath_imports,
 	normalize_config,
 	RECOMMENDED_OPTIONS,
-	remove_trailing_slashstar,
-	validate_resolved_config
+	remove_trailing_slashstar
 } from './utils.js';
+import { extends_id, validate_resolved_config } from './validate.js';
 
-/** @type {import('typescript')} */
+/** @type {typeof import('typescript')} */
 let ts;
 try {
 	ts = await import('typescript');
@@ -24,21 +22,21 @@ try {
 
 /**
  * Generates the tsconfig that the user's tsconfig inherits from.
- * @param {import('types').ValidatedKitConfig} kit
+ * @param {ValidatedConfig} kit
  * @param {string} root
  */
 export function write_tsconfig(kit, root) {
 	const paths = get_paths(kit, root);
+	const types = ['$app/types'];
 
 	write_parent_tsconfig(
-		root,
 		root,
 		'$app/tsconfig',
 		{
 			compilerOptions: {
 				paths,
 				rootDirs: ['.', `${kit.outDir}/types`],
-				types: ['$app/types'],
+				types,
 
 				// This is required for svelte-package to work as expected
 				// Can be overwritten
@@ -46,45 +44,48 @@ export function write_tsconfig(kit, root) {
 
 				...ESSENTIAL_OPTIONS,
 				...RECOMMENDED_OPTIONS
-			},
-			exclude: [kit.files.serviceWorker]
-		},
-		{
-			extends: '$app/tsconfig',
-			include: ['src']
+			}
 		},
 		kit.typescript.config
 	);
 
-	write_parent_tsconfig(
-		root,
-		kit.files.serviceWorker,
-		'$app/tsconfig/service-worker',
-		{
-			compilerOptions: {
-				paths,
-				types: ['$app/types'],
-				lib: ['ESNext', 'WebWorker'],
-				...ESSENTIAL_OPTIONS
-			}
-		},
-		{
+	validate_config(root, {
+		paths,
+		types,
+		exclusions: [kit.files.serviceWorker],
+		example: {
+			extends: '$app/tsconfig'
+		}
+	});
+
+	write_parent_tsconfig(root, '$app/tsconfig/service-worker', {
+		compilerOptions: {
+			paths,
+			types,
+			lib: ['ESNext', 'WebWorker'],
+			...ESSENTIAL_OPTIONS,
+			...RECOMMENDED_OPTIONS
+		}
+	});
+
+	validate_config(kit.files.serviceWorker, {
+		paths,
+		types,
+		example: {
 			extends: '$app/tsconfig/service-worker'
 		}
-	);
+	});
 }
 
 /**
  * Write a generated `tsconfig.json` inside `node_modules`, for the
  * user config to extend
  * @param {string} root The project root
- * @param {string} dir The directory to resolve a user config from
  * @param {string} id The id of the generated config
  * @param {any} config The contents of the generated tsconfig, with paths relative to `root`
- * @param {any} example What to print if the user config does _not_ extend the generated config
- * @param {ValidatedKitConfig['typescript']['config']} [transform] TODO get rid of this
+ * @param {ValidatedConfig['typescript']['config']} [transform] TODO get rid of this
  */
-function write_parent_tsconfig(root, dir, id, config, example, transform) {
+function write_parent_tsconfig(root, id, config, transform) {
 	// simplified tsconfig resolvers (e.g. Playwright's) only find `${id}.json`, not `${id}/tsconfig.json`
 	const out_file = path.join(root, `node_modules/${id}.json`);
 
@@ -92,44 +93,60 @@ function write_parent_tsconfig(root, dir, id, config, example, transform) {
 	normalized = transform?.(normalized) ?? normalized;
 
 	write_if_changed(out_file, JSON.stringify(normalized, null, '\t'));
+}
 
+/**
+ * @param {string} dir The directory to resolve a user config from
+ * @param {Object} options
+ * @param {Record<string, string[]>} options.paths The expected paths
+ * @param {string[]} options.types The expected types
+ * @param {string[]} [options.exclusions] Files that should be excluded
+ * @param {any} options.example What to print if the user config does _not_ extend the generated config
+ */
+function validate_config(dir, options) {
 	if (!ts) {
 		// The user has not installed TypeScript. Skip validation of config.
 		return;
 	}
 
 	const user_config = load_user_tsconfig(dir);
+	if (!user_config || !modified_since_last_check(user_config.file)) return;
 
-	if (user_config && modified_since_last_check(user_config.file)) {
-		// now that we've written the parent config, we can resolve the
-		// user config and validate that nothing important was overwritten
-		if (!extends_id(user_config.options, id)) {
-			console.warn(
-				styleText(
-					['bold', 'yellow'],
-					`${path.relative(process.cwd(), user_config.file)} should extend SvelteKit's built-in configuration:`
-				)
-			);
+	// now that we've written the parent config, we can resolve the
+	// user config and validate that nothing important was overwritten
+	if (!extends_id(user_config.options, options.example.extends)) {
+		console.warn(
+			styleText(
+				['bold', 'yellow'],
+				`${path.relative(process.cwd(), user_config.file)} should extend SvelteKit's built-in configuration:`
+			)
+		);
 
-			console.warn(JSON.stringify(example, null, '  '));
+		console.warn(JSON.stringify(options.example, null, '  '));
 
-			return;
-		}
+		return;
+	}
 
-		const resolved = ts.parseJsonConfigFileContent(user_config.options, ts.sys, dir).options;
-		const warnings = validate_resolved_config(resolved, config.compilerOptions);
+	const resolved = ts.parseJsonConfigFileContent(user_config.options, ts.sys, dir);
 
-		if (warnings.length > 0) {
-			console.warn(
-				styleText(
-					['bold', 'yellow'],
-					`Found issues while validating ${path.relative(process.cwd(), user_config.file)}`
-				)
-			);
+	const warnings = validate_resolved_config(
+		dir,
+		resolved,
+		options.paths,
+		options.types,
+		options.exclusions
+	);
 
-			for (const warning of warnings) {
-				console.warn(`  - ${warning}`);
-			}
+	if (warnings.length > 0) {
+		console.warn(
+			styleText(
+				['bold', 'yellow'],
+				`Found issues while validating ${path.relative(process.cwd(), user_config.file)}`
+			)
+		);
+
+		for (const warning of warnings) {
+			console.warn(`  - ${warning}`);
 		}
 	}
 }
@@ -219,14 +236,13 @@ const alias_value = /^(.+?)((\/\*)|(\.\w+))?$/;
  * Generates tsconfig path aliases from kit's aliases and the package.json `imports` field.
  * Related to vite alias creation.
  *
- * @param {import('types').ValidatedKitConfig} config
+ * @param {import('types').ValidatedConfig} config
  * @param {string} root
  * @returns {Record<string, string[]>}
  */
 function get_paths(config, root) {
 	const alias = {
-		...config.alias,
-		...get_subpath_imports(root)
+		...config.alias
 	};
 
 	/** @type {Record<string, string[]>} */

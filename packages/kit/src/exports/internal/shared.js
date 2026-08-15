@@ -14,6 +14,15 @@ export class HttpError {
 	}
 }
 
+/**
+ * An `HttpError` whose body is already in its final, user-facing form — either produced by the
+ * `handleError` hook on the server and reconstructed here from the response, or authored directly
+ * by the client runtime. Unlike a plain `HttpError` (which represents a fresh `error(...)` call
+ * that the hook has yet to see), `handleError` must not run on it.
+ * @extends HttpError
+ */
+export class HandledHttpError extends HttpError {}
+
 export class Redirect {
 	/**
 	 * @param {300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308} status

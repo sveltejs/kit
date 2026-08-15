@@ -1,4 +1,12 @@
-import { error, isHttpError, isRedirect, normalizeUrl, redirect } from './index.js';
+import {
+	error,
+	invalid,
+	isHttpError,
+	isRedirect,
+	isValidationError,
+	normalizeUrl,
+	redirect
+} from './index.js';
 import { assert, describe, it } from 'vitest';
 
 describe('normalizeUrl', () => {
@@ -48,6 +56,16 @@ describe('normalizeUrl', () => {
 		assert.equal(wasNormalized, true);
 		assert.equal(url.href, 'http://example.com/foo');
 		assert.equal(denormalize().href, original.href);
+		assert.equal(denormalize('/baz').href, 'http://example.com/baz/__route.js');
+	});
+
+	it('should normalize route requests for .html pages', () => {
+		const original = new URL('http://example.com/foo.html__route.js');
+		const { url, wasNormalized, denormalize } = normalizeUrl(original);
+
+		assert.equal(wasNormalized, true);
+		assert.equal(url.pathname, '/foo.html');
+		assert.equal(denormalize('/baz.html').href, 'http://example.com/baz.html__route.js');
 		assert.equal(denormalize('/baz').href, 'http://example.com/baz/__route.js');
 	});
 });
@@ -193,6 +211,17 @@ describe('error', () => {
 					status: 400
 				})
 			);
+		}
+	});
+});
+
+describe('invalid', () => {
+	it('throws a detectable validation error', () => {
+		try {
+			invalid('Invalid value');
+		} catch (e) {
+			assert.equal(isValidationError(e), true);
+			assert.equal(isValidationError(new Error('Invalid value')), false);
 		}
 	});
 });

@@ -1,9 +1,10 @@
-/** @import { RemoteLiveQuery, RemoteLiveQueryFunction, RemoteQuery, RemoteQueryFunction, RequestEvent } from '@sveltejs/kit' */
+/** @import { RemoteLiveQuery, RemoteLiveQueryFunction, RemoteQuery, RemoteQueryFunction } from '$app/server' */
+/** @import { RequestEvent } from '@sveltejs/kit' */
 /** @import { RemoteInternals, MaybePromise, RequestState, RemoteQueryLiveInternals, RemoteQueryBatchInternals, RemoteQueryInternals, RemoteLiveQueryUserFunctionReturnType } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import { create_remote_key, stringify_remote_arg } from '../../../shared.js';
-import { prerendering } from '$app/env/internal';
+import { prerendering } from '#app/env/server';
 import {
 	create_validator,
 	get_cache,
@@ -98,7 +99,7 @@ export function query(validate_or_fn, maybe_fn) {
 		}
 
 		const { event, state } = get_request_store();
-		const payload = stringify_remote_arg(arg, state.transport);
+		const payload = stringify_remote_arg(arg);
 
 		return create_query_resource(__, payload, event, state, () =>
 			run_remote_function(
@@ -197,7 +198,7 @@ function live(validate_or_fn, maybe_fn) {
 		}
 
 		const { event, state } = get_request_store();
-		const payload = stringify_remote_arg(arg, state.transport);
+		const payload = stringify_remote_arg(arg);
 
 		return create_live_query_resource(__, payload, event, state, () =>
 			run(event, state, () => validate(arg))
@@ -376,7 +377,7 @@ function batch(validate_or_fn, maybe_fn) {
 		}
 
 		const { event, state } = get_request_store();
-		const payload = stringify_remote_arg(arg, state.transport);
+		const payload = stringify_remote_arg(arg);
 
 		return create_query_resource(__, payload, event, state, () =>
 			// Collect all the calls to the same query in the same macrotask,

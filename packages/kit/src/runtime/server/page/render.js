@@ -2,7 +2,8 @@
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
 import { isRedirect, text } from '@sveltejs/kit';
-import * as paths from '$app/paths/internal/server';
+import * as paths from '#app/paths';
+import { relative } from '$app/paths/internal/server';
 import { hash } from '../../../utils/hash.js';
 import { serialize_data } from './serialize_data.js';
 import { s } from '../../../utils/misc.js';
@@ -11,16 +12,21 @@ import { uneval_action_response } from './actions.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import { SCHEME } from '../../../utils/url.js';
 import { create_server_routing_response, generate_route_object } from './server_routing.js';
-import { add_data_suffix, add_resolution_suffix } from '../../pathname.js';
+import {
+	add_data_suffix,
+	add_resolution_suffix,
+	route_id_resolution_pathname
+} from '../../pathname.js';
 import { try_get_request_store, with_request_store } from '@sveltejs/kit/internal/server';
 import { text_encoder } from '../../utils.js';
-import { count_non_ssi_comments, create_replacer, get_global_name } from '../utils.js';
+import { count_non_ssi_comments, get_global_name } from '../utils.js';
 import { handle_error_and_jsonify } from '../errors.js';
 import * as env from '__sveltekit/env';
 import { collect_remote_data } from '../remote-functions.js';
 import Root from '../../components/root.svelte';
 import { render } from 'svelte/server';
 import { Props, RenderNode } from '../../props.svelte.js';
+import { has_custom_transporters, uneval } from '#app/internal/transport';
 
 // TODO rename this function/module
 
@@ -31,14 +37,13 @@ import { Props, RenderNode } from '../../props.svelte.js';
  *   fetched: Array<import('./types.js').Fetched>;
  *   options: import('types').SSROptions;
  *   manifest: import('@sveltejs/kit').SSRManifest;
- *   state: import('types').SSRState;
  *   page_config: { ssr: boolean; csr: boolean };
  *   status: number;
  *   error: App.Error | null;
  *   event: import('@sveltejs/kit').RequestEvent;
- *   event_state: import('types').RequestState;
+ *   state: import('types').RequestState;
  *   resolve_opts: import('types').RequiredResolveOptions;
- *   action_result?: import('@sveltejs/kit').ActionResult;
+ *   action_result?: import('$app/forms').ActionResult;
  *   data_serializer: import('./types.js').ServerDataSerializer;
  *   error_components?: Array<import('svelte').Component | undefined>
  * }} opts
@@ -48,18 +53,17 @@ export async function render_response({
 	fetched,
 	options,
 	manifest,
-	state,
 	page_config,
 	status,
 	error = null,
 	event,
-	event_state,
+	state,
 	resolve_opts,
 	action_result,
 	data_serializer,
 	error_components
 }) {
-	if (state.prerendering) {
+	if (state.prerendering || state.prerender_default === true) {
 		if (options.csp.mode === 'nonce') {
 			throw new Error('Cannot use prerendering if config.csp.mode === "nonce"');
 		}
@@ -107,11 +111,11 @@ export async function render_response({
 	let base_expression = s(paths.base);
 
 	const csp = new Csp(options.csp, {
-		prerender: !!state.prerendering
+		prerender: !!(state.prerendering || state.prerender_default === true)
 	});
 
 	// if appropriate, use relative paths for greater portability
-	if (paths.relative) {
+	if (relative) {
 		if (!state.prerendering?.fallback) {
 			// the relative path depth must reflect the URL the browser is actually at, which
 			// for a data request includes the `__data.json` suffix that was stripped during routing
@@ -152,7 +156,7 @@ export async function render_response({
 			tree: new RenderNode(
 				// TODO tidy up
 				/** @type {Component} */ (await branch[0].node.component?.()),
-				/** @type {Component} */ (error_components?.[1])
+				undefined
 			),
 			form: form_value,
 			error: error ?? undefined
@@ -172,14 +176,14 @@ export async function render_response({
 				current_node = current_node.child = new RenderNode(
 					// TODO tidy up
 					/** @type {Component} */ (await branch[i + 1].node.component?.()),
-					/** @type {Component} */ (error_components?.slice(0, i + 2).findLast((x) => x))
+					error_components?.[i + 1]
 				);
 			}
 		}
 
 		props.page.data = data;
 
-		const render_state = { ...event_state, is_in_render: true };
+		const render_state = { ...state, is_in_render: true };
 
 		const render_opts = {
 			context: new Map([
@@ -313,7 +317,7 @@ export async function render_response({
 	 * @param {string[]} attributes
 	 */
 	const add_preload = (path, attributes) => {
-		if (options.link_header_preload && !state.prerendering) {
+		if (options.link_header_preload && !(state.prerendering || state.prerender_default === true)) {
 			link_headers.add(`<${encodeURI(path)}>; ${attributes.join('; ')}; nopush`);
 		} else {
 			head.add_link_tag(path, attributes);
@@ -354,7 +358,11 @@ export async function render_response({
 	if (page_config.ssr && page_config.csr) {
 		body += `\n\t\t\t${fetched
 			.map((item) =>
-				serialize_data(item, resolve_opts.filterSerializedResponseHeaders, !!state.prerendering)
+				serialize_data(
+					item,
+					resolve_opts.filterSerializedResponseHeaders,
+					!!(state.prerendering || state.prerender_default === true)
+				)
 			)
 			.join('\n\t\t\t')}`;
 	}
@@ -366,7 +374,8 @@ export async function render_response({
 		// import the env.js module so that it evaluates before any user code can evaluate.
 		// TODO revert to using top-level await once https://bugs.webkit.org/show_bug.cgi?id=242740 is fixed
 		// https://github.com/sveltejs/kit/pull/11601
-		const load_env_eagerly = client.uses_env_dynamic_public && !!state.prerendering;
+		const load_env_eagerly =
+			client.uses_env_dynamic_public && (state.prerendering || state.prerender_default === true);
 
 		if (load_env_eagerly) {
 			modulepreloads.add(`${paths.app_dir}/env.js`);
@@ -390,6 +399,20 @@ export async function render_response({
 				pathname,
 				create_server_routing_response(route, event.params, new URL(pathname, event.url), client)
 			);
+
+			// Prerender a route-ID-keyed `/_app/routes/<id>/__route.js` module alongside the
+			// pathname-keyed one above, so that `preloadCode(id)` can resolve a route ID without
+			// hitting the server.
+			if (route && !state.prerendering.resolved_route_ids.has(route.id)) {
+				state.prerendering.resolved_route_ids.add(route.id);
+
+				const id_pathname = paths.base + route_id_resolution_pathname(route.id);
+
+				state.prerendering.dependencies.set(
+					id_pathname,
+					create_server_routing_response(route, null, new URL(id_pathname, event.url), client)
+				);
+			}
 		}
 
 		const blocks = [];
@@ -413,7 +436,7 @@ export async function render_response({
 
 			let app_declaration = '';
 
-			if (Object.keys(options.hooks.transport).length > 0) {
+			if (has_custom_transporters) {
 				if (client.inline) {
 					app_declaration = `const app = ${global}.app.app;`;
 				} else if (client.app) {
@@ -464,8 +487,7 @@ export async function render_response({
 			if (form_value) {
 				serialized.form = uneval_action_response(
 					form_value,
-					/** @type {string} */ (event.route.id),
-					options.hooks.transport
+					/** @type {string} */ (event.route.id)
 				);
 			}
 
@@ -500,11 +522,11 @@ export async function render_response({
 			args.push(`{\n${indent}\t${hydrate.join(`,\n${indent}\t`)}\n${indent}}`);
 		}
 
-		const remote_data = await collect_remote_data({}, event, event_state, options);
+		const remote_data = await collect_remote_data({}, event, state, options);
 
 		const serialized_data =
 			Object.keys(remote_data).length > 0
-				? `${global}.data = ${devalue.uneval(remote_data, create_replacer(options.hooks.transport))};\n\n\t\t\t\t\t\t`
+				? `${global}.data = ${uneval(remote_data)};\n\n\t\t\t\t\t\t`
 				: '';
 
 		// `client.app` is a proxy for `bundleStrategy === 'split'`
@@ -571,14 +593,14 @@ export async function render_response({
 		'content-type': 'text/html'
 	});
 
-	if (state.prerendering) {
+	if (state.prerendering || state.prerender_default === true) {
 		// TODO read headers set with setHeaders and convert into http-equiv where possible
 		const csp_headers = csp.csp_provider.get_meta();
 		if (csp_headers) {
 			head.add_http_equiv(csp_headers);
 		}
 
-		if (state.prerendering.cache) {
+		if (state.prerendering?.cache) {
 			head.add_http_equiv(
 				`<meta http-equiv="cache-control" content="${state.prerendering.cache}">`
 			);

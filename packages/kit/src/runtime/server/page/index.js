@@ -1,12 +1,13 @@
-/** @import { Component } from 'svelte' */
-/** @import { ActionResult, RequestEvent, SSRManifest } from '@sveltejs/kit' */
-/** @import { PageNodeIndexes, RequestState, RequiredResolveOptions, ServerDataNode, SSRNode, SSROptions, SSRState } from 'types' */
+/** @import { RequestEvent, SSRManifest } from '@sveltejs/kit' */
+/** @import { ActionResult } from '$app/forms' */
+/** @import { PageNodeIndexes, RequestState, RequiredResolveOptions, ServerDataNode, SSRNode, SSROptions } from 'types' */
 import { text } from '@sveltejs/kit';
 import { Redirect } from '@sveltejs/kit/internal';
 import { compact } from '../../../utils/array.js';
 import { get_status, normalize_error } from '../../../utils/error.js';
 import { noop } from '../../../utils/functions.js';
 import { add_data_suffix } from '../../pathname.js';
+import { build_error_chain, nearest_error_pages } from '../../error-chain.js';
 import { redirect_response } from '../utils.js';
 import { static_error_page, handle_error_and_jsonify } from '../errors.js';
 import {
@@ -30,25 +31,15 @@ const MAX_DEPTH = 10;
 
 /**
  * @param {RequestEvent} event
- * @param {RequestState} event_state
+ * @param {RequestState} state
  * @param {PageNodeIndexes} page
  * @param {SSROptions} options
  * @param {SSRManifest} manifest
- * @param {SSRState} state
  * @param {import('../../../utils/page_nodes.js').PageNodes} nodes
  * @param {RequiredResolveOptions} resolve_opts
  * @returns {Promise<Response>}
  */
-export async function render_page(
-	event,
-	event_state,
-	page,
-	options,
-	manifest,
-	state,
-	nodes,
-	resolve_opts
-) {
+export async function render_page(event, state, page, options, manifest, nodes, resolve_opts) {
 	if (state.depth > MAX_DEPTH) {
 		// infinite request cycle detected
 		return text(`Not found: ${event.url.pathname}`, {
@@ -58,7 +49,7 @@ export async function render_page(
 
 	if (is_action_json_request(event)) {
 		const node = await manifest._.nodes[page.leaf]();
-		return handle_action_json_request(event, event_state, options, node?.server);
+		return handle_action_json_request(event, state, options, node?.server);
 	}
 
 	try {
@@ -72,11 +63,11 @@ export async function render_page(
 		if (is_action_request(event)) {
 			const remote_id = get_remote_action(event.url);
 			if (remote_id) {
-				action_result = await handle_remote_form_post(event, event_state, manifest, remote_id);
+				action_result = await handle_remote_form_post(event, state, manifest, remote_id);
 			} else {
 				// for action requests, first call handler in +page.server.js
 				// (this also determines status code)
-				action_result = await handle_action_request(event, event_state, leaf_node.server);
+				action_result = await handle_action_request(event, state, leaf_node.server);
 			}
 
 			if (action_result?.type === 'redirect') {
@@ -122,7 +113,10 @@ export async function render_page(
 		// renders an empty 'shell' page if SSR is turned off and if there is
 		// no server data to prerender. As a result, the load functions and rendering
 		// only occur client-side.
-		if (ssr === false && !(state.prerendering && should_prerender_data)) {
+		if (
+			ssr === false &&
+			!((state.prerendering || state.prerender_default === true) && should_prerender_data)
+		) {
 			// if the user makes a request through a non-enhanced form, the returned value is lost
 			// because there is no SSR or client-side handling of the response
 			if (DEV && action_result && !event.request.headers.has('x-sveltekit-action')) {
@@ -156,12 +150,11 @@ export async function render_page(
 				status,
 				error: null,
 				event,
-				event_state,
+				state,
 				options,
 				manifest,
-				state,
 				resolve_opts,
-				data_serializer: server_data_serializer(event, event_state, options)
+				data_serializer: server_data_serializer(event, state, options)
 			});
 		}
 
@@ -171,10 +164,10 @@ export async function render_page(
 		/** @type {Error | null} */
 		let load_error = null;
 
-		const data_serializer = server_data_serializer(event, event_state, options);
+		const data_serializer = server_data_serializer(event, state, options);
 		const data_serializer_json =
-			state.prerendering && should_prerender_data
-				? server_data_serializer_json(event, event_state, options)
+			(state.prerendering || state.prerender_default === true) && should_prerender_data
+				? server_data_serializer_json(event, state, options)
 				: null;
 
 		/** @type {Array<Promise<ServerDataNode | null>>} */
@@ -194,7 +187,6 @@ export async function render_page(
 
 					const server_data = await load_server_data({
 						event,
-						event_state,
 						state,
 						node,
 						parent: async () => {
@@ -229,7 +221,7 @@ export async function render_page(
 				try {
 					return await load_data({
 						event,
-						event_state,
+						state,
 						fetched,
 						node,
 						parent: async () => {
@@ -241,7 +233,6 @@ export async function render_page(
 						},
 						resolve_opts,
 						server_data_promise: server_promises[i],
-						state,
 						csr
 					});
 				} catch (e) {
@@ -284,46 +275,39 @@ export async function render_page(
 						return redirect_response(err.status, err.location);
 					}
 
-					const error = await handle_error_and_jsonify(event, event_state, options, err);
+					const error = await handle_error_and_jsonify(event, state, options, err);
 					const status = error.status;
 
-					while (i--) {
-						if (page.errors[i]) {
-							const index = /** @type {number} */ (page.errors[i]);
-							const node = await manifest._.nodes[index]();
+					for (const { error: index, idx } of nearest_error_pages(i, branch, page.errors)) {
+						const node = await manifest._.nodes[index]();
 
-							let j = i;
-							while (!branch[j]) j -= 1;
+						data_serializer.set_max_nodes(idx);
 
-							data_serializer.set_max_nodes(j + 1);
+						const layouts = compact(branch.slice(0, idx));
+						const nodes = new PageNodes(layouts.map((layout) => layout.node));
+						const error_branch = layouts.concat({
+							node,
+							data: null,
+							server_data: null
+						});
 
-							const layouts = compact(branch.slice(0, j + 1));
-							const nodes = new PageNodes(layouts.map((layout) => layout.node));
-							const error_branch = layouts.concat({
-								node,
-								data: null,
-								server_data: null
-							});
-
-							return await render_response({
-								event,
-								event_state,
-								options,
-								manifest,
-								state,
-								resolve_opts,
-								page_config: {
-									ssr: nodes.ssr(),
-									csr: nodes.csr()
-								},
-								status,
-								error,
-								error_components: await load_error_components(ssr, error_branch, page, manifest),
-								branch: error_branch,
-								fetched,
-								data_serializer
-							});
-						}
+						return await render_response({
+							event,
+							state,
+							options,
+							manifest,
+							resolve_opts,
+							page_config: {
+								ssr: nodes.ssr(),
+								csr: nodes.csr()
+							},
+							status,
+							error,
+							error_components: await load_error_components(ssr, error_branch, page, manifest),
+							branch: error_branch,
+							fetched,
+							data_serializer
+						});
 					}
 
 					// if we're still here, it means the error happened in the root layout,
@@ -355,10 +339,9 @@ export async function render_page(
 
 		return await render_response({
 			event,
-			event_state,
+			state,
 			options,
 			manifest,
-			state,
 			resolve_opts,
 			page_config: {
 				csr,
@@ -369,7 +352,7 @@ export async function render_page(
 			branch: compact(branch),
 			action_result,
 			fetched,
-			data_serializer: !ssr ? server_data_serializer(event, event_state, options) : data_serializer,
+			data_serializer: !ssr ? server_data_serializer(event, state, options) : data_serializer,
 			error_components: await load_error_components(ssr, branch, page, manifest)
 		});
 	} catch (e) {
@@ -382,10 +365,9 @@ export async function render_page(
 		// but the page failed to render, or that a prerendering error occurred
 		return await respond_with_error({
 			event,
-			event_state,
+			state,
 			options,
 			manifest,
-			state,
 			error: e,
 			resolve_opts
 		});
@@ -398,35 +380,10 @@ export async function render_page(
  * @param {PageNodeIndexes} page
  * @param {SSRManifest} manifest
  */
-async function load_error_components(ssr, branch, page, manifest) {
-	/** @type {Array<Component | undefined> | undefined} */
-	let error_components;
+function load_error_components(ssr, branch, page, manifest) {
+	if (!ssr) return undefined;
 
-	if (ssr) {
-		let last_idx = -1;
-		error_components = await Promise.all(
-			// eslint-disable-next-line @typescript-eslint/await-thenable
-			branch
-				.map((b, i) => {
-					if (i === 0) return undefined; // root layout wraps root error component, not the other way around
-					if (!b) return null;
-
-					i--;
-					// Find the closest error component up to the previous branch
-					while (i > last_idx + 1 && page.errors[i] === undefined) i -= 1;
-					last_idx = i;
-
-					const idx = page.errors[i];
-					if (idx == null) return undefined;
-
-					return manifest._.nodes[idx]?.()
-						.then((e) => e.component?.())
-						.catch(() => undefined);
-				})
-				// filter out indexes where there was no branch, but keep indexes where there was a branch but no error component
-				.filter((e) => e !== null)
-		);
-	}
-
-	return error_components;
+	return build_error_chain(branch, page.errors, (idx) =>
+		manifest._.nodes[idx]?.().then((e) => e.component?.())
+	);
 }

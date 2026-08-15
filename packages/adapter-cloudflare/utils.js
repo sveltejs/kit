@@ -128,8 +128,8 @@ export function get_routes_json(builder, client_assets, redirects, routes) {
 
 		if (rule === '<files>') {
 			for (const file of client_assets) {
-				if (file.startsWith(`${builder.config.kit.appDir}/`)) continue;
-				excluded_routes.add(`${builder.config.kit.paths.base}/${file}`);
+				if (file.startsWith(`${builder.config.appDir}/`)) continue;
+				excluded_routes.add(`${builder.config.paths.base}/${file}`);
 			}
 			continue;
 		}

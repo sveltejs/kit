@@ -1,7 +1,9 @@
+/** @import { HttpError } from '@sveltejs/kit' */
 import { query_responses, handle_error } from '../../client.js';
-import { HttpError } from '@sveltejs/kit/internal';
+import { HandledHttpError } from '@sveltejs/kit/internal';
 import { QUERY_OVERRIDE_KEY } from '../shared.svelte.js';
 import { noop } from '../../../../utils/functions.js';
+import { with_resolvers } from '../../../../utils/promise.js';
 import { tick, untrack } from 'svelte';
 
 /**
@@ -70,7 +72,7 @@ export class Query {
 			delete query_responses[key];
 
 			if (node.e) {
-				this.fail(new HttpError(node.e));
+				this.fail(new HandledHttpError(node.e));
 			} else {
 				this.set(/** @type {T} */ (node.v));
 			}
@@ -100,7 +102,7 @@ export class Query {
 	#run() {
 		this.#loading = true;
 
-		const { promise, resolve, reject } = Promise.withResolvers();
+		const { promise, resolve, reject } = with_resolvers();
 
 		// the rejection is surfaced via `.error` / the `then` getter for awaiting
 		// consumers — a purely reactive consumer (`.current`) attaches no handler,
@@ -152,7 +154,7 @@ export class Query {
 					this.#loading = false;
 				});
 
-				reject(new HttpError(error)); // so that transformError doesn't transform it again
+				reject(new HandledHttpError(error));
 			});
 
 		return promise;

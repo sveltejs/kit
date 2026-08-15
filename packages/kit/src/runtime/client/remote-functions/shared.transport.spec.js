@@ -5,23 +5,23 @@ import { describe, expect, test, vi, beforeEach } from 'vitest';
 // exists during a real SvelteKit build. We only need stubs for the names that
 // `shared.svelte.js` imports.
 vi.mock(new URL('../client.js', import.meta.url).pathname, () => ({
-	app: { hooks: { transport: {} }, decoders: {} },
 	query_map: new Map(),
 	query_responses: {},
 	live_query_map: new Map(),
 	_goto: () => {}
 }));
 
-// Mock `state.svelte.js` — imports `navigating` and `page` which are reactive
+// Mock `#app/state/client` — imports `navigating` and `page` which are reactive
 // Svelte state only available in a full SvelteKit runtime.
-vi.mock(new URL('../state.svelte.js', import.meta.url).pathname, () => ({
+vi.mock('#app/state/client', () => ({
 	navigating: { current: null },
 	page: { url: new URL('http://localhost/') },
+	updated: { current: false, check: () => Promise.resolve(false) },
 	notify_version: () => {}
 }));
 
 const { remote_request } = await import('./shared.svelte.js');
-const { HttpError } = await import('@sveltejs/kit/internal');
+const { HttpError, HandledHttpError } = await import('@sveltejs/kit/internal');
 
 /**
  * Build a mock fetch Response. `remote_request` reads `response.headers` before
@@ -60,7 +60,9 @@ describe('remote_request transport error handling', () => {
 		);
 
 		await expect(remote_request('/x')).rejects.toSatisfy((e) => {
-			return e instanceof HttpError && e.status === 401 && e.body?.message === 'unauthorized';
+			return (
+				e instanceof HandledHttpError && e.status === 401 && e.body?.message === 'unauthorized'
+			);
 		});
 	});
 
@@ -75,7 +77,7 @@ describe('remote_request transport error handling', () => {
 		);
 
 		await expect(remote_request('/x')).rejects.toSatisfy((e) => {
-			return e instanceof HttpError && e.status === 503;
+			return e instanceof HttpError && !(e instanceof HandledHttpError) && e.status === 503;
 		});
 	});
 

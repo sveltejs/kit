@@ -1,0 +1,15 @@
+{
+	"compilerOptions": {
+		"allowJs": true,
+		"checkJs": true,
+		"noEmit": true,
+		"target": "es2022",
+		"module": "node16",
+		"moduleResolution": "node16",
+		"paths": {
+			"@sveltejs/kit": ["../../kit/types/index"]
+		},
+		"types": ["deno"]
+	},
+	"include": ["edge.js", "../internal.d.ts"]
+}

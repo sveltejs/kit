@@ -26,18 +26,16 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
       - name: Setup Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        uses: pnpm/setup@84cb39b217b10273981911c288cd62326dc7c6d2 # v2.0.2
         with:
-          node-version: 24.x
+          runtime: node@24
           # don't cache pnpm for releases to circumvent cache poisoning
-
-      - run: pnpm install --frozen-lockfile
+          cache: false
 
       - name: Create Release Pull Request or Publish to npm
         id: changesets
-        uses: changesets/action@c47fa68bd43bb8ae0bae7e558622593deebf5955 # v2.0.0-next.3
+        uses: changesets/action@22ccf9aa43179fe9e27dc62e575971d28cce197c # v2.0.0
         with:
           # This expects you to have a script called release which does a build for your packages and calls changeset publish
           publish-script: pnpm changeset:release

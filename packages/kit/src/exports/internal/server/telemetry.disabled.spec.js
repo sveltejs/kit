@@ -1,0 +1,12 @@
+import { test, expect, vi } from 'vitest';
+import { otel, record_span } from './telemetry.js';
+import { noop_span } from '../../../telemetry.js';
+
+test('record_span uses the noop span when tracing is not initialized', async () => {
+	expect(otel).toBeNull();
+
+	const fn = vi.fn().mockResolvedValue('result');
+	const result = await record_span({ name: 'test', attributes: {}, fn });
+	expect(result).toBe('result');
+	expect(fn).toHaveBeenCalledWith(noop_span);
+});
