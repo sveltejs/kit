@@ -475,6 +475,7 @@ interface Request {
   cf: import('@cloudflare/workers-types').IncomingRequestCfProperties;
 }
 // @filename: index.js
+// @errors: 7031
 // ---cut---
 export async function GET({ request }) {
 	const { country } = request.cf;
