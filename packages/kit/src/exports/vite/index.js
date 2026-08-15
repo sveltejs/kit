@@ -1786,7 +1786,7 @@ function kit({ svelte_config }) {
 						client_chunks.some(
 							(chunk) =>
 								chunk.type === 'chunk' &&
-							chunk.modules[`${out_dir}/generated/build/env/public/client.js`]
+								chunk.modules[`${out_dir}/generated/build/env/public/client.js`]
 						);
 
 					if (kit.output.bundleStrategy === 'split') {
