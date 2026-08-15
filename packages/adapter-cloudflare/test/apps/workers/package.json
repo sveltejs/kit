@@ -6,7 +6,7 @@
 		"dev": "vite dev",
 		"build": "vite build",
 		"preview": "wrangler dev dist/index.js --config config/wrangler.jsonc",
-		"prepare": "wrangler types --config config/wrangler.jsonc || echo ''",
+		"generate:types": "wrangler types --config config/wrangler.jsonc",
 		"test:dev": "DEV=true playwright test",
 		"test:build": "playwright test",
 		"test": "pnpm test:dev && pnpm test:build"
