@@ -1068,6 +1068,9 @@ function kit({ svelte_config }) {
 			const new_config = {
 				environments: {
 					serviceWorker: {
+						define: {
+							__SVELTEKIT_PAYLOAD__: kit_global
+						},
 						build: {
 							modulePreload: false,
 							rolldownOptions: {
@@ -1151,21 +1154,6 @@ function kit({ svelte_config }) {
 				if (id === sveltekit_manifest_data) {
 					return manifest_data_code;
 				}
-			}
-		},
-
-		// TODO this really ought to be unnecessary — an environment-specific `define`
-		// would be preferable. For whatever reason (possibly a Vite bug?) that doesn't
-		// work, since instead we replace stuff ourselves
-		transform: {
-			filter: {
-				code: '__SVELTEKIT_PAYLOAD__'
-			},
-			handler(code) {
-				return {
-					code: code.replace('__SVELTEKIT_PAYLOAD__', kit_global),
-					map: null
-				};
 			}
 		},
 
@@ -1986,8 +1974,11 @@ function kit({ svelte_config }) {
 						log.info('Building service worker');
 
 						// mirror client settings that we couldn't set per environment in the config hook
-						builder.environments.serviceWorker.config.define =
-							builder.environments.client.config.define;
+						builder.environments.serviceWorker.config.define = {
+							...builder.environments.client.config.define,
+							...builder.environments.serviceWorker.config.define
+						};
+
 						builder.environments.serviceWorker.config.resolve.alias = [
 							...get_config_aliases(kit, vite_config.root)
 						];
