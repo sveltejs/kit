@@ -1,1 +1,1 @@
-export * from '__sveltekit/env/public/client';
+export * from '<sveltekit:generated>/env/public/client.js';

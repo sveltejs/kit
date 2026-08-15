@@ -5,7 +5,6 @@ import path from 'node:path';
 import * as sync from '../../../core/sync/sync.js';
 import {
 	create_sveltekit_env,
-	create_sveltekit_env_dev,
 	create_sveltekit_env_private,
 	create_sveltekit_env_public,
 	create_sveltekit_env_service_worker,
@@ -18,7 +17,6 @@ import { s } from '../../../utils/misc.js';
 import { write_if_changed } from '../../../core/sync/utils.js';
 import { hash } from '../../../utils/hash.js';
 import { posixify } from '../../../utils/os.js';
-import { prefixRegex } from '@rolldown/pluginutils';
 
 /**
  * Generate (and, in dev, maintain) a `${outDir}/generated/env/config.js` module
@@ -29,14 +27,10 @@ import { prefixRegex } from '@rolldown/pluginutils';
  * @returns {Plugin}
  */
 export function plugin_env_vars(config, callback) {
-	// grab these values eagerly because they get mutated (TODO stop mutating them)
-	const dir = config.env.dir;
-	const out = config.outDir;
-
 	const version_hash = hash(config.version.name);
 
 	/** @type {string} */
-	let out_dir;
+	let dir;
 
 	/** @type {Record<string, any>} */
 	let env;
@@ -66,71 +60,71 @@ export function plugin_env_vars(config, callback) {
 		deps = synced.deps;
 
 		const vars = synced.variables;
-		const dir = `${out_dir}/generated/env`;
+		callback(vars);
 
 		write_if_changed(
 			`${dir}/config.js`,
 			create_sveltekit_env(
 				vars,
 				env,
-				resolved_entry && posixify(path.relative(dir, resolved_entry))
-			)
-		);
-
-		write_if_changed(`${dir}/config-dev.js`, create_sveltekit_env_dev(vars, env));
-
-		write_if_changed(
-			`${dir}/public/client.js`,
-			create_sveltekit_env_public(
-				vars,
-				env,
-				`import { payload } from ${s(posixify(path.relative(`${dir}/public`, `${runtime_directory}/client/payload.js`)))};\nconst env = payload.env;`
+				resolved_entry && posixify(path.relative(dir, resolved_entry)),
+				!is_build
 			)
 		);
 
 		write_if_changed(
 			`${dir}/public/server.js`,
-			create_sveltekit_env_public(
-				vars,
-				env,
-				`import { rendered_env as env } from '__sveltekit/env';`
-			)
-		);
-
-		write_if_changed(
-			`${dir}/public/service-worker.js`,
-			create_sveltekit_env_public(
-				vars,
-				env,
-				`const env = globalThis.__sveltekit_${version_hash}.env;`
-			)
+			create_sveltekit_env_public(vars, env, `import { rendered_env as env } from '../config.js';`)
 		);
 
 		write_if_changed(`${dir}/private/server.js`, create_sveltekit_env_private(vars, env));
 
-		write_if_changed(
-			`${dir}/service-worker-prod.js`,
-			create_sveltekit_env_service_worker(
-				vars,
-				env,
-				config.version.name,
-				`globalThis.__sveltekit_${version_hash}`,
-				config.paths.base,
-				config.appDir
-			)
-		);
+		if (is_build) {
+			write_if_changed(
+				`${dir}/public/client.js`,
+				create_sveltekit_env_public(
+					vars,
+					env,
+					`import { payload } from ${s(posixify(path.relative(`${dir}/public`, `${runtime_directory}/client/payload.js`)))};\nconst env = payload.env;`
+				)
+			);
 
-		write_if_changed(
-			`${dir}/service-worker-dev.js`,
-			create_sveltekit_env_service_worker_dev(
-				vars,
-				env,
-				config.version.name,
-				'globalThis.__sveltekit_dev'
-			)
-		);
+			write_if_changed(
+				`${dir}/public/service-worker.js`,
+				create_sveltekit_env_public(
+					vars,
+					env,
+					`const env = globalThis.__sveltekit_${version_hash}.env;`
+				)
+			);
 
-		callback(vars);
+			write_if_changed(
+				`${dir}/service-worker.js`,
+				create_sveltekit_env_service_worker(
+					vars,
+					env,
+					config.version.name,
+					`globalThis.__sveltekit_${version_hash}`,
+					config.paths.base,
+					config.appDir
+				)
+			);
+		} else {
+			write_if_changed(
+				`${dir}/public/client.js`,
+				create_sveltekit_env_public(vars, env, `const { env } = globalThis.__sveltekit_dev;`)
+			);
+
+			write_if_changed(
+				`${dir}/service-worker.js`,
+				create_sveltekit_env_service_worker_dev(
+					vars,
+					env,
+					config.version.name,
+					'globalThis.__sveltekit_dev'
+				)
+			);
+		}
 	}
 
 	return {
@@ -140,11 +134,13 @@ export function plugin_env_vars(config, callback) {
 			resolved_config = c;
 
 			const vite = await import_peer('vite', c.root);
-			env = vite.loadEnv(c.mode, path.resolve(c.root, dir), '');
-
-			out_dir = posixify(path.resolve(c.root, out));
+			env = vite.loadEnv(c.mode, path.resolve(c.root, config.env.dir), '');
 
 			is_build = c.command === 'build';
+
+			dir = posixify(
+				path.resolve(c.root, config.outDir, `generated/${is_build ? 'build' : 'dev'}/env`)
+			);
 		},
 
 		async buildStart() {
@@ -179,37 +175,6 @@ export function plugin_env_vars(config, callback) {
 		async handleHotUpdate(update) {
 			if (!deps.has(update.file)) return;
 			await generate();
-		},
-
-		resolveId: {
-			filter: {
-				id: prefixRegex('__sveltekit/env')
-			},
-			handler(id) {
-				const dir = `${out_dir}/generated/env`;
-
-				if (id === '__sveltekit/env') {
-					return is_build ? `${dir}/config.js` : `${dir}/config-dev.js`;
-				}
-
-				if (id === '__sveltekit/env/private') {
-					return `${dir}/private/server.js`;
-				}
-
-				if (id === '__sveltekit/env/public/server') {
-					return `${dir}/public/server.js`;
-				}
-
-				if (id === '__sveltekit/env/public/client') {
-					return this.environment.name === 'serviceWorker'
-						? `${dir}/public/service-worker.js`
-						: `${dir}/public/client.js`;
-				}
-
-				if (id === '__sveltekit/env/service-worker') {
-					return is_build ? `${dir}/service-worker-prod.js` : `${dir}/service-worker-dev.js`;
-				}
-			}
 		}
 	};
 }

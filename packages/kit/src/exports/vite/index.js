@@ -94,7 +94,8 @@ const enforced_config = {
 	resolve: {
 		alias: {
 			$app: true,
-			$env: true
+			$env: true,
+			'<sveltekit:generated>': true
 		}
 	}
 };
@@ -456,6 +457,10 @@ function kit({ svelte_config }) {
 							{ find: '$app', replacement: `${runtime_directory}/app` },
 							{ find: '$env', replacement: `${runtime_directory}/env` },
 							{
+								find: '<sveltekit:generated>',
+								replacement: `${out_dir}/generated/${is_build ? 'build' : 'dev'}`
+							},
+							{
 								find: '__sveltekit/server',
 								replacement: `${runtime_directory}/server/internal.js`
 							},
@@ -504,7 +509,7 @@ function kit({ svelte_config }) {
 							// because they for example use rolldown.build with `platform: 'browser'`
 							'esm-env',
 							// This forces `$app/*` modules to be bundled, since they depend on
-							// virtual modules like `__sveltekit/env` (this isn't a valid bare
+							// generated modules like `<sveltekit:generated>/env/config.js` (this isn't a valid bare
 							// import, but it works with vite-node's externalization logic, which
 							// uses basic concatenation)
 							'@sveltejs/kit/src/runtime'
@@ -1198,7 +1203,7 @@ function kit({ svelte_config }) {
 				// build time, so `env.js` is loaded at runtime. In dev, the
 				// imported module just inlines the current values instead.
 				return {
-					code: `import '__sveltekit/env/service-worker';\n${code}`
+					code: `import '<sveltekit:generated>/env/service-worker.js';\n${code}`
 				};
 			}
 		}
@@ -1231,7 +1236,7 @@ function kit({ svelte_config }) {
 					const server_input = {
 						index: `${runtime_directory}/server/index.js`,
 						internal: `${out_dir}/generated/server/internal.js`,
-						env: '__sveltekit/env',
+						env: '<sveltekit:generated>/env/config.js',
 						['remote-entry']: `${runtime_directory}/app/server/remote/index.js`
 					};
 

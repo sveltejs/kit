@@ -54,7 +54,7 @@ async function analyse({
 
 	// `set_env` lives in a separate module that imports the user's `src/env` config. We import it
 	// *after* `set_building()` so that `building`-dependent expressions resolve correctly
-	/** @type {typeof import('__sveltekit/env')} */
+	/** @type {typeof import('<sveltekit:generated>/env/config.js')} */
 	const { set_env } = await import(pathToFileURL(`${server_root}/server/env.js`).href);
 	set_env(env);
 
