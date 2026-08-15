@@ -3,13 +3,13 @@
 /** @import { ValidatedConfig } from 'types' */
 import path from 'node:path';
 import * as devalue from 'devalue';
-import { GENERATED_COMMENT } from '../constants.js';
 import { dedent } from './sync/utils.js';
 import { runtime_directory } from './utils.js';
 import { resolve_entry } from '../utils/filesystem.js';
 import { handle_issues, validate } from '../exports/internal/env.js';
 import { get_config_aliases } from '../exports/vite/utils.js';
 import { get_runner } from '../runner.js';
+import { import_peer } from '../utils/import.js';
 
 /**
  * @typedef {'public' | 'private'} EnvType
@@ -17,22 +17,30 @@ import { get_runner } from '../runner.js';
 
 /**
  * @param {ValidatedConfig} config
+ * @param {string} root
  * @returns {string | null}
  */
-export function resolve_explicit_env_entry(config) {
-	return resolve_entry(path.join(config.files.src, 'env')) ?? null;
+export function resolve_env_entry(config, root) {
+	return resolve_entry(path.resolve(root, config.files.src, 'env'));
 }
 
 /**
- * @param {typeof import('vite')} vite
  * @param {ValidatedConfig} kit
  * @param {string | null} file
  * @param {string} root
  * @param {string} mode
- * @returns {Promise<Record<string, EnvVarConfig<any>> | null>}
+ * @returns {Promise<{ variables: Record<string, EnvVarConfig<any>> | null, deps: Set<string> }>}
  */
-export async function load_explicit_env(vite, kit, file, root, mode) {
-	if (!file) return null;
+export async function load_explicit_env(kit, file, root, mode) {
+	/** @type {Set<string>} */
+	const deps = new Set();
+
+	if (!file) {
+		return { variables: null, deps };
+	}
+
+	/** @type {typeof import('vite')} */
+	const vite = await import_peer('vite', root);
 
 	const server = await vite.createServer({
 		configFile: false,
@@ -49,7 +57,15 @@ export async function load_explicit_env(vite, kit, file, root, mode) {
 				{ find: '$app/env', replacement: `${runtime_directory}/app/env` },
 				...get_config_aliases(kit, root)
 			]
-		}
+		},
+		plugins: [
+			{
+				name: 'dependency-scanner',
+				load(id) {
+					deps.add(id);
+				}
+			}
+		]
 	});
 
 	/** @type {Record<string, EnvVarConfig<any>>} */
@@ -92,7 +108,7 @@ export async function load_explicit_env(vite, kit, file, root, mode) {
 		await server.close();
 	}
 
-	return variables;
+	return { variables, deps };
 }
 
 /**
@@ -100,9 +116,8 @@ export async function load_explicit_env(vite, kit, file, root, mode) {
  * @param {Record<string, EnvVarConfig<any> | undefined> | null} variables
  * @param {Record<string, string>} env
  * @param {string | null} entry
- * @param {boolean} is_dev
  */
-export function create_sveltekit_env(variables, env, entry, is_dev) {
+export function create_sveltekit_env(variables, env, entry) {
 	const imports = entry
 		? [
 				`import { variables } from ${JSON.stringify(entry)};`,
@@ -139,7 +154,6 @@ export function create_sveltekit_env(variables, env, entry, is_dev) {
 	handle_issues(issues);
 
 	const blocks = [
-		GENERATED_COMMENT,
 		imports.join('\n'),
 		`const issues = {};`,
 		'export { variables }',
@@ -156,22 +170,29 @@ export function create_sveltekit_env(variables, env, entry, is_dev) {
 			}`
 	];
 
+	return blocks.join('\n\n');
+}
+
+/**
+ * @param {Record<string, EnvVarConfig<any> | undefined> | null} variables
+ * @param {Record<string, string>} env
+ */
+export function create_sveltekit_env_dev(variables, env) {
 	// In dev, initialise the env immediately. Tools like `vite-node` load modules
 	// through the Vite config but don't run the SvelteKit dev server, which is what
 	// normally calls `set_env`. Without this, dynamic env vars imported from
 	// `$app/env/public` and `$app/env/private` would be `undefined` in such contexts.
-	if (is_dev) {
-		/** @type {Record<string, string>} */
-		const dev_env = {};
-		for (const name of Object.keys(variables ?? {})) {
-			if (name in env) dev_env[name] = env[name];
-		}
-		blocks.push(`set_env(${devalue.uneval(dev_env)});`);
+	/** @type {Record<string, string>} */
+	const dev_env = {};
+	for (const name of Object.keys(variables ?? {})) {
+		if (name in env) dev_env[name] = env[name];
 	}
 
-	const module = blocks.join('\n\n');
-
-	return module;
+	return [
+		`import { set_env } from './config.js';`,
+		`set_env(${devalue.uneval(dev_env)});`,
+		`export * from './config.js';`
+	].join('\n\n');
 }
 
 /**

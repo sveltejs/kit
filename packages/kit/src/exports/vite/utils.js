@@ -6,7 +6,7 @@ import { escape_html } from '../../utils/escape.js';
 import { escape_for_regexp } from '../../utils/regex.js';
 import { stackless } from '../../utils/error.js';
 import { dedent } from '../../core/sync/utils.js';
-import { app_server, app_env_private, sveltekit_env_private } from './module_ids.js';
+import { app_server, app_env_private } from './module_ids.js';
 
 /**
  * Transforms alias to a valid vite.resolve.alias array.
@@ -119,7 +119,7 @@ export function normalize_id(id, aliases, cwd) {
 		return '$app/server';
 	}
 
-	if (id === app_env_private || id === sveltekit_env_private) {
+	if (id === app_env_private) {
 		return '$app/env/private';
 	}
 

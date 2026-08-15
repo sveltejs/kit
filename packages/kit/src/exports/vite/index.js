@@ -23,15 +23,7 @@ import MagicString from 'magic-string';
 import { copy, read, resolve_entry } from '../../utils/filesystem.js';
 import { posixify } from '../../utils/os.js';
 import { to_fs } from '../../utils/vite.js';
-import {
-	create_sveltekit_env,
-	create_sveltekit_env_public,
-	resolve_explicit_env_entry,
-	create_sveltekit_env_service_worker,
-	create_sveltekit_env_service_worker_dev,
-	create_sveltekit_env_private,
-	create_exported_declarations
-} from '../../core/env.js';
+import { create_exported_declarations } from '../../core/env.js';
 import * as sync from '../../core/sync/sync.js';
 import { load_and_validate_params } from '../../utils/params.js';
 import { runtime_directory, logger } from '../../core/utils.js';
@@ -63,22 +55,14 @@ import {
 	is_page_route
 } from '../../core/sync/create_manifest_data/index.js';
 import { get_import_aliases, get_hash_import_keys } from '../../utils/imports.js';
-import {
-	app_env_private,
-	app_server,
-	sveltekit_env,
-	sveltekit_env_private,
-	sveltekit_env_service_worker,
-	sveltekit_manifest_data,
-	sveltekit_env_public_client,
-	sveltekit_env_public_server
-} from './module_ids.js';
+import { app_env_private, app_server, sveltekit_manifest_data } from './module_ids.js';
 import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
 import { should_ignore, has_children } from './static_analysis/utils.js';
 import { process_config, split_config, validate_config } from '../../core/config/index.js';
 import { treeshake_prerendered_remotes } from './build/remote.js';
 import { get_runner } from '../../runner.js';
+import { plugin_env_vars } from './plugins/env-vars.js';
 
 /** @type {import('./types.js').EnforcedConfig} */
 const enforced_config = {
@@ -653,47 +637,12 @@ function kit({ svelte_config }) {
 		}
 	};
 
-	/** @type {string | null} */
-	let explicit_env_entry = null;
-
 	/** @type {Record<string, EnvVarConfig<any>> | null} */
 	let explicit_env_config = null;
 
 	/** @type {Plugin} */
 	const plugin_virtual_modules = {
 		name: 'vite-plugin-sveltekit-virtual-modules',
-
-		async configResolved(config) {
-			explicit_env_entry = resolve_explicit_env_entry(kit);
-			explicit_env_config = await sync.env(vite, kit, explicit_env_entry, config.root, config.mode);
-		},
-
-		configureServer(server) {
-			server.watcher.on('all', async (_, file) => {
-				if (!file.includes('env')) {
-					return;
-				}
-
-				const resolved = resolve_explicit_env_entry(kit);
-
-				if (file === explicit_env_entry || file === resolved) {
-					explicit_env_entry = resolved;
-					explicit_env_config = await sync.env(
-						vite,
-						kit,
-						explicit_env_entry,
-						vite_config.root,
-						vite_config.mode
-					);
-
-					for (const id of [sveltekit_env, sveltekit_env_public_client]) {
-						invalidate_module(server, id);
-					}
-
-					server.hot.send({ type: 'full-reload' });
-				}
-			});
-		},
 
 		applyToEnvironment(environment) {
 			return environment.name !== 'serviceWorker';
@@ -718,56 +667,12 @@ function kit({ svelte_config }) {
 
 		load: {
 			filter: {
-				id: [
-					exactRegex(sveltekit_env),
-					exactRegex(sveltekit_env_private),
-					exactRegex(sveltekit_env_public_client),
-					exactRegex(sveltekit_env_public_server),
-					exactRegex(sveltekit_env_service_worker),
-					exactRegex(sveltekit_manifest_data)
-				]
+				id: [exactRegex(sveltekit_manifest_data)]
 			},
 			handler(id) {
 				switch (id) {
 					case sveltekit_manifest_data:
 						return create_manifest_data_module(is_build, manifest_data);
-
-					case sveltekit_env:
-						return create_sveltekit_env(explicit_env_config, env, explicit_env_entry, !is_build);
-
-					case sveltekit_env_public_client:
-						return create_sveltekit_env_public(
-							explicit_env_config,
-							env,
-							`import { payload } from ${s(`${runtime_directory}/client/payload.js`)};\nconst env = payload.env;`
-						);
-
-					case sveltekit_env_public_server:
-						return create_sveltekit_env_public(
-							explicit_env_config,
-							env,
-							`import { rendered_env as env } from '__sveltekit/env';`
-						);
-
-					case sveltekit_env_private:
-						return create_sveltekit_env_private(explicit_env_config, env);
-
-					case sveltekit_env_service_worker:
-						return is_build
-							? create_sveltekit_env_service_worker(
-									explicit_env_config,
-									env,
-									kit.version.name,
-									kit_global,
-									kit.paths.base,
-									kit.appDir
-								)
-							: create_sveltekit_env_service_worker_dev(
-									explicit_env_config,
-									env,
-									kit.version.name,
-									kit_global
-								);
 				}
 			}
 		}
@@ -1198,7 +1103,7 @@ function kit({ svelte_config }) {
 
 		resolveId: {
 			filter: {
-				id: prefixRegex('__sveltekit/')
+				id: exactRegex('__sveltekit/manifest-data')
 			},
 			handler(id) {
 				return `\0virtual:${id}`;
@@ -1207,12 +1112,7 @@ function kit({ svelte_config }) {
 
 		load: {
 			filter: {
-				id: [
-					exactRegex('\0virtual:app/manifest'),
-					exactRegex(sveltekit_manifest_data),
-					exactRegex(sveltekit_env_service_worker),
-					exactRegex(sveltekit_env_public_client)
-				]
+				id: [exactRegex('\0virtual:app/manifest'), exactRegex(sveltekit_manifest_data)]
 			},
 			handler(id) {
 				if (!manifest_data_code) {
@@ -1245,32 +1145,6 @@ function kit({ svelte_config }) {
 
 				if (id === sveltekit_manifest_data) {
 					return manifest_data_code;
-				}
-
-				if (id === sveltekit_env_service_worker) {
-					return is_build
-						? create_sveltekit_env_service_worker(
-								explicit_env_config,
-								env,
-								kit.version.name,
-								kit_global,
-								kit.paths.base,
-								kit.appDir
-							)
-						: create_sveltekit_env_service_worker_dev(
-								explicit_env_config,
-								env,
-								kit.version.name,
-								kit_global
-							);
-				}
-
-				if (id === sveltekit_env_public_client) {
-					return create_sveltekit_env_public(
-						explicit_env_config,
-						env,
-						`const env = ${kit_global}.env;`
-					);
 				}
 			}
 		},
@@ -1890,7 +1764,8 @@ function kit({ svelte_config }) {
 					const uses_env_dynamic_public =
 						has_explicit_dynamic_public_env &&
 						client_chunks.some(
-							(chunk) => chunk.type === 'chunk' && chunk.modules[sveltekit_env_public_client]
+							(chunk) =>
+								chunk.type === 'chunk' && chunk.modules[`${out_dir}/generated/env/public/client.js`]
 						);
 
 					if (kit.output.bundleStrategy === 'split') {
@@ -2174,15 +2049,6 @@ function kit({ svelte_config }) {
 
 				fs.mkdirSync(out, { recursive: true });
 
-				explicit_env_entry = resolve_explicit_env_entry(kit);
-				explicit_env_config = await sync.env(
-					vite,
-					kit,
-					explicit_env_entry,
-					vite_config.root,
-					vite_config.mode
-				);
-
 				await load_and_validate_params({
 					routes: manifest_data.routes,
 					params_path: manifest_data.params,
@@ -2245,6 +2111,9 @@ function kit({ svelte_config }) {
 			plugin_setup,
 			plugin_remote_guard,
 			plugin_remote,
+			plugin_env_vars(svelte_config, (vars) => {
+				explicit_env_config = vars;
+			}),
 			plugin_virtual_modules,
 			process.env.TEST !== 'true' ? plugin_guard : undefined,
 			plugin_service_worker,
