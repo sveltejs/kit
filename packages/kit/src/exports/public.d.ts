@@ -59,7 +59,7 @@ export interface Adapter {
 	 */
 	getRequest?: typeof getRequest;
 	/**
-	 * This function overrides the default behavior in  vite dev and preview mode to write a `Response` object
+	 * This function overrides the default behavior in vite dev and preview mode to write a `Response` object
 	 * to an `http.ServerResponse`. To call the original setResponse function, import it from `@sveltejs/kit/node`.
 	 * @since 3.0.0
 	 */
