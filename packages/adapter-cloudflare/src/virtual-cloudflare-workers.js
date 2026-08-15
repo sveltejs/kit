@@ -18,6 +18,8 @@ function get_current_env() {
 	return als.getStore() ?? proxy.env;
 }
 
+/** @typedef {import('@cloudflare/workers-types').CloudflareWorkersModule} Module */
+
 export const env = new Proxy(
 	{},
 	{
@@ -100,23 +102,15 @@ export const env = new Proxy(
 	}
 );
 
-/**
- * @param {unknown} newEnv
- * @param {() => unknown} fn
- */
+/** @type {Module['withEnv']} */
 export function withEnv(newEnv, fn) {
 	if (prerendering) {
 		throw new Error(`Cannot access cloudflare:workers in a prerenderable route`);
 	}
 	return als.run(newEnv, fn);
 }
-/**
- * @param {unknown} newEnv
- * @param {unknown} newExports
- * @param {() => unknown} fn
- */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function withEnvAndExports(newEnv, newExports, fn) {
+/** @type {Module['withEnvAndExports']} */
+export function withEnvAndExports(newEnv, _, fn) {
 	if (prerendering) {
 		throw new Error(`Cannot access cloudflare:workers in a prerenderable route`);
 	}
@@ -135,24 +129,36 @@ export const exports = new Proxy(
 		}
 	}
 );
+/** @type {Module['waitUntil']} */
 export function waitUntil() {}
+/** @type {Module['cache']} */
 export const cache = {
-	purge() {}
+	purge() {
+		return Promise.resolve({ success: true, errors: [] });
+	}
 };
 class Span {
-		get isTraced() { return false; }
-		setAttribute() {}
-		end() {}
+	get isTraced() {
+		return false;
 	}
+	setAttribute() {
+		return this;
+	}
+	setAttributes() {
+		return this;
+	}
+	end() {}
+}
 /** @type {import('@cloudflare/workers-types').Tracing} */
 export const tracing = {
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	enterSpan(name, callback, ...args) {
+	enterSpan(_, callback, ...args) {
 		return callback(new Span(), ...args);
 	},
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	startActiveSpan(name, callback, ...args) {
+	startActiveSpan(_, callback, ...args) {
 		return callback(new Span(), ...args);
 	},
-	Span,
+	startSpan(_) {
+		return new Span();
+	},
+	Span
 };
