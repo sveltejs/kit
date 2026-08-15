@@ -1973,12 +1973,6 @@ function kit({ svelte_config }) {
 					if (service_worker_entry_file) {
 						log.info('Building service worker');
 
-						// mirror client settings that we couldn't set per environment in the config hook
-						builder.environments.serviceWorker.config.define = {
-							...builder.environments.client.config.define,
-							...builder.environments.serviceWorker.config.define
-						};
-
 						builder.environments.serviceWorker.config.resolve.alias = [
 							...get_config_aliases(kit, vite_config.root)
 						];
