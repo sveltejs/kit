@@ -133,18 +133,16 @@ Functions contained in the [`/functions` directory](https://developers.cloudflar
 The [`env`](https://developers.cloudflare.com/workers/runtime-apis/fetch-event#parameters) object contains your project's [bindings](https://developers.cloudflare.com/workers/runtime-apis/bindings/), which consist of KV/DO namespaces, etc. It is available on the [`cloudflare:workers`](https://developers.cloudflare.com/workers/runtime-apis/bindings/#importing-env-as-a-global) module.
 
 ```js
+/// file: +server.js
 // @filename: ambient.d.ts
-import { DurableObjectNamespace } from '@cloudflare/workers-types';
-
 declare module 'cloudflare:workers' {
 	export const env: {
-		YOUR_DURABLE_OBJECT_NAMESPACE: DurableObjectNamespace;
+		YOUR_DURABLE_OBJECT_NAMESPACE: import('@cloudflare/workers-types').DurableObjectNamespace;
 	};
 }
 // @filename: +server.js
 // ---cut---
 // @errors: 2355 2322
-/// file: +server.js
 import { env } from 'cloudflare:workers';
 
 /** @type {import('./$types').RequestHandler} */
