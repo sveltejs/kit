@@ -148,6 +148,17 @@ export function count_non_ssi_comments(str) {
 export function create_replacer(transport) {
 	/** @param {unknown} thing */
 	const replacer = (thing) => {
+		// Node.js Buffer is a Uint8Array view into a shared pool ArrayBuffer.
+		// devalue serialises the *entire* backing ArrayBuffer and uses
+		// `.subarray(offset, offset+length)` to address the slice, so a small
+		// Buffer returned from a remote query can embed megabytes of pool garbage
+		// into the page. Bytes outside the ASCII range produce U+FFFD in the HTML
+		// and cause "illegal character" SyntaxErrors on the client.
+		// Copy into a standalone Uint8Array (not backed by the pool) so devalue
+		// only serialises the bytes we actually care about.
+		if (globalThis.Buffer?.isBuffer(thing)) {
+			return `new Uint8Array([${new Uint8Array(thing)}])`;
+		}
 		for (const key in transport) {
 			const encoded = transport[key].encode(thing);
 			if (encoded) {
