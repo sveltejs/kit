@@ -223,7 +223,7 @@ function virtual_workers_module(options, stub_import) {
 		if (globalThis.__platform_proxy) return;
 		const proxy = await getPlatformProxy(options);
 		globalThis.__platform_proxy = proxy;
-		globalThis.caches = proxy.caches;
+		/** @type {any} */ (globalThis).caches = proxy.caches;
 	};
 	return {
 		name: 'vite-plugin-adapter-cloudflare-virtual-workers-module',
