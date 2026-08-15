@@ -1,14 +1,4 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
-/** @type {boolean} */
-let prerendering;
-try {
-	// @ts-expect-error internal types are not published
-	const { prerendering: prerendering_value } = await import('$app/env/internal');
-	prerendering = prerendering_value;
-} catch {
-	// this will throw during analysis, which is when prerendering happens
-	prerendering = true;
-}
 
 const als = new AsyncLocalStorage();
 
@@ -24,7 +14,7 @@ export const env = new Proxy(
 	{},
 	{
 		get(_, prop) {
-			if (prerendering) {
+			if (!proxy) {
 				throw new Error(`Cannot access cloudflare:workers in a prerenderable route`);
 			}
 			const inner = get_current_env();
@@ -35,7 +25,7 @@ export const env = new Proxy(
 		},
 
 		set(_, prop, newValue) {
-			if (prerendering) {
+			if (!proxy) {
 				throw new Error(`Cannot access cloudflare:workers in a prerenderable route`);
 			}
 			const inner = get_current_env();
@@ -46,7 +36,7 @@ export const env = new Proxy(
 		},
 
 		has(_, prop) {
-			if (prerendering) {
+			if (!proxy) {
 				throw new Error(`Cannot access cloudflare:workers in a prerenderable route`);
 			}
 			const inner = get_current_env();
@@ -57,7 +47,7 @@ export const env = new Proxy(
 		},
 
 		ownKeys(_) {
-			if (prerendering) {
+			if (!proxy) {
 				throw new Error(`Cannot access cloudflare:workers in a prerenderable route`);
 			}
 			const inner = get_current_env();
@@ -68,7 +58,7 @@ export const env = new Proxy(
 		},
 
 		deleteProperty(_, prop) {
-			if (prerendering) {
+			if (!proxy) {
 				throw new Error(`Cannot access cloudflare:workers in a prerenderable route`);
 			}
 			const inner = get_current_env();
@@ -79,7 +69,7 @@ export const env = new Proxy(
 		},
 
 		defineProperty(_, prop, attr) {
-			if (prerendering) {
+			if (!proxy) {
 				throw new Error(`Cannot access cloudflare:workers in a prerenderable route`);
 			}
 			const inner = get_current_env();
@@ -90,7 +80,7 @@ export const env = new Proxy(
 		},
 
 		getOwnPropertyDescriptor(_, prop) {
-			if (prerendering) {
+			if (!proxy) {
 				throw new Error(`Cannot access cloudflare:workers in a prerenderable route`);
 			}
 			const inner = get_current_env();
@@ -104,14 +94,14 @@ export const env = new Proxy(
 
 /** @type {Module['withEnv']} */
 export function withEnv(newEnv, fn) {
-	if (prerendering) {
+	if (!proxy) {
 		throw new Error(`Cannot access cloudflare:workers in a prerenderable route`);
 	}
 	return als.run(newEnv, fn);
 }
 /** @type {Module['withEnvAndExports']} */
 export function withEnvAndExports(newEnv, _, fn) {
-	if (prerendering) {
+	if (!proxy) {
 		throw new Error(`Cannot access cloudflare:workers in a prerenderable route`);
 	}
 	return als.run(newEnv, fn);
