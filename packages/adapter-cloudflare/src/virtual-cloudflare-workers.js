@@ -8,7 +8,7 @@ function get_current_env() {
 	return als.getStore() ?? proxy.env;
 }
 
-/** @typedef {import('@cloudflare/workers-types').CloudflareWorkersModule} Module */
+/** @typedef {typeof import('cloudflare:workers')} Module */
 
 export const env = new Proxy(
 	{},
@@ -139,7 +139,7 @@ class Span {
 	}
 	end() {}
 }
-/** @type {import('@cloudflare/workers-types').Tracing} */
+/** @type {Module['tracing']} */
 export const tracing = {
 	enterSpan(_, callback, ...args) {
 		return callback(new Span(), ...args);
