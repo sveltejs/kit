@@ -40,7 +40,7 @@ import { has_custom_transporters, uneval } from '#app/internal/transport';
  *   page_config: { ssr: boolean; csr: boolean };
  *   status: number;
  *   error: App.Error | null;
- *   event: import('$app/server').RequestEvent;
+ *   event: import('@sveltejs/kit').RequestEvent;
  *   state: import('types').RequestState;
  *   resolve_opts: import('types').RequiredResolveOptions;
  *   action_result?: import('$app/forms').ActionResult;
@@ -156,7 +156,7 @@ export async function render_response({
 			tree: new RenderNode(
 				// TODO tidy up
 				/** @type {Component} */ (await branch[0].node.component?.()),
-				/** @type {Component} */ (error_components?.[1])
+				undefined
 			),
 			form: form_value,
 			error: error ?? undefined
@@ -176,7 +176,7 @@ export async function render_response({
 				current_node = current_node.child = new RenderNode(
 					// TODO tidy up
 					/** @type {Component} */ (await branch[i + 1].node.component?.()),
-					/** @type {Component} */ (error_components?.slice(0, i + 2).findLast((x) => x))
+					error_components?.[i + 1]
 				);
 			}
 		}

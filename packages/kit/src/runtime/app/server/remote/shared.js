@@ -1,4 +1,4 @@
-/** @import { RequestEvent } from '$app/server' */
+/** @import { RequestEvent } from '@sveltejs/kit' */
 /** @import { MaybePromise, RequestState, RemoteInternals, RequestStore, RemoteLiveQueryUserFunctionReturnType } from 'types' */
 import { error } from '@sveltejs/kit';
 import { ValidationError } from '@sveltejs/kit/internal';

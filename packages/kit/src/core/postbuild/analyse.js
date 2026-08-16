@@ -1,8 +1,8 @@
 import process from 'node:process';
 import { validate_server_exports } from '../../utils/exports.js';
-import { extract_svelte_config, load_vite_config } from '../config/index.js';
+import { load_vite_config } from '../config/index.js';
 import { forked } from '../../utils/fork.js';
-import { ENDPOINT_METHODS } from '../../constants.js';
+import { BODY_DEPENDENT_METHODS, ENDPOINT_METHODS } from '../../constants.js';
 import { has_server_load, resolve_route } from '../../utils/routing.js';
 import { PageNodes } from '../../utils/page_nodes.js';
 import { get_runner } from '../../runner.js';
@@ -46,8 +46,8 @@ async function analyse({ vite_config_file, hash }) {
 		// configure `import { building } from '$app/env'` —
 		// essential we do this before analysing the code
 		const runner = get_runner(vite, vite_dev_server);
-		const internal = /** @type {typeof import('../../runtime/app/env/internal.js')} */ (
-			await runner.import(`${get_runtime_base(vite_config.root)}/app/env/internal.js`)
+		const internal = /** @type {typeof import('../../runtime/app/env/server.js')} */ (
+			await runner.import(`${get_runtime_base(vite_config.root)}/app/env/server.js`)
 		);
 		internal.set_building();
 
@@ -190,9 +190,14 @@ async function analyse({ vite_config_file, hash }) {
 function analyse_endpoint(route, mod) {
 	validate_server_exports(mod, route.id);
 
-	if (mod.prerender && (mod.POST || mod.PATCH || mod.PUT || mod.DELETE)) {
+	if (
+		mod.prerender &&
+		/** @type {import('types').HttpMethod[]} */ (BODY_DEPENDENT_METHODS).some(
+			(method) => mod[method]
+		)
+	) {
 		throw new Error(
-			`Cannot prerender a +server file with POST, PATCH, PUT, or DELETE (${route.id})`
+			`Cannot prerender a +server file with ${BODY_DEPENDENT_METHODS.join(', ')} handlers (${route.id})`
 		);
 	}
 

@@ -491,6 +491,25 @@ test.describe('Endpoints', () => {
 		expect(await response.text()).toBe('catch-all');
 	});
 
+	test('QUERY handler', async ({ request }) => {
+		const url = '/endpoint-output/query';
+
+		let response = await request.fetch(url, {
+			method: 'QUERY',
+			data: 'name=world'
+		});
+
+		expect(response.status()).toBe(200);
+		expect(await response.text()).toBe('query: name=world');
+
+		response = await request.fetch(url, {
+			method: 'MOVE'
+		});
+
+		expect(response.status()).toBe(405);
+		expect(response.headers()['allow']).toBe('GET, QUERY, HEAD');
+	});
+
 	test('can get assets using absolute path', async ({ request }) => {
 		const response = await request.get('/endpoint-output/fetch-asset/absolute');
 		expect(response.status()).toBe(200);

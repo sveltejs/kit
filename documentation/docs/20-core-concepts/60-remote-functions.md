@@ -296,7 +296,7 @@ If you need direct, imperative access to the underlying stream of values (rather
 
 ```js
 // @filename: time.remote.ts
-import { RemoteLiveQueryFunction } from '$app/server';
+import type { RemoteLiveQueryFunction } from '$app/server';
 export declare const getTime: RemoteLiveQueryFunction<undefined, Date>;
 // @errors: 2304
 // @filename: index.js
@@ -1112,7 +1112,8 @@ export const createPost = form(
 Additionally, `requested` allows a simple shorthand when all you want to do is refresh the requested query instances:
 
 ```ts
-import { requested, type RemoteQueryFunction } from '$app/server';
+import { requested } from '$app/server';
+import type { RemoteQueryFunction } from '$app/server';
 declare const getPosts: RemoteQueryFunction<any, any>;
 // ---cut---
 // this is the same as looping over the result and calling `void query.refresh()`.
@@ -1266,7 +1267,7 @@ export const getStuff = query('unchecked', async ({ id }: { id: string }) => {
 
 ## Using `getRequestEvent`
 
-Inside `query`, `form` and `command` you can use [`getRequestEvent`]($app-server#getRequestEvent) to get the current [`RequestEvent`]($app-server#RequestEvent) object. This makes it easy to build abstractions for interacting with cookies, for example:
+Inside `query`, `form` and `command` you can use [`getRequestEvent`]($app-server#getRequestEvent) to get the current [`RequestEvent`](@sveltejs-kit#RequestEvent) object. This makes it easy to build abstractions for interacting with cookies, for example:
 
 ```ts
 /// file: user.remote.js

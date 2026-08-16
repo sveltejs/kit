@@ -271,9 +271,9 @@ export function invalid(...issues) {
 }
 
 /**
- * Checks whether this is an validation error thrown by {@link invalid}.
+ * Checks whether this is a validation error thrown by {@link invalid}.
  * @param {unknown} e The object to check.
- * @return {e is import('$app/server').ValidationError}
+ * @return {e is import('./public.js').ValidationError}
  * @since 2.47.3
  */
 export function isValidationError(e) {

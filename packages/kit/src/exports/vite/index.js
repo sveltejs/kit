@@ -1,9 +1,8 @@
 /** @import { TopLevelFilterExpression } from '@rolldown/pluginutils' */
-/** @import { KitConfig } from '@sveltejs/kit' */
 /** @import { EnvVarConfig } from '@sveltejs/kit/env' */
-/** @import { Options, SvelteConfig } from '@sveltejs/vite-plugin-svelte' */
+/** @import { Options } from '@sveltejs/vite-plugin-svelte' */
 /** @import { PreprocessorGroup } from 'svelte/compiler' */
-/** @import { Asset, BuildData, ManifestData, Prerendered, PrerenderMap, RemoteChunk, RemoteInternals, RouteData, ServerMetadata, ValidatedConfig, ValidatedKitConfig } from 'types' */
+/** @import { Asset, BuildData, ManifestData, Prerendered, PrerenderMap, RemoteChunk, RemoteInternals, RouteData, ServerMetadata, ValidatedConfig } from 'types' */
 /** @import { Manifest, Plugin, ResolvedConfig, Rolldown, UserConfig, ViteDevServer } from 'vite' */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -25,15 +24,7 @@ import MagicString from 'magic-string';
 import { copy, read, resolve_entry } from '../../utils/filesystem.js';
 import { posixify } from '../../utils/os.js';
 import { to_fs } from '../../utils/vite.js';
-import {
-	create_sveltekit_env,
-	create_sveltekit_env_public,
-	resolve_explicit_env_entry,
-	create_sveltekit_env_service_worker,
-	create_sveltekit_env_service_worker_dev,
-	create_sveltekit_env_private,
-	create_exported_declarations
-} from '../../core/env.js';
+import { create_exported_declarations } from '../../core/env.js';
 import * as sync from '../../core/sync/sync.js';
 import { runtime_directory, logger } from '../../core/utils.js';
 import { generate_manifest } from '../../core/generate_manifest/index.js';
@@ -64,22 +55,14 @@ import {
 	is_page_route
 } from '../../core/sync/create_manifest_data/index.js';
 import { get_import_aliases, get_hash_import_keys } from '../../utils/imports.js';
-import {
-	app_env_private,
-	app_server,
-	sveltekit_env,
-	sveltekit_env_private,
-	sveltekit_env_service_worker,
-	sveltekit_manifest_data,
-	sveltekit_env_public_client,
-	sveltekit_env_public_server
-} from './module_ids.js';
+import { app_env_private, app_server, sveltekit_manifest_data } from './module_ids.js';
 import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
 import { should_ignore, has_children } from './static_analysis/utils.js';
 import { process_config, split_config, validate_config } from '../../core/config/index.js';
 import { treeshake_prerendered_remotes } from './build/remote.js';
 import { get_runner } from '../../runner.js';
+import { plugin_env_vars } from './plugins/env-vars.js';
 
 /** @type {import('./types.js').EnforcedConfig} */
 const enforced_config = {
@@ -138,6 +121,7 @@ const warned = new Set();
 
 /** @type {PreprocessorGroup} */
 const warning_preprocessor = {
+	name: 'sveltekit:warnings',
 	script: ({ content, filename }) => {
 		if (!filename) return;
 
@@ -181,14 +165,39 @@ const warning_preprocessor = {
 let vite_plugin_svelte;
 
 /**
- * Returns the SvelteKit Vite plugins.
- * Any options that don't belong to SvelteKit are passed through to `vite-plugin-svelte`.
+ * The SvelteKit Vite plugin, which must be added to your `vite.config.js` file along with your project's configuration:
  *
- * Since version 3.0.0 you must pass [configuration](configuration) directly.
+ * ```js
+ * /// file: vite.config.js
+ * import adapter from '@sveltejs/adapter-auto';
+ * import { sveltekit } from '@sveltejs/kit/vite';
+ * import { defineConfig } from 'vite';
  *
- * Since version 2.62.0 you can pass configuration directly, in which case `svelte.config.js` is ignored.
+ * export default defineConfig({
+ * 	plugins: [
+ * 		sveltekit({
+ * 			adapter: adapter(),
+ * 			compilerOptions: {
+ * 				experimental: {
+ * 					async: true
+ * 				}
+ * 			},
+ * 			experimental: {
+ * 				remoteFunctions: true
+ * 			}
+ * 		})
+ * 	]
+ * });
+ * ```
  *
- * @param {KitConfig & Omit<Options, 'onwarn'> & Pick<SvelteConfig, 'vitePlugin'>} [config]
+ * As well as SvelteKit, the plugin options are used by other tooling that integrates with Svelte such as editor extensions.
+ *
+ * Any options that don't belong to SvelteKit are passed through to [`vite-plugin-svelte`](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/config.md), so you can set options like `inspector` here too. The `experimental` namespace is shared — SvelteKit reads its own flags and forwards the rest.
+ *
+ * > [!LEGACY]
+ * > Prior to SvelteKit 3, config lived in a `svelte.config.js` file, which is no longer supported. The ability to configure SvelteKit via `vite.config.js` was added in version 2.62.
+ *
+ * @param {import('./public.js').Config} [config]
  * @returns {Promise<Plugin[]>}
  */
 export async function sveltekit(config) {
@@ -212,7 +221,6 @@ export async function sveltekit(config) {
 	/** @type {Partial<Options>} */
 	const inline_vps_config = {
 		preprocess: svelte_config.preprocess,
-		...svelte_config.vitePlugin,
 		// pass through any options that SvelteKit doesn't use itself, so that
 		// the options SvelteKit manages always take precedence
 		...split.vite_plugin_svelte_config,
@@ -263,7 +271,7 @@ function kit({ svelte_config }) {
 	 */
 	let root;
 
-	/** @type {ValidatedKitConfig} */
+	/** @type {ValidatedConfig} */
 	let kit;
 	/** @type {string} `kit.outDir` but posix-ified */
 	let out_dir;
@@ -343,7 +351,7 @@ function kit({ svelte_config }) {
 				const resolved = await this.resolve(id, importer, { ...options, skipSelf: true });
 				if (resolved) return resolved;
 
-				const aliases = svelte_config.kit.alias;
+				const aliases = svelte_config.alias;
 				for (const { name, pattern, message } of removed_modules) {
 					if (!pattern.test(id)) continue;
 
@@ -372,7 +380,7 @@ function kit({ svelte_config }) {
 				process.env.SVELTEKIT_BUILD ??= s(config_env.command === 'build');
 				is_build = process.env.SVELTEKIT_BUILD === 'true';
 
-				({ kit } = process_config(svelte_config, root));
+				kit = process_config(svelte_config, root);
 				out_dir = posixify(kit.outDir);
 				out = `${out_dir}/output`;
 
@@ -627,47 +635,12 @@ function kit({ svelte_config }) {
 		}
 	};
 
-	/** @type {string | null} */
-	let explicit_env_entry = null;
-
 	/** @type {Record<string, EnvVarConfig<any>> | null} */
 	let explicit_env_config = null;
 
 	/** @type {Plugin} */
 	const plugin_virtual_modules = {
 		name: 'vite-plugin-sveltekit-virtual-modules',
-
-		async configResolved(config) {
-			explicit_env_entry = resolve_explicit_env_entry(kit);
-			explicit_env_config = await sync.env(vite, kit, explicit_env_entry, config.root, config.mode);
-		},
-
-		configureServer(server) {
-			server.watcher.on('all', async (_, file) => {
-				if (!file.includes('env')) {
-					return;
-				}
-
-				const resolved = resolve_explicit_env_entry(kit);
-
-				if (file === explicit_env_entry || file === resolved) {
-					explicit_env_entry = resolved;
-					explicit_env_config = await sync.env(
-						vite,
-						kit,
-						explicit_env_entry,
-						vite_config.root,
-						vite_config.mode
-					);
-
-					for (const id of [sveltekit_env, sveltekit_env_public_client]) {
-						invalidate_module(server, id);
-					}
-
-					server.hot.send({ type: 'full-reload' });
-				}
-			});
-		},
 
 		applyToEnvironment(environment) {
 			return environment.name !== 'serviceWorker';
@@ -692,56 +665,12 @@ function kit({ svelte_config }) {
 
 		load: {
 			filter: {
-				id: [
-					exactRegex(sveltekit_env),
-					exactRegex(sveltekit_env_private),
-					exactRegex(sveltekit_env_public_client),
-					exactRegex(sveltekit_env_public_server),
-					exactRegex(sveltekit_env_service_worker),
-					exactRegex(sveltekit_manifest_data)
-				]
+				id: [exactRegex(sveltekit_manifest_data)]
 			},
 			handler(id) {
 				switch (id) {
 					case sveltekit_manifest_data:
 						return create_manifest_data_module(is_build, manifest_data);
-
-					case sveltekit_env:
-						return create_sveltekit_env(explicit_env_config, env, explicit_env_entry, !is_build);
-
-					case sveltekit_env_public_client:
-						return create_sveltekit_env_public(
-							explicit_env_config,
-							env,
-							`import { payload } from ${s(`${runtime_directory}/client/payload.js`)};\nconst env = payload.env;`
-						);
-
-					case sveltekit_env_public_server:
-						return create_sveltekit_env_public(
-							explicit_env_config,
-							env,
-							`import { rendered_env as env } from '__sveltekit/env';`
-						);
-
-					case sveltekit_env_private:
-						return create_sveltekit_env_private(explicit_env_config, env);
-
-					case sveltekit_env_service_worker:
-						return is_build
-							? create_sveltekit_env_service_worker(
-									explicit_env_config,
-									env,
-									kit.version.name,
-									kit_global,
-									kit.paths.base,
-									kit.appDir
-								)
-							: create_sveltekit_env_service_worker_dev(
-									explicit_env_config,
-									env,
-									kit.version.name,
-									kit_global
-								);
 				}
 			}
 		}
@@ -922,7 +851,7 @@ function kit({ svelte_config }) {
 		name: 'vite-plugin-sveltekit-remote',
 
 		applyToEnvironment(environment) {
-			return svelte_config.kit.experimental.remoteFunctions && environment.name !== 'serviceWorker';
+			return svelte_config.experimental.remoteFunctions && environment.name !== 'serviceWorker';
 		},
 
 		// prevent other plugins from resolving our remote virtual module
@@ -1080,13 +1009,13 @@ function kit({ svelte_config }) {
 		name: 'vite-plugin-sveltekit-remote-guard',
 
 		applyToEnvironment() {
-			return !svelte_config.kit.experimental.remoteFunctions;
+			return !svelte_config.experimental.remoteFunctions;
 		},
 
 		transform: {
 			filter: {
 				id: new RegExp(
-					`.remote(${svelte_config.kit.moduleExtensions.join('|')})$`.replaceAll('.', '\\.')
+					`.remote(${svelte_config.moduleExtensions.join('|')})$`.replaceAll('.', '\\.')
 				)
 			},
 			handler() {
@@ -1172,7 +1101,7 @@ function kit({ svelte_config }) {
 
 		resolveId: {
 			filter: {
-				id: prefixRegex('__sveltekit/')
+				id: exactRegex('__sveltekit/manifest-data')
 			},
 			handler(id) {
 				return `\0virtual:${id}`;
@@ -1181,12 +1110,7 @@ function kit({ svelte_config }) {
 
 		load: {
 			filter: {
-				id: [
-					exactRegex('\0virtual:app/manifest'),
-					exactRegex(sveltekit_manifest_data),
-					exactRegex(sveltekit_env_service_worker),
-					exactRegex(sveltekit_env_public_client)
-				]
+				id: [exactRegex('\0virtual:app/manifest'), exactRegex(sveltekit_manifest_data)]
 			},
 			handler(id) {
 				if (!manifest_data_code) {
@@ -1215,32 +1139,6 @@ function kit({ svelte_config }) {
 
 				if (id === sveltekit_manifest_data) {
 					return manifest_data_code;
-				}
-
-				if (id === sveltekit_env_service_worker) {
-					return is_build
-						? create_sveltekit_env_service_worker(
-								explicit_env_config,
-								env,
-								kit.version.name,
-								kit_global,
-								kit.paths.base,
-								kit.appDir
-							)
-						: create_sveltekit_env_service_worker_dev(
-								explicit_env_config,
-								env,
-								kit.version.name,
-								kit_global
-							);
-				}
-
-				if (id === sveltekit_env_public_client) {
-					return create_sveltekit_env_public(
-						explicit_env_config,
-						env,
-						`const env = ${kit_global}.env;`
-					);
 				}
 			}
 		},
@@ -1386,7 +1284,7 @@ function kit({ svelte_config }) {
 					/** @type {Record<string, string>} */
 					const client_input = {};
 
-					if (svelte_config.kit.output.bundleStrategy !== 'split') {
+					if (svelte_config.output.bundleStrategy !== 'split') {
 						client_input['bundle'] = `${runtime_directory}/client/bundle.js`;
 					} else {
 						client_input['entry/start'] = `${runtime_directory}/client/entry.js`;
@@ -1399,7 +1297,7 @@ function kit({ svelte_config }) {
 						});
 					}
 
-					const inline = svelte_config.kit.output.bundleStrategy === 'inline';
+					const inline = svelte_config.output.bundleStrategy === 'inline';
 
 					/** @type {string} */
 					const base = (kit.paths.assets || kit.paths.base) + '/';
@@ -1498,7 +1396,7 @@ function kit({ svelte_config }) {
 												return `${app_immutable}/chunks/[hash].js`;
 											},
 											codeSplitting:
-												svelte_config.kit.output.bundleStrategy === 'split'
+												svelte_config.output.bundleStrategy === 'split'
 													? {
 															groups: [
 																{
@@ -1523,7 +1421,7 @@ function kit({ svelte_config }) {
 								},
 								define: {
 									__SVELTEKIT_PAYLOAD__:
-										svelte_config.kit.output.bundleStrategy !== 'split' ? kit_global : 'undefined'
+										svelte_config.output.bundleStrategy !== 'split' ? kit_global : 'undefined'
 								}
 							}
 						},
@@ -1700,7 +1598,8 @@ function kit({ svelte_config }) {
 					kit,
 					manifest_data,
 					`${out_dir}/generated/client-optimized`,
-					metadata.nodes
+					root,
+					build_metadata.nodes
 				);
 
 				// Through the finished analysis we can now check if any node has server or universal load functions
@@ -1793,7 +1692,8 @@ function kit({ svelte_config }) {
 					const uses_env_dynamic_public =
 						has_explicit_dynamic_public_env &&
 						client_chunks.some(
-							(chunk) => chunk.type === 'chunk' && chunk.modules[sveltekit_env_public_client]
+							(chunk) =>
+								chunk.type === 'chunk' && chunk.modules[`${out_dir}/generated/env/public/client.js`]
 						);
 
 					if (kit.output.bundleStrategy === 'split') {
@@ -2146,7 +2046,7 @@ function kit({ svelte_config }) {
 			// `vite build --watch`
 			let rebuild = false;
 
-			const before_rebuild = async () => {
+			const before_rebuild = () => {
 				rebuild = true;
 
 				// these are set once per plugin initialisation or when the config hook
@@ -2164,15 +2064,6 @@ function kit({ svelte_config }) {
 				finalise = null;
 
 				fs.mkdirSync(out, { recursive: true });
-
-				explicit_env_entry = resolve_explicit_env_entry(kit);
-				explicit_env_config = await sync.env(
-					vite,
-					kit,
-					explicit_env_entry,
-					vite_config.root,
-					vite_config.mode
-				);
 
 				// TODO: re-run analysis, etc.
 			};
@@ -2227,18 +2118,21 @@ function kit({ svelte_config }) {
 
 	return /** @type {Plugin[]} */ (
 		[
-			svelte_config.kit.adapter?.vite?.plugins?.pre,
+			svelte_config.adapter?.vite?.plugins?.pre,
 			plugin_resolve_root,
 			plugin_setup,
 			plugin_remote_guard,
 			plugin_remote,
+			plugin_env_vars(svelte_config, (vars) => {
+				explicit_env_config = vars;
+			}),
 			plugin_virtual_modules,
 			process.env.TEST !== 'true' ? plugin_guard : undefined,
 			plugin_service_worker,
 			plugin_service_worker_env,
 			plugin_compile,
 			plugin_adapter,
-			svelte_config.kit.adapter?.vite?.plugins?.post
+			svelte_config.adapter?.vite?.plugins?.post
 		].filter(Boolean)
 	);
 }

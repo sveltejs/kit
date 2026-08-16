@@ -1246,6 +1246,7 @@ test.describe('client error boundaries', () => {
 		await expect(page.locator('#message')).toContainText(
 			'render error (500 Internal Error, on /server-error-boundary)'
 		);
+		await expect(page.locator('#nested-layout')).toHaveCount(0);
 	});
 
 	test('catches nested server render error and shows nested +error.svelte', async ({
@@ -1259,6 +1260,16 @@ test.describe('client error boundaries', () => {
 		);
 		// The nested layout should still be visible
 		await expect(page.locator('#nested-layout')).toBeVisible();
+	});
+
+	test('layout render error renders the same +error.svelte as SSR', async ({ page, app }) => {
+		await page.goto('/');
+		await app.goto('/server-error-boundary/layout-throws');
+		await expect(page.locator('#message')).toContainText(
+			'layout render error (500 Internal Error, on /server-error-boundary/layout-throws)'
+		);
+		await expect(page.locator('#layout-throws-error-message')).toHaveCount(0);
+		await expect(page.locator('#nested-layout')).toHaveCount(0);
 	});
 
 	test('client navigation away from a render error tears down the stale +error.svelte', async ({
@@ -1331,6 +1342,17 @@ test.describe('client error boundaries', () => {
 		await expect(result).toHaveText('hello world');
 		await page.locator('#redirect').click();
 		await expect(result).not.toHaveText('hello world');
+	});
+
+	test('remote form submit resolves after redirect navigation', async ({ page }) => {
+		await page.goto('/remote/form/reset-on-redirect');
+
+		await page.locator('#redirect-other').click();
+		await page.waitForURL('/remote/form/redirect-target/destination');
+
+		await expect
+			.poll(() => page.evaluate(() => sessionStorage.getItem('submit-resolved-pathname')))
+			.toBe('/remote/form/redirect-target/destination');
 	});
 });
 

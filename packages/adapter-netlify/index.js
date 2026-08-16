@@ -42,15 +42,15 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 				);
 			}
 
-			if (existsSync(`${builder.config.kit.files.assets}/_headers`)) {
+			if (existsSync(`${builder.config.files.assets}/_headers`)) {
 				throw new Error(
-					`The _headers file should be placed in the project root rather than the ${builder.config.kit.files.assets} directory`
+					`The _headers file should be placed in the project root rather than the ${builder.config.files.assets} directory`
 				);
 			}
 
-			if (existsSync(`${builder.config.kit.files.assets}/_redirects`)) {
+			if (existsSync(`${builder.config.files.assets}/_redirects`)) {
 				throw new Error(
-					`The _redirects file should be placed in the project root rather than the ${builder.config.kit.files.assets} directory`
+					`The _redirects file should be placed in the project root rather than the ${builder.config.files.assets} directory`
 				);
 			}
 
@@ -80,7 +80,7 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 			builder.log.minor(`Publishing to "${publish}"`);
 
 			builder.log.minor('Copying assets...');
-			const publish_dir = `${publish}${builder.config.kit.paths.base}`;
+			const publish_dir = `${publish}${builder.config.paths.base}`;
 			builder.writeClient(publish_dir);
 			builder.writePrerendered(publish_dir);
 
@@ -387,16 +387,14 @@ async function generate_edge_functions({ builder }) {
 		// Contains static files
 		`/${builder.getAppPath()}/immutable/*`,
 		`/${builder.getAppPath()}/version.json`,
-		...builder.prerendered.paths,
+		// the base root and `trailingSlash: 'always'` pages are recorded with a trailing slash
+		...builder.prerendered.paths.map((path) => (path === '/' ? path : path.replace(/\/$/, ''))),
 		...Array.from(assets).flatMap((asset) => {
 			if (asset.endsWith('/index.html')) {
 				const dir = asset.replace(/\/index\.html$/, '');
-				return [
-					`${builder.config.kit.paths.base}/${asset}`,
-					`${builder.config.kit.paths.base}/${dir}`
-				];
+				return [`${builder.config.paths.base}/${asset}`, `${builder.config.paths.base}/${dir}`];
 			}
-			return `${builder.config.kit.paths.base}/${asset}`;
+			return `${builder.config.paths.base}/${asset}`;
 		}),
 		// Should not be served by SvelteKit at all
 		'/.netlify/*'

@@ -15,7 +15,9 @@ const exclude = [
 export default /** @satisfies {import('vitest/config').ViteUserConfig} */ ({
 	plugins: [svelte({ compilerOptions: { hmr: false, experimental: { async: true } } })],
 	define: {
-		__SVELTEKIT_SERVER_TRACING_ENABLED__: false
+		__SVELTEKIT_SERVER_TRACING_ENABLED__: false,
+		__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: 0,
+		__SVELTEKIT_APP_VERSION_CHECKS_ENABLED__: false
 	},
 	server: {
 		watch: {
@@ -41,7 +43,7 @@ export default /** @satisfies {import('vitest/config').ViteUserConfig} */ ({
 					name: 'kit-server-dev',
 					environment: 'node',
 					include: ['src/**/*.spec.js'],
-					exclude: [...exclude, 'src/**/*.svelte.spec.js']
+					exclude: [...exclude, 'src/**/*.svelte.spec.js', 'src/runtime/client/**/*.spec.js']
 				}
 			},
 			{
@@ -58,10 +60,13 @@ export default /** @satisfies {import('vitest/config').ViteUserConfig} */ ({
 			},
 			{
 				extends: true,
+				resolve: {
+					conditions: ['browser']
+				},
 				test: {
 					name: 'kit-client-runtime',
 					environment: 'jsdom',
-					include: ['src/**/*.svelte.spec.js'],
+					include: ['src/**/*.svelte.spec.js', 'src/runtime/client/**/*.spec.js'],
 					exclude,
 					// `forks` (child_process) accepts `--expose-gc`; `threads` (worker_threads) does not.
 					pool: 'forks',

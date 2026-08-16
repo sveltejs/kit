@@ -63,7 +63,7 @@ export class RenderNode {
 	/**
 	 *
 	 * @param {Component} component
-	 * @param {Component} error
+	 * @param {Component | undefined} error
 	 */
 	constructor(component, error) {
 		this.component = component;

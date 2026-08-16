@@ -2,7 +2,37 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { expect, test } from 'vitest';
-import { update } from './sync.js';
+import { process_config, validate_config } from '../config/index.js';
+import { relative_path } from '../../utils/filesystem.js';
+import { create, update } from './sync.js';
+
+test('generates client manifest imports relative to the project root', () => {
+	const root = fs.mkdtempSync(path.join(os.tmpdir(), 'svelte-kit-sync-'));
+	const component = path.join(root, 'src/routes/+page.svelte');
+
+	fs.mkdirSync(path.dirname(component), { recursive: true });
+	fs.writeFileSync(component, '');
+	fs.writeFileSync(
+		path.join(root, 'src/app.html'),
+		'<!doctype html><html><head>%sveltekit.head%</head><body>%sveltekit.body%</body></html>'
+	);
+
+	try {
+		const config = process_config(validate_config({}), root);
+		const { manifest_data } = create(config, root);
+		const index = manifest_data.nodes.findIndex(
+			(node) => node.component === 'src/routes/+page.svelte'
+		);
+		const output = path.join(config.outDir, 'generated/client');
+		const generated = fs.readFileSync(path.join(output, `nodes/${index}.js`), 'utf8');
+
+		expect(generated).toBe(
+			`export { default as component } from ${JSON.stringify(relative_path(`${output}/nodes`, component))};`
+		);
+	} finally {
+		fs.rmSync(root, { recursive: true, force: true });
+	}
+});
 
 test('requests a manifest rebuild if static analysis encounters a missing route file', () => {
 	const manifest_data = /** @type {import('types').ManifestData} */ ({
@@ -30,13 +60,11 @@ test('requests a manifest rebuild if type generation encounters a missing route 
 
 	const config = /** @type {import('types').ValidatedConfig} */ (
 		/** @type {unknown} */ ({
-			kit: {
-				files: { params: path.join(root, 'src/params'), routes },
-				outDir: path.join(root, '.svelte-kit')
-			}
+			files: { params: path.join(root, 'src/params'), routes },
+			outDir: path.join(root, '.svelte-kit')
 		})
 	);
-	const outdir = path.join(config.kit.outDir, 'types', path.relative(root, routes), 'missing');
+	const outdir = path.join(config.outDir, 'types', path.relative(root, routes), 'missing');
 	fs.mkdirSync(outdir, { recursive: true });
 
 	const leaf = /** @type {import('types').PageNode} */ ({ depth: 0, server });

@@ -55,6 +55,7 @@ The following options are obsolete and should be removed from your `vite.config.
 - `experimental.handleRenderingErrors` is no longer required ([details](#Error-handling-Rendering-errors-are-now-handled))
 - `experimental.instrumentation` is no longer required ([details](#Observability))
 - `experimental.tracing` is now a top level `tracing` option ([details](#Observability))
+- `vitePlugin` is removed — pass `vite-plugin-svelte` options like `inspector` directly to the plugin instead
 - `preloadStrategy` is removed — `modulepreload` is now supported everywhere and so is always used
 - `prerender.origin` is removed in favour of `paths.origin`
 - `csrf.checkOrigin` is removed in favour of `csrf.trustedOrigins`
@@ -286,9 +287,9 @@ Types like `EnvVarConfig`, used with [`defineEnvVars`](@sveltejs-kit-env#defineE
 
 Types like `Handle`, which defines the type of your [`handle`](hooks#handle) hook, now live in `@sveltejs/kit/hooks`.
 
-### Request-related types moved to `$app/server`
+### Remote function types moved to `$app/server`
 
-Types like `RequestEvent` and `Cookies`, used by [`getRequestEvent`]($app-server#getRequestEvent), now live in `$app/server`.
+Types describing remote functions, such as `RemoteQuery`, `RemoteForm` and `RemoteCommand`, now live in `$app/server` alongside the functions themselves.
 
 ## `@sveltejs/kit/hooks`
 
@@ -359,7 +360,7 @@ SvelteKit now uses [`cookie`](https://npmx.dev/package/cookie) v2, which involve
 When setting a cookie without an explicit `path` (which was previously forbidden), the path defaults to `'/'` rather than the current request path, meaning the cookie applies to the entire site. This matches what most developers expect. You can pass an explicit `path` if necessary:
 
 ```ts
-declare const cookies: import('$app/server').Cookies;
+declare const cookies: import('@sveltejs/kit').Cookies;
 declare const name: string;
 declare const value: string;
 // ---cut---
@@ -476,6 +477,7 @@ All first-party adapters now require SvelteKit 3, alongside these adapter-specif
 For adapter authors, there are some additional changes:
 
 - adapters can augment the Vite config with additional plugins
+- `builder.config.kit` no longer exists — the configuration now lives at the top level
 - `builder.createEntries` has been removed — use `builder.writeClient`, `builder.writeServer` and `builder.writePrerendered` directly
 - `builder.compress` returns a list of compressed files
 - `builder.mkdirp` and `builder.rimraf` are deprecated in favour of `node:fs` methods
