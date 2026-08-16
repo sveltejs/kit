@@ -332,7 +332,11 @@ function kit({ svelte_config }) {
 			order: 'pre',
 			async handler(config, config_env) {
 				initial_config = config;
-				is_build = config_env.command === 'build';
+
+				// if the initial command was `build`, we want to reuse that whenever
+				// the plugin loads again
+				process.env.SVELTEKIT_BUILD ??= s(config_env.command === 'build');
+				is_build = process.env.SVELTEKIT_BUILD === 'true';
 
 				kit = process_config(svelte_config, root);
 				out_dir = posixify(kit.outDir);
