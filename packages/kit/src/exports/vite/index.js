@@ -33,6 +33,7 @@ import { find_deps, resolve_symlinks } from './build/utils.js';
 import { dev, invalidate_module } from './dev/index.js';
 import { preview } from './preview/index.js';
 import {
+	clean_id,
 	error_for_missing_config,
 	get_config_aliases,
 	is_remote_module,
@@ -891,7 +892,8 @@ function kit({ svelte_config }) {
 			async handler(code, id) {
 				if (!is_remote_module(id)) return;
 
-				const file = posixify(path.relative(root, id));
+				// clean the ID because remote functions from libraries can have suffixes
+				const file = posixify(path.relative(root, clean_id(id)));
 				const remote = {
 					hash: hash(file),
 					file
@@ -1579,8 +1581,9 @@ function kit({ svelte_config }) {
 			const hash_routing = kit.router.type === 'hash';
 
 			const { metadata } = await analyse({
-				vite_config_file: vite_config.configFile,
-				hash: hash_routing
+				hash: hash_routing,
+				env,
+				vite_config_file: vite_config.configFile
 			});
 			build_metadata = metadata;
 
@@ -1591,8 +1594,17 @@ function kit({ svelte_config }) {
 			const skip_client_build = manifest_data.nodes.every(
 				(node) => node.page_options?.csr === false
 			);
+			// check if an error page needs to be rendered on the server.
+			// Error pages aren't included in the SSR manifest's routes list
+			const has_ssr_node = manifest_data.nodes.some((node) =>
+				node.child_pages
+					? node.child_pages.some((child) => child.page_options?.ssr !== false)
+					: node.page_options?.ssr !== false
+			);
+			const skip_ssr_build =
+				hash_routing || (!has_ssr_node && !metadata.has_dynamic_server_routes_or_remotes);
 
-			if (!skip_client_build) {
+			if (skip_ssr_build) {
 				// build the client
 				write_client_manifest(
 					kit,
@@ -1632,7 +1644,35 @@ function kit({ svelte_config }) {
 					copy(server_assets, client_assets);
 					copy(kit.files.assets, client_out_dir);
 				} else {
-					client_chunks = initial_build_chunks;
+					if (initial_build_environment.name === 'ssr') {
+						server_chunks = initial_build_chunks;
+						// TODO: dedupe this
+
+						// build the client
+						write_client_manifest(
+							kit,
+							manifest_data,
+							`${out_dir}/generated/client-optimized`,
+							root,
+							metadata.nodes
+						);
+
+						// Through the finished analysis we can now check if any node has server or universal load functions
+						const nodes = Object.values(metadata.nodes);
+						const has_server_load = nodes.some((node) => node.has_server_load);
+						const has_universal_load = nodes.some((node) => node.has_universal_load);
+
+						if (builder.environments.client.config.define) {
+							builder.environments.client.config.define.__SVELTEKIT_HAS_SERVER_LOAD__ =
+								s(has_server_load);
+							builder.environments.client.config.define.__SVELTEKIT_HAS_UNIVERSAL_LOAD__ =
+								s(has_universal_load);
+						}
+						const client_build = await builder.build(builder.environments.client);
+						client_chunks = await normalise_build('client', client_build, watch_build_output);
+					} else {
+						client_chunks = initial_build_chunks;
+					}
 
 					vite_client_manifest = /** @type {Manifest} */ (
 						JSON.parse(read(`${client_out_dir}/.vite/manifest.json`))
@@ -1784,23 +1824,6 @@ function kit({ svelte_config }) {
 							fs.rmSync(`${client_out_dir}/${start.file}.map`, { force: true });
 							if (inline_style) fs.unlinkSync(`${client_out_dir}/${inline_style.fileName}`);
 						}
-					}
-
-					// check if an error page needs to be rendered on the server.
-					// Error pages aren't included in the SSR manifest's routes list
-					const has_ssr_node = manifest_data.nodes.some((node) =>
-						node.child_pages
-							? node.child_pages.some((child) => child.page_options?.ssr !== false)
-							: node.page_options?.ssr !== false
-					);
-
-					if (!hash_routing && (metadata.has_dynamic_routes_or_remotes || has_ssr_node)) {
-						const server_build = await builder.build(builder.environments.ssr);
-						server_chunks = await normalise_build(
-							builder.environments.ssr.name,
-							server_build,
-							watch_build_output
-						);
 					}
 				}
 
@@ -2001,11 +2024,7 @@ function kit({ svelte_config }) {
 						};
 
 						const service_worker_build = await builder.build(builder.environments.serviceWorker);
-						await normalise_build(
-							builder.environments.serviceWorker.name,
-							service_worker_build,
-							watch_build_output
-						);
+						await normalise_build('serviceWorker', service_worker_build, watch_build_output);
 					}
 
 					console.log(

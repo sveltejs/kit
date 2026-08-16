@@ -164,6 +164,7 @@ export async function dev(
 			return;
 		}
 
+		// TODO: try to abstract the dev SSR manifest creation into a reusable function
 		manifest = {
 			appDir: svelte_config.appDir,
 			appPath: svelte_config.appDir,

@@ -229,3 +229,15 @@ export function error_for_missing_config(feature_name, path, value) {
 		`
 	);
 }
+
+// taken from https://github.com/vitejs/vite/blob/main/packages/vite/src/shared/utils.ts#L31-L34
+const postfix_RE = /[?#].*$/;
+
+/**
+ * Remove any query parameters from the Rolldown ID
+ * @param {string} id
+ * @returns {string}
+ */
+export function clean_id(id) {
+	return id.replace(postfix_RE, '');
+}
