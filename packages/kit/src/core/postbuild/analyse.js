@@ -117,7 +117,7 @@ async function analyse({ vite_config_file, hash }) {
 			const route_config = page?.config ?? endpoint?.config ?? {};
 			const prerender = page?.prerender ?? endpoint?.prerender;
 
-			if (prerender !== undefined || prerender !== false) {
+			if (prerender !== undefined && prerender !== false) {
 				metadata.should_prerender = true;
 			}
 
