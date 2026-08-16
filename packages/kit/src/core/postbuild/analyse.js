@@ -1,171 +1,186 @@
-/** @import { RemoteChunk } from 'types' */
-import { join } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import process from 'node:process';
 import { validate_server_exports } from '../../utils/exports.js';
 import { extract_svelte_config, load_vite_config } from '../config/index.js';
 import { forked } from '../../utils/fork.js';
 import { ENDPOINT_METHODS } from '../../constants.js';
 import { has_server_load, resolve_route } from '../../utils/routing.js';
-import { check_feature } from '../../utils/features.js';
-import { createReadableStream } from '@sveltejs/kit/node';
 import { PageNodes } from '../../utils/page_nodes.js';
+import { get_runner } from '../../runner.js';
+import { get_runtime_base } from '../utils.js';
+import { import_peer } from '../../utils/import.js';
 
 export default forked(import.meta.url, analyse);
 
 /**
  * @param {{
- *   hash: boolean;
- *   manifest_path: string;
- *   manifest_data: import('types').ManifestData;
- *   server_manifest: import('vite').Manifest;
- *   tracked_features: Record<string, string[]>;
- *   env: Record<string, string>;
- *   remotes: RemoteChunk[];
  *   vite_config_file: string | undefined;
+ *   hash: boolean;
  * }} opts
  */
-async function analyse({
-	hash,
-	manifest_path,
-	manifest_data,
-	server_manifest,
-	tracked_features,
-	env,
-	remotes,
-	vite_config_file
-}) {
-	/** @type {import('@sveltejs/kit').SSRManifest} */
-	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
-
-	const vite_config = await load_vite_config(vite_config_file);
-	const config = extract_svelte_config(vite_config).kit;
-	const server_root = join(config.outDir, 'output');
-
-	/** @type {import('types').ServerInternalModule} */
-	const internal = await import(pathToFileURL(`${server_root}/server/internal.js`).href);
-
-	// configure `import { building } from '$app/env'` —
-	// essential we do this before analysing the code
-	internal.set_building();
-
-	// set `read` and `manifest`, in case they're used in initialisation
-	internal.set_manifest(manifest);
-	internal.set_read_implementation((file) => createReadableStream(`${server_root}/server/${file}`));
-
-	// `set_env` lives in a separate module that imports the user's `src/env` config. We import it
-	// *after* `set_building()` so that `building`-dependent expressions resolve correctly
-	/** @type {typeof import('__sveltekit/env')} */
-	const { set_env } = await import(pathToFileURL(`${server_root}/server/env.js`).href);
-	set_env(env);
+async function analyse({ vite_config_file, hash }) {
+	const vite = /** @type {typeof import('vite')} */ (await import_peer('vite', process.cwd()));
+	const vite_config = await load_vite_config(vite_config_file, vite, 'serve', {
+		logLevel: 'silent',
+		server: { hmr: false }
+	});
 
 	/** @type {import('types').ServerMetadata} */
 	const metadata = {
 		nodes: [],
 		routes: new Map(),
-		remotes: new Map()
+		remotes: new Map(),
+		should_prerender: hash,
+		has_dynamic_routes_or_remotes: false
 	};
 
-	const nodes = await Promise.all(manifest._.nodes.map((loader) => loader()));
+	const vite_dev_server = await vite.createServer(vite_config);
+	await vite_dev_server.listen();
 
-	// analyse nodes
-	for (const node of nodes) {
-		if (hash && node.universal) {
-			const options = Object.keys(node.universal).filter((o) => o !== 'load');
-			if (options.length > 0) {
-				throw new Error(
-					`Page options are ignored when \`router.type === 'hash'\` (${node.universal_id} has ${options
-						.filter((o) => o !== 'load')
-						.map((o) => `'${o}'`)
-						.join(', ')})`
-				);
-			}
+	try {
+		// initialise the server with a request so that the SSR manifest gets built
+		if (!vite_dev_server.resolvedUrls?.local[0]) {
+			throw new Error('failed to resolve vite dev server url');
 		}
+		await fetch(new URL('/_app/building', vite_dev_server.resolvedUrls?.local[0]));
 
-		metadata.nodes[node.index] = {
-			has_server_load: has_server_load(node),
-			has_universal_load: node.universal?.load !== undefined
-		};
-	}
+		// configure `import { building } from '$app/env'` —
+		// essential we do this before analysing the code
+		const runner = get_runner(vite, vite_dev_server);
+		const internal = /** @type {typeof import('../../runtime/app/env/internal.js')} */ (
+			await runner.import(`${get_runtime_base(vite_config.root)}/app/env/internal.js`)
+		);
+		internal.set_building();
 
-	// analyse routes
-	for (const route of manifest._.routes) {
-		const page =
-			route.page &&
-			analyse_page(
-				route.page.layouts.map((n) => (n === undefined ? n : nodes[n])),
-				nodes[route.page.leaf]
-			);
+		/** @type {{ manifest: import('@sveltejs/kit').SSRManifest }} */
+		// @ts-expect-error we've added `__sveltekit` to the Vite dev server object
+		const { manifest } = vite_dev_server.__sveltekit;
 
-		const endpoint = route.endpoint && analyse_endpoint(route, await route.endpoint());
+		const nodes = await Promise.all(manifest._.nodes.map((loader) => loader()));
 
-		if (page?.prerender && endpoint?.prerender) {
-			throw new Error(`Cannot prerender a route with both +page and +server files (${route.id})`);
-		}
-
-		if (page?.config && endpoint?.config) {
-			for (const key in { ...page.config, ...endpoint.config }) {
-				if (JSON.stringify(page.config[key]) !== JSON.stringify(endpoint.config[key])) {
+		// analyse nodes
+		for (const node of nodes) {
+			if (hash && node.universal) {
+				const options = Object.keys(node.universal).filter((o) => o !== 'load');
+				if (options.length > 0) {
 					throw new Error(
-						`Mismatched route config for ${route.id} — the +page and +server files must export the same config, if any`
+						`Page options are ignored when \`router.type === 'hash'\` (${node.universal_id} has ${options
+							.filter((o) => o !== 'load')
+							.map((o) => `'${o}'`)
+							.join(', ')})`
 					);
 				}
 			}
-		}
 
-		const route_config = page?.config ?? endpoint?.config ?? {};
-		const prerender = page?.prerender ?? endpoint?.prerender;
-
-		if (prerender !== true) {
-			for (const feature of list_features(
-				route,
-				manifest_data,
-				server_manifest,
-				tracked_features
-			)) {
-				check_feature(route.id, route_config, feature, config.adapter);
+			// load the component module so that Vite processes imported remote functions
+			try {
+				await node.component?.();
+			} catch {
+				// ignore errors from loading the component code; we just want Vite
+				// to process the modules through its pipeline
 			}
+
+			if (node.server?.actions) {
+				metadata.has_dynamic_routes_or_remotes = true;
+			}
+
+			metadata.nodes[node.index] = {
+				has_server_load: has_server_load(node),
+				has_universal_load: node.universal?.load !== undefined
+			};
 		}
 
-		const page_methods = page?.methods ?? [];
-		const api_methods = endpoint?.methods ?? [];
-		const entries = page?.entries ?? endpoint?.entries;
+		// analyse routes
+		for (const route of manifest._.routes) {
+			const page =
+				route.page &&
+				analyse_page(
+					route.page.layouts.map((n) => (n === undefined ? n : nodes[n])),
+					nodes[route.page.leaf]
+				);
 
-		metadata.routes.set(route.id, {
-			config: route_config,
-			methods: Array.from(new Set([...page_methods, ...api_methods])),
-			page: {
-				methods: page_methods
-			},
-			api: {
-				methods: api_methods
-			},
-			prerender,
-			entries:
-				entries && (await entries()).map((entry_object) => resolve_route(route.id, entry_object))
-		});
-	}
+			const endpoint = route.endpoint && analyse_endpoint(route, await route.endpoint());
 
-	// analyse remotes
-	for (const remote of remotes) {
-		const loader = manifest._.remotes[remote.hash];
-		const { default: functions } = await loader();
+			if (page?.prerender && endpoint?.prerender) {
+				throw new Error(`Cannot prerender a route with both +page and +server files (${route.id})`);
+			}
 
-		const exports = new Map();
+			if (page?.config && endpoint?.config) {
+				for (const key in { ...page.config, ...endpoint.config }) {
+					if (JSON.stringify(page.config[key]) !== JSON.stringify(endpoint.config[key])) {
+						throw new Error(
+							`Mismatched route config for ${route.id} — the +page and +server files must export the same config, if any`
+						);
+					}
+				}
+			}
 
-		for (const name in functions) {
-			const internals = /** @type {import('types').RemoteInternals} */ (functions[name].__);
-			const type = internals.type;
+			const route_config = page?.config ?? endpoint?.config ?? {};
+			const prerender = page?.prerender ?? endpoint?.prerender;
 
-			exports.set(name, {
-				type,
-				dynamic: type !== 'prerender' || internals.dynamic
+			if (prerender !== undefined || prerender !== false) {
+				metadata.should_prerender = true;
+			}
+
+			const page_methods = page?.methods ?? [];
+			const api_methods = endpoint?.methods ?? [];
+			const entries = page?.entries ?? endpoint?.entries;
+
+			if (
+				(page?.methods.includes('GET') && page.ssr && page.prerender !== true) || // non-prerendered SSR-ed page
+				(api_methods.length && endpoint?.prerender !== true) // non-prerendered endpoint
+			) {
+				metadata.has_dynamic_routes_or_remotes = true;
+			}
+
+			metadata.routes.set(route.id, {
+				config: route_config,
+				methods: Array.from(new Set([...page_methods, ...api_methods])),
+				page: {
+					methods: page_methods
+				},
+				api: {
+					methods: api_methods
+				},
+				prerender,
+				entries:
+					entries && (await entries()).map((entry_object) => resolve_route(route.id, entry_object))
 			});
 		}
 
-		metadata.remotes.set(remote.hash, exports);
-	}
+		// analyse remotes
+		for (const [remote_hash, loader] of Object.entries(manifest._.remotes)) {
+			const { default: functions } = await loader();
 
-	return { metadata };
+			const exports = new Map();
+
+			for (const name in functions) {
+				const internals = /** @type {import('types').RemoteInternals} */ (functions[name].__);
+				const type = internals.type;
+				const dynamic = type !== 'prerender' || internals.dynamic;
+
+				exports.set(name, {
+					type,
+					dynamic
+				});
+
+				if (internals.type === 'prerender') {
+					metadata.should_prerender = true;
+				}
+
+				if (dynamic) {
+					metadata.has_dynamic_routes_or_remotes = true;
+				}
+			}
+
+			metadata.remotes.set(remote_hash, exports);
+		}
+
+		await vite_dev_server.close();
+
+		return { metadata };
+	} finally {
+		await vite_dev_server.close();
+	}
 }
 
 /**
@@ -216,60 +231,7 @@ function analyse_page(layouts, leaf) {
 		config: nodes.get_config(),
 		entries: leaf.universal?.entries ?? leaf.server?.entries,
 		methods,
-		prerender: nodes.prerender()
+		prerender: nodes.prerender(),
+		ssr: nodes.ssr()
 	};
-}
-
-/**
- * @param {import('types').SSRRoute} route
- * @param {import('types').ManifestData} manifest_data
- * @param {import('vite').Manifest} server_manifest
- * @param {Record<string, string[]>} tracked_features
- */
-function list_features(route, manifest_data, server_manifest, tracked_features) {
-	const features = new Set();
-
-	const route_data = /** @type {import('types').RouteData} */ (
-		manifest_data.routes.find((r) => r.id === route.id)
-	);
-
-	const visited = new Set();
-	/** @param {string} id */
-	function visit(id) {
-		if (visited.has(id)) return;
-		visited.add(id);
-
-		const chunk = server_manifest[id];
-		if (!chunk) return;
-
-		if (chunk.file in tracked_features) {
-			for (const feature of tracked_features[chunk.file]) {
-				features.add(feature);
-			}
-		}
-
-		if (chunk.imports) {
-			for (const id of chunk.imports) {
-				visit(id);
-			}
-		}
-	}
-
-	let page_node = route_data?.leaf;
-	while (page_node) {
-		if (page_node.server) visit(page_node.server);
-		page_node = page_node.parent ?? null;
-	}
-
-	if (route_data.endpoint) {
-		visit(route_data.endpoint.file);
-	}
-
-	if (manifest_data.hooks.server) {
-		// TODO if hooks.server.js imports `read`, it will be in the entry chunk
-		// we don't currently account for that case
-		visit(manifest_data.hooks.server);
-	}
-
-	return Array.from(features);
 }

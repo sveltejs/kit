@@ -147,9 +147,10 @@ export function create_builder({
 			const fallback = await generate_fallback({
 				manifest_path,
 				env,
-				out_dir: config.kit.outDir,
+				out: `${config.kit.outDir}/output`,
 				origin: config.kit.paths.origin || 'http://sveltekit-prerender',
-				assets: config.kit.files.assets
+				assets: config.kit.files.assets,
+				vite_config_file: /** @type {string} */ (vite_config.configFile)
 			});
 
 			if (existsSync(dest)) {

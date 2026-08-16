@@ -1,7 +1,7 @@
 /** @import { Config, KitConfig } from '@sveltejs/kit' */
 /** @import { Options, SvelteConfig } from '@sveltejs/vite-plugin-svelte' */
 /** @import { ValidatedConfig } from 'types' */
-/** @import { ResolvedConfig } from 'vite' */
+/** @import { InlineConfig, ResolvedConfig } from 'vite' */
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
@@ -121,11 +121,17 @@ export function load_error_page(config) {
 /**
  * @param {string} [config]
  * @param {typeof import('vite')} [vite]
+ * @param {'build' | 'serve'} [command]
+ * @param {InlineConfig} [inline_config]
  */
-export async function load_vite_config(config, vite) {
+export async function load_vite_config(config, vite, command = 'build', inline_config) {
 	vite ??= /** @type {typeof import('vite')} */ (await import_peer('vite', process.cwd()));
 
-	return vite.resolveConfig({ configFile: config }, 'build', process.env.MODE ?? 'production');
+	return vite.resolveConfig(
+		{ configFile: config, ...inline_config },
+		command,
+		process.env.MODE ?? 'production'
+	);
 }
 
 /**

@@ -271,7 +271,7 @@ export async function render_response({
 		for (const url of node.stylesheets) stylesheets.add(url);
 		for (const url of node.fonts) fonts.add(url);
 
-		if (node.inline_styles && !client?.inline) {
+		if (node.inline_styles && (!client || !client.inline)) {
 			Object.entries(await node.inline_styles()).forEach(([filename, css]) => {
 				if (typeof css === 'string') {
 					inline_styles.set(filename, css);
@@ -297,18 +297,18 @@ export async function render_response({
 		return `${assets}/${path}`;
 	};
 
-	const style = client?.inline
+	const inline_style_content = client?.inline
 		? client.inline?.style
 		: Array.from(inline_styles.values()).join('\n');
 
-	if (style) {
+	if (inline_style_content) {
 		// We always inline all styles to avoid FOUC during development.
 		// Once that's accomplished, we find and remove the style node using the
 		// `data-sveltekit` attribute once CSR kicks in
 		const attributes = __SVELTEKIT_DEV__ ? ['data-sveltekit'] : [];
 		if (csp.style_needs_nonce) attributes.push(`nonce="${csp.nonce}"`);
-		csp.add_style(style);
-		head.add_style(style, attributes);
+		csp.add_style(inline_style_content);
+		head.add_style(inline_style_content, attributes);
 	}
 
 	/**

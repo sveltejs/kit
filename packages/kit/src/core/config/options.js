@@ -1,6 +1,7 @@
 /** @import { SvelteConfig } from '@sveltejs/vite-plugin-svelte' */
 /** @import { ValidatedKitConfig } from 'types' */
 /** @import { Validator } from './types.js' */
+import process from 'node:process';
 import { styleText } from 'node:util';
 
 const directives = object({
@@ -296,7 +297,10 @@ export const validate_kit_options = object({
 	),
 
 	version: object({
-		name: string(Date.now().toString()),
+		// Date.now() returns a different value each time the config is loaded
+		// so we try to preserve the initial value in forked processes by passing it
+		// through environment variables
+		name: string((process.env.SVELTEKIT_APP_VERSION ??= Date.now().toString())),
 		pollInterval: number(3_600_000)
 	})
 });

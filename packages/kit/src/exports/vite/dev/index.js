@@ -338,6 +338,8 @@ export async function dev(
 				}
 			}
 		};
+		// @ts-expect-error we're adding `__sveltekit` to the Vite dev server object
+		vite_dev_server.__sveltekit = { manifest };
 	}
 
 	/** @param {Error} error */
@@ -486,11 +488,29 @@ export async function dev(
 		next();
 	});
 
-	const env = vite.loadEnv(vite_config.mode, svelte_config.kit.env.dir, '');
-	const emulator = await svelte_config.kit.adapter?.emulate?.();
-
 	/** @type {Promise<void> | undefined} */
 	let init_manifest;
+
+	vite_dev_server.middlewares.stack.unshift({
+		route: '',
+		/** @type {import('vite').Connect.NextHandleFunction} */
+		handle: async (req, res, next) => {
+			// Vite throws a Cannot read properties of undefined (reading 'wrapDynamicImport')
+			// if you try to run ssr.runner.import before the server has started so
+			// we do it inside here to avoid that
+			await (init_manifest ??= update_manifest());
+
+			if (req.url?.endsWith('/_app/building')) {
+				res.end();
+				return;
+			}
+
+			next();
+		}
+	});
+
+	const env = vite.loadEnv(vite_config.mode, svelte_config.kit.env.dir, '');
+	const emulator = await svelte_config.kit.adapter?.emulate?.();
 
 	return () => {
 		const serve_static_middleware = vite_dev_server.middlewares.stack.find(
@@ -503,11 +523,6 @@ export async function dev(
 		remove_static_middlewares(vite_dev_server.middlewares);
 
 		vite_dev_server.middlewares.use(async (req, res) => {
-			// Vite throws a Cannot read properties of undefined (reading 'wrapDynamicImport')
-			// if you try to run ssr.runner.import before the server has started so
-			// we do it inside here to avoid that
-			await (init_manifest ??= update_manifest());
-
 			// Vite's base middleware strips out the base path. Restore it
 			const original_url = req.url;
 			req.url = req.originalUrl;
