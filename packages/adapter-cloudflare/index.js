@@ -225,13 +225,31 @@ function cloudflare_vite_plugins(config_path) {
 		{
 			name: 'vite-plugin-adapter-cloudflare-disable-workers-build',
 			apply: 'build',
-			config(user_config) {
+			config(config) {
 				// We need to disable @cloudflare/vite-plugin's buildApp hook,
 				// which is set here: https://github.com/cloudflare/workers-sdk/blob/main/packages/vite-plugin-cloudflare/src/plugins/config.ts#L88
 				// and does not run if config.builder.buildApp is set.
-				if (!user_config.builder?.buildApp) {
-					user_config.builder ??= {};
-					user_config.builder.buildApp = async () => {};
+				if (!config.builder?.buildApp) {
+					config.builder ??= {};
+					config.builder.buildApp = async () => {};
+				}
+				config.environments ??= {};
+				config.environments.ssr ??= {};
+				config.environments.ssr.build ??= {};
+				config.environments.ssr.build.rolldownOptions ??= {};
+				const input = config.environments.ssr.build.rolldownOptions.input;
+				if (typeof input === 'object' && 'index' in input) {
+					input.server = input.index;
+					delete input.index;
+				}
+			},
+			resolveId: {
+				filter: { id: [exactRegex('SERVER'), exactRegex('MANIFEST')] },
+				handler(id, importer, options) {
+					return {
+						id: `./${id.toLowerCase()}.js`,
+						external: true
+					};
 				}
 			},
 			configResolved(config) {
@@ -240,18 +258,26 @@ function cloudflare_vite_plugins(config_path) {
 				);
 				const options = plugin?.api?.options;
 				if (!options) throw new Error('vite-plugin-sveltekit-setup not found');
-				out_dir = path.resolve(process.cwd(), options.kit.outDir);
+				out_dir = path.resolve(process.cwd(), options.outDir);
 			}
 		},
 		...cloudflare({
 			configPath: config_path,
+			viteEnvironment: {
+				name: 'ssr'
+			},
 			config: (user_config) => {
+				if (
+					!user_config.compatibility_flags.includes('nodejs_compat') &&
+					!user_config.compatibility_flags.includes('nodejs_als')
+				) {
+					user_config.compatibility_flags.push('nodejs_als');
+				}
 				const worker_contents = fs
 					.readFileSync(`${files}/worker.js`, 'utf8')
-					.replace('SERVER', `../output/server/index.js`)
-					.replace('MANIFEST', '../cloudflare-tmp/manifest.js')
 					.replace('ASSETS', user_config.assets?.binding ?? 'ASSETS');
-				const worker_out = `${out_dir}/cloudflare/worker.js`;
+				const worker_out = `${out_dir}/cloudflare-tmp/worker.js`;
+				fs.mkdirSync(path.dirname(worker_out), { recursive: true });
 				fs.writeFileSync(worker_out, worker_contents);
 				user_config.main = worker_out;
 			}
