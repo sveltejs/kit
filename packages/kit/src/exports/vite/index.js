@@ -15,7 +15,8 @@ import { runtime_directory, logger, get_global_name } from '../../core/utils.js'
 import { dev } from './dev/index.js';
 import { preview } from './preview/index.js';
 import {
-	enforced_config,
+	clean_id,
+	error_for_missing_config,
 	get_config_aliases,
 	is_remote_module,
 	remote_module_pattern,

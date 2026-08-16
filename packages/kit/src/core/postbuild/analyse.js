@@ -1,4 +1,5 @@
 import process from 'node:process';
+import { createReadableStream } from '@sveltejs/kit/node';
 import { validate_server_exports } from '../../utils/exports.js';
 import { load_vite_config } from '../config/index.js';
 import { forked } from '../../utils/fork.js';
@@ -8,16 +9,18 @@ import { PageNodes } from '../../utils/page_nodes.js';
 import { get_runner } from '../../runner.js';
 import { get_runtime_base } from '../utils.js';
 import { import_peer } from '../../utils/import.js';
+import { from_fs } from '../../utils/vite.js';
 
 export default forked(import.meta.url, analyse);
 
 /**
  * @param {{
- *   vite_config_file: string | undefined;
  *   hash: boolean;
+ *   env: Record<string, string>;
+ *   vite_config_file: string | undefined;
  * }} opts
  */
-async function analyse({ vite_config_file, hash }) {
+async function analyse({ hash, env, vite_config_file }) {
 	const vite = /** @type {typeof import('vite')} */ (await import_peer('vite', process.cwd()));
 	const vite_config = await load_vite_config(vite_config_file, vite, 'serve', {
 		logLevel: 'silent',
@@ -30,7 +33,7 @@ async function analyse({ vite_config_file, hash }) {
 		routes: new Map(),
 		remotes: new Map(),
 		should_prerender: hash,
-		has_dynamic_routes_or_remotes: false
+		has_dynamic_server_routes_or_remotes: false
 	};
 
 	const vite_dev_server = await vite.createServer(vite_config);
@@ -46,14 +49,31 @@ async function analyse({ vite_config_file, hash }) {
 		// configure `import { building } from '$app/env'` —
 		// essential we do this before analysing the code
 		const runner = get_runner(vite, vite_dev_server);
-		const internal = /** @type {typeof import('../../runtime/app/env/server.js')} */ (
-			await runner.import(`${get_runtime_base(vite_config.root)}/app/env/server.js`)
+		const runtime_base = get_runtime_base(vite_config.root);
+
+		const { set_building } = /** @type {typeof import('../../runtime/app/env/server.js')} */ (
+			await runner.import(`${runtime_base}/app/env/server.js`)
 		);
-		internal.set_building();
+		set_building();
+
+		// set `read` and `manifest`, in case they're used in initialisation
+		const { set_read_implementation, set_manifest } =
+			/** @type {typeof import('../../runtime/server/internal.js')} */ (
+				await runner.import(`${runtime_base}/server/internal.js`)
+			);
+		set_read_implementation((file) => createReadableStream(from_fs(file)));
 
 		/** @type {{ manifest: import('types').SSRManifest }} */
 		// @ts-expect-error we've added `__sveltekit` to the Vite dev server object
 		const { manifest } = vite_dev_server.__sveltekit;
+		set_manifest(manifest);
+
+		// `set_env` lives in a separate module that imports the user's `src/env` config. We import it
+		// *after* `set_building()` so that `building`-dependent expressions resolve correctly
+		const { set_env } = /** @type {import('__sveltekit/env')} */ (
+			await runner.import('__sveltekit/env')
+		);
+		set_env(env);
 
 		const nodes = await Promise.all(manifest.nodes.map((loader) => loader()));
 
@@ -80,7 +100,7 @@ async function analyse({ vite_config_file, hash }) {
 			}
 
 			if (node.server?.actions) {
-				metadata.has_dynamic_routes_or_remotes = true;
+				metadata.has_dynamic_server_routes_or_remotes = true;
 			}
 
 			metadata.nodes[node.index] = {
@@ -129,7 +149,7 @@ async function analyse({ vite_config_file, hash }) {
 				(page?.methods.includes('GET') && page.ssr && page.prerender !== true) || // non-prerendered SSR-ed page
 				(api_methods.length && endpoint?.prerender !== true) // non-prerendered endpoint
 			) {
-				metadata.has_dynamic_routes_or_remotes = true;
+				metadata.has_dynamic_server_routes_or_remotes = true;
 			}
 
 			metadata.routes.set(route.id, {
@@ -168,7 +188,7 @@ async function analyse({ vite_config_file, hash }) {
 				}
 
 				if (dynamic) {
-					metadata.has_dynamic_routes_or_remotes = true;
+					metadata.has_dynamic_server_routes_or_remotes = true;
 				}
 			}
 
