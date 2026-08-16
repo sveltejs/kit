@@ -70,7 +70,7 @@ async function analyse({ hash, env, vite_config_file }) {
 
 		// `set_env` lives in a separate module that imports the user's `src/env` config. We import it
 		// *after* `set_building()` so that `building`-dependent expressions resolve correctly
-		const { set_env } = /** @type {import('__sveltekit/env')} */ (
+		const { set_env } = /** @type {typeof import('__sveltekit/env')} */ (
 			await runner.import('__sveltekit/env')
 		);
 		set_env(env);
