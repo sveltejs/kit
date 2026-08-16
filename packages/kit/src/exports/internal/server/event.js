@@ -71,14 +71,34 @@ export function try_get_request_store() {
  * @param {() => T} fn
  */
 export function with_request_store(store, fn) {
-	try {
-		sync_store = store;
-		return als ? als.run(store, fn) : fn();
-	} finally {
-		// Since AsyncLocalStorage is not working in webcontainers, we don't reset `sync_store`
-		// and handle only one request at a time in `src/runtime/server/index.js`.
-		if (!IN_WEBCONTAINER) {
-			sync_store = null;
-		}
+	const previous = sync_store;
+	sync_store = store;
+
+	const result = als ? als.run(store, fn) : fn();
+
+	if (!IN_WEBCONTAINER) {
+		// In Node.js, AsyncLocalStorage tracks async context automatically.
+		// Reset sync_store so async code that reads try_get_request_store() falls
+		// through to als.getStore() which has the correct value for each async task.
+		sync_store = null;
+		return result;
 	}
+
+	// WebContainer: AsyncLocalStorage is unavailable; sync_store is the only context
+	// carrier. The previous implementation left sync_store permanently set to `store`
+	// because the try/finally fired when fn() *returned* the Promise — not when it
+	// *resolved*. Any code that ran after `await fn()` would still observe `store`'s
+	// state (e.g. is_in_remote_query: true) instead of the outer request's store,
+	// causing spurious "Cannot access event.url in a query" errors.
+	//
+	// Restore `previous` once fn() settles. Guard with `sync_store === store` so a
+	// nested with_request_store call that already moved sync_store forward isn't clobbered.
+	if (result instanceof Promise) {
+		return /** @type {T} */ (result.finally(() => {
+			if (sync_store === store) sync_store = previous;
+		}));
+	}
+
+	sync_store = previous;
+	return result;
 }
