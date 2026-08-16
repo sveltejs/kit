@@ -89,8 +89,7 @@ export async function render_response({
 	// TODO if we add a client entry point one day, we will need to include inline_styles with the entry, otherwise stylesheets will be linked even if they are below inlineStyleThreshold
 	const inline_styles = new Map();
 
-	// TODO `svelte/server` should expose `RenderOutput`
-	/** @type {{ head: string, body: string, hashes: { script: string[] } }} */
+	/** @type {Omit<Awaited<ReturnType<typeof render>>, 'html'>} */
 	let rendered;
 
 	const form_value =
