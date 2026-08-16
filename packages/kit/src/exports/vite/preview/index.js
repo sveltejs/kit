@@ -26,6 +26,7 @@ export async function preview(vite, vite_config, svelte_config) {
 
 	const etag = `"${Date.now()}"`;
 
+	// TODO: don't expect the server output to always be built
 	const dir = join(svelte_config.outDir, 'output/server');
 
 	if (!fs.existsSync(`${dir}/manifest.js`)) {

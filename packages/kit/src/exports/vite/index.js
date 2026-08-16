@@ -1594,9 +1594,6 @@ function kit({ svelte_config }) {
 
 			let initial_build_environment = builder.environments.ssr;
 
-			const skip_client_build = manifest_data.nodes.every(
-				(node) => node.page_options?.csr === false
-			);
 			// check if an error page needs to be rendered on the server.
 			// Error pages aren't included in the SSR manifest's routes list
 			const has_ssr_node = manifest_data.nodes.some((node) =>
@@ -1641,6 +1638,10 @@ function kit({ svelte_config }) {
 				let server_chunks = null;
 				/** @type {Rolldown.RolldownOutput['output'] | null} */
 				let client_chunks = null;
+
+				const skip_client_build = manifest_data.nodes.every(
+					(node) => node.page_options?.csr === false
+				);
 
 				if (skip_client_build) {
 					server_chunks = initial_build_chunks;
@@ -1844,7 +1845,8 @@ function kit({ svelte_config }) {
 						JSON.parse(read(`${ssr_out_dir}/.vite/manifest.json`))
 					);
 
-					if (!skip_client_build) {
+					// server build may not have any assets e.g. if no css was used
+					if (fs.existsSync(server_assets)) {
 						// We use `build.ssrEmitAssets` so that asset URLs created from
 						// imports in server-only modules correspond to files in the build,
 						// but we don't want to copy over CSS imports as these are already
