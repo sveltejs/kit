@@ -45,7 +45,7 @@ const SPECIAL_HASHLINKS = new Set(['', 'top']);
  *   assets: string;
  *   prerendered: Prerendered;
  *   prerender_map: PrerenderMap;
- *   client: string;
+ *   client: string | null;
  * }} opts
  */
 async function prerender({
@@ -628,7 +628,7 @@ async function prerender({
 				out,
 				env
 			})
-		: get_ssr_vite_server({ vite, vite_config_file, env, client }));
+		: get_ssr_vite_server({ vite, vite_config_file, env, client: /** @type {string} */ (client) }));
 
 	try {
 		/** @type {Array<import('types').RemotePrerenderInternals>} */

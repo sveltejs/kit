@@ -13,15 +13,15 @@ import { get_runner } from '../../runner.js';
 export default forked(import.meta.url, generate_fallback);
 
 /**
- * @param {{
- *   manifest_path: string | null;
- *   env: Record<string, string>
- *   out: string;
- *   origin: string;
- *   assets: string;
- *   vite_config_file: string;
- *   client: string;
- * }} opts
+ * @param {object} opts
+ * @param {string | null} opts.manifest_path
+ * @param {Record<string, string>} opts.env
+ * @param {string} opts.out
+ * @param {string} opts.origin
+ * @param {string} opts.assets
+ * @param {string} opts.vite_config_file
+ * @param {string | null} opts.client
+ * @returns {Promise<string>}
  */
 async function generate_fallback({
 	manifest_path,
@@ -34,7 +34,11 @@ async function generate_fallback({
 }) {
 	const { server, vite_dev_server } = manifest_path
 		? await get_ssr_build_server({ manifest_path, out, env })
-		: await get_ssr_vite_server({ vite_config_file, env, client });
+		: await get_ssr_vite_server({
+				vite_config_file,
+				env,
+				client: /** @type {string} */ (client)
+			});
 
 	try {
 		const response = await server.respond(new Request(origin + '/[fallback]'), {
