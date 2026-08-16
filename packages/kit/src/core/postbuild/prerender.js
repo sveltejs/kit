@@ -44,7 +44,7 @@ const SPECIAL_HASHLINKS = new Set(['', 'top']);
  *   assets: string;
  *   prerendered: Prerendered;
  *   prerender_map: PrerenderMap;
- *   client: string;
+ *   client: string | null;
  * }} opts
  */
 async function prerender({
@@ -152,7 +152,7 @@ async function prerender({
 	const vite = /** @type {typeof import('vite')} */ (await import_peer('vite', process.cwd()));
 	const vite_config = await load_vite_config(vite_config_file, vite);
 
-	const config = extract_svelte_config(vite_config).kit;
+	const config = extract_svelte_config(vite_config);
 
 	const emulator = await config.adapter?.emulate?.();
 
@@ -627,7 +627,7 @@ async function prerender({
 				out,
 				env
 			})
-		: get_ssr_vite_server({ vite, vite_config_file, env, client }));
+		: get_ssr_vite_server({ vite, vite_config_file, env, client: /** @type {string} */ (client) }));
 
 	try {
 		/** @type {Array<import('types').RemotePrerenderInternals>} */
@@ -779,8 +779,8 @@ async function get_ssr_vite_server({ vite, vite_config_file, env, client }) {
 		const runtime_base = get_runtime_base(vite_config.root);
 
 		const runner = get_runner(vite, vite_dev_server);
-		const env_internal = /** @type {typeof import('../../runtime/app/env/internal.js')} */ (
-			await runner.import(`${runtime_base}/app/env/internal.js`)
+		const env_internal = /** @type {typeof import('../../runtime/app/env/server.js')} */ (
+			await runner.import(`${runtime_base}/app/env/server.js`)
 		);
 
 		// configure `import { building } from `$app/env` —

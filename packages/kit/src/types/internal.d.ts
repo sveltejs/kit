@@ -71,6 +71,7 @@ export interface BuildData {
 	manifest_data: ManifestData;
 	out_dir: string;
 	service_worker: string | null;
+	/** populates the SSRManifest's _.client property */
 	client: {
 		/** Path to the client entry point. */
 		start: string;

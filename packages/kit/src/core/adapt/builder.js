@@ -104,6 +104,9 @@ export function create_builder({
 		return facade;
 	});
 
+	/** @type {string | null} */
+	let client = null;
+
 	return {
 		log,
 		rimraf: (dir) => rmSync(dir, { force: true, recursive: true }),
@@ -140,8 +143,15 @@ export function create_builder({
 		},
 
 		async generateFallback(dest) {
-			const manifest_path = `${config.outDir}/output/server/manifest-full.js`;
+			const has_server_build = !!Object.keys(build_data.server_manifest).length;
+			const manifest_path = has_server_build
+				? `${config.outDir}/output/server/manifest-full.js`
+				: null;
 			const env = loadEnv(vite_config.mode, config.env.dir, '');
+
+			if (!has_server_build) {
+				client ??= devalue.stringify(build_data.client);
+			}
 
 			const fallback = await generate_fallback({
 				manifest_path,
@@ -149,7 +159,8 @@ export function create_builder({
 				out: `${config.outDir}/output`,
 				origin: config.paths.origin || 'http://sveltekit-prerender',
 				assets: config.files.assets,
-				vite_config_file: /** @type {string} */ (vite_config.configFile)
+				vite_config_file: /** @type {string} */ (vite_config.configFile),
+				client
 			});
 
 			if (existsSync(dest)) {
