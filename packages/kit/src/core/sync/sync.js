@@ -26,8 +26,6 @@ export function create(config, root, manifest_data) {
 	write_server(config, output, root);
 	write_all_types(config, manifest_data, root);
 	write_app_types(config, manifest_data, root);
-
-	return { manifest_data };
 }
 
 /**
