@@ -43,6 +43,7 @@ const SPECIAL_HASHLINKS = new Set(['', 'top']);
  *   is_tty: boolean | undefined;
  *   origin: string;
  *   assets: string;
+ *   base: string;
  *   prerendered: Prerendered;
  *   prerender_map: PrerenderMap;
  *   client: string | null;
@@ -61,7 +62,8 @@ async function prerender({
 	assets,
 	prerendered,
 	prerender_map,
-	client
+	client,
+	base
 }) {
 	const throw_handled = () => {
 		throw new Error('__handled__');
@@ -139,7 +141,7 @@ async function prerender({
 			client
 		});
 
-		const file = output_filename('/', true);
+		const file = output_filename(base, '/', true);
 		const dest = `${out}/prerendered/pages/${file}`;
 
 		mkdirSync(dirname(dest), { recursive: true });
@@ -220,20 +222,6 @@ async function prerender({
 	);
 
 	const q = queue(config.prerender.concurrency);
-
-	/**
-	 * @param {string} path
-	 * @param {boolean} is_html
-	 */
-	function output_filename(path, is_html) {
-		const file = path.slice(config.paths.base.length + 1) || 'index.html';
-
-		if (is_html && !file.endsWith('.html')) {
-			return file + (file.endsWith('/') ? 'index.html' : '.html');
-		}
-
-		return file;
-	}
 
 	const files = new Set(walk(`${out}/client`));
 	files.add(`${config.appDir}/env.js`);
@@ -520,7 +508,7 @@ async function prerender({
 			);
 		}
 
-		const file = output_filename(decoded, is_html);
+		const file = output_filename(base, decoded, is_html);
 		const dest = `${config.outDir}/output/prerendered/${category}/${file}`;
 
 		if (written.has(file)) return;
@@ -814,4 +802,20 @@ async function get_ssr_vite_server({ vite, vite_config_file, env, client }) {
 		await vite_dev_server.close();
 		throw error;
 	}
+}
+
+/**
+ * @param {string} base
+ * @param {string} path
+ * @param {boolean} is_html
+ * @returns {string}
+ */
+function output_filename(base, path, is_html) {
+	const file = path.slice(base.length + 1) || 'index.html';
+
+	if (is_html && !file.endsWith('.html')) {
+		return file + (file.endsWith('/') ? 'index.html' : '.html');
+	}
+
+	return file;
 }

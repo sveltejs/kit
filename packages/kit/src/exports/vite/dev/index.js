@@ -280,8 +280,16 @@ export async function dev(
 							await find_deps(vite_dev_server, module_node, deps);
 						}
 
-						/** @type {Record<string, string>} */
-						const styles = {};
+						if (node.universal) {
+							if (node.page_options?.ssr === false || svelte_config.router.type === 'hash') {
+								result.universal = /** @type {UniversalNode} */ (node.page_options);
+							} else {
+								// TODO: explain why the file was loaded on the server if we fail to load it
+								const { module, module_node } = await resolve(node.universal);
+								module_nodes.push(module_node);
+								result.universal = module;
+							}
+						}
 
 						for (const dep of deps) {
 							if (vite.isCSSRequest(dep.url) && !vite_css_query_regex.test(dep.url)) {
