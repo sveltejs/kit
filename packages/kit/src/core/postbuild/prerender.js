@@ -789,6 +789,18 @@ async function get_ssr_vite_server({ vite, vite_config_file, env, client }) {
 		/** @type {{ manifest: import('@sveltejs/kit').SSRManifest }} */
 		// @ts-expect-error we've added `__sveltekit` to the Vite dev server object
 		const { manifest } = vite_dev_server.__sveltekit;
+
+		const nodes = await Promise.all(manifest._.nodes.map((loader) => loader()));
+
+		for (const node of nodes) {
+			try {
+				await node.component?.();
+			} catch {
+				// ignore errors from loading the component code; we just want Vite
+				// to process the modules through its pipeline
+			}
+		}
+
 		manifest._.client = devalue.parse(client);
 
 		const server = new Server(manifest);
