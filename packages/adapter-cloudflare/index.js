@@ -273,13 +273,12 @@ function cloudflare_vite_plugins(config_path) {
 				) {
 					user_config.compatibility_flags.push('nodejs_als');
 				}
-				const worker_contents = fs
-					.readFileSync(`${files}/worker.js`, 'utf8')
-					.replace('ASSETS', user_config.assets?.binding ?? 'ASSETS');
-				const worker_out = `${out_dir}/cloudflare-tmp/worker.js`;
-				fs.mkdirSync(path.dirname(worker_out), { recursive: true });
-				fs.writeFileSync(worker_out, worker_contents);
-				user_config.main = worker_out;
+				if (!user_config.main) {
+					user_config.main = fileURLToPath(import.meta.resolve('./files/worker.js'));
+				}
+				user_config.assets ??= {};
+				user_config.assets.binding ??= 'ASSETS';
+				user_config.assets.directory = `${out_dir}/output/client`;
 			}
 			// for now, disable all cloudflare plugins during dev & preview
 		}).map((p) => {
