@@ -1,8 +1,9 @@
+/** @import { Emulator, SSRManifest } from '@sveltejs/kit' */
 /** @import { NextHandleFunction } from 'connect' */
 /** @import { PreviewServer, ResolvedConfig } from 'vite' */
-/** @import { ValidatedConfig, ServerInternalModule, ServerModule } from 'types' */
+/** @import { ValidatedConfig, ServerInternalModule, ServerModule, InternalServer } from 'types' */
 import fs from 'node:fs';
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { lookup } from '../../../utils/mime.js';
 import sirv from 'sirv';
@@ -27,43 +28,52 @@ export async function preview(vite, vite_config, svelte_config) {
 	const etag = `"${Date.now()}"`;
 
 	// TODO: don't expect the server output to always be built
-	const dir = join(svelte_config.outDir, 'output/server');
+	const server_output_dir = join(svelte_config.outDir, 'output/server');
 
-	if (!fs.existsSync(`${dir}/manifest.js`)) {
-		throw stackless(`Server files not found at ${dir}, did you run \`build\` first?`);
+	/** @type {{ server: InternalServer; manifest: SSRManifest; emulator: Emulator; } | null} */
+	let ssr = null;
+
+	if (fs.existsSync(server_output_dir)) {
+		if (!fs.existsSync(`${server_output_dir}/manifest.js`)) {
+			throw stackless(
+				`Server files not found at ${relative('.', server_output_dir)}, did you run \`build\` first?`
+			);
+		}
+
+		const instrumentation = join(server_output_dir, 'instrumentation.server.js');
+		if (fs.existsSync(instrumentation)) {
+			await import(pathToFileURL(instrumentation).href);
+		}
+
+		/** @type {ServerInternalModule} */
+		const { set_assets } = await import(pathToFileURL(join(server_output_dir, 'internal.js')).href);
+
+		/** @type {ServerModule} */
+		const { Server } = await import(pathToFileURL(join(server_output_dir, 'index.js')).href);
+
+		const { manifest } = await import(pathToFileURL(join(server_output_dir, 'manifest.js')).href);
+
+		set_assets(assets);
+
+		const server = new Server(manifest);
+
+		try {
+			await server.init({
+				env: loadEnv(vite_config.mode, svelte_config.env.dir, ''),
+				read: (file) => createReadableStream(`${server_output_dir}/${file}`)
+			});
+		} catch (error) {
+			// Vite erases the error message when starting the preview server so we store
+			// it in the stack instead. This ensures errors thrown using `stackless`
+			// are still readable
+			if (error instanceof Error) error.stack = error.message;
+			throw error;
+		}
+
+		const emulator = await svelte_config.adapter?.emulate?.();
+
+		ssr = { server, manifest, emulator };
 	}
-
-	const instrumentation = join(dir, 'instrumentation.server.js');
-	if (fs.existsSync(instrumentation)) {
-		await import(pathToFileURL(instrumentation).href);
-	}
-
-	/** @type {ServerInternalModule} */
-	const { set_assets } = await import(pathToFileURL(join(dir, 'internal.js')).href);
-
-	/** @type {ServerModule} */
-	const { Server } = await import(pathToFileURL(join(dir, 'index.js')).href);
-
-	const { manifest } = await import(pathToFileURL(join(dir, 'manifest.js')).href);
-
-	set_assets(assets);
-
-	const server = new Server(manifest);
-
-	try {
-		await server.init({
-			env: loadEnv(vite_config.mode, svelte_config.env.dir, ''),
-			read: (file) => createReadableStream(`${dir}/${file}`)
-		});
-	} catch (error) {
-		// Vite erases the error message when starting the preview server so we store
-		// it in the stack instead. This ensures errors thrown using `stackless`
-		// are still readable
-		if (error instanceof Error) error.stack = error.message;
-		throw error;
-	}
-
-	const emulator = await svelte_config.adapter?.emulate?.();
 
 	return () => {
 		// Remove the base middleware. It screws with the URL.
@@ -202,34 +212,36 @@ export async function preview(vite, vite_config, svelte_config) {
 		);
 
 		// SSR
-		vite.middlewares.use(async (req, res) => {
-			const host = req.headers[':authority'] || req.headers.host;
+		if (ssr) {
+			vite.middlewares.use(async (req, res) => {
+				const host = req.headers[':authority'] || req.headers.host;
 
-			const request = getRequest({
-				base: `${protocol}://${host}`,
-				request: req,
-				response: res
+				const request = getRequest({
+					base: `${protocol}://${host}`,
+					request: req,
+					response: res
+				});
+
+				setResponse(
+					res,
+					await ssr.server.respond(request, {
+						getClientAddress: () => {
+							const { remoteAddress } = req.socket;
+							if (remoteAddress) return remoteAddress;
+							throw new Error('Could not determine clientAddress');
+						},
+						read: (file) => {
+							if (file in ssr.manifest._.server_assets) {
+								return fs.readFileSync(join(server_output_dir, file));
+							}
+
+							return fs.readFileSync(join(svelte_config.files.assets, file));
+						},
+						emulator: ssr.emulator
+					})
+				);
 			});
-
-			setResponse(
-				res,
-				await server.respond(request, {
-					getClientAddress: () => {
-						const { remoteAddress } = req.socket;
-						if (remoteAddress) return remoteAddress;
-						throw new Error('Could not determine clientAddress');
-					},
-					read: (file) => {
-						if (file in manifest._.server_assets) {
-							return fs.readFileSync(join(dir, file));
-						}
-
-						return fs.readFileSync(join(svelte_config.files.assets, file));
-					},
-					emulator
-				})
-			);
-		});
+		}
 	};
 }
 

@@ -1580,7 +1580,8 @@ function kit({ svelte_config }) {
 			const ssr_out_dir = builder.environments.ssr.config.build.outDir;
 			const client_out_dir = builder.environments.client.config.build.outDir;
 
-			const manifest_path = `${ssr_out_dir}/manifest-full.js`;
+			const full_manifest_path = `${ssr_out_dir}/manifest-full.js`;
+			const manifest_path = `${ssr_out_dir}/manifest.js`;
 			const hash_routing = kit.router.type === 'hash';
 
 			const { metadata } = await analyse({
@@ -1882,7 +1883,7 @@ function kit({ svelte_config }) {
 					replace_manifest_placeholder_strings(ssr_out_dir, { immutable });
 
 					fs.writeFileSync(
-						manifest_path,
+						full_manifest_path,
 						`export const manifest = ${generate_manifest({
 							build_data,
 							prerendered: [],
@@ -1892,6 +1893,9 @@ function kit({ svelte_config }) {
 							root
 						})};\n`
 					);
+					// the trimmed SSR manifest is a copy of the full one if there are no
+					// prerendered routes to cut from it
+					copy(full_manifest_path, manifest_path);
 
 					build_server_nodes(
 						out,
@@ -1927,7 +1931,7 @@ function kit({ svelte_config }) {
 						({ prerendered, prerender_map } = await prerender({
 							hash: kit.router.type === 'hash',
 							out,
-							manifest_path: server_chunks ? manifest_path : null,
+							manifest_path: server_chunks ? full_manifest_path : null,
 							metadata,
 							verbose,
 							env,
@@ -1964,7 +1968,7 @@ function kit({ svelte_config }) {
 
 						// generate a new manifest that doesn't include prerendered pages
 						fs.writeFileSync(
-							`${ssr_out_dir}/manifest.js`,
+							manifest_path,
 							`export const manifest = ${generate_manifest({
 								build_data,
 								prerendered: prerendered.paths,
