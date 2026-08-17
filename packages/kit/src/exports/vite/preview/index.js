@@ -27,12 +27,12 @@ export async function preview(vite, svelte_config) {
 
 	const etag = `"${Date.now()}"`;
 
-	// TODO: don't expect the server output to always be built
 	const server_output_dir = join(svelte_config.outDir, 'output/server');
 
 	/** @type {{ server: InternalServer; manifest: SSRManifest; emulator: Emulator; } | null} */
 	let ssr = null;
 
+	// only set up the server if it was built
 	if (fs.existsSync(server_output_dir)) {
 		if (!fs.existsSync(`${server_output_dir}/manifest.js`)) {
 			throw stackless(
