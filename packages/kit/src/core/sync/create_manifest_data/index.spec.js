@@ -18,11 +18,7 @@ const create = (dir, config = {}) => {
 	initial.files.params = path.resolve(cwd, 'params');
 	initial.files.routes = path.resolve(cwd, dir);
 
-	return create_manifest_data({
-		config: /** @type {import('types').ValidatedConfig} */ (initial),
-		fallback: cwd,
-		cwd
-	});
+	return create_manifest_data(initial, cwd, cwd);
 };
 
 const default_layout = {

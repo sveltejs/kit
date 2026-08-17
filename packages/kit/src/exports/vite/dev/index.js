@@ -25,6 +25,8 @@ import { SCHEME } from '../../../utils/url.js';
 import { check_feature } from '../../../utils/features.js';
 import { escape_html } from '../../../utils/escape.js';
 import { get_runner } from '../../../runner.js';
+import { write_server } from '../../../core/sync/write_server.js';
+import { write_tsconfig } from '../../../core/sync/write_tsconfig/index.js';
 
 // vite-specifc queries that we should skip handling for css urls
 const vite_css_query_regex = /(?:\?|&)(?:raw|url|inline)(?:&|$)/;
@@ -74,7 +76,7 @@ export async function dev(
 		return fetch(info, init);
 	};
 
-	sync.init(svelte_config, root);
+	write_tsconfig(svelte_config, root);
 
 	/** @type {ManifestData} */
 	let manifest_data;
@@ -450,7 +452,7 @@ export async function dev(
 			file.startsWith(serviceWorker) ||
 			file.startsWith(hooks.server)
 		) {
-			sync.server(svelte_config, root);
+			write_server(svelte_config, path.join(svelte_config.outDir, 'generated'), root);
 		}
 	});
 

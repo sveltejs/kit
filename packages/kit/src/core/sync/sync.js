@@ -13,21 +13,12 @@ import { load_explicit_env } from '../env.js';
 import { write_env } from './write_env.js';
 
 /**
- * Initialize SvelteKit's generated files that only depend on the config and mode.
- * @param {import('types').ValidatedConfig} config
- * @param {string} root The project root directory
- */
-export function init(config, root) {
-	write_tsconfig(config, root);
-}
-
-/**
  * Update SvelteKit's generated files
  * @param {import('types').ValidatedConfig} config
  * @param {string} root The project root directory
  */
 export function create(config, root) {
-	const manifest_data = create_manifest_data({ config, cwd: root });
+	const manifest_data = create_manifest_data(config, root);
 
 	const output = path.join(config.outDir, 'generated');
 
@@ -84,7 +75,7 @@ export function update(config, manifest_data, file, root) {
  * @param {string} root The project root directory
  */
 export function all(config, root) {
-	init(config, root);
+	write_tsconfig(config, root);
 	return create(config, root);
 }
 
@@ -94,8 +85,8 @@ export function all(config, root) {
  * @param {string} root
  */
 export function all_types(config, root) {
-	init(config, root);
-	const manifest_data = create_manifest_data({ config, cwd: root });
+	write_tsconfig(config, root);
+	const manifest_data = create_manifest_data(config, root);
 	write_all_types(config, manifest_data, root);
 	write_app_types(config, manifest_data, root);
 }
@@ -113,13 +104,4 @@ export async function env(kit, entry, root, mode) {
 	write_env(entry, env_config.variables, root);
 
 	return env_config;
-}
-
-/**
- * Regenerate __SERVER__/internal.js in response to src/{app.html,error.html,service-worker.js} changing
- * @param {import('types').ValidatedConfig} config
- * @param {string} root The project root directory
- */
-export function server(config, root) {
-	write_server(config, path.join(config.outDir, 'generated'), root);
 }
