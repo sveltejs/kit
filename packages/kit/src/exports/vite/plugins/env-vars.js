@@ -4,6 +4,7 @@
 import path from 'node:path';
 import * as sync from '../../../core/sync/sync.js';
 import {
+	create_dev_public_env_prelude,
 	create_sveltekit_env,
 	create_sveltekit_env_private,
 	create_sveltekit_env_public,
@@ -103,7 +104,7 @@ export function plugin_env_vars(config, callback) {
 		} else {
 			write_if_changed(
 				`${dir}/public/client.js`,
-				create_sveltekit_env_public(vars, env, `const env = globalThis.__sveltekit_dev?.env ?? ${devalue.uneval(dev_env)};`)
+				create_sveltekit_env_public(vars, env, create_dev_public_env_prelude(vars, env))
 			);
 
 			write_if_changed(

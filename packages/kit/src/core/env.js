@@ -252,6 +252,31 @@ export function create_sveltekit_env_public(variables, env, prelude) {
 }
 
 /**
+ * Creates the prelude for the dev `<sveltekit:generated>/env/public/client.js` module. The values
+ * are inlined as a fallback for contexts that render without the dev server, like vitest browser
+ * mode, where nothing sets the global
+ * @param {Record<string, EnvVarConfig<any>> | null} variables
+ * @param {Record<string, string>} env
+ */
+export function create_dev_public_env_prelude(variables, env) {
+	/** @type {Record<string, StandardSchemaV1.Issue[]>} */
+	const issues = {};
+
+	/** @type {Record<string, any>} */
+	const dev_env = {};
+
+	for (const [name, config] of Object.entries(variables ?? {})) {
+		if (!config.public || config.static) continue;
+
+		dev_env[name] = validate(variables ?? {}, env[name], name, issues);
+	}
+
+	handle_issues(issues);
+
+	return `const env = globalThis.__sveltekit_dev?.env ?? ${devalue.uneval(dev_env)};`;
+}
+
+/**
  * Creates the `<sveltekit:generated>/env/service-worker.js` module used in production. When an app uses
  * dynamic public env vars, they're loaded at runtime via an import of the prerendered
  * `env.js`. If there are none, values are inlined.
