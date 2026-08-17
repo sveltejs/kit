@@ -2038,42 +2038,28 @@ async function navigate({
 	let navigation_result = intent && (await load_route({ ...intent, action_result }));
 
 	if (!navigation_result) {
-		if (is_external_url(url, base, app.hash)) {
-			if (DEV && app.hash) {
-				// Special case for hash mode during DEV: If someone accidentally forgets to use a hash for the link,
-				// they would end up here in an endless loop. Fall back to error page in that case
-				navigation_result = await server_fallback(
-					url,
-					{ id: null },
-					await handle_error(
-						new SvelteKitError(
-							404,
-							'Not Found',
-							`Not found: ${url.pathname} (did you forget the hash?)`
-						),
-						{
-							url,
-							params: {},
-							route: { id: null }
-						}
-					),
-					replace_state
-				);
-			} else {
-				return await native_navigation(url, replace_state);
-			}
-		} else {
-			navigation_result = await server_fallback(
-				url,
-				{ id: null },
-				await handle_error(new SvelteKitError(404, 'Not Found', `Not found: ${url.pathname}`), {
-					url,
-					params: {},
-					route: { id: null }
-				}),
-				replace_state
-			);
+		const external = is_external_url(url, base, app.hash);
+		// Special case for hash mode during DEV: If someone accidentally forgets to use a hash for the link,
+		// they would end up here in an endless loop. Fall back to error page in that case
+		const missing_hash = external && DEV && app.hash;
+
+		if (external && !missing_hash) {
+			return await native_navigation(url, replace_state);
 		}
+
+		navigation_result = await server_fallback(
+			url,
+			{ id: null },
+			await handle_error(
+				new SvelteKitError(
+					404,
+					'Not Found',
+					`Not found: ${url.pathname}${missing_hash ? ' (did you forget the hash?)' : ''}`
+				),
+				{ url, params: {}, route: { id: null } }
+			),
+			replace_state
+		);
 	}
 
 	// if this is an internal navigation intent, use the normalized
