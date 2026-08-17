@@ -252,6 +252,30 @@ export function create_sveltekit_env_public(variables, env, prelude) {
 }
 
 /**
+ * @param {Record<string, EnvVarConfig<any>> | null} variables
+ * @param {Record<string, string>} env
+ * @param {boolean} include_static
+ * @returns {Record<string, any>}
+ */
+function validate_public_env(variables, env, include_static) {
+	/** @type {Record<string, StandardSchemaV1.Issue[]>} */
+	const issues = {};
+
+	/** @type {Record<string, any>} */
+	const values = {};
+
+	for (const [name, config] of Object.entries(variables ?? {})) {
+		if (!config.public || (config.static && !include_static)) continue;
+
+		values[name] = validate(variables ?? {}, env[name], name, issues);
+	}
+
+	handle_issues(issues);
+
+	return values;
+}
+
+/**
  * Creates the `<sveltekit:generated>/env/service-worker.js` module used in production. When an app uses
  * dynamic public env vars, they're loaded at runtime via an import of the prerendered
  * `env.js`. If there are none, values are inlined.
@@ -297,20 +321,9 @@ export function create_sveltekit_env_service_worker(
  * @param {string} global
  */
 export function create_sveltekit_env_service_worker_dev(variables, env, version, global) {
-	/** @type {string[]} */
-	const properties = [];
-
-	/** @type {Record<string, StandardSchemaV1.Issue[]>} */
-	const issues = {};
-
-	for (const [name, config] of Object.entries(variables ?? {})) {
-		if (!config.public) continue;
-
-		const value = validate(variables ?? {}, env[name], name, issues);
-		properties.push(`${name}: ${devalue.uneval(value)}`);
-	}
-
-	handle_issues(issues);
+	const properties = Object.entries(validate_public_env(variables, env, true)).map(
+		([name, value]) => `${name}: ${devalue.uneval(value)}`
+	);
 
 	return dedent`
 		${global} = {

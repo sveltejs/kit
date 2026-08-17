@@ -19,7 +19,7 @@ import { hash } from '../../../utils/hash.js';
 import { posixify } from '../../../utils/os.js';
 
 /**
- * Generate (and, in dev, maintain) a `${outDir}/generated/env/config.js` module
+ * Generate (and, in dev, maintain) the `${outDir}/generated/{build,dev}/env` modules
  * derived from `src/env.ts`
  *
  * @param {ValidatedConfig} config
