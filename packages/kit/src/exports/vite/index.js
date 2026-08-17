@@ -49,7 +49,7 @@ import analyse from '../../core/postbuild/analyse.js';
 import { s } from '../../utils/misc.js';
 import { hash } from '../../utils/hash.js';
 import { dedent } from '../../core/sync/utils.js';
-import {
+import create_manifest_data, {
 	is_app_route,
 	is_endpoint_route,
 	is_page_route
@@ -567,7 +567,8 @@ function kit({ svelte_config }) {
 						__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: s(kit.version.pollInterval)
 					};
 
-					manifest_data = sync.all(svelte_config, root).manifest_data;
+					manifest_data = create_manifest_data(svelte_config, root);
+					sync.all(svelte_config, root, manifest_data);
 				} else {
 					new_config.define = {
 						...define,
@@ -758,7 +759,7 @@ function kit({ svelte_config }) {
 				if (!is_server_only) return;
 
 				// in dev, this doesn't exist, so we need to create it
-				manifest_data ??= sync.all(svelte_config, root).manifest_data;
+				manifest_data ??= create_manifest_data(svelte_config, root);
 
 				/** @type {Set<string>} */
 				const entrypoints = new Set();
@@ -2046,7 +2047,8 @@ function kit({ svelte_config }) {
 				// these are set once per plugin initialisation or when the config hook
 				// runs. However, those don't re-run during watch mode. So, we need to
 				// re-initialise them manually here
-				manifest_data = sync.all(svelte_config, root).manifest_data;
+				manifest_data = create_manifest_data(svelte_config, root);
+				sync.all(svelte_config, root, manifest_data); // TODO do we need this?
 
 				tracked_features = {};
 

@@ -1,3 +1,4 @@
+/** @import { ValidatedConfig, ManifestData } from 'types' */
 import path from 'node:path';
 import create_manifest_data from './create_manifest_data/index.js';
 import { write_client_manifest } from './write_client_manifest.js';
@@ -14,12 +15,11 @@ import { write_env } from './write_env.js';
 
 /**
  * Update SvelteKit's generated files
- * @param {import('types').ValidatedConfig} config
+ * @param {ValidatedConfig} config
  * @param {string} root The project root directory
+ * @param {ManifestData} manifest_data
  */
-export function create(config, root) {
-	const manifest_data = create_manifest_data(config, root);
-
+export function create(config, root, manifest_data) {
 	const output = path.join(config.outDir, 'generated');
 
 	write_client_manifest(config, manifest_data, `${output}/client`, root);
@@ -34,7 +34,7 @@ export function create(config, root) {
  * Update SvelteKit's generated files in response to a single file content update.
  * Do not call this when the file in question was created/deleted.
  *
- * @param {import('types').ValidatedConfig} config
+ * @param {ValidatedConfig} config
  * @param {import('types').ManifestData} manifest_data
  * @param {string} file
  * @param {string} root The project root directory
@@ -70,18 +70,19 @@ export function update(config, manifest_data, file, root) {
 }
 
 /**
- * Run sync.init and sync.create in series, returning the result from sync.create.
- * @param {import('types').ValidatedConfig} config
+ * Run sync.init and sync.create in series
+ * @param {ValidatedConfig} config
  * @param {string} root The project root directory
+ * @param {ManifestData} manifest_data
  */
-export function all(config, root) {
+export function all(config, root, manifest_data) {
 	write_tsconfig(config, root);
-	return create(config, root);
+	create(config, root, manifest_data);
 }
 
 /**
  * Run sync.init and then generate all type files.
- * @param {import('types').ValidatedConfig} config
+ * @param {ValidatedConfig} config
  * @param {string} root
  */
 export function all_types(config, root) {
@@ -93,7 +94,7 @@ export function all_types(config, root) {
 
 /**
  * Generate modules and types for explicit env vars
- * @param {import('types').ValidatedConfig} kit
+ * @param {ValidatedConfig} kit
  * @param {string | null} entry
  * @param {string} root The Vite root
  * @param {string} mode The Vite mode

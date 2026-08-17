@@ -27,6 +27,7 @@ import { escape_html } from '../../../utils/escape.js';
 import { get_runner } from '../../../runner.js';
 import { write_server } from '../../../core/sync/write_server.js';
 import { write_tsconfig } from '../../../core/sync/write_tsconfig/index.js';
+import create_manifest_data from '../../../core/sync/create_manifest_data/index.js';
 
 // vite-specifc queries that we should skip handling for css urls
 const vite_css_query_regex = /(?:\?|&)(?:raw|url|inline)(?:&|$)/;
@@ -137,7 +138,8 @@ export async function dev(
 
 	async function update_manifest() {
 		try {
-			({ manifest_data } = sync.create(svelte_config, root));
+			manifest_data = create_manifest_data(svelte_config, root);
+			sync.create(svelte_config, root, manifest_data);
 			set_manifest_data(manifest_data);
 
 			await load_and_validate_params({
