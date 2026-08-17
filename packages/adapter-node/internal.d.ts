@@ -1,10 +1,8 @@
 declare module 'MANIFEST' {
 	import { SSRManifest } from '@sveltejs/kit';
 
-	export const base: string;
-	export const uncompressed_extensions: Set<string>;
 	export const manifest: SSRManifest;
-	export const prerendered: Set<string>;
+	export const uncompressed_extensions: Set<string>;
 }
 
 declare module 'SERVER' {

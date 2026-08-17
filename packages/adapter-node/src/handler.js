@@ -5,7 +5,7 @@ import sirv from 'sirv';
 import { parse as polka_url_parser } from '@polka/url';
 import { getRequest, setResponse, createReadableStream } from '@sveltejs/kit/node';
 import { Server } from 'SERVER';
-import { manifest, prerendered, base, uncompressed_extensions } from 'MANIFEST';
+import { manifest, uncompressed_extensions } from 'MANIFEST';
 import { dir } from './dir.js';
 import { env, env_prefix } from './env.js';
 import { parse_as_bytes } from './utils.js';
@@ -28,7 +28,7 @@ if (isNaN(body_size_limit)) {
 	);
 }
 
-const asset_dir = `${dir}/client${base}`;
+const asset_dir = `${dir}/client${manifest.basePath}`;
 
 await server.init({
 	env: process.env,
@@ -96,13 +96,13 @@ function serve_prerendered() {
 			// ignore invalid URI
 		}
 
-		if (prerendered.has(pathname)) {
+		if (manifest.prerenderedRoutes.has(pathname)) {
 			return handler?.(req, res, next);
 		}
 
 		// remove or add trailing slash as appropriate
 		const inverted = pathname.at(-1) === '/' ? pathname.slice(0, -1) : pathname + '/';
-		if (prerendered.has(inverted)) {
+		if (manifest.prerenderedRoutes.has(inverted)) {
 			const location = relative_pathname(pathname, inverted) + (query ? search : '');
 			res.writeHead(308, { location }).end();
 		} else {

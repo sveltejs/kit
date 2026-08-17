@@ -18,6 +18,7 @@ import { uneval } from 'devalue';
  *   build_data: import('types').BuildData;
  *   prerendered: string[];
  *   relative_path: string;
+ *   base_path: string;
  *   routes: import('types').RouteData[];
  *   remotes: RemoteChunk[];
  *   root: string;
@@ -27,6 +28,7 @@ export function generate_manifest({
 	build_data,
 	prerendered,
 	relative_path,
+	base_path,
 	routes,
 	remotes,
 	root
@@ -109,6 +111,8 @@ export function generate_manifest({
 			appPath: ${s(build_data.app_path)},
 			assets: new Set(${s(assets)}),
 			mimeTypes: ${s(mime_types)},
+			prerenderedRoutes: new Set(${s(prerendered)}),
+			basePath: ${s(base_path)},
 			_: {
 				client: ${uneval(build_data.client)},
 				nodes: [
@@ -132,7 +136,6 @@ export function generate_manifest({
 						`;
 					}).filter(Boolean).join(',\n')}
 				],
-				prerendered_routes: new Set(${s(prerendered)}),
 				matchers: async () => {
 					${
 						uses_matchers && build_data.manifest_data.params

@@ -169,6 +169,8 @@ export async function dev(
 			appPath: svelte_config.appDir,
 			assets: new Set(manifest_data.assets.map((asset) => asset.file)),
 			mimeTypes: get_mime_lookup(manifest_data),
+			prerenderedRoutes: new Set(),
+			basePath: svelte_config.paths.base,
 			_: {
 				client: {
 					start: `${get_runtime_base(root)}/client/entry.js`,
@@ -291,7 +293,6 @@ export async function dev(
 						return result;
 					};
 				}),
-				prerendered_routes: new Set(),
 				get remotes() {
 					return Object.fromEntries(
 						get_remotes().map((remote) => [

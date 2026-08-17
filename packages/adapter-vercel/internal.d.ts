@@ -4,5 +4,6 @@ declare module 'SERVER' {
 
 declare module 'MANIFEST' {
 	import { SSRManifest } from '@sveltejs/kit';
+
 	export const manifest: SSRManifest;
 }

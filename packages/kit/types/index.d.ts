@@ -664,6 +664,8 @@ declare module '@sveltejs/kit' {
 		/** Static files from `config.files.assets` and the service worker (if any). */
 		assets: Set<string>;
 		mimeTypes: Record<string, string>;
+		prerenderedRoutes: Set<string>;
+		basePath: string;
 	}
 
 	/**

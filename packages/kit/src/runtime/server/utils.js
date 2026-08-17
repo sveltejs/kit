@@ -110,8 +110,8 @@ export function serialize_uses(node) {
  */
 export function has_prerendered_path(manifest, pathname) {
 	return (
-		manifest._.prerendered_routes.has(pathname) ||
-		(pathname.at(-1) === '/' && manifest._.prerendered_routes.has(pathname.slice(0, -1)))
+		manifest.prerenderedRoutes.has(pathname) ||
+		(pathname.at(-1) === '/' && manifest.prerenderedRoutes.has(pathname.slice(0, -1)))
 	);
 }
 

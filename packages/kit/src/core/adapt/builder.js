@@ -190,6 +190,7 @@ export function create_builder({
 				build_data,
 				prerendered: prerendered.paths,
 				relative_path: relativePath,
+				base_path: config.paths.base,
 				routes: subset
 					? subset.map((route) => /** @type {import('types').RouteData} */ (lookup.get(route)))
 					: route_data.filter((route) => prerender_map.get(route.id) !== true),

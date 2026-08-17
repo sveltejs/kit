@@ -1,5 +1,5 @@
 import { Server } from 'SERVER';
-import { manifest, prerendered, base_path } from 'MANIFEST';
+import { manifest } from 'MANIFEST';
 import { env } from 'cloudflare:workers';
 
 const server = new Server(manifest);
@@ -59,7 +59,7 @@ export default {
 
 		// files in /static, the service worker, and Vite imported server assets
 		let is_static_asset = false;
-		const filename = stripped_pathname.slice(base_path.length + 1);
+		const filename = stripped_pathname.slice(manifest.basePath.length + 1);
 		if (filename) {
 			is_static_asset =
 				manifest.assets.has(filename) || manifest.assets.has(filename + '/index.html');
@@ -69,7 +69,7 @@ export default {
 
 		if (
 			is_static_asset ||
-			prerendered.has(pathname) ||
+			manifest.prerenderedRoutes.has(pathname) ||
 			pathname === version_file ||
 			pathname.startsWith(immutable)
 		) {
@@ -84,7 +84,7 @@ export default {
 		}
 
 		// trailing slash redirect for prerendered pages
-		if (location && prerendered.has(location)) {
+		if (location && manifest.prerenderedRoutes.has(location)) {
 			if (search) location += search;
 			return new Response('', {
 				status: 308,

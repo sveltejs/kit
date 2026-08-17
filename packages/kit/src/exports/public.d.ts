@@ -680,6 +680,8 @@ export interface SSRManifest {
 	/** Static files from `config.files.assets` and the service worker (if any). */
 	assets: Set<string>;
 	mimeTypes: Record<string, string>;
+	prerenderedRoutes: Set<string>;
+	basePath: string;
 
 	/** @internal private fields */
 	_: {
@@ -688,7 +690,6 @@ export interface SSRManifest {
 		/** hashed filename -> import to that file */
 		remotes: Record<string, () => Promise<{ default: Record<string, any> }>>;
 		routes: SSRRoute[];
-		prerendered_routes: Set<string>;
 		matchers: () => Promise<Record<string, ParamMatcher>>;
 		/** A `[file]: size` map of all assets imported by server code. */
 		server_assets: Record<string, number>;

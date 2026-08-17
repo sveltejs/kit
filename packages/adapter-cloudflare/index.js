@@ -105,9 +105,7 @@ export default function (options = {}) {
 			const worker_dest_dir = path.dirname(worker_dest);
 			writeFileSync(
 				`${tmp}/manifest.js`,
-				`export const manifest = ${builder.generateManifest({ relativePath: path.posix.relative(tmp, builder.getServerDirectory()) })};\n\n` +
-					`export const prerendered = new Set(${JSON.stringify(builder.prerendered.paths)});\n\n` +
-					`export const base_path = ${JSON.stringify(builder.config.paths.base)};\n`
+				`export const manifest = ${builder.generateManifest({ relativePath: path.posix.relative(tmp, builder.getServerDirectory()) })};`
 			);
 			builder.copy(`${files}/worker.js`, worker_dest, {
 				replace: {
