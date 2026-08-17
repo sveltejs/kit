@@ -19,7 +19,7 @@ import { hash } from '../../../utils/hash.js';
 import { posixify } from '../../../utils/os.js';
 
 /**
- * Generate (and, in dev, maintain) a `${outDir}/generated/env/config.js` module
+ * Generate (and, in dev, maintain) the `${outDir}/generated/{build,dev}/env` modules
  * derived from `src/env.ts`
  *
  * @param {ValidatedConfig} config
@@ -86,15 +86,6 @@ export function plugin_env_vars(config, callback) {
 					vars,
 					env,
 					`import { payload } from ${s(posixify(path.relative(`${dir}/public`, `${runtime_directory}/client/payload.js`)))};\nconst env = payload.env;`
-				)
-			);
-
-			write_if_changed(
-				`${dir}/public/service-worker.js`,
-				create_sveltekit_env_public(
-					vars,
-					env,
-					`const env = globalThis.__sveltekit_${version_hash}.env;`
 				)
 			);
 
