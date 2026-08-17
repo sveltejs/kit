@@ -2243,7 +2243,14 @@ async function navigate({
 		await initialize(navigation_result, target, false);
 	}
 
-	const finished = await finish_navigation(nav, nav_token, url, popped?.scroll, reset, commit_promise);
+	const finished = await finish_navigation(
+		nav,
+		nav_token,
+		url,
+		popped?.scroll,
+		reset,
+		commit_promise
+	);
 	if (!finished) return;
 
 	if (type === 'popstate') {
