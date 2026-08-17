@@ -112,12 +112,13 @@ export async function load_explicit_env(kit, file, root, mode) {
 }
 
 /**
- * Creates the `__sveltekit/env` module
+ * Creates the `<sveltekit:generated>/env/config.js` module
  * @param {Record<string, EnvVarConfig<any> | undefined> | null} variables
  * @param {Record<string, string>} env
  * @param {string | null} entry
+ * @param {boolean} is_dev
  */
-export function create_sveltekit_env(variables, env, entry) {
+export function create_sveltekit_env(variables, env, entry, is_dev) {
 	const imports = entry
 		? [
 				`import { variables } from ${JSON.stringify(entry)};`,
@@ -170,33 +171,25 @@ export function create_sveltekit_env(variables, env, entry) {
 			}`
 	];
 
+	if (is_dev) {
+		// In dev, initialise the env immediately. Tools like `vite-node` load modules
+		// through the Vite config but don't run the SvelteKit dev server, which is what
+		// normally calls `set_env`. Without this, dynamic env vars imported from
+		// `$app/env/public` and `$app/env/private` would be `undefined` in such contexts.
+		/** @type {Record<string, string>} */
+		const dev_env = {};
+		for (const name of Object.keys(variables ?? {})) {
+			if (name in env) dev_env[name] = env[name];
+		}
+
+		blocks.push(`set_env(${devalue.uneval(dev_env)});`);
+	}
+
 	return blocks.join('\n\n');
 }
 
 /**
- * @param {Record<string, EnvVarConfig<any> | undefined> | null} variables
- * @param {Record<string, string>} env
- */
-export function create_sveltekit_env_dev(variables, env) {
-	// In dev, initialise the env immediately. Tools like `vite-node` load modules
-	// through the Vite config but don't run the SvelteKit dev server, which is what
-	// normally calls `set_env`. Without this, dynamic env vars imported from
-	// `$app/env/public` and `$app/env/private` would be `undefined` in such contexts.
-	/** @type {Record<string, string>} */
-	const dev_env = {};
-	for (const name of Object.keys(variables ?? {})) {
-		if (name in env) dev_env[name] = env[name];
-	}
-
-	return [
-		`import { set_env } from './config.js';`,
-		`set_env(${devalue.uneval(dev_env)});`,
-		`export * from './config.js';`
-	].join('\n\n');
-}
-
-/**
- * Creates the `__sveltekit/env/private` module
+ * Creates the `<sveltekit:generated>/env/private/server.js` module
  * @param {Record<string, EnvVarConfig<any>> | null} variables
  * @param {Record<string, string>} env
  */
@@ -223,11 +216,11 @@ export function create_sveltekit_env_private(variables, env) {
 
 	handle_issues(issues);
 
-	return `import { dynamic_private_env as env } from '__sveltekit/env';\n\n${exports.join('')}`;
+	return `import { dynamic_private_env as env } from '../config.js';\n\n${exports.join('')}`;
 }
 
 /**
- * Creates the `__sveltekit/env/public/*` modules
+ * Creates the `<sveltekit:generated>/env/public/*` modules
  * @param {Record<string, EnvVarConfig<any>> | null} variables
  * @param {Record<string, string>} env
  * @param {string} prelude
@@ -259,7 +252,52 @@ export function create_sveltekit_env_public(variables, env, prelude) {
 }
 
 /**
- * Creates the `__sveltekit/env/service-worker` module used in production. When an app uses
+ * Creates the `<sveltekit:generated>/env/public/client.js` module used in development. The dynamic
+ * values are inlined as a fallback for contexts that render without the dev server, like vitest
+ * browser mode, where nothing sets the global
+ * @param {Record<string, EnvVarConfig<any>> | null} variables
+ * @param {Record<string, string>} env
+ */
+export function create_sveltekit_env_public_dev(variables, env) {
+	if (!variables) {
+		return '';
+	}
+
+	const dev_env = validate_public_env(variables, env, false);
+
+	return create_sveltekit_env_public(
+		variables,
+		env,
+		`const env = globalThis.__sveltekit_dev?.env ?? ${devalue.uneval(dev_env)};`
+	);
+}
+
+/**
+ * @param {Record<string, EnvVarConfig<any>> | null} variables
+ * @param {Record<string, string>} env
+ * @param {boolean} include_static
+ * @returns {Record<string, any>}
+ */
+function validate_public_env(variables, env, include_static) {
+	/** @type {Record<string, StandardSchemaV1.Issue[]>} */
+	const issues = {};
+
+	/** @type {Record<string, any>} */
+	const values = {};
+
+	for (const [name, config] of Object.entries(variables ?? {})) {
+		if (!config.public || (config.static && !include_static)) continue;
+
+		values[name] = validate(variables ?? {}, env[name], name, issues);
+	}
+
+	handle_issues(issues);
+
+	return values;
+}
+
+/**
+ * Creates the `<sveltekit:generated>/env/service-worker.js` module used in production. When an app uses
  * dynamic public env vars, they're loaded at runtime via an import of the prerendered
  * `env.js`. If there are none, values are inlined.
  * @param {Record<string, EnvVarConfig<any>> | null} variables
@@ -297,27 +335,16 @@ export function create_sveltekit_env_service_worker(
 }
 
 /**
- * Creates the `__sveltekit/env/service-worker` module used in development
+ * Creates the `<sveltekit:generated>/env/service-worker.js` module used in development
  * @param {Record<string, EnvVarConfig<any>> | null} variables
  * @param {Record<string, string>} env
  * @param {string} version
  * @param {string} global
  */
 export function create_sveltekit_env_service_worker_dev(variables, env, version, global) {
-	/** @type {string[]} */
-	const properties = [];
-
-	/** @type {Record<string, StandardSchemaV1.Issue[]>} */
-	const issues = {};
-
-	for (const [name, config] of Object.entries(variables ?? {})) {
-		if (!config.public) continue;
-
-		const value = validate(variables ?? {}, env[name], name, issues);
-		properties.push(`${name}: ${devalue.uneval(value)}`);
-	}
-
-	handle_issues(issues);
+	const properties = Object.entries(validate_public_env(variables, env, true)).map(
+		([name, value]) => `${name}: ${devalue.uneval(value)}`
+	);
 
 	return dedent`
 		${global} = {

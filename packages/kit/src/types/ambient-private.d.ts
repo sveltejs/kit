@@ -21,7 +21,7 @@ declare module '__sveltekit/server' {
 	export function set_read_implementation(fn: (path: string) => ReadableStream): void;
 }
 
-declare module '__sveltekit/env' {
+declare module '<sveltekit:generated>/env/config.js' {
 	// exported environment variables are defined in env.d.ts
 
 	/** Populate exported environment variables */
@@ -34,15 +34,15 @@ declare module '__sveltekit/env' {
 	export const rendered_env: Record<string, any>;
 }
 
-declare module '__sveltekit/env/private' {
+declare module '<sveltekit:generated>/env/private/server.js' {
 	// exported environment variables are defined in env.d.ts
 }
 
-declare module '__sveltekit/env/public/client' {
+declare module '<sveltekit:generated>/env/public/client.js' {
 	// exported environment variables are defined in env.d.ts
 }
 
-declare module '__sveltekit/env/public/server' {
+declare module '<sveltekit:generated>/env/public/server.js' {
 	// exported environment variables are defined in env.d.ts
 }
 
