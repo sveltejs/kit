@@ -438,8 +438,6 @@ function kit({ svelte_config }) {
 				const client_hooks = resolve_entry(kit.files.hooks.client);
 				if (client_hooks) allow.add(path.dirname(client_hooks));
 
-				const generated = path.posix.join(out_dir, 'generated');
-
 				// dev and preview config can be shared
 				/** @type {UserConfig} */
 				const new_config = {
@@ -453,16 +451,11 @@ function kit({ svelte_config }) {
 					},
 					resolve: {
 						alias: [
-							{ find: '__SERVER__', replacement: `${generated}/server` },
 							{ find: '$app', replacement: `${runtime_directory}/app` },
 							{ find: '$env', replacement: `${runtime_directory}/env` },
 							{
 								find: '<sveltekit:generated>',
 								replacement: `${out_dir}/generated/${is_build ? 'build' : 'dev'}`
-							},
-							{
-								find: '__sveltekit/server',
-								replacement: `${runtime_directory}/server/internal.js`
 							},
 							...get_config_aliases(kit, root)
 						]
@@ -660,7 +653,7 @@ function kit({ svelte_config }) {
 			},
 			handler(id) {
 				if (id === '__sveltekit/manifest') {
-					return `${out_dir}/generated/client-optimized/app.js`;
+					return `${out_dir}/generated/build/client-optimized/app.js`;
 				}
 
 				return `\0virtual:${id}`;
@@ -1239,7 +1232,7 @@ function kit({ svelte_config }) {
 					/** @type {Record<string, string>} */
 					const server_input = {
 						index: `${runtime_directory}/server/index.js`,
-						internal: `${out_dir}/generated/server/internal.js`,
+						internal: `<sveltekit:generated>/server.js`,
 						env: '<sveltekit:generated>/env/config.js',
 						['remote-entry']: `${runtime_directory}/app/server/remote/index.js`
 					};
@@ -1304,10 +1297,11 @@ function kit({ svelte_config }) {
 					} else {
 						client_input['entry/start'] = `${runtime_directory}/client/entry.js`;
 						client_input['entry/payload'] = `${runtime_directory}/client/payload.js`;
-						client_input['entry/app'] = `${out_dir}/generated/client-optimized/app.js`;
+						client_input['entry/app'] = `${out_dir}/generated/build/client-optimized/app.js`;
 						manifest_data.nodes.forEach((node, i) => {
 							if (node.component || node.universal) {
-								client_input[`nodes/${i}`] = `${out_dir}/generated/client-optimized/nodes/${i}.js`;
+								client_input[`nodes/${i}`] =
+									`${out_dir}/generated/build/client-optimized/nodes/${i}.js`;
 							}
 						});
 					}
@@ -1349,7 +1343,7 @@ function kit({ svelte_config }) {
 								onwarn(warning, handler) {
 									if (
 										warning.code === 'IMPORT_IS_UNDEFINED' &&
-										warning.id === `${out_dir}/generated/client-optimized/app.js`
+										warning.id === `${out_dir}/generated/build/client-optimized/app.js`
 									) {
 										// ignore e.g. undefined `handleError` hook when
 										// referencing `client_hooks.handleError`
@@ -1661,7 +1655,7 @@ function kit({ svelte_config }) {
 					write_client_manifest(
 						kit,
 						manifest_data,
-						`${out_dir}/generated/client-optimized`,
+						`${out_dir}/generated/build/client-optimized`,
 						root,
 						build_metadata.nodes
 					);
@@ -1789,7 +1783,7 @@ function kit({ svelte_config }) {
 							.dynamicImports?.[0]; // client/entry.js dynamically imports client/client-entry.js
 						if (!runtime_entry) throw new Error('Could not find the client runtime chunk');
 						const runtime = find_deps(vite_client_manifest, runtime_entry, false, root);
-						const app = deps_of(`${out_dir}/generated/client-optimized/app.js`);
+						const app = deps_of(`${out_dir}/generated/build/client-optimized/app.js`);
 
 						build_data.client = {
 							start: start.file,
@@ -1814,11 +1808,11 @@ function kit({ svelte_config }) {
 						if (kit.router.resolution === 'server') {
 							const nodes = manifest_data.nodes.map((node, i) => {
 								if (node.component || node.universal) {
-									const entry = `${out_dir}/generated/client-optimized/nodes/${i}.js`;
+									const entry = `${out_dir}/generated/build/client-optimized/nodes/${i}.js`;
 									const deps = deps_of(entry, true);
 									const file = resolve_symlinks(
 										/** @type {Manifest} */ (vite_client_manifest),
-										`${out_dir}/generated/client-optimized/nodes/${i}.js`,
+										`${out_dir}/generated/build/client-optimized/nodes/${i}.js`,
 										root
 									).chunk.file;
 
@@ -2050,7 +2044,7 @@ function kit({ svelte_config }) {
 				// runs. However, those don't re-run during watch mode. So, we need to
 				// re-initialise them manually here
 				manifest_data = create_manifest_data(svelte_config, root);
-				sync.all(svelte_config, root, manifest_data); // TODO do we need this?
+				sync.all(svelte_config, root, manifest_data);
 
 				tracked_features = {};
 

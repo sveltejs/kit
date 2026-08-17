@@ -139,7 +139,7 @@ export async function dev(
 	async function update_manifest() {
 		try {
 			manifest_data = create_manifest_data(svelte_config, root);
-			sync.create(svelte_config, root, manifest_data);
+			sync.create(svelte_config, root, manifest_data, false);
 			set_manifest_data(manifest_data);
 
 			await load_and_validate_params({
@@ -186,7 +186,7 @@ export async function dev(
 							? undefined
 							: manifest_data.nodes.map((node, i) => {
 									if (node.component || node.universal) {
-										return `${svelte_config.paths.base}${to_fs(svelte_config.outDir)}/generated/client/nodes/${i}.js`;
+										return `${svelte_config.paths.base}${to_fs(svelte_config.outDir)}/generated/dev/client/nodes/${i}.js`;
 									}
 								}),
 					// `css` is not necessary in dev, as the JS file from `nodes` will reference the CSS file

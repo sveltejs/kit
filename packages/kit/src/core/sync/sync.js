@@ -18,9 +18,10 @@ import { write_env } from './write_env.js';
  * @param {ValidatedConfig} config
  * @param {string} root The project root directory
  * @param {ManifestData} manifest_data
+ * @param {boolean} is_build
  */
-export function create(config, root, manifest_data) {
-	const output = path.join(config.outDir, 'generated');
+export function create(config, root, manifest_data, is_build) {
+	const output = path.join(config.outDir, `generated/${is_build ? 'build' : 'dev'}`);
 
 	write_client_manifest(config, manifest_data, `${output}/client`, root);
 	write_server(config, output, root);
@@ -68,14 +69,14 @@ export function update(config, manifest_data, file, root) {
 }
 
 /**
- * Run write_tsconfig and sync.create in series
+ * Run write_tsconfig and sync.create in series during build
  * @param {ValidatedConfig} config
  * @param {string} root The project root directory
  * @param {ManifestData} manifest_data
  */
 export function all(config, root, manifest_data) {
 	write_tsconfig(config, root);
-	create(config, root, manifest_data);
+	create(config, root, manifest_data, true);
 }
 
 /**

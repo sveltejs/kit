@@ -21,11 +21,11 @@ test('generates client manifest imports relative to the project root', () => {
 	try {
 		const config = process_config(validate_config({}), root);
 		const manifest_data = create_manifest_data(config, root);
-		create(config, root, manifest_data);
+		create(config, root, manifest_data, true);
 		const index = manifest_data.nodes.findIndex(
 			(node) => node.component === 'src/routes/+page.svelte'
 		);
-		const output = path.join(config.outDir, 'generated/client');
+		const output = path.join(config.outDir, 'generated/build/client');
 		const generated = fs.readFileSync(path.join(output, `nodes/${index}.js`), 'utf8');
 
 		expect(generated).toBe(

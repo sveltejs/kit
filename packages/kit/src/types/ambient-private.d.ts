@@ -1,7 +1,10 @@
 /** Internal version of $app/server */
-declare module '__sveltekit/server' {
+declare module '<sveltekit:generated>/server.js' {
 	import { SSRManifest } from '@sveltejs/kit';
+	import { SSROptions, ServerHooks } from 'types';
 
+	export const options: SSROptions;
+	export const get_hooks: () => Promise<Partial<ServerHooks>>;
 	export let fix_stack_trace: (error: Error) => string;
 	export let manifest: SSRManifest;
 	export function read_implementation(path: string): ReadableStream;
