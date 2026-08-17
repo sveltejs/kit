@@ -70,7 +70,7 @@ export function update(config, manifest_data, file, root) {
 }
 
 /**
- * Run sync.init and sync.create in series
+ * Run write_tsconfig and sync.create in series
  * @param {ValidatedConfig} config
  * @param {string} root The project root directory
  * @param {ManifestData} manifest_data
