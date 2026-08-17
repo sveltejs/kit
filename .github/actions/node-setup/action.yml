@@ -10,23 +10,7 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
-
-    - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+    - uses: pnpm/setup@84cb39b217b10273981911c288cd62326dc7c6d2 # v2.0.2
       with:
-        node-version: ${{ inputs.node-version }}
-        cache: pnpm
-
-    - name: Install dependencies
-      shell: bash
-      run: pnpm install --frozen-lockfile
-
-    - name: setup overrides for inputs.node-version
-      shell: bash
-      if: ${{ inputs.node-version == '18' }}
-      run:
-        | # copies catalogs.node-xx to overrides in pnpm-workspace.yaml so the subsequent `pnpm install` enforces them
-        yq -i '.overrides =.catalogs."node-18"' pnpm-workspace.yaml
-        pnpm install --no-frozen-lockfile
-        git checkout pnpm-lock.yaml pnpm-workspace.yaml # revert changes to pnpm files to avoid cache key changes
-        pnpm --dir packages/kit ls vite @sveltejs/vite-plugin-svelte
+        runtime: node@${{ inputs.node-version }}
+        cache: true

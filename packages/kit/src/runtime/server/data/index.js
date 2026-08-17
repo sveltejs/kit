@@ -7,33 +7,30 @@ import { load_server_data } from '../page/load_data.js';
 import { handle_error_and_jsonify } from '../errors.js';
 import { normalize_path } from '../../../utils/url.js';
 import { text_encoder } from '../../utils.js';
+import { with_version_header } from '../utils.js';
 
 /**
  * @param {import('@sveltejs/kit').RequestEvent} event
- * @param {import('types').RequestState} event_state
+ * @param {import('types').RequestState} state
  * @param {import('types').SSRRoute} route
  * @param {import('types').SSROptions} options
  * @param {import('@sveltejs/kit').SSRManifest} manifest
- * @param {import('types').SSRState} state
  * @param {boolean[] | undefined} invalidated_data_nodes
  * @param {import('types').TrailingSlash} trailing_slash
  * @returns {Promise<Response>}
  */
 export async function render_data(
 	event,
-	event_state,
+	state,
 	route,
 	options,
 	manifest,
-	state,
 	invalidated_data_nodes,
 	trailing_slash
 ) {
 	if (!route.page) {
 		// requesting /__data.json should fail for a +server.js
-		return new Response(undefined, {
-			status: 404
-		});
+		return with_version_header(new Response(undefined, { status: 404 }));
 	}
 
 	try {
@@ -61,7 +58,6 @@ export async function render_data(
 					// load this. for the child, return as is. for the final result, stream things
 					return load_server_data({
 						event: new_event,
-						event_state,
 						state,
 						node,
 						parent: async () => {
@@ -96,7 +92,7 @@ export async function render_data(
 			return fn();
 		});
 
-		const data_serializer = server_data_serializer_json(event, event_state, options);
+		const data_serializer = server_data_serializer_json(event, state, options);
 		await Promise.all(
 			promises.map(async (p, i) => {
 				const node = await p.catch(async (error) => {
@@ -104,7 +100,7 @@ export async function render_data(
 						throw error;
 					}
 
-					const transformed = await handle_error_and_jsonify(event, event_state, options, error);
+					const transformed = await handle_error_and_jsonify(event, state, options, error);
 
 					return /** @type {import('types').ServerErrorNode} */ ({
 						type: 'error',
@@ -123,26 +119,28 @@ export async function render_data(
 			return json_response(data);
 		}
 
-		return new Response(
-			new ReadableStream({
-				async start(controller) {
-					controller.enqueue(text_encoder.encode(data));
-					for await (const chunk of chunks) {
-						controller.enqueue(text_encoder.encode(chunk));
-					}
-					controller.close();
-				},
+		return with_version_header(
+			new Response(
+				new ReadableStream({
+					async start(controller) {
+						controller.enqueue(text_encoder.encode(data));
+						for await (const chunk of chunks) {
+							controller.enqueue(text_encoder.encode(chunk));
+						}
+						controller.close();
+					},
 
-				type: 'bytes'
-			}),
-			{
-				headers: {
-					// we use a proprietary content type to prevent buffering.
-					// the `text` prefix makes it inspectable
-					'content-type': 'text/sveltekit-data',
-					'cache-control': 'private, no-store'
+					type: 'bytes'
+				}),
+				{
+					headers: {
+						// we use a proprietary content type to prevent buffering.
+						// the `text` prefix makes it inspectable
+						'content-type': 'text/sveltekit-data',
+						'cache-control': 'private, no-store'
+					}
 				}
-			}
+			)
 		);
 	} catch (e) {
 		const error = normalize_error(e);
@@ -150,7 +148,7 @@ export async function render_data(
 		if (error instanceof Redirect) {
 			return redirect_json_response(error);
 		} else {
-			const transformed = await handle_error_and_jsonify(event, event_state, options, error);
+			const transformed = await handle_error_and_jsonify(event, state, options, error);
 			return json_response(transformed, transformed.status);
 		}
 	}
@@ -161,13 +159,15 @@ export async function render_data(
  * @param {number} [status]
  */
 function json_response(json, status = 200) {
-	return text(typeof json === 'string' ? json : JSON.stringify(json), {
-		status,
-		headers: {
-			'content-type': 'application/json',
-			'cache-control': 'private, no-store'
-		}
-	});
+	return with_version_header(
+		text(typeof json === 'string' ? json : JSON.stringify(json), {
+			status,
+			headers: {
+				'content-type': 'application/json',
+				'cache-control': 'private, no-store'
+			}
+		})
+	);
 }
 
 /**

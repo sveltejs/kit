@@ -1,9 +1,10 @@
+/** @import { ParamDefinition, ParamMatcher } from '@sveltejs/kit/params' */
 import { assert, expect, test, describe } from 'vitest';
 import * as v from 'valibot';
 import { exec, parse_route_id, resolve_route, find_route } from './routing.js';
-import { defineParams } from '@sveltejs/kit';
+import { defineParams } from '@sveltejs/kit/params';
 
-/** @type {import('@sveltejs/kit').ParamMatcher} */
+/** @type {ParamMatcher} */
 const number = v.pipe(v.string(), v.toNumber());
 
 describe('parse_route_id', () => {
@@ -97,6 +98,14 @@ describe('parse_route_id', () => {
 			params: [
 				{ name: 'catch-all', matcher: 'some-matcher', optional: false, rest: true, chained: true }
 			]
+		},
+		'/[x+5b]': {
+			pattern: /^\/\[\/?$/,
+			params: []
+		},
+		'/[x+5d]': {
+			pattern: /^\/\]\/?$/,
+			params: []
 		}
 	};
 
@@ -461,6 +470,36 @@ describe('resolve_route', () => {
 			route: '/[...catch-all=some-matcher]',
 			params: { 'catch-all': 'a/b' },
 			expected: '/a/b'
+		},
+		{
+			route: '/[x+2e]well-known/[one]',
+			params: { one: 'one' },
+			expected: '/.well-known/one'
+		},
+		{
+			route: '/[u+0041]/[one]',
+			params: { one: 'one' },
+			expected: '/A/one'
+		},
+		{
+			route: '/[u+1f600]/[one]',
+			params: { one: 'one' },
+			expected: '/😀/one'
+		},
+		{
+			route: '/blog/[one]',
+			params: { one: '[x+2f]' },
+			expected: '/blog/[x+2f]'
+		},
+		{
+			route: '/[x+2f]/[one]',
+			params: { one: 'one' },
+			expected: '/%2F/one'
+		},
+		{
+			route: '/[x+23]/[one]',
+			params: { one: 'one' },
+			expected: '/%23/one'
 		}
 	];
 
@@ -597,7 +636,7 @@ describe('find_route', () => {
 
 	test('respects matchers with hyphenated names', () => {
 		const routes = [create_route('/blog/[slug=positive-integer]'), create_route('/blog/[slug]')];
-		/** @type {import('@sveltejs/kit').ParamDefinition} */
+		/** @type {ParamDefinition} */
 		const positive_integer = (param) => (/^\d+$/.test(param) ? param : undefined);
 		const matchers = defineParams({ 'positive-integer': positive_integer });
 

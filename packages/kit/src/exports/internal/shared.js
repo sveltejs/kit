@@ -2,25 +2,26 @@
 
 export class HttpError {
 	/**
-	 * @param {number} status
-	 * @param {Omit<App.Error, 'status'> | string | undefined} body
-	 * @param {Omit<App.Error, 'status' | 'message'>} [properties]
+	 * @param {App.Error} error
 	 */
-	constructor(status, body, properties) {
-		this.status = status;
-		if (typeof body === 'string') {
-			this.body = { ...properties, message: body, status };
-		} else if (body) {
-			this.body = { ...body, status };
-		} else {
-			this.body = { message: `Error: ${status}`, status };
-		}
+	constructor(error) {
+		this.status = error.status;
+		this.body = error;
 	}
 
 	toString() {
 		return JSON.stringify(this.body);
 	}
 }
+
+/**
+ * An `HttpError` whose body is already in its final, user-facing form — either produced by the
+ * `handleError` hook on the server and reconstructed here from the response, or authored directly
+ * by the client runtime. Unlike a plain `HttpError` (which represents a fresh `error(...)` call
+ * that the hook has yet to see), `handleError` must not run on it.
+ * @extends HttpError
+ */
+export class HandledHttpError extends HttpError {}
 
 export class Redirect {
 	/**

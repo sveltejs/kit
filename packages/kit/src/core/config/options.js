@@ -1,6 +1,6 @@
-/** @import { SvelteConfig } from '@sveltejs/vite-plugin-svelte' */
-/** @import { ValidatedKitConfig } from 'types' */
+/** @import { ValidatedConfig } from 'types' */
 /** @import { Validator } from './types.js' */
+import { styleText } from 'node:util';
 
 const directives = object({
 	'child-src': string_array(),
@@ -36,38 +36,13 @@ const directives = object({
 	referrer: string_array()
 });
 
-/** @type {Validator<{ extensions: string[] } & SvelteConfig>} */
-export const validate_svelte_options = object(
-	{
-		extensions: validate(['.svelte'], (input, keypath) => {
-			if (!Array.isArray(input) || !input.every((page) => typeof page === 'string')) {
-				throw new Error(`${keypath} must be an array of strings`);
-			}
-
-			input.forEach((extension) => {
-				if (extension[0] !== '.') {
-					throw new Error(`Each member of ${keypath} must start with '.' — saw '${extension}'`);
-				}
-
-				if (!/^(\.[a-z0-9]+)+$/i.test(extension)) {
-					throw new Error(`File extensions must be alphanumeric — saw '${extension}'`);
-				}
-			});
-
-			return input;
-		})
-	},
-	true
-);
-
 const prerender_handler = validate(undefined, (input, keypath) => {
 	if (typeof input === 'function') return input;
 	if (['fail', 'warn', 'ignore'].includes(input)) return input;
 	throw new Error(`${keypath} should be "fail", "warn", "ignore" or a custom function`);
 });
 
-/** @type {Validator<ValidatedKitConfig>} */
-export const validate_kit_options = object({
+const options = {
 	adapter: validate(undefined, (input, keypath) => {
 		if (typeof input !== 'object' || !input.adapt) {
 			const message = `The SvelteKit Vite plugin ${keypath} should be an object with an \`adapt\` method`;
@@ -77,17 +52,21 @@ export const validate_kit_options = object({
 		return input;
 	}),
 
-	alias: validate({}, (input, keypath) => {
-		if (typeof input !== 'object') {
-			throw new Error(`${keypath} should be an object`);
-		}
+	alias: deprecate(
+		validate({}, (input, keypath) => {
+			if (typeof input !== 'object') {
+				throw new Error(`${keypath} should be an object`);
+			}
 
-		for (const key in input) {
-			assert_string(input[key], `${keypath}.${key}`);
-		}
+			for (const key in input) {
+				assert_string(input[key], `${keypath}.${key}`);
+			}
 
-		return input;
-	}),
+			return input;
+		}),
+		(keypath) =>
+			`The \`${keypath}\` option is deprecated, and will be removed in a future version of SvelteKit. Use subpath imports instead: https://svelte.dev/docs/kit/$lib`
+	),
 
 	appDir: validate('_app', (input, keypath) => {
 		assert_string(input, keypath);
@@ -104,6 +83,8 @@ export const validate_kit_options = object({
 
 		return input;
 	}),
+
+	compilerOptions: any(),
 
 	csp: object({
 		mode: list(['auto', 'hash', 'nonce']),
@@ -124,18 +105,39 @@ export const validate_kit_options = object({
 		dir: string('')
 	}),
 
-	experimental: object({
-		tracing: removed(
-			(keypath) =>
-				`\`${keypath}\` has been removed. Server-side tracing is now configured via \`tracing.server\``
-		),
-		instrumentation: removed(
-			(keypath) =>
-				`\`${keypath}\` has been removed. \`src/instrumentation.server.js\` is now included in the build automatically when it exists; no opt-in is required`
-		),
-		remoteFunctions: boolean(false),
-		forkPreloads: boolean(false),
-		handleRenderingErrors: removed()
+	experimental: object(
+		{
+			tracing: removed(
+				(keypath) =>
+					`\`${keypath}\` has been removed. Server-side tracing is now configured via \`tracing.server\``
+			),
+			instrumentation: removed(
+				(keypath) =>
+					`\`${keypath}\` has been removed. \`src/instrumentation.server.js\` is now included in the build automatically when it exists; no opt-in is required`
+			),
+			remoteFunctions: boolean(false),
+			forkPreloads: boolean(false),
+			handleRenderingErrors: removed()
+		},
+		true
+	),
+
+	extensions: validate(['.svelte'], (input, keypath) => {
+		if (!Array.isArray(input) || !input.every((page) => typeof page === 'string')) {
+			throw new Error(`${keypath} must be an array of strings`);
+		}
+
+		input.forEach((extension) => {
+			if (extension[0] !== '.') {
+				throw new Error(`Each member of ${keypath} must start with '.' — saw '${extension}'`);
+			}
+
+			if (!/^(\.[a-z0-9]+)+$/i.test(extension)) {
+				throw new Error(`File extensions must be alphanumeric — saw '${extension}'`);
+			}
+		});
+
+		return input;
 	}),
 
 	files: object({
@@ -160,6 +162,16 @@ export const validate_kit_options = object({
 	inlineStyleThreshold: number(0),
 
 	moduleExtensions: string_array(['.js', '.ts']),
+
+	kit: validate(undefined, (input) => {
+		const keys = Object.keys(input)
+			.map((key) => `\`${key}\``)
+			.join(', ');
+
+		throw new Error(
+			`SvelteKit configuration (${keys}) no longer lives inside a \`kit\` namespace. Pass it directly to the \`sveltekit(...)\` Vite plugin`
+		);
+	}),
 
 	outDir: string('.svelte-kit'),
 
@@ -234,6 +246,8 @@ export const validate_kit_options = object({
 		relative: boolean(true)
 	}),
 
+	preprocess: any(),
+
 	prerender: object({
 		concurrency: number(1),
 		crawl: boolean(true),
@@ -270,52 +284,63 @@ export const validate_kit_options = object({
 	}),
 
 	serviceWorker: object({
+		files: removed(),
 		register: boolean(true),
 		// options could be undefined but if it is defined we only validate that
 		// it's an object since the type comes from the browser itself
-		options: validate(undefined, object({}, true)),
-		files: fun((filename) => !/\.DS_Store/.test(filename))
+		options: validate(undefined, object({}, true))
 	}),
 
 	tracing: object({
 		server: boolean(false)
 	}),
 
-	typescript: object({
-		config: fun((config) => config)
-	}),
+	typescript: deprecate(
+		object({
+			config: fun((config) => config)
+		}),
+		(keypath) => {
+			return `The \`${keypath}\` option is deprecated, and will be removed in a future version. Add configuration to tsconfig.json directly`;
+		}
+	),
 
 	version: object({
 		name: string(Date.now().toString()),
-		pollInterval: number(0)
-	})
-});
+		pollInterval: number(3_600_000)
+	}),
 
-// /**
-//  * @param {Validator} fn
-//  * @param {(keypath: string) => string} get_message
-//  * @returns {Validator}
-//  */
-// function deprecate(
-// 	fn,
-// 	get_message = (keypath) =>
-// 		`The \`${keypath}\` option is deprecated, and will be removed in a future version`
-// ) {
-// 	return (input, keypath) => {
-//		keypath = remove_kit_prefix(keypath);
-//
-// 		if (input !== undefined) {
-// 			console.warn(styleText(['bold', 'yellow'], get_message(keypath)));
-// 		}
+	vitePlugin: removed(
+		(keypath) =>
+			`\`${keypath}\` has been removed. Pass \`vite-plugin-svelte\` options directly to the \`sveltekit(...)\` Vite plugin`
+	)
+};
 
-// 		return fn(input, keypath);
-// 	};
-// }
+/** @type {Validator<ValidatedConfig>} */
+export const validate_options = object(options, true);
+
+/**
+ * @param {Validator} fn
+ * @param {(keypath: string) => string} get_message
+ * @returns {Validator}
+ */
+function deprecate(
+	fn,
+	get_message = (keypath) =>
+		`The \`${keypath}\` option is deprecated, and will be removed in a future version`
+) {
+	return (input, keypath) => {
+		if (input !== undefined) {
+			console.warn(styleText(['bold', 'yellow'], get_message(keypath)));
+		}
+
+		return fn(input, keypath);
+	};
+}
 
 // Derive the names of SvelteKit's own config options from the schema, so they
 // stay in sync automatically. These are used to separate Kit's options from
 // `vite-plugin-svelte`'s options when config is passed via the Vite plugin.
-const kit_defaults = validate_kit_options({}, 'config');
+const kit_defaults = validate_options({}, 'config');
 
 /** The names of the options that live under the `kit` namespace */
 export const kit_options = Object.keys(kit_defaults);
@@ -355,7 +380,8 @@ export function object(children, allow_unknown = false) {
 		for (const key in input) {
 			if (!(key in children)) {
 				if (allow_unknown) {
-					output[key] = input[key];
+					const value = input[key];
+					if (value !== undefined) output[key] = value;
 				} else {
 					let message = `Unexpected option ${keypath}.${key}`;
 
@@ -475,6 +501,10 @@ function fun(fallback) {
 		}
 		return input;
 	});
+}
+
+function any() {
+	return validate(undefined, (input) => input);
 }
 
 /**

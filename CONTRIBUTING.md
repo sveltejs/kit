@@ -149,7 +149,7 @@ For changes to be reflected in package changelogs, run `pnpm changeset` and foll
 
 ### Type changes
 
-If your PR changes the generated types of SvelteKit, run `pnpm generate:types` inside `packages/kit` and commit the new output (don't format it with Prettier!). Review the changes carefully to ensure there are no unwanted changes. If you don't commit type changes, CI will fail.
+If your PR changes the generated types of SvelteKit, run `pnpm generate:types` inside `packages/kit` and commit the new output (don't format it — `packages/kit/types` is excluded from oxfmt). Review the changes carefully to ensure there are no unwanted changes. If you don't commit type changes, CI will fail.
 
 ## Releases
 

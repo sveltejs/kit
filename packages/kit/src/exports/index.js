@@ -8,12 +8,12 @@ import {
 	has_resolution_suffix,
 	strip_data_suffix,
 	strip_resolution_suffix
-} from '../runtime/pathname.js';
-import { text_encoder } from '../runtime/utils.js';
+} from '../pathname.js';
 import { validate_redirect_location } from './url.js';
 
+const text_encoder = new TextEncoder();
+
 export { VERSION } from '../version.js';
-export { defineParams } from './params.js';
 
 // Keep the status codes as `number` because restricting to certain numbers makes it unnecessarily hard to use compared to the benefits
 // (we have runtime errors already to check for invalid codes). Also see https://github.com/sveltejs/kit/issues/11780
@@ -24,13 +24,44 @@ export { defineParams } from './params.js';
 /**
  * Throws an error with a HTTP status code and an optional message.
  * When called during request handling, this will cause SvelteKit to
- * return an error response without invoking `handleError`.
+ * return an error response; the error will be passed to `handleError` as an _expected_ error.
  * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
+ * @param {number} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
+ * @param {string} [message] The error message.
+ * @overload
+ * @param {{ status: number; message: string } extends App.Error ? number : never} status
+ * @param {{ status: number; message: string } extends App.Error ? string : never} [message]
+ * @return {never}
+ * @throws {import('./public.js').HttpError} This error instructs SvelteKit to initiate HTTP error handling.
+ * @throws {Error} If the provided status is invalid (not between 400 and 599).
+ */
+/**
+ * Throws an error with a HTTP status code and an optional message.
+ * When called during request handling, this will cause SvelteKit to
+ * return an error response; the error will be passed to `handleError` as an _expected_ error.
+ * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
+ * @param {number} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
+ * @param {string} message The error message.
+ * @param {keyof Omit<App.Error, 'status' | 'message'> extends never ? never : Omit<App.Error, 'status' | 'message'>} properties Additional properties of the App.Error type.
+ * @overload
+ * @param {number} status
+ * @param {string} message
+ * @param {keyof Omit<App.Error, 'status' | 'message'> extends never ? never : Omit<App.Error, 'status' | 'message'>} properties
+ * @return {never}
+ * @throws {import('./public.js').HttpError} This error instructs SvelteKit to initiate HTTP error handling.
+ * @throws {Error} If the provided status is invalid (not between 400 and 599).
+ */
+/**
+ * Throws an error with a HTTP status code and an optional message.
+ * When called during request handling, this will cause SvelteKit to
+ * return an error response; the error will be passed to `handleError` as an _expected_ error.
+ * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
+ * @deprecated Passing an `App.Error` body as the second argument is deprecated — pass the `message` as the second argument, and any additional properties as the third
  * @param {number} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
  * @param {Omit<App.Error, 'status'> & { status?: App.Error['status'] }} body An object that conforms to the App.Error type. If a string is passed, it will be used as the message property.
  * @overload
  * @param {number} status
- * @param {Omit<App.Error, 'status'> & { status?: App.Error['status'] }} body
+ * @param {Omit<App.Error, 'status'> & { status?: App.Error['status'] }} properties
  * @return {never}
  * @throws {import('./public.js').HttpError} This error instructs SvelteKit to initiate HTTP error handling.
  * @throws {Error} If the provided status is invalid (not between 400 and 599).
@@ -38,51 +69,31 @@ export { defineParams } from './params.js';
 /**
  * Throws an error with a HTTP status code and an optional message.
  * When called during request handling, this will cause SvelteKit to
- * return an error response without invoking `handleError`.
- * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
- * @param {number} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
- * @param {{ status: number; message: string } extends App.Error ? string | void | undefined : never} body The error message.
- * @overload
- * @param {number} status
- * @param {{ status: number; message: string } extends App.Error ? string | void | undefined : never} body
- * @return {never}
- * @throws {import('./public.js').HttpError} This error instructs SvelteKit to initiate HTTP error handling.
- * @throws {Error} If the provided status is invalid (not between 400 and 599).
- */
-/**
- * Throws an error with a HTTP status code and an optional message.
- * When called during request handling, this will cause SvelteKit to
- * return an error response without invoking `handleError`.
- * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
- * @param {number} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
- * @param {string} body The error message.
- * @param {{ status: number; message: string } extends App.Error ? never : Omit<App.Error, 'status' | 'message'>} properties Additional properties of the App.Error type.
- * @overload
- * @param {number} status
- * @param {string} body
- * @param {{ status: number; message: string } extends App.Error ? never : Omit<App.Error, 'status' | 'message'>} properties
- * @return {never}
- * @throws {import('./public.js').HttpError} This error instructs SvelteKit to initiate HTTP error handling.
- * @throws {Error} If the provided status is invalid (not between 400 and 599).
- */
-/**
- * Throws an error with a HTTP status code and an optional message.
- * When called during request handling, this will cause SvelteKit to
- * return an error response without invoking `handleError`.
+ * return an error response; the error will be passed to `handleError` as an _expected_ error.
  * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
  * @param {any} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
- * @param {any} [body] An object that conforms to the App.Error type. If a string is passed, it will be used as the message property.
+ * @param {any} [message] A string, or (deprecated) a partial App.Error object
  * @param {any} [properties] Additional properties of the App.Error type when passing a string message.
  * @return {never}
  * @throws {import('./public.js').HttpError} This error instructs SvelteKit to initiate HTTP error handling.
  * @throws {Error} If the provided status is invalid (not between 400 and 599).
  */
-export function error(status, body, properties) {
+export function error(status, message, properties) {
 	if ((!BROWSER || DEV) && (isNaN(status) || status < 400 || status > 599)) {
 		throw new Error(`HTTP error status codes must be between 400 and 599 — ${status} is invalid`);
 	}
 
-	throw new HttpError(status, body, properties);
+	if (message !== undefined && typeof message !== 'string') {
+		if (DEV) {
+			console.warn(
+				'Passing an `App.Error` body as the second argument is deprecated — pass the `message` as the second argument, and any additional properties as the third'
+			);
+		}
+
+		({ message, ...properties } = message);
+	}
+
+	throw new HttpError({ ...properties, status, message: message ?? `Error: ${status}` });
 }
 
 /**
@@ -260,9 +271,9 @@ export function invalid(...issues) {
 }
 
 /**
- * Checks whether this is an validation error thrown by {@link invalid}.
+ * Checks whether this is a validation error thrown by {@link invalid}.
  * @param {unknown} e The object to check.
- * @return {e is import('./public.js').ActionFailure}
+ * @return {e is import('./public.js').ValidationError}
  * @since 2.47.3
  */
 export function isValidationError(e) {

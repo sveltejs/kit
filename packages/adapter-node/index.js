@@ -1,4 +1,5 @@
-import { readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { rolldown } from 'rolldown';
 
@@ -6,10 +7,11 @@ const files = fileURLToPath(new URL('./files', import.meta.url).href);
 
 /** @param {string} str */
 function escape_regex(str) {
+	// TODO replace with `RegExp.escape(str)` when we require Node >= 24
 	return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-/** @type {import('./index.js').default} */
+/** @type {typeof import('./index.js').default} */
 export default function (opts = {}) {
 	const { out = 'build', precompress = true, envPrefix = '' } = opts;
 
@@ -18,21 +20,35 @@ export default function (opts = {}) {
 		async adapt(builder) {
 			const tmp = builder.getBuildDirectory('adapter-node');
 
-			builder.rimraf(out);
-			builder.rimraf(tmp);
-			builder.mkdirp(tmp);
+			rmSync(out, { force: true, recursive: true });
+			rmSync(tmp, { force: true, recursive: true });
+			mkdirSync(tmp, { recursive: true });
 
 			builder.log.minor('Copying assets');
-			builder.writeClient(`${out}/client${builder.config.kit.paths.base}`);
-			builder.writePrerendered(`${out}/prerendered${builder.config.kit.paths.base}`);
+			const written = [
+				...builder.writeClient(`${out}/client${builder.config.paths.base}`),
+				...builder.writePrerendered(`${out}/prerendered${builder.config.paths.base}`)
+			];
+
+			/** @type {string[]} */
+			let compressed = [];
 
 			if (precompress) {
 				builder.log.minor('Compressing assets');
-				await Promise.all([
-					builder.compress(`${out}/client`),
-					builder.compress(`${out}/prerendered`)
-				]);
+				compressed = (
+					await Promise.all([
+						builder.compress(`${out}/client`),
+						builder.compress(`${out}/prerendered`)
+					])
+				).flat();
 			}
+
+			const compressed_extensions = new Set(compressed.map((file) => extname(file)));
+			// a pathname whose extension appears in neither set may be a route segment
+			// resolving to a compressed `index.html`, so it must keep its `Vary` header
+			const uncompressed_extensions = new Set(
+				written.map((file) => extname(file)).filter((ext) => ext && !compressed_extensions.has(ext))
+			);
 
 			builder.log.minor('Building server');
 
@@ -54,7 +70,8 @@ export default function (opts = {}) {
 				[
 					`export const manifest = ${builder.generateManifest({ relativePath: './' })};`,
 					`export const prerendered = new Set(${JSON.stringify(builder.prerendered.paths)});`,
-					`export const base = ${JSON.stringify(builder.config.kit.paths.base)};`
+					`export const base = ${JSON.stringify(builder.config.paths.base)};`,
+					`export const uncompressed_extensions = new Set(${JSON.stringify([...uncompressed_extensions])});`
 				].join('\n\n')
 			);
 
@@ -76,7 +93,12 @@ export default function (opts = {}) {
 				input,
 				external: [
 					// dependencies could have deep exports, so we need a regex
-					...Object.keys(pkg.dependencies || {}).map((d) => new RegExp(`^${d}(\\/.*)?$`))
+					...Object.keys(pkg.dependencies || {}).map((d) => new RegExp(`^${d}(\\/.*)?$`)),
+					// `@opentelemetry/api` is an optional peer dependency of `@sveltejs/kit`,
+					// so it's not in `pkg.dependencies` and wouldn't be matched by the regex above.
+					// It must stay external so that `instrumentation.server.js` and the SvelteKit
+					// runtime share a single instance — see https://github.com/sveltejs/kit/issues/16288
+					/^@opentelemetry\/api(\/.*)?$/
 				],
 				platform: 'node',
 				resolve: {
@@ -108,7 +130,7 @@ export default function (opts = {}) {
 									.replace(/\bPRECOMPRESS\b/g, JSON.stringify(precompress))
 									.replace(
 										/\bORIGIN\b/g,
-										JSON.stringify(builder.config.kit.paths.origin) || 'undefined'
+										JSON.stringify(builder.config.paths.origin) || 'undefined'
 									);
 								return {
 									code: magicString,

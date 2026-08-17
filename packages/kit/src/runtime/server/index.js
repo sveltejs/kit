@@ -1,17 +1,51 @@
 import { noop } from '../../utils/functions.js';
-import { IN_WEBCONTAINER } from './constants.js';
+import { IN_WEBCONTAINER } from '../../constants.js';
 import { respond } from './respond.js';
+import { create_request_state } from './state.js';
 import { options, get_hooks } from '__SERVER__/internal.js';
-import { set_read_implementation, set_manifest } from './internal.js';
+import { set_read_implementation, set_manifest, fix_stack_trace } from './internal.js';
 import { set_env } from '__sveltekit/env';
-import { set_app } from './app.js';
-import { SvelteKitError } from '@sveltejs/kit/internal';
+import { init_tracing } from '@sveltejs/kit/internal/server';
+import { DEV } from 'esm-env';
+import { init_transport } from '#app/internal/transport';
 
 /** @type {Promise<any>} */
 let init_promise;
 
 /** @type {Promise<void> | null} */
 let current = null;
+
+/**
+ * Responses that were created with our monkey-patched `fetch`, which may need
+ * to have their `content-encoding` and `content-length` headers removed
+ * if returned directly (i.e. `fetch` is being used to proxy a request)
+ * @type {WeakMap<Response, Error>}
+ */
+const decoded_responses = new WeakMap();
+
+if (DEV) {
+	const fetch = globalThis.fetch;
+
+	/**
+	 * @param {RequestInfo | URL} info
+	 * @param {RequestInit} [init]
+	 */
+	globalThis.fetch = async (info, init) => {
+		const response = await fetch(info, init);
+		const encoding = response.headers.get('content-encoding');
+
+		if (encoding) {
+			decoded_responses.set(
+				response,
+				new Error(
+					`Cannot return \`fetch(...)\` directly from a handler if the response has a \`Content-Encoding: ${encoding}\` header. The body has already been decoded`
+				)
+			);
+		}
+
+		return response;
+	};
+}
 
 export class Server {
 	/** @type {import('types').SSROptions} */
@@ -56,6 +90,8 @@ export class Server {
 		// so anything that shouldn't be rerun should be wrapped in an `if` block to make sure it hasn't
 		// been done already.
 
+		if (__SVELTEKIT_SERVER_TRACING_ENABLED__) init_tracing(import('@opentelemetry/api'));
+
 		// set env, in case it's used in initialisation
 		set_env(env);
 
@@ -67,31 +103,17 @@ export class Server {
 				const result = read(file);
 				if (result instanceof ReadableStream) {
 					return result;
-				} else {
-					return new ReadableStream({
-						async start(controller) {
-							try {
-								const stream = await Promise.resolve(result);
-								if (!stream) {
-									controller.close();
-									return;
-								}
-
-								const reader = stream.getReader();
-
-								while (true) {
-									const { done, value } = await reader.read();
-									if (done) break;
-									controller.enqueue(value);
-								}
-
-								controller.close();
-							} catch (error) {
-								controller.error(error);
-							}
-						}
-					});
 				}
+
+				// TODO remove the cast once TypeScript's lib includes `ReadableStream.from`
+				return /** @type {ReadableStream} */ (
+					/** @type {any} */ (ReadableStream).from(
+						(async function* () {
+							const stream = await result;
+							if (stream) yield* stream;
+						})()
+					)
+				);
 			};
 
 			set_read_implementation(wrapped_read);
@@ -107,8 +129,13 @@ export class Server {
 					handle: module.handle || (({ event, resolve }) => resolve(event)),
 					handleError:
 						module.handleError ||
-						(({ error }) => {
-							if (error instanceof SvelteKitError) {
+						(({ kind, error, issues }) => {
+							if (kind === 'validation') {
+								console.error('Remote function schema validation failed:', issues);
+								return;
+							}
+
+							if (kind !== 'unknown') {
 								// don't log stack traces for 404s etc, it's all internal gubbins
 								return;
 							}
@@ -126,21 +153,10 @@ export class Server {
 							}
 						}),
 					handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request)),
-					handleValidationError:
-						module.handleValidationError ||
-						(({ issues }) => {
-							console.error('Remote function schema validation failed:', issues);
-							return { message: 'Bad Request', status: 400 };
-						}),
-					reroute: module.reroute || noop,
-					transport: module.transport || {}
+					reroute: module.reroute || noop
 				};
 
-				set_app({
-					decoders: module.transport
-						? Object.fromEntries(Object.entries(module.transport).map(([k, v]) => [k, v.decode]))
-						: {}
-				});
+				init_transport(module.transport ?? {});
 
 				if (module.init) {
 					await module.init();
@@ -153,16 +169,8 @@ export class Server {
 						},
 						handleError: ({ error }) => console.error(error),
 						handleFetch: ({ request, fetch }) => fetch(request),
-						handleValidationError: () => {
-							return { message: 'Bad Request' };
-						},
-						reroute: noop,
-						transport: {}
+						reroute: noop
 					};
-
-					set_app({
-						decoders: {}
-					});
 				} else {
 					throw e;
 				}
@@ -172,13 +180,21 @@ export class Server {
 
 	/**
 	 * @param {Request} request
-	 * @param {import('types').RequestOptions} options
+	 * @param {import('types').InternalRequestOptions} options
 	 */
-	respond(request, options) {
-		return respond(request, this.#options, this.#manifest, {
-			...options,
-			error: false,
-			depth: 0
-		});
+	async respond(request, options) {
+		const response = await respond(
+			request,
+			this.#options,
+			this.#manifest,
+			create_request_state(options)
+		);
+
+		if (DEV) {
+			const error = decoded_responses.get(response);
+			if (error) console.error(fix_stack_trace(error));
+		}
+
+		return response;
 	}
 }

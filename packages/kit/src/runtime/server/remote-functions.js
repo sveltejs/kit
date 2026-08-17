@@ -1,18 +1,21 @@
-/** @import { ActionResult, RemoteForm, RequestEvent, SSRManifest } from '@sveltejs/kit' */
+/** @import { RequestEvent, SSRManifest } from '@sveltejs/kit' */
+/** @import { RemoteForm } from '$app/server' */
+/** @import { ActionResult } from '$app/forms' */
 /** @import { RemoteFormInternals, RemoteFunctionData, RemoteFunctionResponse, RemoteInternals, RequestState, SSROptions } from 'types' */
 
-import { json, error } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
 import { Redirect, SvelteKitError } from '@sveltejs/kit/internal';
-import { with_request_store, merge_tracing } from '@sveltejs/kit/internal/server';
-import { app_dir, base } from '$app/paths/internal/server';
+import { with_request_store, merge_tracing, record_span } from '@sveltejs/kit/internal/server';
+import { app_dir, base } from '#app/paths';
 import { is_form_content_type } from '../../utils/http.js';
-import { create_remote_key, parse_remote_arg, split_remote_key, stringify } from '../shared.js';
+import { create_remote_key, parse_remote_arg, split_remote_key } from '../shared.js';
+import { stringify } from '#app/internal/transport';
 import { handle_error_and_jsonify } from './errors.js';
 import { normalize_error } from '../../utils/error.js';
-import { check_incorrect_fail_use } from './page/actions.js';
+import { check_incorrect_fail_use, get_action_location } from './page/actions.js';
 import { DEV } from 'esm-env';
-import { record_span } from '../telemetry/record_span.js';
 import { deserialize_binary_form } from '../form-utils.js';
+import { with_version_header } from './utils.js';
 
 /**
  * How long (in milliseconds) to wait after the last message was sent before
@@ -28,11 +31,12 @@ export async function handle_remote_call(event, state, options, manifest, id) {
 		attributes: {
 			'sveltekit.remote.call.id': id
 		},
-		fn: (current) => {
+		fn: async (current) => {
 			const traced_event = merge_tracing(event, current);
-			return with_request_store({ event: traced_event, state }, () =>
+			const response = await with_request_store({ event: traced_event, state }, () =>
 				handle_remote_call_internal(traced_event, state, options, manifest, id)
 			);
+			return with_version_header(response);
 		}
 	});
 }
@@ -57,7 +61,6 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 
 	/** @type {RemoteInternals} */
 	const internals = fn.__;
-	const transport = options.hooks.transport;
 
 	event.tracing.current.setAttributes({
 		'sveltekit.remote.call.type': internals.type,
@@ -85,7 +88,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 					new URL(event.request.url).searchParams.get('payload')
 				);
 
-				const generator = internals.run(event, state, parse_remote_arg(payload, transport));
+				const generator = internals.run(event, state, parse_remote_arg(payload));
 
 				const encoder = new TextEncoder();
 
@@ -154,7 +157,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 									}
 
 									// only send changed data
-									if (result !== (result = stringify(value, transport))) {
+									if (result !== (result = stringify(value))) {
 										send(controller, {
 											type: 'result',
 											result
@@ -212,9 +215,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 				/** @type {{ payloads: string[] }} */
 				const { payloads } = await event.request.json();
 
-				const args = await Promise.all(
-					payloads.map((payload) => parse_remote_arg(payload, transport))
-				);
+				const args = await Promise.all(payloads.map((payload) => parse_remote_arg(payload)));
 
 				data._ = await with_request_store({ event, state }, () => internals.run(args, options));
 
@@ -240,7 +241,11 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 					);
 				}
 
-				const { data: input, meta, form_data } = await deserialize_binary_form(event.request);
+				const {
+					data: input,
+					meta,
+					form_data
+				} = await deserialize_binary_form(event.request, internals.id);
 				state.remote.requested = create_requested_map(meta.remote_refreshes);
 
 				// If this is a keyed form instance (created via form.for(key)), add the key to the form data (unless already set)
@@ -257,10 +262,10 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 
 				if (data._.issues) {
 					// special case — don't serialize refreshes/reconnects
-					return json(
+					return Response.json(
 						/** @type {RemoteFunctionResponse} */ ({
 							type: 'result',
-							data: stringify(data, transport)
+							data: stringify(data)
 						}),
 						{ headers }
 					);
@@ -273,7 +278,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 				/** @type {{ payload: string, refreshes?: string[] }} */
 				const { payload, refreshes } = await event.request.json();
 				state.remote.requested = create_requested_map(refreshes);
-				const arg = parse_remote_arg(payload, transport);
+				const arg = parse_remote_arg(payload);
 
 				data._ = await with_request_store(
 					{ event, state: { ...state, is_in_remote_form_or_command: true } },
@@ -285,7 +290,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 
 			case 'prerender': {
 				data._ = await with_request_store({ event, state }, () =>
-					fn(parse_remote_arg(additional_args, transport))
+					fn(parse_remote_arg(additional_args))
 				);
 
 				break;
@@ -297,9 +302,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 					new URL(event.request.url).searchParams.get('payload')
 				);
 
-				data._ = await with_request_store({ event, state }, () =>
-					fn(parse_remote_arg(payload, transport))
-				);
+				data._ = await with_request_store({ event, state }, () => fn(parse_remote_arg(payload)));
 
 				break;
 			}
@@ -307,10 +310,10 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 
 		await collect_remote_data(data, event, state, options);
 
-		return json(
+		return Response.json(
 			/** @type {RemoteFunctionResponse} */ ({
 				type: 'result',
-				data: stringify(data, transport)
+				data: stringify(data)
 			}),
 			{ headers }
 		);
@@ -318,10 +321,10 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 		if (error instanceof Redirect) {
 			const data = await collect_remote_data({ redirect: error.location }, event, state, options);
 
-			return json(
+			return Response.json(
 				/** @type {RemoteFunctionResponse} */ ({
 					type: 'result',
-					data: stringify(data, transport)
+					data: stringify(data)
 				}),
 				{ headers }
 			);
@@ -329,7 +332,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 
 		const transformed = await handle_error_and_jsonify(event, state, options, error);
 
-		return json(
+		return Response.json(
 			/** @type {RemoteFunctionResponse} */ ({
 				type: 'error',
 				error: transformed
@@ -368,42 +371,63 @@ export async function collect_remote_data(data, event, state, options) {
 	/** @type {Promise<any>[]} */
 	const promises = [];
 
+	// Keys the explicit pass has serialized. Invoking a query's `fn` there can, as a
+	// side effect, register the same query in `state.remote.implicit` (via
+	// `get_response`), so we skip those keys in the implicit pass below to avoid
+	// processing them twice.
+	/** @type {Set<string>} */
+	const processed = new Set();
+
 	if (state.remote.explicit) {
-		for (const [remote_key, { internals, fn }] of state.remote.explicit) {
-			// there were explicit refreshes/reconnects (via `refresh()`/`set()`/`reconnect()`),
-			// so the client should apply these single-flight updates instead of calling `invalidateAll()`
-			data.r = true;
+		const { explicit } = state.remote;
 
-			const type = /** @type {'p' | 'q' | 'l'} */ (
-				internals.type === 'query_live' ? 'l' : internals.type[0]
-			);
+		/** @type {Promise<void>[]} */
+		const inflight = [];
 
-			// `fn` is deferred until now so the query runs after any state mutations
-			// in the command/form body. If the query was re-awaited in the meantime,
-			// `fn` returns the existing (fresh) cache entry rather than re-running.
-			// Kick off the query immediately and collect the promise so that multiple
-			// explicit refreshes run concurrently rather than serially.
-			const promise = fn();
+		const drain = () => {
+			for (const [remote_key, { internals, fn }] of explicit) {
+				explicit.delete(remote_key);
+				if (processed.has(remote_key)) continue;
+				processed.add(remote_key);
 
-			promises.push(
-				promise.then(
-					(v) => {
-						((data[type] ??= {})[remote_key] ??= {}).v = v;
-					},
-					async (e) => {
-						if (e instanceof Redirect) {
-							// already handled elsewhere
-							return;
+				// there were explicit refreshes/reconnects (via `refresh()`/`set()`/`reconnect()`),
+				// so the client should apply these single-flight updates instead of calling `invalidateAll()`
+				data.r = true;
+
+				const type = /** @type {'p' | 'q' | 'l'} */ (
+					internals.type === 'query_live' ? 'l' : internals.type[0]
+				);
+
+				// `fn` is deferred until now so the query runs after any state mutations
+				// in the command/form body. If the query was re-awaited in the meantime,
+				// `fn` returns the existing (fresh) cache entry rather than re-running.
+				inflight.push(
+					fn().then(
+						(v) => {
+							// a fresh value replaces the node entirely, so a re-run can't leave
+							// a stale error from a previous run alongside the new value
+							(data[type] ??= {})[remote_key] = { v };
+							drain();
+						},
+						async (e) => {
+							if (!(e instanceof Redirect)) {
+								// (a Redirect is already handled elsewhere)
+								(data[type] ??= {})[remote_key] = { e: await convert_error(e) };
+							}
+							drain();
 						}
+					)
+				);
+			}
+		};
 
-						((data[type] ??= {})[remote_key] ??= {}).e = await convert_error(e);
-					}
-				)
-			);
+		drain();
+
+		// `inflight` grows as settles drain newly-refreshed queries
+		for (const promise of inflight) {
+			await promise;
 		}
 	}
-
-	await Promise.all(promises);
 
 	if (state.remote.implicit) {
 		for (const [internals, record] of state.remote.implicit) {
@@ -415,6 +439,10 @@ export async function collect_remote_data(data, event, state, options) {
 			for (const key in record) {
 				// form outputs are registered under the client-side action id directly
 				const remote_key = internals.type === 'form' ? key : create_remote_key(internals.id, key);
+
+				// already serialized by the explicit pass (which always awaits and wins),
+				// so don't reprocess it here with the implicit "still loading" heuristic
+				if (processed.has(remote_key)) continue;
 
 				const type = /** @type {'p' | 'q' | 'l' | 'f'} */ (
 					internals.type === 'query_live' ? 'l' : internals.type[0]
@@ -506,6 +534,7 @@ export async function handle_remote_form_post(event, state, manifest, id) {
  * @returns {Promise<ActionResult>}
  */
 async function handle_remote_form_post_internal(event, state, manifest, id) {
+	const location = get_action_location(event.url);
 	// `hash` and `name` can never contain a `/`, but the JSON-stringified key of a
 	// keyed (`form.for(key)`) instance can — rejoin the remaining segments
 	const [hash, name, ...rest] = id.split('/');
@@ -525,6 +554,7 @@ async function handle_remote_form_post_internal(event, state, manifest, id) {
 		});
 		return {
 			type: 'error',
+			location,
 			// We're lying a bit with the types here; this will be transformed into a proper App.Error object later
 			error: new SvelteKitError(
 				405,
@@ -540,9 +570,9 @@ async function handle_remote_form_post_internal(event, state, manifest, id) {
 	}
 
 	try {
-		const fn = /** @type {RemoteFormInternals} */ (/** @type {any} */ (form).__).fn;
+		const __ = /** @type {RemoteFormInternals} */ (/** @type {any} */ (form).__);
 
-		const { data, meta, form_data } = await deserialize_binary_form(event.request);
+		const { data, meta, form_data } = await deserialize_binary_form(event.request, __.id);
 
 		if (action_id && !('id' in data)) {
 			data.id = JSON.parse(decodeURIComponent(action_id));
@@ -550,14 +580,15 @@ async function handle_remote_form_post_internal(event, state, manifest, id) {
 
 		await with_request_store(
 			{ event, state: { ...state, is_in_remote_form_or_command: true } },
-			() => fn(data, meta, form_data)
+			() => __.fn(data, meta, form_data)
 		);
 
 		// We don't want the data to appear on `let { form } = $props()`, which is why we're not returning it.
 		// It is instead available on `myForm.result`, setting of which happens within the remote `form` function.
 		return {
 			type: 'success',
-			status: 200
+			status: 200,
+			location
 		};
 	} catch (e) {
 		const err = normalize_error(e);
@@ -572,6 +603,7 @@ async function handle_remote_form_post_internal(event, state, manifest, id) {
 
 		return {
 			type: 'error',
+			location,
 			// @ts-expect-error We're lying a bit with the types here; this will be transformed into a proper App.Error object later
 			error: check_incorrect_fail_use(err)
 		};
@@ -581,11 +613,22 @@ async function handle_remote_form_post_internal(event, state, manifest, id) {
 /**
  * @param {URL} url
  */
+export function has_remote_prefix(url) {
+	return url.pathname.startsWith(`${base}/${app_dir}/remote/`);
+}
+
+/**
+ * @param {URL} url
+ */
+export function strip_remote_prefix(url) {
+	return url.pathname.replace(`${base}/${app_dir}/remote/`, '');
+}
+
+/**
+ * @param {URL} url
+ */
 export function get_remote_id(url) {
-	return (
-		url.pathname.startsWith(`${base}/${app_dir}/remote/`) &&
-		url.pathname.replace(`${base}/${app_dir}/remote/`, '')
-	);
+	return has_remote_prefix(url) && strip_remote_prefix(url);
 }
 
 /**

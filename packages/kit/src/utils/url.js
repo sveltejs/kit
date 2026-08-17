@@ -28,12 +28,25 @@ export function is_root_relative(path) {
 }
 
 /**
+ * Relative reference from `from` to `to`, which must differ only by a trailing slash
+ * @param {string} from
+ * @param {string} to
+ * @returns {string}
+ */
+export function relative_pathname(from, to) {
+	const segment = to.replace(/\/$/, '').split('/').at(-1);
+
+	return from.endsWith('/') ? `../${segment}` : `${segment}/`;
+}
+
+/**
  * @param {string} location
  * @param {string} allowed
  */
 export function matches_external_allowlist_entry(location, allowed) {
 	if (location === allowed) return true;
 
+	// TODO replace the try/catch with `URL.parse` when browser support allows (Chrome 126, Firefox 126, Safari 18)
 	try {
 		const allow = new URL(allowed);
 		const loc = new URL(location, allow);

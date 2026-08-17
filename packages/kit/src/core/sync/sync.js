@@ -1,11 +1,9 @@
 import path from 'node:path';
-import process from 'node:process';
 import create_manifest_data from './create_manifest_data/index.js';
 import { write_client_manifest } from './write_client_manifest.js';
-import { write_tsconfig } from './write_tsconfig.js';
+import { write_tsconfig } from './write_tsconfig/index.js';
 import { write_types, write_all_types } from './write_types/index.js';
-import { write_ambient } from './write_ambient.js';
-import { write_non_ambient } from './write_non_ambient.js';
+import { write_app_types } from './write_app_types.js';
 import { write_server } from './write_server.js';
 import {
 	create_node_analyser,
@@ -20,8 +18,7 @@ import { write_env } from './write_env.js';
  * @param {string} root The project root directory
  */
 export function init(config, root) {
-	write_tsconfig(config.kit, root);
-	write_ambient(config.kit);
+	write_tsconfig(config, root);
 }
 
 /**
@@ -32,12 +29,12 @@ export function init(config, root) {
 export function create(config, root) {
 	const manifest_data = create_manifest_data({ config, cwd: root });
 
-	const output = path.join(config.kit.outDir, 'generated');
+	const output = path.join(config.outDir, 'generated');
 
-	write_client_manifest(config.kit, manifest_data, `${output}/client`);
+	write_client_manifest(config, manifest_data, `${output}/client`, root);
 	write_server(config, output, root);
 	write_all_types(config, manifest_data, root);
-	write_non_ambient(config.kit, manifest_data);
+	write_app_types(config, manifest_data, root);
 
 	return { manifest_data };
 }
@@ -50,22 +47,35 @@ export function create(config, root) {
  * @param {import('types').ManifestData} manifest_data
  * @param {string} file
  * @param {string} root The project root directory
+ * @returns {boolean} Whether the update completed, or a full manifest rebuild is needed
  */
 export function update(config, manifest_data, file, root) {
-	const node_analyser = create_node_analyser(root);
+	try {
+		const node_analyser = create_node_analyser(root);
 
-	for (const node of manifest_data.nodes) {
-		node.page_options = node_analyser.get_page_options(node);
-	}
-
-	for (const route of manifest_data.routes) {
-		if (route.endpoint) {
-			route.endpoint.page_options = get_page_options(route.endpoint.file, root);
+		for (const node of manifest_data.nodes) {
+			node.page_options = node_analyser.get_page_options(node);
 		}
+
+		for (const route of manifest_data.routes) {
+			if (route.endpoint) {
+				route.endpoint.page_options = get_page_options(route.endpoint.file, root);
+			}
+		}
+
+		write_types(config, manifest_data, file, root);
+		write_app_types(config, manifest_data, root);
+	} catch (error) {
+		// A route file can disappear before the watcher delivers its unlink event. In that case,
+		// the manifest is stale and must be rebuilt instead of incrementally updated.
+		if (error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT') {
+			return false;
+		}
+
+		throw error;
 	}
 
-	write_types(config, manifest_data, file, root);
-	write_non_ambient(config.kit, manifest_data);
+	return true;
 }
 
 /**
@@ -81,18 +91,18 @@ export function all(config, root) {
 /**
  * Run sync.init and then generate all type files.
  * @param {import('types').ValidatedConfig} config
+ * @param {string} root
  */
-export function all_types(config) {
-	const cwd = process.cwd();
-	init(config, cwd);
-	const manifest_data = create_manifest_data({ config, cwd });
-	write_all_types(config, manifest_data, cwd);
-	write_non_ambient(config.kit, manifest_data);
+export function all_types(config, root) {
+	init(config, root);
+	const manifest_data = create_manifest_data({ config, cwd: root });
+	write_all_types(config, manifest_data, root);
+	write_app_types(config, manifest_data, root);
 }
 
 /**
  * Generate modules and types for explicit env vars
- * @param {import('types').ValidatedKitConfig} kit
+ * @param {import('types').ValidatedConfig} kit
  * @param {string | null} entry
  * @param {string} root The Vite root
  * @param {string} mode The Vite mode
@@ -100,7 +110,7 @@ export function all_types(config) {
 export async function env(kit, entry, root, mode) {
 	const env_config = await load_explicit_env(kit, entry, root, mode);
 
-	write_env(kit, entry, env_config);
+	write_env(entry, env_config.variables, root);
 
 	return env_config;
 }
@@ -111,5 +121,5 @@ export async function env(kit, entry, root, mode) {
  * @param {string} root The project root directory
  */
 export function server(config, root) {
-	write_server(config, path.join(config.kit.outDir, 'generated'), root);
+	write_server(config, path.join(config.outDir, 'generated'), root);
 }

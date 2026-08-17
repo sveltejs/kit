@@ -1,4 +1,4 @@
-/** @import { RemoteCommand } from '@sveltejs/kit' */
+/** @import { RemoteCommand } from '$app/server' */
 /** @import { MaybePromise, RemoteCommandInternals } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
@@ -65,16 +65,21 @@ export function command(validate_or_fn, maybe_fn) {
 	const wrapper = (arg) => {
 		const { event, state } = get_request_store();
 
-		if (!MUTATIVE_METHODS.includes(event.request.method)) {
-			throw new Error(
-				`Cannot call a command (\`${__.name}(${maybe_fn ? '...' : ''})\`) from a ${event.request.method} handler`
-			);
+		if (
+			!MUTATIVE_METHODS.includes(event.request.method) ||
+			state.is_in_remote_query ||
+			state.is_in_remote_prerender
+		) {
+			const violation =
+				state.is_in_remote_query || state.is_in_remote_prerender
+					? `inside a query or prerender function`
+					: `from a ${event.request.method} handler`;
+
+			throw new Error(`Cannot call a command (${__.name}) ${violation}`);
 		}
 
 		if (state.is_in_render) {
-			throw new Error(
-				`Cannot call a command (\`${__.name}(${maybe_fn ? '...' : ''})\`) during server-side rendering`
-			);
+			throw new Error(`Cannot call a command (${__.name}) during server-side rendering`);
 		}
 
 		const promise = Promise.resolve(

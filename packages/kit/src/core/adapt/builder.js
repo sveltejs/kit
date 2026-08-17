@@ -1,22 +1,29 @@
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 /** @import { Builder } from '@sveltejs/kit' */
 /** @import { ResolvedConfig } from 'vite' */
-/** @import { RouteDefinition, EnvVarConfig } from '@sveltejs/kit' */
+/** @import { RouteDefinition } from '@sveltejs/kit' */
+/** @import { EnvVarConfig } from '@sveltejs/kit/env' */
 /** @import { RouteData, ValidatedConfig, BuildData, ServerMetadata, ServerMetadataRoute, Prerendered, PrerenderMap, Logger, RemoteChunk } from 'types' */
 import { loadEnv } from 'vite';
 import * as devalue from 'devalue';
-import { createReadStream, createWriteStream, existsSync, statSync } from 'node:fs';
+import {
+	createReadStream,
+	createWriteStream,
+	existsSync,
+	mkdirSync,
+	rmSync,
+	statSync
+} from 'node:fs';
 import { extname, resolve, join, dirname, relative } from 'node:path';
 import { pipeline } from 'node:stream';
 import { promisify } from 'node:util';
 import zlib from 'node:zlib';
-import { copy, rimraf, mkdirp } from '../../utils/filesystem.js';
+import { copy, walk } from '../../utils/filesystem.js';
 import { posixify } from '../../utils/os.js';
 import { generate_manifest } from '../generate_manifest/index.js';
 import { get_route_segments } from '../../utils/routing.js';
 import generate_fallback from '../postbuild/fallback.js';
 import { write } from '../sync/utils.js';
-import { list_files } from '../utils.js';
 import { find_server_assets } from '../generate_manifest/find_server_assets.js';
 import { create_exported_declarations } from '../env.js';
 import { handle_issues, validate } from '../../exports/internal/env.js';
@@ -99,8 +106,8 @@ export function create_builder({
 
 	return {
 		log,
-		rimraf,
-		mkdirp,
+		rimraf: (dir) => rmSync(dir, { force: true, recursive: true }),
+		mkdirp: (dir) => mkdirSync(dir, { recursive: true }),
 		copy,
 
 		config,
@@ -109,16 +116,19 @@ export function create_builder({
 
 		async compress(directory) {
 			if (!existsSync(directory)) {
-				return;
+				return [];
 			}
 
-			const files = list_files(directory, (file) => extensions.includes(extname(file))).map(
-				(file) => resolve(directory, file)
-			);
+			const files = [...walk(directory)].filter((file) => extensions.includes(extname(file)));
 
 			await Promise.all(
-				files.flatMap((file) => [compress_file(file, 'gz'), compress_file(file, 'br')])
+				files.flatMap((file) => {
+					const abs = resolve(directory, file);
+					return [compress_file(abs, 'gz'), compress_file(abs, 'br')];
+				})
 			);
+
+			return files;
 		},
 
 		findServerAssets(route_data) {
@@ -130,15 +140,15 @@ export function create_builder({
 		},
 
 		async generateFallback(dest) {
-			const manifest_path = `${config.kit.outDir}/output/server/manifest-full.js`;
-			const env = loadEnv(vite_config.mode, config.kit.env.dir, '');
+			const manifest_path = `${config.outDir}/output/server/manifest-full.js`;
+			const env = loadEnv(vite_config.mode, config.env.dir, '');
 
 			const fallback = await generate_fallback({
 				manifest_path,
 				env,
-				out_dir: config.kit.outDir,
-				origin: config.kit.paths.origin || 'http://sveltekit-prerender',
-				assets: config.kit.files.assets
+				out_dir: config.outDir,
+				origin: config.paths.origin || 'http://sveltekit-prerender',
+				assets: config.files.assets
 			});
 
 			if (existsSync(dest)) {
@@ -153,8 +163,8 @@ export function create_builder({
 		generateEnvModule() {
 			if (!build_data.client?.uses_env_dynamic_public) return;
 
-			const dest = `${config.kit.outDir}/output/prerendered/dependencies/${config.kit.appDir}`;
-			const env = loadEnv(vite_config.mode, config.kit.env.dir, '');
+			const dest = `${config.outDir}/output/prerendered/dependencies/${config.appDir}`;
+			const env = loadEnv(vite_config.mode, config.env.dir, '');
 
 			/** @type {Record<string, any>} */
 			const values = {};
@@ -189,15 +199,15 @@ export function create_builder({
 		},
 
 		getBuildDirectory(name) {
-			return `${config.kit.outDir}/${name}`;
+			return `${config.outDir}/${name}`;
 		},
 
 		getClientDirectory() {
-			return `${config.kit.outDir}/output/client`;
+			return `${config.outDir}/output/client`;
 		},
 
 		getServerDirectory() {
-			return `${config.kit.outDir}/output/server`;
+			return `${config.outDir}/output/server`;
 		},
 
 		getAppPath() {
@@ -205,14 +215,14 @@ export function create_builder({
 		},
 
 		writeClient(dest) {
-			return copy(`${config.kit.outDir}/output/client`, dest, {
+			return copy(`${config.outDir}/output/client`, dest, {
 				// avoid making vite build artefacts public
 				filter: (basename) => basename !== '.vite'
 			});
 		},
 
 		writePrerendered(dest) {
-			const source = `${config.kit.outDir}/output/prerendered`;
+			const source = `${config.outDir}/output/prerendered`;
 
 			return [
 				...copy(`${source}/pages`, dest),
@@ -222,11 +232,11 @@ export function create_builder({
 		},
 
 		writeServer(dest) {
-			return copy(`${config.kit.outDir}/output/server`, dest);
+			return copy(`${config.outDir}/output/server`, dest);
 		},
 
 		hasServerInstrumentationFile() {
-			return existsSync(`${config.kit.outDir}/output/server/instrumentation.server.js`);
+			return existsSync(`${config.outDir}/output/server/instrumentation.server.js`);
 		},
 
 		instrument({
@@ -268,7 +278,7 @@ export function create_builder({
 							exports: module.exports
 						});
 
-			rimraf(entrypoint);
+			rmSync(entrypoint, { force: true, recursive: true });
 			write(entrypoint, facade);
 		}
 	};

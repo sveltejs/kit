@@ -24,9 +24,11 @@ export const test = base.extend({
 
 			afterNavigate: () => page.evaluate(() => afterNavigate(() => {})),
 
-			preloadCode: (pathname) => page.evaluate((pathname) => preloadCode(pathname), pathname),
+			preloadCode: (id) => page.evaluate((id) => preloadCode(id), id),
 
-			preloadData: (url) => page.evaluate((url) => preloadData(url), url)
+			preloadData: (url) => page.evaluate((url) => preloadData(url), url),
+
+			match: (url) => page.evaluate((url) => match(url), url)
 		});
 	},
 
@@ -146,10 +148,19 @@ export const test = base.extend({
 	read_errors: async ({}, use) => {
 		/** @param {string} path */
 		function read_errors(path) {
-			const errors =
-				fs.existsSync('test/errors.json') &&
-				JSON.parse(fs.readFileSync('test/errors.json', 'utf8'));
-			return errors[path];
+			if (!fs.existsSync('test/errors.jsonl')) return;
+
+			const records = fs.readFileSync('test/errors.jsonl', 'utf8').split('\n');
+			records.pop(); // ignore a trailing partial record if this races an append
+
+			const match = records
+				.map((line) => JSON.parse(line))
+				.findLast((error) => error.path === path);
+
+			if (match) {
+				const { path: _, ...error } = match;
+				return error;
+			}
 		}
 
 		await use(read_errors);
@@ -263,13 +274,13 @@ const known_devices = {
 	webkit: devices['Desktop Safari']
 };
 const test_browser = /** @type {keyof typeof known_devices} */ (
-	process.env.KIT_E2E_BROWSER ?? 'chromium'
+	process.env.KIT_E2E_BROWSER || 'chromium'
 );
 
 const test_browser_device = known_devices[test_browser]
 	? {
 			...known_devices[test_browser],
-			channel: test_browser === 'chromium' ? 'chromium' : undefined
+			channel: test_browser === 'chromium' ? 'chrome' : undefined
 		}
 	: undefined;
 

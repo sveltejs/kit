@@ -3,23 +3,20 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { assert, expect, test } from 'vitest';
 import { create_builder } from './builder.js';
-import { posixify } from '../../utils/os.js';
-import { list_files } from '../utils.js';
+import { walk } from '../../utils/filesystem.js';
 
 test('copy files', () => {
 	const cwd = join(import.meta.dirname, 'fixtures/basic');
 	const outDir = join(cwd, '.svelte-kit');
 
-	/** @type {import('@sveltejs/kit').Config} */
+	/** @type {import('@sveltejs/kit/vite').Config} */
 	const mocked = {
 		extensions: ['.svelte'],
-		kit: {
-			appDir: '_app',
-			files: {
-				assets: join(import.meta.dirname, 'fixtures/basic/static')
-			},
-			outDir
-		}
+		appDir: '_app',
+		files: {
+			assets: join(import.meta.dirname, 'fixtures/basic/static')
+		},
+		outDir
 	};
 
 	const builder = create_builder({
@@ -43,15 +40,15 @@ test('copy files', () => {
 
 	rmSync(dest, { recursive: true, force: true });
 
-	expect(builder.writeClient(dest)).toEqual(list_files(dest).map(posixify));
-	expect(
-		list_files(`${outDir}/output/client`).filter((file) => !file.startsWith('.vite/'))
-	).toEqual(list_files(dest));
+	expect(builder.writeClient(dest)).toEqual([...walk(dest)]);
+	expect([...walk(`${outDir}/output/client`)].filter((file) => !file.startsWith('.vite/'))).toEqual(
+		[...walk(dest)]
+	);
 
 	rmSync(dest, { recursive: true, force: true });
 
-	expect(builder.writeServer(dest)).toEqual(list_files(dest).map(posixify));
-	expect(list_files(`${outDir}/output/server`)).toEqual(list_files(dest));
+	expect(builder.writeServer(dest)).toEqual([...walk(dest)]);
+	expect([...walk(`${outDir}/output/server`)]).toEqual([...walk(dest)]);
 
 	rmSync(dest, { force: true, recursive: true });
 });
@@ -71,11 +68,21 @@ test('compress files', async () => {
 		rmSync(target + '.br', { force: true });
 		rmSync(target + '.gz', { force: true });
 	}
-	await builder.compress(dirname(targets[0]));
+	const compressed = await builder.compress(dirname(targets[0]));
 	for (const target of targets) {
 		assert.ok(existsSync(target + '.br'));
 		assert.ok(existsSync(target + '.gz'));
 	}
+	assert.deepEqual(compressed.sort(), ['foo.css', 'foo.md', 'foo.mdx']);
+});
+
+test('compress returns an empty array for a directory that does not exist', async () => {
+	// @ts-expect-error - we don't need the whole config for this test
+	const builder = create_builder({
+		route_data: []
+	});
+
+	assert.deepEqual(await builder.compress('does/not/exist'), []);
 });
 
 test('instrument generates facade with posix paths', () => {

@@ -1,12 +1,10 @@
-import { BROWSER, DEV } from 'esm-env';
-import { noop } from '../../utils/functions.js';
-import { hash } from '../../utils/hash.js';
+import { DEV } from 'esm-env';
+import { hash_request } from '../../utils/hash.js';
 import { base64_decode } from '../utils.js';
 
 let loading = 0;
 
-/** @type {typeof fetch} */
-const native_fetch = BROWSER ? window.fetch : /** @type {any} */ (noop);
+const native_fetch = window.fetch;
 
 export function lock_fetch() {
 	loading += 1;
@@ -16,7 +14,7 @@ export function unlock_fetch() {
 	loading -= 1;
 }
 
-if (DEV && BROWSER) {
+if (DEV) {
 	let can_inspect_stack_trace = false;
 
 	// detect whether async stack traces work
@@ -61,17 +59,17 @@ if (DEV && BROWSER) {
 		const method = input instanceof Request ? input.method : init?.method || 'GET';
 
 		if (method !== 'GET') {
-			cache.delete(build_selector(input));
+			cache.delete(build_selector(requested_url(input)));
 		}
 
 		return native_fetch(input, init);
 	};
-} else if (BROWSER) {
+} else {
 	window.fetch = (input, init) => {
 		const method = input instanceof Request ? input.method : init?.method || 'GET';
 
 		if (method !== 'GET') {
-			cache.delete(build_selector(input));
+			cache.delete(build_selector(requested_url(input)));
 		}
 
 		return native_fetch(input, init);
@@ -89,22 +87,24 @@ const cache = new Map();
 export function initial_fetch(resource, opts) {
 	const selector = build_selector(resource, opts);
 
-	const script = document.querySelector(selector);
-	if (script?.textContent) {
-		script.remove(); // In case multiple script tags match the same selector
-		let { body, ...init } = JSON.parse(script.textContent);
+	if (selector) {
+		const script = document.querySelector(selector);
+		if (script?.textContent) {
+			script.remove(); // In case multiple script tags match the same selector
+			let { body, ...init } = JSON.parse(script.textContent);
 
-		const b64 = script.getAttribute('data-b64');
-		if (b64 !== null) {
-			// Can't use native_fetch('data:...;base64,${body}')
-			// csp can block the request
-			body = base64_decode(body);
+			const b64 = script.getAttribute('data-b64');
+			if (b64 !== null) {
+				// Can't use native_fetch('data:...;base64,${body}')
+				// csp can block the request
+				body = base64_decode(body);
+			}
+
+			const ttl = script.getAttribute('data-ttl');
+			if (ttl) cache.set(selector, { body, init, ttl: 1000 * Number(ttl) });
+
+			return Promise.resolve(new Response(body, init));
 		}
-
-		const ttl = script.getAttribute('data-ttl');
-		if (ttl) cache.set(selector, { body, init, ttl: 1000 * Number(ttl) });
-
-		return Promise.resolve(new Response(body, init));
 	}
 
 	return DEV ? dev_fetch(resource, opts) : window.fetch(resource, opts);
@@ -119,7 +119,7 @@ export function initial_fetch(resource, opts) {
 export function subsequent_fetch(resource, resolved, opts) {
 	if (cache.size > 0) {
 		const selector = build_selector(resource, opts);
-		const cached = cache.get(selector);
+		const cached = selector && cache.get(selector);
 		if (cached) {
 			// https://developer.mozilla.org/en-US/docs/Web/API/Request/cache#value
 			if (
@@ -152,9 +152,22 @@ export function dev_fetch(resource, opts) {
 }
 
 /**
+ * Mirror the url normalization in `resolve_fetch_url`, so that non-GET requests
+ * evict the cache entry regardless of how the url is spelled
+ * @param {RequestInfo | URL} input
+ */
+function requested_url(input) {
+	const resolved = new URL(input instanceof Request ? input.url : input, location.href);
+	return resolved.origin === location.origin
+		? resolved.href.slice(location.origin.length)
+		: resolved.href;
+}
+
+/**
  * Build the cache key for a given request
  * @param {URL | RequestInfo} resource
  * @param {RequestInit} [opts]
+ * @returns {string | null} `null` for requests the server never serializes
  */
 function build_selector(resource, opts) {
 	const url = JSON.stringify(resource instanceof Request ? resource.url : resource);
@@ -162,18 +175,14 @@ function build_selector(resource, opts) {
 	let selector = `script[data-sveltekit-fetched][data-url=${url}]`;
 
 	if (opts?.headers || opts?.body) {
-		/** @type {import('types').StrictBody[]} */
-		const values = [];
+		const body = opts.body;
 
-		if (opts.headers) {
-			values.push([...new Headers(opts.headers)].join(','));
+		if (body && typeof body !== 'string' && !ArrayBuffer.isView(body)) {
+			// the server skips serializing these, so a matching script tag belongs to another request
+			return null;
 		}
 
-		if (opts.body && (typeof opts.body === 'string' || ArrayBuffer.isView(opts.body))) {
-			values.push(opts.body);
-		}
-
-		selector += `[data-hash="${hash(...values)}"]`;
+		selector += `[data-hash="${hash_request(opts.headers, body)}"]`;
 	}
 
 	return selector;

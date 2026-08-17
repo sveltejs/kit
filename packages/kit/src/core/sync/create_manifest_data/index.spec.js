@@ -9,14 +9,14 @@ const cwd = path.join(import.meta.dirname, 'test');
 
 /**
  * @param {string} dir
- * @param {import('@sveltejs/kit').Config} config
+ * @param {import('@sveltejs/kit/vite').Config} config
  */
 const create = (dir, config = {}) => {
 	const initial = validate_config(config);
 
-	initial.kit.files.assets = path.resolve(cwd, 'static');
-	initial.kit.files.params = path.resolve(cwd, 'params');
-	initial.kit.files.routes = path.resolve(cwd, dir);
+	initial.files.assets = path.resolve(cwd, 'static');
+	initial.files.params = path.resolve(cwd, 'params');
+	initial.files.routes = path.resolve(cwd, dir);
 
 	return create_manifest_data({
 		config: /** @type {import('types').ValidatedConfig} */ (initial),
@@ -35,8 +35,7 @@ const default_error = {
 
 /** @param {import('types').PageNode} node */
 function simplify_node(node) {
-	/** @type {import('types').PageNode} */
-	const simplified = {};
+	const simplified = /** @type {import('types').PageNode} */ ({});
 
 	if (node.component) simplified.component = node.component;
 	if (node.universal) simplified.universal = node.universal;
@@ -208,20 +207,28 @@ test('succeeds when routes does not exist', () => {
 test('encodes invalid characters', () => {
 	const { nodes, routes } = create('samples/encoding');
 
+	const emoji = { component: 'samples/encoding/[u+1f600]/+page.svelte' };
 	const quote = { component: 'samples/encoding/[x+22]/+page.svelte' };
 	const hash = { component: 'samples/encoding/[x+23]/+page.svelte' };
 	const question_mark = { component: 'samples/encoding/[x+3f]/+page.svelte' };
+	const open_bracket = { component: 'samples/encoding/[x+5b]/+page.svelte' };
+	const close_bracket = { component: 'samples/encoding/[x+5d]/+page.svelte' };
 
 	expect(nodes.map(simplify_node)).toEqual([
 		default_layout,
 		default_error,
+		emoji,
 		quote,
 		hash,
-		question_mark
+		question_mark,
+		open_bracket,
+		close_bracket
 	]);
 
 	expect(routes.map((p) => p.pattern.toString())).toEqual(
-		[/^\/$/, /^\/%3[Ff]\/?$/, /^\/%23\/?$/, /^\/"\/?$/].map((pattern) => pattern.toString())
+		[/^\/$/, /^\/\]\/?$/, /^\/\[\/?$/, /^\/%3[Ff]\/?$/, /^\/%23\/?$/, /^\/"\/?$/, /^\/😀\/?$/].map(
+			(pattern) => pattern.toString()
+		)
 	);
 });
 
@@ -273,8 +280,14 @@ test('sorts routes with rest correctly', () => {
 		default_layout,
 		default_error,
 		{
+			component: 'samples/rest/a/+page.svelte'
+		},
+		{
 			component: 'samples/rest/a/[...rest]/+page.svelte',
 			server: 'samples/rest/a/[...rest]/+page.server.js'
+		},
+		{
+			component: 'samples/rest/b/+page.svelte'
 		},
 		{
 			component: 'samples/rest/b/[...rest]/+page.svelte',
@@ -289,21 +302,27 @@ test('sorts routes with rest correctly', () => {
 		},
 		{
 			id: '/a',
-			pattern: '/^/a/?$/'
+			pattern: '/^/a/?$/',
+			page: {
+				layouts: [0],
+				errors: [1],
+				leaf: 2
+			}
 		},
 		{
 			id: '/a/[...rest]',
 			pattern: '/^/a(?:/([^]*))?/?$/',
-			page: { layouts: [0], errors: [1], leaf: 2 }
+			page: { layouts: [0], errors: [1], leaf: 3 }
 		},
 		{
 			id: '/b',
-			pattern: '/^/b/?$/'
+			pattern: '/^/b/?$/',
+			page: { layouts: [0], errors: [1], leaf: 4 }
 		},
 		{
 			id: '/b/[...rest]',
 			pattern: '/^/b(?:/([^]*))?/?$/',
-			page: { layouts: [0], errors: [1], leaf: 3 }
+			page: { layouts: [0], errors: [1], leaf: 5 }
 		}
 	]);
 });
@@ -357,7 +376,13 @@ test('optional parameters', () => {
 			component: 'samples/optional/[[optional]]/+page.svelte'
 		},
 		{
+			component: 'samples/optional/nested/[[optional]]/+page.svelte'
+		},
+		{
 			component: 'samples/optional/nested/[[optional]]/sub/+page.svelte'
+		},
+		{
+			component: 'samples/optional/nested/+page.svelte'
 		},
 		{
 			component: 'samples/optional/prefix[[suffix]]/+page.svelte'
@@ -374,7 +399,16 @@ test('optional parameters', () => {
 			pattern: '/^/([^/]*)?bar/?$/',
 			endpoint: { file: 'samples/optional/[[foo]]bar/+server.js', page_options: {} }
 		},
-		{ id: '/nested', pattern: '/^/nested/?$/' },
+		{
+			id: '/nested',
+			pattern: '/^/nested/?$/',
+			page: {
+				layouts: [0],
+				errors: [1],
+				// see above, linux/windows difference -> find the index dynamically
+				leaf: nodes.findIndex((node) => node.component?.includes('nested'))
+			}
+		},
 		{
 			id: '/nested/[[optional]]/sub',
 			pattern: '/^/nested(?:/([^/]+))?/sub/?$/',
@@ -382,10 +416,19 @@ test('optional parameters', () => {
 				layouts: [0],
 				errors: [1],
 				// see above, linux/windows difference -> find the index dynamically
+				leaf: nodes.findIndex((node) => node.component?.includes('nested/[[optional]]/sub'))
+			}
+		},
+		{
+			id: '/nested/[[optional]]',
+			pattern: '/^/nested(?:/([^/]+))?/?$/',
+			page: {
+				layouts: [0],
+				errors: [1],
+				// see above, linux/windows difference -> find the index dynamically
 				leaf: nodes.findIndex((node) => node.component?.includes('nested/[[optional]]'))
 			}
 		},
-		{ id: '/nested/[[optional]]', pattern: '/^/nested(?:/([^/]+))?/?$/' },
 		{
 			id: '/prefix[[suffix]]',
 			pattern: '/^/prefix([^/]*)?/?$/',
@@ -414,6 +457,7 @@ test('nested optionals', () => {
 	expect(nodes.map(simplify_node)).toEqual([
 		default_layout,
 		default_error,
+		{ component: 'samples/nested-optionals/[[a]]/+page.svelte' },
 		{ component: 'samples/nested-optionals/[[a]]/[[b]]/+page.svelte' }
 	]);
 
@@ -433,7 +477,12 @@ test('nested optionals', () => {
 		},
 		{
 			id: '/[[a]]',
-			pattern: '/^(?:/([^/]+))?/?$/'
+			pattern: '/^(?:/([^/]+))?/?$/',
+			page: {
+				layouts: [0],
+				errors: [1],
+				leaf: nodes.findIndex((node) => node.component?.includes('/[[a]]'))
+			}
 		}
 	]);
 });
@@ -475,7 +524,11 @@ test('group preceding optional parameters', () => {
 		},
 		{
 			id: '/[[optional]]',
-			pattern: '/^(?:/([^/]+))?/?$/'
+			pattern: '/^(?:/([^/]+))?/?$/',
+			endpoint: {
+				file: 'samples/optional-group/[[optional]]/+server.js',
+				page_options: {}
+			}
 		}
 	]);
 });
@@ -531,10 +584,6 @@ test('optional parameters inside a group adjacent to another route', () => {
 	]);
 
 	expect(routes.map(simplify_route)).toEqual([
-		{
-			id: '/(group)',
-			pattern: '/^/$/'
-		},
 		{
 			id: '/',
 			pattern: '/^/$/',

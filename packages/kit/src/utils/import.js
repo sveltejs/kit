@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 /**
  * Resolves a peer dependency relative to the current working directory.
@@ -51,8 +52,9 @@ function resolve_peer(dependency, root) {
  */
 export async function import_peer(dependency, root) {
 	try {
-		return await import(/* @vite-ignore */ resolve_peer(dependency, root));
+		return await import(/* @vite-ignore */ pathToFileURL(resolve_peer(dependency, root)).href);
 	} catch {
+		// eslint-disable-next-line kit-node-custom/require-path-to-file-url -- bare package specifier, not a path
 		return await import(/* @vite-ignore */ dependency);
 	}
 }

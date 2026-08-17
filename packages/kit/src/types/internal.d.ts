@@ -1,30 +1,28 @@
 import { Component } from 'svelte';
 import {
-	Config,
 	ServerLoad,
-	Handle,
-	HandleServerError,
-	KitConfig,
 	Load,
 	RequestHandler,
-	ResolveOptions,
 	Server,
 	ServerInitOptions,
-	HandleFetch,
 	Actions,
-	HandleClientError,
-	Reroute,
 	RequestEvent,
 	SSRManifest,
-	Emulator,
-	ServerInit,
-	ClientInit,
-	Transport,
-	HandleValidationError,
-	RemoteFormIssue,
-	RemoteQuery,
-	RemoteLiveQuery
+	Emulator
 } from '@sveltejs/kit';
+import { RemoteFormIssue, RemoteQuery, RemoteLiveQuery } from '$app/server';
+import { Config } from '@sveltejs/kit/vite';
+import {
+	ClientInit,
+	Handle,
+	HandleClientError,
+	HandleFetch,
+	HandleServerError,
+	Reroute,
+	ResolveOptions,
+	ServerInit,
+	Transport
+} from '@sveltejs/kit/hooks';
 import {
 	HttpMethod,
 	MaybePromise,
@@ -49,6 +47,7 @@ export interface ServerInternalModule {
 	set_version(version: string): void;
 	set_fix_stack_trace(fix_stack_trace: (error: Error) => void): void;
 	get_hooks: () => Promise<Record<string, any>>;
+	log_response: (status: number, request: Request) => void;
 }
 
 export interface Asset {
@@ -156,9 +155,8 @@ export interface ServerHooks {
 	handleFetch: HandleFetch;
 	handle: Handle;
 	handleError: HandleServerError;
-	handleValidationError: HandleValidationError;
 	reroute: Reroute;
-	transport: Transport;
+	transport?: Transport;
 	init?: ServerInit;
 }
 
@@ -174,24 +172,23 @@ export interface Env {
 	public: Record<string, string>;
 }
 
+export interface InternalRequestOptions extends RequestOptions {
+	prerendering?: PrerenderOptions;
+	/** @internal for saving dependencies during prerendering and generating fallback pages */
+	read: (file: string) => Buffer<ArrayBuffer>;
+	/** @internal used during development to check feature availability depending on the current route */
+	before_handle?: (
+		event: RequestEvent,
+		config: any,
+		prerender: PrerenderOption,
+		handle: () => Promise<Response>
+	) => Promise<Response>;
+	emulator?: Emulator;
+}
+
 export class InternalServer extends Server {
 	init(options: ServerInitOptions): Promise<void>;
-	respond(
-		request: Request,
-		options: RequestOptions & {
-			prerendering?: PrerenderOptions;
-			/** @internal for saving dependencies during prerendering and generating fallback pages */
-			read: (file: string) => Buffer<ArrayBuffer>;
-			/** @internal used during development to check feature availability depending on the current route */
-			before_handle?: (
-				event: RequestEvent,
-				config: any,
-				prerender: PrerenderOption,
-				handle: () => Promise<Response>
-			) => Promise<Response>;
-			emulator?: Emulator;
-		}
-	): Promise<Response>;
+	respond(request: Request, options: InternalRequestOptions): Promise<Response>;
 }
 
 export interface ManifestData {
@@ -233,12 +230,15 @@ export interface PrerenderDependency {
 	body: null | string | Uint8Array;
 }
 
+/** Internal context for the prerendering process */
 export interface PrerenderOptions {
 	cache?: string; // including this here is a bit of a hack, but it makes it easy to add <meta http-equiv>
 	fallback?: boolean;
 	dependencies: Map<string, PrerenderDependency>;
 	/** Results of remote `prerender` functions, shared across the whole prerender run so that each only executes once */
 	remote_responses: Map<string, Promise<any>>;
+	/** Route IDs whose resolution module has been emitted, shared across the whole prerender run so that each only generates once */
+	resolved_route_ids: Set<string>;
 	/** True for the duration of a call to the `reroute` hook */
 	inside_reroute?: boolean;
 }
@@ -476,13 +476,13 @@ export type SSRNodeLoader = () => Promise<SSRNode>;
 
 export interface SSROptions {
 	app_template_contains_nonce: boolean;
-	csp: ValidatedConfig['kit']['csp'];
+	csp: ValidatedConfig['csp'];
 	csrf_check_origin: boolean;
 	csrf_trusted_origins: string[];
 	embedded: boolean;
 	hash_routing: boolean;
 	hooks: ServerHooks;
-	link_header_preload: ValidatedConfig['kit']['output']['linkHeaderPreload'];
+	link_header_preload: ValidatedConfig['output']['linkHeaderPreload'];
 	paths_origin: string | undefined;
 	service_worker: boolean;
 	service_worker_options: RegistrationOptions;
@@ -496,6 +496,7 @@ export interface SSROptions {
 		}): string;
 		error(values: { message: string; status: number }): string;
 	};
+	version: string;
 	version_hash: string;
 }
 
@@ -534,39 +535,6 @@ export interface SSRClientRoute {
 	leaf: [has_server_load: boolean, node_id: number];
 }
 
-export interface SSRState {
-	fallback?: string;
-	getClientAddress(): string;
-	/**
-	 * True if we're currently attempting to render an error page.
-	 */
-	error: boolean;
-	/**
-	 * Allows us to prevent `event.fetch` from making infinitely looping internal requests.
-	 */
-	depth: number;
-	platform?: any;
-	prerendering?: PrerenderOptions;
-	/**
-	 * When fetching data from a +server.js endpoint in `load`, the page's
-	 * prerender option is inherited by the endpoint, unless overridden.
-	 */
-	prerender_default?: PrerenderOption;
-	/** @internal reads from the filesystem when user code tries to fetch a static asset */
-	read?: (file: string) => Buffer<ArrayBuffer>;
-	/**
-	 * Used to set up `__SVELTEKIT_TRACK__` which checks if a used feature is supported.
-	 * E.g. if `read` from `$app/server` is used, it checks whether the route's config is compatible.
-	 */
-	before_handle?: (
-		event: RequestEvent,
-		config: Record<string, any>,
-		prerender: PrerenderOption,
-		handle: () => Promise<Response>
-	) => Promise<Response>;
-	emulator?: Emulator;
-}
-
 export type StrictBody = string | ArrayBufferView;
 
 export interface Uses {
@@ -578,12 +546,9 @@ export interface Uses {
 	search_params: Set<string>;
 }
 
-export type ValidatedConfig = Omit<Config, 'kit'> & {
-	kit: ValidatedKitConfig;
-	extensions: string[];
+export type ValidatedConfig = RecursiveRequired<Omit<Config, 'preprocess'>> & {
+	preprocess: Config['preprocess'];
 };
-
-export type ValidatedKitConfig = RecursiveRequired<KitConfig>;
 
 export type BinaryFormMeta = {
 	remote_refreshes?: string[];
@@ -646,7 +611,7 @@ export interface RemoteFormInternals extends BaseRemoteInternals {
 	 * For keyed (`form.for(key)`) instances: the id as the client computes it
 	 * (the key is JSON-stringified but not URI-encoded, unlike `id`)
 	 */
-	action_id?: string;
+	key?: string;
 	fn(body: Record<string, any>, meta: BinaryFormMeta, form_data: FormData | null): Promise<any>;
 }
 
@@ -685,12 +650,35 @@ export type RecordSpan = <T>(options: {
  * used for tracking things like remote function calls
  */
 export interface RequestState {
-	readonly prerendering: PrerenderOptions | undefined;
-	readonly transport: ServerHooks['transport'];
-	readonly handleValidationError: ServerHooks['handleValidationError'];
-	readonly tracing: {
-		record_span: RecordSpan;
-	};
+	readonly getClientAddress: () => string;
+	readonly platform?: any;
+	/** @internal reads from the filesystem when user code tries to fetch a static asset */
+	readonly read?: (file: string) => Buffer<ArrayBuffer>;
+	/**
+	 * Used to set up `__SVELTEKIT_TRACK__` which checks if a used feature is supported.
+	 * E.g. if `read` from `$app/server` is used, it checks whether the route's config is compatible.
+	 */
+	readonly before_handle?: (
+		event: RequestEvent,
+		config: Record<string, any>,
+		prerender: PrerenderOption,
+		handle: () => Promise<Response>
+	) => Promise<Response>;
+	readonly emulator?: Emulator;
+	readonly prerendering?: PrerenderOptions;
+	/**
+	 * When fetching data from a +server.js endpoint in `load`, the page's
+	 * prerender option is inherited by the endpoint, unless overridden.
+	 */
+	prerender_default?: PrerenderOption;
+	/**
+	 * True if we're currently attempting to render an error page.
+	 */
+	error: boolean;
+	/**
+	 * Allows us to prevent `event.fetch` from making infinitely looping internal requests.
+	 */
+	readonly depth: number;
 	readonly remote: {
 		/** Resolved query/prerender data, populated by `await myQuery()` or `myQuery.set(...)` */
 		data: null | Map<RemoteInternals, Record<string, MaybePromise<any>>>;
@@ -700,8 +688,11 @@ export interface RequestState {
 		 */
 		implicit: null | Map<RemoteInternals, Record<string, () => MaybePromise<any>>>;
 		/**
-		 * Data that is explicitly included because of a `set(...)` or `refresh()`.
-		 * This is always awaited
+		 * Data that is explicitly included because of a `set(...)`, `refresh()` or
+		 * `reconnect()`. The stored function is invoked lazily at the end of the
+		 * request by `collect_remote_data`; if the query was already read (and thus
+		 * cached) earlier in the request, invoking it does no additional work. This
+		 * is always awaited and serialized.
 		 */
 		explicit: null | Map<
 			string,
@@ -736,8 +727,8 @@ export interface RequestState {
 	readonly is_in_remote_function: boolean;
 	readonly is_in_remote_form_or_command: boolean;
 	readonly is_in_remote_query: boolean;
+	readonly is_in_remote_prerender: boolean;
 	readonly is_in_render: boolean;
-	readonly is_in_universal_load: boolean;
 }
 
 export interface RequestStore {

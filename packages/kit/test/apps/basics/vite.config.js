@@ -84,12 +84,6 @@ export default defineConfig({
 
 			router: {
 				resolution: /** @type {'client' | 'server'} */ (process.env.ROUTER_RESOLUTION) || 'client'
-			},
-
-			typescript: {
-				config: (config) => {
-					config.include.push('../unit-test');
-				}
 			}
 		})
 	],
@@ -102,11 +96,22 @@ export default defineConfig({
 		}
 	},
 	test: {
+		name: 'kit-client-import',
 		expect: { requireAssertions: true },
 		browser: {
 			enabled: true,
-			provider: playwright(),
-			instances: [{ browser: 'chromium' }],
+			provider: playwright({
+				launchOptions: {
+					channel: process.env.KIT_E2E_BROWSER === 'chromium' ? 'chrome' : undefined
+				}
+			}),
+			instances: [
+				{
+					browser:
+						/** @type {"chromium" | "firefox" | "webkit"} */ (process.env.KIT_E2E_BROWSER) ||
+						'chromium'
+				}
+			],
 			headless: true
 		},
 		include: ['unit-test/**/*.spec.js']

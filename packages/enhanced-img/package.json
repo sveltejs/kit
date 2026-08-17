@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/enhanced-img",
-	"version": "1.0.0-next.2",
+	"version": "1.0.0-next.5",
 	"description": "Image optimization for your Svelte apps",
 	"repository": {
 		"type": "git",
@@ -21,9 +21,9 @@
 	"homepage": "https://svelte.dev/docs/kit/images#sveltejs-enhanced-img",
 	"type": "module",
 	"scripts": {
-		"lint": "prettier --check .",
+		"lint": "oxfmt --check .",
 		"check": "tsc",
-		"format": "prettier --write .",
+		"format": "oxfmt --write .",
 		"test": "pnpm test:unit && pnpm test:integration",
 		"test:unit": "vitest run",
 		"test:integration": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test"
@@ -38,18 +38,17 @@
 	},
 	"types": "types/index.d.ts",
 	"dependencies": {
-		"magic-string": "^0.30.21",
-		"sharp": "^0.35.2",
+		"magic-string": "^1.1.0",
+		"sharp": "^0.35.3",
 		"svelte-parse-markup": "^0.1.5",
-		"vite-imagetools": "^10.0.1",
-		"zimmerframe": "^1.1.2"
+		"vite-imagetools": "^12.0.0",
+		"zimmerframe": "^1.1.4"
 	},
 	"devDependencies": {
 		"@types/estree": "catalog:",
 		"@types/node": "catalog:",
-		"rolldown": "catalog:",
 		"svelte": "catalog:",
-		"typescript": "catalog:",
+		"typescript": "catalog:typescript-native",
 		"vite": "catalog:",
 		"vitest": "catalog:"
 	},

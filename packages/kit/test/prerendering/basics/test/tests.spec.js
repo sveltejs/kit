@@ -18,15 +18,26 @@ const build = fileURLToPath(new URL('../build', import.meta.url));
  * @returns {Buffer<ArrayBufferLike>}
  */
 /**
+ * @template {BufferEncoding | null} [T='utf-8']
  * @param {string} file
- * @param {BufferEncoding | null} [encoding]
- * @returns {string | Buffer<ArrayBufferLike>}
+ * @param {T} encoding
+ * @returns {T extends string ? string : Buffer<ArrayBufferLike>}
  */
-const read = (file, encoding = 'utf-8') => fs.readFileSync(`${build}/${file}`, encoding);
+const read = (file, encoding = /** @type {T} */ ('utf-8')) =>
+	/** @type {T extends string ? string : Buffer<ArrayBufferLike>} */ (
+		fs.readFileSync(`${build}/${file}`, encoding)
+	);
 
 test('prerenders /', () => {
 	const content = read('index.html');
 	expect(content).toMatch('<h1>hello</h1>');
+});
+
+test('prerenders route resolution modules alongside .html pages', () => {
+	assert.isTrue(fs.statSync(`${build}/page.html`).isFile());
+	expect(read('page.html__route.js')).toContain('export const');
+	assert.isFalse(fs.existsSync(`${build}/page.html/__route.js`));
+	assert.isTrue(fs.statSync(`${build}/prerendering-true/__route.js`).isFile());
 });
 
 test('renders a redirect', () => {
@@ -258,9 +269,9 @@ test('prerendered.paths omits trailing slashes for endpoints', () => {
 	const content = read('service-worker.js');
 
 	for (const path of [
-		'/trailing-slash/page/',
-		'/trailing-slash/page/__data.json',
-		'/trailing-slash/standalone-endpoint.json'
+		'trailing-slash/page/',
+		'trailing-slash/page/__data.json',
+		'trailing-slash/standalone-endpoint.json'
 	]) {
 		expect(content, `Missing ${path}`).toMatch(`"${path}"`);
 	}
@@ -279,6 +290,11 @@ test('prerenders paths with optional parameters with empty values', () => {
 test('crawls links that start with config.paths.origin', () => {
 	const content = read('prerender-origin/dynamic.html');
 	expect(content).toBeTruthy();
+});
+
+test('crawls pages whose content-type has a charset parameter', () => {
+	expect(read('content-type-charset.html')).toBeTruthy();
+	expect(read('content-type-charset/dynamic.html')).toBeTruthy();
 });
 
 test('identifies missing ids', () => {

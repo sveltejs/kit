@@ -1,9 +1,10 @@
-/** @import { RemoteLiveQuery, RemoteLiveQueryFunction, RemoteQuery, RemoteQueryFunction, RequestEvent } from '@sveltejs/kit' */
+/** @import { RemoteLiveQuery, RemoteLiveQueryFunction, RemoteQuery, RemoteQueryFunction } from '$app/server' */
+/** @import { RequestEvent } from '@sveltejs/kit' */
 /** @import { RemoteInternals, MaybePromise, RequestState, RemoteQueryLiveInternals, RemoteQueryBatchInternals, RemoteQueryInternals, RemoteLiveQueryUserFunctionReturnType } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import { create_remote_key, stringify_remote_arg } from '../../../shared.js';
-import { prerendering } from '$app/env/internal';
+import { prerendering } from '#app/env/server';
 import {
 	create_validator,
 	get_cache,
@@ -98,7 +99,7 @@ export function query(validate_or_fn, maybe_fn) {
 		}
 
 		const { event, state } = get_request_store();
-		const payload = stringify_remote_arg(arg, state.transport);
+		const payload = stringify_remote_arg(arg);
 
 		return create_query_resource(__, payload, event, state, () =>
 			run_remote_function(
@@ -197,7 +198,7 @@ function live(validate_or_fn, maybe_fn) {
 		}
 
 		const { event, state } = get_request_store();
-		const payload = stringify_remote_arg(arg, state.transport);
+		const payload = stringify_remote_arg(arg);
 
 		return create_live_query_resource(__, payload, event, state, () =>
 			run(event, state, () => validate(arg))
@@ -376,7 +377,7 @@ function batch(validate_or_fn, maybe_fn) {
 		}
 
 		const { event, state } = get_request_store();
-		const payload = stringify_remote_arg(arg, state.transport);
+		const payload = stringify_remote_arg(arg);
 
 		return create_query_resource(__, payload, event, state, () =>
 			// Collect all the calls to the same query in the same macrotask,
@@ -404,17 +405,18 @@ export function refresh(event, state, internals, payload, fn) {
 		return;
 	}
 
-	if (!event.isRemoteRequest) {
-		// or this is a no-JS form submission
+	if (!event.isRemoteRequest && state.is_in_remote_form_or_command) {
+		// ...or this is a no-JS (native) form submission, where the page re-renders
+		// anyway so there's no live client cache to apply a single-flight update to.
 		return;
 	}
 
 	const key = create_remote_key(internals.id, payload);
 
 	// `fn` is stored rather than invoked eagerly. The query is run at the end of
-	// the command/form (in `collect_remote_data`), so that it observes any state
+	// the request (in `collect_remote_data`), so that it observes any state
 	// mutations that happen after `refresh()` is called. If the developer re-awaits
-	// the query before the command finishes, the cache entry created by that await
+	// the query before the request finishes, the cache entry created by that await
 	// is reused instead of re-running the query.
 	(state.remote.explicit ??= new Map()).set(key, {
 		internals,
@@ -573,12 +575,6 @@ function create_live_query_resource(__, payload, event, state, get_generator) {
 			refresh(event, state, __, payload, get_promise);
 
 			return Promise.resolve();
-		},
-		/** @ts-expect-error This method no longer exists */
-		run() {
-			throw new Error(
-				'`.run()` has been removed from live queries. Use `for await (const value of liveQuery())` instead.'
-			);
 		},
 		/** @type {Promise<any>['then']} */
 		then(onfulfilled, onrejected) {

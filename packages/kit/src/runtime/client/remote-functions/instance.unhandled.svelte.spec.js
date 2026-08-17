@@ -10,7 +10,6 @@ import { HttpError } from '@sveltejs/kit/internal';
 vi.mock(new URL('../client.js', import.meta.url).pathname, async () => {
 	const { HttpError } = await import('@sveltejs/kit/internal');
 	return {
-		app: { hooks: { transport: {} }, decoders: {}, encoders: {} },
 		query_map: new Map(),
 		query_responses: {},
 		live_query_map: new Map(),
@@ -69,7 +68,7 @@ describe('reactive consumption never produces unhandled rejections', () => {
 		const tracker = track_unhandled();
 		try {
 			const instance = new LiveQuery('id', 'id/payload', 'payload');
-			instance.fail(new HttpError(500, 'nope'));
+			instance.fail(new HttpError({ status: 500, message: 'nope' }));
 			await flush();
 			expect(instance.error).toEqual({ message: 'nope', status: 500 });
 			expect(tracker.unhandled).toEqual([]);

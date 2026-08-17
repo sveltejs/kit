@@ -319,6 +319,33 @@ test.describe('Load', () => {
 		}
 	});
 
+	test('POST fetches with non-string bodies are not serialized', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		await page.goto('/load/serialization-post-body-object');
+
+		expect(await page.textContent('h1')).toBe('A=1');
+
+		if (!javaScriptEnabled) {
+			expect(await page.locator('script[data-sveltekit-fetched]').count()).toBe(0);
+		}
+	});
+
+	test('POST fetches with non-string bodies do not reuse responses serialized for other requests', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		await page.goto('/load/serialization-post-body-collision');
+
+		expect(await page.textContent('h1')).toBe('POST:a=1');
+		expect(await page.textContent('p')).toBe('GET');
+
+		if (!javaScriptEnabled) {
+			expect(await page.locator('script[data-sveltekit-fetched]').count()).toBe(1);
+		}
+	});
+
 	test('fetches using an arraybuffer serialized with b64', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/load/fetch-arraybuffer-b64');
 
@@ -747,6 +774,75 @@ test.describe('$app/env', () => {
 	});
 });
 
+test.describe('$app/manifest', () => {
+	test('exposes routes', async ({ page }) => {
+		await page.goto('/app-manifest');
+		const routes = JSON.parse((await page.textContent('[data-name="routes"] pre')) ?? '');
+		const ids = routes.map((/** @type {any} */ r) => r.id);
+		expect(ids).toContain('/');
+		expect(ids).toContain('/app-manifest');
+		expect(ids).toContain('/routing');
+		expect(ids).not.toContain('/app-manifest/not-a-page');
+	});
+
+	test('exposes route capabilities', async ({ page }) => {
+		await page.goto('/app-manifest');
+		const routes = JSON.parse((await page.textContent('[data-name="routes"] pre')) ?? '');
+
+		// only a `+page.svelte`
+		expect(routes).toContainEqual({ id: '/app-manifest', page: true, endpoint: false });
+		// only a `+server.js`
+		expect(routes).toContainEqual({ id: '/answer.json', page: false, endpoint: true });
+		// both a `+page.svelte` and a `+server.js`
+		expect(routes).toContainEqual({
+			id: '/endpoint-output/fallback-with-page',
+			page: true,
+			endpoint: true
+		});
+
+		// every route has at least one capability
+		for (const route of routes) {
+			expect(route.page || route.endpoint).toBe(true);
+		}
+	});
+
+	test('exposes static assets', async ({ page }) => {
+		await page.goto('/app-manifest');
+		const assets = JSON.parse((await page.textContent('[data-name="assets"] pre')) ?? '');
+		const paths = assets.map((/** @type {any} */ a) => a.path);
+		expect(paths).toContain('favicon.png');
+		expect(paths).toContain('static.json');
+	});
+
+	test('exposes immutable assets', async ({ page }) => {
+		test.skip(!!process.env.DEV, 'only known after build');
+		await page.goto('/app-manifest');
+		const immutable = JSON.parse((await page.textContent('[data-name="immutable"] pre')) ?? '');
+		const paths = immutable.map((/** @type {any} */ a) => a.path);
+		expect(paths.length).toBeGreaterThan(0);
+		// should only include immutable chunks
+		expect(paths.every((/** @type {string} */ f) => f.includes('_app/immutable/'))).toBe(true);
+	});
+
+	test('only exposes immutable chunks to the service worker', async ({ request }) => {
+		test.skip(!!process.env.DEV, 'only known after build');
+		const body = await (await request.get('/service-worker.js')).text();
+		expect(body).toContain('_app/immutable/');
+		// the manifest chunk has a fixed filename and must not be cached as if it were immutable
+		expect(body).not.toContain('_app/manifest.js');
+	});
+
+	test('exposes prerendered paths', async ({ page }) => {
+		test.skip(!!process.env.DEV, 'prerendered paths are only known after build');
+		await page.goto('/app-manifest');
+		const prerendered = JSON.parse((await page.textContent('[data-name="prerendered"] pre')) ?? '');
+		const paths = prerendered.map((/** @type {any} */ a) => a.path);
+		// the test app prerenders '*' — some known prerendered routes
+		expect(paths.length).toBeGreaterThan(0);
+		expect(paths).toContain('prerendering/no-ssr');
+	});
+});
+
 test.describe('$app/paths', () => {
 	// some browsers will re-request assets after a `pushState`
 	// https://github.com/sveltejs/kit/issues/3748#issuecomment-1125980897
@@ -840,7 +936,11 @@ test.describe('$app/state', () => {
 		clicknav,
 		javaScriptEnabled
 	}) => {
-		await page.goto('/state/data/foo?reset=true');
+		if (!javaScriptEnabled) {
+			// only the no-js run consumes the server-side `is_first` state (with js the clicknavs
+			// use the client copy); resetting it would corrupt the parallel no-js twin
+			await page.goto('/state/data/foo?reset=true');
+		}
 		const stuff1 = { foo: { bar: 'Custom layout' }, name: 'SvelteKit', value: 123 };
 		const stuff2 = { ...stuff1, foo: true, number: 2 };
 		const stuff3 = { ...stuff2 };
@@ -1351,9 +1451,7 @@ test.describe('Actions', () => {
 		});
 		const { type, error } = await response.json();
 		expect(type).toBe('error');
-		expect(error.message).toBe(
-			'Form actions expect form-encoded data — received application/json (415 Unsupported Media Type)'
-		);
+		expect(error.message).toBe('Unsupported Media Type (415 Unsupported Media Type)');
 		expect(response.status()).toBe(415);
 	});
 
@@ -1370,8 +1468,77 @@ test.describe('Actions', () => {
 		});
 		const { type, error } = await response.json();
 		expect(type).toBe('error');
-		expect(error.message).toBe("No action with name 'doesnt-exist' found (404 Not Found)");
+		expect(error.message).toBe('Not Found (404 Not Found)');
 		expect(response.status()).toBe(404);
+	});
+
+	test('cross-page action success navigates to action page', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		await page.goto('/actions/cross-page/source');
+
+		await page
+			.locator(javaScriptEnabled ? 'button.submit-success' : 'button.native-success')
+			.click();
+
+		await expect(page.locator('pre.destination-form')).toHaveText(
+			JSON.stringify({ source: 'destination', username: 'paolo' })
+		);
+		await expect(page.locator('span.status')).toHaveText('200');
+
+		const url = new URL(page.url());
+		expect(url.pathname).toBe('/actions/cross-page/destination');
+		// enhanced submissions strip the `?/name` param; native ones can't
+		expect(url.search).toBe(javaScriptEnabled ? '' : '?/success');
+	});
+
+	test('cross-page action failure navigates with failure data and status', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		await page.goto('/actions/cross-page/source');
+
+		await page
+			.locator(javaScriptEnabled ? 'button.submit-failure' : 'button.native-failure')
+			.click();
+
+		await expect(page.locator('pre.destination-form')).toHaveText(
+			JSON.stringify({ problem: 'invalid', username: 'paolo' })
+		);
+		await expect(page.locator('span.status')).toHaveText('400');
+
+		const url = new URL(page.url());
+		expect(url.pathname).toBe('/actions/cross-page/destination');
+		expect(url.search).toBe(javaScriptEnabled ? '' : '?/failure');
+	});
+
+	test('cross-page action redirect is followed', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/actions/cross-page/source');
+
+		await page
+			.locator(javaScriptEnabled ? 'button.submit-redirect' : 'button.native-redirect')
+			.click();
+
+		await expect(page.locator('h1.redirected')).toHaveText('redirected');
+		expect(new URL(page.url()).pathname).toBe('/actions/cross-page/redirected');
+	});
+
+	test('cross-page action error renders the destination error boundary', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		await page.goto('/actions/cross-page/source');
+
+		await page.locator(javaScriptEnabled ? 'button.submit-error' : 'button.native-error').click();
+
+		await expect(page.locator('h1.destination-error')).toHaveText(
+			'destination error: cross-page action error'
+		);
+
+		const url = new URL(page.url());
+		expect(url.pathname).toBe('/actions/cross-page/destination');
+		expect(url.search).toBe(javaScriptEnabled ? '?throw-in-load=' : '?throw-in-load&/error');
 	});
 
 	for (const name of ['toString', 'constructor', '__proto__', 'hasOwnProperty']) {
@@ -1391,7 +1558,7 @@ test.describe('Actions', () => {
 			);
 			const { type, error } = await response.json();
 			expect(type).toBe('error');
-			expect(error.message).toBe(`No action with name '${name}' found (404 Not Found)`);
+			expect(error.message).toBe('Not Found (404 Not Found)');
 			expect(response.status()).toBe(404);
 		});
 	}

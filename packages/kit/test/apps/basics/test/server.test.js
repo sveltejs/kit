@@ -491,6 +491,25 @@ test.describe('Endpoints', () => {
 		expect(await response.text()).toBe('catch-all');
 	});
 
+	test('QUERY handler', async ({ request }) => {
+		const url = '/endpoint-output/query';
+
+		let response = await request.fetch(url, {
+			method: 'QUERY',
+			data: 'name=world'
+		});
+
+		expect(response.status()).toBe(200);
+		expect(await response.text()).toBe('query: name=world');
+
+		response = await request.fetch(url, {
+			method: 'MOVE'
+		});
+
+		expect(response.status()).toBe(405);
+		expect(response.headers()['allow']).toBe('GET, QUERY, HEAD');
+	});
+
 	test('can get assets using absolute path', async ({ request }) => {
 		const response = await request.get('/endpoint-output/fetch-asset/absolute');
 		expect(response.status()).toBe(200);
@@ -507,6 +526,15 @@ test.describe('Endpoints', () => {
 });
 
 test.describe('Errors', () => {
+	test('uses the handleError status for the fallback page served to error-page sub-requests', async ({
+		request
+	}) => {
+		const response = await request.get('/errors/handle-error-status-fallback', {
+			headers: { 'x-sveltekit-error': 'true' }
+		});
+		expect(response.status()).toBe(503);
+	});
+
 	test('invalid route response is handled', async ({ request }) => {
 		const response = await request.get('/errors/invalid-route-response');
 
@@ -543,6 +571,32 @@ test.describe('Errors', () => {
 		}
 	});
 
+	test('returns a lightweight 404 for subresource requests', async ({ request, read_errors }) => {
+		// distinct from the path used by the test below, which _does_ invoke the hook
+		const response = await request.get('/errors/does-not-exist-lightweight-subresource', {
+			headers: { 'sec-fetch-dest': 'image' }
+		});
+
+		expect(response.status()).toBe(404);
+		expect(await response.text()).toBe('Not Found');
+		expect(response.headers()['vary']).toContain('Sec-Fetch-Dest');
+
+		// lightweight 404s bypass the handleError hook
+		expect(read_errors('/errors/does-not-exist-lightweight-subresource')).toBe(undefined);
+	});
+
+	test('renders the error page for document and fetch requests', async ({ request }) => {
+		for (const destination of ['document', null, 'empty']) {
+			const response = await request.get(
+				'/errors/does-not-exist-subresource',
+				destination ? { headers: { 'sec-fetch-dest': destination } } : {}
+			);
+
+			expect(response.status()).toBe(404);
+			expect(await response.text()).toContain('This is your custom error page saying:');
+		}
+	});
+
 	test('stack traces are not fixed twice', async ({ page }) => {
 		await page.goto('/errors/stack-trace');
 		expect(await page.textContent('#message')).toBe(
@@ -565,8 +619,10 @@ test.describe('Errors', () => {
 				}
 			});
 
-			const error = read_errors('/errors/endpoint-throw-error');
-			expect(error).toBe(undefined);
+			expect(read_errors('/errors/endpoint-throw-error')).toEqual({
+				kind: 'app',
+				error: { status: 401, message: 'You shall not pass' }
+			});
 
 			expect(res.status()).toBe(401);
 			expect(await res.text()).toContain(
@@ -578,8 +634,10 @@ test.describe('Errors', () => {
 		{
 			const res = await request.get('/errors/endpoint-throw-error');
 
-			const error = read_errors('/errors/endpoint-throw-error');
-			expect(error).toBe(undefined);
+			expect(read_errors('/errors/endpoint-throw-error')).toEqual({
+				kind: 'app',
+				error: { status: 401, message: 'You shall not pass' }
+			});
 
 			expect(res.status()).toBe(401);
 			expect(await res.json()).toEqual({
@@ -617,10 +675,9 @@ test.describe('Errors', () => {
 		expect(res_json?.status()).toBe(405);
 		expect(await res_json.json()).toEqual({
 			type: 'error',
+			location: '/errors/missing-actions',
 			error: {
-				message: process.env.DEV
-					? 'POST method not allowed. No form actions exist for the page at /errors/missing-actions (405 Method Not Allowed)'
-					: 'POST method not allowed. No form actions exist for this page (405 Method Not Allowed)',
+				message: 'Method Not Allowed (405 Method Not Allowed)',
 				status: 405
 			}
 		});
@@ -720,6 +777,18 @@ test.describe('Load', () => {
 		await expect(page.locator('p')).toHaveText('1');
 	});
 
+	test('does not forward accept-language to internal fetch when the request has none', async ({
+		request
+	}) => {
+		// unlike browsers and undici, the `request` fixture sends no accept-language header
+		const html = await (await request.get('/load/fetch-request-headers')).text();
+		const headers = JSON.parse(
+			/** @type {RegExpMatchArray} */ (/<pre>(.+?)<\/pre>/s.exec(html))[1]
+		);
+		expect(headers.accept).toBe('*/*');
+		expect(headers['accept-language']).toBeUndefined();
+	});
+
 	test('includes origin header on non-GET internal request', async ({ page, baseURL }) => {
 		await page.goto('/load/fetch-origin-internal');
 		expect(await page.textContent('h1')).toBe(`origin: ${new URL(baseURL).origin}`);
@@ -789,6 +858,22 @@ test.describe('Routing', () => {
 		expect(data).toEqual({ surprise: 'lol' });
 	});
 
+	test('falls back to page actions if sibling endpoint has no POST handler', async ({
+		baseURL,
+		request
+	}) => {
+		const response = await request.post('/endpoint-output/actions-with-endpoint', {
+			form: {},
+			headers: {
+				accept: 'application/json',
+				origin: new URL(baseURL).origin
+			}
+		});
+
+		expect(response.status()).toBe(200);
+		expect((await response.json()).type).toBe('success');
+	});
+
 	test('Vite trailing slash redirect for prerendered pages retains URL query string', async ({
 		request
 	}) => {
@@ -815,8 +900,33 @@ test.describe('Shadowed pages', () => {
 			}
 		});
 
-		expect(response.status()).toBe(204);
-		expect(await response.text()).toBe('');
+		expect(response.status()).toBe(200);
+		expect(await response.json()).toEqual({
+			type: 'success',
+			status: 204,
+			location: '/shadowed/simple/post'
+		});
+	});
+
+	test('action response includes the stripped landing location', async ({ baseURL, request }) => {
+		const response = await request.post(
+			'/actions/cross-page/destination?redirectTo=%2Fdashboard&/failure',
+			{
+				form: { username: 'paolo' },
+				headers: {
+					accept: 'application/json',
+					origin: new URL(baseURL).origin
+				}
+			}
+		);
+
+		expect(response.status()).toBe(400);
+		expect(await response.json()).toEqual({
+			type: 'failure',
+			status: 400,
+			location: '/actions/cross-page/destination?redirectTo=%2Fdashboard',
+			data: '[{"problem":1,"username":2},"invalid","paolo"]'
+		});
 	});
 
 	test('Action fail() returns matching HTTP status code', async ({ baseURL, request }) => {
@@ -929,6 +1039,16 @@ test.describe('Miscellaneous', () => {
 	test('serves prerendered non-latin pages', async ({ request }) => {
 		const response = await request.get('/prerendering/中文');
 		expect(response.status()).toBe(200);
+	});
+
+	test('does not send x-sveltekit-version header on document responses', async ({ page }) => {
+		const response = await page.goto('/');
+		expect(response?.headers()['x-sveltekit-version']).toBeUndefined();
+	});
+
+	test('sends x-sveltekit-version header on data responses', async ({ request }) => {
+		const response = await request.get('/__data.json');
+		expect(response.headers()['x-sveltekit-version']).toBeTruthy();
 	});
 });
 
