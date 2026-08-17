@@ -1068,6 +1068,9 @@ function kit({ svelte_config }) {
 			const new_config = {
 				environments: {
 					serviceWorker: {
+						define: {
+							__SVELTEKIT_PAYLOAD__: kit_global
+						},
 						build: {
 							modulePreload: false,
 							rolldownOptions: {
@@ -1770,7 +1773,8 @@ function kit({ svelte_config }) {
 						has_explicit_dynamic_public_env &&
 						client_chunks.some(
 							(chunk) =>
-								chunk.type === 'chunk' && chunk.modules[`${out_dir}/generated/env/public/client.js`]
+								chunk.type === 'chunk' &&
+								chunk.modules[`${out_dir}/generated/build/env/public/client.js`]
 						);
 
 					if (kit.output.bundleStrategy === 'split') {
@@ -1970,8 +1974,11 @@ function kit({ svelte_config }) {
 						log.info('Building service worker');
 
 						// mirror client settings that we couldn't set per environment in the config hook
-						builder.environments.serviceWorker.config.define =
-							builder.environments.client.config.define;
+						builder.environments.serviceWorker.config.define = {
+							...builder.environments.client.config.define,
+							...builder.environments.serviceWorker.config.define
+						};
+
 						builder.environments.serviceWorker.config.resolve.alias = [
 							...get_config_aliases(kit, vite_config.root)
 						];
