@@ -98,17 +98,11 @@ function handle_live_query(event, state, options, internals) {
 	// never observe
 	const cancellation = new AbortController();
 
-	if (event.request.signal.aborted) {
-		cancellation.abort();
-	} else {
-		event.request.signal.addEventListener('abort', () => cancellation.abort(), {
-			once: true
-		});
-	}
-
 	const live_event = {
 		...event,
-		request: new Request(event.request, { signal: cancellation.signal })
+		request: new Request(event.request, {
+			signal: AbortSignal.any([event.request.signal, cancellation.signal])
+		})
 	};
 
 	const generator = internals.run(live_event, state, parse_remote_arg(payload));
@@ -117,7 +111,7 @@ function handle_live_query(event, state, options, internals) {
 	const frame = (payload) => 'data: ' + JSON.stringify(payload) + '\n\n';
 
 	/** @type {string | undefined} */
-	let result = undefined;
+	let result;
 
 	// everything the stream sends, as a generator of SSE strings — it holds no
 	// reference to the stream controller, so it cannot touch a dead one
@@ -127,6 +121,10 @@ function handle_live_query(event, state, options, internals) {
 		let settled = false;
 		/** @type {() => void} */
 		let wake = () => {};
+		const settle = () => {
+			settled = true;
+			wake();
+		};
 
 		try {
 			while (true) {
@@ -135,11 +133,7 @@ function handle_live_query(event, state, options, internals) {
 					// one reaction per next() call, so an idle stream doesn't
 					// accumulate one per keep-alive tick
 					pending = generator.next();
-					const on_settled = () => {
-						settled = true;
-						wake();
-					};
-					pending.then(on_settled, on_settled);
+					pending.then(settle, settle);
 				}
 
 				if (!settled) {
@@ -169,7 +163,7 @@ function handle_live_query(event, state, options, internals) {
 				}
 			}
 		} catch (error) {
-			if (!cancellation.signal.aborted) {
+			if (!live_event.request.signal.aborted) {
 				if (error instanceof Redirect) {
 					yield frame({ type: 'redirect', location: error.location });
 				} else {
