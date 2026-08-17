@@ -177,11 +177,9 @@ export async function preview(vite, vite_config, svelte_config) {
 					}
 
 					if (redirect) {
-						// relative so (possibly invisible) path prefixes are preserved
-						let location = relative_pathname(pathname, redirect);
-						if (search) location += search;
 						res.writeHead(308, {
-							location
+							// relative so (possibly invisible) path prefixes are preserved
+							location: relative_pathname(pathname, redirect) + search
 						});
 
 						res.end();
