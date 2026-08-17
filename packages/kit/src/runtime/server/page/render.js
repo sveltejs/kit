@@ -243,19 +243,12 @@ export async function render_response({
 			}
 
 			rendered = await with_request_store({ event, state: render_state }, async () => {
-				// We have to invoke .then eagerly here in order to kick off rendering: it's only starting on access,
-				// and `await maybe_promise` would eagerly access the .then property but call its function only after a tick, which is too late
-				// for the paths.reset() below and for any eager getRequestEvent() calls during rendering without AsyncLocalStorage available.
-				const rendered = render(Root, { ...render_opts, props });
-
-				const { head, body, hashes } = await rendered;
-
-				if (hashes) {
-					csp.add_script_hashes(hashes.script);
-				}
-
-				return { head, body, hashes };
+				return render(Root, { ...render_opts, props });
 			});
+
+			if (rendered.hashes) {
+				csp.add_script_hashes(rendered.hashes.script);
+			}
 		} finally {
 			if (DEV) {
 				globalThis.fetch = fetch;
