@@ -24,8 +24,6 @@ import { stream_from_iterator, with_version_header } from './utils.js';
  */
 const KEEP_ALIVE_INTERVAL = 30_000;
 
-const KEEP_ALIVE = Symbol('keep-alive');
-
 /** @type {typeof handle_remote_call_internal} */
 export async function handle_remote_call(event, state, options, manifest, id) {
 	return record_span({
@@ -118,28 +116,6 @@ function handle_live_query(event, state, options, internals) {
 	/** @param {any} payload */
 	const frame = (payload) => 'data: ' + JSON.stringify(payload) + '\n\n';
 
-	/**
-	 * Resolves with the next iterator result, or with `KEEP_ALIVE` once
-	 * `KEEP_ALIVE_INTERVAL` has elapsed without one.
-	 * @param {Promise<IteratorResult<any>>} pending
-	 * @returns {Promise<IteratorResult<any> | typeof KEEP_ALIVE>}
-	 */
-	function next_or_keep_alive(pending) {
-		return new Promise((resolve, reject) => {
-			const timer = setTimeout(() => resolve(KEEP_ALIVE), KEEP_ALIVE_INTERVAL);
-			pending.then(
-				(result) => {
-					clearTimeout(timer);
-					resolve(result);
-				},
-				(error) => {
-					clearTimeout(timer);
-					reject(error);
-				}
-			);
-		});
-	}
-
 	/** @type {string | undefined} */
 	let result = undefined;
 
@@ -148,18 +124,41 @@ function handle_live_query(event, state, options, internals) {
 	async function* frames() {
 		/** @type {Promise<IteratorResult<any>> | null} */
 		let pending = null;
+		let settled = false;
+		/** @type {() => void} */
+		let wake = () => {};
 
 		try {
 			while (true) {
-				pending ??= generator.next();
-				const winner = await next_or_keep_alive(pending);
+				if (!pending) {
+					settled = false;
+					// one reaction per next() call, so an idle stream doesn't
+					// accumulate one per keep-alive tick
+					pending = generator.next();
+					const on_settled = () => {
+						settled = true;
+						wake();
+					};
+					pending.then(on_settled, on_settled);
+				}
 
-				if (winner === KEEP_ALIVE) {
+				if (!settled) {
+					await new Promise((resolve) => {
+						const timer = setTimeout(resolve, KEEP_ALIVE_INTERVAL);
+						wake = () => {
+							clearTimeout(timer);
+							resolve(undefined);
+						};
+					});
+				}
+
+				if (!settled) {
 					// SSE comments (lines starting with `:`) are ignored by the client
 					yield ': keep-alive\n\n';
 					continue;
 				}
 
+				const winner = await pending;
 				pending = null;
 
 				if (winner.done) return;
