@@ -33,7 +33,7 @@ async function analyse({ hash, env, vite_config_file }) {
 		routes: new Map(),
 		remotes: new Map(),
 		should_prerender: hash,
-		has_dynamic_server_routes_or_remotes: false
+		has_dynamic_endpoints: false
 	};
 
 	const vite_dev_server = await vite.createServer(vite_config);
@@ -100,7 +100,7 @@ async function analyse({ hash, env, vite_config_file }) {
 			}
 
 			if (node.server?.actions) {
-				metadata.has_dynamic_server_routes_or_remotes = true;
+				metadata.has_dynamic_endpoints = true;
 			}
 
 			metadata.nodes[node.index] = {
@@ -145,11 +145,9 @@ async function analyse({ hash, env, vite_config_file }) {
 			const api_methods = endpoint?.methods ?? [];
 			const entries = page?.entries ?? endpoint?.entries;
 
-			if (
-				(page?.methods.includes('GET') && page.ssr && page.prerender !== true) || // non-prerendered SSR-ed page
-				(api_methods.length && endpoint?.prerender !== true) // non-prerendered endpoint
-			) {
-				metadata.has_dynamic_server_routes_or_remotes = true;
+			if (api_methods.length && endpoint?.prerender !== true) // non-prerendered endpoint
+			{
+				metadata.has_dynamic_endpoints = true;
 			}
 
 			metadata.routes.set(route.id, {
@@ -188,7 +186,7 @@ async function analyse({ hash, env, vite_config_file }) {
 				}
 
 				if (dynamic) {
-					metadata.has_dynamic_server_routes_or_remotes = true;
+					metadata.has_dynamic_endpoints = true;
 				}
 			}
 

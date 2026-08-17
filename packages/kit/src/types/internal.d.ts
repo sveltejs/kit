@@ -417,7 +417,7 @@ export interface ServerMetadata {
 	/** For each hashed remote file, a map of export name -> { type, dynamic }, where `dynamic` is `false` for non-dynamic prerender functions */
 	remotes: Map<string, Map<string, { type: RemoteInternals['type']; dynamic: boolean }>>;
 	should_prerender: boolean;
-	has_dynamic_server_routes_or_remotes: boolean;
+	has_dynamic_endpoints: boolean;
 }
 
 export type SSRComponentLoader = () => Promise<Component>;

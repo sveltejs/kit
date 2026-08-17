@@ -2,7 +2,7 @@
 /** @import { EnvVarConfig } from '@sveltejs/kit/env' */
 /** @import { Options } from '@sveltejs/vite-plugin-svelte' */
 /** @import { PreprocessorGroup } from 'svelte/compiler' */
-/** @import { Asset, BuildData, ManifestData, Prerendered, PrerenderMap, RemoteChunk, RemoteInternals, RouteData, ServerMetadata, ValidatedConfig } from 'types' */
+/** @import { Asset, BuildData, ManifestData, PageNode, Prerendered, PrerenderMap, RemoteChunk, RemoteInternals, RouteData, ServerMetadata, ValidatedConfig } from 'types' */
 /** @import { Manifest, Plugin, ResolvedConfig, Rolldown, UserConfig, ViteDevServer } from 'vite' */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -1597,13 +1597,11 @@ function kit({ svelte_config }) {
 
 			// check if an error page needs to be rendered on the server.
 			// Error pages aren't included in the SSR manifest's routes list
-			const has_ssr_node = manifest_data.nodes.some((node) =>
-				node.child_pages
-					? node.child_pages.some((child) => child.page_options?.ssr !== false)
-					: node.page_options?.ssr !== false
+			const has_dynamic_ssr_page = manifest_data.nodes.some((node) =>
+				node.child_pages ? node.child_pages.some(requires_ssr) : requires_ssr(node)
 			);
 			const skip_ssr_build =
-				hash_routing || (!has_ssr_node && !metadata.has_dynamic_server_routes_or_remotes);
+				hash_routing || !(metadata.has_dynamic_endpoints || has_dynamic_ssr_page);
 
 			if (skip_ssr_build) {
 				// build the client
@@ -1941,7 +1939,7 @@ function kit({ svelte_config }) {
 							assets: kit.paths.assets,
 							prerendered,
 							prerender_map,
-							client: devalue.stringify(build_data.client)
+							client: build_data.client ? devalue.stringify(build_data.client) : null
 						}));
 
 						// this silly hack is necessary to ensure that stderr from prerender is flushed before we continue
@@ -2457,4 +2455,12 @@ async function normalise_build(name, build, build_output_map) {
 	await bundling.promise;
 
 	return /** @type {Rolldown.RolldownOutput['output']} */ (build_output_map.get(name));
+}
+
+/**
+ * @param {PageNode} node
+ * @returns {boolean}
+ */
+function requires_ssr(node) {
+	return node.page_options?.ssr !== false && node.page_options?.prerender !== true;
 }
