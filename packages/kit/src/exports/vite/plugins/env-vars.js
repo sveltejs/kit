@@ -4,10 +4,10 @@
 import path from 'node:path';
 import * as sync from '../../../core/sync/sync.js';
 import {
-	create_dev_public_env_prelude,
 	create_sveltekit_env,
 	create_sveltekit_env_private,
 	create_sveltekit_env_public,
+	create_sveltekit_env_public_dev,
 	create_sveltekit_env_service_worker,
 	create_sveltekit_env_service_worker_dev,
 	resolve_env_entry
@@ -102,10 +102,7 @@ export function plugin_env_vars(config, callback) {
 				)
 			);
 		} else {
-			write_if_changed(
-				`${dir}/public/client.js`,
-				create_sveltekit_env_public(vars, env, create_dev_public_env_prelude(vars, env))
-			);
+			write_if_changed(`${dir}/public/client.js`, create_sveltekit_env_public_dev(vars, env));
 
 			write_if_changed(
 				`${dir}/service-worker.js`,

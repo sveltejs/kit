@@ -252,28 +252,48 @@ export function create_sveltekit_env_public(variables, env, prelude) {
 }
 
 /**
- * Creates the prelude for the dev `<sveltekit:generated>/env/public/client.js` module. The values
- * are inlined as a fallback for contexts that render without the dev server, like vitest browser
- * mode, where nothing sets the global
+ * Creates the `<sveltekit:generated>/env/public/client.js` module used in development. The dynamic
+ * values are inlined as a fallback for contexts that render without the dev server, like vitest
+ * browser mode, where nothing sets the global
  * @param {Record<string, EnvVarConfig<any>> | null} variables
  * @param {Record<string, string>} env
  */
-export function create_dev_public_env_prelude(variables, env) {
+export function create_sveltekit_env_public_dev(variables, env) {
+	if (!variables) {
+		return '';
+	}
+
+	const dev_env = validate_public_env(variables, env, false);
+
+	return create_sveltekit_env_public(
+		variables,
+		env,
+		`const env = globalThis.__sveltekit_dev?.env ?? ${devalue.uneval(dev_env)};`
+	);
+}
+
+/**
+ * @param {Record<string, EnvVarConfig<any>> | null} variables
+ * @param {Record<string, string>} env
+ * @param {boolean} include_static
+ * @returns {Record<string, any>}
+ */
+function validate_public_env(variables, env, include_static) {
 	/** @type {Record<string, StandardSchemaV1.Issue[]>} */
 	const issues = {};
 
 	/** @type {Record<string, any>} */
-	const dev_env = {};
+	const values = {};
 
 	for (const [name, config] of Object.entries(variables ?? {})) {
-		if (!config.public || config.static) continue;
+		if (!config.public || (config.static && !include_static)) continue;
 
-		dev_env[name] = validate(variables ?? {}, env[name], name, issues);
+		values[name] = validate(variables ?? {}, env[name], name, issues);
 	}
 
 	handle_issues(issues);
 
-	return `const env = globalThis.__sveltekit_dev?.env ?? ${devalue.uneval(dev_env)};`;
+	return values;
 }
 
 /**
@@ -322,20 +342,9 @@ export function create_sveltekit_env_service_worker(
  * @param {string} global
  */
 export function create_sveltekit_env_service_worker_dev(variables, env, version, global) {
-	/** @type {string[]} */
-	const properties = [];
-
-	/** @type {Record<string, StandardSchemaV1.Issue[]>} */
-	const issues = {};
-
-	for (const [name, config] of Object.entries(variables ?? {})) {
-		if (!config.public) continue;
-
-		const value = validate(variables ?? {}, env[name], name, issues);
-		properties.push(`${name}: ${devalue.uneval(value)}`);
-	}
-
-	handle_issues(issues);
+	const properties = Object.entries(validate_public_env(variables, env, true)).map(
+		([name, value]) => `${name}: ${devalue.uneval(value)}`
+	);
 
 	return dedent`
 		${global} = {
