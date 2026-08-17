@@ -242,7 +242,7 @@ export async function dev(
 						}
 
 						if (node.universal) {
-							if (node.page_options?.ssr === false) {
+							if (node.page_options?.ssr === false || svelte_config.router.type === 'hash') {
 								result.universal = /** @type {UniversalNode} */ (node.page_options);
 							} else {
 								// TODO: explain why the file was loaded on the server if we fail to load it

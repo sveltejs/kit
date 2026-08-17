@@ -1937,6 +1937,7 @@ function kit({ svelte_config }) {
 							is_tty: process.stdout.isTTY,
 							origin: kit.paths.origin,
 							assets: kit.paths.assets,
+							base: kit.paths.base,
 							prerendered,
 							prerender_map,
 							client: build_data.client ? devalue.stringify(build_data.client) : null
