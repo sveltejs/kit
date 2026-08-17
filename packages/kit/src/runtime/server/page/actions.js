@@ -2,7 +2,6 @@
 /** @import { ActionResult } from '$app/forms' */
 /** @import { SSROptions, SSRNode, ServerNode } from 'types' */
 import { DEV } from 'esm-env';
-import { json } from '@sveltejs/kit';
 import { HttpError, Redirect, ActionFailure, SvelteKitError } from '@sveltejs/kit/internal';
 import { with_request_store, merge_tracing, record_span } from '@sveltejs/kit/internal/server';
 import { normalize_error } from '../../../utils/error.js';
@@ -164,7 +163,7 @@ export function action_json_redirect(redirect) {
  * @param {ResponseInit} [init]
  */
 function action_json(data, init) {
-	return with_version_header(json(data, init));
+	return with_version_header(Response.json(data, init));
 }
 
 /**

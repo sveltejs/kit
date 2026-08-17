@@ -1,6 +1,6 @@
 /** @import { SSRNode } from 'types' */
 import { DEV } from 'esm-env';
-import { json, text } from '@sveltejs/kit';
+import { text } from '@sveltejs/kit';
 import { Redirect, SvelteKitError } from '@sveltejs/kit/internal';
 import {
 	merge_tracing,
@@ -111,7 +111,7 @@ export async function internal_respond(request, options, manifest, state) {
 				})
 			) {
 				const message = 'Cross-site remote requests are forbidden';
-				return json({ message }, { status: 403 });
+				return Response.json({ message }, { status: 403 });
 			}
 		} else if (options.csrf_check_origin) {
 			const forbidden = is_csrf_forbidden({
@@ -126,7 +126,7 @@ export async function internal_respond(request, options, manifest, state) {
 				const opts = { status: 403 };
 
 				if (request.headers.get('accept') === 'application/json') {
-					return json({ message }, opts);
+					return Response.json({ message }, opts);
 				}
 
 				return text(message, opts);
