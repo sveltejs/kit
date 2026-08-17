@@ -41,6 +41,50 @@ test.describe('Endpoints', () => {
 });
 
 test.describe('Load', () => {
+	test('does not refetch cross-origin urls in non-canonical form during hydration', async ({
+		page,
+		start_server
+	}) => {
+		let requests = 0;
+
+		const { port } = await start_server((req, res) => {
+			requests += 1;
+			res.writeHead(200, {
+				'Access-Control-Allow-Origin': '*',
+				'content-type': 'application/json'
+			});
+			res.end(JSON.stringify({ count: requests }));
+		});
+
+		await page.goto(`/load/fetch-external-non-canonical?port=${port}`);
+
+		await expect(page.locator('h1')).toHaveText('count: 1');
+		expect(requests).toBe(1);
+	});
+
+	test('busts cache if non-GET request to a non-canonical cross-origin url is made', async ({
+		page,
+		start_server
+	}) => {
+		let gets = 0;
+
+		const { port } = await start_server((req, res) => {
+			if (req.method === 'GET') gets += 1;
+			res.writeHead(200, {
+				'Access-Control-Allow-Origin': '*',
+				'cache-control': 'public, max-age=60',
+				'content-type': 'application/json'
+			});
+			res.end(JSON.stringify({ count: gets }));
+		});
+
+		await page.goto(`/load/fetch-external-non-canonical?port=${port}`);
+		await expect(page.locator('h1')).toHaveText('count: 1');
+
+		await page.locator('button').click();
+		await expect(page.locator('h1')).toHaveText('count: 2');
+	});
+
 	test('load function is only called when necessary', async ({ app, page }) => {
 		test.slow();
 		await page.goto('/load/change-detection/one/a');
