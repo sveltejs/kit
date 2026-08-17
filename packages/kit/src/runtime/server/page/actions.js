@@ -96,29 +96,15 @@ export async function handle_action_json_request(event, state, options, server) 
 			});
 		}
 	} catch (e) {
-		const err = normalize_error(e);
+		const result = action_error_result(e, location);
 
-		if (err instanceof Redirect) {
-			return action_json_redirect(err);
+		if (result.type === 'redirect') {
+			return action_json(result);
 		}
 
-		const transformed = await handle_error_and_jsonify(
-			event,
-			state,
-			options,
-			check_incorrect_fail_use(err)
-		);
+		const error = await handle_error_and_jsonify(event, state, options, result.error);
 
-		return action_json(
-			{
-				type: 'error',
-				error: transformed,
-				location
-			},
-			{
-				status: transformed.status
-			}
-		);
+		return action_json({ type: 'error', error, location }, { status: error.status });
 	}
 }
 
@@ -150,7 +136,7 @@ function check_incorrect_fail_use(error) {
 /**
  * @param {unknown} e
  * @param {string} location
- * @returns {ActionResult}
+ * @returns {Extract<ActionResult, { type: 'redirect' | 'error' }>}
  */
 export function action_error_result(e, location) {
 	const err = normalize_error(e);
