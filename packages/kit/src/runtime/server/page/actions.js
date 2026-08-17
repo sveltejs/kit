@@ -141,10 +141,34 @@ export function get_action_location(url) {
 /**
  * @param {HttpError | Error} error
  */
-export function check_incorrect_fail_use(error) {
+function check_incorrect_fail_use(error) {
 	return error instanceof ActionFailure
 		? new Error('Cannot "throw fail()". Use "return fail()"')
 		: error;
+}
+
+/**
+ * @param {unknown} e
+ * @param {string} location
+ * @returns {ActionResult}
+ */
+export function action_error_result(e, location) {
+	const err = normalize_error(e);
+
+	if (err instanceof Redirect) {
+		return {
+			type: 'redirect',
+			status: err.status,
+			location: err.location
+		};
+	}
+
+	return {
+		type: 'error',
+		location,
+		// @ts-expect-error We're lying a bit with the types here; this will be transformed into a proper App.Error object later
+		error: check_incorrect_fail_use(err)
+	};
 }
 
 /**
@@ -228,22 +252,7 @@ export async function handle_action_request(event, state, server) {
 			};
 		}
 	} catch (e) {
-		const err = normalize_error(e);
-
-		if (err instanceof Redirect) {
-			return {
-				type: 'redirect',
-				status: err.status,
-				location: err.location
-			};
-		}
-
-		return {
-			type: 'error',
-			location,
-			// @ts-expect-error We're lying a bit with the types here; this will be transformed into a proper App.Error object later
-			error: check_incorrect_fail_use(err)
-		};
+		return action_error_result(e, location);
 	}
 }
 

@@ -11,8 +11,7 @@ import { is_form_content_type } from '../../utils/http.js';
 import { create_remote_key, parse_remote_arg, split_remote_key } from '../shared.js';
 import { stringify } from '#app/internal/transport';
 import { handle_error_and_jsonify } from './errors.js';
-import { normalize_error } from '../../utils/error.js';
-import { check_incorrect_fail_use, get_action_location } from './page/actions.js';
+import { action_error_result, get_action_location } from './page/actions.js';
 import { DEV } from 'esm-env';
 import { deserialize_binary_form } from '../form-utils.js';
 import { with_version_header } from './utils.js';
@@ -591,22 +590,7 @@ async function handle_remote_form_post_internal(event, state, manifest, id) {
 			location
 		};
 	} catch (e) {
-		const err = normalize_error(e);
-
-		if (err instanceof Redirect) {
-			return {
-				type: 'redirect',
-				status: err.status,
-				location: err.location
-			};
-		}
-
-		return {
-			type: 'error',
-			location,
-			// @ts-expect-error We're lying a bit with the types here; this will be transformed into a proper App.Error object later
-			error: check_incorrect_fail_use(err)
-		};
+		return action_error_result(e, location);
 	}
 }
 
