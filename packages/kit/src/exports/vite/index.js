@@ -2042,7 +2042,6 @@ function kit({ svelte_config }) {
 			plugin_env_vars(svelte_config, (vars) => {
 				explicit_env_config = vars;
 			}),
-			plugin_virtual_modules,
 			process.env.TEST !== 'true' ? plugin_guard : undefined,
 			plugin_service_worker,
 			plugin_service_worker_env,
