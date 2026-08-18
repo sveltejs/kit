@@ -56,9 +56,18 @@ const plugin = function (defaults = {}) {
 				const dir = `${dirs.functions}/${name}.func`;
 
 				const relativePath = path.posix.relative(tmp, builder.getServerDirectory());
+
+				write(
+					`${tmp}/server.js`,
+					builder.generateServer({
+						relativePath,
+						routes
+					})
+				);
+
 				builder.copy(`${files}/serverless.js`, `${tmp}/index.js`, {
 					replace: {
-						SERVER: `${relativePath}/index.js`
+						SERVER: `./server.js`
 					}
 				});
 				if (builder.hasServerInstrumentationFile()) {
