@@ -1,3 +1,4 @@
+/** @import { ValidatedConfig, ManifestData } from 'types' */
 import path from 'node:path';
 import create_manifest_data from './create_manifest_data/index.js';
 import { write_client_manifest } from './write_client_manifest.js';
@@ -11,39 +12,30 @@ import {
 } from '../../exports/vite/static_analysis/index.js';
 import { load_explicit_env } from '../env.js';
 import { write_env } from './write_env.js';
-
-/**
- * Initialize SvelteKit's generated files that only depend on the config and mode.
- * @param {import('types').ValidatedConfig} config
- * @param {string} root The project root directory
- */
-export function init(config, root) {
-	write_tsconfig(config, root);
-}
+import { write_app_manifest } from './write_app_manifest.js';
 
 /**
  * Update SvelteKit's generated files
- * @param {import('types').ValidatedConfig} config
+ * @param {ValidatedConfig} config
  * @param {string} root The project root directory
+ * @param {ManifestData} manifest_data
+ * @param {boolean} is_build
  */
-export function create(config, root) {
-	const manifest_data = create_manifest_data({ config, cwd: root });
+export function create(config, root, manifest_data, is_build) {
+	const output = path.join(config.outDir, `generated/${is_build ? 'build' : 'dev'}`);
 
-	const output = path.join(config.outDir, 'generated');
-
+	write_app_manifest(output, manifest_data, is_build);
 	write_client_manifest(config, manifest_data, `${output}/client`, root);
 	write_server(config, output, root);
 	write_all_types(config, manifest_data, root);
 	write_app_types(config, manifest_data, root);
-
-	return { manifest_data };
 }
 
 /**
  * Update SvelteKit's generated files in response to a single file content update.
  * Do not call this when the file in question was created/deleted.
  *
- * @param {import('types').ValidatedConfig} config
+ * @param {ValidatedConfig} config
  * @param {import('types').ManifestData} manifest_data
  * @param {string} file
  * @param {string} root The project root directory
@@ -79,30 +71,31 @@ export function update(config, manifest_data, file, root) {
 }
 
 /**
- * Run sync.init and sync.create in series, returning the result from sync.create.
- * @param {import('types').ValidatedConfig} config
+ * Run write_tsconfig and sync.create in series during build
+ * @param {ValidatedConfig} config
  * @param {string} root The project root directory
+ * @param {ManifestData} manifest_data
  */
-export function all(config, root) {
-	init(config, root);
-	return create(config, root);
+export function all(config, root, manifest_data) {
+	write_tsconfig(config, root);
+	create(config, root, manifest_data, true);
 }
 
 /**
  * Run sync.init and then generate all type files.
- * @param {import('types').ValidatedConfig} config
+ * @param {ValidatedConfig} config
  * @param {string} root
  */
 export function all_types(config, root) {
-	init(config, root);
-	const manifest_data = create_manifest_data({ config, cwd: root });
+	write_tsconfig(config, root);
+	const manifest_data = create_manifest_data(config, root);
 	write_all_types(config, manifest_data, root);
 	write_app_types(config, manifest_data, root);
 }
 
 /**
  * Generate modules and types for explicit env vars
- * @param {import('types').ValidatedConfig} kit
+ * @param {ValidatedConfig} kit
  * @param {string | null} entry
  * @param {string} root The Vite root
  * @param {string} mode The Vite mode
@@ -113,13 +106,4 @@ export async function env(kit, entry, root, mode) {
 	write_env(entry, env_config.variables, root);
 
 	return env_config;
-}
-
-/**
- * Regenerate __SERVER__/internal.js in response to src/{app.html,error.html,service-worker.js} changing
- * @param {import('types').ValidatedConfig} config
- * @param {string} root The project root directory
- */
-export function server(config, root) {
-	write_server(config, path.join(config.outDir, 'generated'), root);
 }
