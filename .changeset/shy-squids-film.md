@@ -2,5 +2,5 @@
 "@sveltejs/kit": patch
 ---
 
-chore: remove generated modules'
+chore: remove virtual modules
   
