@@ -39,7 +39,7 @@ declare module '<sveltekit:generated>/env/public/server.js' {
 }
 
 /** Internal version of $app/manifest */
-declare module '__sveltekit/manifest-data' {
+declare module '<sveltekit:generated>/app-manifest.js' {
 	export const immutable: Array<{ path: string }>;
 	export const assets: Array<{ path: string }>;
 	export const prerendered: Array<{ path: string }>;

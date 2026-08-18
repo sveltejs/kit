@@ -176,7 +176,7 @@ export async function dev(
 			_: {
 				client: {
 					start: `${get_runtime_base(root)}/client/entry.js`,
-					app: `${to_fs(svelte_config.outDir)}/generated/client/app.js`,
+					app: `${to_fs(svelte_config.outDir)}/generated/dev/client/app.js`,
 					imports: [],
 					stylesheets: [],
 					fonts: [],
@@ -740,20 +740,4 @@ function has_correct_case(file, assets) {
 	}
 
 	return false;
-}
-
-/**
- * Invalidates a module in all environments.
- * @param {ViteDevServer} server
- * @param {string} id
- * @returns {void}
- */
-export function invalidate_module(server, id) {
-	for (const environment in server.environments) {
-		const module = server.environments[environment].moduleGraph.getModuleById(id);
-		if (module) {
-			server.environments[environment].moduleGraph.invalidateModule(module);
-			void server.environments[environment].reloadModule(module);
-		}
-	}
 }

@@ -12,6 +12,7 @@ import {
 } from '../../exports/vite/static_analysis/index.js';
 import { load_explicit_env } from '../env.js';
 import { write_env } from './write_env.js';
+import { write_app_manifest } from './write_app_manifest.js';
 
 /**
  * Update SvelteKit's generated files
@@ -23,6 +24,7 @@ import { write_env } from './write_env.js';
 export function create(config, root, manifest_data, is_build) {
 	const output = path.join(config.outDir, `generated/${is_build ? 'build' : 'dev'}`);
 
+	write_app_manifest(output, manifest_data, is_build);
 	write_client_manifest(config, manifest_data, `${output}/client`, root);
 	write_server(config, output, root);
 	write_all_types(config, manifest_data, root);

@@ -2,7 +2,7 @@
 /** @import { EnvVarConfig } from '@sveltejs/kit/env' */
 /** @import { Options } from '@sveltejs/vite-plugin-svelte' */
 /** @import { PreprocessorGroup } from 'svelte/compiler' */
-/** @import { Asset, BuildData, ManifestData, Prerendered, RemoteChunk, RemoteInternals, RouteData, ServerMetadata, ValidatedConfig } from 'types' */
+/** @import { BuildData, ManifestData, Prerendered, RemoteChunk, RemoteInternals, ServerMetadata, ValidatedConfig } from 'types' */
 /** @import { Manifest, Plugin, ResolvedConfig, Rolldown, UserConfig, ViteDevServer } from 'vite' */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -30,7 +30,7 @@ import { runtime_directory, logger } from '../../core/utils.js';
 import { generate_manifest } from '../../core/generate_manifest/index.js';
 import { build_server_nodes } from './build/build_server.js';
 import { find_deps, resolve_symlinks } from './build/utils.js';
-import { dev, invalidate_module } from './dev/index.js';
+import { dev } from './dev/index.js';
 import { preview } from './preview/index.js';
 import {
 	error_for_missing_config,
@@ -49,13 +49,9 @@ import analyse from '../../core/postbuild/analyse.js';
 import { s } from '../../utils/misc.js';
 import { hash } from '../../utils/hash.js';
 import { dedent } from '../../core/sync/utils.js';
-import create_manifest_data, {
-	is_app_route,
-	is_endpoint_route,
-	is_page_route
-} from '../../core/sync/create_manifest_data/index.js';
+import create_manifest_data from '../../core/sync/create_manifest_data/index.js';
 import { get_import_aliases, get_hash_import_keys } from '../../utils/imports.js';
-import { app_env_private, app_server, sveltekit_manifest_data } from './module_ids.js';
+import { app_env_private, app_server } from './module_ids.js';
 import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
 import { should_ignore, has_children } from './static_analysis/utils.js';
@@ -63,6 +59,7 @@ import { process_config, split_config, validate_config } from '../../core/config
 import { treeshake_prerendered_remotes } from './build/remote.js';
 import { get_runner } from '../../runner.js';
 import { plugin_env_vars } from './plugins/env-vars.js';
+import { get_manifest_routes } from '../../core/sync/write_app_manifest.js';
 
 /** @type {import('./types.js').EnforcedConfig} */
 const enforced_config = {
@@ -658,18 +655,6 @@ function kit({ svelte_config }) {
 
 				return `\0virtual:${id}`;
 			}
-		},
-
-		load: {
-			filter: {
-				id: [exactRegex(sveltekit_manifest_data)]
-			},
-			handler(id) {
-				switch (id) {
-					case sveltekit_manifest_data:
-						return create_manifest_data_module(is_build, manifest_data);
-				}
-			}
 		}
 	};
 
@@ -1034,8 +1019,6 @@ function kit({ svelte_config }) {
 
 	/** @type {Array<{ path: string }> | null} */
 	let immutable = null;
-	/** @type {string | null} */
-	let manifest_data_code = null;
 
 	/**
 	 * Creates the service worker virtual modules
@@ -1101,54 +1084,6 @@ function kit({ svelte_config }) {
 		// supports the default client environment during development (for now)
 		applyToEnvironment(environment) {
 			return environment.name === 'serviceWorker';
-		},
-
-		resolveId: {
-			filter: {
-				id: exactRegex('__sveltekit/manifest-data')
-			},
-			handler(id) {
-				return `\0virtual:${id}`;
-			}
-		},
-
-		load: {
-			filter: {
-				id: [exactRegex('\0virtual:app/manifest'), exactRegex(sveltekit_manifest_data)]
-			},
-			handler(id) {
-				if (!manifest_data_code) {
-					// the client build computes `immutable`, unless it was skipped
-					// because every route has `csr: false`
-					immutable ??= collect_immutable(vite_server_manifest, kit.appDir, new Set());
-
-					manifest_data_code = dedent`
-					export const immutable = [
-						${immutable.map((entry) => s(entry)).join(',\n')}
-					];
-
-					export const assets = [
-						${stringify_assets(manifest_data.assets)}
-					];
-
-					export const prerendered = [
-						${prerendered.paths.map((path) => s({ path: path.replace(kit.paths.base, '').slice(1) })).join(',\n')}
-					];
-
-					export const routes = [
-						${stringify_routes(manifest_data.routes)}
-					];
-					`;
-				}
-
-				if (id === '\0virtual:app/manifest') {
-					return `export { immutable, assets, prerendered, routes } from '__sveltekit/manifest-data';`;
-				}
-
-				if (id === sveltekit_manifest_data) {
-					return manifest_data_code;
-				}
-			}
 		},
 
 		generateBundle(_, bundle) {
@@ -1410,7 +1345,7 @@ function kit({ svelte_config }) {
 															groups: [
 																{
 																	name: 'sveltekit-manifest',
-																	test: sveltekit_manifest_data
+																	test: '<sveltekit:generated>/app-manifest.js'
 																}
 															]
 														}
@@ -1502,8 +1437,6 @@ function kit({ svelte_config }) {
 				root,
 				(data) => {
 					manifest_data = data;
-					// Invalidate the manifest data module so it reloads with new routes/files
-					invalidate_module(server, sveltekit_manifest_data);
 				}
 			);
 		},
@@ -1973,7 +1906,15 @@ function kit({ svelte_config }) {
 						// mirror client settings that we couldn't set per environment in the config hook
 						builder.environments.serviceWorker.config.define = {
 							...builder.environments.client.config.define,
-							...builder.environments.serviceWorker.config.define
+							...builder.environments.serviceWorker.config.define,
+
+							// $app/manifest
+							__SVELTEKIT_MANIFEST_ASSETS__: s(
+								manifest_data.assets.map((asset) => ({ path: asset.file }))
+							),
+							__SVELTEKIT_MANIFEST_IMMUTABLE__: s(immutable),
+							__SVELTEKIT_MANIFEST_PRERENDERED__: s(prerendered_paths),
+							__SVELTEKIT_MANIFEST_ROUTES__: s(get_manifest_routes(manifest_data.routes))
 						};
 
 						builder.environments.serviceWorker.config.resolve.alias = [
@@ -2053,7 +1994,6 @@ function kit({ svelte_config }) {
 				emitted_remote_hashes.clear();
 
 				immutable = null;
-				manifest_data_code = null;
 
 				finalise = null;
 
@@ -2221,85 +2161,6 @@ function comparable(value) {
 	const normalized = posixify(value);
 	return process.platform === 'win32' ? normalized.toLowerCase() : normalized;
 }
-
-/**
- * @param {Asset[] | undefined} assets
- * @returns {string}
- */
-function stringify_assets(assets) {
-	return assets?.map((asset) => s({ path: asset.file })).join(',\n') ?? '';
-}
-
-/**
- * @param {RouteData[] | undefined} routes
- * @returns {Array<{ id: string; page: boolean; endpoint: boolean }>}
- */
-function get_manifest_routes(routes) {
-	return (
-		routes?.filter(is_app_route).map((route) => ({
-			id: route.id,
-			page: is_page_route(route),
-			endpoint: is_endpoint_route(route)
-		})) ?? []
-	);
-}
-
-/**
- * @param {RouteData[] | undefined} routes
- * @returns {string}
- */
-function stringify_routes(routes) {
-	return get_manifest_routes(routes)
-		.map((route) => s(route))
-		.join(',\n');
-}
-
-/**
- * Creates the `$app/manifest` data module. During development, real values
- * are emitted for `assets` and `routes` (the only data known at that point).
- *
- * During build, bare identifier placeholders (fake globals) are emitted.
- * The bundler leaves these as unresolved global references in the output,
- * which are then replaced with real values by scanning the output chunks
- * after each build completes. This avoids the content-hash feedback loop:
- * the manifest data lives in its own chunk with a fixed filename, so
- * importers' hashes are stable regardless of the manifest content.
- *
- * @param {boolean} is_build
- * @param {ManifestData | undefined} manifest_data
- * @returns {string}
- */
-const create_manifest_data_module = (is_build, manifest_data) => {
-	if (is_build) {
-		// Bare identifiers (fake globals) — the bundler leaves these as
-		// unresolved global references in the output. They are replaced
-		// with real values by `replace_manifest_placeholder_variables`
-		// after each build completes.
-		return dedent`
-			export const immutable = __SVELTEKIT_MANIFEST_IMMUTABLE__;
-			export const assets = __SVELTEKIT_MANIFEST_ASSETS__;
-			export const prerendered = __SVELTEKIT_MANIFEST_PRERENDERED__;
-			export const routes = __SVELTEKIT_MANIFEST_ROUTES__;
-		`;
-	}
-
-	// In dev, `manifest_data` may not be set yet on the very first load,
-	// but `configureServer` (which calls `sync.create`) runs before any
-	// module is served, so it will be set by the time this is called.
-	return dedent`
-		// empty during dev
-		export const immutable = [];
-		export const prerendered = [];
-
-		export const assets = [
-			${stringify_assets(manifest_data?.assets)}
-		];
-
-		export const routes = [
-			${stringify_routes(manifest_data?.routes)}
-		];
-	`;
-};
 
 /**
  * Replaces manifest data placeholder identifiers in output chunks with real
