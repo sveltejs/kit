@@ -191,8 +191,6 @@ function can_export_remote_module(directory) {
 export const server_only_module_pattern = /[/.]server\.[^/]+$/;
 export const server_only_directory_pattern = /\/server\//;
 
-export const strip_virtual_prefix = /** @param {string} id */ (id) => id.replace('\0virtual:', '');
-
 /**
  * For `error_for_missing_config('remote functions', 'experimental.remoteFunctions', 'true')`,
  * returns:
