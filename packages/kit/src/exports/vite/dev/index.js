@@ -454,7 +454,7 @@ export async function dev(
 			file.startsWith(serviceWorker) ||
 			file.startsWith(hooks.server)
 		) {
-			write_server(svelte_config, path.join(svelte_config.outDir, 'generated'), root);
+			write_server(svelte_config, path.join(svelte_config.outDir, 'generated', 'dev'), root);
 		}
 	});
 
