@@ -258,12 +258,13 @@ function write_frameworks_config({ builder }) {
  * }} opts
  */
 function generate_serverless_function({ builder, routes, patterns, name, exclude }) {
-	const manifest = builder.generateManifest({
+	const server = builder.generateServer({
 		relativePath: '../server',
-		routes
+		routes,
+		export: false
 	});
 
-	const fn = generate_serverless_function_module(manifest);
+	const fn = generate_serverless_function_module(server);
 	const config = generate_config_export(name, patterns, exclude);
 
 	if (builder.hasServerInstrumentationFile()) {
@@ -282,14 +283,15 @@ function generate_serverless_function({ builder, routes, patterns, name, exclude
 }
 
 /**
- * @param {string} manifest
+ * @param {string} server
  * @returns {string}
  */
-function generate_serverless_function_module(manifest) {
+function generate_serverless_function_module(server) {
 	return `\
 import { init } from '../serverless.js';
+${server}
 
-export default init(${manifest});
+export default init(server);
 `;
 }
 
@@ -366,16 +368,16 @@ async function generate_edge_functions({ builder }) {
 
 	builder.copy(`${files}/edge.js`, `${tmp}/entry.js`, {
 		replace: {
-			'0SERVER': `${relativePath}/index.js`,
-			MANIFEST: './manifest.js'
+			'0SERVER': `${relativePath}/server.js`
 		}
 	});
 
-	const manifest = builder.generateManifest({
-		relativePath
-	});
-
-	writeFileSync(`${tmp}/manifest.js`, `export const manifest = ${manifest};\n`);
+	writeFileSync(
+		`${tmp}/server.js`,
+		builder.generateServer({
+			relativePath
+		})
+	);
 
 	/** @type {{ assets: Set<string> }} */
 	const { assets } = (await import(pathToFileURL(`${tmp}/manifest.js`).href)).manifest;

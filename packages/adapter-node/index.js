@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, rmSync } from 'node:fs';
 import { extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { rolldown } from 'rolldown';
@@ -65,16 +65,6 @@ export default function (opts = {}) {
 
 			const dir_id = `${entries}/dir.js`;
 
-			writeFileSync(
-				`${server}/manifest.js`,
-				[
-					`export const manifest = ${builder.generateManifest({ relativePath: './' })};`,
-					`export const prerendered = new Set(${JSON.stringify(builder.prerendered.paths)});`,
-					`export const base = ${JSON.stringify(builder.config.paths.base)};`,
-					`export const uncompressed_extensions = new Set(${JSON.stringify([...uncompressed_extensions])});`
-				].join('\n\n')
-			);
-
 			/** @type {Record<string, string>} */
 			const input = {
 				index: `${entries}/index.js`,
@@ -91,6 +81,11 @@ export default function (opts = {}) {
 			// will get included in the bundled code
 			const bundle = await rolldown({
 				input,
+				transform: {
+					define: {
+						UNCOMPRESSED_EXTENSIONS: `new Set(${JSON.stringify([...uncompressed_extensions])})`
+					}
+				},
 				external: [
 					// dependencies could have deep exports, so we need a regex
 					...Object.keys(pkg.dependencies || {}).map((d) => new RegExp(`^${d}(\\/.*)?$`)),
@@ -111,9 +106,11 @@ export default function (opts = {}) {
 					{
 						// resolve the app's server and manifest, generated above
 						name: 'adapter-node-resolve-app',
-						resolveId(id) {
-							if (id === 'SERVER') return `${server}/index.js`;
-							if (id === 'MANIFEST') return `${server}/manifest.js`;
+						resolveId: {
+							filter: { id: /^SERVER$/ },
+							handler() {
+								return `${server}/index.js`;
+							}
 						}
 					},
 					{

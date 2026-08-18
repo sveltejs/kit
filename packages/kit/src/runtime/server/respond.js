@@ -86,7 +86,7 @@ export const respond = propagate_context(internal_respond);
 /**
  * @param {Request} request
  * @param {import('types').SSROptions} options
- * @param {import('@sveltejs/kit').SSRManifest} manifest
+ * @param {import('types').SSRManifest} manifest
  * @param {import('types').RequestState} state
  * @returns {Promise<Response>}
  */
@@ -358,8 +358,8 @@ export async function internal_respond(request, options, manifest, state) {
 
 	if (!state.prerendering?.fallback && !skip_route_resolution) {
 		try {
-			const matchers = await manifest._.matchers();
-			const result = find_route(resolved_path, manifest._.routes, matchers);
+			const matchers = await manifest.matchers();
+			const result = find_route(resolved_path, manifest.routes, matchers);
 
 			if (result) {
 				route = result.route;
@@ -615,7 +615,7 @@ export async function internal_respond(request, options, manifest, state) {
 					branch: [
 						// include the root layout because it applies to every page
 						{
-							node: /** @type {SSRNode} */ (await manifest._.nodes[0]()),
+							node: /** @type {SSRNode} */ (await manifest.nodes[0]()),
 							data: null,
 							server_data: null
 						}
@@ -683,7 +683,7 @@ export async function internal_respond(request, options, manifest, state) {
 							);
 						} else {
 							const allowed_methods = new Set(allowed_page_methods);
-							const node = await manifest._.nodes[route.page.leaf]();
+							const node = await manifest.nodes[route.page.leaf]();
 							if (node?.server?.actions) {
 								allowed_methods.add('POST');
 							}
@@ -802,13 +802,13 @@ export async function internal_respond(request, options, manifest, state) {
 
 /**
  * @param {import('types').PageNodeIndexes} page
- * @param {import('@sveltejs/kit').SSRManifest} manifest
+ * @param {import('types').SSRManifest} manifest
  */
 export function load_page_nodes(page, manifest) {
 	return Promise.all([
 		// we use == here rather than === because [undefined] serializes as "[null]"
-		...page.layouts.map((n) => (n == undefined ? n : manifest._.nodes[n]())),
-		manifest._.nodes[page.leaf]()
+		...page.layouts.map((n) => (n == undefined ? n : manifest.nodes[n]())),
+		manifest.nodes[page.leaf]()
 	]);
 }
 

@@ -1,4 +1,4 @@
-/** @import { SSRManifest } from '@sveltejs/kit'; */
+/** @import { SSRManifest } from 'types'; */
 import { restore, save } from './dev.js';
 import {
 	has_data_suffix,

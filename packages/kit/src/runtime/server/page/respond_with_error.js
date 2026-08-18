@@ -15,7 +15,7 @@ import { server_data_serializer } from './data_serializer.js';
  *   event: import('@sveltejs/kit').RequestEvent;
  *   state: import('types').RequestState;
  *   options: import('types').SSROptions;
- *   manifest: import('@sveltejs/kit').SSRManifest;
+ *   manifest: import('types').SSRManifest;
  *   error: unknown;
  *   resolve_opts: import('types').RequiredResolveOptions;
  * }} opts
@@ -31,7 +31,7 @@ export async function respond_with_error({ event, state, options, manifest, erro
 	const fetched = [];
 	try {
 		const branch = [];
-		const default_layout = await manifest._.nodes[0](); // 0 is always the root layout
+		const default_layout = await manifest.nodes[0](); // 0 is always the root layout
 		const nodes = new PageNodes([default_layout]);
 		const ssr = nodes.ssr();
 		const csr = nodes.csr();
@@ -72,7 +72,7 @@ export async function respond_with_error({ event, state, options, manifest, erro
 					data
 				},
 				{
-					node: await manifest._.nodes[1](), // 1 is always the root error
+					node: await manifest.nodes[1](), // 1 is always the root error
 					data: null,
 					server_data: null
 				}

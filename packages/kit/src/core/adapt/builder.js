@@ -23,7 +23,7 @@ import { posixify } from '../../utils/os.js';
 import { generate_manifest } from '../generate_manifest/index.js';
 import { get_route_segments } from '../../utils/routing.js';
 import generate_fallback from '../postbuild/fallback.js';
-import { write } from '../sync/utils.js';
+import { dedent, write } from '../sync/utils.js';
 import { find_server_assets } from '../generate_manifest/find_server_assets.js';
 import { create_exported_declarations } from '../env.js';
 import { handle_issues, validate } from '../../exports/internal/env.js';
@@ -185,17 +185,23 @@ export function create_builder({
 			write(`${dest}/env.js`, `export const env=${payload}`);
 		},
 
-		generateManifest({ relativePath, routes: subset }) {
-			return generate_manifest({
-				build_data,
-				prerendered: prerendered.paths,
-				relative_path: relativePath,
-				routes: subset
-					? subset.map((route) => /** @type {import('types').RouteData} */ (lookup.get(route)))
-					: route_data.filter((route) => prerender_map.get(route.id) !== true),
-				remotes,
-				root: vite_config.root
-			});
+		generateServer({ relativePath, routes: subset, export: should_export = true }) {
+			// console.log(manifest);
+			return dedent`
+				import { Server } from '@sveltejs/kit';
+				const manifest = ${generate_manifest({
+					build_data,
+					prerendered: prerendered.paths,
+					relative_path: relativePath,
+					base_path: config.paths.base,
+					routes: subset
+						? subset.map((route) => /** @type {import('types').RouteData} */ (lookup.get(route)))
+						: route_data.filter((route) => prerender_map.get(route.id) !== true),
+					remotes,
+					root: vite_config.root
+				})};
+				${should_export ? 'export ' : ''}const server = new Server(manifest);
+			`;
 		},
 
 		getBuildDirectory(name) {

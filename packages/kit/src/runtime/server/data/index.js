@@ -14,7 +14,7 @@ import { with_version_header } from '../utils.js';
  * @param {import('types').RequestState} state
  * @param {import('types').SSRRoute} route
  * @param {import('types').SSROptions} options
- * @param {import('@sveltejs/kit').SSRManifest} manifest
+ * @param {import('types').SSRManifest} manifest
  * @param {boolean[] | undefined} invalidated_data_nodes
  * @param {import('types').TrailingSlash} trailing_slash
  * @returns {Promise<Response>}
@@ -54,7 +54,7 @@ export async function render_data(
 					}
 
 					// == because it could be undefined (in dev) or null (in build, because of JSON.stringify)
-					const node = n == undefined ? n : await manifest._.nodes[n]();
+					const node = n == undefined ? n : await manifest.nodes[n]();
 					// load this. for the child, return as is. for the final result, stream things
 					return load_server_data({
 						event: new_event,

@@ -1,4 +1,5 @@
-/** @import { RequestEvent, SSRManifest } from '@sveltejs/kit' */
+/** @import { RequestEvent } from '@sveltejs/kit' */
+/** @import { SSRManifest } from 'types' */
 /** @import { RemoteForm } from '$app/server' */
 /** @import { ActionResult } from '$app/forms' */
 /** @import { RemoteFormInternals, RemoteFunctionData, RemoteFunctionResponse, RemoteInternals, RequestState, SSROptions } from 'types' */
@@ -50,7 +51,7 @@ export async function handle_remote_call(event, state, options, manifest, id) {
  */
 async function handle_remote_call_internal(event, state, options, manifest, id) {
 	const [hash, name, additional_args] = id.split('/');
-	const remotes = manifest._.remotes;
+	const remotes = manifest.remotes;
 
 	if (!Object.hasOwn(remotes, hash)) error(404);
 
@@ -539,8 +540,7 @@ async function handle_remote_form_post_internal(event, state, manifest, id) {
 	// keyed (`form.for(key)`) instance can — rejoin the remaining segments
 	const [hash, name, ...rest] = id.split('/');
 	const action_id = rest.join('/');
-	const remotes = manifest._.remotes;
-	const module = Object.hasOwn(remotes, hash) ? await remotes[hash]() : undefined;
+	const module = Object.hasOwn(manifest.remotes, hash) ? await manifest.remotes[hash]() : undefined;
 
 	let form = /** @type {RemoteForm<any, any>} */ (
 		module && Object.hasOwn(module.default, name) ? module.default[name] : undefined

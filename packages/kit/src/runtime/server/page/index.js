@@ -1,4 +1,5 @@
-/** @import { RequestEvent, SSRManifest } from '@sveltejs/kit' */
+/** @import { RequestEvent } from '@sveltejs/kit' */
+/** @import { SSRManifest } from 'types' */
 /** @import { ActionResult } from '$app/forms' */
 /** @import { PageNodeIndexes, RequestState, RequiredResolveOptions, ServerDataNode, SSRNode, SSROptions } from 'types' */
 import { text } from '@sveltejs/kit';
@@ -48,7 +49,7 @@ export async function render_page(event, state, page, options, manifest, nodes, 
 	}
 
 	if (is_action_json_request(event)) {
-		const node = await manifest._.nodes[page.leaf]();
+		const node = await manifest.nodes[page.leaf]();
 		return handle_action_json_request(event, state, options, node?.server);
 	}
 
@@ -279,7 +280,7 @@ export async function render_page(event, state, page, options, manifest, nodes, 
 					const status = error.status;
 
 					for (const { error: index, idx } of nearest_error_pages(i, branch, page.errors)) {
-						const node = await manifest._.nodes[index]();
+						const node = await manifest.nodes[index]();
 
 						data_serializer.set_max_nodes(idx);
 
@@ -384,6 +385,6 @@ function load_error_components(ssr, branch, page, manifest) {
 	if (!ssr) return undefined;
 
 	return build_error_chain(branch, page.errors, (idx) =>
-		manifest._.nodes[idx]?.().then((e) => e.component?.())
+		manifest.nodes[idx]?.().then((e) => e.component?.())
 	);
 }

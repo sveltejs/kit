@@ -11,7 +11,7 @@ declare module '__sveltekit/paths' {
 
 /** Internal version of $app/server */
 declare module '__sveltekit/server' {
-	import { SSRManifest } from '@sveltejs/kit';
+	import { SSRManifest } from 'types';
 
 	export let fix_stack_trace: (error: Error) => string;
 	export let manifest: SSRManifest;

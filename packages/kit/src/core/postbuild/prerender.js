@@ -1,3 +1,4 @@
+/** @import { ServerInternalModule, ServerMetadata, SSRManifest } from 'types' */
 import process from 'node:process';
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -31,7 +32,7 @@ const SPECIAL_HASHLINKS = new Set(['', 'top']);
  *   hash: boolean;
  *   out: string;
  *   manifest_path: string;
- *   metadata: import('types').ServerMetadata;
+ *   metadata: ServerMetadata;
  *   verbose: boolean;
  *   env: Record<string, string>;
  *   vite_config_file: string | undefined;
@@ -48,10 +49,10 @@ async function prerender({
 	vite_config_file,
 	is_tty
 }) {
-	/** @type {import('@sveltejs/kit').SSRManifest} */
+	/** @type {SSRManifest} */
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
-	/** @type {import('types').ServerInternalModule} */
+	/** @type {ServerInternalModule} */
 	const { set_building, set_prerendering, set_manifest, set_read_implementation, log_response } =
 		await import(pathToFileURL(`${out}/server/internal.js`).href);
 
@@ -659,7 +660,7 @@ async function prerender({
 	/** @type {Array<import('types').RemotePrerenderInternals>} */
 	const prerender_functions = [];
 
-	for (const loader of Object.values(manifest._.remotes)) {
+	for (const loader of Object.values(manifest.remotes)) {
 		const module = await loader();
 
 		for (const fn of Object.values(module.default)) {
