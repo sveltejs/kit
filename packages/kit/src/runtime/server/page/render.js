@@ -21,7 +21,7 @@ import { try_get_request_store, with_request_store } from '@sveltejs/kit/interna
 import { text_encoder } from '../../utils.js';
 import { count_non_ssi_comments, get_global_name } from '../utils.js';
 import { handle_error_and_jsonify } from '../errors.js';
-import * as env from '__sveltekit/env';
+import * as env from '<sveltekit:generated>/env/config.js';
 import { collect_remote_data } from '../remote-functions.js';
 import Root from '../../components/root.svelte';
 import { render } from 'svelte/server';
@@ -90,7 +90,7 @@ export async function render_response({
 	const inline_styles = new Map();
 
 	// TODO `svelte/server` should expose `RenderOutput`
-	/** @type {{ head: string, body: string, hashes: { script: string[] } }} */
+	/** @type {Omit<Awaited<ReturnType<typeof render>>, 'html'>} */
 	let rendered;
 
 	const form_value =
@@ -244,19 +244,12 @@ export async function render_response({
 			}
 
 			rendered = await with_request_store({ event, state: render_state }, async () => {
-				// We have to invoke .then eagerly here in order to kick off rendering: it's only starting on access,
-				// and `await maybe_promise` would eagerly access the .then property but call its function only after a tick, which is too late
-				// for the paths.reset() below and for any eager getRequestEvent() calls during rendering without AsyncLocalStorage available.
-				const rendered = render(Root, { ...render_opts, props });
-
-				const { head, body, hashes } = await rendered;
-
-				if (hashes) {
-					csp.add_script_hashes(hashes.script);
-				}
-
-				return { head, body, hashes };
+				return render(Root, { ...render_opts, props });
 			});
+
+			if (rendered.hashes) {
+				csp.add_script_hashes(rendered.hashes.script);
+			}
 		} finally {
 			if (DEV) {
 				globalThis.fetch = fetch;

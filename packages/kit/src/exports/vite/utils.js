@@ -1,5 +1,7 @@
+/** @import { ConfigEnv } from 'vite' */
 import fs from 'node:fs';
 import path from 'node:path';
+import process from 'node:process';
 import { posixify } from '../../utils/os.js';
 import { negotiate } from '../../utils/http.js';
 import { escape_html } from '../../utils/escape.js';
@@ -7,6 +9,7 @@ import { escape_for_regexp } from '../../utils/regex.js';
 import { stackless } from '../../utils/error.js';
 import { dedent } from '../../core/sync/utils.js';
 import { app_server, app_env_private } from './module_ids.js';
+import { s } from '../../utils/misc.js';
 
 /**
  * Transforms alias to a valid vite.resolve.alias array.
@@ -228,6 +231,20 @@ export function error_for_missing_config(feature_name, path, value) {
 			${result}
 		`
 	);
+}
+
+/**
+ * @param {ConfigEnv} config_env
+ * @returns {boolean}
+ */
+export function check_vite_build_started(config_env) {
+	// if the initial command was `build`, we want to reuse that whenever
+	// the plugin loads again
+	// but if the user is running vitest, we don't bother with this
+	if (config_env.mode !== 'test') {
+		process.env.SVELTEKIT_BUILD ??= s(config_env.command === 'build');
+	}
+	return process.env.SVELTEKIT_BUILD === 'true' || config_env.command === 'build';
 }
 
 // taken from https://github.com/vitejs/vite/blob/main/packages/vite/src/shared/utils.ts#L31-L34
