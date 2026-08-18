@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
 
@@ -178,4 +179,8 @@ test.describe('hash based navigation', () => {
 	});
 });
 
-// TODO: test server build is skipped
+test('skips server build if every node has ssr disabled', async () => {
+	test.skip(!!process.env.DEV);
+
+	expect(fs.existsSync('.svelte-kit/output/server')).toBe(false);
+});
