@@ -907,7 +907,7 @@ test.describe('data-sveltekit attributes', () => {
 		const responses = [];
 
 		const nodes_location = process.env.DEV
-			? '.svelte-kit/generated/client/nodes/'
+			? '.svelte-kit/generated/dev/client/nodes/'
 			: '/_app/immutable/nodes/';
 
 		page.on('response', async (response) => {
