@@ -77,7 +77,6 @@ catalog:
   '@types/estree': ^1.0.8
   '@types/node': ^22.19.19
   '@types/semver': ^7.8.0
-  dropcss: ^1.0.16
   eslint: ^10.8.1
   polka: ^1.0.0-next.28
   prettier: ^3.9.6
