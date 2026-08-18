@@ -1,18 +1,10 @@
-/** Internal version of $app/paths */
-declare module '__sveltekit/paths' {
-	export let base: '' | `/${string}`;
-	export let assets: '' | `https://${string}` | `http://${string}` | '/_svelte_kit_assets';
-	export let app_dir: string;
-	export let relative: boolean;
-	export function reset(): void;
-	export function override(paths: { base: string; assets: string }): void;
-	export function set_assets(path: string): void;
-}
-
 /** Internal version of $app/server */
-declare module '__sveltekit/server' {
+declare module '<sveltekit:generated>/server.js' {
 	import { SSRManifest } from '@sveltejs/kit';
+	import { SSROptions, ServerHooks } from 'types';
 
+	export const options: SSROptions;
+	export const get_hooks: () => Promise<Partial<ServerHooks>>;
 	export let fix_stack_trace: (error: Error) => string;
 	export let manifest: SSRManifest;
 	export function read_implementation(path: string): ReadableStream;
@@ -47,7 +39,7 @@ declare module '<sveltekit:generated>/env/public/server.js' {
 }
 
 /** Internal version of $app/manifest */
-declare module '__sveltekit/manifest-data' {
+declare module '<sveltekit:generated>/app-manifest.js' {
 	export const immutable: Array<{ path: string }>;
 	export const assets: Array<{ path: string }>;
 	export const prerendered: Array<{ path: string }>;

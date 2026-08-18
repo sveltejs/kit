@@ -252,27 +252,6 @@ export function create_sveltekit_env_public(variables, env, prelude) {
 }
 
 /**
- * Creates the `<sveltekit:generated>/env/public/client.js` module used in development. The dynamic
- * values are inlined as a fallback for contexts that render without the dev server, like vitest
- * browser mode, where nothing sets the global
- * @param {Record<string, EnvVarConfig<any>> | null} variables
- * @param {Record<string, string>} env
- */
-export function create_sveltekit_env_public_dev(variables, env) {
-	if (!variables) {
-		return '';
-	}
-
-	const dev_env = validate_public_env(variables, env, false);
-
-	return create_sveltekit_env_public(
-		variables,
-		env,
-		`const env = globalThis.__sveltekit_dev?.env ?? ${devalue.uneval(dev_env)};`
-	);
-}
-
-/**
  * @param {Record<string, EnvVarConfig<any>> | null} variables
  * @param {Record<string, string>} env
  * @param {boolean} include_static

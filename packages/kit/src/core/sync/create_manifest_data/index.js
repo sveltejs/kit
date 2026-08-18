@@ -1,3 +1,4 @@
+/** @import { ValidatedConfig } from 'types' */
 import { lookup } from '../../../utils/mime.js';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -20,22 +21,20 @@ const module_name_pattern =
 
 /**
  * Generates the manifest data used for the client-side manifest and types generation.
- * @param {{
- *   config: import('types').ValidatedConfig;
- *   fallback?: string;
- *   cwd: string;
- * }} opts
+ * @param {ValidatedConfig} config
+ * @param {string} root
+ * @param {string} [fallback] Where to look for fallback components
  * @returns {import('types').ManifestData}
  */
-export default function create_manifest_data({
+export default function create_manifest_data(
 	config,
-	fallback = `${runtime_directory}/components`,
-	cwd
-}) {
+	root,
+	fallback = `${runtime_directory}/components`
+) {
 	const assets = create_assets(config);
-	const hooks = create_hooks(config, cwd);
-	const params = resolve_params(config, cwd);
-	const { nodes, routes } = create_routes_and_nodes(cwd, config, fallback);
+	const hooks = create_hooks(config, root);
+	const params = resolve_params(config, root);
+	const { nodes, routes } = create_routes_and_nodes(root, config, fallback);
 
 	return {
 		assets,

@@ -2,7 +2,7 @@ import { noop } from '../../utils/functions.js';
 import { IN_WEBCONTAINER } from '../../constants.js';
 import { respond } from './respond.js';
 import { create_request_state } from './state.js';
-import { options, get_hooks } from '__SERVER__/internal.js';
+import { options, get_hooks } from '<sveltekit:generated>/server.js';
 import { set_read_implementation, set_manifest, fix_stack_trace } from './internal.js';
 import { set_env } from '<sveltekit:generated>/env/config.js';
 import { init_tracing } from '@sveltejs/kit/internal/server';

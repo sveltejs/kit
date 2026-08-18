@@ -25,6 +25,9 @@ import { SCHEME } from '../../../utils/url.js';
 import { check_feature } from '../../../utils/features.js';
 import { escape_html } from '../../../utils/escape.js';
 import { get_runner } from '../../../runner.js';
+import { write_server } from '../../../core/sync/write_server.js';
+import { write_tsconfig } from '../../../core/sync/write_tsconfig/index.js';
+import create_manifest_data from '../../../core/sync/create_manifest_data/index.js';
 
 // vite-specifc queries that we should skip handling for css urls
 const vite_css_query_regex = /(?:\?|&)(?:raw|url|inline)(?:&|$)/;
@@ -74,7 +77,7 @@ export async function dev(
 		return fetch(info, init);
 	};
 
-	sync.init(svelte_config, root);
+	write_tsconfig(svelte_config, root);
 
 	/** @type {ManifestData} */
 	let manifest_data;
@@ -135,7 +138,8 @@ export async function dev(
 
 	async function update_manifest() {
 		try {
-			({ manifest_data } = sync.create(svelte_config, root));
+			manifest_data = create_manifest_data(svelte_config, root);
+			sync.create(svelte_config, root, manifest_data, false);
 			set_manifest_data(manifest_data);
 
 			await load_and_validate_params({
@@ -172,7 +176,7 @@ export async function dev(
 			_: {
 				client: {
 					start: `${get_runtime_base(root)}/client/entry.js`,
-					app: `${to_fs(svelte_config.outDir)}/generated/client/app.js`,
+					app: `${to_fs(svelte_config.outDir)}/generated/dev/client/app.js`,
 					imports: [],
 					stylesheets: [],
 					fonts: [],
@@ -182,7 +186,7 @@ export async function dev(
 							? undefined
 							: manifest_data.nodes.map((node, i) => {
 									if (node.component || node.universal) {
-										return `${svelte_config.paths.base}${to_fs(svelte_config.outDir)}/generated/client/nodes/${i}.js`;
+										return `${svelte_config.paths.base}${to_fs(svelte_config.outDir)}/generated/dev/client/nodes/${i}.js`;
 									}
 								}),
 					// `css` is not necessary in dev, as the JS file from `nodes` will reference the CSS file
@@ -450,7 +454,7 @@ export async function dev(
 			file.startsWith(serviceWorker) ||
 			file.startsWith(hooks.server)
 		) {
-			sync.server(svelte_config, root);
+			write_server(svelte_config, path.join(svelte_config.outDir, 'generated', 'dev'), root);
 		}
 	});
 
@@ -736,20 +740,4 @@ function has_correct_case(file, assets) {
 	}
 
 	return false;
-}
-
-/**
- * Invalidates a module in all environments.
- * @param {ViteDevServer} server
- * @param {string} id
- * @returns {void}
- */
-export function invalidate_module(server, id) {
-	for (const environment in server.environments) {
-		const module = server.environments[environment].moduleGraph.getModuleById(id);
-		if (module) {
-			server.environments[environment].moduleGraph.invalidateModule(module);
-			void server.environments[environment].reloadModule(module);
-		}
-	}
 }
