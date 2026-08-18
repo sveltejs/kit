@@ -2463,5 +2463,5 @@ async function normalise_build(name, build, build_output_map) {
  * @returns {boolean}
  */
 function requires_ssr(node) {
-	return node.page_options?.ssr !== false && node.page_options?.prerender !== true;
+	return node.page_options?.ssr !== false;
 }
