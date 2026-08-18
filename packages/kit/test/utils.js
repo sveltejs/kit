@@ -292,13 +292,38 @@ if (!test_browser_device) {
 	);
 }
 
+/** @type {Record<string, number>} */
+const ports = {
+	'test-async': 5300,
+	'test-basics': 5301,
+	'test-dev-only': 5302,
+	'test-embed': 5303,
+	'test-hash-based-routing': 5304,
+	'test-no-csr': 5305,
+	'test-no-ssr': 5306,
+	'test-options': 5307,
+	'test-options-2': 5308,
+	'test-options-3': 5309,
+	'test-prerendered-app-error-pages': 5310,
+	'test-writes': 5311
+};
+
+const package_name = JSON.parse(fs.readFileSync(path.resolve('package.json'), 'utf8')).name;
+export const port = ports[package_name];
+
+if (!port) {
+	throw new Error(`No test server port configured for ${package_name}`);
+}
+
 export const config = defineConfig({
 	forbidOnly: !!process.env.CI,
 	// generous timeouts on CI
 	timeout: process.env.CI ? 45000 : 15000,
 	webServer: {
-		command: process.env.DEV ? 'pnpm dev --force' : 'pnpm build && pnpm preview',
-		port: process.env.DEV ? 5173 : 4173
+		command: process.env.DEV
+			? `pnpm dev --force --port ${port} --strictPort`
+			: `pnpm build && pnpm preview --port ${port} --strictPort`,
+		port
 	},
 	retries: process.env.CI ? 2 : number_from_env('KIT_E2E_RETRIES', 0),
 	projects: [
@@ -320,7 +345,7 @@ export const config = defineConfig({
 		screenshot: 'only-on-failure',
 		trace: 'retain-on-failure'
 	},
-	workers: process.env.CI ? 2 : number_from_env('KIT_E2E_WORKERS', undefined),
+	workers: number_from_env('KIT_E2E_WORKERS', process.env.CI ? 2 : undefined),
 	reporter: process.env.CI
 		? [
 				['dot'],

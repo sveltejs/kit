@@ -26,6 +26,7 @@ on:
 env:
   # we call `pnpm playwright install` instead
   PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+  KIT_E2E_WORKERS: '4'
 
 # dedupe push/pull_request runs for the same ref and cancel superseded runs
 concurrency:
@@ -61,21 +62,11 @@ jobs:
             os: ubuntu-latest
             vite: 'current'
             mode: 'unit'
-          - node-version: 22
-            os: ubuntu-latest
-            e2e-browser: 'chromium'
-            vite: 'current'
-            mode: 'dev'
           - node-version: 24
             os: ubuntu-latest
             e2e-browser: 'chromium'
             vite: 'current'
             mode: 'dev'
-          - node-version: 22
-            os: ubuntu-latest
-            e2e-browser: 'chromium'
-            vite: 'current'
-            mode: 'build'
           - node-version: 24
             os: ubuntu-latest
             e2e-browser: 'chromium'
@@ -87,6 +78,7 @@ jobs:
           #   vite: 'beta'
     env:
       KIT_E2E_BROWSER: ${{matrix.e2e-browser}}
+      KIT_E2E_WORKERS: '2'
       MATRIX_VITE: ${{matrix.vite}}
     steps:
       - run: git config --global core.autocrlf false
