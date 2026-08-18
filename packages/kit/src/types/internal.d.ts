@@ -417,6 +417,7 @@ export interface ServerMetadata {
 	/** For each hashed remote file, a map of export name -> { type, dynamic }, where `dynamic` is `false` for non-dynamic prerender functions */
 	remotes: Map<string, Map<string, { type: RemoteInternals['type']; dynamic: boolean }>>;
 	should_prerender: boolean;
+	/** `true` if any form actions or non-prerendered remote functions/`+server` files exist */
 	has_dynamic_endpoints: boolean;
 }
 

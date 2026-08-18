@@ -177,3 +177,5 @@ test.describe('hash based navigation', () => {
 		expect(url.hash).toBe('#/');
 	});
 });
+
+// TODO: test server build is skipped
