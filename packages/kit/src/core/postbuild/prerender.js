@@ -791,6 +791,15 @@ async function get_ssr_vite_server({ vite, vite_config_file, env, client }) {
 		const { manifest } = vite_dev_server.__sveltekit;
 		manifest._.client = devalue.parse(client);
 
+		// load all nodes and components so that we can list remote functions
+		// discovered from them and check if they need to be prerendered
+		const nodes = await Promise.all(manifest._.nodes.map((loader) => loader()));
+		for (const node of nodes) {
+			try {
+				await node.component?.();
+			} catch {}
+		}
+
 		const server = new Server(manifest);
 		await server.init({
 			env,
