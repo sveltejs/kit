@@ -31,9 +31,8 @@ export function write_app_manifest(out, manifest_data, is_build) {
 			export const prerendered = __SVELTEKIT_MANIFEST_PRERENDERED__;
 			export const routes = __SVELTEKIT_MANIFEST_ROUTES__;
 		`
-		: // In dev, `manifest_data` may not be set yet on the very first load,
-			// but `configureServer` (which calls `sync.create`) runs before any
-			// module is served, so it will be set by the time this is called.
+		: // In dev, an empty manifest is written before dependency scanning starts.
+			// `configureServer` replaces it with the full manifest before modules are served.
 			dedent`
 		// empty during dev
 		export const immutable = [];

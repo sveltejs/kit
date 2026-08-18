@@ -59,7 +59,7 @@ import { process_config, split_config, validate_config } from '../../core/config
 import { treeshake_prerendered_remotes } from './build/remote.js';
 import { get_runner } from '../../runner.js';
 import { plugin_env_vars } from './plugins/env-vars.js';
-import { get_manifest_routes } from '../../core/sync/write_app_manifest.js';
+import { get_manifest_routes, write_app_manifest } from '../../core/sync/write_app_manifest.js';
 
 /** @type {import('./types.js').EnforcedConfig} */
 const enforced_config = {
@@ -612,6 +612,11 @@ function kit({ svelte_config }) {
 		 */
 		configResolved(config) {
 			vite_config = config;
+
+			if (!is_build) {
+				// Dependency scanning starts before configureServer creates the full manifest
+				write_app_manifest(`${out_dir}/generated/dev`, undefined, false);
+			}
 
 			const unsupported_plugins = vite_config.plugins.filter((plugin) => plugin.transformIndexHtml);
 			if (unsupported_plugins.length) {
