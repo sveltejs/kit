@@ -11,8 +11,7 @@ import { is_form_content_type } from '../../utils/http.js';
 import { create_remote_key, parse_remote_arg, split_remote_key } from '../shared.js';
 import { stringify } from '#app/internal/transport';
 import { handle_error_and_jsonify } from './errors.js';
-import { action_error_result, get_action_location } from './page/actions.js';
-import { DEV } from 'esm-env';
+import { action_error_result, get_action_location, no_actions_result } from './page/actions.js';
 import { deserialize_binary_form } from '../form-utils.js';
 import { with_version_header } from './utils.js';
 
@@ -546,21 +545,7 @@ async function handle_remote_form_post_internal(event, state, manifest, id) {
 	);
 
 	if (!form) {
-		event.setHeaders({
-			// https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405
-			// "The server must generate an Allow header field in a 405 status code response"
-			allow: 'GET'
-		});
-		return {
-			type: 'error',
-			location,
-			// We're lying a bit with the types here; this will be transformed into a proper App.Error object later
-			error: new SvelteKitError(
-				405,
-				'Method Not Allowed',
-				`POST method not allowed. No form actions exist for ${DEV ? `the page at ${event.route.id}` : 'this page'}`
-			)
-		};
+		return no_actions_result(event, location);
 	}
 
 	if (action_id) {

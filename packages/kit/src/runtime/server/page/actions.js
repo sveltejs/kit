@@ -27,84 +27,44 @@ export function is_action_json_request(event) {
  * @param {SSRNode['server'] | undefined} server
  */
 export async function handle_action_json_request(event, state, options, server) {
-	const actions = server?.actions;
-	const location = get_action_location(event.url);
+	const result = await handle_action_request(event, state, server);
+	return action_result_json(event, state, options, result);
+}
 
-	if (!actions) {
-		const no_actions_error = new SvelteKitError(
-			405,
-			'Method Not Allowed',
-			`POST method not allowed. No form actions exist for ${DEV ? `the page at ${event.route.id}` : 'this page'}`
-		);
-
-		const error = await handle_error_and_jsonify(event, state, options, no_actions_error);
-
-		return action_json(
-			{
-				type: 'error',
-				error,
-				location
-			},
-			{
-				status: error.status,
-				headers: {
-					// https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405
-					// "The server must generate an Allow header field in a 405 status code response"
-					allow: 'GET'
-				}
-			}
-		);
+/**
+ * @param {RequestEvent} event
+ * @param {import('types').RequestState} state
+ * @param {SSROptions} options
+ * @param {ActionResult} result
+ * @returns {Promise<Response>}
+ */
+async function action_result_json(event, state, options, result) {
+	if (result.type === 'redirect') {
+		return action_json(result);
 	}
 
-	check_named_default_separate(actions);
+	if (result.type === 'error') {
+		const error = await handle_error_and_jsonify(event, state, options, result.error);
+		return action_json({ ...result, error }, { status: error.status });
+	}
+
+	if (result.type === 'success' && !result.data) {
+		return action_json({ ...result, status: 204, data: undefined });
+	}
 
 	try {
-		const data = await call_action(event, state, actions);
-
-		if (DEV) {
-			validate_action_return(data);
-		}
-
-		if (data instanceof ActionFailure) {
-			return action_json(
-				{
-					type: 'failure',
-					status: data.status,
-					location,
-					// @ts-expect-error we assign a string to what is supposed to be an object. That's ok
-					// because we don't use the object outside, and this way we have better code navigation
-					// through knowing where the related interface is used.
-					data: try_serialize(data.data, stringify, /** @type {string} */ (event.route.id))
-				},
-				{
-					status: data.status
-				}
-			);
-		} else if (data) {
-			return action_json({
-				type: 'success',
-				status: 200,
-				location,
-				// @ts-expect-error see comment above
-				data: try_serialize(data, stringify, /** @type {string} */ (event.route.id))
-			});
-		} else {
-			return action_json({
-				type: 'success',
-				status: 204,
-				location
-			});
-		}
+		return action_json(
+			{
+				...result,
+				// @ts-expect-error we assign a string to what is supposed to be an object. That's ok
+				// because we don't use the object outside, and this way we have better code navigation
+				// through knowing where the related interface is used.
+				data: try_serialize(result.data, stringify, /** @type {string} */ (event.route.id))
+			},
+			{ status: result.status }
+		);
 	} catch (e) {
-		const result = action_error_result(check_incorrect_fail_use(e), location);
-
-		if (result.type === 'redirect') {
-			return action_json(result);
-		}
-
-		const error = await handle_error_and_jsonify(event, state, options, result.error);
-
-		return action_json({ type: 'error', error, location }, { status: error.status });
+		return action_result_json(event, state, options, action_error_result(e, result.location));
 	}
 }
 
@@ -125,12 +85,26 @@ export function get_action_location(url) {
 }
 
 /**
- * @param {unknown} error
+ * @param {RequestEvent} event
+ * @param {string} location
+ * @returns {Extract<ActionResult, { type: 'error' }>}
  */
-function check_incorrect_fail_use(error) {
-	return error instanceof ActionFailure
-		? new Error('Cannot "throw fail()". Use "return fail()"')
-		: error;
+export function no_actions_result(event, location) {
+	event.setHeaders({
+		// https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405
+		// "The server must generate an Allow header field in a 405 status code response"
+		allow: 'GET'
+	});
+	return {
+		type: 'error',
+		location,
+		// We're lying a bit with the types here; this will be transformed into a proper App.Error object later
+		error: new SvelteKitError(
+			405,
+			'Method Not Allowed',
+			`POST method not allowed. No form actions exist for ${DEV ? `the page at ${event.route.id}` : 'this page'}`
+		)
+	};
 }
 
 /**
@@ -195,21 +169,7 @@ export async function handle_action_request(event, state, server) {
 
 	if (!actions) {
 		// TODO should this be a different error altogether?
-		event.setHeaders({
-			// https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405
-			// "The server must generate an Allow header field in a 405 status code response"
-			allow: 'GET'
-		});
-		return {
-			type: 'error',
-			location,
-			// We're lying a bit with the types here; this will be transformed into a proper App.Error object later
-			error: new SvelteKitError(
-				405,
-				'Method Not Allowed',
-				`POST method not allowed. No form actions exist for ${DEV ? `the page at ${event.route.id}` : 'this page'}`
-			)
-		};
+		return no_actions_result(event, location);
 	}
 
 	check_named_default_separate(actions);
@@ -238,7 +198,10 @@ export async function handle_action_request(event, state, server) {
 			};
 		}
 	} catch (e) {
-		return action_error_result(check_incorrect_fail_use(e), location);
+		return action_error_result(
+			e instanceof ActionFailure ? new Error('Cannot "throw fail()". Use "return fail()"') : e,
+			location
+		);
 	}
 }
 
