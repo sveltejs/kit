@@ -28,7 +28,6 @@
 		"svelte": "catalog:",
 		"svelte-check": "catalog:",
 		"typescript": "catalog:",
-		"valibot": "catalog:",
 		"vite": "catalog:"
 	},
 	"type": "module",

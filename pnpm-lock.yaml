@@ -357,9 +357,6 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 22.19.19
-      sirv:
-        specifier: ^3.0.2
-        version: 3.0.2
       svelte:
         specifier: 'catalog:'
         version: 5.56.8(@typescript-eslint/types@8.61.1)
@@ -756,9 +753,6 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
-      valibot:
-        specifier: 'catalog:'
-        version: 1.4.2(typescript@6.0.3)
       vite:
         specifier: 'catalog:'
         version: 8.2.1(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0)
@@ -1675,9 +1669,6 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
-      valibot:
-        specifier: 'catalog:'
-        version: 1.4.2(typescript@6.0.3)
       vite:
         specifier: 'catalog:'
         version: 8.2.1(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0)
