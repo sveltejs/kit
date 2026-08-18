@@ -3,7 +3,7 @@
 /** @import { ActionResult } from '$app/forms' */
 /** @import { RemoteFormInternals, RemoteFunctionData, RemoteFunctionResponse, RemoteInternals, RequestState, SSROptions } from 'types' */
 
-import { json, error } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
 import { Redirect, SvelteKitError } from '@sveltejs/kit/internal';
 import { with_request_store, merge_tracing, record_span } from '@sveltejs/kit/internal/server';
 import { app_dir, base } from '#app/paths';
@@ -262,7 +262,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 
 				if (data._.issues) {
 					// special case — don't serialize refreshes/reconnects
-					return json(
+					return Response.json(
 						/** @type {RemoteFunctionResponse} */ ({
 							type: 'result',
 							data: stringify(data)
@@ -310,7 +310,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 
 		await collect_remote_data(data, event, state, options);
 
-		return json(
+		return Response.json(
 			/** @type {RemoteFunctionResponse} */ ({
 				type: 'result',
 				data: stringify(data)
@@ -321,7 +321,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 		if (error instanceof Redirect) {
 			const data = await collect_remote_data({ redirect: error.location }, event, state, options);
 
-			return json(
+			return Response.json(
 				/** @type {RemoteFunctionResponse} */ ({
 					type: 'result',
 					data: stringify(data)
@@ -332,7 +332,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 
 		const transformed = await handle_error_and_jsonify(event, state, options, error);
 
-		return json(
+		return Response.json(
 			/** @type {RemoteFunctionResponse} */ ({
 				type: 'error',
 				error: transformed
