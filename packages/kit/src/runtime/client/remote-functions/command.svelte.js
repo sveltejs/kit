@@ -1,4 +1,4 @@
-/** @import { RemoteCommand, RemoteQueryUpdate } from '@sveltejs/kit/remote' */
+/** @import { RemoteCommand, RemoteQueryUpdate } from '$app/server' */
 import { app_dir, base } from '#app/paths';
 import { stringify_command_arg } from '../../shared.js';
 import { get_remote_request_headers, categorize_updates, remote_request } from './shared.svelte.js';

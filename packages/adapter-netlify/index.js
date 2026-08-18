@@ -447,7 +447,8 @@ async function generate_edge_functions({ builder }) {
 		// Contains static files
 		`/${builder.getAppPath()}/immutable/*`,
 		`/${builder.getAppPath()}/version.json`,
-		...builder.prerendered.paths,
+		// the base root and `trailingSlash: 'always'` pages are recorded with a trailing slash
+		...builder.prerendered.paths.map((path) => (path === '/' ? path : path.replace(/\/$/, ''))),
 		...Array.from(assets).flatMap((asset) => {
 			if (asset.endsWith('/index.html')) {
 				const dir = asset.replace(/\/index\.html$/, '');

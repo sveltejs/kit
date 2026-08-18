@@ -1,12 +1,10 @@
-import { BROWSER, DEV } from 'esm-env';
-import { noop } from '../../utils/functions.js';
+import { DEV } from 'esm-env';
 import { hash_request } from '../../utils/hash.js';
 import { base64_decode } from '../utils.js';
 
 let loading = 0;
 
-/** @type {typeof fetch} */
-const native_fetch = BROWSER ? window.fetch : /** @type {any} */ (noop);
+const native_fetch = window.fetch;
 
 export function lock_fetch() {
 	loading += 1;
@@ -16,7 +14,7 @@ export function unlock_fetch() {
 	loading -= 1;
 }
 
-if (DEV && BROWSER) {
+if (DEV) {
 	let can_inspect_stack_trace = false;
 
 	// detect whether async stack traces work
@@ -61,17 +59,17 @@ if (DEV && BROWSER) {
 		const method = input instanceof Request ? input.method : init?.method || 'GET';
 
 		if (method !== 'GET') {
-			cache.delete(build_selector(input));
+			cache.delete(build_selector(requested_url(input)));
 		}
 
 		return native_fetch(input, init);
 	};
-} else if (BROWSER) {
+} else {
 	window.fetch = (input, init) => {
 		const method = input instanceof Request ? input.method : init?.method || 'GET';
 
 		if (method !== 'GET') {
-			cache.delete(build_selector(input));
+			cache.delete(build_selector(requested_url(input)));
 		}
 
 		return native_fetch(input, init);
@@ -151,6 +149,18 @@ export function dev_fetch(resource, opts) {
 		configurable: true
 	});
 	return window.fetch(resource, patched_opts);
+}
+
+/**
+ * Mirror the url normalization in `resolve_fetch_url`, so that non-GET requests
+ * evict the cache entry regardless of how the url is spelled
+ * @param {RequestInfo | URL} input
+ */
+function requested_url(input) {
+	const resolved = new URL(input instanceof Request ? input.url : input, location.href);
+	return resolved.origin === location.origin
+		? resolved.href.slice(location.origin.length)
+		: resolved.href;
 }
 
 /**

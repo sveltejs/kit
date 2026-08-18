@@ -6,9 +6,21 @@ export const SVELTE_KIT_ASSETS = '/_svelte_kit_assets';
 
 export const GENERATED_COMMENT = '// this file is generated — do not edit it';
 
-export const ENDPOINT_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'];
+export const ENDPOINT_METHODS = [
+	'GET',
+	'POST',
+	'PUT',
+	'PATCH',
+	'DELETE',
+	'OPTIONS',
+	'HEAD',
+	'QUERY'
+];
 
 export const MUTATIVE_METHODS = ['POST', 'PUT', 'PATCH', 'DELETE'];
+
+/** methods whose responses depend on the request body, so they can never be prerendered */
+export const BODY_DEPENDENT_METHODS = [...MUTATIVE_METHODS, 'QUERY'];
 
 export const PAGE_METHODS = ['GET', 'POST', 'HEAD'];
 

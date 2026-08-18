@@ -604,7 +604,13 @@ async function create_function_bundle(builder, entry, dir, config) {
 
 		if (source !== realpath) {
 			const realdest = path.join(dir, path.relative(ancestor, realpath));
-			fs.symlinkSync(path.relative(path.dirname(dest), realdest), dest, is_dir ? 'dir' : 'file');
+			try {
+				fs.symlinkSync(path.relative(path.dirname(dest), realdest), dest, is_dir ? 'dir' : 'file');
+			} catch (error) {
+				// different traced paths can resolve to the same destination
+				// (e.g. multiple pnpm symlink chains pointing at the same real file)
+				if (/** @type {NodeJS.ErrnoException} */ (error).code !== 'EEXIST') throw error;
+			}
 		} else if (!is_dir) {
 			fs.copyFileSync(source, dest);
 		}

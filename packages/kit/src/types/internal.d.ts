@@ -10,7 +10,7 @@ import {
 	SSRManifest,
 	Emulator
 } from '@sveltejs/kit';
-import { RemoteFormIssue, RemoteQuery, RemoteLiveQuery } from '@sveltejs/kit/remote';
+import { RemoteFormIssue, RemoteQuery, RemoteLiveQuery } from '$app/server';
 import { Config } from '@sveltejs/kit/vite';
 import {
 	ClientInit,

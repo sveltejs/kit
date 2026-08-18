@@ -6,6 +6,7 @@ import { s } from '../../utils/misc.js';
 import { load_error_page, load_template } from '../config/index.js';
 import { check_spelling, write_if_changed } from './utils.js';
 import { escape_html } from '../../utils/escape.js';
+import { runtime_directory } from '../utils.js';
 
 /**
  * @param {{
@@ -14,6 +15,7 @@ import { escape_html } from '../../utils/escape.js';
  *   config: import('types').ValidatedConfig;
  *   has_service_worker: boolean;
  *   template: string;
+ *   runtime_directory: string;
  * }} opts
  */
 const server_template = ({
@@ -21,12 +23,13 @@ const server_template = ({
 	server_hooks,
 	universal_hooks,
 	has_service_worker,
-	template
+	template,
+	runtime_directory
 }) => `
-import { set_building, set_prerendering } from '$app/env/internal';
+import { set_building, set_prerendering } from '$app/env/server';
 import { set_assets } from '$app/paths/internal/server';
-import { set_fix_stack_trace, set_manifest, set_read_implementation, log_response } from '__sveltekit/server';
-import error from '../shared/error-template.js';
+import { set_fix_stack_trace, set_manifest, set_read_implementation, log_response } from '${runtime_directory}/server/internal.js';
+import error from './shared/error-template.js';
 
 export const options = {
 	app_template_contains_nonce: ${template.includes('%sveltekit.nonce%')},
@@ -103,7 +106,7 @@ export function write_server(config, output, root) {
 
 	/** @param {string} file */
 	function relative(file) {
-		return posixify(path.relative(`${output}/server`, file));
+		return posixify(path.relative(output, file));
 	}
 
 	write_if_changed(
@@ -116,9 +119,10 @@ export function write_server(config, output, root) {
 	// Contains the stringified version of
 	/** @type {import('types').SSROptions} */
 	write_if_changed(
-		`${output}/server/internal.js`,
+		`${output}/server.js`,
 		server_template({
 			config,
+			runtime_directory: relative(runtime_directory),
 			server_hooks: server_hooks_file ? relative(server_hooks_file) : null,
 			universal_hooks: universal_hooks_file ? relative(universal_hooks_file) : null,
 			has_service_worker:

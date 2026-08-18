@@ -187,7 +187,7 @@ export function build_server_nodes(
 			}
 
 			if (client_manifest) {
-				const entry_path = `${out_dir}/generated/client-optimized/nodes/${i}.js`;
+				const entry_path = `${out_dir}/generated/build/client-optimized/nodes/${i}.js`;
 				const entry = find_deps(client_manifest, entry_path, true, root);
 
 				// Eagerly load client stylesheets and fonts imported by the SSR-ed page to avoid FOUC.
