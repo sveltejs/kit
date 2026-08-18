@@ -130,7 +130,7 @@ export function form(validate_or_fn, maybe_fn) {
 						if (e instanceof ValidationError) {
 							handle_issues(output, e.issues, form_data, __.id);
 						} else if (DEV && e instanceof ActionFailure) {
-							throw new Error(incorrect_fail_message);
+							throw new Error(incorrect_fail_message, { cause: e });
 						} else {
 							throw e;
 						}
