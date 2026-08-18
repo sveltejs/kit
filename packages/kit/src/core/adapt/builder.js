@@ -27,6 +27,7 @@ import { dedent, write } from '../sync/utils.js';
 import { find_server_assets } from '../generate_manifest/find_server_assets.js';
 import { create_exported_declarations } from '../env.js';
 import { handle_issues, validate } from '../../exports/internal/env.js';
+import { get_manifest_routes } from '../../exports/vite/index.js';
 
 const pipe = promisify(pipeline);
 const extensions = [
@@ -52,6 +53,7 @@ const extensions = [
  *   route_data: RouteData[];
  *   prerendered: Prerendered;
  *   prerender_map: PrerenderMap;
+ *   immutable: Array<{ path: string }>;
  *   log: Logger;
  *   vite_config: ResolvedConfig;
  *   remotes: RemoteChunk[];
@@ -66,6 +68,7 @@ export function create_builder({
 	route_data,
 	prerendered,
 	prerender_map,
+	immutable,
 	log,
 	vite_config,
 	remotes,
@@ -202,6 +205,17 @@ export function create_builder({
 				})};
 				${should_export ? 'export ' : ''}const server = new Server(manifest);
 			`;
+		},
+
+		getManifest() {
+			return {
+				assets: build_data.manifest_data.assets.map((asset) => ({ path: asset.file })),
+				routes: get_manifest_routes(build_data.manifest_data.routes),
+				prerendered: prerendered.paths.map((path) => ({
+					path: path.replace(config.paths.base, '')
+				})),
+				immutable
+			};
 		},
 
 		getBuildDirectory(name) {

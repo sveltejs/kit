@@ -2000,6 +2000,7 @@ function kit({ svelte_config }) {
 							metadata,
 							prerendered,
 							prerender_results.prerender_map,
+							immutable ?? [],
 							log,
 							remotes,
 							vite_config,
@@ -2225,15 +2226,17 @@ function stringify_assets(assets) {
 
 /**
  * @param {RouteData[] | undefined} routes
- * @returns {Array<{ id: string; page: boolean; endpoint: boolean }>}
+ * @returns {Array<import('$app/manifest').ManifestRoute>}
  */
-function get_manifest_routes(routes) {
+export function get_manifest_routes(routes) {
 	return (
-		routes?.filter(is_app_route).map((route) => ({
-			id: route.id,
-			page: is_page_route(route),
-			endpoint: is_endpoint_route(route)
-		})) ?? []
+		routes
+			?.filter(is_app_route)
+			.map((route) => /** @type {import('$app/manifest').ManifestRoute} */ ({
+				id: route.id,
+				page: is_page_route(route),
+				endpoint: is_endpoint_route(route)
+			})) ?? []
 	);
 }
 

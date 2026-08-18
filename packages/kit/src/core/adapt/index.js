@@ -7,6 +7,7 @@ import { create_builder } from './builder.js';
  * @param {import('types').ServerMetadata} server_metadata
  * @param {import('types').Prerendered} prerendered
  * @param {import('types').PrerenderMap} prerender_map
+ * @param {Array<{ path: string }>} immutable
  * @param {import('types').Logger} log
  * @param {import('types').RemoteChunk[]} remotes
  * @param {import('vite').ResolvedConfig} vite_config
@@ -18,6 +19,7 @@ export async function adapt(
 	server_metadata,
 	prerendered,
 	prerender_map,
+	immutable,
 	log,
 	remotes,
 	vite_config,
@@ -47,6 +49,7 @@ export async function adapt(
 		server_metadata,
 		route_data: build_data.manifest_data.routes.filter((route) => route.page || route.endpoint),
 		prerendered,
+		immutable,
 		prerender_map,
 		log,
 		remotes,

@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join, posix } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
 import { builtinModules } from 'node:module';
 import process from 'node:process';
 import toml from '@iarna/toml';
@@ -379,8 +379,7 @@ async function generate_edge_functions({ builder }) {
 		})
 	);
 
-	/** @type {{ assets: Set<string> }} */
-	const { assets } = (await import(pathToFileURL(`${tmp}/manifest.js`).href)).manifest;
+	const { assets } = builder.getManifest();
 
 	const path = '/*';
 	// We only need to specify paths without the trailing slash because
@@ -391,7 +390,7 @@ async function generate_edge_functions({ builder }) {
 		`/${builder.getAppPath()}/version.json`,
 		// the base root and `trailingSlash: 'always'` pages are recorded with a trailing slash
 		...builder.prerendered.paths.map((path) => (path === '/' ? path : path.replace(/\/$/, ''))),
-		...Array.from(assets).flatMap((asset) => {
+		...assets.flatMap(({ path: asset }) => {
 			if (asset.endsWith('/index.html')) {
 				const dir = asset.replace(/\/index\.html$/, '');
 				return [`${builder.config.paths.base}/${asset}`, `${builder.config.paths.base}/${dir}`];

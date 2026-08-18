@@ -166,13 +166,16 @@ export interface Builder {
 	 * @param opts
 	 * @param opts.relativePath  A relative path to the base directory of the server build output
 	 * @param opts.export Whether to export the server module - defaults to `true`
-	 * @returns JavaScript source code that initialises the server
+	 * @returns JavaScript source code that initialises the server and exports a `server` object
 	 */
 	generateServer: (opts: {
 		relativePath: string;
 		routes?: RouteDefinition[];
 		export?: boolean;
 	}) => string;
+
+	/** Gets the value of the `$app/manifest` module */
+	getManifest(): typeof import('$app/manifest');
 
 	/**
 	 * Resolve a path to the `name` directory inside `outDir`, e.g. `/path/to/.svelte-kit/my-adapter`.
