@@ -2,4 +2,4 @@
 '@sveltejs/kit': minor
 ---
 
-feat: pass the source file `name` to the `preload` filter for fonts
+feat: pass the project-relative source `filename` to the `preload` filter for fonts

@@ -209,10 +209,14 @@ export const handle = sequence(
 		}
 
 		return resolve(event, {
-			// needed for asset-preload tests, which assert `name` is the unhashed file name
+			// needed for asset-preload tests, which assert `filename` is the unhashed source path
 			preload: (input) =>
 				input.type !== 'font' ||
-				['shlop.woff2', 'shlop.var.woff2', 'shlop+bold.woff2'].includes(input.name)
+				[
+					'src/routes/asset-preload/shlop.woff2',
+					'src/routes/asset-preload/shlop.var.woff2',
+					'src/routes/asset-preload/shlop+bold.woff2'
+				].includes(input.filename)
 		});
 	}
 );

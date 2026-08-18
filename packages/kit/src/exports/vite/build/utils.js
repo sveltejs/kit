@@ -94,7 +94,7 @@ export function find_deps(manifest, entry, add_dynamic_css, root) {
 		imports: Array.from(imports),
 		stylesheets: Array.from(stylesheets),
 		// TODO do we need this separately?
-		fonts: filter_fonts(assets, manifest),
+		fonts: filter_fonts(assets, manifest, root),
 		stylesheet_map
 	};
 }
@@ -122,9 +122,10 @@ const source_maps = new WeakMap();
 /**
  * @param {string[]} assets
  * @param {import('vite').Manifest} manifest
+ * @param {string} root
  * @returns {import('types').FontDependency[]}
  */
-export function filter_fonts(assets, manifest) {
+export function filter_fonts(assets, manifest, root) {
 	let sources = source_maps.get(manifest);
 
 	if (!sources) {
@@ -144,7 +145,26 @@ export function filter_fonts(assets, manifest) {
 		.filter((asset) => /\.(woff2?|ttf|otf)$/.test(asset))
 		.map((file) => {
 			const src = sources.get(file) ?? file;
-			return { file, name: path.basename(src) };
+			const marker = '/node_modules/';
+			const index = src.lastIndexOf(marker);
+
+			// Vite follows package manager symlinks when generating the manifest. Prefer the
+			// project-local node_modules path when it points to the same file.
+			if (index !== -1) {
+				const filename = `node_modules/${src.slice(index + marker.length)}`;
+				const source = path.resolve(root, src);
+				const unresolved = path.resolve(root, filename);
+
+				if (
+					fs.existsSync(source) &&
+					fs.existsSync(unresolved) &&
+					fs.realpathSync(unresolved) === fs.realpathSync(source)
+				) {
+					return { file, filename };
+				}
+			}
+
+			return { file, filename: normalizePath(path.relative(root, path.resolve(root, src))) };
 		});
 }
 

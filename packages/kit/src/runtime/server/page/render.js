@@ -344,10 +344,10 @@ export async function render_response({
 		head.add_stylesheet(path, attributes);
 	}
 
-	for (const { file, name } of fonts.values()) {
+	for (const { file, filename } of fonts.values()) {
 		const path = prefixed(file);
 
-		if (resolve_opts.preload({ type: 'font', path, name })) {
+		if (resolve_opts.preload({ type: 'font', path, filename })) {
 			const ext = file.slice(file.lastIndexOf('.') + 1);
 
 			add_preload(path, ['rel="preload"', 'as="font"', `type="font/${ext}"`, 'crossorigin']);

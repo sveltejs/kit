@@ -68,8 +68,8 @@ export interface AssetDependencies {
 export interface FontDependency {
 	/** emitted file path, relative to the client output directory */
 	file: string;
-	/** the source file's basename, before hashing and character sanitization */
-	name: string;
+	/** the source file path relative to the project root, before hashing and character sanitization */
+	filename: string;
 }
 
 export interface BuildData {

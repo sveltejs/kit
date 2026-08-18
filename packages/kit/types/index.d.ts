@@ -1111,15 +1111,15 @@ declare module '@sveltejs/kit/hooks' {
 		 * [`Link` response header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Link) instead.
 		 * By default, `js` and `css` files will be preloaded.
 		 *
-		 * For `font` files, `input` also has a `name` property, the source file's name, so that a
-		 * filter can match on it instead of the hashed path. `js` and `css` files are bundled and
-		 * have no single source file name.
+		 * For `font` files, `input` also has a `filename` property, the source file's pathname relative
+		 * to the project root, so that a filter can match on it instead of the hashed path. `js` and
+		 * `css` files are bundled and have no single source file name.
 		 * @param input the type of the file and its path
 		 */
 		preload?: (
 			input:
 				| { type: 'css' | 'js' | 'asset'; path: string }
-				| { type: 'font'; path: string; name: string }
+				| { type: 'font'; path: string; filename: string }
 		) => boolean;
 	}
 
