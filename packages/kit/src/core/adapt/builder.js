@@ -188,6 +188,13 @@ export function create_builder({
 			write(`${dest}/env.js`, `export const env=${payload}`);
 		},
 
+		// @ts-expect-error removed method - TODO - remove this in a future version
+		generateManifest() {
+			throw new Error(
+				`The generateManifest adapters api has been replaced with generateServer and getManifest. You may need to update your adapter`
+			);
+		},
+
 		generateServer({ relativePath, routes: subset, export: should_export = true }) {
 			// console.log(manifest);
 			return dedent`
