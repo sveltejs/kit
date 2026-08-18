@@ -636,28 +636,6 @@ function kit({ svelte_config }) {
 	/** @type {Record<string, EnvVarConfig<any>> | null} */
 	let explicit_env_config = null;
 
-	/** @type {Plugin} */
-	const plugin_virtual_modules = {
-		name: 'vite-plugin-sveltekit-virtual-modules',
-
-		applyToEnvironment(environment) {
-			return environment.name !== 'serviceWorker';
-		},
-
-		resolveId: {
-			filter: {
-				id: prefixRegex('__sveltekit/')
-			},
-			handler(id) {
-				if (id === '__sveltekit/manifest') {
-					return `${out_dir}/generated/build/client-optimized/app.js`;
-				}
-
-				return `\0virtual:${id}`;
-			}
-		}
-	};
-
 	/** @type {Map<string, Set<string>>} */
 	const import_map = new Map();
 
