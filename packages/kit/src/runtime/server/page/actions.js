@@ -96,7 +96,7 @@ export async function handle_action_json_request(event, state, options, server) 
 			});
 		}
 	} catch (e) {
-		const result = action_error_result(e, location);
+		const result = action_error_result(check_incorrect_fail_use(e), location);
 
 		if (result.type === 'redirect') {
 			return action_json(result);
@@ -125,7 +125,7 @@ export function get_action_location(url) {
 }
 
 /**
- * @param {HttpError | Error} error
+ * @param {unknown} error
  */
 function check_incorrect_fail_use(error) {
 	return error instanceof ActionFailure
@@ -153,7 +153,7 @@ export function action_error_result(e, location) {
 		type: 'error',
 		location,
 		// @ts-expect-error We're lying a bit with the types here; this will be transformed into a proper App.Error object later
-		error: check_incorrect_fail_use(err)
+		error: err
 	};
 }
 
@@ -238,7 +238,7 @@ export async function handle_action_request(event, state, server) {
 			};
 		}
 	} catch (e) {
-		return action_error_result(e, location);
+		return action_error_result(check_incorrect_fail_use(e), location);
 	}
 }
 
