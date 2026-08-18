@@ -2038,42 +2038,28 @@ async function navigate({
 	let navigation_result = intent && (await load_route({ ...intent, action_result }));
 
 	if (!navigation_result) {
-		if (is_external_url(url, base, app.hash)) {
-			if (DEV && app.hash) {
-				// Special case for hash mode during DEV: If someone accidentally forgets to use a hash for the link,
-				// they would end up here in an endless loop. Fall back to error page in that case
-				navigation_result = await server_fallback(
-					url,
-					{ id: null },
-					await handle_error(
-						new SvelteKitError(
-							404,
-							'Not Found',
-							`Not found: ${url.pathname} (did you forget the hash?)`
-						),
-						{
-							url,
-							params: {},
-							route: { id: null }
-						}
-					),
-					replace_state
-				);
-			} else {
-				return await native_navigation(url, replace_state);
-			}
-		} else {
-			navigation_result = await server_fallback(
-				url,
-				{ id: null },
-				await handle_error(new SvelteKitError(404, 'Not Found', `Not found: ${url.pathname}`), {
-					url,
-					params: {},
-					route: { id: null }
-				}),
-				replace_state
-			);
+		const external = is_external_url(url, base, app.hash);
+		// Special case for hash mode during DEV: If someone accidentally forgets to use a hash for the link,
+		// they would end up here in an endless loop. Fall back to error page in that case
+		const missing_hash = external && DEV && app.hash;
+
+		if (external && !missing_hash) {
+			return await native_navigation(url, replace_state);
 		}
+
+		navigation_result = await server_fallback(
+			url,
+			{ id: null },
+			await handle_error(
+				new SvelteKitError(
+					404,
+					'Not Found',
+					`Not found: ${url.pathname}${missing_hash ? ' (did you forget the hash?)' : ''}`
+				),
+				{ url, params: {}, route: { id: null } }
+			),
+			replace_state
+		);
 	}
 
 	// if this is an internal navigation intent, use the normalized
@@ -2199,26 +2185,7 @@ async function navigate({
 	 */
 	let commit_promise;
 	if (started) {
-		const after_navigate = (
-			await Promise.all(
-				// eslint-disable-next-line @typescript-eslint/await-thenable -- we need to await because they can be asynchronous
-				Array.from(on_navigate_callbacks, (fn) => fn(/** @type {OnNavigate} */ (nav.navigation)))
-			)
-		).filter(/** @returns {value is () => void} */ (value) => typeof value === 'function');
-
-		if (after_navigate.length > 0) {
-			function cleanup() {
-				after_navigate.forEach((fn) => {
-					after_navigate_callbacks.delete(fn);
-				});
-			}
-
-			after_navigate.push(cleanup);
-
-			after_navigate.forEach((fn) => {
-				after_navigate_callbacks.add(fn);
-			});
-		}
+		await run_on_navigate_callbacks(/** @type {OnNavigate} */ (nav.navigation));
 
 		// Type-casts are save because we know this resolved a proper SvelteKit route
 		const target = popped?.shallow
@@ -2276,17 +2243,70 @@ async function navigate({
 		await initialize(navigation_result, target, false);
 	}
 
-	const { activeElement } = document;
+	const finished = await finish_navigation(
+		nav,
+		nav_token,
+		url,
+		popped?.scroll,
+		reset,
+		commit_promise
+	);
+	if (!finished) return;
 
-	await commit_promise;
+	if (type === 'popstate') {
+		restore_snapshot(current_navigation_index);
+	}
+	// new and replaced entries have no stored values, so this only resets there
+	restore_navigation_snapshot(current_history_index, previous_snapshot_registrations);
+
+	set_navigation(null);
+
+	updating = false;
+}
+
+/**
+ * Runs the `onNavigate` callbacks and registers any functions they return to run after the navigation
+ * @param {OnNavigate} navigation
+ */
+async function run_on_navigate_callbacks(navigation) {
+	const after_navigate = (
+		await Promise.all(
+			// eslint-disable-next-line @typescript-eslint/await-thenable -- we need to await because they can be asynchronous
+			Array.from(on_navigate_callbacks, (fn) => fn(navigation))
+		)
+	).filter(/** @returns {value is () => void} */ (value) => typeof value === 'function');
+
+	if (after_navigate.length > 0) {
+		function cleanup() {
+			after_navigate.forEach((fn) => after_navigate_callbacks.delete(fn));
+		}
+
+		after_navigate.push(cleanup);
+		after_navigate.forEach((fn) => after_navigate_callbacks.add(fn));
+	}
+}
+
+/**
+ * Settles the navigation once `updated` resolves. Returns `false` if a newer navigation
+ * superseded it in the meantime, in which case the caller must stop
+ * @param {ReturnType<typeof create_navigation>} nav
+ * @param {{}} nav_token
+ * @param {URL} url
+ * @param {{ x: number, y: number } | null | undefined} popped_scroll the scroll position to restore for popstate navigations
+ * @param {boolean} reset
+ * @param {Promise<void> | undefined} updated
+ */
+async function finish_navigation(nav, nav_token, url, popped_scroll, reset, updated) {
+	const active_element = document.activeElement;
+
+	await updated;
 
 	if (navigation_token !== nav_token) {
-		// a new navigation happened while we were waiting for the DOM to update, so abort
 		nav.reject(new Error('navigation aborted'));
-		return;
+		return false;
 	}
 
-	reset_scroll_and_focus(url, reset ? popped?.scroll : scroll_state(), reset, activeElement);
+	reset_scroll_and_focus(url, reset ? popped_scroll : scroll_state(), reset, active_element);
 
 	is_navigating = false;
 
@@ -2299,15 +2319,7 @@ async function navigate({
 
 	after_navigate_callbacks.forEach((fn) => fn(/** @type {AfterNavigate} */ (nav.navigation)));
 
-	if (type === 'popstate') {
-		restore_snapshot(current_navigation_index);
-	}
-	// new and replaced entries have no stored values, so this only resets there
-	restore_navigation_snapshot(current_history_index, previous_snapshot_registrations);
-
-	set_navigation(null);
-
-	updating = false;
+	return true;
 }
 
 /**
@@ -3003,21 +3015,7 @@ async function update_state(intent, state, { replace, persist_state, reset }, ca
 	}
 
 	if (nav) {
-		const after_navigate = (
-			await Promise.all(
-				// eslint-disable-next-line @typescript-eslint/await-thenable -- we need to await because they can be asynchronous
-				Array.from(on_navigate_callbacks, (fn) => fn(/** @type {OnNavigate} */ (nav.navigation)))
-			)
-		).filter(/** @returns {value is () => void} */ (value) => typeof value === 'function');
-
-		if (after_navigate.length > 0) {
-			function cleanup() {
-				after_navigate.forEach((fn) => after_navigate_callbacks.delete(fn));
-			}
-
-			after_navigate.push(cleanup);
-			after_navigate.forEach((fn) => after_navigate_callbacks.add(fn));
-		}
+		await run_on_navigate_callbacks(/** @type {OnNavigate} */ (nav.navigation));
 	}
 
 	blur_active_element(reset);
@@ -3032,26 +3030,8 @@ async function update_state(intent, state, { replace, persist_state, reset }, ca
 	});
 
 	if (nav) {
-		const { activeElement } = document;
-
-		await settled();
-
-		if (navigation_token !== nav_token) {
-			// a new navigation happened while we were waiting for the DOM to update, so abort
-			nav.reject(new Error('navigation aborted'));
-			return;
-		}
-
-		reset_scroll_and_focus(url, reset ? null : scroll_state(), reset, activeElement);
-
-		is_navigating = false;
-		nav.fulfil(undefined);
-
-		if (nav.navigation.to) {
-			nav.navigation.to.scroll = scroll_state();
-		}
-
-		after_navigate_callbacks.forEach((fn) => fn(/** @type {AfterNavigate} */ (nav.navigation)));
+		const finished = await finish_navigation(nav, nav_token, url, null, reset, settled());
+		if (!finished) return;
 	}
 
 	restore_navigation_snapshot(current_history_index, previous_snapshot_registrations);

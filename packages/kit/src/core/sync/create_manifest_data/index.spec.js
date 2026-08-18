@@ -657,6 +657,20 @@ test('ignores things that look like lockfiles', () => {
 	]);
 });
 
+test('only suggests a + prefix for names valid with the file extension', () => {
+	const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+	try {
+		create('samples/missing-prefix');
+
+		const messages = spy.mock.calls.flat().join('\n');
+		expect(messages).toContain('Did you mean +page.svelte?');
+		expect(messages).not.toContain('+error.ts');
+	} finally {
+		spy.mockRestore();
+	}
+});
+
 test('works with custom extensions', () => {
 	const { nodes, routes } = create('samples/custom-extension', {
 		extensions: ['.jazz', '.beebop', '.funk', '.svelte']
