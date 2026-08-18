@@ -5,6 +5,7 @@ import { expect, test } from 'vitest';
 import { process_config, validate_config } from '../config/index.js';
 import { relative_path } from '../../utils/filesystem.js';
 import { create, update } from './sync.js';
+import create_manifest_data from './create_manifest_data/index.js';
 
 test('generates client manifest imports relative to the project root', () => {
 	const root = fs.mkdtempSync(path.join(os.tmpdir(), 'svelte-kit-sync-'));
@@ -19,11 +20,12 @@ test('generates client manifest imports relative to the project root', () => {
 
 	try {
 		const config = process_config(validate_config({}), root);
-		const { manifest_data } = create(config, root);
+		const manifest_data = create_manifest_data(config, root);
+		create(config, root, manifest_data, true);
 		const index = manifest_data.nodes.findIndex(
 			(node) => node.component === 'src/routes/+page.svelte'
 		);
-		const output = path.join(config.outDir, 'generated/client');
+		const output = path.join(config.outDir, 'generated/build/client');
 		const generated = fs.readFileSync(path.join(output, `nodes/${index}.js`), 'utf8');
 
 		expect(generated).toBe(

@@ -4,7 +4,7 @@ import { decode_pathname } from '../../../utils/url.js';
 import { add_data_suffix } from '../../../pathname.js';
 import { try_get_request_store } from '@sveltejs/kit/internal/server';
 import { manifest } from '../../server/internal.js';
-import { get_hooks } from '__SERVER__/internal.js';
+import { get_hooks } from '<sveltekit:generated>/server.js';
 import { DEV } from 'esm-env';
 
 export { base, assets, app_dir } from './internal/server.js';

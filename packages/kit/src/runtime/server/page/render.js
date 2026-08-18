@@ -21,7 +21,7 @@ import { try_get_request_store, with_request_store } from '@sveltejs/kit/interna
 import { text_encoder } from '../../utils.js';
 import { count_non_ssi_comments, get_global_name } from '../utils.js';
 import { handle_error_and_jsonify } from '../errors.js';
-import * as env from '__sveltekit/env';
+import * as env from '<sveltekit:generated>/env/config.js';
 import { collect_remote_data } from '../remote-functions.js';
 import Root from '../../components/root.svelte';
 import { render } from 'svelte/server';

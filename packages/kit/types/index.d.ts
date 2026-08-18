@@ -2324,59 +2324,6 @@ declare module '@sveltejs/kit/vite' {
 			pollInterval?: number;
 		};
 	}
-	interface PageNode {
-		depth: number;
-		/** The `+page/layout.svelte`. */
-		component?: string; // TODO supply default component if it's missing (bit of an edge case)
-		/** The `+page/layout.js/.ts`. */
-		universal?: string;
-		/** The `+page/layout.server.js/ts`. */
-		server?: string;
-		parent_id?: string;
-		parent?: PageNode;
-		/** Filled with the pages that reference this layout (if this is a layout). */
-		child_pages?: PageNode[];
-		/** The final page options for a node if it was statically analysable */
-		page_options?: PageOptions | null;
-	}
-
-	interface RouteParam {
-		name: string;
-		matcher: string;
-		optional: boolean;
-		rest: boolean;
-		chained: boolean;
-	}
-
-	/**
-	 * Represents a route segment in the app. It can either be an intermediate node
-	 * with only layout/error pages, or a leaf, at which point either `page` and `leaf`
-	 * or `endpoint` is set.
-	 */
-	interface RouteData {
-		id: string;
-		parent: RouteData | null;
-
-		segment: string;
-		pattern: RegExp;
-		params: RouteParam[];
-
-		layout: PageNode | null;
-		error: PageNode | null;
-		leaf: PageNode | null;
-
-		page: {
-			layouts: Array<number | undefined>;
-			errors: Array<number | undefined>;
-			leaf: number;
-		} | null;
-
-		endpoint: {
-			file: string;
-			/** The final page options for the endpoint if it was statically analysable */
-			page_options: PageOptions | null;
-		} | null;
-	}
 	/**
 	 * The SvelteKit Vite plugin, which must be added to your `vite.config.js` file along with your project's configuration:
 	 *
@@ -2412,8 +2359,6 @@ declare module '@sveltejs/kit/vite' {
 	 *
 	 * */
 	export function sveltekit(config?: Config): Promise<Plugin[]>;
-
-	export function get_manifest_routes(routes: RouteData[] | undefined): Array<import("$app/manifest").ManifestRoute>;
 	// Based on https://github.com/josh-hemphill/csp-typed-directives/blob/latest/src/csp.types.ts
 	//
 	// MIT License
@@ -2582,23 +2527,6 @@ declare module '@sveltejs/kit/vite' {
 		| 'warn'
 		| 'ignore'
 		| PrerenderInvalidUrlHandler;
-
-	type PrerenderOption = boolean | 'auto';
-
-	/** @default 'never' */
-	type TrailingSlash = 'never' | 'always' | 'ignore';
-	type ValidPageOption = (typeof valid_page_options_array)[number];
-
-	type PageOptions = Partial<{
-		[K in ValidPageOption]: K extends 'ssr' | 'csr'
-			? boolean
-			: K extends 'prerender'
-				? PrerenderOption
-				: K extends 'trailingSlash'
-					? TrailingSlash
-					: any;
-	}>;
-	const valid_page_options_array: readonly ["ssr", "prerender", "csr", "trailingSlash", "config", "entries", "load"];
 
 	export {};
 }

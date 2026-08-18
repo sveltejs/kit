@@ -27,7 +27,7 @@ import { dedent, write } from '../sync/utils.js';
 import { find_server_assets } from '../generate_manifest/find_server_assets.js';
 import { create_exported_declarations } from '../env.js';
 import { handle_issues, validate } from '../../exports/internal/env.js';
-import { get_manifest_routes } from '../../exports/vite/index.js';
+import { get_manifest_routes } from '../sync/write_app_manifest.js';
 
 const pipe = promisify(pipeline);
 const extensions = [
