@@ -1886,12 +1886,10 @@ function kit({ svelte_config }) {
 					if (service_worker_entry_file) {
 						log.info('Building service worker');
 
-						// mirror client settings that we couldn't set per environment in the config hook
+						// Add defines for `$app/manifest`
 						builder.environments.serviceWorker.config.define = {
-							...builder.environments.client.config.define,
 							...builder.environments.serviceWorker.config.define,
 
-							// $app/manifest
 							__SVELTEKIT_MANIFEST_ASSETS__: s(
 								manifest_data.assets.map((asset) => ({ path: asset.file }))
 							),
@@ -1899,10 +1897,6 @@ function kit({ svelte_config }) {
 							__SVELTEKIT_MANIFEST_PRERENDERED__: s(prerendered_paths),
 							__SVELTEKIT_MANIFEST_ROUTES__: s(get_manifest_routes(manifest_data.routes))
 						};
-
-						builder.environments.serviceWorker.config.resolve.alias = [
-							...get_config_aliases(kit, vite_config.root)
-						];
 
 						// we have to overwrite this because it can't be configured per environment in the config hook
 						builder.environments.serviceWorker.config.experimental.renderBuiltUrl = (filename) => {
