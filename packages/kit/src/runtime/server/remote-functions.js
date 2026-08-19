@@ -56,7 +56,9 @@ export function create_live_query_response(event, state, options, internals, arg
 		clearTimeout(keep_alive);
 		keep_alive = setTimeout(() => {
 			if (!open) return;
-			stream_controller.enqueue(text_encoder.encode(': keep-alive\n\n'));
+			if (stream_controller.desiredSize > 0) {
+				stream_controller.enqueue(text_encoder.encode(': keep-alive\n\n'));
+			}
 			schedule_keep_alive();
 		}, KEEP_ALIVE_INTERVAL);
 	}
