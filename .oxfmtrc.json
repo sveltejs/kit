@@ -1,0 +1,43 @@
+{
+	"$schema": "./node_modules/oxfmt/configuration_schema.json",
+	"useTabs": true,
+	"singleQuote": true,
+	"trailingComma": "none",
+	"printWidth": 100,
+	"sortPackageJson": false,
+	"svelte": {},
+	"overrides": [
+		{
+			"files": ["packages/*/README.md"],
+			"options": {
+				"useTabs": false,
+				"tabWidth": 2
+			}
+		}
+	],
+	"ignorePatterns": [
+		"documentation/**/*.md",
+		"packages/*/test/**/build/**",
+		"packages/adapter-cloudflare/test/apps/workers/dist/**",
+		"packages/enhanced-img/test/Output.svelte",
+		"packages/kit/src/core/postbuild/fixtures/**",
+		"packages/kit/src/runtime/components/svelte-5/layout.svelte",
+		"packages/kit/test/apps/basics/test/errors.json",
+		"packages/kit/test/build-errors/**",
+		"packages/kit/types",
+		"packages/package/test/fixtures/**",
+		"packages/package/test/watch/**",
+		"**/CHANGELOG.md",
+		"**/vite.config.js.timestamp-*",
+		"**/node_modules",
+		"**/.custom-out-dir",
+		"**/.netlify",
+		"**/.svelte-kit",
+		"**/.vercel",
+		"**/.wrangler",
+		"**/test-results",
+		".changeset",
+		"pnpm-lock.yaml",
+		"pnpm-workspace.yaml"
+	]
+}

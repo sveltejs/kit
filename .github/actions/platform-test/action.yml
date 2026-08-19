@@ -5,21 +5,12 @@ inputs:
   test-app-dir:
     description: 'Path to the test app directory'
     required: true
-  os:
-    description: 'Operating system'
-    required: true
-    default: 'ubuntu-latest'
   deployment-url:
     description: 'URL of the deployed preview to test against'
 
 runs:
   using: 'composite'
   steps:
-    - name: Install Playwright
-      uses: ./.github/actions/playwright-setup
-      with:
-        os: ${{ inputs.os }}
-
     - name: Run Playwright tests
       shell: bash
       working-directory: ${{ inputs.test-app-dir }}

@@ -8,7 +8,7 @@ import {
 } from '@playwright/test';
 import { IncomingMessage, ServerResponse } from 'node:http';
 import '../types/index.d.ts';
-import { AfterNavigate, BeforeNavigate, GotoOptions } from '@sveltejs/kit';
+import { AfterNavigate, BeforeNavigate, GotoOptions } from '$app/navigation';
 
 export const test: TestType<
 	Omit<PlaywrightTestArgs, 'page'> &
@@ -18,8 +18,9 @@ export const test: TestType<
 				invalidate(url: string): Promise<void>;
 				beforeNavigate(fn: (navigation: BeforeNavigate) => void | boolean): void;
 				afterNavigate(fn: (navigation: AfterNavigate) => void): void;
-				preloadCode(pathname: string): Promise<void>;
+				preloadCode(id: string): Promise<void>;
 				preloadData(url: string): Promise<void>;
+				match(url: string): Promise<{ id: string; params: Record<string, string> } | null>;
 			};
 			clicknav(
 				selector: string,

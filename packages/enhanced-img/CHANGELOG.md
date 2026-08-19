@@ -1,5 +1,37 @@
 # @sveltejs/enhanced-img
 
+## 1.0.0-next.5
+
+### Patch Changes
+
+- chore: bump `magic-string` to 1.1.0 ([#16745](https://github.com/sveltejs/kit/pull/16745))
+
+- chore: bump `zimmerframe` to 1.1.4 ([#16745](https://github.com/sveltejs/kit/pull/16745))
+
+## 1.0.0-next.4
+
+### Major Changes
+
+- breaking: require Node 22 or newer
+
+- breaking: require `vite@^8.0.12`, the first Vite 8 release bundling stable `rolldown` 1.0.0
+
+### Minor Changes
+
+- breaking: require Vite 8 and `vite-plugin-svelte` 7
+
+### Patch Changes
+
+- chore: replace the `$lib` alias with `#lib` in docs
+
+- chore: bump `vite-imagetools` to v11
+
+## 1.0.0-next.3
+
+### Patch Changes
+
+- chore: bump `vite-imagetools` to v11 ([#16630](https://github.com/sveltejs/kit/pull/16630))
+
 ## 1.0.0-next.2
 
 ### Patch Changes

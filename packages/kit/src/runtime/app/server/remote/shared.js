@@ -1,8 +1,8 @@
 /** @import { RequestEvent } from '@sveltejs/kit' */
-/** @import { ServerHooks, MaybePromise, RequestState, RemoteInternals, RequestStore, RemoteLiveQueryUserFunctionReturnType } from 'types' */
-import { parse } from 'devalue';
+/** @import { MaybePromise, RequestState, RemoteInternals, RequestStore, RemoteLiveQueryUserFunctionReturnType } from 'types' */
 import { error } from '@sveltejs/kit';
-import { with_request_store, get_request_store } from '@sveltejs/kit/internal/server';
+import { ValidationError } from '@sveltejs/kit/internal';
+import { with_request_store } from '@sveltejs/kit/internal/server';
 
 /**
  * @param {any} validate_or_fn
@@ -27,19 +27,12 @@ export function create_validator(validate_or_fn, maybe_fn) {
 	// use https://standardschema.dev validator if provided
 	if ('~standard' in validate_or_fn) {
 		return async (arg) => {
-			// Get event before async validation to ensure it's available in server environments without AsyncLocalStorage, too
-			const { event, state } = get_request_store();
-
 			// access property and call method in one go to preserve potential this context
 			const result = await validate_or_fn['~standard'].validate(arg);
 
 			// if the `issues` field exists, the validation failed
 			if (result.issues) {
-				const body = await state.handleValidationError({
-					issues: result.issues,
-					event: state.original_event ?? event
-				});
-				error(body.status ?? 400, body);
+				throw new ValidationError(result.issues);
 			}
 
 			return result.value;
@@ -78,20 +71,6 @@ export async function get_response(internals, payload, state, get_result) {
 	}
 
 	return (cache[payload] ??= get_result());
-}
-
-/**
- * @param {any} data
- * @param {ServerHooks['transport']} transport
- */
-export function parse_remote_response(data, transport) {
-	/** @type {Record<string, any>} */
-	const revivers = {};
-	for (const key in transport) {
-		revivers[key] = transport[key].decode;
-	}
-
-	return parse(data, revivers);
 }
 
 /**
@@ -152,7 +131,6 @@ function derive_remote_function_event(event, state, allow_cookies) {
 		event: derived,
 		state: {
 			...state,
-			original_event: state.original_event ?? event,
 			is_in_remote_function: true
 		}
 	};

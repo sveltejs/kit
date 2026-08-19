@@ -1,4 +1,4 @@
-import { copyFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
@@ -13,29 +13,26 @@ import {
 
 const name = '@sveltejs/adapter-cloudflare';
 
-/** @type {import('./index.js').default} */
+/** @type {typeof import('./index.js').default} */
 export default function (options = {}) {
 	return {
 		name,
 		async adapt(builder) {
-			if (
-				existsSync('_routes.json') ||
-				existsSync(`${builder.config.kit.files.assets}/_routes.json`)
-			) {
+			if (existsSync('_routes.json') || existsSync(`${builder.config.files.assets}/_routes.json`)) {
 				throw new Error(
 					"Cloudflare Pages' _routes.json should be configured from the adapter option of the SvelteKit plugin in your vite.config.js. See https://svelte.dev/docs/kit/adapter-cloudflare#Options-routes"
 				);
 			}
 
-			if (existsSync(`${builder.config.kit.files.assets}/_headers`)) {
+			if (existsSync(`${builder.config.files.assets}/_headers`)) {
 				throw new Error(
-					`The _headers file should be placed in the project root rather than the ${builder.config.kit.files.assets} directory`
+					`The _headers file should be placed in the project root rather than the ${builder.config.files.assets} directory`
 				);
 			}
 
-			if (existsSync(`${builder.config.kit.files.assets}/_redirects`)) {
+			if (existsSync(`${builder.config.files.assets}/_redirects`)) {
 				throw new Error(
-					`The _redirects file should be placed in the project root rather than the ${builder.config.kit.files.assets} directory`
+					`The _redirects file should be placed in the project root rather than the ${builder.config.files.assets} directory`
 				);
 			}
 
@@ -72,15 +69,15 @@ export default function (options = {}) {
 			const files = fileURLToPath(new URL('./files', import.meta.url).href);
 			const tmp = builder.getBuildDirectory('cloudflare-tmp');
 
-			builder.rimraf(dest);
-			builder.rimraf(worker_dest);
+			rmSync(dest, { force: true, recursive: true });
+			rmSync(worker_dest, { force: true, recursive: true });
 
-			builder.mkdirp(dest);
-			builder.mkdirp(tmp);
+			mkdirSync(dest, { recursive: true });
+			mkdirSync(tmp, { recursive: true });
 
 			// client assets and prerendered pages
-			const assets_dest = `${dest}${builder.config.kit.paths.base}`;
-			builder.mkdirp(assets_dest);
+			const assets_dest = `${dest}${builder.config.paths.base}`;
+			mkdirSync(assets_dest, { recursive: true });
 			if (
 				building_for_cloudflare_pages ||
 				wrangler_config.assets?.not_found_handling === '404-page'
@@ -110,7 +107,7 @@ export default function (options = {}) {
 				`${tmp}/manifest.js`,
 				`export const manifest = ${builder.generateManifest({ relativePath: path.posix.relative(tmp, builder.getServerDirectory()) })};\n\n` +
 					`export const prerendered = new Set(${JSON.stringify(builder.prerendered.paths)});\n\n` +
-					`export const base_path = ${JSON.stringify(builder.config.kit.paths.base)};\n`
+					`export const base_path = ${JSON.stringify(builder.config.paths.base)};\n`
 			);
 			builder.copy(`${files}/worker.js`, worker_dest, {
 				replace: {

@@ -1,16 +1,17 @@
 import { parseSetCookie } from 'cookie';
 import { noop } from '../../utils/functions.js';
 import { respond } from './respond.js';
-import * as paths from '$app/paths/internal/server';
+import * as paths from '#app/paths';
 import { read_implementation } from './internal.js';
 import { has_prerendered_path } from './utils.js';
+import { fork_state_for_subrequest } from './state.js';
 
 /**
  * @param {{
  *   event: import('@sveltejs/kit').RequestEvent;
  *   options: import('types').SSROptions;
  *   manifest: import('@sveltejs/kit').SSRManifest;
- *   state: import('types').SSRState;
+ *   state: import('types').RequestState;
  *   get_cookie_header: (url: URL, header: string | null) => string;
  *   set_internal: (name: string, value: string, opts: import('./page/types.js').Cookie['options']) => void;
  * }} opts
@@ -194,38 +195,32 @@ function normalize_fetch_input(info, init, url) {
  * @param {Request} request
  * @param {import('types').SSROptions} options
  * @param {import('@sveltejs/kit').SSRManifest} manifest
- * @param {import('types').SSRState} state
+ * @param {import('types').RequestState} state
  * @returns {Promise<Response>}
  */
 async function internal_fetch(request, options, manifest, state) {
-	if (request.signal) {
-		if (request.signal.aborted) {
-			throw new DOMException('The operation was aborted.', 'AbortError');
-		}
-
-		let remove_abort_listener = noop;
-		/** @type {Promise<never>} */
-		const abort_promise = new Promise((_, reject) => {
-			const on_abort = () => {
-				reject(new DOMException('The operation was aborted.', 'AbortError'));
-			};
-			request.signal.addEventListener('abort', on_abort, { once: true });
-			remove_abort_listener = () => request.signal.removeEventListener('abort', on_abort);
-		});
-
-		const result = await Promise.race([
-			respond(request, options, manifest, {
-				...state,
-				depth: state.depth + 1
-			}),
-			abort_promise
-		]);
-		remove_abort_listener();
-		return result;
-	} else {
-		return await respond(request, options, manifest, {
-			...state,
-			depth: state.depth + 1
-		});
+	if (request.signal?.aborted) {
+		throw new DOMException('The operation was aborted.', 'AbortError');
 	}
+
+	const subrequest_state = fork_state_for_subrequest(state);
+
+	if (!request.signal) {
+		return await respond(request, options, manifest, subrequest_state);
+	}
+
+	let remove_abort_listener = noop;
+	/** @type {Promise<never>} */
+	const abort_promise = new Promise((_, reject) => {
+		const on_abort = () => {
+			reject(new DOMException('The operation was aborted.', 'AbortError'));
+		};
+		request.signal.addEventListener('abort', on_abort, { once: true });
+		remove_abort_listener = () => request.signal.removeEventListener('abort', on_abort);
+	});
+
+	return Promise.race([
+		respond(request, options, manifest, subrequest_state),
+		abort_promise
+	]).finally(remove_abort_listener);
 }

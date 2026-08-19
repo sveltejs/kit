@@ -785,6 +785,27 @@ test.describe('$app/manifest', () => {
 		expect(ids).not.toContain('/app-manifest/not-a-page');
 	});
 
+	test('exposes route capabilities', async ({ page }) => {
+		await page.goto('/app-manifest');
+		const routes = JSON.parse((await page.textContent('[data-name="routes"] pre')) ?? '');
+
+		// only a `+page.svelte`
+		expect(routes).toContainEqual({ id: '/app-manifest', page: true, endpoint: false });
+		// only a `+server.js`
+		expect(routes).toContainEqual({ id: '/answer.json', page: false, endpoint: true });
+		// both a `+page.svelte` and a `+server.js`
+		expect(routes).toContainEqual({
+			id: '/endpoint-output/fallback-with-page',
+			page: true,
+			endpoint: true
+		});
+
+		// every route has at least one capability
+		for (const route of routes) {
+			expect(route.page || route.endpoint).toBe(true);
+		}
+	});
+
 	test('exposes static assets', async ({ page }) => {
 		await page.goto('/app-manifest');
 		const assets = JSON.parse((await page.textContent('[data-name="assets"] pre')) ?? '');
@@ -915,7 +936,11 @@ test.describe('$app/state', () => {
 		clicknav,
 		javaScriptEnabled
 	}) => {
-		await page.goto('/state/data/foo?reset=true');
+		if (!javaScriptEnabled) {
+			// only the no-js run consumes the server-side `is_first` state (with js the clicknavs
+			// use the client copy); resetting it would corrupt the parallel no-js twin
+			await page.goto('/state/data/foo?reset=true');
+		}
 		const stuff1 = { foo: { bar: 'Custom layout' }, name: 'SvelteKit', value: 123 };
 		const stuff2 = { ...stuff1, foo: true, number: 2 };
 		const stuff3 = { ...stuff2 };
@@ -1230,6 +1255,31 @@ test.describe('Actions', () => {
 		await expect(page.locator('input[name=username]')).toHaveValue('');
 	});
 
+	test('use:enhance renders an error page for a non-ActionResult error response', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		test.skip(!javaScriptEnabled, 'Skip when JavaScript is disabled');
+		await page.goto('/actions/enhance-non-action-response');
+		await page.locator('button.json').click();
+
+		await expect(page.locator('h1')).toHaveText('403');
+		await expect(page.locator('p')).toHaveText('Cross-site POST form submissions are forbidden');
+
+		await page.goto('/actions/enhance-non-action-response');
+		await page.locator('button.html').click();
+
+		await expect(page.locator('h1')).toHaveText('502');
+		// the suffix comes from the `handleError` hook in hooks.client.js
+		await expect(page.locator('p')).toHaveText('Bad Gateway (502 Bad Gateway)');
+
+		await page.goto('/actions/enhance-non-action-response');
+		await page.locator('button.empty').click();
+
+		await expect(page.locator('h1')).toHaveText('403');
+		await expect(page.locator('p')).toHaveText('Forbidden (403 Forbidden)');
+	});
+
 	test('use:enhance abort controller', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/actions/enhance');
 
@@ -1426,9 +1476,7 @@ test.describe('Actions', () => {
 		});
 		const { type, error } = await response.json();
 		expect(type).toBe('error');
-		expect(error.message).toBe(
-			'Form actions expect form-encoded data — received application/json (415 Unsupported Media Type)'
-		);
+		expect(error.message).toBe('Unsupported Media Type (415 Unsupported Media Type)');
 		expect(response.status()).toBe(415);
 	});
 
@@ -1445,8 +1493,77 @@ test.describe('Actions', () => {
 		});
 		const { type, error } = await response.json();
 		expect(type).toBe('error');
-		expect(error.message).toBe("No action with name 'doesnt-exist' found (404 Not Found)");
+		expect(error.message).toBe('Not Found (404 Not Found)');
 		expect(response.status()).toBe(404);
+	});
+
+	test('cross-page action success navigates to action page', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		await page.goto('/actions/cross-page/source');
+
+		await page
+			.locator(javaScriptEnabled ? 'button.submit-success' : 'button.native-success')
+			.click();
+
+		await expect(page.locator('pre.destination-form')).toHaveText(
+			JSON.stringify({ source: 'destination', username: 'paolo' })
+		);
+		await expect(page.locator('span.status')).toHaveText('200');
+
+		const url = new URL(page.url());
+		expect(url.pathname).toBe('/actions/cross-page/destination');
+		// enhanced submissions strip the `?/name` param; native ones can't
+		expect(url.search).toBe(javaScriptEnabled ? '' : '?/success');
+	});
+
+	test('cross-page action failure navigates with failure data and status', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		await page.goto('/actions/cross-page/source');
+
+		await page
+			.locator(javaScriptEnabled ? 'button.submit-failure' : 'button.native-failure')
+			.click();
+
+		await expect(page.locator('pre.destination-form')).toHaveText(
+			JSON.stringify({ problem: 'invalid', username: 'paolo' })
+		);
+		await expect(page.locator('span.status')).toHaveText('400');
+
+		const url = new URL(page.url());
+		expect(url.pathname).toBe('/actions/cross-page/destination');
+		expect(url.search).toBe(javaScriptEnabled ? '' : '?/failure');
+	});
+
+	test('cross-page action redirect is followed', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/actions/cross-page/source');
+
+		await page
+			.locator(javaScriptEnabled ? 'button.submit-redirect' : 'button.native-redirect')
+			.click();
+
+		await expect(page.locator('h1.redirected')).toHaveText('redirected');
+		expect(new URL(page.url()).pathname).toBe('/actions/cross-page/redirected');
+	});
+
+	test('cross-page action error renders the destination error boundary', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		await page.goto('/actions/cross-page/source');
+
+		await page.locator(javaScriptEnabled ? 'button.submit-error' : 'button.native-error').click();
+
+		await expect(page.locator('h1.destination-error')).toHaveText(
+			'destination error: cross-page action error'
+		);
+
+		const url = new URL(page.url());
+		expect(url.pathname).toBe('/actions/cross-page/destination');
+		expect(url.search).toBe(javaScriptEnabled ? '?throw-in-load=' : '?throw-in-load&/error');
 	});
 
 	for (const name of ['toString', 'constructor', '__proto__', 'hasOwnProperty']) {
@@ -1466,7 +1583,7 @@ test.describe('Actions', () => {
 			);
 			const { type, error } = await response.json();
 			expect(type).toBe('error');
-			expect(error.message).toBe(`No action with name '${name}' found (404 Not Found)`);
+			expect(error.message).toBe('Not Found (404 Not Found)');
 			expect(response.status()).toBe(404);
 		});
 	}

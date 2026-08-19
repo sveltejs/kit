@@ -16,3 +16,13 @@ export function once(fn) {
 		return (result = fn());
 	};
 }
+
+/**
+ * @param {string} name
+ * @param {string} [parens]
+ */
+export function disallow_on_server(name, parens = '(...)') {
+	return () => {
+		throw new Error(`Cannot call \`${name}${parens}\` on the server`);
+	};
+}

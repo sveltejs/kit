@@ -2,12 +2,18 @@
 	import { applyAction } from '$app/forms';
 	import { refreshAll } from '$app/navigation';
 
+	/** @type {import('../enhance/$types').ActionData} */
 	export let form;
 	let count = 0;
 
 	/** @param {'success' | 'failure'} type */
 	function update(type) {
-		applyAction({ type, status: 200, data: { count: count++ } });
+		applyAction({
+			type,
+			status: 200,
+			data: { count: count++ },
+			location: '/actions/enhance'
+		});
 	}
 	function redirect() {
 		applyAction({ type: 'redirect', status: 303, location: '/' });

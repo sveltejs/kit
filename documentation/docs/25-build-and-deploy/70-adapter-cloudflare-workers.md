@@ -8,23 +8,24 @@ To deploy to [Cloudflare Workers](https://workers.cloudflare.com/) with [Workers
 
 ## Usage
 
-Install with `npm i -D @sveltejs/adapter-cloudflare-workers`, then add the adapter to your `svelte.config.js`:
+Install with `npm i -D @sveltejs/adapter-cloudflare-workers`, then add the adapter to your `vite.config.js`:
 
 ```js
 // @errors: 2307
-/// file: svelte.config.js
+/// file: vite.config.js
+import { sveltekit } from '@sveltejs/kit/vite';
+import { defineConfig } from 'vite';
 import adapter from '@sveltejs/adapter-cloudflare-workers';
 
-/** @type {import('@sveltejs/kit').Config} */
-const config = {
-	kit: {
-		adapter: adapter({
-			// see below for options that can be set here
+export default defineConfig({
+	plugins: [
+		sveltekit({
++++			adapter: adapter({
+				// see below for options that can be set here
+			})+++
 		})
-	}
-};
-
-export default config;
+	]
+});
 ```
 
 ## Options

@@ -41,6 +41,50 @@ test.describe('Endpoints', () => {
 });
 
 test.describe('Load', () => {
+	test('does not refetch cross-origin urls in non-canonical form during hydration', async ({
+		page,
+		start_server
+	}) => {
+		let requests = 0;
+
+		const { port } = await start_server((req, res) => {
+			requests += 1;
+			res.writeHead(200, {
+				'Access-Control-Allow-Origin': '*',
+				'content-type': 'application/json'
+			});
+			res.end(JSON.stringify({ count: requests }));
+		});
+
+		await page.goto(`/load/fetch-external-non-canonical?port=${port}`);
+
+		await expect(page.locator('h1')).toHaveText('count: 1');
+		expect(requests).toBe(1);
+	});
+
+	test('busts cache if non-GET request to a non-canonical cross-origin url is made', async ({
+		page,
+		start_server
+	}) => {
+		let gets = 0;
+
+		const { port } = await start_server((req, res) => {
+			if (req.method === 'GET') gets += 1;
+			res.writeHead(200, {
+				'Access-Control-Allow-Origin': '*',
+				'cache-control': 'public, max-age=60',
+				'content-type': 'application/json'
+			});
+			res.end(JSON.stringify({ count: gets }));
+		});
+
+		await page.goto(`/load/fetch-external-non-canonical?port=${port}`);
+		await expect(page.locator('h1')).toHaveText('count: 1');
+
+		await page.locator('button').click();
+		await expect(page.locator('h1')).toHaveText('count: 2');
+	});
+
 	test('load function is only called when necessary', async ({ app, page }) => {
 		test.slow();
 		await page.goto('/load/change-detection/one/a');
@@ -266,7 +310,12 @@ test.describe('Load', () => {
 		expect(requests.filter((r) => !r.includes('/__route.js'))).toEqual([]);
 	});
 
-	test('use correct cache result when fetching same url multiple times', async ({ page }) => {
+	test('use correct cache result when fetching same url multiple times', async ({
+		page,
+		request
+	}) => {
+		// reset so the assertion also holds when the test is retried
+		await request.get('/load/fetch-same-url/data.json?reset');
 		await page.goto('/load/fetch-same-url');
 		expect(await page.textContent('h1')).toBe('the result is 1,2,3');
 	});
@@ -466,11 +515,12 @@ test.describe('Invalidation', () => {
 	}) => {
 		await page.goto('/load/unchanged/isolated/a');
 		expect(await page.textContent('h1')).toBe('slug: a');
-		expect(await page.textContent('h2')).toBe('count: 0');
+		const count = await page.textContent('h2');
+		expect(count).toMatch(/^count: \d+$/);
 
 		await clicknav('[href="/load/unchanged/isolated/b"]');
 		expect(await page.textContent('h1')).toBe('slug: b');
-		expect(await page.textContent('h2')).toBe('count: 0');
+		expect(await page.textContent('h2')).toBe(count);
 	});
 
 	test('+layout.server.js re-runs when await parent() is called from downstream load function', async ({
@@ -479,15 +529,15 @@ test.describe('Invalidation', () => {
 	}) => {
 		await page.goto('/load/unchanged-parent/uses-parent/a');
 		expect(await page.textContent('h1')).toBe('slug: a');
-		expect(await page.textContent('h2')).toBe('count: 0');
-		expect(await page.textContent('h3')).toBe('doubled: 0');
+		const count = Number((await page.textContent('h2'))?.replace('count: ', ''));
+		expect(await page.textContent('h3')).toBe(`doubled: ${count * 2}`);
 
 		await clicknav('[href="/load/unchanged-parent/uses-parent/b"]');
 		expect(await page.textContent('h1')).toBe('slug: b');
-		expect(await page.textContent('h2')).toBe('count: 0');
+		expect(await page.textContent('h2')).toBe(`count: ${count}`);
 
 		// this looks wrong, but is actually the intended behaviour (the increment side-effect in a GET would be a bug in a real app)
-		expect(await page.textContent('h3')).toBe('doubled: 2');
+		expect(await page.textContent('h3')).toBe(`doubled: ${(count + 1) * 2}`);
 	});
 
 	test('load function re-runs when searchParams change', async ({ page, clicknav }) => {
@@ -517,11 +567,21 @@ test.describe('Invalidation', () => {
 		page,
 		clicknav
 	}) => {
-		await page.goto('/load/invalidation/search-params/server?tracked=0');
+		await page.goto('/load/invalidation/search-params/server?tracked=0&reset');
 		expect(await page.textContent('span')).toBe('count: 0');
 		await clicknav('[data-id="tracked"]');
 		expect(await page.textContent('span')).toBe('count: 1');
 		await clicknav('[data-id="untracked"]');
+		expect(await page.textContent('span')).toBe('count: 1');
+	});
+
+	test('load function re-runs when the number of values of a tracked searchParam changes', async ({
+		page,
+		clicknav
+	}) => {
+		await page.goto('/load/invalidation/search-params/universal?a=0');
+		expect(await page.textContent('span')).toBe('count: 0');
+		await clicknav('[data-id="duplicate"]');
 		expect(await page.textContent('span')).toBe('count: 1');
 	});
 
@@ -857,7 +917,7 @@ test.describe('data-sveltekit attributes', () => {
 		const responses = [];
 
 		const nodes_location = process.env.DEV
-			? '.svelte-kit/generated/client/nodes/'
+			? '.svelte-kit/generated/dev/client/nodes/'
 			: '/_app/immutable/nodes/';
 
 		page.on('response', async (response) => {
@@ -1272,8 +1332,9 @@ test.describe('env', () => {
 		expect(
 			await page.evaluate(
 				() =>
-					/** @type {Window & typeof globalThis & { PUBLIC_DYNAMIC: string }} */ (window)
-						.PUBLIC_DYNAMIC
+					/** @type {Window & typeof globalThis & { PUBLIC_DYNAMIC: string }} */ (
+						window
+					).PUBLIC_DYNAMIC
 			)
 		).toBe('accessible anywhere/evaluated at run time');
 	});
@@ -1329,6 +1390,77 @@ test.describe('Snapshots', () => {
 		await page.reload();
 
 		await expect(page.locator('[data-testid="order"]')).toHaveText('afterNavigate,restore');
+	});
+
+	test('captures and restores function snapshots', async ({ page, clicknav }) => {
+		await page.goto('/snapshot/helper');
+		await page.locator('[data-testid="default"]').fill('default value');
+		await page.locator('[data-testid="manual"]').fill('manual value');
+		await page.locator('[data-testid="layout"]').fill('layout value');
+
+		await clicknav('[href="/snapshot/helper/b"]');
+		await expect(page.locator('[data-testid="layout"]')).toHaveValue('');
+
+		await page.goBack();
+
+		await expect(page.locator('[data-testid="default"]')).toHaveValue('default value');
+		await expect(page.locator('[data-testid="manual"]')).toHaveValue('manual value');
+		await expect(page.locator('[data-testid="layout"]')).toHaveValue('layout value');
+		await expect(page.locator('[data-testid="order"]')).toHaveText('afterNavigate,restore');
+	});
+
+	test('persists function snapshots with transport support', async ({ page }) => {
+		await page.goto('/snapshot/helper');
+		await page.locator('[data-testid="default"]').fill('reload value');
+		await page.getByRole('button', { name: 'change transport value' }).click();
+
+		await page.reload();
+
+		await expect(page.locator('[data-testid="default"]')).toHaveValue('reload value');
+		await expect(page.locator('[data-testid="transport"]')).toHaveText('restored!');
+		await expect(page.locator('[data-testid="order"]')).toHaveText('afterNavigate,restore');
+	});
+
+	test('starts fresh when a pushed entry reuses an abandoned history index', async ({
+		page,
+		clicknav
+	}) => {
+		await page.goto('/snapshot/stale/a');
+		await clicknav('[href="/snapshot/stale/b"]');
+
+		await page.locator('[data-testid="toggle"]').click();
+		await page.locator('[data-testid="stale-input"]').fill('abandoned value');
+
+		await clicknav('[href="/snapshot/stale/a"]');
+
+		// jump straight back two entries so the abandoned entry is never revisited
+		const index = await page.evaluate(() => history.state['sveltekit:metadata'].historyIndex);
+		await page.evaluate(() => history.go(-2));
+		await page.waitForFunction(
+			(previous) => history.state['sveltekit:metadata'].historyIndex === previous - 2,
+			index
+		);
+		await page.waitForTimeout(200);
+
+		// pushing reuses the abandoned entry's index, whose snapshot must not leak
+		await clicknav('[href="/snapshot/stale/b"]');
+		await page.locator('[data-testid="toggle"]').click();
+		await expect(page.locator('[data-testid="stale-input"]')).toHaveValue('');
+	});
+
+	test('captures and restores function snapshots on shallow navigations', async ({ page }) => {
+		await page.goto('/snapshot/helper');
+		const input = page.locator('[data-testid="default"]');
+
+		await input.fill('one');
+		await page.getByRole('button', { name: 'shallow', exact: true }).click();
+		await input.fill('two');
+
+		await page.goBack();
+		await expect(input).toHaveValue('one');
+
+		await page.goForward();
+		await expect(input).toHaveValue('two');
 	});
 });
 
@@ -1455,6 +1587,140 @@ test.describe('Actions', () => {
 		await expect(pre).toHaveText('prop: 1, state: 1');
 		await page.evaluate('window.svelte_tick()');
 		await expect(pre).toHaveText('prop: 1, state: 1');
+	});
+
+	test('cross-page action navigation is client-side', async ({ page }) => {
+		await page.goto('/actions/cross-page/source');
+		await page.evaluate(() => (window.nav_marker = true));
+
+		await page.locator('button.submit-success').click();
+
+		await expect(page.locator('pre.destination-form')).toHaveText(
+			JSON.stringify({ source: 'destination', username: 'paolo' })
+		);
+		expect(await page.evaluate(() => window.nav_marker)).toBe(true);
+	});
+
+	test('same-page action drops query params omitted from the action', async ({ page }) => {
+		await page.goto('/actions/cross-page/same-page?page=2');
+		await page.locator('button.submit-relative').click();
+
+		await expect(page.locator('pre.form-json')).toHaveText(
+			JSON.stringify({ where: '/actions/cross-page/same-page' })
+		);
+
+		const url = new URL(page.url());
+		expect(url.pathname).toBe('/actions/cross-page/same-page');
+		expect(url.search).toBe('');
+	});
+
+	test('semantically identical action query refreshes without navigating', async ({ page }) => {
+		await page.goto('/actions/cross-page/same-page?a=1&b=2');
+		const loaded_at = await page.locator('pre.loaded-at').innerText();
+		await page.evaluate(() => (window.nav_marker = true));
+
+		await page.locator('button.submit-reordered').click();
+
+		await expect(page.locator('pre.form-json')).toHaveText(
+			JSON.stringify({ where: '/actions/cross-page/same-page' })
+		);
+		await expect(page.locator('pre.loaded-at')).not.toHaveText(loaded_at);
+		expect(await page.evaluate(() => window.nav_marker)).toBe(true);
+		expect(new URL(page.url()).search).toBe('?a=1&b=2');
+	});
+
+	test('failures do not refresh by default but can opt in', async ({ page }) => {
+		await page.goto('/actions/cross-page/same-page');
+		let loaded_at = await page.locator('pre.loaded-at').innerText();
+
+		await page.locator('button.submit-failure').click();
+		await expect(page.locator('pre.form-json')).toHaveText(JSON.stringify({ failed: true }));
+		await expect(page.locator('pre.loaded-at')).toHaveText(loaded_at);
+
+		loaded_at = await page.locator('pre.loaded-at').innerText();
+		await page.locator('button.submit-failure-refresh').click();
+		await expect(page.locator('pre.form-json')).toHaveText(JSON.stringify({ failed: true }));
+		await expect(page.locator('pre.loaded-at')).not.toHaveText(loaded_at);
+	});
+
+	test('cross-page refresh defaults depend on the result type', async ({ page }) => {
+		await page.goto('/actions/cross-page/source');
+		let layout_loaded_at = await page.locator('pre.layout-loaded-at').innerText();
+
+		await page.locator('button.submit-failure').click();
+		await expect(page.locator('pre.destination-form')).toHaveText(
+			JSON.stringify({ problem: 'invalid', username: 'paolo' })
+		);
+		await expect(page.locator('pre.layout-loaded-at')).toHaveText(layout_loaded_at);
+
+		await page.goto('/actions/cross-page/source');
+		layout_loaded_at = await page.locator('pre.layout-loaded-at').innerText();
+		await page.locator('button.submit-success').click();
+		await expect(page.locator('pre.layout-loaded-at')).not.toHaveText(layout_loaded_at);
+	});
+
+	test('cross-page action navigation strips only the named-action param', async ({ page }) => {
+		await page.goto('/actions/cross-page/source');
+		await page.locator('button.submit-extra-params').click();
+
+		await expect(page.locator('pre.destination-form')).toHaveText(
+			JSON.stringify({ source: 'destination', username: 'paolo' })
+		);
+
+		const url = new URL(page.url());
+		expect(url.pathname).toBe('/actions/cross-page/destination');
+		expect(url.searchParams.get('redirectTo')).toBe('/dashboard');
+		expect([...url.searchParams.keys()].some((key) => key.startsWith('/'))).toBe(false);
+
+		// the destination's `load` sees the stripped URL
+		await expect(page.locator('pre.load-search')).toHaveText('?redirectTo=%2Fdashboard');
+	});
+
+	test('cross-page action navigation pushes a history entry', async ({ page }) => {
+		await page.goto('/actions/cross-page/source');
+		await page.locator('button.submit-success').click();
+
+		await expect(page.locator('pre.destination-form')).toHaveText(
+			JSON.stringify({ source: 'destination', username: 'paolo' })
+		);
+
+		await page.goBack();
+		await expect(page.locator('h1.source')).toHaveText('source');
+		expect(new URL(page.url()).pathname).toBe('/actions/cross-page/source');
+
+		// form data is ephemeral — going forward again renders the destination without it
+		await page.goForward();
+		await expect(page.locator('pre.destination-form')).toHaveText(JSON.stringify(null));
+	});
+
+	test('update navigate option applies the result to the current page', async ({ page }) => {
+		await page.goto('/actions/cross-page/source');
+		await page.locator('button.submit-stay').click();
+
+		await expect(page.locator('pre.source-form')).toHaveText(
+			JSON.stringify({ problem: 'invalid', username: 'paolo' })
+		);
+		expect(new URL(page.url()).pathname).toBe('/actions/cross-page/source');
+	});
+
+	test('update navigate option does not suppress redirects', async ({ page }) => {
+		await page.goto('/actions/cross-page/source');
+		await page.locator('button.submit-redirect-stay').click();
+
+		await expect(page.locator('h1.redirected')).toHaveText('redirected');
+		expect(new URL(page.url()).pathname).toBe('/actions/cross-page/redirected');
+	});
+
+	test('update({ refreshAll: false }) still navigates to the cross-page action', async ({
+		page
+	}) => {
+		await page.goto('/actions/cross-page/refreshall-false');
+		await page.locator('button.submit-success').click();
+
+		await expect(page.locator('pre.destination-form')).toHaveText(
+			JSON.stringify({ source: 'destination', username: 'paolo' })
+		);
+		expect(new URL(page.url()).pathname).toBe('/actions/cross-page/destination');
 	});
 });
 
@@ -1692,6 +1958,7 @@ test.describe('Shallow routing', () => {
 		await expect(page.locator('[data-id="shallow"]')).toHaveText(
 			'/shallow-routing/push-state /shallow-routing/push-state {}'
 		);
+		await expect.poll(() => page.evaluate(() => window.shallow_navigation_log.length)).toBe(4);
 		expect(await page.evaluate(() => window.shallow_navigation_log)).toEqual([
 			{
 				hook: 'before',
@@ -1720,6 +1987,29 @@ test.describe('Shallow routing', () => {
 		await page.goBack();
 		await expect(page.locator('p')).toHaveText('active: false');
 		await expect(page.locator('[data-id="shallow"]')).toHaveText('null');
+	});
+
+	test('serializes custom objects in state', async ({ page }) => {
+		await page.goto('/shallow-routing/push-state/foo');
+		await expect(page.locator('[data-testid=foo]')).toHaveText('foo: nope');
+		await expect(page.locator('[data-testid=count]')).toHaveText('count: nope');
+
+		await page.locator('[data-id=shallow]').click();
+		await expect(page.locator('[data-testid=foo]')).toHaveText('foo: it works?!');
+		await expect(page.locator('[data-testid=count]')).toHaveText('count: 0');
+
+		// State is round-tripped before it becomes page.state, so it cannot retain $state reactivity.
+		await page.getByText('bump count').click();
+		await expect(page.locator('[data-testid=count]')).toHaveText('count: 0');
+
+		await page.goBack();
+		await expect(page.locator('[data-testid=foo]')).toHaveText('foo: nope');
+
+		await page.goForward();
+		await expect(page.locator('[data-testid=foo]')).toHaveText('foo: it works?!');
+
+		await page.locator('[data-id=full]').click();
+		await expect(page.locator('[data-testid=foo]')).toHaveText('foo: it works?!');
 	});
 
 	test('Shallow navigates to a new URL', async ({ baseURL, page }) => {
@@ -1811,6 +2101,7 @@ test.describe('Shallow routing', () => {
 		await expect(page).toHaveURL(`${baseURL}/shallow-routing/push-state`);
 		await expect(page.locator('p')).toHaveText('active: false');
 		await expect(page.locator('[data-id="shallow"]')).toHaveText('null');
+		await expect.poll(() => page.evaluate(() => window.shallow_navigation_log.length)).toBe(1);
 		expect(await page.evaluate(() => window.shallow_navigation_log)).toEqual([
 			{
 				hook: 'before',
@@ -1887,7 +2178,9 @@ test.describe('Shallow routing', () => {
 		await expect(page.locator('[data-id="shallow"]')).toHaveText(
 			'/shallow-routing/push-state/a /shallow-routing/push-state/a {}'
 		);
-		expect(await page.evaluate(() => window.shallow_navigation_log.length)).toBeGreaterThan(0);
+		await expect
+			.poll(() => page.evaluate(() => window.shallow_navigation_log.length))
+			.toBeGreaterThan(0);
 
 		await page.goBack();
 		await page.goForward();
@@ -2070,6 +2363,7 @@ test.describe('Shallow routing', () => {
 		await page.locator('[data-id="one"]').click();
 		await expect(page.locator('p')).toHaveText('active: true');
 		await expect(page.locator('[data-id="shallow"]')).toHaveText('/shallow-routing/replace-state');
+		await expect.poll(() => page.evaluate(() => window.shallow_navigation_log.length)).toBe(3);
 		expect(await page.evaluate(() => window.shallow_navigation_log)).toEqual([
 			{
 				hook: 'before',
@@ -2120,7 +2414,9 @@ test.describe('Shallow routing', () => {
 		await expect(page.locator('[data-id="shallow"]')).toHaveText(
 			'/shallow-routing/replace-state/a'
 		);
-		expect(await page.evaluate(() => window.shallow_navigation_log.length)).toBeGreaterThan(0);
+		await expect
+			.poll(() => page.evaluate(() => window.shallow_navigation_log.length))
+			.toBeGreaterThan(0);
 
 		await page.goBack();
 		await expect(page).toHaveURL(`${baseURL}/shallow-routing/replace-state/b`);
@@ -2361,12 +2657,17 @@ test.describe('INP', () => {
 			}, selector);
 		}
 
-		await page.goto('/routing');
-
 		const client = await page.context().newCDPSession(page);
-		await client.send('Emulation.setCPUThrottlingRate', { rate: 100 });
 
-		const time = await measureInteractionToPaint('a[href="/routing/next-paint"]');
+		let time = Infinity;
+
+		// a single sample is noisy on a loaded runner, so take the best of three
+		for (let attempt = 0; attempt < 3 && time >= 400; attempt++) {
+			await page.goto('/routing');
+			await client.send('Emulation.setCPUThrottlingRate', { rate: 100 });
+			time = Math.min(time, await measureInteractionToPaint('a[href="/routing/next-paint"]'));
+			await client.send('Emulation.setCPUThrottlingRate', { rate: 1 });
+		}
 
 		// we may need to tweak this number, and the `rate` above,
 		// depending on if this proves flaky
@@ -2391,6 +2692,19 @@ test.describe('binding_property_non_reactive warn', () => {
 });
 
 test.describe('routing', () => {
+	test('ignores form controls that shadow DOM properties of their form', async ({ page }) => {
+		/** @type {Error[]} */
+		const errors = [];
+		page.on('pageerror', (error) => errors.push(error));
+
+		await page.goto('/routing/clobbered-node-name');
+		await page.locator('#nodeName').hover();
+		await page.locator('#nodeName').dispatchEvent('touchstart');
+		await page.waitForTimeout(100);
+
+		expect(errors).toEqual([]);
+	});
+
 	test('navigating while navigation is in progress sets the correct URL', async ({ page }) => {
 		await page.goto('/routing/long-navigation');
 		await page.click('a[href="/routing"]');

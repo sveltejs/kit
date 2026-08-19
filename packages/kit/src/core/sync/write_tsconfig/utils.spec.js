@@ -1,10 +1,5 @@
 import { assert, describe, test } from 'vitest';
-import {
-	extends_id,
-	get_subpath_imports,
-	normalize_config,
-	validate_resolved_config
-} from './utils.js';
+import { normalize_config } from './utils.js';
 
 describe('normalize_config', () => {
 	test('normalizes rootDirs', () => {
@@ -62,38 +57,5 @@ describe('normalize_config', () => {
 		assert.equal(a, 1);
 		assert.equal(b, 2);
 		assert.equal(c, 3);
-	});
-});
-
-describe('get_subpath_imports', () => {
-	test('gets normalized subpath imports', () => {
-		assert.deepEqual(get_subpath_imports(import.meta.dirname + '/test-app'), {
-			'#lib': 'src/lib',
-			'#lib/*': 'src/lib/*'
-		});
-	});
-});
-
-describe('extends_id', () => {
-	const id = 'POTATO';
-
-	test('validates that a config extends an id (string)', () => {
-		assert.equal(extends_id({ extends: id }, id), true);
-	});
-
-	test('validates that a config extends an id (array)', () => {
-		assert.equal(extends_id({ extends: [id] }, id), true);
-	});
-
-	test('validates that a config does not extend an id', () => {
-		assert.equal(extends_id({}, id), false);
-	});
-});
-
-describe('validate_resolved_config', () => {
-	test('warns if types is overwritten', () => {
-		const warnings = validate_resolved_config({ types: [] }, { types: ['pinky', 'perky'] });
-
-		assert.deepEqual(warnings, ['"types" was overwritten. It must include "pinky" and "perky"']);
 	});
 });

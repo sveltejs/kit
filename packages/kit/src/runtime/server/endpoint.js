@@ -1,17 +1,16 @@
 import { Redirect } from '@sveltejs/kit/internal';
 import { with_request_store } from '@sveltejs/kit/internal/server';
-import { ENDPOINT_METHODS, PAGE_METHODS } from '../../constants.js';
+import { BODY_DEPENDENT_METHODS, ENDPOINT_METHODS, PAGE_METHODS } from '../../constants.js';
 import { negotiate } from '../../utils/http.js';
 import { method_not_allowed } from './utils.js';
 
 /**
  * @param {import('@sveltejs/kit').RequestEvent} event
- * @param {import('types').RequestState} event_state
+ * @param {import('types').RequestState} state
  * @param {import('types').SSREndpoint} mod
- * @param {import('types').SSRState} state
  * @returns {Promise<Response>}
  */
-export async function render_endpoint(event, event_state, mod, state) {
+export async function render_endpoint(event, state, mod) {
 	const method = /** @type {import('types').HttpMethod} */ (event.request.method);
 
 	let handler = mod[method] || mod.fallback;
@@ -26,8 +25,13 @@ export async function render_endpoint(event, event_state, mod, state) {
 
 	const prerender = mod.prerender ?? state.prerender_default;
 
-	if (prerender && (mod.POST || mod.PATCH || mod.PUT || mod.DELETE)) {
-		throw new Error('Cannot prerender endpoints that have mutative methods');
+	if (
+		prerender &&
+		/** @type {import('types').HttpMethod[]} */ (BODY_DEPENDENT_METHODS).some(
+			(method) => mod[method]
+		)
+	) {
+		throw new Error('Cannot prerender endpoints with body-dependent methods');
 	}
 
 	if (state.prerendering && !state.prerendering.inside_reroute && !prerender) {
@@ -42,7 +46,7 @@ export async function render_endpoint(event, event_state, mod, state) {
 	}
 
 	try {
-		const response = await with_request_store({ event, state: event_state }, () =>
+		const response = await with_request_store({ event, state }, () =>
 			handler(/** @type {import('@sveltejs/kit').RequestEvent<Record<string, any>>} */ (event))
 		);
 

@@ -9,6 +9,7 @@ import sirv from 'sirv';
 import { loadEnv, normalizePath } from 'vite';
 import { createReadableStream, getRequest, setResponse } from '../../../exports/node/index.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
+import { relative_pathname } from '../../../utils/url.js';
 import { is_chrome_devtools_request, not_found } from '../utils.js';
 import { stackless } from '../../../utils/error.js';
 
@@ -18,7 +19,7 @@ import { stackless } from '../../../utils/error.js';
  * @param {ValidatedConfig} svelte_config
  */
 export async function preview(vite, vite_config, svelte_config) {
-	const { paths } = svelte_config.kit;
+	const { paths } = svelte_config;
 	const base = paths.base;
 	const assets = paths.assets ? SVELTE_KIT_ASSETS : paths.base;
 
@@ -26,7 +27,7 @@ export async function preview(vite, vite_config, svelte_config) {
 
 	const etag = `"${Date.now()}"`;
 
-	const dir = join(svelte_config.kit.outDir, 'output/server');
+	const dir = join(svelte_config.outDir, 'output/server');
 
 	if (!fs.existsSync(`${dir}/manifest.js`)) {
 		throw stackless(`Server files not found at ${dir}, did you run \`build\` first?`);
@@ -51,7 +52,7 @@ export async function preview(vite, vite_config, svelte_config) {
 
 	try {
 		await server.init({
-			env: loadEnv(vite_config.mode, svelte_config.kit.env.dir, ''),
+			env: loadEnv(vite_config.mode, svelte_config.env.dir, ''),
 			read: (file) => createReadableStream(`${dir}/${file}`)
 		});
 	} catch (error) {
@@ -62,7 +63,7 @@ export async function preview(vite, vite_config, svelte_config) {
 		throw error;
 	}
 
-	const emulator = await svelte_config.kit.adapter?.emulate?.();
+	const emulator = await svelte_config.adapter?.emulate?.();
 
 	return () => {
 		// Remove the base middleware. It screws with the URL.
@@ -81,10 +82,10 @@ export async function preview(vite, vite_config, svelte_config) {
 		vite.middlewares.use(
 			scoped(
 				assets,
-				sirv(join(svelte_config.kit.outDir, 'output/client'), {
+				sirv(join(svelte_config.outDir, 'output/client'), {
 					setHeaders: (res, pathname) => {
 						// only apply to immutable directory, not e.g. version.json
-						if (pathname.startsWith(`/${svelte_config.kit.appDir}/immutable`)) {
+						if (pathname.startsWith(`/${svelte_config.appDir}/immutable`)) {
 							res.setHeader('cache-control', 'public,max-age=31536000,immutable');
 						}
 					}
@@ -122,7 +123,7 @@ export async function preview(vite, vite_config, svelte_config) {
 
 		// prerendered dependencies
 		vite.middlewares.use(
-			scoped(base, mutable(join(svelte_config.kit.outDir, 'output/prerendered/dependencies')))
+			scoped(base, mutable(join(svelte_config.outDir, 'output/prerendered/dependencies')))
 		);
 
 		// prerendered pages (we can't just use sirv because we need to
@@ -143,10 +144,10 @@ export async function preview(vite, vite_config, svelte_config) {
 
 				const { pathname, search } = new URL(/** @type {string} */ (req.url), 'http://dummy');
 
-				const dir = pathname.startsWith(`/${svelte_config.kit.appDir}/remote/`) ? 'data' : 'pages';
+				const dir = pathname.startsWith(`/${svelte_config.appDir}/remote/`) ? 'data' : 'pages';
 
 				let filename = normalizePath(
-					join(svelte_config.kit.outDir, `output/prerendered/${dir}` + pathname)
+					join(svelte_config.outDir, `output/prerendered/${dir}` + pathname)
 				);
 
 				try {
@@ -176,9 +177,9 @@ export async function preview(vite, vite_config, svelte_config) {
 					}
 
 					if (redirect) {
-						if (search) redirect += search;
-						res.writeHead(307, {
-							location: redirect
+						res.writeHead(308, {
+							// relative so (possibly invisible) path prefixes are preserved
+							location: relative_pathname(pathname, redirect) + search
 						});
 
 						res.end();
@@ -206,7 +207,8 @@ export async function preview(vite, vite_config, svelte_config) {
 
 			const request = getRequest({
 				base: `${protocol}://${host}`,
-				request: req
+				request: req,
+				response: res
 			});
 
 			setResponse(
@@ -222,7 +224,7 @@ export async function preview(vite, vite_config, svelte_config) {
 							return fs.readFileSync(join(dir, file));
 						}
 
-						return fs.readFileSync(join(svelte_config.kit.files.assets, file));
+						return fs.readFileSync(join(svelte_config.files.assets, file));
 					},
 					emulator
 				})

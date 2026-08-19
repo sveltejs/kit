@@ -13,26 +13,17 @@ import { server_data_serializer } from './data_serializer.js';
 /**
  * @param {{
  *   event: import('@sveltejs/kit').RequestEvent;
- *   event_state: import('types').RequestState;
+ *   state: import('types').RequestState;
  *   options: import('types').SSROptions;
  *   manifest: import('@sveltejs/kit').SSRManifest;
- *   state: import('types').SSRState;
  *   error: unknown;
  *   resolve_opts: import('types').RequiredResolveOptions;
  * }} opts
  */
-export async function respond_with_error({
-	event,
-	event_state,
-	options,
-	manifest,
-	state,
-	error,
-	resolve_opts
-}) {
+export async function respond_with_error({ event, state, options, manifest, error, resolve_opts }) {
 	// reroute to the fallback page to prevent an infinite chain of requests.
 	if (event.request.headers.get('x-sveltekit-error')) {
-		const transformed = await handle_error_and_jsonify(event, event_state, options, error);
+		const transformed = await handle_error_and_jsonify(event, state, options, error);
 		return static_error_page(options, transformed.status, transformed.message);
 	}
 
@@ -44,16 +35,15 @@ export async function respond_with_error({
 		const nodes = new PageNodes([default_layout]);
 		const ssr = nodes.ssr();
 		const csr = nodes.csr();
-		const data_serializer = server_data_serializer(event, event_state, options);
+		const data_serializer = server_data_serializer(event, state, options);
 		// Do this here first in case the awaits below before rendering themselves error
-		const transformed = await handle_error_and_jsonify(event, event_state, options, error);
+		const transformed = await handle_error_and_jsonify(event, state, options, error);
 
 		if (ssr) {
 			state.error = true;
 
 			const server_data_promise = load_server_data({
 				event,
-				event_state,
 				state,
 				node: default_layout,
 				// eslint-disable-next-line @typescript-eslint/require-await
@@ -65,14 +55,13 @@ export async function respond_with_error({
 
 			const data = await load_data({
 				event,
-				event_state,
+				state,
 				fetched,
 				node: default_layout,
 				// eslint-disable-next-line @typescript-eslint/require-await
 				parent: async () => ({}),
 				resolve_opts,
 				server_data_promise,
-				state,
 				csr
 			});
 
@@ -93,7 +82,6 @@ export async function respond_with_error({
 		return await render_response({
 			options,
 			manifest,
-			state,
 			page_config: {
 				ssr,
 				csr
@@ -104,7 +92,7 @@ export async function respond_with_error({
 			error_components: [],
 			fetched,
 			event,
-			event_state,
+			state,
 			resolve_opts,
 			data_serializer
 		});
@@ -115,7 +103,7 @@ export async function respond_with_error({
 			return redirect_response(e.status, e.location);
 		}
 
-		const transformed = await handle_error_and_jsonify(event, event_state, options, e);
+		const transformed = await handle_error_and_jsonify(event, state, options, e);
 
 		return static_error_page(options, transformed.status, transformed.message);
 	}

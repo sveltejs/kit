@@ -52,6 +52,11 @@ test.describe('remote functions', () => {
 		await page.getByRole('button', { name: 'call remote function' }).click();
 		await expect(page.locator('p')).toHaveText('lib says client');
 	});
+
+	test('packages can contain ordinary remote.js files', async ({ page }) => {
+		await page.goto('/plain-lib');
+		await expect(page.locator('p')).toHaveText('key set for https://example.com/jwks');
+	});
 });
 
 // have to run in serial because commands mutate in-memory data on the server (should fix this at some point)
@@ -894,8 +899,6 @@ test.describe('remote function mutations', () => {
 		// iteration breaks after 3 values
 		await expect(page.locator('#for-await-count')).toHaveText('3');
 		await expect(page.locator('#for-await-values')).toHaveText('0,1,2');
-
-		await page.click('#reset');
 	});
 
 	test('for await consumers continue receiving values across refreshAll-triggered reconnects', async ({
@@ -920,8 +923,6 @@ test.describe('remote function mutations', () => {
 		// this value never arrived and the loop hung.
 		await page.click('#increment');
 		await expect(page.locator('#stream-log')).toContainText('1');
-
-		await page.click('#reset');
 	});
 
 	test('refreshAll resolves while a live query is offline', async ({ page, context }) => {
@@ -1036,7 +1037,6 @@ test.describe('remote function mutations', () => {
 	test.describe('isomorphic query caching', () => {
 		test('await in event handler shares cache with simultaneous awaits', async ({ page }) => {
 			await page.goto('/remote/isomorphic-caching');
-			await page.click('#reset');
 
 			await page.click('#await-dedupe');
 			await expect(page.locator('#dedupe')).toHaveText('dedupe ok');
@@ -1065,12 +1065,6 @@ test.describe('remote function mutations', () => {
 
 		// the query resource should report the 403 status from the hook
 		await expect(page.locator('#status')).toHaveText('403');
-
-		// clean up the cookie so other tests aren't affected
-		await page.click('#clear-btn');
-		await page.evaluate(() => {
-			document.cookie = 'deny-remote=; path=/; max-age=0';
-		});
 	});
 
 	test('form.for() with enhance does not duplicate requests', async ({ page }) => {
@@ -1106,9 +1100,6 @@ test.describe('remote function mutations', () => {
 		// the input value should reflect the updated data
 		await expect(text).toHaveValue('Updated text');
 		await expect(checkbox).not.toBeChecked();
-
-		// reset the values for the client tests
-		await page.click('#reset-values');
 	});
 
 	test('.as(type, value) updates when field.set() is called', async ({ page }) => {
@@ -1255,6 +1246,7 @@ test.describe('client error boundaries', () => {
 		await expect(page.locator('#message')).toContainText(
 			'render error (500 Internal Error, on /server-error-boundary)'
 		);
+		await expect(page.locator('#nested-layout')).toHaveCount(0);
 	});
 
 	test('catches nested server render error and shows nested +error.svelte', async ({
@@ -1268,6 +1260,16 @@ test.describe('client error boundaries', () => {
 		);
 		// The nested layout should still be visible
 		await expect(page.locator('#nested-layout')).toBeVisible();
+	});
+
+	test('layout render error renders the same +error.svelte as SSR', async ({ page, app }) => {
+		await page.goto('/');
+		await app.goto('/server-error-boundary/layout-throws');
+		await expect(page.locator('#message')).toContainText(
+			'layout render error (500 Internal Error, on /server-error-boundary/layout-throws)'
+		);
+		await expect(page.locator('#layout-throws-error-message')).toHaveCount(0);
+		await expect(page.locator('#nested-layout')).toHaveCount(0);
 	});
 
 	test('client navigation away from a render error tears down the stale +error.svelte', async ({
@@ -1340,6 +1342,17 @@ test.describe('client error boundaries', () => {
 		await expect(result).toHaveText('hello world');
 		await page.locator('#redirect').click();
 		await expect(result).not.toHaveText('hello world');
+	});
+
+	test('remote form submit resolves after redirect navigation', async ({ page }) => {
+		await page.goto('/remote/form/reset-on-redirect');
+
+		await page.locator('#redirect-other').click();
+		await page.waitForURL('/remote/form/redirect-target/destination');
+
+		await expect
+			.poll(() => page.evaluate(() => sessionStorage.getItem('submit-resolved-pathname')))
+			.toBe('/remote/form/redirect-target/destination');
 	});
 });
 
