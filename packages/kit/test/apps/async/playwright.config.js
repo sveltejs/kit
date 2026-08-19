@@ -4,7 +4,6 @@ import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
 	...config,
-	fullyParallel: true,
 	webServer: {
 		command: process.env.DEV
 			? `pnpm dev --port ${port} --strictPort`
