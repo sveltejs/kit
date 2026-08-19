@@ -294,11 +294,6 @@ if (!test_browser_device) {
 
 const test_mode = process.env.DEV ? 'dev' : 'build';
 
-const all_projects = [
-	{ name: `${test_browser}-${test_mode}`, use: { javaScriptEnabled: true } },
-	{ name: `${test_browser}-${test_mode}-no-js`, use: { javaScriptEnabled: false } }
-];
-
 // the two projects cost very different amounts of time, so CI runs them as separate jobs
 const test_project = process.env.KIT_E2E_PROJECT;
 
@@ -307,6 +302,13 @@ if (test_project && test_project !== 'js' && test_project !== 'no-js') {
 		`invalid test project specified: KIT_E2E_PROJECT=${test_project}. Allowed values: js, no-js`
 	);
 }
+
+/**
+ * The server configuration variant selected with `KIT_E2E_VARIANT`, or `undefined` for the
+ * app's base configuration. Apps declare their variants in `configure`.
+ * @type {string | undefined}
+ */
+export const variant = process.env.KIT_E2E_VARIANT || undefined;
 
 /** @type {Record<string, number>} */
 const ports = {
@@ -353,36 +355,63 @@ function shard_from_env(name) {
 	return { current, total };
 }
 
-export const config = defineConfig({
-	forbidOnly: !!process.env.CI,
-	// generous timeouts on CI
-	timeout: process.env.CI ? 45000 : 15000,
-	webServer: {
-		command: process.env.DEV
-			? `pnpm dev --force --port ${port} --strictPort`
-			: `pnpm build && pnpm preview --port ${port} --strictPort`,
-		port
-	},
-	retries: process.env.CI ? 2 : number_from_env('KIT_E2E_RETRIES', 0),
-	projects: test_project
-		? all_projects.filter((project) => project.use.javaScriptEnabled === (test_project === 'js'))
-		: all_projects,
-	use: {
-		...test_browser_device,
-		screenshot: 'only-on-failure',
-		trace: 'retain-on-failure'
-	},
-	workers: number_from_env('KIT_E2E_WORKERS', process.env.CI ? 2 : undefined),
-	shard: shard_from_env('KIT_E2E_SHARD'),
-	reporter: process.env.CI
-		? [
-				['dot'],
-				[path.resolve(fileURLToPath(import.meta.url), '../github-flaky-warning-reporter.js')]
-			]
-		: 'list',
-	testDir: 'test',
-	testMatch: /(.+\.)?(test|spec)\.[jt]s/
-});
+/**
+ * Build the Playwright config for a test app. `env` is passed to the app's server on top of
+ * `process.env`; a variant is a named set of additional server env (the app's Vite config reads
+ * it) and `KIT_E2E_VARIANT` selects one per run.
+ *
+ * @param {{
+ *   env?: Record<string, string>,
+ *   variants?: Record<string, Record<string, string>>
+ * }} [options]
+ */
+export function configure({ env = {}, variants = {} } = {}) {
+	if (variant && !Object.hasOwn(variants, variant)) {
+		throw new Error(
+			`invalid test variant specified: KIT_E2E_VARIANT=${variant}. Allowed values: ${
+				Object.keys(variants).join(', ') || '(none)'
+			}`
+		);
+	}
+
+	const project_name = `${test_browser}-${test_mode}${variant ? `-${variant}` : ''}`;
+	const all_projects = [
+		{ name: project_name, use: { javaScriptEnabled: true } },
+		{ name: `${project_name}-no-js`, use: { javaScriptEnabled: false } }
+	];
+
+	return defineConfig({
+		forbidOnly: !!process.env.CI,
+		// generous timeouts on CI
+		timeout: process.env.CI ? 45000 : 15000,
+		webServer: {
+			command: process.env.DEV
+				? `pnpm dev --force --port ${port} --strictPort`
+				: `pnpm build && pnpm preview --port ${port} --strictPort`,
+			port,
+			env: { ...env, ...(variant ? variants[variant] : {}) }
+		},
+		retries: process.env.CI ? 2 : number_from_env('KIT_E2E_RETRIES', 0),
+		projects: test_project
+			? all_projects.filter((project) => project.use.javaScriptEnabled === (test_project === 'js'))
+			: all_projects,
+		use: {
+			...test_browser_device,
+			screenshot: 'only-on-failure',
+			trace: 'retain-on-failure'
+		},
+		workers: number_from_env('KIT_E2E_WORKERS', process.env.CI ? 2 : undefined),
+		shard: shard_from_env('KIT_E2E_SHARD'),
+		reporter: process.env.CI
+			? [
+					['dot'],
+					[path.resolve(fileURLToPath(import.meta.url), '../github-flaky-warning-reporter.js')]
+				]
+			: 'list',
+		testDir: 'test',
+		testMatch: /(.+\.)?(test|spec)\.[jt]s/
+	});
+}
 
 /**
  * @param {SpanData} current_span
