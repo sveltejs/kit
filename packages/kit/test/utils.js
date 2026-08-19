@@ -292,6 +292,22 @@ if (!test_browser_device) {
 	);
 }
 
+const test_mode = process.env.DEV ? 'dev' : 'build';
+
+const all_projects = [
+	{ name: `${test_browser}-${test_mode}`, use: { javaScriptEnabled: true } },
+	{ name: `${test_browser}-${test_mode}-no-js`, use: { javaScriptEnabled: false } }
+];
+
+// the two projects cost very different amounts of time, so CI runs them as separate jobs
+const test_project = process.env.KIT_E2E_PROJECT;
+
+if (test_project && test_project !== 'js' && test_project !== 'no-js') {
+	throw new Error(
+		`invalid test project specified: KIT_E2E_PROJECT=${test_project}. Allowed values: js, no-js`
+	);
+}
+
 /** @type {Record<string, number>} */
 const ports = {
 	'test-async': 5300,
@@ -315,6 +331,28 @@ if (!port) {
 	throw new Error(`No test server port configured for ${package_name}`);
 }
 
+/**
+ * read process.env[name] as a one-based `current/total` shard, e.g. `1/3`
+ *
+ * @param {string} name of process.env value to read
+ * @returns {{ current: number, total: number } | undefined} undefined if process.env[name] isn't set
+ * @throws {Error} when value cannot be parsed to a shard
+ */
+function shard_from_env(name) {
+	const value = process.env[name];
+	if (!value) return undefined;
+
+	const [current, total] = value.split('/').map(Number);
+
+	if (!Number.isInteger(current) || !Number.isInteger(total) || current < 1 || current > total) {
+		throw new Error(
+			`process.env.${name} must be a one-based \`current/total\` shard but is "${value}"`
+		);
+	}
+
+	return { current, total };
+}
+
 export const config = defineConfig({
 	forbidOnly: !!process.env.CI,
 	// generous timeouts on CI
@@ -326,26 +364,16 @@ export const config = defineConfig({
 		port
 	},
 	retries: process.env.CI ? 2 : number_from_env('KIT_E2E_RETRIES', 0),
-	projects: [
-		{
-			name: `${test_browser}-${process.env.DEV ? 'dev' : 'build'}`,
-			use: {
-				javaScriptEnabled: true
-			}
-		},
-		{
-			name: `${test_browser}-${process.env.DEV ? 'dev' : 'build'}-no-js`,
-			use: {
-				javaScriptEnabled: false
-			}
-		}
-	],
+	projects: test_project
+		? all_projects.filter((project) => project.use.javaScriptEnabled === (test_project === 'js'))
+		: all_projects,
 	use: {
 		...test_browser_device,
 		screenshot: 'only-on-failure',
 		trace: 'retain-on-failure'
 	},
 	workers: number_from_env('KIT_E2E_WORKERS', process.env.CI ? 2 : undefined),
+	shard: shard_from_env('KIT_E2E_SHARD'),
 	reporter: process.env.CI
 		? [
 				['dot'],

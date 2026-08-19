@@ -46,38 +46,20 @@ jobs:
       - run: pnpm run lint
       - run: cd packages/kit && pnpm prepublishOnly && { [ "`git status --porcelain=v1`" == "" ] || (echo "Generated types have changed — please run prepublishOnly locally and commit the changes after you have reviewed them"; git diff; exit 1); }
       - run: pnpm run check
-  test-kit:
-    runs-on: ${{ matrix.os }}
+  test:
+    # unit tests for kit and every other package; `script` is a root package.json script
+    runs-on: ${{ matrix.os || 'ubuntu-latest' }}
     timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
         include:
-          - node-version: 22
-            os: ubuntu-latest
-            vite: 'current'
-            mode: 'unit'
-          - node-version: 24
-            os: ubuntu-latest
-            vite: 'current'
-            mode: 'unit'
-          - node-version: 24
-            os: ubuntu-latest
-            e2e-browser: 'chromium'
-            vite: 'current'
-            mode: 'dev'
-          - node-version: 24
-            os: ubuntu-latest
-            e2e-browser: 'chromium'
-            vite: 'current'
-            mode: 'build'
-          # - node-version: 24
-          #   os: ubuntu-latest
-          #   e2e-browser: 'chromium'
-          #   vite: 'beta'
-    env:
-      KIT_E2E_BROWSER: ${{matrix.e2e-browser}}
-      MATRIX_VITE: ${{matrix.vite}}
+          - { script: 'test:kit:unit', node-version: 22 }
+          - { script: 'test:kit:unit', node-version: 24 }
+          - { script: 'test:kit:unit', node-version: 24, os: windows-latest }
+          - { script: 'test:others', node-version: 22 }
+          - { script: 'test:others', node-version: 24 }
+          - { script: 'test:others:unit', node-version: 24, os: windows-latest }
     steps:
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -86,177 +68,84 @@ jobs:
       - uses: ./.github/actions/node-setup
         with:
           node-version: ${{ matrix.node-version }}
+      - run: pnpm run sync-all
+      - run: pnpm ${{ matrix.script }}
+  e2e:
+    # every Playwright leg; `script` is a root package.json script, see test/utils.js for the env
+    runs-on: ${{ matrix.os || 'ubuntu-latest' }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # basics is the biggest app: its js project is sharded and its no-js project runs
+          # alone; the other apps boot once in the `rest` legs
+          - { script: 'test:kit:dev:basics', project: 'js', shard: '1/2' }
+          - { script: 'test:kit:dev:basics', project: 'js', shard: '2/2' }
+          - { script: 'test:kit:dev:basics', project: 'no-js' }
+          - { script: 'test:kit:dev:rest', workers: 2 }
+          - { script: 'test:kit:build:basics', project: 'js', shard: '1/2' }
+          - { script: 'test:kit:build:basics', project: 'js', shard: '2/2' }
+          - { script: 'test:kit:build:basics', project: 'no-js' }
+          - { script: 'test:kit:build:rest', workers: 2 }
+          # basics again with SVELTE_ASYNC=true
+          - { script: 'test:svelte-async:dev', project: 'js', shard: '1/2' }
+          - { script: 'test:svelte-async:dev', project: 'js', shard: '2/2' }
+          - { script: 'test:svelte-async:dev', project: 'no-js' }
+          - { script: 'test:svelte-async:build', project: 'js', shard: '1/2' }
+          - { script: 'test:svelte-async:build', project: 'js', shard: '2/2' }
+          - { script: 'test:svelte-async:build', project: 'no-js' }
+          # basics and options with ROUTER_RESOLUTION=server
+          - { script: 'test:server-side-route-resolution:dev', project: 'js', shard: '1/2' }
+          - { script: 'test:server-side-route-resolution:dev', project: 'js', shard: '2/2' }
+          - { script: 'test:server-side-route-resolution:dev', project: 'no-js' }
+          - { script: 'test:server-side-route-resolution:build', project: 'js', shard: '1/2' }
+          - { script: 'test:server-side-route-resolution:build', project: 'js', shard: '2/2' }
+          - { script: 'test:server-side-route-resolution:build', project: 'no-js' }
+          # the cross-platform subset of basics on the other browsers and operating systems
+          - { script: 'test:cross-platform:dev', os: windows-latest, workers: 2 }
+          - { script: 'test:cross-platform:build', os: windows-latest, workers: 2 }
+          - { script: 'test:cross-platform:dev', browser: firefox }
+          - { script: 'test:cross-platform:build', browser: firefox }
+          - { script: 'test:cross-platform:dev', os: macOS-latest, browser: webkit, workers: 3 }
+          - { script: 'test:cross-platform:build', os: macOS-latest, browser: webkit, workers: 3 }
+          # `vite` swaps in a pnpm-workspace.yaml catalog, e.g. to test a beta
+          # - { script: 'test:kit:dev:basics', vite: 'beta' }
+    env:
+      KIT_E2E_BROWSER: ${{ matrix.browser || 'chromium' }}
+      KIT_E2E_WORKERS: ${{ matrix.workers || 4 }}
+      KIT_E2E_SHARD: ${{ matrix.shard }}
+      KIT_E2E_PROJECT: ${{ matrix.project }}
+    steps:
+      - run: git config --global core.autocrlf false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/node-setup
       - name: setup overrides for matrix.vite
-        if: matrix.vite != 'current'
+        if: matrix.vite
         run: | # copies catalogs.vite-xxx to overrides in pnpm-workspace.yaml so the subsequent `pnpm install` enforces them
           yq -i '.overrides =.catalogs."vite-${{ matrix.vite }}"' pnpm-workspace.yaml
           pnpm install --no-frozen-lockfile
           git checkout pnpm-lock.yaml pnpm-workspace.yaml # revert changes to pnpm files to avoid cache key changes
           pnpm --dir packages/kit ls vite
-      - run: pnpm run sync-all
-      - run: pnpm test:kit:${{ matrix.mode }}
-      - name: Print flaky test report
-        run: node scripts/print-flaky-test-report.js
-      - name: Archive test results
-        if: failure()
-        shell: bash
-        run: find packages -type d -name test-results -not -empty | tar -czf test-results-${{ matrix.mode }}.tar.gz --files-from=-
-      - name: Upload test results
-        if: failure()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          retention-days: 3
-          name: test-failure-${{ matrix.mode }}-${{ github.run_id }}-${{ matrix.os }}-${{ matrix.node-version }}-${{ matrix.e2e-browser }}-vite-${{matrix.vite}}
-          path: test-results-${{ matrix.mode }}.tar.gz
-  test-kit-cross-browser:
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - node-version: 24
-            os: windows-latest
-            e2e-browser: 'chromium'
-            mode: 'dev'
-          - node-version: 24
-            os: ubuntu-latest
-            e2e-browser: 'firefox'
-            mode: 'dev'
-          - node-version: 24
-            os: macOS-latest
-            e2e-browser: 'webkit'
-            mode: 'dev'
-          - node-version: 24
-            os: windows-latest
-            e2e-browser: 'chromium'
-            mode: 'build'
-          - node-version: 24
-            os: ubuntu-latest
-            e2e-browser: 'firefox'
-            mode: 'build'
-          - node-version: 24
-            os: macOS-latest
-            e2e-browser: 'webkit'
-            mode: 'build'
-    env:
-      KIT_E2E_BROWSER: ${{ matrix.e2e-browser }}
-    steps:
-      - run: git config --global core.autocrlf false
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: ./.github/actions/node-setup
-        with:
-          node-version: ${{ matrix.node-version }}
-      - if: matrix.e2e-browser != 'chromium'
+      - if: matrix.browser && matrix.browser != 'chromium'
         uses: ./.github/actions/playwright-setup
         with:
-          os: ${{ matrix.os }}
-          e2e-browser: ${{ matrix.e2e-browser }}
+          os: ${{ matrix.os || 'ubuntu-latest' }}
+          e2e-browser: ${{ matrix.browser }}
       - run: pnpm run sync-all
-      - run: pnpm test:cross-platform:${{ matrix.mode }}
+      - run: pnpm ${{ matrix.script }}
       - name: Print flaky test report
         run: node scripts/print-flaky-test-report.js
       - name: Archive test results
         if: failure()
         shell: bash
-        run: find packages -type d -name test-results -not -empty | tar -czf test-results-cross-platform-${{ matrix.mode }}.tar.gz --files-from=-
+        run: find packages -type d -name test-results -not -empty | tar -czf test-results.tar.gz --files-from=-
       - name: Upload test results
         if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           retention-days: 3
-          name: test-failure-cross-platform-${{ matrix.mode }}-${{ github.run_id }}-${{ matrix.os }}-${{ matrix.node-version }}-${{ matrix.e2e-browser }}
-          path: test-results-cross-platform-${{ matrix.mode }}.tar.gz
-  test-kit-server-side-route-resolution:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    env:
-      KIT_E2E_WORKERS: '4'
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - mode: 'dev'
-          - mode: 'build'
-    steps:
-      - run: git config --global core.autocrlf false
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: ./.github/actions/node-setup
-      - run: pnpm run sync-all
-      - run: pnpm test:server-side-route-resolution:${{ matrix.mode }}
-      - name: Print flaky test report
-        run: node scripts/print-flaky-test-report.js
-      - name: Archive test results
-        if: failure()
-        shell: bash
-        run: find packages -type d -name test-results -not -empty | tar -czf test-results-server-side-route-resolution-${{ matrix.mode }}.tar.gz --files-from=-
-      - name: Upload test results
-        if: failure()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          retention-days: 3
-          name: test-failure-server-side-route-resolution-${{ matrix.mode }}-${{ github.run_id }}
-          path: test-results-server-side-route-resolution-${{ matrix.mode }}.tar.gz
-  test-kit-svelte-async:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    env:
-      KIT_E2E_WORKERS: '4'
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - mode: 'dev'
-          - mode: 'build'
-    steps:
-      - run: git config --global core.autocrlf false
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: ./.github/actions/node-setup
-      - run: pnpm run sync-all
-      - run: pnpm test:svelte-async:${{ matrix.mode }}
-      - name: Print flaky test report
-        run: node scripts/print-flaky-test-report.js
-      - name: Archive test results
-        if: failure()
-        shell: bash
-        run: find packages -type d -name test-results -not -empty | tar -czf test-results-svelte-async-${{ matrix.mode }}.tar.gz --files-from=-
-      - name: Upload test results
-        if: failure()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          retention-days: 3
-          name: test-failure-svelte-async-${{ matrix.mode }}-${{ github.run_id }}
-          path: test-results-svelte-async-${{ matrix.mode }}.tar.gz
-  test-others:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [22, 24]
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: ./.github/actions/node-setup
-        with:
-          node-version: ${{ matrix.node-version }}
-      - run: cd packages/kit && pnpm prepublishOnly
-      - run: pnpm run test:others
-  test-others-windows:
-    runs-on: windows-latest
-    timeout-minutes: 30
-    steps:
-      - run: git config --global core.autocrlf false
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: ./.github/actions/node-setup
-        with:
-          node-version: 24
-      - run: cd packages/kit && pnpm prepublishOnly
-      - run: pnpm run test:others:unit
+          name: test-failure-${{ github.run_id }}-${{ strategy.job-index }}
+          path: test-results.tar.gz
