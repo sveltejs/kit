@@ -89,7 +89,7 @@ export function get_action_location(url) {
  * @param {string} location
  * @returns {Extract<ServerActionResult, { type: 'error' }>}
  */
-export function no_actions_result(event, location) {
+export function method_not_allowed_result(event, location) {
 	event.setHeaders({
 		// https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405
 		// "The server must generate an Allow header field in a 405 status code response"
@@ -167,7 +167,7 @@ export async function handle_action_request(event, state, server) {
 
 	if (!actions) {
 		// TODO should this be a different error altogether?
-		return no_actions_result(event, location);
+		return method_not_allowed_result(event, location);
 	}
 
 	check_named_default_separate(actions);

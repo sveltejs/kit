@@ -10,7 +10,11 @@ import { is_form_content_type } from '../../utils/http.js';
 import { create_remote_key, parse_remote_arg, split_remote_key } from '../shared.js';
 import { stringify } from '#app/internal/transport';
 import { handle_error_and_jsonify } from './errors.js';
-import { action_error_result, get_action_location, no_actions_result } from './page/actions.js';
+import {
+	action_error_result,
+	get_action_location,
+	method_not_allowed_result
+} from './page/actions.js';
 import { deserialize_binary_form } from '../form-utils.js';
 import { with_version_header } from './utils.js';
 
@@ -544,7 +548,7 @@ async function handle_remote_form_post_internal(event, state, manifest, id) {
 	);
 
 	if (!form) {
-		return no_actions_result(event, location);
+		return method_not_allowed_result(event, location);
 	}
 
 	if (action_id) {
