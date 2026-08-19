@@ -1,7 +1,5 @@
 /** @import { RequestEvent } from '@sveltejs/kit' */
-/** @import { SSRManifest } from 'types' */
-/** @import { ActionResult } from '$app/forms' */
-/** @import { PageNodeIndexes, RequestState, RequiredResolveOptions, ServerDataNode, SSRNode, SSROptions } from 'types' */
+/** @import { PageNodeIndexes, RequestState, RequiredResolveOptions, ServerDataNode, SSRNode, SSROptions, SSRManifest } from 'types' */
 import { text } from '@sveltejs/kit';
 import { Redirect } from '@sveltejs/kit/internal';
 import { compact } from '../../../utils/array.js';
@@ -58,7 +56,7 @@ export async function render_page(event, state, page, options, manifest, nodes, 
 
 		let status = 200;
 
-		/** @type {ActionResult | undefined} */
+		/** @type {import('types').ServerActionResult | undefined} */
 		let action_result = undefined;
 
 		if (is_action_request(event)) {

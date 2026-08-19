@@ -575,6 +575,16 @@ test.describe('Invalidation', () => {
 		expect(await page.textContent('span')).toBe('count: 1');
 	});
 
+	test('load function re-runs when the number of values of a tracked searchParam changes', async ({
+		page,
+		clicknav
+	}) => {
+		await page.goto('/load/invalidation/search-params/universal?a=0');
+		expect(await page.textContent('span')).toBe('count: 0');
+		await clicknav('[data-id="duplicate"]');
+		expect(await page.textContent('span')).toBe('count: 1');
+	});
+
 	test('server-only load functions are re-run following forced invalidation', async ({
 		page,
 		request,
