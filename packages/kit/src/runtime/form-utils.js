@@ -441,25 +441,18 @@ class LazyFile {
 	}
 	stream() {
 		const range = read_range(this.#get_chunk, this.#offset, this.size);
-		let cursor = 0;
-		return new ReadableStream({
-			pull: async (controller) => {
-				const { value, done } = await range.next();
-				if (done) {
-					if (cursor < this.size) {
-						controller.error('incomplete file data');
-					} else {
-						controller.close();
-					}
-					return;
+		const size = this.size;
+		// TODO remove the cast once TypeScript's lib includes `ReadableStream.from`
+		return /** @type {any} */ (ReadableStream).from(
+			(async function* () {
+				let cursor = 0;
+				for await (const chunk of range) {
+					cursor += chunk.byteLength;
+					yield chunk;
 				}
-				cursor += value.byteLength;
-				controller.enqueue(value);
-				if (cursor >= this.size) {
-					controller.close();
-				}
-			}
-		});
+				if (cursor < size) throw new Error('incomplete file data');
+			})()
+		);
 	}
 	async text() {
 		return text_decoder.decode(await this.arrayBuffer());

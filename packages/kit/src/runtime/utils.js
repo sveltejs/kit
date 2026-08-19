@@ -1,6 +1,23 @@
 import { BROWSER } from 'esm-env';
 
 export const text_encoder = new TextEncoder();
+
+/**
+ * @param {string} head
+ * @param {AsyncIterable<string>} chunks
+ * @returns {ReadableStream<Uint8Array>} `head` followed by each non-empty chunk, encoded
+ */
+export function stream_text(head, chunks) {
+	// TODO remove the cast once TypeScript's lib includes `ReadableStream.from`
+	return /** @type {any} */ (ReadableStream).from(
+		(async function* () {
+			yield text_encoder.encode(head);
+			for await (const chunk of chunks) {
+				if (chunk) yield text_encoder.encode(chunk);
+			}
+		})()
+	);
+}
 export const text_decoder = new TextDecoder();
 
 /**

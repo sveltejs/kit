@@ -18,7 +18,7 @@ import {
 	route_id_resolution_pathname
 } from '../../pathname.js';
 import { try_get_request_store, with_request_store } from '@sveltejs/kit/internal/server';
-import { text_encoder } from '../../utils.js';
+import { stream_text } from '../../utils.js';
 import { count_non_ssi_comments, get_global_name } from '../utils.js';
 import { handle_error_and_jsonify } from '../errors.js';
 import * as env from '<sveltekit:generated>/env/config.js';
@@ -657,22 +657,7 @@ export async function render_response({
 				status,
 				headers
 			})
-		: new Response(
-				new ReadableStream({
-					async start(controller) {
-						controller.enqueue(text_encoder.encode(transformed + '\n'));
-						for await (const chunk of chunks) {
-							if (chunk.length) controller.enqueue(text_encoder.encode(chunk));
-						}
-						controller.close();
-					},
-
-					type: 'bytes'
-				}),
-				{
-					headers
-				}
-			);
+		: new Response(stream_text(transformed + '\n', chunks), { headers });
 }
 
 class Head {
