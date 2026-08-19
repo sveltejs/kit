@@ -388,7 +388,7 @@ export function configure(variants = {}) {
 		timeout: process.env.CI ? 45000 : 15000,
 		webServer: {
 			command: process.env.DEV
-				? `pnpm dev --port ${port} --strictPort`
+				? `pnpm dev --force --port ${port} --strictPort`
 				: `pnpm build && pnpm preview --port ${port} --strictPort`,
 			port,
 			env: variant ? { ...env, ...variants[variant] } : env
