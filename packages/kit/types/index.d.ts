@@ -925,6 +925,13 @@ declare module '@sveltejs/kit' {
 		type: string | null;
 	}
 
+	interface FontDependency {
+		/** emitted file path, relative to the client output directory */
+		file: string;
+		/** the source file path relative to the project root, before hashing and character sanitization */
+		filename: string;
+	}
+
 	interface BuildData {
 		app_dir: string;
 		app_path: string;
@@ -957,7 +964,7 @@ declare module '@sveltejs/kit' {
 			 */
 			routes?: SSRClientRoute[];
 			stylesheets: string[];
-			fonts: string[];
+			fonts: FontDependency[];
 			/**
 			 * Whether the client uses public dynamic env vars — `$env/dynamic/public` or `$app/env/public`.
 			 */
@@ -1079,7 +1086,7 @@ declare module '@sveltejs/kit' {
 		/** external CSS files that are loaded on the client */
 		stylesheets: string[];
 		/** external font files that are loaded on the client */
-		fonts: string[];
+		fonts: FontDependency[];
 
 		universal_id?: string;
 		server_id?: string;
