@@ -368,7 +368,7 @@ async function generate_edge_functions({ builder }) {
 
 	builder.copy(`${files}/edge.js`, `${tmp}/entry.js`, {
 		replace: {
-			'0SERVER': `${relativePath}/server.js`
+			'0SERVER': `./server.js`
 		}
 	});
 

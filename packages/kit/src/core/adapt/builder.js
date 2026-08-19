@@ -197,7 +197,7 @@ export function create_builder({
 
 		generateServer({ relativePath, routes: subset, export: should_export = true }) {
 			return dedent`
-				import { Server } from '@sveltejs/kit';
+				import { Server } from '${relativePath}/index.js';
 				const manifest = ${generate_manifest({
 					build_data,
 					prerendered: prerendered.paths,

@@ -1,6 +1,6 @@
 /** @import { NextHandleFunction } from 'connect' */
 /** @import { PreviewServer, ResolvedConfig } from 'vite' */
-/** @import { ValidatedConfig, ServerInternalModule, ServerModule } from 'types' */
+/** @import { ValidatedConfig, ServerInternalModule, ServerModule, SSRManifest } from 'types' */
 import fs from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -44,6 +44,7 @@ export async function preview(vite, vite_config, svelte_config) {
 	/** @type {ServerModule} */
 	const { Server } = await import(pathToFileURL(join(dir, 'index.js')).href);
 
+	/** @type {{ manifest: SSRManifest }} */
 	const { manifest } = await import(pathToFileURL(join(dir, 'manifest.js')).href);
 
 	set_assets(assets);
@@ -220,7 +221,7 @@ export async function preview(vite, vite_config, svelte_config) {
 						throw new Error('Could not determine clientAddress');
 					},
 					read: (file) => {
-						if (file in manifest._.server_assets) {
+						if (file in manifest.server_assets) {
 							return fs.readFileSync(join(dir, file));
 						}
 
