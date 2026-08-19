@@ -95,7 +95,6 @@ The Playwright tests can also be run with the following environment variables to
 KIT_E2E_BROWSER=chromium
 KIT_E2E_RETRIES=0
 KIT_E2E_WORKERS=undefined
-KIT_E2E_VARIANT=undefined
 
 # Append the modified environment variable before the test command
 KIT_E2E_RETRIES=2 pnpm test:kit
