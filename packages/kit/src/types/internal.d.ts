@@ -8,7 +8,8 @@ import {
 	Actions,
 	RequestEvent,
 	SSRManifest,
-	Emulator
+	Emulator,
+	HttpError
 } from '@sveltejs/kit';
 import { RemoteFormIssue, RemoteQuery, RemoteLiveQuery } from '$app/server';
 import { Config } from '@sveltejs/kit/vite';
@@ -298,6 +299,14 @@ export interface RouteData {
 		page_options: PageOptions | null;
 	} | null;
 }
+
+/**
+ * The server-side form of `ActionResult`, before the error is passed
+ * through `handleError` and the data is serialized
+ */
+export type ServerActionResult =
+	| Exclude<import('$app/forms').ActionResult, { type: 'error' }>
+	| { type: 'error'; location: string; error: Error | HttpError };
 
 export type ServerRedirectNode = {
 	type: 'redirect';

@@ -43,7 +43,7 @@ import { has_custom_transporters, uneval } from '#app/internal/transport';
  *   event: import('@sveltejs/kit').RequestEvent;
  *   state: import('types').RequestState;
  *   resolve_opts: import('types').RequiredResolveOptions;
- *   action_result?: import('$app/forms').ActionResult;
+ *   action_result?: import('types').ServerActionResult;
  *   data_serializer: import('./types.js').ServerDataSerializer;
  *   error_components?: Array<import('svelte').Component | undefined>
  * }} opts
