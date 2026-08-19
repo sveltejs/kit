@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync, rmSync } from 'node:fs';
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { rolldown } from 'rolldown';
@@ -76,6 +76,8 @@ export default function (opts = {}) {
 				input['instrumentation.server'] = `${server}/instrumentation.server.js`;
 			}
 
+			writeFileSync(`${server}/server.js`, builder.generateServer({ relativePath: './' }));
+
 			// we bundle the Vite output so that deployments only need
 			// their production dependencies. Anything in devDependencies
 			// will get included in the bundled code
@@ -109,7 +111,7 @@ export default function (opts = {}) {
 						resolveId: {
 							filter: { id: /^SERVER$/ },
 							handler() {
-								return `${server}/index.js`;
+								return `${server}/server.js`;
 							}
 						}
 					},
