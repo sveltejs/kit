@@ -1637,6 +1637,10 @@ test.describe('asset preload', () => {
 
 		expect(body).toContain('rel="modulepreload"');
 		expect(body).toContain('as="font"');
+		expect(body).toMatch(/href="[^"]+\/shlop\.[^".]+\.woff2"/);
+		expect(body).toMatch(/href="[^"]+\/shlop\.var\.[^".]+\.woff2"/);
+		// the emitted file name is sanitized, but the filter matched on the original `shlop+bold.woff2`
+		expect(body).toMatch(/href="[^"]+\/shlop_bold\.[^".]+\.woff2"/);
 	});
 });
 

@@ -77,7 +77,9 @@ export async function render_response({
 
 	const modulepreloads = new Set(client?.imports);
 	const stylesheets = new Set(client?.stylesheets);
-	const fonts = new Set(client?.fonts);
+
+	/** @type {Map<string, import('types').FontDependency>} */
+	const fonts = new Map(client?.fonts.map((font) => [font.file, font]));
 
 	/**
 	 * The value of the Link header that is added to the response when not prerendering
@@ -262,7 +264,7 @@ export async function render_response({
 	for (const { node } of branch) {
 		for (const url of node.imports) modulepreloads.add(url);
 		for (const url of node.stylesheets) stylesheets.add(url);
-		for (const url of node.fonts) fonts.add(url);
+		for (const font of node.fonts) fonts.set(font.file, font);
 
 		if (node.inline_styles && !client?.inline) {
 			Object.entries(await node.inline_styles()).forEach(([filename, css]) => {
@@ -335,11 +337,11 @@ export async function render_response({
 		head.add_stylesheet(path, attributes);
 	}
 
-	for (const dep of fonts) {
-		const path = prefixed(dep);
+	for (const { file, filename } of fonts.values()) {
+		const path = prefixed(file);
 
-		if (resolve_opts.preload({ type: 'font', path })) {
-			const ext = dep.slice(dep.lastIndexOf('.') + 1);
+		if (resolve_opts.preload({ type: 'font', path, filename })) {
+			const ext = file.slice(file.lastIndexOf('.') + 1);
 
 			add_preload(path, ['rel="preload"', 'as="font"', `type="font/${ext}"`, 'crossorigin']);
 		}

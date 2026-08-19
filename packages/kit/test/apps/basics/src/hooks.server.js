@@ -209,8 +209,14 @@ export const handle = sequence(
 		}
 
 		return resolve(event, {
-			// needed for asset-preload tests
-			preload: () => true
+			// needed for asset-preload tests, which assert `filename` is the unhashed source path
+			preload: (input) =>
+				input.type !== 'font' ||
+				[
+					'src/routes/asset-preload/shlop.woff2',
+					'src/routes/asset-preload/shlop.var.woff2',
+					'src/routes/asset-preload/shlop+bold.woff2'
+				].includes(input.filename)
 		});
 	}
 );
