@@ -79,35 +79,41 @@ jobs:
         include:
           # basics is the biggest app: its js project is sharded and its no-js project runs
           # alone; the other apps boot once in the `rest` legs
-          - { script: 'test:kit:dev:basics', project: 'js', shard: '1/2', workers: 2 }
-          - { script: 'test:kit:dev:basics', project: 'js', shard: '2/2', workers: 2 }
-          - { script: 'test:kit:dev:basics', project: 'no-js', workers: 2 }
+          - { script: 'test:kit:dev:basics', project: 'js', shard: '1/3' }
+          - { script: 'test:kit:dev:basics', project: 'js', shard: '2/3' }
+          - { script: 'test:kit:dev:basics', project: 'js', shard: '3/3' }
+          - { script: 'test:kit:dev:basics', project: 'no-js' }
           - { script: 'test:kit:dev:rest', workers: 2 }
-          - { script: 'test:kit:build:basics', project: 'js', shard: '1/2', workers: 2 }
-          - { script: 'test:kit:build:basics', project: 'js', shard: '2/2', workers: 2 }
-          - { script: 'test:kit:build:basics', project: 'no-js', workers: 2 }
+          - { script: 'test:kit:build:basics', project: 'js', shard: '1/3' }
+          - { script: 'test:kit:build:basics', project: 'js', shard: '2/3' }
+          - { script: 'test:kit:build:basics', project: 'js', shard: '3/3' }
+          - { script: 'test:kit:build:basics', project: 'no-js' }
           - { script: 'test:kit:build:rest', workers: 2 }
           # basics again with SVELTE_ASYNC=true
-          - { script: 'test:svelte-async:dev', project: 'js', shard: '1/2' }
-          - { script: 'test:svelte-async:dev', project: 'js', shard: '2/2' }
+          - { script: 'test:svelte-async:dev', project: 'js', shard: '1/3' }
+          - { script: 'test:svelte-async:dev', project: 'js', shard: '2/3' }
+          - { script: 'test:svelte-async:dev', project: 'js', shard: '3/3' }
           - { script: 'test:svelte-async:dev', project: 'no-js' }
-          - { script: 'test:svelte-async:build', project: 'js', shard: '1/2' }
-          - { script: 'test:svelte-async:build', project: 'js', shard: '2/2' }
+          - { script: 'test:svelte-async:build', project: 'js', shard: '1/3' }
+          - { script: 'test:svelte-async:build', project: 'js', shard: '2/3' }
+          - { script: 'test:svelte-async:build', project: 'js', shard: '3/3' }
           - { script: 'test:svelte-async:build', project: 'no-js' }
           # basics and options with ROUTER_RESOLUTION=server
-          - { script: 'test:server-side-route-resolution:dev', project: 'js', shard: '1/2' }
-          - { script: 'test:server-side-route-resolution:dev', project: 'js', shard: '2/2' }
+          - { script: 'test:server-side-route-resolution:dev', project: 'js', shard: '1/3' }
+          - { script: 'test:server-side-route-resolution:dev', project: 'js', shard: '2/3' }
+          - { script: 'test:server-side-route-resolution:dev', project: 'js', shard: '3/3' }
           - { script: 'test:server-side-route-resolution:dev', project: 'no-js' }
-          - { script: 'test:server-side-route-resolution:build', project: 'js', shard: '1/2' }
-          - { script: 'test:server-side-route-resolution:build', project: 'js', shard: '2/2' }
+          - { script: 'test:server-side-route-resolution:build', project: 'js', shard: '1/3' }
+          - { script: 'test:server-side-route-resolution:build', project: 'js', shard: '2/3' }
+          - { script: 'test:server-side-route-resolution:build', project: 'js', shard: '3/3' }
           - { script: 'test:server-side-route-resolution:build', project: 'no-js' }
           # the cross-platform subset of basics on the other browsers and operating systems
-          - { script: 'test:cross-platform:dev', os: windows-latest, workers: 2 }
-          - { script: 'test:cross-platform:build', os: windows-latest, workers: 2 }
-          - { script: 'test:cross-platform:dev', browser: firefox, workers: 2 }
-          - { script: 'test:cross-platform:build', browser: firefox, workers: 2 }
-          - { script: 'test:cross-platform:dev', os: macOS-latest, browser: webkit, workers: 2 }
-          - { script: 'test:cross-platform:build', os: macOS-latest, browser: webkit, workers: 2 }
+          - { script: 'test:cross-platform:dev', os: windows-latest }
+          - { script: 'test:cross-platform:build', os: windows-latest }
+          - { script: 'test:cross-platform:dev', browser: firefox }
+          - { script: 'test:cross-platform:build', browser: firefox }
+          - { script: 'test:cross-platform:dev', os: macOS-latest, browser: webkit, workers: 3 }
+          - { script: 'test:cross-platform:build', os: macOS-latest, browser: webkit, workers: 3 }
           # `vite` swaps in a pnpm-workspace.yaml catalog, e.g. to test a beta
           # - { script: 'test:kit:dev:basics', vite: 'beta' }
     env:
