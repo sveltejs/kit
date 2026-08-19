@@ -14,8 +14,9 @@ beforeAll(async () => {
 
 /**
  * @param {(event: import('@sveltejs/kit').RequestEvent) => AsyncGenerator<any>} run
+ * @param {Partial<import('types').SSROptions>} [options]
  */
-function create_response(run) {
+function create_response(run, options = {}) {
 	const event = /** @type {import('@sveltejs/kit').RequestEvent} */ ({
 		request: new Request('http://localhost/_app/remote/test?payload=undefined')
 	});
@@ -23,7 +24,7 @@ function create_response(run) {
 	return create_live_query_response(
 		event,
 		/** @type {import('types').RequestState} */ ({}),
-		/** @type {import('types').SSROptions} */ ({}),
+		/** @type {import('types').SSROptions} */ (options),
 		/** @type {import('types').RemoteQueryLiveInternals} */ (/** @type {unknown} */ ({ run })),
 		undefined
 	);
@@ -31,6 +32,7 @@ function create_response(run) {
 
 // https://github.com/sveltejs/kit/issues/16778
 test('cancellation ignores a value that arrives after generator.next()', async () => {
+	const handle_error = vi.fn(() => ({ message: 'oops' }));
 	/** @type {() => void} */
 	let resume = () => {};
 	const parked = new Promise((resolve) => (resume = () => resolve(undefined)));
@@ -38,12 +40,15 @@ test('cancellation ignores a value that arrives after generator.next()', async (
 	let did_park = () => {};
 	const parked_on_next = new Promise((resolve) => (did_park = () => resolve(undefined)));
 
-	const response = create_response(async function* () {
-		yield 'initial';
-		did_park();
-		await parked;
-		yield 'late';
-	});
+	const response = create_response(
+		async function* () {
+			yield 'initial';
+			did_park();
+			await parked;
+			yield 'late';
+		},
+		{ hooks: /** @type {any} */ ({ handleError: handle_error }) }
+	);
 
 	const reader = /** @type {ReadableStream<Uint8Array>} */ (response.body).getReader();
 	const first = await reader.read();
@@ -58,6 +63,9 @@ test('cancellation ignores a value that arrives after generator.next()', async (
 
 	resume();
 	await new Promise((resolve) => setTimeout(resolve, 0));
+
+	// enqueueing the late value would throw and route through handleError
+	expect(handle_error).not.toHaveBeenCalled();
 });
 
 test('cancellation aborts the generator request signal and runs cleanup', async () => {
