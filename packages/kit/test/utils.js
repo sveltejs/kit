@@ -292,6 +292,23 @@ if (!test_browser_device) {
 	);
 }
 
+const test_mode = process.env.DEV ? 'dev' : 'build';
+
+const all_projects = [
+	{ name: `${test_browser}-${test_mode}`, use: { javaScriptEnabled: true } },
+	{ name: `${test_browser}-${test_mode}-no-js`, use: { javaScriptEnabled: false } }
+];
+
+// the projects run the same files with and without JS and cost very different amounts of
+// time, so CI runs them as separate jobs — a shard would otherwise straddle the two
+const test_project = process.env.KIT_E2E_PROJECT;
+
+if (test_project && test_project !== 'js' && test_project !== 'no-js') {
+	throw new Error(
+		`invalid test project specified: KIT_E2E_PROJECT=${test_project}. Allowed values: js, no-js`
+	);
+}
+
 /** @type {Record<string, number>} */
 const ports = {
 	'test-async': 5300,
@@ -348,20 +365,9 @@ export const config = defineConfig({
 		port
 	},
 	retries: process.env.CI ? 2 : number_from_env('KIT_E2E_RETRIES', 0),
-	projects: [
-		{
-			name: `${test_browser}-${process.env.DEV ? 'dev' : 'build'}`,
-			use: {
-				javaScriptEnabled: true
-			}
-		},
-		{
-			name: `${test_browser}-${process.env.DEV ? 'dev' : 'build'}-no-js`,
-			use: {
-				javaScriptEnabled: false
-			}
-		}
-	],
+	projects: test_project
+		? all_projects.filter((project) => project.use.javaScriptEnabled === (test_project === 'js'))
+		: all_projects,
 	use: {
 		...test_browser_device,
 		screenshot: 'only-on-failure',

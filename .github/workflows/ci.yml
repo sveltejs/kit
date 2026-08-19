@@ -67,6 +67,7 @@ jobs:
             vite: 'current'
             mode: 'dev'
             suite: 'basics'
+            project: 'js'
             shard: '1/2'
           - node-version: 24
             os: ubuntu-latest
@@ -74,7 +75,15 @@ jobs:
             vite: 'current'
             mode: 'dev'
             suite: 'basics'
+            project: 'js'
             shard: '2/2'
+          - node-version: 24
+            os: ubuntu-latest
+            e2e-browser: 'chromium'
+            vite: 'current'
+            mode: 'dev'
+            suite: 'basics'
+            project: 'no-js'
           - node-version: 24
             os: ubuntu-latest
             e2e-browser: 'chromium'
@@ -87,6 +96,7 @@ jobs:
             vite: 'current'
             mode: 'build'
             suite: 'basics'
+            project: 'js'
             shard: '1/2'
           - node-version: 24
             os: ubuntu-latest
@@ -94,7 +104,15 @@ jobs:
             vite: 'current'
             mode: 'build'
             suite: 'basics'
+            project: 'js'
             shard: '2/2'
+          - node-version: 24
+            os: ubuntu-latest
+            e2e-browser: 'chromium'
+            vite: 'current'
+            mode: 'build'
+            suite: 'basics'
+            project: 'no-js'
           - node-version: 24
             os: ubuntu-latest
             e2e-browser: 'chromium'
@@ -109,6 +127,7 @@ jobs:
       KIT_E2E_BROWSER: ${{matrix.e2e-browser}}
       MATRIX_VITE: ${{matrix.vite}}
       KIT_E2E_SHARD: ${{matrix.shard}}
+      KIT_E2E_PROJECT: ${{matrix.project}}
     steps:
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -206,18 +225,27 @@ jobs:
     env:
       KIT_E2E_WORKERS: '4'
       KIT_E2E_SHARD: ${{ matrix.shard }}
+      KIT_E2E_PROJECT: ${{ matrix.project }}
     strategy:
       fail-fast: false
       matrix:
         include:
           - mode: 'dev'
+            project: 'js'
             shard: '1/2'
           - mode: 'dev'
+            project: 'js'
             shard: '2/2'
+          - mode: 'dev'
+            project: 'no-js'
           - mode: 'build'
+            project: 'js'
             shard: '1/2'
           - mode: 'build'
+            project: 'js'
             shard: '2/2'
+          - mode: 'build'
+            project: 'no-js'
     steps:
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -245,18 +273,27 @@ jobs:
     env:
       KIT_E2E_WORKERS: '4'
       KIT_E2E_SHARD: ${{ matrix.shard }}
+      KIT_E2E_PROJECT: ${{ matrix.project }}
     strategy:
       fail-fast: false
       matrix:
         include:
           - mode: 'dev'
+            project: 'js'
             shard: '1/2'
           - mode: 'dev'
+            project: 'js'
             shard: '2/2'
+          - mode: 'dev'
+            project: 'no-js'
           - mode: 'build'
+            project: 'js'
             shard: '1/2'
           - mode: 'build'
+            project: 'js'
             shard: '2/2'
+          - mode: 'build'
+            project: 'no-js'
     steps:
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
