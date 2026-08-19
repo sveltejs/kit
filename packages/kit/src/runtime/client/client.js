@@ -474,6 +474,19 @@ export function start(_app, _target, data) {
 }
 
 /**
+ * @template T
+ * @param {Map<string, Map<string, T>>} map
+ * @returns {Generator<[string, T]>} every entry of the cache map, keyed by remote key
+ */
+function* cache_entries(map) {
+	for (const [id, entries] of map) {
+		for (const [payload, entry] of entries) {
+			yield [create_remote_key(id, payload), entry];
+		}
+	}
+}
+
+/**
  * @param {import('./types.js').SvelteKitApp} _app
  * @param {HTMLElement} _target
  * @param {Parameters<typeof _hydrate>[1]} [data]
@@ -615,19 +628,14 @@ async function _invalidate(reset_page_state = true) {
 	/** @type {Map<string, Promise<void>>} */
 	const live_query_reconnects = new Map();
 	if (force_invalidation) {
-		for (const entries of query_map.values()) {
-			for (const { resource } of entries.values()) {
-				void resource.refresh();
-			}
+		for (const [, { resource }] of cache_entries(query_map)) {
+			void resource.refresh();
 		}
 
-		for (const [query_id, entries] of live_query_map) {
-			for (const [payload, { resource }] of entries) {
-				const key = create_remote_key(query_id, payload);
-				const promise = resource.reconnect();
-				promise.catch(noop);
-				live_query_reconnects.set(key, promise);
-			}
+		for (const [key, { resource }] of cache_entries(live_query_map)) {
+			const promise = resource.reconnect();
+			promise.catch(noop);
+			live_query_reconnects.set(key, promise);
 		}
 	}
 
@@ -669,18 +677,13 @@ async function _invalidate(reset_page_state = true) {
 	// only wait for promises that are connected to queries that still exist
 	/** @type {Promise<any>[]} */
 	const promises = [];
-	for (const entries of query_map.values()) {
-		for (const { resource } of entries.values()) {
-			promises.push(resource);
-		}
+	for (const [, { resource }] of cache_entries(query_map)) {
+		promises.push(resource);
 	}
-	for (const [query_id, entries] of live_query_map) {
-		for (const payload of entries.keys()) {
-			const key = create_remote_key(query_id, payload);
-			const promise = live_query_reconnects.get(key);
-			if (promise) {
-				promises.push(promise);
-			}
+	for (const [key] of cache_entries(live_query_map)) {
+		const promise = live_query_reconnects.get(key);
+		if (promise) {
+			promises.push(promise);
 		}
 	}
 
@@ -767,20 +770,16 @@ export async function _goto(url, options = {}, redirect_count = 0, nav_token = {
 			if (options.refreshAll) {
 				force_invalidation = true;
 				query_keys = new Set();
-				for (const [id, entries] of query_map) {
-					for (const [payload, entry] of entries) {
-						// don't refresh yet, as some queries will be unrendered,
-						// but clear caches so that newly rendered queries
-						// don't use stale data. TODO same for `live_query_map`
-						entry.resource?.reset();
-						query_keys.add(create_remote_key(id, payload));
-					}
+				for (const [key, entry] of cache_entries(query_map)) {
+					// don't refresh yet, as some queries will be unrendered,
+					// but clear caches so that newly rendered queries
+					// don't use stale data. TODO same for `live_query_map`
+					entry.resource?.reset();
+					query_keys.add(key);
 				}
 				live_query_keys = new Set();
-				for (const [id, entries] of live_query_map) {
-					for (const payload of entries.keys()) {
-						live_query_keys.add(create_remote_key(id, payload));
-					}
+				for (const [key] of cache_entries(live_query_map)) {
+					live_query_keys.add(key);
 				}
 			}
 
@@ -796,18 +795,14 @@ export async function _goto(url, options = {}, redirect_count = 0, nav_token = {
 		void tick()
 			.then(tick)
 			.then(() => {
-				for (const [id, entries] of query_map) {
-					for (const [payload, { resource }] of entries) {
-						if (query_keys?.has(create_remote_key(id, payload))) {
-							void resource.start();
-						}
+				for (const [key, { resource }] of cache_entries(query_map)) {
+					if (query_keys?.has(key)) {
+						void resource.start();
 					}
 				}
-				for (const [id, entries] of live_query_map) {
-					for (const [payload, { resource }] of entries) {
-						if (live_query_keys?.has(create_remote_key(id, payload))) {
-							void resource.reconnect();
-						}
+				for (const [key, { resource }] of cache_entries(live_query_map)) {
+					if (live_query_keys?.has(key)) {
+						void resource.reconnect();
 					}
 				}
 			});
