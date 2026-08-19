@@ -46,19 +46,20 @@ jobs:
       - run: pnpm run lint
       - run: cd packages/kit && pnpm prepublishOnly && { [ "`git status --porcelain=v1`" == "" ] || (echo "Generated types have changed — please run prepublishOnly locally and commit the changes after you have reviewed them"; git diff; exit 1); }
       - run: pnpm run check
-  unit:
-    runs-on: ${{ matrix.os }}
+  test:
+    # unit tests for kit and every other package; `script` is a root package.json script
+    runs-on: ${{ matrix.os || 'ubuntu-latest' }}
     timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-latest
-            node-version: 22
-          - os: ubuntu-latest
-            node-version: 24
-          - os: windows-latest
-            node-version: 24
+          - { script: 'test:kit:unit', node-version: 22 }
+          - { script: 'test:kit:unit', node-version: 24 }
+          - { script: 'test:kit:unit', node-version: 24, os: windows-latest }
+          - { script: 'test:others', node-version: 22 }
+          - { script: 'test:others', node-version: 24 }
+          - { script: 'test:others:unit', node-version: 24, os: windows-latest }
     steps:
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -68,7 +69,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - run: pnpm run sync-all
-      - run: pnpm test:kit:unit
+      - run: pnpm ${{ matrix.script }}
   e2e:
     # every Playwright leg; `script` is a root package.json script, see test/utils.js for the env
     runs-on: ${{ matrix.os || 'ubuntu-latest' }}
@@ -148,30 +149,3 @@ jobs:
           retention-days: 3
           name: test-failure-${{ github.run_id }}-${{ strategy.job-index }}
           path: test-results.tar.gz
-  test-others:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [22, 24]
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: ./.github/actions/node-setup
-        with:
-          node-version: ${{ matrix.node-version }}
-      - run: cd packages/kit && pnpm prepublishOnly
-      - run: pnpm run test:others
-  test-others-windows:
-    runs-on: windows-latest
-    timeout-minutes: 30
-    steps:
-      - run: git config --global core.autocrlf false
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: ./.github/actions/node-setup
-        with:
-          node-version: 24
-      - run: cd packages/kit && pnpm prepublishOnly
-      - run: pnpm run test:others:unit
