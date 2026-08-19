@@ -299,8 +299,7 @@ const all_projects = [
 	{ name: `${test_browser}-${test_mode}-no-js`, use: { javaScriptEnabled: false } }
 ];
 
-// the projects run the same files with and without JS and cost very different amounts of
-// time, so CI runs them as separate jobs — a shard would otherwise straddle the two
+// the two projects cost very different amounts of time, so CI runs them as separate jobs
 const test_project = process.env.KIT_E2E_PROJECT;
 
 if (test_project && test_project !== 'js' && test_project !== 'no-js') {
@@ -336,7 +335,7 @@ if (!port) {
  * read process.env[name] as a one-based `current/total` shard, e.g. `1/3`
  *
  * @param {string} name of process.env value to read
- * @return {{ current: number, total: number } | undefined} undefined if process.env[name] isn't set
+ * @returns {{ current: number, total: number } | undefined} undefined if process.env[name] isn't set
  * @throws {Error} when value cannot be parsed to a shard
  */
 function shard_from_env(name) {
