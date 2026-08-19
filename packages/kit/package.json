@@ -84,7 +84,7 @@
 		"test:dev:rest": "pnpm -r --workspace-concurrency 2 --filter=\"./test/**\" --filter=\"!test-basics\" test:dev",
 		"test:build:basics": "pnpm --filter=test-basics test:build",
 		"test:build:rest": "pnpm -r --workspace-concurrency 2 --filter=\"./test/**\" --filter=\"!test-basics\" test:build",
-		"test:cross-platform:dev": "pnpm test:unit && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:cross-platform:dev",
+		"test:cross-platform:dev": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:cross-platform:dev",
 		"test:cross-platform:build": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:cross-platform:build",
 		"test:server-side-route-resolution:dev": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:server-side-route-resolution:dev",
 		"test:server-side-route-resolution:build": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:server-side-route-resolution:build",
