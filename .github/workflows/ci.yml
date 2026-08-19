@@ -26,7 +26,6 @@ on:
 env:
   # we call `pnpm playwright install` instead
   PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
-  KIT_E2E_WORKERS: '4'
 
 # dedupe push/pull_request runs for the same ref and cancel superseded runs
 concurrency:
@@ -78,7 +77,6 @@ jobs:
           #   vite: 'beta'
     env:
       KIT_E2E_BROWSER: ${{matrix.e2e-browser}}
-      KIT_E2E_WORKERS: '2'
       MATRIX_VITE: ${{matrix.vite}}
     steps:
       - run: git config --global core.autocrlf false
@@ -174,6 +172,8 @@ jobs:
   test-kit-server-side-route-resolution:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      KIT_E2E_WORKERS: '4'
     strategy:
       fail-fast: false
       matrix:
@@ -204,6 +204,8 @@ jobs:
   test-kit-svelte-async:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      KIT_E2E_WORKERS: '4'
     strategy:
       fail-fast: false
       matrix:
