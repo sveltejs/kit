@@ -71,7 +71,8 @@ jobs:
       - run: pnpm run sync-all
       - run: pnpm ${{ matrix.script }}
   e2e:
-    # every Playwright leg; `script` is a root package.json script, see test/utils.js for the env
+    # every Playwright leg. `script` runs in the `app`s named, or in packages/kit without `app`;
+    # see test/utils.js for the env
     runs-on: ${{ matrix.os || 'ubuntu-latest' }}
     timeout-minutes: 30
     strategy:
@@ -80,42 +81,42 @@ jobs:
         include:
           # basics is the biggest app: its js project is sharded and its no-js project runs
           # alone; the other apps boot once in the `rest` legs
-          - { script: 'test:kit:dev:basics', project: 'js', shard: '1/2' }
-          - { script: 'test:kit:dev:basics', project: 'js', shard: '2/2' }
-          - { script: 'test:kit:dev:basics', project: 'no-js' }
-          - { script: 'test:kit:dev:rest', workers: 2 }
-          - { script: 'test:kit:build:basics', project: 'js', shard: '1/2' }
-          - { script: 'test:kit:build:basics', project: 'js', shard: '2/2' }
-          - { script: 'test:kit:build:basics', project: 'no-js' }
-          - { script: 'test:kit:build:rest', workers: 2 }
-          # basics again with SVELTE_ASYNC=true
-          - { script: 'test:svelte-async:dev', project: 'js', shard: '1/2' }
-          - { script: 'test:svelte-async:dev', project: 'js', shard: '2/2' }
-          - { script: 'test:svelte-async:dev', project: 'no-js' }
-          - { script: 'test:svelte-async:build', project: 'js', shard: '1/2' }
-          - { script: 'test:svelte-async:build', project: 'js', shard: '2/2' }
-          - { script: 'test:svelte-async:build', project: 'no-js' }
-          # basics and options with ROUTER_RESOLUTION=server
-          - { script: 'test:server-side-route-resolution:dev', project: 'js', shard: '1/2' }
-          - { script: 'test:server-side-route-resolution:dev', project: 'js', shard: '2/2' }
-          - { script: 'test:server-side-route-resolution:dev', project: 'no-js' }
-          - { script: 'test:server-side-route-resolution:build', project: 'js', shard: '1/2' }
-          - { script: 'test:server-side-route-resolution:build', project: 'js', shard: '2/2' }
-          - { script: 'test:server-side-route-resolution:build', project: 'no-js' }
+          - { app: basics, script: pw:dev, project: js, shard: 1/2 }
+          - { app: basics, script: pw:dev, project: js, shard: 2/2 }
+          - { app: basics, script: pw:dev, project: no-js }
+          - { script: test:dev:rest, workers: 2 }
+          - { app: basics, script: pw:build, project: js, shard: 1/2 }
+          - { app: basics, script: pw:build, project: js, shard: 2/2 }
+          - { app: basics, script: pw:build, project: no-js }
+          - { script: test:build:rest, workers: 2 }
+          # the server config variants each app declares in its playwright.config.js
+          - { app: basics, script: pw:dev, variant: async, project: js, shard: 1/2 }
+          - { app: basics, script: pw:dev, variant: async, project: js, shard: 2/2 }
+          - { app: basics, script: pw:dev, variant: async, project: no-js }
+          - { app: basics, script: pw:build, variant: async, project: js, shard: 1/2 }
+          - { app: basics, script: pw:build, variant: async, project: js, shard: 2/2 }
+          - { app: basics, script: pw:build, variant: async, project: no-js }
+          - { app: basics options, script: pw:dev, variant: resolution, project: js, shard: 1/2 }
+          - { app: basics options, script: pw:dev, variant: resolution, project: js, shard: 2/2 }
+          - { app: basics options, script: pw:dev, variant: resolution, project: no-js }
+          - { app: basics options, script: pw:build, variant: resolution, project: js, shard: 1/2 }
+          - { app: basics options, script: pw:build, variant: resolution, project: js, shard: 2/2 }
+          - { app: basics options, script: pw:build, variant: resolution, project: no-js }
           # the cross-platform subset of basics on the other browsers and operating systems
-          - { script: 'test:cross-platform:dev', os: windows-latest, workers: 2 }
-          - { script: 'test:cross-platform:build', os: windows-latest, workers: 2 }
-          - { script: 'test:cross-platform:dev', browser: firefox }
-          - { script: 'test:cross-platform:build', browser: firefox }
-          - { script: 'test:cross-platform:dev', os: macOS-latest, browser: webkit, workers: 3 }
-          - { script: 'test:cross-platform:build', os: macOS-latest, browser: webkit, workers: 3 }
+          - { script: test:cross-platform:dev, os: windows-latest, workers: 2 }
+          - { script: test:cross-platform:build, os: windows-latest, workers: 2 }
+          - { script: test:cross-platform:dev, browser: firefox }
+          - { script: test:cross-platform:build, browser: firefox }
+          - { script: test:cross-platform:dev, os: macOS-latest, browser: webkit, workers: 3 }
+          - { script: test:cross-platform:build, os: macOS-latest, browser: webkit, workers: 3 }
           # `vite` swaps in a pnpm-workspace.yaml catalog, e.g. to test a beta
-          # - { script: 'test:kit:dev:basics', vite: 'beta' }
+          # - { app: basics, script: pw:dev, vite: 'beta' }
     env:
       KIT_E2E_BROWSER: ${{ matrix.browser || 'chromium' }}
       KIT_E2E_WORKERS: ${{ matrix.workers || 4 }}
       KIT_E2E_SHARD: ${{ matrix.shard }}
       KIT_E2E_PROJECT: ${{ matrix.project }}
+      KIT_E2E_VARIANT: ${{ matrix.variant }}
     steps:
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -135,7 +136,10 @@ jobs:
           os: ${{ matrix.os || 'ubuntu-latest' }}
           e2e-browser: ${{ matrix.browser }}
       - run: pnpm run sync-all
-      - run: pnpm ${{ matrix.script }}
+      - shell: bash
+        run: |
+          for app in ${{ matrix.app }}; do filter="$filter --filter=test-$app"; done
+          pnpm --dir packages/kit --workspace-concurrency=1 $filter ${{ matrix.script }}
       - name: Print flaky test report
         run: node scripts/print-flaky-test-report.js
       - name: Archive test results
