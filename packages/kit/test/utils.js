@@ -315,6 +315,28 @@ if (!port) {
 	throw new Error(`No test server port configured for ${package_name}`);
 }
 
+/**
+ * read process.env[name] as a one-based `current/total` shard, e.g. `1/3`
+ *
+ * @param {string} name of process.env value to read
+ * @return {{ current: number, total: number } | undefined} undefined if process.env[name] isn't set
+ * @throws {Error} when value cannot be parsed to a shard
+ */
+function shard_from_env(name) {
+	const value = process.env[name];
+	if (!value) return undefined;
+
+	const [current, total] = value.split('/').map(Number);
+
+	if (!Number.isInteger(current) || !Number.isInteger(total) || current < 1 || current > total) {
+		throw new Error(
+			`process.env.${name} must be a one-based \`current/total\` shard but is "${value}"`
+		);
+	}
+
+	return { current, total };
+}
+
 export const config = defineConfig({
 	forbidOnly: !!process.env.CI,
 	// generous timeouts on CI
@@ -346,6 +368,7 @@ export const config = defineConfig({
 		trace: 'retain-on-failure'
 	},
 	workers: number_from_env('KIT_E2E_WORKERS', process.env.CI ? 2 : undefined),
+	shard: shard_from_env('KIT_E2E_SHARD'),
 	reporter: process.env.CI
 		? [
 				['dot'],
