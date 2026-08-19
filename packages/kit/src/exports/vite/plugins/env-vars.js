@@ -5,10 +5,8 @@ import path from 'node:path';
 import * as sync from '../../../core/sync/sync.js';
 import {
 	create_sveltekit_env,
-	create_sveltekit_env_private,
-	create_sveltekit_env_public,
+	create_sveltekit_env_exports,
 	create_sveltekit_env_service_worker,
-	create_sveltekit_env_service_worker_dev,
 	resolve_env_entry
 } from '../../../core/env.js';
 import { import_peer } from '../../../utils/import.js';
@@ -74,17 +72,31 @@ export function plugin_env_vars(config, callback) {
 
 		write_if_changed(
 			`${dir}/public/server.js`,
-			create_sveltekit_env_public(vars, env, `import { rendered_env as env } from '../config.js';`)
+			create_sveltekit_env_exports(
+				vars,
+				env,
+				true,
+				`import { rendered_env as env } from '../config.js';`
+			)
 		);
 
-		write_if_changed(`${dir}/private/server.js`, create_sveltekit_env_private(vars, env));
+		write_if_changed(
+			`${dir}/private/server.js`,
+			create_sveltekit_env_exports(
+				vars,
+				env,
+				false,
+				`import { dynamic_private_env as env } from '../config.js';`
+			)
+		);
 
 		if (is_build) {
 			write_if_changed(
 				`${dir}/public/client.js`,
-				create_sveltekit_env_public(
+				create_sveltekit_env_exports(
 					vars,
 					env,
+					true,
 					`import { payload } from ${s(posixify(path.relative(`${dir}/public`, `${runtime_directory}/client/payload.js`)))};\nconst env = payload.env;`
 				)
 			);
@@ -96,23 +108,23 @@ export function plugin_env_vars(config, callback) {
 					env,
 					config.version.name,
 					`globalThis.__sveltekit_${version_hash}`,
-					config.paths.base,
-					config.appDir
+					{ base: config.paths.base, app_dir: config.appDir }
 				)
 			);
 		} else {
 			write_if_changed(
 				`${dir}/public/client.js`,
-				create_sveltekit_env_public(vars, env, `const { env } = globalThis.__sveltekit_dev;`)
+				create_sveltekit_env_exports(vars, env, true, `const { env } = globalThis.__sveltekit_dev;`)
 			);
 
 			write_if_changed(
 				`${dir}/service-worker.js`,
-				create_sveltekit_env_service_worker_dev(
+				create_sveltekit_env_service_worker(
 					vars,
 					env,
 					config.version.name,
-					'globalThis.__sveltekit_dev'
+					'globalThis.__sveltekit_dev',
+					null
 				)
 			);
 		}
