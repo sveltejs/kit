@@ -1,7 +1,7 @@
 /** @import { RequestEvent, SSRManifest } from '@sveltejs/kit' */
 /** @import { RemoteForm } from '$app/server' */
 /** @import { ActionResult } from '$app/forms' */
-/** @import { RemoteFormInternals, RemoteFunctionData, RemoteFunctionResponse, RemoteInternals, RemoteQueryLiveInternals, RequestState, SSROptions } from 'types' */
+/** @import { RemoteFormInternals, RemoteFunctionData, RemoteFunctionResponse, RemoteInternals, RequestState, SSROptions } from 'types' */
 
 import { error } from '@sveltejs/kit';
 import { Redirect, SvelteKitError } from '@sveltejs/kit/internal';
@@ -15,7 +15,8 @@ import { normalize_error } from '../../utils/error.js';
 import { check_incorrect_fail_use, get_action_location } from './page/actions.js';
 import { DEV } from 'esm-env';
 import { deserialize_binary_form } from '../form-utils.js';
-import { stream_from_iterator, with_version_header } from './utils.js';
+import { text_encoder } from '../utils.js';
+import { with_version_header } from './utils.js';
 
 /**
  * How long (in milliseconds) to wait after the last message was sent before
@@ -23,6 +24,116 @@ import { stream_from_iterator, with_version_header } from './utils.js';
  * an idle timeout from closing an otherwise-quiet `query.live` connection.
  */
 const KEEP_ALIVE_INTERVAL = 30_000;
+
+/**
+ * @param {RequestEvent} event
+ * @param {RequestState} state
+ * @param {SSROptions} options
+ * @param {import('types').RemoteQueryLiveInternals} internals
+ * @param {any} arg
+ */
+export function create_live_query_response(event, state, options, internals, arg) {
+	const cancellation = new AbortController();
+	const live_event = {
+		...event,
+		request: new Request(event.request, {
+			signal: AbortSignal.any([event.request.signal, cancellation.signal])
+		})
+	};
+
+	const generator = internals.run(live_event, state, arg);
+
+	let open = true;
+	let pulling = false;
+	/** @type {ReadableStreamDefaultController<Uint8Array>} */
+	let stream_controller;
+	/** @type {ReturnType<typeof setTimeout> | undefined} */
+	let keep_alive;
+	/** @type {string | undefined} */
+	let result;
+
+	function schedule_keep_alive() {
+		clearTimeout(keep_alive);
+		keep_alive = setTimeout(() => {
+			if (!open) return;
+			stream_controller.enqueue(text_encoder.encode(': keep-alive\n\n'));
+			schedule_keep_alive();
+		}, KEEP_ALIVE_INTERVAL);
+	}
+
+	/** @param {any} data */
+	function send(data) {
+		if (!open) return;
+		stream_controller.enqueue(text_encoder.encode('data: ' + JSON.stringify(data) + '\n\n'));
+		schedule_keep_alive();
+	}
+
+	/** @param {boolean} cancelled */
+	function teardown(cancelled) {
+		if (!open) return;
+		open = false;
+		clearTimeout(keep_alive);
+		cancellation.abort();
+		if (!cancelled) stream_controller.close();
+		// AsyncGenerator.return() cannot interrupt a pending next(). Cleanup is
+		// cooperative via request.signal, so stream cancellation must not await it.
+		void generator.return(undefined).catch(() => {});
+	}
+
+	return new Response(
+		new ReadableStream({
+			start(controller) {
+				stream_controller = controller;
+				schedule_keep_alive();
+			},
+			async pull() {
+				if (!open || pulling) return;
+				pulling = true;
+
+				try {
+					while (open) {
+						const { value, done } = await generator.next();
+
+						if (!open) return;
+
+						if (done) {
+							teardown(false);
+							return;
+						}
+
+						if (result !== (result = stringify(value))) {
+							send({ type: 'result', result });
+							return;
+						}
+					}
+				} catch (error) {
+					if (!open) return;
+
+					if (error instanceof Redirect) {
+						send({ type: 'redirect', location: error.location });
+					} else {
+						const transformed = await handle_error_and_jsonify(event, state, options, error);
+
+						send({ type: 'error', error: transformed });
+					}
+
+					teardown(false);
+				} finally {
+					pulling = false;
+				}
+			},
+			cancel() {
+				teardown(true);
+			}
+		}),
+		{
+			headers: {
+				'cache-control': 'private, no-store',
+				'content-type': 'text/event-stream'
+			}
+		}
+	);
+}
 
 /** @type {typeof handle_remote_call_internal} */
 export async function handle_remote_call(event, state, options, manifest, id) {
@@ -42,11 +153,13 @@ export async function handle_remote_call(event, state, options, manifest, id) {
 }
 
 /**
- * Looks a remote function up in the manifest by its request id.
+ * @param {RequestEvent} event
+ * @param {RequestState} state
+ * @param {SSROptions} options
  * @param {SSRManifest} manifest
  * @param {string} id
  */
-async function resolve_remote_function(manifest, id) {
+async function handle_remote_call_internal(event, state, options, manifest, id) {
 	const [hash, name, additional_args] = id.split('/');
 	const remotes = manifest._.remotes;
 
@@ -57,147 +170,8 @@ async function resolve_remote_function(manifest, id) {
 
 	if (!fn) error(404);
 
-	return { fn, internals: /** @type {RemoteInternals} */ (fn.__), additional_args };
-}
-
-/**
- * @param {RemoteFunctionData} data
- * @param {HeadersInit | undefined} headers
- */
-function result_response(data, headers) {
-	return Response.json(
-		/** @type {RemoteFunctionResponse} */ ({
-			type: 'result',
-			data: stringify(data)
-		}),
-		{ headers }
-	);
-}
-
-/**
- * Handles a `query.live` call: runs the generator and streams its values as
- * server-sent events.
- * @param {RequestEvent} event
- * @param {RequestState} state
- * @param {SSROptions} options
- * @param {RemoteQueryLiveInternals} internals
- */
-function handle_live_query(event, state, options, internals) {
-	if (event.request.method !== 'GET') {
-		throw new SvelteKitError(
-			405,
-			'Method Not Allowed',
-			`\`query.live\` functions must be invoked via GET request, not ${event.request.method}`
-		);
-	}
-
-	const payload = /** @type {string} */ (new URL(event.request.url).searchParams.get('payload'));
-
-	// aborted whenever the stream is torn down, so unlike the request signal it
-	// also fires on response teardown, which the generator could otherwise
-	// never observe
-	const cancellation = new AbortController();
-
-	const live_event = {
-		...event,
-		request: new Request(event.request, {
-			signal: AbortSignal.any([event.request.signal, cancellation.signal])
-		})
-	};
-
-	const generator = internals.run(live_event, state, parse_remote_arg(payload));
-
-	/** @param {any} payload */
-	const frame = (payload) => 'data: ' + JSON.stringify(payload) + '\n\n';
-
-	/** @type {string | undefined} */
-	let result;
-
-	// everything the stream sends, as a generator of SSE strings — it holds no
-	// reference to the stream controller, so it cannot touch a dead one
-	async function* frames() {
-		/** @type {Promise<IteratorResult<any>> | null} */
-		let pending = null;
-		let settled = false;
-		/** @type {() => void} */
-		let wake = () => {};
-		const settle = () => {
-			settled = true;
-			wake();
-		};
-
-		try {
-			while (true) {
-				if (!pending) {
-					settled = false;
-					// one reaction per next() call, so an idle stream doesn't
-					// accumulate one per keep-alive tick
-					pending = generator.next();
-					pending.then(settle, settle);
-				}
-
-				if (!settled) {
-					await new Promise((resolve) => {
-						const timer = setTimeout(resolve, KEEP_ALIVE_INTERVAL);
-						wake = () => {
-							clearTimeout(timer);
-							resolve(undefined);
-						};
-					});
-				}
-
-				if (!settled) {
-					// SSE comments (lines starting with `:`) are ignored by the client
-					yield ': keep-alive\n\n';
-					continue;
-				}
-
-				const winner = await pending;
-				pending = null;
-
-				if (winner.done) return;
-
-				// only send changed data
-				if (result !== (result = stringify(winner.value))) {
-					yield frame({ type: 'result', result });
-				}
-			}
-		} catch (error) {
-			if (!live_event.request.signal.aborted) {
-				if (error instanceof Redirect) {
-					yield frame({ type: 'redirect', location: error.location });
-				} else {
-					yield frame({
-						type: 'error',
-						error: await handle_error_and_jsonify(event, state, options, error)
-					});
-				}
-			}
-		} finally {
-			cancellation.abort();
-			await generator.return(undefined);
-		}
-	}
-
-	return new Response(
-		stream_from_iterator(frames(), () => cancellation.abort()),
-		{
-			headers: {
-				'cache-control': 'private, no-store',
-				'content-type': 'text/event-stream'
-			}
-		}
-	);
-}
-/**
- * @param {RequestEvent} event
- * @param {RequestState} state
- * @param {SSROptions} options
- * @param {SSRManifest} manifest
- * @param {string} id
- */
-async function handle_remote_call_internal(event, state, options, manifest, id) {
-	const { fn, internals, additional_args } = await resolve_remote_function(manifest, id);
+	/** @type {RemoteInternals} */
+	const internals = fn.__;
 
 	event.tracing.current.setAttributes({
 		'sveltekit.remote.call.type': internals.type,
@@ -212,8 +186,27 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 		const data = {};
 
 		switch (internals.type) {
-			case 'query_live':
-				return handle_live_query(event, state, options, internals);
+			case 'query_live': {
+				if (event.request.method !== 'GET') {
+					throw new SvelteKitError(
+						405,
+						'Method Not Allowed',
+						`\`query.live\` functions must be invoked via GET request, not ${event.request.method}`
+					);
+				}
+
+				const payload = /** @type {string} */ (
+					new URL(event.request.url).searchParams.get('payload')
+				);
+
+				return create_live_query_response(
+					event,
+					state,
+					options,
+					internals,
+					parse_remote_arg(payload)
+				);
+			}
 
 			case 'query_batch': {
 				if (event.request.method !== 'POST') {
@@ -274,7 +267,13 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 
 				if (data._.issues) {
 					// special case — don't serialize refreshes/reconnects
-					return result_response(data, headers);
+					return Response.json(
+						/** @type {RemoteFunctionResponse} */ ({
+							type: 'result',
+							data: stringify(data)
+						}),
+						{ headers }
+					);
 				}
 
 				break;
@@ -316,12 +315,24 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 
 		await collect_remote_data(data, event, state, options);
 
-		return result_response(data, headers);
+		return Response.json(
+			/** @type {RemoteFunctionResponse} */ ({
+				type: 'result',
+				data: stringify(data)
+			}),
+			{ headers }
+		);
 	} catch (error) {
 		if (error instanceof Redirect) {
 			const data = await collect_remote_data({ redirect: error.location }, event, state, options);
 
-			return result_response(data, headers);
+			return Response.json(
+				/** @type {RemoteFunctionResponse} */ ({
+					type: 'result',
+					data: stringify(data)
+				}),
+				{ headers }
+			);
 		}
 
 		const transformed = await handle_error_and_jsonify(event, state, options, error);
