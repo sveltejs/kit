@@ -695,8 +695,6 @@ export function form(id) {
 			validate: {
 				/** @type {RemoteForm<any, any>['validate']} */
 				value: async ({ all = false, preflightOnly = false } = {}) => {
-					if (!element) return;
-
 					const id = ++validate_id;
 
 					// wait a tick in case the user is calling validate() right after set() which takes time to propagate
