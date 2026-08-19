@@ -93,8 +93,36 @@
 		"generate:types": "node scripts/generate-dts.js"
 	},
 	"imports": {
+		"#app/env": {
+			"types": "./src/runtime/app/env/client.js",
+			"workerd": "./src/runtime/app/env/server.js",
+			"browser": "./src/runtime/app/env/client.js",
+			"default": "./src/runtime/app/env/server.js"
+		},
+		"#app/env/public": {
+			"workerd": "./src/runtime/app/env/public/server.js",
+			"browser": "./src/runtime/app/env/public/client.js",
+			"default": "./src/runtime/app/env/public/server.js"
+		},
+		"#app/env/server": {
+			"workerd": "./src/runtime/app/env/server.js",
+			"browser": "./src/runtime/invalid-import.js",
+			"default": "./src/runtime/app/env/server.js"
+		},
+		"#app/forms": {
+			"types": "./src/runtime/app/forms/client.js",
+			"workerd": "./src/runtime/app/forms/server.js",
+			"browser": "./src/runtime/app/forms/client.js",
+			"default": "./src/runtime/app/forms/server.js"
+		},
 		"#app/internal/transport": {
 			"default": "./src/runtime/app/internal/transport.js"
+		},
+		"#app/navigation": {
+			"types": "./src/runtime/app/navigation/client.js",
+			"workerd": "./src/runtime/app/navigation/server.js",
+			"browser": "./src/runtime/app/navigation/client.js",
+			"default": "./src/runtime/app/navigation/server.js"
 		},
 		"#app/paths": {
 			"types": "./src/runtime/app/paths/internal.d.ts",
@@ -102,10 +130,17 @@
 			"browser": "./src/runtime/app/paths/client.js",
 			"default": "./src/runtime/app/paths/server.js"
 		},
-		"#app/env/public": {
-			"workerd": "./src/runtime/app/env/public/server.js",
-			"browser": "./src/runtime/app/env/public/client.js",
-			"default": "./src/runtime/app/env/public/server.js"
+		"#app/state": {
+			"types": "./src/runtime/app/state/client.svelte.js",
+			"workerd": "./src/runtime/app/state/server.js",
+			"browser": "./src/runtime/app/state/client.svelte.js",
+			"default": "./src/runtime/app/state/server.js"
+		},
+		"#app/state/client": {
+			"types": "./src/runtime/app/state/client.svelte.js",
+			"workerd": "./src/runtime/invalid-import.js",
+			"browser": "./src/runtime/app/state/client.svelte.js",
+			"default": "./src/runtime/invalid-import.js"
 		},
 		"#internal": {
 			"workerd": "./src/exports/internal/server/index.js",

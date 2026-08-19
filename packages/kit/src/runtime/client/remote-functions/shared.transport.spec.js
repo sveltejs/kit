@@ -11,11 +11,12 @@ vi.mock(new URL('../client.js', import.meta.url).pathname, () => ({
 	_goto: () => {}
 }));
 
-// Mock `state.svelte.js` — imports `navigating` and `page` which are reactive
+// Mock `#app/state/client` — imports `navigating` and `page` which are reactive
 // Svelte state only available in a full SvelteKit runtime.
-vi.mock(new URL('../state.svelte.js', import.meta.url).pathname, () => ({
+vi.mock('#app/state/client', () => ({
 	navigating: { current: null },
 	page: { url: new URL('http://localhost/') },
+	updated: { current: false, check: () => Promise.resolve(false) },
 	notify_version: () => {}
 }));
 

@@ -828,7 +828,7 @@ declare module '@sveltejs/kit' {
 		complete(entry: { generateManifest(opts: { relativePath: string }): string }): MaybePromise<void>;
 	}
 
-	type HttpMethod = 'GET' | 'HEAD' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'OPTIONS';
+	type HttpMethod = 'GET' | 'HEAD' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'OPTIONS' | 'QUERY';
 
 	interface Logger {
 		(msg: string): void;
@@ -1317,9 +1317,17 @@ declare module '@sveltejs/kit/hooks' {
 		 * `<head>` tag; if `output.linkHeaderPreload` is enabled, dynamically rendered pages use the
 		 * [`Link` response header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Link) instead.
 		 * By default, `js` and `css` files will be preloaded.
+		 *
+		 * For `font` files, `input` also has a `filename` property, the source file's pathname relative
+		 * to the project root, so that a filter can match on it instead of the hashed path. `js` and
+		 * `css` files are bundled and have no single source file name.
 		 * @param input the type of the file and its path
 		 */
-		preload?: (input: { type: 'font' | 'css' | 'js' | 'asset'; path: string }) => boolean;
+		preload?: (
+			input:
+				| { type: 'css' | 'js' | 'asset'; path: string }
+				| { type: 'font'; path: string; filename: string }
+		) => boolean;
 	}
 
 	type AppErrorWithOptionalDefaults = Omit<App.Error, 'status' | 'message'> & {
@@ -1418,8 +1426,9 @@ declare module '@sveltejs/kit/hooks' {
 }
 
 declare module '@sveltejs/kit/node' {
-	export function getRequest({ request, base, bodySizeLimit }: {
+	export function getRequest({ request, response, base, bodySizeLimit }: {
 		request: import("http").IncomingMessage;
+		response?: import("http").ServerResponse;
 		base: string;
 		bodySizeLimit?: number;
 	}): Request;
@@ -2288,19 +2297,16 @@ declare module '@sveltejs/kit/vite' {
 declare module '$app/env' {
 	/**
 	 * `true` if the app is running in the browser.
-	 */
+	 * */
 	export const browser: boolean;
-
 	/**
 	 * Whether the dev server is running. This is not guaranteed to correspond to `NODE_ENV` or `MODE`.
-	 */
+	 * */
 	export const dev: boolean;
-
 	/**
 	 * SvelteKit analyses your app during the `build` step by running it. During this process, `building` is `true`. This also applies during prerendering.
-	 */
+	 * */
 	export const building: boolean;
-
 	/**
 	 * The value of `config.version.name`.
 	 */
@@ -2310,25 +2316,6 @@ declare module '$app/env' {
 }
 
 declare module '$app/forms' {
-	/**
-	 * Use this function to deserialize the response from a form submission.
-	 * Usage:
-	 *
-	 * ```js
-	 * import { deserialize } from '$app/forms';
-	 *
-	 * async function handleSubmit(event) {
-	 *   const response = await fetch('/form?/action', {
-	 *     method: 'POST',
-	 *     body: new FormData(event.target)
-	 *   });
-	 *
-	 *   const result = deserialize(await response.text());
-	 *   // ...
-	 * }
-	 * ```
-	 * */
-	export function deserialize<Success extends Record<string, unknown> | undefined, Failure extends Record<string, unknown> | undefined>(result: string): ActionResult<Success, Failure>;
 	/**
 	 * This action enhances a `<form>` element that otherwise would work without JavaScript.
 	 *
@@ -2416,6 +2403,25 @@ declare module '$app/forms' {
 	 * the redirect location.
 	 * */
 	export function applyAction<Success extends Record<string, unknown> | undefined, Failure extends Record<string, unknown> | undefined>(result: ActionResult<Success, Failure>): Promise<void>;
+	/**
+	 * Use this function to deserialize the response from a form submission.
+	 * Usage:
+	 *
+	 * ```js
+	 * import { deserialize } from '$app/forms';
+	 *
+	 * async function handleSubmit(event) {
+	 *   const response = await fetch('/form?/action', {
+	 *     method: 'POST',
+	 *     body: new FormData(event.target)
+	 *   });
+	 *
+	 *   const result = deserialize(await response.text());
+	 *   // ...
+	 * }
+	 * ```
+	 * */
+	export function deserialize<Success extends Record<string, unknown> | undefined, Failure extends Record<string, unknown> | undefined>(result: string): ActionResult<Success, Failure>;
 	type MaybePromise<T> = T | Promise<T>;
 
 	export {};

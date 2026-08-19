@@ -1,5 +1,5 @@
 import { DEV } from 'esm-env';
-import * as env from '../../app/env/private.js';
+import * as env from '../../app/env/private/index.js';
 export { env };
 
 if (DEV) {

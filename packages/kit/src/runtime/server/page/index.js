@@ -1,6 +1,4 @@
-/** @import { Component } from 'svelte' */
 /** @import { RequestEvent, SSRManifest } from '@sveltejs/kit' */
-/** @import { ActionResult } from '$app/forms' */
 /** @import { PageNodeIndexes, RequestState, RequiredResolveOptions, ServerDataNode, SSRNode, SSROptions } from 'types' */
 import { text } from '@sveltejs/kit';
 import { Redirect } from '@sveltejs/kit/internal';
@@ -8,6 +6,7 @@ import { compact } from '../../../utils/array.js';
 import { get_status, normalize_error } from '../../../utils/error.js';
 import { noop } from '../../../utils/functions.js';
 import { add_data_suffix } from '../../pathname.js';
+import { build_error_chain, nearest_error_pages } from '../../error-chain.js';
 import { redirect_response } from '../utils.js';
 import { static_error_page, handle_error_and_jsonify } from '../errors.js';
 import {
@@ -57,7 +56,7 @@ export async function render_page(event, state, page, options, manifest, nodes, 
 
 		let status = 200;
 
-		/** @type {ActionResult | undefined} */
+		/** @type {import('types').ServerActionResult | undefined} */
 		let action_result = undefined;
 
 		if (is_action_request(event)) {
@@ -278,42 +277,36 @@ export async function render_page(event, state, page, options, manifest, nodes, 
 					const error = await handle_error_and_jsonify(event, state, options, err);
 					const status = error.status;
 
-					while (i--) {
-						if (page.errors[i]) {
-							const index = /** @type {number} */ (page.errors[i]);
-							const node = await manifest._.nodes[index]();
+					for (const { error: index, idx } of nearest_error_pages(i, branch, page.errors)) {
+						const node = await manifest._.nodes[index]();
 
-							let j = i;
-							while (!branch[j]) j -= 1;
+						data_serializer.set_max_nodes(idx);
 
-							data_serializer.set_max_nodes(j + 1);
+						const layouts = compact(branch.slice(0, idx));
+						const nodes = new PageNodes(layouts.map((layout) => layout.node));
+						const error_branch = layouts.concat({
+							node,
+							data: null,
+							server_data: null
+						});
 
-							const layouts = compact(branch.slice(0, j + 1));
-							const nodes = new PageNodes(layouts.map((layout) => layout.node));
-							const error_branch = layouts.concat({
-								node,
-								data: null,
-								server_data: null
-							});
-
-							return await render_response({
-								event,
-								state,
-								options,
-								manifest,
-								resolve_opts,
-								page_config: {
-									ssr: nodes.ssr(),
-									csr: nodes.csr()
-								},
-								status,
-								error,
-								error_components: await load_error_components(ssr, error_branch, page, manifest),
-								branch: error_branch,
-								fetched,
-								data_serializer
-							});
-						}
+						return await render_response({
+							event,
+							state,
+							options,
+							manifest,
+							resolve_opts,
+							page_config: {
+								ssr: nodes.ssr(),
+								csr: nodes.csr()
+							},
+							status,
+							error,
+							error_components: await load_error_components(ssr, error_branch, page, manifest),
+							branch: error_branch,
+							fetched,
+							data_serializer
+						});
 					}
 
 					// if we're still here, it means the error happened in the root layout,
@@ -386,35 +379,10 @@ export async function render_page(event, state, page, options, manifest, nodes, 
  * @param {PageNodeIndexes} page
  * @param {SSRManifest} manifest
  */
-async function load_error_components(ssr, branch, page, manifest) {
-	/** @type {Array<Component | undefined> | undefined} */
-	let error_components;
+function load_error_components(ssr, branch, page, manifest) {
+	if (!ssr) return undefined;
 
-	if (ssr) {
-		let last_idx = -1;
-		error_components = await Promise.all(
-			// eslint-disable-next-line @typescript-eslint/await-thenable
-			branch
-				.map((b, i) => {
-					if (i === 0) return undefined; // root layout wraps root error component, not the other way around
-					if (!b) return null;
-
-					i--;
-					// Find the closest error component up to the previous branch
-					while (i > last_idx + 1 && page.errors[i] === undefined) i -= 1;
-					last_idx = i;
-
-					const idx = page.errors[i];
-					if (idx == null) return undefined;
-
-					return manifest._.nodes[idx]?.()
-						.then((e) => e.component?.())
-						.catch(() => undefined);
-				})
-				// filter out indexes where there was no branch, but keep indexes where there was a branch but no error component
-				.filter((e) => e !== null)
-		);
-	}
-
-	return error_components;
+	return build_error_chain(branch, page.errors, (idx) =>
+		manifest._.nodes[idx]?.().then((e) => e.component?.())
+	);
 }

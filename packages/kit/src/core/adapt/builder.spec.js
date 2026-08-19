@@ -3,8 +3,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { assert, expect, test } from 'vitest';
 import { create_builder } from './builder.js';
-import { posixify } from '../../utils/os.js';
-import { list_files } from '../utils.js';
+import { walk } from '../../utils/filesystem.js';
 
 test('copy files', () => {
 	const cwd = join(import.meta.dirname, 'fixtures/basic');
@@ -41,15 +40,15 @@ test('copy files', () => {
 
 	rmSync(dest, { recursive: true, force: true });
 
-	expect(builder.writeClient(dest)).toEqual(list_files(dest).map(posixify));
-	expect(
-		list_files(`${outDir}/output/client`).filter((file) => !file.startsWith('.vite/'))
-	).toEqual(list_files(dest));
+	expect(builder.writeClient(dest)).toEqual([...walk(dest)]);
+	expect([...walk(`${outDir}/output/client`)].filter((file) => !file.startsWith('.vite/'))).toEqual(
+		[...walk(dest)]
+	);
 
 	rmSync(dest, { recursive: true, force: true });
 
-	expect(builder.writeServer(dest)).toEqual(list_files(dest).map(posixify));
-	expect(list_files(`${outDir}/output/server`)).toEqual(list_files(dest));
+	expect(builder.writeServer(dest)).toEqual([...walk(dest)]);
+	expect([...walk(`${outDir}/output/server`)]).toEqual([...walk(dest)]);
 
 	rmSync(dest, { force: true, recursive: true });
 });

@@ -41,6 +41,50 @@ test.describe('Endpoints', () => {
 });
 
 test.describe('Load', () => {
+	test('does not refetch cross-origin urls in non-canonical form during hydration', async ({
+		page,
+		start_server
+	}) => {
+		let requests = 0;
+
+		const { port } = await start_server((req, res) => {
+			requests += 1;
+			res.writeHead(200, {
+				'Access-Control-Allow-Origin': '*',
+				'content-type': 'application/json'
+			});
+			res.end(JSON.stringify({ count: requests }));
+		});
+
+		await page.goto(`/load/fetch-external-non-canonical?port=${port}`);
+
+		await expect(page.locator('h1')).toHaveText('count: 1');
+		expect(requests).toBe(1);
+	});
+
+	test('busts cache if non-GET request to a non-canonical cross-origin url is made', async ({
+		page,
+		start_server
+	}) => {
+		let gets = 0;
+
+		const { port } = await start_server((req, res) => {
+			if (req.method === 'GET') gets += 1;
+			res.writeHead(200, {
+				'Access-Control-Allow-Origin': '*',
+				'cache-control': 'public, max-age=60',
+				'content-type': 'application/json'
+			});
+			res.end(JSON.stringify({ count: gets }));
+		});
+
+		await page.goto(`/load/fetch-external-non-canonical?port=${port}`);
+		await expect(page.locator('h1')).toHaveText('count: 1');
+
+		await page.locator('button').click();
+		await expect(page.locator('h1')).toHaveText('count: 2');
+	});
+
 	test('load function is only called when necessary', async ({ app, page }) => {
 		test.slow();
 		await page.goto('/load/change-detection/one/a');
@@ -531,6 +575,16 @@ test.describe('Invalidation', () => {
 		expect(await page.textContent('span')).toBe('count: 1');
 	});
 
+	test('load function re-runs when the number of values of a tracked searchParam changes', async ({
+		page,
+		clicknav
+	}) => {
+		await page.goto('/load/invalidation/search-params/universal?a=0');
+		expect(await page.textContent('span')).toBe('count: 0');
+		await clicknav('[data-id="duplicate"]');
+		expect(await page.textContent('span')).toBe('count: 1');
+	});
+
 	test('server-only load functions are re-run following forced invalidation', async ({
 		page,
 		request,
@@ -863,7 +917,7 @@ test.describe('data-sveltekit attributes', () => {
 		const responses = [];
 
 		const nodes_location = process.env.DEV
-			? '.svelte-kit/generated/client/nodes/'
+			? '.svelte-kit/generated/dev/client/nodes/'
 			: '/_app/immutable/nodes/';
 
 		page.on('response', async (response) => {
@@ -2638,6 +2692,19 @@ test.describe('binding_property_non_reactive warn', () => {
 });
 
 test.describe('routing', () => {
+	test('ignores form controls that shadow DOM properties of their form', async ({ page }) => {
+		/** @type {Error[]} */
+		const errors = [];
+		page.on('pageerror', (error) => errors.push(error));
+
+		await page.goto('/routing/clobbered-node-name');
+		await page.locator('#nodeName').hover();
+		await page.locator('#nodeName').dispatchEvent('touchstart');
+		await page.waitForTimeout(100);
+
+		expect(errors).toEqual([]);
+	});
+
 	test('navigating while navigation is in progress sets the correct URL', async ({ page }) => {
 		await page.goto('/routing/long-navigation');
 		await page.click('a[href="/routing"]');
