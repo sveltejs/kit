@@ -121,11 +121,11 @@ export async function render_data(
 
 		return with_version_header(
 			new Response(stream_text(data, chunks), {
-					headers: {
-						// we use a proprietary content type to prevent buffering.
-						// the `text` prefix makes it inspectable
-						'content-type': 'text/sveltekit-data',
-						'cache-control': 'private, no-store'
+				headers: {
+					// we use a proprietary content type to prevent buffering.
+					// the `text` prefix makes it inspectable
+					'content-type': 'text/sveltekit-data',
+					'cache-control': 'private, no-store'
 				}
 			})
 		);
