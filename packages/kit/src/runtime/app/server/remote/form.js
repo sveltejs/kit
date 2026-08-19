@@ -15,7 +15,7 @@ import { ActionFailure, ValidationError } from '@sveltejs/kit/internal';
 import { DEV } from 'esm-env';
 
 const incorrect_fail_message =
-	'`fail()` is for form actions. A remote `form` handler should return a value or throw `invalid()`';
+	'`fail(...)` is for form actions. A remote `form` handler should call `invalid(...)` instead. See https://svelte.dev/docs/kit/remote-functions#form-Programmatic-validation';
 
 /**
  * Creates a form object that can be spread onto a `<form>` element.
