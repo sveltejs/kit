@@ -1,7 +1,6 @@
 /** @import { RequestEvent, SSRManifest } from '@sveltejs/kit' */
 /** @import { RemoteForm } from '$app/server' */
-/** @import { ActionResult } from '$app/forms' */
-/** @import { RemoteFormInternals, RemoteFunctionData, RemoteFunctionResponse, RemoteInternals, RequestState, SSROptions } from 'types' */
+/** @import { RemoteFormInternals, RemoteFunctionData, RemoteFunctionResponse, RemoteInternals, RequestState, ServerActionResult, SSROptions } from 'types' */
 
 import { error } from '@sveltejs/kit';
 import { Redirect, SvelteKitError } from '@sveltejs/kit/internal';
@@ -529,7 +528,7 @@ export async function handle_remote_form_post(event, state, manifest, id) {
  * @param {RequestState} state
  * @param {SSRManifest} manifest
  * @param {string} id
- * @returns {Promise<ActionResult>}
+ * @returns {Promise<ServerActionResult>}
  */
 async function handle_remote_form_post_internal(event, state, manifest, id) {
 	const location = get_action_location(event.url);

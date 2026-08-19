@@ -1,6 +1,6 @@
 /** @import { RequestEvent, Actions } from '@sveltejs/kit' */
 /** @import { ActionResult } from '$app/forms' */
-/** @import { SSROptions, SSRNode, ServerNode } from 'types' */
+/** @import { SSROptions, SSRNode, ServerNode, ServerActionResult } from 'types' */
 import { DEV } from 'esm-env';
 import { HttpError, Redirect, ActionFailure, SvelteKitError } from '@sveltejs/kit/internal';
 import { with_request_store, merge_tracing, record_span } from '@sveltejs/kit/internal/server';
@@ -35,7 +35,7 @@ export async function handle_action_json_request(event, state, options, server) 
  * @param {RequestEvent} event
  * @param {import('types').RequestState} state
  * @param {SSROptions} options
- * @param {ActionResult} result
+ * @param {ServerActionResult} result
  * @returns {Promise<Response>}
  */
 async function action_result_json(event, state, options, result) {
@@ -87,7 +87,7 @@ export function get_action_location(url) {
 /**
  * @param {RequestEvent} event
  * @param {string} location
- * @returns {Extract<ActionResult, { type: 'error' }>}
+ * @returns {Extract<ServerActionResult, { type: 'error' }>}
  */
 export function no_actions_result(event, location) {
 	event.setHeaders({
@@ -98,7 +98,6 @@ export function no_actions_result(event, location) {
 	return {
 		type: 'error',
 		location,
-		// We're lying a bit with the types here; this will be transformed into a proper App.Error object later
 		error: new SvelteKitError(
 			405,
 			'Method Not Allowed',
@@ -110,7 +109,7 @@ export function no_actions_result(event, location) {
 /**
  * @param {unknown} e
  * @param {string} location
- * @returns {Extract<ActionResult, { type: 'redirect' | 'error' }>}
+ * @returns {Extract<ServerActionResult, { type: 'redirect' | 'error' }>}
  */
 export function action_error_result(e, location) {
 	const err = normalize_error(e);
@@ -126,7 +125,6 @@ export function action_error_result(e, location) {
 	return {
 		type: 'error',
 		location,
-		// @ts-expect-error We're lying a bit with the types here; this will be transformed into a proper App.Error object later
 		error: err
 	};
 }
@@ -161,7 +159,7 @@ export function is_action_request(event) {
  * @param {RequestEvent} event
  * @param {import('types').RequestState} state
  * @param {SSRNode['server'] | undefined} server
- * @returns {Promise<ActionResult>}
+ * @returns {Promise<ServerActionResult>}
  */
 export async function handle_action_request(event, state, server) {
 	const actions = server?.actions;
