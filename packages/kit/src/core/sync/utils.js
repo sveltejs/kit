@@ -74,9 +74,10 @@ export function dedent(strings, ...values) {
  * @param {string} original
  * @param {string} typo The common misspelling to check for
  * @param {string} description What was wrong with the filename
+ * @param {string[]} [extensions] the extensions a module may have
  */
-export function check_spelling(original, typo, description) {
-	const misspelled = resolve_entry(typo);
+export function check_spelling(original, typo, description, extensions) {
+	const misspelled = resolve_entry(typo, extensions);
 	if (!misspelled) return;
 
 	const corrected = path.basename(misspelled).replace(path.basename(typo), path.basename(original));
