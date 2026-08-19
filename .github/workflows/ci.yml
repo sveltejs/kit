@@ -66,37 +66,41 @@ jobs:
             e2e-browser: 'chromium'
             vite: 'current'
             mode: 'dev'
-            shard: '1/3'
+            suite: 'basics'
+            shard: '1/2'
           - node-version: 24
             os: ubuntu-latest
             e2e-browser: 'chromium'
             vite: 'current'
             mode: 'dev'
-            shard: '2/3'
+            suite: 'basics'
+            shard: '2/2'
           - node-version: 24
             os: ubuntu-latest
             e2e-browser: 'chromium'
             vite: 'current'
             mode: 'dev'
-            shard: '3/3'
+            suite: 'rest'
           - node-version: 24
             os: ubuntu-latest
             e2e-browser: 'chromium'
             vite: 'current'
             mode: 'build'
-            shard: '1/3'
+            suite: 'basics'
+            shard: '1/2'
           - node-version: 24
             os: ubuntu-latest
             e2e-browser: 'chromium'
             vite: 'current'
             mode: 'build'
-            shard: '2/3'
+            suite: 'basics'
+            shard: '2/2'
           - node-version: 24
             os: ubuntu-latest
             e2e-browser: 'chromium'
             vite: 'current'
             mode: 'build'
-            shard: '3/3'
+            suite: 'rest'
           # - node-version: 24
           #   os: ubuntu-latest
           #   e2e-browser: 'chromium'
@@ -121,7 +125,7 @@ jobs:
           git checkout pnpm-lock.yaml pnpm-workspace.yaml # revert changes to pnpm files to avoid cache key changes
           pnpm --dir packages/kit ls vite
       - run: pnpm run sync-all
-      - run: pnpm test:kit:${{ matrix.mode }}
+      - run: pnpm test:kit:${{ matrix.mode }}${{ matrix.suite && format(':{0}', matrix.suite) || '' }}
       - name: Print flaky test report
         run: node scripts/print-flaky-test-report.js
       - name: Archive test results
@@ -201,12 +205,19 @@ jobs:
     timeout-minutes: 30
     env:
       KIT_E2E_WORKERS: '4'
+      KIT_E2E_SHARD: ${{ matrix.shard }}
     strategy:
       fail-fast: false
       matrix:
         include:
           - mode: 'dev'
+            shard: '1/2'
+          - mode: 'dev'
+            shard: '2/2'
           - mode: 'build'
+            shard: '1/2'
+          - mode: 'build'
+            shard: '2/2'
     steps:
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -226,19 +237,26 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           retention-days: 3
-          name: test-failure-server-side-route-resolution-${{ matrix.mode }}-${{ github.run_id }}
+          name: test-failure-server-side-route-resolution-${{ matrix.mode }}-${{ github.run_id }}-shard-${{ strategy.job-index }}
           path: test-results-server-side-route-resolution-${{ matrix.mode }}.tar.gz
   test-kit-svelte-async:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
       KIT_E2E_WORKERS: '4'
+      KIT_E2E_SHARD: ${{ matrix.shard }}
     strategy:
       fail-fast: false
       matrix:
         include:
           - mode: 'dev'
+            shard: '1/2'
+          - mode: 'dev'
+            shard: '2/2'
           - mode: 'build'
+            shard: '1/2'
+          - mode: 'build'
+            shard: '2/2'
     steps:
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -258,7 +276,7 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           retention-days: 3
-          name: test-failure-svelte-async-${{ matrix.mode }}-${{ github.run_id }}
+          name: test-failure-svelte-async-${{ matrix.mode }}-${{ github.run_id }}-shard-${{ strategy.job-index }}
           path: test-results-svelte-async-${{ matrix.mode }}.tar.gz
   test-others:
     runs-on: ubuntu-latest
