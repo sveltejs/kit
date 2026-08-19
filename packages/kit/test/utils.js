@@ -356,16 +356,13 @@ function shard_from_env(name) {
 }
 
 /**
- * Build the Playwright config for a test app. `env` is passed to the app's server on top of
- * `process.env`; a variant is a named set of additional server env (the app's Vite config reads
- * it) and `KIT_E2E_VARIANT` selects one per run.
+ * Build the Playwright config for a test app. A variant is a named set of server env (the app's
+ * Vite config reads it) and `KIT_E2E_VARIANT` selects one per run; every key any variant declares
+ * is blanked otherwise, so the server can't see a variant's env unless the tests do too.
  *
- * @param {{
- *   env?: Record<string, string>,
- *   variants?: Record<string, Record<string, string>>
- * }} [options]
+ * @param {Record<string, Record<string, string>>} [variants]
  */
-export function configure({ env = {}, variants = {} } = {}) {
+export function configure(variants = {}) {
 	if (variant && !Object.hasOwn(variants, variant)) {
 		throw new Error(
 			`invalid test variant specified: KIT_E2E_VARIANT=${variant}. Allowed values: ${
@@ -374,6 +371,11 @@ export function configure({ env = {}, variants = {} } = {}) {
 		);
 	}
 
+	const env = Object.fromEntries(
+		Object.values(variants)
+			.flatMap(Object.keys)
+			.map((k) => [k, ''])
+	);
 	const project_name = `${test_browser}-${test_mode}${variant ? `-${variant}` : ''}`;
 	const all_projects = [
 		{ name: project_name, use: { javaScriptEnabled: true } },
@@ -386,10 +388,10 @@ export function configure({ env = {}, variants = {} } = {}) {
 		timeout: process.env.CI ? 45000 : 15000,
 		webServer: {
 			command: process.env.DEV
-				? `pnpm dev --force --port ${port} --strictPort`
+				? `pnpm dev --port ${port} --strictPort`
 				: `pnpm build && pnpm preview --port ${port} --strictPort`,
 			port,
-			env: { ...env, ...(variant ? variants[variant] : {}) }
+			env: variant ? { ...env, ...variants[variant] } : env
 		},
 		retries: process.env.CI ? 2 : number_from_env('KIT_E2E_RETRIES', 0),
 		projects: test_project
