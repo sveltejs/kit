@@ -615,7 +615,7 @@ async function _invalidate(reset_page_state = true) {
 
 	const token = (invalidation_token = {});
 	const nav_token = navigation_token;
-	const navigating = is_navigating;
+	const prev_current = current;
 	const intent = await get_navigation_intent(current.url, true);
 
 	// Clear preload, it might be affected by the invalidation.
@@ -655,9 +655,9 @@ async function _invalidate(reset_page_state = true) {
 		);
 	}
 
-	// A navigation started before the invalidation and ended before it finished. The invalidation did not redirect,
-	// hence it likely contains outdated data now, so we ignore it.
-	if (navigating && !is_navigating) {
+	// a navigation applied its result while the invalidation was loading,
+	// so the invalidation contains outdated data for a page we are no longer on
+	if (current !== prev_current) {
 		return;
 	}
 
