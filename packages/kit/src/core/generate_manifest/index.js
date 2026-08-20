@@ -102,7 +102,7 @@ export function generate_manifest({
 
 	// prettier-ignore
 	// String representation of
-	/** @template {import('@sveltejs/kit').SSRManifest} T */
+	/** @template {import('types').SSRManifest} T */
 	const manifest_expr = dedent`
 		{
 			appDir: ${s(build_data.app_dir)},

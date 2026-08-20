@@ -9,7 +9,7 @@ import { fork_state_for_subrequest } from './state.js';
 /**
  * @param {{
  *   event: import('@sveltejs/kit').RequestEvent;
- *   manifest: import('@sveltejs/kit').SSRManifest;
+ *   manifest: import('types').SSRManifest;
  *   state: import('types').RequestState;
  *   get_cookie_header: (url: URL, header: string | null) => string;
  *   set_internal: (name: string, value: string, opts: import('./page/types.js').Cookie['options']) => void;
@@ -193,7 +193,7 @@ function normalize_fetch_input(info, init, url) {
 
 /**
  * @param {Request} request
- * @param {import('@sveltejs/kit').SSRManifest} manifest
+ * @param {import('types').SSRManifest} manifest
  * @param {import('types').RequestState} state
  * @returns {Promise<Response>}
  */

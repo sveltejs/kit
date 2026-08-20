@@ -24,7 +24,7 @@ async function generate_fallback({ manifest_path, env, out_dir, origin, assets }
 	/** @type {import('types').ServerModule} */
 	const { Server } = await import(pathToFileURL(`${server_root}/server/index.js`).href);
 
-	/** @type {import('@sveltejs/kit').SSRManifest} */
+	/** @type {import('types').SSRManifest} */
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
 	set_building();

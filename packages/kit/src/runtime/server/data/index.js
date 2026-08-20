@@ -13,7 +13,7 @@ import { with_version_header } from '../utils.js';
  * @param {import('@sveltejs/kit').RequestEvent} event
  * @param {import('types').RequestState} state
  * @param {{ page: Pick<import('types').PageNodeIndexes, 'layouts' | 'leaf'> | null }} route
- * @param {import('@sveltejs/kit').SSRManifest} manifest
+ * @param {import('types').SSRManifest} manifest
  * @param {boolean[] | undefined} invalidated_data_nodes
  * @param {import('types').TrailingSlash} trailing_slash
  * @returns {Promise<Response>}
