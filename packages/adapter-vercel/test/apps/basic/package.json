@@ -5,7 +5,8 @@
 	"scripts": {
 		"dev": "vite dev",
 		"preview": "vite preview",
-		"build": "vite build && node assert-build-output.js",
+		"build": "vite build",
+		"test:build": "pnpm build && vitest run build.test.js",
 		"test:platform": "playwright test"
 	},
 	"devDependencies": {
@@ -13,7 +14,8 @@
 		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"svelte": "catalog:",
 		"typescript": "catalog:",
-		"vite": "catalog:"
+		"vite": "catalog:",
+		"vitest": "catalog:"
 	},
 	"type": "module"
 }
