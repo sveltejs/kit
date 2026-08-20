@@ -87,24 +87,24 @@ export function create_fetch({ event, manifest, state, get_cookie_header, set_in
 				).slice(1);
 				const filename_html = `${filename}/index.html`; // path may also match path/index.html
 
-				const is_asset = manifest.assets.has(filename) || filename in manifest._.server_assets;
+				const is_asset = manifest.assets.has(filename) || filename in manifest.server_assets;
 				const is_asset_html =
-					manifest.assets.has(filename_html) || filename_html in manifest._.server_assets;
+					manifest.assets.has(filename_html) || filename_html in manifest.server_assets;
 
 				if (is_asset || is_asset_html) {
 					const file = is_asset ? filename : filename_html;
 
 					if (state.read) {
 						const type = is_asset
-							? manifest.mimeTypes[filename.slice(filename.lastIndexOf('.'))]
+							? manifest.mime_types[filename.slice(filename.lastIndexOf('.'))]
 							: 'text/html';
 
 						return new Response(state.read(file), {
 							headers: type ? { 'content-type': type } : {}
 						});
-					} else if (read_implementation && file in manifest._.server_assets) {
-						const length = manifest._.server_assets[file];
-						const type = manifest.mimeTypes[file.slice(file.lastIndexOf('.'))];
+					} else if (read_implementation && file in manifest.server_assets) {
+						const length = manifest.server_assets[file];
+						const type = manifest.mime_types[file.slice(file.lastIndexOf('.'))];
 
 						return new Response(read_implementation(file), {
 							headers: {
