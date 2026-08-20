@@ -1,6 +1,6 @@
 import { noop } from '../../utils/functions.js';
 import { stream_from_iterable } from '../utils.js';
-import { IN_WEBCONTAINER } from '../../constants.js';
+import { IN_WEBCONTAINER, REROUTED_URL_HEADER } from '../../constants.js';
 import { respond } from './respond.js';
 import { create_request_state } from './state.js';
 import { options, get_hooks } from '<sveltekit:generated>/server.js';
@@ -181,16 +181,17 @@ export class Server {
 	 * @param {import('types').InternalRequestOptions} options
 	 */
 	async respond(request, options) {
-		const response = await respond(
-			request,
-			this.#options,
-			this.#manifest,
-			create_request_state(options)
-		);
+		const request_state = create_request_state(options);
+
+		const response = await respond(request, this.#options, this.#manifest, request_state);
 
 		if (DEV) {
 			const error = decoded_responses.get(response);
 			if (error) console.error(fix_stack_trace(error));
+		}
+
+		if (request_state.rerouted_url) {
+			response.headers.set(REROUTED_URL_HEADER, request_state.rerouted_url);
 		}
 
 		return response;

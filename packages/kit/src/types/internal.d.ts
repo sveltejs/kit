@@ -692,6 +692,11 @@ export interface RequestState {
 	 */
 	error: boolean;
 	/**
+	 * The rerouted URL (only if the new pathname differs from the original).
+	 * Used by platforms that serve a catch-all serverless function.
+	 */
+	rerouted_url: string | null;
+	/**
 	 * Allows us to prevent `event.fetch` from making infinitely looping internal requests.
 	 */
 	readonly depth: number;
