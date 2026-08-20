@@ -60,8 +60,12 @@ export function format_response(status, request) {
 		const pathname = strip_resolution_suffix(url.pathname) || '/';
 		log += pathname + styleText('dim', requested.slice(pathname.length));
 	} else if (has_remote_prefix(url)) {
-		const id = /** @type {string} */ (strip_remote_prefix(url).split('/').pop());
-		log += styleText('dim', url.pathname.slice(0, -id.length)) + id + styleText('dim', url.search);
+		const id = /** @type {string} */ (strip_remote_prefix(url));
+		const [file_hash, name, arg_hash] = id.split('/');
+
+		log += styleText('dim', `${url.pathname.slice(0, -id.length)}${file_hash}/`) + name;
+		if (arg_hash) log += styleText('dim', `/${arg_hash}`);
+		if (url.search) log += styleText('dim', url.search);
 	} else {
 		log += requested;
 	}
