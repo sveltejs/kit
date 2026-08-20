@@ -1,5 +1,13 @@
 # @sveltejs/adapter-vercel
 
+## 7.0.0-next.7
+
+### Patch Changes
+
+- fix: ignore `EEXIST` errors when symlinking traced files that resolve to the same destination ([#16809](https://github.com/sveltejs/kit/pull/16809))
+- Updated dependencies [[`6d1e9d7`](https://github.com/sveltejs/kit/commit/6d1e9d70587641a8997f9fc806859370da75e845), [`289afbf`](https://github.com/sveltejs/kit/commit/289afbf3314f50d6160ca75bdf99ed8fbf88cc47), [`7f1db04`](https://github.com/sveltejs/kit/commit/7f1db0430b2ad771fff965990ec42d0fccf9528a), [`7570a62`](https://github.com/sveltejs/kit/commit/7570a62238ac24023157c635c2fbfd887bd6e860), [`6833df1`](https://github.com/sveltejs/kit/commit/6833df1bb799ec802cd2f16fc87b234b1533c003), [`d8efec6`](https://github.com/sveltejs/kit/commit/d8efec6d33c4a84bf9d2caade5896bf175a2f83a), [`fb0e21c`](https://github.com/sveltejs/kit/commit/fb0e21cf32a5b8546ee97ddf18a24a900bb71509), [`6e7d44d`](https://github.com/sveltejs/kit/commit/6e7d44d62434b0bf1e01e646f3bb3fcfc2c3715c), [`bd36e00`](https://github.com/sveltejs/kit/commit/bd36e0049ced1c47ec3be0754894af0aeeecf1bf), [`97ad63a`](https://github.com/sveltejs/kit/commit/97ad63a45c65614081de72ac089e92e8d572bfa2), [`17123bf`](https://github.com/sveltejs/kit/commit/17123bfac392e8941ece37278ee35ba347fe9219), [`2c179e9`](https://github.com/sveltejs/kit/commit/2c179e9b19e1f0c23c1374cea404363a7c12acf3), [`e54a37f`](https://github.com/sveltejs/kit/commit/e54a37f52a0546a6143ba604cfb05043e93dd28a), [`a7f32aa`](https://github.com/sveltejs/kit/commit/a7f32aafa90d6ba3ad16565b6296995544d5a347), [`9a910f3`](https://github.com/sveltejs/kit/commit/9a910f3f5297123b2808b74579d558376b78cf86), [`a610618`](https://github.com/sveltejs/kit/commit/a6106186090e72d2b6d11fae4004b95c7579e75d), [`d455628`](https://github.com/sveltejs/kit/commit/d4556285a0fda2655ca62b25be55003086597cd1), [`4682127`](https://github.com/sveltejs/kit/commit/46821277fe201b7fbe151d4343d59f149ca3a89d), [`e4876e9`](https://github.com/sveltejs/kit/commit/e4876e91ebba0007664bbf06e5a9570d0c2e8844), [`7f1db04`](https://github.com/sveltejs/kit/commit/7f1db0430b2ad771fff965990ec42d0fccf9528a), [`b361b81`](https://github.com/sveltejs/kit/commit/b361b815e79828a6b7404d759d0a4c3892814a4e), [`97ad63a`](https://github.com/sveltejs/kit/commit/97ad63a45c65614081de72ac089e92e8d572bfa2), [`ef70fc7`](https://github.com/sveltejs/kit/commit/ef70fc775ff89a8f86eb62cb5b7a5e01884af563), [`6bfccde`](https://github.com/sveltejs/kit/commit/6bfccdedeefc3df216b050001ae118cd2dbfdcc2), [`7d78680`](https://github.com/sveltejs/kit/commit/7d78680a721c3f337812bdbc2868fc326fde7419), [`b361b81`](https://github.com/sveltejs/kit/commit/b361b815e79828a6b7404d759d0a4c3892814a4e)]:
+  - @sveltejs/kit@3.0.0-next.24
+
 ## 7.0.0-next.6
 
 ### Patch Changes

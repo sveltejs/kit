@@ -3,19 +3,9 @@
 /** @import { ValidatedConfig } from 'types' */
 import path from 'node:path';
 import * as sync from '../../../core/sync/sync.js';
-import {
-	create_sveltekit_env,
-	create_sveltekit_env_private,
-	create_sveltekit_env_public,
-	create_sveltekit_env_service_worker,
-	create_sveltekit_env_service_worker_dev,
-	resolve_env_entry
-} from '../../../core/env.js';
+import { create_env_modules, resolve_env_entry } from '../../../core/env.js';
 import { import_peer } from '../../../utils/import.js';
-import { runtime_directory } from '../../../core/utils.js';
-import { s } from '../../../utils/misc.js';
 import { write_if_changed } from '../../../core/sync/utils.js';
-import { hash } from '../../../utils/hash.js';
 import { posixify } from '../../../utils/os.js';
 
 /**
@@ -27,8 +17,6 @@ import { posixify } from '../../../utils/os.js';
  * @returns {Plugin}
  */
 export function plugin_env_vars(config, callback) {
-	const version_hash = hash(config.version.name);
-
 	/** @type {string} */
 	let dir;
 
@@ -62,59 +50,17 @@ export function plugin_env_vars(config, callback) {
 		const vars = synced.variables;
 		callback(vars);
 
-		write_if_changed(
-			`${dir}/config.js`,
-			create_sveltekit_env(
-				vars,
-				env,
-				resolved_entry && posixify(path.relative(dir, resolved_entry)),
-				!is_build
-			)
+		const modules = create_env_modules(
+			config,
+			vars,
+			env,
+			dir,
+			resolved_entry && posixify(path.relative(dir, resolved_entry)),
+			!is_build
 		);
 
-		write_if_changed(
-			`${dir}/public/server.js`,
-			create_sveltekit_env_public(vars, env, `import { rendered_env as env } from '../config.js';`)
-		);
-
-		write_if_changed(`${dir}/private/server.js`, create_sveltekit_env_private(vars, env));
-
-		if (is_build) {
-			write_if_changed(
-				`${dir}/public/client.js`,
-				create_sveltekit_env_public(
-					vars,
-					env,
-					`import { payload } from ${s(posixify(path.relative(`${dir}/public`, `${runtime_directory}/client/payload.js`)))};\nconst env = payload.env;`
-				)
-			);
-
-			write_if_changed(
-				`${dir}/service-worker.js`,
-				create_sveltekit_env_service_worker(
-					vars,
-					env,
-					config.version.name,
-					`globalThis.__sveltekit_${version_hash}`,
-					config.paths.base,
-					config.appDir
-				)
-			);
-		} else {
-			write_if_changed(
-				`${dir}/public/client.js`,
-				create_sveltekit_env_public(vars, env, `const { env } = globalThis.__sveltekit_dev;`)
-			);
-
-			write_if_changed(
-				`${dir}/service-worker.js`,
-				create_sveltekit_env_service_worker_dev(
-					vars,
-					env,
-					config.version.name,
-					'globalThis.__sveltekit_dev'
-				)
-			);
+		for (const [file, code] of Object.entries(modules)) {
+			write_if_changed(`${dir}/${file}`, code);
 		}
 	}
 

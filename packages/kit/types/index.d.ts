@@ -1336,9 +1336,17 @@ declare module '@sveltejs/kit/hooks' {
 		 * `<head>` tag; if `output.linkHeaderPreload` is enabled, dynamically rendered pages use the
 		 * [`Link` response header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Link) instead.
 		 * By default, `js` and `css` files will be preloaded.
+		 *
+		 * For `font` files, `input` also has a `filename` property, the source file's pathname relative
+		 * to the project root, so that a filter can match on it instead of the hashed path. `js` and
+		 * `css` files are bundled and have no single source file name.
 		 * @param input the type of the file and its path
 		 */
-		preload?: (input: { type: 'font' | 'css' | 'js' | 'asset'; path: string }) => boolean;
+		preload?: (
+			input:
+				| { type: 'css' | 'js' | 'asset'; path: string }
+				| { type: 'font'; path: string; filename: string }
+		) => boolean;
 	}
 
 	type AppErrorWithOptionalDefaults = Omit<App.Error, 'status' | 'message'> & {

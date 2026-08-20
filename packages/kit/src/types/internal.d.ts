@@ -8,7 +8,8 @@ import {
 	Actions,
 	RequestEvent,
 	SSRManifest,
-	Emulator
+	Emulator,
+	HttpError
 } from '@sveltejs/kit';
 import { RemoteFormIssue, RemoteQuery, RemoteLiveQuery } from '$app/server';
 import { Config } from '@sveltejs/kit/vite';
@@ -61,8 +62,15 @@ export interface AssetDependencies {
 	file: string;
 	imports: string[];
 	stylesheets: string[];
-	fonts: string[];
+	fonts: FontDependency[];
 	stylesheet_map: Map<string, { css: Set<string>; assets: Set<string> }>;
+}
+
+export interface FontDependency {
+	/** emitted file path, relative to the client output directory */
+	file: string;
+	/** the source file path relative to the project root, before hashing and character sanitization */
+	filename: string;
 }
 
 export interface BuildData {
@@ -97,7 +105,7 @@ export interface BuildData {
 		 */
 		routes?: SSRClientRoute[];
 		stylesheets: string[];
-		fonts: string[];
+		fonts: FontDependency[];
 		/**
 		 * Whether the client uses public dynamic env vars — `$env/dynamic/public` or `$app/env/public`.
 		 */
@@ -292,6 +300,14 @@ export interface RouteData {
 	} | null;
 }
 
+/**
+ * The server-side form of `ActionResult`, before the error is passed
+ * through `handleError` and the data is serialized
+ */
+export type ServerActionResult =
+	| Exclude<import('$app/forms').ActionResult, { type: 'error' }>
+	| { type: 'error'; location: string; error: Error | HttpError };
+
 export type ServerRedirectNode = {
 	type: 'redirect';
 	status: number;
@@ -449,7 +465,7 @@ export interface SSRNode {
 	/** external CSS files that are loaded on the client */
 	stylesheets: string[];
 	/** external font files that are loaded on the client */
-	fonts: string[];
+	fonts: FontDependency[];
 
 	universal_id?: string;
 	server_id?: string;
