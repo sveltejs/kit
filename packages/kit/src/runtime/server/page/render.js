@@ -18,7 +18,7 @@ import {
 	route_id_resolution_pathname
 } from '../../pathname.js';
 import { try_get_request_store, with_request_store } from '@sveltejs/kit/internal/server';
-import { text_encoder } from '../../utils.js';
+import { stream_text } from '../../utils.js';
 import { count_non_ssi_comments, get_global_name } from '../utils.js';
 import { handle_error_and_jsonify } from '../errors.js';
 import * as env from '<sveltekit:generated>/env/config.js';
@@ -43,7 +43,7 @@ import { has_custom_transporters, uneval } from '#app/internal/transport';
  *   event: import('@sveltejs/kit').RequestEvent;
  *   state: import('types').RequestState;
  *   resolve_opts: import('types').RequiredResolveOptions;
- *   action_result?: import('$app/forms').ActionResult;
+ *   action_result?: import('types').ServerActionResult;
  *   data_serializer: import('./types.js').ServerDataSerializer;
  *   error_components?: Array<import('svelte').Component | undefined>
  * }} opts
@@ -77,7 +77,9 @@ export async function render_response({
 
 	const modulepreloads = new Set(client?.imports);
 	const stylesheets = new Set(client?.stylesheets);
-	const fonts = new Set(client?.fonts);
+
+	/** @type {Map<string, import('types').FontDependency>} */
+	const fonts = new Map(client?.fonts.map((font) => [font.file, font]));
 
 	/**
 	 * The value of the Link header that is added to the response when not prerendering
@@ -262,7 +264,7 @@ export async function render_response({
 	for (const { node } of branch) {
 		for (const url of node.imports) modulepreloads.add(url);
 		for (const url of node.stylesheets) stylesheets.add(url);
-		for (const url of node.fonts) fonts.add(url);
+		for (const font of node.fonts) fonts.set(font.file, font);
 
 		if (node.inline_styles && !client?.inline) {
 			Object.entries(await node.inline_styles()).forEach(([filename, css]) => {
@@ -335,11 +337,11 @@ export async function render_response({
 		head.add_stylesheet(path, attributes);
 	}
 
-	for (const dep of fonts) {
-		const path = prefixed(dep);
+	for (const { file, filename } of fonts.values()) {
+		const path = prefixed(file);
 
-		if (resolve_opts.preload({ type: 'font', path })) {
-			const ext = dep.slice(dep.lastIndexOf('.') + 1);
+		if (resolve_opts.preload({ type: 'font', path, filename })) {
+			const ext = file.slice(file.lastIndexOf('.') + 1);
 
 			add_preload(path, ['rel="preload"', 'as="font"', `type="font/${ext}"`, 'crossorigin']);
 		}
@@ -655,22 +657,7 @@ export async function render_response({
 				status,
 				headers
 			})
-		: new Response(
-				new ReadableStream({
-					async start(controller) {
-						controller.enqueue(text_encoder.encode(transformed + '\n'));
-						for await (const chunk of chunks) {
-							if (chunk.length) controller.enqueue(text_encoder.encode(chunk));
-						}
-						controller.close();
-					},
-
-					type: 'bytes'
-				}),
-				{
-					headers
-				}
-			);
+		: new Response(stream_text(transformed + '\n', chunks), { headers });
 }
 
 class Head {

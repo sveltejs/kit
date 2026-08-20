@@ -1,4 +1,5 @@
 import { noop } from '../../utils/functions.js';
+import { stream_from_iterable } from '../utils.js';
 import { IN_WEBCONTAINER } from '../../constants.js';
 import { respond } from './respond.js';
 import { create_request_state } from './state.js';
@@ -105,14 +106,11 @@ export class Server {
 					return result;
 				}
 
-				// TODO remove the cast once TypeScript's lib includes `ReadableStream.from`
-				return /** @type {ReadableStream} */ (
-					/** @type {any} */ (ReadableStream).from(
-						(async function* () {
-							const stream = await result;
-							if (stream) yield* stream;
-						})()
-					)
+				return stream_from_iterable(
+					(async function* () {
+						const stream = await result;
+						if (stream) yield* stream;
+					})()
 				);
 			};
 

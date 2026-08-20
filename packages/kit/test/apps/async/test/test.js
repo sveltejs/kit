@@ -615,6 +615,20 @@ test.describe('remote functions', () => {
 		await expect(allIssues).toContainText('"path":["nested","value"]');
 	});
 
+	test('form validate does not throw if the form unmounts while validating', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/validate');
+
+		await page.locator('#unmount-then-validate').click();
+
+		await expect(page.locator('#unmount-form')).toHaveCount(0);
+		await expect(page.locator('#unmount-error')).toHaveText('no error');
+	});
+
 	test('form validation issues cleared', async ({ page, javaScriptEnabled }) => {
 		if (!javaScriptEnabled) return;
 

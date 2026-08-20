@@ -1,6 +1,6 @@
 /** @import { RequestEvent, Actions } from '@sveltejs/kit' */
 /** @import { ActionResult } from '$app/forms' */
-/** @import { SSROptions, SSRNode, ServerNode } from 'types' */
+/** @import { SSROptions, SSRNode, ServerNode, ServerActionResult } from 'types' */
 import { DEV } from 'esm-env';
 import { HttpError, Redirect, ActionFailure, SvelteKitError } from '@sveltejs/kit/internal';
 import { with_request_store, merge_tracing, record_span } from '@sveltejs/kit/internal/server';
@@ -27,98 +27,44 @@ export function is_action_json_request(event) {
  * @param {SSRNode['server'] | undefined} server
  */
 export async function handle_action_json_request(event, state, options, server) {
-	const actions = server?.actions;
-	const location = get_action_location(event.url);
+	const result = await handle_action_request(event, state, server);
+	return action_result_json(event, state, options, result);
+}
 
-	if (!actions) {
-		const no_actions_error = new SvelteKitError(
-			405,
-			'Method Not Allowed',
-			`POST method not allowed. No form actions exist for ${DEV ? `the page at ${event.route.id}` : 'this page'}`
-		);
-
-		const error = await handle_error_and_jsonify(event, state, options, no_actions_error);
-
-		return action_json(
-			{
-				type: 'error',
-				error,
-				location
-			},
-			{
-				status: error.status,
-				headers: {
-					// https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405
-					// "The server must generate an Allow header field in a 405 status code response"
-					allow: 'GET'
-				}
-			}
-		);
+/**
+ * @param {RequestEvent} event
+ * @param {import('types').RequestState} state
+ * @param {SSROptions} options
+ * @param {ServerActionResult} result
+ * @returns {Promise<Response>}
+ */
+async function action_result_json(event, state, options, result) {
+	if (result.type === 'redirect') {
+		return action_json(result);
 	}
 
-	check_named_default_separate(actions);
+	if (result.type === 'error') {
+		const error = await handle_error_and_jsonify(event, state, options, result.error);
+		return action_json({ ...result, error }, { status: error.status });
+	}
+
+	if (result.type === 'success' && !result.data) {
+		return action_json({ ...result, status: 204, data: undefined });
+	}
 
 	try {
-		const data = await call_action(event, state, actions);
-
-		if (DEV) {
-			validate_action_return(data);
-		}
-
-		if (data instanceof ActionFailure) {
-			return action_json(
-				{
-					type: 'failure',
-					status: data.status,
-					location,
-					// @ts-expect-error we assign a string to what is supposed to be an object. That's ok
-					// because we don't use the object outside, and this way we have better code navigation
-					// through knowing where the related interface is used.
-					data: try_serialize(data.data, stringify, /** @type {string} */ (event.route.id))
-				},
-				{
-					status: data.status
-				}
-			);
-		} else if (data) {
-			return action_json({
-				type: 'success',
-				status: 200,
-				location,
-				// @ts-expect-error see comment above
-				data: try_serialize(data, stringify, /** @type {string} */ (event.route.id))
-			});
-		} else {
-			return action_json({
-				type: 'success',
-				status: 204,
-				location
-			});
-		}
-	} catch (e) {
-		const err = normalize_error(e);
-
-		if (err instanceof Redirect) {
-			return action_json_redirect(err);
-		}
-
-		const transformed = await handle_error_and_jsonify(
-			event,
-			state,
-			options,
-			check_incorrect_fail_use(err)
-		);
-
 		return action_json(
 			{
-				type: 'error',
-				error: transformed,
-				location
+				...result,
+				// @ts-expect-error we assign a string to what is supposed to be an object. That's ok
+				// because we don't use the object outside, and this way we have better code navigation
+				// through knowing where the related interface is used.
+				data: try_serialize(result.data, stringify, /** @type {string} */ (event.route.id))
 			},
-			{
-				status: transformed.status
-			}
+			{ status: result.status }
 		);
+	} catch (e) {
+		return action_result_json(event, state, options, action_error_result(e, result.location));
 	}
 }
 
@@ -139,12 +85,48 @@ export function get_action_location(url) {
 }
 
 /**
- * @param {HttpError | Error} error
+ * @param {RequestEvent} event
+ * @param {string} location
+ * @returns {Extract<ServerActionResult, { type: 'error' }>}
  */
-export function check_incorrect_fail_use(error) {
-	return error instanceof ActionFailure
-		? new Error('Cannot "throw fail()". Use "return fail()"')
-		: error;
+export function method_not_allowed_result(event, location) {
+	event.setHeaders({
+		// https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405
+		// "The server must generate an Allow header field in a 405 status code response"
+		allow: 'GET'
+	});
+	return {
+		type: 'error',
+		location,
+		error: new SvelteKitError(
+			405,
+			'Method Not Allowed',
+			`POST method not allowed. No form actions exist for ${DEV ? `the page at ${event.route.id}` : 'this page'}`
+		)
+	};
+}
+
+/**
+ * @param {unknown} e
+ * @param {string} location
+ * @returns {Extract<ServerActionResult, { type: 'redirect' | 'error' }>}
+ */
+export function action_error_result(e, location) {
+	const err = normalize_error(e);
+
+	if (err instanceof Redirect) {
+		return {
+			type: 'redirect',
+			status: err.status,
+			location: err.location
+		};
+	}
+
+	return {
+		type: 'error',
+		location,
+		error: err
+	};
 }
 
 /**
@@ -177,7 +159,7 @@ export function is_action_request(event) {
  * @param {RequestEvent} event
  * @param {import('types').RequestState} state
  * @param {SSRNode['server'] | undefined} server
- * @returns {Promise<ActionResult>}
+ * @returns {Promise<ServerActionResult>}
  */
 export async function handle_action_request(event, state, server) {
 	const actions = server?.actions;
@@ -185,21 +167,7 @@ export async function handle_action_request(event, state, server) {
 
 	if (!actions) {
 		// TODO should this be a different error altogether?
-		event.setHeaders({
-			// https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405
-			// "The server must generate an Allow header field in a 405 status code response"
-			allow: 'GET'
-		});
-		return {
-			type: 'error',
-			location,
-			// We're lying a bit with the types here; this will be transformed into a proper App.Error object later
-			error: new SvelteKitError(
-				405,
-				'Method Not Allowed',
-				`POST method not allowed. No form actions exist for ${DEV ? `the page at ${event.route.id}` : 'this page'}`
-			)
-		};
+		return method_not_allowed_result(event, location);
 	}
 
 	check_named_default_separate(actions);
@@ -228,22 +196,10 @@ export async function handle_action_request(event, state, server) {
 			};
 		}
 	} catch (e) {
-		const err = normalize_error(e);
-
-		if (err instanceof Redirect) {
-			return {
-				type: 'redirect',
-				status: err.status,
-				location: err.location
-			};
-		}
-
-		return {
-			type: 'error',
-			location,
-			// @ts-expect-error We're lying a bit with the types here; this will be transformed into a proper App.Error object later
-			error: check_incorrect_fail_use(err)
-		};
+		return action_error_result(
+			e instanceof ActionFailure ? new Error('Cannot "throw fail()". Use "return fail()"') : e,
+			location
+		);
 	}
 }
 
