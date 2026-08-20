@@ -28,7 +28,7 @@ const server_template = ({
 }) => `
 import { set_building, set_prerendering } from '$app/env/server';
 import { set_assets } from '$app/paths/internal/server';
-import { set_fix_stack_trace, set_manifest, set_read_implementation, log_response } from '${runtime_directory}/server/internal.js';
+import { set_fix_stack_trace, set_manifest, set_read_implementation, format_response } from '${runtime_directory}/server/internal.js';
 import error from './shared/error-template.js';
 
 export const options = {
@@ -81,7 +81,7 @@ export async function get_hooks() {
 	};
 }
 
-export { set_assets, set_building, set_fix_stack_trace, set_manifest, set_prerendering, set_read_implementation, log_response };
+export { set_assets, set_building, set_fix_stack_trace, set_manifest, set_prerendering, set_read_implementation, format_response };
 `;
 
 /**

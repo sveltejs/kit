@@ -45,8 +45,9 @@ export function set_manifest(value) {
 /**
  * @param {number} status
  * @param {Request} request
+ * @returns {string}
  */
-export function log_response(status, request) {
+export function format_response(status, request) {
 	const url = new URL(request.url);
 	const requested = url.href.replace(url.origin, '');
 
@@ -65,7 +66,7 @@ export function log_response(status, request) {
 		log += requested;
 	}
 
-	console.log(log);
+	return log;
 }
 
 export { fix_stack_trace, set_fix_stack_trace } from './sourcemaps.js';

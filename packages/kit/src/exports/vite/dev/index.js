@@ -90,6 +90,20 @@ export async function dev(
 	const runner = get_runner(vite, vite_dev_server);
 
 	/**
+	 * Log a response to the console, routed through Vite's logger so that it
+	 * respects the configured `logLevel` and any `customLogger`
+	 * @param {number} status
+	 * @param {string} log
+	 */
+	function log_dev_response(status, log) {
+		if (status < 400) {
+			vite_dev_server.config.logger.info(log);
+		} else {
+			vite_dev_server.config.logger.error(log);
+		}
+	}
+
+	/**
 	 * @param {string} url
 	 * @returns {Promise<Record<string, any>>}
 	 */
@@ -580,7 +594,7 @@ export async function dev(
 					await runner.import(`${get_runtime_base(root)}/server/index.js`)
 				);
 
-				const { set_fix_stack_trace, log_response } = await runner.import(
+				const { set_fix_stack_trace, format_response } = await runner.import(
 					`${get_runtime_base(root)}/server/internal.js`
 				);
 				set_fix_stack_trace(fix_stack_trace);
@@ -647,11 +661,11 @@ export async function dev(
 				if (rendered.status === 404) {
 					// @ts-expect-error
 					serve_static_middleware.handle(req, res, () => {
-						log_response(rendered.status, request);
+						log_dev_response(rendered.status, format_response(rendered.status, request));
 						setResponse(res, rendered);
 					});
 				} else {
-					log_response(rendered.status, request);
+					log_dev_response(rendered.status, format_response(rendered.status, request));
 					setResponse(res, rendered);
 				}
 			} catch (e) {
