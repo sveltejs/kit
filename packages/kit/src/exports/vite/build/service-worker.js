@@ -9,7 +9,7 @@ import { warn_overridden_config } from '../utils.js';
  * @param {() => { service_worker_entry_file: string | null; kit_global: string; out: string; initial_config: UserConfig; }} callback
  * @returns {Plugin}
  */
-export function plugin_service_worker_build(kit, callback) {
+export function plugin_service_worker_build(kit, get_config) {
 	return {
 		name: 'vite-plugin-sveltekit-service-worker',
 
