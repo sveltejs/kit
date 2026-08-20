@@ -57,8 +57,6 @@ beforeAll(async () => {
  * @param {string} pathname
  * @param {RequestInit} [init]
  */
-// const get = (pathname, init) => fetch(origin + pathname, init);
-
 const get = async (pathname, init) => {
 	const url = origin + pathname;
 
@@ -457,7 +455,9 @@ describe('Endpoints', () => {
 
 	// TODO see above
 	test('body can be a binary ReadableStream', async () => {
-		await expect(get('/endpoint-output/stream-throw-error')).rejects.toThrow('fetch failed');
+		await expect(
+			get('/endpoint-output/stream-throw-error').then((r) => r.arrayBuffer())
+		).rejects.toThrow('simulate error');
 
 		const response = await get('/endpoint-output/stream');
 		const body = Buffer.from(await response.arrayBuffer());
@@ -668,7 +668,11 @@ describe('Errors', () => {
 
 		// JSON (default)
 		{
-			const res = await get('/errors/endpoint-throw-error');
+			const res = await get('/errors/endpoint-throw-error', {
+				headers: {
+					accept: '*/*'
+				}
+			});
 
 			expect(read_errors('/errors/endpoint-throw-error')).toEqual({
 				kind: 'app',
@@ -738,7 +742,11 @@ describe('Errors', () => {
 
 		// JSON (default)
 		{
-			const res = await get('/errors/error-in-handle');
+			const res = await get('/errors/error-in-handle', {
+				headers: {
+					accept: '*/*'
+				}
+			});
 
 			const error = await res.json();
 
@@ -768,7 +776,11 @@ describe('Errors', () => {
 
 		// JSON (default)
 		{
-			const res = await get('/errors/expected-error-in-handle');
+			const res = await get('/errors/expected-error-in-handle', {
+				headers: {
+					accept: '*/*'
+				}
+			});
 
 			const error = await res.json();
 
