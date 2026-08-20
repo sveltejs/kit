@@ -105,9 +105,9 @@ export function plugin_remote(svelte_config, get_config, get_build_metadata, set
 					file
 				};
 
-				if (this.environment.name === 'ssr') remotes.push(remote);
+				if (this.environment.config.consumer === 'server') {
+					remotes.push(remote);
 
-				if (this.environment.config.consumer !== 'client') {
 					// we need to add an `await Promise.resolve()` because if the user imports this function
 					// on the client AND in a load function when loading the client module we will trigger
 					// an import during dev. During a link preload, the module can be mistakenly
@@ -136,6 +136,7 @@ export function plugin_remote(svelte_config, get_config, get_build_metadata, set
 					// Emit a dedicated entry chunk for this remote in SSR builds (prod only)
 					if (!dev_server) {
 						remote_original_by_hash.set(remote.hash, id);
+
 						if (!emitted_remote_hashes.has(remote.hash)) {
 							this.emitFile({
 								type: 'chunk',
@@ -165,12 +166,9 @@ export function plugin_remote(svelte_config, get_config, get_build_metadata, set
 
 					for (const [name, value] of Object.entries(module)) {
 						const type = value?.__?.type;
-						if (type) {
-							map.set(name, type);
-						}
+						if (type) map.set(name, type);
 					}
 				}
-
 				// in prod, we already built and analysed the server code before
 				// building the client code, so `remotes` is populated
 				else if (build_metadata?.remotes) {
