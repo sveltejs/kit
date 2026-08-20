@@ -131,6 +131,7 @@ export function plugin_service_worker_env_vars(kit) {
 		name: 'vite-plugin-sveltekit-service-worker-env',
 		configResolved() {
 			service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
+			service_worker_entry_file &&= posixify(service_worker_entry_file);
 
 			if (service_worker_entry_file) {
 				plugin.transform.filter = {
