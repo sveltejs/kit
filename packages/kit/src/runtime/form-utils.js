@@ -3,7 +3,7 @@
 
 import { DEV } from 'esm-env';
 import * as devalue from 'devalue';
-import { text_decoder, text_encoder } from './utils.js';
+import { stream_from_iterable, text_decoder, text_encoder } from './utils.js';
 import { noop } from '../utils/functions.js';
 import { SvelteKitError } from '@sveltejs/kit/internal';
 
@@ -441,25 +441,17 @@ class LazyFile {
 	}
 	stream() {
 		const range = read_range(this.#get_chunk, this.#offset, this.size);
-		let cursor = 0;
-		return new ReadableStream({
-			pull: async (controller) => {
-				const { value, done } = await range.next();
-				if (done) {
-					if (cursor < this.size) {
-						controller.error('incomplete file data');
-					} else {
-						controller.close();
-					}
-					return;
+		const size = this.size;
+		return stream_from_iterable(
+			(async function* () {
+				let cursor = 0;
+				for await (const chunk of range) {
+					cursor += chunk.byteLength;
+					yield chunk;
 				}
-				cursor += value.byteLength;
-				controller.enqueue(value);
-				if (cursor >= this.size) {
-					controller.close();
-				}
-			}
-		});
+				if (cursor < size) throw new Error('incomplete file data');
+			})()
+		);
 	}
 	async text() {
 		return text_decoder.decode(await this.arrayBuffer());

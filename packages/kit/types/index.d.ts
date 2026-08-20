@@ -150,7 +150,7 @@ declare module '@sveltejs/kit' {
 
 		/**
 		 * Generate a server-side manifest to initialise the SvelteKit [server](https://svelte.dev/docs/kit/@sveltejs-kit#Server) with.
-		 * @param opts.relativePath  A relative path to the base directory of the server build output
+		 * @param opts.relativePath A relative path to the base directory of the server build output
 		 */
 		generateManifest: (opts: { relativePath: string; routes?: RouteDefinition[] }) => string;
 
@@ -1065,6 +1065,25 @@ declare module '@sveltejs/kit' {
 	export {};
 }
 
+declare module '@sveltejs/kit/adapter' {
+	/**
+	 * Helps a catch-all request handler pass the request to a different handler if
+	 * the `reroute` hook has returned a URL pathname that's different from the
+	 * incoming request.
+	 *
+	 * If your adapter is capable of deploying multiple serverless functions, it's a
+	 * good idea to also deploy a "catch-all" one to handle uncaught requests.
+	 * Running this in that function allows the app's `reroute` hook to rewrite
+	 * the request URL and invoke the next appropriate serverless function, if any.
+	 * @param response The response returned from the SvelteKit `server.respond` function
+	 * @param next Your platform-specific implementation for invoking the next handler with a different request URL
+	 * @since 3.0.0
+	 */
+	export function applyReroute(response: Response, next: (url: URL) => Response | Promise<Response>): Response | Promise<Response>;
+
+	export {};
+}
+
 declare module '@sveltejs/kit/env' {
 	import type { StandardSchemaV1 } from '@standard-schema/spec';
 	/**
@@ -1317,9 +1336,17 @@ declare module '@sveltejs/kit/hooks' {
 		 * `<head>` tag; if `output.linkHeaderPreload` is enabled, dynamically rendered pages use the
 		 * [`Link` response header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Link) instead.
 		 * By default, `js` and `css` files will be preloaded.
+		 *
+		 * For `font` files, `input` also has a `filename` property, the source file's pathname relative
+		 * to the project root, so that a filter can match on it instead of the hashed path. `js` and
+		 * `css` files are bundled and have no single source file name.
 		 * @param input the type of the file and its path
 		 */
-		preload?: (input: { type: 'font' | 'css' | 'js' | 'asset'; path: string }) => boolean;
+		preload?: (
+			input:
+				| { type: 'css' | 'js' | 'asset'; path: string }
+				| { type: 'font'; path: string; filename: string }
+		) => boolean;
 	}
 
 	type AppErrorWithOptionalDefaults = Omit<App.Error, 'status' | 'message'> & {

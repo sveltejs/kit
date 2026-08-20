@@ -27,10 +27,7 @@ function run_test(dir) {
 
 	const root = path.join(cwd, dir);
 
-	const manifest = create_manifest_data({
-		config: /** @type {import('types').ValidatedConfig} */ (initial),
-		cwd: root
-	});
+	const manifest = create_manifest_data(initial, root);
 
 	write_all_types(initial, manifest, root);
 	write_app_types(initial, manifest, root);

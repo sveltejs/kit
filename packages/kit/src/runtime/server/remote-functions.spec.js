@@ -5,18 +5,20 @@ const decoder = new TextDecoder();
 
 /** @type {typeof import('./remote-functions.js').create_live_query_response} */
 let create_live_query_response;
+/** @type {typeof import('./internal.js').set_hooks} */
+let set_hooks;
 
 beforeAll(async () => {
 	vi.stubGlobal('__SVELTEKIT_DEV__', false);
 	init_transport({});
 	({ create_live_query_response } = await import('./remote-functions.js'));
+	({ set_hooks } = await import('./internal.js'));
 });
 
 /**
  * @param {(event: import('@sveltejs/kit').RequestEvent) => AsyncGenerator<any>} run
- * @param {Partial<import('types').SSROptions>} [options]
  */
-function create_response(run, options = {}) {
+function create_response(run) {
 	const event = /** @type {import('@sveltejs/kit').RequestEvent} */ ({
 		request: new Request('http://localhost/_app/remote/test?payload=undefined')
 	});
@@ -24,7 +26,6 @@ function create_response(run, options = {}) {
 	return create_live_query_response(
 		event,
 		/** @type {import('types').RequestState} */ ({}),
-		/** @type {import('types').SSROptions} */ (options),
 		/** @type {import('types').RemoteQueryLiveInternals} */ (/** @type {unknown} */ ({ run })),
 		undefined
 	);
@@ -33,6 +34,7 @@ function create_response(run, options = {}) {
 // https://github.com/sveltejs/kit/issues/16778
 test('cancellation ignores a value that arrives after generator.next()', async () => {
 	const handle_error = vi.fn(() => ({ message: 'oops' }));
+	set_hooks(/** @type {any} */ ({ handleError: handle_error }));
 	/** @type {() => void} */
 	let resume = () => {};
 	const parked = new Promise((resolve) => (resume = () => resolve(undefined)));
@@ -40,15 +42,12 @@ test('cancellation ignores a value that arrives after generator.next()', async (
 	let did_park = () => {};
 	const parked_on_next = new Promise((resolve) => (did_park = () => resolve(undefined)));
 
-	const response = create_response(
-		async function* () {
-			yield 'initial';
-			did_park();
-			await parked;
-			yield 'late';
-		},
-		{ hooks: /** @type {any} */ ({ handleError: handle_error }) }
-	);
+	const response = create_response(async function* () {
+		yield 'initial';
+		did_park();
+		await parked;
+		yield 'late';
+	});
 
 	const reader = /** @type {ReadableStream<Uint8Array>} */ (response.body).getReader();
 	const first = await reader.read();

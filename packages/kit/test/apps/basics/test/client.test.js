@@ -575,6 +575,16 @@ test.describe('Invalidation', () => {
 		expect(await page.textContent('span')).toBe('count: 1');
 	});
 
+	test('load function re-runs when the number of values of a tracked searchParam changes', async ({
+		page,
+		clicknav
+	}) => {
+		await page.goto('/load/invalidation/search-params/universal?a=0');
+		expect(await page.textContent('span')).toBe('count: 0');
+		await clicknav('[data-id="duplicate"]');
+		expect(await page.textContent('span')).toBe('count: 1');
+	});
+
 	test('server-only load functions are re-run following forced invalidation', async ({
 		page,
 		request,
@@ -879,6 +889,13 @@ test.describe('Invalidation', () => {
 		page,
 		clicknav
 	}) => {
+		// with server-side route resolution, delay resolution so that refreshAll
+		// reliably starts while the navigation is still resolving its route
+		await page.route('**/__route.js', async (route) => {
+			await new Promise((resolve) => setTimeout(resolve, 150));
+			await route.continue();
+		});
+
 		await page.goto('/load/invalidation/during-navigation/a');
 		await expect(page.locator('[data-testid="scores"]')).toHaveText('1 - 1');
 
@@ -907,7 +924,7 @@ test.describe('data-sveltekit attributes', () => {
 		const responses = [];
 
 		const nodes_location = process.env.DEV
-			? '.svelte-kit/generated/client/nodes/'
+			? '.svelte-kit/generated/dev/client/nodes/'
 			: '/_app/immutable/nodes/';
 
 		page.on('response', async (response) => {

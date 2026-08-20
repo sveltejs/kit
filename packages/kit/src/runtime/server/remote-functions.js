@@ -1,7 +1,6 @@
 /** @import { RequestEvent, SSRManifest } from '@sveltejs/kit' */
 /** @import { RemoteForm } from '$app/server' */
-/** @import { ActionResult } from '$app/forms' */
-/** @import { RemoteFormInternals, RemoteFunctionData, RemoteFunctionResponse, RemoteInternals, RequestState, SSROptions } from 'types' */
+/** @import { RemoteFormInternals, RemoteFunctionData, RemoteFunctionResponse, RemoteInternals, RequestState, ServerActionResult } from 'types' */
 
 import { error } from '@sveltejs/kit';
 import { Redirect, SvelteKitError } from '@sveltejs/kit/internal';
@@ -11,9 +10,11 @@ import { is_form_content_type } from '../../utils/http.js';
 import { create_remote_key, parse_remote_arg, split_remote_key } from '../shared.js';
 import { stringify } from '#app/internal/transport';
 import { handle_error_and_jsonify } from './errors.js';
-import { normalize_error } from '../../utils/error.js';
-import { check_incorrect_fail_use, get_action_location } from './page/actions.js';
-import { DEV } from 'esm-env';
+import {
+	action_error_result,
+	get_action_location,
+	method_not_allowed_result
+} from './page/actions.js';
 import { deserialize_binary_form } from '../form-utils.js';
 import { text_encoder } from '../utils.js';
 import { with_version_header } from './utils.js';
@@ -28,11 +29,10 @@ const KEEP_ALIVE_INTERVAL = 30_000;
 /**
  * @param {RequestEvent} event
  * @param {RequestState} state
- * @param {SSROptions} options
  * @param {import('types').RemoteQueryLiveInternals} internals
  * @param {any} arg
  */
-export function create_live_query_response(event, state, options, internals, arg) {
+export function create_live_query_response(event, state, internals, arg) {
 	const cancellation = new AbortController();
 	const live_event = {
 		...event,
@@ -56,7 +56,7 @@ export function create_live_query_response(event, state, options, internals, arg
 		clearTimeout(keep_alive);
 		keep_alive = setTimeout(() => {
 			if (!open) return;
-			if (stream_controller.desiredSize > 0) {
+			if ((stream_controller.desiredSize ?? 0) > 0) {
 				stream_controller.enqueue(text_encoder.encode(': keep-alive\n\n'));
 			}
 			schedule_keep_alive();
@@ -116,7 +116,7 @@ export function create_live_query_response(event, state, options, internals, arg
 					if (error instanceof Redirect) {
 						send({ type: 'redirect', location: error.location });
 					} else {
-						const transformed = await handle_error_and_jsonify(event, state, options, error);
+						const transformed = await handle_error_and_jsonify(event, state, error);
 
 						send({ type: 'error', error: transformed });
 					}
@@ -140,7 +140,7 @@ export function create_live_query_response(event, state, options, internals, arg
 }
 
 /** @type {typeof handle_remote_call_internal} */
-export async function handle_remote_call(event, state, options, manifest, id) {
+export async function handle_remote_call(event, state, manifest, id) {
 	return record_span({
 		name: 'sveltekit.remote.call',
 		attributes: {
@@ -149,7 +149,7 @@ export async function handle_remote_call(event, state, options, manifest, id) {
 		fn: async (current) => {
 			const traced_event = merge_tracing(event, current);
 			const response = await with_request_store({ event: traced_event, state }, () =>
-				handle_remote_call_internal(traced_event, state, options, manifest, id)
+				handle_remote_call_internal(traced_event, state, manifest, id)
 			);
 			return with_version_header(response);
 		}
@@ -159,11 +159,10 @@ export async function handle_remote_call(event, state, options, manifest, id) {
 /**
  * @param {RequestEvent} event
  * @param {RequestState} state
- * @param {SSROptions} options
  * @param {SSRManifest} manifest
  * @param {string} id
  */
-async function handle_remote_call_internal(event, state, options, manifest, id) {
+async function handle_remote_call_internal(event, state, manifest, id) {
 	const [hash, name, additional_args] = id.split('/');
 	const remotes = manifest._.remotes;
 
@@ -203,13 +202,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 					new URL(event.request.url).searchParams.get('payload')
 				);
 
-				return create_live_query_response(
-					event,
-					state,
-					options,
-					internals,
-					parse_remote_arg(payload)
-				);
+				return create_live_query_response(event, state, internals, parse_remote_arg(payload));
 			}
 
 			case 'query_batch': {
@@ -226,7 +219,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 
 				const args = await Promise.all(payloads.map((payload) => parse_remote_arg(payload)));
 
-				data._ = await with_request_store({ event, state }, () => internals.run(args, options));
+				data._ = await with_request_store({ event, state }, () => internals.run(args));
 
 				break;
 			}
@@ -317,7 +310,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			}
 		}
 
-		await collect_remote_data(data, event, state, options);
+		await collect_remote_data(data, event, state);
 
 		return Response.json(
 			/** @type {RemoteFunctionResponse} */ ({
@@ -328,7 +321,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 		);
 	} catch (error) {
 		if (error instanceof Redirect) {
-			const data = await collect_remote_data({ redirect: error.location }, event, state, options);
+			const data = await collect_remote_data({ redirect: error.location }, event, state);
 
 			return Response.json(
 				/** @type {RemoteFunctionResponse} */ ({
@@ -339,7 +332,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			);
 		}
 
-		const transformed = await handle_error_and_jsonify(event, state, options, error);
+		const transformed = await handle_error_and_jsonify(event, state, error);
 
 		return Response.json(
 			/** @type {RemoteFunctionResponse} */ ({
@@ -364,9 +357,8 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
  * @param {RemoteFunctionData} data
  * @param {RequestEvent} event
  * @param {RequestState} state
- * @param {SSROptions} options
  */
-export async function collect_remote_data(data, event, state, options) {
+export async function collect_remote_data(data, event, state) {
 	/**
 	 *
 	 * @param {unknown} error
@@ -374,7 +366,7 @@ export async function collect_remote_data(data, event, state, options) {
 	 */
 	function convert_error(error) {
 		// TODO 4.0 remove the `Promise.resolve(...)`
-		return Promise.resolve(handle_error_and_jsonify(event, state, options, error));
+		return Promise.resolve(handle_error_and_jsonify(event, state, error));
 	}
 
 	/** @type {Promise<any>[]} */
@@ -540,7 +532,7 @@ export async function handle_remote_form_post(event, state, manifest, id) {
  * @param {RequestState} state
  * @param {SSRManifest} manifest
  * @param {string} id
- * @returns {Promise<ActionResult>}
+ * @returns {Promise<ServerActionResult>}
  */
 async function handle_remote_form_post_internal(event, state, manifest, id) {
 	const location = get_action_location(event.url);
@@ -556,21 +548,7 @@ async function handle_remote_form_post_internal(event, state, manifest, id) {
 	);
 
 	if (!form) {
-		event.setHeaders({
-			// https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405
-			// "The server must generate an Allow header field in a 405 status code response"
-			allow: 'GET'
-		});
-		return {
-			type: 'error',
-			location,
-			// We're lying a bit with the types here; this will be transformed into a proper App.Error object later
-			error: new SvelteKitError(
-				405,
-				'Method Not Allowed',
-				`POST method not allowed. No form actions exist for ${DEV ? `the page at ${event.route.id}` : 'this page'}`
-			)
-		};
+		return method_not_allowed_result(event, location);
 	}
 
 	if (action_id) {
@@ -600,22 +578,7 @@ async function handle_remote_form_post_internal(event, state, manifest, id) {
 			location
 		};
 	} catch (e) {
-		const err = normalize_error(e);
-
-		if (err instanceof Redirect) {
-			return {
-				type: 'redirect',
-				status: err.status,
-				location: err.location
-			};
-		}
-
-		return {
-			type: 'error',
-			location,
-			// @ts-expect-error We're lying a bit with the types here; this will be transformed into a proper App.Error object later
-			error: check_incorrect_fail_use(err)
-		};
+		return action_error_result(e, location);
 	}
 }
 

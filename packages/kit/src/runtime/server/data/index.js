@@ -6,14 +6,13 @@ import { server_data_serializer_json } from '../page/data_serializer.js';
 import { load_server_data } from '../page/load_data.js';
 import { handle_error_and_jsonify } from '../errors.js';
 import { normalize_path } from '../../../utils/url.js';
-import { text_encoder } from '../../utils.js';
+import { stream_text } from '../../utils.js';
 import { with_version_header } from '../utils.js';
 
 /**
  * @param {import('@sveltejs/kit').RequestEvent} event
  * @param {import('types').RequestState} state
- * @param {import('types').SSRRoute} route
- * @param {import('types').SSROptions} options
+ * @param {{ page: Pick<import('types').PageNodeIndexes, 'layouts' | 'leaf'> | null }} route
  * @param {import('@sveltejs/kit').SSRManifest} manifest
  * @param {boolean[] | undefined} invalidated_data_nodes
  * @param {import('types').TrailingSlash} trailing_slash
@@ -23,7 +22,6 @@ export async function render_data(
 	event,
 	state,
 	route,
-	options,
 	manifest,
 	invalidated_data_nodes,
 	trailing_slash
@@ -92,7 +90,7 @@ export async function render_data(
 			return fn();
 		});
 
-		const data_serializer = server_data_serializer_json(event, state, options);
+		const data_serializer = server_data_serializer_json(event, state);
 		await Promise.all(
 			promises.map(async (p, i) => {
 				const node = await p.catch(async (error) => {
@@ -100,7 +98,7 @@ export async function render_data(
 						throw error;
 					}
 
-					const transformed = await handle_error_and_jsonify(event, state, options, error);
+					const transformed = await handle_error_and_jsonify(event, state, error);
 
 					return /** @type {import('types').ServerErrorNode} */ ({
 						type: 'error',
@@ -120,27 +118,14 @@ export async function render_data(
 		}
 
 		return with_version_header(
-			new Response(
-				new ReadableStream({
-					async start(controller) {
-						controller.enqueue(text_encoder.encode(data));
-						for await (const chunk of chunks) {
-							controller.enqueue(text_encoder.encode(chunk));
-						}
-						controller.close();
-					},
-
-					type: 'bytes'
-				}),
-				{
-					headers: {
-						// we use a proprietary content type to prevent buffering.
-						// the `text` prefix makes it inspectable
-						'content-type': 'text/sveltekit-data',
-						'cache-control': 'private, no-store'
-					}
+			new Response(stream_text(data, chunks), {
+				headers: {
+					// we use a proprietary content type to prevent buffering.
+					// the `text` prefix makes it inspectable
+					'content-type': 'text/sveltekit-data',
+					'cache-control': 'private, no-store'
 				}
-			)
+			})
 		);
 	} catch (e) {
 		const error = normalize_error(e);
@@ -148,7 +133,7 @@ export async function render_data(
 		if (error instanceof Redirect) {
 			return redirect_json_response(error);
 		} else {
-			const transformed = await handle_error_and_jsonify(event, state, options, error);
+			const transformed = await handle_error_and_jsonify(event, state, error);
 			return json_response(transformed, transformed.status);
 		}
 	}

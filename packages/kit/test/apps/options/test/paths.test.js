@@ -166,6 +166,7 @@ test.describe('inlineStyleThreshold', () => {
 		});
 		await page.goto('/path-base/inline-style');
 		expect(font_loaded).toBeTruthy();
+		await expect(page.locator('link[rel="preload"][as="font"]')).toHaveCount(2);
 	});
 
 	test('loads assets located in static directory', async ({ page, javaScriptEnabled }) => {

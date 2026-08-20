@@ -103,7 +103,7 @@ export function relative_path(from, to) {
 /**
  * Given an entry point like [cwd]/src/hooks, returns a filename like [cwd]/src/hooks.js or [cwd]/src/hooks/index.js
  * @param {string} entry
- * @returns {string|null}
+ * @returns {string | null}
  */
 export function resolve_entry(entry) {
 	if (fs.existsSync(entry)) {

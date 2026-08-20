@@ -30,6 +30,9 @@ catalogs:
     '@polka/url':
       specifier: ^1.0.0-next.29
       version: 1.0.0-next.29
+    '@standard-schema/spec':
+      specifier: ^1.1.0
+      version: 1.1.0
     '@sveltejs/eslint-config':
       specifier: ^10.0.4
       version: 10.0.4
@@ -357,9 +360,6 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 22.19.19
-      sirv:
-        specifier: ^3.0.2
-        version: 3.0.2
       svelte:
         specifier: 'catalog:'
         version: 5.56.8(@typescript-eslint/types@8.61.1)
@@ -442,6 +442,9 @@ importers:
       vite:
         specifier: 'catalog:'
         version: 8.2.1(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0)
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.19)(@vitest/browser-playwright@4.1.10)(jsdom@30.0.1)(vite@8.2.1(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0))
 
   packages/adapter-vercel/test/apps/split:
     devDependencies:
@@ -690,6 +693,9 @@ importers:
 
   packages/kit/test/apps/async:
     devDependencies:
+      '@standard-schema/spec':
+        specifier: 'catalog:'
+        version: 1.1.0
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../..
@@ -756,9 +762,6 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
-      valibot:
-        specifier: 'catalog:'
-        version: 1.4.2(typescript@6.0.3)
       vite:
         specifier: 'catalog:'
         version: 8.2.1(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0)

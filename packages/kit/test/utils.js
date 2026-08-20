@@ -292,35 +292,88 @@ if (!test_browser_device) {
 	);
 }
 
+const test_mode = process.env.DEV ? 'dev' : 'build';
+
+const all_projects = [
+	{ name: `${test_browser}-${test_mode}`, use: { javaScriptEnabled: true } },
+	{ name: `${test_browser}-${test_mode}-no-js`, use: { javaScriptEnabled: false } }
+];
+
+// the two projects cost very different amounts of time, so CI runs them as separate jobs
+const test_project = process.env.KIT_E2E_PROJECT;
+
+if (test_project && test_project !== 'js' && test_project !== 'no-js') {
+	throw new Error(
+		`invalid test project specified: KIT_E2E_PROJECT=${test_project}. Allowed values: js, no-js`
+	);
+}
+
+/** @type {Record<string, number>} */
+const ports = {
+	'test-async': 5300,
+	'test-basics': 5301,
+	'test-dev-only': 5302,
+	'test-embed': 5303,
+	'test-hash-based-routing': 5304,
+	'test-no-csr': 5305,
+	'test-no-ssr': 5306,
+	'test-options': 5307,
+	'test-options-2': 5308,
+	'test-options-3': 5309,
+	'test-prerendered-app-error-pages': 5310,
+	'test-writes': 5311
+};
+
+const package_name = JSON.parse(fs.readFileSync(path.resolve('package.json'), 'utf8')).name;
+export const port = ports[package_name];
+
+if (!port) {
+	throw new Error(`No test server port configured for ${package_name}`);
+}
+
+/**
+ * read process.env[name] as a one-based `current/total` shard, e.g. `1/3`
+ *
+ * @param {string} name of process.env value to read
+ * @returns {{ current: number, total: number } | undefined} undefined if process.env[name] isn't set
+ * @throws {Error} when value cannot be parsed to a shard
+ */
+function shard_from_env(name) {
+	const value = process.env[name];
+	if (!value) return undefined;
+
+	const [current, total] = value.split('/').map(Number);
+
+	if (!Number.isInteger(current) || !Number.isInteger(total) || current < 1 || current > total) {
+		throw new Error(
+			`process.env.${name} must be a one-based \`current/total\` shard but is "${value}"`
+		);
+	}
+
+	return { current, total };
+}
+
 export const config = defineConfig({
 	forbidOnly: !!process.env.CI,
 	// generous timeouts on CI
 	timeout: process.env.CI ? 45000 : 15000,
 	webServer: {
-		command: process.env.DEV ? 'pnpm dev --force' : 'pnpm build && pnpm preview',
-		port: process.env.DEV ? 5173 : 4173
+		command: process.env.DEV
+			? `pnpm dev --force --port ${port} --strictPort`
+			: `pnpm build && pnpm preview --port ${port} --strictPort`,
+		port
 	},
 	retries: process.env.CI ? 2 : number_from_env('KIT_E2E_RETRIES', 0),
-	projects: [
-		{
-			name: `${test_browser}-${process.env.DEV ? 'dev' : 'build'}`,
-			use: {
-				javaScriptEnabled: true
-			}
-		},
-		{
-			name: `${test_browser}-${process.env.DEV ? 'dev' : 'build'}-no-js`,
-			use: {
-				javaScriptEnabled: false
-			}
-		}
-	],
+	projects: test_project
+		? all_projects.filter((project) => project.use.javaScriptEnabled === (test_project === 'js'))
+		: all_projects,
 	use: {
 		...test_browser_device,
 		screenshot: 'only-on-failure',
 		trace: 'retain-on-failure'
 	},
-	workers: process.env.CI ? 2 : number_from_env('KIT_E2E_WORKERS', undefined),
+	workers: number_from_env('KIT_E2E_WORKERS', process.env.CI ? 2 : undefined),
+	shard: shard_from_env('KIT_E2E_SHARD'),
 	reporter: process.env.CI
 		? [
 				['dot'],
