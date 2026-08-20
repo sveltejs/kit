@@ -1,154 +1,278 @@
-/** @import { RemoteQueryOverride } from '@sveltejs/kit' */
-/** @import { RemoteFunctionResponse } from 'types' */
-/** @import { Query } from './query.svelte.js' */
+/** @import { RemoteFunctionResponse, RemoteFunctionData, RemoteFunctionDataNode } from 'types' */
+/** @import { RemoteQueryUpdate } from '@sveltejs/kit' */
+/** @import { CacheEntry } from './cache.svelte.js' */
 import * as devalue from 'devalue';
-import { app, goto, query_map, remote_responses } from '../client.js';
+import { app, goto, live_query_map, query_map, query_responses } from '../client.js';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
-import { tick, untrack } from 'svelte';
-import { create_remote_key, stringify_remote_arg } from '../../shared.js';
-import { page } from '../state.svelte.js';
+import { untrack } from 'svelte';
+import { create_remote_key, split_remote_key } from '../../shared.js';
+import { navigating, page } from '../state.svelte.js';
+
+/** Indicates a query function, as opposed to a query instance */
+export const QUERY_FUNCTION_ID = Symbol('sveltekit.query_function_id');
+/** Indicates a query override callback, used to release the override */
+export const QUERY_OVERRIDE_KEY = Symbol('sveltekit.query_override_key');
+/** Indicates a query instance */
+export const QUERY_RESOURCE_KEY = Symbol('sveltekit.query_resource_key');
+
+/**
+ * If we're inside a reactive context, pin a cache entry for as long as the
+ * surrounding effect is alive. Without this, a transiently-referenced
+ * `QueryProxy`/`LiveQueryProxy` (e.g. one produced by `{await fn()}` in a
+ * template or by `$derived(await fn())`) would be eligible for GC as soon as
+ * the awaited value has been read, after which the FinalizationRegistry
+ * would evict the cache entry — even though the consuming effect is still
+ * alive and may rely on the entry being refreshed (e.g. via `refreshAll()`
+ * or a server-initiated single-flight refresh).
+ *
+ * @template TResource
+ * @param {Map<string, Map<string, { resource: TResource }>>} cache_map
+ * @param {{ manual_ref: (entry: any, id: string, payload: string) => () => void }} cache
+ * @param {string} id
+ * @param {string} payload
+ */
+export function pin_in_effect(cache_map, cache, id, payload) {
+	try {
+		$effect.pre(() => {
+			const entry = cache_map.get(id)?.get(payload);
+			if (!entry) return;
+			return cache.manual_ref(entry, id, payload);
+		});
+	} catch {
+		// not in an effect context — nothing to pin
+	}
+}
+
+/**
+ * Wrap a proxy's `then`/`catch`/`finally` function so that the underlying
+ * cache entry stays pinned for the lifetime of the awaited promise. Without
+ * this, a proxy awaited outside any effect (e.g. in an event handler) could
+ * be GC'd between the `.then` getter returning the thenable and the
+ * underlying promise settling, causing the FinalizationRegistry to evict the
+ * cache entry mid-flight and the awaited value to resolve to Svelte's
+ * `UNINITIALIZED` sentinel from a torn-down `$derived`.
+ *
+ * @template TResource
+ * @template {(...args: any[]) => Promise<any>} TThen
+ * @param {Map<string, Map<string, { resource: TResource }>>} cache_map
+ * @param {{ manual_ref: (entry: any, id: string, payload: string) => () => void }} cache
+ * @param {string} id
+ * @param {string} payload
+ * @param {TThen} then
+ * @returns {TThen}
+ */
+export function pin_while_resolving(cache_map, cache, id, payload, then) {
+	return /** @type {TThen} */ (
+		(...a) => {
+			const entry = cache_map.get(id)?.get(payload);
+			const release = entry ? cache.manual_ref(entry, id, payload) : undefined;
+			const promise = then(...a);
+			if (release) {
+				promise.then(release, release);
+			}
+			return promise;
+		}
+	);
+}
 
 /**
  * @returns {{ 'x-sveltekit-pathname': string, 'x-sveltekit-search': string }}
  */
+/**
+ * Unwraps a `RemoteFunctionDataNode` that was serialized during SSR,
+ * rethrowing serialized errors so the consuming resource ends up
+ * in the same failed state it had on the server
+ * @param {RemoteFunctionDataNode} node
+ */
+export function unwrap_node(node) {
+	if (node.e) {
+		throw new HttpError(node.e[0] ?? 500, node.e[1]);
+	}
+
+	return node.v;
+}
+
 export function get_remote_request_headers() {
 	// This will be the correct value of the current or soon-current url,
 	// even in forks because it's state-based - therefore not using window.location.
 	// Use untrack(...) to Avoid accidental reactive dependency on pathname/search
-	return untrack(() => ({
-		'x-sveltekit-pathname': page.url.pathname,
-		'x-sveltekit-search': page.url.search
-	}));
+	return untrack(() => {
+		const url = navigating.current?.to?.url ?? page.url;
+
+		return {
+			'x-sveltekit-pathname': url.pathname,
+			'x-sveltekit-search': url.search
+		};
+	});
 }
 
 /**
  * @param {string} url
- * @param {HeadersInit} headers
+ * @param {RequestInit} [init]
  */
-export async function remote_request(url, headers) {
-	const response = await fetch(url, {
-		headers: {
-			'Content-Type': 'application/json',
-			...headers
-		}
-	});
+export async function remote_request(url, init) {
+	const response = await fetch(url, init);
 
 	if (!response.ok) {
-		throw new HttpError(500, 'Failed to execute remote function');
+		const result = await response.json().catch(() => ({
+			type: 'error',
+			status: response.status,
+			error: response.statusText
+		}));
+
+		throw new HttpError(result.status ?? response.status ?? 500, result.error);
 	}
 
 	const result = /** @type {RemoteFunctionResponse} */ (await response.json());
-
-	if (result.type === 'redirect') {
-		await goto(result.location);
-		throw new Redirect(307, result.location);
-	}
 
 	if (result.type === 'error') {
 		throw new HttpError(result.status ?? 500, result.error);
 	}
 
-	return result.result;
+	const data = /** @type {RemoteFunctionData} */ (
+		result.data ? devalue.parse(result.data, app.decoders) : {}
+	);
+
+	/**
+	 *
+	 * @param {string} key
+	 * @param {CacheEntry<any> | undefined} entry
+	 * @param {any} result
+	 */
+	function refresh(key, entry, result) {
+		if (entry?.resource) {
+			if (result.e) {
+				entry.resource.fail(new HttpError(result.e[0] ?? 500, result.e[1]));
+			} else {
+				entry.resource.set(result.v);
+			}
+		} else if (!result.e) {
+			// `query_responses` stores `{ v }`/`{ e }` nodes, not raw values.
+			// Errors are deliberately dropped here: they are responses to a specific
+			// refresh, not durable state a future resource should initialize with
+			query_responses[key] = result;
+		}
+	}
+
+	// update queries with refreshed data
+	if (data.q) {
+		for (const key in data.q) {
+			const parts = split_remote_key(key);
+			const entry = query_map.get(parts.id)?.get(parts.payload);
+
+			refresh(key, entry, data.q[key]);
+		}
+	}
+
+	// reconnect live queries
+	if (data.l) {
+		for (const key in data.l) {
+			const parts = split_remote_key(key);
+			const entry = live_query_map.get(parts.id)?.get(parts.payload);
+
+			refresh(key, entry, data.l[key]);
+
+			// `fail()` is terminal, so only reconnect on the success path —
+			// reconnecting after a hard failure would wipe the error state and
+			// restart the stream (see commit 63a3e83 regression).
+			if (!data.l[key].e) {
+				void entry?.resource.reconnect();
+			}
+		}
+	}
+
+	return data;
 }
 
 /**
- * Client-version of the `query`/`prerender`/`cache` function from `$app/server`.
- * @param {string} id
- * @param {(key: string, args: string) => any} create
+ * @param {RemoteFunctionResponse} response
+ * @returns {Promise<Extract<RemoteFunctionResponse, { type: 'result' }>>}
  */
-export function create_remote_function(id, create) {
-	return (/** @type {any} */ arg) => {
-		const payload = stringify_remote_arg(arg, app.hooks.transport);
-		const cache_key = create_remote_key(id, payload);
-		let entry = query_map.get(cache_key);
+export async function handle_side_channel_response(response) {
+	if (response.type === 'redirect') {
+		await goto(response.location);
+		throw new Redirect(307, response.location);
+	}
 
-		let tracking = true;
-		try {
-			$effect.pre(() => {
-				if (entry) entry.count++;
-				return () => {
-					const entry = query_map.get(cache_key);
-					if (entry) {
-						entry.count--;
-						void tick().then(() => {
-							if (!entry.count && entry === query_map.get(cache_key)) {
-								query_map.delete(cache_key);
-								delete remote_responses[cache_key];
-							}
-						});
-					}
-				};
-			});
-		} catch {
-			tracking = false;
-		}
+	if (response.type === 'error') {
+		throw new HttpError(response.status ?? 500, response.error);
+	}
 
-		let resource = entry?.resource;
-		if (!resource) {
-			resource = create(cache_key, payload);
-
-			Object.defineProperty(resource, '_key', {
-				value: cache_key
-			});
-
-			query_map.set(
-				cache_key,
-				(entry = {
-					count: tracking ? 1 : 0,
-					resource
-				})
-			);
-
-			resource
-				.then(() => {
-					void tick().then(() => {
-						if (
-							!(/** @type {NonNullable<typeof entry>} */ (entry).count) &&
-							entry === query_map.get(cache_key)
-						) {
-							// If no one is tracking this resource anymore, we can delete it from the cache
-							query_map.delete(cache_key);
-						}
-					});
-				})
-				.catch(() => {
-					// error delete the resource from the cache
-					// TODO is that correct?
-					query_map.delete(cache_key);
-				});
-		}
-
-		return resource;
-	};
+	return response;
 }
 
 /**
- * @param {Array<Query<any> | RemoteQueryOverride>} updates
+ * Given an array of updates, which could be query instances, query functions, or query override release functions,
+ * categorize them into overrides (which need to be released after the command completes), refreshes (which
+ * just need to be refreshed after the command completes), or both.
+ *
+ * @param {RemoteQueryUpdate[]} updates
+ * @returns {{ overrides: Array<() => void>, refreshes: Set<string> }}
  */
-export function release_overrides(updates) {
+export function categorize_updates(updates) {
+	/** @type {Set<string>} */
+	const override_keys = new Set();
+	/** @type {Array<() => void>} */
+	const overrides = [];
+	/** @type {Set<string>} */
+	const refreshes = new Set();
+
 	for (const update of updates) {
-		if ('release' in update) {
-			update.release();
-		}
-	}
-}
+		if (typeof update === 'function') {
+			if (Object.hasOwn(update, QUERY_FUNCTION_ID)) {
+				// this is a query function (not instance), so we need to find all active instances
+				// of this function and request that they be refreshed/reconnected by the command handler
+				// @ts-expect-error
+				const id = /** @type {string} */ (update[QUERY_FUNCTION_ID]);
+				const entries = query_map.get(id) ?? live_query_map.get(id);
 
-/**
- * @param {string} stringified_refreshes
- * @param {Array<Query<any> | RemoteQueryOverride>} updates
- */
-export function refresh_queries(stringified_refreshes, updates = []) {
-	const refreshes = Object.entries(devalue.parse(stringified_refreshes, app.decoders));
+				if (entries) {
+					for (const payload of entries.keys()) {
+						refreshes.add(create_remote_key(id, payload));
+					}
+				}
 
-	// `refreshes` is a superset of `updates`
-	for (const [key, value] of refreshes) {
-		// If there was an optimistic update, release it right before we update the query
-		const update = updates.find((u) => u._key === key);
-		if (update && 'release' in update) {
-			update.release();
+				continue;
+			}
+
+			if (Object.hasOwn(update, QUERY_OVERRIDE_KEY)) {
+				// this is a query override release function, so we need to both request that the query instance
+				// be refreshed _and_ stash the release function so we can release the override after the command completes
+				// @ts-expect-error
+				const key = /** @type {string} */ (update[QUERY_OVERRIDE_KEY]);
+				refreshes.add(key);
+
+				if (override_keys.has(key)) {
+					throw new Error(
+						'Multiple overrides for the same query are not allowed in a single updates() invocation'
+					);
+				}
+
+				override_keys.add(key);
+				overrides.push(/** @type {() => void} */ (update));
+				continue;
+			}
+
+			// this is just a regular function provided by some user integration, so we can just stash it in the overrides array
+			overrides.push(/** @type {() => void} */ (update));
+			continue;
 		}
-		// Update the query with the new value
-		const entry = query_map.get(key);
-		entry?.resource.set(value);
+
+		if (
+			typeof update === 'object' &&
+			update !== null &&
+			Object.hasOwn(update, QUERY_RESOURCE_KEY)
+		) {
+			// this is a query instance, so we just need to request that it be refreshed
+			// @ts-expect-error
+			refreshes.add(/** @type {string} */ (update[QUERY_RESOURCE_KEY]));
+			continue;
+		}
+
+		throw new Error(
+			'updates() expects a query or live query function, query resource, or query override'
+		);
 	}
+
+	return { overrides, refreshes };
 }

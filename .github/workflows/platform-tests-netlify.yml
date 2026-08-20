@@ -1,0 +1,95 @@
+name: Platform Tests (Netlify)
+
+on:
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: 'Commit SHA to test'
+        required: false
+        default: ''
+  workflow_call:
+    inputs:
+      sha:
+        description: 'Commit SHA to test'
+        required: false
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+env:
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+
+jobs:
+  test-basic:
+    if: github.repository == 'sveltejs/kit'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: '@sveltejs/adapter-netlify platform tests'
+    env:
+      TEST_APP_DIR: packages/adapter-netlify/test/apps/basic
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ inputs.sha || github.sha }}
+
+      - uses: ./.github/actions/netlify-deploy
+        id: deploy
+        with:
+          test-app-dir: ${{ env.TEST_APP_DIR }}
+          netlify-project-id: ${{ secrets.NETLIFY_PROJECT_ID_BASIC }}
+          netlify-token: ${{ secrets.NETLIFY_TOKEN }}
+
+      - uses: ./.github/actions/platform-test
+        with:
+          test-app-dir: ${{ env.TEST_APP_DIR }}
+          deployment-url: ${{ steps.deploy.outputs.deployment-url }}
+
+  test-edge:
+    if: github.repository == 'sveltejs/kit'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: '@sveltejs/adapter-netlify platform tests'
+    env:
+      TEST_APP_DIR: packages/adapter-netlify/test/apps/edge
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ inputs.sha || github.sha }}
+
+      - uses: ./.github/actions/netlify-deploy
+        id: deploy
+        with:
+          test-app-dir: ${{ env.TEST_APP_DIR }}
+          netlify-project-id: ${{ secrets.NETLIFY_PROJECT_ID_EDGE }}
+          netlify-token: ${{ secrets.NETLIFY_TOKEN }}
+
+      - uses: ./.github/actions/platform-test
+        with:
+          test-app-dir: ${{ env.TEST_APP_DIR }}
+          deployment-url: ${{ steps.deploy.outputs.deployment-url }}
+
+  test-split:
+    if: github.repository == 'sveltejs/kit'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: '@sveltejs/adapter-netlify platform tests'
+    env:
+      TEST_APP_DIR: packages/adapter-netlify/test/apps/split
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ inputs.sha || github.sha }}
+
+      - uses: ./.github/actions/netlify-deploy
+        id: deploy
+        with:
+          test-app-dir: ${{ env.TEST_APP_DIR }}
+          netlify-project-id: ${{ secrets.NETLIFY_PROJECT_ID_SPLIT }}
+          netlify-token: ${{ secrets.NETLIFY_TOKEN }}
+
+      - uses: ./.github/actions/platform-test
+        with:
+          test-app-dir: ${{ env.TEST_APP_DIR }}
+          deployment-url: ${{ steps.deploy.outputs.deployment-url }}

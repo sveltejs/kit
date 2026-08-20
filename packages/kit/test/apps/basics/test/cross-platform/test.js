@@ -221,7 +221,7 @@ test.describe('Shadowed pages', () => {
 			expect(await page.textContent('h1')).toBe('500');
 			expect(await page.textContent('#message')).toBe(
 				'This is your custom error page saying: "Data returned from `load` while rendering /shadowed/serialization is not serializable: Cannot stringify arbitrary non-POJOs (data.nope).' +
-					' If you need to serialize/deserialize custom types, use transport hooks: https://svelte.dev/docs/kit/hooks#Universal-hooks-transport. (500 Internal Error)"'
+					' If you need to serialize/deserialize custom types, use transport hooks: https://svelte.dev/docs/kit/hooks#transport. (500 Internal Error)"'
 			);
 		});
 	}
@@ -601,6 +601,19 @@ test.describe('Redirects', () => {
 
 		await page.goBack();
 		expect(page.url()).toBe(`${baseURL}/redirect`);
+	});
+
+	test('invalid redirect location in handle hook returns 500 without crashing server', async ({
+		request
+	}) => {
+		const bad_redirect = await request.get(
+			'/redirect/in-handle?location=%2Fredirect%2Fc%0D%0Aset-cookie%3A%20evil%3D1'
+		);
+
+		expect(bad_redirect.status()).toBe(500);
+
+		const follow_up = await request.get('/');
+		expect(follow_up.status()).toBe(200);
 	});
 
 	test('sets cookies when redirect in handle hook', async ({ page, app, javaScriptEnabled }) => {

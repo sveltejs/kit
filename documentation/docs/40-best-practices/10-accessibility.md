@@ -56,7 +56,7 @@ By default, SvelteKit's page template sets the default language of the document 
 <html lang="de">
 ```
 
-If your content is available in multiple languages, you should set the `lang` attribute based on the language of the current page. You can do this with SvelteKit's [handle hook](hooks#Server-hooks-handle):
+If your content is available in multiple languages, you should set the `lang` attribute based on the language of the current page. You can do this with SvelteKit's [handle hook](hooks#handle):
 
 ```html
 /// file: src/app.html
@@ -65,12 +65,13 @@ If your content is available in multiple languages, you should set the `lang` at
 
 ```js
 /// file: src/hooks.server.js
-/**
- * @param {import('@sveltejs/kit').RequestEvent} event
- */
-function get_lang(event) {
+// @filename: utils.ts
+export function get_lang(event: import('@sveltejs/kit').RequestEvent) {
 	return 'en';
 }
+
+// @filename: hooks.server.js
+import { get_lang } from './utils';
 // ---cut---
 /** @type {import('@sveltejs/kit').Handle} */
 export function handle({ event, resolve }) {

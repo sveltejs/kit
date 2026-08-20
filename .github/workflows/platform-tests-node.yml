@@ -1,0 +1,47 @@
+name: Platform Tests (Node)
+
+on:
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: 'Commit SHA to test'
+        required: false
+        default: ''
+  workflow_call:
+    inputs:
+      sha:
+        description: 'Commit SHA to test'
+        required: false
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+env:
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+
+jobs:
+  test-basic:
+    if: github.repository == 'sveltejs/kit'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [22, 24]
+    environment: '@sveltejs/adapter-node platform tests'
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ inputs.sha || github.sha }}
+
+      - uses: ./.github/actions/node-setup
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Build adapter-node files
+        working-directory: packages/adapter-node
+        run: pnpm prepublishOnly
+
+      - uses: ./.github/actions/platform-test
+        with:
+          test-app-dir: packages/adapter-node/test/apps/basic

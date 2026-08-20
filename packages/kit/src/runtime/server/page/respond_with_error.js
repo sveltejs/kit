@@ -101,6 +101,7 @@ export async function respond_with_error({
 			status,
 			error: await handle_error_and_jsonify(event, event_state, options, error),
 			branch,
+			error_components: [],
 			fetched,
 			event,
 			event_state,

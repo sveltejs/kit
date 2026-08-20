@@ -117,15 +117,15 @@ Finally, you may also consider using an `{#await}` block:
 <script>
 	import { browser } from '$app/environment';
 
-	const ComponentConstructor = browser ?
-		import('some-browser-only-library').then((module) => module.Component) :
-		new Promise(() => {});
+	const promise = browser
+		? import('./BrowserComponent.svelte')
+		: import('./ServerComponent.svelte');
 </script>
 
-{#await ComponentConstructor}
+{#await promise}
 	<p>Loading...</p>
-{:then component}
-	<svelte:component this={component} />
+{:then module}
+	<module.default />
 {:catch error}
 	<p>Something went wrong: {error.message}</p>
 {/await}
@@ -133,7 +133,7 @@ Finally, you may also consider using an `{#await}` block:
 
 ## How do I use a different backend API server?
 
-You can use [`event.fetch`](./load#Making-fetch-requests) to request data from an external API server, but be aware that you would need to deal with [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS), which will result in complications such as generally requiring requests to be preflighted resulting in higher latency. Requests to a separate subdomain may also increase latency due to an additional DNS lookup, TLS setup, etc. If you wish to use this method, you may find [`handleFetch`](./hooks#Server-hooks-handleFetch) helpful.
+You can use [`event.fetch`](./load#Making-fetch-requests) to request data from an external API server, but be aware that you would need to deal with [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS), which will result in complications such as generally requiring requests to be preflighted resulting in higher latency. Requests to a separate subdomain may also increase latency due to an additional DNS lookup, TLS setup, etc. If you wish to use this method, you may find [`handleFetch`](./hooks#handleFetch) helpful.
 
 Another approach is to set up a proxy to bypass CORS headaches. In production, you would rewrite a path like `/api` to the API server; for local development, use Vite's [`server.proxy`](https://vitejs.dev/config/server-options.html#server-proxy) option.
 
@@ -154,12 +154,7 @@ export function GET({ params, url }) {
 `adapter-node` builds a middleware that you can use with your own server for production mode. In dev, you can add middleware to Vite by using a Vite plugin. For example:
 
 ```js
-// @errors: 2322
-// @filename: ambient.d.ts
-declare module '@sveltejs/kit/vite'; // TODO this feels unnecessary, why can't it 'see' the declarations?
-
-// @filename: index.js
-// ---cut---
+/// file: vite.config.js
 import { sveltekit } from '@sveltejs/kit/vite';
 
 /** @type {import('vite').Plugin} */

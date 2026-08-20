@@ -199,11 +199,7 @@ function update_types(config, routes, route, to_delete = new Set()) {
 
 	// returns the predicate of a matcher's type guard - or string if there is no type guard
 	declarations.push(
-		// TS complains on infer U, which seems weird, therefore ts-ignore it
-		[
-			'// @ts-ignore',
-			'type MatcherParam<M> = M extends (param : string) => param is infer U ? U extends string ? U : string : string;'
-		].join('\n')
+		'type MatcherParam<M> = M extends (param : string) => param is (infer U extends string) ? U : string;'
 	);
 
 	declarations.push(
@@ -613,7 +609,7 @@ function generate_params_type(params, outdir, config) {
 					param.matcher
 						? `MatcherParam<typeof import('${path_to_matcher(param.matcher)}').match>`
 						: 'string'
-				}`
+				}${param.optional ? ' | undefined' : ''}`
 		)
 		.join('; ')} }`;
 }
@@ -640,6 +636,16 @@ export function tweak_types(content, is_server) {
 		const code = new MagicString(content);
 
 		const exports = new Map();
+		/** @param {import('typescript').BindingName} name */
+		function add_export(name) {
+			if (ts.isIdentifier(name)) {
+				if (names.has(name.text)) exports.set(name.text, name.text);
+			} else {
+				for (const element of name.elements) {
+					if (ts.isBindingElement(element)) add_export(element.name);
+				}
+			}
+		}
 
 		ast.forEachChild((node) => {
 			if (
@@ -666,9 +672,7 @@ export function tweak_types(content, is_server) {
 
 				if (ts.isVariableStatement(node)) {
 					node.declarationList.declarations.forEach((declaration) => {
-						if (ts.isIdentifier(declaration.name) && names.has(declaration.name.text)) {
-							exports.set(declaration.name.text, declaration.name.text);
-						}
+						add_export(declaration.name);
 					});
 				}
 			}

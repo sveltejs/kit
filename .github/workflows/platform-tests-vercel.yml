@@ -28,14 +28,14 @@ jobs:
     timeout-minutes: 15
     environment: '@sveltejs/adapter-vercel platform tests'
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ inputs.sha || github.sha }}
+          persist-credentials: false
 
       - uses: ./.github/actions/vercel-deploy
         id: deploy
         with:
-          test-app-dir: packages/adapter-vercel/test/apps/basic
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_BASIC }}
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
@@ -43,4 +43,27 @@ jobs:
       - uses: ./.github/actions/platform-test
         with:
           test-app-dir: packages/adapter-vercel/test/apps/basic
+          deployment-url: ${{ steps.deploy.outputs.deployment-url }}
+
+  test-split:
+    if: github.repository == 'sveltejs/kit'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: '@sveltejs/adapter-vercel platform tests'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.sha || github.sha }}
+          persist-credentials: false
+
+      - uses: ./.github/actions/vercel-deploy
+        id: deploy
+        with:
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_SPLIT }}
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+
+      - uses: ./.github/actions/platform-test
+        with:
+          test-app-dir: packages/adapter-vercel/test/apps/split
           deployment-url: ${{ steps.deploy.outputs.deployment-url }}

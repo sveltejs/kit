@@ -6,16 +6,6 @@ Service workers act as proxy servers that handle network requests inside your ap
 
 In SvelteKit, if you have a `src/service-worker.js` file (or `src/service-worker/index.js`) it will be bundled and automatically registered.
 
-You can [disable automatic registration](configuration#serviceWorker) if you need to register the service worker with your own logic or use another solution. The default registration looks something like this:
-
-```js
-if ('serviceWorker' in navigator) {
-	addEventListener('load', function () {
-		navigator.serviceWorker.register('./path/to/service-worker.js');
-	});
-}
-```
-
 ## Inside the service worker
 
 Inside the service worker you have access to the [`$service-worker` module]($service-worker), which provides you with the paths to all static assets, build files and prerendered pages. You're also provided with an app version string, which you can use for creating a unique cache name, and the deployment's `base` path. If your Vite config specifies `define` (used for global variable replacements), this will be applied to service workers as well as your server/client builds.
@@ -23,6 +13,7 @@ Inside the service worker you have access to the [`$service-worker` module]($ser
 The following example caches the built app and any files in `static` eagerly, and caches all other requests as they happen. This would make each page work offline once visited.
 
 ```js
+// @errors: 2688 2307
 /// file: src/service-worker.js
 // Disables access to DOM typings like `HTMLElement` which are not available
 // inside a service worker and instantiates the correct globals
@@ -98,7 +89,7 @@ self.addEventListener('fetch', (event) => {
 				throw new Error('invalid response from fetch');
 			}
 
-			if (response.status === 200) {
+			if (response.status === 200 && !response.headers.get('cache-control')?.includes('no-store')) {
 				cache.put(event.request, response.clone());
 			}
 
@@ -122,19 +113,46 @@ self.addEventListener('fetch', (event) => {
 
 > [!NOTE] Be careful when caching! In some cases, stale data might be worse than data that's unavailable while offline. Since browsers will empty caches if they get too full, you should also be careful about caching large assets like video files.
 
-## During development
+> [!NOTE] `build` and `prerendered` are empty arrays during development
 
-The service worker is bundled for production, but not during development. For that reason, only browsers that support [modules in service workers](https://web.dev/es-modules-in-sw) will be able to use them at dev time. If you are manually registering your service worker, you will need to pass the `{ type: 'module' }` option in development:
+## Manual registration
+
+You can [disable automatic registration](configuration#serviceWorker) if you need to register the service worker with your own logic. The default registration looks something like this:
 
 ```js
 import { dev } from '$app/environment';
 
-navigator.serviceWorker.register('/service-worker.js', {
-	type: dev ? 'module' : 'classic'
+if ('serviceWorker' in navigator) {
+	addEventListener('load', function () {
+		navigator.serviceWorker.register('./path/to/service-worker.js', {
+			type: dev ? 'module' : 'classic'
+		});
+	});
+}
+```
+
+> [!NOTE] The service worker is bundled for production, but not during development.
+
+## Updating the service worker
+
+Browsers check for an updated service worker when a full-page navigation happens within its scope, and after functional events such as `push` and `sync`. Client-side navigations are neither, so navigating around your app will not by itself cause a new deployment's service worker to be picked up.
+
+SvelteKit calls [`registration.update()`](https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerRegistration/update) only as part of error recovery — if a route module fails to load or a navigation results in an error status, and [version polling](configuration#version) detects that the app has been redeployed, the service worker is updated before SvelteKit falls back to a full-page navigation.
+
+If you want new deployments to be picked up more eagerly, you can trigger an update check yourself — for example on every client-side navigation, in your root layout:
+
+```js
+import { afterNavigate } from '$app/navigation';
+
+afterNavigate(async () => {
+	if ('serviceWorker' in navigator) {
+		const registration = await navigator.serviceWorker.getRegistration();
+		await registration?.update();
+	}
 });
 ```
 
-> [!NOTE] `build` and `prerendered` are empty arrays during development
+This will not cause the new service worker (if there is one) to take over the existing page immediately — instead, it will be installed in the background and take over as soon as the number of tabs managed by the existing service worker drops to zero.
 
 ## Other solutions
 

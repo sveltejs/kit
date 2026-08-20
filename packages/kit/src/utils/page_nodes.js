@@ -6,6 +6,7 @@ import {
 } from './exports.js';
 
 export class PageNodes {
+	/** All layout nodes and the page node, if any */
 	data;
 
 	/**

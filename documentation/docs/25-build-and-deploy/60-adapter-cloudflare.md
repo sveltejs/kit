@@ -17,6 +17,7 @@ This adapter will be installed by default when you use [`adapter-auto`](adapter-
 Install with `npm i -D @sveltejs/adapter-cloudflare`, then add the adapter to your `svelte.config.js`:
 
 ```js
+// @errors: 2307
 /// file: svelte.config.js
 import adapter from '@sveltejs/adapter-cloudflare';
 
@@ -116,7 +117,7 @@ If you're using the [Git integration](https://developers.cloudflare.com/pages/ge
 - Build output directory – `.svelte-kit/cloudflare`
 
 
-Once configured, go to the **Runtime** section of your project settings, and add the `nodejs_als` compability flag to enable the [Node.js AsyncLocalStorage](https://developers.cloudflare.com/workers/configuration/compatibility-flags/#nodejs-asynclocalstorage). Alternatively, do this in your wrangler config using the `compatibility_flags` array.
+Once configured, go to the **Runtime** section of your project settings, and add the `nodejs_als` compatibility flag to enable the [Node.js AsyncLocalStorage](https://developers.cloudflare.com/workers/configuration/compatibility-flags/#nodejs-asynclocalstorage). Alternatively, do this in your wrangler config using the `compatibility_flags` array.
 
 ### Further reading
 
@@ -185,7 +186,7 @@ For testing the build, you should use [Wrangler](https://developers.cloudflare.c
 
 The [`_headers`](https://developers.cloudflare.com/pages/configuration/headers/) and [`_redirects`](https://developers.cloudflare.com/pages/configuration/redirects/) files, specific to Cloudflare, can be used for static asset responses (like images) by putting them into the project root folder.
 
-However, they will have no effect on responses dynamically rendered by SvelteKit, which should return custom headers or redirect responses from [server endpoints](routing#server) or with the [`handle`](hooks#Server-hooks-handle) hook.
+However, they will have no effect on responses dynamically rendered by SvelteKit, which should return custom headers or redirect responses from [server endpoints](routing#server) or with the [`handle`](hooks#handle) hook.
 
 ## Troubleshooting
 

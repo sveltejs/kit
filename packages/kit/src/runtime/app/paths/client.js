@@ -1,4 +1,4 @@
-/** @import { Asset, RouteId, Pathname, ResolvedPathname } from '$app/types' */
+/** @import { Asset, RouteId, RouteIdWithSearchOrHash, Pathname, PathnameWithSearchOrHash, ResolvedPathname } from '$app/types' */
 /** @import { ResolveArgs } from './types.js' */
 import { base, assets, hash_routing } from './internal/client.js';
 import { resolve_route } from '../../../utils/routing.js';
@@ -47,11 +47,18 @@ const pathname_prefix = hash_routing ? '#' : '';
  * ```
  * @since 2.26
  *
- * @template {RouteId | Pathname} T
+ * @template {RouteIdWithSearchOrHash | PathnameWithSearchOrHash} T
  * @param {ResolveArgs<T>} args
  * @returns {ResolvedPathname}
  */
 export function resolve(...args) {
+	if (!args[0].startsWith('/')) {
+		throw new Error(
+			`Cannot use \`resolve(...)\` with a non-absolute pathname or route ID (got "${args[0]}"). ` +
+				'`resolve` is only for internal pathnames and route IDs; external URLs should be used directly.'
+		);
+	}
+
 	// The type error is correct here, and if someone doesn't pass params when they should there's a runtime error,
 	// but we don't want to adjust the internal resolve_route function to accept `undefined`, hence the type cast.
 	return (

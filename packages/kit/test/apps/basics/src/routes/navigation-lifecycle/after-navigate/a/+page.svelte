@@ -1,10 +1,10 @@
 <script>
 	import { afterNavigate } from '$app/navigation';
 
-	/** @type {import('@sveltejs/kit').NavigationTarget | null} */
+	/** @type {import('@sveltejs/kit').AfterNavigate['from'] | null} */
 	let from;
 
-	/** @type {import('@sveltejs/kit').NavigationTarget} */
+	/** @type {import('@sveltejs/kit').AfterNavigate['to']} */
 	let to;
 
 	afterNavigate((navigation) => {

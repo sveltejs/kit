@@ -1,3 +1,4 @@
+/** @type {import("./$types").PageLoad} */
 export async function load({ fetch, url }) {
 	await fetch(`/load/set-cookie-fetch/a.json${url.search}`);
 	const res = await fetch('/load/set-cookie-fetch/b.json');

@@ -1,8 +1,10 @@
-<script>
-	import { isHttpError } from '@sveltejs/kit';
+<script lang="ts">
+	import { isHttpError, type RemoteLiveQuery } from '@sveltejs/kit';
 	import {
 		validated_query_no_args,
 		validated_query_with_arg,
+		validated_live_query_no_args,
+		validated_live_query_with_arg,
 		validated_prerendered_query_no_args,
 		validated_prerendered_query_with_arg,
 		validated_command_no_args,
@@ -11,10 +13,18 @@
 		validated_batch_query_with_validation
 	} from './validation.remote.js';
 
-	function validate_result(result) {
+	function validate_result(result: 'success' | 'failure') {
 		if (result !== 'success') {
 			throw new Error('Remote function called with invalid arguments');
 		}
+	}
+
+	async function read_live(resource: RemoteLiveQuery<'success' | 'failure'>) {
+		for await (const value of resource) {
+			return value;
+		}
+
+		throw new Error('query.live did not yield a value');
 	}
 
 	let status = $state('pending');
@@ -27,10 +37,12 @@
 		status = 'pending';
 		try {
 			validate_result(await validated_query_no_args());
+			validate_result(await read_live(validated_live_query_no_args()));
 			validate_result(await validated_prerendered_query_no_args());
 			validate_result(await validated_command_no_args());
 
 			validate_result(await validated_query_with_arg('valid'));
+			validate_result(await read_live(validated_live_query_with_arg('valid')));
 			validate_result(await validated_prerendered_query_with_arg('valid'));
 			validate_result(await validated_command_with_arg('valid'));
 
@@ -38,7 +50,7 @@
 			validate_result(await validated_batch_query_with_validation('valid'));
 
 			status = 'success';
-		} catch (e) {
+		} catch {
 			status = 'error';
 		}
 	}}
@@ -56,15 +68,21 @@
 		} catch {
 			try {
 				// @ts-expect-error
-				await validated_prerendered_query_no_args('invalid');
+				await read_live(validated_live_query_no_args('invalid'));
 				status = 'error';
 			} catch {
 				try {
 					// @ts-expect-error
-					await validated_command_no_args('invalid');
+					await validated_prerendered_query_no_args('invalid');
 					status = 'error';
 				} catch {
-					status = 'success';
+					try {
+						// @ts-expect-error
+						await validated_command_no_args('invalid');
+						status = 'error';
+					} catch {
+						status = 'success';
+					}
 				}
 			}
 		}
@@ -85,18 +103,20 @@
 				status = 'wrong error message';
 				return;
 			}
+
 			try {
 				// @ts-expect-error
-				await validated_prerendered_query_with_arg(1);
+				await read_live(validated_live_query_with_arg(1));
 				status = 'error';
 			} catch (e) {
 				if (!isHttpError(e) || e.body.message !== 'Input must be a string') {
 					status = 'wrong error message';
 					return;
 				}
+
 				try {
 					// @ts-expect-error
-					await validated_command_with_arg(1);
+					await validated_prerendered_query_with_arg(1);
 					status = 'error';
 				} catch (e) {
 					if (!isHttpError(e) || e.body.message !== 'Input must be a string') {
@@ -106,14 +126,26 @@
 
 					try {
 						// @ts-expect-error
-						await validated_batch_query_with_validation(123);
+						await validated_command_with_arg(1);
 						status = 'error';
 					} catch (e) {
 						if (!isHttpError(e) || e.body.message !== 'Input must be a string') {
 							status = 'wrong error message';
 							return;
 						}
-						status = 'success';
+
+						try {
+							// @ts-expect-error
+							await validated_batch_query_with_validation(123);
+							status = 'error';
+						} catch (e) {
+							if (!isHttpError(e) || e.body.message !== 'Input must be a string') {
+								status = 'wrong error message';
+								return;
+							}
+
+							status = 'success';
+						}
 					}
 				}
 			}
@@ -130,6 +162,8 @@
 			// @ts-expect-error
 			validate_result(await validated_query_with_arg('valid', 'ignored'));
 			// @ts-expect-error
+			validate_result(await read_live(validated_live_query_with_arg('valid', 'ignored')));
+			// @ts-expect-error
 			validate_result(await validated_prerendered_query_with_arg('valid', 'ignored'));
 			// @ts-expect-error
 			validate_result(await validated_command_with_arg('valid', 'ignored'));
@@ -137,7 +171,7 @@
 			validate_result(await validated_batch_query_no_validation('valid', 'ignored'));
 
 			status = 'success';
-		} catch (e) {
+		} catch {
 			status = 'error';
 		}
 	}}

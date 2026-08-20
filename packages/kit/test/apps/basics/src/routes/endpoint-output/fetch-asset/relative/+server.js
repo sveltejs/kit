@@ -6,7 +6,7 @@ export async function GET({ fetch }) {
 
 	return new Response(response.body, {
 		headers: {
-			'Content-Type': response.headers.get('Content-Type')
+			'Content-Type': response.headers.get('Content-Type') ?? ''
 		}
 	});
 }

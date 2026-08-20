@@ -3,6 +3,7 @@
 
 	let times_triggered = 0;
 	let unload = false;
+	/** @type {import("@sveltejs/kit").BeforeNavigate['type']} */
 	let navigation_type;
 	beforeNavigate(({ cancel, type, willUnload, to }) => {
 		times_triggered++;

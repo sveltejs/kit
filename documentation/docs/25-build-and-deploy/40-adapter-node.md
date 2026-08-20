@@ -130,7 +130,7 @@ We instead read from the _right_, accounting for the number of trusted proxies. 
 
 ### `BODY_SIZE_LIMIT`
 
-The maximum request body size to accept in bytes including while streaming. The body size can also be specified with a unit suffix for kilobytes (`K`), megabytes (`M`), or gigabytes (`G`). For example, `512K` or `1M`. Defaults to 512kb. You can disable this option with a value of `Infinity` (0 in older versions of the adapter) and implement a custom check in [`handle`](hooks#Server-hooks-handle) if you need something more advanced.
+The maximum request body size to accept in bytes including while streaming. The body size can also be specified with a unit suffix for kilobytes (`K`), megabytes (`M`), or gigabytes (`G`). For example, `512K` or `1M`. Defaults to 512kb. You can disable this option with a value of `Infinity` (0 in older versions of the adapter) and implement a custom check in [`handle`](hooks#handle) if you need something more advanced.
 
 ### `SHUTDOWN_TIMEOUT`
 
@@ -273,3 +273,7 @@ app.listen(3000, () => {
 	console.log('listening on port 3000');
 });
 ```
+
+> [!NOTE] When you use `handler.js` in a custom server, only the environment variables read by the handler itself take effect: `ORIGIN`, `PROTOCOL_HEADER`, `HOST_HEADER`, `PORT_HEADER`, `ADDRESS_HEADER`, `XFF_DEPTH`, and `BODY_SIZE_LIMIT`.
+>
+> The server-lifecycle variables (`PORT`, `HOST`, `SOCKET_PATH`, `SHUTDOWN_TIMEOUT`, `IDLE_TIMEOUT`, `KEEP_ALIVE_TIMEOUT`, `HEADERS_TIMEOUT`, `LISTEN_PID`, `LISTEN_FDS`) are only honored by the default `node build` server. Implement them yourself in a custom server if you need the same behavior — for example, the snippet above listens on a hardcoded `3000` regardless of `PORT`.

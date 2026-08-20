@@ -1,3 +1,4 @@
+// @ts-ignore
 import cjs from 'e2e-test-dep-hooks-client';
 cjs.cjs();
 

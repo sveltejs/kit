@@ -61,7 +61,7 @@ export function load(event) {
 }
 ```
 
-> [!NOTE] If you don't handle 404 cases, they will appear in [`handleError`](hooks#Shared-hooks-handleError)
+> [!NOTE] If you don't handle 404 cases, they will appear in [`handleError`](hooks#handleError)
 
 ## Optional parameters
 
@@ -74,6 +74,9 @@ Note that an optional route parameter cannot follow a rest parameter (`[...rest]
 A route like `src/routes/fruits/[page]` would match `/fruits/apple`, but it would also match `/fruits/rocketship`. We don't want that. You can ensure that route parameters are well-formed by adding a _matcher_ — which takes the parameter string (`"apple"` or `"rocketship"`) and returns `true` if it is valid — to your `src/params` directory...
 
 ```js
+// TODO: remove the ts error once kit 3 docs are main
+// ---cut---
+// @errors: 1360
 /// file: src/params/fruit.js
 /**
  * @param {string} param

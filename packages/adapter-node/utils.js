@@ -1,3 +1,5 @@
+import { format } from 'node:url';
+
 /**
  * Parses the given value into number of bytes.
  *
@@ -49,4 +51,33 @@ export function parse_origin(value) {
 	}
 
 	return url.origin;
+}
+
+/**
+ * Formats the address the server is listening on.
+ *
+ * @param {string | false} path
+ * @param {string} host
+ * @param {string | false} port
+ * @param {import('node:net').AddressInfo | string | null} address
+ * @returns {string}
+ */
+export function format_listening_address(path, host, port, address) {
+	if (path) {
+		return path;
+	}
+
+	if (address && typeof address === 'object') {
+		return format({
+			protocol: 'http:',
+			hostname: address.address,
+			port: address.port
+		});
+	}
+
+	return format({
+		protocol: 'http:',
+		hostname: host,
+		port: String(port)
+	});
 }

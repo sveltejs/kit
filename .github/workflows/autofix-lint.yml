@@ -1,0 +1,64 @@
+name: Autofix Lint
+
+on:
+  issue_comment:
+    types: [created]
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  autofix-lint:
+    permissions:
+      contents: write # to push the generated types commit
+      pull-requests: read # to resolve the PR head ref
+    # prevents this action from running on forks
+    if: |
+      github.repository == 'sveltejs/kit' &&
+      (
+        github.event_name == 'workflow_dispatch' ||
+        (
+          github.event.issue.pull_request != null &&
+          github.event.comment.body == '/autofix' &&
+          contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association)
+        )
+      )
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get PR ref
+        if: github.event_name != 'workflow_dispatch'
+        id: pr
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const { data: pull } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number
+            });
+            if (pull.head.repo.full_name !== `${context.repo.owner}/${context.repo.repo}`) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: 'Cannot autofix: this PR is from a forked repository. The autofix workflow can only push to branches within this repository.'
+              });
+              core.setFailed('PR is from a fork');
+            }
+            core.setOutput('ref', pull.head.ref);
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        if: github.event_name == 'workflow_dispatch' || steps.pr.outcome == 'success'
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.ref || steps.pr.outputs.ref }}
+      - uses: ./.github/actions/node-setup
+      - name: Run prettier
+        run: pnpm format
+      - name: Generate types
+        run: pnpm -F @sveltejs/kit generate:types
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --staged --quiet || git commit -m "chore: autofix lint"
+          git push origin HEAD
