@@ -889,6 +889,13 @@ test.describe('Invalidation', () => {
 		page,
 		clicknav
 	}) => {
+		// with server-side route resolution, delay resolution so that refreshAll
+		// reliably starts while the navigation is still resolving its route
+		await page.route('**/__route.js', async (route) => {
+			await new Promise((resolve) => setTimeout(resolve, 150));
+			await route.continue();
+		});
+
 		await page.goto('/load/invalidation/during-navigation/a');
 		await expect(page.locator('[data-testid="scores"]')).toHaveText('1 - 1');
 
