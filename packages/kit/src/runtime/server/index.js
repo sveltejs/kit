@@ -52,14 +52,14 @@ export class Server {
 	/** @type {import('types').SSROptions} */
 	#options;
 
-	/** @type {import('@sveltejs/kit').SSRManifest} */
-	#manifest;
+	/** @type {import('types').SSRManifest} */
+	manifest;
 
-	/** @param {import('@sveltejs/kit').SSRManifest} manifest */
+	/** @param {import('types').SSRManifest} manifest */
 	constructor(manifest) {
 		/** @type {import('types').SSROptions} */
 		this.#options = options;
-		this.#manifest = manifest;
+		this.manifest = manifest;
 
 		// Since AsyncLocalStorage is not working in webcontainers, we don't reset `sync_store`
 		// in `src/exports/internal/server/event.js` and handle only one request at a time.
@@ -184,7 +184,7 @@ export class Server {
 		const response = await respond(
 			request,
 			this.#options,
-			this.#manifest,
+			this.manifest,
 			create_request_state(options)
 		);
 

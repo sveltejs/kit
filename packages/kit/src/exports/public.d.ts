@@ -12,10 +12,9 @@ import {
 	RequestOptions,
 	RouteSegment
 } from '../types/private.js';
-import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from 'types';
+import { SSRManifest, ValidatedConfig } from 'types';
 import { Plugin } from 'vite';
 import { RouteId as AppRouteId, LayoutParams as AppLayoutParams } from '$app/types';
-import { ParamMatcher } from '@sveltejs/kit/params';
 import { StandardSchemaV1 } from '@standard-schema/spec';
 
 export { PrerenderOption } from '../types/private.js';
@@ -163,11 +162,20 @@ export interface Builder {
 	generateEnvModule: () => void;
 
 	/**
-	 * Generate a server-side manifest to initialise the SvelteKit [server](https://svelte.dev/docs/kit/@sveltejs-kit#Server) with.
+	 * Generate a module that initialises the SvelteKit [server](https://svelte.dev/docs/kit/@sveltejs-kit#Server).
 	 * @param opts
 	 * @param opts.relativePath  A relative path to the base directory of the server build output
+	 * @param opts.export Whether to export the server module - defaults to `true`
+	 * @returns JavaScript source code that initialises the server and exports a `server` object
 	 */
-	generateManifest: (opts: { relativePath: string; routes?: RouteDefinition[] }) => string;
+	generateServer: (opts: {
+		relativePath: string;
+		routes?: RouteDefinition[];
+		export?: boolean;
+	}) => string;
+
+	/** Gets the value of the `$app/manifest` module */
+	getManifest(): typeof import('$app/manifest');
 
 	/**
 	 * Resolve a path to the `name` directory inside `outDir`, e.g. `/path/to/.svelte-kit/my-adapter`.
@@ -660,6 +668,7 @@ export class Server {
 	constructor(manifest: SSRManifest);
 	init(options: ServerInitOptions): Promise<void>;
 	respond(request: Request, options: RequestOptions): Promise<Response>;
+	manifest: SSRManifest;
 }
 
 export interface ServerInitOptions {
@@ -667,32 +676,6 @@ export interface ServerInitOptions {
 	env: Record<string, string | undefined>;
 	/** A function that turns an asset filename into a `ReadableStream`. Required for the `read` export from `$app/server` to work. */
 	read?: (file: string) => MaybePromise<ReadableStream | null>;
-}
-
-/**
- * Information required to instantiate a new `Server` instance.
- */
-export interface SSRManifest {
-	/** The directory where SvelteKit keeps its stuff, including static assets (such as JS and CSS) and internally-used routes. */
-	appDir: string;
-	/** The `base` and `appDir` settings combined without a leading slash. */
-	appPath: string;
-	/** Static files from `config.files.assets` and the service worker (if any). */
-	assets: Set<string>;
-	mimeTypes: Record<string, string>;
-
-	/** @internal private fields */
-	_: {
-		client: BuildData['client'];
-		nodes: SSRNodeLoader[];
-		/** hashed filename -> import to that file */
-		remotes: Record<string, () => Promise<{ default: Record<string, any> }>>;
-		routes: SSRRoute[];
-		prerendered_routes: Set<string>;
-		matchers: () => Promise<Record<string, ParamMatcher>>;
-		/** A `[file]: size` map of all assets imported by server code. */
-		server_assets: Record<string, number>;
-	};
 }
 
 /**

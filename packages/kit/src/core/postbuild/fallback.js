@@ -1,3 +1,4 @@
+/** @import { ServerInternalModule, ServerModule, SSRManifest } from 'types' */
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -18,13 +19,13 @@ export default forked(import.meta.url, generate_fallback);
 async function generate_fallback({ manifest_path, env, out_dir, origin, assets }) {
 	const server_root = join(out_dir, 'output');
 
-	/** @type {import('types').ServerInternalModule} */
+	/** @type {ServerInternalModule} */
 	const { set_building } = await import(pathToFileURL(`${server_root}/server/internal.js`).href);
 
-	/** @type {import('types').ServerModule} */
+	/** @type {ServerModule} */
 	const { Server } = await import(pathToFileURL(`${server_root}/server/index.js`).href);
 
-	/** @type {import('@sveltejs/kit').SSRManifest} */
+	/** @type {SSRManifest} */
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
 	set_building();

@@ -1,10 +1,7 @@
-import { Server } from 'SERVER';
-import { manifest, prerendered, base_path } from 'MANIFEST';
+import { server } from 'SERVER';
 import { env } from 'cloudflare:workers';
 
-const server = new Server(manifest);
-
-const app_path = `/${manifest.appPath}`;
+const app_path = `/${server.manifest.app_path}`;
 
 const immutable = `${app_path}/immutable/`;
 const version_file = `${app_path}/version.json`;
@@ -59,17 +56,18 @@ export default {
 
 		// files in /static, the service worker, and Vite imported server assets
 		let is_static_asset = false;
-		const filename = stripped_pathname.slice(base_path.length + 1);
+		const filename = stripped_pathname.slice(server.manifest.base_path.length + 1);
 		if (filename) {
 			is_static_asset =
-				manifest.assets.has(filename) || manifest.assets.has(filename + '/index.html');
+				server.manifest.assets.has(filename) ||
+				server.manifest.assets.has(filename + '/index.html');
 		}
 
 		let location = pathname.at(-1) === '/' ? stripped_pathname : pathname + '/';
 
 		if (
 			is_static_asset ||
-			prerendered.has(pathname) ||
+			server.manifest.prerendered_routes.has(pathname) ||
 			pathname === version_file ||
 			pathname.startsWith(immutable)
 		) {
@@ -84,7 +82,7 @@ export default {
 		}
 
 		// trailing slash redirect for prerendered pages
-		if (location && prerendered.has(location)) {
+		if (location && server.manifest.prerendered_routes.has(location)) {
 			if (search) location += search;
 			return new Response('', {
 				status: 308,

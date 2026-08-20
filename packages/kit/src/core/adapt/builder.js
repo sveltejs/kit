@@ -23,10 +23,11 @@ import { posixify } from '../../utils/os.js';
 import { generate_manifest } from '../generate_manifest/index.js';
 import { get_route_segments } from '../../utils/routing.js';
 import generate_fallback from '../postbuild/fallback.js';
-import { write } from '../sync/utils.js';
+import { dedent, write } from '../sync/utils.js';
 import { find_server_assets } from '../generate_manifest/find_server_assets.js';
 import { create_exported_declarations } from '../env.js';
 import { handle_issues, validate } from '../../exports/internal/env.js';
+import { get_manifest_routes } from '../sync/write_app_manifest.js';
 
 const pipe = promisify(pipeline);
 const extensions = [
@@ -52,6 +53,7 @@ const extensions = [
  *   route_data: RouteData[];
  *   prerendered: Prerendered;
  *   prerender_map: PrerenderMap;
+ *   immutable: Array<{ path: string }>;
  *   log: Logger;
  *   vite_config: ResolvedConfig;
  *   remotes: RemoteChunk[];
@@ -66,6 +68,7 @@ export function create_builder({
 	route_data,
 	prerendered,
 	prerender_map,
+	immutable,
 	log,
 	vite_config,
 	remotes,
@@ -185,17 +188,40 @@ export function create_builder({
 			write(`${dest}/env.js`, `export const env=${payload}`);
 		},
 
-		generateManifest({ relativePath, routes: subset }) {
-			return generate_manifest({
-				build_data,
-				prerendered: prerendered.paths,
-				relative_path: relativePath,
-				routes: subset
-					? subset.map((route) => /** @type {import('types').RouteData} */ (lookup.get(route)))
-					: route_data.filter((route) => prerender_map.get(route.id) !== true),
-				remotes,
-				root: vite_config.root
-			});
+		// @ts-expect-error removed method - TODO - remove this in a future version
+		generateManifest() {
+			throw new Error(
+				`The generateManifest adapters api has been replaced with generateServer and getManifest. You may need to update your adapter`
+			);
+		},
+
+		generateServer({ relativePath, routes: subset, export: should_export = true }) {
+			return dedent`
+				import { Server } from '${relativePath}/index.js';
+				const manifest = ${generate_manifest({
+					build_data,
+					prerendered: prerendered.paths,
+					relative_path: relativePath,
+					base_path: config.paths.base,
+					routes: subset
+						? subset.map((route) => /** @type {import('types').RouteData} */ (lookup.get(route)))
+						: route_data.filter((route) => prerender_map.get(route.id) !== true),
+					remotes,
+					root: vite_config.root
+				})};
+				${should_export ? 'export ' : ''}const server = new Server(manifest);
+			`;
+		},
+
+		getManifest() {
+			return {
+				assets: build_data.manifest_data.assets.map((asset) => ({ path: asset.file })),
+				routes: get_manifest_routes(build_data.manifest_data.routes),
+				prerendered: prerendered.paths.map((path) => ({
+					path: path.replace(config.paths.base, '')
+				})),
+				immutable
+			};
 		},
 
 		getBuildDirectory(name) {

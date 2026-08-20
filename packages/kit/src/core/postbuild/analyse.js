@@ -1,4 +1,5 @@
-/** @import { RemoteChunk } from 'types' */
+/** @import { HttpMethod, ManifestData, RemoteChunk, RemoteInternals, RouteData, SSREndpoint, SSRManifest, SSRNode, SSRRoute, ServerInternalModule, ServerMetadata } from 'types' */
+/** @import { Manifest } from 'vite' */
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { validate_server_exports } from '../../utils/exports.js';
@@ -16,8 +17,8 @@ export default forked(import.meta.url, analyse);
  * @param {{
  *   hash: boolean;
  *   manifest_path: string;
- *   manifest_data: import('types').ManifestData;
- *   server_manifest: import('vite').Manifest;
+ *   manifest_data: ManifestData;
+ *   server_manifest: Manifest;
  *   tracked_features: Record<string, string[]>;
  *   env: Record<string, string>;
  *   remotes: RemoteChunk[];
@@ -34,14 +35,14 @@ async function analyse({
 	remotes,
 	vite_config_file
 }) {
-	/** @type {import('@sveltejs/kit').SSRManifest} */
+	/** @type {SSRManifest} */
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
 	const vite_config = await load_vite_config(vite_config_file);
 	const config = extract_svelte_config(vite_config);
 	const server_root = join(config.outDir, 'output');
 
-	/** @type {import('types').ServerInternalModule} */
+	/** @type {ServerInternalModule} */
 	const internal = await import(pathToFileURL(`${server_root}/server/internal.js`).href);
 
 	// configure `import { building } from '$app/env'` —
@@ -58,14 +59,14 @@ async function analyse({
 	const { set_env } = await import(pathToFileURL(`${server_root}/server/env.js`).href);
 	set_env(env);
 
-	/** @type {import('types').ServerMetadata} */
+	/** @type {ServerMetadata} */
 	const metadata = {
 		nodes: [],
 		routes: new Map(),
 		remotes: new Map()
 	};
 
-	const nodes = await Promise.all(manifest._.nodes.map((loader) => loader()));
+	const nodes = await Promise.all(manifest.nodes.map((loader) => loader()));
 
 	// analyse nodes
 	for (const node of nodes) {
@@ -88,7 +89,7 @@ async function analyse({
 	}
 
 	// analyse routes
-	for (const route of manifest._.routes) {
+	for (const route of manifest.routes) {
 		const page =
 			route.page &&
 			analyse_page(
@@ -147,13 +148,13 @@ async function analyse({
 
 	// analyse remotes
 	for (const remote of remotes) {
-		const loader = manifest._.remotes[remote.hash];
+		const loader = manifest.remotes[remote.hash];
 		const { default: functions } = await loader();
 
 		const exports = new Map();
 
 		for (const name in functions) {
-			const internals = /** @type {import('types').RemoteInternals} */ (functions[name].__);
+			const internals = /** @type {RemoteInternals} */ (functions[name].__);
 			const type = internals.type;
 
 			exports.set(name, {
@@ -169,27 +170,25 @@ async function analyse({
 }
 
 /**
- * @param {import('types').SSRRoute} route
- * @param {import('types').SSREndpoint} mod
+ * @param {SSRRoute} route
+ * @param {SSREndpoint} mod
  */
 function analyse_endpoint(route, mod) {
 	validate_server_exports(mod, route.id);
 
 	if (
 		mod.prerender &&
-		/** @type {import('types').HttpMethod[]} */ (BODY_DEPENDENT_METHODS).some(
-			(method) => mod[method]
-		)
+		/** @type {HttpMethod[]} */ (BODY_DEPENDENT_METHODS).some((method) => mod[method])
 	) {
 		throw new Error(
 			`Cannot prerender a +server file with ${BODY_DEPENDENT_METHODS.join(', ')} handlers (${route.id})`
 		);
 	}
 
-	/** @type {Array<import('types').HttpMethod | '*'>} */
+	/** @type {Array<HttpMethod | '*'>} */
 	const methods = [];
 
-	for (const method of /** @type {import('types').HttpMethod[]} */ (ENDPOINT_METHODS)) {
+	for (const method of /** @type {HttpMethod[]} */ (ENDPOINT_METHODS)) {
 		if (mod[method]) methods.push(method);
 	}
 
@@ -206,8 +205,8 @@ function analyse_endpoint(route, mod) {
 }
 
 /**
- * @param {Array<import('types').SSRNode | undefined>} layouts
- * @param {import('types').SSRNode} leaf
+ * @param {Array<SSRNode | undefined>} layouts
+ * @param {SSRNode} leaf
  */
 function analyse_page(layouts, leaf) {
 	/** @type {Array<'GET' | 'POST'>} */
@@ -226,17 +225,15 @@ function analyse_page(layouts, leaf) {
 }
 
 /**
- * @param {import('types').SSRRoute} route
- * @param {import('types').ManifestData} manifest_data
- * @param {import('vite').Manifest} server_manifest
+ * @param {SSRRoute} route
+ * @param {ManifestData} manifest_data
+ * @param {Manifest} server_manifest
  * @param {Record<string, string[]>} tracked_features
  */
 function list_features(route, manifest_data, server_manifest, tracked_features) {
 	const features = new Set();
 
-	const route_data = /** @type {import('types').RouteData} */ (
-		manifest_data.routes.find((r) => r.id === route.id)
-	);
+	const route_data = /** @type {RouteData} */ (manifest_data.routes.find((r) => r.id === route.id));
 
 	const visited = new Set();
 	/** @param {string} id */

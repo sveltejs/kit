@@ -5,6 +5,7 @@ declare global {
 	const ENV_PREFIX: string;
 	const PRECOMPRESS: boolean;
 	const ORIGIN: string | undefined;
+	const UNCOMPRESSED_EXTENSIONS: Set<string>;
 }
 
 interface AdapterOptions {

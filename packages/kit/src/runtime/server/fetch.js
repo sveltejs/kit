@@ -10,7 +10,7 @@ import { fork_state_for_subrequest } from './state.js';
  * @param {{
  *   event: import('@sveltejs/kit').RequestEvent;
  *   options: import('types').SSROptions;
- *   manifest: import('@sveltejs/kit').SSRManifest;
+ *   manifest: import('types').SSRManifest;
  *   state: import('types').RequestState;
  *   get_cookie_header: (url: URL, header: string | null) => string;
  *   set_internal: (name: string, value: string, opts: import('./page/types.js').Cookie['options']) => void;
@@ -88,24 +88,24 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 				).slice(1);
 				const filename_html = `${filename}/index.html`; // path may also match path/index.html
 
-				const is_asset = manifest.assets.has(filename) || filename in manifest._.server_assets;
+				const is_asset = manifest.assets.has(filename) || filename in manifest.server_assets;
 				const is_asset_html =
-					manifest.assets.has(filename_html) || filename_html in manifest._.server_assets;
+					manifest.assets.has(filename_html) || filename_html in manifest.server_assets;
 
 				if (is_asset || is_asset_html) {
 					const file = is_asset ? filename : filename_html;
 
 					if (state.read) {
 						const type = is_asset
-							? manifest.mimeTypes[filename.slice(filename.lastIndexOf('.'))]
+							? manifest.mime_types[filename.slice(filename.lastIndexOf('.'))]
 							: 'text/html';
 
 						return new Response(state.read(file), {
 							headers: type ? { 'content-type': type } : {}
 						});
-					} else if (read_implementation && file in manifest._.server_assets) {
-						const length = manifest._.server_assets[file];
-						const type = manifest.mimeTypes[file.slice(file.lastIndexOf('.'))];
+					} else if (read_implementation && file in manifest.server_assets) {
+						const length = manifest.server_assets[file];
+						const type = manifest.mime_types[file.slice(file.lastIndexOf('.'))];
 
 						return new Response(read_implementation(file), {
 							headers: {
@@ -194,7 +194,7 @@ function normalize_fetch_input(info, init, url) {
 /**
  * @param {Request} request
  * @param {import('types').SSROptions} options
- * @param {import('@sveltejs/kit').SSRManifest} manifest
+ * @param {import('types').SSRManifest} manifest
  * @param {import('types').RequestState} state
  * @returns {Promise<Response>}
  */

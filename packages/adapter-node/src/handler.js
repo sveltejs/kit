@@ -4,15 +4,13 @@ import process from 'node:process';
 import sirv from 'sirv';
 import { parse as polka_url_parser } from '@polka/url';
 import { getRequest, setResponse, createReadableStream } from '@sveltejs/kit/node';
-import { Server } from 'SERVER';
-import { manifest, prerendered, base, uncompressed_extensions } from 'MANIFEST';
+import { server } from 'SERVER';
 import { dir } from './dir.js';
 import { env, env_prefix } from './env.js';
 import { parse_as_bytes } from './utils.js';
 
-const server = new Server(manifest);
-
 const origin = ORIGIN;
+const uncompressed_extensions = UNCOMPRESSED_EXTENSIONS;
 
 const xff_depth = parseInt(env('XFF_DEPTH', '1'));
 const address_header = env('ADDRESS_HEADER', '').toLowerCase();
@@ -28,7 +26,7 @@ if (isNaN(body_size_limit)) {
 	);
 }
 
-const asset_dir = `${dir}/client${base}`;
+const asset_dir = `${dir}/client${server.manifest.base_path}`;
 
 await server.init({
 	env: process.env,
@@ -52,14 +50,14 @@ function serve(path, client = false) {
 					}
 
 					// `sirv` uses its own bundled `mrmime`, which the manifest's added types never reach
-					let type = manifest.mimeTypes[pathname.slice(pathname.lastIndexOf('.'))];
+					let type = server.manifest.mime_types[pathname.slice(pathname.lastIndexOf('.'))];
 					if (type === 'text/html') type += ';charset=utf-8';
 					if (type) res.setHeader('content-type', type);
 
 					// only apply to build directory, not e.g. version.json
 					if (
 						client &&
-						pathname.startsWith(`/${manifest.appPath}/immutable/`) &&
+						pathname.startsWith(`/${server.manifest.app_path}/immutable/`) &&
 						res.statusCode === 200
 					) {
 						res.setHeader('cache-control', 'public,max-age=31536000,immutable');
@@ -96,13 +94,13 @@ function serve_prerendered() {
 			// ignore invalid URI
 		}
 
-		if (prerendered.has(pathname)) {
+		if (server.manifest.prerendered_routes.has(pathname)) {
 			return handler?.(req, res, next);
 		}
 
 		// remove or add trailing slash as appropriate
 		const inverted = pathname.at(-1) === '/' ? pathname.slice(0, -1) : pathname + '/';
-		if (prerendered.has(inverted)) {
+		if (server.manifest.prerendered_routes.has(inverted)) {
 			const location = relative_pathname(pathname, inverted) + (query ? search : '');
 			res.writeHead(308, { location }).end();
 		} else {

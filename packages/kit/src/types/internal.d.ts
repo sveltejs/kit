@@ -7,7 +7,6 @@ import {
 	ServerInitOptions,
 	Actions,
 	RequestEvent,
-	SSRManifest,
 	Emulator,
 	HttpError
 } from '@sveltejs/kit';
@@ -34,9 +33,31 @@ import {
 import { Span } from '@opentelemetry/api';
 import { PageOptions } from '../exports/vite/static_analysis/types.js';
 import { SharedIterator } from '../utils/shared-iterator.js';
+import { ParamMatcher } from '@sveltejs/kit/params';
 
 export interface ServerModule {
 	Server: typeof InternalServer;
+}
+
+/**
+ * Information required to instantiate a new `Server` instance.
+ */
+export interface SSRManifest {
+	/** The directory where SvelteKit keeps its stuff, including static assets (such as JS and CSS) and internally-used routes. */
+	app_dir: string;
+	/** The `base` and `appDir` settings combined without a leading slash. */
+	app_path: string;
+	base_path: string;
+	/** Static files from `config.files.assets` and the service worker (if any). */
+	assets: Set<string>;
+	mime_types: Record<string, string>;
+	client: BuildData['client'];
+	nodes: SSRNodeLoader[];
+	remotes: Record<string, () => Promise<{ default: Record<string, any> }>>;
+	routes: SSRRoute[];
+	prerendered_routes: Set<string>;
+	matchers: () => Promise<Record<string, ParamMatcher>>;
+	server_assets: Record<string, number>;
 }
 
 export interface ServerInternalModule {

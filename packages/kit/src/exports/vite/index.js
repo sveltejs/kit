@@ -1371,6 +1371,7 @@ function kit({ svelte_config }) {
 						build_data,
 						prerendered: [],
 						relative_path: '.',
+						base_path: svelte_config.paths.base,
 						routes: manifest_data.routes,
 						remotes,
 						root
@@ -1636,6 +1637,7 @@ function kit({ svelte_config }) {
 							build_data,
 							prerendered: [],
 							relative_path: '.',
+							base_path: svelte_config.paths.base,
 							routes: manifest_data.routes,
 							remotes,
 							root
@@ -1709,6 +1711,7 @@ function kit({ svelte_config }) {
 						build_data,
 						prerendered: prerendered.paths,
 						relative_path: '.',
+						base_path: svelte_config.paths.base,
 						routes: manifest_data.routes.filter(
 							(route) => prerender_results.prerender_map.get(route.id) !== true
 						),
@@ -1773,6 +1776,7 @@ function kit({ svelte_config }) {
 							metadata,
 							prerendered,
 							prerender_results.prerender_map,
+							immutable ?? [],
 							log,
 							remotes,
 							vite_config,
