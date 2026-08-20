@@ -22,4 +22,10 @@ test('skips client build if every node has CSR disabled', async ({ page, request
 
 	const public_asset_response = await request.get('/asset.json');
 	expect(public_asset_response.status()).toBe(200);
+
+	const worker_url = await page.getByTestId('worker').getAttribute('href');
+	if (!worker_url) throw new Error('Worker href not found on /assets page');
+
+	const worker_response = await request.get(worker_url);
+	expect(worker_response.status()).toBe(200);
 });

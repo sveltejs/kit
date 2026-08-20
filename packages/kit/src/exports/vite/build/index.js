@@ -523,6 +523,7 @@ export function plugin_compile(
 
 				const server_assets = `${out}/server/${assets_path}`;
 				const client_assets = `${out}/client/${assets_path}`;
+				const workers_path = `${kit.appDir}/immutable/workers`;
 
 				const skip_client_build = manifest_data.nodes.every(
 					(node) => node.page_options?.csr === false
@@ -530,6 +531,7 @@ export function plugin_compile(
 
 				if (skip_client_build) {
 					copy(server_assets, client_assets);
+					copy(`${out}/server/${workers_path}`, `${out}/client/${workers_path}`);
 					copy(kit.files.assets, `${out}/client`);
 				} else {
 					// ...and build the client
@@ -585,6 +587,10 @@ export function plugin_compile(
 							copy(src, dest);
 						}
 					}
+
+					// worker files emitted by the server build (e.g. `?worker&url` imports
+					// in server-only modules) must be served to the client, too
+					copy(`${out}/server/${workers_path}`, `${out}/client/${workers_path}`);
 
 					vite_client_manifest = /** @type {Manifest} */ (
 						JSON.parse(read(`${out}/client/.vite/manifest.json`))
