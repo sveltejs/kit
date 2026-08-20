@@ -61,6 +61,8 @@ test.describe('remote functions', () => {
 
 // have to run in serial because commands mutate in-memory data on the server (should fix this at some point)
 test.describe('remote function mutations', () => {
+	test.describe.configure({ mode: 'serial' });
+
 	test.afterEach(async ({ page }) => {
 		if (page.url().endsWith('/remote')) {
 			await page.click('#reset-btn');
