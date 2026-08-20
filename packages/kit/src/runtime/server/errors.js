@@ -8,17 +8,16 @@ import {
 import { with_request_store } from '@sveltejs/kit/internal/server';
 import { add_deprecated_handle_error_properties, coalesce_to_error } from '../../utils/error.js';
 import { negotiate } from '../../utils/http.js';
-import { fix_stack_trace } from './internal.js';
+import { fix_stack_trace, hooks, options } from './internal.js';
 import { escape_html } from '../../utils/escape.js';
 
 /**
  * @param {import('@sveltejs/kit').RequestEvent} event
  * @param {import('types').RequestState} state
- * @param {import('types').SSROptions} options
  * @param {unknown} error
  */
-export async function handle_fatal_error(event, state, options, error) {
-	const body = await handle_error_and_jsonify(event, state, options, error);
+export async function handle_fatal_error(event, state, error) {
+	const body = await handle_error_and_jsonify(event, state, error);
 	const status = body.status;
 
 	// sec-fetch-dest would be nicer, but non-browser clients and plain HTTP hosts don't send it
@@ -33,17 +32,16 @@ export async function handle_fatal_error(event, state, options, error) {
 		});
 	}
 
-	return static_error_page(options, status, body.message);
+	return static_error_page(status, body.message);
 }
 
 /**
  * @param {import('@sveltejs/kit').RequestEvent} event
  * @param {import('types').RequestState} state
- * @param {import('types').SSROptions} options
  * @param {any} error
  * @returns {App.Error | Promise<App.Error>}
  */
-export function handle_error_and_jsonify(event, state, options, error) {
+export function handle_error_and_jsonify(event, state, error) {
 	if (error instanceof HandledHttpError) {
 		return error.body;
 	}
@@ -90,7 +88,7 @@ export function handle_error_and_jsonify(event, state, options, error) {
 		const input = { ...caught, event };
 		if (__SVELTEKIT_DEV__) add_deprecated_handle_error_properties(input, fallback);
 
-		result = with_request_store({ event, state }, () => options.hooks.handleError(input));
+		result = with_request_store({ event, state }, () => hooks.handleError(input));
 	} catch (hook_error) {
 		log_handle_error_hook_failure(error, hook_error);
 		return { status: fallback.status, message: 'Internal Error' };
@@ -141,11 +139,10 @@ function log_handle_error_hook_failure(error, hook_error) {
 /**
  * Return as a response that renders the error.html
  *
- * @param {import('types').SSROptions} options
  * @param {number} status
  * @param {string} message
  */
-export function static_error_page(options, status, message) {
+export function static_error_page(status, message) {
 	let page = options.templates.error({ status, message: escape_html(message) });
 
 	if (__SVELTEKIT_DEV__) {

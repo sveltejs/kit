@@ -1,6 +1,6 @@
 /** @import { RequestEvent, SSRManifest } from '@sveltejs/kit' */
 /** @import { RemoteForm } from '$app/server' */
-/** @import { RemoteFormInternals, RemoteFunctionData, RemoteFunctionResponse, RemoteInternals, RequestState, ServerActionResult, SSROptions } from 'types' */
+/** @import { RemoteFormInternals, RemoteFunctionData, RemoteFunctionResponse, RemoteInternals, RequestState, ServerActionResult } from 'types' */
 
 import { error } from '@sveltejs/kit';
 import { Redirect, SvelteKitError } from '@sveltejs/kit/internal';
@@ -26,7 +26,7 @@ import { with_version_header } from './utils.js';
 const KEEP_ALIVE_INTERVAL = 30_000;
 
 /** @type {typeof handle_remote_call_internal} */
-export async function handle_remote_call(event, state, options, manifest, id) {
+export async function handle_remote_call(event, state, manifest, id) {
 	return record_span({
 		name: 'sveltekit.remote.call',
 		attributes: {
@@ -35,7 +35,7 @@ export async function handle_remote_call(event, state, options, manifest, id) {
 		fn: async (current) => {
 			const traced_event = merge_tracing(event, current);
 			const response = await with_request_store({ event: traced_event, state }, () =>
-				handle_remote_call_internal(traced_event, state, options, manifest, id)
+				handle_remote_call_internal(traced_event, state, manifest, id)
 			);
 			return with_version_header(response);
 		}
@@ -45,11 +45,10 @@ export async function handle_remote_call(event, state, options, manifest, id) {
 /**
  * @param {RequestEvent} event
  * @param {RequestState} state
- * @param {SSROptions} options
  * @param {SSRManifest} manifest
  * @param {string} id
  */
-async function handle_remote_call_internal(event, state, options, manifest, id) {
+async function handle_remote_call_internal(event, state, manifest, id) {
 	const [hash, name, additional_args] = id.split('/');
 	const remotes = manifest._.remotes;
 
@@ -175,12 +174,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 											location: error.location
 										});
 									} else {
-										const transformed = await handle_error_and_jsonify(
-											event,
-											state,
-											options,
-											error
-										);
+										const transformed = await handle_error_and_jsonify(event, state, error);
 
 										send(controller, {
 											type: 'error',
@@ -218,7 +212,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 
 				const args = await Promise.all(payloads.map((payload) => parse_remote_arg(payload)));
 
-				data._ = await with_request_store({ event, state }, () => internals.run(args, options));
+				data._ = await with_request_store({ event, state }, () => internals.run(args));
 
 				break;
 			}
@@ -309,7 +303,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			}
 		}
 
-		await collect_remote_data(data, event, state, options);
+		await collect_remote_data(data, event, state);
 
 		return Response.json(
 			/** @type {RemoteFunctionResponse} */ ({
@@ -320,7 +314,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 		);
 	} catch (error) {
 		if (error instanceof Redirect) {
-			const data = await collect_remote_data({ redirect: error.location }, event, state, options);
+			const data = await collect_remote_data({ redirect: error.location }, event, state);
 
 			return Response.json(
 				/** @type {RemoteFunctionResponse} */ ({
@@ -331,7 +325,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			);
 		}
 
-		const transformed = await handle_error_and_jsonify(event, state, options, error);
+		const transformed = await handle_error_and_jsonify(event, state, error);
 
 		return Response.json(
 			/** @type {RemoteFunctionResponse} */ ({
@@ -356,9 +350,8 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
  * @param {RemoteFunctionData} data
  * @param {RequestEvent} event
  * @param {RequestState} state
- * @param {SSROptions} options
  */
-export async function collect_remote_data(data, event, state, options) {
+export async function collect_remote_data(data, event, state) {
 	/**
 	 *
 	 * @param {unknown} error
@@ -366,7 +359,7 @@ export async function collect_remote_data(data, event, state, options) {
 	 */
 	function convert_error(error) {
 		// TODO 4.0 remove the `Promise.resolve(...)`
-		return Promise.resolve(handle_error_and_jsonify(event, state, options, error));
+		return Promise.resolve(handle_error_and_jsonify(event, state, error));
 	}
 
 	/** @type {Promise<any>[]} */

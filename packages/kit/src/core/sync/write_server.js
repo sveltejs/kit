@@ -38,7 +38,6 @@ export const options = {
 	csrf_trusted_origins: ${s(config.csrf.trustedOrigins)},
 	embedded: ${config.embedded},
 	hash_routing: ${s(config.router.type === 'hash')},
-	hooks: null, // added lazily, via \`get_hooks\`
 	link_header_preload: ${s(config.output.linkHeaderPreload)},
 	paths_origin: ${s(config.paths.origin)},
 	service_worker: ${has_service_worker},

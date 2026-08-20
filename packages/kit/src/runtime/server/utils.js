@@ -1,5 +1,6 @@
 import { text } from '@sveltejs/kit';
 import { ENDPOINT_METHODS } from '../../constants.js';
+import { options } from './internal.js';
 
 /**
  * @param {Partial<Record<import('types').HttpMethod, any>>} mod
@@ -30,9 +31,8 @@ export function allowed_methods(mod) {
 }
 
 /**
- * @param {import('types').SSROptions} options
  */
-export function get_global_name(options) {
+export function get_global_name() {
 	return __SVELTEKIT_DEV__ ? '__sveltekit_dev' : `__sveltekit_${options.version_hash}`;
 }
 
