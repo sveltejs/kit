@@ -56,6 +56,16 @@ export default /** @satisfies {import('vitest/config').ViteUserConfig} */ ({
 				}
 			},
 			{
+				test: {
+					name: 'kit-basics-server',
+					// for DOMParser; Request and Response stay Node's
+					environment: 'jsdom',
+					root: fileURLToPath(new URL('./test/apps/basics', import.meta.url)),
+					include: ['test/server.spec.js'],
+					globalSetup: fileURLToPath(new URL('./test/apps/basics/test/server.setup.js', import.meta.url))
+				}
+			},
+			{
 				extends: true,
 				resolve: {
 					conditions: ['browser']
