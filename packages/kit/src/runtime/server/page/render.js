@@ -36,7 +36,7 @@ import { options } from '../internal.js';
  * @param {{
  *   branch: Array<import('./types.js').Loaded>;
  *   fetched: Array<import('./types.js').Fetched>;
- *   manifest: import('@sveltejs/kit').SSRManifest;
+ *   manifest: import('types').SSRManifest;
  *   page_config: { ssr: boolean; csr: boolean };
  *   status: number;
  *   error: App.Error | null;

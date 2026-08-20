@@ -7,12 +7,12 @@ import {
 	ServerInitOptions,
 	Actions,
 	RequestEvent,
-	SSRManifest,
 	Emulator,
 	HttpError
 } from '@sveltejs/kit';
 import { RemoteFormIssue, RemoteQuery, RemoteLiveQuery } from '$app/server';
 import { Config } from '@sveltejs/kit/vite';
+import { ParamMatcher } from '@sveltejs/kit/params';
 import {
 	ClientInit,
 	Handle,
@@ -457,6 +457,32 @@ export interface ServerNode {
 	actions?: Actions;
 	config?: Record<string, any>;
 	entries?: PrerenderEntryGenerator;
+}
+
+/**
+ * Information required to instantiate a new `Server` instance.
+ */
+export interface SSRManifest {
+	/** The directory where SvelteKit keeps its stuff, including static assets (such as JS and CSS) and internally-used routes. */
+	appDir: string;
+	/** The `base` and `appDir` settings combined without a leading slash. */
+	appPath: string;
+	/** Static files from `config.files.assets` and the service worker (if any). */
+	assets: Set<string>;
+	mimeTypes: Record<string, string>;
+
+	/** @internal private fields */
+	_: {
+		client: BuildData['client'];
+		nodes: SSRNodeLoader[];
+		/** hashed filename -> import to that file */
+		remotes: Record<string, () => Promise<{ default: Record<string, any> }>>;
+		routes: SSRRoute[];
+		prerendered_routes: Set<string>;
+		matchers: () => Promise<Record<string, ParamMatcher>>;
+		/** A `[file]: size` map of all assets imported by server code. */
+		server_assets: Record<string, number>;
+	};
 }
 
 export interface SSRNode {

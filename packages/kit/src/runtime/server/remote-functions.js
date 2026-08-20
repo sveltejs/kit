@@ -1,6 +1,6 @@
-/** @import { RequestEvent, SSRManifest } from '@sveltejs/kit' */
+/** @import { RequestEvent } from '@sveltejs/kit' */
 /** @import { RemoteForm } from '$app/server' */
-/** @import { RemoteFormInternals, RemoteFunctionData, RemoteFunctionResponse, RemoteInternals, RequestState, ServerActionResult } from 'types' */
+/** @import { RemoteFormInternals, RemoteFunctionData, RemoteFunctionResponse, RemoteInternals, RequestState, ServerActionResult, SSRManifest } from 'types' */
 
 import { error } from '@sveltejs/kit';
 import { Redirect, SvelteKitError } from '@sveltejs/kit/internal';
