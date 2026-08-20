@@ -61,11 +61,9 @@ const plugin = function (defaults = {}) {
 					builder.copy(proxy, entrypoint);
 				}
 
-				const relativePath = path.posix.relative(tmp, builder.getServerDirectory());
 				builder.copy(`${files}/serverless.js`, proxy ? `${tmp}/serverless.js` : entrypoint, {
 					replace: {
-						SERVER: `${relativePath}/index.js`,
-						MANIFEST: './manifest.js'
+						SERVER: `./server.js`
 					}
 				});
 				if (builder.hasServerInstrumentationFile()) {
@@ -74,11 +72,7 @@ const plugin = function (defaults = {}) {
 						instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`
 					});
 				}
-
-				write(
-					`${tmp}/manifest.js`,
-					`export const manifest = ${builder.generateManifest({ relativePath, routes })};\n`
-				);
+				builder.writeServerEntrypoint(`${tmp}/server.js`, { routes });
 
 				await create_function_bundle(builder, entrypoint, dir, config);
 

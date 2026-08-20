@@ -1,9 +1,6 @@
 import { createReadableStream } from '@sveltejs/kit/node';
-import { Server } from 'SERVER';
-import { manifest } from 'MANIFEST';
+import { server } from 'SERVER';
 import process from 'node:process';
-
-const server = new Server(manifest);
 
 await server.init({
 	env: process.env,
