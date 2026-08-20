@@ -82,6 +82,8 @@ export function create_live_query_response(event, state, options, internals, arg
 		void generator.return(undefined).catch(() => {});
 	}
 
+	event.request.signal.addEventListener('abort', () => teardown(true), { once: true });
+
 	return new Response(
 		new ReadableStream({
 			start(controller) {
