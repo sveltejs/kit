@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { join, posix } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { builtinModules } from 'node:module';
 import process from 'node:process';
 import toml from '@iarna/toml';
@@ -424,7 +424,6 @@ async function generate_edge_functions({ builder }) {
 	mkdirSync('.netlify/v1/edge-functions', { recursive: true });
 
 	builder.log.minor('Generating Edge Function...');
-	const relativePath = posix.relative(tmp, builder.getServerDirectory());
 
 	builder.copy(`${files}/edge.js`, `${tmp}/entry.js`, {
 		replace: {
@@ -443,7 +442,7 @@ async function generate_edge_functions({ builder }) {
 		`/${builder.getAppPath()}/version.json`,
 		// the base root and `trailingSlash: 'always'` pages are recorded with a trailing slash
 		...builder.prerendered.paths.map((path) => (path === '/' ? path : path.replace(/\/$/, ''))),
-		...Array.from(builder.manifest.assets).flatMap((asset) => {
+		...Array.from(builder.manifest.assets).flatMap(({ path: asset }) => {
 			if (asset.endsWith('/index.html')) {
 				const dir = asset.replace(/\/index\.html$/, '');
 				return [`${builder.config.paths.base}/${asset}`, `${builder.config.paths.base}/${dir}`];

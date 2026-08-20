@@ -43,6 +43,7 @@ export async function preview(vite, svelte_config) {
 	/** @type {ServerModule} */
 	const { Server } = await import(pathToFileURL(join(dir, 'index.js')).href);
 
+	/** @type {{ manifest: import('@sveltejs/kit').SSRManifest }} */
 	const { manifest } = await import(pathToFileURL(join(dir, 'manifest.js')).href);
 
 	set_assets(assets);
