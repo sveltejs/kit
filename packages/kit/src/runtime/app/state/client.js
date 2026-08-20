@@ -68,5 +68,5 @@ export const updated = {
 	get current() {
 		return _updated.current;
 	},
-	check: stores.updated.check
+	check: () => stores.updated.check()
 };

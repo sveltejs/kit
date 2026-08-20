@@ -1,10 +1,16 @@
 # @sveltejs/kit
 
+## 2.70.3
+
+### Patch Changes
+
+- fix: avoid eagerly reading `$app/state` dependencies during module initialization ([`b61018d`](https://github.com/sveltejs/kit/commit/b61018d0526e827d1ef8cf8e21ef62b92230ae3d))
+
 ## 2.70.2
 
 ### Patch Changes
 
-- fix: prevent quadratic backtracking in `Accept` header content negotiation ([#1](https://github.com/homebase-garage/igeclouds.github.io/pull/1))
+- fix: prevent quadratic backtracking in `Accept` header content negotiation ([`82712fc`](https://github.com/sveltejs/kit/commit/82712fc02c24b1dcf5b25d7a52129cd8455f04f5))
 
 ## 2.70.1
 
