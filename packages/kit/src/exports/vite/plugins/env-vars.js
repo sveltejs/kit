@@ -2,11 +2,13 @@
 /** @import { EnvVarConfig } from '@sveltejs/kit/env' */
 /** @import { ValidatedConfig } from 'types' */
 import path from 'node:path';
+import { exactRegex } from '@rolldown/pluginutils';
 import * as sync from '../../../core/sync/sync.js';
 import { create_env_modules, resolve_env_entry } from '../../../core/env.js';
 import { import_peer } from '../../../utils/import.js';
 import { write_if_changed } from '../../../core/sync/utils.js';
 import { posixify } from '../../../utils/os.js';
+import { resolve_entry } from '../../../utils/filesystem.js';
 
 /**
  * Generate (and, in dev, maintain) the `${outDir}/generated/{build,dev}/env` modules
@@ -114,4 +116,45 @@ export function plugin_env_vars(config, callback) {
 			await generate();
 		}
 	};
+}
+
+/**
+ * @param {ValidatedConfig} kit
+ * @returns {Plugin}
+ */
+export function plugin_service_worker_env_vars(kit) {
+	/** @type {string | null} */
+	let service_worker_entry_file;
+
+	/** @satisfies {Plugin} */
+	const plugin = {
+		name: 'vite-plugin-sveltekit-service-worker-env',
+		configResolved() {
+			service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
+
+			if (service_worker_entry_file) {
+				plugin.transform.filter = {
+					id: exactRegex(service_worker_entry_file)
+				};
+			}
+		},
+		applyToEnvironment(environment) {
+			return !!service_worker_entry_file && environment.config.consumer === 'client';
+		},
+		transform: {
+			filter: undefined,
+			handler(code) {
+				// prepend the service worker with an import that configures
+				// `env`, in case `$app/env/public` is imported. In production
+				// this is required: dynamic public env vars aren't known at
+				// build time, so `env.js` is loaded at runtime. In dev, the
+				// imported module just inlines the current values instead.
+				return {
+					code: `import '<sveltekit:generated>/env/service-worker.js';\n${code}`
+				};
+			}
+		}
+	};
+
+	return plugin;
 }

@@ -33,13 +33,15 @@ import { find_deps, resolve_symlinks } from './build/utils.js';
 import { dev } from './dev/index.js';
 import { preview } from './preview/index.js';
 import {
+	enforced_config,
 	error_for_missing_config,
 	get_config_aliases,
 	is_remote_module,
 	normalize_id,
 	remote_module_pattern,
 	server_only_directory_pattern,
-	server_only_module_pattern
+	server_only_module_pattern,
+	warn_overridden_config
 } from './utils.js';
 import { stackless } from '../../utils/error.js';
 import { adapt } from '../../core/adapt/index.js';
@@ -58,44 +60,9 @@ import { should_ignore, has_children } from './static_analysis/utils.js';
 import { process_config, split_config, validate_config } from '../../core/config/index.js';
 import { treeshake_prerendered_remotes } from './build/remote.js';
 import { get_runner } from '../../runner.js';
-import { plugin_env_vars } from './plugins/env-vars.js';
+import { plugin_env_vars, plugin_service_worker_env_vars } from './plugins/env-vars.js';
 import { get_manifest_routes, write_app_manifest } from '../../core/sync/write_app_manifest.js';
-
-/** @type {import('./types.js').EnforcedConfig} */
-const enforced_config = {
-	appType: true,
-	base: true,
-	build: {
-		cssCodeSplit: true,
-		emptyOutDir: true,
-		lib: {
-			entry: true,
-			name: true,
-			formats: true
-		},
-		manifest: true,
-		outDir: true,
-		rolldownOptions: {
-			input: true,
-			output: {
-				format: true,
-				entryFileNames: true,
-				chunkFileNames: true,
-				assetFileNames: true
-			},
-			preserveEntrySignatures: true
-		},
-		ssr: true
-	},
-	publicDir: true,
-	resolve: {
-		alias: {
-			$app: true,
-			$env: true,
-			'<sveltekit:generated>': true
-		}
-	}
-};
+import { plugin_service_worker_build } from './build/service-worker.js';
 
 const options_regex = /(export\s+const\s+(prerender|csr|ssr|trailingSlash))\s*=/s;
 
@@ -389,6 +356,9 @@ function kit({ svelte_config }) {
 				kit_global = is_build
 					? `globalThis.__sveltekit_${version_hash}`
 					: 'globalThis.__sveltekit_dev';
+
+				service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
+				service_worker_entry_file &&= posixify(service_worker_entry_file);
 
 				vite = await import_peer('vite', root);
 
@@ -1002,127 +972,6 @@ function kit({ svelte_config }) {
 
 	/** @type {Array<{ path: string }> | null} */
 	let immutable = null;
-
-	/**
-	 * Creates the service worker virtual modules
-	 * @type {Plugin}
-	 */
-	const plugin_service_worker = {
-		name: 'vite-plugin-sveltekit-service-worker',
-
-		config(config) {
-			service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
-
-			if (!service_worker_entry_file) return;
-
-			service_worker_entry_file = posixify(service_worker_entry_file);
-
-			if (kit.paths.assets) {
-				throw new Error('Cannot use service worker alongside config.paths.assets');
-			}
-
-			const user_service_worker_output_config =
-				config.environments?.serviceWorker?.build?.rolldownOptions?.output;
-
-			/** @type {import('vite').UserConfig} */
-			const new_config = {
-				environments: {
-					serviceWorker: {
-						define: {
-							__SVELTEKIT_PAYLOAD__: kit_global
-						},
-						build: {
-							modulePreload: false,
-							rolldownOptions: {
-								external: [`${kit.paths.base}/${kit.appDir}/env.js`],
-								input: {
-									'service-worker': service_worker_entry_file
-								},
-								output: {
-									format: 'es',
-									entryFileNames: 'service-worker.js',
-									assetFileNames: `${kit.appDir}/immutable/assets/[name].[hash][extname]`,
-									codeSplitting:
-										(Array.isArray(user_service_worker_output_config)
-											? user_service_worker_output_config[0].codeSplitting
-											: user_service_worker_output_config?.codeSplitting) ?? false
-								}
-							},
-							outDir: `${out}/client`,
-							minify: initial_config.build?.minify,
-							// avoid overwriting the client build Vite manifest
-							manifest: '.vite/service-worker-manifest.json'
-						},
-						consumer: 'client'
-					}
-				}
-			};
-
-			warn_overridden_config(config, new_config);
-
-			return new_config;
-		},
-
-		// our serviceWorker environment only exists when building because Vite only
-		// supports the default client environment during development (for now)
-		applyToEnvironment(environment) {
-			return environment.name === 'serviceWorker';
-		},
-
-		generateBundle(_, bundle) {
-			const invalid_modules = new Set();
-			const modules = new Map([
-				[`${runtime_directory}/app/forms/index.js`, '$app/forms'],
-				[`${runtime_directory}/app/navigation/index.js`, '$app/navigation'],
-				[`${runtime_directory}/app/state/index.js`, '$app/state']
-			]);
-
-			for (const output of Object.values(bundle)) {
-				if (output.type !== 'chunk') continue;
-
-				for (const id of output.moduleIds) {
-					const module = modules.get(id);
-					if (module) invalid_modules.add(module);
-				}
-			}
-
-			if (invalid_modules.size > 0) {
-				throw new Error(
-					`Cannot import ${Array.from(modules.values())
-						.filter((module) => invalid_modules.has(module))
-						.join(', ')} into service-worker code.`
-				);
-			}
-		}
-	};
-
-	/** @type {Plugin} */
-	const plugin_service_worker_env = {
-		name: 'vite-plugin-sveltekit-service-worker-env',
-		configResolved() {
-			if (service_worker_entry_file) {
-				// @ts-expect-error transform is defined in this object
-				plugin_service_worker_env.transform.filter = {
-					id: exactRegex(service_worker_entry_file)
-				};
-			}
-		},
-		applyToEnvironment(environment) {
-			return !!service_worker_entry_file && environment.config.consumer === 'client';
-		},
-		transform: {
-			handler(code) {
-				// prepend the service worker with an import that configures
-				// `env`, in case `$app/env/public` is imported. In production
-				// this is required: dynamic public env vars aren't known at
-				// build time, so `env.js` is loaded at runtime. In dev, the
-				// imported module just inlines the current values instead.
-				return {
-					code: `import '<sveltekit:generated>/env/service-worker.js';\n${code}`
-				};
-			}
-		}
-	};
 
 	/** @type {Map<string, Rolldown.RolldownOutput['output']>} */
 	const watch_build_output = new Map();
@@ -2042,59 +1891,18 @@ function kit({ svelte_config }) {
 				explicit_env_config = vars;
 			}),
 			process.env.TEST !== 'true' ? plugin_guard : undefined,
-			plugin_service_worker,
-			plugin_service_worker_env,
+			plugin_service_worker_build(svelte_config, () => ({
+				service_worker_entry_file,
+				kit_global,
+				initial_config,
+				out
+			})),
+			plugin_service_worker_env_vars(svelte_config),
 			plugin_compile,
 			plugin_adapter,
 			svelte_config.adapter?.vite?.plugins?.post
 		].filter(Boolean)
 	);
-}
-
-/**
- * @param {UserConfig} config
- * @param {UserConfig} resolved_config
- */
-function warn_overridden_config(config, resolved_config) {
-	const overridden = find_overridden_config(config, resolved_config, enforced_config, '', []);
-
-	if (overridden.length > 0) {
-		console.error(
-			styleText(
-				['bold', 'red'],
-				'The following Vite config options will be overridden by SvelteKit:'
-			) + overridden.map((key) => `\n  - ${key}`).join('')
-		);
-	}
-}
-
-/**
- * @param {Record<string, any>} config
- * @param {Record<string, any>} resolved_config
- * @param {import('./types.js').EnforcedConfig} enforced_config
- * @param {string} path
- * @param {string[]} out used locally to compute the return value
- */
-function find_overridden_config(config, resolved_config, enforced_config, path, out) {
-	if (config == null || resolved_config == null) {
-		return out;
-	}
-
-	for (const key in enforced_config) {
-		if (typeof config === 'object' && key in config && key in resolved_config) {
-			const enforced = enforced_config[key];
-			const resolved = resolved_config[key];
-
-			if (enforced === true) {
-				if (comparable(config[key]) !== comparable(resolved)) {
-					out.push(path + key);
-				}
-			} else {
-				find_overridden_config(config[key], resolved, enforced, path + key + '.', out);
-			}
-		}
-	}
-	return out;
 }
 
 /**
@@ -2126,17 +1934,6 @@ const collect_immutable = (manifest, app_dir, inlined) => {
 
 	return Array.from(files, (path) => ({ path }));
 };
-
-/**
- * Normalizes a config value for comparison, since Windows paths may use backslashes
- * and differ in casing (e.g. the drive letter) depending on where they came from.
- * @param {any} value
- */
-function comparable(value) {
-	if (typeof value !== 'string') return value;
-	const normalized = posixify(value);
-	return process.platform === 'win32' ? normalized.toLowerCase() : normalized;
-}
 
 /**
  * Replaces manifest data placeholder identifiers in output chunks with real
