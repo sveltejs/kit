@@ -57,6 +57,52 @@ test.describe('remote functions', () => {
 		await page.goto('/plain-lib');
 		await expect(page.locator('p')).toHaveText('key set for https://example.com/jwks');
 	});
+
+	// https://github.com/sveltejs/kit/issues/16854
+	//
+	// Deriveds downstream of an awaited query lost their memoization and were recomputed
+	// on every read, which is exponential in the depth of the graph. The fixture's graph
+	// is seven levels deep and costs fourteen recomputations when memoization holds, and
+	// tens of thousands when it doesn't; a real charting library's graph is deep enough
+	// that the tab never recovers.
+	//
+	// The bound is deliberately counted rather than timed, so a regression fails in
+	// milliseconds instead of hanging until the test times out.
+	const RECOMPUTATION_LIMIT = 1000;
+
+	/** @param {import('@playwright/test').Page} page */
+	const recomputations = (page) =>
+		page.evaluate(
+			() => /** @type {Record<string, number>} */ (/** @type {unknown} */ (window)).__recomputations
+		);
+
+	test('deriveds fed by an awaited promise are memoized', async ({ page }) => {
+		await page.goto('/remote/query-derived-memoization');
+		await page.getByRole('radio', { name: 'promise' }).check();
+		await expect(page.locator('#result')).toHaveText('10');
+
+		await page.evaluate(() => {
+			/** @type {Record<string, number>} */ (/** @type {unknown} */ (window)).__recomputations = 0;
+		});
+		await page.locator('#bump').click();
+
+		// the graph must actually re-render, or the control tests nothing
+		await expect(page.locator('#result')).toHaveText('11');
+		expect(await recomputations(page)).toBeLessThan(RECOMPUTATION_LIMIT);
+	});
+
+	test('deriveds fed by an awaited query are memoized', async ({ page }) => {
+		await page.goto('/remote/query-derived-memoization');
+		await expect(page.locator('#result')).toHaveText('10');
+
+		await page.evaluate(() => {
+			/** @type {Record<string, number>} */ (/** @type {unknown} */ (window)).__recomputations = 0;
+		});
+		await page.locator('#bump').click();
+
+		await expect(page.locator('#result')).toHaveText('11');
+		expect(await recomputations(page)).toBeLessThan(RECOMPUTATION_LIMIT);
+	});
 });
 
 // have to run in serial because commands mutate in-memory data on the server (should fix this at some point)
