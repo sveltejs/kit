@@ -3,7 +3,7 @@
 
 import { DEV } from 'esm-env';
 import * as devalue from 'devalue';
-import { text_decoder, text_encoder } from './utils.js';
+import { stream_from_iterable, text_decoder, text_encoder } from './utils.js';
 import { noop } from '../utils/functions.js';
 import { SvelteKitError } from '@sveltejs/kit/internal';
 
@@ -442,8 +442,7 @@ class LazyFile {
 	stream() {
 		const range = read_range(this.#get_chunk, this.#offset, this.size);
 		const size = this.size;
-		// TODO remove the cast once TypeScript's lib includes `ReadableStream.from`
-		return /** @type {any} */ (ReadableStream).from(
+		return stream_from_iterable(
 			(async function* () {
 				let cursor = 0;
 				for await (const chunk of range) {

@@ -15,7 +15,7 @@ export function create_async_iterator() {
 	const deferred = [];
 
 	return {
-		iterate: async function* (transform = (x) => x) {
+		async *iterate(transform = (x) => x) {
 			// `deferred` can grow while we iterate, as resolved values may add further promises
 			for (let i = 0; i < deferred.length; i += 1) {
 				yield transform(await deferred[i].promise);
