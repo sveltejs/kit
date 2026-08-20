@@ -83,8 +83,8 @@ export async function match(url) {
 		resolved_path = resolved_path.slice(base.length) || '/';
 	}
 
-	const matchers = await manifest._.matchers();
-	const result = find_route(resolved_path, manifest._.routes, matchers);
+	const matchers = await manifest.matchers();
+	const result = find_route(resolved_path, manifest.routes, matchers);
 
 	if (result) {
 		return {

@@ -464,25 +464,22 @@ export interface ServerNode {
  */
 export interface SSRManifest {
 	/** The directory where SvelteKit keeps its stuff, including static assets (such as JS and CSS) and internally-used routes. */
-	appDir: string;
+	app_dir: string;
 	/** The `base` and `appDir` settings combined without a leading slash. */
-	appPath: string;
+	app_path: string;
 	/** Static files from `config.files.assets` and the service worker (if any). */
 	assets: Set<string>;
-	mimeTypes: Record<string, string>;
-
-	/** @internal private fields */
-	_: {
-		client: BuildData['client'];
-		nodes: SSRNodeLoader[];
-		/** hashed filename -> import to that file */
-		remotes: Record<string, () => Promise<{ default: Record<string, any> }>>;
-		routes: SSRRoute[];
-		prerendered_routes: Set<string>;
-		matchers: () => Promise<Record<string, ParamMatcher>>;
-		/** A `[file]: size` map of all assets imported by server code. */
-		server_assets: Record<string, number>;
-	};
+	/** Map of file extensions to MIME types */
+	mime_types: Record<string, string>;
+	client: BuildData['client'];
+	nodes: SSRNodeLoader[];
+	/** hashed filename -> import to that file */
+	remotes: Record<string, () => Promise<{ default: Record<string, any> }>>;
+	routes: SSRRoute[];
+	prerendered_routes: Set<string>;
+	matchers: () => Promise<Record<string, ParamMatcher>>;
+	/** A `[file]: size` map of all assets imported by server code. */
+	server_assets: Record<string, number>;
 }
 
 export interface SSRNode {

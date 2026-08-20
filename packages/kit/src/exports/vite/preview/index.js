@@ -220,7 +220,7 @@ export async function preview(vite, svelte_config) {
 						throw new Error('Could not determine clientAddress');
 					},
 					read: (file) => {
-						if (file in manifest._.server_assets) {
+						if (file in manifest.server_assets) {
 							return fs.readFileSync(join(dir, file));
 						}
 

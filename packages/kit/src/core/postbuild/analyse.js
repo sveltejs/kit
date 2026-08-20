@@ -65,7 +65,7 @@ async function analyse({
 		remotes: new Map()
 	};
 
-	const nodes = await Promise.all(manifest._.nodes.map((loader) => loader()));
+	const nodes = await Promise.all(manifest.nodes.map((loader) => loader()));
 
 	// analyse nodes
 	for (const node of nodes) {
@@ -88,7 +88,7 @@ async function analyse({
 	}
 
 	// analyse routes
-	for (const route of manifest._.routes) {
+	for (const route of manifest.routes) {
 		const page =
 			route.page &&
 			analyse_page(
@@ -147,7 +147,7 @@ async function analyse({
 
 	// analyse remotes
 	for (const remote of remotes) {
-		const loader = manifest._.remotes[remote.hash];
+		const loader = manifest.remotes[remote.hash];
 		const { default: functions } = await loader();
 
 		const exports = new Map();

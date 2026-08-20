@@ -9,7 +9,7 @@ import { get_relative_path } from '../../utils.js';
 /**
  * @param {import('types').SSRClientRoute} route
  * @param {URL} url
- * @param {NonNullable<SSRManifest['_']['client']>} client
+ * @param {NonNullable<SSRManifest['client']>} client
  * @returns {string}
  */
 export function generate_route_object(route, url, client) {
@@ -66,19 +66,19 @@ function create_client_import(import_path, url) {
  * @returns {Promise<Response>}
  */
 export async function resolve_route(resolved_path, url, manifest) {
-	if (!manifest._.client?.routes) {
+	if (!manifest.client?.routes) {
 		return text('Server-side route resolution disabled', { status: 400 });
 	}
 
 	try {
-		const matchers = await manifest._.matchers();
-		const result = find_route(resolved_path, manifest._.client.routes, matchers);
+		const matchers = await manifest.matchers();
+		const result = find_route(resolved_path, manifest.client.routes, matchers);
 
 		return create_server_routing_response(
 			result?.route ?? null,
 			result?.params ?? {},
 			url,
-			manifest._.client
+			manifest.client
 		).response;
 	} catch {
 		return text('Error resolving route', { status: 500 });
@@ -103,25 +103,25 @@ export async function resolve_route(resolved_path, url, manifest) {
  * @returns {Response}
  */
 export function resolve_route_by_id(route_id, url, manifest) {
-	if (!manifest._.client?.routes) {
+	if (!manifest.client?.routes) {
 		return text('Server-side route resolution disabled', { status: 400 });
 	}
 
 	try {
-		const route = manifest._.client.routes.find((r) => r.id === route_id);
+		const route = manifest.client.routes.find((r) => r.id === route_id);
 
 		if (route) {
-			return create_server_routing_response(route, null, url, manifest._.client).response;
+			return create_server_routing_response(route, null, url, manifest.client).response;
 		}
 
 		// `client.routes` only contains routes with a `+page`, so a miss above doesn't mean the
 		// route doesn't exist — it might be a `+server.js`-only route. `_.routes` includes those
 		// (with `page: null`), so we can distinguish "exists but has no code" from "unknown".
-		if (manifest._.routes.some((r) => r.id === route_id && !r.page)) {
+		if (manifest.routes.some((r) => r.id === route_id && !r.page)) {
 			return text('export const endpoint_only = true;', { headers: js_headers() });
 		}
 
-		return create_server_routing_response(null, null, url, manifest._.client).response;
+		return create_server_routing_response(null, null, url, manifest.client).response;
 	} catch {
 		return text('Error resolving route', { status: 500 });
 	}
@@ -137,7 +137,7 @@ function js_headers() {
  * @param {import('types').SSRClientRoute | null} route
  * @param {Partial<Record<string, string>> | null} params
  * @param {URL} url
- * @param {NonNullable<SSRManifest['_']['client']>} client
+ * @param {NonNullable<SSRManifest['client']>} client
  * @returns {{response: Response, body: string}}
  */
 export function create_server_routing_response(route, params, url, client) {
@@ -164,7 +164,7 @@ export function create_server_routing_response(route, params, url, client) {
  *
  * @param {import('types').SSRClientRoute} route
  * @param {URL} url
- * @param {NonNullable<SSRManifest['_']['client']>} client
+ * @param {NonNullable<SSRManifest['client']>} client
  * @returns {string}
  */
 function create_css_import(route, url, client) {
