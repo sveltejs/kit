@@ -20,6 +20,9 @@ const out = path.join(root, '.svelte-kit/output/server');
 /** @type {string} */
 let origin;
 
+/** @type {Server} */
+let server;
+
 beforeAll(async () => {
 	// the app writes test/errors.jsonl and test/spans.jsonl relative to cwd
 	process.chdir(root);
@@ -32,8 +35,7 @@ beforeAll(async () => {
 	const { manifest } = await import(pathToFileURL(path.join(out, 'manifest.js')).href);
 	const { Server } = await import(pathToFileURL(path.join(out, 'index.js')).href);
 
-	/** @type {Server} */
-	const server = new Server(manifest);
+	server = new Server(manifest);
 	await server.init({
 		env: process.env,
 		read: (file) =>
@@ -55,7 +57,18 @@ beforeAll(async () => {
  * @param {string} pathname
  * @param {RequestInit} [init]
  */
-const get = (pathname, init) => fetch(origin + pathname, init);
+// const get = (pathname, init) => fetch(origin + pathname, init);
+
+const get = async (pathname, init) => {
+	const url = origin + pathname;
+
+	const request = new Request(url, init);
+	const response = await server.respond(request, {
+		getClientAddress: () => ''
+	});
+
+	return response;
+};
 
 /**
  * Request a page and parse it, for the assertions that used `page.textContent`
@@ -63,7 +76,15 @@ const get = (pathname, init) => fetch(origin + pathname, init);
  * @param {RequestInit} [init]
  */
 async function load(pathname, init) {
-	const response = await get(pathname, init);
+	let response = await get(pathname, init);
+
+	while (response.status >= 300 && response.status < 400) {
+		const location = /** @type {string} */ (response.headers.get('location'));
+		const redirected = new URL(location, origin + pathname);
+
+		response = await get(redirected.pathname + redirected.search, init);
+	}
+
 	const document = new DOMParser().parseFromString(await response.text(), 'text/html');
 	return { response, document };
 }
@@ -664,7 +685,7 @@ describe('Errors', () => {
 
 	test('redirect(...) in endpoint', async () => {
 		const { response, document } = await load('/errors/endpoint-throw-redirect');
-		expect(response.status).toBe(200); // redirects are opaque to the browser
+		expect(response.status).toBe(200);
 
 		const error = read_errors('/errors/endpoint-throw-redirect');
 		expect(error).toBe(undefined);
@@ -1254,8 +1275,11 @@ describe('tracing', () => {
 
 	test('correct spans are created for Redirect', async () => {
 		const test_id = rand();
-		const response = await get(`/tracing/redirect?test_id=${test_id}`);
-		expect(response.status).toBe(200);
+		const r1 = await get(`/tracing/redirect?test_id=${test_id}`);
+		expect(r1.status).toBe(307);
+
+		const r2 = await get(/** @type {string} */ (r1.headers.get('location')));
+		expect(r2.status).toBe(200);
 
 		const traces = read_traces(test_id);
 		expect(traces).toHaveLength(2);
