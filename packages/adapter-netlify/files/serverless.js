@@ -1,14 +1,11 @@
-import { Server } from '0SERVER';
 import { createReadableStream } from '@sveltejs/kit/node';
 import process from 'node:process';
 
 /**
- * @param {import('@sveltejs/kit').SSRManifest} manifest
+ * @param {import('@sveltejs/kit').Server} server
  * @returns {(request: Request, context: import('@netlify/types').Context) => Promise<Response>}
  */
-export function init(manifest) {
-	const server = new Server(manifest);
-
+export function init(server) {
 	/** @type {Promise<void> | null} */
 	let init_promise = server.init({
 		env: process.env,
