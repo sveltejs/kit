@@ -34,7 +34,7 @@ test('API route is present in Vercel routing configuration', () => {
 });
 
 test('__data.json route is not present in Vercel routing configuration for server-only route', () => {
-	assert.ok(api_route_sources.some((src) => !src.includes('__data.json')));
+	assert.ok(!api_route_sources.some((src) => src.includes('__data.json')));
 });
 
 test('__data.json function exists for ISR page route', () => {
