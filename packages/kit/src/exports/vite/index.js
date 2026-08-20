@@ -49,9 +49,9 @@ import { process_config, split_config, validate_config } from '../../core/config
 import { treeshake_prerendered_remotes } from './build/remote.js';
 import { get_runner } from '../../runner.js';
 import { plugin_env_vars, plugin_service_worker_env_vars } from './plugins/env-vars.js';
+import { plugin_guard } from './plugins/guard.js';
 import { get_manifest_routes, write_app_manifest } from '../../core/sync/write_app_manifest.js';
 import { plugin_service_worker_build } from './build/service-worker.js';
-import { plugin_guard } from './plugins/guard.js';
 
 const options_regex = /(export\s+const\s+(prerender|csr|ssr|trailingSlash))\s*=/s;
 
