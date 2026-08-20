@@ -6,16 +6,17 @@ import http from 'node:http';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { createReadableStream, getRequest, setResponse } from '@sveltejs/kit/node';
-import { loadEnv } from 'vite';
-import { afterEach, beforeAll, describe, expect, test } from 'vitest';
+import { createServer, loadEnv } from 'vite';
+import { afterAll, afterEach, beforeAll, describe, expect, test } from 'vitest';
 import * as records from '../../../records.js';
 
-// These tests call the built server directly, so they cover what the no-js Playwright
-// project covered for server responses without a browser or a web server. server.setup.js
-// builds the app first.
+// These tests cover what the no-js Playwright project covered for server responses, without a
+// browser. With KIT_TEST_DEV set they go through Vite's dev server in middleware mode; otherwise
+// they call the built server directly (server.setup.js builds it first).
 
 const root = path.resolve(import.meta.dirname, '..');
 const out = path.join(root, '.svelte-kit/output/server');
+const dev = !!process.env.KIT_TEST_DEV;
 
 /** @type {string} */
 let origin;
@@ -23,9 +24,26 @@ let origin;
 /** @type {Server} */
 let server;
 
+/** @type {import('vite').ViteDevServer} */
+let vite;
+
 beforeAll(async () => {
 	// the app writes test/errors.jsonl and test/spans.jsonl relative to cwd
 	process.chdir(root);
+
+	if (dev) {
+		vite = await createServer({
+			configFile: path.join(root, 'vite.config.js'),
+			root,
+			appType: 'custom',
+			server: { middlewareMode: true },
+			logLevel: 'warn'
+		});
+		const listener = http.createServer(vite.middlewares);
+		await once(listener.listen(0, 'localhost'), 'listening');
+		origin = `http://localhost:${/** @type {import('net').AddressInfo} */ (listener.address()).port}`;
+		return;
+	}
 
 	// the preview server gets these from Vite's .env loading
 	Object.entries(loadEnv('production', root, '')).forEach(
@@ -44,29 +62,26 @@ beforeAll(async () => {
 			)
 	});
 
-	// the same wrapping adapter-node does, so responses get real HTTP semantics
+	// the app's own fetches of unmatched paths leave the server, so give the origin a listener
 	const listener = http.createServer(async (req, res) => {
 		const request = getRequest({ request: req, response: res, base: origin });
-		setResponse(res, await server.respond(request, { getClientAddress: () => '127.0.0.1' }));
+		setResponse(res, await server.respond(request, { getClientAddress: () => '' }));
 	});
 	await once(listener.listen(0, 'localhost'), 'listening');
 	origin = `http://localhost:${/** @type {import('net').AddressInfo} */ (listener.address()).port}`;
 });
 
+afterAll(() => vite?.close());
+
 /**
+ * One request, redirects not followed; `load` follows them
  * @param {string} pathname
  * @param {RequestInit} [init]
  */
-const get = async (pathname, init) => {
-	const url = origin + pathname;
-
-	const request = new Request(url, init);
-	const response = await server.respond(request, {
-		getClientAddress: () => ''
-	});
-
-	return response;
-};
+const get = (pathname, init) =>
+	dev
+		? fetch(origin + pathname, { redirect: 'manual', ...init })
+		: server.respond(new Request(origin + pathname, init), { getClientAddress: () => '' });
 
 /**
  * Request a page and parse it, for the assertions that used `page.textContent`
@@ -156,7 +171,7 @@ describe('Cookies', () => {
 	});
 });
 
-describe('CSRF', () => {
+describe.skipIf(dev)('CSRF', () => {
 	test('Blocks requests with incorrect origin', async () => {
 		const content_types = [
 			'application/x-www-form-urlencoded',
@@ -300,8 +315,9 @@ describe('Endpoints', () => {
 		const responseBefore = await get('/endpoint-output/stream-typeerror?what');
 		expect(await responseBefore.text()).toEqual('null');
 
-		const response = await get('/endpoint-output/stream-typeerror');
-		await response.body?.cancel(new TypeError());
+		// over http the socket just closes; the direct call hands back the stream to cancel
+		if (dev) await expect(get('/endpoint-output/stream-typeerror')).rejects.toThrow('fetch failed');
+		else await (await get('/endpoint-output/stream-typeerror')).body?.cancel(new TypeError());
 
 		const responseAfter = await get('/endpoint-output/stream-typeerror?what');
 		expect(await responseAfter.text()).toEqual('TypeError');
@@ -450,7 +466,7 @@ describe('Endpoints', () => {
 	test('body can be a binary ReadableStream', async () => {
 		await expect(
 			get('/endpoint-output/stream-throw-error').then((r) => r.arrayBuffer())
-		).rejects.toThrow('simulate error');
+		).rejects.toThrow(dev ? 'fetch failed' : 'simulate error');
 
 		const response = await get('/endpoint-output/stream');
 		const body = Buffer.from(await response.arrayBuffer());
@@ -1080,7 +1096,7 @@ describe('$app/forms', () => {
 });
 
 describe('$app/env', () => {
-	test('treeshakes dev check', async () => {
+	test.skipIf(dev)('treeshakes dev check', async () => {
 		const code = fs.readFileSync(
 			path.join(root, '.svelte-kit/output/server/entries/pages/treeshaking/dev/_page.svelte.js'),
 			'utf-8'
@@ -1088,7 +1104,7 @@ describe('$app/env', () => {
 		expect(code).not.toContain('not prod');
 	});
 
-	test('treeshakes browser check', async () => {
+	test.skipIf(dev)('treeshakes browser check', async () => {
 		const code = fs.readFileSync(
 			path.join(
 				root,
@@ -1560,7 +1576,7 @@ describe('tracing', () => {
 	});
 });
 
-describe('asset preload', () => {
+describe.skipIf(dev)('asset preload', () => {
 	test('does not inject Link headers', async () => {
 		const response = await get('/asset-preload');
 
