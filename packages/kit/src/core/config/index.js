@@ -277,11 +277,8 @@ export function validate_config(config, cwd = process.cwd()) {
 	}
 
 	if (validated.kit.csp?.directives?.['require-trusted-types-for']?.includes('script')) {
-		if (!validated.kit.csp?.directives?.['trusted-types']?.includes('svelte-trusted-html')) {
-			throw new Error(
-				"The `csp.directives['trusted-types']` option must include 'svelte-trusted-html'"
-			);
-		}
+		// the 'svelte-trusted-html' policy is only required when client-side code ships,
+		// which is checked at build time once page options are known
 		if (
 			validated.kit.serviceWorker?.register &&
 			resolve_entry(path.resolve(cwd, validated.kit.files.serviceWorker)) &&

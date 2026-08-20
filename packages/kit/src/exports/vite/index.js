@@ -1335,6 +1335,16 @@ async function kit({ svelte_config }) {
 					(node) => node.page_options?.csr === false
 				);
 
+				if (
+					!skip_client_build &&
+					kit.csp.directives['require-trusted-types-for']?.includes('script') &&
+					!kit.csp.directives['trusted-types']?.includes('svelte-trusted-html')
+				) {
+					throw new Error(
+						"The `csp.directives['trusted-types']` option must include 'svelte-trusted-html' unless all pages have `csr: false`"
+					);
+				}
+
 				/** @type {Manifest | null} */
 				let client_manifest = null;
 
