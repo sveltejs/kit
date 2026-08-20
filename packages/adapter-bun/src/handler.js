@@ -28,10 +28,7 @@ export async function handler(request, bun_server) {
 	if (normalized_request instanceof Response) return normalized_request;
 
 	const response = await server.respond(normalized_request, {
-		platform: {
-			request,
-			server: bun_server
-		},
+		platform: { server: bun_server },
 		getClientAddress: () => get_client_address(request, bun_server)
 	});
 

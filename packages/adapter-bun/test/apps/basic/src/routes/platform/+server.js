@@ -4,7 +4,6 @@ import { json } from '@sveltejs/kit';
 export function GET({ getClientAddress, platform }) {
 	return json({
 		address: getClientAddress(),
-		request: platform?.request instanceof Request,
 		server: typeof platform?.server?.requestIP === 'function',
 		id: platform?.server.id,
 		protocol: platform?.server.protocol,

@@ -221,22 +221,19 @@ ADDRESS_HEADER=x-forwarded-for XFF_DEPTH=2 bun ./build
 
 ## Platform API
 
-The request event's `platform` property exposes the original Web API request received by Bun and the Bun server instance:
+The request event's `platform` property exposes the Bun server instance:
 
 ```js
 /** @type {import('./$types').RequestHandler} */
 export function GET({ getClientAddress, platform }) {
 	return Response.json({
 		address: getClientAddress(),
-		requestUrl: platform.request.url,
 		serverId: platform.server.id,
 		pendingRequests: platform.server.pendingRequests,
 		pendingWebSockets: platform.server.pendingWebSockets
 	});
 }
 ```
-
-`platform.request` remains the original request even when the adapter normalizes the request URL to a configured or proxy-derived public origin before passing it to SvelteKit.
 
 ## Graceful shutdown
 

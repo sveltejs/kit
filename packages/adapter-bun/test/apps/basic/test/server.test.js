@@ -3,12 +3,11 @@ import process from 'node:process';
 
 const compiled = process.env.COMPILE === 'true';
 
-test('provides the original request and Bun server on platform', async ({ request }) => {
+test('provides the Bun server on platform', async ({ request }) => {
 	const response = await request.get('/platform');
 	const platform = await response.json();
 
 	expect(platform.address).toBeTruthy();
-	expect(platform.request).toBe(true);
 	expect(platform.server).toBe(true);
 	expect(platform.id).toEqual(expect.any(String));
 	expect(platform.protocol).toBe('http');
