@@ -36,7 +36,7 @@
 		"lint": "oxfmt --check .",
 		"format": "oxfmt --write .",
 		"check": "tsc",
-		"test:unit": "vitest run",
+		"test:unit": "vitest run *.spec.js",
 		"test": "pnpm test:unit && pnpm -r --filter='./test/apps/**' test:build"
 	},
 	"dependencies": {
