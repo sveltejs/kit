@@ -102,9 +102,14 @@ export class Query {
 			.catch(noop);
 	}
 
+	/** @returns {boolean} whether there was an in-flight request to resolve */
 	#clear_pending() {
+		const had_pending = this.#latest.length > 0;
+
 		this.#latest.forEach((r) => r(undefined));
 		this.#latest.length = 0;
+
+		return had_pending;
 	}
 
 	#run() {
@@ -242,12 +247,34 @@ export class Query {
 		// SSR record can never shadow the newly-set value
 		delete query_responses[this.#key];
 
-		this.#clear_pending();
+		// a rejected promise must be replaced, or consumers awaiting the query would keep
+		// throwing the old error. read untracked so that calling `set` from inside an
+		// effect doesn't subscribe that effect to the error
+		const rejected = untrack(() => this.#error !== undefined);
+		const resolved_in_flight = this.#clear_pending();
+
 		this.#ready = true;
 		this.#loading = false;
 		this.#error = undefined;
 		this.#raw = value;
-		this.#promise = Promise.resolve();
+
+		// A fresh promise is how consumers awaiting this query learn that a new value is
+		// available, so it is required whenever they are not already suspended on one —
+		// a server-initiated single-flight update, `.set(...)`, or SSR hydration.
+		//
+		// When there *was* an in-flight request we have just resolved it, and `#then`
+		// reads `#current` after the promise settles rather than closing over the value,
+		// so those consumers already see the new value. Replacing the promise as well
+		// would invalidate `#then` a second time and re-suspend a consumer that is
+		// already awaiting this query — in a second batch, while the first is still
+		// pending. That puts Svelte into 'time travelling' mode, where deriveds are never
+		// marked clean, so everything downstream of the query recomputes on every read.
+		// The cost is exponential in the depth of the derived graph, which is enough to
+		// lock up a page that renders a chart.
+		// See https://github.com/sveltejs/kit/issues/16854
+		if (!resolved_in_flight || rejected) {
+			this.#promise = Promise.resolve();
+		}
 	}
 
 	/** @param {HttpError} error */
