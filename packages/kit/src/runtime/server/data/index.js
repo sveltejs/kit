@@ -13,7 +13,6 @@ import { with_version_header } from '../utils.js';
  * @param {import('@sveltejs/kit').RequestEvent} event
  * @param {import('types').RequestState} state
  * @param {{ page: Pick<import('types').PageNodeIndexes, 'layouts' | 'leaf'> | null }} route
- * @param {import('types').SSROptions} options
  * @param {import('@sveltejs/kit').SSRManifest} manifest
  * @param {boolean[] | undefined} invalidated_data_nodes
  * @param {import('types').TrailingSlash} trailing_slash
@@ -23,7 +22,6 @@ export async function render_data(
 	event,
 	state,
 	route,
-	options,
 	manifest,
 	invalidated_data_nodes,
 	trailing_slash
@@ -92,7 +90,7 @@ export async function render_data(
 			return fn();
 		});
 
-		const data_serializer = server_data_serializer_json(event, state, options);
+		const data_serializer = server_data_serializer_json(event, state);
 		await Promise.all(
 			promises.map(async (p, i) => {
 				const node = await p.catch(async (error) => {
@@ -100,7 +98,7 @@ export async function render_data(
 						throw error;
 					}
 
-					const transformed = await handle_error_and_jsonify(event, state, options, error);
+					const transformed = await handle_error_and_jsonify(event, state, error);
 
 					return /** @type {import('types').ServerErrorNode} */ ({
 						type: 'error',
@@ -135,7 +133,7 @@ export async function render_data(
 		if (error instanceof Redirect) {
 			return redirect_json_response(error);
 		} else {
-			const transformed = await handle_error_and_jsonify(event, state, options, error);
+			const transformed = await handle_error_and_jsonify(event, state, error);
 			return json_response(transformed, transformed.status);
 		}
 	}

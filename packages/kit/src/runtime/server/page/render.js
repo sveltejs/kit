@@ -27,6 +27,7 @@ import Root from '../../components/root.svelte';
 import { render } from 'svelte/server';
 import { Props, RenderNode } from '../../props.svelte.js';
 import { has_custom_transporters, uneval } from '#app/internal/transport';
+import { options } from '../internal.js';
 
 // TODO rename this function/module
 
@@ -35,7 +36,6 @@ import { has_custom_transporters, uneval } from '#app/internal/transport';
  * @param {{
  *   branch: Array<import('./types.js').Loaded>;
  *   fetched: Array<import('./types.js').Fetched>;
- *   options: import('types').SSROptions;
  *   manifest: import('@sveltejs/kit').SSRManifest;
  *   page_config: { ssr: boolean; csr: boolean };
  *   status: number;
@@ -51,7 +51,6 @@ import { has_custom_transporters, uneval } from '#app/internal/transport';
 export async function render_response({
 	branch,
 	fetched,
-	options,
 	manifest,
 	page_config,
 	status,
@@ -203,7 +202,7 @@ export async function render_response({
 							throw e;
 						}
 
-						const handled = handle_error_and_jsonify(event, render_state, options, e);
+						const handled = handle_error_and_jsonify(event, render_state, e);
 
 						// TODO 4.0 make this an async function and await `handled`
 						if (handled instanceof Promise) {
@@ -347,7 +346,7 @@ export async function render_response({
 		}
 	}
 
-	const global = get_global_name(options);
+	const global = get_global_name();
 	const { data, chunks } = data_serializer.get_data(csp);
 
 	if (page_config.ssr && page_config.csr) {
@@ -517,7 +516,7 @@ export async function render_response({
 			args.push(`{\n${indent}\t${hydrate.join(`,\n${indent}\t`)}\n${indent}}`);
 		}
 
-		const remote_data = await collect_remote_data({}, event, state, options);
+		const remote_data = await collect_remote_data({}, event, state);
 
 		const serialized_data =
 			Object.keys(remote_data).length > 0

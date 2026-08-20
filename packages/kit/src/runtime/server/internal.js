@@ -1,4 +1,5 @@
 /** @import { SSRManifest } from '@sveltejs/kit'; */
+/** @import { ServerHooks, SSROptions } from 'types'; */
 import { restore, save } from './dev.js';
 import {
 	has_data_suffix,
@@ -16,6 +17,8 @@ const styleText =
 
 const read_implementation_key = Symbol.for('sveltekit.read_implementation');
 const manifest_key = Symbol.for('sveltekit.manifest');
+const options_key = Symbol.for('sveltekit.options');
+const hooks_key = Symbol.for('sveltekit.hooks');
 
 export let read_implementation = /** @type {((path: string) => ReadableStream<any>) | null} */ (
 	(__SVELTEKIT_DEV__ && restore(read_implementation_key)) ?? null
@@ -24,6 +27,12 @@ export let read_implementation = /** @type {((path: string) => ReadableStream<an
 export let manifest = /** @type {SSRManifest} */ (
 	(__SVELTEKIT_DEV__ && restore(manifest_key)) ?? null
 );
+
+export let options = /** @type {SSROptions} */ (
+	(__SVELTEKIT_DEV__ && restore(options_key)) ?? null
+);
+
+export let hooks = /** @type {ServerHooks} */ ((__SVELTEKIT_DEV__ && restore(hooks_key)) ?? null);
 
 /**
  * @param {(path: string) => ReadableStream<any>} fn
@@ -40,6 +49,22 @@ export function set_read_implementation(fn) {
 export function set_manifest(value) {
 	manifest = value;
 	if (__SVELTEKIT_DEV__) save(manifest_key, value);
+}
+
+/**
+ * @param {SSROptions} value
+ */
+export function set_options(value) {
+	options = value;
+	if (__SVELTEKIT_DEV__) save(options_key, value);
+}
+
+/**
+ * @param {ServerHooks} value
+ */
+export function set_hooks(value) {
+	hooks = value;
+	if (__SVELTEKIT_DEV__) save(hooks_key, value);
 }
 
 /**
