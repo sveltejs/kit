@@ -44,25 +44,7 @@ test.describe('Endpoints', () => {
 	// TODO all the remaining tests in this section are really only testing
 	// setResponse, since we're not otherwise changing anything on the response.
 	// might be worth making these unit tests instead
-	test('stream can be canceled with TypeError', async ({ request }) => {
-		const responseBefore = await request.get('/endpoint-output/stream-typeerror?what');
-		expect(await responseBefore.text()).toEqual('null');
-
-		const interruptedResponse = request.get('/endpoint-output/stream-typeerror');
-		await expect(interruptedResponse).rejects.toThrow('socket hang up');
-
-		const responseAfter = await request.get('/endpoint-output/stream-typeerror?what');
-		expect(await responseAfter.text()).toEqual('TypeError');
-	});
-
 	// TODO see above
-	test('invalid headers return a 500', async ({ request }) => {
-		const response = await request.get('/endpoint-output/head-write-error');
-		expect(response.status()).toBe(500);
-		expect(await response.text()).toMatch(
-			'TypeError [ERR_INVALID_CHAR]: Invalid character in header content ["x-test"]'
-		);
-	});
 });
 
 test.describe('Errors', () => {
@@ -75,20 +57,6 @@ test.describe('Errors', () => {
 		} else {
 			expect(/** @type {Response} */ (response).status()).toBe(400);
 		}
-	});
-});
-
-test.describe('Load', () => {
-	test('fetching a non-existent resource in root layout fails without hanging', async ({
-		request
-	}) => {
-		const response = await request.get('/errors/error-in-layout');
-		expect(await response.text()).toContain('Error: 404');
-	});
-
-	test('fetch does not load a file with a # character', async ({ request }) => {
-		const response = await request.get('/load/static-file-with-hash');
-		expect(await response.text()).toContain('status: 404');
 	});
 });
 

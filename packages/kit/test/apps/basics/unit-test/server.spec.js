@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { createReadableStream } from '@sveltejs/kit/node';
+import { createReadableStream, getRequest, setResponse } from '@sveltejs/kit/node';
 import { loadEnv } from 'vite';
 import { afterEach, beforeAll, describe, expect, test } from 'vitest';
 import * as records from '../../../records.js';
@@ -15,10 +15,9 @@ import * as records from '../../../records.js';
 
 const root = path.resolve(import.meta.dirname, '..');
 const out = path.join(root, '.svelte-kit/output/server');
-const origin = 'http://localhost:3000';
 
-/** @type {Server} */
-let server;
+/** @type {string} */
+let origin;
 
 beforeAll(async () => {
 	// the app writes test/errors.jsonl and test/spans.jsonl relative to cwd
@@ -32,7 +31,8 @@ beforeAll(async () => {
 	const { manifest } = await import(pathToFileURL(path.join(out, 'manifest.js')).href);
 	const { Server } = await import(pathToFileURL(path.join(out, 'index.js')).href);
 
-	server = new Server(manifest);
+	/** @type {Server} */
+	const server = new Server(manifest);
 	await server.init({
 		env: process.env,
 		read: (file) =>
@@ -40,42 +40,21 @@ beforeAll(async () => {
 				path.join(fs.existsSync(path.join(out, file)) ? out : `${root}/static`, file)
 			)
 	});
+
+	// the same wrapping adapter-node does, so responses get real HTTP semantics
+	const listener = http.createServer(async (req, res) => {
+		const request = getRequest({ request: req, response: res, base: origin });
+		setResponse(res, await server.respond(request, { getClientAddress: () => '127.0.0.1' }));
+	});
+	await new Promise((fulfil) => listener.listen(0, 'localhost', () => fulfil(undefined)));
+	origin = `http://localhost:${/** @type {import('net').AddressInfo} */ (listener.address()).port}`;
 });
 
-/** @type {WeakMap<Response, string>} */
-const urls = new WeakMap();
-
 /**
- * Request a path from the built server. Redirects are followed like Playwright's
- * `request.get` follows them, unless `redirect: 'manual'` is passed.
  * @param {string} pathname
  * @param {RequestInit} [init]
  */
-async function get(pathname, init = {}) {
-	let url = origin + pathname;
-
-	for (let hops = 0; ; hops++) {
-		const request = new Request(url, init);
-		if (!request.headers.has('accept')) request.headers.set('accept', '*/*');
-
-		let response = await server.respond(request, { getClientAddress: () => '127.0.0.1' });
-
-		const location = response.headers.get('location');
-
-		if (init.redirect === 'manual' || !location || response.status < 300 || hops === 20) {
-			// an HTTP server drops the body of a HEAD response
-			if (request.method === 'HEAD') response = new Response(null, response);
-			urls.set(response, url);
-			return response;
-		}
-
-		url = new URL(location, url).href;
-		if (response.status !== 307 && response.status !== 308) init = {};
-	}
-}
-
-/** The URL a followed redirect ended on, like Playwright's `response.url()` */
-const url_of = (/** @type {Response} */ response) => /** @type {string} */ (urls.get(response));
+const get = (pathname, init) => fetch(origin + pathname, init);
 
 /**
  * Request a page and parse it, for the assertions that used `page.textContent`
@@ -302,6 +281,24 @@ describe('CSRF', () => {
 });
 
 describe('Endpoints', () => {
+	test('invalid headers return a 500', async () => {
+		const response = await get('/endpoint-output/head-write-error');
+		expect(response.status).toBe(500);
+		expect(await response.text()).toMatch(
+			'TypeError [ERR_INVALID_CHAR]: Invalid character in header content ["x-test"]'
+		);
+	});
+
+	test('stream can be canceled with TypeError', async () => {
+		const responseBefore = await get('/endpoint-output/stream-typeerror?what');
+		expect(await responseBefore.text()).toEqual('null');
+
+		await expect(get('/endpoint-output/stream-typeerror')).rejects.toThrow('fetch failed');
+
+		const responseAfter = await get('/endpoint-output/stream-typeerror?what');
+		expect(await responseAfter.text()).toEqual('TypeError');
+	});
+
 	test('HEAD with matching headers but without body', async () => {
 		const url = '/endpoint-output/body';
 
@@ -320,7 +317,7 @@ describe('Endpoints', () => {
 		expect(await responses.head.text()).toBe('');
 		expect(await responses.get.text()).toBe('{}');
 
-		['date', 'transfer-encoding'].forEach((name) => {
+		['connection', 'date', 'keep-alive', 'transfer-encoding'].forEach((name) => {
 			delete headers.head[name];
 			delete headers.get[name];
 		});
@@ -443,8 +440,7 @@ describe('Endpoints', () => {
 
 	// TODO see above
 	test('body can be a binary ReadableStream', async () => {
-		const interruptedResponse = await get('/endpoint-output/stream-throw-error');
-		await expect(interruptedResponse.text()).rejects.toThrow('simulate error');
+		await expect(get('/endpoint-output/stream-throw-error')).rejects.toThrow('fetch failed');
 
 		const response = await get('/endpoint-output/stream');
 		const body = Buffer.from(await response.arrayBuffer());
@@ -802,14 +798,34 @@ describe('Errors', () => {
 });
 
 describe('Load', () => {
+	test('fetch does not load a file with a # character', async () => {
+		const response = await get('/load/static-file-with-hash');
+		expect(await response.text()).toContain('status: 404');
+	});
+
+	test('fetching a non-existent resource in root layout fails without hanging', async () => {
+		const response = await get('/errors/error-in-layout');
+		expect(await response.text()).toContain('Error: 404');
+	});
+
 	test('fetch reads universal load assets on the server', async () => {
 		const { document } = await load('/load/fetch-asset');
 		expect(document.querySelector('p')?.textContent).toBe('1');
 	});
 
 	test('does not forward accept-language to internal fetch when the request has none', async () => {
-		// unlike browsers and undici, the `request` fixture sends no accept-language header
-		const html = await (await get('/load/fetch-request-headers')).text();
+		// unlike browsers and fetch, a bare http client sends no accept-language header
+		const html = await new Promise((fulfil) => {
+			http.get(
+				`${origin}/load/fetch-request-headers`,
+				{ headers: { accept: '*/*', 'user-agent': 'node' } },
+				(res) => {
+					let body = '';
+					res.on('data', (chunk) => (body += chunk));
+					res.on('end', () => fulfil(body));
+				}
+			);
+		});
 		const headers = JSON.parse(
 			/** @type {RegExpMatchArray} */ (/<pre>(.+?)<\/pre>/s.exec(html))[1]
 		);
