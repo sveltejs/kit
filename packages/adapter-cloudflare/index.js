@@ -106,10 +106,10 @@ export default function (options = {}) {
 			builder.writeServerEntrypoint(`${tmp}/server.js`);
 			builder.copy(`${files}/worker.js`, worker_dest, {
 				replace: {
-					SERVER: `./${path.posix.relative(worker_dest_dir, tmp)}/index.js`,
+					SERVER: `./${path.posix.relative(worker_dest_dir, tmp)}/server.js`,
 					BASE_PATH: JSON.stringify(builder.config.paths.base),
 					APP_PATH: JSON.stringify(builder.getAppPath()),
-					MANIFEST_ASSETS: `new Set(${JSON.stringify(builder.manifest.assets)})`,
+					MANIFEST_ASSETS: `new Set(${JSON.stringify(builder.manifest.assets.map((a) => a.path))})`,
 					PRERENDERED: `new Set(${JSON.stringify(builder.prerendered.paths)})`,
 					ASSETS_BINDING: assets_binding
 				}
@@ -282,9 +282,4 @@ function validate_wrangler_config(config_file = undefined) {
 		wrangler_config,
 		building_for_cloudflare_pages
 	};
-}
-
-/** @param {string} str */
-function posixify(str) {
-	return str.replace(/\\/g, '/');
 }
