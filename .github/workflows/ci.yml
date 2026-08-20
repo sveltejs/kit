@@ -90,7 +90,8 @@ jobs:
           - { app: basics, script: pw:build, project: js, shard: 2/2 }
           - { app: basics, script: pw:build, project: no-js }
           - { script: test:build:rest, workers: 2 }
-          # the server config variants each app declares in its playwright.config.js
+          # the server config variants each app declares in its playwright.config.js. nothing
+          # requests `__route.js` without JS, so resolution has no no-js legs
           - { app: basics, script: pw:dev, variant: async, project: js, shard: 1/2 }
           - { app: basics, script: pw:dev, variant: async, project: js, shard: 2/2 }
           - { app: basics, script: pw:dev, variant: async, project: no-js }
@@ -99,10 +100,8 @@ jobs:
           - { app: basics, script: pw:build, variant: async, project: no-js }
           - { app: basics options, script: pw:dev, variant: resolution, project: js, shard: 1/2 }
           - { app: basics options, script: pw:dev, variant: resolution, project: js, shard: 2/2 }
-          - { app: basics options, script: pw:dev, variant: resolution, project: no-js }
           - { app: basics options, script: pw:build, variant: resolution, project: js, shard: 1/2 }
           - { app: basics options, script: pw:build, variant: resolution, project: js, shard: 2/2 }
-          - { app: basics options, script: pw:build, variant: resolution, project: no-js }
           # the cross-platform subset of basics on the other browsers and operating systems
           - { script: test:cross-platform:dev, os: windows-latest, workers: 2 }
           - { script: test:cross-platform:build, os: windows-latest, workers: 2 }
