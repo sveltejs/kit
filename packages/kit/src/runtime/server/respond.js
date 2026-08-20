@@ -100,7 +100,7 @@ export async function internal_respond(request, manifest, state) {
 
 	if (!__SVELTEKIT_DEV__) {
 		const request_origin = request.headers.get('origin');
-		const self_origin = get_self_origin(options.paths_origin, url.origin);
+		const self_origin = get_self_origin(__SVELTEKIT_PATHS_ORIGIN__, url.origin);
 
 		if (remote_id) {
 			if (
@@ -113,7 +113,7 @@ export async function internal_respond(request, manifest, state) {
 				const message = 'Cross-site remote requests are forbidden';
 				return Response.json({ message }, { status: 403 });
 			}
-		} else if (options.csrf_check_origin) {
+		} else if (__SVELTEKIT_CSRF_CHECK_ORIGIN__) {
 			const forbidden = is_csrf_forbidden({
 				request,
 				request_origin,
@@ -134,7 +134,7 @@ export async function internal_respond(request, manifest, state) {
 		}
 	}
 
-	if (options.hash_routing && url.pathname !== base + '/' && url.pathname !== '/[fallback]') {
+	if (__SVELTEKIT_HASH_ROUTING__ && url.pathname !== base + '/' && url.pathname !== '/[fallback]') {
 		return text('Not found', { status: 404 });
 	}
 
@@ -610,7 +610,7 @@ export async function internal_respond(request, manifest, state) {
 				});
 			}
 
-			if (options.hash_routing || state.prerendering?.fallback) {
+			if (__SVELTEKIT_HASH_ROUTING__ || state.prerendering?.fallback) {
 				return await render_response({
 					event,
 					state,

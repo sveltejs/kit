@@ -1,7 +1,7 @@
 import * as devalue from 'devalue';
 import { compact } from '../../../utils/array.js';
 import { create_async_iterator } from '../../../utils/streaming.js';
-import { clarify_devalue_error, get_global_name, serialize_uses } from '../utils.js';
+import { clarify_devalue_error, serialize_uses } from '../utils.js';
 import { handle_error_and_jsonify } from '../errors.js';
 import { encoders } from '#app/internal/transport';
 
@@ -17,7 +17,7 @@ export function server_data_serializer(event, state) {
 	let max_nodes = -1;
 
 	const iterator = create_async_iterator();
-	const global = get_global_name();
+	const global = __SVELTEKIT_GLOBAL_NAME__;
 
 	/** @param {number} index */
 	function get_replacer(index) {

@@ -13,7 +13,15 @@ declare global {
 	 * it is influenced by `NODE_ENV` which can still be true during `vite preview`
 	 */
 	const __SVELTEKIT_DEV__: boolean;
+	const __SVELTEKIT_CSRF_CHECK_ORIGIN__: boolean;
 	const __SVELTEKIT_EMBEDDED__: boolean;
+	/** True if `config.output.linkHeaderPreload` is `true` */
+	const __SVELTEKIT_LINK_HEADER_PRELOAD__: boolean;
+	const __SVELTEKIT_PATHS_ORIGIN__: string | undefined;
+	/** True if the app has a service worker and `config.serviceWorker.register` is `true` */
+	const __SVELTEKIT_SERVICE_WORKER__: boolean;
+	/** The `__sveltekit_xxx` name the payload object is attached to, without `globalThis.` */
+	const __SVELTEKIT_GLOBAL_NAME__: string;
 	const __SVELTEKIT_PATHS_ASSETS__: string;
 	const __SVELTEKIT_PATHS_BASE__: string;
 	const __SVELTEKIT_PATHS_RELATIVE__: boolean;
