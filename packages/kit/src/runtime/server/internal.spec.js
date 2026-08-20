@@ -38,9 +38,9 @@ test('formats a route resolution request', () => {
 test('formats a remote function request', () => {
 	expect(
 		stripVTControlCharacters(
-			format_response(200, new Request('http://localhost:5173/_app/remote/abc123?x=1'))
+			format_response(200, new Request('http://localhost:5173/_app/remote/abc123/def?x=1'))
 		)
-	).toBe('200 GET /_app/remote/abc123?x=1');
+	).toBe('200 GET /_app/remote/abc123/def?x=1');
 });
 
 test('formats an error response', () => {
