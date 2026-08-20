@@ -9,20 +9,16 @@ const cwd = path.join(import.meta.dirname, 'test');
 
 /**
  * @param {string} dir
- * @param {import('@sveltejs/kit').Config} config
+ * @param {import('@sveltejs/kit/vite').Config} config
  */
 const create = (dir, config = {}) => {
 	const initial = validate_config(config);
 
-	initial.kit.files.assets = path.resolve(cwd, 'static');
-	initial.kit.files.params = path.resolve(cwd, 'params');
-	initial.kit.files.routes = path.resolve(cwd, dir);
+	initial.files.assets = path.resolve(cwd, 'static');
+	initial.files.params = path.resolve(cwd, 'params');
+	initial.files.routes = path.resolve(cwd, dir);
 
-	return create_manifest_data({
-		config: /** @type {import('types').ValidatedConfig} */ (initial),
-		fallback: cwd,
-		cwd
-	});
+	return create_manifest_data(initial, cwd, cwd);
 };
 
 const default_layout = {
@@ -659,6 +655,20 @@ test('ignores things that look like lockfiles', () => {
 			}
 		}
 	]);
+});
+
+test('only suggests a + prefix for names valid with the file extension', () => {
+	const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+	try {
+		create('samples/missing-prefix');
+
+		const messages = spy.mock.calls.flat().join('\n');
+		expect(messages).toContain('Did you mean +page.svelte?');
+		expect(messages).not.toContain('+error.ts');
+	} finally {
+		spy.mockRestore();
+	}
 });
 
 test('works with custom extensions', () => {

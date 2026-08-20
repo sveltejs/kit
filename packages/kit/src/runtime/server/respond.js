@@ -1,6 +1,6 @@
 /** @import { SSRNode } from 'types' */
 import { DEV } from 'esm-env';
-import { json, text } from '@sveltejs/kit';
+import { text } from '@sveltejs/kit';
 import { Redirect, SvelteKitError } from '@sveltejs/kit/internal';
 import {
 	merge_tracing,
@@ -111,7 +111,7 @@ export async function internal_respond(request, options, manifest, state) {
 				})
 			) {
 				const message = 'Cross-site remote requests are forbidden';
-				return json({ message }, { status: 403 });
+				return Response.json({ message }, { status: 403 });
 			}
 		} else if (options.csrf_check_origin) {
 			const forbidden = is_csrf_forbidden({
@@ -126,7 +126,7 @@ export async function internal_respond(request, options, manifest, state) {
 				const opts = { status: 403 };
 
 				if (request.headers.get('accept') === 'application/json') {
-					return json({ message }, opts);
+					return Response.json({ message }, opts);
 				}
 
 				return text(message, opts);
@@ -754,6 +754,26 @@ export async function internal_respond(request, options, manifest, state) {
 			// if this request came direct from the user, rather than
 			// via our own `fetch`, render a 404 page
 			if (state.depth === 0) {
+				// Error-page data requests only invalidate the root layout.
+				if (
+					!state.prerendering &&
+					is_data_request &&
+					invalidated_data_nodes?.length === 1 &&
+					invalidated_data_nodes[0]
+				) {
+					return await render_data(
+						event,
+						state,
+						{ page: { layouts: [], leaf: 0 } },
+						options,
+						manifest,
+						invalidated_data_nodes,
+						// there is no route to take a trailing slash option from, and the
+						// SSR'd error page sees the pathname as-is
+						'ignore'
+					);
+				}
+
 				if (non_html_fetch_destinations.has(event.request.headers.get('sec-fetch-dest') ?? '')) {
 					return text('Not Found', {
 						status: 404,

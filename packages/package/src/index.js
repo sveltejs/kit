@@ -209,16 +209,12 @@ function normalize_options(options) {
 	const input = path.resolve(options.cwd, options.input);
 	const output = path.resolve(options.cwd, options.output);
 	const preserve_output = options.preserve_output;
-	const temp = path.resolve(
-		options.cwd,
-		options.config.kit?.outDir ?? '.svelte-kit',
-		'__package__'
-	);
+	const temp = path.resolve(options.cwd, options.config.outDir ?? '.svelte-kit', '__package__');
 	const extensions = options.config.extensions ?? ['.svelte'];
 	const tsconfig = options.tsconfig ? path.resolve(options.cwd, options.tsconfig) : undefined;
 
 	/** @type {Record<string, string>} */
-	const alias = { ...(options.config.kit?.alias ?? {}) };
+	const alias = { ...(options.config.alias ?? {}) };
 
 	// Read `#`-prefixed imports from package.json and add them as aliases
 	const pkg_path = path.resolve(options.cwd, 'package.json');

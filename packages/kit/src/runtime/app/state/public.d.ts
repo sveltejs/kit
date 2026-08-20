@@ -4,7 +4,7 @@ import type {
 	RouteId as AppRouteId
 } from '$app/types';
 
-export * from './index.js';
+export { page, navigating, updated } from './client.svelte.js';
 
 export type ReadonlyURLSearchParams = Omit<URLSearchParams, 'set' | 'append' | 'delete' | 'sort'>;
 

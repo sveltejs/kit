@@ -296,7 +296,7 @@ If you need direct, imperative access to the underlying stream of values (rather
 
 ```js
 // @filename: time.remote.ts
-import { RemoteLiveQueryFunction } from '$app/server';
+import type { RemoteLiveQueryFunction } from '$app/server';
 export declare const getTime: RemoteLiveQueryFunction<undefined, Date>;
 // @errors: 2304
 // @filename: index.js
@@ -847,7 +847,7 @@ When each instance should render different values, pass them as the second argum
 <h1>Todos</h1>
 
 {#each await getTodos() as todo}
-	{@const modify = modifyTodo.for(todo.id)}
+	{const modify = modifyTodo.for(todo.id)}
 	<form {...modify}>
 		<input {...modify.fields.description.as('text', todo.description)} />
 		<button disabled={!!modify.pending}>save changes</button>
@@ -1112,7 +1112,8 @@ export const createPost = form(
 Additionally, `requested` allows a simple shorthand when all you want to do is refresh the requested query instances:
 
 ```ts
-import { requested, type RemoteQueryFunction } from '$app/server';
+import { requested } from '$app/server';
+import type { RemoteQueryFunction } from '$app/server';
 declare const getPosts: RemoteQueryFunction<any, any>;
 // ---cut---
 // this is the same as looping over the result and calling `void query.refresh()`.

@@ -1,5 +1,91 @@
 # @sveltejs/kit
 
+## 3.0.0-next.24
+
+### Minor Changes
+
+- feat: pass the project-relative source `filename` to the `preload` filter for fonts ([#16443](https://github.com/sveltejs/kit/pull/16443))
+
+- feat: support the `QUERY` HTTP method in `+server.js` ([#16782](https://github.com/sveltejs/kit/pull/16782))
+
+### Patch Changes
+
+- chore: share the action error result between form actions and remote forms ([#16835](https://github.com/sveltejs/kit/pull/16835))
+
+- perf: parse large streamed frames in linear time ([#16489](https://github.com/sveltejs/kit/pull/16489))
+
+- fix: keep at most one pending body read at a time when deserializing binary forms ([#16783](https://github.com/sveltejs/kit/pull/16783))
+
+- fix: render the nearest error page when a form submission receives a non-ActionResult error response ([#16308](https://github.com/sveltejs/kit/pull/16308))
+
+- chore: generate the env modules in a single pass ([#16833](https://github.com/sveltejs/kit/pull/16833))
+
+- fix: reuse SSR-cached fetch responses during hydration when a cross-origin URL is not in canonical form ([#16339](https://github.com/sveltejs/kit/pull/16339))
+
+- fix: resolve client manifest imports against the Vite root ([#16803](https://github.com/sveltejs/kit/pull/16803))
+
+- fix: render the nearest `+error.svelte` at the depth it occupies when an error is thrown during rendering ([#16526](https://github.com/sveltejs/kit/pull/16526))
+
+- fix: wait for the redirect navigation before remote form submissions resolve ([#16765](https://github.com/sveltejs/kit/pull/16765))
+
+- fix: only suggest a `+` prefix for route filenames that are valid with the file's extension ([#16837](https://github.com/sveltejs/kit/pull/16837))
+
+- fix: don't throw from remote form `validate()` if the form unmounts while it is waiting for a tick ([#16720](https://github.com/sveltejs/kit/pull/16720))
+
+- chore: share navigation completion between navigate and shallow routing ([#16838](https://github.com/sveltejs/kit/pull/16838))
+
+- fix: rerun load functions when the number of values of a tracked search parameter changes ([#16495](https://github.com/sveltejs/kit/pull/16495))
+
+- fix: preserve `paths.base` when `vite preview` redirects a prerendered page to the correct trailing slash ([#16836](https://github.com/sveltejs/kit/pull/16836))
+
+- chore: iterate the query cache maps through a single generator ([#16846](https://github.com/sveltejs/kit/pull/16846))
+
+- fix: don't crash on interactions inside a form whose controls shadow `nodeName` ([#16769](https://github.com/sveltejs/kit/pull/16769))
+
+- chore: remove unused helpers ([#16834](https://github.com/sveltejs/kit/pull/16834))
+
+- fix: correctly read zero-length files at the end of a binary form payload ([#16783](https://github.com/sveltejs/kit/pull/16783))
+
+- chore: remove virtual modules ([#16745](https://github.com/sveltejs/kit/pull/16745))
+
+- fix: wait for the redirect navigation before prerendered remote functions resolve ([#16765](https://github.com/sveltejs/kit/pull/16765))
+
+- chore: share the nearest error page walk between client and server ([#16774](https://github.com/sveltejs/kit/pull/16774))
+
+- fix: return root layout server data for error-page data requests to non-existent routes ([#16376](https://github.com/sveltejs/kit/pull/16376))
+
+- chore: unify the `walk` and `list_files` filesystem helpers ([#16784](https://github.com/sveltejs/kit/pull/16784))
+
+- chore: emit env modules to disk ([#16745](https://github.com/sveltejs/kit/pull/16745))
+
+## 3.0.0-next.23
+
+### Patch Changes
+
+- fix: only print prerender progress newline when necessary ([#16766](https://github.com/sveltejs/kit/pull/16766))
+
+## 3.0.0-next.22
+
+### Patch Changes
+
+- fix: respect Vite default log level ([#16767](https://github.com/sveltejs/kit/pull/16767))
+
+## 3.0.0-next.21
+
+### Major Changes
+
+- breaking: move remote function types to `$app/server` ([#16764](https://github.com/sveltejs/kit/pull/16764))
+
+- breaking: move `RequestEvent` and `Cookies` to `$app/server` ([#16751](https://github.com/sveltejs/kit/pull/16751))
+
+### Patch Changes
+
+- fix: correctly implement Vite plugin hook filters ([#16760](https://github.com/sveltejs/kit/pull/16760))
+
+- fix: yield to allow prerender updates to be visible ([#16748](https://github.com/sveltejs/kit/pull/16748))
+
+- fix: don't destroy partial-line app output with the prerender progress line ([#16750](https://github.com/sveltejs/kit/pull/16750))
+
 ## 3.0.0-next.20
 
 ### Major Changes

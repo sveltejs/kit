@@ -1,4 +1,4 @@
-import { json, text } from '@sveltejs/kit';
+import { text } from '@sveltejs/kit';
 import {
 	HandledHttpError,
 	HttpError,
@@ -28,7 +28,7 @@ export async function handle_fatal_error(event, state, options, error) {
 	]);
 
 	if (event.isDataRequest || type === 'application/json') {
-		return json(body, {
+		return Response.json(body, {
 			status
 		});
 	}

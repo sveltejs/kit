@@ -1,4 +1,4 @@
-/** @import { RemoteFormInput, RemoteForm, InvalidField } from '$app/server' */
+/** @import { RemoteFormInput, RemoteForm, RemoteFormInvalidField } from '$app/server' */
 /** @import { InternalRemoteFormIssue, MaybePromise, HasNonOptionalBoolean, RemoteFormInternals } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
@@ -11,7 +11,11 @@ import {
 	parse_form_key
 } from '../../../form-utils.js';
 import { get_cache, get_implicit_lookup, run_remote_function } from './shared.js';
-import { ValidationError } from '@sveltejs/kit/internal';
+import { ActionFailure, ValidationError } from '@sveltejs/kit/internal';
+import { DEV } from 'esm-env';
+
+const incorrect_fail_message =
+	'`fail(...)` is for form actions. A remote `form` handler should call `invalid(...)` instead. See https://svelte.dev/docs/kit/remote-functions#form-Programmatic-validation';
 
 /**
  * Creates a form object that can be spread onto a `<form>` element.
@@ -33,7 +37,7 @@ import { ValidationError } from '@sveltejs/kit/internal';
  * @template Output
  * @overload
  * @param {'unchecked'} validate
- * @param {(data: Input, issue: InvalidField<Input>) => MaybePromise<Output>} fn
+ * @param {(data: Input, issue: RemoteFormInvalidField<Input>) => MaybePromise<Output>} fn
  * @returns {RemoteForm<Input, Output>}
  * @since 2.27
  */
@@ -46,7 +50,7 @@ import { ValidationError } from '@sveltejs/kit/internal';
  * @template Output
  * @overload
  * @param {true extends HasNonOptionalBoolean<StandardSchemaV1.InferInput<Schema>> ? 'Error: All booleans in form schemas must be optional (e.g. `v.optional(v.boolean(), false)`) because checkbox inputs do not send a false value when unchecked.' : Schema} validate
- * @param {(data: StandardSchemaV1.InferOutput<Schema>, issue: InvalidField<StandardSchemaV1.InferInput<Schema>>) => MaybePromise<Output>} fn
+ * @param {(data: StandardSchemaV1.InferOutput<Schema>, issue: RemoteFormInvalidField<StandardSchemaV1.InferInput<Schema>>) => MaybePromise<Output>} fn
  * @returns {RemoteForm<StandardSchemaV1.InferInput<Schema>, Output>}
  * @since 2.27
  */
@@ -118,9 +122,15 @@ export function form(validate_or_fn, maybe_fn) {
 							() => data,
 							(data) => (!maybe_fn ? fn() : fn(data, issue))
 						);
+
+						if (DEV && output.result instanceof ActionFailure) {
+							throw new Error(incorrect_fail_message);
+						}
 					} catch (e) {
 						if (e instanceof ValidationError) {
 							handle_issues(output, e.issues, form_data, __.id);
+						} else if (DEV && e instanceof ActionFailure) {
+							throw new Error(incorrect_fail_message, { cause: e });
 						} else {
 							throw e;
 						}
@@ -293,10 +303,10 @@ function handle_issues(output, issues, form_data, form_id) {
 
 /**
  * Creates an invalid function that can be used to imperatively mark form fields as invalid
- * @returns {InvalidField<any>}
+ * @returns {RemoteFormInvalidField<any>}
  */
 function create_issues() {
-	return /** @type {InvalidField<any>} */ (
+	return /** @type {RemoteFormInvalidField<any>} */ (
 		new Proxy(
 			/** @param {string} message */
 			(message) => {

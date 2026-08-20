@@ -263,6 +263,19 @@ test.describe('remote functions', () => {
 		await page.getByText('This is your custom error page saying: "oops"').waitFor();
 	});
 
+	test('form error falls through a throwing +error.svelte to the one above', async ({ page }) => {
+		await page.goto('/remote/form/throwing-error-page');
+
+		await page.fill('input', 'unexpected error');
+		await page.getByText('set message').click();
+
+		await page
+			.getByText(
+				'This is your custom error page saying: "error page render error (500 Internal Error, on /remote/form/throwing-error-page)"'
+			)
+			.waitFor();
+	});
+
 	test('form redirects', async ({ page }) => {
 		await page.goto('/remote/form/redirect');
 
@@ -594,6 +607,20 @@ test.describe('remote functions', () => {
 		await nestedValue.fill('in');
 		await validate.click();
 		await expect(allIssues).toContainText('"path":["nested","value"]');
+	});
+
+	test('form validate does not throw if the form unmounts while validating', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/validate');
+
+		await page.locator('#unmount-then-validate').click();
+
+		await expect(page.locator('#unmount-form')).toHaveCount(0);
+		await expect(page.locator('#unmount-error')).toHaveText('no error');
 	});
 
 	test('form validation issues cleared', async ({ page, javaScriptEnabled }) => {
@@ -982,6 +1009,7 @@ test.describe('server error boundaries', () => {
 		await expect(page.locator('#message')).toContainText(
 			'render error (500 Internal Error, on /server-error-boundary)'
 		);
+		await expect(page.locator('#nested-layout')).toHaveCount(0);
 	});
 
 	test('catches nested server render error and shows nested +error.svelte', async ({ page }) => {
@@ -991,5 +1019,14 @@ test.describe('server error boundaries', () => {
 		);
 		// The nested layout should still be visible
 		await expect(page.locator('#nested-layout')).toBeVisible();
+	});
+
+	test('layout render error skips the +error.svelte the layout wraps', async ({ page }) => {
+		await page.goto('/server-error-boundary/layout-throws');
+		await expect(page.locator('#message')).toContainText(
+			'layout render error (500 Internal Error, on /server-error-boundary/layout-throws)'
+		);
+		await expect(page.locator('#layout-throws-error-message')).toHaveCount(0);
+		await expect(page.locator('#nested-layout')).toHaveCount(0);
 	});
 });

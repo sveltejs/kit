@@ -6,8 +6,6 @@
 		"target": "es2022",
 		"module": "node16",
 		"moduleResolution": "node16",
-		// TODO: remove this when svelte2tsx has migrated to magic-string v1
-		"skipLibCheck": true,
 		"types": ["node"]
 	},
 	"include": ["*.js", "src/**/*", "test/index.spec.js"]
