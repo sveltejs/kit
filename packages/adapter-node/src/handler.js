@@ -6,17 +6,17 @@ import process from 'node:process';
 import sirv from 'sirv';
 import { parse as polka_url_parser } from '@polka/url';
 import { getRequest, setResponse, createReadableStream } from '@sveltejs/kit/node';
-import { Server } from 'SERVER';
-import { manifest, prerendered, base, uncompressed_extensions } from 'MANIFEST';
+import { server } from 'SERVER';
 import { dir } from './dir.js';
 import { env, env_prefix } from './env.js';
 import { parse_as_bytes } from './utils.js';
 
 /** @typedef {(req: IncomingMessage, res: ServerResponse, next: () => void | Promise<void>) => void | Promise<void>} Middleware */
 
-const server = new Server(manifest);
-
 const origin = ORIGIN;
+const uncompressed_extensions = UNCOMPRESSED_EXTENSIONS;
+const prerendered = PRERENDERED;
+const mime_types = MIME_TYPES;
 
 const xff_depth = parseInt(env('XFF_DEPTH', '1'));
 const address_header = env('ADDRESS_HEADER', '').toLowerCase();
@@ -32,7 +32,7 @@ if (isNaN(body_size_limit)) {
 	);
 }
 
-const asset_dir = `${dir}/client${base}`;
+const asset_dir = `${dir}/client${BASE_PATH}`;
 
 await server.init({
 	env: process.env,
@@ -56,16 +56,12 @@ function serve(path, client = false) {
 					}
 
 					// `sirv` uses its own bundled `mrmime`, which the manifest's added types never reach
-					let type = manifest.mimeTypes[pathname.slice(pathname.lastIndexOf('.'))];
+					let type = mime_types[pathname.slice(pathname.lastIndexOf('.'))];
 					if (type === 'text/html') type += ';charset=utf-8';
 					if (type) res.setHeader('content-type', type);
 
 					// only apply to build directory, not e.g. version.json
-					if (
-						client &&
-						pathname.startsWith(`/${manifest.appPath}/immutable/`) &&
-						res.statusCode === 200
-					) {
+					if (client && pathname.startsWith(`/${APP_PATH}/immutable/`) && res.statusCode === 200) {
 						res.setHeader('cache-control', 'public,max-age=31536000,immutable');
 					}
 				}
