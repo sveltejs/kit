@@ -142,7 +142,7 @@ export function plugin_service_worker_env_vars(kit) {
 			return !!service_worker_entry_file && environment.config.consumer === 'client';
 		},
 		transform: {
-			filter: undefined,
+			filter: {},
 			handler(code) {
 				// prepend the service worker with an import that configures
 				// `env`, in case `$app/env/public` is imported. In production
