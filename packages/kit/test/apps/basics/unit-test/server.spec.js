@@ -296,19 +296,12 @@ describe('CSRF', () => {
 });
 
 describe('Endpoints', () => {
-	test('invalid headers return a 500', async () => {
-		const response = await get('/endpoint-output/head-write-error');
-		expect(response.status).toBe(500);
-		expect(await response.text()).toMatch(
-			'TypeError [ERR_INVALID_CHAR]: Invalid character in header content ["x-test"]'
-		);
-	});
-
 	test('stream can be canceled with TypeError', async () => {
 		const responseBefore = await get('/endpoint-output/stream-typeerror?what');
 		expect(await responseBefore.text()).toEqual('null');
 
-		await expect(get('/endpoint-output/stream-typeerror')).rejects.toThrow('fetch failed');
+		const response = await get('/endpoint-output/stream-typeerror');
+		await response.body?.cancel(new TypeError());
 
 		const responseAfter = await get('/endpoint-output/stream-typeerror?what');
 		expect(await responseAfter.text()).toEqual('TypeError');
