@@ -8,7 +8,6 @@ import { create_env_modules, resolve_env_entry } from '../../../core/env.js';
 import { import_peer } from '../../../utils/import.js';
 import { write_if_changed } from '../../../core/sync/utils.js';
 import { posixify } from '../../../utils/os.js';
-import { resolve_entry } from '../../../utils/filesystem.js';
 
 /**
  * Generate (and, in dev, maintain) the `${outDir}/generated/{build,dev}/env` modules
@@ -119,10 +118,10 @@ export function plugin_env_vars(config, callback) {
 }
 
 /**
- * @param {ValidatedConfig} kit
+ * @param {() => string | null} get_service_worker_entry_file
  * @returns {Plugin}
  */
-export function plugin_service_worker_env_vars(kit) {
+export function plugin_service_worker_env_vars(get_service_worker_entry_file) {
 	/** @type {string | null} */
 	let service_worker_entry_file;
 
@@ -130,8 +129,7 @@ export function plugin_service_worker_env_vars(kit) {
 	const plugin = {
 		name: 'vite-plugin-sveltekit-service-worker-env',
 		configResolved() {
-			service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
-			service_worker_entry_file &&= posixify(service_worker_entry_file);
+			service_worker_entry_file = get_service_worker_entry_file();
 
 			if (service_worker_entry_file) {
 				plugin.transform.filter = {

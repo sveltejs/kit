@@ -1897,7 +1897,7 @@ function kit({ svelte_config }) {
 				initial_config,
 				out
 			})),
-			plugin_service_worker_env_vars(svelte_config),
+			plugin_service_worker_env_vars(() => service_worker_entry_file),
 			plugin_compile,
 			plugin_adapter,
 			svelte_config.adapter?.vite?.plugins?.post

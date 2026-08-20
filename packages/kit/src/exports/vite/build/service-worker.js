@@ -1,7 +1,6 @@
 /** @import { ValidatedConfig } from 'types' */
 /** @import { Plugin, UserConfig } from 'vite' */
 import { runtime_directory } from '../../../core/utils.js';
-import { posixify } from '../../../utils/os.js';
 import { warn_overridden_config } from '../utils.js';
 
 /**
@@ -37,7 +36,7 @@ export function plugin_service_worker_build(kit, get_config) {
 							rolldownOptions: {
 								external: [`${kit.paths.base}/${kit.appDir}/env.js`],
 								input: {
-									'service-worker': posixify(service_worker_entry_file)
+									'service-worker': service_worker_entry_file
 								},
 								output: {
 									format: 'es',
