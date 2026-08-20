@@ -25,9 +25,9 @@ beforeAll(async () => {
 	process.chdir(root);
 
 	// the preview server gets these from Vite's .env loading
-	for (const [key, value] of Object.entries(loadEnv('production', root, ''))) {
-		process.env[key] ??= value;
-	}
+	Object.entries(loadEnv('production', root, '')).forEach(
+		([key, value]) => (process.env[key] ??= value)
+	);
 
 	const { manifest } = await import(pathToFileURL(path.join(out, 'manifest.js')).href);
 	const { Server } = await import(pathToFileURL(path.join(out, 'index.js')).href);
