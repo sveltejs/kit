@@ -1710,12 +1710,17 @@ function kit({ svelte_config }) {
 				explicit_env_config = vars;
 			}),
 			process.env.TEST !== 'true'
-				? plugin_guard(svelte_config, () => ({
-						vite,
-						root,
-						normalized_aliases,
-						service_worker_entry_file
-					}))
+				? plugin_guard(
+						svelte_config,
+						() => ({
+							vite,
+							root,
+							normalized_aliases,
+							service_worker_entry_file
+						}),
+						// in dev, this doesn't exist yet, so we need to create it
+						() => (manifest_data ??= create_manifest_data(svelte_config, root))
+					)
 				: undefined,
 			plugin_service_worker_build(svelte_config, () => ({
 				service_worker_entry_file,
