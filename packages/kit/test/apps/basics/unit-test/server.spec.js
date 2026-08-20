@@ -1,5 +1,6 @@
 /** @import { Server } from '@sveltejs/kit' */
 import { createHash, randomBytes } from 'node:crypto';
+import { once } from 'node:events';
 import fs from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
@@ -46,7 +47,7 @@ beforeAll(async () => {
 		const request = getRequest({ request: req, response: res, base: origin });
 		setResponse(res, await server.respond(request, { getClientAddress: () => '127.0.0.1' }));
 	});
-	await new Promise((fulfil) => listener.listen(0, 'localhost', () => fulfil(undefined)));
+	await once(listener.listen(0, 'localhost'), 'listening');
 	origin = `http://localhost:${/** @type {import('net').AddressInfo} */ (listener.address()).port}`;
 });
 
@@ -80,16 +81,11 @@ const servers = [];
  * An external server for the tests that fetch across origins
  * @param {(req: http.IncomingMessage, res: http.ServerResponse) => void} handler
  */
-function start_server(handler) {
+async function start_server(handler) {
 	const server = http.createServer(handler);
 	servers.push(server);
-
-	return new Promise((fulfil) => {
-		server.listen(0, 'localhost', () => {
-			const { port } = /** @type {import('net').AddressInfo} */ (server.address());
-			fulfil({ port });
-		});
-	});
+	await once(server.listen(0, 'localhost'), 'listening');
+	return { port: /** @type {import('net').AddressInfo} */ (server.address()).port };
 }
 
 afterEach(async () => {
