@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, rmSync } from 'node:fs';
 import { extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { rolldown } from 'rolldown';
