@@ -6,6 +6,13 @@ import { routes } from 'ROUTES';
 import { handler } from './handler.js';
 import { boolean_env, bytes_env, env, number_env } from './env.js';
 
+// nothing enforces `engines.bun` at install time, and the build may have run on a newer Bun
+if (!Bun.semver.satisfies(Bun.version, '>=1.4.0')) {
+	throw new Error(
+		`@sveltejs/adapter-bun requires Bun 1.4 or newer, but this is Bun ${Bun.version}`
+	);
+}
+
 const options = /** @type {Serve.Options<undefined>} */ ({ ...server_options });
 
 const unix = env('SOCKET_PATH', options.unix);
