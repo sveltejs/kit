@@ -4,7 +4,7 @@ title: Zero-config deployments
 
 When you create a new SvelteKit project with `npx sv create`, it installs [`adapter-auto`](https://github.com/sveltejs/kit/tree/main/packages/adapter-auto) by default. This adapter automatically installs and uses the correct adapter for supported environments when you deploy:
 
-- [`@sveltejs/adapter-cloudflare`](adapter-cloudflare) for [Cloudflare Pages](https://developers.cloudflare.com/pages/)
+- [`@sveltejs/adapter-cloudflare`](adapter-cloudflare) for [Cloudflare Workers](https://www.cloudflare.com/products/workers/)
 - [`@sveltejs/adapter-netlify`](adapter-netlify) for [Netlify](https://netlify.com/)
 - [`@sveltejs/adapter-vercel`](adapter-vercel) for [Vercel](https://vercel.com/)
 - [`svelte-adapter-azure-swa`](https://github.com/geoffrich/svelte-adapter-azure-swa) for [Azure Static Web Apps](https://docs.microsoft.com/en-us/azure/static-web-apps/)
