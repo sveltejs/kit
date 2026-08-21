@@ -32,7 +32,7 @@ export function plugin_remote(svelte_config, get_config, get_build_metadata, set
 	let build_metadata;
 
 	/** @type {RemoteChunk[]} */
-	let remotes;
+	let remotes = [];
 
 	/** @type {Map<string, string>} Maps remote hash -> original module id */
 	const remote_original_by_hash = new Map();
@@ -56,14 +56,14 @@ export function plugin_remote(svelte_config, get_config, get_build_metadata, set
 		},
 
 		buildStart() {
+			// avoid stale data when building with watch mode
 			if (this.environment.config.consumer === 'server') {
 				remotes = [];
 				remote_original_by_hash.clear();
 				emitted_remote_hashes.clear();
-			} else {
-				build_metadata = get_build_metadata();
 			}
 
+			build_metadata = get_build_metadata();
 			set_remote_metadata(remotes, remote_original_by_hash);
 		},
 
