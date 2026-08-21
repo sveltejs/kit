@@ -1,4 +1,4 @@
-/** @import { RemoteChunk } from 'types' */
+/** @import { BuildData, RemoteChunk, RouteData } from 'types' */
 import fs from 'node:fs';
 import path from 'node:path';
 import { lookup as mime_lookup } from '../../utils/mime.js';
@@ -15,10 +15,10 @@ import { uneval } from 'devalue';
  * Generates the data used to write the server-side manifest.js file. This data is used in the Vite
  * build process, to power routing, etc.
  * @param {{
- *   build_data: import('types').BuildData;
+ *   build_data: BuildData;
  *   prerendered: string[];
  *   relative_path: string;
- *   routes: import('types').RouteData[];
+ *   routes: RouteData[];
  *   remotes: RemoteChunk[];
  *   root: string;
  * }} opts

@@ -17,7 +17,7 @@ import path from 'node:path';
 import { pipeline } from 'node:stream';
 import { promisify } from 'node:util';
 import zlib from 'node:zlib';
-import { copy, walk } from '../../utils/filesystem.js';
+import { copy, relative_path, walk } from '../../utils/filesystem.js';
 import { posixify } from '../../utils/os.js';
 import { generate_manifest } from '../generate_manifest/index.js';
 import { get_route_segments } from '../../utils/routing.js';
@@ -27,6 +27,7 @@ import { find_server_assets } from '../generate_manifest/find_server_assets.js';
 import { create_exported_declarations } from '../env.js';
 import { handle_issues, validate } from '../../exports/internal/env.js';
 import { get_mime_lookup } from '../utils.js';
+import { lookup as mime_lookup } from '../../utils/mime.js';
 
 const pipe = promisify(pipeline);
 const extensions = [
@@ -117,7 +118,27 @@ export function create_builder({
 		routes,
 		manifest: app_manifest,
 		get mimeTypes() {
-			return get_mime_lookup(build_data.manifest_data);
+			const mime_types = get_mime_lookup(build_data.manifest_data);
+			const server_assets = find_server_assets(
+				build_data,
+				route_data.filter((route) => prerender_map.get(route.id) !== true),
+				vite_config.root
+			);
+			/** @type {Record<string, number>} */
+			const files = {};
+			for (const file of server_assets) {
+				files[file] = statSync(path.resolve(build_data.out_dir, 'server', file)).size;
+
+				const ext = path.extname(file);
+				mime_types[ext] ??= mime_lookup(ext) || '';
+			}
+
+			// record extensions that only exist in prerendered output, e.g. a prerendered favicon.ico
+			for (const pathname of prerendered.paths) {
+				const ext = path.extname(pathname);
+				if (ext) mime_types[ext] ??= mime_lookup(ext) || '';
+			}
+			return mime_types;
 		},
 
 		async compress(directory) {
@@ -193,20 +214,23 @@ export function create_builder({
 
 		generateManifest() {
 			throw new Error(
-				`The \`generateManifest\` adapter API is deprecated — it has been replaced with \`writeServerEntrypoint\` and \`getManifest\`. You may need to update your adapter`
+				`The \`generateManifest\` adapter API is deprecated — it has been replaced with \`writeServerEntrypoint\` and \`builder.manifest\`. You may need to update your adapter`
 			);
 		},
 
-		writeServerEntrypoint(dest, { routes: subset } = {}) {
-			const relativePath = path.posix.relative(path.dirname(dest), this.getServerDirectory());
+		writeServerEntrypoint(dest, { routes: subset, serverDirectory } = {}) {
+			const relative = relative_path(
+				path.dirname(dest),
+				serverDirectory ?? this.getServerDirectory()
+			);
 			write(
 				dest,
 				dedent`
-					import { Server } from '${relativePath}/index.js';
+					import { Server } from '${relative}/index.js';
 					const manifest = ${generate_manifest({
 						build_data,
 						prerendered: prerendered.paths,
-						relative_path: relativePath,
+						relative_path: relative,
 						routes: subset
 							? subset.map((route) => /** @type {import('types').RouteData} */ (lookup.get(route)))
 							: route_data.filter((route) => prerender_map.get(route.id) !== true),

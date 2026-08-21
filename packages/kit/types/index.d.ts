@@ -127,7 +127,7 @@ declare module '@sveltejs/kit' {
 		routes: RouteDefinition[];
 		/** The value of the `$app/manifest` module */
 		manifest: typeof import('$app/manifest');
-		
+		/** A record of file extensions to MIME types */
 		mimeTypes: Record<string, string>;
 
 		/**
@@ -174,11 +174,13 @@ declare module '@sveltejs/kit' {
 		/**
 		 * Writes a javascript file that initialises the SvelteKit [server](https://svelte.dev/docs/kit/@sveltejs-kit#Server).
 		 * @param opts.routes A subset of the routes to include in the server's manifest
+		 * @param opts.serverDirectory The directory containing the server code. Defaults to `getServerDirectory()`.
 		 */
 		writeServerEntrypoint: (
 			dest: string,
 			opts?: {
 				routes?: RouteDefinition[];
+				serverDirectory?: string;
 			}
 		) => void;
 		/**

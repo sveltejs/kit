@@ -106,7 +106,12 @@ export default function (options = {}) {
 			builder.writeServerEntrypoint(`${tmp}/server.js`);
 			builder.copy(`${files}/worker.js`, worker_dest, {
 				replace: {
-					SERVER: `./${path.posix.relative(worker_dest_dir, tmp)}/server.js`,
+					// the paths returned by the Wrangler config might be Windows paths,
+					// so we need to convert them to POSIX paths or else the backslashes
+					// will be interpreted as escape characters and create an incorrect import path.
+					// We also need to ensure the relative imports start with ./ since Wrangler
+					// errors if a relative import looks like a package import
+					SERVER: `./${posixify(path.relative(worker_dest_dir, tmp))}/server.js`,
 					BASE_PATH: JSON.stringify(builder.config.paths.base),
 					APP_PATH: JSON.stringify(builder.getAppPath()),
 					MANIFEST_ASSETS: `new Set(${JSON.stringify(builder.manifest.assets.map((a) => a.path))})`,
@@ -282,4 +287,9 @@ function validate_wrangler_config(config_file = undefined) {
 		wrangler_config,
 		building_for_cloudflare_pages
 	};
+}
+
+/** @param {string} str */
+function posixify(str) {
+	return str.replace(/\\/g, '/');
 }

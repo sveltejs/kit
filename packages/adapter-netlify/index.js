@@ -265,7 +265,8 @@ function write_frameworks_config({ builder }) {
  */
 function generate_serverless_function({ builder, routes, patterns, name, type, exclude }) {
 	builder.writeServerEntrypoint(`.netlify/v1/server-${name}.js`, {
-		routes
+		routes,
+		serverDirectory: '.netlify/v1/server'
 	});
 
 	const fn = generate_serverless_function_module(name, type);
