@@ -1,5 +1,5 @@
 /** @import { RequestEvent, SSRManifest } from '@sveltejs/kit' */
-/** @import { EnvironmentModuleNode, ErrorPayload, ResolvedConfig, ViteDevServer } from 'vite' */
+/** @import { EnvironmentModuleNode, ErrorPayload, ViteDevServer } from 'vite' */
 /** @import { ManifestData, PrerenderOption, RemoteChunk, ServerModule, SSRNode, UniversalNode, ValidatedConfig } from 'types' */
 import process from 'node:process';
 import fs from 'node:fs';
@@ -35,7 +35,6 @@ const vite_css_query_regex = /(?:\?|&)(?:raw|url|inline)(?:&|$)/;
 /**
  * @param {typeof import('vite')} vite the peer resolved vite module
  * @param {ViteDevServer} vite_dev_server
- * @param {ResolvedConfig} vite_config
  * @param {ValidatedConfig} svelte_config
  * @param {() => RemoteChunk[]} get_remotes
  * @param {string} root The project root directory
@@ -45,7 +44,6 @@ const vite_css_query_regex = /(?:\?|&)(?:raw|url|inline)(?:&|$)/;
 export async function dev(
 	vite,
 	vite_dev_server,
-	vite_config,
 	svelte_config,
 	get_remotes,
 	root,
@@ -503,7 +501,7 @@ export async function dev(
 		next();
 	});
 
-	const env = vite.loadEnv(vite_config.mode, svelte_config.env.dir, '');
+	const env = vite.loadEnv(vite_dev_server.config.mode, svelte_config.env.dir, '');
 	const emulator = await svelte_config.adapter?.emulate?.();
 
 	/** @type {Promise<void> | undefined} */
@@ -539,8 +537,8 @@ export async function dev(
 				);
 				const is_file = fs.existsSync(file) && !fs.statSync(file).isDirectory();
 				const allowed =
-					!vite_config.server.fs.strict ||
-					vite_config.server.fs.allow.some((dir) => file.startsWith(dir));
+					!vite_dev_server.config.server.fs.strict ||
+					vite_dev_server.config.server.fs.allow.some((dir) => file.startsWith(dir));
 
 				if (is_file && allowed) {
 					req.url = original_url;
