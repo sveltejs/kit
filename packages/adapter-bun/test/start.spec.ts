@@ -105,6 +105,11 @@ test('refuses to start on a Bun older than 1.4', async () => {
 	await expect(load_start({ bunVersion: '1.3.14' })).rejects.toThrow('requires Bun 1.4');
 });
 
+test.each(['1.4.1', '1.5.0-canary.1', '2.0.0'])('starts on Bun %s', async (bunVersion) => {
+	const loaded = await load_start({ bunVersion });
+	expect(loaded.serve).toHaveBeenCalled();
+});
+
 test.each(['SIGINT', 'SIGTERM'] as const)(
 	'gracefully stops the server and emits sveltekit:shutdown for %s',
 	async (signal) => {
@@ -203,10 +208,10 @@ async function load_start({
 		stop
 	};
 	const serve = vi.fn((_options: any) => server);
-	// vitest runs under Node, so a minimal `>=` stands in for Bun.semver
-	const satisfies = (version: string, range: string) =>
-		version.localeCompare(range.slice(2), undefined, { numeric: true }) >= 0;
-	vi.stubGlobal('Bun', { serve, version: bunVersion, semver: { satisfies } });
+	// vitest runs under Node, so a numeric compare stands in for Bun.semver.order
+	const order = (a: string, b: string) =>
+		a.replace('-', '.').localeCompare(b.replace('-', '.'), undefined, { numeric: true });
+	vi.stubGlobal('Bun', { serve, version: bunVersion, semver: { order } });
 	const log = vi.spyOn(console, 'log').mockImplementation(() => {});
 
 	await import('../src/index.js');

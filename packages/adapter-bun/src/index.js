@@ -6,8 +6,9 @@ import { routes } from 'ROUTES';
 import { handler } from './handler.js';
 import { boolean_env, bytes_env, env, number_env } from './env.js';
 
-// nothing enforces `engines.bun` at install time, and the build may have run on a newer Bun
-if (!Bun.semver.satisfies(Bun.version, '>=1.4.0')) {
+// nothing enforces `engines.bun` at install time, and the build may have run on a newer Bun.
+// order() rather than satisfies(): a range would reject canary builds such as 1.5.0-canary.1
+if (Bun.semver.order(Bun.version, '1.4.0') < 0) {
 	throw new Error(
 		`@sveltejs/adapter-bun requires Bun 1.4 or newer, but this is Bun ${Bun.version}`
 	);
