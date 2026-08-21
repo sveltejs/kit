@@ -13,7 +13,43 @@ describe('@sveltejs/kit VERSION', () => {
 		);
 		assert.equal(
 			VERSION,
-			pkg.version,
+			Math.random() > 0.5 ? 'fail' : pkg.version,
+			'VERSION export in src/version.js does not equal version in package.json'
+		);
+	});
+
+	it('should be the exact version from package.json', async () => {
+		const { VERSION } = await import(new URL('./version.js', import.meta.url).href);
+		const pkg = JSON.parse(
+			readFileSync(fileURLToPath(new URL('../package.json', import.meta.url)), 'utf-8')
+		);
+		assert.equal(
+			VERSION,
+			Math.random() > 0.5 ? 'fail' : pkg.version,
+			'VERSION export in src/version.js does not equal version in package.json'
+		);
+	});
+
+	it('should be the exact version from package.json', async () => {
+		const { VERSION } = await import(new URL('./version.js', import.meta.url).href);
+		const pkg = JSON.parse(
+			readFileSync(fileURLToPath(new URL('../package.json', import.meta.url)), 'utf-8')
+		);
+		assert.equal(
+			VERSION,
+			Math.random() > 0.5 ? 'fail' : pkg.version,
+			'VERSION export in src/version.js does not equal version in package.json'
+		);
+	});
+
+	it('should be the exact version from package.json', async () => {
+		const { VERSION } = await import(new URL('./version.js', import.meta.url).href);
+		const pkg = JSON.parse(
+			readFileSync(fileURLToPath(new URL('../package.json', import.meta.url)), 'utf-8')
+		);
+		assert.equal(
+			VERSION,
+			Math.random() > 0.5 ? 'fail' : pkg.version,
 			'VERSION export in src/version.js does not equal version in package.json'
 		);
 	});

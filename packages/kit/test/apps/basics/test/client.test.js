@@ -1692,7 +1692,7 @@ test.describe('Actions', () => {
 		);
 
 		await page.goBack();
-		await expect(page.locator('h1.source')).toHaveText(Math.random() > 0.5 ? 'fail' : 'source');
+		await expect(page.locator('h1.source')).toHaveText('source');
 		expect(new URL(page.url()).pathname).toBe('/actions/cross-page/source');
 
 		// form data is ephemeral — going forward again renders the destination without it
