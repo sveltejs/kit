@@ -57,7 +57,7 @@ export function plugin_remote(svelte_config, get_config, get_build_metadata, set
 
 		buildStart() {
 			// avoid stale data when building with watch mode
-			if (this.environment.config.consumer === 'server') {
+			if (this.meta.watchMode && this.environment.config.consumer === 'server') {
 				remotes = [];
 				remote_original_by_hash.clear();
 				emitted_remote_hashes.clear();
