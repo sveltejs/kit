@@ -254,7 +254,8 @@ export function form(id) {
 										'x-sveltekit-search': location.search
 									},
 									body: blob
-								}
+								},
+								refreshes
 							);
 
 							({ issues: raw_issues = [], result } = response._ ?? {});

@@ -1,8 +1,7 @@
 /** @import { RemoteLiveQuery, RemoteLiveQueryFunction, RemoteQuery, RemoteQueryFunction, RequestedResult, RemoteQueryRequestedResult, RemoteLiveQueryRequestedResult } from '$app/server' */
 /** @import { MaybePromise, RemoteAnyQueryInternals } from 'types' */
-import { HttpError } from '@sveltejs/kit/internal';
 import { get_request_store } from '@sveltejs/kit/internal/server';
-import { parse_remote_arg } from '../../../shared.js';
+import { create_remote_key, parse_remote_arg } from '../../../shared.js';
 import { noop } from '../../../../utils/functions.js';
 import { get_cache } from './shared.js';
 import { refresh } from './query.js';
@@ -122,11 +121,17 @@ export function requested(query, limit) {
 
 	const requested = state.remote.requested;
 	const payloads = requested?.get(__.id) ?? new Set();
+	const ignored = (state.remote.ignored ??= new Set());
 
 	/** @param {string} payload */
 	const consume = (payload) => {
 		payloads.delete(payload);
 		if (payloads.size === 0) requested?.delete(__.id);
+	};
+
+	/** @param {string} payload */
+	const create_ignore = (payload) => () => {
+		ignored.add(create_remote_key(__.id, payload));
 	};
 
 	// note: don't initialize these maps here -- they will be initialized by the
@@ -155,16 +160,7 @@ export function requested(query, limit) {
 		refresh(event, state, __, payload, () => promise);
 	};
 
-	for (const payload of skipped) {
-		consume(payload);
-		record_failure(
-			payload,
-			new HttpError({
-				status: 400,
-				message: `Requested refresh was rejected because it exceeded requested(${__.name}, ${limit}) limit`
-			})
-		);
-	}
+	for (const payload of skipped) consume(payload);
 
 	const result = {
 		*[Symbol.iterator]() {
@@ -181,7 +177,11 @@ export function requested(query, limit) {
 						);
 					}
 
-					yield { arg: validated, query: __.bind(payload, validated) };
+					yield {
+						arg: validated,
+						query: __.bind(payload, validated),
+						ignore: create_ignore(payload)
+					};
 				} catch (error) {
 					record_failure(payload, error);
 					continue;
@@ -194,7 +194,11 @@ export function requested(query, limit) {
 				try {
 					const parsed = parse_remote_arg(payload);
 					const validated = await __.validate(parsed);
-					return { arg: validated, query: __.bind(payload, validated) };
+					return {
+						arg: validated,
+						query: __.bind(payload, validated),
+						ignore: create_ignore(payload)
+					};
 				} catch (error) {
 					record_failure(payload, error);
 					throw new Error(`Skipping ${__.name}(${payload})`, { cause: error });
@@ -218,6 +222,9 @@ export function requested(query, limit) {
 			for await (const { query } of result) {
 				void (/** @type {RemoteLiveQuery<Output>} */ (query).reconnect());
 			}
+		},
+		async ignoreAll() {
+			for await (const { ignore } of result) ignore();
 		}
 	};
 

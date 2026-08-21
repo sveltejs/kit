@@ -109,8 +109,9 @@ export function get_remote_request_headers() {
 /**
  * @param {string} url
  * @param {RequestInit} [init]
+ * @param {Set<string> | null} [refreshes]
  */
-export async function remote_request(url, init) {
+export async function remote_request(url, init, refreshes) {
 	const response = await fetch(url, init);
 	const status = response.status;
 
@@ -158,6 +159,7 @@ export async function remote_request(url, init) {
 	// update queries with refreshed data
 	if (data.q) {
 		for (const key in data.q) {
+			refreshes?.delete(key);
 			const parts = split_remote_key(key);
 			const entry = query_map.get(parts.id)?.get(parts.payload);
 
@@ -168,6 +170,7 @@ export async function remote_request(url, init) {
 	// reconnect live queries
 	if (data.l) {
 		for (const key in data.l) {
+			refreshes?.delete(key);
 			const parts = split_remote_key(key);
 			const entry = live_query_map.get(parts.id)?.get(parts.payload);
 
@@ -180,6 +183,21 @@ export async function remote_request(url, init) {
 				void entry?.resource.reconnect();
 			}
 		}
+	}
+
+	for (const key of data.i ?? []) refreshes?.delete(key);
+
+	for (const key of refreshes ?? []) {
+		const parts = split_remote_key(key);
+		const entry =
+			query_map.get(parts.id)?.get(parts.payload) ??
+			live_query_map.get(parts.id)?.get(parts.payload);
+		entry?.resource.fail(
+			new HttpError({
+				status: 400,
+				message: 'Requested update was not handled by the remote function'
+			})
+		);
 	}
 
 	return data;

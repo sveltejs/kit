@@ -311,18 +311,7 @@ async function handle_remote_call_internal(event, state, manifest, id) {
 		}
 
 		await collect_remote_data(data, event, state);
-
-		if (__SVELTEKIT_DEV__ && state.remote.requested?.size) {
-			const unhandled = Array.from(state.remote.requested, ([id, payloads]) => {
-				const name = id.slice(id.lastIndexOf('/') + 1);
-				return `${payloads.size} requested ${payloads.size === 1 ? 'update' : 'updates'} for \`${name}\``;
-			});
-			const plural = unhandled.length === 1;
-			const details = plural ? unhandled[0] : `updates:\n- ${unhandled.join('\n- ')}.\n`;
-			console.warn(
-				`The ${internals.type} \`${internals.name}\` did not handle ${details}${plural ? '.' : ''}\nEnsure that all values yielded by \`requested(...)\` are handled.`
-			);
-		}
+		if (state.remote.ignored?.size) data.i = Array.from(state.remote.ignored);
 
 		return Response.json(
 			/** @type {RemoteFunctionResponse} */ ({

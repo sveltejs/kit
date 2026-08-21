@@ -342,6 +342,8 @@ export type RemoteFunctionData = {
 	f?: Record<string, RemoteFunctionDataNode>;
 	/** Whether there were any refreshes/reconnects during the request */
 	r?: true;
+	/** Client-requested updates that the server intentionally ignored */
+	i?: string[];
 	/** The redirect location, if any */
 	redirect?: string;
 };
@@ -717,6 +719,8 @@ export interface RequestState {
 		forms: null | Map<string, any>;
 		/** A map of remote function ID to payloads requested for refreshing by the client */
 		requested: null | Map<string, Set<string>>;
+		/** Client-requested updates intentionally ignored by `requested(...).ignoreAll()` or `ignore` */
+		ignored: null | Set<string>;
 		/** A map of query.batch ID to payloads requested for that batch within the same macrotask */
 		batches: null | Map<
 			string,
