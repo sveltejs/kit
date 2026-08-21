@@ -568,7 +568,7 @@ function kit({ svelte_config }) {
 				vite,
 				server,
 				svelte_config,
-				() => remotes,
+				() => remote_metadata.remotes,
 				root,
 				(data) => {
 					manifest_data = data;
