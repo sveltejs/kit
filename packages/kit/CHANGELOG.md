@@ -1,5 +1,25 @@
 # @sveltejs/kit
 
+## 3.0.0-next.25
+
+### Minor Changes
+
+- feat: add an `applyReroute` helper for adapters that support split serverless function deployments ([#16665](https://github.com/sveltejs/kit/pull/16665))
+
+### Patch Changes
+
+- chore: build streamed responses from async generators ([#16847](https://github.com/sveltejs/kit/pull/16847))
+
+- fix: tweak response logging for remote requests ([#16865](https://github.com/sveltejs/kit/pull/16865))
+
+- fix: discard invalidation results when a navigation completes while they load ([#16852](https://github.com/sveltejs/kit/pull/16852))
+
+- fix: route dev-server response logging through Vite's logger so it respects `logLevel` and `customLogger` ([#16858](https://github.com/sveltejs/kit/pull/16858))
+
+- chore: read build-time config from defines on the server instead of carrying it in `options` ([#16873](https://github.com/sveltejs/kit/pull/16873))
+
+- chore: read `options` from a single module instead of passing it through the server runtime ([#16871](https://github.com/sveltejs/kit/pull/16871))
+
 ## 3.0.0-next.24
 
 ### Minor Changes
