@@ -6,7 +6,7 @@ title: Bun servers
 
 ## Usage
 
-Install the adapter:
+The adapter requires Bun 1.4 or newer. Install it:
 
 ```sh
 bun add -D @sveltejs/adapter-bun

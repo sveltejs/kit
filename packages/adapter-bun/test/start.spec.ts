@@ -119,9 +119,13 @@ test.each(['SIGINT', 'SIGTERM'] as const)(
 test('force-closes lingering connections after SHUTDOWN_TIMEOUT', async () => {
 	vi.useFakeTimers();
 	try {
+		let finish_force: (() => void) | undefined;
 		const loaded = await load_start({
 			env: { SHUTDOWN_TIMEOUT: '5' },
-			stop: () => new Promise<void>(() => {})
+			stop: (force) =>
+				force
+					? new Promise<void>((resolve) => (finish_force = resolve))
+					: new Promise<void>(() => {})
 		});
 
 		const shutdown = loaded.listeners.get('SIGTERM')?.();
@@ -130,7 +134,7 @@ test('force-closes lingering connections after SHUTDOWN_TIMEOUT', async () => {
 		expect(loaded.stop).toHaveBeenLastCalledWith(true);
 		expect(loaded.emit).not.toHaveBeenCalled();
 
-		await vi.advanceTimersByTimeAsync(1000);
+		finish_force?.();
 		await shutdown;
 		expect(loaded.emit).toHaveBeenCalledWith('sveltekit:shutdown', 'SIGTERM');
 	} finally {
@@ -163,7 +167,7 @@ async function load_start({
 	env?: Record<string, string>;
 	envPrefix?: string;
 	pendingRequests?: number;
-	stop?: () => Promise<void>;
+	stop?: (force?: boolean) => Promise<void>;
 } = {}) {
 	vi.resetModules();
 	const listeners = new Map<string, () => Promise<void> | void>();

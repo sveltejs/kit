@@ -50,5 +50,8 @@
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^3.0.0-next.0"
+	},
+	"engines": {
+		"bun": ">=1.4.0"
 	}
 }

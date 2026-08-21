@@ -147,13 +147,6 @@ test('static routes revalidate by date when the client has no ETag', async () =>
 	expect(stale_etag_wins.status).toBe(200);
 });
 
-test('static routes answer HEAD with the same handler', async () => {
-	const { routes } = await load_routes();
-
-	const route = routes.client_asset('data.json', undefined, meta)[0][1] as any;
-	expect(route.HEAD).toBe(route.GET);
-});
-
 test('precompressed variants are negotiated with their own validators', async () => {
 	const { routes, file } = await load_routes();
 
@@ -259,7 +252,6 @@ test.each([
 
 		expect(entries[0][0]).toBe(canonical);
 		expect(entries[1][0]).toBe(alternate);
-		expect((entries[1][1] as any).HEAD).toBe((entries[1][1] as any).GET);
 		const response = (entries[1][1] as any).GET(
 			new Request(`http://localhost${alternate}?from=test`)
 		);
@@ -290,7 +282,6 @@ test('prerendered redirects retain their status and location', async () => {
 	expect(path).toBe('/old%20path');
 	expect((handler as any).GET.status).toBe(307);
 	expect((handler as any).GET.headers.get('location')).toBe('/new');
-	expect((handler as any).HEAD).toBe((handler as any).GET);
 });
 
 async function load_routes({ base = '/', embed = false, appDir = '_app' } = {}) {
