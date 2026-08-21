@@ -493,13 +493,7 @@ export type SSRNodeLoader = () => Promise<SSRNode>;
 export interface SSROptions {
 	app_template_contains_nonce: boolean;
 	csp: ValidatedConfig['csp'];
-	csrf_check_origin: boolean;
 	csrf_trusted_origins: string[];
-	embedded: boolean;
-	hash_routing: boolean;
-	link_header_preload: ValidatedConfig['output']['linkHeaderPreload'];
-	paths_origin: string | undefined;
-	service_worker: boolean;
 	service_worker_options: RegistrationOptions;
 	templates: {
 		app(values: {
@@ -511,8 +505,6 @@ export interface SSROptions {
 		}): string;
 		error(values: { message: string; status: number }): string;
 	};
-	version: string;
-	version_hash: string;
 }
 
 export interface PageNodeIndexes {
