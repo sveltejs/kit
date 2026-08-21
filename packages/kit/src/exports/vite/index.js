@@ -591,10 +591,11 @@ function kit({ svelte_config }) {
 	/** @type {Record<string, EnvVarConfig<any>> | null} */
 	let explicit_env_config = null;
 
-	/** @type {RemoteChunk[]} */
-	let remotes;
-	/** @type {Map<string, string>} Maps remote hash -> original module id */
-	let remote_original_by_hash;
+	/** @type {{ remotes: RemoteChunk[]; remote_original_by_hash: Map<string, string>}} */
+	let remote_metadata = {
+		remotes: [],
+		remote_original_by_hash: new Map()
+	};
 
 	/** @type {(() => Promise<void>) | null} */
 	let finalise = null;
@@ -612,9 +613,8 @@ function kit({ svelte_config }) {
 					vite
 				}),
 				() => build_metadata,
-				(remote_array, remote_original_map) => {
-					remotes = remote_array;
-					remote_original_by_hash = remote_original_map;
+				(metadata) => {
+					remote_metadata = metadata;
 				}
 			),
 			plugin_env_vars(svelte_config, (vars) => {
@@ -655,7 +655,7 @@ function kit({ svelte_config }) {
 					build_metadata = metadata;
 				},
 				() => explicit_env_config,
-				() => ({ remotes, remote_original_by_hash }),
+				() => remote_metadata,
 				(fn) => {
 					finalise = fn;
 				}

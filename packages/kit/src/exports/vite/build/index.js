@@ -43,7 +43,7 @@ import { s } from '../../../utils/misc.js';
  * @param {() => Config} get_config
  * @param {(metadata: ServerMetadata) => void} set_build_metadata
  * @param {() => Record<string, EnvVarConfig<any>> | null} get_explicit_env_config
- * @param {() => { remotes: RemoteChunk[]; remote_original_by_hash: Map<string, string> }} get_remote_metadata
+ * @param {() => ({ remotes: RemoteChunk[]; remote_original_by_hash: Map<string, string> })} get_remote_metadata
  * @param {(fn: () => Promise<void>) => void} set_finalise
  * @returns {Plugin}
  */
