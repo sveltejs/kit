@@ -133,7 +133,9 @@ export default function (opts = {}) {
 								if (!magicString) throw new Error('experimental.nativeMagicString is not enabled');
 
 								for (const [from, to] of Object.entries(defines)) {
-									magicString.replace(new RegExp(`\\b${from}\\b`, 'g'), to);
+									// remove $& and $N substitutions by replacing every $ with $$
+									const value = to.replace(/\$/g, '$$$$');
+									magicString.replace(new RegExp(`\\b${from}\\b`, 'g'), value);
 								}
 
 								return {
