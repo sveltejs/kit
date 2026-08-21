@@ -1,7 +1,12 @@
 /** @import { RemoteCommand, RemoteQueryUpdate } from '$app/server' */
 import { app_dir, base } from '#app/paths';
 import { stringify_command_arg } from '../../shared.js';
-import { get_remote_request_headers, categorize_updates, remote_request } from './shared.svelte.js';
+import {
+	get_remote_request_headers,
+	categorize_updates,
+	remote_request,
+	fail_unhandled_refreshes
+} from './shared.svelte.js';
 
 /**
  * Client-version of the `command` function from `$app/server`.
@@ -63,6 +68,8 @@ export function command(id) {
 								'Redirects are not allowed in commands. Return a result instead and use goto on the client'
 							);
 						}
+
+						fail_unhandled_refreshes(refreshes);
 
 						return response._;
 					} finally {

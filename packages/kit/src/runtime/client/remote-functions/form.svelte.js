@@ -13,7 +13,7 @@ import {
 } from '../client.js';
 import { page } from '#app/state/client';
 import { tick } from 'svelte';
-import { categorize_updates, remote_request } from './shared.svelte.js';
+import { categorize_updates, fail_unhandled_refreshes, remote_request } from './shared.svelte.js';
 import { createAttachmentKey } from 'svelte/attachments';
 import {
 	convert_formdata,
@@ -275,6 +275,7 @@ export function form(id) {
 							const succeeded = raw_issues.length === 0;
 
 							if (succeeded) {
+								fail_unhandled_refreshes(refreshes);
 								if (should_refresh) {
 									await refreshAll();
 								}

@@ -187,6 +187,11 @@ export async function remote_request(url, init, refreshes) {
 
 	for (const key of data.i ?? []) refreshes?.delete(key);
 
+	return data;
+}
+
+/** @param {Set<string> | null} refreshes */
+export function fail_unhandled_refreshes(refreshes) {
 	for (const key of refreshes ?? []) {
 		const parts = split_remote_key(key);
 		const entry =
@@ -199,8 +204,6 @@ export async function remote_request(url, init, refreshes) {
 			})
 		);
 	}
-
-	return data;
 }
 
 /**

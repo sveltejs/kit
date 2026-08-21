@@ -21,7 +21,7 @@ vi.mock('#app/state/client', () => ({
 	notify_version: () => {}
 }));
 
-const { remote_request } = await import('./shared.svelte.js');
+const { fail_unhandled_refreshes, remote_request } = await import('./shared.svelte.js');
 const { HttpError, HandledHttpError } = await import('@sveltejs/kit/internal');
 const { query_map, live_query_map } = await import('../client.js');
 const devalue = await import('devalue');
@@ -110,6 +110,7 @@ describe('remote_request transport error handling', () => {
 		);
 
 		await remote_request('/x', undefined, new Set(['hash/query/[-1]']));
+		fail_unhandled_refreshes(new Set(['hash/query/[-1]']));
 
 		expect(fail).toHaveBeenCalledWith(
 			expect.objectContaining({
@@ -119,6 +120,24 @@ describe('remote_request transport error handling', () => {
 				})
 			})
 		);
+	});
+
+	test('does not fail missing updates before the caller commits reconciliation', async () => {
+		const fail = vi.fn();
+		query_map.set('hash/query', /** @type {any} */ (new Map([['[-1]', { resource: { fail } }]])));
+		vi.stubGlobal('fetch', () =>
+			mock_response({
+				json: () =>
+					Promise.resolve({
+						type: 'result',
+						data: devalue.stringify({ _: { issues: [{ message: 'invalid' }] } })
+					})
+			})
+		);
+
+		await remote_request('/x', undefined, new Set(['hash/query/[-1]']));
+
+		expect(fail).not.toHaveBeenCalled();
 	});
 
 	test('does not fail requested updates returned in the response', async () => {
@@ -134,7 +153,9 @@ describe('remote_request transport error handling', () => {
 			})
 		);
 
-		await remote_request('/x', undefined, new Set(['hash/query/[-1]']));
+		const refreshes = new Set(['hash/query/[-1]']);
+		await remote_request('/x', undefined, refreshes);
+		fail_unhandled_refreshes(refreshes);
 
 		expect(resource.set).toHaveBeenCalledWith(42);
 		expect(resource.fail).not.toHaveBeenCalled();
@@ -153,7 +174,9 @@ describe('remote_request transport error handling', () => {
 			})
 		);
 
-		await remote_request('/x', undefined, new Set(['hash/query/[-1]']));
+		const refreshes = new Set(['hash/query/[-1]']);
+		await remote_request('/x', undefined, refreshes);
+		fail_unhandled_refreshes(refreshes);
 
 		expect(fail).not.toHaveBeenCalled();
 	});
