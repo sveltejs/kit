@@ -16,7 +16,7 @@ import { posixify } from '../../utils/os.js';
 import { to_fs } from '../../utils/vite.js';
 import * as sync from '../../core/sync/sync.js';
 import { load_and_validate_params } from '../../utils/params.js';
-import { runtime_directory, logger } from '../../core/utils.js';
+import { runtime_directory, logger, get_global_name } from '../../core/utils.js';
 import { generate_manifest } from '../../core/generate_manifest/index.js';
 import { build_server_nodes } from './build/build_server.js';
 import { find_deps, resolve_symlinks } from './build/utils.js';
@@ -229,9 +229,6 @@ function kit({ svelte_config }) {
 	/** @type {string} The base directory for the Vite builds */
 	let out;
 
-	/** @type {string} */
-	let version_hash;
-
 	/** @type {ResolvedConfig} */
 	let vite_config;
 
@@ -263,6 +260,9 @@ function kit({ svelte_config }) {
 
 	const sourcemapIgnoreList = /** @param {string} relative_path */ (relative_path) =>
 		relative_path.includes('node_modules') || relative_path.includes(kit.outDir);
+
+	/** @type {string} the `__sveltekit_xxx` name, without `globalThis.` */
+	let global_name;
 
 	/** @type {string} name for `globalThis.__sveltekit_xxx` */
 	let kit_global;
@@ -329,11 +329,8 @@ function kit({ svelte_config }) {
 				out_dir = posixify(kit.outDir);
 				out = `${out_dir}/output`;
 
-				version_hash = hash(kit.version.name);
-
-				kit_global = is_build
-					? `globalThis.__sveltekit_${version_hash}`
-					: 'globalThis.__sveltekit_dev';
+				global_name = get_global_name(kit.version.name, !is_build);
+				kit_global = `globalThis.${global_name}`;
 
 				service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
 				service_worker_entry_file &&= posixify(service_worker_entry_file);
@@ -490,7 +487,12 @@ function kit({ svelte_config }) {
 					__SVELTEKIT_SUPPORTS_ASYNC__: s(
 						svelte_config.compilerOptions?.experimental?.async ?? false
 					),
-					__SVELTEKIT_DEV__: s(!is_build)
+					__SVELTEKIT_DEV__: s(!is_build),
+					__SVELTEKIT_GLOBAL_NAME__: s(global_name),
+					__SVELTEKIT_CSRF_CHECK_ORIGIN__: s(!kit.csrf.trustedOrigins.includes('*')),
+					__SVELTEKIT_LINK_HEADER_PRELOAD__: s(kit.output.linkHeaderPreload),
+					__SVELTEKIT_PATHS_ORIGIN__: s(kit.paths.origin) ?? 'undefined',
+					__SVELTEKIT_SERVICE_WORKER__: s(kit.serviceWorker.register && !!service_worker_entry_file)
 				};
 
 				if (is_build) {
@@ -729,7 +731,7 @@ function kit({ svelte_config }) {
 							manifest: true,
 							rolldownOptions: {
 								output: {
-									name: `__sveltekit_${version_hash}.app`,
+									name: `${global_name}.app`,
 									assetFileNames: `${app_immutable}/assets/[name].[hash][extname]`,
 									hoistTransitiveImports: false,
 									sourcemapIgnoreList
@@ -1526,12 +1528,17 @@ function kit({ svelte_config }) {
 				explicit_env_config = vars;
 			}),
 			process.env.TEST !== 'true'
-				? plugin_guard(svelte_config, () => ({
-						vite,
-						root,
-						normalized_aliases,
-						service_worker_entry_file
-					}))
+				? plugin_guard(
+						svelte_config,
+						() => ({
+							vite,
+							root,
+							normalized_aliases,
+							service_worker_entry_file
+						}),
+						// in dev, this doesn't exist yet, so we need to create it
+						() => (manifest_data ??= create_manifest_data(svelte_config, root))
+					)
 				: undefined,
 			plugin_service_worker_build(svelte_config, () => ({
 				service_worker_entry_file,

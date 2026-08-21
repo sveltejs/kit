@@ -2,14 +2,13 @@ import { parseSetCookie } from 'cookie';
 import { noop } from '../../utils/functions.js';
 import { respond } from './respond.js';
 import * as paths from '#app/paths';
-import { read_implementation } from './internal.js';
+import { hooks, read_implementation } from './internal.js';
 import { has_prerendered_path } from './utils.js';
 import { fork_state_for_subrequest } from './state.js';
 
 /**
  * @param {{
  *   event: import('@sveltejs/kit').RequestEvent;
- *   options: import('types').SSROptions;
  *   manifest: import('@sveltejs/kit').SSRManifest;
  *   state: import('types').RequestState;
  *   get_cookie_header: (url: URL, header: string | null) => string;
@@ -17,7 +16,7 @@ import { fork_state_for_subrequest } from './state.js';
  * }} opts
  * @returns {typeof fetch}
  */
-export function create_fetch({ event, options, manifest, state, get_cookie_header, set_internal }) {
+export function create_fetch({ event, manifest, state, get_cookie_header, set_internal }) {
 	/**
 	 * @type {typeof fetch}
 	 */
@@ -30,7 +29,7 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 		let credentials =
 			(info instanceof Request ? info.credentials : init?.credentials) ?? 'same-origin';
 
-		return options.hooks.handleFetch({
+		return hooks.handleFetch({
 			event,
 			request: original_request,
 			fetch: async (info, init) => {
@@ -148,18 +147,19 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 					request.headers.set('accept-language', accept_language);
 				}
 
-				const response = await internal_fetch(request, options, manifest, state);
+				const response = await internal_fetch(request, manifest, state);
 
 				for (const str of response.headers.getSetCookie()) {
-					const { name, value, ...options } = parseSetCookie(str, { decode: (v) => v });
+					const { name, value, ...cookie_options } = parseSetCookie(str, { decode: (v) => v });
 
-					const path = options.path ?? (url.pathname.split('/').slice(0, -1).join('/') || '/');
+					const path =
+						cookie_options.path ?? (url.pathname.split('/').slice(0, -1).join('/') || '/');
 
-					// options.sameSite is string, something more specific is required - type cast is safe
+					// sameSite is string, something more specific is required - type cast is safe
 					set_internal(name, /** @type {string} */ (value), {
 						path,
 						encode: (value) => value,
-						.../** @type {import('cookie').SerializeOptions} */ (options)
+						.../** @type {import('cookie').SerializeOptions} */ (cookie_options)
 					});
 				}
 
@@ -193,12 +193,11 @@ function normalize_fetch_input(info, init, url) {
 
 /**
  * @param {Request} request
- * @param {import('types').SSROptions} options
  * @param {import('@sveltejs/kit').SSRManifest} manifest
  * @param {import('types').RequestState} state
  * @returns {Promise<Response>}
  */
-async function internal_fetch(request, options, manifest, state) {
+async function internal_fetch(request, manifest, state) {
 	if (request.signal?.aborted) {
 		throw new DOMException('The operation was aborted.', 'AbortError');
 	}
@@ -206,7 +205,7 @@ async function internal_fetch(request, options, manifest, state) {
 	const subrequest_state = fork_state_for_subrequest(state);
 
 	if (!request.signal) {
-		return await respond(request, options, manifest, subrequest_state);
+		return await respond(request, manifest, subrequest_state);
 	}
 
 	let remove_abort_listener = noop;
@@ -219,8 +218,7 @@ async function internal_fetch(request, options, manifest, state) {
 		remove_abort_listener = () => request.signal.removeEventListener('abort', on_abort);
 	});
 
-	return Promise.race([
-		respond(request, options, manifest, subrequest_state),
-		abort_promise
-	]).finally(remove_abort_listener);
+	return Promise.race([respond(request, manifest, subrequest_state), abort_promise]).finally(
+		remove_abort_listener
+	);
 }

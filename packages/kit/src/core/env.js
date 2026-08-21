@@ -4,13 +4,12 @@
 import path from 'node:path';
 import * as devalue from 'devalue';
 import { dedent } from './sync/utils.js';
-import { runtime_directory } from './utils.js';
+import { get_global_name, runtime_directory } from './utils.js';
 import { resolve_entry } from '../utils/filesystem.js';
 import { handle_issues, validate } from '../exports/internal/env.js';
 import { get_config_aliases } from '../exports/vite/utils.js';
 import { get_runner } from '../runner.js';
 import { import_peer } from '../utils/import.js';
-import { hash } from '../utils/hash.js';
 import { posixify } from '../utils/os.js';
 
 /**
@@ -216,9 +215,7 @@ export function create_env_modules(config, variables, env, dir, entry, is_dev) {
 	 */
 	const module = (prelude, exports) => (variables ? `${prelude}\n\n${exports.join('')}` : '');
 
-	const global = is_dev
-		? 'globalThis.__sveltekit_dev'
-		: `globalThis.__sveltekit_${hash(config.version.name)}`;
+	const global = `globalThis.${get_global_name(config.version.name, is_dev)}`;
 
 	const version = JSON.stringify(config.version.name);
 
@@ -257,7 +254,7 @@ export function create_env_modules(config, variables, env, dir, entry, is_dev) {
 		),
 		'public/client.js': module(
 			is_dev
-				? `const { env } = globalThis.__sveltekit_dev;`
+				? `const { env } = ${global};`
 				: `import { payload } from ${JSON.stringify(posixify(path.relative(`${dir}/public`, `${runtime_directory}/client/payload.js`)))};\nconst env = payload.env;`,
 			public_exports
 		),
