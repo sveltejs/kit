@@ -35,7 +35,6 @@ import { write_client_manifest } from '../../core/sync/write_client_manifest.js'
 import prerender from '../../core/postbuild/prerender.js';
 import analyse from '../../core/postbuild/analyse.js';
 import { s } from '../../utils/misc.js';
-import { hash } from '../../utils/hash.js';
 import { dedent } from '../../core/sync/utils.js';
 import create_manifest_data from '../../core/sync/create_manifest_data/index.js';
 import { get_import_aliases, get_hash_import_keys } from '../../utils/imports.js';
