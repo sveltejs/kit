@@ -4,14 +4,15 @@ import {
 	preloadCode,
 	preloadData,
 	beforeNavigate,
-	afterNavigate
-} from '$app/navigation';
-import { match } from '$app/paths';
-import { onMount, tick } from 'svelte';
+	afterNavigate,
+} from "$app/navigation";
+import { match } from "$app/paths";
+import { onMount, tick } from "svelte";
 
 export function setup() {
 	onMount(() => {
 		// give tests programmatic control over the app
+		// testing something
 		Object.assign(window, {
 			goto,
 			invalidate,
@@ -20,10 +21,10 @@ export function setup() {
 			beforeNavigate,
 			afterNavigate,
 			match,
-			svelte_tick: tick
+			svelte_tick: tick,
 		});
 
 		// communicate that the app is ready
-		document.body.classList.add('started');
+		document.body.classList.add("started");
 	});
 }
