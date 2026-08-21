@@ -5,6 +5,7 @@
 	const src = manual_image1;
 	const images = [manual_image1, manual_image2];
 	const get_image = (image_key: number) => images[image_key];
+	const __img = 'existing declaration';
 
 	let foo: string = 'bar';
 </script>
@@ -51,6 +52,10 @@
 
 {#each images as _, i}
 	<enhanced:img src={get_image(i)} alt="opt-in test" />
+{/each}
+
+{#each images as _, j}
+	<enhanced:img src={get_image(j)} alt="collision test" />
 {/each}
 
 <picture>

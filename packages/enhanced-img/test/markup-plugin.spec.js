@@ -43,10 +43,15 @@ it('Image preprocess snapshot test', async () => {
 	const transformed_code = transformed.code.toString();
 
 	expect(transformed_code.match(/get_image\(i\)/g)).toHaveLength(1);
+	expect(transformed_code.match(/get_image\(j\)/g)).toHaveLength(1);
+	expect(transformed_code).toContain('{const __img_1 = get_image(i)}');
+	expect(transformed_code).toContain('{const __img_2 = get_image(j)}');
+	expect(transformed_code).not.toContain('{const __img_1 = src}');
+	expect(transformed_code).not.toContain('{const __img_1 = image}');
 	expect(() => compile(transformed_code, { filename })).not.toThrow();
 
 	// Make imports readable
-	const ouput = transformed_code.replace(/import/g, '\n\timport');
+	const ouput = transformed_code.replace(/import/g, '\n\timport').replaceAll('{#if \n', '{#if\n');
 
 	await expect(ouput).toMatchFileSnapshot('./Output.svelte');
 });

@@ -58,6 +58,19 @@ export function image_plugin(imagetools_plugin) {
 				 * @type {Map<string, string>}
 				 */
 				const imports = new Map();
+				const generated_names = new Set();
+
+				function generate_name() {
+					let suffix = '';
+					while (true) {
+						const name = `__img${suffix}`;
+						if (!generated_names.has(name) && !new RegExp(`\\b${name}\\b`).test(content)) {
+							generated_names.add(name);
+							return name;
+						}
+						suffix = suffix ? `_${Number(suffix.slice(1)) + 1}` : '_1';
+					}
+				}
 
 				/**
 				 * @param {import('svelte/compiler').AST.RegularElement} node
@@ -79,12 +92,22 @@ export function image_plugin(imagetools_plugin) {
 							throw new Error('ExpressionTag has no range');
 						}
 						const src_expression = content.substring(start, end).trim();
-						const src_var_name = `__sveltekit_enhanced_img_${node.start}`;
+						const expression = src_attribute.expression;
+						const is_call =
+							expression.type === 'CallExpression' ||
+							(expression.type === 'ChainExpression' &&
+								expression.expression.type === 'CallExpression');
+						const src_var_name = is_call ? generate_name() : src_expression;
 
 						s.update(
 							node.start,
 							node.end,
-							dynamic_img_to_picture(content, node, src_expression, src_var_name)
+							dynamic_img_to_picture(
+								content,
+								node,
+								is_call ? src_expression : undefined,
+								src_var_name
+							)
 						);
 						return;
 					}
@@ -360,7 +383,7 @@ function to_value(src) {
  * For images like `<img src={manually_imported} />`
  * @param {string} content
  * @param {import('svelte/compiler').AST.RegularElement} node
- * @param {string} src_expression
+ * @param {string | undefined} src_expression
  * @param {string} src_var_name
  */
 function dynamic_img_to_picture(content, node, src_expression, src_var_name) {
@@ -383,8 +406,7 @@ function dynamic_img_to_picture(content, node, src_expression, src_var_name) {
 		attributes.splice(size_index, 1);
 	}
 
-	return `{const ${src_var_name} = ${src_expression}}
-{#if typeof ${src_var_name} === 'string'}
+	return `${src_expression ? `{const ${src_var_name} = ${src_expression}}\n` : ''}{#if typeof ${src_var_name} === 'string'}
 	{#if import.meta.env.DEV && ${!width_index && !height_index}}
 		{${src_var_name}} was not enhanced. Cannot determine dimensions.
 	{:else}
