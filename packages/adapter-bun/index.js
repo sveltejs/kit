@@ -170,9 +170,28 @@ export default function (opts = {}) {
 				if (!buildOptions.compile) entrypoints.push(start_file);
 			}
 
+			// Side-effect-only chunks (e.g. Svelte's events.js, kit's env re-export) compile to
+			// identical stubs whose content hashes collide on one output path, failing the build
+			// with "Multiple files share the same output path" (oven-sh/bun#37576). Resolving a
+			// distinct identity per importer keeps every emitted copy unique; delete this once
+			// the Bun fix ships.
 			const chunks_dir = path.resolve(server, 'chunks');
-			/** @type {Map<string, string | false>} */
+			/** @type {Map<string, string>} */
 			const side_effect_sources = new Map();
+			for (const { abs } of read_files_recursive(chunks_dir)) {
+				const source = fs.readFileSync(abs, 'utf8');
+				if (/^import\s+["'][^"']+["'];\s*export\s*\{\s*\};?\s*$/.test(source)) {
+					side_effect_sources.set(abs, source);
+				}
+			}
+
+			// only the stubs above, because a hook that matches without resolving sends Bun back
+			// to the filesystem, where the virtual entrypoints do not exist
+			const side_effect_filter = new RegExp(
+				`/(?:${[...side_effect_sources.keys()]
+					.map((file) => path.basename(file).replaceAll('.', '\\.'))
+					.join('|')})$`
+			);
 
 			/** @type {BunPlugin} */
 			const adapter_plugin = {
@@ -185,21 +204,12 @@ export default function (opts = {}) {
 						if (path === 'SERVER_OPTIONS') return { path: server_options_file };
 					});
 
-					// Side-effect-only chunks (e.g. Svelte's events.js, kit's env re-export) compile to
-					// identical stubs whose content hashes collide on one output path, failing the build
-					// with "Multiple files share the same output path" (oven-sh/bun#37576). Resolving a
-					// distinct identity per importer keeps every emitted copy unique; delete this once
-					// the Bun fix ships.
-					build.onResolve({ filter: /\.js$/ }, (args) => {
+					if (side_effect_sources.size === 0) return;
+
+					build.onResolve({ filter: side_effect_filter }, (args) => {
 						const file = path.resolve(args.resolveDir, args.path);
-						if (path.dirname(file) !== chunks_dir) return;
-						let source = side_effect_sources.get(file);
-						if (source === undefined) {
-							const text = fs.readFileSync(file, 'utf8');
-							source = /^import\s+["'][^"']+["'];\s*export\s*\{\s*\};?\s*$/.test(text) && text;
-							side_effect_sources.set(file, source);
-						}
-						if (source === false) return;
+						if (!side_effect_sources.has(file))
+							return virtual_files[file] ? { path: file } : undefined;
 						// The `?` suffix keeps dirname(path) inside chunks/ — Bun resolves the synthetic
 						// module's relative imports against that, ignoring onLoad's resolveDir.
 						return {

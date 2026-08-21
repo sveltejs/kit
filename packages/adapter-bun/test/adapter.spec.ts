@@ -146,20 +146,19 @@ describe('Bun build configuration', () => {
 	});
 
 	test('gives side-effect-only chunks a per-importer identity so their copies cannot collide', async () => {
+		const chunks_dir = path.resolve('.svelte-kit/output/server/chunks');
+		mock_chunks(chunks_dir, { 'events.js': "import './other.js';\nexport {};\n" });
+
 		await adapter().adapt(create_builder());
 		const on_resolve = vi.fn();
 		const on_load = vi.fn();
 		bun.build.mock.calls[0][0].plugins[0].setup({ onResolve: on_resolve, onLoad: on_load });
 
-		const chunks_dir = path.resolve('.svelte-kit/output/server/chunks');
-		const resolve_chunk = on_resolve.mock.calls.find(
-			([options]) => String(options.filter) === String(/\.js$/)
-		)![1];
+		const resolve_chunk = on_resolve.mock.calls[1][1];
 		const load_chunk = on_load.mock.calls.find(
 			([options]) => options.namespace === 'adapter-bun-side-effect'
 		)![1];
 
-		vi.mocked(fs.readFileSync).mockReturnValue("import './other.js';\nexport {};\n");
 		const first = resolve_chunk({
 			path: './events.js',
 			resolveDir: chunks_dir,
@@ -173,7 +172,6 @@ describe('Bun build configuration', () => {
 		expect(first.namespace).toBe('adapter-bun-side-effect');
 		expect(first.path.startsWith(`${chunks_dir}/events.js?`)).toBe(true);
 		expect(first.path).not.toBe(second.path);
-		expect(fs.readFileSync).toHaveBeenCalledTimes(1);
 
 		const first_load = load_chunk({ path: first.path });
 		const second_load = load_chunk({ path: second.path });
@@ -181,19 +179,35 @@ describe('Bun build configuration', () => {
 		expect(first_load.contents).not.toBe(second_load.contents);
 
 		// chunks with real exports keep their shared identity
-		vi.mocked(fs.readFileSync).mockReturnValue('export const x = 1;\n');
 		expect(
 			resolve_chunk({ path: './real.js', resolveDir: chunks_dir, importer: `${chunks_dir}/a.js` })
 		).toBeUndefined();
+	});
 
-		// modules outside chunks/ are never rewritten
-		expect(
-			resolve_chunk({
-				path: './index.js',
-				resolveDir: path.resolve('.svelte-kit/output/server'),
-				importer: `${chunks_dir}/a.js`
-			})
-		).toBeUndefined();
+	test('leaves the plugin out when no chunk is side-effect-only', async () => {
+		mock_chunks(path.resolve('.svelte-kit/output/server/chunks'), {
+			'real.js': 'export const x = 1;\n'
+		});
+
+		await adapter().adapt(create_builder());
+		const on_resolve = vi.fn();
+		bun.build.mock.calls[0][0].plugins[0].setup({ onResolve: on_resolve, onLoad: vi.fn() });
+
+		expect(on_resolve).toHaveBeenCalledOnce();
+	});
+
+	test('keeps virtual entrypoints resolvable when a chunk shares their name', async () => {
+		const chunks_dir = path.resolve('.svelte-kit/output/server/chunks');
+		mock_chunks(chunks_dir, { 'start.js': "import './other.js';\nexport {};\n" });
+
+		await adapter().adapt(create_builder({ instrumentation: true }));
+		const on_resolve = vi.fn();
+		bun.build.mock.calls[0][0].plugins[0].setup({ onResolve: on_resolve, onLoad: vi.fn() });
+
+		// resolving nothing here would send Bun to the filesystem, where start.js does not exist
+		expect(on_resolve.mock.calls[1][1]({ path: start_file, resolveDir: package_dir })).toEqual({
+			path: start_file
+		});
 	});
 
 	test('passes supported advanced options while retaining reserved options', async () => {
@@ -486,6 +500,21 @@ describe('generated routes', () => {
 		).rejects.toThrow('Could not find server asset missing.txt');
 	});
 });
+
+function mock_chunks(chunks_dir: string, sources: Record<string, string>) {
+	vi.mocked(fs.readdirSync).mockImplementation((directory) =>
+		String(directory) === chunks_dir
+			? (Object.keys(sources).map((name) => ({
+					name,
+					parentPath: chunks_dir,
+					isFile: () => true
+				})) as unknown as ReturnType<typeof fs.readdirSync>)
+			: []
+	);
+	vi.mocked(fs.readFileSync).mockImplementation(
+		(file) => sources[path.basename(String(file))] as unknown as ReturnType<typeof fs.readFileSync>
+	);
+}
 
 function mock_files({
 	client = [],
