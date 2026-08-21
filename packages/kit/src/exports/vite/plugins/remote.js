@@ -66,7 +66,6 @@ export function plugin_remote(svelte_config, get_config, get_build_metadata, set
 
 			build_metadata = get_build_metadata();
 			set_remote_metadata({ remotes, remote_original_by_hash });
-			console.log({ remotes, remote_original_by_hash });
 		},
 
 		// prevent other plugins from resolving our remote virtual module
