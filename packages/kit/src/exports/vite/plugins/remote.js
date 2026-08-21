@@ -42,6 +42,11 @@ export function plugin_remote(svelte_config, get_config, get_build_metadata, set
 	return {
 		name: 'vite-plugin-sveltekit-remote',
 
+		// in dev, `buildStart`/`buildEnd` only run for the client environment by default.
+		// Opt in to per-environment hooks so `remotes` is initialized in the ssr
+		// environment as well before `transform` runs there
+		perEnvironmentStartEndDuringDev: true,
+
 		configResolved() {
 			({ root, vite } = get_config());
 		},
@@ -106,7 +111,7 @@ export function plugin_remote(svelte_config, get_config, get_build_metadata, set
 				};
 
 				if (this.environment.config.consumer === 'server') {
-					remotes.push(remote);
+					(remotes ??= []).push(remote);
 
 					// we need to add an `await Promise.resolve()` because if the user imports this function
 					// on the client AND in a load function when loading the client module we will trigger
