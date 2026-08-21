@@ -41,6 +41,7 @@ export function plugin_remote(svelte_config, get_config, get_build_metadata, set
 
 	return {
 		name: 'vite-plugin-sveltekit-remote',
+		perEnvironmentStartEndDuringDev: true,
 
 		configResolved() {
 			({ root, vite } = get_config());
