@@ -312,6 +312,18 @@ async function handle_remote_call_internal(event, state, manifest, id) {
 
 		await collect_remote_data(data, event, state);
 
+		if (__SVELTEKIT_DEV__ && state.remote.requested?.size) {
+			const unhandled = Array.from(state.remote.requested, ([id, payloads]) => {
+				const name = id.slice(id.lastIndexOf('/') + 1);
+				return `${payloads.size} requested ${payloads.size === 1 ? 'update' : 'updates'} for \`${name}\``;
+			});
+			const plural = unhandled.length === 1;
+			const details = plural ? unhandled[0] : `updates:\n- ${unhandled.join('\n- ')}.\n`;
+			console.warn(
+				`The ${internals.type} \`${internals.name}\` did not handle ${details}${plural ? '.' : ''}\nEnsure that all values yielded by \`requested(...)\` are handled.`
+			);
+		}
+
 		return Response.json(
 			/** @type {RemoteFunctionResponse} */ ({
 				type: 'result',
@@ -493,7 +505,7 @@ export async function collect_remote_data(data, event, state) {
  * @param {string[] | undefined} refreshes
  */
 function create_requested_map(refreshes) {
-	/** @type {Map<string, string[]>} */
+	/** @type {Map<string, Set<string>>} */
 	const requested = new Map();
 
 	for (const key of refreshes ?? []) {
@@ -502,9 +514,9 @@ function create_requested_map(refreshes) {
 		const existing = requested.get(parts.id);
 
 		if (existing) {
-			existing.push(parts.payload);
+			existing.add(parts.payload);
 		} else {
-			requested.set(parts.id, [parts.payload]);
+			requested.set(parts.id, new Set([parts.payload]));
 		}
 	}
 

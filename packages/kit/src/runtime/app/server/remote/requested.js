@@ -121,7 +121,13 @@ export function requested(query, limit) {
 	const __ = internals;
 
 	const requested = state.remote.requested;
-	const payloads = requested?.get(__.id) ?? [];
+	const payloads = requested?.get(__.id) ?? new Set();
+
+	/** @param {string} payload */
+	const consume = (payload) => {
+		payloads.delete(payload);
+		if (payloads.size === 0) requested?.delete(__.id);
+	};
 
 	// note: don't initialize these maps here -- they will be initialized by the
 	// command/form wrapper when we enter them, and if we initialize them here
@@ -132,7 +138,7 @@ export function requested(query, limit) {
 			'requested(...) can only be called in the context of a command/form remote function'
 		);
 	}
-	const [selected, skipped] = split_limit(payloads, limit);
+	const [selected, skipped] = split_limit([...payloads], limit);
 
 	/**
 	 * Registers the failure exactly like `.set()` registers a value: the error record
@@ -150,6 +156,7 @@ export function requested(query, limit) {
 	};
 
 	for (const payload of skipped) {
+		consume(payload);
 		record_failure(
 			payload,
 			new HttpError({
@@ -162,6 +169,7 @@ export function requested(query, limit) {
 	const result = {
 		*[Symbol.iterator]() {
 			for (const payload of selected) {
+				consume(payload);
 				try {
 					const parsed = parse_remote_arg(payload);
 					const validated = __.validate(parsed);
@@ -182,6 +190,7 @@ export function requested(query, limit) {
 		},
 		async *[Symbol.asyncIterator]() {
 			yield* race_all(selected, async (payload) => {
+				consume(payload);
 				try {
 					const parsed = parse_remote_arg(payload);
 					const validated = await __.validate(parsed);
