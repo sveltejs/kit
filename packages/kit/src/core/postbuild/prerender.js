@@ -1,10 +1,8 @@
 import process from 'node:process';
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { clearLine, moveCursor } from 'node:readline';
 import { pathToFileURL } from 'node:url';
 import { walk } from '../../utils/filesystem.js';
-import { posixify } from '../../utils/os.js';
 import { noop } from '../../utils/functions.js';
 import { decode_uri, is_root_relative, resolve } from '../../utils/url.js';
 import { escape_html } from '../../utils/escape.js';
@@ -54,7 +52,7 @@ async function prerender({
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
 	/** @type {import('types').ServerInternalModule} */
-	const { set_building, set_prerendering, set_manifest, set_read_implementation, log_response } =
+	const { set_building, set_prerendering, set_manifest, set_read_implementation, format_response } =
 		await import(pathToFileURL(`${out}/server/internal.js`).href);
 
 	// configure `import { building } from `$app/env` —
@@ -64,7 +62,7 @@ async function prerender({
 
 	// `set_env` and `Server` live in modules that import the user's `src/env` config. We import them
 	// *after* `set_building()` so that `building`-dependent expressions resolve correctly
-	/** @type {typeof import('__sveltekit/env')} */
+	/** @type {typeof import('<sveltekit:generated>/env/config.js')} */
 	const { set_env } = await import(pathToFileURL(`${out}/server/env.js`).href);
 	set_env(env);
 
@@ -257,13 +255,13 @@ async function prerender({
 		return file;
 	}
 
-	const files = new Set(walk(`${out}/client`).map(posixify));
+	const files = new Set(walk(`${out}/client`));
 	files.add(`${config.appDir}/env.js`);
 
 	const immutable = `${config.appDir}/immutable`;
 	if (existsSync(`${out}/server/${immutable}`)) {
 		for (const file of walk(`${out}/server/${immutable}`)) {
-			files.add(posixify(`${config.appDir}/immutable/${file}`));
+			files.add(`${config.appDir}/immutable/${file}`);
 		}
 	}
 
@@ -283,26 +281,31 @@ async function prerender({
 		// currently requesting, then clearing the line once the response comes in.
 		// This avoids the wall of text that happens when you prerender
 		// many pages and log each response
-		let current = false;
-		let mid_line = false;
-		const stdout_write = process.stdout.write;
-		const stderr_write = process.stderr.write;
+		const { stdout, stderr } = process;
 
-		/** @type {ProxyHandler<typeof stdout_write>} */
-		const track_output = {
+		let current = false;
+		let needs_newline = true;
+
+		const write = stdout.write;
+
+		/** @param {string} value */
+		const print = (value) => write.call(stdout, value);
+
+		/** @type {ProxyHandler<typeof stdout.write>} */
+		const intercept = {
 			apply(target, this_arg, args) {
 				const chunk = args[0];
 				if (chunk.length > 0) {
 					current = false;
-					mid_line =
+					needs_newline =
 						typeof chunk === 'string' ? !chunk.endsWith('\n') : chunk[chunk.length - 1] !== 10;
 				}
 				return Reflect.apply(target, this_arg, args);
 			}
 		};
 
-		process.stdout.write = new Proxy(stdout_write, track_output);
-		process.stderr.write = new Proxy(stderr_write, track_output);
+		stdout.write = new Proxy(stdout.write, intercept);
+		stderr.write = new Proxy(stderr.write, intercept);
 
 		progress = {
 			clear: () => {
@@ -310,25 +313,21 @@ async function prerender({
 				// the previous progress log, because that will corrupt things
 				if (!current) return;
 
-				moveCursor(process.stdout, 0, -1);
-				clearLine(process.stdout, 0);
+				print('\x1B[1A'); // move cursor to start of progress update
+				print('\x1B[2K'); // clear current line
 			},
 
 			update: (path) => {
-				if (mid_line) {
-					// app output ended mid-line — start a fresh one rather than appending to it
-					stdout_write.call(process.stdout, '\n');
-				}
+				// if we're in the middle of a line, start a new one
+				if (needs_newline) print('\n');
 
-				stdout_write.call(process.stdout, `crawling ${path}\n`);
+				print(`crawling ${path}\n`);
 				current = true;
-				mid_line = false;
+				needs_newline = false;
 			},
 
 			updated: 0
 		};
-
-		console.log('');
 	}
 
 	/** @type {Set<string>} */
@@ -425,7 +424,7 @@ async function prerender({
 		}
 
 		if (response.status >= 400) {
-			log_response(response.status, request);
+			console.log(format_response(response.status, request));
 		}
 
 		const body = Buffer.from(await response.arrayBuffer());

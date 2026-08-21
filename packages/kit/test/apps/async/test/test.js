@@ -263,6 +263,19 @@ test.describe('remote functions', () => {
 		await page.getByText('This is your custom error page saying: "oops"').waitFor();
 	});
 
+	test('form error falls through a throwing +error.svelte to the one above', async ({ page }) => {
+		await page.goto('/remote/form/throwing-error-page');
+
+		await page.fill('input', 'unexpected error');
+		await page.getByText('set message').click();
+
+		await page
+			.getByText(
+				'This is your custom error page saying: "error page render error (500 Internal Error, on /remote/form/throwing-error-page)"'
+			)
+			.waitFor();
+	});
+
 	test('form redirects', async ({ page }) => {
 		await page.goto('/remote/form/redirect');
 
@@ -356,85 +369,91 @@ test.describe('remote functions', () => {
 		await expect(page.locator('[data-scoped] input[name^="message"]')).toHaveValue('');
 	});
 
-	test('form enhance(...) works', async ({ page, javaScriptEnabled }) => {
-		await page.goto('/remote/form/enhanced');
+	test.describe('enhanced form state', () => {
+		test.describe.configure({ mode: 'serial' });
 
-		await page.fill('[data-enhanced] input', 'hello');
+		test('form enhance(...) works', async ({ page, javaScriptEnabled }) => {
+			await page.goto('/remote/form/enhanced');
 
-		// Click on the span inside the button to test the event.target vs event.currentTarget issue (#14159)
-		await page.locator('[data-enhanced] span').click();
+			await page.fill('[data-enhanced] input', 'hello');
 
-		if (javaScriptEnabled) {
+			// Click on the span inside the button to test the event.target vs event.currentTarget issue (#14159)
+			await page.locator('[data-enhanced] span').click();
+
+			if (javaScriptEnabled) {
+				await expect(page.getByText('enhanced.pending:')).toHaveText('enhanced.pending: 1');
+				await expect(page.getByText('enhanced.element:')).toHaveText('enhanced.element: attached');
+
+				await page.getByText('message.current: hello (override)').waitFor();
+
+				await page.getByText('resolve deferreds').click();
+				await expect(page.getByText('enhanced.pending:')).toHaveText('enhanced.pending: 0');
+				await expect(page.getByText('await get_message():')).toHaveText(
+					'await get_message(): hello'
+				);
+
+				// enhanced submission should not clear the input; the developer must do that at the appropriate time
+				await expect(page.locator('[data-enhanced] input[name^="message"]')).toHaveValue('hello');
+				await expect(page.getByText('enhanced.callback_element_matches:')).toHaveText(
+					'enhanced.callback_element_matches: true'
+				);
+				await expect(page.getByText('enhanced.callback_has_enhance:')).toHaveText(
+					'enhanced.callback_has_enhance: false'
+				);
+			} else {
+				await expect(page.locator('[data-enhanced] input[name^="message"]')).toHaveValue('');
+			}
+
+			await expect(page.getByText('enhanced.result')).toHaveText(
+				'enhanced.result: hello (from: enhanced:enhanced)'
+			);
+		});
+
+		test('form enhance submit returns boolean', async ({ page, javaScriptEnabled }) => {
+			if (!javaScriptEnabled) return;
+
+			await page.goto('/remote/form/enhanced');
+
+			await expect(page.getByText('enhanced.submit_result:')).toHaveText(
+				'enhanced.submit_result: none'
+			);
+
+			await page.fill('[data-enhanced] input', 'hello');
+			await page.locator('[data-enhanced] span').click();
+			await page.getByText('resolve deferreds').click();
+			await expect(page.getByText('enhanced.submit_result:')).toHaveText(
+				'enhanced.submit_result: true'
+			);
+
+			await page.fill('[data-enhanced] input', 'invalid');
+			await page.locator('[data-enhanced] span').click();
+			await expect(page.getByText('enhanced.submit_result:')).toHaveText(
+				'enhanced.submit_result: false'
+			);
+		});
+
+		test('form submit() enables programmatic submission', async ({ page, javaScriptEnabled }) => {
+			if (!javaScriptEnabled) return;
+
+			await page.goto('/remote/form/enhanced');
+
+			await expect(page.getByText('enhanced.imperative_submit_result:')).toHaveText(
+				'enhanced.imperative_submit_result: none'
+			);
+
+			await page.fill('[data-enhanced] input', 'hello');
+			await page.getByText('submit enhanced programmatically').click();
+
 			await expect(page.getByText('enhanced.pending:')).toHaveText('enhanced.pending: 1');
-			await expect(page.getByText('enhanced.element:')).toHaveText('enhanced.element: attached');
-
-			await page.getByText('message.current: hello (override)').waitFor();
 
 			await page.getByText('resolve deferreds').click();
-			await expect(page.getByText('enhanced.pending:')).toHaveText('enhanced.pending: 0');
-			await expect(page.getByText('await get_message():')).toHaveText('await get_message(): hello');
-
-			// enhanced submission should not clear the input; the developer must do that at the appropriate time
-			await expect(page.locator('[data-enhanced] input[name^="message"]')).toHaveValue('hello');
-			await expect(page.getByText('enhanced.callback_element_matches:')).toHaveText(
-				'enhanced.callback_element_matches: true'
+			await expect(page.getByText('enhanced.imperative_submit_result:')).toHaveText(
+				'enhanced.imperative_submit_result: true'
 			);
-			await expect(page.getByText('enhanced.callback_has_enhance:')).toHaveText(
-				'enhanced.callback_has_enhance: false'
+			await expect(page.getByText('enhanced.result:')).toHaveText(
+				'enhanced.result: hello (from: enhanced:enhanced)'
 			);
-		} else {
-			await expect(page.locator('[data-enhanced] input[name^="message"]')).toHaveValue('');
-		}
-
-		await expect(page.getByText('enhanced.result')).toHaveText(
-			'enhanced.result: hello (from: enhanced:enhanced)'
-		);
-	});
-
-	test('form enhance submit returns boolean', async ({ page, javaScriptEnabled }) => {
-		if (!javaScriptEnabled) return;
-
-		await page.goto('/remote/form/enhanced');
-
-		await expect(page.getByText('enhanced.submit_result:')).toHaveText(
-			'enhanced.submit_result: none'
-		);
-
-		await page.fill('[data-enhanced] input', 'hello');
-		await page.locator('[data-enhanced] span').click();
-		await page.getByText('resolve deferreds').click();
-		await expect(page.getByText('enhanced.submit_result:')).toHaveText(
-			'enhanced.submit_result: true'
-		);
-
-		await page.fill('[data-enhanced] input', 'invalid');
-		await page.locator('[data-enhanced] span').click();
-		await expect(page.getByText('enhanced.submit_result:')).toHaveText(
-			'enhanced.submit_result: false'
-		);
-	});
-
-	test('form submit() enables programmatic submission', async ({ page, javaScriptEnabled }) => {
-		if (!javaScriptEnabled) return;
-
-		await page.goto('/remote/form/enhanced');
-
-		await expect(page.getByText('enhanced.imperative_submit_result:')).toHaveText(
-			'enhanced.imperative_submit_result: none'
-		);
-
-		await page.fill('[data-enhanced] input', 'hello');
-		await page.getByText('submit enhanced programmatically').click();
-
-		await expect(page.getByText('enhanced.pending:')).toHaveText('enhanced.pending: 1');
-
-		await page.getByText('resolve deferreds').click();
-		await expect(page.getByText('enhanced.imperative_submit_result:')).toHaveText(
-			'enhanced.imperative_submit_result: true'
-		);
-		await expect(page.getByText('enhanced.result:')).toHaveText(
-			'enhanced.result: hello (from: enhanced:enhanced)'
-		);
+		});
 	});
 
 	test('form preflight works', async ({ page, javaScriptEnabled }) => {
@@ -594,6 +613,20 @@ test.describe('remote functions', () => {
 		await nestedValue.fill('in');
 		await validate.click();
 		await expect(allIssues).toContainText('"path":["nested","value"]');
+	});
+
+	test('form validate does not throw if the form unmounts while validating', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/validate');
+
+		await page.locator('#unmount-then-validate').click();
+
+		await expect(page.locator('#unmount-form')).toHaveCount(0);
+		await expect(page.locator('#unmount-error')).toHaveText('no error');
 	});
 
 	test('form validation issues cleared', async ({ page, javaScriptEnabled }) => {
@@ -982,6 +1015,7 @@ test.describe('server error boundaries', () => {
 		await expect(page.locator('#message')).toContainText(
 			'render error (500 Internal Error, on /server-error-boundary)'
 		);
+		await expect(page.locator('#nested-layout')).toHaveCount(0);
 	});
 
 	test('catches nested server render error and shows nested +error.svelte', async ({ page }) => {
@@ -991,5 +1025,14 @@ test.describe('server error boundaries', () => {
 		);
 		// The nested layout should still be visible
 		await expect(page.locator('#nested-layout')).toBeVisible();
+	});
+
+	test('layout render error skips the +error.svelte the layout wraps', async ({ page }) => {
+		await page.goto('/server-error-boundary/layout-throws');
+		await expect(page.locator('#message')).toContainText(
+			'layout render error (500 Internal Error, on /server-error-boundary/layout-throws)'
+		);
+		await expect(page.locator('#layout-throws-error-message')).toHaveCount(0);
+		await expect(page.locator('#nested-layout')).toHaveCount(0);
 	});
 });

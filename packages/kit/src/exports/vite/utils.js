@@ -1,12 +1,16 @@
+/** @import { UserConfig } from 'vite' */
+/** @import { EnforcedConfig } from './types.js' */
 import fs from 'node:fs';
 import path from 'node:path';
+import process from 'node:process';
+import { styleText } from 'node:util';
 import { posixify } from '../../utils/os.js';
 import { negotiate } from '../../utils/http.js';
 import { escape_html } from '../../utils/escape.js';
 import { escape_for_regexp } from '../../utils/regex.js';
 import { stackless } from '../../utils/error.js';
 import { dedent } from '../../core/sync/utils.js';
-import { app_server, app_env_private, sveltekit_env_private } from './module_ids.js';
+import { app_server, app_env_private } from './module_ids.js';
 
 /**
  * Transforms alias to a valid vite.resolve.alias array.
@@ -119,7 +123,7 @@ export function normalize_id(id, aliases, cwd) {
 		return '$app/server';
 	}
 
-	if (id === app_env_private || id === sveltekit_env_private) {
+	if (id === app_env_private) {
 		return '$app/env/private';
 	}
 
@@ -191,8 +195,6 @@ function can_export_remote_module(directory) {
 export const server_only_module_pattern = /[/.]server\.[^/]+$/;
 export const server_only_directory_pattern = /\/server\//;
 
-export const strip_virtual_prefix = /** @param {string} id */ (id) => id.replace('\0virtual:', '');
-
 /**
  * For `error_for_missing_config('remote functions', 'experimental.remoteFunctions', 'true')`,
  * returns:
@@ -228,4 +230,97 @@ export function error_for_missing_config(feature_name, path, value) {
 			${result}
 		`
 	);
+}
+
+/** @type {EnforcedConfig} */
+export const enforced_config = {
+	appType: true,
+	base: true,
+	build: {
+		cssCodeSplit: true,
+		emptyOutDir: true,
+		lib: {
+			entry: true,
+			name: true,
+			formats: true
+		},
+		manifest: true,
+		outDir: true,
+		rolldownOptions: {
+			input: true,
+			output: {
+				format: true,
+				entryFileNames: true,
+				chunkFileNames: true,
+				assetFileNames: true
+			},
+			preserveEntrySignatures: true
+		},
+		ssr: true
+	},
+	publicDir: true,
+	resolve: {
+		alias: {
+			$app: true,
+			$env: true,
+			'<sveltekit:generated>': true
+		}
+	}
+};
+
+/**
+ * @param {UserConfig} config
+ * @param {UserConfig} resolved_config
+ */
+export function warn_overridden_config(config, resolved_config) {
+	const overridden = find_overridden_config(config, resolved_config, enforced_config, '', []);
+
+	if (overridden.length > 0) {
+		console.error(
+			styleText(
+				['bold', 'red'],
+				'The following Vite config options will be overridden by SvelteKit:'
+			) + overridden.map((key) => `\n  - ${key}`).join('')
+		);
+	}
+}
+
+/**
+ * @param {Record<string, any>} config
+ * @param {Record<string, any>} resolved_config
+ * @param {EnforcedConfig} enforced_config
+ * @param {string} path
+ * @param {string[]} out used locally to compute the return value
+ */
+export function find_overridden_config(config, resolved_config, enforced_config, path, out) {
+	if (config == null || resolved_config == null) {
+		return out;
+	}
+
+	for (const key in enforced_config) {
+		if (typeof config === 'object' && key in config && key in resolved_config) {
+			const enforced = enforced_config[key];
+			const resolved = resolved_config[key];
+
+			if (enforced === true) {
+				if (comparable(config[key]) !== comparable(resolved)) {
+					out.push(path + key);
+				}
+			} else {
+				find_overridden_config(config[key], resolved, enforced, path + key + '.', out);
+			}
+		}
+	}
+	return out;
+}
+
+/**
+ * Normalizes a config value for comparison, since Windows paths may use backslashes
+ * and differ in casing (e.g. the drive letter) depending on where they came from.
+ * @param {any} value
+ */
+export function comparable(value) {
+	if (typeof value !== 'string') return value;
+	const normalized = posixify(value);
+	return process.platform === 'win32' ? normalized.toLowerCase() : normalized;
 }

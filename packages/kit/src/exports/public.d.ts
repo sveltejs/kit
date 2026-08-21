@@ -16,6 +16,7 @@ import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from 'types';
 import { Plugin } from 'vite';
 import { RouteId as AppRouteId, LayoutParams as AppLayoutParams } from '$app/types';
 import { ParamMatcher } from '@sveltejs/kit/params';
+import { StandardSchemaV1 } from '@standard-schema/spec';
 
 export { PrerenderOption } from '../types/private.js';
 
@@ -99,6 +100,14 @@ export interface ActionFailure<T = undefined> {
 	[uniqueSymbol]: true; // necessary or else UnpackValidationError could wrongly unpack objects with the same shape as ActionFailure
 }
 
+/**
+ * A validation error thrown by `invalid`.
+ */
+export interface ValidationError {
+	/** The validation issues */
+	issues: StandardSchemaV1.Issue[];
+}
+
 type UnpackValidationError<T> =
 	T extends ActionFailure<infer X>
 		? X
@@ -156,7 +165,7 @@ export interface Builder {
 	/**
 	 * Generate a server-side manifest to initialise the SvelteKit [server](https://svelte.dev/docs/kit/@sveltejs-kit#Server) with.
 	 * @param opts
-	 * @param opts.relativePath  A relative path to the base directory of the server build output
+	 * @param opts.relativePath A relative path to the base directory of the server build output
 	 */
 	generateManifest: (opts: { relativePath: string; routes?: RouteDefinition[] }) => string;
 

@@ -1,7 +1,7 @@
 /** @import { RemoteFunctionResponse } from 'types' */
 import { app_dir, base } from '#app/paths';
 import { app } from '../../client.js';
-import { notify_version } from '../../state.svelte.js';
+import { notify_version } from '#app/state/client';
 import { handle_side_channel_response } from '../shared.svelte.js';
 import * as devalue from 'devalue';
 import { HttpError, HandledHttpError } from '@sveltejs/kit/internal';

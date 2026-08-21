@@ -1,7 +1,7 @@
-import { BROWSER, DEV } from 'esm-env';
+import { DEV } from 'esm-env';
 import { PRELOAD_PRIORITIES } from './constants.js';
 
-export const origin = BROWSER ? location.origin : '';
+export const origin = location.origin;
 
 /** @param {string | URL} url */
 export function resolve_url(url) {
@@ -105,7 +105,11 @@ function parent_element(element) {
  */
 export function find_anchor(element, target) {
 	while (element && element !== target) {
-		if (element.nodeName.toUpperCase() === 'A' && element.hasAttribute('href')) {
+		// don't read `nodeName` — a form control named `nodeName` shadows it on its form
+		if (
+			(element instanceof HTMLAnchorElement || element instanceof SVGAElement) &&
+			element.hasAttribute('href')
+		) {
 			return /** @type {HTMLAnchorElement | SVGAElement} */ (element);
 		}
 

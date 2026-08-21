@@ -1,4 +1,12 @@
-import { error, isHttpError, isRedirect, normalizeUrl, redirect } from './index.js';
+import {
+	error,
+	invalid,
+	isHttpError,
+	isRedirect,
+	isValidationError,
+	normalizeUrl,
+	redirect
+} from './index.js';
 import { assert, describe, it } from 'vitest';
 
 describe('normalizeUrl', () => {
@@ -203,6 +211,17 @@ describe('error', () => {
 					status: 400
 				})
 			);
+		}
+	});
+});
+
+describe('invalid', () => {
+	it('throws a detectable validation error', () => {
+		try {
+			invalid('Invalid value');
+		} catch (e) {
+			assert.equal(isValidationError(e), true);
+			assert.equal(isValidationError(new Error('Invalid value')), false);
 		}
 	});
 });

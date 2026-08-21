@@ -8,9 +8,10 @@ import {
 	Actions,
 	RequestEvent,
 	SSRManifest,
-	Emulator
+	Emulator,
+	HttpError
 } from '@sveltejs/kit';
-import { RemoteFormIssue, RemoteQuery, RemoteLiveQuery } from '@sveltejs/kit/remote';
+import { RemoteFormIssue, RemoteQuery, RemoteLiveQuery } from '$app/server';
 import { Config } from '@sveltejs/kit/vite';
 import {
 	ClientInit,
@@ -47,7 +48,7 @@ export interface ServerInternalModule {
 	set_version(version: string): void;
 	set_fix_stack_trace(fix_stack_trace: (error: Error) => void): void;
 	get_hooks: () => Promise<Record<string, any>>;
-	log_response: (status: number, request: Request) => void;
+	format_response: (status: number, request: Request) => string;
 }
 
 export interface Asset {
@@ -61,8 +62,15 @@ export interface AssetDependencies {
 	file: string;
 	imports: string[];
 	stylesheets: string[];
-	fonts: string[];
+	fonts: FontDependency[];
 	stylesheet_map: Map<string, { css: Set<string>; assets: Set<string> }>;
+}
+
+export interface FontDependency {
+	/** emitted file path, relative to the client output directory */
+	file: string;
+	/** the source file path relative to the project root, before hashing and character sanitization */
+	filename: string;
 }
 
 export interface BuildData {
@@ -97,7 +105,7 @@ export interface BuildData {
 		 */
 		routes?: SSRClientRoute[];
 		stylesheets: string[];
-		fonts: string[];
+		fonts: FontDependency[];
 		/**
 		 * Whether the client uses public dynamic env vars — `$env/dynamic/public` or `$app/env/public`.
 		 */
@@ -292,6 +300,14 @@ export interface RouteData {
 	} | null;
 }
 
+/**
+ * The server-side form of `ActionResult`, before the error is passed
+ * through `handleError` and the data is serialized
+ */
+export type ServerActionResult =
+	| Exclude<import('$app/forms').ActionResult, { type: 'error' }>
+	| { type: 'error'; location: string; error: Error | HttpError };
+
 export type ServerRedirectNode = {
 	type: 'redirect';
 	status: number;
@@ -449,7 +465,7 @@ export interface SSRNode {
 	/** external CSS files that are loaded on the client */
 	stylesheets: string[];
 	/** external font files that are loaded on the client */
-	fonts: string[];
+	fonts: FontDependency[];
 
 	universal_id?: string;
 	server_id?: string;
@@ -477,14 +493,7 @@ export type SSRNodeLoader = () => Promise<SSRNode>;
 export interface SSROptions {
 	app_template_contains_nonce: boolean;
 	csp: ValidatedConfig['csp'];
-	csrf_check_origin: boolean;
 	csrf_trusted_origins: string[];
-	embedded: boolean;
-	hash_routing: boolean;
-	hooks: ServerHooks;
-	link_header_preload: ValidatedConfig['output']['linkHeaderPreload'];
-	paths_origin: string | undefined;
-	service_worker: boolean;
 	service_worker_options: RegistrationOptions;
 	templates: {
 		app(values: {
@@ -496,8 +505,6 @@ export interface SSROptions {
 		}): string;
 		error(values: { message: string; status: number }): string;
 	};
-	version: string;
-	version_hash: string;
 }
 
 export interface PageNodeIndexes {
@@ -590,7 +597,7 @@ export interface RemoteQueryLiveInternals extends BaseRemoteInternals {
 export interface RemoteQueryBatchInternals extends BaseRemoteInternals {
 	type: 'query_batch';
 	validate: (arg?: any) => MaybePromise<any>;
-	run: (args: any[], options: SSROptions) => Promise<any[]>;
+	run: (args: any[]) => Promise<any[]>;
 	/**
 	 * Creates a `RemoteQuery` bound directly to a specific client payload (the
 	 * stringified raw argument) and a pre-validated argument, skipping the query
@@ -675,6 +682,11 @@ export interface RequestState {
 	 * True if we're currently attempting to render an error page.
 	 */
 	error: boolean;
+	/**
+	 * The rerouted URL (only if the new pathname differs from the original).
+	 * Used by platforms that serve a catch-all serverless function.
+	 */
+	rerouted_url: string | null;
 	/**
 	 * Allows us to prevent `event.fetch` from making infinitely looping internal requests.
 	 */

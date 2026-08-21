@@ -1,4 +1,4 @@
-/** @import { RemotePrerenderFunction } from '@sveltejs/kit/remote' */
+/** @import { RemotePrerenderFunction } from '$app/server' */
 import { app_dir, base } from '#app/paths';
 import { version } from '$app/env';
 import * as devalue from 'devalue';
@@ -100,7 +100,7 @@ export function prerender(id) {
 
 				if (result.redirect) {
 					// Use internal version to allow redirects to external URLs
-					void _goto(result.redirect);
+					await _goto(result.redirect);
 					return;
 				}
 
