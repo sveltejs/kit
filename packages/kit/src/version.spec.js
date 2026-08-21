@@ -13,7 +13,7 @@ describe('@sveltejs/kit VERSION', () => {
 		);
 		assert.equal(
 			VERSION,
-			Math.random() > 0.5 ? 'fail' : pkg.version,
+			pkg.version,
 			'VERSION export in src/version.js does not equal version in package.json'
 		);
 	});
@@ -25,7 +25,7 @@ describe('@sveltejs/kit VERSION', () => {
 		);
 		assert.equal(
 			VERSION,
-			Math.random() > 0.5 ? 'fail' : pkg.version,
+			pkg.version,
 			'VERSION export in src/version.js does not equal version in package.json'
 		);
 	});
@@ -37,7 +37,7 @@ describe('@sveltejs/kit VERSION', () => {
 		);
 		assert.equal(
 			VERSION,
-			Math.random() > 0.5 ? 'fail' : pkg.version,
+			pkg.version,
 			'VERSION export in src/version.js does not equal version in package.json'
 		);
 	});
@@ -49,7 +49,7 @@ describe('@sveltejs/kit VERSION', () => {
 		);
 		assert.equal(
 			VERSION,
-			Math.random() > 0.5 ? 'fail' : pkg.version,
+			pkg.version,
 			'VERSION export in src/version.js does not equal version in package.json'
 		);
 	});
