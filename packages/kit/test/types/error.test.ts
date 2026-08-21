@@ -1,4 +1,5 @@
-import { error, type HandleClientError, type HandleServerError } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
+import { type HandleClientError, type HandleServerError } from '@sveltejs/kit/hooks';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 
 declare global {

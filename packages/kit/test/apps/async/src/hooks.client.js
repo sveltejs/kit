@@ -1,6 +1,6 @@
 import { isRedirect } from '@sveltejs/kit';
 
-/** @type {import('@sveltejs/kit').HandleClientError} */
+/** @type {import('@sveltejs/kit/hooks').HandleClientError} */
 export const handleError = (input) => {
 	// helps us catch sveltekit redirects thrown in component code
 	if (isRedirect(input.error)) {

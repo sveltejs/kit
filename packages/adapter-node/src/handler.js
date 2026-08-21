@@ -134,6 +134,7 @@ const ssr = async (req, res) => {
 		request = getRequest({
 			base: request_origin,
 			request: req,
+			response: res,
 			bodySizeLimit: body_size_limit
 		});
 	} catch {

@@ -1,9 +1,10 @@
-/** @import { RemoteLiveQuery, RemoteLiveQueryFunction, RemoteQuery, RemoteQueryFunction, RequestEvent } from '@sveltejs/kit' */
+/** @import { RemoteLiveQuery, RemoteLiveQueryFunction, RemoteQuery, RemoteQueryFunction } from '$app/server' */
+/** @import { RequestEvent } from '@sveltejs/kit' */
 /** @import { RemoteInternals, MaybePromise, RequestState, RemoteQueryLiveInternals, RemoteQueryBatchInternals, RemoteQueryInternals, RemoteLiveQueryUserFunctionReturnType } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import { create_remote_key, stringify_remote_arg } from '../../../shared.js';
-import { prerendering } from '$app/env/internal';
+import { prerendering } from '#app/env/server';
 import {
 	create_validator,
 	get_cache,
@@ -329,7 +330,7 @@ function batch(validate_or_fn, maybe_fn) {
 		id: '',
 		name: '',
 		validate,
-		run: async (args, options) => {
+		run: async (args) => {
 			const { event, state } = get_request_store();
 
 			return run_remote_function(
@@ -346,7 +347,7 @@ function batch(validate_or_fn, maybe_fn) {
 								const data = get_result(arg, i);
 								return { type: 'result', data };
 							} catch (error) {
-								const transformed = await handle_error_and_jsonify(event, state, options, error);
+								const transformed = await handle_error_and_jsonify(event, state, error);
 
 								return {
 									type: 'error',

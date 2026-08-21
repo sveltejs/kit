@@ -30,13 +30,6 @@ export function allowed_methods(mod) {
 }
 
 /**
- * @param {import('types').SSROptions} options
- */
-export function get_global_name(options) {
-	return __SVELTEKIT_DEV__ ? '__sveltekit_dev' : `__sveltekit_${options.version_hash}`;
-}
-
-/**
  * @param {number} status
  * @param {string} location
  */

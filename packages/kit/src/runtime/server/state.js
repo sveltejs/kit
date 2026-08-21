@@ -36,6 +36,7 @@ export function create_request_state(options) {
 		prerender_default: undefined,
 		error: false,
 		depth: 0,
+		rerouted_url: null,
 		...transient_fields()
 	};
 }

@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "3.0.0-next.18",
+	"version": "3.0.0-next.24",
 	"description": "SvelteKit is the fastest way to build Svelte apps",
 	"keywords": [
 		"framework",
@@ -18,18 +18,19 @@
 	"homepage": "https://svelte.dev",
 	"type": "module",
 	"dependencies": {
+		"@rolldown/pluginutils": "^1.0.1",
 		"@standard-schema/spec": "^1.1.0",
-		"@sveltejs/acorn-typescript": "^1.0.10",
-		"acorn": "^8.17.0",
-		"cookie": "^2.0.0",
-		"devalue": "^5.8.1",
+		"@sveltejs/acorn-typescript": "^1.0.12",
+		"acorn": "^8.18.0",
+		"cookie": "^2.0.1",
+		"devalue": "^5.9.0",
 		"esm-env": "^1.2.2",
-		"magic-string": "^0.30.21",
-		"mrmime": "^2.0.0",
+		"magic-string": "^1.1.0",
+		"mrmime": "^2.0.1",
 		"sirv": "^3.0.2"
 	},
 	"devDependencies": {
-		"@opentelemetry/api": "^1.9.0",
+		"@opentelemetry/api": "catalog:",
 		"@playwright/test": "catalog:",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"@types/connect": "catalog:",
@@ -37,7 +38,6 @@
 		"@types/node": "catalog:",
 		"dts-buddy": "^0.8.3",
 		"jsdom": "catalog:",
-		"rolldown": "catalog:",
 		"svelte": "catalog:",
 		"svelte-preprocess": "catalog:",
 		"typescript": "~6.0.3",
@@ -78,23 +78,55 @@
 		"format": "oxfmt --write .",
 		"test": "pnpm test:unit && pnpm test:integration",
 		"test:integration": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test",
-		"test:dev": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:dev",
-		"test:build": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:build",
-		"test:cross-platform:dev": "pnpm test:unit && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:cross-platform:dev",
+		"test:dev": "pnpm -r --workspace-concurrency 2 --filter=\"./test/**\" test:dev",
+		"test:build": "pnpm -r --workspace-concurrency 2 --filter=\"./test/**\" test:build",
+		"test:dev:basics": "pnpm --filter=test-basics test:dev",
+		"test:dev:rest": "pnpm -r --workspace-concurrency 2 --filter=\"./test/**\" --filter=\"!test-basics\" test:dev",
+		"test:build:basics": "pnpm --filter=test-basics test:build",
+		"test:build:rest": "pnpm -r --workspace-concurrency 2 --filter=\"./test/**\" --filter=\"!test-basics\" test:build",
+		"test:cross-platform:dev": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:cross-platform:dev",
 		"test:cross-platform:build": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:cross-platform:build",
 		"test:server-side-route-resolution:dev": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:server-side-route-resolution:dev",
 		"test:server-side-route-resolution:build": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:server-side-route-resolution:build",
 		"test:svelte-async:dev": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:svelte-async:dev",
 		"test:svelte-async:build": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:svelte-async:build",
-		"test:unit": "vitest run ./",
+		"test:unit": "vitest run -c vitest.kit.config.js",
 		"tsc-native": "node node_modules/@typescript/native/bin/tsc",
 		"prepublishOnly": "pnpm generate:types",
 		"generate:version": "node scripts/generate-version.js",
 		"generate:types": "node scripts/generate-dts.js"
 	},
 	"imports": {
+		"#app/env": {
+			"types": "./src/runtime/app/env/client.js",
+			"workerd": "./src/runtime/app/env/server.js",
+			"browser": "./src/runtime/app/env/client.js",
+			"default": "./src/runtime/app/env/server.js"
+		},
+		"#app/env/public": {
+			"workerd": "./src/runtime/app/env/public/server.js",
+			"browser": "./src/runtime/app/env/public/client.js",
+			"default": "./src/runtime/app/env/public/server.js"
+		},
+		"#app/env/server": {
+			"workerd": "./src/runtime/app/env/server.js",
+			"browser": "./src/runtime/invalid-import.js",
+			"default": "./src/runtime/app/env/server.js"
+		},
+		"#app/forms": {
+			"types": "./src/runtime/app/forms/client.js",
+			"workerd": "./src/runtime/app/forms/server.js",
+			"browser": "./src/runtime/app/forms/client.js",
+			"default": "./src/runtime/app/forms/server.js"
+		},
 		"#app/internal/transport": {
 			"default": "./src/runtime/app/internal/transport.js"
+		},
+		"#app/navigation": {
+			"types": "./src/runtime/app/navigation/client.js",
+			"workerd": "./src/runtime/app/navigation/server.js",
+			"browser": "./src/runtime/app/navigation/client.js",
+			"default": "./src/runtime/app/navigation/server.js"
 		},
 		"#app/paths": {
 			"types": "./src/runtime/app/paths/internal.d.ts",
@@ -102,10 +134,17 @@
 			"browser": "./src/runtime/app/paths/client.js",
 			"default": "./src/runtime/app/paths/server.js"
 		},
-		"#app/env/public": {
-			"workerd": "./src/runtime/app/env/public/server.js",
-			"browser": "./src/runtime/app/env/public/client.js",
-			"default": "./src/runtime/app/env/public/server.js"
+		"#app/state": {
+			"types": "./src/runtime/app/state/client.svelte.js",
+			"workerd": "./src/runtime/app/state/server.js",
+			"browser": "./src/runtime/app/state/client.svelte.js",
+			"default": "./src/runtime/app/state/server.js"
+		},
+		"#app/state/client": {
+			"types": "./src/runtime/app/state/client.svelte.js",
+			"workerd": "./src/runtime/invalid-import.js",
+			"browser": "./src/runtime/app/state/client.svelte.js",
+			"default": "./src/runtime/invalid-import.js"
 		},
 		"#internal": {
 			"workerd": "./src/exports/internal/server/index.js",
@@ -133,6 +172,10 @@
 		"./internal/server": {
 			"types": "./types/index.d.ts",
 			"import": "./src/exports/internal/server/index.js"
+		},
+		"./adapter": {
+			"types": "./types/index.d.ts",
+			"import": "./src/exports/adapter.js"
 		},
 		"./node": {
 			"types": "./types/index.d.ts",

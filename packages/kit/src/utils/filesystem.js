@@ -63,30 +63,18 @@ export function copy(source, target, opts = {}) {
 /**
  * Get a list of all files in a directory
  * @param {string} cwd - the directory to walk
- * @param {boolean} [dirs] - whether to include directories in the result
- * @returns {string[]} a list of all found files (and possibly directories) relative to `cwd`
+ * @param {string} [dir] - the subdirectory to walk, relative to `cwd`
+ * @returns {Generator<string>} the posix paths of all found files, relative to `cwd`
  */
-export function walk(cwd, dirs = false) {
-	/** @type {string[]} */
-	const all_files = [];
-
-	/** @param {string} dir */
-	function walk_dir(dir) {
-		const files = fs.readdirSync(path.join(cwd, dir));
-
-		for (const file of files) {
-			const joined = path.join(dir, file);
-			const stats = fs.statSync(path.join(cwd, joined));
-			if (stats.isDirectory()) {
-				if (dirs) all_files.push(joined);
-				walk_dir(joined);
-			} else {
-				all_files.push(joined);
-			}
+export function* walk(cwd, dir = '') {
+	for (const file of fs.readdirSync(path.join(cwd, dir))) {
+		const joined = dir ? `${dir}/${file}` : file;
+		if (fs.statSync(path.join(cwd, joined)).isDirectory()) {
+			yield* walk(cwd, joined);
+		} else {
+			yield joined;
 		}
 	}
-
-	return (walk_dir(''), all_files);
 }
 
 /**
@@ -115,7 +103,7 @@ export function relative_path(from, to) {
 /**
  * Given an entry point like [cwd]/src/hooks, returns a filename like [cwd]/src/hooks.js or [cwd]/src/hooks/index.js
  * @param {string} entry
- * @returns {string|null}
+ * @returns {string | null}
  */
 export function resolve_entry(entry) {
 	if (fs.existsSync(entry)) {

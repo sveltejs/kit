@@ -491,6 +491,25 @@ test.describe('Endpoints', () => {
 		expect(await response.text()).toBe('catch-all');
 	});
 
+	test('QUERY handler', async ({ request }) => {
+		const url = '/endpoint-output/query';
+
+		let response = await request.fetch(url, {
+			method: 'QUERY',
+			data: 'name=world'
+		});
+
+		expect(response.status()).toBe(200);
+		expect(await response.text()).toBe('query: name=world');
+
+		response = await request.fetch(url, {
+			method: 'MOVE'
+		});
+
+		expect(response.status()).toBe(405);
+		expect(response.headers()['allow']).toBe('GET, QUERY, HEAD');
+	});
+
 	test('can get assets using absolute path', async ({ request }) => {
 		const response = await request.get('/endpoint-output/fetch-asset/absolute');
 		expect(response.status()).toBe(200);
@@ -737,6 +756,31 @@ test.describe('Errors', () => {
 		expect(content).toContain('Crashing now');
 		// the hydration script should not be present if the csr page option is respected
 		expect(content).not.toContain('kit.start(app');
+	});
+
+	test('returns root layout data for a missing route error page data request', async ({
+		request
+	}) => {
+		const data_response = await request.get(
+			'/this-route-does-not-exist/__data.json?x-sveltekit-invalidated=1'
+		);
+		expect(data_response.status()).toBe(200);
+		expect(data_response.headers()['content-type']).toContain('application/json');
+
+		const data = await data_response.json();
+		expect(data.type).toBe('data');
+		expect(data.nodes[0].type).toBe('data');
+		expect(data.nodes[0].data).toContain('rootlayout');
+
+		const page_response = await request.get('/this-route-does-not-exist/__data.json');
+		expect(page_response.status()).toBe(404);
+		expect(page_response.headers()['content-type']).toContain('text/html');
+
+		// a single-node request that invalidates nothing is not an error-page data request
+		const crafted_response = await request.get(
+			'/this-route-does-not-exist/__data.json?x-sveltekit-invalidated=0'
+		);
+		expect(crafted_response.status()).toBe(404);
 	});
 });
 
@@ -1593,6 +1637,10 @@ test.describe('asset preload', () => {
 
 		expect(body).toContain('rel="modulepreload"');
 		expect(body).toContain('as="font"');
+		expect(body).toMatch(/href="[^"]+\/shlop\.[^".]+\.woff2"/);
+		expect(body).toMatch(/href="[^"]+\/shlop\.var\.[^".]+\.woff2"/);
+		// the emitted file name is sanitized, but the filter matched on the original `shlop+bold.woff2`
+		expect(body).toMatch(/href="[^"]+\/shlop_bold\.[^".]+\.woff2"/);
 	});
 });
 

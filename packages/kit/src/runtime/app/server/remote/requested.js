@@ -1,4 +1,4 @@
-/** @import { RemoteLiveQuery, RemoteLiveQueryFunction, RemoteQuery, RemoteQueryFunction, RequestedResult, QueryRequestedResult, LiveQueryRequestedResult } from '@sveltejs/kit' */
+/** @import { RemoteLiveQuery, RemoteLiveQueryFunction, RemoteQuery, RemoteQueryFunction, RequestedResult, RemoteQueryRequestedResult, RemoteLiveQueryRequestedResult } from '$app/server' */
 /** @import { MaybePromise, RemoteAnyQueryInternals } from 'types' */
 import { HttpError } from '@sveltejs/kit/internal';
 import { get_request_store } from '@sveltejs/kit/internal/server';
@@ -53,7 +53,7 @@ import { refresh } from './query.js';
  * @overload
  * @param {RemoteQueryFunction<Input, Output, Validated>} query
  * @param {number} limit
- * @returns {QueryRequestedResult<Validated, Output>}
+ * @returns {RemoteQueryRequestedResult<Validated, Output>}
  */
 /**
  * Inside a remote `command` or `form` callback, returns an iterable
@@ -91,7 +91,7 @@ import { refresh } from './query.js';
  * @overload
  * @param {RemoteLiveQueryFunction<Input, Output, Validated>} query
  * @param {number} limit
- * @returns {LiveQueryRequestedResult<Validated, Output>}
+ * @returns {RemoteLiveQueryRequestedResult<Validated, Output>}
  */
 /**
  * @template Input

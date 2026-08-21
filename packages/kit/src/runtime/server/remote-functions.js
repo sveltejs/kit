@@ -1,8 +1,8 @@
-/** @import { RemoteForm, RequestEvent, SSRManifest } from '@sveltejs/kit' */
-/** @import { ActionResult } from '$app/forms' */
-/** @import { RemoteFormInternals, RemoteFunctionData, RemoteFunctionResponse, RemoteInternals, RequestState, SSROptions } from 'types' */
+/** @import { RequestEvent, SSRManifest } from '@sveltejs/kit' */
+/** @import { RemoteForm } from '$app/server' */
+/** @import { RemoteFormInternals, RemoteFunctionData, RemoteFunctionResponse, RemoteInternals, RequestState, ServerActionResult } from 'types' */
 
-import { json, error } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
 import { Redirect, SvelteKitError } from '@sveltejs/kit/internal';
 import { with_request_store, merge_tracing, record_span } from '@sveltejs/kit/internal/server';
 import { app_dir, base } from '#app/paths';
@@ -10,9 +10,11 @@ import { is_form_content_type } from '../../utils/http.js';
 import { create_remote_key, parse_remote_arg, split_remote_key } from '../shared.js';
 import { stringify } from '#app/internal/transport';
 import { handle_error_and_jsonify } from './errors.js';
-import { normalize_error } from '../../utils/error.js';
-import { check_incorrect_fail_use, get_action_location } from './page/actions.js';
-import { DEV } from 'esm-env';
+import {
+	action_error_result,
+	get_action_location,
+	method_not_allowed_result
+} from './page/actions.js';
 import { deserialize_binary_form } from '../form-utils.js';
 import { with_version_header } from './utils.js';
 
@@ -24,7 +26,7 @@ import { with_version_header } from './utils.js';
 const KEEP_ALIVE_INTERVAL = 30_000;
 
 /** @type {typeof handle_remote_call_internal} */
-export async function handle_remote_call(event, state, options, manifest, id) {
+export async function handle_remote_call(event, state, manifest, id) {
 	return record_span({
 		name: 'sveltekit.remote.call',
 		attributes: {
@@ -33,7 +35,7 @@ export async function handle_remote_call(event, state, options, manifest, id) {
 		fn: async (current) => {
 			const traced_event = merge_tracing(event, current);
 			const response = await with_request_store({ event: traced_event, state }, () =>
-				handle_remote_call_internal(traced_event, state, options, manifest, id)
+				handle_remote_call_internal(traced_event, state, manifest, id)
 			);
 			return with_version_header(response);
 		}
@@ -43,11 +45,10 @@ export async function handle_remote_call(event, state, options, manifest, id) {
 /**
  * @param {RequestEvent} event
  * @param {RequestState} state
- * @param {SSROptions} options
  * @param {SSRManifest} manifest
  * @param {string} id
  */
-async function handle_remote_call_internal(event, state, options, manifest, id) {
+async function handle_remote_call_internal(event, state, manifest, id) {
 	const [hash, name, additional_args] = id.split('/');
 	const remotes = manifest._.remotes;
 
@@ -173,12 +174,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 											location: error.location
 										});
 									} else {
-										const transformed = await handle_error_and_jsonify(
-											event,
-											state,
-											options,
-											error
-										);
+										const transformed = await handle_error_and_jsonify(event, state, error);
 
 										send(controller, {
 											type: 'error',
@@ -216,7 +212,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 
 				const args = await Promise.all(payloads.map((payload) => parse_remote_arg(payload)));
 
-				data._ = await with_request_store({ event, state }, () => internals.run(args, options));
+				data._ = await with_request_store({ event, state }, () => internals.run(args));
 
 				break;
 			}
@@ -261,7 +257,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 
 				if (data._.issues) {
 					// special case — don't serialize refreshes/reconnects
-					return json(
+					return Response.json(
 						/** @type {RemoteFunctionResponse} */ ({
 							type: 'result',
 							data: stringify(data)
@@ -307,9 +303,9 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			}
 		}
 
-		await collect_remote_data(data, event, state, options);
+		await collect_remote_data(data, event, state);
 
-		return json(
+		return Response.json(
 			/** @type {RemoteFunctionResponse} */ ({
 				type: 'result',
 				data: stringify(data)
@@ -318,9 +314,9 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 		);
 	} catch (error) {
 		if (error instanceof Redirect) {
-			const data = await collect_remote_data({ redirect: error.location }, event, state, options);
+			const data = await collect_remote_data({ redirect: error.location }, event, state);
 
-			return json(
+			return Response.json(
 				/** @type {RemoteFunctionResponse} */ ({
 					type: 'result',
 					data: stringify(data)
@@ -329,9 +325,9 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			);
 		}
 
-		const transformed = await handle_error_and_jsonify(event, state, options, error);
+		const transformed = await handle_error_and_jsonify(event, state, error);
 
-		return json(
+		return Response.json(
 			/** @type {RemoteFunctionResponse} */ ({
 				type: 'error',
 				error: transformed
@@ -354,9 +350,8 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
  * @param {RemoteFunctionData} data
  * @param {RequestEvent} event
  * @param {RequestState} state
- * @param {SSROptions} options
  */
-export async function collect_remote_data(data, event, state, options) {
+export async function collect_remote_data(data, event, state) {
 	/**
 	 *
 	 * @param {unknown} error
@@ -364,7 +359,7 @@ export async function collect_remote_data(data, event, state, options) {
 	 */
 	function convert_error(error) {
 		// TODO 4.0 remove the `Promise.resolve(...)`
-		return Promise.resolve(handle_error_and_jsonify(event, state, options, error));
+		return Promise.resolve(handle_error_and_jsonify(event, state, error));
 	}
 
 	/** @type {Promise<any>[]} */
@@ -530,7 +525,7 @@ export async function handle_remote_form_post(event, state, manifest, id) {
  * @param {RequestState} state
  * @param {SSRManifest} manifest
  * @param {string} id
- * @returns {Promise<ActionResult>}
+ * @returns {Promise<ServerActionResult>}
  */
 async function handle_remote_form_post_internal(event, state, manifest, id) {
 	const location = get_action_location(event.url);
@@ -546,21 +541,7 @@ async function handle_remote_form_post_internal(event, state, manifest, id) {
 	);
 
 	if (!form) {
-		event.setHeaders({
-			// https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405
-			// "The server must generate an Allow header field in a 405 status code response"
-			allow: 'GET'
-		});
-		return {
-			type: 'error',
-			location,
-			// We're lying a bit with the types here; this will be transformed into a proper App.Error object later
-			error: new SvelteKitError(
-				405,
-				'Method Not Allowed',
-				`POST method not allowed. No form actions exist for ${DEV ? `the page at ${event.route.id}` : 'this page'}`
-			)
-		};
+		return method_not_allowed_result(event, location);
 	}
 
 	if (action_id) {
@@ -590,33 +571,29 @@ async function handle_remote_form_post_internal(event, state, manifest, id) {
 			location
 		};
 	} catch (e) {
-		const err = normalize_error(e);
-
-		if (err instanceof Redirect) {
-			return {
-				type: 'redirect',
-				status: err.status,
-				location: err.location
-			};
-		}
-
-		return {
-			type: 'error',
-			location,
-			// @ts-expect-error We're lying a bit with the types here; this will be transformed into a proper App.Error object later
-			error: check_incorrect_fail_use(err)
-		};
+		return action_error_result(e, location);
 	}
 }
 
 /**
  * @param {URL} url
  */
+export function has_remote_prefix(url) {
+	return url.pathname.startsWith(`${base}/${app_dir}/remote/`);
+}
+
+/**
+ * @param {URL} url
+ */
+export function strip_remote_prefix(url) {
+	return url.pathname.replace(`${base}/${app_dir}/remote/`, '');
+}
+
+/**
+ * @param {URL} url
+ */
 export function get_remote_id(url) {
-	return (
-		url.pathname.startsWith(`${base}/${app_dir}/remote/`) &&
-		url.pathname.replace(`${base}/${app_dir}/remote/`, '')
-	);
+	return has_remote_prefix(url) && strip_remote_prefix(url);
 }
 
 /**

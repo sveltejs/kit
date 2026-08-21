@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-vercel",
-	"version": "7.0.0-next.6",
+	"version": "7.0.0-next.7",
 	"description": "A SvelteKit adapter that creates a Vercel app",
 	"keywords": [
 		"adapter",
@@ -36,9 +36,8 @@
 		"lint": "oxfmt --check .",
 		"format": "oxfmt --write .",
 		"check": "tsc",
-		"test:unit": "vitest run",
-		"test:build": "cd test/apps/basic && pnpm build",
-		"test": "pnpm test:unit && pnpm test:build"
+		"test:unit": "vitest run *.spec.js",
+		"test": "pnpm test:unit && pnpm -r --filter='./test/apps/**' test:build"
 	},
 	"dependencies": {
 		"@vercel/nft": "^1.10.2"

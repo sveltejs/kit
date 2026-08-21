@@ -42,15 +42,15 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 				);
 			}
 
-			if (existsSync(`${builder.config.kit.files.assets}/_headers`)) {
+			if (existsSync(`${builder.config.files.assets}/_headers`)) {
 				throw new Error(
-					`The _headers file should be placed in the project root rather than the ${builder.config.kit.files.assets} directory`
+					`The _headers file should be placed in the project root rather than the ${builder.config.files.assets} directory`
 				);
 			}
 
-			if (existsSync(`${builder.config.kit.files.assets}/_redirects`)) {
+			if (existsSync(`${builder.config.files.assets}/_redirects`)) {
 				throw new Error(
-					`The _redirects file should be placed in the project root rather than the ${builder.config.kit.files.assets} directory`
+					`The _redirects file should be placed in the project root rather than the ${builder.config.files.assets} directory`
 				);
 			}
 
@@ -80,7 +80,7 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 			builder.log.minor(`Publishing to "${publish}"`);
 
 			builder.log.minor('Copying assets...');
-			const publish_dir = `${publish}${builder.config.kit.paths.base}`;
+			const publish_dir = `${publish}${builder.config.paths.base}`;
 			builder.writeClient(publish_dir);
 			builder.writePrerendered(publish_dir);
 
@@ -180,7 +180,8 @@ function generate_serverless_functions({ builder, publish, split }) {
 				builder,
 				routes,
 				patterns,
-				name
+				name,
+				type: 'split'
 			});
 		}
 
@@ -189,6 +190,7 @@ function generate_serverless_functions({ builder, publish, split }) {
 			routes: [],
 			patterns: ['/*'],
 			name: `${FUNCTION_PREFIX}catch-all`,
+			type: 'catch-all',
 			exclude: Array.from(seen)
 		});
 	} else {
@@ -196,7 +198,8 @@ function generate_serverless_functions({ builder, publish, split }) {
 			builder,
 			routes: undefined,
 			patterns: ['/*'],
-			name: `${FUNCTION_PREFIX}render`
+			name: `${FUNCTION_PREFIX}render`,
+			type: 'singular'
 		});
 	}
 
@@ -247,6 +250,8 @@ function write_frameworks_config({ builder }) {
 	writeFileSync(netlify_framework_config_path, s(config));
 }
 
+/** @typedef {'singular' | 'split' | 'catch-all'} ServerlessFunctionType */
+
 /**
  *
  * @param {{
@@ -254,16 +259,17 @@ function write_frameworks_config({ builder }) {
  *   routes: import('@sveltejs/kit').RouteDefinition[] | undefined,
  *   patterns: string[],
  *   name: string,
+ *   type: ServerlessFunctionType,
  *   exclude?: string[]
  * }} opts
  */
-function generate_serverless_function({ builder, routes, patterns, name, exclude }) {
+function generate_serverless_function({ builder, routes, patterns, name, type, exclude }) {
 	const manifest = builder.generateManifest({
 		relativePath: '../server',
 		routes
 	});
 
-	const fn = generate_serverless_function_module(manifest);
+	const fn = generate_serverless_function_module(manifest, type);
 	const config = generate_config_export(name, patterns, exclude);
 
 	if (builder.hasServerInstrumentationFile()) {
@@ -283,9 +289,63 @@ function generate_serverless_function({ builder, routes, patterns, name, exclude
 
 /**
  * @param {string} manifest
+ * @param {ServerlessFunctionType} type
  * @returns {string}
  */
-function generate_serverless_function_module(manifest) {
+function generate_serverless_function_module(manifest, type) {
+	if (type === 'catch-all') {
+		// Netlify encodes the response body but `fetch` automatically decodes it.
+		// So, we need to remove the `content-encoding` header to allow Netlify
+		// to correctly re-encode it on the way out.
+		return `\
+import { applyReroute } from '@sveltejs/kit/adapter';
+import { init } from '../serverless.js';
+
+const original_url_header = \`x-sveltekit-original-url-\${process.env.NETLIFY_FUNCTIONS_TOKEN}\`
+
+const respond = init(${manifest});
+
+export default async (request, context) => {
+	const catch_all_response = await respond(request, context);
+
+	return await applyReroute(catch_all_response, async (url) => {
+		const rerouted_request = new Request(url, request);
+		rerouted_request.headers.set(original_url_header, request.url);
+
+		const rerouted_response = await fetch(rerouted_request);
+
+		const response = new Response(rerouted_response.body, rerouted_response);
+		if (response.headers.has('content-encoding')) {
+			response.headers.delete('content-encoding');
+			response.headers.delete('content-length');
+		}
+
+		return response;
+	});
+};
+`;
+	}
+
+	if (type === 'split') {
+		return `\
+import { init } from '../serverless.js';
+
+const original_url_header = \`x-sveltekit-original-url-\${process.env.NETLIFY_FUNCTIONS_TOKEN}\`
+
+const respond = init(${manifest});
+
+export default async (request, context) => {
+	if (request.headers.has(original_url_header)) {
+		const original_url = request.headers.get(original_url_header);
+		request = new Request(original_url, request);
+		request.headers.delete(original_url_header);
+	}
+
+	return await respond(request, context);
+};
+`;
+	}
+
 	return `\
 import { init } from '../serverless.js';
 
@@ -387,16 +447,14 @@ async function generate_edge_functions({ builder }) {
 		// Contains static files
 		`/${builder.getAppPath()}/immutable/*`,
 		`/${builder.getAppPath()}/version.json`,
-		...builder.prerendered.paths,
+		// the base root and `trailingSlash: 'always'` pages are recorded with a trailing slash
+		...builder.prerendered.paths.map((path) => (path === '/' ? path : path.replace(/\/$/, ''))),
 		...Array.from(assets).flatMap((asset) => {
 			if (asset.endsWith('/index.html')) {
 				const dir = asset.replace(/\/index\.html$/, '');
-				return [
-					`${builder.config.kit.paths.base}/${asset}`,
-					`${builder.config.kit.paths.base}/${dir}`
-				];
+				return [`${builder.config.paths.base}/${asset}`, `${builder.config.paths.base}/${dir}`];
 			}
-			return `${builder.config.kit.paths.base}/${asset}`;
+			return `${builder.config.paths.base}/${asset}`;
 		}),
 		// Should not be served by SvelteKit at all
 		'/.netlify/*'

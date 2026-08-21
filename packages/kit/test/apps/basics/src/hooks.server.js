@@ -28,7 +28,7 @@ export function error_to_pojo(error) {
 	return { name, message, stack, ...custom };
 }
 
-/** @type {import('@sveltejs/kit').HandleServerError} */
+/** @type {import('@sveltejs/kit/hooks').HandleServerError} */
 export const handleError = ({ event, kind, error }) => {
 	// TODO we do this because there's no other way (that i'm aware of)
 	// to communicate errors back to the test suite. even if we could
@@ -209,13 +209,19 @@ export const handle = sequence(
 		}
 
 		return resolve(event, {
-			// needed for asset-preload tests
-			preload: () => true
+			// needed for asset-preload tests, which assert `filename` is the unhashed source path
+			preload: (input) =>
+				input.type !== 'font' ||
+				[
+					'src/routes/asset-preload/shlop.woff2',
+					'src/routes/asset-preload/shlop.var.woff2',
+					'src/routes/asset-preload/shlop+bold.woff2'
+				].includes(input.filename)
 		});
 	}
 );
 
-/** @type {import('@sveltejs/kit').HandleFetch} */
+/** @type {import('@sveltejs/kit/hooks').HandleFetch} */
 export async function handleFetch({ request, fetch }) {
 	if (request.url.endsWith('/server-fetch-request.json')) {
 		request = new Request(

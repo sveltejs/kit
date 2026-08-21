@@ -55,6 +55,7 @@ The following options are obsolete and should be removed from your `vite.config.
 - `experimental.handleRenderingErrors` is no longer required ([details](#Error-handling-Rendering-errors-are-now-handled))
 - `experimental.instrumentation` is no longer required ([details](#Observability))
 - `experimental.tracing` is now a top level `tracing` option ([details](#Observability))
+- `vitePlugin` is removed — pass `vite-plugin-svelte` options like `inspector` directly to the plugin instead
 - `preloadStrategy` is removed — `modulepreload` is now supported everywhere and so is always used
 - `prerender.origin` is removed in favour of `paths.origin`
 - `csrf.checkOrigin` is removed in favour of `csrf.trustedOrigins`
@@ -83,11 +84,17 @@ The `$lib` alias is no longer generated automatically by SvelteKit. It is replac
 }
 ```
 
-...and replace `$lib` with `#lib` across your codebase.
+...and replace `$lib` with `#lib` across your codebase. Note that you will also have to add the module extensions (e.g. `.js` or `.ts`) to these imports.
+
+```js
+// @errors: 2307 imported module has no types
+---import { foo } from '$lib/foo';---
++++import { foo } from '#lib/foo.js';+++
+```
 
 ## `$app/environment` (renamed)
 
-The `$app/environment` module has been renamed to [`$app/env`]($app-env). It can now be imported inside your service worker, where previously if you needed to access `version` you would use the now-removed [`$service-worker`](#$service-worker-(removed)) module.
+The `$app/environment` module has been renamed to [`$app/env`]($app-env). It can now be imported inside your service worker, where previously if you needed to access `version` you would use the now-removed [`$service-worker`](<#$service-worker-(removed)>) module.
 
 ## `$app/forms`
 
@@ -95,7 +102,7 @@ Forms with [`use:enhance`]($app-forms#enhance) that specify an `action` on a dif
 
 ## `$app/manifest`
 
-A new [`$app/manifest`]($app-manifest) module gives you access to metadata about your app. You can import this anywhere in your app, including in service workers for offline caching purposes, for which you would previously use the now-removed [`$service-worker`](#$service-worker-(removed)) module.
+A new [`$app/manifest`]($app-manifest) module gives you access to metadata about your app. You can import this anywhere in your app, including in service workers for offline caching purposes, for which you would previously use the now-removed [`$service-worker`](<#$service-worker-(removed)>) module.
 
 ## `$app/navigation`
 
@@ -184,7 +191,7 @@ The `Pathname` and `Asset` types have also been renamed to `Path` and `AssetPath
 
 ### Service workers can now import `$app/paths`
 
-Previously, you needed to import `base` from the now-removed [`$service-worker`](#$service-worker-(removed)) module. You can now use [`asset(...)`]($app-paths#asset) and [`resolve(...)`]($app-paths#resolve) from `$app/paths`.
+Previously, you needed to import `base` from the now-removed [`$service-worker`](<#$service-worker-(removed)>) module. You can now use [`asset(...)`]($app-paths#asset) and [`resolve(...)`]($app-paths#resolve) from `$app/paths`.
 
 ## `$app/service-worker`
 
@@ -271,6 +278,18 @@ The `json(...)` and `text(...)` helpers for generating responses are deprecated.
 ### `defineParams` moved to `@sveltejs/kit/params`
 
 The `defineParams` function for creating [param matchers](advanced-routing#Matching), along with the associated types, now live in [`@sveltejs/kit/params`](@sveltejs-kit-params).
+
+### Env-related types moved to `@sveltejs/kit/env`
+
+Types like `EnvVarConfig`, used with [`defineEnvVars`](@sveltejs-kit-env#defineEnvVars) hook, now live in `@sveltejs/kit/env`.
+
+### Hooks-related types moved to `@sveltejs/kit/hooks`
+
+Types like `Handle`, which defines the type of your [`handle`](hooks#handle) hook, now live in `@sveltejs/kit/hooks`.
+
+### Remote function types moved to `$app/server`
+
+Types describing remote functions, such as `RemoteQuery`, `RemoteForm` and `RemoteCommand`, now live in `$app/server` alongside the functions themselves.
 
 ## `@sveltejs/kit/hooks`
 
@@ -434,30 +453,31 @@ All first-party adapters now require SvelteKit 3, alongside these adapter-specif
 
 ### `adapter-cloudflare`
 
-  - minimum `wrangler` is now `^4.67.0`
-  - `@cloudflare/workers-types` upgraded
-  - `platform.context` removed in favour of `platform.ctx`
+- minimum `wrangler` is now `^4.67.0`
+- `@cloudflare/workers-types` upgraded
+- `platform.context` removed in favour of `platform.ctx`
 
 ### `adapter-node`
 
-  - bundling now happens with `rolldown`
-  - the `ORIGIN` environment variable is removed (set `paths.origin` in your Vite config instead)
+- bundling now happens with `rolldown`
+- the `ORIGIN` environment variable is removed (set `paths.origin` in your Vite config instead)
 
 ### `adapter-netlify`
 
-  - output now conforms to the stable [Netlify Frameworks API](https://docs.netlify.com/build/frameworks/frameworks-api/)
-  - deploying/previewing with the Netlify CLI requires `v17.31.0` or later (`npm i -g netlify-cli@latest`)
-  - edge function build target is `es2022`
+- output now conforms to the stable [Netlify Frameworks API](https://docs.netlify.com/build/frameworks/frameworks-api/)
+- deploying/previewing with the Netlify CLI requires `v17.31.0` or later (`npm i -g netlify-cli@latest`)
+- edge function build target is `es2022`
 
 ### `adapter-vercel`
 
-  - the `edge` runtime is no longer supported
+- the `edge` runtime is no longer supported
 
 ### Adapter API changes
 
 For adapter authors, there are some additional changes:
 
 - adapters can augment the Vite config with additional plugins
+- `builder.config.kit` no longer exists — the configuration now lives at the top level
 - `builder.createEntries` has been removed — use `builder.writeClient`, `builder.writeServer` and `builder.writePrerendered` directly
 - `builder.compress` returns a list of compressed files
 - `builder.mkdirp` and `builder.rimraf` are deprecated in favour of `node:fs` methods
@@ -484,7 +504,7 @@ Previously, any module inside `src/lib/server` was treated as server-only. This 
 
 ## Remote functions
 
-Remove functions are still considered experimental — opt in via the `experimental.remoteFunctions` flag alongside `compilerOptions.experimental.async`:
+Remote functions are still considered experimental — opt in via the `experimental.remoteFunctions` flag alongside `compilerOptions.experimental.async`:
 
 ```js
 /// file: vite.config.js

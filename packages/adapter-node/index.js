@@ -26,8 +26,8 @@ export default function (opts = {}) {
 
 			builder.log.minor('Copying assets');
 			const written = [
-				...builder.writeClient(`${out}/client${builder.config.kit.paths.base}`),
-				...builder.writePrerendered(`${out}/prerendered${builder.config.kit.paths.base}`)
+				...builder.writeClient(`${out}/client${builder.config.paths.base}`),
+				...builder.writePrerendered(`${out}/prerendered${builder.config.paths.base}`)
 			];
 
 			/** @type {string[]} */
@@ -70,7 +70,7 @@ export default function (opts = {}) {
 				[
 					`export const manifest = ${builder.generateManifest({ relativePath: './' })};`,
 					`export const prerendered = new Set(${JSON.stringify(builder.prerendered.paths)});`,
-					`export const base = ${JSON.stringify(builder.config.kit.paths.base)};`,
+					`export const base = ${JSON.stringify(builder.config.paths.base)};`,
 					`export const uncompressed_extensions = new Set(${JSON.stringify([...uncompressed_extensions])});`
 				].join('\n\n')
 			);
@@ -130,7 +130,7 @@ export default function (opts = {}) {
 									.replace(/\bPRECOMPRESS\b/g, JSON.stringify(precompress))
 									.replace(
 										/\bORIGIN\b/g,
-										JSON.stringify(builder.config.kit.paths.origin) || 'undefined'
+										JSON.stringify(builder.config.paths.origin) || 'undefined'
 									);
 								return {
 									code: magicString,

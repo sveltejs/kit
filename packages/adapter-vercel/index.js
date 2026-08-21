@@ -34,7 +34,7 @@ const plugin = function (defaults = {}) {
 			const files = fileURLToPath(new URL('./files', import.meta.url).href);
 
 			const dirs = {
-				static: `${dir}/static${builder.config.kit.paths.base}`,
+				static: `${dir}/static${builder.config.paths.base}`,
 				functions: `${dir}/functions`
 			};
 
@@ -51,12 +51,18 @@ const plugin = function (defaults = {}) {
 			 * @param {string} name
 			 * @param {import('./index.js').ServerlessConfig} config
 			 * @param {import('@sveltejs/kit').RouteDefinition<import('./index.js').Config>[]} routes
+			 * @param {string} [proxy]
 			 */
-			async function generate_serverless_function(name, config, routes) {
+			async function generate_serverless_function(name, config, routes, proxy) {
 				const dir = `${dirs.functions}/${name}.func`;
+				const entrypoint = `${tmp}/index.js`;
+
+				if (proxy) {
+					builder.copy(proxy, entrypoint);
+				}
 
 				const relativePath = path.posix.relative(tmp, builder.getServerDirectory());
-				builder.copy(`${files}/serverless.js`, `${tmp}/index.js`, {
+				builder.copy(`${files}/serverless.js`, proxy ? `${tmp}/serverless.js` : entrypoint, {
 					replace: {
 						SERVER: `${relativePath}/index.js`,
 						MANIFEST: './manifest.js'
@@ -64,7 +70,7 @@ const plugin = function (defaults = {}) {
 				});
 				if (builder.hasServerInstrumentationFile()) {
 					builder.instrument({
-						entrypoint: `${tmp}/index.js`,
+						entrypoint,
 						instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`
 					});
 				}
@@ -74,7 +80,7 @@ const plugin = function (defaults = {}) {
 					`export const manifest = ${builder.generateManifest({ relativePath, routes })};\n`
 				);
 
-				await create_function_bundle(builder, `${tmp}/index.js`, dir, config);
+				await create_function_bundle(builder, entrypoint, dir, config);
 
 				for (const asset of builder.findServerAssets(routes)) {
 					// TODO use symlinks, once Build Output API supports doing so
@@ -115,7 +121,7 @@ const plugin = function (defaults = {}) {
 				}
 
 				if (config.isr) {
-					const directory = path.relative('.', builder.config.kit.files.routes + route.id);
+					const directory = path.relative('.', builder.config.files.routes + route.id);
 
 					if (config.isr.allowQuery?.includes('__pathname')) {
 						throw new Error(
@@ -178,11 +184,7 @@ const plugin = function (defaults = {}) {
 				// generate one function for the group
 				const name = singular ? `${INTERNAL}/catchall` : `${INTERNAL}/${group.i}`;
 
-				await generate_serverless_function(
-					name,
-					/** @type {any} */ (group.config),
-					/** @type {import('@sveltejs/kit').RouteDefinition<any>[]} */ (group.routes)
-				);
+				await generate_serverless_function(name, group.config, group.routes);
 
 				for (const route of group.routes) {
 					functions.set(route.pattern.toString(), name);
@@ -197,12 +199,13 @@ const plugin = function (defaults = {}) {
 
 				await generate_serverless_function(
 					`${INTERNAL}/catchall`,
-					/** @type {any} */ ({ ...defaults, runtime }),
-					[]
+					{ ...defaults, runtime },
+					[],
+					`${files}/catch-all.js`
 				);
 			}
 
-			if (builder.config.kit.experimental.remoteFunctions) {
+			if (builder.config.experimental.remoteFunctions) {
 				// Ensure remote functions are always handled by the catchall route, which will be symlinked to /_app/remote.
 				// This stops them from being affected by ISR config from other routes that match /[...rest] (ref: #15085)
 				// and also makes them show as handled by `/_app/remote` in Vercel's observability.
@@ -238,6 +241,7 @@ const plugin = function (defaults = {}) {
 				if (isr) {
 					const isr_name = route.id.slice(1) || '__root__'; // should we check that __root__ isn't a route?
 					const base = `${dirs.functions}/${isr_name}`;
+					const has_page = route.page.methods.length > 0;
 					fs.mkdirSync(base, { recursive: true });
 
 					const target = `${dirs.functions}/${name}.func`;
@@ -246,7 +250,9 @@ const plugin = function (defaults = {}) {
 					// create a symlink to the actual function, but use the
 					// route name so that we can derive the correct URL
 					fs.symlinkSync(relative, `${base}.func`);
-					fs.symlinkSync(`../${relative}`, `${base}/__data.json.func`);
+					if (has_page) {
+						fs.symlinkSync(`../${relative}`, `${base}/__data.json.func`);
+					}
 
 					const pathname = get_pathname(route);
 					const json = JSON.stringify(
@@ -256,7 +262,9 @@ const plugin = function (defaults = {}) {
 					);
 
 					write(`${base}.prerender-config.json`, json);
-					write(`${base}/__data.json.prerender-config.json`, json);
+					if (has_page) {
+						write(`${base}/__data.json.prerender-config.json`, json);
+					}
 
 					const q = `?__pathname=/${pathname}`;
 
@@ -265,10 +273,12 @@ const plugin = function (defaults = {}) {
 						dest: `/${isr_name}${q}`
 					});
 
-					static_config.routes.push({
-						src: src + '/__data.json$',
-						dest: `/${isr_name}/__data.json${q}`
-					});
+					if (has_page) {
+						static_config.routes.push({
+							src: src + '/__data.json$',
+							dest: `/${isr_name}/__data.json${q}`
+						});
+					}
 				} else {
 					// Create a symlink for each route to the main function for better observability
 					// (without this, every request appears to go through `/![-]`)
@@ -308,21 +318,21 @@ const plugin = function (defaults = {}) {
 				}
 			}
 
-			if (builder.config.kit.router.resolution === 'server') {
+			if (builder.config.router.resolution === 'server') {
 				// Create a separate serverless function just for server-side route resolution.
 				// By omitting all routes we're ensuring it's small (the routes will still be available
 				// to the route resolution, because it does not rely on the server routing manifest)
 				const runtime = resolve_runtime(defaults.runtime);
 
 				await generate_serverless_function(
-					`${builder.config.kit.appDir}/route`,
+					`${builder.config.appDir}/route`,
 					/** @type {any} */ ({ ...defaults, runtime }),
 					[]
 				);
 
 				static_config.routes.push({
-					src: `${builder.config.kit.paths.base}/(?:.+/|.+\\.html)?__route\\.js`,
-					dest: `${builder.config.kit.paths.base}/${builder.config.kit.appDir}/route`
+					src: `${builder.config.paths.base}/(?:.+/|.+\\.html)?__route\\.js`,
+					dest: `${builder.config.paths.base}/${builder.config.appDir}/route`
 				});
 			}
 
@@ -459,7 +469,7 @@ function static_vercel_config(builder, config, dir) {
 				}
 			],
 			headers: {
-				'Set-Cookie': `__vdpl=${process.env.VERCEL_DEPLOYMENT_ID}; Path=${builder.config.kit.paths.base}/; SameSite=Strict; Secure; HttpOnly`
+				'Set-Cookie': `__vdpl=${process.env.VERCEL_DEPLOYMENT_ID}; Path=${builder.config.paths.base}/; SameSite=Strict; Secure; HttpOnly`
 			},
 			continue: true
 		});
@@ -468,7 +478,7 @@ function static_vercel_config(builder, config, dir) {
 		// allows you to set multiple cookies for a single route. essentially, since we
 		// know that the entry file will be requested immediately, we can set the second
 		// cookie in _that_ response rather than the document response
-		const base = `${dir}/${builder.config.kit.appDir}/immutable/entry`;
+		const base = `${dir}/${builder.config.appDir}/immutable/entry`;
 		const entry = fs.readdirSync(base).find((file) => file.startsWith('start.'));
 
 		if (!entry) {
@@ -601,7 +611,13 @@ async function create_function_bundle(builder, entry, dir, config) {
 
 		if (source !== realpath) {
 			const realdest = path.join(dir, path.relative(ancestor, realpath));
-			fs.symlinkSync(path.relative(path.dirname(dest), realdest), dest, is_dir ? 'dir' : 'file');
+			try {
+				fs.symlinkSync(path.relative(path.dirname(dest), realdest), dest, is_dir ? 'dir' : 'file');
+			} catch (error) {
+				// different traced paths can resolve to the same destination
+				// (e.g. multiple pnpm symlink chains pointing at the same real file)
+				if (/** @type {NodeJS.ErrnoException} */ (error).code !== 'EEXIST') throw error;
+			}
 		} else if (!is_dir) {
 			fs.copyFileSync(source, dest);
 		}
