@@ -29,9 +29,14 @@ jobs:
     with:
       sha: ${{ inputs.sha }}
 
+  bun:
+    uses: ./.github/workflows/platform-tests-bun.yml
+    with:
+      sha: ${{ inputs.sha }}
+
   report-status:
     if: always()
-    needs: [vercel, netlify, node]
+    needs: [vercel, netlify, node, bun]
     permissions:
       contents: write # to create the repository_dispatch event
     runs-on: ubuntu-latest
