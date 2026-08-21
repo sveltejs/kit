@@ -13,16 +13,16 @@ import {
 } from '../utils.js';
 import { stackless } from '../../../utils/error.js';
 import { posixify } from '../../../utils/os.js';
-import create_manifest_data from '../../../core/sync/create_manifest_data/index.js';
 
 /**
  * Ensures that client-side code can't accidentally import server-side code,
  * whether in `*.server.js` files, `$app/server`, any `/server/` directory, or `$app/env/private`
  * @param {ValidatedConfig} kit
  * @param {() => { vite: typeof import('vite'); root: string; normalized_aliases: Array<{ alias: string, path: string }>; service_worker_entry_file: string | null; }} get_config
+ * @param {() => ManifestData} get_manifest_data
  * @returns {Plugin}
  */
-export function plugin_guard(kit, get_config) {
+export function plugin_guard(kit, get_config, get_manifest_data) {
 	/** @type {string} */
 	let root;
 
@@ -36,9 +36,6 @@ export function plugin_guard(kit, get_config) {
 	let normalized_routes;
 	/** @type {string} */
 	let normalized_assets;
-
-	/** @type {ManifestData} */
-	let manifest_data;
 
 	/** @type {string | null} */
 	let service_worker_entry_file;
@@ -127,8 +124,7 @@ export function plugin_guard(kit, get_config) {
 
 				if (!is_server_only) return;
 
-				// in dev, this doesn't exist, so we need to create it
-				manifest_data ??= create_manifest_data(kit, root);
+				const manifest_data = get_manifest_data();
 
 				/** @type {Set<string>} */
 				const entrypoints = new Set();
