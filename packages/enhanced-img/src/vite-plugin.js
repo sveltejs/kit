@@ -78,9 +78,14 @@ export function image_plugin(imagetools_plugin) {
 						if (typeof start !== 'number' || typeof end !== 'number') {
 							throw new Error('ExpressionTag has no range');
 						}
-						const src_var_name = content.substring(start, end).trim();
+						const src_expression = content.substring(start, end).trim();
+						const src_var_name = `__sveltekit_enhanced_img_${node.start}`;
 
-						s.update(node.start, node.end, dynamic_img_to_picture(content, node, src_var_name));
+						s.update(
+							node.start,
+							node.end,
+							dynamic_img_to_picture(content, node, src_expression, src_var_name)
+						);
 						return;
 					}
 
@@ -355,9 +360,10 @@ function to_value(src) {
  * For images like `<img src={manually_imported} />`
  * @param {string} content
  * @param {import('svelte/compiler').AST.RegularElement} node
+ * @param {string} src_expression
  * @param {string} src_var_name
  */
-function dynamic_img_to_picture(content, node, src_var_name) {
+function dynamic_img_to_picture(content, node, src_expression, src_var_name) {
 	const attributes = node.attributes;
 	/**
 	 * @param attribute_name {string}
@@ -377,7 +383,8 @@ function dynamic_img_to_picture(content, node, src_var_name) {
 		attributes.splice(size_index, 1);
 	}
 
-	return `{#if typeof ${src_var_name} === 'string'}
+	return `{const ${src_var_name} = ${src_expression}}
+{#if typeof ${src_var_name} === 'string'}
 	{#if import.meta.env.DEV && ${!width_index && !height_index}}
 		{${src_var_name}} was not enhanced. Cannot determine dimensions.
 	{:else}

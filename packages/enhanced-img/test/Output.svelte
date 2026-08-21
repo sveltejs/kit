@@ -37,54 +37,57 @@
 
 <picture><source srcset="/1 1440w, /2 960w" type="image/avif" /><source srcset="/3 1440w, /4 960w" type="image/webp" /><source srcset="5 1440w, /6 960w" type="image/png" /><img src="/7" alt="absolute path test" width=1440 height=1440 /></picture>
 
-{#if typeof src === 'string'}
+{const __sveltekit_enhanced_img_1072 = src}
+{#if typeof __sveltekit_enhanced_img_1072 === 'string'}
 	{#if 
 	import.meta.env.DEV && false}
-		{src} was not enhanced. Cannot determine dimensions.
+		{__sveltekit_enhanced_img_1072} was not enhanced. Cannot determine dimensions.
 	{:else}
-		<img src={src} alt="attribute shorthand test" />
+		<img src={__sveltekit_enhanced_img_1072} alt="attribute shorthand test" />
 	{/if}
 {:else}
 	<picture>
-		{#each Object.entries(src.sources) as [format, srcset]}
+		{#each Object.entries(__sveltekit_enhanced_img_1072.sources) as [format, srcset]}
 			<source {srcset} type={'image/' + format} />
 		{/each}
-		<img src={src.img.src} alt="attribute shorthand test" width={src.img.w} height={src.img.h} />
+		<img src={__sveltekit_enhanced_img_1072.img.src} alt="attribute shorthand test" width={__sveltekit_enhanced_img_1072.img.w} height={__sveltekit_enhanced_img_1072.img.h} />
 	</picture>
 {/if}
 
 {#each images as image}
-	{#if typeof image === 'string'}
+	{const __sveltekit_enhanced_img_1152 = image}
+{#if typeof __sveltekit_enhanced_img_1152 === 'string'}
 	{#if 
 	import.meta.env.DEV && false}
-		{image} was not enhanced. Cannot determine dimensions.
+		{__sveltekit_enhanced_img_1152} was not enhanced. Cannot determine dimensions.
 	{:else}
-		<img src={image} alt="opt-in test" />
+		<img src={__sveltekit_enhanced_img_1152} alt="opt-in test" />
 	{/if}
 {:else}
 	<picture>
-		{#each Object.entries(image.sources) as [format, srcset]}
+		{#each Object.entries(__sveltekit_enhanced_img_1152.sources) as [format, srcset]}
 			<source {srcset} type={'image/' + format} />
 		{/each}
-		<img src={image.img.src} alt="opt-in test" width={image.img.w} height={image.img.h} />
+		<img src={__sveltekit_enhanced_img_1152.img.src} alt="opt-in test" width={__sveltekit_enhanced_img_1152.img.w} height={__sveltekit_enhanced_img_1152.img.h} />
 	</picture>
 {/if}
 {/each}
 
 {#each images as _, i}
-	{#if typeof get_image(i) === 'string'}
+	{const __sveltekit_enhanced_img_1232 = get_image(i)}
+{#if typeof __sveltekit_enhanced_img_1232 === 'string'}
 	{#if 
 	import.meta.env.DEV && false}
-		{get_image(i)} was not enhanced. Cannot determine dimensions.
+		{__sveltekit_enhanced_img_1232} was not enhanced. Cannot determine dimensions.
 	{:else}
-		<img src={get_image(i)} alt="opt-in test" />
+		<img src={__sveltekit_enhanced_img_1232} alt="opt-in test" />
 	{/if}
 {:else}
 	<picture>
-		{#each Object.entries(get_image(i).sources) as [format, srcset]}
+		{#each Object.entries(__sveltekit_enhanced_img_1232.sources) as [format, srcset]}
 			<source {srcset} type={'image/' + format} />
 		{/each}
-		<img src={get_image(i).img.src} alt="opt-in test" width={get_image(i).img.w} height={get_image(i).img.h} />
+		<img src={__sveltekit_enhanced_img_1232.img.src} alt="opt-in test" width={__sveltekit_enhanced_img_1232.img.w} height={__sveltekit_enhanced_img_1232.img.h} />
 	</picture>
 {/if}
 {/each}
