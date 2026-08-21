@@ -37,7 +37,7 @@ test('normalizes the request origin from the Host header', async () => {
 
 	const [request, options] = loaded.respond.mock.calls[0];
 	expect(request.url).toBe('https://public.example:8080/path?query=yes');
-	expect(options.platform).toEqual({ request: original, server: loaded.bun_server });
+	expect(options.platform).toEqual({ server: loaded.bun_server });
 	loaded.request_ip.mockReturnValue({ address: '127.0.0.1', port: 5000, family: 'IPv4' });
 	expect(options.getClientAddress()).toBe('127.0.0.1');
 });
