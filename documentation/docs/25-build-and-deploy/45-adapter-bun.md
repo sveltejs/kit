@@ -88,6 +88,9 @@ Set `precompress: true` to generate `.br` and `.gz` variants of client and prere
 A prefix for every deployment environment variable documented below. This is useful when the unprefixed names conflict with variables managed by your host:
 
 ```js
+// @errors: 2307
+import adapter from '@sveltejs/adapter-bun';
+// ---cut---
 adapter({ envPrefix: 'MY_APP_' });
 ```
 
@@ -125,6 +128,9 @@ The generated entrypoint, output directory, top-level `target`, and module `form
 Set `compile: true` to generate a single executable at `<out>/server`:
 
 ```js
+// @errors: 2307
+import adapter from '@sveltejs/adapter-bun';
+// ---cut---
 adapter({
 	buildOptions: {
 		compile: true
@@ -142,6 +148,9 @@ bun run --bun build
 The executable embeds the server code, client assets, prerendered output, and Bun runtime. `compile` can also be a Bun target string, which keeps the default `server` filename, or an options object. To change the executable name or cross-compile, provide an options object:
 
 ```js
+// @errors: 2307
+import adapter from '@sveltejs/adapter-bun';
+// ---cut---
 adapter({
 	out: 'dist',
 	buildOptions: {
