@@ -586,10 +586,10 @@ function kit({ svelte_config }) {
 	let explicit_env_config = null;
 
 	/** @type {RemoteChunk[]} */
-	let remotes;
+	let remotes = [];
 
 	/** @type {Map<string, string>} Maps remote hash -> original module id */
-	let remote_original_by_hash;
+	let remote_original_by_hash = new Map();
 
 	/** @type {Manifest} */
 	let vite_server_manifest;
