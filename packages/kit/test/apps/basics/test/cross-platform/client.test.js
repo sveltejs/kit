@@ -209,10 +209,9 @@ test.describe('Navigation lifecycle functions', () => {
 		await page.goto('/navigation-lifecycle/before-navigate/prevent-navigation');
 
 		await page.click('[href="/navigation-lifecycle/before-navigate/redirect"]');
-		await page.waitForLoadState('networkidle');
+		await expect(page.locator('pre')).toHaveText('1 false link');
 
 		expect(page.url()).toBe(baseURL + '/navigation-lifecycle/before-navigate/prevent-navigation');
-		expect(await page.innerHTML('pre')).toBe('1 false link');
 	});
 
 	test('beforeNavigate is not triggered on target=_blank', async ({ page, baseURL }) => {
