@@ -1,14 +1,15 @@
 <script lang="ts">
-	
+
 	import manual_image1 from './no.png';
-	
+
 	import manual_image2 from './no.svg';
+
+	import { default as __img } from './dev.png';
 
 	const src = manual_image1;
 	const images = [manual_image1, manual_image2];
 	const object = { image: manual_image1 };
 	const get_image = (image_key: number) => images[image_key];
-	const __img = 'existing declaration';
 
 	let foo: string = 'bar';
 </script>

@@ -4,6 +4,7 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 import MagicString from 'magic-string';
 import sharp from 'sharp';
+import { parse as parse_svelte } from 'svelte/compiler';
 import { parse } from 'svelte-parse-markup';
 import { walk } from 'zimmerframe';
 
@@ -59,13 +60,21 @@ export function image_plugin(imagetools_plugin) {
 				 * @type {Map<string, string>}
 				 */
 				const imports = new Map();
+				const identifiers = new Set();
 				let generated_name_index = 0;
+
+				walk(/** @type {any} */ (parse_svelte(content, { filename, modern: true })), null, {
+					_(node, { next }) {
+						if (node.type === 'Identifier') identifiers.add(node.name);
+						next();
+					}
+				});
 
 				function generate_name() {
 					while (true) {
 						const index = generated_name_index++;
 						const name = `__img${index ? `_${index}` : ''}`;
-						if (!new RegExp(`\\b${name}\\b`).test(content)) return name;
+						if (!identifiers.has(name)) return name;
 					}
 				}
 
