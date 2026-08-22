@@ -17,7 +17,7 @@ export default {
 	 * @param {Request} request
 	 * @returns {Promise<Response>}
 	 */
-	fetch(request) {
+	async fetch(request) {
 		// If this is an ISR request, the requested pathname is encoded
 		// as a search parameter, so we need to extract it
 		const url = new URL(request.url);
@@ -33,10 +33,30 @@ export default {
 			request = new Request(url, request);
 		}
 
-		return server.respond(request, {
-			getClientAddress() {
-				return /** @type {string} */ (request.headers.get('x-forwarded-for'));
+		const respond = () =>
+			server.respond(request, {
+				getClientAddress() {
+					return /** @type {string} */ (request.headers.get('x-forwarded-for'));
+				}
+			});
+
+		let response = await respond();
+
+		if (response.headers.has('x-sveltekit-normalize')) {
+			const location = response.headers.get('location');
+
+			if (location) {
+				const url = new URL(location, request.url);
+
+				if (pathname) {
+					request = new Request(url, request);
+					response = await respond();
+				} else {
+					response.headers.set('location', url.pathname + url.search + url.hash);
+				}
 			}
-		});
+		}
+
+		return response;
 	}
 };
