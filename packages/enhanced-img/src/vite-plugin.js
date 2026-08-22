@@ -1,3 +1,4 @@
+/** @import { Expression, Super } from 'estree' */
 /** @import { AST } from 'svelte/compiler' */
 import { existsSync } from 'node:fs';
 import path from 'node:path';
@@ -332,7 +333,7 @@ function stringToNumber(param) {
 }
 
 /**
- * @param {import('estree').Expression | import('estree').Super} expression
+ * @param {Expression | Super} expression
  */
 function is_reference(expression) {
 	if (expression.type === 'Identifier') return true;
