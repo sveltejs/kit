@@ -46,6 +46,29 @@ test('ISR route serves cached response', async ({ request }) => {
 	expect(first_rendered_at).toBe(second_rendered_at);
 });
 
+test('ISR page with trailingSlash always loads without errors', async ({ page }) => {
+	/** @type {string[]} */
+	const errors = [];
+
+	page.on('response', (response) => {
+		if (!response.ok()) {
+			errors.push(`${response.status()} ${response.url()}`);
+		}
+	});
+
+	page.on('console', (msg) => {
+		if (msg.type() === 'error') {
+			errors.push(`console: ${msg.text()}`);
+		}
+	});
+
+	await page.goto('/isr-trailing-slash/');
+
+	expect(new URL(page.url()).pathname).toBe('/isr-trailing-slash/');
+	await expect(page.locator('h1')).toContainText('ISR Trailing Slash Page');
+	expect(errors).toEqual([]);
+});
+
 test('ISR dynamic route serves cached response per slug', async ({ request }) => {
 	// warm the cache for /isr/alpha
 	const first = await request.get('/isr/alpha');
