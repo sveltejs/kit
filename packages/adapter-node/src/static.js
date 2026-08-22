@@ -170,6 +170,9 @@ export function serve_static(
 			return;
 		}
 
-		fs.createReadStream(file, range).pipe(res);
+		// headers are already sent, so all we can do is drop the connection
+		fs.createReadStream(file, range)
+			.on('error', () => res.destroy())
+			.pipe(res);
 	};
 }
