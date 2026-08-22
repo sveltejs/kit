@@ -654,6 +654,9 @@ function kit({ svelte_config }) {
 				(metadata) => {
 					build_metadata = metadata;
 				},
+				(data) => {
+					manifest_data = data;
+				},
 				() => explicit_env_config,
 				() => remote_metadata,
 				(fn) => {

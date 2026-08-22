@@ -42,6 +42,7 @@ import { s } from '../../../utils/misc.js';
  * @param {ValidatedConfig} kit
  * @param {() => Config} get_config
  * @param {(metadata: ServerMetadata) => void} set_build_metadata
+ * @param {(data: ManifestData) => void} set_manifest_data
  * @param {() => Record<string, EnvVarConfig<any>> | null} get_explicit_env_config
  * @param {() => ({ remotes: RemoteChunk[]; remote_original_by_hash: Map<string, string> })} get_remote_metadata
  * @param {(fn: () => Promise<void>) => void} set_finalise
@@ -51,6 +52,7 @@ export function plugin_compile(
 	kit,
 	get_config,
 	set_build_metadata,
+	set_manifest_data,
 	get_explicit_env_config,
 	get_remote_metadata,
 	set_finalise
@@ -135,6 +137,7 @@ export function plugin_compile(
 				};
 
 				manifest_data = create_manifest_data(kit, root);
+				set_manifest_data(manifest_data);
 				sync.all(kit, root, manifest_data);
 
 				// add entry points for every endpoint...
@@ -915,6 +918,7 @@ export function plugin_compile(
 				// runs. However, those don't re-run during watch mode. So, we need to
 				// re-initialise them manually here
 				manifest_data = create_manifest_data(kit, root);
+				set_manifest_data(manifest_data);
 				sync.all(kit, root, manifest_data);
 
 				tracked_features = {};
