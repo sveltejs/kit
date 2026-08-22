@@ -61,10 +61,10 @@ export default /** @satisfies {import('vitest/config').ViteUserConfig} */ ({
 					// for DOMParser; Request and Response stay Node's
 					environment: 'jsdom',
 					root: fileURLToPath(new URL('./test/apps/basics', import.meta.url)),
-					include: ['unit-test/server.spec.js']
-					// globalSetup: fileURLToPath(
-					// 	new URL('./test/apps/basics/unit-test/server.setup.js', import.meta.url)
-					// )
+					include: ['unit-test/server.spec.js'],
+					globalSetup: fileURLToPath(
+						new URL('./test/apps/basics/unit-test/server.setup.js', import.meta.url)
+					)
 				}
 			},
 			{
