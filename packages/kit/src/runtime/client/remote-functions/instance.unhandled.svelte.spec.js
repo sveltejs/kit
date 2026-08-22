@@ -1,7 +1,7 @@
 /* eslint-disable n/prefer-global/process */
 import { describe, expect, test, vi } from 'vitest';
 import { tick } from 'svelte';
-import { HttpError } from '@sveltejs/kit/internal';
+import { HandledHttpError, HttpError } from '@sveltejs/kit/internal';
 
 // Mock `client.js` because the real one pulls in the SvelteKit
 // router/hydration machinery and resolves `$app/paths` to a server-side
@@ -91,5 +91,43 @@ describe('reactive consumption never produces unhandled rejections', () => {
 			globalThis.fetch = original_fetch;
 			tracker.stop();
 		}
+	});
+});
+
+describe('Query errors', () => {
+	test('a failed newer run rejects superseded awaiters before the first value', async () => {
+		const first = Promise.withResolvers();
+		const second = Promise.withResolvers();
+		let runs = 0;
+		const query = new Query('overlap', () => (runs++ === 0 ? first.promise : second.promise));
+
+		const first_result = Promise.resolve(query);
+		await tick();
+		const second_result = query.refresh();
+		second.reject(new Error('nope'));
+
+		const [first_error, second_error] = await Promise.all([
+			first_result.catch((error) => error),
+			second_result.catch((error) => error)
+		]);
+		expect(first_error).toBeInstanceOf(HandledHttpError);
+		expect(second_error).toBeInstanceOf(HandledHttpError);
+		expect(first_error.body).toBe(second_error.body);
+		expect(query.ready).toBe(false);
+		expect(query.current).toBeUndefined();
+	});
+
+	test('fail rejects existing awaiters before the first value', async () => {
+		const pending = Promise.withResolvers();
+		const query = new Query('fail', () => pending.promise);
+		const result = Promise.resolve(query);
+		await tick();
+
+		query.fail(new HttpError({ status: 503, message: 'unavailable' }));
+
+		await expect(result).rejects.toMatchObject({
+			status: 503,
+			body: { message: 'unavailable' }
+		});
 	});
 });

@@ -49,7 +49,15 @@ export class Query {
 		this.#overrides.length;
 
 		return (resolve, reject) => {
-			const result = p.then(tick).then(() => /** @type {T} */ (this.#current));
+			const result = p.then(tick).then(() => {
+				if (!this.#ready) {
+					throw new HandledHttpError(
+						this.#error ?? { status: 500, message: 'Query resolved without a value' }
+					);
+				}
+
+				return /** @type {T} */ (this.#current);
+			});
 
 			if (resolve || reject) {
 				return result.then(resolve, reject);
