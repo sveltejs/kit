@@ -266,16 +266,30 @@ const plugin = function (defaults = {}) {
 						write(`${base}/__data.json.prerender-config.json`, json);
 					}
 
-					const q = `?__pathname=/${pathname}`;
+					// When trailingSlash is 'always' (or the global config enforces
+					// trailing slashes), the route pattern has an optional trailing
+					// slash /?$. Capture it as a group so we can pass it through in
+					// __pathname, preventing infinite redirects when ISR is enabled.
+					const has_trailing = src.endsWith('/?') && src !== '^/?';
+					const next_idx =
+						(pathname.match(/\$(\d+)/g) || []).reduce(
+							(max, m) => Math.max(max, parseInt(m.slice(1))),
+							0
+						) + 1;
+					const q = has_trailing
+						? `?__pathname=/${pathname}$${next_idx}`
+						: `?__pathname=/${pathname}`;
 
 					static_config.routes.push({
-						src: src + '$',
+						src: has_trailing ? src.replace(/\/\?$/, '(/)?') + '$' : src + '$',
 						dest: `/${isr_name}${q}`
 					});
 
 					if (has_page) {
 						static_config.routes.push({
-							src: src + '/__data.json$',
+							src: has_trailing
+								? src.replace(/\/\?$/, '(/)?') + '/__data.json$'
+								: src + '/__data.json$',
 							dest: `/${isr_name}/__data.json${q}`
 						});
 					}
