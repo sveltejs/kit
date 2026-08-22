@@ -6,7 +6,6 @@ declare global {
 	const ORIGIN: string | undefined;
 	const BASE_PATH: string;
 	const APP_PATH: string;
-	const PRERENDERED: Set<string>;
 	const MIME_TYPES: Record<string, string>;
 }
 

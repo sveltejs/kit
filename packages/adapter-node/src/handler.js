@@ -5,12 +5,11 @@ import { server } from 'SERVER';
 import { dir } from './dir.js';
 import { env, env_prefix } from './env.js';
 import { parse_as_bytes } from './utils.js';
-import { create_asset_map, serve_static, split_url } from './static.js';
+import { serve_static } from './static.js';
 
 /** @typedef {(req: IncomingMessage, res: ServerResponse, next: () => void | Promise<void>) => void | Promise<void>} Middleware */
 
 const origin = ORIGIN;
-const prerendered = PRERENDERED;
 const mime_types = MIME_TYPES;
 const assets = ASSETS;
 const prerendered_assets = PRERENDERED_ASSETS;
@@ -35,44 +34,6 @@ await server.init({
 	env: process.env,
 	read: (file) => createReadableStream(`${asset_dir}/${file}`)
 });
-
-/**
- * Relative reference from `from` to `to`, which must differ only by a trailing slash.
- * Keep in sync with the copy in `packages/kit/src/utils/url.js`
- * @param {string} from
- * @param {string} to
- * @returns {string}
- */
-function relative_pathname(from, to) {
-	const segment = to.replace(/\/$/, '').split('/').at(-1);
-
-	return from.endsWith('/') ? `../${segment}` : `${segment}/`;
-}
-
-// redirects to the canonical prerendered path when only the trailing slash differs
-/** @returns {Middleware} */
-function serve_prerendered() {
-	const handler = serve_static(create_asset_map(`${dir}/prerendered${BASE_PATH}`, prerendered_assets), {
-		mime_types
-	});
-
-	return (req, res, next) => {
-		const { pathname, search } = split_url(req);
-
-		if (prerendered.has(pathname)) {
-			return handler(req, res, next);
-		}
-
-		// remove or add trailing slash as appropriate
-		const inverted = pathname.at(-1) === '/' ? pathname.slice(0, -1) : pathname + '/';
-		if (prerendered.has(inverted)) {
-			const location = relative_pathname(pathname, inverted) + search;
-			res.writeHead(308, { location }).end();
-		} else {
-			void next();
-		}
-	};
-}
 
 /** @type {Middleware} */
 const ssr = async (req, res) => {
@@ -236,10 +197,13 @@ function get_origin(headers) {
 }
 
 export const handler = sequence([
-	serve_static(create_asset_map(asset_dir, assets), {
+	serve_static(asset_dir, assets, {
 		mime_types,
 		immutable_prefix: `/${APP_PATH}/immutable/`
 	}),
-	serve_prerendered(),
+	serve_static(`${dir}/prerendered${BASE_PATH}`, prerendered_assets, {
+		mime_types,
+		redirect_trailing_slash: true
+	}),
 	ssr
 ]);

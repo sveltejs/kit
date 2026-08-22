@@ -3,7 +3,7 @@ declare module 'SERVER' {
 }
 
 interface AssetEntry {
-	/** path on disk, relative to the served directory until `create_asset_map` resolves it */
+	/** path on disk, relative to the served directory */
 	file: string;
 	size: number;
 	/** content hash */
@@ -17,7 +17,7 @@ interface AssetEntry {
 interface AssetTable {
 	entries: Array<[string, AssetEntry]>;
 	/** `[alias, key]` pairs, e.g. `['/about', '/about.html']` */
-	aliases: string[][];
+	aliases: Array<[string, string]>;
 }
 
 declare const ASSETS: AssetTable;

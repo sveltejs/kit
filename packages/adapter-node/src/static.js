@@ -1,27 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-/**
- * Builds the lookup for `serve_static` from a table recorded at adapt time,
- * resolving files to absolute paths and aliases to their entries once
- * @param {string} dir
- * @param {AssetTable} table
- */
-export function create_asset_map(dir, { entries, aliases }) {
-	/** @type {Map<string, AssetEntry>} */
-	const map = new Map();
-
-	for (const [key, entry] of entries) {
-		entry.file = path.join(dir, entry.file);
-		map.set(key, entry);
-	}
-
-	for (const [alias, key] of aliases) {
-		map.set(alias, /** @type {AssetEntry} */ (map.get(key)));
-	}
-
-	return map;
-}
+/** @typedef {AssetEntry & { type?: string }} Asset */
 
 /**
  * Splits `req.url` into a decoded pathname and the search string.
@@ -29,7 +9,7 @@ export function create_asset_map(dir, { entries, aliases }) {
  * tables and falls through to SvelteKit's 400
  * @param {import('node:http').IncomingMessage} req
  */
-export function split_url(req) {
+function split_url(req) {
 	let pathname = /** @type {string} */ (req.url);
 	let search = '';
 
@@ -51,21 +31,67 @@ export function split_url(req) {
 }
 
 /**
+ * Relative reference from `from` to `to`, which must differ only by a trailing slash.
+ * Keep in sync with the copy in `packages/kit/src/utils/url.js`
+ * @param {string} from
+ * @param {string} to
+ * @returns {string}
+ */
+function relative_pathname(from, to) {
+	const segment = to.replace(/\/$/, '').split('/').at(-1);
+
+	return from.endsWith('/') ? `../${segment}` : `${segment}/`;
+}
+
+/**
  * Serves the closed set of files recorded in the manifest at adapt time.
- * Everything about a response is precomputed: exact pathname keys (including
- * `foo.html`/`foo/index.html` aliases), sizes, content-hash ETags and which
- * compressed variants exist, so requests are a map lookup and a stream.
+ * Everything about a response is precomputed: exact pathname keys, sizes,
+ * content-hash ETags, content types and which compressed variants exist,
+ * so requests are a map lookup and a stream.
  *
- * @param {Map<string, AssetEntry>} files
- * @param {{ mime_types: Record<string, string>, immutable_prefix?: string }} opts
+ * @param {string} dir
+ * @param {AssetTable} table
+ * @param {{
+ *   mime_types: Record<string, string>,
+ *   immutable_prefix?: string,
+ *   redirect_trailing_slash?: boolean
+ * }} opts
  * @returns {import('./handler.js').Middleware}
  */
-export function serve_static(files, { mime_types, immutable_prefix }) {
+export function serve_static(
+	dir,
+	table,
+	{ mime_types, immutable_prefix, redirect_trailing_slash }
+) {
+	/** @type {Map<string, Asset>} */
+	const files = new Map();
+
+	for (const [key, entry] of table.entries) {
+		let type = mime_types[entry.file.slice(entry.file.lastIndexOf('.'))];
+		if (type === 'text/html') type += ';charset=utf-8';
+		files.set(key, { ...entry, file: path.join(dir, entry.file), type });
+	}
+
+	for (const [alias, key] of table.aliases) {
+		files.set(alias, /** @type {Asset} */ (files.get(key)));
+	}
+
 	return (req, res, next) => {
-		const { pathname } = split_url(req);
+		const { pathname, search } = split_url(req);
 
 		const entry = files.get(pathname);
-		if (!entry) return next();
+		if (!entry) {
+			if (redirect_trailing_slash) {
+				// redirect to the canonical path when only the trailing slash differs
+				const inverted = pathname.at(-1) === '/' ? pathname.slice(0, -1) : pathname + '/';
+				if (files.has(inverted)) {
+					const location = relative_pathname(pathname, inverted) + search;
+					res.writeHead(308, { location }).end();
+					return;
+				}
+			}
+			return next();
+		}
 
 		let file = entry.file;
 		let size = entry.size;
@@ -97,11 +123,7 @@ export function serve_static(files, { mime_types, immutable_prefix }) {
 			'accept-ranges': 'bytes'
 		};
 
-		const ext = entry.file.slice(entry.file.lastIndexOf('.'));
-		let type = mime_types[ext];
-		if (type === 'text/html') type += ';charset=utf-8';
-		if (type) headers['content-type'] = type;
-
+		if (entry.type) headers['content-type'] = entry.type;
 		if (encoding) headers['content-encoding'] = encoding;
 		if (entry.br || entry.gz) headers.vary = 'Accept-Encoding';
 
