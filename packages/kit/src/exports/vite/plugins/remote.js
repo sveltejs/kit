@@ -16,7 +16,7 @@ import { posixify } from '../../../utils/os.js';
  * @param {ValidatedConfig} svelte_config
  * @param {() => { root: string; vite: typeof import('vite'); }} get_config
  * @param {() => ServerMetadata | null} get_build_metadata
- * @param {(remotes: RemoteChunk[], remote_original_by_hash: Map<string, string>) => void} set_remote_metadata
+ * @param {(remote_metadata: {remotes: RemoteChunk[]; remote_original_by_hash: Map<string, string>}) => void} set_remote_metadata
  * @returns {Plugin}
  */
 export function plugin_remote(svelte_config, get_config, get_build_metadata, set_remote_metadata) {
@@ -41,7 +41,6 @@ export function plugin_remote(svelte_config, get_config, get_build_metadata, set
 
 	return {
 		name: 'vite-plugin-sveltekit-remote',
-		perEnvironmentStartEndDuringDev: true,
 
 		configResolved() {
 			({ root, vite } = get_config());
@@ -55,16 +54,18 @@ export function plugin_remote(svelte_config, get_config, get_build_metadata, set
 			return svelte_config.experimental.remoteFunctions && environment.name !== 'serviceWorker';
 		},
 
+		perEnvironmentStartEndDuringDev: true,
+
 		buildStart() {
 			// avoid stale data when building with watch mode
-			if (this.environment.config.consumer === 'server') {
+			if (this.meta.watchMode && this.environment.config.consumer === 'server') {
 				remotes = [];
 				remote_original_by_hash.clear();
 				emitted_remote_hashes.clear();
 			}
 
 			build_metadata = get_build_metadata();
-			set_remote_metadata(remotes, remote_original_by_hash);
+			set_remote_metadata({ remotes, remote_original_by_hash });
 		},
 
 		// prevent other plugins from resolving our remote virtual module
