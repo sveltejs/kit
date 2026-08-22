@@ -12,6 +12,7 @@
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:*",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
+		"@vercel/functions": "^3.9.3",
 		"svelte": "catalog:",
 		"typescript": "catalog:",
 		"vite": "catalog:",
