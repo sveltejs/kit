@@ -3,7 +3,6 @@ import fs from 'node:fs';
 import process from 'node:process';
 import { handler } from './handler.js';
 import { env, timeout_env } from './env.js';
-import polka from 'polka';
 import { rm } from 'node:fs/promises';
 import { format_listening_address } from './utils.js';
 
@@ -35,9 +34,6 @@ let shutdown_timeout_id;
 /** @type {NodeJS.Timeout | void} */
 let idle_timeout_id;
 
-// Initialize the HTTP server here so that we can set properties before starting to listen.
-// Otherwise, polka delays creating the server until listen() is called. Settings these
-// properties after the server has started listening could lead to race conditions.
 const httpServer = http.createServer();
 
 const keep_alive_timeout = timeout_env('KEEP_ALIVE_TIMEOUT');
@@ -52,10 +48,15 @@ if (headers_timeout !== undefined) {
 	httpServer.headersTimeout = headers_timeout * 1000;
 }
 
-const server = polka({ server: httpServer }).use(handler);
+httpServer.on('request', (req, res) =>
+	handler(req, res, () => {
+		res.statusCode = 404;
+		res.end();
+	})
+);
 
 if (socket_activation) {
-	server.listen({ fd: SD_LISTEN_FDS_START }, () => {
+	httpServer.listen({ fd: SD_LISTEN_FDS_START }, () => {
 		console.log(`Listening on file descriptor ${SD_LISTEN_FDS_START}`);
 	});
 } else {
@@ -69,7 +70,7 @@ if (socket_activation) {
 		}
 	}
 
-	server.listen({ path, host, port }, () => {
+	httpServer.listen({ path, host, port }, () => {
 		console.log(`Listening on ${format_listening_address(path, host, port, httpServer.address())}`);
 	});
 }
@@ -127,4 +128,4 @@ httpServer.on(
 process.on('SIGTERM', graceful_shutdown);
 process.on('SIGINT', graceful_shutdown);
 
-export { server };
+export { httpServer as server };

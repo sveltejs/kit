@@ -10,6 +10,8 @@ import { dir } from './dir.js';
 import { env, env_prefix } from './env.js';
 import { parse_as_bytes } from './utils.js';
 
+/** @typedef {(req: import('node:http').IncomingMessage, res: import('node:http').ServerResponse, next: () => void | Promise<void>) => void | Promise<void>} Middleware */
+
 const server = new Server(manifest);
 
 const origin = ORIGIN;
@@ -83,7 +85,7 @@ function relative_pathname(from, to) {
 }
 
 // required because the static file server ignores trailing slashes
-/** @returns {import('polka').Middleware} */
+/** @returns {Middleware} */
 function serve_prerendered() {
 	const handler = serve(path.join(dir, 'prerendered'));
 
@@ -111,7 +113,7 @@ function serve_prerendered() {
 	};
 }
 
-/** @type {import('polka').Middleware} */
+/** @type {Middleware} */
 const ssr = async (req, res) => {
 	/** @type {Request} */
 	let request;
@@ -199,13 +201,13 @@ const ssr = async (req, res) => {
 	setResponse(res, response);
 };
 
-/** @param {import('polka').Middleware[]} handlers */
+/** @param {Middleware[]} handlers */
 function sequence(handlers) {
-	/** @type {import('polka').Middleware} */
+	/** @type {Middleware} */
 	return (req, res, next) => {
 		/**
 		 * @param {number} i
-		 * @returns {ReturnType<import('polka').Middleware>}
+		 * @returns {ReturnType<Middleware>}
 		 */
 		function handle(i) {
 			if (i < handlers.length) {
@@ -273,6 +275,6 @@ function get_origin(headers) {
 }
 
 export const handler = sequence(
-	/** @type {(import('sirv').RequestHandler | import('polka').Middleware)[]} */
+	/** @type {(import('sirv').RequestHandler | Middleware)[]} */
 	([serve(path.join(dir, 'client'), true), serve_prerendered(), ssr].filter(Boolean))
 );
