@@ -110,6 +110,23 @@
 {/if}
 {/each}
 
+{const __img_3 = foo ? manual_image1 : manual_image2}
+{#if typeof __img_3 === 'string'}
+	{#if
+	import.meta.env.DEV && false}
+		{__img_3} was not enhanced. Cannot determine dimensions.
+	{:else}
+		<img src={__img_3} alt="conditional test" />
+	{/if}
+{:else}
+	<picture>
+		{#each Object.entries(__img_3.sources) as [format, srcset]}
+			<source {srcset} type={'image/' + format} />
+		{/each}
+		<img src={__img_3.img.src} alt="conditional test" width={__img_3.img.w} height={__img_3.img.h} />
+	</picture>
+{/if}
+
 <picture>
 	<source src="./dev.avif" />
 	<source srcset="./dev.avif 500v ./bar.avif 100v" />

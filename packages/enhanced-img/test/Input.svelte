@@ -58,6 +58,8 @@
 	<enhanced:img src={get_image(j)} alt="collision test" />
 {/each}
 
+<enhanced:img src={foo ? manual_image1 : manual_image2} alt="conditional test" />
+
 <picture>
 	<source src="./dev.avif" />
 	<source srcset="./dev.avif 500v ./bar.avif 100v" />

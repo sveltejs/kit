@@ -89,11 +89,12 @@ export function image_plugin(imagetools_plugin) {
 						}
 						const src_expression = content.substring(start, end).trim();
 						const expression = src_attribute.expression;
-						const is_call =
+						const should_declare =
 							expression.type === 'CallExpression' ||
+							expression.type === 'ConditionalExpression' ||
 							(expression.type === 'ChainExpression' &&
 								expression.expression.type === 'CallExpression');
-						const src_var_name = is_call ? generate_name() : src_expression;
+						const src_var_name = should_declare ? generate_name() : src_expression;
 
 						s.update(
 							node.start,
@@ -101,7 +102,7 @@ export function image_plugin(imagetools_plugin) {
 							dynamic_img_to_picture(
 								content,
 								node,
-								is_call ? src_expression : undefined,
+								should_declare ? src_expression : undefined,
 								src_var_name
 							)
 						);
