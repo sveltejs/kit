@@ -58,17 +58,13 @@ export function image_plugin(imagetools_plugin) {
 				 * @type {Map<string, string>}
 				 */
 				const imports = new Map();
-				const generated_names = new Set();
+				let generated_name_index = 0;
 
 				function generate_name() {
-					let suffix = '';
 					while (true) {
-						const name = `__img${suffix}`;
-						if (!generated_names.has(name) && !new RegExp(`\\b${name}\\b`).test(content)) {
-							generated_names.add(name);
-							return name;
-						}
-						suffix = suffix ? `_${Number(suffix.slice(1)) + 1}` : '_1';
+						const index = generated_name_index++;
+						const name = `__img${index ? `_${index}` : ''}`;
+						if (!new RegExp(`\\b${name}\\b`).test(content)) return name;
 					}
 				}
 
