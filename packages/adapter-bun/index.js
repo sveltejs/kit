@@ -189,7 +189,7 @@ export default function (opts = {}) {
 			// to the filesystem, where the virtual entrypoints do not exist
 			const side_effect_filter = new RegExp(
 				`/(?:${[...side_effect_sources.keys()]
-					.map((file) => path.basename(file).replaceAll('.', '\\.'))
+					.map((file) => path.basename(file).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
 					.join('|')})$`
 			);
 
