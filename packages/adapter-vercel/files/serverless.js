@@ -33,10 +33,27 @@ export default {
 			request = new Request(url, request);
 		}
 
-		return server.respond(request, {
-			getClientAddress() {
-				return /** @type {string} */ (request.headers.get('x-forwarded-for'));
-			}
-		});
+		return server
+			.respond(request, {
+				getClientAddress() {
+					return /** @type {string} */ (request.headers.get('x-forwarded-for'));
+				}
+			})
+			.then((response) => {
+				const location = response.headers.get('location');
+
+				if (
+					response.headers.has('x-sveltekit-normalize') &&
+					location &&
+					!location.startsWith('/') &&
+					pathname !== null
+				) {
+					const headers = new Headers(response.headers);
+					headers.set('location', new URL(`/${location}`, request.url).href);
+					return new Response(response.body, { status: response.status, headers });
+				}
+
+				return response;
+			});
 	}
 };
