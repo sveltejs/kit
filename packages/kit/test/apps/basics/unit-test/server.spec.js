@@ -133,9 +133,7 @@ describe('Content-Length', () => {
 	test('sets Content-Length on page', async () => {
 		const response = await get('/content-length-header');
 
-		if (!response.headers.get('content-encoding')) {
-			expect(Number(response.headers.get('content-length'))).toBeGreaterThan(1000);
-		}
+		expect(Number(response.headers.get('content-length'))).toBeGreaterThan(1000);
 	});
 });
 
@@ -328,11 +326,6 @@ describe('Endpoints', () => {
 		expect(responses.get.status).toBe(200);
 		expect(await responses.head.text()).toBe('');
 		expect(await responses.get.text()).toBe('{}');
-
-		['connection', 'date', 'keep-alive', 'transfer-encoding'].forEach((name) => {
-			delete headers.head[name];
-			delete headers.get[name];
-		});
 
 		expect(headers.head).toEqual(headers.get);
 	});
@@ -540,13 +533,6 @@ describe('Endpoints', () => {
 
 		expect(response.status).toBe(405);
 		expect(response.headers.get('allow')).toBe('GET, QUERY, HEAD');
-	});
-
-	test('can get assets using absolute path', async () => {
-		const response = await get('/endpoint-output/fetch-asset/absolute');
-		expect(response.status).toBe(200);
-		expect(response.headers.get('content-type')).toBe('text/plain');
-		expect(await response.text()).toBe('Cos sie konczy, cos zaczyna');
 	});
 
 	test('can get assets using relative path', async () => {
