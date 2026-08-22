@@ -1,5 +1,5 @@
 /** @import { BunFile, BunRequest, Serve } from 'bun' */
-import { manifest, base, embed } from 'MANIFEST';
+import { app_dir, base, embed } from 'MANIFEST';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -174,7 +174,7 @@ function file_route(file, meta, extra_headers = {}) {
  * @returns {Array<[string, RouteHandler]>}
  */
 export function client_asset(url, filename = url, meta) {
-	const immutable = url.startsWith(`${manifest.appDir}/immutable/`);
+	const immutable = url.startsWith(`${app_dir}/immutable/`);
 	const route = file_route(
 		resolve_file('client', filename),
 		meta,

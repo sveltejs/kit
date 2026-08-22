@@ -136,9 +136,13 @@ export default function (opts = {}) {
 			const manifest_file = path.resolve(server, 'manifest.js');
 			const server_options_file = path.resolve(src_dir, 'options.js');
 
+			const tmp = builder.getBuildDirectory('bun-tmp');
+			fs.mkdirSync(tmp, { recursive: true });
+			builder.writeServerEntrypoint(`${tmp}/server.js`);
+
 			const virtual_files = {
 				[manifest_file]:
-					`export const manifest = ${builder.generateManifest({ relativePath: './' })};\n` +
+					`export const app_dir = ${JSON.stringify(builder.getAppPath())};\n` +
 					`export const base = ${JSON.stringify(builder.config.paths.base || '/')};\n` +
 					`export const embed = ${JSON.stringify(!!buildOptions.compile)};\n` +
 					`export const env_prefix = ${JSON.stringify(envPrefix)};\n` +
@@ -198,7 +202,7 @@ export default function (opts = {}) {
 				name: 'adapter-bun',
 				setup(build) {
 					build.onResolve({ filter: /^(SERVER|MANIFEST|ROUTES|SERVER_OPTIONS)$/ }, ({ path }) => {
-						if (path === 'SERVER') return { path: `${server}/index.js` };
+						if (path === 'SERVER') return { path: `${tmp}/server.js` };
 						if (path === 'MANIFEST') return { path: manifest_file };
 						if (path === 'ROUTES') return { path: routes_file };
 						if (path === 'SERVER_OPTIONS') return { path: server_options_file };

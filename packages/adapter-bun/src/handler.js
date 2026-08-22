@@ -1,10 +1,8 @@
 /** @import { Server as BunServer } from 'bun' */
-import { Server } from 'SERVER';
-import { manifest, origin, env_prefix } from 'MANIFEST';
+import { server } from 'SERVER';
+import { origin, env_prefix } from 'MANIFEST';
 import { server_assets } from 'ROUTES';
 import { env, number_env } from './env.js';
-
-const server = new Server(manifest);
 
 const address_header = env('ADDRESS_HEADER', '').toLowerCase();
 const protocol_header = env('PROTOCOL_HEADER', '').toLowerCase();
