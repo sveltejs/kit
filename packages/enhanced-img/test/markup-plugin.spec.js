@@ -53,7 +53,10 @@ it('Image preprocess snapshot test', async () => {
 	expect(() => compile(transformed_code, { filename })).not.toThrow();
 
 	// Make imports readable
-	const ouput = transformed_code.replace(/import/g, '\n\timport').replaceAll('{#if \n', '{#if\n');
+	const ouput = transformed_code
+		.replace(/import/g, '\n\timport')
+		.replaceAll('{#if \n', '{#if\n')
+		.replace(/^[\t ]+$/gm, '');
 
 	await expect(ouput).toMatchFileSnapshot('./Output.svelte');
 });

@@ -4,8 +4,7 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 import MagicString from 'magic-string';
 import sharp from 'sharp';
-import { parse as parse_svelte } from 'svelte/compiler';
-import { parse } from 'svelte-parse-markup';
+import { parse } from 'svelte/compiler';
 import { walk } from 'zimmerframe';
 
 // TODO: expose this in vite-imagetools rather than duplicating it
@@ -63,7 +62,7 @@ export function image_plugin(imagetools_plugin) {
 				const identifiers = new Set();
 				let generated_name_index = 0;
 
-				walk(/** @type {any} */ (parse_svelte(content, { filename, modern: true })), null, {
+				walk(/** @type {any} */ (ast), null, {
 					_(node, { next }) {
 						if (node.type === 'Identifier') identifiers.add(node.name);
 						next();
@@ -86,12 +85,12 @@ export function image_plugin(imagetools_plugin) {
 				async function update_element(node, src_attribute) {
 					if (src_attribute.type === 'ExpressionTag') {
 						const start =
-							'end' in src_attribute.expression
-								? src_attribute.expression.end
-								: src_attribute.expression.range?.[0];
-						const end =
 							'start' in src_attribute.expression
 								? src_attribute.expression.start
+								: src_attribute.expression.range?.[0];
+						const end =
+							'end' in src_attribute.expression
+								? src_attribute.expression.end
 								: src_attribute.expression.range?.[1];
 
 						if (typeof start !== 'number' || typeof end !== 'number') {
