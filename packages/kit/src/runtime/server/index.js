@@ -183,7 +183,13 @@ export class Server {
 	async respond(request, options) {
 		const request_state = create_request_state(options);
 
-		const response = await respond(request, this.#options, this.#manifest, request_state);
+		let response = await respond(request, this.#options, this.#manifest, request_state);
+
+		// the HTTP layer discards HEAD response bodies, but nothing does when the server is called directly
+		if (request.method === 'HEAD' && response.body !== null) {
+			response.body.cancel().catch(noop);
+			response = new Response(null, response);
+		}
 
 		if (DEV) {
 			const error = decoded_responses.get(response);

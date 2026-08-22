@@ -734,7 +734,7 @@ export async function internal_respond(request, options, manifest, state) {
 					if (!(vary?.includes('accept') || vary?.includes('*'))) {
 						// the returned response might have immutable headers,
 						// so we have to clone them before trying to mutate them
-						response = new Response(request.method === 'HEAD' ? undefined : response.body, {
+						response = new Response(response.body, {
 							status: response.status,
 							statusText: response.statusText,
 							headers: new Headers(response.headers)

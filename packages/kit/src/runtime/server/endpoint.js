@@ -46,13 +46,9 @@ export async function render_endpoint(event, state, mod) {
 	}
 
 	try {
-		let response = await with_request_store({ event, state }, () =>
+		const response = await with_request_store({ event, state }, () =>
 			handler(/** @type {import('@sveltejs/kit').RequestEvent<Record<string, any>>} */ (event))
 		);
-
-		if (event.request.method === 'HEAD' && response.body !== null) {
-			response = new Response(null, response);
-		}
 
 		if (!(response instanceof Response)) {
 			throw new Error(
