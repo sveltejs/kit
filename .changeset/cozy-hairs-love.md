@@ -1,6 +1,6 @@
 ---
-"@sveltejs/kit": minor
+"@sveltejs/kit": major
 ---
 
-feat: Warn in dev when client requests refreshes that aren't fulfilled by the server
+major: error when a client-requested single-flight mutation isn't respected by the server, allow the server to explicitly ignore refreshes
   
