@@ -16,6 +16,10 @@ inputs:
   vercel-org-id:
     description: 'Vercel organization ID'
     required: true
+  purge-cache:
+    description: 'Whether to purge the CDN cache before deploying'
+    required: false
+    default: 'false'
 outputs:
   deployment-url:
     description: 'URL of the deployed preview'
@@ -29,6 +33,15 @@ runs:
     - name: Install Vercel CLI
       shell: bash
       run: pnpm i -g vercel
+
+    - name: Purge Vercel CDN cache
+      if: inputs.purge-cache == 'true'
+      shell: bash
+      env:
+        VERCEL_TOKEN: ${{ inputs.vercel-token }}
+        VERCEL_ORG_ID: ${{ inputs.vercel-org-id }}
+        VERCEL_PROJECT_ID: ${{ inputs.vercel-project-id }}
+      run: vercel cache purge --type cdn --yes --token="$VERCEL_TOKEN"
 
     - name: Deploy to Vercel
       id: deploy

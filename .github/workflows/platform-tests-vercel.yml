@@ -39,6 +39,7 @@ jobs:
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_BASIC }}
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          purge-cache: 'true'
 
       - uses: ./.github/actions/platform-test
         with:
