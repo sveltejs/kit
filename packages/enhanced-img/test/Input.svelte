@@ -4,6 +4,7 @@
 
 	const src = manual_image1;
 	const images = [manual_image1, manual_image2];
+	const object = { image: manual_image1 };
 	const get_image = (image_key: number) => images[image_key];
 	const __img = 'existing declaration';
 
@@ -59,6 +60,8 @@
 {/each}
 
 <enhanced:img src={foo ? manual_image1 : manual_image2} alt="conditional test" />
+
+<enhanced:img src={object.image} alt="member access test" />
 
 <picture>
 	<source src="./dev.avif" />

@@ -6,6 +6,7 @@
 
 	const src = manual_image1;
 	const images = [manual_image1, manual_image2];
+	const object = { image: manual_image1 };
 	const get_image = (image_key: number) => images[image_key];
 	const __img = 'existing declaration';
 
@@ -124,6 +125,22 @@
 			<source {srcset} type={'image/' + format} />
 		{/each}
 		<img src={__img_3.img.src} alt="conditional test" width={__img_3.img.w} height={__img_3.img.h} />
+	</picture>
+{/if}
+
+{#if typeof object.image === 'string'}
+	{#if
+	import.meta.env.DEV && false}
+		{object.image} was not enhanced. Cannot determine dimensions.
+	{:else}
+		<img src={object.image} alt="member access test" />
+	{/if}
+{:else}
+	<picture>
+		{#each Object.entries(object.image.sources) as [format, srcset]}
+			<source {srcset} type={'image/' + format} />
+		{/each}
+		<img src={object.image.img.src} alt="member access test" width={object.image.img.w} height={object.image.img.h} />
 	</picture>
 {/if}
 

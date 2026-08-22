@@ -88,12 +88,7 @@ export function image_plugin(imagetools_plugin) {
 							throw new Error('ExpressionTag has no range');
 						}
 						const src_expression = content.substring(start, end).trim();
-						const expression = src_attribute.expression;
-						const should_declare =
-							expression.type === 'CallExpression' ||
-							expression.type === 'ConditionalExpression' ||
-							(expression.type === 'ChainExpression' &&
-								expression.expression.type === 'CallExpression');
+						const should_declare = !is_reference(src_attribute.expression);
 						const src_var_name = should_declare ? generate_name() : src_expression;
 
 						s.update(
@@ -334,6 +329,15 @@ function serialize_img_attributes(content, attributes, details) {
  */
 function stringToNumber(param) {
 	return typeof param === 'string' ? parseInt(param) : param;
+}
+
+/**
+ * @param {import('estree').Expression | import('estree').Super} expression
+ */
+function is_reference(expression) {
+	if (expression.type === 'Identifier') return true;
+	if (expression.type !== 'MemberExpression' || expression.computed) return false;
+	return is_reference(expression.object);
 }
 
 /**
