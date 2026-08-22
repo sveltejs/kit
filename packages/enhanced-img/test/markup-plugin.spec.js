@@ -44,12 +44,12 @@ it('Image preprocess snapshot test', async () => {
 
 	expect(transformed_code.match(/get_image\(i\)/g)).toHaveLength(1);
 	expect(transformed_code.match(/get_image\(j\)/g)).toHaveLength(1);
-	expect(transformed_code).toContain('{const __img_1 = get_image(i)}');
-	expect(transformed_code).toContain('{const __img_2 = get_image(j)}');
-	expect(transformed_code).toContain('{const __img_3 = foo ? manual_image1 : manual_image2}');
-	expect(transformed_code).not.toMatch(/{const __img(?:_\d+)? = src}/);
-	expect(transformed_code).not.toMatch(/{const __img(?:_\d+)? = image}/);
-	expect(transformed_code).not.toMatch(/{const __img(?:_\d+)? = object\.image}/);
+	expect(transformed_code).toContain('{@const __img_1 = get_image(i)}');
+	expect(transformed_code).toContain('{@const __img_2 = get_image(j)}');
+	expect(transformed_code).toContain('{@const __img_3 = foo ? manual_image1 : manual_image2}');
+	expect(transformed_code).not.toMatch(/{@const __img(?:_\d+)? = src}/);
+	expect(transformed_code).not.toMatch(/{@const __img(?:_\d+)? = image}/);
+	expect(transformed_code).not.toMatch(/{@const __img(?:_\d+)? = object\.image}/);
 	expect(() => compile(transformed_code, { filename })).not.toThrow();
 
 	// Make imports readable

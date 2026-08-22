@@ -75,7 +75,7 @@
 {/each}
 
 {#each images as _, i}
-	{const __img_1 = get_image(i)}
+	{#if true}{@const __img_1 = get_image(i)}
 {#if typeof __img_1 === 'string'}
 	{#if
 	import.meta.env.DEV && false}
@@ -91,10 +91,11 @@
 		<img src={__img_1.img.src} alt="opt-in test" width={__img_1.img.w} height={__img_1.img.h} />
 	</picture>
 {/if}
+{/if}
 {/each}
 
 {#each images as _, j}
-	{const __img_2 = get_image(j)}
+	{#if true}{@const __img_2 = get_image(j)}
 {#if typeof __img_2 === 'string'}
 	{#if
 	import.meta.env.DEV && false}
@@ -110,9 +111,10 @@
 		<img src={__img_2.img.src} alt="collision test" width={__img_2.img.w} height={__img_2.img.h} />
 	</picture>
 {/if}
+{/if}
 {/each}
 
-{const __img_3 = foo ? manual_image1 : manual_image2}
+{#if true}{@const __img_3 = foo ? manual_image1 : manual_image2}
 {#if typeof __img_3 === 'string'}
 	{#if
 	import.meta.env.DEV && false}
@@ -127,6 +129,7 @@
 		{/each}
 		<img src={__img_3.img.src} alt="conditional test" width={__img_3.img.w} height={__img_3.img.h} />
 	</picture>
+{/if}
 {/if}
 
 {#if typeof object.image === 'string'}

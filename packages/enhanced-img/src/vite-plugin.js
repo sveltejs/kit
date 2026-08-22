@@ -416,7 +416,7 @@ function dynamic_img_to_picture(content, node, src_expression, src_var_name) {
 		attributes.splice(size_index, 1);
 	}
 
-	return `${src_expression ? `{const ${src_var_name} = ${src_expression}}\n` : ''}{#if typeof ${src_var_name} === 'string'}
+	const picture = `{#if typeof ${src_var_name} === 'string'}
 	{#if import.meta.env.DEV && ${!width_index && !height_index}}
 		{${src_var_name}} was not enhanced. Cannot determine dimensions.
 	{:else}
@@ -436,4 +436,17 @@ function dynamic_img_to_picture(content, node, src_expression, src_var_name) {
 		})} />
 	</picture>
 {/if}`;
+
+	// When the source is a computed expression we cache it in a variable to avoid evaluating it
+	// multiple times (e.g. calling a function once per template position). We use a reactive
+	// `{@const}` — wrapped in an `{#if true}` block so it's valid at this position — rather than a
+	// plain `{const}` declaration tag. Declaration tags cannot be used in legacy-mode components
+	// (they throw a compile error) and are only evaluated once, breaking reactivity when the
+	// expression depends on reactive state. `{@const}` is reactive, memoized, and works in both
+	// legacy and runes mode since Svelte 5.0.
+	if (src_expression) {
+		return `{#if true}{@const ${src_var_name} = ${src_expression}}\n${picture}\n{/if}`;
+	}
+
+	return picture;
 }
