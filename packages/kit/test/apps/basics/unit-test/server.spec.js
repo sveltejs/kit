@@ -58,9 +58,13 @@ beforeAll(async () => {
  * @param {RequestInit} [init]
  */
 const get = async (pathname, init) => {
-	const url = origin + pathname;
+	const request = new Request(origin + pathname, init);
 
-	const request = new Request(url, init);
+	// `fetch` implies this
+	if (!request.headers.has('accept')) {
+		request.headers.set('accept', '*/*');
+	}
+
 	const response = await server.respond(request, {
 		getClientAddress: () => ''
 	});
@@ -362,11 +366,7 @@ describe('Endpoints', () => {
 	});
 
 	test('serves page for GET request when endpoint has no GET handler', async () => {
-		const response = await get('/endpoint-output/post-only-with-page', {
-			headers: {
-				accept: '*/*'
-			}
-		});
+		const response = await get('/endpoint-output/post-only-with-page');
 
 		expect(response.status).toBe(200);
 		expect(response.headers.get('content-type')).toContain('text/html');
@@ -374,12 +374,7 @@ describe('Endpoints', () => {
 	});
 
 	test('serves page for HEAD request when endpoint has no HEAD or GET handler', async () => {
-		const response = await get('/endpoint-output/post-only-with-page', {
-			method: 'HEAD',
-			headers: {
-				accept: '*/*'
-			}
-		});
+		const response = await get('/endpoint-output/post-only-with-page', { method: 'HEAD' });
 
 		expect(response.status).toBe(200);
 		expect(response.headers.get('content-type')).toContain('text/html');
@@ -398,11 +393,7 @@ describe('Endpoints', () => {
 	});
 
 	test('uses fallback handler instead of page when endpoint has no GET but has fallback', async () => {
-		const response = await get('/endpoint-output/fallback-with-page', {
-			headers: {
-				accept: '*/*'
-			}
-		});
+		const response = await get('/endpoint-output/fallback-with-page');
 
 		expect(response.status).toBe(200);
 		expect(await response.text()).toBe('catch-all');
@@ -661,11 +652,7 @@ describe('Errors', () => {
 
 		// JSON (default)
 		{
-			const res = await get('/errors/endpoint-throw-error', {
-				headers: {
-					accept: '*/*'
-				}
-			});
+			const res = await get('/errors/endpoint-throw-error');
 
 			expect(read_errors('/errors/endpoint-throw-error')).toEqual({
 				kind: 'app',
@@ -735,11 +722,7 @@ describe('Errors', () => {
 
 		// JSON (default)
 		{
-			const res = await get('/errors/error-in-handle', {
-				headers: {
-					accept: '*/*'
-				}
-			});
+			const res = await get('/errors/error-in-handle');
 
 			const error = await res.json();
 
@@ -769,11 +752,7 @@ describe('Errors', () => {
 
 		// JSON (default)
 		{
-			const res = await get('/errors/expected-error-in-handle', {
-				headers: {
-					accept: '*/*'
-				}
-			});
+			const res = await get('/errors/expected-error-in-handle');
 
 			const error = await res.json();
 
