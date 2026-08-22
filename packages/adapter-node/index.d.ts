@@ -3,9 +3,7 @@ import './ambient.js';
 
 declare global {
 	const ENV_PREFIX: string;
-	const PRECOMPRESS: boolean;
 	const ORIGIN: string | undefined;
-	const UNCOMPRESSED_EXTENSIONS: Set<string>;
 	const BASE_PATH: string;
 	const APP_PATH: string;
 	const PRERENDERED: Set<string>;

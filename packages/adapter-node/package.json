@@ -43,10 +43,8 @@
 		"prepublishOnly": "pnpm build"
 	},
 	"devDependencies": {
-		"@polka/url": "catalog:",
 		"@sveltejs/kit": "workspace:^",
 		"@types/node": "catalog:",
-		"sirv": "^3.0.2",
 		"typescript": "catalog:typescript-native",
 		"vitest": "catalog:"
 	},

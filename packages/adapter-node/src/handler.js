@@ -1,22 +1,19 @@
 /** @import { IncomingMessage, ServerResponse, IncomingHttpHeaders } from 'node:http' */
-/** @import { RequestHandler } from 'sirv' */
-import fs from 'node:fs';
-import path, { extname } from 'node:path';
 import process from 'node:process';
-import sirv from 'sirv';
-import { parse as polka_url_parser } from '@polka/url';
 import { getRequest, setResponse, createReadableStream } from '@sveltejs/kit/node';
 import { server } from 'SERVER';
 import { dir } from './dir.js';
 import { env, env_prefix } from './env.js';
 import { parse_as_bytes } from './utils.js';
+import { create_asset_map, serve_static, split_url } from './static.js';
 
 /** @typedef {(req: IncomingMessage, res: ServerResponse, next: () => void | Promise<void>) => void | Promise<void>} Middleware */
 
 const origin = ORIGIN;
-const uncompressed_extensions = UNCOMPRESSED_EXTENSIONS;
 const prerendered = PRERENDERED;
 const mime_types = MIME_TYPES;
+const assets = ASSETS;
+const prerendered_assets = PRERENDERED_ASSETS;
 
 const xff_depth = parseInt(env('XFF_DEPTH', '1'));
 const address_header = env('ADDRESS_HEADER', '').toLowerCase();
@@ -40,36 +37,6 @@ await server.init({
 });
 
 /**
- * @param {string} path
- * @param {boolean} client
- */
-function serve(path, client = false) {
-	return fs.existsSync(path)
-		? sirv(path, {
-				etag: true,
-				gzip: PRECOMPRESS,
-				brotli: PRECOMPRESS,
-				setHeaders: (res, pathname) => {
-					// `sirv` sets `Vary` from its options rather than from the file it resolved
-					if (PRECOMPRESS && uncompressed_extensions.has(extname(pathname))) {
-						res.removeHeader('vary');
-					}
-
-					// `sirv` uses its own bundled `mrmime`, which the manifest's added types never reach
-					let type = mime_types[pathname.slice(pathname.lastIndexOf('.'))];
-					if (type === 'text/html') type += ';charset=utf-8';
-					if (type) res.setHeader('content-type', type);
-
-					// only apply to build directory, not e.g. version.json
-					if (client && pathname.startsWith(`/${APP_PATH}/immutable/`) && res.statusCode === 200) {
-						res.setHeader('cache-control', 'public,max-age=31536000,immutable');
-					}
-				}
-			})
-		: undefined;
-}
-
-/**
  * Relative reference from `from` to `to`, which must differ only by a trailing slash.
  * Keep in sync with the copy in `packages/kit/src/utils/url.js`
  * @param {string} from
@@ -82,28 +49,24 @@ function relative_pathname(from, to) {
 	return from.endsWith('/') ? `../${segment}` : `${segment}/`;
 }
 
-// required because the static file server ignores trailing slashes
+// redirects to the canonical prerendered path when only the trailing slash differs
 /** @returns {Middleware} */
 function serve_prerendered() {
-	const handler = serve(path.join(dir, 'prerendered'));
+	const handler = serve_static(create_asset_map(`${dir}/prerendered${BASE_PATH}`, prerendered_assets), {
+		mime_types
+	});
 
 	return (req, res, next) => {
-		let { pathname, search, query } = polka_url_parser(req);
-
-		try {
-			pathname = decodeURIComponent(pathname);
-		} catch {
-			// ignore invalid URI
-		}
+		const { pathname, search } = split_url(req);
 
 		if (prerendered.has(pathname)) {
-			return handler?.(req, res, next);
+			return handler(req, res, next);
 		}
 
 		// remove or add trailing slash as appropriate
 		const inverted = pathname.at(-1) === '/' ? pathname.slice(0, -1) : pathname + '/';
 		if (prerendered.has(inverted)) {
-			const location = relative_pathname(pathname, inverted) + (query ? search : '');
+			const location = relative_pathname(pathname, inverted) + search;
 			res.writeHead(308, { location }).end();
 		} else {
 			void next();
@@ -272,7 +235,11 @@ function get_origin(headers) {
 	return port ? `${protocol}://${host}:${port}` : `${protocol}://${host}`;
 }
 
-export const handler = sequence(
-	/** @type {(RequestHandler | Middleware)[]} */
-	([serve(path.join(dir, 'client'), true), serve_prerendered(), ssr].filter(Boolean))
-);
+export const handler = sequence([
+	serve_static(create_asset_map(asset_dir, assets), {
+		mime_types,
+		immutable_prefix: `/${APP_PATH}/immutable/`
+	}),
+	serve_prerendered(),
+	ssr
+]);

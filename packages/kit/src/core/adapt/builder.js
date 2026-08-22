@@ -145,6 +145,13 @@ export function create_builder({
 				const ext = path.extname(pathname);
 				if (ext) mime_types[ext] ??= mime_lookup(ext) || '';
 			}
+
+			// record extensions in the client output, so that adapters can serve
+			// client files without a mime database of their own
+			for (const file of walk(path.join(build_data.out_dir, 'client'))) {
+				const ext = path.extname(file);
+				if (ext) mime_types[ext] ??= mime_lookup(ext) || '';
+			}
 			return mime_types;
 		},
 

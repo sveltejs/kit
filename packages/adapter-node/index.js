@@ -1,5 +1,6 @@
-import { mkdirSync, readFileSync, rmSync } from 'node:fs';
-import { extname } from 'node:path';
+import { createHash } from 'node:crypto';
+import fs from 'node:fs';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { rolldown } from 'rolldown';
 
@@ -20,39 +21,44 @@ export default function (opts = {}) {
 		async adapt(builder) {
 			const tmp = builder.getBuildDirectory('adapter-node');
 
-			rmSync(out, { force: true, recursive: true });
-			rmSync(tmp, { force: true, recursive: true });
-			mkdirSync(tmp, { recursive: true });
+			fs.rmSync(out, { force: true, recursive: true });
+			fs.rmSync(tmp, { force: true, recursive: true });
+			fs.mkdirSync(tmp, { recursive: true });
+
+			const base = builder.config.paths.base;
 
 			builder.log.minor('Copying assets');
-			const written = [
-				...builder.writeClient(`${out}/client${builder.config.paths.base}`),
-				...builder.writePrerendered(`${out}/prerendered${builder.config.paths.base}`)
-			];
+			const client_files = builder.writeClient(`${out}/client${base}`);
+			const prerendered_files = builder.writePrerendered(`${out}/prerendered${base}`);
 
-			/** @type {string[]} */
-			let compressed = [];
+			/** @type {string[][]} */
+			let compressed = [[], []];
 
 			if (precompress) {
 				builder.log.minor('Compressing assets');
-				compressed = (
-					await Promise.all([
-						builder.compress(`${out}/client`),
-						builder.compress(`${out}/prerendered`)
-					])
-				).flat();
+				compressed = await Promise.all([
+					builder.compress(`${out}/client${base}`),
+					builder.compress(`${out}/prerendered${base}`)
+				]);
 			}
 
-			const compressed_extensions = new Set(compressed.map((file) => extname(file)));
-			// a pathname whose extension appears in neither set may be a route segment
-			// resolving to a compressed `index.html`, so it must keep its `Vary` header
-			const uncompressed_extensions = new Set(
-				written.map((file) => extname(file)).filter((ext) => ext && !compressed_extensions.has(ext))
+			builder.log.minor('Hashing assets');
+			const assets = await create_asset_table(
+				`${out}/client${base}`,
+				base,
+				client_files,
+				compressed[0]
+			);
+			const prerendered_assets = await create_asset_table(
+				`${out}/prerendered${base}`,
+				base,
+				prerendered_files,
+				compressed[1]
 			);
 
 			builder.log.minor('Building server');
 
-			const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
+			const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
 			const server = builder.getServerDirectory();
 
 			// Copy the prebuilt entrypoints into the build directory so that the
@@ -82,14 +88,14 @@ export default function (opts = {}) {
 
 			/** @type {Record<string, string>} */
 			const defines = {
-				UNCOMPRESSED_EXTENSIONS: `new Set(${JSON.stringify([...uncompressed_extensions])})`,
-				BASE_PATH: JSON.stringify(builder.config.paths.base),
+				BASE_PATH: JSON.stringify(base),
 				APP_PATH: JSON.stringify(builder.getAppPath()),
 				PRERENDERED: `new Set(${JSON.stringify(builder.prerendered.paths)})`,
 				MIME_TYPES: JSON.stringify(builder.mimeTypes),
+				ASSETS: JSON.stringify(assets),
+				PRERENDERED_ASSETS: JSON.stringify(prerendered_assets),
 				ORIGIN: JSON.stringify(builder.config.paths.origin) || 'undefined',
-				ENV_PREFIX: JSON.stringify(envPrefix),
-				PRECOMPRESS: JSON.stringify(precompress)
+				ENV_PREFIX: JSON.stringify(envPrefix)
 			};
 
 			// we bundle the Vite output so that deployments only need
@@ -185,6 +191,100 @@ export default function (opts = {}) {
 			instrumentation: () => true
 		}
 	};
+}
+
+/**
+ * Size and content hash, from a single pass over the file
+ * @param {string} file
+ * @returns {Promise<[number, string]>}
+ */
+async function measure(file) {
+	const hash = createHash('sha256');
+	let size = 0;
+
+	for await (const chunk of fs.createReadStream(file)) {
+		hash.update(chunk);
+		size += chunk.length;
+	}
+
+	return [size, hash.digest('base64url')];
+}
+
+/**
+ * Dotfiles are not served, with the customary exception of `.well-known`
+ * @param {string} file
+ */
+function is_hidden(file) {
+	return file.split('/').some((segment) => segment[0] === '.') && !file.startsWith('.well-known/');
+}
+
+/**
+ * Records everything needed to serve the written files: exact URL keys
+ * (plus `foo.html`/`foo/index.html` aliases), sizes, content-hash ETags,
+ * and which compressed variants exist
+ * @param {string} root
+ * @param {string} base
+ * @param {string[]} files
+ * @param {string[]} compressed
+ * @returns {Promise<AssetTable>}
+ */
+async function create_asset_table(root, base, files, compressed) {
+	const variants = new Set(compressed);
+
+	const entries = await Promise.all(
+		files
+			.filter((file) => !is_hidden(file))
+			.map(async (file) => {
+				const [size, etag] = await measure(join(root, file));
+
+				/** @type {AssetEntry} */
+				const entry = { file, size, etag };
+
+				// `builder.compress` writes a `.gz` and a `.br` variant of every file it returns
+				if (variants.has(file)) {
+					entry.gz = await measure(join(root, `${file}.gz`));
+					entry.br = await measure(join(root, `${file}.br`));
+				}
+
+				return /** @type {[string, AssetEntry]} */ ([`${base}/${file}`, entry]);
+			})
+	);
+
+	entries.sort(([a], [b]) => (a < b ? -1 : 1));
+
+	const keys = new Set(entries.map(([key]) => key));
+
+	/** @type {string[][]} */
+	const aliases = [];
+
+	/**
+	 * @param {string} alias
+	 * @param {string} key
+	 */
+	function alias(alias, key) {
+		if (!keys.has(alias)) {
+			keys.add(alias);
+			aliases.push([alias, key]);
+		}
+	}
+
+	// `/foo` and `/foo/` resolve to `foo.html`, unless a `foo/index.html` exists,
+	// in which case `foo.html` wins (matching the resolution order sirv used)
+	for (const [key, entry] of entries) {
+		if (!entry.file.endsWith('.html')) continue;
+		if (entry.file === 'index.html' || entry.file.endsWith('/index.html')) continue;
+		alias(key.slice(0, -5), key);
+		alias(key.slice(0, -5) + '/', key);
+	}
+
+	for (const [key, entry] of entries) {
+		if (entry.file !== 'index.html' && !entry.file.endsWith('/index.html')) continue;
+		const with_slash = key.slice(0, -'index.html'.length);
+		if (with_slash.length > 1) alias(with_slash.slice(0, -1), key);
+		alias(with_slash, key);
+	}
+
+	return { entries, aliases };
 }
 
 /** @param {string} str */

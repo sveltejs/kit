@@ -128,9 +128,6 @@ catalogs:
     '@playwright/test':
       specifier: ^1.62.1
       version: 1.62.1
-    '@polka/url':
-      specifier: ^1.0.0-next.29
-      version: 1.0.0-next.29
     '@standard-schema/spec':
       specifier: ^1.1.0
       version: 1.1.0
@@ -450,18 +447,12 @@ importers:
         specifier: ^1.2.3
         version: 1.2.3
     devDependencies:
-      '@polka/url':
-        specifier: 'catalog:'
-        version: 1.0.0-next.29
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../kit
       '@types/node':
         specifier: 'catalog:'
         version: 22.19.19
-      sirv:
-        specifier: ^3.0.2
-        version: 3.0.2
       typescript:
         specifier: catalog:typescript-native
         version: 7.0.2
