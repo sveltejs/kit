@@ -134,7 +134,8 @@ async function analyse({
 			config: route_config,
 			methods: Array.from(new Set([...page_methods, ...api_methods])),
 			page: {
-				methods: page_methods
+				methods: page_methods,
+				trailingSlash: page?.trailingSlash ?? 'never'
 			},
 			api: {
 				methods: api_methods
@@ -221,7 +222,8 @@ function analyse_page(layouts, leaf) {
 		config: nodes.get_config(),
 		entries: leaf.universal?.entries ?? leaf.server?.entries,
 		methods,
-		prerender: nodes.prerender()
+		prerender: nodes.prerender(),
+		trailingSlash: nodes.trailing_slash()
 	};
 }
 

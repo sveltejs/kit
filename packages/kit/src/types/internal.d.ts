@@ -416,6 +416,7 @@ export interface ServerMetadataRoute {
 	};
 	page: {
 		methods: Array<'GET' | 'POST'>;
+		trailingSlash: TrailingSlash;
 	};
 	methods: Array<HttpMethod | '*'>;
 	prerender: PrerenderOption | undefined;

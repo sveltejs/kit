@@ -632,6 +632,7 @@ declare module '@sveltejs/kit' {
 		};
 		page: {
 			methods: Array<Extract<HttpMethod, 'GET' | 'POST'>>;
+			trailingSlash: 'never' | 'always' | 'ignore';
 		};
 		pattern: RegExp;
 		prerender: PrerenderOption;
