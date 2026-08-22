@@ -16,10 +16,6 @@ inputs:
   vercel-org-id:
     description: 'Vercel organization ID'
     required: true
-  delete-cache-tag:
-    description: 'Cache tag to delete before deploying'
-    required: false
-    default: ''
 outputs:
   deployment-url:
     description: 'URL of the deployed preview'
@@ -33,15 +29,6 @@ runs:
     - name: Install Vercel CLI
       shell: bash
       run: pnpm i -g vercel
-
-    - name: Delete Vercel cache tag
-      if: inputs.delete-cache-tag != ''
-      shell: bash
-      env:
-        VERCEL_TOKEN: ${{ inputs.vercel-token }}
-        VERCEL_ORG_ID: ${{ inputs.vercel-org-id }}
-        VERCEL_PROJECT_ID: ${{ inputs.vercel-project-id }}
-      run: vercel cache dangerously-delete --tag "${{ inputs.delete-cache-tag }}" --yes --token="$VERCEL_TOKEN"
 
     - name: Deploy to Vercel
       id: deploy

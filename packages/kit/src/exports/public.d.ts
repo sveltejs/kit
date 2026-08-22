@@ -648,7 +648,6 @@ export interface RouteDefinition<Config = any> {
 	};
 	page: {
 		methods: Array<Extract<HttpMethod, 'GET' | 'POST'>>;
-		trailingSlash: 'never' | 'always' | 'ignore';
 	};
 	pattern: RegExp;
 	prerender: PrerenderOption;

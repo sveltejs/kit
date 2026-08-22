@@ -1,5 +1,3 @@
-import { addCacheTag } from '@vercel/functions';
-
 export const trailingSlash = 'always';
 
 export const config = {
@@ -8,9 +6,7 @@ export const config = {
 	}
 };
 
-export async function load() {
-	await addCacheTag('isr-trailing-slash');
-
+export function load() {
 	return {
 		rendered_at: Date.now()
 	};
