@@ -267,7 +267,7 @@ const plugin = function (defaults = {}) {
 					}
 
 					const page_pathname =
-						route.page.trailingSlash === 'always' && route.id !== '/' ? `${pathname}/` : pathname;
+						route.page.trailingSlash === 'always' && route.id !== '/' ? `${pathname}%2F` : pathname;
 
 					static_config.routes.push({
 						src: src + '$',
