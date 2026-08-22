@@ -241,6 +241,15 @@ export async function preview(vite, vite_config, svelte_config) {
 					})
 				);
 			});
+		} else {
+			vite.middlewares.use((_, res) => {
+				res.writeHead(200, {
+					'content-type': 'text/html',
+					etag
+				});
+
+				fs.createReadStream(`${svelte_config.outDir}/output/fallback.html`).pipe(res);
+			});
 		}
 	};
 }

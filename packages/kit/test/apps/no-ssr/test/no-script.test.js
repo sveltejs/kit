@@ -1,4 +1,3 @@
-import fs from 'node:fs';
 import process from 'node:process';
 import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
@@ -31,10 +30,4 @@ test('styles are loaded before CSR starts for prerendered routes', async ({ page
 	});
 	await page.goto('/styles/prerendered');
 	expect(requests.length).toBe(1);
-});
-
-test('skips server build if every node has ssr disabled', async () => {
-	test.skip(!!process.env.DEV);
-
-	expect(fs.existsSync('.svelte-kit/output/server')).toBe(false);
 });

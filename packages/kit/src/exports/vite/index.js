@@ -48,6 +48,7 @@ import { adapt } from '../../core/adapt/index.js';
 import { write_client_manifest } from '../../core/sync/write_client_manifest.js';
 import prerender from '../../core/postbuild/prerender.js';
 import analyse from '../../core/postbuild/analyse.js';
+import generate_fallback from '../../core/postbuild/fallback.js';
 import { s } from '../../utils/misc.js';
 import { hash } from '../../utils/hash.js';
 import { dedent } from '../../core/sync/utils.js';
@@ -1600,9 +1601,14 @@ function kit({ svelte_config }) {
 
 			// check if an error page needs to be rendered on the server.
 			// Error pages aren't included in the SSR manifest's routes list
-			const has_dynamic_ssr_page = manifest_data.nodes.some((node) =>
-				node.child_pages ? node.child_pages.some(requires_ssr) : requires_ssr(node)
+
+			// TODO: even if ssr is disabled, a server load function still is still useful to the SPA
+			const has_dynamic_ssr_page = validate_page_options(
+				manifest_data.nodes,
+				'some',
+				(page_options) => page_options?.ssr !== false
 			);
+
 			const skip_ssr_build =
 				hash_routing || !(metadata.has_dynamic_endpoints || has_dynamic_ssr_page);
 
@@ -2003,6 +2009,14 @@ function kit({ svelte_config }) {
 					}
 				}
 
+				const is_fully_prerendered = validate_page_options(
+					manifest_data.nodes,
+					'every',
+					(page_options) => {
+						return page_options?.prerender === true;
+					}
+				);
+
 				if (server_chunks) {
 					await treeshake_prerendered_remotes(
 						vite,
@@ -2014,6 +2028,17 @@ function kit({ svelte_config }) {
 						server_chunks,
 						vite_config.build.sourcemap
 					);
+				} else if (!(hash_routing && is_fully_prerendered)) {
+					const fallback = await generate_fallback({
+						manifest_path: null,
+						env,
+						out,
+						origin: kit.paths.origin || 'http://sveltekit-prerender',
+						assets: kit.paths.assets,
+						vite_config_file: /** @type {string} */ (vite_config.configFile),
+						client: devalue.stringify(build_data.client)
+					});
+					fs.writeFileSync(`${out}/fallback.html`, fallback);
 				}
 
 				// defer until after other buildApp hooks have run
@@ -2468,9 +2493,16 @@ async function normalise_build(name, build, build_output_map) {
 }
 
 /**
- * @param {PageNode} node
+ * @param {PageNode[]} nodes
+ * @param {'some' | 'every'} type
+ * @param {(node: PageNode['page_options']) => boolean} validate
  * @returns {boolean}
  */
-function requires_ssr(node) {
-	return node.page_options?.ssr !== false;
+function validate_page_options(nodes, type, validate) {
+	return nodes[type]((node) => {
+		if (node.child_pages) {
+			return node.child_pages[type]((node) => validate(node.page_options));
+		}
+		return validate(node.page_options);
+	});
 }

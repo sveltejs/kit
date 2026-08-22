@@ -143,6 +143,18 @@ export function create_builder({
 		},
 
 		async generateFallback(dest) {
+			if (existsSync(dest)) {
+				log.warn(
+					`\nOverwriting ${dest} with fallback page. Consider using a different name for the fallback.\n`
+				);
+			}
+
+			const generated_fallback = `${config.outDir}/output/fallback.html`;
+			if (existsSync(generated_fallback)) {
+				copy(generated_fallback, dest);
+				return;
+			}
+
 			const has_server_build = !!Object.keys(build_data.server_manifest).length;
 			const manifest_path = has_server_build
 				? `${config.outDir}/output/server/manifest-full.js`
@@ -162,12 +174,6 @@ export function create_builder({
 				vite_config_file: /** @type {string} */ (vite_config.configFile),
 				client
 			});
-
-			if (existsSync(dest)) {
-				log.warn(
-					`\nOverwriting ${dest} with fallback page. Consider using a different name for the fallback.\n`
-				);
-			}
 
 			write(dest, fallback);
 		},
