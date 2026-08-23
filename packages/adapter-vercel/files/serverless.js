@@ -23,6 +23,8 @@ export default {
 		const url = new URL(request.url);
 		let pathname = url.searchParams.get('__pathname');
 
+		console.log({ request, pathname });
+
 		if (pathname) {
 			// Optional routes' pathname replacements look like `/foo/$1/bar` which means we could end up with an url like /foo//bar
 			pathname = pathname.replace(/\/+/g, '/');
@@ -32,8 +34,6 @@ export default {
 
 			request = new Request(url, request);
 		}
-
-		console.log({ request });
 
 		const response = await server.respond(request, {
 			getClientAddress() {
