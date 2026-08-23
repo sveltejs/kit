@@ -269,8 +269,8 @@ const plugin = function (defaults = {}) {
 					const q = `?__pathname=/${pathname}`;
 
 					static_config.routes.push({
-						src: src.replace(/\/\?$/, '(?<trailing_slash>/?)') + '$',
-						dest: `/${isr_name}${q}$trailing_slash`
+						src: src.replace(/\/\?$/, '(?<slash>/)?') + '$',
+						dest: `/${isr_name}${q}$slash`
 					});
 
 					if (has_page) {
