@@ -62,9 +62,9 @@ test('ISR page with trailingSlash always loads without errors', async ({ page })
 		}
 	});
 
-	await page.goto('/isr-trailing-slash-absolute/');
+	await page.goto('/isr-trailing-slash/');
 
-	expect(new URL(page.url()).pathname).toBe('/isr-trailing-slash-absolute/');
+	expect(new URL(page.url()).pathname).toBe('/isr-trailing-slash/');
 	await expect(page.locator('h1')).toContainText('ISR Trailing Slash Page');
 	expect(errors).toEqual([]);
 });
