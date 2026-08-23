@@ -60,7 +60,7 @@ const pathname_prefix = hash_routing ? '#' : '';
  * ```
  * @since 2.26
  *
- * @template {RouteIdWithSearchOrHash | PathnameWithSearchOrHash} T
+ * @template {RouteIdWithSearchOrHash | PathnameWithSearchOrHash | AssetPath | (string & {})} T
  * @param {ResolveArgs<T>} args
  * @returns {ResolvedPathname}
  */
