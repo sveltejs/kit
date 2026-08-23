@@ -30,6 +30,15 @@ runs:
       shell: bash
       run: pnpm i -g vercel
 
+		# avoid hitting cache when testing ISR routes
+    - name: Purge Vercel CDN Cache
+      shell: bash
+      env:
+        VERCEL_TOKEN: ${{ inputs.vercel-token }}
+        VERCEL_ORG_ID: ${{ inputs.vercel-org-id }}
+        VERCEL_PROJECT_ID: ${{ inputs.vercel-project-id }}
+      run: vercel cache purge --type cdn --token="$VERCEL_TOKEN" --yes
+
     - name: Deploy to Vercel
       id: deploy
       shell: bash
