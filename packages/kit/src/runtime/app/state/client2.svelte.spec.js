@@ -1,7 +1,9 @@
-import { describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { tick } from 'svelte';
-import { run } from './compiled-await.js';
+import { run } from './test/compiled-await.js';
+import { reset_updated, updated } from './client.svelte.js';
 
+// Separate file from client.svelte.spec.js because that one mocks `DEV: false`
 vi.mock('esm-env', () => ({
 	BROWSER: true,
 	DEV: true // `await_reactivity_loss` only happens in dev mode
@@ -14,16 +16,35 @@ vi.hoisted(() => {
 });
 
 describe('notify_version', () => {
-	test('notify_version does not emit await_reactivity_loss after an await', async () => {
+	beforeEach(reset_updated);
+
+	test('does not emit await_reactivity_loss after an await', async () => {
 		const warn = vi.spyOn(console, 'warn');
 
-		const { cleanup, ready } = run();
+		const { cleanup, ready } = run('track_reactivity_loss');
 
 		await tick();
 		await ready;
 
 		cleanup();
 
-		expect(warn.mock.calls.length).toBe(0);
+		const loss_warnings = warn.mock.calls.filter((args) =>
+			String(args[0]).includes('await_reactivity_loss')
+		);
+		expect(loss_warnings).toEqual([]);
+		expect(updated.current).toBe(true);
+
+		warn.mockRestore();
+	});
+
+	test('does not throw in a restored reaction context', async () => {
+		const { cleanup, ready } = run('save');
+
+		await tick();
+		await ready;
+
+		cleanup();
+
+		expect(updated.current).toBe(true);
 	});
 });
