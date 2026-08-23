@@ -1121,6 +1121,61 @@ test.describe('remote function mutations', () => {
 		// the value display should also show the updated value
 		await expect(page.locator('#set-value-display')).toHaveText('Set via method');
 	});
+
+	test('radio and checkbox selections survive the post-submission reset', async ({ page }) => {
+		await page.goto('/remote/form/radio-reset');
+
+		const form = page.locator('form');
+
+		// change the selection away from the initial values
+		await form.locator('input[name^="visibility"][value="private"]').check();
+		await form.locator('input[name^="tags"][value="green"]').check();
+		await form.locator('input[name^="b:notifications"]').check();
+
+		await page.click('#save');
+
+		// the query reflects the new values...
+		await expect(page.locator('#query-value')).toHaveText(
+			JSON.stringify({ visibility: 'private', tags: ['green'], notifications: true })
+		);
+
+		// ...and the controls keep their selection after the default reset
+		await expect(form.locator('input[name^="visibility"][value="public"]')).not.toBeChecked();
+		await expect(form.locator('input[name^="visibility"][value="private"]')).toBeChecked();
+		await expect(form.locator('input[name^="tags"][value="red"]')).not.toBeChecked();
+		await expect(form.locator('input[name^="tags"][value="green"]')).toBeChecked();
+		await expect(form.locator('input[name^="b:notifications"]')).toBeChecked();
+
+		// fields.value() stays in sync with the controls
+		await expect(page.locator('#fields-value')).toHaveText(
+			JSON.stringify({ visibility: 'private', tags: ['green'], notifications: true })
+		);
+	});
+
+	test('unselected radio keeps a failed submission from resetting the form', async ({ page }) => {
+		await page.goto('/remote/form/radio-reset');
+
+		const form = page.locator('form');
+
+		// visibility is required but left unselected, so validation fails
+		await form.locator('input[name^="tags"][value="blue"]').check();
+		await page.click('#save');
+
+		// no reset happened: the checked controls keep their state
+		await expect(form.locator('input[name^="tags"][value="blue"]')).toBeChecked();
+		await expect(page.locator('#query-value')).not.toContainText('blue');
+
+		// completing the submission persists and preserves the selection
+		await form.locator('input[name^="visibility"][value="private"]').check();
+		await page.click('#save');
+
+		await expect(page.locator('#query-value')).toHaveText(
+			JSON.stringify({ visibility: 'private', tags: ['blue'], notifications: false })
+		);
+		await expect(form.locator('input[name^="visibility"][value="private"]')).toBeChecked();
+		await expect(form.locator('input[name^="tags"][value="blue"]')).toBeChecked();
+	});
+
 	test('form does refresh queries when a remote request', async ({ page }) => {
 		await page.goto(`/remote/form/noop-refresh-non-enhanced/${Date.now()}${Math.random()}`);
 

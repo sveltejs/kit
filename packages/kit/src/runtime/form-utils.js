@@ -819,34 +819,52 @@ export function create_field_proxy(context, target = {}, path = []) {
 						}
 
 						if (type === 'checkbox' && !is_array) {
+							// defaultChecked mirrors checked so that the post-submission
+							// form.reset() restores the current field state rather than
+							// first-render defaults
+							const is_checked = () => get_value() ?? input_value;
+
 							return Object.defineProperties(base_props, {
 								defaultChecked: {
 									enumerable: true,
 									get() {
-										return input_value;
+										return is_checked();
 									}
 								},
 								checked: {
 									enumerable: true,
 									get() {
-										return get_value() ?? input_value;
+										return is_checked();
 									}
 								}
 							});
 						}
 
+						// as with single checkboxes, defaultChecked mirrors checked so
+						// that the post-submission form.reset() restores the current
+						// field state rather than first-render defaults
+						const is_checked = () => {
+							const value = get_value();
+
+							if (type === 'radio') {
+								return value === input_value;
+							}
+
+							return (value ?? []).includes(input_value);
+						};
+
 						return Object.defineProperties(base_props, {
 							value: { value: input_value ?? 'on', enumerable: true },
+							defaultChecked: {
+								enumerable: true,
+								get() {
+									return is_checked();
+								}
+							},
 							checked: {
 								enumerable: true,
 								get() {
-									const value = get_value();
-
-									if (type === 'radio') {
-										return value === input_value;
-									}
-
-									return (value ?? []).includes(input_value);
+									return is_checked();
 								}
 							}
 						});
