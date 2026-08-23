@@ -266,17 +266,24 @@ const plugin = function (defaults = {}) {
 						write(`${base}/__data.json.prerender-config.json`, json);
 					}
 
-					const q = `?__pathname=/${pathname}${route.trailingSlash === 'always' ? '/' : ''}`;
+					const trailing_slash = route.trailingSlash === 'always';
+					const q = `?__pathname=/${pathname}`;
 
 					static_config.routes.push({
-						src: src.replace(/\/\?$/, '') + '$',
-						dest: `/${isr_name}${q}$slash`
+						src: src.replace(/\/\?$/, `${trailing_slash ? '' : '/'}$`),
+						dest: `/${isr_name}${trailing_slash ? '/' : ''}`,
+						continue: true
+					});
+
+					static_config.routes.push({
+						src: src.replace(/\/\?$/, '$'),
+						dest: `/${isr_name}${q}`
 					});
 
 					if (has_page) {
 						static_config.routes.push({
 							src: src.replace(/\/\?$/, '/__data.json$'),
-							dest: `/${isr_name}/__data.json${q}`
+							dest: `/${isr_name}/__data.json${q}${trailing_slash ? '/' : ''}`
 						});
 					}
 				} else {

@@ -23,7 +23,7 @@ export default {
 		const url = new URL(request.url);
 		let pathname = url.searchParams.get('__pathname');
 
-		console.log({ request, pathname });
+		console.log(url);
 
 		if (pathname) {
 			// Optional routes' pathname replacements look like `/foo/$1/bar` which means we could end up with an url like /foo//bar
@@ -41,7 +41,7 @@ export default {
 			}
 		});
 
-		console.log({ response });
+		console.log(response.status, response.url);
 
 		return response;
 	}
