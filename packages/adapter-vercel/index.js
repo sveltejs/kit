@@ -239,7 +239,7 @@ const plugin = function (defaults = {}) {
 
 				const isr = isr_config.get(route);
 				if (isr) {
-					const isr_name = route.id.slice(1) || '__root__'; // should we check that __root__ isn't a route?
+					const isr_name = route.id.slice(1) || '__root__'; // TODO should we check that __root__ isn't a route?
 					const base = `${dirs.functions}/${isr_name}`;
 					const has_page = route.page.methods.length > 0;
 					fs.mkdirSync(base, { recursive: true });
@@ -269,13 +269,13 @@ const plugin = function (defaults = {}) {
 					const q = `?__pathname=/${pathname}`;
 
 					static_config.routes.push({
-						src: src + '$',
-						dest: `/${isr_name}${q}`
+						src: src.replace(/\/\?$/, '(?<trailing_slash>/?)') + '$',
+						dest: `/${isr_name}${q}$trailing_slash`
 					});
 
 					if (has_page) {
 						static_config.routes.push({
-							src: src + '/__data.json$',
+							src: src.replace(/\/\?$/, '/__data.json$'),
 							dest: `/${isr_name}/__data.json${q}`
 						});
 					}
@@ -311,7 +311,7 @@ const plugin = function (defaults = {}) {
 
 					// Add route to the config
 					static_config.routes.push({
-						src: src + '(?:/__data.json)?$', // Matches the incoming request path
+						src: src.replace(/\/\?$/, '(?:/__data.json)?$'), // Matches the incoming request path
 						dest: `/${route_dest_name}` // Maps to the function: '/' for root, '/about' for about, etc.
 						// Vercel uses this dest to find the corresponding .func dir/symlink
 					});
