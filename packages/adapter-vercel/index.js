@@ -266,8 +266,7 @@ const plugin = function (defaults = {}) {
 						write(`${base}/__data.json.prerender-config.json`, json);
 					}
 
-					// TODO: preserve trailing slash?
-					const q = `?__pathname=/${pathname}`;
+					const q = `?__pathname=/${pathname}${route.trailingSlash === 'always' ? '/' : ''}`;
 
 					static_config.routes.push({
 						src: src.replace(/\/\?$/, '') + '$',

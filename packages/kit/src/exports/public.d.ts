@@ -10,7 +10,8 @@ import {
 	Prerendered,
 	PrerenderOption,
 	RequestOptions,
-	RouteSegment
+	RouteSegment,
+	TrailingSlash
 } from '../types/private.js';
 import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from 'types';
 import { Plugin } from 'vite';
@@ -651,6 +652,7 @@ export interface RouteDefinition<Config = any> {
 	};
 	pattern: RegExp;
 	prerender: PrerenderOption;
+	trailingSlash: TrailingSlash | undefined;
 	segments: RouteSegment[];
 	methods: Array<HttpMethod | '*'>;
 	config: Config;

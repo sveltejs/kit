@@ -418,6 +418,7 @@ export interface ServerMetadataRoute {
 		methods: Array<'GET' | 'POST'>;
 	};
 	methods: Array<HttpMethod | '*'>;
+	trailing_slash: TrailingSlash | undefined;
 	prerender: PrerenderOption | undefined;
 	entries: string[] | undefined;
 }

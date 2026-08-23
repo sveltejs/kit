@@ -78,7 +78,7 @@ export function create_builder({
 	 * we expose a stable type that adapters can use to group/filter routes
 	 */
 	const routes = route_data.map((route) => {
-		const { config, methods, page, api } = /** @type {ServerMetadataRoute} */ (
+		const { config, methods, page, api, trailing_slash } = /** @type {ServerMetadataRoute} */ (
 			server_metadata.routes.get(route.id)
 		);
 
@@ -94,6 +94,7 @@ export function create_builder({
 			})),
 			pattern: route.pattern,
 			prerender: prerender_map.get(route.id) ?? false,
+			trailingSlash: trailing_slash,
 			methods,
 			config
 		};
