@@ -169,7 +169,7 @@ export const updated = {
 				}
 
 				const data = await res.json();
-				return (_updated ||= data.version !== version);
+				return untrack(() => (_updated ||= data.version !== version));
 			} catch {
 				return false;
 			} finally {
@@ -196,7 +196,9 @@ if (!DEV && interval) {
  */
 export function notify_version(new_version) {
 	if (__SVELTEKIT_APP_VERSION_CHECKS_ENABLED__ && new_version) {
-		_updated = untrack(() => _updated) || new_version !== version;
+		// untrack the write too — in an `$.save`-restored reaction window a tracked
+		// write throws `state_unsafe_mutation`, which is not DEV-only
+		untrack(() => (_updated ||= new_version !== version));
 	}
 }
 
