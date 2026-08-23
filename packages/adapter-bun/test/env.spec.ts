@@ -1,13 +1,13 @@
 import process from 'node:process';
-import { afterEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, describe, expect, test } from 'bun:test';
+import { mock_manifest } from './mocks.js';
 
 const changed = new Set<string>();
+let instance = 0;
 
 afterEach(() => {
 	for (const name of changed) delete process.env[name];
 	changed.clear();
-	vi.resetModules();
-	vi.doUnmock('MANIFEST');
 });
 
 describe('env', () => {
@@ -148,9 +148,10 @@ describe('bytes_env', () => {
 });
 
 async function load_env(prefix = '') {
-	vi.resetModules();
-	vi.doMock('MANIFEST', () => ({ env_prefix: prefix }));
-	return import('../src/env.js');
+	mock_manifest({ env_prefix: prefix });
+	// a fresh query string re-runs the module-level prefix check
+	const specifier = `../src/env.js?instance=${++instance}`;
+	return (await import(specifier)) as typeof import('../src/env.js');
 }
 
 function set_env(name: string, value: string) {

@@ -33,7 +33,7 @@
 		"ambient.d.ts"
 	],
 	"scripts": {
-		"test": "vitest run",
+		"test": "bun test .spec",
 		"check": "tsc",
 		"lint": "prettier --check .",
 		"format": "pnpm lint --write"
@@ -42,8 +42,7 @@
 		"@playwright/test": "catalog:",
 		"@sveltejs/kit": "workspace:^",
 		"@types/node": "catalog:",
-		"typescript": "catalog:",
-		"vitest": "catalog:"
+		"typescript": "catalog:"
 	},
 	"dependencies": {
 		"bun-types": "^1.3.14"

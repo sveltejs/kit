@@ -14,7 +14,6 @@
 	},
 	"include": [
 		"index.js",
-		"vitest.config.js",
 		"src/**/*.js",
 		"test/*.js",
 		"test/*.ts",

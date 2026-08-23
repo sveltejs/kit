@@ -68,6 +68,11 @@ jobs:
       - uses: ./.github/actions/node-setup
         with:
           node-version: ${{ matrix.node-version }}
+      # the adapter-bun unit tests run under `bun test`
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        if: matrix.script == 'test:others'
+        with:
+          bun-version: 1.4.0
       - run: pnpm run sync-all
       - run: pnpm ${{ matrix.script }}
   e2e:
