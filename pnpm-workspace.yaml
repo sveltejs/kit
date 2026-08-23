@@ -69,7 +69,7 @@ catalog:
   rolldown: ^1.2.3
   semver: ^7.5.4
   sirv-cli: ^3.0.1
-  svelte: ^5.56.8
+  svelte: ^5.56.10
   svelte-check: ^4.7.5
   svelte-preprocess: ^6.0.5
   # This version of TypeScript is for apps using it just for type checking.

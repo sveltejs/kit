@@ -1,6 +1,7 @@
 /** @import { Navigation } from '$app/navigation' */
 /** @import { Page } from '$app/state' */
 import { DEV } from 'esm-env';
+import { untrack } from 'svelte';
 import { assets } from '#app/paths';
 import { version } from '$app/env';
 
@@ -195,7 +196,7 @@ if (!DEV && interval) {
  */
 export function notify_version(new_version) {
 	if (__SVELTEKIT_APP_VERSION_CHECKS_ENABLED__ && new_version) {
-		_updated ||= new_version !== version;
+		_updated = untrack(() => _updated) || new_version !== version;
 	}
 }
 
