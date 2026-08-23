@@ -111,7 +111,7 @@ export function plugin_guard(kit, get_config, get_manifest_data) {
 				let is_server_only = normalized === '$app/env/private' || normalized === '$app/server';
 
 				// skip .server.js files outside the cwd or in node_modules, as the filename might not mean 'server-only module' in this context
-				if (id.startsWith(normalized_cwd) && !id.startsWith(normalized_node_modules)) {
+				if (id.startsWith(normalized_cwd + '/') && !id.startsWith(normalized_node_modules + '/')) {
 					// e.g. `server.ts` or `foo.server.ts`
 					is_server_only ||= server_only_module_pattern.test(id);
 
@@ -128,16 +128,28 @@ export function plugin_guard(kit, get_config, get_manifest_data) {
 
 				/** @type {Set<string>} */
 				const entrypoints = new Set();
+
+				/**
+				 * Entrypoints must be normalized like the import map keys, or files
+				 * outside the project root (e.g. hooks) would never match an importer
+				 * @param {string} file - absolute, or relative to the project root
+				 */
+				const add_entrypoint = (file) => {
+					entrypoints.add(
+						normalize_id(posixify(path.resolve(root, file)), normalized_aliases, normalized_cwd)
+					);
+				};
+
 				for (const node of manifest_data.nodes) {
-					if (node.component) entrypoints.add(node.component);
-					if (node.universal) entrypoints.add(node.universal);
+					if (node.component) add_entrypoint(node.component);
+					if (node.universal) add_entrypoint(node.universal);
 				}
 
-				if (manifest_data.hooks.client) entrypoints.add(manifest_data.hooks.client);
-				if (manifest_data.hooks.universal) entrypoints.add(manifest_data.hooks.universal);
+				if (manifest_data.hooks.client) add_entrypoint(manifest_data.hooks.client);
+				if (manifest_data.hooks.universal) add_entrypoint(manifest_data.hooks.universal);
 
 				if (service_worker_entry_file) {
-					entrypoints.add(posixify(path.relative(root, service_worker_entry_file)));
+					add_entrypoint(service_worker_entry_file);
 				}
 
 				// Walk up the import graph from the server-only module, looking for a chain
