@@ -30,7 +30,7 @@ runs:
       shell: bash
       run: pnpm i -g vercel
 
-		# avoid hitting cache when testing ISR routes
+    # avoid hitting cache when testing ISR routes
     - name: Purge Vercel CDN Cache
       shell: bash
       env:
