@@ -84,7 +84,7 @@ The `$lib` alias is no longer generated automatically by SvelteKit. It is replac
 }
 ```
 
-...and replace `$lib` with `#lib` across your codebase. Note that you will also have to add the module extensions (e.g. `.js` or `.ts`) to these imports.
+...and replace `$lib` with `#lib` across your codebase. Note that you will also have to add the module extensions to these imports. Use the `.js` extension even when the file you are importing is written in TypeScript — `src/lib/server/auth.ts` is imported as `#lib/server/auth.js`. Subpath imports are not _relative_ imports, so they are not covered by [`rewriteRelativeImportExtensions`](https://www.typescriptlang.org/tsconfig/#rewriteRelativeImportExtensions), which newly scaffolded projects enable — importing `#lib/server/auth.ts` instead results in a TypeScript error (2877).
 
 ```js
 // @errors: 2307 imported module has no types
