@@ -50,32 +50,29 @@ const options_regex = /(export\s+const\s+(prerender|csr|ssr|trailingSlash))\s*=/
  * @returns {CorsOptions | undefined}
  */
 function resolve_cors(user_cors, key, warn) {
+	// `preview.cors` falls back to the resolved `server.cors`, so emitting a value here when
+	// the user hasn't set one is what drops Vite's `defaultAllowedOrigins` restriction
 	if (user_cors === undefined) {
-		// Default: enable preflightContinue so OPTIONS handlers work
-		return { preflightContinue: true };
+		return key === 'server.cors' ? { preflightContinue: true } : undefined;
 	}
 
-	const preflight_disabled =
-		typeof user_cors !== 'object' || user_cors === null || user_cors.preflightContinue === false;
+	// with `cors: false` Vite installs no CORS middleware, so OPTIONS handlers already work
+	if (user_cors === false) return undefined;
 
-	if (preflight_disabled) {
-		if (warn) {
-			console.warn(
-				styleText(
-					['yellow', 'bold'],
-					`OPTIONS request handlers will not work unless \`${key}.preflightContinue\` is set to \`true\``
-				)
-			);
-		}
-		return undefined;
+	if (typeof user_cors === 'object' && user_cors !== null) {
+		if (user_cors.preflightContinue === undefined) return { preflightContinue: true };
+		if (user_cors.preflightContinue) return undefined;
 	}
 
-	// User set an object without preflightContinue — merge it in
-	if (typeof user_cors === 'object' && user_cors !== null && !('preflightContinue' in user_cors)) {
-		return { ...user_cors, preflightContinue: true };
+	if (warn) {
+		console.warn(
+			styleText(
+				['yellow', 'bold'],
+				`OPTIONS request handlers will not work unless \`${key}.preflightContinue\` is set to \`true\``
+			)
+		);
 	}
 
-	// Already has preflightContinue: true, leave as-is
 	return undefined;
 }
 
