@@ -40,6 +40,15 @@ jobs:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
 
+      # avoid stale cache results when testing ISR routes
+      - name: Purge Vercel CDN Cache
+        shell: bash
+        env:
+          VERCEL_TOKEN: ${{ secrets.vercel-token }}
+          VERCEL_ORG_ID: ${{ secrets.vercel-org-id }}
+          VERCEL_PROJECT_ID: ${{ secrets.vercel-project-id }}
+        run: vercel cache purge --type cdn --token="${{ secrets.vercel-token }}" --yes
+
       - uses: ./.github/actions/platform-test
         with:
           test-app-dir: packages/adapter-vercel/test/apps/basic
