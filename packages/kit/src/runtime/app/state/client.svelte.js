@@ -169,7 +169,7 @@ export const updated = {
 				}
 
 				const data = await res.json();
-				return untrack(() => (_updated ||= data.version !== version));
+				return (_updated ||= data.version !== version);
 			} catch {
 				return false;
 			} finally {
