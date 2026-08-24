@@ -54,7 +54,10 @@ function resolve_cors(user_cors, key) {
 		return { preflightContinue: true };
 	}
 
-	const preflight_disabled = typeof user_cors !== 'object' || user_cors.preflightContinue === false;
+	const preflight_disabled =
+		typeof user_cors !== 'object' ||
+		user_cors === null ||
+		user_cors.preflightContinue === false;
 
 	if (preflight_disabled) {
 		console.warn(
