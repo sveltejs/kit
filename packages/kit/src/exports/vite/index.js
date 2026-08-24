@@ -2,7 +2,7 @@
 /** @import { Options } from '@sveltejs/vite-plugin-svelte' */
 /** @import { PreprocessorGroup } from 'svelte/compiler' */
 /** @import {  ManifestData, RemoteChunk, ServerMetadata, ValidatedConfig } from 'types' */
-/** @import { Plugin, ResolvedConfig, Rolldown, UserConfig } from 'vite' */
+/** @import { CorsOptions, Plugin, ResolvedConfig, Rolldown, UserConfig } from 'vite' */
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
@@ -37,6 +37,43 @@ import { plugin_service_worker_build } from './build/service-worker.js';
 import { plugin_adapter, plugin_compile } from './build/index.js';
 
 const options_regex = /(export\s+const\s+(prerender|csr|ssr|trailingSlash))\s*=/s;
+
+/**
+ * Resolves the CORS config for dev and preview servers.
+ * SvelteKit needs `preflightContinue: true` so that OPTIONS requests for
+ * `+server.js` endpoints aren't intercepted by Vite's CORS middleware.
+ * If the user has explicitly set values that prevent this, we warn them
+ * and preserve their settings.
+ * @param {CorsOptions | boolean | undefined} user_cors
+ * @param {'server.cors' | 'preview.cors'} key
+ * @returns {CorsOptions | undefined}
+ */
+function resolve_cors(user_cors, key) {
+	if (user_cors === undefined) {
+		// Default: enable preflightContinue so OPTIONS handlers work
+		return { preflightContinue: true };
+	}
+
+	const preflight_disabled = typeof user_cors !== 'object' || user_cors.preflightContinue === false;
+
+	if (preflight_disabled) {
+		console.warn(
+			styleText(
+				['yellow', 'bold'],
+				`OPTIONS request handlers will not work unless \`${key}.preflightContinue\` is set to \`true\``
+			)
+		);
+		return undefined;
+	}
+
+	// User set an object without preflightContinue — merge it in
+	if (typeof user_cors === 'object' && user_cors !== null && !('preflightContinue' in user_cors)) {
+		return { ...user_cors, preflightContinue: true };
+	}
+
+	// Already has preflightContinue: true, leave as-is
+	return undefined;
+}
 
 const removed_modules = [
 	{
@@ -369,7 +406,7 @@ function kit({ svelte_config }) {
 						]
 					},
 					server: {
-						cors: { preflightContinue: true },
+						cors: resolve_cors(config.server?.cors, 'server.cors'),
 						fs: {
 							allow: [...allow]
 						},
@@ -382,7 +419,7 @@ function kit({ svelte_config }) {
 						}
 					},
 					preview: {
-						cors: { preflightContinue: true }
+						cors: resolve_cors(config.preview?.cors, 'preview.cors')
 					},
 					optimizeDeps: {
 						entries: [
