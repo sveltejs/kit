@@ -46,9 +46,10 @@ const options_regex = /(export\s+const\s+(prerender|csr|ssr|trailingSlash))\s*=/
  * and preserve their settings.
  * @param {CorsOptions | boolean | undefined} user_cors
  * @param {'server.cors' | 'preview.cors'} key
+ * @param {boolean} warn Whether to emit a warning when the user's settings prevent OPTIONS handlers from working. Only relevant for the dev/preview servers, not `vite build`.
  * @returns {CorsOptions | undefined}
  */
-function resolve_cors(user_cors, key) {
+function resolve_cors(user_cors, key, warn) {
 	if (user_cors === undefined) {
 		// Default: enable preflightContinue so OPTIONS handlers work
 		return { preflightContinue: true };
@@ -58,12 +59,14 @@ function resolve_cors(user_cors, key) {
 		typeof user_cors !== 'object' || user_cors === null || user_cors.preflightContinue === false;
 
 	if (preflight_disabled) {
-		console.warn(
-			styleText(
-				['yellow', 'bold'],
-				`OPTIONS request handlers will not work unless \`${key}.preflightContinue\` is set to \`true\``
-			)
-		);
+		if (warn) {
+			console.warn(
+				styleText(
+					['yellow', 'bold'],
+					`OPTIONS request handlers will not work unless \`${key}.preflightContinue\` is set to \`true\``
+				)
+			);
+		}
 		return undefined;
 	}
 
@@ -407,7 +410,7 @@ function kit({ svelte_config }) {
 						]
 					},
 					server: {
-						cors: resolve_cors(config.server?.cors, 'server.cors'),
+						cors: resolve_cors(config.server?.cors, 'server.cors', !is_build),
 						fs: {
 							allow: [...allow]
 						},
@@ -420,7 +423,7 @@ function kit({ svelte_config }) {
 						}
 					},
 					preview: {
-						cors: resolve_cors(config.preview?.cors, 'preview.cors')
+						cors: resolve_cors(config.preview?.cors, 'preview.cors', !is_build)
 					},
 					optimizeDeps: {
 						entries: [
