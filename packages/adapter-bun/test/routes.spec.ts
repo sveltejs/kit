@@ -78,7 +78,7 @@ test('a root deployment registers routes with a leading slash', async () => {
 });
 
 test('immutable SvelteKit assets receive a long-lived cache policy', async () => {
-	const { routes } = await load_routes({ appDir: '_app' });
+	const { routes } = await load_routes({ app_dir: '_app' });
 
 	const request = new Request('http://localhost/');
 	const immutable = (
@@ -283,8 +283,8 @@ test('prerendered redirects retain their status and location', async () => {
 	expect((handler as any).GET.headers.get('location')).toBe('/new');
 });
 
-async function load_routes({ base = '/', embed = false, appDir = '_app' } = {}) {
-	mock_manifest({ manifest: { appDir }, base, embed });
+async function load_routes({ base = '/', embed = false, app_dir = '_app' } = {}) {
+	mock_manifest({ app_dir, base, embed });
 	// the real Bun.file runs, with the spy recording resolved paths; the files it
 	// points at need not exist because nothing reads their contents
 	const file = spyOn(Bun, 'file');
