@@ -54,8 +54,9 @@ test('copy files', () => {
 });
 
 test('compress files', async () => {
-	// @ts-expect-error - we don't need the whole config for this test
 	const builder = create_builder({
+		// @ts-expect-error - we don't need the whole config for this test
+		build_data: {},
 		route_data: []
 	});
 
@@ -77,8 +78,9 @@ test('compress files', async () => {
 });
 
 test('compress returns an empty array for a directory that does not exist', async () => {
-	// @ts-expect-error - we don't need the whole config for this test
 	const builder = create_builder({
+		// @ts-expect-error - we don't need the whole config for this test
+		build_data: {},
 		route_data: []
 	});
 
@@ -100,8 +102,11 @@ test('instrument generates facade with posix paths', () => {
 	const entrypoint = join(dest, 'index.js');
 	const instrumentation = join(dest, 'server', 'instrumentation.server.js');
 
-	// @ts-expect-error - we don't need the whole config for this test
-	const builder = create_builder({ route_data: [] });
+	const builder = create_builder({
+		// @ts-expect-error - we don't need the whole config for this test
+		build_data: {},
+		route_data: []
+	});
 
 	builder.instrument({
 		entrypoint,
