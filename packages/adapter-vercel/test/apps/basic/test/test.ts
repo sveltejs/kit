@@ -81,6 +81,10 @@ test('ISR dynamic route serves cached response per slug', async ({ request }) =>
 	expect(beta.ok()).toBe(true);
 	const beta_html = await beta.text();
 	expect(beta_html).toContain('ISR: beta');
+
+	// trailing slash is normalized rather than silently served
+	const slashed = await request.get('/isr/alpha/', { maxRedirects: 0 });
+	expect(slashed.status()).toBe(308);
 });
 
 test('prerendered page works', async ({ page }) => {

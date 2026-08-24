@@ -4,7 +4,7 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { VERSION } from '@sveltejs/kit';
 import { nodeFileTrace } from '@vercel/nft';
-import { get_pathname, parse_isr_expiration, pattern_to_src, resolve_runtime } from './utils.js';
+import { parse_isr_expiration, pattern_to_src, resolve_runtime } from './utils.js';
 
 const INTERNAL = '![-]'; // this name is guaranteed not to conflict with user routes
 
@@ -230,6 +230,12 @@ const plugin = function (defaults = {}) {
 				});
 			}
 
+			// Vercel's filesystem phase serves a function at its own path, with or without a
+			// trailing slash, before the routes below are consulted. Static ISR routes live at
+			// their own path, so they must be routed before it to arrive with `__pathname`
+			/** @type {any[]} */
+			const static_isr_routes = [];
+
 			for (const route of builder.routes) {
 				if (is_prerendered(route)) continue;
 
@@ -254,7 +260,6 @@ const plugin = function (defaults = {}) {
 						fs.symlinkSync(`../${relative}`, `${base}/__data.json.func`);
 					}
 
-					const pathname = get_pathname(route);
 					const json = JSON.stringify(
 						{ ...isr, expiration: parse_isr_expiration(isr.expiration, route.id) },
 						null,
@@ -266,17 +271,23 @@ const plugin = function (defaults = {}) {
 						write(`${base}/__data.json.prerender-config.json`, json);
 					}
 
-					const q = `?__pathname=/${pathname}`;
+					const routes = route.segments.some((segment) => segment.dynamic)
+						? static_config.routes
+						: static_isr_routes;
 
-					static_config.routes.push({
-						src: src + '$',
-						dest: `/${isr_name}${q}`
+					// capture the requested pathname (minus the `^` anchor) as `__pathname`,
+					// since the function otherwise only sees its own path
+					const pathname = src.slice(1);
+
+					routes.push({
+						src: `^(${pathname})$`,
+						dest: `/${isr_name}?__pathname=$1`
 					});
 
 					if (has_page) {
-						static_config.routes.push({
-							src: src + '/__data.json$',
-							dest: `/${isr_name}/__data.json${q}`
+						routes.push({
+							src: `^(${pathname}/__data.json)$`,
+							dest: `/${isr_name}/__data.json?__pathname=$1`
 						});
 					}
 				} else {
@@ -317,6 +328,9 @@ const plugin = function (defaults = {}) {
 					});
 				}
 			}
+
+			const filesystem = static_config.routes.findIndex((route) => route.handle === 'filesystem');
+			static_config.routes.splice(filesystem, 0, ...static_isr_routes);
 
 			if (builder.config.router.resolution === 'server') {
 				// Create a separate serverless function just for server-side route resolution.
