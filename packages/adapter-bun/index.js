@@ -142,7 +142,7 @@ export default function (opts = {}) {
 
 			const virtual_files = {
 				[manifest_file]:
-					`export const app_dir = ${JSON.stringify(builder.getAppPath())};\n` +
+					`export const app_dir = ${JSON.stringify(builder.config.appDir)};\n` +
 					`export const base = ${JSON.stringify(builder.config.paths.base || '/')};\n` +
 					`export const embed = ${JSON.stringify(!!buildOptions.compile)};\n` +
 					`export const env_prefix = ${JSON.stringify(envPrefix)};\n` +
