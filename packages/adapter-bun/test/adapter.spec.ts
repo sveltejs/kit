@@ -121,7 +121,7 @@ describe('Bun build configuration', () => {
 
 		const files = bun_build.mock.calls[0][0].files;
 		expect(files[manifest_file]).toBe(
-			'export const app_dir = "/docs/_app";\n' +
+			'export const app_dir = "_app";\n' +
 				'export const base = "/docs";\n' +
 				'export const embed = false;\n' +
 				'export const env_prefix = "APP_";\n' +
@@ -578,7 +578,7 @@ function create_builder({
 	instrumentation?: boolean;
 } = {}) {
 	return {
-		config: { outDir: '.svelte-kit', paths: { base, origin } },
+		config: { outDir: '.svelte-kit', paths: { base, origin }, appDir: '_app' },
 		routes,
 		prerendered: {
 			pages: new Map(prerendered_pages),
