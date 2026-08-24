@@ -121,7 +121,7 @@ describe('Bun build configuration', () => {
 
 		const files = bun_build.mock.calls[0][0].files;
 		expect(files[manifest_file]).toBe(
-			'export const manifest = {"appDir":"_app"};\n' +
+			'export const app_dir = "/docs/_app";\n' +
 				'export const base = "/docs";\n' +
 				'export const embed = false;\n' +
 				'export const env_prefix = "APP_";\n' +
@@ -130,7 +130,9 @@ describe('Bun build configuration', () => {
 		expect(files[options_file]).toBe(
 			'export default {"hostname":"127.0.0.1","port":4000,"development":true};'
 		);
-		expect(builder.generateManifest).toHaveBeenCalledWith({ relativePath: './' });
+		expect(builder.writeServerEntrypoint).toHaveBeenCalledWith(
+			'.svelte-kit/output/bun-tmp/server.js'
+		);
 	});
 
 	test('resolves generated runtime modules through the Bun plugin', async () => {
@@ -144,7 +146,7 @@ describe('Bun build configuration', () => {
 		);
 		const resolve_module = on_resolve.mock.calls[0][1];
 		expect(resolve_module({ path: 'SERVER' })).toEqual({
-			path: '.svelte-kit/output/server/index.js'
+			path: '.svelte-kit/output/bun-tmp/server.js'
 		});
 		expect(resolve_module({ path: 'MANIFEST' })).toEqual({ path: manifest_file });
 		expect(resolve_module({ path: 'ROUTES' })).toEqual({ path: routes_file });
@@ -588,6 +590,9 @@ function create_builder({
 			warn: mock((_message: string) => {}),
 			info: mock((_message: string) => {})
 		},
+		getAppPath: () => `${base}/_app`,
+		writeServerEntrypoint: mock(() => {}),
+		getBuildDirectory: (dir: string) => `.svelte-kit/output/${dir}`,
 		getServerDirectory: () => '.svelte-kit/output/server',
 		writeClient: mock(() => client_files),
 		writePrerendered: mock(() => prerendered_files),
