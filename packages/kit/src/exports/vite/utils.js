@@ -1,5 +1,6 @@
 /** @import { UserConfig } from 'vite' */
 /** @import { EnforcedConfig } from './types.js' */
+/** @import { Emulator } from '@sveltejs/kit' */
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
@@ -323,4 +324,31 @@ export function comparable(value) {
 	if (typeof value !== 'string') return value;
 	const normalized = posixify(value);
 	return process.platform === 'win32' ? normalized.toLowerCase() : normalized;
+}
+
+/**
+ * Ensures that the adapter emulator is disposed when the dev or preview server
+ * shuts down, so adapters do not leak resources acquired during `emulate`
+ * (e.g. a platform proxy spawning a child process). Disposal happens even if
+ * the original `close` fails, and disposal failures are logged rather than
+ * propagated so they can neither mask nor be masked by shutdown errors.
+ *
+ * @param {import('vite').ViteDevServer | import('vite').PreviewServer} server
+ * @param {Emulator | undefined} emulator
+ */
+export function dispose_emulator_on_close(server, emulator) {
+	if (!emulator?.dispose) return;
+
+	const close = server.close.bind(server);
+	server.close = async () => {
+		try {
+			await close();
+		} finally {
+			try {
+				await emulator.dispose();
+			} catch (error) {
+				console.error(`Error disposing emulator: ${/** @type {any} */ (error)?.message ?? error}`);
+			}
+		}
+	};
 }

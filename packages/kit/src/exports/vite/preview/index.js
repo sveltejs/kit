@@ -10,7 +10,7 @@ import { loadEnv, normalizePath } from 'vite';
 import { createReadableStream, getRequest, setResponse } from '../../../exports/node/index.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import { relative_pathname } from '../../../utils/url.js';
-import { is_chrome_devtools_request, not_found } from '../utils.js';
+import { dispose_emulator_on_close, is_chrome_devtools_request, not_found } from '../utils.js';
 import { stackless } from '../../../utils/error.js';
 
 /**
@@ -63,6 +63,10 @@ export async function preview(vite, svelte_config) {
 	}
 
 	const emulator = await svelte_config.adapter?.emulate?.();
+
+	// ensure the adapter can release any resources it acquired (e.g. a platform
+	// proxy spawning a child process) when the preview server shuts down
+	dispose_emulator_on_close(vite, emulator);
 
 	return () => {
 		// Remove the base middleware. It screws with the URL.

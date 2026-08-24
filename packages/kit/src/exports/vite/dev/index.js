@@ -20,7 +20,12 @@ import * as sync from '../../../core/sync/sync.js';
 import { get_mime_lookup, get_runtime_base } from '../../../core/utils.js';
 import '../../../utils/mime.js'; // extend mrmime with additional types (affects sirv too)
 import { compact } from '../../../utils/array.js';
-import { is_chrome_devtools_request, is_remote_module, not_found } from '../utils.js';
+import {
+	dispose_emulator_on_close,
+	is_chrome_devtools_request,
+	is_remote_module,
+	not_found
+} from '../utils.js';
 import { SCHEME } from '../../../utils/url.js';
 import { check_feature } from '../../../utils/features.js';
 import { escape_html } from '../../../utils/escape.js';
@@ -503,6 +508,11 @@ export async function dev(
 
 	const env = vite.loadEnv(vite_dev_server.config.mode, svelte_config.env.dir, '');
 	const emulator = await svelte_config.adapter?.emulate?.();
+
+	// ensure the adapter can release any resources it acquired (e.g. a platform
+	// proxy spawning a child process) when the dev server shuts down, including
+	// when it is closed as part of a restart triggered by a config change
+	dispose_emulator_on_close(vite_dev_server, emulator);
 
 	/** @type {Promise<void> | undefined} */
 	let init_manifest;

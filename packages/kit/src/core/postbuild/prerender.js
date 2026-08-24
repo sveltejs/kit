@@ -180,574 +180,593 @@ async function prerender({
 	/** @type {import('types').Logger} */
 	const log = logger({ verbose });
 
-	/** @type {Map<string, string>} */
-	const saved = new Map();
+	try {
+		/** @type {Map<string, string>} */
+		const saved = new Map();
 
-	const handle_http_error = normalise_error_handler(
-		'handleHttpError',
-		config.prerender.handleHttpError,
-		({ status, path, referrer, referenceType }) => {
-			let message = `Failed to prerender ${path}`;
+		const handle_http_error = normalise_error_handler(
+			'handleHttpError',
+			config.prerender.handleHttpError,
+			({ status, path, referrer, referenceType }) => {
+				let message = `Failed to prerender ${path}`;
 
-			if (status === 404) {
-				if (!path.startsWith(config.paths.base)) {
-					message = referrer ? `${path} (${referenceType} from ${referrer})` : path;
+				if (status === 404) {
+					if (!path.startsWith(config.paths.base)) {
+						message = referrer ? `${path} (${referenceType} from ${referrer})` : path;
 
-					message += ` does not begin with \`base\`. You can fix this by using \`resolve('${path}')\` from \`$app/paths\`. The base path is configurable from \`paths.base\``;
-				} else if (referrer) {
-					message = `${path} was ${referenceType} from ${referrer}`;
-				}
-			}
-
-			return message;
-		}
-	);
-
-	const handle_missing_id = normalise_error_handler(
-		'handleMissingId',
-		config.prerender.handleMissingId,
-		({ path, id, referrers }) => {
-			return (
-				`The following pages contain links to ${path}#${id}, but no element with id="${id}" exists on ${path}:` +
-				referrers.map((l) => `\n  - ${l}`).join('')
-			);
-		}
-	);
-
-	const handle_entry_generator_mismatch = normalise_error_handler(
-		'handleEntryGeneratorMismatch',
-		config.prerender.handleEntryGeneratorMismatch,
-		({ generatedFromId, entry, matchedId }) => {
-			return `The entries export from ${generatedFromId} generated entry ${entry}, which was matched by ${matchedId === entry ? 'a static route' : matchedId}`;
-		}
-	);
-
-	const handle_not_prerendered_route = normalise_error_handler(
-		'handleUnseenRoutes',
-		config.prerender.handleUnseenRoutes,
-		({ routes }) => {
-			const list = routes.map((id) => `  - ${id}`).join('\n');
-			return `The following routes were marked as prerenderable, but were not prerendered because they were not found while crawling your app:\n${list}`;
-		}
-	);
-
-	const handle_invalid_url = normalise_error_handler(
-		'handleInvalidUrl',
-		config.prerender.handleInvalidUrl,
-		({ href, referrer }) => {
-			return `Invalid URL ${href}${referrer ? ` (linked from ${referrer})` : ''}`;
-		}
-	);
-
-	const q = queue(config.prerender.concurrency);
-
-	/**
-	 * @param {string} path
-	 * @param {boolean} is_html
-	 */
-	function output_filename(path, is_html) {
-		const file = path.slice(config.paths.base.length + 1) || 'index.html';
-
-		if (is_html && !file.endsWith('.html')) {
-			return file + (file.endsWith('/') ? 'index.html' : '.html');
-		}
-
-		return file;
-	}
-
-	const files = new Set(walk(`${out}/client`));
-	files.add(`${config.appDir}/env.js`);
-
-	const immutable = `${config.appDir}/immutable`;
-	if (existsSync(`${out}/server/${immutable}`)) {
-		for (const file of walk(`${out}/server/${immutable}`)) {
-			files.add(`${config.appDir}/immutable/${file}`);
-		}
-	}
-
-	const remote_prefix = `${config.paths.base}/${config.appDir}/remote/`;
-
-	const seen = new Set();
-	const written = new Set();
-
-	/** @type {Map<string, Promise<any>>} */
-	const remote_responses = new Map();
-
-	/** @type {null | { clear: () => void; update: (path: string) => void; updated: number }} */
-	let progress = null;
-
-	if (is_tty) {
-		// Where possible, provide progress feedback by showing the path we're
-		// currently requesting, then clearing the line once the response comes in.
-		// This avoids the wall of text that happens when you prerender
-		// many pages and log each response
-		const { stdout, stderr } = process;
-
-		let current = false;
-		let needs_newline = true;
-
-		const write = stdout.write;
-
-		/** @param {string} value */
-		const print = (value) => write.call(stdout, value);
-
-		/** @type {ProxyHandler<typeof stdout.write>} */
-		const intercept = {
-			apply(target, this_arg, args) {
-				const chunk = args[0];
-				if (chunk.length > 0) {
-					current = false;
-					needs_newline =
-						typeof chunk === 'string' ? !chunk.endsWith('\n') : chunk[chunk.length - 1] !== 10;
-				}
-				return Reflect.apply(target, this_arg, args);
-			}
-		};
-
-		stdout.write = new Proxy(stdout.write, intercept);
-		stderr.write = new Proxy(stderr.write, intercept);
-
-		progress = {
-			clear: () => {
-				// If app code writes to stdout or stderr, don't move the cursor to clear
-				// the previous progress log, because that will corrupt things
-				if (!current) return;
-
-				print('\x1B[1A'); // move cursor to start of progress update
-				print('\x1B[2K'); // clear current line
-			},
-
-			update: (path) => {
-				// if we're in the middle of a line, start a new one
-				if (needs_newline) print('\n');
-
-				print(`crawling ${path}\n`);
-				current = true;
-				needs_newline = false;
-			},
-
-			updated: 0
-		};
-	}
-
-	/** @type {Set<string>} */
-	const resolved_route_ids = new Set();
-
-	/** @type {Map<string, Set<string>>} */
-	const expected_hashlinks = new Map();
-
-	/** @type {Map<string, Set<string>>} */
-	const actual_hashlinks = new Map();
-
-	/**
-	 * @param {string | null} referrer
-	 * @param {string} decoded
-	 * @param {string} [encoded]
-	 * @param {string} [generated_from_id]
-	 */
-	function enqueue(referrer, decoded, encoded, generated_from_id) {
-		if (seen.has(decoded)) return;
-		seen.add(decoded);
-
-		const file = decoded.slice(config.paths.base.length + 1);
-		if (files.has(file)) return;
-
-		return q.add(() => visit(decoded, encoded || encodeURI(decoded), referrer, generated_from_id));
-	}
-
-	/**
-	 * @param {string} decoded
-	 * @param {string} encoded
-	 * @param {string?} referrer
-	 * @param {string} [generated_from_id]
-	 */
-	async function visit(decoded, encoded, referrer, generated_from_id) {
-		if (!decoded.startsWith(config.paths.base)) {
-			handle_http_error({ status: 404, path: decoded, referrer, referenceType: 'linked' });
-			return;
-		}
-
-		/** @type {Map<string, import('types').PrerenderDependency>} */
-		const dependencies = new Map();
-
-		if (progress) {
-			progress.clear();
-			progress.update(decoded);
-
-			if (Date.now() - progress.updated > 50) {
-				progress.updated = Date.now();
-
-				// without this, the update will rarely be visible, and progress will appear stuck
-				await new Promise((f) => setTimeout(f, 0));
-			}
-		}
-
-		const request = new Request(prerender_origin + encoded);
-
-		const response = await server.respond(request, {
-			getClientAddress() {
-				throw new Error('Cannot read clientAddress during prerendering');
-			},
-			prerendering: {
-				dependencies,
-				remote_responses,
-				resolved_route_ids
-			},
-			read: (file) => {
-				// stuff we just wrote
-				const filepath = saved.get(file);
-				if (filepath) return readFileSync(filepath);
-
-				// Static assets emitted during build
-				if (file.startsWith(config.appDir)) {
-					return readFileSync(`${out}/server/${file}`);
-				}
-
-				// stuff in `static`
-				return readFileSync(join(config.files.assets, file));
-			},
-			emulator
-		});
-
-		const encoded_id = response.headers.get('x-sveltekit-routeid');
-		const decoded_id = encoded_id && decode_uri(encoded_id);
-		if (
-			decoded_id !== null &&
-			generated_from_id !== undefined &&
-			decoded_id !== generated_from_id
-		) {
-			handle_entry_generator_mismatch({
-				generatedFromId: generated_from_id,
-				entry: decoded,
-				matchedId: decoded_id
-			});
-		}
-
-		if (response.status >= 400) {
-			console.log(format_response(response.status, request));
-		}
-
-		const body = Buffer.from(await response.arrayBuffer());
-
-		const category = decoded.startsWith(remote_prefix) ? 'data' : 'pages';
-		save(category, response, body, decoded, encoded, referrer, 'linked');
-
-		for (const [dependency_path, result] of dependencies) {
-			// this seems circuitous, but using new URL allows us to not care
-			// whether dependency_path is encoded or not
-			const encoded_dependency_path = new URL(dependency_path, 'http://localhost').pathname;
-			const decoded_dependency_path = decode_uri(encoded_dependency_path);
-
-			const headers = Object.fromEntries(result.response.headers);
-
-			const prerender = headers['x-sveltekit-prerender'];
-			if (prerender) {
-				const encoded_route_id = headers['x-sveltekit-routeid'];
-				if (encoded_route_id != null) {
-					const route_id = decode_uri(encoded_route_id);
-					const existing_value = prerender_map.get(route_id);
-					if (existing_value !== 'auto') {
-						prerender_map.set(route_id, prerender === 'true' ? true : 'auto');
+						message += ` does not begin with \`base\`. You can fix this by using \`resolve('${path}')\` from \`$app/paths\`. The base path is configurable from \`paths.base\``;
+					} else if (referrer) {
+						message = `${path} was ${referenceType} from ${referrer}`;
 					}
 				}
+
+				return message;
+			}
+		);
+
+		const handle_missing_id = normalise_error_handler(
+			'handleMissingId',
+			config.prerender.handleMissingId,
+			({ path, id, referrers }) => {
+				return (
+					`The following pages contain links to ${path}#${id}, but no element with id="${id}" exists on ${path}:` +
+					referrers.map((l) => `\n  - ${l}`).join('')
+				);
+			}
+		);
+
+		const handle_entry_generator_mismatch = normalise_error_handler(
+			'handleEntryGeneratorMismatch',
+			config.prerender.handleEntryGeneratorMismatch,
+			({ generatedFromId, entry, matchedId }) => {
+				return `The entries export from ${generatedFromId} generated entry ${entry}, which was matched by ${matchedId === entry ? 'a static route' : matchedId}`;
+			}
+		);
+
+		const handle_not_prerendered_route = normalise_error_handler(
+			'handleUnseenRoutes',
+			config.prerender.handleUnseenRoutes,
+			({ routes }) => {
+				const list = routes.map((id) => `  - ${id}`).join('\n');
+				return `The following routes were marked as prerenderable, but were not prerendered because they were not found while crawling your app:\n${list}`;
+			}
+		);
+
+		const handle_invalid_url = normalise_error_handler(
+			'handleInvalidUrl',
+			config.prerender.handleInvalidUrl,
+			({ href, referrer }) => {
+				return `Invalid URL ${href}${referrer ? ` (linked from ${referrer})` : ''}`;
+			}
+		);
+
+		const q = queue(config.prerender.concurrency);
+
+		/**
+		 * @param {string} path
+		 * @param {boolean} is_html
+		 */
+		function output_filename(path, is_html) {
+			const file = path.slice(config.paths.base.length + 1) || 'index.html';
+
+			if (is_html && !file.endsWith('.html')) {
+				return file + (file.endsWith('/') ? 'index.html' : '.html');
 			}
 
-			const body = result.body ?? new Uint8Array(await result.response.arrayBuffer());
-
-			const category = decoded_dependency_path.startsWith(remote_prefix) ? 'data' : 'dependencies';
-
-			save(
-				category,
-				result.response,
-				body,
-				decoded_dependency_path,
-				encoded_dependency_path,
-				decoded,
-				'fetched'
-			);
+			return file;
 		}
 
-		// avoid triggering `filterSerializeResponseHeaders` guard
-		const headers = Object.fromEntries(response.headers);
+		const files = new Set(walk(`${out}/client`));
+		files.add(`${config.appDir}/env.js`);
 
-		// if it's a 200 HTML response, crawl it. Skip error responses, as we don't save those
-		if (
-			response.ok &&
-			config.prerender.crawl &&
-			matches_content_type(headers['content-type'], 'text/html')
-		) {
-			const { ids, hrefs, invalid } = crawl(body.toString(), decoded);
-
-			for (const href of invalid) {
-				handle_invalid_url({ href, referrer: decoded });
+		const immutable = `${config.appDir}/immutable`;
+		if (existsSync(`${out}/server/${immutable}`)) {
+			for (const file of walk(`${out}/server/${immutable}`)) {
+				files.add(`${config.appDir}/immutable/${file}`);
 			}
+		}
 
-			actual_hashlinks.set(decoded, new Set(ids));
+		const remote_prefix = `${config.paths.base}/${config.appDir}/remote/`;
 
-			/** @param {string} href */
-			const removePrerenderOrigin = (href) => {
-				if (href.startsWith(prerender_origin)) {
-					if (href === prerender_origin) return '/';
-					if (href.at(prerender_origin.length) !== '/') return href;
-					return href.slice(prerender_origin.length);
+		const seen = new Set();
+		const written = new Set();
+
+		/** @type {Map<string, Promise<any>>} */
+		const remote_responses = new Map();
+
+		/** @type {null | { clear: () => void; update: (path: string) => void; updated: number }} */
+		let progress = null;
+
+		if (is_tty) {
+			// Where possible, provide progress feedback by showing the path we're
+			// currently requesting, then clearing the line once the response comes in.
+			// This avoids the wall of text that happens when you prerender
+			// many pages and log each response
+			const { stdout, stderr } = process;
+
+			let current = false;
+			let needs_newline = true;
+
+			const write = stdout.write;
+
+			/** @param {string} value */
+			const print = (value) => write.call(stdout, value);
+
+			/** @type {ProxyHandler<typeof stdout.write>} */
+			const intercept = {
+				apply(target, this_arg, args) {
+					const chunk = args[0];
+					if (chunk.length > 0) {
+						current = false;
+						needs_newline =
+							typeof chunk === 'string' ? !chunk.endsWith('\n') : chunk[chunk.length - 1] !== 10;
+					}
+					return Reflect.apply(target, this_arg, args);
 				}
-				return href;
 			};
 
-			for (const href of hrefs.map(removePrerenderOrigin)) {
-				if (!is_root_relative(href)) continue;
+			stdout.write = new Proxy(stdout.write, intercept);
+			stderr.write = new Proxy(stderr.write, intercept);
 
-				const { pathname, search, hash } = new URL(href, 'http://localhost');
+			progress = {
+				clear: () => {
+					// If app code writes to stdout or stderr, don't move the cursor to clear
+					// the previous progress log, because that will corrupt things
+					if (!current) return;
 
-				if (search) {
-					// TODO warn that query strings have no effect on statically-exported pages
-				}
+					print('\x1B[1A'); // move cursor to start of progress update
+					print('\x1B[2K'); // clear current line
+				},
 
-				if (hash) {
-					const key = decode_uri(pathname + hash);
+				update: (path) => {
+					// if we're in the middle of a line, start a new one
+					if (needs_newline) print('\n');
 
-					if (!expected_hashlinks.has(key)) {
-						expected_hashlinks.set(key, new Set());
-					}
+					print(`crawling ${path}\n`);
+					current = true;
+					needs_newline = false;
+				},
 
-					/** @type {Set<string>} */ (expected_hashlinks.get(key)).add(decoded);
-				}
-
-				void enqueue(decoded, decode_uri(pathname), pathname);
-			}
+				updated: 0
+			};
 		}
-	}
 
-	/**
-	 * @param {'pages' | 'dependencies' | 'data'} category
-	 * @param {Response} response
-	 * @param {string | Uint8Array} body
-	 * @param {string} decoded
-	 * @param {string} encoded
-	 * @param {string | null} referrer
-	 * @param {'linked' | 'fetched'} referenceType
-	 */
-	function save(category, response, body, decoded, encoded, referrer, referenceType) {
-		const response_type = Math.floor(response.status / 100);
-		const headers = Object.fromEntries(response.headers);
+		/** @type {Set<string>} */
+		const resolved_route_ids = new Set();
 
-		const type = headers['content-type'];
-		const is_html = response_type === REDIRECT || matches_content_type(type, 'text/html');
+		/** @type {Map<string, Set<string>>} */
+		const expected_hashlinks = new Map();
 
-		if (!is_html && response.status === 200 && decoded.slice(config.paths.base.length + 1) === '') {
-			throw new Error(
-				`Cannot prerender a root +server.js that returns a non-HTML response - static hosts always serve an HTML file for \`${config.paths.base || '/'}\``
+		/** @type {Map<string, Set<string>>} */
+		const actual_hashlinks = new Map();
+
+		/**
+		 * @param {string | null} referrer
+		 * @param {string} decoded
+		 * @param {string} [encoded]
+		 * @param {string} [generated_from_id]
+		 */
+		function enqueue(referrer, decoded, encoded, generated_from_id) {
+			if (seen.has(decoded)) return;
+			seen.add(decoded);
+
+			const file = decoded.slice(config.paths.base.length + 1);
+			if (files.has(file)) return;
+
+			return q.add(() =>
+				visit(decoded, encoded || encodeURI(decoded), referrer, generated_from_id)
 			);
 		}
 
-		const file = output_filename(decoded, is_html);
-		const dest = `${config.outDir}/output/prerendered/${category}/${file}`;
+		/**
+		 * @param {string} decoded
+		 * @param {string} encoded
+		 * @param {string?} referrer
+		 * @param {string} [generated_from_id]
+		 */
+		async function visit(decoded, encoded, referrer, generated_from_id) {
+			if (!decoded.startsWith(config.paths.base)) {
+				handle_http_error({ status: 404, path: decoded, referrer, referenceType: 'linked' });
+				return;
+			}
 
-		if (written.has(file)) return;
+			/** @type {Map<string, import('types').PrerenderDependency>} */
+			const dependencies = new Map();
 
-		const encoded_route_id = response.headers.get('x-sveltekit-routeid');
-		const route_id = encoded_route_id != null ? decode_uri(encoded_route_id) : null;
-		if (route_id !== null) prerendered_routes.add(route_id);
+			if (progress) {
+				progress.clear();
+				progress.update(decoded);
 
-		if (response_type === REDIRECT) {
-			const location = headers['location'];
+				if (Date.now() - progress.updated > 50) {
+					progress.updated = Date.now();
 
-			if (location) {
-				const resolved = resolve(encoded, location);
-				if (is_root_relative(resolved)) {
-					void enqueue(decoded, decode_uri(resolved), resolved);
+					// without this, the update will rarely be visible, and progress will appear stuck
+					await new Promise((f) => setTimeout(f, 0));
+				}
+			}
+
+			const request = new Request(prerender_origin + encoded);
+
+			const response = await server.respond(request, {
+				getClientAddress() {
+					throw new Error('Cannot read clientAddress during prerendering');
+				},
+				prerendering: {
+					dependencies,
+					remote_responses,
+					resolved_route_ids
+				},
+				read: (file) => {
+					// stuff we just wrote
+					const filepath = saved.get(file);
+					if (filepath) return readFileSync(filepath);
+
+					// Static assets emitted during build
+					if (file.startsWith(config.appDir)) {
+						return readFileSync(`${out}/server/${file}`);
+					}
+
+					// stuff in `static`
+					return readFileSync(join(config.files.assets, file));
+				},
+				emulator
+			});
+
+			const encoded_id = response.headers.get('x-sveltekit-routeid');
+			const decoded_id = encoded_id && decode_uri(encoded_id);
+			if (
+				decoded_id !== null &&
+				generated_from_id !== undefined &&
+				decoded_id !== generated_from_id
+			) {
+				handle_entry_generator_mismatch({
+					generatedFromId: generated_from_id,
+					entry: decoded,
+					matchedId: decoded_id
+				});
+			}
+
+			if (response.status >= 400) {
+				console.log(format_response(response.status, request));
+			}
+
+			const body = Buffer.from(await response.arrayBuffer());
+
+			const category = decoded.startsWith(remote_prefix) ? 'data' : 'pages';
+			save(category, response, body, decoded, encoded, referrer, 'linked');
+
+			for (const [dependency_path, result] of dependencies) {
+				// this seems circuitous, but using new URL allows us to not care
+				// whether dependency_path is encoded or not
+				const encoded_dependency_path = new URL(dependency_path, 'http://localhost').pathname;
+				const decoded_dependency_path = decode_uri(encoded_dependency_path);
+
+				const headers = Object.fromEntries(result.response.headers);
+
+				const prerender = headers['x-sveltekit-prerender'];
+				if (prerender) {
+					const encoded_route_id = headers['x-sveltekit-routeid'];
+					if (encoded_route_id != null) {
+						const route_id = decode_uri(encoded_route_id);
+						const existing_value = prerender_map.get(route_id);
+						if (existing_value !== 'auto') {
+							prerender_map.set(route_id, prerender === 'true' ? true : 'auto');
+						}
+					}
 				}
 
-				if (!headers['x-sveltekit-normalize']) {
-					mkdirSync(dirname(dest), { recursive: true });
+				const body = result.body ?? new Uint8Array(await result.response.arrayBuffer());
 
-					writeFileSync(
-						dest,
-						`<script>location.href=${devalue.uneval(
-							location
-						)};</script><meta http-equiv="refresh" content="${escape_html(
-							`0;url=${location}`,
-							true
-						)}">`
+				const category = decoded_dependency_path.startsWith(remote_prefix)
+					? 'data'
+					: 'dependencies';
+
+				save(
+					category,
+					result.response,
+					body,
+					decoded_dependency_path,
+					encoded_dependency_path,
+					decoded,
+					'fetched'
+				);
+			}
+
+			// avoid triggering `filterSerializeResponseHeaders` guard
+			const headers = Object.fromEntries(response.headers);
+
+			// if it's a 200 HTML response, crawl it. Skip error responses, as we don't save those
+			if (
+				response.ok &&
+				config.prerender.crawl &&
+				matches_content_type(headers['content-type'], 'text/html')
+			) {
+				const { ids, hrefs, invalid } = crawl(body.toString(), decoded);
+
+				for (const href of invalid) {
+					handle_invalid_url({ href, referrer: decoded });
+				}
+
+				actual_hashlinks.set(decoded, new Set(ids));
+
+				/** @param {string} href */
+				const removePrerenderOrigin = (href) => {
+					if (href.startsWith(prerender_origin)) {
+						if (href === prerender_origin) return '/';
+						if (href.at(prerender_origin.length) !== '/') return href;
+						return href.slice(prerender_origin.length);
+					}
+					return href;
+				};
+
+				for (const href of hrefs.map(removePrerenderOrigin)) {
+					if (!is_root_relative(href)) continue;
+
+					const { pathname, search, hash } = new URL(href, 'http://localhost');
+
+					if (search) {
+						// TODO warn that query strings have no effect on statically-exported pages
+					}
+
+					if (hash) {
+						const key = decode_uri(pathname + hash);
+
+						if (!expected_hashlinks.has(key)) {
+							expected_hashlinks.set(key, new Set());
+						}
+
+						/** @type {Set<string>} */ (expected_hashlinks.get(key)).add(decoded);
+					}
+
+					void enqueue(decoded, decode_uri(pathname), pathname);
+				}
+			}
+		}
+
+		/**
+		 * @param {'pages' | 'dependencies' | 'data'} category
+		 * @param {Response} response
+		 * @param {string | Uint8Array} body
+		 * @param {string} decoded
+		 * @param {string} encoded
+		 * @param {string | null} referrer
+		 * @param {'linked' | 'fetched'} referenceType
+		 */
+		function save(category, response, body, decoded, encoded, referrer, referenceType) {
+			const response_type = Math.floor(response.status / 100);
+			const headers = Object.fromEntries(response.headers);
+
+			const type = headers['content-type'];
+			const is_html = response_type === REDIRECT || matches_content_type(type, 'text/html');
+
+			if (
+				!is_html &&
+				response.status === 200 &&
+				decoded.slice(config.paths.base.length + 1) === ''
+			) {
+				throw new Error(
+					`Cannot prerender a root +server.js that returns a non-HTML response - static hosts always serve an HTML file for \`${config.paths.base || '/'}\``
+				);
+			}
+
+			const file = output_filename(decoded, is_html);
+			const dest = `${config.outDir}/output/prerendered/${category}/${file}`;
+
+			if (written.has(file)) return;
+
+			const encoded_route_id = response.headers.get('x-sveltekit-routeid');
+			const route_id = encoded_route_id != null ? decode_uri(encoded_route_id) : null;
+			if (route_id !== null) prerendered_routes.add(route_id);
+
+			if (response_type === REDIRECT) {
+				const location = headers['location'];
+
+				if (location) {
+					const resolved = resolve(encoded, location);
+					if (is_root_relative(resolved)) {
+						void enqueue(decoded, decode_uri(resolved), resolved);
+					}
+
+					if (!headers['x-sveltekit-normalize']) {
+						mkdirSync(dirname(dest), { recursive: true });
+
+						writeFileSync(
+							dest,
+							`<script>location.href=${devalue.uneval(
+								location
+							)};</script><meta http-equiv="refresh" content="${escape_html(
+								`0;url=${location}`,
+								true
+							)}">`
+						);
+
+						written.add(file);
+
+						if (!prerendered.redirects.has(decoded)) {
+							prerendered.redirects.set(decoded, {
+								status: response.status,
+								location: resolved
+							});
+
+							prerendered.paths.push(decoded);
+						}
+					}
+				} else {
+					log.warn(`location header missing on redirect received from ${decoded}`);
+				}
+
+				return;
+			}
+
+			if (response.status === 200) {
+				if (existsSync(dest) && statSync(dest).isDirectory()) {
+					throw new Error(
+						`Cannot save ${decoded} as it is already a directory. See https://svelte.dev/docs/kit/page-options#prerender-route-conflicts for more information`
 					);
+				}
 
-					written.add(file);
+				const dir = dirname(dest);
 
-					if (!prerendered.redirects.has(decoded)) {
-						prerendered.redirects.set(decoded, {
-							status: response.status,
-							location: resolved
-						});
+				if (existsSync(dir) && !statSync(dir).isDirectory()) {
+					const parent = decoded.split('/').slice(0, -1).join('/');
+					throw new Error(
+						`Cannot save ${decoded} as ${parent} is already a file. See https://svelte.dev/docs/kit/page-options#prerender-route-conflicts for more information`
+					);
+				}
 
-						prerendered.paths.push(decoded);
+				mkdirSync(dir, { recursive: true });
+
+				writeFileSync(dest, body);
+				written.add(file);
+
+				if (is_html) {
+					prerendered.pages.set(decoded, {
+						file
+					});
+				} else {
+					prerendered.assets.set(decoded, {
+						type
+					});
+				}
+
+				prerendered.paths.push(decoded);
+			} else if (response_type !== OK) {
+				handle_http_error({
+					status: response.status,
+					path: decoded,
+					referrer,
+					referenceType
+				});
+			}
+
+			manifest.assets.add(file);
+			saved.set(file, dest);
+		}
+
+		/** @type {Array<{ id: string, entries: Array<string>}>} */
+		const route_level_entries = [];
+		for (const [id, { entries }] of metadata.routes.entries()) {
+			if (entries) {
+				route_level_entries.push({ id, entries });
+			}
+		}
+
+		let should_prerender = false;
+
+		for (const value of prerender_map.values()) {
+			if (value) {
+				should_prerender = true;
+				break;
+			}
+		}
+
+		// the user's remote function modules may reference `read` or the `manifest` at the top-level
+		// so we need to set them before evaluating those modules to avoid potential runtime errors
+		set_manifest(manifest);
+		set_read_implementation((file) => createReadableStream(`${out}/server/${file}`));
+
+		/** @type {Array<import('types').RemotePrerenderInternals>} */
+		const prerender_functions = [];
+
+		for (const loader of Object.values(manifest._.remotes)) {
+			const module = await loader();
+
+			for (const fn of Object.values(module.default)) {
+				if (fn?.__?.type === 'prerender') {
+					prerender_functions.push(fn.__);
+					should_prerender = true;
+				}
+			}
+		}
+
+		if (!should_prerender) {
+			return { prerendered, prerender_map };
+		}
+
+		// only run the server after the `should_prerender` check so that we
+		// don't run the user's init hook unnecessarily
+		const server = new Server(manifest);
+		await server.init({
+			env,
+			read: (file) => createReadableStream(`${config.outDir}/output/server/${file}`)
+		});
+
+		log.info('Prerendering');
+
+		for (const entry of config.prerender.entries) {
+			if (entry === '*') {
+				for (const [id, prerender] of prerender_map) {
+					if (prerender) {
+						// remove optional parameters from the route
+						const segments = get_route_segments(id).filter((segment) => !segment.startsWith('[['));
+						const processed_id = '/' + segments.join('/');
+
+						if (processed_id.includes('[')) continue;
+						const path = `/${get_route_segments(processed_id).join('/')}`;
+						void enqueue(null, config.paths.base + path);
 					}
 				}
 			} else {
-				log.warn(`location header missing on redirect received from ${decoded}`);
-			}
-
-			return;
-		}
-
-		if (response.status === 200) {
-			if (existsSync(dest) && statSync(dest).isDirectory()) {
-				throw new Error(
-					`Cannot save ${decoded} as it is already a directory. See https://svelte.dev/docs/kit/page-options#prerender-route-conflicts for more information`
-				);
-			}
-
-			const dir = dirname(dest);
-
-			if (existsSync(dir) && !statSync(dir).isDirectory()) {
-				const parent = decoded.split('/').slice(0, -1).join('/');
-				throw new Error(
-					`Cannot save ${decoded} as ${parent} is already a file. See https://svelte.dev/docs/kit/page-options#prerender-route-conflicts for more information`
-				);
-			}
-
-			mkdirSync(dir, { recursive: true });
-
-			writeFileSync(dest, body);
-			written.add(file);
-
-			if (is_html) {
-				prerendered.pages.set(decoded, {
-					file
-				});
-			} else {
-				prerendered.assets.set(decoded, {
-					type
-				});
-			}
-
-			prerendered.paths.push(decoded);
-		} else if (response_type !== OK) {
-			handle_http_error({
-				status: response.status,
-				path: decoded,
-				referrer,
-				referenceType
-			});
-		}
-
-		manifest.assets.add(file);
-		saved.set(file, dest);
-	}
-
-	/** @type {Array<{ id: string, entries: Array<string>}>} */
-	const route_level_entries = [];
-	for (const [id, { entries }] of metadata.routes.entries()) {
-		if (entries) {
-			route_level_entries.push({ id, entries });
-		}
-	}
-
-	let should_prerender = false;
-
-	for (const value of prerender_map.values()) {
-		if (value) {
-			should_prerender = true;
-			break;
-		}
-	}
-
-	// the user's remote function modules may reference `read` or the `manifest` at the top-level
-	// so we need to set them before evaluating those modules to avoid potential runtime errors
-	set_manifest(manifest);
-	set_read_implementation((file) => createReadableStream(`${out}/server/${file}`));
-
-	/** @type {Array<import('types').RemotePrerenderInternals>} */
-	const prerender_functions = [];
-
-	for (const loader of Object.values(manifest._.remotes)) {
-		const module = await loader();
-
-		for (const fn of Object.values(module.default)) {
-			if (fn?.__?.type === 'prerender') {
-				prerender_functions.push(fn.__);
-				should_prerender = true;
+				void enqueue(null, config.paths.base + entry);
 			}
 		}
-	}
 
-	if (!should_prerender) {
-		return { prerendered, prerender_map };
-	}
+		for (const { id, entries } of route_level_entries) {
+			for (const entry of entries) {
+				void enqueue(null, config.paths.base + entry, undefined, id);
+			}
+		}
 
-	// only run the server after the `should_prerender` check so that we
-	// don't run the user's init hook unnecessarily
-	const server = new Server(manifest);
-	await server.init({
-		env,
-		read: (file) => createReadableStream(`${config.outDir}/output/server/${file}`)
-	});
-
-	log.info('Prerendering');
-
-	for (const entry of config.prerender.entries) {
-		if (entry === '*') {
-			for (const [id, prerender] of prerender_map) {
-				if (prerender) {
-					// remove optional parameters from the route
-					const segments = get_route_segments(id).filter((segment) => !segment.startsWith('[['));
-					const processed_id = '/' + segments.join('/');
-
-					if (processed_id.includes('[')) continue;
-					const path = `/${get_route_segments(processed_id).join('/')}`;
-					void enqueue(null, config.paths.base + path);
+		for (const internals of prerender_functions) {
+			if (internals.has_arg) {
+				for (const arg of (await internals.inputs?.()) ?? []) {
+					void enqueue(null, remote_prefix + internals.id + '/' + stringify_remote_arg(arg));
 				}
+			} else {
+				void enqueue(null, remote_prefix + internals.id);
 			}
-		} else {
-			void enqueue(null, config.paths.base + entry);
 		}
-	}
 
-	for (const { id, entries } of route_level_entries) {
-		for (const entry of entries) {
-			void enqueue(null, config.paths.base + entry, undefined, id);
-		}
-	}
+		await q.done();
+		progress?.clear();
 
-	for (const internals of prerender_functions) {
-		if (internals.has_arg) {
-			for (const arg of (await internals.inputs?.()) ?? []) {
-				void enqueue(null, remote_prefix + internals.id + '/' + stringify_remote_arg(arg));
+		// handle invalid fragment links
+		for (const [key, referrers] of expected_hashlinks) {
+			const index = key.indexOf('#');
+			const path = key.slice(0, index);
+			const id = key.slice(index + 1);
+
+			const hashlinks = actual_hashlinks.get(path);
+			// ignore fragment links to pages that were not prerendered
+			if (!hashlinks) continue;
+
+			if (!hashlinks.has(id) && !SPECIAL_HASHLINKS.has(id)) {
+				handle_missing_id({ id, path, referrers: Array.from(referrers) });
 			}
-		} else {
-			void enqueue(null, remote_prefix + internals.id);
+		}
+
+		/** @type {string[]} */
+		const not_prerendered = [];
+
+		for (const [route_id, prerender] of prerender_map) {
+			if (prerender === true && !prerendered_routes.has(route_id)) {
+				not_prerendered.push(route_id);
+			}
+		}
+
+		if (not_prerendered.length > 0) {
+			handle_not_prerendered_route({ routes: not_prerendered });
+		}
+
+		return { prerendered, prerender_map };
+	} finally {
+		// never let a disposal failure mask the outcome of prerendering itself
+		if (emulator?.dispose) {
+			try {
+				await emulator.dispose();
+			} catch (error) {
+				log.error(`Error disposing emulator: ${/** @type {any} */ (error)?.message ?? error}`);
+			}
 		}
 	}
-
-	await q.done();
-	progress?.clear();
-
-	// handle invalid fragment links
-	for (const [key, referrers] of expected_hashlinks) {
-		const index = key.indexOf('#');
-		const path = key.slice(0, index);
-		const id = key.slice(index + 1);
-
-		const hashlinks = actual_hashlinks.get(path);
-		// ignore fragment links to pages that were not prerendered
-		if (!hashlinks) continue;
-
-		if (!hashlinks.has(id) && !SPECIAL_HASHLINKS.has(id)) {
-			handle_missing_id({ id, path, referrers: Array.from(referrers) });
-		}
-	}
-
-	/** @type {string[]} */
-	const not_prerendered = [];
-
-	for (const [route_id, prerender] of prerender_map) {
-		if (prerender === true && !prerendered_routes.has(route_id)) {
-			not_prerendered.push(route_id);
-		}
-	}
-
-	if (not_prerendered.length > 0) {
-		handle_not_prerendered_route({ routes: not_prerendered });
-	}
-
-	return { prerendered, prerender_map };
 }
