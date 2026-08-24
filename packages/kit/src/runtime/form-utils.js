@@ -831,17 +831,19 @@ export function create_field_proxy(context, target = {}, path = []) {
 							return value;
 						};
 
-						const props = {
-							defaultChecked: { enumerable: true, get: () => is_checked(default_value) },
-							checked: { enumerable: true, get: () => is_checked(get_value() ?? default_value) }
+						/** @type {PropertyDescriptorMap} */
+						const props = is_single
+							? {}
+							: { value: { value: input_value ?? 'on', enumerable: true } };
+						props.defaultChecked = { value: is_checked(default_value), enumerable: true };
+						props.checked = {
+							enumerable: true,
+							get() {
+								return is_checked(get_value() ?? default_value);
+							}
 						};
 
-						return Object.defineProperties(
-							base_props,
-							is_single
-								? props
-								: { value: { value: input_value ?? 'on', enumerable: true }, ...props }
-						);
+						return Object.defineProperties(base_props, props);
 					}
 
 					// Handle file inputs
