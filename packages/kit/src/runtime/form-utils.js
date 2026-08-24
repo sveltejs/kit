@@ -753,8 +753,9 @@ export function create_field_proxy(context, target = {}, path = []) {
 				/**
 				 * @param {string} type
 				 * @param {unknown} [input_value]
+				 * @param {unknown} [current_value]
 				 */
-				const as_func = (type, input_value) => {
+				const as_func = (type, input_value, current_value) => {
 					const is_array =
 						type === 'file multiple' ||
 						type === 'select multiple' ||
@@ -835,18 +836,24 @@ export function create_field_proxy(context, target = {}, path = []) {
 							});
 						}
 
+						/** @param {unknown} value */
+						const is_checked = (value) =>
+							type === 'radio'
+								? value === input_value
+								: /** @type {unknown[]} */ (value ?? []).includes(input_value);
+
 						return Object.defineProperties(base_props, {
 							value: { value: input_value ?? 'on', enumerable: true },
+							defaultChecked: {
+								enumerable: true,
+								get() {
+									return is_checked(current_value);
+								}
+							},
 							checked: {
 								enumerable: true,
 								get() {
-									const value = get_value();
-
-									if (type === 'radio') {
-										return value === input_value;
-									}
-
-									return (value ?? []).includes(input_value);
+									return is_checked(get_value() ?? current_value);
 								}
 							}
 						});

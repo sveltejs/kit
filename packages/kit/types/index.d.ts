@@ -3032,7 +3032,7 @@ declare module '$app/server' {
 
 	type AsArgs<Type extends keyof InputTypeMap, Value> = Type extends 'checkbox'
 		? Value extends string[]
-			? [type: Type, value: Value[number] | (string & {})]
+			? [type: Type, value: Value[number] | (string & {}), current?: Value | undefined]
 			: Value extends boolean
 				? [type: Type] | [type: Type, value: boolean]
 				: [type: Type] | [type: Type, value: Value | (string & {})]
@@ -3041,7 +3041,7 @@ declare module '$app/server' {
 				? [type: Type, value: Value | (string & {})]
 				: [type: Type, value: Value]
 			: Type extends 'radio'
-				? [type: Type, value: Value | (string & {})]
+				? [type: Type, value: Value | (string & {}), current?: Value | undefined]
 				: Type extends 'file' | 'file multiple'
 					? [type: Type]
 					: [type: Type] | [type: Type, value: Value | undefined];
