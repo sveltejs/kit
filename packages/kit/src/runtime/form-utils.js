@@ -819,44 +819,29 @@ export function create_field_proxy(context, target = {}, path = []) {
 							}
 						}
 
-						if (type === 'checkbox' && !is_array) {
-							return Object.defineProperties(base_props, {
-								defaultChecked: {
-									enumerable: true,
-									get() {
-										return input_value;
-									}
-								},
-								checked: {
-									enumerable: true,
-									get() {
-										return get_value() ?? input_value;
-									}
-								}
-							});
-						}
+						// a single checkbox defaults to its second argument, radio and checkbox
+						// array inputs identify their option with it and default to the third
+						const is_single = type === 'checkbox' && !is_array;
+						const default_value = is_single ? input_value : current_value;
 
 						/** @param {unknown} value */
-						const is_checked = (value) =>
-							type === 'radio'
-								? value === input_value
-								: /** @type {unknown[]} */ (value ?? []).includes(input_value);
+						const is_checked = (value) => {
+							if (type === 'radio') return value === input_value;
+							if (is_array) return /** @type {unknown[]} */ (value ?? []).includes(input_value);
+							return value;
+						};
 
-						return Object.defineProperties(base_props, {
-							value: { value: input_value ?? 'on', enumerable: true },
-							defaultChecked: {
-								enumerable: true,
-								get() {
-									return is_checked(current_value);
-								}
-							},
-							checked: {
-								enumerable: true,
-								get() {
-									return is_checked(get_value() ?? current_value);
-								}
-							}
-						});
+						const props = {
+							defaultChecked: { enumerable: true, get: () => is_checked(default_value) },
+							checked: { enumerable: true, get: () => is_checked(get_value() ?? default_value) }
+						};
+
+						return Object.defineProperties(
+							base_props,
+							is_single
+								? props
+								: { value: { value: input_value ?? 'on', enumerable: true }, ...props }
+						);
 					}
 
 					// Handle file inputs
