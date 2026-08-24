@@ -196,8 +196,7 @@ if (!DEV && interval) {
  */
 export function notify_version(new_version) {
 	if (__SVELTEKIT_APP_VERSION_CHECKS_ENABLED__ && new_version) {
-		// untrack the write too — in an `$.save`-restored reaction window a tracked
-		// write throws `state_unsafe_mutation`, which is not DEV-only
+		// a tracked write inside a restored reaction context throws `state_unsafe_mutation`
 		untrack(() => (_updated ||= new_version !== version));
 	}
 }
