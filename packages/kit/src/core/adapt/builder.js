@@ -106,6 +106,9 @@ export function create_builder({
 
 		return facade;
 	});
+	if (build_data.service_worker) {
+		app_manifest.assets.push({ path: build_data.service_worker });
+	}
 
 	return {
 		log,
