@@ -260,8 +260,12 @@ test.describe('remote functions', () => {
 	});
 
 	test('radio and checkbox inputs keep the current value when only another field changes', async ({
-		page
+		page,
+		javaScriptEnabled
 	}) => {
+		// TODO remove once svelte keeps defaultChecked on hydration (sveltejs/svelte#18701)
+		test.skip(javaScriptEnabled);
+
 		await page.goto('/remote/form/checked-current');
 
 		const edit = page.locator('#edit');
