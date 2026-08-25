@@ -15,14 +15,16 @@
 
 	{#each options as option}
 		<label>
-			<input {...update_settings.fields.visibility.as('radio', option, settings.visibility)} />
+			<input
+				{...update_settings.fields.visibility.as('radio', option, settings.visibility === option)}
+			/>
 			{option}
 		</label>
 	{/each}
 
 	{#each tags as tag}
 		<label>
-			<input {...update_settings.fields.tags.as('checkbox', tag, settings.tags)} />
+			<input {...update_settings.fields.tags.as('checkbox', tag, settings.tags.includes(tag))} />
 			{tag}
 		</label>
 	{/each}

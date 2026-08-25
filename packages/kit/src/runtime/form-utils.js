@@ -753,9 +753,9 @@ export function create_field_proxy(context, target = {}, path = []) {
 				/**
 				 * @param {string} type
 				 * @param {unknown} [input_value]
-				 * @param {unknown} [current_value]
+				 * @param {boolean} [checked]
 				 */
-				const as_func = (type, input_value, current_value) => {
+				const as_func = (type, input_value, checked) => {
 					const is_array =
 						type === 'file multiple' ||
 						type === 'select multiple' ||
@@ -819,27 +819,24 @@ export function create_field_proxy(context, target = {}, path = []) {
 							}
 						}
 
-						// a single checkbox defaults to its second argument, radio and checkbox
-						// array inputs identify their option with it and default to the third
+						// a single checkbox is checked by its second argument, radio and checkbox
+						// array inputs identify their option with it and are checked by the third
 						const is_single = type === 'checkbox' && !is_array;
-						const default_value = is_single ? input_value : current_value;
-
-						/** @param {unknown} value */
-						const is_checked = (value) => {
-							if (type === 'radio') return value === input_value;
-							if (is_array) return /** @type {unknown[]} */ (value ?? []).includes(input_value);
-							return value;
-						};
+						const default_checked = is_single ? input_value : checked;
 
 						/** @type {PropertyDescriptorMap} */
 						const props = is_single
 							? {}
 							: { value: { value: input_value ?? 'on', enumerable: true } };
-						props.defaultChecked = { value: is_checked(default_value), enumerable: true };
+						props.defaultChecked = { value: default_checked, enumerable: true };
 						props.checked = {
 							enumerable: true,
 							get() {
-								return is_checked(get_value() ?? default_value);
+								const value = get_value();
+								if (value == null) return default_checked;
+								if (type === 'radio') return value === input_value;
+								if (is_array) return /** @type {unknown[]} */ (value).includes(input_value);
+								return value;
 							}
 						};
 
