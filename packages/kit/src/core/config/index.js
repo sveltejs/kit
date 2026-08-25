@@ -200,15 +200,6 @@ export function validate_config(config) {
 			}
 		}
 
-		if (
-			validated.csp?.directives?.['require-trusted-types-for']?.includes('script') &&
-			!validated.csp?.directives?.['trusted-types']?.includes('svelte-trusted-html')
-		) {
-			throw new Error(
-				"The `csp.directives['trusted-types']` option must include 'svelte-trusted-html'"
-			);
-		}
-
 		return validated;
 	} catch (e) {
 		const error = /** @type {Error} */ (e);

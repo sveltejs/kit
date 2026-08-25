@@ -7,7 +7,16 @@ const config = {
 		minify: false
 	},
 	clearScreen: false,
-	plugins: [sveltekit()],
+	plugins: [
+		sveltekit({
+			csp: {
+				directives: {
+					'script-src': ['self'],
+					'require-trusted-types-for': ['script']
+				}
+			}
+		})
+	],
 	server: {
 		fs: {
 			allow: [path.resolve('../../../src')]

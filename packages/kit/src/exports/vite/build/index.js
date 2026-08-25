@@ -529,6 +529,16 @@ export function plugin_compile(
 					(node) => node.page_options?.csr === false
 				);
 
+				if (
+					!skip_client_build &&
+					kit.csp.directives['require-trusted-types-for']?.includes('script') &&
+					!kit.csp.directives['trusted-types']?.includes('svelte-trusted-html')
+				) {
+					throw new Error(
+						"The `csp.directives['trusted-types']` option must include 'svelte-trusted-html' unless all pages have `csr: false`"
+					);
+				}
+
 				if (skip_client_build) {
 					copy(server_assets, client_assets);
 					copy(`${out}/server/${workers_path}`, `${out}/client/${workers_path}`);
