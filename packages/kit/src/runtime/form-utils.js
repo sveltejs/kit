@@ -819,26 +819,27 @@ export function create_field_proxy(context, target = {}, path = []) {
 							}
 						}
 
-						// a single checkbox is checked by its second argument, radio and checkbox
-						// array inputs identify their option with it and are checked by the third
-						const is_single = type === 'checkbox' && !is_array;
-						const default_checked = is_single ? input_value : checked;
-
 						/** @type {PropertyDescriptorMap} */
-						const props = {
-							defaultChecked: { value: default_checked, enumerable: true },
-							checked: {
-								enumerable: true,
-								get() {
-									const value = get_value();
-									if (value == null) return default_checked;
-									if (type === 'radio') return value === input_value;
-									if (is_array) return /** @type {unknown[]} */ (value).includes(input_value);
-									return value;
-								}
+						const props = {};
+
+						if (type === 'radio' || is_array) {
+							props.value = { value: input_value ?? 'on', enumerable: true };
+						} else {
+							// a single checkbox takes its checked state as the second argument
+							checked = /** @type {boolean | undefined} */ (input_value);
+						}
+
+						props.defaultChecked = { value: checked, enumerable: true };
+						props.checked = {
+							enumerable: true,
+							get() {
+								const value = get_value();
+								if (value == null) return checked;
+								if (type === 'radio') return value === input_value;
+								if (is_array) return /** @type {unknown[]} */ (value).includes(input_value);
+								return value;
 							}
 						};
-						if (!is_single) props.value = { value: input_value ?? 'on', enumerable: true };
 
 						return Object.defineProperties(base_props, props);
 					}
