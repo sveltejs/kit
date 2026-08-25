@@ -1,7 +1,7 @@
 /** @import { Component } from 'svelte'; */
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
-import { isRedirect, text } from '@sveltejs/kit';
+import { isRedirect } from '@sveltejs/kit';
 import * as paths from '#app/paths';
 import { relative } from '$app/paths/internal/server';
 import { hash } from '../../../utils/hash.js';
@@ -654,12 +654,10 @@ export async function render_response({
 		}
 	}
 
-	return !chunks
-		? text(transformed, {
-				status,
-				headers
-			})
-		: new Response(stream_text(transformed + '\n', chunks), { headers });
+	return new Response(chunks ? stream_text(transformed + '\n', chunks) : transformed, {
+		status,
+		headers
+	});
 }
 
 class Head {
