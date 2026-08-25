@@ -494,10 +494,6 @@ function static_vercel_config(builder, config, dir) {
 		});
 	}
 
-	routes.push({
-		handle: 'filesystem'
-	});
-
 	// Prevent incorrect caching: if a request to /_app/immutable/* doesn't match
 	// a static file, return 404 instead of falling through to dynamic routes.
 	// Otherwise, we could accidentally immutably cache dynamic content served
