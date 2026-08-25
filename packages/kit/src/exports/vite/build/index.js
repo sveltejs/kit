@@ -521,17 +521,15 @@ export function plugin_compile(
 				/** @type {Array<{ path: string }> | null} */
 				let immutable = null;
 
-				const server_assets = `${out}/server/${assets_path}`;
-				const client_assets = `${out}/client/${assets_path}`;
-				const workers_path = `${kit.appDir}/immutable/workers`;
+				const server_immutable = `${out}/server/${kit.appDir}/immutable`;
+				const client_immutable = `${out}/client/${kit.appDir}/immutable`;
 
 				const skip_client_build = manifest_data.nodes.every(
 					(node) => node.page_options?.csr === false
 				);
 
 				if (skip_client_build) {
-					copy(server_assets, client_assets);
-					copy(`${out}/server/${workers_path}`, `${out}/client/${workers_path}`);
+					copy(server_immutable, client_immutable);
 					copy(kit.files.assets, `${out}/client`);
 				} else {
 					// ...and build the client
@@ -575,22 +573,9 @@ export function plugin_compile(
 							.flat()
 					);
 
-					if (fs.existsSync(server_assets)) {
-						for (const file of fs.readdirSync(server_assets)) {
-							const src = `${server_assets}/${file}`;
-							const dest = `${client_assets}/${file}`;
-
-							if (fs.existsSync(dest) || ssr_stylesheets.has(`${assets_path}/${file}`)) {
-								continue;
-							}
-
-							copy(src, dest);
-						}
-					}
-
-					// worker files emitted by the server build (e.g. `?worker&url` imports
-					// in server-only modules) must be served to the client, too
-					copy(`${out}/server/${workers_path}`, `${out}/client/${workers_path}`);
+					copy(server_immutable, client_immutable, {
+						filter: (file) => !ssr_stylesheets.has(`${assets_path}/${file}`)
+					});
 
 					vite_client_manifest = /** @type {Manifest} */ (
 						JSON.parse(read(`${out}/client/.vite/manifest.json`))
