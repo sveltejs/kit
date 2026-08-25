@@ -825,20 +825,20 @@ export function create_field_proxy(context, target = {}, path = []) {
 						const default_checked = is_single ? input_value : checked;
 
 						/** @type {PropertyDescriptorMap} */
-						const props = is_single
-							? {}
-							: { value: { value: input_value ?? 'on', enumerable: true } };
-						props.defaultChecked = { value: default_checked, enumerable: true };
-						props.checked = {
-							enumerable: true,
-							get() {
-								const value = get_value();
-								if (value == null) return default_checked;
-								if (type === 'radio') return value === input_value;
-								if (is_array) return /** @type {unknown[]} */ (value).includes(input_value);
-								return value;
+						const props = {
+							defaultChecked: { value: default_checked, enumerable: true },
+							checked: {
+								enumerable: true,
+								get() {
+									const value = get_value();
+									if (value == null) return default_checked;
+									if (type === 'radio') return value === input_value;
+									if (is_array) return /** @type {unknown[]} */ (value).includes(input_value);
+									return value;
+								}
 							}
 						};
+						if (!is_single) props.value = { value: input_value ?? 'on', enumerable: true };
 
 						return Object.defineProperties(base_props, props);
 					}
