@@ -620,6 +620,28 @@ function form_tests() {
 	// @ts-expect-error
 	f_optional_arrays.fields.files.as('text');
 
+	// checked inputs: the option may be a plain string, the checked state is a boolean
+	const f_checked = form(
+		null as any as StandardSchemaV1<{
+			visibility: 'public' | 'private';
+			tags: ('red' | 'green')[];
+			flag?: boolean;
+		}>,
+		() => ({ success: true })
+	);
+	const option = 'public' as string;
+	const flag = undefined as boolean | undefined;
+	f_checked.fields.visibility.as('radio', 'public', option === 'public');
+	f_checked.fields.visibility.as('radio', option);
+	f_checked.fields.tags.as('checkbox', option, true);
+	f_checked.fields.flag.as('checkbox', flag);
+	// @ts-expect-error
+	f_checked.fields.visibility.as('radio', 1);
+	// @ts-expect-error
+	f_checked.fields.visibility.as('radio', 'public', option);
+	// @ts-expect-error
+	f_checked.fields.flag.as('checkbox', option);
+
 	// doesn't use data
 	const f9 = form(() => Promise.resolve({ success: true }));
 	f9.result?.success === true;

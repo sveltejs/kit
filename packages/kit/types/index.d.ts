@@ -3034,8 +3034,8 @@ declare module '$app/server' {
 		? Value extends string[]
 			? [type: Type, value: Value[number] | (string & {}), checked?: boolean]
 			: Value extends boolean
-				? [type: Type] | [type: Type, value: boolean]
-				: [type: Type] | [type: Type, value: Value | (string & {})]
+				? [type: Type] | [type: Type, value: boolean | undefined]
+				: [type: Type] | [type: Type, value: Value]
 		: Type extends 'submit' | 'hidden'
 			? Value extends string
 				? [type: Type, value: Value | (string & {})]
