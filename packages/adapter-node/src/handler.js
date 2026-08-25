@@ -1,3 +1,5 @@
+/** @import { IncomingMessage, ServerResponse, IncomingHttpHeaders } from 'node:http' */
+/** @import { RequestHandler } from 'sirv' */
 import fs from 'node:fs';
 import path, { extname } from 'node:path';
 import process from 'node:process';
@@ -10,7 +12,7 @@ import { dir } from './dir.js';
 import { env, env_prefix } from './env.js';
 import { parse_as_bytes } from './utils.js';
 
-/** @typedef {(req: import('node:http').IncomingMessage, res: import('node:http').ServerResponse, next: () => void | Promise<void>) => void | Promise<void>} Middleware */
+/** @typedef {(req: IncomingMessage, res: ServerResponse, next: () => void | Promise<void>) => void | Promise<void>} Middleware */
 
 const server = new Server(manifest);
 
@@ -239,7 +241,7 @@ function normalise_header(name, value) {
 }
 
 /**
- * @param {import('http').IncomingHttpHeaders} headers
+ * @param {IncomingHttpHeaders} headers
  * @returns {string}
  */
 function get_origin(headers) {
@@ -275,6 +277,6 @@ function get_origin(headers) {
 }
 
 export const handler = sequence(
-	/** @type {(import('sirv').RequestHandler | Middleware)[]} */
+	/** @type {(RequestHandler | Middleware)[]} */
 	([serve(path.join(dir, 'client'), true), serve_prerendered(), ssr].filter(Boolean))
 );
