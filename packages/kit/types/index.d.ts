@@ -3106,9 +3106,7 @@ declare module '$app/server' {
 				: WillRecurseIndefinitely<Input> extends true
 					? RecursiveFormFields
 					: RemoteFormFieldContainer<Original[0]> & {
-							[K in KeysOfUnion<Original[0]>]-?: RemoteFormFields<
-								ValueOfUnionKey<Original[0], K>
-							>;
+							[K in KeysOfUnion<Original[0]>]-?: RemoteFormFields<ValueOfUnionKey<Original[0], K>>;
 						};
 
 	/**
