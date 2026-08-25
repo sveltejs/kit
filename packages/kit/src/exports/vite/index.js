@@ -2,7 +2,7 @@
 /** @import { Options } from '@sveltejs/vite-plugin-svelte' */
 /** @import { PreprocessorGroup } from 'svelte/compiler' */
 /** @import {  ManifestData, RemoteChunk, ServerMetadata, ValidatedConfig } from 'types' */
-/** @import { Plugin, ResolvedConfig, Rolldown, UserConfig } from 'vite' */
+/** @import { CorsOptions, Plugin, ResolvedConfig, Rolldown, UserConfig } from 'vite' */
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
@@ -37,6 +37,44 @@ import { plugin_service_worker_build } from './build/service-worker.js';
 import { plugin_adapter, plugin_compile } from './build/index.js';
 
 const options_regex = /(export\s+const\s+(prerender|csr|ssr|trailingSlash))\s*=/s;
+
+/**
+ * Resolves the CORS config for dev and preview servers.
+ * SvelteKit needs `preflightContinue: true` so that OPTIONS requests for
+ * `+server.js` endpoints aren't intercepted by Vite's CORS middleware.
+ * If the user has explicitly set values that prevent this, we warn them
+ * and preserve their settings.
+ * @param {CorsOptions | boolean | undefined} user_cors
+ * @param {'server.cors' | 'preview.cors'} key
+ * @param {boolean} warn Whether to emit a warning when the user's settings prevent OPTIONS handlers from working. Only relevant for the dev/preview servers, not `vite build`.
+ * @returns {CorsOptions | undefined}
+ */
+function resolve_cors(user_cors, key, warn) {
+	// `preview.cors` falls back to the resolved `server.cors`, so emitting a value here when
+	// the user hasn't set one is what drops Vite's `defaultAllowedOrigins` restriction
+	if (user_cors === undefined) {
+		return key === 'server.cors' ? { preflightContinue: true } : undefined;
+	}
+
+	// with `cors: false` Vite installs no CORS middleware, so OPTIONS handlers already work
+	if (user_cors === false) return undefined;
+
+	if (typeof user_cors === 'object' && user_cors !== null) {
+		if (user_cors.preflightContinue === undefined) return { preflightContinue: true };
+		if (user_cors.preflightContinue) return undefined;
+	}
+
+	if (warn) {
+		console.warn(
+			styleText(
+				['yellow', 'bold'],
+				`OPTIONS request handlers will not work unless \`${key}.preflightContinue\` is set to \`true\``
+			)
+		);
+	}
+
+	return undefined;
+}
 
 const removed_modules = [
 	{
@@ -369,7 +407,7 @@ function kit({ svelte_config }) {
 						]
 					},
 					server: {
-						cors: { preflightContinue: true },
+						cors: resolve_cors(config.server?.cors, 'server.cors', !is_build),
 						fs: {
 							allow: [...allow]
 						},
@@ -382,7 +420,7 @@ function kit({ svelte_config }) {
 						}
 					},
 					preview: {
-						cors: { preflightContinue: true }
+						cors: resolve_cors(config.preview?.cors, 'preview.cors', !is_build)
 					},
 					optimizeDeps: {
 						entries: [
