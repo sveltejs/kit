@@ -524,6 +524,16 @@ function form_tests() {
 	enum_text_props;
 	// @ts-expect-error
 	f5.fields.foo.as('text', 'c');
+	const optional_boolean_form = form(
+		null as any as StandardSchemaV1<{ enabled?: boolean }>,
+		() => {}
+	);
+	const boolean_checkbox_props: { value?: string; checked: boolean } =
+		optional_boolean_form.fields.enabled.as('checkbox');
+	boolean_checkbox_props;
+	const boolean_hidden_props: { value: string | number; type: 'hidden' } =
+		optional_boolean_form.fields.enabled.as('hidden', true);
+	boolean_hidden_props;
 	// @ts-expect-error
 	f5.fields.foo.value() === 'e';
 	// @ts-expect-error

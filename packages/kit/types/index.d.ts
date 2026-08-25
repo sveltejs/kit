@@ -2956,7 +2956,7 @@ declare module '$app/server' {
 	}[keyof InputTypeMap];
 
 	// Input element properties based on type
-	type InputElementProps<T extends keyof InputTypeMap> = T extends 'checkbox' | 'radio'
+	type InputElementProps<T extends keyof InputTypeMap, Value> = T extends 'checkbox' | 'radio'
 		? {
 				name: string;
 				type: T;
@@ -2993,9 +2993,9 @@ declare module '$app/server' {
 						? {
 								name: string;
 								'aria-invalid': boolean | 'false' | 'true' | undefined;
-								get value(): string | number;
-								set value(v: string | number);
-								readonly defaultValue?: string | number;
+								get value(): Value extends string ? string : string | number;
+								set value(v: Value extends string ? string : string | number);
+								readonly defaultValue?: Value extends string ? string : string | number;
 							}
 						: {
 								name: string;
@@ -3064,7 +3064,7 @@ declare module '$app/server' {
 		 */
 		as<T extends RemoteFormFieldType<Value>>(
 			...args: AsArgs<T, Value>
-		): InputElementProps<T> & { value?: WidenLiteralString<Value> };
+		): InputElementProps<T, WidenLiteralString<Value>>;
 	};
 
 	type RemoteFormFieldContainer<Value> = RemoteFormFieldMethods<Value> & {
@@ -3085,7 +3085,7 @@ declare module '$app/server' {
 		 * <input {...myForm.fields.myBoolean.as('checkbox')} />
 		 * ```
 		 */
-		as<T extends RemoteFormFieldType<Value>>(...args: AsArgs<T, Value>): InputElementProps<T>;
+		as<T extends RemoteFormFieldType<Value>>(...args: AsArgs<T, Value>): InputElementProps<T, Value>;
 	} & {
 		[key: string | number]: UnknownField<any>;
 	};
