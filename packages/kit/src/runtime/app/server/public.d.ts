@@ -117,16 +117,16 @@ export type RemoteFormFieldValue = string | string[] | number | boolean | File |
 
 type AsArgs<Type extends keyof InputTypeMap, Value> = Type extends 'checkbox'
 	? Value extends string[]
-		? [type: Type, value: Value[number] | (string & {})]
+		? [type: Type, value: Value[number] | (string & {}), checked?: boolean]
 		: Value extends boolean
-			? [type: Type] | [type: Type, value: boolean]
-			: [type: Type] | [type: Type, value: Value | (string & {})]
+			? [type: Type] | [type: Type, value: boolean | undefined]
+			: [type: Type] | [type: Type, value: Value]
 	: Type extends 'submit' | 'hidden'
 		? Value extends string
 			? [type: Type, value: Value | (string & {})]
 			: [type: Type, value: Value]
 		: Type extends 'radio'
-			? [type: Type, value: Value | (string & {})]
+			? [type: Type, value: Value | (string & {}), checked?: boolean]
 			: Type extends 'file' | 'file multiple'
 				? [type: Type]
 				: [type: Type] | [type: Type, value: Value | undefined];

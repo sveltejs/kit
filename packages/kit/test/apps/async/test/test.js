@@ -202,6 +202,85 @@ test.describe('remote functions', () => {
 		await expect(page.locator('[data-unscoped] input[name^="message"]')).toHaveValue('');
 	});
 
+	test('radio and checkbox inputs reset to the current value', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		await page.goto('/remote/form/checked-current');
+
+		const edit = page.locator('#edit');
+		const create = page.locator('#create');
+
+		await test.step('a reset restores the current value', async () => {
+			await edit.locator('input[value="private"]').check();
+			await edit.locator('input[value="red"]').uncheck();
+			await edit.locator('input[value="blue"]').check();
+			await edit.getByText('discard').click();
+
+			await expect(edit.locator('input[value="public"]')).toBeChecked();
+			await expect(edit.locator('input[value="private"]')).not.toBeChecked();
+			await expect(edit.locator('input[value="red"]')).toBeChecked();
+			await expect(edit.locator('input[value="blue"]')).not.toBeChecked();
+		});
+
+		await test.step('a submission keeps the new selection', async () => {
+			await edit.locator('input[value="private"]').check();
+			await edit.locator('input[value="green"]').check();
+			await edit.getByText('save').click();
+
+			await expect(page.locator('#settings')).toHaveText(
+				JSON.stringify({ title: 'hello', visibility: 'private', tags: ['red', 'green'] })
+			);
+
+			await expect(edit.locator('input[value="public"]')).not.toBeChecked();
+			await expect(edit.locator('input[value="private"]')).toBeChecked();
+			await expect(edit.locator('input[value="red"]')).toBeChecked();
+			await expect(edit.locator('input[value="green"]')).toBeChecked();
+			await expect(edit.locator('input[value="blue"]')).not.toBeChecked();
+
+			if (javaScriptEnabled) {
+				await expect(page.locator('#edit-value')).toHaveText(
+					JSON.stringify({ title: 'hello', visibility: 'private', tags: ['red', 'green'] })
+				);
+			}
+		});
+
+		await test.step('inputs without a current value are cleared', async () => {
+			await create.locator('input[value="private"]').check();
+			await create.locator('input[value="blue"]').check();
+			await create.getByText('create').click();
+
+			await expect(page.locator('#surveys')).toHaveText(
+				JSON.stringify([{ visibility: 'private', tags: ['blue'] }])
+			);
+
+			await expect(create.locator('input[value="private"]')).not.toBeChecked();
+			await expect(create.locator('input[value="blue"]')).not.toBeChecked();
+		});
+	});
+
+	test('radio and checkbox inputs keep the current value when only another field changes', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		// TODO remove once svelte keeps defaultChecked on hydration (sveltejs/svelte#18701)
+		test.skip(javaScriptEnabled);
+
+		await page.goto('/remote/form/checked-current');
+
+		const edit = page.locator('#edit');
+
+		await edit.locator('input[name^="title"]').fill('updated');
+		await edit.getByText('save').click();
+
+		await expect(page.locator('#settings')).toHaveText(
+			JSON.stringify({ title: 'updated', visibility: 'public', tags: ['red'] })
+		);
+
+		await expect(edit.locator('input[value="public"]')).toBeChecked();
+		await expect(edit.locator('input[value="red"]')).toBeChecked();
+	});
+
 	test('form submitters work', async ({ page }) => {
 		await page.goto('/remote/form/submitter');
 
