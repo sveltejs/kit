@@ -51,19 +51,21 @@ Video files can be very large, so extra care should be taken to ensure that they
 
 SvelteKit automatically preloads critical `.js` and `.css` files when the user visits a page, but it does _not_ preload fonts by default, since this may cause unnecessary files (such as font weights that are referenced by your CSS but not actually used on the current page) to be downloaded. Having said that, preloading fonts correctly can make a big difference to how fast your site feels. In your [`handle`](hooks#handle) hook, you can call `resolve` with a `preload` filter that includes your fonts.
 
-Match fonts on `name`, which is the file name before hashing. Matching `path` instead means matching a hashed file name, which changes whenever the file does:
+Match fonts on `filename`, the source file's path relative to the project root. `path` is the hashed output path, which changes whenever the file's contents do:
 
 ```js
 /// file: src/hooks.server.js
 /** @type {import('@sveltejs/kit').Handle} */
 export async function handle({ event, resolve }) {
 	return resolve(event, {
-		preload: (input) => input.type !== 'font' || input.name === 'inter-latin-400.woff2'
+		preload: (input) =>
+			input.type !== 'font' ||
+			input.filename === 'node_modules/@fontsource/inter/files/inter-latin-400-normal.woff2'
 	});
 }
 ```
 
-A filter that names a font it can no longer find preloads nothing, with no warning. If you would rather find out at build time, import the font with Vite's [`?url` suffix](https://vitejs.dev/guide/assets.html#explicit-url-imports) in a module that already uses it, so that removing the font fails the build.
+A `filename` that no longer exists matches nothing, so renaming or removing the font quietly stops the preload. To find out at build time instead, import the font with Vite's [`?url` suffix](https://vitejs.dev/guide/assets.html#explicit-url-imports) from a module that uses it, so that a missing file fails the build.
 
 You can reduce the size of font files by [subsetting](https://web.dev/learn/performance/optimize-web-fonts#subset_your_web_fonts) your fonts.
 
