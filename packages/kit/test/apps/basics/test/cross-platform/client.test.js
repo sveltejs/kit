@@ -1022,6 +1022,50 @@ test.describe('Prefetching', () => {
 		);
 	});
 
+	test('does not reuse preloaded redirects after state changes', async ({ baseURL, page, app }) => {
+		const target = '/routing/preloading/redirect/target';
+		await page.goto('/routing/a');
+
+		expect(await app.preloadData(target)).toEqual({
+			type: 'redirect',
+			status: 303,
+			location: '/routing/preloading/redirect/resolve'
+		});
+
+		await page
+			.context()
+			.addCookies([{ name: 'preload-redirect-selected', value: 'true', url: baseURL }]);
+
+		/** @type {string[]} */
+		const requests = [];
+		page.on('request', (request) => requests.push(request.url()));
+
+		await app.goto(target);
+
+		await expect(page.locator('h1')).toHaveText('Redirect resolved');
+		expect(requests.some((url) => url.includes('/routing/preloading/redirect/resolve'))).toBe(
+			false
+		);
+	});
+
+	test('does not reuse preloaded redirects after a redirect changes state', async ({
+		page,
+		app
+	}) => {
+		const target = '/routing/preloading/redirect/target';
+		await page.goto('/routing/a');
+
+		expect(await app.preloadData(target)).toEqual({
+			type: 'redirect',
+			status: 303,
+			location: '/routing/preloading/redirect/resolve'
+		});
+
+		await app.goto(target);
+
+		await expect(page.locator('h1')).toHaveText('Redirect resolved');
+	});
+
 	test('chooses correct route when hash route is preloaded but regular route is clicked', async ({
 		app,
 		page

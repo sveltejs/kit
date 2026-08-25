@@ -1411,9 +1411,16 @@ function diff_search_params(old_url, new_url) {
  */
 async function load_route({ id, invalidating, url, params, route, preload, action_result }) {
 	if (!action_result && load_cache?.id === id) {
+		const cache = load_cache;
+
 		// the preload becomes the real navigation
-		preload_tokens.delete(load_cache.token);
-		return load_cache.promise;
+		preload_tokens.delete(cache.token);
+
+		const result = await cache.promise;
+		if (result.type !== 'redirect') return result;
+
+		// Redirects depend on transient state and must be reevaluated when navigating.
+		if (load_cache === cache) discard_load_cache();
 	}
 
 	const { errors, layouts, leaf } = route;
