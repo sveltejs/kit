@@ -1105,7 +1105,21 @@ export const createPost = form(
 );
 ```
 
-`requested` gives you access to the queries the client requested to refresh. Each entry is an `{ arg, query }` object: `arg` is the value the query's implementation function received — i.e. the argument *after* the schema has validated and (where applicable) transformed it — and `query` is a `RemoteQuery` already bound to the client's original cache key, so calling `query.refresh()` / `query.set(...)` updates the correct client instance. If parsing an argument fails, that query will error, but the entire command will not fail. `requested`'s second parameter, `limit`, is the maximum number of items it will return. Any refresh requests beyond this limit will fail.
+`requested` gives you access to the queries the client requested to refresh. Each entry is an `{ arg, query, ignore }` object: `arg` is the value the query's implementation function received — i.e. the argument *after* the schema has validated and (where applicable) transformed it — and `query` is a `RemoteQuery` already bound to the client's original cache key, so calling `query.refresh()` / `query.set(...)` updates the correct client instance. Call `ignore()` if you intentionally do not want to update a particular instance:
+
+```js
+for (const { arg, query, ignore } of requested(getPosts, 10)) {
+	if (arg.filter === 'author:santa') {
+		void query.refresh();
+	} else {
+		ignore();
+	}
+}
+```
+
+Every requested update must be refreshed, set, reconnected (for a live query), or explicitly ignored. Otherwise, the corresponding query will enter an error state on the client. If parsing or validating an argument fails, that query will also error, but the entire command will not fail.
+
+`requested`'s second parameter, `limit`, is the maximum number of items it will return. Any refresh requests beyond this limit will fail on the client.
 
 > [!NOTE] `limit` is required because the list of refresh requests is controlled by the client — each entry causes the server to validate an argument and usually re-fetch data, so an unbounded list is a denial-of-service risk. Choose a limit that reflects the worst case you're willing to handle per request. You _can_ pass `Infinity` if you have explicitly decided to accept any number of refreshes, but it is not recommended.
 
@@ -1119,6 +1133,14 @@ declare const getPosts: RemoteQueryFunction<any, any>;
 // this is the same as looping over the result and calling `void query.refresh()`.
 await requested(getPosts, 1).refreshAll();
 ```
+
+If you want to intentionally ignore every selected update, use `ignoreAll`:
+
+```ts
+await requested(getPosts, 10).ignoreAll();
+```
+
+`ignoreAll` only ignores entries within the specified `limit`. Any excess entries still fail on the client.
 
 > [!NOTE] Why does the command have to name every query it's willing to refresh? Two reasons:
 >
