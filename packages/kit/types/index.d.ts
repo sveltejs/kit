@@ -3090,7 +3090,10 @@ declare module '$app/server' {
 		[key: string | number]: UnknownField<any>;
 	};
 
-	type RemoteFormFieldsRoot<Input extends RemoteFormInput | void> =
+	type RemoteFormFieldsRoot<
+		Input extends RemoteFormInput | void,
+		Original extends [RemoteFormInput | void] = [Input]
+	> =
 		IsAny<Input> extends true
 			? RecursiveFormFields
 			: Input extends void
@@ -3100,7 +3103,13 @@ declare module '$app/server' {
 						/** Validation issues belonging to this or any of the fields that belong to it, if any */
 						allIssues(): RemoteFormIssue[] | undefined;
 					}
-				: RemoteFormFields<Input>;
+				: WillRecurseIndefinitely<Input> extends true
+					? RecursiveFormFields
+					: RemoteFormFieldContainer<Original[0]> & {
+							[K in KeysOfUnion<Original[0]>]-?: RemoteFormFields<
+								ValueOfUnionKey<Original[0], K>
+							>;
+						};
 
 	/**
 	 * Recursive type to build form fields structure with proxy access
@@ -3256,17 +3265,7 @@ declare module '$app/server' {
 		/** True if the form has been submitted at least once, and hasn't been reset since */
 		get submitted(): boolean;
 		/** Access form fields using object notation */
-		fields: IsAny<Input> extends true
-			? RecursiveFormFields
-			: Input extends void
-				? RemoteFormFieldsRoot<Input>
-				: WillRecurseIndefinitely<Input> extends true
-					? RecursiveFormFields
-					: RemoteFormFieldContainer<Original[0]> & {
-							[K in KeysOfUnion<Original[0]>]-?: RemoteFormFields<
-								ValueOfUnionKey<Original[0], K>
-							>;
-						};
+		fields: RemoteFormFieldsRoot<Input, Original>;
 	};
 
 	/**
