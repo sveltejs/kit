@@ -264,6 +264,16 @@ export function plugin_compile(
 						emptyOutDir: false,
 						ssrEmitAssets: true
 					},
+					worker: {
+						rolldownOptions: {
+							output: {
+								entryFileNames: `${app_immutable}/workers/[name]-[hash].js`,
+								chunkFileNames: `${app_immutable}/workers/chunks/[hash].js`,
+								assetFileNames: `${app_immutable}/workers/assets/[name]-[hash][extname]`,
+								hoistTransitiveImports: false
+							}
+						}
+					},
 					builder: {
 						sharedConfigBuild: true,
 						sharedPlugins: true
