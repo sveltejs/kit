@@ -520,7 +520,7 @@ function kit({ svelte_config }) {
 						__SVELTEKIT_HAS_UNIVERSAL_LOAD__: 'true'
 					};
 
-					// These Kit dependencies are packaged as CommonJS, which means they must always be externalized.
+					// Any CommonJS dependencies of Kit (of which there are currently none) must always be externalized.
 					// Without this, the tests will still pass but `pnpm dev` will fail in projects that link `@sveltejs/kit`.
 					//
 					// `@opentelemetry/api` must be externalized so that `instrumentation.server.js` and the
@@ -531,7 +531,6 @@ function kit({ svelte_config }) {
 					// would cause those modules to be evaluated before `Server.init()` sets env vars — see
 					// https://github.com/sveltejs/kit/issues/16288
 					/** @type {NonNullable<UserConfig['ssr']>} */ (new_config.ssr).external = [
-						'cookie',
 						'@opentelemetry/api'
 					];
 
