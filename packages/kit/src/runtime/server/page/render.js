@@ -659,7 +659,7 @@ export async function render_response({
 				status,
 				headers
 			})
-		: new Response(stream_text(transformed + '\n', chunks), { headers });
+		: new Response(stream_text(transformed + '\n', chunks), { status, headers });
 }
 
 class Head {

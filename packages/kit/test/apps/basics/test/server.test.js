@@ -782,6 +782,15 @@ test.describe('Errors', () => {
 		);
 		expect(crafted_response.status()).toBe(404);
 	});
+
+	test('preserves the status of a streamed missing route error page', async ({ request }) => {
+		const response = await request.get('/non-existent-streamed-route', {
+			headers: { cookie: 'defer=true' }
+		});
+
+		expect(response.status()).toBe(404);
+		expect(await response.text()).toContain('This is your custom error page');
+	});
 });
 
 test.describe('Load', () => {
