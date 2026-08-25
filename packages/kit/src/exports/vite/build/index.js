@@ -264,6 +264,16 @@ export function plugin_compile(
 						emptyOutDir: false,
 						ssrEmitAssets: true
 					},
+					worker: {
+						rolldownOptions: {
+							output: {
+								entryFileNames: `${app_immutable}/workers/[name]-[hash].js`,
+								chunkFileNames: `${app_immutable}/workers/chunks/[hash].js`,
+								assetFileNames: `${app_immutable}/workers/assets/[name]-[hash][extname]`,
+								hoistTransitiveImports: false
+							}
+						}
+					},
 					builder: {
 						sharedConfigBuild: true,
 						sharedPlugins: true
@@ -452,6 +462,7 @@ export function plugin_compile(
 
 				const manifest_path = `${out}/server/manifest-full.js`;
 				const assets_path = `${kit.appDir}/immutable/assets`;
+				const workers_path = `${kit.appDir}/immutable/workers`;
 
 				/** @type {BuildData} */
 				const build_data = {
@@ -520,6 +531,7 @@ export function plugin_compile(
 
 				if (skip_client_build) {
 					copy(server_assets, client_assets);
+					copy(`${out}/server/${workers_path}`, `${out}/client/${workers_path}`);
 					copy(kit.files.assets, `${out}/client`);
 				} else {
 					// ...and build the client
@@ -575,6 +587,10 @@ export function plugin_compile(
 							copy(src, dest);
 						}
 					}
+
+					// worker files emitted by the server build (e.g. `?worker&url` imports
+					// in server-only modules) must be served to the client, too
+					copy(`${out}/server/${workers_path}`, `${out}/client/${workers_path}`);
 
 					vite_client_manifest = /** @type {Manifest} */ (
 						JSON.parse(read(`${out}/client/.vite/manifest.json`))
