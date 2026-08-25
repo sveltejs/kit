@@ -3046,6 +3046,8 @@ declare module '$app/server' {
 					? [type: Type]
 					: [type: Type] | [type: Type, value: Value | undefined];
 
+	type WidenLiteralString<T> = T extends string ? (string extends T ? T : string) : T;
+
 	/**
 	 * Form field accessor type that provides name(), value(), and issues() methods
 	 */
@@ -3060,7 +3062,9 @@ declare module '$app/server' {
 		 * <input {...myForm.fields.myBoolean.as('checkbox')} />
 		 * ```
 		 */
-		as<T extends RemoteFormFieldType<Value>>(...args: AsArgs<T, Value>): InputElementProps<T>;
+		as<T extends RemoteFormFieldType<Value>>(
+			...args: AsArgs<T, Value>
+		): InputElementProps<T> & { value?: WidenLiteralString<Value> };
 	};
 
 	type RemoteFormFieldContainer<Value> = RemoteFormFieldMethods<Value> & {
@@ -3188,7 +3192,17 @@ declare module '$app/server' {
 	/**
 	 * The type of a remote `form` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
 	 */
-	export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
+	export type RemoteForm<Input extends RemoteFormInput | void, Output> = RemoteForm_<
+		Input,
+		Output,
+		[Input]
+	>;
+
+	type RemoteForm_<
+		Input extends RemoteFormInput | void,
+		Output,
+		Original extends [RemoteFormInput | void]
+	> = {
 		/** Attachment that sets up an event handler that intercepts the form submission on the client to prevent a full page reload */
 		[attachment: symbol]: (node: HTMLFormElement) => void;
 		method: 'POST';
@@ -3242,7 +3256,17 @@ declare module '$app/server' {
 		/** True if the form has been submitted at least once, and hasn't been reset since */
 		get submitted(): boolean;
 		/** Access form fields using object notation */
-		fields: RemoteFormFieldsRoot<Input>;
+		fields: IsAny<Input> extends true
+			? RecursiveFormFields
+			: Input extends void
+				? RemoteFormFieldsRoot<Input>
+				: WillRecurseIndefinitely<Input> extends true
+					? RecursiveFormFields
+					: RemoteFormFieldContainer<Original[0]> & {
+							[K in KeysOfUnion<Original[0]>]-?: RemoteFormFields<
+								ValueOfUnionKey<Original[0], K>
+							>;
+						};
 	};
 
 	/**

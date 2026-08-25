@@ -520,6 +520,10 @@ function form_tests() {
 	f5.fields.bar.issues();
 	f5.fields.foo.value();
 	f5.fields.bar.value() === 'c';
+	const enum_text_props: { value?: string } = f5.fields.foo.as('text', 'a');
+	enum_text_props;
+	// @ts-expect-error
+	f5.fields.foo.as('text', 'c');
 	// @ts-expect-error
 	f5.fields.foo.value() === 'e';
 	// @ts-expect-error
@@ -676,6 +680,12 @@ function form_tests() {
 	f11_field2.propA;
 	// @ts-expect-error
 	f11_field2.propB;
+
+	const f12 = form(null as any as StandardSchemaV1<{ a: string } | { b: string }>, () => {});
+	f12.fields.a.as('text', 'default');
+	f12.fields.b.as('text');
+	// @ts-expect-error
+	f12.fields.c.as('text');
 
 	// non-optional booleans
 	form(
