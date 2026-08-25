@@ -654,12 +654,9 @@ export async function render_response({
 		}
 	}
 
-	return !chunks
-		? text(transformed, {
-				status,
-				headers
-			})
-		: new Response(stream_text(transformed + '\n', chunks), { headers });
+	return chunks
+		? new Response(stream_text(transformed + '\n', chunks), { status, headers })
+		: text(transformed, { status, headers });
 }
 
 class Head {
