@@ -101,6 +101,15 @@ test.each([
 	await expect(load_start({ env })).rejects.toThrow(message);
 });
 
+test('refuses to start on a Bun older than 1.4', async () => {
+	await expect(load_start({ bunVersion: '1.3.14' })).rejects.toThrow('requires Bun 1.4');
+});
+
+test.each(['1.4.1', '1.5.0-canary.1', '2.0.0'])('starts on Bun %s', async (bunVersion) => {
+	const loaded = await load_start({ bunVersion });
+	expect(loaded.serve).toHaveBeenCalled();
+});
+
 test.each(['SIGINT', 'SIGTERM'] as const)(
 	'gracefully stops the server and emits sveltekit:shutdown for %s',
 	async (signal) => {
@@ -119,9 +128,13 @@ test.each(['SIGINT', 'SIGTERM'] as const)(
 test('force-closes lingering connections after SHUTDOWN_TIMEOUT', async () => {
 	vi.useFakeTimers();
 	try {
+		let finish_force: (() => void) | undefined;
 		const loaded = await load_start({
 			env: { SHUTDOWN_TIMEOUT: '5' },
-			stop: () => new Promise<void>(() => {})
+			stop: (force) =>
+				force
+					? new Promise<void>((resolve) => (finish_force = resolve))
+					: new Promise<void>(() => {})
 		});
 
 		const shutdown = loaded.listeners.get('SIGTERM')?.();
@@ -130,7 +143,7 @@ test('force-closes lingering connections after SHUTDOWN_TIMEOUT', async () => {
 		expect(loaded.stop).toHaveBeenLastCalledWith(true);
 		expect(loaded.emit).not.toHaveBeenCalled();
 
-		await vi.advanceTimersByTimeAsync(1000);
+		finish_force?.();
 		await shutdown;
 		expect(loaded.emit).toHaveBeenCalledWith('sveltekit:shutdown', 'SIGTERM');
 	} finally {
@@ -157,13 +170,15 @@ async function load_start({
 	env = {},
 	envPrefix = '',
 	pendingRequests = 0,
+	bunVersion = '1.4.0',
 	stop: stop_implementation
 }: {
 	serverOptions?: Record<string, unknown>;
 	env?: Record<string, string>;
 	envPrefix?: string;
 	pendingRequests?: number;
-	stop?: () => Promise<void>;
+	bunVersion?: string;
+	stop?: (force?: boolean) => Promise<void>;
 } = {}) {
 	vi.resetModules();
 	const listeners = new Map<string, () => Promise<void> | void>();
@@ -193,7 +208,10 @@ async function load_start({
 		stop
 	};
 	const serve = vi.fn((_options: any) => server);
-	vi.stubGlobal('Bun', { serve });
+	// vitest runs under Node, so a numeric compare stands in for Bun.semver.order
+	const order = (a: string, b: string) =>
+		a.replace('-', '.').localeCompare(b.replace('-', '.'), undefined, { numeric: true });
+	vi.stubGlobal('Bun', { serve, version: bunVersion, semver: { order } });
 	const log = vi.spyOn(console, 'log').mockImplementation(() => {});
 
 	await import('../src/index.js');

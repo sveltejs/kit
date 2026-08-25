@@ -115,16 +115,6 @@ function negotiate(accept, meta) {
 }
 
 /**
- * Bun does not route HEAD requests to a GET function handler, so every route
- * registers both methods.
- * @param {((request: BunRequest) => Response) | Response} handler
- * @returns {RouteHandler}
- */
-function handlers(handler) {
-	return { GET: handler, HEAD: handler };
-}
-
-/**
  * @param {string[]} paths
  * @param {RouteHandler} route
  * @returns {Array<[string, RouteHandler]>}
@@ -174,7 +164,7 @@ function file_route(file, meta, extra_headers = {}) {
 		return new Response(Bun.file(body_file), { headers: response_headers });
 	};
 
-	return handlers(handler);
+	return { GET: handler };
 }
 
 /**
@@ -236,11 +226,14 @@ export function prerendered_page(url, filename, meta) {
 	const inverted = url.endsWith('/') ? url.slice(0, -1) : `${url}/`;
 	if (inverted) {
 		const canonical = encode_pathname(url);
-		const redirect = handlers((req) => {
-			const location = canonical + new URL(req.url).search;
-			return new Response(null, { status: 308, headers: { location } });
-		});
-		entries.push(...route_entries(route_paths(inverted), redirect));
+		entries.push(
+			...route_entries(route_paths(inverted), {
+				GET: (req) => {
+					const location = canonical + new URL(req.url).search;
+					return new Response(null, { status: 308, headers: { location } });
+				}
+			})
+		);
 	}
 
 	return entries;
@@ -253,7 +246,7 @@ export function prerendered_page(url, filename, meta) {
  * @returns {Array<[string, RouteHandler]>}
  */
 export function prerendered_redirect(url, status, location) {
-	const route = handlers(new Response(null, { status, headers: { location } }));
+	const route = { GET: new Response(null, { status, headers: { location } }) };
 	// path already contains base, no need to add it here
 	return route_entries(route_paths(url), route);
 }
