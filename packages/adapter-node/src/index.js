@@ -48,12 +48,30 @@ if (headers_timeout !== undefined) {
 	httpServer.headersTimeout = headers_timeout * 1000;
 }
 
-httpServer.on('request', (req, res) =>
-	handler(req, res, () => {
+httpServer.on('request', (req, res) => {
+	requests++;
+
+	if (socket_activation && idle_timeout_id) {
+		idle_timeout_id = clearTimeout(idle_timeout_id);
+	}
+
+	req.on('close', () => {
+		requests--;
+
+		if (shutdown_timeout_id) {
+			// close connections as soon as they become idle, so they don't accept new requests
+			httpServer.closeIdleConnections();
+		}
+		if (requests === 0 && socket_activation && idle_timeout) {
+			idle_timeout_id = setTimeout(() => graceful_shutdown('IDLE'), idle_timeout * 1000);
+		}
+	});
+
+	return handler(req, res, () => {
 		res.statusCode = 404;
 		res.end();
-	})
-);
+	});
+});
 
 if (socket_activation) {
 	httpServer.listen({ fd: SD_LISTEN_FDS_START }, () => {
@@ -100,30 +118,6 @@ function graceful_shutdown(reason) {
 
 	shutdown_timeout_id = setTimeout(() => httpServer.closeAllConnections(), shutdown_timeout * 1000);
 }
-
-httpServer.on(
-	'request',
-	/** @param {import('node:http').IncomingMessage} req */
-	(req) => {
-		requests++;
-
-		if (socket_activation && idle_timeout_id) {
-			idle_timeout_id = clearTimeout(idle_timeout_id);
-		}
-
-		req.on('close', () => {
-			requests--;
-
-			if (shutdown_timeout_id) {
-				// close connections as soon as they become idle, so they don't accept new requests
-				httpServer.closeIdleConnections();
-			}
-			if (requests === 0 && socket_activation && idle_timeout) {
-				idle_timeout_id = setTimeout(() => graceful_shutdown('IDLE'), idle_timeout * 1000);
-			}
-		});
-	}
-);
 
 process.on('SIGTERM', graceful_shutdown);
 process.on('SIGINT', graceful_shutdown);
