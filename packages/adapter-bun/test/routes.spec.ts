@@ -1,15 +1,15 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { afterEach, expect, test, vi } from 'vitest';
+import { afterEach, expect, mock, spyOn, test } from 'bun:test';
+import { mock_manifest } from './mocks.js';
 
 const meta = { hash: 'abc', mtime: 0 };
-// the module resolves assets from its own directory, which is src/ under vitest
+// the module resolves assets from its own directory, which is src/ under bun test
 const dir = path.dirname(fileURLToPath(new URL('../src/routes-util.js', import.meta.url)));
+let instance = 0;
 
 afterEach(() => {
-	vi.resetModules();
-	vi.doUnmock('MANIFEST');
-	vi.unstubAllGlobals();
+	mock.restore();
 });
 
 test('client assets use the configured base and URL-encode path segments', async () => {
@@ -218,7 +218,7 @@ test('embedded routes use the imported asset instead of a filesystem path', asyn
 	expect(file).toHaveBeenNthCalledWith(1, '/embedded/client.txt');
 	expect(file).toHaveBeenNthCalledWith(2, '/embedded/prerendered.txt');
 	expect(file).toHaveBeenNthCalledWith(3, '/embedded/server.txt');
-	expect(server_file).toMatchObject({ path: '/embedded/server.txt' });
+	expect(server_file.name).toBe('/embedded/server.txt');
 });
 
 test('server assets resolve from the client output in regular builds', async () => {
@@ -227,12 +227,11 @@ test('server assets resolve from the client output in regular builds', async () 
 	const result = routes.server_asset('nested/read.txt');
 
 	expect(file).toHaveBeenCalledWith(`${dir}/client/nested/read.txt`);
-	expect(result).toMatchObject({ path: `${dir}/client/nested/read.txt` });
+	expect(result.name).toBe(`${dir}/client/nested/read.txt`);
 });
 
 test('prerendered assets use the base path and preserve their content type', async () => {
-	const { routes, file } = await load_routes({ base: '/base' });
-	file.mockImplementationOnce((path) => ({ path, type: 'image/x-icon' }));
+	const { routes } = await load_routes({ base: '/base' });
 
 	const [[path, handler]] = routes.prerendered_asset('icon.ico', undefined, meta);
 
@@ -285,10 +284,11 @@ test('prerendered redirects retain their status and location', async () => {
 });
 
 async function load_routes({ base = '/', embed = false, appDir = '_app' } = {}) {
-	vi.resetModules();
-	vi.doMock('MANIFEST', () => ({ manifest: { appDir }, base, embed }));
-	const file = vi.fn((path: string) => ({ path, type: 'text/plain;charset=utf-8' }));
-	vi.stubGlobal('Bun', { file });
+	mock_manifest({ manifest: { appDir }, base, embed });
+	// the real Bun.file runs, with the spy recording resolved paths; the files it
+	// points at need not exist because nothing reads their contents
+	const file = spyOn(Bun, 'file');
 
-	return { routes: await import('../src/routes-util.js'), file };
+	const specifier = `../src/routes-util.js?instance=${++instance}`;
+	return { routes: (await import(specifier)) as typeof import('../src/routes-util.js'), file };
 }
