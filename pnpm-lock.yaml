@@ -63,9 +63,6 @@ catalogs:
     jsdom:
       specifier: ^30.0.0
       version: 30.0.1
-    polka:
-      specifier: ^1.0.0-next.28
-      version: 1.0.0-next.28
     prettier:
       specifier: ^3.9.6
       version: 3.9.6
@@ -355,9 +352,6 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 22.19.19
-      polka:
-        specifier: 'catalog:'
-        version: 1.0.0-next.28
       sirv:
         specifier: ^3.0.2
         version: 3.0.2
@@ -4060,10 +4054,6 @@ packages:
     resolution: {integrity: sha512-LKWqWJRhstyYo9pGvgor/ivk2w94eSjE3RGVuzLGlr3NmD8bf7RcYGze1mNdEHRP6TRP6rMuDHk5t44hnTRyow==}
     engines: {node: '>=14.19.0'}
 
-  polka@1.0.0-next.28:
-    resolution: {integrity: sha512-ryc8D/B5E/YnlWHkNMnRvNntPc4GwU1/+iDBjiXVz1SUjDRqlxYX5Ic0IaDLA/cQ+g7/x+jUzEjv2K16u1J+wA==}
-    engines: {node: '>=8'}
-
   postcss-load-config@3.1.4:
     resolution: {integrity: sha512-6DiM4E7v4coTE4uzA8U//WhtPwyhiim3eyjEMFCnUpzbrkK9wJHgKDT2mR+HbtSrd/NubVaYTOpSpjUl8NQeRg==}
     engines: {node: '>= 10'}
@@ -4127,10 +4117,6 @@ packages:
   readdirp@5.0.0:
     resolution: {integrity: sha512-9u/XQ1pvrQtYyMpZe7DXKv2p5CNvyVwzUB6uhLAnQwHMSgKMBR62lc7AHljaeteeHXn11XTAaLLUVZYVZyuRBQ==}
     engines: {node: '>= 20.19.0'}
-
-  regexparam@3.0.0:
-    resolution: {integrity: sha512-RSYAtP31mvYLkAHrOlh25pCNQ5hWnT106VukGaaFfuJrZFkGRX5GhUAdPqpSDXxOhA2c4akmRuplv1mRqnBn6Q==}
-    engines: {node: '>=8'}
 
   require-directory@2.1.1:
     resolution: {integrity: sha512-fGxEI7+wsG9xrvdjsrlmL22OMTTiHRwAMroiEeMgq8gzoLC/PQr7RsRDSTLUg/bZAZtF+TVIkHc6/4RIKrui+Q==}
@@ -4368,10 +4354,6 @@ packages:
   tr46@6.0.0:
     resolution: {integrity: sha512-bLVMLPtstlZ4iMQHpFHTR7GAGj2jxi8Dg0s2h2MafAE4uSWF98FC/3MomU51iQAMf8/qDUbKWf5GxuvvVcXEhw==}
     engines: {node: '>=20'}
-
-  trouter@4.0.0:
-    resolution: {integrity: sha512-bwwr76BThfiVwAFZqks5cJ+VoKNM3/2Yg1ZwJslkdmAUQ6S0UNoCoGYFDxdw+u1skfexggdmD2p35kW5Td4Cug==}
-    engines: {node: '>=6'}
 
   ts-api-utils@1.3.0:
     resolution: {integrity: sha512-UQMIo7pb8WRomKR1/+MFVLTroIvDVtMX3K6OUir8ynLyzB8Jeriont2bTAtmNPa1ekAgN7YPDyf6V+ygrdU+eQ==}
@@ -6694,11 +6676,6 @@ snapshots:
 
   pngjs@7.0.0: {}
 
-  polka@1.0.0-next.28:
-    dependencies:
-      '@polka/url': 1.0.0-next.29
-      trouter: 4.0.0
-
   postcss-load-config@3.1.4(postcss@8.5.26):
     dependencies:
       lilconfig: 2.1.0
@@ -6753,8 +6730,6 @@ snapshots:
   readdirp@4.1.2: {}
 
   readdirp@5.0.0: {}
-
-  regexparam@3.0.0: {}
 
   require-directory@2.1.1: {}
 
@@ -7030,10 +7005,6 @@ snapshots:
   tr46@6.0.0:
     dependencies:
       punycode: 2.3.1
-
-  trouter@4.0.0:
-    dependencies:
-      regexparam: 3.0.0
 
   ts-api-utils@1.3.0(typescript@6.0.3):
     dependencies:
