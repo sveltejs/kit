@@ -116,10 +116,8 @@ test('serializes explicitly ignored requested updates', async () => {
 		}),
 		/** @type {any} */ ({ remote: { requested: null, ignored: null } }),
 		/** @type {any} */ ({
-			_: {
-				remotes: {
-					hash: () => Promise.resolve({ default: { command } })
-				}
+			remotes: {
+				hash: () => Promise.resolve({ default: { command } })
 			}
 		}),
 		'hash/command'
