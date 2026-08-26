@@ -222,6 +222,8 @@ function virtual_workers_module(options, stub_import) {
 	const setup = async () => {
 		if (globalThis.__sveltekit_cloudflare_platform) return;
 		const proxy = await getPlatformProxy(options);
+		// We store the platform proxy on globalThis so that our virtual workers module
+		// can access the same instance that we use here to populate `caches` and `cf` (above).
 		globalThis.__sveltekit_cloudflare_platform = proxy;
 		/** @type {any} */ (globalThis).caches = proxy.caches;
 	};
