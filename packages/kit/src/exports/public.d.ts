@@ -139,12 +139,13 @@ export interface Builder {
 	prerendered: Prerendered;
 	/** An array of all routes (including prerendered) */
 	routes: RouteDefinition[];
-	/** 
-	 * The value of the `$app/manifest` module
+	/**
+	 * The value of the `$app/manifest` module.
+	 * The only difference is `manifest.assets` also includes the service worker, if it exists.
 	 * @since 3.0.0
 	 */
 	manifest: typeof import('$app/manifest');
-	/** 
+	/**
 	 * A record of file extensions to MIME types
 	 * @since 3.0.0
 	 */

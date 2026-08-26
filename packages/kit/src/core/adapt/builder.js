@@ -106,6 +106,9 @@ export function create_builder({
 
 		return facade;
 	});
+
+	// $app/manifest cannot include the service worker because it's used by the service worker itself,
+	// but the adapter needs to know about it so we add it here.
 	if (build_data.service_worker) {
 		app_manifest.assets.push({ path: build_data.service_worker });
 	}
@@ -121,6 +124,7 @@ export function create_builder({
 		routes,
 		manifest: app_manifest,
 		get mimeTypes() {
+			// TODO - make the `generate_manifest` function return data instead of a string, and retrieve mime types from there
 			const mime_types = get_mime_lookup(build_data.manifest_data);
 			const server_assets = find_server_assets(
 				build_data,
