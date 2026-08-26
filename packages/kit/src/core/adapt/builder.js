@@ -217,11 +217,11 @@ export function create_builder({
 
 		generateManifest() {
 			throw new Error(
-				`The \`generateManifest\` adapter API is deprecated — it has been replaced with \`writeServerEntrypoint\` and \`builder.manifest\`. You may need to update your adapter`
+				'The `generateManifest` adapter API has been removed — use `generateServerInstance` or `builder.manifest` instead. You may need to update your adapter'
 			);
 		},
 
-		writeServerEntrypoint(dest, { routes: subset, serverDirectory } = {}) {
+		generateServerInstance(dest, { routes: subset, serverDirectory } = {}) {
 			const relative = relative_path(
 				path.dirname(dest),
 				serverDirectory ?? this.getServerDirectory()

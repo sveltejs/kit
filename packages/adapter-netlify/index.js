@@ -264,7 +264,7 @@ function write_frameworks_config({ builder }) {
  * }} opts
  */
 function generate_serverless_function({ builder, routes, patterns, name, type, exclude }) {
-	builder.writeServerEntrypoint(`.netlify/v1/server-${name}.js`, {
+	builder.generateServerInstance(`.netlify/v1/server-${name}.js`, {
 		routes,
 		serverDirectory: '.netlify/v1/server'
 	});
@@ -432,7 +432,7 @@ async function generate_edge_functions({ builder }) {
 		}
 	});
 
-	builder.writeServerEntrypoint(`${tmp}/server.js`);
+	builder.generateServerInstance(`${tmp}/server.js`);
 
 	const path = '/*';
 	// We only need to specify paths without the trailing slash because

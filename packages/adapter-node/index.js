@@ -76,7 +76,7 @@ export default function (opts = {}) {
 				input['instrumentation.server'] = `${server}/instrumentation.server.js`;
 			}
 
-			builder.writeServerEntrypoint(`${server}/server.js`);
+			builder.generateServerInstance(`${server}/server.js`);
 
 			/** @type {Record<string, string>} */
 			const defines = {
