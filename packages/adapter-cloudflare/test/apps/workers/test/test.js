@@ -28,7 +28,7 @@ test('read from $app/server works', async ({ request }) => {
 });
 
 test('prerendering throws', async ({ request }) => {
-	if (process.env.DEV) return;
+	test.skip(!!process.env.DEV);
 	const res = await request.get('/prerender');
 	expect(await res.text()).toContain('Cannot access cloudflare:workers in a prerenderable route');
 });
