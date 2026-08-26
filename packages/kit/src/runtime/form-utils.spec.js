@@ -893,13 +893,15 @@ describe('create_field_proxy', () => {
 			['multiple', true],
 			['value', ['y']]
 		]);
-		expect(as(['file multiple'])).toEqual([
+		const file = new File([], 'a.txt');
+		expect(as(['file multiple'], [file])).toEqual([
 			['name', 'a[]/form'],
 			invalid,
 			['type', 'file'],
 			['multiple', true],
-			['files', null]
+			['files', { 0: file, length: 1 }]
 		]);
+		expect(as(['file'], file)[4]).toEqual(['files', { 0: file, length: 1 }]);
 		expect(as(['checkbox', true], false)).toEqual([
 			['name', 'b:a/form'],
 			invalid,

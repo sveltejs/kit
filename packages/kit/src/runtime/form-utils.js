@@ -789,6 +789,14 @@ export function create_field_proxy(context, target = {}, path = []) {
 						base_props.type = type === 'file multiple' ? 'file' : type;
 					}
 
+					/**
+					 * adds a prop that is computed each time it is read
+					 * @param {string} prop
+					 * @param {() => unknown} get
+					 */
+					const lazy = (prop, get) =>
+						Object.defineProperty(base_props, prop, { enumerable: true, get });
+
 					// Handle submit and hidden inputs
 					if (type === 'submit' || type === 'hidden') {
 						if (DEV) {
@@ -797,117 +805,72 @@ export function create_field_proxy(context, target = {}, path = []) {
 							}
 						}
 
-						const value =
+						base_props.value =
 							typeof input_value === 'boolean' ? (input_value ? 'on' : 'off') : input_value;
 
-						return Object.defineProperties(base_props, {
-							value: { value, enumerable: true }
-						});
+						return base_props;
 					}
 
 					// Handle select inputs
 					if (type === 'select' || type === 'select multiple') {
-						return Object.defineProperties(base_props, {
-							multiple: { value: is_array, enumerable: true },
-							value: {
-								enumerable: true,
-								get() {
-									return read(input_value);
-								}
-							}
-						});
+						base_props.multiple = is_array;
+
+						return lazy('value', () => read(input_value));
 					}
 
 					// Handle checkbox inputs
 					if (type === 'checkbox' || type === 'radio') {
-						if (DEV && (type === 'radio' || is_array) && !input_value) {
+						// radio and checkbox array inputs take their option as the second argument
+						// and whether it is checked as the third, a single checkbox only the latter
+						const has_option = type === 'radio' || is_array;
+
+						if (DEV && has_option && !input_value) {
 							throw new Error(
 								`${type === 'radio' ? 'Radio' : 'Checkbox array'} inputs must have a value`
 							);
 						}
 
-						/** @type {PropertyDescriptorMap} */
-						const props = {};
-
-						if (type === 'radio' || is_array) {
-							props.value = { value: input_value ?? 'on', enumerable: true };
+						if (has_option) {
+							base_props.value = input_value ?? 'on';
 						} else {
-							// a single checkbox takes its checked state as the second argument
 							checked = /** @type {boolean | undefined} */ (input_value);
 						}
 
-						props.defaultChecked = { value: checked, enumerable: true };
-						props.checked = {
-							enumerable: true,
-							get() {
-								const value = get_value();
-								if (value == null) return read(checked);
-								if (type === 'radio') return value === input_value;
-								if (is_array) return /** @type {unknown[]} */ (value).includes(input_value);
-								return value;
-							}
-						};
+						base_props.defaultChecked = checked;
 
-						return Object.defineProperties(base_props, props);
+						return lazy('checked', () => {
+							const value = get_value();
+							if (value == null) return read(checked);
+							if (type === 'radio') return value === input_value;
+							if (is_array) return /** @type {unknown[]} */ (value).includes(input_value);
+							return value;
+						});
 					}
 
 					// Handle file inputs
 					if (type === 'file' || type === 'file multiple') {
-						return Object.defineProperties(base_props, {
-							multiple: { value: is_array, enumerable: true },
-							files: {
-								enumerable: true,
-								get() {
-									const value = get_value();
+						base_props.multiple = is_array;
 
-									// Convert File/File[] to FileList-like object
-									if (value instanceof File) {
-										// In browsers, we can create a proper FileList using DataTransfer
-										if (typeof DataTransfer !== 'undefined') {
-											const fileList = new DataTransfer();
-											fileList.items.add(value);
-											return fileList.files;
-										}
-										// Fallback for environments without DataTransfer
-										return { 0: value, length: 1 };
-									}
+						return lazy('files', () => {
+							const value = get_value();
+							const files = value instanceof File ? [value] : value;
+							if (!Array.isArray(files) || !files.every((f) => f instanceof File)) return null;
 
-									if (Array.isArray(value) && value.every((f) => f instanceof File)) {
-										if (typeof DataTransfer !== 'undefined') {
-											const fileList = new DataTransfer();
-											value.forEach((file) => fileList.items.add(file));
-											return fileList.files;
-										}
-										// Fallback for environments without DataTransfer
-										/** @type {any} */
-										const fileListLike = { length: value.length };
-										value.forEach((file, index) => {
-											fileListLike[index] = file;
-										});
-										return fileListLike;
-									}
-
-									return null;
-								}
+							// a FileList-like object where DataTransfer does not exist
+							if (typeof DataTransfer === 'undefined') {
+								return Object.assign({ length: files.length }, files);
 							}
+
+							const transfer = new DataTransfer();
+							for (const file of files) transfer.items.add(file);
+							return transfer.files;
 						});
 					}
 
 					// Handle all other input types (text, number, etc.)
-					return Object.defineProperties(base_props, {
-						defaultValue: {
-							enumerable: true,
-							get() {
-								return input_value;
-							}
-						},
-						value: {
-							enumerable: true,
-							get() {
-								return String(read(input_value) ?? '');
-							}
-						}
-					});
+					base_props.defaultValue = input_value;
+
+					return lazy('value', () => String(read(input_value) ?? ''));
 				};
 
 				return create_field_proxy(context, as_func, next);
