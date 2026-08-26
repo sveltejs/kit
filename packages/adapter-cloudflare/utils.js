@@ -29,25 +29,15 @@ export function validate_worker_settings(wrangler_config) {
 		);
 	}
 
-	// we need the `assets.directory` key so that the static assets are deployed
-	if ((wrangler_config.main || wrangler_config.assets) && !wrangler_config.assets?.directory) {
+	if (wrangler_config.assets?.directory) {
 		throw new Error(
-			`You must specify the \`assets.directory\` key in ${config_path}. Consult https://developers.cloudflare.com/workers/static-assets/binding/#directory`
+			`You must remove the \`assets.directory\` key in ${config_path}. You can change the output directory by setting \`outDir\` in your SvelteKit config.`
 		);
 	}
 
-	// we need the `assets.binding` key so that the Worker can access the static assets
-	if (wrangler_config.main && !wrangler_config.assets?.binding) {
+	if (wrangler_config.main?.endsWith('.svelte-kit/cloudflare/_worker.js')) {
 		throw new Error(
-			`You must specify the \`assets.binding\` key in ${config_path} before deploying your Worker. Consult https://developers.cloudflare.com/workers/static-assets/binding/#binding`
-		);
-	}
-
-	// the user might have forgot the `main` key or should remove the `assets.binding`
-	// key to deploy static assets without a Worker
-	if (!wrangler_config.main && wrangler_config.assets?.binding) {
-		throw new Error(
-			`You must specify the \`main\` key in ${config_path} if you want to deploy a Worker alongside your static assets. Otherwise, remove the \`assets.binding\` key if you only want to deploy static assets.`
+			`The \`main\` key in ${config_path} is now used to specify a custom Worker entrypoint. You must remove it unless you are using a custom Worker.`
 		);
 	}
 }

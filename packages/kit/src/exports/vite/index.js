@@ -15,7 +15,8 @@ import { runtime_directory, logger, get_global_name } from '../../core/utils.js'
 import { dev } from './dev/index.js';
 import { preview } from './preview/index.js';
 import {
-	enforced_config,
+	clean_id,
+	error_for_missing_config,
 	get_config_aliases,
 	is_remote_module,
 	remote_module_pattern,
@@ -332,7 +333,14 @@ function kit({ svelte_config }) {
 			order: 'pre',
 			async handler(config, config_env) {
 				initial_config = config;
-				is_build = config_env.command === 'build';
+
+				// if the initial command was `build`, we want to reuse that whenever
+				// the plugin loads again
+				// but if the user is running vitest, we don't bother with this
+				if (config_env.mode !== 'test') {
+					process.env.SVELTEKIT_BUILD ??= s(config_env.command === 'build');
+				}
+				is_build = process.env.SVELTEKIT_BUILD === 'true' || config_env.command === 'build';
 
 				kit = process_config(svelte_config, root);
 				out_dir = posixify(kit.outDir);

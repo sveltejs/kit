@@ -85,6 +85,7 @@ export function plugin_env_vars(config, callback) {
 			// runs once via the memo — per-process, whichever environment starts first
 			// (environment names vary by adapter), and never in the postbuild forks,
 			// which resolve the config without building
+			// TODO: does this need to rerun for build --watch ?
 			await (generated ??= (async () => {
 				resolved_entry = resolve_env_entry(config, resolved_config.root);
 				await generate();

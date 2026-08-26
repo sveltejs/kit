@@ -31,3 +31,5 @@ test('styles are loaded before CSR starts for prerendered routes', async ({ page
 	await page.goto('/styles/prerendered');
 	expect(requests.length).toBe(1);
 });
+
+// TODO: test that server build is skipped

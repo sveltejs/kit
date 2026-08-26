@@ -232,95 +232,14 @@ export function error_for_missing_config(feature_name, path, value) {
 	);
 }
 
-/** @type {EnforcedConfig} */
-export const enforced_config = {
-	appType: true,
-	base: true,
-	build: {
-		cssCodeSplit: true,
-		emptyOutDir: true,
-		lib: {
-			entry: true,
-			name: true,
-			formats: true
-		},
-		manifest: true,
-		outDir: true,
-		rolldownOptions: {
-			input: true,
-			output: {
-				format: true,
-				entryFileNames: true,
-				chunkFileNames: true,
-				assetFileNames: true
-			},
-			preserveEntrySignatures: true
-		},
-		ssr: true
-	},
-	publicDir: true,
-	resolve: {
-		alias: {
-			$app: true,
-			$env: true,
-			'<sveltekit:generated>': true
-		}
-	}
-};
+// taken from https://github.com/vitejs/vite/blob/main/packages/vite/src/shared/utils.ts#L31-L34
+const postfix_RE = /[?#].*$/;
 
 /**
- * @param {UserConfig} config
- * @param {UserConfig} resolved_config
+ * Remove any query parameters from the Rolldown ID
+ * @param {string} id
+ * @returns {string}
  */
-export function warn_overridden_config(config, resolved_config) {
-	const overridden = find_overridden_config(config, resolved_config, enforced_config, '', []);
-
-	if (overridden.length > 0) {
-		console.error(
-			styleText(
-				['bold', 'red'],
-				'The following Vite config options will be overridden by SvelteKit:'
-			) + overridden.map((key) => `\n  - ${key}`).join('')
-		);
-	}
-}
-
-/**
- * @param {Record<string, any>} config
- * @param {Record<string, any>} resolved_config
- * @param {EnforcedConfig} enforced_config
- * @param {string} path
- * @param {string[]} out used locally to compute the return value
- */
-export function find_overridden_config(config, resolved_config, enforced_config, path, out) {
-	if (config == null || resolved_config == null) {
-		return out;
-	}
-
-	for (const key in enforced_config) {
-		if (typeof config === 'object' && key in config && key in resolved_config) {
-			const enforced = enforced_config[key];
-			const resolved = resolved_config[key];
-
-			if (enforced === true) {
-				if (comparable(config[key]) !== comparable(resolved)) {
-					out.push(path + key);
-				}
-			} else {
-				find_overridden_config(config[key], resolved, enforced, path + key + '.', out);
-			}
-		}
-	}
-	return out;
-}
-
-/**
- * Normalizes a config value for comparison, since Windows paths may use backslashes
- * and differ in casing (e.g. the drive letter) depending on where they came from.
- * @param {any} value
- */
-export function comparable(value) {
-	if (typeof value !== 'string') return value;
-	const normalized = posixify(value);
-	return process.platform === 'win32' ? normalized.toLowerCase() : normalized;
+export function clean_id(id) {
+	return id.replace(postfix_RE, '');
 }

@@ -1,3 +1,4 @@
+/** @import { Prerendered, PrerenderMap } from 'types' */
 import process from 'node:process';
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -6,7 +7,7 @@ import { walk } from '../../utils/filesystem.js';
 import { noop } from '../../utils/functions.js';
 import { decode_uri, is_root_relative, resolve } from '../../utils/url.js';
 import { escape_html } from '../../utils/escape.js';
-import { logger } from '../utils.js';
+import { get_runtime_base, logger } from '../utils.js';
 import { extract_svelte_config, load_vite_config } from '../config/index.js';
 import { get_route_segments } from '../../utils/routing.js';
 import { queue } from './queue.js';
@@ -17,6 +18,10 @@ import { createReadableStream } from '@sveltejs/kit/node';
 import generate_fallback from './fallback.js';
 import { stringify_remote_arg } from '../../runtime/shared.js';
 import { matches_content_type } from '../../utils/http.js';
+import { import_peer } from '../../utils/import.js';
+import { get_runner } from '../../runner.js';
+import { from_fs } from '../../utils/vite.js';
+import { format_response } from '../../runtime/server/internal.js';
 
 export default forked(import.meta.url, prerender);
 
@@ -30,12 +35,18 @@ const SPECIAL_HASHLINKS = new Set(['', 'top']);
  * @param {{
  *   hash: boolean;
  *   out: string;
- *   manifest_path: string;
+ *   manifest_path: string | null;
  *   metadata: import('types').ServerMetadata;
  *   verbose: boolean;
  *   env: Record<string, string>;
- *   vite_config_file: string | undefined;
+ *   vite_config_file: string;
  *   is_tty: boolean | undefined;
+ *   origin: string;
+ *   assets: string;
+ *   base: string;
+ *   prerendered: Prerendered;
+ *   prerender_map: PrerenderMap;
+ *   client: string | null;
  * }} opts
  */
 async function prerender({
@@ -46,29 +57,14 @@ async function prerender({
 	verbose,
 	env,
 	vite_config_file,
-	is_tty
+	is_tty,
+	origin,
+	assets,
+	prerendered,
+	prerender_map,
+	client,
+	base
 }) {
-	/** @type {import('types').SSRManifest} */
-	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
-
-	/** @type {import('types').ServerInternalModule} */
-	const { set_building, set_prerendering, set_manifest, set_read_implementation, format_response } =
-		await import(pathToFileURL(`${out}/server/internal.js`).href);
-
-	// configure `import { building } from `$app/env` —
-	// essential we do this before analysing the code
-	set_building();
-	set_prerendering();
-
-	// `set_env` and `Server` live in modules that import the user's `src/env` config. We import them
-	// *after* `set_building()` so that `building`-dependent expressions resolve correctly
-	/** @type {typeof import('<sveltekit:generated>/env/config.js')} */
-	const { set_env } = await import(pathToFileURL(`${out}/server/env.js`).href);
-	set_env(env);
-
-	/** @type {import('types').ServerModule} */
-	const { Server } = await import(pathToFileURL(`${out}/server/index.js`).href);
-
 	const throw_handled = () => {
 		throw new Error('__handled__');
 	};
@@ -129,43 +125,24 @@ async function prerender({
 	const OK = 2;
 	const REDIRECT = 3;
 
-	/** @type {import('types').Prerendered} */
-	const prerendered = {
-		pages: new Map(),
-		assets: new Map(),
-		redirects: new Map(),
-		paths: []
-	};
-
-	/** @type {import('types').PrerenderMap} */
-	const prerender_map = new Map();
-
-	for (const [id, { prerender }] of metadata.routes) {
-		if (prerender !== undefined) {
-			prerender_map.set(id, prerender);
-		}
-	}
-
 	/** @type {Set<string>} */
 	const prerendered_routes = new Set();
 
-	const vite_config = await load_vite_config(vite_config_file);
-
-	const config = extract_svelte_config(vite_config);
-
-	const prerender_origin = config.paths.origin || 'http://sveltekit-prerender';
+	const prerender_origin = origin || 'http://sveltekit-prerender';
 
 	if (hash) {
 		const fallback = await generate_fallback({
 			manifest_path,
 			env,
-			out_dir: config.outDir,
+			out,
 			origin: prerender_origin,
-			assets: config.files.assets
+			assets,
+			vite_config_file,
+			client
 		});
 
-		const file = output_filename('/', true);
-		const dest = `${config.outDir}/output/prerendered/pages/${file}`;
+		const file = output_filename(base, '/', true);
+		const dest = `${out}/prerendered/pages/${file}`;
 
 		mkdirSync(dirname(dest), { recursive: true });
 		writeFileSync(dest, fallback);
@@ -174,6 +151,11 @@ async function prerender({
 
 		return { prerendered, prerender_map };
 	}
+
+	const vite = /** @type {typeof import('vite')} */ (await import_peer('vite', process.cwd()));
+	const vite_config = await load_vite_config(vite_config_file, vite);
+
+	const config = extract_svelte_config(vite_config);
 
 	const emulator = await config.adapter?.emulate?.();
 
@@ -240,20 +222,6 @@ async function prerender({
 	);
 
 	const q = queue(config.prerender.concurrency);
-
-	/**
-	 * @param {string} path
-	 * @param {boolean} is_html
-	 */
-	function output_filename(path, is_html) {
-		const file = path.slice(config.paths.base.length + 1) || 'index.html';
-
-		if (is_html && !file.endsWith('.html')) {
-			return file + (file.endsWith('/') ? 'index.html' : '.html');
-		}
-
-		return file;
-	}
 
 	const files = new Set(walk(`${out}/client`));
 	files.add(`${config.appDir}/env.js`);
@@ -540,7 +508,7 @@ async function prerender({
 			);
 		}
 
-		const file = output_filename(decoded, is_html);
+		const file = output_filename(base, decoded, is_html);
 		const dest = `${config.outDir}/output/prerendered/${category}/${file}`;
 
 		if (written.has(file)) return;
@@ -642,112 +610,212 @@ async function prerender({
 		}
 	}
 
-	let should_prerender = false;
+	const { manifest, server, vite_dev_server } = await (manifest_path
+		? get_ssr_build_server({
+				manifest_path,
+				out,
+				env
+			})
+		: get_ssr_vite_server({ vite, vite_config_file, env, client: /** @type {string} */ (client) }));
 
-	for (const value of prerender_map.values()) {
-		if (value) {
-			should_prerender = true;
-			break;
-		}
-	}
+	try {
+		/** @type {Array<import('types').RemotePrerenderInternals>} */
+		const prerender_functions = [];
 
-	// the user's remote function modules may reference `read` or the `manifest` at the top-level
-	// so we need to set them before evaluating those modules to avoid potential runtime errors
-	set_manifest(manifest);
-	set_read_implementation((file) => createReadableStream(`${out}/server/${file}`));
+		for (const loader of Object.values(manifest.remotes)) {
+			const module = await loader();
 
-	/** @type {Array<import('types').RemotePrerenderInternals>} */
-	const prerender_functions = [];
-
-	for (const loader of Object.values(manifest.remotes)) {
-		const module = await loader();
-
-		for (const fn of Object.values(module.default)) {
-			if (fn?.__?.type === 'prerender') {
-				prerender_functions.push(fn.__);
-				should_prerender = true;
+			for (const fn of Object.values(module.default)) {
+				if (fn?.__?.type === 'prerender') {
+					prerender_functions.push(fn.__);
+				}
 			}
 		}
-	}
 
-	if (!should_prerender) {
+		log.info('Prerendering');
+
+		for (const entry of config.prerender.entries) {
+			if (entry === '*') {
+				for (const [id, prerender] of prerender_map) {
+					if (prerender) {
+						// remove optional parameters from the route
+						const segments = get_route_segments(id).filter((segment) => !segment.startsWith('[['));
+						const processed_id = '/' + segments.join('/');
+
+						if (processed_id.includes('[')) continue;
+						const path = `/${get_route_segments(processed_id).join('/')}`;
+						void enqueue(null, config.paths.base + path);
+					}
+				}
+			} else {
+				void enqueue(null, config.paths.base + entry);
+			}
+		}
+
+		for (const { id, entries } of route_level_entries) {
+			for (const entry of entries) {
+				void enqueue(null, config.paths.base + entry, undefined, id);
+			}
+		}
+
+		for (const internals of prerender_functions) {
+			if (internals.has_arg) {
+				for (const arg of (await internals.inputs?.()) ?? []) {
+					void enqueue(null, remote_prefix + internals.id + '/' + stringify_remote_arg(arg));
+				}
+			} else {
+				void enqueue(null, remote_prefix + internals.id);
+			}
+		}
+
+		await q.done();
+		progress?.clear();
+
+		// handle invalid fragment links
+		for (const [key, referrers] of expected_hashlinks) {
+			const index = key.indexOf('#');
+			const path = key.slice(0, index);
+			const id = key.slice(index + 1);
+
+			const hashlinks = actual_hashlinks.get(path);
+			// ignore fragment links to pages that were not prerendered
+			if (!hashlinks) continue;
+
+			if (!hashlinks.has(id) && !SPECIAL_HASHLINKS.has(id)) {
+				handle_missing_id({ id, path, referrers: Array.from(referrers) });
+			}
+		}
+
+		/** @type {string[]} */
+		const not_prerendered = [];
+
+		for (const [route_id, prerender] of prerender_map) {
+			if (prerender === true && !prerendered_routes.has(route_id)) {
+				not_prerendered.push(route_id);
+			}
+		}
+
+		if (not_prerendered.length > 0) {
+			handle_not_prerendered_route({ routes: not_prerendered });
+		}
+
 		return { prerendered, prerender_map };
+	} finally {
+		await vite_dev_server?.close();
 	}
+}
 
-	// only run the server after the `should_prerender` check so that we
-	// don't run the user's init hook unnecessarily
+/**
+ * @param {object} opts
+ * @param {string} opts.manifest_path
+ * @param {string} opts.out
+ * @param {Record<string, string>} opts.env
+ */
+async function get_ssr_build_server({ manifest_path, out, env }) {
+	/** @type {import('types').SSRManifest} */
+	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
+
+	/** @type {import('types').ServerInternalModule} */
+	const { set_building, set_prerendering } = await import(
+		pathToFileURL(`${out}/server/internal.js`).href
+	);
+
+	// configure `import { building } from `$app/env` —
+	// essential we do this before analysing the code
+	set_building();
+	set_prerendering();
+
+	/** @type {import('types').ServerModule} */
+	const { Server } = await import(pathToFileURL(`${out}/server/index.js`).href);
+
 	const server = new Server(manifest);
 	await server.init({
 		env,
-		read: (file) => createReadableStream(`${config.outDir}/output/server/${file}`)
+		read: (file) => createReadableStream(`${out}/server/${file}`)
 	});
 
-	log.info('Prerendering');
+	return {
+		manifest,
+		server,
+		vite_dev_server: null
+	};
+}
 
-	for (const entry of config.prerender.entries) {
-		if (entry === '*') {
-			for (const [id, prerender] of prerender_map) {
-				if (prerender) {
-					// remove optional parameters from the route
-					const segments = get_route_segments(id).filter((segment) => !segment.startsWith('[['));
-					const processed_id = '/' + segments.join('/');
+/**
+ * @param {object} opts
+ * @param {typeof import('vite')} opts.vite
+ * @param {string} opts.vite_config_file
+ * @param {Record<string, string>} opts.env
+ * @param {string} opts.client
+ */
+async function get_ssr_vite_server({ vite, vite_config_file, env, client }) {
+	const vite_config = await load_vite_config(vite_config_file, vite, 'serve', {
+		logLevel: 'silent',
+		server: { hmr: false }
+	});
 
-					if (processed_id.includes('[')) continue;
-					const path = `/${get_route_segments(processed_id).join('/')}`;
-					void enqueue(null, config.paths.base + path);
-				}
-			}
-		} else {
-			void enqueue(null, config.paths.base + entry);
+	const vite_dev_server = await vite.createServer(vite_config);
+	await vite_dev_server.listen();
+
+	try {
+		// initialise the server with a request so that the SSR manifest gets built
+		if (!vite_dev_server.resolvedUrls?.local[0]) {
+			throw new Error('failed to resolve vite dev server url');
 		}
+		await fetch(new URL('/_app/building', vite_dev_server.resolvedUrls?.local[0]));
+
+		const runtime_base = get_runtime_base(vite_config.root);
+
+		const runner = get_runner(vite, vite_dev_server);
+		const env_internal = /** @type {typeof import('../../runtime/app/env/server.js')} */ (
+			await runner.import(`${runtime_base}/app/env/server.js`)
+		);
+
+		// configure `import { building } from `$app/env` —
+		// essential we do this before analysing the code
+		env_internal.set_building();
+		env_internal.set_prerendering();
+
+		// `set_env` and `Server` live in modules that import the user's `src/env` config. We import them
+		// *after* `set_building()` so that `building`-dependent expressions resolve correctly
+
+		/** @type {import('types').ServerModule} */
+		const { Server } = await runner.import(`${runtime_base}/server/index.js`);
+
+		/** @type {{ manifest: import('types').SSRManifest }} */
+		// @ts-expect-error we've added `__sveltekit` to the Vite dev server object
+		const { manifest } = vite_dev_server.__sveltekit;
+		manifest.client = devalue.parse(client);
+
+		const server = new Server(manifest);
+		await server.init({
+			env,
+			read: (file) => createReadableStream(from_fs(file))
+		});
+
+		return {
+			manifest,
+			server,
+			vite_dev_server
+		};
+	} catch (error) {
+		await vite_dev_server.close();
+		throw error;
+	}
+}
+
+/**
+ * @param {string} base
+ * @param {string} path
+ * @param {boolean} is_html
+ * @returns {string}
+ */
+function output_filename(base, path, is_html) {
+	const file = path.slice(base.length + 1) || 'index.html';
+
+	if (is_html && !file.endsWith('.html')) {
+		return file + (file.endsWith('/') ? 'index.html' : '.html');
 	}
 
-	for (const { id, entries } of route_level_entries) {
-		for (const entry of entries) {
-			void enqueue(null, config.paths.base + entry, undefined, id);
-		}
-	}
-
-	for (const internals of prerender_functions) {
-		if (internals.has_arg) {
-			for (const arg of (await internals.inputs?.()) ?? []) {
-				void enqueue(null, remote_prefix + internals.id + '/' + stringify_remote_arg(arg));
-			}
-		} else {
-			void enqueue(null, remote_prefix + internals.id);
-		}
-	}
-
-	await q.done();
-	progress?.clear();
-
-	// handle invalid fragment links
-	for (const [key, referrers] of expected_hashlinks) {
-		const index = key.indexOf('#');
-		const path = key.slice(0, index);
-		const id = key.slice(index + 1);
-
-		const hashlinks = actual_hashlinks.get(path);
-		// ignore fragment links to pages that were not prerendered
-		if (!hashlinks) continue;
-
-		if (!hashlinks.has(id) && !SPECIAL_HASHLINKS.has(id)) {
-			handle_missing_id({ id, path, referrers: Array.from(referrers) });
-		}
-	}
-
-	/** @type {string[]} */
-	const not_prerendered = [];
-
-	for (const [route_id, prerender] of prerender_map) {
-		if (prerender === true && !prerendered_routes.has(route_id)) {
-			not_prerendered.push(route_id);
-		}
-	}
-
-	if (not_prerendered.length > 0) {
-		handle_not_prerendered_route({ routes: not_prerendered });
-	}
-
-	return { prerendered, prerender_map };
+	return file;
 }
