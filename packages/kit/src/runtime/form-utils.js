@@ -820,14 +820,10 @@ export function create_field_proxy(context, target = {}, path = []) {
 
 					// Handle checkbox inputs
 					if (type === 'checkbox' || type === 'radio') {
-						if (DEV) {
-							if (type === 'radio' && !input_value) {
-								throw new Error('Radio inputs must have a value');
-							}
-
-							if (type === 'checkbox' && is_array && !input_value) {
-								throw new Error('Checkbox array inputs must have a value');
-							}
+						if (DEV && (type === 'radio' || is_array) && !input_value) {
+							throw new Error(
+								`${type === 'radio' ? 'Radio' : 'Checkbox array'} inputs must have a value`
+							);
 						}
 
 						/** @type {PropertyDescriptorMap} */
