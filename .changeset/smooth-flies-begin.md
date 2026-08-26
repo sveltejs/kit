@@ -6,5 +6,5 @@
 "@sveltejs/kit": major
 ---
 
-breaking: replace the `generateManifest` adapter api with `generateServerInstance` and `builder.manifest`
+breaking: replace the `builder.generateManifest` with `builder.generateServerInstance` and `builder.manifest`
   
