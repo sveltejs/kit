@@ -46,7 +46,7 @@ describe('split_path', () => {
 
 	for (const input of bad) {
 		test(input, () => {
-			expect(() => split_path(input)).toThrowError(`Invalid path ${input}`);
+			expect(() => split_path(input)).toThrowError(`Invalid field name ${input}`);
 		});
 	}
 });

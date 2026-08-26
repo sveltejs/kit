@@ -465,7 +465,12 @@ const path_regex = /^[a-zA-Z_$]\w*(\.[a-zA-Z_$]\w*|\[\d+\])*$/;
  */
 export function split_path(path) {
 	if (!path_regex.test(path)) {
-		throw new Error(`Invalid path ${path}`);
+		throw new Error(
+			`Invalid field name ${path}` +
+				(DEV
+					? ': field names are written in JS object notation, so keys that would need quoting are not supported. See https://svelte.dev/docs/kit/remote-functions#form-Fields'
+					: '')
+		);
 	}
 
 	return path.split(/\.|\[|\]/).filter(Boolean);
