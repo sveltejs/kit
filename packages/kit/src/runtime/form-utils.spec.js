@@ -904,6 +904,7 @@ describe('create_field_proxy', () => {
 			['multiple', true],
 			['value', ['y']]
 		]);
+		expect(proxy.a.as('select multiple', ['x']).value).not.toBe(input.a);
 		const file = new File([], 'a.txt');
 		expect(as(['file multiple'], [file])).toEqual([
 			['name', 'a[]/form'],
