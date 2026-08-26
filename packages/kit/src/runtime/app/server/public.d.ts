@@ -480,6 +480,8 @@ export type RemoteLiveQueryFunction<Input, Output, _Validated = Input> = (
 export type RequestedEntry<Validated, Output> = {
 	arg: Validated;
 	query: RemoteQuery<Output>;
+	/** Explicitly ignore this requested update. */
+	ignore: () => void;
 };
 
 /**
@@ -491,6 +493,8 @@ export type RequestedEntry<Validated, Output> = {
 export type RemoteLiveQueryRequestedEntry<Validated, Output> = {
 	arg: Validated;
 	query: RemoteLiveQuery<Output>;
+	/** Explicitly ignore this requested update. */
+	ignore: () => void;
 };
 
 export type RemoteQueryRequestedResult<Validated, Output> = Iterable<
@@ -509,6 +513,8 @@ export type RemoteQueryRequestedResult<Validated, Output> = Iterable<
 		 * ```
 		 */
 		refreshAll: () => Promise<void>;
+		/** Explicitly ignore all updates selected by this `requested` invocation. */
+		ignoreAll: () => Promise<void>;
 	};
 
 export type RemoteLiveQueryRequestedResult<Validated, Output> = Iterable<
@@ -527,6 +533,8 @@ export type RemoteLiveQueryRequestedResult<Validated, Output> = Iterable<
 		 * ```
 		 */
 		reconnectAll: () => Promise<void>;
+		/** Explicitly ignore all updates selected by this `requested` invocation. */
+		ignoreAll: () => Promise<void>;
 	};
 
 export type RequestedResult<Validated, Output> =

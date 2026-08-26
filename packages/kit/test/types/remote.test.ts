@@ -262,10 +262,11 @@ function command_tests() {
 		const wrong: number = await cmd();
 		wrong;
 
-		for (const { arg, query: bound } of requested(q, 5)) {
+		for (const { arg, query: bound, ignore } of requested(q, 5)) {
 			const arg_output: void = arg;
 			arg_output;
 			void bound.refresh();
+			ignore();
 		}
 
 		for await (const { arg, query: bound } of requested(q, 5)) {
@@ -286,10 +287,14 @@ function command_tests() {
 		const refreshes = requested(q, 5);
 		const refreshed: Promise<void> = refreshes.refreshAll();
 		refreshed;
+		const ignored: Promise<void> = refreshes.ignoreAll();
+		ignored;
 
 		const reconnects = requested(lq, 5);
 		const reconnected: Promise<void> = reconnects.reconnectAll();
 		reconnected;
+		const live_ignored: Promise<void> = reconnects.ignoreAll();
+		live_ignored;
 	}
 	void command_without_args();
 

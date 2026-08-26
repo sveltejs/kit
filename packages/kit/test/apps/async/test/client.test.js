@@ -251,7 +251,7 @@ test.describe('remote function mutations', () => {
 		await page.click('button');
 
 		await expect(page.locator('#error')).toHaveText(
-			'400: Requested refresh was rejected because it exceeded requested(get_count, 0) limit'
+			'400: Requested update was not handled by the remote function'
 		);
 	});
 

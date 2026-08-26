@@ -3395,6 +3395,8 @@ declare module '$app/server' {
 	export type RequestedEntry<Validated, Output> = {
 		arg: Validated;
 		query: RemoteQuery<Output>;
+		/** Explicitly ignore this requested update. */
+		ignore: () => void;
 	};
 
 	/**
@@ -3406,6 +3408,8 @@ declare module '$app/server' {
 	export type RemoteLiveQueryRequestedEntry<Validated, Output> = {
 		arg: Validated;
 		query: RemoteLiveQuery<Output>;
+		/** Explicitly ignore this requested update. */
+		ignore: () => void;
 	};
 
 	export type RemoteQueryRequestedResult<Validated, Output> = Iterable<
@@ -3424,6 +3428,8 @@ declare module '$app/server' {
 			 * ```
 			 */
 			refreshAll: () => Promise<void>;
+			/** Explicitly ignore all updates selected by this `requested` invocation. */
+			ignoreAll: () => Promise<void>;
 		};
 
 	export type RemoteLiveQueryRequestedResult<Validated, Output> = Iterable<
@@ -3442,6 +3448,8 @@ declare module '$app/server' {
 			 * ```
 			 */
 			reconnectAll: () => Promise<void>;
+			/** Explicitly ignore all updates selected by this `requested` invocation. */
+			ignoreAll: () => Promise<void>;
 		};
 
 	export type RequestedResult<Validated, Output> =

@@ -311,6 +311,7 @@ async function handle_remote_call_internal(event, state, manifest, id) {
 		}
 
 		await collect_remote_data(data, event, state);
+		if (state.remote.ignored?.size) data.i = Array.from(state.remote.ignored);
 
 		return Response.json(
 			/** @type {RemoteFunctionResponse} */ ({
@@ -493,7 +494,7 @@ export async function collect_remote_data(data, event, state) {
  * @param {string[] | undefined} refreshes
  */
 function create_requested_map(refreshes) {
-	/** @type {Map<string, string[]>} */
+	/** @type {Map<string, Set<string>>} */
 	const requested = new Map();
 
 	for (const key of refreshes ?? []) {
@@ -502,9 +503,9 @@ function create_requested_map(refreshes) {
 		const existing = requested.get(parts.id);
 
 		if (existing) {
-			existing.push(parts.payload);
+			existing.add(parts.payload);
 		} else {
-			requested.set(parts.id, [parts.payload]);
+			requested.set(parts.id, new Set([parts.payload]));
 		}
 	}
 
