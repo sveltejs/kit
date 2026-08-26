@@ -190,14 +190,14 @@ export default function (options = {}) {
 			read: () => true,
 			instrumentation: () => true
 		},
-		getRequest(options) {
-			const request = getRequest(options);
-			/** @type {import('@cloudflare/workers-types').Request} */ (
-				/** @type {unknown} */ (request)
-			).cf = globalThis.__sveltekit_cloudflare_platform?.cf;
-			return request;
-		},
 		vite: {
+			getRequest(options) {
+				const request = getRequest(options);
+				/** @type {import('@cloudflare/workers-types').Request} */ (
+					/** @type {unknown} */ (request)
+				).cf = globalThis.__sveltekit_cloudflare_platform?.cf;
+				return request;
+			},
 			plugins: {
 				pre: [
 					virtual_workers_module(
