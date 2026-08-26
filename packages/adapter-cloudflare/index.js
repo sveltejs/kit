@@ -194,7 +194,7 @@ export default function (options = {}) {
 			const request = getRequest(options);
 			/** @type {import('@cloudflare/workers-types').Request} */ (
 				/** @type {unknown} */ (request)
-			).cf = globalThis.__platform_proxy?.cf;
+			).cf = globalThis.__sveltekit_cloudflare_platform?.cf;
 			return request;
 		},
 		vite: {
@@ -220,9 +220,9 @@ export default function (options = {}) {
  */
 function virtual_workers_module(options, stub_import) {
 	const setup = async () => {
-		if (globalThis.__platform_proxy) return;
+		if (globalThis.__sveltekit_cloudflare_platform) return;
 		const proxy = await getPlatformProxy(options);
-		globalThis.__platform_proxy = proxy;
+		globalThis.__sveltekit_cloudflare_platform = proxy;
 		/** @type {any} */ (globalThis).caches = proxy.caches;
 	};
 	return {

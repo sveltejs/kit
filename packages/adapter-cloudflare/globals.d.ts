@@ -1,5 +1,5 @@
 import type { PlatformProxy } from 'wrangler';
 
 declare global {
-	var __platform_proxy: PlatformProxy;
+	var __sveltekit_cloudflare_platform: PlatformProxy;
 }
