@@ -226,7 +226,7 @@ function virtual_workers_module(options, stub_import) {
 		/** @type {any} */ (globalThis).caches = proxy.caches;
 	};
 	return {
-		name: 'vite-plugin-adapter-cloudflare-virtual-workers-module',
+		name: 'vite-plugin-sveltekit-adapter-cloudflare-virtual-workers-module',
 		configureServer: setup,
 		configurePreviewServer: setup,
 		resolveId: {
