@@ -919,6 +919,8 @@ declare module '@sveltejs/kit' {
 
 	/**
 	 * Information required to instantiate a new `Server` instance.
+	 * This interface's fields are internal implementation details, and
+	 * changes may be made at any time without being considered breaking.
 	 */
 	interface SSRManifest {
 	}
