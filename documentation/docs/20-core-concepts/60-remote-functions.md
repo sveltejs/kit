@@ -1142,7 +1142,10 @@ await requested(getPosts, 1).refreshAll();
 
 If you want to intentionally ignore every selected update, use `ignoreAll`:
 
-```ts
+```js
+import { requested } from '$app/server';
+
+---cut---
 await requested(getPosts, 10).ignoreAll();
 ```
 
