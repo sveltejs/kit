@@ -130,7 +130,7 @@ describe('Bun build configuration', () => {
 		expect(files[options_file]).toBe(
 			'export default {"hostname":"127.0.0.1","port":4000,"development":true};'
 		);
-		expect(builder.writeServerEntrypoint).toHaveBeenCalledWith(
+		expect(builder.generateServerInstance).toHaveBeenCalledWith(
 			'.svelte-kit/output/bun-tmp/server.js'
 		);
 	});
@@ -591,7 +591,7 @@ function create_builder({
 			info: mock((_message: string) => {})
 		},
 		getAppPath: () => `${base}/_app`,
-		writeServerEntrypoint: mock(() => {}),
+		generateServerInstance: mock(() => {}),
 		getBuildDirectory: (dir: string) => `.svelte-kit/output/${dir}`,
 		getServerDirectory: () => '.svelte-kit/output/server',
 		writeClient: mock(() => client_files),
