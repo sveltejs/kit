@@ -1,4 +1,5 @@
 /** @import { PageOptions } from './types.js' */
+/** @import { ESTree } from 'vite' */
 import path from 'node:path';
 import { parseSync } from 'vite';
 import { read } from '../../../utils/filesystem.js';
@@ -39,7 +40,7 @@ export function statically_analyse_page_options(filename, input) {
 		const source = parseSync(filename, input, { sourceType: 'module' });
 		if (source.errors.length) throw new Error(source.errors[0].message);
 
-		/** @type {Map<string, Extract<import('vite').ESTree.Expression, { type: 'Literal' }>['value']>} */
+		/** @type {Map<string, Extract<ESTree.Expression, { type: 'Literal' }>['value']>} */
 		const page_options = new Map();
 
 		for (const statement of source.program.body) {
@@ -201,7 +202,7 @@ export function statically_analyse_page_options(filename, input) {
 }
 
 /**
- * @param {import('vite').ESTree.ModuleExportName} node
+ * @param {ESTree.ModuleExportName} node
  * @returns {string}
  */
 function get_name(node) {
