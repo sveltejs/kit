@@ -461,24 +461,49 @@ export interface ServerNode {
 
 /**
  * Information required to instantiate a new `Server` instance.
+ * This interface's fields are internal implementation details, and
+ * changes may be made at any time without being considered breaking.
  */
 export interface SSRManifest {
-	/** The directory where SvelteKit keeps its stuff, including static assets (such as JS and CSS) and internally-used routes. */
+	/**
+	 * The directory where SvelteKit keeps its stuff, including static assets (such as JS and CSS) and internally-used routes.
+	 * @internal
+	 */
 	app_dir: string;
-	/** The `base` and `appDir` settings combined without a leading slash. */
+	/**
+	 * The `base` and `appDir` settings combined without a leading slash.
+	 * @internal
+	 */
 	app_path: string;
-	/** Static files from `config.files.assets` and the service worker (if any). */
+	/**
+	 * Static files from `config.files.assets` and the service worker (if any).
+	 * @internal
+	 */
 	assets: Set<string>;
-	/** Map of file extensions to MIME types */
+	/**
+	 * Map of file extensions to MIME types
+	 * @internal
+	 */
 	mime_types: Record<string, string>;
+	/** @internal */
 	client: BuildData['client'];
+	/** @internal */
 	nodes: SSRNodeLoader[];
-	/** hashed filename -> import to that file */
+	/**
+	 * hashed filename -> import to that file
+	 * @internal
+	 */
 	remotes: Record<string, () => Promise<{ default: Record<string, any> }>>;
+	/** @internal */
 	routes: SSRRoute[];
+	/** @internal */
 	prerendered_routes: Set<string>;
+	/** @internal */
 	matchers: () => Promise<Record<string, ParamMatcher>>;
-	/** A `[file]: size` map of all assets imported by server code. */
+	/**
+	 * A `[file]: size` map of all assets imported by server code.
+	 * @internal
+	 */
 	server_assets: Record<string, number>;
 }
 
