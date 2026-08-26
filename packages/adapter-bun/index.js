@@ -138,7 +138,7 @@ export default function (opts = {}) {
 
 			const tmp = builder.getBuildDirectory('bun-tmp');
 			fs.mkdirSync(tmp, { recursive: true });
-			builder.writeServerEntrypoint(`${tmp}/server.js`);
+			builder.generateServerInstance(`${tmp}/server.js`);
 
 			const virtual_files = {
 				[manifest_file]:

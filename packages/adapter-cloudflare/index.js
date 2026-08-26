@@ -103,7 +103,7 @@ export default function (options = {}) {
 
 			// worker
 			const worker_dest_dir = path.dirname(worker_dest);
-			builder.writeServerEntrypoint(`${tmp}/server.js`);
+			builder.generateServerInstance(`${tmp}/server.js`);
 			builder.copy(`${files}/worker.js`, worker_dest, {
 				replace: {
 					// the paths returned by the Wrangler config might be Windows paths,

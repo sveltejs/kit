@@ -72,7 +72,7 @@ const plugin = function (defaults = {}) {
 						instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`
 					});
 				}
-				builder.writeServerEntrypoint(`${tmp}/server.js`, { routes });
+				builder.generateServerInstance(`${tmp}/server.js`, { routes });
 
 				await create_function_bundle(builder, entrypoint, dir, config);
 

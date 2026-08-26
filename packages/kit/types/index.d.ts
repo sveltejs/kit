@@ -125,9 +125,15 @@ declare module '@sveltejs/kit' {
 		prerendered: Prerendered;
 		/** An array of all routes (including prerendered) */
 		routes: RouteDefinition[];
-		/** The value of the `$app/manifest` module */
+		/** 
+		 * The value of the `$app/manifest` module
+		 * @since 3.0.0
+		 */
 		manifest: typeof import('$app/manifest');
-		/** A record of file extensions to MIME types */
+		/** 
+		 * A record of file extensions to MIME types
+		 * @since 3.0.0
+		 */
 		mimeTypes: Record<string, string>;
 
 		/**
@@ -155,7 +161,7 @@ declare module '@sveltejs/kit' {
 		/**
 		 * Generate a server-side manifest to initialise the SvelteKit [server](https://svelte.dev/docs/kit/@sveltejs-kit#Server) with.
 		 * @param opts.relativePath A relative path to the base directory of the server build output
-		 * @deprecated removed in 3.0. Use `builder.writeServerEntrypoint` or `builder.manifest` instead
+		 * @deprecated removed in 3.0. Use `builder.generateServerInstance` or `builder.manifest` instead
 		 */
 		generateManifest?: (opts: { relativePath: string; routes?: RouteDefinition[] }) => string;
 
@@ -172,11 +178,12 @@ declare module '@sveltejs/kit' {
 		getAppPath: () => string;
 
 		/**
-		 * Writes a javascript file that initialises the SvelteKit [server](https://svelte.dev/docs/kit/@sveltejs-kit#Server).
+		 * Generates a module exposing a SvelteKit [Server](https://svelte.dev/docs/kit/@sveltejs-kit#Server) instance.
 		 * @param opts.routes A subset of the routes to include in the server's manifest
 		 * @param opts.serverDirectory The directory containing the server code. Defaults to `getServerDirectory()`.
+		 * @since 3.0.0
 		 */
-		writeServerEntrypoint: (
+		generateServerInstance: (
 			dest: string,
 			opts?: {
 				routes?: RouteDefinition[];
