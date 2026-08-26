@@ -535,7 +535,7 @@ export function form(id) {
 						}
 					}
 
-					set_nested_value(input, field, value);
+					set_nested_value(input, field, is_file ? value : coerce_form_value(field.type, value));
 				} else if (is_file) {
 					if (DEV && element.multiple) {
 						throw new Error(
@@ -554,7 +554,10 @@ export function form(id) {
 					set_nested_value(
 						input,
 						field,
-						element.type === 'checkbox' && !element.checked ? null : element.value
+						coerce_form_value(
+							field.type,
+							element.type === 'checkbox' && !element.checked ? null : element.value
+						)
 					);
 				}
 

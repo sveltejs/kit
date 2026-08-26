@@ -850,4 +850,18 @@ describe('create_field_proxy', () => {
 		expect(cloned.getTime()).toBe(original.getTime());
 		expect(cloned).not.toBe(original);
 	});
+
+	test('the default given to as() only applies until the field is edited', () => {
+		const edited = create_field_proxy({
+			form_id: 'form',
+			get: () => ({}),
+			set: () => {},
+			get_issues: () => ({}),
+			get_touched: () => ({}),
+			get_dirty: () => ({ a: true })
+		});
+
+		expect(edited.a.as('number', 3).value).toBe('');
+		expect(edited.a.as('checkbox', true).checked).toBe(undefined);
+	});
 });

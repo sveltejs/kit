@@ -751,6 +751,17 @@ export function create_field_proxy(context, target = {}, path = []) {
 
 			if (prop === 'as') {
 				/**
+				 * the field's value, or `fallback` until the field has been edited
+				 * (without a fallback there is nothing to suppress, so `dirty` is not read)
+				 * @param {unknown} [fallback]
+				 */
+				const read = (fallback) =>
+					get_value() ??
+					(fallback !== undefined && Object.hasOwn(context.get_dirty(), key)
+						? undefined
+						: fallback);
+
+				/**
 				 * @param {string} type
 				 * @param {unknown} [input_value]
 				 * @param {boolean} [checked]
@@ -801,7 +812,7 @@ export function create_field_proxy(context, target = {}, path = []) {
 							value: {
 								enumerable: true,
 								get() {
-									return get_value() ?? input_value;
+									return read(input_value);
 								}
 							}
 						});
@@ -834,7 +845,7 @@ export function create_field_proxy(context, target = {}, path = []) {
 							enumerable: true,
 							get() {
 								const value = get_value();
-								if (value == null) return checked;
+								if (value == null) return read(checked);
 								if (type === 'radio') return value === input_value;
 								if (is_array) return /** @type {unknown[]} */ (value).includes(input_value);
 								return value;
@@ -897,8 +908,7 @@ export function create_field_proxy(context, target = {}, path = []) {
 						value: {
 							enumerable: true,
 							get() {
-								const value = get_value() ?? input_value;
-								return value != null ? String(value) : '';
+								return String(read(input_value) ?? '');
 							}
 						}
 					});
