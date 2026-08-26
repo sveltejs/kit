@@ -264,7 +264,7 @@ export async function internal_respond(request, manifest, state) {
 			resolved_path =
 				(await hooks.reroute({ url: new URL(url), fetch: event.fetch })) ?? url.pathname;
 
-			if (!manifest._.routes.length && resolved_path !== url.pathname) {
+			if (!manifest.routes.length && resolved_path !== url.pathname) {
 				state.rerouted_url = denormalise_url({
 					request_url: request.url,
 					resolved_path,
@@ -366,8 +366,8 @@ export async function internal_respond(request, manifest, state) {
 
 	if (!state.prerendering?.fallback && !skip_route_resolution) {
 		try {
-			const matchers = await manifest._.matchers();
-			const result = find_route(resolved_path, manifest._.routes, matchers);
+			const matchers = await manifest.matchers();
+			const result = find_route(resolved_path, manifest.routes, matchers);
 
 			if (result) {
 				route = result.route;
@@ -621,7 +621,7 @@ export async function internal_respond(request, manifest, state) {
 					branch: [
 						// include the root layout because it applies to every page
 						{
-							node: /** @type {SSRNode} */ (await manifest._.nodes[0]()),
+							node: /** @type {SSRNode} */ (await manifest.nodes[0]()),
 							data: null,
 							server_data: null
 						}
@@ -687,7 +687,7 @@ export async function internal_respond(request, manifest, state) {
 							);
 						} else {
 							const allowed_methods = new Set(allowed_page_methods);
-							const node = await manifest._.nodes[route.page.leaf]();
+							const node = await manifest.nodes[route.page.leaf]();
 							if (node?.server?.actions) {
 								allowed_methods.add('POST');
 							}
@@ -829,8 +829,8 @@ export async function internal_respond(request, manifest, state) {
 export function load_page_nodes(page, manifest) {
 	return Promise.all([
 		// we use == here rather than === because [undefined] serializes as "[null]"
-		...page.layouts.map((n) => (n == undefined ? n : manifest._.nodes[n]())),
-		manifest._.nodes[page.leaf]()
+		...page.layouts.map((n) => (n == undefined ? n : manifest.nodes[n]())),
+		manifest.nodes[page.leaf]()
 	]);
 }
 

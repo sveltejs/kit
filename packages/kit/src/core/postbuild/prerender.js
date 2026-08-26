@@ -659,7 +659,7 @@ async function prerender({
 	/** @type {Array<import('types').RemotePrerenderInternals>} */
 	const prerender_functions = [];
 
-	for (const loader of Object.values(manifest._.remotes)) {
+	for (const loader of Object.values(manifest.remotes)) {
 		const module = await loader();
 
 		for (const fn of Object.values(module.default)) {

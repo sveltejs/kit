@@ -181,176 +181,172 @@ export async function dev(
 		}
 
 		manifest = {
-			appDir: svelte_config.appDir,
-			appPath: svelte_config.appDir,
+			app_dir: svelte_config.appDir,
+			app_path: svelte_config.appDir,
 			assets: new Set(manifest_data.assets.map((asset) => asset.file)),
-			mimeTypes: get_mime_lookup(manifest_data),
-			_: {
-				client: {
-					start: `${get_runtime_base(root)}/client/entry.js`,
-					app: `${to_fs(svelte_config.outDir)}/generated/dev/client/app.js`,
-					imports: [],
-					stylesheets: [],
-					fonts: [],
-					uses_env_dynamic_public: true,
-					nodes:
-						svelte_config.router.resolution === 'client'
-							? undefined
-							: manifest_data.nodes.map((node, i) => {
-									if (node.component || node.universal) {
-										return `${svelte_config.paths.base}${to_fs(svelte_config.outDir)}/generated/dev/client/nodes/${i}.js`;
-									}
-								}),
-					// `css` is not necessary in dev, as the JS file from `nodes` will reference the CSS file
-					routes:
-						svelte_config.router.resolution === 'client'
-							? undefined
-							: compact(
-									manifest_data.routes.map((route) => {
-										if (!route.page) return;
+			mime_types: get_mime_lookup(manifest_data),
+			client: {
+				start: `${get_runtime_base(root)}/client/entry.js`,
+				app: `${to_fs(svelte_config.outDir)}/generated/dev/client/app.js`,
+				imports: [],
+				stylesheets: [],
+				fonts: [],
+				uses_env_dynamic_public: true,
+				nodes:
+					svelte_config.router.resolution === 'client'
+						? undefined
+						: manifest_data.nodes.map((node, i) => {
+								if (node.component || node.universal) {
+									return `${svelte_config.paths.base}${to_fs(svelte_config.outDir)}/generated/dev/client/nodes/${i}.js`;
+								}
+							}),
+				// `css` is not necessary in dev, as the JS file from `nodes` will reference the CSS file
+				routes:
+					svelte_config.router.resolution === 'client'
+						? undefined
+						: compact(
+								manifest_data.routes.map((route) => {
+									if (!route.page) return;
 
-										return {
-											id: route.id,
-											pattern: route.pattern,
-											params: route.params,
-											layouts: route.page.layouts.map((l) =>
-												l !== undefined ? [!!manifest_data.nodes[l].server, l] : undefined
-											),
-											errors: route.page.errors,
-											leaf: [!!manifest_data.nodes[route.page.leaf].server, route.page.leaf]
-										};
-									})
-								)
-				},
-				server_assets: new Proxy(
-					{},
-					{
-						has: (_, /** @type {string} */ file) => fs.existsSync(from_fs(file)),
-						get: (_, /** @type {string} */ file) => fs.statSync(from_fs(file)).size
+									return {
+										id: route.id,
+										pattern: route.pattern,
+										params: route.params,
+										layouts: route.page.layouts.map((l) =>
+											l !== undefined ? [!!manifest_data.nodes[l].server, l] : undefined
+										),
+										errors: route.page.errors,
+										leaf: [!!manifest_data.nodes[route.page.leaf].server, route.page.leaf]
+									};
+								})
+							)
+			},
+			server_assets: new Proxy(
+				{},
+				{
+					has: (_, /** @type {string} */ file) => fs.existsSync(from_fs(file)),
+					get: (_, /** @type {string} */ file) => fs.statSync(from_fs(file)).size
+				}
+			),
+			nodes: manifest_data.nodes.map((node, index) => {
+				return async () => {
+					const result = /** @type {SSRNode} */ ({});
+					result.index = index;
+					result.universal_id = node.universal;
+					result.server_id = node.server;
+
+					// these are unused in dev, but it's easier to include them
+					result.imports = [];
+					result.stylesheets = [];
+					result.fonts = [];
+
+					/** @type {EnvironmentModuleNode[]} */
+					const module_nodes = [];
+
+					if (node.component) {
+						result.component = async () => {
+							const { module_node, module } = await resolve(/** @type {string} */ (node.component));
+
+							module_nodes.push(module_node);
+
+							return module.default;
+						};
 					}
-				),
-				nodes: manifest_data.nodes.map((node, index) => {
-					return async () => {
-						const result = /** @type {SSRNode} */ ({});
-						result.index = index;
-						result.universal_id = node.universal;
-						result.server_id = node.server;
 
-						// these are unused in dev, but it's easier to include them
-						result.imports = [];
-						result.stylesheets = [];
-						result.fonts = [];
+					if (node.universal) {
+						if (node.page_options?.ssr === false) {
+							result.universal = /** @type {UniversalNode} */ (node.page_options);
+						} else {
+							// TODO: explain why the file was loaded on the server if we fail to load it
+							const { module, module_node } = await resolve(node.universal);
+							module_nodes.push(module_node);
+							result.universal = module;
+						}
+					}
 
-						/** @type {EnvironmentModuleNode[]} */
-						const module_nodes = [];
+					if (node.server) {
+						const { module } = await resolve(node.server);
+						result.server = module;
+					}
 
-						if (node.component) {
-							result.component = async () => {
-								const { module_node, module } = await resolve(
-									/** @type {string} */ (node.component)
-								);
+					// in dev we inline all styles to avoid FOUC. this gets populated lazily so that
+					// components/stylesheets loaded via import() during `load` are included
+					result.inline_styles = async () => {
+						/** @type {Set<EnvironmentModuleNode>} */
+						const deps = new Set();
 
-								module_nodes.push(module_node);
-
-								return module.default;
-							};
+						for (const module_node of module_nodes) {
+							await find_deps(vite_dev_server, module_node, deps);
 						}
 
-						if (node.universal) {
-							if (node.page_options?.ssr === false) {
-								result.universal = /** @type {UniversalNode} */ (node.page_options);
-							} else {
-								// TODO: explain why the file was loaded on the server if we fail to load it
-								const { module, module_node } = await resolve(node.universal);
-								module_nodes.push(module_node);
-								result.universal = module;
-							}
-						}
+						/** @type {Record<string, string>} */
+						const styles = {};
 
-						if (node.server) {
-							const { module } = await resolve(node.server);
-							result.server = module;
-						}
-
-						// in dev we inline all styles to avoid FOUC. this gets populated lazily so that
-						// components/stylesheets loaded via import() during `load` are included
-						result.inline_styles = async () => {
-							/** @type {Set<EnvironmentModuleNode>} */
-							const deps = new Set();
-
-							for (const module_node of module_nodes) {
-								await find_deps(vite_dev_server, module_node, deps);
-							}
-
-							/** @type {Record<string, string>} */
-							const styles = {};
-
-							for (const dep of deps) {
-								if (vite.isCSSRequest(dep.url) && !vite_css_query_regex.test(dep.url)) {
-									const inlineCssUrl = dep.url.includes('?')
-										? dep.url.replace('?', '?inline&')
-										: dep.url + '?inline';
-									try {
-										const mod = await runner.import(inlineCssUrl);
-										styles[dep.url] = mod.default;
-									} catch {
-										// this can happen with dynamically imported modules, I think
-										// because the Vite module graph doesn't distinguish between
-										// static and dynamic imports? TODO investigate, submit fix
-									}
+						for (const dep of deps) {
+							if (vite.isCSSRequest(dep.url) && !vite_css_query_regex.test(dep.url)) {
+								const inlineCssUrl = dep.url.includes('?')
+									? dep.url.replace('?', '?inline&')
+									: dep.url + '?inline';
+								try {
+									const mod = await runner.import(inlineCssUrl);
+									styles[dep.url] = mod.default;
+								} catch {
+									// this can happen with dynamically imported modules, I think
+									// because the Vite module graph doesn't distinguish between
+									// static and dynamic imports? TODO investigate, submit fix
 								}
 							}
+						}
 
-							return styles;
-						};
-
-						return result;
+						return styles;
 					};
-				}),
-				prerendered_routes: new Set(),
-				get remotes() {
-					return Object.fromEntries(
-						get_remotes().map((remote) => [
-							remote.hash,
-							() => runner.import(remote.file).then((module) => ({ default: module }))
-						])
+
+					return result;
+				};
+			}),
+			prerendered_routes: new Set(),
+			get remotes() {
+				return Object.fromEntries(
+					get_remotes().map((remote) => [
+						remote.hash,
+						() => runner.import(remote.file).then((module) => ({ default: module }))
+					])
+				);
+			},
+			routes: compact(
+				manifest_data.routes.map((route) => {
+					if (!route.page && !route.endpoint) return null;
+
+					const endpoint = route.endpoint;
+
+					return {
+						id: route.id,
+						pattern: route.pattern,
+						params: route.params,
+						page: route.page,
+						endpoint: endpoint
+							? async () => {
+									const url = path.resolve(root, endpoint.file);
+									return await loud_ssr_load_module(url);
+								}
+							: null,
+						endpoint_id: endpoint?.file
+					};
+				})
+			),
+			matchers: async () => {
+				if (!manifest_data.params) return {};
+
+				const url = path.resolve(root, manifest_data.params);
+				const module = await runner.import(url);
+
+				if (!module.params) {
+					throw new Error(
+						`${manifest_data.params} does not export \`params\` from \`defineParams\``
 					);
-				},
-				routes: compact(
-					manifest_data.routes.map((route) => {
-						if (!route.page && !route.endpoint) return null;
-
-						const endpoint = route.endpoint;
-
-						return {
-							id: route.id,
-							pattern: route.pattern,
-							params: route.params,
-							page: route.page,
-							endpoint: endpoint
-								? async () => {
-										const url = path.resolve(root, endpoint.file);
-										return await loud_ssr_load_module(url);
-									}
-								: null,
-							endpoint_id: endpoint?.file
-						};
-					})
-				),
-				matchers: async () => {
-					if (!manifest_data.params) return {};
-
-					const url = path.resolve(root, manifest_data.params);
-					const module = await runner.import(url);
-
-					if (!module.params) {
-						throw new Error(
-							`${manifest_data.params} does not export \`params\` from \`defineParams\``
-						);
-					}
-
-					return module.params;
 				}
+
+				return module.params;
 			}
 		};
 	}
@@ -642,7 +638,7 @@ export async function dev(
 						throw new Error('Could not determine clientAddress');
 					},
 					read: (file) => {
-						if (file in manifest._.server_assets) {
+						if (file in manifest.server_assets) {
 							return fs.readFileSync(from_fs(file));
 						}
 

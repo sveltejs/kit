@@ -5,7 +5,9 @@ declare module '@sveltejs/kit' {
 	import type { Plugin } from 'vite';
 	import type { RouteId as AppRouteId, LayoutParams as AppLayoutParams } from '$app/types';
 	import type { StandardSchemaV1 } from '@standard-schema/spec';
+	import type { Component } from 'svelte';
 	import type { Config } from '@sveltejs/kit/vite';
+	import type { ParamMatcher } from '@sveltejs/kit/params';
 	// @ts-ignore this is an optional peer dependency so could be missing. Written like this so dts-buddy preserves the ts-ignore
 	type Span = import('@opentelemetry/api').Span;
 
@@ -907,6 +909,97 @@ declare module '@sveltejs/kit' {
 		dynamic: boolean;
 		rest: boolean;
 	}
+
+	/** @default 'never' */
+	type TrailingSlash = 'never' | 'always' | 'ignore';
+	interface Asset {
+		file: string;
+		size: number;
+		type: string | null;
+	}
+
+	interface FontDependency {
+		/** emitted file path, relative to the client output directory */
+		file: string;
+		/** the source file path relative to the project root, before hashing and character sanitization */
+		filename: string;
+	}
+
+	interface BuildData {
+		app_dir: string;
+		app_path: string;
+		manifest_data: ManifestData;
+		out_dir: string;
+		service_worker: string | null;
+		client: {
+			/** Path to the client entry point. */
+			start: string;
+			/** Path to the generated `app.js` file that contains the client manifest. Only set in case of `bundleStrategy === 'split'`. */
+			app?: string;
+			/** JS files that the client entry point relies on. */
+			imports: string[];
+			/**
+			 * JS files that represent the entry points of the layouts/pages.
+			 * An entry is undefined if the layout/page has no component or universal file (i.e. only has a `.server.js` file).
+			 * Only set in case of `router.resolution === 'server'`.
+			 */
+			nodes?: Array<string | undefined>;
+			/**
+			 * CSS files referenced in the entry points of the layouts/pages.
+			 * An entry is undefined if the layout/page has no component or universal file (i.e. only has a `.server.js` file) or if has no CSS.
+			 * Only set in case of `router.resolution === 'server'`.
+			 */
+			css?: Array<string[] | undefined>;
+			/**
+			 * Contains the client route manifest in a form suitable for the server which is used for server-side route resolution.
+			 * Notably, it contains all routes, regardless of whether they are prerendered or not (those are missing in the optimized server route manifest).
+			 * Only set in case of `router.resolution === 'server'`.
+			 */
+			routes?: SSRClientRoute[];
+			stylesheets: string[];
+			fonts: FontDependency[];
+			/**
+			 * Whether the client uses public dynamic env vars — `$env/dynamic/public` or `$app/env/public`.
+			 */
+			uses_env_dynamic_public: boolean;
+			/** Only set in case of `bundleStrategy === 'inline'`. */
+			inline?: {
+				script: string;
+				style: string | undefined;
+			};
+		} | null;
+		server_manifest: import('vite').Manifest;
+	}
+
+	interface ManifestData {
+		/** Static files from `config.files.assets`. */
+		assets: Asset[];
+		hooks: {
+			client: string | null;
+			server: string | null;
+			universal: string | null;
+		};
+		nodes: PageNode[];
+		routes: RouteData[];
+		params: string | null;
+	}
+
+	interface PageNode {
+		depth: number;
+		/** The `+page/layout.svelte`. */
+		component?: string; // TODO supply default component if it's missing (bit of an edge case)
+		/** The `+page/layout.js/.ts`. */
+		universal?: string;
+		/** The `+page/layout.server.js/ts`. */
+		server?: string;
+		parent_id?: string;
+		parent?: PageNode;
+		/** Filled with the pages that reference this layout (if this is a layout). */
+		child_pages?: PageNode[];
+		/** The final page options for a node if it was statically analysable */
+		page_options?: PageOptions | null;
+	}
+
 	type RecursiveRequired<T> = {
 		// Recursive implementation of TypeScript's Required utility type.
 		// Will recursively continue until it reaches a primitive or Function
@@ -916,17 +1009,156 @@ declare module '@sveltejs/kit' {
 			: T[K]; // Use the exact type for everything else
 	};
 
+	interface RouteParam {
+		name: string;
+		matcher: string;
+		optional: boolean;
+		rest: boolean;
+		chained: boolean;
+	}
+
+	/**
+	 * Represents a route segment in the app. It can either be an intermediate node
+	 * with only layout/error pages, or a leaf, at which point either `page` and `leaf`
+	 * or `endpoint` is set.
+	 */
+	interface RouteData {
+		id: string;
+		parent: RouteData | null;
+
+		segment: string;
+		pattern: RegExp;
+		params: RouteParam[];
+
+		layout: PageNode | null;
+		error: PageNode | null;
+		leaf: PageNode | null;
+
+		page: {
+			layouts: Array<number | undefined>;
+			errors: Array<number | undefined>;
+			leaf: number;
+		} | null;
+
+		endpoint: {
+			file: string;
+			/** The final page options for the endpoint if it was statically analysable */
+			page_options: PageOptions | null;
+		} | null;
+	}
+
+	type SSRComponentLoader = () => Promise<Component>;
+
+	interface UniversalNode {
+		/** Is `null` in case static analysis succeeds but the node is ssr=false */
+		load?: Load;
+		prerender?: PrerenderOption;
+		ssr?: boolean;
+		csr?: boolean;
+		trailingSlash?: TrailingSlash;
+		config?: Record<string, any>;
+		entries?: PrerenderEntryGenerator;
+	}
+
+	interface ServerNode {
+		load?: ServerLoad;
+		prerender?: PrerenderOption;
+		ssr?: boolean;
+		csr?: boolean;
+		trailingSlash?: TrailingSlash;
+		actions?: Actions;
+		config?: Record<string, any>;
+		entries?: PrerenderEntryGenerator;
+	}
+
 	/**
 	 * Information required to instantiate a new `Server` instance.
 	 */
 	interface SSRManifest {
 		/** The directory where SvelteKit keeps its stuff, including static assets (such as JS and CSS) and internally-used routes. */
-		appDir: string;
+		app_dir: string;
 		/** The `base` and `appDir` settings combined without a leading slash. */
-		appPath: string;
+		app_path: string;
 		/** Static files from `config.files.assets` and the service worker (if any). */
 		assets: Set<string>;
-		mimeTypes: Record<string, string>;
+		/** Map of file extensions to MIME types */
+		mime_types: Record<string, string>;
+		client: BuildData['client'];
+		nodes: SSRNodeLoader[];
+		/** hashed filename -> import to that file */
+		remotes: Record<string, () => Promise<{ default: Record<string, any> }>>;
+		routes: SSRRoute[];
+		prerendered_routes: Set<string>;
+		matchers: () => Promise<Record<string, ParamMatcher>>;
+		/** A `[file]: size` map of all assets imported by server code. */
+		server_assets: Record<string, number>;
+	}
+
+	interface SSRNode {
+		/** index into the `nodes` array in the generated `client/app.js`. */
+		index: number;
+		/** external JS files that are loaded on the client. `imports[0]` is the entry point (e.g. `client/nodes/0.js`) */
+		imports: string[];
+		/** external CSS files that are loaded on the client */
+		stylesheets: string[];
+		/** external font files that are loaded on the client */
+		fonts: FontDependency[];
+
+		universal_id?: string;
+		server_id?: string;
+
+		/**
+		 * During development, all styles are inlined for the page to avoid FOUC.
+		 * But in production, this stores styles that are below the inline threshold.
+		 * It returns a Promise during development because Vite needs to load the
+		 * modules on demand. But in production, the contents have been precomputed
+		 * during the build, so it can return synchronously.
+		 */
+		inline_styles?(): MaybePromise<
+			Record<string, string | ((assets: string, base: string) => string)>
+		>;
+		/** Svelte component */
+		component?: SSRComponentLoader;
+		/** +page.js or +layout.js */
+		universal?: UniversalNode;
+		/** +page.server.js, +layout.server.js, or +server.js */
+		server?: ServerNode;
+	}
+
+	type SSRNodeLoader = () => Promise<SSRNode>;
+
+	interface PageNodeIndexes {
+		errors: Array<number | undefined>;
+		layouts: Array<number | undefined>;
+		leaf: number;
+	}
+
+	type PrerenderEntryGenerator = () => MaybePromise<Array<Record<string, string>>>;
+
+	type SSREndpoint = Partial<Record<HttpMethod, RequestHandler>> & {
+		prerender?: PrerenderOption;
+		trailingSlash?: TrailingSlash;
+		config?: Record<string, any>;
+		entries?: PrerenderEntryGenerator;
+		fallback?: RequestHandler;
+	};
+
+	interface SSRRoute {
+		id: string;
+		pattern: RegExp;
+		params: RouteParam[];
+		page: PageNodeIndexes | null;
+		endpoint: (() => Promise<SSREndpoint>) | null;
+		endpoint_id?: string;
+	}
+
+	interface SSRClientRoute {
+		id: string;
+		pattern: RegExp;
+		params: RouteParam[];
+		errors: Array<number | undefined>;
+		layouts: Array<[has_server_load: boolean, node_id: number] | undefined>;
+		leaf: [has_server_load: boolean, node_id: number];
 	}
 
 	type ValidatedConfig = RecursiveRequired<Omit<Config, 'preprocess'>> & {
@@ -1084,7 +1316,19 @@ declare module '@sveltejs/kit' {
 		wasNormalized: boolean;
 		denormalize: (url?: string | URL) => URL;
 	};
+	type ValidPageOption = (typeof valid_page_options_array)[number];
+
+	type PageOptions = Partial<{
+		[K in ValidPageOption]: K extends 'ssr' | 'csr'
+			? boolean
+			: K extends 'prerender'
+				? PrerenderOption
+				: K extends 'trailingSlash'
+					? TrailingSlash
+					: any;
+	}>;
 	export const VERSION: string;
+	const valid_page_options_array: readonly ["ssr", "prerender", "csr", "trailingSlash", "config", "entries", "load"];
 
 	export {};
 }
