@@ -3,7 +3,7 @@ import { join, posix } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { builtinModules } from 'node:module';
 import process from 'node:process';
-import toml from '@iarna/toml';
+import { parse } from 'smol-toml';
 import { build } from 'rolldown';
 import { matches, get_publish_directory, s } from './utils.js';
 
@@ -11,7 +11,7 @@ import { matches, get_publish_directory, s } from './utils.js';
  * @typedef {{
  *   build?: { publish?: string }
  *   functions?: { node_bundler?: 'zisi' | 'esbuild' }
- * } & toml.JsonMap} NetlifyConfig
+ * } & import('smol-toml').TomlTable} NetlifyConfig
  */
 
 const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf-8'));
@@ -218,7 +218,7 @@ function get_netlify_config() {
 	if (!existsSync('netlify.toml')) return null;
 
 	try {
-		return toml.parse(readFileSync('netlify.toml', 'utf-8'));
+		return parse(readFileSync('netlify.toml', 'utf-8'));
 	} catch (err) {
 		if (err instanceof Error) {
 			throw new Error(`Failed to parse netlify.toml: ${err.message}`, { cause: err });
