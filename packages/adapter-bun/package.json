@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-bun",
-	"version": "1.0.0-next.1",
+	"version": "1.0.0-next.2",
 	"description": "Adapter for SvelteKit apps that generates a standalone Bun server",
 	"keywords": [
 		"adapter",
