@@ -2,7 +2,7 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 
 const als = new AsyncLocalStorage();
 
-const proxy = globalThis.__platform_proxy;
+const proxy = globalThis.__sveltekit_cloudflare_platform;
 
 function get_current_env() {
 	return als.getStore() ?? proxy.env;
