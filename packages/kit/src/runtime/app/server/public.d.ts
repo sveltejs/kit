@@ -3,6 +3,14 @@ import { DeepPartial, IsAny, MaybePromise } from 'types';
 
 export * from './index.js';
 
+type ImageInputValue = { x: number; y: number };
+
+type IsImageInputValue<T> = T extends ImageInputValue
+	? Exclude<keyof T, keyof ImageInputValue> extends never
+		? true
+		: false
+	: false;
+
 // If T is unknown or has an index signature, the types below will recurse indefinitely and create giant unions that TS can't handle
 type WillRecurseIndefinitely<T> = unknown extends T ? true : string extends keyof T ? true : false;
 
@@ -29,7 +37,7 @@ type InputTypeMap = {
 	submit: string | number | boolean;
 	button: string;
 	reset: string;
-	image: string;
+	image: ImageInputValue;
 	select: string;
 	'select multiple': string[];
 	'file multiple': File[];
@@ -37,7 +45,13 @@ type InputTypeMap = {
 
 // Valid input types for a given value type
 export type RemoteFormFieldType<T> = {
-	[K in keyof InputTypeMap]: T extends InputTypeMap[K] ? K : never;
+	[K in keyof InputTypeMap]: K extends 'image'
+		? IsImageInputValue<T> extends true
+			? K
+			: never
+		: T extends InputTypeMap[K]
+			? K
+			: never;
 }[keyof InputTypeMap];
 
 // Input element properties based on type
@@ -51,45 +65,51 @@ type InputElementProps<T extends keyof InputTypeMap, Value> = T extends 'checkbo
 			set checked(value: boolean);
 			readonly defaultChecked?: boolean;
 		}
-	: T extends 'file'
+	: T extends 'image'
 		? {
 				name: string;
-				type: 'file';
+				type: 'image';
 				'aria-invalid': boolean | 'false' | 'true' | undefined;
-				get files(): FileList | null;
-				set files(v: FileList | null);
 			}
-		: T extends 'select'
+		: T extends 'file'
 			? {
 					name: string;
+					type: 'file';
 					'aria-invalid': boolean | 'false' | 'true' | undefined;
-					get value(): string;
-					set value(v: string);
+					get files(): FileList | null;
+					set files(v: FileList | null);
 				}
-			: T extends 'select multiple'
+			: T extends 'select'
 				? {
 						name: string;
-						multiple: true;
 						'aria-invalid': boolean | 'false' | 'true' | undefined;
-						get value(): string[];
-						set value(v: string[]);
+						get value(): string;
+						set value(v: string);
 					}
-				: T extends 'text'
+				: T extends 'select multiple'
 					? {
 							name: string;
+							multiple: true;
 							'aria-invalid': boolean | 'false' | 'true' | undefined;
-							get value(): Value extends string ? string : string | number;
-							set value(v: Value extends string ? string : string | number);
-							readonly defaultValue?: Value extends string ? string : string | number;
+							get value(): string[];
+							set value(v: string[]);
 						}
-					: {
-							name: string;
-							type: T;
-							'aria-invalid': boolean | 'false' | 'true' | undefined;
-							get value(): string | number;
-							set value(v: string | number);
-							readonly defaultValue?: string | number;
-						};
+					: T extends 'text'
+						? {
+								name: string;
+								'aria-invalid': boolean | 'false' | 'true' | undefined;
+								get value(): Value extends string ? string : string | number;
+								set value(v: Value extends string ? string : string | number);
+								readonly defaultValue?: Value extends string ? string : string | number;
+							}
+						: {
+								name: string;
+								type: T;
+								'aria-invalid': boolean | 'false' | 'true' | undefined;
+								get value(): string | number;
+								set value(v: string | number);
+								readonly defaultValue?: string | number;
+							};
 
 type RemoteFormFieldMethods<T> = {
 	/** The values that will be submitted */
@@ -113,7 +133,14 @@ type ValueOfUnionKey<T, K extends PropertyKey> = T extends unknown
 		: never
 	: never;
 
-export type RemoteFormFieldValue = string | string[] | number | boolean | File | File[];
+export type RemoteFormFieldValue =
+	| string
+	| string[]
+	| number
+	| boolean
+	| File
+	| File[]
+	| ImageInputValue;
 
 type AsArgs<Type extends keyof InputTypeMap, Value> = Type extends 'checkbox'
 	? Value extends string[]
@@ -121,15 +148,17 @@ type AsArgs<Type extends keyof InputTypeMap, Value> = Type extends 'checkbox'
 		: Value extends boolean
 			? [type: Type] | [type: Type, value: boolean | undefined]
 			: [type: Type] | [type: Type, value: Value]
-	: Type extends 'submit' | 'hidden'
-		? Value extends string
-			? [type: Type, value: Value | (string & {})]
-			: [type: Type, value: Value]
-		: Type extends 'radio'
-			? [type: Type, value: Value | (string & {}), checked?: boolean]
-			: Type extends 'file' | 'file multiple'
-				? [type: Type]
-				: [type: Type] | [type: Type, value: Value | undefined];
+	: Type extends 'image'
+		? [type: Type]
+		: Type extends 'submit' | 'hidden'
+			? Value extends string
+				? [type: Type, value: Value | (string & {})]
+				: [type: Type, value: Value]
+			: Type extends 'radio'
+				? [type: Type, value: Value | (string & {}), checked?: boolean]
+				: Type extends 'file' | 'file multiple'
+					? [type: Type]
+					: [type: Type] | [type: Type, value: Value | undefined];
 
 type WidenLiteralString<T> = T extends string ? (string extends T ? T : string) : T;
 
@@ -202,20 +231,25 @@ export type RemoteFormFields<T> =
 		? RecursiveFormFields
 		: NonNullable<T> extends string | number | boolean | File
 			? RemoteFormField<NonNullable<T>>
-			: // [NonNullable<T>] is used to prevent distributing over union while still allowing
-				// nullable wrappers (e.g. `string[] | undefined` from a schema with `.default([])`)
-				// to be treated as arrays; only the last condition should distribute over unions
-				[NonNullable<T>] extends [string[] | File[]]
-				? RemoteFormField<NonNullable<T>> & {
-						[K in number]: RemoteFormField<NonNullable<T>[number]>;
-					}
-				: [NonNullable<T>] extends [Array<infer U>]
-					? RemoteFormFieldContainer<NonNullable<T>> & {
-							[K in number]: RemoteFormFields<U>;
-						}
-					: RemoteFormFieldContainer<T> & {
+			: IsImageInputValue<NonNullable<T>> extends true
+				? RemoteFormField<NonNullable<T> & ImageInputValue> &
+						Pick<RemoteFormFieldContainer<T>, 'allIssues'> & {
 							[K in KeysOfUnion<T>]-?: RemoteFormFields<ValueOfUnionKey<T, K>>;
-						};
+						}
+				: // [NonNullable<T>] is used to prevent distributing over union while still allowing
+					// nullable wrappers (e.g. `string[] | undefined` from a schema with `.default([])`)
+					// to be treated as arrays; only the last condition should distribute over unions
+					[NonNullable<T>] extends [string[] | File[]]
+					? RemoteFormField<NonNullable<T>> & {
+							[K in number]: RemoteFormField<NonNullable<T>[number]>;
+						}
+					: [NonNullable<T>] extends [Array<infer U>]
+						? RemoteFormFieldContainer<NonNullable<T>> & {
+								[K in number]: RemoteFormFields<U>;
+							}
+						: RemoteFormFieldContainer<T> & {
+								[K in KeysOfUnion<T>]-?: RemoteFormFields<ValueOfUnionKey<T, K>>;
+							};
 
 // By breaking this out into its own type, we avoid the TS recursion depth limit
 type RecursiveFormFields = RemoteFormFieldContainer<any> & {

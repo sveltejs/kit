@@ -289,6 +289,14 @@ test.describe('remote functions', () => {
 		await expect(page.locator('#result')).toHaveText('hello');
 	});
 
+	test('image form inputs submit coordinates', async ({ page }) => {
+		await page.goto('/remote/form/submitter');
+
+		await page.locator('input[type="image"]').click({ position: { x: 5, y: 6 } });
+
+		await expect(page.locator('#image-result')).toHaveText('5,6');
+	});
+
 	test('form updates inputs live', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/remote/form/live-update');
 

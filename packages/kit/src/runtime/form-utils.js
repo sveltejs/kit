@@ -26,6 +26,12 @@ export function set_nested_value(object, field, value) {
 export function parse_form_key(form_id, key) {
 	const suffix = '/' + form_id;
 	let name = key;
+	let image_coordinate = '';
+
+	if (name.startsWith('i:') && (name.endsWith(suffix + '.x') || name.endsWith(suffix + '.y'))) {
+		image_coordinate = name[name.length - 1];
+		name = name.slice(0, -2);
+	}
 
 	if (!name.endsWith(suffix)) {
 		throw new Error(`Form contained a field that wasn't created with form.fields.as(...): ${name}`);
@@ -42,10 +48,14 @@ export function parse_form_key(form_id, key) {
 	} else if (name.startsWith('b:')) {
 		name = name.slice(2);
 		type = 'boolean';
+	} else if (name.startsWith('i:')) {
+		name = name.slice(2);
+		type = 'number';
 	}
 
 	const is_array = name.endsWith('[]');
 	if (is_array) name = name.slice(0, -2);
+	if (image_coordinate) name += '.' + image_coordinate;
 
 	return { name, type, is_array };
 }
@@ -612,6 +622,7 @@ export function deep_get(object, path) {
  */
 function get_type_prefix(field_type, is_array, input_value) {
 	if (field_type === 'number' || field_type === 'range') return 'n:';
+	if (field_type === 'image') return 'i:';
 	if (field_type === 'checkbox' && !is_array) return 'b:';
 	if (field_type === 'hidden' || field_type === 'submit') {
 		const input_type = typeof input_value;
@@ -885,6 +896,8 @@ export function create_field_proxy(context, target = {}, path = []) {
 							}
 						});
 					}
+
+					if (type === 'image') return base_props;
 
 					// Handle all other input types (text, number, etc.)
 					return Object.defineProperties(base_props, {
