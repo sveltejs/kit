@@ -17,9 +17,8 @@
 	let stats = $state('pending');
 
 	async function refresh_stats() {
-		const query = get_stats();
-		await query.refresh();
-		stats = JSON.stringify(query.current);
+		get_stats().refresh();
+		stats = JSON.stringify(await get_stats());
 	}
 
 	let for_await_count = $state(0);
