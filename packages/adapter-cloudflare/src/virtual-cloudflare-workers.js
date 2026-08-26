@@ -8,7 +8,7 @@ function get_current_env() {
 	return als.getStore() ?? proxy.env;
 }
 
-/** @typedef {typeof import('cloudflare:workers')} Module */
+/** @typedef {typeof import('@cloudflare/workers-types').CloudflareWorkersModule} Module */
 
 export const env = new Proxy(
 	{},
