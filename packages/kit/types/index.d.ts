@@ -678,19 +678,6 @@ declare module '@sveltejs/kit' {
 	}
 
 	/**
-	 * Information required to instantiate a new `Server` instance.
-	 */
-	export interface SSRManifest {
-		/** The directory where SvelteKit keeps its stuff, including static assets (such as JS and CSS) and internally-used routes. */
-		appDir: string;
-		/** The `base` and `appDir` settings combined without a leading slash. */
-		appPath: string;
-		/** Static files from `config.files.assets` and the service worker (if any). */
-		assets: Set<string>;
-		mimeTypes: Record<string, string>;
-	}
-
-	/**
 	 * The generic form of `PageServerLoad` and `LayoutServerLoad`. You should import those from `./$types` (see [generated types](https://svelte.dev/docs/kit/types#Generated-types))
 	 * rather than using `ServerLoad` directly.
 	 */
@@ -928,6 +915,19 @@ declare module '@sveltejs/kit' {
 			? RecursiveRequired<T[K]> // recursively continue through.
 			: T[K]; // Use the exact type for everything else
 	};
+
+	/**
+	 * Information required to instantiate a new `Server` instance.
+	 */
+	interface SSRManifest {
+		/** The directory where SvelteKit keeps its stuff, including static assets (such as JS and CSS) and internally-used routes. */
+		appDir: string;
+		/** The `base` and `appDir` settings combined without a leading slash. */
+		appPath: string;
+		/** Static files from `config.files.assets` and the service worker (if any). */
+		assets: Set<string>;
+		mimeTypes: Record<string, string>;
+	}
 
 	type ValidatedConfig = RecursiveRequired<Omit<Config, 'preprocess'>> & {
 		preprocess: Config['preprocess'];

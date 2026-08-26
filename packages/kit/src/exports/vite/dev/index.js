@@ -1,6 +1,6 @@
-/** @import { RequestEvent, SSRManifest } from '@sveltejs/kit' */
+/** @import { RequestEvent } from '@sveltejs/kit' */
 /** @import { EnvironmentModuleNode, ErrorPayload, ViteDevServer } from 'vite' */
-/** @import { ManifestData, PrerenderOption, RemoteChunk, ServerModule, SSRNode, UniversalNode, ValidatedConfig } from 'types' */
+/** @import { ManifestData, PrerenderOption, RemoteChunk, ServerModule, SSRNode, UniversalNode, ValidatedConfig, SSRManifest } from 'types' */
 import process from 'node:process';
 import fs from 'node:fs';
 import path from 'node:path';

@@ -86,7 +86,7 @@ export const respond = propagate_context(internal_respond);
 
 /**
  * @param {Request} request
- * @param {import('@sveltejs/kit').SSRManifest} manifest
+ * @param {import('types').SSRManifest} manifest
  * @param {import('types').RequestState} state
  * @returns {Promise<Response>}
  */
@@ -824,7 +824,7 @@ export async function internal_respond(request, manifest, state) {
 
 /**
  * @param {import('types').PageNodeIndexes} page
- * @param {import('@sveltejs/kit').SSRManifest} manifest
+ * @param {import('types').SSRManifest} manifest
  */
 export function load_page_nodes(page, manifest) {
 	return Promise.all([
