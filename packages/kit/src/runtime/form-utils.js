@@ -706,16 +706,188 @@ const dev_traps = DEV
 /** @param {InternalRemoteFormIssue} issue */
 const public_issue = (issue) => ({ path: issue.path, message: issue.message });
 
-/**
- * Creates a proxy-based field accessor for form data
- * @param {{
+/** @typedef {{
  * 	form_id: string,
  * 	get: () => Record<string, any>,
  * 	set: (path: (string | number)[], value: any) => void,
  * 	get_issues: (path?: (string | number)[], all?: boolean) => Record<string, InternalRemoteFormIssue[]>,
  * 	get_touched: () => Record<string, boolean>,
  * 	get_dirty: () => Record<string, boolean>
- * }} context - Form context, including value accessors and form metadata
+ * }} FieldContext */
+
+/**
+ * @param {FieldContext} context
+ * @param {(string | number)[]} path
+ * @param {string} prop
+ * @returns {any} a method of the field at `path`, or undefined for a nested field
+ */
+function create_field_method(context, path, prop) {
+	switch (prop) {
+		case 'set':
+			return (/** @type {any} */ value) => {
+				context.set(path, value);
+				return value;
+			};
+		case 'value':
+			return () => deep_clone(deep_get(context.get(), path));
+		case 'issues':
+		case 'allIssues': {
+			const key = build_path_string(path);
+			const all = prop === 'allIssues';
+
+			return () => {
+				const issues = context.get_issues(path, all)[key === '' ? '$' : key];
+				if (all) return issues?.map(public_issue);
+				const own = issues?.filter((issue) => issue.name === key).map(public_issue);
+				return own?.length ? own : undefined;
+			};
+		}
+		case 'touched':
+		case 'dirty': {
+			const key = build_path_string(path);
+
+			return () => {
+				const object = prop === 'dirty' ? context.get_dirty() : context.get_touched();
+				if (Object.hasOwn(object, key)) return true;
+				for (const candidate in object) {
+					if (!Object.hasOwn(object, candidate)) continue;
+					if (key === '') return true;
+					if (!candidate.startsWith(key)) continue;
+					const next = candidate[key.length];
+					if (next === '.' || next === '[') return true;
+				}
+				return false;
+			};
+		}
+		case 'as': {
+			const key = build_path_string(path);
+
+			/**
+			 * the field's value, or `fallback` until the field has been edited
+			 * (without a fallback there is nothing to suppress, so `dirty` is not read)
+			 * @param {unknown} [fallback]
+			 */
+			const read = (fallback) =>
+				deep_get(context.get(), path) ??
+				(fallback !== undefined && Object.hasOwn(context.get_dirty(), key) ? undefined : fallback);
+
+			/**
+			 * @param {string} type
+			 * @param {unknown} [input_value]
+			 * @param {boolean} [checked]
+			 */
+			return (type, input_value, checked) => {
+				const is_array =
+					type === 'file multiple' ||
+					type === 'select multiple' ||
+					(type === 'checkbox' && typeof input_value === 'string');
+
+				const type_prefix = get_type_prefix(type, is_array, input_value);
+
+				// Base properties for all input types
+				/** @type {Record<string, any>} */
+				const base_props = {
+					name: type_prefix + key + (is_array ? '[]' : '') + '/' + context.form_id,
+					get 'aria-invalid'() {
+						const issues = context.get_issues();
+						return key in issues ? 'true' : undefined;
+					}
+				};
+
+				// Add type attribute only for non-text inputs and non-select elements
+				if (type !== 'text' && type !== 'select' && type !== 'select multiple') {
+					base_props.type = type === 'file multiple' ? 'file' : type;
+				}
+
+				// Handle submit and hidden inputs
+				if (type === 'submit' || type === 'hidden') {
+					if (DEV) {
+						if (input_value === null || input_value === undefined) {
+							throw new Error(`\`${type}\` inputs must have a value`);
+						}
+					}
+
+					return add_props(base_props, {
+						value: typeof input_value === 'boolean' ? (input_value ? 'on' : 'off') : input_value
+					});
+				}
+
+				// Handle select inputs
+				if (type === 'select' || type === 'select multiple') {
+					return add_props(base_props, {
+						multiple: is_array,
+						value: () => {
+							const value = read(input_value);
+							// copied, so the state array can't be edited through the props
+							return Array.isArray(value) ? [...value] : value;
+						}
+					});
+				}
+
+				// Handle checkbox inputs
+				if (type === 'checkbox' || type === 'radio') {
+					// radio and checkbox array inputs take their option as the second argument
+					// and whether it is checked as the third, a single checkbox only the latter
+					const has_option = type === 'radio' || is_array;
+
+					if (DEV && has_option && !input_value) {
+						throw new Error(
+							`${type === 'radio' ? 'Radio' : 'Checkbox array'} inputs must have a value`
+						);
+					}
+
+					if (has_option) {
+						base_props.value = input_value ?? 'on';
+					} else {
+						checked = /** @type {boolean | undefined} */ (input_value);
+					}
+
+					return add_props(base_props, {
+						defaultChecked: checked,
+						checked: () => {
+							const value = read();
+							if (value == null) return read(checked);
+							if (type === 'radio') return value === input_value;
+							if (is_array) return /** @type {unknown[]} */ (value).includes(input_value);
+							return value;
+						}
+					});
+				}
+
+				// Handle file inputs
+				if (type === 'file' || type === 'file multiple') {
+					return add_props(base_props, {
+						multiple: is_array,
+						files: () => {
+							const value = read();
+							const files = value instanceof File ? [value] : value;
+							if (!Array.isArray(files) || !files.every((f) => f instanceof File)) return null;
+
+							// a FileList-like object where DataTransfer does not exist
+							if (typeof DataTransfer === 'undefined') {
+								return Object.assign({ length: files.length }, files);
+							}
+
+							const transfer = new DataTransfer();
+							for (const file of files) transfer.items.add(file);
+							return transfer.files;
+						}
+					});
+				}
+
+				// Handle all other input types (text, number, etc.)
+				return add_props(base_props, {
+					defaultValue: input_value,
+					value: () => String(read(input_value) ?? '')
+				});
+			};
+		}
+	}
+}
+
+/**
+ * Creates a proxy-based field accessor for form data
+ * @param {FieldContext} context
  * @param {any} target - Function or empty POJO
  * @param {(string | number)[]} path - Current access path
  * @returns {any} Proxy object with name(), value(), and issues() methods
@@ -729,168 +901,7 @@ export function create_field_proxy(context, target = {}, path = []) {
 			// array access like jobs[0]
 			const next = [...path, /^\d+$/.test(prop) ? parseInt(prop, 10) : prop];
 
-			/** @type {any} a method of this field, or undefined for a nested field */
-			let fn;
-
-			if (prop === 'set') {
-				fn = (/** @type {any} */ value) => {
-					context.set(path, value);
-					return value;
-				};
-			} else if (prop === 'value') {
-				fn = () => deep_clone(deep_get(context.get(), path));
-			} else if (prop === 'issues' || prop === 'allIssues') {
-				const key = build_path_string(path);
-				const all = prop === 'allIssues';
-
-				fn = () => {
-					const issues = context.get_issues(path, all)[key === '' ? '$' : key];
-					if (all) return issues?.map(public_issue);
-					const own = issues?.filter((issue) => issue.name === key).map(public_issue);
-					return own?.length ? own : undefined;
-				};
-			} else if (prop === 'touched' || prop === 'dirty') {
-				const key = build_path_string(path);
-
-				fn = () => {
-					const object = prop === 'dirty' ? context.get_dirty() : context.get_touched();
-					if (Object.hasOwn(object, key)) return true;
-					for (const candidate in object) {
-						if (!Object.hasOwn(object, candidate)) continue;
-						if (key === '') return true;
-						if (!candidate.startsWith(key)) continue;
-						const next = candidate[key.length];
-						if (next === '.' || next === '[') return true;
-					}
-					return false;
-				};
-			} else if (prop === 'as') {
-				const key = build_path_string(path);
-
-				/**
-				 * the field's value, or `fallback` until the field has been edited
-				 * (without a fallback there is nothing to suppress, so `dirty` is not read)
-				 * @param {unknown} [fallback]
-				 */
-				const read = (fallback) =>
-					deep_get(context.get(), path) ??
-					(fallback !== undefined && Object.hasOwn(context.get_dirty(), key)
-						? undefined
-						: fallback);
-
-				/**
-				 * @param {string} type
-				 * @param {unknown} [input_value]
-				 * @param {boolean} [checked]
-				 */
-				fn = (type, input_value, checked) => {
-					const is_array =
-						type === 'file multiple' ||
-						type === 'select multiple' ||
-						(type === 'checkbox' && typeof input_value === 'string');
-
-					const type_prefix = get_type_prefix(type, is_array, input_value);
-
-					// Base properties for all input types
-					/** @type {Record<string, any>} */
-					const base_props = {
-						name: type_prefix + key + (is_array ? '[]' : '') + '/' + context.form_id,
-						get 'aria-invalid'() {
-							const issues = context.get_issues();
-							return key in issues ? 'true' : undefined;
-						}
-					};
-
-					// Add type attribute only for non-text inputs and non-select elements
-					if (type !== 'text' && type !== 'select' && type !== 'select multiple') {
-						base_props.type = type === 'file multiple' ? 'file' : type;
-					}
-
-					// Handle submit and hidden inputs
-					if (type === 'submit' || type === 'hidden') {
-						if (DEV) {
-							if (input_value === null || input_value === undefined) {
-								throw new Error(`\`${type}\` inputs must have a value`);
-							}
-						}
-
-						return add_props(base_props, {
-							value: typeof input_value === 'boolean' ? (input_value ? 'on' : 'off') : input_value
-						});
-					}
-
-					// Handle select inputs
-					if (type === 'select' || type === 'select multiple') {
-						return add_props(base_props, {
-							multiple: is_array,
-							value: () => {
-								const value = read(input_value);
-								// copied, so the state array can't be edited through the props
-								return Array.isArray(value) ? [...value] : value;
-							}
-						});
-					}
-
-					// Handle checkbox inputs
-					if (type === 'checkbox' || type === 'radio') {
-						// radio and checkbox array inputs take their option as the second argument
-						// and whether it is checked as the third, a single checkbox only the latter
-						const has_option = type === 'radio' || is_array;
-
-						if (DEV && has_option && !input_value) {
-							throw new Error(
-								`${type === 'radio' ? 'Radio' : 'Checkbox array'} inputs must have a value`
-							);
-						}
-
-						if (has_option) {
-							base_props.value = input_value ?? 'on';
-						} else {
-							checked = /** @type {boolean | undefined} */ (input_value);
-						}
-
-						return add_props(base_props, {
-							defaultChecked: checked,
-							checked: () => {
-								const value = read();
-								if (value == null) return read(checked);
-								if (type === 'radio') return value === input_value;
-								if (is_array) return /** @type {unknown[]} */ (value).includes(input_value);
-								return value;
-							}
-						});
-					}
-
-					// Handle file inputs
-					if (type === 'file' || type === 'file multiple') {
-						return add_props(base_props, {
-							multiple: is_array,
-							files: () => {
-								const value = read();
-								const files = value instanceof File ? [value] : value;
-								if (!Array.isArray(files) || !files.every((f) => f instanceof File)) return null;
-
-								// a FileList-like object where DataTransfer does not exist
-								if (typeof DataTransfer === 'undefined') {
-									return Object.assign({ length: files.length }, files);
-								}
-
-								const transfer = new DataTransfer();
-								for (const file of files) transfer.items.add(file);
-								return transfer.files;
-							}
-						});
-					}
-
-					// Handle all other input types (text, number, etc.)
-					return add_props(base_props, {
-						defaultValue: input_value,
-						value: () => String(read(input_value) ?? '')
-					});
-				};
-			}
-
-			return create_field_proxy(context, fn, next);
+			return create_field_proxy(context, create_field_method(context, path, prop), next);
 		}
 	});
 }
