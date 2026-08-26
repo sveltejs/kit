@@ -444,6 +444,7 @@ function dynamic_img_to_picture(content, node, src_expression, src_var_name) {
 	// (they throw a compile error) and are only evaluated once, breaking reactivity when the
 	// expression depends on reactive state. `{@const}` is reactive, memoized, and works in both
 	// legacy and runes mode since Svelte 5.0.
+	// TODO use `{const ...}` when we switch to Svelte 6
 	if (src_expression) {
 		return `{#if true}{@const ${src_var_name} = ${src_expression}}\n${picture}\n{/if}`;
 	}
