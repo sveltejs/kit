@@ -4,6 +4,7 @@ import {
 	DELETE_KEY,
 	convert_formdata,
 	create_field_proxy,
+	deep_get,
 	deep_set,
 	deserialize_binary_form,
 	parse_form_key,
@@ -823,6 +824,16 @@ describe('deep_set', () => {
 		deep_set(target, ['nested', 'file'], DELETE_KEY);
 
 		expect(target).toEqual({ nested: {} });
+	});
+});
+
+describe('deep_get', () => {
+	test('walks objects and arrays and stops at anything else', () => {
+		const object = { a: [{ b: 'hello' }] };
+		expect(deep_get(object, [])).toBe(object);
+		expect(deep_get(object, ['a', 0, 'b'])).toBe('hello');
+		expect(deep_get(object, ['a', 1, 'b'])).toBe(undefined);
+		expect(deep_get(object, ['a', 0, 'b', 'length'])).toBe(undefined);
 	});
 });
 
