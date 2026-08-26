@@ -5,5 +5,5 @@
 "@sveltejs/adapter-cloudflare": minor
 ---
 
-feat: move `basePath` and `prerenderedRoutes` to the public SSRManifest api
+feat: allow adapters to override the `getRequest` and `setResponse` methods used during `vite dev` and `vite preview`
   
