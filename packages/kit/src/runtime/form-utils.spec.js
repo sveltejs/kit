@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import {
 	BINARY_FORM_CONTENT_TYPE,
 	DELETE_KEY,
@@ -951,5 +951,25 @@ describe('create_field_proxy', () => {
 
 		expect(edited.a.as('number', 3).value).toBe('');
 		expect(edited.a.as('checkbox', true).checked).toBe(undefined);
+	});
+
+	test('enumerating fields warns once instead of returning nothing silently', () => {
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+		const proxy = create_field_proxy({
+			form_id: 'form',
+			get: () => ({ a: 1 }),
+			set: () => {},
+			get_issues: () => ({}),
+			get_touched: () => ({}),
+			get_dirty: () => ({})
+		});
+
+		expect(Symbol.iterator in proxy).toBe(false);
+		expect(warn).not.toHaveBeenCalled();
+		expect(Object.keys(proxy)).toEqual([]);
+		expect('a' in proxy).toBe(false);
+		expect(Object.keys(proxy.a.b)).toEqual([]);
+		expect(warn).toHaveBeenCalledTimes(1);
+		warn.mockRestore();
 	});
 });

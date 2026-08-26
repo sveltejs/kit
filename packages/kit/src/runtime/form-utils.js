@@ -677,6 +677,31 @@ function deep_clone(value) {
 	return value;
 }
 
+let warned_no_keys = false;
+
+const warn_no_keys = () => {
+	if (warned_no_keys) return;
+	warned_no_keys = true;
+	console.warn(
+		'form fields have no keys at runtime because they are created as they are accessed, use `.value()` to read the current values'
+	);
+};
+
+// fields are created as they are accessed, so there is nothing to enumerate
+/** @type {ProxyHandler<object> | null} */
+const dev_traps = DEV
+	? {
+			has(target, prop) {
+				if (typeof prop !== 'symbol') warn_no_keys();
+				return prop in target;
+			},
+			ownKeys(target) {
+				warn_no_keys();
+				return Reflect.ownKeys(target);
+			}
+		}
+	: null;
+
 /** @param {InternalRemoteFormIssue} issue */
 const public_issue = (issue) => ({ path: issue.path, message: issue.message });
 
@@ -696,6 +721,7 @@ const public_issue = (issue) => ({ path: issue.path, message: issue.message });
  */
 export function create_field_proxy(context, target = {}, path = []) {
 	return new Proxy(target, {
+		...dev_traps,
 		get(target, prop) {
 			if (typeof prop === 'symbol') return target[prop];
 
