@@ -676,14 +676,16 @@ function deep_clone(value) {
 	return value;
 }
 
-let warned_no_keys = false;
+const warned_sites = new Set();
 
+// keyed by the stack, so every place that enumerates warns once with its call site
 const warn_no_keys = () => {
-	if (warned_no_keys) return;
-	warned_no_keys = true;
-	console.warn(
-		'form fields have no keys at runtime because they are created as they are accessed, use `.value()` to read the current values'
+	const error = new Error(
+		'The properties of `form.fields` are virtual, so operators like `in` and `Object.keys` are meaningless. If you need the current value of a form field, use `form.fields.x.value()`'
 	);
+	if (warned_sites.has(error.stack)) return;
+	warned_sites.add(error.stack);
+	console.warn(error);
 };
 
 // fields are created as they are accessed, so there is nothing to enumerate

@@ -953,7 +953,7 @@ describe('create_field_proxy', () => {
 		expect(edited.a.as('checkbox', true).checked).toBe(undefined);
 	});
 
-	test('enumerating fields warns once instead of returning nothing silently', () => {
+	test('enumerating fields warns once per call site, with a stack trace', () => {
 		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 		const proxy = create_field_proxy({
 			form_id: 'form',
@@ -966,10 +966,16 @@ describe('create_field_proxy', () => {
 
 		expect(Symbol.iterator in proxy).toBe(false);
 		expect(warn).not.toHaveBeenCalled();
-		expect(Object.keys(proxy)).toEqual([]);
-		expect('a' in proxy).toBe(false);
-		expect(Object.keys(proxy.a.b)).toEqual([]);
+
+		for (let i = 0; i < 2; i++) expect(Object.keys(proxy.a.b)).toEqual([]);
 		expect(warn).toHaveBeenCalledTimes(1);
+
+		expect('a' in proxy).toBe(false);
+		expect(warn).toHaveBeenCalledTimes(2);
+
+		const [error] = warn.mock.calls[1];
+		expect(error.message).toMatch('`form.fields`');
+		expect(error.stack).toMatch('form-utils.spec.js');
 		warn.mockRestore();
 	});
 });
