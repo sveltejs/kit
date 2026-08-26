@@ -1108,6 +1108,12 @@ export const createPost = form(
 `requested` gives you access to the queries the client requested to refresh. Each entry is an `{ arg, query, ignore }` object: `arg` is the value the query's implementation function received — i.e. the argument *after* the schema has validated and (where applicable) transformed it — and `query` is a `RemoteQuery` already bound to the client's original cache key, so calling `query.refresh()` / `query.set(...)` updates the correct client instance. Call `ignore()` if you intentionally do not want to update a particular instance:
 
 ```js
+import { requested, query } from '$app/server';
+
+export const getPosts = query('unchecked', ({ filter }) => {
+	return ['foo', 'bar'];
+});
+---cut---
 for (const { arg, query, ignore } of requested(getPosts, 10)) {
 	if (arg.filter === 'author:santa') {
 		void query.refresh();
