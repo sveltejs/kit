@@ -604,20 +604,21 @@ export function deep_get(object, path) {
 	return current;
 }
 
+/** name prefixes that tell the server which type to coerce a submitted string to */
+const type_prefixes = /** @type {Record<string, string | undefined>} */ ({
+	number: 'n:',
+	boolean: 'b:'
+});
+
 /**
- *
- * @param {string} field_type
+ * @param {string} type
  * @param {boolean} is_array
  * @param {unknown} input_value
  */
-function get_type_prefix(field_type, is_array, input_value) {
-	if (field_type === 'number' || field_type === 'range') return 'n:';
-	if (field_type === 'checkbox' && !is_array) return 'b:';
-	if (field_type === 'hidden' || field_type === 'submit') {
-		const input_type = typeof input_value;
-		if (input_type === 'number') return 'n:';
-		if (input_type === 'boolean') return 'b:';
-	}
+function get_type_prefix(type, is_array, input_value) {
+	if (type === 'number' || type === 'range') return 'n:';
+	if (type === 'checkbox' && !is_array) return 'b:';
+	if (type === 'hidden' || type === 'submit') return type_prefixes[typeof input_value] ?? '';
 	return '';
 }
 
