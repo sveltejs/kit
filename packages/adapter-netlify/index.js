@@ -1,3 +1,4 @@
+/** @import { TomlTable } from 'smol-toml' */
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -11,7 +12,7 @@ import { matches, get_publish_directory, s } from './utils.js';
  * @typedef {{
  *   build?: { publish?: string }
  *   functions?: { node_bundler?: 'zisi' | 'esbuild' }
- * } & import('smol-toml').TomlTable} NetlifyConfig
+ * } & TomlTable} NetlifyConfig
  */
 
 const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf-8'));
