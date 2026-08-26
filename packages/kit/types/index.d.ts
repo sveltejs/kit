@@ -42,14 +42,14 @@ declare module '@sveltejs/kit' {
 			instrumentation?: () => boolean;
 		};
 		/**
-		 * This function overrides the default behavior to convert an `http.IncomingMessage` to a `Request` object.
-		 * To call the original setRequest function, import it from `@sveltejs/kit/node`.
+		 * This function overrides the default behavior in vite dev and preview mode to convert an `http.IncomingMessage`
+		 * to a `Request` object. To call the original setRequest function, import it from `@sveltejs/kit/node`.
 		 * @since 3.0.0
 		 */
 		getRequest?: typeof getRequest;
 		/**
-		 * This function overrides the default behavior to write a `Response` object to an `http.ServerResponse`.
-		 * To call the original setResponse function, import it from `@sveltejs/kit/node`.
+		 * This function overrides the default behavior in vite dev and preview mode to write a `Response` object
+		 * to an `http.ServerResponse`. To call the original setResponse function, import it from `@sveltejs/kit/node`.
 		 * @since 3.0.0
 		 */
 		setResponse?: typeof setResponse;
