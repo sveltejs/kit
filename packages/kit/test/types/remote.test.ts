@@ -525,6 +525,20 @@ function form_tests() {
 	f5.fields.bar.issues();
 	f5.fields.foo.value();
 	f5.fields.bar.value() === 'c';
+	const enum_text_props: { value?: string } = f5.fields.foo.as('text', 'a');
+	enum_text_props;
+	// @ts-expect-error
+	f5.fields.foo.as('text', 'c');
+	const optional_boolean_form = form(
+		null as any as StandardSchemaV1<{ enabled?: boolean }>,
+		() => {}
+	);
+	const boolean_checkbox_props: { value?: string; checked: boolean } =
+		optional_boolean_form.fields.enabled.as('checkbox');
+	boolean_checkbox_props;
+	const boolean_hidden_props: { value: string | number; type: 'hidden' } =
+		optional_boolean_form.fields.enabled.as('hidden', true);
+	boolean_hidden_props;
 	// @ts-expect-error
 	f5.fields.foo.value() === 'e';
 	// @ts-expect-error
@@ -703,6 +717,12 @@ function form_tests() {
 	f11_field2.propA;
 	// @ts-expect-error
 	f11_field2.propB;
+
+	const f12 = form(null as any as StandardSchemaV1<{ a: string } | { b: string }>, () => {});
+	f12.fields.a.as('text', 'default');
+	f12.fields.b.as('text');
+	// @ts-expect-error
+	f12.fields.c.as('text');
 
 	// non-optional booleans
 	form(

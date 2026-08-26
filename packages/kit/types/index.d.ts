@@ -2956,7 +2956,7 @@ declare module '$app/server' {
 	}[keyof InputTypeMap];
 
 	// Input element properties based on type
-	type InputElementProps<T extends keyof InputTypeMap> = T extends 'checkbox' | 'radio'
+	type InputElementProps<T extends keyof InputTypeMap, Value> = T extends 'checkbox' | 'radio'
 		? {
 				name: string;
 				type: T;
@@ -2993,9 +2993,9 @@ declare module '$app/server' {
 						? {
 								name: string;
 								'aria-invalid': boolean | 'false' | 'true' | undefined;
-								get value(): string | number;
-								set value(v: string | number);
-								readonly defaultValue?: string | number;
+								get value(): Value extends string ? string : string | number;
+								set value(v: Value extends string ? string : string | number);
+								readonly defaultValue?: Value extends string ? string : string | number;
 							}
 						: {
 								name: string;
@@ -3046,6 +3046,8 @@ declare module '$app/server' {
 					? [type: Type]
 					: [type: Type] | [type: Type, value: Value | undefined];
 
+	type WidenLiteralString<T> = T extends string ? (string extends T ? T : string) : T;
+
 	/**
 	 * Form field accessor type that provides name(), value(), and issues() methods
 	 */
@@ -3060,7 +3062,9 @@ declare module '$app/server' {
 		 * <input {...myForm.fields.myBoolean.as('checkbox')} />
 		 * ```
 		 */
-		as<T extends RemoteFormFieldType<Value>>(...args: AsArgs<T, Value>): InputElementProps<T>;
+		as<T extends RemoteFormFieldType<Value>>(
+			...args: AsArgs<T, Value>
+		): InputElementProps<T, WidenLiteralString<Value>>;
 	};
 
 	type RemoteFormFieldContainer<Value> = RemoteFormFieldMethods<Value> & {
@@ -3081,12 +3085,15 @@ declare module '$app/server' {
 		 * <input {...myForm.fields.myBoolean.as('checkbox')} />
 		 * ```
 		 */
-		as<T extends RemoteFormFieldType<Value>>(...args: AsArgs<T, Value>): InputElementProps<T>;
+		as<T extends RemoteFormFieldType<Value>>(...args: AsArgs<T, Value>): InputElementProps<T, Value>;
 	} & {
 		[key: string | number]: UnknownField<any>;
 	};
 
-	type RemoteFormFieldsRoot<Input extends RemoteFormInput | void> =
+	type RemoteFormFieldsRoot<
+		Input extends RemoteFormInput | void,
+		Original extends [RemoteFormInput | void] = [Input]
+	> =
 		IsAny<Input> extends true
 			? RecursiveFormFields
 			: Input extends void
@@ -3096,7 +3103,11 @@ declare module '$app/server' {
 						/** Validation issues belonging to this or any of the fields that belong to it, if any */
 						allIssues(): RemoteFormIssue[] | undefined;
 					}
-				: RemoteFormFields<Input>;
+				: WillRecurseIndefinitely<Input> extends true
+					? RecursiveFormFields
+					: RemoteFormFieldContainer<Original[0]> & {
+							[K in KeysOfUnion<Original[0]>]-?: RemoteFormFields<ValueOfUnionKey<Original[0], K>>;
+						};
 
 	/**
 	 * Recursive type to build form fields structure with proxy access
@@ -3188,7 +3199,17 @@ declare module '$app/server' {
 	/**
 	 * The type of a remote `form` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
 	 */
-	export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
+	export type RemoteForm<Input extends RemoteFormInput | void, Output> = RemoteForm_<
+		Input,
+		Output,
+		[Input]
+	>;
+
+	type RemoteForm_<
+		Input extends RemoteFormInput | void,
+		Output,
+		Original extends [RemoteFormInput | void]
+	> = {
 		/** Attachment that sets up an event handler that intercepts the form submission on the client to prevent a full page reload */
 		[attachment: symbol]: (node: HTMLFormElement) => void;
 		method: 'POST';
@@ -3242,7 +3263,7 @@ declare module '$app/server' {
 		/** True if the form has been submitted at least once, and hasn't been reset since */
 		get submitted(): boolean;
 		/** Access form fields using object notation */
-		fields: RemoteFormFieldsRoot<Input>;
+		fields: RemoteFormFieldsRoot<Input, Original>;
 	};
 
 	/**
