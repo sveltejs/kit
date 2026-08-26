@@ -677,6 +677,9 @@ function deep_clone(value) {
 	return value;
 }
 
+/** @param {InternalRemoteFormIssue} issue */
+const public_issue = (issue) => ({ path: issue.path, message: issue.message });
+
 /**
  * Creates a proxy-based field accessor for form data
  * @param {{
@@ -692,95 +695,58 @@ function deep_clone(value) {
  * @returns {any} Proxy object with name(), value(), and issues() methods
  */
 export function create_field_proxy(context, target = {}, path = []) {
-	const get_value = () => {
-		const value = deep_get(context.get(), path);
-		return deep_clone(value);
-	};
-
 	return new Proxy(target, {
 		get(target, prop) {
 			if (typeof prop === 'symbol') return target[prop];
 
-			// Handle array access like jobs[0]
-			if (/^\d+$/.test(prop)) {
-				return create_field_proxy(context, {}, [...path, parseInt(prop, 10)]);
-			}
+			// array access like jobs[0]
+			const next = [...path, /^\d+$/.test(prop) ? parseInt(prop, 10) : prop];
 
-			const key = build_path_string(path);
-			const next = [...path, prop];
+			/** @type {any} a method of this field, or undefined for a nested field */
+			let fn;
 
 			if (prop === 'set') {
-				const set_func = function (/** @type {any} */ newValue) {
-					context.set(path, newValue);
-					return newValue;
+				fn = (/** @type {any} */ value) => {
+					context.set(path, value);
+					return value;
 				};
-				return create_field_proxy(context, set_func, next);
-			}
+			} else if (prop === 'value') {
+				fn = () => deep_clone(deep_get(context.get(), path));
+			} else if (prop === 'issues' || prop === 'allIssues') {
+				const key = build_path_string(path);
+				const all = prop === 'allIssues';
 
-			if (prop === 'value') {
-				return create_field_proxy(context, get_value, next);
-			}
-
-			if (prop === 'issues' || prop === 'allIssues') {
-				const issues_func = () => {
-					const all_issues = context.get_issues(path, prop === 'allIssues')[key === '' ? '$' : key];
-
-					if (prop === 'allIssues') {
-						return all_issues?.map((issue) => ({
-							path: issue.path,
-							message: issue.message
-						}));
-					}
-
-					const issues = all_issues
-						?.filter((issue) => issue.name === key)
-						?.map((issue) => ({
-							path: issue.path,
-							message: issue.message
-						}));
-
-					return issues?.length ? issues : undefined;
+				fn = () => {
+					const issues = context.get_issues(path, all)[key === '' ? '$' : key];
+					if (all) return issues?.map(public_issue);
+					const own = issues?.filter((issue) => issue.name === key).map(public_issue);
+					return own?.length ? own : undefined;
 				};
+			} else if (prop === 'touched' || prop === 'dirty') {
+				const key = build_path_string(path);
 
-				return create_field_proxy(context, issues_func, next);
-			}
-
-			if (prop === 'touched' || prop === 'dirty') {
-				const fn = () => {
+				fn = () => {
 					const object = prop === 'dirty' ? context.get_dirty() : context.get_touched();
-
-					if (key === '') {
-						return Object.keys(object).length > 0;
-					}
-
-					if (Object.hasOwn(object, key)) {
-						return true;
-					}
-
+					if (Object.hasOwn(object, key)) return true;
 					for (const candidate in object) {
 						if (!Object.hasOwn(object, candidate)) continue;
+						if (key === '') return true;
 						if (!candidate.startsWith(key)) continue;
-
 						const next = candidate[key.length];
-						if (next === '.' || next === '[') {
-							return true;
-						}
+						if (next === '.' || next === '[') return true;
 					}
-
 					return false;
 				};
+			} else if (prop === 'as') {
+				const key = build_path_string(path);
 
-				return create_field_proxy(context, fn, next);
-			}
-
-			if (prop === 'as') {
 				/**
 				 * the field's value, or `fallback` until the field has been edited
 				 * (without a fallback there is nothing to suppress, so `dirty` is not read)
 				 * @param {unknown} [fallback]
 				 */
 				const read = (fallback) =>
-					get_value() ??
+					deep_get(context.get(), path) ??
 					(fallback !== undefined && Object.hasOwn(context.get_dirty(), key)
 						? undefined
 						: fallback);
@@ -790,7 +756,7 @@ export function create_field_proxy(context, target = {}, path = []) {
 				 * @param {unknown} [input_value]
 				 * @param {boolean} [checked]
 				 */
-				const as_func = (type, input_value, checked) => {
+				fn = (type, input_value, checked) => {
 					const is_array =
 						type === 'file multiple' ||
 						type === 'select multiple' ||
@@ -852,7 +818,7 @@ export function create_field_proxy(context, target = {}, path = []) {
 						return add_props(base_props, {
 							defaultChecked: checked,
 							checked: () => {
-								const value = get_value();
+								const value = read();
 								if (value == null) return read(checked);
 								if (type === 'radio') return value === input_value;
 								if (is_array) return /** @type {unknown[]} */ (value).includes(input_value);
@@ -866,7 +832,7 @@ export function create_field_proxy(context, target = {}, path = []) {
 						return add_props(base_props, {
 							multiple: is_array,
 							files: () => {
-								const value = get_value();
+								const value = read();
 								const files = value instanceof File ? [value] : value;
 								if (!Array.isArray(files) || !files.every((f) => f instanceof File)) return null;
 
@@ -888,12 +854,9 @@ export function create_field_proxy(context, target = {}, path = []) {
 						value: () => String(read(input_value) ?? '')
 					});
 				};
-
-				return create_field_proxy(context, as_func, next);
 			}
 
-			// Handle property access (nested fields)
-			return create_field_proxy(context, {}, next);
+			return create_field_proxy(context, fn, next);
 		}
 	});
 }
