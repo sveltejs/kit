@@ -490,6 +490,8 @@ const myCache = await caches.open('foo');
 await myCache.match(request);
 ```
 
+- To make these types available to your app, install [`wrangler`](https://www.npmjs.com/package/wrangler) and run [`wrangler types`](https://developers.cloudflare.com/workers/languages/typescript/).
+
 - minimum `wrangler` is now `^4.67.0`
 - `@cloudflare/workers-types` upgraded
 
