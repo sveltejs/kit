@@ -14,7 +14,6 @@ afterEach(() => {
 test('initializes SvelteKit with Bun environment variables and server-readable assets', async () => {
 	const loaded = await load_handler();
 
-	expect(loaded.construct).toHaveBeenCalledWith(loaded.manifest);
 	expect(loaded.init).toHaveBeenCalledWith({
 		env: Bun.env,
 		read: expect.any(Function)
@@ -196,23 +195,18 @@ async function load_handler({
 	envPrefix = '',
 	response = new Response('ok')
 }: { origin?: string; envPrefix?: string; response?: Response } = {}) {
-	const manifest = { appDir: '_app' };
 	const stream = new ReadableStream();
 	const asset = { stream: mock(() => stream) };
-	const construct = mock((_value: unknown) => {});
 	const init = mock(async (_options: any) => {});
 	const respond = mock(async (_request: Request, _options: any) => response);
 
 	class Server {
-		constructor(value: unknown) {
-			construct(value);
-		}
 		init = init;
 		respond = respond;
 	}
 
-	mock.module('SERVER', () => ({ Server }));
-	mock_manifest({ manifest, origin, env_prefix: envPrefix });
+	mock.module('SERVER', () => ({ server: new Server() }));
+	mock_manifest({ app_dir: '_app', origin, env_prefix: envPrefix });
 	mock_routes({ server_assets: new Map([['asset.txt', asset]]) });
 
 	const request_ip = mock((_request: Request): any => ({
@@ -227,9 +221,7 @@ async function load_handler({
 
 	return {
 		handler,
-		manifest,
 		stream,
-		construct,
 		init,
 		respond,
 		request_ip,

@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, rmSync } from 'node:fs';
 import { extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { rolldown } from 'rolldown';
@@ -65,16 +65,6 @@ export default function (opts = {}) {
 
 			const dir_id = `${entries}/dir.js`;
 
-			writeFileSync(
-				`${server}/manifest.js`,
-				[
-					`export const manifest = ${builder.generateManifest({ relativePath: './' })};`,
-					`export const prerendered = new Set(${JSON.stringify(builder.prerendered.paths)});`,
-					`export const base = ${JSON.stringify(builder.config.paths.base)};`,
-					`export const uncompressed_extensions = new Set(${JSON.stringify([...uncompressed_extensions])});`
-				].join('\n\n')
-			);
-
 			/** @type {Record<string, string>} */
 			const input = {
 				index: `${entries}/index.js`,
@@ -85,6 +75,20 @@ export default function (opts = {}) {
 			if (builder.hasServerInstrumentationFile()) {
 				input['instrumentation.server'] = `${server}/instrumentation.server.js`;
 			}
+
+			builder.generateServerInstance(`${server}/server.js`);
+
+			/** @type {Record<string, string>} */
+			const defines = {
+				UNCOMPRESSED_EXTENSIONS: `new Set(${JSON.stringify([...uncompressed_extensions])})`,
+				BASE_PATH: JSON.stringify(builder.config.paths.base),
+				APP_PATH: JSON.stringify(builder.getAppPath()),
+				PRERENDERED: `new Set(${JSON.stringify(builder.prerendered.paths)})`,
+				MIME_TYPES: JSON.stringify(builder.mimeTypes),
+				ORIGIN: JSON.stringify(builder.config.paths.origin) || 'undefined',
+				ENV_PREFIX: JSON.stringify(envPrefix),
+				PRECOMPRESS: JSON.stringify(precompress)
+			};
 
 			// we bundle the Vite output so that deployments only need
 			// their production dependencies. Anything in devDependencies
@@ -111,9 +115,11 @@ export default function (opts = {}) {
 					{
 						// resolve the app's server and manifest, generated above
 						name: 'adapter-node-resolve-app',
-						resolveId(id) {
-							if (id === 'SERVER') return `${server}/index.js`;
-							if (id === 'MANIFEST') return `${server}/manifest.js`;
+						resolveId: {
+							filter: { id: /^SERVER$/ },
+							handler() {
+								return `${server}/server.js`;
+							}
 						}
 					},
 					{
@@ -125,13 +131,13 @@ export default function (opts = {}) {
 							filter: { id: new RegExp(escape_regex(entries)) },
 							handler(_code, _id, { magicString }) {
 								if (!magicString) throw new Error('experimental.nativeMagicString is not enabled');
-								magicString
-									.replace(/\bENV_PREFIX\b/g, JSON.stringify(envPrefix))
-									.replace(/\bPRECOMPRESS\b/g, JSON.stringify(precompress))
-									.replace(
-										/\bORIGIN\b/g,
-										JSON.stringify(builder.config.paths.origin) || 'undefined'
-									);
+
+								for (const [from, to] of Object.entries(defines)) {
+									// remove $& and $N substitutions by replacing every $ with $$
+									const value = to.replace(/\$/g, '$$$$');
+									magicString.replace(new RegExp(`\\b${from}\\b`, 'g'), value);
+								}
+
 								return {
 									code: magicString,
 									map: magicString.generateMap().toString()

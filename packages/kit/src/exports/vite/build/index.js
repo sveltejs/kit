@@ -862,6 +862,14 @@ export function plugin_compile(
 
 				// defer until after other buildApp hooks have run
 				finalise = async () => {
+					/** @type {typeof import('$app/manifest')} */
+					const app_manifest = {
+						assets: manifest_data.assets.map((asset) => ({ path: asset.file })),
+						immutable: immutable ?? [],
+						prerendered: prerendered_paths,
+						routes: get_manifest_routes(manifest_data.routes)
+					};
+
 					// defer creating the service worker to avoid other plugins from
 					// overwriting it if they run a client environment build
 					if (service_worker_entry_file) {
@@ -871,12 +879,10 @@ export function plugin_compile(
 						builder.environments.serviceWorker.config.define = {
 							...builder.environments.serviceWorker.config.define,
 
-							__SVELTEKIT_MANIFEST_ASSETS__: s(
-								manifest_data.assets.map((asset) => ({ path: asset.file }))
-							),
-							__SVELTEKIT_MANIFEST_IMMUTABLE__: s(immutable),
-							__SVELTEKIT_MANIFEST_PRERENDERED__: s(prerendered_paths),
-							__SVELTEKIT_MANIFEST_ROUTES__: s(get_manifest_routes(manifest_data.routes))
+							__SVELTEKIT_MANIFEST_ASSETS__: s(app_manifest.assets),
+							__SVELTEKIT_MANIFEST_IMMUTABLE__: s(app_manifest.immutable),
+							__SVELTEKIT_MANIFEST_PRERENDERED__: s(app_manifest.prerendered),
+							__SVELTEKIT_MANIFEST_ROUTES__: s(app_manifest.routes)
 						};
 
 						// we have to overwrite this because it can't be configured per environment in the config hook
@@ -905,6 +911,7 @@ export function plugin_compile(
 							metadata,
 							prerendered,
 							prerender_results.prerender_map,
+							app_manifest,
 							log,
 							remotes,
 							vite_config,
