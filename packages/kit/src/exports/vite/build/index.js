@@ -496,6 +496,17 @@ export function plugin_compile(
 
 				const { remotes, remote_original_by_hash } = get_remote_metadata();
 
+				// first, build server nodes without the client manifest so we can check features
+				build_server_nodes(
+					out,
+					kit,
+					manifest_data,
+					vite_server_manifest,
+					null,
+					assets_path,
+					server_chunks,
+					root
+				);
 				fs.writeFileSync(
 					manifest_path,
 					`export const manifest = ${generate_manifest({
@@ -507,7 +518,6 @@ export function plugin_compile(
 						root
 					})};\n`
 				);
-
 				/** @type {{ manifest: import('types').SSRManifest }} */
 				const { manifest: ssr_manifest } = await import(pathToFileURL(manifest_path).href);
 
