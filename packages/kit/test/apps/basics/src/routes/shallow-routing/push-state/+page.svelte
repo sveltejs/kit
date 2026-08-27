@@ -87,4 +87,5 @@
 </span>
 <span data-id="resolved">{resolved}</span>
 <span data-id="now">{data.now}</span>
+<span data-id="search" hidden>{page.shallow?.url.search ?? page.url.search}</span>
 <div style="height: 2000px"></div>

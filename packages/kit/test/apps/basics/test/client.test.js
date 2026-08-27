@@ -2309,6 +2309,7 @@ test.describe('Shallow routing', () => {
 		for (const shallow of [true, false]) {
 			const prefix = shallow ? 'shallow' : 'regular';
 			const input = page.locator('[data-id="options-focus"]');
+			const search = page.locator('[data-id="search"]');
 			const state = () =>
 				page.evaluate(() => ({
 					focus: document.activeElement?.getAttribute('data-id') ?? document.activeElement?.tagName,
@@ -2325,11 +2326,13 @@ test.describe('Shallow routing', () => {
 			await page.evaluate(() => scrollTo(0, 700));
 			await page.goBack();
 			await expect(page).not.toHaveURL(new RegExp(`${prefix}=a`));
+			await expect(search).toHaveText('');
 			await expect.poll(state).toEqual({ focus: 'options-focus', y: 700 });
 
 			await page.evaluate(() => scrollTo(0, 300));
 			await page.goForward();
 			await expect(page).toHaveURL(new RegExp(`${prefix}=a`));
+			await expect(search).toHaveText(`?${prefix}=a`);
 			await expect.poll(state).toEqual({ focus: 'options-focus', y: 300 });
 
 			await page.reload();
@@ -2337,11 +2340,13 @@ test.describe('Shallow routing', () => {
 			await page.evaluate(() => scrollTo(0, 350));
 			await page.goBack();
 			await expect(page).not.toHaveURL(new RegExp(`${prefix}=a`));
+			await expect(search).toHaveText('');
 			await expect.poll(state).toEqual({ focus: 'options-focus', y: 350 });
 
 			await page.evaluate(() => scrollTo(0, 400));
 			await page.goForward();
 			await expect(page).toHaveURL(new RegExp(`${prefix}=a`));
+			await expect(search).toHaveText(`?${prefix}=a`);
 			await expect.poll(state).toEqual({ focus: 'options-focus', y: 400 });
 
 			await app.goto(`?${prefix}=b`, { shallow, reset: true });
