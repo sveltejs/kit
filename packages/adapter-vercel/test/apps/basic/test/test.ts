@@ -46,6 +46,20 @@ test('ISR route serves cached response', async ({ request }) => {
 	expect(first_rendered_at).toBe(second_rendered_at);
 });
 
+test('ISR page with trailingSlash always loads without errors', async ({ page, request }) => {
+	await page.goto('/isr-trailing-slash/');
+
+	expect(new URL(page.url()).pathname).toBe('/isr-trailing-slash/');
+	await expect(page.locator('h1')).toContainText('ISR Trailing Slash Page');
+
+	const rendered_at = await page.locator('#rendered-at').textContent();
+	await page.reload();
+	await expect(page.locator('#rendered-at')).toHaveText(String(rendered_at));
+
+	const response = await request.get('/isr-trailing-slash', { maxRedirects: 0 });
+	expect(response.status()).toBe(308);
+});
+
 test('ISR dynamic route serves cached response per slug', async ({ request }) => {
 	// warm the cache for /isr/alpha
 	const first = await request.get('/isr/alpha');
@@ -67,6 +81,10 @@ test('ISR dynamic route serves cached response per slug', async ({ request }) =>
 	expect(beta.ok()).toBe(true);
 	const beta_html = await beta.text();
 	expect(beta_html).toContain('ISR: beta');
+
+	// trailing slash is normalized rather than silently served
+	const slashed = await request.get('/isr/alpha/', { maxRedirects: 0 });
+	expect(slashed.status()).toBe(308);
 });
 
 test('prerendered page works', async ({ page }) => {

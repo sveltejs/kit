@@ -66,6 +66,25 @@ describe('convert_formdata', () => {
 		});
 	});
 
+	test('normalizes image input coordinates', () => {
+		expect(parse_form_key('form', 'i:position/form.x')).toEqual({
+			name: 'position.x',
+			type: 'number',
+			is_array: false
+		});
+		expect(parse_form_key('form', 'i:position/form.y')).toEqual({
+			name: 'position.y',
+			type: 'number',
+			is_array: false
+		});
+
+		const data = new FormData();
+		data.append('i:position/form.x', '12');
+		data.append('i:position/form.y', '34');
+
+		expect(convert_formdata('form', data)).toEqual({ position: { x: 12, y: 34 } });
+	});
+
 	test('rejects field names without the form id suffix', () => {
 		expect(() => parse_form_key('form', 'foo/other')).toThrow(/wasn't created with form.fields.as/);
 	});
@@ -838,6 +857,23 @@ describe('deep_get', () => {
 });
 
 describe('create_field_proxy', () => {
+	test('image inputs use coordinate names and omit value properties', () => {
+		const proxy = create_field_proxy({
+			form_id: 'form',
+			get: () => ({}),
+			set: () => {},
+			get_issues: () => ({}),
+			get_touched: () => ({}),
+			get_dirty: () => ({})
+		});
+
+		expect(proxy.position.as('image')).toEqual({
+			name: 'i:position/form',
+			type: 'image',
+			'aria-invalid': undefined
+		});
+	});
+
 	// Regression test for https://github.com/sveltejs/kit/issues/16165
 	// Before the fix, Date values fell through to the generic object branch
 	// of deep_clone, which iterated Object.keys (empty on Date), producing
