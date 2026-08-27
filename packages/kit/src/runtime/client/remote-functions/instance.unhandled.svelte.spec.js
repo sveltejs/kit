@@ -133,7 +133,7 @@ describe('Query errors', () => {
 });
 
 describe('Query.set', () => {
-	/** @param {Query<any>} query */
+	/** @param {import('./query/instance.svelte.js').Query<any>} query */
 	function count_invalidations(query) {
 		let runs = 0;
 		const destroy = $effect.root(() => {
