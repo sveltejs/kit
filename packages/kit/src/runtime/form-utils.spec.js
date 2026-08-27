@@ -1,9 +1,10 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import {
 	BINARY_FORM_CONTENT_TYPE,
 	DELETE_KEY,
 	convert_formdata,
 	create_field_proxy,
+	deep_get,
 	deep_set,
 	deserialize_binary_form,
 	parse_form_key,
@@ -826,6 +827,16 @@ describe('deep_set', () => {
 	});
 });
 
+describe('deep_get', () => {
+	test('walks objects and arrays and stops at anything else', () => {
+		const object = { a: [{ b: 'hello' }] };
+		expect(deep_get(object, [])).toBe(object);
+		expect(deep_get(object, ['a', 0, 'b'])).toBe('hello');
+		expect(deep_get(object, ['a', 1, 'b'])).toBe(undefined);
+		expect(deep_get(object, ['a', 0, 'b', 'length'])).toBe(undefined);
+	});
+});
+
 describe('create_field_proxy', () => {
 	// Regression test for https://github.com/sveltejs/kit/issues/16165
 	// Before the fix, Date values fell through to the generic object branch
@@ -893,6 +904,7 @@ describe('create_field_proxy', () => {
 			['multiple', true],
 			['value', ['y']]
 		]);
+		expect(proxy.a.as('select multiple', ['x']).value).not.toBe(input.a);
 		const file = new File([], 'a.txt');
 		expect(as(['file multiple'], [file])).toEqual([
 			['name', 'a[]/form'],
@@ -940,5 +952,31 @@ describe('create_field_proxy', () => {
 
 		expect(edited.a.as('number', 3).value).toBe('');
 		expect(edited.a.as('checkbox', true).checked).toBe(undefined);
+	});
+
+	test('enumerating fields warns once per call site, with a stack trace', () => {
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+		const proxy = create_field_proxy({
+			form_id: 'form',
+			get: () => ({ a: 1 }),
+			set: () => {},
+			get_issues: () => ({}),
+			get_touched: () => ({}),
+			get_dirty: () => ({})
+		});
+
+		expect(Symbol.iterator in proxy).toBe(false);
+		expect(warn).not.toHaveBeenCalled();
+
+		for (let i = 0; i < 2; i++) expect(Object.keys(proxy.a.b)).toEqual([]);
+		expect(warn).toHaveBeenCalledTimes(1);
+
+		expect('a' in proxy).toBe(false);
+		expect(warn).toHaveBeenCalledTimes(2);
+
+		const [error] = warn.mock.calls[1];
+		expect(error.message).toMatch('`form.fields`');
+		expect(error.stack).toMatch('form-utils.spec.js');
+		warn.mockRestore();
 	});
 });
