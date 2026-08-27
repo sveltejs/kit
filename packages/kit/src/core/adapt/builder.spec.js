@@ -5,6 +5,27 @@ import { assert, expect, test } from 'vitest';
 import { create_builder } from './builder.js';
 import { walk } from '../../utils/filesystem.js';
 
+/** @param {string} outDir */
+function create_test_builder(outDir) {
+	return create_builder({
+		// @ts-expect-error - only fields used by these tests are provided
+		config: { outDir },
+		// @ts-expect-error - only fields used by these tests are provided
+		build_data: { app_path: '', manifest_data: { assets: [] } },
+		server_metadata: { nodes: [], routes: new Map(), remotes: new Map() },
+		route_data: [],
+		prerendered: { pages: new Map(), assets: new Map(), paths: [], redirects: new Map() },
+		prerender_map: new Map(),
+		app_manifest: { assets: [], immutable: [], prerendered: [], routes: [] },
+		// @ts-expect-error - logging is not used by these tests
+		log: {},
+		// @ts-expect-error - only root is used by these tests
+		vite_config: { root: '' },
+		remotes: [],
+		explicit_env_config: null
+	});
+}
+
 test('copy files', () => {
 	const cwd = join(import.meta.dirname, 'fixtures/basic');
 	const outDir = join(cwd, '.svelte-kit');
@@ -102,13 +123,7 @@ test('instrument generates facade with posix paths', () => {
 	const entrypoint = join(dest, 'index.js');
 	const instrumentation = join(dest, 'server', 'instrumentation.server.js');
 
-	const builder = create_builder({
-		// @ts-expect-error - we don't need the whole build data for this test
-		build_data: { app_path: '' },
-		// @ts-expect-error - we don't need the whole config for this test
-		config: { outDir: dest },
-		route_data: []
-	});
+	const builder = create_test_builder(dest);
 
 	builder.instrument({
 		entrypoint,
@@ -150,8 +165,7 @@ test('instrument initializes environment before instrumentation', async () => {
 		`export function set_env(env) { globalThis.env_value = env.VALUE; globalThis.order.push(['env', env.VALUE]); }`
 	);
 
-	// @ts-expect-error - we don't need the whole config for this test
-	const builder = create_builder({ config: { outDir: out_dir }, route_data: [] });
+	const builder = create_test_builder(out_dir);
 	let env_path;
 
 	builder.instrument({
@@ -199,8 +213,7 @@ test('instrument passes environment initializer to custom facade', () => {
 	writeFileSync(instrumentation, '');
 	writeFileSync(env, 'export function set_env() {}');
 
-	// @ts-expect-error - we don't need the whole config for this test
-	const builder = create_builder({ config: { outDir: dest }, route_data: [] });
+	const builder = create_test_builder(dest);
 	builder.instrument({
 		entrypoint,
 		instrumentation,
@@ -229,8 +242,7 @@ test('instrument replaces an environment initializer', () => {
 	writeFileSync(instrumentation, '');
 	writeFileSync(join(dest, '__sveltekit_env_init.js'), 'existing');
 
-	// @ts-expect-error - we don't need the whole config for this test
-	const builder = create_builder({ config: { outDir: dest }, route_data: [] });
+	const builder = create_test_builder(dest);
 	builder.instrument({ entrypoint, instrumentation, environment: {} });
 	expect(readFileSync(join(dest, '__sveltekit_env_init.js'), 'utf8')).not.toBe('existing');
 	rmSync(dest, { recursive: true, force: true });
