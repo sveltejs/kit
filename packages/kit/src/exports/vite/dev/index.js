@@ -118,10 +118,10 @@ export async function dev(
 			}
 
 			// TODO this is inadequate — it doesn't reliably show the overlay on every page load,
-			// and when it does appear it may immediately vanish. `vite.hot.send` broadcasts
+			// and when it does appear it may immediately vanish. `hot.send` broadcasts
 			// to all connected clients, even ones that are unaffected by the error.
 			// we need a more considered approach
-			vite_dev_server.hot.send({
+			vite_dev_server.environments.client.hot.send({
 				type: 'error',
 				err: /** @type {ErrorPayload['err']} */ ({
 					...err,
@@ -163,13 +163,13 @@ export async function dev(
 
 			if (manifest_error) {
 				manifest_error = null;
-				vite_dev_server.hot.send({ type: 'full-reload' });
+				vite_dev_server.environments.client.hot.send({ type: 'full-reload' });
 			}
 		} catch (error) {
 			manifest_error = /** @type {Error} */ (error);
 
 			console.error(styleText(['bold', 'red'], manifest_error.message));
-			vite_dev_server.hot.send({
+			vite_dev_server.environments.client.hot.send({
 				type: 'error',
 				err: {
 					message: manifest_error.message ?? 'Invalid routes',
@@ -450,7 +450,7 @@ export async function dev(
 	if (appTemplate !== 'index.html') {
 		vite_dev_server.watcher.on('change', (file) => {
 			if (file === appTemplate) {
-				vite_dev_server.hot.send({ type: 'full-reload' });
+				vite_dev_server.environments.client.hot.send({ type: 'full-reload' });
 			}
 		});
 	}
