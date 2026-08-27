@@ -53,7 +53,7 @@ SvelteKit automatically preloads critical `.js` and `.css` files when the user v
 
 ```js
 /// file: src/hooks.server.js
-/** @type {import('@sveltejs/kit').Handle} */
+/** @type {import('@sveltejs/kit/hooks').Handle} */
 export async function handle({ event, resolve }) {
 	return resolve(event, {
 		preload: (asset) => {
