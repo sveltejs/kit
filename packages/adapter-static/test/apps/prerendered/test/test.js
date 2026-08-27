@@ -1,11 +1,11 @@
 import * as fs from 'node:fs';
-import process from 'node:process';
+import path from 'node:path';
 import { expect, test } from '@playwright/test';
 
-const cwd = process.cwd();
+const build_dir = path.resolve(import.meta.dirname, '..', 'build');
 
 test('generates HTML files', () => {
-	expect(fs.existsSync(`${cwd}/build/index.html`)).toBeTruthy();
+	expect(fs.existsSync(`${build_dir}/index.html`)).toBeTruthy();
 });
 
 test('prerenders a page', async ({ page }) => {
@@ -15,11 +15,11 @@ test('prerenders a page', async ({ page }) => {
 });
 
 test('prerenders an unreferenced endpoint with explicit `prerender` setting', async () => {
-	expect(fs.existsSync(`${cwd}/build/endpoint/explicit.json`)).toBeTruthy();
+	expect(fs.existsSync(`${build_dir}/endpoint/explicit.json`)).toBeTruthy();
 });
 
 test('prerenders a referenced endpoint with implicit `prerender` setting', async () => {
-	expect(fs.existsSync(`${cwd}/build/endpoint/implicit.json`)).toBeTruthy();
+	expect(fs.existsSync(`${build_dir}/endpoint/implicit.json`)).toBeTruthy();
 });
 
 test('exposes public env vars to the client', async ({ page }) => {
