@@ -616,6 +616,26 @@ const type_prefixes = /** @type {Record<string, string | undefined>} */ ({
 });
 
 /**
+ * adds props; a function becomes a getter that is computed each time it is read
+ * @param {Record<string, any>} base_props
+ * @param {Record<string, unknown>} props
+ */
+function add_props(base_props, props) {
+	for (const prop in props) {
+		const value = props[prop];
+		if (typeof value === 'function') {
+			Object.defineProperty(base_props, prop, {
+				enumerable: true,
+				get: /** @type {() => unknown} */ (value)
+			});
+		} else {
+			base_props[prop] = value;
+		}
+	}
+	return base_props;
+}
+
+/**
  * @param {string} type
  * @param {boolean} is_array
  * @param {unknown} input_value
@@ -795,14 +815,6 @@ export function create_field_proxy(context, target = {}, path = []) {
 						base_props.type = type === 'file multiple' ? 'file' : type;
 					}
 
-					/**
-					 * adds a prop that is computed each time it is read
-					 * @param {string} prop
-					 * @param {() => unknown} get
-					 */
-					const lazy = (prop, get) =>
-						Object.defineProperty(base_props, prop, { enumerable: true, get });
-
 					// Handle submit and hidden inputs
 					if (type === 'submit' || type === 'hidden') {
 						if (DEV) {
@@ -811,17 +823,14 @@ export function create_field_proxy(context, target = {}, path = []) {
 							}
 						}
 
-						base_props.value =
-							typeof input_value === 'boolean' ? (input_value ? 'on' : 'off') : input_value;
-
-						return base_props;
+						return add_props(base_props, {
+							value: typeof input_value === 'boolean' ? (input_value ? 'on' : 'off') : input_value
+						});
 					}
 
 					// Handle select inputs
 					if (type === 'select' || type === 'select multiple') {
-						base_props.multiple = is_array;
-
-						return lazy('value', () => read(input_value));
+						return add_props(base_props, { multiple: is_array, value: () => read(input_value) });
 					}
 
 					// Handle checkbox inputs
@@ -842,41 +851,44 @@ export function create_field_proxy(context, target = {}, path = []) {
 							checked = /** @type {boolean | undefined} */ (input_value);
 						}
 
-						base_props.defaultChecked = checked;
-
-						return lazy('checked', () => {
-							const value = get_value();
-							if (value == null) return read(checked);
-							if (type === 'radio') return value === input_value;
-							if (is_array) return /** @type {unknown[]} */ (value).includes(input_value);
-							return value;
+						return add_props(base_props, {
+							defaultChecked: checked,
+							checked: () => {
+								const value = get_value();
+								if (value == null) return read(checked);
+								if (type === 'radio') return value === input_value;
+								if (is_array) return /** @type {unknown[]} */ (value).includes(input_value);
+								return value;
+							}
 						});
 					}
 
 					// Handle file inputs
 					if (type === 'file' || type === 'file multiple') {
-						base_props.multiple = is_array;
+						return add_props(base_props, {
+							multiple: is_array,
+							files: () => {
+								const value = get_value();
+								const files = value instanceof File ? [value] : value;
+								if (!Array.isArray(files) || !files.every((f) => f instanceof File)) return null;
 
-						return lazy('files', () => {
-							const value = get_value();
-							const files = value instanceof File ? [value] : value;
-							if (!Array.isArray(files) || !files.every((f) => f instanceof File)) return null;
+								// a FileList-like object where DataTransfer does not exist
+								if (typeof DataTransfer === 'undefined') {
+									return Object.assign({ length: files.length }, files);
+								}
 
-							// a FileList-like object where DataTransfer does not exist
-							if (typeof DataTransfer === 'undefined') {
-								return Object.assign({ length: files.length }, files);
+								const transfer = new DataTransfer();
+								for (const file of files) transfer.items.add(file);
+								return transfer.files;
 							}
-
-							const transfer = new DataTransfer();
-							for (const file of files) transfer.items.add(file);
-							return transfer.files;
 						});
 					}
 
 					// Handle all other input types (text, number, etc.)
-					base_props.defaultValue = input_value;
-
-					return lazy('value', () => String(read(input_value) ?? ''));
+					return add_props(base_props, {
+						defaultValue: input_value,
+						value: () => String(read(input_value) ?? '')
+					});
 				};
 
 				return create_field_proxy(context, as_func, next);
