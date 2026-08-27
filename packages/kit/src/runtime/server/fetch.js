@@ -2,21 +2,20 @@ import { parseSetCookie } from 'cookie';
 import { noop } from '../../utils/functions.js';
 import { respond } from './respond.js';
 import * as paths from '#app/paths';
-import { hooks, read_implementation } from './internal.js';
+import { hooks, manifest, read_implementation } from './internal.js';
 import { has_prerendered_path } from './utils.js';
 import { fork_state_for_subrequest } from './state.js';
 
 /**
  * @param {{
  *   event: import('@sveltejs/kit').RequestEvent;
- *   manifest: import('types').SSRManifest;
  *   state: import('types').RequestState;
  *   get_cookie_header: (url: URL, header: string | null) => string;
  *   set_internal: (name: string, value: string, opts: import('./page/types.js').Cookie['options']) => void;
  * }} opts
  * @returns {typeof fetch}
  */
-export function create_fetch({ event, manifest, state, get_cookie_header, set_internal }) {
+export function create_fetch({ event, state, get_cookie_header, set_internal }) {
 	/**
 	 * @type {typeof fetch}
 	 */
@@ -117,7 +116,7 @@ export function create_fetch({ event, manifest, state, get_cookie_header, set_in
 					return await fetch(request);
 				}
 
-				if (has_prerendered_path(manifest, decoded)) {
+				if (has_prerendered_path(decoded)) {
 					// The path of something prerendered could match a different route
 					// that is still in the manifest, leading to the wrong route being loaded.
 					// We therefore bail early here. The prerendered logic is different for
@@ -147,7 +146,7 @@ export function create_fetch({ event, manifest, state, get_cookie_header, set_in
 					request.headers.set('accept-language', accept_language);
 				}
 
-				const response = await internal_fetch(request, manifest, state);
+				const response = await internal_fetch(request, state);
 
 				for (const str of response.headers.getSetCookie()) {
 					const { name, value, ...cookie_options } = parseSetCookie(str, { decode: (v) => v });
@@ -193,11 +192,10 @@ function normalize_fetch_input(info, init, url) {
 
 /**
  * @param {Request} request
- * @param {import('types').SSRManifest} manifest
  * @param {import('types').RequestState} state
  * @returns {Promise<Response>}
  */
-async function internal_fetch(request, manifest, state) {
+async function internal_fetch(request, state) {
 	if (request.signal?.aborted) {
 		throw new DOMException('The operation was aborted.', 'AbortError');
 	}
@@ -205,7 +203,7 @@ async function internal_fetch(request, manifest, state) {
 	const subrequest_state = fork_state_for_subrequest(state);
 
 	if (!request.signal) {
-		return await respond(request, manifest, subrequest_state);
+		return await respond(request, subrequest_state);
 	}
 
 	let remove_abort_listener = noop;
@@ -218,7 +216,7 @@ async function internal_fetch(request, manifest, state) {
 		remove_abort_listener = () => request.signal.removeEventListener('abort', on_abort);
 	});
 
-	return Promise.race([respond(request, manifest, subrequest_state), abort_promise]).finally(
+	return Promise.race([respond(request, subrequest_state), abort_promise]).finally(
 		remove_abort_listener
 	);
 }

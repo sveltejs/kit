@@ -5,6 +5,7 @@ import { text } from '@sveltejs/kit';
 import { s } from '../../../utils/misc.js';
 import { find_route } from '../../../utils/routing.js';
 import { get_relative_path } from '../../utils.js';
+import { manifest } from '../internal.js';
 
 /**
  * @param {import('types').SSRClientRoute} route
@@ -62,10 +63,9 @@ function create_client_import(import_path, url) {
 /**
  * @param {string} resolved_path
  * @param {URL} url
- * @param {SSRManifest} manifest
  * @returns {Promise<Response>}
  */
-export async function resolve_route(resolved_path, url, manifest) {
+export async function resolve_route(resolved_path, url) {
 	if (!manifest.client?.routes) {
 		return text('Server-side route resolution disabled', { status: 400 });
 	}
@@ -99,10 +99,9 @@ export async function resolve_route(resolved_path, url, manifest) {
  *
  * @param {string} route_id
  * @param {URL} url
- * @param {SSRManifest} manifest
  * @returns {Response}
  */
-export function resolve_route_by_id(route_id, url, manifest) {
+export function resolve_route_by_id(route_id, url) {
 	if (!manifest.client?.routes) {
 		return text('Server-side route resolution disabled', { status: 400 });
 	}

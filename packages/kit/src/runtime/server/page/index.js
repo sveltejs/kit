@@ -1,5 +1,5 @@
 /** @import { RequestEvent } from '@sveltejs/kit' */
-/** @import { PageNodeIndexes, RequestState, RequiredResolveOptions, ServerDataNode, SSRNode, SSRManifest } from 'types' */
+/** @import { PageNodeIndexes, RequestState, RequiredResolveOptions, ServerDataNode, SSRNode } from 'types' */
 import { text } from '@sveltejs/kit';
 import { Redirect } from '@sveltejs/kit/internal';
 import { compact } from '../../../utils/array.js';
@@ -8,6 +8,7 @@ import { noop } from '../../../utils/functions.js';
 import { add_data_suffix } from '../../pathname.js';
 import { build_error_chain, nearest_error_pages } from '../../error-chain.js';
 import { redirect_response } from '../utils.js';
+import { manifest } from '../internal.js';
 import { static_error_page, handle_error_and_jsonify } from '../errors.js';
 import {
 	handle_action_json_request,
@@ -32,12 +33,11 @@ const MAX_DEPTH = 10;
  * @param {RequestEvent} event
  * @param {RequestState} state
  * @param {PageNodeIndexes} page
- * @param {SSRManifest} manifest
  * @param {import('../../../utils/page_nodes.js').PageNodes} nodes
  * @param {RequiredResolveOptions} resolve_opts
  * @returns {Promise<Response>}
  */
-export async function render_page(event, state, page, manifest, nodes, resolve_opts) {
+export async function render_page(event, state, page, nodes, resolve_opts) {
 	if (state.depth > MAX_DEPTH) {
 		// infinite request cycle detected
 		return text(`Not found: ${event.url.pathname}`, {
@@ -61,7 +61,7 @@ export async function render_page(event, state, page, manifest, nodes, resolve_o
 		if (is_action_request(event)) {
 			const remote_id = get_remote_action(event.url);
 			if (remote_id) {
-				action_result = await handle_remote_form_post(event, state, manifest, remote_id);
+				action_result = await handle_remote_form_post(event, state, remote_id);
 			} else {
 				// for action requests, first call handler in +page.server.js
 				// (this also determines status code)
@@ -149,7 +149,6 @@ export async function render_page(event, state, page, manifest, nodes, resolve_o
 				error: null,
 				event,
 				state,
-				manifest,
 				resolve_opts,
 				data_serializer: server_data_serializer(event, state)
 			});
@@ -291,7 +290,6 @@ export async function render_page(event, state, page, manifest, nodes, resolve_o
 						return await render_response({
 							event,
 							state,
-							manifest,
 							resolve_opts,
 							page_config: {
 								ssr: nodes.ssr(),
@@ -299,7 +297,7 @@ export async function render_page(event, state, page, manifest, nodes, resolve_o
 							},
 							status,
 							error,
-							error_components: await load_error_components(ssr, error_branch, page, manifest),
+							error_components: await load_error_components(ssr, error_branch, page),
 							branch: error_branch,
 							fetched,
 							data_serializer
@@ -336,7 +334,6 @@ export async function render_page(event, state, page, manifest, nodes, resolve_o
 		return await render_response({
 			event,
 			state,
-			manifest,
 			resolve_opts,
 			page_config: {
 				csr,
@@ -348,7 +345,7 @@ export async function render_page(event, state, page, manifest, nodes, resolve_o
 			action_result,
 			fetched,
 			data_serializer: !ssr ? server_data_serializer(event, state) : data_serializer,
-			error_components: await load_error_components(ssr, branch, page, manifest)
+			error_components: await load_error_components(ssr, branch, page)
 		});
 	} catch (e) {
 		// a remote function could have thrown a redirect during render
@@ -361,7 +358,6 @@ export async function render_page(event, state, page, manifest, nodes, resolve_o
 		return await respond_with_error({
 			event,
 			state,
-			manifest,
 			error: e,
 			resolve_opts
 		});
@@ -372,9 +368,8 @@ export async function render_page(event, state, page, manifest, nodes, resolve_o
  * @param {boolean} ssr
  * @param {Array<import('./types.js').Loaded | null>} branch
  * @param {PageNodeIndexes} page
- * @param {SSRManifest} manifest
  */
-function load_error_components(ssr, branch, page, manifest) {
+function load_error_components(ssr, branch, page) {
 	if (!ssr) return undefined;
 
 	return build_error_chain(branch, page.errors, (idx) =>

@@ -45,7 +45,7 @@ import {
 } from '../pathname.js';
 import { server_data_serializer } from './page/data_serializer.js';
 import { get_remote_id, handle_remote_call } from './remote-functions.js';
-import { hooks, options } from './internal.js';
+import { hooks, manifest, options } from './internal.js';
 
 /** @type {import('types').RequiredResolveOptions['transformPageChunk']} */
 const default_transform = ({ html }) => html;
@@ -86,11 +86,10 @@ export const respond = propagate_context(internal_respond);
 
 /**
  * @param {Request} request
- * @param {import('types').SSRManifest} manifest
  * @param {import('types').RequestState} state
  * @returns {Promise<Response>}
  */
-export async function internal_respond(request, manifest, state) {
+export async function internal_respond(request, state) {
 	/** URL but stripped from the potential `/__data.json` suffix and its search param  */
 	const url = new URL(request.url);
 
@@ -243,7 +242,6 @@ export async function internal_respond(request, manifest, state) {
 	// @ts-expect-error this has to be assigned lazily
 	event.fetch = create_fetch({
 		event,
-		manifest,
 		state,
 		get_cookie_header,
 		set_internal
@@ -306,7 +304,7 @@ export async function internal_respond(request, manifest, state) {
 		// the resolved path has been decoded so it should be compared to the decoded url pathname
 		resolved_path !== decode_pathname(url.pathname) &&
 		!state.prerendering?.fallback &&
-		has_prerendered_path(manifest, resolved_path)
+		has_prerendered_path(resolved_path)
 	) {
 		const url = denormalise_url({
 			request_url: request.url,
@@ -347,10 +345,10 @@ export async function internal_respond(request, manifest, state) {
 
 	if (is_route_resolution_request) {
 		if (is_route_id_resolution_request) {
-			return resolve_route_by_id(extract_route_id(resolved_path), new URL(request.url), manifest);
+			return resolve_route_by_id(extract_route_id(resolved_path), new URL(request.url));
 		}
 
-		return resolve_route(resolved_path, new URL(request.url), manifest);
+		return resolve_route(resolved_path, new URL(request.url));
 	}
 
 	if (resolved_path === `/${app_dir}/env.js`) {
@@ -382,9 +380,7 @@ export async function internal_respond(request, manifest, state) {
 	}
 
 	try {
-		page_nodes = route?.page
-			? new PageNodes(await load_page_nodes(route.page, manifest))
-			: undefined;
+		page_nodes = route?.page ? new PageNodes(await load_page_nodes(route.page)) : undefined;
 
 		// determine whether we need to redirect to add/remove a trailing slash
 		if (route && !remote_id) {
@@ -600,7 +596,6 @@ export async function internal_respond(request, manifest, state) {
 				return await respond_with_error({
 					event,
 					state,
-					manifest,
 					error: new SvelteKitError(
 						400,
 						'Malformed URI',
@@ -614,7 +609,6 @@ export async function internal_respond(request, manifest, state) {
 				return await render_response({
 					event,
 					state,
-					manifest,
 					page_config: { ssr: false, csr: true },
 					status: 200,
 					error: null,
@@ -633,7 +627,7 @@ export async function internal_respond(request, manifest, state) {
 			}
 
 			if (remote_id) {
-				return await handle_remote_call(event, state, manifest, remote_id);
+				return await handle_remote_call(event, state, remote_id);
 			}
 
 			if (route) {
@@ -643,14 +637,7 @@ export async function internal_respond(request, manifest, state) {
 				let response;
 
 				if (is_data_request) {
-					response = await render_data(
-						event,
-						state,
-						route,
-						manifest,
-						invalidated_data_nodes,
-						trailing_slash
-					);
+					response = await render_data(event, state, route, invalidated_data_nodes, trailing_slash);
 				} else {
 					let endpoint;
 					if (
@@ -677,14 +664,7 @@ export async function internal_respond(request, manifest, state) {
 						if (!page_nodes) {
 							throw new Error('page_nodes not found. This should never happen');
 						} else if (page_methods.has(method)) {
-							response = await render_page(
-								event,
-								state,
-								route.page,
-								manifest,
-								page_nodes,
-								resolve_opts
-							);
+							response = await render_page(event, state, route.page, page_nodes, resolve_opts);
 						} else {
 							const allowed_methods = new Set(allowed_page_methods);
 							const node = await manifest.nodes[route.page.leaf]();
@@ -769,7 +749,6 @@ export async function internal_respond(request, manifest, state) {
 						event,
 						state,
 						{ page: { layouts: [], leaf: 0 } },
-						manifest,
 						invalidated_data_nodes,
 						// there is no route to take a trailing slash option from, and the
 						// SSR'd error page sees the pathname as-is
@@ -787,7 +766,6 @@ export async function internal_respond(request, manifest, state) {
 				return await respond_with_error({
 					event,
 					state,
-					manifest,
 					error: new SvelteKitError(404, 'Not Found', `Not found: ${event.url.pathname}`),
 					resolve_opts
 				});
@@ -824,9 +802,8 @@ export async function internal_respond(request, manifest, state) {
 
 /**
  * @param {import('types').PageNodeIndexes} page
- * @param {import('types').SSRManifest} manifest
  */
-export function load_page_nodes(page, manifest) {
+export function load_page_nodes(page) {
 	return Promise.all([
 		// we use == here rather than === because [undefined] serializes as "[null]"
 		...page.layouts.map((n) => (n == undefined ? n : manifest.nodes[n]())),
