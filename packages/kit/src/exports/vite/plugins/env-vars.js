@@ -27,9 +27,6 @@ export function plugin_env_vars(config, callback) {
 	/** @type {ResolvedConfig} */
 	let resolved_config;
 
-	/** @type {string | null} */
-	let resolved_entry = null;
-
 	/** @type {Set<string>} */
 	let deps = new Set();
 
@@ -39,12 +36,8 @@ export function plugin_env_vars(config, callback) {
 	let generated;
 
 	async function generate() {
-		const synced = await sync.env(
-			config,
-			resolved_entry,
-			resolved_config.root,
-			resolved_config.mode
-		);
+		const entry = resolve_env_entry(config, resolved_config.root);
+		const synced = await sync.env(config, entry, resolved_config.root, resolved_config.mode);
 
 		deps = synced.deps;
 
@@ -56,7 +49,7 @@ export function plugin_env_vars(config, callback) {
 			vars,
 			env,
 			dir,
-			resolved_entry && posixify(path.relative(dir, resolved_entry)),
+			entry && posixify(path.relative(dir, entry)),
 			!is_build
 		);
 
@@ -85,28 +78,18 @@ export function plugin_env_vars(config, callback) {
 			// runs once via the memo — per-process, whichever environment starts first
 			// (environment names vary by adapter), and never in the postbuild forks,
 			// which resolve the config without building
-			await (generated ??= (async () => {
-				resolved_entry = resolve_env_entry(config, resolved_config.root);
-				await generate();
-			})());
+			await (generated ??= generate());
 		},
 
 		async hotUpdate({ type, file }) {
 			// runs for every environment; the generated modules are shared, so do the work once
 			if (this.environment.name !== 'client') return;
 
-			if (type === 'update') {
-				if (deps.has(file)) await generate();
-				return;
-			}
+			const created = type === 'create' && file === resolve_env_entry(config, resolved_config.root);
+			if (!deps.has(file) && !created) return;
 
-			// the env entry was created or deleted: re-resolve it and reload
-			const resolved = resolve_env_entry(config, resolved_config.root);
-			if (file !== resolved_entry && file !== resolved) return;
-
-			resolved_entry = resolved;
 			await generate();
-			this.environment.hot.send({ type: 'full-reload' });
+			if (type !== 'update') this.environment.hot.send({ type: 'full-reload' });
 		}
 	};
 }
