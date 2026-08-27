@@ -661,6 +661,33 @@ function form_tests() {
 	// @ts-expect-error
 	f_checked.fields.flag.as('checkbox', option);
 
+	const f_image = form(
+		null as any as StandardSchemaV1<{ position: { x: number; y: number } }>,
+		() => ({ success: true })
+	);
+	const image_props: { name: string; type: 'image' } = f_image.fields.position.as('image');
+	image_props;
+	f_image.fields.position.allIssues();
+	f_image.fields.position.x.as('number');
+	f_image.fields.position.y.as('number');
+	// @ts-expect-error image inputs do not accept a value argument
+	f_image.fields.position.as('image', { x: 0, y: 0 });
+	// @ts-expect-error coordinate objects cannot be used with text inputs
+	f_image.fields.position.as('text');
+
+	const f_3d_position = form(
+		null as any as StandardSchemaV1<{ position: { x: number; y: number; z: number } }>,
+		() => ({ success: true })
+	);
+	f_3d_position.fields.position.x.as('number');
+	f_3d_position.fields.position.y.as('number');
+	f_3d_position.fields.position.z.as('number');
+	// @ts-expect-error image inputs only support objects with exactly x and y coordinates
+	f_3d_position.fields.position.as('image');
+
+	const f_any_image = form(null as any, () => ({ success: true }));
+	f_any_image.fields.position.as('image');
+
 	// doesn't use data
 	const f9 = form(() => Promise.resolve({ success: true }));
 	f9.result?.success === true;
