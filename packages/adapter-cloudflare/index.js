@@ -103,12 +103,7 @@ export default function (options = {}) {
 
 			// worker
 			const worker_dest_dir = path.dirname(worker_dest);
-			writeFileSync(
-				`${tmp}/manifest.js`,
-				`export const manifest = ${builder.generateManifest({ relativePath: path.posix.relative(tmp, builder.getServerDirectory()) })};\n\n` +
-					`export const prerendered = new Set(${JSON.stringify(builder.prerendered.paths)});\n\n` +
-					`export const base_path = ${JSON.stringify(builder.config.paths.base)};\n`
-			);
+			builder.generateServerInstance(`${tmp}/server.js`);
 			builder.copy(`${files}/worker.js`, worker_dest, {
 				replace: {
 					// the paths returned by the Wrangler config might be Windows paths,
@@ -116,9 +111,12 @@ export default function (options = {}) {
 					// will be interpreted as escape characters and create an incorrect import path.
 					// We also need to ensure the relative imports start with ./ since Wrangler
 					// errors if a relative import looks like a package import
-					SERVER: `./${posixify(path.relative(worker_dest_dir, builder.getServerDirectory()))}/index.js`,
-					MANIFEST: `./${posixify(path.relative(worker_dest_dir, tmp))}/manifest.js`,
-					ASSETS: assets_binding
+					SERVER: `./${posixify(path.relative(worker_dest_dir, tmp))}/server.js`,
+					BASE_PATH: JSON.stringify(builder.config.paths.base),
+					APP_PATH: JSON.stringify(builder.getAppPath()),
+					MANIFEST_ASSETS: `new Set(${JSON.stringify(builder.manifest.assets.map((a) => a.path))})`,
+					PRERENDERED: `new Set(${JSON.stringify(builder.prerendered.paths)})`,
+					ASSETS_BINDING: assets_binding
 				}
 			});
 			if (builder.hasServerInstrumentationFile()) {

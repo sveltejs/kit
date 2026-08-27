@@ -259,6 +259,29 @@ test.describe('remote functions', () => {
 		});
 	});
 
+	test('the default given to .as() only applies until the field is edited', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		test.skip(!javaScriptEnabled);
+
+		await page.goto('/remote/form/default-until-edited');
+		const amount = page.locator('#amount');
+		const value = page.locator('#value');
+		await expect(amount).toHaveValue('200');
+
+		await amount.fill('20');
+		await expect(value).toHaveText('{"amount":20}');
+
+		await amount.press('Backspace');
+		await amount.press('Backspace');
+		await expect(amount).toHaveValue('');
+		await expect(value).toHaveText('{}');
+
+		await page.click('#reset');
+		await expect(amount).toHaveValue('200');
+	});
+
 	test('radio and checkbox inputs keep the current value when only another field changes', async ({
 		page,
 		javaScriptEnabled

@@ -1,5 +1,5 @@
 declare module 'MANIFEST' {
-	export const manifest: import('@sveltejs/kit').SSRManifest;
+	export const app_dir: string;
 	export const base: string;
 	export const embed: boolean;
 	export const env_prefix: string;
@@ -12,7 +12,7 @@ declare module 'ROUTES' {
 }
 
 declare module 'SERVER' {
-	export { Server } from '@sveltejs/kit';
+	export const server: import('@sveltejs/kit').Server;
 }
 
 declare module 'SERVER_OPTIONS' {

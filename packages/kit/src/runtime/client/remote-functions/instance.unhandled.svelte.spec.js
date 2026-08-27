@@ -131,3 +131,44 @@ describe('Query errors', () => {
 		});
 	});
 });
+
+describe('Query.set', () => {
+	/** @param {import('./query/instance.svelte.js').Query<any>} query */
+	function count_invalidations(query) {
+		let runs = 0;
+		const destroy = $effect.root(() => {
+			$effect.pre(() => {
+				runs++;
+				void query.then;
+			});
+		});
+		return { runs: () => runs, destroy };
+	}
+
+	test('settles a pending request in place instead of replacing its promise', async () => {
+		const pending = Promise.withResolvers();
+		const query = new Query('set-pending', () => pending.promise);
+		const awaiter = count_invalidations(query);
+		await tick();
+		expect(awaiter.runs()).toBe(1);
+
+		query.set('b');
+		expect(await Promise.resolve(query)).toBe('b');
+		await tick();
+		expect(awaiter.runs()).toBe(1);
+		awaiter.destroy();
+	});
+
+	test('invalidates awaiters of a settled request', async () => {
+		const query = new Query('set-settled', () => Promise.resolve('a'));
+		const awaiter = count_invalidations(query);
+		expect(await Promise.resolve(query)).toBe('a');
+		expect(awaiter.runs()).toBe(1);
+
+		query.set('b');
+		await tick();
+		expect(awaiter.runs()).toBe(2);
+		expect(await Promise.resolve(query)).toBe('b');
+		awaiter.destroy();
+	});
+});

@@ -12,11 +12,11 @@ import {
 	RequestOptions,
 	RouteSegment
 } from '../types/private.js';
-import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from 'types';
+import { ValidatedConfig } from 'types';
 import { Plugin } from 'vite';
 import { RouteId as AppRouteId, LayoutParams as AppLayoutParams } from '$app/types';
-import { ParamMatcher } from '@sveltejs/kit/params';
 import { StandardSchemaV1 } from '@standard-schema/spec';
+import { getRequest, setResponse } from '@sveltejs/kit/node';
 
 export { PrerenderOption } from '../types/private.js';
 
@@ -58,6 +58,20 @@ export interface Adapter {
 	 */
 	emulate?: () => MaybePromise<Emulator>;
 	vite?: {
+		/**
+		 * This function overrides the default behavior during Vite's dev and preview modes
+		 * to convert an `http.IncomingMessage` to a `Request` object.
+		 * To call the original `setRequest` function, import it from `@sveltejs/kit/node`.
+		 * @since 3.0.0
+		 */
+		getRequest?: typeof getRequest;
+		/**
+		 * This function overrides the default behavior in Vite's dev and preview modes
+		 * to write a `Response` object to a `http.ServerResponse`.
+		 * To call the original `setResponse` function, import it from `@sveltejs/kit/node`.
+		 * @since 3.0.0
+		 */
+		setResponse?: typeof setResponse;
 		plugins?: {
 			/**
 			 * Vite plugins placed before any of SvelteKit's own plugins.
@@ -139,6 +153,17 @@ export interface Builder {
 	prerendered: Prerendered;
 	/** An array of all routes (including prerendered) */
 	routes: RouteDefinition[];
+	/**
+	 * The value of the `$app/manifest` module.
+	 * The only difference is `manifest.assets` also includes the service worker, if it exists.
+	 * @since 3.0.0
+	 */
+	manifest: typeof import('$app/manifest');
+	/**
+	 * A record of file extensions to MIME types
+	 * @since 3.0.0
+	 */
+	mimeTypes: Record<string, string>;
 
 	/**
 	 * Create separate functions that map to one or more routes of your app.
@@ -166,8 +191,9 @@ export interface Builder {
 	 * Generate a server-side manifest to initialise the SvelteKit [server](https://svelte.dev/docs/kit/@sveltejs-kit#Server) with.
 	 * @param opts
 	 * @param opts.relativePath A relative path to the base directory of the server build output
+	 * @deprecated removed in 3.0. Use `builder.generateServerInstance` or `builder.manifest` instead
 	 */
-	generateManifest: (opts: { relativePath: string; routes?: RouteDefinition[] }) => string;
+	generateManifest?: (opts: { relativePath: string; routes?: RouteDefinition[] }) => string;
 
 	/**
 	 * Resolve a path to the `name` directory inside `outDir`, e.g. `/path/to/.svelte-kit/my-adapter`.
@@ -181,6 +207,20 @@ export interface Builder {
 	/** Get the application path including any configured `base` path, e.g. `my-base-path/_app`. */
 	getAppPath: () => string;
 
+	/**
+	 * Generates a module exposing a SvelteKit [Server](https://svelte.dev/docs/kit/@sveltejs-kit#Server) instance.
+	 * @param dest
+	 * @param opts.routes A subset of the routes to include in the server's manifest
+	 * @param opts.serverDirectory The directory containing the server code. Defaults to `getServerDirectory()`.
+	 * @since 3.0.0
+	 */
+	generateServerInstance: (
+		dest: string,
+		opts?: {
+			routes?: RouteDefinition[];
+			serverDirectory?: string;
+		}
+	) => void;
 	/**
 	 * Write client assets to `dest`.
 	 * @param dest the destination folder
@@ -656,8 +696,7 @@ export interface RouteDefinition<Config = any> {
 	config: Config;
 }
 
-export class Server {
-	constructor(manifest: SSRManifest);
+export interface Server {
 	init(options: ServerInitOptions): Promise<void>;
 	respond(request: Request, options: RequestOptions): Promise<Response>;
 }
@@ -667,32 +706,6 @@ export interface ServerInitOptions {
 	env: Record<string, string | undefined>;
 	/** A function that turns an asset filename into a `ReadableStream`. Required for the `read` export from `$app/server` to work. */
 	read?: (file: string) => MaybePromise<ReadableStream | null>;
-}
-
-/**
- * Information required to instantiate a new `Server` instance.
- */
-export interface SSRManifest {
-	/** The directory where SvelteKit keeps its stuff, including static assets (such as JS and CSS) and internally-used routes. */
-	appDir: string;
-	/** The `base` and `appDir` settings combined without a leading slash. */
-	appPath: string;
-	/** Static files from `config.files.assets` and the service worker (if any). */
-	assets: Set<string>;
-	mimeTypes: Record<string, string>;
-
-	/** @internal private fields */
-	_: {
-		client: BuildData['client'];
-		nodes: SSRNodeLoader[];
-		/** hashed filename -> import to that file */
-		remotes: Record<string, () => Promise<{ default: Record<string, any> }>>;
-		routes: SSRRoute[];
-		prerendered_routes: Set<string>;
-		matchers: () => Promise<Record<string, ParamMatcher>>;
-		/** A `[file]: size` map of all assets imported by server code. */
-		server_assets: Record<string, number>;
-	};
 }
 
 /**

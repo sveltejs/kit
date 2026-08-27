@@ -78,7 +78,7 @@ export function plugin_guard(kit, get_config, get_manifest_data) {
 				// composable filters only work during build so we still need this guard for dev
 				// see https://github.com/vitejs/rolldown-vite/issues/605
 				if (importer && !importer.endsWith('index.html')) {
-					const resolved = await this.resolve(id, importer, { ...options, skipSelf: true });
+					const resolved = await this.resolve(id, importer, options);
 
 					if (resolved) {
 						const normalized = normalize_id(resolved.id, normalized_aliases, normalized_cwd);

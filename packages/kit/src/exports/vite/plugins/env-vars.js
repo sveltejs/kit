@@ -27,9 +27,6 @@ export function plugin_env_vars(config, callback) {
 	/** @type {ResolvedConfig} */
 	let resolved_config;
 
-	/** @type {string | null} */
-	let resolved_entry = null;
-
 	/** @type {Set<string>} */
 	let deps = new Set();
 
@@ -39,12 +36,8 @@ export function plugin_env_vars(config, callback) {
 	let generated;
 
 	async function generate() {
-		const synced = await sync.env(
-			config,
-			resolved_entry,
-			resolved_config.root,
-			resolved_config.mode
-		);
+		const entry = resolve_env_entry(config, resolved_config.root);
+		const synced = await sync.env(config, entry, resolved_config.root, resolved_config.mode);
 
 		deps = synced.deps;
 
@@ -56,7 +49,7 @@ export function plugin_env_vars(config, callback) {
 			vars,
 			env,
 			dir,
-			resolved_entry && posixify(path.relative(dir, resolved_entry)),
+			entry && posixify(path.relative(dir, entry)),
 			!is_build
 		);
 
@@ -85,34 +78,18 @@ export function plugin_env_vars(config, callback) {
 			// runs once via the memo — per-process, whichever environment starts first
 			// (environment names vary by adapter), and never in the postbuild forks,
 			// which resolve the config without building
-			await (generated ??= (async () => {
-				resolved_entry = resolve_env_entry(config, resolved_config.root);
-				await generate();
-			})());
+			await (generated ??= generate());
 		},
 
-		configureServer(server) {
-			// `handleHotUpdate` only fires for `change` events on files Vite already knows about,
-			// so it doesn't cover the env entry being created or deleted while the dev server is
-			// running. Watch for those events explicitly, re-resolve the entry, regenerate the
-			// modules and trigger a full reload (mirroring the previous behaviour).
-			const on_entry_add_unlink = async (/** @type {string} */ file) => {
-				const resolved = resolve_env_entry(config, resolved_config.root);
+		async hotUpdate({ type, file }) {
+			// runs for every environment; the generated modules are shared, so do the work once
+			if (this.environment.name !== 'client') return;
 
-				if (file === resolved_entry || file === resolved) {
-					resolved_entry = resolved;
-					await generate();
-					server.hot.send({ type: 'full-reload' });
-				}
-			};
+			const created = type === 'create' && file === resolve_env_entry(config, resolved_config.root);
+			if (!deps.has(file) && !created) return;
 
-			server.watcher.on('add', on_entry_add_unlink);
-			server.watcher.on('unlink', on_entry_add_unlink);
-		},
-
-		async handleHotUpdate(update) {
-			if (!deps.has(update.file)) return;
 			await generate();
+			if (type !== 'update') this.environment.hot.send({ type: 'full-reload' });
 		}
 	};
 }

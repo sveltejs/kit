@@ -140,8 +140,8 @@ type AsArgs<Type extends keyof InputTypeMap, Value> = Type extends 'checkbox'
 	? Value extends string[]
 		? [type: Type, value: Value[number] | (string & {}), checked?: boolean]
 		: Value extends boolean
-			? [type: Type] | [type: Type, value: boolean | undefined]
-			: [type: Type] | [type: Type, value: Value]
+			? [type: Type, value?: boolean]
+			: [type: Type, value?: Value]
 	: Type extends 'image'
 		? [type: Type]
 		: Type extends 'submit' | 'hidden'
@@ -152,7 +152,7 @@ type AsArgs<Type extends keyof InputTypeMap, Value> = Type extends 'checkbox'
 				? [type: Type, value: Value | (string & {}), checked?: boolean]
 				: Type extends 'file' | 'file multiple'
 					? [type: Type]
-					: [type: Type] | [type: Type, value: Value | undefined];
+					: [type: Type, value?: Value];
 
 type WidenLiteralString<T> = T extends string ? (string extends T ? T : string) : T;
 
@@ -508,6 +508,8 @@ export type RemoteLiveQueryFunction<Input, Output, _Validated = Input> = (
 export type RequestedEntry<Validated, Output> = {
 	arg: Validated;
 	query: RemoteQuery<Output>;
+	/** Explicitly ignore this requested update. */
+	ignore: () => void;
 };
 
 /**
@@ -519,6 +521,8 @@ export type RequestedEntry<Validated, Output> = {
 export type RemoteLiveQueryRequestedEntry<Validated, Output> = {
 	arg: Validated;
 	query: RemoteLiveQuery<Output>;
+	/** Explicitly ignore this requested update. */
+	ignore: () => void;
 };
 
 export type RemoteQueryRequestedResult<Validated, Output> = Iterable<
@@ -537,6 +541,8 @@ export type RemoteQueryRequestedResult<Validated, Output> = Iterable<
 		 * ```
 		 */
 		refreshAll: () => Promise<void>;
+		/** Explicitly ignore all updates selected by this `requested` invocation. */
+		ignoreAll: () => Promise<void>;
 	};
 
 export type RemoteLiveQueryRequestedResult<Validated, Output> = Iterable<
@@ -555,6 +561,8 @@ export type RemoteLiveQueryRequestedResult<Validated, Output> = Iterable<
 		 * ```
 		 */
 		reconnectAll: () => Promise<void>;
+		/** Explicitly ignore all updates selected by this `requested` invocation. */
+		ignoreAll: () => Promise<void>;
 	};
 
 export type RequestedResult<Validated, Output> =

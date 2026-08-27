@@ -43,6 +43,7 @@ export async function preview(vite, svelte_config) {
 	/** @type {ServerModule} */
 	const { Server } = await import(pathToFileURL(join(dir, 'index.js')).href);
 
+	/** @type {{ manifest: import('types').SSRManifest }} */
 	const { manifest } = await import(pathToFileURL(join(dir, 'manifest.js')).href);
 
 	set_assets(assets);
@@ -204,13 +205,13 @@ export async function preview(vite, svelte_config) {
 		vite.middlewares.use(async (req, res) => {
 			const host = req.headers[':authority'] || req.headers.host;
 
-			const request = getRequest({
+			const request = (svelte_config.adapter?.vite?.getRequest ?? getRequest)({
 				base: `${protocol}://${host}`,
 				request: req,
 				response: res
 			});
 
-			setResponse(
+			(svelte_config.adapter?.vite?.setResponse ?? setResponse)(
 				res,
 				await server.respond(request, {
 					getClientAddress: () => {
@@ -219,7 +220,7 @@ export async function preview(vite, svelte_config) {
 						throw new Error('Could not determine clientAddress');
 					},
 					read: (file) => {
-						if (file in manifest._.server_assets) {
+						if (file in manifest.server_assets) {
 							return fs.readFileSync(join(dir, file));
 						}
 

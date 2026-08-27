@@ -1,9 +1,10 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import {
 	BINARY_FORM_CONTENT_TYPE,
 	DELETE_KEY,
 	convert_formdata,
 	create_field_proxy,
+	deep_get,
 	deep_set,
 	deserialize_binary_form,
 	parse_form_key,
@@ -46,7 +47,7 @@ describe('split_path', () => {
 
 	for (const input of bad) {
 		test(input, () => {
-			expect(() => split_path(input)).toThrowError(`Invalid path ${input}`);
+			expect(() => split_path(input)).toThrowError(`Invalid field name ${input}`);
 		});
 	}
 });
@@ -845,6 +846,16 @@ describe('deep_set', () => {
 	});
 });
 
+describe('deep_get', () => {
+	test('walks objects and arrays and stops at anything else', () => {
+		const object = { a: [{ b: 'hello' }] };
+		expect(deep_get(object, [])).toBe(object);
+		expect(deep_get(object, ['a', 0, 'b'])).toBe('hello');
+		expect(deep_get(object, ['a', 1, 'b'])).toBe(undefined);
+		expect(deep_get(object, ['a', 0, 'b', 'length'])).toBe(undefined);
+	});
+});
+
 describe('create_field_proxy', () => {
 	test('image inputs use coordinate names and omit value properties', () => {
 		const proxy = create_field_proxy({
@@ -885,5 +896,123 @@ describe('create_field_proxy', () => {
 		expect(cloned).toBeInstanceOf(Date);
 		expect(cloned.getTime()).toBe(original.getTime());
 		expect(cloned).not.toBe(original);
+	});
+
+	test('as() returns the props of each input kind in spread order', () => {
+		/** @type {Record<string, unknown>} */
+		let input = {};
+
+		const proxy = create_field_proxy({
+			form_id: 'form',
+			get: () => input,
+			set: () => {},
+			get_issues: () => ({ bad: [] }),
+			get_touched: () => ({}),
+			get_dirty: () => ({})
+		});
+
+		/**
+		 * @param {unknown[]} args
+		 * @param {unknown} [value] the current form value of the field
+		 */
+		const as = (args, value) => {
+			input = value === undefined ? {} : { a: value };
+			return Object.entries(proxy.a.as(...args));
+		};
+
+		const invalid = ['aria-invalid', undefined];
+
+		expect(as(['text', 'x'], 'y')).toEqual([
+			['name', 'a/form'],
+			invalid,
+			['defaultValue', 'x'],
+			['value', 'y']
+		]);
+		expect(as(['hidden', true])).toEqual([
+			['name', 'b:a/form'],
+			invalid,
+			['type', 'hidden'],
+			['value', 'on']
+		]);
+		expect(as(['select multiple', ['x']], ['y'])).toEqual([
+			['name', 'a[]/form'],
+			invalid,
+			['multiple', true],
+			['value', ['y']]
+		]);
+		expect(proxy.a.as('select multiple', ['x']).value).not.toBe(input.a);
+		const file = new File([], 'a.txt');
+		expect(as(['file multiple'], [file])).toEqual([
+			['name', 'a[]/form'],
+			invalid,
+			['type', 'file'],
+			['multiple', true],
+			['files', { 0: file, length: 1 }]
+		]);
+		expect(as(['file'], file)[4]).toEqual(['files', { 0: file, length: 1 }]);
+		expect(as(['checkbox', true], false)).toEqual([
+			['name', 'b:a/form'],
+			invalid,
+			['type', 'checkbox'],
+			['defaultChecked', true],
+			['checked', false]
+		]);
+		expect(as(['checkbox', 'red'])).toEqual([
+			['name', 'a[]/form'],
+			invalid,
+			['type', 'checkbox'],
+			['value', 'red'],
+			['defaultChecked', undefined],
+			['checked', undefined]
+		]);
+		expect(as(['radio', 'x', false], 'x')).toEqual([
+			['name', 'a/form'],
+			invalid,
+			['type', 'radio'],
+			['value', 'x'],
+			['defaultChecked', false],
+			['checked', true]
+		]);
+		expect(Object.entries(proxy.bad.as('text'))[1]).toEqual(['aria-invalid', 'true']);
+	});
+
+	test('the default given to as() only applies until the field is edited', () => {
+		const edited = create_field_proxy({
+			form_id: 'form',
+			get: () => ({}),
+			set: () => {},
+			get_issues: () => ({}),
+			get_touched: () => ({}),
+			get_dirty: () => ({ a: true })
+		});
+
+		expect(edited.a.as('number', 3).value).toBe('');
+		expect(edited.a.as('checkbox', true).checked).toBe(undefined);
+	});
+
+	test('enumerating fields warns once per call site, with a stack trace', () => {
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+		const proxy = create_field_proxy({
+			form_id: 'form',
+			get: () => ({ a: 1 }),
+			set: () => {},
+			get_issues: () => ({}),
+			get_touched: () => ({}),
+			get_dirty: () => ({})
+		});
+
+		expect(Symbol.iterator in proxy).toBe(false);
+		expect(warn).not.toHaveBeenCalled();
+
+		for (let i = 0; i < 2; i++) expect(Object.keys(proxy.a.b)).toEqual([]);
+		expect(warn).toHaveBeenCalledTimes(1);
+
+		expect('a' in proxy).toBe(false);
+		expect(warn).toHaveBeenCalledTimes(2);
+
+		const [error] = warn.mock.calls[1];
+		expect(error.message).toMatch('`form.fields`');
+		expect(error.stack).toMatch('form-utils.spec.js');
+		warn.mockRestore();
 	});
 });

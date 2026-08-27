@@ -38,5 +38,12 @@ export const adapters = [
 		test: () => !!process.env.GCP_BUILDPACKS,
 		module: '@sveltejs/adapter-node',
 		version: '6'
+	},
+	{
+		name: 'Render',
+		test: () => !!process.env.RENDER,
+		module: '@sveltejs/adapter-node',
+		// TODO replace with a stable version
+		version: 'next'
 	}
 ];

@@ -1,17 +1,20 @@
 import { beforeAll, expect, test, vi } from 'vitest';
-import { init_transport } from '#app/internal/transport';
+import { init_transport, parse } from '#app/internal/transport';
+import { get_request_store } from '@sveltejs/kit/internal/server';
 
 const decoder = new TextDecoder();
 
 /** @type {typeof import('./remote-functions.js').create_live_query_response} */
 let create_live_query_response;
+/** @type {typeof import('./remote-functions.js').handle_remote_call} */
+let handle_remote_call;
 /** @type {typeof import('./internal.js').set_hooks} */
 let set_hooks;
 
 beforeAll(async () => {
 	vi.stubGlobal('__SVELTEKIT_DEV__', false);
 	init_transport({});
-	({ create_live_query_response } = await import('./remote-functions.js'));
+	({ create_live_query_response, handle_remote_call } = await import('./remote-functions.js'));
 	({ set_hooks } = await import('./internal.js'));
 });
 
@@ -94,4 +97,32 @@ test('cancellation aborts the generator request signal and runs cleanup', async 
 	await reader.cancel();
 	await expect(pending).resolves.toEqual({ value: undefined, done: true });
 	await vi.waitFor(() => expect(cleaned_up).toHaveBeenCalledOnce());
+});
+
+test('serializes explicitly ignored requested updates', async () => {
+	const command = () => {
+		get_request_store().state.remote.ignored = new Set(['hash/query/[-1]']);
+		return null;
+	};
+	Object.assign(command, { __: { type: 'command', name: 'command', fn: command } });
+
+	const response = await handle_remote_call(
+		/** @type {any} */ ({
+			request: new Request('http://localhost/_app/remote/hash/command', {
+				method: 'POST',
+				body: JSON.stringify({ payload: '', refreshes: ['hash/query/[-1]'] })
+			}),
+			tracing: { current: { setAttributes: vi.fn() } }
+		}),
+		/** @type {any} */ ({ remote: { requested: null, ignored: null } }),
+		/** @type {any} */ ({
+			remotes: {
+				hash: () => Promise.resolve({ default: { command } })
+			}
+		}),
+		'hash/command'
+	);
+
+	const result = await response.json();
+	expect(parse(result.data)).toEqual({ _: null, i: ['hash/query/[-1]'] });
 });

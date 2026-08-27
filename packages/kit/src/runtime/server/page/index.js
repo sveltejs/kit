@@ -1,5 +1,5 @@
-/** @import { RequestEvent, SSRManifest } from '@sveltejs/kit' */
-/** @import { PageNodeIndexes, RequestState, RequiredResolveOptions, ServerDataNode, SSRNode } from 'types' */
+/** @import { RequestEvent } from '@sveltejs/kit' */
+/** @import { PageNodeIndexes, RequestState, RequiredResolveOptions, ServerDataNode, SSRNode, SSRManifest } from 'types' */
 import { text } from '@sveltejs/kit';
 import { Redirect } from '@sveltejs/kit/internal';
 import { compact } from '../../../utils/array.js';
@@ -46,7 +46,7 @@ export async function render_page(event, state, page, manifest, nodes, resolve_o
 	}
 
 	if (is_action_json_request(event)) {
-		const node = await manifest._.nodes[page.leaf]();
+		const node = await manifest.nodes[page.leaf]();
 		return handle_action_json_request(event, state, node?.server);
 	}
 
@@ -276,7 +276,7 @@ export async function render_page(event, state, page, manifest, nodes, resolve_o
 					const status = error.status;
 
 					for (const { error: index, idx } of nearest_error_pages(i, branch, page.errors)) {
-						const node = await manifest._.nodes[index]();
+						const node = await manifest.nodes[index]();
 
 						data_serializer.set_max_nodes(idx);
 
@@ -378,6 +378,6 @@ function load_error_components(ssr, branch, page, manifest) {
 	if (!ssr) return undefined;
 
 	return build_error_chain(branch, page.errors, (idx) =>
-		manifest._.nodes[idx]?.().then((e) => e.component?.())
+		manifest.nodes[idx]?.().then((e) => e.component?.())
 	);
 }

@@ -1,9 +1,11 @@
 <script lang="ts">
 	import manual_image1 from './no.png';
 	import manual_image2 from './no.svg';
+	import { default as __img } from './dev.png';
 
 	const src = manual_image1;
 	const images = [manual_image1, manual_image2];
+	const object = { image: manual_image1 };
 	const get_image = (image_key: number) => images[image_key];
 
 	let foo: string = 'bar';
@@ -52,6 +54,14 @@
 {#each images as _, i}
 	<enhanced:img src={get_image(i)} alt="opt-in test" />
 {/each}
+
+{#each images as _, j}
+	<enhanced:img src={get_image(j)} alt="collision test" />
+{/each}
+
+<enhanced:img src={foo ? manual_image1 : manual_image2} alt="conditional test" />
+
+<enhanced:img src={object.image} alt="member access test" />
 
 <picture>
 	<source src="./dev.avif" />

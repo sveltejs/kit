@@ -13,7 +13,7 @@ import {
 } from '../client.js';
 import { page } from '#app/state/client';
 import { tick } from 'svelte';
-import { categorize_updates, remote_request } from './shared.svelte.js';
+import { categorize_updates, fail_unhandled_refreshes, remote_request } from './shared.svelte.js';
 import { createAttachmentKey } from 'svelte/attachments';
 import {
 	convert_formdata,
@@ -254,7 +254,8 @@ export function form(id) {
 										'x-sveltekit-search': location.search
 									},
 									body: blob
-								}
+								},
+								refreshes
 							);
 
 							({ issues: raw_issues = [], result } = response._ ?? {});
@@ -274,6 +275,7 @@ export function form(id) {
 							const succeeded = raw_issues.length === 0;
 
 							if (succeeded) {
+								fail_unhandled_refreshes(refreshes);
 								if (should_refresh) {
 									await refreshAll();
 								}
@@ -535,7 +537,7 @@ export function form(id) {
 						}
 					}
 
-					set_nested_value(input, field, value);
+					set_nested_value(input, field, is_file ? value : coerce_form_value(field.type, value));
 				} else if (is_file) {
 					if (DEV && element.multiple) {
 						throw new Error(
@@ -554,7 +556,10 @@ export function form(id) {
 					set_nested_value(
 						input,
 						field,
-						element.type === 'checkbox' && !element.checked ? null : element.value
+						coerce_form_value(
+							field.type,
+							element.type === 'checkbox' && !element.checked ? null : element.value
+						)
 					);
 				}
 

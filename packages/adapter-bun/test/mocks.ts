@@ -5,19 +5,19 @@ import { mock } from 'bun:test';
 // exports that src modules pull from these build-generated specifiers
 
 export function mock_manifest({
-	manifest,
+	app_dir,
 	base,
 	embed,
 	origin,
 	env_prefix = ''
 }: {
-	manifest?: unknown;
+	app_dir?: string;
 	base?: string;
 	embed?: boolean;
 	origin?: string;
 	env_prefix?: string;
 } = {}) {
-	mock.module('MANIFEST', () => ({ manifest, base, embed, origin, env_prefix }));
+	mock.module('MANIFEST', () => ({ app_dir, base, embed, origin, env_prefix }));
 }
 
 export function mock_routes({

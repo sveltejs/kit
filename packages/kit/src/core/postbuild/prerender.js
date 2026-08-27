@@ -48,7 +48,7 @@ async function prerender({
 	vite_config_file,
 	is_tty
 }) {
-	/** @type {import('@sveltejs/kit').SSRManifest} */
+	/** @type {import('types').SSRManifest} */
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
 	/** @type {import('types').ServerInternalModule} */
@@ -659,7 +659,7 @@ async function prerender({
 	/** @type {Array<import('types').RemotePrerenderInternals>} */
 	const prerender_functions = [];
 
-	for (const loader of Object.values(manifest._.remotes)) {
+	for (const loader of Object.values(manifest.remotes)) {
 		const module = await loader();
 
 		for (const fn of Object.values(module.default)) {

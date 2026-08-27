@@ -5,6 +5,7 @@ declare module '@sveltejs/kit' {
 	import type { Plugin } from 'vite';
 	import type { RouteId as AppRouteId, LayoutParams as AppLayoutParams } from '$app/types';
 	import type { StandardSchemaV1 } from '@standard-schema/spec';
+	import type { getRequest, setResponse } from '@sveltejs/kit/node';
 	import type { Config } from '@sveltejs/kit/vite';
 	// @ts-ignore this is an optional peer dependency so could be missing. Written like this so dts-buddy preserves the ts-ignore
 	type Span = import('@opentelemetry/api').Span;
@@ -44,6 +45,20 @@ declare module '@sveltejs/kit' {
 		 */
 		emulate?: () => MaybePromise<Emulator>;
 		vite?: {
+			/**
+			 * This function overrides the default behavior during Vite's dev and preview modes
+			 * to convert an `http.IncomingMessage` to a `Request` object.
+			 * To call the original `setRequest` function, import it from `@sveltejs/kit/node`.
+			 * @since 3.0.0
+			 */
+			getRequest?: typeof getRequest;
+			/**
+			 * This function overrides the default behavior in Vite's dev and preview modes
+			 * to write a `Response` object to a `http.ServerResponse`.
+			 * To call the original `setResponse` function, import it from `@sveltejs/kit/node`.
+			 * @since 3.0.0
+			 */
+			setResponse?: typeof setResponse;
 			plugins?: {
 				/**
 				 * Vite plugins placed before any of SvelteKit's own plugins.
@@ -125,6 +140,17 @@ declare module '@sveltejs/kit' {
 		prerendered: Prerendered;
 		/** An array of all routes (including prerendered) */
 		routes: RouteDefinition[];
+		/**
+		 * The value of the `$app/manifest` module.
+		 * The only difference is `manifest.assets` also includes the service worker, if it exists.
+		 * @since 3.0.0
+		 */
+		manifest: typeof import('$app/manifest');
+		/**
+		 * A record of file extensions to MIME types
+		 * @since 3.0.0
+		 */
+		mimeTypes: Record<string, string>;
 
 		/**
 		 * Create separate functions that map to one or more routes of your app.
@@ -151,8 +177,9 @@ declare module '@sveltejs/kit' {
 		/**
 		 * Generate a server-side manifest to initialise the SvelteKit [server](https://svelte.dev/docs/kit/@sveltejs-kit#Server) with.
 		 * @param opts.relativePath A relative path to the base directory of the server build output
+		 * @deprecated removed in 3.0. Use `builder.generateServerInstance` or `builder.manifest` instead
 		 */
-		generateManifest: (opts: { relativePath: string; routes?: RouteDefinition[] }) => string;
+		generateManifest?: (opts: { relativePath: string; routes?: RouteDefinition[] }) => string;
 
 		/**
 		 * Resolve a path to the `name` directory inside `outDir`, e.g. `/path/to/.svelte-kit/my-adapter`.
@@ -166,6 +193,19 @@ declare module '@sveltejs/kit' {
 		/** Get the application path including any configured `base` path, e.g. `my-base-path/_app`. */
 		getAppPath: () => string;
 
+		/**
+		 * Generates a module exposing a SvelteKit [Server](https://svelte.dev/docs/kit/@sveltejs-kit#Server) instance.
+		 * @param opts.routes A subset of the routes to include in the server's manifest
+		 * @param opts.serverDirectory The directory containing the server code. Defaults to `getServerDirectory()`.
+		 * @since 3.0.0
+		 */
+		generateServerInstance: (
+			dest: string,
+			opts?: {
+				routes?: RouteDefinition[];
+				serverDirectory?: string;
+			}
+		) => void;
 		/**
 		 * Write client assets to `dest`.
 		 * @param dest the destination folder
@@ -640,8 +680,7 @@ declare module '@sveltejs/kit' {
 		config: Config;
 	}
 
-	export class Server {
-		constructor(manifest: SSRManifest);
+	export interface Server {
 		init(options: ServerInitOptions): Promise<void>;
 		respond(request: Request, options: RequestOptions): Promise<Response>;
 	}
@@ -651,19 +690,6 @@ declare module '@sveltejs/kit' {
 		env: Record<string, string | undefined>;
 		/** A function that turns an asset filename into a `ReadableStream`. Required for the `read` export from `$app/server` to work. */
 		read?: (file: string) => MaybePromise<ReadableStream | null>;
-	}
-
-	/**
-	 * Information required to instantiate a new `Server` instance.
-	 */
-	export interface SSRManifest {
-		/** The directory where SvelteKit keeps its stuff, including static assets (such as JS and CSS) and internally-used routes. */
-		appDir: string;
-		/** The `base` and `appDir` settings combined without a leading slash. */
-		appPath: string;
-		/** Static files from `config.files.assets` and the service worker (if any). */
-		assets: Set<string>;
-		mimeTypes: Record<string, string>;
 	}
 
 	/**
@@ -3055,8 +3081,8 @@ declare module '$app/server' {
 		? Value extends string[]
 			? [type: Type, value: Value[number] | (string & {}), checked?: boolean]
 			: Value extends boolean
-				? [type: Type] | [type: Type, value: boolean | undefined]
-				: [type: Type] | [type: Type, value: Value]
+				? [type: Type, value?: boolean]
+				: [type: Type, value?: Value]
 		: Type extends 'image'
 			? [type: Type]
 			: Type extends 'submit' | 'hidden'
@@ -3067,7 +3093,7 @@ declare module '$app/server' {
 					? [type: Type, value: Value | (string & {}), checked?: boolean]
 					: Type extends 'file' | 'file multiple'
 						? [type: Type]
-						: [type: Type] | [type: Type, value: Value | undefined];
+						: [type: Type, value?: Value];
 
 	type WidenLiteralString<T> = T extends string ? (string extends T ? T : string) : T;
 
@@ -3423,6 +3449,8 @@ declare module '$app/server' {
 	export type RequestedEntry<Validated, Output> = {
 		arg: Validated;
 		query: RemoteQuery<Output>;
+		/** Explicitly ignore this requested update. */
+		ignore: () => void;
 	};
 
 	/**
@@ -3434,6 +3462,8 @@ declare module '$app/server' {
 	export type RemoteLiveQueryRequestedEntry<Validated, Output> = {
 		arg: Validated;
 		query: RemoteLiveQuery<Output>;
+		/** Explicitly ignore this requested update. */
+		ignore: () => void;
 	};
 
 	export type RemoteQueryRequestedResult<Validated, Output> = Iterable<
@@ -3452,6 +3482,8 @@ declare module '$app/server' {
 			 * ```
 			 */
 			refreshAll: () => Promise<void>;
+			/** Explicitly ignore all updates selected by this `requested` invocation. */
+			ignoreAll: () => Promise<void>;
 		};
 
 	export type RemoteLiveQueryRequestedResult<Validated, Output> = Iterable<
@@ -3470,6 +3502,8 @@ declare module '$app/server' {
 			 * ```
 			 */
 			reconnectAll: () => Promise<void>;
+			/** Explicitly ignore all updates selected by this `requested` invocation. */
+			ignoreAll: () => Promise<void>;
 		};
 
 	export type RequestedResult<Validated, Output> =
@@ -3656,9 +3690,9 @@ declare module '$app/server' {
 		 *
 		 * */
 		function live<Output>(fn: (arg: void) => RemoteLiveQueryUserFunctionReturnType<Output>): RemoteLiveQueryFunction<void, Output>;
-		
+
 		function live<Input, Output>(validate: "unchecked", fn: (arg: Input) => RemoteLiveQueryUserFunctionReturnType<Output>): RemoteLiveQueryFunction<Input, Output>;
-		
+
 		function live<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => RemoteLiveQueryUserFunctionReturnType<Output>): RemoteLiveQueryFunction<StandardSchemaV1.InferInput<Schema>, Output, StandardSchemaV1.InferOutput<Schema>>;
 	}
 	/**
