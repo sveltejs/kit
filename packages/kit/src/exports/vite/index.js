@@ -15,6 +15,7 @@ import { runtime_directory, logger, get_global_name } from '../../core/utils.js'
 import { dev } from './dev/index.js';
 import { preview } from './preview/index.js';
 import {
+	check_vite_build_started,
 	enforced_config,
 	get_config_aliases,
 	is_remote_module,
@@ -332,7 +333,7 @@ function kit({ svelte_config }) {
 			order: 'pre',
 			async handler(config, config_env) {
 				initial_config = config;
-				is_build = config_env.command === 'build';
+				is_build = check_vite_build_started(config_env);
 
 				kit = process_config(svelte_config, root);
 				out_dir = posixify(kit.outDir);

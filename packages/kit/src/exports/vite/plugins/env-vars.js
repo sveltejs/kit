@@ -8,6 +8,7 @@ import { create_env_modules, resolve_env_entry } from '../../../core/env.js';
 import { import_peer } from '../../../utils/import.js';
 import { write_if_changed } from '../../../core/sync/utils.js';
 import { posixify } from '../../../utils/os.js';
+import { check_vite_build_started } from '../utils.js';
 
 /**
  * Generate (and, in dev, maintain) the `${outDir}/generated/{build,dev}/env` modules
@@ -67,7 +68,7 @@ export function plugin_env_vars(config, callback) {
 			const vite = await import_peer('vite', c.root);
 			env = vite.loadEnv(c.mode, path.resolve(c.root, config.env.dir), '');
 
-			is_build = c.command === 'build';
+			is_build = check_vite_build_started(c);
 
 			dir = posixify(
 				path.resolve(c.root, config.outDir, `generated/${is_build ? 'build' : 'dev'}/env`)

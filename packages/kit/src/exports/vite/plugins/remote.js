@@ -1,9 +1,14 @@
 /** @import { RemoteChunk, RemoteInternals, ServerMetadata, ValidatedConfig } from 'types' */
-/** @import { Plugin, ViteDevServer } from 'vite' */
+/** @import { Plugin, ResolvedConfig, ViteDevServer } from 'vite' */
 import path from 'node:path';
 import { prefixRegex } from '@rolldown/pluginutils';
 import MagicString from 'magic-string';
-import { error_for_missing_config, is_remote_module, remote_module_pattern } from '../utils.js';
+import {
+	clean_id,
+	error_for_missing_config,
+	is_remote_module,
+	remote_module_pattern
+} from '../utils.js';
 import { create_exported_declarations } from '../../../core/env.js';
 import { dedent } from '../../../core/sync/utils.js';
 import { runtime_directory } from '../../../core/utils.js';
@@ -11,6 +16,8 @@ import { get_runner } from '../../../runner.js';
 import { hash } from '../../../utils/hash.js';
 import { s } from '../../../utils/misc.js';
 import { posixify } from '../../../utils/os.js';
+
+const remote_plugin_name = 'vite-plugin-sveltekit-remote';
 
 /**
  * @param {ValidatedConfig} svelte_config
@@ -40,7 +47,10 @@ export function plugin_remote(svelte_config, get_config, get_build_metadata, set
 	const emitted_remote_hashes = new Set();
 
 	return {
-		name: 'vite-plugin-sveltekit-remote',
+		name: remote_plugin_name,
+		api: {
+			get_remotes: () => remotes
+		},
 
 		configResolved() {
 			({ root, vite } = get_config());
@@ -101,7 +111,8 @@ export function plugin_remote(svelte_config, get_config, get_build_metadata, set
 			async handler(code, id) {
 				if (!is_remote_module(id)) return;
 
-				const file = posixify(path.relative(root, id));
+				// clean the ID because remote functions from libraries can have suffixes
+				const file = posixify(path.relative(root, clean_id(id)));
 				const remote = {
 					hash: hash(file),
 					file
@@ -209,6 +220,15 @@ export function plugin_remote(svelte_config, get_config, get_build_metadata, set
 			}
 		}
 	};
+}
+
+/**
+ * @param {ResolvedConfig} vite_config
+ * @returns {() => RemoteChunk[]}
+ */
+export function get_remotes_getter(vite_config) {
+	const remote_plugin = vite_config.plugins.find((plugin) => plugin.name === remote_plugin_name);
+	return remote_plugin?.api.get_remotes;
 }
 
 /**

@@ -443,6 +443,23 @@ export function plugin_compile(
 			/** @type {(() => Promise<void>) | null} */
 			let finalise;
 
+			await load_and_validate_params({
+				routes: manifest_data.routes,
+				params_path: manifest_data.params,
+				root
+			});
+
+			log.info('Analysing routes');
+
+			let { metadata } = await analyse({
+				manifest_data,
+				env,
+				vite_config_file: vite_config.configFile
+			});
+			set_build_metadata(metadata);
+
+			log.info('Building app');
+
 			let ssr_build = await builder.build(builder.environments.ssr);
 
 			/** @param {Rolldown.RolldownOutput['output']} server_chunks */
@@ -500,22 +517,6 @@ export function plugin_compile(
 					server_chunks,
 					root
 				);
-
-				log.info('Analysing routes');
-
-				const { metadata } = await analyse({
-					hash: kit.router.type === 'hash',
-					manifest_path,
-					manifest_data,
-					server_manifest: vite_server_manifest,
-					tracked_features,
-					env,
-					remotes,
-					vite_config_file: vite_config.configFile
-				});
-				set_build_metadata(metadata);
-
-				log.info('Building app');
 
 				/** @type {Record<string, EnvVarConfig<any>> | null} */
 				const explicit_env_config = get_explicit_env_config();
@@ -932,12 +933,6 @@ export function plugin_compile(
 			// `vite build`
 			ssr_build = Array.isArray(ssr_build) ? ssr_build[0] : ssr_build;
 			if ('output' in ssr_build) {
-				await load_and_validate_params({
-					routes: manifest_data.routes,
-					params_path: manifest_data.params,
-					root
-				});
-
 				return await process_ssr_build(ssr_build.output);
 			}
 
@@ -965,6 +960,13 @@ export function plugin_compile(
 					params_path: manifest_data.params,
 					root
 				});
+
+				({ metadata } = await analyse({
+					manifest_data,
+					env,
+					vite_config_file: vite_config.configFile
+				}));
+				set_build_metadata(metadata);
 			};
 
 			ssr_build.on('change', before_ssr_build_rerun);

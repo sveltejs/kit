@@ -1,4 +1,4 @@
-/** @import { UserConfig } from 'vite' */
+/** @import { ConfigEnv, UserConfig } from 'vite' */
 /** @import { EnforcedConfig } from './types.js' */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -9,6 +9,7 @@ import { negotiate } from '../../utils/http.js';
 import { escape_html } from '../../utils/escape.js';
 import { escape_for_regexp } from '../../utils/regex.js';
 import { stackless } from '../../utils/error.js';
+import { s } from '../../utils/misc.js';
 import { dedent } from '../../core/sync/utils.js';
 import { app_server, app_env_private } from './module_ids.js';
 
@@ -323,4 +324,29 @@ export function comparable(value) {
 	if (typeof value !== 'string') return value;
 	const normalized = posixify(value);
 	return process.platform === 'win32' ? normalized.toLowerCase() : normalized;
+}
+
+// taken from https://github.com/vitejs/vite/blob/main/packages/vite/src/shared/utils.ts#L31-L34
+const postfix_pattern = /[?#].*$/;
+
+/**
+ * Removes query parameters from the Rolldown ID
+ * @param {string} id
+ */
+export function clean_id(id) {
+	return id.replace(postfix_pattern, '');
+}
+
+/**
+ * @param {ConfigEnv} config_env
+ * @returns {boolean}
+ */
+export function check_vite_build_started(config_env) {
+	// Preserve the original vite command when postbuild forks resolve a `serve` config.
+	// But, if the user is running vitest, we don't bother with this
+	if (config_env.mode !== 'test') {
+		process.env.SVELTEKIT_BUILD ??= s(config_env.command === 'build');
+	}
+
+	return process.env.SVELTEKIT_BUILD === 'true' || config_env.command === 'build';
 }
