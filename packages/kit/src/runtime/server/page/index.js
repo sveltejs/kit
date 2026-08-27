@@ -1,5 +1,5 @@
-/** @import { RequestEvent, SSRManifest } from '@sveltejs/kit' */
-/** @import { PageNodeIndexes, RequestState, RequiredResolveOptions, ServerDataNode, SSRNode } from 'types' */
+/** @import { RequestEvent } from '@sveltejs/kit' */
+/** @import { PageNodeIndexes, RequestState, RequiredResolveOptions, ServerDataNode, SSRNode, SSRManifest } from 'types' */
 import { text } from '@sveltejs/kit';
 import { Redirect } from '@sveltejs/kit/internal';
 import { compact } from '../../../utils/array.js';

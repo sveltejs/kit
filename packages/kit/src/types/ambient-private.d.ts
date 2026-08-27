@@ -1,7 +1,6 @@
 /** Internal version of $app/server */
 declare module '<sveltekit:generated>/server.js' {
-	import { SSRManifest } from '@sveltejs/kit';
-	import { SSROptions, ServerHooks } from 'types';
+	import { SSROptions, ServerHooks, SSRManifest } from 'types';
 
 	export const options: SSROptions;
 	export const get_hooks: () => Promise<Partial<ServerHooks>>;

@@ -98,7 +98,7 @@ export function serialize_uses(node) {
 
 /**
  * Returns `true` if the given path was prerendered
- * @param {import('@sveltejs/kit').SSRManifest} manifest
+ * @param {import('types').SSRManifest} manifest
  * @param {string} pathname Should include the base and be decoded
  */
 export function has_prerendered_path(manifest, pathname) {

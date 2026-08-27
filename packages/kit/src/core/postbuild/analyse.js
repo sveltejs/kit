@@ -34,7 +34,7 @@ async function analyse({
 	remotes,
 	vite_config_file
 }) {
-	/** @type {import('@sveltejs/kit').SSRManifest} */
+	/** @type {import('types').SSRManifest} */
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
 	const vite_config = await load_vite_config(vite_config_file);
