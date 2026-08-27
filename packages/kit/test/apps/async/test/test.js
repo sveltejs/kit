@@ -307,6 +307,24 @@ test.describe('remote functions', () => {
 		await expect(page.locator('#image-result')).toHaveText('5,6');
 	});
 
+	test('image inputs do not fail validation as the default submitter', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		test.skip(!javaScriptEnabled, 'requires JavaScript to validate');
+
+		await page.goto('/remote/form/image-validate');
+		await page.locator('input[type="image"]').click({ position: { x: 5, y: 6 } });
+		await expect(page.locator('#name-issues')).not.toHaveText('[]');
+
+		await page.getByRole('textbox').fill('a');
+		await expect(page.locator('#name-issues')).toHaveText('[]');
+		await expect(page.locator('#position-issues')).toHaveText('[]');
+
+		await page.locator('input[type="image"]').click({ position: { x: 5, y: 6 } });
+		await expect(page.locator('#result')).toHaveText('a:5,6');
+	});
+
 	test('form updates inputs live', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/remote/form/live-update');
 
