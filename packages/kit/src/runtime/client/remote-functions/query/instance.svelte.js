@@ -127,14 +127,12 @@ export class Query {
 
 				// Untrack this to not trigger mutation validation errors which can occur if you do e.g. $derived({ a: await queryA(), b: await queryB() })
 				untrack(() => {
-					this.#latest.splice(0, idx).forEach((r) => r(undefined));
+					this.#latest.splice(0, idx + 1).forEach((r) => r(undefined));
 					this.#ready = true;
 					this.#loading = false;
 					this.#raw = value;
 					this.#error = undefined;
 				});
-
-				resolve(undefined);
 			})
 			.catch(async (e) => {
 				// TODO: Our behavior here could be better:
@@ -158,6 +156,7 @@ export class Query {
 
 				untrack(() => {
 					this.#latest.splice(0, idx).forEach((r) => r(undefined));
+					this.#latest.shift();
 					this.#error = error;
 					this.#loading = false;
 				});
@@ -242,12 +241,19 @@ export class Query {
 		// SSR record can never shadow the newly-set value
 		delete query_responses[this.#key];
 
+		// a pending request's promise is settled with the value below; replacing it
+		// too would make awaiting consumers settle a second time in a new batch
+		const in_flight = this.#latest.length > 0;
+
 		this.#clear_pending();
 		this.#ready = true;
 		this.#loading = false;
 		this.#error = undefined;
 		this.#raw = value;
-		this.#promise = Promise.resolve();
+
+		if (!in_flight) {
+			this.#promise = Promise.resolve();
+		}
 	}
 
 	/** @param {HttpError} error */

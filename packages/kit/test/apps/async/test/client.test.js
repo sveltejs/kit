@@ -57,6 +57,19 @@ test.describe('remote functions', () => {
 		await page.goto('/plain-lib');
 		await expect(page.locator('p')).toHaveText('key set for https://example.com/jwks');
 	});
+
+	// https://github.com/sveltejs/kit/issues/16854
+	test('deriveds fed by an awaited query stay memoized', async ({ page }) => {
+		await page.goto('/remote/query-derived-memoization');
+		await expect(page.locator('#result')).toHaveText('10');
+
+		await page.evaluate(() => (window.__recomputations = 0));
+		await page.locator('#bump').click();
+		await expect(page.locator('#result')).toHaveText('11');
+
+		// fourteen when memoized, tens of thousands (and climbing with graph depth) when not
+		expect(await page.evaluate(() => window.__recomputations)).toBeLessThan(1000);
+	});
 });
 
 // have to run in serial because commands mutate in-memory data on the server (should fix this at some point)

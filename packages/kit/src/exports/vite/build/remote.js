@@ -3,7 +3,6 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { Parser } from 'acorn';
 import MagicString from 'magic-string';
 import { posixify } from '../../../utils/os.js';
 
@@ -59,11 +58,12 @@ export async function treeshake_prerendered_remotes(
 		const chunk_path = posixify(path.relative(cwd, `${out}/server/${remote_chunk.fileName}`));
 
 		const code = fs.readFileSync(chunk_path, 'utf-8');
-		const parsed = Parser.parse(code, { sourceType: 'module', ecmaVersion: 'latest' });
+		const parsed = vite.parseSync(chunk_path, code);
+		if (parsed.errors.length) throw new Error(parsed.errors[0].message);
 		const modified_code = new MagicString(code);
 
 		for (const fn of prerendered) {
-			for (const node of parsed.body) {
+			for (const node of parsed.program.body) {
 				const declaration =
 					node.type === 'ExportNamedDeclaration'
 						? node.declaration
@@ -85,7 +85,7 @@ export async function treeshake_prerendered_remotes(
 			}
 		}
 
-		for (const node of parsed.body) {
+		for (const node of parsed.program.body) {
 			if (node.type === 'ExportDefaultDeclaration') {
 				modified_code.remove(node.start, node.end);
 			}

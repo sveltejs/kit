@@ -20,8 +20,6 @@
 	"dependencies": {
 		"@rolldown/pluginutils": "^1.0.1",
 		"@standard-schema/spec": "^1.1.0",
-		"@sveltejs/acorn-typescript": "^1.0.12",
-		"acorn": "^8.18.0",
 		"cookie": "^2.0.1",
 		"devalue": "^5.9.0",
 		"esm-env": "^1.2.2",
@@ -66,8 +64,8 @@
 	"files": [
 		"src",
 		"!src/**/*.spec.js",
-		"!src/core/**/fixtures",
-		"!src/core/**/test",
+		"!src/**/fixtures",
+		"!src/**/test",
 		"types",
 		"svelte-kit.js"
 	],
