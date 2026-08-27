@@ -1,15 +1,19 @@
-import { afterEach, expect, test, vi } from 'vitest';
+import fs from 'node:fs';
+import process from 'node:process';
+import { afterAll, afterEach, expect, jest, mock, spyOn, test } from 'bun:test';
+import { mock_manifest, mock_routes } from './mocks.js';
+
+// the const captures the real module object before any test swaps the live binding
+const real_process = process;
+let instance = 0;
 
 afterEach(() => {
-	vi.resetModules();
-	vi.doUnmock('node:fs');
-	vi.doUnmock('node:process');
-	vi.doUnmock('MANIFEST');
-	vi.doUnmock('ROUTES');
-	vi.doUnmock('SERVER_OPTIONS');
-	vi.doUnmock('../src/handler.js');
-	vi.unstubAllGlobals();
-	vi.restoreAllMocks();
+	jest.useRealTimers();
+	mock.restore();
+});
+
+afterAll(() => {
+	mock.module('node:process', () => ({ default: real_process }));
 });
 
 test('starts Bun with production defaults and generated request routes', async () => {
@@ -84,13 +88,12 @@ test('a Unix socket takes precedence over TCP-only options', async () => {
 });
 
 test('removes a stale socket file before listening', async () => {
-	const statSync = vi.fn(() => ({ size: 0 }));
-	const rmSync = vi.fn();
-	vi.doMock('node:fs', () => ({ default: { statSync, rmSync } }));
+	spyOn(fs, 'statSync').mockReturnValue({ size: 0 } as ReturnType<typeof fs.statSync>);
+	const rm = spyOn(fs, 'rmSync').mockImplementation(() => {});
 
 	await load_start({ env: { SOCKET_PATH: '/tmp/application.sock' } });
 
-	expect(rmSync).toHaveBeenCalledWith('/tmp/application.sock');
+	expect(rm).toHaveBeenCalledWith('/tmp/application.sock');
 });
 
 test.each([
@@ -101,6 +104,24 @@ test.each([
 	await expect(load_start({ env })).rejects.toThrow(message);
 });
 
+test('refuses to start on a Bun older than 1.4', async () => {
+	spyOn(Bun.semver, 'order').mockReturnValue(-1);
+	await expect(load_start()).rejects.toThrow('requires Bun 1.4');
+});
+
+// every other test proves the guard admits the running Bun; these pin the real
+// comparator's verdicts for the release shapes the guard must order correctly,
+// canaries being the reason it uses order() rather than satisfies()
+test.each([
+	['1.3.14', -1],
+	['1.4.0', 0],
+	['1.4.1', 1],
+	['1.5.0-canary.1', 1],
+	['2.0.0', 1]
+] as const)('Bun.semver orders %s against the 1.4.0 floor as %d', (version, expected) => {
+	expect(Bun.semver.order(version, '1.4.0')).toBe(expected);
+});
+
 test.each(['SIGINT', 'SIGTERM'] as const)(
 	'gracefully stops the server and emits sveltekit:shutdown for %s',
 	async (signal) => {
@@ -108,7 +129,7 @@ test.each(['SIGINT', 'SIGTERM'] as const)(
 
 		await loaded.listeners.get(signal)?.();
 
-		expect(loaded.stop).toHaveBeenCalledOnce();
+		expect(loaded.stop).toHaveBeenCalledTimes(1);
 		expect(loaded.emit).toHaveBeenCalledWith('sveltekit:shutdown', signal);
 		expect(loaded.log).toHaveBeenCalledWith(
 			expect.stringContaining('Waiting for 2 requests to finish before shutting down...')
@@ -117,24 +138,29 @@ test.each(['SIGINT', 'SIGTERM'] as const)(
 );
 
 test('force-closes lingering connections after SHUTDOWN_TIMEOUT', async () => {
-	vi.useFakeTimers();
+	jest.useFakeTimers();
 	try {
+		let finish_force: (() => void) | undefined;
 		const loaded = await load_start({
 			env: { SHUTDOWN_TIMEOUT: '5' },
-			stop: () => new Promise<void>(() => {})
+			stop: (force) =>
+				force
+					? new Promise<void>((resolve) => (finish_force = resolve))
+					: new Promise<void>(() => {})
 		});
 
 		const shutdown = loaded.listeners.get('SIGTERM')?.();
-		await vi.advanceTimersByTimeAsync(5000);
+		jest.advanceTimersByTime(5000);
+		await flush_microtasks();
 		expect(loaded.stop).toHaveBeenCalledTimes(2);
 		expect(loaded.stop).toHaveBeenLastCalledWith(true);
 		expect(loaded.emit).not.toHaveBeenCalled();
 
-		await vi.advanceTimersByTimeAsync(1000);
+		finish_force?.();
 		await shutdown;
 		expect(loaded.emit).toHaveBeenCalledWith('sveltekit:shutdown', 'SIGTERM');
 	} finally {
-		vi.useRealTimers();
+		jest.useRealTimers();
 	}
 });
 
@@ -152,6 +178,12 @@ test('a second shutdown signal forces the process to exit', async () => {
 	await first;
 });
 
+// bun:test has no async advanceTimersByTime, so drain the promise chains that a
+// synchronously-fired timer callback unblocks
+async function flush_microtasks() {
+	for (let i = 0; i < 10; i += 1) await Promise.resolve();
+}
+
 async function load_start({
 	serverOptions = {},
 	env = {},
@@ -163,40 +195,36 @@ async function load_start({
 	env?: Record<string, string>;
 	envPrefix?: string;
 	pendingRequests?: number;
-	stop?: () => Promise<void>;
+	stop?: (force?: boolean) => Promise<void>;
 } = {}) {
-	vi.resetModules();
 	const listeners = new Map<string, () => Promise<void> | void>();
-	const emit = vi.fn();
-	const exit = vi.fn();
+	const emit = mock((_name: string, _detail: unknown) => {});
+	const exit = mock((_code: number) => {});
 	const fake_process = {
 		env,
-		on: vi.fn((name: string, callback: () => Promise<void> | void) =>
-			listeners.set(name, callback)
-		),
+		on: mock((name: string, callback: () => Promise<void> | void) => listeners.set(name, callback)),
 		emit,
 		exit
 	};
-	vi.doMock('node:process', () => ({ default: fake_process }));
-	vi.doMock('MANIFEST', () => ({ env_prefix: envPrefix }));
+	mock.module('node:process', () => ({ default: fake_process }));
+	mock_manifest({ env_prefix: envPrefix });
 
 	const routes = { '/asset': { GET: new Response('asset') } };
-	const handler = vi.fn();
-	vi.doMock('ROUTES', () => ({ routes }));
-	vi.doMock('SERVER_OPTIONS', () => ({ default: serverOptions }));
-	vi.doMock('../src/handler.js', () => ({ handler }));
+	const handler = mock(() => {});
+	mock_routes({ routes });
+	mock.module('SERVER_OPTIONS', () => ({ default: serverOptions }));
+	mock.module('../src/handler.js', () => ({ handler }));
 
-	const stop = vi.fn(stop_implementation ?? (async () => {}));
+	const stop = mock(stop_implementation ?? (async () => {}));
 	const server = {
 		url: new URL('http://localhost:3000'),
 		pendingRequests,
 		stop
 	};
-	const serve = vi.fn((_options: any) => server);
-	vi.stubGlobal('Bun', { serve });
-	const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+	const serve = spyOn(Bun, 'serve').mockImplementation((_options: any) => server as any);
+	const log = spyOn(console, 'log').mockImplementation(() => {});
 
-	await import('../src/index.js');
+	await import(`../src/index.js?instance=${++instance}`);
 
 	return { listeners, emit, exit, routes, handler, stop, serve, log };
 }

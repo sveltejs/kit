@@ -186,8 +186,10 @@ test.describe('Navigation lifecycle functions', () => {
 		await page.click('h1'); // The browsers block attempts to prevent navigation on a frame that's never had a user gesture.
 
 		await page.goBack();
-		expect(await page.innerHTML('pre')).toBe('1 false popstate');
-		expect(page.url()).toBe(baseURL + '/navigation-lifecycle/before-navigate/prevent-navigation');
+		await expect(page.locator('pre')).toHaveText('1 false popstate');
+		await expect(page).toHaveURL(
+			baseURL + '/navigation-lifecycle/before-navigate/prevent-navigation'
+		);
 	});
 
 	test('beforeNavigate prevents unload', async ({ page }) => {
@@ -209,10 +211,9 @@ test.describe('Navigation lifecycle functions', () => {
 		await page.goto('/navigation-lifecycle/before-navigate/prevent-navigation');
 
 		await page.click('[href="/navigation-lifecycle/before-navigate/redirect"]');
-		await page.waitForLoadState('networkidle');
+		await expect(page.locator('pre')).toHaveText('1 false link');
 
 		expect(page.url()).toBe(baseURL + '/navigation-lifecycle/before-navigate/prevent-navigation');
-		expect(await page.innerHTML('pre')).toBe('1 false link');
 	});
 
 	test('beforeNavigate is not triggered on target=_blank', async ({ page, baseURL }) => {

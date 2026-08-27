@@ -1,13 +1,12 @@
-import { Server } from 'SERVER';
-import { manifest, prerendered, base_path } from 'MANIFEST';
+import { server } from 'SERVER';
 import { env } from 'cloudflare:workers';
 
-const server = new Server(manifest);
+const base_path = BASE_PATH;
+const assets = MANIFEST_ASSETS;
+const prerendered = PRERENDERED;
 
-const app_path = `/${manifest.appPath}`;
-
-const immutable = `${app_path}/immutable/`;
-const version_file = `${app_path}/version.json`;
+const immutable = `/${APP_PATH}/immutable/`;
+const version_file = `/${APP_PATH}/version.json`;
 
 /**
  * We don't know the origin until we receive a request, but
@@ -17,11 +16,10 @@ const version_file = `${app_path}/version.json`;
 let origin;
 
 const initialized = server.init({
-	env: /** @type {Record<string, string>} */ (env),
+	env,
 	read: async (file) => {
 		const url = `${origin}/${file}`;
-		const response =
-			await /** @type {{ ASSETS: { fetch: typeof fetch } }} */ (env).ASSETS.fetch(url);
+		const response = await env.ASSETS_BINDING.fetch(url);
 
 		if (!response.ok) {
 			throw new Error(
@@ -33,13 +31,8 @@ const initialized = server.init({
 	}
 });
 
+/** @type {import('@cloudflare/workers-types').ExportedHandler<Cloudflare.Env>} */
 export default {
-	/**
-	 * @param {Request} req
-	 * @param {{ ASSETS: { fetch: typeof fetch } }} env
-	 * @param {ExecutionContext} ctx
-	 * @returns {Promise<Response>}
-	 */
 	async fetch(req, env, ctx) {
 		if (!origin) {
 			origin = new URL(req.url).origin;
@@ -61,8 +54,7 @@ export default {
 		let is_static_asset = false;
 		const filename = stripped_pathname.slice(base_path.length + 1);
 		if (filename) {
-			is_static_asset =
-				manifest.assets.has(filename) || manifest.assets.has(filename + '/index.html');
+			is_static_asset = assets.has(filename) || assets.has(filename + '/index.html');
 		}
 
 		let location = pathname.at(-1) === '/' ? stripped_pathname : pathname + '/';
@@ -73,7 +65,7 @@ export default {
 			pathname === version_file ||
 			pathname.startsWith(immutable)
 		) {
-			let res = await env.ASSETS.fetch(req);
+			let res = await env.ASSETS_BINDING.fetch(req);
 			// `_headers` applies cache regardless of status, so we need to ensure an
 			// error response does not get cached
 			if (res.status >= 400) {

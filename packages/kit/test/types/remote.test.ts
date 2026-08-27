@@ -262,10 +262,11 @@ function command_tests() {
 		const wrong: number = await cmd();
 		wrong;
 
-		for (const { arg, query: bound } of requested(q, 5)) {
+		for (const { arg, query: bound, ignore } of requested(q, 5)) {
 			const arg_output: void = arg;
 			arg_output;
 			void bound.refresh();
+			ignore();
 		}
 
 		for await (const { arg, query: bound } of requested(q, 5)) {
@@ -286,10 +287,14 @@ function command_tests() {
 		const refreshes = requested(q, 5);
 		const refreshed: Promise<void> = refreshes.refreshAll();
 		refreshed;
+		const ignored: Promise<void> = refreshes.ignoreAll();
+		ignored;
 
 		const reconnects = requested(lq, 5);
 		const reconnected: Promise<void> = reconnects.reconnectAll();
 		reconnected;
+		const live_ignored: Promise<void> = reconnects.ignoreAll();
+		live_ignored;
 	}
 	void command_without_args();
 
@@ -520,6 +525,20 @@ function form_tests() {
 	f5.fields.bar.issues();
 	f5.fields.foo.value();
 	f5.fields.bar.value() === 'c';
+	const enum_text_props: { value?: string } = f5.fields.foo.as('text', 'a');
+	enum_text_props;
+	// @ts-expect-error
+	f5.fields.foo.as('text', 'c');
+	const optional_boolean_form = form(
+		null as any as StandardSchemaV1<{ enabled?: boolean }>,
+		() => {}
+	);
+	const boolean_checkbox_props: { value?: string; checked: boolean } =
+		optional_boolean_form.fields.enabled.as('checkbox');
+	boolean_checkbox_props;
+	const boolean_hidden_props: { value: string | number; type: 'hidden' } =
+		optional_boolean_form.fields.enabled.as('hidden', true);
+	boolean_hidden_props;
 	// @ts-expect-error
 	f5.fields.foo.value() === 'e';
 	// @ts-expect-error
@@ -620,6 +639,28 @@ function form_tests() {
 	// @ts-expect-error
 	f_optional_arrays.fields.files.as('text');
 
+	// checked inputs: the option may be a plain string, the checked state is a boolean
+	const f_checked = form(
+		null as any as StandardSchemaV1<{
+			visibility: 'public' | 'private';
+			tags: ('red' | 'green')[];
+			flag?: boolean;
+		}>,
+		() => ({ success: true })
+	);
+	const option = 'public' as string;
+	const flag = undefined as boolean | undefined;
+	f_checked.fields.visibility.as('radio', 'public', option === 'public');
+	f_checked.fields.visibility.as('radio', option);
+	f_checked.fields.tags.as('checkbox', option, true);
+	f_checked.fields.flag.as('checkbox', flag);
+	// @ts-expect-error
+	f_checked.fields.visibility.as('radio', 1);
+	// @ts-expect-error
+	f_checked.fields.visibility.as('radio', 'public', option);
+	// @ts-expect-error
+	f_checked.fields.flag.as('checkbox', option);
+
 	// doesn't use data
 	const f9 = form(() => Promise.resolve({ success: true }));
 	f9.result?.success === true;
@@ -676,6 +717,12 @@ function form_tests() {
 	f11_field2.propA;
 	// @ts-expect-error
 	f11_field2.propB;
+
+	const f12 = form(null as any as StandardSchemaV1<{ a: string } | { b: string }>, () => {});
+	f12.fields.a.as('text', 'default');
+	f12.fields.b.as('text');
+	// @ts-expect-error
+	f12.fields.c.as('text');
 
 	// non-optional booleans
 	form(

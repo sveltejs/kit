@@ -14,7 +14,7 @@ import { server_data_serializer } from './data_serializer.js';
  * @param {{
  *   event: import('@sveltejs/kit').RequestEvent;
  *   state: import('types').RequestState;
- *   manifest: import('@sveltejs/kit').SSRManifest;
+ *   manifest: import('types').SSRManifest;
  *   error: unknown;
  *   resolve_opts: import('types').RequiredResolveOptions;
  * }} opts

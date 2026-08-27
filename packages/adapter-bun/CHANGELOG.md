@@ -1,5 +1,17 @@
 # @sveltejs/adapter-bun
 
+## 1.0.0-next.2
+
+### Major Changes
+
+- breaking: require Bun 1.4, which routes `HEAD` to `GET` handlers and settles `stop()` after a force close ([#16880](https://github.com/sveltejs/kit/pull/16880))
+
+### Patch Changes
+
+- fix: build apps that use server instrumentation ([#16898](https://github.com/sveltejs/kit/pull/16898))
+- Updated dependencies [[`ff8cdd4`](https://github.com/sveltejs/kit/commit/ff8cdd4df8f6a0ee26c25854aa0656f2dc968caf), [`723572c`](https://github.com/sveltejs/kit/commit/723572c76053ebcae02b19166fe7400f45175c70), [`3b8e034`](https://github.com/sveltejs/kit/commit/3b8e034d62f1372f0e450da88c0705bd9828a816), [`f2c5102`](https://github.com/sveltejs/kit/commit/f2c5102079c80c904b3fe165666813023248facc), [`c66a6ed`](https://github.com/sveltejs/kit/commit/c66a6ed5bb6ba4594b0a952744a1d9c7e457b001), [`428e5ef`](https://github.com/sveltejs/kit/commit/428e5efeedba49ccd42d43f85e53707f6704931c)]:
+  - @sveltejs/kit@3.0.0-next.26
+
 ## 1.0.0-next.1
 
 ### Minor Changes

@@ -36,7 +36,7 @@ import { options } from '../internal.js';
  * @param {{
  *   branch: Array<import('./types.js').Loaded>;
  *   fetched: Array<import('./types.js').Fetched>;
- *   manifest: import('@sveltejs/kit').SSRManifest;
+ *   manifest: import('types').SSRManifest;
  *   page_config: { ssr: boolean; csr: boolean };
  *   status: number;
  *   error: App.Error | null;
@@ -654,12 +654,9 @@ export async function render_response({
 		}
 	}
 
-	return !chunks
-		? text(transformed, {
-				status,
-				headers
-			})
-		: new Response(stream_text(transformed + '\n', chunks), { headers });
+	return chunks
+		? new Response(stream_text(transformed + '\n', chunks), { status, headers })
+		: text(transformed, { status, headers });
 }
 
 class Head {

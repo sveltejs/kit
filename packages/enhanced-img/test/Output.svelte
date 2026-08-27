@@ -1,11 +1,14 @@
 <script lang="ts">
-	
+
 	import manual_image1 from './no.png';
-	
+
 	import manual_image2 from './no.svg';
+
+	import { default as __img } from './dev.png';
 
 	const src = manual_image1;
 	const images = [manual_image1, manual_image2];
+	const object = { image: manual_image1 };
 	const get_image = (image_key: number) => images[image_key];
 
 	let foo: string = 'bar';
@@ -38,7 +41,7 @@
 <picture><source srcset="/1 1440w, /2 960w" type="image/avif" /><source srcset="/3 1440w, /4 960w" type="image/webp" /><source srcset="5 1440w, /6 960w" type="image/png" /><img src="/7" alt="absolute path test" width=1440 height=1440 /></picture>
 
 {#if typeof src === 'string'}
-	{#if 
+	{#if
 	import.meta.env.DEV && false}
 		{src} was not enhanced. Cannot determine dimensions.
 	{:else}
@@ -55,7 +58,7 @@
 
 {#each images as image}
 	{#if typeof image === 'string'}
-	{#if 
+	{#if
 	import.meta.env.DEV && false}
 		{image} was not enhanced. Cannot determine dimensions.
 	{:else}
@@ -72,22 +75,78 @@
 {/each}
 
 {#each images as _, i}
-	{#if typeof get_image(i) === 'string'}
-	{#if 
+	{#if true}{@const __img_1 = get_image(i)}
+{#if typeof __img_1 === 'string'}
+	{#if
 	import.meta.env.DEV && false}
-		{get_image(i)} was not enhanced. Cannot determine dimensions.
+		{__img_1} was not enhanced. Cannot determine dimensions.
 	{:else}
-		<img src={get_image(i)} alt="opt-in test" />
+		<img src={__img_1} alt="opt-in test" />
 	{/if}
 {:else}
 	<picture>
-		{#each Object.entries(get_image(i).sources) as [format, srcset]}
+		{#each Object.entries(__img_1.sources) as [format, srcset]}
 			<source {srcset} type={'image/' + format} />
 		{/each}
-		<img src={get_image(i).img.src} alt="opt-in test" width={get_image(i).img.w} height={get_image(i).img.h} />
+		<img src={__img_1.img.src} alt="opt-in test" width={__img_1.img.w} height={__img_1.img.h} />
 	</picture>
 {/if}
+{/if}
 {/each}
+
+{#each images as _, j}
+	{#if true}{@const __img_2 = get_image(j)}
+{#if typeof __img_2 === 'string'}
+	{#if
+	import.meta.env.DEV && false}
+		{__img_2} was not enhanced. Cannot determine dimensions.
+	{:else}
+		<img src={__img_2} alt="collision test" />
+	{/if}
+{:else}
+	<picture>
+		{#each Object.entries(__img_2.sources) as [format, srcset]}
+			<source {srcset} type={'image/' + format} />
+		{/each}
+		<img src={__img_2.img.src} alt="collision test" width={__img_2.img.w} height={__img_2.img.h} />
+	</picture>
+{/if}
+{/if}
+{/each}
+
+{#if true}{@const __img_3 = foo ? manual_image1 : manual_image2}
+{#if typeof __img_3 === 'string'}
+	{#if
+	import.meta.env.DEV && false}
+		{__img_3} was not enhanced. Cannot determine dimensions.
+	{:else}
+		<img src={__img_3} alt="conditional test" />
+	{/if}
+{:else}
+	<picture>
+		{#each Object.entries(__img_3.sources) as [format, srcset]}
+			<source {srcset} type={'image/' + format} />
+		{/each}
+		<img src={__img_3.img.src} alt="conditional test" width={__img_3.img.w} height={__img_3.img.h} />
+	</picture>
+{/if}
+{/if}
+
+{#if typeof object.image === 'string'}
+	{#if
+	import.meta.env.DEV && false}
+		{object.image} was not enhanced. Cannot determine dimensions.
+	{:else}
+		<img src={object.image} alt="member access test" />
+	{/if}
+{:else}
+	<picture>
+		{#each Object.entries(object.image.sources) as [format, srcset]}
+			<source {srcset} type={'image/' + format} />
+		{/each}
+		<img src={object.image.img.src} alt="member access test" width={object.image.img.w} height={object.image.img.h} />
+	</picture>
+{/if}
 
 <picture>
 	<source src="./dev.avif" />

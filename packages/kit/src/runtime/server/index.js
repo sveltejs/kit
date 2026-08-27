@@ -58,10 +58,10 @@ if (DEV) {
 }
 
 export class Server {
-	/** @type {import('@sveltejs/kit').SSRManifest} */
+	/** @type {import('types').SSRManifest} */
 	#manifest;
 
-	/** @param {import('@sveltejs/kit').SSRManifest} manifest */
+	/** @param {import('types').SSRManifest} manifest */
 	constructor(manifest) {
 		this.#manifest = manifest;
 

@@ -264,6 +264,18 @@ test("fails if paths.base ends with '/'", () => {
 	}, /^config\.paths\.base option must either be the empty string or a root-relative path that starts but doesn't end with '\/'. See https:\/\/svelte\.dev\/docs\/kit\/configuration#paths$/);
 });
 
+test('does not require svelte-trusted-html when trusted types are enforced', () => {
+	assert.doesNotThrow(() => {
+		validate_config({
+			csp: {
+				directives: {
+					'require-trusted-types-for': ['script']
+				}
+			}
+		});
+	});
+});
+
 test('fails if paths.assets is relative', () => {
 	assert_logs_error_and_throws(() => {
 		validate_config({

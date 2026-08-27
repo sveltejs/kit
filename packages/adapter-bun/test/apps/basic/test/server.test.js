@@ -88,8 +88,9 @@ test('serves prerendered pages, endpoints, and canonical redirects', async ({ re
 });
 
 test('uses SvelteKit for non-GET requests that share a static pathname', async ({ request }) => {
+	// the adapter assumes TLS terminates upstream, so the origin it computes is https
 	const response = await request.post('/data.json', {
-		headers: { origin: 'http://localhost:4174' }
+		headers: { origin: 'https://localhost:4174' }
 	});
 	expect(response.status()).toBe(200);
 	expect(await response.json()).toEqual({ message: 'hello from a server endpoint' });

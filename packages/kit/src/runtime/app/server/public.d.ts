@@ -41,7 +41,7 @@ export type RemoteFormFieldType<T> = {
 }[keyof InputTypeMap];
 
 // Input element properties based on type
-type InputElementProps<T extends keyof InputTypeMap> = T extends 'checkbox' | 'radio'
+type InputElementProps<T extends keyof InputTypeMap, Value> = T extends 'checkbox' | 'radio'
 	? {
 			name: string;
 			type: T;
@@ -78,9 +78,9 @@ type InputElementProps<T extends keyof InputTypeMap> = T extends 'checkbox' | 'r
 					? {
 							name: string;
 							'aria-invalid': boolean | 'false' | 'true' | undefined;
-							get value(): string | number;
-							set value(v: string | number);
-							readonly defaultValue?: string | number;
+							get value(): Value extends string ? string : string | number;
+							set value(v: Value extends string ? string : string | number);
+							readonly defaultValue?: Value extends string ? string : string | number;
 						}
 					: {
 							name: string;
@@ -117,19 +117,21 @@ export type RemoteFormFieldValue = string | string[] | number | boolean | File |
 
 type AsArgs<Type extends keyof InputTypeMap, Value> = Type extends 'checkbox'
 	? Value extends string[]
-		? [type: Type, value: Value[number] | (string & {})]
+		? [type: Type, value: Value[number] | (string & {}), checked?: boolean]
 		: Value extends boolean
-			? [type: Type] | [type: Type, value: boolean]
-			: [type: Type] | [type: Type, value: Value | (string & {})]
+			? [type: Type] | [type: Type, value: boolean | undefined]
+			: [type: Type] | [type: Type, value: Value]
 	: Type extends 'submit' | 'hidden'
 		? Value extends string
 			? [type: Type, value: Value | (string & {})]
 			: [type: Type, value: Value]
 		: Type extends 'radio'
-			? [type: Type, value: Value | (string & {})]
+			? [type: Type, value: Value | (string & {}), checked?: boolean]
 			: Type extends 'file' | 'file multiple'
 				? [type: Type]
 				: [type: Type] | [type: Type, value: Value | undefined];
+
+type WidenLiteralString<T> = T extends string ? (string extends T ? T : string) : T;
 
 /**
  * Form field accessor type that provides name(), value(), and issues() methods
@@ -145,7 +147,9 @@ export type RemoteFormField<Value extends RemoteFormFieldValue> = RemoteFormFiel
 	 * <input {...myForm.fields.myBoolean.as('checkbox')} />
 	 * ```
 	 */
-	as<T extends RemoteFormFieldType<Value>>(...args: AsArgs<T, Value>): InputElementProps<T>;
+	as<T extends RemoteFormFieldType<Value>>(
+		...args: AsArgs<T, Value>
+	): InputElementProps<T, WidenLiteralString<Value>>;
 };
 
 type RemoteFormFieldContainer<Value> = RemoteFormFieldMethods<Value> & {
@@ -166,12 +170,15 @@ type UnknownField<Value> = RemoteFormFieldMethods<Value> & {
 	 * <input {...myForm.fields.myBoolean.as('checkbox')} />
 	 * ```
 	 */
-	as<T extends RemoteFormFieldType<Value>>(...args: AsArgs<T, Value>): InputElementProps<T>;
+	as<T extends RemoteFormFieldType<Value>>(...args: AsArgs<T, Value>): InputElementProps<T, Value>;
 } & {
 	[key: string | number]: UnknownField<any>;
 };
 
-type RemoteFormFieldsRoot<Input extends RemoteFormInput | void> =
+type RemoteFormFieldsRoot<
+	Input extends RemoteFormInput | void,
+	Original extends [RemoteFormInput | void] = [Input]
+> =
 	IsAny<Input> extends true
 		? RecursiveFormFields
 		: Input extends void
@@ -181,7 +188,11 @@ type RemoteFormFieldsRoot<Input extends RemoteFormInput | void> =
 					/** Validation issues belonging to this or any of the fields that belong to it, if any */
 					allIssues(): RemoteFormIssue[] | undefined;
 				}
-			: RemoteFormFields<Input>;
+			: WillRecurseIndefinitely<Input> extends true
+				? RecursiveFormFields
+				: RemoteFormFieldContainer<Original[0]> & {
+						[K in KeysOfUnion<Original[0]>]-?: RemoteFormFields<ValueOfUnionKey<Original[0], K>>;
+					};
 
 /**
  * Recursive type to build form fields structure with proxy access
@@ -273,7 +284,17 @@ export type RemoteFormEnhanceCallback<
 /**
  * The type of a remote `form` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
  */
-export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
+export type RemoteForm<Input extends RemoteFormInput | void, Output> = RemoteForm_<
+	Input,
+	Output,
+	[Input]
+>;
+
+type RemoteForm_<
+	Input extends RemoteFormInput | void,
+	Output,
+	Original extends [RemoteFormInput | void]
+> = {
 	/** Attachment that sets up an event handler that intercepts the form submission on the client to prevent a full page reload */
 	[attachment: symbol]: (node: HTMLFormElement) => void;
 	method: 'POST';
@@ -327,7 +348,7 @@ export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
 	/** True if the form has been submitted at least once, and hasn't been reset since */
 	get submitted(): boolean;
 	/** Access form fields using object notation */
-	fields: RemoteFormFieldsRoot<Input>;
+	fields: RemoteFormFieldsRoot<Input, Original>;
 };
 
 /**
@@ -459,6 +480,8 @@ export type RemoteLiveQueryFunction<Input, Output, _Validated = Input> = (
 export type RequestedEntry<Validated, Output> = {
 	arg: Validated;
 	query: RemoteQuery<Output>;
+	/** Explicitly ignore this requested update. */
+	ignore: () => void;
 };
 
 /**
@@ -470,6 +493,8 @@ export type RequestedEntry<Validated, Output> = {
 export type RemoteLiveQueryRequestedEntry<Validated, Output> = {
 	arg: Validated;
 	query: RemoteLiveQuery<Output>;
+	/** Explicitly ignore this requested update. */
+	ignore: () => void;
 };
 
 export type RemoteQueryRequestedResult<Validated, Output> = Iterable<
@@ -488,6 +513,8 @@ export type RemoteQueryRequestedResult<Validated, Output> = Iterable<
 		 * ```
 		 */
 		refreshAll: () => Promise<void>;
+		/** Explicitly ignore all updates selected by this `requested` invocation. */
+		ignoreAll: () => Promise<void>;
 	};
 
 export type RemoteLiveQueryRequestedResult<Validated, Output> = Iterable<
@@ -506,6 +533,8 @@ export type RemoteLiveQueryRequestedResult<Validated, Output> = Iterable<
 		 * ```
 		 */
 		reconnectAll: () => Promise<void>;
+		/** Explicitly ignore all updates selected by this `requested` invocation. */
+		ignoreAll: () => Promise<void>;
 	};
 
 export type RequestedResult<Validated, Output> =

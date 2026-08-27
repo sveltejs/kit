@@ -4,6 +4,8 @@ title: Bun servers
 
 [`adapter-bun`](https://github.com/sveltejs/kit/tree/main/packages/adapter-bun) builds a SvelteKit application into a standalone [Bun](https://bun.com/) server. The generated server uses `Bun.serve` for requests and `Bun.file` responses for client assets, prerendered output, and files read with [`read`](https://svelte.dev/docs/kit/$app-server#read) from `$app/server`.
 
+> [!NOTE] Bun 1.4 or newer is required.
+
 ## Usage
 
 Install the adapter:

@@ -1,25 +1,21 @@
 import process from 'node:process';
-import { afterEach, expect, test, vi } from 'vitest';
+import { afterEach, expect, mock, spyOn, test } from 'bun:test';
+import { mock_manifest, mock_routes } from './mocks.js';
 
 const environment = new Set<string>();
+let instance = 0;
 
 afterEach(() => {
 	for (const name of environment) delete process.env[name];
 	environment.clear();
-	vi.resetModules();
-	vi.doUnmock('SERVER');
-	vi.doUnmock('MANIFEST');
-	vi.doUnmock('ROUTES');
-	vi.unstubAllGlobals();
-	vi.restoreAllMocks();
+	mock.restore();
 });
 
 test('initializes SvelteKit with Bun environment variables and server-readable assets', async () => {
 	const loaded = await load_handler();
 
-	expect(loaded.construct).toHaveBeenCalledWith(loaded.manifest);
 	expect(loaded.init).toHaveBeenCalledWith({
-		env: loaded.bun_env,
+		env: Bun.env,
 		read: expect.any(Function)
 	});
 	const { read } = loaded.init.mock.calls[0][0];
@@ -75,7 +71,7 @@ test.each([
 ])('returns 400 for an invalid origin from %s', async (name, value, headers, message) => {
 	set_env(name, value);
 	const loaded = await load_handler({ envPrefix: 'APP_' });
-	const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+	const error = spyOn(console, 'error').mockImplementation(() => {});
 
 	const response = await loaded.handler(
 		new Request('http://internal/path', { headers }),
@@ -90,7 +86,7 @@ test.each([
 
 test('rejects a present but empty Host header', async () => {
 	const loaded = await load_handler();
-	const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+	const error = spyOn(console, 'error').mockImplementation(() => {});
 	const request = new Request('http://internal/path');
 	request.headers.set('host', '');
 
@@ -199,43 +195,33 @@ async function load_handler({
 	envPrefix = '',
 	response = new Response('ok')
 }: { origin?: string; envPrefix?: string; response?: Response } = {}) {
-	vi.resetModules();
-	const manifest = { appDir: '_app' };
-	const bun_env = { PUBLIC_VALUE: 'available' };
 	const stream = new ReadableStream();
-	const asset = { stream: vi.fn(() => stream) };
-	const construct = vi.fn();
-	const init = vi.fn(async (_options: any) => {});
-	const respond = vi.fn(async (_request: Request, _options: any) => response);
+	const asset = { stream: mock(() => stream) };
+	const init = mock(async (_options: any) => {});
+	const respond = mock(async (_request: Request, _options: any) => response);
 
 	class Server {
-		constructor(value: unknown) {
-			construct(value);
-		}
 		init = init;
 		respond = respond;
 	}
 
-	vi.doMock('SERVER', () => ({ Server }));
-	vi.doMock('MANIFEST', () => ({ manifest, origin, env_prefix: envPrefix }));
-	vi.doMock('ROUTES', () => ({ server_assets: new Map([['asset.txt', asset]]) }));
-	vi.stubGlobal('Bun', { env: bun_env });
+	mock.module('SERVER', () => ({ server: new Server() }));
+	mock_manifest({ app_dir: '_app', origin, env_prefix: envPrefix });
+	mock_routes({ server_assets: new Map([['asset.txt', asset]]) });
 
-	const request_ip = vi.fn((_request: Request): any => ({
+	const request_ip = mock((_request: Request): any => ({
 		address: '127.0.0.1',
 		port: 5000,
 		family: 'IPv4'
 	}));
-	const timeout = vi.fn((_request: Request, _seconds: number) => {});
+	const timeout = mock((_request: Request, _seconds: number) => {});
 	const bun_server = { requestIP: request_ip, timeout } as any;
-	const { handler } = await import('../src/handler.js');
+	const specifier = `../src/handler.js?instance=${++instance}`;
+	const { handler } = (await import(specifier)) as typeof import('../src/handler.js');
 
 	return {
 		handler,
-		manifest,
-		bun_env,
 		stream,
-		construct,
 		init,
 		respond,
 		request_ip,

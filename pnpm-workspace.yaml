@@ -63,7 +63,6 @@ catalog:
   '@types/node': ^22.19.19
   '@types/semver': ^7.8.0
   eslint: ^10.8.1
-  polka: ^1.0.0-next.28
   prettier: ^3.9.6
   prettier-plugin-svelte: ^4.1.1
   rolldown: ^1.2.3

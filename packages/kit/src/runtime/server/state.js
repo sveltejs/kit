@@ -9,6 +9,7 @@ function transient_fields() {
 			implicit: null,
 			forms: null,
 			requested: null,
+			ignored: null,
 			batches: null,
 			live_iterators: null
 		},

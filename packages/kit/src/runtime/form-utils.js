@@ -753,8 +753,9 @@ export function create_field_proxy(context, target = {}, path = []) {
 				/**
 				 * @param {string} type
 				 * @param {unknown} [input_value]
+				 * @param {boolean} [checked]
 				 */
-				const as_func = (type, input_value) => {
+				const as_func = (type, input_value, checked) => {
 					const is_array =
 						type === 'file multiple' ||
 						type === 'select multiple' ||
@@ -818,38 +819,29 @@ export function create_field_proxy(context, target = {}, path = []) {
 							}
 						}
 
-						if (type === 'checkbox' && !is_array) {
-							return Object.defineProperties(base_props, {
-								defaultChecked: {
-									enumerable: true,
-									get() {
-										return input_value;
-									}
-								},
-								checked: {
-									enumerable: true,
-									get() {
-										return get_value() ?? input_value;
-									}
-								}
-							});
+						/** @type {PropertyDescriptorMap} */
+						const props = {};
+
+						if (type === 'radio' || is_array) {
+							props.value = { value: input_value ?? 'on', enumerable: true };
+						} else {
+							// a single checkbox takes its checked state as the second argument
+							checked = /** @type {boolean | undefined} */ (input_value);
 						}
 
-						return Object.defineProperties(base_props, {
-							value: { value: input_value ?? 'on', enumerable: true },
-							checked: {
-								enumerable: true,
-								get() {
-									const value = get_value();
-
-									if (type === 'radio') {
-										return value === input_value;
-									}
-
-									return (value ?? []).includes(input_value);
-								}
+						props.defaultChecked = { value: checked, enumerable: true };
+						props.checked = {
+							enumerable: true,
+							get() {
+								const value = get_value();
+								if (value == null) return checked;
+								if (type === 'radio') return value === input_value;
+								if (is_array) return /** @type {unknown[]} */ (value).includes(input_value);
+								return value;
 							}
-						});
+						};
+
+						return Object.defineProperties(base_props, props);
 					}
 
 					// Handle file inputs

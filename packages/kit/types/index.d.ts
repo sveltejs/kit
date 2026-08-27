@@ -125,6 +125,17 @@ declare module '@sveltejs/kit' {
 		prerendered: Prerendered;
 		/** An array of all routes (including prerendered) */
 		routes: RouteDefinition[];
+		/**
+		 * The value of the `$app/manifest` module.
+		 * The only difference is `manifest.assets` also includes the service worker, if it exists.
+		 * @since 3.0.0
+		 */
+		manifest: typeof import('$app/manifest');
+		/**
+		 * A record of file extensions to MIME types
+		 * @since 3.0.0
+		 */
+		mimeTypes: Record<string, string>;
 
 		/**
 		 * Create separate functions that map to one or more routes of your app.
@@ -151,8 +162,9 @@ declare module '@sveltejs/kit' {
 		/**
 		 * Generate a server-side manifest to initialise the SvelteKit [server](https://svelte.dev/docs/kit/@sveltejs-kit#Server) with.
 		 * @param opts.relativePath A relative path to the base directory of the server build output
+		 * @deprecated removed in 3.0. Use `builder.generateServerInstance` or `builder.manifest` instead
 		 */
-		generateManifest: (opts: { relativePath: string; routes?: RouteDefinition[] }) => string;
+		generateManifest?: (opts: { relativePath: string; routes?: RouteDefinition[] }) => string;
 
 		/**
 		 * Resolve a path to the `name` directory inside `outDir`, e.g. `/path/to/.svelte-kit/my-adapter`.
@@ -166,6 +178,19 @@ declare module '@sveltejs/kit' {
 		/** Get the application path including any configured `base` path, e.g. `my-base-path/_app`. */
 		getAppPath: () => string;
 
+		/**
+		 * Generates a module exposing a SvelteKit [Server](https://svelte.dev/docs/kit/@sveltejs-kit#Server) instance.
+		 * @param opts.routes A subset of the routes to include in the server's manifest
+		 * @param opts.serverDirectory The directory containing the server code. Defaults to `getServerDirectory()`.
+		 * @since 3.0.0
+		 */
+		generateServerInstance: (
+			dest: string,
+			opts?: {
+				routes?: RouteDefinition[];
+				serverDirectory?: string;
+			}
+		) => void;
 		/**
 		 * Write client assets to `dest`.
 		 * @param dest the destination folder
@@ -654,19 +679,6 @@ declare module '@sveltejs/kit' {
 	}
 
 	/**
-	 * Information required to instantiate a new `Server` instance.
-	 */
-	export interface SSRManifest {
-		/** The directory where SvelteKit keeps its stuff, including static assets (such as JS and CSS) and internally-used routes. */
-		appDir: string;
-		/** The `base` and `appDir` settings combined without a leading slash. */
-		appPath: string;
-		/** Static files from `config.files.assets` and the service worker (if any). */
-		assets: Set<string>;
-		mimeTypes: Record<string, string>;
-	}
-
-	/**
 	 * The generic form of `PageServerLoad` and `LayoutServerLoad`. You should import those from `./$types` (see [generated types](https://svelte.dev/docs/kit/types#Generated-types))
 	 * rather than using `ServerLoad` directly.
 	 */
@@ -904,6 +916,19 @@ declare module '@sveltejs/kit' {
 			? RecursiveRequired<T[K]> // recursively continue through.
 			: T[K]; // Use the exact type for everything else
 	};
+
+	/**
+	 * Information required to instantiate a new `Server` instance.
+	 */
+	interface SSRManifest {
+		/** The directory where SvelteKit keeps its stuff, including static assets (such as JS and CSS) and internally-used routes. */
+		appDir: string;
+		/** The `base` and `appDir` settings combined without a leading slash. */
+		appPath: string;
+		/** Static files from `config.files.assets` and the service worker (if any). */
+		assets: Set<string>;
+		mimeTypes: Record<string, string>;
+	}
 
 	type ValidatedConfig = RecursiveRequired<Omit<Config, 'preprocess'>> & {
 		preprocess: Config['preprocess'];
@@ -2956,7 +2981,7 @@ declare module '$app/server' {
 	}[keyof InputTypeMap];
 
 	// Input element properties based on type
-	type InputElementProps<T extends keyof InputTypeMap> = T extends 'checkbox' | 'radio'
+	type InputElementProps<T extends keyof InputTypeMap, Value> = T extends 'checkbox' | 'radio'
 		? {
 				name: string;
 				type: T;
@@ -2993,9 +3018,9 @@ declare module '$app/server' {
 						? {
 								name: string;
 								'aria-invalid': boolean | 'false' | 'true' | undefined;
-								get value(): string | number;
-								set value(v: string | number);
-								readonly defaultValue?: string | number;
+								get value(): Value extends string ? string : string | number;
+								set value(v: Value extends string ? string : string | number);
+								readonly defaultValue?: Value extends string ? string : string | number;
 							}
 						: {
 								name: string;
@@ -3032,19 +3057,21 @@ declare module '$app/server' {
 
 	type AsArgs<Type extends keyof InputTypeMap, Value> = Type extends 'checkbox'
 		? Value extends string[]
-			? [type: Type, value: Value[number] | (string & {})]
+			? [type: Type, value: Value[number] | (string & {}), checked?: boolean]
 			: Value extends boolean
-				? [type: Type] | [type: Type, value: boolean]
-				: [type: Type] | [type: Type, value: Value | (string & {})]
+				? [type: Type] | [type: Type, value: boolean | undefined]
+				: [type: Type] | [type: Type, value: Value]
 		: Type extends 'submit' | 'hidden'
 			? Value extends string
 				? [type: Type, value: Value | (string & {})]
 				: [type: Type, value: Value]
 			: Type extends 'radio'
-				? [type: Type, value: Value | (string & {})]
+				? [type: Type, value: Value | (string & {}), checked?: boolean]
 				: Type extends 'file' | 'file multiple'
 					? [type: Type]
 					: [type: Type] | [type: Type, value: Value | undefined];
+
+	type WidenLiteralString<T> = T extends string ? (string extends T ? T : string) : T;
 
 	/**
 	 * Form field accessor type that provides name(), value(), and issues() methods
@@ -3060,7 +3087,9 @@ declare module '$app/server' {
 		 * <input {...myForm.fields.myBoolean.as('checkbox')} />
 		 * ```
 		 */
-		as<T extends RemoteFormFieldType<Value>>(...args: AsArgs<T, Value>): InputElementProps<T>;
+		as<T extends RemoteFormFieldType<Value>>(
+			...args: AsArgs<T, Value>
+		): InputElementProps<T, WidenLiteralString<Value>>;
 	};
 
 	type RemoteFormFieldContainer<Value> = RemoteFormFieldMethods<Value> & {
@@ -3081,12 +3110,15 @@ declare module '$app/server' {
 		 * <input {...myForm.fields.myBoolean.as('checkbox')} />
 		 * ```
 		 */
-		as<T extends RemoteFormFieldType<Value>>(...args: AsArgs<T, Value>): InputElementProps<T>;
+		as<T extends RemoteFormFieldType<Value>>(...args: AsArgs<T, Value>): InputElementProps<T, Value>;
 	} & {
 		[key: string | number]: UnknownField<any>;
 	};
 
-	type RemoteFormFieldsRoot<Input extends RemoteFormInput | void> =
+	type RemoteFormFieldsRoot<
+		Input extends RemoteFormInput | void,
+		Original extends [RemoteFormInput | void] = [Input]
+	> =
 		IsAny<Input> extends true
 			? RecursiveFormFields
 			: Input extends void
@@ -3096,7 +3128,11 @@ declare module '$app/server' {
 						/** Validation issues belonging to this or any of the fields that belong to it, if any */
 						allIssues(): RemoteFormIssue[] | undefined;
 					}
-				: RemoteFormFields<Input>;
+				: WillRecurseIndefinitely<Input> extends true
+					? RecursiveFormFields
+					: RemoteFormFieldContainer<Original[0]> & {
+							[K in KeysOfUnion<Original[0]>]-?: RemoteFormFields<ValueOfUnionKey<Original[0], K>>;
+						};
 
 	/**
 	 * Recursive type to build form fields structure with proxy access
@@ -3188,7 +3224,17 @@ declare module '$app/server' {
 	/**
 	 * The type of a remote `form` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
 	 */
-	export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
+	export type RemoteForm<Input extends RemoteFormInput | void, Output> = RemoteForm_<
+		Input,
+		Output,
+		[Input]
+	>;
+
+	type RemoteForm_<
+		Input extends RemoteFormInput | void,
+		Output,
+		Original extends [RemoteFormInput | void]
+	> = {
 		/** Attachment that sets up an event handler that intercepts the form submission on the client to prevent a full page reload */
 		[attachment: symbol]: (node: HTMLFormElement) => void;
 		method: 'POST';
@@ -3242,7 +3288,7 @@ declare module '$app/server' {
 		/** True if the form has been submitted at least once, and hasn't been reset since */
 		get submitted(): boolean;
 		/** Access form fields using object notation */
-		fields: RemoteFormFieldsRoot<Input>;
+		fields: RemoteFormFieldsRoot<Input, Original>;
 	};
 
 	/**
@@ -3374,6 +3420,8 @@ declare module '$app/server' {
 	export type RequestedEntry<Validated, Output> = {
 		arg: Validated;
 		query: RemoteQuery<Output>;
+		/** Explicitly ignore this requested update. */
+		ignore: () => void;
 	};
 
 	/**
@@ -3385,6 +3433,8 @@ declare module '$app/server' {
 	export type RemoteLiveQueryRequestedEntry<Validated, Output> = {
 		arg: Validated;
 		query: RemoteLiveQuery<Output>;
+		/** Explicitly ignore this requested update. */
+		ignore: () => void;
 	};
 
 	export type RemoteQueryRequestedResult<Validated, Output> = Iterable<
@@ -3403,6 +3453,8 @@ declare module '$app/server' {
 			 * ```
 			 */
 			refreshAll: () => Promise<void>;
+			/** Explicitly ignore all updates selected by this `requested` invocation. */
+			ignoreAll: () => Promise<void>;
 		};
 
 	export type RemoteLiveQueryRequestedResult<Validated, Output> = Iterable<
@@ -3421,6 +3473,8 @@ declare module '$app/server' {
 			 * ```
 			 */
 			reconnectAll: () => Promise<void>;
+			/** Explicitly ignore all updates selected by this `requested` invocation. */
+			ignoreAll: () => Promise<void>;
 		};
 
 	export type RequestedResult<Validated, Output> =

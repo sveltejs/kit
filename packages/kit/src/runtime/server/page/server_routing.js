@@ -1,4 +1,4 @@
-/** @import { SSRManifest } from '@sveltejs/kit' */
+/** @import { SSRManifest } from 'types' */
 import { base, assets } from '#app/paths';
 import { relative } from '$app/paths/internal/server';
 import { text } from '@sveltejs/kit';

@@ -6,6 +6,14 @@ import { routes } from 'ROUTES';
 import { handler } from './handler.js';
 import { boolean_env, bytes_env, env, number_env } from './env.js';
 
+// nothing enforces `engines.bun` at install time, and the build may have run on a newer Bun.
+// order() rather than satisfies(): a range would reject canary builds such as 1.5.0-canary.1
+if (Bun.semver.order(Bun.version, '1.4.0') < 0) {
+	throw new Error(
+		`@sveltejs/adapter-bun requires Bun 1.4 or newer, but this is Bun ${Bun.version}`
+	);
+}
+
 const options = /** @type {Serve.Options<undefined>} */ ({ ...server_options });
 
 const unix = env('SOCKET_PATH', options.unix);
@@ -65,8 +73,9 @@ async function graceful_shutdown(reason) {
 		);
 	}
 
-	// stop() waits forever on idle connections such as open event streams, and once it
-	// is pending its promise never settles even after a force-close, so race it instead
+	// stop() waits for in-flight requests, and an open event stream is one forever,
+	// so race the drain against the deadline. The timer must stay referenced: a
+	// draining server no longer holds the event loop open on its own
 	/** @type {ReturnType<typeof setTimeout> | undefined} */
 	let deadline;
 	const drained = await Promise.race([
@@ -77,20 +86,9 @@ async function graceful_shutdown(reason) {
 	]);
 	clearTimeout(deadline);
 
-	if (!drained) {
-		// give the force-close a moment to abort in-flight handlers, so shutdown
-		// listeners do not tear down resources those handlers still hold; the stop
-		// promise may never settle, so the timer bounds the wait
-		/** @type {ReturnType<typeof setTimeout> | undefined} */
-		let grace;
-		await Promise.race([
-			server.stop(true),
-			new Promise((resolve) => {
-				grace = setTimeout(resolve, 1000);
-			})
-		]);
-		clearTimeout(grace);
-	}
+	// force-close aborts the in-flight handlers, so shutdown listeners do not tear
+	// down resources those handlers still hold
+	if (!drained) await server.stop(true);
 
 	// @ts-expect-error custom events cannot be typed
 	process.emit('sveltekit:shutdown', reason);

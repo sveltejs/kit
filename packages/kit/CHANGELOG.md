@@ -1,5 +1,21 @@
 # @sveltejs/kit
 
+## 3.0.0-next.26
+
+### Patch Changes
+
+- fix: only require the `svelte-trusted-html` trusted-types policy when client-side code is shipped, allowing builds where all pages have `csr: false` ([#16928](https://github.com/sveltejs/kit/pull/16928))
+
+- chore: stop externalizing `cookie` dependency during build ([#16936](https://github.com/sveltejs/kit/pull/16936))
+
+- fix: preserve metadata on streamed page responses ([#16935](https://github.com/sveltejs/kit/pull/16935))
+
+- fix: error on server-only imports reachable from hooks or service worker files outside the project root ([#16912](https://github.com/sveltejs/kit/pull/16912))
+
+- fix: copy worker files emitted by the server build to the client output directory ([#16929](https://github.com/sveltejs/kit/pull/16929))
+
+- fix: Reject all pending query promises when a query fails before resolving with a value for the first time ([#16890](https://github.com/sveltejs/kit/pull/16890))
+
 ## 3.0.0-next.25
 
 ### Minor Changes

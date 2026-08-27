@@ -136,9 +136,13 @@ export default function (opts = {}) {
 			const manifest_file = path.resolve(server, 'manifest.js');
 			const server_options_file = path.resolve(src_dir, 'options.js');
 
+			const tmp = builder.getBuildDirectory('bun-tmp');
+			fs.mkdirSync(tmp, { recursive: true });
+			builder.generateServerInstance(`${tmp}/server.js`);
+
 			const virtual_files = {
 				[manifest_file]:
-					`export const manifest = ${builder.generateManifest({ relativePath: './' })};\n` +
+					`export const app_dir = ${JSON.stringify(builder.config.appDir)};\n` +
 					`export const base = ${JSON.stringify(builder.config.paths.base || '/')};\n` +
 					`export const embed = ${JSON.stringify(!!buildOptions.compile)};\n` +
 					`export const env_prefix = ${JSON.stringify(envPrefix)};\n` +
@@ -170,36 +174,46 @@ export default function (opts = {}) {
 				if (!buildOptions.compile) entrypoints.push(start_file);
 			}
 
+			// Side-effect-only chunks (e.g. Svelte's events.js, kit's env re-export) compile to
+			// identical stubs whose content hashes collide on one output path, failing the build
+			// with "Multiple files share the same output path" (oven-sh/bun#37576). Resolving a
+			// distinct identity per importer keeps every emitted copy unique; delete this once
+			// the Bun fix ships.
 			const chunks_dir = path.resolve(server, 'chunks');
-			/** @type {Map<string, string | false>} */
+			/** @type {Map<string, string>} */
 			const side_effect_sources = new Map();
+			for (const { abs } of read_files_recursive(chunks_dir)) {
+				const source = fs.readFileSync(abs, 'utf8');
+				if (/^import\s+["'][^"']+["'];\s*export\s*\{\s*\};?\s*$/.test(source)) {
+					side_effect_sources.set(abs, source);
+				}
+			}
+
+			// only the stubs above, because a hook that matches without resolving sends Bun back
+			// to the filesystem, where the virtual entrypoints do not exist
+			const side_effect_filter = new RegExp(
+				`/(?:${[...side_effect_sources.keys()]
+					.map((file) => path.basename(file).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+					.join('|')})$`
+			);
 
 			/** @type {BunPlugin} */
 			const adapter_plugin = {
 				name: 'adapter-bun',
 				setup(build) {
 					build.onResolve({ filter: /^(SERVER|MANIFEST|ROUTES|SERVER_OPTIONS)$/ }, ({ path }) => {
-						if (path === 'SERVER') return { path: `${server}/index.js` };
+						if (path === 'SERVER') return { path: `${tmp}/server.js` };
 						if (path === 'MANIFEST') return { path: manifest_file };
 						if (path === 'ROUTES') return { path: routes_file };
 						if (path === 'SERVER_OPTIONS') return { path: server_options_file };
 					});
 
-					// Side-effect-only chunks (e.g. Svelte's events.js, kit's env re-export) compile to
-					// identical stubs whose content hashes collide on one output path, failing the build
-					// with "Multiple files share the same output path" (oven-sh/bun#37576). Resolving a
-					// distinct identity per importer keeps every emitted copy unique; delete this once
-					// the Bun fix ships.
-					build.onResolve({ filter: /\.js$/ }, (args) => {
+					if (side_effect_sources.size === 0) return;
+
+					build.onResolve({ filter: side_effect_filter }, (args) => {
 						const file = path.resolve(args.resolveDir, args.path);
-						if (path.dirname(file) !== chunks_dir) return;
-						let source = side_effect_sources.get(file);
-						if (source === undefined) {
-							const text = fs.readFileSync(file, 'utf8');
-							source = /^import\s+["'][^"']+["'];\s*export\s*\{\s*\};?\s*$/.test(text) && text;
-							side_effect_sources.set(file, source);
-						}
-						if (source === false) return;
+						if (!side_effect_sources.has(file))
+							return virtual_files[file] ? { path: file } : undefined;
 						// The `?` suffix keeps dirname(path) inside chunks/ — Bun resolves the synthetic
 						// module's relative imports against that, ignoring onLoad's resolveDir.
 						return {

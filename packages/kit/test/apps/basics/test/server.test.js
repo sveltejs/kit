@@ -782,6 +782,19 @@ test.describe('Errors', () => {
 		);
 		expect(crafted_response.status()).toBe(404);
 	});
+
+	test('preserves metadata for a streamed missing route error page', async ({ request }) => {
+		const response = await request.get('/non-existent-streamed-route', {
+			headers: { cookie: 'defer=true' }
+		});
+
+		expect(response.status()).toBe(404);
+		expect(response.headers()['etag']).toBeUndefined();
+
+		const body = await response.text();
+		expect(body).toMatch(/<h1[^>]*>404<\/h1>/);
+		expect(body).toContain('This is your custom error page');
+	});
 });
 
 test.describe('Load', () => {
@@ -1160,6 +1173,15 @@ test.describe('$app/env', () => {
 			'utf-8'
 		);
 		expect(code).not.toMatch('client');
+	});
+});
+
+test.describe('web workers', () => {
+	test('worker files emitted by the server build are copied to the client output', () => {
+		test.skip(!!process.env.DEV, 'checks the build output');
+
+		const workers = path.join(root, '.svelte-kit/output/client/_app/immutable/workers');
+		expect(fs.readdirSync(workers).some((file) => file.startsWith('worker-'))).toBe(true);
 	});
 });
 
