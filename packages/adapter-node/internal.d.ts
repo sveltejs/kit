@@ -8,10 +8,10 @@ interface AssetEntry {
 	size: number;
 	/** content hash */
 	etag: string;
-	/** size and content hash of the gzip variant, if one was written */
-	gz?: [number, string];
-	/** size and content hash of the brotli variant, if one was written */
-	br?: [number, string];
+	/** size of the gzip variant, if one was written */
+	gz?: number;
+	/** size of the brotli variant, if one was written */
+	br?: number;
 }
 
 interface AssetTable {

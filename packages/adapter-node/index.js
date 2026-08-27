@@ -185,20 +185,15 @@ export default function (opts = {}) {
 }
 
 /**
- * Size and content hash, from a single pass over the file
+ * Content hash of a file
  * @param {string} file
- * @returns {Promise<[number, string]>}
  */
-async function measure(file) {
-	const hash = createHash('sha256');
-	let size = 0;
+async function hash(file) {
+	const sha = createHash('sha256');
 
-	for await (const chunk of fs.createReadStream(file)) {
-		hash.update(chunk);
-		size += chunk.length;
-	}
+	for await (const chunk of fs.createReadStream(file)) sha.update(chunk);
 
-	return [size, hash.digest('base64url')];
+	return sha.digest('base64url');
 }
 
 /**
@@ -210,8 +205,8 @@ function is_hidden(file) {
 }
 
 /**
- * Sizes and content hashes for every servable file, plus its compressed
- * variants where `builder.compress` wrote them
+ * Size and content hash of every servable file, plus the sizes of the
+ * compressed variants where `builder.compress` wrote them
  * @param {string} root
  * @param {string[]} files
  * @param {string[]} compressed
@@ -224,15 +219,15 @@ function measure_files(root, files, compressed) {
 		files
 			.filter((file) => !is_hidden(file))
 			.map(async (file) => {
-				const [size, etag] = await measure(join(root, file));
+				const abs = join(root, file);
 
 				/** @type {AssetEntry} */
-				const entry = { file, size, etag };
+				const entry = { file, size: fs.statSync(abs).size, etag: await hash(abs) };
 
 				// `builder.compress` writes a `.gz` and a `.br` variant of every file it returns
 				if (variants.has(file)) {
-					entry.gz = await measure(join(root, `${file}.gz`));
-					entry.br = await measure(join(root, `${file}.br`));
+					entry.gz = fs.statSync(`${abs}.gz`).size;
+					entry.br = fs.statSync(`${abs}.br`).size;
 				}
 
 				return entry;

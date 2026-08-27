@@ -188,3 +188,76 @@ test('serves the gzip variant when brotli is not accepted', async ({ request }) 
 	expect(response.headers()['content-encoding']).toBe('gzip');
 	expect(response.headers()['vary']).toBe('Accept-Encoding');
 });
+
+test('serves the variant the client prefers', async ({ request }) => {
+	const response = await request.get('/range.txt', {
+		headers: { 'accept-encoding': 'gzip;q=1, br;q=0.5' }
+	});
+	expect(response.headers()['content-encoding']).toBe('gzip');
+});
+
+test('does not serve an encoding the client rejects', async ({ request }) => {
+	const response = await request.get('/range.txt', {
+		headers: { 'accept-encoding': 'br;q=0, gzip;q=0' }
+	});
+	expect(response.headers()['content-encoding']).toBeUndefined();
+	expect(await response.text()).toBe('0123456789');
+});
+
+test('treats content codings as case-insensitive', async ({ request }) => {
+	const response = await request.get('/range.txt', { headers: { 'accept-encoding': 'BR' } });
+	expect(response.headers()['content-encoding']).toBe('br');
+});
+
+test('gives each variant its own ETag', async ({ request }) => {
+	const identity = await request.get('/range.txt', { headers: { 'accept-encoding': 'identity' } });
+	const br = await request.get('/range.txt', { headers: { 'accept-encoding': 'br' } });
+	expect(br.headers()['etag']).not.toBe(identity.headers()['etag']);
+});
+
+test('only serves static files to GET and HEAD', async ({ request }) => {
+	const response = await request.post('/range.txt');
+	expect(response.status()).not.toBe(200);
+	expect(response.headers()['etag']).toBeUndefined();
+});
+
+test('sends the validator headers with a 304', async ({ request }) => {
+	const response = await request.get('/range.txt');
+	const etag = response.headers()['etag'];
+
+	const cached = await request.get('/range.txt', { headers: { 'if-none-match': etag } });
+	expect(cached.status()).toBe(304);
+	expect(cached.headers()['etag']).toBe(etag);
+	expect(cached.headers()['vary']).toBe('Accept-Encoding');
+});
+
+test('matches if-none-match lists, weak tags and wildcards', async ({ request }) => {
+	const etag = (await request.get('/range.txt')).headers()['etag'];
+
+	for (const header of [`"stale", ${etag}`, `W/${etag}`, '*']) {
+		const cached = await request.get('/range.txt', { headers: { 'if-none-match': header } });
+		expect(cached.status(), header).toBe(304);
+	}
+});
+
+test('serves the whole file when if-range does not match', async ({ request }) => {
+	const etag = (
+		await request.get('/range.txt', { headers: { 'accept-encoding': 'identity' } })
+	).headers()['etag'];
+
+	const fresh = await request.get('/range.txt', {
+		headers: { 'accept-encoding': 'identity', range: 'bytes=0-1', 'if-range': etag }
+	});
+	expect(fresh.status()).toBe(206);
+
+	const stale = await request.get('/range.txt', {
+		headers: { 'accept-encoding': 'identity', range: 'bytes=0-1', 'if-range': '"stale"' }
+	});
+	expect(stale.status()).toBe(200);
+	expect(await stale.text()).toBe('0123456789');
+});
+
+test('does not decode reserved characters in the pathname', async ({ request }) => {
+	const response = await request.get('/sub%2Findex.html');
+	expect(response.status()).toBe(404);
+});
