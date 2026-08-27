@@ -1023,6 +1023,24 @@ test.describe('Prefetching', () => {
 		);
 	});
 
+	test('does not replay a preloaded redirect when a later hop returns to the route', async ({
+		page,
+		app
+	}) => {
+		await page.goto('/routing/a');
+
+		// the cookie is unset, so the preload resolves to a redirect to /resolve
+		const target = '/routing/preloading/redirect/target';
+		expect(await app.preloadData(target)).toMatchObject({
+			type: 'redirect',
+			location: '/routing/preloading/redirect/resolve'
+		});
+
+		// /resolve sets the cookie and redirects back to /target, which must now load afresh
+		await app.goto(target);
+		await expect(page.locator('h1')).toHaveText('Redirect resolved');
+	});
+
 	test('chooses correct route when hash route is preloaded but regular route is clicked', async ({
 		app,
 		page
