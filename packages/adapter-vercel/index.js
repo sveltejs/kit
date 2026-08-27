@@ -526,7 +526,7 @@ async function create_function_bundle(builder, entry, dir, config) {
 	let base = entry;
 	while (base !== (base = path.dirname(base)));
 
-	const traced = await nodeFileTrace([entry], { base });
+	const traced = await nodeFileTrace([entry], { base, processCwd: process.cwd() });
 
 	/** @type {Map<string, string[]>} */
 	const resolution_failures = new Map();

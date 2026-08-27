@@ -44,3 +44,8 @@ test('__data.json function exists for ISR page route', () => {
 test('__data.json function exists in Vercel routing configuration', () => {
 	assert.ok(isr_page_route_sources.some((src) => src.includes('__data.json')));
 });
+
+test('process.cwd() is traced from the project directory', () => {
+	const function_dir = fs.realpathSync(`${output}/functions/process-cwd.func`);
+	assert.ok(fs.existsSync(`${function_dir}/adapter-vercel/test/apps/basic/asset.txt`));
+});
