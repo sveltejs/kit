@@ -446,7 +446,7 @@ export function form(id) {
 					set_nested_value(input, previous_submitter, undefined);
 				}
 
-				if (event.submitter) {
+				if (event.submitter && /** @type {HTMLInputElement} */ (event.submitter).type !== 'image') {
 					const name = event.submitter.getAttribute('name');
 
 					/** @type {null | ReturnType<typeof parse_form_key>} */
@@ -615,7 +615,7 @@ export function form(id) {
 					}
 
 					const default_submitter = /** @type {HTMLElement | undefined} */ (
-						element.querySelector('button:not([type]), [type="submit"]')
+						element.querySelector('button:not([type]), [type="submit"], [type="image"]')
 					);
 
 					const form_data = new FormData(element, default_submitter);
@@ -706,7 +706,7 @@ export function form(id) {
 					if (!element) return;
 
 					const default_submitter = /** @type {HTMLElement | undefined} */ (
-						element.querySelector('button:not([type]), [type="submit"]')
+						element.querySelector('button:not([type]), [type="submit"], [type="image"]')
 					);
 
 					const form_data = new FormData(element, default_submitter);

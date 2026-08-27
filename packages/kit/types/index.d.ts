@@ -2960,13 +2960,7 @@ declare module '$app/server' {
 
 	// Valid input types for a given value type
 	export type RemoteFormFieldType<T> = {
-		[K in keyof InputTypeMap]: K extends 'image'
-			? IsImageInputValue<T> extends true
-				? K
-				: never
-			: T extends InputTypeMap[K]
-				? K
-				: never;
+		[K in keyof InputTypeMap]: T extends InputTypeMap[K] ? K : never;
 	}[keyof InputTypeMap];
 
 	// Input element properties based on type
