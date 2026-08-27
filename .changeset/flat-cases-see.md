@@ -2,5 +2,4 @@
 "@sveltejs/kit": major
 ---
 
-breaking: remove `SSRManifest` from public types
-  
+breaking: remove `Server` constructor and `SSRManifest` from public types

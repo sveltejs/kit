@@ -72,7 +72,7 @@ export async function render_response({
 		}
 	}
 
-	const { client } = manifest._;
+	const client = manifest.client;
 
 	const modulepreloads = new Set(client?.imports);
 	const stylesheets = new Set(client?.stylesheets);

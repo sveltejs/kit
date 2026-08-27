@@ -12,7 +12,7 @@ import {
 	RequestOptions,
 	RouteSegment
 } from '../types/private.js';
-import { SSRManifest, ValidatedConfig } from 'types';
+import { ValidatedConfig } from 'types';
 import { Plugin } from 'vite';
 import { RouteId as AppRouteId, LayoutParams as AppLayoutParams } from '$app/types';
 import { StandardSchemaV1 } from '@standard-schema/spec';
@@ -681,8 +681,7 @@ export interface RouteDefinition<Config = any> {
 	config: Config;
 }
 
-export class Server {
-	constructor(manifest: SSRManifest);
+export interface Server {
 	init(options: ServerInitOptions): Promise<void>;
 	respond(request: Request, options: RequestOptions): Promise<Response>;
 }

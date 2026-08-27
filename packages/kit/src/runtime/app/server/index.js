@@ -59,9 +59,9 @@ export function read(asset) {
 			: asset.slice(assets.length + 1)
 	);
 
-	if (file in manifest._.server_assets) {
-		const length = manifest._.server_assets[file];
-		const type = manifest.mimeTypes[file.slice(file.lastIndexOf('.'))];
+	if (file in manifest.server_assets) {
+		const length = manifest.server_assets[file];
+		const type = manifest.mime_types[file.slice(file.lastIndexOf('.'))];
 
 		return new Response(read_implementation(file), {
 			headers: {
