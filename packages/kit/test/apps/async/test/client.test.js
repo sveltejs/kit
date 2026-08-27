@@ -582,6 +582,7 @@ test.describe('remote function mutations', () => {
 	// TODO once we have async SSR adjust the test and move this into test.js
 	test('query.batch works', async ({ page }) => {
 		await page.goto('/remote/batch');
+		await page.click('#batch-reset-btn');
 
 		await expect(page.locator('#batch-result-1')).toHaveText('Buy groceries');
 		await expect(page.locator('#batch-result-2')).toHaveText('Walk the dog');
@@ -833,30 +834,23 @@ test.describe('remote function mutations', () => {
 	}) => {
 		await page.goto('/remote/live');
 		await page.click('#reset');
+		await expect(page.locator('#connected')).toHaveText('true');
 
-		await page.click('#stats');
-		await expect(page.locator('#stats-value')).not.toHaveText('pending');
-		const before = JSON.parse((await page.locator('#stats-value').textContent()) ?? '{}');
+		let live_connections = 0;
+		let finite_connections = 0;
+		page.on('request', (request) => {
+			const pathname = new URL(request.url()).pathname;
+			if (pathname.endsWith('/get_count')) live_connections += 1;
+			if (pathname.endsWith('/get_finite_count')) finite_connections += 1;
+		});
 
-		await page.click('#reconnect-live-form');
+		await Promise.all([
+			page.waitForResponse((response) => response.url().includes('reconnect_live_form')),
+			page.click('#reconnect-live-form')
+		]);
 
-		await expect
-			.poll(async () => {
-				await page.click('#stats');
-				const value = (await page.locator('#stats-value').textContent()) ?? '{}';
-				if (value === 'pending') return before.cleanup_count;
-				return JSON.parse(value).cleanup_count;
-			})
-			.toBeGreaterThan(before.cleanup_count);
-
-		await expect
-			.poll(async () => {
-				await page.click('#stats');
-				const value = (await page.locator('#stats-value').textContent()) ?? '{}';
-				if (value === 'pending') return before.finite_connection_count;
-				return JSON.parse(value).finite_connection_count;
-			})
-			.toBe(before.finite_connection_count);
+		await expect.poll(() => live_connections).toBe(1);
+		expect(finite_connections).toBe(0);
 	});
 
 	test('query.live can be detached from the page', async ({ page }) => {
