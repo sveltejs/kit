@@ -139,6 +139,8 @@ Bundling can disrupt this in two ways.
 
 First, a bundler may place code imported by `instrumentation.server.js` and application code in the same shared chunk. Importing that chunk to initialize instrumentation can then evaluate application code before the interceptor has been installed. By the time the application is dynamically imported, the module is already in the ESM module cache and it is too late to instrument it.
 
+There is also an unavoidable chicken-and-egg limitation: initializing `$app/env/*` modules evaluates your `src/env.js` module and its dependencies. Instrumentation cannot intercept a module imported by `src/env`, because that module must run before `instrumentation.server.js` can start. Avoid importing anything from `src/env` that you need to instrument.
+
 Second, a bundler may inline or transform the module you want to instrument. For example, it could replace this:
 
 ```js

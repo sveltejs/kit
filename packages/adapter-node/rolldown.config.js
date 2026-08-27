@@ -41,7 +41,7 @@ export default {
 	input: {
 		index: 'src/index.js',
 		handler: 'src/handler.js',
-		env: 'src/env.js'
+		'adapter-env': 'src/env.js'
 	},
 	output: {
 		dir: 'files',

@@ -255,6 +255,13 @@ declare module '@sveltejs/kit' {
 		 * `entrypoint` which imports `instrumentation` and then dynamically imports `start`. This allows
 		 * the module hooks necessary for instrumentation libraries to be loaded prior to any application code.
 		 *
+		 * `environment` generates a separate init module which is imported before `instrumentation`.
+		 * `environment.module` is the final filesystem path to the module exporting `set_env`; it defaults
+		 * to `${getServerDirectory()}/env.js`, and should be overridden if the adapter moves or rebundles
+		 * that entry. `environment.generateInit` receives an `importSpecifier` which is already normalized
+		 * for use in an ESM import, and returns the initializer module's source. If omitted, the generated
+		 * module imports `set_env` and calls it with `process.env`.
+		 *
 		 * Caveats:
 		 * - "Live exports" will not work. If your adapter uses live exports, your users will need to manually import the server instrumentation on startup.
 		 * - If `tla` is `false`, OTEL auto-instrumentation may not work properly. Use it if your environment supports it.
@@ -264,20 +271,30 @@ declare module '@sveltejs/kit' {
 		 * @param options.entrypoint the path to the entrypoint to trace.
 		 * @param options.instrumentation the path to the instrumentation file.
 		 * @param options.start the name of the start file. This is what `entrypoint` will be renamed to.
+		 * @param options.environment configuration for populating dynamic env vars before instrumentation runs.
 		 * @param options.module configuration for the resulting entrypoint module.
-		 * @param options.module.generateText a function that receives the relative paths to the instrumentation and start files, and generates the text of the module to be traced. If not provided, the default implementation will be used, which uses top-level await.
+		 * @param options.module.generateText a function that receives the relative paths to the environment initializer, instrumentation and start files, and generates the text of the module to be traced. It must import `environment` before `instrumentation`, and dynamically import `start` after instrumentation has run. If not provided, the default implementation will be used, which uses top-level await.
 		 * @since 2.31.0
 		 */
 		instrument: (args: {
 			entrypoint: string;
 			instrumentation: string;
 			start?: string;
+			environment?: {
+				init?: string;
+				module?: string;
+				generateInit?: (args: { importSpecifier: string }) => string;
+			};
 			module?:
 				| {
 						exports: string[];
 				  }
 				| {
-						generateText: (args: { instrumentation: string; start: string }) => string;
+						generateText: (args: {
+							instrumentation: string;
+							start: string;
+							environment: string;
+						}) => string;
 				  };
 		}) => void;
 

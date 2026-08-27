@@ -1,6 +1,6 @@
 /** @import { TomlTable } from 'smol-toml' */
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, posix } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { builtinModules } from 'node:module';
 import process from 'node:process';
@@ -279,6 +279,9 @@ function generate_serverless_function({ builder, routes, patterns, name, type, e
 			entrypoint: `${netlify_framework_serverless_path}/${name}.mjs`,
 			instrumentation: '.netlify/v1/server/instrumentation.server.js',
 			start: `.netlify/v1/server/${name}.start.mjs`,
+			environment: {
+				module: '.netlify/v1/server/env.js'
+			},
 			module: {
 				generateText: generate_traced_module(config)
 			}
@@ -382,11 +385,12 @@ export const config = {
 
 /**
  * @param {string} config
- * @returns {(opts: { instrumentation: string; start: string }) => string}
+ * @returns {(opts: { instrumentation: string; start: string; environment: string }) => string}
  */
 function generate_traced_module(config) {
-	return ({ instrumentation, start }) => {
+	return ({ instrumentation, start, environment }) => {
 		return `\
+import ${JSON.stringify(`./${environment}`)};
 import '../server/${instrumentation}';
 const { default: _0 } = await import('../server/${start}');
 export { _0 as default };
@@ -455,33 +459,24 @@ async function generate_edge_functions({ builder }) {
 		'/.netlify/*'
 	];
 
-	await Promise.all([
-		build({
-			...rolldown_config,
-			input: `${tmp}/entry.js`,
-			output: {
-				...rolldown_config.output,
-				file: `${netlify_framework_edge_path}/${FUNCTION_PREFIX}render.js`
-			}
-		}),
-		builder.hasServerInstrumentationFile() &&
-			build({
-				...rolldown_config,
-				input: `${builder.getServerDirectory()}/instrumentation.server.js`,
-				output: {
-					...rolldown_config.output,
-					file: `${netlify_framework_edge_path}/${FUNCTION_PREFIX}instrumentation.server.js`
-				}
-			})
-	]);
-
 	if (builder.hasServerInstrumentationFile()) {
-		builder.instrument({
-			entrypoint: `${netlify_framework_edge_path}/${FUNCTION_PREFIX}render.js`,
-			instrumentation: `${netlify_framework_edge_path}/${FUNCTION_PREFIX}instrumentation.server.js`,
-			start: `${netlify_framework_edge_path}/${FUNCTION_PREFIX}start.js`
-		});
+		const server_directory = posix.relative(tmp, builder.getServerDirectory());
+		writeFileSync(
+			`${tmp}/instrumented-entry.js`,
+			`import { set_env } from ${JSON.stringify(`${server_directory}/env.js`)};\nset_env(Deno.env.toObject());\nawait import(${JSON.stringify(`${server_directory}/instrumentation.server.js`)});\nconst { default: handler } = await import('./entry.js');\nexport { handler as default };\n`
+		);
 	}
+
+	await build({
+		...rolldown_config,
+		input: builder.hasServerInstrumentationFile()
+			? `${tmp}/instrumented-entry.js`
+			: `${tmp}/entry.js`,
+		output: {
+			...rolldown_config.output,
+			file: `${netlify_framework_edge_path}/${FUNCTION_PREFIX}render.js`
+		}
+	});
 
 	add_edge_function_config({ builder, path, excluded_paths });
 }

@@ -68,7 +68,8 @@ export default function (opts = {}) {
 			/** @type {Record<string, string>} */
 			const input = {
 				index: `${entries}/index.js`,
-				env: `${entries}/env.js`,
+				'adapter-env': `${entries}/adapter-env.js`,
+				env: `${server}/env.js`,
 				handler: `${entries}/handler.js`
 			};
 
@@ -170,6 +171,9 @@ export default function (opts = {}) {
 				builder.instrument({
 					entrypoint: `${out}/index.js`,
 					instrumentation: `${out}/instrumentation.server.js`,
+					environment: {
+						module: `${out}/env.js`
+					},
 					module: {
 						exports: ['path', 'host', 'port', 'server']
 					}

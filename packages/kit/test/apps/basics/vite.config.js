@@ -22,6 +22,13 @@ export default defineConfig({
 					builder.instrument({
 						entrypoint: `${builder.getServerDirectory()}/index.js`,
 						instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`,
+						environment: {
+							generateInit: ({ importSpecifier }) => `\
+import { set_env } from ${JSON.stringify(importSpecifier)};
+import { loadEnv } from 'vite';
+set_env(loadEnv('production', ${JSON.stringify(import.meta.dirname)}, ''));
+`
+						},
 						module: {
 							exports: ['Server']
 						}

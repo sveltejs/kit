@@ -1,6 +1,6 @@
-import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { assert, expect, test } from 'vitest';
 import { create_builder } from './builder.js';
 import { walk } from '../../utils/filesystem.js';
@@ -103,8 +103,10 @@ test('instrument generates facade with posix paths', () => {
 	const instrumentation = join(dest, 'server', 'instrumentation.server.js');
 
 	const builder = create_builder({
+		// @ts-expect-error - we don't need the whole build data for this test
+		build_data: { app_path: '' },
 		// @ts-expect-error - we don't need the whole config for this test
-		build_data: {},
+		config: { outDir: dest },
 		route_data: []
 	});
 
@@ -120,9 +122,116 @@ test('instrument generates facade with posix paths', () => {
 	// Verify it uses forward slashes (not backslashes)
 	// On Windows, path.relative() returns 'server\instrumentation.server.js'
 	// The fix ensures this becomes 'server/instrumentation.server.js'
-	expect(facade).toContain("import './server/instrumentation.server.js'");
+	expect(facade).toContain('import "./server/instrumentation.server.js"');
 	expect(facade).not.toContain('\\');
 
 	// Cleanup
+	rmSync(dest, { recursive: true, force: true });
+});
+
+test('instrument initializes environment before instrumentation', async () => {
+	const dest = join(import.meta.dirname, 'output');
+	const entrypoint = join(dest, 'functions', 'index.js');
+	const instrumentation = join(dest, 'server', 'instrumentation.server.js');
+	const out_dir = dest;
+	const env = join(out_dir, 'output', 'server', 'env.js');
+
+	rmSync(dest, { recursive: true, force: true });
+	mkdirSync(dirname(entrypoint), { recursive: true });
+	mkdirSync(dirname(instrumentation), { recursive: true });
+	mkdirSync(dirname(env), { recursive: true });
+	writeFileSync(entrypoint, `export default globalThis.order;`);
+	writeFileSync(
+		instrumentation,
+		`globalThis.order.push(['instrumentation', globalThis.env_value]);`
+	);
+	writeFileSync(
+		env,
+		`export function set_env(env) { globalThis.env_value = env.VALUE; globalThis.order.push(['env', env.VALUE]); }`
+	);
+
+	// @ts-expect-error - we don't need the whole config for this test
+	const builder = create_builder({ config: { outDir: out_dir }, route_data: [] });
+	let env_path;
+
+	builder.instrument({
+		entrypoint,
+		instrumentation,
+		environment: {
+			generateInit: ({ importSpecifier }) => {
+				env_path = importSpecifier;
+				return `import { set_env } from ${JSON.stringify(importSpecifier)}; set_env({ VALUE: 'set' });`;
+			}
+		}
+	});
+
+	expect(env_path).toBe('../output/server/env.js');
+	const facade = readFileSync(entrypoint, 'utf8');
+	expect(facade.indexOf('__sveltekit_env_init.js')).toBeLessThan(
+		facade.indexOf('server/instrumentation.server.js')
+	);
+
+	// @ts-expect-error test-only state shared by generated modules
+	globalThis.order = [];
+	const url = pathToFileURL(entrypoint);
+	url.search = String(Date.now());
+	const result = await import(url.href);
+	expect(result.default).toEqual([
+		['env', 'set'],
+		['instrumentation', 'set']
+	]);
+	// @ts-expect-error test-only state shared by generated modules
+	delete globalThis.order;
+	// @ts-expect-error test-only state shared by generated modules
+	delete globalThis.env_value;
+	rmSync(dest, { recursive: true, force: true });
+});
+
+test('instrument passes environment initializer to custom facade', () => {
+	const dest = join(import.meta.dirname, 'output');
+	const entrypoint = join(dest, 'index.js');
+	const instrumentation = join(dest, 'instrumentation.server.js');
+	const env = join(dest, 'output', 'server', 'env.js');
+
+	rmSync(dest, { recursive: true, force: true });
+	mkdirSync(dirname(env), { recursive: true });
+	writeFileSync(entrypoint, 'export default true;');
+	writeFileSync(instrumentation, '');
+	writeFileSync(env, 'export function set_env() {}');
+
+	// @ts-expect-error - we don't need the whole config for this test
+	const builder = create_builder({ config: { outDir: dest }, route_data: [] });
+	builder.instrument({
+		entrypoint,
+		instrumentation,
+		environment: {
+			generateInit: ({ importSpecifier }) => `import ${JSON.stringify(importSpecifier)};`
+		},
+		module: {
+			generateText: ({ environment, instrumentation, start }) =>
+				`import ${JSON.stringify(`./${environment}`)};\nimport ${JSON.stringify(`./${instrumentation}`)};\nexport { default } from ${JSON.stringify(`./${start}`)};`
+		}
+	});
+
+	const facade = readFileSync(entrypoint, 'utf8');
+	expect(facade).toContain('import "./__sveltekit_env_init.js";');
+	rmSync(dest, { recursive: true, force: true });
+});
+
+test('instrument replaces an environment initializer', () => {
+	const dest = join(import.meta.dirname, 'output');
+	const entrypoint = join(dest, 'index.js');
+	const instrumentation = join(dest, 'instrumentation.server.js');
+
+	rmSync(dest, { recursive: true, force: true });
+	mkdirSync(dest, { recursive: true });
+	writeFileSync(entrypoint, 'export default true;');
+	writeFileSync(instrumentation, '');
+	writeFileSync(join(dest, '__sveltekit_env_init.js'), 'existing');
+
+	// @ts-expect-error - we don't need the whole config for this test
+	const builder = create_builder({ config: { outDir: dest }, route_data: [] });
+	builder.instrument({ entrypoint, instrumentation, environment: {} });
+	expect(readFileSync(join(dest, '__sveltekit_env_init.js'), 'utf8')).not.toBe('existing');
 	rmSync(dest, { recursive: true, force: true });
 });
