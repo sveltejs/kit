@@ -680,6 +680,9 @@ function form_tests() {
 	// @ts-expect-error image inputs only support objects with exactly x and y coordinates
 	f_3d_position.fields.position.as('image');
 
+	const f_any_image = form(null as any, () => ({ success: true }));
+	f_any_image.fields.position.as('image');
+
 	// doesn't use data
 	const f9 = form(() => Promise.resolve({ success: true }));
 	f9.result?.success === true;
