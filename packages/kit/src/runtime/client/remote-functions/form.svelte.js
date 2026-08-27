@@ -446,7 +446,7 @@ export function form(id) {
 					set_nested_value(input, previous_submitter, undefined);
 				}
 
-				if (event.submitter) {
+				if (event.submitter && /** @type {HTMLInputElement} */ (event.submitter).type !== 'image') {
 					const name = event.submitter.getAttribute('name');
 
 					/** @type {null | ReturnType<typeof parse_form_key>} */

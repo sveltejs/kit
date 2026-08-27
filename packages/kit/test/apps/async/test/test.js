@@ -297,6 +297,16 @@ test.describe('remote functions', () => {
 		await expect(page.locator('#image-result')).toHaveText('5,6');
 	});
 
+	test('image form submit keeps client field state', async ({ page, javaScriptEnabled }) => {
+		test.skip(!javaScriptEnabled, 'requires JavaScript to set field values');
+
+		await page.goto('/remote/form/submitter');
+		await page.locator('input[type="image"]').click({ position: { x: 5, y: 6 } });
+
+		await expect(page.locator('#image-position')).toHaveText('{"x":1,"y":2}');
+		await expect(page.locator('#image-result')).toHaveText('5,6');
+	});
+
 	test('form updates inputs live', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/remote/form/live-update');
 
