@@ -659,12 +659,6 @@ importers:
       '@standard-schema/spec':
         specifier: ^1.1.0
         version: 1.1.0
-      '@sveltejs/acorn-typescript':
-        specifier: ^1.0.12
-        version: 1.0.12(acorn@8.18.0)
-      acorn:
-        specifier: ^8.18.0
-        version: 8.18.0
       cookie:
         specifier: ^2.0.1
         version: 2.0.1
