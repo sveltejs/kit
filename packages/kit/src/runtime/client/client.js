@@ -2113,12 +2113,15 @@ async function navigate({
 
 	updating = true;
 
-	capture_scroll(previous_history_index);
-	capture_snapshot(previous_navigation_index);
-	if (replace_state) {
-		delete_navigation_snapshot(previous_history_index);
-	} else {
-		capture_navigation_snapshot(previous_history_index);
+	if (!popped) {
+		// popstate captures the source entry synchronously, before the traversal is resolved
+		capture_scroll(previous_history_index);
+		capture_snapshot(previous_navigation_index);
+		if (replace_state) {
+			delete_navigation_snapshot(previous_history_index);
+		} else {
+			capture_navigation_snapshot(previous_history_index);
+		}
 	}
 
 	// ensure the url pathname matches the page's trailing slash option
@@ -3404,9 +3407,25 @@ function _start_router() {
 					(history_metadata.pageUrl === undefined || history_metadata.pageUrl === location.href)) ||
 					is_hash_change);
 			const shallow_url = history_metadata.pageUrl ? new URL(location.href) : null;
+
+			// the browser has already traversed, so record the source entry and move the
+			// indices before anything async: a navigation that starts while this one
+			// resolves must build on the entry we are actually on
+			const previous_history_index = current_history_index;
+			const previous_navigation_index = current_navigation_index;
+			const previous_reset_index = current_reset_index;
+			capture_scroll(previous_history_index);
+			if (!shallow) capture_snapshot(previous_navigation_index);
+			capture_navigation_snapshot(previous_history_index);
+			current_history_index = history_index;
+			current_navigation_index = navigation_index;
+			current_reset_index = reset_index;
+
+			const token = navigation_token;
 			const shallow_intent = shallow_url
 				? await get_navigation_intent(shallow_url, false)
 				: undefined;
+			if (navigation_token !== token) return;
 			const shallow_target = shallow_url
 				? {
 						params: shallow_intent?.params ?? null,
@@ -3430,10 +3449,6 @@ function _start_router() {
 
 				update_url(url);
 
-				capture_scroll(current_history_index);
-				capture_navigation_snapshot(current_history_index);
-				current_history_index = history_index;
-				current_reset_index = reset_index;
 				if (reset && scroll) scrollTo(scroll.x, scroll.y);
 				restore_navigation_snapshot(current_history_index, current_registrations());
 				return;
@@ -3449,15 +3464,13 @@ function _start_router() {
 					delta,
 					shallow: shallow_target
 				},
-				accept: () => {
-					current_history_index = history_index;
-					current_navigation_index = navigation_index;
-					current_reset_index = reset_index;
-				},
 				block: () => {
+					current_history_index = previous_history_index;
+					current_navigation_index = previous_navigation_index;
+					current_reset_index = previous_reset_index;
 					history.go(-delta);
 				},
-				nav_token: navigation_token,
+				nav_token: token,
 				event
 			});
 		} else {
