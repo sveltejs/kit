@@ -1,7 +1,7 @@
 /** @import { TomlTable } from 'smol-toml' */
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { join, posix } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { builtinModules } from 'node:module';
 import process from 'node:process';
 import { parse } from 'smol-toml';
@@ -265,12 +265,12 @@ function write_frameworks_config({ builder }) {
  * }} opts
  */
 function generate_serverless_function({ builder, routes, patterns, name, type, exclude }) {
-	const manifest = builder.generateManifest({
-		relativePath: '../server',
-		routes
+	builder.generateServerInstance(`.netlify/v1/server-${name}.js`, {
+		routes,
+		serverDirectory: '.netlify/v1/server'
 	});
 
-	const fn = generate_serverless_function_module(manifest, type);
+	const fn = generate_serverless_function_module(name, type);
 	const config = generate_config_export(name, patterns, exclude);
 
 	if (builder.hasServerInstrumentationFile()) {
@@ -289,11 +289,11 @@ function generate_serverless_function({ builder, routes, patterns, name, type, e
 }
 
 /**
- * @param {string} manifest
+ * @param {string} name
  * @param {ServerlessFunctionType} type
  * @returns {string}
  */
-function generate_serverless_function_module(manifest, type) {
+function generate_serverless_function_module(name, type) {
 	if (type === 'catch-all') {
 		// Netlify encodes the response body but `fetch` automatically decodes it.
 		// So, we need to remove the `content-encoding` header to allow Netlify
@@ -301,10 +301,11 @@ function generate_serverless_function_module(manifest, type) {
 		return `\
 import { applyReroute } from '@sveltejs/kit/adapter';
 import { init } from '../serverless.js';
+import { server } from '../server-${name}.js';
 
 const original_url_header = \`x-sveltekit-original-url-\${process.env.NETLIFY_FUNCTIONS_TOKEN}\`
 
-const respond = init(${manifest});
+const respond = init(server);
 
 export default async (request, context) => {
 	const catch_all_response = await respond(request, context);
@@ -330,10 +331,11 @@ export default async (request, context) => {
 	if (type === 'split') {
 		return `\
 import { init } from '../serverless.js';
+import { server } from '../server-${name}.js';
 
 const original_url_header = \`x-sveltekit-original-url-\${process.env.NETLIFY_FUNCTIONS_TOKEN}\`
 
-const respond = init(${manifest});
+const respond = init(server);
 
 export default async (request, context) => {
 	if (request.headers.has(original_url_header)) {
@@ -349,8 +351,9 @@ export default async (request, context) => {
 
 	return `\
 import { init } from '../serverless.js';
+import { server } from '../server-${name}.js';
 
-export default init(${manifest});
+export default init(server);
 `;
 }
 
@@ -423,23 +426,14 @@ async function generate_edge_functions({ builder }) {
 	mkdirSync('.netlify/v1/edge-functions', { recursive: true });
 
 	builder.log.minor('Generating Edge Function...');
-	const relativePath = posix.relative(tmp, builder.getServerDirectory());
 
 	builder.copy(`${files}/edge.js`, `${tmp}/entry.js`, {
 		replace: {
-			'0SERVER': `${relativePath}/index.js`,
-			MANIFEST: './manifest.js'
+			'0SERVER': `./server.js`
 		}
 	});
 
-	const manifest = builder.generateManifest({
-		relativePath
-	});
-
-	writeFileSync(`${tmp}/manifest.js`, `export const manifest = ${manifest};\n`);
-
-	/** @type {{ assets: Set<string> }} */
-	const { assets } = (await import(pathToFileURL(`${tmp}/manifest.js`).href)).manifest;
+	builder.generateServerInstance(`${tmp}/server.js`);
 
 	const path = '/*';
 	// We only need to specify paths without the trailing slash because
@@ -450,7 +444,7 @@ async function generate_edge_functions({ builder }) {
 		`/${builder.getAppPath()}/version.json`,
 		// the base root and `trailingSlash: 'always'` pages are recorded with a trailing slash
 		...builder.prerendered.paths.map((path) => (path === '/' ? path : path.replace(/\/$/, ''))),
-		...Array.from(assets).flatMap((asset) => {
+		...Array.from(builder.manifest.assets).flatMap(({ path: asset }) => {
 			if (asset.endsWith('/index.html')) {
 				const dir = asset.replace(/\/index\.html$/, '');
 				return [`${builder.config.paths.base}/${asset}`, `${builder.config.paths.base}/${dir}`];

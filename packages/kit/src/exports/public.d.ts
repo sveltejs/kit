@@ -139,6 +139,17 @@ export interface Builder {
 	prerendered: Prerendered;
 	/** An array of all routes (including prerendered) */
 	routes: RouteDefinition[];
+	/**
+	 * The value of the `$app/manifest` module.
+	 * The only difference is `manifest.assets` also includes the service worker, if it exists.
+	 * @since 3.0.0
+	 */
+	manifest: typeof import('$app/manifest');
+	/**
+	 * A record of file extensions to MIME types
+	 * @since 3.0.0
+	 */
+	mimeTypes: Record<string, string>;
 
 	/**
 	 * Create separate functions that map to one or more routes of your app.
@@ -166,8 +177,9 @@ export interface Builder {
 	 * Generate a server-side manifest to initialise the SvelteKit [server](https://svelte.dev/docs/kit/@sveltejs-kit#Server) with.
 	 * @param opts
 	 * @param opts.relativePath A relative path to the base directory of the server build output
+	 * @deprecated removed in 3.0. Use `builder.generateServerInstance` or `builder.manifest` instead
 	 */
-	generateManifest: (opts: { relativePath: string; routes?: RouteDefinition[] }) => string;
+	generateManifest?: (opts: { relativePath: string; routes?: RouteDefinition[] }) => string;
 
 	/**
 	 * Resolve a path to the `name` directory inside `outDir`, e.g. `/path/to/.svelte-kit/my-adapter`.
@@ -181,6 +193,20 @@ export interface Builder {
 	/** Get the application path including any configured `base` path, e.g. `my-base-path/_app`. */
 	getAppPath: () => string;
 
+	/**
+	 * Generates a module exposing a SvelteKit [Server](https://svelte.dev/docs/kit/@sveltejs-kit#Server) instance.
+	 * @param dest
+	 * @param opts.routes A subset of the routes to include in the server's manifest
+	 * @param opts.serverDirectory The directory containing the server code. Defaults to `getServerDirectory()`.
+	 * @since 3.0.0
+	 */
+	generateServerInstance: (
+		dest: string,
+		opts?: {
+			routes?: RouteDefinition[];
+			serverDirectory?: string;
+		}
+	) => void;
 	/**
 	 * Write client assets to `dest`.
 	 * @param dest the destination folder
