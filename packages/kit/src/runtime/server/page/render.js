@@ -27,7 +27,7 @@ import Root from '../../components/root.svelte';
 import { render } from 'svelte/server';
 import { Props, RenderNode } from '../../props.svelte.js';
 import { has_custom_transporters, uneval } from '#app/internal/transport';
-import { options } from '../internal.js';
+import { manifest, options } from '../internal.js';
 
 // TODO rename this function/module
 
@@ -36,7 +36,6 @@ import { options } from '../internal.js';
  * @param {{
  *   branch: Array<import('./types.js').Loaded>;
  *   fetched: Array<import('./types.js').Fetched>;
- *   manifest: import('types').SSRManifest;
  *   page_config: { ssr: boolean; csr: boolean };
  *   status: number;
  *   error: App.Error | null;
@@ -51,7 +50,6 @@ import { options } from '../internal.js';
 export async function render_response({
 	branch,
 	fetched,
-	manifest,
 	page_config,
 	status,
 	error = null,
