@@ -665,8 +665,7 @@ declare module '@sveltejs/kit' {
 		config: Config;
 	}
 
-	export class Server {
-		constructor(manifest: SSRManifest);
+	export interface Server {
 		init(options: ServerInitOptions): Promise<void>;
 		respond(request: Request, options: RequestOptions): Promise<Response>;
 	}
@@ -916,14 +915,6 @@ declare module '@sveltejs/kit' {
 			? RecursiveRequired<T[K]> // recursively continue through.
 			: T[K]; // Use the exact type for everything else
 	};
-
-	/**
-	 * Information required to instantiate a new `Server` instance.
-	 * This interface's fields are internal implementation details, and
-	 * changes may be made at any time without being considered breaking.
-	 */
-	interface SSRManifest {
-	}
 
 	type ValidatedConfig = RecursiveRequired<Omit<Config, 'preprocess'>> & {
 		preprocess: Config['preprocess'];
