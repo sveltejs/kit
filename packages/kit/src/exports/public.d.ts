@@ -16,6 +16,7 @@ import { ValidatedConfig } from 'types';
 import { Plugin } from 'vite';
 import { RouteId as AppRouteId, LayoutParams as AppLayoutParams } from '$app/types';
 import { StandardSchemaV1 } from '@standard-schema/spec';
+import { getRequest, setResponse } from '@sveltejs/kit/node';
 
 export { PrerenderOption } from '../types/private.js';
 
@@ -57,6 +58,20 @@ export interface Adapter {
 	 */
 	emulate?: () => MaybePromise<Emulator>;
 	vite?: {
+		/**
+		 * This function overrides the default behavior during Vite's dev and preview modes
+		 * to convert an `http.IncomingMessage` to a `Request` object.
+		 * To call the original `setRequest` function, import it from `@sveltejs/kit/node`.
+		 * @since 3.0.0
+		 */
+		getRequest?: typeof getRequest;
+		/**
+		 * This function overrides the default behavior in Vite's dev and preview modes
+		 * to write a `Response` object to a `http.ServerResponse`.
+		 * To call the original `setResponse` function, import it from `@sveltejs/kit/node`.
+		 * @since 3.0.0
+		 */
+		setResponse?: typeof setResponse;
 		plugins?: {
 			/**
 			 * Vite plugins placed before any of SvelteKit's own plugins.

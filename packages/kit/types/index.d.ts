@@ -5,6 +5,7 @@ declare module '@sveltejs/kit' {
 	import type { Plugin } from 'vite';
 	import type { RouteId as AppRouteId, LayoutParams as AppLayoutParams } from '$app/types';
 	import type { StandardSchemaV1 } from '@standard-schema/spec';
+	import type { getRequest, setResponse } from '@sveltejs/kit/node';
 	import type { Config } from '@sveltejs/kit/vite';
 	// @ts-ignore this is an optional peer dependency so could be missing. Written like this so dts-buddy preserves the ts-ignore
 	type Span = import('@opentelemetry/api').Span;
@@ -44,6 +45,20 @@ declare module '@sveltejs/kit' {
 		 */
 		emulate?: () => MaybePromise<Emulator>;
 		vite?: {
+			/**
+			 * This function overrides the default behavior during Vite's dev and preview modes
+			 * to convert an `http.IncomingMessage` to a `Request` object.
+			 * To call the original `setRequest` function, import it from `@sveltejs/kit/node`.
+			 * @since 3.0.0
+			 */
+			getRequest?: typeof getRequest;
+			/**
+			 * This function overrides the default behavior in Vite's dev and preview modes
+			 * to write a `Response` object to a `http.ServerResponse`.
+			 * To call the original `setResponse` function, import it from `@sveltejs/kit/node`.
+			 * @since 3.0.0
+			 */
+			setResponse?: typeof setResponse;
 			plugins?: {
 				/**
 				 * Vite plugins placed before any of SvelteKit's own plugins.
