@@ -5,6 +5,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import { pathToFileURL } from 'node:url';
 import { styleText } from 'node:util';
 import { code, include } from '@rolldown/pluginutils';
 import { build_server_nodes } from './build_server.js';
@@ -26,6 +27,7 @@ import { load_and_validate_params } from '../../../utils/params.js';
 import { posixify } from '../../../utils/os.js';
 import { stackless } from '../../../utils/error.js';
 import { s } from '../../../utils/misc.js';
+import { check_feature } from '../../../utils/features.js';
 
 /**
  * @typedef {object} Config
@@ -506,17 +508,24 @@ export function plugin_compile(
 					})};\n`
 				);
 
-				// first, build server nodes without the client manifest so we can analyse it
-				build_server_nodes(
-					out,
-					kit,
-					manifest_data,
-					vite_server_manifest,
-					null,
-					assets_path,
-					server_chunks,
-					root
-				);
+				/** @type {{ manifest: import('types').SSRManifest }} */
+				const { manifest: ssr_manifest } = await import(pathToFileURL(manifest_path).href);
+
+				for (const route of ssr_manifest.routes) {
+					const route_metadata = metadata.routes.get(route.id);
+					if (!route_metadata) throw new Error(`Expected to find metadata for route ${route.id}`);
+
+					if (route_metadata.prerender === true) return;
+
+					for (const feature of list_features(
+						route,
+						manifest_data,
+						vite_server_manifest,
+						tracked_features
+					)) {
+						check_feature(route.id, route_metadata.config, feature, kit.adapter);
+					}
+				}
 
 				/** @type {Record<string, EnvVarConfig<any>> | null} */
 				const explicit_env_config = get_explicit_env_config();
@@ -1179,4 +1188,58 @@ async function normalise_build(name, build, build_output_map) {
 	await bundling.promise;
 
 	return /** @type {Rolldown.RolldownOutput['output']} */ (build_output_map.get(name));
+}
+
+/**
+ * @param {import('types').SSRRoute} route
+ * @param {import('types').ManifestData} manifest_data
+ * @param {import('vite').Manifest} server_manifest
+ * @param {Record<string, string[]>} tracked_features
+ */
+function list_features(route, manifest_data, server_manifest, tracked_features) {
+	const features = new Set();
+
+	const route_data = /** @type {import('types').RouteData} */ (
+		manifest_data.routes.find((r) => r.id === route.id)
+	);
+
+	const visited = new Set();
+	/** @param {string} id */
+	function visit(id) {
+		if (visited.has(id)) return;
+		visited.add(id);
+
+		const chunk = server_manifest[id];
+		if (!chunk) return;
+
+		if (chunk.file in tracked_features) {
+			for (const feature of tracked_features[chunk.file]) {
+				features.add(feature);
+			}
+		}
+
+		if (chunk.imports) {
+			for (const id of chunk.imports) {
+				visit(id);
+			}
+		}
+	}
+
+	let page_node = route_data?.leaf;
+	while (page_node) {
+		if (page_node.server) visit(page_node.server);
+		page_node = page_node.parent ?? null;
+	}
+
+	if (route_data.endpoint) {
+		visit(route_data.endpoint.file);
+	}
+
+	if (manifest_data.hooks.server) {
+		// TODO if hooks.server.js imports `read`, it will be in the entry chunk
+		// we don't currently account for that case
+		visit(manifest_data.hooks.server);
+	}
+
+	return Array.from(features);
 }
