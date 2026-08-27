@@ -46,16 +46,16 @@ declare module '@sveltejs/kit' {
 		emulate?: () => MaybePromise<Emulator>;
 		vite?: {
 			/**
-			 * This function overrides the default behavior in vite dev and preview mode
+			 * This function overrides the default behavior during Vite's dev and preview modes
 			 * to convert an `http.IncomingMessage` to a `Request` object.
-			 * To call the original setRequest function, import it from `@sveltejs/kit/node`.
+			 * To call the original `setRequest` function, import it from `@sveltejs/kit/node`.
 			 * @since 3.0.0
 			 */
 			getRequest?: typeof getRequest;
 			/**
-			 * This function overrides the default behavior in vite dev and preview mode
-			 * to write a `Response` object to an `http.ServerResponse`.
-			 * To call the original setResponse function, import it from `@sveltejs/kit/node`.
+			 * This function overrides the default behavior in Vite's dev and preview modes
+			 * to write a `Response` object to a `http.ServerResponse`.
+			 * To call the original `setResponse` function, import it from `@sveltejs/kit/node`.
 			 * @since 3.0.0
 			 */
 			setResponse?: typeof setResponse;
