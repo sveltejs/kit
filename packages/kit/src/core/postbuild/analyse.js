@@ -27,7 +27,9 @@ async function analyse({ manifest_data, env, vite_config_file }) {
 	const vite = /** @type {typeof import('vite')} */ (await import_peer('vite', process.cwd()));
 	const vite_config = await load_vite_config(vite_config_file, vite, 'serve', {
 		logLevel: 'silent',
-		server: { hmr: false }
+		// we only use the server to run modules — `middlewareMode` prevents it from
+		// occupying a port, which would otherwise clash with a running dev server
+		server: { middlewareMode: true, hmr: false, watch: null }
 	});
 
 	/** @type {import('types').ServerMetadata} */
@@ -40,8 +42,6 @@ async function analyse({ manifest_data, env, vite_config_file }) {
 	const vite_dev_server = await vite.createServer(vite_config);
 
 	try {
-		await vite_dev_server.listen();
-
 		// configure `import { building } from '$app/env'` —
 		// essential we do this before analysing the code
 		const runner = get_runner(vite, vite_dev_server);
