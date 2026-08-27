@@ -511,7 +511,6 @@ export function plugin_compile(
 				/** @type {{ manifest: import('types').SSRManifest }} */
 				const { manifest: ssr_manifest } = await import(pathToFileURL(manifest_path).href);
 
-
 				for (const route of ssr_manifest.routes) {
 					const route_metadata = metadata.routes.get(route.id);
 					if (!route_metadata) throw new Error(`Expected to find metadata for route ${route.id}`);
