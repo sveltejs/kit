@@ -2,7 +2,7 @@
 /** @import { Options } from '@sveltejs/vite-plugin-svelte' */
 /** @import { PreprocessorGroup } from 'svelte/compiler' */
 /** @import {  ManifestData, RemoteChunk, ServerMetadata, ValidatedConfig } from 'types' */
-/** @import { CorsOptions, Plugin, ResolvedConfig, Rolldown, UserConfig } from 'vite' */
+/** @import { CorsOptions, ResolvedConfig, Rolldown, UserConfig } from 'vite' */
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
@@ -174,7 +174,7 @@ let vite_plugin_svelte;
  * > Prior to SvelteKit 3, config lived in a `svelte.config.js` file, which is no longer supported. The ability to configure SvelteKit via `vite.config.js` was added in version 2.62.
  *
  * @param {import('./public.js').Config} [config]
- * @returns {Promise<Plugin[]>}
+ * @returns {Promise<import('vite').Plugin[]>}
  */
 export async function sveltekit(config) {
 	const cwd = process.cwd();
@@ -274,7 +274,7 @@ function kit({ svelte_config }) {
 	/** @type {string} name for `globalThis.__sveltekit_xxx` */
 	let kit_global;
 
-	/** @type {Plugin} */
+	/** @type {import('vite').Plugin} */
 	const plugin_resolve_root = {
 		name: 'vite-plugin-sveltekit-resolve-root',
 		// make sure it runs first
@@ -295,7 +295,7 @@ function kit({ svelte_config }) {
 		}
 	};
 
-	/** @type {Plugin} */
+	/** @type {import('vite').Plugin} */
 	const plugin_setup = {
 		name: 'vite-plugin-sveltekit-setup',
 		api: {

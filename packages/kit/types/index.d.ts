@@ -1556,7 +1556,6 @@ declare module '@sveltejs/kit/params' {
 declare module '@sveltejs/kit/vite' {
 	import type { Adapter } from '@sveltejs/kit';
 	import type { Options } from '@sveltejs/vite-plugin-svelte';
-	import * as vite from 'vite';
 	// this indirection helps make the docs look pretty
 	type VitePluginSvelteOptions = Omit<Options, 'experimental'>;
 	type VitePluginSvelteOptionsExperimental = Options['experimental'];
@@ -2166,7 +2165,7 @@ declare module '@sveltejs/kit/vite' {
 	 * > Prior to SvelteKit 3, config lived in a `svelte.config.js` file, which is no longer supported. The ability to configure SvelteKit via `vite.config.js` was added in version 2.62.
 	 *
 	 * */
-	export function sveltekit(config?: Config): Promise<Plugin[]>;
+	export function sveltekit(config?: Config): Promise<import("vite").Plugin[]>;
 	// Based on https://github.com/josh-hemphill/csp-typed-directives/blob/latest/src/csp.types.ts
 	//
 	// MIT License
