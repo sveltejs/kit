@@ -3,7 +3,7 @@
 /** @import { SSRNode, ServerNode, ServerActionResult } from 'types' */
 import { DEV } from 'esm-env';
 import { HttpError, Redirect, ActionFailure, SvelteKitError } from '@sveltejs/kit/internal';
-import { with_request_store, merge_tracing, record_span } from '@sveltejs/kit/internal/server';
+import { with_event, merge_tracing, record_span } from '@sveltejs/kit/internal/server';
 import { normalize_error } from '../../../utils/error.js';
 import { is_form_content_type, negotiate } from '../../../utils/http.js';
 import { with_version_header } from '../utils.js';
@@ -22,27 +22,25 @@ export function is_action_json_request(event) {
 
 /**
  * @param {RequestEvent} event
- * @param {import('types').RequestState} state
  * @param {SSRNode['server'] | undefined} server
  */
-export async function handle_action_json_request(event, state, server) {
-	const result = await handle_action_request(event, state, server);
-	return action_result_json(event, state, result);
+export async function handle_action_json_request(event, server) {
+	const result = await handle_action_request(event, server);
+	return action_result_json(event, result);
 }
 
 /**
  * @param {RequestEvent} event
- * @param {import('types').RequestState} state
  * @param {ServerActionResult} result
  * @returns {Promise<Response>}
  */
-async function action_result_json(event, state, result) {
+async function action_result_json(event, result) {
 	if (result.type === 'redirect') {
 		return action_json(result);
 	}
 
 	if (result.type === 'error') {
-		const error = await handle_error_and_jsonify(event, state, result.error);
+		const error = await handle_error_and_jsonify(event, result.error);
 		return action_json({ ...result, error }, { status: error.status });
 	}
 
@@ -62,7 +60,7 @@ async function action_result_json(event, state, result) {
 			{ status: result.status }
 		);
 	} catch (e) {
-		return action_result_json(event, state, action_error_result(e, result.location));
+		return action_result_json(event, action_error_result(e, result.location));
 	}
 }
 
@@ -155,11 +153,10 @@ export function is_action_request(event) {
 
 /**
  * @param {RequestEvent} event
- * @param {import('types').RequestState} state
  * @param {SSRNode['server'] | undefined} server
  * @returns {Promise<ServerActionResult>}
  */
-export async function handle_action_request(event, state, server) {
+export async function handle_action_request(event, server) {
 	const actions = server?.actions;
 	const location = get_action_location(event.url);
 
@@ -171,7 +168,7 @@ export async function handle_action_request(event, state, server) {
 	check_named_default_separate(actions);
 
 	try {
-		const data = await call_action(event, state, actions);
+		const data = await call_action(event, actions);
 
 		if (DEV) {
 			validate_action_return(data);
@@ -214,11 +211,10 @@ function check_named_default_separate(actions) {
 
 /**
  * @param {RequestEvent} event
- * @param {import('types').RequestState} state
  * @param {NonNullable<ServerNode['actions']>} actions
  * @throws {Redirect | HttpError | SvelteKitError | Error}
  */
-async function call_action(event, state, actions) {
+async function call_action(event, actions) {
 	const url = new URL(event.request.url);
 
 	let name = 'default';
@@ -257,9 +253,7 @@ async function call_action(event, state, actions) {
 		fn: async (current) => {
 			const traced_event = merge_tracing(event, current);
 
-			const result = await with_request_store({ event: traced_event, state }, () =>
-				action(traced_event)
-			);
+			const result = await with_event(traced_event, () => action(traced_event));
 
 			if (result instanceof ActionFailure) {
 				current.setAttributes({

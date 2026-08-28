@@ -1,7 +1,7 @@
 /** @import { RemoteFormInput, RemoteForm, RemoteFormInvalidField } from '$app/server' */
 /** @import { InternalRemoteFormIssue, MaybePromise, HasNonOptionalBoolean, RemoteFormInternals } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
-import { get_request_store } from '@sveltejs/kit/internal/server';
+import { get_event } from '@sveltejs/kit/internal/server';
 import {
 	create_field_proxy,
 	set_nested_value,
@@ -13,6 +13,7 @@ import {
 import { get_cache, get_implicit_lookup, run_remote_function } from './shared.js';
 import { ActionFailure, ValidationError } from '@sveltejs/kit/internal';
 import { DEV } from 'esm-env';
+import { get_state } from '../../../server/state.js';
 
 const incorrect_fail_message =
 	'`fail(...)` is for form actions. A remote `form` handler should call `invalid(...)` instead. See https://svelte.dev/docs/kit/remote-functions#form-Programmatic-validation';
@@ -98,7 +99,7 @@ export function form(validate_or_fn, maybe_fn) {
 				// make it possible to differentiate between user submission and programmatic `field.set(...)` updates
 				output.submission = true;
 
-				const { event, state } = get_request_store();
+				const event = get_event();
 				const validated = await schema?.['~standard'].validate(data);
 
 				if (meta.validate_only) {
@@ -117,7 +118,6 @@ export function form(validate_or_fn, maybe_fn) {
 					try {
 						output.result = await run_remote_function(
 							event,
-							state,
 							'form',
 							() => data,
 							(data) => (!maybe_fn ? fn() : fn(data, issue))
@@ -140,12 +140,12 @@ export function form(validate_or_fn, maybe_fn) {
 				// We don't need to care about args or deduplicating calls, because uneval results are only relevant in full page reloads
 				// where only one form submission is active at the same time
 				if (!event.isRemoteRequest) {
-					const cache = get_cache(__, state);
+					const cache = get_cache(__, event);
 					cache[''] ??= output;
 
 					// register under the client-side action id so the output is serialized
 					// into the page, allowing the hydrated client to restore `result`/`issues`/`input`
-					get_implicit_lookup(__, state)[__.key ? `${__.id}/${__.key}` : __.id] = () => cache[''];
+					get_implicit_lookup(__, event)[__.key ? `${__.id}/${__.key}` : __.id] = () => cache[''];
 				}
 
 				return output;
@@ -156,7 +156,7 @@ export function form(validate_or_fn, maybe_fn) {
 
 		Object.defineProperty(instance, 'action', {
 			get: () => {
-				const search = new URLSearchParams(get_request_store().event.url.search);
+				const search = new URLSearchParams(get_event().url.search);
 				search.delete('/remote');
 
 				const query = search.toString();
@@ -173,9 +173,9 @@ export function form(validate_or_fn, maybe_fn) {
 				// so the current request's state has to be resolved at access time
 				return create_field_proxy({
 					form_id: __.id,
-					get: () => get_cache(__, get_request_store().state)?.['']?.input ?? {},
+					get: () => get_cache(__, get_event())?.['']?.input ?? {},
 					set: (path, value) => {
-						const cache = get_cache(__, get_request_store().state);
+						const cache = get_cache(__, get_event());
 						const entry = cache[''];
 
 						if (entry?.submission) {
@@ -192,8 +192,7 @@ export function form(validate_or_fn, maybe_fn) {
 						deep_set(input, path.map(String), value);
 						(cache[''] ??= {}).input = input;
 					},
-					get_issues: () =>
-						flatten_issues(get_cache(__, get_request_store().state)?.['']?.issues ?? []),
+					get_issues: () => flatten_issues(get_cache(__, get_event())?.['']?.issues ?? []),
 					get_touched: () => ({}),
 					get_dirty: () => ({})
 				});
@@ -203,7 +202,7 @@ export function form(validate_or_fn, maybe_fn) {
 		Object.defineProperty(instance, 'result', {
 			get() {
 				try {
-					return get_cache(__, get_request_store().state)?.['']?.result;
+					return get_cache(__, get_event())?.['']?.result;
 				} catch {
 					return undefined;
 				}
@@ -244,7 +243,7 @@ export function form(validate_or_fn, maybe_fn) {
 			Object.defineProperty(instance, 'for', {
 				/** @type {RemoteForm<any, any>['for']} */
 				value: (key) => {
-					const { state } = get_request_store();
+					const state = get_state(get_event());
 					const cache_key = __.id + '|' + JSON.stringify(key);
 					/** @type {RemoteForm<Input, Output> & { __: RemoteFormInternals }} */
 					let instance = (state.remote.forms ??= new Map()).get(cache_key);

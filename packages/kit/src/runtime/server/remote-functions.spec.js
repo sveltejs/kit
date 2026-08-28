@@ -1,6 +1,7 @@
 import { beforeAll, expect, test, vi } from 'vitest';
 import { init_transport, parse } from '#app/internal/transport';
-import { get_request_store } from '@sveltejs/kit/internal/server';
+import { get_event } from '@sveltejs/kit/internal/server';
+import { get_state, set_state } from './state.js';
 
 const decoder = new TextDecoder();
 
@@ -30,7 +31,6 @@ function create_response(run) {
 
 	return create_live_query_response(
 		event,
-		/** @type {import('types').RequestState} */ ({}),
 		/** @type {import('types').RemoteQueryLiveInternals} */ (/** @type {unknown} */ ({ run })),
 		undefined
 	);
@@ -103,7 +103,7 @@ test('cancellation aborts the generator request signal and runs cleanup', async 
 
 test('serializes explicitly ignored requested updates', async () => {
 	const command = () => {
-		get_request_store().state.remote.ignored = new Set(['hash/query/[-1]']);
+		get_state(get_event()).remote.ignored = new Set(['hash/query/[-1]']);
 		return null;
 	};
 	Object.assign(command, { __: { type: 'command', name: 'command', fn: command } });
@@ -115,17 +115,16 @@ test('serializes explicitly ignored requested updates', async () => {
 		})
 	);
 
-	const response = await handle_remote_call(
-		/** @type {any} */ ({
-			request: new Request('http://localhost/_app/remote/hash/command', {
-				method: 'POST',
-				body: JSON.stringify({ payload: '', refreshes: ['hash/query/[-1]'] })
-			}),
-			tracing: { current: { setAttributes: vi.fn() } }
+	const event = /** @type {any} */ ({
+		request: new Request('http://localhost/_app/remote/hash/command', {
+			method: 'POST',
+			body: JSON.stringify({ payload: '', refreshes: ['hash/query/[-1]'] })
 		}),
-		/** @type {any} */ ({ remote: { requested: null, ignored: null } }),
-		'hash/command'
-	);
+		tracing: { current: { setAttributes: vi.fn() } }
+	});
+	set_state(event, /** @type {any} */ ({ remote: { requested: null, ignored: null } }));
+
+	const response = await handle_remote_call(event, 'hash/command');
 
 	const result = await response.json();
 	expect(parse(result.data)).toEqual({ _: null, i: ['hash/query/[-1]'] });

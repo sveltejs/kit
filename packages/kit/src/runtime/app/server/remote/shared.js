@@ -1,9 +1,10 @@
 /** @import { RequestEvent } from '@sveltejs/kit' */
-/** @import { MaybePromise, RequestState, RemoteInternals, RemoteLiveQueryUserFunctionReturnType } from 'types' */
+/** @import { MaybePromise, RemoteInternals, RemoteLiveQueryUserFunctionReturnType } from 'types' */
 /** @import { Kind } from '@sveltejs/kit/internal/server' */
 import { error } from '@sveltejs/kit';
 import { ValidationError } from '@sveltejs/kit/internal';
-import { derive_event, inside, with_request_store } from '@sveltejs/kit/internal/server';
+import { derive_event, inside, with_event } from '@sveltejs/kit/internal/server';
+import { get_state } from '../../../server/state.js';
 
 /**
  * @param {any} validate_or_fn
@@ -56,20 +57,19 @@ export function create_validator(validate_or_fn, maybe_fn) {
  * @param {RemoteInternals} internals
  * @param {string} payload — the stringified raw argument (i.e. the cache key the client will use)
  * @param {RequestEvent} event
- * @param {RequestState} state
  * @param {() => Promise<T>} get_result
  * @returns {Promise<T>}
  */
-export async function get_response(internals, payload, event, state, get_result) {
+export async function get_response(internals, payload, event, get_result) {
 	// wait a beat, in case `myQuery().set(...)` or `myQuery().refresh()` is immediately called
 	// eslint-disable-next-line @typescript-eslint/await-thenable
 	await 0;
 
-	const cache = get_cache(internals, state);
+	const cache = get_cache(internals, event);
 
 	if (!inside(event, 'query')) {
 		// if this is a top-level (not nested) `await myQuery()`, include it in the serialized response
-		get_implicit_lookup(internals, state)[payload] = get_result;
+		get_implicit_lookup(internals, event)[payload] = get_result;
 	}
 
 	return (cache[payload] ??= get_result());
@@ -79,35 +79,33 @@ export async function get_response(internals, payload, event, state, get_result)
  * Like `with_event` but removes things from `event` you cannot see/call in remote functions, such as `setHeaders`.
  * @template T
  * @param {RequestEvent} event
- * @param {RequestState} state
  * @param {Kind} kind
  * @param {() => any} get_input
  * @param {(arg?: any) => T} fn
  */
-export async function run_remote_function(event, state, kind, get_input, fn) {
-	const store = { event: derive_event(event, kind), state };
+export async function run_remote_function(event, kind, get_input, fn) {
+	const derived = derive_event(event, kind);
 
 	// In two parts, each with_event, so that runtimes without async local storage can still get the event at the start of the function
-	const input = await with_request_store(store, get_input);
-	return with_request_store(store, () => fn(input));
+	const input = await with_event(derived, get_input);
+	return with_event(derived, () => fn(input));
 }
 
 /**
  * Like `with_event` but removes things from `event` you cannot see/call in remote functions, such as `setHeaders`.
  * @template T
  * @param {RequestEvent} event
- * @param {RequestState} state
  * @param {Kind} kind
  * @param {() => any} get_input
  * @param {(arg?: any) => RemoteLiveQueryUserFunctionReturnType<T>} fn
  * @param {string} name
  */
-export async function* run_remote_generator(event, state, kind, get_input, fn, name) {
-	const store = { event: derive_event(event, kind), state };
+export async function* run_remote_generator(event, kind, get_input, fn, name) {
+	const derived = derive_event(event, kind);
 
 	// In two parts, each with_event, so that runtimes without async local storage can still get the event at the start of the function / calls to next
-	const input = await with_request_store(store, get_input);
-	const source = await with_request_store(store, () => fn(input));
+	const input = await with_event(derived, get_input);
+	const source = await with_event(derived, () => fn(input));
 	const iterator = to_iterator(source, name);
 	let done = false;
 
@@ -118,7 +116,7 @@ export async function* run_remote_generator(event, state, kind, get_input, fn, n
 			// access to the request context in generator functions, we have to
 			// provide it to every invocation of `.next`. (It's more obvious that
 			// this is necessary with plain iterators.)
-			const result = await with_request_store(store, () => iterator.next());
+			const result = await with_event(derived, () => iterator.next());
 			if (result.done) {
 				done = true;
 				return result.value;
@@ -127,7 +125,7 @@ export async function* run_remote_generator(event, state, kind, get_input, fn, n
 		}
 	} finally {
 		if (!done && typeof iterator.return === 'function') {
-			await with_request_store(store, () => iterator.return?.(undefined));
+			await with_event(derived, () => iterator.return?.(undefined));
 		}
 	}
 }
@@ -158,20 +156,18 @@ function to_iterator(source, name) {
 }
 
 /**
- * Note that `state` is deliberately not optional: resources that capture the request
- * state at creation must pass it explicitly, because reading it from the request store
- * at call time is only equivalent on runtimes with `AsyncLocalStorage` support.
- * Callers without a captured state (such as the module-level `form` instance getters)
- * should pass `get_request_store().state` themselves.
+ * `event` is deliberately not optional: resources capture it at creation, since reading it
+ * from the store at call time is only equivalent on runtimes with `AsyncLocalStorage`
  * @param {RemoteInternals} internals
- * @param {RequestState} state
+ * @param {RequestEvent} event
  */
-export function get_cache(internals, state) {
-	let cache = state.remote.data?.get(internals);
+export function get_cache(internals, event) {
+	const { remote } = get_state(event);
+	let cache = remote.data?.get(internals);
 
 	if (cache === undefined) {
 		cache = {};
-		(state.remote.data ??= new Map()).set(internals, cache);
+		(remote.data ??= new Map()).set(internals, cache);
 	}
 
 	return cache;
@@ -179,14 +175,15 @@ export function get_cache(internals, state) {
 
 /**
  * @param {RemoteInternals} internals
- * @param {RequestState} state
+ * @param {RequestEvent} event
  */
-export function get_implicit_lookup(internals, state) {
-	let cache = state.remote.implicit?.get(internals);
+export function get_implicit_lookup(internals, event) {
+	const { remote } = get_state(event);
+	let cache = remote.implicit?.get(internals);
 
 	if (cache === undefined) {
 		cache = {};
-		(state.remote.implicit ??= new Map()).set(internals, cache);
+		(remote.implicit ??= new Map()).set(internals, cache);
 	}
 
 	return cache;

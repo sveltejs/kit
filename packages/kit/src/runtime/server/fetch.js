@@ -4,18 +4,18 @@ import { respond } from './respond.js';
 import * as paths from '#app/paths';
 import { hooks, manifest, read_implementation } from './internal.js';
 import { has_prerendered_path } from './utils.js';
-import { fork_state_for_subrequest } from './state.js';
+import { fork_state_for_subrequest, get_state } from './state.js';
 
 /**
  * @param {{
  *   event: import('@sveltejs/kit').RequestEvent;
- *   state: import('types').RequestState;
  *   get_cookie_header: (url: URL, header: string | null) => string;
  *   set_internal: (name: string, value: string, opts: import('./page/types.js').Cookie['options']) => void;
  * }} opts
  * @returns {typeof fetch}
  */
-export function create_fetch({ event, state, get_cookie_header, set_internal }) {
+export function create_fetch({ event, get_cookie_header, set_internal }) {
+	const state = get_state(event);
 	/**
 	 * @type {typeof fetch}
 	 */

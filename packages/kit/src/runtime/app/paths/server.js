@@ -2,8 +2,9 @@ import { base, assets, relative } from './internal/server.js';
 import { resolve_route, find_route } from '../../../utils/routing.js';
 import { decode_pathname } from '../../../utils/url.js';
 import { add_data_suffix } from '../../../pathname.js';
-import { try_get_request_store } from '@sveltejs/kit/internal/server';
+import { try_get_event } from '@sveltejs/kit/internal/server';
 import { manifest } from '../../server/internal.js';
+import { get_state } from '../../server/state.js';
 import { get_hooks } from '<sveltekit:generated>/server.js';
 import { DEV } from 'esm-env';
 
@@ -39,14 +40,14 @@ export function resolve(id, params) {
 	}
 
 	if (relative) {
-		const store = try_get_request_store();
+		const event = try_get_event();
 
-		if (store && !store.state.prerendering?.fallback) {
+		if (event && !get_state(event).prerendering?.fallback) {
 			// the relative path depth must reflect the URL the browser is actually at, which
 			// for a data request includes the `__data.json` suffix that was stripped during routing
-			const pathname = store.event.isDataRequest
-				? add_data_suffix(store.event.url.pathname)
-				: store.event.url.pathname;
+			const pathname = event.isDataRequest
+				? add_data_suffix(event.url.pathname)
+				: event.url.pathname;
 			const after_base = pathname.slice(base.length);
 			const segments = after_base.split('/').slice(2);
 			const prefix = segments.map(() => '..').join('/') || '.';
@@ -60,10 +61,10 @@ export function resolve(id, params) {
 
 /** @type {typeof import('./client.js').match} */
 export async function match(url) {
-	const store = try_get_request_store();
+	const event = try_get_event();
 
 	if (typeof url === 'string') {
-		const origin = store?.event.url.origin ?? 'a://a';
+		const origin = event?.url.origin ?? 'a://a';
 		url = new URL(url, origin);
 	}
 
@@ -73,7 +74,7 @@ export async function match(url) {
 
 	try {
 		resolved_path = decode_pathname(
-			(await reroute?.({ url: new URL(url), fetch: store?.event.fetch ?? fetch })) ?? url.pathname
+			(await reroute?.({ url: new URL(url), fetch: event?.fetch ?? fetch })) ?? url.pathname
 		);
 	} catch {
 		return null;

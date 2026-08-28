@@ -14,7 +14,7 @@ vi.mock(import('@sveltejs/kit/internal/server'), async (actualPromise) => {
 	const actual = await actualPromise();
 	return {
 		...actual,
-		get_request_store: () => store.current
+		get_event: () => store.current
 	};
 });
 
@@ -22,6 +22,7 @@ vi.stubGlobal('__SVELTEKIT_DEV__', false);
 
 const { handle_error_and_jsonify } = await import('../../../server/errors.js');
 const { set_hooks } = await import('../../../server/internal.js');
+const { set_state } = await import('../../../server/state.js');
 
 /**
  * Creates a prerender function whose self-fetch of the prerendered response
@@ -33,22 +34,23 @@ function setup(fetch_impl) {
 	const wrapper = prerender(fn);
 	/** @type {any} */ (wrapper).__.id = 'hash/fn';
 
-	store.current = {
-		event: /** @type {RequestEvent} */ (
-			/** @type {unknown} */ ({
-				request: { url: 'http://localhost/' },
-				isRemoteRequest: false,
-				cookies: {},
-				[CONTEXT]: 0
-			})
-		),
-		state: /** @type {RequestState} */ (
+	store.current = /** @type {RequestEvent} */ (
+		/** @type {unknown} */ ({
+			request: { url: 'http://localhost/' },
+			isRemoteRequest: false,
+			cookies: {},
+			[CONTEXT]: 0
+		})
+	);
+	set_state(
+		store.current,
+		/** @type {RequestState} */ (
 			/** @type {unknown} */ ({
 				remote: {},
 				prerendering: undefined
 			})
 		)
-	};
+	);
 
 	vi.stubGlobal('fetch', vi.fn(fetch_impl));
 
@@ -73,11 +75,7 @@ test('propagates an error response instead of running the function', async () =>
 	const handleError = vi.fn();
 	set_hooks(/** @type {any} */ ({ handleError }));
 
-	const transformed = await handle_error_and_jsonify(
-		store.current.event,
-		store.current.state,
-		rejection
-	);
+	const transformed = await handle_error_and_jsonify(store.current, rejection);
 
 	expect(transformed).toBe(rejection.body);
 	expect(handleError).not.toHaveBeenCalled();
@@ -89,17 +87,13 @@ test('passes validation errors to handleError without exposing issues by default
 	const handleError = vi.fn();
 	set_hooks(/** @type {any} */ ({ handleError }));
 
-	const transformed = await handle_error_and_jsonify(
-		store.current.event,
-		store.current.state,
-		new ValidationError(issues)
-	);
+	const transformed = await handle_error_and_jsonify(store.current, new ValidationError(issues));
 
 	expect(handleError).toHaveBeenCalledWith({
 		kind: 'validation',
 		error: { status: 400, message: 'Bad Request' },
 		issues,
-		event: store.current.event
+		event: store.current
 	});
 	expect(transformed).toEqual({ status: 400, message: 'Bad Request' });
 });

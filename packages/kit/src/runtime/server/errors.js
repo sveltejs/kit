@@ -4,18 +4,17 @@ import {
 	SvelteKitError,
 	ValidationError
 } from '@sveltejs/kit/internal';
-import { with_request_store, inside } from '@sveltejs/kit/internal/server';
+import { with_event, inside } from '@sveltejs/kit/internal/server';
 import { add_deprecated_handle_error_properties, coalesce_to_error } from '../../utils/error.js';
 // `$app/server` reaches this module, so it must not import anything generated
 import { fix_stack_trace, hooks } from './internal.js';
 
 /**
  * @param {import('@sveltejs/kit').RequestEvent} event
- * @param {import('types').RequestState} state
  * @param {any} error
  * @returns {App.Error | Promise<App.Error>}
  */
-export function handle_error_and_jsonify(event, state, error) {
+export function handle_error_and_jsonify(event, error) {
 	if (error instanceof HandledHttpError) {
 		return error.body;
 	}
@@ -62,7 +61,7 @@ export function handle_error_and_jsonify(event, state, error) {
 		const input = { ...caught, event };
 		if (__SVELTEKIT_DEV__) add_deprecated_handle_error_properties(input, fallback);
 
-		result = with_request_store({ event, state }, () => hooks.handleError(input));
+		result = with_event(event, () => hooks.handleError(input));
 	} catch (hook_error) {
 		log_handle_error_hook_failure(error, hook_error);
 		return { status: fallback.status, message: 'Internal Error' };
