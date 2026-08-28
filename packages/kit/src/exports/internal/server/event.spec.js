@@ -1,7 +1,7 @@
 /** @import { RequestEvent as Interface } from '@sveltejs/kit' */
 /** @import { RequestState } from 'types' */
 import { assert, expect, test } from 'vitest';
-import { RequestEvent, CONTEXT, QUERY, COMMAND, RENDER } from './event.js';
+import { RequestEvent, QUERY, COMMAND, RENDER } from './event.js';
 
 function root() {
 	return new RequestEvent(
@@ -15,7 +15,8 @@ function root() {
 				tracing: { enabled: false }
 			})
 		),
-		0
+		0,
+		/** @type {any} */ ({ remote: {} })
 	);
 }
 
@@ -66,7 +67,8 @@ test('views share the request data and own nothing else', () => {
 	const event = base.clone(QUERY);
 
 	assert.strictEqual(event.locals, base.locals);
-	assert.deepEqual(Object.getOwnPropertySymbols(event), [CONTEXT]);
+	assert.equal(Object.getOwnPropertySymbols(event).length, 2);
+	assert.strictEqual(event.state, base.state);
 	assert.isFalse(Object.hasOwn(event, 'url'));
 });
 

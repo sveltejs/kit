@@ -1,6 +1,6 @@
 /** @import { RemoteLiveQuery, RemoteLiveQueryFunction, RemoteQuery, RemoteQueryFunction, RequestedResult, RemoteQueryRequestedResult, RemoteLiveQueryRequestedResult } from '$app/server' */
 /** @import { MaybePromise, RemoteAnyQueryInternals } from 'types' */
-import { get_request_store } from '@sveltejs/kit/internal/server';
+import { get_event } from '@sveltejs/kit/internal/server';
 import { create_remote_key, parse_remote_arg } from '../../../shared.js';
 import { noop } from '../../../../utils/functions.js';
 import { get_cache } from './shared.js';
@@ -101,7 +101,8 @@ import { refresh } from './query.js';
  * @returns {RequestedResult<Validated, Output>}
  */
 export function requested(query, limit) {
-	const { event, state } = get_request_store();
+	const event = get_event();
+	const state = event.state;
 	const internals = /** @type {RemoteAnyQueryInternals | undefined} */ (
 		/** @type {any} */ (query).__
 	);
@@ -156,8 +157,8 @@ export function requested(query, limit) {
 		const promise = Promise.reject(error);
 		promise.catch(noop);
 
-		get_cache(__, state)[payload] = promise;
-		refresh(event, state, __, payload, () => promise);
+		get_cache(__, event)[payload] = promise;
+		refresh(event, __, payload, () => promise);
 	};
 
 	for (const payload of skipped) consume(payload);
