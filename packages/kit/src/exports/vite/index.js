@@ -7,6 +7,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { styleText } from 'node:util';
+import * as vite from 'vite';
 
 import { resolve_entry } from '../../utils/filesystem.js';
 import { posixify } from '../../utils/os.js';
@@ -237,9 +238,6 @@ function resolve_root(vite_config) {
  * @return {Plugin[]}
  */
 function kit({ svelte_config }) {
-	/** @type {typeof import('vite')} */
-	let vite;
-
 	/**
 	 * The posix-ified root of the project based on the Vite configuration.
 	 * @type {string}
@@ -343,8 +341,6 @@ function kit({ svelte_config }) {
 
 				service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
 				service_worker_entry_file &&= posixify(service_worker_entry_file);
-
-				vite = await import_peer('vite', root);
 
 				normalized_aliases = get_import_aliases(root, vite.normalizePath.bind(vite));
 
@@ -645,10 +641,7 @@ function kit({ svelte_config }) {
 			plugin_remote_guard(svelte_config),
 			plugin_remote(
 				svelte_config,
-				() => ({
-					root,
-					vite
-				}),
+				() => ({ root, vite }),
 				() => build_metadata,
 				(metadata) => {
 					remote_metadata = metadata;

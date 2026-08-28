@@ -1,7 +1,7 @@
 /** @import { ViteDevServer } from 'vite' */
 
 /**
- * @param {typeof import('vite')} vite the peer resolved vite module
+ * @param {typeof import('vite')} vite the vite module that created the server
  * @param {ViteDevServer} server
  */
 export function get_runner(vite, server) {
