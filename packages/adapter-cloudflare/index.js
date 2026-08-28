@@ -219,18 +219,46 @@ export default function (options = {}) {
  * @returns {Plugin}
  */
 function virtual_workers_module(options, stub_import) {
+	/** @type {import('wrangler').PlatformProxy | undefined} */
+	let proxy;
+
 	const setup = async () => {
 		if (globalThis.__sveltekit_cloudflare_platform) return;
-		const proxy = await getPlatformProxy(options);
+		proxy = await getPlatformProxy(options);
 		// We store the platform proxy on globalThis so that our virtual workers module
 		// can access the same instance that we use here to populate `caches` and `cf` (above).
 		globalThis.__sveltekit_cloudflare_platform = proxy;
 		/** @type {any} */ (globalThis).caches = proxy.caches;
 	};
+
+	const dispose = async () => {
+		if (!proxy) return;
+
+		const current = proxy;
+		proxy = undefined;
+		if (globalThis.__sveltekit_cloudflare_platform === current) {
+			// @ts-expect-error allow another dev or preview server to create a new proxy
+			globalThis.__sveltekit_cloudflare_platform = undefined;
+		}
+		await current.dispose();
+	};
+
 	return {
 		name: 'vite-plugin-sveltekit-adapter-cloudflare-virtual-workers-module',
 		configureServer: setup,
-		configurePreviewServer: setup,
+		async configurePreviewServer(server) {
+			await setup();
+
+			const close = server.close;
+			server.close = async () => {
+				try {
+					await close.call(server);
+				} finally {
+					await dispose();
+				}
+			};
+		},
+		closeBundle: dispose,
 		resolveId: {
 			filter: { id: exactRegex('cloudflare:workers') },
 			handler() {
