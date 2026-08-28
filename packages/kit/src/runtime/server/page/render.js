@@ -30,6 +30,7 @@ import { Props, RenderNode } from '../../props.svelte.js';
 import { has_custom_transporters, uneval } from '#app/internal/transport';
 import { manifest } from '../internal.js';
 import { options } from '<sveltekit:generated>/server.js';
+import { derive_event, get_context } from '../context.js';
 
 // TODO rename this function/module
 
@@ -183,7 +184,7 @@ export async function render_response({
 
 		props.page.data = data;
 
-		const render_state = { ...state, is_in_render: true };
+		const render_event = derive_event(event, { is_in_render: true });
 
 		const render_opts = {
 			context: new Map([
@@ -201,7 +202,7 @@ export async function render_response({
 							throw e;
 						}
 
-						const handled = handle_error_and_jsonify(event, render_state, e);
+						const handled = handle_error_and_jsonify(render_event, state, e);
 
 						// TODO 4.0 make this an async function and await `handled`
 						if (handled instanceof Promise) {
@@ -228,11 +229,13 @@ export async function render_response({
 			if (DEV) {
 				let warned = false;
 				globalThis.fetch = (info, init) => {
+					const store = try_get_request_store();
+
 					if (typeof info === 'string' && !SCHEME.test(info)) {
 						throw new Error(
 							`Cannot call \`fetch\` eagerly during server-side rendering with relative URL (${info}) — put your \`fetch\` calls inside \`onMount\` or a \`load\` function instead`
 						);
-					} else if (!warned && !try_get_request_store()?.state.is_in_remote_function) {
+					} else if (!warned && !(store && get_context(store.event).is_in_remote_function)) {
 						console.warn(
 							'Avoid calling `fetch` eagerly during server-side rendering — put your `fetch` calls inside `onMount` or a `load` function instead'
 						);
@@ -243,7 +246,7 @@ export async function render_response({
 				};
 			}
 
-			rendered = await with_request_store({ event, state: render_state }, async () => {
+			rendered = await with_request_store({ event: render_event, state }, async () => {
 				return render(Root, { ...render_opts, props });
 			});
 

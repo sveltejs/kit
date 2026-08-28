@@ -18,6 +18,7 @@ import {
 import { deserialize_binary_form } from '../form-utils.js';
 import { text_encoder } from '../utils.js';
 import { with_version_header } from './utils.js';
+import { derive_event } from './context.js';
 import { manifest } from './internal.js';
 
 /**
@@ -258,7 +259,7 @@ async function handle_remote_call_internal(event, state, id) {
 
 				const fn = internals.fn;
 				data._ = await with_request_store(
-					{ event, state: { ...state, is_in_remote_form_or_command: true } },
+					{ event: derive_event(event, { is_in_remote_form_or_command: true }), state },
 					() => fn(input, meta, form_data)
 				);
 
@@ -283,7 +284,7 @@ async function handle_remote_call_internal(event, state, id) {
 				const arg = parse_remote_arg(payload);
 
 				data._ = await with_request_store(
-					{ event, state: { ...state, is_in_remote_form_or_command: true } },
+					{ event: derive_event(event, { is_in_remote_form_or_command: true }), state },
 					() => fn(arg)
 				);
 
@@ -566,7 +567,7 @@ async function handle_remote_form_post_internal(event, state, id) {
 		}
 
 		await with_request_store(
-			{ event, state: { ...state, is_in_remote_form_or_command: true } },
+			{ event: derive_event(event, { is_in_remote_form_or_command: true }), state },
 			() => __.fn(data, meta, form_data)
 		);
 

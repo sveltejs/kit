@@ -3,6 +3,7 @@
 /** @import { RemoteInternals, MaybePromise, RequestState, RemoteQueryLiveInternals, RemoteQueryBatchInternals, RemoteQueryInternals, RemoteLiveQueryUserFunctionReturnType } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
+import { get_context } from '../../../server/context.js';
 import { create_remote_key, stringify_remote_arg } from '../../../shared.js';
 import { prerendering } from '#app/env/server';
 import {
@@ -81,7 +82,8 @@ export function query(validate_or_fn, maybe_fn) {
 			return create_query_resource(__, payload, event, state, () =>
 				run_remote_function(
 					event,
-					{ ...state, is_in_remote_query: true },
+					state,
+					{ is_in_remote_query: true },
 					false,
 					() => validated_arg,
 					fn
@@ -104,7 +106,8 @@ export function query(validate_or_fn, maybe_fn) {
 		return create_query_resource(__, payload, event, state, () =>
 			run_remote_function(
 				event,
-				{ ...state, is_in_remote_query: true },
+				state,
+				{ is_in_remote_query: true },
 				false,
 				() => validate(arg),
 				fn
@@ -164,14 +167,7 @@ function live(validate_or_fn, maybe_fn) {
 	 * @param {any} get_input
 	 */
 	const run = (event, state, get_input) =>
-		run_remote_generator(
-			event,
-			{ ...state, is_in_remote_query: true },
-			false,
-			get_input,
-			fn,
-			__.name
-		);
+		run_remote_generator(event, state, { is_in_remote_query: true }, false, get_input, fn, __.name);
 
 	/** @type {RemoteQueryLiveInternals} */
 	const __ = {
@@ -292,7 +288,8 @@ function batch(validate_or_fn, maybe_fn) {
 				try {
 					return await run_remote_function(
 						event,
-						{ ...state, is_in_remote_query: true },
+						state,
+						{ is_in_remote_query: true },
 						false,
 						async () => Promise.all(entries.map((entry) => entry.get_validated())),
 						async (input) => {
@@ -335,7 +332,8 @@ function batch(validate_or_fn, maybe_fn) {
 
 			return run_remote_function(
 				event,
-				{ ...state, is_in_remote_query: true },
+				state,
+				{ is_in_remote_query: true },
 				false,
 				async () => Promise.all(args.map(validate)),
 				async (/** @type {any[]} */ input) => {
@@ -405,7 +403,7 @@ export function refresh(event, state, internals, payload, fn) {
 		return;
 	}
 
-	if (!event.isRemoteRequest && state.is_in_remote_form_or_command) {
+	if (!event.isRemoteRequest && get_context(event).is_in_remote_form_or_command) {
 		// ...or this is a no-JS (native) form submission, where the page re-renders
 		// anyway so there's no live client cache to apply a single-flight update to.
 		return;
@@ -437,14 +435,14 @@ function create_query_resource(__, payload, event, state, fn) {
 	let promise = null;
 
 	const get_promise = () => {
-		return (promise ??= get_response(__, payload, state, fn));
+		return (promise ??= get_response(__, payload, event, state, fn));
 	};
 
 	const populate_hydratable = () => {
 		// accessing data properties needs to kick off the work
 		// so that it gets seeded in the hydration cache
 		// and becomes available on the client
-		if (__.id && state.is_in_render) {
+		if (__.id && get_context(event).is_in_render) {
 			// swallow rejections so they don't crash the server — the error is
 			// serialized into the response and surfaced on the client instead
 			get_promise().catch(noop);
@@ -524,11 +522,11 @@ function create_live_query_resource(__, payload, event, state, get_generator) {
 	};
 
 	const get_promise = () => {
-		return (promise ??= get_response(__, payload, state, get_first_value));
+		return (promise ??= get_response(__, payload, event, state, get_first_value));
 	};
 
 	const populate_hydratable = () => {
-		if (__.id && state.is_in_render) {
+		if (__.id && get_context(event).is_in_render) {
 			// swallow rejections so they don't crash the server — the error is
 			// serialized into the response and surfaced on the client instead
 			get_promise().catch(noop);
