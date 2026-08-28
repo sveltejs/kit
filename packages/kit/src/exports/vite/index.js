@@ -328,7 +328,7 @@ function kit({ svelte_config }) {
 		 */
 		config: {
 			order: 'pre',
-			async handler(config, config_env) {
+			handler(config, config_env) {
 				initial_config = config;
 				is_build = config_env.command === 'build';
 
