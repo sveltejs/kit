@@ -1,5 +1,6 @@
 import { text } from '@sveltejs/kit';
 import { ENDPOINT_METHODS } from '../../constants.js';
+import { manifest } from './internal.js';
 
 /**
  * @param {Partial<Record<import('types').HttpMethod, any>>} mod
@@ -98,10 +99,9 @@ export function serialize_uses(node) {
 
 /**
  * Returns `true` if the given path was prerendered
- * @param {import('types').SSRManifest} manifest
  * @param {string} pathname Should include the base and be decoded
  */
-export function has_prerendered_path(manifest, pathname) {
+export function has_prerendered_path(pathname) {
 	return (
 		manifest.prerendered_routes.has(pathname) ||
 		(pathname.at(-1) === '/' && manifest.prerendered_routes.has(pathname.slice(0, -1)))

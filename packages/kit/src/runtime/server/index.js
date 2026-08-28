@@ -58,13 +58,8 @@ if (DEV) {
 }
 
 export class Server {
-	/** @type {import('types').SSRManifest} */
-	#manifest;
-
 	/** @param {import('types').SSRManifest} manifest */
 	constructor(manifest) {
-		this.#manifest = manifest;
-
 		// Since AsyncLocalStorage is not working in webcontainers, we don't reset `sync_store`
 		// in `src/exports/internal/server/event.js` and handle only one request at a time.
 		if (IN_WEBCONTAINER) {
@@ -187,7 +182,7 @@ export class Server {
 	async respond(request, options) {
 		const request_state = create_request_state(options);
 
-		const response = await respond(request, this.#manifest, request_state);
+		const response = await respond(request, request_state);
 
 		if (DEV) {
 			const error = decoded_responses.get(response);

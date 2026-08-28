@@ -8,24 +8,17 @@ import { handle_error_and_jsonify } from '../errors.js';
 import { normalize_path } from '../../../utils/url.js';
 import { stream_text } from '../../utils.js';
 import { with_version_header } from '../utils.js';
+import { manifest } from '../internal.js';
 
 /**
  * @param {import('@sveltejs/kit').RequestEvent} event
  * @param {import('types').RequestState} state
  * @param {{ page: Pick<import('types').PageNodeIndexes, 'layouts' | 'leaf'> | null }} route
- * @param {import('types').SSRManifest} manifest
  * @param {boolean[] | undefined} invalidated_data_nodes
  * @param {import('types').TrailingSlash} trailing_slash
  * @returns {Promise<Response>}
  */
-export async function render_data(
-	event,
-	state,
-	route,
-	manifest,
-	invalidated_data_nodes,
-	trailing_slash
-) {
+export async function render_data(event, state, route, invalidated_data_nodes, trailing_slash) {
 	if (!route.page) {
 		// requesting /__data.json should fail for a +server.js
 		return with_version_header(new Response(undefined, { status: 404 }));

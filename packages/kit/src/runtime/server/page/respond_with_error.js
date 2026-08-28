@@ -5,6 +5,7 @@ import { redirect_response } from '../utils.js';
 import { handle_error_and_jsonify, static_error_page } from '../errors.js';
 import { PageNodes } from '../../../utils/page_nodes.js';
 import { server_data_serializer } from './data_serializer.js';
+import { manifest } from '../internal.js';
 
 /**
  * @typedef {import('./types.js').Loaded} Loaded
@@ -14,12 +15,11 @@ import { server_data_serializer } from './data_serializer.js';
  * @param {{
  *   event: import('@sveltejs/kit').RequestEvent;
  *   state: import('types').RequestState;
- *   manifest: import('types').SSRManifest;
  *   error: unknown;
  *   resolve_opts: import('types').RequiredResolveOptions;
  * }} opts
  */
-export async function respond_with_error({ event, state, manifest, error, resolve_opts }) {
+export async function respond_with_error({ event, state, error, resolve_opts }) {
 	// reroute to the fallback page to prevent an infinite chain of requests.
 	if (event.request.headers.get('x-sveltekit-error')) {
 		const transformed = await handle_error_and_jsonify(event, state, error);
@@ -79,7 +79,6 @@ export async function respond_with_error({ event, state, manifest, error, resolv
 		}
 
 		return await render_response({
-			manifest,
 			page_config: {
 				ssr,
 				csr

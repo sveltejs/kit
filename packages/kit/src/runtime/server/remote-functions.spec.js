@@ -10,12 +10,14 @@ let create_live_query_response;
 let handle_remote_call;
 /** @type {typeof import('./internal.js').set_hooks} */
 let set_hooks;
+/** @type {typeof import('./internal.js').set_manifest} */
+let set_manifest;
 
 beforeAll(async () => {
 	vi.stubGlobal('__SVELTEKIT_DEV__', false);
 	init_transport({});
 	({ create_live_query_response, handle_remote_call } = await import('./remote-functions.js'));
-	({ set_hooks } = await import('./internal.js'));
+	({ set_hooks, set_manifest } = await import('./internal.js'));
 });
 
 /**
@@ -105,6 +107,13 @@ test('serializes explicitly ignored requested updates', async () => {
 		return null;
 	};
 	Object.assign(command, { __: { type: 'command', name: 'command', fn: command } });
+	set_manifest(
+		/** @type {any} */ ({
+			remotes: {
+				hash: () => Promise.resolve({ default: { command } })
+			}
+		})
+	);
 
 	const response = await handle_remote_call(
 		/** @type {any} */ ({
@@ -115,11 +124,6 @@ test('serializes explicitly ignored requested updates', async () => {
 			tracing: { current: { setAttributes: vi.fn() } }
 		}),
 		/** @type {any} */ ({ remote: { requested: null, ignored: null } }),
-		/** @type {any} */ ({
-			remotes: {
-				hash: () => Promise.resolve({ default: { command } })
-			}
-		}),
 		'hash/command'
 	);
 

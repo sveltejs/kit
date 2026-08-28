@@ -1,6 +1,6 @@
 /** @import { RequestEvent } from '@sveltejs/kit' */
 /** @import { RemoteForm } from '$app/server' */
-/** @import { RemoteFormInternals, RemoteFunctionData, RemoteFunctionResponse, RemoteInternals, RequestState, ServerActionResult, SSRManifest } from 'types' */
+/** @import { RemoteFormInternals, RemoteFunctionData, RemoteFunctionResponse, RemoteInternals, RequestState, ServerActionResult } from 'types' */
 
 import { error } from '@sveltejs/kit';
 import { Redirect, SvelteKitError } from '@sveltejs/kit/internal';
@@ -18,6 +18,7 @@ import {
 import { deserialize_binary_form } from '../form-utils.js';
 import { text_encoder } from '../utils.js';
 import { with_version_header } from './utils.js';
+import { manifest } from './internal.js';
 
 /**
  * How long (in milliseconds) to wait after the last message was sent before
@@ -140,7 +141,7 @@ export function create_live_query_response(event, state, internals, arg) {
 }
 
 /** @type {typeof handle_remote_call_internal} */
-export async function handle_remote_call(event, state, manifest, id) {
+export async function handle_remote_call(event, state, id) {
 	return record_span({
 		name: 'sveltekit.remote.call',
 		attributes: {
@@ -149,7 +150,7 @@ export async function handle_remote_call(event, state, manifest, id) {
 		fn: async (current) => {
 			const traced_event = merge_tracing(event, current);
 			const response = await with_request_store({ event: traced_event, state }, () =>
-				handle_remote_call_internal(traced_event, state, manifest, id)
+				handle_remote_call_internal(traced_event, state, id)
 			);
 			return with_version_header(response);
 		}
@@ -159,10 +160,9 @@ export async function handle_remote_call(event, state, manifest, id) {
 /**
  * @param {RequestEvent} event
  * @param {RequestState} state
- * @param {SSRManifest} manifest
  * @param {string} id
  */
-async function handle_remote_call_internal(event, state, manifest, id) {
+async function handle_remote_call_internal(event, state, id) {
 	const [hash, name, additional_args] = id.split('/');
 	const remotes = manifest.remotes;
 
@@ -513,7 +513,7 @@ function create_requested_map(refreshes) {
 }
 
 /** @type {typeof handle_remote_form_post_internal} */
-export async function handle_remote_form_post(event, state, manifest, id) {
+export async function handle_remote_form_post(event, state, id) {
 	return record_span({
 		name: 'sveltekit.remote.form.post',
 		attributes: {
@@ -522,7 +522,7 @@ export async function handle_remote_form_post(event, state, manifest, id) {
 		fn: (current) => {
 			const traced_event = merge_tracing(event, current);
 			return with_request_store({ event: traced_event, state }, () =>
-				handle_remote_form_post_internal(traced_event, state, manifest, id)
+				handle_remote_form_post_internal(traced_event, state, id)
 			);
 		}
 	});
@@ -531,11 +531,10 @@ export async function handle_remote_form_post(event, state, manifest, id) {
 /**
  * @param {RequestEvent} event
  * @param {RequestState} state
- * @param {SSRManifest} manifest
  * @param {string} id
  * @returns {Promise<ServerActionResult>}
  */
-async function handle_remote_form_post_internal(event, state, manifest, id) {
+async function handle_remote_form_post_internal(event, state, id) {
 	const location = get_action_location(event.url);
 	// `hash` and `name` can never contain a `/`, but the JSON-stringified key of a
 	// keyed (`form.for(key)`) instance can — rejoin the remaining segments
