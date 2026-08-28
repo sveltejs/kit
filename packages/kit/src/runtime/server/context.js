@@ -1,17 +1,24 @@
 /** @import { RequestEvent } from '@sveltejs/kit' */
 /** @import { RequestContext } from 'types' */
 
+const CONTEXT = Symbol('sveltekit.context');
+
 /** @type {RequestContext} */
 const EMPTY = {};
 
 /**
- * What kind of code the event was handed to. Lives on the event view as a non-enumerable
- * `__`, so it accumulates through `derive_event` and is dropped by a plain `{ ...event }`
+ * What kind of code the event was handed to. Lives on the event view under an enumerable symbol
+ * so that every `{ ...event }` copy carries it and the view keeps V8's fast object shape,
+ * which `Object.defineProperty` would drop it out of
  * @param {RequestEvent} event
  * @returns {RequestContext}
  */
 export function get_context(event) {
-	return /** @type {{ __?: RequestContext }} */ (/** @type {unknown} */ (event)).__ ?? EMPTY;
+	return (
+		/** @type {Record<symbol, RequestContext | undefined>} */ (/** @type {unknown} */ (event))[
+			CONTEXT
+		] ?? EMPTY
+	);
 }
 
 /**
@@ -21,7 +28,9 @@ export function get_context(event) {
  * @returns {RequestEvent}
  */
 export function derive_event(event, context, overrides) {
-	const derived = { ...event, ...overrides };
-	Object.defineProperty(derived, '__', { value: { ...get_context(event), ...context } });
-	return derived;
+	return /** @type {RequestEvent} */ ({
+		...event,
+		...overrides,
+		[CONTEXT]: { ...get_context(event), ...context }
+	});
 }
