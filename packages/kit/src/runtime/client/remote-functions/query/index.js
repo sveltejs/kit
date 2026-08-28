@@ -4,6 +4,7 @@ import { _goto, query_map } from '../../client.js';
 import { QUERY_FUNCTION_ID, remote_request } from '../shared.svelte.js';
 import { DEV } from 'esm-env';
 import { QueryProxy } from './proxy.js';
+import { noop } from '../../../../utils/functions.js';
 
 /**
  * @param {string} id
@@ -29,8 +30,9 @@ export function query(id) {
 			const result = await remote_request(url);
 
 			if (result.redirect) {
-				// Use internal version to allow redirects to external URLs
-				await _goto(result.redirect);
+				// Use internal version to allow redirects to external URLs. Don't await it here,
+				// since the query may be blocking the component update that completes the navigation.
+				void _goto(result.redirect).catch(noop);
 			}
 		});
 	};
