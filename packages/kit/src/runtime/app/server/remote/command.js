@@ -85,7 +85,13 @@ export function command(validate_or_fn, maybe_fn) {
 		}
 
 		const promise = Promise.resolve(
-			run_remote_function(event, state, null, () => validate(arg), fn)
+			run_remote_function(
+				event,
+				state,
+				{ is_in_remote_form_or_command: true },
+				() => validate(arg),
+				fn
+			)
 		);
 
 		// @ts-expect-error

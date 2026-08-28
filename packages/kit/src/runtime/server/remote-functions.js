@@ -18,7 +18,6 @@ import {
 import { deserialize_binary_form } from '../form-utils.js';
 import { text_encoder } from '../utils.js';
 import { with_version_header } from './utils.js';
-import { derive_event } from './context.js';
 import { manifest } from './internal.js';
 
 /**
@@ -258,10 +257,7 @@ async function handle_remote_call_internal(event, state, id) {
 				}
 
 				const fn = internals.fn;
-				data._ = await with_request_store(
-					{ event: derive_event(event, { is_in_remote_form_or_command: true }), state },
-					() => fn(input, meta, form_data)
-				);
+				data._ = await with_request_store({ event, state }, () => fn(input, meta, form_data));
 
 				if (data._.issues) {
 					// special case — don't serialize refreshes/reconnects
@@ -283,10 +279,7 @@ async function handle_remote_call_internal(event, state, id) {
 				state.remote.requested = create_requested_map(refreshes);
 				const arg = parse_remote_arg(payload);
 
-				data._ = await with_request_store(
-					{ event: derive_event(event, { is_in_remote_form_or_command: true }), state },
-					() => fn(arg)
-				);
+				data._ = await with_request_store({ event, state }, () => fn(arg));
 
 				break;
 			}
@@ -566,10 +559,7 @@ async function handle_remote_form_post_internal(event, state, id) {
 			data.id = JSON.parse(decodeURIComponent(action_id));
 		}
 
-		await with_request_store(
-			{ event: derive_event(event, { is_in_remote_form_or_command: true }), state },
-			() => __.fn(data, meta, form_data)
-		);
+		await with_request_store({ event, state }, () => __.fn(data, meta, form_data));
 
 		// We don't want the data to appear on `let { form } = $props()`, which is why we're not returning it.
 		// It is instead available on `myForm.result`, setting of which happens within the remote `form` function.
