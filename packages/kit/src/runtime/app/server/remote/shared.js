@@ -79,10 +79,12 @@ export async function get_response(internals, payload, event, state, get_result)
  * @param {RequestEvent} event
  * @param {RequestState} state
  * @param {RequestContext | null} context
- * @param {boolean} allow_cookies
  * @returns {RequestStore}
  */
-function derive_remote_function_event(event, state, context, allow_cookies) {
+function derive_remote_function_event(event, state, context) {
+	const { is_in_remote_query, is_in_remote_prerender } = { ...get_context(event), ...context };
+	const allow_cookies = !(is_in_remote_query || is_in_remote_prerender);
+
 	const derived = derive_event(
 		event,
 		{ ...context, is_in_remote_function: true },
@@ -118,7 +120,7 @@ function derive_remote_function_event(event, state, context, allow_cookies) {
 		}
 	);
 
-	if (get_context(derived).is_in_remote_query) {
+	if (is_in_remote_query) {
 		for (const property of ['url', 'params', 'route']) {
 			// non-enumerable so spreading for a nested derivation doesn't invoke the getter
 			Object.defineProperty(derived, property, {
@@ -141,12 +143,11 @@ function derive_remote_function_event(event, state, context, allow_cookies) {
  * @param {RequestEvent} event
  * @param {RequestState} state
  * @param {RequestContext | null} context
- * @param {boolean} allow_cookies
  * @param {() => any} get_input
  * @param {(arg?: any) => T} fn
  */
-export async function run_remote_function(event, state, context, allow_cookies, get_input, fn) {
-	const store = derive_remote_function_event(event, state, context, allow_cookies);
+export async function run_remote_function(event, state, context, get_input, fn) {
+	const store = derive_remote_function_event(event, state, context);
 
 	// In two parts, each with_event, so that runtimes without async local storage can still get the event at the start of the function
 	const input = await with_request_store(store, get_input);
@@ -159,21 +160,12 @@ export async function run_remote_function(event, state, context, allow_cookies, 
  * @param {RequestEvent} event
  * @param {RequestState} state
  * @param {RequestContext | null} context
- * @param {boolean} allow_cookies
  * @param {() => any} get_input
  * @param {(arg?: any) => RemoteLiveQueryUserFunctionReturnType<T>} fn
  * @param {string} name
  */
-export async function* run_remote_generator(
-	event,
-	state,
-	context,
-	allow_cookies,
-	get_input,
-	fn,
-	name
-) {
-	const store = derive_remote_function_event(event, state, context, allow_cookies);
+export async function* run_remote_generator(event, state, context, get_input, fn, name) {
+	const store = derive_remote_function_event(event, state, context);
 
 	// In two parts, each with_event, so that runtimes without async local storage can still get the event at the start of the function / calls to next
 	const input = await with_request_store(store, get_input);

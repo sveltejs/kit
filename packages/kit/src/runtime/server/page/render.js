@@ -229,13 +229,14 @@ export async function render_response({
 			if (DEV) {
 				let warned = false;
 				globalThis.fetch = (info, init) => {
-					const store = try_get_request_store();
-
 					if (typeof info === 'string' && !SCHEME.test(info)) {
 						throw new Error(
 							`Cannot call \`fetch\` eagerly during server-side rendering with relative URL (${info}) — put your \`fetch\` calls inside \`onMount\` or a \`load\` function instead`
 						);
-					} else if (!warned && !(store && get_context(store.event).is_in_remote_function)) {
+					} else if (
+						!warned &&
+						!get_context(try_get_request_store()?.event ?? event).is_in_remote_function
+					) {
 						console.warn(
 							'Avoid calling `fetch` eagerly during server-side rendering — put your `fetch` calls inside `onMount` or a `load` function instead'
 						);

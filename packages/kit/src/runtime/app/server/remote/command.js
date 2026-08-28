@@ -85,7 +85,7 @@ export function command(validate_or_fn, maybe_fn) {
 		}
 
 		const promise = Promise.resolve(
-			run_remote_function(event, state, null, true, () => validate(arg), fn)
+			run_remote_function(event, state, null, () => validate(arg), fn)
 		);
 
 		// @ts-expect-error

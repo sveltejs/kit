@@ -80,14 +80,7 @@ export function query(validate_or_fn, maybe_fn) {
 			const { event, state } = get_request_store();
 
 			return create_query_resource(__, payload, event, state, () =>
-				run_remote_function(
-					event,
-					state,
-					{ is_in_remote_query: true },
-					false,
-					() => validated_arg,
-					fn
-				)
+				run_remote_function(event, state, { is_in_remote_query: true }, () => validated_arg, fn)
 			);
 		}
 	};
@@ -104,14 +97,7 @@ export function query(validate_or_fn, maybe_fn) {
 		const payload = stringify_remote_arg(arg);
 
 		return create_query_resource(__, payload, event, state, () =>
-			run_remote_function(
-				event,
-				state,
-				{ is_in_remote_query: true },
-				false,
-				() => validate(arg),
-				fn
-			)
+			run_remote_function(event, state, { is_in_remote_query: true }, () => validate(arg), fn)
 		);
 	};
 
@@ -167,7 +153,7 @@ function live(validate_or_fn, maybe_fn) {
 	 * @param {any} get_input
 	 */
 	const run = (event, state, get_input) =>
-		run_remote_generator(event, state, { is_in_remote_query: true }, false, get_input, fn, __.name);
+		run_remote_generator(event, state, { is_in_remote_query: true }, get_input, fn, __.name);
 
 	/** @type {RemoteQueryLiveInternals} */
 	const __ = {
@@ -290,7 +276,6 @@ function batch(validate_or_fn, maybe_fn) {
 						event,
 						state,
 						{ is_in_remote_query: true },
-						false,
 						async () => Promise.all(entries.map((entry) => entry.get_validated())),
 						async (input) => {
 							const get_result = await fn(input);
@@ -334,7 +319,6 @@ function batch(validate_or_fn, maybe_fn) {
 				event,
 				state,
 				{ is_in_remote_query: true },
-				false,
 				async () => Promise.all(args.map(validate)),
 				async (/** @type {any[]} */ input) => {
 					const get_result = await fn(input);

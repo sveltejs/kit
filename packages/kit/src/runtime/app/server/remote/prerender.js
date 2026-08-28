@@ -130,7 +130,6 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 				event,
 				state,
 				{ is_in_remote_prerender: true },
-				false,
 				() => validate(arg),
 				fn
 			);
