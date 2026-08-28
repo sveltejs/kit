@@ -6,12 +6,22 @@ declare global {
 	const __SVELTEKIT_APP_VERSION__: string;
 	const __SVELTEKIT_APP_VERSION_FILE__: string;
 	const __SVELTEKIT_APP_VERSION_POLL_INTERVAL__: number;
+	/** True if version checks are enabled (i.e. `bundleStrategy !== 'inline'`) */
+	const __SVELTEKIT_APP_VERSION_CHECKS_ENABLED__: boolean;
 	/**
 	 * True if the user ran `vite dev`. This is different from `esm-env` because
 	 * it is influenced by `NODE_ENV` which can still be true during `vite preview`
 	 */
 	const __SVELTEKIT_DEV__: boolean;
+	const __SVELTEKIT_CSRF_CHECK_ORIGIN__: boolean;
 	const __SVELTEKIT_EMBEDDED__: boolean;
+	/** True if `config.output.linkHeaderPreload` is `true` */
+	const __SVELTEKIT_LINK_HEADER_PRELOAD__: boolean;
+	const __SVELTEKIT_PATHS_ORIGIN__: string | undefined;
+	/** True if the app has a service worker and `config.serviceWorker.register` is `true` */
+	const __SVELTEKIT_SERVICE_WORKER__: boolean;
+	/** The `__sveltekit_xxx` name the payload object is attached to, without `globalThis.` */
+	const __SVELTEKIT_GLOBAL_NAME__: string;
 	const __SVELTEKIT_PATHS_ASSETS__: string;
 	const __SVELTEKIT_PATHS_BASE__: string;
 	const __SVELTEKIT_PATHS_RELATIVE__: boolean;
@@ -51,7 +61,7 @@ declare global {
 	const __SVELTEKIT_MANIFEST_IMMUTABLE__: string[];
 	const __SVELTEKIT_MANIFEST_ASSETS__: string[];
 	const __SVELTEKIT_MANIFEST_PRERENDERED__: string[];
-	const __SVELTEKIT_MANIFEST_ROUTES__: { id: string }[];
+	const __SVELTEKIT_MANIFEST_ROUTES__: Array<{ id: string }>;
 	/**
 	 * This makes the use of specific features visible at both dev and build time, in such a
 	 * way that we can error when they are not supported by the target platform.

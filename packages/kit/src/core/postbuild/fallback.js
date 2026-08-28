@@ -24,7 +24,7 @@ async function generate_fallback({ manifest_path, env, out_dir, origin, assets }
 	/** @type {import('types').ServerModule} */
 	const { Server } = await import(pathToFileURL(`${server_root}/server/index.js`).href);
 
-	/** @type {import('@sveltejs/kit').SSRManifest} */
+	/** @type {import('types').SSRManifest} */
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
 	set_building();
@@ -39,7 +39,8 @@ async function generate_fallback({ manifest_path, env, out_dir, origin, assets }
 		prerendering: {
 			fallback: true,
 			dependencies: new Map(),
-			remote_responses: new Map()
+			remote_responses: new Map(),
+			resolved_route_ids: new Set()
 		},
 		read: (file) => readFileSync(join(assets, file))
 	});

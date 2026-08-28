@@ -60,7 +60,7 @@ function normalize_route_id(id) {
 			.replace(/(?<=^|\/)\(.+?\)(?=$|\/)/g, '')
 
 			.replace(/\[[ux]\+([0-9a-f]+)\]/g, (_, x) =>
-				String.fromCharCode(parseInt(x, 16)).replace(/\//g, '%2f')
+				String.fromCodePoint(parseInt(x, 16)).replace(/\//g, '%2f')
 			)
 
 			// replace `[param]` with `<*>`, `[param=x]` with `<x>`, and `[[param]]` with `<?*>`

@@ -1,7 +1,9 @@
+/** @import { HttpError } from '@sveltejs/kit' */
 import { query_responses, handle_error } from '../../client.js';
-import { HttpError } from '@sveltejs/kit/internal';
+import { HandledHttpError } from '@sveltejs/kit/internal';
 import { QUERY_OVERRIDE_KEY } from '../shared.svelte.js';
 import { noop } from '../../../../utils/functions.js';
+import { with_resolvers } from '../../../../utils/promise.js';
 import { tick, untrack } from 'svelte';
 
 /**
@@ -47,7 +49,15 @@ export class Query {
 		this.#overrides.length;
 
 		return (resolve, reject) => {
-			const result = p.then(tick).then(() => /** @type {T} */ (this.#current));
+			const result = p.then(tick).then(() => {
+				if (!this.#ready) {
+					throw new HandledHttpError(
+						this.#error ?? { status: 500, message: 'Query resolved without a value' }
+					);
+				}
+
+				return /** @type {T} */ (this.#current);
+			});
 
 			if (resolve || reject) {
 				return result.then(resolve, reject);
@@ -70,7 +80,7 @@ export class Query {
 			delete query_responses[key];
 
 			if (node.e) {
-				this.fail(new HttpError(node.e.status, node.e));
+				this.fail(new HandledHttpError(node.e));
 			} else {
 				this.set(/** @type {T} */ (node.v));
 			}
@@ -100,7 +110,7 @@ export class Query {
 	#run() {
 		this.#loading = true;
 
-		const { promise, resolve, reject } = Promise.withResolvers();
+		const { promise, resolve, reject } = with_resolvers();
 
 		// the rejection is surfaced via `.error` / the `then` getter for awaiting
 		// consumers — a purely reactive consumer (`.current`) attaches no handler,
@@ -117,14 +127,12 @@ export class Query {
 
 				// Untrack this to not trigger mutation validation errors which can occur if you do e.g. $derived({ a: await queryA(), b: await queryB() })
 				untrack(() => {
-					this.#latest.splice(0, idx).forEach((r) => r(undefined));
+					this.#latest.splice(0, idx + 1).forEach((r) => r(undefined));
 					this.#ready = true;
 					this.#loading = false;
 					this.#raw = value;
 					this.#error = undefined;
 				});
-
-				resolve(undefined);
 			})
 			.catch(async (e) => {
 				// TODO: Our behavior here could be better:
@@ -148,11 +156,12 @@ export class Query {
 
 				untrack(() => {
 					this.#latest.splice(0, idx).forEach((r) => r(undefined));
+					this.#latest.shift();
 					this.#error = error;
 					this.#loading = false;
 				});
 
-				reject(new HttpError(error.status, error)); // so that transformError doesn't transform it again
+				reject(new HandledHttpError(error));
 			});
 
 		return promise;
@@ -232,12 +241,19 @@ export class Query {
 		// SSR record can never shadow the newly-set value
 		delete query_responses[this.#key];
 
+		// a pending request's promise is settled with the value below; replacing it
+		// too would make awaiting consumers settle a second time in a new batch
+		const in_flight = this.#latest.length > 0;
+
 		this.#clear_pending();
 		this.#ready = true;
 		this.#loading = false;
 		this.#error = undefined;
 		this.#raw = value;
-		this.#promise = Promise.resolve();
+
+		if (!in_flight) {
+			this.#promise = Promise.resolve();
+		}
 	}
 
 	/** @param {HttpError} error */

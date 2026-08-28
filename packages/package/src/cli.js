@@ -1,7 +1,7 @@
+/** @import { Options } from './types.js'*/
 import fs from 'node:fs';
 import process from 'node:process';
-import { styleText } from 'node:util';
-import sade from 'sade';
+import { parseArgs, styleText } from 'node:util';
 import { load_config } from './config.js';
 
 /** @param {Error} error */
@@ -17,47 +17,82 @@ function handle_error(error) {
 }
 
 const pkg = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf-8'));
-const prog = sade('svelte-package', true).version(pkg.version);
 
-prog
-	.describe('Create a package')
-	.option('-i, --input', 'Input directory')
-	.option('-o, --output', 'Output directory', 'dist')
-	.option('-p, --preserve-output', 'Do not delete the output directory before packaging', false)
-	.option('-t, --types', 'Emit type declarations', true)
-	.option('-w, --watch', 'Rerun when files change', false)
-	.option(
-		'--tsconfig',
-		'A path to a tsconfig or jsconfig file. When not provided, searches for the next upper tsconfig/jsconfig in the workspace path.'
-	)
-	.action(async (args) => {
-		try {
-			const config = await load_config();
+const help = `
+  Usage: svelte-package [options]
 
-			// @ts-expect-error
-			if (config.package) {
-				throw new Error(
-					'config.package is no longer supported. See https://github.com/sveltejs/kit/pull/8922 for more information and how to migrate.'
-				);
-			}
+  Options:
+    --input, -i <input>        Input directory
+    --output, -o <output>      Output directory (default: dist)
+    --preserve-output, -p      Do not delete the output directory before packaging
+    --types, -t                Emit type declarations (default: true)
+    --watch, -w                Rerun when files change
+    --tsconfig <tsconfig>      A path to a tsconfig or jsconfig file. When not provided, searches
+                               for the next upper tsconfig/jsconfig in the workspace path.
+    --version, -v              Show version number
+    --help, -h                 Show this help message
+`;
 
-			const packaging = await import('./index.js');
-
-			/** @type {import('./types.js').Options} */
-			const options = {
-				cwd: process.cwd(),
-				input: args.input ?? config.kit?.files?.lib ?? 'src/lib',
-				output: args.output,
-				preserve_output: args['preserve-output'],
-				tsconfig: args.tsconfig,
-				types: args.types,
-				config
-			};
-
-			await (args.watch ? packaging.watch(options) : packaging.build(options));
-		} catch (error) {
-			handle_error(/** @type {Error} */ (error));
-		}
+let parsed;
+try {
+	parsed = parseArgs({
+		options: {
+			input: { type: 'string', short: 'i' },
+			output: { type: 'string', short: 'o', default: 'dist' },
+			'preserve-output': { type: 'boolean', short: 'p', default: false },
+			types: { type: 'boolean', short: 't', default: true },
+			watch: { type: 'boolean', short: 'w', default: false },
+			tsconfig: { type: 'string' },
+			version: { type: 'boolean', short: 'v' },
+			help: { type: 'boolean', short: 'h' }
+		},
+		allowPositionals: false,
+		allowNegative: true,
+		strict: true
 	});
+} catch (err) {
+	const error = /** @type {Error} */ (err);
+	console.error(styleText(['bold', 'red'], `> ${error.message}`));
+	console.log(help);
+	process.exit(1);
+}
 
-prog.parse(process.argv, { unknown: (arg) => `Unknown option: ${arg}` });
+const { values } = parsed;
+
+if (values.version) {
+	console.log(pkg.version);
+	process.exit(0);
+}
+
+if (values.help) {
+	console.log(help);
+	process.exit(0);
+}
+
+try {
+	const config = await load_config();
+
+	// @ts-expect-error
+	if (config.package) {
+		throw new Error(
+			'config.package is no longer supported. See https://github.com/sveltejs/kit/pull/8922 for more information and how to migrate.'
+		);
+	}
+
+	const packaging = await import('./index.js');
+
+	/** @type {Options} */
+	const options = {
+		cwd: process.cwd(),
+		input: values.input ?? config.files?.lib ?? 'src/lib',
+		output: values.output,
+		preserve_output: values['preserve-output'],
+		tsconfig: values.tsconfig,
+		types: values.types,
+		config
+	};
+
+	await (values.watch ? packaging.watch(options) : packaging.build(options));
+} catch (error) {
+	handle_error(/** @type {Error} */ (error));
+}

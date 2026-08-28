@@ -19,6 +19,9 @@ const config = {
 			paths: {
 				origin: 'http://prerender.origin'
 			},
+			router: {
+				resolution: 'server'
+			},
 			prerender: {
 				handleHttpError: 'warn',
 				handleMissingId: ({ id }) => {
@@ -39,6 +42,7 @@ const config = {
 	},
 
 	test: {
+		name: 'kit-prerendering-basics',
 		globalSetup: path.join(import.meta.dirname, 'globalSetup.js')
 	}
 };

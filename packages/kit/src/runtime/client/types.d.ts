@@ -1,4 +1,3 @@
-import { SvelteComponent } from 'svelte';
 import {
 	ClientHooks,
 	CSRPageNode,
@@ -9,8 +8,9 @@ import {
 	TrailingSlash,
 	Uses
 } from 'types';
-import { Page, ParamMatcher } from '@sveltejs/kit';
-import { RenderNode } from '../types.js';
+import { ParamMatcher } from '@sveltejs/kit/params';
+import { Page } from '$app/state';
+import { RenderNode } from '../props.svelte.js';
 
 export interface SvelteKitApp {
 	/**

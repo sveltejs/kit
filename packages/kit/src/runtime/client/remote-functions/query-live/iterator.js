@@ -1,8 +1,10 @@
-import { app_dir, base } from '$app/paths/internal/client';
+/** @import { RemoteFunctionResponse } from 'types' */
+import { app_dir, base } from '#app/paths';
 import { app } from '../../client.js';
-import { get_remote_request_headers, handle_side_channel_response } from '../shared.svelte.js';
+import { notify_version } from '#app/state/client';
+import { handle_side_channel_response } from '../shared.svelte.js';
 import * as devalue from 'devalue';
-import { HttpError } from '@sveltejs/kit/internal';
+import { HttpError, HandledHttpError } from '@sveltejs/kit/internal';
 import { noop } from '../../../../utils/functions.js';
 import { read_sse } from '../../sse.js';
 
@@ -23,25 +25,26 @@ export async function* create_live_iterator(
 	const url = `${base}/${app_dir}/remote/${id}${payload ? `?payload=${payload}` : ''}`;
 
 	const response = await fetch(url, {
-		headers: get_remote_request_headers(),
 		signal: controller.signal
 	});
 
-	if (!response.ok) {
-		const result = await response.json().catch(() => ({
-			type: 'error',
-			status: response.status,
-			error: response.statusText
-		}));
+	// detect new deployments from the response header
+	notify_version(response.headers.get('x-sveltekit-version'));
 
-		throw new HttpError(result.status ?? response.status ?? 500, result.error);
+	if (!response.ok) {
+		/** @type {RemoteFunctionResponse | undefined} */
+		const result = await response.json().catch(() => undefined);
+
+		throw result?.type === 'error'
+			? new HandledHttpError(result.error)
+			: new HttpError({ status: response.status, message: response.statusText });
 	}
 
 	if (response.headers.get('content-type')?.includes('application/json')) {
 		// we can end up here if we e.g. redirect in `handle`
 		const result = await response.json();
 		await handle_side_channel_response(result);
-		throw new HttpError(500, 'Invalid query.live response');
+		throw new HttpError({ status: 500, message: 'Invalid query.live response' });
 	}
 
 	if (!response.body) {
@@ -60,7 +63,7 @@ export async function* create_live_iterator(
 			}
 
 			await handle_side_channel_response(node);
-			throw new HttpError(500, 'Invalid query.live response');
+			throw new HttpError({ status: 500, message: 'Invalid query.live response' });
 		}
 	} finally {
 		try {

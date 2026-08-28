@@ -25,40 +25,50 @@ jobs:
       )
     runs-on: ubuntu-latest
     steps:
-      - name: Get PR ref
+      - name: Check permissions and get PR head
         if: github.event_name != 'workflow_dispatch'
         id: pr
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
+            // author_association allows read-only collaborators, so check the actual permission
+            const { data: access } = await github.rest.repos.getCollaboratorPermissionLevel({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              username: context.payload.comment.user.login
+            });
+            if (!['admin', 'write'].includes(access.permission)) {
+              core.setFailed(`@${context.payload.comment.user.login} does not have write access`);
+              return;
+            }
             const { data: pull } = await github.rest.pulls.get({
               owner: context.repo.owner,
               repo: context.repo.repo,
               pull_number: context.issue.number
             });
             if (pull.head.repo.full_name !== `${context.repo.owner}/${context.repo.repo}`) {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-                body: 'Cannot autofix: this PR is from a forked repository. The autofix workflow can only push to branches within this repository.'
-              });
-              core.setFailed('PR is from a fork');
+              core.setFailed('Cannot autofix: this PR is from a forked repository. The autofix workflow can only push to branches within this repository.');
+              return;
             }
+            core.setOutput('sha', pull.head.sha);
             core.setOutput('ref', pull.head.ref);
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         if: github.event_name == 'workflow_dispatch' || steps.pr.outcome == 'success'
         with:
-          ref: ${{ github.event_name == 'workflow_dispatch' && github.ref || steps.pr.outputs.ref }}
+          # the sha the comment was made on, so a branch updated after the comment isn't run
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.ref || steps.pr.outputs.sha }}
       - uses: ./.github/actions/node-setup
-      - name: Run prettier
+      - name: Run oxfmt
         run: pnpm format
       - name: Generate types
         run: pnpm -F @sveltejs/kit generate:types
       - name: Commit changes
+        env:
+          TARGET_REF: ${{ github.event_name == 'workflow_dispatch' && github.ref_name || steps.pr.outputs.ref }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -A
           git diff --staged --quiet || git commit -m "chore: autofix lint"
-          git push origin HEAD
+          # non-fast-forward push fails if the branch moved since the comment
+          git push origin "HEAD:refs/heads/$TARGET_REF"

@@ -1,18 +1,22 @@
+/** @import { IncomingMessage, ServerResponse, IncomingHttpHeaders } from 'node:http' */
+/** @import { RequestHandler } from 'sirv' */
 import fs from 'node:fs';
-import path from 'node:path';
+import path, { extname } from 'node:path';
 import process from 'node:process';
 import sirv from 'sirv';
 import { parse as polka_url_parser } from '@polka/url';
 import { getRequest, setResponse, createReadableStream } from '@sveltejs/kit/node';
-import { Server } from 'SERVER';
-import { manifest, prerendered, base } from 'MANIFEST';
+import { server } from 'SERVER';
 import { dir } from './dir.js';
 import { env, env_prefix } from './env.js';
 import { parse_as_bytes } from './utils.js';
 
-const server = new Server(manifest);
+/** @typedef {(req: IncomingMessage, res: ServerResponse, next: () => void | Promise<void>) => void | Promise<void>} Middleware */
 
 const origin = ORIGIN;
+const uncompressed_extensions = UNCOMPRESSED_EXTENSIONS;
+const prerendered = PRERENDERED;
+const mime_types = MIME_TYPES;
 
 const xff_depth = parseInt(env('XFF_DEPTH', '1'));
 const address_header = env('ADDRESS_HEADER', '').toLowerCase();
@@ -28,10 +32,10 @@ if (isNaN(body_size_limit)) {
 	);
 }
 
-const asset_dir = `${dir}/client${base}`;
+const asset_dir = `${dir}/client${BASE_PATH}`;
 
 await server.init({
-	env: /** @type {Record<string, string>} */ (process.env),
+	env: process.env,
 	read: (file) => createReadableStream(`${asset_dir}/${file}`)
 });
 
@@ -45,17 +49,22 @@ function serve(path, client = false) {
 				etag: true,
 				gzip: PRECOMPRESS,
 				brotli: PRECOMPRESS,
-				setHeaders: client
-					? (res, pathname) => {
-							// only apply to build directory, not e.g. version.json
-							if (
-								pathname.startsWith(`/${manifest.appPath}/immutable/`) &&
-								res.statusCode === 200
-							) {
-								res.setHeader('cache-control', 'public,max-age=31536000,immutable');
-							}
-						}
-					: undefined
+				setHeaders: (res, pathname) => {
+					// `sirv` sets `Vary` from its options rather than from the file it resolved
+					if (PRECOMPRESS && uncompressed_extensions.has(extname(pathname))) {
+						res.removeHeader('vary');
+					}
+
+					// `sirv` uses its own bundled `mrmime`, which the manifest's added types never reach
+					let type = mime_types[pathname.slice(pathname.lastIndexOf('.'))];
+					if (type === 'text/html') type += ';charset=utf-8';
+					if (type) res.setHeader('content-type', type);
+
+					// only apply to build directory, not e.g. version.json
+					if (client && pathname.startsWith(`/${APP_PATH}/immutable/`) && res.statusCode === 200) {
+						res.setHeader('cache-control', 'public,max-age=31536000,immutable');
+					}
+				}
 			})
 		: undefined;
 }
@@ -74,7 +83,7 @@ function relative_pathname(from, to) {
 }
 
 // required because the static file server ignores trailing slashes
-/** @returns {import('polka').Middleware} */
+/** @returns {Middleware} */
 function serve_prerendered() {
 	const handler = serve(path.join(dir, 'prerendered'));
 
@@ -102,7 +111,7 @@ function serve_prerendered() {
 	};
 }
 
-/** @type {import('polka').Middleware} */
+/** @type {Middleware} */
 const ssr = async (req, res) => {
 	/** @type {Request} */
 	let request;
@@ -125,6 +134,7 @@ const ssr = async (req, res) => {
 		request = getRequest({
 			base: request_origin,
 			request: req,
+			response: res,
 			bodySizeLimit: body_size_limit
 		});
 	} catch {
@@ -189,13 +199,13 @@ const ssr = async (req, res) => {
 	setResponse(res, response);
 };
 
-/** @param {import('polka').Middleware[]} handlers */
+/** @param {Middleware[]} handlers */
 function sequence(handlers) {
-	/** @type {import('polka').Middleware} */
+	/** @type {Middleware} */
 	return (req, res, next) => {
 		/**
 		 * @param {number} i
-		 * @returns {ReturnType<import('polka').Middleware>}
+		 * @returns {ReturnType<Middleware>}
 		 */
 		function handle(i) {
 			if (i < handlers.length) {
@@ -227,7 +237,7 @@ function normalise_header(name, value) {
 }
 
 /**
- * @param {import('http').IncomingHttpHeaders} headers
+ * @param {IncomingHttpHeaders} headers
  * @returns {string}
  */
 function get_origin(headers) {
@@ -263,6 +273,6 @@ function get_origin(headers) {
 }
 
 export const handler = sequence(
-	/** @type {(import('sirv').RequestHandler | import('polka').Middleware)[]} */
+	/** @type {(RequestHandler | Middleware)[]} */
 	([serve(path.join(dir, 'client'), true), serve_prerendered(), ssr].filter(Boolean))
 );

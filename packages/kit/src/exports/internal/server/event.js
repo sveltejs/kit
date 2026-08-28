@@ -1,7 +1,7 @@
 /** @import { RequestEvent } from '@sveltejs/kit' */
 /** @import { RequestStore } from 'types' */
 /** @import { AsyncLocalStorage } from 'node:async_hooks' */
-import { IN_WEBCONTAINER } from '../../../runtime/server/constants.js';
+import { IN_WEBCONTAINER } from '../../../constants.js';
 
 /** @type {RequestStore | null} */
 let sync_store = null;

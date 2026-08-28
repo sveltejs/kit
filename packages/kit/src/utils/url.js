@@ -46,6 +46,7 @@ export function relative_pathname(from, to) {
 export function matches_external_allowlist_entry(location, allowed) {
 	if (location === allowed) return true;
 
+	// TODO replace the try/catch with `URL.parse` when browser support allows (Chrome 126, Firefox 126, Safari 18)
 	try {
 		const allow = new URL(allowed);
 		const loc = new URL(location, allow);
@@ -79,17 +80,6 @@ export function normalize_path(path, trailing_slash) {
  */
 export function decode_pathname(pathname) {
 	return pathname.split('%25').map(decodeURI).join('%25');
-}
-
-/** @param {Record<string, string>} params */
-export function decode_params(params) {
-	for (const key in params) {
-		// input has already been decoded by decodeURI
-		// now handle the rest
-		params[key] = decodeURIComponent(params[key]);
-	}
-
-	return params;
 }
 
 /**

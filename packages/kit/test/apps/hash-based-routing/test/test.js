@@ -37,13 +37,13 @@ test.describe('hash based navigation', () => {
 		expect(url.pathname).toBe('/');
 		expect(url.hash).toBe('#/a#b');
 
-		await page.locator('button[data-push]').click();
+		await page.locator('button[data-shallow]').click();
 		await expect(page.locator('p')).toHaveText('a');
 		url = new URL(page.url());
 		expect(url.pathname).toBe('/');
 		expect(url.hash).toBe('#/b');
 
-		await page.locator('button[data-replace]').click();
+		await page.locator('button[data-shallow-replace]').click();
 		await expect(page.locator('p')).toHaveText('a');
 		url = new URL(page.url());
 		expect(url.pathname).toBe('/');

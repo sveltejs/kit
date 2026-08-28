@@ -3,7 +3,6 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { Parser } from 'acorn';
 import MagicString from 'magic-string';
 import { posixify } from '../../../utils/os.js';
 
@@ -11,6 +10,7 @@ import { posixify } from '../../../utils/os.js';
  * @param {typeof import('vite')} vite
  * @param {string} out
  * @param {Array<{ hash: string, file: string }>} remotes
+ * @param {Map<string, string>} remote_original_by_hash
  * @param {ServerMetadata} metadata
  * @param {string} cwd
  * @param {(Rolldown.OutputAsset | Rolldown.OutputChunk)[]} server_chunks
@@ -20,6 +20,7 @@ export async function treeshake_prerendered_remotes(
 	vite,
 	out,
 	remotes,
+	remote_original_by_hash,
 	metadata,
 	cwd,
 	server_chunks,
@@ -45,11 +46,11 @@ export async function treeshake_prerendered_remotes(
 
 		if (prerendered.length === 0) continue; // nothing to treeshake
 
-		// remove file extension
-		const remote_filename = path.basename(remote.file).split('.').slice(0, -1).join('.');
+		const original_id = remote_original_by_hash.get(remote.hash);
+		if (!original_id) continue;
 
 		const remote_chunk = server_chunks.find((chunk) => {
-			return chunk.name === remote_filename;
+			return chunk.type === 'chunk' && chunk.moduleIds.includes(original_id);
 		});
 
 		if (!remote_chunk) continue;
@@ -57,11 +58,12 @@ export async function treeshake_prerendered_remotes(
 		const chunk_path = posixify(path.relative(cwd, `${out}/server/${remote_chunk.fileName}`));
 
 		const code = fs.readFileSync(chunk_path, 'utf-8');
-		const parsed = Parser.parse(code, { sourceType: 'module', ecmaVersion: 'latest' });
+		const parsed = vite.parseSync(chunk_path, code);
+		if (parsed.errors.length) throw new Error(parsed.errors[0].message);
 		const modified_code = new MagicString(code);
 
 		for (const fn of prerendered) {
-			for (const node of parsed.body) {
+			for (const node of parsed.program.body) {
 				const declaration =
 					node.type === 'ExportNamedDeclaration'
 						? node.declaration
@@ -83,7 +85,7 @@ export async function treeshake_prerendered_remotes(
 			}
 		}
 
-		for (const node of parsed.body) {
+		for (const node of parsed.program.body) {
 			if (node.type === 'ExportDefaultDeclaration') {
 				modified_code.remove(node.start, node.end);
 			}
@@ -116,16 +118,12 @@ export async function treeshake_prerendered_remotes(
 			})
 		);
 
+		// the only possible outputs are the treeshaken chunk and, with sourcemaps, its map
 		for (const output of bundle.output) {
-			if (output.type !== 'chunk' || output.name !== 'treeshaken') return;
-
-			fs.writeFileSync(chunk_path, output.code);
-
-			const chunk_sourcemap = bundle.output.find(
-				(o) => o.type === 'asset' && o.fileName === output.fileName + '.map'
-			);
-			if (chunk_sourcemap && chunk_sourcemap.type === 'asset') {
-				fs.writeFileSync(chunk_path + '.map', chunk_sourcemap.source);
+			if (output.type === 'chunk') {
+				fs.writeFileSync(chunk_path, output.code);
+			} else {
+				fs.writeFileSync(chunk_path + '.map', output.source);
 			}
 		}
 	}

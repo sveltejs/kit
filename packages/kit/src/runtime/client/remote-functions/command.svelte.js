@@ -1,8 +1,12 @@
-/** @import { RemoteCommand, RemoteQueryUpdate } from '@sveltejs/kit' */
-import { app_dir, base } from '$app/paths/internal/client';
-import { app } from '../client.js';
+/** @import { RemoteCommand, RemoteQueryUpdate } from '$app/server' */
+import { app_dir, base } from '#app/paths';
 import { stringify_command_arg } from '../../shared.js';
-import { get_remote_request_headers, categorize_updates, remote_request } from './shared.svelte.js';
+import {
+	get_remote_request_headers,
+	categorize_updates,
+	remote_request,
+	fail_unhandled_refreshes
+} from './shared.svelte.js';
 
 /**
  * Client-version of the `command` function from `$app/server`.
@@ -35,39 +39,47 @@ export function command(id) {
 			...get_remote_request_headers()
 		};
 
-		/** @type {Promise<any> & { updates: (...args: RemoteQueryUpdate[]) => Promise<any> }} */
-		const promise = (async () => {
-			try {
-				// Wait a tick to give room for the `updates` method to be called
-				await Promise.resolve();
+		const promise =
+			/** @type {Promise<any> & { updates: (...args: RemoteQueryUpdate[]) => Promise<any> }} */ (
+				(async () => {
+					try {
+						// Wait a tick to give room for the `updates` method to be called
+						await Promise.resolve();
 
-				if (updates_error) {
-					throw updates_error;
-				}
+						if (updates_error) {
+							throw updates_error;
+						}
 
-				const response = await remote_request(`${base}/${app_dir}/remote/${id}`, {
-					method: 'POST',
-					body: JSON.stringify({
-						payload: await stringify_command_arg(arg, app.hooks.transport),
-						refreshes: Array.from(refreshes ?? [])
-					}),
-					headers
-				});
+						const response = await remote_request(
+							`${base}/${app_dir}/remote/${id}`,
+							{
+								method: 'POST',
+								body: JSON.stringify({
+									payload: await stringify_command_arg(arg),
+									refreshes: Array.from(refreshes ?? [])
+								}),
+								headers
+							},
+							refreshes
+						);
 
-				if (response.redirect) {
-					throw new Error(
-						'Redirects are not allowed in commands. Return a result instead and use goto on the client'
-					);
-				}
+						if (response.redirect) {
+							throw new Error(
+								'Redirects are not allowed in commands. Return a result instead and use goto on the client'
+							);
+						}
 
-				return response._;
-			} finally {
-				overrides?.forEach((fn) => fn());
+						fail_unhandled_refreshes(refreshes);
 
-				// Decrement pending count when command completes
-				pending_count--;
-			}
-		})();
+						return response._;
+					} finally {
+						overrides?.forEach((fn) => fn());
+
+						// Decrement pending count when command completes
+						pending_count--;
+					}
+				})()
+			);
 
 		let updates_called = false;
 		promise.updates = (...args) => {

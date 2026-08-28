@@ -1,11 +1,12 @@
+/** @import { ValidatedConfig } from 'types' */
 import { lookup } from '../../../utils/mime.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import { styleText } from 'node:util';
-import { resolve_entry } from '../../../utils/filesystem.js';
+import { resolve_entry, walk } from '../../../utils/filesystem.js';
 import { posixify } from '../../../utils/os.js';
 import { parse_route_id } from '../../../utils/routing.js';
-import { list_files, runtime_directory } from '../../utils.js';
+import { runtime_directory } from '../../utils.js';
 import { prevent_conflicts } from './conflict.js';
 import { sort_routes } from './sort.js';
 import {
@@ -13,24 +14,27 @@ import {
 	get_page_options
 } from '../../../exports/vite/static_analysis/index.js';
 
+const component_name_pattern = /^\+(?:(page(?:@(.*))?)|(layout(?:@(.*))?)|(error))$/;
+
+const module_name_pattern =
+	/^\+(?:(server)|(page(?:(@[a-zA-Z0-9_-]*))?(\.server)?)|(layout(?:(@[a-zA-Z0-9_-]*))?(\.server)?))$/;
+
 /**
  * Generates the manifest data used for the client-side manifest and types generation.
- * @param {{
- *   config: import('types').ValidatedConfig;
- *   fallback?: string;
- *   cwd: string;
- * }} opts
+ * @param {ValidatedConfig} config
+ * @param {string} root
+ * @param {string} [fallback] Where to look for fallback components
  * @returns {import('types').ManifestData}
  */
-export default function create_manifest_data({
+export default function create_manifest_data(
 	config,
-	fallback = `${runtime_directory}/components`,
-	cwd
-}) {
+	root,
+	fallback = `${runtime_directory}/components`
+) {
 	const assets = create_assets(config);
-	const hooks = create_hooks(config, cwd);
-	const params = resolve_params(config, cwd);
-	const { nodes, routes } = create_routes_and_nodes(cwd, config, fallback);
+	const hooks = create_hooks(config, root);
+	const params = resolve_params(config, root);
+	const { nodes, routes } = create_routes_and_nodes(root, config, fallback);
 
 	return {
 		assets,
@@ -42,13 +46,43 @@ export default function create_manifest_data({
 }
 
 /**
+ * Whether this route has a `+page`. Independent of `is_endpoint_route` — a route can be both.
+ * @param {import('types').RouteData} route
+ * @returns {boolean}
+ */
+export function is_page_route(route) {
+	return !!route.page;
+}
+
+/**
+ * Whether this route has a `+server`. Independent of `is_page_route` — a route can be both.
+ * @param {import('types').RouteData} route
+ * @returns {boolean}
+ */
+export function is_endpoint_route(route) {
+	return !!route.endpoint;
+}
+
+/**
+ * Whether the router can match this route. `manifest_data.routes` also contains entries for
+ * directories with layouts or errors, which never reach `event.route.id`.
+ * @param {import('types').RouteData} route
+ * @returns {boolean}
+ */
+export function is_app_route(route) {
+	return is_page_route(route) || is_endpoint_route(route);
+}
+
+/**
  * Returns a list of files in the `static` directory.
  * @param {import('types').ValidatedConfig} config
  */
 export function create_assets(config) {
-	return list_files(config.kit.files.assets).map((file) => ({
+	if (!fs.existsSync(config.files.assets)) return [];
+
+	return [...walk(config.files.assets)].map((file) => ({
 		file,
-		size: fs.statSync(path.resolve(config.kit.files.assets, file)).size,
+		size: fs.statSync(path.resolve(config.files.assets, file)).size,
 		type: lookup(file) || null
 	}));
 }
@@ -58,9 +92,9 @@ export function create_assets(config) {
  * @param {string} cwd
  */
 function create_hooks(config, cwd) {
-	const client = resolve_entry(config.kit.files.hooks.client);
-	const server = resolve_entry(config.kit.files.hooks.server);
-	const universal = resolve_entry(config.kit.files.hooks.universal);
+	const client = resolve_entry(config.files.hooks.client);
+	const server = resolve_entry(config.files.hooks.server);
+	const universal = resolve_entry(config.files.hooks.universal);
 
 	return {
 		client: client && posixify(path.relative(cwd, client)),
@@ -74,7 +108,7 @@ function create_hooks(config, cwd) {
  * @param {string} cwd
  */
 function resolve_params(config, cwd) {
-	const params_file = resolve_entry(config.kit.files.params);
+	const params_file = resolve_entry(config.files.params);
 	return params_file ? posixify(path.relative(cwd, params_file)) : null;
 }
 
@@ -85,17 +119,17 @@ function resolve_params(config, cwd) {
  */
 function create_routes_and_nodes(cwd, config, fallback) {
 	/** @type {import('types').RouteData[]} */
-	const routes = [];
+	let routes = [];
 
-	const routes_base = posixify(path.relative(cwd, config.kit.files.routes));
+	const routes_base = posixify(path.relative(cwd, config.files.routes));
 
-	const valid_extensions = [...config.extensions, ...config.kit.moduleExtensions];
+	const valid_extensions = [...config.extensions, ...config.moduleExtensions];
 
 	/** @type {import('types').PageNode[]} */
 	const nodes = [];
 
 	// create route data by processing files in `src/routes`
-	if (fs.existsSync(config.kit.files.routes)) {
+	if (fs.existsSync(config.files.routes)) {
 		/**
 		 * @param {number} depth
 		 * @param {string} id
@@ -125,7 +159,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 						);
 					}
 
-					return String.fromCharCode(parseInt(code, 16));
+					return String.fromCodePoint(parseInt(code, 16));
 				}
 			});
 
@@ -204,13 +238,12 @@ function create_routes_and_nodes(cwd, config, fallback) {
 
 				if (!file.name.startsWith('+')) {
 					const name = file.name.slice(0, -ext.length);
+					const pattern = config.extensions.includes(ext)
+						? component_name_pattern
+						: module_name_pattern;
+
 					// check if it is a valid route filename but missing the + prefix
-					const typo =
-						/^(?:(page(?:@(.*))?)|(layout(?:@(.*))?)|(error))$/.test(name) ||
-						/^(?:(server)|(page(?:(@[a-zA-Z0-9_-]*))?(\.server)?)|(layout(?:(@[a-zA-Z0-9_-]*))?(\.server)?))$/.test(
-							name
-						);
-					if (typo) {
+					if (pattern.test(`+${name}`)) {
 						console.log(
 							styleText(
 								['bold', 'yellow'],
@@ -223,18 +256,21 @@ function create_routes_and_nodes(cwd, config, fallback) {
 					continue;
 				}
 
+				// allow e.g. `+page.stories.svelte` or `+server.test.ts`
+				if (
+					file.name.includes('.test.') ||
+					file.name.includes('.spec.') ||
+					file.name.includes('.stories.')
+				) {
+					continue;
+				}
+
 				if (file.name.endsWith('.d.ts')) {
 					let name = file.name.slice(0, -5);
 					const ext = valid_extensions.find((ext) => name.endsWith(ext));
 					if (ext) name = name.slice(0, -ext.length);
 
-					const valid =
-						/^\+(?:(page(?:@(.*))?)|(layout(?:@(.*))?)|(error))$/.test(name) ||
-						/^\+(?:(server)|(page(?:(@[a-zA-Z0-9_-]*))?(\.server)?)|(layout(?:(@[a-zA-Z0-9_-]*))?(\.server)?))$/.test(
-							name
-						);
-
-					if (valid) continue;
+					if (component_name_pattern.test(name) || module_name_pattern.test(name)) continue;
 				}
 
 				const project_relative = posixify(path.relative(cwd, path.join(dir, file.name)));
@@ -243,10 +279,10 @@ function create_routes_and_nodes(cwd, config, fallback) {
 					project_relative,
 					file.name,
 					config.extensions,
-					config.kit.moduleExtensions
+					config.moduleExtensions
 				);
 
-				if (config.kit.router.type === 'hash' && item.kind === 'server') {
+				if (config.router.type === 'hash' && item.kind === 'server') {
 					throw new Error(
 						`Cannot use server-only files in an app with \`router.type === 'hash': ${project_relative}`
 					);
@@ -440,6 +476,9 @@ function create_routes_and_nodes(cwd, config, fallback) {
 		}
 	}
 
+	// remove route objects with no route file
+	routes = routes.filter((route) => route.endpoint || route.leaf || route.layout || route.error);
+
 	// add parents to error nodes so that we can compute which page options apply to them
 	for (const route of routes) {
 		if (!route.error) continue;
@@ -495,8 +534,7 @@ function analyze(project_relative, file, component_extensions, module_extensions
 	const component_extension = component_extensions.find((ext) => file.endsWith(ext));
 	if (component_extension) {
 		const name = file.slice(0, -component_extension.length);
-		const pattern = /^\+(?:(page(?:@(.*))?)|(layout(?:@(.*))?)|(error))$/;
-		const match = pattern.exec(name);
+		const match = component_name_pattern.exec(name);
 		if (!match) {
 			throw new Error(`Files prefixed with + are reserved (saw ${project_relative})`);
 		}
@@ -513,9 +551,7 @@ function analyze(project_relative, file, component_extensions, module_extensions
 	const module_extension = module_extensions.find((ext) => file.endsWith(ext));
 	if (module_extension) {
 		const name = file.slice(0, -module_extension.length);
-		const pattern =
-			/^\+(?:(server)|(page(?:(@[a-zA-Z0-9_-]*))?(\.server)?)|(layout(?:(@[a-zA-Z0-9_-]*))?(\.server)?))$/;
-		const match = pattern.exec(name);
+		const match = module_name_pattern.exec(name);
 		if (!match) {
 			throw new Error(`Files prefixed with + are reserved (saw ${project_relative})`);
 		} else if (match[3] || match[6]) {

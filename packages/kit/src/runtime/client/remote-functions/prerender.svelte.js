@@ -1,12 +1,12 @@
-/** @import { RemotePrerenderFunction } from '@sveltejs/kit' */
-import { app_dir, base } from '$app/paths/internal/client';
+/** @import { RemotePrerenderFunction } from '$app/server' */
+import { app_dir, base } from '#app/paths';
 import { version } from '$app/env';
 import * as devalue from 'devalue';
 import { app, _goto, handle_error, prerender_responses } from '../client.js';
 import { get_remote_request_headers, remote_request, unwrap_node } from './shared.svelte.js';
 import { create_remote_key, stringify_remote_arg } from '../../shared.js';
 import { noop } from '../../../utils/functions.js';
-import { HttpError } from '@sveltejs/kit/internal';
+import { HandledHttpError } from '@sveltejs/kit/internal';
 
 // Initialize Cache API for prerender functions
 const CACHE_NAME = __SVELTEKIT_DEV__ ? `sveltekit:${Date.now()}` : `sveltekit:${version}`;
@@ -57,7 +57,7 @@ function put(url, encoded) {
  */
 export function prerender(id) {
 	return (arg) => {
-		const payload = stringify_remote_arg(arg, app.hooks.transport);
+		const payload = stringify_remote_arg(arg);
 		const cache_key = create_remote_key(id, payload);
 
 		let resource = prerender_resources.get(cache_key)?.deref();
@@ -100,7 +100,7 @@ export function prerender(id) {
 
 				if (result.redirect) {
 					// Use internal version to allow redirects to external URLs
-					void _goto(result.redirect, {}, 0);
+					await _goto(result.redirect);
 					return;
 				}
 
@@ -172,7 +172,7 @@ class Prerender {
 				});
 				this.#loading = false;
 				this.#error = error;
-				throw new HttpError(error.status, error); // so that transformError doesn't transform it again
+				throw new HandledHttpError(error);
 			}
 		);
 

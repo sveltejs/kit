@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-node",
-	"version": "6.0.0-next.5",
+	"version": "6.0.0-next.11",
 	"description": "Adapter for SvelteKit apps that generates a standalone Node server",
 	"keywords": [
 		"adapter",
@@ -36,24 +36,23 @@
 		"dev": "rolldown -cw",
 		"build": "rolldown -c",
 		"test": "pnpm test:unit && pnpm test:apps",
-		"check": "tsc",
-		"lint": "prettier --check .",
-		"format": "pnpm lint --write",
-		"prepublishOnly": "pnpm build",
 		"test:unit": "vitest run",
-		"test:apps": "pnpm build && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test"
+		"test:apps": "pnpm build && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test",
+		"check": "tsc",
+		"lint": "oxfmt --check .",
+		"format": "oxfmt --write .",
+		"prepublishOnly": "pnpm build"
 	},
 	"devDependencies": {
 		"@polka/url": "catalog:",
 		"@sveltejs/kit": "workspace:^",
 		"@types/node": "catalog:",
-		"polka": "catalog:",
 		"sirv": "^3.0.2",
-		"typescript": "catalog:",
+		"typescript": "catalog:typescript-native",
 		"vitest": "catalog:"
 	},
 	"dependencies": {
-		"rolldown": "^1.2.0"
+		"rolldown": "^1.2.3"
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^3.0.0-next.0"

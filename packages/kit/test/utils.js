@@ -24,9 +24,11 @@ export const test = base.extend({
 
 			afterNavigate: () => page.evaluate(() => afterNavigate(() => {})),
 
-			preloadCode: (pathname) => page.evaluate((pathname) => preloadCode(pathname), pathname),
+			preloadCode: (id) => page.evaluate((id) => preloadCode(id), id),
 
-			preloadData: (url) => page.evaluate((url) => preloadData(url), url)
+			preloadData: (url) => page.evaluate((url) => preloadData(url), url),
+
+			match: (url) => page.evaluate((url) => match(url), url)
 		});
 	},
 
@@ -146,10 +148,19 @@ export const test = base.extend({
 	read_errors: async ({}, use) => {
 		/** @param {string} path */
 		function read_errors(path) {
-			const errors =
-				fs.existsSync('test/errors.json') &&
-				JSON.parse(fs.readFileSync('test/errors.json', 'utf8'));
-			return errors[path];
+			if (!fs.existsSync('test/errors.jsonl')) return;
+
+			const records = fs.readFileSync('test/errors.jsonl', 'utf8').split('\n');
+			records.pop(); // ignore a trailing partial record if this races an append
+
+			const match = records
+				.map((line) => JSON.parse(line))
+				.findLast((error) => error.path === path);
+
+			if (match) {
+				const { path: _, ...error } = match;
+				return error;
+			}
 		}
 
 		await use(read_errors);
@@ -263,13 +274,13 @@ const known_devices = {
 	webkit: devices['Desktop Safari']
 };
 const test_browser = /** @type {keyof typeof known_devices} */ (
-	process.env.KIT_E2E_BROWSER ?? 'chromium'
+	process.env.KIT_E2E_BROWSER || 'chromium'
 );
 
 const test_browser_device = known_devices[test_browser]
 	? {
 			...known_devices[test_browser],
-			channel: test_browser === 'chromium' ? 'chromium' : undefined
+			channel: test_browser === 'chromium' ? 'chrome' : undefined
 		}
 	: undefined;
 
@@ -281,35 +292,88 @@ if (!test_browser_device) {
 	);
 }
 
+const test_mode = process.env.DEV ? 'dev' : 'build';
+
+const all_projects = [
+	{ name: `${test_browser}-${test_mode}`, use: { javaScriptEnabled: true } },
+	{ name: `${test_browser}-${test_mode}-no-js`, use: { javaScriptEnabled: false } }
+];
+
+// the two projects cost very different amounts of time, so CI runs them as separate jobs
+const test_project = process.env.KIT_E2E_PROJECT;
+
+if (test_project && test_project !== 'js' && test_project !== 'no-js') {
+	throw new Error(
+		`invalid test project specified: KIT_E2E_PROJECT=${test_project}. Allowed values: js, no-js`
+	);
+}
+
+/** @type {Record<string, number>} */
+const ports = {
+	'test-async': 5300,
+	'test-basics': 5301,
+	'test-dev-only': 5302,
+	'test-embed': 5303,
+	'test-hash-based-routing': 5304,
+	'test-no-csr': 5305,
+	'test-no-ssr': 5306,
+	'test-options': 5307,
+	'test-options-2': 5308,
+	'test-options-3': 5309,
+	'test-prerendered-app-error-pages': 5310,
+	'test-writes': 5311
+};
+
+const package_name = JSON.parse(fs.readFileSync(path.resolve('package.json'), 'utf8')).name;
+export const port = ports[package_name];
+
+if (!port) {
+	throw new Error(`No test server port configured for ${package_name}`);
+}
+
+/**
+ * read process.env[name] as a one-based `current/total` shard, e.g. `1/3`
+ *
+ * @param {string} name of process.env value to read
+ * @returns {{ current: number, total: number } | undefined} undefined if process.env[name] isn't set
+ * @throws {Error} when value cannot be parsed to a shard
+ */
+function shard_from_env(name) {
+	const value = process.env[name];
+	if (!value) return undefined;
+
+	const [current, total] = value.split('/').map(Number);
+
+	if (!Number.isInteger(current) || !Number.isInteger(total) || current < 1 || current > total) {
+		throw new Error(
+			`process.env.${name} must be a one-based \`current/total\` shard but is "${value}"`
+		);
+	}
+
+	return { current, total };
+}
+
 export const config = defineConfig({
 	forbidOnly: !!process.env.CI,
 	// generous timeouts on CI
 	timeout: process.env.CI ? 45000 : 15000,
 	webServer: {
-		command: process.env.DEV ? 'pnpm dev --force' : 'pnpm build && pnpm preview',
-		port: process.env.DEV ? 5173 : 4173
+		command: process.env.DEV
+			? `pnpm dev --force --port ${port} --strictPort`
+			: `pnpm build && pnpm preview --port ${port} --strictPort`,
+		port
 	},
 	retries: process.env.CI ? 2 : number_from_env('KIT_E2E_RETRIES', 0),
-	projects: [
-		{
-			name: `${test_browser}-${process.env.DEV ? 'dev' : 'build'}`,
-			use: {
-				javaScriptEnabled: true
-			}
-		},
-		{
-			name: `${test_browser}-${process.env.DEV ? 'dev' : 'build'}-no-js`,
-			use: {
-				javaScriptEnabled: false
-			}
-		}
-	],
+	projects: test_project
+		? all_projects.filter((project) => project.use.javaScriptEnabled === (test_project === 'js'))
+		: all_projects,
 	use: {
 		...test_browser_device,
 		screenshot: 'only-on-failure',
 		trace: 'retain-on-failure'
 	},
-	workers: process.env.CI ? 2 : number_from_env('KIT_E2E_WORKERS', undefined),
+	workers: number_from_env('KIT_E2E_WORKERS', process.env.CI ? 2 : undefined),
+	shard: shard_from_env('KIT_E2E_SHARD'),
 	reporter: process.env.CI
 		? [
 				['dot'],

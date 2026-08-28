@@ -61,6 +61,11 @@ test.describe('paths', () => {
 		expect(new URL(page.url()).pathname).toBe('/basepath/hello');
 	});
 
+	test('serves a prerendered page for a server-side fetch of its path', async ({ page }) => {
+		await page.goto('/basepath/fetch-prerendered');
+		expect(await page.textContent('h1')).toBe('200 true');
+	});
+
 	test('query remote function from client accounts for base path', async ({
 		page,
 		javaScriptEnabled
@@ -123,6 +128,19 @@ test.describe('trailing slash', () => {
 
 		await clicknav('a[href="/basepath/trailing-slash-server/prerender"]');
 		await expect(page.locator('h2')).toHaveText('/basepath/trailing-slash-server/prerender/');
+	});
+
+	test('normalizes the trailing slash of a prerendered page without dropping the base', async ({
+		request
+	}) => {
+		const response = await request.get('/basepath/trailing-slash-server/prerender');
+		expect(new URL(response.url()).pathname).toBe('/basepath/trailing-slash-server/prerender/');
+		expect(response.status()).toBe(200);
+
+		const redirect = await request.get('/basepath/trailing-slash-server/prerender', {
+			maxRedirects: 0
+		});
+		expect(redirect.status()).toBe(308);
 	});
 });
 

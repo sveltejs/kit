@@ -1,22 +1,21 @@
 import { parseSetCookie } from 'cookie';
 import { noop } from '../../utils/functions.js';
 import { respond } from './respond.js';
-import * as paths from '$app/paths/internal/server';
-import { read_implementation } from './internal.js';
+import * as paths from '#app/paths';
+import { hooks, manifest, read_implementation } from './internal.js';
 import { has_prerendered_path } from './utils.js';
+import { fork_state_for_subrequest } from './state.js';
 
 /**
  * @param {{
  *   event: import('@sveltejs/kit').RequestEvent;
- *   options: import('types').SSROptions;
- *   manifest: import('@sveltejs/kit').SSRManifest;
- *   state: import('types').SSRState;
+ *   state: import('types').RequestState;
  *   get_cookie_header: (url: URL, header: string | null) => string;
  *   set_internal: (name: string, value: string, opts: import('./page/types.js').Cookie['options']) => void;
  * }} opts
  * @returns {typeof fetch}
  */
-export function create_fetch({ event, options, manifest, state, get_cookie_header, set_internal }) {
+export function create_fetch({ event, state, get_cookie_header, set_internal }) {
 	/**
 	 * @type {typeof fetch}
 	 */
@@ -29,7 +28,7 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 		let credentials =
 			(info instanceof Request ? info.credentials : init?.credentials) ?? 'same-origin';
 
-		return options.hooks.handleFetch({
+		return hooks.handleFetch({
 			event,
 			request: original_request,
 			fetch: async (info, init) => {
@@ -87,24 +86,24 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 				).slice(1);
 				const filename_html = `${filename}/index.html`; // path may also match path/index.html
 
-				const is_asset = manifest.assets.has(filename) || filename in manifest._.server_assets;
+				const is_asset = manifest.assets.has(filename) || filename in manifest.server_assets;
 				const is_asset_html =
-					manifest.assets.has(filename_html) || filename_html in manifest._.server_assets;
+					manifest.assets.has(filename_html) || filename_html in manifest.server_assets;
 
 				if (is_asset || is_asset_html) {
 					const file = is_asset ? filename : filename_html;
 
 					if (state.read) {
 						const type = is_asset
-							? manifest.mimeTypes[filename.slice(filename.lastIndexOf('.'))]
+							? manifest.mime_types[filename.slice(filename.lastIndexOf('.'))]
 							: 'text/html';
 
 						return new Response(state.read(file), {
 							headers: type ? { 'content-type': type } : {}
 						});
-					} else if (read_implementation && file in manifest._.server_assets) {
-						const length = manifest._.server_assets[file];
-						const type = manifest.mimeTypes[file.slice(file.lastIndexOf('.'))];
+					} else if (read_implementation && file in manifest.server_assets) {
+						const length = manifest.server_assets[file];
+						const type = manifest.mime_types[file.slice(file.lastIndexOf('.'))];
 
 						return new Response(read_implementation(file), {
 							headers: {
@@ -117,7 +116,7 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 					return await fetch(request);
 				}
 
-				if (has_prerendered_path(manifest, paths.base + decoded)) {
+				if (has_prerendered_path(decoded)) {
 					// The path of something prerendered could match a different route
 					// that is still in the manifest, leading to the wrong route being loaded.
 					// We therefore bail early here. The prerendered logic is different for
@@ -142,25 +141,24 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 					request.headers.set('accept', '*/*');
 				}
 
-				if (!request.headers.has('accept-language')) {
-					request.headers.set(
-						'accept-language',
-						/** @type {string} */ (event.request.headers.get('accept-language'))
-					);
+				const accept_language = event.request.headers.get('accept-language');
+				if (accept_language && !request.headers.has('accept-language')) {
+					request.headers.set('accept-language', accept_language);
 				}
 
-				const response = await internal_fetch(request, options, manifest, state);
+				const response = await internal_fetch(request, state);
 
 				for (const str of response.headers.getSetCookie()) {
-					const { name, value, ...options } = parseSetCookie(str, { decode: (v) => v });
+					const { name, value, ...cookie_options } = parseSetCookie(str, { decode: (v) => v });
 
-					const path = options.path ?? (url.pathname.split('/').slice(0, -1).join('/') || '/');
+					const path =
+						cookie_options.path ?? (url.pathname.split('/').slice(0, -1).join('/') || '/');
 
-					// options.sameSite is string, something more specific is required - type cast is safe
+					// sameSite is string, something more specific is required - type cast is safe
 					set_internal(name, /** @type {string} */ (value), {
 						path,
 						encode: (value) => value,
-						.../** @type {import('cookie').SerializeOptions} */ (options)
+						.../** @type {import('cookie').SerializeOptions} */ (cookie_options)
 					});
 				}
 
@@ -194,40 +192,31 @@ function normalize_fetch_input(info, init, url) {
 
 /**
  * @param {Request} request
- * @param {import('types').SSROptions} options
- * @param {import('@sveltejs/kit').SSRManifest} manifest
- * @param {import('types').SSRState} state
+ * @param {import('types').RequestState} state
  * @returns {Promise<Response>}
  */
-async function internal_fetch(request, options, manifest, state) {
-	if (request.signal) {
-		if (request.signal.aborted) {
-			throw new DOMException('The operation was aborted.', 'AbortError');
-		}
-
-		let remove_abort_listener = noop;
-		/** @type {Promise<never>} */
-		const abort_promise = new Promise((_, reject) => {
-			const on_abort = () => {
-				reject(new DOMException('The operation was aborted.', 'AbortError'));
-			};
-			request.signal.addEventListener('abort', on_abort, { once: true });
-			remove_abort_listener = () => request.signal.removeEventListener('abort', on_abort);
-		});
-
-		const result = await Promise.race([
-			respond(request, options, manifest, {
-				...state,
-				depth: state.depth + 1
-			}),
-			abort_promise
-		]);
-		remove_abort_listener();
-		return result;
-	} else {
-		return await respond(request, options, manifest, {
-			...state,
-			depth: state.depth + 1
-		});
+async function internal_fetch(request, state) {
+	if (request.signal?.aborted) {
+		throw new DOMException('The operation was aborted.', 'AbortError');
 	}
+
+	const subrequest_state = fork_state_for_subrequest(state);
+
+	if (!request.signal) {
+		return await respond(request, subrequest_state);
+	}
+
+	let remove_abort_listener = noop;
+	/** @type {Promise<never>} */
+	const abort_promise = new Promise((_, reject) => {
+		const on_abort = () => {
+			reject(new DOMException('The operation was aborted.', 'AbortError'));
+		};
+		request.signal.addEventListener('abort', on_abort, { once: true });
+		remove_abort_listener = () => request.signal.removeEventListener('abort', on_abort);
+	});
+
+	return Promise.race([respond(request, subrequest_state), abort_promise]).finally(
+		remove_abort_listener
+	);
 }

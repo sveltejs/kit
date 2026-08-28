@@ -4,7 +4,7 @@ import { pathToFileURL } from 'node:url';
 import { validate_server_exports } from '../../utils/exports.js';
 import { extract_svelte_config, load_vite_config } from '../config/index.js';
 import { forked } from '../../utils/fork.js';
-import { ENDPOINT_METHODS } from '../../constants.js';
+import { BODY_DEPENDENT_METHODS, ENDPOINT_METHODS } from '../../constants.js';
 import { has_server_load, resolve_route } from '../../utils/routing.js';
 import { check_feature } from '../../utils/features.js';
 import { createReadableStream } from '@sveltejs/kit/node';
@@ -34,11 +34,11 @@ async function analyse({
 	remotes,
 	vite_config_file
 }) {
-	/** @type {import('@sveltejs/kit').SSRManifest} */
+	/** @type {import('types').SSRManifest} */
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
 	const vite_config = await load_vite_config(vite_config_file);
-	const config = extract_svelte_config(vite_config).kit;
+	const config = extract_svelte_config(vite_config);
 	const server_root = join(config.outDir, 'output');
 
 	/** @type {import('types').ServerInternalModule} */
@@ -54,7 +54,7 @@ async function analyse({
 
 	// `set_env` lives in a separate module that imports the user's `src/env` config. We import it
 	// *after* `set_building()` so that `building`-dependent expressions resolve correctly
-	/** @type {import('__sveltekit/env')} */
+	/** @type {typeof import('<sveltekit:generated>/env/config.js')} */
 	const { set_env } = await import(pathToFileURL(`${server_root}/server/env.js`).href);
 	set_env(env);
 
@@ -65,7 +65,7 @@ async function analyse({
 		remotes: new Map()
 	};
 
-	const nodes = await Promise.all(manifest._.nodes.map((loader) => loader()));
+	const nodes = await Promise.all(manifest.nodes.map((loader) => loader()));
 
 	// analyse nodes
 	for (const node of nodes) {
@@ -88,7 +88,7 @@ async function analyse({
 	}
 
 	// analyse routes
-	for (const route of manifest._.routes) {
+	for (const route of manifest.routes) {
 		const page =
 			route.page &&
 			analyse_page(
@@ -147,7 +147,7 @@ async function analyse({
 
 	// analyse remotes
 	for (const remote of remotes) {
-		const loader = manifest._.remotes[remote.hash];
+		const loader = manifest.remotes[remote.hash];
 		const { default: functions } = await loader();
 
 		const exports = new Map();
@@ -175,9 +175,14 @@ async function analyse({
 function analyse_endpoint(route, mod) {
 	validate_server_exports(mod, route.id);
 
-	if (mod.prerender && (mod.POST || mod.PATCH || mod.PUT || mod.DELETE)) {
+	if (
+		mod.prerender &&
+		/** @type {import('types').HttpMethod[]} */ (BODY_DEPENDENT_METHODS).some(
+			(method) => mod[method]
+		)
+	) {
 		throw new Error(
-			`Cannot prerender a +server file with POST, PATCH, PUT, or DELETE (${route.id})`
+			`Cannot prerender a +server file with ${BODY_DEPENDENT_METHODS.join(', ')} handlers (${route.id})`
 		);
 	}
 

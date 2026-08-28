@@ -21,11 +21,6 @@ runs:
   steps:
     - uses: ./.github/actions/node-setup
 
-    - name: Build adapter-netlify files
-      shell: bash
-      working-directory: packages/adapter-netlify
-      run: pnpm prepublishOnly
-
     - name: Install Netlify CLI
       shell: bash
       run: pnpm i -g netlify-cli

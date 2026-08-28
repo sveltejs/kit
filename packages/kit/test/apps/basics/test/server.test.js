@@ -491,6 +491,25 @@ test.describe('Endpoints', () => {
 		expect(await response.text()).toBe('catch-all');
 	});
 
+	test('QUERY handler', async ({ request }) => {
+		const url = '/endpoint-output/query';
+
+		let response = await request.fetch(url, {
+			method: 'QUERY',
+			data: 'name=world'
+		});
+
+		expect(response.status()).toBe(200);
+		expect(await response.text()).toBe('query: name=world');
+
+		response = await request.fetch(url, {
+			method: 'MOVE'
+		});
+
+		expect(response.status()).toBe(405);
+		expect(response.headers()['allow']).toBe('GET, QUERY, HEAD');
+	});
+
 	test('can get assets using absolute path', async ({ request }) => {
 		const response = await request.get('/endpoint-output/fetch-asset/absolute');
 		expect(response.status()).toBe(200);
@@ -507,6 +526,15 @@ test.describe('Endpoints', () => {
 });
 
 test.describe('Errors', () => {
+	test('uses the handleError status for the fallback page served to error-page sub-requests', async ({
+		request
+	}) => {
+		const response = await request.get('/errors/handle-error-status-fallback', {
+			headers: { 'x-sveltekit-error': 'true' }
+		});
+		expect(response.status()).toBe(503);
+	});
+
 	test('invalid route response is handled', async ({ request }) => {
 		const response = await request.get('/errors/invalid-route-response');
 
@@ -543,6 +571,32 @@ test.describe('Errors', () => {
 		}
 	});
 
+	test('returns a lightweight 404 for subresource requests', async ({ request, read_errors }) => {
+		// distinct from the path used by the test below, which _does_ invoke the hook
+		const response = await request.get('/errors/does-not-exist-lightweight-subresource', {
+			headers: { 'sec-fetch-dest': 'image' }
+		});
+
+		expect(response.status()).toBe(404);
+		expect(await response.text()).toBe('Not Found');
+		expect(response.headers()['vary']).toContain('Sec-Fetch-Dest');
+
+		// lightweight 404s bypass the handleError hook
+		expect(read_errors('/errors/does-not-exist-lightweight-subresource')).toBe(undefined);
+	});
+
+	test('renders the error page for document and fetch requests', async ({ request }) => {
+		for (const destination of ['document', null, 'empty']) {
+			const response = await request.get(
+				'/errors/does-not-exist-subresource',
+				destination ? { headers: { 'sec-fetch-dest': destination } } : {}
+			);
+
+			expect(response.status()).toBe(404);
+			expect(await response.text()).toContain('This is your custom error page saying:');
+		}
+	});
+
 	test('stack traces are not fixed twice', async ({ page }) => {
 		await page.goto('/errors/stack-trace');
 		expect(await page.textContent('#message')).toBe(
@@ -565,8 +619,10 @@ test.describe('Errors', () => {
 				}
 			});
 
-			const error = read_errors('/errors/endpoint-throw-error');
-			expect(error).toBe(undefined);
+			expect(read_errors('/errors/endpoint-throw-error')).toEqual({
+				kind: 'app',
+				error: { status: 401, message: 'You shall not pass' }
+			});
 
 			expect(res.status()).toBe(401);
 			expect(await res.text()).toContain(
@@ -578,8 +634,10 @@ test.describe('Errors', () => {
 		{
 			const res = await request.get('/errors/endpoint-throw-error');
 
-			const error = read_errors('/errors/endpoint-throw-error');
-			expect(error).toBe(undefined);
+			expect(read_errors('/errors/endpoint-throw-error')).toEqual({
+				kind: 'app',
+				error: { status: 401, message: 'You shall not pass' }
+			});
 
 			expect(res.status()).toBe(401);
 			expect(await res.json()).toEqual({
@@ -617,10 +675,9 @@ test.describe('Errors', () => {
 		expect(res_json?.status()).toBe(405);
 		expect(await res_json.json()).toEqual({
 			type: 'error',
+			location: '/errors/missing-actions',
 			error: {
-				message: process.env.DEV
-					? 'POST method not allowed. No form actions exist for the page at /errors/missing-actions (405 Method Not Allowed)'
-					: 'POST method not allowed. No form actions exist for this page (405 Method Not Allowed)',
+				message: 'Method Not Allowed (405 Method Not Allowed)',
 				status: 405
 			}
 		});
@@ -700,6 +757,44 @@ test.describe('Errors', () => {
 		// the hydration script should not be present if the csr page option is respected
 		expect(content).not.toContain('kit.start(app');
 	});
+
+	test('returns root layout data for a missing route error page data request', async ({
+		request
+	}) => {
+		const data_response = await request.get(
+			'/this-route-does-not-exist/__data.json?x-sveltekit-invalidated=1'
+		);
+		expect(data_response.status()).toBe(200);
+		expect(data_response.headers()['content-type']).toContain('application/json');
+
+		const data = await data_response.json();
+		expect(data.type).toBe('data');
+		expect(data.nodes[0].type).toBe('data');
+		expect(data.nodes[0].data).toContain('rootlayout');
+
+		const page_response = await request.get('/this-route-does-not-exist/__data.json');
+		expect(page_response.status()).toBe(404);
+		expect(page_response.headers()['content-type']).toContain('text/html');
+
+		// a single-node request that invalidates nothing is not an error-page data request
+		const crafted_response = await request.get(
+			'/this-route-does-not-exist/__data.json?x-sveltekit-invalidated=0'
+		);
+		expect(crafted_response.status()).toBe(404);
+	});
+
+	test('preserves metadata for a streamed missing route error page', async ({ request }) => {
+		const response = await request.get('/non-existent-streamed-route', {
+			headers: { cookie: 'defer=true' }
+		});
+
+		expect(response.status()).toBe(404);
+		expect(response.headers()['etag']).toBeUndefined();
+
+		const body = await response.text();
+		expect(body).toMatch(/<h1[^>]*>404<\/h1>/);
+		expect(body).toContain('This is your custom error page');
+	});
 });
 
 test.describe('Load', () => {
@@ -718,6 +813,18 @@ test.describe('Load', () => {
 	test('fetch reads universal load assets on the server', async ({ page }) => {
 		await page.goto('/load/fetch-asset');
 		await expect(page.locator('p')).toHaveText('1');
+	});
+
+	test('does not forward accept-language to internal fetch when the request has none', async ({
+		request
+	}) => {
+		// unlike browsers and undici, the `request` fixture sends no accept-language header
+		const html = await (await request.get('/load/fetch-request-headers')).text();
+		const headers = JSON.parse(
+			/** @type {RegExpMatchArray} */ (/<pre>(.+?)<\/pre>/s.exec(html))[1]
+		);
+		expect(headers.accept).toBe('*/*');
+		expect(headers['accept-language']).toBeUndefined();
 	});
 
 	test('includes origin header on non-GET internal request', async ({ page, baseURL }) => {
@@ -831,8 +938,33 @@ test.describe('Shadowed pages', () => {
 			}
 		});
 
-		expect(response.status()).toBe(204);
-		expect(await response.text()).toBe('');
+		expect(response.status()).toBe(200);
+		expect(await response.json()).toEqual({
+			type: 'success',
+			status: 204,
+			location: '/shadowed/simple/post'
+		});
+	});
+
+	test('action response includes the stripped landing location', async ({ baseURL, request }) => {
+		const response = await request.post(
+			'/actions/cross-page/destination?redirectTo=%2Fdashboard&/failure',
+			{
+				form: { username: 'paolo' },
+				headers: {
+					accept: 'application/json',
+					origin: new URL(baseURL).origin
+				}
+			}
+		);
+
+		expect(response.status()).toBe(400);
+		expect(await response.json()).toEqual({
+			type: 'failure',
+			status: 400,
+			location: '/actions/cross-page/destination?redirectTo=%2Fdashboard',
+			data: '[{"problem":1,"username":2},"invalid","paolo"]'
+		});
 	});
 
 	test('Action fail() returns matching HTTP status code', async ({ baseURL, request }) => {
@@ -946,6 +1078,16 @@ test.describe('Miscellaneous', () => {
 		const response = await request.get('/prerendering/中文');
 		expect(response.status()).toBe(200);
 	});
+
+	test('does not send x-sveltekit-version header on document responses', async ({ page }) => {
+		const response = await page.goto('/');
+		expect(response?.headers()['x-sveltekit-version']).toBeUndefined();
+	});
+
+	test('sends x-sveltekit-version header on data responses', async ({ request }) => {
+		const response = await request.get('/__data.json');
+		expect(response.headers()['x-sveltekit-version']).toBeTruthy();
+	});
 });
 
 test.describe('reroute', () => {
@@ -1031,6 +1173,15 @@ test.describe('$app/env', () => {
 			'utf-8'
 		);
 		expect(code).not.toMatch('client');
+	});
+});
+
+test.describe('web workers', () => {
+	test('worker files emitted by the server build are copied to the client output', () => {
+		test.skip(!!process.env.DEV, 'checks the build output');
+
+		const workers = path.join(root, '.svelte-kit/output/client/_app/immutable/workers');
+		expect(fs.readdirSync(workers).some((file) => file.startsWith('worker-'))).toBe(true);
 	});
 });
 
@@ -1508,6 +1659,10 @@ test.describe('asset preload', () => {
 
 		expect(body).toContain('rel="modulepreload"');
 		expect(body).toContain('as="font"');
+		expect(body).toMatch(/href="[^"]+\/shlop\.[^".]+\.woff2"/);
+		expect(body).toMatch(/href="[^"]+\/shlop\.var\.[^".]+\.woff2"/);
+		// the emitted file name is sanitized, but the filter matched on the original `shlop+bold.woff2`
+		expect(body).toMatch(/href="[^"]+\/shlop_bold\.[^".]+\.woff2"/);
 	});
 });
 

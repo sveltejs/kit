@@ -1,4 +1,5 @@
-import { readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, rmSync } from 'node:fs';
+import { extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { rolldown } from 'rolldown';
 
@@ -6,10 +7,11 @@ const files = fileURLToPath(new URL('./files', import.meta.url).href);
 
 /** @param {string} str */
 function escape_regex(str) {
+	// TODO replace with `RegExp.escape(str)` when we require Node >= 24
 	return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-/** @type {import('./index.js').default} */
+/** @type {typeof import('./index.js').default} */
 export default function (opts = {}) {
 	const { out = 'build', precompress = true, envPrefix = '' } = opts;
 
@@ -18,21 +20,35 @@ export default function (opts = {}) {
 		async adapt(builder) {
 			const tmp = builder.getBuildDirectory('adapter-node');
 
-			builder.rimraf(out);
-			builder.rimraf(tmp);
-			builder.mkdirp(tmp);
+			rmSync(out, { force: true, recursive: true });
+			rmSync(tmp, { force: true, recursive: true });
+			mkdirSync(tmp, { recursive: true });
 
 			builder.log.minor('Copying assets');
-			builder.writeClient(`${out}/client${builder.config.kit.paths.base}`);
-			builder.writePrerendered(`${out}/prerendered${builder.config.kit.paths.base}`);
+			const written = [
+				...builder.writeClient(`${out}/client${builder.config.paths.base}`),
+				...builder.writePrerendered(`${out}/prerendered${builder.config.paths.base}`)
+			];
+
+			/** @type {string[]} */
+			let compressed = [];
 
 			if (precompress) {
 				builder.log.minor('Compressing assets');
-				await Promise.all([
-					builder.compress(`${out}/client`),
-					builder.compress(`${out}/prerendered`)
-				]);
+				compressed = (
+					await Promise.all([
+						builder.compress(`${out}/client`),
+						builder.compress(`${out}/prerendered`)
+					])
+				).flat();
 			}
+
+			const compressed_extensions = new Set(compressed.map((file) => extname(file)));
+			// a pathname whose extension appears in neither set may be a route segment
+			// resolving to a compressed `index.html`, so it must keep its `Vary` header
+			const uncompressed_extensions = new Set(
+				written.map((file) => extname(file)).filter((ext) => ext && !compressed_extensions.has(ext))
+			);
 
 			builder.log.minor('Building server');
 
@@ -49,15 +65,6 @@ export default function (opts = {}) {
 
 			const dir_id = `${entries}/dir.js`;
 
-			writeFileSync(
-				`${server}/manifest.js`,
-				[
-					`export const manifest = ${builder.generateManifest({ relativePath: './' })};`,
-					`export const prerendered = new Set(${JSON.stringify(builder.prerendered.paths)});`,
-					`export const base = ${JSON.stringify(builder.config.kit.paths.base)};`
-				].join('\n\n')
-			);
-
 			/** @type {Record<string, string>} */
 			const input = {
 				index: `${entries}/index.js`,
@@ -69,6 +76,20 @@ export default function (opts = {}) {
 				input['instrumentation.server'] = `${server}/instrumentation.server.js`;
 			}
 
+			builder.generateServerInstance(`${server}/server.js`);
+
+			/** @type {Record<string, string>} */
+			const defines = {
+				UNCOMPRESSED_EXTENSIONS: `new Set(${JSON.stringify([...uncompressed_extensions])})`,
+				BASE_PATH: JSON.stringify(builder.config.paths.base),
+				APP_PATH: JSON.stringify(builder.getAppPath()),
+				PRERENDERED: `new Set(${JSON.stringify(builder.prerendered.paths)})`,
+				MIME_TYPES: JSON.stringify(builder.mimeTypes),
+				ORIGIN: JSON.stringify(builder.config.paths.origin) || 'undefined',
+				ENV_PREFIX: JSON.stringify(envPrefix),
+				PRECOMPRESS: JSON.stringify(precompress)
+			};
+
 			// we bundle the Vite output so that deployments only need
 			// their production dependencies. Anything in devDependencies
 			// will get included in the bundled code
@@ -76,7 +97,12 @@ export default function (opts = {}) {
 				input,
 				external: [
 					// dependencies could have deep exports, so we need a regex
-					...Object.keys(pkg.dependencies || {}).map((d) => new RegExp(`^${d}(\\/.*)?$`))
+					...Object.keys(pkg.dependencies || {}).map((d) => new RegExp(`^${d}(\\/.*)?$`)),
+					// `@opentelemetry/api` is an optional peer dependency of `@sveltejs/kit`,
+					// so it's not in `pkg.dependencies` and wouldn't be matched by the regex above.
+					// It must stay external so that `instrumentation.server.js` and the SvelteKit
+					// runtime share a single instance — see https://github.com/sveltejs/kit/issues/16288
+					/^@opentelemetry\/api(\/.*)?$/
 				],
 				platform: 'node',
 				resolve: {
@@ -89,9 +115,11 @@ export default function (opts = {}) {
 					{
 						// resolve the app's server and manifest, generated above
 						name: 'adapter-node-resolve-app',
-						resolveId(id) {
-							if (id === 'SERVER') return `${server}/index.js`;
-							if (id === 'MANIFEST') return `${server}/manifest.js`;
+						resolveId: {
+							filter: { id: /^SERVER$/ },
+							handler() {
+								return `${server}/server.js`;
+							}
 						}
 					},
 					{
@@ -103,13 +131,13 @@ export default function (opts = {}) {
 							filter: { id: new RegExp(escape_regex(entries)) },
 							handler(_code, _id, { magicString }) {
 								if (!magicString) throw new Error('experimental.nativeMagicString is not enabled');
-								magicString
-									.replace(/\bENV_PREFIX\b/g, JSON.stringify(envPrefix))
-									.replace(/\bPRECOMPRESS\b/g, JSON.stringify(precompress))
-									.replace(
-										/\bORIGIN\b/g,
-										JSON.stringify(builder.config.kit.paths.origin) || 'undefined'
-									);
+
+								for (const [from, to] of Object.entries(defines)) {
+									// remove $& and $N substitutions by replacing every $ with $$
+									const value = to.replace(/\$/g, '$$$$');
+									magicString.replace(new RegExp(`\\b${from}\\b`, 'g'), value);
+								}
+
 								return {
 									code: magicString,
 									map: magicString.generateMap().toString()

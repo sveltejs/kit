@@ -1,11 +1,13 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import {
 	BINARY_FORM_CONTENT_TYPE,
 	DELETE_KEY,
 	convert_formdata,
 	create_field_proxy,
+	deep_get,
 	deep_set,
 	deserialize_binary_form,
+	parse_form_key,
 	serialize_binary_form,
 	split_path
 } from './form-utils.js';
@@ -45,23 +47,73 @@ describe('split_path', () => {
 
 	for (const input of bad) {
 		test(input, () => {
-			expect(() => split_path(input)).toThrowError(`Invalid path ${input}`);
+			expect(() => split_path(input)).toThrowError(`Invalid field name ${input}`);
 		});
 	}
 });
 
 describe('convert_formdata', () => {
+	test('normalizes type prefixes and array suffixes', () => {
+		expect(parse_form_key('form', 'n:items[]/form')).toEqual({
+			name: 'items',
+			type: 'number',
+			is_array: true
+		});
+		expect(parse_form_key('form', 'b:enabled/form')).toEqual({
+			name: 'enabled',
+			type: 'boolean',
+			is_array: false
+		});
+	});
+
+	test('normalizes image input coordinates', () => {
+		expect(parse_form_key('form', 'i:position/form.x')).toEqual({
+			name: 'position.x',
+			type: 'number',
+			is_array: false
+		});
+		expect(parse_form_key('form', 'i:position/form.y')).toEqual({
+			name: 'position.y',
+			type: 'number',
+			is_array: false
+		});
+
+		const data = new FormData();
+		data.append('i:position/form.x', '12');
+		data.append('i:position/form.y', '34');
+
+		expect(convert_formdata('form', data)).toEqual({ position: { x: 12, y: 34 } });
+	});
+
+	test('rejects field names without the form id suffix', () => {
+		expect(() => parse_form_key('form', 'foo/other')).toThrow(/wasn't created with form.fields.as/);
+	});
+
+	test('coerces typed values after normalizing field names', () => {
+		const data = new FormData();
+		data.append('n:count/form', '42');
+		data.append('n:items[]/form', '1');
+		data.append('n:items[]/form', '2');
+		data.append('b:enabled/form', 'on');
+
+		expect(convert_formdata('form', data)).toEqual({
+			count: 42,
+			items: [1, 2],
+			enabled: true
+		});
+	});
+
 	test('converts a FormData object', () => {
 		const data = new FormData();
 
-		data.append('foo', 'foo');
+		data.append('foo/form', 'foo');
 
-		data.append('object.nested.property', 'property');
-		data.append('array[]', 'a');
-		data.append('array[]', 'b');
-		data.append('array[]', 'c');
+		data.append('object.nested.property/form', 'property');
+		data.append('array[]/form', 'a');
+		data.append('array[]/form', 'b');
+		data.append('array[]/form', 'c');
 
-		const converted = convert_formdata(data);
+		const converted = convert_formdata('form', data);
 
 		expect(converted).toEqual({
 			foo: 'foo',
@@ -77,10 +129,10 @@ describe('convert_formdata', () => {
 	test('handles multiple fields at the same nested level', () => {
 		const data = new FormData();
 
-		data.append('user.name.first', 'first');
-		data.append('user.name.last', 'last');
+		data.append('user.name.first/form', 'first');
+		data.append('user.name.last/form', 'last');
 
-		const converted = convert_formdata(data);
+		const converted = convert_formdata('form', data);
 
 		expect(converted).toEqual({
 			user: {
@@ -95,24 +147,33 @@ describe('convert_formdata', () => {
 	test('omits empty file inputs', () => {
 		const data = new FormData();
 
-		data.append('file', new File([], ''));
+		data.append('file/form', new File([], ''));
 
-		expect(convert_formdata(data)).toEqual({});
+		expect(convert_formdata('form', data)).toEqual({});
 	});
 
 	test('keeps real zero-byte files', () => {
 		const data = new FormData();
 		const file = new File([], 'empty.txt');
 
-		data.append('file', file);
+		data.append('file/form', file);
 
-		expect(convert_formdata(data)).toEqual({ file });
+		expect(convert_formdata('form', data)).toEqual({ file });
+	});
+
+	test('rejects field names without the form id suffix', () => {
+		const data = new FormData();
+		data.append('foo/other/form', 'foo');
+
+		expect(() => convert_formdata('/this/form', data)).toThrow(
+			/wasn't created with form.fields.as/
+		);
 	});
 
 	test.each(POLLUTION_ATTACKS)('prevents prototype pollution: %s', (attack) => {
 		const data = new FormData();
-		data.append(attack, 'bad');
-		expect(() => convert_formdata(data)).toThrow(/Invalid key "/);
+		data.append(attack + '/form', 'bad');
+		expect(() => convert_formdata('form', data)).toThrow(/Invalid key "/);
 	});
 });
 
@@ -136,7 +197,8 @@ describe('binary form serializer', () => {
 					'Content-Type': BINARY_FORM_CONTENT_TYPE,
 					'Content-Length': blob.size.toString()
 				}
-			})
+			}),
+			''
 		);
 		expect(res.form_data).toBeNull();
 		expect(res.data).toEqual(input.data);
@@ -174,7 +236,8 @@ describe('binary form serializer', () => {
 					'Content-Type': BINARY_FORM_CONTENT_TYPE,
 					'Content-Length': blob.size.toString()
 				}
-			})
+			}),
+			''
 		);
 		const { small, large, empty } = res.data;
 		expect(empty.name).toBe('empty.txt');
@@ -215,7 +278,8 @@ describe('binary form serializer', () => {
 					'Content-Type': BINARY_FORM_CONTENT_TYPE,
 					'Content-Length': blob.size.toString()
 				}
-			})
+			}),
+			''
 		);
 		/** @type {File} */
 		const file = res.data.file;
@@ -248,7 +312,8 @@ describe('binary form serializer', () => {
 					'Content-Type': BINARY_FORM_CONTENT_TYPE
 					// No Content-Length — simulates proxy stripping it
 				}
-			})
+			}),
+			''
 		);
 		expect(res.data.foo).toBe('bar');
 		expect(res.data.file.name).toBe('hello.txt');
@@ -273,7 +338,8 @@ describe('binary form serializer', () => {
 					'Content-Type': BINARY_FORM_CONTENT_TYPE,
 					'Content-Length': blob.size.toString()
 				}
-			})
+			}),
+			''
 		);
 		expect(res.data.foo).toBe('bar');
 		expect(res.data.file.name).toBe('hello.txt');
@@ -345,7 +411,8 @@ describe('binary form serializer', () => {
 							'Content-Type': BINARY_FORM_CONTENT_TYPE,
 							'Content-Length': (header_bytes + data_length).toString()
 						}
-					})
+					}),
+					''
 				)
 			).rejects.toThrow('data too short');
 		} finally {
@@ -404,7 +471,8 @@ describe('binary form serializer', () => {
 						'Content-Type': BINARY_FORM_CONTENT_TYPE,
 						'Content-Length': total.toString()
 					}
-				})
+				}),
+				''
 			)
 		).rejects.toThrow('invalid file metadata');
 	}, 1000);
@@ -427,7 +495,7 @@ describe('binary form serializer', () => {
 			payload: '[[1,3],{"file":2},["File",4],{},[-2,-2,7],"a.txt","text/plain",0]'
 		}
 	])('rejects invalid file metadata: $name', async ({ payload }) => {
-		await expect(deserialize_binary_form(build_raw_request(payload))).rejects.toThrow(
+		await expect(deserialize_binary_form(build_raw_request(payload), '')).rejects.toThrow(
 			'invalid file metadata'
 		);
 	});
@@ -465,7 +533,8 @@ describe('binary form serializer', () => {
 						'Content-Type': BINARY_FORM_CONTENT_TYPE,
 						'Content-Length': total.toString()
 					}
-				})
+				}),
+				''
 			)
 		).rejects.toThrow('invalid file offset table');
 	}, 1000);
@@ -497,7 +566,8 @@ describe('binary form serializer', () => {
 				build_raw_request(
 					'[[1,3],{"file":2},["File",4],{},[5,6,7,8,9],"a.txt","text/plain",0,0,0]',
 					offsets
-				)
+				),
+				''
 			)
 		).rejects.toThrow('invalid file offset table');
 	});
@@ -526,7 +596,8 @@ describe('binary form serializer', () => {
 					'Content-Type': BINARY_FORM_CONTENT_TYPE,
 					'Content-Length': blob.size.toString()
 				}
-			})
+			}),
+			''
 		);
 
 		expect(res.data).toEqual({ a: 1 });
@@ -610,7 +681,7 @@ describe('binary form serializer', () => {
 		// file_offsets: [0, 1] — file a starts at 0, file b starts at 1.
 		// With size=3 each, they overlap (0..3 and 1..4).
 		await expect(
-			deserialize_binary_form(build_raw_request_with_files(payload, '[0,1]', 4))
+			deserialize_binary_form(build_raw_request_with_files(payload, '[0,1]', 4), '')
 		).rejects.toThrow('overlapping file data');
 	});
 
@@ -620,7 +691,7 @@ describe('binary form serializer', () => {
 		const payload =
 			'[[1,3],{"a":2,"b":4},["File",6],{},["File",7],0,[8,9,10,11,12],[8,9,10,11,12],"a.txt","text/plain",1,0,0]';
 		await expect(
-			deserialize_binary_form(build_raw_request_with_files(payload, '[0]', 1))
+			deserialize_binary_form(build_raw_request_with_files(payload, '[0]', 1), '')
 		).rejects.toThrow('duplicate file offset table index');
 	});
 
@@ -631,7 +702,7 @@ describe('binary form serializer', () => {
 			'[[1,3],{"a":2,"b":4},["File",6],{},["File",7],0,[8,9,10,11,12],[8,9,10,11,13],"a.txt","text/plain",1,0,0,1]';
 		// file_offsets: [0, 3] — file a at 0 (size 1), file b at 3 (size 1), gap at 1..3.
 		await expect(
-			deserialize_binary_form(build_raw_request_with_files(payload, '[0,3]', 4))
+			deserialize_binary_form(build_raw_request_with_files(payload, '[0,3]', 4), '')
 		).rejects.toThrow('gaps in file data');
 	});
 
@@ -692,7 +763,7 @@ describe('binary form serializer', () => {
 		const offsets = JSON.stringify(new Array(file_count).fill(0));
 
 		await expect(
-			deserialize_binary_form(build_raw_request_with_files(payload, offsets, file_size))
+			deserialize_binary_form(build_raw_request_with_files(payload, offsets, file_size), '')
 		).rejects.toThrow('overlapping file data');
 	}, 1000);
 
@@ -715,12 +786,30 @@ describe('binary form serializer', () => {
 					'Content-Type': BINARY_FORM_CONTENT_TYPE,
 					'Content-Length': blob.size.toString()
 				}
-			})
+			}),
+			''
 		);
 		expect(res.data.a.size).toBe(0);
 		expect(res.data.b.size).toBe(0);
 		expect(res.data.c.size).toBe(1);
 		expect(await res.data.c.text()).toBe('x');
+	});
+
+	test('reads a zero-length file at the end of the payload', async () => {
+		const { blob } = serialize_binary_form({ empty: new File([], 'empty.txt') }, {});
+		const res = await deserialize_binary_form(
+			new Request('http://test', {
+				method: 'POST',
+				body: blob,
+				headers: {
+					'Content-Type': BINARY_FORM_CONTENT_TYPE,
+					'Content-Length': blob.size.toString()
+				}
+			}),
+			''
+		);
+		expect(res.data.empty.size).toBe(0);
+		expect(await res.data.empty.text()).toBe('');
 	});
 });
 
@@ -757,7 +846,34 @@ describe('deep_set', () => {
 	});
 });
 
+describe('deep_get', () => {
+	test('walks objects and arrays and stops at anything else', () => {
+		const object = { a: [{ b: 'hello' }] };
+		expect(deep_get(object, [])).toBe(object);
+		expect(deep_get(object, ['a', 0, 'b'])).toBe('hello');
+		expect(deep_get(object, ['a', 1, 'b'])).toBe(undefined);
+		expect(deep_get(object, ['a', 0, 'b', 'length'])).toBe(undefined);
+	});
+});
+
 describe('create_field_proxy', () => {
+	test('image inputs use coordinate names and omit value properties', () => {
+		const proxy = create_field_proxy({
+			form_id: 'form',
+			get: () => ({}),
+			set: () => {},
+			get_issues: () => ({}),
+			get_touched: () => ({}),
+			get_dirty: () => ({})
+		});
+
+		expect(proxy.position.as('image')).toEqual({
+			name: 'i:position/form',
+			type: 'image',
+			'aria-invalid': undefined
+		});
+	});
+
 	// Regression test for https://github.com/sveltejs/kit/issues/16165
 	// Before the fix, Date values fell through to the generic object branch
 	// of deep_clone, which iterated Object.keys (empty on Date), producing
@@ -766,20 +882,137 @@ describe('create_field_proxy', () => {
 		const original = new Date('2025-06-25T00:00:00Z');
 		const input = { created_at: original };
 
-		const proxy = create_field_proxy(
-			{},
-			() => input,
-			() => {},
-			() => ({}),
-			() => ({}),
-			() => ({}),
-			[]
-		);
+		const proxy = create_field_proxy({
+			form_id: 'form',
+			get: () => input,
+			set: () => {},
+			get_issues: () => ({}),
+			get_touched: () => ({}),
+			get_dirty: () => ({})
+		});
 
 		const cloned = proxy.created_at.value();
 
 		expect(cloned).toBeInstanceOf(Date);
 		expect(cloned.getTime()).toBe(original.getTime());
 		expect(cloned).not.toBe(original);
+	});
+
+	test('as() returns the props of each input kind in spread order', () => {
+		/** @type {Record<string, unknown>} */
+		let input = {};
+
+		const proxy = create_field_proxy({
+			form_id: 'form',
+			get: () => input,
+			set: () => {},
+			get_issues: () => ({ bad: [] }),
+			get_touched: () => ({}),
+			get_dirty: () => ({})
+		});
+
+		/**
+		 * @param {unknown[]} args
+		 * @param {unknown} [value] the current form value of the field
+		 */
+		const as = (args, value) => {
+			input = value === undefined ? {} : { a: value };
+			return Object.entries(proxy.a.as(...args));
+		};
+
+		const invalid = ['aria-invalid', undefined];
+
+		expect(as(['text', 'x'], 'y')).toEqual([
+			['name', 'a/form'],
+			invalid,
+			['defaultValue', 'x'],
+			['value', 'y']
+		]);
+		expect(as(['hidden', true])).toEqual([
+			['name', 'b:a/form'],
+			invalid,
+			['type', 'hidden'],
+			['value', 'on']
+		]);
+		expect(as(['select multiple', ['x']], ['y'])).toEqual([
+			['name', 'a[]/form'],
+			invalid,
+			['multiple', true],
+			['value', ['y']]
+		]);
+		expect(proxy.a.as('select multiple', ['x']).value).not.toBe(input.a);
+		const file = new File([], 'a.txt');
+		expect(as(['file multiple'], [file])).toEqual([
+			['name', 'a[]/form'],
+			invalid,
+			['type', 'file'],
+			['multiple', true],
+			['files', { 0: file, length: 1 }]
+		]);
+		expect(as(['file'], file)[4]).toEqual(['files', { 0: file, length: 1 }]);
+		expect(as(['checkbox', true], false)).toEqual([
+			['name', 'b:a/form'],
+			invalid,
+			['type', 'checkbox'],
+			['defaultChecked', true],
+			['checked', false]
+		]);
+		expect(as(['checkbox', 'red'])).toEqual([
+			['name', 'a[]/form'],
+			invalid,
+			['type', 'checkbox'],
+			['value', 'red'],
+			['defaultChecked', undefined],
+			['checked', undefined]
+		]);
+		expect(as(['radio', 'x', false], 'x')).toEqual([
+			['name', 'a/form'],
+			invalid,
+			['type', 'radio'],
+			['value', 'x'],
+			['defaultChecked', false],
+			['checked', true]
+		]);
+		expect(Object.entries(proxy.bad.as('text'))[1]).toEqual(['aria-invalid', 'true']);
+	});
+
+	test('the default given to as() only applies until the field is edited', () => {
+		const edited = create_field_proxy({
+			form_id: 'form',
+			get: () => ({}),
+			set: () => {},
+			get_issues: () => ({}),
+			get_touched: () => ({}),
+			get_dirty: () => ({ a: true })
+		});
+
+		expect(edited.a.as('number', 3).value).toBe('');
+		expect(edited.a.as('checkbox', true).checked).toBe(undefined);
+	});
+
+	test('enumerating fields warns once per call site, with a stack trace', () => {
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+		const proxy = create_field_proxy({
+			form_id: 'form',
+			get: () => ({ a: 1 }),
+			set: () => {},
+			get_issues: () => ({}),
+			get_touched: () => ({}),
+			get_dirty: () => ({})
+		});
+
+		expect(Symbol.iterator in proxy).toBe(false);
+		expect(warn).not.toHaveBeenCalled();
+
+		for (let i = 0; i < 2; i++) expect(Object.keys(proxy.a.b)).toEqual([]);
+		expect(warn).toHaveBeenCalledTimes(1);
+
+		expect('a' in proxy).toBe(false);
+		expect(warn).toHaveBeenCalledTimes(2);
+
+		const [error] = warn.mock.calls[1];
+		expect(error.message).toMatch('`form.fields`');
+		expect(error.stack).toMatch('form-utils.spec.js');
+		warn.mockRestore();
 	});
 });

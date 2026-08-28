@@ -1,7 +1,7 @@
-import { BROWSER, DEV } from 'esm-env';
+import { DEV } from 'esm-env';
 import { PRELOAD_PRIORITIES } from './constants.js';
 
-export const origin = BROWSER ? location.origin : '';
+export const origin = location.origin;
 
 /** @param {string | URL} url */
 export function resolve_url(url) {
@@ -31,10 +31,9 @@ const warned = new WeakSet();
 const valid_link_options = /** @type {const} */ ({
 	'preload-code': ['', 'false', 'tap', 'hover', 'viewport', 'eager'],
 	'preload-data': ['', 'false', 'tap', 'hover'],
-	keepfocus: ['', 'true', 'false'],
-	noscroll: ['', 'true', 'false'],
 	reload: ['', 'true', 'false'],
-	replacestate: ['', 'true', 'false']
+	replacestate: ['', 'true', 'false'],
+	reset: ['', 'true', 'false']
 });
 
 /**
@@ -106,7 +105,11 @@ function parent_element(element) {
  */
 export function find_anchor(element, target) {
 	while (element && element !== target) {
-		if (element.nodeName.toUpperCase() === 'A' && element.hasAttribute('href')) {
+		// don't read `nodeName` — a form control named `nodeName` shadows it on its form
+		if (
+			(element instanceof HTMLAnchorElement || element instanceof SVGAElement) &&
+			element.hasAttribute('href')
+		) {
 			return /** @type {HTMLAnchorElement | SVGAElement} */ (element);
 		}
 
@@ -123,6 +126,7 @@ export function get_link_info(a, base, uses_hash_router) {
 	/** @type {URL | undefined} */
 	let url;
 
+	// TODO replace the try/catch with `URL.parse` when browser support allows (Chrome 126, Firefox 126, Safari 18)
 	try {
 		url = new URL(a instanceof SVGAElement ? a.href.baseVal : a.href, document.baseURI);
 
@@ -150,12 +154,6 @@ export function get_link_info(a, base, uses_hash_router) {
  * @param {HTMLFormElement | HTMLAnchorElement | SVGAElement} element
  */
 export function get_router_options(element) {
-	/** @type {ValidLinkOptions<'keepfocus'> | null} */
-	let keepfocus = null;
-
-	/** @type {ValidLinkOptions<'noscroll'> | null} */
-	let noscroll = null;
-
 	/** @type {ValidLinkOptions<'preload-code'> | null} */
 	let preload_code = null;
 
@@ -168,16 +166,31 @@ export function get_router_options(element) {
 	/** @type {ValidLinkOptions<'replacestate'> | null} */
 	let replace_state = null;
 
+	/** @type {ValidLinkOptions<'reset'> | null} */
+	let reset = null;
+
 	/** @type {Element} */
 	let el = element;
 
 	while (el && el !== document.documentElement) {
+		if (DEV) {
+			for (const name of ['keepfocus', 'noscroll']) {
+				const value = el.getAttribute(`data-sveltekit-${name}`);
+				if (value !== null && !warned.has(el)) {
+					warned.add(el);
+					console.warn(
+						`\`data-sveltekit-${name}="true"\` has been replaced with \`data-sveltekit-reset="false"\``
+					);
+					console.log(el);
+				}
+			}
+		}
+
 		if (preload_code === null) preload_code = link_option(el, 'preload-code');
 		if (preload_data === null) preload_data = link_option(el, 'preload-data');
-		if (keepfocus === null) keepfocus = link_option(el, 'keepfocus');
-		if (noscroll === null) noscroll = link_option(el, 'noscroll');
 		if (reload === null) reload = link_option(el, 'reload');
 		if (replace_state === null) replace_state = link_option(el, 'replacestate');
+		if (reset === null) reset = link_option(el, 'reset');
 
 		el = /** @type {Element} */ (parent_element(el));
 	}
@@ -198,10 +211,9 @@ export function get_router_options(element) {
 	return {
 		preload_code: levels[preload_code ?? 'false'],
 		preload_data: levels[preload_data ?? 'false'],
-		keepfocus: get_option_state(keepfocus),
-		noscroll: get_option_state(noscroll),
 		reload: get_option_state(reload),
-		replace_state: get_option_state(replace_state)
+		replace_state: get_option_state(replace_state),
+		reset: get_option_state(reset) ?? true
 	};
 }
 

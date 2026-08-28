@@ -1,4 +1,4 @@
-/** @import { RemoteChunk } from 'types' */
+/** @import { BuildData, RemoteChunk, RouteData } from 'types' */
 import fs from 'node:fs';
 import path from 'node:path';
 import { lookup as mime_lookup } from '../../utils/mime.js';
@@ -15,10 +15,10 @@ import { uneval } from 'devalue';
  * Generates the data used to write the server-side manifest.js file. This data is used in the Vite
  * build process, to power routing, etc.
  * @param {{
- *   build_data: import('types').BuildData;
+ *   build_data: BuildData;
  *   prerendered: string[];
  *   relative_path: string;
- *   routes: import('types').RouteData[];
+ *   routes: RouteData[];
  *   remotes: RemoteChunk[];
  *   root: string;
  * }} opts
@@ -94,51 +94,56 @@ export function generate_manifest({
 		mime_types[ext] ??= mime_lookup(ext) || '';
 	}
 
+	// record extensions that only exist in prerendered output, e.g. a prerendered favicon.ico
+	for (const pathname of prerendered) {
+		const ext = path.extname(pathname);
+		if (ext) mime_types[ext] ??= mime_lookup(ext) || '';
+	}
+
 	// prettier-ignore
 	// String representation of
-	/** @template {import('@sveltejs/kit').SSRManifest} T */
+	/** @template {import('types').SSRManifest} T */
 	const manifest_expr = dedent`
 		{
-			appDir: ${s(build_data.app_dir)},
-			appPath: ${s(build_data.app_path)},
+			app_dir: ${s(build_data.app_dir)},
+			app_path: ${s(build_data.app_path)},
 			assets: new Set(${s(assets)}),
-			mimeTypes: ${s(mime_types)},
-			_: {
-				client: ${uneval(build_data.client)},
-				nodes: [
-					${(node_paths).map(loader).join(',\n')}
-				],
-				remotes: {
-					${remotes.map((remote) => `'${remote.hash}': ${loader(join_relative(relative_path, `chunks/remote-${remote.hash}.js`))}`).join(',\n')}
-				},
-				routes: [
-					${routes.map(route => {
-						if (!route.page && !route.endpoint) return;
+			mime_types: ${s(mime_types)},
+			client: ${uneval(build_data.client)},
+			
+			nodes: [
+				${(node_paths).map(loader).join(',\n')}
+			],
+			remotes: {
+				${remotes.map((remote) => `'${remote.hash}': ${loader(join_relative(relative_path, `chunks/remote-${remote.hash}.js`))}`).join(',\n')}
+			},
+			routes: [
+				${routes.map(route => {
+					if (!route.page && !route.endpoint) return;
 
-						return dedent`
-							{
-								id: ${s(route.id)},
-								pattern: ${route.pattern},
-								params: ${s(route.params)},
-								page: ${route.page ? `{ layouts: ${get_nodes(route.page.layouts)}, errors: ${get_nodes(route.page.errors)}, leaf: ${reindexed.get(route.page.leaf)} }` : 'null'},
-								endpoint: ${route.endpoint ? loader(join_relative(relative_path, resolve_symlinks(build_data.server_manifest, route.endpoint.file, root).chunk.file)) : 'null'}
-							}
-						`;
-					}).filter(Boolean).join(',\n')}
-				],
-				prerendered_routes: new Set(${s(prerendered)}),
-				matchers: async () => {
-					${
-						uses_matchers && build_data.manifest_data.params
-							? dedent`
-								const { params } = await import('${join_relative(relative_path, '/entries/params.js')}');
-								return params;
-							`
-							: 'return {};'
-					}
-				},
-				server_assets: ${s(files)}
-			}
+					return dedent`
+						{
+							id: ${s(route.id)},
+							pattern: ${route.pattern},
+							params: ${s(route.params)},
+							page: ${route.page ? `{ layouts: ${get_nodes(route.page.layouts)}, errors: ${get_nodes(route.page.errors)}, leaf: ${reindexed.get(route.page.leaf)} }` : 'null'},
+							endpoint: ${route.endpoint ? loader(join_relative(relative_path, resolve_symlinks(build_data.server_manifest, route.endpoint.file, root).chunk.file)) : 'null'}
+						}
+					`;
+				}).filter(Boolean).join(',\n')}
+			],
+			prerendered_routes: new Set(${s(prerendered)}),
+			matchers: async () => {
+				${
+					uses_matchers && build_data.manifest_data.params
+						? dedent`
+							const { params } = await import('${join_relative(relative_path, '/entries/params.js')}');
+							return params;
+						`
+						: 'return {};'
+				}
+			},
+			server_assets: ${s(files)}
 		}
 	`;
 
