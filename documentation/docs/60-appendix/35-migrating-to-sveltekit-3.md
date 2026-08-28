@@ -453,9 +453,47 @@ All first-party adapters now require SvelteKit 3, alongside these adapter-specif
 
 ### `adapter-cloudflare`
 
+Cloudflare-specific APIs are no longer available on `platform`. Instead, find them where you would expect on a Cloudflare worker:
+
+- `env`, `ctx.waitUntil`, and other `ctx` properties should be imported from `cloudflare:workers`:
+```js
+// @filename: ambient.d.ts
+declare module 'cloudflare:workers' {
+	export const env: { KV: { get(): Promise<unknown> } };
+	export function waitUntil(promise: Promise<any>): void;
+}
+// ---cut---
+import { env, waitUntil } from 'cloudflare:workers';
+
+const value = await env.KV.get('key');
+```
+- `cf` is now a property of the `Request` object:
+```js
+/// file: src/routes/cf/+server.js
+// @filename: ambient.d.ts
+interface Request {
+  cf: import('@cloudflare/workers-types').IncomingRequestCfProperties;
+}
+// @filename: index.js
+// @errors: 7031
+// ---cut---
+export async function GET({ request }) {
+	const { country } = request.cf;
+}
+```
+- `caches` is now a global variable:
+```js
+/// file: src/routes/cache/+server.js
+let request = new Request('');
+// ---cut---
+const myCache = await caches.open('foo');
+await myCache.match(request);
+```
+
+- To make these types available to your app, install [`wrangler`](https://www.npmjs.com/package/wrangler) and run [`wrangler types`](https://developers.cloudflare.com/workers/languages/typescript/).
+
 - minimum `wrangler` is now `^4.67.0`
 - `@cloudflare/workers-types` upgraded
-- `platform.context` removed in favour of `platform.ctx`
 
 ### `adapter-node`
 
