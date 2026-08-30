@@ -583,12 +583,8 @@ export async function internal_respond(request, state) {
 	 * @param {import('@sveltejs/kit/hooks').ResolveOptions} [opts]
 	 */
 	async function resolve(event, page_nodes, opts) {
-		// headers set so far came from `handle`. A failed render must not leak
-		// headers into the error page, so rendering it starts from this state
 		const handle_headers = { ...headers };
-		state.reset_headers ??= () => {
-			headers = { ...handle_headers };
-		};
+		state.reset_headers ??= () => (headers = { ...handle_headers });
 
 		try {
 			if (opts) {
