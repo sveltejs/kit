@@ -696,6 +696,12 @@ export type RecordSpan = <T>(options: {
  * used for tracking things like remote function calls
  */
 export interface RequestState {
+	/**
+	 * Restores the response headers to their post-`handle` state, discarding
+	 * `setHeaders` calls made by a render that subsequently failed.
+	 * Assigned lazily when `resolve` is first called.
+	 */
+	reset_headers?(): void;
 	readonly getClientAddress: () => string;
 	readonly platform?: any;
 	/** @internal reads from the filesystem when user code tries to fetch a static asset */

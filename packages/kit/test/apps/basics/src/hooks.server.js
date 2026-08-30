@@ -138,7 +138,7 @@ export const handle = sequence(
 		const response = await resolve(event, {
 			transformPageChunk: event.url.pathname.startsWith('/transform-page-chunk')
 				? ({ html }) => html.replace('__REPLACEME__', 'Worked!')
-				: event.url.pathname === '/errors/error-page-setheaders'
+				: event.url.pathname.startsWith('/errors/error-page-setheaders')
 					? ({ html }) => {
 							if (html.includes('makes the page transform crash')) {
 								throw new Error('Crashing now');
@@ -200,9 +200,8 @@ export const handle = sequence(
 	},
 	async ({ event, resolve }) => {
 		if (
-			['/errors/error-page-setheaders', '/non-existent-route', '/non-existent-route-loop'].includes(
-				event.url.pathname
-			)
+			event.url.pathname.startsWith('/errors/error-page-setheaders') ||
+			['/non-existent-route', '/non-existent-route-loop'].includes(event.url.pathname)
 		) {
 			event.locals.url = new URL(event.request.url);
 		}

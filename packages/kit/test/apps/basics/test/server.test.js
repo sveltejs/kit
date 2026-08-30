@@ -1054,6 +1054,15 @@ test.describe('setHeaders', () => {
 		expect(response.headers()['cache-control']).toBe('private, max-age=60');
 		expect(await response.text()).toContain('This is your custom error page saying:');
 	});
+
+	test('drops headers set by the failed render from the error page', async ({ request }) => {
+		const response = await request.get('/errors/error-page-setheaders-leak');
+
+		expect(response.status()).toBe(500);
+		expect(response.headers()['x-failed-render']).toBeUndefined();
+		expect(response.headers()['cache-control']).toBe('private, max-age=60');
+		expect(await response.text()).toContain('This is your custom error page saying:');
+	});
 });
 
 test.describe('cookies', () => {

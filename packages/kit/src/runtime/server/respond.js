@@ -175,7 +175,7 @@ export async function internal_respond(request, state) {
 	}
 
 	/** @type {Record<string, string>} */
-	const headers = {};
+	let headers = {};
 
 	const { cookies, new_cookies, get_cookie_header, set_internal, set_trailing_slash } = get_cookies(
 		request,
@@ -221,7 +221,7 @@ export async function internal_respond(request, state) {
 					// appendHeaders-style for Server-Timing https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Server-Timing
 					if (lower === 'server-timing') {
 						headers[lower] += ', ' + value;
-					} else if (!state.error) {
+					} else {
 						throw new Error(`"${key}" header is already set`);
 					}
 				} else {
@@ -583,6 +583,13 @@ export async function internal_respond(request, state) {
 	 * @param {import('@sveltejs/kit/hooks').ResolveOptions} [opts]
 	 */
 	async function resolve(event, page_nodes, opts) {
+		// headers set so far came from `handle`. A failed render must not leak
+		// headers into the error page, so rendering it starts from this state
+		const handle_headers = { ...headers };
+		state.reset_headers ??= () => {
+			headers = { ...handle_headers };
+		};
+
 		try {
 			if (opts) {
 				resolve_opts = {
