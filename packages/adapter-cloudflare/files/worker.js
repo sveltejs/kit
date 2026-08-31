@@ -33,7 +33,7 @@ const initialized = server.init({
 
 /** @type {import('@cloudflare/workers-types').ExportedHandler<Cloudflare.Env>} */
 export default {
-	async fetch(req, env, ctx) {
+	async fetch(req, env) {
 		if (!origin) {
 			origin = new URL(req.url).origin;
 		}
@@ -88,12 +88,6 @@ export default {
 
 		// dynamically-generated pages
 		return await server.respond(req, {
-			platform: {
-				env,
-				ctx,
-				caches,
-				cf: req.cf
-			},
 			getClientAddress() {
 				return /** @type {string} */ (req.headers.get('cf-connecting-ip'));
 			}

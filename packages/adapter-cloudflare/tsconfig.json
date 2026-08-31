@@ -15,5 +15,13 @@
 		"lib": ["es2024"],
 		"types": ["node"]
 	},
-	"include": ["index.js", "utils.js", "utils.spec.js", "vitest.config.js", "test/utils.js"]
+	"include": [
+		"index.js",
+		"src",
+		"utils.js",
+		"utils.spec.js",
+		"vitest.config.js",
+		"globals.d.ts",
+		"test/utils.js"
+	]
 }

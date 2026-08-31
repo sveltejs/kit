@@ -61,3 +61,8 @@ test('dynamic ISR routes are matched after the filesystem', () => {
 	const index = config.routes.findIndex((route) => route.src === '^(/isr/([^/]+?)/?)$');
 	assert.ok(index > filesystem);
 });
+
+test('process.cwd() is traced from the project directory', () => {
+	const function_dir = fs.realpathSync(`${output}/functions/process-cwd.func`);
+	assert.ok(fs.existsSync(`${function_dir}/adapter-vercel/test/apps/basic/asset.txt`));
+});
