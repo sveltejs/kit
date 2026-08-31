@@ -2,7 +2,7 @@
  * @param {string} route_id
  * @param {Record<string, any>} config
  * @param {string} feature
- * @param {import('@sveltejs/kit').Adapter | undefined} adapter
+ * @param {import('@sveltejs/kit').Adapter<any> | undefined} adapter
  */
 export function check_feature(route_id, config, feature, adapter) {
 	if (!adapter) return;

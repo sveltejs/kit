@@ -200,6 +200,12 @@ export function validate_config(config) {
 			}
 		}
 
+		if (typeof config.adapter?.vite === 'function') {
+			validated.adapter.vite = config.adapter.vite({
+				config: validated
+			});
+		}
+
 		return validated;
 	} catch (e) {
 		const error = /** @type {Error} */ (e);

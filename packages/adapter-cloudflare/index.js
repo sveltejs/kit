@@ -198,17 +198,15 @@ export default function (options = {}) {
 				).cf = globalThis.__sveltekit_cloudflare_platform?.cf;
 				return request;
 			},
-			plugins: {
-				pre: [
-					virtual_workers_module(
-						{
-							configPath: options.config,
-							...options.platformProxy
-						},
-						stub_import
-					)
-				]
-			}
+			plugins: [
+				virtual_workers_module(
+					{
+						configPath: options.config,
+						...options.platformProxy
+					},
+					stub_import
+				)
+			]
 		}
 	};
 }

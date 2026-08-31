@@ -13,7 +13,7 @@ declare module '@sveltejs/kit' {
 	/**
 	 * [Adapters](https://svelte.dev/docs/kit/adapters) are responsible for taking the production build and turning it into something that can be deployed to a platform of your choosing.
 	 */
-	export interface Adapter {
+	export interface Adapter<ViteResolved extends boolean = false> {
 		/**
 		 * The name of the adapter, using for logging. Will typically correspond to the package name.
 		 */
@@ -44,34 +44,49 @@ declare module '@sveltejs/kit' {
 		 * during dev, build and prerendering.
 		 */
 		emulate?: () => MaybePromise<Emulator>;
-		vite?: {
-			/**
-			 * This function overrides the default behavior during Vite's dev and preview modes
-			 * to convert an `http.IncomingMessage` to a `Request` object.
-			 * To call the original `setRequest` function, import it from `@sveltejs/kit/node`.
-			 * @since 3.0.0
-			 */
-			getRequest?: typeof getRequest;
-			/**
-			 * This function overrides the default behavior in Vite's dev and preview modes
-			 * to write a `Response` object to a `http.ServerResponse`.
-			 * To call the original `setResponse` function, import it from `@sveltejs/kit/node`.
-			 * @since 3.0.0
-			 */
-			setResponse?: typeof setResponse;
-			plugins?: {
-				/**
-				 * Vite plugins placed before any of SvelteKit's own plugins.
-				 * @since 3.0.0
-				 */
-				pre?: Plugin[];
-				/**
-				 * Vite plugins placed after any of SvelteKit's own plugins.
-				 * @since 3.0.0
-				 */
-				post?: Plugin[];
-			};
-		};
+		/**
+		 * Options for configuring and interacting with Vite
+		 * @since 3.0.0
+		 */
+		vite?: ViteResolved extends true
+			? AdapterViteConfig
+			: AdapterViteConfig | ((ctx: { config: ValidatedConfig }) => AdapterViteConfig);
+	}
+
+	interface AdapterViteConfig {
+		/**
+		 * This function overrides the default behavior during Vite's dev and preview modes
+		 * to convert an `http.IncomingMessage` to a `Request` object.
+		 * To call the original `setRequest` function, import it from `@sveltejs/kit/node`.
+		 * @since 3.0.0
+		 */
+		getRequest?: typeof getRequest;
+		/**
+		 * This function overrides the default behavior in Vite's dev and preview modes
+		 * to write a `Response` object to a `http.ServerResponse`.
+		 * To call the original `setResponse` function, import it from `@sveltejs/kit/node`.
+		 * @since 3.0.0
+		 */
+		setResponse?: typeof setResponse;
+		/**
+		 * Vite plugins injected by the adapter. By default,
+		 * they are placed before SvelteKit's plugins.
+		 * @since 3.0.0
+		 */
+		plugins?:
+			| Plugin[]
+			| {
+					/**
+					 * Vite plugins placed before any of SvelteKit's own plugins.
+					 * @since 3.0.0
+					 */
+					pre?: Plugin[];
+					/**
+					 * Vite plugins placed after any of SvelteKit's own plugins.
+					 * @since 3.0.0
+					 */
+					post?: Plugin[];
+			  };
 	}
 
 	export type LoadProperties<input extends Record<string, any> | void> = input extends void
@@ -931,7 +946,8 @@ declare module '@sveltejs/kit' {
 			: T[K]; // Use the exact type for everything else
 	};
 
-	type ValidatedConfig = RecursiveRequired<Omit<Config, 'preprocess'>> & {
+	type ValidatedConfig = RecursiveRequired<Omit<Config, 'preprocess' | 'adapter'>> & {
+		adapter: Adapter<true>;
 		preprocess: Config['preprocess'];
 	};
 	/**
