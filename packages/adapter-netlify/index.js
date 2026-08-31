@@ -1,6 +1,6 @@
 /** @import { TomlTable } from 'smol-toml' */
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { join, posix } from 'node:path';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { builtinModules } from 'node:module';
 import process from 'node:process';
@@ -275,13 +275,14 @@ function generate_serverless_function({ builder, routes, patterns, name, type, e
 
 	if (builder.hasServerInstrumentationFile()) {
 		writeFileSync(`${netlify_framework_serverless_path}/${name}.mjs`, fn);
+		const initializer = builder.createInstrumentationInitializer({
+			directory: netlify_framework_serverless_path
+		});
 		builder.instrument({
 			entrypoint: `${netlify_framework_serverless_path}/${name}.mjs`,
 			instrumentation: '.netlify/v1/server/instrumentation.server.js',
 			start: `.netlify/v1/server/${name}.start.mjs`,
-			environment: {
-				module: '.netlify/v1/server/env.js'
-			},
+			initializer,
 			module: {
 				generateText: generate_traced_module(config)
 			}
@@ -460,11 +461,16 @@ async function generate_edge_functions({ builder }) {
 	];
 
 	if (builder.hasServerInstrumentationFile()) {
-		const server_directory = posix.relative(tmp, builder.getServerDirectory());
-		writeFileSync(
-			`${tmp}/instrumented-entry.js`,
-			`import { set_env } from ${JSON.stringify(`${server_directory}/env.js`)};\nset_env(Deno.env.toObject());\nawait import(${JSON.stringify(`${server_directory}/instrumentation.server.js`)});\nconst { default: handler } = await import('./entry.js');\nexport { handler as default };\n`
-		);
+		const initializer = builder.createInstrumentationInitializer({
+			directory: tmp,
+			environment: 'export default Deno.env.toObject();\n'
+		});
+		writeFileSync(`${tmp}/instrumented-entry.js`, `export { default } from './entry.js';\n`);
+		builder.instrument({
+			entrypoint: `${tmp}/instrumented-entry.js`,
+			instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`,
+			initializer
+		});
 	}
 
 	await build({

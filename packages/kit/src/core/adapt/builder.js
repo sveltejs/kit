@@ -286,6 +286,28 @@ export function create_builder({
 			return copy(`${config.outDir}/output/server`, dest);
 		},
 
+		createInstrumentationInitializer({ directory, environment }) {
+			const provider = path.join(directory, '__sveltekit_env.js');
+			write(provider, environment ?? 'export default process.env;');
+
+			const initializer = path.join(directory, '__sveltekit_env_init.js');
+			write(
+				initializer,
+				create_env_module({
+					environment: to_import_specifier(
+						posixify(path.relative(path.dirname(initializer), provider))
+					),
+					set_env: to_import_specifier(
+						posixify(
+							path.relative(path.dirname(initializer), `${config.outDir}/output/server/env.js`)
+						)
+					)
+				})
+			);
+
+			return initializer;
+		},
+
 		hasServerInstrumentationFile() {
 			return existsSync(`${config.outDir}/output/server/instrumentation.server.js`);
 		},
@@ -294,7 +316,7 @@ export function create_builder({
 			entrypoint,
 			instrumentation,
 			start = path.join(path.dirname(entrypoint), 'start.js'),
-			environment = {},
+			initializer,
 			module = {
 				exports: ['default']
 			}
@@ -319,21 +341,7 @@ export function create_builder({
 				path.relative(path.dirname(entrypoint), instrumentation)
 			);
 			const relative_start = posixify(path.relative(path.dirname(entrypoint), start));
-			const environment_path = path.join(path.dirname(entrypoint), '__sveltekit_env_init.js');
-
-			const environment_module = environment.module ?? `${config.outDir}/output/server/env.js`;
-			const import_path = posixify(
-				path.relative(path.dirname(environment_path), environment_module)
-			);
-			const import_specifier = to_import_specifier(import_path);
-			write(
-				environment_path,
-				environment.generateInit?.({ importSpecifier: import_specifier }) ??
-					`import { set_env } from ${JSON.stringify(import_specifier)};\nset_env(process.env);\n`
-			);
-			const relative_environment = posixify(
-				path.relative(path.dirname(entrypoint), environment_path)
-			);
+			const relative_environment = posixify(path.relative(path.dirname(entrypoint), initializer));
 
 			const facade =
 				'generateText' in module
@@ -410,4 +418,11 @@ function create_instrumentation_facade({ instrumentation, start, exports, enviro
  */
 function to_import_specifier(path) {
 	return path.startsWith('.') ? path : `./${path}`;
+}
+
+/**
+ * @param {{ environment: string; set_env: string }} opts
+ */
+function create_env_module({ environment, set_env }) {
+	return `import env from ${JSON.stringify(environment)};\nimport { set_env } from ${JSON.stringify(set_env)};\nset_env(env);\n`;
 }

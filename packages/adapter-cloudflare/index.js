@@ -120,16 +120,14 @@ export default function (options = {}) {
 				}
 			});
 			if (builder.hasServerInstrumentationFile()) {
+				const initializer = builder.createInstrumentationInitializer({
+					directory: worker_dest_dir,
+					environment: `import { env } from 'cloudflare:workers';\nexport default env;\n`
+				});
 				builder.instrument({
 					entrypoint: worker_dest,
 					instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`,
-					environment: {
-						generateInit: ({ importSpecifier }) => `\
-import { env } from 'cloudflare:workers';
-import { set_env } from ${JSON.stringify(importSpecifier)};
-set_env(env);
-`
-					}
+					initializer
 				});
 			}
 
