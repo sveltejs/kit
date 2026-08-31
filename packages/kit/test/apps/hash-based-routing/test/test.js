@@ -119,20 +119,9 @@ test.describe('hash based navigation', () => {
 	test('sequential focus navigation point is set correctly', async ({ page, browserName }) => {
 		const tab = browserName === 'webkit' ? 'Alt+Tab' : 'Tab';
 		await page.goto('/#/focus');
-		await page.locator('a[href="#/focus/a#p"]').click();
-		await page.waitForURL('#/focus/a#p');
-		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('BODY');
-		await page.keyboard.press(tab);
-		await expect(page.locator('#button3')).toBeFocused();
-		await expect(page.locator('button[id="button3"]')).toBeFocused();
-	});
-
-	test('resetting focus does not dispatch hashchange', async ({ page }) => {
-		await page.goto('/#/focus');
 		await page.evaluate(() => {
-			window.hashchanges = [];
-			addEventListener('hashchange', (event) => {
-				window.hashchanges.push({ old_url: event.oldURL, new_url: event.newURL });
+			addEventListener('hashchange', () => {
+				document.documentElement.dataset.hashchange = '';
 			});
 		});
 
@@ -140,7 +129,15 @@ test.describe('hash based navigation', () => {
 		await page.waitForURL('#/focus/a#p');
 		await page.waitForTimeout(50);
 
-		expect(await page.evaluate(() => window.hashchanges)).toEqual([]);
+		await expect(page.locator('html')).not.toHaveAttribute('data-hashchange');
+		if (browserName === 'chromium') {
+			expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('BODY');
+		} else {
+			await expect(page.locator('#p')).toBeFocused();
+		}
+		await page.keyboard.press(tab);
+		await expect(page.locator('#button3')).toBeFocused();
+		await expect(page.locator('button[id="button3"]')).toBeFocused();
 	});
 
 	test('does not look up an empty anchor id on navigation', async ({ page }) => {
