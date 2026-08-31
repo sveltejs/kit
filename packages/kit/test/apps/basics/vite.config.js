@@ -20,7 +20,7 @@ export default defineConfig({
 				name: 'test-adapter',
 				adapt(builder) {
 					const initializer = builder.createInstrumentationInitializer({
-						directory: builder.getServerDirectory(),
+						outputDirectory: builder.getServerDirectory(),
 						environment: `import { loadEnv } from 'vite';\nexport default loadEnv('production', ${JSON.stringify(import.meta.dirname)}, '');\n`
 					});
 					builder.instrument({

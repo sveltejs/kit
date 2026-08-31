@@ -124,7 +124,7 @@ test('instrument generates facade with posix paths', () => {
 	const instrumentation = join(dest, 'server', 'instrumentation.server.js');
 
 	const builder = create_test_builder(dest);
-	const initializer = builder.createInstrumentationInitializer({ directory: dest });
+	const initializer = builder.createInstrumentationInitializer({ outputDirectory: dest });
 
 	builder.instrument({
 		entrypoint,
@@ -168,7 +168,7 @@ test('instrument initializes environment before instrumentation', async () => {
 	);
 	const builder = create_test_builder(out_dir);
 	const initializer = builder.createInstrumentationInitializer({
-		directory: dirname(entrypoint),
+		outputDirectory: dirname(entrypoint),
 		environment: `export default { VALUE: 'set' };`
 	});
 
@@ -199,6 +199,26 @@ test('instrument initializes environment before instrumentation', async () => {
 	rmSync(dest, { recursive: true, force: true });
 });
 
+test('initializer can target copied server output', () => {
+	const dest = join(import.meta.dirname, 'output');
+	const server = join(dest, 'server');
+
+	rmSync(dest, { recursive: true, force: true });
+	mkdirSync(server, { recursive: true });
+	writeFileSync(join(server, 'env.js'), 'export function set_env() {}');
+
+	const builder = create_test_builder(join(dest, '.svelte-kit'));
+	const initializer = builder.createInstrumentationInitializer({
+		outputDirectory: join(dest, 'functions'),
+		serverDirectory: server
+	});
+	const source = readFileSync(initializer, 'utf8');
+
+	expect(source).toContain('import { set_env } from "../server/env.js";');
+	expect(source).not.toContain('.svelte-kit');
+	rmSync(dest, { recursive: true, force: true });
+});
+
 test('instrument passes environment initializer to custom facade', () => {
 	const dest = join(import.meta.dirname, 'output');
 	const entrypoint = join(dest, 'index.js');
@@ -212,7 +232,7 @@ test('instrument passes environment initializer to custom facade', () => {
 	writeFileSync(env, 'export function set_env() {}');
 	const builder = create_test_builder(dest);
 	const initializer = builder.createInstrumentationInitializer({
-		directory: dest,
+		outputDirectory: dest,
 		environment: 'export default {};'
 	});
 	builder.instrument({
@@ -220,8 +240,8 @@ test('instrument passes environment initializer to custom facade', () => {
 		instrumentation,
 		initializer,
 		module: {
-			generateText: ({ environment, instrumentation, start }) =>
-				`import ${JSON.stringify(`./${environment}`)};\nimport ${JSON.stringify(`./${instrumentation}`)};\nexport { default } from ${JSON.stringify(`./${start}`)};`
+			generateText: ({ initializer, instrumentation, start }) =>
+				`import ${JSON.stringify(`./${initializer}`)};\nimport ${JSON.stringify(`./${instrumentation}`)};\nexport { default } from ${JSON.stringify(`./${start}`)};`
 		}
 	});
 
@@ -245,7 +265,7 @@ test('instrument replaces an environment initializer', () => {
 	writeFileSync(join(dest, '__sveltekit_env_init.js'), 'existing');
 
 	const builder = create_test_builder(dest);
-	const initializer = builder.createInstrumentationInitializer({ directory: dest });
+	const initializer = builder.createInstrumentationInitializer({ outputDirectory: dest });
 	builder.instrument({ entrypoint, instrumentation, initializer });
 	expect(readFileSync(join(dest, '__sveltekit_env.js'), 'utf8')).toBe(
 		'export default process.env;'

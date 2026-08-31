@@ -229,13 +229,16 @@ declare module '@sveltejs/kit' {
 		 * Generate an initializer that populates `$env/dynamic/private` before server instrumentation
 		 * runs. Include the returned module in any subsequent bundling or tracing step.
 		 * @param options an object containing the following properties:
-		 * @param options.directory the directory in which to create the initializer.
+		 * @param options.outputDirectory the directory in which to create the initializer.
 		 * @param options.environment the contents of a module whose default export contains the platform's environment variables. If omitted, `process.env` is used.
+		 * @param options.serverDirectory the directory containing the server build output. Defaults to `getServerDirectory()`.
 		 * @returns the filesystem path to the generated initializer.
+		 * @since 3.0.0
 		 */
 		createInstrumentationInitializer: (options: {
-			directory: string;
+			outputDirectory: string;
 			environment?: string;
+			serverDirectory?: string;
 		}) => string;
 
 		/**
@@ -283,8 +286,8 @@ declare module '@sveltejs/kit' {
 		 * @param options.start the name of the start file. This is what `entrypoint` will be renamed to.
 		 * @param options.initializer the filesystem path to the bundled or copied instrumentation initializer.
 		 * @param options.module configuration for the resulting entrypoint module.
-		 * @param options.module.generateText a function that receives the relative paths to the environment initializer, instrumentation and start files, and generates the text of the module to be traced. It must import `environment` before `instrumentation`, and dynamically import `start` after instrumentation has run. If not provided, the default implementation will be used, which uses top-level await.
-		 * @since 2.31.0
+		 * @param options.module.generateText a function that receives the relative paths to the initializer, instrumentation and start files, and generates the text of the module to be traced. It must import `initializer` before `instrumentation`, and dynamically import `start` after instrumentation has run. If not provided, the default implementation will be used, which uses top-level await.
+		 * @since 3.0.0
 		 */
 		instrument: (args: {
 			entrypoint: string;
@@ -299,7 +302,7 @@ declare module '@sveltejs/kit' {
 						generateText: (args: {
 							instrumentation: string;
 							start: string;
-							environment: string;
+							initializer: string;
 						}) => string;
 				  };
 		}) => void;

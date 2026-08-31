@@ -483,6 +483,34 @@ For adapter authors, there are some additional changes:
 - `builder.mkdirp` and `builder.rimraf` are deprecated in favour of `node:fs` methods
 - `builder.generateManifest` has been removed — use `builder.generateServerInstance` to replace it, and `builder.manifest` to access the manifest
 
+#### Server instrumentation
+
+Adapters that use `builder.instrument` must now generate an environment initializer before any
+bundling or tracing step, include the returned module in that step, and pass its final path to
+`builder.instrument`:
+
+```js
+const initializer = builder.createInstrumentationInitializer({ outputDirectory: temporary_directory });
+
+// Include `initializer` in any bundling or file tracing here
+
+builder.instrument({
+	entrypoint,
+	instrumentation,
+	initializer
+});
+```
+
+For runtimes that do not expose environment variables through `process.env`, pass the contents of
+a module whose default export is the platform environment:
+
+```js
+const initializer = builder.createInstrumentationInitializer({
+	outputDirectory: temporary_directory,
+	environment: `import { env } from 'cloudflare:workers';\nexport default env;`
+});
+```
+
 ## Responses
 
 ### 204 responses return no content

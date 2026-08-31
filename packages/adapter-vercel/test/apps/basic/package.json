@@ -6,6 +6,7 @@
 		"dev": "vite dev",
 		"preview": "vite preview",
 		"build": "vite build",
+		"check": "svelte-check",
 		"test:build": "pnpm build && vitest run build.test.js",
 		"test:platform": "playwright test"
 	},
@@ -13,6 +14,7 @@
 		"@sveltejs/kit": "workspace:*",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"svelte": "catalog:",
+		"svelte-check": "catalog:",
 		"typescript": "catalog:",
 		"vite": "catalog:",
 		"vitest": "catalog:"

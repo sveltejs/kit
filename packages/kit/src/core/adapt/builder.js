@@ -286,11 +286,15 @@ export function create_builder({
 			return copy(`${config.outDir}/output/server`, dest);
 		},
 
-		createInstrumentationInitializer({ directory, environment }) {
-			const provider = path.join(directory, '__sveltekit_env.js');
+		createInstrumentationInitializer({
+			outputDirectory,
+			environment,
+			serverDirectory = `${config.outDir}/output/server`
+		}) {
+			const provider = path.join(outputDirectory, '__sveltekit_env.js');
 			write(provider, environment ?? 'export default process.env;');
 
-			const initializer = path.join(directory, '__sveltekit_env_init.js');
+			const initializer = path.join(outputDirectory, '__sveltekit_env_init.js');
 			write(
 				initializer,
 				create_env_module({
@@ -298,9 +302,7 @@ export function create_builder({
 						posixify(path.relative(path.dirname(initializer), provider))
 					),
 					set_env: to_import_specifier(
-						posixify(
-							path.relative(path.dirname(initializer), `${config.outDir}/output/server/env.js`)
-						)
+						posixify(path.relative(path.dirname(initializer), `${serverDirectory}/env.js`))
 					)
 				})
 			);
@@ -331,6 +333,11 @@ export function create_builder({
 					`Entrypoint file ${entrypoint} not found. This is probably a bug in your adapter.`
 				);
 			}
+			if (!existsSync(initializer)) {
+				throw new Error(
+					`Instrumentation initializer ${initializer} not found. This is probably a bug in your adapter.`
+				);
+			}
 
 			copy(entrypoint, start);
 			if (existsSync(`${entrypoint}.map`)) {
@@ -341,20 +348,20 @@ export function create_builder({
 				path.relative(path.dirname(entrypoint), instrumentation)
 			);
 			const relative_start = posixify(path.relative(path.dirname(entrypoint), start));
-			const relative_environment = posixify(path.relative(path.dirname(entrypoint), initializer));
+			const relative_initializer = posixify(path.relative(path.dirname(entrypoint), initializer));
 
 			const facade =
 				'generateText' in module
 					? module.generateText({
 							instrumentation: relative_instrumentation,
 							start: relative_start,
-							environment: relative_environment
+							initializer: relative_initializer
 						})
 					: create_instrumentation_facade({
 							instrumentation: relative_instrumentation,
 							start: relative_start,
 							exports: module.exports,
-							environment: relative_environment
+							initializer: relative_initializer
 						});
 
 			rmSync(entrypoint, { force: true, recursive: true });
@@ -387,15 +394,15 @@ async function compress_file(file, format = 'gz') {
 
 /**
  * Given a list of exports, generate a facade that:
- * - Imports the environment initializer (if provided)
+ * - Imports the environment initializer
  * - Imports the instrumentation file
  * - Imports `exports` from the entrypoint (dynamically)
  * - Re-exports `exports` from the entrypoint
  *
- * @param {{ instrumentation: string; start: string; exports: string[]; environment: string }} opts
+ * @param {{ instrumentation: string; start: string; exports: string[]; initializer: string }} opts
  * @returns {string}
  */
-function create_instrumentation_facade({ instrumentation, start, exports, environment }) {
+function create_instrumentation_facade({ instrumentation, start, exports, initializer }) {
 	const { namespace, declarations, reexports } = create_exported_declarations(
 		exports,
 		(name, ns) => `${ns}.${name}`,
@@ -403,7 +410,7 @@ function create_instrumentation_facade({ instrumentation, start, exports, enviro
 	);
 
 	const parts = [
-		`import ${JSON.stringify(to_import_specifier(environment))};`,
+		`import ${JSON.stringify(to_import_specifier(initializer))};`,
 		`import ${JSON.stringify(to_import_specifier(instrumentation))};`,
 		`const ${namespace} = await import(${JSON.stringify(to_import_specifier(start))});`,
 		declarations.join('\n'),

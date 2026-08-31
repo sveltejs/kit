@@ -276,7 +276,8 @@ function generate_serverless_function({ builder, routes, patterns, name, type, e
 	if (builder.hasServerInstrumentationFile()) {
 		writeFileSync(`${netlify_framework_serverless_path}/${name}.mjs`, fn);
 		const initializer = builder.createInstrumentationInitializer({
-			directory: netlify_framework_serverless_path
+			outputDirectory: netlify_framework_serverless_path,
+			serverDirectory: '.netlify/v1/server'
 		});
 		builder.instrument({
 			entrypoint: `${netlify_framework_serverless_path}/${name}.mjs`,
@@ -386,18 +387,23 @@ export const config = {
 
 /**
  * @param {string} config
- * @returns {(opts: { instrumentation: string; start: string; environment: string }) => string}
+ * @returns {(opts: { instrumentation: string; start: string; initializer: string }) => string}
  */
 function generate_traced_module(config) {
-	return ({ instrumentation, start, environment }) => {
+	return ({ instrumentation, start, initializer }) => {
 		return `\
-import ${JSON.stringify(`./${environment}`)};
-import '../server/${instrumentation}';
-const { default: _0 } = await import('../server/${start}');
+import ${JSON.stringify(to_import_specifier(initializer))};
+import ${JSON.stringify(to_import_specifier(instrumentation))};
+const { default: _0 } = await import(${JSON.stringify(to_import_specifier(start))});
 export { _0 as default };
 
 ${config}`;
 	};
+}
+
+/** @param {string} path */
+function to_import_specifier(path) {
+	return path.startsWith('.') ? path : `./${path}`;
 }
 
 /** @satisfies {import('rolldown').BuildOptions} */
@@ -462,7 +468,7 @@ async function generate_edge_functions({ builder }) {
 
 	if (builder.hasServerInstrumentationFile()) {
 		const initializer = builder.createInstrumentationInitializer({
-			directory: tmp,
+			outputDirectory: tmp,
 			environment: 'export default Deno.env.toObject();\n'
 		});
 		writeFileSync(`${tmp}/instrumented-entry.js`, `export { default } from './entry.js';\n`);

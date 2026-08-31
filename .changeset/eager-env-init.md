@@ -6,4 +6,4 @@
 '@sveltejs/adapter-netlify': major
 ---
 
-fix: populate env vars before `instrumentation.server.js` is evaluated
+breaking: populate env vars before `instrumentation.server.js` is evaluated and update the adapter instrumentation API

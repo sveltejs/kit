@@ -74,7 +74,7 @@ export default function (opts = {}) {
 			};
 
 			if (builder.hasServerInstrumentationFile()) {
-				input.environment = builder.createInstrumentationInitializer({ directory: entries });
+				input.environment = builder.createInstrumentationInitializer({ outputDirectory: entries });
 				input['instrumentation.server'] = `${server}/instrumentation.server.js`;
 			}
 
