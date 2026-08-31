@@ -188,16 +188,16 @@ function blur_active_element(reset) {
  * @param {Element | null} active_element
  */
 function reset_scroll_and_focus(url, scroll, reset, active_element) {
-	/** @type {Element | null} */
-	let deep_linked = null;
-
 	if (autoscroll) {
 		if (scroll) {
 			scrollTo(scroll.x, scroll.y);
-		} else if ((deep_linked = get_hash_element(url))) {
-			deep_linked.scrollIntoView();
 		} else {
-			scrollTo(0, 0);
+			const deep_linked = get_hash_element(url);
+			if (deep_linked) {
+				deep_linked.scrollIntoView();
+			} else {
+				scrollTo(0, 0);
+			}
 		}
 	}
 
@@ -205,7 +205,7 @@ function reset_scroll_and_focus(url, scroll, reset, active_element) {
 		document.activeElement !== active_element && document.activeElement !== document.body;
 
 	if (reset && !changed_focus) {
-		reset_focus(url, !deep_linked);
+		reset_focus(url);
 	}
 
 	autoscroll = true;
@@ -3380,8 +3380,6 @@ function _start_router() {
 	});
 
 	addEventListener('popstate', async (event) => {
-		if (resetting_focus) return;
-
 		const history_metadata = get_history_metadata(event.state);
 
 		if (history_metadata?.historyIndex) {
@@ -3779,17 +3777,25 @@ function deserialize_uses(uses) {
 	};
 }
 
-/**
- * This flag is used to avoid client-side navigation when we're only using
- * `location.replace()` to set focus.
- */
-let resetting_focus = false;
+/** @param {Element} element */
+function focus_element(element) {
+	const tabindex = element.getAttribute('tabindex');
 
-/**
- * @param {URL} url
- * @param {boolean} [scroll]
- */
-function reset_focus(url, scroll = true) {
+	element.setAttribute('tabindex', '-1');
+	/** @type {HTMLElement} */ (element).focus({ preventScroll: true, focusVisible: false });
+
+	// Restoring `tabindex` synchronously prevents a focus ring in browsers without `focusVisible`
+	// and removes focus from elements that are not normally focusable, without resetting the
+	// sequential focus navigation starting point.
+	if (tabindex !== null) {
+		element.setAttribute('tabindex', tabindex);
+	} else {
+		element.removeAttribute('tabindex');
+	}
+}
+
+/** @param {URL} url */
+function reset_focus(url) {
 	const autofocus = document.querySelector('[autofocus]');
 	if (autofocus) {
 		// @ts-ignore
@@ -3801,44 +3807,14 @@ function reset_focus(url, scroll = true) {
 		// starting point to the fragment identifier.
 		const element = get_hash_element(url);
 		if (element) {
-			const { x, y } = scroll_state();
-
-			// `element.focus()` doesn't work on Safari and Firefox Ubuntu so we need
-			// to use this hack with `location.replace()` instead.
-			setTimeout(() => {
-				const history_state = history.state;
-
-				resetting_focus = true;
-				location.replace(new URL(`#${element.id}`, location.href));
-
-				// Firefox has a bug that sets the history state to `null` so we need to
-				// restore it after. See https://bugzilla.mozilla.org/show_bug.cgi?id=1199924
-				// This is also needed to restore the original hash if we're using hash routing
-				history.replaceState(history_state, '', url);
-
-				// If scroll management has already happened earlier, we need to restore
-				// the scroll position after setting the sequential focus navigation starting point
-				if (scroll) scrollTo(x, y);
-				resetting_focus = false;
-			});
+			focus_element(element);
 		} else {
 			// If the ID doesn't exist, we try to mimic browsers' behaviour as closely
 			// as possible by targeting the first scrollable region. Unfortunately, it's
 			// not a perfect match — e.g. shift-tabbing won't immediately cycle up from
 			// the end of the page on Chromium
 			// See https://html.spec.whatwg.org/multipage/interaction.html#get-the-focusable-area
-			const root = document.body;
-			const tabindex = root.getAttribute('tabindex');
-
-			root.tabIndex = -1;
-			root.focus({ preventScroll: true, focusVisible: false });
-
-			// restore `tabindex` as to prevent `root` from stealing input from elements
-			if (tabindex !== null) {
-				root.setAttribute('tabindex', tabindex);
-			} else {
-				root.removeAttribute('tabindex');
-			}
+			focus_element(document.body);
 		}
 
 		// capture current selection, so we can compare the state after

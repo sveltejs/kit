@@ -127,6 +127,22 @@ test.describe('hash based navigation', () => {
 		await expect(page.locator('button[id="button3"]')).toBeFocused();
 	});
 
+	test('resetting focus does not dispatch hashchange', async ({ page }) => {
+		await page.goto('/#/focus');
+		await page.evaluate(() => {
+			window.hashchanges = [];
+			addEventListener('hashchange', (event) => {
+				window.hashchanges.push({ old_url: event.oldURL, new_url: event.newURL });
+			});
+		});
+
+		await page.locator('a[href="#/focus/a#p"]').click();
+		await page.waitForURL('#/focus/a#p');
+		await page.waitForTimeout(50);
+
+		expect(await page.evaluate(() => window.hashchanges)).toEqual([]);
+	});
+
 	test('does not look up an empty anchor id on navigation', async ({ page }) => {
 		await page.addInitScript(`
 			window.empty_id_lookups = [];
