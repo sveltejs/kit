@@ -281,7 +281,6 @@ declare module '@sveltejs/kit' {
 			instrumentation: string;
 			start?: string;
 			environment?: {
-				init?: string;
 				module?: string;
 				generateInit?: (args: { importSpecifier: string }) => string;
 			};

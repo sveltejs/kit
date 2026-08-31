@@ -319,8 +319,7 @@ export function create_builder({
 				path.relative(path.dirname(entrypoint), instrumentation)
 			);
 			const relative_start = posixify(path.relative(path.dirname(entrypoint), start));
-			const environment_path =
-				environment.init ?? path.join(path.dirname(entrypoint), '__sveltekit_env_init.js');
+			const environment_path = path.join(path.dirname(entrypoint), '__sveltekit_env_init.js');
 
 			const environment_module = environment.module ?? `${config.outDir}/output/server/env.js`;
 			const import_path = posixify(
