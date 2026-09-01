@@ -256,6 +256,7 @@ function write_frameworks_config({ builder }) {
 		]
 	};
 
+	// adds skew protection for static assets
 	if (process.env.NETLIFY_SKEW_PROTECTION_TOKEN) {
 		config.headers.push({
 			for: '/*',
@@ -456,12 +457,13 @@ async function generate_edge_functions({ builder }) {
 
 	builder.log.minor('Generating Edge Function...');
 
-	const replace = {
-		'0SERVER': './server.js',
-		'0PATH': `${builder.config.paths.base}/`
-	};
-	builder.copy(`${files}/edge.js`, `${tmp}/entry.js`, { replace });
-	builder.copy(`${files}/skew.js`, `${tmp}/skew.js`, { replace });
+	builder.copy(`${files}/edge.js`, `${tmp}/entry.js`, {
+		replace: {
+			'0SERVER': './server.js',
+			'0PATH': `${builder.config.paths.base}/`
+		}
+	});
+	builder.copy(`${files}/skew.js`, `${tmp}/skew.js`);
 
 	builder.generateServerInstance(`${tmp}/server.js`);
 
