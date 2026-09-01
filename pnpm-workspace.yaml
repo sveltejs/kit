@@ -53,7 +53,7 @@ catalog:
   '@opentelemetry/api': ^1.9.1
   '@opentelemetry/sdk-node': ^0.221.0
   '@opentelemetry/sdk-trace-node': ^2.8.0
-  '@playwright/test': ^1.62.0
+  '@playwright/test': ^1.62.1
   '@polka/url': ^1.0.0-next.29
   '@standard-schema/spec': ^1.1.0
   '@sveltejs/eslint-config': ^10.0.4
