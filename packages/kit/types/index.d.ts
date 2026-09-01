@@ -1556,7 +1556,7 @@ declare module '@sveltejs/kit/params' {
 declare module '@sveltejs/kit/vite' {
 	import type { Adapter } from '@sveltejs/kit';
 	import type { Options } from '@sveltejs/vite-plugin-svelte';
-	import type { Plugin } from 'vite';
+	import * as vite from 'vite';
 	// this indirection helps make the docs look pretty
 	type VitePluginSvelteOptions = Omit<Options, 'experimental'>;
 	type VitePluginSvelteOptionsExperimental = Options['experimental'];
