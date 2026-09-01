@@ -2,7 +2,7 @@
 /** @import { ViteDevServer } from 'vite' */
 
 /**
- * @param {typeof vite} vite_mod the vite module that created the server
+ * @param {typeof vite} vite the vite module that created the server
  * @param {ViteDevServer} server
  */
 export function get_runner({ isRunnableDevEnvironment }, server) {
