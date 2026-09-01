@@ -54,6 +54,14 @@ If `true`, your app will be split into multiple functions instead of a single on
 
 If `edge` is `true`, this option cannot be used.
 
+## Skew protection
+
+When a new version of your app is deployed, users with the previous version open can encounter errors if their client makes requests to the new deployment. SvelteKit mitigates this _version skew_ by reloading the page, but this causes client-side state to be lost.
+
+[Netlify skew protection](https://docs.netlify.com/deploy/deploy-overview/#skew-protection) routes requests from an open app to the deployment that served it. The adapter configures skew protection automatically when Netlify provides the `NETLIFY_SKEW_PROTECTION_TOKEN` environment variable. A hard navigation uses the newest deployment.
+
+Cookie-based skew protection has one caveat: if a user has multiple versions of your app open in different tabs, requests from older versions may be routed to a newer deployment, in which case SvelteKit's built-in skew protection applies.
+
 ## Netlify alternatives to SvelteKit functionality
 
 You may build your app using functionality provided directly by SvelteKit without relying on any Netlify functionality. Using the SvelteKit versions of these features will allow them to be used in dev mode, tested with integration tests, and to work with other adapters should you ever decide to switch away from Netlify. However, in some scenarios you may find it beneficial to use the Netlify versions of these features. One example would be if you're migrating an app that's already hosted on Netlify to SvelteKit.
