@@ -286,6 +286,30 @@ export function create_builder({
 			return copy(`${config.outDir}/output/server`, dest);
 		},
 
+		createInstrumentationInitializer({
+			outputDirectory,
+			environment,
+			serverDirectory = `${config.outDir}/output/server`
+		}) {
+			const provider = path.join(outputDirectory, '__sveltekit_env.js');
+			write(provider, environment ?? 'export default process.env;');
+
+			const initializer = path.join(outputDirectory, '__sveltekit_env_init.js');
+			write(
+				initializer,
+				create_env_module({
+					environment: to_import_specifier(
+						posixify(path.relative(path.dirname(initializer), provider))
+					),
+					set_env: to_import_specifier(
+						posixify(path.relative(path.dirname(initializer), `${serverDirectory}/env.js`))
+					)
+				})
+			);
+
+			return initializer;
+		},
+
 		hasServerInstrumentationFile() {
 			return existsSync(`${config.outDir}/output/server/instrumentation.server.js`);
 		},
@@ -294,6 +318,7 @@ export function create_builder({
 			entrypoint,
 			instrumentation,
 			start = path.join(path.dirname(entrypoint), 'start.js'),
+			initializer,
 			module = {
 				exports: ['default']
 			}
@@ -308,6 +333,11 @@ export function create_builder({
 					`Entrypoint file ${entrypoint} not found. This is probably a bug in your adapter.`
 				);
 			}
+			if (!existsSync(initializer)) {
+				throw new Error(
+					`Instrumentation initializer ${initializer} not found. This is probably a bug in your adapter.`
+				);
+			}
 
 			copy(entrypoint, start);
 			if (existsSync(`${entrypoint}.map`)) {
@@ -318,17 +348,20 @@ export function create_builder({
 				path.relative(path.dirname(entrypoint), instrumentation)
 			);
 			const relative_start = posixify(path.relative(path.dirname(entrypoint), start));
+			const relative_initializer = posixify(path.relative(path.dirname(entrypoint), initializer));
 
 			const facade =
 				'generateText' in module
 					? module.generateText({
 							instrumentation: relative_instrumentation,
-							start: relative_start
+							start: relative_start,
+							initializer: relative_initializer
 						})
 					: create_instrumentation_facade({
 							instrumentation: relative_instrumentation,
 							start: relative_start,
-							exports: module.exports
+							exports: module.exports,
+							initializer: relative_initializer
 						});
 
 			rmSync(entrypoint, { force: true, recursive: true });
@@ -361,16 +394,15 @@ async function compress_file(file, format = 'gz') {
 
 /**
  * Given a list of exports, generate a facade that:
+ * - Imports the environment initializer
  * - Imports the instrumentation file
- * - Imports `exports` from the entrypoint (dynamically, if `tla` is true)
+ * - Imports `exports` from the entrypoint (dynamically)
  * - Re-exports `exports` from the entrypoint
  *
- * @param {{ instrumentation: string; start: string; exports: string[] }} opts
+ * @param {{ instrumentation: string; start: string; exports: string[]; initializer: string }} opts
  * @returns {string}
  */
-function create_instrumentation_facade({ instrumentation, start, exports }) {
-	const import_instrumentation = `import './${instrumentation}';`;
-
+function create_instrumentation_facade({ instrumentation, start, exports, initializer }) {
 	const { namespace, declarations, reexports } = create_exported_declarations(
 		exports,
 		(name, ns) => `${ns}.${name}`,
@@ -378,12 +410,26 @@ function create_instrumentation_facade({ instrumentation, start, exports }) {
 	);
 
 	const parts = [
-		`const ${namespace} = await import('./${start}');`,
+		`import ${JSON.stringify(to_import_specifier(initializer))};`,
+		`import ${JSON.stringify(to_import_specifier(instrumentation))};`,
+		`const ${namespace} = await import(${JSON.stringify(to_import_specifier(start))});`,
 		declarations.join('\n'),
 		reexports.length > 0 ? `export { ${reexports.join(', ')} };` : ''
-	]
-		.filter(Boolean)
-		.join('\n');
+	];
 
-	return `${import_instrumentation}\n${parts}`;
+	return parts.filter(Boolean).join('\n');
+}
+
+/**
+ * @param {string} path
+ */
+function to_import_specifier(path) {
+	return path.startsWith('.') ? path : `./${path}`;
+}
+
+/**
+ * @param {{ environment: string; set_env: string }} opts
+ */
+function create_env_module({ environment, set_env }) {
+	return `import env from ${JSON.stringify(environment)};\nimport { set_env } from ${JSON.stringify(set_env)};\nset_env(env);\n`;
 }

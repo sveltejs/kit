@@ -9,5 +9,5 @@ test('page renders', async ({ request }) => {
 test('instrumentation.server.js runs at startup', async ({ request }) => {
 	const response = await request.get('/instrumented');
 	expect(response.status()).toBe(200);
-	expect(await response.text()).toBe('true');
+	expect(await response.json()).toEqual({ ran: true, env: true });
 });

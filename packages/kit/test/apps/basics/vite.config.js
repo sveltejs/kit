@@ -19,9 +19,14 @@ export default defineConfig({
 			adapter: {
 				name: 'test-adapter',
 				adapt(builder) {
+					const initializer = builder.createInstrumentationInitializer({
+						outputDirectory: builder.getServerDirectory(),
+						environment: `import { loadEnv } from 'vite';\nexport default loadEnv('production', ${JSON.stringify(import.meta.dirname)}, '');\n`
+					});
 					builder.instrument({
 						entrypoint: `${builder.getServerDirectory()}/index.js`,
 						instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`,
+						initializer,
 						module: {
 							exports: ['Server']
 						}
