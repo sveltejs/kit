@@ -568,9 +568,6 @@ importers:
       svelte:
         specifier: 'catalog:'
         version: 5.56.8(@typescript-eslint/types@8.61.1)
-      svelte-check:
-        specifier: 'catalog:'
-        version: 4.7.5(picomatch@4.0.5)(svelte@5.56.8(@typescript-eslint/types@8.61.1))(typescript@6.0.3)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -592,9 +589,6 @@ importers:
       svelte:
         specifier: 'catalog:'
         version: 5.56.8(@typescript-eslint/types@8.61.1)
-      svelte-check:
-        specifier: 'catalog:'
-        version: 4.7.5(picomatch@4.0.5)(svelte@5.56.8(@typescript-eslint/types@8.61.1))(typescript@6.0.3)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
