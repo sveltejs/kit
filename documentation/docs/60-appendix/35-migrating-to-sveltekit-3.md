@@ -519,6 +519,18 @@ For runtimes that do not expose environment variables through `process.env`, pas
 a module whose default export is the platform environment:
 
 ```js
+// @filename: ambient.d.ts
+import { Builder } from '@sveltejs/kit';
+
+declare global {
+	const builder: Builder;
+	const temporary_directory: string;
+}
+
+export {};
+
+// @filename: index.js
+// ---cut---
 const initializer = builder.createInstrumentationInitializer({
 	outputDirectory: temporary_directory,
 	environment: `import { env } from 'cloudflare:workers';\nexport default env;`
