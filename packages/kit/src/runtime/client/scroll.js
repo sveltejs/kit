@@ -14,23 +14,20 @@ export function disable_scroll_handling() {
  * @param {URL} url
  * @param {boolean} reset
  * @param {{ x: number; y: number } | null | undefined} popped_scroll
- * @returns {Element | null} the hash target, when that is what was scrolled into view
  */
 export function restore_scroll(url, reset, popped_scroll) {
-	/** @type {Element | null} */
-	let deep_linked = null;
-
 	if (reset && autoscroll) {
 		if (popped_scroll) {
 			scrollTo(popped_scroll.x, popped_scroll.y);
-		} else if ((deep_linked = get_hash_element(url, hash_routing))) {
-			deep_linked.scrollIntoView();
 		} else {
-			scrollTo(0, 0);
+			const element = get_hash_element(url, hash_routing);
+			if (element) {
+				element.scrollIntoView();
+			} else {
+				scrollTo(0, 0);
+			}
 		}
 	}
 
 	autoscroll = true;
-
-	return deep_linked;
 }
