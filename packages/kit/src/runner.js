@@ -1,8 +1,8 @@
-/** @import { ViteDevServer } from 'vite' */
+/** @import * as vite from 'vite' */
 
 /**
- * @param {typeof import('vite')} vite the vite module that created the server
- * @param {ViteDevServer} server
+ * @param {typeof vite} vite the vite module that created the server
+ * @param {vite.ViteDevServer} server
  */
 export function get_runner(vite, server) {
 	// `isRunnableDevEnvironment` does an `instanceof` check and will fail if
