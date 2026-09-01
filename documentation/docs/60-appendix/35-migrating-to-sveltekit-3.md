@@ -486,7 +486,7 @@ For adapter authors, there are some additional changes:
 #### Server instrumentation
 
 Adapters that use `builder.instrument` must now generate an environment initializer before any
-bundling or tracing step, include the returned module in that step, and pass its final path to
+bundling step, include the returned module as an entrypoint in that step, and pass its final path to
 `builder.instrument`:
 
 ```js
