@@ -13,7 +13,7 @@ import { decode_pathname, strip_hash, make_trackable, normalize_path } from '../
 import { dev_fetch, initial_fetch, lock_fetch, subsequent_fetch, unlock_fetch } from './fetcher.js';
 import { parse_routes, parse_server_route } from './parse.js';
 import * as storage from './session-storage.js';
-import { blur_active_element, is_resetting_focus, reset_focus } from './focus.js';
+import { blur_active_element, reset_focus } from './focus.js';
 import { disable_scroll_handling, restore_scroll } from './scroll.js';
 import {
 	find_anchor,
@@ -2263,9 +2263,9 @@ async function finish_navigation(nav, nav_token, url, popped_scroll, reset, upda
 		return false;
 	}
 
-	const deep_linked = restore_scroll(url, reset, popped_scroll);
+	restore_scroll(url, reset, popped_scroll);
 	if (reset && document.activeElement === document.body) {
-		reset_focus(url, !deep_linked);
+		reset_focus(url);
 	}
 
 	is_navigating = false;
@@ -3339,8 +3339,6 @@ function _start_router() {
 	});
 
 	addEventListener('popstate', async (event) => {
-		if (is_resetting_focus()) return;
-
 		const history_metadata = get_history_metadata(event.state);
 
 		if (history_metadata?.historyIndex) {
