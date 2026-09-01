@@ -133,9 +133,14 @@ export default function (options = {}) {
 				}
 			});
 			if (builder.hasServerInstrumentationFile()) {
+				const initializer = builder.createInstrumentationInitializer({
+					outputDirectory: worker_dest_dir,
+					environment: `import { env } from 'cloudflare:workers';\nexport default env;\n`
+				});
 				builder.instrument({
 					entrypoint: worker_dest,
-					instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`
+					instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`,
+					initializer
 				});
 			}
 

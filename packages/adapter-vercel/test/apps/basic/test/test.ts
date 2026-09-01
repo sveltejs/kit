@@ -19,6 +19,12 @@ test('API routes work', async ({ request }) => {
 	expect(data.ok).toBe(true);
 });
 
+test('dynamic env is available in instrumentation', async ({ request }) => {
+	const response = await request.get('/instrumentation-env');
+	expect(response.ok()).toBe(true);
+	expect(await response.json()).toEqual({ loaded: true });
+});
+
 test('$app/server read works', async ({ request }) => {
 	const response = await request.get('/read');
 	expect(response.ok()).toBe(true);

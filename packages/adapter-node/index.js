@@ -68,11 +68,13 @@ export default function (opts = {}) {
 			/** @type {Record<string, string>} */
 			const input = {
 				index: `${entries}/index.js`,
-				env: `${entries}/env.js`,
+				'adapter-env': `${entries}/adapter-env.js`,
+				env: `${server}/env.js`,
 				handler: `${entries}/handler.js`
 			};
 
 			if (builder.hasServerInstrumentationFile()) {
+				input.environment = builder.createInstrumentationInitializer({ outputDirectory: entries });
 				input['instrumentation.server'] = `${server}/instrumentation.server.js`;
 			}
 
@@ -170,6 +172,7 @@ export default function (opts = {}) {
 				builder.instrument({
 					entrypoint: `${out}/index.js`,
 					instrumentation: `${out}/instrumentation.server.js`,
+					initializer: `${out}/environment.js`,
 					module: {
 						exports: ['path', 'host', 'port', 'server']
 					}

@@ -67,9 +67,11 @@ const plugin = function (defaults = {}) {
 					}
 				});
 				if (builder.hasServerInstrumentationFile()) {
+					const initializer = builder.createInstrumentationInitializer({ outputDirectory: tmp });
 					builder.instrument({
 						entrypoint,
-						instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`
+						instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`,
+						initializer
 					});
 				}
 				builder.generateServerInstance(`${tmp}/server.js`, { routes });

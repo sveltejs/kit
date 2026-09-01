@@ -371,6 +371,8 @@ export async function dev(
 						);
 					}
 
+					const { set_env } = await runner.import('<sveltekit:generated>/env/config.js');
+					set_env(env);
 					await runner.import(resolved_instrumentation);
 				}
 
