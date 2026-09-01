@@ -19,8 +19,7 @@ export function blur_active_element(reset) {
 }
 
 /**
- * Sets the sequential focus navigation starting point to `element` and leaves it unfocused,
- * which is what a fragment navigation does for a non-focusable target
+ * Sets the sequential focus navigation starting point to `element` without leaving it focused
  * @param {Element} element
  */
 function focus_element(element) {
@@ -29,8 +28,7 @@ function focus_element(element) {
 	element.setAttribute('tabindex', '-1');
 	/** @type {HTMLElement} */ (element).focus({ preventScroll: true, focusVisible: false });
 
-	// removing `tabindex` blurs the element again (synchronously in Chromium, on the next frame
-	// in Firefox and WebKit) without moving the starting point
+	// removing `tabindex` blurs it again, synchronously in Chromium and a frame later elsewhere
 	if (tabindex !== null) {
 		element.setAttribute('tabindex', tabindex);
 	} else {
@@ -45,21 +43,11 @@ export function reset_focus(url) {
 		// @ts-ignore
 		autofocus.focus();
 	} else {
-		// Reset page selection and focus
-
-		// Mimic the browsers' behaviour and set the sequential focus navigation
-		// starting point to the fragment identifier.
-		const element = get_hash_element(url, hash_routing);
-		if (element) {
-			focus_element(element);
-		} else {
-			// If the ID doesn't exist, we try to mimic browsers' behaviour as closely
-			// as possible by targeting the first scrollable region. Unfortunately, it's
-			// not a perfect match — e.g. shift-tabbing won't immediately cycle up from
-			// the end of the page on Chromium
-			// See https://html.spec.whatwg.org/multipage/interaction.html#get-the-focusable-area
-			focus_element(document.body);
-		}
+		// set the sequential focus navigation starting point to the fragment identifier, or to
+		// the first scrollable region when there is none. Not a perfect match for browsers:
+		// shift-tabbing won't immediately cycle up from the end of the page on Chromium
+		// See https://html.spec.whatwg.org/multipage/interaction.html#get-the-focusable-area
+		focus_element(get_hash_element(url, hash_routing) ?? document.body);
 
 		// capture current selection, so we can compare the state after
 		// snapshot restoration and afterNavigate callbacks have run
