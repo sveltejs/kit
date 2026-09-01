@@ -1,15 +1,5 @@
 import { hash_routing } from '$app/paths/internal/client';
-import { get_hash_element, scroll_state } from './utils.js';
-
-/**
- * This flag is used to avoid client-side navigation when we're only using
- * `location.replace()` to set focus.
- */
-let resetting_focus = false;
-
-export function is_resetting_focus() {
-	return resetting_focus;
-}
+import { get_hash_element } from './utils.js';
 
 /**
  * Blurs the active element before the DOM update when a navigation resets focus, so that
@@ -29,10 +19,27 @@ export function blur_active_element(reset) {
 }
 
 /**
- * @param {URL} url
- * @param {boolean} [scroll]
+ * Sets the sequential focus navigation starting point to `element` and leaves it unfocused,
+ * which is what a fragment navigation does for a non-focusable target
+ * @param {Element} element
  */
-export function reset_focus(url, scroll = true) {
+function focus_element(element) {
+	const tabindex = element.getAttribute('tabindex');
+
+	element.setAttribute('tabindex', '-1');
+	/** @type {HTMLElement} */ (element).focus({ preventScroll: true, focusVisible: false });
+
+	// removing `tabindex` blurs the element again (synchronously in Chromium, on the next frame
+	// in Firefox and WebKit) without moving the starting point
+	if (tabindex !== null) {
+		element.setAttribute('tabindex', tabindex);
+	} else {
+		element.removeAttribute('tabindex');
+	}
+}
+
+/** @param {URL} url */
+export function reset_focus(url) {
 	const autofocus = document.querySelector('[autofocus]');
 	if (autofocus) {
 		// @ts-ignore
@@ -44,43 +51,14 @@ export function reset_focus(url, scroll = true) {
 		// starting point to the fragment identifier.
 		const element = get_hash_element(url, hash_routing);
 		if (element) {
-			const { x, y } = scroll_state();
-
-			// focusing a non-focusable element is a no-op, so navigate to the fragment
-			// instead; see sveltejs/kit#16982 for the tabindex alternative
-			setTimeout(() => {
-				const history_state = history.state;
-
-				resetting_focus = true;
-				location.replace(new URL(`#${element.id}`, location.href));
-
-				// a fragment navigation nulls `history.state` (per spec; WebKit keeps it), so
-				// restore it. This also restores the original hash if we're using hash routing
-				history.replaceState(history_state, '', url);
-
-				// If scroll management has already happened earlier, we need to restore
-				// the scroll position after setting the sequential focus navigation starting point
-				if (scroll) scrollTo(x, y);
-				resetting_focus = false;
-			});
+			focus_element(element);
 		} else {
 			// If the ID doesn't exist, we try to mimic browsers' behaviour as closely
 			// as possible by targeting the first scrollable region. Unfortunately, it's
 			// not a perfect match — e.g. shift-tabbing won't immediately cycle up from
 			// the end of the page on Chromium
 			// See https://html.spec.whatwg.org/multipage/interaction.html#get-the-focusable-area
-			const root = document.body;
-			const tabindex = root.getAttribute('tabindex');
-
-			root.tabIndex = -1;
-			root.focus({ preventScroll: true, focusVisible: false });
-
-			// restore `tabindex` as to prevent `root` from stealing input from elements
-			if (tabindex !== null) {
-				root.setAttribute('tabindex', tabindex);
-			} else {
-				root.removeAttribute('tabindex');
-			}
+			focus_element(document.body);
 		}
 
 		// capture current selection, so we can compare the state after
