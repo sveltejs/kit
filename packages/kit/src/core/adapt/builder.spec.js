@@ -41,7 +41,7 @@ test('copy files', () => {
 	};
 
 	const builder = create_builder({
-		config: /** @type {import('types').ValidatedConfig} */ (/** @type {unknown} */ (mocked)),
+		config: /** @type {import('types').ValidatedConfig} */ (mocked),
 		// @ts-expect-error
 		build_data: {},
 		// @ts-expect-error
