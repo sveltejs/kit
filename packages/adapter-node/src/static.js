@@ -48,7 +48,7 @@ function relative_pathname(from, to) {
  * Parses `Accept-Encoding` and picks the preferred variant that exists
  * @param {string | undefined} header
  * @param {Asset} asset
- * @returns {'br' | 'gzip' | undefined}
+ * @returns {'br' | 'gz' | undefined}
  */
 function negotiate(header, asset) {
 	if (!header) return;
@@ -68,20 +68,14 @@ function negotiate(header, asset) {
 		weights.set(coding.trim(), weight);
 	}
 
-	const wildcard = weights.get('*') ?? 0;
+	/** @param {string} coding */
+	const weight = (coding) => weights.get(coding) ?? weights.get('*') ?? 0;
 
-	/** @type {'br' | 'gzip' | undefined} */
-	let best;
-	let best_weight = 0;
+	const br = asset.br ? weight('br') : 0;
+	const gzip = asset.gz ? weight('gzip') : 0;
 
-	if (asset.br) {
-		best_weight = weights.get('br') ?? wildcard;
-		if (best_weight > 0) best = 'br';
-	}
-
-	if (asset.gz && (weights.get('gzip') ?? wildcard) > best_weight) best = 'gzip';
-
-	return best;
+	if (gzip > br) return 'gz';
+	if (br > 0) return 'br';
 }
 
 /**
@@ -152,15 +146,11 @@ export function serve_static(
 		let size = asset.size;
 		let etag = `"${asset.etag}"`;
 
-		const encoding = negotiate(req.headers['accept-encoding'], asset);
-		if (encoding === 'br') {
-			size = /** @type {number} */ (asset.br);
-			file += '.br';
-			etag = `"${asset.etag}.br"`;
-		} else if (encoding === 'gzip') {
-			size = /** @type {number} */ (asset.gz);
-			file += '.gz';
-			etag = `"${asset.etag}.gz"`;
+		const variant = negotiate(req.headers['accept-encoding'], asset);
+		if (variant) {
+			size = /** @type {number} */ (asset[variant]);
+			file += `.${variant}`;
+			etag = `"${asset.etag}.${variant}"`;
 		}
 
 		/** @type {Record<string, string | number>} */
@@ -180,7 +170,7 @@ export function serve_static(
 		headers['content-length'] = size;
 		headers['accept-ranges'] = 'bytes';
 		if (asset.type) headers['content-type'] = asset.type;
-		if (encoding) headers['content-encoding'] = encoding;
+		if (variant) headers['content-encoding'] = variant === 'gz' ? 'gzip' : 'br';
 
 		/** @type {{ start?: number, end?: number }} */
 		const range = {};
