@@ -5,8 +5,7 @@
 /** @import { RouteData, ValidatedConfig, BuildData, ServerMetadata, ServerMetadataRoute, Prerendered, PrerenderMap, Logger, RemoteChunk } from 'types' */
 import { loadEnv } from 'vite';
 import * as devalue from 'devalue';
-import { existsSync, mkdirSync, rmSync, statSync } from 'node:fs';
-import { readFile, writeFile } from 'node:fs/promises';
+import fs from 'node:fs';
 import path from 'node:path';
 import { promisify } from 'node:util';
 import zlib from 'node:zlib';
@@ -109,8 +108,8 @@ export function create_builder({
 
 	return {
 		log,
-		rimraf: (dir) => rmSync(dir, { force: true, recursive: true }),
-		mkdirp: (dir) => mkdirSync(dir, { recursive: true }),
+		rimraf: (dir) => fs.rmSync(dir, { force: true, recursive: true }),
+		mkdirp: (dir) => fs.mkdirSync(dir, { recursive: true }),
 		copy,
 
 		config,
@@ -128,7 +127,7 @@ export function create_builder({
 			/** @type {Record<string, number>} */
 			const files = {};
 			for (const file of server_assets) {
-				files[file] = statSync(path.resolve(build_data.out_dir, 'server', file)).size;
+				files[file] = fs.statSync(path.resolve(build_data.out_dir, 'server', file)).size;
 
 				const ext = path.extname(file);
 				mime_types[ext] ??= mime_lookup(ext) || '';
@@ -144,7 +143,7 @@ export function create_builder({
 		},
 
 		async compress(directory) {
-			if (!existsSync(directory)) {
+			if (!fs.existsSync(directory)) {
 				return [];
 			}
 
@@ -152,12 +151,10 @@ export function create_builder({
 
 			// zlib work is serialised on the threadpool and each brotli encoder is allocated up front,
 			// so a handful of files in flight is as fast as all of them and keeps memory flat
-			const queue = [...files];
+			let i = 0;
 			await Promise.all(
 				Array.from({ length: 16 }, async () => {
-					/** @type {string | undefined} */
-					let file;
-					while ((file = queue.shift())) await compress_file(path.resolve(directory, file));
+					while (i < files.length) await compress_file(path.resolve(directory, files[i++]));
 				})
 			);
 
@@ -184,7 +181,7 @@ export function create_builder({
 				assets: config.files.assets
 			});
 
-			if (existsSync(dest)) {
+			if (fs.existsSync(dest)) {
 				log.warn(
 					`\nOverwriting ${dest} with fallback page. Consider using a different name for the fallback.\n`
 				);
@@ -310,7 +307,7 @@ export function create_builder({
 		},
 
 		hasServerInstrumentationFile() {
-			return existsSync(`${config.outDir}/output/server/instrumentation.server.js`);
+			return fs.existsSync(`${config.outDir}/output/server/instrumentation.server.js`);
 		},
 
 		instrument({
@@ -322,24 +319,24 @@ export function create_builder({
 				exports: ['default']
 			}
 		}) {
-			if (!existsSync(instrumentation)) {
+			if (!fs.existsSync(instrumentation)) {
 				throw new Error(
 					`Instrumentation file ${instrumentation} not found. This is probably a bug in your adapter.`
 				);
 			}
-			if (!existsSync(entrypoint)) {
+			if (!fs.existsSync(entrypoint)) {
 				throw new Error(
 					`Entrypoint file ${entrypoint} not found. This is probably a bug in your adapter.`
 				);
 			}
-			if (!existsSync(initializer)) {
+			if (!fs.existsSync(initializer)) {
 				throw new Error(
 					`Instrumentation initializer ${initializer} not found. This is probably a bug in your adapter.`
 				);
 			}
 
 			copy(entrypoint, start);
-			if (existsSync(`${entrypoint}.map`)) {
+			if (fs.existsSync(`${entrypoint}.map`)) {
 				copy(`${entrypoint}.map`, `${start}.map`);
 			}
 
@@ -363,7 +360,7 @@ export function create_builder({
 							initializer: relative_initializer
 						});
 
-			rmSync(entrypoint, { force: true, recursive: true });
+			fs.rmSync(entrypoint, { force: true, recursive: true });
 			write(entrypoint, facade);
 		}
 	};
@@ -374,7 +371,7 @@ export function create_builder({
  * @param {string} file
  */
 async function compress_file(file) {
-	const contents = await readFile(file);
+	const contents = await fs.promises.readFile(file);
 
 	const [gz, br] = await Promise.all([
 		gzip(contents, { level: zlib.constants.Z_BEST_COMPRESSION }),
@@ -387,7 +384,10 @@ async function compress_file(file) {
 		})
 	]);
 
-	await Promise.all([writeFile(`${file}.gz`, gz), writeFile(`${file}.br`, br)]);
+	await Promise.all([
+		fs.promises.writeFile(`${file}.gz`, gz),
+		fs.promises.writeFile(`${file}.br`, br)
+	]);
 }
 
 /**
