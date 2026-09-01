@@ -497,6 +497,9 @@ declare global {
 	const entrypoint: string;
 	const instrumentation: string;
 }
+
+export {};
+
 // @filename: index.js
 ---cut---
 const initializer = builder.createInstrumentationInitializer({ outputDirectory: temporary_directory });
