@@ -26,7 +26,7 @@ type Span = import('@opentelemetry/api').Span;
 /**
  * [Adapters](https://svelte.dev/docs/kit/adapters) are responsible for taking the production build and turning it into something that can be deployed to a platform of your choosing.
  */
-export interface Adapter<ViteResolved extends boolean = false> {
+export interface Adapter {
 	/**
 	 * The name of the adapter, using for logging. Will typically correspond to the package name.
 	 */
@@ -61,12 +61,10 @@ export interface Adapter<ViteResolved extends boolean = false> {
 	 * Options for configuring and interacting with Vite
 	 * @since 3.0.0
 	 */
-	vite?: ViteResolved extends true
-		? AdapterViteConfig
-		: AdapterViteConfig | ((ctx: { config: ValidatedConfig }) => AdapterViteConfig);
+	vite?: AdapterViteConfig | ((ctx: { config: ValidatedConfig }) => AdapterViteConfig);
 }
 
-interface AdapterViteConfig {
+export interface AdapterViteConfig {
 	/**
 	 * This function overrides the default behavior during Vite's dev and preview modes
 	 * to convert an `http.IncomingMessage` to a `Request` object.
