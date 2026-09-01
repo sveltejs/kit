@@ -501,7 +501,7 @@ declare global {
 export {};
 
 // @filename: index.js
----cut---
+// ---cut---
 const initializer = builder.createInstrumentationInitializer({ outputDirectory: temporary_directory });
 
 // Include `initializer` in any bundling or file tracing here
