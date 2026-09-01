@@ -490,6 +490,15 @@ bundling step, include the returned module as an entrypoint in that step, and pa
 `builder.instrument`:
 
 ```js
+// @filename: ambient.d.ts
+import { Builder } from '@sveltejs/kit';
+
+declare const builder: Builder;
+declare const temporary_directory: string;
+declare const entrypoint: string;
+declare const instrumentation: string;
+// @filename: index.js
+---cut---
 const initializer = builder.createInstrumentationInitializer({ outputDirectory: temporary_directory });
 
 // Include `initializer` in any bundling or file tracing here
