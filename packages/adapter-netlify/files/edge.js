@@ -1,4 +1,5 @@
 import { server } from '0SERVER';
+import { set_skew_cookie } from './skew.js';
 
 /**
  * We don't know the origin until we receive a request, but
@@ -31,6 +32,8 @@ export default async function handler(request, context) {
 
 	// always await initialization to prevent race condition with concurrent requests
 	await initialized;
+
+	set_skew_cookie(request, context, '0PATH');
 
 	return server.respond(request, {
 		platform: { context },

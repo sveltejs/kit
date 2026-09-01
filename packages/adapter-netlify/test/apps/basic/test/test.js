@@ -35,3 +35,33 @@ test('_headers are copied to publish directory', () => {
 	const headers = fs.readFileSync(path.resolve(import.meta.dirname, '../build/_headers'), 'utf-8');
 	expect(headers).toContain('X-Custom-Header: test-value');
 });
+
+test('skew protection is configured', () => {
+	const frameworks_config = JSON.parse(
+		fs.readFileSync(path.resolve(import.meta.dirname, '../.netlify/v1/config.json'), 'utf-8')
+	);
+	expect(frameworks_config.headers).toContainEqual({
+		for: '/*',
+		values: {
+			'Set-Cookie': '__sveltekit_skew=test-skew-token; Path=/; SameSite=Strict; Secure; HttpOnly'
+		}
+	});
+
+	const skew_config = JSON.parse(
+		fs.readFileSync(
+			path.resolve(import.meta.dirname, '../.netlify/v1/skew-protection.json'),
+			'utf-8'
+		)
+	);
+	expect(skew_config).toEqual({
+		patterns: ['.*'],
+		sources: [{ type: 'cookie', name: '__sveltekit_skew' }]
+	});
+
+	const runtime = fs.readFileSync(
+		path.resolve(import.meta.dirname, '../.netlify/v1/serverless.js'),
+		'utf-8'
+	);
+	expect(runtime).toContain("set_skew_cookie(request, context, '/')");
+	expect(runtime).toContain("request.headers.get('sec-fetch-dest') !== 'document'");
+});

@@ -1,5 +1,6 @@
 import { createReadableStream } from '@sveltejs/kit/node';
 import process from 'node:process';
+import { set_skew_cookie } from './skew.js';
 
 /**
  * @param {import('@sveltejs/kit').Server} server
@@ -17,6 +18,8 @@ export function init(server) {
 			await init_promise;
 			init_promise = null;
 		}
+
+		set_skew_cookie(request, context, '0PATH');
 
 		return server.respond(request, {
 			platform: { context },

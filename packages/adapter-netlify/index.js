@@ -26,8 +26,11 @@ const edge_set_in_env_var =
 	process.env.NETLIFY_SVELTEKIT_USE_EDGE === '1';
 
 const netlify_framework_config_path = '.netlify/v1/config.json';
+const netlify_framework_skew_protection_path = '.netlify/v1/skew-protection.json';
 const netlify_framework_serverless_path = '.netlify/v1/functions';
 const netlify_framework_edge_path = '.netlify/v1/edge-functions';
+
+const skew_protection_cookie = '__sveltekit_skew';
 
 const FUNCTION_PREFIX = 'sveltekit-';
 
@@ -93,6 +96,11 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 			builder.log.minor('Writing Netlify config...');
 			write_frameworks_config({ builder });
 
+			// https://docs.netlify.com/build/frameworks/frameworks-api/#netlifyv1skew-protectionjson
+			if (process.env.NETLIFY_SKEW_PROTECTION_TOKEN) {
+				write_skew_protection_config();
+			}
+
 			if (edge) {
 				if (split) {
 					throw new Error('Cannot use `split: true` alongside `edge: true`');
@@ -124,7 +132,8 @@ function generate_serverless_functions({ builder, publish, split }) {
 	builder.writeServer('.netlify/v1/server');
 
 	const replace = {
-		'0SERVER': './server/index.js' // digit prefix prevents CJS build from using this as a variable name, which would also get replaced
+		'0SERVER': './server/index.js', // digit prefix prevents CJS build from using this as a variable name, which would also get replaced
+		'0PATH': `${builder.config.paths.base}/`
 	};
 
 	builder.copy(files, '.netlify/v1', { replace, filter: (file) => !file.endsWith('edge.js') });
@@ -247,8 +256,28 @@ function write_frameworks_config({ builder }) {
 		]
 	};
 
+	if (process.env.NETLIFY_SKEW_PROTECTION_TOKEN) {
+		config.headers.push({
+			for: '/*',
+			values: {
+				'Set-Cookie': `${skew_protection_cookie}=${process.env.NETLIFY_SKEW_PROTECTION_TOKEN}; Path=${builder.config.paths.base}/; SameSite=Strict; Secure; HttpOnly`
+			}
+		});
+	}
+
 	mkdirSync('.netlify/v1', { recursive: true });
 	writeFileSync(netlify_framework_config_path, s(config));
+}
+
+function write_skew_protection_config() {
+	// https://docs.netlify.com/build/frameworks/frameworks-api/#netlifyv1skew-protectionjson
+	writeFileSync(
+		netlify_framework_skew_protection_path,
+		s({
+			patterns: ['.*'],
+			sources: [{ type: 'cookie', name: skew_protection_cookie }]
+		})
+	);
 }
 
 /** @typedef {'singular' | 'split' | 'catch-all'} ServerlessFunctionType */
@@ -427,11 +456,12 @@ async function generate_edge_functions({ builder }) {
 
 	builder.log.minor('Generating Edge Function...');
 
-	builder.copy(`${files}/edge.js`, `${tmp}/entry.js`, {
-		replace: {
-			'0SERVER': `./server.js`
-		}
-	});
+	const replace = {
+		'0SERVER': './server.js',
+		'0PATH': `${builder.config.paths.base}/`
+	};
+	builder.copy(`${files}/edge.js`, `${tmp}/entry.js`, { replace });
+	builder.copy(`${files}/skew.js`, `${tmp}/skew.js`, { replace });
 
 	builder.generateServerInstance(`${tmp}/server.js`);
 
