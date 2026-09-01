@@ -633,6 +633,12 @@ function kit({ svelte_config }) {
 	/** @type {(() => Promise<void>) | null} */
 	let finalise = null;
 
+	if (Array.isArray(svelte_config.adapter?.vite?.plugins)) {
+		svelte_config.adapter.vite.plugins = {
+			pre: svelte_config.adapter.vite.plugins
+		};
+	}
+
 	return /** @type {Plugin[]} */ (
 		[
 			svelte_config.adapter?.vite?.plugins?.pre,

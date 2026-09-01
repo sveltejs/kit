@@ -8,7 +8,9 @@ import {
 	Actions,
 	RequestEvent,
 	Emulator,
-	HttpError
+	HttpError,
+	Adapter,
+	AdapterViteConfig
 } from '@sveltejs/kit';
 import { RemoteFormIssue, RemoteQuery, RemoteLiveQuery } from '$app/server';
 import { Config } from '@sveltejs/kit/vite';
@@ -592,7 +594,8 @@ export interface Uses {
 	search_params: Set<string>;
 }
 
-export type ValidatedConfig = RecursiveRequired<Omit<Config, 'preprocess'>> & {
+export type ValidatedConfig = RecursiveRequired<Omit<Config, 'preprocess' | 'adapter'>> & {
+	adapter: Adapter & { vite?: AdapterViteConfig };
 	preprocess: Config['preprocess'];
 };
 
