@@ -12,6 +12,7 @@ afterEach(() => {
 
 test('reset_focus focuses the body without leaving a tabindex behind', () => {
 	document.body.innerHTML = '<input>';
+	/** @type {HTMLInputElement} */ (document.body.firstElementChild).focus();
 	reset_focus(new URL('/', location.href));
 	expect(document.activeElement).toBe(document.body);
 	expect(document.body.hasAttribute('tabindex')).toBe(false);
