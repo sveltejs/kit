@@ -56,11 +56,11 @@ If `edge` is `true`, this option cannot be used.
 
 ## Skew protection
 
-When a new version of your app is deployed, users with the previous version open can encounter errors if their client makes requests to the new deployment. SvelteKit mitigates this _version skew_ by reloading the page, but this causes client-side state to be lost.
+When a new version of your app is deployed, assets belonging to the previous version may no longer be accessible. If a user is actively using your app when this happens, it can cause errors when they navigate — this is known as _version skew_. SvelteKit mitigates this by detecting errors resulting from version skew and causing a hard reload to get the latest version of the app, but this will cause any client-side state to be lost. (You can also proactively mitigate it by observing [`updated.current`]($app-state#updated) from `$app/state`, which tells clients when a new version has been deployed.)
 
-[Netlify skew protection](https://docs.netlify.com/deploy/deploy-overview/#skew-protection) routes requests from an open app to the deployment that served it. The adapter configures skew protection automatically when Netlify provides the `NETLIFY_SKEW_PROTECTION_TOKEN` environment variable. A hard navigation uses the newest deployment.
+[Skew protection](https://docs.netlify.com/deploy/deploy-overview/#skew-protection) is a Netlify feature that routes client requests to their original deployment. When a user visits your app, a cookie is set with a token unique to that deployment, and any subsequent requests will be routed to that deployment for as long as skew protection is active. When they reload the page, they will get the newest deployment. (`updated.current` is exempted from this behaviour, and so will continue to report new deployments.) To enable it, visit the Advanced section of your project settings on Vercel.
 
-Cookie-based skew protection has one caveat: if a user has multiple versions of your app open in different tabs, requests from older versions may be routed to a newer deployment, in which case SvelteKit's built-in skew protection applies.
+Cookie-based skew protection comes with one caveat: if a user has multiple versions of your app open in multiple tabs, requests from older versions will be routed to the newer one, meaning they will fall back to SvelteKit's built-in skew protection.
 
 ## Netlify alternatives to SvelteKit functionality
 
