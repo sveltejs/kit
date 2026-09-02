@@ -5,16 +5,8 @@
 /** @import { RouteData, ValidatedConfig, BuildData, ServerMetadata, ServerMetadataRoute, Prerendered, PrerenderMap, Logger, RemoteChunk } from 'types' */
 import { loadEnv } from 'vite';
 import * as devalue from 'devalue';
-import {
-	createReadStream,
-	createWriteStream,
-	existsSync,
-	mkdirSync,
-	rmSync,
-	statSync
-} from 'node:fs';
+import fs from 'node:fs';
 import path from 'node:path';
-import { pipeline } from 'node:stream';
 import { promisify } from 'node:util';
 import zlib from 'node:zlib';
 import { copy, relative_path, walk } from '../../utils/filesystem.js';
@@ -29,7 +21,8 @@ import { handle_issues, validate } from '../../exports/internal/env.js';
 import { get_mime_lookup } from '../utils.js';
 import { lookup as mime_lookup } from '../../utils/mime.js';
 
-const pipe = promisify(pipeline);
+const gzip = promisify(zlib.gzip);
+const brotli = promisify(zlib.brotliCompress);
 const extensions = [
 	'.html',
 	'.js',
@@ -115,8 +108,8 @@ export function create_builder({
 
 	return {
 		log,
-		rimraf: (dir) => rmSync(dir, { force: true, recursive: true }),
-		mkdirp: (dir) => mkdirSync(dir, { recursive: true }),
+		rimraf: (dir) => fs.rmSync(dir, { force: true, recursive: true }),
+		mkdirp: (dir) => fs.mkdirSync(dir, { recursive: true }),
 		copy,
 
 		config,
@@ -134,7 +127,7 @@ export function create_builder({
 			/** @type {Record<string, number>} */
 			const files = {};
 			for (const file of server_assets) {
-				files[file] = statSync(path.resolve(build_data.out_dir, 'server', file)).size;
+				files[file] = fs.statSync(path.resolve(build_data.out_dir, 'server', file)).size;
 
 				const ext = path.extname(file);
 				mime_types[ext] ??= mime_lookup(ext) || '';
@@ -150,16 +143,18 @@ export function create_builder({
 		},
 
 		async compress(directory) {
-			if (!existsSync(directory)) {
+			if (!fs.existsSync(directory)) {
 				return [];
 			}
 
 			const files = [...walk(directory)].filter((file) => extensions.includes(path.extname(file)));
 
+			// zlib work is serialised on the threadpool and each brotli encoder is allocated up front,
+			// so a handful of files in flight is as fast as all of them and keeps memory flat
+			let i = 0;
 			await Promise.all(
-				files.flatMap((file) => {
-					const abs = path.resolve(directory, file);
-					return [compress_file(abs, 'gz'), compress_file(abs, 'br')];
+				Array.from({ length: 16 }, async () => {
+					while (i < files.length) await compress_file(path.resolve(directory, files[i++]));
 				})
 			);
 
@@ -186,7 +181,7 @@ export function create_builder({
 				assets: config.files.assets
 			});
 
-			if (existsSync(dest)) {
+			if (fs.existsSync(dest)) {
 				log.warn(
 					`\nOverwriting ${dest} with fallback page. Consider using a different name for the fallback.\n`
 				);
@@ -312,7 +307,7 @@ export function create_builder({
 		},
 
 		hasServerInstrumentationFile() {
-			return existsSync(`${config.outDir}/output/server/instrumentation.server.js`);
+			return fs.existsSync(`${config.outDir}/output/server/instrumentation.server.js`);
 		},
 
 		instrument({
@@ -324,24 +319,24 @@ export function create_builder({
 				exports: ['default']
 			}
 		}) {
-			if (!existsSync(instrumentation)) {
+			if (!fs.existsSync(instrumentation)) {
 				throw new Error(
 					`Instrumentation file ${instrumentation} not found. This is probably a bug in your adapter.`
 				);
 			}
-			if (!existsSync(entrypoint)) {
+			if (!fs.existsSync(entrypoint)) {
 				throw new Error(
 					`Entrypoint file ${entrypoint} not found. This is probably a bug in your adapter.`
 				);
 			}
-			if (!existsSync(initializer)) {
+			if (!fs.existsSync(initializer)) {
 				throw new Error(
 					`Instrumentation initializer ${initializer} not found. This is probably a bug in your adapter.`
 				);
 			}
 
 			copy(entrypoint, start);
-			if (existsSync(`${entrypoint}.map`)) {
+			if (fs.existsSync(`${entrypoint}.map`)) {
 				copy(`${entrypoint}.map`, `${start}.map`);
 			}
 
@@ -365,32 +360,34 @@ export function create_builder({
 							initializer: relative_initializer
 						});
 
-			rmSync(entrypoint, { force: true, recursive: true });
+			fs.rmSync(entrypoint, { force: true, recursive: true });
 			write(entrypoint, facade);
 		}
 	};
 }
 
 /**
+ * Writes gzip and brotli variants next to `file`
  * @param {string} file
- * @param {'gz' | 'br'} format
  */
-async function compress_file(file, format = 'gz') {
-	const compress =
-		format == 'br'
-			? zlib.createBrotliCompress({
-					params: {
-						[zlib.constants.BROTLI_PARAM_MODE]: zlib.constants.BROTLI_MODE_TEXT,
-						[zlib.constants.BROTLI_PARAM_QUALITY]: zlib.constants.BROTLI_MAX_QUALITY,
-						[zlib.constants.BROTLI_PARAM_SIZE_HINT]: statSync(file).size
-					}
-				})
-			: zlib.createGzip({ level: zlib.constants.Z_BEST_COMPRESSION });
+async function compress_file(file) {
+	const contents = await fs.promises.readFile(file);
 
-	const source = createReadStream(file);
-	const destination = createWriteStream(`${file}.${format}`);
+	const [gz, br] = await Promise.all([
+		gzip(contents, { level: zlib.constants.Z_BEST_COMPRESSION }),
+		brotli(contents, {
+			params: {
+				[zlib.constants.BROTLI_PARAM_MODE]: zlib.constants.BROTLI_MODE_TEXT,
+				[zlib.constants.BROTLI_PARAM_QUALITY]: zlib.constants.BROTLI_MAX_QUALITY,
+				[zlib.constants.BROTLI_PARAM_SIZE_HINT]: contents.length
+			}
+		})
+	]);
 
-	await pipe(source, compress, destination);
+	await Promise.all([
+		fs.promises.writeFile(`${file}.gz`, gz),
+		fs.promises.writeFile(`${file}.br`, br)
+	]);
 }
 
 /**
