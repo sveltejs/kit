@@ -109,6 +109,8 @@ export function create_builder({
 
 	/** @type {Array<{ file: string, size: number, hash: string }> | undefined} */
 	let client_files;
+	/** @type {Array<{ file: string, size: number, hash: string }> | undefined} */
+	let prerendered_files;
 
 	return {
 		log,
@@ -122,6 +124,11 @@ export function create_builder({
 		manifest: app_manifest,
 		get clientFiles() {
 			return (client_files ??= measure_files(`${config.outDir}/output/client`));
+		},
+		get prerenderedFiles() {
+			return (prerendered_files ??= ['pages', 'dependencies', 'data'].flatMap((category) =>
+				measure_files(`${config.outDir}/output/prerendered/${category}`)
+			));
 		},
 		get mimeTypes() {
 			// TODO - make the `generate_manifest` function return data instead of a string, and retrieve mime types from there
@@ -387,6 +394,8 @@ export function create_builder({
 function measure_files(directory) {
 	/** @type {Array<{ file: string, size: number, hash: string }>} */
 	const files = [];
+
+	if (!fs.existsSync(directory)) return files;
 
 	for (const file of walk(directory)) {
 		if (file.startsWith('.vite/') || file.includes('/.vite/')) continue;

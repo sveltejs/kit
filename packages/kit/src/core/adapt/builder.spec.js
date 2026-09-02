@@ -1,7 +1,14 @@
-import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import fs, {
+	copyFileSync,
+	existsSync,
+	mkdirSync,
+	readFileSync,
+	rmSync,
+	writeFileSync
+} from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { assert, expect, test } from 'vitest';
+import { assert, expect, test, vi } from 'vitest';
 import { create_builder } from './builder.js';
 import { walk } from '../../utils/filesystem.js';
 
@@ -114,12 +121,27 @@ test('clientFiles measures the client output once', () => {
 		route_data: []
 	});
 
+	const read = vi.spyOn(fs, 'readFileSync');
+
+	assert.equal(read.mock.calls.length, 0);
+
 	const files = builder.clientFiles;
 	assert.deepEqual(files, [
 		{ file: 'a.txt', size: 6, hash: 'WJG1tSLV3whtD_CxEPvZ0hu0_HFjrzTQgoai6Eb2vgM' },
 		{ file: 'sub/b.txt', size: 2, hash: 'AmOCmYm2_ZVPcrqvL8ZLwuLwHWktTecphuqAj26ZgT8' }
 	]);
+	assert.equal(read.mock.calls.length, 2);
+
 	assert.equal(builder.clientFiles, files);
+	assert.equal(read.mock.calls.length, 2);
+
+	assert.deepEqual(builder.prerenderedFiles, [
+		{ file: 'page.html', size: 14, hash: 'sGk9yS924IvxSFs92bUUouMd_W85QiprYO23ImcdyY8' },
+		{ file: 'data.json', size: 3, hash: 'yj0WO6sFU4GCciYUBWjzvvfqrBh869doeOC2Pp5EI1Y' }
+	]);
+	assert.equal(read.mock.calls.length, 4);
+
+	read.mockRestore();
 });
 
 test('compress returns an empty array for a directory that does not exist', async () => {

@@ -188,6 +188,17 @@ export interface Builder {
 		/** suitable for use as an ETag */
 		hash: string;
 	}>;
+	/**
+	 * The size and a content hash of every prerendered page, asset and redirect.
+	 * `file` is relative to the prerendered directory, matching the paths returned by `writePrerendered`. Read from disk once, on first access.
+	 * @since 3.0.0
+	 */
+	prerenderedFiles: Array<{
+		file: string;
+		size: number;
+		/** suitable for use as an ETag */
+		hash: string;
+	}>;
 
 	/**
 	 * Create separate functions that map to one or more routes of your app.

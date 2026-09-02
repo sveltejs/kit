@@ -184,14 +184,10 @@ export interface Prerendered {
 		{
 			/** The location of the .html file relative to the output directory */
 			file: string;
-			/** The size of the file in bytes */
-			size: number;
-			/** A hash of the file's contents, suitable for use as an ETag */
-			hash: string;
 		}
 	>;
 	/**
-	 * A map of `path` to `{ type, file, size, hash }` objects.
+	 * A map of `path` to `{ type, file }` objects.
 	 */
 	assets: Map<
 		string,
@@ -200,10 +196,6 @@ export interface Prerendered {
 			type: string;
 			/** The location of the file relative to the output directory */
 			file: string;
-			/** The size of the file in bytes */
-			size: number;
-			/** A hash of the file's contents, suitable for use as an ETag */
-			hash: string;
 		}
 	>;
 	/**
@@ -216,10 +208,6 @@ export interface Prerendered {
 			location: string;
 			/** The location of the .html file relative to the output directory */
 			file: string;
-			/** The size of the file in bytes */
-			size: number;
-			/** A hash of the file's contents, suitable for use as an ETag */
-			hash: string;
 		}
 	>;
 	/** An array of prerendered paths (without trailing slashes, regardless of the trailingSlash config) */

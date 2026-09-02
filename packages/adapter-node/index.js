@@ -39,6 +39,7 @@ export default function (opts = {}) {
 			const assets = create_asset_table(base, builder.clientFiles, client_compressed);
 			const prerendered_assets = create_prerendered_table(
 				builder.prerendered,
+				builder.prerenderedFiles,
 				prerendered_compressed
 			);
 
@@ -204,10 +205,11 @@ function to_entry({ file, size, hash }, variants) {
 }
 
 /**
- * @param {Array<{ file: string, gz: number, br: number }>} compressed
+ * @template {{ file: string }} T
+ * @param {T[]} entries
  */
-function by_file(compressed) {
-	return new Map(compressed.map((entry) => [entry.file, entry]));
+function by_file(entries) {
+	return new Map(entries.map((entry) => [entry.file, entry]));
 }
 
 /**
@@ -267,18 +269,21 @@ function create_asset_table(base, files, compressed) {
  * prerendered, so a lookup hit is precisely one of those and every other
  * pathname (including the non-canonical trailing-slash form) misses
  * @param {import('@sveltejs/kit').Builder['prerendered']} prerendered
+ * @param {import('@sveltejs/kit').Builder['prerenderedFiles']} files
  * @param {Array<{ file: string, gz: number, br: number }>} compressed
  * @returns {AssetTable}
  */
-function create_prerendered_table(prerendered, compressed) {
+function create_prerendered_table(prerendered, files, compressed) {
+	const measured = by_file(files);
 	const variants = by_file(compressed);
 
 	/** @type {Array<[string, AssetEntry]>} */
 	const entries = [];
 
 	for (const map of [prerendered.pages, prerendered.assets, prerendered.redirects]) {
-		for (const [path, measured] of map) {
-			entries.push([path, to_entry(measured, variants.get(measured.file))]);
+		for (const [path, { file }] of map) {
+			const entry = measured.get(file);
+			if (entry) entries.push([path, to_entry(entry, variants.get(file))]);
 		}
 	}
 
