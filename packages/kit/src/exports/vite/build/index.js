@@ -21,7 +21,7 @@ import { get_manifest_routes } from '../../../core/sync/write_app_manifest.js';
 import { write_client_manifest } from '../../../core/sync/write_client_manifest.js';
 import { logger, runtime_directory } from '../../../core/utils.js';
 import { compact } from '../../../utils/array.js';
-import { copy, read, resolve_entry } from '../../../utils/filesystem.js';
+import { copy, read, resolve_entry, walk } from '../../../utils/filesystem.js';
 import { load_and_validate_params } from '../../../utils/params.js';
 import { posixify } from '../../../utils/os.js';
 import { stackless } from '../../../utils/error.js';
@@ -1106,31 +1106,24 @@ const replace_manifest_placeholder_variables = (chunks, output_dir, values) => {
  * }} values
  */
 const replace_manifest_placeholder_strings = (dir, values) => {
-	/** @type {Record<string, string>} */
-	const replacements = {};
+	/** @type {Array<[string, string]>} */
+	const replacements = [];
 
 	if (values.immutable !== undefined) {
-		replacements['__sveltekit_manifest_build__'] = JSON.stringify(values.immutable);
+		replacements.push(['__sveltekit_manifest_build__', JSON.stringify(values.immutable)]);
 	}
 	if (values.prerendered !== undefined) {
-		replacements['__sveltekit_manifest_prerendered__'] = JSON.stringify(values.prerendered);
+		replacements.push(['__sveltekit_manifest_prerendered__', JSON.stringify(values.prerendered)]);
 	}
 
-	for (const file of fs.readdirSync(dir)) {
-		const file_path = `${dir}/${file}`;
-		const stat = fs.statSync(file_path);
-
-		if (stat.isDirectory()) {
-			replace_manifest_placeholder_strings(file_path, values);
-			continue;
-		}
-
+	for (const file of walk(dir)) {
 		if (!file.endsWith('.js')) continue;
 
+		const file_path = `${dir}/${file}`;
 		let code = read(file_path);
 		let changed = false;
 
-		for (const [sentinel, replacement] of Object.entries(replacements)) {
+		for (const [sentinel, replacement] of replacements) {
 			if (code.includes(sentinel)) {
 				code = code.replaceAll(`"${sentinel}"`, replacement);
 				changed = true;
