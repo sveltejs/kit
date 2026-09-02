@@ -140,9 +140,10 @@ export function create_builder({
 				mime_types[ext] ??= mime_lookup(ext) || '';
 			}
 
-			// record extensions that only exist in prerendered output, e.g. a prerendered favicon.ico
-			for (const pathname of prerendered.paths) {
-				const ext = path.extname(pathname);
+			// record extensions that only exist in prerendered or client output (e.g. a favicon.ico),
+			// so that adapters can serve those files without a mime database of their own
+			for (const file of [...prerendered.paths, ...walk(path.join(build_data.out_dir, 'client'))]) {
+				const ext = path.extname(file);
 				if (ext) mime_types[ext] ??= mime_lookup(ext) || '';
 			}
 			return mime_types;
