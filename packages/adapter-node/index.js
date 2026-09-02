@@ -1,6 +1,4 @@
-import { createHash } from 'node:crypto';
 import fs from 'node:fs';
-import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { rolldown } from 'rolldown';
 
@@ -30,22 +28,18 @@ export default function (opts = {}) {
 			const prerendered_dir = `${out}/prerendered${base}`;
 
 			builder.log.minor('Copying assets');
-			const client_files = builder.writeClient(client_dir);
-			const prerendered_files = builder.writePrerendered(prerendered_dir);
+			builder.writeClient(client_dir);
+			builder.writePrerendered(prerendered_dir);
 
-			builder.log.minor(precompress ? 'Compressing and hashing assets' : 'Hashing assets');
+			if (precompress) builder.log.minor('Compressing assets');
 			const [client_compressed, prerendered_compressed] = precompress
 				? await Promise.all([builder.compress(client_dir), builder.compress(prerendered_dir)])
 				: [[], []];
 
-			const assets = create_asset_table(
-				base,
-				measure_files(client_dir, client_files, client_compressed)
-			);
+			const assets = create_asset_table(base, builder.clientFiles, client_compressed);
 			const prerendered_assets = create_prerendered_table(
-				base,
-				measure_files(prerendered_dir, prerendered_files, prerendered_compressed),
-				builder.prerendered.paths
+				builder.prerendered,
+				prerendered_compressed
 			);
 
 			builder.log.minor('Building server');
@@ -193,57 +187,47 @@ function is_hidden(file) {
 }
 
 /**
- * Size and content hash of every servable file, plus the sizes of the
- * compressed variants where `builder.compress` wrote them.
- * Files are read one at a time, so large outputs neither exhaust file descriptors nor pile up in memory
- * @param {string} root
- * @param {string[]} files
- * @param {string[]} compressed
- * @returns {AssetEntry[]}
+ * @param {{ file: string, size: number, hash: string }} measured
+ * @param {{ gz: number, br: number } | undefined} variants sizes of the `.gz` and `.br` files `builder.compress` wrote, if any
+ * @returns {AssetEntry}
  */
-function measure_files(root, files, compressed) {
-	const variants = new Set(compressed);
+function to_entry({ file, size, hash }, variants) {
+	/** @type {AssetEntry} */
+	const entry = { file, size, etag: hash };
 
-	/** @type {AssetEntry[]} */
-	const entries = [];
-
-	for (const file of files) {
-		if (is_hidden(file)) continue;
-
-		const abs = join(root, file);
-		const contents = fs.readFileSync(abs);
-
-		/** @type {AssetEntry} */
-		const entry = {
-			file,
-			size: contents.length,
-			etag: createHash('sha256').update(contents).digest('base64url')
-		};
-
-		// `builder.compress` writes a `.gz` and a `.br` variant of every file it returns
-		if (variants.has(file)) {
-			entry.gz = fs.statSync(`${abs}.gz`).size;
-			entry.br = fs.statSync(`${abs}.br`).size;
-		}
-
-		entries.push(entry);
+	if (variants) {
+		entry.gz = variants.gz;
+		entry.br = variants.br;
 	}
 
-	return entries;
+	return entry;
 }
 
 /**
- * Keys the measured files by URL: the exact pathname, plus the `/foo` and
+ * @param {Array<{ file: string, gz: number, br: number }>} compressed
+ */
+function by_file(compressed) {
+	return new Map(compressed.map((entry) => [entry.file, entry]));
+}
+
+/**
+ * Keys the client files by URL: the exact pathname, plus the `/foo` and
  * `/foo/` forms of `foo.html`/`foo/index.html` files
  * @param {string} base
- * @param {AssetEntry[]} measured
+ * @param {Array<{ file: string, size: number, hash: string }>} files
+ * @param {Array<{ file: string, gz: number, br: number }>} compressed
  * @returns {AssetTable}
  */
-function create_asset_table(base, measured) {
-	const entries = measured.map((entry) => /** @type {[string, AssetEntry]} */ ([
-		`${base}/${entry.file}`,
-		entry
-	]));
+function create_asset_table(base, files, compressed) {
+	const variants = by_file(compressed);
+
+	/** @type {Array<[string, AssetEntry]>} */
+	const entries = [];
+
+	for (const measured of files) {
+		if (is_hidden(measured.file)) continue;
+		entries.push([`${base}/${measured.file}`, to_entry(measured, variants.get(measured.file))]);
+	}
 
 	entries.sort(([a], [b]) => (a < b ? -1 : 1));
 
@@ -279,26 +263,23 @@ function create_asset_table(base, measured) {
 }
 
 /**
- * Keys the measured files by the exact paths kit prerendered, so a lookup
- * hit is precisely a prerendered page, asset or redirect and every other
+ * Keys the prerendered pages, assets and redirect stubs by the exact paths kit
+ * prerendered, so a lookup hit is precisely one of those and every other
  * pathname (including the non-canonical trailing-slash form) misses
- * @param {string} base
- * @param {AssetEntry[]} measured
- * @param {string[]} paths
+ * @param {import('@sveltejs/kit').Builder['prerendered']} prerendered
+ * @param {Array<{ file: string, gz: number, br: number }>} compressed
  * @returns {AssetTable}
  */
-function create_prerendered_table(base, measured, paths) {
-	const by_file = new Map(measured.map((entry) => [entry.file, entry]));
+function create_prerendered_table(prerendered, compressed) {
+	const variants = by_file(compressed);
 
 	/** @type {Array<[string, AssetEntry]>} */
 	const entries = [];
 
-	for (const path of paths) {
-		// invert `output_filename` in kit's prerenderer
-		const file = path.slice(base.length + 1) || 'index.html';
-		const entry =
-			by_file.get(file) ?? by_file.get(file + (file.endsWith('/') ? 'index.html' : '.html'));
-		if (entry) entries.push([path, entry]);
+	for (const map of [prerendered.pages, prerendered.assets, prerendered.redirects]) {
+		for (const [path, measured] of map) {
+			entries.push([path, to_entry(measured, variants.get(measured.file))]);
+		}
 	}
 
 	entries.sort(([a], [b]) => (a < b ? -1 : 1));

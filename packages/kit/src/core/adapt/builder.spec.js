@@ -95,7 +95,31 @@ test('compress files', async () => {
 		assert.ok(existsSync(target + '.br'));
 		assert.ok(existsSync(target + '.gz'));
 	}
-	assert.deepEqual(compressed.sort(), ['foo.css', 'foo.md', 'foo.mdx']);
+	assert.deepEqual(
+		compressed.map(({ file, gz, br }) => [file, gz > 0, br > 0]),
+		[
+			['foo.css', true, true],
+			['foo.md', true, true],
+			['foo.mdx', true, true]
+		]
+	);
+});
+
+test('clientFiles measures the client output once', () => {
+	const builder = create_builder({
+		// @ts-expect-error - we don't need the whole config for this test
+		config: { outDir: fileURLToPath(new URL('./fixtures/client-files', import.meta.url)) },
+		// @ts-expect-error - we don't need the whole config for this test
+		build_data: {},
+		route_data: []
+	});
+
+	const files = builder.clientFiles;
+	assert.deepEqual(files, [
+		{ file: 'a.txt', size: 6, hash: 'WJG1tSLV3whtD_CxEPvZ0hu0_HFjrzTQgoai6Eb2vgM' },
+		{ file: 'sub/b.txt', size: 2, hash: 'AmOCmYm2_ZVPcrqvL8ZLwuLwHWktTecphuqAj26ZgT8' }
+	]);
+	assert.equal(builder.clientFiles, files);
 });
 
 test('compress returns an empty array for a directory that does not exist', async () => {

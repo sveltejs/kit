@@ -5,6 +5,7 @@
 /** @import { RouteData, ValidatedConfig, BuildData, ServerMetadata, ServerMetadataRoute, Prerendered, PrerenderMap, Logger, RemoteChunk } from 'types' */
 import { loadEnv } from 'vite';
 import * as devalue from 'devalue';
+import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { promisify } from 'node:util';
@@ -106,6 +107,9 @@ export function create_builder({
 		app_manifest.assets.push({ path: build_data.service_worker });
 	}
 
+	/** @type {Array<{ file: string, size: number, hash: string }> | undefined} */
+	let client_files;
+
 	return {
 		log,
 		rimraf: (dir) => fs.rmSync(dir, { force: true, recursive: true }),
@@ -116,6 +120,9 @@ export function create_builder({
 		prerendered,
 		routes,
 		manifest: app_manifest,
+		get clientFiles() {
+			return (client_files ??= measure_files(`${config.outDir}/output/client`));
+		},
 		get mimeTypes() {
 			// TODO - make the `generate_manifest` function return data instead of a string, and retrieve mime types from there
 			const mime_types = get_mime_lookup(build_data.manifest_data);
@@ -149,16 +156,23 @@ export function create_builder({
 
 			const files = [...walk(directory)].filter((file) => extensions.includes(path.extname(file)));
 
+			/** @type {Array<{ file: string, gz: number, br: number }>} */
+			const compressed = [];
+
 			// zlib work is serialised on the threadpool and each brotli encoder is allocated up front,
 			// so a handful of files in flight is as fast as all of them and keeps memory flat
 			let i = 0;
 			await Promise.all(
 				Array.from({ length: 16 }, async () => {
-					while (i < files.length) await compress_file(path.resolve(directory, files[i++]));
+					while (i < files.length) {
+						const index = i++;
+						const file = files[index];
+						compressed[index] = { file, ...(await compress_file(path.resolve(directory, file))) };
+					}
 				})
 			);
 
-			return files;
+			return compressed;
 		},
 
 		findServerAssets(route_data) {
@@ -367,7 +381,29 @@ export function create_builder({
 }
 
 /**
- * Writes gzip and brotli variants next to `file`
+ * Size and content hash of every file under `directory`, skipping Vite's own metadata
+ * @param {string} directory
+ */
+function measure_files(directory) {
+	/** @type {Array<{ file: string, size: number, hash: string }>} */
+	const files = [];
+
+	for (const file of walk(directory)) {
+		if (file.startsWith('.vite/') || file.includes('/.vite/')) continue;
+
+		const contents = fs.readFileSync(path.join(directory, file));
+		files.push({
+			file,
+			size: contents.length,
+			hash: createHash('sha256').update(contents).digest('base64url')
+		});
+	}
+
+	return files;
+}
+
+/**
+ * Writes gzip and brotli variants next to `file` and returns their sizes
  * @param {string} file
  */
 async function compress_file(file) {
@@ -388,6 +424,8 @@ async function compress_file(file) {
 		fs.promises.writeFile(`${file}.gz`, gz),
 		fs.promises.writeFile(`${file}.br`, br)
 	]);
+
+	return { gz: gz.length, br: br.length };
 }
 
 /**

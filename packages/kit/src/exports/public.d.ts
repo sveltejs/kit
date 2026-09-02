@@ -177,6 +177,17 @@ export interface Builder {
 	 * @since 3.0.0
 	 */
 	mimeTypes: Record<string, string>;
+	/**
+	 * The size and a content hash of every file in the client output, i.e. the Vite build and the contents of the `static` directory.
+	 * `file` is relative to the client directory, matching the paths returned by `writeClient`. Read from disk once, on first access.
+	 * @since 3.0.0
+	 */
+	clientFiles: Array<{
+		file: string;
+		size: number;
+		/** suitable for use as an ETag */
+		hash: string;
+	}>;
 
 	/**
 	 * Create separate functions that map to one or more routes of your app.
@@ -339,9 +350,9 @@ export interface Builder {
 	/**
 	 * Compress files in `directory` with gzip and brotli, where appropriate. Generates `.gz` and `.br` files alongside the originals.
 	 * @param {string} directory The directory containing the files to be compressed
-	 * @returns an array of the files in `directory` that were compressed
+	 * @returns the files in `directory` that were compressed, with the sizes of their `.gz` and `.br` variants
 	 */
-	compress: (directory: string) => Promise<string[]>;
+	compress: (directory: string) => Promise<Array<{ file: string; gz: number; br: number }>>;
 }
 
 export interface Cookies {
