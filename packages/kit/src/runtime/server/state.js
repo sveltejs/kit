@@ -45,9 +45,6 @@ export function create_request_state(options) {
 	return {
 		getClientAddress: options.getClientAddress,
 		platform: options.platform,
-		read: options.read,
-		before_handle: options.before_handle,
-		emulator: options.emulator,
 		prerendering: options.prerendering,
 		prerender_default: undefined,
 		error: false,
