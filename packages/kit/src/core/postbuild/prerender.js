@@ -51,22 +51,16 @@ async function prerender({
 	/** @type {import('types').SSRManifest} */
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
-	/** @type {import('types').ServerInternalModule} */
-	const { configure, format_response } = await import(
-		pathToFileURL(`${out}/server/internal.js`).href
-	);
+	/** @type {import('types').ServerModule} */
+	const { configure, format_response } = await import(pathToFileURL(`${out}/server/index.js`).href);
 
-	// everything user modules may read at their top level, before the server module evaluates the user's env config
-	await configure({
+	const { init, respond } = await configure({
 		building: true,
 		prerendering: true,
 		env,
 		manifest,
 		read: (file) => createReadableStream(`${out}/server/${file}`)
 	});
-
-	/** @type {import('types').ServerModule} */
-	const { init, respond } = await import(pathToFileURL(`${out}/server/index.js`).href);
 
 	const throw_handled = () => {
 		throw new Error('__handled__');
