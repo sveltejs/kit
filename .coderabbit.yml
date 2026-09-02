@@ -26,19 +26,19 @@ reviews:
     auto_incremental_review: true
     # auto_pause_after_reviewed_commits: 5
     ignore_title_keywords:
-      - "Version Packages"
+      - 'Version Packages'
     # ignore_usernames: []
     # labels: []
 
   auto_apply_labels: true
   labeling_instructions:
-    - label: "breaking change"
-      instructions: "PR contains a breaking change to public interfaces"
-    - label: "documentation"
-      instructions: "PR updates documentation or examples"
+    - label: 'breaking change'
+      instructions: 'PR contains a breaking change to public interfaces'
+    - label: 'documentation'
+      instructions: 'PR updates documentation or examples'
 
   slop_detection:
-    label: "🤖"
+    label: '🤖'
 
   profile: quiet
 
@@ -65,7 +65,7 @@ reviews:
   pre_merge_checks:
     title:
       mode: warning
-      requirements: "Prefix PR titles with `breaking:`, `feat:`, `fix:`, or `chore:`"
+      requirements: 'Prefix PR titles with `breaking:`, `feat:`, `fix:`, or `chore:`'
     docstrings:
       mode: off
       threshold: 80
@@ -74,8 +74,8 @@ reviews:
     issue_assessment:
       mode: off
     custom_checks:
-      - name: "Backward Compatibility Impact Disclosure"
-        mode: "warning"
+      - name: 'Backward Compatibility Impact Disclosure'
+        mode: 'warning'
         instructions: >-
           Detect breaking changes to public interfaces: removed or renamed
           exports, new required request/response fields, changed defaults, or
@@ -87,12 +87,12 @@ reviews:
   #     prompt: ""
 
   path_filters:
-    - "!.well-known/**"
-    - "!playgrounds/**"
-    - "!packages/kit/types/**"
-    - "!FUNDING.json"
+    - '!.well-known/**'
+    - '!playgrounds/**'
+    - '!packages/kit/types/**'
+    - '!FUNDING.json'
   path_instructions:
-    - path: "documentation/docs/**.md"
+    - path: 'documentation/docs/**.md'
       instructions: |
         Check for clarity, accuracy, and completeness.
         Flag any references to deprecated APIs or outdated behavior.
@@ -100,15 +100,15 @@ reviews:
 knowledge_base:
   code_guidelines:
     filePatterns:
-      - "AGENTS.md"
-      - "CONTRIBUTING.md"
+      - 'AGENTS.md'
+      - 'CONTRIBUTING.md'
   linked_repositories:
-    - repository: "sveltejs/svelte"
-      instructions: "The Svelte compiler and runtime"
-    - repository: "sveltejs/vite-plugin-svelte"
-      instructions: "The Vite plugin that transforms Svelte modules during development and build"
-    - repository: "vitejs/vite"
-      instructions: "Powers the development server and build process"
+    - repository: 'sveltejs/svelte'
+      instructions: 'The Svelte compiler and runtime'
+    - repository: 'sveltejs/vite-plugin-svelte'
+      instructions: 'The Vite plugin that transforms Svelte modules during development and build'
+    - repository: 'vitejs/vite'
+      instructions: 'Powers the development server and build process'
   learnings:
     scope: global
   issues:
@@ -137,13 +137,13 @@ issue_enrichment:
   labeling:
     auto_apply_labels: true
     labeling_instructions:
-      - label: "awaiting submitter"
-        instructions: "If the issue is a bug report but does not include a link to a minimal reproduction"
-      - label: "pkg:enhanced-img"
-        instructions: "If the issue is related to static image optimisation the `@sveltejs/enhanced-img` package"
-      - label: "pkg:adapter-cloudflare"
-        instructions: "If the issue is related to Cloudflare Workers/Pages or the `@sveltejs/adapter-cloudflare` package"
-      - label: "pkg:adapter-netlify"
-        instructions: "If the issue is related to the Netlify platform or the `@sveltejs/adapter-netlify` package"
-      - label: "pkg:adapter-vercel"
-        instructions: "If the issue is related to the Vercel platform or the `@sveltejs/adapter-vercel` package"
+      - label: 'awaiting submitter'
+        instructions: 'If the issue is a bug report but does not include a link to a minimal reproduction'
+      - label: 'pkg:enhanced-img'
+        instructions: 'If the issue is related to static image optimisation the `@sveltejs/enhanced-img` package'
+      - label: 'pkg:adapter-cloudflare'
+        instructions: 'If the issue is related to Cloudflare Workers/Pages or the `@sveltejs/adapter-cloudflare` package'
+      - label: 'pkg:adapter-netlify'
+        instructions: 'If the issue is related to the Netlify platform or the `@sveltejs/adapter-netlify` package'
+      - label: 'pkg:adapter-vercel'
+        instructions: 'If the issue is related to the Vercel platform or the `@sveltejs/adapter-vercel` package'
