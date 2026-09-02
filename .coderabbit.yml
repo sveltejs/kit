@@ -143,7 +143,9 @@ issue_enrichment:
     auto_apply_labels: true
     labeling_instructions:
       - label: 'awaiting submitter'
-        instructions: 'Issue is a bug report but does not include a link to a minimal reproduction'
+        instructions: >-
+          Issue is a bug report and has a heading named "Reproduction" in the description
+          but does not include a link to a minimal reproduction
       - label: 'pkg:enhanced-img'
         instructions: 'Issue is related to static image optimisation the `@sveltejs/enhanced-img` package'
       - label: 'pkg:adapter-cloudflare'
