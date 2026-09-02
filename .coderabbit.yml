@@ -1,0 +1,10 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+reviews:
+  profile: quiet # quiet | chill (default) | assertive
+  request_changes_workflow: true # needed for merge-blocking checks
+  high_level_summary: false
+  sequence_diagrams: true # auto architecture diagrams for the PR
+  assess_linked_issues: true
+  poem: false
+  path_filters: []
+  path_instructions: []
