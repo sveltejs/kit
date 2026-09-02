@@ -82,7 +82,6 @@ export function create_assets(config) {
 
 	return [...walk(config.files.assets)].map((file) => ({
 		file,
-		size: fs.statSync(path.resolve(config.files.assets, file)).size,
 		type: lookup(file) || null
 	}));
 }
