@@ -16,46 +16,58 @@ export function copy(source, target, opts = {}) {
 	/** @type {string[]} */
 	const files = [];
 
-	const prefix = posixify(target) + '/';
-
 	const regex = opts.replace
 		? new RegExp(`\\b(${Object.keys(opts.replace).join('|')})\\b`, 'g')
 		: null;
 
+	/** @type {string | undefined} */
+	let created;
+
 	/**
 	 * @param {string} from
 	 * @param {string} to
+	 * @param {string} file posix path of `to` relative to `target`, empty when copying a single file
+	 * @param {boolean} is_directory
 	 */
-	function go(from, to) {
+	function go(from, to, file, is_directory) {
 		if (opts.filter && !opts.filter(path.basename(from))) return;
 
-		const stats = fs.statSync(from);
-
-		if (stats.isDirectory()) {
-			fs.readdirSync(from).forEach((file) => {
-				go(path.join(from, file), path.join(to, file));
-			});
-		} else {
-			fs.mkdirSync(path.dirname(to), { recursive: true });
-
-			if (opts.replace) {
-				const data = fs.readFileSync(from, 'utf-8');
-				fs.writeFileSync(
-					to,
-					data.replace(
-						/** @type {RegExp} */ (regex),
-						(_match, key) => /** @type {Record<string, string>} */ (opts.replace)[key]
-					)
+		if (is_directory) {
+			for (const entry of fs.readdirSync(from, { withFileTypes: true })) {
+				const child = path.join(from, entry.name);
+				go(
+					child,
+					path.join(to, entry.name),
+					file ? `${file}/${entry.name}` : entry.name,
+					entry.isSymbolicLink() ? fs.statSync(child).isDirectory() : entry.isDirectory()
 				);
-			} else {
-				fs.copyFileSync(from, to);
 			}
-
-			files.push(to === target ? posixify(path.basename(to)) : posixify(to).replace(prefix, ''));
+			return;
 		}
+
+		const dir = path.dirname(to);
+		if (dir !== created) {
+			fs.mkdirSync(dir, { recursive: true });
+			created = dir;
+		}
+
+		if (opts.replace) {
+			const data = fs.readFileSync(from, 'utf-8');
+			fs.writeFileSync(
+				to,
+				data.replace(
+					/** @type {RegExp} */ (regex),
+					(_match, key) => /** @type {Record<string, string>} */ (opts.replace)[key]
+				)
+			);
+		} else {
+			fs.copyFileSync(from, to);
+		}
+
+		files.push(file || posixify(path.basename(to)));
 	}
 
-	go(source, target);
+	go(source, target, '', fs.statSync(source).isDirectory());
 
 	return files;
 }
@@ -67,9 +79,13 @@ export function copy(source, target, opts = {}) {
  * @returns {Generator<string>} the posix paths of all found files, relative to `cwd`
  */
 export function* walk(cwd, dir = '') {
-	for (const file of fs.readdirSync(path.join(cwd, dir))) {
-		const joined = dir ? `${dir}/${file}` : file;
-		if (fs.statSync(path.join(cwd, joined)).isDirectory()) {
+	for (const entry of fs.readdirSync(path.join(cwd, dir), { withFileTypes: true })) {
+		const joined = dir ? `${dir}/${entry.name}` : entry.name;
+		const is_directory = entry.isSymbolicLink()
+			? fs.statSync(path.join(cwd, joined)).isDirectory()
+			: entry.isDirectory();
+
+		if (is_directory) {
 			yield* walk(cwd, joined);
 		} else {
 			yield joined;
