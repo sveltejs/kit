@@ -140,32 +140,37 @@ function generate_serverless_functions({ builder, publish, split }) {
 
 			const routes = [route];
 
-			/** @type {string[]} */
-			const parts = [];
+			/** @type {string[][]} */
+			let paths = [[]];
 
 			// The parts should conform to URLPattern syntax
 			// https://docs.netlify.com/build/functions/get-started/?fn-language=ts&data-tab=TypeScript#route-requests
-			for (const segment of route.segments) {
-				if (segment.rest) {
-					parts.push('*');
-				} else if (segment.dynamic) {
-					// URLPattern requires params to start with letters
-					parts.push(`:param${parts.length}`);
+			for (const [i, segment] of route.segments.entries()) {
+				const param = `:param${i}`;
+
+				if (/^\[\[.+\]\]$/.test(segment.content)) {
+					paths = paths.flatMap((parts) => [parts, [...parts, param]]);
 				} else {
-					parts.push(segment.content);
+					const part = segment.rest ? '*' : segment.dynamic ? param : segment.content;
+					paths.forEach((parts) => parts.push(part));
 				}
 			}
 
-			// Netlify handles trailing slashes for us, so we don't need to include them in the pattern
-			const pattern = `/${parts.join('/')}`;
+			const name_parts = paths.at(-1);
 			const name =
-				FUNCTION_PREFIX + (parts.join('-').replace(/[:.]/g, '_').replace('*', '__rest') || 'index');
+				FUNCTION_PREFIX +
+				(name_parts?.join('-').replace(/[:.]/g, '_').replace('*', '__rest') || 'index');
 
-			// skip routes with identical patterns, they were already folded into another function
-			if (seen.has(pattern)) continue;
+			// Netlify handles trailing slashes for us, so we don't need to include them in the patterns
+			const patterns = paths
+				.map((parts) => `/${parts.join('/')}`)
+				.flatMap((pattern) => [pattern, `${pattern === '/' ? '' : pattern}/__data.json`])
+				.filter((pattern) => !seen.has(pattern));
 
-			const patterns = [pattern, `${pattern === '/' ? '' : pattern}/__data.json`];
-			patterns.forEach((p) => seen.add(p));
+			// skip routes whose patterns were already folded into other functions
+			if (patterns.length === 0) continue;
+
+			patterns.forEach((pattern) => seen.add(pattern));
 
 			// figure out which lower priority routes should be considered fallbacks
 			for (let j = i + 1; j < builder.routes.length; j += 1) {
