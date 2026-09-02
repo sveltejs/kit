@@ -36,6 +36,8 @@ reviews:
       instructions: "PR contains a breaking change to public interfaces"
     - label: "documentation"
       instructions: "PR updates documentation or examples"
+    - label: "needs-platform-tests"
+      instructions: "PR adds/deletes/modifies files in an adapter package or has 'Version Packages' in the title"
 
   slop_detection:
     label: "🤖"
@@ -138,12 +140,12 @@ issue_enrichment:
     auto_apply_labels: true
     labeling_instructions:
       - label: "awaiting submitter"
-        instructions: "If the issue is a bug report but does not include a link to a minimal reproduction"
+        instructions: "Issue is a bug report but does not include a link to a minimal reproduction"
       - label: "pkg:enhanced-img"
-        instructions: "If the issue is related to static image optimisation the `@sveltejs/enhanced-img` package"
+        instructions: "Issue is related to static image optimisation the `@sveltejs/enhanced-img` package"
       - label: "pkg:adapter-cloudflare"
-        instructions: "If the issue is related to Cloudflare Workers/Pages or the `@sveltejs/adapter-cloudflare` package"
+        instructions: "Issue is related to Cloudflare Workers/Pages or the `@sveltejs/adapter-cloudflare` package"
       - label: "pkg:adapter-netlify"
-        instructions: "If the issue is related to the Netlify platform or the `@sveltejs/adapter-netlify` package"
+        instructions: "Issue is related to the Netlify platform or the `@sveltejs/adapter-netlify` package"
       - label: "pkg:adapter-vercel"
-        instructions: "If the issue is related to the Vercel platform or the `@sveltejs/adapter-vercel` package"
+        instructions: "Issue is related to the Vercel platform or the `@sveltejs/adapter-vercel` package"
