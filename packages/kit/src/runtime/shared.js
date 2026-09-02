@@ -15,6 +15,16 @@ export function validate_depends(route_id, dep) {
 	}
 }
 
+/**
+ * The url a `load` `fetch` response is serialized under during SSR and looked up by on the client:
+ * a path for same-origin urls, so prerendered pages can be served from any origin, the href otherwise
+ * @param {URL} url
+ * @param {{ origin: string }} page
+ */
+export function fetch_cache_url(url, page) {
+	return url.origin === page.origin ? url.href.slice(page.origin.length) : url.href;
+}
+
 export const INVALIDATED_PARAM = 'x-sveltekit-invalidated';
 
 export const TRAILING_SLASH_PARAM = 'x-sveltekit-trailing-slash';

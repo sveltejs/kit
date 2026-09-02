@@ -1,3 +1,4 @@
+import { fetch_cache_url } from '../shared.js';
 import { DEV } from 'esm-env';
 import { hash_request } from '../../utils/hash.js';
 import { base64_decode } from '../utils.js';
@@ -152,15 +153,14 @@ export function dev_fetch(resource, opts) {
 }
 
 /**
- * Mirror the url normalization in `resolve_fetch_url`, so that non-GET requests
- * evict the cache entry regardless of how the url is spelled
+ * The cache key of a request, so that non-GET requests evict the entry regardless of how the url is spelled
  * @param {RequestInfo | URL} input
  */
 function requested_url(input) {
-	const resolved = new URL(input instanceof Request ? input.url : input, location.href);
-	return resolved.origin === location.origin
-		? resolved.href.slice(location.origin.length)
-		: resolved.href;
+	return fetch_cache_url(
+		new URL(input instanceof Request ? input.url : input, location.href),
+		location
+	);
 }
 
 /**
