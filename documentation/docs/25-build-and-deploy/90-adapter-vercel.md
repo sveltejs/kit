@@ -51,7 +51,7 @@ You can set the following options:
 - `maxDuration`: [maximum execution duration](https://vercel.com/docs/functions/runtimes#max-duration) of the function. Defaults to `10` seconds for Hobby accounts, `15` for Pro and `900` for Enterprise
 - `isr`: configuration Incremental Static Regeneration, described below
 
-Configuration set in a layout applies to all the routes beneath that layout, unless overridden at a more granular level.
+Configuration set in a layout applies to all the routes beneath that layout, unless overridden at a more granular level. However, a `+page` and `+server` file in the same directory will always share the same configuration settings.
 
 If your functions need to access data in a specific region, it's recommended that they be deployed in the same region (or close to it) for optimal performance.
 
@@ -110,6 +110,8 @@ export const config = {
 ```
 
 > [!NOTE] Using ISR on a route with `export const prerender = true` will have no effect, since the route is prerendered at build time
+
+> [!NOTE] A route using ISR cannot have both a `+page` and a `+server` file with a `GET`, `HEAD` or `fallback` handler as the cached response will be used, skipping content negotiation.
 
 The `expiration` property is required; all others are optional. The properties are discussed in more detail below.
 

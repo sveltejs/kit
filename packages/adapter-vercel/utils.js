@@ -1,5 +1,21 @@
 import process from 'node:process';
 
+const CACHEABLE_METHODS = new Set(['GET', 'HEAD', '*']);
+
+/**
+ * @param {{ id: string, page: { methods: string[] }, api: { methods: string[] } }} route
+ */
+export function validate_isr_route(route) {
+	if (
+		route.page.methods.length > 0 &&
+		route.api.methods.some((method) => CACHEABLE_METHODS.has(method))
+	) {
+		throw new Error(
+			`The ${route.id} route cannot use ISR. It has a +page and a +server file returning the same cached response for GET and HEAD requests`
+		);
+	}
+}
+
 /**
  * Adjusts the stringified route regex for Vercel's routing system
  * @param {string} pattern stringified route regex
