@@ -41,7 +41,7 @@ test('non-GET/HEAD methods bypass ISR', async ({ request }) => {
 	}
 });
 
-test('ISR form actions bypass ISR', async ({ page }) => {
+test('form actions bypass ISR', async ({ page }) => {
 	await page.goto('/isr');
 	await page.getByRole('button', { name: 'Submit' }).click();
 	await expect(page.locator('#form-success')).toHaveText('success');
