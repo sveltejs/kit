@@ -175,6 +175,17 @@ declare module '@sveltejs/kit' {
 			/** suitable for use as an ETag */
 			hash: string;
 		}>;
+		/**
+		 * The size and a content hash of every prerendered page, asset and redirect.
+		 * `file` is relative to the prerendered directory, matching the paths returned by `writePrerendered`. Read from disk once, on first access.
+		 * @since 3.0.0
+		 */
+		prerenderedFiles: Array<{
+			file: string;
+			size: number;
+			/** suitable for use as an ETag */
+			hash: string;
+		}>;
 
 		/**
 		 * Create separate functions that map to one or more routes of your app.
@@ -934,14 +945,10 @@ declare module '@sveltejs/kit' {
 			{
 				/** The location of the .html file relative to the output directory */
 				file: string;
-				/** The size of the file in bytes */
-				size: number;
-				/** A hash of the file's contents, suitable for use as an ETag */
-				hash: string;
 			}
 		>;
 		/**
-		 * A map of `path` to `{ type, file, size, hash }` objects.
+		 * A map of `path` to `{ type, file }` objects.
 		 */
 		assets: Map<
 			string,
@@ -950,10 +957,6 @@ declare module '@sveltejs/kit' {
 				type: string;
 				/** The location of the file relative to the output directory */
 				file: string;
-				/** The size of the file in bytes */
-				size: number;
-				/** A hash of the file's contents, suitable for use as an ETag */
-				hash: string;
 			}
 		>;
 		/**
@@ -966,10 +969,6 @@ declare module '@sveltejs/kit' {
 				location: string;
 				/** The location of the .html file relative to the output directory */
 				file: string;
-				/** The size of the file in bytes */
-				size: number;
-				/** A hash of the file's contents, suitable for use as an ETag */
-				hash: string;
 			}
 		>;
 		/** An array of prerendered paths (without trailing slashes, regardless of the trailingSlash config) */

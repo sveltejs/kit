@@ -584,28 +584,20 @@ function create_builder({
 	instrumentation?: boolean;
 	compressed?: string[];
 } = {}) {
-	// kit records a size and content hash for every file it writes
+	// kit measures every file in its output on first access
 	const measure = (file: string) => ({ file, size: 0, hash: 'abc' });
-	const page_files = new Set(prerendered_pages.map(([, { file }]) => file));
 
 	return {
 		config: { outDir: '.svelte-kit', paths: { base, origin }, appDir: '_app' },
 		routes,
 		prerendered: {
-			pages: new Map(prerendered_pages.map(([path, { file }]) => [path, measure(file)])),
-			assets: new Map(
-				prerendered_files
-					.filter((file) => !page_files.has(file))
-					.map((file) => [`/${file}`, { type: '', ...measure(file) }])
-			),
-			redirects: new Map(
-				prerendered_redirects.map(([path, redirect]) => [
-					path,
-					{ ...redirect, ...measure(`${path.slice(1)}.html`) }
-				])
-			)
+			pages: new Map(prerendered_pages),
+			redirects: new Map(prerendered_redirects)
 		},
 		clientFiles: client_files.map(measure),
+		prerenderedFiles: [...prerendered_files, ...prerendered_pages.map(([, { file }]) => file)].map(
+			measure
+		),
 		log: {
 			minor: mock((_message: string) => {}),
 			error: mock((_message: string) => {}),

@@ -1,5 +1,4 @@
 import process from 'node:process';
-import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -18,15 +17,6 @@ import { createReadableStream } from '@sveltejs/kit/node';
 import generate_fallback from './fallback.js';
 import { stringify_remote_arg } from '../../runtime/shared.js';
 import { matches_content_type } from '../../utils/http.js';
-
-/**
- * Size and content hash of a file that has just been written, so adapters can serve it without reading it back
- * @param {string | Uint8Array} contents
- */
-function measure(contents) {
-	const bytes = typeof contents === 'string' ? Buffer.from(contents) : contents;
-	return { size: bytes.byteLength, hash: createHash('sha256').update(bytes).digest('base64url') };
-}
 
 export default forked(import.meta.url, prerender);
 
@@ -180,7 +170,7 @@ async function prerender({
 		mkdirSync(dirname(dest), { recursive: true });
 		writeFileSync(dest, fallback);
 
-		prerendered.pages.set('/', { file, ...measure(fallback) });
+		prerendered.pages.set('/', { file });
 
 		return { prerendered, prerender_map };
 	}
@@ -586,8 +576,7 @@ async function prerender({
 						prerendered.redirects.set(decoded, {
 							status: response.status,
 							location: resolved,
-							file,
-							...measure(stub)
+							file
 						});
 
 						prerendered.paths.push(decoded);
@@ -621,12 +610,10 @@ async function prerender({
 			writeFileSync(dest, body);
 			written.add(file);
 
-			const measured = measure(body);
-
 			if (is_html) {
-				prerendered.pages.set(decoded, { file, ...measured });
+				prerendered.pages.set(decoded, { file });
 			} else {
-				prerendered.assets.set(decoded, { type, file, ...measured });
+				prerendered.assets.set(decoded, { type, file });
 			}
 
 			prerendered.paths.push(decoded);
