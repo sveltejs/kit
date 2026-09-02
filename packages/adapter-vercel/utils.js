@@ -11,7 +11,7 @@ export function validate_isr_route(route) {
 		route.api.methods.some((method) => CACHEABLE_METHODS.has(method))
 	) {
 		throw new Error(
-			`The ${route.id} route cannot use ISR. It has a +page and a +server file returning the same cached response for GET and HEAD requests`
+			`The ${route.id} route cannot use ISR. It has a +page and a +server file that would return the same cached response for GET and HEAD requests. Either disable ISR or remove one of the files`
 		);
 	}
 }
