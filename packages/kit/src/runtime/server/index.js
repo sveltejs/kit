@@ -162,7 +162,7 @@ export const respond = IN_WEBCONTAINER ? serialise(respond_to) : respond_to;
 /**
  * The `server` object adapters receive from `builder.generateServerInstance`
  * @param {import('types').SSRManifest} manifest
- * @returns {import('types').InternalServer}
+ * @returns {import('@sveltejs/kit').Server}
  */
 export function create_server(manifest) {
 	// set now rather than in `init`, since user modules may read the manifest at their top level

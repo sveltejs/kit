@@ -37,9 +37,7 @@ import { Span } from '@opentelemetry/api';
 import { PageOptions } from '../exports/vite/static_analysis/types.js';
 import { SharedIterator } from '../utils/shared-iterator.js';
 
-export interface ServerConfigureOptions {
-	env?: ServerInitOptions['env'];
-	read?: ServerInitOptions['read'];
+export interface ServerConfigureOptions extends Partial<ServerInitOptions> {
 	manifest?: SSRManifest;
 	/** the value of `$app/paths`'s `assets`, when it differs from the build-time one */
 	assets?: string;
@@ -51,22 +49,12 @@ export interface ServerConfigureOptions {
 export interface ServerModule {
 	init(options: ServerConfigureOptions): Promise<void>;
 	respond(request: Request, options: InternalRequestOptions): Promise<Response>;
-	create_server(manifest: SSRManifest): InternalServer;
-	/** @deprecated */
-	Server: new (manifest: SSRManifest) => InternalServer;
+	/** the `server` adapters receive from `builder.generateServerInstance` */
+	create_server(manifest: SSRManifest): Server;
 }
 
-export interface ServerInternalModule {
-	configure(options: ServerConfigureOptions): Promise<void>;
-	set_assets(path: string): void;
-	set_building(): void;
-	set_manifest(manifest: SSRManifest): void;
-	set_prerendering(): void;
-	set_read_implementation(implementation: (path: string) => ReadableStream): void;
-	set_fix_stack_trace(fix_stack_trace: (error: Error) => void): void;
-	get_hooks: () => Promise<Record<string, any>>;
-	format_response: (status: number, request: Request) => string;
-}
+/** the built `server/internal.js` */
+export type ServerInternalModule = typeof import('<sveltekit:generated>/server.js');
 
 export interface Asset {
 	file: string;
@@ -208,10 +196,6 @@ export interface InternalRequestOptions extends RequestOptions {
 		handle: () => Promise<Response>
 	) => Promise<Response>;
 	emulator?: Emulator;
-}
-
-export interface InternalServer extends Server {
-	respond(request: Request, options: InternalRequestOptions): Promise<Response>;
 }
 
 export interface ManifestData {
