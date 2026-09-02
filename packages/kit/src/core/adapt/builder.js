@@ -5,6 +5,7 @@
 /** @import { RouteData, ValidatedConfig, BuildData, ServerMetadata, ServerMetadataRoute, Prerendered, PrerenderMap, Logger, RemoteChunk } from 'types' */
 import { loadEnv } from 'vite';
 import * as devalue from 'devalue';
+import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { promisify } from 'node:util';
@@ -21,8 +22,11 @@ import { handle_issues, validate } from '../../exports/internal/env.js';
 import { get_mime_lookup } from '../utils.js';
 import { lookup as mime_lookup } from '../../utils/mime.js';
 
+/** @typedef {{ file: string, size: number, hash: string }} MeasuredFile */
+
 const gzip = promisify(zlib.gzip);
 const brotli = promisify(zlib.brotliCompress);
+const prerendered_dirs = ['pages', 'dependencies', 'data'];
 const extensions = [
 	'.html',
 	'.js',
@@ -106,6 +110,11 @@ export function create_builder({
 		app_manifest.assets.push({ path: build_data.service_worker });
 	}
 
+	/** @type {MeasuredFile[] | undefined} */
+	let client_files;
+	/** @type {MeasuredFile[] | undefined} */
+	let prerendered_files;
+
 	return {
 		log,
 		rimraf: (dir) => fs.rmSync(dir, { force: true, recursive: true }),
@@ -116,6 +125,14 @@ export function create_builder({
 		prerendered,
 		routes,
 		manifest: app_manifest,
+		get clientFiles() {
+			return (client_files ??= measure_files(`${config.outDir}/output/client`));
+		},
+		get prerenderedFiles() {
+			return (prerendered_files ??= prerendered_dirs.flatMap((dir) =>
+				measure_files(`${config.outDir}/output/prerendered/${dir}`)
+			));
+		},
 		get mimeTypes() {
 			// TODO - make the `generate_manifest` function return data instead of a string, and retrieve mime types from there
 			const mime_types = get_mime_lookup(build_data.manifest_data);
@@ -149,16 +166,22 @@ export function create_builder({
 
 			const files = [...walk(directory)].filter((file) => extensions.includes(path.extname(file)));
 
+			/** @type {Array<{ file: string, gz: number, br: number }>} */
+			const compressed = [];
+
 			// zlib work is serialised on the threadpool and each brotli encoder is allocated up front,
 			// so a handful of files in flight is as fast as all of them and keeps memory flat
 			let i = 0;
 			await Promise.all(
 				Array.from({ length: 16 }, async () => {
-					while (i < files.length) await compress_file(path.resolve(directory, files[i++]));
+					while (i < files.length) {
+						const index = i++;
+						compressed[index] = await compress_file(directory, files[index]);
+					}
 				})
 			);
 
-			return files;
+			return compressed;
 		},
 
 		findServerAssets(route_data) {
@@ -271,11 +294,7 @@ export function create_builder({
 		writePrerendered(dest) {
 			const source = `${config.outDir}/output/prerendered`;
 
-			return [
-				...copy(`${source}/pages`, dest),
-				...copy(`${source}/dependencies`, dest),
-				...copy(`${source}/data`, dest)
-			];
+			return prerendered_dirs.flatMap((dir) => copy(`${source}/${dir}`, dest));
 		},
 
 		writeServer(dest) {
@@ -367,11 +386,37 @@ export function create_builder({
 }
 
 /**
- * Writes gzip and brotli variants next to `file`
+ * Size and content hash of every file under `directory`, skipping Vite's own metadata
+ * @param {string} directory
+ */
+function measure_files(directory) {
+	/** @type {MeasuredFile[]} */
+	const files = [];
+
+	if (!fs.existsSync(directory)) return files;
+
+	for (const file of walk(directory)) {
+		if (file.startsWith('.vite/')) continue;
+
+		const contents = fs.readFileSync(path.join(directory, file));
+		files.push({
+			file,
+			size: contents.length,
+			hash: createHash('sha256').update(contents).digest('base64url')
+		});
+	}
+
+	return files;
+}
+
+/**
+ * Writes gzip and brotli variants next to `file` and returns their sizes
+ * @param {string} directory
  * @param {string} file
  */
-async function compress_file(file) {
-	const contents = await fs.promises.readFile(file);
+async function compress_file(directory, file) {
+	const abs = path.resolve(directory, file);
+	const contents = await fs.promises.readFile(abs);
 
 	const [gz, br] = await Promise.all([
 		gzip(contents, { level: zlib.constants.Z_BEST_COMPRESSION }),
@@ -385,9 +430,11 @@ async function compress_file(file) {
 	]);
 
 	await Promise.all([
-		fs.promises.writeFile(`${file}.gz`, gz),
-		fs.promises.writeFile(`${file}.br`, br)
+		fs.promises.writeFile(`${abs}.gz`, gz),
+		fs.promises.writeFile(`${abs}.br`, br)
 	]);
+
+	return { file, gz: gz.length, br: br.length };
 }
 
 /**

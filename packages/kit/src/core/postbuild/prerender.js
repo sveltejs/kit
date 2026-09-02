@@ -561,22 +561,22 @@ async function prerender({
 				if (!headers['x-sveltekit-normalize']) {
 					mkdirSync(dirname(dest), { recursive: true });
 
-					writeFileSync(
-						dest,
-						`<script>location.href=${devalue.uneval(
-							location
-						)};</script><meta http-equiv="refresh" content="${escape_html(
-							`0;url=${location}`,
-							true
-						)}">`
-					);
+					const stub = `<script>location.href=${devalue.uneval(
+						location
+					)};</script><meta http-equiv="refresh" content="${escape_html(
+						`0;url=${location}`,
+						true
+					)}">`;
+
+					writeFileSync(dest, stub);
 
 					written.add(file);
 
 					if (!prerendered.redirects.has(decoded)) {
 						prerendered.redirects.set(decoded, {
 							status: response.status,
-							location: resolved
+							location: resolved,
+							file
 						});
 
 						prerendered.paths.push(decoded);
@@ -611,13 +611,9 @@ async function prerender({
 			written.add(file);
 
 			if (is_html) {
-				prerendered.pages.set(decoded, {
-					file
-				});
+				prerendered.pages.set(decoded, { file });
 			} else {
-				prerendered.assets.set(decoded, {
-					type
-				});
+				prerendered.assets.set(decoded, { type, file });
 			}
 
 			prerendered.paths.push(decoded);

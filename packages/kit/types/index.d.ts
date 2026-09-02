@@ -164,6 +164,28 @@ declare module '@sveltejs/kit' {
 		 * @since 3.0.0
 		 */
 		mimeTypes: Record<string, string>;
+		/**
+		 * The size and a content hash of every file in the client output, i.e. the Vite build and the contents of the `static` directory.
+		 * `file` is relative to the client directory, matching the paths returned by `writeClient`. Read from disk once, on first access.
+		 * @since 3.0.0
+		 */
+		clientFiles: Array<{
+			file: string;
+			size: number;
+			/** suitable for use as an ETag */
+			hash: string;
+		}>;
+		/**
+		 * The size and a content hash of every prerendered page, asset and redirect.
+		 * `file` is relative to the prerendered directory, matching the paths returned by `writePrerendered`. Read from disk once, on first access.
+		 * @since 3.0.0
+		 */
+		prerenderedFiles: Array<{
+			file: string;
+			size: number;
+			/** suitable for use as an ETag */
+			hash: string;
+		}>;
 
 		/**
 		 * Create separate functions that map to one or more routes of your app.
@@ -323,9 +345,9 @@ declare module '@sveltejs/kit' {
 		/**
 		 * Compress files in `directory` with gzip and brotli, where appropriate. Generates `.gz` and `.br` files alongside the originals.
 		 * @param directory The directory containing the files to be compressed
-		 * @returns an array of the files in `directory` that were compressed
+		 * @returns the files in `directory` that were compressed, with the sizes of their `.gz` and `.br` variants
 		 */
-		compress: (directory: string) => Promise<string[]>;
+		compress: (directory: string) => Promise<Array<{ file: string; gz: number; br: number }>>;
 	}
 
 	export interface Cookies {
@@ -926,23 +948,27 @@ declare module '@sveltejs/kit' {
 			}
 		>;
 		/**
-		 * A map of `path` to `{ type }` objects.
+		 * A map of `path` to `{ type, file }` objects.
 		 */
 		assets: Map<
 			string,
 			{
 				/** The MIME type of the asset */
 				type: string;
+				/** The location of the file relative to the output directory */
+				file: string;
 			}
 		>;
 		/**
-		 * A map of redirects encountered during prerendering.
+		 * A map of redirects encountered during prerendering. Each one is also written as an HTML file that redirects on load.
 		 */
 		redirects: Map<
 			string,
 			{
 				status: number;
 				location: string;
+				/** The location of the .html file relative to the output directory */
+				file: string;
 			}
 		>;
 		/** An array of prerendered paths (without trailing slashes, regardless of the trailingSlash config) */
