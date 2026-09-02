@@ -56,8 +56,14 @@ async function prerender({
 		pathToFileURL(`${out}/server/internal.js`).href
 	);
 
-	// `building` and `prerendering` have to be set before the server module evaluates the user's env config
-	await configure({ building: true, prerendering: true, env });
+	// everything user modules may read at their top level, before the server module evaluates the user's env config
+	await configure({
+		building: true,
+		prerendering: true,
+		env,
+		manifest,
+		read: (file) => createReadableStream(`${out}/server/${file}`)
+	});
 
 	/** @type {import('types').ServerModule} */
 	const { init, respond } = await import(pathToFileURL(`${out}/server/index.js`).href);
@@ -644,11 +650,6 @@ async function prerender({
 		}
 	}
 
-	// the user's remote function modules may reference `read` or the `manifest` at the top-level
-	// so we need to set them before evaluating those modules to avoid potential runtime errors
-	const read = (/** @type {string} */ file) => createReadableStream(`${out}/server/${file}`);
-	await configure({ manifest, read });
-
 	/** @type {Array<import('types').RemotePrerenderInternals>} */
 	const prerender_functions = [];
 
@@ -669,7 +670,7 @@ async function prerender({
 
 	// only run the server after the `should_prerender` check so that we
 	// don't run the user's init hook unnecessarily
-	await init({ manifest, env, read });
+	await init();
 
 	log.info('Prerendering');
 
