@@ -78,7 +78,7 @@ import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentation
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto';
 import { register } from 'import-in-the-middle/register-hooks.mjs';
 
-register();
+register({ shouldInclude: (_url, specifier) => !specifier.startsWith('.') });
 
 const sdk = new NodeSDK({
 	serviceName: 'test-sveltekit-tracing',
@@ -88,6 +88,10 @@ const sdk = new NodeSDK({
 
 sdk.start();
 ```
+
+The `shouldInclude` option limits interception to package imports. It is important to exclude relative
+imports, because `import-in-the-middle` does not preserve live bindings when wrapping mutable ESM
+exports, which can break bundled application and framework code.
 
 Now, server-side requests will begin generating traces, which you can view in Jaeger's web console at [localhost:16686](http://localhost:16686).
 
@@ -106,7 +110,7 @@ Now, server-side requests will begin generating traces, which you can view in Ja
 > import { register as registerAsync } from 'node:module';
 >
 > if (supportsSyncHooks()) {
-> 	register();
+> 	register({ shouldInclude: (_url, specifier) => !specifier.startsWith('.') });
 > } else {
 > 	const { registerOptions } = createAddHookMessageChannel();
 > 	registerAsync('import-in-the-middle/hook.mjs', import.meta.url, registerOptions);

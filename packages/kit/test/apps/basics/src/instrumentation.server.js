@@ -2,7 +2,28 @@
 /** @import {SpanData} from '../../../types' */
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { SimpleSpanProcessor } from '@opentelemetry/sdk-trace-node';
+// @ts-expect-error import-in-the-middle does not declare this entry point
+import { register, supportsSyncHooks } from 'import-in-the-middle/register-hooks.mjs';
+import { createAddHookMessageChannel } from 'import-in-the-middle';
+import { register as registerAsync } from 'node:module';
 import fs from 'node:fs';
+
+/**
+ * @param {string} _url
+ * @param {string} specifier
+ */
+function should_include(_url, specifier) {
+	return !specifier.startsWith('.');
+}
+
+if (process.env.SVELTE_ASYNC === 'true') {
+	if (supportsSyncHooks()) {
+		register({ shouldInclude: should_include });
+	} else {
+		const { registerOptions } = createAddHookMessageChannel();
+		registerAsync('import-in-the-middle/hook.mjs', import.meta.url, registerOptions);
+	}
+}
 
 /** @implements {SpanExporter} */
 class FilesystemSpanExporter {
