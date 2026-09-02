@@ -47,7 +47,8 @@ import {
 	TRAILING_SLASH_PARAM,
 	create_remote_key,
 	validate_depends,
-	validate_load_response
+	validate_load_response,
+	fetch_cache_url
 } from '../shared.js';
 
 import { page, updated, notify_version, update_page, set_navigation } from '#app/state/client';
@@ -1309,10 +1310,7 @@ function resolve_fetch_url(input, init, url) {
 	// we must fixup relative urls so they are resolved from the target page
 	const resolved = new URL(input instanceof Request ? input.url : input, url);
 
-	// match the server's serialization of `fetched.url` (see load_data.js): a path for same-origin
-	// urls, so prerendered pages can be served from any origin, the normalized href otherwise
-	const requested =
-		resolved.origin === url.origin ? resolved.href.slice(url.origin.length) : resolved.href;
+	const requested = fetch_cache_url(resolved, url);
 
 	const promise = started
 		? subsequent_fetch(requested, resolved.href, init)

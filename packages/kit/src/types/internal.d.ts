@@ -55,7 +55,6 @@ export interface ServerInternalModule {
 
 export interface Asset {
 	file: string;
-	size: number;
 	type: string | null;
 }
 

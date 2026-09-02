@@ -131,11 +131,7 @@ export function create_builder({
 				route_data.filter((route) => prerender_map.get(route.id) !== true),
 				vite_config.root
 			);
-			/** @type {Record<string, number>} */
-			const files = {};
 			for (const file of server_assets) {
-				files[file] = statSync(path.resolve(build_data.out_dir, 'server', file)).size;
-
 				const ext = path.extname(file);
 				mime_types[ext] ??= mime_lookup(ext) || '';
 			}
