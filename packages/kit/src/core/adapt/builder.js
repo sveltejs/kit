@@ -22,8 +22,11 @@ import { handle_issues, validate } from '../../exports/internal/env.js';
 import { get_mime_lookup } from '../utils.js';
 import { lookup as mime_lookup } from '../../utils/mime.js';
 
+/** @typedef {{ file: string, size: number, hash: string }} MeasuredFile */
+
 const gzip = promisify(zlib.gzip);
 const brotli = promisify(zlib.brotliCompress);
+const prerendered_dirs = ['pages', 'dependencies', 'data'];
 const extensions = [
 	'.html',
 	'.js',
@@ -107,9 +110,9 @@ export function create_builder({
 		app_manifest.assets.push({ path: build_data.service_worker });
 	}
 
-	/** @type {Array<{ file: string, size: number, hash: string }> | undefined} */
+	/** @type {MeasuredFile[] | undefined} */
 	let client_files;
-	/** @type {Array<{ file: string, size: number, hash: string }> | undefined} */
+	/** @type {MeasuredFile[] | undefined} */
 	let prerendered_files;
 
 	return {
@@ -126,8 +129,8 @@ export function create_builder({
 			return (client_files ??= measure_files(`${config.outDir}/output/client`));
 		},
 		get prerenderedFiles() {
-			return (prerendered_files ??= ['pages', 'dependencies', 'data'].flatMap((category) =>
-				measure_files(`${config.outDir}/output/prerendered/${category}`)
+			return (prerendered_files ??= prerendered_dirs.flatMap((dir) =>
+				measure_files(`${config.outDir}/output/prerendered/${dir}`)
 			));
 		},
 		get mimeTypes() {
@@ -173,8 +176,7 @@ export function create_builder({
 				Array.from({ length: 16 }, async () => {
 					while (i < files.length) {
 						const index = i++;
-						const file = files[index];
-						compressed[index] = { file, ...(await compress_file(path.resolve(directory, file))) };
+						compressed[index] = await compress_file(directory, files[index]);
 					}
 				})
 			);
@@ -292,11 +294,7 @@ export function create_builder({
 		writePrerendered(dest) {
 			const source = `${config.outDir}/output/prerendered`;
 
-			return [
-				...copy(`${source}/pages`, dest),
-				...copy(`${source}/dependencies`, dest),
-				...copy(`${source}/data`, dest)
-			];
+			return prerendered_dirs.flatMap((dir) => copy(`${source}/${dir}`, dest));
 		},
 
 		writeServer(dest) {
@@ -392,13 +390,13 @@ export function create_builder({
  * @param {string} directory
  */
 function measure_files(directory) {
-	/** @type {Array<{ file: string, size: number, hash: string }>} */
+	/** @type {MeasuredFile[]} */
 	const files = [];
 
 	if (!fs.existsSync(directory)) return files;
 
 	for (const file of walk(directory)) {
-		if (file.startsWith('.vite/') || file.includes('/.vite/')) continue;
+		if (file.startsWith('.vite/')) continue;
 
 		const contents = fs.readFileSync(path.join(directory, file));
 		files.push({
@@ -413,10 +411,12 @@ function measure_files(directory) {
 
 /**
  * Writes gzip and brotli variants next to `file` and returns their sizes
+ * @param {string} directory
  * @param {string} file
  */
-async function compress_file(file) {
-	const contents = await fs.promises.readFile(file);
+async function compress_file(directory, file) {
+	const abs = path.resolve(directory, file);
+	const contents = await fs.promises.readFile(abs);
 
 	const [gz, br] = await Promise.all([
 		gzip(contents, { level: zlib.constants.Z_BEST_COMPRESSION }),
@@ -430,11 +430,11 @@ async function compress_file(file) {
 	]);
 
 	await Promise.all([
-		fs.promises.writeFile(`${file}.gz`, gz),
-		fs.promises.writeFile(`${file}.br`, br)
+		fs.promises.writeFile(`${abs}.gz`, gz),
+		fs.promises.writeFile(`${abs}.br`, br)
 	]);
 
-	return { gz: gz.length, br: br.length };
+	return { file, gz: gz.length, br: br.length };
 }
 
 /**
