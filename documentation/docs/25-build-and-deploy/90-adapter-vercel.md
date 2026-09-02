@@ -113,6 +113,8 @@ export const config = {
 
 > [!NOTE] A route using ISR cannot have both a `+page` and a `+server` file with a `GET`, `HEAD` or `fallback` handler as the cached response will be used, skipping content negotiation.
 
+> [!NOTE] Vercel does not support the non-standard `QUERY` HTTP method.
+
 The `expiration` property is required; all others are optional. The properties are discussed in more detail below.
 
 ### expiration
