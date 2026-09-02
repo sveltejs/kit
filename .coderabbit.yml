@@ -37,7 +37,7 @@ reviews:
     - label: "documentation"
       instructions: "PR updates documentation or examples"
     - label: "needs-platform-tests"
-      instructions: "PR adds/deletes/modifies files in an adapter package or has 'Version Packages' in the title"
+      instructions: "PR adds/deletes/modifies files in an adapter package (except adapter-static and adapter-auto) or has 'Version Packages' in the PR title"
 
   slop_detection:
     label: "🤖"
