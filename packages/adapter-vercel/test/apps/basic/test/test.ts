@@ -5,6 +5,12 @@ test('basic page renders', async ({ page }) => {
 	await expect(page.locator('h1')).toContainText('Hello from SvelteKit on Vercel');
 });
 
+test('redirects from vercel.json work', async ({ request }) => {
+	const response = await request.get('/redirect', { maxRedirects: 0 });
+	expect(response.status()).toBe(307);
+	expect(response.headers()['location']).toBe('/');
+});
+
 test('server-side data loading works', async ({ page }) => {
 	await page.goto('/server-data');
 	await expect(page.locator('h1')).toContainText('loaded on server');
