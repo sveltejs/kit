@@ -1,7 +1,7 @@
-import { fetch_cache_url } from '../shared.js';
 import { DEV } from 'esm-env';
 import { hash_request } from '../../utils/hash.js';
 import { base64_decode } from '../utils.js';
+import { fetch_cache_url } from '../shared.js';
 
 let loading = 0;
 
@@ -153,7 +153,7 @@ export function dev_fetch(resource, opts) {
 }
 
 /**
- * The cache key of a request, so that non-GET requests evict the entry regardless of how the url is spelled
+ * Non-GET requests must evict under the stored key, however the url is spelled
  * @param {RequestInfo | URL} input
  */
 function requested_url(input) {

@@ -16,8 +16,7 @@ export function validate_depends(route_id, dep) {
 }
 
 /**
- * The url a `load` `fetch` response is serialized under during SSR and looked up by on the client:
- * a path for same-origin urls, so prerendered pages can be served from any origin, the href otherwise
+ * Same-origin urls are keyed by path, so prerendered pages can be served from any origin
  * @param {URL} url
  * @param {{ origin: string }} page
  */
