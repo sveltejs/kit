@@ -35,7 +35,7 @@ reviews:
     - label: 'breaking change'
       instructions: 'PR contains a breaking change to public interfaces'
     - label: 'documentation'
-      instructions: 'PR updates documentation or examples'
+      instructions: 'PR only contains changes to documentation files'
     - label: 'needs-platform-tests'
       instructions: >-
         PR adds/deletes/modifies files in an adapter package
