@@ -1,19 +1,18 @@
-import { configure as set_state, options } from '<sveltekit:generated>/server.js';
-import { set_options } from './internal.js';
-
-// set at module scope because prerendering evaluates user modules before `init` runs
-set_options(options);
+import { configure as set_state } from '<sveltekit:generated>/server.js';
 
 /**
  * Sets the module-level state the runtime reads, then loads the runtime. Everything that
- * evaluates user code sits behind this import, so `building`, `prerendering` and `env` are
- * in place before any of it runs
+ * evaluates user code, the env config included, sits behind this import
  * @param {import('types').ServerConfigureOptions} opts
  * @returns {Promise<import('types').ServerInstance>}
  */
 export async function configure(opts) {
-	await set_state(opts);
-	return import('./instance.js');
+	set_state(opts);
+
+	const instance = await import('./instance.js');
+	if (opts.env) instance.set_env(opts.env);
+
+	return instance;
 }
 
 /**

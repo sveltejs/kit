@@ -4,7 +4,7 @@ declare module '<sveltekit:generated>/server.js' {
 
 	export const options: SSROptions;
 	export function get_hooks(): Promise<Partial<ServerHooks>>;
-	export function configure(options: ServerConfigureOptions): Promise<void>;
+	export function configure(options: ServerConfigureOptions): void;
 	export function format_response(status: number, request: Request): string;
 }
 

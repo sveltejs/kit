@@ -28,7 +28,8 @@ import Root from '../../components/root.svelte';
 import { render } from 'svelte/server';
 import { Props, RenderNode } from '../../props.svelte.js';
 import { has_custom_transporters, uneval } from '#app/internal/transport';
-import { manifest, options } from '../internal.js';
+import { manifest } from '../internal.js';
+import { options } from '<sveltekit:generated>/server.js';
 
 // TODO rename this function/module
 

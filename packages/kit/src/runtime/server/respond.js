@@ -45,7 +45,8 @@ import {
 } from '../pathname.js';
 import { server_data_serializer } from './page/data_serializer.js';
 import { get_remote_id, handle_remote_call } from './remote-functions.js';
-import { hooks, manifest, options } from './internal.js';
+import { hooks, manifest } from './internal.js';
+import { options } from '<sveltekit:generated>/server.js';
 
 /** @type {import('types').RequiredResolveOptions['transformPageChunk']} */
 const default_transform = ({ html }) => html;

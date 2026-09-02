@@ -71,12 +71,10 @@ export async function get_hooks() {
 }
 
 /**
- * Sets the module-level state the server runtime reads, in the order it has to happen:
- * \`building\` and \`prerendering\` before the env module evaluates the user's \`src/env\` config,
- * which may read them, and everything else before user modules run
+ * Sets the module-level state the server runtime reads
  * @param {import('types').ServerConfigureOptions} opts
  */
-export async function configure({ building, prerendering, env, manifest, read, assets, fix_stack_trace }) {
+export function configure({ building, prerendering, manifest, read, assets, fix_stack_trace }) {
 	if (building) set_building();
 	if (prerendering) set_prerendering();
 
@@ -97,12 +95,6 @@ export async function configure({ building, prerendering, env, manifest, read, a
 				})()
 			);
 		});
-	}
-
-	// evaluates the user's \`src/env\` config, which may read any of the above
-	if (env) {
-		const { set_env } = await import('<sveltekit:generated>/env/config.js');
-		set_env(env);
 	}
 }
 
