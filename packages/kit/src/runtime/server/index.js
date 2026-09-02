@@ -49,12 +49,12 @@ if (DEV) {
 /**
  * Configures the runtime and loads the user's hooks. Adapters call this at startup, some of them
  * again per request to refresh `env`, so only the hooks are guarded against running twice
- * @param {import('types').ServerConfigureOptions} opts
+ * @param {import('types').ServerConfigureOptions} [opts]
  */
 export async function init(opts) {
 	if (__SVELTEKIT_SERVER_TRACING_ENABLED__) init_tracing(import('@opentelemetry/api'));
 
-	await configure(opts);
+	if (opts) await configure(opts);
 
 	await (init_promise ??= (async () => {
 		try {

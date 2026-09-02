@@ -47,7 +47,7 @@ export interface ServerConfigureOptions extends Partial<ServerInitOptions> {
 }
 
 export interface ServerModule {
-	init(options: ServerConfigureOptions): Promise<void>;
+	init(options?: ServerConfigureOptions): Promise<void>;
 	respond(request: Request, options: InternalRequestOptions): Promise<Response>;
 	/** the `server` adapters receive from `builder.generateServerInstance` */
 	create_server(manifest: SSRManifest): Server;

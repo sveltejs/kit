@@ -20,15 +20,17 @@ async function generate_fallback({ manifest_path, env, out_dir, origin, assets }
 
 	/** @type {import('types').ServerInternalModule} */
 	const { configure } = await import(pathToFileURL(`${server_root}/server/internal.js`).href);
-	await configure({ building: true });
-
-	/** @type {import('types').ServerModule} */
-	const { init, respond } = await import(pathToFileURL(`${server_root}/server/index.js`).href);
 
 	/** @type {import('types').SSRManifest} */
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
-	await init({ manifest, env });
+	// `building` has to be set before the server module evaluates the user's env config
+	await configure({ building: true, manifest, env });
+
+	/** @type {import('types').ServerModule} */
+	const { init, respond } = await import(pathToFileURL(`${server_root}/server/index.js`).href);
+
+	await init();
 
 	const response = await respond(new Request(origin + '/[fallback]'), {
 		getClientAddress: () => {
