@@ -1,4 +1,5 @@
 import process from 'node:process';
+import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -17,6 +18,15 @@ import { createReadableStream } from '@sveltejs/kit/node';
 import generate_fallback from './fallback.js';
 import { stringify_remote_arg } from '../../runtime/shared.js';
 import { matches_content_type } from '../../utils/http.js';
+
+/**
+ * Size and content hash of a file that has just been written, so adapters can serve it without reading it back
+ * @param {string | Uint8Array} contents
+ */
+function measure(contents) {
+	const bytes = typeof contents === 'string' ? Buffer.from(contents) : contents;
+	return { size: bytes.byteLength, hash: createHash('sha256').update(bytes).digest('base64url') };
+}
 
 export default forked(import.meta.url, prerender);
 
@@ -170,7 +180,7 @@ async function prerender({
 		mkdirSync(dirname(dest), { recursive: true });
 		writeFileSync(dest, fallback);
 
-		prerendered.pages.set('/', { file });
+		prerendered.pages.set('/', { file, ...measure(fallback) });
 
 		return { prerendered, prerender_map };
 	}
@@ -561,22 +571,23 @@ async function prerender({
 				if (!headers['x-sveltekit-normalize']) {
 					mkdirSync(dirname(dest), { recursive: true });
 
-					writeFileSync(
-						dest,
-						`<script>location.href=${devalue.uneval(
-							location
-						)};</script><meta http-equiv="refresh" content="${escape_html(
-							`0;url=${location}`,
-							true
-						)}">`
-					);
+					const stub = `<script>location.href=${devalue.uneval(
+						location
+					)};</script><meta http-equiv="refresh" content="${escape_html(
+						`0;url=${location}`,
+						true
+					)}">`;
+
+					writeFileSync(dest, stub);
 
 					written.add(file);
 
 					if (!prerendered.redirects.has(decoded)) {
 						prerendered.redirects.set(decoded, {
 							status: response.status,
-							location: resolved
+							location: resolved,
+							file,
+							...measure(stub)
 						});
 
 						prerendered.paths.push(decoded);
@@ -610,14 +621,12 @@ async function prerender({
 			writeFileSync(dest, body);
 			written.add(file);
 
+			const measured = measure(body);
+
 			if (is_html) {
-				prerendered.pages.set(decoded, {
-					file
-				});
+				prerendered.pages.set(decoded, { file, ...measured });
 			} else {
-				prerendered.assets.set(decoded, {
-					type
-				});
+				prerendered.assets.set(decoded, { type, file, ...measured });
 			}
 
 			prerendered.paths.push(decoded);
