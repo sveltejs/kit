@@ -159,7 +159,7 @@ function generate_serverless_functions({ builder, publish, split }) {
 			const name_parts = paths.at(-1);
 			const name =
 				FUNCTION_PREFIX +
-				(name_parts?.join('-').replace(/[:.]/g, '_').replace('*', '__rest') || 'index');
+				(name_parts?.join('-').replace(/[:.]/g, '_').replace(/\*/g, '__rest') || 'index');
 
 			// Netlify handles trailing slashes for us, so we don't need to include them in the patterns
 			const patterns = paths
