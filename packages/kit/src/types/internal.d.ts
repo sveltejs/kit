@@ -49,6 +49,7 @@ export interface ServerConfigureOptions extends Partial<ServerInitOptions> {
 export interface ServerInstance {
 	init(): Promise<void>;
 	respond(request: Request, options: InternalRequestOptions): Promise<Response>;
+	set_env(env: Record<string, string | undefined>): void;
 }
 
 /** the built `server/index.js` */

@@ -8,7 +8,8 @@ import {
 import { with_request_store } from '@sveltejs/kit/internal/server';
 import { add_deprecated_handle_error_properties, coalesce_to_error } from '../../utils/error.js';
 import { negotiate } from '../../utils/http.js';
-import { fix_stack_trace, hooks, options } from './internal.js';
+import { fix_stack_trace, hooks } from './internal.js';
+import { options } from '<sveltekit:generated>/server.js';
 import { escape_html } from '../../utils/escape.js';
 
 /**
