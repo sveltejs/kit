@@ -1,5 +1,6 @@
 /** @import { ServerHooks, SSRManifest } from 'types'; */
 import { restore, save } from './dev.js';
+import { stream_from_iterable } from '../utils.js';
 import {
 	has_data_suffix,
 	has_resolution_suffix,
@@ -29,11 +30,22 @@ export let manifest = /** @type {SSRManifest} */ (
 export let hooks = /** @type {ServerHooks} */ ((__SVELTEKIT_DEV__ && restore(hooks_key)) ?? null);
 
 /**
- * @param {(path: string) => ReadableStream<any>} fn
+ * The public `read` may return a promise, the runtime expects a stream
+ * @param {NonNullable<import('@sveltejs/kit').ServerInitOptions['read']>} read
  */
-export function set_read_implementation(fn) {
-	read_implementation = fn;
-	if (__SVELTEKIT_DEV__) save(read_implementation_key, fn);
+export function set_read_implementation(read) {
+	read_implementation = (file) => {
+		const result = read(file);
+		if (result instanceof ReadableStream) return result;
+
+		return stream_from_iterable(
+			(async function* () {
+				const stream = await result;
+				if (stream) yield* stream;
+			})()
+		);
+	};
+	if (__SVELTEKIT_DEV__) save(read_implementation_key, read_implementation);
 }
 
 /**

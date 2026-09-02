@@ -1,11 +1,9 @@
 /** Internal version of $app/server */
 declare module '<sveltekit:generated>/server.js' {
-	import { SSROptions, ServerHooks, ServerConfigureOptions } from 'types';
+	import { SSROptions, ServerHooks } from 'types';
 
 	export const options: SSROptions;
 	export function get_hooks(): Promise<Partial<ServerHooks>>;
-	export function configure(options: ServerConfigureOptions): void;
-	export function format_response(status: number, request: Request): string;
 }
 
 declare module '<sveltekit:generated>/env/config.js' {
