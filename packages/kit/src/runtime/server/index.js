@@ -168,13 +168,26 @@ export function create_server(manifest) {
 	// set now rather than in `init`, since user modules may read the manifest at their top level
 	set_manifest(manifest);
 
-	return { init: (opts) => init({ ...opts, manifest }), respond };
+	return { init, respond };
 }
 
 /** @deprecated use the `server` written by `builder.generateServerInstance`, or `init` and `respond` */
 export class Server {
 	/** @param {import('types').SSRManifest} manifest */
 	constructor(manifest) {
-		Object.assign(this, create_server(manifest));
+		set_manifest(manifest);
+	}
+
+	/** @param {import('@sveltejs/kit').ServerInitOptions} opts */
+	init(opts) {
+		return init(opts);
+	}
+
+	/**
+	 * @param {Request} request
+	 * @param {import('types').InternalRequestOptions} options
+	 */
+	respond(request, options) {
+		return respond(request, options);
 	}
 }

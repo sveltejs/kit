@@ -1,16 +1,10 @@
 /** Internal version of $app/server */
 declare module '<sveltekit:generated>/server.js' {
-	import { SSROptions, ServerHooks, SSRManifest, ServerConfigureOptions } from 'types';
+	import { SSROptions, ServerHooks, ServerConfigureOptions } from 'types';
 
 	export const options: SSROptions;
 	export function get_hooks(): Promise<Partial<ServerHooks>>;
 	export function configure(options: ServerConfigureOptions): Promise<void>;
-	export function set_assets(path: string): void;
-	export function set_building(): void;
-	export function set_prerendering(): void;
-	export function set_manifest(manifest: SSRManifest): void;
-	export function set_read_implementation(fn: (path: string) => ReadableStream): void;
-	export function set_fix_stack_trace(fn: (error: Error) => void): void;
 	export function format_response(status: number, request: Request): string;
 }
 

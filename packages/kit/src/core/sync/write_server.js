@@ -80,11 +80,6 @@ export async function configure({ building, prerendering, env, manifest, read, a
 	if (building) set_building();
 	if (prerendering) set_prerendering();
 
-	if (env) {
-		const { set_env } = await import('<sveltekit:generated>/env/config.js');
-		set_env(env);
-	}
-
 	if (manifest) set_manifest(manifest);
 	if (assets !== undefined) set_assets(assets);
 	if (fix_stack_trace) set_fix_stack_trace(fix_stack_trace);
@@ -103,9 +98,15 @@ export async function configure({ building, prerendering, env, manifest, read, a
 			);
 		});
 	}
+
+	// evaluates the user's \`src/env\` config, which may read any of the above
+	if (env) {
+		const { set_env } = await import('<sveltekit:generated>/env/config.js');
+		set_env(env);
+	}
 }
 
-export { set_assets, set_building, set_fix_stack_trace, set_manifest, set_prerendering, set_read_implementation, format_response };
+export { format_response };
 `;
 
 /**
