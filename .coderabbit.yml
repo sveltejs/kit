@@ -107,6 +107,8 @@ knowledge_base:
       instructions: "The Svelte compiler and runtime"
     - repository: "sveltejs/vite-plugin-svelte"
       instructions: "The Vite plugin that transforms Svelte modules during development and build"
+    - repository: "vitejs/vite"
+      instructions: "Powers the development server and build process"
   learnings:
     scope: global
   issues:
