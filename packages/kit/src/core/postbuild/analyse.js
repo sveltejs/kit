@@ -41,10 +41,9 @@ async function analyse({
 	const config = extract_svelte_config(vite_config);
 	const server_root = join(config.outDir, 'output');
 
-	/** @type {import('types').ServerInternalModule} */
-	const { configure } = await import(pathToFileURL(`${server_root}/server/internal.js`).href);
+	/** @type {import('types').ServerModule} */
+	const { configure } = await import(pathToFileURL(`${server_root}/server/index.js`).href);
 
-	// everything user modules may read at their top level, before any of them are analysed
 	await configure({
 		building: true,
 		manifest,
