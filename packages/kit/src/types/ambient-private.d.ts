@@ -1,7 +1,8 @@
 /** Internal version of $app/server */
 declare module '<sveltekit:generated>/server.js' {
-	import { SSROptions, ServerHooks, SSRManifest } from 'types';
+	import { SSROptions, ServerHooks, SSRManifest, ServerConfigureOptions } from 'types';
 
+	export function configure(options: ServerConfigureOptions): Promise<void>;
 	export const options: SSROptions;
 	export const get_hooks: () => Promise<Partial<ServerHooks>>;
 	export let fix_stack_trace: (error: Error) => string;

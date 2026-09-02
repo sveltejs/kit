@@ -37,17 +37,32 @@ import { Span } from '@opentelemetry/api';
 import { PageOptions } from '../exports/vite/static_analysis/types.js';
 import { SharedIterator } from '../utils/shared-iterator.js';
 
+export interface ServerConfigureOptions {
+	env?: ServerInitOptions['env'];
+	read?: ServerInitOptions['read'];
+	manifest?: SSRManifest;
+	/** the value of `$app/paths`'s `assets`, when it differs from the build-time one */
+	assets?: string;
+	building?: boolean;
+	prerendering?: boolean;
+	fix_stack_trace?: (error: Error) => void;
+}
+
 export interface ServerModule {
-	Server: typeof InternalServer;
+	init(options: ServerConfigureOptions): Promise<void>;
+	respond(request: Request, options: InternalRequestOptions): Promise<Response>;
+	create_server(manifest: SSRManifest): InternalServer;
+	/** @deprecated */
+	Server: new (manifest: SSRManifest) => InternalServer;
 }
 
 export interface ServerInternalModule {
+	configure(options: ServerConfigureOptions): Promise<void>;
 	set_assets(path: string): void;
 	set_building(): void;
 	set_manifest(manifest: SSRManifest): void;
 	set_prerendering(): void;
 	set_read_implementation(implementation: (path: string) => ReadableStream): void;
-	set_version(version: string): void;
 	set_fix_stack_trace(fix_stack_trace: (error: Error) => void): void;
 	get_hooks: () => Promise<Record<string, any>>;
 	format_response: (status: number, request: Request) => string;
@@ -195,9 +210,7 @@ export interface InternalRequestOptions extends RequestOptions {
 	emulator?: Emulator;
 }
 
-export class InternalServer implements Server {
-	constructor(manifest: SSRManifest);
-	init(options: ServerInitOptions): Promise<void>;
+export interface InternalServer extends Server {
 	respond(request: Request, options: InternalRequestOptions): Promise<Response>;
 }
 
