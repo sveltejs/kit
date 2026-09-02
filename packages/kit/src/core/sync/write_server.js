@@ -5,7 +5,6 @@ import { s } from '../../utils/misc.js';
 import { load_error_page, load_template } from '../config/index.js';
 import { check_spelling, write_if_changed } from './utils.js';
 import { escape_html } from '../../utils/escape.js';
-import { runtime_directory } from '../utils.js';
 
 /**
  * @param {{
@@ -13,20 +12,9 @@ import { runtime_directory } from '../utils.js';
  *   universal_hooks: string | null;
  *   config: import('types').ValidatedConfig;
  *   template: string;
- *   runtime_directory: string;
  * }} opts
  */
-const server_template = ({
-	config,
-	server_hooks,
-	universal_hooks,
-	template,
-	runtime_directory
-}) => `
-import { set_building, set_prerendering } from '$app/env/server';
-import { set_assets } from '$app/paths/internal/server';
-import { set_fix_stack_trace, set_manifest, set_read_implementation, format_response } from '${runtime_directory}/server/internal.js';
-import { stream_from_iterable } from '${runtime_directory}/utils.js';
+const server_template = ({ config, server_hooks, universal_hooks, template }) => `
 import error from './shared/error-template.js';
 
 export const options = {
@@ -69,36 +57,6 @@ export async function get_hooks() {
 		transport
 	};
 }
-
-/**
- * Sets the module-level state the server runtime reads
- * @param {import('types').ServerConfigureOptions} opts
- */
-export function configure({ building, prerendering, manifest, read, assets, fix_stack_trace }) {
-	if (building) set_building();
-	if (prerendering) set_prerendering();
-
-	if (manifest) set_manifest(manifest);
-	if (assets !== undefined) set_assets(assets);
-	if (fix_stack_trace) set_fix_stack_trace(fix_stack_trace);
-
-	if (read) {
-		// the public \`read\` may return a promise, the runtime expects a stream
-		set_read_implementation((file) => {
-			const result = read(file);
-			if (result instanceof ReadableStream) return result;
-
-			return stream_from_iterable(
-				(async function* () {
-					const stream = await result;
-					if (stream) yield* stream;
-				})()
-			);
-		});
-	}
-}
-
-export { format_response };
 `;
 
 /**
@@ -139,7 +97,6 @@ export function write_server(config, output, root) {
 		`${output}/server.js`,
 		server_template({
 			config,
-			runtime_directory: relative(runtime_directory),
 			server_hooks: server_hooks_file ? relative(server_hooks_file) : null,
 			universal_hooks: universal_hooks_file ? relative(universal_hooks_file) : null,
 			template: load_template(root, config)

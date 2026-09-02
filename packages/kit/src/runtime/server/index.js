@@ -1,4 +1,6 @@
-import { configure as set_state } from '<sveltekit:generated>/server.js';
+import { set_building, set_prerendering } from '#app/env/server';
+import { set_assets } from '../app/paths/internal/server.js';
+import { set_fix_stack_trace, set_manifest, set_read_implementation } from './internal.js';
 
 /**
  * Sets the module-level state the runtime reads, then loads the runtime. Everything that
@@ -6,11 +8,24 @@ import { configure as set_state } from '<sveltekit:generated>/server.js';
  * @param {import('types').ServerConfigureOptions} opts
  * @returns {Promise<import('types').ServerInstance>}
  */
-export async function configure(opts) {
-	set_state(opts);
+export async function configure({
+	building,
+	prerendering,
+	manifest,
+	read,
+	assets,
+	fix_stack_trace,
+	env
+}) {
+	if (building) set_building();
+	if (prerendering) set_prerendering();
+	if (manifest) set_manifest(manifest);
+	if (read) set_read_implementation(read);
+	if (assets !== undefined) set_assets(assets);
+	if (fix_stack_trace) set_fix_stack_trace(fix_stack_trace);
 
 	const instance = await import('./instance.js');
-	if (opts.env) instance.set_env(opts.env);
+	if (env) instance.set_env(env);
 
 	return instance;
 }
@@ -58,4 +73,4 @@ export class Server {
 	}
 }
 
-export { format_response } from '<sveltekit:generated>/server.js';
+export { format_response } from './internal.js';
