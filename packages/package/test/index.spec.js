@@ -127,6 +127,10 @@ test('create package with javascript', async () => {
 	await test_make_package('javascript');
 });
 
+test('loads inline Svelte config from the SvelteKit Vite plugin', async () => {
+	await test_make_package('inline-vite-config', { types: false });
+});
+
 test('create package with typescript using esnext', async () => {
 	await test_make_package('typescript-esnext');
 });

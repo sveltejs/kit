@@ -1,0 +1,13 @@
+{
+	"name": "inline-vite-config",
+	"private": true,
+	"type": "module",
+	"peerDependencies": {
+		"svelte": "*"
+	},
+	"exports": {
+		".": {
+			"svelte": "./dist/Widget.svelte"
+		}
+	}
+}

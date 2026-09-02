@@ -1416,6 +1416,9 @@ importers:
         specifier: ~0.7.55
         version: 0.7.55(svelte@5.56.3(@typescript-eslint/types@8.61.1))(typescript@6.0.2)
     devDependencies:
+      '@sveltejs/kit':
+        specifier: workspace:^
+        version: link:../kit
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
         version: 6.2.4(svelte@5.56.3(@typescript-eslint/types@8.61.1))(vite@6.4.3(@types/node@18.19.130)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.9.0))
@@ -1437,6 +1440,9 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 6.0.2
+      vite:
+        specifier: 'catalog:'
+        version: 6.4.3(@types/node@18.19.130)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.9.0)
       vitest:
         specifier: 'catalog:'
         version: 4.1.9(@opentelemetry/api@1.9.0)(@types/node@18.19.130)(@vitest/browser-playwright@4.1.9)(jsdom@26.1.0)(vite@6.4.3(@types/node@18.19.130)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.9.0))
