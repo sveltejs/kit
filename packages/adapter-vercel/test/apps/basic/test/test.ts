@@ -32,7 +32,7 @@ test('$app/server read works', async ({ request }) => {
 	expect(text).toContain('Hello from $app/server read');
 });
 
-test('non-cacheable methods bypass ISR', async ({ request }) => {
+test('non-GET/HEAD methods bypass ISR', async ({ request }) => {
 	for (const method of ['POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'QUERY']) {
 		const body = method === 'OPTIONS' ? undefined : crypto.randomUUID();
 		const response = await request.fetch('/isr-endpoint', { method, data: body });
