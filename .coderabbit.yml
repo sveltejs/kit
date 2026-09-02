@@ -22,7 +22,7 @@ reviews:
 
   auto_review:
     enabled: false
-    description_keyword: ""
+    # description_keyword: ""
     auto_incremental_review: true
     # auto_pause_after_reviewed_commits: 5
     ignore_title_keywords:
