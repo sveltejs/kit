@@ -1,10 +1,139 @@
 # yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
 reviews:
-  profile: quiet # quiet | chill (default) | assertive
-  request_changes_workflow: true # needed for merge-blocking checks
+  review_status: false
+  review_progress: false
+  commit_status: false
   high_level_summary: false
-  sequence_diagrams: true # auto architecture diagrams for the PR
-  assess_linked_issues: true
+  changed_files_summary: false
+  # sequence_diagrams: true
+  estimate_code_review_effort: false
+  assess_linked_issues: false
+  # related_issues: true
+  # related_prs: true
+  suggested_labels: false
+  suggested_reviewers: false
+  in_progress_fortune: false
   poem: false
-  path_filters: []
-  path_instructions: []
+  enable_prompt_for_ai_agents: false
+  chat:
+    art: false
+    allow_non_org_members: false
+    # auto_reply: true
+
+  auto_review:
+    enabled: false
+    description_keyword: ""
+    auto_incremental_review: true
+    # auto_pause_after_reviewed_commits: 5
+    ignore_title_keywords:
+      - "Version Packages"
+    # ignore_usernames: []
+    # labels: []
+
+  auto_apply_labels: true
+  labeling_instructions:
+    - label: "breaking change"
+      instructions: "PR contains a breaking change to public interfaces"
+    - label: "documentation"
+      instructions: "PR updates documentation or examples"
+
+  slop_detection:
+    label: "🤖"
+
+  profile: quiet
+
+  finishing_touches:
+    docstrings:
+      enabled: false
+    unit_tests:
+      enabled: false
+    simplify:
+      enabled: false
+    autofix:
+      enabled: true
+    fix_ci:
+      enabled: true
+    resolve_merge_conflict:
+      enabled: true
+  #   custom:
+  #     - name: "cleanup stale imports"
+  #       instructions: |
+  #         Remove unused imports in the changed files.
+  #         Preserve imports used in type positions; do not reorder.
+
+  request_changes_workflow: true # let 'error' checks block a merge
+  pre_merge_checks:
+    title:
+      mode: warning
+      requirements: "Prefix PR titles with `breaking:`, `feat:`, `fix:`, or `chore:`"
+    docstrings:
+      mode: off
+      threshold: 80
+    description:
+      mode: off
+    issue_assessment:
+      mode: off
+    custom_checks:
+      - name: "Backward Compatibility Impact Disclosure"
+        mode: "warning"
+        instructions: >-
+          Detect breaking changes to public interfaces: removed or renamed
+          exports, new required request/response fields, changed defaults, or
+          removed config keys. Require a "major" changeset and a "breaking:"
+          prefix in the changeset description. Fail if a breaking change is undocumented.
+
+  # post_merge_actions:
+  #   - name: ""
+  #     prompt: ""
+
+  path_filters:
+    - "!.well-known/**"
+    - "!playgrounds/**"
+    - "!packages/kit/types/**"
+    - "!FUNDING.json"
+  path_instructions:
+    - path: "documentation/docs/**.md"
+      instructions: |
+        Check for clarity, accuracy, and completeness.
+        Flag any references to deprecated APIs or outdated behavior.
+
+knowledge_base:
+  code_guidelines:
+    filePatterns:
+      - "AGENTS.md"
+      - "CONTRIBUTING.md"
+  linked_repositories:
+    - repository: "sveltejs/svelte"
+      instructions: "The Svelte compiler and runtime"
+    - repository: "sveltejs/vite-plugin-svelte"
+      instructions: "The Vite plugin that transforms Svelte modules during development and build"
+  learnings:
+    scope: global
+  issues:
+    scope: global
+  pull_requests:
+    scope: global
+  # mcp:
+  #   usage: auto
+
+# code_generation:
+#   docstrings:
+#     language: en-GB
+#     path_instructions:
+#       - path: ""
+#         instructions: ""
+#   unit_tests:
+#     path_instructions:
+#       - path: ""
+#         instructions: ""
+
+issue_enrichment:
+  auto_enrich:
+    enabled: false
+  planning:
+    enabled: false
+  labeling:
+    auto_apply_labels: true
+    labeling_instructions:
+      - label: "awaiting submitter"
+        instructions: "If the issue is a bug report but does not include a link to a minimal reproduction"
