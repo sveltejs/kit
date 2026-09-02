@@ -139,3 +139,11 @@ issue_enrichment:
     labeling_instructions:
       - label: "awaiting submitter"
         instructions: "If the issue is a bug report but does not include a link to a minimal reproduction"
+      - label: "pkg:enhanced-img"
+        instructions: "If the issue is related to static image optimisation the `@sveltejs/enhanced-img` package"
+      - label: "pkg:adapter-cloudflare"
+        instructions: "If the issue is related to Cloudflare Workers/Pages or the `@sveltejs/adapter-cloudflare` package"
+      - label: "pkg:adapter-netlify"
+        instructions: "If the issue is related to the Netlify platform or the `@sveltejs/adapter-netlify` package"
+      - label: "pkg:adapter-vercel"
+        instructions: "If the issue is related to the Vercel platform or the `@sveltejs/adapter-vercel` package"
