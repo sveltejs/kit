@@ -168,19 +168,25 @@ export function create_server(manifest) {
 	// set now rather than in `init`, since user modules may read the manifest at their top level
 	set_manifest(manifest);
 
-	return { init, respond };
+	return {
+		// adapters get to set `env` and `read`, nothing else
+		init: ({ env, read }) => init({ env, read }),
+		respond
+	};
 }
 
 /** @deprecated use the `server` written by `builder.generateServerInstance`, or `init` and `respond` */
 export class Server {
+	#server;
+
 	/** @param {import('types').SSRManifest} manifest */
 	constructor(manifest) {
-		set_manifest(manifest);
+		this.#server = create_server(manifest);
 	}
 
 	/** @param {import('@sveltejs/kit').ServerInitOptions} opts */
 	init(opts) {
-		return init(opts);
+		return this.#server.init(opts);
 	}
 
 	/**
@@ -188,6 +194,6 @@ export class Server {
 	 * @param {import('types').InternalRequestOptions} options
 	 */
 	respond(request, options) {
-		return respond(request, options);
+		return this.#server.respond(request, options);
 	}
 }
