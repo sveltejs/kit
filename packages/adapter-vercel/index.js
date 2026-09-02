@@ -12,7 +12,7 @@ import {
 } from './utils.js';
 
 const INTERNAL = '![-]'; // this name is guaranteed not to conflict with user routes
-const ISR_BYPASS_METHODS = ['POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'];
+const ISR_BYPASS_METHODS = ['POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'QUERY'];
 
 /** @type {typeof import('./index.js').default} **/
 const plugin = function (defaults = {}) {

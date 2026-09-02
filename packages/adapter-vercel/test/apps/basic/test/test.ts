@@ -32,7 +32,7 @@ test('$app/server read works', async ({ request }) => {
 	expect(text).toContain('Hello from $app/server read');
 });
 
-test('non-GET/HEAD methods supported by Vercel bypass ISR', async ({ request }) => {
+test('non-GET/HEAD methods bypass ISR', async ({ request }) => {
 	for (const method of ['POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']) {
 		await test.step(method, async () => {
 			const body = method === 'OPTIONS' ? undefined : crypto.randomUUID();
@@ -41,6 +41,13 @@ test('non-GET/HEAD methods supported by Vercel bypass ISR', async ({ request }) 
 			expect(await response.json()).toEqual({ method, body: body ?? '' });
 		});
 	}
+
+	await test.step('QUERY', async () => {
+		const body = crypto.randomUUID();
+		const response = await request.fetch('/api/json', { method: 'QUERY', data: body });
+		expect(response.ok()).toBe(true);
+		expect(await response.json()).toEqual({ method: 'QUERY', body });
+	});
 });
 
 test('form actions bypass ISR', async ({ page }) => {
