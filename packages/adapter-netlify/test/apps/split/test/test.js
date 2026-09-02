@@ -2,9 +2,17 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { expect, test } from '@playwright/test';
 
-test('routes to routes with dynamic params', async ({ page }) => {
+test('routes with dynamic params', async ({ page }) => {
 	await page.goto('/dynamic/123');
 	await expect(page.locator('p')).toHaveText('id: 123');
+});
+
+test('routes with optional params', async ({ page }) => {
+	await page.goto('/collection/article');
+	await expect(page.locator('p')).toHaveText('optional: none');
+
+	await page.goto('/collection/value/article');
+	await expect(page.locator('p')).toHaveText('optional: value');
 });
 
 test('client-side navigation fetches server load function data', async ({ page }) => {
