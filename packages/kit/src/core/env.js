@@ -96,14 +96,24 @@ export async function load_explicit_env(kit, file, root, mode) {
 	} catch (e) {
 		const error = /** @type {any} */ (e || {});
 
-		if (
-			error.code === 'ERR_MODULE_NOT_FOUND' &&
-			error.message?.includes(`Cannot find module '$app`)
-		) {
-			throw new Error(
-				`Cannot import \`$app/*\` modules other than \`$app/env\` inside \`src/env\``,
-				{ cause: e }
+		if (error.code === 'ERR_MODULE_NOT_FOUND') {
+			const match = error.message?.match(
+				/<sveltekit:generated>\/env\/(private|public)\/server\.js/
 			);
+
+			if (match) {
+				throw new Error(
+					`Cannot import \`$app/env/${match[1]}\` inside \`src/env\` or its dependencies because it creates a circular dependency`,
+					{ cause: e }
+				);
+			}
+
+			if (error.message?.includes(`Cannot find module '$app`)) {
+				throw new Error(
+					`Cannot import \`$app/*\` modules other than \`$app/env\` inside \`src/env\``,
+					{ cause: e }
+				);
+			}
 		}
 
 		throw error;
