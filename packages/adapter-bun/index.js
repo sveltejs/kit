@@ -58,16 +58,9 @@ function asset_meta(file, hash, compressed = false) {
  * @param {Builder} builder
  */
 function content_hashes(builder) {
-	const { pages, assets, redirects } = builder.prerendered;
-	return {
-		client: new Map(builder.clientFiles.map(({ file, hash }) => [file, hash])),
-		prerendered: new Map(
-			[...pages.values(), ...assets.values(), ...redirects.values()].map(({ file, hash }) => [
-				file,
-				hash
-			])
-		)
-	};
+	/** @param {Array<{ file: string, hash: string }>} files */
+	const index = (files) => new Map(files.map(({ file, hash }) => [file, hash]));
+	return { client: index(builder.clientFiles), prerendered: index(builder.prerenderedFiles) };
 }
 
 /** @param {string[]} files */
