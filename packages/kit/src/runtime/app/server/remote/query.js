@@ -3,7 +3,7 @@
 /** @import { RemoteInternals, MaybePromise, RequestState, RemoteQueryLiveInternals, RemoteQueryBatchInternals, RemoteQueryInternals, RemoteLiveQueryUserFunctionReturnType } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
-import { is_in } from '../../../server/context.js';
+import { inside } from '../../../server/context.js';
 import { create_remote_key, stringify_remote_arg } from '../../../shared.js';
 import { prerendering } from '#app/env/server';
 import {
@@ -387,7 +387,7 @@ export function refresh(event, state, internals, payload, fn) {
 		return;
 	}
 
-	if (!event.isRemoteRequest && is_in(event, 'mutation')) {
+	if (!event.isRemoteRequest && inside(event, 'mutation')) {
 		// ...or this is a no-JS (native) form submission, where the page re-renders
 		// anyway so there's no live client cache to apply a single-flight update to.
 		return;
@@ -426,7 +426,7 @@ function create_query_resource(__, payload, event, state, fn) {
 		// accessing data properties needs to kick off the work
 		// so that it gets seeded in the hydration cache
 		// and becomes available on the client
-		if (__.id && is_in(event, 'render')) {
+		if (__.id && inside(event, 'render')) {
 			// swallow rejections so they don't crash the server — the error is
 			// serialized into the response and surfaced on the client instead
 			get_promise().catch(noop);
@@ -510,7 +510,7 @@ function create_live_query_resource(__, payload, event, state, get_generator) {
 	};
 
 	const populate_hydratable = () => {
-		if (__.id && is_in(event, 'render')) {
+		if (__.id && inside(event, 'render')) {
 			// swallow rejections so they don't crash the server — the error is
 			// serialized into the response and surfaced on the client instead
 			get_promise().catch(noop);

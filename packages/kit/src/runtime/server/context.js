@@ -44,7 +44,7 @@ function get_flags(event) {
  * @param {Kind} kind
  * @returns {boolean}
  */
-export function is_in(event, kind) {
+export function inside(event, kind) {
 	return (get_flags(event) & KINDS[kind]) !== 0;
 }
 

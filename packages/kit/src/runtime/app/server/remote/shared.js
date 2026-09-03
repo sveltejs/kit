@@ -3,7 +3,7 @@
 /** @import { Kind } from '../../../server/context.js' */
 import { error } from '@sveltejs/kit';
 import { ValidationError } from '@sveltejs/kit/internal';
-import { derive_event, is_in } from '../../../server/context.js';
+import { derive_event, inside } from '../../../server/context.js';
 import { with_request_store } from '@sveltejs/kit/internal/server';
 
 /**
@@ -68,7 +68,7 @@ export async function get_response(internals, payload, event, state, get_result)
 
 	const cache = get_cache(internals, state);
 
-	if (!is_in(event, 'query')) {
+	if (!inside(event, 'query')) {
 		// if this is a top-level (not nested) `await myQuery()`, include it in the serialized response
 		get_implicit_lookup(internals, state)[payload] = get_result;
 	}
