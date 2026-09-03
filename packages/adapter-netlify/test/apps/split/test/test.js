@@ -39,9 +39,11 @@ test('split generates multiple function files with unique names', () => {
 			.filter((file) => file.endsWith('.mjs'))
 			.map((file) => path.parse(file).name);
 	}
-	const colliding_names = names.filter((name) => name.startsWith('sveltekit-_param0'));
+	const colliding_names = names.filter((name) => name.startsWith('sveltekit-collision-foo_bar'));
 	expect(names.length).toBeGreaterThan(1);
-	expect(new Set(colliding_names)).toEqual(new Set(['sveltekit-_param0', 'sveltekit-_param0-2']));
+	expect(new Set(colliding_names)).toEqual(
+		new Set(['sveltekit-collision-foo_bar', 'sveltekit-collision-foo_bar-2'])
+	);
 });
 
 test('_redirects are copied to publish directory', () => {
