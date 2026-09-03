@@ -47,6 +47,7 @@ export async function load_explicit_env(kit, file, root, mode) {
 
 	const server = await vite.createServer({
 		configFile: false,
+		ssr: { external: true },
 		logLevel: 'silent',
 		mode,
 		define: {
