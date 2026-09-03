@@ -1,41 +1,42 @@
-import { server } from '0SERVER';
+/** @param {import('@sveltejs/kit').Server} server */
+export function init(server) {
+	/**
+	 * We don't know the origin until we receive a request, but
+	 * that's guaranteed to happen before we call `read`
+	 * @type {string}
+	 */
+	let origin;
 
-/**
- * We don't know the origin until we receive a request, but
- * that's guaranteed to happen before we call `read`
- * @type {string}
- */
-let origin;
+	const initialized = server.init({
+		env: Deno.env.toObject(),
+		read: async (file) => {
+			const url = `${origin}/${file}`;
+			const response = await fetch(url);
 
-const initialized = server.init({
-	env: Deno.env.toObject(),
-	read: async (file) => {
-		const url = `${origin}/${file}`;
-		const response = await fetch(url);
+			if (!response.ok) {
+				throw new Error(
+					`read(...) failed: could not fetch ${url} (${response.status} ${response.statusText})`
+				);
+			}
 
-		if (!response.ok) {
-			throw new Error(
-				`read(...) failed: could not fetch ${url} (${response.status} ${response.statusText})`
-			);
-		}
-
-		return response.body;
-	}
-});
-
-/** @type {import('@netlify/edge-functions').EdgeFunction} */
-export default async function handler(request, context) {
-	if (!origin) {
-		origin = new URL(request.url).origin;
-	}
-
-	// always await initialization to prevent race condition with concurrent requests
-	await initialized;
-
-	return server.respond(request, {
-		platform: { context },
-		getClientAddress() {
-			return context.ip;
+			return response.body;
 		}
 	});
+
+	/** @type {import('@netlify/edge-functions').EdgeFunction} */
+	return async function handler(request, context) {
+		if (!origin) {
+			origin = new URL(request.url).origin;
+		}
+
+		// always await initialization to prevent race condition with concurrent requests
+		await initialized;
+
+		return server.respond(request, {
+			platform: { context },
+			getClientAddress() {
+				return context.ip;
+			}
+		});
+	};
 }

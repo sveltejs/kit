@@ -11,6 +11,9 @@ inputs:
   netlify-token:
     description: 'Netlify authentication token'
     required: true
+  edge:
+    description: 'Used to enable edge functions for the split test app'
+    default: false
 outputs:
   deployment-url:
     description: 'URL of the deployed preview'
@@ -32,6 +35,7 @@ runs:
         TEST_APP_DIR: ${{ inputs.test-app-dir }}
         NETLIFY_AUTH_TOKEN: ${{ inputs.netlify-token }}
         NETLIFY_PROJECT_ID: ${{ inputs.netlify-project-id }}
+        EDGE: ${{ inputs.edge }}
       run: |
         TEST_APP_NAME=$(cat "$TEST_APP_DIR/package.json" | jq -r '.name')
         echo "url=$(netlify deploy --json --filter="$TEST_APP_NAME" --dir="$TEST_APP_DIR/build" --functions=".netlify/v1/functions" --auth="$NETLIFY_AUTH_TOKEN" --site="$NETLIFY_PROJECT_ID" | jq -r '.deploy_url')" >> "$GITHUB_OUTPUT"

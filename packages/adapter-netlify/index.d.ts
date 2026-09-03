@@ -9,8 +9,6 @@ export interface AdapterOptions {
 	edge?: boolean;
 	/**
 	 * If `true`, your app will be split into multiple functions instead of a single one for the entire app.
-	 *
-	 * If `edge` is `true`, this option cannot be used.
 	 * @default false
 	 */
 	split?: boolean;

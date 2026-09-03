@@ -23,10 +23,27 @@ test('client-side fetch for query remote function data', async ({ page }) => {
 	await expect(page.locator('p')).toHaveText('a: 1');
 });
 
-test('split generates multiple function files', () => {
-	const functions_dir = path.resolve(import.meta.dirname, '../.netlify/v1/functions');
-	const files = fs.readdirSync(functions_dir).filter((f) => f.startsWith('sveltekit-'));
-	expect(files.length).toBeGreaterThan(1);
+test('split generates multiple function files with unique names', () => {
+	let names;
+
+	/** @type {{ edge_functions?: Array<{ name: string }> }} */
+	const config = JSON.parse(
+		fs.readFileSync(path.resolve(import.meta.dirname, '../.netlify/v1/config.json'), 'utf-8')
+	);
+	if (config.edge_functions) {
+		names = config.edge_functions.map((fn) => fn.name);
+	} else {
+		const functions_dir = path.resolve(import.meta.dirname, '../.netlify/v1/functions');
+		names = fs
+			.readdirSync(functions_dir)
+			.filter((file) => file.endsWith('.mjs'))
+			.map((file) => path.parse(file).name);
+	}
+	const colliding_names = names.filter((name) => name.startsWith('sveltekit-collision-foo_bar'));
+	expect(names.length).toBeGreaterThan(1);
+	expect(new Set(colliding_names)).toEqual(
+		new Set(['sveltekit-collision-foo_bar', 'sveltekit-collision-foo_bar-2'])
+	);
 });
 
 test('_redirects are copied to publish directory', () => {

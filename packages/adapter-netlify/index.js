@@ -94,11 +94,7 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 			write_frameworks_config({ builder });
 
 			if (edge) {
-				if (split) {
-					throw new Error('Cannot use `split: true` alongside `edge: true`');
-				}
-
-				await generate_edge_functions({ builder });
+				await generate_edge_functions({ builder, split });
 			} else {
 				generate_serverless_functions({ builder, split, publish });
 			}
@@ -132,68 +128,9 @@ function generate_serverless_functions({ builder, publish, split }) {
 	builder.log.minor('Generating serverless functions...');
 
 	if (split) {
-		const seen = new Set();
-
-		for (let i = 0; i < builder.routes.length; i++) {
-			const route = builder.routes[i];
-			if (route.prerender === true) continue;
-
-			const routes = [route];
-
-			/** @type {string[]} */
-			const parts = [];
-
-			// The parts should conform to URLPattern syntax
-			// https://docs.netlify.com/build/functions/get-started/?fn-language=ts&data-tab=TypeScript#route-requests
-			for (const segment of route.segments) {
-				if (segment.rest) {
-					parts.push('*');
-				} else if (segment.dynamic) {
-					// URLPattern requires params to start with letters
-					parts.push(`:param${parts.length}`);
-				} else {
-					parts.push(segment.content);
-				}
-			}
-
-			// Netlify handles trailing slashes for us, so we don't need to include them in the pattern
-			const pattern = `/${parts.join('/')}`;
-			const name =
-				FUNCTION_PREFIX + (parts.join('-').replace(/[:.]/g, '_').replace('*', '__rest') || 'index');
-
-			// skip routes with identical patterns, they were already folded into another function
-			if (seen.has(pattern)) continue;
-
-			const patterns = [pattern, `${pattern === '/' ? '' : pattern}/__data.json`];
-			patterns.forEach((p) => seen.add(p));
-
-			// figure out which lower priority routes should be considered fallbacks
-			for (let j = i + 1; j < builder.routes.length; j += 1) {
-				const other = builder.routes[j];
-				if (other.prerender === true) continue;
-
-				if (matches(route.segments, other.segments)) {
-					routes.push(other);
-				}
-			}
-
-			generate_serverless_function({
-				builder,
-				routes,
-				patterns,
-				name,
-				type: 'split'
-			});
+		for (const fn of get_split_functions(builder)) {
+			generate_serverless_function({ builder, ...fn });
 		}
-
-		generate_serverless_function({
-			builder,
-			routes: [],
-			patterns: ['/*'],
-			name: `${FUNCTION_PREFIX}catch-all`,
-			type: 'catch-all',
-			exclude: Array.from(seen)
-		});
 	} else {
 		generate_serverless_function({
 			builder,
@@ -210,6 +147,84 @@ function generate_serverless_functions({ builder, publish, split }) {
 		const redirects_file = join(publish, '_redirects');
 		builder.copy('_redirects', redirects_file);
 	}
+}
+
+/**
+ * @param {import('@sveltejs/kit').Builder} builder
+ * @returns {Array<{
+ *   routes: import('@sveltejs/kit').RouteDefinition[],
+ *   patterns: string[],
+ *   name: string,
+ *   type: 'split' | 'catch-all',
+ *   exclude?: string[]
+ * }>}
+ */
+function get_split_functions(builder) {
+	const seen = new Set();
+	const generated_names = new Set([`${FUNCTION_PREFIX}catch-all`]);
+	/** @type {ReturnType<typeof get_split_functions>} */
+	const functions = [];
+
+	for (let i = 0; i < builder.routes.length; i++) {
+		const route = builder.routes[i];
+		if (route.prerender === true) continue;
+
+		const routes = [route];
+
+		/** @type {string[]} */
+		const parts = [];
+
+		// The parts should conform to URLPattern syntax
+		// https://docs.netlify.com/build/functions/get-started/?fn-language=ts&data-tab=TypeScript#route-requests
+		for (const segment of route.segments) {
+			if (segment.rest) {
+				parts.push('*');
+			} else if (segment.dynamic) {
+				// URLPattern requires params to start with letters
+				parts.push(`:param${parts.length}`);
+			} else {
+				parts.push(segment.content);
+			}
+		}
+
+		// Netlify handles trailing slashes for us, so we don't need to include them in the pattern
+		const pattern = `/${parts.join('/')}`;
+
+		// skip routes with identical patterns, they were already folded into another function
+		if (seen.has(pattern)) continue;
+
+		const base_name =
+			FUNCTION_PREFIX + (parts.join('-').replace(/[:.]/g, '_').replace(/\*/g, '__rest') || 'index');
+		let name = base_name;
+		let suffix = 2;
+		while (generated_names.has(name)) name = `${base_name}-${suffix++}`;
+		generated_names.add(name);
+
+		const patterns = [pattern, `${pattern === '/' ? '' : pattern}/__data.json`];
+		patterns.forEach((p) => seen.add(p));
+
+		// figure out which lower priority routes should be considered fallbacks
+		for (let j = i + 1; j < builder.routes.length; j += 1) {
+			const other = builder.routes[j];
+			if (other.prerender === true) continue;
+
+			if (matches(route.segments, other.segments)) {
+				routes.push(other);
+			}
+		}
+
+		functions.push({ routes, patterns, name, type: 'split' });
+	}
+
+	functions.push({
+		routes: [],
+		patterns: ['/*'],
+		name: `${FUNCTION_PREFIX}catch-all`,
+		type: 'catch-all',
+		exclude: Array.from(seen)
+	});
+
+	return functions;
 }
 
 /**
@@ -270,7 +285,11 @@ function generate_serverless_function({ builder, routes, patterns, name, type, e
 		serverDirectory: '.netlify/v1/server'
 	});
 
-	const fn = generate_serverless_function_module(name, type);
+	const fn = generate_function_module(type, {
+		init: '../serverless.js',
+		server: `../server-${name}.js`,
+		environment_token: 'process.env.NETLIFY_FUNCTIONS_TOKEN'
+	});
 	const config = generate_config_export(name, patterns, exclude);
 
 	if (builder.hasServerInstrumentationFile()) {
@@ -294,31 +313,31 @@ function generate_serverless_function({ builder, routes, patterns, name, type, e
 }
 
 /**
- * @param {string} name
- * @param {ServerlessFunctionType} type
+ * @param {'singular' | 'split' | 'catch-all'} type
+ * @param {{ init: string, server: string, environment_token: string }} imports
  * @returns {string}
  */
-function generate_serverless_function_module(name, type) {
+function generate_function_module(type, imports) {
+	const runtime_imports =
+		`import { init } from '${imports.init}';` + `\nimport { server } from '${imports.server}';`;
+
 	if (type === 'catch-all') {
 		// Netlify encodes the response body but `fetch` automatically decodes it.
 		// So, we need to remove the `content-encoding` header to allow Netlify
 		// to correctly re-encode it on the way out.
 		return `\
 import { applyReroute } from '@sveltejs/kit/adapter';
-import { init } from '../serverless.js';
-import { server } from '../server-${name}.js';
+${runtime_imports}
 
-const original_url_header = \`x-sveltekit-original-url-\${process.env.NETLIFY_FUNCTIONS_TOKEN}\`
-
+const original_url_header = \`x-sveltekit-original-url-\${${imports.environment_token}}\`;
 const respond = init(server);
 
 export default async (request, context) => {
-	const catch_all_response = await respond(request, context);
+	const response = await respond(request, context);
 
-	return await applyReroute(catch_all_response, async (url) => {
+	return await applyReroute(response, async (url) => {
 		const rerouted_request = new Request(url, request);
 		rerouted_request.headers.set(original_url_header, request.url);
-
 		const rerouted_response = await fetch(rerouted_request);
 
 		const response = new Response(rerouted_response.body, rerouted_response);
@@ -335,11 +354,9 @@ export default async (request, context) => {
 
 	if (type === 'split') {
 		return `\
-import { init } from '../serverless.js';
-import { server } from '../server-${name}.js';
+${runtime_imports}
 
-const original_url_header = \`x-sveltekit-original-url-\${process.env.NETLIFY_FUNCTIONS_TOKEN}\`
-
+const original_url_header = \`x-sveltekit-original-url-\${${imports.environment_token}}\`;
 const respond = init(server);
 
 export default async (request, context) => {
@@ -354,12 +371,7 @@ export default async (request, context) => {
 `;
 	}
 
-	return `\
-import { init } from '../serverless.js';
-import { server } from '../server-${name}.js';
-
-export default init(server);
-`;
+	return `${runtime_imports}\n\nexport default init(server);\n`;
 }
 
 const generator_string = `@sveltejs/adapter-netlify@${adapter_version}`;
@@ -427,26 +439,97 @@ const rolldown_config = {
 /**
  * @param { object } params
  * @param {import('@sveltejs/kit').Builder} params.builder
+ * @param {boolean} params.split
  */
-async function generate_edge_functions({ builder }) {
+async function generate_edge_functions({ builder, split }) {
 	const tmp = builder.getBuildDirectory('netlify-tmp');
 	rmSync(tmp, { force: true, recursive: true });
 	mkdirSync(tmp, { recursive: true });
 
 	// https://docs.netlify.com/build/frameworks/frameworks-api/#edge-functions
-	mkdirSync('.netlify/v1/edge-functions', { recursive: true });
+	mkdirSync(netlify_framework_edge_path, { recursive: true });
 
-	builder.log.minor('Generating Edge Function...');
+	builder.log.minor(`Generating Edge Function${split ? 's' : ''}...`);
+	builder.copy(`${files}/edge.js`, `${tmp}/edge.js`);
 
-	builder.copy(`${files}/edge.js`, `${tmp}/entry.js`, {
-		replace: {
-			'0SERVER': `./server.js`
+	const functions = split
+		? get_split_functions(builder)
+		: [
+				{
+					routes: undefined,
+					patterns: ['/*'],
+					name: `${FUNCTION_PREFIX}render`,
+					type: /** @type {const} */ ('singular')
+				}
+			];
+
+	for (const fn of functions) {
+		await generate_edge_function({ builder, tmp, ...fn });
+	}
+
+	add_edge_function_config({ builder, functions });
+}
+
+/**
+ * @param {{
+ *   builder: import('@sveltejs/kit').Builder,
+ *   tmp: string,
+ *   routes: import('@sveltejs/kit').RouteDefinition[] | undefined,
+ *   patterns: string[],
+ *   name: string,
+ *   type: 'singular' | 'split' | 'catch-all',
+ *   exclude?: string[]
+ * }} opts
+ */
+async function generate_edge_function({ builder, tmp, routes, name, type }) {
+	const server = `${tmp}/server-${name}.js`;
+	const entry = `${tmp}/entry-${name}.js`;
+	builder.generateServerInstance(server, { routes });
+	writeFileSync(
+		entry,
+		generate_function_module(type, {
+			init: './edge.js',
+			server: `./server-${name}.js`,
+			environment_token: "Deno.env.get('NETLIFY_FUNCTIONS_TOKEN')"
+		})
+	);
+
+	let input = entry;
+	if (builder.hasServerInstrumentationFile()) {
+		const initializer = builder.createInstrumentationInitializer({
+			outputDirectory: tmp,
+			environment: 'export default Deno.env.toObject();\n'
+		});
+		input = `${tmp}/instrumented-entry-${name}.js`;
+		writeFileSync(input, `export { default } from './entry-${name}.js';\n`);
+		builder.instrument({
+			entrypoint: input,
+			instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`,
+			initializer
+		});
+	}
+
+	await build({
+		...rolldown_config,
+		input,
+		output: {
+			...rolldown_config.output,
+			file: `${netlify_framework_edge_path}/${name}.js`
 		}
 	});
+}
 
-	builder.generateServerInstance(`${tmp}/server.js`);
+/**
+ * Adds edge function configuration to the Frameworks API config file `config.json`
+ * https://docs.netlify.com/build/frameworks/frameworks-api/#netlifyv1edge-functions
+ * @param {{
+ *   builder: import('@sveltejs/kit').Builder,
+ *   functions: Array<{ patterns: string[], name: string, exclude?: string[] }>
+ * }} params
+ */
+function add_edge_function_config({ builder, functions }) {
+	const config = JSON.parse(readFileSync(netlify_framework_config_path, 'utf-8'));
 
-	const path = '/*';
 	// We only need to specify paths without the trailing slash because
 	// Netlify will handle the optional trailing slash for us
 	const excluded_paths = [
@@ -466,51 +549,16 @@ async function generate_edge_functions({ builder }) {
 		'/.netlify/*'
 	];
 
-	if (builder.hasServerInstrumentationFile()) {
-		const initializer = builder.createInstrumentationInitializer({
-			outputDirectory: tmp,
-			environment: 'export default Deno.env.toObject();\n'
-		});
-		writeFileSync(`${tmp}/instrumented-entry.js`, `export { default } from './entry.js';\n`);
-		builder.instrument({
-			entrypoint: `${tmp}/instrumented-entry.js`,
-			instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`,
-			initializer
-		});
-	}
-
-	await build({
-		...rolldown_config,
-		input: builder.hasServerInstrumentationFile()
-			? `${tmp}/instrumented-entry.js`
-			: `${tmp}/entry.js`,
-		output: {
-			...rolldown_config.output,
-			file: `${netlify_framework_edge_path}/${FUNCTION_PREFIX}render.js`
-		}
-	});
-
-	add_edge_function_config({ builder, path, excluded_paths });
-}
-
-/**
- * Adds edge function configuration to the Frameworks API config file `config.json`
- * https://docs.netlify.com/build/frameworks/frameworks-api/#netlifyv1edge-functions
- * @param {{ builder: import('@sveltejs/kit').Builder, path: string, excluded_paths: string[] }} params
- */
-function add_edge_function_config({ path, excluded_paths }) {
-	const config = JSON.parse(readFileSync(netlify_framework_config_path, 'utf-8'));
-
 	// https://docs.netlify.com/build/frameworks/frameworks-api/#configuration-options-1
-	config.edge_functions = [
-		{
-			function: `${FUNCTION_PREFIX}render`,
-			name: 'SvelteKit server',
+	config.edge_functions = functions.flatMap((fn) =>
+		fn.patterns.map((path) => ({
+			function: fn.name,
+			name: fn.name === `${FUNCTION_PREFIX}render` ? 'SvelteKit server' : fn.name,
 			generator: generator_string,
 			path,
-			excludedPath: excluded_paths
-		}
-	];
+			excludedPath: [...excluded_paths, ...(fn.exclude ?? [])]
+		}))
+	);
 
 	writeFileSync(netlify_framework_config_path, s(config));
 }

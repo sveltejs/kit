@@ -121,3 +121,29 @@ jobs:
         with:
           test-app-dir: ${{ env.TEST_APP_DIR }}
           deployment-url: ${{ steps.deploy.outputs.deployment-url }}
+
+  test-split-edge:
+    if: github.repository == 'sveltejs/kit'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: '@sveltejs/adapter-netlify platform tests'
+    env:
+      TEST_APP_DIR: packages/adapter-netlify/test/apps/split
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.sha || github.sha }}
+          persist-credentials: false
+
+      - uses: ./.github/actions/netlify-deploy
+        id: deploy
+        with:
+          test-app-dir: ${{ env.TEST_APP_DIR }}
+          netlify-project-id: ${{ secrets.NETLIFY_PROJECT_ID_SPLIT }}
+          netlify-token: ${{ secrets.NETLIFY_TOKEN }}
+          edge: true
+
+      - uses: ./.github/actions/platform-test
+        with:
+          test-app-dir: ${{ env.TEST_APP_DIR }}
+          deployment-url: ${{ steps.deploy.outputs.deployment-url }}
