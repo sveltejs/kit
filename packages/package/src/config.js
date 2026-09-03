@@ -30,7 +30,12 @@ async function load_config_from_vite(cwd) {
 		if (cwd !== current_cwd) process.chdir(cwd);
 
 		const { resolveConfig } = /** @type {typeof import('vite')} */ (await import_peer('vite', cwd));
-		const vite_config = await resolveConfig({}, 'build', process.env.MODE ?? 'production');
+		const vite_config = await resolveConfig(
+			{},
+			'build',
+			process.env.MODE ?? 'production',
+			'production'
+		);
 		const plugin = vite_config.plugins.find(
 			(plugin) => plugin.name === 'vite-plugin-sveltekit-setup' && plugin.api?.options
 		);
