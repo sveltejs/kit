@@ -140,36 +140,34 @@ function generate_serverless_functions({ builder, publish, split }) {
 
 			const routes = [route];
 
-			/** @type {string[][]} */
-			let paths = [[]];
+			/** @type {string[]} */
+			const parts = [];
 
 			// The parts should conform to URLPattern syntax
 			// https://docs.netlify.com/build/functions/get-started/?fn-language=ts&data-tab=TypeScript#route-requests
 			for (const [i, segment] of route.segments.entries()) {
-				const param = `:param${i}`;
-
-				if (/^\[\[.+\]\]$/.test(segment.content)) {
-					paths = paths.flatMap((parts) => [parts, [...parts, param]]);
+				if (segment.rest) {
+					parts.push('*');
+				} else if (segment.dynamic) {
+					// URLPattern requires params to start with letters
+					const optional = /^\[\[.+\]\]$/.test(segment.content) ? '?' : '';
+					parts.push(`:param${i}${optional}`);
 				} else {
-					const part = segment.rest ? '*' : segment.dynamic ? param : segment.content;
-					paths.forEach((parts) => parts.push(part));
+					parts.push(segment.content);
 				}
 			}
 
-			const name_parts = paths.at(-1);
+			// Netlify handles trailing slashes for us, so we don't need to include them in the pattern
+			const pattern = `/${parts.join('/')}`;
 			const name =
 				FUNCTION_PREFIX +
-				(name_parts?.join('-').replace(/[:.]/g, '_').replace(/\*/g, '__rest') || 'index');
+				(parts.join('-').replace(/[:.]/g, '_').replace(/\?/g, '').replace(/\*/g, '__rest') ||
+					'index');
 
-			// Netlify handles trailing slashes for us, so we don't need to include them in the patterns
-			const patterns = paths
-				.map((parts) => `/${parts.join('/')}`)
-				.flatMap((pattern) => [pattern, `${pattern === '/' ? '' : pattern}/__data.json`])
-				.filter((pattern) => !seen.has(pattern));
+			// skip routes with identical patterns, they were already folded into another function
+			if (seen.has(pattern)) continue;
 
-			// skip routes whose patterns were already folded into other functions
-			if (patterns.length === 0) continue;
-
+			const patterns = [pattern, `${pattern === '/' ? '' : pattern}/__data.json`];
 			patterns.forEach((pattern) => seen.add(pattern));
 
 			// figure out which lower priority routes should be considered fallbacks

@@ -41,7 +41,7 @@ test('split generates multiple function files', () => {
 		'utf-8'
 	);
 	expect(optional_route).toContain(
-		'path: ["/collection/article", "/collection/article/__data.json", "/collection/:param1/article", "/collection/:param1/article/__data.json"]'
+		'path: ["/collection/:param1?/article", "/collection/:param1?/article/__data.json"]'
 	);
 });
 
