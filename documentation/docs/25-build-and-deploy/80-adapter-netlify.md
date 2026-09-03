@@ -52,8 +52,6 @@ If `true`, your app will be deployed as a [Netlify Edge Function](https://docs.n
 
 If `true`, your app will be split into multiple functions instead of a single one for the entire app.
 
-If `edge` is `true`, this option cannot be used.
-
 ## Netlify alternatives to SvelteKit functionality
 
 You may build your app using functionality provided directly by SvelteKit without relying on any Netlify functionality. Using the SvelteKit versions of these features will allow them to be used in dev mode, tested with integration tests, and to work with other adapters should you ever decide to switch away from Netlify. However, in some scenarios you may find it beneficial to use the Netlify versions of these features. One example would be if you're migrating an app that's already hosted on Netlify to SvelteKit.
