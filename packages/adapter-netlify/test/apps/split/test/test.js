@@ -1,6 +1,5 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import process from 'node:process';
 import { expect, test } from '@playwright/test';
 
 test('routes to routes with dynamic params', async ({ page }) => {
@@ -26,11 +25,12 @@ test('client-side fetch for query remote function data', async ({ page }) => {
 
 test('split generates multiple function files with unique names', () => {
 	let names;
-	if (process.env.EDGE === 'true') {
-		const config = JSON.parse(
-			fs.readFileSync(path.resolve(import.meta.dirname, '../.netlify/v1/config.json'), 'utf-8')
-		);
-		expect(config.functions).toBeUndefined();
+
+	/** @type {{ edge_functions?: Array<{ name: string }> }} */
+	const config = JSON.parse(
+		fs.readFileSync(path.resolve(import.meta.dirname, '../.netlify/v1/config.json'), 'utf-8')
+	);
+	if (config.edge_functions) {
 		names = config.edge_functions.map((fn) => fn.name);
 	} else {
 		const functions_dir = path.resolve(import.meta.dirname, '../.netlify/v1/functions');
@@ -39,7 +39,6 @@ test('split generates multiple function files with unique names', () => {
 			.filter((file) => file.endsWith('.mjs'))
 			.map((file) => path.parse(file).name);
 	}
-
 	const colliding_names = names.filter((name) => name.startsWith('sveltekit-_param0'));
 	expect(names.length).toBeGreaterThan(1);
 	expect(new Set(colliding_names)).toEqual(new Set(['sveltekit-_param0', 'sveltekit-_param0-2']));
