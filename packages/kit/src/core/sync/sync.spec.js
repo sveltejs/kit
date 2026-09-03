@@ -5,6 +5,7 @@ import { expect, test } from 'vitest';
 import { process_config, validate_config } from '../config/index.js';
 import { load_explicit_env } from '../env.js';
 import { relative_path } from '../../utils/filesystem.js';
+import { posixify } from '../../utils/os.js';
 import { create, update } from './sync.js';
 import create_manifest_data from './create_manifest_data/index.js';
 
@@ -49,13 +50,14 @@ import './helper.js';
 export const variables = defineEnvVars({ FOO: {} });
 `
 	);
-	fs.writeFileSync(path.join(dir, 'helper.ts'), `import '$app/env/private';\n`);
+	const helper = path.join(dir, 'helper.ts');
+	fs.writeFileSync(helper, `import '$app/env/private';\n`);
 
 	try {
 		const config = process_config(validate_config({}), root);
 
 		await expect(load_explicit_env(config, entry, root, 'development')).rejects.toThrow(
-			'Cannot import `$app/env/private` inside `src/env` or its dependencies because it creates a circular dependency'
+			`Module \`${posixify(path.relative(root, helper))}\` imports \`$app/env/private\`, which creates a circular dependency with \`src/env\``
 		);
 	} finally {
 		fs.rmSync(dir, { recursive: true, force: true });

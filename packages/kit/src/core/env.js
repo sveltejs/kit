@@ -37,6 +37,8 @@ export function resolve_env_entry(config, root) {
 export async function load_explicit_env(kit, file, root, mode) {
 	/** @type {Set<string>} */
 	const deps = new Set();
+	/** @type {Map<EnvType, string>} */
+	const env_importers = new Map();
 
 	if (!file) {
 		return { variables: null, deps };
@@ -64,6 +66,16 @@ export async function load_explicit_env(kit, file, root, mode) {
 		plugins: [
 			{
 				name: 'dependency-scanner',
+				enforce: 'pre',
+				resolveId(id, importer) {
+					const prefixes = ['$app/env/', `${runtime_directory}/app/env/`];
+					const prefix = prefixes.find((prefix) => id.startsWith(prefix));
+					const type = prefix && id.slice(prefix.length);
+
+					if (importer && (type === 'private' || type === 'public')) {
+						env_importers.set(type, importer);
+					}
+				},
 				load(id) {
 					deps.add(id);
 				}
@@ -102,10 +114,13 @@ export async function load_explicit_env(kit, file, root, mode) {
 			);
 
 			if (match) {
-				throw new Error(
-					`Cannot import \`$app/env/${match[1]}\` inside \`src/env\` or its dependencies because it creates a circular dependency`,
-					{ cause: e }
-				);
+				const type = /** @type {EnvType} */ (match[1]);
+				const importer = env_importers.get(type);
+				const message = importer
+					? `Module \`${posixify(path.relative(root, importer))}\` imports \`$app/env/${type}\`, which creates a circular dependency with \`src/env\``
+					: `Cannot import \`$app/env/${type}\` inside \`src/env\` or its dependencies because it creates a circular dependency`;
+
+				throw new Error(message, { cause: e });
 			}
 
 			if (error.message?.includes(`Cannot find module '$app`)) {
