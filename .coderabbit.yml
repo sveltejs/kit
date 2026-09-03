@@ -1,0 +1,156 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+reviews:
+  review_status: false
+  review_progress: false
+  commit_status: false
+  high_level_summary: false
+  changed_files_summary: false
+  # sequence_diagrams: true
+  estimate_code_review_effort: false
+  assess_linked_issues: false
+  # related_issues: true
+  # related_prs: true
+  suggested_labels: false
+  suggested_reviewers: false
+  in_progress_fortune: false
+  poem: false
+  enable_prompt_for_ai_agents: false
+  chat:
+    art: false
+    allow_non_org_members: false
+    # auto_reply: true
+
+  auto_review:
+    enabled: false
+    # description_keyword: ""
+    auto_incremental_review: true
+    # auto_pause_after_reviewed_commits: 5
+    ignore_title_keywords:
+      - 'Version Packages'
+    # ignore_usernames: []
+    # labels: []
+
+  auto_apply_labels: true
+  labeling_instructions:
+    - label: 'breaking change'
+      instructions: 'PR contains a breaking change to public interfaces'
+    - label: 'documentation'
+      instructions: 'PR only contains changes to documentation files'
+    - label: 'needs-platform-tests'
+      instructions: >-
+        PR adds/deletes/modifies files in an adapter package
+        (except adapter-static and adapter-auto) or has 'Version Packages'
+        in the PR title
+
+  slop_detection:
+    label: '🤖'
+
+  profile: quiet
+
+  finishing_touches:
+    docstrings:
+      enabled: false
+    unit_tests:
+      enabled: false
+    simplify:
+      enabled: false
+    autofix:
+      enabled: true
+    fix_ci:
+      enabled: true
+    resolve_merge_conflict:
+      enabled: true
+  #   custom:
+  #     - name: "cleanup stale imports"
+  #       instructions: |
+  #         Remove unused imports in the changed files.
+  #         Preserve imports used in type positions; do not reorder.
+
+  request_changes_workflow: true # let 'error' checks block a merge
+  pre_merge_checks:
+    title:
+      mode: warning
+      requirements: 'Prefix PR titles with `breaking:`, `feat:`, `fix:`, or `chore:`'
+    docstrings:
+      mode: off
+      threshold: 80
+    description:
+      mode: off
+    issue_assessment:
+      mode: off
+    custom_checks:
+      - name: 'Backward Compatibility Impact Disclosure'
+        mode: 'warning'
+        instructions: >-
+          Detect breaking changes to public interfaces: removed or renamed
+          exports, new required request/response fields, changed defaults, or
+          removed config keys. Require a "major" changeset and a "breaking:"
+          prefix in the changeset description. Fail if a breaking change is undocumented.
+
+  # post_merge_actions:
+  #   - name: ""
+  #     prompt: ""
+
+  path_filters:
+    - '!.well-known/**'
+    - '!playgrounds/**'
+    - '!packages/kit/types/**'
+    - '!FUNDING.json'
+  path_instructions:
+    - path: 'documentation/docs/**.md'
+      instructions: |
+        Check for clarity, accuracy, and completeness.
+        Flag any references to deprecated APIs or outdated behavior.
+
+knowledge_base:
+  code_guidelines:
+    filePatterns:
+      - 'AGENTS.md'
+      - 'CONTRIBUTING.md'
+  linked_repositories:
+    - repository: 'sveltejs/svelte'
+      instructions: 'The Svelte compiler and runtime'
+    - repository: 'sveltejs/vite-plugin-svelte'
+      instructions: 'The Vite plugin that transforms Svelte modules during development and build'
+    - repository: 'vitejs/vite'
+      instructions: 'Powers the development server and build process'
+  learnings:
+    scope: global
+  issues:
+    scope: global
+  pull_requests:
+    scope: global
+  # mcp:
+  #   usage: auto
+
+# code_generation:
+#   docstrings:
+#     language: en-GB
+#     path_instructions:
+#       - path: ""
+#         instructions: ""
+#   unit_tests:
+#     path_instructions:
+#       - path: ""
+#         instructions: ""
+
+issue_enrichment:
+  auto_enrich:
+    enabled: false
+  planning:
+    enabled: false
+  labeling:
+    auto_apply_labels: true
+    labeling_instructions:
+      - label: 'awaiting submitter'
+        instructions: >-
+          Issue is a bug report and has a heading named "Reproduction" in the description
+          but does not include a link to a minimal reproduction
+      - label: 'pkg:enhanced-img'
+        instructions: 'Issue is related to static image optimisation the `@sveltejs/enhanced-img` package'
+      - label: 'pkg:adapter-cloudflare'
+        instructions: 'Issue is related to Cloudflare Workers/Pages or the `@sveltejs/adapter-cloudflare` package'
+      - label: 'pkg:adapter-netlify'
+        instructions: 'Issue is related to the Netlify platform or the `@sveltejs/adapter-netlify` package'
+      - label: 'pkg:adapter-vercel'
+        instructions: 'Issue is related to the Vercel platform or the `@sveltejs/adapter-vercel` package'
