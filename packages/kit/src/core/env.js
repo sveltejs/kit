@@ -5,6 +5,7 @@ import path from 'node:path';
 import * as devalue from 'devalue';
 import { dedent } from './sync/utils.js';
 import { get_global_name, runtime_directory } from './utils.js';
+import { stackless } from '../utils/error.js';
 import { resolve_entry } from '../utils/filesystem.js';
 import { handle_issues, validate } from '../exports/internal/env.js';
 import { get_config_aliases } from '../exports/vite/utils.js';
@@ -120,7 +121,7 @@ export async function load_explicit_env(kit, file, root, mode) {
 					? `Module \`${posixify(path.relative(root, importer))}\` imports \`$app/env/${type}\`, which creates a circular dependency with \`src/env\``
 					: `Cannot import \`$app/env/${type}\` inside \`src/env\` or its dependencies because it creates a circular dependency`;
 
-				throw new Error(message, { cause: e });
+				throw stackless(message);
 			}
 
 			if (error.message?.includes(`Cannot find module '$app`)) {

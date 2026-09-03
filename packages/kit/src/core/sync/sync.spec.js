@@ -56,9 +56,10 @@ export const variables = defineEnvVars({ FOO: {} });
 	try {
 		const config = process_config(validate_config({}), root);
 
-		await expect(load_explicit_env(config, entry, root, 'development')).rejects.toThrow(
-			`Module \`${posixify(path.relative(root, helper))}\` imports \`$app/env/private\`, which creates a circular dependency with \`src/env\``
-		);
+		await expect(load_explicit_env(config, entry, root, 'development')).rejects.toMatchObject({
+			message: `Module \`${posixify(path.relative(root, helper))}\` imports \`$app/env/private\`, which creates a circular dependency with \`src/env\``,
+			stack: ''
+		});
 	} finally {
 		fs.rmSync(dir, { recursive: true, force: true });
 	}
