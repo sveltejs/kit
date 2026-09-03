@@ -161,6 +161,7 @@ function generate_serverless_functions({ builder, publish, split }) {
  */
 function get_split_functions(builder) {
 	const seen = new Set();
+	const generated_names = new Set([`${FUNCTION_PREFIX}catch-all`]);
 	/** @type {ReturnType<typeof get_split_functions>} */
 	const functions = [];
 
@@ -188,11 +189,16 @@ function get_split_functions(builder) {
 
 		// Netlify handles trailing slashes for us, so we don't need to include them in the pattern
 		const pattern = `/${parts.join('/')}`;
-		const name =
-			FUNCTION_PREFIX + (parts.join('-').replace(/[:.]/g, '_').replace(/\*/g, '__rest') || 'index');
 
 		// skip routes with identical patterns, they were already folded into another function
 		if (seen.has(pattern)) continue;
+
+		const base_name =
+			FUNCTION_PREFIX + (parts.join('-').replace(/[:.]/g, '_').replace(/\*/g, '__rest') || 'index');
+		let name = base_name;
+		let suffix = 2;
+		while (generated_names.has(name)) name = `${base_name}-${suffix++}`;
+		generated_names.add(name);
 
 		const patterns = [pattern, `${pattern === '/' ? '' : pattern}/__data.json`];
 		patterns.forEach((p) => seen.add(p));

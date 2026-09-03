@@ -23,10 +23,16 @@ test('client-side fetch for query remote function data', async ({ page }) => {
 	await expect(page.locator('p')).toHaveText('a: 1');
 });
 
-test('split generates multiple function files', () => {
-	const functions_dir = path.resolve(import.meta.dirname, '../.netlify/v1/functions');
-	const files = fs.readdirSync(functions_dir).filter((f) => f.startsWith('sveltekit-'));
-	expect(files.length).toBeGreaterThan(1);
+test('split generates multiple function files with unique names', () => {
+	const config = JSON.parse(
+		fs.readFileSync(path.resolve(import.meta.dirname, '../.netlify/v1/config.json'), 'utf-8')
+	);
+	const functions = config.edge_functions ?? config.functions;
+	const names = functions.map((fn) => fn.name);
+	const colliding_names = names.filter((name) => name.startsWith('sveltekit-_param0'));
+
+	expect(functions.length).toBeGreaterThan(1);
+	expect(new Set(colliding_names)).toEqual(new Set(['sveltekit-_param0', 'sveltekit-_param0-2']));
 });
 
 test('_redirects are copied to publish directory', () => {
