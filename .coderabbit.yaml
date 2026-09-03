@@ -8,8 +8,8 @@ reviews:
   # sequence_diagrams: true
   estimate_code_review_effort: false
   assess_linked_issues: false
-  # related_issues: true
-  # related_prs: true
+  related_issues: true
+  related_prs: true
   suggested_labels: false
   suggested_reviewers: false
   in_progress_fortune: false
@@ -18,10 +18,10 @@ reviews:
   chat:
     art: false
     allow_non_org_members: false
-    # auto_reply: true
+    auto_reply: true
 
   auto_review:
-    enabled: false
+    enabled: true
     # description_keyword: ""
     auto_incremental_review: true
     # auto_pause_after_reviewed_commits: 5
@@ -35,10 +35,10 @@ reviews:
     - label: 'breaking change'
       instructions: 'PR contains a breaking change to public interfaces'
     - label: 'documentation'
-      instructions: 'PR only contains changes to documentation files'
+      instructions: 'PR only contains changes to files in `/documentation`'
     - label: 'needs-platform-tests'
       instructions: >-
-        PR adds/deletes/modifies files in an adapter package
+        PR adds/deletes/modifies files in `packages/adapter-*`
         (except adapter-static and adapter-auto) or has 'Version Packages'
         in the PR title
 
@@ -136,7 +136,7 @@ knowledge_base:
 
 issue_enrichment:
   auto_enrich:
-    enabled: false
+    enabled: true
   planning:
     enabled: false
   labeling:
