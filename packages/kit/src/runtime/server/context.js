@@ -81,6 +81,18 @@ export function derive_event(event, kind, overrides) {
 function restrictions({ cookies }, flags) {
 	const read_only = flags & (KINDS.query | KINDS.prerender);
 
+	/**
+	 * @param {'set' | 'delete'} verb
+	 * @param {import('cookie').SerializeOptions} opts
+	 */
+	const check = (verb, opts) => {
+		if (read_only)
+			throw new Error(`Cannot ${verb} cookies in \`query\` or \`prerender\` functions`);
+		if (opts.path && !opts.path.startsWith('/')) {
+			throw new Error('Cookies in remote functions must have an absolute path');
+		}
+	};
+
 	return {
 		setHeaders: () => {
 			throw new Error('setHeaders is not allowed in remote functions');
@@ -88,17 +100,11 @@ function restrictions({ cookies }, flags) {
 		cookies: {
 			...cookies,
 			set: (name, value, opts) => {
-				if (read_only) throw new Error('Cannot set cookies in `query` or `prerender` functions');
-				if (opts.path && !opts.path.startsWith('/')) {
-					throw new Error('Cookies set in remote functions must have an absolute path');
-				}
+				check('set', opts);
 				return cookies.set(name, value, opts);
 			},
 			delete: (name, opts) => {
-				if (read_only) throw new Error('Cannot delete cookies in `query` or `prerender` functions');
-				if (opts.path && !opts.path.startsWith('/')) {
-					throw new Error('Cookies deleted in remote functions must have an absolute path');
-				}
+				check('delete', opts);
 				return cookies.delete(name, opts);
 			}
 		}
