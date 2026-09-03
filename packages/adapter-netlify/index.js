@@ -285,7 +285,11 @@ function generate_serverless_function({ builder, routes, patterns, name, type, e
 		serverDirectory: '.netlify/v1/server'
 	});
 
-	const fn = generate_serverless_function_module(name, type);
+	const fn = generate_function_module(type, {
+		init: '../serverless.js',
+		server: `../server-${name}.js`,
+		environment_token: 'process.env.NETLIFY_FUNCTIONS_TOKEN'
+	});
 	const config = generate_config_export(name, patterns, exclude);
 
 	if (builder.hasServerInstrumentationFile()) {
@@ -309,31 +313,30 @@ function generate_serverless_function({ builder, routes, patterns, name, type, e
 }
 
 /**
- * @param {string} name
- * @param {ServerlessFunctionType} type
+ * @param {'singular' | 'split' | 'catch-all'} type
+ * @param {{ init: string, server: string, environment_token: string }} imports
  * @returns {string}
  */
-function generate_serverless_function_module(name, type) {
+function generate_function_module(type, imports) {
+	const runtime_imports = `import { init } from '${imports.init}';\nimport { server } from '${imports.server}';`;
+
 	if (type === 'catch-all') {
 		// Netlify encodes the response body but `fetch` automatically decodes it.
 		// So, we need to remove the `content-encoding` header to allow Netlify
 		// to correctly re-encode it on the way out.
 		return `\
 import { applyReroute } from '@sveltejs/kit/adapter';
-import { init } from '../serverless.js';
-import { server } from '../server-${name}.js';
+${runtime_imports}
 
-const original_url_header = \`x-sveltekit-original-url-\${process.env.NETLIFY_FUNCTIONS_TOKEN}\`
-
+const original_url_header = \`x-sveltekit-original-url-\${${imports.environment_token}}\`;
 const respond = init(server);
 
 export default async (request, context) => {
-	const catch_all_response = await respond(request, context);
+	const response = await respond(request, context);
 
-	return await applyReroute(catch_all_response, async (url) => {
+	return await applyReroute(response, async (url) => {
 		const rerouted_request = new Request(url, request);
 		rerouted_request.headers.set(original_url_header, request.url);
-
 		const rerouted_response = await fetch(rerouted_request);
 
 		const response = new Response(rerouted_response.body, rerouted_response);
@@ -350,11 +353,9 @@ export default async (request, context) => {
 
 	if (type === 'split') {
 		return `\
-import { init } from '../serverless.js';
-import { server } from '../server-${name}.js';
+${runtime_imports}
 
-const original_url_header = \`x-sveltekit-original-url-\${process.env.NETLIFY_FUNCTIONS_TOKEN}\`
-
+const original_url_header = \`x-sveltekit-original-url-\${${imports.environment_token}}\`;
 const respond = init(server);
 
 export default async (request, context) => {
@@ -369,12 +370,7 @@ export default async (request, context) => {
 `;
 	}
 
-	return `\
-import { init } from '../serverless.js';
-import { server } from '../server-${name}.js';
-
-export default init(server);
-`;
+	return `${runtime_imports}\n\nexport default init(server);\n`;
 }
 
 const generator_string = `@sveltejs/adapter-netlify@${adapter_version}`;
@@ -488,7 +484,14 @@ async function generate_edge_function({ builder, tmp, routes, name, type }) {
 	const server = `${tmp}/server-${name}.js`;
 	const entry = `${tmp}/entry-${name}.js`;
 	builder.generateServerInstance(server, { routes });
-	writeFileSync(entry, generate_edge_function_module(name, type));
+	writeFileSync(
+		entry,
+		generate_function_module(type, {
+			init: './edge.js',
+			server: `./server-${name}.js`,
+			environment_token: "Deno.env.get('NETLIFY_FUNCTIONS_TOKEN')"
+		})
+	);
 
 	let input = entry;
 	if (builder.hasServerInstrumentationFile()) {
@@ -513,63 +516,6 @@ async function generate_edge_function({ builder, tmp, routes, name, type }) {
 			file: `${netlify_framework_edge_path}/${name}.js`
 		}
 	});
-}
-
-/**
- * @param {string} name
- * @param {'singular' | 'split' | 'catch-all'} type
- */
-function generate_edge_function_module(name, type) {
-	const imports = `import { init } from './edge.js';\nimport { server } from './server-${name}.js';`;
-
-	if (type === 'catch-all') {
-		return `\
-import { applyReroute } from '@sveltejs/kit/adapter';
-${imports}
-
-const original_url_header = \`x-sveltekit-original-url-\${Deno.env.get('NETLIFY_FUNCTIONS_TOKEN')}\`;
-const respond = init(server);
-
-export default async (request, context) => {
-	const response = await respond(request, context);
-
-	return await applyReroute(response, async (url) => {
-		const rerouted_request = new Request(url, request);
-		rerouted_request.headers.set(original_url_header, request.url);
-		const rerouted_response = await fetch(rerouted_request);
-
-		const response = new Response(rerouted_response.body, rerouted_response);
-		if (response.headers.has('content-encoding')) {
-			response.headers.delete('content-encoding');
-			response.headers.delete('content-length');
-		}
-
-		return response;
-	});
-};
-`;
-	}
-
-	if (type === 'split') {
-		return `\
-${imports}
-
-const original_url_header = \`x-sveltekit-original-url-\${Deno.env.get('NETLIFY_FUNCTIONS_TOKEN')}\`;
-const respond = init(server);
-
-export default async (request, context) => {
-	if (request.headers.has(original_url_header)) {
-		const original_url = request.headers.get(original_url_header);
-		request = new Request(original_url, request);
-		request.headers.delete(original_url_header);
-	}
-
-	return await respond(request, context);
-};
-`;
-	}
-
-	return `${imports}\n\nexport default init(server);\n`;
 }
 
 /**
