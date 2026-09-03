@@ -318,7 +318,8 @@ function generate_serverless_function({ builder, routes, patterns, name, type, e
  * @returns {string}
  */
 function generate_function_module(type, imports) {
-	const runtime_imports = `import { init } from '${imports.init}';\nimport { server } from '${imports.server}';`;
+	const runtime_imports =
+		`import { init } from '${imports.init}';` + `\nimport { server } from '${imports.server}';`;
 
 	if (type === 'catch-all') {
 		// Netlify encodes the response body but `fetch` automatically decodes it.
