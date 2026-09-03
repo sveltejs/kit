@@ -113,13 +113,11 @@ describe('trace_ignore', () => {
 
 		ignore?.(path.join('Users', 'jane', 'app', 'node_modules', 'vite', 'index.js'));
 
-		assert.deepEqual(seen, [
-			path.join(path.sep, 'Users', 'jane', 'app', 'node_modules', 'vite', 'index.js')
-		]);
+		assert.deepEqual(seen, ['/Users/jane/app/node_modules/vite/index.js']);
 	});
 
 	test('forwards the result of the predicate', () => {
-		const ignore = trace_ignore(path.sep, (file) => file.includes('node_modules'));
+		const ignore = trace_ignore(path.sep, (file) => file.includes('/node_modules/vite/'));
 
 		assert.equal(ignore?.(path.join('app', 'node_modules', 'vite', 'index.js')), true);
 		assert.equal(ignore?.(path.join('app', 'src', 'index.js')), false);

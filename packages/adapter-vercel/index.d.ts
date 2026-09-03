@@ -77,7 +77,8 @@ export type Config = ServerlessConfig & {
 	 */
 	images?: ImagesConfig;
 	/**
-	 * Exclude files from the serverless function bundles
+	 * Exclude files from the serverless function bundles. Called with the absolute path of each
+	 * traced file, using `/` as the separator on every platform.
 	 *
 	 * This option can only be set at the adapter level. It is ignored if set in a route's `config`.
 	 */

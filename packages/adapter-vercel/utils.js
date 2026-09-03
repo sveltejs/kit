@@ -121,13 +121,14 @@ function assert_is_valid_runtime(key) {
 
 /**
  * Wrap a user `ignore` predicate for `@vercel/nft`, which reports paths relative to `base`.
+ * The predicate receives the absolute path with `/` separators on every platform.
  * @param {string} base
  * @param {((file: string) => boolean) | undefined} ignore
  * @returns {((file: string) => boolean) | undefined}
  */
 export function trace_ignore(base, ignore) {
 	if (!ignore) return undefined;
-	return (file) => ignore(path.join(base, file));
+	return (file) => ignore(path.join(base, file).split(path.sep).join('/'));
 }
 
 /** @typedef {typeof valid_runtimes[number]} RuntimeKey */
