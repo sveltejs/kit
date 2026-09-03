@@ -66,7 +66,9 @@ reviews:
   #         Remove unused imports in the changed files.
   #         Preserve imports used in type positions; do not reorder.
 
-  request_changes_workflow: true # let 'error' checks block a merge
+  # let 'error' checks block a merge
+  # disabled for now because it automatically approves PRs, which disables merge protection
+  request_changes_workflow: false
   pre_merge_checks:
     title:
       mode: warning
