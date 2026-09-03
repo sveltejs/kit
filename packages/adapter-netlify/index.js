@@ -145,12 +145,13 @@ function generate_serverless_functions({ builder, publish, split }) {
 
 			// The parts should conform to URLPattern syntax
 			// https://docs.netlify.com/build/functions/get-started/?fn-language=ts&data-tab=TypeScript#route-requests
-			for (const segment of route.segments) {
+			for (const [i, segment] of route.segments.entries()) {
 				if (segment.rest) {
 					parts.push('*');
 				} else if (segment.dynamic) {
 					// URLPattern requires params to start with letters
-					parts.push(`:param${parts.length}`);
+					const optional = /^\[\[.+\]\]$/.test(segment.content) ? '?' : '';
+					parts.push(`:param${i}${optional}`);
 				} else {
 					parts.push(segment.content);
 				}
@@ -159,13 +160,15 @@ function generate_serverless_functions({ builder, publish, split }) {
 			// Netlify handles trailing slashes for us, so we don't need to include them in the pattern
 			const pattern = `/${parts.join('/')}`;
 			const name =
-				FUNCTION_PREFIX + (parts.join('-').replace(/[:.]/g, '_').replace('*', '__rest') || 'index');
+				FUNCTION_PREFIX +
+				(parts.join('-').replace(/[:.]/g, '_').replace(/\?/g, '').replace(/\*/g, '__rest') ||
+					'index');
 
 			// skip routes with identical patterns, they were already folded into another function
 			if (seen.has(pattern)) continue;
 
 			const patterns = [pattern, `${pattern === '/' ? '' : pattern}/__data.json`];
-			patterns.forEach((p) => seen.add(p));
+			patterns.forEach((pattern) => seen.add(pattern));
 
 			// figure out which lower priority routes should be considered fallbacks
 			for (let j = i + 1; j < builder.routes.length; j += 1) {

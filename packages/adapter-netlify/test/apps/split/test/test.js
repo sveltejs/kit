@@ -2,9 +2,17 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { expect, test } from '@playwright/test';
 
-test('routes to routes with dynamic params', async ({ page }) => {
+test('routes with dynamic params', async ({ page }) => {
 	await page.goto('/dynamic/123');
 	await expect(page.locator('p')).toHaveText('id: 123');
+});
+
+test('routes with optional params', async ({ page }) => {
+	await page.goto('/collection/article');
+	await expect(page.locator('p')).toHaveText('optional: none');
+
+	await page.goto('/collection/value/article');
+	await expect(page.locator('p')).toHaveText('optional: value');
 });
 
 test('client-side navigation fetches server load function data', async ({ page }) => {
@@ -27,6 +35,14 @@ test('split generates multiple function files', () => {
 	const functions_dir = path.resolve(import.meta.dirname, '../.netlify/v1/functions');
 	const files = fs.readdirSync(functions_dir).filter((f) => f.startsWith('sveltekit-'));
 	expect(files.length).toBeGreaterThan(1);
+
+	const optional_route = fs.readFileSync(
+		path.join(functions_dir, 'sveltekit-collection-_param1-article.mjs'),
+		'utf-8'
+	);
+	expect(optional_route).toContain(
+		'path: ["/collection/:param1?/article", "/collection/:param1?/article/__data.json"]'
+	);
 });
 
 test('_redirects are copied to publish directory', () => {
