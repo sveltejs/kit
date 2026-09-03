@@ -55,6 +55,26 @@ Configuration set in a layout applies to all the routes beneath that layout, unl
 
 If your functions need to access data in a specific region, it's recommended that they be deployed in the same region (or close to it) for optimal performance.
 
+The `ignore` option can only be set at the adapter level, and is ignored if you set it in a route's `config`. It is called with the absolute path of every file traced into a serverless function bundle, and returning `true` leaves that file, and anything reachable only through it, out of the bundle:
+
+```js
+// @errors: 2554
+/// file: vite.config.js
+import adapter from '@sveltejs/adapter-vercel';
+import { sveltekit } from '@sveltejs/kit/vite';
+import { defineConfig } from 'vite';
+
+export default defineConfig({
+	plugins: [
+		sveltekit({
+			adapter: adapter({
+				ignore: (file) => file.includes('/node_modules/some-build-only-package/')
+			})
+		})
+	]
+});
+```
+
 ## Image Optimization
 
 You may set the `images` config to control how Vercel builds your images. See the [image configuration reference](https://vercel.com/docs/build-output-api/v3/configuration#images) for full details. As an example, you may set:

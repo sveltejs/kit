@@ -4,7 +4,7 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { VERSION } from '@sveltejs/kit';
 import { nodeFileTrace } from '@vercel/nft';
-import { parse_isr_expiration, pattern_to_src, resolve_runtime } from './utils.js';
+import { parse_isr_expiration, pattern_to_src, resolve_runtime, trace_ignore } from './utils.js';
 
 const INTERNAL = '![-]'; // this name is guaranteed not to conflict with user routes
 
@@ -13,6 +13,10 @@ const plugin = function (defaults = {}) {
 	// @ts-ignore TODO remove this in a future version
 	if ('edge' in defaults || defaults.runtime === 'edge') {
 		throw new Error('The `edge` runtime is no longer supported');
+	}
+
+	if (defaults.ignore !== undefined && typeof defaults.ignore !== 'function') {
+		throw new Error('The `ignore` option must be a function');
 	}
 
 	return {
@@ -76,7 +80,7 @@ const plugin = function (defaults = {}) {
 				}
 				builder.generateServerInstance(`${tmp}/server.js`, { routes });
 
-				await create_function_bundle(builder, entrypoint, dir, config);
+				await create_function_bundle(builder, entrypoint, dir, config, defaults.ignore);
 
 				for (const asset of builder.findServerAssets(routes)) {
 					// TODO use symlinks, once Build Output API supports doing so
@@ -535,18 +539,21 @@ function static_vercel_config(builder, config, dir) {
  * @param {string} entry
  * @param {string} dir
  * @param {import('./index.js').ServerlessConfig} config
+ * @param {((file: string) => boolean) | undefined} ignore
  */
-async function create_function_bundle(builder, entry, dir, config) {
+async function create_function_bundle(builder, entry, dir, config, ignore) {
 	fs.rmSync(dir, { force: true, recursive: true });
 
 	let base = entry;
 	while (base !== (base = path.dirname(base)));
 
+	const user_ignore = trace_ignore(base, ignore);
+
 	const traced = await nodeFileTrace([entry], {
 		base,
 		processCwd: process.cwd(),
 		// a wildcard directly under `base` would glob the entire filesystem
-		ignore: (file) => file.startsWith('**')
+		ignore: (file) => file.startsWith('**') || user_ignore?.(file) === true
 	});
 
 	/** @type {Map<string, string[]>} */

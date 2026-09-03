@@ -76,4 +76,12 @@ export type Config = ServerlessConfig & {
 	 * https://vercel.com/docs/build-output-api/v3/configuration#images
 	 */
 	images?: ImagesConfig;
+	/**
+	 * Exclude files from the serverless function bundles. Called with the absolute path of every
+	 * file [`@vercel/nft`](https://github.com/vercel/nft) traces from the function entry point.
+	 * Return `true` to leave the file, and anything reachable only through it, out of the bundle.
+	 *
+	 * This option can only be set at the adapter level. It is ignored if set in a route's `config`.
+	 */
+	ignore?: (file: string) => boolean;
 };

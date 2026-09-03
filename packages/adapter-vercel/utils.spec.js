@@ -1,5 +1,6 @@
 import { assert, test, describe } from 'vitest';
-import { parse_isr_expiration, pattern_to_src, resolve_runtime } from './utils.js';
+import path from 'node:path';
+import { parse_isr_expiration, pattern_to_src, resolve_runtime, trace_ignore } from './utils.js';
 
 // workaround so that TypeScript doesn't follow that import which makes it pick up that file and then error on missing import aliases
 const { parse_route_id } = await import(
@@ -93,5 +94,34 @@ describe('resolve_runtime', () => {
 
 	test('throws an error when resolving to an invalid runtime', () => {
 		assert.throws(() => resolve_runtime('node18.x', undefined), /Unsupported runtime: node18.x/);
+	});
+});
+
+describe('trace_ignore', () => {
+	test('returns undefined when no predicate is given', () => {
+		assert.equal(trace_ignore('/', undefined), undefined);
+	});
+
+	test('calls the predicate with the absolute path', () => {
+		/** @type {string[]} */
+		const seen = [];
+
+		const ignore = trace_ignore(path.sep, (file) => {
+			seen.push(file);
+			return false;
+		});
+
+		ignore?.(path.join('Users', 'jane', 'app', 'node_modules', 'vite', 'index.js'));
+
+		assert.deepEqual(seen, [
+			path.join(path.sep, 'Users', 'jane', 'app', 'node_modules', 'vite', 'index.js')
+		]);
+	});
+
+	test('forwards the result of the predicate', () => {
+		const ignore = trace_ignore(path.sep, (file) => file.includes('node_modules'));
+
+		assert.equal(ignore?.(path.join('app', 'node_modules', 'vite', 'index.js')), true);
+		assert.equal(ignore?.(path.join('app', 'src', 'index.js')), false);
 	});
 });

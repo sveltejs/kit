@@ -1,3 +1,4 @@
+import path from 'node:path';
 import process from 'node:process';
 
 /**
@@ -116,6 +117,17 @@ function assert_is_valid_runtime(key) {
 			`Unsupported runtime: ${key}. Supported runtimes are: ${valid_runtimes.join(', ')}. See the Node.js Version section in your Vercel project settings for info on the currently supported versions.`
 		);
 	}
+}
+
+/**
+ * Wrap a user `ignore` predicate for `@vercel/nft`, which reports paths relative to `base`.
+ * @param {string} base
+ * @param {((file: string) => boolean) | undefined} ignore
+ * @returns {((file: string) => boolean) | undefined}
+ */
+export function trace_ignore(base, ignore) {
+	if (!ignore) return undefined;
+	return (file) => ignore(path.join(base, file));
 }
 
 /** @typedef {typeof valid_runtimes[number]} RuntimeKey */
