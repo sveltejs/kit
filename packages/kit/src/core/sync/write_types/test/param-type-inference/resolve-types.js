@@ -36,7 +36,13 @@ const _invalid_dynamic_params = [
 	{ optionalNarrowedParam: 'c' }
 ];
 
+/** @typedef {Extract<import('$app/types').RouteId, `/static-${number}`>} StaticRouteId */
+/** @typedef {import('$app/paths/types.js').ResolveArgs<StaticRouteId>} StaticResolveArgs */
+
 // Enough routes are needed to exceed TypeScript's inference cutoff and expose the full-union error.
-const route = /** @type {import('$app/types').RouteId} */ ('/static-1');
+const route = /** @type {StaticRouteId} */ ('/static-1');
+
+/** @type {StaticResolveArgs} */
+const static_route_args = [route];
 
 resolve(route);
