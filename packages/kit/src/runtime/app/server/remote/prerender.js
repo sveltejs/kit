@@ -126,13 +126,7 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 				return /** @type {Promise<any>} */ (state.prerendering.remote_responses.get(url));
 			}
 
-			const promise = run_remote_function(
-				event,
-				state,
-				{ is_in_remote_prerender: true },
-				() => validate(arg),
-				fn
-			);
+			const promise = run_remote_function(event, state, 'prerender', () => validate(arg), fn);
 
 			if (state.prerendering) {
 				state.prerendering.remote_responses.set(url, promise);

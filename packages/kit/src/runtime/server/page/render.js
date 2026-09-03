@@ -30,7 +30,7 @@ import { Props, RenderNode } from '../../props.svelte.js';
 import { has_custom_transporters, uneval } from '#app/internal/transport';
 import { manifest } from '../internal.js';
 import { options } from '<sveltekit:generated>/server.js';
-import { derive_event, get_context } from '../context.js';
+import { derive_event, is_in } from '../context.js';
 
 // TODO rename this function/module
 
@@ -184,7 +184,7 @@ export async function render_response({
 
 		props.page.data = data;
 
-		const render_event = derive_event(event, { is_in_render: true });
+		const render_event = derive_event(event, 'render');
 
 		const render_opts = {
 			context: new Map([
@@ -233,10 +233,7 @@ export async function render_response({
 						throw new Error(
 							`Cannot call \`fetch\` eagerly during server-side rendering with relative URL (${info}) — put your \`fetch\` calls inside \`onMount\` or a \`load\` function instead`
 						);
-					} else if (
-						!warned &&
-						!get_context(try_get_request_store()?.event ?? event).is_in_remote_function
-					) {
+					} else if (!warned && !is_in(try_get_request_store()?.event ?? event, 'remote')) {
 						console.warn(
 							'Avoid calling `fetch` eagerly during server-side rendering — put your `fetch` calls inside `onMount` or a `load` function instead'
 						);

@@ -118,7 +118,7 @@ export function form(validate_or_fn, maybe_fn) {
 						output.result = await run_remote_function(
 							event,
 							state,
-							{ is_in_remote_form_or_command: true },
+							'form',
 							() => data,
 							(data) => (!maybe_fn ? fn() : fn(data, issue))
 						);
