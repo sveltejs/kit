@@ -26,6 +26,8 @@ export async function respond_with_error({ event, state, error, resolve_opts }) 
 		return static_error_page(transformed.status, transformed.message);
 	}
 
+	state.reset_headers?.();
+
 	/** @type {import('./types.js').Fetched[]} */
 	const fetched = [];
 	try {

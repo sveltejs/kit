@@ -698,6 +698,8 @@ export type RecordSpan = <T>(options: {
  * used for tracking things like remote function calls
  */
 export interface RequestState {
+	/** discards headers set by a render that failed, so the error page starts from the post-`handle` state */
+	reset_headers?(): void;
 	readonly getClientAddress: () => string;
 	readonly platform?: any;
 	/** @internal reads from the filesystem when user code tries to fetch a static asset */

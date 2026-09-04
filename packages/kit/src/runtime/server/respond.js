@@ -175,7 +175,7 @@ export async function internal_respond(request, state) {
 	}
 
 	/** @type {Record<string, string>} */
-	const headers = {};
+	let headers = {};
 
 	const { cookies, new_cookies, get_cookie_header, set_internal, set_trailing_slash } = get_cookies(
 		request,
@@ -583,6 +583,9 @@ export async function internal_respond(request, state) {
 	 * @param {import('@sveltejs/kit/hooks').ResolveOptions} [opts]
 	 */
 	async function resolve(event, page_nodes, opts) {
+		const handle_headers = { ...headers };
+		state.reset_headers ??= () => (headers = { ...handle_headers });
+
 		try {
 			if (opts) {
 				resolve_opts = {
