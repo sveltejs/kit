@@ -93,7 +93,7 @@ function create_response(req) {
 	res.destroyed = false;
 	res.headers = new Map();
 	res.chunks = [];
-	res.setHeader = (/** @type {string} */ name, /** @type {unknown} */ value) => {
+	res.setHeader = (/** @type {string} */ name, /** @type {string} */ value) => {
 		validateHeaderValue(name, value);
 		res.headers.set(name.toLowerCase(), value);
 	};
