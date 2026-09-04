@@ -4,11 +4,10 @@ import {
 	SvelteKitError,
 	ValidationError
 } from '@sveltejs/kit/internal';
-import { with_request_store } from '@sveltejs/kit/internal/server';
+import { with_request_store, inside } from '@sveltejs/kit/internal/server';
 import { add_deprecated_handle_error_properties, coalesce_to_error } from '../../utils/error.js';
 // `$app/server` reaches this module, so it must not import anything generated
 import { fix_stack_trace, hooks } from './internal.js';
-import { inside } from './context.js';
 
 /**
  * @param {import('@sveltejs/kit').RequestEvent} event

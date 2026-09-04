@@ -4,7 +4,12 @@
 
 import { error } from '@sveltejs/kit';
 import { Redirect, SvelteKitError } from '@sveltejs/kit/internal';
-import { with_request_store, merge_tracing, record_span } from '@sveltejs/kit/internal/server';
+import {
+	with_request_store,
+	merge_tracing,
+	record_span,
+	derive_event
+} from '@sveltejs/kit/internal/server';
 import { app_dir, base } from '#app/paths';
 import { is_form_content_type } from '../../utils/http.js';
 import { create_remote_key, parse_remote_arg, split_remote_key } from '../shared.js';
@@ -35,12 +40,11 @@ const KEEP_ALIVE_INTERVAL = 30_000;
  */
 export function create_live_query_response(event, state, internals, arg) {
 	const cancellation = new AbortController();
-	const live_event = {
-		...event,
+	const live_event = derive_event(event, null, {
 		request: new Request(event.request, {
 			signal: AbortSignal.any([event.request.signal, cancellation.signal])
 		})
-	};
+	});
 
 	const generator = internals.run(live_event, state, arg);
 

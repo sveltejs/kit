@@ -1,8 +1,7 @@
 /** @import { RemoteCommand } from '$app/server' */
 /** @import { MaybePromise, RemoteCommandInternals } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
-import { get_request_store } from '@sveltejs/kit/internal/server';
-import { inside } from '../../../server/context.js';
+import { get_request_store, inside } from '@sveltejs/kit/internal/server';
 import { create_validator, run_remote_function } from './shared.js';
 import { MUTATIVE_METHODS } from '../../../../constants.js';
 

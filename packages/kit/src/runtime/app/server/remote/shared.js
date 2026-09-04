@@ -1,10 +1,9 @@
 /** @import { RequestEvent } from '@sveltejs/kit' */
 /** @import { MaybePromise, RequestState, RemoteInternals, RemoteLiveQueryUserFunctionReturnType } from 'types' */
-/** @import { Kind } from '../../../server/context.js' */
+/** @import { Kind } from '@sveltejs/kit/internal/server' */
 import { error } from '@sveltejs/kit';
 import { ValidationError } from '@sveltejs/kit/internal';
-import { derive_event, inside } from '../../../server/context.js';
-import { with_request_store } from '@sveltejs/kit/internal/server';
+import { derive_event, inside, with_request_store } from '@sveltejs/kit/internal/server';
 
 /**
  * @param {any} validate_or_fn

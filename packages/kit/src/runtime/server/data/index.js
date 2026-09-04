@@ -9,6 +9,7 @@ import { normalize_path } from '../../../utils/url.js';
 import { stream_text } from '../../utils.js';
 import { with_version_header } from '../utils.js';
 import { manifest } from '../internal.js';
+import { derive_event } from '@sveltejs/kit/internal/server';
 
 /**
  * @param {import('@sveltejs/kit').RequestEvent} event
@@ -33,7 +34,7 @@ export async function render_data(event, state, route, invalidated_data_nodes, t
 		const url = new URL(event.url);
 		url.pathname = normalize_path(url.pathname, trailing_slash);
 
-		const new_event = { ...event, url };
+		const new_event = derive_event(event, null, { url });
 
 		const functions = node_ids.map((n, i) => {
 			return once(async () => {

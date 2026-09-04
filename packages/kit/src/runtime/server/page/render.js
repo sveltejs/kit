@@ -18,7 +18,12 @@ import {
 	add_resolution_suffix,
 	route_id_resolution_pathname
 } from '../../pathname.js';
-import { try_get_request_store, with_request_store } from '@sveltejs/kit/internal/server';
+import {
+	try_get_request_store,
+	with_request_store,
+	derive_event,
+	inside
+} from '@sveltejs/kit/internal/server';
 import { stream_text } from '../../utils.js';
 import { count_non_ssi_comments } from '../utils.js';
 import { handle_error_and_jsonify } from '../errors.js';
@@ -30,7 +35,6 @@ import { Props, RenderNode } from '../../props.svelte.js';
 import { has_custom_transporters, uneval } from '#app/internal/transport';
 import { manifest } from '../internal.js';
 import { options } from '<sveltekit:generated>/server.js';
-import { derive_event, inside } from '../context.js';
 
 // TODO rename this function/module
 
