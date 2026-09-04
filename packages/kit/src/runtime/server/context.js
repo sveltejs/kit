@@ -15,26 +15,19 @@ const KINDS = {
 
 /** @typedef {keyof typeof KINDS} Kind */
 
-/**
- * A value that throws on any use. Unlike an accessor, it survives every copy of the view
- * @template {'url' | 'params' | 'route'} K
- * @param {K} property
- * @returns {RequestEvent[K]}
- */
-function poison(property) {
-	const fail = () => {
-		throw new Error(
-			`Cannot access event.${property} in a query. Pass the value as an argument to the query instead`
-		);
-	};
-
-	return /** @type {RequestEvent[K]} */ (
-		new Proxy(Object.freeze({}), { get: fail, has: fail, ownKeys: fail, set: fail })
-	);
+// a query may not read the URL. The getters that say so live on a prototype: redefining them on
+// each view would drop it into dictionary mode, and the no-op setters make the copy skip those keys
+const QUERY_PROTOTYPE = {};
+for (const property of ['url', 'params', 'route']) {
+	Object.defineProperty(QUERY_PROTOTYPE, property, {
+		get() {
+			throw new Error(
+				`Cannot access event.${property} in a query. Pass the value as an argument to the query instead`
+			);
+		},
+		set() {}
+	});
 }
-
-/** What a query may not read */
-const POISON = { url: poison('url'), params: poison('params'), route: poison('route') };
 
 /**
  * @param {RequestEvent} event
@@ -66,14 +59,17 @@ export function inside(event, kind) {
 export function derive_event(event, kind, overrides) {
 	const entering = kind ? KINDS[kind] : 0;
 	const flags = get_flags(event) | entering;
+	const prototype = flags & KINDS.query ? QUERY_PROTOTYPE : Object.prototype;
 
-	return /** @type {RequestEvent} */ ({
-		...event,
-		...overrides,
-		...(entering & KINDS.remote ? restrictions(event, flags) : null),
-		...(flags & KINDS.query ? POISON : null),
-		[CONTEXT]: flags
-	});
+	const derived = Object.assign(
+		Object.create(prototype),
+		event,
+		overrides,
+		entering & KINDS.remote ? restrictions(event, flags) : null
+	);
+	derived[CONTEXT] = flags;
+
+	return derived;
 }
 
 /**
