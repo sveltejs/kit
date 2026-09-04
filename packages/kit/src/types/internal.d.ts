@@ -44,6 +44,16 @@ export interface ServerConfigureOptions extends Partial<ServerInitOptions> {
 	building?: boolean;
 	prerendering?: boolean;
 	fix_stack_trace?: (error: Error) => void;
+	/** reads static assets from disk when user code fetches them, for the hosts kit runs itself */
+	read_static?: (file: string) => Buffer<ArrayBuffer>;
+	/** used during development to check feature availability depending on the current route */
+	before_handle?: (
+		event: RequestEvent,
+		config: Record<string, any>,
+		prerender: PrerenderOption,
+		handle: () => Promise<Response>
+	) => Promise<Response>;
+	emulator?: Emulator;
 }
 
 export interface ServerInstance {
@@ -190,16 +200,6 @@ export interface Env {
 
 export interface InternalRequestOptions extends RequestOptions {
 	prerendering?: PrerenderOptions;
-	/** @internal for saving dependencies during prerendering and generating fallback pages */
-	read: (file: string) => Buffer<ArrayBuffer>;
-	/** @internal used during development to check feature availability depending on the current route */
-	before_handle?: (
-		event: RequestEvent,
-		config: any,
-		prerender: PrerenderOption,
-		handle: () => Promise<Response>
-	) => Promise<Response>;
-	emulator?: Emulator;
 }
 
 export interface ManifestData {
@@ -701,19 +701,6 @@ export type RecordSpan = <T>(options: {
 export interface RequestState {
 	readonly getClientAddress: () => string;
 	readonly platform?: any;
-	/** @internal reads from the filesystem when user code tries to fetch a static asset */
-	readonly read?: (file: string) => Buffer<ArrayBuffer>;
-	/**
-	 * Used to set up `__SVELTEKIT_TRACK__` which checks if a used feature is supported.
-	 * E.g. if `read` from `$app/server` is used, it checks whether the route's config is compatible.
-	 */
-	readonly before_handle?: (
-		event: RequestEvent,
-		config: Record<string, any>,
-		prerender: PrerenderOption,
-		handle: () => Promise<Response>
-	) => Promise<Response>;
-	readonly emulator?: Emulator;
 	readonly prerendering?: PrerenderOptions;
 	/**
 	 * When fetching data from a +server.js endpoint in `load`, the page's

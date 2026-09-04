@@ -385,7 +385,20 @@ export async function dev(
 					env,
 					read: (file) => createReadableStream(from_fs(file)),
 					assets,
-					fix_stack_trace
+					fix_stack_trace,
+					read_static: (file) => {
+						if (file in manifest.server_assets) {
+							return fs.readFileSync(from_fs(file));
+						}
+
+						return fs.readFileSync(path.join(svelte_config.files.assets, file));
+					},
+					before_handle: async (event, config, prerender, handle) => {
+						// we need to use .run because .enterWith() is not supported in Cloudflare Workers
+						// see https://blog.cloudflare.com/workers-node-js-asynclocalstorage/
+						return await async_local_storage.run({ event, config, prerender }, handle);
+					},
+					emulator
 				});
 
 				await init();
@@ -423,20 +436,7 @@ export async function dev(
 						const { remoteAddress } = req.socket;
 						if (remoteAddress) return remoteAddress;
 						throw new Error('Could not determine clientAddress');
-					},
-					read: (file) => {
-						if (file in manifest.server_assets) {
-							return fs.readFileSync(from_fs(file));
-						}
-
-						return fs.readFileSync(path.join(svelte_config.files.assets, file));
-					},
-					before_handle: async (event, config, prerender, handle) => {
-						// we need to use .run because .enterWith() is not supported in Cloudflare Workers
-						// see https://blog.cloudflare.com/workers-node-js-asynclocalstorage/
-						return await async_local_storage.run({ event, config, prerender }, handle);
-					},
-					emulator
+					}
 				});
 
 				if (rendered.status === 404) {

@@ -25,7 +25,6 @@ import { text_encoder } from '../utils.js';
 import { with_version_header } from './utils.js';
 import { manifest } from './internal.js';
 import { get_state, set_state } from './state.js';
-import { derive_event } from './context.js';
 
 /**
  * How long (in milliseconds) to wait after the last message was sent before

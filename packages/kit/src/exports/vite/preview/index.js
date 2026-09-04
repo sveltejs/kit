@@ -51,7 +51,15 @@ export async function preview(vite, svelte_config) {
 			manifest,
 			env: loadEnv(vite.config.mode, svelte_config.env.dir, ''),
 			read: (file) => createReadableStream(`${dir}/${file}`),
-			assets
+			assets,
+			read_static: (file) => {
+				if (file in manifest.server_assets) {
+					return fs.readFileSync(join(dir, file));
+				}
+
+				return fs.readFileSync(join(svelte_config.files.assets, file));
+			},
+			emulator: await svelte_config.adapter?.emulate?.()
 		});
 
 		await server.init();
@@ -62,8 +70,6 @@ export async function preview(vite, svelte_config) {
 		if (error instanceof Error) error.stack = error.message;
 		throw error;
 	}
-
-	const emulator = await svelte_config.adapter?.emulate?.();
 
 	return () => {
 		// Remove the base middleware. It screws with the URL.
@@ -218,15 +224,7 @@ export async function preview(vite, svelte_config) {
 						const { remoteAddress } = req.socket;
 						if (remoteAddress) return remoteAddress;
 						throw new Error('Could not determine clientAddress');
-					},
-					read: (file) => {
-						if (file in manifest.server_assets) {
-							return fs.readFileSync(join(dir, file));
-						}
-
-						return fs.readFileSync(join(svelte_config.files.assets, file));
-					},
-					emulator
+					}
 				})
 			);
 		});

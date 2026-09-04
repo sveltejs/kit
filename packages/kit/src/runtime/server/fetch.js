@@ -2,7 +2,7 @@ import { parseSetCookie } from 'cookie';
 import { noop } from '../../utils/functions.js';
 import { respond } from './respond.js';
 import * as paths from '#app/paths';
-import { hooks, manifest, read_implementation } from './internal.js';
+import { hooks, manifest, read_implementation, read_static } from './internal.js';
 import { has_prerendered_path } from './utils.js';
 import { fork_state_for_subrequest, get_state } from './state.js';
 
@@ -93,12 +93,12 @@ export function create_fetch({ event, get_cookie_header, set_internal }) {
 				if (is_asset || is_asset_html) {
 					const file = is_asset ? filename : filename_html;
 
-					if (state.read) {
+					if (read_static) {
 						const type = is_asset
 							? manifest.mime_types[filename.slice(filename.lastIndexOf('.'))]
 							: 'text/html';
 
-						return new Response(state.read(file), {
+						return new Response(read_static(file), {
 							headers: type ? { 'content-type': type } : {}
 						});
 					} else if (read_implementation && file in manifest.server_assets) {
