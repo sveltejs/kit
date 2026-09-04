@@ -1,5 +1,20 @@
 # @sveltejs/adapter-cloudflare
 
+## 8.0.0-next.7
+
+### Major Changes
+
+- breaking: populate env vars before `instrumentation.server.js` is evaluated and update the adapter instrumentation API ([#16303](https://github.com/sveltejs/kit/pull/16303))
+
+- breaking: remove cloudflare `platform`, emulate the `cloudflare:workers` module instead ([#16754](https://github.com/sveltejs/kit/pull/16754))
+
+- breaking: replace the `builder.generateManifest` with `builder.generateServerInstance` and `builder.manifest` ([#16875](https://github.com/sveltejs/kit/pull/16875))
+
+### Patch Changes
+
+- Updated dependencies [[`ee2f55b`](https://github.com/sveltejs/kit/commit/ee2f55b1e3338d2fa92a25fe53d095129edf1002), [`65673a4`](https://github.com/sveltejs/kit/commit/65673a4dd35054c16f8555eb896dfb773d86a556), [`1b79845`](https://github.com/sveltejs/kit/commit/1b79845e117f417b63fa399149816d73882c27ea), [`b12bb78`](https://github.com/sveltejs/kit/commit/b12bb789c17c30e7ff835de4af004d2f3eb36159), [`03f1687`](https://github.com/sveltejs/kit/commit/03f1687fe612ce3d2d9131139b5b188d9cf90c64), [`49f0808`](https://github.com/sveltejs/kit/commit/49f0808f3e983d0cb5a4d586cf0d1678467431ed), [`e7c74bf`](https://github.com/sveltejs/kit/commit/e7c74bf8227dc228cb36e822eaff5992569b830a), [`0876d63`](https://github.com/sveltejs/kit/commit/0876d633145088c7a5213e9f530cf2fed96ce35d), [`9a2b9ba`](https://github.com/sveltejs/kit/commit/9a2b9bacbb2de0533966bb029ef526b357aac086), [`22b8152`](https://github.com/sveltejs/kit/commit/22b8152f74882775ac63e1cf96d3016b92ac8256), [`f6d44cf`](https://github.com/sveltejs/kit/commit/f6d44cf007d6c6b54de57f6ae4ef8e2e7fea2f44), [`3c3a27b`](https://github.com/sveltejs/kit/commit/3c3a27bf67a26164266e132dbb7f9266643cf724), [`7f376b1`](https://github.com/sveltejs/kit/commit/7f376b109cd770638806184cf5d8bf4cf88c5bf2), [`8a587c7`](https://github.com/sveltejs/kit/commit/8a587c7b3919408ec66a362eb249fe5cf43f5316), [`aa4f960`](https://github.com/sveltejs/kit/commit/aa4f9605761e686f6aaf414b9186c68ddd2468dc)]:
+  - @sveltejs/kit@3.0.0-next.27
+
 ## 8.0.0-next.6
 
 ### Patch Changes
