@@ -1,4 +1,5 @@
 import { EventEmitter, once } from 'node:events';
+import { validateHeaderValue } from 'node:http';
 import { PassThrough } from 'node:stream';
 import { expect, test, vi } from 'vitest';
 import { getRequest, setResponse } from './index.js';
@@ -92,11 +93,17 @@ function create_response(req) {
 	res.destroyed = false;
 	res.headers = new Map();
 	res.chunks = [];
-	res.setHeader = (/** @type {string} */ name, /** @type {unknown} */ value) =>
+	res.setHeader = (/** @type {string} */ name, /** @type {unknown} */ value) => {
+		validateHeaderValue(name, value);
 		res.headers.set(name.toLowerCase(), value);
+	};
 	res.hasHeader = (/** @type {string} */ name) => res.headers.has(name.toLowerCase());
 	res.getHeaderNames = () => [...res.headers.keys()];
-	res.writeHead = () => res;
+	res.removeHeader = (/** @type {string} */ name) => res.headers.delete(name.toLowerCase());
+	res.writeHead = (/** @type {number} */ status) => {
+		res.statusCode = status;
+		return res;
+	};
 	res.write = (/** @type {unknown} */ chunk) => {
 		res.chunks.push(chunk);
 		return true;
@@ -253,6 +260,18 @@ test('does not abort the request signal when the response finishes normally', as
 	res.emit('close');
 
 	expect(request.signal.aborted).toBe(false);
+});
+
+test('responds with a 500 when Node rejects a header, instead of leaving the request open', async () => {
+	const res = /** @type {any} */ (create_response());
+	const finished = once(res, 'finish');
+
+	setResponse(res, new Response('{}', { headers: { 'x-test': '\u001f' } }));
+
+	await finished;
+	expect(res.statusCode).toBe(500);
+	expect(res.headers.size).toBe(0);
+	expect(Buffer.concat(res.chunks.map(Buffer.from)).toString()).toMatch('ERR_INVALID_CHAR');
 });
 
 test('sends fixed response bodies with a content-length', async () => {
