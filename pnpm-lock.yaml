@@ -1734,6 +1734,9 @@ importers:
 
   packages/package:
     dependencies:
+      '@sveltejs/load-config':
+        specifier: ^0.2.3
+        version: 0.2.3
       chokidar:
         specifier: ^5.0.0
         version: 5.0.0
@@ -3120,6 +3123,10 @@ packages:
 
   '@sveltejs/load-config@0.2.2':
     resolution: {integrity: sha512-K7dsJDQxBOF+f+epuhMactcjK2VP4MRkLKtwSykNtEI+cKVEyzrmmhQ1pmoxI800m4JKcyJ05L2M4yPwAGiBNw==}
+    engines: {node: '>= 18.0.0'}
+
+  '@sveltejs/load-config@0.2.3':
+    resolution: {integrity: sha512-VT3qmUb8pRV2QrZjd8iAmtg8lf4W0TIjZbvXtz5MKei/q96teWZgGJyyidJzOjzZzvdq616eSRVeMYIQChUTAQ==}
     engines: {node: '>= 18.0.0'}
 
   '@sveltejs/vite-plugin-svelte@7.3.0':
@@ -5774,6 +5781,8 @@ snapshots:
       typescript-eslint: 8.58.0(eslint@10.8.1(jiti@2.4.2)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3)
 
   '@sveltejs/load-config@0.2.2': {}
+
+  '@sveltejs/load-config@0.2.3': {}
 
   '@sveltejs/vite-plugin-svelte@7.3.0(svelte@5.57.0(@typescript-eslint/types@8.61.1))(vite@8.2.1(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0))':
     dependencies:
