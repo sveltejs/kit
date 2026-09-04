@@ -96,35 +96,24 @@ jobs:
           - { app: basics, script: pw:build, project: js, shard: 2/2 }
           - { app: basics, script: pw:build, project: no-js }
           - { script: test:build:rest, workers: 2 }
-          # the server config variants each app declares in its playwright.config.js
-          - { app: basics, script: pw:dev, variant: async, project: js, shard: 1/2 }
-          - { app: basics, script: pw:dev, variant: async, project: js, shard: 2/2 }
-          - { app: basics, script: pw:dev, variant: async, project: no-js }
+          # the server config variants each app declares in its playwright.config.js. nothing
+          # requests `__route.js` without JS, so resolution has no no-js legs
           - { app: basics, script: pw:build, variant: async, project: js, shard: 1/2 }
           - { app: basics, script: pw:build, variant: async, project: js, shard: 2/2 }
           - { app: basics, script: pw:build, variant: async, project: no-js }
           - { app: basics options, script: pw:dev, variant: resolution, project: js, shard: 1/2 }
           - { app: basics options, script: pw:dev, variant: resolution, project: js, shard: 2/2 }
-          - { app: basics options, script: pw:dev, variant: resolution, project: no-js }
           - { app: basics options, script: pw:build, variant: resolution, project: js, shard: 1/2 }
           - { app: basics options, script: pw:build, variant: resolution, project: js, shard: 2/2 }
-          - { app: basics options, script: pw:build, variant: resolution, project: no-js }
-          # the cross-platform subset of basics on the other browsers and operating systems
-          - { script: test:cross-platform:dev, os: windows-latest, workers: 2 }
-          - { script: test:cross-platform:build, os: windows-latest, workers: 2 }
-          - { script: test:cross-platform:dev, browser: firefox }
-          - { script: test:cross-platform:build, browser: firefox }
-          - { script: test:cross-platform:dev, os: macOS-latest, browser: webkit, workers: 3 }
-          - { script: test:cross-platform:build, os: macOS-latest, browser: webkit, workers: 3 }
           # `vite` swaps in a pnpm-workspace.yaml catalog, e.g. to test a beta
           # - { app: basics, script: pw:dev, vite: 'beta' }
-    env:
+    env: &e2e_env
       KIT_E2E_BROWSER: ${{ matrix.browser || 'chromium' }}
       KIT_E2E_WORKERS: ${{ matrix.workers || 4 }}
       KIT_E2E_SHARD: ${{ matrix.shard }}
       KIT_E2E_PROJECT: ${{ matrix.project }}
       KIT_E2E_VARIANT: ${{ matrix.variant }}
-    steps:
+    steps: &e2e_steps
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -160,3 +149,24 @@ jobs:
           retention-days: 3
           name: test-failure-${{ github.run_id }}-${{ strategy.job-index }}
           path: test-results.tar.gz
+  e2e-push:
+    # the legs a pull request rarely changes the outcome of, on pushes to version-3 only
+    if: github.event_name == 'push'
+    runs-on: ${{ matrix.os || 'ubuntu-latest' }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { app: basics, script: pw:dev, variant: async, project: js, shard: 1/2 }
+          - { app: basics, script: pw:dev, variant: async, project: js, shard: 2/2 }
+          - { app: basics, script: pw:dev, variant: async, project: no-js }
+          # the cross-platform subset of basics on the other browsers and operating systems
+          - { script: test:cross-platform:dev, os: windows-latest, workers: 2 }
+          - { script: test:cross-platform:build, os: windows-latest, workers: 2 }
+          - { script: test:cross-platform:dev, browser: firefox }
+          - { script: test:cross-platform:build, browser: firefox }
+          - { script: test:cross-platform:dev, os: macOS-latest, browser: webkit, workers: 3 }
+          - { script: test:cross-platform:build, os: macOS-latest, browser: webkit, workers: 3 }
+    env: *e2e_env
+    steps: *e2e_steps
