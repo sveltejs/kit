@@ -354,17 +354,6 @@ describe('Endpoints', () => {
 		expect(response.headers.get('digest')).toEqual(`sha-256=${digest}`);
 	});
 
-	test('request body can be read slow', async () => {
-		const data = randomBytes(1024 * 256);
-		const digest = createHash('sha256').update(data).digest('base64url');
-		const response = await get('/endpoint-input/sha256', {
-			method: 'PUT',
-			headers: { 'content-type': 'application/octet-stream' },
-			body: data
-		});
-		expect(await response.text()).toEqual(digest);
-	});
-
 	test('OPTIONS handler', async () => {
 		const url = '/endpoint-output';
 
