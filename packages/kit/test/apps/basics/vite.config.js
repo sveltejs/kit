@@ -28,7 +28,7 @@ export default defineConfig({
 						instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`,
 						initializer,
 						module: {
-							exports: ['init', 'respond', 'create_server', 'Server']
+							exports: ['configure', 'create_server', 'Server', 'format_response']
 						}
 					});
 				},

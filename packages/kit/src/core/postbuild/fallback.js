@@ -18,17 +18,14 @@ export default forked(import.meta.url, generate_fallback);
 async function generate_fallback({ manifest_path, env, out_dir, origin, assets }) {
 	const server_root = join(out_dir, 'output');
 
-	/** @type {import('types').ServerInternalModule} */
-	const { configure } = await import(pathToFileURL(`${server_root}/server/internal.js`).href);
-	await configure({ building: true });
-
 	/** @type {import('types').ServerModule} */
-	const { init, respond } = await import(pathToFileURL(`${server_root}/server/index.js`).href);
+	const { configure } = await import(pathToFileURL(`${server_root}/server/index.js`).href);
 
 	/** @type {import('types').SSRManifest} */
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
-	await init({ manifest, env });
+	const { init, respond } = await configure({ building: true, manifest, env });
+	await init();
 
 	const response = await respond(new Request(origin + '/[fallback]'), {
 		getClientAddress: () => {
