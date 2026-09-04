@@ -1,29 +1,18 @@
 import { noop } from '../../utils/functions.js';
-import { stream_from_iterable } from '../utils.js';
 import { IN_WEBCONTAINER, REROUTED_URL_HEADER } from '../../constants.js';
-import { respond } from './respond.js';
+import { respond as handle } from './respond.js';
 import { create_request_state } from './state.js';
-import { options, get_hooks } from '<sveltekit:generated>/server.js';
-import {
-	set_read_implementation,
-	set_manifest,
-	set_options,
-	set_hooks,
-	fix_stack_trace
-} from './internal.js';
-import { set_env } from '<sveltekit:generated>/env/config.js';
+import { configure, options, get_hooks } from '<sveltekit:generated>/server.js';
+import { set_manifest, set_options, set_hooks, fix_stack_trace } from './internal.js';
 import { init_tracing } from '@sveltejs/kit/internal/server';
 import { DEV } from 'esm-env';
 import { init_transport } from '#app/internal/transport';
 
-// set at module scope because prerendering evaluates user modules before constructing a `Server`
+// set at module scope because prerendering evaluates user modules before `init` runs
 set_options(options);
 
 /** @type {Promise<any>} */
 let init_promise;
-
-/** @type {Promise<void> | null} */
-let current = null;
 
 /**
  * Responses that were created with our monkey-patched `fetch`, which may need
@@ -57,142 +46,154 @@ if (DEV) {
 	};
 }
 
-export class Server {
-	/** @param {import('types').SSRManifest} manifest */
-	constructor(manifest) {
-		// Since AsyncLocalStorage is not working in webcontainers, we don't reset `sync_store`
-		// in `src/exports/internal/server/event.js` and handle only one request at a time.
-		if (IN_WEBCONTAINER) {
-			const respond = this.respond.bind(this);
+/**
+ * Configures the runtime and loads the user's hooks. Adapters call this at startup, some of them
+ * again per request to refresh `env`, so only the hooks are guarded against running twice
+ * @param {import('types').ServerConfigureOptions} opts
+ */
+export async function init(opts) {
+	if (__SVELTEKIT_SERVER_TRACING_ENABLED__) init_tracing(import('@opentelemetry/api'));
 
-			/** @type {typeof respond} */
-			this.respond = async (...args) => {
-				const { promise, resolve } = /** @type {PromiseWithResolvers<void>} */ (
-					Promise.withResolvers()
-				);
+	await configure(opts);
 
-				const previous = current;
-				current = promise;
+	await (init_promise ??= (async () => {
+		try {
+			const module = await get_hooks();
 
-				await previous;
-				return respond(...args).finally(resolve);
-			};
+			set_hooks({
+				handle: module.handle || (({ event, resolve }) => resolve(event)),
+				handleError:
+					module.handleError ||
+					(({ kind, error, issues }) => {
+						if (kind === 'validation') {
+							console.error('Remote function schema validation failed:', issues);
+							return;
+						}
+
+						if (kind !== 'unknown') {
+							// don't log stack traces for 404s etc, it's all internal gubbins
+							return;
+						}
+
+						let e = error;
+						while (e instanceof Error) {
+							if (e.stack) {
+								console.error(e.stack);
+							}
+							e = e.cause;
+						}
+
+						if (e) {
+							console.error(String(e));
+						}
+					}),
+				handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request)),
+				reroute: module.reroute || noop
+			});
+
+			init_transport(module.transport ?? {});
+
+			if (module.init) {
+				await module.init();
+			}
+		} catch (e) {
+			if (__SVELTEKIT_DEV__) {
+				set_hooks({
+					handle: () => {
+						throw e;
+					},
+					handleError: ({ error }) => console.error(error),
+					handleFetch: ({ request, fetch }) => fetch(request),
+					reroute: noop
+				});
+			} else {
+				throw e;
+			}
 		}
+	})());
+}
 
-		set_manifest(manifest);
+/**
+ * @param {Request} request
+ * @param {import('types').InternalRequestOptions} options
+ */
+async function respond_to(request, options) {
+	const request_state = create_request_state(options);
+
+	const response = await handle(request, request_state);
+
+	if (DEV) {
+		const error = decoded_responses.get(response);
+		if (error) console.error(fix_stack_trace(error));
 	}
 
-	/**
-	 * @param {import('@sveltejs/kit').ServerInitOptions} opts
-	 */
-	async init({ env, read }) {
-		// Take care: Some adapters may have to call `Server.init` per-request to set env vars,
-		// so anything that shouldn't be rerun should be wrapped in an `if` block to make sure it hasn't
-		// been done already.
+	if (request_state.rerouted_url) {
+		response.headers.set(REROUTED_URL_HEADER, request_state.rerouted_url);
+	}
 
-		if (__SVELTEKIT_SERVER_TRACING_ENABLED__) init_tracing(import('@opentelemetry/api'));
+	return response;
+}
 
-		// set env, in case it's used in initialisation
-		set_env(env);
+/**
+ * AsyncLocalStorage does not work in webcontainers, so there `sync_store` is never reset
+ * (see `src/exports/internal/server/event.js`) and requests are handled one at a time
+ * @param {typeof respond_to} fn
+ */
+function serialise(fn) {
+	/** @type {Promise<void> | null} */
+	let current = null;
 
-		if (read) {
-			// Wrap the read function to handle MaybePromise<ReadableStream>
-			// and ensure the public API stays synchronous
-			/** @param {string} file */
-			const wrapped_read = (file) => {
-				const result = read(file);
-				if (result instanceof ReadableStream) {
-					return result;
-				}
+	/** @type {typeof respond_to} */
+	return async (...args) => {
+		const { promise, resolve } = /** @type {PromiseWithResolvers<void>} */ (
+			Promise.withResolvers()
+		);
 
-				return stream_from_iterable(
-					(async function* () {
-						const stream = await result;
-						if (stream) yield* stream;
-					})()
-				);
-			};
+		const previous = current;
+		current = promise;
 
-			set_read_implementation(wrapped_read);
-		}
+		await previous;
+		return fn(...args).finally(resolve);
+	};
+}
 
-		// During dev and for some adapters this function might be called in quick succession,
-		// so we need to make sure we're not invoking this logic (most notably the init hook) multiple times
-		await (init_promise ??= (async () => {
-			try {
-				const module = await get_hooks();
+export const respond = IN_WEBCONTAINER ? serialise(respond_to) : respond_to;
 
-				set_hooks({
-					handle: module.handle || (({ event, resolve }) => resolve(event)),
-					handleError:
-						module.handleError ||
-						(({ kind, error, issues }) => {
-							if (kind === 'validation') {
-								console.error('Remote function schema validation failed:', issues);
-								return;
-							}
+/**
+ * The `server` object adapters receive from `builder.generateServerInstance`
+ * @param {import('types').SSRManifest} manifest
+ * @returns {import('@sveltejs/kit').Server}
+ */
+export function create_server(manifest) {
+	// set now rather than in `init`, since user modules may read the manifest at their top level
+	set_manifest(manifest);
 
-							if (kind !== 'unknown') {
-								// don't log stack traces for 404s etc, it's all internal gubbins
-								return;
-							}
+	return {
+		// adapters get to set `env` and `read`, nothing else
+		init: ({ env, read }) => init({ env, read }),
+		respond
+	};
+}
 
-							let e = error;
-							while (e instanceof Error) {
-								if (e.stack) {
-									console.error(e.stack);
-								}
-								e = e.cause;
-							}
+/** @deprecated use the `server` written by `builder.generateServerInstance`, or `init` and `respond` */
+export class Server {
+	#server;
 
-							if (e) {
-								console.error(String(e));
-							}
-						}),
-					handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request)),
-					reroute: module.reroute || noop
-				});
+	/** @param {import('types').SSRManifest} manifest */
+	constructor(manifest) {
+		this.#server = create_server(manifest);
+	}
 
-				init_transport(module.transport ?? {});
-
-				if (module.init) {
-					await module.init();
-				}
-			} catch (e) {
-				if (__SVELTEKIT_DEV__) {
-					set_hooks({
-						handle: () => {
-							throw e;
-						},
-						handleError: ({ error }) => console.error(error),
-						handleFetch: ({ request, fetch }) => fetch(request),
-						reroute: noop
-					});
-				} else {
-					throw e;
-				}
-			}
-		})());
+	/** @param {import('@sveltejs/kit').ServerInitOptions} opts */
+	init(opts) {
+		return this.#server.init(opts);
 	}
 
 	/**
 	 * @param {Request} request
 	 * @param {import('types').InternalRequestOptions} options
 	 */
-	async respond(request, options) {
-		const request_state = create_request_state(options);
-
-		const response = await respond(request, request_state);
-
-		if (DEV) {
-			const error = decoded_responses.get(response);
-			if (error) console.error(fix_stack_trace(error));
-		}
-
-		if (request_state.rerouted_url) {
-			response.headers.set(REROUTED_URL_HEADER, request_state.rerouted_url);
-		}
-
-		return response;
+	respond(request, options) {
+		return this.#server.respond(request, options);
 	}
 }

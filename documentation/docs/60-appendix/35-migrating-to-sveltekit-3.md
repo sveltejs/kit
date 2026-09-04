@@ -520,6 +520,7 @@ For adapter authors, there are some additional changes:
 - `builder.compress` returns a list of compressed files
 - `builder.mkdirp` and `builder.rimraf` are deprecated in favour of `node:fs` methods
 - `builder.generateManifest` has been removed — use `builder.generateServerInstance` to replace it, and `builder.manifest` to access the manifest
+- the `Server` class exported from the server output is deprecated — use the `server` object written by `builder.generateServerInstance`
 
 #### Server instrumentation
 

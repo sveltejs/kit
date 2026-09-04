@@ -1,15 +1,11 @@
 /** Internal version of $app/server */
 declare module '<sveltekit:generated>/server.js' {
-	import { SSROptions, ServerHooks, SSRManifest } from 'types';
+	import { SSROptions, ServerHooks, ServerConfigureOptions } from 'types';
 
 	export const options: SSROptions;
-	export const get_hooks: () => Promise<Partial<ServerHooks>>;
-	export let fix_stack_trace: (error: Error) => string;
-	export let manifest: SSRManifest;
-	export function read_implementation(path: string): ReadableStream;
-	export function set_fix_stack_trace(fn: (error: Error) => string): void;
-	export function set_manifest(manifest: SSRManifest): void;
-	export function set_read_implementation(fn: (path: string) => ReadableStream): void;
+	export function get_hooks(): Promise<Partial<ServerHooks>>;
+	export function configure(options: ServerConfigureOptions): Promise<void>;
+	export function format_response(status: number, request: Request): string;
 }
 
 declare module '<sveltekit:generated>/env/config.js' {
