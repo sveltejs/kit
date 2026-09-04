@@ -1,5 +1,43 @@
 # @sveltejs/kit
 
+## 3.0.0-next.27
+
+### Major Changes
+
+- major: error when a client-requested single-flight mutation isn't respected by the server, allow the server to explicitly ignore refreshes ([#16892](https://github.com/sveltejs/kit/pull/16892))
+
+- breaking: remove `Server` constructor and `SSRManifest` from public types ([#16876](https://github.com/sveltejs/kit/pull/16876))
+
+- breaking: replace the `builder.generateManifest` with `builder.generateServerInstance` and `builder.manifest` ([#16875](https://github.com/sveltejs/kit/pull/16875))
+
+### Minor Changes
+
+- feat: allow adapters to receive the Svelte config as a function argument when adding Vite plugins ([#16986](https://github.com/sveltejs/kit/pull/16986))
+
+- feat: allow adapters to override `getRequest` and `setResponse` during `vite dev` and `vite preview` ([#16753](https://github.com/sveltejs/kit/pull/16753))
+
+### Patch Changes
+
+- fix: clarify circular imports from `src/env` ([#17014](https://github.com/sveltejs/kit/pull/17014))
+
+- breaking: populate env vars before `instrumentation.server.js` is evaluated and update the adapter instrumentation API ([#16303](https://github.com/sveltejs/kit/pull/16303))
+
+- fix: record a history traversal before resolving its route ([#16959](https://github.com/sveltejs/kit/pull/16959))
+
+- fix: support coordinate objects from image inputs in remote forms ([#16944](https://github.com/sveltejs/kit/pull/16944))
+
+- fix: walk and copy directories without a stat per file ([#16995](https://github.com/sveltejs/kit/pull/16995))
+
+- fix: widen remote form fields for union schemas and string enums ([#16937](https://github.com/sveltejs/kit/pull/16937))
+
+- chore: replace deprecated Vite dev server APIs ([#16961](https://github.com/sveltejs/kit/pull/16961))
+
+- fix: settle a query's pending request in place when its value arrives through `set()` ([#16958](https://github.com/sveltejs/kit/pull/16958))
+
+- fix: prevent `await_reactivity_loss` warning and `state_unsafe_mutation` error when the new version detector runs after an `await` ([#16915](https://github.com/sveltejs/kit/pull/16915))
+
+- chore: parse page options and remote modules with Vite's `parseSync` instead of `acorn` ([#16947](https://github.com/sveltejs/kit/pull/16947))
+
 ## 3.0.0-next.26
 
 ### Patch Changes
