@@ -8,14 +8,12 @@
 		"preview": "vite preview",
 		"check": "svelte-kit sync && node node_modules/@typescript/native/bin/tsc && svelte-check --tsgo --incremental",
 		"test": "pnpm test:dev && pnpm test:build",
-		"test:dev": "node test/setup.js && DEV=true playwright test",
-		"test:build": "node test/setup.js && PUBLIC_PRERENDERING=false playwright test",
+		"test:dev": "pnpm pw:dev",
+		"test:build": "pnpm pw:build",
+		"pw:dev": "node test/setup.js && DEV=true playwright test",
+		"pw:build": "node test/setup.js && playwright test",
 		"test:cross-platform:dev": "pnpm test:client-import && node test/setup.js && DEV=true playwright test test/cross-platform/",
 		"test:cross-platform:build": "node test/setup.js && playwright test test/cross-platform/",
-		"test:server-side-route-resolution:dev": "node test/setup.js && DEV=true ROUTER_RESOLUTION=server playwright test",
-		"test:server-side-route-resolution:build": "node test/setup.js && PUBLIC_PRERENDERING=false ROUTER_RESOLUTION=server playwright test",
-		"test:svelte-async:dev": "node test/setup.js && DEV=true SVELTE_ASYNC=true playwright test",
-		"test:svelte-async:build": "node test/setup.js && PUBLIC_PRERENDERING=false SVELTE_ASYNC=true playwright test",
 		"test:client-import": "svelte-kit sync && vitest run"
 	},
 	"devDependencies": {

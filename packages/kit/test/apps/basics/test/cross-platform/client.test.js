@@ -1,6 +1,6 @@
 import process from 'node:process';
 import { expect } from '@playwright/test';
-import { test } from '../../../../utils.js';
+import { test, variant } from '../../../../utils.js';
 
 /** @typedef {{ fromScroll: { x: number, y: number }, toScroll: { x: number, y: number }, type: string }} ScrollState */
 
@@ -904,7 +904,7 @@ test.describe('Prefetching', () => {
 		// with server-side route resolution the loaders were cached during `match`,
 		// so no additional `__route.js` request may occur. In client-resolution mode
 		// this is trivially true (no `__route.js` requests exist at all) — the test is
-		// meaningful under the `test:server-side-route-resolution:*` suites, so don't
+		// meaningful under the `resolution` variant, so don't
 		// remove it from the matrix
 		expect(requests.filter((r) => r.includes('__route.js'))).toEqual([]);
 	});
@@ -957,7 +957,7 @@ test.describe('Prefetching', () => {
 			// `/set-cookie` is a `+server.js` with no `+page`, so there is no code to preload
 			await app.preloadCode('/set-cookie');
 
-			if (process.env.ROUTER_RESOLUTION) {
+			if (variant === 'resolution') {
 				// under server resolution the endpoint tells us the route exists but has no page
 				expect(warnings.join('\n')).toMatch('has no `+page`');
 			} else {
@@ -967,7 +967,7 @@ test.describe('Prefetching', () => {
 			}
 		});
 
-		if (!process.env.ROUTER_RESOLUTION) {
+		if (variant !== 'resolution') {
 			test('hints at `match` when preloadCode is called with a pathname', async ({ page, app }) => {
 				await page.goto('/routing/a');
 

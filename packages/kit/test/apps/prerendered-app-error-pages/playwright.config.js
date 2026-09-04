@@ -1,1 +1,3 @@
-export { config as default } from '../../utils.js';
+import { configure } from '../../utils.js';
+
+export default configure();
