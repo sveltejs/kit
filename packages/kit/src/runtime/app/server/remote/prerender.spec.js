@@ -3,6 +3,7 @@
 import { expect, test, vi } from 'vitest';
 import { HandledHttpError, ValidationError } from '@sveltejs/kit/internal';
 import { prerender } from './prerender.js';
+import { CONTEXT } from '@sveltejs/kit/internal/server';
 import { init_transport, stringify } from '#app/internal/transport';
 
 init_transport({});
@@ -37,14 +38,14 @@ function setup(fetch_impl) {
 			/** @type {unknown} */ ({
 				request: { url: 'http://localhost/' },
 				isRemoteRequest: false,
-				cookies: {}
+				cookies: {},
+				[CONTEXT]: 0
 			})
 		),
 		state: /** @type {RequestState} */ (
 			/** @type {unknown} */ ({
 				remote: {},
-				prerendering: undefined,
-				is_in_remote_query: false
+				prerendering: undefined
 			})
 		)
 	};

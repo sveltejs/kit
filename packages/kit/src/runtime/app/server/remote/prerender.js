@@ -90,7 +90,7 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 		// implicit lookup, so that the result is inlined into the page payload (`data.p`)
 		// and the client doesn't need to fetch it again upon hydration
 		/** @type {Promise<Output> & Partial<RemoteResource<Output>>} */
-		const promise = get_response(__, payload, state, async () => {
+		const promise = get_response(__, payload, event, state, async () => {
 			const id = __.id;
 			const url = `${base}/${app_dir}/remote/${id}${payload ? `/${payload}` : ''}`;
 
@@ -126,13 +126,7 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 				return /** @type {Promise<any>} */ (state.prerendering.remote_responses.get(url));
 			}
 
-			const promise = run_remote_function(
-				event,
-				{ ...state, is_in_remote_prerender: true },
-				false,
-				() => validate(arg),
-				fn
-			);
+			const promise = run_remote_function(event, state, 'prerender', () => validate(arg), fn);
 
 			if (state.prerendering) {
 				state.prerendering.remote_responses.set(url, promise);

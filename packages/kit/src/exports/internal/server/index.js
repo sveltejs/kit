@@ -1,5 +1,7 @@
 /** @import { Span } from '@opentelemetry/api' */
+/** @import { RequestEvent } from '@sveltejs/kit' */
 import { try_get_request_store } from './event.js';
+import { derive_event } from './context.js';
 
 export function get_origin() {
 	// `request.url` rather than `event.url`, which throws inside queries
@@ -8,19 +10,12 @@ export function get_origin() {
 }
 
 /**
- * @template {{ tracing: { enabled: boolean, root: Span, current: Span } }} T
- * @param {T} event_like
+ * @param {RequestEvent} event
  * @param {Span} current
- * @returns {T}
+ * @returns {RequestEvent}
  */
-export function merge_tracing(event_like, current) {
-	return {
-		...event_like,
-		tracing: {
-			...event_like.tracing,
-			current
-		}
-	};
+export function merge_tracing(event, current) {
+	return derive_event(event, null, { tracing: { ...event.tracing, current } });
 }
 
 export {
@@ -31,6 +26,8 @@ export {
 } from './event.js';
 
 export { init_remote_functions } from './remote-functions.js';
+
+export * from './context.js';
 
 export { init_tracing, otel, record_span } from './telemetry.js';
 

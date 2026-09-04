@@ -4,7 +4,12 @@
 
 import { error } from '@sveltejs/kit';
 import { Redirect, SvelteKitError } from '@sveltejs/kit/internal';
-import { with_request_store, merge_tracing, record_span } from '@sveltejs/kit/internal/server';
+import {
+	with_request_store,
+	merge_tracing,
+	record_span,
+	derive_event
+} from '@sveltejs/kit/internal/server';
 import { app_dir, base } from '#app/paths';
 import { is_form_content_type } from '../../utils/http.js';
 import { create_remote_key, parse_remote_arg, split_remote_key } from '../shared.js';
@@ -35,12 +40,11 @@ const KEEP_ALIVE_INTERVAL = 30_000;
  */
 export function create_live_query_response(event, state, internals, arg) {
 	const cancellation = new AbortController();
-	const live_event = {
-		...event,
+	const live_event = derive_event(event, null, {
 		request: new Request(event.request, {
 			signal: AbortSignal.any([event.request.signal, cancellation.signal])
 		})
-	};
+	});
 
 	const generator = internals.run(live_event, state, arg);
 
@@ -257,10 +261,7 @@ async function handle_remote_call_internal(event, state, id) {
 				}
 
 				const fn = internals.fn;
-				data._ = await with_request_store(
-					{ event, state: { ...state, is_in_remote_form_or_command: true } },
-					() => fn(input, meta, form_data)
-				);
+				data._ = await with_request_store({ event, state }, () => fn(input, meta, form_data));
 
 				if (data._.issues) {
 					// special case — don't serialize refreshes/reconnects
@@ -282,10 +283,7 @@ async function handle_remote_call_internal(event, state, id) {
 				state.remote.requested = create_requested_map(refreshes);
 				const arg = parse_remote_arg(payload);
 
-				data._ = await with_request_store(
-					{ event, state: { ...state, is_in_remote_form_or_command: true } },
-					() => fn(arg)
-				);
+				data._ = await with_request_store({ event, state }, () => fn(arg));
 
 				break;
 			}
@@ -565,10 +563,7 @@ async function handle_remote_form_post_internal(event, state, id) {
 			data.id = JSON.parse(decodeURIComponent(action_id));
 		}
 
-		await with_request_store(
-			{ event, state: { ...state, is_in_remote_form_or_command: true } },
-			() => __.fn(data, meta, form_data)
-		);
+		await with_request_store({ event, state }, () => __.fn(data, meta, form_data));
 
 		// We don't want the data to appear on `let { form } = $props()`, which is why we're not returning it.
 		// It is instead available on `myForm.result`, setting of which happens within the remote `form` function.

@@ -6,7 +6,9 @@ import {
 	merge_tracing,
 	otel,
 	record_span,
-	with_request_store
+	with_request_store,
+	CONTEXT,
+	derive_event
 } from '@sveltejs/kit/internal/server';
 import { base, app_dir } from '#app/paths';
 import { is_endpoint_request, render_endpoint } from './endpoint.js';
@@ -236,7 +238,8 @@ export async function internal_respond(request, state) {
 		url,
 		isDataRequest: is_data_request,
 		isSubRequest: state.depth > 0,
-		isRemoteRequest: !!remote_id
+		isRemoteRequest: !!remote_id,
+		[CONTEXT]: 0
 	};
 
 	// @ts-expect-error this has to be assigned lazily
@@ -479,14 +482,13 @@ export async function internal_respond(request, state) {
 				'sveltekit.is_sub_request': event.isSubRequest
 			},
 			fn: async (root_span) => {
-				const traced_event = {
-					...event,
+				const traced_event = derive_event(event, null, {
 					tracing: {
 						enabled: __SVELTEKIT_SERVER_TRACING_ENABLED__,
 						root: root_span,
 						current: root_span
 					}
-				};
+				});
 
 				return await with_request_store({ event: traced_event, state }, () =>
 					hooks.handle({

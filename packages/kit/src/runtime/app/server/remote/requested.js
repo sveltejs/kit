@@ -1,6 +1,6 @@
 /** @import { RemoteLiveQuery, RemoteLiveQueryFunction, RemoteQuery, RemoteQueryFunction, RequestedResult, RemoteQueryRequestedResult, RemoteLiveQueryRequestedResult } from '$app/server' */
 /** @import { MaybePromise, RemoteAnyQueryInternals } from 'types' */
-import { get_request_store } from '@sveltejs/kit/internal/server';
+import { get_request_store, inside } from '@sveltejs/kit/internal/server';
 import { create_remote_key, parse_remote_arg } from '../../../shared.js';
 import { noop } from '../../../../utils/functions.js';
 import { get_cache } from './shared.js';
@@ -138,7 +138,7 @@ export function requested(query, limit) {
 	// command/form wrapper when we enter them, and if we initialize them here
 	// we will enable requested(...) in contexts where it shouldn't be allowed,
 	// such as load functions or other server functions
-	if (!state.is_in_remote_form_or_command) {
+	if (!inside(event, 'mutation')) {
 		throw new Error(
 			'requested(...) can only be called in the context of a command/form remote function'
 		);

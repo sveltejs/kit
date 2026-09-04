@@ -18,7 +18,12 @@ import {
 	add_resolution_suffix,
 	route_id_resolution_pathname
 } from '../../pathname.js';
-import { try_get_request_store, with_request_store } from '@sveltejs/kit/internal/server';
+import {
+	try_get_request_store,
+	with_request_store,
+	derive_event,
+	inside
+} from '@sveltejs/kit/internal/server';
 import { stream_text } from '../../utils.js';
 import { count_non_ssi_comments } from '../utils.js';
 import { handle_error_and_jsonify } from '../errors.js';
@@ -183,7 +188,7 @@ export async function render_response({
 
 		props.page.data = data;
 
-		const render_state = { ...state, is_in_render: true };
+		const render_event = derive_event(event, 'render');
 
 		const render_opts = {
 			context: new Map([
@@ -201,7 +206,7 @@ export async function render_response({
 							throw e;
 						}
 
-						const handled = handle_error_and_jsonify(event, render_state, e);
+						const handled = handle_error_and_jsonify(render_event, state, e);
 
 						// TODO 4.0 make this an async function and await `handled`
 						if (handled instanceof Promise) {
@@ -232,7 +237,7 @@ export async function render_response({
 						throw new Error(
 							`Cannot call \`fetch\` eagerly during server-side rendering with relative URL (${info}) — put your \`fetch\` calls inside \`onMount\` or a \`load\` function instead`
 						);
-					} else if (!warned && !try_get_request_store()?.state.is_in_remote_function) {
+					} else if (!warned && !inside(try_get_request_store()?.event ?? event, 'remote')) {
 						console.warn(
 							'Avoid calling `fetch` eagerly during server-side rendering — put your `fetch` calls inside `onMount` or a `load` function instead'
 						);
@@ -243,7 +248,7 @@ export async function render_response({
 				};
 			}
 
-			rendered = await with_request_store({ event, state: render_state }, async () => {
+			rendered = await with_request_store({ event: render_event, state }, async () => {
 				return render(Root, { ...render_opts, props });
 			});
 

@@ -1,8 +1,9 @@
 /** @import { RequestEvent } from '@sveltejs/kit' */
-/** @import { MaybePromise, RequestState, RemoteInternals, RequestStore, RemoteLiveQueryUserFunctionReturnType } from 'types' */
+/** @import { MaybePromise, RequestState, RemoteInternals, RemoteLiveQueryUserFunctionReturnType } from 'types' */
+/** @import { Kind } from '@sveltejs/kit/internal/server' */
 import { error } from '@sveltejs/kit';
 import { ValidationError } from '@sveltejs/kit/internal';
-import { with_request_store } from '@sveltejs/kit/internal/server';
+import { derive_event, inside, with_request_store } from '@sveltejs/kit/internal/server';
 
 /**
  * @param {any} validate_or_fn
@@ -54,18 +55,19 @@ export function create_validator(validate_or_fn, maybe_fn) {
  * @template {MaybePromise<any>} T
  * @param {RemoteInternals} internals
  * @param {string} payload — the stringified raw argument (i.e. the cache key the client will use)
+ * @param {RequestEvent} event
  * @param {RequestState} state
  * @param {() => Promise<T>} get_result
  * @returns {Promise<T>}
  */
-export async function get_response(internals, payload, state, get_result) {
+export async function get_response(internals, payload, event, state, get_result) {
 	// wait a beat, in case `myQuery().set(...)` or `myQuery().refresh()` is immediately called
 	// eslint-disable-next-line @typescript-eslint/await-thenable
 	await 0;
 
 	const cache = get_cache(internals, state);
 
-	if (!state.is_in_remote_query) {
+	if (!inside(event, 'query')) {
 		// if this is a top-level (not nested) `await myQuery()`, include it in the serialized response
 		get_implicit_lookup(internals, state)[payload] = get_result;
 	}
@@ -74,79 +76,16 @@ export async function get_response(internals, payload, state, get_result) {
 }
 
 /**
- * @param {RequestEvent} event
- * @param {RequestState} state
- * @param {boolean} allow_cookies
- * @returns {RequestStore}
- */
-function derive_remote_function_event(event, state, allow_cookies) {
-	/** @type {RequestEvent} */
-	const derived = {
-		...event,
-		setHeaders: () => {
-			throw new Error('setHeaders is not allowed in remote functions');
-		},
-		cookies: {
-			...event.cookies,
-			set: (name, value, opts) => {
-				if (!allow_cookies) {
-					throw new Error('Cannot set cookies in `query` or `prerender` functions');
-				}
-
-				if (opts.path && !opts.path.startsWith('/')) {
-					throw new Error('Cookies set in remote functions must have an absolute path');
-				}
-
-				return event.cookies.set(name, value, opts);
-			},
-			delete: (name, opts) => {
-				if (!allow_cookies) {
-					throw new Error('Cannot delete cookies in `query` or `prerender` functions');
-				}
-
-				if (opts.path && !opts.path.startsWith('/')) {
-					throw new Error('Cookies deleted in remote functions must have an absolute path');
-				}
-
-				return event.cookies.delete(name, opts);
-			}
-		}
-	};
-
-	if (state.is_in_remote_query) {
-		for (const property of ['url', 'params', 'route']) {
-			// non-enumerable so spreading for a nested derivation doesn't invoke the getter
-			Object.defineProperty(derived, property, {
-				enumerable: false,
-				get() {
-					throw new Error(
-						`Cannot access event.${property} in a query. Pass the value as an argument to the query instead`
-					);
-				}
-			});
-		}
-	}
-
-	return {
-		event: derived,
-		state: {
-			...state,
-			is_in_remote_function: true
-		}
-	};
-}
-
-/**
  * Like `with_event` but removes things from `event` you cannot see/call in remote functions, such as `setHeaders`.
  * @template T
  * @param {RequestEvent} event
  * @param {RequestState} state
- * @param {boolean} allow_cookies
+ * @param {Kind} kind
  * @param {() => any} get_input
  * @param {(arg?: any) => T} fn
  */
-export async function run_remote_function(event, state, allow_cookies, get_input, fn) {
-	const store = derive_remote_function_event(event, state, allow_cookies);
+export async function run_remote_function(event, state, kind, get_input, fn) {
+	const store = { event: derive_event(event, kind), state };
 
 	// In two parts, each with_event, so that runtimes without async local storage can still get the event at the start of the function
 	const input = await with_request_store(store, get_input);
@@ -158,13 +97,13 @@ export async function run_remote_function(event, state, allow_cookies, get_input
  * @template T
  * @param {RequestEvent} event
  * @param {RequestState} state
- * @param {boolean} allow_cookies
+ * @param {Kind} kind
  * @param {() => any} get_input
  * @param {(arg?: any) => RemoteLiveQueryUserFunctionReturnType<T>} fn
  * @param {string} name
  */
-export async function* run_remote_generator(event, state, allow_cookies, get_input, fn, name) {
-	const store = derive_remote_function_event(event, state, allow_cookies);
+export async function* run_remote_generator(event, state, kind, get_input, fn, name) {
+	const store = { event: derive_event(event, kind), state };
 
 	// In two parts, each with_event, so that runtimes without async local storage can still get the event at the start of the function / calls to next
 	const input = await with_request_store(store, get_input);
