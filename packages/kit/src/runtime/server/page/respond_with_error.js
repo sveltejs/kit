@@ -10,6 +10,7 @@ import { server_data_serializer } from './data_serializer.js';
 import { manifest } from '../internal.js';
 import { options } from '<sveltekit:generated>/server.js';
 import { escape_html } from '../../../utils/escape.js';
+import { get_state } from '../state.js';
 
 /**
  * @typedef {import('./types.js').Loaded} Loaded
@@ -18,15 +19,15 @@ import { escape_html } from '../../../utils/escape.js';
 /**
  * @param {{
  *   event: import('@sveltejs/kit').RequestEvent;
- *   state: import('types').RequestState;
  *   error: unknown;
  *   resolve_opts: import('types').RequiredResolveOptions;
  * }} opts
  */
-export async function respond_with_error({ event, state, error, resolve_opts }) {
+export async function respond_with_error({ event, error, resolve_opts }) {
+	const state = get_state(event);
 	// reroute to the fallback page to prevent an infinite chain of requests.
 	if (event.request.headers.get('x-sveltekit-error')) {
-		const transformed = await handle_error_and_jsonify(event, state, error);
+		const transformed = await handle_error_and_jsonify(event, error);
 		return static_error_page(transformed.status, transformed.message);
 	}
 
@@ -38,16 +39,15 @@ export async function respond_with_error({ event, state, error, resolve_opts }) 
 		const nodes = new PageNodes([default_layout]);
 		const ssr = nodes.ssr();
 		const csr = nodes.csr();
-		const data_serializer = server_data_serializer(event, state);
+		const data_serializer = server_data_serializer(event);
 		// Do this here first in case the awaits below before rendering themselves error
-		const transformed = await handle_error_and_jsonify(event, state, error);
+		const transformed = await handle_error_and_jsonify(event, error);
 
 		if (ssr) {
 			state.error = true;
 
 			const server_data_promise = load_server_data({
 				event,
-				state,
 				node: default_layout,
 				// eslint-disable-next-line @typescript-eslint/require-await
 				parent: async () => ({})
@@ -58,7 +58,6 @@ export async function respond_with_error({ event, state, error, resolve_opts }) 
 
 			const data = await load_data({
 				event,
-				state,
 				fetched,
 				node: default_layout,
 				// eslint-disable-next-line @typescript-eslint/require-await
@@ -93,7 +92,6 @@ export async function respond_with_error({ event, state, error, resolve_opts }) 
 			error_components: [],
 			fetched,
 			event,
-			state,
 			resolve_opts,
 			data_serializer
 		});
@@ -104,7 +102,7 @@ export async function respond_with_error({ event, state, error, resolve_opts }) 
 			return redirect_response(e.status, e.location);
 		}
 
-		const transformed = await handle_error_and_jsonify(event, state, e);
+		const transformed = await handle_error_and_jsonify(event, e);
 
 		return static_error_page(transformed.status, transformed.message);
 	}
@@ -132,11 +130,10 @@ export function static_error_page(status, message) {
 
 /**
  * @param {import('@sveltejs/kit').RequestEvent} event
- * @param {import('types').RequestState} state
  * @param {unknown} error
  */
-export async function handle_fatal_error(event, state, error) {
-	const body = await handle_error_and_jsonify(event, state, error);
+export async function handle_fatal_error(event, error) {
+	const body = await handle_error_and_jsonify(event, error);
 	const status = body.status;
 
 	// sec-fetch-dest would be nicer, but non-browser clients and plain HTTP hosts don't send it

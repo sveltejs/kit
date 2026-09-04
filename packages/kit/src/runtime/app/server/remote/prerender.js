@@ -2,7 +2,8 @@
 /** @import { RemoteFunctionResponse, RemotePrerenderInputsGenerator, RemotePrerenderInternals, MaybePromise } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { HandledHttpError } from '@sveltejs/kit/internal';
-import { get_request_store } from '@sveltejs/kit/internal/server';
+import { get_event } from '@sveltejs/kit/internal/server';
+import { get_state } from '../../../server/state.js';
 import { stringify_remote_arg } from '../../../shared.js';
 import { parse, stringify } from '#app/internal/transport';
 import { noop } from '../../../../utils/functions.js';
@@ -83,14 +84,15 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 
 	/** @type {RemotePrerenderFunction<Input, Output> & { __: RemotePrerenderInternals }} */
 	const wrapper = (arg) => {
-		const { event, state } = get_request_store();
+		const event = get_event();
+		const state = get_state(event);
 		const payload = stringify_remote_arg(arg);
 
 		// `get_response` (as opposed to bare `get_cache`) also registers the call in the
 		// implicit lookup, so that the result is inlined into the page payload (`data.p`)
 		// and the client doesn't need to fetch it again upon hydration
 		/** @type {Promise<Output> & Partial<RemoteResource<Output>>} */
-		const promise = get_response(__, payload, event, state, async () => {
+		const promise = get_response(__, payload, event, async () => {
 			const id = __.id;
 			const url = `${base}/${app_dir}/remote/${id}${payload ? `/${payload}` : ''}`;
 
@@ -126,7 +128,7 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 				return /** @type {Promise<any>} */ (state.prerendering.remote_responses.get(url));
 			}
 
-			const promise = run_remote_function(event, state, 'prerender', () => validate(arg), fn);
+			const promise = run_remote_function(event, 'prerender', () => validate(arg), fn);
 
 			if (state.prerendering) {
 				state.prerendering.remote_responses.set(url, promise);

@@ -1,5 +1,4 @@
 /** @import { RequestEvent } from '@sveltejs/kit' */
-/** @import { RequestState } from 'types' */
 import { assert, expect, test, vi } from 'vitest';
 import { sequence } from './sequence.js';
 
@@ -13,10 +12,7 @@ vi.mock(import('@sveltejs/kit/internal/server'), async (actualPromise) => {
 	const actual = await actualPromise();
 	return {
 		...actual,
-		get_request_store: () => ({
-			event: dummy_event,
-			state: /** @type {RequestState} */ (/** @type {unknown} */ ({}))
-		})
+		get_event: () => dummy_event
 	};
 });
 

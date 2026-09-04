@@ -18,12 +18,7 @@ import {
 	add_resolution_suffix,
 	route_id_resolution_pathname
 } from '../../pathname.js';
-import {
-	try_get_request_store,
-	with_request_store,
-	derive_event,
-	inside
-} from '@sveltejs/kit/internal/server';
+import { try_get_event, with_event, derive_event, inside } from '@sveltejs/kit/internal/server';
 import { stream_text } from '../../utils.js';
 import { count_non_ssi_comments } from '../utils.js';
 import { handle_error_and_jsonify } from '../errors.js';
@@ -35,6 +30,7 @@ import { Props, RenderNode } from '../../props.svelte.js';
 import { has_custom_transporters, uneval } from '#app/internal/transport';
 import { manifest } from '../internal.js';
 import { options } from '<sveltekit:generated>/server.js';
+import { get_state } from '../state.js';
 
 // TODO rename this function/module
 
@@ -47,7 +43,6 @@ import { options } from '<sveltekit:generated>/server.js';
  *   status: number;
  *   error: App.Error | null;
  *   event: import('@sveltejs/kit').RequestEvent;
- *   state: import('types').RequestState;
  *   resolve_opts: import('types').RequiredResolveOptions;
  *   action_result?: import('types').ServerActionResult;
  *   data_serializer: import('./types.js').ServerDataSerializer;
@@ -61,12 +56,12 @@ export async function render_response({
 	status,
 	error = null,
 	event,
-	state,
 	resolve_opts,
 	action_result,
 	data_serializer,
 	error_components
 }) {
+	const state = get_state(event);
 	if (state.prerendering || state.prerender_default === true) {
 		if (options.csp.mode === 'nonce') {
 			throw new Error('Cannot use prerendering if config.csp.mode === "nonce"');
@@ -206,7 +201,7 @@ export async function render_response({
 							throw e;
 						}
 
-						const handled = handle_error_and_jsonify(render_event, state, e);
+						const handled = handle_error_and_jsonify(render_event, e);
 
 						// TODO 4.0 make this an async function and await `handled`
 						if (handled instanceof Promise) {
@@ -237,7 +232,7 @@ export async function render_response({
 						throw new Error(
 							`Cannot call \`fetch\` eagerly during server-side rendering with relative URL (${info}) — put your \`fetch\` calls inside \`onMount\` or a \`load\` function instead`
 						);
-					} else if (!warned && !inside(try_get_request_store()?.event ?? event, 'remote')) {
+					} else if (!warned && !inside(try_get_event() ?? event, 'remote')) {
 						console.warn(
 							'Avoid calling `fetch` eagerly during server-side rendering — put your `fetch` calls inside `onMount` or a `load` function instead'
 						);
@@ -248,7 +243,7 @@ export async function render_response({
 				};
 			}
 
-			rendered = await with_request_store({ event: render_event, state }, async () => {
+			rendered = await with_event(render_event, async () => {
 				return render(Root, { ...render_opts, props });
 			});
 
@@ -523,7 +518,7 @@ export async function render_response({
 			args.push(`{\n${indent}\t${hydrate.join(`,\n${indent}\t`)}\n${indent}}`);
 		}
 
-		const remote_data = await collect_remote_data({}, event, state);
+		const remote_data = await collect_remote_data({}, event);
 
 		const serialized_data =
 			Object.keys(remote_data).length > 0

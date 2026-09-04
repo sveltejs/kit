@@ -9,10 +9,9 @@ import { encoders } from '#app/internal/transport';
  * If the serialized data contains promises, `chunks` will be an
  * async iterable containing their resolutions
  * @param {import('@sveltejs/kit').RequestEvent} event
- * @param {import('types').RequestState} state
  * @returns {import('./types.js').ServerDataSerializer}
  */
-export function server_data_serializer(event, state) {
+export function server_data_serializer(event) {
 	let promise_id = 1;
 	let max_nodes = -1;
 
@@ -30,7 +29,7 @@ export function server_data_serializer(event, state) {
 					.then(/** @param {any} data */ (data) => ({ data }))
 					.catch(
 						/** @param {any} error */ async (error) => ({
-							error: await handle_error_and_jsonify(event, state, error)
+							error: await handle_error_and_jsonify(event, error)
 						})
 					)
 					.then(
@@ -44,7 +43,6 @@ export function server_data_serializer(event, state) {
 							} catch (e) {
 								error = await handle_error_and_jsonify(
 									event,
-									state,
 									new Error(`Failed to serialize promise while rendering ${event.route.id}`, {
 										cause: e
 									})
@@ -124,10 +122,9 @@ export function server_data_serializer(event, state) {
  * If the serialized data contains promises, `chunks` will be an
  * async iterable containing their resolutions
  * @param {import('@sveltejs/kit').RequestEvent} event
- * @param {import('types').RequestState} state
  * @returns {import('./types.js').ServerDataSerializerJson}
  */
-export function server_data_serializer_json(event, state) {
+export function server_data_serializer_json(event) {
 	let promise_id = 1;
 
 	const iterator = create_async_iterator();
@@ -149,7 +146,7 @@ export function server_data_serializer_json(event, state) {
 				.catch(
 					/** @param {any} e */ async (e) => {
 						key = 'error';
-						return handle_error_and_jsonify(event, state, /** @type {any} */ (e));
+						return handle_error_and_jsonify(event, /** @type {any} */ (e));
 					}
 				)
 				.then(
@@ -161,7 +158,6 @@ export function server_data_serializer_json(event, state) {
 						} catch (e) {
 							const error = await handle_error_and_jsonify(
 								event,
-								state,
 								new Error(`Failed to serialize promise while rendering ${event.route.id}`, {
 									cause: e
 								})

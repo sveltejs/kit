@@ -2,22 +2,23 @@ import { DEV } from 'esm-env';
 import { noop } from '../../../utils/functions.js';
 import { disable_search, make_trackable } from '../../../utils/url.js';
 import { fetch_cache_url, validate_depends, validate_load_response } from '../../shared.js';
-import { with_request_store, merge_tracing, record_span } from '@sveltejs/kit/internal/server';
+import { with_event, merge_tracing, record_span } from '@sveltejs/kit/internal/server';
 import { base64_encode } from '../../utils.js';
 import { NULL_BODY_STATUS } from '../constants.js';
 import { get_node_type } from '../utils.js';
+import { get_state } from '../state.js';
 
 /**
  * Calls the user's server `load` function.
  * @param {{
  *   event: import('@sveltejs/kit').RequestEvent;
- *   state: import('types').RequestState;
  *   node: import('types').SSRNode | undefined;
  *   parent: () => Promise<Record<string, any>>;
  * }} opts
  * @returns {Promise<import('types').ServerDataNode | null>}
  */
-export async function load_server_data({ event, state, node, parent }) {
+export async function load_server_data({ event, node, parent }) {
+	const state = get_state(event);
 	if (!node?.server) return null;
 
 	let is_tracking = true;
@@ -81,7 +82,7 @@ export async function load_server_data({ event, state, node, parent }) {
 		},
 		fn: async (current) => {
 			const traced_event = merge_tracing(event, current);
-			const result = await with_request_store({ event: traced_event, state }, () =>
+			const result = await with_event(traced_event, () =>
 				load.call(null, {
 					...traced_event,
 					fetch: (info, init) => {
@@ -192,7 +193,6 @@ export async function load_server_data({ event, state, node, parent }) {
  * Calls the user's `load` function.
  * @param {{
  *   event: import('@sveltejs/kit').RequestEvent;
- *   state: import('types').RequestState;
  *   fetched: import('./types.js').Fetched[];
  *   node: import('types').SSRNode | undefined;
  *   parent: () => Promise<Record<string, any>>;
@@ -204,7 +204,6 @@ export async function load_server_data({ event, state, node, parent }) {
  */
 export async function load_data({
 	event,
-	state,
 	fetched,
 	node,
 	parent,
@@ -212,6 +211,7 @@ export async function load_data({
 	resolve_opts,
 	csr
 }) {
+	const state = get_state(event);
 	const server_data_node = await server_data_promise;
 
 	const load = node?.universal?.load;
@@ -231,7 +231,7 @@ export async function load_data({
 		fn: async (current) => {
 			const traced_event = merge_tracing(event, current);
 
-			return await with_request_store({ event: traced_event, state }, () =>
+			return await with_event(traced_event, () =>
 				load.call(null, {
 					url: event.url,
 					params: event.params,

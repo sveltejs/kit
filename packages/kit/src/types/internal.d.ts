@@ -625,7 +625,7 @@ export interface RemoteQueryInternals extends BaseRemoteInternals {
 export interface RemoteQueryLiveInternals extends BaseRemoteInternals {
 	type: 'query_live';
 	validate: (arg?: any) => MaybePromise<any>;
-	run(event: RequestEvent, state: RequestState, arg: any): AsyncGenerator<any>;
+	run(event: RequestEvent, arg: any): AsyncGenerator<any>;
 	/**
 	 * Creates a `RemoteLiveQuery` bound directly to a specific client payload (the
 	 * stringified raw argument) and a pre-validated argument, skipping the query
@@ -780,11 +780,6 @@ export interface RequestState {
 		 */
 		live_iterators: null | Map<string, SharedIterator<any>>;
 	};
-}
-
-export interface RequestStore {
-	event: RequestEvent;
-	state: RequestState;
 }
 
 /** Type of the `__sveltekit_abc123` object in the init `<script>` */

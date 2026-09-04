@@ -13,13 +13,12 @@ import { derive_event } from '@sveltejs/kit/internal/server';
 
 /**
  * @param {import('@sveltejs/kit').RequestEvent} event
- * @param {import('types').RequestState} state
  * @param {{ page: Pick<import('types').PageNodeIndexes, 'layouts' | 'leaf'> | null }} route
  * @param {boolean[] | undefined} invalidated_data_nodes
  * @param {import('types').TrailingSlash} trailing_slash
  * @returns {Promise<Response>}
  */
-export async function render_data(event, state, route, invalidated_data_nodes, trailing_slash) {
+export async function render_data(event, route, invalidated_data_nodes, trailing_slash) {
 	if (!route.page) {
 		// requesting /__data.json should fail for a +server.js
 		return with_version_header(new Response(undefined, { status: 404 }));
@@ -50,7 +49,6 @@ export async function render_data(event, state, route, invalidated_data_nodes, t
 					// load this. for the child, return as is. for the final result, stream things
 					return load_server_data({
 						event: new_event,
-						state,
 						node,
 						parent: async () => {
 							/** @type {Record<string, any>} */
@@ -84,7 +82,7 @@ export async function render_data(event, state, route, invalidated_data_nodes, t
 			return fn();
 		});
 
-		const data_serializer = server_data_serializer_json(event, state);
+		const data_serializer = server_data_serializer_json(event);
 		await Promise.all(
 			promises.map(async (p, i) => {
 				const node = await p.catch(async (error) => {
@@ -92,7 +90,7 @@ export async function render_data(event, state, route, invalidated_data_nodes, t
 						throw error;
 					}
 
-					const transformed = await handle_error_and_jsonify(event, state, error);
+					const transformed = await handle_error_and_jsonify(event, error);
 
 					return /** @type {import('types').ServerErrorNode} */ ({
 						type: 'error',
@@ -127,7 +125,7 @@ export async function render_data(event, state, route, invalidated_data_nodes, t
 		if (error instanceof Redirect) {
 			return redirect_json_response(error);
 		} else {
-			const transformed = await handle_error_and_jsonify(event, state, error);
+			const transformed = await handle_error_and_jsonify(event, error);
 			return json_response(transformed, transformed.status);
 		}
 	}
