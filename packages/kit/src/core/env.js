@@ -5,6 +5,7 @@ import path from 'node:path';
 import * as devalue from 'devalue';
 import { dedent } from './sync/utils.js';
 import { get_global_name, runtime_directory } from './utils.js';
+import { stackless } from '../utils/error.js';
 import { resolve_entry } from '../utils/filesystem.js';
 import { handle_issues, validate } from '../exports/internal/env.js';
 import { get_config_aliases } from '../exports/vite/utils.js';
@@ -37,6 +38,8 @@ export function resolve_env_entry(config, root) {
 export async function load_explicit_env(kit, file, root, mode) {
 	/** @type {Set<string>} */
 	const deps = new Set();
+	/** @type {Map<EnvType, string>} */
+	const env_importers = new Map();
 
 	if (!file) {
 		return { variables: null, deps };
@@ -64,6 +67,16 @@ export async function load_explicit_env(kit, file, root, mode) {
 		plugins: [
 			{
 				name: 'dependency-scanner',
+				enforce: 'pre',
+				resolveId(id, importer) {
+					const prefixes = ['$app/env/', `${runtime_directory}/app/env/`];
+					const prefix = prefixes.find((prefix) => id.startsWith(prefix));
+					const type = prefix && id.slice(prefix.length);
+
+					if (importer && (type === 'private' || type === 'public')) {
+						env_importers.set(type, importer);
+					}
+				},
 				load(id) {
 					deps.add(id);
 				}
@@ -96,14 +109,27 @@ export async function load_explicit_env(kit, file, root, mode) {
 	} catch (e) {
 		const error = /** @type {any} */ (e || {});
 
-		if (
-			error.code === 'ERR_MODULE_NOT_FOUND' &&
-			error.message?.includes(`Cannot find module '$app`)
-		) {
-			throw new Error(
-				`Cannot import \`$app/*\` modules other than \`$app/env\` inside \`src/env\``,
-				{ cause: e }
+		if (error.code === 'ERR_MODULE_NOT_FOUND') {
+			const match = error.message?.match(
+				/<sveltekit:generated>\/env\/(private|public)\/server\.js/
 			);
+
+			if (match) {
+				const type = /** @type {EnvType} */ (match[1]);
+				const importer = env_importers.get(type);
+				const message = importer
+					? `Module \`${posixify(path.relative(root, importer))}\` imports \`$app/env/${type}\`, which creates a circular dependency with \`src/env\``
+					: `Cannot import \`$app/env/${type}\` inside \`src/env\` or its dependencies because it creates a circular dependency`;
+
+				throw stackless(message);
+			}
+
+			if (error.message?.includes(`Cannot find module '$app`)) {
+				throw new Error(
+					`Cannot import \`$app/*\` modules other than \`$app/env\` inside \`src/env\``,
+					{ cause: e }
+				);
+			}
 		}
 
 		throw error;
