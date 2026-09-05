@@ -21,7 +21,7 @@ test('__data.json prerender config is not generated for server-only route', () =
 	assert.ok(!fs.existsSync(`${functions}/__data.json.prerender-config.json`));
 });
 
-/** @type {{ routes: Array<{ src?: string, dest?: string, handle?: string }> }} */
+/** @type {{ routes: Array<{ src?: string, dest?: string, handle?: string, methods?: string[] }> }} */
 const config = JSON.parse(fs.readFileSync(`${output}/config.json`, 'utf8'));
 const route_sources = config.routes.flatMap((route) =>
 	typeof route.src === 'string' ? [route.src] : []
@@ -60,6 +60,12 @@ test('static ISR routes are matched before the filesystem', () => {
 test('dynamic ISR routes are matched after the filesystem', () => {
 	const index = config.routes.findIndex((route) => route.src === '^(/isr/([^/]+?)/?)$');
 	assert.ok(index > filesystem);
+});
+
+test('ISR bypass routes include every non-cacheable SvelteKit method', () => {
+	const route = config.routes.find((route) => route.src === '^(/isr-endpoint/?)(?:)$');
+
+	assert.deepEqual(route?.methods, ['POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'QUERY']);
 });
 
 test('process.cwd() is traced from the project directory', () => {

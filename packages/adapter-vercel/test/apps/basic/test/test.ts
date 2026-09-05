@@ -44,6 +44,23 @@ test('$app/server read works', async ({ request }) => {
 	expect(text).toContain('Hello from $app/server read');
 });
 
+test('avoid serving ISR for non-GET/HEAD requests', async ({ request }) => {
+	for (const method of ['POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'QUERY']) {
+		await test.step(method, async () => {
+			const body = method === 'OPTIONS' ? undefined : crypto.randomUUID();
+			const response = await request.fetch('/isr-endpoint', { method, data: body });
+			expect(response.ok()).toBe(true);
+			expect(await response.json()).toEqual({ method, body: body ?? '' });
+		});
+	}
+});
+
+test('form actions bypass ISR', async ({ page }) => {
+	await page.goto('/isr');
+	await page.getByRole('button', { name: 'Submit' }).click();
+	await expect(page.locator('#form-success')).toHaveText('success');
+});
+
 test('ISR route serves cached response', async ({ request }) => {
 	// first request warms the cache
 	const first = await request.get('/isr');
