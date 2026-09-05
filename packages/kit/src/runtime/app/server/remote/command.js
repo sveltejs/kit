@@ -83,7 +83,17 @@ export function command(validate_or_fn, maybe_fn) {
 		}
 
 		const promise = Promise.resolve(
-			run_remote_function(event, state, true, () => validate(arg), fn)
+			run_remote_function(
+				event,
+				// `requested(...)` and single-flight `refresh()` use this to detect that they
+				// are inside a command. The remote function endpoint sets it for the requests
+				// it handles, but a command can also be called from other server code, such as
+				// a `+server.js` handler, and it is still a command in that case
+				{ ...state, is_in_remote_form_or_command: true },
+				true,
+				() => validate(arg),
+				fn
+			)
 		);
 
 		// @ts-expect-error
