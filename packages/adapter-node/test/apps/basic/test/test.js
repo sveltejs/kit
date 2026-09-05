@@ -23,6 +23,11 @@ test('does not set X-Accel-Buffering header on other responses', async ({ reques
 	expect(response.headers()['x-accel-buffering']).toBeUndefined();
 });
 
+test('initializes dynamic env before instrumentation', async ({ request }) => {
+	const response = await request.get('/instrumentation-env');
+	expect(await response.json()).toEqual({ value: 'available' });
+});
+
 test('sets Vary on assets that were precompressed', async ({ request }) => {
 	const response = await request.get('/data.json');
 	expect(response.status()).toBe(200);

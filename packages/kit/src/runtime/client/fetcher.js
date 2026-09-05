@@ -1,6 +1,7 @@
 import { DEV } from 'esm-env';
 import { hash_request } from '../../utils/hash.js';
 import { base64_decode } from '../utils.js';
+import { fetch_cache_url } from '../shared.js';
 
 let loading = 0;
 
@@ -59,7 +60,7 @@ if (DEV) {
 		const method = input instanceof Request ? input.method : init?.method || 'GET';
 
 		if (method !== 'GET') {
-			cache.delete(build_selector(input));
+			cache.delete(build_selector(requested_url(input)));
 		}
 
 		return native_fetch(input, init);
@@ -69,7 +70,7 @@ if (DEV) {
 		const method = input instanceof Request ? input.method : init?.method || 'GET';
 
 		if (method !== 'GET') {
-			cache.delete(build_selector(input));
+			cache.delete(build_selector(requested_url(input)));
 		}
 
 		return native_fetch(input, init);
@@ -149,6 +150,17 @@ export function dev_fetch(resource, opts) {
 		configurable: true
 	});
 	return window.fetch(resource, patched_opts);
+}
+
+/**
+ * Non-GET requests must evict under the stored key, however the url is spelled
+ * @param {RequestInfo | URL} input
+ */
+function requested_url(input) {
+	return fetch_cache_url(
+		new URL(input instanceof Request ? input.url : input, location.href),
+		location
+	);
 }
 
 /**

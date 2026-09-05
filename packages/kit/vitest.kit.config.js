@@ -15,6 +15,7 @@ const exclude = [
 export default /** @satisfies {import('vitest/config').ViteUserConfig} */ ({
 	plugins: [svelte({ compilerOptions: { hmr: false, experimental: { async: true } } })],
 	define: {
+		__SVELTEKIT_GLOBAL_NAME__: '"__sveltekit_test"',
 		__SVELTEKIT_SERVER_TRACING_ENABLED__: false,
 		__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: 0,
 		__SVELTEKIT_APP_VERSION_CHECKS_ENABLED__: false
@@ -29,12 +30,9 @@ export default /** @satisfies {import('vitest/config').ViteUserConfig} */ ({
 			// Order matters: vite prefix-matches with trailing-slash, so longer keys must
 			// come first to avoid `$app/paths` matching `$app/paths/internal/client`.
 			'#app/paths': mock('app-paths'),
-			'$app/env/internal': mock('app-env-internal'),
 			'$app/env': mock('app-env'),
 			'$app/paths/internal/client': mock('app-paths-internal-client'),
-			'$app/paths/internal/server': mock('app-paths-internal-server'),
-			'$app/paths': mock('app-paths'),
-			'__sveltekit/paths': mock('sveltekit-paths')
+			'$app/paths/internal/server': mock('app-paths-internal-server')
 		},
 		projects: [
 			{

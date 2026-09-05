@@ -202,12 +202,150 @@ test.describe('remote functions', () => {
 		await expect(page.locator('[data-unscoped] input[name^="message"]')).toHaveValue('');
 	});
 
+	test('radio and checkbox inputs reset to the current value', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		await page.goto('/remote/form/checked-current');
+
+		const edit = page.locator('#edit');
+		const create = page.locator('#create');
+
+		await test.step('a reset restores the current value', async () => {
+			await edit.locator('input[value="private"]').check();
+			await edit.locator('input[value="red"]').uncheck();
+			await edit.locator('input[value="blue"]').check();
+			await edit.getByText('discard').click();
+
+			await expect(edit.locator('input[value="public"]')).toBeChecked();
+			await expect(edit.locator('input[value="private"]')).not.toBeChecked();
+			await expect(edit.locator('input[value="red"]')).toBeChecked();
+			await expect(edit.locator('input[value="blue"]')).not.toBeChecked();
+		});
+
+		await test.step('a submission keeps the new selection', async () => {
+			await edit.locator('input[value="private"]').check();
+			await edit.locator('input[value="green"]').check();
+			await edit.getByText('save').click();
+
+			await expect(page.locator('#settings')).toHaveText(
+				JSON.stringify({ title: 'hello', visibility: 'private', tags: ['red', 'green'] })
+			);
+
+			await expect(edit.locator('input[value="public"]')).not.toBeChecked();
+			await expect(edit.locator('input[value="private"]')).toBeChecked();
+			await expect(edit.locator('input[value="red"]')).toBeChecked();
+			await expect(edit.locator('input[value="green"]')).toBeChecked();
+			await expect(edit.locator('input[value="blue"]')).not.toBeChecked();
+
+			if (javaScriptEnabled) {
+				await expect(page.locator('#edit-value')).toHaveText(
+					JSON.stringify({ title: 'hello', visibility: 'private', tags: ['red', 'green'] })
+				);
+			}
+		});
+
+		await test.step('inputs without a current value are cleared', async () => {
+			await create.locator('input[value="private"]').check();
+			await create.locator('input[value="blue"]').check();
+			await create.getByText('create').click();
+
+			await expect(page.locator('#surveys')).toHaveText(
+				JSON.stringify([{ visibility: 'private', tags: ['blue'] }])
+			);
+
+			await expect(create.locator('input[value="private"]')).not.toBeChecked();
+			await expect(create.locator('input[value="blue"]')).not.toBeChecked();
+		});
+	});
+
+	test('the default given to .as() only applies until the field is edited', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		test.skip(!javaScriptEnabled);
+
+		await page.goto('/remote/form/default-until-edited');
+		const amount = page.locator('#amount');
+		const value = page.locator('#value');
+		await expect(amount).toHaveValue('200');
+
+		await amount.fill('20');
+		await expect(value).toHaveText('{"amount":20}');
+
+		await amount.press('Backspace');
+		await amount.press('Backspace');
+		await expect(amount).toHaveValue('');
+		await expect(value).toHaveText('{}');
+
+		await page.click('#reset');
+		await expect(amount).toHaveValue('200');
+	});
+
+	test('radio and checkbox inputs keep the current value when only another field changes', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		// TODO remove once svelte keeps defaultChecked on hydration (sveltejs/svelte#18701)
+		test.skip(javaScriptEnabled);
+
+		await page.goto('/remote/form/checked-current');
+
+		const edit = page.locator('#edit');
+
+		await edit.locator('input[name^="title"]').fill('updated');
+		await edit.getByText('save').click();
+
+		await expect(page.locator('#settings')).toHaveText(
+			JSON.stringify({ title: 'updated', visibility: 'public', tags: ['red'] })
+		);
+
+		await expect(edit.locator('input[value="public"]')).toBeChecked();
+		await expect(edit.locator('input[value="red"]')).toBeChecked();
+	});
+
 	test('form submitters work', async ({ page }) => {
 		await page.goto('/remote/form/submitter');
 
 		await page.locator('button').click();
 
 		await expect(page.locator('#result')).toHaveText('hello');
+	});
+
+	test('image form inputs submit coordinates', async ({ page }) => {
+		await page.goto('/remote/form/submitter');
+
+		await page.locator('input[type="image"]').click({ position: { x: 5, y: 6 } });
+
+		await expect(page.locator('#image-result')).toHaveText('5,6');
+	});
+
+	test('image form submit keeps client field state', async ({ page, javaScriptEnabled }) => {
+		test.skip(!javaScriptEnabled, 'requires JavaScript to set field values');
+
+		await page.goto('/remote/form/submitter');
+		await page.locator('input[type="image"]').click({ position: { x: 5, y: 6 } });
+
+		await expect(page.locator('#image-position')).toHaveText('{"x":1,"y":2}');
+		await expect(page.locator('#image-result')).toHaveText('5,6');
+	});
+
+	test('image inputs do not fail validation as the default submitter', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		test.skip(!javaScriptEnabled, 'requires JavaScript to validate');
+
+		await page.goto('/remote/form/image-validate');
+		await page.locator('input[type="image"]').click({ position: { x: 5, y: 6 } });
+		await expect(page.locator('#name-issues')).not.toHaveText('[]');
+
+		await page.getByRole('textbox').fill('a');
+		await expect(page.locator('#name-issues')).toHaveText('[]');
+		await expect(page.locator('#position-issues')).toHaveText('[]');
+
+		await page.locator('input[type="image"]').click({ position: { x: 5, y: 6 } });
+		await expect(page.locator('#result')).toHaveText('a:5,6');
 	});
 
 	test('form updates inputs live', async ({ page, javaScriptEnabled }) => {
@@ -369,85 +507,91 @@ test.describe('remote functions', () => {
 		await expect(page.locator('[data-scoped] input[name^="message"]')).toHaveValue('');
 	});
 
-	test('form enhance(...) works', async ({ page, javaScriptEnabled }) => {
-		await page.goto('/remote/form/enhanced');
+	test.describe('enhanced form state', () => {
+		test.describe.configure({ mode: 'serial' });
 
-		await page.fill('[data-enhanced] input', 'hello');
+		test('form enhance(...) works', async ({ page, javaScriptEnabled }) => {
+			await page.goto('/remote/form/enhanced');
 
-		// Click on the span inside the button to test the event.target vs event.currentTarget issue (#14159)
-		await page.locator('[data-enhanced] span').click();
+			await page.fill('[data-enhanced] input', 'hello');
 
-		if (javaScriptEnabled) {
+			// Click on the span inside the button to test the event.target vs event.currentTarget issue (#14159)
+			await page.locator('[data-enhanced] span').click();
+
+			if (javaScriptEnabled) {
+				await expect(page.getByText('enhanced.pending:')).toHaveText('enhanced.pending: 1');
+				await expect(page.getByText('enhanced.element:')).toHaveText('enhanced.element: attached');
+
+				await page.getByText('message.current: hello (override)').waitFor();
+
+				await page.getByText('resolve deferreds').click();
+				await expect(page.getByText('enhanced.pending:')).toHaveText('enhanced.pending: 0');
+				await expect(page.getByText('await get_message():')).toHaveText(
+					'await get_message(): hello'
+				);
+
+				// enhanced submission should not clear the input; the developer must do that at the appropriate time
+				await expect(page.locator('[data-enhanced] input[name^="message"]')).toHaveValue('hello');
+				await expect(page.getByText('enhanced.callback_element_matches:')).toHaveText(
+					'enhanced.callback_element_matches: true'
+				);
+				await expect(page.getByText('enhanced.callback_has_enhance:')).toHaveText(
+					'enhanced.callback_has_enhance: false'
+				);
+			} else {
+				await expect(page.locator('[data-enhanced] input[name^="message"]')).toHaveValue('');
+			}
+
+			await expect(page.getByText('enhanced.result')).toHaveText(
+				'enhanced.result: hello (from: enhanced:enhanced)'
+			);
+		});
+
+		test('form enhance submit returns boolean', async ({ page, javaScriptEnabled }) => {
+			if (!javaScriptEnabled) return;
+
+			await page.goto('/remote/form/enhanced');
+
+			await expect(page.getByText('enhanced.submit_result:')).toHaveText(
+				'enhanced.submit_result: none'
+			);
+
+			await page.fill('[data-enhanced] input', 'hello');
+			await page.locator('[data-enhanced] span').click();
+			await page.getByText('resolve deferreds').click();
+			await expect(page.getByText('enhanced.submit_result:')).toHaveText(
+				'enhanced.submit_result: true'
+			);
+
+			await page.fill('[data-enhanced] input', 'invalid');
+			await page.locator('[data-enhanced] span').click();
+			await expect(page.getByText('enhanced.submit_result:')).toHaveText(
+				'enhanced.submit_result: false'
+			);
+		});
+
+		test('form submit() enables programmatic submission', async ({ page, javaScriptEnabled }) => {
+			if (!javaScriptEnabled) return;
+
+			await page.goto('/remote/form/enhanced');
+
+			await expect(page.getByText('enhanced.imperative_submit_result:')).toHaveText(
+				'enhanced.imperative_submit_result: none'
+			);
+
+			await page.fill('[data-enhanced] input', 'hello');
+			await page.getByText('submit enhanced programmatically').click();
+
 			await expect(page.getByText('enhanced.pending:')).toHaveText('enhanced.pending: 1');
-			await expect(page.getByText('enhanced.element:')).toHaveText('enhanced.element: attached');
-
-			await page.getByText('message.current: hello (override)').waitFor();
 
 			await page.getByText('resolve deferreds').click();
-			await expect(page.getByText('enhanced.pending:')).toHaveText('enhanced.pending: 0');
-			await expect(page.getByText('await get_message():')).toHaveText('await get_message(): hello');
-
-			// enhanced submission should not clear the input; the developer must do that at the appropriate time
-			await expect(page.locator('[data-enhanced] input[name^="message"]')).toHaveValue('hello');
-			await expect(page.getByText('enhanced.callback_element_matches:')).toHaveText(
-				'enhanced.callback_element_matches: true'
+			await expect(page.getByText('enhanced.imperative_submit_result:')).toHaveText(
+				'enhanced.imperative_submit_result: true'
 			);
-			await expect(page.getByText('enhanced.callback_has_enhance:')).toHaveText(
-				'enhanced.callback_has_enhance: false'
+			await expect(page.getByText('enhanced.result:')).toHaveText(
+				'enhanced.result: hello (from: enhanced:enhanced)'
 			);
-		} else {
-			await expect(page.locator('[data-enhanced] input[name^="message"]')).toHaveValue('');
-		}
-
-		await expect(page.getByText('enhanced.result')).toHaveText(
-			'enhanced.result: hello (from: enhanced:enhanced)'
-		);
-	});
-
-	test('form enhance submit returns boolean', async ({ page, javaScriptEnabled }) => {
-		if (!javaScriptEnabled) return;
-
-		await page.goto('/remote/form/enhanced');
-
-		await expect(page.getByText('enhanced.submit_result:')).toHaveText(
-			'enhanced.submit_result: none'
-		);
-
-		await page.fill('[data-enhanced] input', 'hello');
-		await page.locator('[data-enhanced] span').click();
-		await page.getByText('resolve deferreds').click();
-		await expect(page.getByText('enhanced.submit_result:')).toHaveText(
-			'enhanced.submit_result: true'
-		);
-
-		await page.fill('[data-enhanced] input', 'invalid');
-		await page.locator('[data-enhanced] span').click();
-		await expect(page.getByText('enhanced.submit_result:')).toHaveText(
-			'enhanced.submit_result: false'
-		);
-	});
-
-	test('form submit() enables programmatic submission', async ({ page, javaScriptEnabled }) => {
-		if (!javaScriptEnabled) return;
-
-		await page.goto('/remote/form/enhanced');
-
-		await expect(page.getByText('enhanced.imperative_submit_result:')).toHaveText(
-			'enhanced.imperative_submit_result: none'
-		);
-
-		await page.fill('[data-enhanced] input', 'hello');
-		await page.getByText('submit enhanced programmatically').click();
-
-		await expect(page.getByText('enhanced.pending:')).toHaveText('enhanced.pending: 1');
-
-		await page.getByText('resolve deferreds').click();
-		await expect(page.getByText('enhanced.imperative_submit_result:')).toHaveText(
-			'enhanced.imperative_submit_result: true'
-		);
-		await expect(page.getByText('enhanced.result:')).toHaveText(
-			'enhanced.result: hello (from: enhanced:enhanced)'
-		);
+		});
 	});
 
 	test('form preflight works', async ({ page, javaScriptEnabled }) => {
@@ -607,6 +751,20 @@ test.describe('remote functions', () => {
 		await nestedValue.fill('in');
 		await validate.click();
 		await expect(allIssues).toContainText('"path":["nested","value"]');
+	});
+
+	test('form validate does not throw if the form unmounts while validating', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/validate');
+
+		await page.locator('#unmount-then-validate').click();
+
+		await expect(page.locator('#unmount-form')).toHaveCount(0);
+		await expect(page.locator('#unmount-error')).toHaveText('no error');
 	});
 
 	test('form validation issues cleared', async ({ page, javaScriptEnabled }) => {

@@ -4,8 +4,8 @@
 	"private": true,
 	"scripts": {
 		"dev": "vite dev",
-		"build": "MY_CUSTOM_PORT=5173 vite build",
-		"preview": "MY_CUSTOM_PORT=5173 node build",
+		"build": "MY_CUSTOM_PORT=5173 INSTRUMENTATION_ENV=available vite build",
+		"preview": "MY_CUSTOM_PORT=5173 INSTRUMENTATION_ENV=available node build",
 		"test:platform": "playwright test"
 	},
 	"devDependencies": {

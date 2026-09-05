@@ -42,7 +42,6 @@
 		"@playwright/test": "catalog:",
 		"@sveltejs/kit": "workspace:^",
 		"@types/node": "catalog:",
-		"sirv": "^3.0.2",
 		"svelte": "catalog:",
 		"typescript": "catalog:typescript-native",
 		"vite": "catalog:"

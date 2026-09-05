@@ -129,6 +129,19 @@ test.describe('trailing slash', () => {
 		await clicknav('a[href="/basepath/trailing-slash-server/prerender"]');
 		await expect(page.locator('h2')).toHaveText('/basepath/trailing-slash-server/prerender/');
 	});
+
+	test('normalizes the trailing slash of a prerendered page without dropping the base', async ({
+		request
+	}) => {
+		const response = await request.get('/basepath/trailing-slash-server/prerender');
+		expect(new URL(response.url()).pathname).toBe('/basepath/trailing-slash-server/prerender/');
+		expect(response.status()).toBe(200);
+
+		const redirect = await request.get('/basepath/trailing-slash-server/prerender', {
+			maxRedirects: 0
+		});
+		expect(redirect.status()).toBe(308);
+	});
 });
 
 test.describe('Service worker', () => {

@@ -116,17 +116,6 @@ export function parse_route_id(id) {
 	return { pattern, params };
 }
 
-const optional_param_regex = /\/\[\[[\w-]+?(?:=[\w-]+)?\]\]/;
-
-/**
- * Removes optional params from a route ID.
- * @param {string} id
- * @returns The route id with optional params removed
- */
-export function remove_optional_params(id) {
-	return id.replace(optional_param_regex, '');
-}
-
 /**
  * Returns `false` for `(group)` segments
  * @param {string} segment

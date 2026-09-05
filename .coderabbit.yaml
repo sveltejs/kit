@@ -1,0 +1,66 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+inheritance: true
+reviews:
+  related_issues: true
+  related_prs: true
+
+  auto_review:
+    enabled: true
+    auto_incremental_review: true
+
+  auto_apply_labels: true
+  labeling_instructions:
+    - label: 'breaking change'
+      instructions: 'PR contains a breaking change to public interfaces'
+    - label: 'documentation'
+      instructions: 'PR only contains changes to files in `/documentation`'
+    - label: 'needs-platform-tests'
+      instructions: >-
+        PR adds/deletes/modifies files in `packages/adapter-*`
+        (except adapter-static and adapter-auto) or has 'Version Packages'
+        in the PR title
+
+  pre_merge_checks:
+    title:
+      mode: warning
+      requirements: 'Prefix PR titles with `breaking:`, `feat:`, `fix:`, or `chore:`'
+    custom_checks:
+      - name: 'Backward Compatibility Impact Disclosure'
+        mode: 'warning'
+        instructions: >-
+          Detect breaking changes to public interfaces: removed or renamed
+          exports, new required request/response fields, changed defaults, or
+          removed config keys. Require a "major" changeset and a "breaking:"
+          prefix in the changeset description. Fail if a breaking change is undocumented.
+
+  path_filters:
+    - '!packages/kit/types/**'
+  path_instructions:
+    - path: 'documentation/docs/**.md'
+      instructions: |
+        Check for clarity, accuracy, and completeness.
+        Flag any references to deprecated APIs or outdated behavior.
+
+knowledge_base:
+  linked_repositories:
+    - repository: 'sveltejs/vite-plugin-svelte'
+      instructions: 'The Vite plugin that transforms Svelte modules during development and build'
+    - repository: 'vitejs/vite'
+      instructions: 'Powers the SvelteKit development server and build process'
+
+issue_enrichment:
+  labeling:
+    auto_apply_labels: true
+    labeling_instructions:
+      - label: 'awaiting submitter'
+        instructions: >-
+          Issue is a bug report and has a heading named "Reproduction" in the description
+          but does not include a link to a minimal reproduction
+      - label: 'pkg:enhanced-img'
+        instructions: 'Issue is related to static image optimisation the `@sveltejs/enhanced-img` package'
+      - label: 'pkg:adapter-cloudflare'
+        instructions: 'Issue is related to Cloudflare Workers/Pages or the `@sveltejs/adapter-cloudflare` package'
+      - label: 'pkg:adapter-netlify'
+        instructions: 'Issue is related to the Netlify platform or the `@sveltejs/adapter-netlify` package'
+      - label: 'pkg:adapter-vercel'
+        instructions: 'Issue is related to the Vercel platform or the `@sveltejs/adapter-vercel` package'

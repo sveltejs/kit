@@ -20,6 +20,7 @@ vi.mock(import('@sveltejs/kit/internal/server'), async (actualPromise) => {
 vi.stubGlobal('__SVELTEKIT_DEV__', false);
 
 const { handle_error_and_jsonify } = await import('../../../server/errors.js');
+const { set_hooks } = await import('../../../server/internal.js');
 
 /**
  * Creates a prerender function whose self-fetch of the prerendered response
@@ -69,10 +70,11 @@ test('propagates an error response instead of running the function', async () =>
 	expect(fn).not.toHaveBeenCalled();
 
 	const handleError = vi.fn();
+	set_hooks(/** @type {any} */ ({ handleError }));
+
 	const transformed = await handle_error_and_jsonify(
 		store.current.event,
 		store.current.state,
-		/** @type {any} */ ({ hooks: { handleError } }),
 		rejection
 	);
 
@@ -84,11 +86,11 @@ test('passes validation errors to handleError without exposing issues by default
 	setup(() => new Response());
 	const issues = [{ message: 'Expected a string' }];
 	const handleError = vi.fn();
+	set_hooks(/** @type {any} */ ({ handleError }));
 
 	const transformed = await handle_error_and_jsonify(
 		store.current.event,
 		store.current.state,
-		/** @type {any} */ ({ hooks: { handleError } }),
 		new ValidationError(issues)
 	);
 

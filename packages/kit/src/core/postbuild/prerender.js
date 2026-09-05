@@ -48,11 +48,11 @@ async function prerender({
 	vite_config_file,
 	is_tty
 }) {
-	/** @type {import('@sveltejs/kit').SSRManifest} */
+	/** @type {import('types').SSRManifest} */
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
 	/** @type {import('types').ServerInternalModule} */
-	const { set_building, set_prerendering, set_manifest, set_read_implementation, log_response } =
+	const { set_building, set_prerendering, set_manifest, set_read_implementation, format_response } =
 		await import(pathToFileURL(`${out}/server/internal.js`).href);
 
 	// configure `import { building } from `$app/env` —
@@ -62,7 +62,7 @@ async function prerender({
 
 	// `set_env` and `Server` live in modules that import the user's `src/env` config. We import them
 	// *after* `set_building()` so that `building`-dependent expressions resolve correctly
-	/** @type {typeof import('__sveltekit/env')} */
+	/** @type {typeof import('<sveltekit:generated>/env/config.js')} */
 	const { set_env } = await import(pathToFileURL(`${out}/server/env.js`).href);
 	set_env(env);
 
@@ -424,7 +424,7 @@ async function prerender({
 		}
 
 		if (response.status >= 400) {
-			log_response(response.status, request);
+			console.log(format_response(response.status, request));
 		}
 
 		const body = Buffer.from(await response.arrayBuffer());
@@ -659,7 +659,7 @@ async function prerender({
 	/** @type {Array<import('types').RemotePrerenderInternals>} */
 	const prerender_functions = [];
 
-	for (const loader of Object.values(manifest._.remotes)) {
+	for (const loader of Object.values(manifest.remotes)) {
 		const module = await loader();
 
 		for (const fn of Object.values(module.default)) {

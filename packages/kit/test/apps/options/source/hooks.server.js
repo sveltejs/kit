@@ -9,7 +9,12 @@ export function handle({ event, resolve }) {
 	return resolve(event, {
 		// this allows us to check that <link rel="stylesheet"> is still added
 		// to the DOM even if they're not included by `preload`
-		preload: ({ type }) => type !== 'css'
+		preload: (input) =>
+			input.type === 'font'
+				? input.filename.startsWith(
+						'node_modules/@fontsource/libre-barcode-128-text/files/libre-barcode-128-text-'
+					)
+				: input.type !== 'css'
 	});
 }
 

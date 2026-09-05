@@ -1,9 +1,8 @@
-/** @import { RequestEvent, SSRManifest } from '@sveltejs/kit' */
+/** @import { RequestEvent } from '@sveltejs/kit' */
 /** @import { RemoteForm } from '$app/server' */
-/** @import { ActionResult } from '$app/forms' */
-/** @import { RemoteFormInternals, RemoteFunctionData, RemoteFunctionResponse, RemoteInternals, RequestState, SSROptions } from 'types' */
+/** @import { RemoteFormInternals, RemoteFunctionData, RemoteFunctionResponse, RemoteInternals, RequestState, ServerActionResult } from 'types' */
 
-import { json, error } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
 import { Redirect, SvelteKitError } from '@sveltejs/kit/internal';
 import { with_request_store, merge_tracing, record_span } from '@sveltejs/kit/internal/server';
 import { app_dir, base } from '#app/paths';
@@ -11,11 +10,15 @@ import { is_form_content_type } from '../../utils/http.js';
 import { create_remote_key, parse_remote_arg, split_remote_key } from '../shared.js';
 import { stringify } from '#app/internal/transport';
 import { handle_error_and_jsonify } from './errors.js';
-import { normalize_error } from '../../utils/error.js';
-import { check_incorrect_fail_use, get_action_location } from './page/actions.js';
-import { DEV } from 'esm-env';
+import {
+	action_error_result,
+	get_action_location,
+	method_not_allowed_result
+} from './page/actions.js';
 import { deserialize_binary_form } from '../form-utils.js';
+import { text_encoder } from '../utils.js';
 import { with_version_header } from './utils.js';
+import { manifest } from './internal.js';
 
 /**
  * How long (in milliseconds) to wait after the last message was sent before
@@ -24,8 +27,121 @@ import { with_version_header } from './utils.js';
  */
 const KEEP_ALIVE_INTERVAL = 30_000;
 
+/**
+ * @param {RequestEvent} event
+ * @param {RequestState} state
+ * @param {import('types').RemoteQueryLiveInternals} internals
+ * @param {any} arg
+ */
+export function create_live_query_response(event, state, internals, arg) {
+	const cancellation = new AbortController();
+	const live_event = {
+		...event,
+		request: new Request(event.request, {
+			signal: AbortSignal.any([event.request.signal, cancellation.signal])
+		})
+	};
+
+	const generator = internals.run(live_event, state, arg);
+
+	let open = true;
+	let pulling = false;
+	/** @type {ReadableStreamDefaultController<Uint8Array>} */
+	let stream_controller;
+	/** @type {ReturnType<typeof setTimeout> | undefined} */
+	let keep_alive;
+	/** @type {string | undefined} */
+	let result;
+
+	function schedule_keep_alive() {
+		clearTimeout(keep_alive);
+		keep_alive = setTimeout(() => {
+			if (!open) return;
+			if ((stream_controller.desiredSize ?? 0) > 0) {
+				stream_controller.enqueue(text_encoder.encode(': keep-alive\n\n'));
+			}
+			schedule_keep_alive();
+		}, KEEP_ALIVE_INTERVAL);
+	}
+
+	/** @param {any} data */
+	function send(data) {
+		if (!open) return;
+		stream_controller.enqueue(text_encoder.encode('data: ' + JSON.stringify(data) + '\n\n'));
+		schedule_keep_alive();
+	}
+
+	/** @param {boolean} cancelled */
+	function teardown(cancelled) {
+		if (!open) return;
+		open = false;
+		clearTimeout(keep_alive);
+		cancellation.abort();
+		if (!cancelled) stream_controller.close();
+		// AsyncGenerator.return() cannot interrupt a pending next(). Cleanup is
+		// cooperative via request.signal, so stream cancellation must not await it.
+		void generator.return(undefined).catch(() => {});
+	}
+
+	event.request.signal.addEventListener('abort', () => teardown(true), { once: true });
+
+	return new Response(
+		new ReadableStream({
+			start(controller) {
+				stream_controller = controller;
+				schedule_keep_alive();
+			},
+			async pull() {
+				if (!open || pulling) return;
+				pulling = true;
+
+				try {
+					while (open) {
+						const { value, done } = await generator.next();
+
+						if (!open) return;
+
+						if (done) {
+							teardown(false);
+							return;
+						}
+
+						if (result !== (result = stringify(value))) {
+							send({ type: 'result', result });
+							return;
+						}
+					}
+				} catch (error) {
+					if (!open) return;
+
+					if (error instanceof Redirect) {
+						send({ type: 'redirect', location: error.location });
+					} else {
+						const transformed = await handle_error_and_jsonify(event, state, error);
+
+						send({ type: 'error', error: transformed });
+					}
+
+					teardown(false);
+				} finally {
+					pulling = false;
+				}
+			},
+			cancel() {
+				teardown(true);
+			}
+		}),
+		{
+			headers: {
+				'cache-control': 'private, no-store',
+				'content-type': 'text/event-stream'
+			}
+		}
+	);
+}
+
 /** @type {typeof handle_remote_call_internal} */
-export async function handle_remote_call(event, state, options, manifest, id) {
+export async function handle_remote_call(event, state, id) {
 	return record_span({
 		name: 'sveltekit.remote.call',
 		attributes: {
@@ -34,7 +150,7 @@ export async function handle_remote_call(event, state, options, manifest, id) {
 		fn: async (current) => {
 			const traced_event = merge_tracing(event, current);
 			const response = await with_request_store({ event: traced_event, state }, () =>
-				handle_remote_call_internal(traced_event, state, options, manifest, id)
+				handle_remote_call_internal(traced_event, state, id)
 			);
 			return with_version_header(response);
 		}
@@ -44,13 +160,11 @@ export async function handle_remote_call(event, state, options, manifest, id) {
 /**
  * @param {RequestEvent} event
  * @param {RequestState} state
- * @param {SSROptions} options
- * @param {SSRManifest} manifest
  * @param {string} id
  */
-async function handle_remote_call_internal(event, state, options, manifest, id) {
+async function handle_remote_call_internal(event, state, id) {
 	const [hash, name, additional_args] = id.split('/');
-	const remotes = manifest._.remotes;
+	const remotes = manifest.remotes;
 
 	if (!Object.hasOwn(remotes, hash)) error(404);
 
@@ -88,119 +202,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 					new URL(event.request.url).searchParams.get('payload')
 				);
 
-				const generator = internals.run(event, state, parse_remote_arg(payload));
-
-				const encoder = new TextEncoder();
-
-				let closed = false;
-
-				/** @type {ReturnType<typeof setTimeout> | undefined} */
-				let keep_alive;
-
-				/**
-				 * (Re)schedule the keep-alive comment. Called whenever a message is sent, so
-				 * that a keep-alive is only emitted once `KEEP_ALIVE_INTERVAL` has elapsed
-				 * without any other activity.
-				 * @param {ReadableStreamDefaultController} controller
-				 */
-				function schedule_keep_alive(controller) {
-					clearTimeout(keep_alive);
-					keep_alive = setTimeout(() => {
-						if (closed || event.request.signal.aborted) return;
-						// SSE comments (lines starting with `:`) are ignored by the client
-						controller.enqueue(encoder.encode(': keep-alive\n\n'));
-						schedule_keep_alive(controller);
-					}, KEEP_ALIVE_INTERVAL);
-				}
-
-				/**
-				 * @param {ReadableStreamDefaultController} controller
-				 * @param {any} payload
-				 */
-				function send(controller, payload) {
-					controller.enqueue(encoder.encode('data: ' + JSON.stringify(payload) + '\n\n'));
-					schedule_keep_alive(controller);
-				}
-
-				/** @type {string | undefined} */
-				let result = undefined;
-
-				async function cancel() {
-					if (closed) return;
-					closed = true;
-					clearTimeout(keep_alive);
-					await generator.return(undefined);
-				}
-
-				event.request.signal.addEventListener('abort', cancel, { once: true });
-
-				return new Response(
-					new ReadableStream({
-						start(controller) {
-							schedule_keep_alive(controller);
-						},
-						async pull(controller) {
-							if (event.request.signal.aborted) {
-								await cancel();
-								controller.close();
-								return;
-							}
-
-							try {
-								while (true) {
-									const { value, done } = await generator.next();
-
-									if (done) {
-										await cancel();
-										controller.close();
-										return;
-									}
-
-									// only send changed data
-									if (result !== (result = stringify(value))) {
-										send(controller, {
-											type: 'result',
-											result
-										});
-
-										return;
-									}
-								}
-							} catch (error) {
-								if (!event.request.signal.aborted) {
-									if (error instanceof Redirect) {
-										send(controller, {
-											type: 'redirect',
-											location: error.location
-										});
-									} else {
-										const transformed = await handle_error_and_jsonify(
-											event,
-											state,
-											options,
-											error
-										);
-
-										send(controller, {
-											type: 'error',
-											error: transformed
-										});
-									}
-								}
-
-								await cancel();
-								controller.close();
-							}
-						},
-						cancel
-					}),
-					{
-						headers: {
-							'cache-control': 'private, no-store',
-							'content-type': 'text/event-stream'
-						}
-					}
-				);
+				return create_live_query_response(event, state, internals, parse_remote_arg(payload));
 			}
 
 			case 'query_batch': {
@@ -217,7 +219,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 
 				const args = await Promise.all(payloads.map((payload) => parse_remote_arg(payload)));
 
-				data._ = await with_request_store({ event, state }, () => internals.run(args, options));
+				data._ = await with_request_store({ event, state }, () => internals.run(args));
 
 				break;
 			}
@@ -262,7 +264,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 
 				if (data._.issues) {
 					// special case — don't serialize refreshes/reconnects
-					return json(
+					return Response.json(
 						/** @type {RemoteFunctionResponse} */ ({
 							type: 'result',
 							data: stringify(data)
@@ -308,9 +310,10 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			}
 		}
 
-		await collect_remote_data(data, event, state, options);
+		await collect_remote_data(data, event, state);
+		if (state.remote.ignored?.size) data.i = Array.from(state.remote.ignored);
 
-		return json(
+		return Response.json(
 			/** @type {RemoteFunctionResponse} */ ({
 				type: 'result',
 				data: stringify(data)
@@ -319,9 +322,9 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 		);
 	} catch (error) {
 		if (error instanceof Redirect) {
-			const data = await collect_remote_data({ redirect: error.location }, event, state, options);
+			const data = await collect_remote_data({ redirect: error.location }, event, state);
 
-			return json(
+			return Response.json(
 				/** @type {RemoteFunctionResponse} */ ({
 					type: 'result',
 					data: stringify(data)
@@ -330,9 +333,9 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			);
 		}
 
-		const transformed = await handle_error_and_jsonify(event, state, options, error);
+		const transformed = await handle_error_and_jsonify(event, state, error);
 
-		return json(
+		return Response.json(
 			/** @type {RemoteFunctionResponse} */ ({
 				type: 'error',
 				error: transformed
@@ -355,9 +358,8 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
  * @param {RemoteFunctionData} data
  * @param {RequestEvent} event
  * @param {RequestState} state
- * @param {SSROptions} options
  */
-export async function collect_remote_data(data, event, state, options) {
+export async function collect_remote_data(data, event, state) {
 	/**
 	 *
 	 * @param {unknown} error
@@ -365,7 +367,7 @@ export async function collect_remote_data(data, event, state, options) {
 	 */
 	function convert_error(error) {
 		// TODO 4.0 remove the `Promise.resolve(...)`
-		return Promise.resolve(handle_error_and_jsonify(event, state, options, error));
+		return Promise.resolve(handle_error_and_jsonify(event, state, error));
 	}
 
 	/** @type {Promise<any>[]} */
@@ -492,7 +494,7 @@ export async function collect_remote_data(data, event, state, options) {
  * @param {string[] | undefined} refreshes
  */
 function create_requested_map(refreshes) {
-	/** @type {Map<string, string[]>} */
+	/** @type {Map<string, Set<string>>} */
 	const requested = new Map();
 
 	for (const key of refreshes ?? []) {
@@ -501,9 +503,9 @@ function create_requested_map(refreshes) {
 		const existing = requested.get(parts.id);
 
 		if (existing) {
-			existing.push(parts.payload);
+			existing.add(parts.payload);
 		} else {
-			requested.set(parts.id, [parts.payload]);
+			requested.set(parts.id, new Set([parts.payload]));
 		}
 	}
 
@@ -511,7 +513,7 @@ function create_requested_map(refreshes) {
 }
 
 /** @type {typeof handle_remote_form_post_internal} */
-export async function handle_remote_form_post(event, state, manifest, id) {
+export async function handle_remote_form_post(event, state, id) {
 	return record_span({
 		name: 'sveltekit.remote.form.post',
 		attributes: {
@@ -520,7 +522,7 @@ export async function handle_remote_form_post(event, state, manifest, id) {
 		fn: (current) => {
 			const traced_event = merge_tracing(event, current);
 			return with_request_store({ event: traced_event, state }, () =>
-				handle_remote_form_post_internal(traced_event, state, manifest, id)
+				handle_remote_form_post_internal(traced_event, state, id)
 			);
 		}
 	});
@@ -529,17 +531,16 @@ export async function handle_remote_form_post(event, state, manifest, id) {
 /**
  * @param {RequestEvent} event
  * @param {RequestState} state
- * @param {SSRManifest} manifest
  * @param {string} id
- * @returns {Promise<ActionResult>}
+ * @returns {Promise<ServerActionResult>}
  */
-async function handle_remote_form_post_internal(event, state, manifest, id) {
+async function handle_remote_form_post_internal(event, state, id) {
 	const location = get_action_location(event.url);
 	// `hash` and `name` can never contain a `/`, but the JSON-stringified key of a
 	// keyed (`form.for(key)`) instance can — rejoin the remaining segments
 	const [hash, name, ...rest] = id.split('/');
 	const action_id = rest.join('/');
-	const remotes = manifest._.remotes;
+	const remotes = manifest.remotes;
 	const module = Object.hasOwn(remotes, hash) ? await remotes[hash]() : undefined;
 
 	let form = /** @type {RemoteForm<any, any>} */ (
@@ -547,21 +548,7 @@ async function handle_remote_form_post_internal(event, state, manifest, id) {
 	);
 
 	if (!form) {
-		event.setHeaders({
-			// https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405
-			// "The server must generate an Allow header field in a 405 status code response"
-			allow: 'GET'
-		});
-		return {
-			type: 'error',
-			location,
-			// We're lying a bit with the types here; this will be transformed into a proper App.Error object later
-			error: new SvelteKitError(
-				405,
-				'Method Not Allowed',
-				`POST method not allowed. No form actions exist for ${DEV ? `the page at ${event.route.id}` : 'this page'}`
-			)
-		};
+		return method_not_allowed_result(event, location);
 	}
 
 	if (action_id) {
@@ -591,22 +578,7 @@ async function handle_remote_form_post_internal(event, state, manifest, id) {
 			location
 		};
 	} catch (e) {
-		const err = normalize_error(e);
-
-		if (err instanceof Redirect) {
-			return {
-				type: 'redirect',
-				status: err.status,
-				location: err.location
-			};
-		}
-
-		return {
-			type: 'error',
-			location,
-			// @ts-expect-error We're lying a bit with the types here; this will be transformed into a proper App.Error object later
-			error: check_incorrect_fail_use(err)
-		};
+		return action_error_result(e, location);
 	}
 }
 

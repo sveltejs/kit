@@ -2,26 +2,15 @@
 /** @import { EnvVarConfig } from '@sveltejs/kit/env' */
 /** @import { ValidatedConfig } from 'types' */
 import path from 'node:path';
+import { exactRegex } from '@rolldown/pluginutils';
 import * as sync from '../../../core/sync/sync.js';
-import {
-	create_sveltekit_env,
-	create_sveltekit_env_dev,
-	create_sveltekit_env_private,
-	create_sveltekit_env_public,
-	create_sveltekit_env_service_worker,
-	create_sveltekit_env_service_worker_dev,
-	resolve_env_entry
-} from '../../../core/env.js';
+import { create_env_modules, resolve_env_entry } from '../../../core/env.js';
 import { import_peer } from '../../../utils/import.js';
-import { runtime_directory } from '../../../core/utils.js';
-import { s } from '../../../utils/misc.js';
 import { write_if_changed } from '../../../core/sync/utils.js';
-import { hash } from '../../../utils/hash.js';
 import { posixify } from '../../../utils/os.js';
-import { prefixRegex } from '@rolldown/pluginutils';
 
 /**
- * Generate (and, in dev, maintain) a `${outDir}/generated/env/config.js` module
+ * Generate (and, in dev, maintain) the `${outDir}/generated/{build,dev}/env` modules
  * derived from `src/env.ts`
  *
  * @param {ValidatedConfig} config
@@ -29,23 +18,14 @@ import { prefixRegex } from '@rolldown/pluginutils';
  * @returns {Plugin}
  */
 export function plugin_env_vars(config, callback) {
-	// grab these values eagerly because they get mutated (TODO stop mutating them)
-	const dir = config.env.dir;
-	const out = config.outDir;
-
-	const version_hash = hash(config.version.name);
-
 	/** @type {string} */
-	let out_dir;
+	let dir;
 
 	/** @type {Record<string, any>} */
 	let env;
 
 	/** @type {ResolvedConfig} */
 	let resolved_config;
-
-	/** @type {string | null} */
-	let resolved_entry = null;
 
 	/** @type {Set<string>} */
 	let deps = new Set();
@@ -56,81 +36,26 @@ export function plugin_env_vars(config, callback) {
 	let generated;
 
 	async function generate() {
-		const synced = await sync.env(
-			config,
-			resolved_entry,
-			resolved_config.root,
-			resolved_config.mode
-		);
+		const entry = resolve_env_entry(config, resolved_config.root);
+		const synced = await sync.env(config, entry, resolved_config.root, resolved_config.mode);
 
 		deps = synced.deps;
 
 		const vars = synced.variables;
-		const dir = `${out_dir}/generated/env`;
-
-		write_if_changed(
-			`${dir}/config.js`,
-			create_sveltekit_env(
-				vars,
-				env,
-				resolved_entry && posixify(path.relative(dir, resolved_entry))
-			)
-		);
-
-		write_if_changed(`${dir}/config-dev.js`, create_sveltekit_env_dev(vars, env));
-
-		write_if_changed(
-			`${dir}/public/client.js`,
-			create_sveltekit_env_public(
-				vars,
-				env,
-				`import { payload } from ${s(posixify(path.relative(`${dir}/public`, `${runtime_directory}/client/payload.js`)))};\nconst env = payload.env;`
-			)
-		);
-
-		write_if_changed(
-			`${dir}/public/server.js`,
-			create_sveltekit_env_public(
-				vars,
-				env,
-				`import { rendered_env as env } from '__sveltekit/env';`
-			)
-		);
-
-		write_if_changed(
-			`${dir}/public/service-worker.js`,
-			create_sveltekit_env_public(
-				vars,
-				env,
-				`const env = globalThis.__sveltekit_${version_hash}.env;`
-			)
-		);
-
-		write_if_changed(`${dir}/private/server.js`, create_sveltekit_env_private(vars, env));
-
-		write_if_changed(
-			`${dir}/service-worker-prod.js`,
-			create_sveltekit_env_service_worker(
-				vars,
-				env,
-				config.version.name,
-				`globalThis.__sveltekit_${version_hash}`,
-				config.paths.base,
-				config.appDir
-			)
-		);
-
-		write_if_changed(
-			`${dir}/service-worker-dev.js`,
-			create_sveltekit_env_service_worker_dev(
-				vars,
-				env,
-				config.version.name,
-				'globalThis.__sveltekit_dev'
-			)
-		);
-
 		callback(vars);
+
+		const modules = create_env_modules(
+			config,
+			vars,
+			env,
+			dir,
+			entry && posixify(path.relative(dir, entry)),
+			!is_build
+		);
+
+		for (const [file, code] of Object.entries(modules)) {
+			write_if_changed(`${dir}/${file}`, code);
+		}
 	}
 
 	return {
@@ -140,76 +65,72 @@ export function plugin_env_vars(config, callback) {
 			resolved_config = c;
 
 			const vite = await import_peer('vite', c.root);
-			env = vite.loadEnv(c.mode, path.resolve(c.root, dir), '');
-
-			out_dir = posixify(path.resolve(c.root, out));
+			env = vite.loadEnv(c.mode, path.resolve(c.root, config.env.dir), '');
 
 			is_build = c.command === 'build';
+
+			dir = posixify(
+				path.resolve(c.root, config.outDir, `generated/${is_build ? 'build' : 'dev'}/env`)
+			);
 		},
 
 		async buildStart() {
 			// runs once via the memo — per-process, whichever environment starts first
 			// (environment names vary by adapter), and never in the postbuild forks,
 			// which resolve the config without building
-			await (generated ??= (async () => {
-				resolved_entry = resolve_env_entry(config, resolved_config.root);
-				await generate();
-			})());
+			await (generated ??= generate());
 		},
 
-		configureServer(server) {
-			// `handleHotUpdate` only fires for `change` events on files Vite already knows about,
-			// so it doesn't cover the env entry being created or deleted while the dev server is
-			// running. Watch for those events explicitly, re-resolve the entry, regenerate the
-			// modules and trigger a full reload (mirroring the previous behaviour).
-			const on_entry_add_unlink = async (/** @type {string} */ file) => {
-				const resolved = resolve_env_entry(config, resolved_config.root);
+		async hotUpdate({ type, file }) {
+			// runs for every environment; the generated modules are shared, so do the work once
+			if (this.environment.name !== 'client') return;
 
-				if (file === resolved_entry || file === resolved) {
-					resolved_entry = resolved;
-					await generate();
-					server.hot.send({ type: 'full-reload' });
-				}
-			};
+			const created = type === 'create' && file === resolve_env_entry(config, resolved_config.root);
+			if (!deps.has(file) && !created) return;
 
-			server.watcher.on('add', on_entry_add_unlink);
-			server.watcher.on('unlink', on_entry_add_unlink);
-		},
-
-		async handleHotUpdate(update) {
-			if (!deps.has(update.file)) return;
 			await generate();
+			if (type !== 'update') this.environment.hot.send({ type: 'full-reload' });
+		}
+	};
+}
+
+/**
+ * @param {() => string | null} get_service_worker_entry_file
+ * @returns {Plugin}
+ */
+export function plugin_service_worker_env_vars(get_service_worker_entry_file) {
+	/** @type {string | null} */
+	let service_worker_entry_file;
+
+	/** @satisfies {Plugin} */
+	const plugin = {
+		name: 'vite-plugin-sveltekit-service-worker-env',
+		configResolved() {
+			service_worker_entry_file = get_service_worker_entry_file();
+
+			if (service_worker_entry_file) {
+				plugin.transform.filter = {
+					id: exactRegex(service_worker_entry_file)
+				};
+			}
 		},
-
-		resolveId: {
-			filter: {
-				id: prefixRegex('__sveltekit/env')
-			},
-			handler(id) {
-				const dir = `${out_dir}/generated/env`;
-
-				if (id === '__sveltekit/env') {
-					return is_build ? `${dir}/config.js` : `${dir}/config-dev.js`;
-				}
-
-				if (id === '__sveltekit/env/private') {
-					return `${dir}/private/server.js`;
-				}
-
-				if (id === '__sveltekit/env/public/server') {
-					return `${dir}/public/server.js`;
-				}
-
-				if (id === '__sveltekit/env/public/client') {
-					return this.environment.name === 'serviceWorker'
-						? `${dir}/public/service-worker.js`
-						: `${dir}/public/client.js`;
-				}
-
-				if (id === '__sveltekit/env/service-worker') {
-					return is_build ? `${dir}/service-worker-prod.js` : `${dir}/service-worker-dev.js`;
-				}
+		applyToEnvironment(environment) {
+			return !!service_worker_entry_file && environment.config.consumer === 'client';
+		},
+		transform: {
+			filter: {},
+			handler(code) {
+				// prepend the service worker with an import that configures
+				// `env`, in case `$app/env/public` is imported. In production
+				// this is required: dynamic public env vars aren't known at
+				// build time, so `env.js` is loaded at runtime. In dev, the
+				// imported module just inlines the current values instead.
+				return {
+					code: `import '<sveltekit:generated>/env/service-worker.js';\n${code}`
+				};
 			}
 		}
 	};
+
+	return plugin;
 }

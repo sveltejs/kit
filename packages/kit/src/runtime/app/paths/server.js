@@ -4,7 +4,7 @@ import { decode_pathname } from '../../../utils/url.js';
 import { add_data_suffix } from '../../../pathname.js';
 import { try_get_request_store } from '@sveltejs/kit/internal/server';
 import { manifest } from '../../server/internal.js';
-import { get_hooks } from '__SERVER__/internal.js';
+import { get_hooks } from '<sveltekit:generated>/server.js';
 import { DEV } from 'esm-env';
 
 export { base, assets, app_dir } from './internal/server.js';
@@ -83,8 +83,8 @@ export async function match(url) {
 		resolved_path = resolved_path.slice(base.length) || '/';
 	}
 
-	const matchers = await manifest._.matchers();
-	const result = find_route(resolved_path, manifest._.routes, matchers);
+	const matchers = await manifest.matchers();
+	const result = find_route(resolved_path, manifest.routes, matchers);
 
 	if (result) {
 		return {

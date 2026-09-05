@@ -1,7 +1,4 @@
-import { Server } from '0SERVER';
-import { manifest } from 'MANIFEST';
-
-const server = new Server(manifest);
+import { server } from '0SERVER';
 
 /**
  * We don't know the origin until we receive a request, but

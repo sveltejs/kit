@@ -82,17 +82,6 @@ export function decode_pathname(pathname) {
 	return pathname.split('%25').map(decodeURI).join('%25');
 }
 
-/** @param {Record<string, string>} params */
-export function decode_params(params) {
-	for (const key in params) {
-		// input has already been decoded by decodeURI
-		// now handle the rest
-		params[key] = decodeURIComponent(params[key]);
-	}
-
-	return params;
-}
-
 /**
  * The error when a URL is malformed is not very helpful, so we augment it with the URI
  * @param {string} uri

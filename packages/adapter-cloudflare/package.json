@@ -27,11 +27,11 @@
 	},
 	"types": "index.d.ts",
 	"files": [
+		"src/virtual-cloudflare-workers.js",
 		"files/worker.js",
 		"index.js",
 		"utils.js",
-		"index.d.ts",
-		"ambient.d.ts"
+		"index.d.ts"
 	],
 	"scripts": {
 		"lint": "oxfmt --check .",
@@ -42,13 +42,15 @@
 		"test": "pnpm test:unit && pnpm test:e2e"
 	},
 	"dependencies": {
-		"@cloudflare/workers-types": "^5.20260809.1"
+		"@cloudflare/workers-types": "^5.20260813.1",
+		"@rolldown/pluginutils": "^1.0.1"
 	},
 	"devDependencies": {
 		"@playwright/test": "catalog:",
 		"@sveltejs/kit": "workspace:^",
 		"@types/node": "catalog:",
 		"typescript": "catalog:typescript-native",
+		"vite": "catalog:",
 		"vitest": "catalog:"
 	},
 	"peerDependencies": {

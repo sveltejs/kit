@@ -30,7 +30,6 @@
 		"test-redirect-importer": "workspace:*",
 		"typescript": "catalog:",
 		"@typescript/native": "catalog:",
-		"valibot": "catalog:",
 		"vite": "catalog:",
 		"vitest": "catalog:"
 	},

@@ -416,7 +416,7 @@ A form is composed of a set of _fields_, which are defined by the schema. In the
 
 These attributes allow SvelteKit to set the correct input type, set a `name` that is used to construct the `data` passed to the handler, populate the `value` of the form (for example following a failed submission, to save the user having to re-enter everything), and set the [`aria-invalid`](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Attributes/aria-invalid) state.
 
-Passing a second argument to `.as(...)` is useful when rendering a form from existing data, such as an edit form or multiple instances created with [`for(...)`](#form-Multiple-instances-of-a-form). As well as setting the value of the element when it is rendered, it controls the value of the element when the form is reset. `radio`, `submit` and `hidden` inputs always need this value, and `checkbox` inputs need it when they represent one option in an array field. `file` inputs cannot be populated this way.
+Passing a second argument to `.as(...)` is useful when rendering a form from existing data, such as an edit form or multiple instances created with [`for(...)`](#form-Multiple-instances-of-a-form). As well as setting the value of the element when it is rendered, it controls the value of the element when the form is reset. `radio`, `submit` and `hidden` inputs always need this value, and `checkbox` inputs need it when they represent one option in an array field. For these `radio` and `checkbox` inputs the second argument identifies the option, so whether it is currently checked goes in a third argument, e.g. `.as('radio', option, settings.visibility === option)` or `.as('checkbox', tag, settings.tags.includes(tag))`. `file` inputs cannot be populated this way.
 
 > [!NOTE] The generated `name` attribute uses JS object notation (e.g. `nested.array[0].value`). String keys that require quotes such as `object['nested-array'][0].value` are not supported. Under the hood, boolean checkbox and number field names are prefixed with `b:` and `n:`, respectively, to signal SvelteKit to coerce the values from strings prior to validation.
 
@@ -1105,7 +1105,27 @@ export const createPost = form(
 );
 ```
 
-`requested` gives you access to the queries the client requested to refresh. Each entry is an `{ arg, query }` object: `arg` is the value the query's implementation function received — i.e. the argument *after* the schema has validated and (where applicable) transformed it — and `query` is a `RemoteQuery` already bound to the client's original cache key, so calling `query.refresh()` / `query.set(...)` updates the correct client instance. If parsing an argument fails, that query will error, but the entire command will not fail. `requested`'s second parameter, `limit`, is the maximum number of items it will return. Any refresh requests beyond this limit will fail.
+`requested` gives you access to the queries the client requested to refresh. Each entry is an `{ arg, query, ignore }` object: `arg` is the value the query's implementation function received — i.e. the argument *after* the schema has validated and (where applicable) transformed it — and `query` is a `RemoteQuery` already bound to the client's original cache key, so calling `query.refresh()` / `query.set(...)` updates the correct client instance. Call `ignore()` if you intentionally do not want to update a particular instance:
+
+```js
+import { requested, query } from '$app/server';
+
+export const getPosts = query('unchecked', ({ filter }) => {
+	return ['foo', 'bar'];
+});
+---cut---
+for (const { arg, query, ignore } of requested(getPosts, 10)) {
+	if (arg.filter === 'author:santa') {
+		void query.refresh();
+	} else {
+		ignore();
+	}
+}
+```
+
+Every requested update must be refreshed, set, reconnected (for a live query), or explicitly ignored. Otherwise, the corresponding query will enter an error state on the client. If parsing or validating an argument fails, that query will also error, but the entire command will not fail.
+
+`requested`'s second parameter, `limit`, is the maximum number of items it will return. Any refresh requests beyond this limit will fail on the client.
 
 > [!NOTE] `limit` is required because the list of refresh requests is controlled by the client — each entry causes the server to validate an argument and usually re-fetch data, so an unbounded list is a denial-of-service risk. Choose a limit that reflects the worst case you're willing to handle per request. You _can_ pass `Infinity` if you have explicitly decided to accept any number of refreshes, but it is not recommended.
 
@@ -1119,6 +1139,17 @@ declare const getPosts: RemoteQueryFunction<any, any>;
 // this is the same as looping over the result and calling `void query.refresh()`.
 await requested(getPosts, 1).refreshAll();
 ```
+
+If you want to intentionally ignore every selected update, use `ignoreAll`:
+
+```js
+import { requested } from '$app/server';
+
+---cut---
+await requested(getPosts, 10).ignoreAll();
+```
+
+`ignoreAll` only ignores entries within the specified `limit`. Any excess entries still fail on the client.
 
 > [!NOTE] Why does the command have to name every query it's willing to refresh? Two reasons:
 >

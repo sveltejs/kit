@@ -1,6 +1,47 @@
 import { BROWSER } from 'esm-env';
 
 export const text_encoder = new TextEncoder();
+
+/**
+ * `ReadableStream.from`, for runtimes that don't support it (as of writing, every Bun release)
+ * @template T
+ * @param {AsyncIterable<T>} iterable
+ * @returns {ReadableStream<T>}
+ */
+export function stream_from_iterable(iterable) {
+	// TODO remove the casts once TypeScript's lib includes `ReadableStream.from`
+	if (/** @type {any} */ (ReadableStream).from) {
+		return /** @type {any} */ (ReadableStream).from(iterable);
+	}
+
+	const iterator = iterable[Symbol.asyncIterator]();
+	return new ReadableStream({
+		async pull(controller) {
+			const { value, done } = await iterator.next();
+			if (done) controller.close();
+			else controller.enqueue(value);
+		},
+		async cancel(reason) {
+			await iterator.return?.(reason);
+		}
+	});
+}
+
+/**
+ * @param {string} head
+ * @param {AsyncIterable<string>} chunks
+ * @returns {ReadableStream<Uint8Array>} `head` followed by each non-empty chunk, encoded
+ */
+export function stream_text(head, chunks) {
+	return stream_from_iterable(
+		(async function* () {
+			yield text_encoder.encode(head);
+			for await (const chunk of chunks) {
+				if (chunk) yield text_encoder.encode(chunk);
+			}
+		})()
+	);
+}
 export const text_decoder = new TextDecoder();
 
 /**

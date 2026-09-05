@@ -11,7 +11,11 @@ import {
 	parse_form_key
 } from '../../../form-utils.js';
 import { get_cache, get_implicit_lookup, run_remote_function } from './shared.js';
-import { ValidationError } from '@sveltejs/kit/internal';
+import { ActionFailure, ValidationError } from '@sveltejs/kit/internal';
+import { DEV } from 'esm-env';
+
+const incorrect_fail_message =
+	'`fail(...)` is for form actions. A remote `form` handler should call `invalid(...)` instead. See https://svelte.dev/docs/kit/remote-functions#form-Programmatic-validation';
 
 /**
  * Creates a form object that can be spread onto a `<form>` element.
@@ -118,9 +122,15 @@ export function form(validate_or_fn, maybe_fn) {
 							() => data,
 							(data) => (!maybe_fn ? fn() : fn(data, issue))
 						);
+
+						if (DEV && output.result instanceof ActionFailure) {
+							throw new Error(incorrect_fail_message);
+						}
 					} catch (e) {
 						if (e instanceof ValidationError) {
 							handle_issues(output, e.issues, form_data, __.id);
+						} else if (DEV && e instanceof ActionFailure) {
+							throw new Error(incorrect_fail_message, { cause: e });
 						} else {
 							throw e;
 						}

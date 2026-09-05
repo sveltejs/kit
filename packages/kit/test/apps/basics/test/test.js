@@ -1255,6 +1255,31 @@ test.describe('Actions', () => {
 		await expect(page.locator('input[name=username]')).toHaveValue('');
 	});
 
+	test('use:enhance renders an error page for a non-ActionResult error response', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		test.skip(!javaScriptEnabled, 'Skip when JavaScript is disabled');
+		await page.goto('/actions/enhance-non-action-response');
+		await page.locator('button.json').click();
+
+		await expect(page.locator('h1')).toHaveText('403');
+		await expect(page.locator('p')).toHaveText('Cross-site POST form submissions are forbidden');
+
+		await page.goto('/actions/enhance-non-action-response');
+		await page.locator('button.html').click();
+
+		await expect(page.locator('h1')).toHaveText('502');
+		// the suffix comes from the `handleError` hook in hooks.client.js
+		await expect(page.locator('p')).toHaveText('Bad Gateway (502 Bad Gateway)');
+
+		await page.goto('/actions/enhance-non-action-response');
+		await page.locator('button.empty').click();
+
+		await expect(page.locator('h1')).toHaveText('403');
+		await expect(page.locator('p')).toHaveText('Forbidden (403 Forbidden)');
+	});
+
 	test('use:enhance abort controller', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/actions/enhance');
 

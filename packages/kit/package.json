@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "3.0.0-next.23",
+	"version": "3.0.0-next.26",
 	"description": "SvelteKit is the fastest way to build Svelte apps",
 	"keywords": [
 		"framework",
@@ -20,8 +20,6 @@
 	"dependencies": {
 		"@rolldown/pluginutils": "^1.0.1",
 		"@standard-schema/spec": "^1.1.0",
-		"@sveltejs/acorn-typescript": "^1.0.12",
-		"acorn": "^8.18.0",
 		"cookie": "^2.0.1",
 		"devalue": "^5.9.0",
 		"esm-env": "^1.2.2",
@@ -66,8 +64,8 @@
 	"files": [
 		"src",
 		"!src/**/*.spec.js",
-		"!src/core/**/fixtures",
-		"!src/core/**/test",
+		"!src/**/fixtures",
+		"!src/**/test",
 		"types",
 		"svelte-kit.js"
 	],
@@ -78,9 +76,13 @@
 		"format": "oxfmt --write .",
 		"test": "pnpm test:unit && pnpm test:integration",
 		"test:integration": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test",
-		"test:dev": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:dev",
-		"test:build": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:build",
-		"test:cross-platform:dev": "pnpm test:unit && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:cross-platform:dev",
+		"test:dev": "pnpm -r --workspace-concurrency 2 --filter=\"./test/**\" test:dev",
+		"test:build": "pnpm -r --workspace-concurrency 2 --filter=\"./test/**\" test:build",
+		"test:dev:basics": "pnpm --filter=test-basics test:dev",
+		"test:dev:rest": "pnpm -r --workspace-concurrency 2 --filter=\"./test/**\" --filter=\"!test-basics\" test:dev",
+		"test:build:basics": "pnpm --filter=test-basics test:build",
+		"test:build:rest": "pnpm -r --workspace-concurrency 2 --filter=\"./test/**\" --filter=\"!test-basics\" test:build",
+		"test:cross-platform:dev": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:cross-platform:dev",
 		"test:cross-platform:build": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:cross-platform:build",
 		"test:server-side-route-resolution:dev": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:server-side-route-resolution:dev",
 		"test:server-side-route-resolution:build": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:server-side-route-resolution:build",
@@ -168,6 +170,10 @@
 		"./internal/server": {
 			"types": "./types/index.d.ts",
 			"import": "./src/exports/internal/server/index.js"
+		},
+		"./adapter": {
+			"types": "./types/index.d.ts",
+			"import": "./src/exports/adapter.js"
 		},
 		"./node": {
 			"types": "./types/index.d.ts",

@@ -1,5 +1,5 @@
 import * as devalue from 'devalue';
-import { rendered_env } from '__sveltekit/env';
+import { rendered_env } from '<sveltekit:generated>/env/config.js';
 
 /** @type {string} */
 let payload;

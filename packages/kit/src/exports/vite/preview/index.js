@@ -1,5 +1,5 @@
 /** @import { NextHandleFunction } from 'connect' */
-/** @import { PreviewServer, ResolvedConfig } from 'vite' */
+/** @import { PreviewServer } from 'vite' */
 /** @import { ValidatedConfig, ServerInternalModule, ServerModule } from 'types' */
 import fs from 'node:fs';
 import { join } from 'node:path';
@@ -9,20 +9,20 @@ import sirv from 'sirv';
 import { loadEnv, normalizePath } from 'vite';
 import { createReadableStream, getRequest, setResponse } from '../../../exports/node/index.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
+import { relative_pathname } from '../../../utils/url.js';
 import { is_chrome_devtools_request, not_found } from '../utils.js';
 import { stackless } from '../../../utils/error.js';
 
 /**
  * @param {PreviewServer} vite
- * @param {ResolvedConfig} vite_config
  * @param {ValidatedConfig} svelte_config
  */
-export async function preview(vite, vite_config, svelte_config) {
+export async function preview(vite, svelte_config) {
 	const { paths } = svelte_config;
 	const base = paths.base;
 	const assets = paths.assets ? SVELTE_KIT_ASSETS : paths.base;
 
-	const protocol = vite_config.preview.https ? 'https' : 'http';
+	const protocol = vite.config.preview.https ? 'https' : 'http';
 
 	const etag = `"${Date.now()}"`;
 
@@ -43,6 +43,7 @@ export async function preview(vite, vite_config, svelte_config) {
 	/** @type {ServerModule} */
 	const { Server } = await import(pathToFileURL(join(dir, 'index.js')).href);
 
+	/** @type {{ manifest: import('types').SSRManifest }} */
 	const { manifest } = await import(pathToFileURL(join(dir, 'manifest.js')).href);
 
 	set_assets(assets);
@@ -51,7 +52,7 @@ export async function preview(vite, vite_config, svelte_config) {
 
 	try {
 		await server.init({
-			env: loadEnv(vite_config.mode, svelte_config.env.dir, ''),
+			env: loadEnv(vite.config.mode, svelte_config.env.dir, ''),
 			read: (file) => createReadableStream(`${dir}/${file}`)
 		});
 	} catch (error) {
@@ -176,9 +177,9 @@ export async function preview(vite, vite_config, svelte_config) {
 					}
 
 					if (redirect) {
-						if (search) redirect += search;
-						res.writeHead(307, {
-							location: redirect
+						res.writeHead(308, {
+							// relative so (possibly invisible) path prefixes are preserved
+							location: relative_pathname(pathname, redirect) + search
 						});
 
 						res.end();
@@ -204,13 +205,13 @@ export async function preview(vite, vite_config, svelte_config) {
 		vite.middlewares.use(async (req, res) => {
 			const host = req.headers[':authority'] || req.headers.host;
 
-			const request = getRequest({
+			const request = (svelte_config.adapter?.vite?.getRequest ?? getRequest)({
 				base: `${protocol}://${host}`,
 				request: req,
 				response: res
 			});
 
-			setResponse(
+			(svelte_config.adapter?.vite?.setResponse ?? setResponse)(
 				res,
 				await server.respond(request, {
 					getClientAddress: () => {
@@ -219,7 +220,7 @@ export async function preview(vite, vite_config, svelte_config) {
 						throw new Error('Could not determine clientAddress');
 					},
 					read: (file) => {
-						if (file in manifest._.server_assets) {
+						if (file in manifest.server_assets) {
 							return fs.readFileSync(join(dir, file));
 						}
 

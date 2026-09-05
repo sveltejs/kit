@@ -48,7 +48,8 @@ import {
 	TRAILING_SLASH_PARAM,
 	create_remote_key,
 	validate_depends,
-	validate_load_response
+	validate_load_response,
+	fetch_cache_url
 } from '../shared.js';
 
 import { page, updated, notify_version, update_page, set_navigation } from '#app/state/client';
@@ -475,6 +476,19 @@ export function start(_app, _target, data) {
 }
 
 /**
+ * @template T
+ * @param {Map<string, Map<string, T>>} map
+ * @returns {Generator<[string, T]>} every entry of the cache map, keyed by remote key
+ */
+function* cache_entries(map) {
+	for (const [id, entries] of map) {
+		for (const [payload, entry] of entries) {
+			yield [create_remote_key(id, payload), entry];
+		}
+	}
+}
+
+/**
  * @param {import('./types.js').SvelteKitApp} _app
  * @param {HTMLElement} _target
  * @param {Parameters<typeof _hydrate>[1]} [data]
@@ -603,7 +617,7 @@ async function _invalidate(reset_page_state = true) {
 
 	const token = (invalidation_token = {});
 	const nav_token = navigation_token;
-	const navigating = is_navigating;
+	const prev_current = current;
 	const intent = await get_navigation_intent(current.url, true);
 
 	// Clear preload, it might be affected by the invalidation.
@@ -616,19 +630,14 @@ async function _invalidate(reset_page_state = true) {
 	/** @type {Map<string, Promise<void>>} */
 	const live_query_reconnects = new Map();
 	if (force_invalidation) {
-		for (const entries of query_map.values()) {
-			for (const { resource } of entries.values()) {
-				void resource.refresh();
-			}
+		for (const [, { resource }] of cache_entries(query_map)) {
+			void resource.refresh();
 		}
 
-		for (const [query_id, entries] of live_query_map) {
-			for (const [payload, { resource }] of entries) {
-				const key = create_remote_key(query_id, payload);
-				const promise = resource.reconnect();
-				promise.catch(noop);
-				live_query_reconnects.set(key, promise);
-			}
+		for (const [key, { resource }] of cache_entries(live_query_map)) {
+			const promise = resource.reconnect();
+			promise.catch(noop);
+			live_query_reconnects.set(key, promise);
 		}
 	}
 
@@ -648,9 +657,9 @@ async function _invalidate(reset_page_state = true) {
 		);
 	}
 
-	// A navigation started before the invalidation and ended before it finished. The invalidation did not redirect,
-	// hence it likely contains outdated data now, so we ignore it.
-	if (navigating && !is_navigating) {
+	// a navigation applied its result while the invalidation was loading,
+	// so the invalidation contains outdated data for a page we are no longer on
+	if (current !== prev_current) {
 		return;
 	}
 
@@ -670,18 +679,13 @@ async function _invalidate(reset_page_state = true) {
 	// only wait for promises that are connected to queries that still exist
 	/** @type {Promise<any>[]} */
 	const promises = [];
-	for (const entries of query_map.values()) {
-		for (const { resource } of entries.values()) {
-			promises.push(resource);
-		}
+	for (const [, { resource }] of cache_entries(query_map)) {
+		promises.push(resource);
 	}
-	for (const [query_id, entries] of live_query_map) {
-		for (const payload of entries.keys()) {
-			const key = create_remote_key(query_id, payload);
-			const promise = live_query_reconnects.get(key);
-			if (promise) {
-				promises.push(promise);
-			}
+	for (const [key] of cache_entries(live_query_map)) {
+		const promise = live_query_reconnects.get(key);
+		if (promise) {
+			promises.push(promise);
 		}
 	}
 
@@ -768,20 +772,16 @@ export async function _goto(url, options = {}, redirect_count = 0, nav_token = {
 			if (options.refreshAll) {
 				force_invalidation = true;
 				query_keys = new Set();
-				for (const [id, entries] of query_map) {
-					for (const [payload, entry] of entries) {
-						// don't refresh yet, as some queries will be unrendered,
-						// but clear caches so that newly rendered queries
-						// don't use stale data. TODO same for `live_query_map`
-						entry.resource?.reset();
-						query_keys.add(create_remote_key(id, payload));
-					}
+				for (const [key, entry] of cache_entries(query_map)) {
+					// don't refresh yet, as some queries will be unrendered,
+					// but clear caches so that newly rendered queries
+					// don't use stale data. TODO same for `live_query_map`
+					entry.resource?.reset();
+					query_keys.add(key);
 				}
 				live_query_keys = new Set();
-				for (const [id, entries] of live_query_map) {
-					for (const payload of entries.keys()) {
-						live_query_keys.add(create_remote_key(id, payload));
-					}
+				for (const [key] of cache_entries(live_query_map)) {
+					live_query_keys.add(key);
 				}
 			}
 
@@ -797,18 +797,14 @@ export async function _goto(url, options = {}, redirect_count = 0, nav_token = {
 		void tick()
 			.then(tick)
 			.then(() => {
-				for (const [id, entries] of query_map) {
-					for (const [payload, { resource }] of entries) {
-						if (query_keys?.has(create_remote_key(id, payload))) {
-							void resource.start();
-						}
+				for (const [key, { resource }] of cache_entries(query_map)) {
+					if (query_keys?.has(key)) {
+						void resource.start();
 					}
 				}
-				for (const [id, entries] of live_query_map) {
-					for (const [payload, { resource }] of entries) {
-						if (live_query_keys?.has(create_remote_key(id, payload))) {
-							void resource.reconnect();
-						}
+				for (const [key, { resource }] of cache_entries(live_query_map)) {
+					if (live_query_keys?.has(key)) {
+						void resource.reconnect();
 					}
 				}
 			});
@@ -1312,17 +1308,11 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
  * @param {URL} url
  */
 function resolve_fetch_url(input, init, url) {
-	let requested = input instanceof Request ? input.url : input;
-
 	// we must fixup relative urls so they are resolved from the target page
-	const resolved = new URL(requested, url);
+	const resolved = new URL(input instanceof Request ? input.url : input, url);
 
-	// match ssr serialized data url, which is important to find cached responses
-	if (resolved.origin === url.origin) {
-		requested = resolved.href.slice(url.origin.length);
-	}
+	const requested = fetch_cache_url(resolved, url);
 
-	// prerendered pages may be served from any origin, so `initial_fetch` urls shouldn't be resolved
 	const promise = started
 		? subsequent_fetch(requested, resolved.href, init)
 		: initial_fetch(requested, init);
@@ -1390,12 +1380,12 @@ function diff_search_params(old_url, new_url) {
 	const changed = new Set([...old_url.searchParams.keys(), ...new_url.searchParams.keys()]);
 
 	for (const key of changed) {
-		const old_values = old_url.searchParams.getAll(key);
-		const new_values = new_url.searchParams.getAll(key);
+		const old_values = old_url.searchParams.getAll(key).sort();
+		const new_values = new_url.searchParams.getAll(key).sort();
 
 		if (
-			old_values.every((value) => new_values.includes(value)) &&
-			new_values.every((value) => old_values.includes(value))
+			old_values.length === new_values.length &&
+			old_values.every((value, i) => value === new_values[i])
 		) {
 			changed.delete(key);
 		}
@@ -2042,42 +2032,28 @@ async function navigate({
 	let navigation_result = intent && (await load_route({ ...intent, action_result }));
 
 	if (!navigation_result) {
-		if (is_external_url(url, base, app.hash)) {
-			if (DEV && app.hash) {
-				// Special case for hash mode during DEV: If someone accidentally forgets to use a hash for the link,
-				// they would end up here in an endless loop. Fall back to error page in that case
-				navigation_result = await server_fallback(
-					url,
-					{ id: null },
-					await handle_error(
-						new SvelteKitError(
-							404,
-							'Not Found',
-							`Not found: ${url.pathname} (did you forget the hash?)`
-						),
-						{
-							url,
-							params: {},
-							route: { id: null }
-						}
-					),
-					replace_state
-				);
-			} else {
-				return await native_navigation(url, replace_state);
-			}
-		} else {
-			navigation_result = await server_fallback(
-				url,
-				{ id: null },
-				await handle_error(new SvelteKitError(404, 'Not Found', `Not found: ${url.pathname}`), {
-					url,
-					params: {},
-					route: { id: null }
-				}),
-				replace_state
-			);
+		const external = is_external_url(url, base, app.hash);
+		// Special case for hash mode during DEV: If someone accidentally forgets to use a hash for the link,
+		// they would end up here in an endless loop. Fall back to error page in that case
+		const missing_hash = external && DEV && app.hash;
+
+		if (external && !missing_hash) {
+			return await native_navigation(url, replace_state);
 		}
+
+		navigation_result = await server_fallback(
+			url,
+			{ id: null },
+			await handle_error(
+				new SvelteKitError(
+					404,
+					'Not Found',
+					`Not found: ${url.pathname}${missing_hash ? ' (did you forget the hash?)' : ''}`
+				),
+				{ url, params: {}, route: { id: null } }
+			),
+			replace_state
+		);
 	}
 
 	// if this is an internal navigation intent, use the normalized
@@ -2095,6 +2071,9 @@ async function navigate({
 	if (navigation_result.type === 'redirect') {
 		// whatwg fetch spec https://fetch.spec.whatwg.org/#http-redirect-fetch says to error after 20 redirects
 		if (redirect_count < 20) {
+			// a preloaded redirect has been consumed; a later hop back to this route must load afresh
+			if (load_cache?.id === intent?.id) discard_load_cache();
+
 			await navigate({
 				type,
 				url: new URL(navigation_result.location, url),
@@ -2136,12 +2115,15 @@ async function navigate({
 
 	updating = true;
 
-	capture_scroll(previous_history_index);
-	capture_snapshot(previous_navigation_index);
-	if (replace_state) {
-		delete_navigation_snapshot(previous_history_index);
-	} else {
-		capture_navigation_snapshot(previous_history_index);
+	if (!popped) {
+		// popstate captures the source entry synchronously, before the traversal is resolved
+		capture_scroll(previous_history_index);
+		capture_snapshot(previous_navigation_index);
+		if (replace_state) {
+			delete_navigation_snapshot(previous_history_index);
+		} else {
+			capture_navigation_snapshot(previous_history_index);
+		}
 	}
 
 	// ensure the url pathname matches the page's trailing slash option
@@ -2203,26 +2185,7 @@ async function navigate({
 	 */
 	let commit_promise;
 	if (started) {
-		const after_navigate = (
-			await Promise.all(
-				// eslint-disable-next-line @typescript-eslint/await-thenable -- we need to await because they can be asynchronous
-				Array.from(on_navigate_callbacks, (fn) => fn(/** @type {OnNavigate} */ (nav.navigation)))
-			)
-		).filter(/** @returns {value is () => void} */ (value) => typeof value === 'function');
-
-		if (after_navigate.length > 0) {
-			function cleanup() {
-				after_navigate.forEach((fn) => {
-					after_navigate_callbacks.delete(fn);
-				});
-			}
-
-			after_navigate.push(cleanup);
-
-			after_navigate.forEach((fn) => {
-				after_navigate_callbacks.add(fn);
-			});
-		}
+		await run_on_navigate_callbacks(/** @type {OnNavigate} */ (nav.navigation));
 
 		// Type-casts are save because we know this resolved a proper SvelteKit route
 		const target = popped?.shallow
@@ -2280,17 +2243,70 @@ async function navigate({
 		await initialize(navigation_result, target, false);
 	}
 
-	const { activeElement } = document;
+	const finished = await finish_navigation(
+		nav,
+		nav_token,
+		url,
+		popped?.scroll,
+		reset,
+		commit_promise
+	);
+	if (!finished) return;
 
-	await commit_promise;
+	if (type === 'popstate') {
+		restore_snapshot(current_navigation_index);
+	}
+	// new and replaced entries have no stored values, so this only resets there
+	restore_navigation_snapshot(current_history_index, previous_snapshot_registrations);
+
+	set_navigation(null);
+
+	updating = false;
+}
+
+/**
+ * Runs the `onNavigate` callbacks and registers any functions they return to run after the navigation
+ * @param {OnNavigate} navigation
+ */
+async function run_on_navigate_callbacks(navigation) {
+	const after_navigate = (
+		await Promise.all(
+			// eslint-disable-next-line @typescript-eslint/await-thenable -- we need to await because they can be asynchronous
+			Array.from(on_navigate_callbacks, (fn) => fn(navigation))
+		)
+	).filter(/** @returns {value is () => void} */ (value) => typeof value === 'function');
+
+	if (after_navigate.length > 0) {
+		function cleanup() {
+			after_navigate.forEach((fn) => after_navigate_callbacks.delete(fn));
+		}
+
+		after_navigate.push(cleanup);
+		after_navigate.forEach((fn) => after_navigate_callbacks.add(fn));
+	}
+}
+
+/**
+ * Settles the navigation once `updated` resolves. Returns `false` if a newer navigation
+ * superseded it in the meantime, in which case the caller must stop
+ * @param {ReturnType<typeof create_navigation>} nav
+ * @param {{}} nav_token
+ * @param {URL} url
+ * @param {{ x: number, y: number } | null | undefined} popped_scroll the scroll position to restore for popstate navigations
+ * @param {boolean} reset
+ * @param {Promise<void> | undefined} updated
+ */
+async function finish_navigation(nav, nav_token, url, popped_scroll, reset, updated) {
+	const active_element = document.activeElement;
+
+	await updated;
 
 	if (navigation_token !== nav_token) {
-		// a new navigation happened while we were waiting for the DOM to update, so abort
 		nav.reject(new Error('navigation aborted'));
-		return;
+		return false;
 	}
 
-	reset_scroll_and_focus(url, reset ? popped?.scroll : scroll_state(), reset, activeElement);
+	reset_scroll_and_focus(url, reset ? popped_scroll : scroll_state(), reset, active_element);
 
 	is_navigating = false;
 
@@ -2303,15 +2319,7 @@ async function navigate({
 
 	after_navigate_callbacks.forEach((fn) => fn(/** @type {AfterNavigate} */ (nav.navigation)));
 
-	if (type === 'popstate') {
-		restore_snapshot(current_navigation_index);
-	}
-	// new and replaced entries have no stored values, so this only resets there
-	restore_navigation_snapshot(current_history_index, previous_snapshot_registrations);
-
-	set_navigation(null);
-
-	updating = false;
+	return true;
 }
 
 /**
@@ -3007,21 +3015,7 @@ async function update_state(intent, state, { replace, persist_state, reset }, ca
 	}
 
 	if (nav) {
-		const after_navigate = (
-			await Promise.all(
-				// eslint-disable-next-line @typescript-eslint/await-thenable -- we need to await because they can be asynchronous
-				Array.from(on_navigate_callbacks, (fn) => fn(/** @type {OnNavigate} */ (nav.navigation)))
-			)
-		).filter(/** @returns {value is () => void} */ (value) => typeof value === 'function');
-
-		if (after_navigate.length > 0) {
-			function cleanup() {
-				after_navigate.forEach((fn) => after_navigate_callbacks.delete(fn));
-			}
-
-			after_navigate.push(cleanup);
-			after_navigate.forEach((fn) => after_navigate_callbacks.add(fn));
-		}
+		await run_on_navigate_callbacks(/** @type {OnNavigate} */ (nav.navigation));
 	}
 
 	blur_active_element(reset);
@@ -3036,26 +3030,8 @@ async function update_state(intent, state, { replace, persist_state, reset }, ca
 	});
 
 	if (nav) {
-		const { activeElement } = document;
-
-		await settled();
-
-		if (navigation_token !== nav_token) {
-			// a new navigation happened while we were waiting for the DOM to update, so abort
-			nav.reject(new Error('navigation aborted'));
-			return;
-		}
-
-		reset_scroll_and_focus(url, reset ? null : scroll_state(), reset, activeElement);
-
-		is_navigating = false;
-		nav.fulfil(undefined);
-
-		if (nav.navigation.to) {
-			nav.navigation.to.scroll = scroll_state();
-		}
-
-		after_navigate_callbacks.forEach((fn) => fn(/** @type {AfterNavigate} */ (nav.navigation)));
+		const finished = await finish_navigation(nav, nav_token, url, null, reset, settled());
+		if (!finished) return;
 	}
 
 	restore_navigation_snapshot(current_history_index, previous_snapshot_registrations);
@@ -3433,9 +3409,25 @@ function _start_router() {
 					(history_metadata.pageUrl === undefined || history_metadata.pageUrl === location.href)) ||
 					is_hash_change);
 			const shallow_url = history_metadata.pageUrl ? new URL(location.href) : null;
+
+			// the browser has already traversed, so record the source entry and move the
+			// indices before anything async: a navigation that starts while this one
+			// resolves must build on the entry we are actually on
+			const previous_history_index = current_history_index;
+			const previous_navigation_index = current_navigation_index;
+			const previous_reset_index = current_reset_index;
+			capture_scroll(previous_history_index);
+			if (!shallow) capture_snapshot(previous_navigation_index);
+			capture_navigation_snapshot(previous_history_index);
+			current_history_index = history_index;
+			current_navigation_index = navigation_index;
+			current_reset_index = reset_index;
+
+			const token = navigation_token;
 			const shallow_intent = shallow_url
 				? await get_navigation_intent(shallow_url, false)
 				: undefined;
+			if (navigation_token !== token) return;
 			const shallow_target = shallow_url
 				? {
 						params: shallow_intent?.params ?? null,
@@ -3459,10 +3451,6 @@ function _start_router() {
 
 				update_url(url);
 
-				capture_scroll(current_history_index);
-				capture_navigation_snapshot(current_history_index);
-				current_history_index = history_index;
-				current_reset_index = reset_index;
 				if (reset && scroll) scroll_to(scroll.x, scroll.y);
 				restore_navigation_snapshot(current_history_index, current_registrations());
 				return;
@@ -3478,15 +3466,13 @@ function _start_router() {
 					delta,
 					shallow: shallow_target
 				},
-				accept: () => {
-					current_history_index = history_index;
-					current_navigation_index = navigation_index;
-					current_reset_index = reset_index;
-				},
 				block: () => {
+					current_history_index = previous_history_index;
+					current_navigation_index = previous_navigation_index;
+					current_reset_index = previous_reset_index;
 					history.go(-delta);
 				},
-				nav_token: navigation_token,
+				nav_token: token,
 				event
 			});
 		} else {

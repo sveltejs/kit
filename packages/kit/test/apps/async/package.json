@@ -13,6 +13,7 @@
 		"test:build": "svelte-kit sync && vitest run && playwright test"
 	},
 	"devDependencies": {
+		"@standard-schema/spec": "catalog:",
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"svelte": "catalog:",

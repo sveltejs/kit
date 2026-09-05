@@ -8,32 +8,39 @@
  */
 export async function* read_stream(reader, delimiter, options) {
 	let done = false;
-	let buffer = '';
+	/** @type {string[]} */
+	let parts = [];
+	let rest = '';
 	const decoder = new TextDecoder(undefined, options);
+	const carry = delimiter.length - 1;
 
-	while (true) {
-		let split = buffer.indexOf(delimiter);
-		while (split !== -1) {
-			yield buffer.slice(0, split);
-			buffer = buffer.slice(split + delimiter.length);
-			split = buffer.indexOf(delimiter);
-		}
-
-		if (done) {
-			if (buffer) {
-				yield buffer;
-			}
-			return;
-		}
-
+	while (!done) {
 		const chunk = await reader.read();
 		done = chunk.done;
-		if (chunk.value) {
-			buffer += decoder.decode(chunk.value, { stream: true });
+		let text = rest;
+		if (chunk.value) text += decoder.decode(chunk.value, { stream: true });
+		if (done) text += decoder.decode();
+
+		let start = 0;
+		let split = text.indexOf(delimiter);
+		while (split !== -1) {
+			if (parts.length > 0) {
+				parts.push(text.slice(start, split));
+				yield parts.join('');
+				parts = [];
+			} else {
+				yield text.slice(start, split);
+			}
+			start = split + delimiter.length;
+			split = text.indexOf(delimiter, start);
 		}
 
-		if (done) {
-			buffer += decoder.decode();
-		}
+		const keep = Math.max(start, text.length - carry);
+		if (keep > start) parts.push(text.slice(start, keep));
+		rest = text.slice(keep);
+	}
+
+	if (parts.length > 0 || rest) {
+		yield parts.join('') + rest;
 	}
 }

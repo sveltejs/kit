@@ -1,7 +1,6 @@
 /** @import { RemoteResource, RemotePrerenderFunction } from '$app/server' */
 /** @import { RemoteFunctionResponse, RemotePrerenderInputsGenerator, RemotePrerenderInternals, MaybePromise } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
-import { json } from '@sveltejs/kit';
 import { HandledHttpError } from '@sveltejs/kit/internal';
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import { stringify_remote_arg } from '../../../shared.js';
@@ -145,7 +144,7 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 				const body = { type: 'result', data: stringify({ _: result }) };
 				state.prerendering.dependencies.set(url, {
 					body: JSON.stringify(body),
-					response: json(body)
+					response: Response.json(body)
 				});
 			}
 

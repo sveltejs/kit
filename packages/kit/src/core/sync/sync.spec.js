@@ -3,8 +3,11 @@ import os from 'node:os';
 import path from 'node:path';
 import { expect, test } from 'vitest';
 import { process_config, validate_config } from '../config/index.js';
+import { load_explicit_env } from '../env.js';
 import { relative_path } from '../../utils/filesystem.js';
+import { posixify } from '../../utils/os.js';
 import { create, update } from './sync.js';
+import create_manifest_data from './create_manifest_data/index.js';
 
 test('generates client manifest imports relative to the project root', () => {
 	const root = fs.mkdtempSync(path.join(os.tmpdir(), 'svelte-kit-sync-'));
@@ -19,11 +22,12 @@ test('generates client manifest imports relative to the project root', () => {
 
 	try {
 		const config = process_config(validate_config({}), root);
-		const { manifest_data } = create(config, root);
+		const manifest_data = create_manifest_data(config, root);
+		create(config, root, manifest_data, true);
 		const index = manifest_data.nodes.findIndex(
 			(node) => node.component === 'src/routes/+page.svelte'
 		);
-		const output = path.join(config.outDir, 'generated/client');
+		const output = path.join(config.outDir, 'generated/build/client');
 		const generated = fs.readFileSync(path.join(output, `nodes/${index}.js`), 'utf8');
 
 		expect(generated).toBe(
@@ -31,6 +35,33 @@ test('generates client manifest imports relative to the project root', () => {
 		);
 	} finally {
 		fs.rmSync(root, { recursive: true, force: true });
+	}
+});
+
+test('explains circular imports through $app/env/private', async () => {
+	const root = path.resolve(import.meta.dirname, '../../../test/apps/basics');
+	const dir = fs.mkdtempSync(path.join(root, 'node_modules/.svelte-kit-env-'));
+	const entry = path.join(dir, 'env.ts');
+
+	fs.writeFileSync(
+		entry,
+		`import { defineEnvVars } from '@sveltejs/kit/env';
+import './helper.js';
+export const variables = defineEnvVars({ FOO: {} });
+`
+	);
+	const helper = path.join(dir, 'helper.ts');
+	fs.writeFileSync(helper, `import '$app/env/private';\n`);
+
+	try {
+		const config = process_config(validate_config({}), root);
+
+		await expect(load_explicit_env(config, entry, root, 'development')).rejects.toMatchObject({
+			message: `Module \`${posixify(path.relative(root, helper))}\` imports \`$app/env/private\`, which creates a circular dependency with \`src/env\``,
+			stack: ''
+		});
+	} finally {
+		fs.rmSync(dir, { recursive: true, force: true });
 	}
 });
 

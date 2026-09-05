@@ -1,36 +1,4 @@
-/** @import { Tracer, Span, SpanContext } from '@opentelemetry/api' */
-
-/**
- * Tracer implementation that does nothing (null object).
- * @type {Tracer}
- */
-export const noop_tracer = {
-	/**
-	 * @returns {Span}
-	 */
-	startSpan() {
-		return noop_span;
-	},
-
-	/**
-	 * @param {unknown} _name
-	 * @param {unknown} arg_1
-	 * @param {unknown} [arg_2]
-	 * @param {Function} [arg_3]
-	 * @returns {unknown}
-	 */
-	startActiveSpan(_name, arg_1, arg_2, arg_3) {
-		if (typeof arg_1 === 'function') {
-			return arg_1(noop_span);
-		}
-		if (typeof arg_2 === 'function') {
-			return arg_2(noop_span);
-		}
-		if (typeof arg_3 === 'function') {
-			return arg_3(noop_span);
-		}
-	}
-};
+/** @import { Span, SpanContext } from '@opentelemetry/api' */
 
 /**
  * @type {Span}

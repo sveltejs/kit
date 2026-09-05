@@ -1,4 +1,5 @@
 /** @import { Component } from 'svelte'; */
+/** @import { SyncRenderOutput } from 'svelte/server' */
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
 import { isRedirect, text } from '@sveltejs/kit';
@@ -18,15 +19,16 @@ import {
 	route_id_resolution_pathname
 } from '../../pathname.js';
 import { try_get_request_store, with_request_store } from '@sveltejs/kit/internal/server';
-import { text_encoder } from '../../utils.js';
-import { count_non_ssi_comments, get_global_name } from '../utils.js';
+import { stream_text } from '../../utils.js';
+import { count_non_ssi_comments } from '../utils.js';
 import { handle_error_and_jsonify } from '../errors.js';
-import * as env from '__sveltekit/env';
+import * as env from '<sveltekit:generated>/env/config.js';
 import { collect_remote_data } from '../remote-functions.js';
 import Root from '../../components/root.svelte';
 import { render } from 'svelte/server';
 import { Props, RenderNode } from '../../props.svelte.js';
 import { has_custom_transporters, uneval } from '#app/internal/transport';
+import { manifest, options } from '../internal.js';
 
 // TODO rename this function/module
 
@@ -35,15 +37,13 @@ import { has_custom_transporters, uneval } from '#app/internal/transport';
  * @param {{
  *   branch: Array<import('./types.js').Loaded>;
  *   fetched: Array<import('./types.js').Fetched>;
- *   options: import('types').SSROptions;
- *   manifest: import('@sveltejs/kit').SSRManifest;
  *   page_config: { ssr: boolean; csr: boolean };
  *   status: number;
  *   error: App.Error | null;
  *   event: import('@sveltejs/kit').RequestEvent;
  *   state: import('types').RequestState;
  *   resolve_opts: import('types').RequiredResolveOptions;
- *   action_result?: import('$app/forms').ActionResult;
+ *   action_result?: import('types').ServerActionResult;
  *   data_serializer: import('./types.js').ServerDataSerializer;
  *   error_components?: Array<import('svelte').Component | undefined>
  * }} opts
@@ -51,8 +51,6 @@ import { has_custom_transporters, uneval } from '#app/internal/transport';
 export async function render_response({
 	branch,
 	fetched,
-	options,
-	manifest,
 	page_config,
 	status,
 	error = null,
@@ -73,11 +71,13 @@ export async function render_response({
 		}
 	}
 
-	const { client } = manifest._;
+	const client = manifest.client;
 
 	const modulepreloads = new Set(client?.imports);
 	const stylesheets = new Set(client?.stylesheets);
-	const fonts = new Set(client?.fonts);
+
+	/** @type {Map<string, import('types').FontDependency>} */
+	const fonts = new Map(client?.fonts.map((font) => [font.file, font]));
 
 	/**
 	 * The value of the Link header that is added to the response when not prerendering
@@ -89,8 +89,7 @@ export async function render_response({
 	// TODO if we add a client entry point one day, we will need to include inline_styles with the entry, otherwise stylesheets will be linked even if they are below inlineStyleThreshold
 	const inline_styles = new Map();
 
-	// TODO `svelte/server` should expose `RenderOutput`
-	/** @type {{ head: string, body: string, hashes: { script: string[] } }} */
+	/** @type {Omit<SyncRenderOutput, 'html'>} */
 	let rendered;
 
 	const form_value =
@@ -132,7 +131,7 @@ export async function render_response({
 			if (!paths.assets || (paths.assets[0] === '/' && paths.assets !== SVELTE_KIT_ASSETS)) {
 				assets = base;
 			}
-		} else if (options.hash_routing) {
+		} else if (__SVELTEKIT_HASH_ROUTING__) {
 			// we have to assume that we're in the right place
 			base_expression = "new URL('.', location).pathname.slice(0, -1)";
 		}
@@ -201,7 +200,7 @@ export async function render_response({
 							throw e;
 						}
 
-						const handled = handle_error_and_jsonify(event, render_state, options, e);
+						const handled = handle_error_and_jsonify(event, render_state, e);
 
 						// TODO 4.0 make this an async function and await `handled`
 						if (handled instanceof Promise) {
@@ -244,19 +243,12 @@ export async function render_response({
 			}
 
 			rendered = await with_request_store({ event, state: render_state }, async () => {
-				// We have to invoke .then eagerly here in order to kick off rendering: it's only starting on access,
-				// and `await maybe_promise` would eagerly access the .then property but call its function only after a tick, which is too late
-				// for the paths.reset() below and for any eager getRequestEvent() calls during rendering without AsyncLocalStorage available.
-				const rendered = render(Root, { ...render_opts, props });
-
-				const { head, body, hashes } = await rendered;
-
-				if (hashes) {
-					csp.add_script_hashes(hashes.script);
-				}
-
-				return { head, body, hashes };
+				return render(Root, { ...render_opts, props });
 			});
+
+			if (rendered.hashes) {
+				csp.add_script_hashes(rendered.hashes.script);
+			}
 		} finally {
 			if (DEV) {
 				globalThis.fetch = fetch;
@@ -269,7 +261,7 @@ export async function render_response({
 	for (const { node } of branch) {
 		for (const url of node.imports) modulepreloads.add(url);
 		for (const url of node.stylesheets) stylesheets.add(url);
-		for (const url of node.fonts) fonts.add(url);
+		for (const font of node.fonts) fonts.set(font.file, font);
 
 		if (node.inline_styles && !client?.inline) {
 			Object.entries(await node.inline_styles()).forEach(([filename, css]) => {
@@ -317,7 +309,10 @@ export async function render_response({
 	 * @param {string[]} attributes
 	 */
 	const add_preload = (path, attributes) => {
-		if (options.link_header_preload && !(state.prerendering || state.prerender_default === true)) {
+		if (
+			__SVELTEKIT_LINK_HEADER_PRELOAD__ &&
+			!(state.prerendering || state.prerender_default === true)
+		) {
 			link_headers.add(`<${encodeURI(path)}>; ${attributes.join('; ')}; nopush`);
 		} else {
 			head.add_link_tag(path, attributes);
@@ -334,7 +329,7 @@ export async function render_response({
 			// include them in disabled state so that Vite can detect them and doesn't try to add them
 			attributes.push('disabled', 'media="(max-width: 0)"');
 		} else {
-			if (options.link_header_preload && resolve_opts.preload({ type: 'css', path })) {
+			if (__SVELTEKIT_LINK_HEADER_PRELOAD__ && resolve_opts.preload({ type: 'css', path })) {
 				link_headers.add(`<${encodeURI(path)}>; rel="preload"; as="style"; nopush`);
 			}
 		}
@@ -342,17 +337,17 @@ export async function render_response({
 		head.add_stylesheet(path, attributes);
 	}
 
-	for (const dep of fonts) {
-		const path = prefixed(dep);
+	for (const { file, filename } of fonts.values()) {
+		const path = prefixed(file);
 
-		if (resolve_opts.preload({ type: 'font', path })) {
-			const ext = dep.slice(dep.lastIndexOf('.') + 1);
+		if (resolve_opts.preload({ type: 'font', path, filename })) {
+			const ext = file.slice(file.lastIndexOf('.') + 1);
 
 			add_preload(path, ['rel="preload"', 'as="font"', `type="font/${ext}"`, 'crossorigin']);
 		}
 	}
 
-	const global = get_global_name(options);
+	const global = __SVELTEKIT_GLOBAL_NAME__;
 	const { data, chunks } = data_serializer.get_data(csp);
 
 	if (page_config.ssr && page_config.csr) {
@@ -514,7 +509,7 @@ export async function render_response({
 					); // make output after it's put together with the rest more readable
 					hydrate.push(`params: ${devalue.uneval(event.params)}`, `server_route: ${stringified}`);
 				}
-			} else if (options.embedded) {
+			} else if (__SVELTEKIT_EMBEDDED__) {
 				hydrate.push(`params: ${devalue.uneval(event.params)}`, `route: ${s(event.route)}`);
 			}
 
@@ -522,7 +517,7 @@ export async function render_response({
 			args.push(`{\n${indent}\t${hydrate.join(`,\n${indent}\t`)}\n${indent}}`);
 		}
 
-		const remote_data = await collect_remote_data({}, event, state, options);
+		const remote_data = await collect_remote_data({}, event, state);
 
 		const serialized_data =
 			Object.keys(remote_data).length > 0
@@ -554,7 +549,7 @@ export async function render_response({
 			blocks.push(boot);
 		}
 
-		if (options.service_worker) {
+		if (__SVELTEKIT_SERVICE_WORKER__) {
 			let opts = ", { type: 'module' }";
 			if (options.service_worker_options != null) {
 				const service_worker_options = { ...options.service_worker_options, type: 'module' };
@@ -615,7 +610,7 @@ export async function render_response({
 			headers.set('content-security-policy-report-only', report_only_header);
 		}
 
-		if (options.link_header_preload && link_headers.size) {
+		if (__SVELTEKIT_LINK_HEADER_PRELOAD__ && link_headers.size) {
 			headers.set('link', Array.from(link_headers).join(', '));
 		}
 	}
@@ -657,27 +652,9 @@ export async function render_response({
 		}
 	}
 
-	return !chunks
-		? text(transformed, {
-				status,
-				headers
-			})
-		: new Response(
-				new ReadableStream({
-					async start(controller) {
-						controller.enqueue(text_encoder.encode(transformed + '\n'));
-						for await (const chunk of chunks) {
-							if (chunk.length) controller.enqueue(text_encoder.encode(chunk));
-						}
-						controller.close();
-					},
-
-					type: 'bytes'
-				}),
-				{
-					headers
-				}
-			);
+	return chunks
+		? new Response(stream_text(transformed + '\n', chunks), { status, headers })
+		: text(transformed, { status, headers });
 }
 
 class Head {
