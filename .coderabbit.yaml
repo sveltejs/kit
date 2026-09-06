@@ -23,7 +23,7 @@ reviews:
   pre_merge_checks:
     title:
       mode: warning
-      requirements: 'Prefix PR titles with `breaking:`, `feat:`, `fix:`, or `chore:`'
+      requirements: 'Prefix PR titles with `breaking:`, `feat:`, `fix:`, `chore:`, or `docs:`'
     custom_checks:
       - name: 'Backward Compatibility Impact Disclosure'
         mode: 'warning'
@@ -55,7 +55,7 @@ issue_enrichment:
       - label: 'awaiting submitter'
         instructions: >-
           Issue is a bug report and has a heading named "Reproduction" in the description
-          but does not include a link to a minimal reproduction
+          but does not include a link to a minimal reproduction or detailed reproduction steps
       - label: 'pkg:enhanced-img'
         instructions: 'Issue is related to static image optimisation the `@sveltejs/enhanced-img` package'
       - label: 'pkg:adapter-cloudflare'
