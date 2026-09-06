@@ -54,8 +54,8 @@ issue_enrichment:
     labeling_instructions:
       - label: 'awaiting submitter'
         instructions: >-
-          Issue is a bug report and has a heading named "Reproduction" in the description
-          but does not include a link to a minimal reproduction or detailed reproduction steps
+          Issue is a bug report, does not have the "triage bot" label, has a heading named "Reproduction"
+          in the description, but does not include a link to a minimal reproduction or complete reproduction steps
       - label: 'pkg:enhanced-img'
         instructions: 'Issue is related to static image optimisation the `@sveltejs/enhanced-img` package'
       - label: 'pkg:adapter-cloudflare'
