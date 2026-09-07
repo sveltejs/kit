@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: make Vite development client paths relative when `paths.relative` is enabled
+fix: respect `paths.relative` during development for client files
