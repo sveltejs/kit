@@ -112,16 +112,21 @@ test.describe('relative paths', () => {
 		const proxy_path = '/proxy';
 
 		// simulate a reverse proxy that mounts the app at `/proxy`: strip the prefix and
-		// forward to the dev server; requests that escape the prefix (e.g. module URLs
-		// generated without it) are aborted so the test hangs instead of silently passing
+		// forward to the dev server. Abort initial client module requests that escape the
+		// prefix; imported module URLs are rewritten by Vite and are outside this regression.
 		await page.route('**/*', async (route) => {
 			const url = new URL(route.request().url());
 
 			if (url.pathname.startsWith(`${proxy_path}/`)) {
 				url.pathname = url.pathname.slice(proxy_path.length);
 				await route.fulfill({ response: await route.fetch({ url: url.href }) });
-			} else {
+			} else if (
+				(url.pathname.includes('/node_modules/') || url.pathname.includes('/@fs/')) &&
+				route.request().headers().referer?.endsWith(`${proxy_path}/path-base/base/`)
+			) {
 				await route.abort();
+			} else {
+				await route.continue();
 			}
 		});
 
