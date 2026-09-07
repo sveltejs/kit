@@ -10,16 +10,44 @@ test('_redirects are copied to publish directory', () => {
 	expect(redirects).toContain('/redirect-me /greeting/redirected 301');
 });
 
-test('split generates multiple function files', () => {
-	const functions_dir = path.resolve(import.meta.dirname, './.netlify/v1/functions');
-	const files = fs.readdirSync(functions_dir).filter((f) => f.startsWith('sveltekit-'));
-	expect(files.length).toBeGreaterThan(1);
+const functions_dir = path.resolve(import.meta.dirname, './.netlify/v1/functions');
 
-	const optional_route = fs.readFileSync(
-		path.join(functions_dir, 'sveltekit-collection-_param1-article.mjs'),
-		'utf-8'
+/** @param {(content: string) => boolean} filter */
+function read_functions(filter) {
+	return fs
+		.readdirSync(functions_dir)
+		.filter((f) => f.startsWith('sveltekit-') && f.endsWith('.mjs'))
+		.map((f) => fs.readFileSync(path.join(functions_dir, f), 'utf-8'))
+		.filter(filter);
+}
+
+test('split generates multiple function files', () => {
+	const functions = read_functions((content) =>
+		content.includes('path: ["/collection/:param1?/article"')
 	);
-	expect(optional_route).toContain(
+	expect(functions.length).toBe(1);
+	expect(functions[0]).toContain(
 		'path: ["/collection/:param1?/article", "/collection/:param1?/article/__data.json"]'
 	);
+});
+
+test('functions have human friendly display names', () => {
+	const functions = read_functions((content) =>
+		content.includes('path: ["/collection/:param1?/article"')
+	);
+	expect(functions[0]).toContain('name: "SvelteKit /collection/[[optional]]/article"');
+
+	const catch_all = read_functions((content) => content.includes('path: ["/*"]'));
+	expect(catch_all.length).toBe(1);
+	expect(catch_all[0]).toContain('name: "SvelteKit catch-all"');
+});
+
+test('routes that sanitize to the same pattern generate separate functions', () => {
+	const foo_dot = read_functions((content) => content.includes('path: ["/collision/foo.bar"'));
+	const foo_bar = read_functions((content) => content.includes('path: ["/collision/foo_bar"'));
+
+	expect(foo_dot.length).toBe(1);
+	expect(foo_bar.length).toBe(1);
+	expect(foo_dot[0]).toContain('name: "SvelteKit /collision/foo.bar"');
+	expect(foo_bar[0]).toContain('name: "SvelteKit /collision/foo_bar"');
 });
