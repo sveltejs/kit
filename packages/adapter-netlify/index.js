@@ -1,4 +1,6 @@
+/** @import { Builder, RouteDefinition } from '@sveltejs/kit' */
 /** @import { TomlTable } from 'smol-toml' */
+import crypto from 'node:crypto';
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -100,7 +102,7 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 
 				await generate_edge_functions({ builder });
 			} else {
-				generate_serverless_functions({ builder, split, publish });
+				generate_serverless_functions(builder, publish, split);
 			}
 		},
 
@@ -112,12 +114,11 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 }
 
 /**
- * @param { object } params
- * @param {import('@sveltejs/kit').Builder} params.builder
- * @param { string } params.publish
- * @param { boolean } params.split
+ * @param {Builder} builder
+ * @param {string} publish
+ * @param {boolean} split
  */
-function generate_serverless_functions({ builder, publish, split }) {
+function generate_serverless_functions(builder, publish, split) {
 	// https://docs.netlify.com/build/frameworks/frameworks-api/#netlifyv1functions
 	mkdirSync(netlify_framework_serverless_path, { recursive: true });
 
@@ -133,6 +134,7 @@ function generate_serverless_functions({ builder, publish, split }) {
 
 	if (split) {
 		const seen = new Set();
+		const uuid = crypto.randomUUID();
 
 		for (let i = 0; i < builder.routes.length; i++) {
 			const route = builder.routes[i];
@@ -185,7 +187,8 @@ function generate_serverless_functions({ builder, publish, split }) {
 				routes,
 				patterns,
 				name,
-				type: 'split'
+				type: 'split',
+				uuid
 			});
 		}
 
@@ -195,7 +198,8 @@ function generate_serverless_functions({ builder, publish, split }) {
 			patterns: ['/*'],
 			name: `${FUNCTION_PREFIX}catch-all`,
 			type: 'catch-all',
-			exclude: Array.from(seen)
+			exclude: Array.from(seen),
+			uuid
 		});
 	} else {
 		generate_serverless_function({
@@ -257,23 +261,22 @@ function write_frameworks_config({ builder }) {
 /** @typedef {'singular' | 'split' | 'catch-all'} ServerlessFunctionType */
 
 /**
- *
- * @param {{
- *   builder: import('@sveltejs/kit').Builder,
- *   routes: import('@sveltejs/kit').RouteDefinition[] | undefined,
- *   patterns: string[],
- *   name: string,
- *   type: ServerlessFunctionType,
- *   exclude?: string[]
- * }} opts
+ * @param {object} opts
+ * @param {Builder} opts.builder
+ * @param {RouteDefinition[] | undefined} opts.routes
+ * @param {string[]} opts.patterns
+ * @param {string} opts.name
+ * @param {ServerlessFunctionType} opts.type
+ * @param {string[]} [opts.exclude]
+ * @param {string} [opts.uuid]
  */
-function generate_serverless_function({ builder, routes, patterns, name, type, exclude }) {
+function generate_serverless_function({ builder, routes, patterns, name, type, exclude, uuid }) {
 	builder.generateServerInstance(`.netlify/v1/server-${name}.js`, {
 		routes,
 		serverDirectory: '.netlify/v1/server'
 	});
 
-	const fn = generate_serverless_function_module(name, type);
+	const fn = generate_serverless_function_module(name, type, uuid);
 	const config = generate_config_export(name, patterns, exclude);
 
 	if (builder.hasServerInstrumentationFile()) {
@@ -299,10 +302,13 @@ function generate_serverless_function({ builder, routes, patterns, name, type, e
 /**
  * @param {string} name
  * @param {ServerlessFunctionType} type
+ * @param {string} [uuid]
  * @returns {string}
  */
-function generate_serverless_function_module(name, type) {
-	if (type === 'catch-all') {
+function generate_serverless_function_module(name, type, uuid) {
+	const original_pathname_header = `const original_pathname_header = \`x-sveltekit-original-pathname-${uuid}\``;
+
+	if (type === 'catch-all' && uuid) {
 		// Netlify encodes the response body but `fetch` automatically decodes it.
 		// So, we need to remove the `content-encoding` header to allow Netlify
 		// to correctly re-encode it on the way out.
@@ -311,7 +317,7 @@ import { applyReroute } from '@sveltejs/kit/adapter';
 import { init } from '../serverless.js';
 import { server } from '../server-${name}.js';
 
-const original_url_header = \`x-sveltekit-original-url-\${process.env.NETLIFY_FUNCTIONS_TOKEN}\`
+${original_pathname_header}
 
 const respond = init(server);
 
@@ -320,7 +326,7 @@ export default async (request, context) => {
 
 	return await applyReroute(catch_all_response, async (url) => {
 		const rerouted_request = new Request(url, request);
-		rerouted_request.headers.set(original_url_header, request.url);
+		rerouted_request.headers.set(original_pathname_header, new URL(request.url).pathname);
 
 		const rerouted_response = await fetch(rerouted_request);
 
@@ -336,20 +342,21 @@ export default async (request, context) => {
 `;
 	}
 
-	if (type === 'split') {
+	if (type === 'split' && uuid) {
 		return `\
 import { init } from '../serverless.js';
 import { server } from '../server-${name}.js';
 
-const original_url_header = \`x-sveltekit-original-url-\${process.env.NETLIFY_FUNCTIONS_TOKEN}\`
+${original_pathname_header}
 
 const respond = init(server);
 
 export default async (request, context) => {
-	if (request.headers.has(original_url_header)) {
-		const original_url = request.headers.get(original_url_header);
-		request = new Request(original_url, request);
-		request.headers.delete(original_url_header);
+	if (request.headers.has(original_pathname_header)) {
+		const url = new URL(request.url);
+		url.pathname = request.headers.get(original_pathname_header);
+		request = new Request(url, request);
+		request.headers.delete(original_pathname_header);
 	}
 
 	return await respond(request, context);
