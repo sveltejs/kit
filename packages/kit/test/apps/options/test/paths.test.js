@@ -118,11 +118,8 @@ test.describe('relative paths', () => {
 			if (url.pathname.startsWith(`${proxy_path}/`)) {
 				url.pathname = url.pathname.slice(proxy_path.length);
 				await route.fulfill({ response: await route.fetch({ url: url.href }) });
-			} else if (url.pathname.includes('/node_modules/') || url.pathname.includes('/@fs/')) {
-				// module requests escaping the proxy prefix — abort, hydration never completes
-				await route.abort();
 			} else {
-				await route.continue();
+				await route.abort();
 			}
 		});
 
