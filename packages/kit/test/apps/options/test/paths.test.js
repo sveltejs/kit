@@ -123,8 +123,7 @@ test.describe('relative paths behind a proxy', () => {
 			}
 		});
 
-		await page.goto(`${proxy_path}/path-base/base/`, { wait_for_started: false });
-		await page.locator('body.started').waitFor();
+		await page.goto(`${proxy_path}/path-base/base/`);
 
 		await page.click('button');
 		expect(await page.innerHTML('h2')).toBe('button has been clicked 1 time');
