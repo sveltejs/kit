@@ -133,6 +133,7 @@ function generate_serverless_functions({ builder, publish, split }) {
 
 	if (split) {
 		const seen = new Set();
+		let index = 0;
 
 		for (let i = 0; i < builder.routes.length; i++) {
 			const route = builder.routes[i];
@@ -159,13 +160,13 @@ function generate_serverless_functions({ builder, publish, split }) {
 
 			// Netlify handles trailing slashes for us, so we don't need to include them in the pattern
 			const pattern = `/${parts.join('/')}`;
-			const name =
-				FUNCTION_PREFIX +
-				(parts.join('-').replace(/[:.]/g, '_').replace(/\?/g, '').replace(/\*/g, '__rest') ||
-					'index');
 
 			// skip routes with identical patterns, they were already folded into another function
 			if (seen.has(pattern)) continue;
+
+			// the route itself is human readable via the `name` config export,
+			// so the function file can just use an index
+			const name = `${FUNCTION_PREFIX}${index++}`;
 
 			const patterns = [pattern, `${pattern === '/' ? '' : pattern}/__data.json`];
 			patterns.forEach((pattern) => seen.add(pattern));
@@ -185,6 +186,7 @@ function generate_serverless_functions({ builder, publish, split }) {
 				routes,
 				patterns,
 				name,
+				display_name: `SvelteKit ${route.id}`,
 				type: 'split'
 			});
 		}
@@ -194,6 +196,7 @@ function generate_serverless_functions({ builder, publish, split }) {
 			routes: [],
 			patterns: ['/*'],
 			name: `${FUNCTION_PREFIX}catch-all`,
+			display_name: 'SvelteKit catch-all',
 			type: 'catch-all',
 			exclude: Array.from(seen)
 		});
@@ -203,6 +206,7 @@ function generate_serverless_functions({ builder, publish, split }) {
 			routes: undefined,
 			patterns: ['/*'],
 			name: `${FUNCTION_PREFIX}render`,
+			display_name: 'SvelteKit server',
 			type: 'singular'
 		});
 	}
@@ -263,18 +267,27 @@ function write_frameworks_config({ builder }) {
  *   routes: import('@sveltejs/kit').RouteDefinition[] | undefined,
  *   patterns: string[],
  *   name: string,
+ *   display_name: string,
  *   type: ServerlessFunctionType,
  *   exclude?: string[]
  * }} opts
  */
-function generate_serverless_function({ builder, routes, patterns, name, type, exclude }) {
+function generate_serverless_function({
+	builder,
+	routes,
+	patterns,
+	name,
+	display_name,
+	type,
+	exclude
+}) {
 	builder.generateServerInstance(`.netlify/v1/server-${name}.js`, {
 		routes,
 		serverDirectory: '.netlify/v1/server'
 	});
 
 	const fn = generate_serverless_function_module(name, type);
-	const config = generate_config_export(name, patterns, exclude);
+	const config = generate_config_export(patterns, display_name, exclude);
 
 	if (builder.hasServerInstrumentationFile()) {
 		writeFileSync(`${netlify_framework_serverless_path}/${name}.mjs`, fn);
@@ -368,18 +381,16 @@ export default init(server);
 const generator_string = `@sveltejs/adapter-netlify@${adapter_version}`;
 
 /**
- * @param {string} name The name that shows up in the logs & metrics functions list
  * @param {string[]} patterns
+ * @param {string} display_name The name that shows up in the logs & metrics functions list
  * @param {string[]} [exclude]
  * @returns {string}
  */
-function generate_config_export(name, patterns, exclude = []) {
-	// TODO: add a human friendly name for the function https://docs.netlify.com/build/frameworks/frameworks-api/#configuration-options-2
-
+function generate_config_export(patterns, display_name, exclude = []) {
 	// https://docs.netlify.com/build/frameworks/frameworks-api/#configuration-options-2
 	return `\
 export const config = {
-	name: ${JSON.stringify(name)},
+	name: ${JSON.stringify(display_name)},
 	generator: '${generator_string}',
 	path: [${patterns.map(s).join(', ')}],
 	excludedPath: [${['/.netlify/*', ...exclude].map(s).join(', ')}],
