@@ -90,6 +90,13 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 				builder.copy('_headers', join(publish, '_headers'));
 			}
 
+			// Copy user's custom _redirects file if it exists
+			if (existsSync('_redirects')) {
+				builder.log.minor('Copying user redirects...');
+				const redirects_file = join(publish, '_redirects');
+				builder.copy('_redirects', redirects_file);
+			}
+
 			builder.log.minor('Writing Netlify config...');
 			write_frameworks_config({ builder });
 
@@ -100,7 +107,7 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 
 				await generate_edge_functions({ builder });
 			} else {
-				generate_serverless_functions({ builder, split, publish });
+				generate_serverless_functions({ builder, split });
 			}
 		},
 
@@ -114,20 +121,15 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 /**
  * @param { object } params
  * @param {import('@sveltejs/kit').Builder} params.builder
- * @param { string } params.publish
  * @param { boolean } params.split
  */
-function generate_serverless_functions({ builder, publish, split }) {
+function generate_serverless_functions({ builder, split }) {
 	// https://docs.netlify.com/build/frameworks/frameworks-api/#netlifyv1functions
 	mkdirSync(netlify_framework_serverless_path, { recursive: true });
 
 	builder.writeServer('.netlify/v1/server');
 
-	const replace = {
-		'0SERVER': './server/index.js' // digit prefix prevents CJS build from using this as a variable name, which would also get replaced
-	};
-
-	builder.copy(files, '.netlify/v1', { replace, filter: (file) => !file.endsWith('edge.js') });
+	builder.copy(`${files}/serverless.js`, '.netlify/v1/serverless.js');
 
 	builder.log.minor('Generating serverless functions...');
 
@@ -205,13 +207,6 @@ function generate_serverless_functions({ builder, publish, split }) {
 			name: `${FUNCTION_PREFIX}render`,
 			type: 'singular'
 		});
-	}
-
-	// Copy user's custom _redirects file if it exists
-	if (existsSync('_redirects')) {
-		builder.log.minor('Copying user redirects...');
-		const redirects_file = join(publish, '_redirects');
-		builder.copy('_redirects', redirects_file);
 	}
 }
 
