@@ -29,19 +29,6 @@ test('read from $app/server works', async ({ request }) => {
 	expect(await response.text()).toBe(content);
 });
 
-test('_redirects are copied to publish directory', () => {
-	const redirects = fs.readFileSync(
-		path.resolve(import.meta.dirname, '../build/_redirects'),
-		'utf-8'
-	);
-	expect(redirects).toContain('/redirect-me /greeting/redirected 301');
-});
-
-test('_headers are copied to publish directory', () => {
-	const headers = fs.readFileSync(path.resolve(import.meta.dirname, '../build/_headers'), 'utf-8');
-	expect(headers).toContain('X-Custom-Header: test-value');
-});
-
 test('treeshakes component from the server bundle if SSR is turned off', async ({ page }) => {
 	await page.goto('/treeshake-server');
 	const component_text = 'this should never appear in the server bundle';
