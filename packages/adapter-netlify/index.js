@@ -306,6 +306,8 @@ function generate_serverless_function({ builder, routes, patterns, name, type, e
  * @returns {string}
  */
 function generate_serverless_function_module(name, type, uuid) {
+	const original_pathname_header = `const original_pathname_header = \`x-sveltekit-original-pathname-${uuid}\``;
+
 	if (type === 'catch-all' && uuid) {
 		// Netlify encodes the response body but `fetch` automatically decodes it.
 		// So, we need to remove the `content-encoding` header to allow Netlify
@@ -315,7 +317,7 @@ import { applyReroute } from '@sveltejs/kit/adapter';
 import { init } from '../serverless.js';
 import { server } from '../server-${name}.js';
 
-const original_url_header = \`x-sveltekit-original-url-${uuid}\`
+${original_pathname_header}
 
 const respond = init(server);
 
@@ -324,7 +326,7 @@ export default async (request, context) => {
 
 	return await applyReroute(catch_all_response, async (url) => {
 		const rerouted_request = new Request(url, request);
-		rerouted_request.headers.set(original_url_header, request.url);
+		rerouted_request.headers.set(original_pathname_header, new URL(request.url).pathname);
 
 		const rerouted_response = await fetch(rerouted_request);
 
@@ -345,15 +347,16 @@ export default async (request, context) => {
 import { init } from '../serverless.js';
 import { server } from '../server-${name}.js';
 
-const original_url_header = \`x-sveltekit-original-url-${uuid}\`
+${original_pathname_header}
 
 const respond = init(server);
 
 export default async (request, context) => {
-	if (request.headers.has(original_url_header)) {
-		const original_url = request.headers.get(original_url_header);
-		request = new Request(original_url, request);
-		request.headers.delete(original_url_header);
+	if (request.headers.has(original_pathname_header)) {
+		const url = new URL(request.url);
+		url.pathname = request.headers.get(original_pathname_header);
+		request = new Request(url, request);
+		request.headers.delete(original_pathname_header);
 	}
 
 	return await respond(request, context);
