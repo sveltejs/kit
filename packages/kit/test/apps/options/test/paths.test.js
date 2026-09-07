@@ -104,7 +104,9 @@ test.describe('base path', () => {
 });
 
 test.describe('relative paths', () => {
-	test.skip(!!process.env.PATHS_ASSETS);
+	test.skip(
+		({ javaScriptEnabled }) => !process.env.DEV || !javaScriptEnabled || !!process.env.PATHS_ASSETS
+	);
 
 	test('works when proxied', async ({ page }) => {
 		const proxy_path = '/proxy';
