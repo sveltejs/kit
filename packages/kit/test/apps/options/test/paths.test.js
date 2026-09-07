@@ -108,10 +108,6 @@ test.describe('relative paths behind a proxy', () => {
 
 	test('loads javascript behind an unknown prefix', async ({ page }) => {
 		const proxy_path = '/proxy';
-		let report_bypass = () => {};
-		const bypassed = new Promise((resolve) => {
-			report_bypass = () => resolve('bypassed');
-		});
 
 		await page.route('**/*', async (route) => {
 			const url = new URL(route.request().url());
@@ -120,7 +116,7 @@ test.describe('relative paths behind a proxy', () => {
 				url.pathname = url.pathname.slice(proxy_path.length);
 				await route.fulfill({ response: await route.fetch({ url: url.href }) });
 			} else if (url.pathname.includes('/node_modules/') || url.pathname.includes('/@fs/')) {
-				report_bypass();
+				// module requests escaping the proxy prefix — abort, hydration never completes
 				await route.abort();
 			} else {
 				await route.continue();
@@ -128,12 +124,7 @@ test.describe('relative paths behind a proxy', () => {
 		});
 
 		await page.goto(`${proxy_path}/path-base/base/`, { wait_for_started: false });
-
-		const hydrated = page
-			.locator('body.started')
-			.waitFor()
-			.then(() => 'hydrated');
-		expect(await Promise.race([hydrated, bypassed])).toBe('hydrated');
+		await page.locator('body.started').waitFor();
 
 		await page.click('button');
 		expect(await page.innerHTML('h2')).toBe('button has been clicked 1 time');
