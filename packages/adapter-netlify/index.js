@@ -85,16 +85,16 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 			builder.writeClient(publish_dir);
 			builder.writePrerendered(publish_dir);
 
-			// Copy user's custom _headers file if it exists
+			// Copy user's _headers file if it exists
 			if (existsSync('_headers')) {
+				builder.log.minor('Copying user custom headers...');
 				builder.copy('_headers', join(publish, '_headers'));
 			}
 
-			// Copy user's custom _redirects file if it exists
+			// Copy user's _redirects file if it exists
 			if (existsSync('_redirects')) {
 				builder.log.minor('Copying user redirects...');
-				const redirects_file = join(publish, '_redirects');
-				builder.copy('_redirects', redirects_file);
+				builder.copy('_redirects', join(publish, '_redirects'));
 			}
 
 			builder.log.minor('Writing Netlify config...');
