@@ -125,8 +125,8 @@ test.describe('relative paths behind a proxy', () => {
 
 		await page.goto(`${proxy_path}/path-base/base/`);
 
-		await page.click('button');
-		expect(await page.innerHTML('h2')).toBe('button has been clicked 1 time');
+		await page.locator('button').click();
+		await expect(page.locator('h2')).toHaveText('button has been clicked 1 time');
 	});
 });
 
