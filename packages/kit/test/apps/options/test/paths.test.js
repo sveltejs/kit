@@ -103,7 +103,7 @@ test.describe('base path', () => {
 	});
 });
 
-test.describe('relative paths behind a proxy', () => {
+test.describe('relative paths', () => {
 	test.skip(({ javaScriptEnabled }) => !process.env.DEV || !javaScriptEnabled);
 
 	test('loads javascript behind an unknown prefix', async ({ page }) => {
