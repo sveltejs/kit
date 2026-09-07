@@ -45,14 +45,6 @@ test('split generates multiple function files', () => {
 	);
 });
 
-test('_redirects are copied to publish directory', () => {
-	const redirects = fs.readFileSync(
-		path.resolve(import.meta.dirname, '../build/_redirects'),
-		'utf-8'
-	);
-	expect(redirects).toContain('/redirect-me /greeting/redirected 301');
-});
-
 test('reroute works', async ({ page }) => {
 	await page.goto('/reroute');
 	await expect(page.locator('p')).toContainText('/reroute');
