@@ -104,9 +104,9 @@ test.describe('base path', () => {
 });
 
 test.describe('relative paths', () => {
-	test.skip(({ javaScriptEnabled }) => !process.env.DEV || !javaScriptEnabled);
+	test.skip(!!process.env.PATHS_ASSETS);
 
-	test('loads javascript behind an unknown prefix', async ({ page }) => {
+	test('works when proxied', async ({ page }) => {
 		const proxy_path = '/proxy';
 
 		// simulate a reverse proxy that mounts the app at `/proxy`: strip the prefix and
