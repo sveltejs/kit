@@ -284,7 +284,9 @@ export async function render_response({
 			// Vite makes the start script available through the base path and without it.
 			// We load it via the base path in order to support remote IDE environments which proxy
 			// all URLs under the base path during development.
-			return paths.base + path;
+			return relative && !state.prerendering?.fallback
+				? `${base}/${path.slice(1)}`
+				: paths.base + path;
 		}
 		return `${assets}/${path}`;
 	};
