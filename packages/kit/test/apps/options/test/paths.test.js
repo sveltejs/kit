@@ -109,6 +109,9 @@ test.describe('relative paths behind a proxy', () => {
 	test('loads javascript behind an unknown prefix', async ({ page }) => {
 		const proxy_path = '/proxy';
 
+		// simulate a reverse proxy that mounts the app at `/proxy`: strip the prefix and
+		// forward to the dev server; requests that escape the prefix (e.g. module URLs
+		// generated without it) are aborted so the test hangs instead of silently passing
 		await page.route('**/*', async (route) => {
 			const url = new URL(route.request().url());
 
