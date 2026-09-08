@@ -23,7 +23,7 @@ runs:
 
     - name: Install Netlify CLI
       shell: bash
-      run: pnpm i -g netlify-cli --allow-build=esbuild --allow-build=netlify-cli
+      run: pnpm i -g netlify-cli
 
     - name: Deploy to Netlify
       id: deploy
