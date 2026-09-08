@@ -7,9 +7,9 @@
 		"module": "node16",
 		"moduleResolution": "node16",
 		"paths": {
-			"@sveltejs/kit": ["../kit/types/index"],
+			"@sveltejs/kit": ["../kit/types/index"]
 		},
-		"types": ["node"],
+		"types": ["node"]
 	},
-	"include": ["*.js", "files/serverless.js", "test/utils.js"],
+	"include": ["*.js", "files/serverless.js", "test/utils.js"]
 }
