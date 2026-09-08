@@ -111,7 +111,6 @@ jobs:
       - uses: ./.github/actions/netlify-deploy
         id: deploy
         with:
-        with:
           test-app-dir: ${{ env.TEST_APP_DIR }}
           netlify-project-id: ${{ secrets.NETLIFY_PROJECT_ID_SPLIT }}
           netlify-token: ${{ secrets.NETLIFY_TOKEN }}
