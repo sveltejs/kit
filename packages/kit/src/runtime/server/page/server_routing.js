@@ -41,7 +41,10 @@ function create_client_import(import_path, url) {
 
 	// During DEV, Vite will make the paths absolute (e.g. /@fs/...)
 	if (import_path[0] === '/') {
-		return `import('${import_path}')`;
+		if (!relative) return `import('${import_path}')`;
+		let path = get_relative_path(url.pathname, import_path);
+		if (path[0] !== '.') path = `./${path}`;
+		return `import('${path}')`;
 	}
 
 	// During PROD, they're root-relative
