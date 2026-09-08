@@ -39,23 +39,18 @@ export function generate_route_object(route, url, client) {
 function create_client_import(import_path, url) {
 	if (!import_path) return 'Promise.resolve({})';
 
-	// During DEV, Vite will make the paths absolute (e.g. /@fs/...)
-	if (import_path[0] === '/') {
-		return `import('${import_path}')`;
-	}
-
 	// During PROD, they're root-relative
-	if (assets !== '') {
+	if (assets !== '' && import_path[0] !== '/') {
 		return `import('${assets}/${import_path}')`;
 	}
 
-	if (!relative) {
-		return `import('${base}/${import_path}')`;
-	}
+	// During DEV, Vite will make the paths absolute (e.g. /@fs/...)
+	const absolute = import_path[0] === '/' ? import_path : `${base}/${import_path}`;
+	if (!relative) return `import('${absolute}')`;
 
 	// Else we make them relative to the server-side route resolution request
 	// to support IPFS, the internet archive, etc.
-	let path = get_relative_path(url.pathname, `${base}/${import_path}`);
+	let path = get_relative_path(url.pathname, absolute);
 	if (path[0] !== '.') path = `./${path}`;
 	return `import('${path}')`;
 }
