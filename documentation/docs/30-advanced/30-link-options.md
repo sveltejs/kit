@@ -100,6 +100,18 @@ The attribute can also be used on a `<form method="GET">` — for example a sear
 
 In general, avoid preserving focus on links, since the focused element would be the `<a>` tag (and not a previously focused element) and screen reader and other assistive technology users often expect focus to be moved after a navigation. You should also only use this attribute on elements that still exist after navigation. If the element no longer exists, the user's focus will be lost, making for a confusing experience for assistive technology users.
 
+## data-sveltekit-scroll-container
+
+SvelteKit applies its scroll management to the window by default. If your app keeps the document fixed and scrolls inside an app-owned container instead, mark the scrollable element that should own route scroll state with `data-sveltekit-scroll-container`:
+
+```svelte
+<main data-sveltekit-scroll-container>
+	<slot />
+</main>
+```
+
+SvelteKit will read and restore that element's `scrollLeft` and `scrollTop` when navigating between routes. Unlike the link options above, this attribute applies to the scrollable app shell element itself. Use a single scroll container for the app shell; if multiple elements have the attribute, the first one in the document whose value is not `"false"` is used.
+
 ## Disabling options
 
 To disable any of these options inside an element where they have been enabled, use the `"false"` value:

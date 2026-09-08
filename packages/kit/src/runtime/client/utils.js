@@ -17,11 +17,39 @@ export function resolve_url(url) {
 	return new URL(url, baseURI);
 }
 
+function get_scroll_container() {
+	return /** @type {HTMLElement | null} */ (
+		document.querySelector(
+			'[data-sveltekit-scroll-container]:not([data-sveltekit-scroll-container="false"])'
+		)
+	);
+}
+
 export function scroll_state() {
+	const scroll_container = get_scroll_container();
+
+	if (scroll_container) {
+		return {
+			x: scroll_container.scrollLeft,
+			y: scroll_container.scrollTop
+		};
+	}
+
 	return {
 		x: pageXOffset,
 		y: pageYOffset
 	};
+}
+
+/**
+ * @param {number | ScrollToOptions} x
+ * @param {number} [y]
+ */
+export function scroll_to(x, y) {
+	const scroll_container = get_scroll_container();
+	const scroll = scroll_container ?? window;
+	if (typeof x === 'number') scroll.scrollTo(x, y ?? 0);
+	else scroll.scrollTo(x);
 }
 
 const warned = new WeakSet();

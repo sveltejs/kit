@@ -545,6 +545,42 @@ test.describe('Scrolling', () => {
 		expect(await page.evaluate(() => scrollY)).toBe(0);
 	});
 
+	test('no-anchor url will scroll app-owned container to top when navigated from scrolled page', async ({
+		page,
+		clicknav
+	}) => {
+		await page.goto('/scroll/custom-container/a');
+		const scroll_container = page.locator('#scroll-container');
+
+		await scroll_container.evaluate((node) => node.scrollTo(0, node.scrollHeight));
+		await expect.poll(() => scroll_container.evaluate((node) => node.scrollTop)).toBeGreaterThan(0);
+
+		await clicknav('nav [href="/scroll/custom-container/b"]');
+		await expect.poll(() => scroll_container.evaluate((node) => node.scrollTop)).toBe(0);
+	});
+
+	test('app-owned container scroll is restored after hitting the back button', async ({
+		page,
+		clicknav
+	}) => {
+		await page.goto('/scroll/custom-container/a');
+		const scroll_container = page.locator('#scroll-container');
+
+		await scroll_container.evaluate((node) => node.scrollTo(0, 300));
+		await expect
+			.poll(() => scroll_container.evaluate((node) => node.scrollTop))
+			.toBeGreaterThan(250);
+
+		await clicknav('nav [href="/scroll/custom-container/b"]');
+		await expect.poll(() => scroll_container.evaluate((node) => node.scrollTop)).toBe(0);
+
+		await page.goBack();
+		await page.waitForURL('/scroll/custom-container/a');
+		await expect
+			.poll(() => scroll_container.evaluate((node) => node.scrollTop))
+			.toBeGreaterThan(250);
+	});
+
 	test('scroll is restored after hitting the back button', async ({ clicknav, page }) => {
 		await page.goto('/anchor');
 		await page.locator('#scroll-anchor').click();
