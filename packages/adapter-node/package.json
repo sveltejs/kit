@@ -44,8 +44,7 @@
 	},
 	"dependencies": {
 		"@jridgewell/remapping": "^2.3.5",
-		"@jridgewell/remapping": "^2.3.5",
-		"magic-string": "^1.1.0"
+		"magic-string": "^1.2.3"
 	},
 	"devDependencies": {
 		"@polka/url": "catalog:",
