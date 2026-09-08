@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import MagicString from 'magic-string';
 
 const files = fileURLToPath(new URL('./files', import.meta.url).href);
 const dir_id = posixify(`${files}/dir.js`);
@@ -165,11 +166,18 @@ export default function (opts = {}) {
 							transform: {
 								filter: { id: new RegExp(`^${escape_regex(posixify(files))}/`) },
 								handler(code) {
+									const s = new MagicString(code);
+
 									for (const [from, to] of Object.entries(defines)) {
-										code = code.replace(new RegExp(`\\b${from}\\b`, 'g'), () => to);
+										for (const match of code.matchAll(new RegExp(`\\b${from}\\b`, 'g'))) {
+											s.overwrite(match.index, match.index + from.length, to);
+										}
 									}
 
-									return { code, map: null };
+									return {
+										code: s.toString(),
+										map: s.generateMap({ hires: 'boundary' })
+									};
 								}
 							},
 							resolveId: {

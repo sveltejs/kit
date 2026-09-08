@@ -42,6 +42,9 @@
 		"format": "oxfmt --write .",
 		"prepublishOnly": "pnpm build"
 	},
+	"dependencies": {
+		"magic-string": "^1.1.0"
+	},
 	"devDependencies": {
 		"@polka/url": "catalog:",
 		"@sveltejs/kit": "workspace:^",
