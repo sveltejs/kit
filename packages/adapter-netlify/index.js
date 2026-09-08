@@ -261,11 +261,11 @@ function write_frameworks_config({ builder }) {
 	writeFileSync(netlify_framework_config_path, s(config));
 }
 
-/** @typedef {'singular' | 'split' | 'catch-all'} FunctionType */
+/** @typedef {'singular' | 'split' | 'catch-all'} EntrypointType */
 
 /**
- * @typedef {object} FunctionDefinition
- * @property {FunctionType} type
+ * @typedef {object} EntrypointMetadata
+ * @property {EntrypointType} type
  * @property {RouteDefinition[] | undefined} routes
  * @property {string[]} patterns
  * @property {string} name
@@ -275,7 +275,7 @@ function write_frameworks_config({ builder }) {
 
 /**
  * @param {Builder} builder
- * @param {FunctionDefinition} fn
+ * @param {EntrypointMetadata} fn
  * @param {string} [uuid]
  */
 function generate_serverless_function(builder, fn, uuid) {
@@ -291,7 +291,7 @@ function generate_serverless_function(builder, fn, uuid) {
 		`../server-${fn.name}.js`,
 		uuid
 	);
-	const config = generate_config_export('serverless', fn);
+	const config = create_function_config('serverless', fn);
 
 	if (builder.hasServerInstrumentationFile()) {
 		writeFileSync(filename, code);
@@ -314,7 +314,7 @@ function generate_serverless_function(builder, fn, uuid) {
 }
 
 /**
- * @param {FunctionType} type
+ * @param {EntrypointType} type
  * @param {string} init
  * @param {string} server
  * @param {string} [uuid]
@@ -392,8 +392,8 @@ const generator_string = `@sveltejs/adapter-netlify@${adapter_version}`;
 
 /**
  * @param {'serverless' | 'edge'} runtime
- * @param {FunctionDefinition} fn
- * @returns {IntegrationsConfig & { preferStatic?: boolean }}
+ * @param {EntrypointMetadata} fn
+ * @returns {string}
  */
 function create_function_config(runtime, fn) {
 	/** @type {IntegrationsConfig & { preferStatic?: boolean }} */
@@ -408,16 +408,7 @@ function create_function_config(runtime, fn) {
 		config.preferStatic = true;
 	}
 
-	return config;
-}
-
-/**
- * @param {'serverless' | 'edge'} runtime
- * @param {FunctionDefinition} fn
- * @returns {string}
- */
-function generate_config_export(runtime, fn) {
-	return `export const config = ${s(create_function_config(runtime, fn))};\n`;
+	return `export const config = ${s(config)};\n`;
 }
 
 /**
@@ -491,7 +482,7 @@ async function generate_edge_functions({ builder }) {
 		})
 	];
 
-	/** @type {FunctionDefinition} */
+	/** @type {EntrypointMetadata} */
 	const fn = {
 		type: 'singular',
 		routes: undefined,
@@ -503,7 +494,7 @@ async function generate_edge_functions({ builder }) {
 	builder.generateServerInstance(`${tmp}/server-${fn.name}.js`);
 
 	const code = generate_function_module(fn.type, './edge.js', `./server-${fn.name}.js`);
-	const config = generate_config_export('edge', fn);
+	const config = create_function_config('edge', fn);
 	writeFileSync(`${tmp}/entry.js`, `${code}\n${config}`);
 
 	if (builder.hasServerInstrumentationFile()) {
