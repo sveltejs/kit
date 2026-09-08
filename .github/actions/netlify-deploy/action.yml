@@ -11,9 +11,6 @@ inputs:
   netlify-token:
     description: 'Netlify authentication token'
     required: true
-  edge:
-    description: 'Used to enable edge functions for the split test app'
-    default: false
 outputs:
   deployment-url:
     description: 'URL of the deployed preview'
