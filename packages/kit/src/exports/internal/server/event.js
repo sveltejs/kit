@@ -27,35 +27,65 @@ function forbid_set_headers() {
 
 /**
  * What remote functions may do with cookies
- * @param {Cookies} cookies
- * @param {boolean} read_only
- * @returns {Cookies}
+ * @implements {Cookies}
  */
-function remote_cookies(cookies, read_only) {
+class RemoteCookies {
+	#cookies;
+	#read_only;
+
+	/**
+	 * @param {Cookies} cookies
+	 * @param {boolean} read_only
+	 */
+	constructor(cookies, read_only) {
+		this.#cookies = cookies;
+		this.#read_only = read_only;
+	}
+
 	/**
 	 * @param {'set' | 'delete'} verb
 	 * @param {import('cookie').SerializeOptions} opts
 	 */
-	const check = (verb, opts) => {
-		if (read_only) {
+	#check(verb, opts) {
+		if (this.#read_only) {
 			throw new Error(`Cannot ${verb} cookies in \`query\` or \`prerender\` functions`);
 		}
 		if (opts.path && !opts.path.startsWith('/')) {
 			throw new Error('Cookies in remote functions must have an absolute path');
 		}
-	};
+	}
 
-	return {
-		...cookies,
-		set: (name, value, opts) => {
-			check('set', opts);
-			return cookies.set(name, value, opts);
-		},
-		delete: (name, opts) => {
-			check('delete', opts);
-			return cookies.delete(name, opts);
-		}
-	};
+	/** @type {Cookies['get']} */
+	get(name, opts) {
+		return this.#cookies.get(name, opts);
+	}
+
+	/** @type {Cookies['getAll']} */
+	getAll(opts) {
+		return this.#cookies.getAll(opts);
+	}
+
+	/** @type {Cookies['serialize']} */
+	serialize(name, value, opts) {
+		return this.#cookies.serialize(name, value, opts);
+	}
+
+	/** @type {Cookies['parse']} */
+	parse(header, opts) {
+		return this.#cookies.parse(header, opts);
+	}
+
+	/** @type {Cookies['set']} */
+	set(name, value, opts) {
+		this.#check('set', opts);
+		return this.#cookies.set(name, value, opts);
+	}
+
+	/** @type {Cookies['delete']} */
+	delete(name, opts) {
+		this.#check('delete', opts);
+		return this.#cookies.delete(name, opts);
+	}
 }
 
 /**
@@ -204,7 +234,7 @@ export class RequestEvent {
 		const view = new (flags & QUERY ? QueryEvent : RequestEvent)(this, flags);
 
 		if (kind & (QUERY | PRERENDER | FORM | COMMAND)) {
-			view.cookies = remote_cookies(this.cookies, view.read_only);
+			view.cookies = new RemoteCookies(this.cookies, view.read_only);
 			view.setHeaders = forbid_set_headers;
 		}
 
