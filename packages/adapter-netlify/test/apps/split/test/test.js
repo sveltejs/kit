@@ -36,6 +36,7 @@ test('reroute works', async ({ page }) => {
 	await expect(page.locator('p')).toContainText('/reroute');
 	await page.goto('/en/reroute?hello=world');
 	await expect(page.locator('p')).toContainText('/en/reroute?hello=world');
+	await expect(page.locator('p')).not.toContainText('__sveltekit_original_pathname_');
 });
 
 // TODO: test remote function works

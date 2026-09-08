@@ -6,7 +6,9 @@
 		"dev": "vite dev",
 		"build": "vite build",
 		"preview": "vite preview",
-		"test:build": "pnpm build && vitest run build.test.js",
+		"test:serverless:build": "pnpm build && vitest run build.test.js",
+		"test:edge:build": "EDGE=true pnpm build && EDGE=true vitest run build.test.js",
+		"test:build": "pnpm test:serverless:build && pnpm test:edge:build",
 		"test:platform": "playwright test"
 	},
 	"devDependencies": {
