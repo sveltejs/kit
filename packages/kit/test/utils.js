@@ -146,7 +146,10 @@ export const test = base.extend({
 
 	// eslint-disable-next-line no-empty-pattern -- Playwright doesn't let us use `_` as a parameter name. It must be a destructured object
 	read_errors: async ({}, use) => {
-		/** @param {string} path */
+		/**
+		 * The most recent error a test app's `handleError` hook appended for `path`
+		 * @param {string} path
+		 */
 		function read_errors(path) {
 			if (!fs.existsSync('test/errors.jsonl')) return;
 
@@ -168,7 +171,10 @@ export const test = base.extend({
 
 	// eslint-disable-next-line no-empty-pattern -- Playwright doesn't let us use `_` as a parameter name. It must be a destructured object
 	read_traces: async ({}, use) => {
-		/** @param {string} test_id */
+		/**
+		 * The span trees a test app's instrumentation exported for `test_id`
+		 * @param {string} test_id
+		 */
 		function read_traces(test_id) {
 			const raw = fs.readFileSync('test/spans.jsonl', 'utf8').split('\n').filter(Boolean);
 			const traces = /** @type {SpanData[]} */ (raw.map((line) => JSON.parse(line)));
