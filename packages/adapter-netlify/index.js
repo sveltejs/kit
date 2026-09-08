@@ -1,3 +1,4 @@
+/** @import { IntegrationsConfig } from '@netlify/edge-functions' */
 /** @import { Builder, RouteDefinition } from '@sveltejs/kit' */
 /** @import { TomlTable } from 'smol-toml' */
 import crypto from 'node:crypto';
@@ -187,35 +188,37 @@ function generate_serverless_functions(builder, split) {
 
 			generate_serverless_function(
 				builder,
-				routes,
-				patterns,
-				name,
-				`SvelteKit ${route.id}`,
-				'split',
-				undefined,
+				{
+					type: 'split',
+					routes,
+					patterns,
+					name,
+					display_name: `SvelteKit ${route.id}`
+				},
 				uuid
 			);
 		}
 
 		generate_serverless_function(
 			builder,
-			[],
-			['/*'],
-			`${FUNCTION_PREFIX}catch-all`,
-			'SvelteKit catch-all',
-			'catch-all',
-			Array.from(seen),
+			{
+				type: 'catch-all',
+				routes: [],
+				patterns: ['/*'],
+				name: `${FUNCTION_PREFIX}catch-all`,
+				display_name: 'SvelteKit catch-all',
+				exclude: Array.from(seen)
+			},
 			uuid
 		);
 	} else {
-		generate_serverless_function(
-			builder,
-			undefined,
-			['/*'],
-			`${FUNCTION_PREFIX}render`,
-			'SvelteKit server',
-			'singular'
-		);
+		generate_serverless_function(builder, {
+			type: 'singular',
+			routes: undefined,
+			patterns: ['/*'],
+			name: `${FUNCTION_PREFIX}render`,
+			display_name: 'SvelteKit server'
+		});
 	}
 }
 
@@ -258,63 +261,70 @@ function write_frameworks_config({ builder }) {
 	writeFileSync(netlify_framework_config_path, s(config));
 }
 
-/** @typedef {'singular' | 'split' | 'catch-all'} ServerlessFunctionType */
+/** @typedef {'singular' | 'split' | 'catch-all'} FunctionType */
+
+/**
+ * @typedef {object} FunctionDefinition
+ * @property {FunctionType} type
+ * @property {RouteDefinition[] | undefined} routes
+ * @property {string[]} patterns
+ * @property {string} name
+ * @property {string} display_name
+ * @property {string[]} [exclude]
+ */
 
 /**
  * @param {Builder} builder
- * @param {RouteDefinition[] | undefined} routes
- * @param {string[]} patterns
- * @param {string} name
- * @param {string} display_name
- * @param {ServerlessFunctionType} type
- * @param {string[]} [exclude]
+ * @param {FunctionDefinition} fn
  * @param {string} [uuid]
  */
-function generate_serverless_function(
-	builder,
-	routes,
-	patterns,
-	name,
-	display_name,
-	type,
-	exclude,
-	uuid
-) {
-	builder.generateServerInstance(`.netlify/v1/server-${name}.js`, {
-		routes,
+function generate_serverless_function(builder, fn, uuid) {
+	builder.generateServerInstance(`.netlify/v1/server-${fn.name}.js`, {
+		routes: fn.routes,
 		serverDirectory: '.netlify/v1/server'
 	});
 
-	const fn = generate_serverless_function_module(name, type, uuid);
-	const config = generate_config_export(patterns, display_name, exclude);
+	const filename = `${netlify_framework_serverless_path}/${fn.name}.mjs`;
+	const code = generate_function_module(
+		fn.type,
+		'../serverless.js',
+		`../server-${fn.name}.js`,
+		uuid
+	);
+	const config = generate_config_export('serverless', fn);
 
 	if (builder.hasServerInstrumentationFile()) {
-		writeFileSync(`${netlify_framework_serverless_path}/${name}.mjs`, fn);
+		writeFileSync(filename, code);
 		const initializer = builder.createInstrumentationInitializer({
 			outputDirectory: netlify_framework_serverless_path,
 			serverDirectory: '.netlify/v1/server'
 		});
 		builder.instrument({
-			entrypoint: `${netlify_framework_serverless_path}/${name}.mjs`,
+			entrypoint: filename,
 			instrumentation: '.netlify/v1/server/instrumentation.server.js',
-			start: `.netlify/v1/server/${name}.start.mjs`,
+			start: `.netlify/v1/server/${fn.name}.start.mjs`,
 			initializer,
 			module: {
 				generateText: generate_traced_module(config)
 			}
 		});
 	} else {
-		writeFileSync(`${netlify_framework_serverless_path}/${name}.mjs`, `${fn}\n${config}`);
+		writeFileSync(filename, `${code}\n${config}`);
 	}
 }
 
 /**
- * @param {string} name
- * @param {ServerlessFunctionType} type
+ * @param {FunctionType} type
+ * @param {string} init
+ * @param {string} server
  * @param {string} [uuid]
  * @returns {string}
  */
-function generate_serverless_function_module(name, type, uuid) {
+function generate_function_module(type, init, server, uuid) {
+	const runtime_imports = [
+		`import { init } from '${init}';`,
+		`import { server } from '${server}';`
+	].join('\n');
 	const original_pathname_header = `const original_pathname_header = \`x-sveltekit-original-pathname-${uuid}\``;
 
 	if (type === 'catch-all' && uuid) {
@@ -323,8 +333,7 @@ function generate_serverless_function_module(name, type, uuid) {
 		// to correctly re-encode it on the way out.
 		return `\
 import { applyReroute } from '@sveltejs/kit/adapter';
-import { init } from '../serverless.js';
-import { server } from '../server-${name}.js';
+${runtime_imports}
 
 ${original_pathname_header}
 
@@ -353,8 +362,7 @@ export default async (request, context) => {
 
 	if (type === 'split' && uuid) {
 		return `\
-import { init } from '../serverless.js';
-import { server } from '../server-${name}.js';
+${runtime_imports}
 
 ${original_pathname_header}
 
@@ -374,8 +382,7 @@ export default async (request, context) => {
 	}
 
 	return `\
-import { init } from '../serverless.js';
-import { server } from '../server-${name}.js';
+${runtime_imports}
 
 export default init(server);
 `;
@@ -384,22 +391,33 @@ export default init(server);
 const generator_string = `@sveltejs/adapter-netlify@${adapter_version}`;
 
 /**
- * @param {string[]} patterns
- * @param {string} display_name The name that shows up in the logs & metrics functions list
- * @param {string[]} [exclude]
- * @param {boolean} [prefer_static]
+ * @param {'serverless' | 'edge'} runtime
+ * @param {FunctionDefinition} fn
+ * @returns {IntegrationsConfig & { preferStatic?: boolean }}
+ */
+function create_function_config(runtime, fn) {
+	/** @type {IntegrationsConfig & { preferStatic?: boolean }} */
+	const config = {
+		name: fn.display_name,
+		generator: generator_string,
+		path: /** @type {`/${string}`[]} */ (fn.patterns),
+		excludedPath: /** @type {`/${string}`[]} */ (['/.netlify/*', ...(fn.exclude ?? [])])
+	};
+
+	if (runtime === 'serverless') {
+		config.preferStatic = true;
+	}
+
+	return config;
+}
+
+/**
+ * @param {'serverless' | 'edge'} runtime
+ * @param {FunctionDefinition} fn
  * @returns {string}
  */
-function generate_config_export(patterns, display_name, exclude = [], prefer_static = true) {
-	// https://docs.netlify.com/build/frameworks/frameworks-api/#configuration-options-2
-	return `\
-export const config = {
-	name: ${JSON.stringify(display_name)},
-	generator: '${generator_string}',
-	path: [${patterns.map(s).join(', ')}],
-	excludedPath: [${['/.netlify/*', ...exclude].map(s).join(', ')}]${prefer_static ? ',\n\tpreferStatic: true' : ''}
-};
-`;
+function generate_config_export(runtime, fn) {
+	return `export const config = ${s(create_function_config(runtime, fn))};\n`;
 }
 
 /**
@@ -455,15 +473,7 @@ async function generate_edge_functions({ builder }) {
 
 	builder.log.minor('Generating Edge Function...');
 
-	builder.copy(`${files}/edge.js`, `${tmp}/entry.js`, {
-		replace: {
-			'0SERVER': `./server.js`
-		}
-	});
-
-	builder.generateServerInstance(`${tmp}/server.js`);
-
-	const path = '/*';
+	builder.copy(`${files}/edge.js`, `${tmp}/edge.js`);
 	// We only need to specify paths without the trailing slash because
 	// Netlify will handle the optional trailing slash for us
 	const excluded_paths = [
@@ -480,8 +490,21 @@ async function generate_edge_functions({ builder }) {
 			return `${builder.config.paths.base}/${asset}`;
 		})
 	];
-	const config = generate_config_export([path], 'SvelteKit server', excluded_paths, false);
-	writeFileSync(`${tmp}/entry.js`, `${readFileSync(`${tmp}/entry.js`, 'utf-8')}\n${config}`);
+
+	/** @type {FunctionDefinition} */
+	const fn = {
+		type: 'singular',
+		routes: undefined,
+		patterns: ['/*'],
+		name: `${FUNCTION_PREFIX}render`,
+		display_name: 'SvelteKit server',
+		exclude: excluded_paths
+	};
+	builder.generateServerInstance(`${tmp}/server-${fn.name}.js`);
+
+	const code = generate_function_module(fn.type, './edge.js', `./server-${fn.name}.js`);
+	const config = generate_config_export('edge', fn);
+	writeFileSync(`${tmp}/entry.js`, `${code}\n${config}`);
 
 	if (builder.hasServerInstrumentationFile()) {
 		const initializer = builder.createInstrumentationInitializer({
