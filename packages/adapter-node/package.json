@@ -46,12 +46,10 @@
 		"@polka/url": "catalog:",
 		"@sveltejs/kit": "workspace:^",
 		"@types/node": "catalog:",
+		"rolldown": "catalog:",
 		"sirv": "^3.0.2",
 		"typescript": "catalog:typescript-native",
 		"vitest": "catalog:"
-	},
-	"dependencies": {
-		"rolldown": "^1.2.3"
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^3.0.0-next.0"

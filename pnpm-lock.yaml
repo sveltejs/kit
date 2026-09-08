@@ -170,6 +170,9 @@ catalogs:
     prettier-plugin-svelte:
       specifier: ^4.1.1
       version: 4.1.1
+    rolldown:
+      specifier: ^1.2.3
+      version: 1.2.3
     sirv-cli:
       specifier: ^3.0.1
       version: 3.0.1
@@ -454,10 +457,6 @@ importers:
         version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.19)(@vitest/browser-playwright@4.1.10)(jsdom@30.0.1)(vite@8.2.1(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0))
 
   packages/adapter-node:
-    dependencies:
-      rolldown:
-        specifier: ^1.2.3
-        version: 1.2.3
     devDependencies:
       '@polka/url':
         specifier: 'catalog:'
@@ -468,6 +467,9 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 22.19.19
+      rolldown:
+        specifier: 'catalog:'
+        version: 1.2.3
       sirv:
         specifier: ^3.0.2
         version: 3.0.2
