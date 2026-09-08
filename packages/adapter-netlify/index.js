@@ -261,11 +261,11 @@ function write_frameworks_config({ builder }) {
 	writeFileSync(netlify_framework_config_path, s(config));
 }
 
-/** @typedef {'singular' | 'split' | 'catch-all'} FunctionType */
+/** @typedef {'singular' | 'split' | 'catch-all'} EntrypointType */
 
 /**
- * @typedef {object} FunctionDefinition
- * @property {FunctionType} type
+ * @typedef {object} EntrypointMetadata
+ * @property {EntrypointType} type
  * @property {RouteDefinition[] | undefined} routes
  * @property {string[]} patterns
  * @property {string} name
@@ -275,7 +275,7 @@ function write_frameworks_config({ builder }) {
 
 /**
  * @param {Builder} builder
- * @param {FunctionDefinition} fn
+ * @param {EntrypointMetadata} fn
  * @param {string} [uuid]
  */
 function generate_serverless_function(builder, fn, uuid) {
@@ -314,7 +314,7 @@ function generate_serverless_function(builder, fn, uuid) {
 }
 
 /**
- * @param {FunctionType} type
+ * @param {EntrypointType} type
  * @param {string} init
  * @param {string} server
  * @param {string} [uuid]
@@ -392,7 +392,7 @@ const generator_string = `@sveltejs/adapter-netlify@${adapter_version}`;
 
 /**
  * @param {'serverless' | 'edge'} runtime
- * @param {FunctionDefinition} fn
+ * @param {EntrypointMetadata} fn
  * @returns {IntegrationsConfig & { preferStatic?: boolean }}
  */
 function create_function_config(runtime, fn) {
@@ -413,7 +413,7 @@ function create_function_config(runtime, fn) {
 
 /**
  * @param {'serverless' | 'edge'} runtime
- * @param {FunctionDefinition} fn
+ * @param {EntrypointMetadata} fn
  * @returns {string}
  */
 function generate_config_export(runtime, fn) {
@@ -491,7 +491,7 @@ async function generate_edge_functions({ builder }) {
 		})
 	];
 
-	/** @type {FunctionDefinition} */
+	/** @type {EntrypointMetadata} */
 	const fn = {
 		type: 'singular',
 		routes: undefined,
