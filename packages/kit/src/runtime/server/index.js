@@ -193,7 +193,15 @@ export class Server {
 	 * @param {Request} request
 	 * @param {import('types').InternalRequestOptions} options
 	 */
-	respond(request, options) {
-		return this.#server.respond(request, options);
+	async respond(request, options) {
+		const response = await this.#server.respond(request, options);
+
+		// the HTTP layer discards HEAD response bodies, but nothing does when the server is called directly
+		if (request.method === 'HEAD' && response.body !== null) {
+			response.body.cancel().catch(noop);
+			return new Response(null, response);
+		}
+
+		return response;
 	}
 }

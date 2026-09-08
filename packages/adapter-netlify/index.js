@@ -1,4 +1,6 @@
+/** @import { Builder, RouteDefinition } from '@sveltejs/kit' */
 /** @import { TomlTable } from 'smol-toml' */
+import crypto from 'node:crypto';
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -85,9 +87,16 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 			builder.writeClient(publish_dir);
 			builder.writePrerendered(publish_dir);
 
-			// Copy user's custom _headers file if it exists
+			// Copy user's _headers file if it exists
 			if (existsSync('_headers')) {
+				builder.log.minor('Copying user custom headers...');
 				builder.copy('_headers', join(publish, '_headers'));
+			}
+
+			// Copy user's _redirects file if it exists
+			if (existsSync('_redirects')) {
+				builder.log.minor('Copying user redirects...');
+				builder.copy('_redirects', join(publish, '_redirects'));
 			}
 
 			builder.log.minor('Writing Netlify config...');
@@ -100,7 +109,7 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 
 				await generate_edge_functions({ builder });
 			} else {
-				generate_serverless_functions({ builder, split, publish });
+				generate_serverless_functions(builder, split);
 			}
 		},
 
@@ -112,27 +121,23 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 }
 
 /**
- * @param { object } params
- * @param {import('@sveltejs/kit').Builder} params.builder
- * @param { string } params.publish
- * @param { boolean } params.split
+ * @param {Builder} builder
+ * @param {boolean} split
  */
-function generate_serverless_functions({ builder, publish, split }) {
+function generate_serverless_functions(builder, split) {
 	// https://docs.netlify.com/build/frameworks/frameworks-api/#netlifyv1functions
 	mkdirSync(netlify_framework_serverless_path, { recursive: true });
 
 	builder.writeServer('.netlify/v1/server');
 
-	const replace = {
-		'0SERVER': './server/index.js' // digit prefix prevents CJS build from using this as a variable name, which would also get replaced
-	};
-
-	builder.copy(files, '.netlify/v1', { replace, filter: (file) => !file.endsWith('edge.js') });
+	builder.copy(`${files}/serverless.js`, '.netlify/v1/serverless.js');
 
 	builder.log.minor('Generating serverless functions...');
 
 	if (split) {
 		const seen = new Set();
+		let index = 0;
+		const uuid = crypto.randomUUID();
 
 		for (let i = 0; i < builder.routes.length; i++) {
 			const route = builder.routes[i];
@@ -145,12 +150,13 @@ function generate_serverless_functions({ builder, publish, split }) {
 
 			// The parts should conform to URLPattern syntax
 			// https://docs.netlify.com/build/functions/get-started/?fn-language=ts&data-tab=TypeScript#route-requests
-			for (const segment of route.segments) {
+			for (const [i, segment] of route.segments.entries()) {
 				if (segment.rest) {
 					parts.push('*');
 				} else if (segment.dynamic) {
 					// URLPattern requires params to start with letters
-					parts.push(`:param${parts.length}`);
+					const optional = /^\[\[.+\]\]$/.test(segment.content) ? '?' : '';
+					parts.push(`:param${i}${optional}`);
 				} else {
 					parts.push(segment.content);
 				}
@@ -158,14 +164,16 @@ function generate_serverless_functions({ builder, publish, split }) {
 
 			// Netlify handles trailing slashes for us, so we don't need to include them in the pattern
 			const pattern = `/${parts.join('/')}`;
-			const name =
-				FUNCTION_PREFIX + (parts.join('-').replace(/[:.]/g, '_').replace('*', '__rest') || 'index');
 
 			// skip routes with identical patterns, they were already folded into another function
 			if (seen.has(pattern)) continue;
 
+			// the route itself is human readable via the `name` config export,
+			// so the function file can just use an index
+			const name = `${FUNCTION_PREFIX}${index++}`;
+
 			const patterns = [pattern, `${pattern === '/' ? '' : pattern}/__data.json`];
-			patterns.forEach((p) => seen.add(p));
+			patterns.forEach((pattern) => seen.add(pattern));
 
 			// figure out which lower priority routes should be considered fallbacks
 			for (let j = i + 1; j < builder.routes.length; j += 1) {
@@ -177,38 +185,37 @@ function generate_serverless_functions({ builder, publish, split }) {
 				}
 			}
 
-			generate_serverless_function({
+			generate_serverless_function(
 				builder,
 				routes,
 				patterns,
 				name,
-				type: 'split'
-			});
+				`SvelteKit ${route.id}`,
+				'split',
+				undefined,
+				uuid
+			);
 		}
 
-		generate_serverless_function({
+		generate_serverless_function(
 			builder,
-			routes: [],
-			patterns: ['/*'],
-			name: `${FUNCTION_PREFIX}catch-all`,
-			type: 'catch-all',
-			exclude: Array.from(seen)
-		});
+			[],
+			['/*'],
+			`${FUNCTION_PREFIX}catch-all`,
+			'SvelteKit catch-all',
+			'catch-all',
+			Array.from(seen),
+			uuid
+		);
 	} else {
-		generate_serverless_function({
+		generate_serverless_function(
 			builder,
-			routes: undefined,
-			patterns: ['/*'],
-			name: `${FUNCTION_PREFIX}render`,
-			type: 'singular'
-		});
-	}
-
-	// Copy user's custom _redirects file if it exists
-	if (existsSync('_redirects')) {
-		builder.log.minor('Copying user redirects...');
-		const redirects_file = join(publish, '_redirects');
-		builder.copy('_redirects', redirects_file);
+			undefined,
+			['/*'],
+			`${FUNCTION_PREFIX}render`,
+			'SvelteKit server',
+			'singular'
+		);
 	}
 }
 
@@ -254,24 +261,32 @@ function write_frameworks_config({ builder }) {
 /** @typedef {'singular' | 'split' | 'catch-all'} ServerlessFunctionType */
 
 /**
- *
- * @param {{
- *   builder: import('@sveltejs/kit').Builder,
- *   routes: import('@sveltejs/kit').RouteDefinition[] | undefined,
- *   patterns: string[],
- *   name: string,
- *   type: ServerlessFunctionType,
- *   exclude?: string[]
- * }} opts
+ * @param {Builder} builder
+ * @param {RouteDefinition[] | undefined} routes
+ * @param {string[]} patterns
+ * @param {string} name
+ * @param {string} display_name
+ * @param {ServerlessFunctionType} type
+ * @param {string[]} [exclude]
+ * @param {string} [uuid]
  */
-function generate_serverless_function({ builder, routes, patterns, name, type, exclude }) {
+function generate_serverless_function(
+	builder,
+	routes,
+	patterns,
+	name,
+	display_name,
+	type,
+	exclude,
+	uuid
+) {
 	builder.generateServerInstance(`.netlify/v1/server-${name}.js`, {
 		routes,
 		serverDirectory: '.netlify/v1/server'
 	});
 
-	const fn = generate_serverless_function_module(name, type);
-	const config = generate_config_export(name, patterns, exclude);
+	const fn = generate_serverless_function_module(name, type, uuid);
+	const config = generate_config_export(patterns, display_name, exclude);
 
 	if (builder.hasServerInstrumentationFile()) {
 		writeFileSync(`${netlify_framework_serverless_path}/${name}.mjs`, fn);
@@ -296,10 +311,13 @@ function generate_serverless_function({ builder, routes, patterns, name, type, e
 /**
  * @param {string} name
  * @param {ServerlessFunctionType} type
+ * @param {string} [uuid]
  * @returns {string}
  */
-function generate_serverless_function_module(name, type) {
-	if (type === 'catch-all') {
+function generate_serverless_function_module(name, type, uuid) {
+	const original_pathname_header = `const original_pathname_header = \`x-sveltekit-original-pathname-${uuid}\``;
+
+	if (type === 'catch-all' && uuid) {
 		// Netlify encodes the response body but `fetch` automatically decodes it.
 		// So, we need to remove the `content-encoding` header to allow Netlify
 		// to correctly re-encode it on the way out.
@@ -308,7 +326,7 @@ import { applyReroute } from '@sveltejs/kit/adapter';
 import { init } from '../serverless.js';
 import { server } from '../server-${name}.js';
 
-const original_url_header = \`x-sveltekit-original-url-\${process.env.NETLIFY_FUNCTIONS_TOKEN}\`
+${original_pathname_header}
 
 const respond = init(server);
 
@@ -317,7 +335,7 @@ export default async (request, context) => {
 
 	return await applyReroute(catch_all_response, async (url) => {
 		const rerouted_request = new Request(url, request);
-		rerouted_request.headers.set(original_url_header, request.url);
+		rerouted_request.headers.set(original_pathname_header, new URL(request.url).pathname);
 
 		const rerouted_response = await fetch(rerouted_request);
 
@@ -333,20 +351,21 @@ export default async (request, context) => {
 `;
 	}
 
-	if (type === 'split') {
+	if (type === 'split' && uuid) {
 		return `\
 import { init } from '../serverless.js';
 import { server } from '../server-${name}.js';
 
-const original_url_header = \`x-sveltekit-original-url-\${process.env.NETLIFY_FUNCTIONS_TOKEN}\`
+${original_pathname_header}
 
 const respond = init(server);
 
 export default async (request, context) => {
-	if (request.headers.has(original_url_header)) {
-		const original_url = request.headers.get(original_url_header);
-		request = new Request(original_url, request);
-		request.headers.delete(original_url_header);
+	if (request.headers.has(original_pathname_header)) {
+		const url = new URL(request.url);
+		url.pathname = request.headers.get(original_pathname_header);
+		request = new Request(url, request);
+		request.headers.delete(original_pathname_header);
 	}
 
 	return await respond(request, context);
@@ -365,18 +384,16 @@ export default init(server);
 const generator_string = `@sveltejs/adapter-netlify@${adapter_version}`;
 
 /**
- * @param {string} name The name that shows up in the logs & metrics functions list
  * @param {string[]} patterns
+ * @param {string} display_name The name that shows up in the logs & metrics functions list
  * @param {string[]} [exclude]
  * @returns {string}
  */
-function generate_config_export(name, patterns, exclude = []) {
-	// TODO: add a human friendly name for the function https://docs.netlify.com/build/frameworks/frameworks-api/#configuration-options-2
-
+function generate_config_export(patterns, display_name, exclude = []) {
 	// https://docs.netlify.com/build/frameworks/frameworks-api/#configuration-options-2
 	return `\
 export const config = {
-	name: ${JSON.stringify(name)},
+	name: ${JSON.stringify(display_name)},
 	generator: '${generator_string}',
 	path: [${patterns.map(s).join(', ')}],
 	excludedPath: [${['/.netlify/*', ...exclude].map(s).join(', ')}],
