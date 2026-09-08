@@ -57,7 +57,7 @@ describe('parse_runtime', () => {
 		'nodejs22.0.x'
 	])('rejects unsupported runtime %s', (runtime) => {
 		expect(() => parse_runtime(/** @type {any} */ (runtime))).toThrow(
-			'Supported runtimes are "edge", "nodejs22.x", "nodejs24.x", and "nodejs26.x"'
+			'Supported runtimes are: edge, nodejs22.x, nodejs24.x, nodejs26.x'
 		);
 	});
 });

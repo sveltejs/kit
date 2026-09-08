@@ -1,7 +1,8 @@
 import { Adapter } from '@sveltejs/kit';
+import { Runtime } from './utils.js';
 import './ambient.d.ts';
 
-export type Runtime = 'edge' | 'nodejs22.x' | 'nodejs24.x' | 'nodejs26.x';
+export { Runtime };
 
 export interface AdapterOptions {
 	/**
