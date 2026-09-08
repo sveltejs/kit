@@ -4,6 +4,11 @@ import './ambient.d.ts';
 
 export { Runtime };
 
+export interface Config {
+	/** The runtime to use for this route. */
+	runtime?: Runtime;
+}
+
 export interface AdapterOptions {
 	/**
 	 * The runtime to use. Supported runtimes are `edge`, `nodejs22.x`, `nodejs24.x`, and `nodejs26.x`.

@@ -52,6 +52,20 @@ The runtime to use. Set this to `'edge'` to deploy your app as a [Netlify Edge F
 
 If `true`, your app will be split into multiple functions instead of a single one for the entire app.
 
+## Route configuration
+
+You can override the adapter's `runtime` for an individual route:
+
+```js
+/// file: src/routes/admin/+page.server.js
+/** @type {import('@sveltejs/adapter-netlify').Config} */
+export const config = { runtime: 'nodejs24.x' };
+```
+
+Route configuration follows the usual layout inheritance rules, so a config exported from a layout applies to its child routes. A child route can override the inherited value. Routes without a runtime config use the adapter's `runtime`.
+
+Routes with the same runtime are grouped into one function by default. With `split: true`, each route pattern gets its own function while keeping its configured runtime. Prerendered routes do not emit functions, so their runtime config has no effect.
+
 ## Netlify alternatives to SvelteKit functionality
 
 You may build your app using functionality provided directly by SvelteKit without relying on any Netlify functionality. Using the SvelteKit versions of these features will allow them to be used in dev mode, tested with integration tests, and to work with other adapters should you ever decide to switch away from Netlify. However, in some scenarios you may find it beneficial to use the Netlify versions of these features. One example would be if you're migrating an app that's already hosted on Netlify to SvelteKit.
