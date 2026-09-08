@@ -176,6 +176,7 @@ export function create_server_routing_response(route, params, url, client) {
  */
 function create_css_import(route, url, client) {
 	const { errors, layouts, leaf } = route;
+	const paths = resolve_paths(url.pathname);
 
 	let css = '';
 
@@ -183,11 +184,11 @@ function create_css_import(route, url, client) {
 		if (typeof node !== 'number') continue;
 		const node_css = client.css?.[node];
 		for (const css_path of node_css ?? []) {
-			css += `'${assets || base}/${css_path}',`;
+			css += `'${client_path(css_path, paths)}',`;
 		}
 	}
 
 	if (!css) return '';
 
-	return `${create_client_import(client.start, resolve_paths(url.pathname))}.then(x => x.load_css([${css}]));\n`;
+	return `${create_client_import(client.start, paths)}.then(x => x.load_css([${css}]));\n`;
 }
