@@ -15,8 +15,6 @@ export const RENDER = 16;
 /** The kinds on the stack, kept under a symbol so it is not part of the public shape */
 export const CONTEXT = Symbol('sveltekit.context');
 
-const PAGE = Symbol('sveltekit.page');
-
 /** What a query view copies its page fields from */
 const NO_PAGE = /** @type {Interface} */ ({});
 
@@ -150,7 +148,8 @@ export class RequestEvent {
 		this.request = source.request;
 		this.setHeaders = source.setHeaders;
 
-		const page = this[PAGE](source);
+		// a query view neither reads the page from its source nor keeps it
+		const page = flags & QUERY ? NO_PAGE : source;
 		this.url = page.url;
 		this.params = page.params;
 		this.route = page.route;
@@ -186,15 +185,6 @@ export class RequestEvent {
 		return event instanceof RequestEvent
 			? event
 			: new RequestEvent(event, /** @type {Partial<RequestEvent>} */ (event)[CONTEXT] ?? 0);
-	}
-
-	/**
-	 * Where the fields a query may not read are copied from, so a query view neither reads
-	 * them from its source nor keeps them
-	 * @param {Interface} source
-	 */
-	[PAGE](source) {
-		return source;
 	}
 
 	/** Inside a `query` function, however deep */
@@ -243,11 +233,7 @@ export class RequestEvent {
 }
 
 /** A query may not read the page, so a query view never copies it and reads throw */
-class QueryEvent extends RequestEvent {
-	[PAGE]() {
-		return NO_PAGE;
-	}
-}
+class QueryEvent extends RequestEvent {}
 
 for (const property of /** @type {const} */ (['url', 'params', 'route'])) {
 	Object.defineProperty(QueryEvent.prototype, property, {
