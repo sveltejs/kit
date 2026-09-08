@@ -20,11 +20,15 @@ export function parse_runtime(runtime) {
 	if (runtime === undefined) return { primitive: 'nodejs', version: undefined };
 	if (runtime === 'edge') return { primitive: 'edge', version: undefined };
 
-	const match = /^nodejs(\d+)\.x$/.exec(runtime);
-	if (match) return { primitive: 'nodejs', version: match[1] };
+	const version = {
+		'nodejs22.x': '22',
+		'nodejs24.x': '24',
+		'nodejs26.x': '26'
+	}[runtime];
+	if (version) return { primitive: 'nodejs', version };
 
 	throw new Error(
-		`Invalid runtime ${JSON.stringify(runtime)}. Expected "edge" or a Node.js runtime in the form "nodejs<major>.x" (for example "nodejs22.x").`
+		`Invalid runtime ${JSON.stringify(runtime)}. Supported runtimes are "edge", "nodejs22.x", "nodejs24.x", and "nodejs26.x".`
 	);
 }
 

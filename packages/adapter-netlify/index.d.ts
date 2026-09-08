@@ -1,11 +1,11 @@
 import { Adapter } from '@sveltejs/kit';
 import './ambient.d.ts';
 
-export type Runtime = 'edge' | `nodejs${number}.x`;
+export type Runtime = 'edge' | 'nodejs22.x' | 'nodejs24.x' | 'nodejs26.x';
 
 export interface AdapterOptions {
 	/**
-	 * The runtime to use. The runtime can be `edge` or a Node.js runtime in the form `nodejs<major>.x`.
+	 * The runtime to use. Supported runtimes are `edge`, `nodejs22.x`, `nodejs24.x`, and `nodejs26.x`.
 	 * If omitted, the Node.js runtime configured for the Netlify build is used.
 	 */
 	runtime?: Runtime;

@@ -46,7 +46,7 @@ If the `netlify.toml` file or the `build.publish` value is missing, a default va
 
 ### `runtime`
 
-The runtime to use. Set this to `'edge'` to deploy your app as a [Netlify Edge Function](https://docs.netlify.com/build/edge-functions/overview/), or use a Node.js runtime such as `'nodejs22.x'`. If omitted, the Node.js runtime configured for the Netlify build is used.
+The runtime to use. Set this to `'edge'` to deploy your app as a [Netlify Edge Function](https://docs.netlify.com/build/edge-functions/overview/), or use `'nodejs22.x'`, `'nodejs24.x'`, or `'nodejs26.x'`. If omitted, the Node.js runtime configured for the Netlify build is used.
 
 ### `split`
 

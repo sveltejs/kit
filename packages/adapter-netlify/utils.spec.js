@@ -45,14 +45,21 @@ describe('parse_runtime', () => {
 		}
 	});
 
-	test.each(['serverless', 'bun1.x', 'node', 'nodejs22', 'node22.x', 'nodejs-1.x', 'nodejs22.0.x'])(
-		'rejects invalid runtime %s',
-		(runtime) => {
-			expect(() => parse_runtime(/** @type {any} */ (runtime))).toThrow(
-				'Expected "edge" or a Node.js runtime in the form "nodejs<major>.x"'
-			);
-		}
-	);
+	test.each([
+		'serverless',
+		'bun1.x',
+		'node',
+		'nodejs20.x',
+		'nodejs28.x',
+		'nodejs22',
+		'node22.x',
+		'nodejs-1.x',
+		'nodejs22.0.x'
+	])('rejects unsupported runtime %s', (runtime) => {
+		expect(() => parse_runtime(/** @type {any} */ (runtime))).toThrow(
+			'Supported runtimes are "edge", "nodejs22.x", "nodejs24.x", and "nodejs26.x"'
+		);
+	});
 });
 
 describe('matches', () => {
