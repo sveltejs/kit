@@ -3,6 +3,7 @@ import {
 	BINARY_FORM_CONTENT_TYPE,
 	DELETE_KEY,
 	convert_formdata,
+	create_field_proxy,
 	deep_set,
 	deserialize_binary_form,
 	serialize_binary_form,
@@ -769,5 +770,24 @@ describe('deep_set', () => {
 		deep_set(target, ['nested', 'file'], DELETE_KEY);
 
 		expect(target).toEqual({ nested: {} });
+	});
+});
+
+describe('create_field_proxy', () => {
+	test('does not restore a number input default after the field is emptied', () => {
+		const input = {};
+		const fields = create_field_proxy(
+			{},
+			() => input,
+			(path, value) => deep_set(input, path.map(String), value),
+			() => ({})
+		);
+		const props = fields.age.as('number', 200);
+
+		expect(props.value).toBe('200');
+
+		fields.age.set(undefined);
+
+		expect(props.value).toBe('');
 	});
 });
