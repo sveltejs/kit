@@ -25,6 +25,7 @@
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"@vitest/browser-playwright": "catalog:",
+		"jsdom": "catalog:",
 		"svelte": "catalog:",
 		"svelte-check": "catalog:",
 		"test-redirect-importer": "workspace:*",
