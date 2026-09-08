@@ -104,11 +104,7 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 			write_frameworks_config({ builder });
 
 			if (edge) {
-				if (split) {
-					throw new Error('Cannot use `split: true` alongside `edge: true`');
-				}
-
-				await generate_edge_functions({ builder });
+				await generate_edge_functions({ builder, split });
 			} else {
 				generate_serverless_functions(builder, split);
 			}
@@ -136,81 +132,10 @@ function generate_serverless_functions(builder, split) {
 	builder.log.minor('Generating serverless functions...');
 
 	if (split) {
-		const seen = new Set();
-		let index = 0;
 		const uuid = crypto.randomUUID();
-
-		for (let i = 0; i < builder.routes.length; i++) {
-			const route = builder.routes[i];
-			if (route.prerender === true) continue;
-
-			const routes = [route];
-
-			/** @type {string[]} */
-			const parts = [];
-
-			// The parts should conform to URLPattern syntax
-			// https://docs.netlify.com/build/functions/get-started/?fn-language=ts&data-tab=TypeScript#route-requests
-			for (const [i, segment] of route.segments.entries()) {
-				if (segment.rest) {
-					parts.push('*');
-				} else if (segment.dynamic) {
-					// URLPattern requires params to start with letters
-					const optional = /^\[\[.+\]\]$/.test(segment.content) ? '?' : '';
-					parts.push(`:param${i}${optional}`);
-				} else {
-					parts.push(segment.content);
-				}
-			}
-
-			// Netlify handles trailing slashes for us, so we don't need to include them in the pattern
-			const pattern = `/${parts.join('/')}`;
-
-			// skip routes with identical patterns, they were already folded into another function
-			if (seen.has(pattern)) continue;
-
-			// the route itself is human readable via the `name` config export,
-			// so the function file can just use an index
-			const name = `${FUNCTION_PREFIX}${index++}`;
-
-			const patterns = [pattern, `${pattern === '/' ? '' : pattern}/__data.json`];
-			patterns.forEach((pattern) => seen.add(pattern));
-
-			// figure out which lower priority routes should be considered fallbacks
-			for (let j = i + 1; j < builder.routes.length; j += 1) {
-				const other = builder.routes[j];
-				if (other.prerender === true) continue;
-
-				if (matches(route.segments, other.segments)) {
-					routes.push(other);
-				}
-			}
-
-			generate_serverless_function(
-				builder,
-				{
-					type: 'split',
-					routes,
-					patterns,
-					name,
-					display_name: `SvelteKit ${route.id}`
-				},
-				uuid
-			);
+		for (const fn of get_split_functions(builder)) {
+			generate_serverless_function(builder, fn, uuid);
 		}
-
-		generate_serverless_function(
-			builder,
-			{
-				type: 'catch-all',
-				routes: [],
-				patterns: ['/*'],
-				name: `${FUNCTION_PREFIX}catch-all`,
-				display_name: 'SvelteKit catch-all',
-				exclude: Array.from(seen)
-			},
-			uuid
-		);
 	} else {
 		generate_serverless_function(builder, {
 			type: 'singular',
@@ -272,6 +197,79 @@ function write_frameworks_config({ builder }) {
  * @property {string} display_name
  * @property {string[]} [exclude]
  */
+
+/**
+ * @param {Builder} builder
+ * @returns {EntrypointMetadata[]}
+ */
+function get_split_functions(builder) {
+	const seen = new Set();
+	let index = 0;
+
+	/** @type {EntrypointMetadata[]} */
+	const functions = [];
+
+	for (let i = 0; i < builder.routes.length; i++) {
+		const route = builder.routes[i];
+		if (route.prerender === true) continue;
+
+		const routes = [route];
+		/** @type {string[]} */
+		const parts = [];
+
+		// The parts should conform to URLPattern syntax
+		// https://docs.netlify.com/build/functions/get-started/?fn-language=ts&data-tab=TypeScript#route-requests
+		for (const [i, segment] of route.segments.entries()) {
+			if (segment.rest) {
+				parts.push('*');
+			} else if (segment.dynamic) {
+				// URLPattern requires params to start with letters
+				const optional = /^\[\[.+\]\]$/.test(segment.content) ? '?' : '';
+				parts.push(`:param${i}${optional}`);
+			} else {
+				parts.push(segment.content);
+			}
+		}
+
+		// Netlify handles trailing slashes for us, so we don't need to include them in the pattern
+		const pattern = `/${parts.join('/')}`;
+
+		// skip routes with identical patterns, they were already folded into another function
+		if (seen.has(pattern)) continue;
+
+		const patterns = [pattern, `${pattern === '/' ? '' : pattern}/__data.json`];
+		patterns.forEach((pattern) => seen.add(pattern));
+
+		// figure out which lower priority routes should be considered fallbacks
+		for (let j = i + 1; j < builder.routes.length; j += 1) {
+			const other = builder.routes[j];
+			if (other.prerender === true) continue;
+
+			if (matches(route.segments, other.segments)) {
+				routes.push(other);
+			}
+		}
+
+		functions.push({
+			type: 'split',
+			routes,
+			patterns,
+			name: `${FUNCTION_PREFIX}${index++}`,
+			display_name: `SvelteKit ${route.id}`
+		});
+	}
+
+	functions.push({
+		type: 'catch-all',
+		routes: [],
+		patterns: ['/*'],
+		name: `${FUNCTION_PREFIX}catch-all`,
+		display_name: 'SvelteKit catch-all',
+		exclude: Array.from(seen)
+	});
+
+	return functions;
+}
 
 /**
  * @param {Builder} builder
@@ -451,20 +449,21 @@ const rolldown_config = {
 };
 
 /**
- * @param { object } params
- * @param {import('@sveltejs/kit').Builder} params.builder
+ * @param {object} params
+ * @param {Builder} params.builder
+ * @param {boolean} params.split
  */
-async function generate_edge_functions({ builder }) {
+async function generate_edge_functions({ builder, split }) {
 	const tmp = builder.getBuildDirectory('netlify-tmp');
 	rmSync(tmp, { force: true, recursive: true });
 	mkdirSync(tmp, { recursive: true });
 
 	// https://docs.netlify.com/build/frameworks/frameworks-api/#edge-functions
-	mkdirSync('.netlify/v1/edge-functions', { recursive: true });
+	mkdirSync(netlify_framework_edge_path, { recursive: true });
 
-	builder.log.minor('Generating Edge Function...');
-
+	builder.log.minor('Generating edge functions...');
 	builder.copy(`${files}/edge.js`, `${tmp}/edge.js`);
+
 	// We only need to specify paths without the trailing slash because
 	// Netlify will handle the optional trailing slash for us
 	const excluded_paths = [
@@ -482,32 +481,62 @@ async function generate_edge_functions({ builder }) {
 		})
 	];
 
-	/** @type {EntrypointMetadata} */
-	const fn = {
-		type: 'singular',
-		routes: undefined,
-		patterns: ['/*'],
-		name: `${FUNCTION_PREFIX}render`,
-		display_name: 'SvelteKit server',
-		exclude: excluded_paths
-	};
-	builder.generateServerInstance(`${tmp}/server-${fn.name}.js`);
+	/** @type {EntrypointMetadata[]} */
+	const functions = split
+		? get_split_functions(builder)
+		: [
+				{
+					type: 'singular',
+					routes: undefined,
+					patterns: ['/*'],
+					name: `${FUNCTION_PREFIX}render`,
+					display_name: 'SvelteKit server'
+				}
+			];
+	const reroute_id = split ? crypto.randomUUID() : undefined;
 
-	const code = generate_function_module(fn.type, './edge.js', `./server-${fn.name}.js`);
+	for (const fn of functions) {
+		await generate_edge_function(
+			builder,
+			tmp,
+			{
+				...fn,
+				exclude: excluded_paths.concat(fn.exclude ?? [])
+			},
+			reroute_id
+		);
+	}
+}
+
+/**
+ * @param {Builder} builder
+ * @param {string} tmp
+ * @param {EntrypointMetadata} fn
+ * @param {string | undefined} reroute_id
+ */
+async function generate_edge_function(builder, tmp, fn, reroute_id) {
+	builder.generateServerInstance(`${tmp}/server-${fn.name}.js`, { routes: fn.routes });
+
+	const entry = `${tmp}/entry-${fn.name}.js`;
+	const code = generate_edge_function_module(
+		fn.type,
+		'./edge.js',
+		`./server-${fn.name}.js`,
+		reroute_id
+	);
 	const config = create_function_config('edge', fn);
-	writeFileSync(`${tmp}/entry.js`, `${code}\n${config}`);
+	writeFileSync(entry, `${code}\n${config}`);
 
+	let input = entry;
 	if (builder.hasServerInstrumentationFile()) {
 		const initializer = builder.createInstrumentationInitializer({
 			outputDirectory: tmp,
 			environment: 'export default Deno.env.toObject();\n'
 		});
-		writeFileSync(
-			`${tmp}/instrumented-entry.js`,
-			`export { default, config } from './entry.js';\n`
-		);
+		input = `${tmp}/instrumented-entry-${fn.name}.js`;
+		writeFileSync(input, `export { default, config } from './entry-${fn.name}.js';\n`);
 		builder.instrument({
-			entrypoint: `${tmp}/instrumented-entry.js`,
+			entrypoint: input,
 			instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`,
 			initializer,
 			module: {
@@ -518,12 +547,69 @@ async function generate_edge_functions({ builder }) {
 
 	await build({
 		...rolldown_config,
-		input: builder.hasServerInstrumentationFile()
-			? `${tmp}/instrumented-entry.js`
-			: `${tmp}/entry.js`,
+		input,
 		output: {
 			...rolldown_config.output,
-			file: `${netlify_framework_edge_path}/${FUNCTION_PREFIX}render.js`
+			file: `${netlify_framework_edge_path}/${fn.name}.js`
 		}
 	});
+}
+
+/**
+ * @param {EntrypointType} type
+ * @param {string} init
+ * @param {string} server
+ * @param {string | undefined} reroute_id
+ * @returns {string}
+ */
+function generate_edge_function_module(type, init, server, reroute_id) {
+	if (type === 'singular') {
+		return generate_function_module(type, init, server);
+	}
+
+	const runtime_imports = [
+		`import { init } from '${init}';`,
+		`import { server } from '${server}';`
+	].join('\n');
+	const reroute_parameter = `__sveltekit_original_pathname_${reroute_id}`;
+
+	if (type === 'catch-all') {
+		return `\
+import { applyReroute } from '@sveltejs/kit/adapter';
+${runtime_imports}
+
+const respond = init(server);
+
+export default async (request, context) => {
+	const response = await respond(request, context);
+
+	let rerouted_url;
+	applyReroute(response, (url) => {
+		url.searchParams.set('${reroute_parameter}', new URL(request.url).pathname);
+		rerouted_url = url;
+	});
+
+	return rerouted_url ?? response;
+};
+`;
+	}
+
+	return `\
+${runtime_imports}
+
+const respond = init(server);
+
+export default async (request, context) => {
+	const url = new URL(request.url);
+	const pathname = url.searchParams.get('${reroute_parameter}');
+
+	if (pathname) {
+		url.pathname = pathname;
+		url.searchParams.delete('${reroute_parameter}');
+		request = new Request(url, request);
+	}
+
+	return await respond(request, context);
+};
+`;
 }

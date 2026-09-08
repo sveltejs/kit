@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import process from 'node:process';
 import { test, expect } from 'vitest';
 
 test('_redirects are copied to publish directory', () => {
@@ -10,13 +11,17 @@ test('_redirects are copied to publish directory', () => {
 	expect(redirects).toContain('/redirect-me /greeting/redirected 301');
 });
 
-const functions_dir = path.resolve(import.meta.dirname, './.netlify/v1/functions');
+const edge = process.env.EDGE === 'true';
+const functions_dir = path.resolve(
+	import.meta.dirname,
+	edge ? './.netlify/v1/edge-functions' : './.netlify/v1/functions'
+);
 
 /** @param {(content: string) => boolean} filter */
 function read_functions(filter) {
 	return fs
 		.readdirSync(functions_dir)
-		.filter((f) => f.startsWith('sveltekit-') && f.endsWith('.mjs'))
+		.filter((f) => f.startsWith('sveltekit-') && f.endsWith(edge ? '.js' : '.mjs'))
 		.map((f) => fs.readFileSync(path.join(functions_dir, f), 'utf-8'))
 		.filter(filter);
 }
@@ -27,7 +32,7 @@ test('split generates multiple function files', () => {
 	);
 	expect(functions.length).toBe(1);
 	expect(functions[0]).toMatch(
-		/"path": \[\s+"\/collection\/:param1\?\/article",\s+"\/collection\/:param1\?\/article\/__data\.json"\s+\]/
+		/"path": \[\s*"\/collection\/:param1\?\/article",\s*"\/collection\/:param1\?\/article\/__data\.json"\s*\]/
 	);
 });
 
