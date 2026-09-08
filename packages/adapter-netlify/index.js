@@ -291,7 +291,7 @@ function generate_serverless_function(builder, fn, uuid) {
 		`../server-${fn.name}.js`,
 		uuid
 	);
-	const config = create_config_export('serverless', fn);
+	const config = generate_config_export('serverless', fn);
 
 	if (builder.hasServerInstrumentationFile()) {
 		writeFileSync(filename, code);
@@ -393,9 +393,8 @@ const generator_string = `@sveltejs/adapter-netlify@${adapter_version}`;
 /**
  * @param {'serverless' | 'edge'} runtime
  * @param {EntrypointMetadata} fn
- * @returns {string}
  */
-function create_config_export(runtime, fn) {
+function generate_config_export(runtime, fn) {
 	/** @type {IntegrationsConfig & { preferStatic?: boolean }} */
 	const config = {
 		name: fn.display_name,
@@ -494,7 +493,7 @@ async function generate_edge_functions({ builder }) {
 	builder.generateServerInstance(`${tmp}/server-${fn.name}.js`);
 
 	const code = generate_function_module(fn.type, './edge.js', `./server-${fn.name}.js`);
-	const config = create_config_export('edge', fn);
+	const config = generate_config_export('edge', fn);
 	writeFileSync(`${tmp}/entry.js`, `${code}\n${config}`);
 
 	if (builder.hasServerInstrumentationFile()) {
