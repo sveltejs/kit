@@ -48,6 +48,7 @@ runs:
 
         if deploy_json=$(netlify deploy \
           --json \
+          --verbose \
           --filter="$TEST_APP_NAME" \
           --dir="$TEST_APP_DIR/build" \
           --functions=".netlify/v1/functions" \
