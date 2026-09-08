@@ -105,15 +105,17 @@ test.describe('base path', () => {
 
 test.describe('relative paths', () => {
 	test.skip(
-		({ javaScriptEnabled }) => !process.env.DEV || !javaScriptEnabled || !!process.env.PATHS_ASSETS
+		({ javaScriptEnabled }) =>
+			!javaScriptEnabled || !!process.env.PATHS_ASSETS || process.env.PATHS_RELATIVE === 'false'
 	);
 
 	test('works when proxied', async ({ page }) => {
 		const proxy_path = '/proxy';
 
 		// simulate a reverse proxy that mounts the app at `/proxy`: strip the prefix and
-		// forward to the dev server. Abort initial client module requests that escape the
-		// prefix; imported module URLs are rewritten by Vite and are outside this regression.
+		// forward to the server, and abort requests that escape the prefix. In dev, only the
+		// initial client module requests; imported module URLs are rewritten by Vite and
+		// are outside this regression.
 		await page.route('**/*', async (route) => {
 			const url = new URL(route.request().url());
 
@@ -121,8 +123,9 @@ test.describe('relative paths', () => {
 				url.pathname = url.pathname.slice(proxy_path.length);
 				await route.fulfill({ response: await route.fetch({ url: url.href }) });
 			} else if (
-				(url.pathname.includes('/node_modules/') || url.pathname.includes('/@fs/')) &&
-				route.request().headers().referer?.endsWith(`${proxy_path}/path-base/base/`)
+				!process.env.DEV ||
+				((url.pathname.includes('/node_modules/') || url.pathname.includes('/@fs/')) &&
+					route.request().headers().referer?.endsWith(`${proxy_path}/path-base/base/`))
 			) {
 				await route.abort();
 			} else {
