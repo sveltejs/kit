@@ -9,7 +9,7 @@ const config: UserConfig = {
 	plugins: [
 		sveltekit({
 			adapter: adapter({
-				edge: true
+				runtime: 'edge'
 			})
 		})
 	]

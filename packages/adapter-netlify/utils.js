@@ -13,6 +13,22 @@ import process from 'node:process';
  */
 
 /**
+ * @param {import('./index.js').Runtime} [runtime]
+ * @returns {{ primitive: 'edge' | 'nodejs', version: string | undefined }}
+ */
+export function parse_runtime(runtime) {
+	if (runtime === undefined) return { primitive: 'nodejs', version: undefined };
+	if (runtime === 'edge') return { primitive: 'edge', version: undefined };
+
+	const match = /^nodejs(\d+)\.x$/.exec(runtime);
+	if (match) return { primitive: 'nodejs', version: match[1] };
+
+	throw new Error(
+		`Invalid runtime ${JSON.stringify(runtime)}. Expected "edge" or a Node.js runtime in the form "nodejs<major>.x" (for example "nodejs22.x").`
+	);
+}
+
+/**
  * @param {RouteSegment[]} a
  * @param {RouteSegment[]} b
  * @returns {boolean}

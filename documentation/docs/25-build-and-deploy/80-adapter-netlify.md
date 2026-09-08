@@ -22,7 +22,7 @@ export default defineConfig({
 		sveltekit({
 			adapter: adapter({
 				// See below for an explanation of these options
-				edge: false,
+				runtime: 'nodejs22.x',
 				split: false
 			})
 		})
@@ -44,9 +44,9 @@ If the `netlify.toml` file or the `build.publish` value is missing, a default va
 
 ## Options
 
-### `edge`
+### `runtime`
 
-If `true`, your app will be deployed as a [Netlify Edge Function](https://docs.netlify.com/build/edge-functions/overview/) rather than the standard Node-based function.
+The runtime to use. Set this to `'edge'` to deploy your app as a [Netlify Edge Function](https://docs.netlify.com/build/edge-functions/overview/), or use a Node.js runtime such as `'nodejs22.x'`. If omitted, the Node.js runtime configured for the Netlify build is used.
 
 ### `split`
 
@@ -68,7 +68,7 @@ The [`_headers`](https://docs.netlify.com/routing/headers/#syntax-for-the-header
 
 ### Netlify Functions
 
-With this adapter, SvelteKit endpoints are hosted as [Netlify Functions](https://docs.netlify.com/functions/overview/). Netlify function handlers have additional context, including [Netlify Identity](https://docs.netlify.com/visitor-access/identity/) information. You can access this context via the `event.platform.context` field inside your hooks and `+page.server` or `+layout.server` endpoints. These are [serverless functions](https://docs.netlify.com/functions/overview/) when the `edge` property is `false` in the adapter config or [edge functions](https://docs.netlify.com/edge-functions/overview/#app) when it is `true`.
+With this adapter, SvelteKit endpoints are hosted as [Netlify Functions](https://docs.netlify.com/functions/overview/). Netlify function handlers have additional context, including [Netlify Identity](https://docs.netlify.com/visitor-access/identity/) information. You can access this context via the `event.platform.context` field inside your hooks and `+page.server` or `+layout.server` endpoints. These are [serverless functions](https://docs.netlify.com/functions/overview/) by default or [edge functions](https://docs.netlify.com/edge-functions/overview/#app) when the `runtime` property is `'edge'`.
 
 ```js
 // @errors: 2339

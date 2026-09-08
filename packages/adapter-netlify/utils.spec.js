@@ -1,6 +1,6 @@
 import process from 'node:process';
 import { describe, test, expect, vi } from 'vitest';
-import { matches, get_publish_directory } from './utils.js';
+import { matches, get_publish_directory, parse_runtime } from './utils.js';
 
 /**
  * Helper to create a static route segment
@@ -28,6 +28,32 @@ function dynamic_segment(content) {
 function rest_segment(content) {
 	return { rest: true, dynamic: true, content };
 }
+
+describe('parse_runtime', () => {
+	test('defaults to the Node.js build runtime', () => {
+		expect(parse_runtime()).toEqual({ primitive: 'nodejs', version: undefined });
+	});
+
+	test('parses edge and Node.js runtimes', () => {
+		expect(parse_runtime('edge')).toEqual({ primitive: 'edge', version: undefined });
+		for (const [runtime, version] of /** @type {const} */ ([
+			['nodejs22.x', '22'],
+			['nodejs24.x', '24'],
+			['nodejs26.x', '26']
+		])) {
+			expect(parse_runtime(runtime)).toEqual({ primitive: 'nodejs', version });
+		}
+	});
+
+	test.each(['serverless', 'bun1.x', 'node', 'nodejs22', 'node22.x', 'nodejs-1.x', 'nodejs22.0.x'])(
+		'rejects invalid runtime %s',
+		(runtime) => {
+			expect(() => parse_runtime(/** @type {any} */ (runtime))).toThrow(
+				'Expected "edge" or a Node.js runtime in the form "nodejs<major>.x"'
+			);
+		}
+	);
+});
 
 describe('matches', () => {
 	test('two identical static routes match', () => {
