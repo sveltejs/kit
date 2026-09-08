@@ -1,3 +1,5 @@
+/** @import { Runtime } from './index.js' */
+
 import { resolve } from 'node:path';
 import process from 'node:process';
 
@@ -13,7 +15,7 @@ import process from 'node:process';
  */
 
 /**
- * @param {import('./index.js').Runtime} [runtime]
+ * @param {Runtime} [runtime]
  * @returns {{ primitive: 'edge' | 'nodejs', version: string | undefined }}
  */
 export function parse_runtime(runtime) {
