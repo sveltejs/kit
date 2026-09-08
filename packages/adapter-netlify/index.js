@@ -387,17 +387,17 @@ const generator_string = `@sveltejs/adapter-netlify@${adapter_version}`;
  * @param {string[]} patterns
  * @param {string} display_name The name that shows up in the logs & metrics functions list
  * @param {string[]} [exclude]
+ * @param {boolean} [prefer_static]
  * @returns {string}
  */
-function generate_config_export(patterns, display_name, exclude = []) {
+function generate_config_export(patterns, display_name, exclude = [], prefer_static = true) {
 	// https://docs.netlify.com/build/frameworks/frameworks-api/#configuration-options-2
 	return `\
 export const config = {
 	name: ${JSON.stringify(display_name)},
 	generator: '${generator_string}',
 	path: [${patterns.map(s).join(', ')}],
-	excludedPath: [${['/.netlify/*', ...exclude].map(s).join(', ')}],
-	preferStatic: true
+	excludedPath: [${['/.netlify/*', ...exclude].map(s).join(', ')}]${prefer_static ? ',\n\tpreferStatic: true' : ''}
 };
 `;
 }
@@ -478,21 +478,27 @@ async function generate_edge_functions({ builder }) {
 				return [`${builder.config.paths.base}/${asset}`, `${builder.config.paths.base}/${dir}`];
 			}
 			return `${builder.config.paths.base}/${asset}`;
-		}),
-		// Should not be served by SvelteKit at all
-		'/.netlify/*'
+		})
 	];
+	const config = generate_config_export([path], 'SvelteKit server', excluded_paths, false);
+	writeFileSync(`${tmp}/entry.js`, `${readFileSync(`${tmp}/entry.js`, 'utf-8')}\n${config}`);
 
 	if (builder.hasServerInstrumentationFile()) {
 		const initializer = builder.createInstrumentationInitializer({
 			outputDirectory: tmp,
 			environment: 'export default Deno.env.toObject();\n'
 		});
-		writeFileSync(`${tmp}/instrumented-entry.js`, `export { default } from './entry.js';\n`);
+		writeFileSync(
+			`${tmp}/instrumented-entry.js`,
+			`export { default, config } from './entry.js';\n`
+		);
 		builder.instrument({
 			entrypoint: `${tmp}/instrumented-entry.js`,
 			instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`,
-			initializer
+			initializer,
+			module: {
+				generateText: generate_traced_module(config)
+			}
 		});
 	}
 
@@ -506,28 +512,4 @@ async function generate_edge_functions({ builder }) {
 			file: `${netlify_framework_edge_path}/${FUNCTION_PREFIX}render.js`
 		}
 	});
-
-	add_edge_function_config({ builder, path, excluded_paths });
-}
-
-/**
- * Adds edge function configuration to the Frameworks API config file `config.json`
- * https://docs.netlify.com/build/frameworks/frameworks-api/#netlifyv1edge-functions
- * @param {{ builder: import('@sveltejs/kit').Builder, path: string, excluded_paths: string[] }} params
- */
-function add_edge_function_config({ path, excluded_paths }) {
-	const config = JSON.parse(readFileSync(netlify_framework_config_path, 'utf-8'));
-
-	// https://docs.netlify.com/build/frameworks/frameworks-api/#configuration-options-1
-	config.edge_functions = [
-		{
-			function: `${FUNCTION_PREFIX}render`,
-			name: 'SvelteKit server',
-			generator: generator_string,
-			path,
-			excludedPath: excluded_paths
-		}
-	];
-
-	writeFileSync(netlify_framework_config_path, s(config));
 }
