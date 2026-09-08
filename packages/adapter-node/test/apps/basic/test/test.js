@@ -28,7 +28,7 @@ test('initializes dynamic env before instrumentation', async ({ request }) => {
 	expect(await response.json()).toEqual({ value: 'available' });
 });
 
-test('does not replace identifiers or resolve imports in application code', async ({ request }) => {
+test('preserves similar user identifiers and imports', async ({ request }) => {
 	const response = await request.get('/adapter-identifiers');
 	expect(await response.json()).toEqual({
 		BASE_PATH: 'user-base-path',
