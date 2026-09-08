@@ -15,5 +15,8 @@
 		"svelte": "catalog:",
 		"vite": "catalog:"
 	},
+	"dependencies": {
+		"server-side-dep": "file:server-side-dep"
+	},
 	"type": "module"
 }

@@ -1,4 +1,6 @@
 import { expect, test } from '@playwright/test';
+import { readFileSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
 
 test('SSR', async ({ page }) => {
 	await page.goto('/');
@@ -10,6 +12,18 @@ test('CSR', async ({ page }) => {
 	await expect(page.locator('button')).toContainText('Toggle: false');
 	await page.locator('button').click();
 	await expect(page.locator('button')).toContainText('Toggle: true');
+});
+
+test('does not bundle dependencies', async ({ request }) => {
+	const response = await request.get('/external-dependency');
+	const marker = 'server-side-dep implementation';
+
+	expect(await response.text()).toBe(marker);
+	for (const file of readdirSync('build', { encoding: 'utf8', recursive: true })) {
+		if (file.endsWith('.js')) {
+			expect(readFileSync(join('build', file), 'utf8')).not.toContain(marker);
+		}
+	}
 });
 
 test('sets X-Accel-Buffering header on text/event-stream responses', async ({ request }) => {
