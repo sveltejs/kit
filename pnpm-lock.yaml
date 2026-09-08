@@ -458,6 +458,9 @@ importers:
 
   packages/adapter-node:
     dependencies:
+      '@jridgewell/remapping':
+        specifier: ^2.3.5
+        version: 2.3.5
       magic-string:
         specifier: ^1.1.0
         version: 1.1.0

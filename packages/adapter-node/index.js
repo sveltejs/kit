@@ -1,6 +1,15 @@
-import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import {
+	existsSync,
+	mkdirSync,
+	readFileSync,
+	readdirSync,
+	renameSync,
+	rmSync,
+	writeFileSync
+} from 'node:fs';
 import { extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import remapping from '@jridgewell/remapping';
 import MagicString from 'magic-string';
 
 const files = fileURLToPath(new URL('./files', import.meta.url).href);
@@ -75,13 +84,13 @@ export default function (opts = {}) {
 				});
 			}
 
+			builder.copy(server, out);
+
 			// replace the stubs whose values are only known after the build
-			builder.copy(server, out, {
-				replace: {
-					__SVELTEKIT_ADAPTER_NODE_UNCOMPRESSED_EXTENSIONS__: `new Set(${JSON.stringify([...uncompressed_extensions])})`,
-					__SVELTEKIT_ADAPTER_NODE_PRERENDERED__: `new Set(${JSON.stringify([...builder.prerendered.paths])})`,
-					__SVELTEKIT_ADAPTER_NODE_MIMETYPES__: JSON.stringify(builder.mimeTypes)
-				}
+			replace_stubs(out, {
+				__SVELTEKIT_ADAPTER_NODE_UNCOMPRESSED_EXTENSIONS__: `new Set(${JSON.stringify([...uncompressed_extensions])})`,
+				__SVELTEKIT_ADAPTER_NODE_PRERENDERED__: `new Set(${JSON.stringify([...builder.prerendered.paths])})`,
+				__SVELTEKIT_ADAPTER_NODE_MIMETYPES__: JSON.stringify(builder.mimeTypes)
 			});
 		},
 
@@ -194,6 +203,46 @@ export default function (opts = {}) {
 			};
 		}
 	};
+}
+
+/**
+ * @param {string} dir
+ * @param {Record<string, string>} replacements
+ */
+function replace_stubs(dir, replacements) {
+	const pattern = new RegExp(`\\b(${Object.keys(replacements).join('|')})\\b`, 'g');
+
+	for (const entry of readdirSync(dir, { withFileTypes: true })) {
+		const file = `${dir}/${entry.name}`;
+		if (entry.isDirectory()) {
+			replace_stubs(file, replacements);
+		} else if (entry.name.endsWith('.js')) {
+			const code = readFileSync(file, 'utf8');
+			const s = new MagicString(code);
+			let changed = false;
+
+			for (const match of code.matchAll(pattern)) {
+				s.overwrite(match.index, match.index + match[0].length, replacements[match[0]]);
+				changed = true;
+			}
+
+			if (changed) {
+				writeFileSync(file, s.toString());
+
+				const map_file = `${file}.map`;
+				if (existsSync(map_file)) {
+					const map = remapping(
+						[
+							JSON.parse(s.generateMap({ hires: 'boundary', source: entry.name }).toString()),
+							JSON.parse(readFileSync(map_file, 'utf8'))
+						],
+						() => null
+					);
+					writeFileSync(map_file, map.toString());
+				}
+			}
+		}
+	}
 }
 
 /**

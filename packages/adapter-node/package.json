@@ -43,6 +43,8 @@
 		"prepublishOnly": "pnpm build"
 	},
 	"dependencies": {
+		"@jridgewell/remapping": "^2.3.5",
+		"@jridgewell/remapping": "^2.3.5",
 		"magic-string": "^1.1.0"
 	},
 	"devDependencies": {
