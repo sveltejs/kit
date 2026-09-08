@@ -40,7 +40,6 @@ runs:
         TEST_APP_DIR: ${{ inputs.test-app-dir }}
         NETLIFY_AUTH_TOKEN: ${{ inputs.netlify-token }}
         NETLIFY_PROJECT_ID: ${{ inputs.netlify-project-id }}
-        EDGE: ${{ inputs.edge }}
       run: |
         set -euo pipefail
 
