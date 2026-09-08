@@ -33,5 +33,22 @@ runs:
         NETLIFY_AUTH_TOKEN: ${{ inputs.netlify-token }}
         NETLIFY_PROJECT_ID: ${{ inputs.netlify-project-id }}
       run: |
-        TEST_APP_NAME=$(cat "$TEST_APP_DIR/package.json" | jq -r '.name')
-        echo "url=$(netlify deploy --json --filter="$TEST_APP_NAME" --dir="$TEST_APP_DIR/build" --functions=".netlify/v1/functions" --auth="$NETLIFY_AUTH_TOKEN" --site="$NETLIFY_PROJECT_ID" | jq -r '.deploy_url')" >> "$GITHUB_OUTPUT"
+        set -euo pipefail
+
+        TEST_APP_NAME=$(jq -r '.name' "$TEST_APP_DIR/package.json")
+
+        if deploy_json=$(netlify deploy \
+          --json \
+          --filter="$TEST_APP_NAME" \
+          --dir="$TEST_APP_DIR/build" \
+          --functions=".netlify/v1/functions" \
+          --auth="$NETLIFY_AUTH_TOKEN" \
+          --site="$NETLIFY_PROJECT_ID"
+        ); then
+          deploy_url=$(jq -er '.deploy_url' <<< "$deploy_json")
+          echo "url=$deploy_url" >> "$GITHUB_OUTPUT"
+        else
+          echo "::error::Netlify deployment failed"
+          echo "$deploy_json" >&2
+          exit 1
+        fi
