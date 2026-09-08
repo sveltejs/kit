@@ -281,9 +281,11 @@ function get_functions(builder, split, default_runtime) {
 	}
 
 	const route_groups = Array.from(groups.values()).flat();
-	if (route_groups.length === 0) return [];
 
-	if (route_groups.length === 1) {
+	// Even when every route is prerendered we still emit a single fallback
+	// function so that SvelteKit can serve its own 404/error page for unknown
+	// paths and handle the `reroute` hook, matching the pre-refactor behaviour.
+	if (route_groups.length <= 1) {
 		return [
 			{
 				type: 'singular',
@@ -291,7 +293,7 @@ function get_functions(builder, split, default_runtime) {
 				patterns: ['/*'],
 				name: `${FUNCTION_PREFIX}render`,
 				display_name: 'SvelteKit server',
-				runtime: route_groups[0].runtime
+				runtime: route_groups[0]?.runtime ?? default_runtime
 			}
 		];
 	}
