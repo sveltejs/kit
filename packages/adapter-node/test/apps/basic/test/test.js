@@ -28,6 +28,17 @@ test('initializes dynamic env before instrumentation', async ({ request }) => {
 	expect(await response.json()).toEqual({ value: 'available' });
 });
 
+test('does not replace identifiers or resolve imports in application code', async ({ request }) => {
+	const response = await request.get('/adapter-identifiers');
+	expect(await response.json()).toEqual({
+		BASE_PATH: 'user-base-path',
+		APP_PATH: 'user-app-path',
+		ENV_PREFIX: 'user-env-prefix',
+		PRECOMPRESS: 'user-precompress',
+		SERVER: 'user-server'
+	});
+});
+
 test('sets Vary on assets that were precompressed', async ({ request }) => {
 	const response = await request.get('/data.json');
 	expect(response.status()).toBe(200);

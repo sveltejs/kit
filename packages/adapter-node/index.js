@@ -1,8 +1,9 @@
-import { mkdirSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const files = fileURLToPath(new URL('./files', import.meta.url).href);
+const dir_id = posixify(`${files}/dir.js`);
 
 /** @type {typeof import('./index.js').default} */
 export default function (opts = {}) {
@@ -45,9 +46,26 @@ export default function (opts = {}) {
 
 			const server = builder.getServerDirectory();
 
+			const server_entry = `${server}/server.js`;
+			builder.generateServerInstance(server_entry);
+			const server_code = readFileSync(server_entry, 'utf8');
+			const runtime_import = "from './index.js'";
+
+			if (!server_code.includes(runtime_import)) {
+				throw new Error(`Could not find ${runtime_import} in generated server entry`);
+			}
+
+			writeFileSync(
+				server_entry,
+				server_code.replace(runtime_import, "from './server-runtime.js'")
+			);
+
+			rename_entry(server, 'index', 'server-runtime');
+			rename_entry(server, 'adapter-index', 'index');
+
 			if (builder.hasServerInstrumentationFile()) {
 				builder.instrument({
-					entrypoint: `${server}/adapter-index.js`,
+					entrypoint: `${server}/index.js`,
 					instrumentation: `${server}/instrumentation.server.js`,
 					initializer: builder.createInstrumentationInitializer({ outputDirectory: server }),
 					module: {
@@ -55,7 +73,6 @@ export default function (opts = {}) {
 					}
 				});
 			}
-			builder.generateServerInstance(`${server}/server.js`);
 
 			// replace the stubs whose values are only known after the build
 			builder.copy(server, out, {
@@ -73,6 +90,22 @@ export default function (opts = {}) {
 		},
 
 		vite({ config }) {
+			/** @type {Record<string, string>} */
+			const defines = {
+				// these get replaced later in the adapt step
+				UNCOMPRESSED_EXTENSIONS: '__SVELTEKIT_ADAPTER_NODE_UNCOMPRESSED_EXTENSIONS__',
+				PRERENDERED: '__SVELTEKIT_ADAPTER_NODE_PRERENDERED__',
+				MIME_TYPES: '__SVELTEKIT_ADAPTER_NODE_MIMETYPES__',
+
+				BASE_PATH: JSON.stringify(config.paths.base),
+				APP_PATH: JSON.stringify(
+					`${config.paths.base.slice(1)}${config.paths.base ? '/' : ''}${config.appDir}`
+				),
+				ORIGIN: JSON.stringify(config.paths.origin) || 'undefined',
+				ENV_PREFIX: JSON.stringify(envPrefix),
+				PRECOMPRESS: JSON.stringify(precompress)
+			};
+
 			return {
 				plugins: {
 					post: [
@@ -82,29 +115,9 @@ export default function (opts = {}) {
 							config() {
 								const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
 
-								/** @type {Record<string, string>} */
-								const defines = {
-									// these get replaced later in the adapt step
-									UNCOMPRESSED_EXTENSIONS: '__SVELTEKIT_ADAPTER_NODE_UNCOMPRESSED_EXTENSIONS__',
-									PRERENDERED: '__SVELTEKIT_ADAPTER_NODE_PRERENDERED__',
-									MIME_TYPES: '__SVELTEKIT_ADAPTER_NODE_MIMETYPES__',
-
-									BASE_PATH: JSON.stringify(config.paths.base),
-									APP_PATH: JSON.stringify(
-										`${config.paths.base.slice(1)}${config.paths.base ? '/' : ''}${config.appDir}`
-									),
-									ORIGIN: JSON.stringify(config.paths.origin) || 'undefined',
-									ENV_PREFIX: JSON.stringify(envPrefix),
-									PRECOMPRESS: JSON.stringify(precompress)
-								};
-
 								return {
 									environments: {
 										ssr: {
-											// TODO: replace build-time constants in the adapter's own entrypoints only, so that identifiers in the app or its dependencies aren't accidentally replaced
-											define: {
-												...defines
-											},
 											build: {
 												rolldownOptions: {
 													// Copy the prebuilt entrypoints into the build directory so that the
@@ -113,10 +126,23 @@ export default function (opts = {}) {
 													// pass means shared modules (e.g. `SvelteKitError` from `@sveltejs/kit`)
 													// aren't duplicated. See https://github.com/sveltejs/kit/issues/15755
 													input: {
-														// TODO: adapter-index.js should be index.js but we need to avoid overridding the sveltekit one
 														'adapter-index': `${files}/index.js`,
 														'adapter-env': `${files}/adapter-env.js`,
 														handler: `${files}/handler.js`
+													},
+													output: {
+														chunkFileNames(chunk) {
+															if (chunk.name === 'dir') return '[name].js';
+															return 'chunks/[name].js';
+														},
+														codeSplitting: {
+															groups: [
+																{
+																	name: 'dir',
+																	test: dir_id
+																}
+															]
+														}
 													},
 													// deployments only need their production dependencies.
 													// Anything in devDependencies will get included in the
@@ -136,11 +162,22 @@ export default function (opts = {}) {
 							applyToEnvironment(environment) {
 								return environment.name === 'ssr';
 							},
+							transform: {
+								filter: { id: new RegExp(`^${escape_regex(posixify(files))}/`) },
+								handler(code) {
+									for (const [from, to] of Object.entries(defines)) {
+										code = code.replace(new RegExp(`\\b${from}\\b`, 'g'), () => to);
+									}
+
+									return { code, map: null };
+								}
+							},
 							resolveId: {
-								// TODO: only apply this to our own files, not the app's code or its dependencies
 								filter: { id: /^SERVER$/ },
-								handler() {
-									return { external: true, id: '../server.js' };
+								handler(_source, importer) {
+									if (importer?.startsWith(`${posixify(files)}/`)) {
+										return { external: true, id: '../server.js' };
+									}
 								}
 							}
 						}
@@ -149,4 +186,41 @@ export default function (opts = {}) {
 			};
 		}
 	};
+}
+
+/**
+ * @param {string} dir
+ * @param {string} from
+ * @param {string} to
+ */
+function rename_entry(dir, from, to) {
+	const entry = `${dir}/${to}.js`;
+	const map = `${entry}.map`;
+	renameSync(`${dir}/${from}.js`, entry);
+
+	if (existsSync(`${dir}/${from}.js.map`)) {
+		renameSync(`${dir}/${from}.js.map`, map);
+
+		const code = readFileSync(entry, 'utf8');
+		const source_map_url = `sourceMappingURL=${from}.js.map`;
+		if (!code.includes(source_map_url)) {
+			throw new Error(`Could not find ${source_map_url} in ${entry}`);
+		}
+		writeFileSync(entry, code.replace(source_map_url, `sourceMappingURL=${to}.js.map`));
+
+		const source_map = JSON.parse(readFileSync(map, 'utf8'));
+		source_map.file = `${to}.js`;
+		writeFileSync(map, JSON.stringify(source_map));
+	}
+}
+
+/** @param {string} str */
+function escape_regex(str) {
+	// TODO replace with `RegExp.escape(str)` when we require Node >= 24
+	return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/** @param {string} str */
+function posixify(str) {
+	return str.replace(/\\/g, '/');
 }
