@@ -7,6 +7,7 @@ import {
 } from '../shared.svelte.js';
 import { create_remote_key, stringify_remote_arg } from '../../../shared.js';
 import { Query } from './instance.svelte.js';
+import { getAbortSignal } from 'svelte';
 import { cache } from './cache.js';
 
 /**
@@ -44,7 +45,14 @@ export class QueryProxy {
 			() => new Query(key, () => fn(payload))
 		);
 
-		cache.ref(this, entry, this.#id, this.#payload);
+		let signal;
+		try {
+			signal = getAbortSignal();
+		} catch {
+			// not in a reaction — fall back to garbage collection for cleanup
+		}
+
+		cache.ref(this, entry, this.#id, this.#payload, signal);
 	}
 
 	#get_cached_query() {
@@ -62,18 +70,22 @@ export class QueryProxy {
 	}
 
 	get current() {
+		pin_in_effect(query_map, cache, this.#id, this.#payload);
 		return this.#get_cached_query().current;
 	}
 
 	get error() {
+		pin_in_effect(query_map, cache, this.#id, this.#payload);
 		return this.#get_cached_query().error;
 	}
 
 	get loading() {
+		pin_in_effect(query_map, cache, this.#id, this.#payload);
 		return this.#get_cached_query().loading;
 	}
 
 	get ready() {
+		pin_in_effect(query_map, cache, this.#id, this.#payload);
 		return this.#get_cached_query().ready;
 	}
 

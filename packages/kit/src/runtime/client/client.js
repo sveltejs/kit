@@ -386,7 +386,8 @@ let pending_invalidate;
 
 /**
  * @type {Map<string, Map<string, CacheEntry<Query<any>>>>}
- * A map of query id -> payload -> query internals for all active queries.
+ * A map of query id -> payload -> query internals for cached queries. Entries with an
+ * `active_count` greater than zero are currently active.
  */
 export const query_map = new Map();
 
@@ -435,14 +436,16 @@ export function start(_app, _target, data) {
 }
 
 /**
- * @template T
+ * @template {{ active_count: number }} T
  * @param {Map<string, Map<string, T>>} map
- * @returns {Generator<[string, T]>} every entry of the cache map, keyed by remote key
+ * @returns {Generator<[string, T]>} every active entry of the cache map, keyed by remote key
  */
 function* cache_entries(map) {
 	for (const [id, entries] of map) {
 		for (const [payload, entry] of entries) {
-			yield [create_remote_key(id, payload), entry];
+			if (entry.active_count > 0) {
+				yield [create_remote_key(id, payload), entry];
+			}
 		}
 	}
 }

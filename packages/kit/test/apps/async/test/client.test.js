@@ -58,6 +58,31 @@ test.describe('remote functions', () => {
 		await expect(page.locator('p')).toHaveText('key set for https://example.com/jwks');
 	});
 
+	// https://github.com/sveltejs/kit/issues/17070
+	test('submitting a form does not rerun inactive derived queries', async ({ page }) => {
+		await page.goto('/remote/form/derived-query-refresh');
+
+		await page.locator('#category').fill('potatoes');
+		await page.getByRole('button', { name: 'select category' }).click();
+		await expect(page.locator('#selected')).toHaveText('potatoes');
+		await page.locator('#run').click();
+		await expect(page.locator('#result')).toHaveText('potatoes');
+
+		let query_requests = 0;
+		page.on('request', (request) => {
+			if (request.method() === 'GET' && request.url().includes('/_app/remote/')) {
+				query_requests += 1;
+			}
+		});
+
+		await page.locator('#category').fill('tomatoes');
+		await page.getByRole('button', { name: 'select category' }).click();
+		await expect(page.locator('#selected')).toHaveText('tomatoes');
+		await page.waitForTimeout(100);
+
+		expect(query_requests).toBe(0);
+	});
+
 	// https://github.com/sveltejs/kit/issues/16854
 	test('deriveds fed by an awaited query stay memoized', async ({ page }) => {
 		await page.goto('/remote/query-derived-memoization');

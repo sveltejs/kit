@@ -81,6 +81,24 @@ describe('CacheController', () => {
 		expect(entry.proxy_count).toBe(1);
 	});
 
+	test('a signal-scoped ref is inactive and released when aborted', async () => {
+		const entry = cache.ensure_entry('q', 'p', () => ({ id: 'x', destroyed: false }));
+		const controller = new AbortController();
+		const anchor = {};
+
+		cache.ref(anchor, entry, 'q', 'p', controller.signal);
+		expect(entry.proxy_count).toBe(1);
+		expect(entry.active_count).toBe(0);
+
+		controller.abort();
+		expect(entry.proxy_count).toBe(0);
+		await tick();
+		await tick();
+
+		expect(cache_map.get('q')?.get('p')).toBeUndefined();
+		expect(anchor).toBeDefined();
+	});
+
 	test('manual_ref increments and the returned deref decrements proxy_count', async () => {
 		const entry = cache.ensure_entry('q', 'p', () => ({ id: 'x', destroyed: false }));
 		const release = cache.manual_ref(entry, 'q', 'p');

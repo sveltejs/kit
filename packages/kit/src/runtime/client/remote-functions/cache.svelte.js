@@ -6,8 +6,9 @@ import { once } from '../../../utils/functions.js';
 /**
  * @template [R=Query<any> | LiveQuery<any>]
  * @typedef {object} CacheEntry
- * @property {number} proxy_count The number of live proxy instances referencing this
- *   entry. The entry is eligible for eviction when this hits zero.
+ * @property {number} proxy_count The number of live references to this entry. The entry is
+ *   eligible for eviction when this hits zero.
+ * @property {number} active_count The number of references that make this resource active.
  * @property {R} resource The actual reactive resource (Query or LiveQuery).
  * @property {() => void} cleanup Tears down the `$effect.root` that owns the resource.
  *   Run when the entry is evicted.
@@ -15,7 +16,7 @@ import { once } from '../../../utils/functions.js';
 
 /**
  * @template R
- * @typedef {{ entry: CacheEntry<R>, id: string, payload: string }} ProxyFinalizerToken
+ * @typedef {{ entry: CacheEntry<R>, id: string, payload: string, active: boolean }} ProxyFinalizerToken
  */
 
 /**
@@ -41,8 +42,8 @@ export class CacheController {
 	 *
 	 * @type {FinalizationRegistry<ProxyFinalizerToken<R>>}
 	 */
-	#proxy_finalizer = new FinalizationRegistry(({ entry, id, payload }) => {
-		this.deref(entry, id, payload);
+	#proxy_finalizer = new FinalizationRegistry(({ entry, id, payload, active }) => {
+		this.deref(entry, id, payload, active);
 	});
 
 	/**
@@ -78,6 +79,7 @@ export class CacheController {
 		if (!entry) {
 			const c = /** @type {CacheEntry<R>} */ ({
 				proxy_count: 0,
+				active_count: 0,
 				resource: /** @type {R} */ (/** @type {unknown} */ (null)),
 				cleanup: /** @type {() => void} */ (/** @type {unknown} */ (null))
 			});
@@ -102,10 +104,30 @@ export class CacheController {
 	 * @param {CacheEntry<R>} entry
 	 * @param {string} id
 	 * @param {string} payload
+	 * @param {AbortSignal} [signal] A signal means the proxy was created by a reaction and
+	 *   does not make the resource active until the reaction consumes it.
 	 */
-	ref = (anchor, entry, id, payload) => {
+	ref = (anchor, entry, id, payload, signal) => {
 		entry.proxy_count++;
-		this.#proxy_finalizer.register(anchor, { entry, id, payload });
+		const active = signal === undefined;
+		if (active) entry.active_count++;
+
+		const unregister_token = {};
+		this.#proxy_finalizer.register(anchor, { entry, id, payload, active }, unregister_token);
+
+		if (signal) {
+			const entry_ref = new WeakRef(entry);
+			signal.addEventListener(
+				'abort',
+				() => {
+					const entry = entry_ref.deref();
+					if (entry && this.#proxy_finalizer.unregister(unregister_token)) {
+						this.deref(entry, id, payload, false);
+					}
+				},
+				{ once: true }
+			);
+		}
 	};
 
 	/**
@@ -117,7 +139,8 @@ export class CacheController {
 	 */
 	manual_ref = (entry, id, payload) => {
 		entry.proxy_count++;
-		return once(() => this.deref(entry, id, payload));
+		entry.active_count++;
+		return once(() => this.deref(entry, id, payload, true));
 	};
 
 	/**
@@ -126,9 +149,11 @@ export class CacheController {
 	 * @param {CacheEntry<R>} entry
 	 * @param {string} id
 	 * @param {string} payload
+	 * @param {boolean} active
 	 */
-	deref = (entry, id, payload) => {
+	deref = (entry, id, payload, active) => {
 		entry.proxy_count--;
+		if (active) entry.active_count--;
 		void tick().then(() => {
 			const entry = this.#cache_map.get(id)?.get(payload);
 			if (!entry || entry.proxy_count > 0) return;
