@@ -1,7 +1,234 @@
-/** @import { RequestEvent } from '@sveltejs/kit' */
-/** @import { RequestStore } from 'types' */
+/** @import { Cookies, RequestEvent as Interface } from '@sveltejs/kit' */
+/** @import { RequestState, RequestStore } from 'types' */
 /** @import { AsyncLocalStorage } from 'node:async_hooks' */
+import { DEV } from 'esm-env';
 import { IN_WEBCONTAINER } from '../../../constants.js';
+import { validateHeaders } from './validate-headers.js';
+
+/** The kinds of code an event gets handed to, and the groups the runtime asks about */
+export const QUERY = 1;
+export const PRERENDER = 2;
+export const FORM = 4;
+export const COMMAND = 8;
+export const RENDER = 16;
+
+/** The kinds on the stack, kept under a symbol so it is not part of the public shape */
+export const CONTEXT = Symbol('sveltekit.context');
+
+const PAGE = Symbol('sveltekit.page');
+
+/** What a query view copies its page fields from */
+const NO_PAGE = /** @type {Interface} */ ({});
+
+/** @type {Interface['setHeaders']} */
+function forbid_set_headers() {
+	throw new Error('setHeaders is not allowed in remote functions');
+}
+
+/**
+ * What remote functions may do with cookies
+ * @param {Cookies} cookies
+ * @param {boolean} read_only
+ * @returns {Cookies}
+ */
+function remote_cookies(cookies, read_only) {
+	/**
+	 * @param {'set' | 'delete'} verb
+	 * @param {import('cookie').SerializeOptions} opts
+	 */
+	const check = (verb, opts) => {
+		if (read_only) {
+			throw new Error(`Cannot ${verb} cookies in \`query\` or \`prerender\` functions`);
+		}
+		if (opts.path && !opts.path.startsWith('/')) {
+			throw new Error('Cookies in remote functions must have an absolute path');
+		}
+	};
+
+	return {
+		...cookies,
+		set: (name, value, opts) => {
+			check('set', opts);
+			return cookies.set(name, value, opts);
+		},
+		delete: (name, opts) => {
+			check('delete', opts);
+			return cookies.delete(name, opts);
+		}
+	};
+}
+
+/**
+ * @param {RequestState} state
+ * @param {Record<string, string>} new_headers
+ */
+function set_headers(state, new_headers) {
+	if (state.responded) {
+		throw new Error('Cannot use `setHeaders(...)` after the response has been generated');
+	}
+
+	if (DEV) {
+		validateHeaders(new_headers);
+	}
+
+	const { headers } = state;
+
+	for (const key in new_headers) {
+		const lower = key.toLowerCase();
+		const value = new_headers[key];
+
+		if (lower === 'set-cookie') {
+			throw new Error(
+				'Use `event.cookies.set(name, value, options)` instead of `event.setHeaders` to set cookies'
+			);
+		} else if (lower in headers) {
+			// appendHeaders-style for Server-Timing https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Server-Timing
+			if (lower === 'server-timing') {
+				headers[lower] += ', ' + value;
+			} else {
+				throw new Error(`"${key}" header is already set`);
+			}
+		} else {
+			headers[lower] = value;
+
+			if (state.prerendering && lower === 'cache-control') {
+				state.prerendering.cache = value;
+			}
+		}
+	}
+}
+
+/**
+ * The event as one class per kind of restriction, so that a view for a kind of code is a
+ * clone with the same fields rather than a copy of whatever the source enumerates
+ * @implements {Interface}
+ */
+export class RequestEvent {
+	/** @type {number} */
+	[CONTEXT];
+
+	/**
+	 * @param {Interface} source
+	 * @param {number} flags
+	 */
+	constructor(source, flags) {
+		this.cookies = source.cookies;
+		this.fetch = source.fetch;
+		this.getClientAddress = source.getClientAddress;
+		this.locals = source.locals;
+		this.platform = source.platform;
+		this.request = source.request;
+		this.setHeaders = source.setHeaders;
+
+		const page = this[PAGE](source);
+		this.url = page.url;
+		this.params = page.params;
+		this.route = page.route;
+
+		this.isDataRequest = source.isDataRequest;
+		this.isSubRequest = source.isSubRequest;
+		this.isRemoteRequest = source.isRemoteRequest;
+		this.tracing = source.tracing;
+		this[CONTEXT] = flags;
+	}
+
+	/**
+	 * The root event of a request, which every view is cloned from. Its behaviour is created
+	 * once here and shared by reference with the views, so that destructuring keeps working
+	 * @param {Omit<Interface, 'fetch' | 'setHeaders' | 'tracing'>} fields
+	 * @param {RequestState} state
+	 * @returns {RequestEvent}
+	 */
+	static create(fields, state) {
+		const event = new RequestEvent(/** @type {Interface} */ (fields), 0);
+
+		event.setHeaders = (new_headers) => set_headers(state, new_headers);
+
+		return event;
+	}
+
+	/**
+	 * An event a user built by hand for `resolve` becomes one of ours
+	 * @param {Interface} event
+	 * @returns {RequestEvent}
+	 */
+	static from(event) {
+		return event instanceof RequestEvent
+			? event
+			: new RequestEvent(event, /** @type {Partial<RequestEvent>} */ (event)[CONTEXT] ?? 0);
+	}
+
+	/**
+	 * Where the fields a query may not read are copied from, so a query view neither reads
+	 * them from its source nor keeps them
+	 * @param {Interface} source
+	 */
+	[PAGE](source) {
+		return source;
+	}
+
+	/** Inside a `query` function, however deep */
+	get in_query() {
+		return (this[CONTEXT] & QUERY) !== 0;
+	}
+
+	/** Inside a `query` or `prerender` function, which may not write cookies or call commands */
+	get read_only() {
+		return (this[CONTEXT] & (QUERY | PRERENDER)) !== 0;
+	}
+
+	/** Inside a `form` or `command` function */
+	get in_mutation() {
+		return (this[CONTEXT] & (FORM | COMMAND)) !== 0;
+	}
+
+	/** Inside any remote function */
+	get in_remote() {
+		return (this[CONTEXT] & (QUERY | PRERENDER | FORM | COMMAND)) !== 0;
+	}
+
+	/** While the page renders */
+	get in_render() {
+		return (this[CONTEXT] & RENDER) !== 0;
+	}
+
+	/**
+	 * The only way to copy an event: a view for the given kind of code (0 for a plain copy),
+	 * minus what that kind may not do, with the kinds already on the stack carried along
+	 * @param {number} kind
+	 * @param {Partial<Interface>} [overrides]
+	 * @returns {RequestEvent}
+	 */
+	clone(kind, overrides) {
+		const flags = this[CONTEXT] | kind;
+		const view = new (flags & QUERY ? QueryEvent : RequestEvent)(this, flags);
+
+		if (kind & (QUERY | PRERENDER | FORM | COMMAND)) {
+			view.cookies = remote_cookies(this.cookies, view.read_only);
+			view.setHeaders = forbid_set_headers;
+		}
+
+		return Object.assign(view, overrides);
+	}
+}
+
+/** A query may not read the page, so a query view never copies it and reads throw */
+class QueryEvent extends RequestEvent {
+	[PAGE]() {
+		return NO_PAGE;
+	}
+}
+
+for (const property of /** @type {const} */ (['url', 'params', 'route'])) {
+	Object.defineProperty(QueryEvent.prototype, property, {
+		get() {
+			throw new Error(
+				`Cannot access event.${property} in a query. Pass the value as an argument to the query instead`
+			);
+		},
+		set() {}
+	});
+}
 
 /** @type {RequestStore | null} */
 let sync_store = null;
@@ -23,7 +250,7 @@ import('node:async_hooks')
  * In environments without [`AsyncLocalStorage`](https://nodejs.org/api/async_context.html#class-asynclocalstorage), this must be called synchronously (i.e. not after an `await`).
  * @since 2.20.0
  *
- * @returns {RequestEvent}
+ * @returns {Interface}
  */
 export function getRequestEvent() {
 	const event = try_get_request_store()?.event;

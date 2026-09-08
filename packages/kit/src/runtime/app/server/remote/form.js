@@ -1,7 +1,7 @@
 /** @import { RemoteFormInput, RemoteForm, RemoteFormInvalidField } from '$app/server' */
 /** @import { InternalRemoteFormIssue, MaybePromise, HasNonOptionalBoolean, RemoteFormInternals } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
-import { get_request_store } from '@sveltejs/kit/internal/server';
+import { FORM, get_request_store } from '@sveltejs/kit/internal/server';
 import {
 	create_field_proxy,
 	set_nested_value,
@@ -118,7 +118,7 @@ export function form(validate_or_fn, maybe_fn) {
 						output.result = await run_remote_function(
 							event,
 							state,
-							true,
+							FORM,
 							() => data,
 							(data) => (!maybe_fn ? fn() : fn(data, issue))
 						);

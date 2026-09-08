@@ -138,7 +138,7 @@ export function requested(query, limit) {
 	// command/form wrapper when we enter them, and if we initialize them here
 	// we will enable requested(...) in contexts where it shouldn't be allowed,
 	// such as load functions or other server functions
-	if (!state.is_in_remote_form_or_command) {
+	if (!event.in_mutation) {
 		throw new Error(
 			'requested(...) can only be called in the context of a command/form remote function'
 		);

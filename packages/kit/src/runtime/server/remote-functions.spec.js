@@ -1,6 +1,6 @@
 import { beforeAll, expect, test, vi } from 'vitest';
 import { init_transport, parse } from '#app/internal/transport';
-import { get_request_store } from '@sveltejs/kit/internal/server';
+import { get_request_store, RequestEvent } from '@sveltejs/kit/internal/server';
 
 const decoder = new TextDecoder();
 
@@ -24,9 +24,12 @@ beforeAll(async () => {
  * @param {(event: import('@sveltejs/kit').RequestEvent) => AsyncGenerator<any>} run
  */
 function create_response(run) {
-	const event = /** @type {import('@sveltejs/kit').RequestEvent} */ ({
-		request: new Request('http://localhost/_app/remote/test?payload=undefined')
-	});
+	const event = new RequestEvent(
+		/** @type {import('@sveltejs/kit').RequestEvent} */ ({
+			request: new Request('http://localhost/_app/remote/test?payload=undefined')
+		}),
+		0
+	);
 
 	return create_live_query_response(
 		event,
