@@ -848,6 +848,11 @@ declare module '@sveltejs/kit' {
 					register?: false;
 			  }
 		);
+		/**
+		 * Enable [Subresource Integrity](https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity) (SRI) hash generation for scripts and stylesheets. When set to a hash algorithm, SvelteKit will compute integrity hashes for all client assets at build time and add `integrity` and `crossorigin` attributes to `<link>` and `<script>` tags.
+		 * @default false
+		 */
+		subresourceIntegrity?: false | 'sha256' | 'sha384' | 'sha512';
 		typescript?: {
 			/**
 			 * A function that allows you to edit the generated `tsconfig.json`. You can mutate the config (recommended) or return a new one.
@@ -2679,6 +2684,8 @@ declare module '@sveltejs/kit' {
 			 * Whether the client uses public dynamic env vars — `$env/dynamic/public` or `$app/env/public`.
 			 */
 			uses_env_dynamic_public: boolean;
+			/** Maps asset file paths to SRI integrity strings (e.g. "sha384-..."). Only set when `subresourceIntegrity` is enabled. */
+			integrity?: Record<string, string>;
 			/** Only set in case of `bundleStrategy === 'inline'`. */
 			inline?: {
 				script: string;
@@ -3279,6 +3286,31 @@ declare module '$app/forms' {
 	 * In case of an error, it redirects to the nearest error page.
 	 * */
 	export function applyAction<Success extends Record<string, unknown> | undefined, Failure extends Record<string, unknown> | undefined>(result: import("@sveltejs/kit").ActionResult<Success, Failure>): Promise<void>;
+
+	export {};
+}
+
+declare module '$app/integrity' {
+	/**
+	 * Look up the SRI integrity hash for a Vite-processed asset URL.
+	 * Returns the integrity string (e.g. `"sha384-..."`) during SSR when
+	 * [`subresourceIntegrity`](https://svelte.dev/docs/kit/configuration#subresourceIntegrity) is enabled,
+	 * or `undefined` on the client and in dev.
+	 *
+	 * ```svelte
+	 * <script>
+	 *   import scriptUrl from "./my-script.js?url";
+	 *   import { integrity } from '$app/integrity';
+	 * </script>
+	 *
+	 * <svelte:head>
+	 *   <script src="{scriptUrl}" type="module" integrity={integrity(scriptUrl)} crossorigin="anonymous"></script>
+	 * </svelte:head>
+	 * ```
+	 * @param url The asset URL (e.g. from a `?url` import)
+	 * @since 2.54.0
+	 */
+	export function integrity(url: string): string | undefined;
 
 	export {};
 }
