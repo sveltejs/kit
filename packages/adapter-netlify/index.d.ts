@@ -1,9 +1,7 @@
 import { Adapter } from '@sveltejs/kit';
 import './ambient.d.ts';
 
-type Digit = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
-
-export type Runtime = 'edge' | (`nodejs${bigint}.x` & `nodejs${Digit}${string}.x`);
+export type Runtime = 'edge' | `nodejs${number}.x`;
 
 export interface AdapterOptions {
 	/**
