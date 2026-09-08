@@ -1,8 +1,10 @@
 <script lang="ts">
 	
-	import manual_image1 from './no.png';
+	import manual_image1 from './no.png?enhanced';
 	
-	import manual_image2 from './no.svg';
+	import manual_image2 from './no.svg?enhanced';
+	
+	import webp_image from './dev.png?format=webp&enhanced';
 
 	const src = manual_image1;
 	const images = [manual_image1, manual_image2];
@@ -16,6 +18,8 @@
 <img src="./dev.png" alt="non-enhanced test" />
 
 <picture><source srcset="/1 1440w, /2 960w" type="image/avif" /><source srcset="/3 1440w, /4 960w" type="image/webp" /><source srcset="5 1440w, /6 960w" type="image/png" /><img src="/7" alt="dev test" width=1440 height=1440 /></picture>
+
+<img src="/7" alt="single format static test" srcset="/3 1440w, /4 960w" width=1440 height=1440 />
 
 <div>
 	<picture><source srcset="/1 1440w, /2 960w" type="image/avif" /><source srcset="/3 1440w, /4 960w" type="image/webp" /><source srcset="5 1440w, /6 960w" type="image/png" /><img src="/7" alt="nested test" width=1440 height=1440 /></picture>
@@ -44,12 +48,32 @@
 	{:else}
 		<img src={src} alt="attribute shorthand test" />
 	{/if}
+{:else if Object.keys(src.sources).length === 1}
+	<img src={src.img.src} alt="attribute shorthand test" srcset={Object.values(src.sources)[0]} width={src.img.w} height={src.img.h} />
 {:else}
 	<picture>
 		{#each Object.entries(src.sources) as [format, srcset]}
 			<source {srcset} type={'image/' + format} />
 		{/each}
 		<img src={src.img.src} alt="attribute shorthand test" width={src.img.w} height={src.img.h} />
+	</picture>
+{/if}
+
+{#if typeof webp_image === 'string'}
+	{#if 
+	import.meta.env.DEV && false}
+		{webp_image} was not enhanced. Cannot determine dimensions.
+	{:else}
+		<img src={webp_image} alt="single format dynamic test" />
+	{/if}
+{:else if Object.keys(webp_image.sources).length === 1}
+	<img src={webp_image.img.src} alt="single format dynamic test" srcset={Object.values(webp_image.sources)[0]} width={webp_image.img.w} height={webp_image.img.h} />
+{:else}
+	<picture>
+		{#each Object.entries(webp_image.sources) as [format, srcset]}
+			<source {srcset} type={'image/' + format} />
+		{/each}
+		<img src={webp_image.img.src} alt="single format dynamic test" width={webp_image.img.w} height={webp_image.img.h} />
 	</picture>
 {/if}
 
@@ -61,6 +85,8 @@
 	{:else}
 		<img src={image} alt="opt-in test" />
 	{/if}
+{:else if Object.keys(image.sources).length === 1}
+	<img src={image.img.src} alt="opt-in test" srcset={Object.values(image.sources)[0]} width={image.img.w} height={image.img.h} />
 {:else}
 	<picture>
 		{#each Object.entries(image.sources) as [format, srcset]}
@@ -79,6 +105,8 @@
 	{:else}
 		<img src={get_image(i)} alt="opt-in test" />
 	{/if}
+{:else if Object.keys(get_image(i).sources).length === 1}
+	<img src={get_image(i).img.src} alt="opt-in test" srcset={Object.values(get_image(i).sources)[0]} width={get_image(i).img.w} height={get_image(i).img.h} />
 {:else}
 	<picture>
 		{#each Object.entries(get_image(i).sources) as [format, srcset]}
