@@ -37,7 +37,7 @@
 		"build": "rolldown -c",
 		"test": "pnpm test:unit && pnpm test:build",
 		"test:unit": "vitest run",
-		"test:build": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:build",
+		"test:build": "pnpm build && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:build",
 		"check": "tsc",
 		"lint": "oxfmt --check .",
 		"format": "oxfmt --write .",
