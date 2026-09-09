@@ -5,6 +5,6 @@ export default defineConfig({
 		name: 'kit-basics-server',
 		// for DOMParser
 		environment: 'jsdom',
-		include: ['unit-test/server.spec.js']
+		include: ['test/vitest/server.spec.js']
 	}
 });
