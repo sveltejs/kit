@@ -52,19 +52,27 @@ The runtime to use. Set this to `'edge'` to deploy your app as a [Netlify Edge F
 
 If `true`, your app will be split into multiple functions instead of a single one for the entire app.
 
-## Route configuration
+## Deployment configuration
 
-You can override the adapter's `runtime` for an individual route:
+To control how your routes are deployed to Netlify as functions, you can specify deployment configuration, either through the option shown above or with [`export const config`](page-options#config) inside `+server.js`, `+page(.server).js` and `+layout(.server).js` files.
+
+For example, you could deploy one specific route using the Node.js 24 runtime:
 
 ```js
-/// file: src/routes/admin/+page.server.js
+/// file: admin/+page.js
 /** @type {import('@sveltejs/adapter-netlify').Config} */
-export const config = { runtime: 'nodejs24.x' };
+export const config = {
+	runtime: 'nodejs24.x'
+};
 ```
 
-Route configuration follows the usual layout inheritance rules, so a config exported from a layout applies to its child routes. A child route can override the inherited value. Routes without a runtime config use the adapter's `runtime`.
+You can set the following option:
 
-Routes with the same runtime are grouped into one function by default. With `split: true`, each route pattern gets its own function while keeping its configured runtime. Prerendered routes do not emit functions, so their runtime config has no effect.
+- `runtime`: `'edge'`, `'nodejs22.x'`, `'nodejs24.x'` or `'nodejs26.x'`. By default, the route uses the runtime configured for the adapter
+
+Configuration set in a layout applies to all the routes beneath that layout, unless overridden at a more granular level.
+
+Routes with the same runtime are grouped into one function by default. If `split` is set to `true` at the adapter level, each route is deployed as an individual function using its configured runtime. Prerendered routes do not emit functions, so their runtime configuration has no effect.
 
 ## Netlify alternatives to SvelteKit functionality
 
