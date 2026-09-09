@@ -488,6 +488,10 @@ importers:
         version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.19)(@vitest/browser-playwright@4.1.10)(jsdom@30.0.1)(vite@8.2.1(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0))
 
   packages/adapter-node/test/apps/basic:
+    dependencies:
+      server-side-dep:
+        specifier: file:server-side-dep
+        version: file:packages/adapter-node/test/apps/basic/server-side-dep
     devDependencies:
       '@playwright/test':
         specifier: 'catalog:'
@@ -504,6 +508,9 @@ importers:
       vite:
         specifier: 'catalog:'
         version: 8.2.1(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0)
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.19)(@vitest/browser-playwright@4.1.10)(jsdom@30.0.1)(vite@8.2.1(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0))
 
   packages/adapter-static:
     devDependencies:
@@ -4287,6 +4294,9 @@ packages:
   server-side-dep@file:packages/adapter-cloudflare/test/apps/workers/server-side-dep:
     resolution: {directory: packages/adapter-cloudflare/test/apps/workers/server-side-dep, type: directory}
 
+  server-side-dep@file:packages/adapter-node/test/apps/basic/server-side-dep:
+    resolution: {directory: packages/adapter-node/test/apps/basic/server-side-dep, type: directory}
+
   sharp@0.35.2:
     resolution: {integrity: sha512-FVtFjtBCMiJS6yb5CX7Sop45WFMpeGw6oRKuJnXYgf/f1ms/D7LE/ZUSNxnW7rZ/dbslQWYkoqFHGPaDBtaK4w==}
     engines: {node: '>=20.9.0'}
@@ -6904,6 +6914,8 @@ snapshots:
   server-side-dep@file:packages/adapter-cloudflare/test/apps/pages/server-side-dep: {}
 
   server-side-dep@file:packages/adapter-cloudflare/test/apps/workers/server-side-dep: {}
+
+  server-side-dep@file:packages/adapter-node/test/apps/basic/server-side-dep: {}
 
   sharp@0.35.2:
     dependencies:
