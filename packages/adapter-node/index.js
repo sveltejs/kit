@@ -1,14 +1,6 @@
 /** @import { TopLevelFilterExpression } from '@rolldown/pluginutils' */
-import {
-	existsSync,
-	mkdirSync,
-	readFileSync,
-	readdirSync,
-	renameSync,
-	rmSync,
-	writeFileSync
-} from 'node:fs';
-import { extname } from 'node:path';
+import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import { dirname, extname, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { and, id, importerId, include } from '@rolldown/pluginutils';
 import remapping from '@jridgewell/remapping';
@@ -58,11 +50,15 @@ export default function (opts = {}) {
 			);
 
 			const server = builder.getServerDirectory();
+			const manifest = JSON.parse(readFileSync(`${server}/.vite/manifest.json`, 'utf8'));
+			const adapter_index = find_entry(manifest, 'adapter-index');
+			const handler = find_entry(manifest, 'handler');
+
 			builder.generateServerInstance(`${server}/server.js`);
 
 			if (builder.hasServerInstrumentationFile()) {
 				builder.instrument({
-					entrypoint: `${server}/adapter-index.js`,
+					entrypoint: `${server}/${adapter_index.file}`,
 					instrumentation: `${server}/instrumentation.server.js`,
 					initializer: builder.createInstrumentationInitializer({ outputDirectory: server }),
 					module: {
@@ -82,14 +78,18 @@ export default function (opts = {}) {
 			writeFileSync(`${output_server}/dir.js`, `export * from '../dir.js';\n`);
 
 			// replace the stubs whose values are only known after the build
-			replace_stubs(output_server, {
+			replace_stubs(output_server, handler.chunks, {
 				__SVELTEKIT_ADAPTER_NODE_UNCOMPRESSED_EXTENSIONS__: `new Set(${JSON.stringify([...uncompressed_extensions])})`,
 				__SVELTEKIT_ADAPTER_NODE_PRERENDERED__: `new Set(${JSON.stringify([...builder.prerendered.paths])})`,
-				__SVELTEKIT_ADAPTER_NODE_MIMETYPES__: JSON.stringify(builder.mimeTypes)
+				__SVELTEKIT_ADAPTER_NODE_MIMETYPES__: JSON.stringify(builder.mimeTypes),
+				__SVELTEKIT_ADAPTER_NODE_SERVER__: (chunk) => {
+					const server = posixify(relative(dirname(chunk), 'server.js'));
+					return server.startsWith('.') ? server : `./${server}`;
+				}
 			});
 
-			writeFileSync(`${out}/index.js`, `export * from './server/adapter-index.js';\n`);
-			writeFileSync(`${out}/handler.js`, `export * from './server/handler.js';\n`);
+			writeFileSync(`${out}/index.js`, `export * from './server/${adapter_index.file}';\n`);
+			writeFileSync(`${out}/handler.js`, `export * from './server/${handler.file}';\n`);
 		},
 
 		supports: {
@@ -201,7 +201,7 @@ export default function (opts = {}) {
 									])
 								),
 								handler() {
-									return { external: true, id: '../server.js' };
+									return { external: true, id: '__SVELTEKIT_ADAPTER_NODE_SERVER__' };
 								}
 							}
 						}
@@ -213,31 +213,59 @@ export default function (opts = {}) {
 }
 
 /**
- * @param {string} dir
- * @param {Record<string, string>} replacements
+ * @typedef {{ file: string; imports?: string[]; isEntry?: boolean; name?: string }} ManifestEntry
  */
-function replace_stubs(dir, replacements) {
+
+/**
+ * @param {Record<string, ManifestEntry>} manifest
+ * @param {string} name
+ */
+function find_entry(manifest, name) {
+	const match = Object.entries(manifest).find(([, entry]) => entry.isEntry && entry.name === name);
+	if (!match) throw new Error(`Could not find adapter-node entry ${name} in the Vite manifest`);
+
+	/** @type {string[]} */
+	const chunks = [];
+	const seen = new Set();
+
+	/** @param {string} key */
+	const visit = (key) => {
+		if (seen.has(key)) return;
+		seen.add(key);
+
+		const chunk = manifest[key];
+		if (!chunk) throw new Error(`Could not find ${key} in the Vite manifest`);
+
+		chunks.push(chunk.file);
+		for (const dependency of chunk.imports ?? []) visit(dependency);
+	};
+
+	visit(match[0]);
+	return { file: match[1].file, chunks };
+}
+
+/**
+ * @param {string} dir
+ * @param {string[]} chunks
+ * @param {Record<string, string | ((chunk: string) => string)>} replacements
+ */
+function replace_stubs(dir, chunks, replacements) {
 	const pattern = new RegExp(`\\b(${Object.keys(replacements).join('|')})\\b`, 'g');
+	const found = new Set();
 
-	for (const entry of readdirSync(dir, { withFileTypes: true })) {
-		const file = `${dir}/${entry.name}`;
-
-		if (entry.isDirectory()) {
-			replace_stubs(file, replacements);
-			continue;
-		}
-
-		if (!entry.name.endsWith('.js')) continue;
-
+	for (const chunk of chunks) {
+		const file = `${dir}/${chunk}`;
 		const code = readFileSync(file, 'utf8');
 		const matches = [...code.matchAll(pattern)];
-
 		if (matches.length === 0) continue;
 
 		const s = new MagicString(code);
 
 		for (const match of matches) {
-			s.overwrite(match.index, match.index + match[0].length, replacements[match[0]]);
+			found.add(match[0]);
+			const replacement = replacements[match[0]];
+			const value = typeof replacement === 'function' ? replacement(chunk) : replacement;
+			s.overwrite(match.index, match.index + match[0].length, value);
 		}
 
 		writeFileSync(file, s.toString());
@@ -247,12 +275,17 @@ function replace_stubs(dir, replacements) {
 
 		const map = remapping(
 			[
-				JSON.parse(s.generateMap({ hires: 'boundary', source: entry.name }).toString()),
+				JSON.parse(s.generateMap({ hires: 'boundary', source: chunk }).toString()),
 				JSON.parse(readFileSync(map_file, 'utf8'))
 			],
 			() => null
 		);
 		writeFileSync(map_file, map.toString());
+	}
+
+	const missing = Object.keys(replacements).filter((stub) => !found.has(stub));
+	if (missing.length > 0) {
+		throw new Error(`Could not find adapter-node stubs: ${missing.join(', ')}`);
 	}
 }
 
