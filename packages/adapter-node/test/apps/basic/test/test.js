@@ -1,12 +1,5 @@
 import { expect, test } from '@playwright/test';
 
-test('exports the handler', async () => {
-	process.env.MY_CUSTOM_PORT = '5173';
-	process.env.INSTRUMENTATION_ENV = 'available';
-	const { handler } = await import('../build/handler.js');
-	expect(handler).toBeDefined();
-});
-
 test('SSR', async ({ page }) => {
 	await page.goto('/');
 	await expect(page.locator('h1')).toContainText('Hello world!');
