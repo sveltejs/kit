@@ -94,46 +94,67 @@ function rebase_sourcemap(contents, from, to) {
 		return contents;
 	}
 
-	if (sourcemap.version !== 3 || !rebase_sourcemap_paths(sourcemap, source_dir, target_dir)) {
-		return contents;
-	}
-	return JSON.stringify(sourcemap) + (contents.endsWith('\n') ? '\n' : '');
+	if (sourcemap.version !== 3) return contents;
+
+	const rebased = rebase_sourcemap_paths(sourcemap, source_dir, target_dir);
+	if (rebased === sourcemap) return contents;
+
+	return JSON.stringify(rebased) + (contents.endsWith('\n') ? '\n' : '');
 }
 
 /**
  * @param {any} sourcemap
  * @param {string} source_dir
  * @param {string} target_dir
- * @returns {boolean}
+ * @returns {any}
  */
 function rebase_sourcemap_paths(sourcemap, source_dir, target_dir) {
-	let changed = false;
+	let rebased = sourcemap;
 
-	/** @param {unknown} source */
-	const relocate = (source) => {
-		if (typeof source !== 'string' || !is_relative_path(source)) return source;
-		const relocated = posixify(path.relative(target_dir, path.resolve(source_dir, source))) || '.';
-		if (relocated !== source) changed = true;
-		return relocated;
-	};
-
-	/** @param {any} map */
-	const visit = (map) => {
-		if (map.sourceRoot) {
-			map.sourceRoot = relocate(map.sourceRoot);
-		} else if (Array.isArray(map.sources)) {
-			map.sources = map.sources.map(relocate);
+	if (sourcemap.sourceRoot) {
+		const source_root = relocate_sourcemap_path(sourcemap.sourceRoot, source_dir, target_dir);
+		if (source_root !== sourcemap.sourceRoot) rebased = { ...rebased, sourceRoot: source_root };
+	} else if (Array.isArray(sourcemap.sources)) {
+		const sources = sourcemap.sources.map(
+			/** @param {unknown} source */ (source) =>
+				relocate_sourcemap_path(source, source_dir, target_dir)
+		);
+		if (
+			sources.some(
+				/** @param {unknown} source @param {number} i */ (source, i) =>
+					source !== sourcemap.sources[i]
+			)
+		) {
+			rebased = { ...rebased, sources };
 		}
+	}
 
-		if (Array.isArray(map.sections)) {
-			for (const section of map.sections) {
-				if (section.map) visit(section.map);
+	if (Array.isArray(sourcemap.sections)) {
+		let sections = sourcemap.sections;
+		for (let i = 0; i < sections.length; i += 1) {
+			const section = sections[i];
+			if (!section.map) continue;
+
+			const map = rebase_sourcemap_paths(section.map, source_dir, target_dir);
+			if (map !== section.map) {
+				if (sections === sourcemap.sections) sections = [...sections];
+				sections[i] = { ...section, map };
 			}
 		}
-	};
+		if (sections !== sourcemap.sections) rebased = { ...rebased, sections };
+	}
 
-	visit(sourcemap);
-	return changed;
+	return rebased;
+}
+
+/**
+ * @param {unknown} source
+ * @param {string} source_dir
+ * @param {string} target_dir
+ */
+function relocate_sourcemap_path(source, source_dir, target_dir) {
+	if (typeof source !== 'string' || !is_relative_path(source)) return source;
+	return posixify(path.relative(target_dir, path.resolve(source_dir, source))) || '.';
 }
 
 /** @param {string} source */
