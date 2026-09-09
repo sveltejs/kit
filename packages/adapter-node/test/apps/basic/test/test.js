@@ -92,3 +92,8 @@ test('serves static HTML with a charset', async ({ request }) => {
 	expect(response.status()).toBe(200);
 	expect(response.headers()['content-type']).toBe('text/html;charset=utf-8');
 });
+
+test('does not replace adapter stubs in application chunks', async ({ request }) => {
+	const response = await request.get('/stub');
+	expect(await response.text()).toBe('__SVELTEKIT_ADAPTER_NODE_MIMETYPES__');
+});
