@@ -109,42 +109,45 @@ function rebase_sourcemap(contents, from, to) {
  * @returns {any}
  */
 function rebase_sourcemap_paths(sourcemap, source_dir, target_dir) {
-	let rebased = sourcemap;
+	const source_root = sourcemap.sourceRoot
+		? relocate_sourcemap_path(sourcemap.sourceRoot, source_dir, target_dir)
+		: sourcemap.sourceRoot;
+	const sources =
+		!sourcemap.sourceRoot && Array.isArray(sourcemap.sources)
+			? map_preserving_identity(sourcemap.sources, (source) =>
+					relocate_sourcemap_path(source, source_dir, target_dir)
+				)
+			: sourcemap.sources;
+	const sections = Array.isArray(sourcemap.sections)
+		? map_preserving_identity(sourcemap.sections, (section) => {
+				const map = section.map
+					? rebase_sourcemap_paths(section.map, source_dir, target_dir)
+					: section.map;
+				return map === section.map ? section : { ...section, map };
+			})
+		: sourcemap.sections;
 
-	if (sourcemap.sourceRoot) {
-		const source_root = relocate_sourcemap_path(sourcemap.sourceRoot, source_dir, target_dir);
-		if (source_root !== sourcemap.sourceRoot) rebased = { ...rebased, sourceRoot: source_root };
-	} else if (Array.isArray(sourcemap.sources)) {
-		const sources = sourcemap.sources.map(
-			/** @param {unknown} source */ (source) =>
-				relocate_sourcemap_path(source, source_dir, target_dir)
-		);
-		if (
-			sources.some(
-				/** @param {unknown} source @param {number} i */ (source, i) =>
-					source !== sourcemap.sources[i]
-			)
-		) {
-			rebased = { ...rebased, sources };
-		}
-	}
+	return source_root === sourcemap.sourceRoot &&
+		sources === sourcemap.sources &&
+		sections === sourcemap.sections
+		? sourcemap
+		: {
+				...sourcemap,
+				...(source_root !== sourcemap.sourceRoot && { sourceRoot: source_root }),
+				...(sources !== sourcemap.sources && { sources }),
+				...(sections !== sourcemap.sections && { sections })
+			};
+}
 
-	if (Array.isArray(sourcemap.sections)) {
-		let sections = sourcemap.sections;
-		for (let i = 0; i < sections.length; i += 1) {
-			const section = sections[i];
-			if (!section.map) continue;
-
-			const map = rebase_sourcemap_paths(section.map, source_dir, target_dir);
-			if (map !== section.map) {
-				if (sections === sourcemap.sections) sections = [...sections];
-				sections[i] = { ...section, map };
-			}
-		}
-		if (sections !== sourcemap.sections) rebased = { ...rebased, sections };
-	}
-
-	return rebased;
+/**
+ * @template T
+ * @param {T[]} values
+ * @param {(value: T) => T} transform
+ * @returns {T[]}
+ */
+function map_preserving_identity(values, transform) {
+	const transformed = values.map(transform);
+	return transformed.some((value, i) => value !== values[i]) ? transformed : values;
 }
 
 /**
