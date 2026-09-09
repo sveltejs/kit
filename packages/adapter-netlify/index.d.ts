@@ -7,7 +7,7 @@ export { Runtime };
 export interface Config {
 	/**
 	 * Which [Serverless Function](https://docs.netlify.com/build/functions/configuration/#nodejs-version-for-runtime)
-		* runtime to use (`'nodejs22.x'`, `'nodejs24.x'` etc) or `'edge'` to deploy as an Edge Function.
+	 * runtime to use (`'nodejs22.x'`, `'nodejs24.x'` etc) or `'edge'` to deploy as an Edge Function.
 	 * @default Same as the build environment
 	 */
 	runtime?: Runtime;
