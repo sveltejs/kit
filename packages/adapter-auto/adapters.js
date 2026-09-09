@@ -45,5 +45,11 @@ export const adapters = [
 		module: '@sveltejs/adapter-node',
 		// TODO replace with a stable version
 		version: 'next'
+	},
+	{
+		name: 'Lizard',
+		test: () => !!process.env.LIZARD_BUILD,
+		module: '@sveltejs/adapter-node',
+		version: '6'
 	}
 ];
