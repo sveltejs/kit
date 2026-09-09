@@ -221,34 +221,38 @@ function replace_stubs(dir, replacements) {
 
 	for (const entry of readdirSync(dir, { withFileTypes: true })) {
 		const file = `${dir}/${entry.name}`;
+
 		if (entry.isDirectory()) {
 			replace_stubs(file, replacements);
-		} else if (entry.name.endsWith('.js')) {
-			const code = readFileSync(file, 'utf8');
-			const s = new MagicString(code);
-			let changed = false;
-
-			for (const match of code.matchAll(pattern)) {
-				s.overwrite(match.index, match.index + match[0].length, replacements[match[0]]);
-				changed = true;
-			}
-
-			if (changed) {
-				writeFileSync(file, s.toString());
-
-				const map_file = `${file}.map`;
-				if (existsSync(map_file)) {
-					const map = remapping(
-						[
-							JSON.parse(s.generateMap({ hires: 'boundary', source: entry.name }).toString()),
-							JSON.parse(readFileSync(map_file, 'utf8'))
-						],
-						() => null
-					);
-					writeFileSync(map_file, map.toString());
-				}
-			}
+			continue;
 		}
+
+		if (!entry.name.endsWith('.js')) continue;
+
+		const code = readFileSync(file, 'utf8');
+		const matches = [...code.matchAll(pattern)];
+
+		if (matches.length === 0) continue;
+
+		const s = new MagicString(code);
+
+		for (const match of matches) {
+			s.overwrite(match.index, match.index + match[0].length, replacements[match[0]]);
+		}
+
+		writeFileSync(file, s.toString());
+
+		const map_file = `${file}.map`;
+		if (!existsSync(map_file)) continue;
+
+		const map = remapping(
+			[
+				JSON.parse(s.generateMap({ hires: 'boundary', source: entry.name }).toString()),
+				JSON.parse(readFileSync(map_file, 'utf8'))
+			],
+			() => null
+		);
+		writeFileSync(map_file, map.toString());
 	}
 }
 
