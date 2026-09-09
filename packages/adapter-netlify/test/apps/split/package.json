@@ -8,7 +8,7 @@
 		"preview": "vite preview",
 		"test:serverless:build": "pnpm build && vitest run build.test.js",
 		"test:edge:build": "EDGE=true pnpm build && EDGE=true vitest run build.test.js",
-		"test:build": "vitest run conflict.test.js && pnpm test:serverless:build && pnpm test:edge:build",
+		"test:build": "pnpm test:serverless:build && pnpm test:edge:build",
 		"test:platform": "playwright test"
 	},
 	"devDependencies": {

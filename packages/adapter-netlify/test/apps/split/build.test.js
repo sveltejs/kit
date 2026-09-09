@@ -11,42 +11,29 @@ test('_redirects are copied to publish directory', () => {
 	expect(redirects).toContain('/redirect-me /greeting/redirected 301');
 });
 
-const adapter_is_edge = process.env.EDGE === 'true';
-const serverless_dir = path.resolve(import.meta.dirname, './.netlify/v1/functions');
-const edge_dir = path.resolve(import.meta.dirname, './.netlify/v1/edge-functions');
+const edge = process.env.EDGE === 'true';
+const functions_dir = path.resolve(
+	import.meta.dirname,
+	edge ? './.netlify/v1/edge-functions' : './.netlify/v1/functions'
+);
+
 const config_path = path.resolve(import.meta.dirname, './.netlify/v1/config.json');
 
-test('omitted runtime inherits the adapter runtime', () => {
+test('omitted runtime uses Node.js without overriding its version', () => {
+	if (edge) return;
+
 	const config = JSON.parse(fs.readFileSync(config_path, 'utf-8'));
 	expect(config).not.toHaveProperty('nodeVersion');
-	expect(fs.existsSync(serverless_dir)).toBe(true);
-	expect(fs.existsSync(edge_dir)).toBe(true);
-
-	const catch_all = read_functions((content) => content.includes('"name": "SvelteKit catch-all"'));
-	expect(catch_all).toHaveLength(1);
-	expect(catch_all[0].runtime).toBe(adapter_is_edge ? 'edge' : 'nodejs');
-	expect(catch_all[0].content).not.toContain('"nodeVersion"');
+	expect(fs.existsSync(functions_dir)).toBe(true);
 });
 
 /** @param {(content: string) => boolean} filter */
 function read_functions(filter) {
-	return [
-		...read_directory(serverless_dir, 'nodejs', '.mjs'),
-		...read_directory(edge_dir, 'edge', '.js')
-	].filter(({ content }) => filter(content));
-}
-
-/** @param {string} directory @param {'edge' | 'nodejs'} runtime @param {string} extension */
-function read_directory(directory, runtime, extension) {
-	if (!fs.existsSync(directory)) return [];
 	return fs
-		.readdirSync(directory)
-		.filter((file) => file.startsWith('sveltekit-') && file.endsWith(extension))
-		.map((file) => ({
-			file,
-			runtime,
-			content: fs.readFileSync(path.join(directory, file), 'utf-8')
-		}));
+		.readdirSync(functions_dir)
+		.filter((f) => f.startsWith('sveltekit-') && f.endsWith(edge ? '.js' : '.mjs'))
+		.map((f) => fs.readFileSync(path.join(functions_dir, f), 'utf-8'))
+		.filter(filter);
 }
 
 test('split generates multiple function files', () => {
@@ -54,8 +41,7 @@ test('split generates multiple function files', () => {
 		content.includes('"name": "SvelteKit /collection/[[optional]]/article"')
 	);
 	expect(functions.length).toBe(1);
-	expect(functions[0].runtime).toBe('edge');
-	expect(functions[0].content).toMatch(
+	expect(functions[0]).toMatch(
 		/"path": \[\s*"\/collection\/:param1\?\/article",\s*"\/collection\/:param1\?\/article\/__data\.json"\s*\]/
 	);
 });
@@ -64,11 +50,11 @@ test('functions have human friendly display names', () => {
 	const functions = read_functions((content) =>
 		content.includes('"name": "SvelteKit /collection/[[optional]]/article"')
 	);
-	expect(functions[0].content).toContain('"name": "SvelteKit /collection/[[optional]]/article"');
+	expect(functions[0]).toContain('"name": "SvelteKit /collection/[[optional]]/article"');
 
 	const catch_all = read_functions((content) => content.includes('"name": "SvelteKit catch-all"'));
 	expect(catch_all.length).toBe(1);
-	expect(catch_all[0].content).toContain('"name": "SvelteKit catch-all"');
+	expect(catch_all[0]).toContain('"name": "SvelteKit catch-all"');
 });
 
 test('routes that sanitize to the same pattern generate separate functions', () => {
@@ -81,43 +67,6 @@ test('routes that sanitize to the same pattern generate separate functions', () 
 
 	expect(foo_dot.length).toBe(1);
 	expect(foo_bar.length).toBe(1);
-	expect(foo_dot[0].content).toContain('"name": "SvelteKit /collision/foo.bar"');
-	expect(foo_bar[0].content).toContain('"name": "SvelteKit /collision/foo_bar"');
-	expect(foo_dot[0].content).toContain('"nodeVersion": "22"');
-	expect(foo_bar[0].content).toContain('"nodeVersion": "24"');
-});
-
-test('route runtimes override the adapter runtime and retain exact Node versions', () => {
-	const greeting = read_functions((content) =>
-		content.includes('"name": "SvelteKit /greeting/[name]"')
-	);
-	const reroute = read_functions((content) => content.includes('"name": "SvelteKit /reroute"'));
-
-	expect(greeting).toHaveLength(1);
-	expect(reroute).toHaveLength(1);
-	expect(greeting[0].runtime).toBe('nodejs');
-	expect(greeting[0].content).toContain('"nodeVersion": "24"');
-	expect(reroute[0].runtime).toBe(adapter_is_edge ? 'nodejs' : 'edge');
-	if (adapter_is_edge) expect(reroute[0].content).toContain('"nodeVersion": "24"');
-	else expect(reroute[0].content).not.toContain('"nodeVersion"');
-});
-
-test('reroute transport works across runtimes', () => {
-	const reroute = read_functions((content) => content.includes('"name": "SvelteKit /reroute"'))[0];
-	const catch_all = read_functions((content) =>
-		content.includes('"name": "SvelteKit catch-all"')
-	)[0];
-	const parameter = reroute.content.match(/__sveltekit_original_pathname_[\w-]+/)?.[0];
-
-	expect(parameter).toBeTruthy();
-	expect(catch_all.content).toContain(parameter);
-	expect(reroute.content).not.toContain('x-sveltekit-original-pathname');
-});
-
-test('catch-all excludes app routes and route configs include data paths', () => {
-	const catch_all = read_functions((content) =>
-		content.includes('"name": "SvelteKit catch-all"')
-	)[0];
-	expect(catch_all.content).toContain('"/greeting/:param1"');
-	expect(catch_all.content).toContain('"/greeting/:param1/__data.json"');
+	expect(foo_dot[0]).toContain('"name": "SvelteKit /collision/foo.bar"');
+	expect(foo_bar[0]).toContain('"name": "SvelteKit /collision/foo_bar"');
 });

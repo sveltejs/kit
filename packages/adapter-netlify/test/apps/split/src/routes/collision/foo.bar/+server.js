@@ -1,6 +1,3 @@
-/** @type {import('@sveltejs/adapter-netlify').Config} */
-export const config = { runtime: 'nodejs22.x' };
-
 export function GET() {
 	return new Response('static');
 }
