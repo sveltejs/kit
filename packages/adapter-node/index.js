@@ -1,5 +1,6 @@
-import { mkdirSync, readFileSync, rmSync } from 'node:fs';
-import { extname } from 'node:path';
+import { createHash } from 'node:crypto';
+import fs from 'node:fs';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { rolldown } from 'rolldown';
 
@@ -20,39 +21,36 @@ export default function (opts = {}) {
 		async adapt(builder) {
 			const tmp = builder.getBuildDirectory('adapter-node');
 
-			rmSync(out, { force: true, recursive: true });
-			rmSync(tmp, { force: true, recursive: true });
-			mkdirSync(tmp, { recursive: true });
+			fs.rmSync(out, { force: true, recursive: true });
+			fs.rmSync(tmp, { force: true, recursive: true });
+			fs.mkdirSync(tmp, { recursive: true });
+
+			const base = builder.config.paths.base;
+			const client_dir = `${out}/client${base}`;
+			const prerendered_dir = `${out}/prerendered${base}`;
 
 			builder.log.minor('Copying assets');
-			const written = [
-				...builder.writeClient(`${out}/client${builder.config.paths.base}`),
-				...builder.writePrerendered(`${out}/prerendered${builder.config.paths.base}`)
-			];
+			const client_files = builder.writeClient(client_dir);
+			const prerendered_files = builder.writePrerendered(prerendered_dir);
 
-			/** @type {string[]} */
-			let compressed = [];
+			builder.log.minor(precompress ? 'Compressing and hashing assets' : 'Hashing assets');
+			const [client_compressed, prerendered_compressed] = precompress
+				? await Promise.all([builder.compress(client_dir), builder.compress(prerendered_dir)])
+				: [[], []];
 
-			if (precompress) {
-				builder.log.minor('Compressing assets');
-				compressed = (
-					await Promise.all([
-						builder.compress(`${out}/client`),
-						builder.compress(`${out}/prerendered`)
-					])
-				).flat();
-			}
-
-			const compressed_extensions = new Set(compressed.map((file) => extname(file)));
-			// a pathname whose extension appears in neither set may be a route segment
-			// resolving to a compressed `index.html`, so it must keep its `Vary` header
-			const uncompressed_extensions = new Set(
-				written.map((file) => extname(file)).filter((ext) => ext && !compressed_extensions.has(ext))
+			const assets = create_asset_table(
+				base,
+				measure_files(client_dir, client_files, client_compressed)
+			);
+			const prerendered_assets = create_prerendered_table(
+				base,
+				measure_files(prerendered_dir, prerendered_files, prerendered_compressed),
+				builder.prerendered.paths
 			);
 
 			builder.log.minor('Building server');
 
-			const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
+			const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
 			const server = builder.getServerDirectory();
 
 			// Copy the prebuilt entrypoints into the build directory so that the
@@ -82,14 +80,13 @@ export default function (opts = {}) {
 
 			/** @type {Record<string, string>} */
 			const defines = {
-				UNCOMPRESSED_EXTENSIONS: `new Set(${JSON.stringify([...uncompressed_extensions])})`,
-				BASE_PATH: JSON.stringify(builder.config.paths.base),
+				BASE_PATH: JSON.stringify(base),
 				APP_PATH: JSON.stringify(builder.getAppPath()),
-				PRERENDERED: `new Set(${JSON.stringify(builder.prerendered.paths)})`,
 				MIME_TYPES: JSON.stringify(builder.mimeTypes),
+				ASSETS: JSON.stringify(assets),
+				PRERENDERED_ASSETS: JSON.stringify(prerendered_assets),
 				ORIGIN: JSON.stringify(builder.config.paths.origin) || 'undefined',
-				ENV_PREFIX: JSON.stringify(envPrefix),
-				PRECOMPRESS: JSON.stringify(precompress)
+				ENV_PREFIX: JSON.stringify(envPrefix)
 			};
 
 			// we bundle the Vite output so that deployments only need
@@ -185,6 +182,128 @@ export default function (opts = {}) {
 			instrumentation: () => true
 		}
 	};
+}
+
+/**
+ * Dotfiles are not served, with the customary exception of `.well-known`
+ * @param {string} file
+ */
+function is_hidden(file) {
+	return file.split('/').some((segment) => segment[0] === '.') && !file.startsWith('.well-known/');
+}
+
+/**
+ * Size and content hash of every servable file, plus the sizes of the
+ * compressed variants where `builder.compress` wrote them.
+ * Files are read one at a time, so large outputs neither exhaust file descriptors nor pile up in memory
+ * @param {string} root
+ * @param {string[]} files
+ * @param {string[]} compressed
+ * @returns {AssetEntry[]}
+ */
+function measure_files(root, files, compressed) {
+	const variants = new Set(compressed);
+
+	/** @type {AssetEntry[]} */
+	const entries = [];
+
+	for (const file of files) {
+		if (is_hidden(file)) continue;
+
+		const abs = join(root, file);
+		const contents = fs.readFileSync(abs);
+
+		/** @type {AssetEntry} */
+		const entry = {
+			file,
+			size: contents.length,
+			etag: createHash('sha256').update(contents).digest('base64url')
+		};
+
+		// `builder.compress` writes a `.gz` and a `.br` variant of every file it returns
+		if (variants.has(file)) {
+			entry.gz = fs.statSync(`${abs}.gz`).size;
+			entry.br = fs.statSync(`${abs}.br`).size;
+		}
+
+		entries.push(entry);
+	}
+
+	return entries;
+}
+
+/**
+ * Keys the measured files by URL: the exact pathname, plus the `/foo` and
+ * `/foo/` forms of `foo.html`/`foo/index.html` files
+ * @param {string} base
+ * @param {AssetEntry[]} measured
+ * @returns {AssetTable}
+ */
+function create_asset_table(base, measured) {
+	const entries = measured.map((entry) => /** @type {[string, AssetEntry]} */ ([
+		`${base}/${entry.file}`,
+		entry
+	]));
+
+	entries.sort(([a], [b]) => (a < b ? -1 : 1));
+
+	const keys = new Set(entries.map(([key]) => key));
+
+	/** @type {Array<[string, string]>} */
+	const aliases = [];
+
+	/**
+	 * @param {string} alias
+	 * @param {string} key
+	 */
+	function alias(alias, key) {
+		if (!keys.has(alias)) {
+			keys.add(alias);
+			aliases.push([alias, key]);
+		}
+	}
+
+	// `/foo` and `/foo/` resolve to `foo.html`, or to `foo/index.html` when only that exists.
+	// `foo.html` sorts first, so it claims the aliases (the resolution order sirv used)
+	for (const [key, entry] of entries) {
+		if (!entry.file.endsWith('.html')) continue;
+
+		const is_index = entry.file === 'index.html' || entry.file.endsWith('/index.html');
+		const with_slash = is_index ? key.slice(0, -'index.html'.length) : key.slice(0, -5) + '/';
+
+		alias(with_slash, key);
+		if (with_slash.length > 1) alias(with_slash.slice(0, -1), key);
+	}
+
+	return { entries, aliases };
+}
+
+/**
+ * Keys the measured files by the exact paths kit prerendered, so a lookup
+ * hit is precisely a prerendered page, asset or redirect and every other
+ * pathname (including the non-canonical trailing-slash form) misses
+ * @param {string} base
+ * @param {AssetEntry[]} measured
+ * @param {string[]} paths
+ * @returns {AssetTable}
+ */
+function create_prerendered_table(base, measured, paths) {
+	const by_file = new Map(measured.map((entry) => [entry.file, entry]));
+
+	/** @type {Array<[string, AssetEntry]>} */
+	const entries = [];
+
+	for (const path of paths) {
+		// invert `output_filename` in kit's prerenderer
+		const file = path.slice(base.length + 1) || 'index.html';
+		const entry =
+			by_file.get(file) ?? by_file.get(file + (file.endsWith('/') ? 'index.html' : '.html'));
+		if (entry) entries.push([path, entry]);
+	}
+
+	entries.sort(([a], [b]) => (a < b ? -1 : 1));
+
+	return { entries, aliases: [] };
 }
 
 /** @param {string} str */
