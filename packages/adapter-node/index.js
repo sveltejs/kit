@@ -200,7 +200,7 @@ export default function (opts = {}) {
 										)
 									])
 								),
-								handler(_source) {
+								handler() {
 									return { external: true, id: '../server.js' };
 								}
 							}
