@@ -1,4 +1,12 @@
+import { existsSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
+
+test('keeps adapter entrypoints at the output root', () => {
+	expect(existsSync('build/index.js')).toBe(true);
+	expect(existsSync('build/adapter-index.js')).toBe(true);
+	expect(existsSync('build/handler.js')).toBe(true);
+	expect(existsSync('build/server/index.js')).toBe(true);
+});
 
 test('SSR', async ({ page }) => {
 	await page.goto('/');

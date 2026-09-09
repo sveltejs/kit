@@ -55,27 +55,11 @@ export default function (opts = {}) {
 			);
 
 			const server = builder.getServerDirectory();
-
-			const server_entry = `${server}/server.js`;
-			builder.generateServerInstance(server_entry);
-			const server_code = readFileSync(server_entry, 'utf8');
-			const runtime_import = "from './index.js'";
-
-			if (!server_code.includes(runtime_import)) {
-				throw new Error(`Could not find ${runtime_import} in generated server entry`);
-			}
-
-			writeFileSync(
-				server_entry,
-				server_code.replace(runtime_import, "from './server-runtime.js'")
-			);
-
-			rename_entry(server, 'index', 'server-runtime');
-			rename_entry(server, 'adapter-index', 'index');
+			builder.generateServerInstance(`${server}/server.js`);
 
 			if (builder.hasServerInstrumentationFile()) {
 				builder.instrument({
-					entrypoint: `${server}/index.js`,
+					entrypoint: `${server}/adapter-index.js`,
 					instrumentation: `${server}/instrumentation.server.js`,
 					initializer: builder.createInstrumentationInitializer({ outputDirectory: server }),
 					module: {
@@ -84,14 +68,26 @@ export default function (opts = {}) {
 				});
 			}
 
-			builder.copy(server, out);
+			const output_server = `${out}/server`;
+			builder.copy(server, output_server);
+
+			// `dir.js` must evaluate at the output root because it anchors the asset directories
+			renameSync(`${output_server}/dir.js`, `${out}/dir.js`);
+			if (existsSync(`${output_server}/dir.js.map`)) {
+				renameSync(`${output_server}/dir.js.map`, `${out}/dir.js.map`);
+			}
+			writeFileSync(`${output_server}/dir.js`, `export * from '../dir.js';\n`);
 
 			// replace the stubs whose values are only known after the build
-			replace_stubs(out, {
+			replace_stubs(output_server, {
 				__SVELTEKIT_ADAPTER_NODE_UNCOMPRESSED_EXTENSIONS__: `new Set(${JSON.stringify([...uncompressed_extensions])})`,
 				__SVELTEKIT_ADAPTER_NODE_PRERENDERED__: `new Set(${JSON.stringify([...builder.prerendered.paths])})`,
 				__SVELTEKIT_ADAPTER_NODE_MIMETYPES__: JSON.stringify(builder.mimeTypes)
 			});
+
+			writeFileSync(`${out}/adapter-index.js`, `export * from './server/adapter-index.js';\n`);
+			writeFileSync(`${out}/handler.js`, `export * from './server/handler.js';\n`);
+			writeFileSync(`${out}/index.js`, `export * from './adapter-index.js';\n`);
 		},
 
 		supports: {
@@ -242,32 +238,6 @@ function replace_stubs(dir, replacements) {
 				}
 			}
 		}
-	}
-}
-
-/**
- * @param {string} dir
- * @param {string} from
- * @param {string} to
- */
-function rename_entry(dir, from, to) {
-	const entry = `${dir}/${to}.js`;
-	const map = `${entry}.map`;
-	renameSync(`${dir}/${from}.js`, entry);
-
-	if (existsSync(`${dir}/${from}.js.map`)) {
-		renameSync(`${dir}/${from}.js.map`, map);
-
-		const code = readFileSync(entry, 'utf8');
-		const source_map_url = `sourceMappingURL=${from}.js.map`;
-		if (!code.includes(source_map_url)) {
-			throw new Error(`Could not find ${source_map_url} in ${entry}`);
-		}
-		writeFileSync(entry, code.replace(source_map_url, `sourceMappingURL=${to}.js.map`));
-
-		const source_map = JSON.parse(readFileSync(map, 'utf8'));
-		source_map.file = `${to}.js`;
-		writeFileSync(map, JSON.stringify(source_map));
 	}
 }
 
