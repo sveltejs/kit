@@ -5,7 +5,11 @@ import './ambient.d.ts';
 export { Runtime };
 
 export interface Config {
-	/** The runtime to use for this route. */
+	/**
+	 * Which [Netlify Function](https://docs.netlify.com/build/functions/overview/) runtime to use (`'edge'`, `'nodejs22.x'`, `'nodejs24.x'` etc).
+	 * @default Same as the adapter configuration
+	 * @see https://docs.netlify.com/build/functions/configuration/#nodejs-version-for-runtime
+	 */
 	runtime?: Runtime;
 }
 
