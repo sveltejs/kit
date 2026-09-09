@@ -1,10 +1,12 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { expect, test } from 'vitest';
+import { afterEach, expect, test, vi } from 'vitest';
+
+afterEach(() => vi.unstubAllEnvs());
 
 test('exports the handler', async () => {
-	process.env.MY_CUSTOM_PORT = '5173';
-	process.env.INSTRUMENTATION_ENV = 'available';
+	vi.stubEnv('MY_CUSTOM_PORT', '5173');
+	vi.stubEnv('INSTRUMENTATION_ENV', 'available');
 	const { handler } = await import('./build/handler.js');
 	expect(handler).toBeDefined();
 });
