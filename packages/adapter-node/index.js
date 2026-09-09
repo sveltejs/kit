@@ -85,9 +85,8 @@ export default function (opts = {}) {
 				__SVELTEKIT_ADAPTER_NODE_MIMETYPES__: JSON.stringify(builder.mimeTypes)
 			});
 
-			writeFileSync(`${out}/adapter-index.js`, `export * from './server/adapter-index.js';\n`);
+			writeFileSync(`${out}/index.js`, `export * from './server/adapter-index.js';\n`);
 			writeFileSync(`${out}/handler.js`, `export * from './server/handler.js';\n`);
-			writeFileSync(`${out}/index.js`, `export * from './adapter-index.js';\n`);
 		},
 
 		supports: {
