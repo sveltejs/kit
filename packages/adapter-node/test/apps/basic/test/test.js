@@ -12,6 +12,11 @@ test('CSR', async ({ page }) => {
 	await expect(page.locator('button')).toContainText('Toggle: true');
 });
 
+test('loads external dependencies', async ({ request }) => {
+	const response = await request.get('/external-dependency');
+	expect(await response.text()).toBe('server-side-dep implementation');
+});
+
 test('sets X-Accel-Buffering header on text/event-stream responses', async ({ request }) => {
 	const response = await request.get('/event-stream');
 	expect(response.headers()['content-type']).toContain('text/event-stream');
