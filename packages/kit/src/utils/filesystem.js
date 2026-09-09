@@ -51,15 +51,17 @@ export function copy(source, target, opts = {}) {
 			created = dir;
 		}
 
-		if (opts.replace) {
-			const data = fs.readFileSync(from, 'utf-8');
-			fs.writeFileSync(
-				to,
-				data.replace(
+		const is_sourcemap = path.extname(from) === '.map';
+		if (opts.replace || is_sourcemap) {
+			let data = fs.readFileSync(from, 'utf-8');
+			if (opts.replace) {
+				data = data.replace(
 					/** @type {RegExp} */ (regex),
 					(_match, key) => /** @type {Record<string, string>} */ (opts.replace)[key]
-				)
-			);
+				);
+			}
+			if (is_sourcemap) data = rebase_sourcemap(data, from, to);
+			fs.writeFileSync(to, data);
 		} else {
 			fs.copyFileSync(from, to);
 		}
@@ -70,6 +72,71 @@ export function copy(source, target, opts = {}) {
 	go(source, target, '', fs.statSync(source).isDirectory());
 
 	return files;
+}
+
+/**
+ * Preserve relative source paths when a sourcemap is copied to a different directory.
+ * @param {string} contents
+ * @param {string} from
+ * @param {string} to
+ */
+function rebase_sourcemap(contents, from, to) {
+	const source_dir = path.dirname(from);
+	const target_dir = path.dirname(to);
+	if (path.resolve(source_dir) === path.resolve(target_dir)) return contents;
+
+	/** @type {any} */
+	let sourcemap;
+	try {
+		sourcemap = JSON.parse(contents);
+	} catch {
+		// A .map file is not necessarily a sourcemap
+		return contents;
+	}
+
+	if (sourcemap.version !== 3 || !rebase(sourcemap, source_dir, target_dir)) return contents;
+	return JSON.stringify(sourcemap) + (contents.endsWith('\n') ? '\n' : '');
+}
+
+/**
+ * @param {any} sourcemap
+ * @param {string} source_dir
+ * @param {string} target_dir
+ * @returns {boolean}
+ */
+function rebase(sourcemap, source_dir, target_dir) {
+	let changed = false;
+
+	/** @param {unknown} source */
+	const relocate = (source) => {
+		if (typeof source !== 'string' || !is_relative_path(source)) return source;
+		const relocated = posixify(path.relative(target_dir, path.resolve(source_dir, source))) || '.';
+		if (relocated !== source) changed = true;
+		return relocated;
+	};
+
+	/** @param {any} map */
+	const visit = (map) => {
+		if (map.sourceRoot) {
+			map.sourceRoot = relocate(map.sourceRoot);
+		} else if (Array.isArray(map.sources)) {
+			map.sources = map.sources.map(relocate);
+		}
+
+		if (Array.isArray(map.sections)) {
+			for (const section of map.sections) {
+				if (section.map) visit(section.map);
+			}
+		}
+	};
+
+	visit(sourcemap);
+	return changed;
+}
+
+/** @param {string} source */
+function is_relative_path(source) {
+	return !path.posix.isAbsolute(source) && !path.win32.isAbsolute(source) && !URL.canParse(source);
 }
 
 /**

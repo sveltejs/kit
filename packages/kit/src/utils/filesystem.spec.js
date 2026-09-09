@@ -100,6 +100,77 @@ test('replaces strings', () => {
 	);
 });
 
+test('rebases sourcemap sources', () => {
+	write(
+		'output/chunks/main.js.map',
+		`${JSON.stringify({
+			version: 3,
+			file: 'main.js',
+			sources: ['../../../src/main.js', 'https://example.com/external.js', '/absolute.js'],
+			sourcesContent: ['source', 'external', 'absolute'],
+			names: [],
+			mappings: ''
+		})}\n`
+	);
+
+	copy(join(source_dir, 'output'), join(dest_dir, 'nested/output'));
+
+	const sourcemap = JSON.parse(
+		readFileSync(join(dest_dir, 'nested/output/chunks/main.js.map'), 'utf8')
+	);
+	expect(sourcemap.sources).toEqual([
+		'../../../../src/main.js',
+		'https://example.com/external.js',
+		'/absolute.js'
+	]);
+	expect(sourcemap.sourcesContent).toEqual(['source', 'external', 'absolute']);
+
+	copy(join(source_dir, 'output/chunks/main.js.map'), join(dest_dir, 'renamed.json'));
+	const renamed = JSON.parse(readFileSync(join(dest_dir, 'renamed.json'), 'utf8'));
+	expect(renamed.sources[0]).toBe('../src/main.js');
+});
+
+test('leaves sourcemaps unchanged when sources are equally relative', () => {
+	const contents = `{
+		"version": 3,
+		"sources": ["../shared.js"],
+		"names": [],
+		"mappings": ""
+	}\n`;
+	write('main.js.map', contents);
+
+	copy(join(source_dir, 'main.js.map'), join(dest_dir, 'main.js.map'));
+
+	expect(readFileSync(join(dest_dir, 'main.js.map'), 'utf8')).toBe(contents);
+});
+
+test('rebases a relative sourcemap sourceRoot', () => {
+	write(
+		'output/chunks/main.js.map',
+		JSON.stringify({
+			version: 3,
+			sourceRoot: '../../../src',
+			sources: ['main.js'],
+			names: [],
+			mappings: ''
+		})
+	);
+
+	copy(join(source_dir, 'output'), join(dest_dir, 'nested/output'));
+
+	const sourcemap = JSON.parse(
+		readFileSync(join(dest_dir, 'nested/output/chunks/main.js.map'), 'utf8')
+	);
+	expect(sourcemap.sourceRoot).toBe('../../../../src');
+	expect(sourcemap.sources).toEqual(['main.js']);
+});
+
+test('leaves non-sourcemap .map files unchanged', () => {
+	write('assets/image.map', 'not a sourcemap\n');
+	copy(source_dir, dest_dir);
+	expect(readFileSync(join(dest_dir, 'assets/image.map'), 'utf8')).toBe('not a sourcemap\n');
+});
+
 test('resolves index files', () => {
 	write(join('service-worker', 'index.js'), '');
 
