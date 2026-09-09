@@ -259,11 +259,15 @@ export const prerender_responses = {};
 /** @type {Array<((url: URL) => boolean)>} */
 const invalidated = [];
 
-/** @type {{id: string, token: {}, promise: Promise<import('./types.js').NavigationResult>, fork: Promise<import('svelte').Fork | null> | null} | null} */
+/** @type {{id: string, token: {}, controller: AbortController | null, promise: Promise<import('./types.js').NavigationResult>, fork: Promise<import('svelte').Fork | null> | null} | null} */
 let load_cache = null;
 
 function discard_load_cache() {
-	void load_cache?.fork?.then((f) => f?.discard());
+	if (load_cache?.controller && preload_tokens.has(load_cache.token)) {
+		load_cache.controller.abort();
+	}
+
+	void load_cache?.fork?.then((f) => f?.discard(), noop);
 	load_cache = null;
 	current_a = { element: undefined, href: undefined };
 }
@@ -770,8 +774,11 @@ export async function _goto(url, options = {}, redirect_count = 0, nav_token = {
 	}
 }
 
-/** @param {import('./types.js').NavigationIntent} intent */
-async function _preload_data(intent) {
+/**
+ * @param {import('./types.js').NavigationIntent} intent
+ * @param {boolean} [cancellable] whether the preload should be aborted when another one supersedes it
+ */
+async function _preload_data(intent, cancellable) {
 	// Reuse the existing pending preload if it's for the same navigation.
 	// Prevents an edge case where same preload is triggered multiple times,
 	// then a later one is becoming the real navigation and the preload tokens
@@ -781,20 +788,26 @@ async function _preload_data(intent) {
 
 		const preload = {};
 		preload_tokens.add(preload);
+
+		const controller = cancellable ? new AbortController() : null;
+
 		load_cache = {
 			id: intent.id,
 			token: preload,
-			promise: load_route({ ...intent, preload }).finally(() => {
+			controller,
+			promise: load_route({ ...intent, preload, signal: controller?.signal }).finally(() => {
 				preload_tokens.delete(preload);
 			}),
 			fork: null
 		};
 
-		load_cache.promise.catch(discard_load_cache);
+		const lc = load_cache;
+
+		lc.promise.catch(() => {
+			if (lc === load_cache) discard_load_cache();
+		});
 
 		if (__SVELTEKIT_FORK_PRELOADS__) {
-			const lc = load_cache;
-
 			lc.fork = lc.promise.then((result) => {
 				// if load_cache was discarded before load_cache.promise could
 				// resolve, bail rather than creating an orphan fork
@@ -1098,10 +1111,11 @@ async function get_navigation_result_from_branch({
  *   params: Record<string, string>;
  *   route: { id: string | null };
  * 	 server_data_node: import('./types.js').DataNode | null;
+ *   signal?: AbortSignal;
  * }} options
  * @returns {Promise<import('./types.js').BranchNode>}
  */
-async function load_node({ loader, parent, url, params, route, server_data_node }) {
+async function load_node({ loader, parent, url, params, route, server_data_node, signal }) {
 	/** @type {Record<string, any> | null} */
 	let data = null;
 
@@ -1212,7 +1226,11 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 					};
 				}
 
-				const { resolved, promise } = resolve_fetch_url(resource, init, url);
+				const { resolved, promise } = resolve_fetch_url(
+					resource,
+					signal && !init?.signal ? { ...init, signal } : init,
+					url
+				);
 
 				if (is_tracking) {
 					depends(resolved.href);
@@ -1360,14 +1378,23 @@ function diff_search_params(old_url, new_url) {
  */
 /**
  * @overload
- * @param {import('./types.js').NavigationIntent & { preload: {} }} intent
+ * @param {import('./types.js').NavigationIntent & { preload: {}; signal?: AbortSignal }} intent
  * @returns {Promise<import('./types.js').NavigationResult>}
  */
 /**
- * @param {import('./types.js').NavigationIntent & { preload?: {}; action_result?: ActionResult }} intent
+ * @param {import('./types.js').NavigationIntent & { preload?: {}; action_result?: ActionResult; signal?: AbortSignal }} intent
  * @returns {Promise<import('./types.js').NavigationResult | undefined>}
  */
-async function load_route({ id, invalidating, url, params, route, preload, action_result }) {
+async function load_route({
+	id,
+	invalidating,
+	url,
+	params,
+	route,
+	preload,
+	action_result,
+	signal
+}) {
 	if (!action_result && load_cache?.id === id) {
 		// the preload becomes the real navigation
 		preload_tokens.delete(load_cache.token);
@@ -1423,8 +1450,10 @@ async function load_route({ id, invalidating, url, params, route, preload, actio
 
 		if (invalid_server_nodes.some(Boolean)) {
 			try {
-				server_data = await load_data(url, invalid_server_nodes);
+				server_data = await load_data(url, invalid_server_nodes, signal);
 			} catch (error) {
+				if (signal?.aborted) throw error;
+
 				const handled_error = await handle_error(error, { url, params, route: { id } });
 
 				if (preload && preload_tokens.has(preload)) {
@@ -1482,6 +1511,7 @@ async function load_route({ id, invalidating, url, params, route, preload, actio
 			url,
 			params,
 			route,
+			signal,
 			parent: async () => {
 				const data = {};
 				for (let j = 0; j < i; j += 1) {
@@ -1509,6 +1539,8 @@ async function load_route({ id, invalidating, url, params, route, preload, actio
 			try {
 				branch.push(await branch_promises[i]);
 			} catch (err) {
+				if (signal?.aborted) throw err;
+
 				if (err instanceof Redirect) {
 					return {
 						type: 'redirect',
@@ -2431,7 +2463,9 @@ function setup_preload() {
 			if (!intent) return;
 
 			if (DEV) {
-				void _preload_data(intent).catch((error) => {
+				void _preload_data(intent, true).catch((error) => {
+					if (error?.name === 'AbortError') return;
+
 					console.warn(
 						`Preloading data for ${intent.url.pathname} failed with the following error: ${error.message}\n` +
 							'If this error is transient, you can ignore it. Otherwise, consider disabling preloading for this route. ' +
@@ -2440,7 +2474,7 @@ function setup_preload() {
 					);
 				});
 			} else {
-				void _preload_data(intent);
+				void _preload_data(intent, true);
 			}
 		} else if (priority <= options.preload_code) {
 			current_a = { element: a, href: a.href };
@@ -3622,9 +3656,10 @@ async function _hydrate(
 /**
  * @param {URL} url
  * @param {boolean[]} invalid
+ * @param {AbortSignal} [signal]
  * @returns {Promise<import('types').ServerNodesResponse | import('types').ServerRedirectNode>}
  */
-async function load_data(url, invalid) {
+async function load_data(url, invalid, signal) {
 	const data_url = new URL(url);
 	data_url.pathname = add_data_suffix(url.pathname);
 	if (url.pathname.endsWith('/')) {
@@ -3637,7 +3672,7 @@ async function load_data(url, invalid) {
 
 	// use window.fetch directly to allow using a 3rd party-patched fetch implementation
 	const fetcher = DEV ? dev_fetch : window.fetch;
-	const res = await fetcher(data_url.href, {});
+	const res = await fetcher(data_url.href, { signal });
 
 	// detect new deployments from the response header
 	notify_version(res.headers.get('x-sveltekit-version'));
