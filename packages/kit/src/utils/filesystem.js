@@ -94,7 +94,9 @@ function rebase_sourcemap(contents, from, to) {
 		return contents;
 	}
 
-	if (sourcemap.version !== 3 || !rebase(sourcemap, source_dir, target_dir)) return contents;
+	if (sourcemap.version !== 3 || !rebase_sourcemap_paths(sourcemap, source_dir, target_dir)) {
+		return contents;
+	}
 	return JSON.stringify(sourcemap) + (contents.endsWith('\n') ? '\n' : '');
 }
 
@@ -104,7 +106,7 @@ function rebase_sourcemap(contents, from, to) {
  * @param {string} target_dir
  * @returns {boolean}
  */
-function rebase(sourcemap, source_dir, target_dir) {
+function rebase_sourcemap_paths(sourcemap, source_dir, target_dir) {
 	let changed = false;
 
 	/** @param {unknown} source */
