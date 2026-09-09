@@ -19,6 +19,7 @@ shellEmulator: true
 engineStrict: true
 
 packages:
+  - benchmark
   - packages/*
   - packages/adapter-bun/test/apps/*
   - packages/adapter-cloudflare/test/apps/*
@@ -46,6 +47,7 @@ allowBuilds:
 # see https://github.com/changesets/changesets/issues/1707
 catalog:
   '@changesets/cli': ^3.0.0
+  '@codspeed/vitest-plugin': ^5.7.1
   # pin the version of changelog-github because we're using the experimental
   # template feature which can change in a patch version
   '@changesets/changelog-github': 1.0.0-next.9

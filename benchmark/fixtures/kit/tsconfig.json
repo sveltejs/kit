@@ -1,0 +1,5 @@
+{
+	"extends": "$app/tsconfig",
+	"include": ["src", "*"],
+	"exclude": []
+}

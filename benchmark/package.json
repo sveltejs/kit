@@ -1,0 +1,10 @@
+{
+	"name": "@sveltejs/benchmarks",
+	"private": true,
+	"type": "module",
+	"devDependencies": {
+		"@codspeed/vitest-plugin": "catalog:",
+		"@types/node": "catalog:",
+		"vitest": "catalog:"
+	}
+}

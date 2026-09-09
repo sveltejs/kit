@@ -1,0 +1,16 @@
+{
+	"name": "benchmark-fixture-kit",
+	"private": true,
+	"version": "0.0.0",
+	"type": "module",
+	"scripts": {
+		"build": "vite build",
+		"preview": "node build/index.js"
+	},
+	"devDependencies": {
+		"@sveltejs/adapter-node": "workspace:*",
+		"@sveltejs/kit": "workspace:*",
+		"svelte": "catalog:",
+		"vite": "catalog:"
+	}
+}
