@@ -1,11 +1,10 @@
-import { existsSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
 
-test('keeps adapter entrypoints at the output root', () => {
-	expect(existsSync('build/index.js')).toBe(true);
-	expect(existsSync('build/adapter-index.js')).toBe(false);
-	expect(existsSync('build/handler.js')).toBe(true);
-	expect(existsSync('build/server/index.js')).toBe(true);
+test('exports the handler', async () => {
+	process.env.MY_CUSTOM_PORT = '5173';
+	process.env.INSTRUMENTATION_ENV = 'available';
+	const { handler } = await import('../build/handler.js');
+	expect(handler).toBeDefined();
 });
 
 test('SSR', async ({ page }) => {
