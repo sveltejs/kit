@@ -8,12 +8,12 @@ import { pathToFileURL } from 'node:url';
 import { createReadableStream, getRequest, setResponse } from '@sveltejs/kit/node';
 import { createServer, loadEnv } from 'vite';
 import { afterAll, afterEach, beforeAll, describe, expect, test } from 'vitest';
-import * as records from '../../../records.js';
+import * as records from '../../../../records.js';
 
 // the server half of the old no-js Playwright project, against the built server directly or,
 // with KIT_TEST_DEV set, Vite's dev server in middleware mode
 
-const root = path.resolve(import.meta.dirname, '..');
+const root = path.resolve(import.meta.dirname, '../..');
 const out = path.join(root, '.svelte-kit/output/server');
 const dev = !!process.env.KIT_TEST_DEV;
 
