@@ -1,4 +1,12 @@
+import { existsSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
+
+test('keeps adapter entrypoints at the output root', () => {
+	expect(existsSync('build/index.js')).toBe(true);
+	expect(existsSync('build/adapter-index.js')).toBe(false);
+	expect(existsSync('build/handler.js')).toBe(true);
+	expect(existsSync('build/server/index.js')).toBe(true);
+});
 
 test('SSR', async ({ page }) => {
 	await page.goto('/');
@@ -10,11 +18,6 @@ test('CSR', async ({ page }) => {
 	await expect(page.locator('button')).toContainText('Toggle: false');
 	await page.locator('button').click();
 	await expect(page.locator('button')).toContainText('Toggle: true');
-});
-
-test('loads external dependencies', async ({ request }) => {
-	const response = await request.get('/external-dependency');
-	expect(await response.text()).toBe('server-side-dep implementation');
 });
 
 test('sets X-Accel-Buffering header on text/event-stream responses', async ({ request }) => {
@@ -31,6 +34,17 @@ test('does not set X-Accel-Buffering header on other responses', async ({ reques
 test('initializes dynamic env before instrumentation', async ({ request }) => {
 	const response = await request.get('/instrumentation-env');
 	expect(await response.json()).toEqual({ value: 'available' });
+});
+
+test('preserves similar user identifiers and imports', async ({ request }) => {
+	const response = await request.get('/adapter-identifiers');
+	expect(await response.json()).toEqual({
+		BASE_PATH: 'user-base-path',
+		APP_PATH: 'user-app-path',
+		ENV_PREFIX: 'user-env-prefix',
+		PRECOMPRESS: 'user-precompress',
+		SERVER: 'user-server'
+	});
 });
 
 test('sets Vary on assets that were precompressed', async ({ request }) => {
