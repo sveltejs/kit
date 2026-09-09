@@ -15,7 +15,7 @@ export default defineConfig({
 					root: 'packages/kit',
 					test: {
 						...kit_config.test,
-						// Vitest doesn't support nested project configs so we need to flatten it
+						// flatten the imported kit projects into the root project list
 						...project.test
 					}
 				};
