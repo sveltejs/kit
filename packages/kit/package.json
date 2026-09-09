@@ -23,7 +23,7 @@
 		"cookie": "^2.0.1",
 		"devalue": "^5.9.0",
 		"esm-env": "^1.2.2",
-		"magic-string": "^1.2.3",
+		"magic-string": "^1.1.0",
 		"mrmime": "^2.0.1",
 		"sirv": "^3.0.2"
 	},
