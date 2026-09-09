@@ -45,6 +45,7 @@
 	},
 	"dependencies": {
 		"@jridgewell/remapping": "^2.3.5",
+		"@rolldown/pluginutils": "^1.0.1",
 		"magic-string": "^1.2.3"
 	},
 	"devDependencies": {

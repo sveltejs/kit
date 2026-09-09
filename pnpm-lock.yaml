@@ -461,6 +461,9 @@ importers:
       '@jridgewell/remapping':
         specifier: ^2.3.5
         version: 2.3.5
+      '@rolldown/pluginutils':
+        specifier: ^1.0.1
+        version: 1.0.1
       magic-string:
         specifier: ^1.2.3
         version: 1.2.3

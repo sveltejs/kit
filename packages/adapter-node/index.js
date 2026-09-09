@@ -1,3 +1,4 @@
+/** @import { TopLevelFilterExpression } from '@rolldown/pluginutils' */
 import {
 	existsSync,
 	mkdirSync,
@@ -9,10 +10,12 @@ import {
 } from 'node:fs';
 import { extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { and, id, importerId, include } from '@rolldown/pluginutils';
 import remapping from '@jridgewell/remapping';
 import MagicString from 'magic-string';
 
 const files = fileURLToPath(new URL('./files', import.meta.url).href);
+const posixified_files = posixify(files);
 const dir_id = posixify(`${files}/dir.js`);
 
 /** @type {typeof import('./index.js').default} */
@@ -168,7 +171,7 @@ export default function (opts = {}) {
 								return environment.name === 'ssr';
 							},
 							transform: {
-								filter: { id: new RegExp(`^${escape_regex(posixify(files))}/`) },
+								filter: { id: new RegExp(`^${escape_regex(posixified_files)}/`) },
 								handler(code) {
 									const s = new MagicString(code);
 
@@ -185,11 +188,20 @@ export default function (opts = {}) {
 								}
 							},
 							resolveId: {
-								filter: { id: /^SERVER$/ },
-								handler(_source, importer) {
-									if (importer?.startsWith(`${posixify(files)}/`)) {
-										return { external: true, id: '../server.js' };
-									}
+								// composable filters are not accepted type-wise but still work during build
+								// see https://github.com/vitejs/rolldown-vite/issues/605
+								filter: /** @type {any} */ (
+									/** @satisfies {TopLevelFilterExpression[]} */ ([
+										include(
+											and(
+												importerId(new RegExp(`^${escape_regex(posixified_files)}/`)),
+												id(/^SERVER$/)
+											)
+										)
+									])
+								),
+								handler(_source) {
+									return { external: true, id: '../server.js' };
 								}
 							}
 						}
