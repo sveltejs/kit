@@ -165,6 +165,27 @@ test('rebases a relative sourcemap sourceRoot', () => {
 	expect(sourcemap.sources).toEqual(['main.js']);
 });
 
+test('preserves a trailing slash when rebasing a relative sourcemap sourceRoot', () => {
+	write(
+		'output/chunks/main.js.map',
+		JSON.stringify({
+			version: 3,
+			sourceRoot: '../../../src/',
+			sources: ['main.js'],
+			names: [],
+			mappings: ''
+		})
+	);
+
+	copy(join(source_dir, 'output'), join(dest_dir, 'nested/output'));
+
+	const sourcemap = JSON.parse(
+		readFileSync(join(dest_dir, 'nested/output/chunks/main.js.map'), 'utf8')
+	);
+	expect(sourcemap.sourceRoot).toBe('../../../../src/');
+	expect(sourcemap.sources).toEqual(['main.js']);
+});
+
 test('leaves non-sourcemap .map files unchanged', () => {
 	write('assets/image.map', 'not a sourcemap\n');
 	copy(source_dir, dest_dir);

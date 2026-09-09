@@ -47,7 +47,7 @@ function rebase_sourcemap_paths(sourcemap, source_dir, target_dir) {
  */
 function rebase_sourcemap_sources(sourcemap, source_dir, target_dir) {
 	if (sourcemap.sourceRoot) {
-		const source_root = relocate_sourcemap_path(sourcemap.sourceRoot, source_dir, target_dir);
+		const source_root = relocate_sourcemap_path(sourcemap.sourceRoot, source_dir, target_dir, true);
 		return source_root === sourcemap.sourceRoot
 			? sourcemap
 			: { ...sourcemap, sourceRoot: source_root };
@@ -93,10 +93,26 @@ function map_preserving_identity(values, transform) {
  * @param {unknown} source
  * @param {string} source_dir
  * @param {string} target_dir
+ * @param {boolean} [is_dir_prefix] - whether `source` is a directory prefix
+ *   (i.e. `sourceRoot`), in which case a trailing slash must be preserved
+ *   because it is semantically significant under URL resolution
+ *   (consumers treat `.../src` and `.../src/` differently)
  */
-function relocate_sourcemap_path(source, source_dir, target_dir) {
+function relocate_sourcemap_path(source, source_dir, target_dir, is_dir_prefix = false) {
 	if (typeof source !== 'string' || !is_relative_path(source)) return source;
-	return posixify(path.relative(target_dir, path.resolve(source_dir, source))) || '.';
+	let relocated = posixify(path.relative(target_dir, path.resolve(source_dir, source)));
+	if (is_dir_prefix) {
+		// `path.relative`/`path.resolve` strip trailing slashes, but for a
+		// `sourceRoot` the trailing slash matters, so restore it when the
+		// original value had one
+		if (source.endsWith('/') && relocated && !relocated.endsWith('/')) {
+			relocated += '/';
+		}
+		// an empty relative path means the target dir itself; represent it as
+		// `./` rather than `.` so URL resolution stays anchored to the dir
+		return relocated || './';
+	}
+	return relocated || '.';
 }
 
 /** @param {string} source */
