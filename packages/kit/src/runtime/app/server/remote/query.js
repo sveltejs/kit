@@ -1,8 +1,8 @@
 /** @import { RemoteLiveQuery, RemoteLiveQueryFunction, RemoteQuery, RemoteQueryFunction } from '$app/server' */
 /** @import { RequestEvent } from '@sveltejs/kit/internal/server' */
-/** @import { RemoteInternals, MaybePromise, RequestState, RemoteQueryLiveInternals, RemoteQueryBatchInternals, RemoteQueryInternals, RemoteLiveQueryUserFunctionReturnType } from 'types' */
+/** @import { RemoteInternals, MaybePromise, RemoteQueryLiveInternals, RemoteQueryBatchInternals, RemoteQueryInternals, RemoteLiveQueryUserFunctionReturnType } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
-import { get_request_store, QUERY } from '@sveltejs/kit/internal/server';
+import { get_event, QUERY } from '@sveltejs/kit/internal/server';
 import { create_remote_key, stringify_remote_arg } from '../../../shared.js';
 import { prerendering } from '#app/env/server';
 import {
@@ -76,10 +76,10 @@ export function query(validate_or_fn, maybe_fn) {
 		name: '',
 		validate,
 		bind(payload, validated_arg) {
-			const { event, state } = get_request_store();
+			const event = get_event();
 
-			return create_query_resource(__, payload, event, state, () =>
-				run_remote_function(event, state, QUERY, () => validated_arg, fn)
+			return create_query_resource(__, payload, event, () =>
+				run_remote_function(event, QUERY, () => validated_arg, fn)
 			);
 		}
 	};
@@ -92,11 +92,11 @@ export function query(validate_or_fn, maybe_fn) {
 			);
 		}
 
-		const { event, state } = get_request_store();
+		const event = get_event();
 		const payload = stringify_remote_arg(arg);
 
-		return create_query_resource(__, payload, event, state, () =>
-			run_remote_function(event, state, QUERY, () => validate(arg), fn)
+		return create_query_resource(__, payload, event, () =>
+			run_remote_function(event, QUERY, () => validate(arg), fn)
 		);
 	};
 
@@ -147,26 +147,22 @@ function live(validate_or_fn, maybe_fn) {
 	const validate = create_validator(validate_or_fn, maybe_fn);
 
 	/**
-	 * @param {any} event
-	 * @param {any} state
+	 * @param {RequestEvent} event
 	 * @param {any} get_input
 	 */
-	const run = (event, state, get_input) =>
-		run_remote_generator(event, state, QUERY, get_input, fn, __.name);
+	const run = (event, get_input) => run_remote_generator(event, QUERY, get_input, fn, __.name);
 
 	/** @type {RemoteQueryLiveInternals} */
 	const __ = {
 		type: 'query_live',
 		id: '',
 		name: '',
-		run: (event, state, arg) => run(event, state, () => validate(arg)),
+		run: (event, arg) => run(event, () => validate(arg)),
 		validate,
 		bind(payload, validated_arg) {
-			const { event, state } = get_request_store();
+			const event = get_event();
 
-			return create_live_query_resource(__, payload, event, state, () =>
-				run(event, state, () => validated_arg)
-			);
+			return create_live_query_resource(__, payload, event, () => run(event, () => validated_arg));
 		}
 	};
 
@@ -178,12 +174,10 @@ function live(validate_or_fn, maybe_fn) {
 			);
 		}
 
-		const { event, state } = get_request_store();
+		const event = get_event();
 		const payload = stringify_remote_arg(arg);
 
-		return create_live_query_resource(__, payload, event, state, () =>
-			run(event, state, () => validate(arg))
-		);
+		return create_live_query_resource(__, payload, event, () => run(event, () => validate(arg)));
 	};
 
 	Object.defineProperty(wrapper, '__', { value: __ });
@@ -242,7 +236,8 @@ function batch(validate_or_fn, maybe_fn) {
 	 * @returns {Promise<any>}
 	 */
 	const enqueue = (payload, get_validated) => {
-		const { event, state } = get_request_store();
+		const event = get_event();
+		const state = event.state;
 
 		return new Promise((resolve, reject) => {
 			const batches = (state.remote.batches ??=
@@ -273,7 +268,6 @@ function batch(validate_or_fn, maybe_fn) {
 				try {
 					return await run_remote_function(
 						event,
-						state,
 						QUERY,
 						async () => Promise.all(entries.map((entry) => entry.get_validated())),
 						async (input) => {
@@ -312,11 +306,10 @@ function batch(validate_or_fn, maybe_fn) {
 		name: '',
 		validate,
 		run: async (args) => {
-			const { event, state } = get_request_store();
+			const event = get_event();
 
 			return run_remote_function(
 				event,
-				state,
 				QUERY,
 				async () => Promise.all(args.map(validate)),
 				async (/** @type {any[]} */ input) => {
@@ -328,7 +321,7 @@ function batch(validate_or_fn, maybe_fn) {
 								const data = get_result(arg, i);
 								return { type: 'result', data };
 							} catch (error) {
-								const transformed = await handle_error_and_jsonify(event, state, error);
+								const transformed = await handle_error_and_jsonify(event, error);
 
 								return {
 									type: 'error',
@@ -341,11 +334,9 @@ function batch(validate_or_fn, maybe_fn) {
 			);
 		},
 		bind(payload, validated_arg) {
-			const { event, state } = get_request_store();
+			const event = get_event();
 
-			return create_query_resource(__, payload, event, state, () =>
-				enqueue(payload, () => validated_arg)
-			);
+			return create_query_resource(__, payload, event, () => enqueue(payload, () => validated_arg));
 		}
 	};
 
@@ -357,10 +348,10 @@ function batch(validate_or_fn, maybe_fn) {
 			);
 		}
 
-		const { event, state } = get_request_store();
+		const event = get_event();
 		const payload = stringify_remote_arg(arg);
 
-		return create_query_resource(__, payload, event, state, () =>
+		return create_query_resource(__, payload, event, () =>
 			// Collect all the calls to the same query in the same macrotask,
 			// then execute them as one backend request.
 			enqueue(payload, () => validate(arg))
@@ -375,12 +366,11 @@ function batch(validate_or_fn, maybe_fn) {
 /**
  * Include this value in the returned payload...
  * @param {RequestEvent} event
- * @param {RequestState} state
  * @param {RemoteInternals} internals
  * @param {string} payload
  * @param {() => Promise<any>} fn
  */
-export function refresh(event, state, internals, payload, fn) {
+export function refresh(event, internals, payload, fn) {
 	if (!internals.id) {
 		// unless this is a non-exported (i.e. private) query...
 		return;
@@ -399,7 +389,7 @@ export function refresh(event, state, internals, payload, fn) {
 	// mutations that happen after `refresh()` is called. If the developer re-awaits
 	// the query before the request finishes, the cache entry created by that await
 	// is reused instead of re-running the query.
-	(state.remote.explicit ??= new Map()).set(key, {
+	(event.state.remote.explicit ??= new Map()).set(key, {
 		internals,
 		fn
 	});
@@ -409,16 +399,15 @@ export function refresh(event, state, internals, payload, fn) {
  * @param {RemoteInternals} __
  * @param {string} payload — the stringified raw argument (i.e. the cache key the client will use)
  * @param {RequestEvent} event
- * @param {RequestState} state
  * @param {() => Promise<any>} fn
  * @returns {RemoteQuery<any>}
  */
-function create_query_resource(__, payload, event, state, fn) {
+function create_query_resource(__, payload, event, fn) {
 	/** @type {Promise<any> | null} */
 	let promise = null;
 
 	const get_promise = () => {
-		return (promise ??= get_response(__, payload, event, state, fn));
+		return (promise ??= get_response(__, payload, event, fn));
 	};
 
 	const populate_hydratable = () => {
@@ -459,18 +448,18 @@ function create_query_resource(__, payload, event, state, fn) {
 		},
 		refresh() {
 			promise = null;
-			delete get_cache(__, state)[payload];
+			delete get_cache(__, event)[payload];
 
-			refresh(event, state, __, payload, get_promise);
+			refresh(event, __, payload, get_promise);
 
 			return Promise.resolve();
 		},
 		/** @param {any} value */
 		set(value) {
 			const p = (promise = Promise.resolve(value));
-			get_cache(__, state)[payload] = p;
+			get_cache(__, event)[payload] = p;
 
-			refresh(event, state, __, payload, () => p);
+			refresh(event, __, payload, () => p);
 		},
 		/** @type {Promise<any>['then']} */
 		then(onfulfilled, onrejected) {
@@ -489,11 +478,10 @@ function create_query_resource(__, payload, event, state, fn) {
  * @param {RemoteQueryLiveInternals} __
  * @param {string} payload — the stringified raw argument (i.e. the cache key the client will use)
  * @param {RequestEvent} event
- * @param {RequestState} state
  * @param {() => AsyncGenerator<any, void, void>} get_generator
  * @returns {RemoteLiveQuery<any>}
  */
-function create_live_query_resource(__, payload, event, state, get_generator) {
+function create_live_query_resource(__, payload, event, get_generator) {
 	/** @type {Promise<any> | null} */
 	let promise = null;
 
@@ -505,7 +493,7 @@ function create_live_query_resource(__, payload, event, state, get_generator) {
 	};
 
 	const get_promise = () => {
-		return (promise ??= get_response(__, payload, event, state, get_first_value));
+		return (promise ??= get_response(__, payload, event, get_first_value));
 	};
 
 	const populate_hydratable = () => {
@@ -551,9 +539,9 @@ function create_live_query_resource(__, payload, event, state, get_generator) {
 		},
 		reconnect() {
 			promise = null;
-			delete get_cache(__, state)[payload];
+			delete get_cache(__, event)[payload];
 
-			refresh(event, state, __, payload, get_promise);
+			refresh(event, __, payload, get_promise);
 
 			return Promise.resolve();
 		},
@@ -563,7 +551,7 @@ function create_live_query_resource(__, payload, event, state, get_generator) {
 		},
 		[Symbol.asyncIterator]() {
 			const key = create_remote_key(__.id, payload);
-			const cache = (state.remote.live_iterators ??= new Map());
+			const cache = (event.state.remote.live_iterators ??= new Map());
 			let cached = cache.get(key);
 			if (!cached) {
 				cached = create_shared_live_iterator(event.request.signal, get_generator);
