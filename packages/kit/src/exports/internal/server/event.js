@@ -15,9 +15,6 @@ export const RENDER = 16;
 /** The kinds on the stack, kept under a symbol so it is not part of the public shape */
 export const CONTEXT = Symbol('sveltekit.context');
 
-/** What a query view copies its page fields from */
-const NO_PAGE = /** @type {Interface} */ ({});
-
 /** @type {Interface['setHeaders']} */
 function forbid_set_headers() {
 	throw new Error('setHeaders is not allowed in remote functions');
@@ -147,13 +144,9 @@ export class RequestEvent {
 		this.platform = source.platform;
 		this.request = source.request;
 		this.setHeaders = source.setHeaders;
-
-		// a query view neither reads the page from its source nor keeps it
-		const page = flags & QUERY ? NO_PAGE : source;
-		this.url = page.url;
-		this.params = page.params;
-		this.route = page.route;
-
+		this.url = source.url;
+		this.params = source.params;
+		this.route = source.route;
 		this.isDataRequest = source.isDataRequest;
 		this.isSubRequest = source.isSubRequest;
 		this.isRemoteRequest = source.isRemoteRequest;
@@ -216,24 +209,54 @@ export class RequestEvent {
 	 * The only way to copy an event: a view for the given kind of code (0 for a plain copy),
 	 * minus what that kind may not do, with the kinds already on the stack carried along
 	 * @param {number} kind
-	 * @param {Partial<Interface>} [overrides]
 	 * @returns {RequestEvent}
 	 */
-	clone(kind, overrides) {
+	clone(kind) {
 		const flags = this[CONTEXT] | kind;
-		const view = new (flags & QUERY ? QueryEvent : RequestEvent)(this, flags);
+		const view =
+			flags & QUERY
+				? /** @type {RequestEvent} */ (new QueryEvent(this, flags))
+				: new RequestEvent(this, flags);
 
 		if (kind & (QUERY | PRERENDER | FORM | COMMAND)) {
 			view.cookies = new RemoteCookies(this.cookies, view.read_only);
 			view.setHeaders = forbid_set_headers;
 		}
 
-		return Object.assign(view, overrides);
+		return view;
 	}
 }
 
-/** A query may not read the page, so a query view never copies it and reads throw */
-class QueryEvent extends RequestEvent {}
+/**
+ * A query may not read the page, so a query view never copies it and reads throw. It copies
+ * its own field list instead of extending `RequestEvent`, which would run the parent
+ * constructor and hand its stores a second shape
+ */
+class QueryEvent {
+	/** @type {number} */
+	[CONTEXT];
+
+	/**
+	 * @param {Interface} source
+	 * @param {number} flags
+	 */
+	constructor(source, flags) {
+		this.cookies = source.cookies;
+		this.fetch = source.fetch;
+		this.getClientAddress = source.getClientAddress;
+		this.locals = source.locals;
+		this.platform = source.platform;
+		this.request = source.request;
+		this.setHeaders = source.setHeaders;
+		this.isDataRequest = source.isDataRequest;
+		this.isSubRequest = source.isSubRequest;
+		this.isRemoteRequest = source.isRemoteRequest;
+		this.tracing = source.tracing;
+		this[CONTEXT] = flags;
+	}
+}
+
+Object.setPrototypeOf(QueryEvent.prototype, RequestEvent.prototype);
 
 for (const property of /** @type {const} */ (['url', 'params', 'route'])) {
 	Object.defineProperty(QueryEvent.prototype, property, {

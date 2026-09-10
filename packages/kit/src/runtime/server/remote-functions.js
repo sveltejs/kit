@@ -35,10 +35,9 @@ const KEEP_ALIVE_INTERVAL = 30_000;
  */
 export function create_live_query_response(event, state, internals, arg) {
 	const cancellation = new AbortController();
-	const live_event = event.clone(0, {
-		request: new Request(event.request, {
-			signal: AbortSignal.any([event.request.signal, cancellation.signal])
-		})
+	const live_event = event.clone(0);
+	live_event.request = new Request(event.request, {
+		signal: AbortSignal.any([event.request.signal, cancellation.signal])
 	});
 
 	const generator = internals.run(live_event, state, arg);

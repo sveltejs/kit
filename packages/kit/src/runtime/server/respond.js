@@ -443,13 +443,12 @@ export async function internal_respond(request, state) {
 				'sveltekit.is_sub_request': event.isSubRequest
 			},
 			fn: async (root_span) => {
-				const traced_event = event.clone(0, {
-					tracing: {
-						enabled: __SVELTEKIT_SERVER_TRACING_ENABLED__,
-						root: root_span,
-						current: root_span
-					}
-				});
+				const traced_event = event.clone(0);
+				traced_event.tracing = {
+					enabled: __SVELTEKIT_SERVER_TRACING_ENABLED__,
+					root: root_span,
+					current: root_span
+				};
 
 				return await with_request_store({ event: traced_event, state }, () =>
 					hooks.handle({

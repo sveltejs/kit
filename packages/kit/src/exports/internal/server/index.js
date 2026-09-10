@@ -14,7 +14,9 @@ export function get_origin() {
  * @returns {RequestEvent}
  */
 export function merge_tracing(event, current) {
-	return RequestEvent.from(event).clone(0, { tracing: { ...event.tracing, current } });
+	const traced = RequestEvent.from(event).clone(0);
+	traced.tracing = { ...event.tracing, current };
+	return traced;
 }
 
 export {

@@ -33,7 +33,8 @@ export async function render_data(event, state, route, invalidated_data_nodes, t
 		const url = new URL(event.url);
 		url.pathname = normalize_path(url.pathname, trailing_slash);
 
-		const new_event = event.clone(0, { url });
+		const new_event = event.clone(0);
+		new_event.url = url;
 
 		const functions = node_ids.map((n, i) => {
 			return once(async () => {

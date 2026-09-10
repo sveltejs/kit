@@ -32,7 +32,7 @@ test('flags accumulate through nested views', () => {
 
 test('a query view throws on access to the page, on every copy', () => {
 	const query = root().clone(QUERY);
-	const traced = query.clone(0, { locals: {} });
+	const traced = query.clone(0);
 
 	for (const event of [query, traced, traced.clone(QUERY)]) {
 		for (const property of /** @type {const} */ (['url', 'params', 'route'])) {
