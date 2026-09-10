@@ -14,7 +14,7 @@ vi.mock(import('@sveltejs/kit/internal/server'), async (actualPromise) => {
 	return {
 		...actual,
 		get_request_store: () => ({
-			event: dummy_event,
+			event: /** @type {any} */ (dummy_event),
 			state: /** @type {RequestState} */ (/** @type {unknown} */ ({}))
 		})
 	};

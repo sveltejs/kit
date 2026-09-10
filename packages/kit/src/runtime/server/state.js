@@ -1,8 +1,10 @@
 /** @import { InternalRequestOptions, RequestState } from 'types' */
 
-/** Per-request caches and context flags — never carried into a fork. */
+/** Per-request caches — never carried into a fork. */
 function transient_fields() {
 	return {
+		headers: {},
+		responded: false,
 		remote: {
 			data: null,
 			explicit: null,
@@ -12,12 +14,7 @@ function transient_fields() {
 			ignored: null,
 			batches: null,
 			live_iterators: null
-		},
-		is_in_remote_function: false,
-		is_in_remote_form_or_command: false,
-		is_in_remote_query: false,
-		is_in_remote_prerender: false,
-		is_in_render: false
+		}
 	};
 }
 
