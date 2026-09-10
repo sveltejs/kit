@@ -43,7 +43,7 @@ import {
 } from '../pathname.js';
 import { server_data_serializer } from './page/data_serializer.js';
 import { get_remote_id, handle_remote_call } from './remote-functions.js';
-import { hooks, manifest } from './internal.js';
+import { before_handle, emulator, hooks, manifest } from './internal.js';
 import { options } from '<sveltekit:generated>/server.js';
 import { respond_with_error, handle_fatal_error } from './page/respond_with_error.js';
 
@@ -191,8 +191,8 @@ export async function internal_respond(request, state) {
 				}),
 			locals: {},
 			params: {},
-			platform: state.emulator?.platform
-				? await state.emulator.platform({
+			platform: emulator?.platform
+				? await emulator.platform({
 						config: {},
 						prerender: !!state.prerendering?.fallback
 					})
@@ -381,7 +381,7 @@ export async function internal_respond(request, state) {
 				}
 			}
 
-			if (state.before_handle || state.emulator?.platform) {
+			if (before_handle || emulator?.platform) {
 				let config = {};
 
 				/** @type {import('types').PrerenderOption} */
@@ -396,12 +396,12 @@ export async function internal_respond(request, state) {
 					prerender = state.prerender_default = page_nodes.prerender();
 				}
 
-				if (state.emulator?.platform) {
-					event.platform = await state.emulator.platform({ config, prerender });
+				if (emulator?.platform) {
+					event.platform = await emulator.platform({ config, prerender });
 				}
 
-				if (state.before_handle) {
-					return await state.before_handle(event, config, prerender, handle);
+				if (before_handle) {
+					return await before_handle(event, config, prerender, handle);
 				}
 			}
 		}

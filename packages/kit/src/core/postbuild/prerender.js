@@ -54,14 +54,6 @@ async function prerender({
 	/** @type {import('types').ServerModule} */
 	const { configure, format_response } = await import(pathToFileURL(`${out}/server/index.js`).href);
 
-	const { init, respond } = await configure({
-		building: true,
-		prerendering: true,
-		env,
-		manifest,
-		read: (file) => createReadableStream(`${out}/server/${file}`)
-	});
-
 	const throw_handled = () => {
 		throw new Error('__handled__');
 	};
@@ -170,11 +162,33 @@ async function prerender({
 
 	const emulator = await config.adapter?.emulate?.();
 
-	/** @type {import('types').Logger} */
-	const log = logger({ verbose });
-
 	/** @type {Map<string, string>} */
 	const saved = new Map();
+
+	const { init, respond } = await configure({
+		building: true,
+		prerendering: true,
+		env,
+		manifest,
+		read: (file) => createReadableStream(`${out}/server/${file}`),
+		read_static: (file) => {
+			// stuff we just wrote
+			const filepath = saved.get(file);
+			if (filepath) return readFileSync(filepath);
+
+			// Static assets emitted during build
+			if (file.startsWith(config.appDir)) {
+				return readFileSync(`${out}/server/${file}`);
+			}
+
+			// stuff in `static`
+			return readFileSync(join(config.files.assets, file));
+		},
+		emulator
+	});
+
+	/** @type {import('types').Logger} */
+	const log = logger({ verbose });
 
 	const handle_http_error = normalise_error_handler(
 		'handleHttpError',
@@ -385,21 +399,7 @@ async function prerender({
 				dependencies,
 				remote_responses,
 				resolved_route_ids
-			},
-			read: (file) => {
-				// stuff we just wrote
-				const filepath = saved.get(file);
-				if (filepath) return readFileSync(filepath);
-
-				// Static assets emitted during build
-				if (file.startsWith(config.appDir)) {
-					return readFileSync(`${out}/server/${file}`);
-				}
-
-				// stuff in `static`
-				return readFileSync(join(config.files.assets, file));
-			},
-			emulator
+			}
 		});
 
 		const encoded_id = response.headers.get('x-sveltekit-routeid');
