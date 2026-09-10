@@ -47,25 +47,37 @@ test('__data.json function exists in Vercel routing configuration', () => {
 
 const filesystem = config.routes.findIndex((route) => route.handle === 'filesystem');
 
+// each ISR route emits more than one entry, and all of them have to sit on the same
+// side of the filesystem phase, so match on the prefix rather than the whole `src`
+/** @param {string} prefix */
+const find_indexes = (prefix) =>
+	config.routes.flatMap((route, index) => (route.src?.startsWith(prefix) ? [index] : []));
+
 test('ISR routes capture the requested pathname', () => {
 	const route = config.routes.find((route) => route.src === '^(/isr-trailing-slash/?)$');
 	assert.equal(route?.dest, '/isr-trailing-slash?__pathname=$1');
 });
 
 test('static ISR routes are matched before the filesystem', () => {
-	const index = config.routes.findIndex((route) => route.src === '^(/isr-trailing-slash/?)$');
-	assert.ok(index < filesystem);
+	const indexes = find_indexes('^(/isr-trailing-slash/?)');
+	assert.ok(indexes.length > 0);
+	assert.ok(indexes.every((index) => index < filesystem));
 });
 
 test('dynamic ISR routes are matched after the filesystem', () => {
-	const index = config.routes.findIndex((route) => route.src === '^(/isr/([^/]+?)/?)$');
-	assert.ok(index > filesystem);
+	const indexes = find_indexes('^(/isr/([^/]+?)/?)');
+	assert.ok(indexes.length > 0);
+	assert.ok(indexes.every((index) => index > filesystem));
 });
 
-test('ISR bypass routes include every non-cacheable SvelteKit method', () => {
-	const route = config.routes.find((route) => route.src === '^(/isr-endpoint/?)(?:)$');
+test('only GET and HEAD are served the cached ISR response', () => {
+	const [cached, uncached] = config.routes.filter((route) => route.src === '^(/isr-endpoint/?)$');
 
-	assert.deepEqual(route?.methods, ['POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'QUERY']);
+	assert.deepEqual(cached?.methods, ['GET', 'HEAD']);
+	assert.equal(cached?.dest, '/isr-endpoint?__pathname=$1');
+
+	assert.equal(uncached?.methods, undefined);
+	assert.match(uncached?.dest ?? '', /^\/!\[-\]\/\d+\?__pathname=\$1$/);
 });
 
 test('process.cwd() is traced from the project directory', () => {

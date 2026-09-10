@@ -12,7 +12,6 @@ import {
 } from './utils.js';
 
 const INTERNAL = '![-]'; // this name is guaranteed not to conflict with user routes
-const ISR_BYPASS_METHODS = ['POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'QUERY'];
 
 /** @type {typeof import('./index.js').default} **/
 const plugin = function (defaults = {}) {
@@ -239,8 +238,6 @@ const plugin = function (defaults = {}) {
 			// their own path, so they must be routed before it to arrive with `__pathname`
 			/** @type {any[]} */
 			const static_isr_routes = [];
-			/** @type {any[]} */
-			const isr_bypass_routes = [];
 
 			for (const route of builder.routes) {
 				if (is_prerendered(route)) continue;
@@ -285,15 +282,17 @@ const plugin = function (defaults = {}) {
 					// since the function otherwise only sees its own path
 					const pathname = src.slice(1);
 
-					isr_bypass_routes.push({
-						src: `^(${pathname})(?:)$`,
-						methods: ISR_BYPASS_METHODS,
-						dest: `/${name}?__pathname=$1`
-					});
-
 					routes.push({
 						src: `^(${pathname})$`,
+						methods: ['GET', 'HEAD'],
 						dest: `/${isr_name}?__pathname=$1`
+					});
+
+					// any other method would be served the cached response, so it skips the
+					// ISR symlink and goes straight to the function
+					routes.push({
+						src: `^(${pathname})$`,
+						dest: `/${name}?__pathname=$1`
 					});
 
 					if (has_page) {
@@ -342,7 +341,7 @@ const plugin = function (defaults = {}) {
 			}
 
 			const filesystem = static_config.routes.findIndex((route) => route.handle === 'filesystem');
-			static_config.routes.splice(filesystem, 0, ...isr_bypass_routes, ...static_isr_routes);
+			static_config.routes.splice(filesystem, 0, ...static_isr_routes);
 
 			if (builder.config.router.resolution === 'server') {
 				// Create a separate serverless function just for server-side route resolution.
