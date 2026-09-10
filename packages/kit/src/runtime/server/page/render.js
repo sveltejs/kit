@@ -10,9 +10,13 @@ import { serialize_data } from './serialize_data.js';
 import { s } from '../../../utils/misc.js';
 import { Csp } from './csp.js';
 import { uneval_action_response } from './actions.js';
-import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import { SCHEME } from '../../../utils/url.js';
-import { create_server_routing_response, generate_route_object } from './server_routing.js';
+import {
+	client_path,
+	create_server_routing_response,
+	generate_route_object,
+	resolve_paths
+} from './server_routing.js';
 import {
 	add_data_suffix,
 	add_resolution_suffix,
@@ -121,16 +125,10 @@ export async function render_response({
 			const pathname = event.isDataRequest
 				? add_data_suffix(event.url.pathname)
 				: event.url.pathname;
-			const segments = pathname.slice(paths.base.length).split('/').slice(2);
-
-			base = segments.map(() => '..').join('/') || '.';
+			({ base, assets } = resolve_paths(pathname));
 
 			// resolve e.g. '../..' against current location, then remove trailing slash
 			base_expression = `new URL(${s(base)}, location).pathname.slice(0, -1)`;
-
-			if (!paths.assets || (paths.assets[0] === '/' && paths.assets !== SVELTE_KIT_ASSETS)) {
-				assets = base;
-			}
 		} else if (__SVELTEKIT_HASH_ROUTING__) {
 			// we have to assume that we're in the right place
 			base_expression = "new URL('.', location).pathname.slice(0, -1)";
@@ -279,15 +277,7 @@ export async function render_response({
 	let body = rendered.body;
 
 	/** @param {string} path */
-	const prefixed = (path) => {
-		if (path.startsWith('/')) {
-			// Vite makes the start script available through the base path and without it.
-			// We load it via the base path in order to support remote IDE environments which proxy
-			// all URLs under the base path during development.
-			return paths.base + path;
-		}
-		return `${assets}/${path}`;
-	};
+	const prefixed = (path) => client_path(path, { base, assets });
 
 	const style = client?.inline
 		? client.inline?.style

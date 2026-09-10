@@ -193,6 +193,12 @@ export class Server {
 			response.headers.set(REROUTED_URL_HEADER, request_state.rerouted_url);
 		}
 
+		// the HTTP layer discards HEAD response bodies, but nothing does when the server is called directly
+		if (request.method === 'HEAD' && response.body !== null) {
+			response.body.cancel().catch(noop);
+			return new Response(null, response);
+		}
+
 		return response;
 	}
 }

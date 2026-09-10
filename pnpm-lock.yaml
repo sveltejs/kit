@@ -170,6 +170,9 @@ catalogs:
     prettier-plugin-svelte:
       specifier: ^4.1.1
       version: 4.1.1
+    rolldown:
+      specifier: ^1.2.3
+      version: 1.2.3
     sirv-cli:
       specifier: ^3.0.1
       version: 3.0.1
@@ -361,9 +364,6 @@ importers:
       rolldown:
         specifier: ^1.2.3
         version: 1.2.3
-      smol-toml:
-        specifier: ^1.8.0
-        version: 1.8.0
     devDependencies:
       '@netlify/edge-functions':
         specifier: ^3.0.8
@@ -398,6 +398,9 @@ importers:
       vite:
         specifier: 'catalog:'
         version: 8.2.1(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0)
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.19)(@vitest/browser-playwright@4.1.10)(jsdom@30.0.1)(vite@8.2.1(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0))
 
   packages/adapter-netlify/test/apps/edge:
     devDependencies:
@@ -413,6 +416,9 @@ importers:
       vite:
         specifier: 'catalog:'
         version: 8.2.1(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0)
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.19)(@vitest/browser-playwright@4.1.10)(jsdom@30.0.1)(vite@8.2.1(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0))
 
   packages/adapter-netlify/test/apps/instrumentation:
     devDependencies:
@@ -443,10 +449,19 @@ importers:
       vite:
         specifier: 'catalog:'
         version: 8.2.1(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0)
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.19)(@vitest/browser-playwright@4.1.10)(jsdom@30.0.1)(vite@8.2.1(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0))
 
   packages/adapter-node:
     dependencies:
-      rolldown:
+      '@jridgewell/remapping':
+        specifier: ^2.3.5
+        version: 2.3.5
+      '@rolldown/pluginutils':
+        specifier: ^1.0.1
+        version: 1.0.1
+      magic-string:
         specifier: ^1.2.3
         version: 1.2.3
     devDependencies:
@@ -459,6 +474,9 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 22.19.19
+      rolldown:
+        specifier: 'catalog:'
+        version: 1.2.3
       sirv:
         specifier: ^3.0.2
         version: 3.0.2
@@ -470,6 +488,10 @@ importers:
         version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.19)(@vitest/browser-playwright@4.1.10)(jsdom@30.0.1)(vite@8.2.1(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0))
 
   packages/adapter-node/test/apps/basic:
+    dependencies:
+      server-side-dep:
+        specifier: file:server-side-dep
+        version: file:packages/adapter-node/test/apps/basic/server-side-dep
     devDependencies:
       '@playwright/test':
         specifier: 'catalog:'
@@ -486,6 +508,9 @@ importers:
       vite:
         specifier: 'catalog:'
         version: 8.2.1(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0)
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.19)(@vitest/browser-playwright@4.1.10)(jsdom@30.0.1)(vite@8.2.1(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0))
 
   packages/adapter-static:
     devDependencies:
@@ -608,8 +633,8 @@ importers:
         specifier: ^7.0.0
         version: 7.3.0(svelte@5.57.0(@typescript-eslint/types@8.61.1))(vite@8.2.1(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0))
       magic-string:
-        specifier: ^1.1.0
-        version: 1.1.0
+        specifier: ^1.2.3
+        version: 1.2.3
       sharp:
         specifier: ^0.35.3
         version: 0.35.3(@types/node@22.19.19)
@@ -675,8 +700,8 @@ importers:
         specifier: ^1.2.2
         version: 1.2.2
       magic-string:
-        specifier: ^1.1.0
-        version: 1.1.0
+        specifier: ^1.2.3
+        version: 1.2.3
       mrmime:
         specifier: ^2.0.1
         version: 2.0.1
@@ -879,6 +904,9 @@ importers:
       '@vitest/browser-playwright':
         specifier: 'catalog:'
         version: 4.1.10(playwright@1.62.1)(vite@8.2.1(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0))(vitest@4.1.10)
+      jsdom:
+        specifier: 'catalog:'
+        version: 30.0.1
       svelte:
         specifier: 'catalog:'
         version: 5.57.0(@typescript-eslint/types@8.61.1)
@@ -1734,6 +1762,9 @@ importers:
 
   packages/package:
     dependencies:
+      '@sveltejs/load-config':
+        specifier: ^0.2.3
+        version: 0.2.3
       chokidar:
         specifier: ^5.0.0
         version: 5.0.0
@@ -3118,8 +3149,8 @@ packages:
       typescript: '>= 5 < 7'
       typescript-eslint: '>= 8'
 
-  '@sveltejs/load-config@0.2.2':
-    resolution: {integrity: sha512-K7dsJDQxBOF+f+epuhMactcjK2VP4MRkLKtwSykNtEI+cKVEyzrmmhQ1pmoxI800m4JKcyJ05L2M4yPwAGiBNw==}
+  '@sveltejs/load-config@0.2.3':
+    resolution: {integrity: sha512-VT3qmUb8pRV2QrZjd8iAmtg8lf4W0TIjZbvXtz5MKei/q96teWZgGJyyidJzOjzZzvdq616eSRVeMYIQChUTAQ==}
     engines: {node: '>= 18.0.0'}
 
   '@sveltejs/vite-plugin-svelte@7.3.0':
@@ -4013,8 +4044,8 @@ packages:
   magic-string@0.30.21:
     resolution: {integrity: sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ==}
 
-  magic-string@1.1.0:
-    resolution: {integrity: sha512-kS3VHe0nEPST2saQV4Rbkchcd3UBRkVTQHo1D3h/ZTwFDhai/mfKkmtPAtD129EOI7K3HlHIsFOt0WrI2/oU9g==}
+  magic-string@1.2.3:
+    resolution: {integrity: sha512-Bpb0W2TbLKOZ7vJnOUnVRGq3WL2p+ISV29M6hYPL1AFCpyKZpdr5ytiXoTSSxRVhg8YW7f65+6gbG8WG6PCa/g==}
 
   mdn-data@2.27.1:
     resolution: {integrity: sha512-9Yubnt3e8A0OKwxYSXyhLymGW4sCufcLG6VdiDdUGVkPhpqLxlvP5vl1983gQjJl3tqbrM731mjaZaP68AgosQ==}
@@ -4263,6 +4294,9 @@ packages:
   server-side-dep@file:packages/adapter-cloudflare/test/apps/workers/server-side-dep:
     resolution: {directory: packages/adapter-cloudflare/test/apps/workers/server-side-dep, type: directory}
 
+  server-side-dep@file:packages/adapter-node/test/apps/basic/server-side-dep:
+    resolution: {directory: packages/adapter-node/test/apps/basic/server-side-dep, type: directory}
+
   sharp@0.35.2:
     resolution: {integrity: sha512-FVtFjtBCMiJS6yb5CX7Sop45WFMpeGw6oRKuJnXYgf/f1ms/D7LE/ZUSNxnW7rZ/dbslQWYkoqFHGPaDBtaK4w==}
     engines: {node: '>=20.9.0'}
@@ -4302,10 +4336,6 @@ packages:
 
   sisteransi@1.0.5:
     resolution: {integrity: sha512-bLGGlR1QxBcynn2d5YmDX4MGjlZvy2MRBDRNHLJ8VI6l6+9FUiyTFNJ0IveOSP0bcXgVDPRcfGqA0pjaqUpfVg==}
-
-  smol-toml@1.8.0:
-    resolution: {integrity: sha512-kCZr2V3ch9i00x8zXRhjUNVcjG9ijES5dDudkXvUVCT5QlJNQWElSJdZqyPemffHoLNUYwOcou0Fy+ojN0uHSQ==}
-    engines: {node: '>= 18'}
 
   source-map-js@1.2.1:
     resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
@@ -5773,12 +5803,12 @@ snapshots:
       typescript: 6.0.3
       typescript-eslint: 8.58.0(eslint@10.8.1(jiti@2.4.2)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3)
 
-  '@sveltejs/load-config@0.2.2': {}
+  '@sveltejs/load-config@0.2.3': {}
 
   '@sveltejs/vite-plugin-svelte@7.3.0(svelte@5.57.0(@typescript-eslint/types@8.61.1))(vite@8.2.1(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0))':
     dependencies:
       deepmerge: 4.3.1
-      magic-string: 1.1.0
+      magic-string: 1.2.3
       obug: 2.1.4
       svelte: 5.57.0(@typescript-eslint/types@8.61.1)
       vite: 8.2.1(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0)
@@ -6646,7 +6676,7 @@ snapshots:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  magic-string@1.1.0:
+  magic-string@1.2.3:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.5.5
 
@@ -6881,6 +6911,8 @@ snapshots:
 
   server-side-dep@file:packages/adapter-cloudflare/test/apps/workers/server-side-dep: {}
 
+  server-side-dep@file:packages/adapter-node/test/apps/basic/server-side-dep: {}
+
   sharp@0.35.2:
     dependencies:
       '@img/colour': 1.1.0
@@ -6975,8 +7007,6 @@ snapshots:
 
   sisteransi@1.0.5: {}
 
-  smol-toml@1.8.0: {}
-
   source-map-js@1.2.1: {}
 
   stackback@0.0.2: {}
@@ -6998,7 +7028,7 @@ snapshots:
   svelte-check@4.7.5(picomatch@4.0.5)(svelte@5.57.0(@typescript-eslint/types@8.61.1))(typescript@6.0.3):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.25
-      '@sveltejs/load-config': 0.2.2
+      '@sveltejs/load-config': 0.2.3
       chokidar: 4.0.3
       fdir: 6.5.0(picomatch@4.0.5)
       picocolors: 1.1.1
