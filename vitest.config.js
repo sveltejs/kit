@@ -1,5 +1,4 @@
 import { defineConfig } from 'vitest/config';
-import kit_config from './packages/kit/vitest.kit.config.js';
 
 export default defineConfig({
 	root: import.meta.dirname,
@@ -9,17 +8,7 @@ export default defineConfig({
 			// prevent Vitest from crawling nested Vite apps in the kit test directory
 			// which do not use Vitest but have a vite.config.js file
 			'!packages/kit',
-			...kit_config.test.projects.map((project) => {
-				return {
-					extends: 'packages/kit/vitest.kit.config.js',
-					root: 'packages/kit',
-					test: {
-						...kit_config.test,
-						// TODO: use vitest `mergeConfig` rather than manually merging it
-						...project.test
-					}
-				};
-			}),
+			'packages/kit/vitest.kit.config.js',
 			'packages/kit/test/apps/async',
 			'packages/kit/test/apps/basics',
 			'packages/kit/test/apps/options/vite.custom.config.js',
