@@ -138,7 +138,7 @@ export function process_config(config, cwd) {
 	if (
 		config.csp?.directives?.['require-trusted-types-for']?.includes('script') &&
 		config.serviceWorker.register &&
-		resolve_entry(path.resolve(cwd, config.files.serviceWorker)) &&
+		resolve_entry(path.resolve(cwd, config.files.serviceWorker), config.moduleExtensions) &&
 		!config.csp?.directives?.['trusted-types']?.includes('sveltekit-trusted-url')
 	) {
 		throw new Error(

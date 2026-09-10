@@ -91,9 +91,9 @@ export function create_assets(config) {
  * @param {string} cwd
  */
 function create_hooks(config, cwd) {
-	const client = resolve_entry(config.files.hooks.client);
-	const server = resolve_entry(config.files.hooks.server);
-	const universal = resolve_entry(config.files.hooks.universal);
+	const client = resolve_entry(config.files.hooks.client, config.moduleExtensions);
+	const server = resolve_entry(config.files.hooks.server, config.moduleExtensions);
+	const universal = resolve_entry(config.files.hooks.universal, config.moduleExtensions);
 
 	return {
 		client: client && posixify(path.relative(cwd, client)),
@@ -107,7 +107,7 @@ function create_hooks(config, cwd) {
  * @param {string} cwd
  */
 function resolve_params(config, cwd) {
-	const params_file = resolve_entry(config.files.params);
+	const params_file = resolve_entry(config.files.params, config.moduleExtensions);
 	return params_file ? posixify(path.relative(cwd, params_file)) : null;
 }
 

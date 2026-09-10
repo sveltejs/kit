@@ -183,7 +183,8 @@ export function plugin_compile(
 
 				// ...and the server instrumentation file
 				const server_instrumentation = resolve_entry(
-					path.join(kit.files.src, 'instrumentation.server')
+					path.join(kit.files.src, 'instrumentation.server'),
+					kit.moduleExtensions
 				);
 				if (server_instrumentation) {
 					if (kit.adapter && !kit.adapter.supports?.instrumentation?.()) {
