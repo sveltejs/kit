@@ -38,18 +38,23 @@ export async function preview(vite, svelte_config) {
 	}
 
 	/** @type {ServerModule} */
-	const { init, respond } = await import(pathToFileURL(join(dir, 'index.js')).href);
+	const { configure } = await import(pathToFileURL(join(dir, 'index.js')).href);
 
 	/** @type {{ manifest: import('types').SSRManifest }} */
 	const { manifest } = await import(pathToFileURL(join(dir, 'manifest.js')).href);
 
+	/** @type {import('types').ServerInstance} */
+	let server;
+
 	try {
-		await init({
+		server = await configure({
 			manifest,
 			env: loadEnv(vite.config.mode, svelte_config.env.dir, ''),
 			read: (file) => createReadableStream(`${dir}/${file}`),
 			assets
 		});
+
+		await server.init();
 	} catch (error) {
 		// Vite erases the error message when starting the preview server so we store
 		// it in the stack instead. This ensures errors thrown using `stackless`
@@ -208,7 +213,7 @@ export async function preview(vite, svelte_config) {
 
 			(svelte_config.adapter?.vite?.setResponse ?? setResponse)(
 				res,
-				await respond(request, {
+				await server.respond(request, {
 					getClientAddress: () => {
 						const { remoteAddress } = req.socket;
 						if (remoteAddress) return remoteAddress;

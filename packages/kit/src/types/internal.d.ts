@@ -46,15 +46,19 @@ export interface ServerConfigureOptions extends Partial<ServerInitOptions> {
 	fix_stack_trace?: (error: Error) => void;
 }
 
-export interface ServerModule {
-	init(options: ServerConfigureOptions): Promise<void>;
+export interface ServerInstance {
+	init(): Promise<void>;
 	respond(request: Request, options: InternalRequestOptions): Promise<Response>;
-	/** the `server` adapters receive from `builder.generateServerInstance` */
-	create_server(manifest: SSRManifest): Server;
+	set_env(env: Record<string, string | undefined>): void;
 }
 
-/** the built `server/internal.js` */
-export type ServerInternalModule = typeof import('<sveltekit:generated>/server.js');
+/** the built `server/index.js` */
+export interface ServerModule {
+	configure(options: ServerConfigureOptions): Promise<ServerInstance>;
+	/** the `server` adapters receive from `builder.generateServerInstance` */
+	create_server(manifest: SSRManifest): Server;
+	format_response(status: number, request: Request): string;
+}
 
 export interface Asset {
 	file: string;

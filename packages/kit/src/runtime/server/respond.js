@@ -12,10 +12,8 @@ import { base, app_dir } from '#app/paths';
 import { is_endpoint_request, render_endpoint } from './endpoint.js';
 import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
-import { respond_with_error } from './page/respond_with_error.js';
 import { get_self_origin, is_csrf_forbidden, is_remote_forbidden } from './csrf.js';
 import { has_prerendered_path, method_not_allowed, redirect_response } from './utils.js';
-import { handle_fatal_error } from './errors.js';
 import {
 	decode_pathname,
 	disable_search,
@@ -45,7 +43,9 @@ import {
 } from '../pathname.js';
 import { server_data_serializer } from './page/data_serializer.js';
 import { get_remote_id, handle_remote_call } from './remote-functions.js';
-import { hooks, manifest, options } from './internal.js';
+import { hooks, manifest } from './internal.js';
+import { options } from '<sveltekit:generated>/server.js';
+import { respond_with_error, handle_fatal_error } from './page/respond_with_error.js';
 
 /** @type {import('types').RequiredResolveOptions['transformPageChunk']} */
 const default_transform = ({ html }) => html;
