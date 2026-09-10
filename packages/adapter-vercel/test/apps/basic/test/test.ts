@@ -45,7 +45,8 @@ test('$app/server read works', async ({ request }) => {
 });
 
 test('avoid serving ISR for non-GET/HEAD requests', async ({ request }) => {
-	for (const method of ['POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'QUERY']) {
+	// Vercel rejects QUERY at the edge with a 405, so it never reaches the function
+	for (const method of ['POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']) {
 		await test.step(method, async () => {
 			const body = method === 'OPTIONS' ? undefined : crypto.randomUUID();
 			const response = await request.fetch('/isr-endpoint', { method, data: body });
