@@ -74,7 +74,9 @@ export function resolve(...args) {
 		}
 
 		return (
-			/** @type {ResolvedPathname} */ (base + pathname_prefix + resolve_route(id, params ?? {}))
+			/** @type {ResolvedPathname} */ (
+				base + pathname_prefix + resolve_route(id, params ?? {}, true)
+			)
 		);
 	}
 
