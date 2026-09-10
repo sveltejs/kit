@@ -448,7 +448,18 @@ function kit({ svelte_config }) {
 							// import, but it works with vite-node's externalization logic, which
 							// uses basic concatenation)
 							'@sveltejs/kit/src/runtime'
-						]
+						],
+						// Any CommonJS dependencies of Kit (of which there are currently none) must always be externalized.
+						// Without this, the tests will still pass but `pnpm dev` will fail in projects that link `@sveltejs/kit`.
+
+						// `@opentelemetry/api` must be externalized so that `instrumentation.server.js` and the
+						// SvelteKit runtime share a single instance of the module (the global tracer/propagation
+						// is set on that instance — two bundled copies would mean instrumentation hooks are
+						// invisible to the runtime). Externalizing also prevents the bundler from colocating
+						// `@opentelemetry/api` into a shared chunk that also contains application modules, which
+						// would cause those modules to be evaluated before `Server.init()` sets env vars — see
+						// https://github.com/sveltejs/kit/issues/16288
+						external: ['@opentelemetry/api']
 					},
 					publicDir: kit.files.assets
 				};
@@ -515,20 +526,6 @@ function kit({ svelte_config }) {
 						__SVELTEKIT_HAS_SERVER_LOAD__: 'true',
 						__SVELTEKIT_HAS_UNIVERSAL_LOAD__: 'true'
 					};
-
-					// Any CommonJS dependencies of Kit (of which there are currently none) must always be externalized.
-					// Without this, the tests will still pass but `pnpm dev` will fail in projects that link `@sveltejs/kit`.
-					//
-					// `@opentelemetry/api` must be externalized so that `instrumentation.server.js` and the
-					// SvelteKit runtime share a single instance of the module (the global tracer/propagation
-					// is set on that instance — two bundled copies would mean instrumentation hooks are
-					// invisible to the runtime). Externalizing also prevents the bundler from colocating
-					// `@opentelemetry/api` into a shared chunk that also contains application modules, which
-					// would cause those modules to be evaluated before `Server.init()` sets env vars — see
-					// https://github.com/sveltejs/kit/issues/16288
-					/** @type {NonNullable<UserConfig['ssr']>} */ (new_config.ssr).external = [
-						'@opentelemetry/api'
-					];
 
 					// we avoid setting base to paths.assets in dev so that we get the
 					// trailing slash redirect to paths.base if it is set
