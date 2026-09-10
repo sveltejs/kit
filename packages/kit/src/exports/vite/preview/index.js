@@ -1,6 +1,6 @@
 /** @import { NextHandleFunction } from 'connect' */
 /** @import { PreviewServer } from 'vite' */
-/** @import { ValidatedConfig, ServerInternalModule, ServerModule } from 'types' */
+/** @import { ValidatedConfig, ServerModule } from 'types' */
 import fs from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -37,23 +37,18 @@ export async function preview(vite, svelte_config) {
 		await import(pathToFileURL(instrumentation).href);
 	}
 
-	/** @type {ServerInternalModule} */
-	const { set_assets } = await import(pathToFileURL(join(dir, 'internal.js')).href);
-
 	/** @type {ServerModule} */
-	const { Server } = await import(pathToFileURL(join(dir, 'index.js')).href);
+	const { init, respond } = await import(pathToFileURL(join(dir, 'index.js')).href);
 
 	/** @type {{ manifest: import('types').SSRManifest }} */
 	const { manifest } = await import(pathToFileURL(join(dir, 'manifest.js')).href);
 
-	set_assets(assets);
-
-	const server = new Server(manifest);
-
 	try {
-		await server.init({
+		await init({
+			manifest,
 			env: loadEnv(vite.config.mode, svelte_config.env.dir, ''),
-			read: (file) => createReadableStream(`${dir}/${file}`)
+			read: (file) => createReadableStream(`${dir}/${file}`),
+			assets
 		});
 	} catch (error) {
 		// Vite erases the error message when starting the preview server so we store
@@ -213,7 +208,7 @@ export async function preview(vite, svelte_config) {
 
 			(svelte_config.adapter?.vite?.setResponse ?? setResponse)(
 				res,
-				await server.respond(request, {
+				await respond(request, {
 					getClientAddress: () => {
 						const { remoteAddress } = req.socket;
 						if (remoteAddress) return remoteAddress;

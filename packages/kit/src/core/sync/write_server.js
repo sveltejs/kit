@@ -26,6 +26,7 @@ const server_template = ({
 import { set_building, set_prerendering } from '$app/env/server';
 import { set_assets } from '$app/paths/internal/server';
 import { set_fix_stack_trace, set_manifest, set_read_implementation, format_response } from '${runtime_directory}/server/internal.js';
+import { stream_from_iterable } from '${runtime_directory}/utils.js';
 import error from './shared/error-template.js';
 
 export const options = {
@@ -69,7 +70,43 @@ export async function get_hooks() {
 	};
 }
 
-export { set_assets, set_building, set_fix_stack_trace, set_manifest, set_prerendering, set_read_implementation, format_response };
+/**
+ * Sets the module-level state the server runtime reads, in the order it has to happen:
+ * \`building\` and \`prerendering\` before the env module evaluates the user's \`src/env\` config,
+ * which may read them, and everything else before user modules run
+ * @param {import('types').ServerConfigureOptions} opts
+ */
+export async function configure({ building, prerendering, env, manifest, read, assets, fix_stack_trace }) {
+	if (building) set_building();
+	if (prerendering) set_prerendering();
+
+	if (manifest) set_manifest(manifest);
+	if (assets !== undefined) set_assets(assets);
+	if (fix_stack_trace) set_fix_stack_trace(fix_stack_trace);
+
+	if (read) {
+		// the public \`read\` may return a promise, the runtime expects a stream
+		set_read_implementation((file) => {
+			const result = read(file);
+			if (result instanceof ReadableStream) return result;
+
+			return stream_from_iterable(
+				(async function* () {
+					const stream = await result;
+					if (stream) yield* stream;
+				})()
+			);
+		});
+	}
+
+	// evaluates the user's \`src/env\` config, which may read any of the above
+	if (env) {
+		const { set_env } = await import('<sveltekit:generated>/env/config.js');
+		set_env(env);
+	}
+}
+
+export { format_response };
 `;
 
 /**
