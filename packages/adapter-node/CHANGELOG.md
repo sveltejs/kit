@@ -1,5 +1,13 @@
 # @sveltejs/adapter-node
 
+## 6.0.0-next.13
+
+### Patch Changes
+
+- chore: avoid bundling the server twice ([#17068](https://github.com/sveltejs/kit/pull/17068))
+- Updated dependencies [[`4c812c8`](https://github.com/sveltejs/kit/commit/4c812c808c6b62c78b89fb0021dcfe45e06afcc7), [`4da6320`](https://github.com/sveltejs/kit/commit/4da6320db8d70b73b93e142e4bb6ba9173be3b97)]:
+  - @sveltejs/kit@3.0.0-next.28
+
 ## 6.0.0-next.12
 
 ### Major Changes

@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 3.0.0-next.28
+
+### Patch Changes
+
+- fix: respect `paths.relative` for server-side route resolution imports ([#17056](https://github.com/sveltejs/kit/pull/17056))
+
+- fix: preserve sourcemap source paths when adapters copy build output ([#17082](https://github.com/sveltejs/kit/pull/17082))
+
 ## 3.0.0-next.27
 
 ### Major Changes

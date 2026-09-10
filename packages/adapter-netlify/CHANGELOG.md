@@ -1,5 +1,21 @@
 # @sveltejs/adapter-netlify
 
+## 7.0.0-next.12
+
+### Major Changes
+
+- breaking: write static files based on the `publish` adapter option rather than reading the `netlify.toml` file ([#17078](https://github.com/sveltejs/kit/pull/17078))
+
+### Minor Changes
+
+- feat: support `split` and `edge` options combined ([#17045](https://github.com/sveltejs/kit/pull/17045))
+
+### Patch Changes
+
+- chore: include edge function configuration in the function module ([#17058](https://github.com/sveltejs/kit/pull/17058))
+- Updated dependencies [[`4c812c8`](https://github.com/sveltejs/kit/commit/4c812c808c6b62c78b89fb0021dcfe45e06afcc7), [`4da6320`](https://github.com/sveltejs/kit/commit/4da6320db8d70b73b93e142e4bb6ba9173be3b97)]:
+  - @sveltejs/kit@3.0.0-next.28
+
 ## 7.0.0-next.11
 
 ### Major Changes
