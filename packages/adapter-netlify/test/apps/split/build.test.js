@@ -17,6 +17,16 @@ const functions_dir = path.resolve(
 	edge ? './.netlify/v1/edge-functions' : './.netlify/v1/functions'
 );
 
+const config_path = path.resolve(import.meta.dirname, './.netlify/v1/config.json');
+
+test('omitted runtime uses Node.js without overriding its version', () => {
+	if (edge) return;
+
+	const config = JSON.parse(fs.readFileSync(config_path, 'utf-8'));
+	expect(config).not.toHaveProperty('nodeVersion');
+	expect(fs.existsSync(functions_dir)).toBe(true);
+});
+
 /** @param {(content: string) => boolean} filter */
 function read_functions(filter) {
 	return fs

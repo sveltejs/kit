@@ -16,7 +16,7 @@ It's recommended to install the appropriate adapter to your `devDependencies` on
 
 ## Environment-specific configuration
 
-To add configuration options, such as `{ edge: true }` in [`adapter-vercel`](adapter-vercel) and [`adapter-netlify`](adapter-netlify), you must install the underlying adapter — `adapter-auto` does not take any options.
+To add configuration options, such as `{ runtime: 'edge' }` in [`adapter-netlify`](adapter-netlify), you must install the underlying adapter — `adapter-auto` does not take any options.
 
 ## Adding community adapters
 

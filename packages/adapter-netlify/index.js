@@ -5,19 +5,14 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { builtinModules } from 'node:module';
-import process from 'node:process';
 import { build } from 'rolldown';
-import { matches, s } from './utils.js';
+import { matches, parse_runtime, s } from './utils.js';
 
 const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf-8'));
 const adapter_version = pkg.version;
 
 const name = '@sveltejs/adapter-netlify';
 const files = fileURLToPath(new URL('./files', import.meta.url).href);
-
-const edge_set_in_env_var =
-	process.env.NETLIFY_SVELTEKIT_USE_EDGE === 'true' ||
-	process.env.NETLIFY_SVELTEKIT_USE_EDGE === '1';
 
 const netlify_framework_config_path = '.netlify/v1/config.json';
 const netlify_framework_serverless_path = '.netlify/v1/functions';
@@ -28,7 +23,9 @@ const FUNCTION_PREFIX = 'sveltekit-';
 // "build" is the default publish directory when Netlify detects SvelteKit
 
 /** @type {typeof import('./index.js').default} */
-export default function ({ split = false, edge = edge_set_in_env_var, publish = 'build' } = {}) {
+export default function ({ split = false, publish = 'build', runtime } = {}) {
+	const { primitive, version } = parse_runtime(runtime);
+
 	return {
 		name,
 		async adapt(builder) {
@@ -87,9 +84,9 @@ export default function ({ split = false, edge = edge_set_in_env_var, publish = 
 			}
 
 			builder.log.minor('Writing Netlify config...');
-			write_frameworks_config({ builder });
+			write_frameworks_config({ builder, node_version: version });
 
-			if (edge) {
+			if (primitive === 'edge') {
 				await generate_edge_functions({ builder, split });
 			} else {
 				generate_serverless_functions(builder, split);
@@ -136,11 +133,11 @@ function generate_serverless_functions(builder, split) {
 /**
  * Writes the Netlify Frameworks API config file
  * https://docs.netlify.com/build/frameworks/frameworks-api/
- * @param {{ builder: import('@sveltejs/kit').Builder }} params
+ * @param {{ builder: import('@sveltejs/kit').Builder, node_version: string | undefined }} params
  */
-function write_frameworks_config({ builder }) {
+function write_frameworks_config({ builder, node_version }) {
 	// https://docs.netlify.com/build/frameworks/frameworks-api/#headers
-	/** @type {{ headers: Array<{ for: string, values: Record<string, string> }> }} */
+	/** @type {{ headers: Array<{ for: string, values: Record<string, string> }>, nodeVersion?: string }} */
 	const config = {
 		headers: [
 			{
@@ -151,6 +148,10 @@ function write_frameworks_config({ builder }) {
 			}
 		]
 	};
+
+	if (node_version !== undefined) {
+		config.nodeVersion = node_version;
+	}
 
 	mkdirSync('.netlify/v1', { recursive: true });
 	writeFileSync(netlify_framework_config_path, s(config));
