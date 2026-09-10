@@ -37,6 +37,7 @@
 		"@changesets/cli": "catalog:",
 		"@playwright/test": "catalog:",
 		"@sveltejs/eslint-config": "catalog:",
+		"@types/node": "catalog:",
 		"eslint": "catalog:",
 		"oxfmt": "^0.62.0",
 		"vitest": "catalog:"

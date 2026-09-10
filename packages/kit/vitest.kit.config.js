@@ -36,7 +36,6 @@ export default /** @satisfies {import('vitest/config').ViteUserConfig} */ ({
 		},
 		projects: [
 			{
-				extends: true,
 				test: {
 					name: 'kit-server-dev',
 					environment: 'node',
@@ -45,7 +44,6 @@ export default /** @satisfies {import('vitest/config').ViteUserConfig} */ ({
 				}
 			},
 			{
-				extends: true,
 				test: {
 					name: 'kit-server-build',
 					environment: 'node',
@@ -57,7 +55,6 @@ export default /** @satisfies {import('vitest/config').ViteUserConfig} */ ({
 				}
 			},
 			{
-				extends: true,
 				resolve: {
 					conditions: ['browser']
 				},

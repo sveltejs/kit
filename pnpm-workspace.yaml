@@ -81,8 +81,8 @@ catalog:
   wrangler: ^4.120.1
 
   # unit test deps that should be upgraded together
-  '@vitest/browser-playwright': ^4.1.10
-  vitest: ^4.1.10
+  '@vitest/browser-playwright': ^5.0.0
+  vitest: ^5.0.0
   jsdom: ^30.0.0
 catalogs:
   typescript-native:
