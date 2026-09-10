@@ -15,7 +15,7 @@ export default defineConfig({
 					root: 'packages/kit',
 					test: {
 						...kit_config.test,
-						// Vitest doesn't support nested project configs so we need to flatten it
+						// TODO: use vitest `mergeConfig` rather than manually merging it
 						...project.test
 					}
 				};
