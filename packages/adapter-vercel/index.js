@@ -4,7 +4,12 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { VERSION } from '@sveltejs/kit';
 import { nodeFileTrace } from '@vercel/nft';
-import { parse_isr_expiration, pattern_to_src, resolve_runtime } from './utils.js';
+import {
+	parse_isr_expiration,
+	pattern_to_src,
+	resolve_runtime,
+	validate_isr_route
+} from './utils.js';
 
 const INTERNAL = '![-]'; // this name is guaranteed not to conflict with user routes
 
@@ -117,6 +122,8 @@ const plugin = function (defaults = {}) {
 				}
 
 				if (config.isr) {
+					validate_isr_route(route);
+
 					const directory = path.relative('.', builder.config.files.routes + route.id);
 
 					if (config.isr.allowQuery?.includes('__pathname')) {
@@ -277,7 +284,15 @@ const plugin = function (defaults = {}) {
 
 					routes.push({
 						src: `^(${pathname})$`,
+						methods: ['GET', 'HEAD'],
 						dest: `/${isr_name}?__pathname=$1`
+					});
+
+					// any other method would be served the cached response, so it skips the
+					// ISR symlink and goes straight to the function
+					routes.push({
+						src: `^(${pathname})$`,
+						dest: `/${name}?__pathname=$1`
 					});
 
 					if (has_page) {
