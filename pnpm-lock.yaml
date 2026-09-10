@@ -6,9 +6,6 @@ importers:
   .:
     configDependencies: {}
     packageManagerDependencies:
-      '@pnpm/exe':
-        specifier: 12.2.1
-        version: 12.2.1
       pnpm:
         specifier: 12.2.1
         version: 12.2.1
@@ -59,11 +56,6 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@pnpm/exe@12.2.1':
-    resolution: {integrity: sha512-ePrbOG3UMb9Phds9MjAgoNYzCyU78l2YX8+MTjl25lucWNvQQDy6qIV9Pgdl5jhoedS2QDcqQKIEM0Wyvp2R1g==}
-    engines: {node: '>=18.*'}
-    hasBin: true
-
   pnpm@12.2.1:
     resolution: {integrity: sha512-9Vymiqy561q2nGb4KKmK+JoyKGcDrvH42hMcp+q01nfzS/qF4YZGepGcB5nfi29KokD33CkZszsycxkBBBYmFg==}
     engines: {node: '>=18.*'}
@@ -94,17 +86,6 @@ snapshots:
 
   '@pnpm/exe.win32-x64@12.2.1':
     optional: true
-
-  '@pnpm/exe@12.2.1':
-    optionalDependencies:
-      '@pnpm/exe.darwin-arm64': 12.2.1
-      '@pnpm/exe.darwin-x64': 12.2.1
-      '@pnpm/exe.linux-arm64': 12.2.1
-      '@pnpm/exe.linux-arm64-musl': 12.2.1
-      '@pnpm/exe.linux-x64': 12.2.1
-      '@pnpm/exe.linux-x64-musl': 12.2.1
-      '@pnpm/exe.win32-arm64': 12.2.1
-      '@pnpm/exe.win32-x64': 12.2.1
 
   pnpm@12.2.1:
     optionalDependencies:
@@ -240,6 +221,9 @@ importers:
       '@sveltejs/eslint-config':
         specifier: 'catalog:'
         version: 10.0.4(@eslint/js@10.0.1(eslint@10.8.1(jiti@2.4.2)(supports-color@10.2.2)))(@stylistic/eslint-plugin@5.10.0(eslint@10.8.1(jiti@2.4.2)(supports-color@10.2.2)))(eslint-config-prettier@9.1.0(eslint@10.8.1(jiti@2.4.2)(supports-color@10.2.2)))(eslint-plugin-n@17.24.0(eslint@10.8.1(jiti@2.4.2)(supports-color@10.2.2))(typescript@6.0.3))(eslint-plugin-svelte@3.15.0(eslint@10.8.1(jiti@2.4.2)(supports-color@10.2.2))(svelte@5.56.8(@typescript-eslint/types@8.61.1)))(eslint@10.8.1(jiti@2.4.2)(supports-color@10.2.2))(typescript-eslint@8.58.0(eslint@10.8.1(jiti@2.4.2)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3))(typescript@6.0.3)
+      '@types/node':
+        specifier: 'catalog:'
+        version: 22.19.19
       eslint:
         specifier: 'catalog:'
         version: 10.8.1(jiti@2.4.2)(supports-color@10.2.2)
@@ -5831,7 +5815,7 @@ snapshots:
       eslint-visitor-keys: 4.2.1
       espree: 10.4.0
       estraverse: 5.3.0
-      picomatch: 4.0.5
+      picomatch: 4.0.7
 
   '@sveltejs/acorn-typescript@1.0.12(acorn@8.18.0)':
     dependencies:
@@ -7205,7 +7189,7 @@ snapshots:
 
   ts-declaration-location@1.0.7(typescript@6.0.3):
     dependencies:
-      picomatch: 4.0.5
+      picomatch: 4.0.7
       typescript: 6.0.3
 
   tslib@2.8.1:
