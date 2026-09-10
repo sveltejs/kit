@@ -25,7 +25,6 @@ export {
 	get_request_store,
 	try_get_request_store,
 	RequestEvent,
-	CONTEXT,
 	QUERY,
 	PRERENDER,
 	FORM,

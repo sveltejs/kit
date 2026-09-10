@@ -124,8 +124,8 @@ function set_headers(state, new_headers) {
 }
 
 /**
- * The event as one class per kind of restriction, so that a view for a kind of code is a
- * clone with the same fields rather than a copy of whatever the source enumerates
+ * The event as a class, so that a view for a kind of code is a clone with a fixed field list
+ * rather than a copy of whatever the source enumerates
  * @implements {Interface}
  */
 export class RequestEvent {
@@ -258,14 +258,13 @@ class QueryEvent {
 
 Object.setPrototypeOf(QueryEvent.prototype, RequestEvent.prototype);
 
-for (const property of /** @type {const} */ (['url', 'params', 'route'])) {
+for (const property of ['url', 'params', 'route']) {
 	Object.defineProperty(QueryEvent.prototype, property, {
 		get() {
 			throw new Error(
 				`Cannot access event.${property} in a query. Pass the value as an argument to the query instead`
 			);
-		},
-		set() {}
+		}
 	});
 }
 
