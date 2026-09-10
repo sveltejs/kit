@@ -317,7 +317,9 @@ export function resolve_route(id, params) {
 							);
 						}
 
-						return value;
+						return rest
+							? value.split('/').map(encodeURIComponent).join('/')
+							: encodeURIComponent(value);
 					}
 
 					if (

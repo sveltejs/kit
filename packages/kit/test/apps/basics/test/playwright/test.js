@@ -114,6 +114,14 @@ test.describe('Encoded paths', () => {
 		expect(decodeURI(await page.innerHTML('h3'))).toBe('/encoded/苗条');
 	});
 
+	test('redirects to a resolved route with a non-ASCII parameter', async ({ page }) => {
+		await page.goto('/encoded/resolve-redirect');
+
+		expect(new URL(page.url()).pathname).toBe('/encoded/m%C3%B8te');
+		expect(new URL(page.url()).search).toBe('?q=a%20b');
+		expect(await page.innerHTML('h1')).toBe('dynamic');
+	});
+
 	test('redirects do not re-encode the redirect string', async ({ page, clicknav }) => {
 		await page.goto('/encoded');
 
