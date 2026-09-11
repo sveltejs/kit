@@ -1,5 +1,26 @@
 # @sveltejs/adapter-node
 
+## 6.0.0-next.12
+
+### Major Changes
+
+- breaking: populate env vars before `instrumentation.server.js` is evaluated and update the adapter instrumentation API ([#16303](https://github.com/sveltejs/kit/pull/16303))
+
+- breaking: replace the `builder.generateManifest` with `builder.generateServerInstance` and `builder.manifest` ([#16875](https://github.com/sveltejs/kit/pull/16875))
+
+### Patch Changes
+
+- Updated dependencies [[`9a4b343`](https://github.com/sveltejs/kit/commit/9a4b343bd8ab0060dc624fbdd139155fc4a0a1dc), [`ee2f55b`](https://github.com/sveltejs/kit/commit/ee2f55b1e3338d2fa92a25fe53d095129edf1002), [`65673a4`](https://github.com/sveltejs/kit/commit/65673a4dd35054c16f8555eb896dfb773d86a556), [`1b79845`](https://github.com/sveltejs/kit/commit/1b79845e117f417b63fa399149816d73882c27ea), [`b12bb78`](https://github.com/sveltejs/kit/commit/b12bb789c17c30e7ff835de4af004d2f3eb36159), [`03f1687`](https://github.com/sveltejs/kit/commit/03f1687fe612ce3d2d9131139b5b188d9cf90c64), [`49f0808`](https://github.com/sveltejs/kit/commit/49f0808f3e983d0cb5a4d586cf0d1678467431ed), [`e7c74bf`](https://github.com/sveltejs/kit/commit/e7c74bf8227dc228cb36e822eaff5992569b830a), [`0876d63`](https://github.com/sveltejs/kit/commit/0876d633145088c7a5213e9f530cf2fed96ce35d), [`9a2b9ba`](https://github.com/sveltejs/kit/commit/9a2b9bacbb2de0533966bb029ef526b357aac086), [`c9f54b5`](https://github.com/sveltejs/kit/commit/c9f54b5d66acd9443d36b0ae9aa0a656809bd7f9), [`22b8152`](https://github.com/sveltejs/kit/commit/22b8152f74882775ac63e1cf96d3016b92ac8256), [`f6d44cf`](https://github.com/sveltejs/kit/commit/f6d44cf007d6c6b54de57f6ae4ef8e2e7fea2f44), [`3c3a27b`](https://github.com/sveltejs/kit/commit/3c3a27bf67a26164266e132dbb7f9266643cf724), [`7f376b1`](https://github.com/sveltejs/kit/commit/7f376b109cd770638806184cf5d8bf4cf88c5bf2), [`8a587c7`](https://github.com/sveltejs/kit/commit/8a587c7b3919408ec66a362eb249fe5cf43f5316), [`aa4f960`](https://github.com/sveltejs/kit/commit/aa4f9605761e686f6aaf414b9186c68ddd2468dc)]:
+  - @sveltejs/kit@3.0.0-next.27
+
+## 6.0.0-next.11
+
+### Patch Changes
+
+- chore: remove polka, attach the handler to the http server directly ([#16907](https://github.com/sveltejs/kit/pull/16907))
+- Updated dependencies [[`ff8cdd4`](https://github.com/sveltejs/kit/commit/ff8cdd4df8f6a0ee26c25854aa0656f2dc968caf), [`723572c`](https://github.com/sveltejs/kit/commit/723572c76053ebcae02b19166fe7400f45175c70), [`3b8e034`](https://github.com/sveltejs/kit/commit/3b8e034d62f1372f0e450da88c0705bd9828a816), [`f2c5102`](https://github.com/sveltejs/kit/commit/f2c5102079c80c904b3fe165666813023248facc), [`c66a6ed`](https://github.com/sveltejs/kit/commit/c66a6ed5bb6ba4594b0a952744a1d9c7e457b001), [`428e5ef`](https://github.com/sveltejs/kit/commit/428e5efeedba49ccd42d43f85e53707f6704931c)]:
+  - @sveltejs/kit@3.0.0-next.26
+
 ## 6.0.0-next.10
 
 ### Patch Changes

@@ -6,6 +6,8 @@ A `+page.server.js` file can export _actions_, which allow you to `POST` data to
 
 When using `<form>`, client-side JavaScript is optional, but you can easily _progressively enhance_ your form interactions with JavaScript to provide the best user experience.
 
+> [!NOTE] The experimental [`form` remote function](remote-functions#form) covers the same use cases as form actions, adding type safety and [single-flight mutations](remote-functions#Single-flight-mutations). Form actions are feature-complete and will continue to work, but new development is focused on remote functions, which are intended to become the recommended way to communicate with the server. Consider remote functions for new projects, keeping in mind that the API may change while the feature is experimental.
+
 ## Default actions
 
 In the simplest case, a page declares a `default` action:

@@ -7,12 +7,14 @@ import {
 	ServerInitOptions,
 	Actions,
 	RequestEvent,
-	SSRManifest,
 	Emulator,
-	HttpError
+	HttpError,
+	Adapter,
+	AdapterViteConfig
 } from '@sveltejs/kit';
 import { RemoteFormIssue, RemoteQuery, RemoteLiveQuery } from '$app/server';
 import { Config } from '@sveltejs/kit/vite';
+import { ParamMatcher } from '@sveltejs/kit/params';
 import {
 	ClientInit,
 	Handle,
@@ -48,12 +50,11 @@ export interface ServerInternalModule {
 	set_version(version: string): void;
 	set_fix_stack_trace(fix_stack_trace: (error: Error) => void): void;
 	get_hooks: () => Promise<Record<string, any>>;
-	log_response: (status: number, request: Request) => void;
+	format_response: (status: number, request: Request) => string;
 }
 
 export interface Asset {
 	file: string;
-	size: number;
 	type: string | null;
 }
 
@@ -194,7 +195,8 @@ export interface InternalRequestOptions extends RequestOptions {
 	emulator?: Emulator;
 }
 
-export class InternalServer extends Server {
+export class InternalServer implements Server {
+	constructor(manifest: SSRManifest);
 	init(options: ServerInitOptions): Promise<void>;
 	respond(request: Request, options: InternalRequestOptions): Promise<Response>;
 }
@@ -342,6 +344,8 @@ export type RemoteFunctionData = {
 	f?: Record<string, RemoteFunctionDataNode>;
 	/** Whether there were any refreshes/reconnects during the request */
 	r?: true;
+	/** Client-requested updates that the server intentionally ignored */
+	i?: string[];
 	/** The redirect location, if any */
 	redirect?: string;
 };
@@ -457,6 +461,42 @@ export interface ServerNode {
 	entries?: PrerenderEntryGenerator;
 }
 
+/**
+ * Information required to instantiate a new `Server` instance.
+ */
+export interface SSRManifest {
+	/**
+	 * The directory where SvelteKit keeps its stuff, including static assets
+	 * (such as JS and CSS) and internally-used routes.
+	 */
+	app_dir: string;
+	/**
+	 * The `base` and `appDir` settings combined without a leading slash.
+	 */
+	app_path: string;
+	/**
+	 * Static files from `config.files.assets` and the service worker (if any).
+	 */
+	assets: Set<string>;
+	/**
+	 * Map of file extensions to MIME types
+	 */
+	mime_types: Record<string, string>;
+	client: BuildData['client'];
+	nodes: SSRNodeLoader[];
+	/**
+	 * hashed filename -> import to that file
+	 */
+	remotes: Record<string, () => Promise<{ default: Record<string, any> }>>;
+	routes: SSRRoute[];
+	prerendered_routes: Set<string>;
+	matchers: () => Promise<Record<string, ParamMatcher>>;
+	/**
+	 * A `[file]: size` map of all assets imported by server code.
+	 */
+	server_assets: Record<string, number>;
+}
+
 export interface SSRNode {
 	/** index into the `nodes` array in the generated `client/app.js`. */
 	index: number;
@@ -493,14 +533,7 @@ export type SSRNodeLoader = () => Promise<SSRNode>;
 export interface SSROptions {
 	app_template_contains_nonce: boolean;
 	csp: ValidatedConfig['csp'];
-	csrf_check_origin: boolean;
 	csrf_trusted_origins: string[];
-	embedded: boolean;
-	hash_routing: boolean;
-	hooks: ServerHooks;
-	link_header_preload: ValidatedConfig['output']['linkHeaderPreload'];
-	paths_origin: string | undefined;
-	service_worker: boolean;
 	service_worker_options: RegistrationOptions;
 	templates: {
 		app(values: {
@@ -512,8 +545,6 @@ export interface SSROptions {
 		}): string;
 		error(values: { message: string; status: number }): string;
 	};
-	version: string;
-	version_hash: string;
 }
 
 export interface PageNodeIndexes {
@@ -562,7 +593,8 @@ export interface Uses {
 	search_params: Set<string>;
 }
 
-export type ValidatedConfig = RecursiveRequired<Omit<Config, 'preprocess'>> & {
+export type ValidatedConfig = RecursiveRequired<Omit<Config, 'preprocess' | 'adapter'>> & {
+	adapter: Adapter & { vite?: AdapterViteConfig };
 	preprocess: Config['preprocess'];
 };
 
@@ -606,7 +638,7 @@ export interface RemoteQueryLiveInternals extends BaseRemoteInternals {
 export interface RemoteQueryBatchInternals extends BaseRemoteInternals {
 	type: 'query_batch';
 	validate: (arg?: any) => MaybePromise<any>;
-	run: (args: any[], options: SSROptions) => Promise<any[]>;
+	run: (args: any[]) => Promise<any[]>;
 	/**
 	 * Creates a `RemoteQuery` bound directly to a specific client payload (the
 	 * stringified raw argument) and a pre-validated argument, skipping the query
@@ -692,6 +724,11 @@ export interface RequestState {
 	 */
 	error: boolean;
 	/**
+	 * The rerouted URL (only if the new pathname differs from the original).
+	 * Used by platforms that serve a catch-all serverless function.
+	 */
+	rerouted_url: string | null;
+	/**
 	 * Allows us to prevent `event.fetch` from making infinitely looping internal requests.
 	 */
 	readonly depth: number;
@@ -720,7 +757,9 @@ export interface RequestState {
 		/** Instances created via `myForm.for(...)` */
 		forms: null | Map<string, any>;
 		/** A map of remote function ID to payloads requested for refreshing by the client */
-		requested: null | Map<string, string[]>;
+		requested: null | Map<string, Set<string>>;
+		/** Client-requested updates intentionally ignored by `requested(...).ignoreAll()` or `ignore` */
+		ignored: null | Set<string>;
 		/** A map of query.batch ID to payloads requested for that batch within the same macrotask */
 		batches: null | Map<
 			string,

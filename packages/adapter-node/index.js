@@ -1,15 +1,14 @@
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { extname } from 'node:path';
+/** @import { TopLevelFilterExpression } from '@rolldown/pluginutils' */
+import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import { dirname, extname, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { rolldown } from 'rolldown';
+import { and, id, importerId, include } from '@rolldown/pluginutils';
+import remapping from '@jridgewell/remapping';
+import MagicString from 'magic-string';
 
 const files = fileURLToPath(new URL('./files', import.meta.url).href);
-
-/** @param {string} str */
-function escape_regex(str) {
-	// TODO replace with `RegExp.escape(str)` when we require Node >= 24
-	return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
+const posixified_files = posixify(files);
+const dir_id = posixify(`${files}/dir.js`);
 
 /** @type {typeof import('./index.js').default} */
 export default function (opts = {}) {
@@ -50,132 +49,250 @@ export default function (opts = {}) {
 				written.map((file) => extname(file)).filter((ext) => ext && !compressed_extensions.has(ext))
 			);
 
-			builder.log.minor('Building server');
-
-			const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
 			const server = builder.getServerDirectory();
+			const manifest = JSON.parse(readFileSync(`${server}/.vite/manifest.json`, 'utf8'));
+			const adapter_index = find_entry(manifest, 'adapter-index');
+			const handler = find_entry(manifest, 'handler');
 
-			// Copy the prebuilt entrypoints into the build directory so that the
-			// adapter's own bundled dependencies resolve correctly, then bundle them
-			// together with the app's server code. Bundling everything in a single
-			// pass means shared modules (e.g. `SvelteKitError` from `@sveltejs/kit`)
-			// aren't duplicated. See https://github.com/sveltejs/kit/issues/15755
-			const entries = posixify(`${tmp}/entries`);
-			builder.copy(files, entries);
-
-			const dir_id = `${entries}/dir.js`;
-
-			writeFileSync(
-				`${server}/manifest.js`,
-				[
-					`export const manifest = ${builder.generateManifest({ relativePath: './' })};`,
-					`export const prerendered = new Set(${JSON.stringify(builder.prerendered.paths)});`,
-					`export const base = ${JSON.stringify(builder.config.paths.base)};`,
-					`export const uncompressed_extensions = new Set(${JSON.stringify([...uncompressed_extensions])});`
-				].join('\n\n')
-			);
-
-			/** @type {Record<string, string>} */
-			const input = {
-				index: `${entries}/index.js`,
-				env: `${entries}/env.js`,
-				handler: `${entries}/handler.js`
-			};
-
-			if (builder.hasServerInstrumentationFile()) {
-				input['instrumentation.server'] = `${server}/instrumentation.server.js`;
-			}
-
-			// we bundle the Vite output so that deployments only need
-			// their production dependencies. Anything in devDependencies
-			// will get included in the bundled code
-			const bundle = await rolldown({
-				input,
-				external: [
-					// dependencies could have deep exports, so we need a regex
-					...Object.keys(pkg.dependencies || {}).map((d) => new RegExp(`^${d}(\\/.*)?$`)),
-					// `@opentelemetry/api` is an optional peer dependency of `@sveltejs/kit`,
-					// so it's not in `pkg.dependencies` and wouldn't be matched by the regex above.
-					// It must stay external so that `instrumentation.server.js` and the SvelteKit
-					// runtime share a single instance — see https://github.com/sveltejs/kit/issues/16288
-					/^@opentelemetry\/api(\/.*)?$/
-				],
-				platform: 'node',
-				resolve: {
-					conditionNames: ['node']
-				},
-				experimental: {
-					nativeMagicString: true
-				},
-				plugins: [
-					{
-						// resolve the app's server and manifest, generated above
-						name: 'adapter-node-resolve-app',
-						resolveId(id) {
-							if (id === 'SERVER') return `${server}/index.js`;
-							if (id === 'MANIFEST') return `${server}/manifest.js`;
-						}
-					},
-					{
-						// replace build-time constants in the adapter's own entrypoints
-						// only, so that identifiers in the app or its dependencies aren't
-						// accidentally replaced
-						name: 'adapter-node-replace-constants',
-						transform: {
-							filter: { id: new RegExp(escape_regex(entries)) },
-							handler(_code, _id, { magicString }) {
-								if (!magicString) throw new Error('experimental.nativeMagicString is not enabled');
-								magicString
-									.replace(/\bENV_PREFIX\b/g, JSON.stringify(envPrefix))
-									.replace(/\bPRECOMPRESS\b/g, JSON.stringify(precompress))
-									.replace(
-										/\bORIGIN\b/g,
-										JSON.stringify(builder.config.paths.origin) || 'undefined'
-									);
-								return {
-									code: magicString,
-									map: magicString.generateMap().toString()
-								};
-							}
-						}
-					}
-				]
-			});
-
-			await bundle.write({
-				dir: out,
-				format: 'esm',
-				sourcemap: true,
-				codeSplitting: {
-					groups: [
-						{
-							name: 'dir',
-							test: dir_id
-						}
-					]
-				},
-				chunkFileNames(chunk) {
-					if (chunk.name === 'dir') return '[name].js';
-					return 'server/chunks/[name]-[hash].js';
-				}
-			});
+			builder.generateServerInstance(`${server}/server.js`);
 
 			if (builder.hasServerInstrumentationFile()) {
 				builder.instrument({
-					entrypoint: `${out}/index.js`,
-					instrumentation: `${out}/instrumentation.server.js`,
+					entrypoint: `${server}/${adapter_index.file}`,
+					instrumentation: `${server}/instrumentation.server.js`,
+					initializer: builder.createInstrumentationInitializer({ outputDirectory: server }),
 					module: {
 						exports: ['path', 'host', 'port', 'server']
 					}
 				});
 			}
+
+			const output_server = `${out}/server`;
+			builder.copy(server, output_server);
+
+			// `dir.js` must evaluate at the output root because it anchors the asset directories
+			renameSync(`${output_server}/dir.js`, `${out}/dir.js`);
+			if (existsSync(`${output_server}/dir.js.map`)) {
+				renameSync(`${output_server}/dir.js.map`, `${out}/dir.js.map`);
+			}
+			writeFileSync(`${output_server}/dir.js`, `export * from '../dir.js';\n`);
+
+			// replace the stubs whose values are only known after the build
+			replace_stubs(output_server, handler.chunks, {
+				__SVELTEKIT_ADAPTER_NODE_UNCOMPRESSED_EXTENSIONS__: `new Set(${JSON.stringify([...uncompressed_extensions])})`,
+				__SVELTEKIT_ADAPTER_NODE_PRERENDERED__: `new Set(${JSON.stringify([...builder.prerendered.paths])})`,
+				__SVELTEKIT_ADAPTER_NODE_MIMETYPES__: JSON.stringify(builder.mimeTypes),
+				__SVELTEKIT_ADAPTER_NODE_SERVER__: (chunk) => {
+					const server = posixify(relative(dirname(chunk), 'server.js'));
+					return server.startsWith('.') ? server : `./${server}`;
+				}
+			});
+
+			writeFileSync(`${out}/index.js`, `export * from './server/${adapter_index.file}';\n`);
+			writeFileSync(`${out}/handler.js`, `export * from './server/${handler.file}';\n`);
 		},
 
 		supports: {
 			read: () => true,
 			instrumentation: () => true
+		},
+
+		vite({ config }) {
+			/** @type {Record<string, string>} */
+			const defines = {
+				// these get replaced later in the adapt step
+				UNCOMPRESSED_EXTENSIONS: '__SVELTEKIT_ADAPTER_NODE_UNCOMPRESSED_EXTENSIONS__',
+				PRERENDERED: '__SVELTEKIT_ADAPTER_NODE_PRERENDERED__',
+				MIME_TYPES: '__SVELTEKIT_ADAPTER_NODE_MIMETYPES__',
+
+				BASE_PATH: JSON.stringify(config.paths.base),
+				APP_PATH: JSON.stringify(
+					`${config.paths.base.slice(1)}${config.paths.base ? '/' : ''}${config.appDir}`
+				),
+				ORIGIN: JSON.stringify(config.paths.origin) || 'undefined',
+				ENV_PREFIX: JSON.stringify(envPrefix),
+				PRECOMPRESS: JSON.stringify(precompress)
+			};
+
+			return {
+				plugins: {
+					post: [
+						{
+							name: 'vite-plugin-sveltekit-adapter-node',
+							apply: 'build',
+							config() {
+								const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
+
+								return {
+									environments: {
+										ssr: {
+											build: {
+												rolldownOptions: {
+													// Copy the prebuilt entrypoints into the build directory so that the
+													// adapter's own bundled dependencies resolve correctly, then bundle them
+													// together with the app's server code. Bundling everything in a single
+													// pass means shared modules (e.g. `SvelteKitError` from `@sveltejs/kit`)
+													// aren't duplicated. See https://github.com/sveltejs/kit/issues/15755
+													input: {
+														'adapter-index': `${files}/index.js`,
+														'adapter-env': `${files}/adapter-env.js`,
+														handler: `${files}/handler.js`
+													},
+													output: {
+														chunkFileNames(chunk) {
+															if (chunk.name === 'dir') return '[name].js';
+															return 'chunks/[name].js';
+														},
+														codeSplitting: {
+															groups: [
+																{
+																	name: 'dir',
+																	test: dir_id
+																}
+															]
+														}
+													},
+													// deployments only need their production dependencies.
+													// Anything in devDependencies will get included in the
+													// bundled code
+													external: [
+														// dependencies could have deep exports, so we need a regex
+														...Object.keys(pkg.dependencies || {}).map(
+															(d) => new RegExp(`^${d}(\\/.*)?$`)
+														)
+													]
+												}
+											}
+										}
+									}
+								};
+							},
+							applyToEnvironment(environment) {
+								return environment.name === 'ssr';
+							},
+							transform: {
+								filter: { id: new RegExp(`^${escape_regex(posixified_files)}/`) },
+								handler(code) {
+									const s = new MagicString(code);
+
+									for (const [from, to] of Object.entries(defines)) {
+										for (const match of code.matchAll(new RegExp(`\\b${from}\\b`, 'g'))) {
+											s.overwrite(match.index, match.index + from.length, to);
+										}
+									}
+
+									return {
+										code: s.toString(),
+										map: s.generateMap({ hires: 'boundary' })
+									};
+								}
+							},
+							resolveId: {
+								// composable filters are not accepted type-wise but still work during build
+								// see https://github.com/vitejs/rolldown-vite/issues/605
+								filter: /** @type {any} */ (
+									/** @satisfies {TopLevelFilterExpression[]} */ ([
+										include(
+											and(
+												importerId(new RegExp(`^${escape_regex(posixified_files)}/`)),
+												id(/^SERVER$/)
+											)
+										)
+									])
+								),
+								handler() {
+									return { external: true, id: '__SVELTEKIT_ADAPTER_NODE_SERVER__' };
+								}
+							}
+						}
+					]
+				}
+			};
 		}
 	};
+}
+
+/**
+ * @typedef {{ file: string; imports?: string[]; isEntry?: boolean; name?: string }} ManifestEntry
+ */
+
+/**
+ * @param {Record<string, ManifestEntry>} manifest
+ * @param {string} name
+ */
+function find_entry(manifest, name) {
+	const match = Object.entries(manifest).find(([, entry]) => entry.isEntry && entry.name === name);
+	if (!match) throw new Error(`Could not find adapter-node entry ${name} in the Vite manifest`);
+
+	/** @type {string[]} */
+	const chunks = [];
+	const seen = new Set();
+
+	/** @param {string} key */
+	const visit = (key) => {
+		if (seen.has(key)) return;
+		seen.add(key);
+
+		const chunk = manifest[key];
+		if (!chunk) throw new Error(`Could not find ${key} in the Vite manifest`);
+
+		chunks.push(chunk.file);
+		for (const dependency of chunk.imports ?? []) visit(dependency);
+	};
+
+	visit(match[0]);
+	return { file: match[1].file, chunks };
+}
+
+/**
+ * @param {string} dir
+ * @param {string[]} chunks
+ * @param {Record<string, string | ((chunk: string) => string)>} replacements
+ */
+function replace_stubs(dir, chunks, replacements) {
+	const pattern = new RegExp(`\\b(${Object.keys(replacements).join('|')})\\b`, 'g');
+	const found = new Set();
+
+	for (const chunk of chunks) {
+		const file = `${dir}/${chunk}`;
+		const code = readFileSync(file, 'utf8');
+		const matches = [...code.matchAll(pattern)];
+		if (matches.length === 0) continue;
+
+		const s = new MagicString(code);
+
+		for (const match of matches) {
+			found.add(match[0]);
+			const replacement = replacements[match[0]];
+			const value = typeof replacement === 'function' ? replacement(chunk) : replacement;
+			s.overwrite(match.index, match.index + match[0].length, value);
+		}
+
+		writeFileSync(file, s.toString());
+
+		const map_file = `${file}.map`;
+		if (!existsSync(map_file)) continue;
+
+		const map = remapping(
+			[
+				JSON.parse(s.generateMap({ hires: 'boundary', source: chunk }).toString()),
+				JSON.parse(readFileSync(map_file, 'utf8'))
+			],
+			() => null
+		);
+		writeFileSync(map_file, map.toString());
+	}
+
+	const missing = Object.keys(replacements).filter((stub) => !found.has(stub));
+	if (missing.length > 0) {
+		throw new Error(`Could not find adapter-node stubs: ${missing.join(', ')}`);
+	}
+}
+
+/** @param {string} str */
+function escape_regex(str) {
+	// TODO replace with `RegExp.escape(str)` when we require Node >= 24
+	return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 /** @param {string} str */

@@ -1,6 +1,6 @@
 /** @import { RequestEvent, Actions } from '@sveltejs/kit' */
 /** @import { ActionResult } from '$app/forms' */
-/** @import { SSROptions, SSRNode, ServerNode, ServerActionResult } from 'types' */
+/** @import { SSRNode, ServerNode, ServerActionResult } from 'types' */
 import { DEV } from 'esm-env';
 import { HttpError, Redirect, ActionFailure, SvelteKitError } from '@sveltejs/kit/internal';
 import { with_request_store, merge_tracing, record_span } from '@sveltejs/kit/internal/server';
@@ -23,28 +23,26 @@ export function is_action_json_request(event) {
 /**
  * @param {RequestEvent} event
  * @param {import('types').RequestState} state
- * @param {SSROptions} options
  * @param {SSRNode['server'] | undefined} server
  */
-export async function handle_action_json_request(event, state, options, server) {
+export async function handle_action_json_request(event, state, server) {
 	const result = await handle_action_request(event, state, server);
-	return action_result_json(event, state, options, result);
+	return action_result_json(event, state, result);
 }
 
 /**
  * @param {RequestEvent} event
  * @param {import('types').RequestState} state
- * @param {SSROptions} options
  * @param {ServerActionResult} result
  * @returns {Promise<Response>}
  */
-async function action_result_json(event, state, options, result) {
+async function action_result_json(event, state, result) {
 	if (result.type === 'redirect') {
 		return action_json(result);
 	}
 
 	if (result.type === 'error') {
-		const error = await handle_error_and_jsonify(event, state, options, result.error);
+		const error = await handle_error_and_jsonify(event, state, result.error);
 		return action_json({ ...result, error }, { status: error.status });
 	}
 
@@ -64,7 +62,7 @@ async function action_result_json(event, state, options, result) {
 			{ status: result.status }
 		);
 	} catch (e) {
-		return action_result_json(event, state, options, action_error_result(e, result.location));
+		return action_result_json(event, state, action_error_result(e, result.location));
 	}
 }
 

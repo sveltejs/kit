@@ -3,7 +3,6 @@ import fs from 'node:fs';
 import process from 'node:process';
 import { handler } from './handler.js';
 import { env, timeout_env } from './env.js';
-import polka from 'polka';
 import { rm } from 'node:fs/promises';
 import { format_listening_address } from './utils.js';
 
@@ -35,9 +34,6 @@ let shutdown_timeout_id;
 /** @type {NodeJS.Timeout | void} */
 let idle_timeout_id;
 
-// Initialize the HTTP server here so that we can set properties before starting to listen.
-// Otherwise, polka delays creating the server until listen() is called. Settings these
-// properties after the server has started listening could lead to race conditions.
 const httpServer = http.createServer();
 
 const keep_alive_timeout = timeout_env('KEEP_ALIVE_TIMEOUT');
@@ -52,10 +48,33 @@ if (headers_timeout !== undefined) {
 	httpServer.headersTimeout = headers_timeout * 1000;
 }
 
-const server = polka({ server: httpServer }).use(handler);
+httpServer.on('request', (req, res) => {
+	requests++;
+
+	if (socket_activation && idle_timeout_id) {
+		idle_timeout_id = clearTimeout(idle_timeout_id);
+	}
+
+	req.on('close', () => {
+		requests--;
+
+		if (shutdown_timeout_id) {
+			// close connections as soon as they become idle, so they don't accept new requests
+			httpServer.closeIdleConnections();
+		}
+		if (requests === 0 && socket_activation && idle_timeout) {
+			idle_timeout_id = setTimeout(() => graceful_shutdown('IDLE'), idle_timeout * 1000);
+		}
+	});
+
+	return handler(req, res, () => {
+		res.statusCode = 404;
+		res.end();
+	});
+});
 
 if (socket_activation) {
-	server.listen({ fd: SD_LISTEN_FDS_START }, () => {
+	httpServer.listen({ fd: SD_LISTEN_FDS_START }, () => {
 		console.log(`Listening on file descriptor ${SD_LISTEN_FDS_START}`);
 	});
 } else {
@@ -69,7 +88,7 @@ if (socket_activation) {
 		}
 	}
 
-	server.listen({ path, host, port }, () => {
+	httpServer.listen({ path, host, port }, () => {
 		console.log(`Listening on ${format_listening_address(path, host, port, httpServer.address())}`);
 	});
 }
@@ -100,31 +119,7 @@ function graceful_shutdown(reason) {
 	shutdown_timeout_id = setTimeout(() => httpServer.closeAllConnections(), shutdown_timeout * 1000);
 }
 
-httpServer.on(
-	'request',
-	/** @param {import('node:http').IncomingMessage} req */
-	(req) => {
-		requests++;
-
-		if (socket_activation && idle_timeout_id) {
-			idle_timeout_id = clearTimeout(idle_timeout_id);
-		}
-
-		req.on('close', () => {
-			requests--;
-
-			if (shutdown_timeout_id) {
-				// close connections as soon as they become idle, so they don't accept new requests
-				httpServer.closeIdleConnections();
-			}
-			if (requests === 0 && socket_activation && idle_timeout) {
-				idle_timeout_id = setTimeout(() => graceful_shutdown('IDLE'), idle_timeout * 1000);
-			}
-		});
-	}
-);
-
 process.on('SIGTERM', graceful_shutdown);
 process.on('SIGINT', graceful_shutdown);
 
-export { server };
+export { httpServer as server };
