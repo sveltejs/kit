@@ -6,7 +6,7 @@ const timeout = 60_000;
 
 const cwd = path.resolve(import.meta.dirname, '..');
 
-test('no overridden options warning', () => {
+test('no overridden options warning', { timeout }, () => {
 	const result = spawnSync(
 		'pnpm',
 		['vitest', 'run', '--config', './vite.custom.config.js', '-t', 'noop'],

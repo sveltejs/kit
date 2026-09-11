@@ -4,13 +4,13 @@
 import path from 'node:path';
 import * as devalue from 'devalue';
 import { dedent } from './sync/utils.js';
-import { runtime_directory } from './utils.js';
+import { get_global_name, runtime_directory } from './utils.js';
+import { stackless } from '../utils/error.js';
 import { resolve_entry } from '../utils/filesystem.js';
 import { handle_issues, validate } from '../exports/internal/env.js';
 import { get_config_aliases } from '../exports/vite/utils.js';
 import { get_runner } from '../runner.js';
 import { import_peer } from '../utils/import.js';
-import { hash } from '../utils/hash.js';
 import { posixify } from '../utils/os.js';
 
 /**
@@ -23,7 +23,9 @@ import { posixify } from '../utils/os.js';
  * @returns {string | null}
  */
 export function resolve_env_entry(config, root) {
-	return resolve_entry(path.resolve(root, config.files.src, 'env'));
+	const entry = resolve_entry(path.resolve(root, config.files.src, 'env'));
+	// posix, like the paths Vite hands to `hotUpdate`
+	return entry && posixify(entry);
 }
 
 /**
@@ -36,6 +38,8 @@ export function resolve_env_entry(config, root) {
 export async function load_explicit_env(kit, file, root, mode) {
 	/** @type {Set<string>} */
 	const deps = new Set();
+	/** @type {Map<EnvType, string>} */
+	const env_importers = new Map();
 
 	if (!file) {
 		return { variables: null, deps };
@@ -63,6 +67,16 @@ export async function load_explicit_env(kit, file, root, mode) {
 		plugins: [
 			{
 				name: 'dependency-scanner',
+				enforce: 'pre',
+				resolveId(id, importer) {
+					const prefixes = ['$app/env/', `${runtime_directory}/app/env/`];
+					const prefix = prefixes.find((prefix) => id.startsWith(prefix));
+					const type = prefix && id.slice(prefix.length);
+
+					if (importer && (type === 'private' || type === 'public')) {
+						env_importers.set(type, importer);
+					}
+				},
 				load(id) {
 					deps.add(id);
 				}
@@ -95,14 +109,27 @@ export async function load_explicit_env(kit, file, root, mode) {
 	} catch (e) {
 		const error = /** @type {any} */ (e || {});
 
-		if (
-			error.code === 'ERR_MODULE_NOT_FOUND' &&
-			error.message?.includes(`Cannot find module '$app`)
-		) {
-			throw new Error(
-				`Cannot import \`$app/*\` modules other than \`$app/env\` inside \`src/env\``,
-				{ cause: e }
+		if (error.code === 'ERR_MODULE_NOT_FOUND') {
+			const match = error.message?.match(
+				/<sveltekit:generated>\/env\/(private|public)\/server\.js/
 			);
+
+			if (match) {
+				const type = /** @type {EnvType} */ (match[1]);
+				const importer = env_importers.get(type);
+				const message = importer
+					? `Module \`${posixify(path.relative(root, importer))}\` imports \`$app/env/${type}\`, which creates a circular dependency with \`src/env\``
+					: `Cannot import \`$app/env/${type}\` inside \`src/env\` or its dependencies because it creates a circular dependency`;
+
+				throw stackless(message);
+			}
+
+			if (error.message?.includes(`Cannot find module '$app`)) {
+				throw new Error(
+					`Cannot import \`$app/*\` modules other than \`$app/env\` inside \`src/env\``,
+					{ cause: e }
+				);
+			}
 		}
 
 		throw error;
@@ -216,9 +243,7 @@ export function create_env_modules(config, variables, env, dir, entry, is_dev) {
 	 */
 	const module = (prelude, exports) => (variables ? `${prelude}\n\n${exports.join('')}` : '');
 
-	const global = is_dev
-		? 'globalThis.__sveltekit_dev'
-		: `globalThis.__sveltekit_${hash(config.version.name)}`;
+	const global = `globalThis.${get_global_name(config.version.name, is_dev)}`;
 
 	const version = JSON.stringify(config.version.name);
 
@@ -257,7 +282,7 @@ export function create_env_modules(config, variables, env, dir, entry, is_dev) {
 		),
 		'public/client.js': module(
 			is_dev
-				? `const { env } = globalThis.__sveltekit_dev;`
+				? `const { env } = ${global};`
 				: `import { payload } from ${JSON.stringify(posixify(path.relative(`${dir}/public`, `${runtime_directory}/client/payload.js`)))};\nconst env = payload.env;`,
 			public_exports
 		),

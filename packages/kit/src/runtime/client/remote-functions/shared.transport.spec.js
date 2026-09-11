@@ -5,6 +5,7 @@ import { describe, expect, test, vi, beforeEach } from 'vitest';
 // exists during a real SvelteKit build. We only need stubs for the names that
 // `shared.svelte.js` imports.
 vi.mock(new URL('../client.js', import.meta.url).pathname, () => ({
+	app: { decoders: {} },
 	query_map: new Map(),
 	query_responses: {},
 	live_query_map: new Map(),
@@ -20,8 +21,10 @@ vi.mock('#app/state/client', () => ({
 	notify_version: () => {}
 }));
 
-const { remote_request } = await import('./shared.svelte.js');
+const { fail_unhandled_refreshes, remote_request } = await import('./shared.svelte.js');
 const { HttpError, HandledHttpError } = await import('@sveltejs/kit/internal');
+const { query_map, live_query_map } = await import('../client.js');
+const devalue = await import('devalue');
 
 /**
  * Build a mock fetch Response. `remote_request` reads `response.headers` before
@@ -42,6 +45,8 @@ function mock_response(props) {
 describe('remote_request transport error handling', () => {
 	beforeEach(() => {
 		vi.unstubAllGlobals();
+		query_map.clear();
+		live_query_map.clear();
 	});
 
 	test('non-OK response with JSON error body preserves status and error body', async () => {
@@ -93,5 +98,86 @@ describe('remote_request transport error handling', () => {
 
 		// Should resolve without throwing.
 		await expect(remote_request('/x')).resolves.toBeDefined();
+	});
+
+	test('fails requested updates missing from the response', async () => {
+		const fail = vi.fn();
+		query_map.set('hash/query', /** @type {any} */ (new Map([['[-1]', { resource: { fail } }]])));
+		vi.stubGlobal('fetch', () =>
+			mock_response({
+				json: () => Promise.resolve({ type: 'result', data: devalue.stringify({}) })
+			})
+		);
+
+		await remote_request('/x', undefined, new Set(['hash/query/[-1]']));
+		fail_unhandled_refreshes(new Set(['hash/query/[-1]']));
+
+		expect(fail).toHaveBeenCalledWith(
+			expect.objectContaining({
+				status: 400,
+				body: expect.objectContaining({
+					message: 'Requested update was not handled by the remote function'
+				})
+			})
+		);
+	});
+
+	test('does not fail missing updates before the caller commits reconciliation', async () => {
+		const fail = vi.fn();
+		query_map.set('hash/query', /** @type {any} */ (new Map([['[-1]', { resource: { fail } }]])));
+		vi.stubGlobal('fetch', () =>
+			mock_response({
+				json: () =>
+					Promise.resolve({
+						type: 'result',
+						data: devalue.stringify({ _: { issues: [{ message: 'invalid' }] } })
+					})
+			})
+		);
+
+		await remote_request('/x', undefined, new Set(['hash/query/[-1]']));
+
+		expect(fail).not.toHaveBeenCalled();
+	});
+
+	test('does not fail requested updates returned in the response', async () => {
+		const resource = { fail: vi.fn(), set: vi.fn() };
+		query_map.set('hash/query', /** @type {any} */ (new Map([['[-1]', { resource }]])));
+		vi.stubGlobal('fetch', () =>
+			mock_response({
+				json: () =>
+					Promise.resolve({
+						type: 'result',
+						data: devalue.stringify({ q: { 'hash/query/[-1]': { v: 42 } } })
+					})
+			})
+		);
+
+		const refreshes = new Set(['hash/query/[-1]']);
+		await remote_request('/x', undefined, refreshes);
+		fail_unhandled_refreshes(refreshes);
+
+		expect(resource.set).toHaveBeenCalledWith(42);
+		expect(resource.fail).not.toHaveBeenCalled();
+	});
+
+	test('does not fail explicitly ignored requested updates', async () => {
+		const fail = vi.fn();
+		query_map.set('hash/query', /** @type {any} */ (new Map([['[-1]', { resource: { fail } }]])));
+		vi.stubGlobal('fetch', () =>
+			mock_response({
+				json: () =>
+					Promise.resolve({
+						type: 'result',
+						data: devalue.stringify({ i: ['hash/query/[-1]'] })
+					})
+			})
+		);
+
+		const refreshes = new Set(['hash/query/[-1]']);
+		await remote_request('/x', undefined, refreshes);
+		fail_unhandled_refreshes(refreshes);
+
+		expect(fail).not.toHaveBeenCalled();
 	});
 });

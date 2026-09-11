@@ -134,7 +134,7 @@ export function normalize_id(id, aliases, cwd) {
 		}
 	}
 
-	if (id.startsWith(cwd)) {
+	if (id.startsWith(cwd + '/')) {
 		id = path.relative(cwd, id);
 	}
 

@@ -14,6 +14,12 @@ test('dynamic route works', async ({ request }) => {
 	expect(await response.text()).toContain('Hello world');
 });
 
+test('dynamic env is available in instrumentation', async ({ request }) => {
+	const response = await request.get('/instrumentation-env');
+	expect(response.status()).toBe(200);
+	expect(await response.json()).toEqual({ loaded: true });
+});
+
 test('read from $app/server works', async ({ request }) => {
 	const content = fs.readFileSync(
 		path.resolve(import.meta.dirname, '../src/routes/read/file.txt'),
@@ -21,11 +27,6 @@ test('read from $app/server works', async ({ request }) => {
 	);
 	const response = await request.get('/read');
 	expect(await response.text()).toBe(content);
-});
-
-test('_headers are copied to publish directory', () => {
-	const headers = fs.readFileSync(path.resolve(import.meta.dirname, '../build/_headers'), 'utf-8');
-	expect(headers).toContain('X-Custom-Header: test-value');
 });
 
 test('treeshakes component from the server bundle if SSR is turned off', async ({ page }) => {

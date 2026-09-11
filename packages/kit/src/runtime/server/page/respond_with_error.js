@@ -5,6 +5,7 @@ import { redirect_response } from '../utils.js';
 import { handle_error_and_jsonify, static_error_page } from '../errors.js';
 import { PageNodes } from '../../../utils/page_nodes.js';
 import { server_data_serializer } from './data_serializer.js';
+import { manifest } from '../internal.js';
 
 /**
  * @typedef {import('./types.js').Loaded} Loaded
@@ -14,30 +15,28 @@ import { server_data_serializer } from './data_serializer.js';
  * @param {{
  *   event: import('@sveltejs/kit').RequestEvent;
  *   state: import('types').RequestState;
- *   options: import('types').SSROptions;
- *   manifest: import('@sveltejs/kit').SSRManifest;
  *   error: unknown;
  *   resolve_opts: import('types').RequiredResolveOptions;
  * }} opts
  */
-export async function respond_with_error({ event, state, options, manifest, error, resolve_opts }) {
+export async function respond_with_error({ event, state, error, resolve_opts }) {
 	// reroute to the fallback page to prevent an infinite chain of requests.
 	if (event.request.headers.get('x-sveltekit-error')) {
-		const transformed = await handle_error_and_jsonify(event, state, options, error);
-		return static_error_page(options, transformed.status, transformed.message);
+		const transformed = await handle_error_and_jsonify(event, state, error);
+		return static_error_page(transformed.status, transformed.message);
 	}
 
 	/** @type {import('./types.js').Fetched[]} */
 	const fetched = [];
 	try {
 		const branch = [];
-		const default_layout = await manifest._.nodes[0](); // 0 is always the root layout
+		const default_layout = await manifest.nodes[0](); // 0 is always the root layout
 		const nodes = new PageNodes([default_layout]);
 		const ssr = nodes.ssr();
 		const csr = nodes.csr();
-		const data_serializer = server_data_serializer(event, state, options);
+		const data_serializer = server_data_serializer(event, state);
 		// Do this here first in case the awaits below before rendering themselves error
-		const transformed = await handle_error_and_jsonify(event, state, options, error);
+		const transformed = await handle_error_and_jsonify(event, state, error);
 
 		if (ssr) {
 			state.error = true;
@@ -72,7 +71,7 @@ export async function respond_with_error({ event, state, options, manifest, erro
 					data
 				},
 				{
-					node: await manifest._.nodes[1](), // 1 is always the root error
+					node: await manifest.nodes[1](), // 1 is always the root error
 					data: null,
 					server_data: null
 				}
@@ -80,8 +79,6 @@ export async function respond_with_error({ event, state, options, manifest, erro
 		}
 
 		return await render_response({
-			options,
-			manifest,
 			page_config: {
 				ssr,
 				csr
@@ -103,8 +100,8 @@ export async function respond_with_error({ event, state, options, manifest, erro
 			return redirect_response(e.status, e.location);
 		}
 
-		const transformed = await handle_error_and_jsonify(event, state, options, e);
+		const transformed = await handle_error_and_jsonify(event, state, e);
 
-		return static_error_page(options, transformed.status, transformed.message);
+		return static_error_page(transformed.status, transformed.message);
 	}
 }

@@ -1,4 +1,5 @@
 /** @import { Component } from 'svelte'; */
+/** @import { SyncRenderOutput } from 'svelte/server' */
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
 import { isRedirect, text } from '@sveltejs/kit';
@@ -9,9 +10,13 @@ import { serialize_data } from './serialize_data.js';
 import { s } from '../../../utils/misc.js';
 import { Csp } from './csp.js';
 import { uneval_action_response } from './actions.js';
-import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import { SCHEME } from '../../../utils/url.js';
-import { create_server_routing_response, generate_route_object } from './server_routing.js';
+import {
+	client_path,
+	create_server_routing_response,
+	generate_route_object,
+	resolve_paths
+} from './server_routing.js';
 import {
 	add_data_suffix,
 	add_resolution_suffix,
@@ -19,7 +24,7 @@ import {
 } from '../../pathname.js';
 import { try_get_request_store, with_request_store } from '@sveltejs/kit/internal/server';
 import { stream_text } from '../../utils.js';
-import { count_non_ssi_comments, get_global_name } from '../utils.js';
+import { count_non_ssi_comments } from '../utils.js';
 import { handle_error_and_jsonify } from '../errors.js';
 import * as env from '<sveltekit:generated>/env/config.js';
 import { collect_remote_data } from '../remote-functions.js';
@@ -27,6 +32,7 @@ import Root from '../../components/root.svelte';
 import { render } from 'svelte/server';
 import { Props, RenderNode } from '../../props.svelte.js';
 import { has_custom_transporters, uneval } from '#app/internal/transport';
+import { manifest, options } from '../internal.js';
 
 // TODO rename this function/module
 
@@ -35,8 +41,6 @@ import { has_custom_transporters, uneval } from '#app/internal/transport';
  * @param {{
  *   branch: Array<import('./types.js').Loaded>;
  *   fetched: Array<import('./types.js').Fetched>;
- *   options: import('types').SSROptions;
- *   manifest: import('@sveltejs/kit').SSRManifest;
  *   page_config: { ssr: boolean; csr: boolean };
  *   status: number;
  *   error: App.Error | null;
@@ -51,8 +55,6 @@ import { has_custom_transporters, uneval } from '#app/internal/transport';
 export async function render_response({
 	branch,
 	fetched,
-	options,
-	manifest,
 	page_config,
 	status,
 	error = null,
@@ -73,7 +75,7 @@ export async function render_response({
 		}
 	}
 
-	const { client } = manifest._;
+	const client = manifest.client;
 
 	const modulepreloads = new Set(client?.imports);
 	const stylesheets = new Set(client?.stylesheets);
@@ -91,8 +93,7 @@ export async function render_response({
 	// TODO if we add a client entry point one day, we will need to include inline_styles with the entry, otherwise stylesheets will be linked even if they are below inlineStyleThreshold
 	const inline_styles = new Map();
 
-	// TODO `svelte/server` should expose `RenderOutput`
-	/** @type {Omit<Awaited<ReturnType<typeof render>>, 'html'>} */
+	/** @type {Omit<SyncRenderOutput, 'html'>} */
 	let rendered;
 
 	const form_value =
@@ -124,17 +125,11 @@ export async function render_response({
 			const pathname = event.isDataRequest
 				? add_data_suffix(event.url.pathname)
 				: event.url.pathname;
-			const segments = pathname.slice(paths.base.length).split('/').slice(2);
-
-			base = segments.map(() => '..').join('/') || '.';
+			({ base, assets } = resolve_paths(pathname));
 
 			// resolve e.g. '../..' against current location, then remove trailing slash
 			base_expression = `new URL(${s(base)}, location).pathname.slice(0, -1)`;
-
-			if (!paths.assets || (paths.assets[0] === '/' && paths.assets !== SVELTE_KIT_ASSETS)) {
-				assets = base;
-			}
-		} else if (options.hash_routing) {
+		} else if (__SVELTEKIT_HASH_ROUTING__) {
 			// we have to assume that we're in the right place
 			base_expression = "new URL('.', location).pathname.slice(0, -1)";
 		}
@@ -203,7 +198,7 @@ export async function render_response({
 							throw e;
 						}
 
-						const handled = handle_error_and_jsonify(event, render_state, options, e);
+						const handled = handle_error_and_jsonify(event, render_state, e);
 
 						// TODO 4.0 make this an async function and await `handled`
 						if (handled instanceof Promise) {
@@ -282,15 +277,7 @@ export async function render_response({
 	let body = rendered.body;
 
 	/** @param {string} path */
-	const prefixed = (path) => {
-		if (path.startsWith('/')) {
-			// Vite makes the start script available through the base path and without it.
-			// We load it via the base path in order to support remote IDE environments which proxy
-			// all URLs under the base path during development.
-			return paths.base + path;
-		}
-		return `${assets}/${path}`;
-	};
+	const prefixed = (path) => client_path(path, { base, assets });
 
 	const style = client?.inline
 		? client.inline?.style
@@ -312,7 +299,10 @@ export async function render_response({
 	 * @param {string[]} attributes
 	 */
 	const add_preload = (path, attributes) => {
-		if (options.link_header_preload && !(state.prerendering || state.prerender_default === true)) {
+		if (
+			__SVELTEKIT_LINK_HEADER_PRELOAD__ &&
+			!(state.prerendering || state.prerender_default === true)
+		) {
 			link_headers.add(`<${encodeURI(path)}>; ${attributes.join('; ')}; nopush`);
 		} else {
 			head.add_link_tag(path, attributes);
@@ -329,7 +319,7 @@ export async function render_response({
 			// include them in disabled state so that Vite can detect them and doesn't try to add them
 			attributes.push('disabled', 'media="(max-width: 0)"');
 		} else {
-			if (options.link_header_preload && resolve_opts.preload({ type: 'css', path })) {
+			if (__SVELTEKIT_LINK_HEADER_PRELOAD__ && resolve_opts.preload({ type: 'css', path })) {
 				link_headers.add(`<${encodeURI(path)}>; rel="preload"; as="style"; nopush`);
 			}
 		}
@@ -347,7 +337,7 @@ export async function render_response({
 		}
 	}
 
-	const global = get_global_name(options);
+	const global = __SVELTEKIT_GLOBAL_NAME__;
 	const { data, chunks } = data_serializer.get_data(csp);
 
 	if (page_config.ssr && page_config.csr) {
@@ -509,7 +499,7 @@ export async function render_response({
 					); // make output after it's put together with the rest more readable
 					hydrate.push(`params: ${devalue.uneval(event.params)}`, `server_route: ${stringified}`);
 				}
-			} else if (options.embedded) {
+			} else if (__SVELTEKIT_EMBEDDED__) {
 				hydrate.push(`params: ${devalue.uneval(event.params)}`, `route: ${s(event.route)}`);
 			}
 
@@ -517,7 +507,7 @@ export async function render_response({
 			args.push(`{\n${indent}\t${hydrate.join(`,\n${indent}\t`)}\n${indent}}`);
 		}
 
-		const remote_data = await collect_remote_data({}, event, state, options);
+		const remote_data = await collect_remote_data({}, event, state);
 
 		const serialized_data =
 			Object.keys(remote_data).length > 0
@@ -549,7 +539,7 @@ export async function render_response({
 			blocks.push(boot);
 		}
 
-		if (options.service_worker) {
+		if (__SVELTEKIT_SERVICE_WORKER__) {
 			let opts = ", { type: 'module' }";
 			if (options.service_worker_options != null) {
 				const service_worker_options = { ...options.service_worker_options, type: 'module' };
@@ -610,7 +600,7 @@ export async function render_response({
 			headers.set('content-security-policy-report-only', report_only_header);
 		}
 
-		if (options.link_header_preload && link_headers.size) {
+		if (__SVELTEKIT_LINK_HEADER_PRELOAD__ && link_headers.size) {
 			headers.set('link', Array.from(link_headers).join(', '));
 		}
 	}
@@ -652,12 +642,9 @@ export async function render_response({
 		}
 	}
 
-	return !chunks
-		? text(transformed, {
-				status,
-				headers
-			})
-		: new Response(stream_text(transformed + '\n', chunks), { headers });
+	return chunks
+		? new Response(stream_text(transformed + '\n', chunks), { status, headers })
+		: text(transformed, { status, headers });
 }
 
 class Head {

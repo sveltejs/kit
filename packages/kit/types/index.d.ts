@@ -5,6 +5,7 @@ declare module '@sveltejs/kit' {
 	import type { Plugin } from 'vite';
 	import type { RouteId as AppRouteId, LayoutParams as AppLayoutParams } from '$app/types';
 	import type { StandardSchemaV1 } from '@standard-schema/spec';
+	import type { getRequest, setResponse } from '@sveltejs/kit/node';
 	import type { Config } from '@sveltejs/kit/vite';
 	// @ts-ignore this is an optional peer dependency so could be missing. Written like this so dts-buddy preserves the ts-ignore
 	type Span = import('@opentelemetry/api').Span;
@@ -43,20 +44,47 @@ declare module '@sveltejs/kit' {
 		 * during dev, build and prerendering.
 		 */
 		emulate?: () => MaybePromise<Emulator>;
-		vite?: {
-			plugins?: {
-				/**
-				 * Vite plugins placed before any of SvelteKit's own plugins.
-				 * @since 3.0.0
-				 */
-				pre?: Plugin[];
-				/**
-				 * Vite plugins placed after any of SvelteKit's own plugins.
-				 * @since 3.0.0
-				 */
-				post?: Plugin[];
-			};
-		};
+		/**
+		 * Options for configuring and interacting with Vite
+		 * @since 3.0.0
+		 */
+		vite?: AdapterViteConfig | ((ctx: { config: ValidatedConfig }) => AdapterViteConfig);
+	}
+
+	export interface AdapterViteConfig {
+		/**
+		 * This function overrides the default behavior during Vite's dev and preview modes
+		 * to convert an `http.IncomingMessage` to a `Request` object.
+		 * To call the original `setRequest` function, import it from `@sveltejs/kit/node`.
+		 * @since 3.0.0
+		 */
+		getRequest?: typeof getRequest;
+		/**
+		 * This function overrides the default behavior in Vite's dev and preview modes
+		 * to write a `Response` object to a `http.ServerResponse`.
+		 * To call the original `setResponse` function, import it from `@sveltejs/kit/node`.
+		 * @since 3.0.0
+		 */
+		setResponse?: typeof setResponse;
+		/**
+		 * Vite plugins injected by the adapter. By default,
+		 * they are placed before SvelteKit's plugins.
+		 * @since 3.0.0
+		 */
+		plugins?:
+			| Plugin[]
+			| {
+					/**
+					 * Vite plugins placed before any of SvelteKit's own plugins.
+					 * @since 3.0.0
+					 */
+					pre?: Plugin[];
+					/**
+					 * Vite plugins placed after any of SvelteKit's own plugins.
+					 * @since 3.0.0
+					 */
+					post?: Plugin[];
+			  };
 	}
 
 	export type LoadProperties<input extends Record<string, any> | void> = input extends void
@@ -125,6 +153,17 @@ declare module '@sveltejs/kit' {
 		prerendered: Prerendered;
 		/** An array of all routes (including prerendered) */
 		routes: RouteDefinition[];
+		/**
+		 * The value of the `$app/manifest` module.
+		 * The only difference is `manifest.assets` also includes the service worker, if it exists.
+		 * @since 3.0.0
+		 */
+		manifest: typeof import('$app/manifest');
+		/**
+		 * A record of file extensions to MIME types
+		 * @since 3.0.0
+		 */
+		mimeTypes: Record<string, string>;
 
 		/**
 		 * Create separate functions that map to one or more routes of your app.
@@ -150,9 +189,10 @@ declare module '@sveltejs/kit' {
 
 		/**
 		 * Generate a server-side manifest to initialise the SvelteKit [server](https://svelte.dev/docs/kit/@sveltejs-kit#Server) with.
-		 * @param opts.relativePath  A relative path to the base directory of the server build output
+		 * @param opts.relativePath A relative path to the base directory of the server build output
+		 * @deprecated removed in 3.0. Use `builder.generateServerInstance` or `builder.manifest` instead
 		 */
-		generateManifest: (opts: { relativePath: string; routes?: RouteDefinition[] }) => string;
+		generateManifest?: (opts: { relativePath: string; routes?: RouteDefinition[] }) => string;
 
 		/**
 		 * Resolve a path to the `name` directory inside `outDir`, e.g. `/path/to/.svelte-kit/my-adapter`.
@@ -166,6 +206,19 @@ declare module '@sveltejs/kit' {
 		/** Get the application path including any configured `base` path, e.g. `my-base-path/_app`. */
 		getAppPath: () => string;
 
+		/**
+		 * Generates a module exposing a SvelteKit [Server](https://svelte.dev/docs/kit/@sveltejs-kit#Server) instance.
+		 * @param opts.routes A subset of the routes to include in the server's manifest
+		 * @param opts.serverDirectory The directory containing the server code. Defaults to `getServerDirectory()`.
+		 * @since 3.0.0
+		 */
+		generateServerInstance: (
+			dest: string,
+			opts?: {
+				routes?: RouteDefinition[];
+				serverDirectory?: string;
+			}
+		) => void;
 		/**
 		 * Write client assets to `dest`.
 		 * @param dest the destination folder
@@ -184,6 +237,23 @@ declare module '@sveltejs/kit' {
 		 * @returns an array of files written to `dest`
 		 */
 		writeServer: (dest: string) => string[];
+
+		/**
+		 * Generate an initializer that populates `$env/dynamic/private` before server instrumentation
+		 * runs. Include the returned module in any subsequent bundling or tracing step.
+		 * @param options an object containing the following properties:
+		 * @param options.outputDirectory the directory in which to create the initializer.
+		 * @param options.environment the contents of a module whose default export contains the platform's environment variables. If omitted, `process.env` is used.
+		 * @param options.serverDirectory the directory containing the server build output. Defaults to `getServerDirectory()`.
+		 * @returns the filesystem path to the generated initializer.
+		 * @since 3.0.0
+		 */
+		createInstrumentationInitializer: (options: {
+			outputDirectory: string;
+			environment?: string;
+			serverDirectory?: string;
+		}) => string;
+
 		/**
 		 * Copy a file or directory.
 		 * @param from the source file or directory
@@ -215,6 +285,9 @@ declare module '@sveltejs/kit' {
 		 * `entrypoint` which imports `instrumentation` and then dynamically imports `start`. This allows
 		 * the module hooks necessary for instrumentation libraries to be loaded prior to any application code.
 		 *
+		 * `initializer` is a module generated by `createInstrumentationInitializer`. It must be included
+		 * in any bundling or tracing step before calling this method.
+		 *
 		 * Caveats:
 		 * - "Live exports" will not work. If your adapter uses live exports, your users will need to manually import the server instrumentation on startup.
 		 * - If `tla` is `false`, OTEL auto-instrumentation may not work properly. Use it if your environment supports it.
@@ -224,20 +297,26 @@ declare module '@sveltejs/kit' {
 		 * @param options.entrypoint the path to the entrypoint to trace.
 		 * @param options.instrumentation the path to the instrumentation file.
 		 * @param options.start the name of the start file. This is what `entrypoint` will be renamed to.
+		 * @param options.initializer the filesystem path to the bundled or copied instrumentation initializer.
 		 * @param options.module configuration for the resulting entrypoint module.
-		 * @param options.module.generateText a function that receives the relative paths to the instrumentation and start files, and generates the text of the module to be traced. If not provided, the default implementation will be used, which uses top-level await.
-		 * @since 2.31.0
+		 * @param options.module.generateText a function that receives the relative paths to the initializer, instrumentation and start files, and generates the text of the module to be traced. It must import `initializer` before `instrumentation`, and dynamically import `start` after instrumentation has run. If not provided, the default implementation will be used, which uses top-level await.
+		 * @since 3.0.0
 		 */
 		instrument: (args: {
 			entrypoint: string;
 			instrumentation: string;
 			start?: string;
+			initializer: string;
 			module?:
 				| {
 						exports: string[];
 				  }
 				| {
-						generateText: (args: { instrumentation: string; start: string }) => string;
+						generateText: (args: {
+							instrumentation: string;
+							start: string;
+							initializer: string;
+						}) => string;
 				  };
 		}) => void;
 
@@ -640,8 +719,7 @@ declare module '@sveltejs/kit' {
 		config: Config;
 	}
 
-	export class Server {
-		constructor(manifest: SSRManifest);
+	export interface Server {
 		init(options: ServerInitOptions): Promise<void>;
 		respond(request: Request, options: RequestOptions): Promise<Response>;
 	}
@@ -651,19 +729,6 @@ declare module '@sveltejs/kit' {
 		env: Record<string, string | undefined>;
 		/** A function that turns an asset filename into a `ReadableStream`. Required for the `read` export from `$app/server` to work. */
 		read?: (file: string) => MaybePromise<ReadableStream | null>;
-	}
-
-	/**
-	 * Information required to instantiate a new `Server` instance.
-	 */
-	export interface SSRManifest {
-		/** The directory where SvelteKit keeps its stuff, including static assets (such as JS and CSS) and internally-used routes. */
-		appDir: string;
-		/** The `base` and `appDir` settings combined without a leading slash. */
-		appPath: string;
-		/** Static files from `config.files.assets` and the service worker (if any). */
-		assets: Set<string>;
-		mimeTypes: Record<string, string>;
 	}
 
 	/**
@@ -905,7 +970,8 @@ declare module '@sveltejs/kit' {
 			: T[K]; // Use the exact type for everything else
 	};
 
-	type ValidatedConfig = RecursiveRequired<Omit<Config, 'preprocess'>> & {
+	type ValidatedConfig = RecursiveRequired<Omit<Config, 'preprocess' | 'adapter'>> & {
+		adapter: Adapter & { vite?: AdapterViteConfig };
 		preprocess: Config['preprocess'];
 	};
 	/**
@@ -1061,6 +1127,25 @@ declare module '@sveltejs/kit' {
 		denormalize: (url?: string | URL) => URL;
 	};
 	export const VERSION: string;
+
+	export {};
+}
+
+declare module '@sveltejs/kit/adapter' {
+	/**
+	 * Helps a catch-all request handler pass the request to a different handler if
+	 * the `reroute` hook has returned a URL pathname that's different from the
+	 * incoming request.
+	 *
+	 * If your adapter is capable of deploying multiple serverless functions, it's a
+	 * good idea to also deploy a "catch-all" one to handle uncaught requests.
+	 * Running this in that function allows the app's `reroute` hook to rewrite
+	 * the request URL and invoke the next appropriate serverless function, if any.
+	 * @param response The response returned from the SvelteKit `server.respond` function
+	 * @param next Your platform-specific implementation for invoking the next handler with a different request URL
+	 * @since 3.0.0
+	 */
+	export function applyReroute(response: Response, next: (url: URL) => Response | Promise<Response>): Response | Promise<Response>;
 
 	export {};
 }
@@ -1511,7 +1596,7 @@ declare module '@sveltejs/kit/params' {
 declare module '@sveltejs/kit/vite' {
 	import type { Adapter } from '@sveltejs/kit';
 	import type { Options } from '@sveltejs/vite-plugin-svelte';
-	import type { Plugin } from 'vite';
+	import * as vite from 'vite';
 	// this indirection helps make the docs look pretty
 	type VitePluginSvelteOptions = Omit<Options, 'experimental'>;
 	type VitePluginSvelteOptionsExperimental = Options['experimental'];
@@ -2899,6 +2984,14 @@ declare module '$app/paths' {
 declare module '$app/server' {
 	import type { StandardSchemaV1 } from '@standard-schema/spec';
 	import type { RequestEvent } from '@sveltejs/kit';
+	type ImageInputValue = { x: number; y: number };
+
+	type IsImageInputValue<T> = T extends ImageInputValue
+		? Exclude<keyof T, keyof ImageInputValue> extends never
+			? true
+			: false
+		: false;
+
 	// If T is unknown or has an index signature, the types below will recurse indefinitely and create giant unions that TS can't handle
 	type WillRecurseIndefinitely<T> = unknown extends T ? true : string extends keyof T ? true : false;
 
@@ -2925,7 +3018,7 @@ declare module '$app/server' {
 		submit: string | number | boolean;
 		button: string;
 		reset: string;
-		image: string;
+		image: ImageInputValue;
 		select: string;
 		'select multiple': string[];
 		'file multiple': File[];
@@ -2937,7 +3030,7 @@ declare module '$app/server' {
 	}[keyof InputTypeMap];
 
 	// Input element properties based on type
-	type InputElementProps<T extends keyof InputTypeMap> = T extends 'checkbox' | 'radio'
+	type InputElementProps<T extends keyof InputTypeMap, Value> = T extends 'checkbox' | 'radio'
 		? {
 				name: string;
 				type: T;
@@ -2947,45 +3040,51 @@ declare module '$app/server' {
 				set checked(value: boolean);
 				readonly defaultChecked?: boolean;
 			}
-		: T extends 'file'
+		: T extends 'image'
 			? {
 					name: string;
-					type: 'file';
+					type: 'image';
 					'aria-invalid': boolean | 'false' | 'true' | undefined;
-					get files(): FileList | null;
-					set files(v: FileList | null);
 				}
-			: T extends 'select'
+			: T extends 'file'
 				? {
 						name: string;
+						type: 'file';
 						'aria-invalid': boolean | 'false' | 'true' | undefined;
-						get value(): string;
-						set value(v: string);
+						get files(): FileList | null;
+						set files(v: FileList | null);
 					}
-				: T extends 'select multiple'
+				: T extends 'select'
 					? {
 							name: string;
-							multiple: true;
 							'aria-invalid': boolean | 'false' | 'true' | undefined;
-							get value(): string[];
-							set value(v: string[]);
+							get value(): string;
+							set value(v: string);
 						}
-					: T extends 'text'
+					: T extends 'select multiple'
 						? {
 								name: string;
+								multiple: true;
 								'aria-invalid': boolean | 'false' | 'true' | undefined;
-								get value(): string | number;
-								set value(v: string | number);
-								readonly defaultValue?: string | number;
+								get value(): string[];
+								set value(v: string[]);
 							}
-						: {
-								name: string;
-								type: T;
-								'aria-invalid': boolean | 'false' | 'true' | undefined;
-								get value(): string | number;
-								set value(v: string | number);
-								readonly defaultValue?: string | number;
-							};
+						: T extends 'text'
+							? {
+									name: string;
+									'aria-invalid': boolean | 'false' | 'true' | undefined;
+									get value(): Value extends string ? string : string | number;
+									set value(v: Value extends string ? string : string | number);
+									readonly defaultValue?: Value extends string ? string : string | number;
+								}
+							: {
+									name: string;
+									type: T;
+									'aria-invalid': boolean | 'false' | 'true' | undefined;
+									get value(): string | number;
+									set value(v: string | number);
+									readonly defaultValue?: string | number;
+								};
 
 	type RemoteFormFieldMethods<T> = {
 		/** The values that will be submitted */
@@ -3009,23 +3108,34 @@ declare module '$app/server' {
 			: never
 		: never;
 
-	export type RemoteFormFieldValue = string | string[] | number | boolean | File | File[];
+	export type RemoteFormFieldValue =
+		| string
+		| string[]
+		| number
+		| boolean
+		| File
+		| File[]
+		| ImageInputValue;
 
 	type AsArgs<Type extends keyof InputTypeMap, Value> = Type extends 'checkbox'
 		? Value extends string[]
-			? [type: Type, value: Value[number] | (string & {})]
+			? [type: Type, value: Value[number] | (string & {}), checked?: boolean]
 			: Value extends boolean
-				? [type: Type] | [type: Type, value: boolean]
-				: [type: Type] | [type: Type, value: Value | (string & {})]
-		: Type extends 'submit' | 'hidden'
-			? Value extends string
-				? [type: Type, value: Value | (string & {})]
-				: [type: Type, value: Value]
-			: Type extends 'radio'
-				? [type: Type, value: Value | (string & {})]
-				: Type extends 'file' | 'file multiple'
-					? [type: Type]
-					: [type: Type] | [type: Type, value: Value | undefined];
+				? [type: Type, value?: boolean]
+				: [type: Type, value?: Value]
+		: Type extends 'image'
+			? [type: Type]
+			: Type extends 'submit' | 'hidden'
+				? Value extends string
+					? [type: Type, value: Value | (string & {})]
+					: [type: Type, value: Value]
+				: Type extends 'radio'
+					? [type: Type, value: Value | (string & {}), checked?: boolean]
+					: Type extends 'file' | 'file multiple'
+						? [type: Type]
+						: [type: Type, value?: Value];
+
+	type WidenLiteralString<T> = T extends string ? (string extends T ? T : string) : T;
 
 	/**
 	 * Form field accessor type that provides name(), value(), and issues() methods
@@ -3041,7 +3151,9 @@ declare module '$app/server' {
 		 * <input {...myForm.fields.myBoolean.as('checkbox')} />
 		 * ```
 		 */
-		as<T extends RemoteFormFieldType<Value>>(...args: AsArgs<T, Value>): InputElementProps<T>;
+		as<T extends RemoteFormFieldType<Value>>(
+			...args: AsArgs<T, Value>
+		): InputElementProps<T, WidenLiteralString<Value>>;
 	};
 
 	type RemoteFormFieldContainer<Value> = RemoteFormFieldMethods<Value> & {
@@ -3062,12 +3174,15 @@ declare module '$app/server' {
 		 * <input {...myForm.fields.myBoolean.as('checkbox')} />
 		 * ```
 		 */
-		as<T extends RemoteFormFieldType<Value>>(...args: AsArgs<T, Value>): InputElementProps<T>;
+		as<T extends RemoteFormFieldType<Value>>(...args: AsArgs<T, Value>): InputElementProps<T, Value>;
 	} & {
 		[key: string | number]: UnknownField<any>;
 	};
 
-	type RemoteFormFieldsRoot<Input extends RemoteFormInput | void> =
+	type RemoteFormFieldsRoot<
+		Input extends RemoteFormInput | void,
+		Original extends [RemoteFormInput | void] = [Input]
+	> =
 		IsAny<Input> extends true
 			? RecursiveFormFields
 			: Input extends void
@@ -3077,7 +3192,11 @@ declare module '$app/server' {
 						/** Validation issues belonging to this or any of the fields that belong to it, if any */
 						allIssues(): RemoteFormIssue[] | undefined;
 					}
-				: RemoteFormFields<Input>;
+				: WillRecurseIndefinitely<Input> extends true
+					? RecursiveFormFields
+					: RemoteFormFieldContainer<Original[0]> & {
+							[K in KeysOfUnion<Original[0]>]-?: RemoteFormFields<ValueOfUnionKey<Original[0], K>>;
+						};
 
 	/**
 	 * Recursive type to build form fields structure with proxy access
@@ -3087,20 +3206,25 @@ declare module '$app/server' {
 			? RecursiveFormFields
 			: NonNullable<T> extends string | number | boolean | File
 				? RemoteFormField<NonNullable<T>>
-				: // [NonNullable<T>] is used to prevent distributing over union while still allowing
-					// nullable wrappers (e.g. `string[] | undefined` from a schema with `.default([])`)
-					// to be treated as arrays; only the last condition should distribute over unions
-					[NonNullable<T>] extends [string[] | File[]]
-					? RemoteFormField<NonNullable<T>> & {
-							[K in number]: RemoteFormField<NonNullable<T>[number]>;
-						}
-					: [NonNullable<T>] extends [Array<infer U>]
-						? RemoteFormFieldContainer<NonNullable<T>> & {
-								[K in number]: RemoteFormFields<U>;
-							}
-						: RemoteFormFieldContainer<T> & {
+				: IsImageInputValue<NonNullable<T>> extends true
+					? RemoteFormField<NonNullable<T> & ImageInputValue> &
+							Pick<RemoteFormFieldContainer<T>, 'allIssues'> & {
 								[K in KeysOfUnion<T>]-?: RemoteFormFields<ValueOfUnionKey<T, K>>;
-							};
+							}
+					: // [NonNullable<T>] is used to prevent distributing over union while still allowing
+						// nullable wrappers (e.g. `string[] | undefined` from a schema with `.default([])`)
+						// to be treated as arrays; only the last condition should distribute over unions
+						[NonNullable<T>] extends [string[] | File[]]
+						? RemoteFormField<NonNullable<T>> & {
+								[K in number]: RemoteFormField<NonNullable<T>[number]>;
+							}
+						: [NonNullable<T>] extends [Array<infer U>]
+							? RemoteFormFieldContainer<NonNullable<T>> & {
+									[K in number]: RemoteFormFields<U>;
+								}
+							: RemoteFormFieldContainer<T> & {
+									[K in KeysOfUnion<T>]-?: RemoteFormFields<ValueOfUnionKey<T, K>>;
+								};
 
 	// By breaking this out into its own type, we avoid the TS recursion depth limit
 	type RecursiveFormFields = RemoteFormFieldContainer<any> & {
@@ -3169,7 +3293,17 @@ declare module '$app/server' {
 	/**
 	 * The type of a remote `form` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
 	 */
-	export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
+	export type RemoteForm<Input extends RemoteFormInput | void, Output> = RemoteForm_<
+		Input,
+		Output,
+		[Input]
+	>;
+
+	type RemoteForm_<
+		Input extends RemoteFormInput | void,
+		Output,
+		Original extends [RemoteFormInput | void]
+	> = {
 		/** Attachment that sets up an event handler that intercepts the form submission on the client to prevent a full page reload */
 		[attachment: symbol]: (node: HTMLFormElement) => void;
 		method: 'POST';
@@ -3223,7 +3357,7 @@ declare module '$app/server' {
 		/** True if the form has been submitted at least once, and hasn't been reset since */
 		get submitted(): boolean;
 		/** Access form fields using object notation */
-		fields: RemoteFormFieldsRoot<Input>;
+		fields: RemoteFormFieldsRoot<Input, Original>;
 	};
 
 	/**
@@ -3355,6 +3489,8 @@ declare module '$app/server' {
 	export type RequestedEntry<Validated, Output> = {
 		arg: Validated;
 		query: RemoteQuery<Output>;
+		/** Explicitly ignore this requested update. */
+		ignore: () => void;
 	};
 
 	/**
@@ -3366,6 +3502,8 @@ declare module '$app/server' {
 	export type RemoteLiveQueryRequestedEntry<Validated, Output> = {
 		arg: Validated;
 		query: RemoteLiveQuery<Output>;
+		/** Explicitly ignore this requested update. */
+		ignore: () => void;
 	};
 
 	export type RemoteQueryRequestedResult<Validated, Output> = Iterable<
@@ -3384,6 +3522,8 @@ declare module '$app/server' {
 			 * ```
 			 */
 			refreshAll: () => Promise<void>;
+			/** Explicitly ignore all updates selected by this `requested` invocation. */
+			ignoreAll: () => Promise<void>;
 		};
 
 	export type RemoteLiveQueryRequestedResult<Validated, Output> = Iterable<
@@ -3402,6 +3542,8 @@ declare module '$app/server' {
 			 * ```
 			 */
 			reconnectAll: () => Promise<void>;
+			/** Explicitly ignore all updates selected by this `requested` invocation. */
+			ignoreAll: () => Promise<void>;
 		};
 
 	export type RequestedResult<Validated, Output> =

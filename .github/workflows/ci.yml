@@ -20,6 +20,7 @@ on:
       - 'FUNDING.json'
       - 'LICENSE'
       - 'README.md'
+      - '.coderabbit.yml'
   pull_request:
     paths-ignore: *paths_ignore
 
@@ -68,12 +69,17 @@ jobs:
       - uses: ./.github/actions/node-setup
         with:
           node-version: ${{ matrix.node-version }}
+      # the adapter-bun unit tests run under `bun test`
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        if: matrix.script == 'test:others'
+        with:
+          bun-version: 1.4.0
       - run: pnpm run sync-all
       - run: pnpm ${{ matrix.script }}
   e2e:
-    # every Playwright leg. `script` runs in the `app`s named, or in packages/kit without `app`;
-    # see test/utils.js for the env. pnpm skips a named app that lacks `script` as long as
-    # another has it, so check each app defines the script
+    # every Playwright leg, and the basics server spec. `script` runs in the `app`s named, or in
+    # packages/kit without `app`; see test/utils.js for the env. pnpm skips a named app that lacks
+    # `script` as long as another has it, so check each app defines the script
     runs-on: ${{ matrix.os || 'ubuntu-latest' }}
     timeout-minutes: 30
     strategy:
@@ -90,6 +96,9 @@ jobs:
           - { app: basics, script: pw:build, project: js, shard: 2/2 }
           - { app: basics, script: pw:build, project: no-js }
           - { script: test:build:rest, workers: 2 }
+          # the server half of basics, a vitest spec against Server.respond and against the dev server
+          - { app: basics, script: server:dev }
+          - { app: basics, script: server:build }
           # the server config variants each app declares in its playwright.config.js. nothing
           # requests `__route.js` without JS, so resolution has no no-js legs
           - { app: basics, script: pw:build, variant: async, project: js, shard: 1/2 }

@@ -35,6 +35,19 @@ test('$app/env/private is not dynamically importable from the client', { timeout
 	);
 });
 
+test('$app/env/private is not importable from client hooks outside the project root', { timeout }, () => {
+	assert.throws(
+		() =>
+			execSync('pnpm build', {
+				cwd: path.join(import.meta.dirname, 'apps/env-private-out-of-root-hooks'),
+				stdio: 'pipe',
+				timeout,
+				env
+			}),
+		/.*Cannot import \$app\/env\/private into code that runs in the browser.*/gs
+	);
+});
+
 test('$app/env/private is not importable from the service worker', { timeout }, () => {
 	assert.throws(
 		() =>

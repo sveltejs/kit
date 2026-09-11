@@ -1,14 +1,23 @@
 import { noop } from '../../utils/functions.js';
 import { stream_from_iterable } from '../utils.js';
-import { IN_WEBCONTAINER } from '../../constants.js';
+import { IN_WEBCONTAINER, REROUTED_URL_HEADER } from '../../constants.js';
 import { respond } from './respond.js';
 import { create_request_state } from './state.js';
 import { options, get_hooks } from '<sveltekit:generated>/server.js';
-import { set_read_implementation, set_manifest, fix_stack_trace } from './internal.js';
+import {
+	set_read_implementation,
+	set_manifest,
+	set_options,
+	set_hooks,
+	fix_stack_trace
+} from './internal.js';
 import { set_env } from '<sveltekit:generated>/env/config.js';
 import { init_tracing } from '@sveltejs/kit/internal/server';
 import { DEV } from 'esm-env';
 import { init_transport } from '#app/internal/transport';
+
+// set at module scope because prerendering evaluates user modules before constructing a `Server`
+set_options(options);
 
 /** @type {Promise<any>} */
 let init_promise;
@@ -49,18 +58,8 @@ if (DEV) {
 }
 
 export class Server {
-	/** @type {import('types').SSROptions} */
-	#options;
-
-	/** @type {import('@sveltejs/kit').SSRManifest} */
-	#manifest;
-
-	/** @param {import('@sveltejs/kit').SSRManifest} manifest */
+	/** @param {import('types').SSRManifest} manifest */
 	constructor(manifest) {
-		/** @type {import('types').SSROptions} */
-		this.#options = options;
-		this.#manifest = manifest;
-
 		// Since AsyncLocalStorage is not working in webcontainers, we don't reset `sync_store`
 		// in `src/exports/internal/server/event.js` and handle only one request at a time.
 		if (IN_WEBCONTAINER) {
@@ -123,7 +122,7 @@ export class Server {
 			try {
 				const module = await get_hooks();
 
-				this.#options.hooks = {
+				set_hooks({
 					handle: module.handle || (({ event, resolve }) => resolve(event)),
 					handleError:
 						module.handleError ||
@@ -152,7 +151,7 @@ export class Server {
 						}),
 					handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request)),
 					reroute: module.reroute || noop
-				};
+				});
 
 				init_transport(module.transport ?? {});
 
@@ -161,14 +160,14 @@ export class Server {
 				}
 			} catch (e) {
 				if (__SVELTEKIT_DEV__) {
-					this.#options.hooks = {
+					set_hooks({
 						handle: () => {
 							throw e;
 						},
 						handleError: ({ error }) => console.error(error),
 						handleFetch: ({ request, fetch }) => fetch(request),
 						reroute: noop
-					};
+					});
 				} else {
 					throw e;
 				}
@@ -181,16 +180,23 @@ export class Server {
 	 * @param {import('types').InternalRequestOptions} options
 	 */
 	async respond(request, options) {
-		const response = await respond(
-			request,
-			this.#options,
-			this.#manifest,
-			create_request_state(options)
-		);
+		const request_state = create_request_state(options);
+
+		const response = await respond(request, request_state);
 
 		if (DEV) {
 			const error = decoded_responses.get(response);
 			if (error) console.error(fix_stack_trace(error));
+		}
+
+		if (request_state.rerouted_url) {
+			response.headers.set(REROUTED_URL_HEADER, request_state.rerouted_url);
+		}
+
+		// the HTTP layer discards HEAD response bodies, but nothing does when the server is called directly
+		if (request.method === 'HEAD' && response.body !== null) {
+			response.body.cancel().catch(noop);
+			return new Response(null, response);
 		}
 
 		return response;

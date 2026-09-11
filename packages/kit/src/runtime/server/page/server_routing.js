@@ -1,23 +1,25 @@
-/** @import { SSRManifest } from '@sveltejs/kit' */
+/** @import { SSRManifest } from 'types' */
 import { base, assets } from '#app/paths';
 import { relative } from '$app/paths/internal/server';
 import { text } from '@sveltejs/kit';
 import { s } from '../../../utils/misc.js';
 import { find_route } from '../../../utils/routing.js';
-import { get_relative_path } from '../../utils.js';
+import { SVELTE_KIT_ASSETS } from '../../../constants.js';
+import { manifest } from '../internal.js';
 
 /**
  * @param {import('types').SSRClientRoute} route
  * @param {URL} url
- * @param {NonNullable<SSRManifest['_']['client']>} client
+ * @param {NonNullable<SSRManifest['client']>} client
  * @returns {string}
  */
 export function generate_route_object(route, url, client) {
 	const { errors, layouts, leaf } = route;
+	const paths = resolve_paths(url.pathname);
 
 	const nodes = [...errors, ...layouts.map((l) => l?.[1]), leaf[1]]
 		.filter((n) => typeof n === 'number')
-		.map((n) => `'${n}': () => ${create_client_import(client.nodes?.[n], url)}`)
+		.map((n) => `'${n}': () => ${create_client_import(client.nodes?.[n], paths)}`)
 		.join(',\n\t\t');
 
 	// stringified version of
@@ -32,53 +34,59 @@ export function generate_route_object(route, url, client) {
 }
 
 /**
- * @param {string | undefined} import_path
- * @param {URL} url
+ * The `base` and `assets` prefixes for client paths in a document at `pathname`. With
+ * `paths.relative`, they're relative to that document so the app also works when served
+ * from IPFS, the internet archive, or behind a proxy.
+ * @param {string} pathname
  */
-function create_client_import(import_path, url) {
-	if (!import_path) return 'Promise.resolve({})';
+export function resolve_paths(pathname) {
+	if (!relative) return { base, assets };
 
-	// During DEV, Vite will make the paths absolute (e.g. /@fs/...)
-	if (import_path[0] === '/') {
-		return `import('${import_path}')`;
-	}
+	const segments = pathname.slice(base.length).split('/').slice(2);
+	const relative_base = segments.map(() => '..').join('/') || '.';
 
-	// During PROD, they're root-relative
-	if (assets !== '') {
-		return `import('${assets}/${import_path}')`;
-	}
+	return {
+		base: relative_base,
+		// same-origin assets are relative too, except for the placeholder used by `vite preview`
+		assets: !assets || (assets[0] === '/' && assets !== SVELTE_KIT_ASSETS) ? relative_base : assets
+	};
+}
 
-	if (!relative) {
-		return `import('${base}/${import_path}')`;
-	}
+/**
+ * @param {string} path a root-absolute dev path (e.g. `/@fs/...`) or a prod path relative to `assets`
+ * @param {ReturnType<typeof resolve_paths>} paths
+ */
+export function client_path(path, { base, assets }) {
+	return path[0] === '/' ? base + path : `${assets}/${path}`;
+}
 
-	// Else we make them relative to the server-side route resolution request
-	// to support IPFS, the internet archive, etc.
-	let path = get_relative_path(url.pathname, `${base}/${import_path}`);
-	if (path[0] !== '.') path = `./${path}`;
-	return `import('${path}')`;
+/**
+ * @param {string | undefined} import_path
+ * @param {ReturnType<typeof resolve_paths>} paths
+ */
+function create_client_import(import_path, paths) {
+	return import_path ? `import('${client_path(import_path, paths)}')` : 'Promise.resolve({})';
 }
 
 /**
  * @param {string} resolved_path
  * @param {URL} url
- * @param {SSRManifest} manifest
  * @returns {Promise<Response>}
  */
-export async function resolve_route(resolved_path, url, manifest) {
-	if (!manifest._.client?.routes) {
+export async function resolve_route(resolved_path, url) {
+	if (!manifest.client?.routes) {
 		return text('Server-side route resolution disabled', { status: 400 });
 	}
 
 	try {
-		const matchers = await manifest._.matchers();
-		const result = find_route(resolved_path, manifest._.client.routes, matchers);
+		const matchers = await manifest.matchers();
+		const result = find_route(resolved_path, manifest.client.routes, matchers);
 
 		return create_server_routing_response(
 			result?.route ?? null,
 			result?.params ?? {},
 			url,
-			manifest._.client
+			manifest.client
 		).response;
 	} catch {
 		return text('Error resolving route', { status: 500 });
@@ -99,29 +107,28 @@ export async function resolve_route(resolved_path, url, manifest) {
  *
  * @param {string} route_id
  * @param {URL} url
- * @param {SSRManifest} manifest
  * @returns {Response}
  */
-export function resolve_route_by_id(route_id, url, manifest) {
-	if (!manifest._.client?.routes) {
+export function resolve_route_by_id(route_id, url) {
+	if (!manifest.client?.routes) {
 		return text('Server-side route resolution disabled', { status: 400 });
 	}
 
 	try {
-		const route = manifest._.client.routes.find((r) => r.id === route_id);
+		const route = manifest.client.routes.find((r) => r.id === route_id);
 
 		if (route) {
-			return create_server_routing_response(route, null, url, manifest._.client).response;
+			return create_server_routing_response(route, null, url, manifest.client).response;
 		}
 
 		// `client.routes` only contains routes with a `+page`, so a miss above doesn't mean the
 		// route doesn't exist — it might be a `+server.js`-only route. `_.routes` includes those
 		// (with `page: null`), so we can distinguish "exists but has no code" from "unknown".
-		if (manifest._.routes.some((r) => r.id === route_id && !r.page)) {
+		if (manifest.routes.some((r) => r.id === route_id && !r.page)) {
 			return text('export const endpoint_only = true;', { headers: js_headers() });
 		}
 
-		return create_server_routing_response(null, null, url, manifest._.client).response;
+		return create_server_routing_response(null, null, url, manifest.client).response;
 	} catch {
 		return text('Error resolving route', { status: 500 });
 	}
@@ -137,7 +144,7 @@ function js_headers() {
  * @param {import('types').SSRClientRoute | null} route
  * @param {Partial<Record<string, string>> | null} params
  * @param {URL} url
- * @param {NonNullable<SSRManifest['_']['client']>} client
+ * @param {NonNullable<SSRManifest['client']>} client
  * @returns {{response: Response, body: string}}
  */
 export function create_server_routing_response(route, params, url, client) {
@@ -164,11 +171,12 @@ export function create_server_routing_response(route, params, url, client) {
  *
  * @param {import('types').SSRClientRoute} route
  * @param {URL} url
- * @param {NonNullable<SSRManifest['_']['client']>} client
+ * @param {NonNullable<SSRManifest['client']>} client
  * @returns {string}
  */
 function create_css_import(route, url, client) {
 	const { errors, layouts, leaf } = route;
+	const paths = resolve_paths(url.pathname);
 
 	let css = '';
 
@@ -176,11 +184,11 @@ function create_css_import(route, url, client) {
 		if (typeof node !== 'number') continue;
 		const node_css = client.css?.[node];
 		for (const css_path of node_css ?? []) {
-			css += `'${assets || base}/${css_path}',`;
+			css += `'${client_path(css_path, paths)}',`;
 		}
 	}
 
 	if (!css) return '';
 
-	return `${create_client_import(client.start, url)}.then(x => x.load_css([${css}]));\n`;
+	return `${create_client_import(client.start, paths)}.then(x => x.load_css([${css}]));\n`;
 }

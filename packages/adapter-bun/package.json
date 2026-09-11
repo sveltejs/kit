@@ -1,0 +1,56 @@
+{
+	"name": "@sveltejs/adapter-bun",
+	"version": "1.0.0-next.2",
+	"description": "Adapter for SvelteKit apps that generates a standalone Bun server",
+	"keywords": [
+		"adapter",
+		"bun",
+		"deploy",
+		"hosting",
+		"svelte",
+		"sveltekit"
+	],
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/sveltejs/kit.git",
+		"directory": "packages/adapter-bun"
+	},
+	"license": "MIT",
+	"homepage": "https://svelte.dev/docs/kit/adapter-bun",
+	"type": "module",
+	"exports": {
+		".": {
+			"types": "./index.d.ts",
+			"import": "./index.js"
+		},
+		"./package.json": "./package.json"
+	},
+	"types": "index.d.ts",
+	"files": [
+		"src/*.js",
+		"index.js",
+		"index.d.ts",
+		"ambient.d.ts"
+	],
+	"scripts": {
+		"test": "bun test .spec",
+		"check": "tsc",
+		"lint": "prettier --check .",
+		"format": "pnpm lint --write"
+	},
+	"devDependencies": {
+		"@playwright/test": "catalog:",
+		"@sveltejs/kit": "workspace:^",
+		"@types/node": "catalog:",
+		"typescript": "catalog:"
+	},
+	"dependencies": {
+		"bun-types": "^1.3.14"
+	},
+	"peerDependencies": {
+		"@sveltejs/kit": "^3.0.0-next.0"
+	},
+	"engines": {
+		"bun": ">=1.4.0"
+	}
+}

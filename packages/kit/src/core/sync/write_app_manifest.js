@@ -1,4 +1,5 @@
 /** @import { Asset, ManifestData, RouteData } from 'types' */
+/** @import { ManifestRoute } from '$app/manifest' */
 
 import { s } from '../../utils/misc.js';
 import { is_app_route, is_endpoint_route, is_page_route } from './create_manifest_data/index.js';
@@ -60,11 +61,11 @@ function stringify_assets(assets) {
 
 /**
  * @param {RouteData[] | undefined} routes
- * @returns {Array<{ id: string; page: boolean; endpoint: boolean }>}
+ * @returns {ManifestRoute[]}
  */
 export function get_manifest_routes(routes) {
 	return (
-		routes?.filter(is_app_route).map((route) => ({
+		routes?.filter(is_app_route).map((route) => /** @type {ManifestRoute} */ ({
 			id: route.id,
 			page: is_page_route(route),
 			endpoint: is_endpoint_route(route)
