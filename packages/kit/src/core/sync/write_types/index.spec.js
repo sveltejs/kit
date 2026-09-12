@@ -2,7 +2,7 @@ import { execSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
-import { assert, describe, expect, test } from 'vitest';
+import { assert, describe, expect, test, vi } from 'vitest';
 import create_manifest_data from '../create_manifest_data/index.js';
 import { tweak_types, write_all_types } from './index.js';
 import { write_app_types } from '../write_app_types.js';
@@ -33,7 +33,72 @@ function run_test(dir) {
 	write_app_types(initial, manifest, root);
 	write_tsconfig(initial, root);
 	write_env('', {}, root);
+
+	return { config: initial, manifest, root };
 }
+
+test('route metadata remains readable while it is replaced', () => {
+	const { config, manifest, root } = run_test('simple-page-shared-only');
+	const meta_data_file = path.join(config.outDir, 'types', 'route_meta_data.json');
+	const meta_data_temp_prefix = path.join(config.outDir, 'route_meta_data.');
+	const original_remove = fs.rmSync;
+	const original_write = fs.writeFileSync;
+	let intercepted = false;
+	let competing_error;
+
+	// Model a competing invocation that has already finished cleaning stale generated files.
+	const remove_spy = vi.spyOn(fs, 'rmSync').mockImplementation((file, options) => {
+		if (file.toString() !== meta_data_file) {
+			original_remove(file, options);
+		}
+	});
+
+	const write_spy = vi.spyOn(fs, 'writeFileSync').mockImplementation((file, data, options) => {
+		const filename = file.toString();
+		if (
+			!intercepted &&
+			(filename === meta_data_file || filename.startsWith(meta_data_temp_prefix))
+		) {
+			intercepted = true;
+
+			if (filename === meta_data_file) {
+				original_write(file, '');
+			} else {
+				original_write(file, data, options);
+			}
+
+			try {
+				write_all_types(config, manifest, root);
+			} catch (error) {
+				competing_error = error;
+			}
+
+			if (filename === meta_data_file) {
+				original_write(file, data, options);
+			}
+			return;
+		}
+
+		original_write(file, data, options);
+	});
+
+	try {
+		write_all_types(config, manifest, root);
+	} finally {
+		write_spy.mockRestore();
+		remove_spy.mockRestore();
+	}
+
+	const removed_meta_data = remove_spy.mock.calls.some(
+		([file]) => file.toString() === meta_data_file
+	);
+	expect(removed_meta_data).toBe(false);
+	expect(intercepted).toBe(true);
+	expect(competing_error).toBeUndefined();
+	expect(
+		fs.readdirSync(config.outDir).filter((file) => file.startsWith('route_meta_data.'))
+	).toEqual([]);
+});
 
 describe('Creates correct $types', () => {
 	// To save us from creating a real SvelteKit project for each of the tests,
