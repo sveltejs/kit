@@ -499,6 +499,9 @@ await myCache.match(request);
 
 - bundling now happens with `rolldown`
 - the `ORIGIN` environment variable is removed (set `paths.origin` in your Vite config instead)
+- static assets are served from a list recorded at build time; files added to the output directory afterwards are not served
+- `ETag`s for static assets are content hashes, and `Last-Modified` is no longer sent
+- only `GET` and `HEAD` requests are served static assets; other methods reach SvelteKit
 
 ### `adapter-netlify`
 
