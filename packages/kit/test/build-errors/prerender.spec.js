@@ -9,12 +9,14 @@ const timeout = 60_000;
  * Run `pnpm build` for the given test app and return the captured stderr output.
  * The build is expected to fail — if it doesn't, the test fails.
  * @param {string} app
+ * @param {Record<string, string>} [env]
  * @returns {string}
  */
-function build(app) {
+function build(app, env) {
 	try {
 		execSync('pnpm build', {
 			cwd: path.join(import.meta.dirname, 'apps', app),
+			env: { ...process.env, ...env },
 			stdio: 'pipe',
 			timeout
 		});
@@ -48,6 +50,21 @@ test('an error in a `prerender` function should fail the build', { timeout }, ()
 
 	assert.match(stderr, /remote function blew up/);
 });
+
+test.each(['sync', 'async'])(
+	'%s errors in prerender inputs identify the remote function and module',
+	{ timeout },
+	(mode) => {
+		const stderr = build('prerender-remote-function-error', { PRERENDER_INPUTS_ERROR: mode });
+
+		assert.match(
+			stderr,
+			/Failed to generate inputs for prerender function `from_inputs` in src\/routes\/data\.remote\.ts/
+		);
+		assert.notMatch(stderr, /Failed to generate inputs for prerender function `same_inputs`/);
+		assert.match(stderr, /Could not get the request store/);
+	}
+);
 
 test('a root +server.js returning non-HTML cannot be prerendered', { timeout }, () => {
 	const stderr = build('prerender-root-non-html-server');

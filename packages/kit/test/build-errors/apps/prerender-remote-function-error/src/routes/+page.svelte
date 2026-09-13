@@ -1,7 +1,11 @@
 <script>
-	import { throws } from './data.remote.ts';
+	import { from_inputs, throws } from './data.remote.ts';
 </script>
 
-{#await throws() then value}
-	{value}
+{#await throws() then values}
+	{#each values as value}
+		{#await from_inputs(value) then result}
+			{result}
+		{/await}
+	{/each}
 {/await}

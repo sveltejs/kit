@@ -795,6 +795,7 @@ export function plugin_compile(
 						out,
 						manifest_path,
 						metadata,
+						remote_files: Object.fromEntries(remotes.map(({ hash, file }) => [hash, file])),
 						verbose,
 						env,
 						vite_config_file: vite_config.configFile,

@@ -32,6 +32,7 @@ const SPECIAL_HASHLINKS = new Set(['', 'top']);
  *   out: string;
  *   manifest_path: string;
  *   metadata: import('types').ServerMetadata;
+ *   remote_files: Record<string, string>;
  *   verbose: boolean;
  *   env: Record<string, string>;
  *   vite_config_file: string | undefined;
@@ -43,6 +44,7 @@ async function prerender({
 	out,
 	manifest_path,
 	metadata,
+	remote_files,
 	verbose,
 	env,
 	vite_config_file,
@@ -656,15 +658,15 @@ async function prerender({
 	set_manifest(manifest);
 	set_read_implementation((file) => createReadableStream(`${out}/server/${file}`));
 
-	/** @type {Array<import('types').RemotePrerenderInternals>} */
+	/** @type {Array<{ internals: import('types').RemotePrerenderInternals; name: string; file: string }>} */
 	const prerender_functions = [];
 
-	for (const loader of Object.values(manifest.remotes)) {
+	for (const [hash, loader] of Object.entries(manifest.remotes)) {
 		const module = await loader();
 
-		for (const fn of Object.values(module.default)) {
+		for (const [name, fn] of Object.entries(module.default)) {
 			if (fn?.__?.type === 'prerender') {
-				prerender_functions.push(fn.__);
+				prerender_functions.push({ internals: fn.__, name, file: remote_files[hash] });
 				should_prerender = true;
 			}
 		}
@@ -708,9 +710,18 @@ async function prerender({
 		}
 	}
 
-	for (const internals of prerender_functions) {
+	for (const { internals, name, file } of prerender_functions) {
 		if (internals.has_arg) {
-			for (const arg of (await internals.inputs?.()) ?? []) {
+			let inputs;
+			try {
+				inputs = await internals.inputs?.();
+			} catch (cause) {
+				throw new Error(
+					`Failed to generate inputs for prerender function \`${name}\` in ${file}: ${cause instanceof Error ? cause.message : String(cause)}`,
+					{ cause }
+				);
+			}
+			for (const arg of inputs ?? []) {
 				void enqueue(null, remote_prefix + internals.id + '/' + stringify_remote_arg(arg));
 			}
 		} else {
