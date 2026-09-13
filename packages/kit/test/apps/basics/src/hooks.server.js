@@ -1,5 +1,5 @@
 import { building, dev } from '$app/env';
-import { error, isHttpError, redirect } from '@sveltejs/kit';
+import { error, isHttpError, json, redirect } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 import fs from 'node:fs';
 import { COOKIE_NAME } from './routes/cookies/shared';
@@ -222,12 +222,28 @@ export const handle = sequence(
 );
 
 /** @type {import('@sveltejs/kit/hooks').HandleFetch} */
-export async function handleFetch({ request, fetch }) {
+export async function handleFetch({ event, request, fetch }) {
 	if (request.url.endsWith('/server-fetch-request.json')) {
 		request = new Request(
 			request.url.replace('/server-fetch-request.json', '/server-fetch-request-modified.json'),
 			request
 		);
+	}
+
+	if (event.url.pathname === '/load/fetch-request-init' && event.url.searchParams.has('hook')) {
+		if (event.url.searchParams.has('repeat')) {
+			const first = await (await fetch(request)).json();
+			const omitted = await (await fetch(request, { credentials: 'omit' })).json();
+			const last = await (await fetch(request)).json();
+			return json({ first, omitted, last, input_headers: Object.fromEntries(request.headers) });
+		}
+
+		/** @type {RequestInit} */
+		const init = JSON.parse(event.request.headers.get('x-fetch-init') ?? '{}');
+		if (event.request.headers.get('x-fetch-abort') === 'true') {
+			init.signal = AbortSignal.abort();
+		}
+		return fetch(request, init);
 	}
 
 	return fetch(request);

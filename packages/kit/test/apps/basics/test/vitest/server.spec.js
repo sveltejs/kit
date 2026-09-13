@@ -717,6 +717,110 @@ describe('Load', () => {
 		expect(document.querySelector('p')?.textContent).toBe('1');
 	});
 
+	describe.each(['event.fetch', 'handleFetch'])('%s RequestInit', (fetch_type) => {
+		/**
+		 * @param {RequestInit} request_init
+		 * @param {RequestInit} init
+		 * @param {{ target?: string; abort?: boolean; repeat?: boolean }} [options]
+		 */
+		async function fetch_with_init(
+			request_init,
+			init,
+			{ target = '/load/fetch-request-init/data', abort = false, repeat = false } = {}
+		) {
+			const search = new URLSearchParams({ target });
+			if (fetch_type === 'handleFetch') search.set('hook', '');
+			if (repeat) search.set('repeat', '');
+			const response = await get(`/load/fetch-request-init?${search}`, {
+				headers: {
+					authorization: 'parent-authorization',
+					cookie: 'fetch-init=secret',
+					'x-request-init': JSON.stringify(request_init),
+					'x-fetch-init': JSON.stringify(init),
+					'x-fetch-abort': String(abort)
+				}
+			});
+			expect(response.status).toBe(200);
+			return response.json();
+		}
+
+		test('replaces Request headers', async () => {
+			const { headers } = await fetch_with_init(
+				{ headers: { authorization: 'original', 'x-original': 'removed' } },
+				{ headers: { authorization: 'replacement', 'x-added': 'added' } }
+			);
+			expect(headers.authorization).toBe('replacement');
+			expect(headers['x-added']).toBe('added');
+			expect(headers['x-original']).toBeUndefined();
+
+			const cleared = await fetch_with_init(
+				{ headers: { authorization: 'original', 'x-original': 'removed' } },
+				{ headers: {} }
+			);
+			expect(cleared.headers.authorization).toBe('parent-authorization');
+			expect(cleared.headers['x-original']).toBeUndefined();
+		});
+
+		test('overrides the Request method and body', async () => {
+			const { method, body } = await fetch_with_init(
+				{ method: 'POST', body: 'original body' },
+				{ method: 'PUT', body: 'replacement body' }
+			);
+			expect(method).toBe('PUT');
+			expect(body).toBe('replacement body');
+		});
+
+		for (const credentials of /** @type {RequestCredentials[]} */ (['omit', 'include'])) {
+			test(`overrides Request credentials with ${credentials}`, async () => {
+				const { headers } = await fetch_with_init(
+					{ credentials: credentials === 'omit' ? 'include' : 'omit' },
+					{ credentials }
+				);
+				expect(headers.cookie).toBe(credentials === 'omit' ? undefined : 'fetch-init=secret');
+				expect(headers.authorization).toBe(
+					credentials === 'omit' ? undefined : 'parent-authorization'
+				);
+			});
+		}
+
+		for (const mode of /** @type {RequestMode[]} */ (['cors', 'no-cors'])) {
+			test(`overrides Request mode with ${mode}`, async () => {
+				const { port } = await start_server((req, res) => {
+					res.setHeader('content-type', 'application/json');
+					res.end(JSON.stringify({ origin: req.headers.origin ?? null }));
+				});
+				const result = await fetch_with_init(
+					{ mode: mode === 'cors' ? 'no-cors' : 'cors' },
+					{ mode },
+					{ target: `http://localhost:${port}/` }
+				);
+				expect(result.origin).toBe(mode === 'cors' ? origin : null);
+			});
+		}
+
+		test('uses the AbortSignal supplied in init', async () => {
+			const result = await fetch_with_init({}, {}, { abort: true });
+			expect(result).toEqual({ error: 'AbortError' });
+		});
+
+		if (fetch_type === 'handleFetch') {
+			test('keeps repeated fetch calls and the input Request independent', async () => {
+				const { first, omitted, last, input_headers } = await fetch_with_init(
+					{ headers: { 'x-original': 'retained' } },
+					{},
+					{ repeat: true }
+				);
+				for (const result of [first, last]) {
+					expect(result.headers.cookie).toContain('fetch-init=secret');
+					expect(result.headers.authorization).toBe('parent-authorization');
+				}
+				expect(omitted.headers.cookie).toBeUndefined();
+				expect(omitted.headers.authorization).toBeUndefined();
+				expect(input_headers).toEqual({ 'x-original': 'retained' });
+			});
+		}
+	});
+
 	test('does not forward accept-language to internal fetch when the request has none', async () => {
 		// unlike browsers and fetch, a bare http client sends no accept-language header
 		const html = await new Promise((fulfil) => {
