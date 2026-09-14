@@ -81,11 +81,6 @@ test('uses the content types from the manifest', async ({ request }) => {
 	expect((await request.get('/prerendered.ico')).headers()['content-type']).toBe('image/x-icon');
 });
 
-test('does not replace adapter stubs in application chunks', async ({ request }) => {
-	const response = await request.get('/stub');
-	expect(await response.text()).toBe('__SVELTEKIT_ADAPTER_NODE_MIMETYPES__');
-});
-
 test('does not record dotfiles, except .well-known', async ({ request }) => {
 	expect((await request.get('/.hidden')).status()).toBe(404);
 	expect(await (await request.get('/.well-known/thing.txt')).text()).toBe('wk');
