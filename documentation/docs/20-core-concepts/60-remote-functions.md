@@ -1027,6 +1027,8 @@ export const updatePost = form(
 
 Because queries are keyed based on their arguments, `getPost(post.id).set(result)` on the server knows to look up the matching `getPost(id)` on the client to update it. The same goes for `getPosts().refresh()` -- it knows to look up `getPosts()` with no argument on the client.
 
+Calling `refresh()`, `set()` or `reconnect()` anywhere in a `form` handler replaces the default invalidation of all queries and load functions for that submission, so only the queries you refreshed will update.
+
 ### Reconnecting live queries in mutations
 
 Single-flight mutations can also reconnect `query.live` instances. In a `form`/`command` handler, call `.reconnect()` on the live query resource you want to reconnect:
