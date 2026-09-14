@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { pipeline } from 'node:stream';
 
 /** @typedef {AssetEntry & { type?: string }} Asset */
 
@@ -214,9 +215,8 @@ export function serve_static(
 			return;
 		}
 
-		// headers are already sent, so all we can do is drop the connection
-		fs.createReadStream(file, range)
-			.on('error', () => res.destroy())
-			.pipe(res);
+		// the headers are already sent, so a failed read can only drop the connection.
+		// `pipeline` also closes the file when the client goes away mid-transfer
+		pipeline(fs.createReadStream(file, range), res, () => {});
 	};
 }
