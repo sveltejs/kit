@@ -1280,6 +1280,18 @@ test.describe('Actions', () => {
 		await expect(page.locator('p')).toHaveText('Forbidden (403 Forbidden)');
 	});
 
+	test('use:enhance follows an HTTP redirect to a non-ActionResult page', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		test.skip(!javaScriptEnabled, 'Skip when JavaScript is disabled');
+		await page.goto('/actions/enhance-non-action-response');
+		await page.locator('button.redirect').click();
+
+		await expect(page.locator('h1')).toHaveText('login');
+		expect(new URL(page.url()).pathname).toBe('/actions/enhance-non-action-response/login');
+	});
+
 	test('use:enhance abort controller', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/actions/enhance');
 
