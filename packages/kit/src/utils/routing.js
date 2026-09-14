@@ -289,9 +289,10 @@ export const segment_pattern = new RegExp(
  * ```
  * @param {string} id
  * @param {Record<string, ParamValue | undefined>} params
+ * @param {boolean} [encode] percent-encode the values, so the pathname is a valid URI
  * @returns {string}
  */
-export function resolve_route(id, params) {
+export function resolve_route(id, params, encode = false) {
 	const segments = get_route_segments(id);
 	const has_id_trailing_slash = id != '/' && id.endsWith('/');
 
@@ -317,7 +318,17 @@ export function resolve_route(id, params) {
 							);
 						}
 
-						return value;
+						if (!encode) return value;
+
+						// A rest parameter spans segments, so its slashes separate them and
+						// survive. Anywhere else a slash would push the value into the next
+						// segment, where the route no longer matches.
+						return rest
+							? value
+									.split('/')
+									.map((segment) => encodeURIComponent(segment))
+									.join('/')
+							: encodeURIComponent(value);
 					}
 
 					if (

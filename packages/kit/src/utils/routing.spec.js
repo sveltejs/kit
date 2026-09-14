@@ -657,3 +657,37 @@ describe('find_route', () => {
 		assert.equal(result?.params.slug, 'hello world');
 	});
 });
+
+describe('resolve_route with encoding', () => {
+	test('encodes a non-ASCII value', () => {
+		assert.equal(resolve_route('/blog/[slug]', { slug: 'møte' }, true), '/blog/m%C3%B8te');
+	});
+
+	test('leaves an ASCII value unchanged', () => {
+		assert.equal(resolve_route('/blog/[slug]', { slug: 'hello-world' }, true), '/blog/hello-world');
+	});
+
+	test('escapes a slash, so the value stays in one segment', () => {
+		assert.equal(resolve_route('/blog/[slug]', { slug: 'a/b' }, true), '/blog/a%2Fb');
+	});
+
+	test('keeps the separators in a rest parameter', () => {
+		assert.equal(resolve_route('/blog/[...rest]', { rest: 'æ/ø' }, true), '/blog/%C3%A6/%C3%B8');
+	});
+
+	test('stringifies a non-string value', () => {
+		assert.equal(resolve_route('/blog/[slug]', { slug: 2 }, true), '/blog/2');
+	});
+
+	test('substitutes verbatim when not encoding', () => {
+		assert.equal(resolve_route('/blog/[slug]', { slug: 'møte' }), '/blog/møte');
+	});
+
+	test('resolves back to the parameters it was given', () => {
+		const { pattern, params } = parse_route_id('/blog/[slug]');
+		const pathname = resolve_route('/blog/[slug]', { slug: 'a/b' }, true);
+		const match = pattern.exec(decodeURI(pathname));
+
+		assert.deepEqual(match && exec(match, params, {}), { slug: 'a/b' });
+	});
+});
