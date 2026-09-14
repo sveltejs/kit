@@ -31,11 +31,11 @@ export default function (opts = {}) {
 
 			const assets = create_asset_table(
 				base,
-				await measure_files(client_dir, client_files, client_compressed)
+				measure_files(client_dir, client_files, client_compressed)
 			);
 			const prerendered_assets = create_prerendered_table(
 				base,
-				await measure_files(prerendered_dir, prerendered_files, prerendered_compressed),
+				measure_files(prerendered_dir, prerendered_files, prerendered_compressed),
 				builder.prerendered.paths
 			);
 
@@ -132,18 +132,6 @@ export default function (opts = {}) {
 }
 
 /**
- * Content hash of a file
- * @param {string} file
- */
-async function hash(file) {
-	const sha = createHash('sha256');
-
-	for await (const chunk of fs.createReadStream(file)) sha.update(chunk);
-
-	return sha.digest('base64url');
-}
-
-/**
  * Dotfiles are not served, with the customary exception of `.well-known`
  * @param {string} file
  */
@@ -152,34 +140,63 @@ function is_hidden(file) {
 }
 
 /**
+ * Size and content hash from one pass over the file, a buffer at a time
+ * @param {string} file
+ * @param {Buffer} buffer
+ */
+function measure(file, buffer) {
+	const fd = fs.openSync(file, 'r');
+	const hash = createHash('sha256');
+	let size = 0;
+
+	try {
+		let read;
+		while ((read = fs.readSync(fd, buffer)) > 0) {
+			hash.update(buffer.subarray(0, read));
+			size += read;
+		}
+	} finally {
+		fs.closeSync(fd);
+	}
+
+	return { size, etag: hash.digest('base64url') };
+}
+
+/**
  * Size and content hash of every servable file, plus the sizes of the
- * compressed variants where `builder.compress` wrote them
+ * compressed variants where `builder.compress` wrote them.
+ * Files are read one at a time through a single buffer, so large outputs
+ * neither exhaust file descriptors nor pile up in memory
  * @param {string} root
  * @param {string[]} files
  * @param {string[]} compressed
- * @returns {Promise<AssetEntry[]>}
+ * @returns {AssetEntry[]}
  */
 function measure_files(root, files, compressed) {
 	const variants = new Set(compressed);
+	const buffer = Buffer.allocUnsafe(64 * 1024);
 
-	return Promise.all(
-		files
-			.filter((file) => !is_hidden(file))
-			.map(async (file) => {
-				const abs = join(root, file);
+	/** @type {AssetEntry[]} */
+	const entries = [];
 
-				/** @type {AssetEntry} */
-				const entry = { file, size: fs.statSync(abs).size, etag: await hash(abs) };
+	for (const file of files) {
+		if (is_hidden(file)) continue;
 
-				// `builder.compress` writes a `.gz` and a `.br` variant of every file it returns
-				if (variants.has(file)) {
-					entry.gz = fs.statSync(`${abs}.gz`).size;
-					entry.br = fs.statSync(`${abs}.br`).size;
-				}
+		const abs = join(root, file);
 
-				return entry;
-			})
-	);
+		/** @type {AssetEntry} */
+		const entry = { file, ...measure(abs, buffer) };
+
+		// `builder.compress` writes a `.gz` and a `.br` variant of every file it returns
+		if (variants.has(file)) {
+			entry.gz = fs.statSync(`${abs}.gz`).size;
+			entry.br = fs.statSync(`${abs}.br`).size;
+		}
+
+		entries.push(entry);
+	}
+
+	return entries;
 }
 
 /**
@@ -213,20 +230,16 @@ function create_asset_table(base, measured) {
 		}
 	}
 
-	// `/foo` and `/foo/` resolve to `foo.html`, unless a `foo/index.html` exists,
-	// in which case `foo.html` wins (matching the resolution order sirv used)
+	// `/foo` and `/foo/` resolve to `foo.html`, or to `foo/index.html` when only that exists.
+	// `foo.html` sorts first, so it claims the aliases (the resolution order sirv used)
 	for (const [key, entry] of entries) {
 		if (!entry.file.endsWith('.html')) continue;
-		if (entry.file === 'index.html' || entry.file.endsWith('/index.html')) continue;
-		alias(key.slice(0, -5), key);
-		alias(key.slice(0, -5) + '/', key);
-	}
 
-	for (const [key, entry] of entries) {
-		if (entry.file !== 'index.html' && !entry.file.endsWith('/index.html')) continue;
-		const with_slash = key.slice(0, -'index.html'.length);
-		if (with_slash.length > 1) alias(with_slash.slice(0, -1), key);
+		const is_index = entry.file === 'index.html' || entry.file.endsWith('/index.html');
+		const with_slash = is_index ? key.slice(0, -'index.html'.length) : key.slice(0, -5) + '/';
+
 		alias(with_slash, key);
+		if (with_slash.length > 1) alias(with_slash.slice(0, -1), key);
 	}
 
 	return { entries, aliases };
