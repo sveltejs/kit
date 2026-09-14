@@ -2,7 +2,8 @@ import * as fs from 'node:fs';
 import { extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const files = fileURLToPath(new URL('./files', import.meta.url).href);
+// posix so it matches the module ids Vite reports on every platform
+const files = fileURLToPath(new URL('./files', import.meta.url).href).replaceAll('\\', '/');
 const handoff = '#@sveltejs/adapter-node';
 
 /** @type {typeof import('./index.js').default} */
@@ -57,7 +58,7 @@ export default function (opts = {}) {
 
 			builder.copy(server, `${out}/server`);
 
-			// values only known after the build, imported by chunks via `package.json`. `dir` needs the output root
+			// values only known after the build. `dir` needs the output root
 			fs.writeFileSync(
 				`${out}/adapter-node.js`,
 				[
@@ -76,10 +77,6 @@ export default function (opts = {}) {
 				].join('\n')
 			);
 
-			fs.writeFileSync(
-				`${out}/package.json`,
-				JSON.stringify({ type: 'module', imports: { [handoff]: './adapter-node.js' } })
-			);
 			fs.writeFileSync(`${out}/index.js`, `export * from './server/adapter-index.js';\n`);
 			fs.writeFileSync(`${out}/handler.js`, `export * from './server/handler.js';\n`);
 		},
@@ -115,7 +112,15 @@ export default function (opts = {}) {
 													...Object.keys(pkg.dependencies || {}).map(
 														(d) => new RegExp(`^${d}(\\/.*)?$`)
 													)
-												]
+												],
+												output: {
+													paths: { [handoff]: '../adapter-node.js' },
+													// the hand-off path only holds at the output root, so adapter chunks may not nest
+													chunkFileNames: (chunk) =>
+														chunk.moduleIds.some((id) => id.startsWith(files))
+															? 'adapter-node-[name].js'
+															: 'chunks/[name].js'
+												}
 											}
 										}
 									}
