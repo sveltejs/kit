@@ -1,8 +1,13 @@
+/** @import { IncomingMessage, ServerResponse } from 'node:http' */
 import fs from 'node:fs';
 import path from 'node:path';
 import { pipeline } from 'node:stream';
 
-/** @typedef {AssetEntry & { type?: string }} Asset */
+/**
+ * @typedef {(req: IncomingMessage, res: ServerResponse, next: () => void | Promise<void>) => void | Promise<void>} Middleware
+ * @typedef {AssetEntry & { type?: string, cache_control?: string }} Asset
+ * @typedef {Asset | { location: string }} Entry
+ */
 
 /**
  * Splits `req.url` into a decoded pathname and the search string.
@@ -92,25 +97,13 @@ function etag_matches(header, etag) {
 }
 
 /**
- * Serves the closed set of files recorded in the manifest at adapt time.
- * Everything about a response is precomputed: exact pathname keys, sizes,
- * content-hash ETags, content types and which compressed variants exist,
- * so requests are a map lookup and a stream.
- *
+ * Absolute file paths and content types for one table
  * @param {string} dir
  * @param {AssetTable} table
- * @param {{
- *   mime_types: Record<string, string>,
- *   immutable_prefix?: string,
- *   redirect_trailing_slash?: boolean
- * }} opts
- * @returns {import('./handler.js').Middleware}
+ * @param {Record<string, string>} mime_types
+ * @returns {Map<string, Asset>}
  */
-export function serve_static(
-	dir,
-	table,
-	{ mime_types, immutable_prefix, redirect_trailing_slash }
-) {
+function resolve(dir, table, mime_types) {
 	/** @type {Map<string, Asset>} */
 	const files = new Map();
 
@@ -124,23 +117,68 @@ export function serve_static(
 		files.set(alias, /** @type {Asset} */ (files.get(key)));
 	}
 
+	return files;
+}
+
+/**
+ * One lookup for every request, decided at boot: client assets (immutable below
+ * `app_path`), prerendered pages, and a 308 from the non-canonical trailing-slash
+ * form of a prerendered path to the canonical one. Client assets win a collision
+ * @param {{
+ *   dir: string,
+ *   base: string,
+ *   app_path: string,
+ *   mime_types: Record<string, string>,
+ *   assets: AssetTable,
+ *   prerendered_assets: AssetTable
+ * }} opts
+ * @returns {Map<string, Entry>}
+ */
+export function create_file_map({ dir, base, app_path, mime_types, assets, prerendered_assets }) {
+	/** @type {Map<string, Entry>} */
+	const files = resolve(`${dir}/client${base}`, assets, mime_types);
+
+	const immutable = `/${app_path}/immutable/`;
+	for (const [key, asset] of files) {
+		if (key.startsWith(immutable)) {
+			/** @type {Asset} */ (asset).cache_control = 'public,max-age=31536000,immutable';
+		}
+	}
+
+	const prerendered = resolve(`${dir}/prerendered${base}`, prerendered_assets, mime_types);
+	for (const [key, asset] of prerendered) {
+		if (!files.has(key)) files.set(key, asset);
+	}
+
+	for (const key of prerendered.keys()) {
+		const inverted = key.at(-1) === '/' ? key.slice(0, -1) : key + '/';
+		if (inverted && !files.has(inverted)) {
+			files.set(inverted, { location: relative_pathname(inverted, key) });
+		}
+	}
+
+	return files;
+}
+
+/**
+ * Serves the closed set of files recorded at adapt time. Everything about a
+ * response is decided before the first request, so a request is one map
+ * lookup, header negotiation and a stream
+ * @param {Map<string, Entry>} files
+ * @returns {Middleware}
+ */
+export function serve_static(files) {
 	return (req, res, next) => {
 		if (req.method !== 'GET' && req.method !== 'HEAD') return next();
 
 		const { pathname, search } = split_url(req);
 
 		const asset = files.get(pathname);
-		if (!asset) {
-			if (redirect_trailing_slash) {
-				// redirect to the canonical path when only the trailing slash differs
-				const inverted = pathname.at(-1) === '/' ? pathname.slice(0, -1) : pathname + '/';
-				if (files.has(inverted)) {
-					const location = relative_pathname(pathname, inverted) + search;
-					res.writeHead(308, { location }).end();
-					return;
-				}
-			}
-			return next();
+		if (!asset) return next();
+
+		if ('location' in asset) {
+			res.writeHead(308, { location: asset.location + search }).end();
+			return;
 		}
 
 		let file = asset.file;
@@ -158,16 +196,12 @@ export function serve_static(
 		const headers = { etag };
 
 		if (asset.br || asset.gz) headers.vary = 'Accept-Encoding';
-
-		if (immutable_prefix && pathname.startsWith(immutable_prefix)) {
-			headers['cache-control'] = 'public,max-age=31536000,immutable';
-		}
+		if (asset.cache_control) headers['cache-control'] = asset.cache_control;
 
 		if (etag_matches(req.headers['if-none-match'], etag)) {
 			res.writeHead(304, headers).end();
 			return;
 		}
-
 		headers['content-length'] = size;
 		headers['accept-ranges'] = 'bytes';
 		if (asset.type) headers['content-type'] = asset.type;

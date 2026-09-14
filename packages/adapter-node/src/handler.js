@@ -1,4 +1,4 @@
-/** @import { IncomingMessage, ServerResponse, IncomingHttpHeaders } from 'node:http' */
+/** @import { IncomingHttpHeaders } from 'node:http' */
 import process from 'node:process';
 import { getRequest, setResponse, createReadableStream } from '@sveltejs/kit/node';
 import {
@@ -14,9 +14,9 @@ import {
 } from '#@sveltejs/adapter-node';
 import { env } from './env.js';
 import { parse_as_bytes } from './utils.js';
-import { serve_static } from './static.js';
+import { create_file_map, serve_static } from './static.js';
 
-/** @typedef {(req: IncomingMessage, res: ServerResponse, next: () => void | Promise<void>) => void | Promise<void>} Middleware */
+/** @import { Middleware } from './static.js' */
 
 const xff_depth = parseInt(env('XFF_DEPTH', '1'));
 const address_header = env('ADDRESS_HEADER', '').toLowerCase();
@@ -201,13 +201,6 @@ function get_origin(headers) {
 }
 
 export const handler = sequence([
-	serve_static(asset_dir, assets, {
-		mime_types,
-		immutable_prefix: `/${app_path}/immutable/`
-	}),
-	serve_static(`${dir}/prerendered${base}`, prerendered_assets, {
-		mime_types,
-		redirect_trailing_slash: true
-	}),
+	serve_static(create_file_map({ dir, base, app_path, mime_types, assets, prerendered_assets })),
 	ssr
 ]);
