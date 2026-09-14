@@ -39,10 +39,11 @@ export function asset(file) {
 	return (assets || base) + '/' + path;
 }
 
-const pathname_prefix = hash_routing ? '#' : '';
+const pathname_prefix = hash_routing ? '#' : base;
 
 /**
  * Resolve a pathname by prefixing it with the base path, if any, or resolve a route ID by populating dynamic segments with parameters.
+ * In hash routing mode, the returned URL starts with `#`.
  *
  * During server rendering, the base path is relative and depends on the page currently being rendered.
  *
@@ -73,12 +74,10 @@ export function resolve(...args) {
 			throw new Error(`Missing params for dynamic route ID ${id}`);
 		}
 
-		return (
-			/** @type {ResolvedPathname} */ (base + pathname_prefix + resolve_route(id, params ?? {}))
-		);
+		return /** @type {ResolvedPathname} */ (pathname_prefix + resolve_route(id, params ?? {}));
 	}
 
-	return /** @type {ResolvedPathname} */ (base + pathname_prefix + '/' + id);
+	return /** @type {ResolvedPathname} */ (pathname_prefix + '/' + id);
 }
 
 /**
