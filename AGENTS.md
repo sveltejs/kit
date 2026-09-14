@@ -12,9 +12,6 @@ This guide is for AI coding agents working in the SvelteKit monorepo.
 # Initial setup (takes 3-4 minutes, set 10+ min timeout)
 pnpm install --frozen-lockfile
 
-# Build all packages (~1-2 seconds)
-pnpm build
-
 # Format code (~15 seconds)
 pnpm run format
 
