@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 // posix so it matches the module ids Vite reports on every platform
-const files = fileURLToPath(new URL('./files', import.meta.url).href).replaceAll('\\', '/');
+const src = fileURLToPath(new URL('./src', import.meta.url).href).replaceAll('\\', '/');
 const handoff = '#@sveltejs/adapter-node';
 
 /** @type {typeof import('./index.js').default} */
@@ -100,9 +100,9 @@ export default function (opts = {}) {
 											rolldownOptions: {
 												// bundled with the app's server code so shared modules aren't duplicated (#15755)
 												input: {
-													'adapter-index': `${files}/index.js`,
-													'adapter-env': `${files}/adapter-env.js`,
-													handler: `${files}/handler.js`
+													'adapter-index': `${src}/index.js`,
+													'adapter-env': `${src}/env.js`,
+													handler: `${src}/handler.js`
 												},
 												// only production dependencies (and their deep imports) stay external
 												external: [
@@ -115,7 +115,7 @@ export default function (opts = {}) {
 													paths: { [handoff]: '../adapter-node.js' },
 													// the hand-off path only holds at the output root, so adapter chunks may not nest
 													chunkFileNames: (chunk) =>
-														chunk.moduleIds.some((id) => id.startsWith(files))
+														chunk.moduleIds.some((id) => id.startsWith(src))
 															? 'adapter-node-[name].js'
 															: 'chunks/[name].js'
 												}

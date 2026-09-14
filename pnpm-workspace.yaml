@@ -65,7 +65,6 @@ catalog:
   eslint: ^10.8.1
   prettier: ^3.9.6
   prettier-plugin-svelte: ^4.1.1
-  rolldown: ^1.2.3
   semver: ^7.5.4
   sirv-cli: ^3.0.1
   svelte: ^5.57.0
