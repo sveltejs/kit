@@ -195,8 +195,8 @@ export function enhance(form_element, submit = noop) {
 				// an empty body carries no result for an error response
 				parsed = text === '' && !response.ok ? undefined : deserialize(text);
 			} catch (error) {
-				// only an error response may have a non-ActionResult body, e.g. an HTML error page
-				if (response.ok) throw error;
+				// A proxy may redirect to a login page or return a non-JSON error response.
+				if (response.ok && !response.redirected) throw error;
 			}
 
 			if (
@@ -209,6 +209,9 @@ export function enhance(form_element, submit = noop) {
 				if (result.type === 'error' || result.type === 'failure') {
 					result.status = response.status;
 				}
+			} else if (response.redirected) {
+				// fetch has followed the HTTP redirect, so its original status is no longer available.
+				result = { type: 'redirect', status: 303, location: response.url };
 			} else if (!response.ok) {
 				// the action never ran, e.g. the CSRF check or a proxy rejected the request.
 				// an `App.Error`-shaped body is an expected error, anything else goes through `handleError`
