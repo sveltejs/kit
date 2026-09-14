@@ -979,13 +979,84 @@ The purpose of both [`form`](#form) and [`command`](#command) is *mutating data*
 
 SvelteKit solves both of these problems with *single-flight mutations*: Your `form` submission or `command` invocation can refresh queries and pass their results back to the client in a single request.
 
-Calling `.refresh()`, `.set()` or `.reconnect()` anywhere inside a `form`/`command` handler opts the entire submission into single flight: it replaces the default behavior — for `form`, the `invalidateAll()` that would otherwise run after a successful submission — not just the refresh of the one query you called it on. The refreshed data is sent back with the mutation response.
+### Server-driven refreshes
+
+In most circumstances, the server handler knows what client data needs to be updated based on its arguments:
+
+```js
+import * as v from 'valibot';
+import { error, redirect } from '@sveltejs/kit';
+import { query, form } from '$app/server';
+const slug = '';
+const post = { id: '' };
+/** @type {any} */
+const externalApi = '';
+// ---cut---
+export const getPosts = query(async () => { /* ... */ });
+
+export const getPost = query(v.string(), async (slug) => { /* ... */ });
+
+export const createPost = form(
+	v.object({/* ... */}),
+	async (data) => {
+		// form logic goes here...
+
+		// Refresh `getPosts()` on the server, and send
+		// the data back with the result of `createPost`
+		// it's safe to throw away the promise from `refresh`,
+		// as the framework awaits it for us before serving the response
+		+++void getPosts().refresh();+++
+
+		// Redirect to the newly created page
+		redirect(303, `/blog/${slug}`);
+	}
+);
+
+export const updatePost = form(
+	v.object({ id: v.string() }),
+	async (post) => {
+		// form logic goes here...
+		const result = externalApi.update(post);
+
+		// The API already gives us the updated post,
+		// no need to refresh it, we can set it directly
+		+++getPost(post.id).set(result);+++
+	}
+);
+```
+
+Because queries are keyed based on their arguments, `getPost(post.id).set(result)` on the server knows to look up the matching `getPost(id)` on the client to update it. The same goes for `getPosts().refresh()` -- it knows to look up `getPosts()` with no argument on the client.
+
+Calling `refresh()`, `set()` or `reconnect()` anywhere in a `form` handler replaces the default invalidation of all queries and load functions for that submission, so only the queries you refreshed will update.
+
+### Reconnecting live queries in mutations
+
+Single-flight mutations can also reconnect `query.live` instances. In a `form`/`command` handler, call `.reconnect()` on the live query resource you want to reconnect:
+
+```js
+import * as v from 'valibot';
+import { form, query } from '$app/server';
+
+export const getNotifications = query.live(v.string(), async function* (userId) {
+	while (true) {
+		yield await db.notifications(userId);
+		await wait(1000);
+	}
+});
+
+export const markAllRead = form(v.object({ userId: v.string() }), async ({ userId }) => {
+	// mutation logic...
+	+++getNotifications(userId).reconnect();+++
+});
+```
+
+This schedules a reconnect for the matching active client instances and applies it as part of the mutation response (i.e. in the same flight as the form/command result). You might need this if, for example, the command modifies a cookie that the live query needs to restart in order to capture.
 
 ### Client-requested refreshes
 
-The server knows which query _functions_ exist, but not which specific query _instances_ are currently rendered on the client. For example, if `getPosts({ filter: 'author:santa' })` is rendered on the client, you'd need to refresh exactly that instance — but how could you know, in the handler, which combinations of filters are rendered on the client, especially if your query argument is more complicated than an object with just one key?
+Unfortunately, life isn't always as simple as the preceding example. The server always knows which query _functions_ to update, but it may not know which specific query _instances_ to update. For example, if `getPosts({ filter: 'author:santa' })` is rendered on the client, calling `getPosts().refresh()` in the server handler won't update it. You'd need to call `getPosts({ filter: 'author:santa' }).refresh()` instead — but how could you know which specific combinations of filters are currently rendered on the client, especially if your query argument is more complicated than an object with just one key?
 
-SvelteKit solves this by letting the client _request_ the refresh. `submit().updates` (for `form`) or `myCommand().updates` (for `command`) tells the server which queries to update:
+SvelteKit makes this easy by allowing the client to _request_ that the server updates specific data using `submit().updates` (for `form`) or `myCommand().updates` (for `command`):
 
 ```ts
 import type { RemoteQueryUpdate, RemoteQuery } from '$app/server';
@@ -1071,8 +1142,6 @@ declare const getPosts: RemoteQueryFunction<any, any>;
 await requested(getPosts, 1).refreshAll();
 ```
 
-Because the refresh list is controlled by the client, asking for nothing is safe: if the client never calls `.updates(...)`, `requested(getPosts, 1)` yields no entries, `refreshAll()` is a no-op, and the submission falls back to its default behavior (for `form`, that's the usual `invalidateAll()`). A client-requested refresh that matches nothing is therefore harmless — unlike an unmatched [server-driven refresh](#server-driven-refreshes), which leaves data stale with no fallback.
-
 If you want to intentionally ignore every selected update, use `ignoreAll`:
 
 ```js
@@ -1088,79 +1157,6 @@ await requested(getPosts, 10).ignoreAll();
 >
 > - **Bundle size.** If a command could implicitly refresh *any* query in your app, SvelteKit would have to include every query's code in the command's server bundle, because it can't know ahead of time which ones will be called.
 > - **Denial-of-service.** Any malicious user can inspect their network tab to discover which queries your app uses, then POST a command with a client-supplied list of thousands of refreshes. The only defence is for the server handler to declare which queries it is willing to refresh — and in what quantity (hence the required `limit`).
-
-### Server-driven refreshes
-
-If a query's key is fully known in the handler — typically because it takes no arguments, or its arguments can be derived from the submission — you can re-fetch or update it directly on the server, without the client asking. This is a convenient shorthand when you're certain which instances need updating:
-
-```js
-import * as v from 'valibot';
-import { error, redirect } from '@sveltejs/kit';
-import { query, form } from '$app/server';
-const slug = '';
-const post = { id: '' };
-/** @type {any} */
-const externalApi = '';
-// ---cut---
-export const getPosts = query(async () => { /* ... */ });
-
-export const getPost = query(v.string(), async (slug) => { /* ... */ });
-
-export const createPost = form(
-	v.object({/* ... */}),
-	async (data) => {
-		// form logic goes here...
-
-		// Refresh `getPosts()` on the server, and send
-		// the data back with the result of `createPost`
-		// it's safe to throw away the promise from `refresh`,
-		// as the framework awaits it for us before serving the response
-		+++void getPosts().refresh();+++
-
-		// Redirect to the newly created page
-		redirect(303, `/blog/${slug}`);
-	}
-);
-
-export const updatePost = form(
-	v.object({ id: v.string() }),
-	async (post) => {
-		// form logic goes here...
-		const result = externalApi.update(post);
-
-		// The API already gives us the updated post,
-		// no need to refresh it, we can set it directly
-		+++getPost(post.id).set(result);+++
-	}
-);
-```
-
-Because queries are keyed based on their arguments, `getPost(post.id).set(result)` on the server knows to look up the matching `getPost(id)` on the client to update it. The same goes for `getPosts().refresh()` -- it knows to look up `getPosts()` with no argument on the client.
-
-These calls always execute, and their results are always serialized into the mutation response, whether or not a matching query is currently active on the client. Matching against live client instances happens after the fact, client-side, purely by cache key (`functionId` + stringified arguments). Calling `getPosts().refresh()` while the client renders `getPosts({ filter: 'author:santa' })`, for example, ships the data but applies it to nothing, with no error. If you're not certain which instances are rendered on the client, prefer [client-requested refreshes](#client-requested-refreshes), which fail safely when nothing matches.
-
-### Reconnecting live queries in mutations
-
-Single-flight mutations can also reconnect `query.live` instances. In a `form`/`command` handler, call `.reconnect()` on the live query resource you want to reconnect:
-
-```js
-import * as v from 'valibot';
-import { form, query } from '$app/server';
-
-export const getNotifications = query.live(v.string(), async function* (userId) {
-	while (true) {
-		yield await db.notifications(userId);
-		await wait(1000);
-	}
-});
-
-export const markAllRead = form(v.object({ userId: v.string() }), async ({ userId }) => {
-	// mutation logic...
-	+++getNotifications(userId).reconnect();+++
-});
-```
-
-This schedules a reconnect for the matching active client instances and applies it as part of the mutation response (i.e. in the same flight as the form/command result). You might need this if, for example, the command modifies a cookie that the live query needs to restart in order to capture.
 
 ## prerender
 
