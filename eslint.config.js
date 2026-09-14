@@ -105,8 +105,7 @@ export default [
 			'packages/package/test/errors/**/*',
 			'packages/package/test/fixtures/**/*',
 			'packages/package/test/watch/expected/**/*',
-			'packages/package/test/watch/package/**/*',
-			'packages/adapter-node/smoke.spec_disabled.js'
+			'packages/package/test/watch/package/**/*'
 		]
 	},
 	{
