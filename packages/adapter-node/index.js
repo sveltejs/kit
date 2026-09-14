@@ -69,8 +69,9 @@ export default function (opts = {}) {
 					`export const origin = ${JSON.stringify(builder.config.paths.origin)};`,
 					`export const env_prefix = ${JSON.stringify(envPrefix)};`,
 					`export const mime_types = ${JSON.stringify(builder.mimeTypes)};`,
-					`export const assets = ${JSON.stringify(assets)};`,
-					`export const prerendered_assets = ${JSON.stringify(prerendered_assets)};`
+					// JSON.parse of a string loads about twice as fast as an object literal of the same size
+					`export const assets = JSON.parse(${JSON.stringify(JSON.stringify(assets))});`,
+					`export const prerendered_assets = JSON.parse(${JSON.stringify(JSON.stringify(prerendered_assets))});`
 				].join('\n')
 			);
 
