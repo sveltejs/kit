@@ -163,9 +163,7 @@ export class RequestEvent {
 	 */
 	static create(fields, state) {
 		const event = new RequestEvent(/** @type {Interface} */ (fields), 0);
-
 		event.setHeaders = (new_headers) => set_headers(state, new_headers);
-
 		return event;
 	}
 
