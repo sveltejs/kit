@@ -20,6 +20,5 @@
 		"tests/**/*.js",
 		"tests/**/*.ts",
 		"./internal.d.ts"
-	],
-	"exclude": ["smoke.spec_disabled.js"]
+	]
 }
