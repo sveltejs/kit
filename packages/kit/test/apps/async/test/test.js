@@ -1147,6 +1147,31 @@ test.describe('remote functions', () => {
 	});
 });
 
+test.describe('issue 16207 - stale values when navigating from within a boundary', () => {
+	// Demonstrates https://github.com/sveltejs/kit/issues/16207
+	// Navigating away from a boundary showing its `failed` snippet leaves
+	// stale `#failed_effect` content in the DOM and (with forkPreloads)
+	// duplicates the target's `#main_effect`. The hover triggers a preload
+	// fork which makes the race reliably reproducible. This test should
+	// pass once the fix lands in Svelte's Boundary class.
+	test.fixme(
+		'navigating from a failed boundary to a route that accesses nested data',
+		async ({ page, clicknav }) => {
+			await page.goto('/issue-16207');
+			await expect(page.locator('#source-error')).toBeVisible();
+			// Hover to trigger preload fork, then click to navigate
+			await page.locator('a[href="/issue-16207/target"]').hover();
+			await page.waitForTimeout(200);
+			await clicknav('a[href="/issue-16207/target"]', {
+				waitForURL: '/issue-16207/target'
+			});
+			// Should render exactly one #value element with fresh data
+			expect(await page.locator('#value').count()).toBe(1);
+			await expect(page.locator('#value')).toHaveText('1');
+		}
+	);
+});
+
 test.describe('server error boundaries', () => {
 	test('catches server render error and shows root +error.svelte', async ({ page }) => {
 		await page.goto('/server-error-boundary');
