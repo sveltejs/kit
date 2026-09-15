@@ -376,21 +376,19 @@ export async function dev(
 					await runner.import(resolved_instrumentation);
 				}
 
-				const { init, respond } = /** @type {ServerModule} */ (
+				const { configure, format_response } = /** @type {ServerModule} */ (
 					await runner.import(`${get_runtime_base(root)}/server/index.js`)
 				);
 
-				const { format_response } = await runner.import(
-					`${get_runtime_base(root)}/server/internal.js`
-				);
-
-				await init({
+				const { init, respond } = await configure({
 					manifest,
 					env,
 					read: (file) => createReadableStream(from_fs(file)),
 					assets,
 					fix_stack_trace
 				});
+
+				await init();
 
 				const request = (svelte_config.adapter?.vite?.getRequest ?? getRequest)({
 					base,
