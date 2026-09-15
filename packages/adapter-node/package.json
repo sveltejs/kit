@@ -33,6 +33,7 @@
 		"ambient.d.ts"
 	],
 	"scripts": {
+		"prepublishOnly": "echo TODO: remove this script once .github/workflows/platform-tests-node.yml no longer invokes prepublishOnly, after version-3 is merged into main",
 		"test": "pnpm test:unit && pnpm test:build",
 		"test:unit": "vitest run",
 		"test:build": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:build",
