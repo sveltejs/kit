@@ -1149,6 +1149,26 @@ test.describe('data-sveltekit attributes', () => {
 		await expect(page.getByText('slow navigation', { exact: true })).toBeVisible();
 	});
 
+	test('data-sveltekit-preload-data aborts a superseded preload', async ({ page }) => {
+		/** @type {string[]} */
+		const failed = [];
+		page.on('requestfailed', (req) => {
+			if (req.url().includes('__data.json')) {
+				failed.push(req.url());
+			}
+		});
+
+		await page.goto('/data-sveltekit/preload-data/offline');
+
+		await page.locator('#slow-navigation').hover();
+		await page.waitForTimeout(100); // wait for the slow preload to start
+
+		await page.locator('#one').hover();
+		await page.waitForTimeout(100); // wait for the superseding preload to start
+
+		expect(failed.some((url) => url.includes('/slow-navigation/__data.json'))).toBe(true);
+	});
+
 	test('data-sveltekit-preload repeatedly works on the same anchor element', async ({
 		page,
 		clicknav
