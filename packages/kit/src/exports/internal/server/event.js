@@ -98,7 +98,7 @@ function set_headers(state, new_headers) {
 
 	const { headers } = state;
 
-	for (const key in new_headers) {
+	for (const key of Object.keys(new_headers)) {
 		const lower = key.toLowerCase();
 		const value = new_headers[key];
 
