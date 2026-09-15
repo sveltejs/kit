@@ -661,7 +661,7 @@ function get_type_prefix(type, is_array, input_value) {
  * @param {any} value
  * @returns {any}
  */
-function deep_clone(value) {
+export function deep_clone(value) {
 	if (value !== null && typeof value === 'object') {
 		if (value instanceof Date) {
 			return new Date(value.getTime());
@@ -685,6 +685,31 @@ function deep_clone(value) {
 	}
 
 	return value;
+}
+
+/**
+ * @param {any} a
+ * @param {any} b
+ * @returns {boolean}
+ */
+export function form_values_equal(a, b) {
+	if (a === b) return true;
+	if (a instanceof File || b instanceof File) return a === b;
+	if (Array.isArray(a) || Array.isArray(b))
+		return (
+			Array.isArray(a) &&
+			Array.isArray(b) &&
+			a.length === b.length &&
+			a.every((value, i) => form_values_equal(value, b[i]))
+		);
+	if (a && b && typeof a === 'object' && typeof b === 'object') {
+		const a_keys = Object.keys(a);
+		return (
+			a_keys.length === Object.keys(b).length &&
+			a_keys.every((key) => Object.hasOwn(b, key) && form_values_equal(a[key], b[key]))
+		);
+	}
+	return false;
 }
 
 const warned_sites = new Set();
@@ -759,9 +784,10 @@ function create_field_method(context, path, prop) {
 
 			return () => {
 				const object = prop === 'dirty' ? context.get_dirty() : context.get_touched();
-				if (Object.hasOwn(object, key)) return true;
+				if (Object.hasOwn(object, key) && (prop !== 'dirty' || object[key] === true)) return true;
 				for (const candidate in object) {
-					if (!Object.hasOwn(object, candidate)) continue;
+					if (!Object.hasOwn(object, candidate) || (prop === 'dirty' && object[candidate] !== true))
+						continue;
 					if (key === '') return true;
 					if (!candidate.startsWith(key)) continue;
 					const next = candidate[key.length];

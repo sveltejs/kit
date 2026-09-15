@@ -25,6 +25,9 @@ import {
 	normalize_issue,
 	serialize_binary_form,
 	deep_get,
+	deep_clone,
+	split_path,
+	form_values_equal,
 	DELETE_KEY,
 	BINARY_FORM_CONTENT_TYPE,
 	parse_form_key,
@@ -148,6 +151,13 @@ export function form(id) {
 		/** @type {Record<string, boolean>} */
 		let dirty = $state({});
 
+		/** @type {Record<string, any>} */
+		let original = {};
+		/** @type {Set<string>} */
+		let dom_fields = new Set();
+		/** @type {Set<string>} */
+		let checkbox_fields = new Set();
+
 		/** @type {Record<string, boolean>} */
 		let can_validate = {};
 
@@ -158,6 +168,75 @@ export function form(id) {
 
 		/** @type {{ name: string; type: 'number' | 'boolean' | null; is_array: boolean } | null} */
 		let previous_submitter = null;
+
+		/** @param {string} path @returns {boolean} */
+		function has_dom_descendant(path) {
+			for (const field of dom_fields)
+				if (field === path || field.startsWith(path + '.') || field.startsWith(path + '['))
+					return true;
+			return false;
+		}
+		/**
+		 * Compare values against the mounted baseline while preserving untouched DOM
+		 * defaults for fields that are not represented in the model yet.
+		 * @param {any} value
+		 * @param {any} baseline
+		 * @param {string} path
+		 * @returns {any}
+		 */
+		function effective_value(value, baseline, path) {
+			if (value === undefined && dom_fields.has(path) && !Object.hasOwn(dirty, path))
+				return baseline;
+			if (
+				value &&
+				baseline &&
+				typeof value === 'object' &&
+				typeof baseline === 'object' &&
+				!(value instanceof File) &&
+				!(baseline instanceof File) &&
+				!Array.isArray(value) &&
+				!Array.isArray(baseline)
+			) {
+				const merged = { ...value };
+				for (const key of Object.keys(baseline)) {
+					const child = build_path_string([...split_path(path), key]);
+					if (has_dom_descendant(child))
+						merged[key] = effective_value(value[key], baseline[key], child);
+				}
+				return merged;
+			}
+			return value;
+		}
+		/** @param {any} a @param {any} b @param {string} path @returns {boolean} */
+		function values_equal(a, b, path) {
+			if (
+				checkbox_fields.has(path) &&
+				(a === undefined || a === null || a === false) &&
+				(b === undefined || b === null || b === false)
+			)
+				return true;
+			return form_values_equal(a, b);
+		}
+		function normalize_checkbox_baseline() {
+			for (const path of checkbox_fields)
+				if (deep_get(original, split_path(path)) === undefined)
+					deep_set(original, split_path(path), false);
+		}
+		/** @param {string} key @returns {any} */
+		function value_for(key) {
+			return key === '' ? input : deep_get(input, split_path(key));
+		}
+		function refresh_dirty() {
+			for (const key of Object.keys(dirty)) {
+				const current = effective_value(
+					value_for(key),
+					key === '' ? original : deep_get(original, split_path(key)),
+					key
+				);
+				const baseline = key === '' ? original : deep_get(original, split_path(key));
+				dirty[key] = !values_equal(current, baseline, key);
+			}
+		}
 
 		/**
 		 * In dev, warn if there are validation issues going unread
@@ -402,10 +481,22 @@ export function form(id) {
 			}
 
 			element = form;
+			dom_fields = new Set();
+			checkbox_fields = new Set();
+			for (const control of form.elements) {
+				const name = /** @type {HTMLInputElement} */ (control).name;
+				if (!name) continue;
+				const field = parse_form_key(action_id_without_key, name);
+				dom_fields.add(field.name);
+				if (/** @type {HTMLInputElement} */ (control).type === 'checkbox' && !field.is_array)
+					checkbox_fields.add(field.name);
+			}
 
 			touched = {};
 			dirty = {};
 			can_validate = {};
+			original = deep_clone(convert_formdata(action_id_without_key, new FormData(form)));
+			normalize_checkbox_baseline();
 
 			/** @param {SubmitEvent} event */
 			const handle_submit = async (event) => {
@@ -564,6 +655,7 @@ export function form(id) {
 				}
 
 				dirty[field.name] = true;
+				refresh_dirty();
 			};
 
 			const handle_reset = async () => {
@@ -572,6 +664,8 @@ export function form(id) {
 				await tick();
 
 				input = convert_formdata(action_id_without_key, new FormData(form));
+				original = deep_clone(input);
+				normalize_checkbox_baseline();
 				raw_issues = [];
 				touched = {};
 				dirty = {};
@@ -650,6 +744,7 @@ export function form(id) {
 						set: (path, value) => {
 							if (path.length === 0) {
 								input = value;
+								if (element) refresh_dirty();
 							} else if (value !== deep_get(input, path)) {
 								deep_set(input, path.map(String), value);
 
@@ -658,6 +753,7 @@ export function form(id) {
 								if (element) {
 									touched[key] = true;
 									dirty[key] = true;
+									refresh_dirty();
 									can_validate[key] = true;
 								}
 							}
