@@ -17,8 +17,8 @@ let read_dir: Mock<typeof fs.readdirSync>;
 let exists: Mock<typeof fs.existsSync>;
 let read_file: Mock<typeof fs.readFileSync>;
 
-// the real Bun.build would bundle and the real hashers would read assets off
-// disk, so the build APIs stay test doubles even under Bun
+// the real Bun.build would bundle and Bun.file would stat assets on disk,
+// so the build APIs stay test doubles even under Bun
 beforeEach(() => {
 	bun_build = spyOn(Bun, 'build').mockImplementation((async (_options: any): Promise<any> => ({
 		success: true,
@@ -30,14 +30,6 @@ beforeEach(() => {
 		stream: () => new Blob([]).stream(),
 		lastModified: 0
 	})) as never);
-	spyOn(Bun, 'CryptoHasher').mockImplementation(function () {
-		return {
-			update() {},
-			digest() {
-				return 'abc';
-			}
-		};
-	} as never);
 	spyOn(Bun, 'hash').mockImplementation(((input: string) => {
 		let hash = 0n;
 		for (const char of input) hash = hash * 31n + BigInt(char.charCodeAt(0));
@@ -357,6 +349,13 @@ describe('generated routes', () => {
 
 		await adapter({ buildOptions: { compile: true } }).adapt(
 			create_builder({
+				client_files: ['data.json', '.well-known/asset.txt', '_app/read.txt'],
+				prerendered_files: [
+					'page/index.html',
+					'favicon.ico',
+					'dependency.json',
+					'page/__data.json'
+				],
 				prerendered_pages: [['/page/', { file: 'page/index.html' }]],
 				server_assets: ['_app/read.txt']
 			})
@@ -391,7 +390,7 @@ describe('generated routes', () => {
 	});
 
 	test('precompresses assets and marks the variants in the generated routes', async () => {
-		const builder = create_builder({ client_files: ['app.js'] });
+		const builder = create_builder({ client_files: ['app.js'], compressed: ['app.js'] });
 
 		await adapter({ precompress: true }).adapt(builder);
 
@@ -455,7 +454,9 @@ describe('generated routes', () => {
 	test('excludes dotfiles from embedded assets', async () => {
 		mock_files({ client: ['.secret', 'public.txt'] });
 
-		await adapter({ buildOptions: { compile: true } }).adapt(create_builder());
+		await adapter({ buildOptions: { compile: true } }).adapt(
+			create_builder({ client_files: ['.secret', 'public.txt'] })
+		);
 
 		const source = bun_build.mock.calls[0][0].files[routes_file];
 		expect(source).not.toContain('.secret');
@@ -473,7 +474,11 @@ describe('generated routes', () => {
 		mock_files({ client: ['page.html'], pages: ['page.html'] });
 
 		await adapter({ buildOptions: { compile: true } }).adapt(
-			create_builder({ prerendered_pages: [['/page/', { file: 'page.html' }]] })
+			create_builder({
+				client_files: ['page.html'],
+				prerendered_files: ['page.html'],
+				prerendered_pages: [['/page/', { file: 'page.html' }]]
+			})
 		);
 
 		const source = bun_build.mock.calls[0][0].files[routes_file];
@@ -565,7 +570,8 @@ function create_builder({
 	server_assets = [],
 	base = '',
 	origin,
-	instrumentation = false
+	instrumentation = false,
+	compressed = []
 }: {
 	client_files?: string[];
 	prerendered_files?: string[];
@@ -576,7 +582,11 @@ function create_builder({
 	base?: string;
 	origin?: string;
 	instrumentation?: boolean;
+	compressed?: string[];
 } = {}) {
+	// kit measures every file in its output on first access
+	const measure = (file: string) => ({ file, size: 0, hash: 'abc' });
+
 	return {
 		config: { outDir: '.svelte-kit', paths: { base, origin }, appDir: '_app' },
 		routes,
@@ -584,6 +594,10 @@ function create_builder({
 			pages: new Map(prerendered_pages),
 			redirects: new Map(prerendered_redirects)
 		},
+		clientFiles: client_files.map(measure),
+		prerenderedFiles: [...prerendered_files, ...prerendered_pages.map(([, { file }]) => file)].map(
+			measure
+		),
 		log: {
 			minor: mock((_message: string) => {}),
 			error: mock((_message: string) => {}),
@@ -596,7 +610,9 @@ function create_builder({
 		getServerDirectory: () => '.svelte-kit/output/server',
 		writeClient: mock(() => client_files),
 		writePrerendered: mock(() => prerendered_files),
-		compress: mock(async (_directory: string) => {}),
+		compress: mock(async (_directory: string) =>
+			compressed.map((file) => ({ file, gz: 1, br: 1 }))
+		),
 		findServerAssets: mock(() => server_assets),
 		generateManifest: mock(() => '{"appDir":"_app"}'),
 		hasServerInstrumentationFile: () => instrumentation,

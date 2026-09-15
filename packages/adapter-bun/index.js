@@ -31,55 +31,36 @@ function is_dotfile(file) {
 		.some((segment, i) => segment.startsWith('.') && !(i === 0 && segment === '.well-known'));
 }
 
-// bounds open file handles while every asset hashes concurrently
-const MAX_OPEN_FILES = 64;
-let open_files = 0;
-/** @type {Array<() => void>} */
-const file_waiters = [];
-
-/**
- * Streams the file through the hasher so build memory stays bounded by chunk
- * size instead of total asset size.
- * @param {string} file
- * @returns {Promise<string>}
- */
-async function hash_file(file) {
-	if (open_files === MAX_OPEN_FILES) {
-		await new Promise((resolve) => {
-			file_waiters.push(() => resolve(undefined));
-		});
-	}
-	open_files++;
-	try {
-		const hasher = new Bun.CryptoHasher('blake2b256');
-		for await (const chunk of Bun.file(file).stream()) {
-			hasher.update(chunk);
-		}
-		return hasher.digest('hex').slice(0, 16);
-	} finally {
-		open_files--;
-		file_waiters.shift()?.();
-	}
-}
-
 /**
  * The build-time validator for conditional requests: Bun only generates ETags for
- * in-memory static routes, not file-backed responses, so the adapter ships its own.
+ * in-memory static routes, not file-backed responses, so the adapter ships kit's content hash.
  * @param {string} file
- * @param {boolean} [precompress]
- * @returns {Promise<{ hash: string, mtime: number, br?: boolean, gz?: boolean }>}
+ * @param {string | undefined} hash
+ * @param {boolean} [compressed] whether `builder.compress` wrote `.br` and `.gz` variants
+ * @returns {{ hash: string, mtime: number, br?: boolean, gz?: boolean }}
  */
-async function asset_meta(file, precompress = false) {
-	const hash = await hash_file(file);
+function asset_meta(file, hash, compressed = false) {
+	if (hash === undefined) throw new Error(`Could not find a content hash for ${file}`);
 
 	/** @type {{ hash: string, mtime: number, br?: boolean, gz?: boolean }} */
 	const meta = { hash, mtime: Bun.file(file).lastModified };
-	if (precompress) {
-		if (fs.existsSync(`${file}.br`)) meta.br = true;
-		if (fs.existsSync(`${file}.gz`)) meta.gz = true;
+	if (compressed) {
+		meta.br = true;
+		meta.gz = true;
 	}
 
 	return meta;
+}
+
+/**
+ * Content hashes of every client and prerendered file kit produced, keyed by the
+ * file's path relative to its output directory
+ * @param {Builder} builder
+ */
+function content_hashes(builder) {
+	/** @param {Array<{ file: string, hash: string }>} files */
+	const index = (files) => new Map(files.map(({ file, hash }) => [file, hash]));
+	return { client: index(builder.clientFiles), prerendered: index(builder.prerenderedFiles) };
 }
 
 /** @param {string[]} files */
@@ -279,9 +260,9 @@ export default function (opts = {}) {
  * @param {object} options
  * @param {Builder} options.builder
  * @param {string[]} options.server_assets
- * @returns {Promise<{imports: string[], entries: string[], server_assets: string[]}>}
+ * @returns {{imports: string[], entries: string[], server_assets: string[]}}
  */
-async function get_embed_entries({ builder, server_assets }) {
+function get_embed_entries({ builder, server_assets }) {
 	const built_files = `${builder.config.outDir}/output`;
 
 	const all_cl_files = read_files_recursive(`${built_files}/client`);
@@ -300,30 +281,33 @@ async function get_embed_entries({ builder, server_assets }) {
 		return `import asset_${i} from ${JSON.stringify(abs)} with { type: 'file' };`;
 	});
 
+	const hashes = content_hashes(builder);
+
 	/**
 	 * @param {{ abs: string, rel: string }} file
 	 * @param {string} helper
+	 * @param {Map<string, string>} hashes
 	 * @param {string} [url]
 	 */
-	const entry = async (file, helper, url = file.rel) =>
-		`...${helper}(${JSON.stringify(url)}, asset_${asset_index.get(file)}, ${JSON.stringify(await asset_meta(file.abs))})`;
+	const entry = (file, helper, hashes, url = file.rel) =>
+		`...${helper}(${JSON.stringify(url)}, asset_${asset_index.get(file)}, ${JSON.stringify(asset_meta(file.abs, hashes.get(file.rel)))})`;
 
 	const page_files = new Map(pr_pages.map((file) => [file.rel, file]));
 	const page_rels = new Set([...builder.prerendered.pages].map(([_, { file }]) => file));
 
-	const entries = await Promise.all([
-		...cl_files.map((file) => entry(file, 'client_asset')),
+	const entries = [
+		...cl_files.map((file) => entry(file, 'client_asset', hashes.client)),
 		...[...builder.prerendered.pages].map(([path, { file }]) => {
 			const page = page_files.get(file);
 			if (page === undefined)
 				throw new Error(`Could not find prerendered page ${file} for route ${path}`);
-			return entry(page, 'prerendered_page', path);
+			return entry(page, 'prerendered_page', hashes.prerendered, path);
 		}),
 		...pr_pages
 			.filter(({ rel }) => !page_rels.has(rel))
-			.map((file) => entry(file, 'prerendered_asset')),
-		...[...pr_deps, ...pr_data].map((file) => entry(file, 'prerendered_asset'))
-	]);
+			.map((file) => entry(file, 'prerendered_asset', hashes.prerendered)),
+		...[...pr_deps, ...pr_data].map((file) => entry(file, 'prerendered_asset', hashes.prerendered))
+	];
 
 	const index_by_rel = new Map(
 		assets.map(({ rel }, i) => /** @type {[string, number]} */ ([rel, i])).reverse()
@@ -353,29 +337,43 @@ async function get_no_embed_entries({ builder, server_assets, out, precompress }
 	const prerendered_files = builder.writePrerendered(`${out}/prerendered`);
 	validate_file_paths([...client_files, ...prerendered_files]);
 
+	const hashes = content_hashes(builder);
+
+	/** @type {Record<keyof typeof hashes, Set<string>>} */
+	const compressed = { client: new Set(), prerendered: new Set() };
 	if (precompress) {
-		await Promise.all([builder.compress(`${out}/client`), builder.compress(`${out}/prerendered`)]);
+		for (const dir of /** @type {const} */ (['client', 'prerendered'])) {
+			const files = await builder.compress(`${out}/${dir}`);
+			compressed[dir] = new Set(files.map(({ file }) => file));
+		}
 	}
 
 	/**
 	 * @param {string} helper
 	 * @param {string} url
-	 * @param {string} dir
+	 * @param {keyof typeof hashes} dir
 	 * @param {string} [filename]
 	 */
-	const entry = async (helper, url, dir, filename) =>
-		`...${helper}(${JSON.stringify(url)}, ${JSON.stringify(filename)}, ${JSON.stringify(await asset_meta(`${out}/${dir}/${filename ?? url}`, precompress))})`;
+	const entry = (helper, url, dir, filename) => {
+		const file = filename ?? url;
+		const meta = asset_meta(
+			`${out}/${dir}/${file}`,
+			hashes[dir].get(file),
+			compressed[dir].has(file)
+		);
+		return `...${helper}(${JSON.stringify(url)}, ${JSON.stringify(filename)}, ${JSON.stringify(meta)})`;
+	};
 
 	const pages = [...builder.prerendered.pages];
 	const page_files = new Set(pages.map(([_, { file }]) => file));
 
-	const entries = await Promise.all([
+	const entries = [
 		...client_files.map((file) => entry('client_asset', file, 'client')),
 		...pages.map(([path, { file }]) => entry('prerendered_page', path, 'prerendered', file)),
 		...prerendered_files
 			.filter((file) => !page_files.has(file))
 			.map((file) => entry('prerendered_asset', file, 'prerendered'))
-	]);
+	];
 
 	return {
 		imports: [],
@@ -409,7 +407,7 @@ async function create_routes({ builder, out, embed, precompress }) {
 		entries,
 		server_assets: resolved_server_assets
 	} = embed
-		? await get_embed_entries({ builder, server_assets })
+		? get_embed_entries({ builder, server_assets })
 		: await get_no_embed_entries({ builder, out, server_assets, precompress });
 
 	const redirects = [...builder.prerendered.redirects].map(([src, { status, location }]) => {
