@@ -339,7 +339,7 @@ function kit({ svelte_config }) {
 				global_name = get_global_name(kit.version.name, !is_build);
 				kit_global = `globalThis.${global_name}`;
 
-				service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
+				service_worker_entry_file = resolve_entry(kit.files.serviceWorker, kit.moduleExtensions);
 				service_worker_entry_file &&= posixify(service_worker_entry_file);
 
 				normalized_aliases = get_import_aliases(root, vite.normalizePath.bind(vite));
@@ -376,7 +376,7 @@ function kit({ svelte_config }) {
 
 				// We can only add directories to the allow list, so we find out
 				// if there's a client hooks file and pass its directory
-				const client_hooks = resolve_entry(kit.files.hooks.client);
+				const client_hooks = resolve_entry(kit.files.hooks.client, kit.moduleExtensions);
 				if (client_hooks) allow.add(path.dirname(client_hooks));
 
 				// dev and preview config can be shared

@@ -122,9 +122,10 @@ export function relative_path(from, to) {
 /**
  * Given an entry point like [cwd]/src/hooks, returns a filename like [cwd]/src/hooks.js or [cwd]/src/hooks/index.js
  * @param {string} entry
+ * @param {string[]} [extensions] defaults to `['.js', '.ts']`; pass `config.kit.moduleExtensions` for entries that are modules
  * @returns {string | null}
  */
-export function resolve_entry(entry) {
+export function resolve_entry(entry, extensions = ['.js', '.ts']) {
 	if (fs.existsSync(entry)) {
 		const stats = fs.statSync(entry);
 		if (stats.isFile()) {
@@ -132,8 +133,8 @@ export function resolve_entry(entry) {
 		}
 
 		const index = path.join(entry, 'index');
-		if (fs.existsSync(index + '.js') || fs.existsSync(index + '.ts')) {
-			return resolve_entry(index);
+		if (extensions.some((extension) => fs.existsSync(index + extension))) {
+			return resolve_entry(index, extensions);
 		}
 	}
 
@@ -143,7 +144,8 @@ export function resolve_entry(entry) {
 		const base = path.basename(entry);
 		const files = fs.readdirSync(dir);
 		const found = files.find((file) => {
-			return file.replace(/\.(js|ts)$/, '') === base && fs.statSync(path.join(dir, file)).isFile();
+			const matches = file === base || extensions.some((extension) => file === base + extension);
+			return matches && fs.statSync(path.join(dir, file)).isFile();
 		});
 
 		if (found) return path.join(dir, found);

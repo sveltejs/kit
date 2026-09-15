@@ -1816,7 +1816,7 @@ declare module '@sveltejs/kit/vite' {
 		 */
 		inlineStyleThreshold?: number;
 		/**
-		 * An array of file extensions that SvelteKit will treat as modules. Files with extensions that match neither `config.extensions` nor `config.moduleExtensions` will be ignored by the router.
+		 * An array of file extensions that SvelteKit will treat as modules. Files with extensions that match neither `config.extensions` nor `config.moduleExtensions` will be ignored.
 		 * @default [".js", ".ts"]
 		 */
 		moduleExtensions?: string[];
