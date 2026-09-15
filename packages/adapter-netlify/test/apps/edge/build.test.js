@@ -13,6 +13,7 @@ test('configuration is included in the edge function module', () => {
 	const edge_function = fs.readFileSync(edge_function_path, 'utf-8');
 
 	expect(config).not.toHaveProperty('edge_functions');
+	expect(config).not.toHaveProperty('nodeVersion');
 	expect(edge_function).toContain('"name": "SvelteKit server"');
 	expect(edge_function).toContain('"path": ["/*"]');
 	expect(edge_function).toContain('"excludedPath":');
