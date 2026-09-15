@@ -714,7 +714,7 @@ async function prerender({
 		let inputs;
 
 		try {
-			inputs = await internals.inputs?.() ?? [];
+			inputs = (await internals.inputs?.()) ?? [];
 		} catch (e) {
 			if (e instanceof Error) fix_stack_trace(e);
 			throw e;
