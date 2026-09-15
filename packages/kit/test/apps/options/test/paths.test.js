@@ -1,12 +1,12 @@
 import process from 'node:process';
 import { expect } from '@playwright/test';
-import { test } from '../../../utils.js';
+import { test, variant } from '../../../utils.js';
 import { readdirSync, readFileSync } from 'node:fs';
 
 test.describe.configure({ mode: 'parallel' });
 
 test.describe('base path', () => {
-	test.skip(!process.env.PATHS_ASSETS);
+	test.skip(variant !== 'paths-assets');
 
 	test('serves a useful 404 when visiting unprefixed path', async ({ request }) => {
 		const html = await request.get('/slash/', { headers: { Accept: 'text/html' } });
@@ -106,7 +106,7 @@ test.describe('base path', () => {
 test.describe('relative paths', () => {
 	test.skip(
 		({ javaScriptEnabled }) =>
-			!javaScriptEnabled || !!process.env.PATHS_ASSETS || process.env.PATHS_RELATIVE === 'false'
+			!javaScriptEnabled || variant === 'paths-assets' || variant === 'paths-absolute'
 	);
 
 	test('works when proxied', async ({ page }) => {
@@ -141,7 +141,7 @@ test.describe('relative paths', () => {
 });
 
 test.describe('assets path', () => {
-	test.skip(!process.env.PATHS_ASSETS);
+	test.skip(variant !== 'paths-assets');
 
 	test('serves static assets with correct prefix', async ({ page, request }) => {
 		await page.goto('/path-base/');
