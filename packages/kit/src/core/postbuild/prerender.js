@@ -17,6 +17,7 @@ import { createReadableStream } from '@sveltejs/kit/node';
 import generate_fallback from './fallback.js';
 import { stringify_remote_arg } from '../../runtime/shared.js';
 import { matches_content_type } from '../../utils/http.js';
+import { fix_stack_trace } from '../../runtime/server/sourcemaps.js';
 
 export default forked(import.meta.url, prerender);
 
@@ -709,8 +710,18 @@ async function prerender({
 	}
 
 	for (const internals of prerender_functions) {
+		/** @type {any[]} */
+		let inputs;
+
+		try {
+			inputs = await internals.inputs?.() ?? [];
+		} catch (e) {
+			if (e instanceof Error) fix_stack_trace(e);
+			throw e;
+		}
+
 		if (internals.has_arg) {
-			for (const arg of (await internals.inputs?.()) ?? []) {
+			for (const arg of inputs) {
 				void enqueue(null, remote_prefix + internals.id + '/' + stringify_remote_arg(arg));
 			}
 		} else {
