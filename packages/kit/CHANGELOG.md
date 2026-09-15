@@ -1,5 +1,25 @@
 # @sveltejs/kit
 
+## 3.0.0-next.28
+
+### Patch Changes
+
+- fix: manipulate stack trace for errors that happen while generating prerender inputs ([#17113](https://github.com/sveltejs/kit/pull/17113))
+
+- fix: ignore Vitest browser loader HTML transforms ([#17092](https://github.com/sveltejs/kit/pull/17092))
+
+- fix: follow HTTP redirects from authentication proxies when enhancing form submissions ([#17106](https://github.com/sveltejs/kit/pull/17106))
+
+- fix: keep hash-router links on the current document when resolving paths ([#17107](https://github.com/sveltejs/kit/pull/17107))
+
+- fix: respect `paths.relative` for server-side route resolution imports ([#17056](https://github.com/sveltejs/kit/pull/17056))
+
+- fix: recommend safe include and exclude patterns in tsconfig warning ([#17102](https://github.com/sveltejs/kit/pull/17102))
+
+- fix: atomically replace route metadata during sync ([#17096](https://github.com/sveltejs/kit/pull/17096))
+
+- fix: preserve sourcemap source paths when adapters copy build output ([#17082](https://github.com/sveltejs/kit/pull/17082))
+
 ## 3.0.0-next.27
 
 ### Major Changes

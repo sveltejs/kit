@@ -1,5 +1,21 @@
 # @sveltejs/adapter-netlify
 
+## 7.0.0-next.12
+
+### Major Changes
+
+- breaking: write static files based on the `publish` adapter option rather than reading the `netlify.toml` file ([#17078](https://github.com/sveltejs/kit/pull/17078))
+
+### Minor Changes
+
+- feat: support `split` and `edge` options combined ([#17045](https://github.com/sveltejs/kit/pull/17045))
+
+### Patch Changes
+
+- chore: include edge function configuration in the function module ([#17058](https://github.com/sveltejs/kit/pull/17058))
+- Updated dependencies [[`509dd14`](https://github.com/sveltejs/kit/commit/509dd146696b2c77ae3ac8ac2435773864520016), [`9f3342f`](https://github.com/sveltejs/kit/commit/9f3342fb9305d1fd731a49497bec894469073fd0), [`147f09a`](https://github.com/sveltejs/kit/commit/147f09ab7397727f17b5f35ff7535eb1a089180f), [`377fc5d`](https://github.com/sveltejs/kit/commit/377fc5dd93054ba01ec0e9623036735ff7aadfb5), [`4c812c8`](https://github.com/sveltejs/kit/commit/4c812c808c6b62c78b89fb0021dcfe45e06afcc7), [`fbbb4c7`](https://github.com/sveltejs/kit/commit/fbbb4c7d3c4ff3a3792a58db26c6be77996a392d), [`f8258ee`](https://github.com/sveltejs/kit/commit/f8258ee5e042d48d198cca3f35982e90db0077cb), [`4da6320`](https://github.com/sveltejs/kit/commit/4da6320db8d70b73b93e142e4bb6ba9173be3b97)]:
+  - @sveltejs/kit@3.0.0-next.28
+
 ## 7.0.0-next.11
 
 ### Major Changes
