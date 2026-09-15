@@ -134,10 +134,10 @@ export function requested(query, limit) {
 		ignored.add(create_remote_key(__.id, payload));
 	};
 
-	// note: don't initialize these maps here -- they will be initialized by the
-	// command/form wrapper when we enter them, and if we initialize them here
-	// we will enable requested(...) in contexts where it shouldn't be allowed,
-	// such as load functions or other server functions
+	// note: this flag is set by the command/form wrapper when we enter it, so that
+	// requested(...) is rejected in contexts where it makes no sense, such as load
+	// functions or other server functions. A command that was not called via the
+	// remote endpoint has nothing to refresh, so `payloads` is empty there
 	if (!state.is_in_remote_form_or_command) {
 		throw new Error(
 			'requested(...) can only be called in the context of a command/form remote function'
