@@ -229,7 +229,7 @@ export function create_builder({
 			write(
 				dest,
 				dedent`
-					import { Server } from '${relative}/index.js';
+					import { create_server } from '${relative}/index.js';
 					const manifest = ${generate_manifest({
 						build_data,
 						prerendered: prerendered.paths,
@@ -240,7 +240,7 @@ export function create_builder({
 						remotes,
 						root: vite_config.root
 					})};
-					export const server = new Server(manifest);
+					export const server = create_server(manifest);
 				`
 			);
 		},
