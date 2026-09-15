@@ -33,17 +33,6 @@ test('initializes dynamic env before instrumentation', async ({ request }) => {
 	expect(await response.json()).toEqual({ value: 'available' });
 });
 
-test('preserves similar user identifiers and imports', async ({ request }) => {
-	const response = await request.get('/adapter-identifiers');
-	expect(await response.json()).toEqual({
-		BASE_PATH: 'user-base-path',
-		APP_PATH: 'user-app-path',
-		ENV_PREFIX: 'user-env-prefix',
-		PRECOMPRESS: 'user-precompress',
-		SERVER: 'user-server'
-	});
-});
-
 test('records which assets have compressed variants', async ({ request }) => {
 	expect((await request.get('/data.json')).headers()['vary']).toBe('Accept-Encoding');
 	expect((await request.get('/test.ico')).headers()['vary']).toBeUndefined();
@@ -79,11 +68,6 @@ test('uses the content types from the manifest', async ({ request }) => {
 	// https://github.com/sveltejs/kit/issues/13753
 	expect((await request.get('/test.ico')).headers()['content-type']).toBe('image/x-icon');
 	expect((await request.get('/prerendered.ico')).headers()['content-type']).toBe('image/x-icon');
-});
-
-test('does not replace adapter stubs in application chunks', async ({ request }) => {
-	const response = await request.get('/stub');
-	expect(await response.text()).toBe('__SVELTEKIT_ADAPTER_NODE_MIMETYPES__');
 });
 
 test('does not record dotfiles, except .well-known', async ({ request }) => {

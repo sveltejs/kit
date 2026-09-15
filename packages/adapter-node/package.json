@@ -27,26 +27,23 @@
 	},
 	"types": "index.d.ts",
 	"files": [
-		"files",
+		"src/*.js",
 		"index.js",
 		"index.d.ts",
 		"ambient.d.ts"
 	],
 	"scripts": {
-		"dev": "rolldown -cw",
-		"build": "rolldown -c",
+		"prepublishOnly": "echo TODO: remove this script once .github/workflows/platform-tests-node.yml no longer invokes prepublishOnly, after version-3 is merged into main",
 		"test": "pnpm test:unit && pnpm test:build",
 		"test:unit": "vitest run",
-		"test:build": "pnpm build && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:build",
+		"test:build": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:build",
 		"check": "tsc",
 		"lint": "oxfmt --check .",
-		"format": "oxfmt --write .",
-		"prepublishOnly": "pnpm build"
+		"format": "oxfmt --write ."
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",
 		"@types/node": "catalog:",
-		"rolldown": "catalog:",
 		"typescript": "catalog:typescript-native",
 		"vitest": "catalog:"
 	},
