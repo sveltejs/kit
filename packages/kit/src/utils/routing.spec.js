@@ -397,6 +397,21 @@ describe('resolve_route', () => {
 			expected: '/blog/one/two/three'
 		},
 		{
+			route: '/blog/[one]',
+			params: { one: 'møte' },
+			expected: '/blog/m%C3%B8te'
+		},
+		{
+			route: '/blog/[...one]',
+			params: { one: 'møte/reise' },
+			expected: '/blog/m%C3%B8te/reise'
+		},
+		{
+			route: '/blog/[one]?q=a%20b',
+			params: { one: 'møte' },
+			expected: '/blog/m%C3%B8te?q=a%20b'
+		},
+		{
 			route: '/blog/[one=matcher]/[...two]/',
 			params: { one: 'one', two: 'two/three' },
 			expected: '/blog/one/two/three/'
@@ -489,7 +504,7 @@ describe('resolve_route', () => {
 		{
 			route: '/blog/[one]',
 			params: { one: '[x+2f]' },
-			expected: '/blog/[x+2f]'
+			expected: '/blog/%5Bx%2B2f%5D'
 		},
 		{
 			route: '/[x+2f]/[one]',
