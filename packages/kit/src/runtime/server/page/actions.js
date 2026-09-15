@@ -1,4 +1,5 @@
-/** @import { RequestEvent, Actions } from '@sveltejs/kit' */
+/** @import { Actions } from '@sveltejs/kit' */
+/** @import { RequestEvent } from '@sveltejs/kit/internal/server' */
 /** @import { ActionResult } from '$app/forms' */
 /** @import { SSRNode, ServerNode, ServerActionResult } from 'types' */
 import { DEV } from 'esm-env';
