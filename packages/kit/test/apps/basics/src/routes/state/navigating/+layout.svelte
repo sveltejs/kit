@@ -1,11 +1,17 @@
 <script>
+	import { beforeNavigate } from '$app/navigation';
 	import { navigating } from '$app/state';
+
+	beforeNavigate((navigation) => {
+		(window.before_navigate_calls ??= []).push(navigation.to?.url.pathname ?? null);
+	});
 </script>
 
 <nav>
 	<a href="/state/navigating/a">a</a>
 	<a href="/state/navigating/b">b</a>
 	<a href="/state/navigating/c">c</a>
+	<a href="#deep">deep</a>
 </nav>
 
 <div id="nav-status">

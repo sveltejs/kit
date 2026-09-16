@@ -2282,6 +2282,16 @@ async function finish_navigation(nav, nav_token, url, popped_scroll, reset, upda
 }
 
 /**
+ * Clears the 'a navigation is in progress' state after `navigation_token` was replaced
+ * without a new navigation taking over. The superseded navigation bails out on the token
+ * check and never reaches `finish_navigation`, so nothing else will clear it
+ */
+function abandon_navigation() {
+	is_navigating = false;
+	set_navigation(null);
+}
+
+/**
  * Does a full page reload if it wouldn't result in an endless loop in the SPA case
  * @param {URL} url
  * @param {{ id: string | null }} route
@@ -3349,7 +3359,10 @@ function _start_router() {
 
 			// if a popstate-driven navigation is cancelled, we need to counteract it
 			// with history.go, which means we end up back here, hence this check
-			if (history_index === current_history_index) return;
+			if (history_index === current_history_index) {
+				abandon_navigation();
+				return;
+			}
 
 			const delta = history_index - current_history_index;
 			const reset_index = history_metadata.resetIndex;
@@ -3412,6 +3425,7 @@ function _start_router() {
 
 				if (reset && scroll) scrollTo(scroll.x, scroll.y);
 				restore_navigation_snapshot(current_history_index, current_registrations());
+				abandon_navigation();
 				return;
 			}
 

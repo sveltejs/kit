@@ -1,5 +1,6 @@
 declare global {
 	interface Window {
+		before_navigate_calls: Array<string | null>;
 		invalidated: boolean;
 		oops: string;
 		pageContext: any;
