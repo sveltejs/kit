@@ -1,22 +1,19 @@
 import fs from 'node:fs';
-import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, mock, spyOn, test, type Mock } from 'bun:test';
 import adapter from '../index.js';
 
 const package_dir = new URL('..', import.meta.url).pathname.replace(/\/$/, '');
-const index_file = `${package_dir}/src/index.js`;
-const manifest_file = `${package_dir}/.svelte-kit/output/server/manifest.js`;
-const routes_file = `${package_dir}/src/routes.js`;
-const options_file = `${package_dir}/src/options.js`;
-const start_file = `${package_dir}/src/start.js`;
-
-const entrypoint = '// generated server entrypoint';
-const package_json = JSON.stringify({ dependencies: { jsdom: '^30.0.0' } });
+const src_dir = `${package_dir}/src`;
+const server_dir = '.svelte-kit/output/server';
+const handoff_file = `${process.cwd()}/.svelte-kit/output/adapter-bun.js`;
+const entrypoint = `${server_dir}/adapter-index.js`;
+const handoff = '#@sveltejs/adapter-bun';
 
 let bun_build: Mock<(options: any) => Promise<any>>;
 let read_dir: Mock<typeof fs.readdirSync>;
 let exists: Mock<typeof fs.existsSync>;
 let read_file: Mock<typeof fs.readFileSync>;
+let write_file: Mock<typeof fs.writeFileSync>;
 
 // the real Bun.build would bundle and the real hashers would read assets off
 // disk, so the build APIs stay test doubles even under Bun
@@ -27,7 +24,6 @@ beforeEach(() => {
 		outputs: []
 	})) as any) as any;
 	spyOn(Bun, 'file').mockImplementation(((_path: string) => ({
-		text: async () => entrypoint,
 		stream: () => new Blob([]).stream(),
 		lastModified: 0
 	})) as never);
@@ -39,16 +35,12 @@ beforeEach(() => {
 			}
 		};
 	} as never);
-	spyOn(Bun, 'hash').mockImplementation(((input: string) => {
-		let hash = 0n;
-		for (const char of input) hash = hash * 31n + BigInt(char.charCodeAt(0));
-		return hash;
-	}) as never);
 
 	read_dir = spyOn(fs, 'readdirSync').mockReturnValue([]) as any;
 	exists = spyOn(fs, 'existsSync').mockReturnValue(true);
 	spyOn(fs, 'rmSync').mockImplementation(() => {});
-	read_file = spyOn(fs, 'readFileSync').mockImplementation(read_files({}) as any) as any;
+	read_file = spyOn(fs, 'readFileSync').mockImplementation((() => undefined) as any) as any;
+	write_file = spyOn(fs, 'writeFileSync').mockImplementation(() => {});
 });
 
 afterEach(() => {
@@ -84,148 +76,116 @@ describe('adapter contract', () => {
 	});
 });
 
-describe('Bun build configuration', () => {
-	test('cleans the output and supplies production defaults', async () => {
+describe('Vite build configuration', () => {
+	test('bundles the server source with the app and keeps production dependencies external', () => {
+		read_file.mockReturnValue(JSON.stringify({ dependencies: { jsdom: '1.0.0' } }));
+
+		const options = vite_config().environments.ssr.build.rolldownOptions;
+
+		expect(read_file).toHaveBeenCalledWith('package.json', 'utf8');
+		expect(options.input).toEqual({ 'adapter-index': `${src_dir}/index.js` });
+		expect(options.external).toEqual([handoff, /^jsdom(\/.*)?$/]);
+		expect('jsdom/lib/api.js').toMatch(options.external[1]);
+		expect('jsdom-global').not.toMatch(options.external[1]);
+		expect(options.output.paths).toEqual({ [handoff]: '../adapter-bun.js' });
+	});
+
+	test('keeps adapter chunks at the output root so the hand-off path resolves', () => {
+		read_file.mockReturnValue('{}');
+
+		const { chunkFileNames } = vite_config().environments.ssr.build.rolldownOptions.output;
+
+		expect(chunkFileNames({ moduleIds: [`${src_dir}/handler.js`, '/app/src/hooks.js'] })).toBe(
+			'adapter-bun-[name].js'
+		);
+		expect(chunkFileNames({ moduleIds: ['/app/src/hooks.js'] })).toBe('chunks/[name].js');
+	});
+});
+
+describe('build output', () => {
+	test('cleans the output and copies the Vite build next to the hand-off module', async () => {
 		const builder = create_builder();
 		await adapter().adapt(builder);
 
 		expect(fs.rmSync).toHaveBeenCalledWith('build', { recursive: true, force: true });
 		expect(builder.log.minor).toHaveBeenCalledWith('Building server');
-
-		const options = bun_build.mock.calls[0][0];
-		expect(options).toMatchObject({
-			entrypoints: [index_file],
-			outdir: 'build',
-			target: 'bun',
-			format: 'esm',
-			splitting: true,
-			sourcemap: 'external',
-			external: ['jsdom'],
-			conditions: ['bun', 'node'],
-			throw: false,
-			compile: false
-		});
-		expect(options.naming).toEqual({
-			entry: '[name].[ext]',
-			chunk: 'server/chunks/[name]-[hash].[ext]',
-			asset: 'server/assets/[name]-[hash].[ext]'
-		});
-		expect(options.plugins).toHaveLength(1);
-		expect(options.plugins[0].name).toBe('adapter-bun');
+		expect(builder.generateServerInstance).toHaveBeenCalledWith(`${server_dir}/server.js`);
+		expect(builder.copy).toHaveBeenCalledWith(server_dir, 'build/server');
+		expect(builder.copy).toHaveBeenCalledWith(handoff_file, 'build/adapter-bun.js');
+		expect(write_file).toHaveBeenCalledWith(
+			'build/index.js',
+			"import './server/adapter-index.js';\n"
+		);
+		expect(bun_build).not.toHaveBeenCalled();
 	});
 
-	test('bundles production dependencies only into executables', async () => {
-		await adapter({ buildOptions: { external: ['sharp'] } }).adapt(create_builder());
-		expect(bun_build.mock.calls[0][0].external).toEqual(['jsdom', 'sharp']);
-
-		await adapter({ buildOptions: { compile: true, external: ['sharp'] } }).adapt(create_builder());
-		expect(bun_build.mock.calls[1][0].external).toEqual(['sharp']);
-	});
-
-	test('generates manifest and server-option modules', async () => {
-		const builder = create_builder({ base: '/docs', origin: 'https://example.com' });
+	test('hands the configured values to the server', async () => {
 		await adapter({
 			envPrefix: 'APP_',
 			serverOptions: { hostname: '127.0.0.1', port: 4000, development: true }
-		}).adapt(builder);
+		}).adapt(create_builder({ base: '/docs', origin: 'https://example.com' }));
 
-		const files = bun_build.mock.calls[0][0].files;
-		expect(files[manifest_file]).toBe(
-			'export const app_dir = "_app";\n' +
+		expect(handoff_source()).toContain(
+			"import { dirname } from 'node:path';\n" +
+				"import { fileURLToPath } from 'node:url';\n" +
+				"export { server } from './server/server.js';\n" +
+				'export const dir = dirname(fileURLToPath(import.meta.url));\n' +
+				'export const app_dir = "_app";\n' +
 				'export const base = "/docs";\n' +
 				'export const embed = false;\n' +
 				'export const env_prefix = "APP_";\n' +
-				'export const origin = "https://example.com";'
-		);
-		expect(files[options_file]).toBe(
-			'export default {"hostname":"127.0.0.1","port":4000,"development":true};'
-		);
-		expect(builder.generateServerInstance).toHaveBeenCalledWith(
-			'.svelte-kit/output/bun-tmp/server.js'
+				'export const origin = "https://example.com";\n' +
+				'export const server_options = {"hostname":"127.0.0.1","port":4000,"development":true};\n'
 		);
 	});
 
-	test('resolves generated runtime modules through the Bun plugin', async () => {
+	test('defaults the base to the root and leaves the origin undefined', async () => {
 		await adapter().adapt(create_builder());
-		const on_resolve = mock((_options: any, _callback: any) => {});
-		bun_build.mock.calls[0][0].plugins[0].setup({ onResolve: on_resolve, onLoad: mock() });
 
-		expect(on_resolve).toHaveBeenCalledWith(
-			{ filter: /^(SERVER|MANIFEST|ROUTES|SERVER_OPTIONS)$/ },
-			expect.any(Function)
-		);
-		const resolve_module = on_resolve.mock.calls[0][1];
-		expect(resolve_module({ path: 'SERVER' })).toEqual({
-			path: '.svelte-kit/output/bun-tmp/server.js'
-		});
-		expect(resolve_module({ path: 'MANIFEST' })).toEqual({ path: manifest_file });
-		expect(resolve_module({ path: 'ROUTES' })).toEqual({ path: routes_file });
-		expect(resolve_module({ path: 'SERVER_OPTIONS' })).toEqual({ path: options_file });
+		expect(handoff_source()).toContain('export const base = "/";\n');
+		expect(handoff_source()).toContain('export const origin = undefined;\n');
+		expect(handoff_source()).toContain('export const server_options = {};\n');
 	});
 
-	test('gives side-effect-only chunks a per-importer identity so their copies cannot collide', async () => {
-		const chunks_dir = path.resolve('.svelte-kit/output/server/chunks');
-		mock_chunks(chunks_dir, { 'events.js': "import './other.js';\nexport {};\n" });
+	test('loads instrumentation before the generated server entrypoint', async () => {
+		const builder = create_builder({ instrumentation: true });
+		await adapter().adapt(builder);
 
-		await adapter().adapt(create_builder());
-		const on_resolve = mock((_options: any, _callback: any) => {});
-		const on_load = mock((_options: any, _callback: any) => {});
-		bun_build.mock.calls[0][0].plugins[0].setup({ onResolve: on_resolve, onLoad: on_load });
-
-		const resolve_chunk = on_resolve.mock.calls[1][1];
-		const load_chunk = on_load.mock.calls.find(
-			([options]) => options.namespace === 'adapter-bun-side-effect'
-		)![1];
-
-		const first = resolve_chunk({
-			path: './events.js',
-			resolveDir: chunks_dir,
-			importer: `${chunks_dir}/a.js`
+		expect(builder.createInstrumentationInitializer).toHaveBeenCalledWith({
+			outputDirectory: server_dir
 		});
-		const second = resolve_chunk({
-			path: './events.js',
-			resolveDir: chunks_dir,
-			importer: `${chunks_dir}/b.js`
+		expect(builder.instrument).toHaveBeenCalledWith({
+			entrypoint,
+			instrumentation: `${server_dir}/instrumentation.server.js`,
+			initializer: `${server_dir}/__sveltekit_env_init.js`,
+			module: { exports: [] }
 		});
-		expect(first.namespace).toBe('adapter-bun-side-effect');
-		expect(first.path.startsWith(`${chunks_dir}/events.js?`)).toBe(true);
-		expect(first.path).not.toBe(second.path);
-
-		const first_load = load_chunk({ path: first.path });
-		const second_load = load_chunk({ path: second.path });
-		expect(first_load.contents).toContain("import './other.js';");
-		expect(first_load.contents).not.toBe(second_load.contents);
-
-		// chunks with real exports keep their shared identity
-		expect(
-			resolve_chunk({ path: './real.js', resolveDir: chunks_dir, importer: `${chunks_dir}/a.js` })
-		).toBeUndefined();
 	});
 
-	test('leaves the plugin out when no chunk is side-effect-only', async () => {
-		mock_chunks(path.resolve('.svelte-kit/output/server/chunks'), {
-			'real.js': 'export const x = 1;\n'
-		});
+	test('does not instrument apps without a server instrumentation file', async () => {
+		const builder = create_builder();
+		await adapter().adapt(builder);
 
-		await adapter().adapt(create_builder());
-		const on_resolve = mock((_options: any, _callback: any) => {});
-		bun_build.mock.calls[0][0].plugins[0].setup({ onResolve: on_resolve, onLoad: mock() });
-
-		expect(on_resolve).toHaveBeenCalledTimes(1);
+		expect(builder.instrument).not.toHaveBeenCalled();
 	});
 
-	test('keeps virtual entrypoints resolvable when a chunk shares their name', async () => {
-		const chunks_dir = path.resolve('.svelte-kit/output/server/chunks');
-		mock_chunks(chunks_dir, { 'start.js': "import './other.js';\nexport {};\n" });
+	test('compiles an executable from the Vite build instead of copying it', async () => {
+		const builder = create_builder();
+		await adapter({ buildOptions: { compile: true } }).adapt(builder);
 
-		await adapter().adapt(create_builder({ instrumentation: true }));
-		const on_resolve = mock((_options: any, _callback: any) => {});
-		bun_build.mock.calls[0][0].plugins[0].setup({ onResolve: on_resolve, onLoad: mock() });
-
-		// resolving nothing here would send Bun to the filesystem, where start.js does not exist
-		expect(on_resolve.mock.calls[1][1]({ path: start_file, resolveDir: package_dir })).toEqual({
-			path: start_file
+		expect(builder.copy).not.toHaveBeenCalled();
+		expect(write_file).not.toHaveBeenCalledWith('build/index.js', expect.anything());
+		expect(bun_build.mock.calls[0][0]).toEqual({
+			entrypoints: [entrypoint],
+			outdir: 'build',
+			target: 'bun',
+			format: 'esm',
+			sourcemap: 'external',
+			conditions: ['bun', 'node'],
+			throw: false,
+			compile: { outfile: 'server' }
 		});
+		expect(handoff_source()).toContain('export const embed = true;\n');
 	});
 
 	test('passes supported advanced options while retaining reserved options', async () => {
@@ -236,11 +196,13 @@ describe('Bun build configuration', () => {
 				minify: true,
 				bytecode: true,
 				sourcemap: 'linked',
-				drop: ['debugger']
+				drop: ['debugger'],
+				external: ['sharp']
 			}
 		}).adapt(create_builder());
 
 		expect(bun_build.mock.calls[0][0]).toMatchObject({
+			entrypoints: [entrypoint],
 			outdir: 'dist',
 			target: 'bun',
 			format: 'esm',
@@ -248,6 +210,7 @@ describe('Bun build configuration', () => {
 			bytecode: true,
 			sourcemap: 'linked',
 			drop: ['debugger'],
+			external: ['sharp'],
 			compile: { outfile: 'application', target: 'bun-linux-x64' }
 		});
 	});
@@ -269,28 +232,6 @@ describe('Bun build configuration', () => {
 		expect(bun_build.mock.calls[0][0].compile).toEqual(expected);
 	});
 
-	test('loads instrumentation before the generated server entrypoint', async () => {
-		const builder = create_builder({ instrumentation: true });
-		await adapter().adapt(builder);
-
-		const files = bun_build.mock.calls[0][0].files;
-		expect(files[index_file]).toBe(
-			`import ".svelte-kit/output/server/instrumentation.server.js";\nawait import(${JSON.stringify(start_file)});`
-		);
-		expect(files[start_file]).toBe(entrypoint);
-		expect(builder.instrument).not.toHaveBeenCalled();
-
-		// start.js must be its own entrypoint so asset paths resolve from the output root
-		expect(bun_build.mock.calls[0][0].entrypoints).toEqual([index_file, start_file]);
-	});
-
-	test('keeps a single entrypoint when compiling with instrumentation', async () => {
-		const builder = create_builder({ instrumentation: true });
-		await adapter({ buildOptions: { compile: true } }).adapt(builder);
-
-		expect(bun_build.mock.calls[0][0].entrypoints).toEqual([index_file]);
-	});
-
 	test('reports every Bun diagnostic before failing the build', async () => {
 		bun_build.mockResolvedValueOnce({
 			success: false,
@@ -303,7 +244,9 @@ describe('Bun build configuration', () => {
 		});
 		const builder = create_builder();
 
-		await expect(adapter().adapt(builder)).rejects.toBeInstanceOf(AggregateError);
+		await expect(
+			adapter({ buildOptions: { compile: true } }).adapt(builder)
+		).rejects.toBeInstanceOf(AggregateError);
 		expect(builder.log.error).toHaveBeenCalledWith('broken');
 		expect(builder.log.warn).toHaveBeenCalledWith('careful');
 		expect(builder.log.info).toHaveBeenCalledWith('context');
@@ -325,20 +268,25 @@ describe('generated routes', () => {
 
 		await adapter().adapt(builder);
 
+		expect(builder.writeClient).toHaveBeenCalledWith('build/client');
+		expect(builder.writePrerendered).toHaveBeenCalledWith('build/prerendered');
 		expect(builder.findServerAssets).toHaveBeenCalledWith([dynamic]);
-		const source = bun_build.mock.calls[0][0].files[routes_file];
-		expect(source).toContain('...client_asset("data.json", undefined, {"hash":"abc","mtime":0})');
+		const source = handoff_source();
 		expect(source).toContain(
-			'...client_asset("_app/immutable/read.txt", undefined, {"hash":"abc","mtime":0})'
+			'["client_asset", "data.json", "data.json", {"hash":"abc","mtime":0}]'
 		);
 		expect(source).toContain(
-			'...prerendered_page("/page/", "page/index.html", {"hash":"abc","mtime":0})'
+			'["client_asset", "_app/immutable/read.txt", "_app/immutable/read.txt", {"hash":"abc","mtime":0}]'
 		);
-		expect(source).toContain('prerendered_asset("icon.png", undefined, {"hash":"abc","mtime":0})');
-		expect(source).toContain('prerendered_redirect("/old", 301, "/new")');
 		expect(source).toContain(
-			'["_app/immutable/read.txt", server_asset("_app/immutable/read.txt")]'
+			'["prerendered_page", "/page/", "page/index.html", {"hash":"abc","mtime":0}]'
 		);
+		expect(source).toContain(
+			'["prerendered_asset", "icon.png", "icon.png", {"hash":"abc","mtime":0}]'
+		);
+		expect(source).toContain('export const redirects = [["/old",301,"/new"]];');
+		expect(source).toContain('export const server_assets = [\n["_app/immutable/read.txt"]\n];');
+		expect(source).not.toContain("with { type: 'file' }");
 	});
 
 	test('does not prepend the base to prerendered route paths a second time', async () => {
@@ -350,9 +298,9 @@ describe('generated routes', () => {
 			})
 		);
 
-		const source = bun_build.mock.calls[0][0].files[routes_file];
+		const source = handoff_source();
 		expect(source).toContain(
-			'...prerendered_page("/base/page/", "page/index.html", {"hash":"abc","mtime":0})'
+			'["prerendered_page", "/base/page/", "page/index.html", {"hash":"abc","mtime":0}]'
 		);
 		expect(source).not.toContain('/base/base/');
 	});
@@ -372,21 +320,25 @@ describe('generated routes', () => {
 			})
 		);
 
-		const source = bun_build.mock.calls[0][0].files[routes_file];
-		expect(source).toContain("with { type: 'file' }");
-		expect(source).toContain('...client_asset("data.json", asset_0, {"hash":"abc","mtime":0})');
+		const source = handoff_source();
 		expect(source).toContain(
-			'...client_asset(".well-known/asset.txt", asset_1, {"hash":"abc","mtime":0})'
+			`import asset_0 from ${JSON.stringify(`${process.cwd()}/.svelte-kit/output/client/data.json`)} with { type: 'file' };`
 		);
-		expect(source).toContain('...prerendered_page("/page/", asset_3, {"hash":"abc","mtime":0})');
-		expect(source).toContain('prerendered_asset("favicon.ico", asset_4, {"hash":"abc","mtime":0})');
+		expect(source).toContain('["client_asset", "data.json", asset_0, {"hash":"abc","mtime":0}]');
 		expect(source).toContain(
-			'prerendered_asset("dependency.json", asset_5, {"hash":"abc","mtime":0})'
+			'["client_asset", ".well-known/asset.txt", asset_1, {"hash":"abc","mtime":0}]'
+		);
+		expect(source).toContain('["prerendered_page", "/page/", asset_3, {"hash":"abc","mtime":0}]');
+		expect(source).toContain(
+			'["prerendered_asset", "favicon.ico", asset_4, {"hash":"abc","mtime":0}]'
 		);
 		expect(source).toContain(
-			'prerendered_asset("page/__data.json", asset_6, {"hash":"abc","mtime":0})'
+			'["prerendered_asset", "dependency.json", asset_5, {"hash":"abc","mtime":0}]'
 		);
-		expect(source).toContain('["_app/read.txt", server_asset("_app/read.txt", asset_2)]');
+		expect(source).toContain(
+			'["prerendered_asset", "page/__data.json", asset_6, {"hash":"abc","mtime":0}]'
+		);
+		expect(source).toContain('["_app/read.txt", asset_2]');
 		expect(source).not.toContain('.vite/manifest.json');
 	});
 
@@ -397,7 +349,7 @@ describe('generated routes', () => {
 		await expect(adapter({ buildOptions: { compile } }).adapt(builder)).rejects.toThrow(
 			'Bun treats literal `*` characters in route paths as wildcards'
 		);
-		expect(bun_build).not.toHaveBeenCalled();
+		expect(write_file).not.toHaveBeenCalled();
 	});
 
 	test('precompresses assets and marks the variants in the generated routes', async () => {
@@ -407,9 +359,8 @@ describe('generated routes', () => {
 
 		expect(builder.compress).toHaveBeenCalledWith('build/client');
 		expect(builder.compress).toHaveBeenCalledWith('build/prerendered');
-		const source = bun_build.mock.calls[0][0].files[routes_file];
-		expect(source).toContain(
-			'...client_asset("app.js", undefined, {"hash":"abc","mtime":0,"br":true,"gz":true})'
+		expect(handoff_source()).toContain(
+			'["client_asset", "app.js", "app.js", {"hash":"abc","mtime":0,"br":true,"gz":true}]'
 		);
 	});
 
@@ -439,12 +390,12 @@ describe('generated routes', () => {
 
 		await adapter().adapt(builder);
 
-		const source = bun_build.mock.calls[0][0].files[routes_file];
+		const source = handoff_source();
 		expect(source).not.toContain('.env');
 		expect(source).toContain(
-			'...client_asset(".well-known/security.txt", undefined, {"hash":"abc","mtime":0})'
+			'["client_asset", ".well-known/security.txt", ".well-known/security.txt", {"hash":"abc","mtime":0}]'
 		);
-		expect(source).toContain('...client_asset("ok.txt", undefined, {"hash":"abc","mtime":0})');
+		expect(source).toContain('["client_asset", "ok.txt", "ok.txt", {"hash":"abc","mtime":0}]');
 	});
 
 	test('embedded builds tolerate absent output directories but propagate readdir errors', async () => {
@@ -467,16 +418,16 @@ describe('generated routes', () => {
 
 		await adapter({ buildOptions: { compile: true } }).adapt(create_builder());
 
-		const source = bun_build.mock.calls[0][0].files[routes_file];
+		const source = handoff_source();
 		expect(source).not.toContain('.secret');
-		expect(source).toContain('...client_asset("public.txt", asset_0, {"hash":"abc","mtime":0})');
+		expect(source).toContain('["client_asset", "public.txt", asset_0, {"hash":"abc","mtime":0}]');
 	});
 
 	test('rejects route segments starting with a colon', async () => {
 		const builder = create_builder({ client_files: [':tag.txt'] });
 
 		await expect(adapter().adapt(builder)).rejects.toThrow('starts with `:`');
-		expect(bun_build).not.toHaveBeenCalled();
+		expect(write_file).not.toHaveBeenCalled();
 	});
 
 	test('embedded assets with the same relative path keep distinct imports', async () => {
@@ -486,9 +437,9 @@ describe('generated routes', () => {
 			create_builder({ prerendered_pages: [['/page/', { file: 'page.html' }]] })
 		);
 
-		const source = bun_build.mock.calls[0][0].files[routes_file];
-		expect(source).toContain('...client_asset("page.html", asset_0, {"hash":"abc","mtime":0})');
-		expect(source).toContain('...prerendered_page("/page/", asset_1, {"hash":"abc","mtime":0})');
+		const source = handoff_source();
+		expect(source).toContain('["client_asset", "page.html", asset_0, {"hash":"abc","mtime":0}]');
+		expect(source).toContain('["prerendered_page", "/page/", asset_1, {"hash":"abc","mtime":0}]');
 	});
 
 	test('rejects wildcard characters in prerendered redirect sources', async () => {
@@ -499,15 +450,15 @@ describe('generated routes', () => {
 		await expect(adapter().adapt(builder)).rejects.toThrow(
 			'Bun treats literal `*` characters in route paths as wildcards'
 		);
-		expect(bun_build).not.toHaveBeenCalled();
+		expect(write_file).not.toHaveBeenCalled();
 	});
 
 	test('fails when a prerendered page is absent from compiled build output', async () => {
 		await expect(
 			adapter({ buildOptions: { compile: true } }).adapt(
-				create_builder({ prerendered_pages: [['/missing', { file: 'missing.html' }]] })
+				create_builder({ prerendered_pages: [['/missing/', { file: 'missing/index.html' }]] })
 			)
-		).rejects.toThrow('Could not find prerendered page missing.html for route /missing');
+		).rejects.toThrow('Could not find prerendered page missing/index.html for route /missing/');
 	});
 
 	test('fails when a server-readable asset is absent from compiled build output', async () => {
@@ -519,21 +470,14 @@ describe('generated routes', () => {
 	});
 });
 
-function mock_chunks(chunks_dir: string, sources: Record<string, string>) {
-	read_dir.mockImplementation(((directory: unknown) =>
-		String(directory) === chunks_dir
-			? Object.keys(sources).map((name) => ({
-					name,
-					parentPath: chunks_dir,
-					isFile: () => true
-				}))
-			: []) as unknown as typeof fs.readdirSync);
-	read_file.mockImplementation(read_files(sources) as unknown as typeof fs.readFileSync);
+function vite_config() {
+	return (adapter() as any).vite.plugins.post[0].config();
 }
 
-function read_files(sources: Record<string, string>) {
-	return (file: unknown) =>
-		String(file) === 'package.json' ? package_json : sources[path.basename(String(file))];
+function handoff_source() {
+	const call = write_file.mock.calls.find(([file]) => file === handoff_file);
+	if (!call) throw new Error('the hand-off module was not written');
+	return String(call[1]);
 }
 
 function mock_files({
@@ -605,14 +549,14 @@ function create_builder({
 		},
 		getAppPath: () => `${base}/_app`,
 		generateServerInstance: mock(() => {}),
-		getBuildDirectory: (dir: string) => `.svelte-kit/output/${dir}`,
-		getServerDirectory: () => '.svelte-kit/output/server',
+		getServerDirectory: () => server_dir,
 		writeClient: mock(() => client_files),
 		writePrerendered: mock(() => prerendered_files),
+		copy: mock(() => []),
 		compress: mock(async (_directory: string) => {}),
 		findServerAssets: mock(() => server_assets),
-		generateManifest: mock(() => '{"appDir":"_app"}'),
 		hasServerInstrumentationFile: () => instrumentation,
+		createInstrumentationInitializer: mock(() => `${server_dir}/__sveltekit_env_init.js`),
 		instrument: mock(() => {})
 	} as any;
 }

@@ -67,9 +67,6 @@ export default defineConfig({
 				envPrefix: '',
 				serverOptions: {
 					idleTimeout: 30
-				},
-				buildOptions: {
-					sourcemap: 'external'
 				}
 			})
 		})
@@ -121,9 +118,7 @@ The generated server owns `fetch` and `routes`. It does not expose `websocket`, 
 
 ### buildOptions
 
-Advanced Bun build settings can be supplied with `buildOptions`. The adapter currently accepts `sourcemap`, `minify`, `bytecode`, `banner`, `footer`, `drop`, `features`, `optimizeImports`, `splitting`, `external`, and `compile`. `external` keeps additional packages out of the bundle. Code splitting is enabled by default; `splitting: false` bundles the server into a single file, which works around [`Bun.build` output path collisions](https://github.com/oven-sh/bun/issues/17674) on applications whose module graph produces identically-hashed chunks.
-
-The generated entrypoint, output directory, top-level `target`, and module `format` are reserved. Generated servers target Bun and use ESM. Source maps default to `external`; set `sourcemap: 'none'` to disable them.
+`buildOptions` configures the `Bun.build` call that turns the server into an executable, so it only applies when `compile` is set. The adapter accepts `sourcemap`, `minify`, `bytecode`, `banner`, `footer`, `drop`, `features`, `optimizeImports`, `external`, and `compile`. The entrypoint, output directory, top-level `target`, and module `format` are reserved. Source maps default to `external`; set `sourcemap: 'none'` to disable them.
 
 #### Compiled executables
 
@@ -169,7 +164,7 @@ adapter({
 
 The result in this example is `dist/application`. Platform targets, native dependencies, and other limitations follow [Bun's executable compilation rules](https://bun.com/docs/bundler/executables).
 
-Executables bundle production dependencies, since there is no `node_modules` to resolve them from. To resolve a package from `node_modules` at runtime instead, list it in `external` and set `compile: { autoloadPackageJson: true }`.
+Executables bundle production dependencies, since there is no `node_modules` to resolve them from. To resolve a package from `node_modules` at runtime instead, list it in `external` and set `compile: { autoloadPackageJson: true }`. Packages that read files relative to their own location, such as `jsdom`, only work this way.
 
 ## Environment variables
 
