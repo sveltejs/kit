@@ -11,6 +11,7 @@ const options_file = `${package_dir}/src/options.js`;
 const start_file = `${package_dir}/src/start.js`;
 
 const entrypoint = '// generated server entrypoint';
+const package_json = JSON.stringify({ dependencies: { jsdom: '^30.0.0' } });
 
 let bun_build: Mock<(options: any) => Promise<any>>;
 let read_dir: Mock<typeof fs.readdirSync>;
@@ -47,7 +48,7 @@ beforeEach(() => {
 	read_dir = spyOn(fs, 'readdirSync').mockReturnValue([]) as any;
 	exists = spyOn(fs, 'existsSync').mockReturnValue(true);
 	spyOn(fs, 'rmSync').mockImplementation(() => {});
-	read_file = spyOn(fs, 'readFileSync').mockImplementation((() => undefined) as any) as any;
+	read_file = spyOn(fs, 'readFileSync').mockImplementation(read_files({}) as any) as any;
 });
 
 afterEach(() => {
@@ -99,6 +100,7 @@ describe('Bun build configuration', () => {
 			format: 'esm',
 			splitting: true,
 			sourcemap: 'external',
+			external: ['jsdom'],
 			conditions: ['bun', 'node'],
 			throw: false,
 			compile: false
@@ -110,6 +112,14 @@ describe('Bun build configuration', () => {
 		});
 		expect(options.plugins).toHaveLength(1);
 		expect(options.plugins[0].name).toBe('adapter-bun');
+	});
+
+	test('bundles production dependencies only into executables', async () => {
+		await adapter({ buildOptions: { external: ['sharp'] } }).adapt(create_builder());
+		expect(bun_build.mock.calls[0][0].external).toEqual(['jsdom', 'sharp']);
+
+		await adapter({ buildOptions: { compile: true, external: ['sharp'] } }).adapt(create_builder());
+		expect(bun_build.mock.calls[1][0].external).toEqual(['sharp']);
 	});
 
 	test('generates manifest and server-option modules', async () => {
@@ -518,9 +528,12 @@ function mock_chunks(chunks_dir: string, sources: Record<string, string>) {
 					isFile: () => true
 				}))
 			: []) as unknown as typeof fs.readdirSync);
-	read_file.mockImplementation(
-		((file: unknown) => sources[path.basename(String(file))]) as unknown as typeof fs.readFileSync
-	);
+	read_file.mockImplementation(read_files(sources) as unknown as typeof fs.readFileSync);
+}
+
+function read_files(sources: Record<string, string>) {
+	return (file: unknown) =>
+		String(file) === 'package.json' ? package_json : sources[path.basename(String(file))];
 }
 
 function mock_files({

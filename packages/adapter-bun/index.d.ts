@@ -48,15 +48,17 @@ interface AdapterOptions {
 	>;
 	/**
 	 * Pass Bun build options directly for advanced configuration. The generated entrypoint,
-	 * output directory, top-level target, and module format are reserved. Set `compile` to
-	 * create an executable; if it does not specify an outfile, the executable is written to
-	 * `<out>/server`.
+	 * output directory, top-level target, and module format are reserved. Production
+	 * dependencies are external unless `compile` is set; `external` adds further packages.
+	 * Set `compile` to create an executable; if it does not specify an outfile, the
+	 * executable is written to `<out>/server`.
 	 * @default {}
 	 */
 	buildOptions?: Pick<
 		import('bun').BuildConfig,
 		| 'sourcemap'
 		| 'minify'
+		| 'external'
 		| 'bytecode'
 		| 'banner'
 		| 'footer'

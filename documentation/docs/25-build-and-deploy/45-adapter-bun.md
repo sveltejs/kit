@@ -44,7 +44,7 @@ The default build is written to `build`. Start it with:
 bun ./build
 ```
 
-The JavaScript server, client files, and prerendered files in the output directory are all required at runtime. Application imports are processed according to Bun's bundler behavior.
+You will need the output directory, the project's `package.json`, and the production dependencies in `node_modules` to run the application. Development dependencies are bundled into your app. To control whether a given package is bundled or externalised, place it in `devDependencies` or `dependencies` respectively in your `package.json`.
 
 Client assets and prerendered output are registered as native Bun routes. Only `GET` and `HEAD` requests are served by those routes; other methods continue to SvelteKit. Every asset carries an ETag computed during the build, so conditional requests revalidate with an empty `304` response. Bun supplies MIME types, byte ranges for filesystem-backed files, and streaming without buffering every asset in memory. Files below SvelteKit's `immutable` directory receive `Cache-Control: public,max-age=31536000,immutable`.
 
@@ -121,7 +121,7 @@ The generated server owns `fetch` and `routes`. It does not expose `websocket`, 
 
 ### buildOptions
 
-Advanced Bun build settings can be supplied with `buildOptions`. The adapter currently accepts `sourcemap`, `minify`, `bytecode`, `banner`, `footer`, `drop`, `features`, `optimizeImports`, `splitting`, and `compile`. Code splitting is enabled by default; `splitting: false` bundles the server into a single file, which works around [`Bun.build` output path collisions](https://github.com/oven-sh/bun/issues/17674) on applications whose module graph produces identically-hashed chunks.
+Advanced Bun build settings can be supplied with `buildOptions`. The adapter currently accepts `sourcemap`, `minify`, `bytecode`, `banner`, `footer`, `drop`, `features`, `optimizeImports`, `splitting`, `external`, and `compile`. `external` keeps additional packages out of the bundle. Code splitting is enabled by default; `splitting: false` bundles the server into a single file, which works around [`Bun.build` output path collisions](https://github.com/oven-sh/bun/issues/17674) on applications whose module graph produces identically-hashed chunks.
 
 The generated entrypoint, output directory, top-level `target`, and module `format` are reserved. Generated servers target Bun and use ESM. Source maps default to `external`; set `sourcemap: 'none'` to disable them.
 
@@ -168,6 +168,8 @@ adapter({
 ```
 
 The result in this example is `dist/application`. Platform targets, native dependencies, and other limitations follow [Bun's executable compilation rules](https://bun.com/docs/bundler/executables).
+
+Executables bundle production dependencies, since there is no `node_modules` to resolve them from. To resolve a package from `node_modules` at runtime instead, list it in `external` and set `compile: { autoloadPackageJson: true }`.
 
 ## Environment variables
 

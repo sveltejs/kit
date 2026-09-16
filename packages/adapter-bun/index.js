@@ -1,7 +1,11 @@
 /** @import { Builder } from '@sveltejs/kit' */
-/** @import { BunPlugin } from 'bun' */
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+// posix so it matches the module ids Vite reports on every platform
+const files = fileURLToPath(new URL('./src', import.meta.url)).replaceAll('\\', '/');
+const handoff = '#@sveltejs/adapter-bun';
 
 /**
  * @param {string} dir
@@ -108,6 +112,7 @@ export default function (opts = {}) {
 		serverOptions = {},
 		buildOptions = {}
 	} = opts;
+	const embed = !!buildOptions.compile;
 
 	return {
 		name: '@sveltejs/adapter-bun',
@@ -120,141 +125,68 @@ export default function (opts = {}) {
 
 			fs.rmSync(out, { recursive: true, force: true });
 
-			builder.log.minor('Building server');
-
-			if (precompress && buildOptions.compile) {
+			if (precompress && embed) {
 				builder.log.warn(
 					'precompress is ignored with buildOptions.compile: embedded assets are imported by identity path'
 				);
 			}
 
+			builder.log.minor('Building server');
+
 			const server = builder.getServerDirectory();
+			builder.generateServerInstance(`${server}/server.js`);
 
-			const src_dir = path.resolve(import.meta.dirname, 'src');
-			const index_file = path.resolve(src_dir, 'index.js');
-			const routes_file = path.resolve(src_dir, 'routes.js');
-			const manifest_file = path.resolve(server, 'manifest.js');
-			const server_options_file = path.resolve(src_dir, 'options.js');
-
-			const tmp = builder.getBuildDirectory('bun-tmp');
-			fs.mkdirSync(tmp, { recursive: true });
-			builder.generateServerInstance(`${tmp}/server.js`);
-
-			const virtual_files = {
-				[manifest_file]:
-					`export const app_dir = ${JSON.stringify(builder.config.appDir)};\n` +
-					`export const base = ${JSON.stringify(builder.config.paths.base || '/')};\n` +
-					`export const embed = ${JSON.stringify(!!buildOptions.compile)};\n` +
-					`export const env_prefix = ${JSON.stringify(envPrefix)};\n` +
-					`export const origin = ${JSON.stringify(builder.config.paths.origin) ?? 'undefined'};`,
-				[server_options_file]: `export default ${JSON.stringify(serverOptions)};`,
-				[routes_file]: await create_routes({
-					builder,
-					out,
-					embed: !!buildOptions.compile,
-					precompress: precompress && !buildOptions.compile
-				})
-			};
-
-			const instrumentation = builder.hasServerInstrumentationFile()
-				? `${server}/instrumentation.server.js`
-				: undefined;
-
-			const entrypoints = [index_file];
-
-			if (instrumentation) {
-				const start_file = path.resolve(src_dir, 'start.js'); // Virtual only
-				virtual_files[start_file] = await Bun.file(index_file).text();
-				virtual_files[index_file] = [
-					`import ${JSON.stringify(instrumentation)};`,
-					`await import(${JSON.stringify(start_file)});`
-				].join('\n');
-
-				// as a split chunk, start.js would resolve assets from server/chunks/ instead of the output root
-				if (!buildOptions.compile) entrypoints.push(start_file);
-			}
-
-			// Side-effect-only chunks (e.g. Svelte's events.js, kit's env re-export) compile to
-			// identical stubs whose content hashes collide on one output path, failing the build
-			// with "Multiple files share the same output path" (oven-sh/bun#37576). Resolving a
-			// distinct identity per importer keeps every emitted copy unique; delete this once
-			// the Bun fix ships.
-			const chunks_dir = path.resolve(server, 'chunks');
-			/** @type {Map<string, string>} */
-			const side_effect_sources = new Map();
-			for (const { abs } of read_files_recursive(chunks_dir)) {
-				const source = fs.readFileSync(abs, 'utf8');
-				if (/^import\s+["'][^"']+["'];\s*export\s*\{\s*\};?\s*$/.test(source)) {
-					side_effect_sources.set(abs, source);
-				}
-			}
-
-			// only the stubs above, because a hook that matches without resolving sends Bun back
-			// to the filesystem, where the virtual entrypoints do not exist
-			const side_effect_filter = new RegExp(
-				`/(?:${[...side_effect_sources.keys()]
-					.map((file) => path.basename(file).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
-					.join('|')})$`
+			// values only known once the app is built, next to server/ so the chunks' `../adapter-bun.js` resolves
+			const handoff_file = path.resolve(server, '../adapter-bun.js');
+			fs.writeFileSync(
+				handoff_file,
+				[
+					`import { dirname } from 'node:path';`,
+					`import { fileURLToPath } from 'node:url';`,
+					`export { server } from './server/server.js';`,
+					`export const dir = dirname(fileURLToPath(import.meta.url));`,
+					`export const app_dir = ${JSON.stringify(builder.config.appDir)};`,
+					`export const base = ${JSON.stringify(builder.config.paths.base || '/')};`,
+					`export const embed = ${embed};`,
+					`export const env_prefix = ${JSON.stringify(envPrefix)};`,
+					`export const origin = ${JSON.stringify(builder.config.paths.origin)};`,
+					`export const server_options = ${JSON.stringify(serverOptions)};`,
+					...(await create_routes({ builder, out, embed, precompress: precompress && !embed }))
+				].join('\n')
 			);
 
-			/** @type {BunPlugin} */
-			const adapter_plugin = {
-				name: 'adapter-bun',
-				setup(build) {
-					build.onResolve({ filter: /^(SERVER|MANIFEST|ROUTES|SERVER_OPTIONS)$/ }, ({ path }) => {
-						if (path === 'SERVER') return { path: `${tmp}/server.js` };
-						if (path === 'MANIFEST') return { path: manifest_file };
-						if (path === 'ROUTES') return { path: routes_file };
-						if (path === 'SERVER_OPTIONS') return { path: server_options_file };
-					});
+			const entrypoint = `${server}/adapter-index.js`;
 
-					if (side_effect_sources.size === 0) return;
+			if (builder.hasServerInstrumentationFile()) {
+				builder.instrument({
+					entrypoint,
+					instrumentation: `${server}/instrumentation.server.js`,
+					initializer: builder.createInstrumentationInitializer({ outputDirectory: server }),
+					module: { exports: [] }
+				});
+			}
 
-					build.onResolve({ filter: side_effect_filter }, (args) => {
-						const file = path.resolve(args.resolveDir, args.path);
-						if (!side_effect_sources.has(file))
-							return virtual_files[file] ? { path: file } : undefined;
-						// The `?` suffix keeps dirname(path) inside chunks/ — Bun resolves the synthetic
-						// module's relative imports against that, ignoring onLoad's resolveDir.
-						return {
-							path: `${file}?${Bun.hash(args.importer).toString(16)}`,
-							namespace: 'adapter-bun-side-effect'
-						};
-					});
-					build.onLoad({ filter: /.*/, namespace: 'adapter-bun-side-effect' }, (args) => {
-						const file = args.path.slice(0, args.path.indexOf('?'));
-						return {
-							loader: 'js',
-							contents: `${side_effect_sources.get(file)}\nSymbol.for('adapter-bun:${Bun.hash(args.path).toString(16)}');`
-						};
-					});
-				}
-			};
+			if (!embed) {
+				builder.copy(server, `${out}/server`);
+				builder.copy(handoff_file, `${out}/adapter-bun.js`);
+				fs.writeFileSync(`${out}/index.js`, `import './server/adapter-index.js';\n`);
+				return;
+			}
 
 			const result = await Bun.build({
 				...buildOptions,
-				splitting: buildOptions.splitting ?? true,
 				sourcemap: buildOptions.sourcemap ?? 'external',
-				entrypoints,
+				entrypoints: [entrypoint],
 				target: 'bun',
 				format: 'esm',
-				naming: {
-					entry: '[name].[ext]',
-					chunk: 'server/chunks/[name]-[hash].[ext]',
-					asset: 'server/assets/[name]-[hash].[ext]'
-				},
-				plugins: [adapter_plugin],
 				conditions: ['bun', 'node'],
 				throw: false,
-				files: virtual_files,
 				outdir: out,
-				compile: buildOptions.compile
-					? {
-							outfile: 'server',
-							...(typeof buildOptions.compile === 'string' ? { target: buildOptions.compile } : {}),
-							...(typeof buildOptions.compile === 'object' ? buildOptions.compile : {})
-						}
-					: false
+				compile: {
+					outfile: 'server',
+					...(typeof buildOptions.compile === 'string' ? { target: buildOptions.compile } : {}),
+					...(typeof buildOptions.compile === 'object' ? buildOptions.compile : {})
+				}
 			});
 			if (!result.success) {
 				for (const log of result.logs) {
@@ -271,6 +203,48 @@ export default function (opts = {}) {
 		supports: {
 			read: () => true,
 			instrumentation: () => true
+		},
+
+		vite: {
+			plugins: {
+				post: [
+					{
+						name: 'vite-plugin-sveltejs-adapter-bun',
+						apply: 'build',
+						config() {
+							const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+
+							return {
+								environments: {
+									ssr: {
+										build: {
+											rolldownOptions: {
+												// bundled with the app's server code so shared modules aren't duplicated
+												input: { 'adapter-index': `${files}/index.js` },
+												// only production dependencies (and their deep imports) stay external
+												external: [
+													handoff,
+													...Object.keys(pkg.dependencies || {}).map(
+														(d) => new RegExp(`^${d}(\\/.*)?$`)
+													)
+												],
+												output: {
+													paths: { [handoff]: '../adapter-bun.js' },
+													// the hand-off path only holds at the output root, so adapter chunks may not nest
+													chunkFileNames: (chunk) =>
+														chunk.moduleIds.some((id) => id.startsWith(files))
+															? 'adapter-bun-[name].js'
+															: 'chunks/[name].js'
+												}
+											}
+										}
+									}
+								}
+							};
+						}
+					}
+				]
+			}
 		}
 	};
 }
@@ -279,7 +253,7 @@ export default function (opts = {}) {
  * @param {object} options
  * @param {Builder} options.builder
  * @param {string[]} options.server_assets
- * @returns {Promise<{imports: string[], entries: string[], server_assets: string[]}>}
+ * @returns {Promise<{imports: string[], assets: string[], server_assets: string[]}>}
  */
 async function get_embed_entries({ builder, server_assets }) {
 	const built_files = `${builder.config.outDir}/output`;
@@ -306,7 +280,7 @@ async function get_embed_entries({ builder, server_assets }) {
 	 * @param {string} [url]
 	 */
 	const entry = async (file, helper, url = file.rel) =>
-		`...${helper}(${JSON.stringify(url)}, asset_${asset_index.get(file)}, ${JSON.stringify(await asset_meta(file.abs))})`;
+		`[${JSON.stringify(helper)}, ${JSON.stringify(url)}, asset_${asset_index.get(file)}, ${JSON.stringify(await asset_meta(file.abs))}]`;
 
 	const page_files = new Map(pr_pages.map((file) => [file.rel, file]));
 	const page_rels = new Set([...builder.prerendered.pages].map(([_, { file }]) => file));
@@ -331,11 +305,11 @@ async function get_embed_entries({ builder, server_assets }) {
 
 	return {
 		imports,
-		entries,
+		assets: entries,
 		server_assets: server_assets.map((file) => {
 			const idx = index_by_rel.get(file);
 			if (idx === undefined) throw new Error(`Could not find server asset ${file}`);
-			return `[${JSON.stringify(file)}, server_asset(${JSON.stringify(file)}, asset_${idx})]`;
+			return `[${JSON.stringify(file)}, asset_${idx}]`;
 		})
 	};
 }
@@ -346,7 +320,7 @@ async function get_embed_entries({ builder, server_assets }) {
  * @param {string[]} options.server_assets
  * @param {string} options.out
  * @param {boolean} options.precompress
- * @returns {Promise<{imports: string[], entries: string[], server_assets: string[]}>}
+ * @returns {Promise<{imports: string[], assets: string[], server_assets: string[]}>}
  */
 async function get_no_embed_entries({ builder, server_assets, out, precompress }) {
 	const client_files = builder.writeClient(`${out}/client`).filter((file) => !is_dotfile(file));
@@ -363,8 +337,8 @@ async function get_no_embed_entries({ builder, server_assets, out, precompress }
 	 * @param {string} dir
 	 * @param {string} [filename]
 	 */
-	const entry = async (helper, url, dir, filename) =>
-		`...${helper}(${JSON.stringify(url)}, ${JSON.stringify(filename)}, ${JSON.stringify(await asset_meta(`${out}/${dir}/${filename ?? url}`, precompress))})`;
+	const entry = async (helper, url, dir, filename = url) =>
+		`[${JSON.stringify(helper)}, ${JSON.stringify(url)}, ${JSON.stringify(filename)}, ${JSON.stringify(await asset_meta(`${out}/${dir}/${filename}`, precompress))}]`;
 
 	const pages = [...builder.prerendered.pages];
 	const page_files = new Set(pages.map(([_, { file }]) => file));
@@ -379,20 +353,19 @@ async function get_no_embed_entries({ builder, server_assets, out, precompress }
 
 	return {
 		imports: [],
-		entries,
-		server_assets: server_assets.map((file) => {
-			return `[${JSON.stringify(file)}, server_asset(${JSON.stringify(file)})]`;
-		})
+		assets: entries,
+		server_assets: server_assets.map((file) => `[${JSON.stringify(file)}]`)
 	};
 }
 
 /**
+ * The static route table, as data the bundled `src/routes.js` turns into Bun routes at startup.
  * @param {object} options
  * @param {Builder} options.builder
  * @param {string} options.out
  * @param {boolean} options.embed
  * @param {boolean} options.precompress
- * @returns {Promise<string>}
+ * @returns {Promise<string[]>}
  */
 async function create_routes({ builder, out, embed, precompress }) {
 	validate_file_paths([
@@ -406,24 +379,22 @@ async function create_routes({ builder, out, embed, precompress }) {
 
 	const {
 		imports,
-		entries,
+		assets,
 		server_assets: resolved_server_assets
 	} = embed
 		? await get_embed_entries({ builder, server_assets })
 		: await get_no_embed_entries({ builder, out, server_assets, precompress });
 
 	const redirects = [...builder.prerendered.redirects].map(([src, { status, location }]) => {
-		return `...prerendered_redirect(${JSON.stringify(src)}, ${status}, ${JSON.stringify(location)})`;
+		return [src, status, location];
 	});
 
 	return [
-		`import { client_asset, prerendered_asset, prerendered_page, prerendered_redirect, server_asset } from './routes-util.js';`,
 		...imports,
-		// reversed because Object.fromEntries keeps the last duplicate: the first generated
-		// entry for a path must win so exact files beat aliases, like sirv's lookup order
-		`export const routes = Object.fromEntries([${[...entries, ...redirects].join(',\n')}].reverse());`,
-		`export const server_assets = new Map([${resolved_server_assets.join(',\n')}]);`
-	].join('\n');
+		`export const assets = [\n${assets.join(',\n')}\n];`,
+		`export const redirects = ${JSON.stringify(redirects)};`,
+		`export const server_assets = [\n${resolved_server_assets.join(',\n')}\n];`
+	];
 }
 
 /** @param {string} path */
