@@ -14,6 +14,7 @@ test('provides the Bun server on platform', async ({ request }) => {
 	expect(platform.pendingRequests).toBeGreaterThanOrEqual(1);
 	expect(platform.pendingWebSockets).toBe(0);
 	expect(platform.subscribers).toBe(0);
+	expect(platform.packageData).toBe('package data');
 });
 
 test('runs server instrumentation before accepting requests', async ({ request }) => {

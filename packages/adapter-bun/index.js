@@ -120,6 +120,12 @@ export default function (opts = {}) {
 
 			fs.rmSync(out, { recursive: true, force: true });
 
+			const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+			const external = [
+				...(buildOptions.compile ? [] : Object.keys(pkg.dependencies || {})),
+				...(buildOptions.external || [])
+			];
+
 			builder.log.minor('Building server');
 
 			if (precompress && buildOptions.compile) {
@@ -235,6 +241,7 @@ export default function (opts = {}) {
 				...buildOptions,
 				splitting: buildOptions.splitting ?? true,
 				sourcemap: buildOptions.sourcemap ?? 'external',
+				external,
 				entrypoints,
 				target: 'bun',
 				format: 'esm',

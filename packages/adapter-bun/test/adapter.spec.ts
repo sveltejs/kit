@@ -47,7 +47,10 @@ beforeEach(() => {
 	read_dir = spyOn(fs, 'readdirSync').mockReturnValue([]) as any;
 	exists = spyOn(fs, 'existsSync').mockReturnValue(true);
 	spyOn(fs, 'rmSync').mockImplementation(() => {});
-	read_file = spyOn(fs, 'readFileSync').mockImplementation((() => undefined) as any) as any;
+	read_file = spyOn(fs, 'readFileSync').mockImplementation(((file: unknown) =>
+		String(file) === 'package.json'
+			? JSON.stringify({ dependencies: { 'production-dependency': '1.0.0' } })
+			: undefined) as any) as any;
 });
 
 afterEach(() => {
@@ -99,6 +102,7 @@ describe('Bun build configuration', () => {
 			format: 'esm',
 			splitting: true,
 			sourcemap: 'external',
+			external: ['production-dependency'],
 			conditions: ['bun', 'node'],
 			throw: false,
 			compile: false
@@ -216,6 +220,27 @@ describe('Bun build configuration', () => {
 		expect(on_resolve.mock.calls[1][1]({ path: start_file, resolveDir: package_dir })).toEqual({
 			path: start_file
 		});
+	});
+
+	test('merges configured externals with production dependencies', async () => {
+		read_file.mockImplementation(((file: unknown) =>
+			String(file) === 'package.json'
+				? JSON.stringify({ dependencies: { jsdom: '1.0.0', '@scope/package': '1.0.0' } })
+				: undefined) as any);
+
+		await adapter({ buildOptions: { external: ['custom-package'] } }).adapt(create_builder());
+
+		expect(bun_build.mock.calls[0][0].external).toEqual([
+			'jsdom',
+			'@scope/package',
+			'custom-package'
+		]);
+	});
+
+	test('bundles production dependencies into compiled executables', async () => {
+		await adapter({ buildOptions: { compile: true } }).adapt(create_builder());
+
+		expect(bun_build.mock.calls[0][0].external).toEqual([]);
 	});
 
 	test('passes supported advanced options while retaining reserved options', async () => {
@@ -518,9 +543,10 @@ function mock_chunks(chunks_dir: string, sources: Record<string, string>) {
 					isFile: () => true
 				}))
 			: []) as unknown as typeof fs.readdirSync);
-	read_file.mockImplementation(
-		((file: unknown) => sources[path.basename(String(file))]) as unknown as typeof fs.readFileSync
-	);
+	read_file.mockImplementation(((file: unknown) =>
+		String(file) === 'package.json'
+			? JSON.stringify({ dependencies: { 'production-dependency': '1.0.0' } })
+			: sources[path.basename(String(file))]) as unknown as typeof fs.readFileSync);
 }
 
 function mock_files({

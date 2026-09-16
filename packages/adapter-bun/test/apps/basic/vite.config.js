@@ -27,6 +27,9 @@ export default defineConfig({
 	build: {
 		minify: false
 	},
+	define: {
+		'import.meta.env.ADAPTER_BUN_COMPILE': !!buildOptions.compile
+	},
 	plugins: [
 		sveltekit({
 			adapter: adapter({

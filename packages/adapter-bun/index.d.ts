@@ -56,6 +56,7 @@ interface AdapterOptions {
 	buildOptions?: Pick<
 		import('bun').BuildConfig,
 		| 'sourcemap'
+		| 'external'
 		| 'minify'
 		| 'bytecode'
 		| 'banner'
