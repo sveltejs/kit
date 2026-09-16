@@ -1001,6 +1001,25 @@ test.describe('$app/state', () => {
 		}
 	});
 
+	test('navigating state clears when a shallow popstate aborts a navigation', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		await page.goto('/state/navigating/a');
+
+		expect(await page.textContent('#nav-status')).toBe('not currently navigating');
+
+		if (javaScriptEnabled) {
+			await page.click('a[href="#hash"]');
+			await page.click('a[href="/state/navigating/c"]');
+			await expect(page.locator('#navigating')).toBeVisible();
+
+			// going back over the hash entry is handled shallowly, so no navigation replaces the aborted one
+			await page.goBack();
+			await expect(page.locator('#not-navigating')).toBeVisible();
+		}
+	});
+
 	test('should update page state when URL hash is changed through the address bar', async ({
 		baseURL,
 		page,
