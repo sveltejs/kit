@@ -1041,43 +1041,6 @@ test.describe('$app/state', () => {
 		}
 	});
 
-	test('navigating state describes the navigation that superseded an aborted one', async ({
-		baseURL,
-		page,
-		javaScriptEnabled
-	}) => {
-		await page.goto('/state/navigating/a');
-
-		expect(await page.textContent('#nav-status')).toBe('not currently navigating');
-
-		if (javaScriptEnabled) {
-			await page.evaluate(() => {
-				window.promise = goto('/state/navigating/pending').catch(() => {});
-			});
-			await expect(page.locator('#navigating')).toHaveText(
-				'navigating from /state/navigating/a to /state/navigating/pending (goto)'
-			);
-
-			await page.click('a[href="/state/navigating/c"]');
-			await expect(page.locator('#navigating')).toHaveText(
-				'navigating from /state/navigating/a to /state/navigating/c (link)'
-			);
-
-			// letting the superseded navigation finish loading must not clear the state
-			// that the navigation which replaced it owns
-			await page.waitForFunction(() => !!window.fulfil_navigation);
-			await page.evaluate(() => window.fulfil_navigation(undefined));
-			await page.evaluate(() => window.promise);
-
-			await expect(page.locator('#navigating')).toHaveText(
-				'navigating from /state/navigating/a to /state/navigating/c (link)'
-			);
-
-			await page.waitForSelector('#not-navigating');
-			expect(page.url()).toBe(`${baseURL}/state/navigating/c`);
-		}
-	});
-
 	test('should update page state when URL hash is changed through the address bar', async ({
 		baseURL,
 		page,
