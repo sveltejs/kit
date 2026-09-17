@@ -5,6 +5,12 @@ inputs:
   sha:
     description: 'Commit SHA to build'
     required: true
+  test-app-dir:
+    description: 'Path to the test app directory'
+    required: true
+  variant:
+    description: 'Name of the test app variant'
+    required: true
 
 runs:
   using: 'composite'
@@ -22,20 +28,20 @@ runs:
 
     - name: Build test app
       shell: bash
-      working-directory: .target/${{ env.TEST_APP_DIR }}
+      working-directory: .target/${{ inputs.test-app-dir }}
       run: pnpm build
 
     - name: Stage deployment artifact
       shell: bash
       env:
-        TARGET_DIR: ${{ github.workspace }}/.target/${{ env.TEST_APP_DIR }}
+        TARGET_DIR: ${{ github.workspace }}/.target/${{ inputs.test-app-dir }}
       run: |
         mkdir platform-output
         cp -a "$TARGET_DIR/.vercel" platform-output/
 
     - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       with:
-        name: platform-vercel-${{ env.VARIANT }}-${{ github.run_id }}
+        name: platform-vercel-${{ inputs.variant }}-${{ github.run_id }}
         path: platform-output
         include-hidden-files: true
         if-no-files-found: error

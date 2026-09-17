@@ -44,6 +44,8 @@ jobs:
       - uses: ./.workflow/.github/actions/netlify-build
         with:
           sha: ${{ inputs.sha || github.sha }}
+          test-app-dir: ${{ env.TEST_APP_DIR }}
+          variant: ${{ env.VARIANT }}
 
   build-edge:
     if: github.repository == 'sveltejs/kit'
