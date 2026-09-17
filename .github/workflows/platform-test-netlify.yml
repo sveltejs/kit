@@ -35,18 +35,33 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.workflow_sha }}
+          ref: ${{ inputs.sha }}
           persist-credentials: false
-          sparse-checkout: |
-            .github/actions
-            pnpm-lock.yaml
-          path: .workflow
-      - uses: ./.workflow/.github/actions/netlify-build
+
+      - uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
         with:
-          sha: ${{ inputs.sha }}
-          test-app-dir: ${{ inputs.test-app-dir }}
-          variant: ${{ inputs.variant }}
-          edge: ${{ inputs.edge }}
+          runtime: node@24
+
+      - name: Build test app
+        working-directory: ${{ inputs.test-app-dir }}
+        env:
+          EDGE: ${{ inputs.edge }}
+        run: pnpm build
+
+      - name: Stage deployment artifact
+        env:
+          TARGET_DIR: ${{ github.workspace }}/${{ inputs.test-app-dir }}
+        run: |
+          mkdir platform-output
+          cp -a "$TARGET_DIR/build" "$TARGET_DIR/.netlify" platform-output/
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: platform-netlify-${{ inputs.variant }}-${{ github.run_id }}
+          path: platform-output
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 1
 
   deploy:
     if: github.repository == 'sveltejs/kit'
