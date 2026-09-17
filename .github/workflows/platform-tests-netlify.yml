@@ -18,39 +18,190 @@ on:
 permissions:
   contents: read
 
+env:
+  PLATFORM: netlify
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+
 jobs:
-  basic:
-    uses: ./.github/workflows/platform-test-netlify.yml
-    with:
-      sha: ${{ inputs.sha || github.sha }}
-      name: basic
-      test-app-dir: packages/adapter-netlify/test/apps/basic
+  build-basic:
+    if: github.repository == 'sveltejs/kit'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      VARIANT: basic
+      TEST_APP_DIR: packages/adapter-netlify/test/apps/basic
+    steps: &build-steps
+      - &checkout-actions
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          persist-credentials: false
+          sparse-checkout: |
+            .github/actions
+            pnpm-lock.yaml
+          path: .workflow
 
-  edge:
-    uses: ./.github/workflows/platform-test-netlify.yml
-    with:
-      sha: ${{ inputs.sha || github.sha }}
-      name: edge
-      test-app-dir: packages/adapter-netlify/test/apps/edge
+      - uses: ./.workflow/.github/actions/platform-build
+        with:
+          sha: ${{ inputs.sha || github.sha }}
 
-  instrumentation:
-    uses: ./.github/workflows/platform-test-netlify.yml
-    with:
-      sha: ${{ inputs.sha || github.sha }}
-      name: instrumentation
-      test-app-dir: packages/adapter-netlify/test/apps/instrumentation
+  build-edge:
+    if: github.repository == 'sveltejs/kit'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      VARIANT: edge
+      TEST_APP_DIR: packages/adapter-netlify/test/apps/edge
+    steps: *build-steps
 
-  split:
-    uses: ./.github/workflows/platform-test-netlify.yml
-    with:
-      sha: ${{ inputs.sha || github.sha }}
-      name: split
-      test-app-dir: packages/adapter-netlify/test/apps/split
+  build-instrumentation:
+    if: github.repository == 'sveltejs/kit'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      VARIANT: instrumentation
+      TEST_APP_DIR: packages/adapter-netlify/test/apps/instrumentation
+    steps: *build-steps
 
-  split-edge:
-    uses: ./.github/workflows/platform-test-netlify.yml
-    with:
-      sha: ${{ inputs.sha || github.sha }}
-      name: split-edge
-      test-app-dir: packages/adapter-netlify/test/apps/split
-      edge: true
+  build-split:
+    if: github.repository == 'sveltejs/kit'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      VARIANT: split
+      TEST_APP_DIR: packages/adapter-netlify/test/apps/split
+    steps: *build-steps
+
+  build-split-edge:
+    if: github.repository == 'sveltejs/kit'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      VARIANT: split-edge
+      TEST_APP_DIR: packages/adapter-netlify/test/apps/split
+      EDGE: true
+    steps: *build-steps
+
+  deploy-basic:
+    if: github.repository == 'sveltejs/kit'
+    needs: build-basic
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: '@sveltejs/adapter-netlify platform tests'
+    env:
+      VARIANT: basic
+    steps:
+      - *checkout-actions
+      - uses: ./.workflow/.github/actions/netlify-deploy
+        with:
+          netlify-project-id: ${{ secrets.NETLIFY_PROJECT_ID_BASIC }}
+          netlify-token: ${{ secrets.NETLIFY_TOKEN }}
+
+  deploy-edge:
+    if: github.repository == 'sveltejs/kit'
+    needs: build-edge
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: '@sveltejs/adapter-netlify platform tests'
+    env:
+      VARIANT: edge
+    steps:
+      - *checkout-actions
+      - uses: ./.workflow/.github/actions/netlify-deploy
+        with:
+          netlify-project-id: ${{ secrets.NETLIFY_PROJECT_ID_EDGE }}
+          netlify-token: ${{ secrets.NETLIFY_TOKEN }}
+
+  deploy-instrumentation:
+    if: github.repository == 'sveltejs/kit'
+    needs: build-instrumentation
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: '@sveltejs/adapter-netlify platform tests'
+    env:
+      VARIANT: instrumentation
+    steps:
+      - *checkout-actions
+      - uses: ./.workflow/.github/actions/netlify-deploy
+        with:
+          netlify-project-id: ${{ secrets.NETLIFY_PROJECT_ID_INSTRUMENTATION }}
+          netlify-token: ${{ secrets.NETLIFY_TOKEN }}
+
+  deploy-split:
+    if: github.repository == 'sveltejs/kit'
+    needs: build-split
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: '@sveltejs/adapter-netlify platform tests'
+    env:
+      VARIANT: split
+    steps: &deploy-split-steps
+      - *checkout-actions
+      - uses: ./.workflow/.github/actions/netlify-deploy
+        with:
+          netlify-project-id: ${{ secrets.NETLIFY_PROJECT_ID_SPLIT }}
+          netlify-token: ${{ secrets.NETLIFY_TOKEN }}
+
+  deploy-split-edge:
+    if: github.repository == 'sveltejs/kit'
+    needs: build-split-edge
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: '@sveltejs/adapter-netlify platform tests'
+    env:
+      VARIANT: split-edge
+    steps: *deploy-split-steps
+
+  test-basic:
+    if: github.repository == 'sveltejs/kit'
+    needs: deploy-basic
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      VARIANT: basic
+      TEST_APP_DIR: packages/adapter-netlify/test/apps/basic
+    steps: &test-steps
+      - *checkout-actions
+      - uses: ./.workflow/.github/actions/platform-test
+        with:
+          sha: ${{ inputs.sha || github.sha }}
+
+  test-edge:
+    if: github.repository == 'sveltejs/kit'
+    needs: deploy-edge
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      VARIANT: edge
+      TEST_APP_DIR: packages/adapter-netlify/test/apps/edge
+    steps: *test-steps
+
+  test-instrumentation:
+    if: github.repository == 'sveltejs/kit'
+    needs: deploy-instrumentation
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      VARIANT: instrumentation
+      TEST_APP_DIR: packages/adapter-netlify/test/apps/instrumentation
+    steps: *test-steps
+
+  test-split:
+    if: github.repository == 'sveltejs/kit'
+    needs: deploy-split
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      VARIANT: split
+      TEST_APP_DIR: packages/adapter-netlify/test/apps/split
+    steps: *test-steps
+
+  test-split-edge:
+    if: github.repository == 'sveltejs/kit'
+    needs: deploy-split-edge
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      VARIANT: split-edge
+      TEST_APP_DIR: packages/adapter-netlify/test/apps/split
+    steps: *test-steps
