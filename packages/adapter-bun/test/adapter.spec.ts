@@ -114,13 +114,22 @@ describe('build output', () => {
 			"import './server/adapter-index.js';\n"
 		);
 		expect(bun_build).not.toHaveBeenCalled();
+		expect(builder.instrument).not.toHaveBeenCalled();
+		expect(builder.compress).not.toHaveBeenCalled();
 	});
 
 	test('hands the configured values to the server', async () => {
 		await adapter({
 			envPrefix: 'APP_',
 			serverOptions: { hostname: '127.0.0.1', port: 4000, development: true }
-		}).adapt(create_builder({ base: '/docs', origin: 'https://example.com' }));
+		}).adapt(
+			create_builder({
+				base: '/docs',
+				origin: 'https://example.com',
+				prerendered_files: ['page/index.html'],
+				prerendered_pages: [['/docs/page/', { file: 'page/index.html' }]]
+			})
+		);
 
 		expect(handoff_source()).toContain(
 			"import { dirname } from 'node:path';\n" +
@@ -134,6 +143,8 @@ describe('build output', () => {
 				'export const origin = "https://example.com";\n' +
 				'export const server_options = {"hostname":"127.0.0.1","port":4000,"development":true};\n'
 		);
+		// prerendered paths already contain the base
+		expect(handoff_source()).toContain('["prerendered_page", "/docs/page/", "page/index.html", ');
 	});
 
 	test('defaults the base to the root and leaves the origin undefined', async () => {
@@ -157,13 +168,6 @@ describe('build output', () => {
 			initializer: `${server_dir}/__sveltekit_env_init.js`,
 			module: { exports: [] }
 		});
-	});
-
-	test('does not instrument apps without a server instrumentation file', async () => {
-		const builder = create_builder();
-		await adapter().adapt(builder);
-
-		expect(builder.instrument).not.toHaveBeenCalled();
 	});
 
 	test('compiles an executable from the Vite build instead of copying it', async () => {
@@ -213,7 +217,6 @@ describe('build output', () => {
 	});
 
 	test.each([
-		[true, { outfile: 'server' }],
 		['bun-linux-x64', { outfile: 'server', target: 'bun-linux-x64' }],
 		[
 			{ target: 'bun-windows-x64', windows: { hideConsole: true } },
@@ -255,7 +258,7 @@ describe('generated routes', () => {
 		const dynamic = { id: '/read', prerender: false };
 		const prerendered = { id: '/prerendered', prerender: true };
 		const builder = create_builder({
-			client_files: ['data.json', '_app/immutable/read.txt'],
+			client_files: ['.env', 'data.json', '.well-known/security.txt', '_app/immutable/read.txt'],
 			prerendered_files: ['page/index.html', 'icon.png'],
 			prerendered_pages: [['/page/', { file: 'page/index.html' }]],
 			prerendered_redirects: [['/old', { status: 301, location: '/new' }]],
@@ -275,6 +278,11 @@ describe('generated routes', () => {
 		expect(source).toContain(
 			'["client_asset", "_app/immutable/read.txt", "_app/immutable/read.txt", {"hash":"abc","mtime":0}]'
 		);
+		// like sirv, dotfiles are not served, apart from .well-known
+		expect(source).not.toContain('.env');
+		expect(source).toContain(
+			'["client_asset", ".well-known/security.txt", ".well-known/security.txt", {"hash":"abc","mtime":0}]'
+		);
 		expect(source).toContain(
 			'["prerendered_page", "/page/", "page/index.html", {"hash":"abc","mtime":0}]'
 		);
@@ -286,25 +294,15 @@ describe('generated routes', () => {
 		expect(source).not.toContain("with { type: 'file' }");
 	});
 
-	test('does not prepend the base to prerendered route paths a second time', async () => {
-		await adapter().adapt(
-			create_builder({
-				base: '/base',
-				prerendered_files: ['page/index.html'],
-				prerendered_pages: [['/base/page/', { file: 'page/index.html' }]]
-			})
-		);
-
-		const source = handoff_source();
-		expect(source).toContain(
-			'["prerendered_page", "/base/page/", "page/index.html", {"hash":"abc","mtime":0}]'
-		);
-		expect(source).not.toContain('/base/base/');
-	});
-
 	test('embeds assets in compiled executables from a staging directory', async () => {
 		const builder = create_builder({
-			client_files: ['data.json', '.well-known/asset.txt', '_app/read.txt'],
+			client_files: [
+				'.secret',
+				'data.json',
+				'.well-known/asset.txt',
+				'_app/read.txt',
+				'page/index.html'
+			],
 			prerendered_files: ['page/index.html', 'favicon.ico', 'dependency.json', 'page/__data.json'],
 			prerendered_pages: [['/page/', { file: 'page/index.html' }]],
 			server_assets: ['_app/read.txt']
@@ -322,15 +320,21 @@ describe('generated routes', () => {
 		expect(source).toContain(
 			'["client_asset", ".well-known/asset.txt", asset_1, {"hash":"abc","mtime":0}]'
 		);
-		expect(source).toContain('["prerendered_page", "/page/", asset_3, {"hash":"abc","mtime":0}]');
+		// a skipped dotfile takes no import, and the same relative path in the client
+		// and prerendered output stays two imports
+		expect(source).not.toContain('.secret');
 		expect(source).toContain(
-			'["prerendered_asset", "favicon.ico", asset_4, {"hash":"abc","mtime":0}]'
+			'["client_asset", "page/index.html", asset_3, {"hash":"abc","mtime":0}]'
+		);
+		expect(source).toContain('["prerendered_page", "/page/", asset_4, {"hash":"abc","mtime":0}]');
+		expect(source).toContain(
+			'["prerendered_asset", "favicon.ico", asset_5, {"hash":"abc","mtime":0}]'
 		);
 		expect(source).toContain(
-			'["prerendered_asset", "dependency.json", asset_5, {"hash":"abc","mtime":0}]'
+			'["prerendered_asset", "dependency.json", asset_6, {"hash":"abc","mtime":0}]'
 		);
 		expect(source).toContain(
-			'["prerendered_asset", "page/__data.json", asset_6, {"hash":"abc","mtime":0}]'
+			'["prerendered_asset", "page/__data.json", asset_7, {"hash":"abc","mtime":0}]'
 		);
 		expect(source).toContain('["_app/read.txt", asset_2]');
 	});
@@ -356,53 +360,6 @@ describe('generated routes', () => {
 			expect.stringContaining('precompress is ignored')
 		);
 		expect(builder.compress).not.toHaveBeenCalled();
-	});
-
-	test('does not compress by default', async () => {
-		const builder = create_builder({ client_files: ['app.js'] });
-
-		await adapter().adapt(builder);
-
-		expect(builder.compress).not.toHaveBeenCalled();
-	});
-
-	test('does not register dotfiles apart from .well-known', async () => {
-		const builder = create_builder({
-			client_files: ['.env', '.well-known/security.txt', 'ok.txt']
-		});
-
-		await adapter().adapt(builder);
-
-		const source = handoff_source();
-		expect(source).not.toContain('.env');
-		expect(source).toContain(
-			'["client_asset", ".well-known/security.txt", ".well-known/security.txt", {"hash":"abc","mtime":0}]'
-		);
-		expect(source).toContain('["client_asset", "ok.txt", "ok.txt", {"hash":"abc","mtime":0}]');
-	});
-
-	test('excludes dotfiles from embedded assets', async () => {
-		await adapter({ buildOptions: { compile: true } }).adapt(
-			create_builder({ client_files: ['.secret', 'public.txt'] })
-		);
-
-		const source = handoff_source();
-		expect(source).not.toContain('.secret');
-		expect(source).toContain('["client_asset", "public.txt", asset_0, {"hash":"abc","mtime":0}]');
-	});
-
-	test('embedded assets with the same relative path keep distinct imports', async () => {
-		await adapter({ buildOptions: { compile: true } }).adapt(
-			create_builder({
-				client_files: ['page.html'],
-				prerendered_files: ['page.html'],
-				prerendered_pages: [['/page/', { file: 'page.html' }]]
-			})
-		);
-
-		const source = handoff_source();
-		expect(source).toContain('["client_asset", "page.html", asset_0, {"hash":"abc","mtime":0}]');
-		expect(source).toContain('["prerendered_page", "/page/", asset_1, {"hash":"abc","mtime":0}]');
 	});
 
 	test('fails when a server-readable asset is absent from compiled build output', async () => {
