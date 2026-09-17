@@ -22,63 +22,94 @@ env:
   PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
 
 jobs:
-  build:
+  build-basic:
     if: github.repository == 'sveltejs/kit'
-    strategy:
-      fail-fast: false
-      matrix: &variants
-        include:
-          - name: basic
-            test-app-dir: packages/adapter-netlify/test/apps/basic
-            edge: false
-          - name: edge
-            test-app-dir: packages/adapter-netlify/test/apps/edge
-            edge: false
-          - name: instrumentation
-            test-app-dir: packages/adapter-netlify/test/apps/instrumentation
-            edge: false
-          - name: split
-            test-app-dir: packages/adapter-netlify/test/apps/split
-            edge: false
-          - name: split-edge
-            test-app-dir: packages/adapter-netlify/test/apps/split
-            edge: true
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      TEST_APP_DIR: packages/adapter-netlify/test/apps/basic
+      VARIANT: basic
+      EDGE: false
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - &build-checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ inputs.sha || github.sha }}
           persist-credentials: false
 
-      - uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
+      - &build-setup
+        uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
         with:
           runtime: node@24
 
-      - name: Build test app
-        working-directory: ${{ matrix.test-app-dir }}
-        env:
-          EDGE: ${{ matrix.edge }}
+      - &build-app
+        name: Build test app
+        working-directory: ${{ env.TEST_APP_DIR }}
         run: pnpm build
 
-      - name: Stage deployment artifact
-        env:
-          TEST_APP_DIR: ${{ matrix.test-app-dir }}
+      - &stage-build
+        name: Stage deployment artifact
         run: |
           mkdir platform-output
           cp -a "$TEST_APP_DIR/build" "$TEST_APP_DIR/.netlify" platform-output/
 
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - &upload-build
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: platform-netlify-${{ matrix.name }}-${{ github.run_id }}
+          name: platform-netlify-${{ env.VARIANT }}-${{ github.run_id }}
           path: platform-output
           include-hidden-files: true
           if-no-files-found: error
           retention-days: 1
 
+  build-edge:
+    if: github.repository == 'sveltejs/kit'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      TEST_APP_DIR: packages/adapter-netlify/test/apps/edge
+      VARIANT: edge
+      EDGE: false
+    steps: &build-steps
+      - *build-checkout
+      - *build-setup
+      - *build-app
+      - *stage-build
+      - *upload-build
+
+  build-instrumentation:
+    if: github.repository == 'sveltejs/kit'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      TEST_APP_DIR: packages/adapter-netlify/test/apps/instrumentation
+      VARIANT: instrumentation
+      EDGE: false
+    steps: *build-steps
+
+  build-split:
+    if: github.repository == 'sveltejs/kit'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      TEST_APP_DIR: packages/adapter-netlify/test/apps/split
+      VARIANT: split
+      EDGE: false
+    steps: *build-steps
+
+  build-split-edge:
+    if: github.repository == 'sveltejs/kit'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      TEST_APP_DIR: packages/adapter-netlify/test/apps/split
+      VARIANT: split-edge
+      EDGE: true
+    steps: *build-steps
+
   deploy-basic:
-    if: always() && github.repository == 'sveltejs/kit'
-    needs: build
+    if: github.repository == 'sveltejs/kit'
+    needs: build-basic
     runs-on: ubuntu-latest
     timeout-minutes: 15
     environment: '@sveltejs/adapter-netlify platform tests'
@@ -125,8 +156,8 @@ jobs:
           retention-days: 1
 
   deploy-edge:
-    if: always() && github.repository == 'sveltejs/kit'
-    needs: build
+    if: github.repository == 'sveltejs/kit'
+    needs: build-edge
     runs-on: ubuntu-latest
     timeout-minutes: 15
     environment: '@sveltejs/adapter-netlify platform tests'
@@ -145,8 +176,8 @@ jobs:
       - *upload-deployment-url
 
   deploy-instrumentation:
-    if: always() && github.repository == 'sveltejs/kit'
-    needs: build
+    if: github.repository == 'sveltejs/kit'
+    needs: build-instrumentation
     runs-on: ubuntu-latest
     timeout-minutes: 15
     environment: '@sveltejs/adapter-netlify platform tests'
@@ -165,18 +196,14 @@ jobs:
       - *upload-deployment-url
 
   deploy-split:
-    if: always() && github.repository == 'sveltejs/kit'
-    needs: build
-    strategy:
-      fail-fast: false
-      matrix:
-        name: [split, split-edge]
+    if: github.repository == 'sveltejs/kit'
+    needs: build-split
     runs-on: ubuntu-latest
     timeout-minutes: 15
     environment: '@sveltejs/adapter-netlify platform tests'
     env:
-      VARIANT: ${{ matrix.name }}
-    steps:
+      VARIANT: split
+    steps: &deploy-split-steps
       - *deploy-checkout
       - *download-build
       - uses: ./.workflow/.github/actions/netlify-deploy
@@ -188,15 +215,57 @@ jobs:
       - *save-deployment-url
       - *upload-deployment-url
 
-  test:
-    if: always()
-    needs: [deploy-basic, deploy-edge, deploy-instrumentation, deploy-split]
-    strategy:
-      fail-fast: false
-      matrix: *variants
+  deploy-split-edge:
+    if: github.repository == 'sveltejs/kit'
+    needs: build-split-edge
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: '@sveltejs/adapter-netlify platform tests'
+    env:
+      VARIANT: split-edge
+    steps: *deploy-split-steps
+
+  test-basic:
+    needs: deploy-basic
     uses: ./.github/workflows/platform-test.yml
     with:
       sha: ${{ inputs.sha || github.sha }}
-      test-app-dir: ${{ matrix.test-app-dir }}
-      deployment-artifact-name: platform-netlify-${{ matrix.name }}-deployment-${{ github.run_id }}
-      artifact-name: platform-test-results-netlify-${{ matrix.name }}
+      test-app-dir: packages/adapter-netlify/test/apps/basic
+      deployment-artifact-name: platform-netlify-basic-deployment-${{ github.run_id }}
+      artifact-name: platform-test-results-netlify-basic
+
+  test-edge:
+    needs: deploy-edge
+    uses: ./.github/workflows/platform-test.yml
+    with:
+      sha: ${{ inputs.sha || github.sha }}
+      test-app-dir: packages/adapter-netlify/test/apps/edge
+      deployment-artifact-name: platform-netlify-edge-deployment-${{ github.run_id }}
+      artifact-name: platform-test-results-netlify-edge
+
+  test-instrumentation:
+    needs: deploy-instrumentation
+    uses: ./.github/workflows/platform-test.yml
+    with:
+      sha: ${{ inputs.sha || github.sha }}
+      test-app-dir: packages/adapter-netlify/test/apps/instrumentation
+      deployment-artifact-name: platform-netlify-instrumentation-deployment-${{ github.run_id }}
+      artifact-name: platform-test-results-netlify-instrumentation
+
+  test-split:
+    needs: deploy-split
+    uses: ./.github/workflows/platform-test.yml
+    with:
+      sha: ${{ inputs.sha || github.sha }}
+      test-app-dir: packages/adapter-netlify/test/apps/split
+      deployment-artifact-name: platform-netlify-split-deployment-${{ github.run_id }}
+      artifact-name: platform-test-results-netlify-split
+
+  test-split-edge:
+    needs: deploy-split-edge
+    uses: ./.github/workflows/platform-test.yml
+    with:
+      sha: ${{ inputs.sha || github.sha }}
+      test-app-dir: packages/adapter-netlify/test/apps/split
+      deployment-artifact-name: platform-netlify-split-edge-deployment-${{ github.run_id }}
+      artifact-name: platform-test-results-netlify-split-edge
