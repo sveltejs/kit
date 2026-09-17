@@ -6,17 +6,22 @@ import process from 'node:process';
 import sirv from 'sirv';
 import { parse as polka_url_parser } from '@polka/url';
 import { getRequest, setResponse, createReadableStream } from '@sveltejs/kit/node';
-import { server } from 'SERVER';
-import { dir } from './dir.js';
-import { env, env_prefix } from './env.js';
+import {
+	server,
+	dir,
+	env_prefix,
+	base,
+	app_path,
+	origin,
+	precompress,
+	uncompressed_extensions,
+	prerendered,
+	mime_types
+} from '#@sveltejs/adapter-node';
+import { env } from './env.js';
 import { parse_as_bytes } from './utils.js';
 
 /** @typedef {(req: IncomingMessage, res: ServerResponse, next: () => void | Promise<void>) => void | Promise<void>} Middleware */
-
-const origin = ORIGIN;
-const uncompressed_extensions = UNCOMPRESSED_EXTENSIONS;
-const prerendered = PRERENDERED;
-const mime_types = MIME_TYPES;
 
 const xff_depth = parseInt(env('XFF_DEPTH', '1'));
 const address_header = env('ADDRESS_HEADER', '').toLowerCase();
@@ -32,7 +37,7 @@ if (isNaN(body_size_limit)) {
 	);
 }
 
-const asset_dir = `${dir}/client${BASE_PATH}`;
+const asset_dir = `${dir}/client${base}`;
 
 await server.init({
 	env: process.env,
@@ -47,11 +52,11 @@ function serve(path, client = false) {
 	return fs.existsSync(path)
 		? sirv(path, {
 				etag: true,
-				gzip: PRECOMPRESS,
-				brotli: PRECOMPRESS,
+				gzip: precompress,
+				brotli: precompress,
 				setHeaders: (res, pathname) => {
 					// `sirv` sets `Vary` from its options rather than from the file it resolved
-					if (PRECOMPRESS && uncompressed_extensions.has(extname(pathname))) {
+					if (precompress && uncompressed_extensions.has(extname(pathname))) {
 						res.removeHeader('vary');
 					}
 
@@ -61,7 +66,7 @@ function serve(path, client = false) {
 					if (type) res.setHeader('content-type', type);
 
 					// only apply to build directory, not e.g. version.json
-					if (client && pathname.startsWith(`/${APP_PATH}/immutable/`) && res.statusCode === 200) {
+					if (client && pathname.startsWith(`/${app_path}/immutable/`) && res.statusCode === 200) {
 						res.setHeader('cache-control', 'public,max-age=31536000,immutable');
 					}
 				}
