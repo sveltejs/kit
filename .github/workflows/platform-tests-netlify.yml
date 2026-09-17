@@ -26,12 +26,8 @@ jobs:
     if: github.repository == 'sveltejs/kit'
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    env:
-      VARIANT: basic
-      TEST_APP_DIR: packages/adapter-netlify/test/apps/basic
-    steps: &build-steps
-      - &checkout-actions
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.workflow_sha }}
           persist-credentials: false
@@ -39,50 +35,88 @@ jobs:
             .github/actions
             pnpm-lock.yaml
           path: .workflow
-
       - uses: ./.workflow/.github/actions/netlify-build
         with:
           sha: ${{ inputs.sha || github.sha }}
-          test-app-dir: ${{ env.TEST_APP_DIR }}
-          variant: ${{ env.VARIANT }}
-          edge: ${{ env.EDGE || 'false' }}
+          test-app-dir: packages/adapter-netlify/test/apps/basic
+          variant: basic
 
   build-edge:
     if: github.repository == 'sveltejs/kit'
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    env:
-      VARIANT: edge
-      TEST_APP_DIR: packages/adapter-netlify/test/apps/edge
-    steps: *build-steps
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          persist-credentials: false
+          sparse-checkout: |
+            .github/actions
+            pnpm-lock.yaml
+          path: .workflow
+      - uses: ./.workflow/.github/actions/netlify-build
+        with:
+          sha: ${{ inputs.sha || github.sha }}
+          test-app-dir: packages/adapter-netlify/test/apps/edge
+          variant: edge
 
   build-instrumentation:
     if: github.repository == 'sveltejs/kit'
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    env:
-      VARIANT: instrumentation
-      TEST_APP_DIR: packages/adapter-netlify/test/apps/instrumentation
-    steps: *build-steps
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          persist-credentials: false
+          sparse-checkout: |
+            .github/actions
+            pnpm-lock.yaml
+          path: .workflow
+      - uses: ./.workflow/.github/actions/netlify-build
+        with:
+          sha: ${{ inputs.sha || github.sha }}
+          test-app-dir: packages/adapter-netlify/test/apps/instrumentation
+          variant: instrumentation
 
   build-split:
     if: github.repository == 'sveltejs/kit'
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    env:
-      VARIANT: split
-      TEST_APP_DIR: packages/adapter-netlify/test/apps/split
-    steps: *build-steps
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          persist-credentials: false
+          sparse-checkout: |
+            .github/actions
+            pnpm-lock.yaml
+          path: .workflow
+      - uses: ./.workflow/.github/actions/netlify-build
+        with:
+          sha: ${{ inputs.sha || github.sha }}
+          test-app-dir: packages/adapter-netlify/test/apps/split
+          variant: split
 
   build-split-edge:
     if: github.repository == 'sveltejs/kit'
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    env:
-      VARIANT: split-edge
-      TEST_APP_DIR: packages/adapter-netlify/test/apps/split
-      EDGE: 'true'
-    steps: *build-steps
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          persist-credentials: false
+          sparse-checkout: |
+            .github/actions
+            pnpm-lock.yaml
+          path: .workflow
+      - uses: ./.workflow/.github/actions/netlify-build
+        with:
+          sha: ${{ inputs.sha || github.sha }}
+          test-app-dir: packages/adapter-netlify/test/apps/split
+          variant: split-edge
+          edge: 'true'
 
   deploy-basic:
     if: github.repository == 'sveltejs/kit'
@@ -90,15 +124,20 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     environment: '@sveltejs/adapter-netlify platform tests'
-    env:
-      VARIANT: basic
     steps:
-      - *checkout-actions
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          persist-credentials: false
+          sparse-checkout: |
+            .github/actions
+            pnpm-lock.yaml
+          path: .workflow
       - uses: ./.workflow/.github/actions/netlify-deploy
         with:
           netlify-project-id: ${{ secrets.NETLIFY_PROJECT_ID_BASIC }}
           netlify-token: ${{ secrets.NETLIFY_TOKEN }}
-          variant: ${{ env.VARIANT }}
+          variant: basic
 
   deploy-edge:
     if: github.repository == 'sveltejs/kit'
@@ -106,15 +145,20 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     environment: '@sveltejs/adapter-netlify platform tests'
-    env:
-      VARIANT: edge
     steps:
-      - *checkout-actions
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          persist-credentials: false
+          sparse-checkout: |
+            .github/actions
+            pnpm-lock.yaml
+          path: .workflow
       - uses: ./.workflow/.github/actions/netlify-deploy
         with:
           netlify-project-id: ${{ secrets.NETLIFY_PROJECT_ID_EDGE }}
           netlify-token: ${{ secrets.NETLIFY_TOKEN }}
-          variant: ${{ env.VARIANT }}
+          variant: edge
 
   deploy-instrumentation:
     if: github.repository == 'sveltejs/kit'
@@ -122,15 +166,20 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     environment: '@sveltejs/adapter-netlify platform tests'
-    env:
-      VARIANT: instrumentation
     steps:
-      - *checkout-actions
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          persist-credentials: false
+          sparse-checkout: |
+            .github/actions
+            pnpm-lock.yaml
+          path: .workflow
       - uses: ./.workflow/.github/actions/netlify-deploy
         with:
           netlify-project-id: ${{ secrets.NETLIFY_PROJECT_ID_INSTRUMENTATION }}
           netlify-token: ${{ secrets.NETLIFY_TOKEN }}
-          variant: ${{ env.VARIANT }}
+          variant: instrumentation
 
   deploy-split:
     if: github.repository == 'sveltejs/kit'
@@ -138,15 +187,20 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     environment: '@sveltejs/adapter-netlify platform tests'
-    env:
-      VARIANT: split
-    steps: &deploy-split-steps
-      - *checkout-actions
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          persist-credentials: false
+          sparse-checkout: |
+            .github/actions
+            pnpm-lock.yaml
+          path: .workflow
       - uses: ./.workflow/.github/actions/netlify-deploy
         with:
           netlify-project-id: ${{ secrets.NETLIFY_PROJECT_ID_SPLIT }}
           netlify-token: ${{ secrets.NETLIFY_TOKEN }}
-          variant: ${{ env.VARIANT }}
+          variant: split
 
   deploy-split-edge:
     if: github.repository == 'sveltejs/kit'
@@ -154,63 +208,122 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     environment: '@sveltejs/adapter-netlify platform tests'
-    env:
-      VARIANT: split-edge
-    steps: *deploy-split-steps
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          persist-credentials: false
+          sparse-checkout: |
+            .github/actions
+            pnpm-lock.yaml
+          path: .workflow
+      - uses: ./.workflow/.github/actions/netlify-deploy
+        with:
+          netlify-project-id: ${{ secrets.NETLIFY_PROJECT_ID_SPLIT }}
+          netlify-token: ${{ secrets.NETLIFY_TOKEN }}
+          variant: split-edge
 
   test-basic:
     if: github.repository == 'sveltejs/kit'
     needs: deploy-basic
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    env:
-      VARIANT: basic
-      TEST_APP_DIR: packages/adapter-netlify/test/apps/basic
-    steps: &test-steps
-      - *checkout-actions
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          persist-credentials: false
+          sparse-checkout: |
+            .github/actions
+            pnpm-lock.yaml
+          path: .workflow
       - uses: ./.workflow/.github/actions/platform-test
         with:
           sha: ${{ inputs.sha || github.sha }}
           platform: netlify
-          test-app-dir: ${{ env.TEST_APP_DIR }}
-          variant: ${{ env.VARIANT }}
+          test-app-dir: packages/adapter-netlify/test/apps/basic
+          variant: basic
 
   test-edge:
     if: github.repository == 'sveltejs/kit'
     needs: deploy-edge
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    env:
-      VARIANT: edge
-      TEST_APP_DIR: packages/adapter-netlify/test/apps/edge
-    steps: *test-steps
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          persist-credentials: false
+          sparse-checkout: |
+            .github/actions
+            pnpm-lock.yaml
+          path: .workflow
+      - uses: ./.workflow/.github/actions/platform-test
+        with:
+          sha: ${{ inputs.sha || github.sha }}
+          platform: netlify
+          test-app-dir: packages/adapter-netlify/test/apps/edge
+          variant: edge
 
   test-instrumentation:
     if: github.repository == 'sveltejs/kit'
     needs: deploy-instrumentation
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    env:
-      VARIANT: instrumentation
-      TEST_APP_DIR: packages/adapter-netlify/test/apps/instrumentation
-    steps: *test-steps
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          persist-credentials: false
+          sparse-checkout: |
+            .github/actions
+            pnpm-lock.yaml
+          path: .workflow
+      - uses: ./.workflow/.github/actions/platform-test
+        with:
+          sha: ${{ inputs.sha || github.sha }}
+          platform: netlify
+          test-app-dir: packages/adapter-netlify/test/apps/instrumentation
+          variant: instrumentation
 
   test-split:
     if: github.repository == 'sveltejs/kit'
     needs: deploy-split
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    env:
-      VARIANT: split
-      TEST_APP_DIR: packages/adapter-netlify/test/apps/split
-    steps: *test-steps
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          persist-credentials: false
+          sparse-checkout: |
+            .github/actions
+            pnpm-lock.yaml
+          path: .workflow
+      - uses: ./.workflow/.github/actions/platform-test
+        with:
+          sha: ${{ inputs.sha || github.sha }}
+          platform: netlify
+          test-app-dir: packages/adapter-netlify/test/apps/split
+          variant: split
 
   test-split-edge:
     if: github.repository == 'sveltejs/kit'
     needs: deploy-split-edge
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    env:
-      VARIANT: split-edge
-      TEST_APP_DIR: packages/adapter-netlify/test/apps/split
-    steps: *test-steps
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          persist-credentials: false
+          sparse-checkout: |
+            .github/actions
+            pnpm-lock.yaml
+          path: .workflow
+      - uses: ./.workflow/.github/actions/platform-test
+        with:
+          sha: ${{ inputs.sha || github.sha }}
+          platform: netlify
+          test-app-dir: packages/adapter-netlify/test/apps/split
+          variant: split-edge

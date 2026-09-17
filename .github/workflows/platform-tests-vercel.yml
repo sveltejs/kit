@@ -26,12 +26,8 @@ jobs:
     if: github.repository == 'sveltejs/kit'
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    env:
-      VARIANT: basic
-      TEST_APP_DIR: packages/adapter-vercel/test/apps/basic
-    steps: &build-steps
-      - &checkout-actions
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.workflow_sha }}
           persist-credentials: false
@@ -39,21 +35,30 @@ jobs:
             .github/actions
             pnpm-lock.yaml
           path: .workflow
-
       - uses: ./.workflow/.github/actions/vercel-build
         with:
           sha: ${{ inputs.sha || github.sha }}
-          test-app-dir: ${{ env.TEST_APP_DIR }}
-          variant: ${{ env.VARIANT }}
+          test-app-dir: packages/adapter-vercel/test/apps/basic
+          variant: basic
 
   build-split:
     if: github.repository == 'sveltejs/kit'
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    env:
-      VARIANT: split
-      TEST_APP_DIR: packages/adapter-vercel/test/apps/split
-    steps: *build-steps
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          persist-credentials: false
+          sparse-checkout: |
+            .github/actions
+            pnpm-lock.yaml
+          path: .workflow
+      - uses: ./.workflow/.github/actions/vercel-build
+        with:
+          sha: ${{ inputs.sha || github.sha }}
+          test-app-dir: packages/adapter-vercel/test/apps/split
+          variant: split
 
   deploy-basic:
     if: github.repository == 'sveltejs/kit'
@@ -61,16 +66,21 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     environment: '@sveltejs/adapter-vercel platform tests'
-    env:
-      VARIANT: basic
     steps:
-      - *checkout-actions
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          persist-credentials: false
+          sparse-checkout: |
+            .github/actions
+            pnpm-lock.yaml
+          path: .workflow
       - uses: ./.workflow/.github/actions/vercel-deploy
         with:
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_BASIC }}
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          variant: ${{ env.VARIANT }}
+          variant: basic
           purge-cache: true
 
   deploy-split:
@@ -79,40 +89,60 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     environment: '@sveltejs/adapter-vercel platform tests'
-    env:
-      VARIANT: split
     steps:
-      - *checkout-actions
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          persist-credentials: false
+          sparse-checkout: |
+            .github/actions
+            pnpm-lock.yaml
+          path: .workflow
       - uses: ./.workflow/.github/actions/vercel-deploy
         with:
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_SPLIT }}
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          variant: ${{ env.VARIANT }}
+          variant: split
 
   test-basic:
     if: github.repository == 'sveltejs/kit'
     needs: deploy-basic
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    env:
-      VARIANT: basic
-      TEST_APP_DIR: packages/adapter-vercel/test/apps/basic
-    steps: &test-steps
-      - *checkout-actions
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          persist-credentials: false
+          sparse-checkout: |
+            .github/actions
+            pnpm-lock.yaml
+          path: .workflow
       - uses: ./.workflow/.github/actions/platform-test
         with:
           sha: ${{ inputs.sha || github.sha }}
           platform: vercel
-          test-app-dir: ${{ env.TEST_APP_DIR }}
-          variant: ${{ env.VARIANT }}
+          test-app-dir: packages/adapter-vercel/test/apps/basic
+          variant: basic
 
   test-split:
     if: github.repository == 'sveltejs/kit'
     needs: deploy-split
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    env:
-      VARIANT: split
-      TEST_APP_DIR: packages/adapter-vercel/test/apps/split
-    steps: *test-steps
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          persist-credentials: false
+          sparse-checkout: |
+            .github/actions
+            pnpm-lock.yaml
+          path: .workflow
+      - uses: ./.workflow/.github/actions/platform-test
+        with:
+          sha: ${{ inputs.sha || github.sha }}
+          platform: vercel
+          test-app-dir: packages/adapter-vercel/test/apps/split
+          variant: split
