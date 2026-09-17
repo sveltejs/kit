@@ -4,7 +4,7 @@
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import {
 	create_field_proxy,
-	set_nested_value,
+	split_path,
 	deep_set,
 	normalize_issue,
 	flatten_issues,
@@ -286,15 +286,17 @@ function handle_issues(output, issues, form_data, form_id) {
 		output.input = {};
 
 		for (const field_name of form_data.keys()) {
+			const field = parse_form_key(form_id, field_name);
+			const path = split_path(field.name);
+
 			// redact sensitive fields
-			if (/^[.\]]?_/.test(field_name)) continue;
+			if (path.some((part) => part.startsWith('_'))) continue;
 
 			const values = form_data.getAll(field_name).filter((value) => typeof value === 'string');
-			const field = parse_form_key(form_id, field_name);
 
-			set_nested_value(
+			deep_set(
 				/** @type {Record<string, any>} */ (output.input),
-				field,
+				path,
 				field.is_array ? values : values[0]
 			);
 		}
