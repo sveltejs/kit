@@ -26,51 +26,41 @@ test('client assets use the configured base and match any percent-encoding of th
 	expect(get('/base/%E0%A4%A')).toBeUndefined();
 	// an encoded slash is not a path separator
 	expect(get('/base/folder%2Fencoded%20name%231&.txt')).toBeUndefined();
+
+	// other methods continue to SvelteKit
+	expect(get('/base/folder/encoded%20name%231&.txt', { method: 'HEAD' })?.status).toBe(200);
+	expect(get('/base/folder/encoded%20name%231&.txt', { method: 'POST' })).toBeUndefined();
 });
 
-test('filenames may contain the characters Bun routes reserve', async () => {
-	const { get } = await load({
-		assets: [
-			['client_asset', 'literal*.txt', 'literal*.txt', meta],
-			['client_asset', ':tag/file.txt', ':tag/file.txt', meta]
-		]
-	});
+test.each(['/', '/base'])(
+	'client HTML files are also served as directories and without extension under %s',
+	async (base) => {
+		const { get } = await load({
+			base,
+			assets: [
+				['client_asset', 'index.html', 'index.html', meta],
+				['client_asset', 'docs/index.html', 'docs/index.html', meta],
+				['client_asset', 'page.html', 'page.html', meta]
+			]
+		});
 
-	expect(get('/literal*.txt')?.status).toBe(200);
-	expect(get('/:tag/file.txt')?.status).toBe(200);
-	expect(get('/literal-other.txt')).toBeUndefined();
-});
-
-test('client HTML files are also available at their directory or extensionless URL', async () => {
-	const { get } = await load({
-		base: '/base',
-		assets: [
-			['client_asset', 'index.html', 'index.html', meta],
-			['client_asset', 'docs/index.html', 'docs/index.html', meta],
-			['client_asset', 'page.html', 'page.html', meta]
-		]
-	});
-
-	for (const path of [
-		'/base/index.html',
-		'/base/',
-		'/base',
-		'/base/docs/index.html',
-		'/base/docs/',
-		'/base/docs',
-		'/base/page.html',
-		'/base/page'
-	]) {
-		expect(get(path)?.headers.get('content-type')).toBe('text/html;charset=utf-8');
+		const prefix = base === '/' ? '' : base;
+		for (const path of [
+			'/index.html',
+			'/',
+			'/docs/index.html',
+			'/docs/',
+			'/docs',
+			'/page.html',
+			'/page'
+		]) {
+			expect(get(prefix + path)?.headers.get('content-type')).toBe('text/html;charset=utf-8');
+		}
+		// the directory itself, which for a root deployment is just `/`
+		if (prefix) expect(get(prefix)?.status).toBe(200);
+		expect(get(`${prefix}/docs/page`)).toBeUndefined();
 	}
-});
-
-test('a root deployment serves the index at /', async () => {
-	const { get } = await load({ assets: [['client_asset', 'index.html', 'index.html', meta]] });
-
-	expect(get('/index.html')?.status).toBe(200);
-	expect(get('/')?.status).toBe(200);
-});
+);
 
 test('the first entry for a pathname wins', async () => {
 	const { get } = await load({
@@ -85,14 +75,14 @@ test('the first entry for a pathname wins', async () => {
 });
 
 test('registers Bun routes only for paths that user agents never re-encode', async () => {
-	const { module } = await load({
+	const { module, get } = await load({
 		base: '/base',
 		assets: [
 			['client_asset', 'data.json', 'data.json', meta],
 			['client_asset', 'docs/index.html', 'docs/index.html', meta],
 			['client_asset', 'encoded name.txt', 'encoded name.txt', meta],
 			['client_asset', 'literal*.txt', 'literal*.txt', meta],
-			['client_asset', ':tag.txt', ':tag.txt', meta],
+			['client_asset', ':tag/file.txt', ':tag/file.txt', meta],
 			['client_asset', 'café.txt', 'café.txt', meta]
 		]
 	});
@@ -103,10 +93,17 @@ test('registers Bun routes only for paths that user agents never re-encode', asy
 		'/base/docs/',
 		'/base/docs'
 	]);
+
+	// the lookup serves the rest, with no meaning attached to the characters Bun routes reserve
+	for (const path of ['/encoded%20name.txt', '/literal*.txt', '/:tag/file.txt', '/caf%C3%A9.txt']) {
+		expect(get(`/base${path}`)?.status).toBe(200);
+	}
+	expect(get('/base/literal-other.txt')).toBeUndefined();
+	expect(get('/base/other/file.txt')).toBeUndefined();
 });
 
 test('Bun serves immutable files without JavaScript unless they are precompressed', async () => {
-	const { module } = await load({
+	const { module, get: lookup } = await load({
 		assets: [
 			['client_asset', '_app/immutable/chunk.js', '_app/immutable/chunk.js', meta],
 			['client_asset', '_app/immutable/big.js', '_app/immutable/big.js', { ...meta, br: true }],
@@ -129,27 +126,12 @@ test('Bun serves immutable files without JavaScript unless they are precompresse
 	expect(get('/_app/immutable/big.js')).toBeInstanceOf(Function);
 	expect(get('/data.json')).toBeInstanceOf(Function);
 	expect(get('/page')).toBeInstanceOf(Function);
-});
 
-test('only GET and HEAD are served', async () => {
-	const { get } = await load({ assets: [['client_asset', 'data.json', 'data.json', meta]] });
-
-	expect(get('/data.json', { method: 'HEAD' })?.status).toBe(200);
-	expect(get('/data.json', { method: 'POST' })).toBeUndefined();
-});
-
-test('immutable SvelteKit assets receive a long-lived cache policy', async () => {
-	const { get } = await load({
-		assets: [
-			['client_asset', '_app/immutable/chunk.js', '_app/immutable/chunk.js', meta],
-			['client_asset', 'favicon.ico', 'favicon.ico', meta]
-		]
-	});
-
-	expect(get('/_app/immutable/chunk.js')?.headers.get('cache-control')).toBe(
-		'public,max-age=31536000,immutable'
-	);
-	expect(get('/favicon.ico')?.headers.has('cache-control')).toBe(false);
+	// the long-lived cache policy holds however the file is served, and only for immutable files
+	for (const path of ['/_app/immutable/chunk.js', '/_app/immutable/big.js']) {
+		expect(lookup(path)?.headers.get('cache-control')).toBe('public,max-age=31536000,immutable');
+	}
+	expect(lookup('/data.json')?.headers.has('cache-control')).toBe(false);
 });
 
 test('assets revalidate against the build-time hash', async () => {
@@ -243,11 +225,12 @@ test('server assets resolve from the client output in regular builds', async () 
 });
 
 test('prerendered assets use the base path and preserve their content type', async () => {
-	const { get } = await load({
+	const { get, file } = await load({
 		base: '/base',
 		assets: [['prerendered_asset', 'icon.ico', 'icon.ico', meta]]
 	});
 
+	expect(file).toHaveBeenCalledWith(`${dir}/prerendered/icon.ico`);
 	expect(get('/base/icon.ico')?.headers.get('content-type')).toBe('image/x-icon');
 });
 
