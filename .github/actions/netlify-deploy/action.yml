@@ -40,6 +40,7 @@ runs:
 
         if deploy_json=$(netlify deploy \
           --json \
+          --no-build \
           --dir="build" \
           --functions=".netlify/v1/functions" \
           --auth="$NETLIFY_AUTH_TOKEN" \
