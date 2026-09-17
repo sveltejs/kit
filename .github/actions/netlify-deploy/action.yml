@@ -43,7 +43,10 @@ runs:
       run: |
         set -euo pipefail
 
-        if deploy_json=$(netlify deploy \
+        if deploy_json=$(env \
+          -u NETLIFY_AUTH_TOKEN \
+          -u NETLIFY_PROJECT_ID \
+          netlify deploy \
           --json \
           --no-build \
           --dir="build" \
