@@ -18,8 +18,12 @@ on:
 permissions:
   contents: read
 
+env:
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+
 jobs:
   build:
+    if: github.repository == 'sveltejs/kit'
     strategy:
       fail-fast: false
       matrix: &variants
@@ -39,13 +43,38 @@ jobs:
           - name: split-edge
             test-app-dir: packages/adapter-netlify/test/apps/split
             edge: true
-    uses: ./.github/workflows/platform-build.yml
-    with:
-      sha: ${{ inputs.sha || github.sha }}
-      platform: netlify
-      test-app-dir: ${{ matrix.test-app-dir }}
-      artifact-name: platform-netlify-${{ matrix.name }}-${{ github.run_id }}
-      edge: ${{ matrix.edge }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.sha || github.sha }}
+          persist-credentials: false
+
+      - uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
+        with:
+          runtime: node@24
+
+      - name: Build test app
+        working-directory: ${{ matrix.test-app-dir }}
+        env:
+          EDGE: ${{ matrix.edge }}
+        run: pnpm build
+
+      - name: Stage deployment artifact
+        env:
+          TEST_APP_DIR: ${{ matrix.test-app-dir }}
+        run: |
+          mkdir platform-output
+          cp -a "$TEST_APP_DIR/build" "$TEST_APP_DIR/.netlify" platform-output/
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: platform-netlify-${{ matrix.name }}-${{ github.run_id }}
+          path: platform-output
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 1
 
   deploy-basic:
     if: always() && github.repository == 'sveltejs/kit'
