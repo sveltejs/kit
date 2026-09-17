@@ -26,23 +26,18 @@ jobs:
         include:
           - name: basic
             test-app-dir: packages/adapter-netlify/test/apps/basic
-            project-id-secret: NETLIFY_PROJECT_ID_BASIC
             edge: false
           - name: edge
             test-app-dir: packages/adapter-netlify/test/apps/edge
-            project-id-secret: NETLIFY_PROJECT_ID_EDGE
             edge: false
           - name: instrumentation
             test-app-dir: packages/adapter-netlify/test/apps/instrumentation
-            project-id-secret: NETLIFY_PROJECT_ID_INSTRUMENTATION
             edge: false
           - name: split
             test-app-dir: packages/adapter-netlify/test/apps/split
-            project-id-secret: NETLIFY_PROJECT_ID_SPLIT
             edge: false
           - name: split-edge
             test-app-dir: packages/adapter-netlify/test/apps/split
-            project-id-secret: NETLIFY_PROJECT_ID_SPLIT
             edge: true
     uses: ./.github/workflows/platform-build.yml
     with:
@@ -80,7 +75,7 @@ jobs:
         id: deploy
         with:
           artifact-dir: ${{ runner.temp }}/platform-output
-          netlify-project-id: ${{ secrets[matrix.project-id-secret] }}
+          netlify-project-id: ${{ matrix.name == 'basic' && secrets.NETLIFY_PROJECT_ID_BASIC || matrix.name == 'edge' && secrets.NETLIFY_PROJECT_ID_EDGE || matrix.name == 'instrumentation' && secrets.NETLIFY_PROJECT_ID_INSTRUMENTATION || secrets.NETLIFY_PROJECT_ID_SPLIT }}
           netlify-token: ${{ secrets.NETLIFY_TOKEN }}
 
       - name: Save deployment URL

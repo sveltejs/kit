@@ -26,11 +26,9 @@ jobs:
         include:
           - name: basic
             test-app-dir: packages/adapter-vercel/test/apps/basic
-            project-id-secret: VERCEL_PROJECT_ID_BASIC
             purge-cache: true
           - name: split
             test-app-dir: packages/adapter-vercel/test/apps/split
-            project-id-secret: VERCEL_PROJECT_ID_SPLIT
             purge-cache: false
     uses: ./.github/workflows/platform-build.yml
     with:
@@ -67,7 +65,7 @@ jobs:
         id: deploy
         with:
           artifact-dir: ${{ runner.temp }}/platform-output
-          vercel-project-id: ${{ secrets[matrix.project-id-secret] }}
+          vercel-project-id: ${{ matrix.name == 'basic' && secrets.VERCEL_PROJECT_ID_BASIC || secrets.VERCEL_PROJECT_ID_SPLIT }}
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
 
@@ -77,7 +75,7 @@ jobs:
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets[matrix.project-id-secret] }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_BASIC }}
         run: vercel cache purge --type cdn --token="$VERCEL_TOKEN" --yes
 
       - name: Save deployment URL

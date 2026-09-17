@@ -42,7 +42,9 @@ jobs:
           ref: ${{ inputs.sha }}
           persist-credentials: false
 
-      - uses: ./.github/actions/node-setup
+      - uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
+        with:
+          runtime: node@24
 
       - name: Build test app
         working-directory: ${{ inputs.test-app-dir }}
