@@ -1,6 +1,3 @@
-import { resolve } from 'node:path';
-import process from 'node:process';
-
 /**
  * @typedef {{ rest: boolean, dynamic: boolean, content: string }} RouteSegment
  */
@@ -63,31 +60,6 @@ export function matches(a, b) {
 	} else {
 		return b.length === 1 && b[0].rest;
 	}
-}
-
-/**
- * @param {NetlifyConfig | null} netlify_config
- * @param {import('@sveltejs/kit').Builder} builder
- * @returns {string | undefined}
- */
-export function get_publish_directory(netlify_config, builder) {
-	if (netlify_config) {
-		if (!netlify_config.build?.publish) {
-			builder.log.minor('No publish directory specified in netlify.toml, using default');
-			return;
-		}
-
-		if (resolve(netlify_config.build.publish) === process.cwd()) {
-			throw new Error(
-				'The publish directory cannot be set to the site root. Please change it to another value such as "build" in netlify.toml.'
-			);
-		}
-		return netlify_config.build.publish;
-	}
-
-	builder.log.warn(
-		'No netlify.toml found. Using default publish directory. Consult https://svelte.dev/docs/kit/adapter-netlify#usage for more details'
-	);
 }
 
 /**

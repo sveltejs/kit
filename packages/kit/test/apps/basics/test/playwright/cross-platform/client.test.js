@@ -1,6 +1,6 @@
 import process from 'node:process';
 import { expect } from '@playwright/test';
-import { test } from '../../../../utils.js';
+import { test } from '../../../../../utils.js';
 
 /** @typedef {{ fromScroll: { x: number, y: number }, toScroll: { x: number, y: number }, type: string }} ScrollState */
 

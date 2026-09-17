@@ -2923,6 +2923,7 @@ declare module '$app/paths' {
 	export function asset(file: AssetPath): string;
 	/**
 	 * Resolve a pathname by prefixing it with the base path, if any, or resolve a route ID by populating dynamic segments with parameters.
+	 * In hash routing mode, the returned URL starts with `#`.
 	 *
 	 * During server rendering, the base path is relative and depends on the page currently being rendered.
 	 *

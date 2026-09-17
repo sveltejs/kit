@@ -43,8 +43,7 @@
 	},
 	"dependencies": {
 		"@netlify/types": "^2.8.0",
-		"rolldown": "^1.2.3",
-		"smol-toml": "^1.8.0"
+		"rolldown": "^1.2.3"
 	},
 	"devDependencies": {
 		"@netlify/edge-functions": "^3.0.8",

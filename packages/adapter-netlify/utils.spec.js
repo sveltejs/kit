@@ -1,6 +1,5 @@
-import process from 'node:process';
-import { describe, test, expect, vi } from 'vitest';
-import { matches, get_publish_directory, parse_runtime } from './utils.js';
+import { describe, test, expect } from 'vitest';
+import { matches, parse_runtime } from './utils.js';
 
 /**
  * Helper to create a static route segment
@@ -150,45 +149,5 @@ describe('matches', () => {
 
 	test('both dynamic segments match', () => {
 		expect(matches([dynamic_segment('[id]')], [dynamic_segment('[slug]')])).toBe(true);
-	});
-});
-
-describe('get_publish_directory', () => {
-	test('returns undefined when no netlify.toml, with warning logged', () => {
-		const warn = vi.fn();
-		const builder = /** @type {any} */ ({ log: { warn, minor: vi.fn() } });
-
-		const result = get_publish_directory(null, builder);
-
-		expect(result).toBeUndefined();
-		expect(warn).toHaveBeenCalledOnce();
-		expect(warn).toHaveBeenCalledWith(expect.stringContaining('No netlify.toml found'));
-	});
-
-	test('returns undefined when config has no build.publish, with minor log', () => {
-		const minor = vi.fn();
-		const builder = /** @type {any} */ ({ log: { warn: vi.fn(), minor } });
-
-		const result = get_publish_directory({ build: {} }, builder);
-
-		expect(result).toBeUndefined();
-		expect(minor).toHaveBeenCalledOnce();
-		expect(minor).toHaveBeenCalledWith(expect.stringContaining('No publish directory specified'));
-	});
-
-	test('returns the publish value when specified', () => {
-		const builder = /** @type {any} */ ({ log: { warn: vi.fn(), minor: vi.fn() } });
-
-		const result = get_publish_directory({ build: { publish: 'dist' } }, builder);
-
-		expect(result).toBe('dist');
-	});
-
-	test('throws when publish is site root', () => {
-		const builder = /** @type {any} */ ({ log: { warn: vi.fn(), minor: vi.fn() } });
-
-		expect(() => get_publish_directory({ build: { publish: process.cwd() } }, builder)).toThrow(
-			'The publish directory cannot be set to the site root'
-		);
 	});
 });

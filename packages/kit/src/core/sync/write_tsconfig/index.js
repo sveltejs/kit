@@ -54,7 +54,9 @@ export function write_tsconfig(kit, root) {
 		types,
 		exclusions: [kit.files.serviceWorker],
 		example: {
-			extends: '$app/tsconfig'
+			extends: '$app/tsconfig',
+			include: ['src', 'test', '*'],
+			exclude: ['src/service-worker']
 		}
 	});
 
