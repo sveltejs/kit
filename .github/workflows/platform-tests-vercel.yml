@@ -18,61 +18,91 @@ on:
 permissions:
   contents: read
 
-env:
-  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
-
 jobs:
-  test-basic:
-    if: github.repository == 'sveltejs/kit'
+  build:
+    strategy:
+      fail-fast: false
+      matrix: &variants
+        include:
+          - name: basic
+            test-app-dir: packages/adapter-vercel/test/apps/basic
+            project-id-secret: VERCEL_PROJECT_ID_BASIC
+            purge-cache: true
+          - name: split
+            test-app-dir: packages/adapter-vercel/test/apps/split
+            project-id-secret: VERCEL_PROJECT_ID_SPLIT
+            purge-cache: false
+    uses: ./.github/workflows/platform-build.yml
+    with:
+      sha: ${{ inputs.sha || github.sha }}
+      platform: vercel
+      test-app-dir: ${{ matrix.test-app-dir }}
+      artifact-name: platform-vercel-${{ matrix.name }}-${{ github.run_id }}
+
+  deploy:
+    if: always() && github.repository == 'sveltejs/kit'
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix: *variants
     runs-on: ubuntu-latest
     timeout-minutes: 15
     environment: '@sveltejs/adapter-vercel platform tests'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ inputs.sha || github.sha }}
+          ref: ${{ github.workflow_sha }}
           persist-credentials: false
+          sparse-checkout: |
+            .github/actions
+            pnpm-lock.yaml
+          path: .workflow
 
-      - uses: ./.github/actions/vercel-deploy
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: platform-vercel-${{ matrix.name }}-${{ github.run_id }}
+          path: ${{ runner.temp }}/platform-output
+
+      - uses: ./.workflow/.github/actions/vercel-deploy
         id: deploy
         with:
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_BASIC }}
+          artifact-dir: ${{ runner.temp }}/platform-output
+          vercel-project-id: ${{ secrets[matrix.project-id-secret] }}
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
 
       # avoid stale cache results when testing ISR routes
       - name: Purge Vercel CDN Cache
-        shell: bash
+        if: matrix.purge-cache
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_BASIC }}
-        run: vercel cache purge --type cdn --token="${{ secrets.VERCEL_TOKEN }}" --yes
+          VERCEL_PROJECT_ID: ${{ secrets[matrix.project-id-secret] }}
+        run: vercel cache purge --type cdn --token="$VERCEL_TOKEN" --yes
 
-      - uses: ./.github/actions/platform-test
-        with:
-          test-app-dir: packages/adapter-vercel/test/apps/basic
-          deployment-url: ${{ steps.deploy.outputs.deployment-url }}
+      - name: Save deployment URL
+        env:
+          DEPLOYMENT_URL: ${{ steps.deploy.outputs.deployment-url }}
+        run: |
+          mkdir "${{ runner.temp }}/deployment"
+          printf '%s' "$DEPLOYMENT_URL" > "${{ runner.temp }}/deployment/url"
 
-  test-split:
-    if: github.repository == 'sveltejs/kit'
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    environment: '@sveltejs/adapter-vercel platform tests'
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          ref: ${{ inputs.sha || github.sha }}
-          persist-credentials: false
+          name: platform-vercel-${{ matrix.name }}-deployment-${{ github.run_id }}
+          path: ${{ runner.temp }}/deployment/url
+          if-no-files-found: error
+          retention-days: 1
 
-      - uses: ./.github/actions/vercel-deploy
-        id: deploy
-        with:
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_SPLIT }}
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-
-      - uses: ./.github/actions/platform-test
-        with:
-          test-app-dir: packages/adapter-vercel/test/apps/split
-          deployment-url: ${{ steps.deploy.outputs.deployment-url }}
+  test:
+    if: always()
+    needs: deploy
+    strategy:
+      fail-fast: false
+      matrix: *variants
+    uses: ./.github/workflows/platform-test.yml
+    with:
+      sha: ${{ inputs.sha || github.sha }}
+      test-app-dir: ${{ matrix.test-app-dir }}
+      deployment-artifact-name: platform-vercel-${{ matrix.name }}-deployment-${{ github.run_id }}
+      artifact-name: platform-test-results-vercel-${{ matrix.name }}

@@ -1,12 +1,12 @@
 name: 'Vercel Deploy'
-description: 'Set up the repo and deploy a test app to Vercel'
+description: 'Deploy a prebuilt test app to Vercel'
 
 inputs:
+  artifact-dir:
+    description: 'Path to the downloaded deployment artifact'
+    required: true
   # Important: When setting up a new Vercel test app, make sure
   # to set the root directory in the dashboard to the correct path.
-  # The `vercel deploy` command runs from the root of the repository,
-  # so it has to be able to look up the test app's dir in order to know
-  # what to deploy.
   vercel-project-id:
     description: 'Vercel project ID for the test app'
     required: true
@@ -24,7 +24,10 @@ outputs:
 runs:
   using: 'composite'
   steps:
-    - uses: ./.github/actions/node-setup
+    - uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
+      with:
+        runtime: node@24
+        cache: true
 
     - name: Install Vercel CLI
       shell: bash
@@ -33,8 +36,9 @@ runs:
     - name: Deploy to Vercel
       id: deploy
       shell: bash
+      working-directory: ${{ inputs.artifact-dir }}
       env:
         VERCEL_TOKEN: ${{ inputs.vercel-token }}
         VERCEL_ORG_ID: ${{ inputs.vercel-org-id }}
         VERCEL_PROJECT_ID: ${{ inputs.vercel-project-id }}
-      run: echo "url=$(vercel deploy --yes --token="$VERCEL_TOKEN")" >> "$GITHUB_OUTPUT"
+      run: echo "url=$(vercel deploy --prebuilt --yes --token="$VERCEL_TOKEN")" >> "$GITHUB_OUTPUT"
