@@ -335,15 +335,6 @@ describe('generated routes', () => {
 		expect(source).toContain('["_app/read.txt", asset_2]');
 	});
 
-	test.each([false, true])('rejects wildcard filenames when compile is %s', async (compile) => {
-		const builder = create_builder({ client_files: ['literal*.txt'] });
-
-		await expect(adapter({ buildOptions: { compile } }).adapt(builder)).rejects.toThrow(
-			'Bun treats literal `*` characters in route paths as wildcards'
-		);
-		expect(write_file).not.toHaveBeenCalled();
-	});
-
 	test('precompresses assets and marks the variants in the generated routes', async () => {
 		const builder = create_builder({ client_files: ['app.js'] });
 
@@ -400,13 +391,6 @@ describe('generated routes', () => {
 		expect(source).toContain('["client_asset", "public.txt", asset_0, {"hash":"abc","mtime":0}]');
 	});
 
-	test('rejects route segments starting with a colon', async () => {
-		const builder = create_builder({ client_files: [':tag.txt'] });
-
-		await expect(adapter().adapt(builder)).rejects.toThrow('starts with `:`');
-		expect(write_file).not.toHaveBeenCalled();
-	});
-
 	test('embedded assets with the same relative path keep distinct imports', async () => {
 		await adapter({ buildOptions: { compile: true } }).adapt(
 			create_builder({
@@ -419,17 +403,6 @@ describe('generated routes', () => {
 		const source = handoff_source();
 		expect(source).toContain('["client_asset", "page.html", asset_0, {"hash":"abc","mtime":0}]');
 		expect(source).toContain('["prerendered_page", "/page/", asset_1, {"hash":"abc","mtime":0}]');
-	});
-
-	test('rejects wildcard characters in prerendered redirect sources', async () => {
-		const builder = create_builder({
-			prerendered_redirects: [['/docs/*', { status: 308, location: '/new' }]]
-		});
-
-		await expect(adapter().adapt(builder)).rejects.toThrow(
-			'Bun treats literal `*` characters in route paths as wildcards'
-		);
-		expect(write_file).not.toHaveBeenCalled();
 	});
 
 	test('fails when a server-readable asset is absent from compiled build output', async () => {

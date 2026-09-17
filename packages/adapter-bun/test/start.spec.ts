@@ -16,7 +16,7 @@ afterAll(() => {
 	mock.module('node:process', () => ({ default: real_process }));
 });
 
-test('starts Bun with production defaults and generated request routes', async () => {
+test('starts Bun with production defaults, the request handler and the static routes', async () => {
 	const loaded = await load_start();
 
 	expect(loaded.serve).toHaveBeenCalledWith(
@@ -211,7 +211,7 @@ async function load_start({
 
 	const routes = { '/asset': { GET: new Response('asset') } };
 	const handler = mock(() => {});
-	mock.module('../src/routes.js', () => ({ routes, server_assets: new Map() }));
+	mock.module('../src/assets.js', () => ({ routes, server_assets: new Map() }));
 	mock.module('../src/handler.js', () => ({ handler }));
 
 	const stop = mock(stop_implementation ?? (async () => {}));
