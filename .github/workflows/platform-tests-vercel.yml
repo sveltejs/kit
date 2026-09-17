@@ -41,7 +41,7 @@ jobs:
             pnpm-lock.yaml
           path: .workflow
 
-      - uses: ./.workflow/.github/actions/platform-build
+      - uses: ./.workflow/.github/actions/vercel-build
         with:
           sha: ${{ inputs.sha || github.sha }}
 
