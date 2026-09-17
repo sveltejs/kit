@@ -1,0 +1,92 @@
+name: Platform Test (Vercel)
+
+on:
+  workflow_call:
+    inputs:
+      sha:
+        description: 'Commit SHA to test'
+        required: true
+        type: string
+      variant:
+        description: 'Name of the test app variant'
+        required: true
+        type: string
+      test-app-dir:
+        description: 'Path to the test app directory'
+        required: true
+        type: string
+      purge-cache:
+        description: 'Purge the Vercel CDN cache before testing'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+env:
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+
+jobs:
+  build:
+    if: github.repository == 'sveltejs/kit'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          persist-credentials: false
+          sparse-checkout: |
+            .github/actions
+            pnpm-lock.yaml
+          path: .workflow
+      - uses: ./.workflow/.github/actions/vercel-build
+        with:
+          sha: ${{ inputs.sha }}
+          test-app-dir: ${{ inputs.test-app-dir }}
+          variant: ${{ inputs.variant }}
+
+  deploy:
+    if: github.repository == 'sveltejs/kit'
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: '@sveltejs/adapter-vercel platform tests'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          persist-credentials: false
+          sparse-checkout: |
+            .github/actions
+            pnpm-lock.yaml
+          path: .workflow
+      - uses: ./.workflow/.github/actions/vercel-deploy
+        with:
+          vercel-project-id: ${{ inputs.variant == 'basic' && secrets.VERCEL_PROJECT_ID_BASIC || secrets.VERCEL_PROJECT_ID_SPLIT }}
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          variant: ${{ inputs.variant }}
+          purge-cache: ${{ inputs.purge-cache }}
+
+  test:
+    if: github.repository == 'sveltejs/kit'
+    needs: deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          persist-credentials: false
+          sparse-checkout: |
+            .github/actions
+            pnpm-lock.yaml
+          path: .workflow
+      - uses: ./.workflow/.github/actions/platform-test
+        with:
+          sha: ${{ inputs.sha }}
+          platform: vercel
+          test-app-dir: ${{ inputs.test-app-dir }}
+          variant: ${{ inputs.variant }}
