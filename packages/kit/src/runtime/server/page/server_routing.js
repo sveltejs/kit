@@ -1,8 +1,9 @@
+/** @import { ParamValue } from '@sveltejs/kit/params' */
 /** @import { SSRManifest } from 'types' */
 import { base, assets } from '#app/paths';
 import { relative } from '$app/paths/internal/server';
 import { text } from '@sveltejs/kit';
-import { uneval } from 'devalue';
+import * as devalue from 'devalue';
 import { s } from '../../../utils/misc.js';
 import { find_route } from '../../../utils/routing.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
@@ -143,7 +144,7 @@ function js_headers() {
 
 /**
  * @param {import('types').SSRClientRoute | null} route
- * @param {Partial<Record<string, string>> | null} params
+ * @param {Partial<Record<string, ParamValue>> | null} params
  * @param {URL} url
  * @param {NonNullable<SSRManifest['client']>} client
  * @returns {{response: Response, body: string}}
@@ -157,7 +158,7 @@ export function create_server_routing_response(route, params, url, client) {
 		body = `${create_css_import(route, url, client)}export const route = ${csr_route};`;
 
 		if (params !== null) {
-			body += `\nexport const params = ${uneval(params)}`;
+			body += `\nexport const params = ${devalue.uneval(params)}`;
 		}
 	}
 
