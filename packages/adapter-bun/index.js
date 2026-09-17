@@ -8,23 +8,6 @@ const files = fileURLToPath(new URL('./src', import.meta.url)).replaceAll('\\', 
 const handoff = '#@sveltejs/adapter-bun';
 
 /**
- * @param {string} dir
- * @returns {{abs: string, rel: string}[]}
- */
-function read_files_recursive(dir) {
-	if (!fs.existsSync(dir)) return [];
-	return fs
-		.readdirSync(dir, { recursive: true, withFileTypes: true })
-		.filter((entry) => entry.isFile())
-		.map((entry) => {
-			const abs = path.resolve(entry.parentPath, entry.name);
-			const rel = posixify(path.relative(dir, abs));
-			return { abs, rel };
-		})
-		.filter(({ rel }) => rel.split('/').every((segment) => segment !== '.vite'));
-}
-
-/**
  * Matches sirv's default behaviour in adapter-node: dotfiles are not served,
  * with an exception for the `.well-known` directory.
  * @param {string} file
@@ -250,115 +233,6 @@ export default function (opts = {}) {
 }
 
 /**
- * @param {object} options
- * @param {Builder} options.builder
- * @param {string[]} options.server_assets
- * @returns {Promise<{imports: string[], assets: string[], server_assets: string[]}>}
- */
-async function get_embed_entries({ builder, server_assets }) {
-	const built_files = `${builder.config.outDir}/output`;
-
-	const all_cl_files = read_files_recursive(`${built_files}/client`);
-	const pr_pages = read_files_recursive(`${built_files}/prerendered/pages`);
-	const pr_deps = read_files_recursive(`${built_files}/prerendered/dependencies`);
-	const pr_data = read_files_recursive(`${built_files}/prerendered/data`);
-
-	const cl_files = all_cl_files.filter(({ rel }) => !is_dotfile(rel));
-
-	const assets = [...cl_files, ...pr_pages, ...pr_deps, ...pr_data];
-	validate_file_paths(assets.map(({ rel }) => rel));
-
-	// keyed by identity: client and prerendered trees can contain the same relative path
-	const asset_index = new Map(assets.map((file, i) => [file, i]));
-	const imports = assets.map(({ abs }, i) => {
-		return `import asset_${i} from ${JSON.stringify(abs)} with { type: 'file' };`;
-	});
-
-	/**
-	 * @param {{ abs: string, rel: string }} file
-	 * @param {string} helper
-	 * @param {string} [url]
-	 */
-	const entry = async (file, helper, url = file.rel) =>
-		`[${JSON.stringify(helper)}, ${JSON.stringify(url)}, asset_${asset_index.get(file)}, ${JSON.stringify(await asset_meta(file.abs))}]`;
-
-	const page_files = new Map(pr_pages.map((file) => [file.rel, file]));
-	const page_rels = new Set([...builder.prerendered.pages].map(([_, { file }]) => file));
-
-	const entries = await Promise.all([
-		...cl_files.map((file) => entry(file, 'client_asset')),
-		...[...builder.prerendered.pages].map(([path, { file }]) => {
-			const page = page_files.get(file);
-			if (page === undefined)
-				throw new Error(`Could not find prerendered page ${file} for route ${path}`);
-			return entry(page, 'prerendered_page', path);
-		}),
-		...pr_pages
-			.filter(({ rel }) => !page_rels.has(rel))
-			.map((file) => entry(file, 'prerendered_asset')),
-		...[...pr_deps, ...pr_data].map((file) => entry(file, 'prerendered_asset'))
-	]);
-
-	const index_by_rel = new Map(
-		assets.map(({ rel }, i) => /** @type {[string, number]} */ ([rel, i])).reverse()
-	);
-
-	return {
-		imports,
-		assets: entries,
-		server_assets: server_assets.map((file) => {
-			const idx = index_by_rel.get(file);
-			if (idx === undefined) throw new Error(`Could not find server asset ${file}`);
-			return `[${JSON.stringify(file)}, asset_${idx}]`;
-		})
-	};
-}
-
-/**
- * @param {object} options
- * @param {Builder} options.builder
- * @param {string[]} options.server_assets
- * @param {string} options.out
- * @param {boolean} options.precompress
- * @returns {Promise<{imports: string[], assets: string[], server_assets: string[]}>}
- */
-async function get_no_embed_entries({ builder, server_assets, out, precompress }) {
-	const client_files = builder.writeClient(`${out}/client`).filter((file) => !is_dotfile(file));
-	const prerendered_files = builder.writePrerendered(`${out}/prerendered`);
-	validate_file_paths([...client_files, ...prerendered_files]);
-
-	if (precompress) {
-		await Promise.all([builder.compress(`${out}/client`), builder.compress(`${out}/prerendered`)]);
-	}
-
-	/**
-	 * @param {string} helper
-	 * @param {string} url
-	 * @param {string} dir
-	 * @param {string} [filename]
-	 */
-	const entry = async (helper, url, dir, filename = url) =>
-		`[${JSON.stringify(helper)}, ${JSON.stringify(url)}, ${JSON.stringify(filename)}, ${JSON.stringify(await asset_meta(`${out}/${dir}/${filename}`, precompress))}]`;
-
-	const pages = [...builder.prerendered.pages];
-	const page_files = new Set(pages.map(([_, { file }]) => file));
-
-	const entries = await Promise.all([
-		...client_files.map((file) => entry('client_asset', file, 'client')),
-		...pages.map(([path, { file }]) => entry('prerendered_page', path, 'prerendered', file)),
-		...prerendered_files
-			.filter((file) => !page_files.has(file))
-			.map((file) => entry('prerendered_asset', file, 'prerendered'))
-	]);
-
-	return {
-		imports: [],
-		assets: entries,
-		server_assets: server_assets.map((file) => `[${JSON.stringify(file)}]`)
-	};
-}
-
-/**
  * The static route table, as data the bundled `src/routes.js` turns into Bun routes at startup.
  * @param {object} options
  * @param {Builder} options.builder
@@ -368,36 +242,72 @@ async function get_no_embed_entries({ builder, server_assets, out, precompress }
  * @returns {Promise<string[]>}
  */
 async function create_routes({ builder, out, embed, precompress }) {
+	// executables embed the files from a staging directory instead of shipping them in `out`
+	const dest = embed ? builder.getBuildDirectory('adapter-bun') : out;
+	if (embed) fs.rmSync(dest, { recursive: true, force: true });
+
+	const client_files = builder.writeClient(`${dest}/client`).filter((file) => !is_dotfile(file));
+	const prerendered_files = builder.writePrerendered(`${dest}/prerendered`);
 	validate_file_paths([
+		...client_files,
+		...prerendered_files,
 		...builder.prerendered.pages.keys(),
 		...builder.prerendered.redirects.keys()
 	]);
 
-	const server_assets = builder.findServerAssets(
-		builder.routes.filter((route) => route.prerender !== true)
-	);
+	if (precompress) {
+		await Promise.all([
+			builder.compress(`${dest}/client`),
+			builder.compress(`${dest}/prerendered`)
+		]);
+	}
 
-	const {
-		imports,
-		assets,
-		server_assets: resolved_server_assets
-	} = embed
-		? await get_embed_entries({ builder, server_assets })
-		: await get_no_embed_entries({ builder, out, server_assets, precompress });
+	/** @type {Map<string, string>} */
+	const embedded = new Map();
+
+	/**
+	 * @param {string} helper
+	 * @param {string} url
+	 * @param {string} dir
+	 * @param {string} [filename]
+	 */
+	const entry = async (helper, url, dir, filename = url) => {
+		const file = `${dest}/${dir}/${filename}`;
+		if (embed) embedded.set(file, `asset_${embedded.size}`);
+		return `[${JSON.stringify(helper)}, ${JSON.stringify(url)}, ${embedded.get(file) ?? JSON.stringify(filename)}, ${JSON.stringify(await asset_meta(file, precompress))}]`;
+	};
+
+	const pages = [...builder.prerendered.pages];
+	const page_files = new Set(pages.map(([_, { file }]) => file));
+
+	const assets = await Promise.all([
+		...client_files.map((file) => entry('client_asset', file, 'client')),
+		...pages.map(([path, { file }]) => entry('prerendered_page', path, 'prerendered', file)),
+		...prerendered_files
+			.filter((file) => !page_files.has(file))
+			.map((file) => entry('prerendered_asset', file, 'prerendered'))
+	]);
+
+	const server_assets = builder
+		.findServerAssets(builder.routes.filter((route) => route.prerender !== true))
+		.map((file) => {
+			if (!embed) return `[${JSON.stringify(file)}]`;
+			const asset = embedded.get(`${dest}/client/${file}`);
+			if (asset === undefined) throw new Error(`Could not find server asset ${file}`);
+			return `[${JSON.stringify(file)}, ${asset}]`;
+		});
 
 	const redirects = [...builder.prerendered.redirects].map(([src, { status, location }]) => {
 		return [src, status, location];
 	});
 
 	return [
-		...imports,
+		...[...embedded].map(
+			([file, asset]) =>
+				`import ${asset} from ${JSON.stringify(path.resolve(file))} with { type: 'file' };`
+		),
 		`export const assets = [\n${assets.join(',\n')}\n];`,
 		`export const redirects = ${JSON.stringify(redirects)};`,
-		`export const server_assets = [\n${resolved_server_assets.join(',\n')}\n];`
+		`export const server_assets = [\n${server_assets.join(',\n')}\n];`
 	];
-}
-
-/** @param {string} path */
-function posixify(path) {
-	return path.replace(/\\/g, '/');
 }

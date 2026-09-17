@@ -10,8 +10,6 @@ const entrypoint = `${server_dir}/adapter-index.js`;
 const handoff = '#@sveltejs/adapter-bun';
 
 let bun_build: Mock<(options: any) => Promise<any>>;
-let read_dir: Mock<typeof fs.readdirSync>;
-let exists: Mock<typeof fs.existsSync>;
 let read_file: Mock<typeof fs.readFileSync>;
 let write_file: Mock<typeof fs.writeFileSync>;
 
@@ -36,8 +34,7 @@ beforeEach(() => {
 		};
 	} as never);
 
-	read_dir = spyOn(fs, 'readdirSync').mockReturnValue([]) as any;
-	exists = spyOn(fs, 'existsSync').mockReturnValue(true);
+	spyOn(fs, 'existsSync').mockReturnValue(true);
 	spyOn(fs, 'rmSync').mockImplementation(() => {});
 	read_file = spyOn(fs, 'readFileSync').mockImplementation((() => undefined) as any) as any;
 	write_file = spyOn(fs, 'writeFileSync').mockImplementation(() => {});
@@ -305,24 +302,21 @@ describe('generated routes', () => {
 		expect(source).not.toContain('/base/base/');
 	});
 
-	test('embeds assets in compiled executables and ignores Vite metadata', async () => {
-		mock_files({
-			client: ['data.json', '.vite/manifest.json', '.well-known/asset.txt', '_app/read.txt'],
-			pages: ['page/index.html', 'favicon.ico'],
-			dependencies: ['dependency.json'],
-			data: ['page/__data.json']
+	test('embeds assets in compiled executables from a staging directory', async () => {
+		const builder = create_builder({
+			client_files: ['data.json', '.well-known/asset.txt', '_app/read.txt'],
+			prerendered_files: ['page/index.html', 'favicon.ico', 'dependency.json', 'page/__data.json'],
+			prerendered_pages: [['/page/', { file: 'page/index.html' }]],
+			server_assets: ['_app/read.txt']
 		});
 
-		await adapter({ buildOptions: { compile: true } }).adapt(
-			create_builder({
-				prerendered_pages: [['/page/', { file: 'page/index.html' }]],
-				server_assets: ['_app/read.txt']
-			})
-		);
+		await adapter({ buildOptions: { compile: true } }).adapt(builder);
 
+		expect(builder.writeClient).toHaveBeenCalledWith('.svelte-kit/adapter-bun/client');
+		expect(builder.writePrerendered).toHaveBeenCalledWith('.svelte-kit/adapter-bun/prerendered');
 		const source = handoff_source();
 		expect(source).toContain(
-			`import asset_0 from ${JSON.stringify(`${process.cwd()}/.svelte-kit/output/client/data.json`)} with { type: 'file' };`
+			`import asset_0 from ${JSON.stringify(`${process.cwd()}/.svelte-kit/adapter-bun/client/data.json`)} with { type: 'file' };`
 		);
 		expect(source).toContain('["client_asset", "data.json", asset_0, {"hash":"abc","mtime":0}]');
 		expect(source).toContain(
@@ -339,11 +333,9 @@ describe('generated routes', () => {
 			'["prerendered_asset", "page/__data.json", asset_6, {"hash":"abc","mtime":0}]'
 		);
 		expect(source).toContain('["_app/read.txt", asset_2]');
-		expect(source).not.toContain('.vite/manifest.json');
 	});
 
 	test.each([false, true])('rejects wildcard filenames when compile is %s', async (compile) => {
-		if (compile) mock_files({ client: ['literal*.txt'] });
 		const builder = create_builder({ client_files: ['literal*.txt'] });
 
 		await expect(adapter({ buildOptions: { compile } }).adapt(builder)).rejects.toThrow(
@@ -398,25 +390,10 @@ describe('generated routes', () => {
 		expect(source).toContain('["client_asset", "ok.txt", "ok.txt", {"hash":"abc","mtime":0}]');
 	});
 
-	test('embedded builds tolerate absent output directories but propagate readdir errors', async () => {
-		exists.mockReturnValue(false);
-		await adapter({ buildOptions: { compile: true } }).adapt(create_builder());
-		expect(bun_build).toHaveBeenCalledTimes(1);
-		expect(read_dir).not.toHaveBeenCalled();
-
-		exists.mockReturnValue(true);
-		read_dir.mockImplementation(() => {
-			throw Object.assign(new Error('denied'), { code: 'EACCES' });
-		});
-		await expect(
-			adapter({ buildOptions: { compile: true } }).adapt(create_builder())
-		).rejects.toThrow('denied');
-	});
-
 	test('excludes dotfiles from embedded assets', async () => {
-		mock_files({ client: ['.secret', 'public.txt'] });
-
-		await adapter({ buildOptions: { compile: true } }).adapt(create_builder());
+		await adapter({ buildOptions: { compile: true } }).adapt(
+			create_builder({ client_files: ['.secret', 'public.txt'] })
+		);
 
 		const source = handoff_source();
 		expect(source).not.toContain('.secret');
@@ -431,10 +408,12 @@ describe('generated routes', () => {
 	});
 
 	test('embedded assets with the same relative path keep distinct imports', async () => {
-		mock_files({ client: ['page.html'], pages: ['page.html'] });
-
 		await adapter({ buildOptions: { compile: true } }).adapt(
-			create_builder({ prerendered_pages: [['/page/', { file: 'page.html' }]] })
+			create_builder({
+				client_files: ['page.html'],
+				prerendered_files: ['page.html'],
+				prerendered_pages: [['/page/', { file: 'page.html' }]]
+			})
 		);
 
 		const source = handoff_source();
@@ -451,14 +430,6 @@ describe('generated routes', () => {
 			'Bun treats literal `*` characters in route paths as wildcards'
 		);
 		expect(write_file).not.toHaveBeenCalled();
-	});
-
-	test('fails when a prerendered page is absent from compiled build output', async () => {
-		await expect(
-			adapter({ buildOptions: { compile: true } }).adapt(
-				create_builder({ prerendered_pages: [['/missing/', { file: 'missing/index.html' }]] })
-			)
-		).rejects.toThrow('Could not find prerendered page missing/index.html for route /missing/');
 	});
 
 	test('fails when a server-readable asset is absent from compiled build output', async () => {
@@ -478,39 +449,6 @@ function handoff_source() {
 	const call = write_file.mock.calls.find(([file]) => file === handoff_file);
 	if (!call) throw new Error('the hand-off module was not written');
 	return String(call[1]);
-}
-
-function mock_files({
-	client = [],
-	pages = [],
-	dependencies = [],
-	data = []
-}: {
-	client?: string[];
-	pages?: string[];
-	dependencies?: string[];
-	data?: string[];
-}) {
-	read_dir.mockImplementation(((dir: unknown) => {
-		const directory = String(dir);
-		const files = directory.endsWith('/client')
-			? client
-			: directory.endsWith('/prerendered/pages')
-				? pages
-				: directory.endsWith('/prerendered/dependencies')
-					? dependencies
-					: data;
-
-		return files.map((file) => {
-			const segments = file.split('/');
-			const name = segments.pop();
-			return {
-				name,
-				parentPath: [directory, ...segments].join('/'),
-				isFile: () => true
-			};
-		});
-	}) as unknown as typeof fs.readdirSync);
 }
 
 function create_builder({
@@ -550,6 +488,7 @@ function create_builder({
 		getAppPath: () => `${base}/_app`,
 		generateServerInstance: mock(() => {}),
 		getServerDirectory: () => server_dir,
+		getBuildDirectory: (name: string) => `.svelte-kit/${name}`,
 		writeClient: mock(() => client_files),
 		writePrerendered: mock(() => prerendered_files),
 		copy: mock(() => []),
