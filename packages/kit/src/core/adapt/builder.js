@@ -370,13 +370,7 @@ async function compress_file(file) {
 
 	const [gz, br] = await Promise.all([
 		gzip(contents, { level: zlib.constants.Z_BEST_COMPRESSION }),
-		brotli(contents, {
-			params: {
-				[zlib.constants.BROTLI_PARAM_MODE]: zlib.constants.BROTLI_MODE_TEXT,
-				[zlib.constants.BROTLI_PARAM_QUALITY]: zlib.constants.BROTLI_MAX_QUALITY,
-				[zlib.constants.BROTLI_PARAM_SIZE_HINT]: contents.length
-			}
-		})
+		brotli(contents)
 	]);
 
 	await Promise.all([
