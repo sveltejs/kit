@@ -71,11 +71,31 @@ jobs:
           name: platform-netlify-${{ matrix.name }}-${{ github.run_id }}
           path: ${{ runner.temp }}/platform-output
 
+      - if: matrix.name == 'basic'
+        env:
+          PROJECT_ID: ${{ secrets.NETLIFY_PROJECT_ID_BASIC }}
+        run: echo "NETLIFY_PROJECT_ID=$PROJECT_ID" >> "$GITHUB_ENV"
+
+      - if: matrix.name == 'edge'
+        env:
+          PROJECT_ID: ${{ secrets.NETLIFY_PROJECT_ID_EDGE }}
+        run: echo "NETLIFY_PROJECT_ID=$PROJECT_ID" >> "$GITHUB_ENV"
+
+      - if: matrix.name == 'instrumentation'
+        env:
+          PROJECT_ID: ${{ secrets.NETLIFY_PROJECT_ID_INSTRUMENTATION }}
+        run: echo "NETLIFY_PROJECT_ID=$PROJECT_ID" >> "$GITHUB_ENV"
+
+      - if: startsWith(matrix.name, 'split')
+        env:
+          PROJECT_ID: ${{ secrets.NETLIFY_PROJECT_ID_SPLIT }}
+        run: echo "NETLIFY_PROJECT_ID=$PROJECT_ID" >> "$GITHUB_ENV"
+
       - uses: ./.workflow/.github/actions/netlify-deploy
         id: deploy
         with:
           artifact-dir: ${{ runner.temp }}/platform-output
-          netlify-project-id: ${{ matrix.name == 'basic' && secrets.NETLIFY_PROJECT_ID_BASIC || matrix.name == 'edge' && secrets.NETLIFY_PROJECT_ID_EDGE || matrix.name == 'instrumentation' && secrets.NETLIFY_PROJECT_ID_INSTRUMENTATION || secrets.NETLIFY_PROJECT_ID_SPLIT }}
+          netlify-project-id: ${{ env.NETLIFY_PROJECT_ID }}
           netlify-token: ${{ secrets.NETLIFY_TOKEN }}
 
       - name: Save deployment URL
