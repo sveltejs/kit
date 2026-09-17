@@ -26,7 +26,6 @@ jobs:
       name: basic
       test-app-dir: packages/adapter-vercel/test/apps/basic
       purge-cache: true
-    secrets: inherit
 
   split:
     uses: ./.github/workflows/platform-test-vercel.yml
@@ -34,4 +33,3 @@ jobs:
       sha: ${{ inputs.sha || github.sha }}
       name: split
       test-app-dir: packages/adapter-vercel/test/apps/split
-    secrets: inherit

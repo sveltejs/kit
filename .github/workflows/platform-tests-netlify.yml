@@ -25,7 +25,6 @@ jobs:
       sha: ${{ inputs.sha || github.sha }}
       name: basic
       test-app-dir: packages/adapter-netlify/test/apps/basic
-    secrets: inherit
 
   edge:
     uses: ./.github/workflows/platform-test-netlify.yml
@@ -33,7 +32,6 @@ jobs:
       sha: ${{ inputs.sha || github.sha }}
       name: edge
       test-app-dir: packages/adapter-netlify/test/apps/edge
-    secrets: inherit
 
   instrumentation:
     uses: ./.github/workflows/platform-test-netlify.yml
@@ -41,7 +39,6 @@ jobs:
       sha: ${{ inputs.sha || github.sha }}
       name: instrumentation
       test-app-dir: packages/adapter-netlify/test/apps/instrumentation
-    secrets: inherit
 
   split:
     uses: ./.github/workflows/platform-test-netlify.yml
@@ -49,7 +46,6 @@ jobs:
       sha: ${{ inputs.sha || github.sha }}
       name: split
       test-app-dir: packages/adapter-netlify/test/apps/split
-    secrets: inherit
 
   split-edge:
     uses: ./.github/workflows/platform-test-netlify.yml
@@ -58,4 +54,3 @@ jobs:
       name: split-edge
       test-app-dir: packages/adapter-netlify/test/apps/split
       edge: true
-    secrets: inherit
