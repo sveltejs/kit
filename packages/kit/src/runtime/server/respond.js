@@ -2,13 +2,7 @@
 import { DEV } from 'esm-env';
 import { text } from '@sveltejs/kit';
 import { Redirect, SvelteKitError } from '@sveltejs/kit/internal';
-import {
-	merge_tracing,
-	otel,
-	record_span,
-	with_request_store,
-	RequestEvent
-} from '@sveltejs/kit/internal/server';
+import { otel, record_span, with_request_store, RequestEvent } from '@sveltejs/kit/internal/server';
 import { base, app_dir } from '#app/paths';
 import { is_endpoint_request, render_endpoint } from './endpoint.js';
 import { render_page } from './page/index.js';
@@ -443,7 +437,7 @@ export async function internal_respond(request, state) {
 				'sveltekit.is_sub_request': event.isSubRequest
 			},
 			fn: async (root_span) => {
-				const traced_event = event.clone(0);
+				const traced_event = event.clone();
 				traced_event.tracing = {
 					enabled: __SVELTEKIT_SERVER_TRACING_ENABLED__,
 					root: root_span,
@@ -460,32 +454,33 @@ export async function internal_respond(request, state) {
 									'http.route': event.route.id || 'unknown'
 								},
 								fn: (resolve_span) => {
+									const traced_event = RequestEvent.from(event);
+									traced_event.tracing = { ...event.tracing, current: resolve_span };
+
 									// counter-intuitively, we need to clear the event, so that it's not
 									// e.g. accessible when loading modules needed to handle the request
 									return with_request_store(null, () =>
-										resolve(merge_tracing(event, resolve_span), page_nodes, opts).then(
-											(response) => {
-												// add headers/cookies here, rather than inside `resolve`, so that we
-												// can do it once for all responses instead of once per `return`
-												for (const key in state.headers) {
-													response.headers.set(key, state.headers[key]);
-												}
-
-												add_cookies_to_headers(response.headers, new_cookies.values());
-
-												if (state.prerendering && event.route.id !== null) {
-													response.headers.set('x-sveltekit-routeid', encodeURI(event.route.id));
-												}
-
-												resolve_span.setAttributes({
-													'http.response.status_code': response.status,
-													'http.response.body.size':
-														response.headers.get('content-length') || 'unknown'
-												});
-
-												return response;
+										resolve(traced_event, page_nodes, opts).then((response) => {
+											// add headers/cookies here, rather than inside `resolve`, so that we
+											// can do it once for all responses instead of once per `return`
+											for (const key in state.headers) {
+												response.headers.set(key, state.headers[key]);
 											}
-										)
+
+											add_cookies_to_headers(response.headers, new_cookies.values());
+
+											if (state.prerendering && event.route.id !== null) {
+												response.headers.set('x-sveltekit-routeid', encodeURI(event.route.id));
+											}
+
+											resolve_span.setAttributes({
+												'http.response.status_code': response.status,
+												'http.response.body.size':
+													response.headers.get('content-length') || 'unknown'
+											});
+
+											return response;
+										})
 									);
 								}
 							});

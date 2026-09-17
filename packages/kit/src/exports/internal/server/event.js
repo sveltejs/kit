@@ -1,4 +1,5 @@
 /** @import { Cookies, RequestEvent as Interface } from '@sveltejs/kit' */
+/** @import { Span } from '@opentelemetry/api' */
 /** @import { RequestState, RequestStore } from 'types' */
 /** @import { AsyncLocalStorage } from 'node:async_hooks' */
 import { DEV } from 'esm-env';
@@ -168,13 +169,13 @@ export class RequestEvent {
 	}
 
 	/**
-	 * An event a user built by hand for `resolve` becomes one of ours
+	 * A copy of an event that may have been built by hand for `resolve`
 	 * @param {Interface} event
 	 * @returns {RequestEvent}
 	 */
 	static from(event) {
 		return event instanceof RequestEvent
-			? event
+			? event.clone()
 			: new RequestEvent(event, /** @type {Partial<RequestEvent>} */ (event)[CONTEXT] ?? 0);
 	}
 
@@ -183,9 +184,9 @@ export class RequestEvent {
 		return (this[CONTEXT] & QUERY) !== 0;
 	}
 
-	/** Inside a `query` or `prerender` function, which may not write cookies or call commands */
-	get read_only() {
-		return (this[CONTEXT] & (QUERY | PRERENDER)) !== 0;
+	/** Inside a `prerender` function, however deep */
+	get in_prerender() {
+		return (this[CONTEXT] & PRERENDER) !== 0;
 	}
 
 	/** Inside a `form` or `command` function */
@@ -204,12 +205,12 @@ export class RequestEvent {
 	}
 
 	/**
-	 * The only way to copy an event: a view for the given kind of code (0 for a plain copy),
-	 * minus what that kind may not do, with the kinds already on the stack carried along
-	 * @param {number} kind
+	 * The only way to copy an event: a view for the given kind of code, minus what that kind
+	 * may not do, with the kinds already on the stack carried along
+	 * @param {number} [kind]
 	 * @returns {RequestEvent}
 	 */
-	clone(kind) {
+	clone(kind = 0) {
 		const flags = this[CONTEXT] | kind;
 		const view =
 			flags & QUERY
@@ -217,10 +218,20 @@ export class RequestEvent {
 				: new RequestEvent(this, flags);
 
 		if (kind & (QUERY | PRERENDER | FORM | COMMAND)) {
-			view.cookies = new RemoteCookies(this.cookies, view.read_only);
+			view.cookies = new RemoteCookies(this.cookies, view.in_query || view.in_prerender);
 			view.setHeaders = forbid_set_headers;
 		}
 
+		return view;
+	}
+
+	/**
+	 * @param {Span} current
+	 * @returns {RequestEvent}
+	 */
+	traced(current) {
+		const view = this.clone();
+		view.tracing = { ...this.tracing, current };
 		return view;
 	}
 }

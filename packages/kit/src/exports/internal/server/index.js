@@ -1,22 +1,9 @@
-/** @import { Span } from '@opentelemetry/api' */
-/** @import { RequestEvent as Interface } from '@sveltejs/kit' */
-import { RequestEvent, try_get_request_store } from './event.js';
+import { try_get_request_store } from './event.js';
 
 export function get_origin() {
 	// `request.url` rather than `event.url`, which throws inside queries
 	const request = try_get_request_store()?.event.request;
 	return request && new URL(request.url).origin;
-}
-
-/**
- * @param {Interface} event
- * @param {Span} current
- * @returns {RequestEvent}
- */
-export function merge_tracing(event, current) {
-	const traced = RequestEvent.from(event).clone(0);
-	traced.tracing = { ...event.tracing, current };
-	return traced;
 }
 
 export {

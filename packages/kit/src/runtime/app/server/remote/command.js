@@ -64,7 +64,7 @@ export function command(validate_or_fn, maybe_fn) {
 	/** @type {RemoteCommand<Input, Output> & { __: RemoteCommandInternals }} */
 	const wrapper = (arg) => {
 		const { event, state } = get_request_store();
-		const nested = event.read_only;
+		const nested = event.in_query || event.in_prerender;
 
 		if (nested || !MUTATIVE_METHODS.includes(event.request.method)) {
 			const violation = nested

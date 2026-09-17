@@ -25,14 +25,14 @@ test('flags accumulate through nested views', () => {
 	assert.isTrue(event.in_render);
 	assert.isTrue(event.in_query);
 	assert.isTrue(event.in_remote);
-	assert.isTrue(event.read_only);
+	assert.isFalse(event.in_prerender);
 	assert.isFalse(event.in_mutation);
 	assert.isFalse(root().in_render);
 });
 
 test('a query view throws on access to the page, on every copy', () => {
 	const query = root().clone(QUERY);
-	const traced = query.clone(0);
+	const traced = query.clone();
 
 	for (const event of [query, traced, traced.clone(QUERY)]) {
 		for (const property of /** @type {const} */ (['url', 'params', 'route'])) {
@@ -58,7 +58,7 @@ test('an event built by hand is adopted with its flags', () => {
 
 	assert.isTrue(adopted instanceof RequestEvent);
 	assert.isTrue(adopted.in_render);
-	assert.strictEqual(RequestEvent.from(own), own);
+	assert.notStrictEqual(RequestEvent.from(own), own);
 });
 
 test('views share the request data and own nothing else', () => {

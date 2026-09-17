@@ -4,7 +4,7 @@
 
 import { error } from '@sveltejs/kit';
 import { Redirect, SvelteKitError } from '@sveltejs/kit/internal';
-import { with_request_store, merge_tracing, record_span } from '@sveltejs/kit/internal/server';
+import { with_request_store, record_span } from '@sveltejs/kit/internal/server';
 import { app_dir, base } from '#app/paths';
 import { is_form_content_type } from '../../utils/http.js';
 import { create_remote_key, parse_remote_arg, split_remote_key } from '../shared.js';
@@ -35,7 +35,7 @@ const KEEP_ALIVE_INTERVAL = 30_000;
  */
 export function create_live_query_response(event, state, internals, arg) {
 	const cancellation = new AbortController();
-	const live_event = event.clone(0);
+	const live_event = event.clone();
 	live_event.request = new Request(event.request, {
 		signal: AbortSignal.any([event.request.signal, cancellation.signal])
 	});
@@ -146,7 +146,7 @@ export async function handle_remote_call(event, state, id) {
 			'sveltekit.remote.call.id': id
 		},
 		fn: async (current) => {
-			const traced_event = merge_tracing(event, current);
+			const traced_event = event.traced(current);
 			const response = await with_request_store({ event: traced_event, state }, () =>
 				handle_remote_call_internal(traced_event, state, id)
 			);
@@ -512,7 +512,7 @@ export async function handle_remote_form_post(event, state, id) {
 			'sveltekit.remote.form.post.id': id
 		},
 		fn: (current) => {
-			const traced_event = merge_tracing(event, current);
+			const traced_event = event.traced(current);
 			return with_request_store({ event: traced_event, state }, () =>
 				handle_remote_form_post_internal(traced_event, state, id)
 			);
