@@ -13,5 +13,6 @@ export const params = defineParams({
 		const value = parseInt(param);
 		if (isNaN(value)) return;
 		return value;
-	}
+	},
+	bigint: (param) => BigInt(param)
 });

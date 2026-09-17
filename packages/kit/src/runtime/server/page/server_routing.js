@@ -2,6 +2,7 @@
 import { base, assets } from '#app/paths';
 import { relative } from '$app/paths/internal/server';
 import { text } from '@sveltejs/kit';
+import { uneval } from 'devalue';
 import { s } from '../../../utils/misc.js';
 import { find_route } from '../../../utils/routing.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
@@ -156,7 +157,7 @@ export function create_server_routing_response(route, params, url, client) {
 		body = `${create_css_import(route, url, client)}export const route = ${csr_route};`;
 
 		if (params !== null) {
-			body += `\nexport const params = ${JSON.stringify(params)}`;
+			body += `\nexport const params = ${uneval(params)}`;
 		}
 	}
 

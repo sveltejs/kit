@@ -1086,6 +1086,9 @@ test.describe('Matchers', () => {
 		await clicknav('[href="/routing/matched/1"]');
 		expect(await page.textContent('h1')).toBe('number: 1');
 
+		await clicknav('[href="/routing/matched/bigint/9007199254740993"]');
+		expect(await page.textContent('h1')).toBe('bigint: 9007199254740993 (bigint)');
+
 		await clicknav('[href="/routing/matched/everything-else"]');
 		expect(await page.textContent('h1')).toBe('fallback: everything-else');
 	});
