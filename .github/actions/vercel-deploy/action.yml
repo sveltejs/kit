@@ -2,6 +2,9 @@ name: 'Vercel Deploy'
 description: 'Deploy a prebuilt test app to Vercel'
 
 inputs:
+  variant:
+    description: 'Name of the test app variant'
+    required: true
   # Important: When setting up a new Vercel test app, make sure
   # to set the root directory in the dashboard to the correct path.
   vercel-project-id:
@@ -27,7 +30,7 @@ runs:
   steps:
     - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
       with:
-        name: platform-vercel-${{ env.VARIANT }}-${{ github.run_id }}
+        name: platform-vercel-${{ inputs.variant }}-${{ github.run_id }}
         path: ${{ runner.temp }}/platform-output
 
     - uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
@@ -69,7 +72,7 @@ runs:
 
     - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       with:
-        name: platform-vercel-${{ env.VARIANT }}-deployment-${{ github.run_id }}
+        name: platform-vercel-${{ inputs.variant }}-deployment-${{ github.run_id }}
         path: ${{ runner.temp }}/deployment/url
         if-no-files-found: error
         retention-days: 1

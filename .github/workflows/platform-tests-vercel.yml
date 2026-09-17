@@ -19,7 +19,6 @@ permissions:
   contents: read
 
 env:
-  PLATFORM: vercel
   PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
 
 jobs:
@@ -71,6 +70,7 @@ jobs:
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_BASIC }}
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          variant: ${{ env.VARIANT }}
           purge-cache: true
 
   deploy-split:
@@ -88,6 +88,7 @@ jobs:
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_SPLIT }}
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          variant: ${{ env.VARIANT }}
 
   test-basic:
     if: github.repository == 'sveltejs/kit'
@@ -102,6 +103,9 @@ jobs:
       - uses: ./.workflow/.github/actions/platform-test
         with:
           sha: ${{ inputs.sha || github.sha }}
+          platform: vercel
+          test-app-dir: ${{ env.TEST_APP_DIR }}
+          variant: ${{ env.VARIANT }}
 
   test-split:
     if: github.repository == 'sveltejs/kit'

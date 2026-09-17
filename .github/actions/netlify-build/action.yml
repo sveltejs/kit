@@ -11,6 +11,10 @@ inputs:
   variant:
     description: 'Name of the test app variant'
     required: true
+  edge:
+    description: 'Build the test app with Netlify Edge Functions'
+    required: false
+    default: 'false'
 
 runs:
   using: 'composite'
@@ -29,6 +33,8 @@ runs:
     - name: Build test app
       shell: bash
       working-directory: .target/${{ inputs.test-app-dir }}
+      env:
+        EDGE: ${{ inputs.edge }}
       run: pnpm build
 
     - name: Stage deployment artifact
