@@ -266,6 +266,10 @@ importers:
         version: 6.0.3
 
   packages/adapter-bun/test/apps/basic:
+    dependencies:
+      jsdom:
+        specifier: 'catalog:'
+        version: 30.0.1
     devDependencies:
       '@playwright/test':
         specifier: 'catalog:'
