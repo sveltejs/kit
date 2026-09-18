@@ -119,7 +119,7 @@ test.describe('Encoded paths', () => {
 
 		expect(new URL(page.url()).pathname).toBe('/encoded/m%C3%B8te');
 		expect(new URL(page.url()).search).toBe('?q=a%20b');
-		expect(await page.innerHTML('h1')).toBe('dynamic');
+		await expect(page.locator('h1')).toHaveText('dynamic');
 	});
 
 	test('redirects do not re-encode the redirect string', async ({ page, clicknav }) => {
