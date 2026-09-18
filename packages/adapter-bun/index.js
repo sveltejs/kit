@@ -69,6 +69,23 @@ async function asset_meta(file, precompress = false) {
 	return meta;
 }
 
+/** @param {string[]} files */
+function validate_file_paths(files) {
+	for (const file of files) {
+		if (file.includes('*')) {
+			throw new Error(
+				`Cannot build with ${JSON.stringify(file)} because Bun treats literal \`*\` characters in route paths as wildcards. Rename the file or route to remove the \`*\` character.`
+			);
+		}
+		// a leading ':' would need percent-encoding, but browsers request the colon raw
+		if (file.split('/').some((segment) => segment.startsWith(':'))) {
+			throw new Error(
+				`Cannot build with ${JSON.stringify(file)} because Bun treats a route segment starting with \`:\` as a parameter. Rename the file or route so no segment starts with \`:\`.`
+			);
+		}
+	}
+}
+
 /** @type {import('./index.js').default} */
 export default function (opts = {}) {
 	const {
@@ -231,6 +248,12 @@ async function create_assets({ builder, out, embed, precompress }) {
 
 	const client_files = builder.writeClient(`${dest}/client`).filter((file) => !is_dotfile(file));
 	const prerendered_files = builder.writePrerendered(`${dest}/prerendered`);
+	validate_file_paths([
+		...client_files,
+		...prerendered_files,
+		...builder.prerendered.pages.keys(),
+		...builder.prerendered.redirects.keys()
+	]);
 
 	if (precompress) {
 		await Promise.all([

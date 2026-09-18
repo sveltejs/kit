@@ -310,6 +310,14 @@ test.describe('Load', () => {
 		expect(requests.filter((r) => !r.includes('/__route.js'))).toEqual([]);
 	});
 
+	test('non-GET requests evict cached responses with hashed keys', async ({ page }) => {
+		await page.goto('/load/fetch-cache-control/headers-diff');
+		await expect(page.locator('p')).toHaveText('0 / 0');
+
+		await page.locator('button').click();
+		await expect(page.locator('p')).toHaveText('1 / 1');
+	});
+
 	test('use correct cache result when fetching same url multiple times', async ({
 		page,
 		request
