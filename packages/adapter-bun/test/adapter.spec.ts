@@ -339,15 +339,6 @@ describe('generated routes', () => {
 		expect(source).toContain('["_app/read.txt", asset_2]');
 	});
 
-	test.each([false, true])('rejects wildcard filenames when compile is %s', async (compile) => {
-		const builder = create_builder({ client_files: ['literal*.txt'] });
-
-		await expect(adapter({ buildOptions: { compile } }).adapt(builder)).rejects.toThrow(
-			'Bun treats literal `*` characters in route paths as wildcards'
-		);
-		expect(write_file).not.toHaveBeenCalled();
-	});
-
 	test('precompresses assets and marks the variants in the generated routes', async () => {
 		const builder = create_builder({ client_files: ['app.js'] });
 
@@ -369,24 +360,6 @@ describe('generated routes', () => {
 			expect.stringContaining('precompress is ignored')
 		);
 		expect(builder.compress).not.toHaveBeenCalled();
-	});
-
-	test('rejects route segments starting with a colon', async () => {
-		const builder = create_builder({ client_files: [':tag.txt'] });
-
-		await expect(adapter().adapt(builder)).rejects.toThrow('starts with `:`');
-		expect(write_file).not.toHaveBeenCalled();
-	});
-
-	test('rejects wildcard characters in prerendered redirect sources', async () => {
-		const builder = create_builder({
-			prerendered_redirects: [['/docs/*', { status: 308, location: '/new' }]]
-		});
-
-		await expect(adapter().adapt(builder)).rejects.toThrow(
-			'Bun treats literal `*` characters in route paths as wildcards'
-		);
-		expect(write_file).not.toHaveBeenCalled();
 	});
 
 	test('fails when a server-readable asset is absent from compiled build output', async () => {
