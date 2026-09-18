@@ -811,6 +811,7 @@ test.describe('remote functions', () => {
 		await page.goto('/remote/prerender');
 		await clicknav('[href="/remote/prerender/whole-page"]');
 		await expect(page.locator('#prerendered-data')).toHaveText('a c 中文 yes');
+		await expect(page.locator('[data-prerendered]')).toHaveAttribute('action', /^\?\/remote=/);
 
 		await page.goto('/remote/prerender');
 		await clicknav('[href="/remote/prerender/functions-only"]');
