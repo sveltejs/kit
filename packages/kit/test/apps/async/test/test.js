@@ -964,7 +964,7 @@ test.describe('remote functions', () => {
 		await expect(ageTouched).toHaveText('Age touched: false');
 	});
 
-	test('selects are not nuked when unrelated controls change', async ({
+	test('preflight validation preserves untouched selects with an empty value', async ({
 		page,
 		javaScriptEnabled
 	}) => {
@@ -972,8 +972,17 @@ test.describe('remote functions', () => {
 
 		await page.goto('/remote/form/select-untouched');
 
+		const select = page.locator('select');
+		await expect(select).toHaveValue('');
+		await expect(select).toHaveJSProperty('selectedIndex', 0);
+
 		await page.fill('input', 'hello');
-		await expect(page.locator('select')).toHaveValue('one');
+		const validated = page.waitForResponse((response) => response.request().method() === 'POST');
+		await page.locator('input').blur();
+		await validated;
+
+		await expect(select).toHaveValue('');
+		await expect(select).toHaveJSProperty('selectedIndex', 0);
 	});
 	test('file uploads work', async ({ page }) => {
 		await page.goto('/remote/form/file-upload');
