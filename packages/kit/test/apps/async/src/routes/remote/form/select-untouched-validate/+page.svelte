@@ -22,3 +22,9 @@
 		?.map((i) => i.message)
 		.join(',') ?? ''}
 </p>
+<p id="text-issues">
+	{myform.fields.text
+		.issues()
+		?.map((i) => i.message)
+		.join(',') ?? ''}
+</p>
