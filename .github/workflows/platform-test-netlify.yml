@@ -98,7 +98,7 @@ jobs:
             .github/actions
             pnpm-lock.yaml
           path: .workflow
-      - uses: ./.workflow/.github/actions/platform-test
+      - uses: ./.workflow/.github/actions/deployment-test
         with:
           sha: ${{ inputs.sha }}
           platform: netlify
