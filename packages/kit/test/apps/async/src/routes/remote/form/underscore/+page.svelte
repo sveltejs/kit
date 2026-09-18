@@ -5,6 +5,8 @@
 <form {...register}>
 	<input {...register.fields.username.as('text')} />
 	<input {...register.fields._password.as('password')} />
+	<input {...register.fields._pin.as('number')} />
+	<input {...register.fields.user._password.as('password')} />
 
 	<button>submit</button>
 </form>
