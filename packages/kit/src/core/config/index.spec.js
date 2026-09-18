@@ -165,6 +165,17 @@ test('errors on invalid values', () => {
 	}, /^config\.appDir should be a string, if specified$/);
 });
 
+test.each([-1, 0, 1.5, Infinity, NaN])(
+	'errors on invalid prerender concurrency %s',
+	(concurrency) => {
+		assert_logs_error_and_throws(() => {
+			validate_config({
+				prerender: { concurrency }
+			});
+		}, /^config\.prerender\.concurrency should be a positive integer, if specified$/);
+	}
+);
+
 test('errors on invalid nested values', () => {
 	assert_logs_error_and_throws(() => {
 		validate_config({

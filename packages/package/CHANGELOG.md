@@ -1,5 +1,11 @@
 # @sveltejs/package
 
+## 3.0.0-next.8
+
+### Patch Changes
+
+- chore: read the Svelte config via `@sveltejs/load-config` ([#17039](https://github.com/sveltejs/kit/pull/17039))
+
 ## 3.0.0-next.7
 
 ### Patch Changes
