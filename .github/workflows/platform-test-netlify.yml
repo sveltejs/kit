@@ -45,7 +45,7 @@ jobs:
 
       # TODO: version-3 branch has no build command, so remove this step
       - name: Build adapter
-        run: pnpm --filter --if-present @sveltejs/adapter-netlify build
+        run: pnpm --filter @sveltejs/adapter-netlify --if-present build
 
       - name: Build test app
         working-directory: ${{ inputs.test-app-dir }}
