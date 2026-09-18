@@ -38,7 +38,7 @@ jobs:
         with:
           bun-version: 1.4.0
 
-      - uses: ./.github/actions/platform-test
+      - uses: ./.github/actions/node-test
         with:
           test-app-dir: packages/adapter-bun/test/apps/basic
           os: ubuntu-latest

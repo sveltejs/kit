@@ -170,12 +170,13 @@ function analyse_endpoint(route, mod) {
 
 	if (
 		mod.prerender &&
-		/** @type {import('types').HttpMethod[]} */ (BODY_DEPENDENT_METHODS).some(
-			(method) => mod[method]
-		)
+		(mod.fallback ||
+			/** @type {import('types').HttpMethod[]} */ (BODY_DEPENDENT_METHODS).some(
+				(method) => mod[method]
+			))
 	) {
 		throw new Error(
-			`Cannot prerender a +server file with ${BODY_DEPENDENT_METHODS.join(', ')} handlers (${route.id})`
+			`Cannot prerender a +server file with ${BODY_DEPENDENT_METHODS.join(', ')} or fallback handlers (${route.id})`
 		);
 	}
 

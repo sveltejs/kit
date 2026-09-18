@@ -505,6 +505,7 @@ await myCache.match(request);
 - output now conforms to the stable [Netlify Frameworks API](https://docs.netlify.com/build/frameworks/frameworks-api/)
 - deploying/previewing with the Netlify CLI requires `v17.31.0` or later (`npm i -g netlify-cli@latest`)
 - edge function build target is `es2022`
+- the publish directory is now an adapter option rather than being read from the `netlify.toml` file
 
 ### `adapter-vercel`
 

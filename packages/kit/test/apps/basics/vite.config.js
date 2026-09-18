@@ -119,6 +119,6 @@ export default defineConfig({
 			],
 			headless: true
 		},
-		include: ['unit-test/**/*.spec.js']
+		include: ['test/vitest/client.spec.js']
 	}
 });

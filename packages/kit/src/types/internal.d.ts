@@ -70,6 +70,9 @@ export interface ServerModule {
 	format_response(status: number, request: Request): string;
 }
 
+/** the built `server/internal.js` */
+export type ServerInternalModule = typeof import('<sveltekit:generated>/server.js');
+
 export interface Asset {
 	file: string;
 	type: string | null;
