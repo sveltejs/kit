@@ -211,7 +211,11 @@ async function load_start({
 
 	const routes = { '/asset': { GET: new Response('asset') } };
 	const handler = mock(() => {});
-	mock.module('../src/assets.js', () => ({ routes, server_assets: new Map() }));
+	mock.module('../src/assets.js', () => ({
+		routes,
+		serve_static: () => undefined,
+		server_assets: new Map()
+	}));
 	mock.module('../src/handler.js', () => ({ handler }));
 
 	const stop = mock(stop_implementation ?? (async () => {}));

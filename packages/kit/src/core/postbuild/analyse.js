@@ -42,21 +42,15 @@ async function analyse({
 	const server_root = join(config.outDir, 'output');
 
 	/** @type {import('types').ServerInternalModule} */
-	const internal = await import(pathToFileURL(`${server_root}/server/internal.js`).href);
+	const { configure } = await import(pathToFileURL(`${server_root}/server/internal.js`).href);
 
-	// configure `import { building } from '$app/env'` —
-	// essential we do this before analysing the code
-	internal.set_building();
-
-	// set `read` and `manifest`, in case they're used in initialisation
-	internal.set_manifest(manifest);
-	internal.set_read_implementation((file) => createReadableStream(`${server_root}/server/${file}`));
-
-	// `set_env` lives in a separate module that imports the user's `src/env` config. We import it
-	// *after* `set_building()` so that `building`-dependent expressions resolve correctly
-	/** @type {typeof import('<sveltekit:generated>/env/config.js')} */
-	const { set_env } = await import(pathToFileURL(`${server_root}/server/env.js`).href);
-	set_env(env);
+	// everything user modules may read at their top level, before any of them are analysed
+	await configure({
+		building: true,
+		manifest,
+		env,
+		read: (file) => createReadableStream(`${server_root}/server/${file}`)
+	});
 
 	/** @type {import('types').ServerMetadata} */
 	const metadata = {
@@ -177,12 +171,13 @@ function analyse_endpoint(route, mod) {
 
 	if (
 		mod.prerender &&
-		/** @type {import('types').HttpMethod[]} */ (BODY_DEPENDENT_METHODS).some(
-			(method) => mod[method]
-		)
+		(mod.fallback ||
+			/** @type {import('types').HttpMethod[]} */ (BODY_DEPENDENT_METHODS).some(
+				(method) => mod[method]
+			))
 	) {
 		throw new Error(
-			`Cannot prerender a +server file with ${BODY_DEPENDENT_METHODS.join(', ')} handlers (${route.id})`
+			`Cannot prerender a +server file with ${BODY_DEPENDENT_METHODS.join(', ')} or fallback handlers (${route.id})`
 		);
 	}
 
