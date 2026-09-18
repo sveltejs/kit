@@ -206,6 +206,28 @@ test('resolves entries that have an extension', () => {
 	expect(resolve_entry(join(source_dir, 'hooks.js'))).toBe(join(source_dir, 'hooks.js'));
 });
 
+test('resolves entries with an extension from moduleExtensions', () => {
+	write('hooks.server.py', '');
+
+	expect(resolve_entry(join(source_dir, 'hooks.server'), ['.js', '.ts', '.py'])).toBe(
+		join(source_dir, 'hooks.server.py')
+	);
+});
+
+test('ignores extensions that are not listed', () => {
+	write('hooks.server.py', '');
+
+	expect(resolve_entry(join(source_dir, 'hooks.server'))).null;
+});
+
+test('resolves index files with an extension from moduleExtensions', () => {
+	write(join('params', 'index.py'), '');
+
+	expect(resolve_entry(source_dir + '/params', ['.js', '.ts', '.py'])).toBe(
+		join(source_dir, 'params', 'index.py')
+	);
+});
+
 test('resolves universal hooks file when hooks folder exists', () => {
 	write(join('hooks', 'not-index.js'), '');
 	write('hooks.js', '');
