@@ -7,6 +7,7 @@ import {
 	deep_get,
 	deep_set,
 	deserialize_binary_form,
+	flatten_issues,
 	parse_form_key,
 	serialize_binary_form,
 	split_path
@@ -843,6 +844,15 @@ describe('deep_set', () => {
 		deep_set(target, ['nested', 'file'], DELETE_KEY);
 
 		expect(target).toEqual({ nested: {} });
+	});
+});
+
+describe('prototype property names', () => {
+	test('are treated like ordinary form field names', () => {
+		expect.soft(deep_get({}, ['toString'])).toBeUndefined();
+
+		const issue = { name: 'toString', path: ['toString'], message: 'invalid', server: true };
+		expect(flatten_issues([issue])).toEqual({ $: [issue], toString: [issue] });
 	});
 });
 

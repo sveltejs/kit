@@ -578,7 +578,7 @@ export function normalize_issue(issue, server = false) {
  */
 export function flatten_issues(issues) {
 	/** @type {Record<string, InternalRemoteFormIssue[]>} */
-	const result = {};
+	const result = Object.create(null);
 
 	for (const issue of issues) {
 		(result.$ ??= []).push(issue);
@@ -610,7 +610,9 @@ export function flatten_issues(issues) {
 export function deep_get(object, path) {
 	let current = object;
 	for (const key of path) {
-		if (current === null || typeof current !== 'object') return undefined;
+		if (current === null || typeof current !== 'object' || !Object.hasOwn(current, key)) {
+			return undefined;
+		}
 		current = current[key];
 	}
 	return current;
