@@ -35,9 +35,10 @@ test.describe('remote functions', () => {
 		);
 	});
 
-	test('query redirects on page load (query on page)', async ({ page }) => {
+	test('query redirects across layout boundaries', async ({ page }) => {
 		await page.goto('/remote/query-redirect');
 		await page.click('a[href="/remote/query-redirect/from-page"]');
+		await expect(page).toHaveURL(/\/remote\/query-redirect\/redirected$/);
 		await expect(page.locator('#redirected')).toHaveText('redirected');
 	});
 
