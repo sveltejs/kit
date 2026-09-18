@@ -4,6 +4,8 @@ title: Node servers
 
 To generate a standalone Node server, use [`adapter-node`](https://github.com/sveltejs/kit/tree/main/packages/adapter-node).
 
+A quick way to get started is to deploy a project using the [official Railway template](https://railway.com/deploy/svelte-kit).
+
 ## Usage
 
 Install with `npm i -D @sveltejs/adapter-node`, then add the adapter to your `vite.config.js`:
@@ -282,7 +284,3 @@ app.listen(3000, () => {
 > [!NOTE] When you use `handler.js` in a custom server, only the environment variables read by the handler itself take effect: `PROTOCOL_HEADER`, `HOST_HEADER`, `PORT_HEADER`, `ADDRESS_HEADER`, `XFF_DEPTH`, and `BODY_SIZE_LIMIT`.
 >
 > The server-lifecycle variables (`PORT`, `HOST`, `SOCKET_PATH`, `SHUTDOWN_TIMEOUT`, `IDLE_TIMEOUT`, `KEEP_ALIVE_TIMEOUT`, `HEADERS_TIMEOUT`, `LISTEN_PID`, `LISTEN_FDS`) are only honored by the default `node build` server. Implement them yourself in a custom server if you need the same behavior — for example, the snippet above listens on a hardcoded `3000` regardless of `PORT`.
-
-## Railway
-
-A quick way to try out a SvelteKit Node.js application is to deploy one using the [official Railway template](https://railway.com/deploy/svelte-kit).
