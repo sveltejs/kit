@@ -857,6 +857,19 @@ describe('prototype property names', () => {
 });
 
 describe('deep_get', () => {
+	test('tracks missing properties on reactive proxies', () => {
+		let tracked = false;
+		const object = new Proxy(
+			{},
+			{
+				has: () => (tracked = true)
+			}
+		);
+
+		expect(deep_get(object, ['missing'])).toBeUndefined();
+		expect(tracked).toBe(true);
+	});
+
 	test('walks objects and arrays and stops at anything else', () => {
 		const object = { a: [{ b: 'hello' }] };
 		expect(deep_get(object, [])).toBe(object);
