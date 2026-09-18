@@ -6,7 +6,13 @@ import { HttpError, Redirect, SvelteKitError } from '@sveltejs/kit/internal';
 import { with_request_store, merge_tracing } from '@sveltejs/kit/internal/server';
 import { app_dir, base } from '$app/paths/internal/server';
 import { is_form_content_type } from '../../utils/http.js';
-import { create_remote_key, parse_remote_arg, split_remote_key, stringify } from '../shared.js';
+import {
+	create_remote_key,
+	create_remote_arg_revivers,
+	parse_remote_arg,
+	split_remote_key,
+	stringify
+} from '../shared.js';
 import { handle_error_and_jsonify } from './utils.js';
 import { normalize_error } from '../../utils/error.js';
 import { check_incorrect_fail_use } from './page/actions.js';
@@ -238,10 +244,9 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			}
 
 			case 'command': {
-				/** @type {{ payload: string, refreshes?: string[] }} */
-				const { payload, refreshes } = await event.request.json();
-				state.remote.requested = create_requested_map(refreshes);
-				const arg = parse_remote_arg(payload, transport);
+				const revivers = create_remote_arg_revivers(transport);
+				const { data: arg, meta } = await deserialize_binary_form(event.request, revivers);
+				state.remote.requested = create_requested_map(meta.remote_refreshes);
 
 				data._ = await with_request_store(
 					{ event, state: { ...state, is_in_remote_form_or_command: true } },
