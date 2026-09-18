@@ -29,6 +29,7 @@ env:
 
 jobs:
   build:
+    name: ${{ inputs.variant }} build
     if: github.repository == 'sveltejs/kit'
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -42,8 +43,9 @@ jobs:
         with:
           runtime: node@24
 
+      # TODO: version-3 branch has no build command, so remove this step
       - name: Build adapter
-        run: pnpm --filter @sveltejs/adapter-netlify build
+        run: pnpm --filter --if-present @sveltejs/adapter-netlify build
 
       - name: Build test app
         working-directory: ${{ inputs.test-app-dir }}
@@ -67,6 +69,7 @@ jobs:
           retention-days: 1
 
   deploy:
+    name: ${{ inputs.variant }} deploy
     if: github.repository == 'sveltejs/kit'
     needs: build
     runs-on: ubuntu-latest
@@ -88,6 +91,7 @@ jobs:
           variant: ${{ inputs.variant }}
 
   test:
+    name: ${{ inputs.variant }} test
     if: github.repository == 'sveltejs/kit'
     needs: deploy
     runs-on: ubuntu-latest
