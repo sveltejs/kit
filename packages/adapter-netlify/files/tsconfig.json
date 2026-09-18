@@ -11,5 +11,5 @@
 		},
 		"types": ["deno"]
 	},
-	"include": ["edge.js", "../internal.d.ts"]
+	"include": ["edge.js"]
 }

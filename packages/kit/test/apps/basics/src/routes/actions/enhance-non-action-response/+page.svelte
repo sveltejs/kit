@@ -13,3 +13,7 @@
 <form method="POST" action="/actions/enhance-non-action-response/reject?body=empty" use:enhance>
 	<button class="empty">Submit</button>
 </form>
+
+<form method="POST" action="/actions/enhance-non-action-response/reject?body=redirect" use:enhance>
+	<button class="redirect">Submit</button>
+</form>
