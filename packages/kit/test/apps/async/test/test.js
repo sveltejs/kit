@@ -975,6 +975,44 @@ test.describe('remote functions', () => {
 		await page.fill('input', 'hello');
 		await expect(page.locator('select')).toHaveValue('one');
 	});
+	test('untouched selects keep their selection when validate() runs on an unrelated field', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/select-untouched-validate');
+
+		const select = page.locator('select');
+		await expect(select).toHaveJSProperty('selectedIndex', 0);
+
+		await page.fill('input', 'hello');
+		await page.locator('input').blur();
+		await page.waitForTimeout(300);
+
+		await expect(select).toHaveJSProperty('selectedIndex', 0);
+		await expect(select).toHaveValue('');
+	});
+
+	test('untouched selects keep their selection when their own issues change', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/select-untouched-validate');
+
+		const select = page.locator('select');
+		await expect(select).toHaveJSProperty('selectedIndex', 0);
+
+		await page.click('button[type="button"]');
+		await expect(page.locator('#picked-issues')).toHaveText('pick one');
+		await expect(select).toHaveAttribute('aria-invalid', 'true');
+
+		await expect(select).toHaveJSProperty('selectedIndex', 0);
+		await expect(select).toHaveValue('');
+	});
+
 	test('file uploads work', async ({ page }) => {
 		await page.goto('/remote/form/file-upload');
 
