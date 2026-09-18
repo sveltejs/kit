@@ -27,11 +27,12 @@ export async function render_endpoint(event, state, mod) {
 
 	if (
 		prerender &&
-		/** @type {import('types').HttpMethod[]} */ (BODY_DEPENDENT_METHODS).some(
-			(method) => mod[method]
-		)
+		(mod.fallback ||
+			/** @type {import('types').HttpMethod[]} */ (BODY_DEPENDENT_METHODS).some(
+				(method) => mod[method]
+			))
 	) {
-		throw new Error('Cannot prerender endpoints with body-dependent methods');
+		throw new Error('Cannot prerender endpoints with body-dependent methods or fallback handlers');
 	}
 
 	if (state.prerendering && !state.prerendering.inside_reroute && !prerender) {

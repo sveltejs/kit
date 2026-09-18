@@ -38,7 +38,7 @@
 	},
 	"types": "types/index.d.ts",
 	"dependencies": {
-		"magic-string": "^1.1.0",
+		"magic-string": "^1.2.3",
 		"sharp": "^0.35.3",
 		"vite-imagetools": "^12.0.0",
 		"zimmerframe": "^1.1.4"
