@@ -381,25 +381,19 @@ export async function dev(
 					await runner.import(resolved_instrumentation);
 				}
 
-				// we have to import `Server` before calling `set_assets`
-				const { Server } = /** @type {ServerModule} */ (
+				const { configure, format_response } = /** @type {ServerModule} */ (
 					await runner.import(`${get_runtime_base(root)}/server/index.js`)
 				);
 
-				const { set_fix_stack_trace, format_response } = await runner.import(
-					`${get_runtime_base(root)}/server/internal.js`
-				);
-				set_fix_stack_trace(fix_stack_trace);
-
-				const { set_assets } = await runner.import('$app/paths/internal/server');
-				set_assets(assets);
-
-				const server = new Server(manifest);
-
-				await server.init({
+				const { init, respond } = await configure({
+					manifest,
 					env,
-					read: (file) => createReadableStream(from_fs(file))
+					read: (file) => createReadableStream(from_fs(file)),
+					assets,
+					fix_stack_trace
 				});
+
+				await init();
 
 				const request = (svelte_config.adapter?.vite?.getRequest ?? getRequest)({
 					base,
@@ -429,7 +423,7 @@ export async function dev(
 					return;
 				}
 
-				const rendered = await server.respond(request, {
+				const rendered = await respond(request, {
 					getClientAddress: () => {
 						const { remoteAddress } = req.socket;
 						if (remoteAddress) return remoteAddress;

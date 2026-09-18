@@ -505,6 +505,7 @@ await myCache.match(request);
 - output now conforms to the stable [Netlify Frameworks API](https://docs.netlify.com/build/frameworks/frameworks-api/)
 - deploying/previewing with the Netlify CLI requires `v17.31.0` or later (`npm i -g netlify-cli@latest`)
 - edge function build target is `es2022`
+- the publish directory is now an adapter option rather than being read from the `netlify.toml` file
 
 ### `adapter-vercel`
 
@@ -520,6 +521,7 @@ For adapter authors, there are some additional changes:
 - `builder.compress` returns a list of compressed files
 - `builder.mkdirp` and `builder.rimraf` are deprecated in favour of `node:fs` methods
 - `builder.generateManifest` has been removed — use `builder.generateServerInstance` to replace it, and `builder.manifest` to access the manifest
+- the `Server` class exported from the server output is deprecated — use the `server` object written by `builder.generateServerInstance`
 
 #### Server instrumentation
 

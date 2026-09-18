@@ -131,7 +131,6 @@ export function plugin_compile(
 				/** @type {Record<string, string>} */
 				const server_input = {
 					index: `${runtime_directory}/server/index.js`,
-					internal: `<sveltekit:generated>/server.js`,
 					env: '<sveltekit:generated>/env/config.js',
 					['remote-entry']: `${runtime_directory}/app/server/remote/index.js`
 				};

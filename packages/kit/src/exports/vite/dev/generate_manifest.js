@@ -47,7 +47,7 @@ export function generate_manifest(
 					? undefined
 					: manifest_data.nodes.map((node, i) => {
 							if (node.component || node.universal) {
-								return `${svelte_config.paths.base}${to_fs(svelte_config.outDir)}/generated/dev/client/nodes/${i}.js`;
+								return `${to_fs(svelte_config.outDir)}/generated/dev/client/nodes/${i}.js`;
 							}
 						}),
 			// `css` is not necessary in dev, as the JS file from `nodes` will reference the CSS file

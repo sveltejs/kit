@@ -28,7 +28,7 @@ export default defineConfig({
 						instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`,
 						initializer,
 						module: {
-							exports: ['Server']
+							exports: ['configure', 'create_server', 'Server', 'format_response']
 						}
 					});
 				},
@@ -119,6 +119,6 @@ export default defineConfig({
 			],
 			headless: true
 		},
-		include: ['unit-test/**/*.spec.js']
+		include: ['test/vitest/client.spec.js']
 	}
 });
