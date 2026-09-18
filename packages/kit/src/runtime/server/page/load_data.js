@@ -269,12 +269,14 @@ export function create_universal_fetch(event, prerendering, fetched, csr, resolv
 	 * @param {RequestInit} [init]
 	 */
 	const universal_fetch = async (input, init) => {
-		const cloned_body = input instanceof Request && input.body ? input.clone().body : null;
+		const cloned_body =
+			init?.body == null && input instanceof Request && input.body ? input.clone().body : null;
 
 		const cloned_headers =
-			input instanceof Request && [...input.headers].length
+			init?.headers ??
+			(input instanceof Request && [...input.headers].length
 				? new Headers(input.headers)
-				: init?.headers;
+				: undefined);
 
 		let response = await event.fetch(input, init);
 
@@ -291,7 +293,7 @@ export function create_universal_fetch(event, prerendering, fetched, csr, resolv
 			}
 		} else if (url.protocol === 'https:' || url.protocol === 'http:') {
 			// simulate CORS errors and "no access to body in no-cors mode" server-side for consistency with client-side behaviour
-			const mode = input instanceof Request ? input.mode : (init?.mode ?? 'cors');
+			const mode = init?.mode ?? (input instanceof Request ? input.mode : 'cors');
 			if (mode === 'no-cors') {
 				response = new Response('', {
 					status: response.status,

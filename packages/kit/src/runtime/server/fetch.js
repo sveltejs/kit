@@ -24,9 +24,9 @@ export function create_fetch({ event, state, get_cookie_header, set_internal }) 
 
 		// some runtimes (e.g. Cloudflare) error if you access `request.mode`,
 		// annoyingly, so we need to read the value from the `init` object instead
-		let mode = (info instanceof Request ? info.mode : init?.mode) ?? 'cors';
-		let credentials =
-			(info instanceof Request ? info.credentials : init?.credentials) ?? 'same-origin';
+		const original_mode = init?.mode ?? (info instanceof Request ? info.mode : 'cors');
+		const original_credentials =
+			init?.credentials ?? (info instanceof Request ? info.credentials : 'same-origin');
 
 		return hooks.handleFetch({
 			event,
@@ -40,11 +40,20 @@ export function create_fetch({ event, state, get_cookie_header, set_internal }) 
 					request.headers.set('origin', event.url.origin);
 				}
 
-				if (info !== original_request) {
-					mode = (info instanceof Request ? info.mode : init?.mode) ?? 'cors';
-					credentials =
-						(info instanceof Request ? info.credentials : init?.credentials) ?? 'same-origin';
-				}
+				const mode =
+					init?.mode ??
+					(info === original_request
+						? original_mode
+						: info instanceof Request
+							? info.mode
+							: 'cors');
+				const credentials =
+					init?.credentials ??
+					(info === original_request
+						? original_credentials
+						: info instanceof Request
+							? info.credentials
+							: 'same-origin');
 
 				// Remove Origin, according to https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Origin#description
 				if (
@@ -183,10 +192,6 @@ export function create_fetch({ event, state, get_cookie_header, set_internal }) 
  * @param {URL} url
  */
 function normalize_fetch_input(info, init, url) {
-	if (info instanceof Request) {
-		return info;
-	}
-
 	return new Request(typeof info === 'string' ? new URL(info, url) : info, init);
 }
 
