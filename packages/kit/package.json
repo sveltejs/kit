@@ -21,7 +21,7 @@
 		"@rolldown/pluginutils": "^1.0.1",
 		"@standard-schema/spec": "^1.1.0",
 		"cookie": "^2.0.1",
-		"devalue": "^5.9.0",
+		"devalue": "^5.9.4",
 		"esm-env": "^1.2.2",
 		"magic-string": "^1.2.3",
 		"mrmime": "^2.0.1",
