@@ -388,6 +388,7 @@ describe('generated routes', () => {
 		);
 		expect(write_file).not.toHaveBeenCalled();
 	});
+
 	test('fails when a server-readable asset is absent from compiled build output', async () => {
 		await expect(
 			adapter({ buildOptions: { compile: true } }).adapt(
