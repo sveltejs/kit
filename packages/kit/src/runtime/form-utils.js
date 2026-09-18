@@ -633,6 +633,7 @@ function add_props(base_props, props) {
 		if (typeof value === 'function') {
 			Object.defineProperty(base_props, prop, {
 				enumerable: true,
+				// `omit_while_undefined` can only hide configurable properties
 				configurable: true,
 				get: /** @type {() => unknown} */ (value)
 			});

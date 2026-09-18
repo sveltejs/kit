@@ -986,9 +986,18 @@ test.describe('remote functions', () => {
 		const select = page.locator('select');
 		await expect(select).toHaveJSProperty('selectedIndex', 0);
 
+		// validation reports an issue on the text field...
 		await page.fill('input', 'hello');
 		await page.locator('input').blur();
-		await page.waitForTimeout(300);
+		await expect(page.locator('#text-issues')).toHaveText('too long');
+
+		await expect(select).toHaveJSProperty('selectedIndex', 0);
+		await expect(select).toHaveValue('');
+
+		// ...and then clears it again
+		await page.fill('input', 'hi');
+		await page.locator('input').blur();
+		await expect(page.locator('#text-issues')).toHaveText('');
 
 		await expect(select).toHaveJSProperty('selectedIndex', 0);
 		await expect(select).toHaveValue('');
