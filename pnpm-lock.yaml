@@ -269,6 +269,10 @@ importers:
         version: 6.0.3
 
   packages/adapter-bun/test/apps/basic:
+    dependencies:
+      jsdom:
+        specifier: 'catalog:'
+        version: 30.0.1
     devDependencies:
       '@playwright/test':
         specifier: 'catalog:'
@@ -457,16 +461,6 @@ importers:
         version: 5.0.0(@opentelemetry/api@1.9.1)(@types/node@22.19.19)(@vitest/browser-playwright@5.0.0)(@vitest/ui@5.0.0)(jsdom@30.0.1)(vite@8.2.1(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0))
 
   packages/adapter-node:
-    dependencies:
-      '@jridgewell/remapping':
-        specifier: ^2.3.5
-        version: 2.3.5
-      '@rolldown/pluginutils':
-        specifier: ^1.0.1
-        version: 1.0.1
-      magic-string:
-        specifier: ^1.2.3
-        version: 1.2.3
     devDependencies:
       '@polka/url':
         specifier: 'catalog:'

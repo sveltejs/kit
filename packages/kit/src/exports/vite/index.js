@@ -410,8 +410,9 @@ function kit({ svelte_config }) {
 						sourcemapIgnoreList,
 						watch: {
 							ignored: [
-								// Ignore all siblings of config.outDir/generated
-								`${out_dir}/!(generated)`
+								// Ignore all siblings of config.outDir/generated, at any depth
+								`${out_dir}/!(generated)`,
+								`${out_dir}/!(generated)/**`
 							]
 						}
 					},
@@ -570,7 +571,10 @@ function kit({ svelte_config }) {
 				write_app_manifest(`${out_dir}/generated/dev`, undefined, false);
 			}
 
-			const unsupported_plugins = config.plugins.filter((plugin) => plugin.transformIndexHtml);
+			const unsupported_plugins = config.plugins.filter(
+				// Vitest invokes this hook for its own browser tester HTML, not the SvelteKit app
+				(plugin) => plugin.transformIndexHtml && plugin.name !== 'vitest:browser:loader'
+			);
 			if (unsupported_plugins.length) {
 				const verbose = config.logLevel === 'info' || config.logLevel === undefined;
 				const log = logger({ verbose });

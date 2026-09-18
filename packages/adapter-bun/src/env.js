@@ -1,5 +1,5 @@
 import process from 'node:process';
-import { env_prefix } from 'MANIFEST';
+import { env_prefix } from '#@sveltejs/adapter-bun';
 
 const expected = new Set([
 	'SOCKET_PATH',

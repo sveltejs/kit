@@ -1,11 +1,8 @@
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { afterEach, expect, mock, spyOn, test } from 'bun:test';
-import { mock_manifest } from './mocks.js';
+import { mock_handoff } from './mocks.js';
 
 const meta = { hash: 'abc', mtime: 0 };
-// the module resolves assets from its own directory, which is src/ under bun test
-const dir = path.dirname(fileURLToPath(new URL('../src/routes-util.js', import.meta.url)));
+const dir = '/build';
 let instance = 0;
 
 afterEach(() => {
@@ -284,7 +281,7 @@ test('prerendered redirects retain their status and location', async () => {
 });
 
 async function load_routes({ base = '/', embed = false, app_dir = '_app' } = {}) {
-	mock_manifest({ app_dir, base, embed });
+	mock_handoff({ app_dir, base, embed, dir });
 	// the real Bun.file runs, with the spy recording resolved paths; the files it
 	// points at need not exist because nothing reads their contents
 	const file = spyOn(Bun, 'file');
