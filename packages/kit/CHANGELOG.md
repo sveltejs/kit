@@ -1,5 +1,55 @@
 # @sveltejs/kit
 
+## 3.0.0-next.28
+
+### Patch Changes
+
+- fix: support bigint params in server-side route resolution ([#17130](https://github.com/sveltejs/kit/pull/17130))
+
+- fix: generate types when dev server starts ([#17034](https://github.com/sveltejs/kit/pull/17034))
+
+- fix: validate prerender concurrency ([#17145](https://github.com/sveltejs/kit/pull/17145))
+
+- fix: manipulate stack trace for errors that happen while generating prerender inputs ([#17113](https://github.com/sveltejs/kit/pull/17113))
+
+- fix: keep memory flat when precompressing many files ([#16993](https://github.com/sveltejs/kit/pull/16993))
+
+- fix: render remote form actions while prerendering ([#17139](https://github.com/sveltejs/kit/pull/17139))
+
+- fix: ignore Vitest browser loader HTML transforms ([#17092](https://github.com/sveltejs/kit/pull/17092))
+
+- fix: enforce request body size limits when Content-Type is absent ([#17127](https://github.com/sveltejs/kit/pull/17127))
+
+- fix: ignore nested outDir files outside generated ([#17150](https://github.com/sveltejs/kit/pull/17150))
+
+- fix: follow HTTP redirects from authentication proxies when enhancing form submissions ([#17106](https://github.com/sveltejs/kit/pull/17106))
+
+- fix: evict hashed fetch cache entries after mutations ([#17146](https://github.com/sveltejs/kit/pull/17146))
+
+- fix: keep hash-router links on the current document when resolving paths ([#17107](https://github.com/sveltejs/kit/pull/17107))
+
+- fix: exit build workers after completing their tasks while allowing synchronous exit handlers to run ([#17135](https://github.com/sveltejs/kit/pull/17135))
+
+- fix: respect `paths.relative` for server-side route resolution imports ([#17056](https://github.com/sveltejs/kit/pull/17056))
+
+- fix: recommend safe include and exclude patterns in tsconfig warning ([#17102](https://github.com/sveltejs/kit/pull/17102))
+
+- chore: configure the server runtime in one place, deprecate `Server` in favour of the `server` object written by `builder.generateServerInstance` ([#17000](https://github.com/sveltejs/kit/pull/17000))
+
+- fix: reject fallback handlers on prerendered endpoints ([#17140](https://github.com/sveltejs/kit/pull/17140))
+
+- fix: atomically replace route metadata during sync ([#17096](https://github.com/sveltejs/kit/pull/17096))
+
+- fix: preserve sourcemap source paths when adapters copy build output ([#17082](https://github.com/sveltejs/kit/pull/17082))
+
+- fix: prevent prerender crawler from hanging on unterminated unquoted attributes ([#17141](https://github.com/sveltejs/kit/pull/17141))
+
+- fix: redact nested and typed underscore-prefixed remote form fields after invalid submissions ([#17128](https://github.com/sveltejs/kit/pull/17128))
+
+- fix: correctly serialize Node.js buffers returned from remote functions during SSR ([#17158](https://github.com/sveltejs/kit/pull/17158))
+
+- fix: reject invalid binary form file metadata ([#17149](https://github.com/sveltejs/kit/pull/17149))
+
 ## 3.0.0-next.27
 
 ### Major Changes

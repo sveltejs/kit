@@ -1,5 +1,15 @@
 # @sveltejs/adapter-node
 
+## 6.0.0-next.13
+
+### Patch Changes
+
+- chore: hand adapt-time values to the server as a module instead of patching built chunks ([#17103](https://github.com/sveltejs/kit/pull/17103))
+
+- chore: avoid bundling the server twice ([#17068](https://github.com/sveltejs/kit/pull/17068))
+- Updated dependencies [[`abf47df`](https://github.com/sveltejs/kit/commit/abf47df887f914f09c39a7f771d32cdd55fb346d), [`df3f003`](https://github.com/sveltejs/kit/commit/df3f0034b541701bd3319225f4e6003579d4ebd6), [`3c044cd`](https://github.com/sveltejs/kit/commit/3c044cda5c356dede92167dcca549cd58e73e61f), [`509dd14`](https://github.com/sveltejs/kit/commit/509dd146696b2c77ae3ac8ac2435773864520016), [`5d8722c`](https://github.com/sveltejs/kit/commit/5d8722c60977efb6e4606fefd9750c2349af410a), [`462111a`](https://github.com/sveltejs/kit/commit/462111a1411551386c6e1aa6c14f967f4ae875c2), [`9f3342f`](https://github.com/sveltejs/kit/commit/9f3342fb9305d1fd731a49497bec894469073fd0), [`8614b01`](https://github.com/sveltejs/kit/commit/8614b016e3be4247cb1aae615870f4c23a0622b3), [`65f93c8`](https://github.com/sveltejs/kit/commit/65f93c83b29f47ebc05bfdeac53f8c92c8d522e1), [`147f09a`](https://github.com/sveltejs/kit/commit/147f09ab7397727f17b5f35ff7535eb1a089180f), [`68c6ef9`](https://github.com/sveltejs/kit/commit/68c6ef97fad9baf6c883e203b1ceb686e2ca74a1), [`377fc5d`](https://github.com/sveltejs/kit/commit/377fc5dd93054ba01ec0e9623036735ff7aadfb5), [`4ac8c9b`](https://github.com/sveltejs/kit/commit/4ac8c9b4b9f015769f81adb941c85cf42fc17424), [`4c812c8`](https://github.com/sveltejs/kit/commit/4c812c808c6b62c78b89fb0021dcfe45e06afcc7), [`fbbb4c7`](https://github.com/sveltejs/kit/commit/fbbb4c7d3c4ff3a3792a58db26c6be77996a392d), [`c6ba86b`](https://github.com/sveltejs/kit/commit/c6ba86ba7983a53f0d1e16c0a6462009d5245d4d), [`7847e4e`](https://github.com/sveltejs/kit/commit/7847e4e27f17a0a94b29f88d79050d704436957c), [`f8258ee`](https://github.com/sveltejs/kit/commit/f8258ee5e042d48d198cca3f35982e90db0077cb), [`4da6320`](https://github.com/sveltejs/kit/commit/4da6320db8d70b73b93e142e4bb6ba9173be3b97), [`b21766f`](https://github.com/sveltejs/kit/commit/b21766f362e39f51cb4ae8f894ea5aca40cf305e), [`a2bfcaf`](https://github.com/sveltejs/kit/commit/a2bfcafbe496e23b1e0bcfce442309bb94783efd), [`680405d`](https://github.com/sveltejs/kit/commit/680405d2d06f02774a8d7df5351df4a0d259c338), [`3a7d329`](https://github.com/sveltejs/kit/commit/3a7d3290e28dffa730d0c71699906dbc6d2fd584)]:
+  - @sveltejs/kit@3.0.0-next.28
+
 ## 6.0.0-next.12
 
 ### Major Changes
