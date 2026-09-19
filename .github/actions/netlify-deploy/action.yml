@@ -39,23 +39,18 @@ runs:
       id: deploy
       shell: bash
       working-directory: ${{ runner.temp }}/platform-output
-      env:
-        NETLIFY_AUTH_TOKEN: ${{ inputs.netlify-token }}
-        NETLIFY_PROJECT_ID: ${{ inputs.netlify-project-id }}
       run: |
         set -euo pipefail
 
-        if deploy_json=$(env \
-          -u NETLIFY_AUTH_TOKEN \
-          -u NETLIFY_PROJECT_ID \
+        if deploy_json=$(
           netlify deploy \
           --json \
           --verbose \
           --no-build \
           --dir="build" \
           --functions=".netlify/v1/functions" \
-          --auth="$NETLIFY_AUTH_TOKEN" \
-          --site="$NETLIFY_PROJECT_ID"
+          --auth="${{ inputs.netlify-token }}" \
+          --site="${{ inputs.netlify-project-id }}"
         ); then
           deploy_url=$(jq -er '.deploy_url' <<< "$deploy_json")
           echo "url=$deploy_url" >> "$GITHUB_OUTPUT"
