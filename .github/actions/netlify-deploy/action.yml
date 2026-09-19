@@ -26,12 +26,14 @@ runs:
 
     - uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
       with:
+        version: ^12.0.0
         runtime: node@24
         cache: true
+        cache-dependency-path: .workflow/pnpm-lock.yaml
 
     - name: Install Netlify CLI
       shell: bash
-      run: pnpm i -g netlify-cli
+      run: pnpm i -g netlify-cli --allow-build=esbuild --allow-build=netlify-cli
 
     - name: Deploy to Netlify
       id: deploy
