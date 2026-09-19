@@ -20,13 +20,13 @@ export function blur_active_element(reset) {
 
 /**
  * Sets the sequential focus navigation starting point to `element` without leaving it focused
- * @param {Element} element
+ * @param {HTMLElement} element
  */
 function focus_element(element) {
 	const tabindex = element.getAttribute('tabindex');
 
 	element.setAttribute('tabindex', '-1');
-	/** @type {HTMLElement} */ (element).focus({ preventScroll: true, focusVisible: false });
+	element.focus({ preventScroll: true, focusVisible: false });
 
 	// removing `tabindex` blurs it again, synchronously in Chromium and a frame later elsewhere
 	if (tabindex !== null) {
