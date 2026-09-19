@@ -167,9 +167,6 @@ catalogs:
     prettier-plugin-svelte:
       specifier: ^4.1.1
       version: 4.1.1
-    rolldown:
-      specifier: ^1.2.3
-      version: 1.2.3
     sirv-cli:
       specifier: ^3.0.1
       version: 3.0.1
@@ -465,9 +462,6 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 22.19.19
-      rolldown:
-        specifier: 'catalog:'
-        version: 1.2.3
       typescript:
         specifier: catalog:typescript-native
         version: 7.0.2
