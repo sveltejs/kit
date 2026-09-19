@@ -49,20 +49,18 @@ runs:
       shell: bash
       working-directory: ${{ runner.temp }}/platform-output
       env:
-        VERCEL_TOKEN: ${{ inputs.vercel-token }}
         VERCEL_ORG_ID: ${{ inputs.vercel-org-id }}
         VERCEL_PROJECT_ID: ${{ inputs.vercel-project-id }}
-      run: echo "url=$(vercel deploy --prebuilt --yes --token="$VERCEL_TOKEN")" >> "$GITHUB_OUTPUT"
+      run: echo "url=$(vercel deploy --prebuilt --yes --token="${{ inputs.vercel-token }}")" >> "$GITHUB_OUTPUT"
 
     # avoid stale cache results when testing ISR routes
     - name: Purge Vercel CDN Cache
       if: inputs.purge-cache == 'true'
       shell: bash
       env:
-        VERCEL_TOKEN: ${{ inputs.vercel-token }}
         VERCEL_ORG_ID: ${{ inputs.vercel-org-id }}
         VERCEL_PROJECT_ID: ${{ inputs.vercel-project-id }}
-      run: vercel cache purge --type cdn --token="$VERCEL_TOKEN" --yes
+      run: vercel cache purge --type cdn --token="${{ inputs.vercel-token }}" --yes
 
     - name: Save deployment URL
       shell: bash
