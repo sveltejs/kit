@@ -52,23 +52,16 @@ async function prerender({
 	/** @type {import('types').SSRManifest} */
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
-	/** @type {import('types').ServerInternalModule} */
-	const { set_building, set_prerendering, set_manifest, set_read_implementation, format_response } =
-		await import(pathToFileURL(`${out}/server/internal.js`).href);
-
-	// configure `import { building } from `$app/env` —
-	// essential we do this before analysing the code
-	set_building();
-	set_prerendering();
-
-	// `set_env` and `Server` live in modules that import the user's `src/env` config. We import them
-	// *after* `set_building()` so that `building`-dependent expressions resolve correctly
-	/** @type {typeof import('<sveltekit:generated>/env/config.js')} */
-	const { set_env } = await import(pathToFileURL(`${out}/server/env.js`).href);
-	set_env(env);
-
 	/** @type {import('types').ServerModule} */
-	const { Server } = await import(pathToFileURL(`${out}/server/index.js`).href);
+	const { configure, format_response } = await import(pathToFileURL(`${out}/server/index.js`).href);
+
+	const { init, respond } = await configure({
+		building: true,
+		prerendering: true,
+		env,
+		manifest,
+		read: (file) => createReadableStream(`${out}/server/${file}`)
+	});
 
 	const throw_handled = () => {
 		throw new Error('__handled__');
@@ -385,7 +378,7 @@ async function prerender({
 
 		const request = new Request(prerender_origin + encoded);
 
-		const response = await server.respond(request, {
+		const response = await respond(request, {
 			getClientAddress() {
 				throw new Error('Cannot read clientAddress during prerendering');
 			},
@@ -648,11 +641,6 @@ async function prerender({
 		}
 	}
 
-	// the user's remote function modules may reference `read` or the `manifest` at the top-level
-	// so we need to set them before evaluating those modules to avoid potential runtime errors
-	set_manifest(manifest);
-	set_read_implementation((file) => createReadableStream(`${out}/server/${file}`));
-
 	/** @type {Array<import('types').RemotePrerenderInternals>} */
 	const prerender_functions = [];
 
@@ -673,11 +661,7 @@ async function prerender({
 
 	// only run the server after the `should_prerender` check so that we
 	// don't run the user's init hook unnecessarily
-	const server = new Server(manifest);
-	await server.init({
-		env,
-		read: (file) => createReadableStream(`${config.outDir}/output/server/${file}`)
-	});
+	await init();
 
 	log.info('Prerendering');
 

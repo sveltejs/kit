@@ -20,7 +20,7 @@
 		"test:svelte-async:dev": "pnpm run --dir packages/kit test:svelte-async:dev",
 		"test:svelte-async:build": "pnpm run --dir packages/kit test:svelte-async:build",
 		"test:vite-ecosystem-ci": "pnpm --dir packages/kit test",
-		"test:others": "pnpm -F @sveltejs/kit prepublishOnly && pnpm -r --filter='./packages/*' --filter=!./packages/kit/ --workspace-concurrency=1 test",
+		"test:others": "pnpm -F @sveltejs/kit prepublishOnly && pnpm -r --filter='./packages/*' --filter=!./packages/kit/ test",
 		"test:others:unit": "pnpm -F @sveltejs/kit prepublishOnly && pnpm -r --filter=\"./packages/*\" --filter=\"!./packages/kit\" --workspace-concurrency=1 test:unit",
 		"test:unit": "vitest run",
 		"check": "pnpm --filter='./packages/**' prepublishOnly && pnpm --filter='./packages/**' --filter='!./packages/kit/test/build-errors/**' check",
@@ -36,6 +36,7 @@
 		"@changesets/cli": "catalog:",
 		"@playwright/test": "catalog:",
 		"@sveltejs/eslint-config": "catalog:",
+		"@types/node": "catalog:",
 		"eslint": "catalog:",
 		"oxfmt": "^0.62.0",
 		"vitest": "catalog:"
