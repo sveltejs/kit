@@ -13,7 +13,7 @@ const exclude = [
 ];
 
 export default /** @satisfies {import('vitest/config').ViteUserConfig} */ ({
-	plugins: [svelte({ compilerOptions: { hmr: false, experimental: { async: true } } })],
+	plugins: [svelte({ compilerOptions: { experimental: { async: true } } })],
 	define: {
 		__SVELTEKIT_GLOBAL_NAME__: '"__sveltekit_test"',
 		__SVELTEKIT_SERVER_TRACING_ENABLED__: false,
@@ -37,7 +37,6 @@ export default /** @satisfies {import('vitest/config').ViteUserConfig} */ ({
 		},
 		projects: [
 			{
-				extends: true,
 				test: {
 					name: 'kit-server-dev',
 					environment: 'node',
@@ -46,7 +45,6 @@ export default /** @satisfies {import('vitest/config').ViteUserConfig} */ ({
 				}
 			},
 			{
-				extends: true,
 				test: {
 					name: 'kit-server-build',
 					environment: 'node',
@@ -58,7 +56,6 @@ export default /** @satisfies {import('vitest/config').ViteUserConfig} */ ({
 				}
 			},
 			{
-				extends: true,
 				resolve: {
 					conditions: ['browser']
 				},
@@ -69,7 +66,6 @@ export default /** @satisfies {import('vitest/config').ViteUserConfig} */ ({
 					exclude,
 					// `forks` (child_process) accepts `--expose-gc`; `threads` (worker_threads) does not.
 					pool: 'forks',
-					maxWorkers: 1,
 					execArgv: ['--expose-gc']
 				}
 			}
