@@ -612,12 +612,10 @@ export function flatten_issues(issues) {
 export function deep_get(object, path) {
 	let current = object;
 	for (const key of path) {
-		if (current === null || typeof current !== 'object') return undefined;
-		if (!Object.hasOwn(current, key)) {
-			// Unlike Object.hasOwn, `in` is reactive for Svelte proxies.
-			void (key in current);
+		if (current === null || typeof current !== 'object' || !Object.hasOwn(current, key)) {
 			return undefined;
 		}
+
 		current = current[key];
 	}
 	return current;
