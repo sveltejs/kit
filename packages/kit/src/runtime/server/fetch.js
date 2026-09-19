@@ -9,13 +9,13 @@ import { fork_state_for_subrequest } from './state.js';
 /**
  * @param {{
  *   event: import('@sveltejs/kit/internal/server').RequestEvent;
- *   state: import('types').RequestState;
  *   get_cookie_header: (url: URL, header: string | null) => string;
  *   set_internal: (name: string, value: string, opts: import('./page/types.js').Cookie['options']) => void;
  * }} opts
  * @returns {typeof fetch}
  */
-export function create_fetch({ event, state, get_cookie_header, set_internal }) {
+export function create_fetch({ event, get_cookie_header, set_internal }) {
+	const state = event.state;
 	/**
 	 * @type {typeof fetch}
 	 */

@@ -1,11 +1,6 @@
 /** @import { RequestEvent as Interface } from '@sveltejs/kit' */
 /** @import { Handle, ResolveOptions } from '@sveltejs/kit/hooks' */
-import {
-	RequestEvent,
-	get_request_store,
-	record_span,
-	with_request_store
-} from '@sveltejs/kit/internal/server';
+import { RequestEvent, record_span, with_event } from '@sveltejs/kit/internal/server';
 
 /**
  * A helper function for sequencing multiple `handle` calls in a middleware-like manner.
@@ -85,7 +80,6 @@ export function sequence(...handlers) {
 	if (!length) return ({ event, resolve }) => resolve(event);
 
 	return ({ event, resolve }) => {
-		const { state } = get_request_store();
 		return apply_handle(0, event, {});
 
 		/**
@@ -104,7 +98,7 @@ export function sequence(...handlers) {
 					const traced_event = RequestEvent.from(event);
 					traced_event.tracing = { ...event.tracing, current };
 
-					return await with_request_store({ event: traced_event, state }, () =>
+					return await with_event(traced_event, () =>
 						handle({
 							event: traced_event,
 							resolve: (event, options) => {
