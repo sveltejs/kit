@@ -4,6 +4,8 @@ title: Node servers
 
 To generate a standalone Node server, use [`adapter-node`](https://github.com/sveltejs/kit/tree/main/packages/adapter-node).
 
+A quick way to get started is by deploying a project using SvelteKit's [official Railway template](https://railway.com/deploy/svelte-kit).
+
 ## Usage
 
 Install with `npm i -D @sveltejs/adapter-node`, then add the adapter to your `vite.config.js`:
