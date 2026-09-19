@@ -977,6 +977,22 @@ describe('create_field_proxy', () => {
 			['value', ['y']]
 		]);
 		expect(proxy.a.as('select multiple', ['x']).value).not.toBe(input.a);
+		// a select without a value omits `value` so the browser keeps its selection
+		expect(as(['select'])).toEqual([['name', 'a/form'], invalid, ['multiple', false]]);
+		input = {};
+		expect('value' in proxy.a.as('select')).toBe(false);
+		expect(as(['select'], '')).toEqual([
+			['name', 'a/form'],
+			invalid,
+			['multiple', false],
+			['value', '']
+		]);
+		expect(as(['select', 'x'])).toEqual([
+			['name', 'a/form'],
+			invalid,
+			['multiple', false],
+			['value', 'x']
+		]);
 		const file = new File([], 'a.txt');
 		expect(as(['file multiple'], [file])).toEqual([
 			['name', 'a[]/form'],
