@@ -45,6 +45,7 @@ test('serves static files and implements HEAD natively', async ({ request }) => 
 for (const [url, content_type, body] of [
 	['/sub/', 'text/html;charset=utf-8', 'directory index'],
 	['/encoded%20name.txt', 'text/plain;charset=utf-8', 'encoded filename'],
+	['/encoded%20name.tx%74', 'text/plain;charset=utf-8', 'encoded filename'],
 	['/.well-known/adapter-bun.txt', 'text/plain;charset=utf-8', 'adapter bun']
 ]) {
 	test(`serves ${url} with its MIME type`, async ({ request }) => {

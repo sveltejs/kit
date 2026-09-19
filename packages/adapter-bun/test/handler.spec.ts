@@ -23,6 +23,18 @@ test('initializes SvelteKit with Bun environment variables and server-readable a
 	expect(read('missing.txt')).toBeNull();
 });
 
+test('serves static assets without involving SvelteKit', async () => {
+	const loaded = await load_handler();
+
+	const response = await loaded.handler(
+		new Request('http://localhost/static.txt'),
+		loaded.bun_server
+	);
+
+	expect(await response.text()).toBe('static');
+	expect(loaded.respond).not.toHaveBeenCalled();
+});
+
 test('normalizes the request origin from the Host header', async () => {
 	const loaded = await load_handler();
 	const original = new Request('http://127.0.0.1:3000/path?query=yes', {
@@ -206,8 +218,10 @@ async function load_handler({
 	}
 
 	mock_handoff({ server: new Server(), origin, env_prefix: envPrefix });
-	mock.module('../src/routes.js', () => ({
+	mock.module('../src/assets.js', () => ({
 		routes: {},
+		serve_static: (request: Request) =>
+			request.url.endsWith('/static.txt') ? new Response('static') : undefined,
 		server_assets: new Map([['asset.txt', asset]])
 	}));
 
