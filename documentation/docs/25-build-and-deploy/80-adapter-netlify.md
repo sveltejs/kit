@@ -8,7 +8,7 @@ This adapter will be installed by default when you use [`adapter-auto`](adapter-
 
 ## Usage
 
-Install with `npm i -D @sveltejs/adapter-netlify`, then add the adapter to your `svelte.config.js`:
+Run [`npx sv add sveltekit-adapter`](/docs/cli/sveltekit-adapter) to set everything up, or install manually with `npm i -D @sveltejs/adapter-netlify` and add the adapter to your `svelte.config.js`:
 
 ```js
 // @errors: 2307

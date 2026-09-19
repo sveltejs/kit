@@ -8,7 +8,7 @@ This will prerender your entire site as a collection of static files. If you'd l
 
 ## Usage
 
-Install with `npm i -D @sveltejs/adapter-static`, then add the adapter to your `svelte.config.js`:
+Run [`npx sv add sveltekit-adapter`](/docs/cli/sveltekit-adapter) to set everything up, or install manually with `npm i -D @sveltejs/adapter-static` and add the adapter to your `svelte.config.js`:
 
 ```js
 // @errors: 2307

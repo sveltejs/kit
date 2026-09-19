@@ -16,7 +16,15 @@ Additional [community-provided adapters](/packages#sveltekit-adapters) exist for
 
 ## Using adapters
 
-Your adapter is specified in `svelte.config.js`:
+The easiest way to set up an adapter is with the [Svelte CLI](/docs/cli):
+
+```sh
+npx sv add sveltekit-adapter
+```
+
+This installs the adapter and updates `svelte.config.js` for you — see the [`sveltekit-adapter` add-on documentation](/docs/cli/sveltekit-adapter) for the available options.
+
+You can also configure things manually. Your adapter is specified in `svelte.config.js`:
 
 ```js
 /// file: svelte.config.js
