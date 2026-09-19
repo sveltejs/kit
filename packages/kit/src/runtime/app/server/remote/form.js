@@ -155,8 +155,8 @@ export function form(validate_or_fn, maybe_fn) {
 
 		Object.defineProperty(instance, 'action', {
 			get: () => {
-				const { event, state } = get_request_store();
-				const search = new URLSearchParams(state.prerendering ? '' : get_event().url.search);
+				const event = get_event();
+				const search = new URLSearchParams(event.state.prerendering ? '' : event.url.search);
 				search.delete('/remote');
 
 				const query = search.toString();
