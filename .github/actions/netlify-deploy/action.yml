@@ -29,6 +29,7 @@ runs:
         version: ^12.0.0
         runtime: node@24
         cache: true
+        cache-dependency-path: .workflow/pnpm-lock.yaml
 
     - name: Install Netlify CLI
       shell: bash
