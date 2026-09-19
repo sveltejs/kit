@@ -1,4 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
+import * as devalue from 'devalue';
 import {
 	BINARY_FORM_CONTENT_TYPE,
 	DELETE_KEY,
@@ -496,6 +497,41 @@ describe('binary form serializer', () => {
 			payload: '[[1,3],{"file":2},["File",4],{},[-2,-2,7],"a.txt","text/plain",0]'
 		}
 	])('rejects invalid file metadata: $name', async ({ payload }) => {
+		await expect(deserialize_binary_form(build_raw_request(payload), '')).rejects.toThrow(
+			'invalid file metadata'
+		);
+	});
+
+	test.each([
+		{ name: 'negative size', size: -1, last_modified: 0, index: 0 },
+		{ name: 'fractional size', size: 0.5, last_modified: 0, index: 0 },
+		{ name: 'NaN size', size: NaN, last_modified: 0, index: 0 },
+		{ name: 'infinite size', size: Infinity, last_modified: 0, index: 0 },
+		{ name: 'unsafe size', size: Number.MAX_SAFE_INTEGER + 1, last_modified: 0, index: 0 },
+		{ name: 'fractional lastModified', size: 0, last_modified: 0.5, index: 0 },
+		{ name: 'NaN lastModified', size: 0, last_modified: NaN, index: 0 },
+		{ name: 'infinite lastModified', size: 0, last_modified: Infinity, index: 0 },
+		{
+			name: 'unsafe lastModified',
+			size: 0,
+			last_modified: Number.MAX_SAFE_INTEGER + 1,
+			index: 0
+		},
+		{ name: 'negative index', size: 0, last_modified: 0, index: -1 },
+		{ name: 'fractional index', size: 0, last_modified: 0, index: 0.5 },
+		{ name: 'NaN index', size: 0, last_modified: 0, index: NaN },
+		{ name: 'infinite index', size: 0, last_modified: 0, index: Infinity },
+		{ name: 'unsafe index', size: 0, last_modified: 0, index: Number.MAX_SAFE_INTEGER + 1 }
+	])('rejects invalid numeric file metadata: $name', async (metadata) => {
+		const file = {};
+		const payload = devalue.stringify([{ file }, {}], {
+			File: (value) => {
+				if (value === file) {
+					return ['a.txt', 'text/plain', metadata.size, metadata.last_modified, metadata.index];
+				}
+			}
+		});
+
 		await expect(deserialize_binary_form(build_raw_request(payload), '')).rejects.toThrow(
 			'invalid file metadata'
 		);

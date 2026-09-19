@@ -289,9 +289,11 @@ export async function deserialize_binary_form(request, form_id) {
 			if (
 				typeof name !== 'string' ||
 				typeof type !== 'string' ||
-				typeof size !== 'number' ||
-				typeof last_modified !== 'number' ||
-				typeof index !== 'number'
+				!Number.isSafeInteger(size) ||
+				size < 0 ||
+				!Number.isSafeInteger(last_modified) ||
+				!Number.isSafeInteger(index) ||
+				index < 0
 			) {
 				throw deserialize_error('invalid file metadata');
 			}
