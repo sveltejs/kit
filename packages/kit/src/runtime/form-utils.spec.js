@@ -902,7 +902,7 @@ describe('deep_get', () => {
 				getOwnPropertyDescriptor: () => {
 					tracked = true;
 					return undefined;
-				},
+				}
 			}
 		);
 
