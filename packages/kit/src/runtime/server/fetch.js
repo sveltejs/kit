@@ -8,7 +8,7 @@ import { fork_state_for_subrequest } from './state.js';
 
 /**
  * @param {{
- *   event: import('@sveltejs/kit').RequestEvent;
+ *   event: import('@sveltejs/kit/internal/server').RequestEvent;
  *   state: import('types').RequestState;
  *   get_cookie_header: (url: URL, header: string | null) => string;
  *   set_internal: (name: string, value: string, opts: import('./page/types.js').Cookie['options']) => void;
