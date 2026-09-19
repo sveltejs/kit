@@ -898,7 +898,11 @@ describe('deep_get', () => {
 		const object = new Proxy(
 			{},
 			{
-				has: () => (tracked = true)
+				has: () => (tracked = true),
+				getOwnPropertyDescriptor: () => {
+					tracked = true;
+					return undefined;
+				},
 			}
 		);
 
