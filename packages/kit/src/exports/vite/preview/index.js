@@ -1,6 +1,6 @@
 /** @import { NextHandleFunction } from 'connect' */
 /** @import { PreviewServer } from 'vite' */
-/** @import { ValidatedConfig, ServerInternalModule, ServerModule } from 'types' */
+/** @import { ValidatedConfig, ServerModule } from 'types' */
 import fs from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -37,24 +37,24 @@ export async function preview(vite, svelte_config) {
 		await import(pathToFileURL(instrumentation).href);
 	}
 
-	/** @type {ServerInternalModule} */
-	const { set_assets } = await import(pathToFileURL(join(dir, 'internal.js')).href);
-
 	/** @type {ServerModule} */
-	const { Server } = await import(pathToFileURL(join(dir, 'index.js')).href);
+	const { configure } = await import(pathToFileURL(join(dir, 'index.js')).href);
 
 	/** @type {{ manifest: import('types').SSRManifest }} */
 	const { manifest } = await import(pathToFileURL(join(dir, 'manifest.js')).href);
 
-	set_assets(assets);
-
-	const server = new Server(manifest);
+	/** @type {import('types').ServerInstance} */
+	let server;
 
 	try {
-		await server.init({
+		server = await configure({
+			manifest,
 			env: loadEnv(vite.config.mode, svelte_config.env.dir, ''),
-			read: (file) => createReadableStream(`${dir}/${file}`)
+			read: (file) => createReadableStream(`${dir}/${file}`),
+			assets
 		});
+
+		await server.init();
 	} catch (error) {
 		// Vite erases the error message when starting the preview server so we store
 		// it in the stack instead. This ensures errors thrown using `stackless`
