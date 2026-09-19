@@ -99,11 +99,14 @@ export async function dev(
 		}
 	}
 
-	async function update_manifest() {
+	/** @param {boolean} [validate_params] */
+	async function update_manifest(validate_params = true) {
 		try {
 			manifest_data = create_manifest_data(svelte_config, root);
 			sync.create(svelte_config, root, manifest_data, false);
 			set_manifest_data(manifest_data);
+
+			if (!validate_params) return;
 
 			await load_and_validate_params({
 				routes: manifest_data.routes,
@@ -141,6 +144,10 @@ export async function dev(
 			get_remotes
 		);
 	}
+
+	// Initializing the Vite SSR runner before the server starts is unsafe, but generated types
+	// don't depend on it and should be available as soon as the dev server is ready.
+	await update_manifest(false);
 
 	/** @param {Error} error */
 	function fix_stack_trace(error) {
@@ -222,10 +229,8 @@ export async function dev(
 	watch('add', () => debounce(update_manifest));
 	watch('unlink', () => debounce(update_manifest));
 	watch('change', (file) => {
-		// `manifest_data` is populated lazily on the first request (see `update_manifest`
-		// call in the middleware below), so it may still be undefined if a file changes
-		// before the dev server has served a request. In that case there's nothing to
-		// update — the manifest will be created from scratch on the first request.
+		// `manifest_data` may be undefined if initial manifest creation failed. In that case
+		// there's nothing to update — the manifest will be created from scratch on the first request.
 		if (!manifest_data) return;
 		// Don't run for a single file if the whole manifest is about to get updated
 		// Unless it's a file where the trailing slash page option might have changed
