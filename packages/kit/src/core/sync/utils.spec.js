@@ -1,7 +1,7 @@
 import path from 'node:path';
 import process from 'node:process';
 import { stripVTControlCharacters } from 'node:util';
-import { afterAll, afterEach, expect, test, vi } from 'vitest';
+import { afterAll, expect, test, vi } from 'vitest';
 import { check_spelling } from './utils.js';
 
 const fixtures = path.join(import.meta.dirname, 'fixtures');
@@ -9,11 +9,6 @@ const fixtures = path.join(import.meta.dirname, 'fixtures');
 test.describe('check_spelling', () => {
 	const console_warn_spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 	const cwd_spy = vi.spyOn(process, 'cwd').mockReturnValue(fixtures);
-
-	afterEach(() => {
-		console_warn_spy.mockClear();
-		cwd_spy.mockClear();
-	});
 
 	afterAll(() => {
 		console_warn_spy.mockReset();
