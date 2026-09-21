@@ -1076,6 +1076,30 @@ test.describe('data-sveltekit attributes', () => {
 		expect(requests.length).toBe(3);
 	});
 
+	test('data-sveltekit-preload-data failure does not trigger an unhandled rejection', async ({
+		page
+	}) => {
+		await page.addInitScript(() => {
+			Reflect.set(globalThis, 'unhandled_rejections', 0);
+			window.addEventListener('unhandledrejection', () => {
+				Reflect.set(
+					globalThis,
+					'unhandled_rejections',
+					Reflect.get(globalThis, 'unhandled_rejections') + 1
+				);
+			});
+		});
+
+		await page.route('**/data-sveltekit/preload-data/target/__data.json*', (route) =>
+			route.abort('failed')
+		);
+		await page.goto('/data-sveltekit/preload-data');
+		await page.locator('#one').hover();
+		await page.waitForTimeout(100);
+
+		expect(await page.evaluate(() => Reflect.get(globalThis, 'unhandled_rejections'))).toBe(0);
+	});
+
 	test('data-sveltekit-preload-data network failure does not trigger navigation', async ({
 		page,
 		context,
