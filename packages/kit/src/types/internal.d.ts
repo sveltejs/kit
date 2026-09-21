@@ -106,6 +106,8 @@ export interface BuildData {
 		 * Whether the client uses public dynamic env vars — `$env/dynamic/public` or `$app/env/public`.
 		 */
 		uses_env_dynamic_public: boolean;
+		/** Maps asset file paths to SRI integrity strings (e.g. "sha384-..."). Only set when `subresourceIntegrity` is enabled. */
+		integrity?: Record<string, string>;
 		/** Only set in case of `bundleStrategy === 'inline'`. */
 		inline?: {
 			script: string;
