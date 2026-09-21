@@ -94,9 +94,10 @@ jobs:
           version: ^12.0.0
           runtime: node@24
 
-      - name: Install Netlify CLI
-        if: inputs.platform == 'netlify'
-        run: pnpm i -g netlify-cli --allow-build=esbuild --allow-build=netlify-cli
+      - name: Install CLI
+        env:
+          CLI: ${{ inputs.platform == 'netlify' && 'netlify-cli' || 'vercel' }}
+        run: pnpm i -g "$CLI" --allow-build=esbuild --allow-build=netlify-cli
 
       # the secrets are passed as flags and scrubbed from the environment the CLI bundles functions in
       - name: Deploy to Netlify
@@ -109,10 +110,6 @@ jobs:
             netlify deploy --json --no-build --dir=build --functions=.netlify/v1/functions \
             --auth="$NETLIFY_AUTH_TOKEN" --site="$NETLIFY_PROJECT_ID" \
             | tee /dev/stderr | jq -er '.deploy_url' > url
-
-      - name: Install Vercel CLI
-        if: inputs.platform == 'vercel'
-        run: pnpm i -g vercel
 
       # Important: When setting up a new Vercel test app, make sure
       # to set the root directory in the dashboard to the correct path.
