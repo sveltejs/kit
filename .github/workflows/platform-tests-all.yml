@@ -7,56 +7,125 @@ on:
         description: 'Commit SHA to test and update check status on'
         required: false
         default: ''
+      platform:
+        description: 'Platform to test'
+        type: choice
+        options: [all, netlify, vercel, node]
+        default: all
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  vercel:
-    uses: ./.github/workflows/platform-tests-vercel.yml
-    with:
-      sha: ${{ inputs.sha }}
-
   netlify:
-    uses: ./.github/workflows/platform-tests-netlify.yml
+    name: netlify / ${{ matrix.variant }}
+    if: github.repository == 'sveltejs/kit' && (inputs.platform == 'all' || inputs.platform == 'netlify')
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [basic, edge, split]
+        include:
+          - variant: split-edge
+            app: split
+    uses: ./.github/workflows/platform-test.yml
     with:
-      sha: ${{ inputs.sha }}
+      sha: ${{ inputs.sha || github.sha }}
+      platform: netlify
+      variant: ${{ matrix.variant }}
+      app: ${{ matrix.app || matrix.variant }}
+    # the secrets of a job's environment only resolve in a called workflow when the caller passes `secrets`
+    secrets: inherit
+
+  vercel:
+    name: vercel / ${{ matrix.variant }}
+    if: github.repository == 'sveltejs/kit' && (inputs.platform == 'all' || inputs.platform == 'vercel')
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [basic, split]
+    uses: ./.github/workflows/platform-test.yml
+    with:
+      sha: ${{ inputs.sha || github.sha }}
+      platform: vercel
+      variant: ${{ matrix.variant }}
+      app: ${{ matrix.variant }}
+    secrets: inherit
 
   node:
-    uses: ./.github/workflows/platform-tests-node.yml
-    with:
-      sha: ${{ inputs.sha }}
+    name: node / ${{ matrix.node-version }}
+    if: github.repository == 'sveltejs/kit' && (inputs.platform == 'all' || inputs.platform == 'node')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [22, 24]
+    environment: '@sveltejs/adapter-node platform tests'
+    env:
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+      APP: packages/adapter-node/test/apps/basic
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.sha || github.sha }}
+          persist-credentials: false
+
+      - uses: ./.github/actions/node-setup
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Build adapter-node files
+        working-directory: packages/adapter-node
+        run: pnpm prepublishOnly
+
+      - name: Install Playwright
+        run: pnpm playwright install chromium --no-shell
+
+      - name: Run Playwright tests
+        working-directory: ${{ env.APP }}
+        run: pnpm test:platform
+
+      - name: Upload test artifacts
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: test-results-node-${{ matrix.node-version }}
+          path: ${{ env.APP }}/test-results
+          retention-days: 3
 
   report-status:
-    if: always()
-    needs: [vercel, netlify, node]
+    if: always() && github.repository == 'sveltejs/kit' && inputs.platform == 'all'
+    needs: [netlify, vercel, node]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - name: Determine outcome
-        id: outcome
-        run: |
-          if [ "${{ contains(needs.*.result, 'failure') }}" = "true" ]; then
-            echo "conclusion=failure" >> "$GITHUB_OUTPUT"
-            echo "title=Platform tests failed" >> "$GITHUB_OUTPUT"
-            echo "summary=One or more platform test jobs failed. See the [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details." >> "$GITHUB_OUTPUT"
-          elif [ "${{ contains(needs.*.result, 'cancelled') }}" = "true" ]; then
-            echo "conclusion=cancelled" >> "$GITHUB_OUTPUT"
-            echo "title=Platform tests cancelled" >> "$GITHUB_OUTPUT"
-            echo "summary=Platform tests were cancelled before completing." >> "$GITHUB_OUTPUT"
-          else
-            echo "conclusion=success" >> "$GITHUB_OUTPUT"
-            echo "title=Platform tests passed" >> "$GITHUB_OUTPUT"
-            echo "summary=All platform test jobs passed." >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Report results
         env:
           GH_TOKEN: ${{ github.token }}
+          SHA: ${{ inputs.sha || github.sha }}
+          CONCLUSION: ${{ contains(needs.*.result, 'failure') && 'failure' || contains(needs.*.result, 'cancelled') && 'cancelled' || 'success' }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          gh api repos/${{ github.repository }}/dispatches \
+          case "$CONCLUSION" in
+            failure)
+              title='Platform tests failed'
+              summary="One or more platform test jobs failed. See the [workflow run]($RUN_URL) for details."
+              ;;
+            cancelled)
+              title='Platform tests cancelled'
+              summary='Platform tests were cancelled before completing.'
+              ;;
+            success)
+              title='Platform tests passed'
+              summary='All platform test jobs passed.'
+              ;;
+          esac
+
+          gh api "repos/$GITHUB_REPOSITORY/dispatches" \
             -f event_type=platform-tests-result \
-            -f 'client_payload[sha]=${{ inputs.sha || github.sha }}' \
-            -f 'client_payload[conclusion]=${{ steps.outcome.outputs.conclusion }}' \
-            -f 'client_payload[title]=${{ steps.outcome.outputs.title }}' \
-            -f 'client_payload[summary]=${{ steps.outcome.outputs.summary }}' \
-            -f 'client_payload[details_url]=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}'
+            -f "client_payload[sha]=$SHA" \
+            -f "client_payload[conclusion]=$CONCLUSION" \
+            -f "client_payload[title]=$title" \
+            -f "client_payload[summary]=$summary" \
+            -f "client_payload[details_url]=$RUN_URL"
