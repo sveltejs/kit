@@ -13,6 +13,22 @@ export function stackless(message) {
 }
 
 /**
+ * @param {Error} error
+ * @param {string} stack
+ * @returns {string | undefined}
+ */
+export function set_error_stack(error, stack) {
+	try {
+		// Unlike assignment in strict mode, Reflect.set returns false for a read-only property
+		if (Reflect.set(error, 'stack', stack)) return stack;
+	} catch {
+		// A custom setter or proxy trap may still throw
+	}
+
+	return error.stack;
+}
+
+/**
  * @param {unknown} err
  * @return {Error}
  */
