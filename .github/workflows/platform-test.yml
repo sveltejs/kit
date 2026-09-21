@@ -53,6 +53,13 @@ jobs:
           EDGE: ${{ inputs.variant == 'split-edge' }}
         run: pnpm build
 
+      # the Netlify CLI bundles the functions in the deploy job, which has no `node_modules`
+      - name: Copy Kit next to the Netlify functions
+        if: inputs.platform == 'netlify'
+        run: |
+          mkdir -p "$APP/.netlify/v1/node_modules/@sveltejs/kit"
+          cp -r packages/kit/package.json packages/kit/src "$APP/.netlify/v1/node_modules/@sveltejs/kit"
+
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ inputs.platform }}-${{ inputs.variant }}
