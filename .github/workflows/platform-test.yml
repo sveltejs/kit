@@ -122,7 +122,10 @@ jobs:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ inputs.variant == 'basic' && secrets.VERCEL_PROJECT_ID_BASIC || secrets.VERCEL_PROJECT_ID_SPLIT }}
-        run: vercel deploy --prebuilt --yes --token="$VERCEL_TOKEN" > url
+        # the CLI reads `.vercel/output` from here but checks that the project's root directory exists
+        run: |
+          mkdir -p "$APP"
+          vercel deploy --prebuilt --yes --token="$VERCEL_TOKEN" > url
 
       # avoid stale cache results when testing ISR routes
       - name: Purge Vercel CDN Cache
@@ -149,6 +152,12 @@ jobs:
 
       - name: Install Playwright
         run: pnpm playwright install chromium --no-shell
+
+      # some tests inspect the build output
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: ${{ inputs.platform }}-${{ inputs.variant }}
+          path: ${{ env.APP }}
 
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
