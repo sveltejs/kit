@@ -27,6 +27,7 @@ jobs:
       variant: basic
       test-app-dir: packages/adapter-vercel/test/apps/basic
       purge-cache: true
+    secrets: inherit
 
   split:
     if: github.repository == 'sveltejs/kit'
@@ -35,3 +36,4 @@ jobs:
       sha: ${{ inputs.sha || github.sha }}
       variant: split
       test-app-dir: packages/adapter-vercel/test/apps/split
+    secrets: inherit

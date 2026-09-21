@@ -26,6 +26,7 @@ jobs:
       sha: ${{ inputs.sha || github.sha }}
       variant: basic
       test-app-dir: packages/adapter-netlify/test/apps/basic
+    secrets: inherit
 
   edge:
     if: github.repository == 'sveltejs/kit'
@@ -34,6 +35,7 @@ jobs:
       sha: ${{ inputs.sha || github.sha }}
       variant: edge
       test-app-dir: packages/adapter-netlify/test/apps/edge
+    secrets: inherit
 
   split:
     if: github.repository == 'sveltejs/kit'
@@ -42,6 +44,7 @@ jobs:
       sha: ${{ inputs.sha || github.sha }}
       variant: split
       test-app-dir: packages/adapter-netlify/test/apps/split
+    secrets: inherit
 
   split-edge:
     if: github.repository == 'sveltejs/kit'
@@ -51,3 +54,4 @@ jobs:
       variant: split-edge
       test-app-dir: packages/adapter-netlify/test/apps/split
       edge: true
+    secrets: inherit
