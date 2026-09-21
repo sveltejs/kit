@@ -56,12 +56,6 @@ jobs:
         name: Install dependencies
         run: pnpm install --frozen-lockfile --store-dir "${{ runner.temp }}/pnpm-store"
 
-      # TODO: only adapter-netlify on `main` has a build script, remove this step after the v3 release
-      - name: Build adapter
-        env:
-          PLATFORM: ${{ inputs.platform }}
-        run: pnpm --filter "@sveltejs/adapter-$PLATFORM" --if-present build
-
       - name: Build test app
         working-directory: ${{ env.APP }}
         env:
