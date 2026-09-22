@@ -1,9 +1,11 @@
-import { command, query } from '$app/server';
+import { command, query, requested } from '$app/server';
 
 export const foo = query(() => {
 	return 'foo';
 });
 
 export const mutate = command(() => {
-	foo().set('baz');
+	for (const { query } of requested(foo, 1)) {
+		query.set('baz');
+	}
 });
