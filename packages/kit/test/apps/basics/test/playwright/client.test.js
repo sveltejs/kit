@@ -1079,16 +1079,9 @@ test.describe('data-sveltekit attributes', () => {
 	test('data-sveltekit-preload-data failure does not trigger an unhandled rejection', async ({
 		page
 	}) => {
-		await page.addInitScript(() => {
-			Reflect.set(globalThis, 'unhandled_rejections', 0);
-			window.addEventListener('unhandledrejection', () => {
-				Reflect.set(
-					globalThis,
-					'unhandled_rejections',
-					Reflect.get(globalThis, 'unhandled_rejections') + 1
-				);
-			});
-		});
+		/** @type {Error[]} */
+		const errors = [];
+		page.on('pageerror', (error) => errors.push(error));
 
 		await page.route('**/data-sveltekit/preload-data/target/__data.json*', (route) =>
 			route.abort('failed')
@@ -1097,7 +1090,7 @@ test.describe('data-sveltekit attributes', () => {
 		await page.locator('#one').hover();
 		await page.waitForTimeout(100);
 
-		expect(await page.evaluate(() => Reflect.get(globalThis, 'unhandled_rejections'))).toBe(0);
+		expect(errors).toEqual([]);
 	});
 
 	test('data-sveltekit-preload-data network failure does not trigger navigation', async ({
