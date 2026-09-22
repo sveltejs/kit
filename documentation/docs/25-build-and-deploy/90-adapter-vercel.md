@@ -8,7 +8,7 @@ This adapter will be installed by default when you use [`adapter-auto`](adapter-
 
 ## Usage
 
-Install with `npm i -D @sveltejs/adapter-vercel`, then add the adapter to your `vite.config.js`:
+Run [`npx sv add sveltekit-adapter="adapter:vercel"`](/docs/cli/sveltekit-adapter), or install with `npm i -D @sveltejs/adapter-vercel` and add the adapter to your `vite.config.js`:
 
 ```js
 // @errors: 2554

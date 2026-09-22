@@ -1086,6 +1086,9 @@ test.describe('Matchers', () => {
 		await clicknav('[href="/routing/matched/1"]');
 		expect(await page.textContent('h1')).toBe('number: 1');
 
+		await clicknav('[href="/routing/matched/bigint/9007199254740993"]');
+		expect(await page.textContent('h1')).toBe('bigint: 9007199254740993 (bigint)');
+
 		await clicknav('[href="/routing/matched/everything-else"]');
 		expect(await page.textContent('h1')).toBe('fallback: everything-else');
 	});
@@ -1278,6 +1281,18 @@ test.describe('Actions', () => {
 
 		await expect(page.locator('h1')).toHaveText('403');
 		await expect(page.locator('p')).toHaveText('Forbidden (403 Forbidden)');
+	});
+
+	test('use:enhance follows an HTTP redirect to a non-ActionResult page', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		test.skip(!javaScriptEnabled, 'Skip when JavaScript is disabled');
+		await page.goto('/actions/enhance-non-action-response');
+		await page.locator('button.redirect').click();
+
+		await expect(page.locator('h1')).toHaveText('login');
+		expect(new URL(page.url()).pathname).toBe('/actions/enhance-non-action-response/login');
 	});
 
 	test('use:enhance abort controller', async ({ page, javaScriptEnabled }) => {
