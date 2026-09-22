@@ -10,7 +10,7 @@ import { styleText } from 'node:util';
 import sirv from 'sirv';
 import { generate_manifest, loud_ssr_load_module } from './generate_manifest.js';
 import { createReadableStream, getRequest, setResponse } from '../../../exports/node/index.js';
-import { coalesce_to_error } from '../../../utils/error.js';
+import { coalesce_to_error, set_error_stack } from '../../../utils/error.js';
 import { resolve_entry } from '../../../utils/filesystem.js';
 import { load_and_validate_params } from '../../../utils/params.js';
 import { from_fs, to_fs } from '../../../utils/vite.js';
@@ -188,7 +188,7 @@ export async function dev(
 			// lines and drop everything else so the message isn't duplicated
 			.slice(start === -1 ? end : start, end);
 
-		return (error.stack = prelude + lines.join('\n'));
+		return set_error_stack(error, prelude + lines.join('\n'));
 	}
 
 	const params_file = resolve_entry(svelte_config.files.params);
