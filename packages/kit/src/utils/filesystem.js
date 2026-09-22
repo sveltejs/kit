@@ -122,10 +122,10 @@ export function relative_path(from, to) {
 /**
  * Given an entry point like [cwd]/src/hooks, returns a filename like [cwd]/src/hooks.js or [cwd]/src/hooks/index.js
  * @param {string} entry
- * @param {string[]} [extensions] defaults to `['.js', '.ts']`; pass `config.kit.moduleExtensions` for entries that are modules
+ * @param {string[]} extensions defaults to `['.js', '.ts']`; pass `config.kit.moduleExtensions` for entries that are modules
  * @returns {string | null}
  */
-export function resolve_entry(entry, extensions = ['.js', '.ts']) {
+export function resolve_entry(entry, extensions) {
 	if (fs.existsSync(entry)) {
 		const stats = fs.statSync(entry);
 		if (stats.isFile()) {
