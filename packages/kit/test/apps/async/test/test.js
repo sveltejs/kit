@@ -980,6 +980,7 @@ test.describe('remote functions', () => {
 		await page.fill('input', 'hello');
 		await expect(page.locator('select')).toHaveValue('one');
 	});
+
 	test('untouched selects keep their selection when validate() runs on an unrelated field', async ({
 		page,
 		javaScriptEnabled
