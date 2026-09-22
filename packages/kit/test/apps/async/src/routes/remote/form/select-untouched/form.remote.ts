@@ -1,4 +1,10 @@
 import { form } from '$app/server';
-import { schema } from './schema.ts';
+import * as v from 'valibot';
 
-export const myform = form(schema, async () => ({ ok: true }));
+export const myform = form(
+	v.object({
+		message: v.string(),
+		number: v.picklist(['one', 'two', 'three'])
+	}),
+	(_data) => {}
+);
