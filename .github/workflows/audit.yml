@@ -4,10 +4,6 @@ on:
   schedule:
     - cron: '0 5 * * *' # daily 5AM
 
-env:
-  # not needed for audit
-  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
-
 permissions:
   contents: read # to fetch code (actions/checkout)
 
@@ -20,6 +16,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: ./.github/actions/node-setup
+      # the audit reads the lockfile; nothing needs installing
+      - uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
+        with:
+          install: false
       # check prod dependencies as these would affect users
       - run: pnpm audit --prod

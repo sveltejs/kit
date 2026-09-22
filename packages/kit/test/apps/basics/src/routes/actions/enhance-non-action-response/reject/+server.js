@@ -12,6 +12,13 @@ export function POST({ url }) {
 		});
 	}
 
+	if (body === 'redirect') {
+		return new Response(null, {
+			status: 302,
+			headers: { location: '/actions/enhance-non-action-response/login' }
+		});
+	}
+
 	if (body === 'empty') {
 		return new Response(null, { status: 403, statusText: 'Forbidden' });
 	}

@@ -131,7 +131,6 @@ export function plugin_compile(
 				/** @type {Record<string, string>} */
 				const server_input = {
 					index: `${runtime_directory}/server/index.js`,
-					internal: `<sveltekit:generated>/server.js`,
 					env: '<sveltekit:generated>/env/config.js',
 					['remote-entry']: `${runtime_directory}/app/server/remote/index.js`
 				};
@@ -183,7 +182,8 @@ export function plugin_compile(
 
 				// ...and the server instrumentation file
 				const server_instrumentation = resolve_entry(
-					path.join(kit.files.src, 'instrumentation.server')
+					path.join(kit.files.src, 'instrumentation.server'),
+					kit.moduleExtensions
 				);
 				if (server_instrumentation) {
 					if (kit.adapter && !kit.adapter.supports?.instrumentation?.()) {
