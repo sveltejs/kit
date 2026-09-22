@@ -20,7 +20,7 @@ export function stackless(message) {
 export function set_error_stack(error, stack) {
 	try {
 		// Unlike assignment in strict mode, Reflect.set returns false for a read-only property
-		if (Reflect.set(error, 'stack', stack)) return stack;
+		Reflect.set(error, 'stack', stack);
 	} catch {
 		// A custom setter or proxy trap may still throw
 	}
