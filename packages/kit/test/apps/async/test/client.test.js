@@ -701,7 +701,11 @@ test.describe('remote function mutations', () => {
 	});
 
 	test('query.live streams updates and reconnects after disconnect', async ({ page, context }) => {
+		const response = page.waitForResponse(
+			(r) => r.headers()['content-type'] === 'text/event-stream'
+		);
 		await page.goto('/remote/live');
+		expect((await response).request().headers()['accept']).toBe('text/event-stream');
 		await page.click('#reset');
 
 		await expect(page.locator('#first-value')).toHaveText('0');
