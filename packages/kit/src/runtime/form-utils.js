@@ -604,6 +604,21 @@ export function deep_get(object, path) {
 }
 
 /**
+ * @param {Record<string, any>} object
+ * @param {(string | number)[]} path
+ */
+function deep_has(object, path) {
+	let current = object;
+	for (const key of path) {
+		if (current == null || typeof current !== 'object' || !Object.hasOwn(current, key)) {
+			return false;
+		}
+		current = current[key];
+	}
+	return true;
+}
+
+/**
  *
  * @param {string} field_type
  * @param {boolean} is_array
@@ -662,6 +677,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 		const value = deep_get(get_input(), path);
 		return deep_clone(value);
 	};
+	const has_value = () => deep_has(get_input(), path);
 
 	return new Proxy(target, {
 		get(target, prop) {
@@ -869,7 +885,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 						value: {
 							enumerable: true,
 							get() {
-								const value = get_value() ?? input_value;
+								const value = has_value() ? get_value() : input_value;
 								return value != null ? String(value) : '';
 							}
 						}
