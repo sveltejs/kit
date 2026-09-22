@@ -217,7 +217,7 @@ test('resolves entries with an extension from moduleExtensions', () => {
 test('ignores extensions that are not listed', () => {
 	write('hooks.server.py', '');
 
-	expect(resolve_entry(join(source_dir, 'hooks.server'))).null;
+	expect(resolve_entry(join(source_dir, 'hooks.server'))).toBeNull();
 });
 
 test('resolves index files with an extension from moduleExtensions', () => {
