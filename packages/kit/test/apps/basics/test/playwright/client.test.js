@@ -1076,6 +1076,23 @@ test.describe('data-sveltekit attributes', () => {
 		expect(requests.length).toBe(3);
 	});
 
+	test('data-sveltekit-preload-data failure does not trigger an unhandled rejection', async ({
+		page
+	}) => {
+		/** @type {Error[]} */
+		const errors = [];
+		page.on('pageerror', (error) => errors.push(error));
+
+		await page.route('**/data-sveltekit/preload-data/target/__data.json*', (route) =>
+			route.abort('failed')
+		);
+		await page.goto('/data-sveltekit/preload-data');
+		await page.locator('#one').hover();
+		await page.waitForTimeout(100);
+
+		expect(errors).toEqual([]);
+	});
+
 	test('data-sveltekit-preload-data network failure does not trigger navigation', async ({
 		page,
 		context,
