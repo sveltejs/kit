@@ -96,8 +96,6 @@ function to_sorted(value, clones) {
 const remote_object = '__skrao';
 const remote_map = '__skram';
 const remote_set = '__skras';
-const remote_file = '__skraf';
-const remote_promise_guard = '__skrap';
 const remote_regex_guard = '__skrag';
 const remote_arg_marker = Symbol(remote_object);
 
@@ -106,7 +104,7 @@ const remote_arg_marker = Symbol(remote_object);
  * @param {boolean} sort
  * @param {Map<any, any>} remote_arg_clones
  */
-function create_remote_arg_reducers(transport, sort, remote_arg_clones) {
+export function create_remote_arg_reducers(transport, sort, remote_arg_clones) {
 	/** @type {Record<string, (value: unknown) => unknown>} */
 	const remote_fns_reducers = {
 		/** @param {unknown} value */
@@ -187,7 +185,7 @@ function create_remote_arg_reducers(transport, sort, remote_arg_clones) {
 }
 
 /** @param {Transport} transport */
-function create_remote_arg_revivers(transport) {
+export function create_remote_arg_revivers(transport) {
 	const remote_fns_revivers = {
 		/** @type {(value: unknown) => unknown} */
 		[remote_object]: (value) => value,
@@ -230,24 +228,6 @@ function create_remote_arg_revivers(transport) {
 			}
 
 			return set;
-		},
-		/** @type {(value: any) => File} */
-		[remote_file]: (value) => {
-			if (
-				!value ||
-				typeof value !== 'object' ||
-				typeof value.name !== 'string' ||
-				typeof value.type !== 'string' ||
-				typeof value.size !== 'number' ||
-				typeof value.lastModified !== 'number' ||
-				!(value.data instanceof ArrayBuffer)
-			) {
-				throw new Error('Invalid data for File reviver');
-			}
-
-			const { data, name, ...meta } = value;
-
-			return new File([data], name, meta);
 		}
 	};
 
@@ -274,52 +254,6 @@ export function stringify_remote_arg(value, transport) {
 
 	// If people hit file/url size limits, we can look into using something like compress_and_encode_text from svelte.dev beyond a certain size
 	const json = devalue.stringify(value, create_remote_arg_reducers(transport, true, new Map()));
-
-	return url_friendly_base64_encode(json);
-}
-
-/**
- * Stringifies command arguments, including `File` objects.
- * @param {any} value
- * @param {Transport} transport
- */
-export async function stringify_command_arg(value, transport) {
-	if (value === undefined) return '';
-
-	const reducers = create_remote_arg_reducers(transport, false, new Map());
-
-	/** @type {Set<Promise<any>>} */
-	const allowed_promises = new Set();
-
-	/** @param {any} value */
-	reducers[remote_file] = (value) => {
-		if (value instanceof File) {
-			const promise = value.arrayBuffer().then((data) => ({
-				data,
-				lastModified: value.lastModified,
-				name: value.name,
-				size: value.size,
-				type: value.type
-			}));
-
-			allowed_promises.add(promise);
-
-			return promise;
-		}
-	};
-
-	// we don't want to allow arbitrary promises, because they won't
-	// show up as promises on the other side. this is something
-	// we could potentially change in future. stringifyAsync
-	// will await them, so we need to explicitly deny them
-	/** @param {unknown} value */
-	reducers[remote_promise_guard] = (value) => {
-		if (value instanceof Promise && !allowed_promises.has(value)) {
-			throw new Error('Promises are not valid remote function arguments');
-		}
-	};
-
-	const json = await devalue.stringifyAsync(value, reducers);
 
 	return url_friendly_base64_encode(json);
 }
