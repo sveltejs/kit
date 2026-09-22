@@ -9,6 +9,9 @@
 		"prepare": "svelte-kit sync || echo ''",
 		"test:platform": "playwright test"
 	},
+	"dependencies": {
+		"jsdom": "catalog:"
+	},
 	"devDependencies": {
 		"@playwright/test": "catalog:",
 		"@sveltejs/kit": "workspace:^",

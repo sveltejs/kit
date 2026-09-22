@@ -310,6 +310,14 @@ test.describe('Load', () => {
 		expect(requests.filter((r) => !r.includes('/__route.js'))).toEqual([]);
 	});
 
+	test('non-GET requests evict cached responses with hashed keys', async ({ page }) => {
+		await page.goto('/load/fetch-cache-control/headers-diff');
+		await expect(page.locator('p')).toHaveText('0 / 0');
+
+		await page.locator('button').click();
+		await expect(page.locator('p')).toHaveText('1 / 1');
+	});
+
 	test('use correct cache result when fetching same url multiple times', async ({
 		page,
 		request
@@ -1066,6 +1074,23 @@ test.describe('data-sveltekit attributes', () => {
 			page.waitForLoadState('networkidle') // wait for preloading to finish
 		]);
 		expect(requests.length).toBe(3);
+	});
+
+	test('data-sveltekit-preload-data failure does not trigger an unhandled rejection', async ({
+		page
+	}) => {
+		/** @type {Error[]} */
+		const errors = [];
+		page.on('pageerror', (error) => errors.push(error));
+
+		await page.route('**/data-sveltekit/preload-data/target/__data.json*', (route) =>
+			route.abort('failed')
+		);
+		await page.goto('/data-sveltekit/preload-data');
+		await page.locator('#one').hover();
+		await page.waitForTimeout(100);
+
+		expect(errors).toEqual([]);
 	});
 
 	test('data-sveltekit-preload-data network failure does not trigger navigation', async ({

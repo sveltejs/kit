@@ -2441,7 +2441,7 @@ function setup_preload() {
 					);
 				});
 			} else {
-				void _preload_data(intent);
+				void _preload_data(intent).catch(noop);
 			}
 		} else if (priority <= options.preload_code) {
 			current_a = { element: a, href: a.href };
