@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { compile } from 'svelte/compiler';
 import { expect, it } from 'vitest';
 import { image_plugin, parse_object } from '../src/vite-plugin.js';
 
@@ -39,9 +40,23 @@ it('Image preprocess snapshot test', async () => {
 	if (!transformed) throw new Error('transform unexpectedly returned no results');
 	if (typeof transformed === 'string') throw new Error('transform did not return a sourcemap');
 	if (!transformed.code) throw new Error('transform did not return any code');
+	const transformed_code = transformed.code.toString();
+
+	expect(transformed_code.match(/get_image\(i\)/g)).toHaveLength(1);
+	expect(transformed_code.match(/get_image\(j\)/g)).toHaveLength(1);
+	expect(transformed_code).toContain('{@const __img_1 = get_image(i)}');
+	expect(transformed_code).toContain('{@const __img_2 = get_image(j)}');
+	expect(transformed_code).toContain('{@const __img_3 = foo ? manual_image1 : manual_image2}');
+	expect(transformed_code).not.toMatch(/{@const __img(?:_\d+)? = src}/);
+	expect(transformed_code).not.toMatch(/{@const __img(?:_\d+)? = image}/);
+	expect(transformed_code).not.toMatch(/{@const __img(?:_\d+)? = object\.image}/);
+	expect(() => compile(transformed_code, { filename })).not.toThrow();
 
 	// Make imports readable
-	const ouput = transformed.code.toString().replace(/import/g, '\n\timport');
+	const ouput = transformed_code
+		.replace(/import/g, '\n\timport')
+		.replaceAll('{#if \n', '{#if\n')
+		.replace(/^[\t ]+$/gm, '');
 
 	await expect(ouput).toMatchFileSnapshot('./Output.svelte');
 });

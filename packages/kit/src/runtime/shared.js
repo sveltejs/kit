@@ -15,6 +15,15 @@ export function validate_depends(route_id, dep) {
 	}
 }
 
+/**
+ * Same-origin urls are keyed by path, so prerendered pages can be served from any origin
+ * @param {URL} url
+ * @param {{ origin: string }} page
+ */
+export function fetch_cache_url(url, page) {
+	return url.origin === page.origin ? url.href.slice(page.origin.length) : url.href;
+}
+
 export const INVALIDATED_PARAM = 'x-sveltekit-invalidated';
 
 export const TRAILING_SLASH_PARAM = 'x-sveltekit-trailing-slash';

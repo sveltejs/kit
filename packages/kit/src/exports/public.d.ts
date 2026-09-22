@@ -12,11 +12,11 @@ import {
 	RequestOptions,
 	RouteSegment
 } from '../types/private.js';
-import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from 'types';
+import { ValidatedConfig } from 'types';
 import { Plugin } from 'vite';
 import { RouteId as AppRouteId, LayoutParams as AppLayoutParams } from '$app/types';
-import { ParamMatcher } from '@sveltejs/kit/params';
 import { StandardSchemaV1 } from '@standard-schema/spec';
+import { getRequest, setResponse } from '@sveltejs/kit/node';
 
 export { PrerenderOption } from '../types/private.js';
 
@@ -57,20 +57,47 @@ export interface Adapter {
 	 * during dev, build and prerendering.
 	 */
 	emulate?: () => MaybePromise<Emulator>;
-	vite?: {
-		plugins?: {
-			/**
-			 * Vite plugins placed before any of SvelteKit's own plugins.
-			 * @since 3.0.0
-			 */
-			pre?: Plugin[];
-			/**
-			 * Vite plugins placed after any of SvelteKit's own plugins.
-			 * @since 3.0.0
-			 */
-			post?: Plugin[];
-		};
-	};
+	/**
+	 * Options for configuring and interacting with Vite
+	 * @since 3.0.0
+	 */
+	vite?: AdapterViteConfig | ((ctx: { config: ValidatedConfig }) => AdapterViteConfig);
+}
+
+export interface AdapterViteConfig {
+	/**
+	 * This function overrides the default behavior during Vite's dev and preview modes
+	 * to convert an `http.IncomingMessage` to a `Request` object.
+	 * To call the original `setRequest` function, import it from `@sveltejs/kit/node`.
+	 * @since 3.0.0
+	 */
+	getRequest?: typeof getRequest;
+	/**
+	 * This function overrides the default behavior in Vite's dev and preview modes
+	 * to write a `Response` object to a `http.ServerResponse`.
+	 * To call the original `setResponse` function, import it from `@sveltejs/kit/node`.
+	 * @since 3.0.0
+	 */
+	setResponse?: typeof setResponse;
+	/**
+	 * Vite plugins injected by the adapter. By default,
+	 * they are placed before SvelteKit's plugins.
+	 * @since 3.0.0
+	 */
+	plugins?:
+		| Plugin[]
+		| {
+				/**
+				 * Vite plugins placed before any of SvelteKit's own plugins.
+				 * @since 3.0.0
+				 */
+				pre?: Plugin[];
+				/**
+				 * Vite plugins placed after any of SvelteKit's own plugins.
+				 * @since 3.0.0
+				 */
+				post?: Plugin[];
+		  };
 }
 
 export type LoadProperties<input extends Record<string, any> | void> = input extends void
@@ -139,6 +166,17 @@ export interface Builder {
 	prerendered: Prerendered;
 	/** An array of all routes (including prerendered) */
 	routes: RouteDefinition[];
+	/**
+	 * The value of the `$app/manifest` module.
+	 * The only difference is `manifest.assets` also includes the service worker, if it exists.
+	 * @since 3.0.0
+	 */
+	manifest: typeof import('$app/manifest');
+	/**
+	 * A record of file extensions to MIME types
+	 * @since 3.0.0
+	 */
+	mimeTypes: Record<string, string>;
 
 	/**
 	 * Create separate functions that map to one or more routes of your app.
@@ -165,9 +203,10 @@ export interface Builder {
 	/**
 	 * Generate a server-side manifest to initialise the SvelteKit [server](https://svelte.dev/docs/kit/@sveltejs-kit#Server) with.
 	 * @param opts
-	 * @param opts.relativePath  A relative path to the base directory of the server build output
+	 * @param opts.relativePath A relative path to the base directory of the server build output
+	 * @deprecated removed in 3.0. Use `builder.generateServerInstance` or `builder.manifest` instead
 	 */
-	generateManifest: (opts: { relativePath: string; routes?: RouteDefinition[] }) => string;
+	generateManifest?: (opts: { relativePath: string; routes?: RouteDefinition[] }) => string;
 
 	/**
 	 * Resolve a path to the `name` directory inside `outDir`, e.g. `/path/to/.svelte-kit/my-adapter`.
@@ -181,6 +220,20 @@ export interface Builder {
 	/** Get the application path including any configured `base` path, e.g. `my-base-path/_app`. */
 	getAppPath: () => string;
 
+	/**
+	 * Generates a module exposing a SvelteKit [Server](https://svelte.dev/docs/kit/@sveltejs-kit#Server) instance.
+	 * @param dest
+	 * @param opts.routes A subset of the routes to include in the server's manifest
+	 * @param opts.serverDirectory The directory containing the server code. Defaults to `getServerDirectory()`.
+	 * @since 3.0.0
+	 */
+	generateServerInstance: (
+		dest: string,
+		opts?: {
+			routes?: RouteDefinition[];
+			serverDirectory?: string;
+		}
+	) => void;
 	/**
 	 * Write client assets to `dest`.
 	 * @param dest the destination folder
@@ -199,6 +252,23 @@ export interface Builder {
 	 * @returns an array of files written to `dest`
 	 */
 	writeServer: (dest: string) => string[];
+
+	/**
+	 * Generate an initializer that populates `$env/dynamic/private` before server instrumentation
+	 * runs. Include the returned module in any subsequent bundling or tracing step.
+	 * @param options an object containing the following properties:
+	 * @param options.outputDirectory the directory in which to create the initializer.
+	 * @param options.environment the contents of a module whose default export contains the platform's environment variables. If omitted, `process.env` is used.
+	 * @param options.serverDirectory the directory containing the server build output. Defaults to `getServerDirectory()`.
+	 * @returns the filesystem path to the generated initializer.
+	 * @since 3.0.0
+	 */
+	createInstrumentationInitializer: (options: {
+		outputDirectory: string;
+		environment?: string;
+		serverDirectory?: string;
+	}) => string;
+
 	/**
 	 * Copy a file or directory.
 	 * @param from the source file or directory
@@ -230,6 +300,9 @@ export interface Builder {
 	 * `entrypoint` which imports `instrumentation` and then dynamically imports `start`. This allows
 	 * the module hooks necessary for instrumentation libraries to be loaded prior to any application code.
 	 *
+	 * `initializer` is a module generated by `createInstrumentationInitializer`. It must be included
+	 * in any bundling or tracing step before calling this method.
+	 *
 	 * Caveats:
 	 * - "Live exports" will not work. If your adapter uses live exports, your users will need to manually import the server instrumentation on startup.
 	 * - If `tla` is `false`, OTEL auto-instrumentation may not work properly. Use it if your environment supports it.
@@ -239,21 +312,27 @@ export interface Builder {
 	 * @param options.entrypoint the path to the entrypoint to trace.
 	 * @param options.instrumentation the path to the instrumentation file.
 	 * @param options.start the name of the start file. This is what `entrypoint` will be renamed to.
+	 * @param options.initializer the filesystem path to the bundled or copied instrumentation initializer.
 	 * @param options.module configuration for the resulting entrypoint module.
 	 * @param options.module.exports
-	 * @param options.module.generateText a function that receives the relative paths to the instrumentation and start files, and generates the text of the module to be traced. If not provided, the default implementation will be used, which uses top-level await.
-	 * @since 2.31.0
+	 * @param options.module.generateText a function that receives the relative paths to the initializer, instrumentation and start files, and generates the text of the module to be traced. It must import `initializer` before `instrumentation`, and dynamically import `start` after instrumentation has run. If not provided, the default implementation will be used, which uses top-level await.
+	 * @since 3.0.0
 	 */
 	instrument: (args: {
 		entrypoint: string;
 		instrumentation: string;
 		start?: string;
+		initializer: string;
 		module?:
 			| {
 					exports: string[];
 			  }
 			| {
-					generateText: (args: { instrumentation: string; start: string }) => string;
+					generateText: (args: {
+						instrumentation: string;
+						start: string;
+						initializer: string;
+					}) => string;
 			  };
 	}) => void;
 
@@ -656,8 +735,7 @@ export interface RouteDefinition<Config = any> {
 	config: Config;
 }
 
-export class Server {
-	constructor(manifest: SSRManifest);
+export interface Server {
 	init(options: ServerInitOptions): Promise<void>;
 	respond(request: Request, options: RequestOptions): Promise<Response>;
 }
@@ -667,32 +745,6 @@ export interface ServerInitOptions {
 	env: Record<string, string | undefined>;
 	/** A function that turns an asset filename into a `ReadableStream`. Required for the `read` export from `$app/server` to work. */
 	read?: (file: string) => MaybePromise<ReadableStream | null>;
-}
-
-/**
- * Information required to instantiate a new `Server` instance.
- */
-export interface SSRManifest {
-	/** The directory where SvelteKit keeps its stuff, including static assets (such as JS and CSS) and internally-used routes. */
-	appDir: string;
-	/** The `base` and `appDir` settings combined without a leading slash. */
-	appPath: string;
-	/** Static files from `config.files.assets` and the service worker (if any). */
-	assets: Set<string>;
-	mimeTypes: Record<string, string>;
-
-	/** @internal private fields */
-	_: {
-		client: BuildData['client'];
-		nodes: SSRNodeLoader[];
-		/** hashed filename -> import to that file */
-		remotes: Record<string, () => Promise<{ default: Record<string, any> }>>;
-		routes: SSRRoute[];
-		prerendered_routes: Set<string>;
-		matchers: () => Promise<Record<string, ParamMatcher>>;
-		/** A `[file]: size` map of all assets imported by server code. */
-		server_assets: Record<string, number>;
-	};
 }
 
 /**

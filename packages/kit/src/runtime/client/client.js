@@ -13,6 +13,8 @@ import { decode_pathname, strip_hash, make_trackable, normalize_path } from '../
 import { dev_fetch, initial_fetch, lock_fetch, subsequent_fetch, unlock_fetch } from './fetcher.js';
 import { parse_routes, parse_server_route } from './parse.js';
 import * as storage from './session-storage.js';
+import { blur_active_element, is_resetting_focus, reset_focus } from './focus.js';
+import { disable_scroll_handling, reset_scroll_and_focus } from './scroll.js';
 import {
 	find_anchor,
 	resolve_url,
@@ -47,7 +49,8 @@ import {
 	TRAILING_SLASH_PARAM,
 	create_remote_key,
 	validate_depends,
-	validate_load_response
+	validate_load_response,
+	fetch_cache_url
 } from '../shared.js';
 
 import { page, updated, notify_version, update_page, set_navigation } from '#app/state/client';
@@ -168,47 +171,6 @@ function set_history_options(index, options) {
 		...history_info[index],
 		resetIndex: options.resetIndex
 	};
-}
-
-/** @param {boolean} reset */
-function blur_active_element(reset) {
-	if (
-		reset &&
-		document.activeElement instanceof HTMLElement &&
-		document.activeElement !== document.body
-	) {
-		document.activeElement.blur();
-	}
-}
-
-/**
- * @param {URL} url
- * @param {{ x: number; y: number } | null | undefined} scroll
- * @param {boolean} reset
- * @param {Element | null} active_element
- */
-function reset_scroll_and_focus(url, scroll, reset, active_element) {
-	/** @type {Element | null} */
-	let deep_linked = null;
-
-	if (autoscroll) {
-		if (scroll) {
-			scrollTo(scroll.x, scroll.y);
-		} else if ((deep_linked = get_hash_element(url))) {
-			deep_linked.scrollIntoView();
-		} else {
-			scrollTo(0, 0);
-		}
-	}
-
-	const changed_focus =
-		document.activeElement !== active_element && document.activeElement !== document.body;
-
-	if (reset && !changed_focus) {
-		reset_focus(url, !deep_linked);
-	}
-
-	autoscroll = true;
 }
 
 /**
@@ -372,7 +334,6 @@ let current = {
 /** this being true means we SSR'd */
 let hydrated = false;
 let started = false;
-let autoscroll = true;
 let updating = false;
 let is_navigating = false;
 /** @type {HistoryMetadata | null} */
@@ -471,6 +432,19 @@ export function start(_app, _target, data) {
 	}
 
 	return _start(_app, _target, data);
+}
+
+/**
+ * @template T
+ * @param {Map<string, Map<string, T>>} map
+ * @returns {Generator<[string, T]>} every entry of the cache map, keyed by remote key
+ */
+function* cache_entries(map) {
+	for (const [id, entries] of map) {
+		for (const [payload, entry] of entries) {
+			yield [create_remote_key(id, payload), entry];
+		}
+	}
 }
 
 /**
@@ -602,7 +576,7 @@ async function _invalidate(reset_page_state = true) {
 
 	const token = (invalidation_token = {});
 	const nav_token = navigation_token;
-	const navigating = is_navigating;
+	const prev_current = current;
 	const intent = await get_navigation_intent(current.url, true);
 
 	// Clear preload, it might be affected by the invalidation.
@@ -615,19 +589,14 @@ async function _invalidate(reset_page_state = true) {
 	/** @type {Map<string, Promise<void>>} */
 	const live_query_reconnects = new Map();
 	if (force_invalidation) {
-		for (const entries of query_map.values()) {
-			for (const { resource } of entries.values()) {
-				void resource.refresh();
-			}
+		for (const [, { resource }] of cache_entries(query_map)) {
+			void resource.refresh();
 		}
 
-		for (const [query_id, entries] of live_query_map) {
-			for (const [payload, { resource }] of entries) {
-				const key = create_remote_key(query_id, payload);
-				const promise = resource.reconnect();
-				promise.catch(noop);
-				live_query_reconnects.set(key, promise);
-			}
+		for (const [key, { resource }] of cache_entries(live_query_map)) {
+			const promise = resource.reconnect();
+			promise.catch(noop);
+			live_query_reconnects.set(key, promise);
 		}
 	}
 
@@ -647,9 +616,9 @@ async function _invalidate(reset_page_state = true) {
 		);
 	}
 
-	// A navigation started before the invalidation and ended before it finished. The invalidation did not redirect,
-	// hence it likely contains outdated data now, so we ignore it.
-	if (navigating && !is_navigating) {
+	// a navigation applied its result while the invalidation was loading,
+	// so the invalidation contains outdated data for a page we are no longer on
+	if (current !== prev_current) {
 		return;
 	}
 
@@ -669,18 +638,13 @@ async function _invalidate(reset_page_state = true) {
 	// only wait for promises that are connected to queries that still exist
 	/** @type {Promise<any>[]} */
 	const promises = [];
-	for (const entries of query_map.values()) {
-		for (const { resource } of entries.values()) {
-			promises.push(resource);
-		}
+	for (const [, { resource }] of cache_entries(query_map)) {
+		promises.push(resource);
 	}
-	for (const [query_id, entries] of live_query_map) {
-		for (const payload of entries.keys()) {
-			const key = create_remote_key(query_id, payload);
-			const promise = live_query_reconnects.get(key);
-			if (promise) {
-				promises.push(promise);
-			}
+	for (const [key] of cache_entries(live_query_map)) {
+		const promise = live_query_reconnects.get(key);
+		if (promise) {
+			promises.push(promise);
 		}
 	}
 
@@ -767,20 +731,16 @@ export async function _goto(url, options = {}, redirect_count = 0, nav_token = {
 			if (options.refreshAll) {
 				force_invalidation = true;
 				query_keys = new Set();
-				for (const [id, entries] of query_map) {
-					for (const [payload, entry] of entries) {
-						// don't refresh yet, as some queries will be unrendered,
-						// but clear caches so that newly rendered queries
-						// don't use stale data. TODO same for `live_query_map`
-						entry.resource?.reset();
-						query_keys.add(create_remote_key(id, payload));
-					}
+				for (const [key, entry] of cache_entries(query_map)) {
+					// don't refresh yet, as some queries will be unrendered,
+					// but clear caches so that newly rendered queries
+					// don't use stale data. TODO same for `live_query_map`
+					entry.resource?.reset();
+					query_keys.add(key);
 				}
 				live_query_keys = new Set();
-				for (const [id, entries] of live_query_map) {
-					for (const payload of entries.keys()) {
-						live_query_keys.add(create_remote_key(id, payload));
-					}
+				for (const [key] of cache_entries(live_query_map)) {
+					live_query_keys.add(key);
 				}
 			}
 
@@ -796,18 +756,14 @@ export async function _goto(url, options = {}, redirect_count = 0, nav_token = {
 		void tick()
 			.then(tick)
 			.then(() => {
-				for (const [id, entries] of query_map) {
-					for (const [payload, { resource }] of entries) {
-						if (query_keys?.has(create_remote_key(id, payload))) {
-							void resource.start();
-						}
+				for (const [key, { resource }] of cache_entries(query_map)) {
+					if (query_keys?.has(key)) {
+						void resource.start();
 					}
 				}
-				for (const [id, entries] of live_query_map) {
-					for (const [payload, { resource }] of entries) {
-						if (live_query_keys?.has(create_remote_key(id, payload))) {
-							void resource.reconnect();
-						}
+				for (const [key, { resource }] of cache_entries(live_query_map)) {
+					if (live_query_keys?.has(key)) {
+						void resource.reconnect();
 					}
 				}
 			});
@@ -1314,10 +1270,7 @@ function resolve_fetch_url(input, init, url) {
 	// we must fixup relative urls so they are resolved from the target page
 	const resolved = new URL(input instanceof Request ? input.url : input, url);
 
-	// match the server's serialization of `fetched.url` (see load_data.js): a path for same-origin
-	// urls, so prerendered pages can be served from any origin, the normalized href otherwise
-	const requested =
-		resolved.origin === url.origin ? resolved.href.slice(url.origin.length) : resolved.href;
+	const requested = fetch_cache_url(resolved, url);
 
 	const promise = started
 		? subsequent_fetch(requested, resolved.href, init)
@@ -1386,12 +1339,12 @@ function diff_search_params(old_url, new_url) {
 	const changed = new Set([...old_url.searchParams.keys(), ...new_url.searchParams.keys()]);
 
 	for (const key of changed) {
-		const old_values = old_url.searchParams.getAll(key);
-		const new_values = new_url.searchParams.getAll(key);
+		const old_values = old_url.searchParams.getAll(key).sort();
+		const new_values = new_url.searchParams.getAll(key).sort();
 
 		if (
-			old_values.every((value) => new_values.includes(value)) &&
-			new_values.every((value) => old_values.includes(value))
+			old_values.length === new_values.length &&
+			old_values.every((value, i) => value === new_values[i])
 		) {
 			changed.delete(key);
 		}
@@ -2077,6 +2030,9 @@ async function navigate({
 	if (navigation_result.type === 'redirect') {
 		// whatwg fetch spec https://fetch.spec.whatwg.org/#http-redirect-fetch says to error after 20 redirects
 		if (redirect_count < 20) {
+			// a preloaded redirect has been consumed; a later hop back to this route must load afresh
+			if (load_cache?.id === intent?.id) discard_load_cache();
+
 			await navigate({
 				type,
 				url: new URL(navigation_result.location, url),
@@ -2118,12 +2074,15 @@ async function navigate({
 
 	updating = true;
 
-	capture_scroll(previous_history_index);
-	capture_snapshot(previous_navigation_index);
-	if (replace_state) {
-		delete_navigation_snapshot(previous_history_index);
-	} else {
-		capture_navigation_snapshot(previous_history_index);
+	if (!popped) {
+		// popstate captures the source entry synchronously, before the traversal is resolved
+		capture_scroll(previous_history_index);
+		capture_snapshot(previous_navigation_index);
+		if (replace_state) {
+			delete_navigation_snapshot(previous_history_index);
+		} else {
+			capture_navigation_snapshot(previous_history_index);
+		}
 	}
 
 	// ensure the url pathname matches the page's trailing slash option
@@ -2481,7 +2440,7 @@ function setup_preload() {
 					);
 				});
 			} else {
-				void _preload_data(intent);
+				void _preload_data(intent).catch(noop);
 			}
 		} else if (priority <= options.preload_code) {
 			current_a = { element: a, href: a.href };
@@ -2622,7 +2581,7 @@ export function disableScrollHandling() {
 	}
 
 	if (updating || !started) {
-		autoscroll = false;
+		disable_scroll_handling();
 	}
 }
 
@@ -3379,7 +3338,7 @@ function _start_router() {
 	});
 
 	addEventListener('popstate', async (event) => {
-		if (resetting_focus) return;
+		if (is_resetting_focus()) return;
 
 		const history_metadata = get_history_metadata(event.state);
 
@@ -3409,9 +3368,25 @@ function _start_router() {
 					(history_metadata.pageUrl === undefined || history_metadata.pageUrl === location.href)) ||
 					is_hash_change);
 			const shallow_url = history_metadata.pageUrl ? new URL(location.href) : null;
+
+			// the browser has already traversed, so record the source entry and move the
+			// indices before anything async: a navigation that starts while this one
+			// resolves must build on the entry we are actually on
+			const previous_history_index = current_history_index;
+			const previous_navigation_index = current_navigation_index;
+			const previous_reset_index = current_reset_index;
+			capture_scroll(previous_history_index);
+			if (!shallow) capture_snapshot(previous_navigation_index);
+			capture_navigation_snapshot(previous_history_index);
+			current_history_index = history_index;
+			current_navigation_index = navigation_index;
+			current_reset_index = reset_index;
+
+			const token = navigation_token;
 			const shallow_intent = shallow_url
 				? await get_navigation_intent(shallow_url, false)
 				: undefined;
+			if (navigation_token !== token) return;
 			const shallow_target = shallow_url
 				? {
 						params: shallow_intent?.params ?? null,
@@ -3435,10 +3410,6 @@ function _start_router() {
 
 				update_url(url);
 
-				capture_scroll(current_history_index);
-				capture_navigation_snapshot(current_history_index);
-				current_history_index = history_index;
-				current_reset_index = reset_index;
 				if (reset && scroll) scrollTo(scroll.x, scroll.y);
 				restore_navigation_snapshot(current_history_index, current_registrations());
 				return;
@@ -3454,15 +3425,13 @@ function _start_router() {
 					delta,
 					shallow: shallow_target
 				},
-				accept: () => {
-					current_history_index = history_index;
-					current_navigation_index = navigation_index;
-					current_reset_index = reset_index;
-				},
 				block: () => {
+					current_history_index = previous_history_index;
+					current_navigation_index = previous_navigation_index;
+					current_reset_index = previous_reset_index;
 					history.go(-delta);
 				},
-				nav_token: navigation_token,
+				nav_token: token,
 				event
 			});
 		} else {
@@ -3769,109 +3738,6 @@ function deserialize_uses(uses) {
 }
 
 /**
- * This flag is used to avoid client-side navigation when we're only using
- * `location.replace()` to set focus.
- */
-let resetting_focus = false;
-
-/**
- * @param {URL} url
- * @param {boolean} [scroll]
- */
-function reset_focus(url, scroll = true) {
-	const autofocus = document.querySelector('[autofocus]');
-	if (autofocus) {
-		// @ts-ignore
-		autofocus.focus();
-	} else {
-		// Reset page selection and focus
-
-		// Mimic the browsers' behaviour and set the sequential focus navigation
-		// starting point to the fragment identifier.
-		const element = get_hash_element(url);
-		if (element) {
-			const { x, y } = scroll_state();
-
-			// `element.focus()` doesn't work on Safari and Firefox Ubuntu so we need
-			// to use this hack with `location.replace()` instead.
-			setTimeout(() => {
-				const history_state = history.state;
-
-				resetting_focus = true;
-				location.replace(new URL(`#${element.id}`, location.href));
-
-				// Firefox has a bug that sets the history state to `null` so we need to
-				// restore it after. See https://bugzilla.mozilla.org/show_bug.cgi?id=1199924
-				// This is also needed to restore the original hash if we're using hash routing
-				history.replaceState(history_state, '', url);
-
-				// If scroll management has already happened earlier, we need to restore
-				// the scroll position after setting the sequential focus navigation starting point
-				if (scroll) scrollTo(x, y);
-				resetting_focus = false;
-			});
-		} else {
-			// If the ID doesn't exist, we try to mimic browsers' behaviour as closely
-			// as possible by targeting the first scrollable region. Unfortunately, it's
-			// not a perfect match — e.g. shift-tabbing won't immediately cycle up from
-			// the end of the page on Chromium
-			// See https://html.spec.whatwg.org/multipage/interaction.html#get-the-focusable-area
-			const root = document.body;
-			const tabindex = root.getAttribute('tabindex');
-
-			root.tabIndex = -1;
-			root.focus({ preventScroll: true, focusVisible: false });
-
-			// restore `tabindex` as to prevent `root` from stealing input from elements
-			if (tabindex !== null) {
-				root.setAttribute('tabindex', tabindex);
-			} else {
-				root.removeAttribute('tabindex');
-			}
-		}
-
-		// capture current selection, so we can compare the state after
-		// snapshot restoration and afterNavigate callbacks have run
-		const selection = getSelection();
-
-		if (selection && selection.type !== 'None') {
-			/** @type {Range[]} */
-			const ranges = [];
-
-			for (let i = 0; i < selection.rangeCount; i += 1) {
-				ranges.push(selection.getRangeAt(i));
-			}
-
-			setTimeout(() => {
-				if (selection.rangeCount !== ranges.length) return;
-
-				for (let i = 0; i < selection.rangeCount; i += 1) {
-					const a = ranges[i];
-					const b = selection.getRangeAt(i);
-
-					// we need to do a deep comparison rather than just `a !== b` because
-					// Safari behaves differently to other browsers
-					if (
-						a.commonAncestorContainer !== b.commonAncestorContainer ||
-						a.startContainer !== b.startContainer ||
-						a.endContainer !== b.endContainer ||
-						a.startOffset !== b.startOffset ||
-						a.endOffset !== b.endOffset
-					) {
-						return;
-					}
-				}
-
-				// if the selection hasn't changed (as a result of an element being (auto)focused,
-				// or a programmatic selection, we reset everything as part of the navigation)
-				// fixes https://github.com/sveltejs/kit/issues/8439
-				selection.removeAllRanges();
-			});
-		}
-	}
-}
-
-/**
  * @template {NavigationType} T
  * @param {import('./types.js').NavigationState} current
  * @param {import('./types.js').NavigationIntent | undefined} intent
@@ -3942,32 +3808,6 @@ function decode_hash(url) {
 	// Safari, for some reason, does change # to %23, when entered through the address bar
 	new_url.hash = decodeURIComponent(url.hash);
 	return new_url;
-}
-
-/**
- * @param {URL} url
- * @returns {string}
- */
-function get_id(url) {
-	let id;
-
-	if (app.hash) {
-		const [, , second] = url.hash.split('#', 3);
-		id = second ?? '';
-	} else {
-		id = url.hash.slice(1);
-	}
-
-	return decodeURIComponent(id);
-}
-
-/**
- * @param {URL} url
- * @returns {Element | null}
- */
-function get_hash_element(url) {
-	const id = get_id(url);
-	return id ? document.getElementById(id) : null;
 }
 
 if (DEV) {

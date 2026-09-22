@@ -1,6 +1,6 @@
 /** @import { NextHandleFunction } from 'connect' */
-/** @import { PreviewServer, ResolvedConfig } from 'vite' */
-/** @import { ValidatedConfig, ServerInternalModule, ServerModule } from 'types' */
+/** @import { PreviewServer } from 'vite' */
+/** @import { ValidatedConfig, ServerModule } from 'types' */
 import fs from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -11,19 +11,18 @@ import { createReadableStream, getRequest, setResponse } from '../../../exports/
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import { relative_pathname } from '../../../utils/url.js';
 import { is_chrome_devtools_request, not_found } from '../utils.js';
-import { stackless } from '../../../utils/error.js';
+import { set_error_stack, stackless } from '../../../utils/error.js';
 
 /**
  * @param {PreviewServer} vite
- * @param {ResolvedConfig} vite_config
  * @param {ValidatedConfig} svelte_config
  */
-export async function preview(vite, vite_config, svelte_config) {
+export async function preview(vite, svelte_config) {
 	const { paths } = svelte_config;
 	const base = paths.base;
 	const assets = paths.assets ? SVELTE_KIT_ASSETS : paths.base;
 
-	const protocol = vite_config.preview.https ? 'https' : 'http';
+	const protocol = vite.config.preview.https ? 'https' : 'http';
 
 	const etag = `"${Date.now()}"`;
 
@@ -38,28 +37,29 @@ export async function preview(vite, vite_config, svelte_config) {
 		await import(pathToFileURL(instrumentation).href);
 	}
 
-	/** @type {ServerInternalModule} */
-	const { set_assets } = await import(pathToFileURL(join(dir, 'internal.js')).href);
-
 	/** @type {ServerModule} */
-	const { Server } = await import(pathToFileURL(join(dir, 'index.js')).href);
+	const { configure } = await import(pathToFileURL(join(dir, 'index.js')).href);
 
+	/** @type {{ manifest: import('types').SSRManifest }} */
 	const { manifest } = await import(pathToFileURL(join(dir, 'manifest.js')).href);
 
-	set_assets(assets);
-
-	const server = new Server(manifest);
+	/** @type {import('types').ServerInstance} */
+	let server;
 
 	try {
-		await server.init({
-			env: loadEnv(vite_config.mode, svelte_config.env.dir, ''),
-			read: (file) => createReadableStream(`${dir}/${file}`)
+		server = await configure({
+			manifest,
+			env: loadEnv(vite.config.mode, svelte_config.env.dir, ''),
+			read: (file) => createReadableStream(`${dir}/${file}`),
+			assets
 		});
+
+		await server.init();
 	} catch (error) {
 		// Vite erases the error message when starting the preview server so we store
 		// it in the stack instead. This ensures errors thrown using `stackless`
 		// are still readable
-		if (error instanceof Error) error.stack = error.message;
+		if (error instanceof Error) set_error_stack(error, error.message);
 		throw error;
 	}
 
@@ -205,13 +205,13 @@ export async function preview(vite, vite_config, svelte_config) {
 		vite.middlewares.use(async (req, res) => {
 			const host = req.headers[':authority'] || req.headers.host;
 
-			const request = getRequest({
+			const request = (svelte_config.adapter?.vite?.getRequest ?? getRequest)({
 				base: `${protocol}://${host}`,
 				request: req,
 				response: res
 			});
 
-			setResponse(
+			(svelte_config.adapter?.vite?.setResponse ?? setResponse)(
 				res,
 				await server.respond(request, {
 					getClientAddress: () => {
@@ -220,7 +220,7 @@ export async function preview(vite, vite_config, svelte_config) {
 						throw new Error('Could not determine clientAddress');
 					},
 					read: (file) => {
-						if (file in manifest._.server_assets) {
+						if (file in manifest.server_assets) {
 							return fs.readFileSync(join(dir, file));
 						}
 

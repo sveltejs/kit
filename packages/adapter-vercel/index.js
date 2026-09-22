@@ -4,7 +4,7 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { VERSION } from '@sveltejs/kit';
 import { nodeFileTrace } from '@vercel/nft';
-import { get_pathname, parse_isr_expiration, pattern_to_src, resolve_runtime } from './utils.js';
+import { parse_isr_expiration, pattern_to_src, resolve_runtime } from './utils.js';
 
 const INTERNAL = '![-]'; // this name is guaranteed not to conflict with user routes
 
@@ -51,30 +51,32 @@ const plugin = function (defaults = {}) {
 			 * @param {string} name
 			 * @param {import('./index.js').ServerlessConfig} config
 			 * @param {import('@sveltejs/kit').RouteDefinition<import('./index.js').Config>[]} routes
+			 * @param {string} [proxy]
 			 */
-			async function generate_serverless_function(name, config, routes) {
+			async function generate_serverless_function(name, config, routes, proxy) {
 				const dir = `${dirs.functions}/${name}.func`;
+				const entrypoint = `${tmp}/index.js`;
 
-				const relativePath = path.posix.relative(tmp, builder.getServerDirectory());
-				builder.copy(`${files}/serverless.js`, `${tmp}/index.js`, {
+				if (proxy) {
+					builder.copy(proxy, entrypoint);
+				}
+
+				builder.copy(`${files}/serverless.js`, proxy ? `${tmp}/serverless.js` : entrypoint, {
 					replace: {
-						SERVER: `${relativePath}/index.js`,
-						MANIFEST: './manifest.js'
+						SERVER: `./server.js`
 					}
 				});
 				if (builder.hasServerInstrumentationFile()) {
+					const initializer = builder.createInstrumentationInitializer({ outputDirectory: tmp });
 					builder.instrument({
-						entrypoint: `${tmp}/index.js`,
-						instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`
+						entrypoint,
+						instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`,
+						initializer
 					});
 				}
+				builder.generateServerInstance(`${tmp}/server.js`, { routes });
 
-				write(
-					`${tmp}/manifest.js`,
-					`export const manifest = ${builder.generateManifest({ relativePath, routes })};\n`
-				);
-
-				await create_function_bundle(builder, `${tmp}/index.js`, dir, config);
+				await create_function_bundle(builder, entrypoint, dir, config);
 
 				for (const asset of builder.findServerAssets(routes)) {
 					// TODO use symlinks, once Build Output API supports doing so
@@ -178,11 +180,7 @@ const plugin = function (defaults = {}) {
 				// generate one function for the group
 				const name = singular ? `${INTERNAL}/catchall` : `${INTERNAL}/${group.i}`;
 
-				await generate_serverless_function(
-					name,
-					/** @type {any} */ (group.config),
-					/** @type {import('@sveltejs/kit').RouteDefinition<any>[]} */ (group.routes)
-				);
+				await generate_serverless_function(name, group.config, group.routes);
 
 				for (const route of group.routes) {
 					functions.set(route.pattern.toString(), name);
@@ -197,8 +195,9 @@ const plugin = function (defaults = {}) {
 
 				await generate_serverless_function(
 					`${INTERNAL}/catchall`,
-					/** @type {any} */ ({ ...defaults, runtime }),
-					[]
+					{ ...defaults, runtime },
+					[],
+					`${files}/catch-all.js`
 				);
 			}
 
@@ -227,6 +226,12 @@ const plugin = function (defaults = {}) {
 				});
 			}
 
+			// Vercel's filesystem phase serves a function at its own path, with or without a
+			// trailing slash, before the routes below are consulted. Static ISR routes live at
+			// their own path, so they must be routed before it to arrive with `__pathname`
+			/** @type {any[]} */
+			const static_isr_routes = [];
+
 			for (const route of builder.routes) {
 				if (is_prerendered(route)) continue;
 
@@ -238,6 +243,7 @@ const plugin = function (defaults = {}) {
 				if (isr) {
 					const isr_name = route.id.slice(1) || '__root__'; // should we check that __root__ isn't a route?
 					const base = `${dirs.functions}/${isr_name}`;
+					const has_page = route.page.methods.length > 0;
 					fs.mkdirSync(base, { recursive: true });
 
 					const target = `${dirs.functions}/${name}.func`;
@@ -246,9 +252,10 @@ const plugin = function (defaults = {}) {
 					// create a symlink to the actual function, but use the
 					// route name so that we can derive the correct URL
 					fs.symlinkSync(relative, `${base}.func`);
-					fs.symlinkSync(`../${relative}`, `${base}/__data.json.func`);
+					if (has_page) {
+						fs.symlinkSync(`../${relative}`, `${base}/__data.json.func`);
+					}
 
-					const pathname = get_pathname(route);
 					const json = JSON.stringify(
 						{ ...isr, expiration: parse_isr_expiration(isr.expiration, route.id) },
 						null,
@@ -256,19 +263,29 @@ const plugin = function (defaults = {}) {
 					);
 
 					write(`${base}.prerender-config.json`, json);
-					write(`${base}/__data.json.prerender-config.json`, json);
+					if (has_page) {
+						write(`${base}/__data.json.prerender-config.json`, json);
+					}
 
-					const q = `?__pathname=/${pathname}`;
+					const routes = route.segments.some((segment) => segment.dynamic)
+						? static_config.routes
+						: static_isr_routes;
 
-					static_config.routes.push({
-						src: src + '$',
-						dest: `/${isr_name}${q}`
+					// capture the requested pathname (minus the `^` anchor) as `__pathname`,
+					// since the function otherwise only sees its own path
+					const pathname = src.slice(1);
+
+					routes.push({
+						src: `^(${pathname})$`,
+						dest: `/${isr_name}?__pathname=$1`
 					});
 
-					static_config.routes.push({
-						src: src + '/__data.json$',
-						dest: `/${isr_name}/__data.json${q}`
-					});
+					if (has_page) {
+						routes.push({
+							src: `^(${pathname}/__data.json)$`,
+							dest: `/${isr_name}/__data.json?__pathname=$1`
+						});
+					}
 				} else {
 					// Create a symlink for each route to the main function for better observability
 					// (without this, every request appears to go through `/![-]`)
@@ -307,6 +324,9 @@ const plugin = function (defaults = {}) {
 					});
 				}
 			}
+
+			const filesystem = static_config.routes.findIndex((route) => route.handle === 'filesystem');
+			static_config.routes.splice(filesystem, 0, ...static_isr_routes);
 
 			if (builder.config.router.resolution === 'server') {
 				// Create a separate serverless function just for server-side route resolution.
@@ -522,7 +542,12 @@ async function create_function_bundle(builder, entry, dir, config) {
 	let base = entry;
 	while (base !== (base = path.dirname(base)));
 
-	const traced = await nodeFileTrace([entry], { base });
+	const traced = await nodeFileTrace([entry], {
+		base,
+		processCwd: process.cwd(),
+		// a wildcard directly under `base` would glob the entire filesystem
+		ignore: (file) => file.startsWith('**')
+	});
 
 	/** @type {Map<string, string[]>} */
 	const resolution_failures = new Map();

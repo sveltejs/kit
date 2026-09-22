@@ -1,7 +1,6 @@
 /** @import { Plugin, RolldownOptions } from 'rolldown' */
 import { builtinModules } from 'node:module';
 import { rmSync } from 'node:fs';
-import { join } from 'node:path';
 
 /**
  * @param {string} filepath
@@ -34,36 +33,21 @@ function prefixBuiltinModules() {
 	};
 }
 
-const dir_id = join(import.meta.dirname, 'src', 'dir.js');
-
 /** @type {RolldownOptions} */
 export default {
 	input: {
 		index: 'src/index.js',
 		handler: 'src/handler.js',
-		env: 'src/env.js'
+		'adapter-env': 'src/env.js'
 	},
 	output: {
 		dir: 'files',
 		format: 'esm',
 		hoistTransitiveImports: false,
-		chunkFileNames(chunk) {
-			if (chunk.name === 'dir') return '[name].js';
-			return 'chunks/[name].js';
-		},
-		codeSplitting: {
-			groups: [
-				{
-					name: 'dir',
-					test: dir_id
-				}
-			]
-		}
+		chunkFileNames: 'chunks/[name].js'
 	},
 	plugins: [clearOutput('files'), prefixBuiltinModules()],
-	// `MANIFEST` and `SERVER` are resolved at adapt time, and `@sveltejs/kit/node`
-	// is kept external so that it gets bundled _alongside_ the app's server code
-	// (rather than duplicated), see https://github.com/sveltejs/kit/issues/15755
-	external: ['MANIFEST', 'SERVER', '@sveltejs/kit/node'],
+	// resolved by the app's build; `@sveltejs/kit/node` stays external so it isn't duplicated (#15755)
+	external: ['#@sveltejs/adapter-node', '@sveltejs/kit/node'],
 	platform: 'node'
 };

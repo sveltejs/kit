@@ -249,7 +249,13 @@ const options = {
 	preprocess: any(),
 
 	prerender: object({
-		concurrency: number(1),
+		concurrency: validate(1, (input, keypath) => {
+			if (!Number.isInteger(input) || input < 1) {
+				throw new Error(`${keypath} should be a positive integer, if specified`);
+			}
+
+			return input;
+		}),
 		crawl: boolean(true),
 		entries: validate(['*'], (input, keypath) => {
 			if (!Array.isArray(input) || !input.every((page) => typeof page === 'string')) {

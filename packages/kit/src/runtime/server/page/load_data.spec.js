@@ -1,5 +1,8 @@
-import { assert, expect, test } from 'vitest';
-import { create_universal_fetch } from './load_data.js';
+import { assert, expect, test, vi } from 'vitest';
+
+vi.stubGlobal('__SVELTEKIT_DEV__', undefined);
+
+const { create_universal_fetch } = await import('./load_data.js');
 
 /**
  * @param {Partial<Pick<import('@sveltejs/kit').RequestEvent, 'fetch' | 'url' | 'request' | 'route'>>} event

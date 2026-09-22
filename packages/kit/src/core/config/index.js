@@ -138,7 +138,7 @@ export function process_config(config, cwd) {
 	if (
 		config.csp?.directives?.['require-trusted-types-for']?.includes('script') &&
 		config.serviceWorker.register &&
-		resolve_entry(path.resolve(cwd, config.files.serviceWorker)) &&
+		resolve_entry(path.resolve(cwd, config.files.serviceWorker), config.moduleExtensions) &&
 		!config.csp?.directives?.['trusted-types']?.includes('sveltekit-trusted-url')
 	) {
 		throw new Error(
@@ -200,13 +200,10 @@ export function validate_config(config) {
 			}
 		}
 
-		if (
-			validated.csp?.directives?.['require-trusted-types-for']?.includes('script') &&
-			!validated.csp?.directives?.['trusted-types']?.includes('svelte-trusted-html')
-		) {
-			throw new Error(
-				"The `csp.directives['trusted-types']` option must include 'svelte-trusted-html'"
-			);
+		if (typeof config.adapter?.vite === 'function') {
+			validated.adapter.vite = config.adapter.vite({
+				config: validated
+			});
 		}
 
 		return validated;

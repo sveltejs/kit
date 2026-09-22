@@ -13,7 +13,7 @@ import {
 } from '../client.js';
 import { page } from '#app/state/client';
 import { tick } from 'svelte';
-import { categorize_updates, remote_request } from './shared.svelte.js';
+import { categorize_updates, fail_unhandled_refreshes, remote_request } from './shared.svelte.js';
 import { createAttachmentKey } from 'svelte/attachments';
 import {
 	convert_formdata,
@@ -113,9 +113,23 @@ export function form(id) {
 		let input = $state(initial?.input ?? {});
 
 		/** @type {InternalRemoteFormIssue[]} */
-		let raw_issues = $state.raw(initial?.issues ?? []);
+		let raw_issues = initial?.issues ?? [];
 
-		const issues = $derived(flatten_issues(raw_issues));
+		const issues = $state(flatten_issues(raw_issues));
+
+		/** @param {InternalRemoteFormIssue[]} next */
+		function update_issues(next) {
+			raw_issues = next;
+			const flattened = flatten_issues(raw_issues);
+
+			for (const key in issues) {
+				if (!(key in flattened)) delete issues[key];
+			}
+
+			for (const key in flattened) {
+				issues[key] = flattened[key];
+			}
+		}
 
 		/** @type {any} */
 		let result = $state.raw(initial?.result);
@@ -254,10 +268,13 @@ export function form(id) {
 										'x-sveltekit-search': location.search
 									},
 									body: blob
-								}
+								},
+								refreshes
 							);
 
-							({ issues: raw_issues = [], result } = response._ ?? {});
+							const { issues = [], result: next_result } = response._ ?? {};
+							update_issues(issues);
+							result = next_result;
 
 							// if the developer took control of updates via `.updates(...)` (even with
 							// no arguments), or the server performed explicit refreshes, don't invalidateAll
@@ -274,6 +291,7 @@ export function form(id) {
 							const succeeded = raw_issues.length === 0;
 
 							if (succeeded) {
+								fail_unhandled_refreshes(refreshes);
 								if (should_refresh) {
 									await refreshAll();
 								}
@@ -286,7 +304,7 @@ export function form(id) {
 							return succeeded;
 						} catch (e) {
 							result = undefined;
-							raw_issues = [];
+							update_issues([]);
 							throw e;
 						} finally {
 							overrides?.forEach((fn) => fn());
@@ -359,10 +377,12 @@ export function form(id) {
 			const validated = await schema?.['~standard'].validate(data);
 
 			if (validated?.issues) {
-				raw_issues = merge_with_server_issues(
-					form_data,
-					raw_issues,
-					validated.issues.map((issue) => normalize_issue(issue, false))
+				update_issues(
+					merge_with_server_issues(
+						form_data,
+						raw_issues,
+						validated.issues.map((issue) => normalize_issue(issue, false))
+					)
 				);
 
 				if (DEV) {
@@ -374,7 +394,7 @@ export function form(id) {
 
 			// Preflight passed - clear stale client-side preflight issues
 			if (preflight_schema) {
-				raw_issues = raw_issues.filter((issue) => issue.server);
+				update_issues(raw_issues.filter((issue) => issue.server));
 			}
 
 			return true;
@@ -446,7 +466,7 @@ export function form(id) {
 					set_nested_value(input, previous_submitter, undefined);
 				}
 
-				if (event.submitter) {
+				if (event.submitter && /** @type {HTMLInputElement} */ (event.submitter).type !== 'image') {
 					const name = event.submitter.getAttribute('name');
 
 					/** @type {null | ReturnType<typeof parse_form_key>} */
@@ -535,7 +555,7 @@ export function form(id) {
 						}
 					}
 
-					set_nested_value(input, field, value);
+					set_nested_value(input, field, is_file ? value : coerce_form_value(field.type, value));
 				} else if (is_file) {
 					if (DEV && element.multiple) {
 						throw new Error(
@@ -554,7 +574,10 @@ export function form(id) {
 					set_nested_value(
 						input,
 						field,
-						element.type === 'checkbox' && !element.checked ? null : element.value
+						coerce_form_value(
+							field.type,
+							element.type === 'checkbox' && !element.checked ? null : element.value
+						)
 					);
 				}
 
@@ -567,7 +590,7 @@ export function form(id) {
 				await tick();
 
 				input = convert_formdata(action_id_without_key, new FormData(form));
-				raw_issues = [];
+				update_issues([]);
 				touched = {};
 				dirty = {};
 				can_validate = {};
@@ -615,7 +638,7 @@ export function form(id) {
 					}
 
 					const default_submitter = /** @type {HTMLElement | undefined} */ (
-						element.querySelector('button:not([type]), [type="submit"]')
+						element.querySelector('button:not([type]), [type="submit"], [type="image"]')
 					);
 
 					const form_data = new FormData(element, default_submitter);
@@ -697,15 +720,16 @@ export function form(id) {
 			validate: {
 				/** @type {RemoteForm<any, any>['validate']} */
 				value: async ({ all = false, preflightOnly = false } = {}) => {
-					if (!element) return;
-
 					const id = ++validate_id;
 
 					// wait a tick in case the user is calling validate() right after set() which takes time to propagate
 					await tick();
 
+					// the form may have been removed from the DOM while we were waiting
+					if (!element) return;
+
 					const default_submitter = /** @type {HTMLElement | undefined} */ (
-						element.querySelector('button:not([type]), [type="submit"]')
+						element.querySelector('button:not([type]), [type="submit"], [type="image"]')
 					);
 
 					const form_data = new FormData(element, default_submitter);
@@ -753,9 +777,9 @@ export function form(id) {
 
 					const is_server_validation = !validated?.issues && !preflightOnly;
 
-					raw_issues = is_server_validation
-						? array
-						: merge_with_server_issues(form_data, raw_issues, array);
+					update_issues(
+						is_server_validation ? array : merge_with_server_issues(form_data, raw_issues, array)
+					);
 				}
 			},
 			enhance: {

@@ -5,6 +5,12 @@ test('basic page renders', async ({ page }) => {
 	await expect(page.locator('h1')).toContainText('Hello from SvelteKit on Vercel');
 });
 
+test('redirects from vercel.json work', async ({ request }) => {
+	const response = await request.get('/redirect', { maxRedirects: 0 });
+	expect(response.status()).toBe(307);
+	expect(response.headers()['location']).toBe('/');
+});
+
 test('server-side data loading works', async ({ page }) => {
 	await page.goto('/server-data');
 	await expect(page.locator('h1')).toContainText('loaded on server');
@@ -17,6 +23,18 @@ test('API routes work', async ({ request }) => {
 	expect(response.ok()).toBe(true);
 	const data = await response.json();
 	expect(data.ok).toBe(true);
+});
+
+test('route-level maxDuration is applied', async ({ request }) => {
+	const response = await request.get('/max-duration');
+	expect(response.status()).toBe(504);
+	expect(response.headers()['x-vercel-error']).toBe('FUNCTION_INVOCATION_TIMEOUT');
+});
+
+test('dynamic env is available in instrumentation', async ({ request }) => {
+	const response = await request.get('/instrumentation-env');
+	expect(response.ok()).toBe(true);
+	expect(await response.json()).toEqual({ loaded: true });
 });
 
 test('$app/server read works', async ({ request }) => {
@@ -46,6 +64,20 @@ test('ISR route serves cached response', async ({ request }) => {
 	expect(first_rendered_at).toBe(second_rendered_at);
 });
 
+test('ISR page with trailingSlash always loads without errors', async ({ page, request }) => {
+	await page.goto('/isr-trailing-slash/');
+
+	expect(new URL(page.url()).pathname).toBe('/isr-trailing-slash/');
+	await expect(page.locator('h1')).toContainText('ISR Trailing Slash Page');
+
+	const rendered_at = await page.locator('#rendered-at').textContent();
+	await page.reload();
+	await expect(page.locator('#rendered-at')).toHaveText(String(rendered_at));
+
+	const response = await request.get('/isr-trailing-slash', { maxRedirects: 0 });
+	expect(response.status()).toBe(308);
+});
+
 test('ISR dynamic route serves cached response per slug', async ({ request }) => {
 	// warm the cache for /isr/alpha
 	const first = await request.get('/isr/alpha');
@@ -67,6 +99,10 @@ test('ISR dynamic route serves cached response per slug', async ({ request }) =>
 	expect(beta.ok()).toBe(true);
 	const beta_html = await beta.text();
 	expect(beta_html).toContain('ISR: beta');
+
+	// trailing slash is normalized rather than silently served
+	const slashed = await request.get('/isr/alpha/', { maxRedirects: 0 });
+	expect(slashed.status()).toBe(308);
 });
 
 test('prerendered page works', async ({ page }) => {

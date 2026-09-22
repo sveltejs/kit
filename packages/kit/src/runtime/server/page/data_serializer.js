@@ -1,7 +1,7 @@
 import * as devalue from 'devalue';
 import { compact } from '../../../utils/array.js';
 import { create_async_iterator } from '../../../utils/streaming.js';
-import { clarify_devalue_error, get_global_name, serialize_uses } from '../utils.js';
+import { clarify_devalue_error, serialize_uses } from '../utils.js';
 import { handle_error_and_jsonify } from '../errors.js';
 import { encoders } from '#app/internal/transport';
 
@@ -10,15 +10,14 @@ import { encoders } from '#app/internal/transport';
  * async iterable containing their resolutions
  * @param {import('@sveltejs/kit').RequestEvent} event
  * @param {import('types').RequestState} state
- * @param {import('types').SSROptions} options
  * @returns {import('./types.js').ServerDataSerializer}
  */
-export function server_data_serializer(event, state, options) {
+export function server_data_serializer(event, state) {
 	let promise_id = 1;
 	let max_nodes = -1;
 
 	const iterator = create_async_iterator();
-	const global = get_global_name(options);
+	const global = __SVELTEKIT_GLOBAL_NAME__;
 
 	/** @param {number} index */
 	function get_replacer(index) {
@@ -31,7 +30,7 @@ export function server_data_serializer(event, state, options) {
 					.then(/** @param {any} data */ (data) => ({ data }))
 					.catch(
 						/** @param {any} error */ async (error) => ({
-							error: await handle_error_and_jsonify(event, state, options, error)
+							error: await handle_error_and_jsonify(event, state, error)
 						})
 					)
 					.then(
@@ -46,7 +45,6 @@ export function server_data_serializer(event, state, options) {
 								error = await handle_error_and_jsonify(
 									event,
 									state,
-									options,
 									new Error(`Failed to serialize promise while rendering ${event.route.id}`, {
 										cause: e
 									})
@@ -127,10 +125,9 @@ export function server_data_serializer(event, state, options) {
  * async iterable containing their resolutions
  * @param {import('@sveltejs/kit').RequestEvent} event
  * @param {import('types').RequestState} state
- * @param {import('types').SSROptions} options
  * @returns {import('./types.js').ServerDataSerializerJson}
  */
-export function server_data_serializer_json(event, state, options) {
+export function server_data_serializer_json(event, state) {
 	let promise_id = 1;
 
 	const iterator = create_async_iterator();
@@ -152,7 +149,7 @@ export function server_data_serializer_json(event, state, options) {
 				.catch(
 					/** @param {any} e */ async (e) => {
 						key = 'error';
-						return handle_error_and_jsonify(event, state, options, /** @type {any} */ (e));
+						return handle_error_and_jsonify(event, state, /** @type {any} */ (e));
 					}
 				)
 				.then(
@@ -165,7 +162,6 @@ export function server_data_serializer_json(event, state, options) {
 							const error = await handle_error_and_jsonify(
 								event,
 								state,
-								options,
 								new Error(`Failed to serialize promise while rendering ${event.route.id}`, {
 									cause: e
 								})

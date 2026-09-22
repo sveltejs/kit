@@ -12,6 +12,11 @@ test('CSR', async ({ page }) => {
 	await expect(page.locator('button')).toContainText('Toggle: true');
 });
 
+test('loads external dependencies', async ({ request }) => {
+	const response = await request.get('/external-dependency');
+	expect(await response.text()).toBe('server-side-dep implementation');
+});
+
 test('sets X-Accel-Buffering header on text/event-stream responses', async ({ request }) => {
 	const response = await request.get('/event-stream');
 	expect(response.headers()['content-type']).toContain('text/event-stream');
@@ -21,6 +26,22 @@ test('sets X-Accel-Buffering header on text/event-stream responses', async ({ re
 test('does not set X-Accel-Buffering header on other responses', async ({ request }) => {
 	const response = await request.get('/');
 	expect(response.headers()['x-accel-buffering']).toBeUndefined();
+});
+
+test('initializes dynamic env before instrumentation', async ({ request }) => {
+	const response = await request.get('/instrumentation-env');
+	expect(await response.json()).toEqual({ value: 'available' });
+});
+
+test('preserves similar user identifiers and imports', async ({ request }) => {
+	const response = await request.get('/adapter-identifiers');
+	expect(await response.json()).toEqual({
+		BASE_PATH: 'user-base-path',
+		APP_PATH: 'user-app-path',
+		ENV_PREFIX: 'user-env-prefix',
+		PRECOMPRESS: 'user-precompress',
+		SERVER: 'user-server'
+	});
 });
 
 test('sets Vary on assets that were precompressed', async ({ request }) => {
@@ -70,4 +91,9 @@ test('serves static HTML with a charset', async ({ request }) => {
 	const response = await request.get('/page.html');
 	expect(response.status()).toBe(200);
 	expect(response.headers()['content-type']).toBe('text/html;charset=utf-8');
+});
+
+test('does not replace adapter stubs in application chunks', async ({ request }) => {
+	const response = await request.get('/stub');
+	expect(await response.text()).toBe('__SVELTEKIT_ADAPTER_NODE_MIMETYPES__');
 });

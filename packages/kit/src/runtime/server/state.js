@@ -9,6 +9,7 @@ function transient_fields() {
 			implicit: null,
 			forms: null,
 			requested: null,
+			ignored: null,
 			batches: null,
 			live_iterators: null
 		},
@@ -36,6 +37,7 @@ export function create_request_state(options) {
 		prerender_default: undefined,
 		error: false,
 		depth: 0,
+		rerouted_url: null,
 		...transient_fields()
 	};
 }

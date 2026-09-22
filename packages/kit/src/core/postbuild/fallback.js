@@ -18,21 +18,16 @@ export default forked(import.meta.url, generate_fallback);
 async function generate_fallback({ manifest_path, env, out_dir, origin, assets }) {
 	const server_root = join(out_dir, 'output');
 
-	/** @type {import('types').ServerInternalModule} */
-	const { set_building } = await import(pathToFileURL(`${server_root}/server/internal.js`).href);
-
 	/** @type {import('types').ServerModule} */
-	const { Server } = await import(pathToFileURL(`${server_root}/server/index.js`).href);
+	const { configure } = await import(pathToFileURL(`${server_root}/server/index.js`).href);
 
-	/** @type {import('@sveltejs/kit').SSRManifest} */
+	/** @type {import('types').SSRManifest} */
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
-	set_building();
+	const { init, respond } = await configure({ building: true, manifest, env });
+	await init();
 
-	const server = new Server(manifest);
-	await server.init({ env });
-
-	const response = await server.respond(new Request(origin + '/[fallback]'), {
+	const response = await respond(new Request(origin + '/[fallback]'), {
 		getClientAddress: () => {
 			throw new Error('Cannot read clientAddress during prerendering');
 		},

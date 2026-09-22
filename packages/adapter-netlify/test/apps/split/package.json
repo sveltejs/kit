@@ -6,13 +6,17 @@
 		"dev": "vite dev",
 		"build": "vite build",
 		"preview": "vite preview",
+		"test:serverless:build": "pnpm build && vitest run build.test.js",
+		"test:edge:build": "EDGE=true pnpm build && EDGE=true vitest run build.test.js",
+		"test:build": "pnpm test:serverless:build && pnpm test:edge:build",
 		"test:platform": "playwright test"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"svelte": "catalog:",
-		"vite": "catalog:"
+		"vite": "catalog:",
+		"vitest": "catalog:"
 	},
 	"type": "module"
 }

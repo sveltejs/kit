@@ -4,14 +4,18 @@
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import {
 	create_field_proxy,
-	set_nested_value,
+	split_path,
 	deep_set,
 	normalize_issue,
 	flatten_issues,
 	parse_form_key
 } from '../../../form-utils.js';
 import { get_cache, get_implicit_lookup, run_remote_function } from './shared.js';
-import { ValidationError } from '@sveltejs/kit/internal';
+import { ActionFailure, ValidationError } from '@sveltejs/kit/internal';
+import { DEV } from 'esm-env';
+
+const incorrect_fail_message =
+	'`fail(...)` is for form actions. A remote `form` handler should call `invalid(...)` instead. See https://svelte.dev/docs/kit/remote-functions#form-Programmatic-validation';
 
 /**
  * Creates a form object that can be spread onto a `<form>` element.
@@ -118,9 +122,15 @@ export function form(validate_or_fn, maybe_fn) {
 							() => data,
 							(data) => (!maybe_fn ? fn() : fn(data, issue))
 						);
+
+						if (DEV && output.result instanceof ActionFailure) {
+							throw new Error(incorrect_fail_message);
+						}
 					} catch (e) {
 						if (e instanceof ValidationError) {
 							handle_issues(output, e.issues, form_data, __.id);
+						} else if (DEV && e instanceof ActionFailure) {
+							throw new Error(incorrect_fail_message, { cause: e });
 						} else {
 							throw e;
 						}
@@ -146,7 +156,8 @@ export function form(validate_or_fn, maybe_fn) {
 
 		Object.defineProperty(instance, 'action', {
 			get: () => {
-				const search = new URLSearchParams(get_request_store().event.url.search);
+				const { event, state } = get_request_store();
+				const search = new URLSearchParams(state.prerendering ? '' : event.url.search);
 				search.delete('/remote');
 
 				const query = search.toString();
@@ -276,15 +287,17 @@ function handle_issues(output, issues, form_data, form_id) {
 		output.input = {};
 
 		for (const field_name of form_data.keys()) {
+			const field = parse_form_key(form_id, field_name);
+			const path = split_path(field.name);
+
 			// redact sensitive fields
-			if (/^[.\]]?_/.test(field_name)) continue;
+			if (path.some((part) => part.startsWith('_'))) continue;
 
 			const values = form_data.getAll(field_name).filter((value) => typeof value === 'string');
-			const field = parse_form_key(form_id, field_name);
 
-			set_nested_value(
+			deep_set(
 				/** @type {Record<string, any>} */ (output.input),
-				field,
+				path,
 				field.is_array ? values : values[0]
 			);
 		}

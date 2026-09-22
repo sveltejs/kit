@@ -19,11 +19,16 @@ export default defineConfig({
 			adapter: {
 				name: 'test-adapter',
 				adapt(builder) {
+					const initializer = builder.createInstrumentationInitializer({
+						outputDirectory: builder.getServerDirectory(),
+						environment: `import { loadEnv } from 'vite';\nexport default loadEnv('production', ${JSON.stringify(import.meta.dirname)}, '');\n`
+					});
 					builder.instrument({
 						entrypoint: `${builder.getServerDirectory()}/index.js`,
 						instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`,
+						initializer,
 						module: {
-							exports: ['Server']
+							exports: ['configure', 'create_server', 'Server', 'format_response']
 						}
 					});
 				},
@@ -114,6 +119,6 @@ export default defineConfig({
 			],
 			headless: true
 		},
-		include: ['unit-test/**/*.spec.js']
+		include: ['test/vitest/client.spec.js']
 	}
 });

@@ -1,5 +1,39 @@
 # @sveltejs/adapter-vercel
 
+## 7.0.0-next.9
+
+### Major Changes
+
+- breaking: populate env vars before `instrumentation.server.js` is evaluated and update the adapter instrumentation API ([#16303](https://github.com/sveltejs/kit/pull/16303))
+
+- breaking: replace the `builder.generateManifest` with `builder.generateServerInstance` and `builder.manifest` ([#16875](https://github.com/sveltejs/kit/pull/16875))
+
+### Patch Changes
+
+- fix: pass the requested pathname, including any trailing slash, to ISR functions ([#16903](https://github.com/sveltejs/kit/pull/16903))
+
+- fix: trace `process.cwd()`-relative files from the project directory and never glob from the filesystem root ([#16972](https://github.com/sveltejs/kit/pull/16972))
+- Updated dependencies [[`9a4b343`](https://github.com/sveltejs/kit/commit/9a4b343bd8ab0060dc624fbdd139155fc4a0a1dc), [`ee2f55b`](https://github.com/sveltejs/kit/commit/ee2f55b1e3338d2fa92a25fe53d095129edf1002), [`65673a4`](https://github.com/sveltejs/kit/commit/65673a4dd35054c16f8555eb896dfb773d86a556), [`1b79845`](https://github.com/sveltejs/kit/commit/1b79845e117f417b63fa399149816d73882c27ea), [`b12bb78`](https://github.com/sveltejs/kit/commit/b12bb789c17c30e7ff835de4af004d2f3eb36159), [`03f1687`](https://github.com/sveltejs/kit/commit/03f1687fe612ce3d2d9131139b5b188d9cf90c64), [`49f0808`](https://github.com/sveltejs/kit/commit/49f0808f3e983d0cb5a4d586cf0d1678467431ed), [`e7c74bf`](https://github.com/sveltejs/kit/commit/e7c74bf8227dc228cb36e822eaff5992569b830a), [`0876d63`](https://github.com/sveltejs/kit/commit/0876d633145088c7a5213e9f530cf2fed96ce35d), [`9a2b9ba`](https://github.com/sveltejs/kit/commit/9a2b9bacbb2de0533966bb029ef526b357aac086), [`c9f54b5`](https://github.com/sveltejs/kit/commit/c9f54b5d66acd9443d36b0ae9aa0a656809bd7f9), [`22b8152`](https://github.com/sveltejs/kit/commit/22b8152f74882775ac63e1cf96d3016b92ac8256), [`f6d44cf`](https://github.com/sveltejs/kit/commit/f6d44cf007d6c6b54de57f6ae4ef8e2e7fea2f44), [`3c3a27b`](https://github.com/sveltejs/kit/commit/3c3a27bf67a26164266e132dbb7f9266643cf724), [`7f376b1`](https://github.com/sveltejs/kit/commit/7f376b109cd770638806184cf5d8bf4cf88c5bf2), [`8a587c7`](https://github.com/sveltejs/kit/commit/8a587c7b3919408ec66a362eb249fe5cf43f5316), [`aa4f960`](https://github.com/sveltejs/kit/commit/aa4f9605761e686f6aaf414b9186c68ddd2468dc)]:
+  - @sveltejs/kit@3.0.0-next.27
+
+## 7.0.0-next.8
+
+### Patch Changes
+
+- fix: omit ISR data endpoints for server-only routes ([#16731](https://github.com/sveltejs/kit/pull/16731))
+
+- fix: correctly apply `reroute` results for apps configured with split serverless functions ([#16665](https://github.com/sveltejs/kit/pull/16665))
+- Updated dependencies [[`9b3d195`](https://github.com/sveltejs/kit/commit/9b3d1955cb40042cbc411637dab3064ddfa6b1a5), [`385d378`](https://github.com/sveltejs/kit/commit/385d378dd1281e1b69417bf4980a169d67a49314), [`3782448`](https://github.com/sveltejs/kit/commit/37824483ca6ccf802942740f0da31b149d09e077), [`d0d3a33`](https://github.com/sveltejs/kit/commit/d0d3a33535cd2f3db1ed09680ccb34624b3abb77), [`4b7a483`](https://github.com/sveltejs/kit/commit/4b7a4830e962ee404161197b3b016182c376ed61), [`e325d7d`](https://github.com/sveltejs/kit/commit/e325d7dfa4313c889d3f9ebea9e70552722c427e), [`4f63c79`](https://github.com/sveltejs/kit/commit/4f63c799ab8dd9ae01eb301d7a9f5d712b724d23)]:
+  - @sveltejs/kit@3.0.0-next.25
+
+## 7.0.0-next.7
+
+### Patch Changes
+
+- fix: ignore `EEXIST` errors when symlinking traced files that resolve to the same destination ([#16809](https://github.com/sveltejs/kit/pull/16809))
+- Updated dependencies [[`6d1e9d7`](https://github.com/sveltejs/kit/commit/6d1e9d70587641a8997f9fc806859370da75e845), [`289afbf`](https://github.com/sveltejs/kit/commit/289afbf3314f50d6160ca75bdf99ed8fbf88cc47), [`7f1db04`](https://github.com/sveltejs/kit/commit/7f1db0430b2ad771fff965990ec42d0fccf9528a), [`7570a62`](https://github.com/sveltejs/kit/commit/7570a62238ac24023157c635c2fbfd887bd6e860), [`6833df1`](https://github.com/sveltejs/kit/commit/6833df1bb799ec802cd2f16fc87b234b1533c003), [`d8efec6`](https://github.com/sveltejs/kit/commit/d8efec6d33c4a84bf9d2caade5896bf175a2f83a), [`fb0e21c`](https://github.com/sveltejs/kit/commit/fb0e21cf32a5b8546ee97ddf18a24a900bb71509), [`6e7d44d`](https://github.com/sveltejs/kit/commit/6e7d44d62434b0bf1e01e646f3bb3fcfc2c3715c), [`bd36e00`](https://github.com/sveltejs/kit/commit/bd36e0049ced1c47ec3be0754894af0aeeecf1bf), [`97ad63a`](https://github.com/sveltejs/kit/commit/97ad63a45c65614081de72ac089e92e8d572bfa2), [`17123bf`](https://github.com/sveltejs/kit/commit/17123bfac392e8941ece37278ee35ba347fe9219), [`2c179e9`](https://github.com/sveltejs/kit/commit/2c179e9b19e1f0c23c1374cea404363a7c12acf3), [`e54a37f`](https://github.com/sveltejs/kit/commit/e54a37f52a0546a6143ba604cfb05043e93dd28a), [`a7f32aa`](https://github.com/sveltejs/kit/commit/a7f32aafa90d6ba3ad16565b6296995544d5a347), [`9a910f3`](https://github.com/sveltejs/kit/commit/9a910f3f5297123b2808b74579d558376b78cf86), [`a610618`](https://github.com/sveltejs/kit/commit/a6106186090e72d2b6d11fae4004b95c7579e75d), [`d455628`](https://github.com/sveltejs/kit/commit/d4556285a0fda2655ca62b25be55003086597cd1), [`4682127`](https://github.com/sveltejs/kit/commit/46821277fe201b7fbe151d4343d59f149ca3a89d), [`e4876e9`](https://github.com/sveltejs/kit/commit/e4876e91ebba0007664bbf06e5a9570d0c2e8844), [`7f1db04`](https://github.com/sveltejs/kit/commit/7f1db0430b2ad771fff965990ec42d0fccf9528a), [`b361b81`](https://github.com/sveltejs/kit/commit/b361b815e79828a6b7404d759d0a4c3892814a4e), [`97ad63a`](https://github.com/sveltejs/kit/commit/97ad63a45c65614081de72ac089e92e8d572bfa2), [`ef70fc7`](https://github.com/sveltejs/kit/commit/ef70fc775ff89a8f86eb62cb5b7a5e01884af563), [`6bfccde`](https://github.com/sveltejs/kit/commit/6bfccdedeefc3df216b050001ae118cd2dbfdcc2), [`7d78680`](https://github.com/sveltejs/kit/commit/7d78680a721c3f337812bdbc2868fc326fde7419), [`b361b81`](https://github.com/sveltejs/kit/commit/b361b815e79828a6b7404d759d0a4c3892814a4e)]:
+  - @sveltejs/kit@3.0.0-next.24
+
 ## 7.0.0-next.6
 
 ### Patch Changes

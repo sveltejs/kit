@@ -731,12 +731,10 @@ test('lists static assets', () => {
 	expect(assets).toEqual([
 		{
 			file: 'bar/baz.txt',
-			size: 14,
 			type: 'text/plain'
 		},
 		{
 			file: 'foo.txt',
-			size: 9,
 			type: 'text/plain'
 		}
 	]);

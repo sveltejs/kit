@@ -7,9 +7,15 @@ test('worker', async ({ page }) => {
 	await expect(page.locator('h1')).toContainText('Sum: 3');
 });
 
-test('ctx', async ({ request }) => {
-	const res = await request.get('/ctx');
-	expect(await res.text()).toBe('ctx works');
+test('cloudflare:workers', async ({ request }) => {
+	const res = await request.get('/env');
+	expect(await res.text()).toBe('from wrangler.jsonc');
+});
+
+test('Request.cf', async ({ request }) => {
+	const res = await request.get('cf');
+	const cf = await res.json();
+	expect(cf.colo).toBeDefined();
 });
 
 test('read from $app/server works', async ({ request }) => {
@@ -19,4 +25,10 @@ test('read from $app/server works', async ({ request }) => {
 	);
 	const response = await request.get('/read');
 	expect(await response.text()).toBe(content);
+});
+
+test('prerendering throws', async ({ request }) => {
+	test.skip(!!process.env.DEV);
+	const res = await request.get('/prerender');
+	expect(await res.text()).toContain('Cannot access cloudflare:workers in a prerenderable route');
 });

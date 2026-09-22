@@ -56,6 +56,13 @@ test('normalizes special module ids that live inside the cwd', () => {
 	expect(normalize_id(app_env_private, [], cwd)).toBe('$app/env/private');
 });
 
+test('only removes the cwd from ids inside it', () => {
+	expect(normalize_id('/app/src/module.js', [], '/app')).toBe('src/module.js');
+	expect(normalize_id('/outside/module.js', [], '/app')).toBe('/outside/module.js');
+	// a sibling directory sharing the cwd as a string prefix is still outside it
+	expect(normalize_id('/app-shared/module.js', [], '/app')).toBe('/app-shared/module.js');
+});
+
 test('recognizes server-only module filenames', () => {
 	expect(server_only_module_pattern.test('dir/server.js')).toBe(true);
 	expect(server_only_module_pattern.test('dir/module.server.ts')).toBe(true);

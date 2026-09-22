@@ -1,5 +1,6 @@
 import { text } from '@sveltejs/kit';
 import { ENDPOINT_METHODS } from '../../constants.js';
+import { manifest } from './internal.js';
 
 /**
  * @param {Partial<Record<import('types').HttpMethod, any>>} mod
@@ -27,13 +28,6 @@ export function allowed_methods(mod) {
 	}
 
 	return allowed;
-}
-
-/**
- * @param {import('types').SSROptions} options
- */
-export function get_global_name(options) {
-	return __SVELTEKIT_DEV__ ? '__sveltekit_dev' : `__sveltekit_${options.version_hash}`;
 }
 
 /**
@@ -105,13 +99,12 @@ export function serialize_uses(node) {
 
 /**
  * Returns `true` if the given path was prerendered
- * @param {import('@sveltejs/kit').SSRManifest} manifest
  * @param {string} pathname Should include the base and be decoded
  */
-export function has_prerendered_path(manifest, pathname) {
+export function has_prerendered_path(pathname) {
 	return (
-		manifest._.prerendered_routes.has(pathname) ||
-		(pathname.at(-1) === '/' && manifest._.prerendered_routes.has(pathname.slice(0, -1)))
+		manifest.prerendered_routes.has(pathname) ||
+		(pathname.at(-1) === '/' && manifest.prerendered_routes.has(pathname.slice(0, -1)))
 	);
 }
 

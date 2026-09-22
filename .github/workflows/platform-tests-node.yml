@@ -51,6 +51,6 @@ jobs:
         working-directory: packages/adapter-node
         run: pnpm prepublishOnly
 
-      - uses: ./.github/actions/platform-test
+      - uses: ./.github/actions/node-test
         with:
           test-app-dir: packages/adapter-node/test/apps/basic

@@ -128,7 +128,7 @@ export function build_server_nodes(
 		/** @type {string[]} */
 		let stylesheets = [];
 
-		/** @type {string[]} */
+		/** @type {import('types').FontDependency[]} */
 		let fonts = [];
 
 		/** @type {Set<string>} */
@@ -212,7 +212,7 @@ export function build_server_nodes(
 
 				imported = entry.imports;
 				stylesheets = Array.from(eager_css);
-				fonts = filter_fonts(Array.from(eager_assets));
+				fonts = filter_fonts(Array.from(eager_assets), client_manifest, root);
 			} else {
 				for (const entry of [component, universal]) {
 					if (!entry) continue;

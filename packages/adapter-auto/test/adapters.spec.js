@@ -11,6 +11,12 @@ test('adapter versions are up to date', () => {
 		}
 		const adapter_version = JSON.parse(readFileSync(package_json, 'utf-8')).version;
 		const [major] = adapter_version.split('.');
-		assert.equal(adapter.version, major, `${adapter.name} adapter is outdated`);
+
+		// TODO get rid of `next` support once we exit pre-release mode
+		if (adapter.version === 'next') {
+			console.warn(`Update ${adapter.name} config to use a stable version`);
+		} else {
+			assert.equal(adapter.version, major, `${adapter.name} adapter is outdated`);
+		}
 	}
 });

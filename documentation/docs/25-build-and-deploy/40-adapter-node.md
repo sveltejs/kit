@@ -4,9 +4,11 @@ title: Node servers
 
 To generate a standalone Node server, use [`adapter-node`](https://github.com/sveltejs/kit/tree/main/packages/adapter-node).
 
+A quick way to get started is by deploying a project using SvelteKit's [official Railway template](https://railway.com/deploy/svelte-kit).
+
 ## Usage
 
-Install with `npm i -D @sveltejs/adapter-node`, then add the adapter to your `vite.config.js`:
+Run [`npx sv add sveltekit-adapter="adapter:node"`](/docs/cli/sveltekit-adapter), or install with `npm i -D @sveltejs/adapter-node` and add the adapter to your `vite.config.js`:
 
 ```js
 // @errors: 2307 2554
@@ -46,19 +48,7 @@ However, if you're building a [custom server](#Custom-server) and do want to add
 
 In `dev` and `preview`, SvelteKit will read environment variables from your `.env` file (or `.env.local`, or `.env.[mode]`, [as determined by Vite](https://vitejs.dev/guide/env-and-mode.html#env-files).)
 
-In production, `.env` files are _not_ automatically loaded. To do so, install `dotenv` in your project...
-
-```sh
-npm install dotenv
-```
-
-...and invoke it before running the built app:
-
-```sh
-node +++-r dotenv/config+++ build
-```
-
-If you use Node.js v20.6+, you can use the [`--env-file`](https://nodejs.org/en/learn/command-line/how-to-read-environment-variables-from-nodejs) flag instead:
+In production, `.env` files are _not_ automatically loaded. To do so, use the [`--env-file`](https://nodejs.org/en/learn/command-line/how-to-read-environment-variables-from-nodejs) flag when running the built app:
 
 ```sh
 node +++--env-file=.env+++ build
@@ -266,7 +256,7 @@ WantedBy=sockets.target
 
 ## Custom server
 
-The adapter creates two files in your build directory — `index.js` and `handler.js`. Running `index.js` — e.g. `node build`, if you use the default build directory — will start a server on the configured port.
+The build directory contains two entry points, `index.js` and `handler.js`. Running `index.js` — e.g. `node build`, if you use the default build directory — will start a server on the configured port.
 
 Alternatively, you can import the `handler.js` file, which exports a handler suitable for use with [Express](https://github.com/expressjs/express), [Connect](https://github.com/senchalabs/connect) or [Polka](https://github.com/lukeed/polka) (or even just the built-in [`http.createServer`](https://nodejs.org/dist/latest/docs/api/http.html#httpcreateserveroptions-requestlistener)) and set up your own server:
 

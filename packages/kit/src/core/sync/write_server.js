@@ -1,47 +1,26 @@
 import path from 'node:path';
-import { hash } from '../../utils/hash.js';
 import { resolve_entry } from '../../utils/filesystem.js';
 import { posixify } from '../../utils/os.js';
 import { s } from '../../utils/misc.js';
 import { load_error_page, load_template } from '../config/index.js';
 import { check_spelling, write_if_changed } from './utils.js';
 import { escape_html } from '../../utils/escape.js';
-import { runtime_directory } from '../utils.js';
 
 /**
  * @param {{
  *   server_hooks: string | null;
  *   universal_hooks: string | null;
  *   config: import('types').ValidatedConfig;
- *   has_service_worker: boolean;
  *   template: string;
- *   runtime_directory: string;
  * }} opts
  */
-const server_template = ({
-	config,
-	server_hooks,
-	universal_hooks,
-	has_service_worker,
-	template,
-	runtime_directory
-}) => `
-import { set_building, set_prerendering } from '$app/env/server';
-import { set_assets } from '$app/paths/internal/server';
-import { set_fix_stack_trace, set_manifest, set_read_implementation, log_response } from '${runtime_directory}/server/internal.js';
+const server_template = ({ config, server_hooks, universal_hooks, template }) => `
 import error from './shared/error-template.js';
 
 export const options = {
 	app_template_contains_nonce: ${template.includes('%sveltekit.nonce%')},
 	csp: ${s(config.csp)},
-	csrf_check_origin: ${s(!config.csrf.trustedOrigins.includes('*'))},
 	csrf_trusted_origins: ${s(config.csrf.trustedOrigins)},
-	embedded: ${config.embedded},
-	hash_routing: ${s(config.router.type === 'hash')},
-	hooks: null, // added lazily, via \`get_hooks\`
-	link_header_preload: ${s(config.output.linkHeaderPreload)},
-	paths_origin: ${s(config.paths.origin)},
-	service_worker: ${has_service_worker},
 	service_worker_options: ${config.serviceWorker.register ? s(config.serviceWorker.options) : 'null'},
 	templates: {
 		app: ({ head, body, assets, nonce, env }) => ${s(template)
@@ -55,9 +34,7 @@ export const options = {
 				(_match, capture) => `" + (env[${s(capture)}] ?? "") + "`
 			)},
 		error
-	},
-	version: ${s(config.version.name)},
-	version_hash: ${s(hash(config.version.name))}
+	}
 };
 
 export async function get_hooks() {
@@ -80,8 +57,6 @@ export async function get_hooks() {
 		transport
 	};
 }
-
-export { set_assets, set_building, set_fix_stack_trace, set_manifest, set_prerendering, set_read_implementation, log_response };
 `;
 
 /**
@@ -91,17 +66,27 @@ export { set_assets, set_building, set_fix_stack_trace, set_manifest, set_preren
  * @param {string} root The project root directory
  */
 export function write_server(config, output, root) {
-	const server_hooks_file = resolve_entry(config.files.hooks.server);
-	const universal_hooks_file = resolve_entry(config.files.hooks.universal);
+	const server_hooks_file = resolve_entry(config.files.hooks.server, config.moduleExtensions);
+	const universal_hooks_file = resolve_entry(config.files.hooks.universal, config.moduleExtensions);
 
 	if (!server_hooks_file) {
-		check_spelling('src/hooks.server', 'src/+hooks.server', 'Unexpected + prefix');
-		check_spelling('src/hooks.server', 'src/hook.server', 'Missing s suffix');
+		check_spelling(
+			'src/hooks.server',
+			'src/+hooks.server',
+			'Unexpected + prefix',
+			config.moduleExtensions
+		);
+		check_spelling(
+			'src/hooks.server',
+			'src/hook.server',
+			'Missing s suffix',
+			config.moduleExtensions
+		);
 	}
 
 	if (!universal_hooks_file) {
-		check_spelling('src/hooks', 'src/+hooks', 'Unexpected + prefix');
-		check_spelling('src/hooks', 'src/hook', 'Missing s suffix');
+		check_spelling('src/hooks', 'src/+hooks', 'Unexpected + prefix', config.moduleExtensions);
+		check_spelling('src/hooks', 'src/hook', 'Missing s suffix', config.moduleExtensions);
 	}
 
 	/** @param {string} file */
@@ -122,11 +107,8 @@ export function write_server(config, output, root) {
 		`${output}/server.js`,
 		server_template({
 			config,
-			runtime_directory: relative(runtime_directory),
 			server_hooks: server_hooks_file ? relative(server_hooks_file) : null,
 			universal_hooks: universal_hooks_file ? relative(universal_hooks_file) : null,
-			has_service_worker:
-				config.serviceWorker.register && !!resolve_entry(config.files.serviceWorker),
 			template: load_template(root, config)
 		})
 	);

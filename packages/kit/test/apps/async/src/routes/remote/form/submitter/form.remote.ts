@@ -10,3 +10,13 @@ export const my_form = form(
 		return data.submitter;
 	}
 );
+
+export const image_form = form(
+	v.object({
+		position: v.object({
+			x: v.number(),
+			y: v.number()
+		})
+	}),
+	({ position }) => `${position.x},${position.y}`
+);

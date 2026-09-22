@@ -3,6 +3,14 @@ import { DeepPartial, IsAny, MaybePromise } from 'types';
 
 export * from './index.js';
 
+type ImageInputValue = { x: number; y: number };
+
+type IsImageInputValue<T> = T extends ImageInputValue
+	? Exclude<keyof T, keyof ImageInputValue> extends never
+		? true
+		: false
+	: false;
+
 // If T is unknown or has an index signature, the types below will recurse indefinitely and create giant unions that TS can't handle
 type WillRecurseIndefinitely<T> = unknown extends T ? true : string extends keyof T ? true : false;
 
@@ -29,7 +37,7 @@ type InputTypeMap = {
 	submit: string | number | boolean;
 	button: string;
 	reset: string;
-	image: string;
+	image: ImageInputValue;
 	select: string;
 	'select multiple': string[];
 	'file multiple': File[];
@@ -41,7 +49,7 @@ export type RemoteFormFieldType<T> = {
 }[keyof InputTypeMap];
 
 // Input element properties based on type
-type InputElementProps<T extends keyof InputTypeMap> = T extends 'checkbox' | 'radio'
+type InputElementProps<T extends keyof InputTypeMap, Value> = T extends 'checkbox' | 'radio'
 	? {
 			name: string;
 			type: T;
@@ -51,45 +59,51 @@ type InputElementProps<T extends keyof InputTypeMap> = T extends 'checkbox' | 'r
 			set checked(value: boolean);
 			readonly defaultChecked?: boolean;
 		}
-	: T extends 'file'
+	: T extends 'image'
 		? {
 				name: string;
-				type: 'file';
+				type: 'image';
 				'aria-invalid': boolean | 'false' | 'true' | undefined;
-				get files(): FileList | null;
-				set files(v: FileList | null);
 			}
-		: T extends 'select'
+		: T extends 'file'
 			? {
 					name: string;
+					type: 'file';
 					'aria-invalid': boolean | 'false' | 'true' | undefined;
-					get value(): string;
-					set value(v: string);
+					get files(): FileList | null;
+					set files(v: FileList | null);
 				}
-			: T extends 'select multiple'
+			: T extends 'select'
 				? {
 						name: string;
-						multiple: true;
 						'aria-invalid': boolean | 'false' | 'true' | undefined;
-						get value(): string[];
-						set value(v: string[]);
+						get value(): string;
+						set value(v: string);
 					}
-				: T extends 'text'
+				: T extends 'select multiple'
 					? {
 							name: string;
+							multiple: true;
 							'aria-invalid': boolean | 'false' | 'true' | undefined;
-							get value(): string | number;
-							set value(v: string | number);
-							readonly defaultValue?: string | number;
+							get value(): string[];
+							set value(v: string[]);
 						}
-					: {
-							name: string;
-							type: T;
-							'aria-invalid': boolean | 'false' | 'true' | undefined;
-							get value(): string | number;
-							set value(v: string | number);
-							readonly defaultValue?: string | number;
-						};
+					: T extends 'text'
+						? {
+								name: string;
+								'aria-invalid': boolean | 'false' | 'true' | undefined;
+								get value(): Value extends string ? string : string | number;
+								set value(v: Value extends string ? string : string | number);
+								readonly defaultValue?: Value extends string ? string : string | number;
+							}
+						: {
+								name: string;
+								type: T;
+								'aria-invalid': boolean | 'false' | 'true' | undefined;
+								get value(): string | number;
+								set value(v: string | number);
+								readonly defaultValue?: string | number;
+							};
 
 type RemoteFormFieldMethods<T> = {
 	/** The values that will be submitted */
@@ -113,23 +127,34 @@ type ValueOfUnionKey<T, K extends PropertyKey> = T extends unknown
 		: never
 	: never;
 
-export type RemoteFormFieldValue = string | string[] | number | boolean | File | File[];
+export type RemoteFormFieldValue =
+	| string
+	| string[]
+	| number
+	| boolean
+	| File
+	| File[]
+	| ImageInputValue;
 
 type AsArgs<Type extends keyof InputTypeMap, Value> = Type extends 'checkbox'
 	? Value extends string[]
-		? [type: Type, value: Value[number] | (string & {})]
+		? [type: Type, value: Value[number] | (string & {}), checked?: boolean]
 		: Value extends boolean
-			? [type: Type] | [type: Type, value: boolean]
-			: [type: Type] | [type: Type, value: Value | (string & {})]
-	: Type extends 'submit' | 'hidden'
-		? Value extends string
-			? [type: Type, value: Value | (string & {})]
-			: [type: Type, value: Value]
-		: Type extends 'radio'
-			? [type: Type, value: Value | (string & {})]
-			: Type extends 'file' | 'file multiple'
-				? [type: Type]
-				: [type: Type] | [type: Type, value: Value | undefined];
+			? [type: Type, value?: boolean]
+			: [type: Type, value?: Value]
+	: Type extends 'image'
+		? [type: Type]
+		: Type extends 'submit' | 'hidden'
+			? Value extends string
+				? [type: Type, value: Value | (string & {})]
+				: [type: Type, value: Value]
+			: Type extends 'radio'
+				? [type: Type, value: Value | (string & {}), checked?: boolean]
+				: Type extends 'file' | 'file multiple'
+					? [type: Type]
+					: [type: Type, value?: Value];
+
+type WidenLiteralString<T> = T extends string ? (string extends T ? T : string) : T;
 
 /**
  * Form field accessor type that provides name(), value(), and issues() methods
@@ -145,7 +170,9 @@ export type RemoteFormField<Value extends RemoteFormFieldValue> = RemoteFormFiel
 	 * <input {...myForm.fields.myBoolean.as('checkbox')} />
 	 * ```
 	 */
-	as<T extends RemoteFormFieldType<Value>>(...args: AsArgs<T, Value>): InputElementProps<T>;
+	as<T extends RemoteFormFieldType<Value>>(
+		...args: AsArgs<T, Value>
+	): InputElementProps<T, WidenLiteralString<Value>>;
 };
 
 type RemoteFormFieldContainer<Value> = RemoteFormFieldMethods<Value> & {
@@ -166,12 +193,15 @@ type UnknownField<Value> = RemoteFormFieldMethods<Value> & {
 	 * <input {...myForm.fields.myBoolean.as('checkbox')} />
 	 * ```
 	 */
-	as<T extends RemoteFormFieldType<Value>>(...args: AsArgs<T, Value>): InputElementProps<T>;
+	as<T extends RemoteFormFieldType<Value>>(...args: AsArgs<T, Value>): InputElementProps<T, Value>;
 } & {
 	[key: string | number]: UnknownField<any>;
 };
 
-type RemoteFormFieldsRoot<Input extends RemoteFormInput | void> =
+type RemoteFormFieldsRoot<
+	Input extends RemoteFormInput | void,
+	Original extends [RemoteFormInput | void] = [Input]
+> =
 	IsAny<Input> extends true
 		? RecursiveFormFields
 		: Input extends void
@@ -181,7 +211,11 @@ type RemoteFormFieldsRoot<Input extends RemoteFormInput | void> =
 					/** Validation issues belonging to this or any of the fields that belong to it, if any */
 					allIssues(): RemoteFormIssue[] | undefined;
 				}
-			: RemoteFormFields<Input>;
+			: WillRecurseIndefinitely<Input> extends true
+				? RecursiveFormFields
+				: RemoteFormFieldContainer<Original[0]> & {
+						[K in KeysOfUnion<Original[0]>]-?: RemoteFormFields<ValueOfUnionKey<Original[0], K>>;
+					};
 
 /**
  * Recursive type to build form fields structure with proxy access
@@ -191,20 +225,25 @@ export type RemoteFormFields<T> =
 		? RecursiveFormFields
 		: NonNullable<T> extends string | number | boolean | File
 			? RemoteFormField<NonNullable<T>>
-			: // [NonNullable<T>] is used to prevent distributing over union while still allowing
-				// nullable wrappers (e.g. `string[] | undefined` from a schema with `.default([])`)
-				// to be treated as arrays; only the last condition should distribute over unions
-				[NonNullable<T>] extends [string[] | File[]]
-				? RemoteFormField<NonNullable<T>> & {
-						[K in number]: RemoteFormField<NonNullable<T>[number]>;
-					}
-				: [NonNullable<T>] extends [Array<infer U>]
-					? RemoteFormFieldContainer<NonNullable<T>> & {
-							[K in number]: RemoteFormFields<U>;
-						}
-					: RemoteFormFieldContainer<T> & {
+			: IsImageInputValue<NonNullable<T>> extends true
+				? RemoteFormField<NonNullable<T> & ImageInputValue> &
+						Pick<RemoteFormFieldContainer<T>, 'allIssues'> & {
 							[K in KeysOfUnion<T>]-?: RemoteFormFields<ValueOfUnionKey<T, K>>;
-						};
+						}
+				: // [NonNullable<T>] is used to prevent distributing over union while still allowing
+					// nullable wrappers (e.g. `string[] | undefined` from a schema with `.default([])`)
+					// to be treated as arrays; only the last condition should distribute over unions
+					[NonNullable<T>] extends [string[] | File[]]
+					? RemoteFormField<NonNullable<T>> & {
+							[K in number]: RemoteFormField<NonNullable<T>[number]>;
+						}
+					: [NonNullable<T>] extends [Array<infer U>]
+						? RemoteFormFieldContainer<NonNullable<T>> & {
+								[K in number]: RemoteFormFields<U>;
+							}
+						: RemoteFormFieldContainer<T> & {
+								[K in KeysOfUnion<T>]-?: RemoteFormFields<ValueOfUnionKey<T, K>>;
+							};
 
 // By breaking this out into its own type, we avoid the TS recursion depth limit
 type RecursiveFormFields = RemoteFormFieldContainer<any> & {
@@ -273,7 +312,17 @@ export type RemoteFormEnhanceCallback<
 /**
  * The type of a remote `form` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
  */
-export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
+export type RemoteForm<Input extends RemoteFormInput | void, Output> = RemoteForm_<
+	Input,
+	Output,
+	[Input]
+>;
+
+type RemoteForm_<
+	Input extends RemoteFormInput | void,
+	Output,
+	Original extends [RemoteFormInput | void]
+> = {
 	/** Attachment that sets up an event handler that intercepts the form submission on the client to prevent a full page reload */
 	[attachment: symbol]: (node: HTMLFormElement) => void;
 	method: 'POST';
@@ -327,7 +376,7 @@ export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
 	/** True if the form has been submitted at least once, and hasn't been reset since */
 	get submitted(): boolean;
 	/** Access form fields using object notation */
-	fields: RemoteFormFieldsRoot<Input>;
+	fields: RemoteFormFieldsRoot<Input, Original>;
 };
 
 /**
@@ -459,6 +508,8 @@ export type RemoteLiveQueryFunction<Input, Output, _Validated = Input> = (
 export type RequestedEntry<Validated, Output> = {
 	arg: Validated;
 	query: RemoteQuery<Output>;
+	/** Explicitly ignore this requested update. */
+	ignore: () => void;
 };
 
 /**
@@ -470,6 +521,8 @@ export type RequestedEntry<Validated, Output> = {
 export type RemoteLiveQueryRequestedEntry<Validated, Output> = {
 	arg: Validated;
 	query: RemoteLiveQuery<Output>;
+	/** Explicitly ignore this requested update. */
+	ignore: () => void;
 };
 
 export type RemoteQueryRequestedResult<Validated, Output> = Iterable<
@@ -488,6 +541,8 @@ export type RemoteQueryRequestedResult<Validated, Output> = Iterable<
 		 * ```
 		 */
 		refreshAll: () => Promise<void>;
+		/** Explicitly ignore all updates selected by this `requested` invocation. */
+		ignoreAll: () => Promise<void>;
 	};
 
 export type RemoteLiveQueryRequestedResult<Validated, Output> = Iterable<
@@ -506,6 +561,8 @@ export type RemoteLiveQueryRequestedResult<Validated, Output> = Iterable<
 		 * ```
 		 */
 		reconnectAll: () => Promise<void>;
+		/** Explicitly ignore all updates selected by this `requested` invocation. */
+		ignoreAll: () => Promise<void>;
 	};
 
 export type RequestedResult<Validated, Output> =

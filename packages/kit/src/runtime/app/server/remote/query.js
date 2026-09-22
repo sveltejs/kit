@@ -330,7 +330,7 @@ function batch(validate_or_fn, maybe_fn) {
 		id: '',
 		name: '',
 		validate,
-		run: async (args, options) => {
+		run: async (args) => {
 			const { event, state } = get_request_store();
 
 			return run_remote_function(
@@ -347,7 +347,7 @@ function batch(validate_or_fn, maybe_fn) {
 								const data = get_result(arg, i);
 								return { type: 'result', data };
 							} catch (error) {
-								const transformed = await handle_error_and_jsonify(event, state, options, error);
+								const transformed = await handle_error_and_jsonify(event, state, error);
 
 								return {
 									type: 'error',

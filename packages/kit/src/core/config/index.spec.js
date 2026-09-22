@@ -165,6 +165,17 @@ test('errors on invalid values', () => {
 	}, /^config\.appDir should be a string, if specified$/);
 });
 
+test.each([-1, 0, 1.5, Infinity, NaN])(
+	'errors on invalid prerender concurrency %s',
+	(concurrency) => {
+		assert_logs_error_and_throws(() => {
+			validate_config({
+				prerender: { concurrency }
+			});
+		}, /^config\.prerender\.concurrency should be a positive integer, if specified$/);
+	}
+);
+
 test('errors on invalid nested values', () => {
 	assert_logs_error_and_throws(() => {
 		validate_config({
@@ -262,6 +273,18 @@ test("fails if paths.base ends with '/'", () => {
 			}
 		});
 	}, /^config\.paths\.base option must either be the empty string or a root-relative path that starts but doesn't end with '\/'. See https:\/\/svelte\.dev\/docs\/kit\/configuration#paths$/);
+});
+
+test('does not require svelte-trusted-html when trusted types are enforced', () => {
+	assert.doesNotThrow(() => {
+		validate_config({
+			csp: {
+				directives: {
+					'require-trusted-types-for': ['script']
+				}
+			}
+		});
+	});
 });
 
 test('fails if paths.assets is relative', () => {

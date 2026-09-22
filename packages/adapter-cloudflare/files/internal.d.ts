@@ -1,12 +1,17 @@
 declare module 'SERVER' {
-	export { Server } from '@sveltejs/kit';
+	export const server: import('@sveltejs/kit').Server;
 }
 
-declare module 'MANIFEST' {
-	import { SSRManifest } from '@sveltejs/kit';
-
-	export const manifest: SSRManifest;
-	export const prerendered: Set<string>;
-	export const app_path: string;
-	export const base_path: string;
+namespace Cloudflare {
+	interface Env {
+		ASSETS_BINDING: {
+			fetch: typeof fetch;
+		};
+		[key: string]: string | undefined;
+	}
 }
+
+declare const BASE_PATH: string;
+declare const APP_PATH: string;
+declare const PRERENDERED: Set<string>;
+declare const MANIFEST_ASSETS: Set<string>;

@@ -37,3 +37,12 @@ export const issue_path_form = form(
 		return data;
 	}
 );
+
+export const unmount_form = form(
+	v.object({
+		qux: v.picklist(['a', 'b'])
+	}),
+	async (data) => {
+		return data;
+	}
+);

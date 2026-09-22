@@ -1,13 +1,14 @@
+/** @import * as vite from 'vite' */
 /** @import { ViteDevServer } from 'vite' */
 
 /**
- * @param {typeof import('vite')} vite the peer resolved vite module
+ * @param {typeof vite} vite the vite module that created the server
  * @param {ViteDevServer} server
  */
-export function get_runner(vite, server) {
+export function get_runner({ isRunnableDevEnvironment }, server) {
 	// `isRunnableDevEnvironment` does an `instanceof` check and will fail if
 	// we're using different instances of Vite
-	if (!vite.isRunnableDevEnvironment(server.environments.ssr)) {
+	if (!isRunnableDevEnvironment(server.environments.ssr)) {
 		throw new Error('The configured Vite SSR environment must be a RunnableDevEnvironment');
 	}
 

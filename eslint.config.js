@@ -40,6 +40,29 @@ export default [
 		}
 	},
 	{
+		// code that ends up in user bundles must not pull in Vite or the build pipeline
+		files: [
+			'packages/kit/src/runtime/**/*.js',
+			'packages/kit/src/exports/**/*.js',
+			'packages/kit/src/utils/**/*.js'
+		],
+		ignores: ['packages/kit/src/exports/vite/**'],
+		rules: {
+			'no-restricted-imports': [
+				'error',
+				{
+					patterns: [
+						{
+							group: ['vite', '**/vite/**', '**/core/**', '**/cli.js', '**/runner.js'],
+							message:
+								'This code is bundled into user apps and must not import Vite or the build pipeline (src/core, src/exports/vite).'
+						}
+					]
+				}
+			]
+		}
+	},
+	{
 		// code that runs in Node, where dynamic imports of absolute paths
 		// need `pathToFileURL` to work on Windows
 		files: [
