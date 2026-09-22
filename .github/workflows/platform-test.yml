@@ -84,7 +84,6 @@ jobs:
             ${{ env.APP }}/build
             ${{ env.APP }}/.netlify
             ${{ env.APP }}/.vercel
-            ${{ env.APP }}/vercel.json
           include-hidden-files: true
           if-no-files-found: error
           retention-days: 1
