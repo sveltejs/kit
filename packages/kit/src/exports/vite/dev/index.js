@@ -191,7 +191,7 @@ export async function dev(
 		return set_error_stack(error, prelude + lines.join('\n'));
 	}
 
-	const params_file = resolve_entry(svelte_config.files.params);
+	const params_file = resolve_entry(svelte_config.files.params, svelte_config.moduleExtensions);
 
 	/**
 	 * @param {string} event
@@ -348,7 +348,10 @@ export async function dev(
 				}
 
 				if (decoded === svelte_config.paths.base + '/service-worker.js') {
-					const resolved = resolve_entry(svelte_config.files.serviceWorker);
+					const resolved = resolve_entry(
+						svelte_config.files.serviceWorker,
+						svelte_config.moduleExtensions
+					);
 
 					if (resolved) {
 						res.writeHead(200, {
@@ -366,7 +369,8 @@ export async function dev(
 				// resolve the instrumentation file per request so that changes to it
 				// are picked up on new requests
 				const resolved_instrumentation = resolve_entry(
-					path.join(svelte_config.files.src, 'instrumentation.server')
+					path.join(svelte_config.files.src, 'instrumentation.server'),
+					svelte_config.moduleExtensions
 				);
 
 				if (resolved_instrumentation) {
