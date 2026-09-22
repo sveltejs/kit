@@ -8,7 +8,7 @@ A quick way to get started is by deploying a project using SvelteKit's [official
 
 ## Usage
 
-Install with `npm i -D @sveltejs/adapter-node`, then add the adapter to your `vite.config.js`:
+Run [`npx sv add sveltekit-adapter="adapter:node"`](/docs/cli/sveltekit-adapter), or install with `npm i -D @sveltejs/adapter-node` and add the adapter to your `vite.config.js`:
 
 ```js
 // @errors: 2307 2554
