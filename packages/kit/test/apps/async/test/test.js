@@ -801,16 +801,21 @@ test.describe('remote functions', () => {
 
 		await page.fill('input[name^="username"]', 'abcdefg');
 		await page.fill('input[name^="_password"]', 'pqrstuv');
+		await page.fill('input[name^="n:_pin"]', '1234');
+		await page.fill('input[name^="user._password"]', 'nested-secret');
 		await page.locator('button').click();
 
 		await expect(page.locator('input[name^="username"]')).toHaveValue('abcdefg');
 		await expect(page.locator('input[name^="_password"]')).toHaveValue('');
+		await expect(page.locator('input[name^="n:_pin"]')).toHaveValue('');
+		await expect(page.locator('input[name^="user._password"]')).toHaveValue('');
 	});
 
 	test('prerendered entries not called in prod', async ({ page, clicknav }) => {
 		await page.goto('/remote/prerender');
 		await clicknav('[href="/remote/prerender/whole-page"]');
 		await expect(page.locator('#prerendered-data')).toHaveText('a c 中文 yes');
+		await expect(page.locator('[data-prerendered]')).toHaveAttribute('action', /^\?\/remote=/);
 
 		await page.goto('/remote/prerender');
 		await clicknav('[href="/remote/prerender/functions-only"]');
@@ -964,7 +969,7 @@ test.describe('remote functions', () => {
 		await expect(ageTouched).toHaveText('Age touched: false');
 	});
 
-	test('selects are not nuked when unrelated controls change', async ({
+	test('preflight validation preserves untouched selects with an empty value', async ({
 		page,
 		javaScriptEnabled
 	}) => {
@@ -972,8 +977,17 @@ test.describe('remote functions', () => {
 
 		await page.goto('/remote/form/select-untouched');
 
+		const select = page.locator('select');
+		await expect(select).toHaveValue('');
+		await expect(select).toHaveJSProperty('selectedIndex', 0);
+
 		await page.fill('input', 'hello');
-		await expect(page.locator('select')).toHaveValue('one');
+		const validated = page.waitForResponse((response) => response.request().method() === 'POST');
+		await page.locator('input').blur();
+		await validated;
+
+		await expect(select).toHaveValue('');
+		await expect(select).toHaveJSProperty('selectedIndex', 0);
 	});
 	test('file uploads work', async ({ page }) => {
 		await page.goto('/remote/form/file-upload');

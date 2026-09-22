@@ -16,6 +16,14 @@ test('provides the Bun server on platform', async ({ request }) => {
 	expect(platform.subscribers).toBe(0);
 });
 
+test('keeps production dependencies external', async ({ request }) => {
+	// TODO drop the skip once Bun bundles css-tree's createRequire (oven-sh/bun#36565)
+	test.skip(compiled, 'executables bundle dependencies, which breaks jsdom');
+	const response = await request.get('/dependency');
+	expect(response.status()).toBe(200);
+	expect(await response.text()).toBe('hello from a dependency');
+});
+
 test('runs server instrumentation before accepting requests', async ({ request }) => {
 	const response = await request.get('/instrumented');
 	expect(response.status()).toBe(200);

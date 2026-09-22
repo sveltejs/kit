@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { posixify } from './os.js';
+import { rebase_sourcemap } from './sourcemap.js';
 
 /**
  * @param {string} source
@@ -51,15 +52,17 @@ export function copy(source, target, opts = {}) {
 			created = dir;
 		}
 
-		if (opts.replace) {
-			const data = fs.readFileSync(from, 'utf-8');
-			fs.writeFileSync(
-				to,
-				data.replace(
+		const is_sourcemap = path.extname(from) === '.map';
+		if (opts.replace || is_sourcemap) {
+			let data = fs.readFileSync(from, 'utf-8');
+			if (opts.replace) {
+				data = data.replace(
 					/** @type {RegExp} */ (regex),
 					(_match, key) => /** @type {Record<string, string>} */ (opts.replace)[key]
-				)
-			);
+				);
+			}
+			if (is_sourcemap) data = rebase_sourcemap(data, from, to);
+			fs.writeFileSync(to, data);
 		} else {
 			fs.copyFileSync(from, to);
 		}

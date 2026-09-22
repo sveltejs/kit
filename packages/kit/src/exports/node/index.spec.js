@@ -1,4 +1,5 @@
 import { EventEmitter, once } from 'node:events';
+import { validateHeaderValue } from 'node:http';
 import { PassThrough } from 'node:stream';
 import { expect, test, vi } from 'vitest';
 import { getRequest, setResponse } from './index.js';
@@ -81,6 +82,32 @@ test('rejects request bodies that exceed content-length', async () => {
 	});
 });
 
+test.each([{ 'content-length': '11' }, { 'transfer-encoding': 'chunked' }])(
+	'enforces body size limit without content-type (%j)',
+	async (headers) => {
+		const req = new PassThrough();
+		const incoming = /** @type {import('http').IncomingMessage} */ (/** @type {unknown} */ (req));
+		incoming.headers = headers;
+		incoming.method = 'POST';
+		incoming.url = '/';
+		incoming.httpVersionMajor = 1;
+
+		const request = getRequest({
+			request: incoming,
+			base: 'http://localhost',
+			bodySizeLimit: 10
+		});
+
+		const text = request.text();
+		req.end(Buffer.from('0123456789a'));
+
+		await expect(text).rejects.toMatchObject({
+			status: 413,
+			text: 'Payload Too Large'
+		});
+	}
+);
+
 /**
  * Minimal `ServerResponse` stand-in that records headers and body writes and
  * emits `finish` when ended.
@@ -92,11 +119,17 @@ function create_response(req) {
 	res.destroyed = false;
 	res.headers = new Map();
 	res.chunks = [];
-	res.setHeader = (/** @type {string} */ name, /** @type {unknown} */ value) =>
+	res.setHeader = (/** @type {string} */ name, /** @type {string} */ value) => {
+		validateHeaderValue(name, value);
 		res.headers.set(name.toLowerCase(), value);
+	};
 	res.hasHeader = (/** @type {string} */ name) => res.headers.has(name.toLowerCase());
 	res.getHeaderNames = () => [...res.headers.keys()];
-	res.writeHead = () => res;
+	res.removeHeader = (/** @type {string} */ name) => res.headers.delete(name.toLowerCase());
+	res.writeHead = (/** @type {number} */ status) => {
+		res.statusCode = status;
+		return res;
+	};
 	res.write = (/** @type {unknown} */ chunk) => {
 		res.chunks.push(chunk);
 		return true;
@@ -253,6 +286,18 @@ test('does not abort the request signal when the response finishes normally', as
 	res.emit('close');
 
 	expect(request.signal.aborted).toBe(false);
+});
+
+test('responds with a 500 when Node rejects a header, instead of leaving the request open', async () => {
+	const res = /** @type {any} */ (create_response());
+	const finished = once(res, 'finish');
+
+	setResponse(res, new Response('{}', { headers: { 'x-test': '\u001f' } }));
+
+	await finished;
+	expect(res.statusCode).toBe(500);
+	expect(res.headers.size).toBe(0);
+	expect(Buffer.concat(res.chunks.map(Buffer.from)).toString()).toMatch('ERR_INVALID_CHAR');
 });
 
 test('sends fixed response bodies with a content-length', async () => {
