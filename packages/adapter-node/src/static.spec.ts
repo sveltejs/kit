@@ -129,12 +129,14 @@ test('serves a recorded file with its precomputed headers', async () => {
 	expect(head.body).toBe('');
 });
 
-test('passes unknown paths and non-GET methods to the next handler', async () => {
+test('passes unknown paths to the next handler', async () => {
 	expect((await get('/missing.txt')).status).toBe(404);
+});
 
+test('disallows non-GET/HEAD methods', async () => {
 	const post = await get('/plain.txt', { method: 'POST' });
-	expect(post.status).toBe(404);
-	expect(post.headers['etag']).toBeUndefined();
+	expect(post.status).toBe(405);
+	expect(post.headers['allow']).toBe('GET, HEAD');
 });
 
 test('decodes percent-encoding but not reserved characters or +', async () => {

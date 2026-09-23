@@ -33,11 +33,6 @@ test('initializes dynamic env before instrumentation', async ({ request }) => {
 	expect(await response.json()).toEqual({ value: 'available' });
 });
 
-test('records which assets have compressed variants', async ({ request }) => {
-	expect((await request.get('/data.json')).headers()['vary']).toBe('Accept-Encoding');
-	expect((await request.get('/test.ico')).headers()['vary']).toBeUndefined();
-});
-
 test('records the size, content hash and compressed variants of each file', async ({ request }) => {
 	expect(await (await request.get('/a+b.txt')).text()).toBe('plus');
 
@@ -68,6 +63,15 @@ test('uses the content types from the manifest', async ({ request }) => {
 	// https://github.com/sveltejs/kit/issues/13753
 	expect((await request.get('/test.ico')).headers()['content-type']).toBe('image/x-icon');
 	expect((await request.get('/prerendered.ico')).headers()['content-type']).toBe('image/x-icon');
+});
+
+test('serves immutable assets with an immutable cache header', async ({ request }) => {
+	const html = await (await request.get('/')).text();
+	const [asset] = /** @type {RegExpMatchArray} */ (html.match(/\/_app\/immutable\/[^"']+\.js/));
+
+	const response = await request.get(asset);
+	expect(response.status()).toBe(200);
+	expect(response.headers()['cache-control']).toBe('public,max-age=31536000,immutable');
 });
 
 test('does not record dotfiles, except .well-known', async ({ request }) => {

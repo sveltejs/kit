@@ -501,7 +501,7 @@ await myCache.match(request);
 - the `ORIGIN` environment variable is removed (set `paths.origin` in your Vite config instead)
 - static assets are served from a list recorded at build time; files added to the output directory afterwards are not served, and replaced ones keep their old size and `ETag` (use environment variables for runtime configuration)
 - `ETag`s for static assets are content hashes, and `Last-Modified` is no longer sent
-- only `GET` and `HEAD` requests are served static assets; other methods reach SvelteKit
+- only `GET` and `HEAD` requests are served static assets; other methods result in a 405 response
 
 ### `adapter-netlify`
 
