@@ -169,12 +169,6 @@ export function create_file_map({ dir, base, app_path, mime_types, assets, prere
  */
 export function serve_static(files) {
 	return (req, res, next) => {
-		if (req.method !== 'GET' && req.method !== 'HEAD') {
-			res.writeHead(405, { allow: 'GET, HEAD' });
-			res.end();
-			return;
-		}
-
 		const { pathname, search } = split_url(req);
 
 		const asset = files.get(pathname);
@@ -182,6 +176,12 @@ export function serve_static(files) {
 
 		if ('location' in asset) {
 			res.writeHead(308, { location: asset.location + search }).end();
+			return;
+		}
+
+		if (req.method !== 'GET' && req.method !== 'HEAD') {
+			res.writeHead(405, { allow: 'GET, HEAD' });
+			res.end();
 			return;
 		}
 
