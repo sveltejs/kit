@@ -33,11 +33,6 @@ test('initializes dynamic env before instrumentation', async ({ request }) => {
 	expect(await response.json()).toEqual({ value: 'available' });
 });
 
-test('records which assets have compressed variants', async ({ request }) => {
-	expect((await request.get('/data.json')).headers()['vary']).toBe('Accept-Encoding');
-	expect((await request.get('/test.ico')).headers()['vary']).toBeUndefined();
-});
-
 test('records the size, content hash and compressed variants of each file', async ({ request }) => {
 	expect(await (await request.get('/a+b.txt')).text()).toBe('plus');
 
