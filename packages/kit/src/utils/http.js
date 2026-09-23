@@ -9,11 +9,13 @@ function parse_accept(accept) {
 	const parts = [];
 
 	accept.split(',').forEach((str, i) => {
-		const match = /^[ \t]*([^/ \t]+)\/([^; \t]+)[ \t]*(?:;[ \t]*q=([0-9.]+))?/.exec(str);
+		const match = /^[ \t]*([^/ \t]+)\/([^; \t]+)/.exec(str);
 
 		// no match equals invalid header — ignore
 		if (match) {
-			const [, type, subtype, q = '1'] = match;
+			const [, type, subtype] = match;
+			// the quality can follow other parameters, e.g. `application/json;charset=utf-8;q=0.5`
+			const q = /;[ \t]*q=([0-9.]+)/.exec(str)?.[1] ?? '1';
 			parts.push({ type, subtype, q: +q, i });
 		}
 	});

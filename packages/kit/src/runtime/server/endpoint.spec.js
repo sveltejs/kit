@@ -24,6 +24,15 @@ describe('is_endpoint_request', () => {
 		expect(is_endpoint_request(event('POST', { accept }))).toBe(false);
 	});
 
+	test('treats a request as a page request when text/html outranks a type with other parameters', () => {
+		for (const accept of [
+			'text/html;q=0.9, application/signed-exchange;v=b3;q=0.7',
+			'text/html;q=0.8, application/json;charset=utf-8;q=0.5'
+		]) {
+			expect(is_endpoint_request(event('GET', { accept }))).toBe(false);
+		}
+	});
+
 	test('sends a request that ranks text/html below another type to the endpoint', () => {
 		// the default accept header of SimplePie-based feed readers such as FreshRSS
 		const feed_reader =
