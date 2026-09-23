@@ -38,7 +38,7 @@ node build
 
 Development dependencies will be bundled into your app using [Rolldown](https://rolldown.rs/). To control whether a given package is bundled or externalised, place it in `devDependencies` or `dependencies` respectively in your `package.json`.
 
-Client assets and prerendered output are served from a list of files recorded during the build. Only `GET` and `HEAD` requests are served from it; other methods continue to SvelteKit. Every asset carries an ETag computed during the build, so conditional requests revalidate with an empty `304` response. Byte ranges are supported. Files below SvelteKit's `immutable` directory receive `Cache-Control: public,max-age=31536000,immutable`.
+Client assets and prerendered output are served from a list of files recorded during the build.
 
 ### Compressing responses
 
