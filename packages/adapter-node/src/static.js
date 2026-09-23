@@ -169,7 +169,11 @@ export function create_file_map({ dir, base, app_path, mime_types, assets, prere
  */
 export function serve_static(files) {
 	return (req, res, next) => {
-		if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+		if (req.method !== 'GET' && req.method !== 'HEAD') {
+			res.writeHead(405, { allow: 'GET, HEAD' });
+			res.end();
+			return;
+		}
 
 		const { pathname, search } = split_url(req);
 
