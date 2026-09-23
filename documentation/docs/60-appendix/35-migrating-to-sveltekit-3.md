@@ -16,7 +16,7 @@ SvelteKit 3 requires the following minimum versions:
 
 - Node v22.17
 - TypeScript v6
-- Svelte v5.56.4
+- Svelte v5.57.1
 - Vite v8.0.12 (the first Vite 8 release bundling stable `rolldown` v1)
 - `@sveltejs/vite-plugin-svelte` v7
 
