@@ -113,23 +113,9 @@ export function form(id) {
 		let input = $state(initial?.input ?? {});
 
 		/** @type {InternalRemoteFormIssue[]} */
-		let raw_issues = initial?.issues ?? [];
+		let raw_issues = $state.raw(initial?.issues ?? []);
 
-		const issues = $state(flatten_issues(raw_issues));
-
-		/** @param {InternalRemoteFormIssue[]} next */
-		function update_issues(next) {
-			raw_issues = next;
-			const flattened = flatten_issues(raw_issues);
-
-			for (const key in issues) {
-				if (!(key in flattened)) delete issues[key];
-			}
-
-			for (const key in flattened) {
-				issues[key] = flattened[key];
-			}
-		}
+		const issues = $derived(flatten_issues(raw_issues));
 
 		/** @type {any} */
 		let result = $state.raw(initial?.result);
@@ -272,9 +258,7 @@ export function form(id) {
 								refreshes
 							);
 
-							const { issues = [], result: next_result } = response._ ?? {};
-							update_issues(issues);
-							result = next_result;
+							({ issues: raw_issues = [], result } = response._ ?? {});
 
 							// if the developer took control of updates via `.updates(...)` (even with
 							// no arguments), or the server performed explicit refreshes, don't invalidateAll
@@ -304,7 +288,7 @@ export function form(id) {
 							return succeeded;
 						} catch (e) {
 							result = undefined;
-							update_issues([]);
+							raw_issues = [];
 							throw e;
 						} finally {
 							overrides?.forEach((fn) => fn());
@@ -377,12 +361,10 @@ export function form(id) {
 			const validated = await schema?.['~standard'].validate(data);
 
 			if (validated?.issues) {
-				update_issues(
-					merge_with_server_issues(
-						form_data,
-						raw_issues,
-						validated.issues.map((issue) => normalize_issue(issue, false))
-					)
+				raw_issues = merge_with_server_issues(
+					form_data,
+					raw_issues,
+					validated.issues.map((issue) => normalize_issue(issue, false))
 				);
 
 				if (DEV) {
@@ -394,7 +376,7 @@ export function form(id) {
 
 			// Preflight passed - clear stale client-side preflight issues
 			if (preflight_schema) {
-				update_issues(raw_issues.filter((issue) => issue.server));
+				raw_issues = raw_issues.filter((issue) => issue.server);
 			}
 
 			return true;
@@ -590,7 +572,7 @@ export function form(id) {
 				await tick();
 
 				input = convert_formdata(action_id_without_key, new FormData(form));
-				update_issues([]);
+				raw_issues = [];
 				touched = {};
 				dirty = {};
 				can_validate = {};
@@ -777,9 +759,9 @@ export function form(id) {
 
 					const is_server_validation = !validated?.issues && !preflightOnly;
 
-					update_issues(
-						is_server_validation ? array : merge_with_server_issues(form_data, raw_issues, array)
-					);
+					raw_issues = is_server_validation
+						? array
+						: merge_with_server_issues(form_data, raw_issues, array);
 				}
 			},
 			enhance: {
