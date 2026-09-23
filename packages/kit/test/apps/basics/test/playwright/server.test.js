@@ -58,6 +58,19 @@ test.describe('Errors', () => {
 			expect(/** @type {Response} */ (response).status()).toBe(400);
 		}
 	});
+
+	test('handles redirects from handle for malformed data requests', async ({ request }) => {
+		test.skip(!!process.env.DEV, 'Vite intercepts malformed URIs before SvelteKit');
+
+		const response = await request.get('/%E0%A4%A/__data.json');
+		expect(response.status()).toBe(200);
+		expect(await response.json()).toEqual({
+			type: 'redirect',
+			status: 303,
+			location: '/'
+		});
+		expect(response.headers()['set-cookie']).toContain('malformed=redirected');
+	});
 });
 
 test.describe('Routing', () => {
