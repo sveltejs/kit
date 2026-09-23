@@ -1,7 +1,7 @@
 import { Redirect } from '@sveltejs/kit/internal';
 import { with_request_store } from '@sveltejs/kit/internal/server';
 import { BODY_DEPENDENT_METHODS, ENDPOINT_METHODS, PAGE_METHODS } from '../../constants.js';
-import { negotiate } from '../../utils/http.js';
+import { prefers_html } from '../../utils/http.js';
 import { method_not_allowed } from './utils.js';
 
 /**
@@ -108,7 +108,8 @@ export function is_endpoint_request(event) {
 	// use:enhance uses a custom header to disambiguate
 	if (method === 'POST' && headers.get('x-sveltekit-action') === 'true') return false;
 
-	// GET/POST requests may be for endpoints or pages. We prefer endpoints if this isn't a text/html request
+	// GET/POST requests may be for endpoints or pages. They are page requests if the accept
+	// header prioritises text/html (i.e. a browser page request), else they go to the endpoint
 	const accept = event.request.headers.get('accept') ?? '*/*';
-	return negotiate(accept, ['*', 'text/html']) !== 'text/html';
+	return !prefers_html(accept);
 }
