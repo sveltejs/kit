@@ -227,3 +227,24 @@ export function error_for_missing_config(feature_name, path, value) {
 		`
 	);
 }
+
+/**
+ * @param {import('vite').ViteDevServer | import('vite').PreviewServer} server
+ * @param {import('@sveltejs/kit').Emulator | undefined} emulator
+ */
+export function dispose_emulator_on_close(server, emulator) {
+	if (!emulator?.dispose) return;
+
+	const close = server.close.bind(server);
+	/** @type {Promise<void> | undefined} */
+	let disposal;
+
+	server.close = async () => {
+		try {
+			await close();
+		} finally {
+			disposal ??= Promise.resolve().then(() => emulator.dispose?.());
+			await disposal;
+		}
+	};
+}

@@ -327,6 +327,11 @@ export interface Emulator {
 	 * and returns an `App.Platform` object
 	 */
 	platform?(details: { config: any; prerender: PrerenderOption }): MaybePromise<App.Platform>;
+
+	/**
+	 * A function that is called when the emulator is no longer needed, allowing adapters to release any resources they acquired
+	 */
+	dispose?(): MaybePromise<void>;
 }
 
 export interface KitConfig {

@@ -109,3 +109,30 @@ test('q.done() rejects if task rejects', async () => {
 		assert.equal(/** @type {Error} */ (e).message, 'nope');
 	}
 });
+
+test('q.done() waits for remaining tasks before rejecting', async () => {
+	const q = queue(2);
+	/** @type {() => void} */
+	let finish = () => {};
+
+	q.add(() => Promise.reject(new Error('nope'))).catch(() => {});
+	void q.add(
+		() =>
+			new Promise((resolve) => {
+				finish = () => resolve(undefined);
+			})
+	);
+
+	let rejected = false;
+	const done = q.done().catch((error) => {
+		rejected = true;
+		throw error;
+	});
+
+	await sleep(1);
+	expect(rejected).toBe(false);
+
+	finish();
+	await expect(done).rejects.toThrow('nope');
+	expect(rejected).toBe(true);
+});

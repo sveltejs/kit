@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import process from 'node:process';
 
 /** @type {import('@sveltejs/kit').Config} */
@@ -18,6 +19,9 @@ const config = {
 				return {
 					platform({ config, prerender }) {
 						return { config, prerender };
+					},
+					dispose() {
+						fs.writeFileSync('.svelte-kit/emulator-disposed', '');
 					}
 				};
 			},

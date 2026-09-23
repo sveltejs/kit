@@ -127,8 +127,6 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 		return { prerendered, prerender_map };
 	}
 
-	const emulator = await config.adapter?.emulate?.();
-
 	/** @type {import('types').Logger} */
 	const log = logger({ verbose });
 
@@ -187,6 +185,8 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 	);
 
 	const q = queue(config.prerender.concurrency);
+	/** @type {InstanceType<typeof Server>} */
+	let server;
 
 	/**
 	 * @param {string} path
@@ -542,55 +542,61 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 		return { prerendered, prerender_map };
 	}
 
-	// only run the server after the `should_prerender` check so that we
-	// don't run the user's init hook unnecessarily
-	const server = new Server(manifest);
-	await server.init({
-		env,
-		read: (file) => createReadableStream(`${config.outDir}/output/server/${file}`)
-	});
+	const emulator = await config.adapter?.emulate?.();
 
-	log.info('Prerendering');
+	try {
+		// only run the server after the `should_prerender` check so that we
+		// don't run the user's init hook unnecessarily
+		server = new Server(manifest);
+		await server.init({
+			env,
+			read: (file) => createReadableStream(`${config.outDir}/output/server/${file}`)
+		});
 
-	for (const entry of config.prerender.entries) {
-		if (entry === '*') {
-			for (const [id, prerender] of prerender_map) {
-				if (prerender) {
-					// remove optional parameters from the route
-					const segments = get_route_segments(id).filter((segment) => !segment.startsWith('[['));
-					const processed_id = '/' + segments.join('/');
+		log.info('Prerendering');
 
-					if (processed_id.includes('[')) continue;
-					const path = `/${get_route_segments(processed_id).join('/')}`;
-					void enqueue(null, config.paths.base + path);
+		for (const entry of config.prerender.entries) {
+			if (entry === '*') {
+				for (const [id, prerender] of prerender_map) {
+					if (prerender) {
+						// remove optional parameters from the route
+						const segments = get_route_segments(id).filter((segment) => !segment.startsWith('[['));
+						const processed_id = '/' + segments.join('/');
+
+						if (processed_id.includes('[')) continue;
+						const path = `/${get_route_segments(processed_id).join('/')}`;
+						void enqueue(null, config.paths.base + path);
+					}
 				}
+			} else {
+				void enqueue(null, config.paths.base + entry);
 			}
-		} else {
-			void enqueue(null, config.paths.base + entry);
 		}
-	}
 
-	for (const { id, entries } of route_level_entries) {
-		for (const entry of entries) {
-			void enqueue(null, config.paths.base + entry, undefined, id);
-		}
-	}
-
-	const transport = (await internal.get_hooks()).transport ?? {};
-	for (const internals of prerender_functions) {
-		if (internals.has_arg) {
-			for (const arg of (await internals.inputs?.()) ?? []) {
-				void enqueue(
-					null,
-					remote_prefix + internals.id + '/' + stringify_remote_arg(arg, transport)
-				);
+		for (const { id, entries } of route_level_entries) {
+			for (const entry of entries) {
+				void enqueue(null, config.paths.base + entry, undefined, id);
 			}
-		} else {
-			void enqueue(null, remote_prefix + internals.id);
 		}
-	}
 
-	await q.done();
+		const transport = (await internal.get_hooks()).transport ?? {};
+		for (const internals of prerender_functions) {
+			if (internals.has_arg) {
+				for (const arg of (await internals.inputs?.()) ?? []) {
+					void enqueue(
+						null,
+						remote_prefix + internals.id + '/' + stringify_remote_arg(arg, transport)
+					);
+				}
+			} else {
+				void enqueue(null, remote_prefix + internals.id);
+			}
+		}
+
+		await q.done();
+	} finally {
+		await emulator?.dispose?.();
+	}
 
 	// handle invalid fragment links
 	for (const [key, referrers] of expected_hashlinks) {

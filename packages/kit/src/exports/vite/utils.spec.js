@@ -1,9 +1,13 @@
 import path from 'node:path';
-import { expect, test } from 'vitest';
+import { expect, test, vi } from 'vitest';
 import { validate_config } from '../../core/config/index.js';
 import { posixify } from '../../utils/filesystem.js';
 import { dedent } from '../../core/sync/utils.js';
-import { get_config_aliases, error_for_missing_config } from './utils.js';
+import {
+	dispose_emulator_on_close,
+	get_config_aliases,
+	error_for_missing_config
+} from './utils.js';
 
 test('transform kit.alias to resolve.alias', () => {
 	const config = validate_config({
@@ -115,4 +119,29 @@ test('error_for_missing_config - handles special characters in feature name', ()
 			}
 		`
 	);
+});
+
+test('disposes an emulator once when the Vite server closes', async () => {
+	const close = vi.fn();
+	const dispose = vi.fn();
+	const server = /** @type {import('vite').ViteDevServer} */ (/** @type {unknown} */ ({ close }));
+
+	dispose_emulator_on_close(server, { dispose });
+	await server.close();
+	await server.close();
+
+	expect(close).toHaveBeenCalledTimes(2);
+	expect(dispose).toHaveBeenCalledOnce();
+});
+
+test('disposes an emulator when Vite server shutdown fails', async () => {
+	const error = new Error('shutdown failed');
+	const close = vi.fn().mockRejectedValue(error);
+	const dispose = vi.fn();
+	const server = /** @type {import('vite').PreviewServer} */ (/** @type {unknown} */ ({ close }));
+
+	dispose_emulator_on_close(server, { dispose });
+
+	await expect(server.close()).rejects.toBe(error);
+	expect(dispose).toHaveBeenCalledOnce();
 });

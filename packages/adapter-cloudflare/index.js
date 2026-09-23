@@ -181,8 +181,14 @@ export default function (options = {}) {
 		emulate() {
 			// we want to invoke `getPlatformProxy` only once, but await it only when it is accessed.
 			// If we would await it here, it would hang indefinitely because the platform proxy only resolves once a request happens
+			/** @type {Promise<import('wrangler').PlatformProxy> | undefined} */
+			let get_proxy;
+			/** @type {Promise<void> | undefined} */
+			let disposal;
+
 			const get_emulated = async () => {
-				const proxy = await getPlatformProxy(options.platformProxy);
+				get_proxy ??= getPlatformProxy(options.platformProxy);
+				const proxy = await get_proxy;
 				const platform = {
 					env: proxy.env,
 					ctx: proxy.ctx,
@@ -209,6 +215,11 @@ export default function (options = {}) {
 				platform: async ({ prerender }) => {
 					emulated ??= await get_emulated();
 					return prerender ? emulated.prerender_platform : emulated.platform;
+				},
+				dispose: async () => {
+					if (!get_proxy) return;
+					disposal ??= get_proxy.then((proxy) => proxy.dispose());
+					await disposal;
 				}
 			};
 		},

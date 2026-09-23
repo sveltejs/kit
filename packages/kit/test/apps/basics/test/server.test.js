@@ -13,6 +13,11 @@ test.skip(({ javaScriptEnabled }) => javaScriptEnabled);
 
 test.describe.configure({ mode: 'parallel' });
 
+test('disposes the adapter emulator after prerendering', () => {
+	test.skip(!!process.env.DEV, 'only runs during build');
+	expect(fs.existsSync('.svelte-kit/emulator-disposed')).toBe(true);
+});
+
 test.describe('Caching', () => {
 	test('caches pages', async ({ request }) => {
 		const response = await request.get('/caching');

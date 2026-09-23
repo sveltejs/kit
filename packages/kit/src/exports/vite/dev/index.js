@@ -17,7 +17,7 @@ import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
 import { get_mime_lookup, runtime_base } from '../../../core/utils.js';
 import { compact } from '../../../utils/array.js';
-import { is_chrome_devtools_request, not_found } from '../utils.js';
+import { dispose_emulator_on_close, is_chrome_devtools_request, not_found } from '../utils.js';
 import { SCHEME } from '../../../utils/url.js';
 import { check_feature } from '../../../utils/features.js';
 import { escape_html } from '../../../utils/escape.js';
@@ -442,6 +442,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 
 	const env = loadEnv(vite_config.mode, svelte_config.kit.env.dir, '');
 	const emulator = await svelte_config.kit.adapter?.emulate?.();
+	dispose_emulator_on_close(vite, emulator);
 
 	return () => {
 		const serve_static_middleware = vite.middlewares.stack.find(

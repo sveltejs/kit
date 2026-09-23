@@ -7,7 +7,7 @@ import { loadEnv, normalizePath } from 'vite';
 import { createReadableStream, getRequest, setResponse } from '../../../exports/node/index.js';
 import { installPolyfills } from '../../../exports/node/polyfills.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
-import { is_chrome_devtools_request, not_found } from '../utils.js';
+import { dispose_emulator_on_close, is_chrome_devtools_request, not_found } from '../utils.js';
 
 /** @typedef {import('http').IncomingMessage} Req */
 /** @typedef {import('http').ServerResponse} Res */
@@ -66,6 +66,7 @@ export async function preview(vite, vite_config, svelte_config) {
 	}
 
 	const emulator = await svelte_config.kit.adapter?.emulate?.();
+	dispose_emulator_on_close(vite, emulator);
 
 	return () => {
 		// Remove the base middleware. It screws with the URL.

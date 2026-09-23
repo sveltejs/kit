@@ -17,11 +17,22 @@ export function queue(concurrency) {
 
 	let current = 0;
 	let closed = false;
+	/** @type {Error | undefined} */
+	let error;
 
 	promise.catch(() => {
 		// this is necessary in case a catch handler is never added
 		// to the done promise by the user
 	});
+
+	function settle() {
+		closed = true;
+		if (error) {
+			reject(error);
+		} else {
+			resolve();
+		}
+	}
 
 	function dequeue() {
 		if (current < concurrency) {
@@ -34,15 +45,14 @@ export function queue(concurrency) {
 				void promise
 					.then(task.fulfil, (err) => {
 						task.reject(err);
-						reject(err);
+						error ??= err;
 					})
 					.then(() => {
 						current -= 1;
 						dequeue();
 					});
 			} else if (current === 0) {
-				closed = true;
-				resolve();
+				settle();
 			}
 		}
 	}
@@ -62,8 +72,7 @@ export function queue(concurrency) {
 
 		done: () => {
 			if (current === 0) {
-				closed = true;
-				resolve();
+				settle();
 			}
 
 			return promise;
