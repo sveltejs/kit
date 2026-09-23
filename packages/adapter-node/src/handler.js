@@ -127,26 +127,6 @@ const ssr = async (req, res) => {
 	setResponse(res, response);
 };
 
-/** @param {Middleware[]} handlers */
-function sequence(handlers) {
-	/** @type {Middleware} */
-	return (req, res, next) => {
-		/**
-		 * @param {number} i
-		 * @returns {ReturnType<Middleware>}
-		 */
-		function handle(i) {
-			if (i < handlers.length) {
-				return handlers[i](req, res, () => handle(i + 1));
-			} else {
-				return next();
-			}
-		}
-
-		return handle(0);
-	};
-}
-
 /**
  * @param {string} name
  * @param {string | string[] | undefined} value
@@ -200,7 +180,9 @@ function get_origin(headers) {
 	return port ? `${protocol}://${host}:${port}` : `${protocol}://${host}`;
 }
 
-export const handler = sequence([
-	serve_static(create_file_map({ dir, base, app_path, mime_types, assets, prerendered_assets })),
-	ssr
-]);
+const serve = serve_static(
+	create_file_map({ dir, base, app_path, mime_types, assets, prerendered_assets })
+);
+
+/** @type {Middleware} */
+export const handler = (req, res, next) => serve(req, res, () => ssr(req, res, next));

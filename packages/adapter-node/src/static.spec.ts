@@ -133,16 +133,14 @@ test('passes unknown paths to the next handler', async () => {
 	expect((await get('/missing.txt')).status).toBe(404);
 });
 
-test('disallows non-GET/HEAD methods', async () => {
-	const post = await get('/plain.txt', { method: 'POST' });
-	expect(post.status).toBe(405);
-	expect(post.headers['allow']).toBe('GET, HEAD');
-});
+test('disallows non-GET/HEAD methods on recorded paths only', async () => {
+	for (const pathname of ['/plain.txt', '/about/']) {
+		const post = await get(pathname, { method: 'POST' });
+		expect(post.status).toBe(405);
+		expect(post.headers['allow']).toBe('GET, HEAD');
+	}
 
-test('passes non-GET/HEAD requests to non-asset paths to the next handler', async () => {
-	const post = await get('/missing.txt', { method: 'POST' });
-	expect(post.status).toBe(404);
-	expect(post.body).toBe('next');
+	expect((await get('/missing.txt', { method: 'POST' })).body).toBe('next');
 });
 
 test('decodes percent-encoding but not reserved characters or +', async () => {
