@@ -60,7 +60,8 @@ jobs:
           mkdir -p "$APP/.netlify/v1/node_modules/@sveltejs/kit"
           cp -r packages/kit/package.json packages/kit/src "$APP/.netlify/v1/node_modules/@sveltejs/kit"
 
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - name: Upload build output
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ inputs.platform }}-${{ inputs.variant }}
           # whichever of these the adapter wrote, relative to the test app
@@ -78,7 +79,8 @@ jobs:
     timeout-minutes: 15
     environment: '@sveltejs/adapter-${{ inputs.platform }} platform tests'
     steps:
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      - name: Get the build output
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: ${{ inputs.platform }}-${{ inputs.variant }}
 
@@ -123,7 +125,8 @@ jobs:
         env: *vercel-secrets
         run: vercel cache purge --type cdn --token="$VERCEL_TOKEN" --yes
 
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - name: Store the deployment URL
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ inputs.platform }}-${{ inputs.variant }}-url
           path: url
@@ -142,12 +145,14 @@ jobs:
         run: pnpm playwright install chromium --no-shell
 
       # some tests inspect the build output
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      - name: Get the build output
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: ${{ inputs.platform }}-${{ inputs.variant }}
           path: ${{ env.APP }}
 
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      - name: Get the deployment URL
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: ${{ inputs.platform }}-${{ inputs.variant }}-url
           path: ${{ runner.temp }}
