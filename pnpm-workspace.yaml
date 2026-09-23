@@ -84,8 +84,6 @@ catalog:
   vitest: ^5.0.1
   jsdom: ^30.0.0
 catalogs:
-  typescript-native:
-    typescript: ^7.0.2
   # these show up in the ci.yml like `vite: 'beta'`, etc.
   vite-baseline:
     vite: ^8.0.12
