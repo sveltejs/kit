@@ -1115,7 +1115,7 @@ import { requested, query } from '$app/server';
 export const getPosts = query('unchecked', ({ filter }) => {
 	return ['foo', 'bar'];
 });
----cut---
+// ---cut---
 for (const { arg, query, ignore } of requested(getPosts, 10)) {
 	if (arg.filter === 'author:santa') {
 		void query.refresh();
@@ -1145,9 +1145,13 @@ await requested(getPosts, 1).refreshAll();
 If you want to intentionally ignore every selected update, use `ignoreAll`:
 
 ```js
-import { requested } from '$app/server';
+import { requested, query } from '$app/server';
 
----cut---
+export const getPosts = query('unchecked', ({ filter }) => {
+	return ['foo', 'bar'];
+});
+
+// ---cut---
 await requested(getPosts, 10).ignoreAll();
 ```
 

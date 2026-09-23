@@ -84,10 +84,6 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
-      - name: Build adapter-node files
-        working-directory: packages/adapter-node
-        run: pnpm prepublishOnly
-
       - &install-playwright
         name: Install Playwright
         run: pnpm playwright install chromium --no-shell
