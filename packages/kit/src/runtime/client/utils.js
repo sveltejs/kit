@@ -238,6 +238,34 @@ export function is_external_url(url, base, hash_routing) {
 	return false;
 }
 
+/**
+ * @param {URL} url
+ * @param {boolean} hash_routing
+ * @returns {string}
+ */
+export function get_id(url, hash_routing) {
+	let id;
+
+	if (hash_routing) {
+		const [, , second] = url.hash.split('#', 3);
+		id = second ?? '';
+	} else {
+		id = url.hash.slice(1);
+	}
+
+	return decodeURIComponent(id);
+}
+
+/**
+ * @param {URL} url
+ * @param {boolean} hash_routing
+ * @returns {Element | null}
+ */
+export function get_hash_element(url, hash_routing) {
+	const id = get_id(url, hash_routing);
+	return id ? document.getElementById(id) : null;
+}
+
 /** @type {Set<string> | null} */
 let seen = null;
 

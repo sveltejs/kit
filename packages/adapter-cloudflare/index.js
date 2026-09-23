@@ -133,9 +133,14 @@ export default function (options = {}) {
 				}
 			});
 			if (builder.hasServerInstrumentationFile()) {
+				const initializer = builder.createInstrumentationInitializer({
+					outputDirectory: worker_dest_dir,
+					environment: `import { env } from 'cloudflare:workers';\nexport default env;\n`
+				});
 				builder.instrument({
 					entrypoint: worker_dest,
-					instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`
+					instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`,
+					initializer
 				});
 			}
 
@@ -198,17 +203,15 @@ export default function (options = {}) {
 				).cf = globalThis.__sveltekit_cloudflare_platform?.cf;
 				return request;
 			},
-			plugins: {
-				pre: [
-					virtual_workers_module(
-						{
-							configPath: options.config,
-							...options.platformProxy
-						},
-						stub_import
-					)
-				]
-			}
+			plugins: [
+				virtual_workers_module(
+					{
+						configPath: options.config,
+						...options.platformProxy
+					},
+					stub_import
+				)
+			]
 		}
 	};
 }

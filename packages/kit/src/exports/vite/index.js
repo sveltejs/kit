@@ -1,12 +1,13 @@
 /** @import { EnvVarConfig } from '@sveltejs/kit/env' */
 /** @import { Options } from '@sveltejs/vite-plugin-svelte' */
 /** @import { PreprocessorGroup } from 'svelte/compiler' */
-/** @import {  ManifestData, RemoteChunk, ServerMetadata, ValidatedConfig } from 'types' */
+/** @import { ManifestData, RemoteChunk, ServerMetadata, ValidatedConfig } from 'types' */
 /** @import { CorsOptions, Plugin, ResolvedConfig, Rolldown, UserConfig } from 'vite' */
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { styleText } from 'node:util';
+import * as vite from 'vite';
 
 import { resolve_entry } from '../../utils/filesystem.js';
 import { posixify } from '../../utils/os.js';
@@ -237,9 +238,6 @@ function resolve_root(vite_config) {
  * @return {Plugin[]}
  */
 function kit({ svelte_config }) {
-	/** @type {typeof import('vite')} */
-	let vite;
-
 	/**
 	 * The posix-ified root of the project based on the Vite configuration.
 	 * @type {string}
@@ -330,7 +328,7 @@ function kit({ svelte_config }) {
 		 */
 		config: {
 			order: 'pre',
-			async handler(config, config_env) {
+			handler(config, config_env) {
 				initial_config = config;
 				is_build = config_env.command === 'build';
 
@@ -341,10 +339,8 @@ function kit({ svelte_config }) {
 				global_name = get_global_name(kit.version.name, !is_build);
 				kit_global = `globalThis.${global_name}`;
 
-				service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
+				service_worker_entry_file = resolve_entry(kit.files.serviceWorker, kit.moduleExtensions);
 				service_worker_entry_file &&= posixify(service_worker_entry_file);
-
-				vite = await import_peer('vite', root);
 
 				normalized_aliases = get_import_aliases(root, vite.normalizePath.bind(vite));
 
@@ -380,7 +376,7 @@ function kit({ svelte_config }) {
 
 				// We can only add directories to the allow list, so we find out
 				// if there's a client hooks file and pass its directory
-				const client_hooks = resolve_entry(kit.files.hooks.client);
+				const client_hooks = resolve_entry(kit.files.hooks.client, kit.moduleExtensions);
 				if (client_hooks) allow.add(path.dirname(client_hooks));
 
 				// dev and preview config can be shared
@@ -414,8 +410,9 @@ function kit({ svelte_config }) {
 						sourcemapIgnoreList,
 						watch: {
 							ignored: [
-								// Ignore all siblings of config.outDir/generated
-								`${out_dir}/!(generated)`
+								// Ignore all siblings of config.outDir/generated, at any depth
+								`${out_dir}/!(generated)`,
+								`${out_dir}/!(generated)/**`
 							]
 						}
 					},
@@ -452,7 +449,18 @@ function kit({ svelte_config }) {
 							// import, but it works with vite-node's externalization logic, which
 							// uses basic concatenation)
 							'@sveltejs/kit/src/runtime'
-						]
+						],
+						// Any CommonJS dependencies of Kit (of which there are currently none) must always be externalized.
+						// Without this, the tests will still pass but `pnpm dev` will fail in projects that link `@sveltejs/kit`.
+
+						// `@opentelemetry/api` must be externalized so that `instrumentation.server.js` and the
+						// SvelteKit runtime share a single instance of the module (the global tracer/propagation
+						// is set on that instance — two bundled copies would mean instrumentation hooks are
+						// invisible to the runtime). Externalizing also prevents the bundler from colocating
+						// `@opentelemetry/api` into a shared chunk that also contains application modules, which
+						// would cause those modules to be evaluated before `Server.init()` sets env vars — see
+						// https://github.com/sveltejs/kit/issues/16288
+						external: ['@opentelemetry/api']
 					},
 					publicDir: kit.files.assets
 				};
@@ -520,20 +528,6 @@ function kit({ svelte_config }) {
 						__SVELTEKIT_HAS_UNIVERSAL_LOAD__: 'true'
 					};
 
-					// Any CommonJS dependencies of Kit (of which there are currently none) must always be externalized.
-					// Without this, the tests will still pass but `pnpm dev` will fail in projects that link `@sveltejs/kit`.
-					//
-					// `@opentelemetry/api` must be externalized so that `instrumentation.server.js` and the
-					// SvelteKit runtime share a single instance of the module (the global tracer/propagation
-					// is set on that instance — two bundled copies would mean instrumentation hooks are
-					// invisible to the runtime). Externalizing also prevents the bundler from colocating
-					// `@opentelemetry/api` into a shared chunk that also contains application modules, which
-					// would cause those modules to be evaluated before `Server.init()` sets env vars — see
-					// https://github.com/sveltejs/kit/issues/16288
-					/** @type {NonNullable<UserConfig['ssr']>} */ (new_config.ssr).external = [
-						'@opentelemetry/api'
-					];
-
 					// we avoid setting base to paths.assets in dev so that we get the
 					// trailing slash redirect to paths.base if it is set
 					new_config.base = kit.paths.base || '/';
@@ -577,7 +571,10 @@ function kit({ svelte_config }) {
 				write_app_manifest(`${out_dir}/generated/dev`, undefined, false);
 			}
 
-			const unsupported_plugins = config.plugins.filter((plugin) => plugin.transformIndexHtml);
+			const unsupported_plugins = config.plugins.filter(
+				// Vitest invokes this hook for its own browser tester HTML, not the SvelteKit app
+				(plugin) => plugin.transformIndexHtml && plugin.name !== 'vitest:browser:loader'
+			);
 			if (unsupported_plugins.length) {
 				const verbose = config.logLevel === 'info' || config.logLevel === undefined;
 				const log = logger({ verbose });
@@ -637,6 +634,12 @@ function kit({ svelte_config }) {
 	/** @type {(() => Promise<void>) | null} */
 	let finalise = null;
 
+	if (Array.isArray(svelte_config.adapter?.vite?.plugins)) {
+		svelte_config.adapter.vite.plugins = {
+			pre: svelte_config.adapter.vite.plugins
+		};
+	}
+
 	return /** @type {Plugin[]} */ (
 		[
 			svelte_config.adapter?.vite?.plugins?.pre,
@@ -645,10 +648,7 @@ function kit({ svelte_config }) {
 			plugin_remote_guard(svelte_config),
 			plugin_remote(
 				svelte_config,
-				() => ({
-					root,
-					vite
-				}),
+				() => ({ root, vite }),
 				() => build_metadata,
 				(metadata) => {
 					remote_metadata = metadata;

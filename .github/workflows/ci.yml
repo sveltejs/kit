@@ -20,6 +20,7 @@ on:
       - 'FUNDING.json'
       - 'LICENSE'
       - 'README.md'
+      - '.coderabbit.yml'
   pull_request:
     paths-ignore: *paths_ignore
 

@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-node",
-	"version": "6.0.0-next.11",
+	"version": "6.0.0-next.12",
 	"description": "Adapter for SvelteKit apps that generates a standalone Node server",
 	"keywords": [
 		"adapter",
@@ -27,31 +27,25 @@
 	},
 	"types": "index.d.ts",
 	"files": [
-		"files",
+		"src/*.js",
 		"index.js",
 		"index.d.ts",
 		"ambient.d.ts"
 	],
 	"scripts": {
-		"dev": "rolldown -cw",
-		"build": "rolldown -c",
-		"test": "vitest run",
+		"prepublishOnly": "echo TODO: remove this script once .github/workflows/platform-tests-node.yml no longer invokes prepublishOnly, after version-3 is merged into main",
+		"test": "pnpm test:unit && pnpm test:build",
 		"test:unit": "vitest run",
+		"test:build": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:build",
 		"check": "tsc",
 		"lint": "oxfmt --check .",
-		"format": "oxfmt --write .",
-		"prepublishOnly": "pnpm build"
+		"format": "oxfmt --write ."
 	},
 	"devDependencies": {
-		"@polka/url": "catalog:",
 		"@sveltejs/kit": "workspace:^",
 		"@types/node": "catalog:",
-		"sirv": "^3.0.2",
 		"typescript": "catalog:typescript-native",
 		"vitest": "catalog:"
-	},
-	"dependencies": {
-		"rolldown": "^1.2.3"
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^3.0.0-next.0"

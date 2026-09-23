@@ -8,6 +8,9 @@ vite.config.js.timestamp-*
 /packages/package/test/**/package
 /documentation/types.js
 .env
+!packages/adapter-netlify/test/apps/edge/.env
+!packages/adapter-netlify/test/apps/instrumentation/.env
+!packages/adapter-vercel/test/apps/basic/.env
 .vercel_build_output
 .svelte-kit
 .svelte-check
@@ -17,6 +20,7 @@ vite.config.js.timestamp-*
 .turbo
 .vercel
 .test-tmp
+.vitest
 symlink-from
 .idea/
 _tmp_flaky_test_output.txt

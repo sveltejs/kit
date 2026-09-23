@@ -1,15 +1,11 @@
-import { mkdirSync, readFileSync, rmSync } from 'node:fs';
-import { extname } from 'node:path';
+import { createHash } from 'node:crypto';
+import * as fs from 'node:fs';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { rolldown } from 'rolldown';
 
-const files = fileURLToPath(new URL('./files', import.meta.url).href);
-
-/** @param {string} str */
-function escape_regex(str) {
-	// TODO replace with `RegExp.escape(str)` when we require Node >= 24
-	return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
+// posix so it matches the module ids Vite reports on every platform
+const src = fileURLToPath(new URL('./src', import.meta.url).href).replaceAll('\\', '/');
+const handoff = '#@sveltejs/adapter-node';
 
 /** @type {typeof import('./index.js').default} */
 export default function (opts = {}) {
@@ -18,173 +14,262 @@ export default function (opts = {}) {
 	return {
 		name: '@sveltejs/adapter-node',
 		async adapt(builder) {
-			const tmp = builder.getBuildDirectory('adapter-node');
+			fs.rmSync(out, { force: true, recursive: true });
 
-			rmSync(out, { force: true, recursive: true });
-			rmSync(tmp, { force: true, recursive: true });
-			mkdirSync(tmp, { recursive: true });
+			const base = builder.config.paths.base;
+			const client_dir = `${out}/client${base}`;
+			const prerendered_dir = `${out}/prerendered${base}`;
 
 			builder.log.minor('Copying assets');
-			const written = [
-				...builder.writeClient(`${out}/client${builder.config.paths.base}`),
-				...builder.writePrerendered(`${out}/prerendered${builder.config.paths.base}`)
-			];
+			const client_files = builder.writeClient(client_dir);
+			const prerendered_files = builder.writePrerendered(prerendered_dir);
 
-			/** @type {string[]} */
-			let compressed = [];
+			builder.log.minor(precompress ? 'Compressing and hashing assets' : 'Hashing assets');
+			const [client_compressed, prerendered_compressed] = precompress
+				? await Promise.all([builder.compress(client_dir), builder.compress(prerendered_dir)])
+				: [[], []];
 
-			if (precompress) {
-				builder.log.minor('Compressing assets');
-				compressed = (
-					await Promise.all([
-						builder.compress(`${out}/client`),
-						builder.compress(`${out}/prerendered`)
-					])
-				).flat();
-			}
-
-			const compressed_extensions = new Set(compressed.map((file) => extname(file)));
-			// a pathname whose extension appears in neither set may be a route segment
-			// resolving to a compressed `index.html`, so it must keep its `Vary` header
-			const uncompressed_extensions = new Set(
-				written.map((file) => extname(file)).filter((ext) => ext && !compressed_extensions.has(ext))
+			const assets = create_asset_table(
+				base,
+				measure_files(client_dir, client_files, client_compressed)
+			);
+			const prerendered_assets = create_prerendered_table(
+				base,
+				measure_files(prerendered_dir, prerendered_files, prerendered_compressed),
+				builder.prerendered.paths
 			);
 
-			builder.log.minor('Building server');
-
-			const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
 			const server = builder.getServerDirectory();
-
-			// Copy the prebuilt entrypoints into the build directory so that the
-			// adapter's own bundled dependencies resolve correctly, then bundle them
-			// together with the app's server code. Bundling everything in a single
-			// pass means shared modules (e.g. `SvelteKitError` from `@sveltejs/kit`)
-			// aren't duplicated. See https://github.com/sveltejs/kit/issues/15755
-			const entries = posixify(`${tmp}/entries`);
-			builder.copy(files, entries);
-
-			const dir_id = `${entries}/dir.js`;
-
-			/** @type {Record<string, string>} */
-			const input = {
-				index: `${entries}/index.js`,
-				env: `${entries}/env.js`,
-				handler: `${entries}/handler.js`
-			};
-
-			if (builder.hasServerInstrumentationFile()) {
-				input['instrumentation.server'] = `${server}/instrumentation.server.js`;
-			}
 
 			builder.generateServerInstance(`${server}/server.js`);
 
-			/** @type {Record<string, string>} */
-			const defines = {
-				UNCOMPRESSED_EXTENSIONS: `new Set(${JSON.stringify([...uncompressed_extensions])})`,
-				BASE_PATH: JSON.stringify(builder.config.paths.base),
-				APP_PATH: JSON.stringify(builder.getAppPath()),
-				PRERENDERED: `new Set(${JSON.stringify(builder.prerendered.paths)})`,
-				MIME_TYPES: JSON.stringify(builder.mimeTypes),
-				ORIGIN: JSON.stringify(builder.config.paths.origin) || 'undefined',
-				ENV_PREFIX: JSON.stringify(envPrefix),
-				PRECOMPRESS: JSON.stringify(precompress)
-			};
-
-			// we bundle the Vite output so that deployments only need
-			// their production dependencies. Anything in devDependencies
-			// will get included in the bundled code
-			const bundle = await rolldown({
-				input,
-				external: [
-					// dependencies could have deep exports, so we need a regex
-					...Object.keys(pkg.dependencies || {}).map((d) => new RegExp(`^${d}(\\/.*)?$`)),
-					// `@opentelemetry/api` is an optional peer dependency of `@sveltejs/kit`,
-					// so it's not in `pkg.dependencies` and wouldn't be matched by the regex above.
-					// It must stay external so that `instrumentation.server.js` and the SvelteKit
-					// runtime share a single instance — see https://github.com/sveltejs/kit/issues/16288
-					/^@opentelemetry\/api(\/.*)?$/
-				],
-				platform: 'node',
-				resolve: {
-					conditionNames: ['node']
-				},
-				experimental: {
-					nativeMagicString: true
-				},
-				plugins: [
-					{
-						// resolve the app's server and manifest, generated above
-						name: 'adapter-node-resolve-app',
-						resolveId: {
-							filter: { id: /^SERVER$/ },
-							handler() {
-								return `${server}/server.js`;
-							}
-						}
-					},
-					{
-						// replace build-time constants in the adapter's own entrypoints
-						// only, so that identifiers in the app or its dependencies aren't
-						// accidentally replaced
-						name: 'adapter-node-replace-constants',
-						transform: {
-							filter: { id: new RegExp(escape_regex(entries)) },
-							handler(_code, _id, { magicString }) {
-								if (!magicString) throw new Error('experimental.nativeMagicString is not enabled');
-
-								for (const [from, to] of Object.entries(defines)) {
-									// remove $& and $N substitutions by replacing every $ with $$
-									const value = to.replace(/\$/g, '$$$$');
-									magicString.replace(new RegExp(`\\b${from}\\b`, 'g'), value);
-								}
-
-								return {
-									code: magicString,
-									map: magicString.generateMap().toString()
-								};
-							}
-						}
-					}
-				]
-			});
-
-			await bundle.write({
-				dir: out,
-				format: 'esm',
-				sourcemap: true,
-				codeSplitting: {
-					groups: [
-						{
-							name: 'dir',
-							test: dir_id
-						}
-					]
-				},
-				chunkFileNames(chunk) {
-					if (chunk.name === 'dir') return '[name].js';
-					return 'server/chunks/[name]-[hash].js';
-				}
-			});
-
 			if (builder.hasServerInstrumentationFile()) {
 				builder.instrument({
-					entrypoint: `${out}/index.js`,
-					instrumentation: `${out}/instrumentation.server.js`,
+					entrypoint: `${server}/adapter-index.js`,
+					instrumentation: `${server}/instrumentation.server.js`,
+					initializer: builder.createInstrumentationInitializer({ outputDirectory: server }),
 					module: {
 						exports: ['path', 'host', 'port', 'server']
 					}
 				});
 			}
+
+			builder.copy(server, `${out}/server`);
+
+			// values only known after the build. `dir` needs the output root
+			fs.writeFileSync(
+				`${out}/adapter-node.js`,
+				[
+					`import { dirname } from 'node:path';`,
+					`import { fileURLToPath } from 'node:url';`,
+					`export { server } from './server/server.js';`,
+					`export const dir = dirname(fileURLToPath(import.meta.url));`,
+					`export const base = ${JSON.stringify(base)};`,
+					`export const app_path = ${JSON.stringify(builder.getAppPath())};`,
+					`export const origin = ${JSON.stringify(builder.config.paths.origin)};`,
+					`export const env_prefix = ${JSON.stringify(envPrefix)};`,
+					`export const mime_types = ${JSON.stringify(builder.mimeTypes)};`,
+					// JSON.parse of a string loads about twice as fast as an object literal of the same size
+					`export const assets = JSON.parse(${JSON.stringify(JSON.stringify(assets))});`,
+					`export const prerendered_assets = JSON.parse(${JSON.stringify(JSON.stringify(prerendered_assets))});`
+				].join('\n')
+			);
+
+			fs.writeFileSync(`${out}/index.js`, `export * from './server/adapter-index.js';\n`);
+			fs.writeFileSync(`${out}/handler.js`, `export * from './server/handler.js';\n`);
 		},
 
 		supports: {
 			read: () => true,
 			instrumentation: () => true
+		},
+
+		vite: {
+			plugins: {
+				post: [
+					{
+						name: 'vite-plugin-sveltekit-adapter-node',
+						apply: 'build',
+						config() {
+							const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+
+							return {
+								environments: {
+									ssr: {
+										build: {
+											rolldownOptions: {
+												// bundled with the app's server code so shared modules aren't duplicated (#15755)
+												input: {
+													'adapter-index': `${src}/index.js`,
+													'adapter-env': `${src}/env.js`,
+													handler: `${src}/handler.js`
+												},
+												// only production dependencies (and their deep imports) stay external
+												external: [
+													handoff,
+													...Object.keys(pkg.dependencies || {}).map(
+														(d) => new RegExp(`^${d}(\\/.*)?$`)
+													)
+												],
+												output: {
+													paths: { [handoff]: '../adapter-node.js' },
+													// the hand-off path only holds at the output root, so adapter chunks may not nest
+													chunkFileNames: (chunk) =>
+														chunk.moduleIds.some((id) => id.startsWith(src))
+															? 'adapter-node-[name].js'
+															: 'chunks/[name].js'
+												}
+											}
+										}
+									}
+								}
+							};
+						}
+					}
+				]
+			}
 		}
 	};
 }
 
-/** @param {string} str */
-function posixify(str) {
-	return str.replace(/\\/g, '/');
+/**
+ * Dotfiles are not served, with the customary exception of `.well-known`
+ * @param {string} file
+ */
+function is_hidden(file) {
+	return file.split('/').some((segment) => segment[0] === '.') && !file.startsWith('.well-known/');
+}
+
+/**
+ * Size and content hash from one pass over the file, a buffer at a time
+ * @param {string} file
+ * @param {Buffer} buffer
+ */
+function measure(file, buffer) {
+	const fd = fs.openSync(file, 'r');
+	const hash = createHash('sha256');
+	let size = 0;
+
+	try {
+		let read;
+		while ((read = fs.readSync(fd, buffer)) > 0) {
+			hash.update(buffer.subarray(0, read));
+			size += read;
+		}
+	} finally {
+		fs.closeSync(fd);
+	}
+
+	return { size, etag: hash.digest('base64url') };
+}
+
+/**
+ * Size and content hash of every servable file, plus the sizes of the
+ * compressed variants where `builder.compress` wrote them.
+ * Files are read one at a time through a single buffer, so large outputs
+ * neither exhaust file descriptors nor pile up in memory
+ * @param {string} root
+ * @param {string[]} files
+ * @param {string[]} compressed
+ * @returns {AssetEntry[]}
+ */
+function measure_files(root, files, compressed) {
+	const variants = new Set(compressed);
+	const buffer = Buffer.allocUnsafe(64 * 1024);
+
+	/** @type {AssetEntry[]} */
+	const entries = [];
+
+	for (const file of files) {
+		if (is_hidden(file)) continue;
+
+		const abs = join(root, file);
+
+		/** @type {AssetEntry} */
+		const entry = { file, ...measure(abs, buffer) };
+
+		// `builder.compress` writes a `.gz` and a `.br` variant of every file it returns
+		if (variants.has(file)) {
+			entry.gz = fs.statSync(`${abs}.gz`).size;
+			entry.br = fs.statSync(`${abs}.br`).size;
+		}
+
+		entries.push(entry);
+	}
+
+	return entries;
+}
+
+/**
+ * Keys the measured files by URL: the exact pathname, plus the `/foo` and
+ * `/foo/` forms of `foo.html`/`foo/index.html` files
+ * @param {string} base
+ * @param {AssetEntry[]} measured
+ * @returns {AssetTable}
+ */
+function create_asset_table(base, measured) {
+	const entries = measured.map((entry) => /** @type {[string, AssetEntry]} */ ([
+		`${base}/${entry.file}`,
+		entry
+	]));
+
+	entries.sort(([a], [b]) => (a < b ? -1 : 1));
+
+	const keys = new Set(entries.map(([key]) => key));
+
+	/** @type {Array<[string, string]>} */
+	const aliases = [];
+
+	/**
+	 * @param {string} alias
+	 * @param {string} key
+	 */
+	function alias(alias, key) {
+		if (!keys.has(alias)) {
+			keys.add(alias);
+			aliases.push([alias, key]);
+		}
+	}
+
+	// `/foo` and `/foo/` resolve to `foo.html`, or to `foo/index.html` when only that exists.
+	// `foo.html` sorts first, so it claims the aliases (the resolution order sirv used)
+	for (const [key, entry] of entries) {
+		if (!entry.file.endsWith('.html')) continue;
+
+		const is_index = entry.file === 'index.html' || entry.file.endsWith('/index.html');
+		const with_slash = is_index ? key.slice(0, -'index.html'.length) : key.slice(0, -5) + '/';
+
+		alias(with_slash, key);
+		if (with_slash.length > 1) alias(with_slash.slice(0, -1), key);
+	}
+
+	return { entries, aliases };
+}
+
+/**
+ * Keys the measured files by the exact paths kit prerendered, so a lookup
+ * hit is precisely a prerendered page, asset or redirect and every other
+ * pathname (including the non-canonical trailing-slash form) misses
+ * @param {string} base
+ * @param {AssetEntry[]} measured
+ * @param {string[]} paths
+ * @returns {AssetTable}
+ */
+function create_prerendered_table(base, measured, paths) {
+	const by_file = new Map(measured.map((entry) => [entry.file, entry]));
+
+	/** @type {Array<[string, AssetEntry]>} */
+	const entries = [];
+
+	for (const path of paths) {
+		// invert `output_filename` in kit's prerenderer
+		const file = path.slice(base.length + 1) || 'index.html';
+		const entry =
+			by_file.get(file) ?? by_file.get(file + (file.endsWith('/') ? 'index.html' : '.html'));
+		if (entry) entries.push([path, entry]);
+	}
+
+	entries.sort(([a], [b]) => (a < b ? -1 : 1));
+
+	return { entries, aliases: [] };
 }

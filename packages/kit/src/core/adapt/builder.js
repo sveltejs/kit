@@ -5,16 +5,8 @@
 /** @import { RouteData, ValidatedConfig, BuildData, ServerMetadata, ServerMetadataRoute, Prerendered, PrerenderMap, Logger, RemoteChunk } from 'types' */
 import { loadEnv } from 'vite';
 import * as devalue from 'devalue';
-import {
-	createReadStream,
-	createWriteStream,
-	existsSync,
-	mkdirSync,
-	rmSync,
-	statSync
-} from 'node:fs';
+import fs from 'node:fs';
 import path from 'node:path';
-import { pipeline } from 'node:stream';
 import { promisify } from 'node:util';
 import zlib from 'node:zlib';
 import { copy, relative_path, walk } from '../../utils/filesystem.js';
@@ -29,7 +21,8 @@ import { handle_issues, validate } from '../../exports/internal/env.js';
 import { get_mime_lookup } from '../utils.js';
 import { lookup as mime_lookup } from '../../utils/mime.js';
 
-const pipe = promisify(pipeline);
+const gzip = promisify(zlib.gzip);
+const brotli = promisify(zlib.brotliCompress);
 const extensions = [
 	'.html',
 	'.js',
@@ -115,8 +108,8 @@ export function create_builder({
 
 	return {
 		log,
-		rimraf: (dir) => rmSync(dir, { force: true, recursive: true }),
-		mkdirp: (dir) => mkdirSync(dir, { recursive: true }),
+		rimraf: (dir) => fs.rmSync(dir, { force: true, recursive: true }),
+		mkdirp: (dir) => fs.mkdirSync(dir, { recursive: true }),
 		copy,
 
 		config,
@@ -131,34 +124,33 @@ export function create_builder({
 				route_data.filter((route) => prerender_map.get(route.id) !== true),
 				vite_config.root
 			);
-			/** @type {Record<string, number>} */
-			const files = {};
 			for (const file of server_assets) {
-				files[file] = statSync(path.resolve(build_data.out_dir, 'server', file)).size;
-
 				const ext = path.extname(file);
 				mime_types[ext] ??= mime_lookup(ext) || '';
 			}
 
-			// record extensions that only exist in prerendered output, e.g. a prerendered favicon.ico
-			for (const pathname of prerendered.paths) {
-				const ext = path.extname(pathname);
+			// record extensions that only exist in prerendered or client output (e.g. a favicon.ico),
+			// so that adapters can serve those files without a mime database of their own
+			for (const file of [...prerendered.paths, ...walk(path.join(build_data.out_dir, 'client'))]) {
+				const ext = path.extname(file);
 				if (ext) mime_types[ext] ??= mime_lookup(ext) || '';
 			}
 			return mime_types;
 		},
 
 		async compress(directory) {
-			if (!existsSync(directory)) {
+			if (!fs.existsSync(directory)) {
 				return [];
 			}
 
 			const files = [...walk(directory)].filter((file) => extensions.includes(path.extname(file)));
 
+			// zlib work is serialised on the threadpool and each brotli encoder is allocated up front,
+			// so a handful of files in flight is as fast as all of them and keeps memory flat
+			let i = 0;
 			await Promise.all(
-				files.flatMap((file) => {
-					const abs = path.resolve(directory, file);
-					return [compress_file(abs, 'gz'), compress_file(abs, 'br')];
+				Array.from({ length: 16 }, async () => {
+					while (i < files.length) await compress_file(path.resolve(directory, files[i++]));
 				})
 			);
 
@@ -185,7 +177,7 @@ export function create_builder({
 				assets: config.files.assets
 			});
 
-			if (existsSync(dest)) {
+			if (fs.existsSync(dest)) {
 				log.warn(
 					`\nOverwriting ${dest} with fallback page. Consider using a different name for the fallback.\n`
 				);
@@ -233,7 +225,7 @@ export function create_builder({
 			write(
 				dest,
 				dedent`
-					import { Server } from '${relative}/index.js';
+					import { create_server } from '${relative}/index.js';
 					const manifest = ${generate_manifest({
 						build_data,
 						prerendered: prerendered.paths,
@@ -244,7 +236,7 @@ export function create_builder({
 						remotes,
 						root: vite_config.root
 					})};
-					export const server = new Server(manifest);
+					export const server = create_server(manifest);
 				`
 			);
 		},
@@ -286,31 +278,61 @@ export function create_builder({
 			return copy(`${config.outDir}/output/server`, dest);
 		},
 
+		createInstrumentationInitializer({
+			outputDirectory,
+			environment,
+			serverDirectory = `${config.outDir}/output/server`
+		}) {
+			const provider = path.join(outputDirectory, '__sveltekit_env.js');
+			write(provider, environment ?? 'export default process.env;');
+
+			const initializer = path.join(outputDirectory, '__sveltekit_env_init.js');
+			write(
+				initializer,
+				create_env_module({
+					environment: to_import_specifier(
+						posixify(path.relative(path.dirname(initializer), provider))
+					),
+					set_env: to_import_specifier(
+						posixify(path.relative(path.dirname(initializer), `${serverDirectory}/env.js`))
+					)
+				})
+			);
+
+			return initializer;
+		},
+
 		hasServerInstrumentationFile() {
-			return existsSync(`${config.outDir}/output/server/instrumentation.server.js`);
+			return fs.existsSync(`${config.outDir}/output/server/instrumentation.server.js`);
 		},
 
 		instrument({
 			entrypoint,
 			instrumentation,
 			start = path.join(path.dirname(entrypoint), 'start.js'),
+			initializer,
 			module = {
 				exports: ['default']
 			}
 		}) {
-			if (!existsSync(instrumentation)) {
+			if (!fs.existsSync(instrumentation)) {
 				throw new Error(
 					`Instrumentation file ${instrumentation} not found. This is probably a bug in your adapter.`
 				);
 			}
-			if (!existsSync(entrypoint)) {
+			if (!fs.existsSync(entrypoint)) {
 				throw new Error(
 					`Entrypoint file ${entrypoint} not found. This is probably a bug in your adapter.`
 				);
 			}
+			if (!fs.existsSync(initializer)) {
+				throw new Error(
+					`Instrumentation initializer ${initializer} not found. This is probably a bug in your adapter.`
+				);
+			}
 
 			copy(entrypoint, start);
-			if (existsSync(`${entrypoint}.map`)) {
+			if (fs.existsSync(`${entrypoint}.map`)) {
 				copy(`${entrypoint}.map`, `${start}.map`);
 			}
 
@@ -318,59 +340,57 @@ export function create_builder({
 				path.relative(path.dirname(entrypoint), instrumentation)
 			);
 			const relative_start = posixify(path.relative(path.dirname(entrypoint), start));
+			const relative_initializer = posixify(path.relative(path.dirname(entrypoint), initializer));
 
 			const facade =
 				'generateText' in module
 					? module.generateText({
 							instrumentation: relative_instrumentation,
-							start: relative_start
+							start: relative_start,
+							initializer: relative_initializer
 						})
 					: create_instrumentation_facade({
 							instrumentation: relative_instrumentation,
 							start: relative_start,
-							exports: module.exports
+							exports: module.exports,
+							initializer: relative_initializer
 						});
 
-			rmSync(entrypoint, { force: true, recursive: true });
+			fs.rmSync(entrypoint, { force: true, recursive: true });
 			write(entrypoint, facade);
 		}
 	};
 }
 
 /**
+ * Writes gzip and brotli variants next to `file`
  * @param {string} file
- * @param {'gz' | 'br'} format
  */
-async function compress_file(file, format = 'gz') {
-	const compress =
-		format == 'br'
-			? zlib.createBrotliCompress({
-					params: {
-						[zlib.constants.BROTLI_PARAM_MODE]: zlib.constants.BROTLI_MODE_TEXT,
-						[zlib.constants.BROTLI_PARAM_QUALITY]: zlib.constants.BROTLI_MAX_QUALITY,
-						[zlib.constants.BROTLI_PARAM_SIZE_HINT]: statSync(file).size
-					}
-				})
-			: zlib.createGzip({ level: zlib.constants.Z_BEST_COMPRESSION });
+async function compress_file(file) {
+	const contents = await fs.promises.readFile(file);
 
-	const source = createReadStream(file);
-	const destination = createWriteStream(`${file}.${format}`);
+	const [gz, br] = await Promise.all([
+		gzip(contents, { level: zlib.constants.Z_BEST_COMPRESSION }),
+		brotli(contents)
+	]);
 
-	await pipe(source, compress, destination);
+	await Promise.all([
+		fs.promises.writeFile(`${file}.gz`, gz),
+		fs.promises.writeFile(`${file}.br`, br)
+	]);
 }
 
 /**
  * Given a list of exports, generate a facade that:
+ * - Imports the environment initializer
  * - Imports the instrumentation file
- * - Imports `exports` from the entrypoint (dynamically, if `tla` is true)
+ * - Imports `exports` from the entrypoint (dynamically)
  * - Re-exports `exports` from the entrypoint
  *
- * @param {{ instrumentation: string; start: string; exports: string[] }} opts
+ * @param {{ instrumentation: string; start: string; exports: string[]; initializer: string }} opts
  * @returns {string}
  */
-function create_instrumentation_facade({ instrumentation, start, exports }) {
-	const import_instrumentation = `import './${instrumentation}';`;
-
+function create_instrumentation_facade({ instrumentation, start, exports, initializer }) {
 	const { namespace, declarations, reexports } = create_exported_declarations(
 		exports,
 		(name, ns) => `${ns}.${name}`,
@@ -378,12 +398,26 @@ function create_instrumentation_facade({ instrumentation, start, exports }) {
 	);
 
 	const parts = [
-		`const ${namespace} = await import('./${start}');`,
+		`import ${JSON.stringify(to_import_specifier(initializer))};`,
+		`import ${JSON.stringify(to_import_specifier(instrumentation))};`,
+		`const ${namespace} = await import(${JSON.stringify(to_import_specifier(start))});`,
 		declarations.join('\n'),
 		reexports.length > 0 ? `export { ${reexports.join(', ')} };` : ''
-	]
-		.filter(Boolean)
-		.join('\n');
+	];
 
-	return `${import_instrumentation}\n${parts}`;
+	return parts.filter(Boolean).join('\n');
+}
+
+/**
+ * @param {string} path
+ */
+function to_import_specifier(path) {
+	return path.startsWith('.') ? path : `./${path}`;
+}
+
+/**
+ * @param {{ environment: string; set_env: string }} opts
+ */
+function create_env_module({ environment, set_env }) {
+	return `import env from ${JSON.stringify(environment)};\nimport { set_env } from ${JSON.stringify(set_env)};\nset_env(env);\n`;
 }

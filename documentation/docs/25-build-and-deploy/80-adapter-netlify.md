@@ -8,7 +8,7 @@ This adapter will be installed by default when you use [`adapter-auto`](adapter-
 
 ## Usage
 
-Install with `npm i -D @sveltejs/adapter-netlify`, then add the adapter to your `vite.config.js`:
+Run [`npx sv add sveltekit-adapter="adapter:netlify"`](/docs/cli/sveltekit-adapter), or install with `npm i -D @sveltejs/adapter-netlify` and add the adapter to your `vite.config.js`:
 
 ```js
 // @errors: 2307
@@ -51,8 +51,6 @@ If `true`, your app will be deployed as a [Netlify Edge Function](https://docs.n
 ### `split`
 
 If `true`, your app will be split into multiple functions instead of a single one for the entire app.
-
-If `edge` is `true`, this option cannot be used.
 
 ## Netlify alternatives to SvelteKit functionality
 

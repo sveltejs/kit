@@ -8,7 +8,9 @@ import {
 	Actions,
 	RequestEvent,
 	Emulator,
-	HttpError
+	HttpError,
+	Adapter,
+	AdapterViteConfig
 } from '@sveltejs/kit';
 import { RemoteFormIssue, RemoteQuery, RemoteLiveQuery } from '$app/server';
 import { Config } from '@sveltejs/kit/vite';
@@ -35,25 +37,34 @@ import { Span } from '@opentelemetry/api';
 import { PageOptions } from '../exports/vite/static_analysis/types.js';
 import { SharedIterator } from '../utils/shared-iterator.js';
 
-export interface ServerModule {
-	Server: typeof InternalServer;
+export interface ServerConfigureOptions extends Partial<ServerInitOptions> {
+	manifest?: SSRManifest;
+	/** the value of `$app/paths`'s `assets`, when it differs from the build-time one */
+	assets?: string;
+	building?: boolean;
+	prerendering?: boolean;
+	fix_stack_trace?: (error: Error) => void;
 }
 
-export interface ServerInternalModule {
-	set_assets(path: string): void;
-	set_building(): void;
-	set_manifest(manifest: SSRManifest): void;
-	set_prerendering(): void;
-	set_read_implementation(implementation: (path: string) => ReadableStream): void;
-	set_version(version: string): void;
-	set_fix_stack_trace(fix_stack_trace: (error: Error) => void): void;
-	get_hooks: () => Promise<Record<string, any>>;
-	format_response: (status: number, request: Request) => string;
+export interface ServerInstance {
+	init(): Promise<void>;
+	respond(request: Request, options: InternalRequestOptions): Promise<Response>;
+	set_env(env: Record<string, string | undefined>): void;
 }
+
+/** the built `server/index.js` */
+export interface ServerModule {
+	configure(options: ServerConfigureOptions): Promise<ServerInstance>;
+	/** the `server` adapters receive from `builder.generateServerInstance` */
+	create_server(manifest: SSRManifest): Server;
+	format_response(status: number, request: Request): string;
+}
+
+/** the built `server/internal.js` */
+export type ServerInternalModule = typeof import('<sveltekit:generated>/server.js');
 
 export interface Asset {
 	file: string;
-	size: number;
 	type: string | null;
 }
 
@@ -192,12 +203,6 @@ export interface InternalRequestOptions extends RequestOptions {
 		handle: () => Promise<Response>
 	) => Promise<Response>;
 	emulator?: Emulator;
-}
-
-export class InternalServer implements Server {
-	constructor(manifest: SSRManifest);
-	init(options: ServerInitOptions): Promise<void>;
-	respond(request: Request, options: InternalRequestOptions): Promise<Response>;
 }
 
 export interface ManifestData {
@@ -592,7 +597,8 @@ export interface Uses {
 	search_params: Set<string>;
 }
 
-export type ValidatedConfig = RecursiveRequired<Omit<Config, 'preprocess'>> & {
+export type ValidatedConfig = RecursiveRequired<Omit<Config, 'preprocess' | 'adapter'>> & {
+	adapter: Adapter & { vite?: AdapterViteConfig };
 	preprocess: Config['preprocess'];
 };
 
