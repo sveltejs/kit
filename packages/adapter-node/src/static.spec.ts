@@ -139,6 +139,12 @@ test('disallows non-GET/HEAD methods', async () => {
 	expect(post.headers['allow']).toBe('GET, HEAD');
 });
 
+test('passes non-GET/HEAD requests to non-asset paths to the next handler', async () => {
+	const post = await get('/missing.txt', { method: 'POST' });
+	expect(post.status).toBe(404);
+	expect(post.body).toBe('next');
+});
+
 test('decodes percent-encoding but not reserved characters or +', async () => {
 	// https://github.com/sveltejs/kit/issues/11766
 	expect((await get('/pl%61in.txt')).body).toBe('plain');
