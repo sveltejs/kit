@@ -91,7 +91,7 @@ export const handle = sequence(
 	},
 	async ({ event, resolve }) => {
 		const response = await resolve(event);
-		if (event.url.searchParams.has('set-headers-after-resolve')) {
+		if (event.request.url.includes('?set-headers-after-resolve')) {
 			try {
 				event.setHeaders({ 'x-late': '1' });
 			} catch (e) {
