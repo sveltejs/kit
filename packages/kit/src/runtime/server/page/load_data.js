@@ -255,7 +255,7 @@ export async function load_data({
 }
 
 /**
- * @param {Pick<import('@sveltejs/kit/internal/server').RequestEvent, 'fetch' | 'url' | 'request' | 'route'>} event
+ * @param {Pick<import('@sveltejs/kit').RequestEvent, 'fetch' | 'url' | 'request' | 'route'>} event
  * @param {import('types').PrerenderOptions | undefined} prerendering
  * @param {import('./types.js').Fetched[]} fetched
  * @param {boolean} csr

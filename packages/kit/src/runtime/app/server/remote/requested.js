@@ -135,10 +135,6 @@ export function requested(query, limit) {
 		ignored.add(create_remote_key(__.id, payload));
 	};
 
-	// note: don't initialize these maps here -- the remote call handler initializes
-	// them when it handles a form or command call, and if we initialize them here
-	// we will enable requested(...) in contexts where it shouldn't be allowed,
-	// such as load functions or other server functions
 	if (!event.in_mutation) {
 		throw new Error(
 			'requested(...) can only be called in the context of a command/form remote function'

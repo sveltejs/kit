@@ -229,7 +229,7 @@ export async function render_response({
 						throw new Error(
 							`Cannot call \`fetch\` eagerly during server-side rendering with relative URL (${info}) — put your \`fetch\` calls inside \`onMount\` or a \`load\` function instead`
 						);
-					} else if (!warned && !(try_get_event() ?? event).in_remote) {
+					} else if (!warned && !try_get_event()?.in_remote) {
 						console.warn(
 							'Avoid calling `fetch` eagerly during server-side rendering — put your `fetch` calls inside `onMount` or a `load` function instead'
 						);

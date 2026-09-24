@@ -739,10 +739,6 @@ export interface RequestState {
 	 * Allows us to prevent `event.fetch` from making infinitely looping internal requests.
 	 */
 	readonly depth: number;
-	/** Set through `event.setHeaders`, added to the response once there is one */
-	readonly headers: Record<string, string>;
-	/** Once the response exists, `setHeaders` throws */
-	responded: boolean;
 	readonly remote: {
 		/** Resolved query/prerender data, populated by `await myQuery()` or `myQuery.set(...)` */
 		data: null | Map<RemoteInternals, Record<string, MaybePromise<any>>>;
