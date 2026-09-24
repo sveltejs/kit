@@ -1,26 +1,28 @@
 import { hash_routing } from '$app/paths/internal/client';
-import { reset_focus } from './focus.js';
 import { get_hash_element } from './utils.js';
 
 let autoscroll = true;
 
+/** Disables scroll handling for the next `restore_scroll` */
 export function disable_scroll_handling() {
 	autoscroll = false;
 }
 
 /**
+ * After a navigation that resets, scrolls to `popped_scroll` ?? the hash target ?? the top,
+ * unless `disable_scroll_handling` was called since the last navigation
  * @param {URL} url
- * @param {{ x: number; y: number } | null | undefined} scroll
  * @param {boolean} reset
- * @param {Element | null} active_element
+ * @param {{ x: number; y: number } | null | undefined} popped_scroll
+ * @returns {Element | null} the hash target, when that is what was scrolled into view
  */
-export function reset_scroll_and_focus(url, scroll, reset, active_element) {
+export function restore_scroll(url, reset, popped_scroll) {
 	/** @type {Element | null} */
 	let deep_linked = null;
 
-	if (autoscroll) {
-		if (scroll) {
-			scrollTo(scroll.x, scroll.y);
+	if (reset && autoscroll) {
+		if (popped_scroll) {
+			scrollTo(popped_scroll.x, popped_scroll.y);
 		} else if ((deep_linked = get_hash_element(url, hash_routing))) {
 			deep_linked.scrollIntoView();
 		} else {
@@ -28,12 +30,7 @@ export function reset_scroll_and_focus(url, scroll, reset, active_element) {
 		}
 	}
 
-	const changed_focus =
-		document.activeElement !== active_element && document.activeElement !== document.body;
-
-	if (reset && !changed_focus) {
-		reset_focus(url, !deep_linked);
-	}
-
 	autoscroll = true;
+
+	return deep_linked;
 }

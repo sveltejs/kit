@@ -11,14 +11,20 @@ export function is_resetting_focus() {
 	return resetting_focus;
 }
 
-/** @param {boolean} reset */
+/**
+ * Blurs the active element before the DOM update when a navigation resets focus, so that
+ * blur/focusout handlers run while the outgoing component's data is still valid (#14575)
+ * @param {boolean} reset
+ */
 export function blur_active_element(reset) {
+	const element = document.activeElement;
+
 	if (
 		reset &&
-		document.activeElement instanceof HTMLElement &&
-		document.activeElement !== document.body
+		(element instanceof HTMLElement || element instanceof SVGElement) &&
+		element !== document.body
 	) {
-		document.activeElement.blur();
+		element.blur();
 	}
 }
 
@@ -40,17 +46,16 @@ export function reset_focus(url, scroll = true) {
 		if (element) {
 			const { x, y } = scroll_state();
 
-			// `element.focus()` doesn't work on Safari and Firefox Ubuntu so we need
-			// to use this hack with `location.replace()` instead.
+			// focusing a non-focusable element is a no-op, so navigate to the fragment
+			// instead; see sveltejs/kit#16982 for the tabindex alternative
 			setTimeout(() => {
 				const history_state = history.state;
 
 				resetting_focus = true;
 				location.replace(new URL(`#${element.id}`, location.href));
 
-				// Firefox has a bug that sets the history state to `null` so we need to
-				// restore it after. See https://bugzilla.mozilla.org/show_bug.cgi?id=1199924
-				// This is also needed to restore the original hash if we're using hash routing
+				// a fragment navigation nulls `history.state` (per spec; WebKit keeps it), so
+				// restore it. This also restores the original hash if we're using hash routing
 				history.replaceState(history_state, '', url);
 
 				// If scroll management has already happened earlier, we need to restore
@@ -97,8 +102,8 @@ export function reset_focus(url, scroll = true) {
 					const a = ranges[i];
 					const b = selection.getRangeAt(i);
 
-					// we need to do a deep comparison rather than just `a !== b` because
-					// Safari behaves differently to other browsers
+					// compare field by field: a range modified in place keeps its identity,
+					// and Safari before 17 returned a new Range object on every getRangeAt()
 					if (
 						a.commonAncestorContainer !== b.commonAncestorContainer ||
 						a.startContainer !== b.startContainer ||

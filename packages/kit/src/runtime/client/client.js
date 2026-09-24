@@ -14,7 +14,7 @@ import { dev_fetch, initial_fetch, lock_fetch, subsequent_fetch, unlock_fetch } 
 import { parse_routes, parse_server_route } from './parse.js';
 import * as storage from './session-storage.js';
 import { blur_active_element, is_resetting_focus, reset_focus } from './focus.js';
-import { disable_scroll_handling, reset_scroll_and_focus } from './scroll.js';
+import { disable_scroll_handling, restore_scroll } from './scroll.js';
 import {
 	find_anchor,
 	resolve_url,
@@ -540,7 +540,7 @@ async function _start(_app, _target, data) {
 	// if we reload the page, or Cmd-Shift-T back to it,
 	// recover scroll position
 	const scroll = history_info[current_history_index]?.scroll;
-	function restore_scroll() {
+	function restore_reload_scroll() {
 		if (scroll) {
 			history.scrollRestoration = 'manual';
 			scrollTo(scroll.x, scroll.y);
@@ -548,7 +548,7 @@ async function _start(_app, _target, data) {
 	}
 
 	if (data) {
-		restore_scroll();
+		restore_reload_scroll();
 
 		await _hydrate(target, data);
 	} else {
@@ -560,7 +560,7 @@ async function _start(_app, _target, data) {
 			persist_state: history_metadata?.persistState ?? false
 		});
 
-		restore_scroll();
+		restore_reload_scroll();
 	}
 
 	_start_router();
@@ -2256,8 +2256,6 @@ async function run_on_navigate_callbacks(navigation) {
  * @param {Promise<void> | undefined} updated
  */
 async function finish_navigation(nav, nav_token, url, popped_scroll, reset, updated) {
-	const active_element = document.activeElement;
-
 	await updated;
 
 	if (navigation_token !== nav_token) {
@@ -2265,7 +2263,10 @@ async function finish_navigation(nav, nav_token, url, popped_scroll, reset, upda
 		return false;
 	}
 
-	reset_scroll_and_focus(url, reset ? popped_scroll : scroll_state(), reset, active_element);
+	const deep_linked = restore_scroll(url, reset, popped_scroll);
+	if (reset && document.activeElement === document.body) {
+		reset_focus(url, !deep_linked);
+	}
 
 	is_navigating = false;
 
