@@ -32,6 +32,35 @@ test.describe('Caching', () => {
 	});
 });
 
+test.describe('searchParams', () => {
+	test('rejects reserved query parameters', async ({ page, app, request }) => {
+		await page.goto('/');
+
+		for (const key of [
+			'x-sveltekit-invalidated',
+			'x-sveltekit-trailing-slash',
+			'x-sveltekit-custom',
+			'%78-sveltekit-custom'
+		]) {
+			const url = `/load/url-query-param?${key}=0`;
+			const message = `Cannot use reserved query parameter "${decodeURIComponent(key)}"`;
+			const response = await request.get(url);
+
+			expect(response.status()).toBe(400);
+			expect(await response.text()).toBe(message);
+			expect(await app.preloadData(url)).toMatchObject({
+				type: 'error',
+				error: { message: `${message} (500 Internal Error)` }
+			});
+		}
+
+		expect(await app.preloadData('/load/url-query-param/')).toMatchObject({
+			type: 'loaded',
+			status: 200
+		});
+	});
+});
+
 test.describe('Endpoints', () => {
 	test('calls a delete handler', async ({ page }) => {
 		await page.goto('/delete-route');
@@ -1074,6 +1103,23 @@ test.describe('data-sveltekit attributes', () => {
 			page.waitForLoadState('networkidle') // wait for preloading to finish
 		]);
 		expect(requests.length).toBe(3);
+	});
+
+	test('data-sveltekit-preload-data failure does not trigger an unhandled rejection', async ({
+		page
+	}) => {
+		/** @type {Error[]} */
+		const errors = [];
+		page.on('pageerror', (error) => errors.push(error));
+
+		await page.route('**/data-sveltekit/preload-data/target/__data.json*', (route) =>
+			route.abort('failed')
+		);
+		await page.goto('/data-sveltekit/preload-data');
+		await page.locator('#one').hover();
+		await page.waitForTimeout(100);
+
+		expect(errors).toEqual([]);
 	});
 
 	test('data-sveltekit-preload-data network failure does not trigger navigation', async ({

@@ -168,6 +168,12 @@ export async function internal_respond(request, state) {
 		}
 	}
 
+	for (const key of url.searchParams.keys()) {
+		if (key.startsWith('x-sveltekit-')) {
+			return text(`Cannot use reserved query parameter "${key}"`, { status: 400 });
+		}
+	}
+
 	const { cookies, new_cookies, get_cookie_header, set_internal, set_trailing_slash } = get_cookies(
 		request,
 		url
