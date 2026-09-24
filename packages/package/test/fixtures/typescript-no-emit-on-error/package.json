@@ -1,0 +1,15 @@
+{
+	"name": "typescript-no-emit-on-error",
+	"private": true,
+	"version": "1.0.0",
+	"type": "module",
+	"peerDependencies": {
+		"svelte": "^5.0.0"
+	},
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"svelte": "./dist/index.js"
+		}
+	}
+}
