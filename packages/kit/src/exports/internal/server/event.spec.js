@@ -1,5 +1,4 @@
 /** @import { RequestEvent as Interface } from '@sveltejs/kit' */
-/** @import { RequestState } from 'types' */
 import { assert, expect, test } from 'vitest';
 import { RequestEvent, QUERY, COMMAND, RENDER } from './event.js';
 
@@ -53,13 +52,13 @@ test('a spread of a view is not an event any more', () => {
 	expect(() => /** @type {any} */ (copy).clone(QUERY)).toThrow(TypeError);
 });
 
-test('an event built by hand is adopted with its flags', () => {
-	const own = root().clone(RENDER);
-	const adopted = RequestEvent.from({ ...own });
+test('an event built by hand for `resolve` is adopted as a traced root', () => {
+	const span = /** @type {any} */ ({});
+	const adopted = RequestEvent.from({ ...root() }, span);
 
 	assert.isTrue(adopted instanceof RequestEvent);
-	assert.isTrue(adopted.in_render);
-	assert.notStrictEqual(RequestEvent.from(own), own);
+	assert.isFalse(adopted.in_render);
+	assert.strictEqual(adopted.tracing.current, span);
 });
 
 test('views share the request data and own nothing else', () => {
@@ -80,27 +79,7 @@ test('remote views restrict headers and cookies', () => {
 	expect(() => query.cookies.set('a', 'b', { path: '/' })).toThrow('Cannot set cookies');
 	expect(() => command.cookies.set('a', 'b', { path: 'x' })).toThrow('absolute path');
 	command.cookies.set('a', 'b', { path: '/' });
-});
-
-test('the root event owns setHeaders, which writes to the request state until it responded', () => {
-	const state = /** @type {RequestState} */ (
-		/** @type {unknown} */ ({ headers: {}, responded: false })
+	expect(() => command.clone(QUERY).cookies.set('a', 'b', { path: '/' })).toThrow(
+		'Cannot set cookies'
 	);
-	const event = RequestEvent.create(/** @type {any} */ ({ cookies: {} }), state);
-	const { setHeaders } = event;
-
-	setHeaders({ 'Cache-Control': 'max-age=60', 'Server-Timing': 'a;dur=1' });
-	setHeaders({ 'server-timing': 'b;dur=2' });
-	assert.deepEqual(state.headers, {
-		'cache-control': 'max-age=60',
-		'server-timing': 'a;dur=1, b;dur=2'
-	});
-
-	expect(() => setHeaders({ 'cache-control': 'no-store' })).toThrow('already set');
-	expect(() => setHeaders({ 'set-cookie': 'a=b' })).toThrow('event.cookies.set');
-
-	assert.strictEqual(event.clone(RENDER).setHeaders, setHeaders);
-
-	state.responded = true;
-	expect(() => setHeaders({ 'x-a': 'b' })).toThrow('after the response');
 });

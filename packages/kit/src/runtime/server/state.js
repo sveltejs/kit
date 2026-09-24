@@ -3,8 +3,6 @@
 /** Per-request caches — never carried into a fork. */
 function transient_fields() {
 	return {
-		headers: {},
-		responded: false,
 		remote: {
 			data: null,
 			explicit: null,
