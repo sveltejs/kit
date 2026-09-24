@@ -32,6 +32,35 @@ test.describe('Caching', () => {
 	});
 });
 
+test.describe('searchParams', () => {
+	test('rejects reserved query parameters', async ({ page, app, request }) => {
+		await page.goto('/');
+
+		for (const key of [
+			'x-sveltekit-invalidated',
+			'x-sveltekit-trailing-slash',
+			'x-sveltekit-custom',
+			'%78-sveltekit-custom'
+		]) {
+			const url = `/load/url-query-param?${key}=0`;
+			const message = `Cannot use reserved query parameter "${decodeURIComponent(key)}"`;
+			const response = await request.get(url);
+
+			expect(response.status()).toBe(400);
+			expect(await response.text()).toBe(message);
+			expect(await app.preloadData(url)).toMatchObject({
+				type: 'error',
+				error: { message: `${message} (500 Internal Error)` }
+			});
+		}
+
+		expect(await app.preloadData('/load/url-query-param/')).toMatchObject({
+			type: 'loaded',
+			status: 200
+		});
+	});
+});
+
 test.describe('Endpoints', () => {
 	test('calls a delete handler', async ({ page }) => {
 		await page.goto('/delete-route');
@@ -1364,9 +1393,8 @@ test.describe('env', () => {
 		expect(
 			await page.evaluate(
 				() =>
-					/** @type {Window & typeof globalThis & { PUBLIC_DYNAMIC: string }} */ (
-						window
-					).PUBLIC_DYNAMIC
+					/** @type {Window & typeof globalThis & { PUBLIC_DYNAMIC: string }} */ (window)
+						.PUBLIC_DYNAMIC
 			)
 		).toBe('accessible anywhere/evaluated at run time');
 	});

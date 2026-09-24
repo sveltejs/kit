@@ -57,7 +57,7 @@ function relative_pathname(from, to) {
  * @returns {'br' | 'gz' | undefined}
  */
 function negotiate(header, asset) {
-	if (!header) return;
+	if (!header || !(asset.br || asset.gz)) return;
 
 	/** @type {Map<string, number>} */
 	const weights = new Map();
@@ -174,14 +174,13 @@ export function serve_static(files) {
 		const asset = files.get(pathname);
 		if (!asset) return next();
 
-		if ('location' in asset) {
-			res.writeHead(308, { location: asset.location + search }).end();
+		if (req.method !== 'GET' && req.method !== 'HEAD') {
+			res.writeHead(405, { allow: 'GET, HEAD' }).end();
 			return;
 		}
 
-		if (req.method !== 'GET' && req.method !== 'HEAD') {
-			res.writeHead(405, { allow: 'GET, HEAD' });
-			res.end();
+		if ('location' in asset) {
+			res.writeHead(308, { location: asset.location + search }).end();
 			return;
 		}
 
