@@ -3626,13 +3626,16 @@ async function _hydrate(
  * @returns {Promise<import('types').ServerNodesResponse | import('types').ServerRedirectNode>}
  */
 async function load_data(url, invalid) {
+	for (const key of url.searchParams.keys()) {
+		if (key.startsWith('x-sveltekit-')) {
+			throw new Error(`Cannot use reserved query parameter "${key}"`);
+		}
+	}
+
 	const data_url = new URL(url);
 	data_url.pathname = add_data_suffix(url.pathname);
 	if (url.pathname.endsWith('/')) {
 		data_url.searchParams.append(TRAILING_SLASH_PARAM, '1');
-	}
-	if (DEV && url.searchParams.has(INVALIDATED_PARAM)) {
-		throw new Error(`Cannot used reserved query parameter "${INVALIDATED_PARAM}"`);
 	}
 	data_url.searchParams.append(INVALIDATED_PARAM, invalid.map((i) => (i ? '1' : '0')).join(''));
 

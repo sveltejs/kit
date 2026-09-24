@@ -48,7 +48,7 @@ catalog:
   '@changesets/cli': ^3.0.0
   # pin the version of changelog-github because we're using the experimental
   # template feature which can change in a patch version
-  '@changesets/changelog-github': 1.0.0-next.9
+  '@changesets/changelog-github': 1.0.1
   '@fontsource/libre-barcode-128-text': ^5.3.0
   '@opentelemetry/api': ^1.9.1
   '@opentelemetry/sdk-node': ^0.221.0
@@ -65,10 +65,9 @@ catalog:
   eslint: ^10.8.1
   prettier: ^3.9.6
   prettier-plugin-svelte: ^4.1.1
-  rolldown: ^1.2.3
   semver: ^7.5.4
   sirv-cli: ^3.0.1
-  svelte: ^5.57.0
+  svelte: ^5.57.1
   svelte-check: ^4.7.5
   svelte-preprocess: ^6.0.5
   # This version of TypeScript is for apps using it just for type checking.
@@ -85,8 +84,6 @@ catalog:
   vitest: ^5.0.1
   jsdom: ^30.0.0
 catalogs:
-  typescript-native:
-    typescript: ^7.0.2
   # these show up in the ci.yml like `vite: 'beta'`, etc.
   vite-baseline:
     vite: ^8.0.12

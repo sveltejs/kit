@@ -29,7 +29,6 @@
 		"precommit": "pnpm format && pnpm lint",
 		"changeset:version": "changeset version && pnpm -r generate:version && git add --all",
 		"changeset:release": "changeset publish",
-		"build": "pnpm --filter '@sveltejs/*' -r build",
 		"sync-all": "node scripts/sync-all.js"
 	},
 	"devDependencies": {
@@ -39,10 +38,10 @@
 		"@sveltejs/eslint-config": "catalog:",
 		"@types/node": "catalog:",
 		"eslint": "catalog:",
-		"oxfmt": "^0.62.0",
+		"oxfmt": "^0.70.0",
 		"vitest": "catalog:"
 	},
-	"packageManager": "pnpm@12.2.1+sha512.f55ca68aacb9eb5ab69c66f828a98af89a32286703aef1f8da131ca7eab4d677f34bfa85e186467a919c0799df8b6f4aa240f7dc2919b33b3273190104162616",
+	"packageManager": "pnpm@12.5.0+sha512.9cdbaa34ffacae1768635ac0d23e94db6201c7d59bf3da236b23d67c8f6b794d1dab323bcd5bcc51b55c8cafbf6f19a24e4aa61d6ab7772aa3b5cc85e325dc4d",
 	"engines": {
 		"pnpm": ">=11.0.0"
 	}
