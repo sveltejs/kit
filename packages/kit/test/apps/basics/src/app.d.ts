@@ -20,6 +20,7 @@ declare global {
 
 	interface Window {
 		nav_marker: boolean;
+		held_navigations: Array<() => void>;
 		shallow_navigation_log: Array<{
 			hook: string;
 			params?: Record<string, unknown> | null;
