@@ -24,6 +24,29 @@ If the number of route segments is unknown, you can use rest syntax — for exam
 
 > [!NOTE] `src/routes/a/[...rest]/z/+page.svelte` will match `/a/z` (i.e. there's no parameter at all) as well as `/a/b/z` and `/a/b/c/z` and so on. Make sure you check that the value of the rest parameter is valid, for example using a [matcher](#Matching).
 
+Parameter values are decoded before they reach your code, so they can contain any character. A request for `/files/..%2F..%2F.env` matches `src/routes/files/[...path]` with `params.path` set to `'../../.env'`. This applies to every parameter, not just rest parameters. Treat parameters as untrusted input, and if you use one to build a filesystem path, check that the result stays inside the directory you expect:
+
+```js
+/// file: src/routes/files/[...path]/+server.js
+import fs from 'node:fs';
+import path from 'node:path';
+import { error } from '@sveltejs/kit';
+
+const root = path.resolve('files');
+
+/** @type {import('./$types').RequestHandler} */
+export function GET({ params }) {
+	const file = path.resolve(root, params.path);
+
+	// `root + path.sep`, not just `root`, so that `files-private/...` doesn't pass
+	if (!file.startsWith(root + path.sep) || !fs.existsSync(file)) {
+		error(404, 'Not Found');
+	}
+
+	return new Response(fs.readFileSync(file));
+}
+```
+
 ### 404 pages
 
 Rest parameters also allow you to render custom 404s. Given these routes...
