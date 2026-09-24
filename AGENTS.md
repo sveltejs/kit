@@ -29,7 +29,7 @@ pnpm run check
 pnpm -F @sveltejs/kit test:unit
 
 # Run a single unit test file
-pnpm -F @sveltejs/kit test:unit:dev path/to/test.spec.js
+pnpm -F @sveltejs/kit test:unit path/to/test.spec.js
 
 # Integration tests (10-30 minutes, set 60+ min timeout)
 pnpm test:kit
