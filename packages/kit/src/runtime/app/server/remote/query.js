@@ -387,8 +387,8 @@ export function refresh(event, state, internals, payload, fn) {
 	}
 
 	if (!event.isRemoteRequest && event.in_mutation) {
-		// ...or this is a no-JS (native) form submission, where the page re-renders
-		// anyway so there's no live client cache to apply a single-flight update to.
+		// ...or the mutation runs outside a remote request (a no-JS form submission, or a
+		// command called from an action or endpoint), so there is no client cache to update.
 		return;
 	}
 

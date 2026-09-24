@@ -19,6 +19,7 @@ import { find_route } from '../../utils/routing.js';
 import { redirect_json_response, render_data } from './data/index.js';
 import { add_cookies_to_headers, get_cookies } from './cookie.js';
 import { create_fetch } from './fetch.js';
+import { validateHeaders } from './validate-headers.js';
 import { PageNodes } from '../../utils/page_nodes.js';
 import { validate_server_exports } from '../../utils/exports.js';
 import { action_json_redirect, is_action_json_request } from './page/actions.js';
@@ -174,13 +175,17 @@ export async function internal_respond(request, state) {
 		}
 	}
 
+	/** @type {Record<string, string>} */
+	const headers = {};
+	let responded = false;
+
 	const { cookies, new_cookies, get_cookie_header, set_internal, set_trailing_slash } = get_cookies(
 		request,
 		url
 	);
 
-	const event = RequestEvent.create(
-		{
+	const event = new RequestEvent(
+		/** @type {import('@sveltejs/kit').RequestEvent} */ ({
 			cookies,
 			getClientAddress:
 				state.getClientAddress ||
@@ -199,12 +204,44 @@ export async function internal_respond(request, state) {
 				: state.platform,
 			request,
 			route: { id: null },
+			setHeaders: (new_headers) => {
+				if (responded) {
+					throw new Error('Cannot use `setHeaders(...)` after the response has been generated');
+				}
+
+				if (DEV) {
+					validateHeaders(new_headers);
+				}
+
+				for (const [key, value] of Object.entries(new_headers)) {
+					const lower = key.toLowerCase();
+
+					if (lower === 'set-cookie') {
+						throw new Error(
+							'Use `event.cookies.set(name, value, options)` instead of `event.setHeaders` to set cookies'
+						);
+					} else if (Object.hasOwn(headers, lower)) {
+						// appendHeaders-style for Server-Timing https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Server-Timing
+						if (lower === 'server-timing') {
+							headers[lower] += ', ' + value;
+						} else {
+							throw new Error(`"${key}" header is already set`);
+						}
+					} else {
+						headers[lower] = value;
+
+						if (state.prerendering && lower === 'cache-control') {
+							state.prerendering.cache = value;
+						}
+					}
+				}
+			},
 			url,
 			isDataRequest: is_data_request,
 			isSubRequest: state.depth > 0,
 			isRemoteRequest: !!remote_id
-		},
-		state
+		}),
+		0
 	);
 
 	event.fetch = create_fetch({
@@ -460,8 +497,7 @@ export async function internal_respond(request, state) {
 									'http.route': event.route.id || 'unknown'
 								},
 								fn: (resolve_span) => {
-									const traced_event = RequestEvent.from(event);
-									traced_event.tracing = { ...event.tracing, current: resolve_span };
+									const traced_event = RequestEvent.from(event, resolve_span);
 
 									// counter-intuitively, we need to clear the event, so that it's not
 									// e.g. accessible when loading modules needed to handle the request
@@ -469,8 +505,8 @@ export async function internal_respond(request, state) {
 										resolve(traced_event, page_nodes, opts).then((response) => {
 											// add headers/cookies here, rather than inside `resolve`, so that we
 											// can do it once for all responses instead of once per `return`
-											for (const key in state.headers) {
-												response.headers.set(key, state.headers[key]);
+											for (const [key, value] of Object.entries(headers)) {
+												response.headers.set(key, value);
 											}
 
 											add_cookies_to_headers(response.headers, new_cookies.values());
@@ -750,7 +786,7 @@ export async function internal_respond(request, state) {
 			// HttpError from endpoint can end up here - TODO should it be handled there instead?
 			return await handle_fatal_error(event, state, e);
 		} finally {
-			state.responded = true;
+			responded = true;
 			event.cookies.set = () => {
 				throw new Error('Cannot use `cookies.set(...)` after the response has been generated');
 			};

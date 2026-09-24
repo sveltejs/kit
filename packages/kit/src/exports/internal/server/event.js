@@ -1,10 +1,9 @@
 /** @import { Cookies, RequestEvent as Interface } from '@sveltejs/kit' */
 /** @import { Span } from '@opentelemetry/api' */
-/** @import { RequestState, RequestStore } from 'types' */
+/** @import { RequestStore } from 'types' */
 /** @import { AsyncLocalStorage } from 'node:async_hooks' */
 import { DEV } from 'esm-env';
 import { IN_WEBCONTAINER } from '../../../constants.js';
-import { validateHeaders } from './validate-headers.js';
 
 /** The kinds of code an event gets handed to, and the groups the runtime asks about */
 export const QUERY = 1;
@@ -12,6 +11,7 @@ export const PRERENDER = 2;
 export const FORM = 4;
 export const COMMAND = 8;
 export const RENDER = 16;
+const REMOTE = QUERY | PRERENDER | FORM | COMMAND;
 
 /** The kinds on the stack, kept under a symbol so it is not part of the public shape */
 export const CONTEXT = Symbol('sveltekit.context');
@@ -27,15 +27,15 @@ function forbid_set_headers() {
  */
 class RemoteCookies {
 	#cookies;
-	#read_only;
+	#flags;
 
 	/**
 	 * @param {Cookies} cookies
-	 * @param {boolean} read_only
+	 * @param {number} flags the kinds on the stack
 	 */
-	constructor(cookies, read_only) {
+	constructor(cookies, flags) {
 		this.#cookies = cookies;
-		this.#read_only = read_only;
+		this.#flags = flags;
 	}
 
 	/**
@@ -43,7 +43,7 @@ class RemoteCookies {
 	 * @param {import('cookie').SerializeOptions} opts
 	 */
 	#check(verb, opts) {
-		if (this.#read_only) {
+		if (this.#flags & (QUERY | PRERENDER)) {
 			throw new Error(`Cannot ${verb} cookies in \`query\` or \`prerender\` functions`);
 		}
 		if (opts.path && !opts.path.startsWith('/')) {
@@ -85,46 +85,6 @@ class RemoteCookies {
 }
 
 /**
- * @param {RequestState} state
- * @param {Record<string, string>} new_headers
- */
-function set_headers(state, new_headers) {
-	if (state.responded) {
-		throw new Error('Cannot use `setHeaders(...)` after the response has been generated');
-	}
-
-	if (DEV) {
-		validateHeaders(new_headers);
-	}
-
-	const { headers } = state;
-
-	for (const key of Object.keys(new_headers)) {
-		const lower = key.toLowerCase();
-		const value = new_headers[key];
-
-		if (lower === 'set-cookie') {
-			throw new Error(
-				'Use `event.cookies.set(name, value, options)` instead of `event.setHeaders` to set cookies'
-			);
-		} else if (lower in headers) {
-			// appendHeaders-style for Server-Timing https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Server-Timing
-			if (lower === 'server-timing') {
-				headers[lower] += ', ' + value;
-			} else {
-				throw new Error(`"${key}" header is already set`);
-			}
-		} else {
-			headers[lower] = value;
-
-			if (state.prerendering && lower === 'cache-control') {
-				state.prerendering.cache = value;
-			}
-		}
-	}
-}
-
-/**
  * The event as a class, so that a view for a kind of code is a clone with a fixed field list
  * rather than a copy of whatever the source enumerates
  * @implements {Interface}
@@ -156,27 +116,15 @@ export class RequestEvent {
 	}
 
 	/**
-	 * The root event of a request, which every view is cloned from. Its behaviour is created
-	 * once here and shared by reference with the views, so that destructuring keeps working
-	 * @param {Omit<Interface, 'fetch' | 'setHeaders' | 'tracing'>} fields
-	 * @param {RequestState} state
-	 * @returns {RequestEvent}
-	 */
-	static create(fields, state) {
-		const event = new RequestEvent(/** @type {Interface} */ (fields), 0);
-		event.setHeaders = (new_headers) => set_headers(state, new_headers);
-		return event;
-	}
-
-	/**
-	 * A copy of an event that may have been built by hand for `resolve`
+	 * A traced copy of the event a `handle` hook passes on, which it may have built by hand
 	 * @param {Interface} event
+	 * @param {Span} current
 	 * @returns {RequestEvent}
 	 */
-	static from(event) {
-		return event instanceof RequestEvent
-			? event.clone()
-			: new RequestEvent(event, /** @type {Partial<RequestEvent>} */ (event)[CONTEXT] ?? 0);
+	static from(event, current) {
+		const view = new RequestEvent(event, 0);
+		view.tracing = { ...event.tracing, current };
+		return view;
 	}
 
 	/** Inside a `query` function, however deep */
@@ -196,7 +144,7 @@ export class RequestEvent {
 
 	/** Inside any remote function */
 	get in_remote() {
-		return (this[CONTEXT] & (QUERY | PRERENDER | FORM | COMMAND)) !== 0;
+		return (this[CONTEXT] & REMOTE) !== 0;
 	}
 
 	/** While the page renders */
@@ -217,8 +165,8 @@ export class RequestEvent {
 				? /** @type {RequestEvent} */ (new QueryEvent(this, flags))
 				: new RequestEvent(this, flags);
 
-		if (kind & (QUERY | PRERENDER | FORM | COMMAND)) {
-			view.cookies = new RemoteCookies(this.cookies, view.in_query || view.in_prerender);
+		if (kind & REMOTE) {
+			view.cookies = new RemoteCookies(this.cookies, flags);
 			view.setHeaders = forbid_set_headers;
 		}
 
@@ -240,6 +188,7 @@ export class RequestEvent {
  * A query may not read the page, so a query view never copies it and reads throw. It copies
  * its own field list instead of extending `RequestEvent`, which would run the parent
  * constructor and hand its stores a second shape
+ * @implements {Omit<Interface, 'url' | 'params' | 'route'>}
  */
 class QueryEvent {
 	/** @type {number} */
@@ -345,6 +294,10 @@ export function try_get_request_store() {
  * @param {() => T} fn
  */
 export function with_request_store(store, fn) {
+	if (DEV && store && !(store.event instanceof RequestEvent)) {
+		throw new Error('The request store only holds events made by `RequestEvent`, never a copy');
+	}
+
 	try {
 		sync_store = store;
 		return als ? als.run(store, fn) : fn();

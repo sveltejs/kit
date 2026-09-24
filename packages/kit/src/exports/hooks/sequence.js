@@ -101,8 +101,7 @@ export function sequence(...handlers) {
 				name: `sveltekit.handle.sequenced.${handle.name ? handle.name : i}`,
 				attributes: {},
 				fn: async (current) => {
-					const traced_event = RequestEvent.from(event);
-					traced_event.tracing = { ...event.tracing, current };
+					const traced_event = RequestEvent.from(event, current);
 
 					return await with_request_store({ event: traced_event, state }, () =>
 						handle({

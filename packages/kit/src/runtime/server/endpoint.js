@@ -93,7 +93,7 @@ export async function render_endpoint(event, state, mod) {
 }
 
 /**
- * @param {import('@sveltejs/kit/internal/server').RequestEvent} event
+ * @param {import('@sveltejs/kit').RequestEvent} event
  */
 export function is_endpoint_request(event) {
 	const { method, headers } = event.request;

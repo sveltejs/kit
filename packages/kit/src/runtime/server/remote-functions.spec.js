@@ -119,14 +119,15 @@ test('serializes explicitly ignored requested updates', async () => {
 	);
 
 	const response = await handle_remote_call(
-		RequestEvent.from(
+		new RequestEvent(
 			/** @type {any} */ ({
 				request: new Request('http://localhost/_app/remote/hash/command', {
 					method: 'POST',
 					body: JSON.stringify({ payload: '', refreshes: ['hash/query/[-1]'] })
 				}),
 				tracing: { current: { setAttributes: vi.fn() } }
-			})
+			}),
+			0
 		),
 		/** @type {any} */ ({ remote: { requested: null, ignored: null } }),
 		'hash/command'
