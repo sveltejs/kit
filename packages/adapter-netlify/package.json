@@ -34,12 +34,13 @@
 		"ambient.d.ts"
 	],
 	"scripts": {
-		"check": "tsc && tsc --project files/tsconfig.json",
+		"check": "pnpm tsc-native && pnpm tsc-native --project files/tsconfig.json",
 		"lint": "oxfmt --check .",
 		"format": "oxfmt --write .",
 		"test:unit": "vitest run",
 		"test:build": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:build",
-		"test": "pnpm test:unit && pnpm test:build"
+		"test": "pnpm test:unit && pnpm test:build",
+		"tsc-native": "node node_modules/@typescript/native/bin/tsc"
 	},
 	"dependencies": {
 		"@netlify/types": "^2.8.0",
@@ -50,7 +51,7 @@
 		"@sveltejs/kit": "workspace:^",
 		"@types/deno": "^2.7.0",
 		"@types/node": "catalog:",
-		"typescript": "catalog:typescript-native",
+		"@typescript/native": "catalog:",
 		"vitest": "catalog:"
 	},
 	"peerDependencies": {
