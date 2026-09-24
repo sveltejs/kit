@@ -1074,6 +1074,8 @@ await submit().updates(
 );
 ```
 
+Using `.withOverride((current) => ...)` lets you optimistically update the client-side query result before the server responds.
+
 It's not enough to just request the updates from the client -- you need to accept them from the server as well:
 
 ```js
