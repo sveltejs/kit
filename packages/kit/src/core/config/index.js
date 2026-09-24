@@ -9,6 +9,7 @@ import { validate_options, kit_options, kit_experimental_options } from './optio
 import { resolve_entry } from '../../utils/filesystem.js';
 import { import_peer } from '../../utils/import.js';
 import { stackless } from '../../utils/error.js';
+import * as e from '../../messages/build-errors.js';
 
 /**
  * Splits the config passed to the `sveltekit` Vite plugin into the options that
@@ -77,7 +78,7 @@ export function load_template(cwd, config) {
 	const relative = path.relative(cwd, files.appTemplate);
 
 	if (!fs.existsSync(files.appTemplate)) {
-		throw new Error(`${relative} does not exist`);
+		e.app_template_missing({ file: relative });
 	}
 
 	const contents = fs.readFileSync(files.appTemplate, 'utf8');
@@ -85,7 +86,7 @@ export function load_template(cwd, config) {
 	const expected_tags = ['%sveltekit.head%', '%sveltekit.body%'];
 	expected_tags.forEach((tag) => {
 		if (contents.indexOf(tag) === -1) {
-			throw new Error(`${relative} is missing ${tag}`);
+			e.app_template_tag_missing({ file: relative, tag });
 		}
 	});
 
