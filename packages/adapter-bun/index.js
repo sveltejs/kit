@@ -216,7 +216,7 @@ export default function (opts = {}) {
 }
 
 /**
- * The static route table, as data the bundled `src/assets.js` turns into a lookup at startup.
+ * The static asset table, as data the bundled `src/assets.js` turns into a lookup at startup.
  * @param {object} options
  * @param {Builder} options.builder
  * @param {string} options.out
@@ -229,7 +229,11 @@ async function create_assets({ builder, out, embed, precompress }) {
 	const dest = embed ? builder.getBuildDirectory('adapter-bun') : out;
 	if (embed) fs.rmSync(dest, { recursive: true, force: true });
 
-	const client_files = builder.writeClient(`${dest}/client`).filter((file) => !is_dotfile(file));
+	// sorted so an exact file precedes the aliases derived from it, as in adapter-node's table
+	const client_files = builder
+		.writeClient(`${dest}/client`)
+		.filter((file) => !is_dotfile(file))
+		.sort();
 	const prerendered_files = builder.writePrerendered(`${dest}/prerendered`);
 
 	if (precompress) {
@@ -243,15 +247,15 @@ async function create_assets({ builder, out, embed, precompress }) {
 	const embedded = new Map();
 
 	/**
-	 * @param {string} helper
+	 * @param {string} kind
 	 * @param {string} url
 	 * @param {string} dir
 	 * @param {string} [filename]
 	 */
-	const entry = async (helper, url, dir, filename = url) => {
+	const entry = async (kind, url, dir, filename = url) => {
 		const file = `${dest}/${dir}/${filename}`;
 		if (embed) embedded.set(file, `asset_${embedded.size}`);
-		return `[${JSON.stringify(helper)}, ${JSON.stringify(url)}, ${embedded.get(file) ?? JSON.stringify(filename)}, ${JSON.stringify(await asset_meta(file, precompress))}]`;
+		return `[${JSON.stringify(kind)}, ${JSON.stringify(url)}, ${embedded.get(file) ?? JSON.stringify(filename)}, ${JSON.stringify(await asset_meta(file, precompress))}]`;
 	};
 
 	const pages = [...builder.prerendered.pages];

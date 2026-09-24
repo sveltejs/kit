@@ -12,7 +12,10 @@ afterEach(() => {
 test('client assets use the configured base and match any percent-encoding of their path', async () => {
 	const { get, file } = await load({
 		base: '/base',
-		assets: [['client_asset', 'folder/encoded name#1&.txt', 'folder/encoded name#1&.txt', meta]]
+		assets: [
+			['client_asset', 'folder/encoded name#1&.txt', 'folder/encoded name#1&.txt', meta],
+			['client_asset', '100%.txt', '100%.txt', meta]
+		]
 	});
 
 	expect(file).toHaveBeenCalledWith(`${dir}/client/folder/encoded name#1&.txt`);
@@ -23,7 +26,10 @@ test('client assets use the configured base and match any percent-encoding of th
 		expect(get(path)?.headers.get('content-type')).toBe('text/plain;charset=utf-8');
 	}
 	expect(get('/folder/encoded%20name%231&.txt')).toBeUndefined();
+	// an undecodable path is looked up as sent, which is how a browser requests `100%.txt`
 	expect(get('/base/%E0%A4%A')).toBeUndefined();
+	expect(get('/base/100%.txt')?.status).toBe(200);
+	expect(get('/base/100%25.txt')?.status).toBe(200);
 	// an encoded slash is not a path separator
 	expect(get('/base/folder%2Fencoded%20name%231&.txt')).toBeUndefined();
 
@@ -134,32 +140,24 @@ test('Bun serves immutable files without JavaScript unless they are precompresse
 	expect(lookup('/data.json')?.headers.has('cache-control')).toBe(false);
 });
 
-test('assets revalidate against the build-time hash', async () => {
+const epoch = 'Thu, 01 Jan 1970 00:00:00 GMT';
+
+test.each([
+	[{}, 200],
+	[{ 'if-none-match': '"abc"' }, 304],
+	[{ 'if-none-match': 'W/"abc", "other"' }, 304],
+	[{ 'if-none-match': '*' }, 304],
+	[{ 'if-none-match': '"old"' }, 200],
+	[{ 'if-modified-since': epoch }, 304],
+	// If-None-Match takes precedence
+	[{ 'if-modified-since': epoch, 'if-none-match': '"old"' }, 200]
+])('assets revalidate against the build-time validators: %o is %i', async (headers, status) => {
 	const { get } = await load({ assets: [['client_asset', 'data.json', 'data.json', meta]] });
-	const conditional = (value: string) => get('/data.json', { headers: { 'if-none-match': value } });
 
-	const fresh = get('/data.json');
-	expect(fresh?.status).toBe(200);
-	expect(fresh?.headers.get('etag')).toBe('"abc"');
-
-	const revalidated = conditional('"abc"');
-	expect(revalidated?.status).toBe(304);
-	expect(revalidated?.headers.get('etag')).toBe('"abc"');
-
-	expect(conditional('W/"abc", "other"')?.status).toBe(304);
-	expect(conditional('"old"')?.status).toBe(200);
-	expect(conditional('*')?.status).toBe(304);
-});
-
-test('assets revalidate by date when the client has no ETag', async () => {
-	const { get } = await load({ assets: [['client_asset', 'data.json', 'data.json', meta]] });
-	const epoch = 'Thu, 01 Jan 1970 00:00:00 GMT';
-
-	expect(get('/data.json')?.headers.get('last-modified')).toBe(epoch);
-	expect(get('/data.json', { headers: { 'if-modified-since': epoch } })?.status).toBe(304);
-	expect(
-		get('/data.json', { headers: { 'if-modified-since': epoch, 'if-none-match': '"old"' } })?.status
-	).toBe(200);
+	const response = get('/data.json', { headers });
+	expect(response?.status).toBe(status);
+	expect(response?.headers.get('etag')).toBe('"abc"');
+	expect(response?.headers.get('last-modified')).toBe(epoch);
 });
 
 test('precompressed variants are negotiated with their own validators', async () => {
@@ -181,6 +179,9 @@ test('precompressed variants are negotiated with their own validators', async ()
 	expect(
 		get('/app.js', { headers: { 'accept-encoding': '*' } })?.headers.get('content-encoding')
 	).toBe('br');
+	expect(
+		get('/app.js', { headers: { 'accept-encoding': '*, br;q=0' } })?.headers.get('content-encoding')
+	).toBe('gzip');
 
 	const identity = get('/app.js');
 	expect(identity?.headers.has('content-encoding')).toBe(false);
@@ -227,16 +228,25 @@ test('server assets resolve from the client output in regular builds', async () 
 test('prerendered assets use the base path and preserve their content type', async () => {
 	const { get, file } = await load({
 		base: '/base',
-		assets: [['prerendered_asset', 'icon.ico', 'icon.ico', meta]]
+		assets: [
+			['prerendered_asset', 'icon.ico', 'icon.ico', meta],
+			['prerendered_asset', 'api/c%23.json', 'api/c%23.json', meta]
+		]
 	});
 
 	expect(file).toHaveBeenCalledWith(`${dir}/prerendered/icon.ico`);
 	expect(get('/base/icon.ico')?.headers.get('content-type')).toBe('image/x-icon');
+	expect(get('/base/api/c%23.json')?.status).toBe(200);
+	expect(get('/base/api/c%2523.json')).toBeUndefined();
 });
 
 test.each([
 	['/base/page/', '/base/page', '/base/page/?from=test'],
-	['/base/page', '/base/page/', '/base/page?from=test']
+	['/base/page', '/base/page/', '/base/page?from=test'],
+	['/base/café/', '/base/caf%C3%A9', '/base/caf%C3%A9/?from=test'],
+	// kit keeps reserved characters percent-encoded in prerendered paths
+	['/base/c%23/', '/base/c%23', '/base/c%23/?from=test'],
+	['/base/a%2Fb', '/base/a%2Fb/', '/base/a%2Fb?from=test']
 ])(
 	'prerendered page %s redirects its alternate form %s to the canonical URL',
 	async (canonical, alternate, location) => {
@@ -252,16 +262,10 @@ test.each([
 	}
 );
 
-test('redirects to non-ASCII canonical URLs use a percent-encoded location', async () => {
-	const { get } = await load({ assets: [['prerendered_page', '/café/', 'cafe.html', meta]] });
-
-	expect(get('/caf%C3%A9')?.headers.get('location')).toBe('/caf%C3%A9/');
-});
-
 test('prerendered redirects retain their status and location', async () => {
-	const { get } = await load({ redirects: [['/old path', 307, '/new']] });
+	const { get } = await load({ redirects: [['/old path%23', 307, '/new']] });
 
-	const response = get('/old%20path');
+	const response = get('/old%20path%23');
 	expect(response?.status).toBe(307);
 	expect(response?.headers.get('location')).toBe('/new');
 });

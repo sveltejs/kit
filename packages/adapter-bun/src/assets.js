@@ -28,6 +28,19 @@ function resolve_file(subdir, filename) {
 }
 
 /**
+ * An encoded slash is not a path separator, and an undecodable pathname is looked up as sent
+ * @param {string} pathname
+ */
+function decode(pathname) {
+	if (!pathname.includes('%')) return pathname;
+	try {
+		return decodeURIComponent(pathname.replace(/%2f/gi, '%252F'));
+	} catch {
+		return pathname;
+	}
+}
+
+/**
  * If-None-Match takes precedence over If-Modified-Since (RFC 9110 §13.1.3);
  * dates compare at whole-second precision because HTTP dates have none finer.
  * @param {Request} request
@@ -38,33 +51,43 @@ function resolve_file(subdir, filename) {
 function is_fresh(request, etag, mtime) {
 	const header = request.headers.get('if-none-match');
 	if (header !== null) {
-		return header
-			.split(',')
-			.some((value) => ['*', etag].includes(value.trim().replace(/^W\//, '')));
+		if (header === etag) return true;
+		for (const value of header.split(',')) {
+			const tag = value.trim();
+			if (tag === etag || tag === '*' || tag === `W/${etag}`) return true;
+		}
+		return false;
 	}
 
-	const since = Date.parse(request.headers.get('if-modified-since') ?? '');
-	return Number.isFinite(since) && Math.trunc(mtime / 1000) <= Math.trunc(since / 1000);
+	const since = request.headers.get('if-modified-since');
+	if (since === null) return false;
+	const time = Date.parse(since);
+	return Number.isFinite(time) && Math.trunc(mtime / 1000) <= Math.trunc(time / 1000);
 }
 
 /**
+ * Picks the precompressed variant the client accepts, preferring brotli. An explicit
+ * `q=0` refuses a coding even when `*` accepts the rest.
+ * @template T
  * @param {string | null} accept
- * @param {AssetMeta} meta
- * @returns {'br' | 'gz' | null}
+ * @param {T | undefined} br
+ * @param {T | undefined} gz
+ * @returns {T | undefined}
  */
-function negotiate(accept, meta) {
-	if (accept === null || (!meta.br && !meta.gz)) return null;
+function negotiate(accept, br, gz) {
+	if (accept === null) return;
 
-	const accepted = new Set();
+	/** @type {Map<string, boolean>} */
+	const accepted = new Map();
 	for (const part of accept.split(',')) {
 		const [name = '', ...params] = part.trim().toLowerCase().split(';');
-		if (params.some((param) => /^q=0(\.0*)?$/.test(param.trim()))) continue;
-		accepted.add(name.trim());
+		accepted.set(name.trim(), !params.some((param) => /^q=0(\.0*)?$/.test(param.trim())));
 	}
 
-	if (meta.br && (accepted.has('br') || accepted.has('*'))) return 'br';
-	if (meta.gz && (accepted.has('gzip') || accepted.has('*'))) return 'gz';
-	return null;
+	/** @param {string} coding */
+	const ok = (coding) => accepted.get(coding) ?? accepted.get('*') ?? false;
+	if (br && ok('br')) return br;
+	if (gz && ok('gzip')) return gz;
 }
 
 /**
@@ -76,44 +99,44 @@ function negotiate(accept, meta) {
  * @returns {{ serve: Serve, native?: Response }}
  */
 function file_entry(file, meta, immutable = false) {
-	/** @type {Record<string, string>} */
-	const base_headers = { 'content-type': Bun.file(file).type };
-	if (immutable) base_headers['cache-control'] = 'public,max-age=31536000,immutable';
+	const source = Bun.file(file);
+	const compressed = Boolean(meta.br || meta.gz);
 
-	/** @param {'br' | 'gz' | null} encoding */
+	/** @type {Record<string, string>} */
+	const base_headers = {
+		'content-type': source.type,
+		'last-modified': new Date(meta.mtime).toUTCString()
+	};
+	if (immutable) base_headers['cache-control'] = 'public,max-age=31536000,immutable';
+	if (compressed) base_headers['vary'] = 'accept-encoding';
+
+	/** @param {'br' | 'gz'} [encoding] */
 	const variant = (encoding) => {
-		const etag = encoding === null ? `"${meta.hash}"` : `"${meta.hash}-${encoding}"`;
-		/** @type {Record<string, string>} */
-		const headers = { ...base_headers, etag, 'last-modified': new Date(meta.mtime).toUTCString() };
-		if (meta.br || meta.gz) headers['vary'] = 'accept-encoding';
+		const etag = encoding ? `"${meta.hash}-${encoding}"` : `"${meta.hash}"`;
+		const headers = { ...base_headers, etag };
 
 		return {
 			etag,
 			not_modified: { status: 304, headers },
-			body: Bun.file(encoding === null ? file : `${file}.${encoding}`),
+			body: encoding ? Bun.file(`${file}.${encoding}`) : source,
 			ok: {
-				headers:
-					encoding === null
-						? headers
-						: { ...headers, 'content-encoding': CONTENT_ENCODING[encoding] }
+				headers: encoding ? { ...headers, 'content-encoding': CONTENT_ENCODING[encoding] } : headers
 			}
 		};
 	};
 
-	const variants = {
-		identity: variant(null),
-		br: meta.br ? variant('br') : undefined,
-		gz: meta.gz ? variant('gz') : undefined
-	};
+	const identity = variant();
+	const br = meta.br ? variant('br') : undefined;
+	const gz = meta.gz ? variant('gz') : undefined;
 
 	/** @type {Serve} */
 	const serve = (request) => {
 		// ranges apply to the identity representation
-		const encoding =
-			request.headers.get('range') === null
-				? negotiate(request.headers.get('accept-encoding'), meta)
-				: null;
-		const { etag, not_modified, body, ok } = variants[encoding ?? 'identity'] ?? variants.identity;
+		const { etag, not_modified, body, ok } =
+			(compressed &&
+				request.headers.get('range') === null &&
+				negotiate(request.headers.get('accept-encoding'), br, gz)) ||
+			identity;
 
 		return is_fresh(request, etag, meta.mtime)
 			? new Response(null, not_modified)
@@ -123,10 +146,7 @@ function file_entry(file, meta, immutable = false) {
 	// Given the validators as headers, a Bun file route answers conditional requests, HEAD and
 	// Range without calling into JavaScript. It opens the file before checking them though, which
 	// makes its 304 slower than `serve`'s, so only files that are never revalidated use it
-	const native =
-		immutable && !meta.br && !meta.gz
-			? new Response(variants.identity.body, variants.identity.ok)
-			: undefined;
+	const native = immutable && !compressed ? new Response(identity.body, identity.ok) : undefined;
 
 	return { serve, native };
 }
@@ -141,7 +161,8 @@ export const routes = {};
 const UNRESERVED_PATH = /^[\w\-./~]+$/;
 
 /**
- * The first entry for a pathname wins, so exact files beat aliases like sirv's lookup order.
+ * The first entry for a pathname wins: files arrive sorted, so an exact file precedes the
+ * aliases derived from it, in sirv's lookup order.
  * @param {string} pathname
  * @param {{ serve: Serve, native?: Response }} entry
  */
@@ -151,28 +172,32 @@ function add(pathname, { serve, native }) {
 	if (UNRESERVED_PATH.test(pathname)) routes[pathname] = { GET: native ?? serve };
 }
 
+/**
+ * Redirects the non-canonical trailing-slash form of a prerendered page to the canonical one,
+ * spelled the way the client sent it.
+ * @param {Request} request
+ */
+function redirect_to_canonical(request) {
+	const { pathname, search } = new URL(request.url);
+	const location = pathname.endsWith('/') ? pathname.slice(0, -1) : `${pathname}/`;
+	return new Response(null, { status: 308, headers: { location: location + search } });
+}
+
 for (const [kind, url, filename, meta] of assets) {
 	if (kind === 'prerendered_page') {
-		// url already contains base
-		add(url, file_entry(resolve_file('prerendered', filename), meta));
+		// url already contains base, with reserved characters kept percent-encoded
+		const pathname = decode(url);
+		add(pathname, file_entry(resolve_file('prerendered', filename), meta));
 
-		const inverted = url.endsWith('/') ? url.slice(0, -1) : `${url}/`;
-		if (inverted) {
-			const location = encodeURI(url);
-			add(inverted, {
-				serve: (request) => {
-					const { search } = new URL(request.url);
-					return new Response(null, { status: 308, headers: { location: location + search } });
-				}
-			});
-		}
+		const inverted = pathname.endsWith('/') ? pathname.slice(0, -1) : `${pathname}/`;
+		if (inverted) add(inverted, { serve: redirect_to_canonical });
 		continue;
 	}
 
 	const pathname = path.posix.join(base, url);
 
 	if (kind === 'prerendered_asset') {
-		add(pathname, file_entry(resolve_file('prerendered', filename), meta));
+		add(decode(pathname), file_entry(resolve_file('prerendered', filename), meta));
 		continue;
 	}
 
@@ -196,7 +221,7 @@ for (const [kind, url, filename, meta] of assets) {
 for (const [url, status, location] of redirects) {
 	// url already contains base
 	const init = { status, headers: { location } };
-	add(url, { serve: () => new Response(null, init), native: new Response(null, init) });
+	add(decode(url), { serve: () => new Response(null, init), native: new Response(null, init) });
 }
 
 /**
@@ -208,18 +233,7 @@ for (const [url, status, location] of redirects) {
  */
 export function serve_static(request, url) {
 	if (request.method !== 'GET' && request.method !== 'HEAD') return;
-
-	let pathname = url.pathname;
-	if (pathname.includes('%')) {
-		try {
-			// an encoded slash is not a path separator
-			pathname = decodeURIComponent(pathname.replace(/%2f/gi, '%252F'));
-		} catch {
-			return;
-		}
-	}
-
-	return lookup.get(pathname)?.(request);
+	return lookup.get(decode(url.pathname))?.(request);
 }
 
 export const server_assets = new Map(

@@ -314,11 +314,11 @@ describe('generated routes', () => {
 		expect(builder.writePrerendered).toHaveBeenCalledWith('.svelte-kit/adapter-bun/prerendered');
 		const source = handoff_source();
 		expect(source).toContain(
-			`import asset_0 from ${JSON.stringify(`${process.cwd()}/.svelte-kit/adapter-bun/client/data.json`)} with { type: 'file' };`
+			`import asset_0 from ${JSON.stringify(`${process.cwd()}/.svelte-kit/adapter-bun/client/.well-known/asset.txt`)} with { type: 'file' };`
 		);
-		expect(source).toContain('["client_asset", "data.json", asset_0, {"hash":"abc","mtime":0}]');
+		expect(source).toContain('["client_asset", "data.json", asset_2, {"hash":"abc","mtime":0}]');
 		expect(source).toContain(
-			'["client_asset", ".well-known/asset.txt", asset_1, {"hash":"abc","mtime":0}]'
+			'["client_asset", ".well-known/asset.txt", asset_0, {"hash":"abc","mtime":0}]'
 		);
 		// a skipped dotfile takes no import, and the same relative path in the client
 		// and prerendered output stays two imports
@@ -336,7 +336,7 @@ describe('generated routes', () => {
 		expect(source).toContain(
 			'["prerendered_asset", "page/__data.json", asset_7, {"hash":"abc","mtime":0}]'
 		);
-		expect(source).toContain('["_app/read.txt", asset_2]');
+		expect(source).toContain('["_app/read.txt", asset_1]');
 	});
 
 	test('precompresses assets and marks the variants in the generated routes', async () => {
