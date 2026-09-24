@@ -131,7 +131,7 @@ export const actions = {
 		const password = data.get('password');
 
 		const user = await db.getUser(email);
-		cookies.set('sessionid', await db.createSession(user), { path: '/' });
+		cookies.set('sessionid', await db.createSession(user));
 
 		return { success: true };
 	},
@@ -198,7 +198,7 @@ export const actions = {
 			return fail(400, { email, incorrect: true });
 		}+++
 
-		cookies.set('sessionid', await db.createSession(user), { path: '/' });
+		cookies.set('sessionid', await db.createSession(user));
 
 		return { success: true };
 	},
@@ -261,7 +261,7 @@ export const actions = {
 			return fail(400, { email, incorrect: true });
 		}
 
-		cookies.set('sessionid', await db.createSession(user), { path: '/' });
+		cookies.set('sessionid', await db.createSession(user));
 
 +++		if (url.searchParams.has('redirectTo')) {
 			redirect(303, url.searchParams.get('redirectTo'));
@@ -333,7 +333,7 @@ export function load(event) {
 /** @satisfies {import('./$types').Actions} */
 export const actions = {
 	logout: async (event) => {
-		event.cookies.delete('sessionid', { path: '/' });
+		event.cookies.delete('sessionid');
 		event.locals.user = null;
 	}
 };
