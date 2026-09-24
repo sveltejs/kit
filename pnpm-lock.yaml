@@ -3653,8 +3653,8 @@ packages:
     resolution: {integrity: sha512-Ap6G0WQwcU/LHsvLwON1fAQX9Zp0A2Y6Y/cJBl9r/JbW90Zyg4/zbG6zzKa2OTALELarYHmKu0GhpM5EO+7T0g==}
     engines: {node: '>=0.10'}
 
-  esrap@2.3.10:
-    resolution: {integrity: sha512-U57Y4yS8udsPP22QKK6dhbGQl6JeQXYYWGDPPfA8YAU1jMaqZ8ogVazTqoPl3WYtRj84c2TCeNhhep8NKaNX5w==}
+  esrap@2.3.11:
+    resolution: {integrity: sha512-1kmQFiDHcf1T69K9qKtn2MasiKlaq6xNw2ZEgHD8jNyyoNEfx9eCOiJpYDmc0Yk0FKT0bzx5dyBocMDAitWpaQ==}
     peerDependencies:
       '@typescript-eslint/types': ^8.2.0
     peerDependenciesMeta:
@@ -6299,7 +6299,7 @@ snapshots:
     dependencies:
       estraverse: 5.3.0
 
-  esrap@2.3.10(@typescript-eslint/types@8.70.1):
+  esrap@2.3.11(@typescript-eslint/types@8.70.1):
     dependencies:
       '@jridgewell/sourcemap-codec': 1.6.0
     optionalDependencies:
@@ -6941,7 +6941,7 @@ snapshots:
       clsx: 2.1.1
       devalue: 5.9.4
       esm-env: 1.2.2
-      esrap: 2.3.10(@typescript-eslint/types@8.70.1)
+      esrap: 2.3.11(@typescript-eslint/types@8.70.1)
       is-reference: 3.0.3
       locate-character: 3.0.0
       magic-string: 0.30.21
