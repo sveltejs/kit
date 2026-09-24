@@ -220,8 +220,8 @@ async function load_handler({
 	mock_handoff({ server: new Server(), origin, env_prefix: envPrefix });
 	mock.module('../src/assets.js', () => ({
 		routes: {},
-		serve_static: (request: Request) =>
-			request.url.endsWith('/static.txt') ? new Response('static') : undefined,
+		serve_static: (_request: Request, url: URL) =>
+			url.pathname === '/static.txt' ? new Response('static') : undefined,
 		server_assets: new Map([['asset.txt', asset]])
 	}));
 

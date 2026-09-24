@@ -30,7 +30,7 @@ test('runs server instrumentation before accepting requests', async ({ request }
 	expect(await response.text()).toBe('true');
 });
 
-test('serves static files and implements HEAD natively', async ({ request }) => {
+test('serves static files and answers HEAD without a body', async ({ request }) => {
 	const response = await request.get('/data.json');
 	expect(response.status()).toBe(200);
 	expect(response.headers()['content-type']).toContain('application/json');
@@ -56,7 +56,7 @@ for (const [url, content_type, body] of [
 	});
 }
 
-test('uses Bun conditional requests and byte ranges for filesystem assets', async ({ request }) => {
+test('revalidates static files and serves byte ranges', async ({ request }) => {
 	const initial = await request.get('/data.json');
 	const body = await initial.text();
 
@@ -118,6 +118,15 @@ test('sets immutable caching only on generated immutable assets', async ({ reque
 
 	const immutable = await request.get(/** @type {string} */ (asset));
 	expect(immutable.headers()['cache-control']).toBe('public,max-age=31536000,immutable');
+
+	// Bun serves the file natively, checking the build-time validator itself
+	const revalidated = await request.get(/** @type {string} */ (asset), {
+		headers: { 'if-none-match': immutable.headers()['etag'] }
+	});
+	expect(revalidated.status()).toBe(304);
+	const head = await request.head(/** @type {string} */ (asset));
+	expect(head.status()).toBe(200);
+	expect(head.headers()['content-length']).toBe(immutable.headers()['content-length']);
 
 	const regular = await request.get('/data.json');
 	expect(regular.headers()['cache-control']).toBeUndefined();
