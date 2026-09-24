@@ -638,8 +638,6 @@ function add_props(base_props, props) {
 		if (typeof value === 'function') {
 			Object.defineProperty(base_props, prop, {
 				enumerable: true,
-				// `omit_while_undefined` can only hide configurable properties
-				configurable: true,
 				get: /** @type {() => unknown} */ (value)
 			});
 		} else {
@@ -650,8 +648,7 @@ function add_props(base_props, props) {
 }
 
 /**
- * Returns a view of `props` that hides `key` while its value is `undefined`,
- * so that spreading the props onto an element omits the attribute entirely
+ * Hides `key` from spreads while its value is `undefined` (it must be configurable)
  * @param {Record<string, any>} props
  * @param {string} key
  */
@@ -849,19 +846,19 @@ function create_field_method(context, path, prop) {
 
 				// Handle select inputs
 				if (type === 'select' || type === 'select multiple') {
-					const props = add_props(base_props, {
-						multiple: is_array,
-						value: () => {
+					const props = add_props(base_props, { multiple: is_array });
+
+					// omitted while undefined, which would otherwise deselect the current option
+					Object.defineProperty(props, 'value', {
+						enumerable: true,
+						configurable: true,
+						get: () => {
 							const value = read(input_value);
 							// copied, so the state array can't be edited through the props
 							return Array.isArray(value) ? [...value] : value;
 						}
 					});
 
-					// Svelte re-applies a spread `value` to a `<select>` whenever any of the
-					// spread props change (e.g. `aria-invalid` after validation), and `undefined`
-					// clears the selection. Until the field has a value, leave `value` out of
-					// the spread so the browser keeps the current selection.
 					return omit_while_undefined(props, 'value');
 				}
 
