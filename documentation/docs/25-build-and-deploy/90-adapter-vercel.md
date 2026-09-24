@@ -6,9 +6,11 @@ To deploy to Vercel, use [`adapter-vercel`](https://github.com/sveltejs/kit/tree
 
 This adapter will be installed by default when you use [`adapter-auto`](adapter-auto), but adding it to your project allows you to specify Vercel-specific options.
 
+If you'd like to try out SvelteKit on Vercel, you can start from one of the [Vercel SvelteKit templates](https://vercel.com/templates/svelte).
+
 ## Usage
 
-Install with `npm i -D @sveltejs/adapter-vercel`, then add the adapter to your `vite.config.js`:
+Run [`npx sv add sveltekit-adapter="adapter:vercel"`](/docs/cli/sveltekit-adapter), or install with `npm i -D @sveltejs/adapter-vercel` and add the adapter to your `vite.config.js`:
 
 ```js
 // @errors: 2554

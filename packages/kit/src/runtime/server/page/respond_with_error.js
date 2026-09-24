@@ -1,11 +1,15 @@
+import { text } from '@sveltejs/kit';
 import { Redirect } from '@sveltejs/kit/internal';
 import { render_response } from './render.js';
 import { load_data, load_server_data } from './load_data.js';
 import { redirect_response } from '../utils.js';
-import { handle_error_and_jsonify, static_error_page } from '../errors.js';
+import { negotiate } from '../../../utils/http.js';
+import { handle_error_and_jsonify } from '../errors.js';
 import { PageNodes } from '../../../utils/page_nodes.js';
 import { server_data_serializer } from './data_serializer.js';
 import { manifest } from '../internal.js';
+import { options } from '<sveltekit:generated>/server.js';
+import { escape_html } from '../../../utils/escape.js';
 
 /**
  * @typedef {import('./types.js').Loaded} Loaded
@@ -104,4 +108,48 @@ export async function respond_with_error({ event, state, error, resolve_opts }) 
 
 		return static_error_page(transformed.status, transformed.message);
 	}
+}
+
+/**
+ * Return as a response that renders the error.html
+ *
+ * @param {number} status
+ * @param {string} message
+ */
+export function static_error_page(status, message) {
+	let page = options.templates.error({ status, message: escape_html(message) });
+
+	if (__SVELTEKIT_DEV__) {
+		// inject Vite HMR client, for easier debugging
+		page = page.replace('</head>', '<script type="module" src="/@vite/client"></script></head>');
+	}
+
+	return text(page, {
+		headers: { 'content-type': 'text/html; charset=utf-8' },
+		status
+	});
+}
+
+/**
+ * @param {import('@sveltejs/kit').RequestEvent} event
+ * @param {import('types').RequestState} state
+ * @param {unknown} error
+ */
+export async function handle_fatal_error(event, state, error) {
+	const body = await handle_error_and_jsonify(event, state, error);
+	const status = body.status;
+
+	// sec-fetch-dest would be nicer, but non-browser clients and plain HTTP hosts don't send it
+	const type = negotiate(event.request.headers.get('accept') || 'text/html', [
+		'application/json',
+		'text/html'
+	]);
+
+	if (event.isDataRequest || type === 'application/json') {
+		return Response.json(body, {
+			status
+		});
+	}
+
+	return static_error_page(status, body.message);
 }

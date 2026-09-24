@@ -11,7 +11,7 @@ import { createReadableStream, getRequest, setResponse } from '../../../exports/
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import { relative_pathname } from '../../../utils/url.js';
 import { is_chrome_devtools_request, not_found } from '../utils.js';
-import { stackless } from '../../../utils/error.js';
+import { set_error_stack, stackless } from '../../../utils/error.js';
 
 /**
  * @param {PreviewServer} vite
@@ -38,23 +38,28 @@ export async function preview(vite, svelte_config) {
 	}
 
 	/** @type {ServerModule} */
-	const { init, respond } = await import(pathToFileURL(join(dir, 'index.js')).href);
+	const { configure } = await import(pathToFileURL(join(dir, 'index.js')).href);
 
 	/** @type {{ manifest: import('types').SSRManifest }} */
 	const { manifest } = await import(pathToFileURL(join(dir, 'manifest.js')).href);
 
+	/** @type {import('types').ServerInstance} */
+	let server;
+
 	try {
-		await init({
+		server = await configure({
 			manifest,
 			env: loadEnv(vite.config.mode, svelte_config.env.dir, ''),
 			read: (file) => createReadableStream(`${dir}/${file}`),
 			assets
 		});
+
+		await server.init();
 	} catch (error) {
 		// Vite erases the error message when starting the preview server so we store
 		// it in the stack instead. This ensures errors thrown using `stackless`
 		// are still readable
-		if (error instanceof Error) error.stack = error.message;
+		if (error instanceof Error) set_error_stack(error, error.message);
 		throw error;
 	}
 
@@ -208,7 +213,7 @@ export async function preview(vite, svelte_config) {
 
 			(svelte_config.adapter?.vite?.setResponse ?? setResponse)(
 				res,
-				await respond(request, {
+				await server.respond(request, {
 					getClientAddress: () => {
 						const { remoteAddress } = req.socket;
 						if (remoteAddress) return remoteAddress;

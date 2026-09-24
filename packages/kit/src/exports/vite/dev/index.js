@@ -10,7 +10,7 @@ import { styleText } from 'node:util';
 import sirv from 'sirv';
 import { generate_manifest, loud_ssr_load_module } from './generate_manifest.js';
 import { createReadableStream, getRequest, setResponse } from '../../../exports/node/index.js';
-import { coalesce_to_error } from '../../../utils/error.js';
+import { coalesce_to_error, set_error_stack } from '../../../utils/error.js';
 import { resolve_entry } from '../../../utils/filesystem.js';
 import { load_and_validate_params } from '../../../utils/params.js';
 import { from_fs, to_fs } from '../../../utils/vite.js';
@@ -99,11 +99,14 @@ export async function dev(
 		}
 	}
 
-	async function update_manifest() {
+	/** @param {boolean} [validate_params] */
+	async function update_manifest(validate_params = true) {
 		try {
 			manifest_data = create_manifest_data(svelte_config, root);
 			sync.create(svelte_config, root, manifest_data, false);
 			set_manifest_data(manifest_data);
+
+			if (!validate_params) return;
 
 			await load_and_validate_params({
 				routes: manifest_data.routes,
@@ -141,6 +144,10 @@ export async function dev(
 			get_remotes
 		);
 	}
+
+	// Initializing the Vite SSR runner before the server starts is unsafe, but generated types
+	// don't depend on it and should be available as soon as the dev server is ready.
+	await update_manifest(false);
 
 	/** @param {Error} error */
 	function fix_stack_trace(error) {
@@ -181,10 +188,10 @@ export async function dev(
 			// lines and drop everything else so the message isn't duplicated
 			.slice(start === -1 ? end : start, end);
 
-		return (error.stack = prelude + lines.join('\n'));
+		return set_error_stack(error, prelude + lines.join('\n'));
 	}
 
-	const params_file = resolve_entry(svelte_config.files.params);
+	const params_file = resolve_entry(svelte_config.files.params, svelte_config.moduleExtensions);
 
 	/**
 	 * @param {string} event
@@ -222,10 +229,8 @@ export async function dev(
 	watch('add', () => debounce(update_manifest));
 	watch('unlink', () => debounce(update_manifest));
 	watch('change', (file) => {
-		// `manifest_data` is populated lazily on the first request (see `update_manifest`
-		// call in the middleware below), so it may still be undefined if a file changes
-		// before the dev server has served a request. In that case there's nothing to
-		// update — the manifest will be created from scratch on the first request.
+		// `manifest_data` may be undefined if initial manifest creation failed. In that case
+		// there's nothing to update — the manifest will be created from scratch on the first request.
 		if (!manifest_data) return;
 		// Don't run for a single file if the whole manifest is about to get updated
 		// Unless it's a file where the trailing slash page option might have changed
@@ -343,7 +348,10 @@ export async function dev(
 				}
 
 				if (decoded === svelte_config.paths.base + '/service-worker.js') {
-					const resolved = resolve_entry(svelte_config.files.serviceWorker);
+					const resolved = resolve_entry(
+						svelte_config.files.serviceWorker,
+						svelte_config.moduleExtensions
+					);
 
 					if (resolved) {
 						res.writeHead(200, {
@@ -361,7 +369,8 @@ export async function dev(
 				// resolve the instrumentation file per request so that changes to it
 				// are picked up on new requests
 				const resolved_instrumentation = resolve_entry(
-					path.join(svelte_config.files.src, 'instrumentation.server')
+					path.join(svelte_config.files.src, 'instrumentation.server'),
+					svelte_config.moduleExtensions
 				);
 
 				if (resolved_instrumentation) {
@@ -376,21 +385,19 @@ export async function dev(
 					await runner.import(resolved_instrumentation);
 				}
 
-				const { init, respond } = /** @type {ServerModule} */ (
+				const { configure, format_response } = /** @type {ServerModule} */ (
 					await runner.import(`${get_runtime_base(root)}/server/index.js`)
 				);
 
-				const { format_response } = await runner.import(
-					`${get_runtime_base(root)}/server/internal.js`
-				);
-
-				await init({
+				const { init, respond } = await configure({
 					manifest,
 					env,
 					read: (file) => createReadableStream(from_fs(file)),
 					assets,
 					fix_stack_trace
 				});
+
+				await init();
 
 				const request = (svelte_config.adapter?.vite?.getRequest ?? getRequest)({
 					base,
