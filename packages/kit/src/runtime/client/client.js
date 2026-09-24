@@ -2148,6 +2148,8 @@ async function navigate({
 
 		// abort if user navigated while `onNavigate` callbacks were pending
 		if (navigation_token !== nav_token) {
+			// `load_cache` no longer holds this fork, so nothing else will discard it
+			void load_cache_fork?.then((f) => f?.discard());
 			nav.reject(new Error('navigation aborted'));
 			return;
 		}
