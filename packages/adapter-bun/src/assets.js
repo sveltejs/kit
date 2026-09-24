@@ -92,7 +92,8 @@ function negotiate(accept, br, gz) {
 
 /**
  * Serves one file with its build-time validator and precompressed variants. Everything
- * that does not depend on the request is created once, here.
+ * that does not depend on the request is created once, here, including the `Headers`
+ * (Bun copies them into each response).
  * @param {string} file
  * @param {AssetMeta} meta
  * @param {boolean} [immutable]
@@ -117,10 +118,12 @@ function file_entry(file, meta, immutable = false) {
 
 		return {
 			etag,
-			not_modified: { status: 304, headers },
+			not_modified: { status: 304, headers: new Headers(headers) },
 			body: encoding ? Bun.file(`${file}.${encoding}`) : source,
 			ok: {
-				headers: encoding ? { ...headers, 'content-encoding': CONTENT_ENCODING[encoding] } : headers
+				headers: new Headers(
+					encoding ? { ...headers, 'content-encoding': CONTENT_ENCODING[encoding] } : headers
+				)
 			}
 		};
 	};
