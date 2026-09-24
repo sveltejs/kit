@@ -888,6 +888,22 @@
 
 - feat: add `ErrorProps` to generated types ([#16272](https://github.com/sveltejs/kit/pull/16272))
 
+### Patch Changes
+
+- fix: detect destructured `load` and `actions` exports during type generation ([#16329](https://github.com/sveltejs/kit/pull/16329))
+
+- fix: ensure CSS URL references are absolute when `paths.relative` is `false` ([#16315](https://github.com/sveltejs/kit/pull/16315))
+
+- fix: exclude deleted cookies from `cookies.getAll()` so it stays consistent with `cookies.get()` ([#16297](https://github.com/sveltejs/kit/pull/16297))
+
+- fix: reset failed `<svelte:boundary>` on client navigation so a stale `+error.svelte` is torn down ([#16296](https://github.com/sveltejs/kit/pull/16296))
+
+- fix: preserve shared client chunk hashes when the app version changes ([#16324](https://github.com/sveltejs/kit/pull/16324))
+
+- fix: align MAX_COOKIE_SIZE with RFC 6265bis ([#16322](https://github.com/sveltejs/kit/pull/16322))
+
+- fix: use mouseover+mousemove for preloading to reduce events ([#16325](https://github.com/sveltejs/kit/pull/16325))
+
 ## 2.70.3
 
 ### Patch Changes
@@ -925,24 +941,6 @@
 - fix: ensure CSS URL references are absolute when `paths.relative` is `false` ([#16315](https://github.com/sveltejs/kit/pull/16315))
 
 - fix: align MAX_COOKIE_SIZE with RFC 6265bis ([#16322](https://github.com/sveltejs/kit/pull/16322))
-
-## 2.69.2
-
-### Patch Changes
-
-- fix: detect destructured `load` and `actions` exports during type generation ([#16329](https://github.com/sveltejs/kit/pull/16329))
-
-- fix: ensure CSS URL references are absolute when `paths.relative` is `false` ([#16315](https://github.com/sveltejs/kit/pull/16315))
-
-- fix: exclude deleted cookies from `cookies.getAll()` so it stays consistent with `cookies.get()` ([#16297](https://github.com/sveltejs/kit/pull/16297))
-
-- fix: reset failed `<svelte:boundary>` on client navigation so a stale `+error.svelte` is torn down ([#16296](https://github.com/sveltejs/kit/pull/16296))
-
-- fix: preserve shared client chunk hashes when the app version changes ([#16324](https://github.com/sveltejs/kit/pull/16324))
-
-- fix: align MAX_COOKIE_SIZE with RFC 6265bis ([#16322](https://github.com/sveltejs/kit/pull/16322))
-
-- fix: use mouseover+mousemove for preloading to reduce events ([#16325](https://github.com/sveltejs/kit/pull/16325))
 
 ## 3.0.0-next.7
 ### Major Changes

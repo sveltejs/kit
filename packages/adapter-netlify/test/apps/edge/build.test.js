@@ -30,3 +30,8 @@ test('_redirects are copied to publish directory', () => {
 	);
 	expect(redirects).toContain('/redirect-me /greeting/redirected 301');
 });
+
+test('treeshakes component from the server bundle if SSR is turned off', () => {
+	const edge_function = fs.readFileSync(edge_function_path, 'utf-8');
+	expect(edge_function).not.toContain('this should never appear in the server bundle');
+});

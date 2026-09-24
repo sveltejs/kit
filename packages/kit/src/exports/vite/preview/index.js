@@ -11,7 +11,7 @@ import { createReadableStream, getRequest, setResponse } from '../../../exports/
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import { relative_pathname } from '../../../utils/url.js';
 import { is_chrome_devtools_request, not_found } from '../utils.js';
-import { stackless } from '../../../utils/error.js';
+import { set_error_stack, stackless } from '../../../utils/error.js';
 
 /**
  * @param {PreviewServer} vite
@@ -67,7 +67,7 @@ export async function preview(vite, svelte_config) {
 		// Vite erases the error message when starting the preview server so we store
 		// it in the stack instead. This ensures errors thrown using `stackless`
 		// are still readable
-		if (error instanceof Error) error.stack = error.message;
+		if (error instanceof Error) set_error_stack(error, error.message);
 		throw error;
 	}
 

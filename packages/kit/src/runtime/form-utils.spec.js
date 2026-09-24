@@ -8,6 +8,7 @@ import {
 	deep_get,
 	deep_set,
 	deserialize_binary_form,
+	flatten_issues,
 	parse_form_key,
 	serialize_binary_form,
 	split_path
@@ -882,7 +883,33 @@ describe('deep_set', () => {
 	});
 });
 
+describe('prototype property names', () => {
+	test('are treated like ordinary form field names', () => {
+		expect.soft(deep_get({}, ['toString'])).toBeUndefined();
+
+		const issue = { name: 'toString', path: ['toString'], message: 'invalid', server: true };
+		expect(flatten_issues([issue])).toEqual({ $: [issue], toString: [issue] });
+	});
+});
+
 describe('deep_get', () => {
+	test('tracks missing properties on reactive proxies', () => {
+		let tracked = false;
+		const object = new Proxy(
+			{},
+			{
+				has: () => (tracked = true),
+				getOwnPropertyDescriptor: () => {
+					tracked = true;
+					return undefined;
+				}
+			}
+		);
+
+		expect(deep_get(object, ['missing'])).toBeUndefined();
+		expect(tracked).toBe(true);
+	});
+
 	test('walks objects and arrays and stops at anything else', () => {
 		const object = { a: [{ b: 'hello' }] };
 		expect(deep_get(object, [])).toBe(object);

@@ -66,17 +66,27 @@ export async function get_hooks() {
  * @param {string} root The project root directory
  */
 export function write_server(config, output, root) {
-	const server_hooks_file = resolve_entry(config.files.hooks.server);
-	const universal_hooks_file = resolve_entry(config.files.hooks.universal);
+	const server_hooks_file = resolve_entry(config.files.hooks.server, config.moduleExtensions);
+	const universal_hooks_file = resolve_entry(config.files.hooks.universal, config.moduleExtensions);
 
 	if (!server_hooks_file) {
-		check_spelling('src/hooks.server', 'src/+hooks.server', 'Unexpected + prefix');
-		check_spelling('src/hooks.server', 'src/hook.server', 'Missing s suffix');
+		check_spelling(
+			'src/hooks.server',
+			'src/+hooks.server',
+			'Unexpected + prefix',
+			config.moduleExtensions
+		);
+		check_spelling(
+			'src/hooks.server',
+			'src/hook.server',
+			'Missing s suffix',
+			config.moduleExtensions
+		);
 	}
 
 	if (!universal_hooks_file) {
-		check_spelling('src/hooks', 'src/+hooks', 'Unexpected + prefix');
-		check_spelling('src/hooks', 'src/hook', 'Missing s suffix');
+		check_spelling('src/hooks', 'src/+hooks', 'Unexpected + prefix', config.moduleExtensions);
+		check_spelling('src/hooks', 'src/hook', 'Missing s suffix', config.moduleExtensions);
 	}
 
 	/** @param {string} file */
