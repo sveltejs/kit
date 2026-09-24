@@ -208,10 +208,9 @@ function measure_files(root, files, compressed) {
  * @returns {AssetTable}
  */
 function create_asset_table(base, measured) {
-	const entries = measured.map((entry) => /** @type {[string, AssetEntry]} */ ([
-		`${base}/${entry.file}`,
-		entry
-	]));
+	const entries = measured.map(
+		(entry) => /** @type {[string, AssetEntry]} */ ([`${base}/${entry.file}`, entry])
+	);
 
 	entries.sort(([a], [b]) => (a < b ? -1 : 1));
 
