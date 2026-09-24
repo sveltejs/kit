@@ -239,31 +239,14 @@ export function is_external_url(url, base, hash_routing) {
 }
 
 /**
- * @param {URL} url
- * @param {boolean} hash_routing
- * @returns {string}
- */
-export function get_id(url, hash_routing) {
-	let id;
-
-	if (hash_routing) {
-		const [, , second] = url.hash.split('#', 3);
-		id = second ?? '';
-	} else {
-		id = url.hash.slice(1);
-	}
-
-	return decodeURIComponent(id);
-}
-
-/**
+ * The element a URL's fragment points at, if any. Under hash routing the fragment sits after the route
  * @param {URL} url
  * @param {boolean} hash_routing
  * @returns {Element | null}
  */
 export function get_hash_element(url, hash_routing) {
-	const id = get_id(url, hash_routing);
-	return id ? document.getElementById(id) : null;
+	const id = hash_routing ? (url.hash.split('#', 3)[2] ?? '') : url.hash.slice(1);
+	return id ? document.getElementById(decodeURIComponent(id)) : null;
 }
 
 /** @type {Set<string> | null} */
