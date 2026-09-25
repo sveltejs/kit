@@ -314,11 +314,11 @@ describe('generated routes', () => {
 		expect(builder.writePrerendered).toHaveBeenCalledWith('.svelte-kit/adapter-bun/prerendered');
 		const source = handoff_source();
 		expect(source).toContain(
-			`import asset_0 from ${JSON.stringify(`${process.cwd()}/.svelte-kit/adapter-bun/client/data.json`)} with { type: 'file' };`
+			`import asset_0 from ${JSON.stringify(`${process.cwd()}/.svelte-kit/adapter-bun/client/.well-known/asset.txt`)} with { type: 'file' };`
 		);
-		expect(source).toContain('["client_asset", "data.json", asset_0, {"hash":"abc","mtime":0}]');
+		expect(source).toContain('["client_asset", "data.json", asset_2, {"hash":"abc","mtime":0}]');
 		expect(source).toContain(
-			'["client_asset", ".well-known/asset.txt", asset_1, {"hash":"abc","mtime":0}]'
+			'["client_asset", ".well-known/asset.txt", asset_0, {"hash":"abc","mtime":0}]'
 		);
 		// a skipped dotfile takes no import, and the same relative path in the client
 		// and prerendered output stays two imports
@@ -336,16 +336,7 @@ describe('generated routes', () => {
 		expect(source).toContain(
 			'["prerendered_asset", "page/__data.json", asset_7, {"hash":"abc","mtime":0}]'
 		);
-		expect(source).toContain('["_app/read.txt", asset_2]');
-	});
-
-	test.each([false, true])('rejects wildcard filenames when compile is %s', async (compile) => {
-		const builder = create_builder({ client_files: ['literal*.txt'] });
-
-		await expect(adapter({ buildOptions: { compile } }).adapt(builder)).rejects.toThrow(
-			'Bun treats literal `*` characters in route paths as wildcards'
-		);
-		expect(write_file).not.toHaveBeenCalled();
+		expect(source).toContain('["_app/read.txt", asset_1]');
 	});
 
 	test('precompresses assets and marks the variants in the generated routes', async () => {
@@ -369,24 +360,6 @@ describe('generated routes', () => {
 			expect.stringContaining('precompress is ignored')
 		);
 		expect(builder.compress).not.toHaveBeenCalled();
-	});
-
-	test('rejects route segments starting with a colon', async () => {
-		const builder = create_builder({ client_files: [':tag.txt'] });
-
-		await expect(adapter().adapt(builder)).rejects.toThrow('starts with `:`');
-		expect(write_file).not.toHaveBeenCalled();
-	});
-
-	test('rejects wildcard characters in prerendered redirect sources', async () => {
-		const builder = create_builder({
-			prerendered_redirects: [['/docs/*', { status: 308, location: '/new' }]]
-		});
-
-		await expect(adapter().adapt(builder)).rejects.toThrow(
-			'Bun treats literal `*` characters in route paths as wildcards'
-		);
-		expect(write_file).not.toHaveBeenCalled();
 	});
 
 	test('fails when a server-readable asset is absent from compiled build output', async () => {

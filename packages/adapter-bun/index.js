@@ -69,23 +69,6 @@ async function asset_meta(file, precompress = false) {
 	return meta;
 }
 
-/** @param {string[]} files */
-function validate_file_paths(files) {
-	for (const file of files) {
-		if (file.includes('*')) {
-			throw new Error(
-				`Cannot build with ${JSON.stringify(file)} because Bun treats literal \`*\` characters in route paths as wildcards. Rename the file or route to remove the \`*\` character.`
-			);
-		}
-		// a leading ':' would need percent-encoding, but browsers request the colon raw
-		if (file.split('/').some((segment) => segment.startsWith(':'))) {
-			throw new Error(
-				`Cannot build with ${JSON.stringify(file)} because Bun treats a route segment starting with \`:\` as a parameter. Rename the file or route so no segment starts with \`:\`.`
-			);
-		}
-	}
-}
-
 /** @type {import('./index.js').default} */
 export default function (opts = {}) {
 	const {
@@ -134,7 +117,7 @@ export default function (opts = {}) {
 					`export const env_prefix = ${JSON.stringify(envPrefix)};`,
 					`export const origin = ${JSON.stringify(builder.config.paths.origin)};`,
 					`export const server_options = ${JSON.stringify(serverOptions)};`,
-					...(await create_routes({ builder, out, embed, precompress: precompress && !embed }))
+					...(await create_assets({ builder, out, embed, precompress: precompress && !embed }))
 				].join('\n')
 			);
 
@@ -239,7 +222,7 @@ export default function (opts = {}) {
 }
 
 /**
- * The static route table, as data the bundled `src/routes.js` turns into Bun routes at startup.
+ * The static asset table, as data the bundled `src/assets.js` turns into a lookup at startup.
  * @param {object} options
  * @param {Builder} options.builder
  * @param {string} options.out
@@ -247,19 +230,17 @@ export default function (opts = {}) {
  * @param {boolean} options.precompress
  * @returns {Promise<string[]>}
  */
-async function create_routes({ builder, out, embed, precompress }) {
+async function create_assets({ builder, out, embed, precompress }) {
 	// executables embed the files from a staging directory instead of shipping them in `out`
 	const dest = embed ? builder.getBuildDirectory('adapter-bun') : out;
 	if (embed) fs.rmSync(dest, { recursive: true, force: true });
 
-	const client_files = builder.writeClient(`${dest}/client`).filter((file) => !is_dotfile(file));
+	// sorted so an exact file precedes the aliases derived from it, as in adapter-node's table
+	const client_files = builder
+		.writeClient(`${dest}/client`)
+		.filter((file) => !is_dotfile(file))
+		.sort();
 	const prerendered_files = builder.writePrerendered(`${dest}/prerendered`);
-	validate_file_paths([
-		...client_files,
-		...prerendered_files,
-		...builder.prerendered.pages.keys(),
-		...builder.prerendered.redirects.keys()
-	]);
 
 	if (precompress) {
 		await Promise.all([
@@ -272,15 +253,15 @@ async function create_routes({ builder, out, embed, precompress }) {
 	const embedded = new Map();
 
 	/**
-	 * @param {string} helper
+	 * @param {string} kind
 	 * @param {string} url
 	 * @param {string} dir
 	 * @param {string} [filename]
 	 */
-	const entry = async (helper, url, dir, filename = url) => {
+	const entry = async (kind, url, dir, filename = url) => {
 		const file = `${dest}/${dir}/${filename}`;
 		if (embed) embedded.set(file, `asset_${embedded.size}`);
-		return `[${JSON.stringify(helper)}, ${JSON.stringify(url)}, ${embedded.get(file) ?? JSON.stringify(filename)}, ${JSON.stringify(await asset_meta(file, precompress))}]`;
+		return `[${JSON.stringify(kind)}, ${JSON.stringify(url)}, ${embedded.get(file) ?? JSON.stringify(filename)}, ${JSON.stringify(await asset_meta(file, precompress))}]`;
 	};
 
 	const pages = [...builder.prerendered.pages];
