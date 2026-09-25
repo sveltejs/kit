@@ -3,6 +3,34 @@
  */
 
 /**
+ * @typedef {{
+ *   build?: { publish?: string }
+ *   functions?: { node_bundler?: 'zisi' | 'esbuild' }
+ * }} NetlifyConfig
+ */
+
+const valid_runtimes = /** @type {const} */ (['edge', 'nodejs22.x', 'nodejs24.x', 'nodejs26.x']);
+
+/**
+ * @param {Runtime} [runtime]
+ * @returns {{ primitive: 'edge' | 'nodejs', version: string | undefined }}
+ */
+export function parse_runtime(runtime) {
+	if (runtime === undefined) return { primitive: 'nodejs', version: undefined };
+	if (runtime === 'edge') return { primitive: 'edge', version: undefined };
+
+	if (valid_runtimes.includes(runtime)) {
+		return { primitive: 'nodejs', version: runtime.slice('nodejs'.length, -'.x'.length) };
+	}
+
+	throw new Error(
+		`Invalid runtime ${JSON.stringify(runtime)}. Supported runtimes are: ${valid_runtimes.join(', ')}.`
+	);
+}
+
+/** @typedef {typeof valid_runtimes[number]} Runtime */
+
+/**
  * @param {RouteSegment[]} a
  * @param {RouteSegment[]} b
  * @returns {boolean}
