@@ -187,23 +187,27 @@ export interface Prerendered {
 		}
 	>;
 	/**
-	 * A map of `path` to `{ type }` objects.
+	 * A map of `path` to `{ type, file }` objects.
 	 */
 	assets: Map<
 		string,
 		{
 			/** The MIME type of the asset */
 			type: string;
+			/** The location of the file relative to the output directory */
+			file: string;
 		}
 	>;
 	/**
-	 * A map of redirects encountered during prerendering.
+	 * A map of redirects encountered during prerendering. Each one is also written as an HTML file that redirects on load.
 	 */
 	redirects: Map<
 		string,
 		{
 			status: number;
 			location: string;
+			/** The location of the .html file relative to the output directory */
+			file: string;
 		}
 	>;
 	/** An array of prerendered paths (without trailing slashes, regardless of the trailingSlash config) */

@@ -13,8 +13,8 @@ let bun_build: Mock<(options: any) => Promise<any>>;
 let read_file: Mock<typeof fs.readFileSync>;
 let write_file: Mock<typeof fs.writeFileSync>;
 
-// the real Bun.build would bundle and the real hashers would read assets off
-// disk, so the build APIs stay test doubles even under Bun
+// the real Bun.build would bundle and Bun.file would stat assets on disk,
+// so the build APIs stay test doubles even under Bun
 beforeEach(() => {
 	bun_build = spyOn(Bun, 'build').mockImplementation((async (_options: any): Promise<any> => ({
 		success: true,
@@ -25,16 +25,7 @@ beforeEach(() => {
 		stream: () => new Blob([]).stream(),
 		lastModified: 0
 	})) as never);
-	spyOn(Bun, 'CryptoHasher').mockImplementation(function () {
-		return {
-			update() {},
-			digest() {
-				return 'abc';
-			}
-		};
-	} as never);
 
-	spyOn(fs, 'existsSync').mockReturnValue(true);
 	spyOn(fs, 'rmSync').mockImplementation(() => {});
 	read_file = spyOn(fs, 'readFileSync').mockImplementation((() => undefined) as any) as any;
 	write_file = spyOn(fs, 'writeFileSync').mockImplementation(() => {});
@@ -349,7 +340,7 @@ describe('generated routes', () => {
 	});
 
 	test('precompresses assets and marks the variants in the generated routes', async () => {
-		const builder = create_builder({ client_files: ['app.js'] });
+		const builder = create_builder({ client_files: ['app.js'], compressed: ['app.js'] });
 
 		await adapter({ precompress: true }).adapt(builder);
 
@@ -417,7 +408,8 @@ function create_builder({
 	server_assets = [],
 	base = '',
 	origin,
-	instrumentation = false
+	instrumentation = false,
+	compressed = []
 }: {
 	client_files?: string[];
 	prerendered_files?: string[];
@@ -428,7 +420,11 @@ function create_builder({
 	base?: string;
 	origin?: string;
 	instrumentation?: boolean;
+	compressed?: string[];
 } = {}) {
+	// kit measures every file in its output on first access
+	const measure = (file: string) => ({ file, size: 0, hash: 'abc' });
+
 	return {
 		config: { outDir: '.svelte-kit', paths: { base, origin }, appDir: '_app' },
 		routes,
@@ -436,6 +432,8 @@ function create_builder({
 			pages: new Map(prerendered_pages),
 			redirects: new Map(prerendered_redirects)
 		},
+		clientFiles: client_files.map(measure),
+		prerenderedFiles: prerendered_files.map(measure),
 		log: {
 			minor: mock((_message: string) => {}),
 			error: mock((_message: string) => {}),
@@ -449,7 +447,9 @@ function create_builder({
 		writeClient: mock(() => client_files),
 		writePrerendered: mock(() => prerendered_files),
 		copy: mock(() => []),
-		compress: mock(async (_directory: string) => {}),
+		compress: mock(async (_directory: string) =>
+			compressed.map((file) => ({ file, gz: 1, br: 1 }))
+		),
 		findServerAssets: mock(() => server_assets),
 		hasServerInstrumentationFile: () => instrumentation,
 		createInstrumentationInitializer: mock(() => `${server_dir}/__sveltekit_env_init.js`),
