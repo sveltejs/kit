@@ -531,6 +531,9 @@ importers:
       '@playwright/test':
         specifier: 'catalog:'
         version: 1.63.0
+      '@sveltejs/adapter-node':
+        specifier: workspace:*
+        version: link:../../..
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../../../kit
