@@ -222,13 +222,26 @@ export default function (options = {}) {
  * @returns {Plugin}
  */
 function virtual_workers_module(options, stub_import) {
-	const setup = async () => {
+	/** @param {import('vite').ViteDevServer | import('vite').PreviewServer} server */
+	const setup = async (server) => {
 		if (globalThis.__sveltekit_cloudflare_platform) return;
 		const proxy = await getPlatformProxy(options);
 		// We store the platform proxy on globalThis so that our virtual workers module
 		// can access the same instance that we use here to populate `caches` and `cf` (above).
 		globalThis.__sveltekit_cloudflare_platform = proxy;
 		/** @type {any} */ (globalThis).caches = proxy.caches;
+
+		const close = server.close.bind(server);
+		/** @type {Promise<void> | undefined} */
+		let disposing;
+		server.close = async () => {
+			disposing ??= proxy.dispose().finally(() => {
+				if (globalThis.__sveltekit_cloudflare_platform === proxy) {
+					Reflect.deleteProperty(globalThis, '__sveltekit_cloudflare_platform');
+				}
+			});
+			await Promise.all([close(), disposing]);
+		};
 	};
 	return {
 		name: 'vite-plugin-sveltekit-adapter-cloudflare-virtual-workers-module',
