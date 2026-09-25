@@ -198,6 +198,12 @@ export default function (opts = {}) {
 							const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
 
 							return {
+								ssr: {
+									// Vite doesn't bundle dependencies for SSR by default so we
+									// tell it to bundle everything and exclude prod dependencies
+									// in the external option below
+									noExternal: true
+								},
 								environments: {
 									ssr: {
 										build: {
