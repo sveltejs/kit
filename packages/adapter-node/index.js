@@ -94,6 +94,12 @@ export default function (opts = {}) {
 							const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
 
 							return {
+								ssr: {
+									// Vite doesn't bundle dependencies for SSR by default so we
+									// tell it to bundle everything and exclude prod dependencies
+									// in the external option below
+									noExternal: true
+								},
 								environments: {
 									ssr: {
 										build: {
@@ -208,10 +214,9 @@ function measure_files(root, files, compressed) {
  * @returns {AssetTable}
  */
 function create_asset_table(base, measured) {
-	const entries = measured.map((entry) => /** @type {[string, AssetEntry]} */ ([
-		`${base}/${entry.file}`,
-		entry
-	]));
+	const entries = measured.map(
+		(entry) => /** @type {[string, AssetEntry]} */ ([`${base}/${entry.file}`, entry])
+	);
 
 	entries.sort(([a], [b]) => (a < b ? -1 : 1));
 
