@@ -2,12 +2,7 @@
 import { DEV } from 'esm-env';
 import { text } from '@sveltejs/kit';
 import { Redirect, SvelteKitError } from '@sveltejs/kit/internal';
-import {
-	merge_tracing,
-	otel,
-	record_span,
-	with_request_store
-} from '@sveltejs/kit/internal/server';
+import { otel, record_span, with_request_store, RequestEvent } from '@sveltejs/kit/internal/server';
 import { base, app_dir } from '#app/paths';
 import { is_endpoint_request, render_endpoint } from './endpoint.js';
 import { render_page } from './page/index.js';
@@ -24,13 +19,13 @@ import { find_route } from '../../utils/routing.js';
 import { redirect_json_response, render_data } from './data/index.js';
 import { add_cookies_to_headers, get_cookies } from './cookie.js';
 import { create_fetch } from './fetch.js';
+import { validateHeaders } from './validate-headers.js';
 import { PageNodes } from '../../utils/page_nodes.js';
 import { validate_server_exports } from '../../utils/exports.js';
 import { action_json_redirect, is_action_json_request } from './page/actions.js';
 import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM } from '../shared.js';
 import { get_public_env } from './env_module.js';
 import { resolve_route, resolve_route_by_id } from './page/server_routing.js';
-import { validateHeaders } from './validate-headers.js';
 import {
 	add_data_suffix,
 	add_resolution_suffix,
@@ -182,70 +177,73 @@ export async function internal_respond(request, state) {
 
 	/** @type {Record<string, string>} */
 	const headers = {};
+	let responded = false;
 
 	const { cookies, new_cookies, get_cookie_header, set_internal, set_trailing_slash } = get_cookies(
 		request,
 		url
 	);
 
-	/** @type {import('@sveltejs/kit').RequestEvent} */
-	const event = {
-		cookies,
-		// @ts-expect-error `fetch` needs to be created after the `event` itself
-		fetch: null,
-		getClientAddress:
-			state.getClientAddress ||
-			(() => {
-				throw new Error(
-					`${__SVELTEKIT_ADAPTER_NAME__} does not specify getClientAddress. Please raise an issue`
-				);
-			}),
-		locals: {},
-		params: {},
-		platform: state.emulator?.platform
-			? await state.emulator.platform({
-					config: {},
-					prerender: !!state.prerendering?.fallback
-				})
-			: state.platform,
-		request,
-		route: { id: null },
-		setHeaders: (new_headers) => {
-			if (DEV) {
-				validateHeaders(new_headers);
-			}
-
-			for (const key in new_headers) {
-				const lower = key.toLowerCase();
-				const value = new_headers[key];
-
-				if (lower === 'set-cookie') {
+	const event = new RequestEvent(
+		/** @type {import('@sveltejs/kit').RequestEvent} */ ({
+			cookies,
+			getClientAddress:
+				state.getClientAddress ||
+				(() => {
 					throw new Error(
-						'Use `event.cookies.set(name, value, options)` instead of `event.setHeaders` to set cookies'
+						`${__SVELTEKIT_ADAPTER_NAME__} does not specify getClientAddress. Please raise an issue`
 					);
-				} else if (lower in headers) {
-					// appendHeaders-style for Server-Timing https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Server-Timing
-					if (lower === 'server-timing') {
-						headers[lower] += ', ' + value;
-					} else {
-						throw new Error(`"${key}" header is already set`);
-					}
-				} else {
-					headers[lower] = value;
+				}),
+			locals: {},
+			params: {},
+			platform: state.emulator?.platform
+				? await state.emulator.platform({
+						config: {},
+						prerender: !!state.prerendering?.fallback
+					})
+				: state.platform,
+			request,
+			route: { id: null },
+			setHeaders: (new_headers) => {
+				if (responded) {
+					throw new Error('Cannot use `setHeaders(...)` after the response has been generated');
+				}
 
-					if (state.prerendering && lower === 'cache-control') {
-						state.prerendering.cache = /** @type {string} */ (value);
+				if (DEV) {
+					validateHeaders(new_headers);
+				}
+
+				for (const [key, value] of Object.entries(new_headers)) {
+					const lower = key.toLowerCase();
+
+					if (lower === 'set-cookie') {
+						throw new Error(
+							'Use `event.cookies.set(name, value, options)` instead of `event.setHeaders` to set cookies'
+						);
+					} else if (Object.hasOwn(headers, lower)) {
+						// appendHeaders-style for Server-Timing https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Server-Timing
+						if (lower === 'server-timing') {
+							headers[lower] += ', ' + value;
+						} else {
+							throw new Error(`"${key}" header is already set`);
+						}
+					} else {
+						headers[lower] = value;
+
+						if (state.prerendering && lower === 'cache-control') {
+							state.prerendering.cache = value;
+						}
 					}
 				}
-			}
-		},
-		url,
-		isDataRequest: is_data_request,
-		isSubRequest: state.depth > 0,
-		isRemoteRequest: !!remote_id
-	};
+			},
+			url,
+			isDataRequest: is_data_request,
+			isSubRequest: state.depth > 0,
+			isRemoteRequest: !!remote_id
+		}),
+		0
+	);
 
-	// @ts-expect-error this has to be assigned lazily
 	event.fetch = create_fetch({
 		event,
 		state,
@@ -375,9 +373,7 @@ export async function internal_respond(request, state) {
 
 			if (result) {
 				route = result.route;
-				// @ts-expect-error this has to be assigned lazily
 				event.route = { id: route.id };
-				// @ts-expect-error this has to be assigned lazily
 				event.params = result.params;
 			}
 		} catch (e) {
@@ -439,7 +435,6 @@ export async function internal_respond(request, state) {
 				}
 
 				if (state.emulator?.platform) {
-					// @ts-expect-error this has to be assigned lazily
 					event.platform = await state.emulator.platform({ config, prerender });
 				}
 
@@ -485,13 +480,11 @@ export async function internal_respond(request, state) {
 				'sveltekit.is_sub_request': event.isSubRequest
 			},
 			fn: async (root_span) => {
-				const traced_event = {
-					...event,
-					tracing: {
-						enabled: __SVELTEKIT_SERVER_TRACING_ENABLED__,
-						root: root_span,
-						current: root_span
-					}
+				const traced_event = event.clone();
+				traced_event.tracing = {
+					enabled: __SVELTEKIT_SERVER_TRACING_ENABLED__,
+					root: root_span,
+					current: root_span
 				};
 
 				return await with_request_store({ event: traced_event, state }, () =>
@@ -504,33 +497,32 @@ export async function internal_respond(request, state) {
 									'http.route': event.route.id || 'unknown'
 								},
 								fn: (resolve_span) => {
+									const traced_event = RequestEvent.from(event, resolve_span);
+
 									// counter-intuitively, we need to clear the event, so that it's not
 									// e.g. accessible when loading modules needed to handle the request
 									return with_request_store(null, () =>
-										resolve(merge_tracing(event, resolve_span), page_nodes, opts).then(
-											(response) => {
-												// add headers/cookies here, rather than inside `resolve`, so that we
-												// can do it once for all responses instead of once per `return`
-												for (const key in headers) {
-													const value = headers[key];
-													response.headers.set(key, /** @type {string} */ (value));
-												}
-
-												add_cookies_to_headers(response.headers, new_cookies.values());
-
-												if (state.prerendering && event.route.id !== null) {
-													response.headers.set('x-sveltekit-routeid', encodeURI(event.route.id));
-												}
-
-												resolve_span.setAttributes({
-													'http.response.status_code': response.status,
-													'http.response.body.size':
-														response.headers.get('content-length') || 'unknown'
-												});
-
-												return response;
+										resolve(traced_event, page_nodes, opts).then((response) => {
+											// add headers/cookies here, rather than inside `resolve`, so that we
+											// can do it once for all responses instead of once per `return`
+											for (const [key, value] of Object.entries(headers)) {
+												response.headers.set(key, value);
 											}
-										)
+
+											add_cookies_to_headers(response.headers, new_cookies.values());
+
+											if (state.prerendering && event.route.id !== null) {
+												response.headers.set('x-sveltekit-routeid', encodeURI(event.route.id));
+											}
+
+											resolve_span.setAttributes({
+												'http.response.status_code': response.status,
+												'http.response.body.size':
+													response.headers.get('content-length') || 'unknown'
+											});
+
+											return response;
+										})
 									);
 								}
 							});
@@ -584,7 +576,7 @@ export async function internal_respond(request, state) {
 	}
 
 	/**
-	 * @param {import('@sveltejs/kit').RequestEvent} event
+	 * @param {import('@sveltejs/kit/internal/server').RequestEvent} event
 	 * @param {PageNodes | undefined} page_nodes
 	 * @param {import('@sveltejs/kit/hooks').ResolveOptions} [opts]
 	 */
@@ -794,13 +786,9 @@ export async function internal_respond(request, state) {
 			// HttpError from endpoint can end up here - TODO should it be handled there instead?
 			return await handle_fatal_error(event, state, e);
 		} finally {
+			responded = true;
 			event.cookies.set = () => {
 				throw new Error('Cannot use `cookies.set(...)` after the response has been generated');
-			};
-
-			// @ts-expect-error this has to be assigned lazily
-			event.setHeaders = () => {
-				throw new Error('Cannot use `setHeaders(...)` after the response has been generated');
 			};
 		}
 	}
