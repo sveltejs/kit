@@ -16,7 +16,7 @@ minimumReleaseAgeExclude:
 blockExoticSubdeps: true
 shellEmulator: true
 engineStrict: true
-injectWorkspacePackages: true # more accurate adapter tests
+# injectWorkspacePackages: true # more accurate adapter tests
 packages:
   - packages/*
   - packages/adapter-bun/test/apps/*
