@@ -638,6 +638,8 @@ function add_props(base_props, props) {
 		if (typeof value === 'function') {
 			Object.defineProperty(base_props, prop, {
 				enumerable: true,
+				// `omit_while_undefined` can only hide configurable properties
+				configurable: true,
 				get: /** @type {() => unknown} */ (value)
 			});
 		} else {
@@ -645,6 +647,23 @@ function add_props(base_props, props) {
 		}
 	}
 	return base_props;
+}
+
+/**
+ * Returns a view of `props` that hides `key` while its value is `undefined`,
+ * so that spreading the props onto an element omits the attribute entirely
+ * @param {Record<string, any>} props
+ * @param {string} key
+ */
+function omit_while_undefined(props, key) {
+	const hidden = () => props[key] === undefined;
+
+	return new Proxy(props, {
+		has: (target, prop) => (prop === key && hidden() ? false : prop in target),
+		ownKeys: (target) => Reflect.ownKeys(target).filter((prop) => prop !== key || !hidden()),
+		getOwnPropertyDescriptor: (target, prop) =>
+			prop === key && hidden() ? undefined : Reflect.getOwnPropertyDescriptor(target, prop)
+	});
 }
 
 /**
@@ -830,7 +849,7 @@ function create_field_method(context, path, prop) {
 
 				// Handle select inputs
 				if (type === 'select' || type === 'select multiple') {
-					return add_props(base_props, {
+					const props = add_props(base_props, {
 						multiple: is_array,
 						value: () => {
 							const value = read(input_value);
@@ -838,6 +857,12 @@ function create_field_method(context, path, prop) {
 							return Array.isArray(value) ? [...value] : value;
 						}
 					});
+
+					// Svelte re-applies a spread `value` to a `<select>` whenever any of the
+					// spread props change (e.g. `aria-invalid` after validation), and `undefined`
+					// clears the selection. Until the field has a value, leave `value` out of
+					// the spread so the browser keeps the current selection.
+					return omit_while_undefined(props, 'value');
 				}
 
 				// Handle checkbox inputs
