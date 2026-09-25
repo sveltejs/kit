@@ -300,6 +300,32 @@ test.describe('Navigation lifecycle functions', () => {
 		expect(await page.textContent('.nav-lifecycle-after-nav-removed-test-target')).toBe('false');
 	});
 
+	test('a navigation superseded while onNavigate is pending does not commit', async ({ page }) => {
+		await page.goto('/navigation-lifecycle/on-navigate-superseded/a');
+		await expect(page.locator('h1')).toHaveText('a');
+
+		const held = () => page.evaluate(() => window.held_navigations?.length);
+
+		// the navigation to b loads, then waits in onNavigate
+		await page.locator('a[href="/navigation-lifecycle/on-navigate-superseded/b"]').click();
+		await expect.poll(held).toBe(1);
+
+		// a newer navigation back to a loads while the page still shows a
+		await page.locator('a[href="/navigation-lifecycle/on-navigate-superseded/a"]').click();
+		await expect.poll(held).toBe(2);
+
+		// the superseded navigation's onNavigate settles first, and must not render b
+		await page.evaluate(async () => {
+			window.held_navigations[0]();
+			await new Promise((f) => requestAnimationFrame(() => requestAnimationFrame(f)));
+		});
+		await expect(page.locator('h1')).toHaveText('a');
+
+		await page.evaluate(() => window.held_navigations[1]());
+		await expect(page).toHaveURL('/navigation-lifecycle/on-navigate-superseded/a');
+		await expect(page.locator('h1')).toHaveText('a');
+	});
+
 	test('navigation.event is populated', async ({ page, clicknav }) => {
 		/** @type {string[]} */
 		const logs = [];
