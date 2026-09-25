@@ -3346,11 +3346,12 @@ function _start_router() {
 		if (history_metadata?.historyIndex) {
 			const history_index = history_metadata.historyIndex;
 			const source_info = history_info[current_history_index];
-			navigation_token = invalidation_token = {};
 
 			// if a popstate-driven navigation is cancelled, we need to counteract it
 			// with history.go, which means we end up back here, hence this check
 			if (history_index === current_history_index) return;
+
+			navigation_token = invalidation_token = {};
 
 			const delta = history_index - current_history_index;
 			const reset_index = history_metadata.resetIndex;
@@ -3413,6 +3414,9 @@ function _start_router() {
 
 				if (reset && scroll) scrollTo(scroll.x, scroll.y);
 				restore_navigation_snapshot(current_history_index, current_registrations());
+				// the token above aborted any in-flight navigation, and nothing else will clear it
+				is_navigating = false;
+				set_navigation(null);
 				return;
 			}
 
