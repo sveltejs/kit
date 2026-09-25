@@ -1,5 +1,13 @@
 # @sveltejs/adapter-node
 
+## 6.0.0-next.14
+
+### Patch Changes
+
+- fix: always bundle dev dependencies ([#17210](https://github.com/sveltejs/kit/pull/17210))
+- Updated dependencies [[`058d29b`](https://github.com/sveltejs/kit/commit/058d29be2cbedb91546b6f6ddf157b881b87360b), [`5e11958`](https://github.com/sveltejs/kit/commit/5e119589bb8784cb43fd631afaa81b78b3ff6f36)]:
+  - @sveltejs/kit@3.0.0-next.29
+
 ## 6.0.0-next.13
 
 ### Major Changes

@@ -40,13 +40,13 @@ class RemoteCookies {
 
 	/**
 	 * @param {'set' | 'delete'} verb
-	 * @param {import('cookie').SerializeOptions} opts
+	 * @param {import('cookie').SerializeOptions} [opts]
 	 */
 	#check(verb, opts) {
 		if (this.#flags & (QUERY | PRERENDER)) {
 			throw new Error(`Cannot ${verb} cookies in \`query\` or \`prerender\` functions`);
 		}
-		if (opts.path && !opts.path.startsWith('/')) {
+		if (opts?.path && !opts.path.startsWith('/')) {
 			throw new Error('Cookies in remote functions must have an absolute path');
 		}
 	}
