@@ -198,7 +198,7 @@ export default function (opts = {}) {
 							const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
 
 							return {
-							  ssr: {
+								ssr: {
 									noExternal: true
 								},
 								environments: {
