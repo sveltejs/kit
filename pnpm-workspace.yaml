@@ -17,6 +17,7 @@ blockExoticSubdeps: true
 linkWorkspacePackages: true
 shellEmulator: true
 engineStrict: true
+dedupeInjectedDeps: false
 injectWorkspacePackages: true # more accurate adapter tests
 
 packages:
