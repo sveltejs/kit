@@ -38,7 +38,7 @@ test.describe('check_spelling', () => {
 
 		expect(console_warn_spy).toHaveBeenCalledOnce();
 		expect(stripVTControlCharacters(console_warn_spy.mock.calls[0][0])).toBe(
-			`Missing s suffix. Did you mean hooks.server.js? at ${path.join(fixtures, `src/hook.server.js`)}`
+			`file_name_misspelled\nMissing s suffix. Did you mean hooks.server.js? at ${path.join(fixtures, `src/hook.server.js`)}\nhttps://next.svelte.dev/e/@sveltejs/kit/file_name_misspelled`
 		);
 	});
 });

@@ -75,9 +75,45 @@ export const variables = defineEnvVars({ FOO: {} });
 		const config = process_config(validate_config({}), root);
 
 		await expect(load_explicit_env(config, entry, root, 'development')).rejects.toMatchObject({
-			message: `Module \`${posixify(path.relative(root, helper))}\` imports \`$app/env/private\`, which creates a circular dependency with \`src/env\``,
+			name: 'SvelteKit error',
+			message: `env_circular_import\nModule \`${posixify(path.relative(root, helper))}\` imports \`$app/env/private\`, which creates a circular dependency with \`src/env\`\nhttps://next.svelte.dev/e/@sveltejs/kit/env_circular_import`,
 			stack: ''
 		});
+	} finally {
+		fs.rmSync(dir, { recursive: true, force: true });
+	}
+});
+
+test('keeps the cause when src/env imports other $app modules', async () => {
+	const root = path.resolve(import.meta.dirname, '../../../test/apps/basics');
+	const dir = fs.mkdtempSync(path.join(root, 'node_modules/.svelte-kit-env-'));
+	const entry = path.join(dir, 'env.ts');
+
+	fs.writeFileSync(
+		entry,
+		`import '$app/navigation';
+export const variables = {};
+`
+	);
+
+	try {
+		const config = process_config(validate_config({}), root);
+
+		/** @type {any} */
+		let error;
+		try {
+			await load_explicit_env(config, entry, root, 'development');
+		} catch (e) {
+			error = e;
+		}
+
+		expect(error).toMatchObject({
+			name: 'SvelteKit error',
+			message:
+				'env_app_import\nCannot import `$app/*` modules other than `$app/env` inside `src/env`\nhttps://next.svelte.dev/e/@sveltejs/kit/env_app_import'
+		});
+		expect(error.cause).toMatchObject({ code: 'ERR_MODULE_NOT_FOUND' });
+		expect(error.stack).not.toBe('');
 	} finally {
 		fs.rmSync(dir, { recursive: true, force: true });
 	}

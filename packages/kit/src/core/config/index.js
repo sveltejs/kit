@@ -141,9 +141,7 @@ export function process_config(config, cwd) {
 		resolve_entry(path.resolve(cwd, config.files.serviceWorker), config.moduleExtensions) &&
 		!config.csp?.directives?.['trusted-types']?.includes('sveltekit-trusted-url')
 	) {
-		throw new Error(
-			"The `csp.directives['trusted-types']` option must include 'sveltekit-trusted-url' when `serviceWorker.register` is true"
-		);
+		e.config_csp_trusted_types_missing();
 	}
 
 	config.outDir = path.resolve(cwd, config.outDir);
@@ -170,9 +168,7 @@ export function process_config(config, cwd) {
 export function validate_config(config) {
 	try {
 		if (typeof config !== 'object') {
-			throw new Error(
-				'The SvelteKit options from the Vite config must be an object. See https://svelte.dev/docs/kit/configuration'
-			);
+			e.config_not_object();
 		}
 
 		const validated = validate_options(config, 'config');
@@ -189,14 +185,10 @@ export function validate_config(config) {
 
 		if (validated.router.resolution === 'server') {
 			if (validated.router.type === 'hash') {
-				throw new Error(
-					"The `router.resolution` option cannot be 'server' if `router.type` is 'hash'"
-				);
+				e.config_server_resolution_hash();
 			}
 			if (validated.output.bundleStrategy !== 'split') {
-				throw new Error(
-					"The `router.resolution` option cannot be 'server' if `output.bundleStrategy` is 'inline' or 'single'"
-				);
+				e.config_server_resolution_bundle_strategy();
 			}
 		}
 
