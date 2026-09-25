@@ -104,12 +104,13 @@ export default function (opts = {}) {
 													'adapter-env': `${src}/env.js`,
 													handler: `${src}/handler.js`
 												},
-												// only production dependencies (and their deep imports) stay external
+												// only ordinary production dependencies (and their deep imports) stay external;
+												// Kit must be bundled even if the app lists it as a production dependency
 												external: [
 													handoff,
-													...Object.keys(pkg.dependencies || {}).map(
-														(d) => new RegExp(`^${d}(\\/.*)?$`)
-													)
+													...Object.keys(pkg.dependencies || {})
+														.filter((d) => d !== '@sveltejs/kit')
+														.map((d) => new RegExp(`^${d}(\\/.*)?$`))
 												],
 												output: {
 													paths: { [handoff]: '../adapter-node.js' },

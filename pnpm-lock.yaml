@@ -524,6 +524,9 @@ importers:
 
   packages/adapter-node/test/apps/basic:
     dependencies:
+      '@sveltejs/kit':
+        specifier: workspace:^
+        version: link:../../../../kit
       server-side-dep:
         specifier: file:server-side-dep
         version: file:packages/adapter-node/test/apps/basic/server-side-dep
@@ -531,9 +534,6 @@ importers:
       '@playwright/test':
         specifier: 'catalog:'
         version: 1.63.0
-      '@sveltejs/kit':
-        specifier: workspace:^
-        version: link:../../../../kit
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
         version: 7.3.1(svelte@5.57.1(@typescript-eslint/types@8.70.1))(vite@8.3.0(@types/node@22.20.4)(esbuild@0.28.1)(yaml@2.9.1))
