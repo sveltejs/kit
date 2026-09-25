@@ -95,7 +95,10 @@ export default function (opts = {}) {
 
 							return {
 								ssr: {
-									noExternal: ['@sveltejs/kit']
+								  // Vite doesn't bundle dependencies for SSR by default so we
+									// tell it to bundle everything and exclude prod dependencies
+									// in the external option below
+									noExternal: true
 								},
 								environments: {
 									ssr: {
