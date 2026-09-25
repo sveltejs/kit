@@ -136,6 +136,10 @@ test('create package with typescript using esnext', async () => {
 	await test_make_package('typescript-esnext');
 });
 
+test('emits declarations with noEmitOnError', async () => {
+	await test_make_package('typescript-no-emit-on-error');
+});
+
 test('create package with typescript using nodenext', async () => {
 	await test_make_package('typescript-nodenext');
 });
@@ -178,6 +182,10 @@ test('create package with emitTypes settings disabled', async () => {
 
 test('create package with SvelteComponentTyped for backwards compatibility', async () => {
 	await test_make_package('svelte-3-types');
+});
+
+test('emits Svelte 3 declarations with noEmitOnError', async () => {
+	await test_make_package('svelte-3-no-emit-on-error');
 });
 
 test('Custom lib folder with #lib import', async () => {

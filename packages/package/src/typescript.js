@@ -35,14 +35,35 @@ export async function emit_dts(input, output, final_output, cwd, alias, files, t
 		// Not all version specs are valid semver, e.g. "latest" or "next" or catalog references
 		no_svelte_3 = true;
 	}
-	await emitDts({
-		libRoot: input,
-		svelteShimsPath: no_svelte_3
-			? require.resolve('svelte2tsx/svelte-shims-v4.d.ts')
-			: require.resolve('svelte2tsx/svelte-shims.d.ts'),
-		declarationDir: tmp,
-		tsconfig
-	});
+	const shims = require.resolve(
+		no_svelte_3 ? 'svelte2tsx/svelte-shims-v4.d.ts' : 'svelte2tsx/svelte-shims.d.ts'
+	);
+	const jsx = require.resolve(
+		no_svelte_3 ? 'svelte2tsx/svelte-jsx-v4.d.ts' : 'svelte2tsx/svelte-jsx.d.ts'
+	);
+	const shim_root = fs.mkdtempSync(path.join(output, '__package_types_shim__'));
+	// svelte2tsx checks this suffix to decide whether to generate modern component declarations
+	const svelte_shims_path = path.join(shim_root, 'svelte2tsx', path.basename(shims));
+	try {
+		write(
+			svelte_shims_path,
+			[shims, jsx]
+				.map(
+					(file) =>
+						`/// <reference path="${posixify(path.relative(path.dirname(svelte_shims_path), file))}" />`
+				)
+				.join('\n')
+		);
+
+		await emitDts({
+			libRoot: input,
+			svelteShimsPath: svelte_shims_path,
+			declarationDir: tmp,
+			tsconfig
+		});
+	} finally {
+		fs.rmSync(shim_root, { force: true, recursive: true });
+	}
 
 	const handwritten = new Set();
 
