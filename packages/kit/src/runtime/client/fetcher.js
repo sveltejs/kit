@@ -1,6 +1,7 @@
 import { DEV } from 'esm-env';
 import { hash_request } from '../../utils/hash.js';
 import { base64_decode } from '../utils.js';
+import { fetch_cache_url } from '../shared.js';
 
 let loading = 0;
 
@@ -59,7 +60,7 @@ if (DEV) {
 		const method = input instanceof Request ? input.method : init?.method || 'GET';
 
 		if (method !== 'GET') {
-			cache.delete(build_selector(requested_url(input)));
+			clear_cache(input);
 		}
 
 		return native_fetch(input, init);
@@ -69,7 +70,7 @@ if (DEV) {
 		const method = input instanceof Request ? input.method : init?.method || 'GET';
 
 		if (method !== 'GET') {
-			cache.delete(build_selector(requested_url(input)));
+			clear_cache(input);
 		}
 
 		return native_fetch(input, init);
@@ -152,15 +153,25 @@ export function dev_fetch(resource, opts) {
 }
 
 /**
- * Mirror the url normalization in `resolve_fetch_url`, so that non-GET requests
- * evict the cache entry regardless of how the url is spelled
+ * Evict all cached responses for a URL, including responses keyed by request data
+ * @param {RequestInfo | URL} input
+ */
+function clear_cache(input) {
+	const selector = build_selector(requested_url(input));
+	for (const key of cache.keys()) {
+		if (key.startsWith(selector)) cache.delete(key);
+	}
+}
+
+/**
+ * Non-GET requests must evict under the stored key, however the url is spelled
  * @param {RequestInfo | URL} input
  */
 function requested_url(input) {
-	const resolved = new URL(input instanceof Request ? input.url : input, location.href);
-	return resolved.origin === location.origin
-		? resolved.href.slice(location.origin.length)
-		: resolved.href;
+	return fetch_cache_url(
+		new URL(input instanceof Request ? input.url : input, location.href),
+		location
+	);
 }
 
 /**

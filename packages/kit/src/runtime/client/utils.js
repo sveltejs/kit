@@ -238,6 +238,17 @@ export function is_external_url(url, base, hash_routing) {
 	return false;
 }
 
+/**
+ * The element a URL's fragment points at, if any. Under hash routing the fragment sits after the route
+ * @param {URL} url
+ * @param {boolean} hash_routing
+ * @returns {HTMLElement | null}
+ */
+export function get_hash_element(url, hash_routing) {
+	const id = hash_routing ? (url.hash.split('#', 3)[2] ?? '') : url.hash.slice(1);
+	return id ? document.getElementById(decodeURIComponent(id)) : null;
+}
+
 /** @type {Set<string> | null} */
 let seen = null;
 

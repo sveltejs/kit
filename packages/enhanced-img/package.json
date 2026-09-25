@@ -22,7 +22,7 @@
 	"type": "module",
 	"scripts": {
 		"lint": "oxfmt --check .",
-		"check": "tsc",
+		"check": "node node_modules/@typescript/native/bin/tsc",
 		"format": "oxfmt --write .",
 		"test": "pnpm test:unit && pnpm test:integration",
 		"test:unit": "vitest run",
@@ -38,7 +38,7 @@
 	},
 	"types": "types/index.d.ts",
 	"dependencies": {
-		"magic-string": "^1.1.0",
+		"magic-string": "^1.2.3",
 		"sharp": "^0.35.3",
 		"vite-imagetools": "^12.0.0",
 		"zimmerframe": "^1.1.4"
@@ -47,7 +47,7 @@
 		"@types/estree": "catalog:",
 		"@types/node": "catalog:",
 		"svelte": "catalog:",
-		"typescript": "catalog:typescript-native",
+		"@typescript/native": "catalog:",
 		"vite": "catalog:",
 		"vitest": "catalog:"
 	},

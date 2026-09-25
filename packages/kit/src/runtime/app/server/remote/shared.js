@@ -93,7 +93,7 @@ function derive_remote_function_event(event, state, allow_cookies) {
 					throw new Error('Cannot set cookies in `query` or `prerender` functions');
 				}
 
-				if (opts.path && !opts.path.startsWith('/')) {
+				if (opts?.path && !opts.path.startsWith('/')) {
 					throw new Error('Cookies set in remote functions must have an absolute path');
 				}
 
@@ -104,7 +104,7 @@ function derive_remote_function_event(event, state, allow_cookies) {
 					throw new Error('Cannot delete cookies in `query` or `prerender` functions');
 				}
 
-				if (opts.path && !opts.path.startsWith('/')) {
+				if (opts?.path && !opts.path.startsWith('/')) {
 					throw new Error('Cookies deleted in remote functions must have an absolute path');
 				}
 

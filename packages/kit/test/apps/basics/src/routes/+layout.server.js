@@ -22,7 +22,7 @@ export async function load({ cookies, locals, fetch, setHeaders }) {
 
 	const should_fail = cookies.get('fail-type');
 	if (should_fail) {
-		cookies.delete('fail-type', { path: '/' });
+		cookies.delete('fail-type');
 		if (should_fail === 'expected') {
 			error(401, 'Not allowed');
 		} else if (should_fail === 'unexpected') {

@@ -16,7 +16,7 @@ SvelteKit 3 requires the following minimum versions:
 
 - Node v22.17
 - TypeScript v6
-- Svelte v5.56.4
+- Svelte v5.57.1
 - Vite v8.0.12 (the first Vite 8 release bundling stable `rolldown` v1)
 - `@sveltejs/vite-plugin-svelte` v7
 
@@ -499,12 +499,16 @@ await myCache.match(request);
 
 - bundling now happens with `rolldown`
 - the `ORIGIN` environment variable is removed (set `paths.origin` in your Vite config instead)
+- static assets are served from a list recorded at build time; files added to the output directory afterwards are not served, and replaced ones keep their old size and `ETag` (use environment variables for runtime configuration)
+- `ETag`s for static assets are content hashes, and `Last-Modified` is no longer sent
+- only `GET` and `HEAD` requests are served static assets; other methods result in a 405 response
 
 ### `adapter-netlify`
 
 - output now conforms to the stable [Netlify Frameworks API](https://docs.netlify.com/build/frameworks/frameworks-api/)
 - deploying/previewing with the Netlify CLI requires `v17.31.0` or later (`npm i -g netlify-cli@latest`)
 - edge function build target is `es2022`
+- the publish directory is now an adapter option rather than being read from the `netlify.toml` file
 
 ### `adapter-vercel`
 
@@ -520,6 +524,61 @@ For adapter authors, there are some additional changes:
 - `builder.compress` returns a list of compressed files
 - `builder.mkdirp` and `builder.rimraf` are deprecated in favour of `node:fs` methods
 - `builder.generateManifest` has been removed — use `builder.generateServerInstance` to replace it, and `builder.manifest` to access the manifest
+- the `Server` class exported from the server output is deprecated — use the `server` object written by `builder.generateServerInstance`
+
+#### Server instrumentation
+
+Adapters that use `builder.instrument` must now generate an environment initializer before any
+bundling step, include the returned module as an entrypoint in that step, and pass its final path to
+`builder.instrument`:
+
+```js
+// @filename: ambient.d.ts
+import { Builder } from '@sveltejs/kit';
+
+declare global {
+	const builder: Builder;
+	const temporary_directory: string;
+	const entrypoint: string;
+	const instrumentation: string;
+}
+
+export {};
+
+// @filename: index.js
+// ---cut---
+const initializer = builder.createInstrumentationInitializer({ outputDirectory: temporary_directory });
+
+// Include `initializer` in any bundling or file tracing here
+
+builder.instrument({
+	entrypoint,
+	instrumentation,
+	initializer
+});
+```
+
+For runtimes that do not expose environment variables through `process.env`, pass the contents of
+a module whose default export is the platform environment:
+
+```js
+// @filename: ambient.d.ts
+import { Builder } from '@sveltejs/kit';
+
+declare global {
+	const builder: Builder;
+	const temporary_directory: string;
+}
+
+export {};
+
+// @filename: index.js
+// ---cut---
+const initializer = builder.createInstrumentationInitializer({
+	outputDirectory: temporary_directory,
+	environment: `import { env } from 'cloudflare:workers';\nexport default env;`
+});
+```
 
 ## Responses
 
