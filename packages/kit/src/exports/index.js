@@ -348,8 +348,11 @@ export function defineCookie(name, options) {
 		throw new Error('Cookie name must be a non-empty string');
 	}
 
-	return {
-		name,
-		options
-	};
+	/** @type {import('./public.js').CookieDefinition} */
+	const definition = { name };
+	if (options !== undefined) {
+		definition.options = options;
+	}
+
+	return definition;
 }

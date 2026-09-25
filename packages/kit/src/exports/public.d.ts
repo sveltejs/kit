@@ -349,7 +349,7 @@ export interface Builder {
  */
 export interface CookieDefinition {
 	name: string;
-	options?: import('cookie').SerializeOptions & import('cookie').ParseOptions;
+	options?: (import('cookie').SerializeOptions & import('cookie').ParseOptions) | undefined;
 }
 
 export interface Cookies {
