@@ -1,16 +1,16 @@
-import { try_get_request_store } from './event.js';
+import { try_get_event } from './event.js';
 
 export function get_origin() {
 	// `request.url` rather than `event.url`, which throws inside queries
-	const request = try_get_request_store()?.event.request;
+	const request = try_get_event()?.request;
 	return request && new URL(request.url).origin;
 }
 
 export {
-	with_request_store,
+	with_event,
 	getRequestEvent,
-	get_request_store,
-	try_get_request_store,
+	get_event,
+	try_get_event,
 	RequestEvent,
 	QUERY,
 	PRERENDER,
