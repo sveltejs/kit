@@ -14,10 +14,9 @@ minimumReleaseAgeExclude:
   - vite-imagetools
   - imagetools-core
 blockExoticSubdeps: true
-linkWorkspacePackages: true
 shellEmulator: true
 engineStrict: true
-
+injectWorkspacePackages: true # more accurate adapter tests
 packages:
   - packages/*
   - packages/adapter-bun/test/apps/*

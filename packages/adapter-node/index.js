@@ -94,6 +94,9 @@ export default function (opts = {}) {
 							const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
 
 							return {
+								ssr: {
+									noExternal: ['@sveltejs/kit']
+								},
 								environments: {
 									ssr: {
 										build: {
