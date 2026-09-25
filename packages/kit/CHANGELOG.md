@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 3.0.0-next.29
+
+### Patch Changes
+
+- fix: blur focused SVG elements before the DOM update on navigation ([#16983](https://github.com/sveltejs/kit/pull/16983))
+
+- fix: make cookie options optional ([#17201](https://github.com/sveltejs/kit/pull/17201))
+
 ## 3.0.0-next.28
 
 ### Major Changes
