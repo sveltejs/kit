@@ -119,8 +119,8 @@ export default function (opts = {}) {
 				// force the Vite server output to retain their file structure to avoid
 				// a circular import chain
 				// see https://github.com/sveltejs/kit/issues/16092
-				manualChunks(id) {
-					if (id.startsWith(server)) {
+				manualChunks(id, { getModuleInfo }) {
+					if (id.startsWith(server) && getModuleInfo(id)?.isIncluded) {
 						return id.slice(server_path_length);
 					}
 				}
