@@ -315,6 +315,36 @@ export async function load({ cookies }) {
 }
 ```
 
+You can also define a cookie with [`defineCookie`](@sveltejs-kit#defineCookie) so that `cookies.set`, `cookies.get`, and `cookies.delete` share a single identity and default options:
+
+```js
+/// file: src/lib/cookies.js
+import { defineCookie } from '@sveltejs/kit';
+
+export const csrf = defineCookie('csrf', { path: '/admin', sameSite: 'strict' });
+```
+
+```js
+/// file: src/routes/admin/+page.server.js
+// @filename: ambient.d.ts
+declare module '$lib/cookies.js' {
+	export const csrf: import('@sveltejs/kit').CookieDefinition;
+}
+
+// @filename: index.js
+// ---cut---
+import { csrf } from '$lib/cookies.js';
+
+/** @type {import('./$types').PageServerLoad} */
+export function load({ cookies }) {
+	const token = cookies.get(csrf);
+
+	return {
+		token
+	};
+}
+```
+
 Cookies will only be passed through the provided `fetch` function if the target host is the same as the SvelteKit application or a more specific subdomain of it.
 
 For example, if SvelteKit is serving my.domain.com:

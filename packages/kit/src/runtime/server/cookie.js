@@ -83,7 +83,13 @@ export function get_cookies(request, url) {
 		// typescript users. `@type {import('@sveltejs/kit').Cookies}` above is not
 		// sufficient to do so.
 
-		get(name, opts) {
+		get(cookie_or_name, opts) {
+			const name = typeof cookie_or_name === 'string' ? cookie_or_name : cookie_or_name?.name;
+			const decode =
+				opts?.decode ??
+				(typeof cookie_or_name === 'string' ? undefined : cookie_or_name?.options?.decode);
+			const parse_opts = decode ? { ...opts, decode } : opts;
+
 			// Look for the most specific matching cookie from new_cookies
 			/** @type {import('./page/types.js').Cookie | undefined} */
 			let best_match;
@@ -101,7 +107,7 @@ export function get_cookies(request, url) {
 				return best_match.options.maxAge === 0 ? undefined : best_match.value;
 			}
 
-			const cookie = parse_header(opts)[name]; // the decoded string or undefined
+			const cookie = parse_header(parse_opts)[name]; // the decoded string or undefined
 
 			// in development, if the cookie was set during this session with `cookies.set`,
 			// but at a different path, warn the user. (ignore cookies from request headers,
@@ -159,17 +165,28 @@ export function get_cookies(request, url) {
 			);
 		},
 
-		set(name, value, options) {
-			set_internal(name, value, { ...defaults, ...options });
+		set(cookie_or_name, value, options) {
+			if (typeof cookie_or_name === 'string') {
+				set_internal(cookie_or_name, value, { ...defaults, ...options });
+			} else {
+				set_internal(cookie_or_name.name, value, {
+					...defaults,
+					...cookie_or_name.options,
+					...options
+				});
+			}
 		},
 
-		delete(name, options) {
-			cookies.set(name, '', { ...options, maxAge: 0 });
+		delete(cookie_or_name, options) {
+			cookies.set(cookie_or_name, '', { ...options, maxAge: 0 });
 		},
 
 		parse: parseSetCookie,
 
-		serialize(name, value, { encode, ...options } = {}) {
+		serialize(cookie_or_name, value, opts = {}) {
+			const name = typeof cookie_or_name === 'string' ? cookie_or_name : cookie_or_name.name;
+			const { encode, ...options } =
+				typeof cookie_or_name === 'string' ? opts : { ...cookie_or_name.options, ...opts };
 			let path = options.path ?? '/';
 
 			if (!options.domain || options.domain === url.hostname) {
@@ -332,4 +349,23 @@ export function add_cookies_to_headers(headers, cookies) {
 function conjoin(array) {
 	if (array.length <= 2) return array.join(' and ');
 	return `${array.slice(0, -1).join(', ')} and ${array.at(-1)}`;
+}
+
+/**
+ * Utility for defining a cookie identity and default options so that
+ * `cookies.set`, `cookies.get`, and `cookies.delete` share one identity.
+ *
+ * @param {string} name
+ * @param {import('cookie').SerializeOptions & import('cookie').ParseOptions} [options]
+ * @returns {import('@sveltejs/kit').CookieDefinition}
+ */
+export function defineCookie(name, options) {
+	if (typeof name !== 'string' || !name) {
+		throw new Error('Cookie name must be a non-empty string');
+	}
+
+	return {
+		name,
+		options
+	};
 }

@@ -344,13 +344,24 @@ export interface Builder {
 	compress: (directory: string) => Promise<string[]>;
 }
 
+/**
+ * A cookie definition created with [`defineCookie`](https://svelte.dev/docs/kit/@sveltejs-kit#defineCookie).
+ */
+export interface CookieDefinition {
+	name: string;
+	options?: import('cookie').SerializeOptions & import('cookie').ParseOptions;
+}
+
 export interface Cookies {
 	/**
 	 * Gets a cookie that was previously set with `cookies.set`, or from the request headers.
-	 * @param name the name of the cookie
+	 * @param name the name or definition of the cookie
 	 * @param opts the options, passed directly to `cookie.parseCookie`. See documentation [here](https://github.com/jshttp/cookie?tab=readme-ov-file#cookieparsecookiestr-options)
 	 */
-	get: (name: string, opts?: import('cookie').ParseOptions) => string | undefined;
+	get: (
+		name: string | CookieDefinition,
+		opts?: import('cookie').ParseOptions
+	) => string | undefined;
 
 	/**
 	 * Gets all cookies that were previously set with `cookies.set`, or from the request headers.
@@ -364,11 +375,15 @@ export interface Cookies {
 	 * The `httpOnly` is `true` by default, as is `secure`, except during development, when it defaults to `false`. These must be explicitly disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP.
 	 *
 	 * The `path` option is `'/'` by default. You can use relative paths, or set `path: ''` to make the cookie only available on the current path and its children.
-	 * @param name the name of the cookie
+	 * @param name the name or definition of the cookie
 	 * @param value the cookie value
 	 * @param opts the options passed to `cookie.stringifySetCookie` with the SvelteKit defaults described above. See documentation [here](https://github.com/jshttp/cookie?tab=readme-ov-file#cookiestringifysetcookiesetcookieobj-options)
 	 */
-	set: (name: string, value: string, opts?: import('cookie').SerializeOptions) => void;
+	set: (
+		name: string | CookieDefinition,
+		value: string,
+		opts?: import('cookie').SerializeOptions
+	) => void;
 
 	/**
 	 * Deletes a cookie by setting its value to an empty string and setting the expiry date in the past.
@@ -376,10 +391,10 @@ export interface Cookies {
 	 * The `httpOnly` is `true` by default, as is `secure`, except during development, when it defaults to `false`. These must be explicitly disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP.
 	 *
 	 * The `path` option is `'/'` by default. You can use relative paths, or set `path: ''` to make the cookie only available on the current path and its children.
-	 * @param name the name of the cookie
+	 * @param name the name or definition of the cookie
 	 * @param opts the options passed to `cookie.stringifySetCookie` with the SvelteKit defaults described above. See documentation [here](https://github.com/jshttp/cookie?tab=readme-ov-file#cookiestringifysetcookiesetcookieobj-options)
 	 */
-	delete: (name: string, opts?: import('cookie').SerializeOptions) => void;
+	delete: (name: string | CookieDefinition, opts?: import('cookie').SerializeOptions) => void;
 
 	/**
 	 * Parses a single `Set-Cookie` header. This allows you to apply cookies received from an external source:
@@ -411,11 +426,15 @@ export interface Cookies {
 	 * The `httpOnly` is `true` by default, as is `secure`, except during development, when it defaults to `false`. These must be explicitly disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP.
 	 *
 	 * The `path` option is `'/'` by default. You can use relative paths, or set `path: ''` to make the cookie only available on the current path and its children.
-	 * @param name the name of the cookie
+	 * @param name the name or definition of the cookie
 	 * @param value the cookie value
 	 * @param opts the options passed to `cookie.stringifySetCookie` with the SvelteKit defaults described above. See documentation [here](https://github.com/jshttp/cookie?tab=readme-ov-file#cookiestringifysetcookiesetcookieobj-options)
 	 */
-	serialize: (name: string, value: string, opts?: import('cookie').SerializeOptions) => string;
+	serialize: (
+		name: string | CookieDefinition,
+		value: string,
+		opts?: import('cookie').SerializeOptions
+	) => string;
 }
 
 /**

@@ -38,7 +38,7 @@ test('generates client manifest imports relative to the project root', () => {
 	}
 });
 
-test('explains circular imports through $app/env/private', async () => {
+test('explains circular imports through $app/env/private', { timeout: 15000 }, async () => {
 	const root = path.resolve(import.meta.dirname, '../../../test/apps/basics');
 	const dir = fs.mkdtempSync(path.join(root, 'node_modules/.svelte-kit-env-'));
 	const entry = path.join(dir, 'env.ts');

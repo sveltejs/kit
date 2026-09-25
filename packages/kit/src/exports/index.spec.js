@@ -1,4 +1,5 @@
 import {
+	defineCookie,
 	error,
 	invalid,
 	isHttpError,
@@ -223,5 +224,29 @@ describe('invalid', () => {
 			assert.equal(isValidationError(e), true);
 			assert.equal(isValidationError(new Error('Invalid value')), false);
 		}
+	});
+});
+
+describe('defineCookie', () => {
+	it('defines a cookie with name and options', () => {
+		const csrf = defineCookie('csrf', { path: '/admin', sameSite: 'strict' });
+
+		assert.equal(csrf.name, 'csrf');
+		assert.deepEqual(csrf.options, { path: '/admin', sameSite: 'strict' });
+	});
+
+	it('defines a cookie without options', () => {
+		const session = defineCookie('session');
+
+		assert.equal(session.name, 'session');
+		assert.equal(session.options, undefined);
+	});
+
+	it('throws on invalid cookie name', () => {
+		assert.throws(() => defineCookie(''), 'Cookie name must be a non-empty string');
+		// @ts-expect-error
+		assert.throws(() => defineCookie(null), 'Cookie name must be a non-empty string');
+		// @ts-expect-error
+		assert.throws(() => defineCookie(123), 'Cookie name must be a non-empty string');
 	});
 });

@@ -326,3 +326,30 @@ export function normalizeUrl(url) {
 		}
 	};
 }
+
+/**
+ * Utility for defining a cookie identity and default options so that
+ * `cookies.set`, `cookies.get`, and `cookies.delete` share one identity.
+ *
+ * @example
+ * ```js
+ * import { defineCookie } from '@sveltejs/kit';
+ *
+ * export const csrf = defineCookie('csrf', { path: '/admin', sameSite: 'strict' });
+ * ```
+ *
+ * @param {string} name The name of the cookie
+ * @param {import('cookie').SerializeOptions & import('cookie').ParseOptions} [options] Default options for the cookie
+ * @returns {import('./public.js').CookieDefinition}
+ * @since 3.0.0
+ */
+export function defineCookie(name, options) {
+	if (typeof name !== 'string' || !name) {
+		throw new Error('Cookie name must be a non-empty string');
+	}
+
+	return {
+		name,
+		options
+	};
+}

@@ -1,6 +1,6 @@
 import process from 'node:process';
 import { assert, expect, test, describe, beforeAll, vi } from 'vitest';
-import { domain_matches, path_matches, get_cookies } from './cookie.js';
+import { domain_matches, path_matches, get_cookies, defineCookie } from './cookie.js';
 
 vi.stubGlobal('__SVELTEKIT_DEV__', undefined);
 
@@ -69,6 +69,15 @@ describe.skipIf(!process.env.DEV)('cookies in dev', () => {
 		cookies.set('a', 'b');
 		const opts = new_cookies.get('/?a')?.options;
 		assert.equal(opts?.secure, false);
+	});
+
+	test('throws if defineCookie name/value exceeds 4,096 bytes', () => {
+		const { cookies } = cookies_setup();
+		const huge = defineCookie('huge');
+
+		expect(() => cookies.set(huge, 'a'.repeat(4096))).toThrowError(
+			'Cookie "huge" is too large, and will be discarded by the browser'
+		);
 	});
 });
 
@@ -328,6 +337,94 @@ describe.skipIf(!!process.env.DEV)('cookies in prod', () => {
 		const duplicate = all.find((c) => c.name === 'duplicate');
 
 		expect(duplicate?.value).toEqual('foobar_value');
+	});
+
+	test('defineCookie: set and delete share identity and path', () => {
+		const csrf = defineCookie('csrf', { path: '/admin', sameSite: 'strict' });
+		const { cookies, new_cookies } = cookies_setup({ href: 'https://example.com/admin' });
+
+		cookies.set(csrf, 'my-token');
+		expect(cookies.get(csrf)).toEqual('my-token');
+		expect(cookies.get('csrf')).toEqual('my-token');
+
+		const set_opts = new_cookies.get('/admin?csrf')?.options;
+		assert.equal(set_opts?.path, '/admin');
+		assert.equal(set_opts?.sameSite, 'strict');
+
+		cookies.delete(csrf);
+		assert.isUndefined(cookies.get(csrf));
+
+		const delete_opts = new_cookies.get('/admin?csrf')?.options;
+		assert.equal(delete_opts?.path, '/admin');
+		assert.equal(delete_opts?.sameSite, 'strict');
+		assert.equal(delete_opts?.maxAge, 0);
+	});
+
+	test('defineCookie: delete can override options while preserving path', () => {
+		const cookie = defineCookie('auth', { path: '/app', domain: 'example.com' });
+		const { cookies, new_cookies } = cookies_setup({ href: 'https://example.com/app' });
+
+		cookies.set(cookie, 'token');
+		cookies.delete(cookie, { secure: false });
+
+		const delete_opts = new_cookies.get('example.com/app?auth')?.options;
+		assert.equal(delete_opts?.path, '/app');
+		assert.equal(delete_opts?.domain, 'example.com');
+		assert.equal(delete_opts?.secure, false);
+		assert.equal(delete_opts?.maxAge, 0);
+	});
+
+	test('defineCookie: read cookie from incoming request headers', () => {
+		const csrf = defineCookie('csrf', { path: '/admin' });
+		const { cookies } = cookies_setup({
+			href: 'https://example.com/admin',
+			headers: { cookie: 'csrf=incoming-token' }
+		});
+
+		expect(cookies.get(csrf)).toEqual('incoming-token');
+	});
+
+	test('defineCookie: serialize uses defined options', () => {
+		const csrf = defineCookie('csrf', { path: '/admin', sameSite: 'strict' });
+		const { cookies } = cookies_setup({ href: 'https://example.com/admin' });
+
+		const serialized = cookies.serialize(csrf, 'token');
+		assert.include(serialized, 'csrf=token');
+		assert.include(serialized, 'Path=/admin');
+		assert.include(serialized, 'SameSite=Strict');
+	});
+
+	test('defineCookie: custom encode and decode options', () => {
+		const custom = defineCookie('custom', {
+			encode: (val) => `enc_${val}`,
+			decode: (val) => (val?.startsWith('enc_') ? val.slice(4) : val)
+		});
+
+		const { cookies, new_cookies } = cookies_setup({
+			href: 'https://example.com',
+			headers: { cookie: 'custom=enc_header-val' }
+		});
+
+		expect(cookies.get(custom)).toEqual('header-val');
+
+		cookies.set(custom, 'new-val');
+		expect(cookies.get(custom)).toEqual('new-val');
+		expect(new_cookies.get('/?custom')?.value).toEqual('new-val');
+		expect(new_cookies.get('/?custom')?.options.encode?.('foo')).toEqual('enc_foo');
+	});
+
+	test('defineCookie without options defaults path to /', () => {
+		const simple = defineCookie('simple');
+		const { cookies, new_cookies } = cookies_setup();
+
+		cookies.set(simple, 'val');
+		const opts = new_cookies.get('/?simple')?.options;
+		assert.equal(opts?.path, '/');
+
+		cookies.delete(simple);
+		const delete_opts = new_cookies.get('/?simple')?.options;
+		assert.equal(delete_opts?.path, '/');
+		assert.equal(delete_opts?.maxAge, 0);
 	});
 });
 
