@@ -17,6 +17,7 @@ blockExoticSubdeps: true
 linkWorkspacePackages: true
 shellEmulator: true
 engineStrict: true
+
 packages:
   - packages/*
   - packages/adapter-bun/test/apps/*
