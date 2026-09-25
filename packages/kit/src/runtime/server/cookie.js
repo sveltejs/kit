@@ -169,7 +169,7 @@ export function get_cookies(request, url) {
 
 		parse: parseSetCookie,
 
-		serialize(name, value, { encode, ...options }) {
+		serialize(name, value, { encode, ...options } = {}) {
 			let path = options.path ?? '/';
 
 			if (!options.domain || options.domain === url.hostname) {
