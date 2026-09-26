@@ -39,6 +39,7 @@
 		"@types/node": "catalog:",
 		"eslint": "catalog:",
 		"oxfmt": "^0.70.0",
+		"vite": "catalog:",
 		"vitest": "catalog:"
 	},
 	"packageManager": "pnpm@12.5.0+sha512.9cdbaa34ffacae1768635ac0d23e94db6201c7d59bf3da236b23d67c8f6b794d1dab323bcd5bcc51b55c8cafbf6f19a24e4aa61d6ab7772aa3b5cc85e325dc4d",
