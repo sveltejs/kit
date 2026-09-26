@@ -4,6 +4,7 @@ import MagicString from 'magic-string';
 import { walk, resolve_entry } from '../../../utils/filesystem.js';
 import { posixify } from '../../../utils/os.js';
 import { ts } from '../ts.js';
+import { write } from '../utils.js';
 import { is_page_route } from '../create_manifest_data/index.js';
 const remove_relative_parent_traversals = (/** @type {string} */ path) =>
 	path.replace(/\.\.\//g, '');
@@ -118,15 +119,17 @@ function get_outdir(config, route, root) {
  */
 function update_types(config, routes, route, root) {
 	const outdir = get_outdir(config, route, root);
-	fs.mkdirSync(outdir, { recursive: true });
 
-	// track which old files end up being surplus to requirements
-	const to_delete = new Set(
-		fs
-			.readdirSync(outdir, { withFileTypes: true })
-			.filter((entry) => entry.isFile())
-			.map((entry) => entry.name)
-	);
+	/** @type {Set<string>} */
+	const written = new Set();
+	/**
+	 * @param {string} name
+	 * @param {string} code
+	 */
+	const write_file = (name, code) => {
+		written.add(name);
+		write(path.join(outdir, name), code);
+	};
 
 	// now generate new types
 	const imports = [
@@ -192,23 +195,17 @@ function update_types(config, routes, route, root) {
 			routes.set(route.leaf, route_info);
 		}
 
-		const {
-			declarations: d,
-			exports: e,
-			proxies
-		} = process_node(route.leaf, outdir, true, route_info.proxies, root);
+		const { declarations: d, exports: e } = process_node(
+			route.leaf,
+			outdir,
+			true,
+			route_info.proxies,
+			root
+		);
 
 		exports.push(...e);
 		declarations.push(...d);
-
-		if (proxies.server) {
-			route_info.proxies.server = proxies.server;
-			if (proxies.server?.modified) to_delete.delete(proxies.server.file_name);
-		}
-		if (proxies.universal) {
-			route_info.proxies.universal = proxies.universal;
-			if (proxies.universal?.modified) to_delete.delete(proxies.universal.file_name);
-		}
+		write_proxies(route_info.proxies);
 
 		if (route.leaf.server) {
 			exports.push(
@@ -267,24 +264,20 @@ function update_types(config, routes, route, root) {
 			'type LayoutParams = RouteParams & ' + generate_params_type(layout_params, outdir, config)
 		);
 
-		const {
-			exports: e,
-			declarations: d,
-			proxies
-		} = process_node(
+		/** @type {Proxies} */
+		const proxies = { server: null, universal: null };
+		const { exports: e, declarations: d } = process_node(
 			route.layout,
 			outdir,
 			false,
-			{ server: null, universal: null },
+			proxies,
 			root,
 			all_pages_have_load
 		);
 
 		exports.push(...e);
 		declarations.push(...d);
-
-		if (proxies.server?.modified) to_delete.delete(proxies.server.file_name);
-		if (proxies.universal?.modified) to_delete.delete(proxies.universal.file_name);
+		write_proxies(proxies);
 
 		exports.push(
 			'export type LayoutProps = { params: LayoutParams; data: LayoutData; children: import("svelte").Snippet }'
@@ -303,11 +296,18 @@ function update_types(config, routes, route, root) {
 		.filter(Boolean)
 		.join('\n\n');
 
-	fs.writeFileSync(`${outdir}/$types.d.ts`, output);
-	to_delete.delete('$types.d.ts');
+	write_file('$types.d.ts', output);
 
-	for (const file of to_delete) {
-		fs.unlinkSync(path.join(outdir, file));
+	// remove proxies that are no longer needed
+	for (const entry of fs.readdirSync(outdir, { withFileTypes: true })) {
+		if (entry.isFile() && !written.has(entry.name)) fs.unlinkSync(path.join(outdir, entry.name));
+	}
+
+	/** @param {Proxies} proxies */
+	function write_proxies(proxies) {
+		for (const proxy of [proxies.server, proxies.universal]) {
+			if (proxy?.modified) write_file(proxy.file_name, proxy.code);
+		}
 	}
 }
 
@@ -340,9 +340,6 @@ function process_node(node, outdir, is_page, proxies, root, all_pages_have_load 
 	if (node.server) {
 		const basename = path.basename(node.server);
 		const proxy = proxies.server;
-		if (proxy?.modified) {
-			fs.writeFileSync(`${outdir}/proxy${basename}`, proxy.code);
-		}
 
 		server_data = get_data_type(node.server, 'null', proxy, true);
 
@@ -393,9 +390,6 @@ function process_node(node, outdir, is_page, proxies, root, all_pages_have_load 
 
 	if (node.universal) {
 		const proxy = proxies.universal;
-		if (proxy?.modified) {
-			fs.writeFileSync(`${outdir}/proxy${path.basename(node.universal)}`, proxy.code);
-		}
 
 		const type = get_data_type(
 			node.universal,
@@ -422,7 +416,7 @@ function process_node(node, outdir, is_page, proxies, root, all_pages_have_load 
 
 	exports.push(`export type ${prefix}Data = ${data};`);
 
-	return { declarations, exports, proxies };
+	return { declarations, exports };
 
 	/**
 	 * @param {string} file_path

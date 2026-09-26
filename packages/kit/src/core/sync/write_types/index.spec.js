@@ -37,6 +37,23 @@ function run_test(dir) {
 	return { config: initial, manifest, root };
 }
 
+test('removes types of deleted routes and proxies that are no longer written', () => {
+	const { config, manifest, root } = run_test('simple-page-shared-only');
+	const types = path.join(config.outDir, 'types');
+	const stale_proxy = path.join(types, 'proxy+page.server.js');
+	fs.writeFileSync(stale_proxy, '');
+
+	write_all_types(
+		config,
+		{ ...manifest, routes: manifest.routes.filter((r) => r.id !== '/sub') },
+		root
+	);
+
+	expect(fs.existsSync(path.join(types, '$types.d.ts'))).toBe(true);
+	expect(fs.existsSync(stale_proxy)).toBe(false);
+	expect(fs.existsSync(path.join(types, 'sub/$types.d.ts'))).toBe(false);
+});
+
 describe('Creates correct $types', () => {
 	// To save us from creating a real SvelteKit project for each of the tests,
 	// we first run the type generation directly for each test case, and then
