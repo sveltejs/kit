@@ -33,6 +33,8 @@ function run_test(dir) {
 	write_app_types(initial, manifest, root);
 	write_tsconfig(initial, root);
 	write_env('', {}, root);
+
+	return { config: initial, manifest, root };
 }
 
 describe('Creates correct $types', () => {
