@@ -6,10 +6,11 @@
 		"dev": "vite dev",
 		"preview": "vite preview",
 		"build": "vite build",
-		"test:build": "pnpm build && vitest run build.test.js",
+		"test:build": "vitest run build.test.js",
 		"test:platform": "playwright test"
 	},
 	"devDependencies": {
+		"@sveltejs/adapter-vercel": "workspace:*",
 		"@sveltejs/kit": "workspace:*",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"svelte": "catalog:",
