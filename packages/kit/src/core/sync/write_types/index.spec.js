@@ -76,20 +76,26 @@ test('refreshes layout types when a page gains or loses a load function', () => 
 		fs.readFileSync(layout_types, 'utf-8').includes('LayoutServerLoad<OutputData extends Partial');
 
 	const page = path.join(routes, 'sub/+page.js');
+	const marker = '// untouched';
 	/** @param {string} code */
 	const save = (code) => {
+		fs.appendFileSync(layout_types, marker);
 		fs.writeFileSync(page, code);
 		write_types(config, manifest, page, root);
+		return !fs.readFileSync(layout_types, 'utf-8').endsWith(marker);
 	};
 
 	try {
 		write_all_types(config, manifest, root);
 		expect(shape()).toBe(false);
 
-		save('export function load() {}');
+		expect(save('export function load() {}')).toBe(true);
 		expect(shape()).toBe(true);
 
-		save('');
+		// same `load` presence, layouts are left alone
+		expect(save('export function load() { return {}; }')).toBe(false);
+
+		expect(save('')).toBe(true);
 		expect(shape()).toBe(false);
 	} finally {
 		fs.rmSync(root, { recursive: true, force: true });
