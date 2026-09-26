@@ -77,13 +77,13 @@ describe('Vite build configuration', () => {
 	test('bundles the server source with the app and keeps production dependencies external', () => {
 		read_file.mockReturnValue(JSON.stringify({ dependencies: { jsdom: '1.0.0' } }));
 
-		const options = vite_config().environments.ssr.build.rolldownOptions;
+		const config = vite_config();
+		const options = config.environments.ssr.build.rolldownOptions;
 
 		expect(read_file).toHaveBeenCalledWith('package.json', 'utf8');
+		expect(config.ssr).toEqual({ external: ['jsdom'], noExternal: true });
 		expect(options.input).toEqual({ 'adapter-index': `${src_dir}/index.js` });
-		expect(options.external).toEqual([handoff, /^jsdom(\/.*)?$/]);
-		expect('jsdom/lib/api.js').toMatch(options.external[1]);
-		expect('jsdom-global').not.toMatch(options.external[1]);
+		expect(options.external).toEqual([handoff]);
 		expect(options.output.paths).toEqual({ [handoff]: '../adapter-bun.js' });
 	});
 

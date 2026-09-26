@@ -18,7 +18,8 @@
 		"vitest": "catalog:"
 	},
 	"dependencies": {
-		"server-side-dep": "file:server-side-dep"
+		"server-side-dep": "file:server-side-dep",
+		"server-side-svelte-dep": "file:server-side-svelte-dep"
 	},
 	"type": "module"
 }

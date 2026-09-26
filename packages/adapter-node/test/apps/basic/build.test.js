@@ -21,3 +21,17 @@ test('dependencies are not bundled', () => {
 		}
 	}
 });
+
+test('dependencies that require build conditions are bundled', () => {
+	const build = path.resolve(import.meta.dirname, 'build');
+	const marker = 'server-side Svelte dependency';
+	let found = false;
+
+	for (const file of fs.readdirSync(build, { encoding: 'utf8', recursive: true })) {
+		if (file.endsWith('.js')) {
+			found ||= fs.readFileSync(path.join(build, file), 'utf8').includes(marker);
+		}
+	}
+
+	expect(found).toBe(true);
+});
