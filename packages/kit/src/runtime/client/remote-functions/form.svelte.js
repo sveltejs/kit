@@ -787,19 +787,19 @@ export function form(id) {
 
 			try {
 				$effect.pre(() => {
+					entry.count += 1;
+					instances.set(key, entry);
+
 					return () => {
 						entry.count--;
 
 						void tick().then(() => {
-							if (entry.count === 0) {
+							if (entry.count === 0 && instances.get(key) === entry) {
 								instances.delete(key);
 							}
 						});
 					};
 				});
-
-				entry.count += 1;
-				instances.set(key, entry);
 			} catch {
 				// not in an effect context
 			}
