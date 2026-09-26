@@ -798,7 +798,7 @@ export function plugin_compile(
 						verbose,
 						env,
 						vite_config_file: vite_config.configFile,
-						is_tty: process.stdout.isTTY
+						is_tty: process.stdout.isTTY ?? false
 					});
 
 					// this silly hack is necessary to ensure that stderr from prerender is flushed before we continue
