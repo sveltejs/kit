@@ -44,7 +44,7 @@ export function write_all_types(config, manifest_data, root) {
 		posixify(path.relative(root, config.files.routes))
 	);
 	const expected_directories = new Set(
-		manifest_data.routes.map((route) => path.posix.join(routes_dir, route.id))
+		manifest_data.routes.map((route) => path.posix.join(routes_dir, route.id.slice(1)))
 	);
 
 	if (fs.existsSync(types_dir)) {

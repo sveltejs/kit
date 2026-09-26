@@ -1,5 +1,6 @@
 import { execSync } from 'node:child_process';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
 import { assert, describe, expect, test, vi } from 'vitest';
@@ -98,6 +99,58 @@ test('route metadata remains readable while it is replaced', () => {
 	expect(
 		fs.readdirSync(config.outDir).filter((file) => file.startsWith('route_meta_data.'))
 	).toEqual([]);
+});
+
+test('does not clean files for existing root or nested routes', () => {
+	const { config, manifest, root } = run_test('simple-page-shared-only');
+	const generated_files = [
+		path.join(config.outDir, 'types/$types.d.ts'),
+		path.join(config.outDir, 'types/sub/$types.d.ts'),
+		path.join(config.outDir, 'types/sub/proxy+page.js')
+	];
+	const remove_spy = vi.spyOn(fs, 'rmSync');
+	let removed_files;
+
+	try {
+		write_all_types(config, manifest, root);
+		removed_files = remove_spy.mock.calls.map(([file]) => file.toString());
+	} finally {
+		remove_spy.mockRestore();
+	}
+
+	for (const file of generated_files) {
+		expect(removed_files).not.toContain(file);
+		expect(fs.existsSync(file)).toBe(true);
+	}
+});
+
+test('keeps root route types on repeated generation', () => {
+	const root = fs.mkdtempSync(path.join(os.tmpdir(), 'svelte-kit-write-types-'));
+	const routes = path.join(root, 'src/routes');
+	fs.mkdirSync(routes, { recursive: true });
+	fs.writeFileSync(path.join(routes, '+layout.svelte'), '');
+	fs.writeFileSync(path.join(routes, '+page.svelte'), '');
+
+	const config = validate_config({});
+	config.files.assets = path.join(root, 'static');
+	config.files.params = path.join(root, 'src/params');
+	config.files.routes = routes;
+	config.outDir = path.join(root, '.svelte-kit');
+
+	const manifest = create_manifest_data(config, root);
+	const types = path.join(config.outDir, 'types/src/routes/$types.d.ts');
+
+	try {
+		write_all_types(config, manifest, root);
+		expect(fs.existsSync(types)).toBe(true);
+
+		write_all_types(config, manifest, root);
+		const generated = fs.readFileSync(types, 'utf8');
+		expect(generated).toContain('export type LayoutProps');
+		expect(generated).toContain('export type PageProps');
+	} finally {
+		fs.rmSync(root, { force: true, recursive: true });
+	}
 });
 
 describe('Creates correct $types', () => {
