@@ -1,6 +1,6 @@
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { HttpError, Redirect, ActionFailure, ValidationError } from './internal/shared.js';
-import { BROWSER, DEV } from 'esm-env';
+import { DEV } from 'esm-env';
 import {
 	add_data_suffix,
 	add_resolution_suffix,
@@ -79,7 +79,7 @@ export { VERSION } from '../version.js';
  * @throws {Error} If the provided status is invalid (not between 400 and 599).
  */
 export function error(status, message, properties) {
-	if ((!BROWSER || DEV) && (isNaN(status) || status < 400 || status > 599)) {
+	if (isNaN(status) || status < 400 || status > 599) {
 		throw new Error(`HTTP error status codes must be between 400 and 599 — ${status} is invalid`);
 	}
 
@@ -127,7 +127,7 @@ export function isHttpError(e, status) {
  * @return {never}
  */
 export function redirect(status, location, options) {
-	if ((!BROWSER || DEV) && (isNaN(status) || status < 300 || status > 308)) {
+	if (isNaN(status) || status < 300 || status > 308) {
 		throw new Error('Invalid status code');
 	}
 
