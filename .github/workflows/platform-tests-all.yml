@@ -88,8 +88,25 @@ jobs:
         name: Install Playwright
         run: pnpm playwright install chromium --no-shell
 
-      - &test
-        name: Run Playwright tests
+      - name: Build Node test app
+        working-directory: ${{ env.APP }}
+        run: pnpm build
+
+      - name: Deploy Node test app with production dependencies
+        env: &node-runtime
+          NODE_APP_RUNTIME_DIR: ${{ runner.temp }}/node-app
+        run: |
+          runtime_dir="$NODE_APP_RUNTIME_DIR"
+          if [[ "$RUNNER_OS" == Windows ]]; then
+            runtime_dir=$(cygpath -u "$runtime_dir")
+          fi
+          mkdir -p "$runtime_dir"
+          cp -R "$APP/build" "$APP/server-side-dep" "$APP/package.json" "$runtime_dir/"
+          npm pkg delete devDependencies --prefix "$NODE_APP_RUNTIME_DIR"
+          npm i --omit=dev --ignore-scripts --no-audit --no-fund --prefix "$NODE_APP_RUNTIME_DIR"
+
+      - name: Run Playwright tests
+        env: *node-runtime
         working-directory: ${{ env.APP }}
         run: pnpm test:platform
 
@@ -119,7 +136,9 @@ jobs:
           bun-version: 1.4.0
 
       - *install-playwright
-      - *test
+      - name: Run Playwright tests
+        working-directory: ${{ env.APP }}
+        run: pnpm test:platform
 
       - name: Test compiled executable
         working-directory: ${{ env.APP }}
