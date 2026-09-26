@@ -302,7 +302,11 @@ export async function internal_respond(request, state) {
 		resolved_path = decode_pathname(resolved_path);
 	} catch {
 		resolved_path = null;
-		return await handle();
+		try {
+			return await handle();
+		} catch (e) {
+			return await handle_exception(e, null);
+		}
 	}
 
 	// try to serve the rerouted prerendered resource if it exists
@@ -451,21 +455,29 @@ export async function internal_respond(request, state) {
 
 		return await handle();
 	} catch (e) {
-		if (e instanceof Redirect) {
+		return await handle_exception(e, route);
+	}
+
+	/**
+	 * @param {unknown} error
+	 * @param {import('types').SSRRoute | null} route
+	 */
+	async function handle_exception(error, route) {
+		if (error instanceof Redirect) {
 			try {
 				const response =
 					is_data_request || remote_id
-						? redirect_json_response(e)
+						? redirect_json_response(error)
 						: route?.page && is_action_json_request(event)
-							? action_json_redirect(e)
-							: redirect_response(e.status, e.location);
+							? action_json_redirect(error)
+							: redirect_response(error.status, error.location);
 				add_cookies_to_headers(response.headers, new_cookies.values());
 				return response;
-			} catch (err) {
-				return await handle_fatal_error(event, state, err);
+			} catch (e) {
+				return await handle_fatal_error(event, state, e);
 			}
 		}
-		return await handle_fatal_error(event, state, e);
+		return await handle_fatal_error(event, state, error);
 	}
 
 	async function handle() {

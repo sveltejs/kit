@@ -595,6 +595,19 @@ describe('Errors', () => {
 		});
 	});
 
+	test.skipIf(dev)('exceptions thrown in handle for a malformed URI return responses', async () => {
+		const redirect = await get('/%E0%A4%A');
+		expect(redirect.status).toBe(303);
+		expect(redirect.headers.get('location')).toBe('/');
+
+		const error = await get('/%E0%A4%A?error');
+		expect(error.status).toBe(500);
+		expect(await error.json()).toEqual({
+			message: 'Error in handle for malformed URI (500 Internal Error)',
+			status: 500
+		});
+	});
+
 	test('error thrown in handle results in a rendered error page or JSON response', async () => {
 		// HTML
 		{
