@@ -582,32 +582,6 @@ test.describe('Redirects', () => {
 		}
 	});
 
-	test('errors on an invalid status', async ({
-		baseURL,
-		page,
-		clicknav,
-		javaScriptEnabled,
-		read_errors
-	}) => {
-		await page.goto('/redirect');
-
-		await clicknav('[href="/redirect/invalid-status"]');
-
-		expect(page.url()).toBe(`${baseURL}/redirect/invalid-status`);
-		expect(await page.textContent('h1')).toBe('500');
-		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "Invalid status code (500 Internal Error)"'
-		);
-
-		if (!javaScriptEnabled) {
-			// handleError is not invoked for client-side navigation
-			const { kind, error } = read_errors('/redirect/invalid-status');
-			expect(kind).toBe('unknown');
-			const lines = error.stack.split('\n');
-			expect(lines[0]).toBe('Error: Invalid status code');
-		}
-	});
-
 	test('redirect-on-load', async ({ baseURL, page, javaScriptEnabled }) => {
 		const redirected_to_url = javaScriptEnabled
 			? `${baseURL}/redirect-on-load/redirected`

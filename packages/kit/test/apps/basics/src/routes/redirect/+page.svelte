@@ -5,7 +5,5 @@
 <a href="/redirect/loopy/a">a (loopy)</a>
 <a href="/redirect/loopy/b">b (loopy)</a>
 
-<a href="/redirect/invalid-status">invalid-status</a>
-
 <a href="/redirect/in-handle?throw">in-handle (redirect)</a>
 <a href="/redirect/in-handle?response">in-handle (return Response)</a>
