@@ -1,36 +1,41 @@
 import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import { isBuiltin } from 'node:module';
 import os from 'node:os';
 import path from 'node:path';
 import { parseAst } from 'vite';
-import { afterAll, beforeAll } from 'vitest';
 
 /**
- * Deploys and builds the test app in `dir` before the tests in the current file and removes the
- * copy afterwards. In the copy, kit and the adapter are installed packages rather than workspace
- * links, so Vite resolves them the way it would in a user's project
+ * Copies the test app in `dir` with `pnpm deploy`, so that kit and the adapter are installed
+ * packages rather than workspace links and Vite resolves them the way it would in a user's project
  * @param {string} dir the app's directory in the workspace
- * @param {Record<string, string>} [env]
- * @returns {string} the copy
+ * @returns {string} the copy, which the caller removes
  */
-export function deploy(dir, env) {
-	const { name } = JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf8'));
-	const app = path.join(os.tmpdir(), name);
-
-	beforeAll(() => {
-		fs.rmSync(app, { recursive: true, force: true });
-		execFileSync('pnpm', ['--filter', name, 'deploy', app], {
-			cwd: dir,
-			stdio: 'inherit',
-			shell: process.platform === 'win32'
-		});
-		build(app, env);
-	}, 60_000);
-
-	afterAll(() => fs.rmSync(app, { recursive: true, force: true }));
+export function deploy(dir) {
+	const app = location(dir);
+	fs.rmSync(app, { recursive: true, force: true });
+	execFileSync('pnpm', ['--filter', name(dir), 'deploy', app], {
+		cwd: dir,
+		stdio: 'inherit',
+		shell: process.platform === 'win32'
+	});
 
 	return app;
+}
+
+/**
+ * Where `deploy` puts the copy of the app in `dir`
+ * @param {string} dir
+ */
+export function location(dir) {
+	const hash = createHash('sha1').update(dir).digest('hex').slice(0, 8);
+	return path.join(os.tmpdir(), `${name(dir)}-${hash}`);
+}
+
+/** @param {string} dir */
+function name(dir) {
+	return JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf8')).name;
 }
 
 /**

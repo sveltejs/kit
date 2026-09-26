@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { afterEach, expect, test, vi } from 'vitest';
-import { deploy, leaked_imports } from '../../../../../test-utils/deploy.js';
+import { deploy, leaked_imports } from '../../../../../test-utils/deploy.vitest.js';
 
 const app = deploy(import.meta.dirname, {
 	MY_CUSTOM_PORT: '5173',
