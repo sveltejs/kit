@@ -961,7 +961,7 @@ export type HandleServerError = (input: {
 }) => MaybePromise<void | App.Error>;
 
 /**
- * The [`handleValidationError`](https://svelte.dev/docs/kit/hooks#handleValidationError) hook runs when the argument to a remote function fails validation.
+ * The [`handleValidationError`](https://svelte.dev/docs/kit/hooks#handleValidationError) hook runs when the argument to a `query`, `command` or `prerender` remote function fails validation. It does not run for `form` functions, whose validation issues are returned as field issues instead.
  *
  * It will be called with the validation issues and the event, and must return an object shape that matches `App.Error`.
  */

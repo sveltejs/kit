@@ -147,7 +147,9 @@ export async function handleFetch({ event, request, fetch }) {
 
 > [!NOTE] Can be added to `src/hooks.server.js`
 
-This hook is called when a remote function is called with an argument that does not match the provided [Standard Schema](https://standardschema.dev/). It must return an object matching the shape of [`App.Error`](types#Error).
+This hook is called when a `query`, `command` or `prerender` remote function is called with an argument that does not match the provided [Standard Schema](https://standardschema.dev/). It must return an object matching the shape of [`App.Error`](types#Error).
+
+It is not called for [`form`](remote-functions#form) functions — invalid form submissions are [returned as field issues](remote-functions#form-Validation) instead.
 
 Say you have a remote function that expects a string as its argument ...
 
