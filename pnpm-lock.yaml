@@ -373,6 +373,9 @@ importers:
 
   packages/adapter-cloudflare/test/apps/pages:
     devDependencies:
+      '@sveltejs/adapter-cloudflare':
+        specifier: workspace:*
+        version: link:../../..
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../../../kit
@@ -394,6 +397,9 @@ importers:
 
   packages/adapter-cloudflare/test/apps/workers:
     devDependencies:
+      '@sveltejs/adapter-cloudflare':
+        specifier: workspace:*
+        version: link:../../..
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../../../kit
@@ -585,6 +591,9 @@ importers:
 
   packages/adapter-static/test/apps/prerendered:
     devDependencies:
+      '@sveltejs/adapter-static':
+        specifier: workspace:*
+        version: link:../../..
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../../../kit
@@ -603,6 +612,9 @@ importers:
 
   packages/adapter-static/test/apps/spa:
     devDependencies:
+      '@sveltejs/adapter-static':
+        specifier: workspace:*
+        version: link:../../..
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../../../kit
