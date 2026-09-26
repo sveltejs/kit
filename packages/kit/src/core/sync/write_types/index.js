@@ -15,16 +15,15 @@ const is_whitespace = (/** @type {string} */ char) => /\s/.test(char);
  *   file_name: string;
  *   modified: boolean;
  *   code: string;
- *   exports: any[];
+ *   exports: string[];
  *  } | null} Proxy
  *
- *  @typedef {{
- *   server: Proxy,
- *   universal: Proxy
- *  }} Proxies
- *
- *  @typedef {Map<import('types').PageNode, {route: import('types').RouteData, proxies: Proxies}>} RoutesMap
+ *  @typedef {Map<import('types').PageNode, import('types').RouteData>} RoutesMap
  */
+
+// proxies are reused across syncs until the module they were made from changes
+/** @type {Map<string, { content: string, proxy: Proxy }>} */
+const proxy_cache = new Map();
 
 /**
  * Creates types for the whole manifest
@@ -80,7 +79,19 @@ export function write_types(config, manifest_data, file, root) {
 	if (!route) return;
 	if (!route.leaf && !route.layout && !route.endpoint) return; // nothing to do
 
-	update_types(config, create_routes_map(manifest_data), route, root);
+	const routes_map = create_routes_map(manifest_data);
+	update_types(config, routes_map, route, root);
+
+	// a layout's types depend on the `load` exports of every page below it
+	const is_page_module = [route.leaf?.universal, route.leaf?.server].some(
+		(f) => f && path.resolve(root, f) === path.resolve(file)
+	);
+	if (!is_page_module) return;
+
+	for (let node = route.leaf?.parent; node; node = node.parent) {
+		const layout_route = manifest_data.routes.find((r) => r.layout === node);
+		if (layout_route) update_types(config, routes_map, layout_route, root);
+	}
 }
 
 /**
@@ -91,9 +102,7 @@ function create_routes_map(manifest_data) {
 	/** @type {RoutesMap} */
 	const map = new Map();
 	for (const route of manifest_data.routes) {
-		if (route.leaf) {
-			map.set(route.leaf, { route, proxies: { server: null, universal: null } });
-		}
+		if (route.leaf) map.set(route.leaf, route);
 	}
 	return map;
 }
@@ -188,24 +197,11 @@ function update_types(config, routes, route, root) {
 	}
 
 	if (route.leaf) {
-		let route_info = routes.get(route.leaf);
-		if (!route_info) {
-			// This should be defined, but belts and braces
-			route_info = { route, proxies: { server: null, universal: null } };
-			routes.set(route.leaf, route_info);
-		}
-
-		const { declarations: d, exports: e } = process_node(
-			route.leaf,
-			outdir,
-			true,
-			route_info.proxies,
-			root
-		);
+		const { declarations: d, exports: e, proxies } = process_node(route.leaf, outdir, true, root);
 
 		exports.push(...e);
 		declarations.push(...d);
-		write_proxies(route_info.proxies);
+		write_proxies(proxies);
 
 		if (route.leaf.server) {
 			exports.push(
@@ -229,26 +225,25 @@ function update_types(config, routes, route, root) {
 		route.layout.child_pages?.forEach((page) => {
 			const leaf = routes.get(page);
 			if (leaf) {
-				if (leaf.route.page) ids.push(`"${leaf.route.id}"`);
+				if (leaf.page) ids.push(`"${leaf.id}"`);
 
-				for (const param of leaf.route.params) {
+				for (const param of leaf.params) {
 					// skip if already added
 					if (layout_params.some((p) => p.name === param.name)) continue;
 					layout_params.push({ ...param, optional: true });
 				}
-
-				ensureProxies(page, leaf.proxies, root);
-
-				if (
-					// Be defensive - if a proxy doesn't exist (because it couldn't be created), assume a load function exists.
-					// If we didn't and it's a false negative, the user could wrongfully get a type error on layouts.
-					(leaf.proxies.server && !leaf.proxies.server.exports.includes('load')) ||
-					(leaf.proxies.universal && !leaf.proxies.universal.exports.includes('load'))
-				) {
-					all_pages_have_load = false;
-				}
 			}
-			if (!page.server && !page.universal) {
+
+			const server = page.server ? get_proxy(page.server, true, root) : null;
+			const universal = page.universal ? get_proxy(page.universal, false, root) : null;
+
+			if (
+				(!page.server && !page.universal) ||
+				// Be defensive - if a proxy doesn't exist (because it couldn't be created), assume a load function exists.
+				// If we didn't and it's a false negative, the user could wrongfully get a type error on layouts.
+				(server && !server.exports.includes('load')) ||
+				(universal && !universal.exports.includes('load'))
+			) {
 				all_pages_have_load = false;
 			}
 		});
@@ -264,16 +259,11 @@ function update_types(config, routes, route, root) {
 			'type LayoutParams = RouteParams & ' + generate_params_type(layout_params, outdir, config)
 		);
 
-		/** @type {Proxies} */
-		const proxies = { server: null, universal: null };
-		const { exports: e, declarations: d } = process_node(
-			route.layout,
-			outdir,
-			false,
-			proxies,
-			root,
-			all_pages_have_load
-		);
+		const {
+			exports: e,
+			declarations: d,
+			proxies
+		} = process_node(route.layout, outdir, false, root, all_pages_have_load);
 
 		exports.push(...e);
 		declarations.push(...d);
@@ -303,9 +293,9 @@ function update_types(config, routes, route, root) {
 		if (entry.isFile() && !written.has(entry.name)) fs.unlinkSync(path.join(outdir, entry.name));
 	}
 
-	/** @param {Proxies} proxies */
+	/** @param {Proxy[]} proxies */
 	function write_proxies(proxies) {
-		for (const proxy of [proxies.server, proxies.universal]) {
+		for (const proxy of proxies) {
 			if (proxy?.modified) write_file(proxy.file_name, proxy.code);
 		}
 	}
@@ -315,11 +305,10 @@ function update_types(config, routes, route, root) {
  * @param {import('types').PageNode} node
  * @param {string} outdir
  * @param {boolean} is_page
- * @param {Proxies} proxies
  * @param {string} root The project root directory
  * @param {boolean} [all_pages_have_load]
  */
-function process_node(node, outdir, is_page, proxies, root, all_pages_have_load = true) {
+function process_node(node, outdir, is_page, root, all_pages_have_load = true) {
 	const params = `${is_page ? 'Route' : 'Layout'}Params`;
 	const prefix = is_page ? 'Page' : 'Layout';
 
@@ -335,11 +324,13 @@ function process_node(node, outdir, is_page, proxies, root, all_pages_have_load 
 	/** @type {string} */
 	let data;
 
-	ensureProxies(node, proxies, root);
+	/** @type {Proxy[]} */
+	const proxies = [];
 
 	if (node.server) {
 		const basename = path.basename(node.server);
-		const proxy = proxies.server;
+		const proxy = get_proxy(node.server, true, root);
+		proxies.push(proxy);
 
 		server_data = get_data_type(node.server, 'null', proxy, true);
 
@@ -389,7 +380,8 @@ function process_node(node, outdir, is_page, proxies, root, all_pages_have_load 
 	declarations.push(`type ${parent_type} = ${get_parent_type(node, 'LayoutData')};`);
 
 	if (node.universal) {
-		const proxy = proxies.universal;
+		const proxy = get_proxy(node.universal, false, root);
+		proxies.push(proxy);
 
 		const type = get_data_type(
 			node.universal,
@@ -416,7 +408,7 @@ function process_node(node, outdir, is_page, proxies, root, all_pages_have_load 
 
 	exports.push(`export type ${prefix}Data = ${data};`);
 
-	return { declarations, exports };
+	return { declarations, exports, proxies };
 
 	/**
 	 * @param {string} file_path
@@ -444,41 +436,26 @@ function process_node(node, outdir, is_page, proxies, root, all_pages_have_load 
 }
 
 /**
- * This function populates the proxies object, if necessary and not already done.
  * Proxies are used to tweak the code of a file before it's typechecked.
- * They are needed in two places - when generating the types for a page or layout.
- * To not do the same work twice, we generate the proxies once and pass them around.
- *
- * @param {import('types').PageNode} node
- * @param {Proxies} proxies
- * @param {string} root The project root directory
- */
-function ensureProxies(node, proxies, root) {
-	if (node.server && !proxies.server) {
-		proxies.server = createProxy(node.server, true, root);
-	}
-
-	if (node.universal && !proxies.universal) {
-		proxies.universal = createProxy(node.universal, false, root);
-	}
-}
-
-/**
  * @param {string} file_path
  * @param {boolean} is_server
  * @param {string} root The project root directory
  * @returns {Proxy}
  */
-function createProxy(file_path, is_server, root) {
-	const proxy = tweak_types(fs.readFileSync(path.resolve(root, file_path), 'utf8'), is_server);
-	if (proxy) {
-		return {
-			...proxy,
-			file_name: `proxy${path.basename(file_path)}`
+function get_proxy(file_path, is_server, root) {
+	const content = fs.readFileSync(path.resolve(root, file_path), 'utf8');
+	let cached = proxy_cache.get(file_path);
+
+	if (cached?.content !== content) {
+		const proxy = tweak_types(content, is_server);
+		cached = {
+			content,
+			proxy: proxy && { ...proxy, file_name: `proxy${path.basename(file_path)}` }
 		};
-	} else {
-		return null;
+		proxy_cache.set(file_path, cached);
 	}
+
+	return cached.proxy;
 }
 
 /**
