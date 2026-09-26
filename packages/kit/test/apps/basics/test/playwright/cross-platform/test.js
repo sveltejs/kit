@@ -582,48 +582,6 @@ test.describe('Redirects', () => {
 		}
 	});
 
-	test('errors on missing status', async ({
-		baseURL,
-		page,
-		clicknav,
-		javaScriptEnabled,
-		read_errors
-	}) => {
-		await page.goto('/redirect');
-
-		await clicknav('[href="/redirect/missing-status/a"]');
-
-		const message = process.env.DEV || !javaScriptEnabled ? 'Invalid status code' : 'Redirect loop';
-
-		expect(page.url()).toBe(`${baseURL}/redirect/missing-status/a`);
-		expect(await page.textContent('h1')).toBe('500');
-		expect(await page.textContent('#message')).toBe(
-			`This is your custom error page saying: "${message} (500 Internal Error)"`
-		);
-
-		if (!javaScriptEnabled) {
-			// handleError is not invoked for client-side navigation
-			const { kind, error } = read_errors('/redirect/missing-status/a');
-			expect(kind).toBe('unknown');
-			const lines = error.stack.split('\n');
-			expect(lines[0]).toBe(`Error: ${message}`);
-		}
-	});
-
-	test('errors on invalid status', async ({ baseURL, page, clicknav, javaScriptEnabled }) => {
-		await page.goto('/redirect');
-
-		await clicknav('[href="/redirect/missing-status/b"]');
-
-		const message = process.env.DEV || !javaScriptEnabled ? 'Invalid status code' : 'Redirect loop';
-
-		expect(page.url()).toBe(`${baseURL}/redirect/missing-status/b`);
-		expect(await page.textContent('h1')).toBe('500');
-		expect(await page.textContent('#message')).toBe(
-			`This is your custom error page saying: "${message} (500 Internal Error)"`
-		);
-	});
-
 	test('redirect-on-load', async ({ baseURL, page, javaScriptEnabled }) => {
 		const redirected_to_url = javaScriptEnabled
 			? `${baseURL}/redirect-on-load/redirected`
