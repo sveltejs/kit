@@ -1,0 +1,10 @@
+{
+	"name": "server-side-svelte-dep",
+	"version": "0.0.1",
+	"type": "module",
+	"exports": {
+		"./server/message": {
+			"svelte": "./message.js"
+		}
+	}
+}
