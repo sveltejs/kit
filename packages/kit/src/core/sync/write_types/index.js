@@ -79,14 +79,18 @@ export function write_types(config, manifest_data, file, root) {
 	if (!route) return;
 	if (!route.leaf && !route.layout && !route.endpoint) return; // nothing to do
 
+	// a layout's types depend on the `load` exports of every page below it
+	const page_module = [route.leaf?.universal, route.leaf?.server].find(
+		(f) => f && path.resolve(root, f) === path.resolve(file)
+	);
+	const declares_load = (/** @type {string} */ f) =>
+		proxy_cache.get(f)?.proxy?.exports.includes('load');
+	const declared_load = page_module && declares_load(page_module);
+
 	const routes_map = create_routes_map(manifest_data);
 	update_types(config, routes_map, route, root);
 
-	// a layout's types depend on the `load` exports of every page below it
-	const is_page_module = [route.leaf?.universal, route.leaf?.server].some(
-		(f) => f && path.resolve(root, f) === path.resolve(file)
-	);
-	if (!is_page_module) return;
+	if (!page_module || declares_load(page_module) === declared_load) return;
 
 	for (let node = route.leaf?.parent; node; node = node.parent) {
 		const layout_route = manifest_data.routes.find((r) => r.layout === node);
