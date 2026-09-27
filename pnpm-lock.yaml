@@ -527,6 +527,9 @@ importers:
       server-side-dep:
         specifier: file:server-side-dep
         version: file:packages/adapter-node/test/apps/basic/server-side-dep
+      server-side-svelte-dep:
+        specifier: file:server-side-svelte-dep
+        version: file:packages/adapter-node/test/apps/basic/server-side-svelte-dep
     devDependencies:
       '@playwright/test':
         specifier: 'catalog:'
@@ -4234,6 +4237,9 @@ packages:
   server-side-dep@file:packages/adapter-node/test/apps/basic/server-side-dep:
     resolution: {directory: packages/adapter-node/test/apps/basic/server-side-dep, type: directory}
 
+  server-side-svelte-dep@file:packages/adapter-node/test/apps/basic/server-side-svelte-dep:
+    resolution: {directory: packages/adapter-node/test/apps/basic/server-side-svelte-dep, type: directory}
+
   sharp@0.35.4:
     resolution: {integrity: sha512-n++8XWcj+jCOr2IOl7h8LbKnGBDY4aPbmprMONBNFdn0ImXqpGVv5zliDs0V9HbmbCQLpbuo2ej9rAoOQTvMDA==}
     engines: {node: '>=20.9.0'}
@@ -6808,6 +6814,8 @@ snapshots:
   server-side-dep@file:packages/adapter-cloudflare/test/apps/workers/server-side-dep: {}
 
   server-side-dep@file:packages/adapter-node/test/apps/basic/server-side-dep: {}
+
+  server-side-svelte-dep@file:packages/adapter-node/test/apps/basic/server-side-svelte-dep: {}
 
   sharp@0.35.4(@types/node@22.20.4):
     dependencies:
