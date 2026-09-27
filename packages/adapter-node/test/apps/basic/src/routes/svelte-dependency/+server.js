@@ -1,4 +1,4 @@
-import { message } from 'server-side-svelte-dep/server/message';
+import { message } from 'server-side-svelte-dep';
 
 export function GET() {
 	return new Response(message());

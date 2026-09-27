@@ -87,6 +87,18 @@ describe('Vite build configuration', () => {
 		expect(options.output.paths).toEqual({ [handoff]: '../adapter-bun.js' });
 	});
 
+	test('bundles production dependencies that vite-plugin-svelte marks noExternal', () => {
+		read_file.mockReturnValue(
+			JSON.stringify({
+				dependencies: { jsdom: '1.0.0', 'svelte-lib': '1.0.0', '@ui/kit': '1.0.0' }
+			})
+		);
+
+		const { ssr } = vite_config({ ssr: { noExternal: ['svelte-lib', /^@ui\//] } });
+
+		expect(ssr.external).toEqual(['jsdom']);
+	});
+
 	test('keeps adapter chunks at the output root so the hand-off path resolves', () => {
 		read_file.mockReturnValue('{}');
 
@@ -398,8 +410,8 @@ describe('generated routes', () => {
 	});
 });
 
-function vite_config() {
-	return (adapter() as any).vite.plugins.post[0].config();
+function vite_config(config = {}) {
+	return (adapter() as any).vite.plugins.post[0].config(config);
 }
 
 function handoff_source() {

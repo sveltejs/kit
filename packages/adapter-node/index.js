@@ -90,14 +90,23 @@ export default function (opts = {}) {
 					{
 						name: 'vite-plugin-sveltekit-adapter-node',
 						apply: 'build',
-						config() {
+						config(config) {
 							const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+							// vite-plugin-svelte lists Svelte libraries here so their export conditions resolve at build time
+							const no_external = Array.isArray(config.ssr?.noExternal)
+								? config.ssr.noExternal
+								: [];
 
 							return {
 								ssr: {
 									// Vite doesn't bundle dependencies for SSR by default. Bundle everything
-									// except production dependencies it can resolve under runtime conditions
-									external: Object.keys(pkg.dependencies || {}),
+									// except production dependencies that don't need the build's export conditions
+									external: Object.keys(pkg.dependencies || {}).filter(
+										(dep) =>
+											!no_external.some((rule) =>
+												typeof rule === 'string' ? rule === dep : rule.test(dep)
+											)
+									),
 									noExternal: true
 								},
 								environments: {

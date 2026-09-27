@@ -3,4 +3,4 @@
 '@sveltejs/adapter-bun': patch
 ---
 
-fix: bundle dependencies unavailable under runtime export conditions
+fix: bundle Svelte libraries listed in `dependencies` instead of externalising them
