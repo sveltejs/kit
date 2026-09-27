@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { expect, test } from 'vitest';
-import { deploy } from '../../../../../test-utils/deploy.js';
+import { deploy } from '../../../../../test-utils/deploy.vitest.js';
 
 const app = deploy(import.meta.dirname);
 
