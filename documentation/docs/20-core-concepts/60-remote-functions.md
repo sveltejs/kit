@@ -529,6 +529,8 @@ export const survey = form(
 </form>
 ```
 
+> [!NOTE] Do not use `defaultChecked` or `defaultValue` together with `.as(...)`. The helpers spread a live `checked` or `value` attribute that reflects the form's current state, which overrides HTML defaults. To set initial values, use [`fields.set(...)`](#form-Getting/setting-inputs) instead.
+
 Alternatively, you could use `select` and `select multiple`:
 
 ```svelte
@@ -688,7 +690,7 @@ Each field has a `value()` method that reflects its current value. As the user i
 
 Alternatively, `createPost.fields.value()` would return a `{ title, content }` object.
 
-The `value()` of a field does _not_ reflect defaults provided as a second argument to `as` (as in `fields.title.as('text', '...')`) until it is edited or submitted. You can programmatically update a field (or a collection of fields) via the `set(...)` method:
+The `value()` of a field does _not_ reflect defaults provided as a second argument to `as` (as in `fields.title.as('text', '...')`) until it is edited or submitted. You can programmatically update a field (or a collection of fields) via the `set(...)` method. Prefer `set(...)` over HTML `defaultChecked` / `defaultValue` when using `.as(...)`, because those helpers already provide a live `checked` or `value` attribute:
 
 ```svelte
 <script>
