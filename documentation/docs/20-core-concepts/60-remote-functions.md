@@ -811,13 +811,18 @@ We can customize what happens when the form is submitted with the `enhance` meth
 
 <form {...createPost.enhance(async (form) => {
 	try {
-		if (await form.submit()) {
-			form.element.reset();
+		await form.submit();
 
-			showToast('Successfully published!');
-		} else {
+		// A resolved submit() does not always mean the data was valid — schema
+		// failures and issues raised via invalid() populate fields.allIssues()
+		// instead of throwing.
+		if (form.fields.allIssues()?.length) {
 			showToast('Invalid data!');
+			return;
 		}
+
+		form.element.reset();
+		showToast('Successfully published!');
 	} catch (error) {
 		showToast('Oh no! Something went wrong');
 	}
@@ -826,7 +831,7 @@ We can customize what happens when the form is submitted with the `enhance` meth
 </form>
 ```
 
-> [!NOTE] When using `enhance`, the `<form>` is not automatically reset — you must call `form.element.reset()` if you want to clear the inputs.
+> [!NOTE] When using `enhance`, the `<form>` is not automatically reset — you must call `form.element.reset()` if you want to clear the inputs. Check [`fields.allIssues()`](#form-Validation) (or the boolean returned by `submit()`) before treating the submission as successful — validation failures do not throw.
 
 The callback receives a copy of the form instance. It has all the same properties and methods except `enhance`, and `form.submit()` performs the submission directly without re-running the enhance callback. Inside the callback, `form.element` is always defined.
 
