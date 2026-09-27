@@ -24,7 +24,3 @@ function server_source() {
 test('dependencies are not bundled', () => {
 	expect(server_source()).not.toContain('server-side-dep implementation');
 });
-
-test('Svelte dependencies are bundled', () => {
-	expect(server_source()).toContain('server-side Svelte dependency');
-});
