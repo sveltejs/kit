@@ -1369,6 +1369,31 @@ test.describe('client error boundaries', () => {
 	});
 });
 
+test.describe('onNavigate', () => {
+	test('a navigation superseded before its render settles does not run its onNavigate return value', async ({
+		page
+	}) => {
+		await page.goto('/navigation-settle');
+		await page.evaluate(() => {
+			window.render_gate = new Promise((fulfil) => (window.open_render_gate = fulfil));
+		});
+
+		// the navigation commits, then waits for its render to settle
+		await page.locator('a[href="/navigation-settle/held"]').click();
+		await expect(page).toHaveURL('/navigation-settle/held');
+
+		// a newer navigation starts before the render settles
+		await page.locator('a[href="/navigation-settle/other"]').click();
+		await expect(page).toHaveURL('/navigation-settle/other');
+		await page.evaluate(() => window.open_render_gate('open'));
+
+		await expect(page.locator('p')).toHaveText('other');
+		await expect
+			.poll(() => page.evaluate(() => window.after_navigate_log))
+			.toEqual(['/navigation-settle/other']);
+	});
+});
+
 test.describe('fork', () => {
 	test('preloading one route must not throw errors when navigating elsewhere', async ({ page }) => {
 		await page.goto('/fork');

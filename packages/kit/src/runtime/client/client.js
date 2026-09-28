@@ -2143,10 +2143,12 @@ async function navigate({
 	 * @type {Promise<void> | undefined}
 	 */
 	let commit_promise;
+
+	/** @type {Array<() => void>} */
+	let after_navigate = [];
+
 	if (started) {
-		const after_navigate = await run_on_navigate_callbacks(
-			/** @type {OnNavigate} */ (nav.navigation)
-		);
+		after_navigate = await run_on_navigate_callbacks(/** @type {OnNavigate} */ (nav.navigation));
 
 		// abort if user navigated while `onNavigate` callbacks were pending
 		if (navigation_token !== nav_token) {
@@ -2220,7 +2222,8 @@ async function navigate({
 		url,
 		popped?.scroll,
 		reset,
-		commit_promise
+		commit_promise,
+		after_navigate
 	);
 	if (!finished) return;
 
@@ -2273,13 +2276,24 @@ function register_after_navigate(after_navigate) {
  * @param {{ x: number, y: number } | null | undefined} popped_scroll the scroll position to restore for popstate navigations
  * @param {boolean} reset
  * @param {Promise<void> | undefined} updated
+ * @param {Array<() => void>} after_navigate functions this navigation's `onNavigate` callbacks returned
  */
-async function finish_navigation(nav, nav_token, url, popped_scroll, reset, updated) {
+async function finish_navigation(
+	nav,
+	nav_token,
+	url,
+	popped_scroll,
+	reset,
+	updated,
+	after_navigate
+) {
 	const active_element = document.activeElement;
 
 	await updated;
 
 	if (navigation_token !== nav_token) {
+		// they belong to this navigation, so they must not run when the newer one finishes
+		after_navigate.forEach((fn) => after_navigate_callbacks.delete(fn));
 		nav.reject(new Error('navigation aborted'));
 		return false;
 	}
@@ -2992,10 +3006,19 @@ async function update_state(intent, state, { replace, persist_state, reset }, ca
 		clear_onward_history(current_history_index, current_navigation_index);
 	}
 
+	/** @type {Array<() => void>} */
+	let after_navigate = [];
+
 	if (nav) {
-		register_after_navigate(
-			await run_on_navigate_callbacks(/** @type {OnNavigate} */ (nav.navigation))
-		);
+		after_navigate = await run_on_navigate_callbacks(/** @type {OnNavigate} */ (nav.navigation));
+
+		// abort if user navigated while `onNavigate` callbacks were pending
+		if (navigation_token !== nav_token) {
+			nav.reject(new Error('navigation aborted'));
+			return;
+		}
+
+		register_after_navigate(after_navigate);
 	}
 
 	blur_active_element(reset);
@@ -3010,7 +3033,15 @@ async function update_state(intent, state, { replace, persist_state, reset }, ca
 	});
 
 	if (nav) {
-		const finished = await finish_navigation(nav, nav_token, url, null, reset, settled());
+		const finished = await finish_navigation(
+			nav,
+			nav_token,
+			url,
+			null,
+			reset,
+			settled(),
+			after_navigate
+		);
 		if (!finished) return;
 	}
 

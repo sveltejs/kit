@@ -1,5 +1,6 @@
 <script>
-	import { onNavigate } from '$app/navigation';
+	import { goto, onNavigate } from '$app/navigation';
+	import { page } from '$app/state';
 	import { onMount } from 'svelte';
 
 	let { data } = $props();
@@ -23,3 +24,11 @@
 <h1>{data.id}</h1>
 <a href="/navigation-lifecycle/on-navigate-superseded/a">a</a>
 <a href="/navigation-lifecycle/on-navigate-superseded/b">b</a>
+<button
+	onclick={() =>
+		void goto('/navigation-lifecycle/on-navigate-superseded/shallow', {
+			shallow: true,
+			state: { active: true }
+		})}>shallow</button
+>
+<p data-testid="state">{page.state.active ? 'active' : 'inactive'}</p>
