@@ -1,3 +1,4 @@
+/** @import { CloudflareWorkersModule } from '@cloudflare/workers-types/experimental/index.js'; */
 import { AsyncLocalStorage } from 'node:async_hooks';
 
 const als = new AsyncLocalStorage();
@@ -8,7 +9,7 @@ function get_current_env() {
 	return als.getStore() ?? proxy.env;
 }
 
-/** @typedef {typeof import('@cloudflare/workers-types').CloudflareWorkersModule} Module */
+/** @typedef {typeof CloudflareWorkersModule} Module */
 
 export const env = new Proxy(
 	{},
@@ -138,6 +139,7 @@ class Span {
 		return this;
 	}
 	end() {}
+	recordException() {}
 }
 /** @type {Module['tracing']} */
 export const tracing = {
@@ -150,5 +152,6 @@ export const tracing = {
 	startSpan(_) {
 		return new Span();
 	},
+	getActiveSpan() {},
 	Span
 };

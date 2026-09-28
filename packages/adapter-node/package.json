@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-node",
-	"version": "6.0.0-next.12",
+	"version": "6.0.0-next.13",
 	"description": "Adapter for SvelteKit apps that generates a standalone Node server",
 	"keywords": [
 		"adapter",
@@ -37,14 +37,14 @@
 		"test": "pnpm test:unit && pnpm test:build",
 		"test:unit": "vitest run",
 		"test:build": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:build",
-		"check": "tsc",
+		"check": "node node_modules/@typescript/native/bin/tsc",
 		"lint": "oxfmt --check .",
 		"format": "oxfmt --write ."
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",
 		"@types/node": "catalog:",
-		"typescript": "catalog:typescript-native",
+		"@typescript/native": "catalog:",
 		"vitest": "catalog:"
 	},
 	"peerDependencies": {
