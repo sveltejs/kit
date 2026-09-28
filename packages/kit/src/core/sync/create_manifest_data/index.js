@@ -214,18 +214,18 @@ function create_routes_and_nodes(cwd, config, fallback) {
 
 			const dir = path.join(cwd, routes_base, id);
 
-			// We can't use withFileTypes because of a NodeJs bug which returns wrong results
-			// with isDirectory() in case of symlinks: https://github.com/nodejs/node/issues/30646
 			// We sort the entries because `readdirSync` order is not guaranteed and differs
 			// between runtimes (e.g. Node returns entries alphabetically, Bun in directory
 			// order). Node indices are assigned from this traversal order, so without sorting
 			// the SSR and client manifests can disagree, causing hydration mismatches.
 			const files = fs
-				.readdirSync(dir)
-				.sort()
-				.map((name) => ({
-					is_dir: fs.statSync(path.join(dir, name)).isDirectory(),
-					name
+				.readdirSync(dir, { withFileTypes: true })
+				.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0))
+				.map((entry) => ({
+					is_dir: entry.isSymbolicLink()
+						? fs.statSync(path.join(dir, entry.name)).isDirectory()
+						: entry.isDirectory(),
+					name: entry.name
 				}));
 
 			// process files first
