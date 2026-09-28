@@ -3116,10 +3116,6 @@ export async function set_nearest_error_page(error) {
 function _start_router() {
 	history.scrollRestoration = 'manual';
 
-	// Adopted from Nuxt.js
-	// Reset scrollRestoration to auto when leaving page, allowing page reload
-	// and back-navigation from other pages to use the browser to restore the
-	// scrolling position.
 	addEventListener('beforeunload', (e) => {
 		let should_block = false;
 
@@ -3145,8 +3141,6 @@ function _start_router() {
 		if (should_block) {
 			e.preventDefault();
 			e.returnValue = '';
-		} else {
-			history.scrollRestoration = 'auto';
 		}
 	});
 	addEventListener('visibilitychange', () => {
