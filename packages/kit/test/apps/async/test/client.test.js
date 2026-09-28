@@ -1390,7 +1390,7 @@ test.describe('onNavigate', () => {
 		await expect(page.locator('p')).toHaveText('other');
 		await expect
 			.poll(() => page.evaluate(() => window.after_navigate_log))
-			.toEqual(['/navigation-settle/other']);
+			.toEqual(['/navigation-settle/other', 'shared']);
 	});
 });
 

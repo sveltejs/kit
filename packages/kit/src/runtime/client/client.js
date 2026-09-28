@@ -2144,11 +2144,11 @@ async function navigate({
 	 */
 	let commit_promise;
 
-	/** @type {Array<() => void>} */
+	/** @type {Array<(navigation: AfterNavigate) => void>} */
 	let after_navigate = [];
 
 	if (started) {
-		after_navigate = await run_on_navigate_callbacks(/** @type {OnNavigate} */ (nav.navigation));
+		const returned = await run_on_navigate_callbacks(/** @type {OnNavigate} */ (nav.navigation));
 
 		// abort if user navigated while `onNavigate` callbacks were pending
 		if (navigation_token !== nav_token) {
@@ -2158,7 +2158,7 @@ async function navigate({
 			return;
 		}
 
-		register_after_navigate(after_navigate);
+		after_navigate = register_after_navigate(returned);
 
 		// Type-casts are save because we know this resolved a proper SvelteKit route
 		const target = popped?.shallow
@@ -2253,18 +2253,24 @@ async function run_on_navigate_callbacks(navigation) {
 }
 
 /**
- * Registers the functions returned by `onNavigate` callbacks to run once, after the navigation
- * @param {Array<() => void>} after_navigate
+ * Registers the functions returned by `onNavigate` callbacks to run once, after the navigation.
+ * Each gets an entry of its own, so removing one navigation's entries never removes another's
+ * registration of the same function
+ * @param {Array<() => void>} returned
+ * @returns {Array<(navigation: AfterNavigate) => void>} the registered entries
  */
-function register_after_navigate(after_navigate) {
-	if (after_navigate.length > 0) {
-		function cleanup() {
-			after_navigate.forEach((fn) => after_navigate_callbacks.delete(fn));
-		}
+function register_after_navigate(returned) {
+	if (returned.length === 0) return [];
 
-		after_navigate.push(cleanup);
-		after_navigate.forEach((fn) => after_navigate_callbacks.add(fn));
-	}
+	/** @type {Array<(navigation: AfterNavigate) => void>} */
+	const entries = returned.map(
+		(fn) => (navigation) => /** @type {(navigation: AfterNavigate) => void} */ (fn)(navigation)
+	);
+
+	entries.push(() => entries.forEach((entry) => after_navigate_callbacks.delete(entry)));
+	entries.forEach((entry) => after_navigate_callbacks.add(entry));
+
+	return entries;
 }
 
 /**
@@ -2276,7 +2282,7 @@ function register_after_navigate(after_navigate) {
  * @param {{ x: number, y: number } | null | undefined} popped_scroll the scroll position to restore for popstate navigations
  * @param {boolean} reset
  * @param {Promise<void> | undefined} updated
- * @param {Array<() => void>} after_navigate functions this navigation's `onNavigate` callbacks returned
+ * @param {Array<(navigation: AfterNavigate) => void>} after_navigate the entries this navigation registered for the functions its `onNavigate` callbacks returned
  */
 async function finish_navigation(
 	nav,
@@ -2293,7 +2299,7 @@ async function finish_navigation(
 
 	if (navigation_token !== nav_token) {
 		// they belong to this navigation, so they must not run when the newer one finishes
-		after_navigate.forEach((fn) => after_navigate_callbacks.delete(fn));
+		after_navigate.forEach((entry) => after_navigate_callbacks.delete(entry));
 		nav.reject(new Error('navigation aborted'));
 		return false;
 	}
@@ -3006,11 +3012,11 @@ async function update_state(intent, state, { replace, persist_state, reset }, ca
 		clear_onward_history(current_history_index, current_navigation_index);
 	}
 
-	/** @type {Array<() => void>} */
+	/** @type {Array<(navigation: AfterNavigate) => void>} */
 	let after_navigate = [];
 
 	if (nav) {
-		after_navigate = await run_on_navigate_callbacks(/** @type {OnNavigate} */ (nav.navigation));
+		const returned = await run_on_navigate_callbacks(/** @type {OnNavigate} */ (nav.navigation));
 
 		// abort if user navigated while `onNavigate` callbacks were pending
 		if (navigation_token !== nav_token) {
@@ -3018,7 +3024,7 @@ async function update_state(intent, state, { replace, persist_state, reset }, ca
 			return;
 		}
 
-		register_after_navigate(after_navigate);
+		after_navigate = register_after_navigate(returned);
 	}
 
 	blur_active_element(reset);
