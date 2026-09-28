@@ -138,6 +138,66 @@ test.describe('relative paths', () => {
 		await page.locator('button').click();
 		await expect(page.locator('h2')).toHaveText('button has been clicked 1 time');
 	});
+
+	test('works when proxied with an empty base path', async ({ page, baseURL }) => {
+		test.skip(
+			process.env.PATHS_BASE !== '',
+			'only applies to the `paths.base: ""` configuration, where the proxy prefix is the only prefix'
+		);
+
+		const proxy_path = '/proxy';
+
+		/** @type {string | null} */
+		let redirect_location = null;
+
+		// the same reverse proxy as the non-empty base case: strip the prefix and forward
+		// to the server, and abort requests that escape the prefix. In dev, only the
+		// initial client module requests; imported module URLs are rewritten by Vite and
+		// are outside this regression.
+		await page.route('**/*', async (route) => {
+			const url = new URL(route.request().url());
+
+			if (url.pathname.startsWith(`${proxy_path}/`)) {
+				url.pathname = url.pathname.slice(proxy_path.length);
+
+				// don't follow redirects, so that the `location` is the one kit emitted
+				const response = await route.fetch({ url: url.href, maxRedirects: 0 });
+
+				if (response.status() === 308) {
+					redirect_location = response.headers()['location'] ?? null;
+				}
+
+				await route.fulfill({ response });
+			} else if (
+				!process.env.DEV ||
+				((url.pathname.includes('/node_modules/') || url.pathname.includes('/@fs/')) &&
+					route.request().headers().referer?.endsWith(`${proxy_path}/base/`))
+			) {
+				await route.abort();
+			} else {
+				await route.continue();
+			}
+		});
+
+		// with nothing configured as the base, the trailing slash redirect has to be
+		// relative, so that resolving it against the URL the browser asked for keeps the
+		// stripped prefix. an absolute `location` would send the browser to the origin,
+		// outside the app. note that we cannot assert this by navigating and checking
+		// `page.url()`, because a fulfilled redirect does not re-enter the route handler
+		// for the followed request
+		await page.goto(`${proxy_path}/slash`, { wait_for_started: false });
+		expect(redirect_location).toBe('slash/');
+		expect(
+			new URL(/** @type {string} */ (redirect_location), `${baseURL}${proxy_path}/slash`).pathname
+		).toBe(`${proxy_path}/slash/`);
+
+		// the assets are document relative, so they resolve against the proxied URL and
+		// the app still hydrates
+		await page.goto(`${proxy_path}/base/`);
+
+		await page.locator('button').click();
+		await expect(page.locator('h2')).toHaveText('button has been clicked 1 time');
+	});
 });
 
 test.describe('assets path', () => {

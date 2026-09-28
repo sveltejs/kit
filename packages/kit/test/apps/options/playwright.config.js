@@ -11,6 +11,7 @@ export default defineConfig({
 			: `pnpm build && pnpm preview --port ${port} --strictPort`,
 		env: {
 			ROUTER_RESOLUTION: process.env.ROUTER_RESOLUTION ?? 'client',
+			PATHS_BASE: process.env.PATHS_BASE ?? '/path-base',
 			PATHS_ASSETS: process.env.PATHS_ASSETS ?? '',
 			PATHS_RELATIVE: process.env.PATHS_RELATIVE ?? 'true'
 		}

@@ -41,7 +41,7 @@ const config = {
 			inlineStyleThreshold: 1024,
 			outDir: '.custom-out-dir',
 			paths: {
-				base: '/path-base',
+				base: process.env.PATHS_BASE ?? '/path-base',
 				// @ts-expect-error our env var string can't match the https template literal
 				assets: process.env.PATHS_ASSETS,
 				relative: process.env.PATHS_RELATIVE !== 'false'
