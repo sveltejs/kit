@@ -2144,7 +2144,9 @@ async function navigate({
 	 */
 	let commit_promise;
 	if (started) {
-		await run_on_navigate_callbacks(/** @type {OnNavigate} */ (nav.navigation));
+		const after_navigate = await run_on_navigate_callbacks(
+			/** @type {OnNavigate} */ (nav.navigation)
+		);
 
 		// abort if user navigated while `onNavigate` callbacks were pending
 		if (navigation_token !== nav_token) {
@@ -2153,6 +2155,8 @@ async function navigate({
 			nav.reject(new Error('navigation aborted'));
 			return;
 		}
+
+		register_after_navigate(after_navigate);
 
 		// Type-casts are save because we know this resolved a proper SvelteKit route
 		const target = popped?.shallow
@@ -2232,17 +2236,24 @@ async function navigate({
 }
 
 /**
- * Runs the `onNavigate` callbacks and registers any functions they return to run after the navigation
+ * Runs the `onNavigate` callbacks and returns any functions they return, to run after the navigation
  * @param {OnNavigate} navigation
+ * @returns {Promise<Array<() => void>>}
  */
 async function run_on_navigate_callbacks(navigation) {
-	const after_navigate = (
+	return (
 		await Promise.all(
 			// eslint-disable-next-line @typescript-eslint/await-thenable -- we need to await because they can be asynchronous
 			Array.from(on_navigate_callbacks, (fn) => fn(navigation))
 		)
 	).filter(/** @returns {value is () => void} */ (value) => typeof value === 'function');
+}
 
+/**
+ * Registers the functions returned by `onNavigate` callbacks to run once, after the navigation
+ * @param {Array<() => void>} after_navigate
+ */
+function register_after_navigate(after_navigate) {
 	if (after_navigate.length > 0) {
 		function cleanup() {
 			after_navigate.forEach((fn) => after_navigate_callbacks.delete(fn));
@@ -2982,7 +2993,9 @@ async function update_state(intent, state, { replace, persist_state, reset }, ca
 	}
 
 	if (nav) {
-		await run_on_navigate_callbacks(/** @type {OnNavigate} */ (nav.navigation));
+		register_after_navigate(
+			await run_on_navigate_callbacks(/** @type {OnNavigate} */ (nav.navigation))
+		);
 	}
 
 	blur_active_element(reset);

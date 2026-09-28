@@ -324,6 +324,11 @@ test.describe('Navigation lifecycle functions', () => {
 		await page.evaluate(() => window.held_navigations[1]());
 		await expect(page).toHaveURL('/navigation-lifecycle/on-navigate-superseded/a');
 		await expect(page.locator('h1')).toHaveText('a');
+
+		// only the navigation that completed runs the function its onNavigate returned
+		await expect
+			.poll(() => page.evaluate(() => window.after_navigate_log))
+			.toEqual(['/navigation-lifecycle/on-navigate-superseded/a']);
 	});
 
 	test('navigation.event is populated', async ({ page, clicknav }) => {

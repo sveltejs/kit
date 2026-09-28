@@ -6,12 +6,16 @@
 
 	onMount(() => {
 		window.held_navigations = [];
+		window.after_navigate_log = [];
 	});
 
-	// hold every navigation until the test releases it, as a view transition would
-	onNavigate(() => {
+	// hold every navigation until the test releases it, as a view transition would,
+	// then register a function to run once the navigation has completed
+	onNavigate((navigation) => {
 		return new Promise((fulfil) => {
-			window.held_navigations.push(fulfil);
+			window.held_navigations.push(() =>
+				fulfil(() => window.after_navigate_log.push(navigation.to?.url.pathname ?? ''))
+			);
 		});
 	});
 </script>
