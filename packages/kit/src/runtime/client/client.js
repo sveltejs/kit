@@ -3478,10 +3478,16 @@ function _start_router() {
 	addEventListener('pageshow', (event) => {
 		// If the user navigates to another site and then uses the back button and
 		// bfcache hits, we need to set navigating to null, the site doesn't know
-		// the navigation away from it was successful.
+		// the navigation away from it was successful. Some browsers also restore
+		// the document at the top when manual scroll restoration is enabled.
 		// Info about bfcache here: https://web.dev/bfcache
 		if (event.persisted) {
 			set_navigation(null);
+
+			const scroll = history_info[current_history_index]?.scroll;
+			if (scroll) {
+				scrollTo(scroll.x, scroll.y);
+			}
 		}
 	});
 

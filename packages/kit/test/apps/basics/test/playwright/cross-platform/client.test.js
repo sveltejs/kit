@@ -545,6 +545,46 @@ test.describe('Scrolling', () => {
 		expect(await page.evaluate(() => scrollY)).toBe(0);
 	});
 
+	test('scroll is restored when returning from the back-forward cache', async ({
+		page,
+		scroll_to
+	}) => {
+		await page.goto('/anchor');
+		await scroll_to(0, 1000);
+
+		await page.evaluate(() => {
+			Object.defineProperty(document, 'visibilityState', {
+				value: 'hidden',
+				configurable: true
+			});
+			dispatchEvent(new Event('visibilitychange'));
+			Object.defineProperty(document, 'visibilityState', { value: 'visible' });
+			scrollTo(0, 0);
+			dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true }));
+		});
+
+		await expect.poll(() => page.evaluate(() => scrollY)).toBe(1000);
+	});
+
+	test('scroll is not restored for a non-persisted pageshow', async ({ page, scroll_to }) => {
+		await page.goto('/anchor');
+		await scroll_to(0, 1000);
+
+		const scroll_y = await page.evaluate(() => {
+			Object.defineProperty(document, 'visibilityState', {
+				value: 'hidden',
+				configurable: true
+			});
+			dispatchEvent(new Event('visibilitychange'));
+			Object.defineProperty(document, 'visibilityState', { value: 'visible' });
+			scrollTo(0, 0);
+			dispatchEvent(new PageTransitionEvent('pageshow'));
+			return scrollY;
+		});
+
+		expect(scroll_y).toBe(0);
+	});
+
 	test('scroll is restored after hitting the back button', async ({ clicknav, page }) => {
 		await page.goto('/anchor');
 		await page.locator('#scroll-anchor').click();
