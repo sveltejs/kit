@@ -193,6 +193,12 @@ test('create package with tsconfig specified', async () => {
 	await test_make_package('tsconfig-specified', { tsconfig: 'tsconfig.build.json' });
 });
 
+test('create package with noEmitOnError', async () => {
+	// the virtual `.svelte.ts` file must not have a type error, otherwise `noEmitOnError`
+	// silently swallows the declaration emit
+	await test_make_package('tsconfig-noemitonerror');
+});
+
 // chokidar doesn't fire events in github actions :shrug:
 if (!process.env.CI) {
 	test('watches for changes', async () => {

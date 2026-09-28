@@ -1,0 +1,16 @@
+{
+	"name": "tsconfig-noemitonerror",
+	"private": true,
+	"version": "1.0.0",
+	"description": "emits type declarations with noEmitOnError enabled",
+	"type": "module",
+	"peerDependencies": {
+		"svelte": "^5.0.0"
+	},
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"svelte": "./dist/index.js"
+		}
+	}
+}

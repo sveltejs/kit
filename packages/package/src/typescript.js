@@ -1,4 +1,5 @@
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import { createRequire } from 'node:module';
 import semver from 'semver';
@@ -35,14 +36,44 @@ export async function emit_dts(input, output, final_output, cwd, alias, files, t
 		// Not all version specs are valid semver, e.g. "latest" or "next" or catalog references
 		no_svelte_3 = true;
 	}
-	await emitDts({
-		libRoot: input,
-		svelteShimsPath: no_svelte_3
-			? require.resolve('svelte2tsx/svelte-shims-v4.d.ts')
-			: require.resolve('svelte2tsx/svelte-shims.d.ts'),
-		declarationDir: tmp,
-		tsconfig
-	});
+	const svelte2tsx_shims = no_svelte_3
+		? require.resolve('svelte2tsx/svelte-shims-v4.d.ts')
+		: require.resolve('svelte2tsx/svelte-shims.d.ts');
+	const svelte2tsx_jsx = no_svelte_3
+		? require.resolve('svelte2tsx/svelte-jsx-v4.d.ts')
+		: require.resolve('svelte2tsx/svelte-jsx.d.ts');
+
+	// For any component containing markup, the `dts` output of `svelte2tsx` references the
+	// ambient `svelteHTML` namespace, but `emitDts` only adds the shims file to the program.
+	// Without those typings the virtual `.svelte.ts` file has a type error, which means that
+	// `noEmitOnError` in the user's tsconfig silently suppresses the declaration emit. Hand
+	// `emitDts` a file that pulls in both sets of ambient declarations instead. It lives in a
+	// `svelte2tsx` directory because `svelte2tsx` determines which Svelte version to target
+	// from the path of the shims file.
+	const shims_dir = fs.mkdtempSync(path.join(os.tmpdir(), 'svelte-package-'));
+	const svelte2tsx_shims_entry = path.join(
+		shims_dir,
+		'svelte2tsx',
+		path.basename(svelte2tsx_shims)
+	);
+
+	try {
+		fs.mkdirSync(path.dirname(svelte2tsx_shims_entry), { recursive: true });
+		fs.writeFileSync(
+			svelte2tsx_shims_entry,
+			`/// <reference path="${svelte2tsx_shims}" />\n` +
+				`/// <reference path="${svelte2tsx_jsx}" />\n`
+		);
+
+		await emitDts({
+			libRoot: input,
+			svelteShimsPath: svelte2tsx_shims_entry,
+			declarationDir: tmp,
+			tsconfig
+		});
+	} finally {
+		fs.rmSync(shims_dir, { force: true, recursive: true });
+	}
 
 	const handwritten = new Set();
 
