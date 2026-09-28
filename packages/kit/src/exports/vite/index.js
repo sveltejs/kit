@@ -446,8 +446,7 @@ function kit({ svelte_config }) {
 							'esm-env',
 							// This forces `$app/*` modules to be bundled, since they depend on
 							// generated modules like `<sveltekit:generated>/env/config.js` (this isn't a valid bare
-							// import, but it works with vite-node's externalization logic, which
-							// uses basic concatenation)
+							// import, but Vitest's externalization logic matches it against the module path)
 							'@sveltejs/kit/src/runtime'
 						],
 						// Any CommonJS dependencies of Kit (of which there are currently none) must always be externalized.
@@ -531,12 +530,6 @@ function kit({ svelte_config }) {
 					// we avoid setting base to paths.assets in dev so that we get the
 					// trailing slash redirect to paths.base if it is set
 					new_config.base = kit.paths.base || '/';
-
-					// Vite dependency crawler needs an explicit JS entry point
-					// even though server otherwise works without it
-					new_config.build ??= {};
-					new_config.build.rolldownOptions ??= {};
-					new_config.build.rolldownOptions.input = `${runtime_directory}/client/entry.js`;
 				}
 
 				// Vite's `define` is a compile-time text replacement, but Vitest strips

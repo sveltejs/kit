@@ -1,5 +1,13 @@
 # @sveltejs/adapter-bun
 
+## 1.0.0-next.5
+
+### Patch Changes
+
+- fix: bundle Svelte libraries listed in `dependencies` instead of externalising them ([#17234](https://github.com/sveltejs/kit/pull/17234))
+- Updated dependencies [[`f8a90be`](https://github.com/sveltejs/kit/commit/f8a90be73c61dee7d586b26d19dad59637de63b0), [`30d06f5`](https://github.com/sveltejs/kit/commit/30d06f5698528cf540899900366fc0cfeb3dc7f6), [`0107721`](https://github.com/sveltejs/kit/commit/0107721dbdde1310d4c5427f7ad33a2ee5593d3e)]:
+  - @sveltejs/kit@3.0.0-next.30
+
 ## 1.0.0-next.4
 
 ### Patch Changes
