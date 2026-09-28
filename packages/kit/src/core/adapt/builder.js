@@ -18,6 +18,8 @@ import { dedent, write } from '../sync/utils.js';
 import { find_server_assets } from '../generate_manifest/find_server_assets.js';
 import { create_exported_declarations } from '../env.js';
 import { handle_issues, validate } from '../../exports/internal/env.js';
+import * as e from '../../messages/build-errors.js';
+import * as w from '../../messages/build-warnings.js';
 import { get_mime_lookup } from '../utils.js';
 import { lookup as mime_lookup } from '../../utils/mime.js';
 
@@ -178,9 +180,7 @@ export function create_builder({
 			});
 
 			if (fs.existsSync(dest)) {
-				log.warn(
-					`\nOverwriting ${dest} with fallback page. Consider using a different name for the fallback.\n`
-				);
+				w.adapter_fallback_overwrites({ file: dest });
 			}
 
 			write(dest, fallback);
@@ -212,9 +212,7 @@ export function create_builder({
 		},
 
 		generateManifest() {
-			throw new Error(
-				'The `generateManifest` adapter API has been removed — use `generateServerInstance` or `builder.manifest` instead. You may need to update your adapter'
-			);
+			e.adapter_generate_manifest_removed();
 		},
 
 		generateServerInstance(dest, { routes: subset, serverDirectory } = {}) {
@@ -316,19 +314,19 @@ export function create_builder({
 			}
 		}) {
 			if (!fs.existsSync(instrumentation)) {
-				throw new Error(
-					`Instrumentation file ${instrumentation} not found. This is probably a bug in your adapter.`
-				);
+				e.adapter_instrumentation_file_missing({
+					kind: 'Instrumentation file',
+					file: instrumentation
+				});
 			}
 			if (!fs.existsSync(entrypoint)) {
-				throw new Error(
-					`Entrypoint file ${entrypoint} not found. This is probably a bug in your adapter.`
-				);
+				e.adapter_instrumentation_file_missing({ kind: 'Entrypoint file', file: entrypoint });
 			}
 			if (!fs.existsSync(initializer)) {
-				throw new Error(
-					`Instrumentation initializer ${initializer} not found. This is probably a bug in your adapter.`
-				);
+				e.adapter_instrumentation_file_missing({
+					kind: 'Instrumentation initializer',
+					file: initializer
+				});
 			}
 
 			copy(entrypoint, start);

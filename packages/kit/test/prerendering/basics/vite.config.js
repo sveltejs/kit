@@ -24,8 +24,12 @@ const config = {
 			},
 			prerender: {
 				handleHttpError: 'warn',
-				handleMissingId: ({ id }) => {
-					writeFileSync('./missing_ids/index.jsonl', JSON.stringify(id) + ',', 'utf-8');
+				handleMissingId: ({ id, message }) => {
+					writeFileSync(
+						'./missing_ids/index.jsonl',
+						JSON.stringify({ id, message }) + ',',
+						'utf-8'
+					);
 				}
 			}
 		})

@@ -34,6 +34,22 @@ export function throw_error(code, message, options, caller) {
 }
 
 /**
+ * Returns the message of the diagnostic thrown by `fn`, for the few places that need the
+ * formatted text as a string (callbacks, CLI output, generated code) rather than a thrown error.
+ * There's probably a better solution to this, but it's needed so
+ * sparsely that it would almost certainly not be worth the effort
+ * @param {() => never} fn A function that calls a generated `build-errors` helper
+ * @returns {string}
+ */
+export function capture_message(fn) {
+	try {
+		fn();
+	} catch (error) {
+		return /** @type {Error} */ (error).message;
+	}
+}
+
+/**
  * @param {string} code
  * @param {string} message
  */

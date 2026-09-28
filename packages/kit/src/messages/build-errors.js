@@ -4,6 +4,46 @@
 import { throw_error } from './internal/build.js';
 
 /**
+ * The `generateManifest` adapter API has been removed — use `generateServerInstance` or `builder.manifest` instead. You may need to update your adapter
+ * @param {void} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function adapter_generate_manifest_removed(_values, options) {
+	throw_error('adapter_generate_manifest_removed', `The \`generateManifest\` adapter API has been removed — use \`generateServerInstance\` or \`builder.manifest\` instead. You may need to update your adapter`, options, adapter_generate_manifest_removed);
+}
+
+/**
+ * %kind% %file% not found. This is probably a bug in your adapter.
+ * @param {{ "kind": string; "file": string }} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function adapter_instrumentation_file_missing(_values, options) {
+	throw_error('adapter_instrumentation_file_missing', `${_values.kind} ${_values.file} not found. This is probably a bug in your adapter.`, options, adapter_instrumentation_file_missing);
+}
+
+/**
+ * %file% is unsupported in %adapter%.
+ * @param {{ "file": string; "adapter": string }} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function adapter_instrumentation_unsupported(_values, options) {
+	throw_error('adapter_instrumentation_unsupported', `${_values.file} is unsupported in ${_values.adapter}.`, options, adapter_instrumentation_unsupported);
+}
+
+/**
+ * Cannot use `read` from `$app/server` in %route% when using %adapter%. Please ensure that your adapter is up to date and supports this feature.
+ * @param {{ "route": string; "adapter": string }} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function adapter_read_unsupported(_values, options) {
+	throw_error('adapter_read_unsupported', `Cannot use \`read\` from \`$app/server\` in ${_values.route} when using ${_values.adapter}. Please ensure that your adapter is up to date and supports this feature.`, options, adapter_read_unsupported);
+}
+
+/**
  * %file% does not exist
  * @param {{ "file": string }} _values
  * @param {ThrowOptions} [options]
@@ -51,6 +91,16 @@ export function config_alias_value_invalid(_values, options) {
  */
 export function config_app_dir_slash(_values, options) {
 	throw_error('config_app_dir_slash', `\`${_values.keypath}\` cannot start or end with \`'/'\``, options, config_app_dir_slash);
+}
+
+/**
+ * The `csp.directives['trusted-types']` option must include 'svelte-trusted-html' unless all pages have `csr: false`
+ * @param {void} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function config_csp_trusted_html_missing(_values, options) {
+	throw_error('config_csp_trusted_html_missing', `The \`csp.directives['trusted-types']\` option must include 'svelte-trusted-html' unless all pages have \`csr: false\``, options, config_csp_trusted_html_missing);
 }
 
 /**
@@ -171,6 +221,30 @@ export function config_extension_invalid(_values, options) {
  */
 export function config_extension_missing_dot(_values, options) {
 	throw_error('config_extension_missing_dot', `Each member of ${_values.keypath} must start with \`'.'\` — saw \`'${_values.extension}'\``, options, config_extension_missing_dot);
+}
+
+/**
+ * To enable %feature%, add the following to your SvelteKit plugin in `vite.config.js`:
+
+%config%
+ * @param {{ "feature": string; "config": string }} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function config_feature_disabled(_values, options) {
+	throw_error('config_feature_disabled', `To enable ${_values.feature}, add the following to your SvelteKit plugin in \`vite.config.js\`:
+
+${_values.config}`, options, config_feature_disabled);
+}
+
+/**
+ * %file% is no longer used. Please pass configuration via the `sveltekit(...)` plugin in your Vite config.
+ * @param {{ "file": string }} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function config_file_unsupported(_values, options) {
+	throw_error('config_file_unsupported', `${_values.file} is no longer used. Please pass configuration via the \`sveltekit(...)\` plugin in your Vite config.`, options, config_file_unsupported);
 }
 
 /**
@@ -434,6 +508,36 @@ export function env_variables_missing(_values, options) {
 }
 
 /**
+ * Cannot use relative URL (%url%) with global fetch — use `event.fetch` instead: https://svelte.dev/docs/kit/web-standards#fetch-apis
+ * @param {{ "url": string }} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function fetch_relative_url(_values, options) {
+	throw_error('fetch_relative_url', `Cannot use relative URL (${_values.url}) with global fetch — use \`event.fetch\` instead: https://svelte.dev/docs/kit/web-standards#fetch-apis`, options, fetch_relative_url);
+}
+
+/**
+ * `$lib` has been removed. Use `#lib` instead: https://svelte.dev/docs/kit/$lib. To keep using `$lib`, add `alias: { '$lib': 'src/lib' }` to your SvelteKit config.
+ * @param {void} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function module_removed_lib(_values, options) {
+	throw_error('module_removed_lib', `\`$lib\` has been removed. Use \`#lib\` instead: https://svelte.dev/docs/kit/$lib. To keep using \`$lib\`, add \`alias: { '$lib': 'src/lib' }\` to your SvelteKit config.`, options, module_removed_lib);
+}
+
+/**
+ * `$service-worker` has been removed. Use `immutable`, `assets` and `prerendered` from `$app/manifest`, `version` from `$app/env`, and `resolve(...)` from `$app/paths` instead: https://svelte.dev/docs/kit/$service-worker
+ * @param {void} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function module_removed_service_worker(_values, options) {
+	throw_error('module_removed_service_worker', `\`$service-worker\` has been removed. Use \`immutable\`, \`assets\` and \`prerendered\` from \`$app/manifest\`, \`version\` from \`$app/env\`, and \`resolve(...)\` from \`$app/paths\` instead: https://svelte.dev/docs/kit/$service-worker`, options, module_removed_service_worker);
+}
+
+/**
  * No matcher found for parameter `%name%`
  * @param {{ "name": string; "file"?: string }} _values
  * @param {ThrowOptions} [options]
@@ -451,6 +555,150 @@ export function param_matcher_missing(_values, options) {
  */
 export function params_export_missing(_values, options) {
 	throw_error('params_export_missing', `\`${_values.file}\` does not export \`params\` from \`defineParams\``, options, params_export_missing);
+}
+
+/**
+ * Cannot read clientAddress during prerendering
+ * @param {void} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function prerender_client_address(_values, options) {
+	throw_error('prerender_client_address', `Cannot read clientAddress during prerendering`, options, prerender_client_address);
+}
+
+/**
+ * Cannot save %path% as it is already a directory. See https://svelte.dev/docs/kit/page-options#prerender-route-conflicts for more information
+ * @param {{ "path": string; "parent"?: string }} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function prerender_directory_conflict(_values, options) {
+	throw_error('prerender_directory_conflict', (_values?.parent !== undefined ? `Cannot save ${_values.path} as ${_values.parent} is already a file. See https://svelte.dev/docs/kit/page-options#prerender-route-conflicts for more information` : `Cannot save ${_values.path} as it is already a directory. See https://svelte.dev/docs/kit/page-options#prerender-route-conflicts for more information`), options, prerender_directory_conflict);
+}
+
+/**
+ * Cannot prerender a +server file with %methods% or fallback handlers (%id%)
+ * @param {{ "methods": string; "id": string }} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function prerender_endpoint_methods(_values, options) {
+	throw_error('prerender_endpoint_methods', `Cannot prerender a +server file with ${_values.methods} or fallback handlers (${_values.id})`, options, prerender_endpoint_methods);
+}
+
+/**
+ * The entries export from %id% generated entry %entry%, which was matched by %matched%
+ * @param {{ "id": string; "entry": string; "matched": string }} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function prerender_entry_generator_mismatch(_values, options) {
+	throw_error('prerender_entry_generator_mismatch', `The entries export from ${_values.id} generated entry ${_values.entry}, which was matched by ${_values.matched}`, options, prerender_entry_generator_mismatch);
+}
+
+/**
+ * Could not create a fallback page
+ * @param {void} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function prerender_fallback_failed(_values, options) {
+	throw_error('prerender_fallback_failed', `Could not create a fallback page`, options, prerender_fallback_failed);
+}
+
+/**
+ * Failed to prerender %path%
+ * @param {{ "path": string; "reference_type"?: string; "referrer"?: string }} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function prerender_http_error(_values, options) {
+	throw_error('prerender_http_error', (_values?.reference_type !== undefined ? `${_values.path} was ${_values.reference_type} from ${_values.referrer}` : `Failed to prerender ${_values.path}`), options, prerender_http_error);
+}
+
+/**
+ * Invalid URL %href%
+ * @param {{ "href": string; "referrer"?: string }} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function prerender_invalid_url(_values, options) {
+	throw_error('prerender_invalid_url', (_values?.referrer !== undefined ? `Invalid URL ${_values.href} (linked from ${_values.referrer})` : `Invalid URL ${_values.href}`), options, prerender_invalid_url);
+}
+
+/**
+ * The following pages contain links to %path%#%id%, but no element with id="%id%" exists on %path%:
+%referrers%
+ * @param {{ "path": string; "id": string; "referrers": string }} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function prerender_missing_id(_values, options) {
+	throw_error('prerender_missing_id', `The following pages contain links to ${_values.path}#${_values.id}, but no element with id="${_values.id}" exists on ${_values.path}:
+${_values.referrers}`, options, prerender_missing_id);
+}
+
+/**
+ * %path% does not begin with `base`. You can fix this by using `resolve('%path%')` from `$app/paths`. The base path is configurable from `paths.base`
+ * @param {{ "path": string; "reference_type"?: string; "referrer"?: string }} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function prerender_path_outside_base(_values, options) {
+	throw_error('prerender_path_outside_base', (_values?.reference_type !== undefined ? `${_values.path} (${_values.reference_type} from ${_values.referrer}) does not begin with \`base\`. You can fix this by using \`resolve('${_values.path}')\` from \`$app/paths\`. The base path is configurable from \`paths.base\`` : `${_values.path} does not begin with \`base\`. You can fix this by using \`resolve('${_values.path}')\` from \`$app/paths\`. The base path is configurable from \`paths.base\``), options, prerender_path_outside_base);
+}
+
+/**
+ * Cannot prerender a root +server.js that returns a non-HTML response - static hosts always serve an HTML file for `%base%`
+ * @param {{ "base": string }} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function prerender_root_non_html(_values, options) {
+	throw_error('prerender_root_non_html', `Cannot prerender a root +server.js that returns a non-HTML response - static hosts always serve an HTML file for \`${_values.base}\``, options, prerender_root_non_html);
+}
+
+/**
+ * The following routes were marked as prerenderable, but were not prerendered because they were not found while crawling your app:
+%routes%
+ * @param {{ "routes": string }} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function prerender_unseen_routes(_values, options) {
+	throw_error('prerender_unseen_routes', `The following routes were marked as prerenderable, but were not prerendered because they were not found while crawling your app:
+${_values.routes}`, options, prerender_unseen_routes);
+}
+
+/**
+ * Server files not found at %dir%, did you run `build` first?
+ * @param {{ "dir": string }} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function preview_build_missing(_values, options) {
+	throw_error('preview_build_missing', `Server files not found at ${_values.dir}, did you run \`build\` first?`, options, preview_build_missing);
+}
+
+/**
+ * Unexpectedly called prerender function. Did you forget to set { dynamic: true } ?
+ * @param {void} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function remote_prerender_not_dynamic(_values, options) {
+	throw_error('remote_prerender_not_dynamic', `Unexpectedly called prerender function. Did you forget to set { dynamic: true } ?`, options, remote_prerender_not_dynamic);
+}
+
+/**
+ * Mismatched route config for %id% — the +page and +server files must export the same config, if any
+ * @param {{ "id": string }} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function route_config_mismatch(_values, options) {
+	throw_error('route_config_mismatch', `Mismatched route config for ${_values.id} — the +page and +server files must export the same config, if any`, options, route_config_mismatch);
 }
 
 /**
@@ -624,6 +872,16 @@ export function route_unbalanced_brackets(_values, options) {
 }
 
 /**
+ * Page options are ignored when `router.type === 'hash'` (%file% has %options%)
+ * @param {{ "file": string; "options": string }} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function router_hash_page_options(_values, options) {
+	throw_error('router_hash_page_options', `Page options are ignored when \`router.type === 'hash'\` (${_values.file} has ${_values.options})`, options, router_hash_page_options);
+}
+
+/**
  * No routes found. If you are using a custom `src/routes` directory, make sure it is specified in your SvelteKit Vite plugin options
  * @param {void} _values
  * @param {ThrowOptions} [options]
@@ -634,6 +892,44 @@ export function routes_not_found(_values, options) {
 }
 
 /**
+ * Cannot import %module% into code that runs in the browser, as this could leak sensitive information.
+
+%chain%
+
+If you're only using the import as a type, change it to `import type`.
+ * @param {{ "module": string; "chain": string }} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function server_only_import(_values, options) {
+	throw_error('server_only_import', `Cannot import ${_values.module} into code that runs in the browser, as this could leak sensitive information.
+
+${_values.chain}
+
+If you're only using the import as a type, change it to \`import type\`.`, options, server_only_import);
+}
+
+/**
+ * Cannot use service worker alongside config.paths.assets
+ * @param {void} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function service_worker_assets(_values, options) {
+	throw_error('service_worker_assets', `Cannot use service worker alongside config.paths.assets`, options, service_worker_assets);
+}
+
+/**
+ * Cannot import %modules% into service-worker code.
+ * @param {{ "modules": string }} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function service_worker_invalid_import(_values, options) {
+	throw_error('service_worker_invalid_import', `Cannot import ${_values.modules} into service-worker code.`, options, service_worker_invalid_import);
+}
+
+/**
  * Failed to parse TypeScript config
  * @param {void | { "details": string }} _values
  * @param {ThrowOptions} [options]
@@ -641,4 +937,14 @@ export function routes_not_found(_values, options) {
  */
 export function tsconfig_parse_failed(_values, options) {
 	throw_error('tsconfig_parse_failed', (_values?.details !== undefined ? `Failed to parse TypeScript config: ${_values.details}` : `Failed to parse TypeScript config`), options, tsconfig_parse_failed);
+}
+
+/**
+ * The configured Vite SSR environment must be a RunnableDevEnvironment
+ * @param {void} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function vite_ssr_environment_not_runnable(_values, options) {
+	throw_error('vite_ssr_environment_not_runnable', `The configured Vite SSR environment must be a RunnableDevEnvironment`, options, vite_ssr_environment_not_runnable);
 }

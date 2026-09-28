@@ -14,7 +14,7 @@ test('an unresolved $lib import explains how to migrate', { timeout }, () => {
 	} catch (err) {
 		const message = /** @type {Error} */ (err).message;
 		assert.ok(
-			message.includes('Use `#lib` instead'),
+			message.includes('module_removed_lib\n`$lib` has been removed. Use `#lib` instead'),
 			`received unexpected exception message ${message}`
 		);
 		return;
@@ -32,7 +32,9 @@ test('an unresolved $service-worker import explains how to migrate', { timeout }
 	} catch (err) {
 		const message = /** @type {Error} */ (err).message;
 		assert.ok(
-			message.includes('Use `immutable`, `assets` and `prerendered` from `$app/manifest`'),
+			message.includes(
+				'module_removed_service_worker\n`$service-worker` has been removed. Use `immutable`, `assets` and `prerendered` from `$app/manifest`'
+			),
 			`received unexpected exception message ${message}`
 		);
 		return;

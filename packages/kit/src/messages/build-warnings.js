@@ -3,6 +3,30 @@
 import { warn } from './internal/build.js';
 
 /**
+ * Reading `config.kit` inside adapters is deprecated — it should access configuration on the `config` object directly. You may need to update your adapter
+ * @param {void} _values
+ */
+export function adapter_config_kit_deprecated(_values) {
+	warn('adapter_config_kit_deprecated', `Reading \`config.kit\` inside adapters is deprecated — it should access configuration on the \`config\` object directly. You may need to update your adapter`);
+}
+
+/**
+ * Overwriting %file% with fallback page. Consider using a different name for the fallback.
+ * @param {{ "file": string }} _values
+ */
+export function adapter_fallback_overwrites(_values) {
+	warn('adapter_fallback_overwrites', `Overwriting ${_values.file} with fallback page. Consider using a different name for the fallback.`);
+}
+
+/**
+ * No adapter specified. See https://svelte.dev/docs/kit/adapters to learn how to configure your app to run on the platform of your choosing
+ * @param {void} _values
+ */
+export function adapter_missing(_values) {
+	warn('adapter_missing', `No adapter specified. See https://svelte.dev/docs/kit/adapters to learn how to configure your app to run on the platform of your choosing`);
+}
+
+/**
  * The `%keypath%` option is deprecated, and will be removed in a future version
  * @param {{ "keypath": string }} _values
  */
@@ -27,11 +51,53 @@ export function config_option_deprecated_typescript(_values) {
 }
 
 /**
+ * OPTIONS request handlers will not work unless `%key%.preflightContinue` is set to `true`
+ * @param {{ "key": string }} _values
+ */
+export function cors_preflight_continue(_values) {
+	warn('cors_preflight_continue', `OPTIONS request handlers will not work unless \`${_values.key}.preflightContinue\` is set to \`true\``);
+}
+
+/**
  * %description%. Did you mean %corrected%? at %file%
  * @param {{ "description": string; "corrected": string; "file": string }} _values
  */
 export function file_name_misspelled(_values) {
 	warn('file_name_misspelled', `${_values.description}. Did you mean ${_values.corrected}? at ${_values.file}`);
+}
+
+/**
+ * %file%: `<slot />` or `{@render ...}` tag missing — inner content will not be rendered
+ * @param {{ "file": string }} _values
+ */
+export function layout_children_missing(_values) {
+	warn('layout_children_missing', `${_values.file}: \`<slot />\` or \`{@render ...}\` tag missing — inner content will not be rendered`);
+}
+
+/**
+ * %file%: `%option%` will be ignored — move it to %fixed% instead. See https://svelte.dev/docs/kit/page-options for more information.
+ * @param {{ "file": string; "option": string; "fixed": string }} _values
+ */
+export function page_option_in_component(_values) {
+	warn('page_option_in_component', `${_values.file}: \`${_values.option}\` will be ignored — move it to ${_values.fixed} instead. See https://svelte.dev/docs/kit/page-options for more information.`);
+}
+
+/**
+ * location header missing on redirect received from %path%
+ * @param {{ "path": string }} _values
+ */
+export function prerender_redirect_location_missing(_values) {
+	warn('prerender_redirect_location_missing', `location header missing on redirect received from ${_values.path}`);
+}
+
+/**
+ * The following plugins may not work correctly because they use the `transformIndexHtml` hook which is not supported:
+%plugins%
+ * @param {{ "plugins": string }} _values
+ */
+export function transform_index_html_unsupported(_values) {
+	warn('transform_index_html_unsupported', `The following plugins may not work correctly because they use the \`transformIndexHtml\` hook which is not supported:
+${_values.plugins}`);
 }
 
 /**
@@ -52,4 +118,14 @@ ${_values.example}`);
 export function tsconfig_invalid(_values) {
 	warn('tsconfig_invalid', `Found issues while validating \`${_values.file}\`:
 ${_values.issues}`);
+}
+
+/**
+ * The following Vite config options will be overridden by SvelteKit:
+%options%
+ * @param {{ "options": string }} _values
+ */
+export function vite_config_overridden(_values) {
+	warn('vite_config_overridden', `The following Vite config options will be overridden by SvelteKit:
+${_values.options}`);
 }

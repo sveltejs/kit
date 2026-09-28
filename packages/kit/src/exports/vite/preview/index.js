@@ -11,7 +11,8 @@ import { createReadableStream, getRequest, setResponse } from '../../../exports/
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import { relative_pathname } from '../../../utils/url.js';
 import { is_chrome_devtools_request, not_found } from '../utils.js';
-import { set_error_stack, stackless } from '../../../utils/error.js';
+import { set_error_stack } from '../../../utils/error.js';
+import * as e from '../../../messages/build-errors.js';
 
 /**
  * @param {PreviewServer} vite
@@ -29,7 +30,7 @@ export async function preview(vite, svelte_config) {
 	const dir = join(svelte_config.outDir, 'output/server');
 
 	if (!fs.existsSync(`${dir}/manifest.js`)) {
-		throw stackless(`Server files not found at ${dir}, did you run \`build\` first?`);
+		e.preview_build_missing({ dir }, { stackless: true });
 	}
 
 	const instrumentation = join(dir, 'instrumentation.server.js');

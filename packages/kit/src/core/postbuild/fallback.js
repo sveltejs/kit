@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { forked } from '../../utils/fork.js';
-import { stackless } from '../../utils/error.js';
+import * as e from '../../messages/build-errors.js';
 
 export default forked(import.meta.url, generate_fallback);
 
@@ -29,7 +29,7 @@ async function generate_fallback({ manifest_path, env, out_dir, origin, assets }
 
 	const response = await respond(new Request(origin + '/[fallback]'), {
 		getClientAddress: () => {
-			throw new Error('Cannot read clientAddress during prerendering');
+			e.prerender_client_address();
 		},
 		prerendering: {
 			fallback: true,
@@ -44,5 +44,5 @@ async function generate_fallback({ manifest_path, env, out_dir, origin, assets }
 		return await response.text();
 	}
 
-	throw stackless('Could not create a fallback page');
+	e.prerender_fallback_failed(undefined, { stackless: true });
 }
