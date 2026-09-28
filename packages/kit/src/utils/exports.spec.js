@@ -9,9 +9,10 @@ import {
 
 /**
  * @param {() => void} fn
+ * @param {string} code
  * @param {string} message
  */
-function check_error(fn, message) {
+function check_error(fn, code, message) {
 	let error;
 
 	try {
@@ -20,7 +21,11 @@ function check_error(fn, message) {
 		error = /** @type {Error} */ (e);
 	}
 
-	assert.equal(error?.message, message);
+	assert.equal(error?.name, 'SvelteKit error');
+	assert.equal(
+		error?.message,
+		`${code}\n${message}\nhttps://next.svelte.dev/e/@sveltejs/kit/${code}`
+	);
 }
 
 test('validates +layout.js', () => {
@@ -37,26 +42,38 @@ test('validates +layout.js', () => {
 		_unknown: () => {}
 	});
 
-	check_error(() => {
-		validate_layout_exports({
-			answer: 42
-		});
-	}, "Invalid export 'answer' (valid exports are load, prerender, csr, ssr, trailingSlash, config, or anything with a '_' prefix)");
+	check_error(
+		() => {
+			validate_layout_exports({
+				answer: 42
+			});
+		},
+		'invalid_export',
+		"Invalid export `answer` (valid exports are load, prerender, csr, ssr, trailingSlash, config, or anything with a `'_'` prefix)"
+	);
 
-	check_error(() => {
-		validate_layout_exports(
-			{
-				actions: {}
-			},
-			'src/routes/foo/+page.ts'
-		);
-	}, "Invalid export 'actions' in src/routes/foo/+page.ts ('actions' is a valid export in +page.server.ts)");
+	check_error(
+		() => {
+			validate_layout_exports(
+				{
+					actions: {}
+				},
+				'src/routes/foo/+page.ts'
+			);
+		},
+		'invalid_export_location',
+		'Invalid export `actions` in `src/routes/foo/+page.ts` (`actions` is a valid export in +page.server.ts)'
+	);
 
-	check_error(() => {
-		validate_layout_exports({
-			GET: {}
-		});
-	}, "Invalid export 'GET' ('GET' is a valid export in +server.js)");
+	check_error(
+		() => {
+			validate_layout_exports({
+				GET: {}
+			});
+		},
+		'invalid_export_location',
+		'Invalid export `GET` (`GET` is a valid export in +server.js)'
+	);
 });
 
 test('validates +page.js', () => {
@@ -74,26 +91,38 @@ test('validates +page.js', () => {
 		_unknown: () => {}
 	});
 
-	check_error(() => {
-		validate_page_exports({
-			answer: 42
-		});
-	}, "Invalid export 'answer' (valid exports are load, prerender, csr, ssr, trailingSlash, config, entries, or anything with a '_' prefix)");
+	check_error(
+		() => {
+			validate_page_exports({
+				answer: 42
+			});
+		},
+		'invalid_export',
+		"Invalid export `answer` (valid exports are load, prerender, csr, ssr, trailingSlash, config, entries, or anything with a `'_'` prefix)"
+	);
 
-	check_error(() => {
-		validate_page_exports(
-			{
-				actions: {}
-			},
-			'src/routes/foo/+page.ts'
-		);
-	}, "Invalid export 'actions' in src/routes/foo/+page.ts ('actions' is a valid export in +page.server.ts)");
+	check_error(
+		() => {
+			validate_page_exports(
+				{
+					actions: {}
+				},
+				'src/routes/foo/+page.ts'
+			);
+		},
+		'invalid_export_location',
+		'Invalid export `actions` in `src/routes/foo/+page.ts` (`actions` is a valid export in +page.server.ts)'
+	);
 
-	check_error(() => {
-		validate_page_exports({
-			GET: {}
-		});
-	}, "Invalid export 'GET' ('GET' is a valid export in +server.js)");
+	check_error(
+		() => {
+			validate_page_exports({
+				GET: {}
+			});
+		},
+		'invalid_export_location',
+		'Invalid export `GET` (`GET` is a valid export in +server.js)'
+	);
 });
 
 test('validates +layout.server.js', () => {
@@ -110,26 +139,38 @@ test('validates +layout.server.js', () => {
 		_unknown: () => {}
 	});
 
-	check_error(() => {
-		validate_layout_server_exports({
-			answer: 42
-		});
-	}, "Invalid export 'answer' (valid exports are load, prerender, csr, ssr, trailingSlash, config, or anything with a '_' prefix)");
+	check_error(
+		() => {
+			validate_layout_server_exports({
+				answer: 42
+			});
+		},
+		'invalid_export',
+		"Invalid export `answer` (valid exports are load, prerender, csr, ssr, trailingSlash, config, or anything with a `'_'` prefix)"
+	);
 
-	check_error(() => {
-		validate_layout_exports(
-			{
-				actions: {}
-			},
-			'src/routes/foo/+page.ts'
-		);
-	}, "Invalid export 'actions' in src/routes/foo/+page.ts ('actions' is a valid export in +page.server.ts)");
+	check_error(
+		() => {
+			validate_layout_exports(
+				{
+					actions: {}
+				},
+				'src/routes/foo/+page.ts'
+			);
+		},
+		'invalid_export_location',
+		'Invalid export `actions` in `src/routes/foo/+page.ts` (`actions` is a valid export in +page.server.ts)'
+	);
 
-	check_error(() => {
-		validate_layout_server_exports({
-			POST: {}
-		});
-	}, "Invalid export 'POST' ('POST' is a valid export in +server.js)");
+	check_error(
+		() => {
+			validate_layout_server_exports({
+				POST: {}
+			});
+		},
+		'invalid_export_location',
+		'Invalid export `POST` (`POST` is a valid export in +server.js)'
+	);
 });
 
 test('validates +page.server.js', () => {
@@ -148,17 +189,25 @@ test('validates +page.server.js', () => {
 		_unknown: () => {}
 	});
 
-	check_error(() => {
-		validate_page_server_exports({
-			answer: 42
-		});
-	}, "Invalid export 'answer' (valid exports are load, prerender, csr, ssr, trailingSlash, config, actions, entries, or anything with a '_' prefix)");
+	check_error(
+		() => {
+			validate_page_server_exports({
+				answer: 42
+			});
+		},
+		'invalid_export',
+		"Invalid export `answer` (valid exports are load, prerender, csr, ssr, trailingSlash, config, actions, entries, or anything with a `'_'` prefix)"
+	);
 
-	check_error(() => {
-		validate_page_server_exports({
-			POST: {}
-		});
-	}, "Invalid export 'POST' ('POST' is a valid export in +server.js)");
+	check_error(
+		() => {
+			validate_page_server_exports({
+				POST: {}
+			});
+		},
+		'invalid_export_location',
+		'Invalid export `POST` (`POST` is a valid export in +server.js)'
+	);
 });
 
 test('validates +server.js', () => {
@@ -174,15 +223,23 @@ test('validates +server.js', () => {
 		_unknown: () => {}
 	});
 
-	check_error(() => {
-		validate_server_exports({
-			answer: 42
-		});
-	}, "Invalid export 'answer' (valid exports are GET, POST, PATCH, PUT, DELETE, OPTIONS, HEAD, QUERY, fallback, prerender, trailingSlash, config, entries, or anything with a '_' prefix)");
+	check_error(
+		() => {
+			validate_server_exports({
+				answer: 42
+			});
+		},
+		'invalid_export',
+		"Invalid export `answer` (valid exports are GET, POST, PATCH, PUT, DELETE, OPTIONS, HEAD, QUERY, fallback, prerender, trailingSlash, config, entries, or anything with a `'_'` prefix)"
+	);
 
-	check_error(() => {
-		validate_server_exports({
-			csr: false
-		});
-	}, "Invalid export 'csr' ('csr' is a valid export in +layout.js, +page.js, +layout.server.js or +page.server.js)");
+	check_error(
+		() => {
+			validate_server_exports({
+				csr: false
+			});
+		},
+		'invalid_export_location',
+		'Invalid export `csr` (`csr` is a valid export in +layout.js, +page.js, +layout.server.js or +page.server.js)'
+	);
 });

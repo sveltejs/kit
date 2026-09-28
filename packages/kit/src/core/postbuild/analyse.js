@@ -9,6 +9,7 @@ import { has_server_load, resolve_route } from '../../utils/routing.js';
 import { check_feature } from '../../utils/features.js';
 import { createReadableStream } from '@sveltejs/kit/node';
 import { PageNodes } from '../../utils/page_nodes.js';
+import { enable_verbose_errors } from '../../messages/internal/shared.js';
 
 export default forked(import.meta.url, analyse);
 
@@ -34,6 +35,10 @@ async function analyse({
 	remotes,
 	vite_config_file
 }) {
+	// this worker validates exports and resolves `entries` with Kit's own modules, rather than the
+	// bundled server's copies that `configure` affects, so its shared errors need the full text too
+	enable_verbose_errors();
+
 	/** @type {import('types').SSRManifest} */
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
