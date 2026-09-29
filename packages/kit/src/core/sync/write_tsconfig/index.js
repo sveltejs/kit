@@ -35,7 +35,7 @@ export function write_tsconfig(kit, root) {
 		{
 			compilerOptions: {
 				paths,
-				rootDirs: ['.', `${kit.outDir}/types`],
+				rootDirs: [root, `${kit.outDir}/types`],
 				types,
 
 				// This is required for svelte-package to work as expected
