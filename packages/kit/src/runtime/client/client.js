@@ -3483,6 +3483,8 @@ function _start_router() {
 		if (event.persisted) {
 			set_navigation(null);
 
+			// pages restored from bfcache don't re-run the `start` script
+			// so we need to restore the scroll position manually here
 			const scroll = history_info[current_history_index]?.scroll;
 			if (scroll) {
 				scrollTo(scroll.x, scroll.y);
