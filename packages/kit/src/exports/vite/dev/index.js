@@ -305,8 +305,8 @@ export async function dev(
 				/** @type {Function} */ (middleware.handle).name === 'viteServeStaticMiddleware'
 		);
 
-		// Vite will give a 403 on URLs like /test, /static, and /package.json preventing us from
-		// serving routes with those names. See https://github.com/vitejs/vite/issues/7363
+		// Vite's static middleware would serve project files at URLs like /test, /static and
+		// /package.json before our routes get a chance. See https://github.com/vitejs/vite/issues/7363
 		remove_static_middlewares(vite_dev_server.middlewares);
 
 		vite_dev_server.middlewares.use(async (req, res) => {
