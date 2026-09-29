@@ -9,8 +9,6 @@ my-project/
 ├ src/
 │ ├ lib/
 │ │ └ [your lib files]
-│ ├ params/
-│ │ └ [your param matchers]
 │ ├ routes/
 │ │ └ [your routes]
 │ ├ service-worker/
@@ -20,7 +18,8 @@ my-project/
 │ ├ error.html
 │ ├ hooks.client.js
 │ ├ hooks.server.js
-│ └ instrumentation.server.js
+│ ├ instrumentation.server.js
+│ └ params.js
 ├ static/
 │ └ [your static assets]
 ├ tests/
@@ -40,21 +39,21 @@ The `src` directory contains the meat of your project. Everything except `src/ro
 
 - `lib` contains your library code (utilities and components), which can be imported via the [`#lib`]($lib) alias, or packaged up for distribution using [`svelte-package`](packaging)
   - directories named `server`, at any depth, mark any code within as [server only](server-only-modules). SvelteKit will prevent you from importing these in client code.
-- `params` contains any [param matchers](advanced-routing#Matching) your app needs
 - `routes` contains the [routes](routing) of your application. You can also colocate other components that are only used within a single route here
+- `service-worker` contains your [service worker](service-workers)
 - `app.html` is your page template — an HTML document containing the following placeholders:
   - `%sveltekit.head%` — `<link>` and `<script>` elements needed by the app, plus any `<svelte:head>` content
   - `%sveltekit.body%` — the markup for a rendered page. This should live inside a `<div>` or other element, rather than directly inside `<body>`, to prevent bugs caused by browser extensions injecting elements that are then destroyed by the hydration process. SvelteKit will warn you in development if this is not the case
   - `%sveltekit.assets%` — either [`paths.assets`](configuration#paths), if specified, or a relative path to [`paths.base`](configuration#paths)
   - `%sveltekit.nonce%` — a [CSP](configuration#csp) nonce for manually included links and scripts, if used
-  - `%sveltekit.env.[NAME]%` - this will be replaced at render time with the `[NAME]` environment variable, which must begin with the [`publicPrefix`](configuration#env) (usually `PUBLIC_`), or be defined as a public variable in `src/env` if using [`experimental.explicitEnvironmentVariables`](environment-variables). It will fallback to `''` if not matched.
+  - `%sveltekit.env.[NAME]%` - this will be replaced at render time with the `[NAME]` environment variable, which must be defined as a public variable in `src/env`. It will fallback to `''` if not matched.
   - `%sveltekit.version%` — the app version, which can be specified with the [`version`](configuration#version) configuration
 - `error.html` is the page that is rendered when everything else fails. It can contain the following placeholders:
   - `%sveltekit.status%` — the HTTP status
   - `%sveltekit.error.message%` — the error message
 - `hooks.client.js` contains your client [hooks](hooks)
 - `hooks.server.js` contains your server [hooks](hooks)
-- `service-worker` contains your [service worker](service-workers)
+- `params.js` contains any [param matchers](advanced-routing#Matching) your app needs
 - `instrumentation.server.js` contains your [observability](observability) setup and instrumentation code
   - Requires adapter support. If your adapter supports it, it is guaranteed to run prior to loading and running your application code.
 
@@ -82,7 +81,7 @@ A SvelteKit project is really just a [Vite](https://vitejs.dev) project that use
 
 ### tsconfig.json
 
-This file (or `jsconfig.json`, if you prefer type-checked `.js` files over `.ts` files) configures TypeScript, if you added typechecking during `npx sv create`. Since SvelteKit relies on certain configuration being set a specific way, it generates its own `.svelte-kit/tsconfig.json` file which your own config `extends`. To make changes to top-level options such as `include` and `exclude`, we recommend extending the generated config; see the [`typescript.config` setting](configuration#typescript) for more details.
+This file (or `jsconfig.json`, if you prefer type-checked `.js` files over `.ts` files) configures TypeScript, if you added typechecking during `npx sv create`. Since SvelteKit relies on certain configuration being set a specific way, it generates a [TypeScript configuration module]($app-tsconfig) which your own config `extends`.
 
 ## Other files
 

@@ -44,3 +44,31 @@ test('warns with a safe root tsconfig', () => {
 		)
 	);
 });
+
+test('generates rootDirs relative to the project root', () => {
+	const root = fs.mkdtempSync(path.join(os.tmpdir(), 'svelte-kit-tsconfig-'));
+	dirs.push(root);
+
+	const config = process_config(validate_config({}), root);
+	write_tsconfig(config, root);
+
+	const generated = JSON.parse(
+		fs.readFileSync(path.join(root, 'node_modules/$app/tsconfig.json'), 'utf8')
+	);
+
+	expect(generated.compilerOptions.rootDirs).toEqual(['../..', '../../.svelte-kit/types']);
+});
+
+test('generates rootDirs for a custom outDir', () => {
+	const root = fs.mkdtempSync(path.join(os.tmpdir(), 'svelte-kit-tsconfig-'));
+	dirs.push(root);
+
+	const config = process_config(validate_config({ outDir: 'build-output' }), root);
+	write_tsconfig(config, root);
+
+	const generated = JSON.parse(
+		fs.readFileSync(path.join(root, 'node_modules/$app/tsconfig.json'), 'utf8')
+	);
+
+	expect(generated.compilerOptions.rootDirs).toEqual(['../..', '../../build-output/types']);
+});

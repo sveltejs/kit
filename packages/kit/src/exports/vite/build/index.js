@@ -238,7 +238,6 @@ export function plugin_compile(
 							output: {
 								name: `${global_name}.app`,
 								assetFileNames: `${app_immutable}/assets/[name].[hash][extname]`,
-								hoistTransitiveImports: false,
 								sourcemapIgnoreList
 							},
 							preserveEntrySignatures: 'strict',
@@ -269,8 +268,7 @@ export function plugin_compile(
 							output: {
 								entryFileNames: `${app_immutable}/workers/[name]-[hash].js`,
 								chunkFileNames: `${app_immutable}/workers/chunks/[hash].js`,
-								assetFileNames: `${app_immutable}/workers/assets/[name]-[hash][extname]`,
-								hoistTransitiveImports: false
+								assetFileNames: `${app_immutable}/workers/assets/[name]-[hash][extname]`
 							}
 						}
 					},

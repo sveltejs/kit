@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 3.0.0-next.30
+
+### Patch Changes
+
+- fix: generate a `never` `Path` type when there are no routes ([#17228](https://github.com/sveltejs/kit/pull/17228))
+
+- fix: set the focus starting point without a fragment navigation, which leaked a `hashchange` to app listeners ([#16992](https://github.com/sveltejs/kit/pull/16992))
+
+- fix: keep a `form.for` instance registered when the derived that holds it disconnects and reconnects ([#17230](https://github.com/sveltejs/kit/pull/17230))
+
 ## 3.0.0-next.29
 
 ### Patch Changes
