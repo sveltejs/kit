@@ -23,6 +23,7 @@ import {
 import { find_route } from '../../utils/routing.js';
 import { redirect_json_response, render_data } from './data/index.js';
 import { add_cookies_to_headers, get_cookies } from './cookie.js';
+import { create_headers } from './headers.js';
 import { create_fetch } from './fetch.js';
 import { PageNodes } from '../../utils/page_nodes.js';
 import { validate_server_exports } from '../../utils/exports.js';
@@ -30,7 +31,6 @@ import { action_json_redirect, is_action_json_request } from './page/actions.js'
 import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM } from '../shared.js';
 import { get_public_env } from './env_module.js';
 import { resolve_route, resolve_route_by_id } from './page/server_routing.js';
-import { validateHeaders } from './validate-headers.js';
 import {
 	add_data_suffix,
 	add_resolution_suffix,
@@ -180,8 +180,7 @@ export async function internal_respond(request, state) {
 		}
 	}
 
-	/** @type {Record<string, string>} */
-	const headers = {};
+	const headers = create_headers(state);
 
 	const { cookies, new_cookies, get_cookie_header, set_internal, set_trailing_slash } = get_cookies(
 		request,
@@ -210,35 +209,7 @@ export async function internal_respond(request, state) {
 			: state.platform,
 		request,
 		route: { id: null },
-		setHeaders: (new_headers) => {
-			if (DEV) {
-				validateHeaders(new_headers);
-			}
-
-			for (const key in new_headers) {
-				const lower = key.toLowerCase();
-				const value = new_headers[key];
-
-				if (lower === 'set-cookie') {
-					throw new Error(
-						'Use `event.cookies.set(name, value, options)` instead of `event.setHeaders` to set cookies'
-					);
-				} else if (lower in headers) {
-					// appendHeaders-style for Server-Timing https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Server-Timing
-					if (lower === 'server-timing') {
-						headers[lower] += ', ' + value;
-					} else {
-						throw new Error(`"${key}" header is already set`);
-					}
-				} else {
-					headers[lower] = value;
-
-					if (state.prerendering && lower === 'cache-control') {
-						state.prerendering.cache = /** @type {string} */ (value);
-					}
-				}
-			}
-		},
+		setHeaders: headers.set,
 		url,
 		isDataRequest: is_data_request,
 		isSubRequest: state.depth > 0,
@@ -511,10 +482,7 @@ export async function internal_respond(request, state) {
 											(response) => {
 												// add headers/cookies here, rather than inside `resolve`, so that we
 												// can do it once for all responses instead of once per `return`
-												for (const key in headers) {
-													const value = headers[key];
-													response.headers.set(key, /** @type {string} */ (value));
-												}
+												headers.apply(response.headers);
 
 												add_cookies_to_headers(response.headers, new_cookies.values());
 
@@ -670,7 +638,14 @@ export async function internal_respond(request, state) {
 						if (!page_nodes) {
 							throw new Error('page_nodes not found. This should never happen');
 						} else if (page_methods.has(method)) {
-							response = await render_page(event, state, route.page, page_nodes, resolve_opts);
+							response = await render_page(
+								event,
+								state,
+								route.page,
+								page_nodes,
+								resolve_opts,
+								headers
+							);
 						} else {
 							const allowed_methods = new Set(allowed_page_methods);
 							const node = await manifest.nodes[route.page.leaf]();
