@@ -542,7 +542,6 @@ async function _start(_app, _target, data) {
 	const scroll = history_info[current_history_index]?.scroll;
 	function restore_reload_scroll() {
 		if (scroll) {
-			history.scrollRestoration = 'manual';
 			scrollTo(scroll.x, scroll.y);
 		}
 	}
@@ -3137,11 +3136,10 @@ function check_leaving() {
 }
 
 function _start_router() {
-	history.scrollRestoration = 'manual';
-
 	let before_unload_fired = false;
 
-	// doesn't fire if it is a background tab or on Safari
+	// TODO: avoid listening to `beforeunload` unconditionally
+	// doesn't fire if it is a background tab or on iOS Safari
 	// also prevents bfcache on Firefox
 	addEventListener('beforeunload', (e) => {
 		if (check_leaving()) {
@@ -3153,26 +3151,20 @@ function _start_router() {
 	});
 
 	addEventListener('pagehide', () => {
-		persist_state();
-
-		// it may not have run since Safari doesn't support `beforeunload`
+		// beforeNavigate may not have run since iOS Safari doesn't support `beforeunload`
 		if (before_unload_fired) {
 			before_unload_fired = false;
 		} else {
 			check_leaving();
 		}
+
+		persist_state();
 	});
 
 	addEventListener('visibilitychange', () => {
 		// doesn't fire on Firefox when closing a tab
 		if (document.visibilityState === 'hidden') {
 			persist_state();
-
-			// Adopted from Nuxt.js
-			// Reset scrollRestoration to auto when leaving page, allowing page reload
-			// and back-navigation from other pages to use the browser to restore the
-			// scrolling position.
-			history.scrollRestoration = 'auto';
 		} else {
 			// the tab just became visible — a good time to check for a new deployment
 			void updated.check();
