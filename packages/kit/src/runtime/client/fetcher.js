@@ -60,7 +60,7 @@ if (DEV) {
 		const method = input instanceof Request ? input.method : init?.method || 'GET';
 
 		if (method !== 'GET') {
-			cache.delete(build_selector(requested_url(input)));
+			clear_cache(input);
 		}
 
 		return native_fetch(input, init);
@@ -70,7 +70,7 @@ if (DEV) {
 		const method = input instanceof Request ? input.method : init?.method || 'GET';
 
 		if (method !== 'GET') {
-			cache.delete(build_selector(requested_url(input)));
+			clear_cache(input);
 		}
 
 		return native_fetch(input, init);
@@ -150,6 +150,17 @@ export function dev_fetch(resource, opts) {
 		configurable: true
 	});
 	return window.fetch(resource, patched_opts);
+}
+
+/**
+ * Evict all cached responses for a URL, including responses keyed by request data
+ * @param {RequestInfo | URL} input
+ */
+function clear_cache(input) {
+	const selector = build_selector(requested_url(input));
+	for (const key of cache.keys()) {
+		if (key.startsWith(selector)) cache.delete(key);
+	}
 }
 
 /**

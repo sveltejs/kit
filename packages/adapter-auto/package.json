@@ -35,14 +35,14 @@
 	"scripts": {
 		"lint": "oxfmt --check .",
 		"format": "oxfmt --write .",
-		"check": "tsc",
+		"check": "node node_modules/@typescript/native/bin/tsc",
 		"test": "vitest run",
 		"test:unit": "vitest run"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",
 		"@types/node": "catalog:",
-		"typescript": "catalog:typescript-native",
+		"@typescript/native": "catalog:",
 		"vitest": "catalog:"
 	},
 	"peerDependencies": {

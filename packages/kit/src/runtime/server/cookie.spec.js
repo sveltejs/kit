@@ -46,7 +46,7 @@ describe.skipIf(!process.env.DEV)('cookies in dev', () => {
 		const { cookies } = cookies_setup();
 
 		// name ("a=") is 2 bytes, so the value alone must stay under 4094 bytes
-		expect(() => cookies.set('a', 'a'.repeat(4096), { path: '/' })).toThrowError(
+		expect(() => cookies.set('a', 'a'.repeat(4096))).toThrowError(
 			'Cookie "a" is too large, and will be discarded by the browser'
 		);
 	});
@@ -54,19 +54,19 @@ describe.skipIf(!process.env.DEV)('cookies in dev', () => {
 	test('does not throw if cookie name/value is at the 4,096 byte limit', () => {
 		const { cookies } = cookies_setup();
 
-		expect(() => cookies.set('a', 'a'.repeat(4095), { path: '/' })).not.toThrow();
+		expect(() => cookies.set('a', 'a'.repeat(4095))).not.toThrow();
 	});
 
 	test('secure defaults to false when served over http (e.g. --host)', () => {
 		const { cookies, new_cookies } = cookies_setup({ href: 'http://192.168.0.1:5173' });
-		cookies.set('a', 'b', { path: '/' });
+		cookies.set('a', 'b');
 		const opts = new_cookies.get('/?a')?.options;
 		assert.equal(opts?.secure, false);
 	});
 
 	test('secure defaults to false even when served over https', () => {
 		const { cookies, new_cookies } = cookies_setup({ href: 'https://192.168.0.1:5173' });
-		cookies.set('a', 'b', { path: '/' });
+		cookies.set('a', 'b');
 		const opts = new_cookies.get('/?a')?.options;
 		assert.equal(opts?.secure, false);
 	});
@@ -97,25 +97,25 @@ describe.skipIf(!!process.env.DEV)('cookies in prod', () => {
 
 	test('a cookie should not be present after it is deleted', () => {
 		const { cookies } = cookies_setup();
-		cookies.set('a', 'b', { path: '/' });
+		cookies.set('a', 'b');
 		expect(cookies.get('a')).toEqual('b');
-		cookies.delete('a', { path: '/' });
+		cookies.delete('a');
 		assert.isUndefined(cookies.get('a'));
 	});
 
 	test('getAll should not include deleted cookies', () => {
 		const { cookies } = cookies_setup({ headers: { cookie: 'session=abc' } });
-		cookies.set('session', 'abc', { path: '/' });
+		cookies.set('session', 'abc');
 		expect(cookies.getAll()).toEqual([{ name: 'session', value: 'abc' }]);
 
-		cookies.delete('session', { path: '/' });
+		cookies.delete('session');
 		assert.isUndefined(cookies.get('session'));
 		expect(cookies.getAll()).toEqual([]);
 	});
 
 	test('default values when set is called', () => {
 		const { cookies, new_cookies } = cookies_setup();
-		cookies.set('a', 'b', { path: '/' });
+		cookies.set('a', 'b');
 		const opts = new_cookies.get('/?a')?.options;
 		assert.equal(opts?.secure, true);
 		assert.equal(opts?.httpOnly, true);
@@ -135,14 +135,14 @@ describe.skipIf(!!process.env.DEV)('cookies in prod', () => {
 
 	test('default values when on localhost', () => {
 		const { cookies, new_cookies } = cookies_setup({ href: 'http://localhost:1234' });
-		cookies.set('a', 'b', { path: '/' });
+		cookies.set('a', 'b');
 		const opts = new_cookies.get('/?a')?.options;
 		assert.equal(opts?.secure, false);
 	});
 
 	test('secure defaults to true on http on a non-localhost host', () => {
 		const { cookies, new_cookies } = cookies_setup({ href: 'http://192.168.0.1:5173' });
-		cookies.set('a', 'b', { path: '/' });
+		cookies.set('a', 'b');
 		const opts = new_cookies.get('/?a')?.options;
 		assert.equal(opts?.secure, true);
 	});
@@ -159,7 +159,7 @@ describe.skipIf(!!process.env.DEV)('cookies in prod', () => {
 
 	test('default values when delete is called', () => {
 		const { cookies, new_cookies } = cookies_setup();
-		cookies.delete('a', { path: '/' });
+		cookies.delete('a');
 		const opts = new_cookies.get('/?a')?.options;
 		assert.equal(opts?.secure, true);
 		assert.equal(opts?.httpOnly, true);
@@ -188,8 +188,8 @@ describe.skipIf(!!process.env.DEV)('cookies in prod', () => {
 
 	test('last cookie set with the same name wins', () => {
 		const { cookies, new_cookies } = cookies_setup();
-		cookies.set('a', 'foo', { path: '/' });
-		cookies.set('a', 'bar', { path: '/' });
+		cookies.set('a', 'foo');
+		cookies.set('a', 'bar');
 		const entry = new_cookies.get('/?a');
 		assert.equal(entry?.value, 'bar');
 	});
@@ -197,8 +197,8 @@ describe.skipIf(!!process.env.DEV)('cookies in prod', () => {
 	test('cookie names are case sensitive', () => {
 		const { cookies, new_cookies } = cookies_setup();
 		// not that one should do this, but we follow the spec...
-		cookies.set('a', 'foo', { path: '/' });
-		cookies.set('A', 'bar', { path: '/' });
+		cookies.set('a', 'foo');
+		cookies.set('A', 'bar');
 		const entrya = new_cookies.get('/?a');
 		const entryA = new_cookies.get('/?A');
 		assert.equal(entrya?.value, 'foo');
@@ -213,7 +213,7 @@ describe.skipIf(!!process.env.DEV)('cookies in prod', () => {
 				cookie: 'a=f%C3%BC; b=foo+bar' // a=fü
 			}
 		});
-		cookies.set('c', 'fö', { path: '/' }); // should use default encoding
+		cookies.set('c', 'fö'); // should use default encoding
 		cookies.set('d', 'fö', { path: '/', encode: () => 'öf' }); // should respect `encode`
 		const header = get_cookie_header(new URL(href), 'e=f%C3%A4; f=foo+bar');
 		assert.equal(header, 'a=f%C3%BC; b=foo+bar; c=f%C3%B6; d=öf; e=f%C3%A4; f=foo+bar');
@@ -223,9 +223,9 @@ describe.skipIf(!!process.env.DEV)('cookies in prod', () => {
 		const { cookies } = cookies_setup();
 		expect(cookies.getAll()).toEqual([{ name: 'a', value: 'b' }]);
 
-		cookies.set('a', 'foo', { path: '/' });
-		cookies.set('a', 'bar', { path: '/' });
-		cookies.set('b', 'baz', { path: '/' });
+		cookies.set('a', 'foo');
+		cookies.set('a', 'bar');
+		cookies.set('b', 'baz');
 
 		expect(cookies.getAll()).toEqual([
 			{ name: 'a', value: 'bar' },
@@ -262,7 +262,7 @@ describe.skipIf(!!process.env.DEV)('cookies in prod', () => {
 	test('reproduce issue #13947: multiple cookies with same name but different paths', () => {
 		// Test on root path to see if most specific cookie wins
 		const { cookies: root_cookies } = cookies_setup({ href: 'https://example.com/' });
-		root_cookies.set('key', 'value_root', { path: '/' });
+		root_cookies.set('key', 'value_root');
 		root_cookies.set('key', 'value_foo', { path: '/foo' });
 
 		// When on root path, should get the root cookie
@@ -270,7 +270,7 @@ describe.skipIf(!!process.env.DEV)('cookies in prod', () => {
 
 		// Test on /foo path to see if more specific cookie wins
 		const { cookies: foo_cookies } = cookies_setup({ href: 'https://example.com/foo' });
-		foo_cookies.set('key', 'value_root', { path: '/' });
+		foo_cookies.set('key', 'value_root');
 		foo_cookies.set('key', 'value_foo', { path: '/foo' });
 
 		// When on /foo path, should get the more specific /foo cookie
@@ -295,7 +295,7 @@ describe.skipIf(!!process.env.DEV)('cookies in prod', () => {
 		const { cookies } = cookies_setup({ href: 'https://example.com/x/y/z' });
 
 		// Set cookies with increasing path specificity
-		cookies.set('n', '1', { path: '/' });
+		cookies.set('n', '1');
 		cookies.set('n', '2', { path: '/x' });
 		cookies.set('n', '3', { path: '/x/y' });
 		cookies.set('n', '4', { path: '/x/y/z' });
@@ -308,7 +308,7 @@ describe.skipIf(!!process.env.DEV)('cookies in prod', () => {
 		const { cookies } = cookies_setup();
 
 		// Set a cookie the old way
-		cookies.set('old-style', 'value', { path: '/' });
+		cookies.set('old-style', 'value');
 
 		// Should be retrievable without specifying path
 		expect(cookies.get('old-style')).toEqual('value');
@@ -321,7 +321,7 @@ describe.skipIf(!!process.env.DEV)('cookies in prod', () => {
 		// Set cookies with the same name but different path specificity
 		// Setting most specific first, then less specific ones to expose the bug
 		cookies.set('duplicate', 'foobar_value', { path: '/foo/bar' }); // Most specific
-		cookies.set('duplicate', 'root_value', { path: '/' }); // Least specific
+		cookies.set('duplicate', 'root_value'); // Least specific
 		cookies.set('duplicate', 'foo_value', { path: '/foo' }); // Middle specificity
 
 		const all = cookies.getAll();

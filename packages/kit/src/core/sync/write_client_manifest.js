@@ -120,12 +120,17 @@ export function write_client_manifest(kit, manifest_data, output, root, metadata
 		if (root_layout) layouts_with_server_load.add(0);
 	}
 
-	const client_hooks_file = resolve_entry(kit.files.hooks.client);
-	const universal_hooks_file = resolve_entry(kit.files.hooks.universal);
+	const client_hooks_file = resolve_entry(kit.files.hooks.client, kit.moduleExtensions);
+	const universal_hooks_file = resolve_entry(kit.files.hooks.universal, kit.moduleExtensions);
 
 	if (!client_hooks_file) {
-		check_spelling('src/hooks.client', 'src/+hooks.client', 'Unexpected + prefix');
-		check_spelling('src/hooks.client', 'src/hook.client', 'Missing s suffix');
+		check_spelling(
+			'src/hooks.client',
+			'src/+hooks.client',
+			'Unexpected + prefix',
+			kit.moduleExtensions
+		);
+		check_spelling('src/hooks.client', 'src/hook.client', 'Missing s suffix', kit.moduleExtensions);
 	}
 
 	// Stringified version of

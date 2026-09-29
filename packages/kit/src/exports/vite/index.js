@@ -339,7 +339,7 @@ function kit({ svelte_config }) {
 				global_name = get_global_name(kit.version.name, !is_build);
 				kit_global = `globalThis.${global_name}`;
 
-				service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
+				service_worker_entry_file = resolve_entry(kit.files.serviceWorker, kit.moduleExtensions);
 				service_worker_entry_file &&= posixify(service_worker_entry_file);
 
 				normalized_aliases = get_import_aliases(root, vite.normalizePath.bind(vite));
@@ -376,7 +376,7 @@ function kit({ svelte_config }) {
 
 				// We can only add directories to the allow list, so we find out
 				// if there's a client hooks file and pass its directory
-				const client_hooks = resolve_entry(kit.files.hooks.client);
+				const client_hooks = resolve_entry(kit.files.hooks.client, kit.moduleExtensions);
 				if (client_hooks) allow.add(path.dirname(client_hooks));
 
 				// dev and preview config can be shared
@@ -410,8 +410,9 @@ function kit({ svelte_config }) {
 						sourcemapIgnoreList,
 						watch: {
 							ignored: [
-								// Ignore all siblings of config.outDir/generated
-								`${out_dir}/!(generated)`
+								// Ignore all siblings of config.outDir/generated, at any depth
+								`${out_dir}/!(generated)`,
+								`${out_dir}/!(generated)/**`
 							]
 						}
 					},
@@ -445,8 +446,7 @@ function kit({ svelte_config }) {
 							'esm-env',
 							// This forces `$app/*` modules to be bundled, since they depend on
 							// generated modules like `<sveltekit:generated>/env/config.js` (this isn't a valid bare
-							// import, but it works with vite-node's externalization logic, which
-							// uses basic concatenation)
+							// import, but Vitest's externalization logic matches it against the module path)
 							'@sveltejs/kit/src/runtime'
 						],
 						// Any CommonJS dependencies of Kit (of which there are currently none) must always be externalized.
@@ -530,12 +530,6 @@ function kit({ svelte_config }) {
 					// we avoid setting base to paths.assets in dev so that we get the
 					// trailing slash redirect to paths.base if it is set
 					new_config.base = kit.paths.base || '/';
-
-					// Vite dependency crawler needs an explicit JS entry point
-					// even though server otherwise works without it
-					new_config.build ??= {};
-					new_config.build.rolldownOptions ??= {};
-					new_config.build.rolldownOptions.input = `${runtime_directory}/client/entry.js`;
 				}
 
 				// Vite's `define` is a compile-time text replacement, but Vitest strips

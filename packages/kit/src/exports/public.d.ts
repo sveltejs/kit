@@ -368,7 +368,7 @@ export interface Cookies {
 	 * @param value the cookie value
 	 * @param opts the options passed to `cookie.stringifySetCookie` with the SvelteKit defaults described above. See documentation [here](https://github.com/jshttp/cookie?tab=readme-ov-file#cookiestringifysetcookiesetcookieobj-options)
 	 */
-	set: (name: string, value: string, opts: import('cookie').SerializeOptions) => void;
+	set: (name: string, value: string, opts?: import('cookie').SerializeOptions) => void;
 
 	/**
 	 * Deletes a cookie by setting its value to an empty string and setting the expiry date in the past.
@@ -379,7 +379,7 @@ export interface Cookies {
 	 * @param name the name of the cookie
 	 * @param opts the options passed to `cookie.stringifySetCookie` with the SvelteKit defaults described above. See documentation [here](https://github.com/jshttp/cookie?tab=readme-ov-file#cookiestringifysetcookiesetcookieobj-options)
 	 */
-	delete: (name: string, opts: import('cookie').SerializeOptions) => void;
+	delete: (name: string, opts?: import('cookie').SerializeOptions) => void;
 
 	/**
 	 * Parses a single `Set-Cookie` header. This allows you to apply cookies received from an external source:
@@ -394,7 +394,7 @@ export interface Cookies {
 	 *
 	 * 	for (const str of response.headers.getSetCookie()) {
 	 * 		const { name, value, ...options } = cookies.parse(str);
-	 * 		cookies.set(name, value, { ...options, path: '/' });
+	 * 		cookies.set(name, value, options);
 	 * 	}
 	 *
 	 * 	// ...
@@ -415,7 +415,7 @@ export interface Cookies {
 	 * @param value the cookie value
 	 * @param opts the options passed to `cookie.stringifySetCookie` with the SvelteKit defaults described above. See documentation [here](https://github.com/jshttp/cookie?tab=readme-ov-file#cookiestringifysetcookiesetcookieobj-options)
 	 */
-	serialize: (name: string, value: string, opts: import('cookie').SerializeOptions) => string;
+	serialize: (name: string, value: string, opts?: import('cookie').SerializeOptions) => string;
 }
 
 /**

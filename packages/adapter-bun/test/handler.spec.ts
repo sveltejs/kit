@@ -1,6 +1,6 @@
 import process from 'node:process';
 import { afterEach, expect, mock, spyOn, test } from 'bun:test';
-import { mock_manifest, mock_routes } from './mocks.js';
+import { mock_handoff } from './mocks.js';
 
 const environment = new Set<string>();
 let instance = 0;
@@ -205,9 +205,11 @@ async function load_handler({
 		respond = respond;
 	}
 
-	mock.module('SERVER', () => ({ server: new Server() }));
-	mock_manifest({ app_dir: '_app', origin, env_prefix: envPrefix });
-	mock_routes({ server_assets: new Map([['asset.txt', asset]]) });
+	mock_handoff({ server: new Server(), origin, env_prefix: envPrefix });
+	mock.module('../src/routes.js', () => ({
+		routes: {},
+		server_assets: new Map([['asset.txt', asset]])
+	}));
 
 	const request_ip = mock((_request: Request): any => ({
 		address: '127.0.0.1',

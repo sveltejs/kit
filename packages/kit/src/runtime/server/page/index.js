@@ -9,7 +9,7 @@ import { add_data_suffix } from '../../pathname.js';
 import { build_error_chain, nearest_error_pages } from '../../error-chain.js';
 import { redirect_response } from '../utils.js';
 import { manifest } from '../internal.js';
-import { static_error_page, handle_error_and_jsonify } from '../errors.js';
+import { handle_error_and_jsonify } from '../errors.js';
 import {
 	handle_action_json_request,
 	handle_action_request,
@@ -19,10 +19,10 @@ import {
 import { server_data_serializer, server_data_serializer_json } from './data_serializer.js';
 import { load_data, load_server_data } from './load_data.js';
 import { render_response } from './render.js';
-import { respond_with_error } from './respond_with_error.js';
 import { DEV } from 'esm-env';
 import { get_remote_action, handle_remote_form_post } from '../remote-functions.js';
 import { PageNodes } from '../../../utils/page_nodes.js';
+import { static_error_page, respond_with_error } from './respond_with_error.js';
 
 /**
  * The maximum request depth permitted before assuming we're stuck in an infinite loop

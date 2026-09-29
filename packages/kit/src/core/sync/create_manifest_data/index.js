@@ -91,9 +91,9 @@ export function create_assets(config) {
  * @param {string} cwd
  */
 function create_hooks(config, cwd) {
-	const client = resolve_entry(config.files.hooks.client);
-	const server = resolve_entry(config.files.hooks.server);
-	const universal = resolve_entry(config.files.hooks.universal);
+	const client = resolve_entry(config.files.hooks.client, config.moduleExtensions);
+	const server = resolve_entry(config.files.hooks.server, config.moduleExtensions);
+	const universal = resolve_entry(config.files.hooks.universal, config.moduleExtensions);
 
 	return {
 		client: client && posixify(path.relative(cwd, client)),
@@ -107,7 +107,7 @@ function create_hooks(config, cwd) {
  * @param {string} cwd
  */
 function resolve_params(config, cwd) {
-	const params_file = resolve_entry(config.files.params);
+	const params_file = resolve_entry(config.files.params, config.moduleExtensions);
 	return params_file ? posixify(path.relative(cwd, params_file)) : null;
 }
 
@@ -214,18 +214,18 @@ function create_routes_and_nodes(cwd, config, fallback) {
 
 			const dir = path.join(cwd, routes_base, id);
 
-			// We can't use withFileTypes because of a NodeJs bug which returns wrong results
-			// with isDirectory() in case of symlinks: https://github.com/nodejs/node/issues/30646
 			// We sort the entries because `readdirSync` order is not guaranteed and differs
 			// between runtimes (e.g. Node returns entries alphabetically, Bun in directory
 			// order). Node indices are assigned from this traversal order, so without sorting
 			// the SSR and client manifests can disagree, causing hydration mismatches.
 			const files = fs
-				.readdirSync(dir)
-				.sort()
-				.map((name) => ({
-					is_dir: fs.statSync(path.join(dir, name)).isDirectory(),
-					name
+				.readdirSync(dir, { withFileTypes: true })
+				.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0))
+				.map((entry) => ({
+					is_dir: entry.isSymbolicLink()
+						? fs.statSync(path.join(dir, entry.name)).isDirectory()
+						: entry.isDirectory(),
+					name: entry.name
 				}));
 
 			// process files first
