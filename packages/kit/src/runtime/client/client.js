@@ -3510,6 +3510,12 @@ function _start_router() {
 		// the navigation away from it was successful.
 		// Info about bfcache here: https://web.dev/bfcache
 		if (event.persisted) {
+			// `pagehide` sets `scrollRestoration` to `auto` so that the browser
+			// restores the scroll position on reload/back-forward. When the page is
+			// restored from bfcache we need to switch back to `manual` so that
+			// SvelteKit controls scroll restoration for subsequent client-side navigations.
+			history.scrollRestoration = 'manual';
+
 			set_navigation(null);
 		}
 	});
