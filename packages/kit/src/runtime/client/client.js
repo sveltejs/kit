@@ -3113,39 +3113,66 @@ export async function set_nearest_error_page(error) {
 	}
 }
 
+function check_leaving() {
+	if (is_navigating) return false;
+
+	let should_block = false;
+
+	const nav = create_navigation(current, undefined, null, 'leave');
+
+	// If we're navigating, beforeNavigate was already called. If we end up in here during navigation,
+	// it's due to an external or full-page-reload link, for which we don't want to call the hook again.
+	/** @type {BeforeNavigate} */
+	const navigation = {
+		...nav.navigation,
+		cancel: () => {
+			should_block = true;
+			nav.reject(new Error('navigation cancelled'));
+		}
+	};
+
+	before_navigate_callbacks.forEach((fn) => fn(navigation));
+
+	return should_block;
+}
+
 function _start_router() {
 	history.scrollRestoration = 'manual';
 
+	let before_unload_fired = false;
+
+	// doesn't fire if it is a background tab or on Safari
+	// also prevents bfcache on Firefox
 	addEventListener('beforeunload', (e) => {
-		let should_block = false;
-
-		persist_state();
-
-		if (!is_navigating) {
-			const nav = create_navigation(current, undefined, null, 'leave');
-
-			// If we're navigating, beforeNavigate was already called. If we end up in here during navigation,
-			// it's due to an external or full-page-reload link, for which we don't want to call the hook again.
-			/** @type {BeforeNavigate} */
-			const navigation = {
-				...nav.navigation,
-				cancel: () => {
-					should_block = true;
-					nav.reject(new Error('navigation cancelled'));
-				}
-			};
-
-			before_navigate_callbacks.forEach((fn) => fn(navigation));
-		}
-
-		if (should_block) {
+		if (check_leaving()) {
 			e.preventDefault();
 			e.returnValue = '';
 		}
+
+		before_unload_fired = true;
 	});
+
+	addEventListener('pagehide', () => {
+		persist_state();
+
+		// it may not have run since Safari doesn't support `beforeunload`
+		if (before_unload_fired) {
+			before_unload_fired = false;
+		} else {
+			check_leaving();
+		}
+	});
+
 	addEventListener('visibilitychange', () => {
+		// doesn't fire on Firefox when closing a tab
 		if (document.visibilityState === 'hidden') {
 			persist_state();
+
+			// Adopted from Nuxt.js
+			// Reset scrollRestoration to auto when leaving page, allowing page reload
+			// and back-navigation from other pages to use the browser to restore the
+			// scrolling position.
+			history.scrollRestoration = 'auto';
 		} else {
 			// the tab just became visible — a good time to check for a new deployment
 			void updated.check();
