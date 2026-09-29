@@ -3137,6 +3137,7 @@ function check_leaving() {
 
 function _start_router() {
 	history.scrollRestoration = 'manual';
+
 	let before_unload_fired = false;
 
 	// TODO: avoid listening to `beforeunload` unconditionally
@@ -3152,7 +3153,8 @@ function _start_router() {
 	});
 
 	addEventListener('pagehide', () => {
-		// runs for iOS Safari but noops for other browsers
+		// noops if it already ran during `beforeunload`
+		// this is necessary because `beforeunload` isn't supported by iOS Safari
 		if (before_unload_fired) {
 			before_unload_fired = false;
 		} else {
@@ -3161,7 +3163,7 @@ function _start_router() {
 
 		// Adopted from Nuxt.js
 		// Reset scrollRestoration to auto when leaving page, allowing page reload
-		// and bfcache back-navigation from other pages to use the browser to restore
+		// and back-navigation from other pages to use the browser to restore
 		// the scrolling position.
 		history.scrollRestoration = 'auto';
 
