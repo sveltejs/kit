@@ -714,6 +714,8 @@ export async function _goto(url, options = {}, redirect_count = 0, nav_token = {
 		discard_load_cache();
 	}
 
+	history.scrollRestoration = 'manual';
+
 	await navigate({
 		type: options.type ?? 'goto',
 		url: resolve_url(url),
@@ -2651,8 +2653,6 @@ export async function goto(url, opts = {}) {
 
 	const intent = await resolve_intent(url, 'goto');
 
-	history.scrollRestoration = 'manual';
-
 	if (opts.shallow) {
 		return update_state(
 			intent,
@@ -2965,6 +2965,8 @@ async function update_state(intent, state, { replace, persist_state, reset }, ca
 			resetIndex: current_reset_index
 		})
 	};
+
+	history.scrollRestoration = 'manual';
 
 	const fn = replace ? history.replaceState : history.pushState;
 	fn.call(history, entry, '', url);
