@@ -17,6 +17,16 @@ test('loads external dependencies', async ({ request }) => {
 	expect(await response.text()).toBe('server-side-dep implementation');
 });
 
+test('loads bundled Svelte dependencies', async ({ request }) => {
+	const response = await request.get('/svelte-dependency');
+	expect(await response.text()).toBe('server-side Svelte dependency');
+});
+
+test('renders components from bundled Svelte dependencies', async ({ page }) => {
+	await page.goto('/svelte-dependency/component');
+	await expect(page.locator('p')).toHaveText('Hello from a Svelte dependency');
+});
+
 test('sets X-Accel-Buffering header on text/event-stream responses', async ({ request }) => {
 	const response = await request.get('/event-stream');
 	expect(response.headers()['content-type']).toContain('text/event-stream');

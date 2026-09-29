@@ -1,5 +1,21 @@
 # @sveltejs/adapter-node
 
+## 6.0.0-next.15
+
+### Patch Changes
+
+- fix: bundle Svelte libraries listed in `dependencies` instead of externalising them ([#17234](https://github.com/sveltejs/kit/pull/17234))
+- Updated dependencies [[`f8a90be`](https://github.com/sveltejs/kit/commit/f8a90be73c61dee7d586b26d19dad59637de63b0), [`30d06f5`](https://github.com/sveltejs/kit/commit/30d06f5698528cf540899900366fc0cfeb3dc7f6), [`0107721`](https://github.com/sveltejs/kit/commit/0107721dbdde1310d4c5427f7ad33a2ee5593d3e)]:
+  - @sveltejs/kit@3.0.0-next.30
+
+## 6.0.0-next.14
+
+### Patch Changes
+
+- fix: always bundle dev dependencies ([#17210](https://github.com/sveltejs/kit/pull/17210))
+- Updated dependencies [[`058d29b`](https://github.com/sveltejs/kit/commit/058d29be2cbedb91546b6f6ddf157b881b87360b), [`5e11958`](https://github.com/sveltejs/kit/commit/5e119589bb8784cb43fd631afaa81b78b3ff6f36)]:
+  - @sveltejs/kit@3.0.0-next.29
+
 ## 6.0.0-next.13
 
 ### Major Changes

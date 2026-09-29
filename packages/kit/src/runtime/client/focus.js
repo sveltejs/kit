@@ -1,82 +1,53 @@
 import { hash_routing } from '$app/paths/internal/client';
-import { get_hash_element, scroll_state } from './utils.js';
+import { get_hash_element } from './utils.js';
 
 /**
- * This flag is used to avoid client-side navigation when we're only using
- * `location.replace()` to set focus.
+ * Blurs the active element before the DOM update when a navigation resets focus, so that
+ * blur/focusout handlers run while the outgoing component's data is still valid (#14575)
+ * @param {boolean} reset
  */
-let resetting_focus = false;
-
-export function is_resetting_focus() {
-	return resetting_focus;
-}
-
-/** @param {boolean} reset */
 export function blur_active_element(reset) {
+	const element = document.activeElement;
+
 	if (
 		reset &&
-		document.activeElement instanceof HTMLElement &&
-		document.activeElement !== document.body
+		(element instanceof HTMLElement || element instanceof SVGElement) &&
+		element !== document.body
 	) {
-		document.activeElement.blur();
+		element.blur();
 	}
 }
 
 /**
- * @param {URL} url
- * @param {boolean} [scroll]
+ * Sets the sequential focus navigation starting point to `element` without leaving it focused
+ * @param {HTMLElement} element
  */
-export function reset_focus(url, scroll = true) {
+function focus_element(element) {
+	const tabindex = element.getAttribute('tabindex');
+
+	element.setAttribute('tabindex', '-1');
+	element.focus({ preventScroll: true, focusVisible: false });
+
+	// removing `tabindex` blurs it again, synchronously in Chromium and a frame later elsewhere
+	if (tabindex !== null) {
+		element.setAttribute('tabindex', tabindex);
+	} else {
+		element.removeAttribute('tabindex');
+	}
+}
+
+/** @param {URL} url */
+export function reset_focus(url) {
 	const autofocus = document.querySelector('[autofocus]');
 	if (autofocus) {
 		// @ts-ignore
 		autofocus.focus();
 	} else {
-		// Reset page selection and focus
-
-		// Mimic the browsers' behaviour and set the sequential focus navigation
-		// starting point to the fragment identifier.
-		const element = get_hash_element(url, hash_routing);
-		if (element) {
-			const { x, y } = scroll_state();
-
-			// `element.focus()` doesn't work on Safari and Firefox Ubuntu so we need
-			// to use this hack with `location.replace()` instead.
-			setTimeout(() => {
-				const history_state = history.state;
-
-				resetting_focus = true;
-				location.replace(new URL(`#${element.id}`, location.href));
-
-				// Firefox has a bug that sets the history state to `null` so we need to
-				// restore it after. See https://bugzilla.mozilla.org/show_bug.cgi?id=1199924
-				// This is also needed to restore the original hash if we're using hash routing
-				history.replaceState(history_state, '', url);
-
-				// If scroll management has already happened earlier, we need to restore
-				// the scroll position after setting the sequential focus navigation starting point
-				if (scroll) scrollTo(x, y);
-				resetting_focus = false;
-			});
-		} else {
-			// If the ID doesn't exist, we try to mimic browsers' behaviour as closely
-			// as possible by targeting the first scrollable region. Unfortunately, it's
-			// not a perfect match — e.g. shift-tabbing won't immediately cycle up from
-			// the end of the page on Chromium
-			// See https://html.spec.whatwg.org/multipage/interaction.html#get-the-focusable-area
-			const root = document.body;
-			const tabindex = root.getAttribute('tabindex');
-
-			root.tabIndex = -1;
-			root.focus({ preventScroll: true, focusVisible: false });
-
-			// restore `tabindex` as to prevent `root` from stealing input from elements
-			if (tabindex !== null) {
-				root.setAttribute('tabindex', tabindex);
-			} else {
-				root.removeAttribute('tabindex');
-			}
-		}
+		// set the sequential focus navigation starting point to the fragment identifier, or to
+		// the first scrollable region when there is none. Not a perfect match for browsers:
+		// shift-tabbing won't immediately cycle up from the end of the page on Chromium
+		// See https://html.spec.whatwg.org/multipage/interaction.html#get-the-focusable-area
+		focus_element(get_hash_element(url, hash_routing) ?? document.body);
 
 		// capture current selection, so we can compare the state after
 		// snapshot restoration and afterNavigate callbacks have run
@@ -97,8 +68,8 @@ export function reset_focus(url, scroll = true) {
 					const a = ranges[i];
 					const b = selection.getRangeAt(i);
 
-					// we need to do a deep comparison rather than just `a !== b` because
-					// Safari behaves differently to other browsers
+					// compare field by field: a range modified in place keeps its identity,
+					// and Safari before 17 returned a new Range object on every getRangeAt()
 					if (
 						a.commonAncestorContainer !== b.commonAncestorContainer ||
 						a.startContainer !== b.startContainer ||

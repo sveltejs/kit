@@ -194,23 +194,33 @@ export default function (opts = {}) {
 					{
 						name: 'vite-plugin-sveltejs-adapter-bun',
 						apply: 'build',
-						config() {
+						config(config) {
 							const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+							// vite-plugin-svelte lists Svelte libraries here so their export conditions resolve at build time
+							const no_external = Array.isArray(config.ssr?.noExternal)
+								? config.ssr.noExternal
+								: [];
 
 							return {
+								ssr: {
+									// Vite doesn't bundle dependencies for SSR by default. Bundle everything
+									// except production dependencies that don't need the build's export conditions
+									external: Object.keys(pkg.dependencies || {}).filter(
+										(dep) =>
+											!no_external.some((rule) =>
+												typeof rule === 'string' ? rule === dep : rule.test(dep)
+											)
+									),
+									noExternal: true
+								},
 								environments: {
 									ssr: {
 										build: {
 											rolldownOptions: {
 												// bundled with the app's server code so shared modules aren't duplicated
 												input: { 'adapter-index': `${files}/index.js` },
-												// only production dependencies (and their deep imports) stay external
-												external: [
-													handoff,
-													...Object.keys(pkg.dependencies || {}).map(
-														(d) => new RegExp(`^${d}(\\/.*)?$`)
-													)
-												],
+												// generated after the Vite build and rewritten to an output-relative path
+												external: [handoff],
 												output: {
 													paths: { [handoff]: '../adapter-bun.js' },
 													// the hand-off path only holds at the output root, so adapter chunks may not nest
