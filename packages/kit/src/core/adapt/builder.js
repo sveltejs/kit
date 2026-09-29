@@ -379,7 +379,7 @@ async function compress_file(file) {
 	await Promise.all([
 		fs.promises.writeFile(`${file}.gz`, gz),
 		fs.promises.writeFile(`${file}.br`, br),
-		fs.promises.writeFile(`${file}.zstd`, zstd)
+		fs.promises.writeFile(`${file}.zst`, zstd)
 	]);
 }
 

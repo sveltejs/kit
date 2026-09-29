@@ -89,13 +89,13 @@ test('compress files', async () => {
 	for (const target of targets) {
 		rmSync(target + '.br', { force: true });
 		rmSync(target + '.gz', { force: true });
-		rmSync(target + '.zstd', { force: true });
+		rmSync(target + '.zst', { force: true });
 	}
 	const compressed = await builder.compress(dirname(targets[0]));
 	for (const target of targets) {
 		assert.ok(existsSync(target + '.br'));
 		assert.ok(existsSync(target + '.gz'));
-		assert.ok(existsSync(target + '.zstd'));
+		assert.ok(existsSync(target + '.zst'));
 	}
 	assert.deepEqual(compressed.sort(), ['foo.css', 'foo.md', 'foo.mdx']);
 });
