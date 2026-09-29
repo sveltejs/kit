@@ -23,7 +23,7 @@ import { posixify } from '../utils/os.js';
  * @returns {string | null}
  */
 export function resolve_env_entry(config, root) {
-	const entry = resolve_entry(path.resolve(root, config.files.src, 'env'));
+	const entry = resolve_entry(path.resolve(root, config.files.src, 'env'), config.moduleExtensions);
 	// posix, like the paths Vite hands to `hotUpdate`
 	return entry && posixify(entry);
 }

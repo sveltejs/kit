@@ -36,10 +36,11 @@
 	"scripts": {
 		"lint": "oxfmt --check .",
 		"format": "oxfmt --write .",
-		"check": "tsc && tsc --project files/tsconfig.json",
+		"check": "pnpm tsc-native && pnpm tsc-native --project files/tsconfig.json",
 		"test:unit": "vitest run",
 		"test:e2e": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test",
-		"test": "pnpm test:unit && pnpm test:e2e"
+		"test": "pnpm test:unit && pnpm test:e2e",
+		"tsc-native": "node node_modules/@typescript/native/bin/tsc"
 	},
 	"dependencies": {
 		"@cloudflare/workers-types": "^5.20260813.1",
@@ -49,7 +50,7 @@
 		"@playwright/test": "catalog:",
 		"@sveltejs/kit": "workspace:^",
 		"@types/node": "catalog:",
-		"typescript": "catalog:typescript-native",
+		"@typescript/native": "catalog:",
 		"vite": "catalog:",
 		"vitest": "catalog:"
 	},

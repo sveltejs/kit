@@ -131,7 +131,6 @@ export function plugin_compile(
 				/** @type {Record<string, string>} */
 				const server_input = {
 					index: `${runtime_directory}/server/index.js`,
-					internal: `<sveltekit:generated>/server.js`,
 					env: '<sveltekit:generated>/env/config.js',
 					['remote-entry']: `${runtime_directory}/app/server/remote/index.js`
 				};
@@ -183,7 +182,8 @@ export function plugin_compile(
 
 				// ...and the server instrumentation file
 				const server_instrumentation = resolve_entry(
-					path.join(kit.files.src, 'instrumentation.server')
+					path.join(kit.files.src, 'instrumentation.server'),
+					kit.moduleExtensions
 				);
 				if (server_instrumentation) {
 					if (kit.adapter && !kit.adapter.supports?.instrumentation?.()) {
@@ -238,7 +238,6 @@ export function plugin_compile(
 							output: {
 								name: `${global_name}.app`,
 								assetFileNames: `${app_immutable}/assets/[name].[hash][extname]`,
-								hoistTransitiveImports: false,
 								sourcemapIgnoreList
 							},
 							preserveEntrySignatures: 'strict',
@@ -269,8 +268,7 @@ export function plugin_compile(
 							output: {
 								entryFileNames: `${app_immutable}/workers/[name]-[hash].js`,
 								chunkFileNames: `${app_immutable}/workers/chunks/[hash].js`,
-								assetFileNames: `${app_immutable}/workers/assets/[name]-[hash][extname]`,
-								hoistTransitiveImports: false
+								assetFileNames: `${app_immutable}/workers/assets/[name]-[hash][extname]`
 							}
 						}
 					},

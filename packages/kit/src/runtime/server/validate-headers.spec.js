@@ -1,12 +1,8 @@
-import { describe, test, expect, beforeEach, vi } from 'vitest';
+import { describe, test, expect, vi } from 'vitest';
 import { validateHeaders } from './validate-headers.js';
 
 describe('validateHeaders', () => {
 	const console_warn_spy = vi.spyOn(console, 'warn');
-
-	beforeEach(() => {
-		vi.resetAllMocks();
-	});
 
 	describe('cache-control header', () => {
 		test('accepts valid directives', () => {

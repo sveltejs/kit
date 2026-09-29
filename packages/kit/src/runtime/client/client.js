@@ -13,8 +13,8 @@ import { decode_pathname, strip_hash, make_trackable, normalize_path } from '../
 import { dev_fetch, initial_fetch, lock_fetch, subsequent_fetch, unlock_fetch } from './fetcher.js';
 import { parse_routes, parse_server_route } from './parse.js';
 import * as storage from './session-storage.js';
-import { blur_active_element, is_resetting_focus, reset_focus } from './focus.js';
-import { disable_scroll_handling, reset_scroll_and_focus } from './scroll.js';
+import { blur_active_element, reset_focus } from './focus.js';
+import { disable_scroll_handling, restore_scroll } from './scroll.js';
 import {
 	find_anchor,
 	resolve_url,
@@ -540,7 +540,7 @@ async function _start(_app, _target, data) {
 	// if we reload the page, or Cmd-Shift-T back to it,
 	// recover scroll position
 	const scroll = history_info[current_history_index]?.scroll;
-	function restore_scroll() {
+	function restore_reload_scroll() {
 		if (scroll) {
 			history.scrollRestoration = 'manual';
 			scrollTo(scroll.x, scroll.y);
@@ -548,7 +548,7 @@ async function _start(_app, _target, data) {
 	}
 
 	if (data) {
-		restore_scroll();
+		restore_reload_scroll();
 
 		await _hydrate(target, data);
 	} else {
@@ -560,7 +560,7 @@ async function _start(_app, _target, data) {
 			persist_state: history_metadata?.persistState ?? false
 		});
 
-		restore_scroll();
+		restore_reload_scroll();
 	}
 
 	_start_router();
@@ -2256,8 +2256,6 @@ async function run_on_navigate_callbacks(navigation) {
  * @param {Promise<void> | undefined} updated
  */
 async function finish_navigation(nav, nav_token, url, popped_scroll, reset, updated) {
-	const active_element = document.activeElement;
-
 	await updated;
 
 	if (navigation_token !== nav_token) {
@@ -2265,7 +2263,10 @@ async function finish_navigation(nav, nav_token, url, popped_scroll, reset, upda
 		return false;
 	}
 
-	reset_scroll_and_focus(url, reset ? popped_scroll : scroll_state(), reset, active_element);
+	restore_scroll(url, reset, popped_scroll);
+	if (reset && document.activeElement === document.body) {
+		reset_focus(url);
+	}
 
 	is_navigating = false;
 
@@ -2440,7 +2441,7 @@ function setup_preload() {
 					);
 				});
 			} else {
-				void _preload_data(intent);
+				void _preload_data(intent).catch(noop);
 			}
 		} else if (priority <= options.preload_code) {
 			current_a = { element: a, href: a.href };
@@ -3115,10 +3116,6 @@ export async function set_nearest_error_page(error) {
 function _start_router() {
 	history.scrollRestoration = 'manual';
 
-	// Adopted from Nuxt.js
-	// Reset scrollRestoration to auto when leaving page, allowing page reload
-	// and back-navigation from other pages to use the browser to restore the
-	// scrolling position.
 	addEventListener('beforeunload', (e) => {
 		let should_block = false;
 
@@ -3144,8 +3141,6 @@ function _start_router() {
 		if (should_block) {
 			e.preventDefault();
 			e.returnValue = '';
-		} else {
-			history.scrollRestoration = 'auto';
 		}
 	});
 	addEventListener('visibilitychange', () => {
@@ -3170,7 +3165,7 @@ function _start_router() {
 	container.addEventListener('click', async (event) => {
 		// Adapted from https://github.com/visionmedia/page.js
 		// MIT license https://github.com/visionmedia/page.js#license
-		if (event.button || event.which !== 1) return;
+		if (event.button) return;
 		if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
 		if (event.defaultPrevented) return;
 
@@ -3193,7 +3188,6 @@ function _start_router() {
 		// Ignore URL protocols that differ to the current one and are not http(s) (e.g. `mailto:`, `tel:`, `myapp:`, etc.)
 		// This may be wrong when the protocol is x: and the link goes to y:.. which should be treated as an external
 		// navigation, but it's not clear how to handle that case and it's not likely to come up in practice.
-		// MEMO: Without this condition, firefox will open mailer twice.
 		// See:
 		// - https://github.com/sveltejs/kit/issues/4045
 		// - https://github.com/sveltejs/kit/issues/5725
@@ -3229,8 +3223,8 @@ function _start_router() {
 		if (hash !== undefined && same_pathname) {
 			// If we are trying to navigate to the same hash, we should only
 			// attempt to scroll to that element and avoid any history changes.
-			// Otherwise, this can cause Firefox to incorrectly assign a null
-			// history state value without any signal that we can detect.
+			// Otherwise a fragment navigation creates a new entry with a null history state,
+			// which browsers handle differently: https://github.com/whatwg/html/issues/6213
 			const [, current_hash] = current.url.href.split('#');
 			if (current_hash === hash) {
 				event.preventDefault();
@@ -3338,8 +3332,6 @@ function _start_router() {
 	});
 
 	addEventListener('popstate', async (event) => {
-		if (is_resetting_focus()) return;
-
 		const history_metadata = get_history_metadata(event.state);
 
 		if (history_metadata?.historyIndex) {
@@ -3625,13 +3617,16 @@ async function _hydrate(
  * @returns {Promise<import('types').ServerNodesResponse | import('types').ServerRedirectNode>}
  */
 async function load_data(url, invalid) {
+	for (const key of url.searchParams.keys()) {
+		if (key.startsWith('x-sveltekit-')) {
+			throw new Error(`Cannot use reserved query parameter "${key}"`);
+		}
+	}
+
 	const data_url = new URL(url);
 	data_url.pathname = add_data_suffix(url.pathname);
 	if (url.pathname.endsWith('/')) {
 		data_url.searchParams.append(TRAILING_SLASH_PARAM, '1');
-	}
-	if (DEV && url.searchParams.has(INVALIDATED_PARAM)) {
-		throw new Error(`Cannot used reserved query parameter "${INVALIDATED_PARAM}"`);
 	}
 	data_url.searchParams.append(INVALIDATED_PARAM, invalid.map((i) => (i ? '1' : '0')).join(''));
 
@@ -3811,20 +3806,6 @@ function decode_hash(url) {
 }
 
 if (DEV) {
-	// Nasty hack to silence harmless warnings the user can do nothing about
-	const console_warn = console.warn;
-	console.warn = function warn(...args) {
-		if (
-			args.length === 1 &&
-			/<(Layout|Page|Error)(_[\w$]+)?> was created (with unknown|without expected) prop '(data|form)'/.test(
-				args[0]
-			)
-		) {
-			return;
-		}
-		console_warn(...args);
-	};
-
 	if (import.meta.hot) {
 		import.meta.hot.on('vite:beforeUpdate', () => {
 			if (errored) {

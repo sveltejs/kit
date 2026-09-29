@@ -34,7 +34,7 @@
 	],
 	"scripts": {
 		"lint": "oxfmt --check .",
-		"check": "tsc",
+		"check": "node node_modules/@typescript/native/bin/tsc",
 		"format": "oxfmt --write .",
 		"test": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test"
 	},
@@ -43,7 +43,7 @@
 		"@sveltejs/kit": "workspace:^",
 		"@types/node": "catalog:",
 		"svelte": "catalog:",
-		"typescript": "catalog:typescript-native",
+		"@typescript/native": "catalog:",
 		"vite": "catalog:"
 	},
 	"peerDependencies": {

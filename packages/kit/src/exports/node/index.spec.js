@@ -82,6 +82,32 @@ test('rejects request bodies that exceed content-length', async () => {
 	});
 });
 
+test.each([{ 'content-length': '11' }, { 'transfer-encoding': 'chunked' }])(
+	'enforces body size limit without content-type (%j)',
+	async (headers) => {
+		const req = new PassThrough();
+		const incoming = /** @type {import('http').IncomingMessage} */ (/** @type {unknown} */ (req));
+		incoming.headers = headers;
+		incoming.method = 'POST';
+		incoming.url = '/';
+		incoming.httpVersionMajor = 1;
+
+		const request = getRequest({
+			request: incoming,
+			base: 'http://localhost',
+			bodySizeLimit: 10
+		});
+
+		const text = request.text();
+		req.end(Buffer.from('0123456789a'));
+
+		await expect(text).rejects.toMatchObject({
+			status: 413,
+			text: 'Payload Too Large'
+		});
+	}
+);
+
 /**
  * Minimal `ServerResponse` stand-in that records headers and body writes and
  * emits `finish` when ended.

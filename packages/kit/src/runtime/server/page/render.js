@@ -32,7 +32,8 @@ import Root from '../../components/root.svelte';
 import { render } from 'svelte/server';
 import { Props, RenderNode } from '../../props.svelte.js';
 import { has_custom_transporters, uneval } from '#app/internal/transport';
-import { manifest, options } from '../internal.js';
+import { manifest } from '../internal.js';
+import { options } from '<sveltekit:generated>/server.js';
 
 // TODO rename this function/module
 
@@ -289,7 +290,7 @@ export async function render_response({
 		// `data-sveltekit` attribute once CSR kicks in
 		const attributes = __SVELTEKIT_DEV__ ? ['data-sveltekit'] : [];
 		if (csp.style_needs_nonce) attributes.push(`nonce="${csp.nonce}"`);
-		csp.add_style(style);
+		await csp.add_style(style);
 		head.add_style(style, attributes);
 	}
 
@@ -566,7 +567,7 @@ export async function render_response({
 					${blocks.join('\n\n\t\t\t\t\t')}
 				}
 			`;
-		csp.add_script(init_app);
+		await csp.add_script(init_app);
 
 		body += `\n\t\t\t<script${
 			csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''

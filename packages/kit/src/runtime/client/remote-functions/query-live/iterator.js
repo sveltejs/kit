@@ -25,6 +25,7 @@ export async function* create_live_iterator(
 	const url = `${base}/${app_dir}/remote/${id}${payload ? `?payload=${payload}` : ''}`;
 
 	const response = await fetch(url, {
+		headers: { accept: 'text/event-stream' },
 		signal: controller.signal
 	});
 

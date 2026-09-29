@@ -4,7 +4,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
-import * as url from 'node:url';
 import { styleText } from 'node:util';
 import { validate_options, kit_options, kit_experimental_options } from './options.js';
 import { resolve_entry } from '../../utils/filesystem.js';
@@ -104,7 +103,7 @@ export function load_error_page(config) {
 	// Don't do this inside resolving the config, because that would mean
 	// adding/removing error.html isn't detected and would require a restart.
 	if (!fs.existsSync(config.files.errorTemplate)) {
-		errorTemplate = url.fileURLToPath(new URL('./default-error.html', import.meta.url));
+		errorTemplate = path.join(import.meta.dirname, 'default-error.html');
 	}
 
 	return fs.readFileSync(errorTemplate, 'utf-8');
@@ -138,7 +137,7 @@ export function process_config(config, cwd) {
 	if (
 		config.csp?.directives?.['require-trusted-types-for']?.includes('script') &&
 		config.serviceWorker.register &&
-		resolve_entry(path.resolve(cwd, config.files.serviceWorker)) &&
+		resolve_entry(path.resolve(cwd, config.files.serviceWorker), config.moduleExtensions) &&
 		!config.csp?.directives?.['trusted-types']?.includes('sveltekit-trusted-url')
 	) {
 		throw new Error(

@@ -7,6 +7,7 @@ import { load_explicit_env } from '../env.js';
 import { relative_path } from '../../utils/filesystem.js';
 import { posixify } from '../../utils/os.js';
 import { create, update } from './sync.js';
+import { write_app_types } from './write_app_types.js';
 import create_manifest_data from './create_manifest_data/index.js';
 
 test('generates client manifest imports relative to the project root', () => {
@@ -33,6 +34,23 @@ test('generates client manifest imports relative to the project root', () => {
 		expect(generated).toBe(
 			`export { default as component } from ${JSON.stringify(relative_path(`${output}/nodes`, component))};`
 		);
+	} finally {
+		fs.rmSync(root, { recursive: true, force: true });
+	}
+});
+
+test('generates a `never` Path type when there are no routes', () => {
+	const root = fs.mkdtempSync(path.join(os.tmpdir(), 'svelte-kit-sync-'));
+
+	try {
+		const config = process_config(validate_config({}), root);
+		write_app_types(config, create_manifest_data(config, root), root);
+		const generated = fs.readFileSync(
+			path.join(root, 'node_modules/$app/types/index.d.ts'),
+			'utf8'
+		);
+
+		expect(generated).toContain('\t\tPath(): never;');
 	} finally {
 		fs.rmSync(root, { recursive: true, force: true });
 	}

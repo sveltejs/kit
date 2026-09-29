@@ -1,6 +1,7 @@
 import { assert, test } from 'vitest';
 import { execSync } from 'node:child_process';
 import path from 'node:path';
+import process from 'node:process';
 import { stripVTControlCharacters } from 'node:util';
 
 const timeout = 60_000;
@@ -9,14 +10,16 @@ const timeout = 60_000;
  * Run `pnpm build` for the given test app and return the captured stderr output.
  * The build is expected to fail — if it doesn't, the test fails.
  * @param {string} app
+ * @param {Record<string, string>} [env]
  * @returns {string}
  */
-function build(app) {
+function build(app, env) {
 	try {
 		execSync('pnpm build', {
 			cwd: path.join(import.meta.dirname, 'apps', app),
 			stdio: 'pipe',
-			timeout
+			timeout,
+			env: { ...process.env, ...env }
 		});
 	} catch (e) {
 		const error = /** @type {{ stderr: Buffer }} */ (e);
@@ -31,6 +34,15 @@ test('prerenderable routes must be prerendered', { timeout }, () => {
 	assert.match(
 		stderr,
 		/The following routes were marked as prerenderable, but were not prerendered because they were not found while crawling your app:\s+- \/\[x\]/
+	);
+});
+
+test('prerendered endpoints cannot have fallback handlers', { timeout }, () => {
+	const stderr = build('prerenderable-not-prerendered', { PRERENDER_FALLBACK: 'true' });
+
+	assert.match(
+		stderr,
+		/Cannot prerender a \+server file with POST, PUT, PATCH, DELETE, QUERY or fallback handlers \(\/fallback\)/
 	);
 });
 
