@@ -101,7 +101,7 @@ jobs:
             runtime_dir=$(cygpath -u "$runtime_dir")
           fi
           mkdir -p "$runtime_dir"
-          cp -R "$APP/build" "$APP/server-side-dep" "$APP/package.json" "$runtime_dir/"
+          cp -R "$APP/build" "$APP/server-side-dep" "$APP/server-side-svelte-dep" "$APP/package.json" "$runtime_dir/"
           npm pkg delete devDependencies --prefix "$NODE_APP_RUNTIME_DIR"
           npm i --omit=dev --ignore-scripts --no-audit --no-fund --prefix "$NODE_APP_RUNTIME_DIR"
 
