@@ -1,4 +1,5 @@
 import { HttpError, SvelteKitError } from '@sveltejs/kit/internal';
+import * as w from '../messages/shared-warnings.js';
 
 /**
  * For times when you need to throw an error, but without
@@ -70,17 +71,13 @@ export function add_deprecated_handle_error_properties(input, fallback) {
 	Object.defineProperties(input, {
 		status: {
 			get() {
-				console.warn(
-					'The `status` property of `handleError` is deprecated. Use `error.status` for expected and framework errors, or `500` for unexpected errors.'
-				);
+				w.handle_error_status_deprecated();
 				return fallback.status;
 			}
 		},
 		message: {
 			get() {
-				console.warn(
-					"The `message` property of `handleError` is deprecated. Use `error.message` for expected and framework errors, or 'Internal Error' for unexpected errors."
-				);
+				w.handle_error_message_deprecated();
 				return fallback.message;
 			}
 		}

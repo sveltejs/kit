@@ -1,6 +1,6 @@
 import process from 'node:process';
-import { expect } from '@playwright/test';
 import { test } from '../../../../utils.js';
+import { expect } from '../../../../playwright-matchers.js';
 
 /** @typedef {import('@playwright/test').Response} Response */
 
@@ -158,9 +158,7 @@ test.describe('Load', () => {
 	if (process.env.DEV) {
 		test('accessing url.hash from load errors and suggests using page state', async ({ page }) => {
 			await page.goto('/load/url-hash#please-dont-send-me-to-load');
-			expect(await page.textContent('#message')).toBe(
-				'This is your custom error page saying: "Cannot access event.url.hash. Consider using `page.url.hash` inside a component instead (500 Internal Error)"'
-			);
+			expect(await page.textContent('#message')).toContainKitDiagnostic('url_hash_unavailable');
 		});
 	}
 
