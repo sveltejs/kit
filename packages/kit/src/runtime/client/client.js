@@ -542,6 +542,7 @@ async function _start(_app, _target, data) {
 	const scroll = history_info[current_history_index]?.scroll;
 	function restore_reload_scroll() {
 		if (scroll) {
+			history.scrollRestoration = 'manual';
 			scrollTo(scroll.x, scroll.y);
 		}
 	}
