@@ -23,6 +23,7 @@ import { lookup as mime_lookup } from '../../utils/mime.js';
 
 const gzip = promisify(zlib.gzip);
 const brotli = promisify(zlib.brotliCompress);
+const zstandard = promisify(zlib.zstdCompress);
 const extensions = [
 	'.html',
 	'.js',
@@ -363,20 +364,22 @@ export function create_builder({
 }
 
 /**
- * Writes gzip and brotli variants next to `file`
+ * Writes gzip, brotli and zstandard variants next to `file`
  * @param {string} file
  */
 async function compress_file(file) {
 	const contents = await fs.promises.readFile(file);
 
-	const [gz, br] = await Promise.all([
+	const [gz, br, zstd] = await Promise.all([
 		gzip(contents, { level: zlib.constants.Z_BEST_COMPRESSION }),
-		brotli(contents)
+		brotli(contents),
+		zstandard(contents)
 	]);
 
 	await Promise.all([
 		fs.promises.writeFile(`${file}.gz`, gz),
-		fs.promises.writeFile(`${file}.br`, br)
+		fs.promises.writeFile(`${file}.br`, br),
+		fs.promises.writeFile(`${file}.zstd`, zstd)
 	]);
 }
 
