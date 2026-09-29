@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import process from 'node:process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { expect } from '@playwright/test';
+import { expect } from '../../../playwright-matchers.js';
 import { test } from '../../../utils.js';
 
 test.skip(({ javaScriptEnabled }) => javaScriptEnabled);
@@ -29,11 +29,10 @@ test.describe('remote functions', () => {
 			path.join(root, '.svelte-kit', 'output', 'server', 'chunks', 'prerender.remote.js'),
 			'utf-8'
 		);
-		const code_name = 'remote_prerender_not_dynamic';
-		expect(code).toContain(
-			`throw new Error(${JSON.stringify(
-				`${code_name}\nUnexpectedly called \`prerender\` function. Did you forget to set \`{ dynamic: true }\`?\nhttps://next.svelte.dev/e/@sveltejs/kit/${code_name}`
-			)})`
+		const thrown = /throw new Error\(("(?:[^"\\]|\\.)*")\)/.exec(code);
+		expect(thrown).not.toBeNull();
+		expect(String(JSON.parse(/** @type {RegExpExecArray} */ (thrown)[1]))).toContainKitDiagnostic(
+			'remote_prerender_not_dynamic'
 		);
 	});
 

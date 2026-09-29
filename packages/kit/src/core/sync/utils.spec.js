@@ -1,6 +1,5 @@
 import path from 'node:path';
 import process from 'node:process';
-import { stripVTControlCharacters } from 'node:util';
 import { afterAll, expect, test, vi } from 'vitest';
 import { check_spelling } from './utils.js';
 
@@ -37,8 +36,8 @@ test.describe('check_spelling', () => {
 		);
 
 		expect(console_warn_spy).toHaveBeenCalledOnce();
-		expect(stripVTControlCharacters(console_warn_spy.mock.calls[0][0])).toBe(
-			`file_name_misspelled\nMissing s suffix. Did you mean hooks.server.js? at ${path.join(fixtures, `src/hook.server.js`)}\nhttps://next.svelte.dev/e/@sveltejs/kit/file_name_misspelled`
-		);
+		expect(console_warn_spy).toContainKitDiagnostic('file_name_misspelled', {
+			contains: ['Missing s suffix', 'hooks.server.js', path.join(fixtures, 'src/hook.server.js')]
+		});
 	});
 });

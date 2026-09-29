@@ -13,6 +13,7 @@ import { extends_id, validate_resolved_config } from './validate.js';
 import * as e from '../../../messages/build-errors.js';
 import * as w from '../../../messages/build-warnings.js';
 import { posixify } from '../../../utils/os.js';
+import { bullet_list } from '../../../utils/format.js';
 
 /** @type {typeof import('typescript')} */
 let ts;
@@ -140,7 +141,7 @@ function validate_config(dir, options) {
 	if (warnings.length > 0) {
 		w.tsconfig_invalid({
 			file: path.relative(process.cwd(), user_config.file),
-			issues: warnings.map((warning) => `  - ${warning}`).join('\n')
+			issues: bullet_list(warnings)
 		});
 	}
 }

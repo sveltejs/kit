@@ -47,7 +47,8 @@ const config = {
 
 	test: {
 		name: 'kit-prerendering-basics',
-		globalSetup: path.join(import.meta.dirname, 'globalSetup.js')
+		globalSetup: path.join(import.meta.dirname, 'globalSetup.js'),
+		setupFiles: [path.join(import.meta.dirname, '../../matchers.js')]
 	}
 };
 

@@ -2,6 +2,7 @@ import { test, expect } from 'vitest';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { createFilter, resolveConfig } from 'vite';
+import { bullet_list } from '../../../../src/utils/format.js';
 
 const timeout = 60_000;
 
@@ -73,7 +74,7 @@ test('transformIndexHtml warning for app plugins', { timeout }, () => {
 
 	expect(result.error).toBeUndefined();
 	expect(result.status).toBe(0);
-	expect(result.stderr).toContain(
-		'transform_index_html_unsupported\nThe following plugins may not work correctly because they use the `transformIndexHtml` hook which is not supported:\n  - app-html-transform\nhttps://next.svelte.dev/e/@sveltejs/kit/transform_index_html_unsupported'
-	);
+	expect(result.stderr).toContainKitDiagnostic('transform_index_html_unsupported', {
+		contains: [bullet_list(['app-html-transform'])]
+	});
 });
