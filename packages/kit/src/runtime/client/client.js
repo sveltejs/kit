@@ -542,7 +542,6 @@ async function _start(_app, _target, data) {
 	const scroll = history_info[current_history_index]?.scroll;
 	function restore_reload_scroll() {
 		if (scroll) {
-			history.scrollRestoration = 'manual';
 			scrollTo(scroll.x, scroll.y);
 		}
 	}
@@ -2652,6 +2651,8 @@ export async function goto(url, opts = {}) {
 
 	const intent = await resolve_intent(url, 'goto');
 
+	history.scrollRestoration = 'manual';
+
 	if (opts.shallow) {
 		return update_state(
 			intent,
@@ -3137,8 +3138,6 @@ function check_leaving() {
 }
 
 function _start_router() {
-	history.scrollRestoration = 'manual';
-
 	let before_unload_fired = false;
 
 	// TODO: avoid listening to `beforeunload` unconditionally
@@ -3161,12 +3160,6 @@ function _start_router() {
 		} else {
 			check_leaving();
 		}
-
-		// Adopted from Nuxt.js
-		// Reset scrollRestoration to auto when leaving page, allowing page reload
-		// and back-navigation from other pages to use the browser to restore
-		// the scrolling position.
-		history.scrollRestoration = 'auto';
 
 		persist_state();
 	});
@@ -3239,6 +3232,12 @@ function _start_router() {
 				// set `navigating` to `true` to prevent `beforeNavigate` callbacks
 				// being called when the page unloads
 				is_navigating = true;
+
+				// Adopted from Nuxt.js
+				// Reset scrollRestoration to auto when leaving page, allowing page reload
+				// and back-navigation from other pages to use the browser to restore
+				// the scrolling position.
+				history.scrollRestoration = 'auto';
 			} else {
 				event.preventDefault();
 			}
@@ -3510,12 +3509,6 @@ function _start_router() {
 		// the navigation away from it was successful.
 		// Info about bfcache here: https://web.dev/bfcache
 		if (event.persisted) {
-			// `pagehide` sets `scrollRestoration` to `auto` so that the browser
-			// restores the scroll position on reload/back-forward. When the page is
-			// restored from bfcache we need to switch back to `manual` so that
-			// SvelteKit controls scroll restoration for subsequent client-side navigations.
-			history.scrollRestoration = 'manual';
-
 			set_navigation(null);
 		}
 	});
