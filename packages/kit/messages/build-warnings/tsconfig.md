@@ -1,6 +1,6 @@
 ## tsconfig_extends_missing
 
-> %file% should extend SvelteKit's built-in configuration:
+> `%file%` should extend SvelteKit's built-in configuration:
 > %example%
 
 Your TypeScript configuration needs to extend the one SvelteKit generates, so that TypeScript knows about generated types, path aliases and the compiler options SvelteKit relies on. The warning includes an example configuration. For your root `tsconfig.json`, that looks like this:
@@ -18,7 +18,7 @@ See [`$app/tsconfig`](https://svelte.dev/docs/kit/$app-tsconfig) and, for servic
 
 ## tsconfig_invalid
 
-> Found issues while validating %file%:
+> Found issues while validating `%file%`:
 > %issues%
 
 Your `tsconfig.json` extends SvelteKit's generated configuration, but overrides settings that SvelteKit relies on. In every case, the fix is to stop overriding what [`$app/tsconfig`](https://svelte.dev/docs/kit/$app-tsconfig) sets, or to add back what's missing:

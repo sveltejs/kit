@@ -1,12 +1,12 @@
 ## env_invalid_variable_name
 
-> Invalid environment variable name %name%
+> Invalid environment variable name `%name%`
 
 The keys of the `variables` object exported from `src/env` become exports of `$app/env/private` and `$app/env/public`, so each name must be a valid JavaScript identifier that isn't a reserved word — for example `API_KEY` rather than `api-key` or `default`.
 
 ## env_variables_missing
 
-> %file% must export a variables object
+> `%file%` must export a variables object
 
 `src/env.js` (or `src/env.ts`) declares your app's [environment variables](https://svelte.dev/docs/kit/environment-variables). Export them as an object called `variables`:
 

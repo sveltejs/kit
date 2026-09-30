@@ -22,6 +22,6 @@ Node's [subpath imports](https://nodejs.org/api/packages.html#subpath-imports), 
 
 ## config_option_deprecated_typescript
 
-> The `%keypath%` option is deprecated, and will be removed in a future version. Add configuration to tsconfig.json directly
+> The `%keypath%` option is deprecated, and will be removed in a future version. Add configuration to `tsconfig.json` directly
 
 Rather than modifying SvelteKit's generated TypeScript configuration with a function, add the options to your own `tsconfig.json`, which [extends `$app/tsconfig`](https://svelte.dev/docs/kit/$app-tsconfig).
