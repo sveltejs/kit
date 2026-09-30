@@ -49,13 +49,13 @@ If the `netlify.toml` file or the `build.publish` value is missing, a default va
 
 If `true`, your app will be deployed as a [Netlify Edge Function](https://docs.netlify.com/build/edge-functions/overview/) rather than the standard Node-based function. Edge Functions run in a Deno-based environment, so `edge: true` cannot be combined with a `runtime` value.
 
-By default, Node-based functions are used unless the `NETLIFY_SVELTEKIT_USE_EDGE` environment variable is set to `true` or `1`. Setting `edge: false` or specifying a `runtime` overrides this environment default.
+By default, Node-based functions are used. Set `edge: true` to use Edge Functions.
 
 ### `runtime`
 
-The [Node.js version for the runtime](https://docs.netlify.com/build/functions/configuration/#nodejs-version-for-runtime), for example `'nodejs24.x'`. The value must use the format `nodejs<major>.x`, where `<major>` is a positive integer.
+The [Node.js version for the runtime](https://docs.netlify.com/build/functions/configuration/#nodejs-version-for-runtime). The supported values are `'nodejs22.x'` and `'nodejs24.x'`.
 
-This option applies only to Node-based functions and cannot be combined with `edge: true`. When omitted or `undefined`, the adapter leaves the Node.js version to Netlify.
+This option applies only to Node-based functions and cannot be combined with `edge: true`. When omitted or `undefined`, the default runtime is based on the Node.js version used for the Netlify build.
 
 ### `split`
 

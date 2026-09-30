@@ -1,8 +1,8 @@
 import { Adapter } from '@sveltejs/kit';
 import './ambient.d.ts';
 
-/** A Node.js runtime supported by Netlify. The major version must be a positive integer. */
-export type Runtime = `nodejs${number}.x`;
+/** A Node.js runtime supported by Netlify. */
+export type Runtime = 'nodejs22.x' | 'nodejs24.x';
 
 export type AdapterOptions = {
 	/**
@@ -28,13 +28,13 @@ export type AdapterOptions = {
 	| {
 			/**
 			 * Deploy your app as Node-based functions rather than [Netlify Edge Functions](https://docs.netlify.com/build/edge-functions/overview/).
-			 * Defaults to `false` unless `NETLIFY_SVELTEKIT_USE_EDGE` is `true` or `1` and neither `edge` nor `runtime` is specified.
+			 * @default false
 			 */
 			edge?: false;
 			/**
 			 * The [Node.js version for the runtime](https://docs.netlify.com/build/functions/configuration/#nodejs-version-for-runtime), for example `nodejs24.x`.
 			 * Specifying this option selects Node-based functions and cannot be combined with `edge: true`.
-			 * When omitted, uses Netlify's default Node.js runtime.
+			 * @default Same as the Netlify build environment
 			 */
 			runtime?: Runtime | undefined;
 	  }

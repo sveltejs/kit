@@ -5,7 +5,6 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { builtinModules } from 'node:module';
-import process from 'node:process';
 import { build } from 'rolldown';
 import { matches, resolve_runtime, s } from './utils.js';
 
@@ -14,10 +13,6 @@ const adapter_version = pkg.version;
 
 const name = '@sveltejs/adapter-netlify';
 const files = fileURLToPath(new URL('./files', import.meta.url).href);
-
-const edge_set_in_env_var =
-	process.env.NETLIFY_SVELTEKIT_USE_EDGE === 'true' ||
-	process.env.NETLIFY_SVELTEKIT_USE_EDGE === '1';
 
 const netlify_framework_config_path = '.netlify/v1/config.json';
 const netlify_framework_serverless_path = '.netlify/v1/functions';
@@ -29,7 +24,7 @@ const FUNCTION_PREFIX = 'sveltekit-';
 
 /** @type {typeof import('./index.js').default} */
 export default function ({ split = false, edge, runtime, publish = 'build' } = {}) {
-	const { edge: use_edge, node_version } = resolve_runtime({ edge, runtime }, edge_set_in_env_var);
+	const { edge: use_edge, node_version } = resolve_runtime({ edge, runtime });
 
 	return {
 		name,
