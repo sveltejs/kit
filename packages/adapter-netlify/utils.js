@@ -1,33 +1,33 @@
 /** @import { Runtime } from './index.js' */
 
 /**
- * @param {unknown} runtime
+ * @param {unknown} node_version
  * @returns {string}
  */
-export function parse_node_version(runtime) {
-	const match = typeof runtime === 'string' && /^nodejs([1-9]\d*)\.x$/.exec(runtime);
+export function parse_node_version(node_version) {
+	const match = typeof node_version === 'string' && /^nodejs([1-9]\d*)\.x$/.exec(node_version);
 	if (!match) {
 		throw new Error(
-			`@sveltejs/adapter-netlify: Invalid runtime ${JSON.stringify(runtime)}. Use nodejs<major>.x with a positive integer major version, for example nodejs24.x.`
+			`@sveltejs/adapter-netlify: Invalid nodeVersion ${JSON.stringify(node_version)}. Use nodejs<major>.x with a positive integer major version, for example nodejs24.x.`
 		);
 	}
 	return match[1];
 }
 
 /**
- * @param {{ edge?: boolean; runtime?: Runtime }} options
+ * @param {{ edge?: boolean; nodeVersion?: Runtime }} options
  * @param {boolean} [default_edge]
  * @returns {{ edge: boolean; node_version?: string }}
  */
-export function resolve_runtime({ edge, runtime }, default_edge = false) {
-	if (edge === true && runtime !== undefined) {
+export function resolve_runtime({ edge, nodeVersion }, default_edge = false) {
+	if (edge === true && nodeVersion !== undefined) {
 		throw new Error(
-			'@sveltejs/adapter-netlify: Cannot combine edge: true with runtime. Remove runtime to use Edge Functions, or set edge: false to use a Node.js runtime.'
+			'@sveltejs/adapter-netlify: Cannot combine edge: true with nodeVersion. Remove nodeVersion to use Edge Functions, or set edge: false to use a Node.js runtime.'
 		);
 	}
 
-	if (runtime !== undefined) {
-		return { edge: false, node_version: parse_node_version(runtime) };
+	if (nodeVersion !== undefined) {
+		return { edge: false, node_version: parse_node_version(nodeVersion) };
 	}
 
 	return { edge: edge ?? default_edge };

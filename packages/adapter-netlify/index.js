@@ -23,8 +23,8 @@ const FUNCTION_PREFIX = 'sveltekit-';
 // "build" is the default publish directory when Netlify detects SvelteKit
 
 /** @type {typeof import('./index.js').default} */
-export default function ({ split = false, edge, runtime, publish = 'build' } = {}) {
-	const { edge: use_edge, node_version } = resolve_runtime({ edge, runtime });
+export default function ({ split = false, edge, nodeVersion, publish = 'build' } = {}) {
+	const { edge: use_edge, node_version } = resolve_runtime({ edge, nodeVersion });
 
 	return {
 		name,
