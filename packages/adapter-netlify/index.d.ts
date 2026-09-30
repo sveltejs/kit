@@ -19,21 +19,21 @@ export type AdapterOptions = {
 } & (
 	| {
 			/**
-			 * Deploy your app as [Netlify Edge Functions](https://docs.netlify.com/build/edge-functions/overview/) rather than Node-based functions.
-			 * Cannot be combined with a Node.js `runtime`.
+			 * If `true`, your app will be deployed as a [Netlify Edge Function](https://docs.netlify.com/build/edge-functions/overview/) rather than the standard Node-based function.
+			 * Cannot be combined with the `runtime` option.
 			 */
 			edge: true;
 			runtime?: undefined;
 	  }
 	| {
 			/**
-			 * Deploy your app as Node-based functions rather than [Netlify Edge Functions](https://docs.netlify.com/build/edge-functions/overview/).
+			 * If `true`, your app will be deployed as a [Netlify Edge Function](https://docs.netlify.com/build/edge-functions/overview/) rather than the standard Node-based function.
 			 * @default false
 			 */
 			edge?: false;
 			/**
-			 * The [Node.js version for the runtime](https://docs.netlify.com/build/functions/configuration/#nodejs-version-for-runtime), for example `nodejs24.x`.
-			 * Specifying this option selects Node-based functions and cannot be combined with `edge: true`.
+			 * The [Node.js version](https://docs.netlify.com/build/functions/configuration/#nodejs-version-for-runtime) used for the serverless function. The supported values are `'nodejs22.x'` and `'nodejs24.x'`.
+			 * Cannot be combined with `edge: true`.
 			 */
 			runtime?: Runtime | undefined;
 	  }
