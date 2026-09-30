@@ -65,7 +65,6 @@ You can set the following options:
 
 Configuration set in a layout applies to all the routes beneath that layout, unless overridden at a more granular level. Routes without deployment configuration use the adapter's defaults.
 
-Prerendered routes do not emit functions, so their deployment configuration has no effect.
 
 ## Netlify alternatives to SvelteKit functionality
 
