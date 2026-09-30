@@ -368,7 +368,7 @@ describe('generated routes', () => {
 		expect(builder.compress).toHaveBeenCalledWith('build/client');
 		expect(builder.compress).toHaveBeenCalledWith('build/prerendered');
 		expect(handoff_source()).toContain(
-			'["client_asset", "app.js", "app.js", {"hash":"abc","mtime":0,"br":true,"gz":true}]'
+			'["client_asset", "app.js", "app.js", {"hash":"abc","mtime":0,"br":true,"gz":true,"zst":true}]'
 		);
 	});
 

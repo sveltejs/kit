@@ -151,19 +151,31 @@ test('precompressed variants are negotiated with their own validators', async ()
 		hash: 'abc',
 		mtime: 0,
 		br: true,
-		gz: true
+		gz: true,
+		zst: true,
 	})[0][1] as any;
 
+	const zstd = route.GET(
+		new Request('http://localhost/app.js', { headers: { 'accept-encoding': 'br, gzip, zstd' } })
+	);
+	expect(zstd.headers.get('content-encoding')).toBe('zstd');
+	expect(zstd.headers.get('etag')).toBe('"abc-zst"');
+	expect(zstd.headers.get('vary')).toBe('accept-encoding');
+	expect(file).toHaveBeenLastCalledWith(`${dir}/client/app.js.zst`);
+
 	const br = route.GET(
-		new Request('http://localhost/app.js', { headers: { 'accept-encoding': 'br, gzip' } })
+		new Request('http://localhost/app.js', {
+			headers: { 'accept-encoding': 'br, gzip, zstd;q=0' }
+		})
 	);
 	expect(br.headers.get('content-encoding')).toBe('br');
 	expect(br.headers.get('etag')).toBe('"abc-br"');
-	expect(br.headers.get('vary')).toBe('accept-encoding');
 	expect(file).toHaveBeenLastCalledWith(`${dir}/client/app.js.br`);
 
 	const gzip = route.GET(
-		new Request('http://localhost/app.js', { headers: { 'accept-encoding': 'br;q=0, gzip' } })
+		new Request('http://localhost/app.js', {
+			headers: { 'accept-encoding': 'br;q=0, gzip, zstd;q=0' }
+		})
 	);
 	expect(gzip.headers.get('content-encoding')).toBe('gzip');
 	expect(gzip.headers.get('etag')).toBe('"abc-gz"');
@@ -172,7 +184,7 @@ test('precompressed variants are negotiated with their own validators', async ()
 	const any = route.GET(
 		new Request('http://localhost/app.js', { headers: { 'accept-encoding': '*' } })
 	);
-	expect(any.headers.get('content-encoding')).toBe('br');
+	expect(any.headers.get('content-encoding')).toBe('zstd');
 
 	const identity = route.GET(new Request('http://localhost/app.js'));
 	expect(identity.headers.has('content-encoding')).toBe(false);

@@ -54,16 +54,17 @@ async function hash_file(file) {
  * in-memory static routes, not file-backed responses, so the adapter ships its own.
  * @param {string} file
  * @param {boolean} [precompress]
- * @returns {Promise<{ hash: string, mtime: number, br?: boolean, gz?: boolean }>}
+ * @returns {Promise<{ hash: string, mtime: number, br?: boolean, gz?: boolean, zst?: boolean }>}
  */
 async function asset_meta(file, precompress = false) {
 	const hash = await hash_file(file);
 
-	/** @type {{ hash: string, mtime: number, br?: boolean, gz?: boolean }} */
+	/** @type {{ hash: string, mtime: number, br?: boolean, gz?: boolean, zst?: boolean }} */
 	const meta = { hash, mtime: Bun.file(file).lastModified };
 	if (precompress) {
 		if (fs.existsSync(`${file}.br`)) meta.br = true;
 		if (fs.existsSync(`${file}.gz`)) meta.gz = true;
+		if (fs.existsSync(`${file}.zst`)) meta.zst = true;
 	}
 
 	return meta;

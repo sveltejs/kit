@@ -15,10 +15,10 @@ function resolve_file(subdir, filename) {
 
 /**
  * @typedef {Serve.Routes<never, string>[string]} RouteHandler
- * @typedef {{ hash: string, mtime: number, br?: boolean, gz?: boolean }} AssetMeta
+ * @typedef {{ hash: string, mtime: number, br?: boolean, gz?: boolean, zst?: boolean }} AssetMeta
  */
 
-const CONTENT_ENCODING = { br: 'br', gz: 'gzip' };
+const CONTENT_ENCODING = { br: 'br', gz: 'gzip', zst: 'zstd' };
 
 // the URL Standard's path percent-encode set, plus `%` and `\` so they stay literal
 // eslint-disable-next-line no-control-regex -- control characters are part of the encode set
@@ -92,10 +92,10 @@ function is_fresh(request, etag, mtime) {
 /**
  * @param {string | null} accept
  * @param {AssetMeta} meta
- * @returns {'br' | 'gz' | null}
+ * @returns {'br' | 'gz' | 'zst' | null}
  */
 function negotiate(accept, meta) {
-	if (accept === null || (!meta.br && !meta.gz)) return null;
+	if (accept === null || (!meta.br && !meta.gz && !meta.zst)) return null;
 
 	const accepted = new Set();
 	for (const part of accept.split(',')) {
@@ -104,6 +104,7 @@ function negotiate(accept, meta) {
 		accepted.add(name.trim());
 	}
 
+	if (meta.zst && (accepted.has('zstd') || accepted.has('*'))) return 'zst';
 	if (meta.br && (accepted.has('br') || accepted.has('*'))) return 'br';
 	if (meta.gz && (accepted.has('gzip') || accepted.has('*'))) return 'gz';
 	return null;
@@ -145,7 +146,7 @@ function file_route(file, meta, extra_headers = {}) {
 			etag,
 			'last-modified': last_modified
 		};
-		if (meta.br || meta.gz) response_headers['vary'] = 'accept-encoding';
+		if (meta.br || meta.gz || meta.zst) response_headers['vary'] = 'accept-encoding';
 
 		if (is_fresh(request, etag, meta.mtime)) {
 			return new Response(null, { status: 304, headers: response_headers });

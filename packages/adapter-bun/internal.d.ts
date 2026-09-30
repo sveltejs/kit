@@ -26,7 +26,7 @@ declare module '#@sveltejs/adapter-bun' {
 			'client_asset' | 'prerendered_asset' | 'prerendered_page',
 			string,
 			string,
-			{ hash: string; mtime: number; br?: boolean; gz?: boolean }
+			{ hash: string; mtime: number; br?: boolean; gz?: boolean, zst?: boolean }
 		]
 	>;
 	/** `[url, status, location]` */
