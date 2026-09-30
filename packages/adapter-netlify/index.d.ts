@@ -34,7 +34,7 @@ export type AdapterOptions = {
 			/**
 			 * The [Node.js version for the runtime](https://docs.netlify.com/build/functions/configuration/#nodejs-version-for-runtime), for example `nodejs24.x`.
 			 * Specifying this option selects Node-based functions and cannot be combined with `edge: true`.
-			 * When omitted, Netlify determines the Node.js version. Netlify controls which versions are available.
+			 * When omitted, uses Netlify's default Node.js runtime.
 			 */
 			runtime?: Runtime | undefined;
 	  }

@@ -53,7 +53,7 @@ By default, Node-based functions are used unless the `NETLIFY_SVELTEKIT_USE_EDGE
 
 ### `runtime`
 
-The [Node.js version for the runtime](https://docs.netlify.com/build/functions/configuration/#nodejs-version-for-runtime), for example `'nodejs24.x'`. The value must use the format `nodejs<major>.x`, where `<major>` is a positive integer. Netlify determines which versions are available.
+The [Node.js version for the runtime](https://docs.netlify.com/build/functions/configuration/#nodejs-version-for-runtime), for example `'nodejs24.x'`. The value must use the format `nodejs<major>.x`, where `<major>` is a positive integer.
 
 This option applies only to Node-based functions and cannot be combined with `edge: true`. When omitted or `undefined`, the adapter leaves the Node.js version to Netlify.
 

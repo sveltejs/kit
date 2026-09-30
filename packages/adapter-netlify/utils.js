@@ -8,7 +8,7 @@ export function parse_node_version(runtime) {
 	const match = typeof runtime === 'string' && /^nodejs([1-9]\d*)\.x$/.exec(runtime);
 	if (!match) {
 		throw new Error(
-			`@sveltejs/adapter-netlify: Invalid runtime ${JSON.stringify(runtime)}. Use nodejs<major>.x with a positive integer major version, for example nodejs24.x. Netlify determines which Node.js versions are available.`
+			`@sveltejs/adapter-netlify: Invalid runtime ${JSON.stringify(runtime)}. Use nodejs<major>.x with a positive integer major version, for example nodejs24.x.`
 		);
 	}
 	return match[1];
