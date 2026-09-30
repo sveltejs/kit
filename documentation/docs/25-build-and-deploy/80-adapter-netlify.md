@@ -61,6 +61,53 @@ This option applies only to Node-based functions and cannot be combined with `ed
 
 If `true`, your app will be split into multiple functions instead of a single one for the entire app.
 
+## Deployment configuration
+
+To control how your routes are deployed to Netlify as functions, you can specify deployment configuration, either through the options shown above or with [`export const config`](page-options#config) inside `+server.js`, `+page(.server).js` and `+layout(.server).js` files.
+
+For example, you could deploy one specific route using the Node.js 24 runtime:
+
+```js
+/// file: admin/+page.js
+/** @type {import('@sveltejs/adapter-netlify').Config} */
+export const config = {
+	runtime: 'nodejs24.x'
+};
+```
+
+You can set the following options:
+
+- `edge`: `true` to deploy the route as an Edge Function, or `false` to deploy it as a Node-based function
+- `runtime`: the Node.js runtime to use (`'nodejs22.x'`, `'nodejs24.x'` etc)
+
+You cannot configure both `edge: true` and a Node.js `runtime`. An explicit route configuration overrides the adapter's deployment selection. Routes without deployment configuration use the adapter's defaults.
+
+Configuration set in a layout applies to all the routes beneath that layout, unless overridden at a more granular level. Because configuration is merged by property, you must clear an inherited setting when switching between Edge and Node.js:
+
+```js
+/// file: admin/+page.js
+/** @type {import('@sveltejs/adapter-netlify').Config} */
+export const config = {
+	// Override an Edge layout with a Node.js function
+	edge: false,
+	runtime: 'nodejs24.x'
+};
+```
+
+```js
+/// file: search/+page.js
+/** @type {import('@sveltejs/adapter-netlify').Config} */
+export const config = {
+	// Override a Node.js layout with an Edge Function
+	edge: true,
+	runtime: undefined
+};
+```
+
+Setting `runtime: undefined` clears a Node.js version inherited from a layout and falls back to the adapter's defaults. Setting `edge: false` forces Node.js, using the adapter's Node.js version when configured or Netlify's default otherwise.
+
+Routes with the same runtime are grouped into one function by default; different Node.js versions and Edge routes are deployed separately. If `split` is set to `true` at the adapter level, each route pattern is deployed as an individual function using its configured runtime. Prerendered routes do not emit functions, so their deployment configuration has no effect.
+
 ## Netlify alternatives to SvelteKit functionality
 
 You may build your app using functionality provided directly by SvelteKit without relying on any Netlify functionality. Using the SvelteKit versions of these features will allow them to be used in dev mode, tested with integration tests, and to work with other adapters should you ever decide to switch away from Netlify. However, in some scenarios you may find it beneficial to use the Netlify versions of these features. One example would be if you're migrating an app that's already hosted on Netlify to SvelteKit.
