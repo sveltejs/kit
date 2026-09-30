@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 3.0.0-next.31
+
+### Patch Changes
+
+- fix: resolve generated rootDirs from the project root ([#17242](https://github.com/sveltejs/kit/pull/17242))
+
+- fix: keep `history.scrollRestoration` set to `manual` when leaving the page, so a document restored from the back/forward cache does not fall back to browser scroll restoration ([#17244](https://github.com/sveltejs/kit/pull/17244))
+
+- fix: clear `navigating` when a shallow popstate aborts an in-flight navigation ([#17118](https://github.com/sveltejs/kit/pull/17118))
+
+- fix: restore scroll position after back-forward cache returns ([#17255](https://github.com/sveltejs/kit/pull/17255))
+
 ## 3.0.0-next.30
 
 ### Patch Changes

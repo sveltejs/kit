@@ -1,5 +1,13 @@
 # @sveltejs/adapter-cloudflare
 
+## 8.0.0-next.8
+
+### Patch Changes
+
+- fix: dispose the platform proxy when the Vite dev or preview server closes ([#17238](https://github.com/sveltejs/kit/pull/17238))
+- Updated dependencies [[`12ae0b9`](https://github.com/sveltejs/kit/commit/12ae0b9f7b1b92a0356dadcd87d47f8a1707bf3e), [`ee3332f`](https://github.com/sveltejs/kit/commit/ee3332fe58292be9fcfabaef65dc39e61ab6d1f8), [`72832f9`](https://github.com/sveltejs/kit/commit/72832f9f85d94e569b4b4f27799dc6a01564fd01), [`846f3d4`](https://github.com/sveltejs/kit/commit/846f3d42a2cfe60f0501fc80a7ceeaa604324c30)]:
+  - @sveltejs/kit@3.0.0-next.31
+
 ## 8.0.0-next.7
 
 ### Major Changes
