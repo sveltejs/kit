@@ -31,5 +31,9 @@
 		"types": ["node"]
 	},
 	"include": ["*.js", "scripts/**/*", "src/**/*"],
-	"exclude": ["./**/write_types/test/**", "./src/runtime/app/service-worker"]
+	"exclude": [
+		"./**/write_types/test/**",
+		"./src/runtime/app/service-worker",
+		"./scripts/process-messages/templates"
+	]
 }

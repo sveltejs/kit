@@ -30,6 +30,7 @@
 	"devDependencies": {
 		"@opentelemetry/api": "catalog:",
 		"@playwright/test": "catalog:",
+		"@sveltejs/message-box": "^1.1.3",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"@types/connect": "catalog:",
 		"@typescript/native": "catalog:",
@@ -90,7 +91,8 @@
 		"test:svelte-async:build": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:svelte-async:build",
 		"test:unit": "vitest run -c vitest.kit.config.js",
 		"tsc-native": "node node_modules/@typescript/native/bin/tsc",
-		"prepublishOnly": "pnpm generate:types",
+		"prepublishOnly": "pnpm generate:messages && pnpm generate:types",
+		"generate:messages": "node scripts/process-messages/index.js",
 		"generate:version": "node scripts/generate-version.js",
 		"generate:types": "node scripts/generate-dts.js"
 	},

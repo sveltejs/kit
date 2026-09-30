@@ -1,7 +1,9 @@
+import fs from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 import { assert, expect, test } from 'vitest';
-import { validate_config, split_config } from './index.js';
+import { validate_config, split_config, load_template } from './index.js';
 
 /**
  * mutates and remove keys from an object when check callback returns true
@@ -598,4 +600,81 @@ test('split_config only sets `experimental` when SvelteKit flags are present', (
 
 	expect(svelte_config).toEqual({});
 	expect(vite_plugin_svelte_config).toEqual({ experimental: { sendWarningsToBrowser: true } });
+});
+
+/**
+ * @param {(cwd: string) => void} fn
+ */
+function with_temp_dir(fn) {
+	const cwd = fs.mkdtempSync(join(tmpdir(), 'kit-load-template-'));
+	try {
+		fn(cwd);
+	} finally {
+		fs.rmSync(cwd, { recursive: true, force: true });
+	}
+}
+
+/**
+ * @param {string} cwd
+ */
+function template_config(cwd) {
+	return validate_config({ files: { appTemplate: join(cwd, 'src/app.html') } });
+}
+
+/**
+ * @param {() => void} fn
+ * @param {string} code
+ * @param {string} text
+ */
+function assert_diagnostic(fn, code, text) {
+	/** @type {unknown} */
+	let thrown;
+	try {
+		fn();
+	} catch (error) {
+		thrown = error;
+	}
+
+	assert.instanceOf(thrown, Error);
+	const error = /** @type {Error} */ (thrown);
+	assert.equal(Object.getPrototypeOf(error), Error.prototype);
+	assert.equal(error.name, 'SvelteKit error');
+	assert.equal(error.message, `${code}\n${text}\nhttps://next.svelte.dev/e/@sveltejs/kit/${code}`);
+}
+
+const valid_template = '<html><head>%sveltekit.head%</head><body>%sveltekit.body%</body></html>';
+
+test('load_template errors if the app template does not exist', () => {
+	with_temp_dir((cwd) => {
+		assert_diagnostic(
+			() => load_template(cwd, template_config(cwd)),
+			'app_template_missing',
+			`${join('src', 'app.html')} does not exist`
+		);
+	});
+});
+
+test.each(['%sveltekit.head%', '%sveltekit.body%'])(
+	'load_template errors if the app template is missing %s',
+	(tag) => {
+		with_temp_dir((cwd) => {
+			fs.mkdirSync(join(cwd, 'src'));
+			fs.writeFileSync(join(cwd, 'src/app.html'), valid_template.replace(tag, ''));
+
+			assert_diagnostic(
+				() => load_template(cwd, template_config(cwd)),
+				'app_template_tag_missing',
+				`${join('src', 'app.html')} is missing ${tag}`
+			);
+		});
+	}
+);
+
+test('load_template returns a valid app template unchanged', () => {
+	with_temp_dir((cwd) => {
+		fs.mkdirSync(join(cwd, 'src'));
+		fs.writeFileSync(join(cwd, 'src/app.html'), valid_template);
+
+		assert.equal(load_template(cwd, template_config(cwd)), valid_template);
+	});
 });
