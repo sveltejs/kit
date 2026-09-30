@@ -31,6 +31,21 @@ test.describe('remote functions', () => {
 		expect(response.headers()['cache-control']).toBe('private, no-store');
 	});
 
+	test('remote queries preserve network errors', async ({ page, context }) => {
+		await page.goto('/remote/query-loading-state');
+		await context.setOffline(true);
+
+		try {
+			await page.getByRole('button', { name: 'Fetch thing' }).click();
+
+			await expect(page.locator('#transport-error')).toHaveText(
+				JSON.stringify({ name: 'TypeError', is_http_error: false, status: null })
+			);
+		} finally {
+			await context.setOffline(false);
+		}
+	});
+
 	test('clicking a link to the current page refreshes active queries', async ({ page }) => {
 		await page.goto('/remote/link-refresh');
 		await page.locator('#reset').click();
