@@ -13,3 +13,9 @@ SvelteKit reads specific exports from [route files](https://svelte.dev/docs/kit/
 > Invalid export `%key%` in `%file%` (`%key%` is a valid export in %locations%)
 
 Each kind of [route file](https://svelte.dev/docs/kit/routing) supports a different set of exports. For example, `actions` can only be exported from `+page.server.js`, and HTTP method handlers such as `GET` only from `+server.js`. Move the export to one of the listed files.
+
+## router_hash_page_options
+
+> Page options are ignored when `router.type === 'hash'` (%source% has %options%)
+
+With the [hash router](https://svelte.dev/docs/kit/configuration#router), your app is a single page that's rendered entirely in the browser, so [page options](https://svelte.dev/docs/kit/page-options) such as `prerender`, `ssr` and `trailingSlash` have no effect. Remove them from the file, leaving only `load`.
