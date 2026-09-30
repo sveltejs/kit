@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { builtinModules } from 'node:module';
 import process from 'node:process';
 import { build } from 'rolldown';
-import { matches, s } from './utils.js';
+import { matches, resolve_runtime, s } from './utils.js';
 
 const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf-8'));
 const adapter_version = pkg.version;
@@ -28,7 +28,9 @@ const FUNCTION_PREFIX = 'sveltekit-';
 // "build" is the default publish directory when Netlify detects SvelteKit
 
 /** @type {typeof import('./index.js').default} */
-export default function ({ split = false, edge = edge_set_in_env_var, publish = 'build' } = {}) {
+export default function ({ split = false, edge, runtime, publish = 'build' } = {}) {
+	const { edge: use_edge, node_version } = resolve_runtime({ edge, runtime }, edge_set_in_env_var);
+
 	return {
 		name,
 		async adapt(builder) {
@@ -87,12 +89,12 @@ export default function ({ split = false, edge = edge_set_in_env_var, publish = 
 			}
 
 			builder.log.minor('Writing Netlify config...');
-			write_frameworks_config({ builder });
+			write_frameworks_config({ builder, node_version });
 
-			if (edge) {
+			if (use_edge) {
 				await generate_edge_functions({ builder, split });
 			} else {
-				generate_serverless_functions(builder, split);
+				generate_serverless_functions(builder, split, node_version);
 			}
 		},
 
@@ -106,8 +108,9 @@ export default function ({ split = false, edge = edge_set_in_env_var, publish = 
 /**
  * @param {Builder} builder
  * @param {boolean} split
+ * @param {string} [node_version]
  */
-function generate_serverless_functions(builder, split) {
+function generate_serverless_functions(builder, split, node_version) {
 	// https://docs.netlify.com/build/frameworks/frameworks-api/#netlifyv1functions
 	mkdirSync(netlify_framework_serverless_path, { recursive: true });
 
@@ -120,27 +123,32 @@ function generate_serverless_functions(builder, split) {
 	if (split) {
 		const uuid = crypto.randomUUID();
 		for (const fn of get_split_functions(builder)) {
-			generate_serverless_function(builder, fn, uuid);
+			generate_serverless_function(builder, fn, uuid, node_version);
 		}
 	} else {
-		generate_serverless_function(builder, {
-			type: 'singular',
-			routes: undefined,
-			patterns: ['/*'],
-			name: `${FUNCTION_PREFIX}render`,
-			display_name: 'SvelteKit server'
-		});
+		generate_serverless_function(
+			builder,
+			{
+				type: 'singular',
+				routes: undefined,
+				patterns: ['/*'],
+				name: `${FUNCTION_PREFIX}render`,
+				display_name: 'SvelteKit server'
+			},
+			undefined,
+			node_version
+		);
 	}
 }
 
 /**
  * Writes the Netlify Frameworks API config file
  * https://docs.netlify.com/build/frameworks/frameworks-api/
- * @param {{ builder: import('@sveltejs/kit').Builder }} params
+ * @param {{ builder: Builder; node_version?: string }} params
  */
-function write_frameworks_config({ builder }) {
+function write_frameworks_config({ builder, node_version }) {
 	// https://docs.netlify.com/build/frameworks/frameworks-api/#headers
-	/** @type {{ headers: Array<{ for: string, values: Record<string, string> }> }} */
+	/** @type {{ headers: Array<{ for: string, values: Record<string, string> }>; functions?: { nodeVersion: string } }} */
 	const config = {
 		headers: [
 			{
@@ -151,6 +159,10 @@ function write_frameworks_config({ builder }) {
 			}
 		]
 	};
+
+	if (node_version !== undefined) {
+		config.functions = { nodeVersion: node_version };
+	}
 
 	mkdirSync('.netlify/v1', { recursive: true });
 	writeFileSync(netlify_framework_config_path, s(config));
@@ -245,8 +257,9 @@ function get_split_functions(builder) {
  * @param {Builder} builder
  * @param {EntrypointMetadata} fn
  * @param {string} [uuid]
+ * @param {string} [node_version]
  */
-function generate_serverless_function(builder, fn, uuid) {
+function generate_serverless_function(builder, fn, uuid, node_version) {
 	builder.generateServerInstance(`.netlify/v1/server-${fn.name}.js`, {
 		routes: fn.routes,
 		serverDirectory: '.netlify/v1/server'
@@ -259,7 +272,7 @@ function generate_serverless_function(builder, fn, uuid) {
 		`../server-${fn.name}.js`,
 		uuid
 	);
-	const config = create_function_config('serverless', fn);
+	const config = create_function_config('serverless', fn, node_version);
 
 	if (builder.hasServerInstrumentationFile()) {
 		writeFileSync(filename, code);
@@ -361,10 +374,11 @@ const generator_string = `@sveltejs/adapter-netlify@${adapter_version}`;
 /**
  * @param {'serverless' | 'edge'} runtime
  * @param {EntrypointMetadata} fn
+ * @param {string} [node_version]
  * @returns {string}
  */
-function create_function_config(runtime, fn) {
-	/** @type {IntegrationsConfig & { preferStatic?: boolean }} */
+function create_function_config(runtime, fn, node_version) {
+	/** @type {IntegrationsConfig & { preferStatic?: boolean; nodeVersion?: string }} */
 	const config = {
 		name: fn.display_name,
 		generator: generator_string,
@@ -374,6 +388,9 @@ function create_function_config(runtime, fn) {
 
 	if (runtime === 'serverless') {
 		config.preferStatic = true;
+		if (node_version !== undefined) {
+			config.nodeVersion = node_version;
+		}
 	}
 
 	return `export const config = ${s(config)};\n`;
