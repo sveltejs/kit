@@ -12,6 +12,34 @@ test('cloudflare:workers', async ({ request }) => {
 	expect(await res.text()).toBe('from wrangler.jsonc');
 });
 
+test('cloudflare:workers remains stubbed for vite preview', () => {
+	test.skip(!!process.env.DEV);
+	const output = fs.readFileSync(
+		path.resolve(
+			import.meta.dirname,
+			'../.svelte-kit/output/server/entries/endpoints/env/_server.js'
+		),
+		'utf8'
+	);
+	expect(output).toContain('virtual-cloudflare-workers.js?');
+	expect(output).not.toContain('cloudflare:workers');
+
+	const worker = fs.readFileSync(
+		path.resolve(
+			import.meta.dirname,
+			'../.svelte-kit/cloudflare-tmp/server/entries/endpoints/env/_server.js'
+		),
+		'utf8'
+	);
+	expect(worker).toContain('cloudflare:workers');
+	expect(worker).not.toContain('virtual-cloudflare-workers.js?');
+});
+
+test('instrumentation uses the Worker server copy', async ({ request }) => {
+	const res = await request.get('/instrumentation');
+	expect(await res.text()).toBe('from wrangler.jsonc');
+});
+
 test('Request.cf', async ({ request }) => {
 	const res = await request.get('cf');
 	const cf = await res.json();

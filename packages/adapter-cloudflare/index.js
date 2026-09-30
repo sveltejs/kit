@@ -82,11 +82,14 @@ export default function (options = {}) {
 
 			fs.rmSync(dest, { force: true, recursive: true });
 			fs.rmSync(worker_dest, { force: true, recursive: true });
+			fs.rmSync(tmp, { force: true, recursive: true });
 
 			fs.mkdirSync(dest, { recursive: true });
 			fs.mkdirSync(tmp, { recursive: true });
 
-			replace_stub(builder.getServerDirectory(), stub_import);
+			const server = `${tmp}/server`;
+			builder.writeServer(server);
+			replace_stub(server, stub_import);
 
 			// client assets and prerendered pages
 			const assets_dest = `${dest}${builder.config.paths.base}`;
@@ -116,7 +119,7 @@ export default function (options = {}) {
 
 			// worker
 			const worker_dest_dir = path.dirname(worker_dest);
-			builder.generateServerInstance(`${tmp}/server.js`);
+			builder.generateServerInstance(`${tmp}/server.js`, { serverDirectory: server });
 			builder.copy(`${files}/worker.js`, worker_dest, {
 				replace: {
 					// the paths returned by the Wrangler config might be Windows paths,
@@ -135,11 +138,12 @@ export default function (options = {}) {
 			if (builder.hasServerInstrumentationFile()) {
 				const initializer = builder.createInstrumentationInitializer({
 					outputDirectory: worker_dest_dir,
-					environment: `import { env } from 'cloudflare:workers';\nexport default env;\n`
+					environment: `import { env } from 'cloudflare:workers';\nexport default env;\n`,
+					serverDirectory: server
 				});
 				builder.instrument({
 					entrypoint: worker_dest,
-					instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`,
+					instrumentation: `${server}/instrumentation.server.js`,
 					initializer
 				});
 			}
