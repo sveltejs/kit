@@ -34,6 +34,8 @@ import { Props, RenderNode } from '../../props.svelte.js';
 import { has_custom_transporters, uneval } from '#app/internal/transport';
 import { manifest } from '../internal.js';
 import { options } from '<sveltekit:generated>/server.js';
+import * as e from '../../../messages/server-errors.js';
+import * as w from '../../../messages/server-warnings.js';
 
 // TODO rename this function/module
 
@@ -68,11 +70,11 @@ export async function render_response({
 }) {
 	if (state.prerendering || state.prerender_default === true) {
 		if (options.csp.mode === 'nonce') {
-			throw new Error('Cannot use prerendering if config.csp.mode === "nonce"');
+			e.prerender_nonce();
 		}
 
 		if (options.app_template_contains_nonce) {
-			throw new Error('Cannot use prerendering if page template contains %sveltekit.nonce%');
+			e.prerender_template_nonce({ tag: '%sveltekit.nonce%' });
 		}
 	}
 
@@ -227,13 +229,9 @@ export async function render_response({
 				let warned = false;
 				globalThis.fetch = (info, init) => {
 					if (typeof info === 'string' && !SCHEME.test(info)) {
-						throw new Error(
-							`Cannot call \`fetch\` eagerly during server-side rendering with relative URL (${info}) — put your \`fetch\` calls inside \`onMount\` or a \`load\` function instead`
-						);
+						e.ssr_fetch_relative_url({ url: info });
 					} else if (!warned && !try_get_request_store()?.state.is_in_remote_function) {
-						console.warn(
-							'Avoid calling `fetch` eagerly during server-side rendering — put your `fetch` calls inside `onMount` or a `load` function instead'
-						);
+						w.ssr_fetch_eager();
 						warned = true;
 					}
 
@@ -628,17 +626,11 @@ export async function render_response({
 	if (DEV) {
 		if (page_config.csr) {
 			if (count_non_ssi_comments(transformed) < count_non_ssi_comments(html)) {
-				// the \u001B stuff is ANSI codes, so that we don't need to add a library to the runtime
-				// https://svelte.dev/playground/1b3f49696f0c44c881c34587f2537aa2?version=4.2.19
-				console.warn(
-					"\u001B[1m\u001B[31mRemoving comments in transformPageChunk can break Svelte's hydration\u001B[39m\u001B[22m"
-				);
+				w.transform_page_chunk_comments();
 			}
 		} else {
 			if (chunks) {
-				console.warn(
-					'\u001B[1m\u001B[31mReturning promises from server `load` functions will only work if `csr === true`\u001B[39m\u001B[22m'
-				);
+				w.streaming_without_csr();
 			}
 		}
 	}

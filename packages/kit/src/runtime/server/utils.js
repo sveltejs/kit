@@ -1,6 +1,7 @@
 import { text } from '@sveltejs/kit';
 import { ENDPOINT_METHODS } from '../../constants.js';
 import { manifest } from './internal.js';
+import * as e from '../../messages/server-errors.js';
 
 /**
  * @param {Partial<Record<import('types').HttpMethod, any>>} mod
@@ -53,23 +54,25 @@ export function with_version_header(response) {
 }
 
 /**
+ * Throws an error explaining why data returned from `load` couldn't be serialized by devalue,
+ * whose error becomes the cause
  * @param {import('@sveltejs/kit').RequestEvent} event
  * @param {Error & { path: string }} error
+ * @returns {never}
  */
-export function clarify_devalue_error(event, error) {
+export function throw_devalue_error(event, error) {
+	const id = /** @type {string} */ (event.route.id);
+
 	if (error.path) {
-		return (
-			`Data returned from \`load\` while rendering ${event.route.id} is not serializable: ${error.message} (${error.path}). ` +
-			`If you need to serialize/deserialize custom types, use transport hooks: https://svelte.dev/docs/kit/hooks#transport.`
-		);
+		e.load_not_serializable({ id, message: error.message, path: error.path }, { cause: error });
 	}
 
 	if (error.path === '') {
-		return `Data returned from \`load\` while rendering ${event.route.id} is not a plain object`;
+		e.load_not_plain_object({ id }, { cause: error });
 	}
 
 	// belt and braces — this should never happen
-	return error.message;
+	throw new Error(error.message, { cause: error });
 }
 
 /**

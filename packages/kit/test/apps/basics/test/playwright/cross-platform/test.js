@@ -219,10 +219,13 @@ test.describe('Shadowed pages', () => {
 			await clicknav('[href="/shadowed/serialization"]');
 
 			expect(await page.textContent('h1')).toBe('500');
-			expect(await page.textContent('#message')).toBe(
-				'This is your custom error page saying: "Data returned from `load` while rendering /shadowed/serialization is not serializable: Cannot stringify arbitrary non-POJOs (data.nope).' +
-					' If you need to serialize/deserialize custom types, use transport hooks: https://svelte.dev/docs/kit/hooks#transport. (500 Internal Error)"'
+			const message = /** @type {string} */ (await page.textContent('#message'));
+			expect(message).toMatch(
+				/^This is your custom error page saying: "[^]+ \(500 Internal Error\)"$/
 			);
+			expect(message).toContainKitDiagnostic('load_not_serializable', {
+				contains: ['/shadowed/serialization', 'Cannot stringify arbitrary non-POJOs (data.nope)']
+			});
 		});
 	}
 });
@@ -440,9 +443,11 @@ test.describe('Errors', () => {
 		await page.goto('/prerendering/mutative-endpoint');
 		expect(await page.textContent('h1')).toBe('500');
 
-		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "Cannot prerender pages with actions (500 Internal Error)"'
+		const message = /** @type {string} */ (await page.textContent('#message'));
+		expect(message).toMatch(
+			/^This is your custom error page saying: "[^]+ \(500 Internal Error\)"$/
 		);
+		expect(message).toContainKitDiagnostic('prerender_actions');
 	});
 
 	test('page endpoint GET thrown error message is preserved', async ({

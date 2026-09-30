@@ -46,15 +46,39 @@ describe.skipIf(!process.env.DEV)('cookies in dev', () => {
 		const { cookies } = cookies_setup();
 
 		// name ("a=") is 2 bytes, so the value alone must stay under 4094 bytes
-		expect(() => cookies.set('a', 'a'.repeat(4096))).toThrowError(
-			'Cookie "a" is too large, and will be discarded by the browser'
-		);
+		expect(() => cookies.set('a', 'a'.repeat(4096))).toThrowKitError('cookie_too_large', {
+			contains: ['"a"']
+		});
 	});
 
 	test('does not throw if cookie name/value is at the 4,096 byte limit', () => {
 		const { cookies } = cookies_setup();
 
 		expect(() => cookies.set('a', 'a'.repeat(4095))).not.toThrow();
+	});
+
+	test('warns once when reading a cookie that was only set at a more specific path', () => {
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+		const { cookies: first } = cookies_setup({ href: 'https://example.com/account/settings' });
+		first.set('mismatched', 'value', { path: '/account/settings' });
+
+		const { cookies } = cookies_setup({ href: 'https://example.com/account' });
+		assert.equal(cookies.get('mismatched'), undefined);
+
+		expect(warn).toHaveBeenCalledOnce();
+		expect(warn).toContainKitDiagnostic('cookie_path_mismatch', {
+			contains: ["'mismatched'", '/account', '/account/settings']
+		});
+		warn.mockRestore();
+	});
+
+	test('can only serialize cookies for the current hostname once the route is determined', () => {
+		const url = new URL('https://example.com');
+		const { cookies } = get_cookies(new Request(url), url);
+
+		expect(() => cookies.serialize('a', 'b')).toThrowKitError('cookies_serialize_before_route');
+		expect(cookies.serialize('a', 'b', { domain: 'other.com' })).toContain('a=b');
 	});
 
 	test('secure defaults to false when served over http (e.g. --host)', () => {

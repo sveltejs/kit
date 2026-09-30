@@ -578,16 +578,6 @@ export function prerender_directory_conflict(_values, options) {
 }
 
 /**
- * Cannot prerender a `+server` file with %methods% or fallback handlers (`%id%`)
- * @param {{ "methods": string; "id": string }} _values
- * @param {ThrowOptions} [options]
- * @returns {never}
- */
-export function prerender_endpoint_methods(_values, options) {
-	throw_error('prerender_endpoint_methods', `Cannot prerender a \`+server\` file with ${_values.methods} or fallback handlers (\`${_values.id}\`)`, options, prerender_endpoint_methods);
-}
-
-/**
  * The `entries` export from `%id%` generated entry `%entry%`, which was matched by `%matched%`
  * @param {{ "id": string; "entry": string; "matched": string }} _values
  * @param {ThrowOptions} [options]
