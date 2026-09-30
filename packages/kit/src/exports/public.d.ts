@@ -699,7 +699,7 @@ export interface RequestEvent<
 		enabled: boolean;
 		/** The root span for the request. This span is named `sveltekit.handle.root`. */
 		root: Span;
-		/** The span associated with the current `handle` hook, `load` function, or form action. */
+		/** The span associated with the current `handle` hook, `load` function, form action, or `+server` handler. */
 		current: Span;
 	};
 
