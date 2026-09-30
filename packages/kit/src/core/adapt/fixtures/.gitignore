@@ -1,2 +1,3 @@
 compress/*.br
 compress/*.gz
+compress/*.zst
