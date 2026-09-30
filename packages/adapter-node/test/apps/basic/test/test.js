@@ -59,6 +59,16 @@ test('records the size, content hash and compressed variants of each file', asyn
 	expect(gzip.headers()['content-encoding']).toBe('gzip');
 	expect(await gzip.text()).toBe('0123456789');
 	expect(gzip.headers()['etag']).not.toBe(etag);
+
+	const zstd = await request.get('/range.txt', { headers: { 'accept-encoding': 'zstd' } });
+	expect(zstd.headers()['content-encoding']).toBe('zstd');
+	expect(await zstd.text()).toBe('0123456789');
+	expect(zstd.headers()['etag']).not.toBe(etag);
+
+	const weighted = await request.get('/range.txt', {
+		headers: { 'accept-encoding': 'br;q=0.5, zstd;q=1.0' }
+	});
+	expect(weighted.headers()['content-encoding']).toBe('zstd');
 });
 
 test('records aliases for html files', async ({ request }) => {

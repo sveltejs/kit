@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import http from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
-import { brotliCompressSync, gzipSync } from 'node:zlib';
+import { brotliCompressSync, gzipSync, zstdCompressSync } from 'node:zlib';
 import { afterAll, beforeAll, expect, test } from 'vitest';
 import { create_file_map, serve_static } from './static.js';
 
@@ -26,10 +26,13 @@ function write(root: string, file: string, content: string, compress = false): A
 	if (compress) {
 		const gz = gzipSync(content);
 		const br = brotliCompressSync(content);
+		const zst = zstdCompressSync(content);
 		fs.writeFileSync(`${abs}.gz`, gz);
 		fs.writeFileSync(`${abs}.br`, br);
+		fs.writeFileSync(`${abs}.zst`, zst);
 		entry.gz = gz.length;
 		entry.br = br.length;
+		entry.zst = zst.length;
 	}
 
 	return entry;
@@ -237,11 +240,28 @@ test('negotiates the compressed variant', async () => {
 	expect(rejected.headers['content-encoding']).toBeUndefined();
 	expect(rejected.body).toBe('0123456789');
 
+	const zstd = await get('/range.txt', { headers: { 'accept-encoding': 'zstd' } });
+	expect(zstd.headers['content-encoding']).toBe('zstd');
+	expect(zstd.headers['content-length']).toBe(String(range.zst));
+
+	const tied = await get('/range.txt', { headers: { 'accept-encoding': 'zstd, br' } });
+	expect(tied.headers['content-encoding']).toBe('br');
+
+	const zstd_preferred = await get('/range.txt', {
+		headers: { 'accept-encoding': 'zstd;q=1, br;q=0.5, gzip;q=0.5' }
+	});
+	expect(zstd_preferred.headers['content-encoding']).toBe('zstd');
+
 	// each representation has its own validator and its own range base
 	const br = await get('/range.txt', { headers: { 'accept-encoding': 'br' } });
 	expect(br.headers['etag']).toBe(`"${range.etag}.br"`);
-	const partial = await get('/range.txt', {
+	expect(zstd.headers['etag']).toBe(`"${range.etag}.zst"`);
+	const br_partial = await get('/range.txt', {
 		headers: { 'accept-encoding': 'br', range: 'bytes=0-0' }
 	});
-	expect(partial.headers['content-range']).toBe(`bytes 0-0/${range.br}`);
+	expect(br_partial.headers['content-range']).toBe(`bytes 0-0/${range.br}`);
+	const zstd_partial = await get('/range.txt', {
+		headers: { 'accept-encoding': 'zstd', range: 'bytes=0-0' }
+	});
+	expect(zstd_partial.headers['content-range']).toBe(`bytes 0-0/${range.zst}`);
 });

@@ -22,6 +22,8 @@ interface AssetEntry {
 	gz?: number;
 	/** size of the brotli variant, if one was written */
 	br?: number;
+	/** size of the zstandard variant, if one was written */
+	zst?: number;
 }
 
 interface AssetTable {

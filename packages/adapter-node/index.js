@@ -198,10 +198,11 @@ function measure_files(root, files, compressed) {
 		/** @type {AssetEntry} */
 		const entry = { file, ...measure(abs, buffer) };
 
-		// `builder.compress` writes a `.gz` and a `.br` variant of every file it returns
+		// `builder.compress` writes a `.gz`, `.br` and a `.zst` variant of every file it returns
 		if (variants.has(file)) {
 			entry.gz = fs.statSync(`${abs}.gz`).size;
 			entry.br = fs.statSync(`${abs}.br`).size;
+			entry.zst = fs.statSync(`${abs}.zst`).size;
 		}
 
 		entries.push(entry);

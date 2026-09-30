@@ -54,10 +54,10 @@ function relative_pathname(from, to) {
  * Parses `Accept-Encoding` and picks the preferred variant that exists
  * @param {string | undefined} header
  * @param {Asset} asset
- * @returns {'br' | 'gz' | undefined}
+ * @returns {'br' | 'gz' | 'zst' | undefined}
  */
 function negotiate(header, asset) {
-	if (!header || !(asset.br || asset.gz)) return;
+	if (!header || !(asset.br || asset.gz || asset.zst)) return;
 
 	/** @type {Map<string, number>} */
 	const weights = new Map();
@@ -79,7 +79,9 @@ function negotiate(header, asset) {
 
 	const br = asset.br ? weight('br') : 0;
 	const gzip = asset.gz ? weight('gzip') : 0;
+	const zstd = asset.zst ? weight('zstd') : 0;
 
+	if (zstd > br && zstd > gzip) return 'zst';
 	if (gzip > br) return 'gz';
 	if (br > 0) return 'br';
 }
@@ -198,7 +200,7 @@ export function serve_static(files) {
 		/** @type {Record<string, string | number>} */
 		const headers = { etag };
 
-		if (asset.br || asset.gz) headers.vary = 'Accept-Encoding';
+		if (asset.br || asset.gz || asset.zst) headers.vary = 'Accept-Encoding';
 		if (asset.cache_control) headers['cache-control'] = asset.cache_control;
 
 		if (etag_matches(req.headers['if-none-match'], etag)) {
@@ -208,7 +210,9 @@ export function serve_static(files) {
 		headers['content-length'] = size;
 		headers['accept-ranges'] = 'bytes';
 		if (asset.type) headers['content-type'] = asset.type;
-		if (variant) headers['content-encoding'] = variant === 'gz' ? 'gzip' : 'br';
+		if (variant) {
+			headers['content-encoding'] = variant === 'gz' ? 'gzip' : variant === 'zst' ? 'zstd' : 'br';
+		}
 
 		/** @type {{ start?: number, end?: number }} */
 		const range = {};
