@@ -20,7 +20,7 @@ export type AdapterOptions = {
 	| {
 			/**
 			 * Deploy your app as [Netlify Edge Functions](https://docs.netlify.com/build/edge-functions/overview/) rather than Node-based functions.
-			 * Edge Functions run in a Deno-based environment and cannot use a Node.js `runtime`.
+			 * Cannot be combined with a Node.js `runtime`.
 			 */
 			edge: true;
 			runtime?: undefined;
@@ -34,7 +34,6 @@ export type AdapterOptions = {
 			/**
 			 * The [Node.js version for the runtime](https://docs.netlify.com/build/functions/configuration/#nodejs-version-for-runtime), for example `nodejs24.x`.
 			 * Specifying this option selects Node-based functions and cannot be combined with `edge: true`.
-			 * @default Same as the Netlify build environment
 			 */
 			runtime?: Runtime | undefined;
 	  }
