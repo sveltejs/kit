@@ -8,7 +8,7 @@ export function parse_node_version(node_version) {
 	const match = typeof node_version === 'string' && /^nodejs([1-9]\d*)\.x$/.exec(node_version);
 	if (!match) {
 		throw new Error(
-			`@sveltejs/adapter-netlify: Invalid nodeVersion ${JSON.stringify(node_version)}. Use nodejs<major>.x with a positive integer major version, for example nodejs24.x.`
+			`@sveltejs/adapter-netlify: Invalid \`nodeVersion\` ${JSON.stringify(node_version)}. Use \`nodejs<major>.x\` with a positive integer major version, for example \`nodejs24.x\`.`
 		);
 	}
 	return match[1];
@@ -22,7 +22,7 @@ export function parse_node_version(node_version) {
 export function resolve_runtime({ edge, nodeVersion }, default_edge = false) {
 	if (edge === true && nodeVersion !== undefined) {
 		throw new Error(
-			'@sveltejs/adapter-netlify: Cannot combine edge: true with nodeVersion. Remove nodeVersion to use Edge Functions, or set edge: false to use a Node.js runtime.'
+			'@sveltejs/adapter-netlify: Cannot combine `edge: true` with `nodeVersion`. Remove `nodeVersion` to use Edge Functions, or set `edge: false` to use a Node.js runtime.'
 		);
 	}
 
