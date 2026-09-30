@@ -14,183 +14,183 @@ export function app_template_missing(_values, options) {
 }
 
 /**
- * %file% is missing %tag%
+ * %file% is missing `%tag%`
  * @param {{ "file": string; "tag": string }} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function app_template_tag_missing(_values, options) {
-	throw_error('app_template_tag_missing', `${_values.file} is missing ${_values.tag}`, options, app_template_tag_missing);
+	throw_error('app_template_tag_missing', `${_values.file} is missing \`${_values.tag}\``, options, app_template_tag_missing);
 }
 
 /**
- * Invalid alias key: %key%
+ * Invalid alias key: `%key%`
  * @param {{ "key": string }} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function config_alias_key_invalid(_values, options) {
-	throw_error('config_alias_key_invalid', `Invalid alias key: ${_values.key}`, options, config_alias_key_invalid);
+	throw_error('config_alias_key_invalid', `Invalid alias key: \`${_values.key}\``, options, config_alias_key_invalid);
 }
 
 /**
- * Invalid alias value: %value%
+ * Invalid alias value: `%value%`
  * @param {{ "value": string }} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function config_alias_value_invalid(_values, options) {
-	throw_error('config_alias_value_invalid', `Invalid alias value: ${_values.value}`, options, config_alias_value_invalid);
+	throw_error('config_alias_value_invalid', `Invalid alias value: \`${_values.value}\``, options, config_alias_value_invalid);
 }
 
 /**
- * %keypath% cannot start or end with '/'
+ * `%keypath%` cannot start or end with `'/'`
  * @param {{ "keypath": string }} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function config_app_dir_slash(_values, options) {
-	throw_error('config_app_dir_slash', `${_values.keypath} cannot start or end with '/'`, options, config_app_dir_slash);
+	throw_error('config_app_dir_slash', `\`${_values.keypath}\` cannot start or end with \`'/'\``, options, config_app_dir_slash);
 }
 
 /**
- * The `csp.directives['trusted-types']` option must include 'sveltekit-trusted-url' when `serviceWorker.register` is true
+ * The `csp.directives['trusted-types']` option must include `'sveltekit-trusted-url'` when `serviceWorker.register` is `true`
  * @param {void} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function config_csp_trusted_types_missing(_values, options) {
-	throw_error('config_csp_trusted_types_missing', `The \`csp.directives['trusted-types']\` option must include 'sveltekit-trusted-url' when \`serviceWorker.register\` is true`, options, config_csp_trusted_types_missing);
+	throw_error('config_csp_trusted_types_missing', `The \`csp.directives['trusted-types']\` option must include \`'sveltekit-trusted-url'\` when \`serviceWorker.register\` is \`true\``, options, config_csp_trusted_types_missing);
 }
 
 /**
- * %keypath% cannot be empty
+ * `%keypath%` cannot be empty
  * @param {{ "keypath": string }} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function config_empty_string(_values, options) {
-	throw_error('config_empty_string', `${_values.keypath} cannot be empty`, options, config_empty_string);
+	throw_error('config_empty_string', `\`${_values.keypath}\` cannot be empty`, options, config_empty_string);
 }
 
 /**
- * %keypath% should be true or false, if specified
+ * `%keypath%` should be true or false, if specified
  * @param {{ "keypath": string }} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function config_expected_boolean(_values, options) {
-	throw_error('config_expected_boolean', `${_values.keypath} should be true or false, if specified`, options, config_expected_boolean);
+	throw_error('config_expected_boolean', `\`${_values.keypath}\` should be true or false, if specified`, options, config_expected_boolean);
 }
 
 /**
- * %keypath% should be a function, if specified
+ * `%keypath%` should be a function, if specified
  * @param {{ "keypath": string }} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function config_expected_function(_values, options) {
-	throw_error('config_expected_function', `${_values.keypath} should be a function, if specified`, options, config_expected_function);
+	throw_error('config_expected_function', `\`${_values.keypath}\` should be a function, if specified`, options, config_expected_function);
 }
 
 /**
- * %keypath% should be a number, if specified
+ * `%keypath%` should be a number, if specified
  * @param {{ "keypath": string }} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function config_expected_number(_values, options) {
-	throw_error('config_expected_number', `${_values.keypath} should be a number, if specified`, options, config_expected_number);
+	throw_error('config_expected_number', `\`${_values.keypath}\` should be a number, if specified`, options, config_expected_number);
 }
 
 /**
- * %keypath% should be an object
+ * `%keypath%` should be an object
  * @param {{ "keypath": string }} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function config_expected_object(_values, options) {
-	throw_error('config_expected_object', `${_values.keypath} should be an object`, options, config_expected_object);
+	throw_error('config_expected_object', `\`${_values.keypath}\` should be an object`, options, config_expected_object);
 }
 
 /**
- * %keypath% should be %options%
+ * `%keypath%` should be %options%
  * @param {{ "keypath": string; "options": string }} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function config_expected_one_of(_values, options) {
-	throw_error('config_expected_one_of', `${_values.keypath} should be ${_values.options}`, options, config_expected_one_of);
+	throw_error('config_expected_one_of', `\`${_values.keypath}\` should be ${_values.options}`, options, config_expected_one_of);
 }
 
 /**
- * %keypath% should be a positive integer, if specified
+ * `%keypath%` should be a positive integer, if specified
  * @param {{ "keypath": string }} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function config_expected_positive_integer(_values, options) {
-	throw_error('config_expected_positive_integer', `${_values.keypath} should be a positive integer, if specified`, options, config_expected_positive_integer);
+	throw_error('config_expected_positive_integer', `\`${_values.keypath}\` should be a positive integer, if specified`, options, config_expected_positive_integer);
 }
 
 /**
- * %keypath% should be a string, if specified
+ * `%keypath%` should be a string, if specified
  * @param {{ "keypath": string }} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function config_expected_string(_values, options) {
-	throw_error('config_expected_string', `${_values.keypath} should be a string, if specified`, options, config_expected_string);
+	throw_error('config_expected_string', `\`${_values.keypath}\` should be a string, if specified`, options, config_expected_string);
 }
 
 /**
- * %keypath% should be an array of strings, if specified
+ * `%keypath%` should be an array of strings, if specified
  * @param {{ "keypath": string }} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function config_expected_string_array(_values, options) {
-	throw_error('config_expected_string_array', `${_values.keypath} should be an array of strings, if specified`, options, config_expected_string_array);
+	throw_error('config_expected_string_array', `\`${_values.keypath}\` should be an array of strings, if specified`, options, config_expected_string_array);
 }
 
 /**
- * File extensions must be alphanumeric — saw '%extension%'
+ * File extensions must be alphanumeric — saw `'%extension%'`
  * @param {{ "extension": string }} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function config_extension_invalid(_values, options) {
-	throw_error('config_extension_invalid', `File extensions must be alphanumeric — saw '${_values.extension}'`, options, config_extension_invalid);
+	throw_error('config_extension_invalid', `File extensions must be alphanumeric — saw \`'${_values.extension}'\``, options, config_extension_invalid);
 }
 
 /**
- * Each member of %keypath% must start with '.' — saw '%extension%'
+ * Each member of %keypath% must start with `'.'` — saw `'%extension%'`
  * @param {{ "keypath": string; "extension": string }} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function config_extension_missing_dot(_values, options) {
-	throw_error('config_extension_missing_dot', `Each member of ${_values.keypath} must start with '.' — saw '${_values.extension}'`, options, config_extension_missing_dot);
+	throw_error('config_extension_missing_dot', `Each member of ${_values.keypath} must start with \`'.'\` — saw \`'${_values.extension}'\``, options, config_extension_missing_dot);
 }
 
 /**
- * The SvelteKit Vite plugin %keypath% should be an object with an `adapt` method
+ * The SvelteKit Vite plugin `%keypath%` should be an object with an `adapt` method
  * @param {{ "keypath": string }} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function config_invalid_adapter(_values, options) {
-	throw_error('config_invalid_adapter', `The SvelteKit Vite plugin ${_values.keypath} should be an object with an \`adapt\` method`, options, config_invalid_adapter);
+	throw_error('config_invalid_adapter', `The SvelteKit Vite plugin \`${_values.keypath}\` should be an object with an \`adapt\` method`, options, config_invalid_adapter);
 }
 
 /**
- * %keypath% should be "fail", "warn", "ignore" or a custom function
+ * `%keypath%` should be `'fail'`, `'warn'`, `'ignore'` or a custom function
  * @param {{ "keypath": string }} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function config_invalid_prerender_handler(_values, options) {
-	throw_error('config_invalid_prerender_handler', `${_values.keypath} should be "fail", "warn", "ignore" or a custom function`, options, config_invalid_prerender_handler);
+	throw_error('config_invalid_prerender_handler', `\`${_values.keypath}\` should be \`'fail'\`, \`'warn'\`, \`'ignore'\` or a custom function`, options, config_invalid_prerender_handler);
 }
 
 /**
@@ -254,23 +254,23 @@ export function config_option_removed_experimental_tracing(_values, options) {
 }
 
 /**
- * `%keypath%` has been removed. Use #lib instead of $lib: https://svelte.dev/docs/kit/$lib
+ * `%keypath%` has been removed. Use `#lib` instead of `$lib`: https://svelte.dev/docs/kit/$lib
  * @param {{ "keypath": string }} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function config_option_removed_files_lib(_values, options) {
-	throw_error('config_option_removed_files_lib', `\`${_values.keypath}\` has been removed. Use #lib instead of $lib: https://svelte.dev/docs/kit/$lib`, options, config_option_removed_files_lib);
+	throw_error('config_option_removed_files_lib', `\`${_values.keypath}\` has been removed. Use \`#lib\` instead of \`$lib\`: https://svelte.dev/docs/kit/$lib`, options, config_option_removed_files_lib);
 }
 
 /**
- * `%keypath%` has been removed. modulepreload will always be used
+ * `%keypath%` has been removed. `modulepreload` will always be used
  * @param {{ "keypath": string }} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function config_option_removed_preload_strategy(_values, options) {
-	throw_error('config_option_removed_preload_strategy', `\`${_values.keypath}\` has been removed. modulepreload will always be used`, options, config_option_removed_preload_strategy);
+	throw_error('config_option_removed_preload_strategy', `\`${_values.keypath}\` has been removed. \`modulepreload\` will always be used`, options, config_option_removed_preload_strategy);
 }
 
 /**
@@ -294,103 +294,103 @@ export function config_option_removed_vite_plugin(_values, options) {
 }
 
 /**
- * %keypath% must be a valid origin — received '%input%' which contains a path, query, or hash. Use the bare origin '%origin%' instead
+ * `%keypath%` must be a valid origin — received `'%input%'` which contains a path, query, or hash. Use the bare origin `'%origin%'` instead
  * @param {{ "keypath": string; "input": string; "origin": string }} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function config_origin_has_path(_values, options) {
-	throw_error('config_origin_has_path', `${_values.keypath} must be a valid origin — received '${_values.input}' which contains a path, query, or hash. Use the bare origin '${_values.origin}' instead`, options, config_origin_has_path);
+	throw_error('config_origin_has_path', `\`${_values.keypath}\` must be a valid origin — received \`'${_values.input}'\` which contains a path, query, or hash. Use the bare origin \`'${_values.origin}'\` instead`, options, config_origin_has_path);
 }
 
 /**
- * %keypath% must be a valid origin (e.g. 'https://my-site.com'). '%input%' could not be parsed as a URL
+ * `%keypath%` must be a valid origin (e.g. 'https://my-site.com'). `'%input%'` could not be parsed as a URL
  * @param {{ "keypath": string; "input": string }} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function config_origin_invalid(_values, options) {
-	throw_error('config_origin_invalid', `${_values.keypath} must be a valid origin (e.g. 'https://my-site.com'). '${_values.input}' could not be parsed as a URL`, options, config_origin_invalid);
+	throw_error('config_origin_invalid', `\`${_values.keypath}\` must be a valid origin (e.g. 'https://my-site.com'). \`'${_values.input}'\` could not be parsed as a URL`, options, config_origin_invalid);
 }
 
 /**
- * %keypath% must be a valid origin — only 'http' and 'https' protocols are supported, received '%protocol%'
+ * `%keypath%` must be a valid origin — only 'http' and 'https' protocols are supported, received '%protocol%'
  * @param {{ "keypath": string; "protocol": string }} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function config_origin_protocol(_values, options) {
-	throw_error('config_origin_protocol', `${_values.keypath} must be a valid origin — only 'http' and 'https' protocols are supported, received '${_values.protocol}'`, options, config_origin_protocol);
+	throw_error('config_origin_protocol', `\`${_values.keypath}\` must be a valid origin — only 'http' and 'https' protocols are supported, received '${_values.protocol}'`, options, config_origin_protocol);
 }
 
 /**
- * %keypath% option must be an absolute path, if specified
+ * `%keypath%` option must be an absolute path, if specified
  * @param {{ "keypath": string }} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function config_paths_assets_not_absolute(_values, options) {
-	throw_error('config_paths_assets_not_absolute', `${_values.keypath} option must be an absolute path, if specified`, options, config_paths_assets_not_absolute);
+	throw_error('config_paths_assets_not_absolute', `\`${_values.keypath}\` option must be an absolute path, if specified`, options, config_paths_assets_not_absolute);
 }
 
 /**
- * %keypath% option must not end with '/'
+ * `%keypath%` option must not end with `'/'`
  * @param {{ "keypath": string }} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function config_paths_assets_trailing_slash(_values, options) {
-	throw_error('config_paths_assets_trailing_slash', `${_values.keypath} option must not end with '/'`, options, config_paths_assets_trailing_slash);
+	throw_error('config_paths_assets_trailing_slash', `\`${_values.keypath}\` option must not end with \`'/'\``, options, config_paths_assets_trailing_slash);
 }
 
 /**
- * %keypath% option must either be the empty string or a root-relative path that starts but doesn't end with '/'
+ * `%keypath%` option must either be the empty string or a root-relative path that starts but doesn't end with `'/'`
  * @param {{ "keypath": string }} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function config_paths_base_invalid(_values, options) {
-	throw_error('config_paths_base_invalid', `${_values.keypath} option must either be the empty string or a root-relative path that starts but doesn't end with '/'`, options, config_paths_base_invalid);
+	throw_error('config_paths_base_invalid', `\`${_values.keypath}\` option must either be the empty string or a root-relative path that starts but doesn't end with \`'/'\``, options, config_paths_base_invalid);
 }
 
 /**
- * Each member of %keypath% must be either '*' or an absolute path beginning with '/' — saw '%entry%'
+ * Each member of `%keypath%` must be either `'*'` or an absolute path beginning with `'/'` — saw `'%entry%'`
  * @param {{ "keypath": string; "entry": string }} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function config_prerender_entry_invalid(_values, options) {
-	throw_error('config_prerender_entry_invalid', `Each member of ${_values.keypath} must be either '*' or an absolute path beginning with '/' — saw '${_values.entry}'`, options, config_prerender_entry_invalid);
+	throw_error('config_prerender_entry_invalid', `Each member of \`${_values.keypath}\` must be either \`'*'\` or an absolute path beginning with \`'/'\` — saw \`'${_values.entry}'\``, options, config_prerender_entry_invalid);
 }
 
 /**
- * The `router.resolution` option cannot be 'server' if `output.bundleStrategy` is 'inline' or 'single'
+ * The `router.resolution` option cannot be `'server'` if `output.bundleStrategy` is `'inline'` or `'single'`
  * @param {void} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function config_server_resolution_bundle_strategy(_values, options) {
-	throw_error('config_server_resolution_bundle_strategy', `The \`router.resolution\` option cannot be 'server' if \`output.bundleStrategy\` is 'inline' or 'single'`, options, config_server_resolution_bundle_strategy);
+	throw_error('config_server_resolution_bundle_strategy', `The \`router.resolution\` option cannot be \`'server'\` if \`output.bundleStrategy\` is \`'inline'\` or \`'single'\``, options, config_server_resolution_bundle_strategy);
 }
 
 /**
- * The `router.resolution` option cannot be 'server' if `router.type` is 'hash'
+ * The `router.resolution` option cannot be `'server'` if `router.type` is `'hash'`
  * @param {void} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function config_server_resolution_hash(_values, options) {
-	throw_error('config_server_resolution_hash', `The \`router.resolution\` option cannot be 'server' if \`router.type\` is 'hash'`, options, config_server_resolution_hash);
+	throw_error('config_server_resolution_hash', `The \`router.resolution\` option cannot be \`'server'\` if \`router.type\` is \`'hash'\``, options, config_server_resolution_hash);
 }
 
 /**
- * Unexpected option %keypath%
+ * Unexpected option `%keypath%`
  * @param {{ "keypath": string; "suggestion"?: string }} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function config_unexpected_option(_values, options) {
-	throw_error('config_unexpected_option', (_values?.suggestion !== undefined ? `Unexpected option ${_values.keypath} (did you mean ${_values.suggestion}?)` : `Unexpected option ${_values.keypath}`), options, config_unexpected_option);
+	throw_error('config_unexpected_option', (_values?.suggestion !== undefined ? `Unexpected option \`${_values.keypath}\` (did you mean \`${_values.suggestion}\`?)` : `Unexpected option \`${_values.keypath}\``), options, config_unexpected_option);
 }
 
 /**
@@ -414,23 +414,23 @@ export function env_circular_import(_values, options) {
 }
 
 /**
- * Invalid environment variable name %name%
+ * Invalid environment variable name `%name%`
  * @param {{ "name": string }} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function env_invalid_variable_name(_values, options) {
-	throw_error('env_invalid_variable_name', `Invalid environment variable name ${_values.name}`, options, env_invalid_variable_name);
+	throw_error('env_invalid_variable_name', `Invalid environment variable name \`${_values.name}\``, options, env_invalid_variable_name);
 }
 
 /**
- * %file% must export a variables object
+ * `%file%` must export a variables object
  * @param {{ "file": string }} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function env_variables_missing(_values, options) {
-	throw_error('env_variables_missing', `${_values.file} must export a variables object`, options, env_variables_missing);
+	throw_error('env_variables_missing', `\`${_values.file}\` must export a variables object`, options, env_variables_missing);
 }
 
 /**

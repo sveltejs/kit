@@ -19,11 +19,11 @@ export function config_option_deprecated_alias(_values) {
 }
 
 /**
- * The `%keypath%` option is deprecated, and will be removed in a future version. Add configuration to tsconfig.json directly
+ * The `%keypath%` option is deprecated, and will be removed in a future version. Add configuration to `tsconfig.json` directly
  * @param {{ "keypath": string }} _values
  */
 export function config_option_deprecated_typescript(_values) {
-	warn('config_option_deprecated_typescript', `The \`${_values.keypath}\` option is deprecated, and will be removed in a future version. Add configuration to tsconfig.json directly`);
+	warn('config_option_deprecated_typescript', `The \`${_values.keypath}\` option is deprecated, and will be removed in a future version. Add configuration to \`tsconfig.json\` directly`);
 }
 
 /**
@@ -35,21 +35,21 @@ export function file_name_misspelled(_values) {
 }
 
 /**
- * %file% should extend SvelteKit's built-in configuration:
+ * `%file%` should extend SvelteKit's built-in configuration:
 %example%
  * @param {{ "file": string; "example": string }} _values
  */
 export function tsconfig_extends_missing(_values) {
-	warn('tsconfig_extends_missing', `${_values.file} should extend SvelteKit's built-in configuration:
+	warn('tsconfig_extends_missing', `\`${_values.file}\` should extend SvelteKit's built-in configuration:
 ${_values.example}`);
 }
 
 /**
- * Found issues while validating %file%:
+ * Found issues while validating `%file%`:
 %issues%
  * @param {{ "file": string; "issues": string }} _values
  */
 export function tsconfig_invalid(_values) {
-	warn('tsconfig_invalid', `Found issues while validating ${_values.file}:
+	warn('tsconfig_invalid', `Found issues while validating \`${_values.file}\`:
 ${_values.issues}`);
 }

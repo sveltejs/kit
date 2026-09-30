@@ -186,7 +186,7 @@ test('errors on invalid values', () => {
 			});
 		},
 		'config_expected_string',
-		/^config\.appDir should be a string, if specified$/
+		/^`config\.appDir` should be a string, if specified$/
 	);
 });
 
@@ -200,7 +200,7 @@ test.each([-1, 0, 1.5, Infinity, NaN])(
 				});
 			},
 			'config_expected_positive_integer',
-			/^config\.prerender\.concurrency should be a positive integer, if specified$/
+			/^`config\.prerender\.concurrency` should be a positive integer, if specified$/
 		);
 	}
 );
@@ -216,7 +216,7 @@ test('errors on invalid nested values', () => {
 			});
 		},
 		'config_unexpected_option',
-		/^Unexpected option config\.files\.potato$/
+		/^Unexpected option `config\.files\.potato`$/
 	);
 });
 
@@ -236,7 +236,7 @@ test('errors on extension without leading .', () => {
 			});
 		},
 		'config_extension_missing_dot',
-		/Each member of config\.extensions must start with '\.' — saw 'blah'/
+		/Each member of config\.extensions must start with `'\.'` — saw `'blah'`/
 	);
 });
 
@@ -267,7 +267,7 @@ test('fails if appDir is blank', () => {
 			});
 		},
 		'config_empty_string',
-		/^config\.appDir cannot be empty$/
+		/^`config\.appDir` cannot be empty$/
 	);
 });
 
@@ -279,7 +279,7 @@ test('fails if appDir is only slash', () => {
 			});
 		},
 		'config_app_dir_slash',
-		/^config\.appDir cannot start or end with '\/'$/
+		/^`config\.appDir` cannot start or end with `'\/'`$/
 	);
 });
 
@@ -291,7 +291,7 @@ test('fails if appDir starts with slash', () => {
 			});
 		},
 		'config_app_dir_slash',
-		/^config\.appDir cannot start or end with '\/'$/
+		/^`config\.appDir` cannot start or end with `'\/'`$/
 	);
 });
 
@@ -303,7 +303,7 @@ test('fails if appDir ends with slash', () => {
 			});
 		},
 		'config_app_dir_slash',
-		/^config\.appDir cannot start or end with '\/'$/
+		/^`config\.appDir` cannot start or end with `'\/'`$/
 	);
 });
 
@@ -318,7 +318,7 @@ test('fails if paths.base is not root-relative', () => {
 			});
 		},
 		'config_paths_base_invalid',
-		/^config\.paths\.base option must either be the empty string or a root-relative path that starts but doesn't end with '\/'$/
+		/^`config\.paths\.base` option must either be the empty string or a root-relative path that starts but doesn't end with `'\/'`$/
 	);
 });
 
@@ -332,7 +332,7 @@ test("fails if paths.base ends with '/'", () => {
 			});
 		},
 		'config_paths_base_invalid',
-		/^config\.paths\.base option must either be the empty string or a root-relative path that starts but doesn't end with '\/'$/
+		/^`config\.paths\.base` option must either be the empty string or a root-relative path that starts but doesn't end with `'\/'`$/
 	);
 });
 
@@ -359,7 +359,7 @@ test('fails if paths.assets is relative', () => {
 			});
 		},
 		'config_paths_assets_not_absolute',
-		/^config\.paths\.assets option must be an absolute path, if specified$/
+		/^`config\.paths\.assets` option must be an absolute path, if specified$/
 	);
 });
 
@@ -373,7 +373,7 @@ test('fails if paths.assets has trailing slash', () => {
 			});
 		},
 		'config_paths_assets_trailing_slash',
-		/^config\.paths\.assets option must not end with '\/'$/
+		/^`config\.paths\.assets` option must not end with `'\/'`$/
 	);
 });
 
@@ -387,7 +387,7 @@ test('fails if paths.origin is not a valid origin', () => {
 			});
 		},
 		'config_origin_invalid',
-		/^config.paths.origin must be a valid origin \(e\.g\. 'https:\/\/my-site\.com'\)\. 'not an origin' could not be parsed as a URL$/
+		/^`config.paths.origin` must be a valid origin \(e\.g\. 'https:\/\/my-site\.com'\)\. `'not an origin'` could not be parsed as a URL$/
 	);
 });
 
@@ -403,7 +403,7 @@ test('fails if paths.origin uses an unsupported protocol', () => {
 			});
 		},
 		'config_origin_protocol',
-		/^config.paths.origin must be a valid origin — only 'http' and 'https' protocols are supported, received 'ftp:'$/
+		/^`config.paths.origin` must be a valid origin — only 'http' and 'https' protocols are supported, received 'ftp:'$/
 	);
 });
 
@@ -417,7 +417,7 @@ test('fails if paths.origin contains a path', () => {
 			});
 		},
 		'config_origin_has_path',
-		/^config.paths.origin must be a valid origin — received 'https:\/\/example\.com\/path' which contains a path, query, or hash\. Use the bare origin 'https:\/\/example\.com' instead$/
+		/^`config.paths.origin` must be a valid origin — received `'https:\/\/example\.com\/path'` which contains a path, query, or hash\. Use the bare origin `'https:\/\/example\.com'` instead$/
 	);
 });
 
@@ -445,7 +445,7 @@ test('fails if paths.origin is the empty string', () => {
 			});
 		},
 		'config_origin_invalid',
-		/^config.paths.origin must be a valid origin \(e\.g\. 'https:\/\/my-site\.com'\)\. '' could not be parsed as a URL$/
+		/^`config.paths.origin` must be a valid origin \(e\.g\. 'https:\/\/my-site\.com'\)\. `''` could not be parsed as a URL$/
 	);
 });
 
@@ -460,7 +460,7 @@ test('fails if prerender.entries are invalid', () => {
 			});
 		},
 		'config_prerender_entry_invalid',
-		/^Each member of config.prerender.entries must be either '\*' or an absolute path beginning with '\/' — saw 'foo'$/
+		/^Each member of `config.prerender.entries` must be either `'\*'` or an absolute path beginning with `'\/'` — saw `'foo'`$/
 	);
 });
 
@@ -563,7 +563,7 @@ test('errors on invalid tracing values', () => {
 			});
 		},
 		'config_expected_object',
-		/^config\.tracing should be an object$/
+		/^`config\.tracing` should be an object$/
 	);
 
 	assert_logs_error_and_throws(
@@ -574,7 +574,7 @@ test('errors on invalid tracing values', () => {
 			});
 		},
 		'config_expected_object',
-		/^config\.tracing should be an object$/
+		/^`config\.tracing` should be an object$/
 	);
 
 	assert_logs_error_and_throws(
@@ -585,7 +585,7 @@ test('errors on invalid tracing values', () => {
 			});
 		},
 		'config_expected_boolean',
-		/^config\.tracing\.server should be true or false, if specified$/
+		/^`config\.tracing\.server` should be true or false, if specified$/
 	);
 });
 
@@ -628,7 +628,7 @@ test('errors on invalid forkPreloads values', () => {
 			});
 		},
 		'config_expected_boolean',
-		/^config\.experimental\.forkPreloads should be true or false, if specified$/
+		/^`config\.experimental\.forkPreloads` should be true or false, if specified$/
 	);
 
 	assert_logs_error_and_throws(
@@ -641,7 +641,7 @@ test('errors on invalid forkPreloads values', () => {
 			});
 		},
 		'config_expected_boolean',
-		/^config\.experimental\.forkPreloads should be true or false, if specified$/
+		/^`config\.experimental\.forkPreloads` should be true or false, if specified$/
 	);
 });
 
@@ -680,7 +680,7 @@ test('lists allowed values for invalid options', () => {
 			});
 		},
 		'config_expected_one_of',
-		/^config\.router\.type should be either "pathname" or "hash"$/
+		/^`config\.router\.type` should be either "pathname" or "hash"$/
 	);
 
 	assert_logs_error_and_throws(
@@ -691,7 +691,7 @@ test('lists allowed values for invalid options', () => {
 			});
 		},
 		'config_expected_one_of',
-		/^config\.csp\.mode should be one of "auto", "hash" or "nonce"$/
+		/^`config\.csp\.mode` should be one of "auto", "hash" or "nonce"$/
 	);
 });
 
@@ -701,7 +701,7 @@ test('errors if server-side route resolution is combined with hash routing', () 
 			validate_config({ router: { type: 'hash', resolution: 'server' } });
 		},
 		'config_server_resolution_hash',
-		/^The `router\.resolution` option cannot be 'server' if `router\.type` is 'hash'$/
+		/^The `router\.resolution` option cannot be `'server'` if `router\.type` is `'hash'`$/
 	);
 });
 
@@ -725,7 +725,7 @@ test('warns about deprecated options and still validates them', () => {
 				validate_config({ alias: { $utils: 42 } });
 			},
 			'config_expected_string',
-			/^config\.alias\.\$utils should be a string, if specified$/
+			/^`config\.alias\.\$utils` should be a string, if specified$/
 		);
 	} finally {
 		warn.mockRestore();
@@ -869,7 +869,7 @@ test.each(['%sveltekit.head%', '%sveltekit.body%'])(
 			assert_diagnostic(
 				() => load_template(cwd, template_config(cwd)),
 				'app_template_tag_missing',
-				`${join('src', 'app.html')} is missing ${tag}`
+				`${join('src', 'app.html')} is missing \`${tag}\``
 			);
 		});
 	}

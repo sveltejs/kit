@@ -47,7 +47,7 @@ test('warns with a safe root tsconfig', () => {
 	expect(warn).toHaveBeenCalledOnce();
 	assert.equal(
 		stripVTControlCharacters(warn.mock.calls[0][0]),
-		`tsconfig_extends_missing\ntsconfig.json should extend SvelteKit's built-in configuration:\n${example}\nhttps://next.svelte.dev/e/@sveltejs/kit/tsconfig_extends_missing`
+		`tsconfig_extends_missing\n\`tsconfig.json\` should extend SvelteKit's built-in configuration:\n${example}\nhttps://next.svelte.dev/e/@sveltejs/kit/tsconfig_extends_missing`
 	);
 });
 
@@ -101,7 +101,7 @@ test('reports all tsconfig issues in a single warning', () => {
 	assert.deepEqual(calls, [
 		[
 			'tsconfig_invalid',
-			'Found issues while validating tsconfig.json:',
+			'Found issues while validating `tsconfig.json`:',
 			'  - "types" was overwritten. It must include "$app/types"',
 			'  - "isolatedModules" was overwritten. It should be true',
 			'https://next.svelte.dev/e/@sveltejs/kit/tsconfig_invalid'
