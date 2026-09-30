@@ -1,17 +1,17 @@
 import { Adapter } from '@sveltejs/kit';
 import './ambient.d.ts';
 
-/** A Node.js runtime supported by Netlify. The major version must be a positive integer. */
-export type Runtime = `nodejs${number}.x`;
+/** A Node.js runtime supported by Netlify. */
+export type Runtime = 'nodejs22.x' | 'nodejs24.x';
 
 export type Config =
 	| {
 			/**
 			 * Deploy this route as a [Netlify Edge Function](https://docs.netlify.com/build/edge-functions/overview/).
-			 * Set `runtime: undefined` to clear a Node runtime inherited from a layout.
+			 * Set `nodeVersion: undefined` to clear a Node runtime inherited from a layout.
 			 */
 			edge: true;
-			runtime?: undefined;
+			nodeVersion?: undefined;
 	  }
 	| {
 			/**
@@ -20,11 +20,11 @@ export type Config =
 			edge?: false;
 			/**
 			 * Which [Serverless Function](https://docs.netlify.com/build/functions/configuration/#nodejs-version-for-runtime)
-			 * runtime to use (`'nodejs22.x'`, `'nodejs24.x'` etc).
+			 * Node.js version to use (`'nodejs22.x'` or `'nodejs24.x'`).
 			 * Set `undefined` to clear a version inherited from a layout and use the adapter default.
 			 * @default Same as the adapter
 			 */
-			runtime?: Runtime | undefined;
+			nodeVersion?: Runtime | undefined;
 	  };
 
 export type AdapterOptions = {
@@ -42,24 +42,23 @@ export type AdapterOptions = {
 } & (
 	| {
 			/**
-			 * Deploy your app as [Netlify Edge Functions](https://docs.netlify.com/build/edge-functions/overview/) rather than Node-based functions.
-			 * Edge Functions run in a Deno-based environment and cannot use a Node.js `runtime`.
+			 * If `true`, your app will be deployed as a [Netlify Edge Function](https://docs.netlify.com/build/edge-functions/overview/) rather than the standard Node-based function.
+			 * Cannot be combined with the `nodeVersion` option.
 			 */
 			edge: true;
-			runtime?: undefined;
+			nodeVersion?: undefined;
 	  }
 	| {
 			/**
-			 * Deploy your app as Node-based functions rather than [Netlify Edge Functions](https://docs.netlify.com/build/edge-functions/overview/).
-			 * Defaults to `false` unless `NETLIFY_SVELTEKIT_USE_EDGE` is `true` or `1` and neither `edge` nor `runtime` is specified.
+			 * If `true`, your app will be deployed as a [Netlify Edge Function](https://docs.netlify.com/build/edge-functions/overview/) rather than the standard Node-based function.
+			 * @default false
 			 */
 			edge?: false;
 			/**
-			 * The [Node.js version for the runtime](https://docs.netlify.com/build/functions/configuration/#nodejs-version-for-runtime), for example `nodejs24.x`.
-			 * Specifying this option selects Node-based functions and cannot be combined with `edge: true`.
-			 * When omitted, Netlify determines the Node.js version. Netlify controls which versions are available.
+			 * The [Node.js version](https://docs.netlify.com/build/functions/configuration/#nodejs-version-for-runtime) used for the serverless function. The supported values are `'nodejs22.x'` and `'nodejs24.x'`.
+			 * Cannot be combined with `edge: true`.
 			 */
-			runtime?: Runtime | undefined;
+			nodeVersion?: Runtime | undefined;
 	  }
 );
 

@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { test, expect } from 'vitest';
 
-test('explicit Node runtime is included in framework and function metadata', () => {
+test('explicit nodeVersion is included in framework and function metadata', () => {
 	const framework_config = JSON.parse(
 		fs.readFileSync(path.resolve(import.meta.dirname, '.netlify/v1/config.json'), 'utf-8')
 	);

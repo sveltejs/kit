@@ -23,7 +23,7 @@ export default defineConfig({
 			adapter: adapter({
 				// See below for an explanation of these options
 				edge: false,
-				runtime: 'nodejs24.x',
+				nodeVersion: 'nodejs24.x',
 				split: false
 			})
 		})
@@ -47,15 +47,15 @@ If the `netlify.toml` file or the `build.publish` value is missing, a default va
 
 ### `edge`
 
-If `true`, your app will be deployed as a [Netlify Edge Function](https://docs.netlify.com/build/edge-functions/overview/) rather than the standard Node-based function. Edge Functions run in a Deno-based environment, so `edge: true` cannot be combined with a `runtime` value.
+If `true`, your app will be deployed as a [Netlify Edge Function](https://docs.netlify.com/build/edge-functions/overview/) rather than the standard Node-based function.
 
-By default, Node-based functions are used unless the `NETLIFY_SVELTEKIT_USE_EDGE` environment variable is set to `true` or `1`. Setting `edge: false` or specifying a `runtime` overrides this environment default.
+Cannot be combined with the `nodeVersion` option.
 
-### `runtime`
+### `nodeVersion`
 
-The [Node.js version for the runtime](https://docs.netlify.com/build/functions/configuration/#nodejs-version-for-runtime), for example `'nodejs24.x'`. The value must use the format `nodejs<major>.x`, where `<major>` is a positive integer. Netlify determines which versions are available.
+The [Node.js version](https://docs.netlify.com/build/functions/configuration/#nodejs-version-for-runtime) used for the serverless function. The supported values are `'nodejs22.x'` and `'nodejs24.x'`.
 
-This option applies only to Node-based functions and cannot be combined with `edge: true`. When omitted or `undefined`, the adapter leaves the Node.js version to Netlify.
+Cannot be combined with the `edge` option.
 
 ### `split`
 
@@ -71,16 +71,16 @@ For example, you could deploy one specific route using the Node.js 24 runtime:
 /// file: admin/+page.js
 /** @type {import('@sveltejs/adapter-netlify').Config} */
 export const config = {
-	runtime: 'nodejs24.x'
+	nodeVersion: 'nodejs24.x'
 };
 ```
 
 You can set the following options:
 
 - `edge`: `true` to deploy the route as an Edge Function, or `false` to deploy it as a Node-based function
-- `runtime`: the Node.js runtime to use (`'nodejs22.x'`, `'nodejs24.x'` etc)
+- `nodeVersion`: the Node.js version to use (`'nodejs22.x'` or `'nodejs24.x'`)
 
-You cannot configure both `edge: true` and a Node.js `runtime`. An explicit route configuration overrides the adapter's deployment selection. Routes without deployment configuration use the adapter's defaults.
+You cannot configure both `edge: true` and a Node.js `nodeVersion`. An explicit route configuration overrides the adapter's deployment selection. Routes without deployment configuration use the adapter's defaults.
 
 Configuration set in a layout applies to all the routes beneath that layout, unless overridden at a more granular level. Because configuration is merged by property, you must clear an inherited setting when switching between Edge and Node.js:
 
@@ -90,7 +90,7 @@ Configuration set in a layout applies to all the routes beneath that layout, unl
 export const config = {
 	// Override an Edge layout with a Node.js function
 	edge: false,
-	runtime: 'nodejs24.x'
+	nodeVersion: 'nodejs24.x'
 };
 ```
 
@@ -100,11 +100,11 @@ export const config = {
 export const config = {
 	// Override a Node.js layout with an Edge Function
 	edge: true,
-	runtime: undefined
+	nodeVersion: undefined
 };
 ```
 
-Setting `runtime: undefined` clears a Node.js version inherited from a layout and falls back to the adapter's defaults. Setting `edge: false` forces Node.js, using the adapter's Node.js version when configured or Netlify's default otherwise.
+Setting `nodeVersion: undefined` clears a Node.js version inherited from a layout and falls back to the adapter's defaults. Setting `edge: false` forces Node.js, using the adapter's Node.js version when configured or Netlify's default otherwise.
 
 Routes with the same runtime are grouped into one function by default; different Node.js versions and Edge routes are deployed separately. If `split` is set to `true` at the adapter level, each route pattern is deployed as an individual function using its configured runtime. Prerendered routes do not emit functions, so their deployment configuration has no effect.
 

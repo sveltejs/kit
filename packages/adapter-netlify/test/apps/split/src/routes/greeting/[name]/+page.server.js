@@ -1,5 +1,5 @@
 /** @type {import('@sveltejs/adapter-netlify').Config} */
-export const config = { runtime: 'nodejs24.x' };
+export const config = { nodeVersion: 'nodejs24.x' };
 
 /** @type {import('./$types').PageServerLoad} */
 export function load({ params }) {
