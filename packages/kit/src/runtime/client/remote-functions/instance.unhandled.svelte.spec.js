@@ -65,6 +65,27 @@ describe('reactive consumption never produces unhandled rejections', () => {
 		}
 	});
 
+	test('Query.refresh whose returned promise is ignored', async () => {
+		const tracker = track_unhandled();
+		try {
+			const query = new Query('refresh-error', () => Promise.reject(new Error('nope')));
+			void query.refresh();
+			await flush();
+			expect(query.error).toEqual({ message: 'nope', status: 500 });
+			expect(tracker.unhandled).toEqual([]);
+
+			// Awaiting callers must still receive the failure.
+			await expect(query.refresh()).rejects.toMatchObject({
+				status: 500,
+				body: { message: 'nope' }
+			});
+			await flush();
+			expect(tracker.unhandled).toEqual([]);
+		} finally {
+			tracker.stop();
+		}
+	});
+
 	test('LiveQuery.fail without any consumers', async () => {
 		const tracker = track_unhandled();
 		try {

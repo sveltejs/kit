@@ -270,10 +270,13 @@ export class Query {
 	 */
 	refresh() {
 		delete query_responses[this.#key];
-		return (this.#promise = this.#run()).catch((error) => {
+		const promise = (this.#promise = this.#run()).catch((error) => {
 			if (error instanceof Redirect) return this.#redirect(error);
 			throw error;
 		});
+		// Like the run promise, this wrapper may be ignored by reactive consumers.
+		promise.catch(noop);
+		return promise;
 	}
 
 	/**
