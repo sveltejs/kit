@@ -12,6 +12,7 @@ import {
 import { extends_id, validate_resolved_config } from './validate.js';
 import * as e from '../../../messages/build-errors.js';
 import * as w from '../../../messages/build-warnings.js';
+import { posixify } from '../../../utils/os.js';
 
 /** @type {typeof import('typescript')} */
 let ts;
@@ -189,7 +190,7 @@ function load_user_tsconfig(cwd) {
  * @param {string} file
  */
 function load_tsconfig(file) {
-	const options = ts.readConfigFile(file, ts.sys.readFile);
+	const options = ts.readConfigFile(posixify(file), ts.sys.readFile);
 
 	if (options.error) {
 		/** @type {string | undefined} */
