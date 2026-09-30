@@ -65,31 +65,7 @@ You can set the following options:
 
 Configuration set in a layout applies to all the routes beneath that layout, unless overridden at a more granular level. Routes without deployment configuration use the adapter's defaults.
 
-Because configuration is merged by property, you must clear an inherited setting when switching between Edge and Node.js:
-
-```js
-/// file: admin/+page.js
-/** @type {import('@sveltejs/adapter-netlify').Config} */
-export const config = {
-	// Override an Edge layout with a Node.js function
-	edge: false,
-	nodeVersion: 'nodejs24.x'
-};
-```
-
-```js
-/// file: search/+page.js
-/** @type {import('@sveltejs/adapter-netlify').Config} */
-export const config = {
-	// Override a Node.js layout with an Edge Function
-	edge: true,
-	nodeVersion: undefined
-};
-```
-
-Setting `nodeVersion: undefined` clears a Node.js version inherited from a layout and falls back to the adapter's defaults. Setting `edge: false` forces Node.js, using the adapter's Node.js version when configured or Netlify's default otherwise.
-
-Routes with the same runtime are grouped into one function by default; different Node.js versions and Edge routes are deployed separately. Routes with `split: true` are deployed separately from these groups using their configured runtime. Prerendered routes do not emit functions, so their deployment configuration has no effect.
+Prerendered routes do not emit functions, so their deployment configuration has no effect.
 
 ## Netlify alternatives to SvelteKit functionality
 
