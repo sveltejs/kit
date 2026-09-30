@@ -5,7 +5,7 @@ import { DEV } from 'esm-env';
 import { bold, normal } from './internal/shared.js';
 
 /**
- * Placing %tag% directly inside <body> is not recommended, as your app may break for users who have certain browser extensions installed
+ * Placing `%tag%` directly inside `<body>` is not recommended, as your app may break for users who have certain browser extensions installed
  * @param {{ "tag": string }} _values
  * @param {ClientWarningOptions} [options]
  */
@@ -14,7 +14,7 @@ export function app_body_unwrapped(_values, options) {
 
 	if (DEV) {
 		console.warn(
-			`%c[sveltekit] ${'app_body_unwrapped'}\n%c${`Placing ${_values.tag} directly inside <body> is not recommended, as your app may break for users who have certain browser extensions installed`}\nhttps://next.svelte.dev/e/@sveltejs/kit/${'app_body_unwrapped'}`,
+			`%c[sveltekit] ${'app_body_unwrapped'}\n%c${`Placing \`${_values.tag}\` directly inside \`<body>\` is not recommended, as your app may break for users who have certain browser extensions installed`}\nhttps://next.svelte.dev/e/@sveltejs/kit/${'app_body_unwrapped'}`,
 			bold,
 			normal,
 			...details
@@ -145,7 +145,7 @@ export function hmr_reload_after_error(_values, options) {
 }
 
 /**
- * Unexpected value for %name% — should be one of %options%
+ * Unexpected value for `%name%` — should be one of %options%
  * @param {{ "name": string; "options": string }} _values
  * @param {ClientWarningOptions} [options]
  */
@@ -154,7 +154,7 @@ export function link_option_invalid(_values, options) {
 
 	if (DEV) {
 		console.warn(
-			`%c[sveltekit] ${'link_option_invalid'}\n%c${`Unexpected value for ${_values.name} — should be one of ${_values.options}`}\nhttps://next.svelte.dev/e/@sveltejs/kit/${'link_option_invalid'}`,
+			`%c[sveltekit] ${'link_option_invalid'}\n%c${`Unexpected value for \`${_values.name}\` — should be one of ${_values.options}`}\nhttps://next.svelte.dev/e/@sveltejs/kit/${'link_option_invalid'}`,
 			bold,
 			normal,
 			...details
@@ -185,7 +185,7 @@ export function link_option_replaced(_values, options) {
 }
 
 /**
- * '%id%' has no `+page`, so there is no code to preload. If you meant to warm up an endpoint, request it with `fetch` instead.
+ * `%id%` has no `+page`, so there is no code to preload. If you meant to warm up an endpoint, request it with `fetch` instead.
  * @param {{ "id": string }} _values
  * @param {ClientWarningOptions} [options]
  */
@@ -194,7 +194,7 @@ export function preload_code_endpoint_only(_values, options) {
 
 	if (DEV) {
 		console.warn(
-			`%c[sveltekit] ${'preload_code_endpoint_only'}\n%c${`'${_values.id}' has no \`+page\`, so there is no code to preload. If you meant to warm up an endpoint, request it with \`fetch\` instead.`}\nhttps://next.svelte.dev/e/@sveltejs/kit/${'preload_code_endpoint_only'}`,
+			`%c[sveltekit] ${'preload_code_endpoint_only'}\n%c${`\`${_values.id}\` has no \`+page\`, so there is no code to preload. If you meant to warm up an endpoint, request it with \`fetch\` instead.`}\nhttps://next.svelte.dev/e/@sveltejs/kit/${'preload_code_endpoint_only'}`,
 			bold,
 			normal,
 			...details
@@ -205,7 +205,7 @@ export function preload_code_endpoint_only(_values, options) {
 }
 
 /**
- * Preloading data for %path% failed with the following error: %message%
+ * Preloading data for `%path%` failed with the following error: %message%
  * @param {{ "path": string; "message": string }} _values
  * @param {ClientWarningOptions} [options]
  */
@@ -214,7 +214,7 @@ export function preload_data_failed(_values, options) {
 
 	if (DEV) {
 		console.warn(
-			`%c[sveltekit] ${'preload_data_failed'}\n%c${`Preloading data for ${_values.path} failed with the following error: ${_values.message}`}\nhttps://next.svelte.dev/e/@sveltejs/kit/${'preload_data_failed'}`,
+			`%c[sveltekit] ${'preload_data_failed'}\n%c${`Preloading data for \`${_values.path}\` failed with the following error: ${_values.message}`}\nhttps://next.svelte.dev/e/@sveltejs/kit/${'preload_data_failed'}`,
 			bold,
 			normal,
 			...details
@@ -225,7 +225,7 @@ export function preload_data_failed(_values, options) {
 }
 
 /**
- * '%id%' did not match any route, but it does match as a pathname — use `match(...)` from `$app/paths` to convert a pathname into a route ID
+ * `%id%` did not match any route, but it does match as a pathname — use `match(...)` from `$app/paths` to convert a pathname into a route ID
  * @param {{ "id": string }} _values
  * @param {ClientWarningOptions} [options]
  */
@@ -234,7 +234,7 @@ export function preload_route_is_pathname(_values, options) {
 
 	if (DEV) {
 		console.warn(
-			`%c[sveltekit] ${'preload_route_is_pathname'}\n%c${`'${_values.id}' did not match any route, but it does match as a pathname — use \`match(...)\` from \`$app/paths\` to convert a pathname into a route ID`}\nhttps://next.svelte.dev/e/@sveltejs/kit/${'preload_route_is_pathname'}`,
+			`%c[sveltekit] ${'preload_route_is_pathname'}\n%c${`\`${_values.id}\` did not match any route, but it does match as a pathname — use \`match(...)\` from \`$app/paths\` to convert a pathname into a route ID`}\nhttps://next.svelte.dev/e/@sveltejs/kit/${'preload_route_is_pathname'}`,
 			bold,
 			normal,
 			...details
@@ -245,7 +245,7 @@ export function preload_route_is_pathname(_values, options) {
 }
 
 /**
- * '%id%' did not match any route
+ * `%id%` did not match any route
  * @param {{ "id": string }} _values
  * @param {ClientWarningOptions} [options]
  */
@@ -254,7 +254,7 @@ export function preload_route_missing(_values, options) {
 
 	if (DEV) {
 		console.warn(
-			`%c[sveltekit] ${'preload_route_missing'}\n%c${`'${_values.id}' did not match any route`}\nhttps://next.svelte.dev/e/@sveltejs/kit/${'preload_route_missing'}`,
+			`%c[sveltekit] ${'preload_route_missing'}\n%c${`\`${_values.id}\` did not match any route`}\nhttps://next.svelte.dev/e/@sveltejs/kit/${'preload_route_missing'}`,
 			bold,
 			normal,
 			...details
@@ -325,7 +325,7 @@ export function snapshot_export_deprecated(_values, options) {
 }
 
 /**
- * Loading %url% using `window.fetch`. For best results, use the `fetch` that is passed to your `load` function
+ * Loading `%url%` using `window.fetch`. For best results, use the `fetch` that is passed to your `load` function
  * @param {{ "url": string }} _values
  * @param {ClientWarningOptions} [options]
  */
@@ -334,7 +334,7 @@ export function window_fetch_in_load(_values, options) {
 
 	if (DEV) {
 		console.warn(
-			`%c[sveltekit] ${'window_fetch_in_load'}\n%c${`Loading ${_values.url} using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function`}\nhttps://next.svelte.dev/e/@sveltejs/kit/${'window_fetch_in_load'}`,
+			`%c[sveltekit] ${'window_fetch_in_load'}\n%c${`Loading \`${_values.url}\` using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function`}\nhttps://next.svelte.dev/e/@sveltejs/kit/${'window_fetch_in_load'}`,
 			bold,
 			normal,
 			...details

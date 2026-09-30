@@ -1,8 +1,8 @@
 ## snapshot_duplicate_id
 
-> snapshot() was called multiple times from the same call site. Pass a unique `id` to distinguish the instances.
+> `snapshot()` was called multiple times from the same call site. Pass a unique `id` to distinguish the instances.
 
-> A snapshot with id "%id%" is already registered. Pass a unique `id`.
+> A snapshot with id `%id%` is already registered. Pass a unique `id`.
 
 Each [`snapshot`](https://svelte.dev/docs/kit/snapshots) needs an `id` that is unique among the snapshots mounted at the same time, so that SvelteKit knows which captured value to restore to which component. By default, the `id` is derived from the place in your code where `snapshot` is called, so calling it from a helper function, or from a component that is rendered more than once, produces the same `id` for every instance. Pass an explicit `id` that differs between them, for example one based on a prop.
 

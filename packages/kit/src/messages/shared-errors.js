@@ -225,13 +225,13 @@ export function route_param_value_invalid(_values) {
 }
 
 /**
- * Page options are ignored when `router.type === 'hash'` (%source% has %options%)
+ * Page options are ignored when `router.type === 'hash'` (`%source%` has %options%)
  * @param {{ "source": string; "options": string }} _values
  * @returns {never}
  */
 export function router_hash_page_options(_values) {
 	if (DEV || (!BROWSER && verbose)) {
-		throw_error('router_hash_page_options', `Page options are ignored when \`router.type === 'hash'\` (${_values.source} has ${_values.options})`, router_hash_page_options);
+		throw_error('router_hash_page_options', `Page options are ignored when \`router.type === 'hash'\` (\`${_values.source}\` has ${_values.options})`, router_hash_page_options);
 	}
 
 	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/router_hash_page_options');

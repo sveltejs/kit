@@ -1,6 +1,6 @@
 ## app_body_unwrapped
 
-> Placing %tag% directly inside <body> is not recommended, as your app may break for users who have certain browser extensions installed
+> Placing `%tag%` directly inside `<body>` is not recommended, as your app may break for users who have certain browser extensions installed
 
 Browser extensions often inject elements into `<body>`. When your app is rendered directly into `<body>`, hydration can remove those elements or be confused by them, which breaks the extension or your app. Wrap the placeholder in an element in your [app template](https://svelte.dev/docs/kit/project-structure#Project-files-src):
 

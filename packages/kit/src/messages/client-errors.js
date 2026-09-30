@@ -4,26 +4,26 @@ import { DEV } from 'esm-env';
 import { throw_error } from './internal/shared.js';
 
 /**
- * Your form contains <input type="file"> fields, but is missing the necessary `enctype="multipart/form-data"` attribute
+ * Your form contains `<input type="file">` fields, but is missing the necessary `enctype="multipart/form-data"` attribute
  * @param {void} _values
  * @returns {never}
  */
 export function enhance_file_without_enctype(_values) {
 	if (DEV) {
-		throw_error('enhance_file_without_enctype', `Your form contains <input type="file"> fields, but is missing the necessary \`enctype="multipart/form-data"\` attribute`, enhance_file_without_enctype);
+		throw_error('enhance_file_without_enctype', `Your form contains \`<input type="file">\` fields, but is missing the necessary \`enctype="multipart/form-data"\` attribute`, enhance_file_without_enctype);
 	}
 
 	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/enhance_file_without_enctype');
 }
 
 /**
- * use:enhance can only be used on <form> fields with method="POST"
+ * `use:enhance` can only be used on `<form>` elements with `method="POST"`
  * @param {void} _values
  * @returns {never}
  */
 export function enhance_invalid_method(_values) {
 	if (DEV) {
-		throw_error('enhance_invalid_method', `use:enhance can only be used on <form> fields with method="POST"`, enhance_invalid_method);
+		throw_error('enhance_invalid_method', `\`use:enhance\` can only be used on \`<form>\` elements with \`method="POST"\``, enhance_invalid_method);
 	}
 
 	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/enhance_invalid_method');
@@ -43,13 +43,13 @@ export function goto_options_removed(_values) {
 }
 
 /**
- * Cannot call %caller%(...) before router is initialized
+ * Cannot call `%caller%(...)` before router is initialized
  * @param {{ "caller": string }} _values
  * @returns {never}
  */
 export function navigation_before_start(_values) {
 	if (DEV) {
-		throw_error('navigation_before_start', `Cannot call ${_values.caller}(...) before router is initialized`, navigation_before_start);
+		throw_error('navigation_before_start', `Cannot call \`${_values.caller}(...)\` before router is initialized`, navigation_before_start);
 	}
 
 	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/navigation_before_start');
@@ -82,52 +82,52 @@ export function navigation_route_missing(_values) {
 }
 
 /**
- * `preloadCode` expects a route ID starting with `/` (such as "/blog/[slug]"), but received "%id%"
+ * `preloadCode` expects a route ID starting with `/` (such as `/blog/[slug]`), but received `%id%`
  * @param {{ "id": string }} _values
  * @returns {never}
  */
 export function preload_invalid_route_id(_values) {
 	if (DEV) {
-		throw_error('preload_invalid_route_id', `\`preloadCode\` expects a route ID starting with \`/\` (such as "/blog/[slug]"), but received "${_values.id}"`, preload_invalid_route_id);
+		throw_error('preload_invalid_route_id', `\`preloadCode\` expects a route ID starting with \`/\` (such as \`/blog/[slug]\`), but received \`${_values.id}\``, preload_invalid_route_id);
 	}
 
 	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/preload_invalid_route_id');
 }
 
 /**
- * Attempted to preload a URL that does not belong to this app: %url%
+ * Attempted to preload a URL that does not belong to this app: `%url%`
  * @param {{ "url": string }} _values
  * @returns {never}
  */
 export function preload_url_outside_app(_values) {
 	if (DEV) {
-		throw_error('preload_url_outside_app', `Attempted to preload a URL that does not belong to this app: ${_values.url}`, preload_url_outside_app);
+		throw_error('preload_url_outside_app', `Attempted to preload a URL that does not belong to this app: \`${_values.url}\``, preload_url_outside_app);
 	}
 
 	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/preload_url_outside_app');
 }
 
 /**
- * Redirect loop while navigating to %url%
+ * Redirect loop while navigating to `%url%`
  * @param {{ "url": string }} _values
  * @returns {never}
  */
 export function redirect_loop(_values) {
 	if (DEV) {
-		throw_error('redirect_loop', `Redirect loop while navigating to ${_values.url}`, redirect_loop);
+		throw_error('redirect_loop', `Redirect loop while navigating to \`${_values.url}\``, redirect_loop);
 	}
 
 	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/redirect_loop');
 }
 
 /**
- * Cannot use reserved query parameter "%key%"
+ * Cannot use reserved query parameter `%key%`
  * @param {{ "key": string }} _values
  * @returns {never}
  */
 export function reserved_query_parameter(_values) {
 	if (DEV) {
-		throw_error('reserved_query_parameter', `Cannot use reserved query parameter "${_values.key}"`, reserved_query_parameter);
+		throw_error('reserved_query_parameter', `Cannot use reserved query parameter \`${_values.key}\``, reserved_query_parameter);
 	}
 
 	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/reserved_query_parameter');
@@ -147,13 +147,13 @@ export function scroll_handling_outside_navigation(_values) {
 }
 
 /**
- * snapshot() was called multiple times from the same call site. Pass a unique `id` to distinguish the instances.
+ * `snapshot()` was called multiple times from the same call site. Pass a unique `id` to distinguish the instances.
  * @param {void | { "id": string }} _values
  * @returns {never}
  */
 export function snapshot_duplicate_id(_values) {
 	if (DEV) {
-		throw_error('snapshot_duplicate_id', (_values?.id !== undefined ? `A snapshot with id "${_values.id}" is already registered. Pass a unique \`id\`.` : `snapshot() was called multiple times from the same call site. Pass a unique \`id\` to distinguish the instances.`), snapshot_duplicate_id);
+		throw_error('snapshot_duplicate_id', (_values?.id !== undefined ? `A snapshot with id \`${_values.id}\` is already registered. Pass a unique \`id\`.` : `\`snapshot()\` was called multiple times from the same call site. Pass a unique \`id\` to distinguish the instances.`), snapshot_duplicate_id);
 	}
 
 	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/snapshot_duplicate_id');

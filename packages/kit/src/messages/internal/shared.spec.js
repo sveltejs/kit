@@ -169,7 +169,7 @@ test.each([
 
 	expect(() => e.preload_invalid_route_id({ id: 'blog' })).toThrowKitError(
 		'preload_invalid_route_id',
-		url_only ? { url_only } : { contains: ['"blog"'] }
+		url_only ? { url_only } : { contains: ['`blog`'] }
 	);
 });
 
@@ -193,7 +193,7 @@ test.each([
 			'font-weight: bold',
 			'font-weight: normal'
 		);
-		expect(warn).toContainKitDiagnostic('preload_route_missing', { contains: ["'/a'"] });
+		expect(warn).toContainKitDiagnostic('preload_route_missing', { contains: ['`/a`'] });
 	}
 	warn.mockRestore();
 });

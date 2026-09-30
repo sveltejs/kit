@@ -12,7 +12,7 @@ await goto('/somewhere', { reset: false });
 
 ## navigation_before_start
 
-> Cannot call %caller%(...) before router is initialized
+> Cannot call `%caller%(...)` before router is initialized
 
 Shallow routing functions such as [`pushState`](https://svelte.dev/docs/kit/$app-navigation#pushState), [`replaceState`](https://svelte.dev/docs/kit/$app-navigation#replaceState) and `goto(url, { shallow: true })` update the router's history state, which only exists once the app has started in the browser. Call them from event handlers, effects or `onMount` rather than while modules or components are first being evaluated.
 
@@ -30,13 +30,13 @@ Shallow routing functions such as [`pushState`](https://svelte.dev/docs/kit/$app
 
 ## redirect_loop
 
-> Redirect loop while navigating to %url%
+> Redirect loop while navigating to `%url%`
 
 A navigation followed more than 20 redirects without reaching a page, which usually means two or more `load` functions redirect to each other, or a `load` function redirects to its own route. Check the conditions under which each [`redirect`](https://svelte.dev/docs/kit/@sveltejs-kit#redirect) is thrown, and make sure the destination doesn't redirect back.
 
 ## reserved_query_parameter
 
-> Cannot use reserved query parameter "%key%"
+> Cannot use reserved query parameter `%key%`
 
 SvelteKit uses query parameters starting with `x-sveltekit-` internally when it requests the data for a page, so a URL can't contain them. Rename the parameter.
 

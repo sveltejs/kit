@@ -55,7 +55,7 @@ test.describe('searchParams', () => {
 			expect(result.error.message).toMatch(/ \(500 Internal Error\)$/);
 			expect(result.error.message).toContainKitDiagnostic(
 				'reserved_query_parameter',
-				process.env.DEV ? { contains: [`"${decodeURIComponent(key)}"`] } : { url_only: true }
+				process.env.DEV ? { contains: [`\`${decodeURIComponent(key)}\``] } : { url_only: true }
 			);
 		}
 

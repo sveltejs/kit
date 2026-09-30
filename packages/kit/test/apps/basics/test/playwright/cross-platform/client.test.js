@@ -862,7 +862,7 @@ test.describe('Prefetching', () => {
 				throw new Error('Error was not thrown');
 			} catch (/** @type {any} */ e) {
 				expect(String(e.message)).toContainKitDiagnostic('preload_invalid_route_id', {
-					contains: ['"https://example.com"']
+					contains: ['`https://example.com`']
 				});
 			}
 		}
