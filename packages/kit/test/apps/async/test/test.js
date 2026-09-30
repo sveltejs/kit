@@ -41,6 +41,36 @@ test.describe('remote functions', () => {
 		await expect(page.locator('#redirected')).toHaveText('redirected');
 	});
 
+	for (const kind of ['query', 'batch']) {
+		test(`${kind} redirects when repeatedly awaited in a page script`, async ({
+			page,
+			clicknav
+		}) => {
+			await page.goto('/remote/query-guard');
+
+			for (let i = 0; i < 3; i++) {
+				await clicknav(`a[href="/remote/query-guard/${kind}"]`);
+				await expect(page).toHaveURL(/\/remote\/query-guard$/);
+				await expect(page.locator('h1')).toHaveText('Home');
+				await expect(page.locator('body')).not.toContainText('Protected content');
+			}
+		});
+
+		test(`${kind} redirects during SSR when awaited in a page script`, async ({ page }) => {
+			await page.goto(`/remote/query-guard/${kind}`);
+			await expect(page).toHaveURL(/\/remote\/query-guard$/);
+			await expect(page.locator('h1')).toHaveText('Home');
+		});
+	}
+
+	test('query errors when awaited in a page script', async ({ page }) => {
+		await page.goto('/remote/query-guard');
+		await page.click('a[href="/remote/query-guard/error"]');
+		await expect(page.locator('h1')).toHaveText('401');
+		await expect(page.locator('body')).toContainText('Unauthorized');
+		await expect(page.locator('body')).not.toContainText('Protected content');
+	});
+
 	test('query redirect to a same-origin URL outside the app navigates', async ({
 		page,
 		javaScriptEnabled

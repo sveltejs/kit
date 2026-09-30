@@ -664,14 +664,17 @@ test.describe('remote function mutations', () => {
 		expect(request_count).toBe(1);
 	});
 
-	test('query.batch redirect settles batched promises', async ({ page }) => {
+	test('query.batch redirect settles batched promises', async ({ page, app }) => {
 		await page.goto('/remote/batch-redirect');
 
-		await page.click('#trigger');
+		for (let i = 0; i < 3; i++) {
+			await app.goto('/remote/batch-redirect');
+			await page.click('#trigger');
 
-		// the redirect must both navigate and settle the awaited query
-		await expect(page.locator('#status')).toHaveText('resolved');
-		expect(page.url()).toContain('#redirected');
+			// The redirect must navigate and settle every awaited query, even when cached.
+			await expect(page.locator('#status')).toHaveText('resolved');
+			await expect(page).toHaveURL(/#redirected$/);
+		}
 	});
 
 	test('non-exported remote functions are never serialized into responses', async ({ page }) => {
