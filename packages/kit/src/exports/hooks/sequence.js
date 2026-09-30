@@ -1,7 +1,7 @@
-/** @import { RequestEvent } from '@sveltejs/kit' */
+/** @import { RequestEvent as Interface } from '@sveltejs/kit' */
 /** @import { Handle, ResolveOptions } from '@sveltejs/kit/hooks' */
 import {
-	merge_tracing,
+	RequestEvent,
 	get_request_store,
 	record_span,
 	with_request_store
@@ -90,7 +90,7 @@ export function sequence(...handlers) {
 
 		/**
 		 * @param {number} i
-		 * @param {RequestEvent} event
+		 * @param {Interface} event
 		 * @param {ResolveOptions | undefined} parent_options
 		 * @returns {Promise<Response>}
 		 */
@@ -101,7 +101,8 @@ export function sequence(...handlers) {
 				name: `sveltekit.handle.sequenced.${handle.name ? handle.name : i}`,
 				attributes: {},
 				fn: async (current) => {
-					const traced_event = merge_tracing(event, current);
+					const traced_event = RequestEvent.from(event, current);
+
 					return await with_request_store({ event: traced_event, state }, () =>
 						handle({
 							event: traced_event,

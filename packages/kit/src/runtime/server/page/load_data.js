@@ -2,7 +2,7 @@ import { DEV } from 'esm-env';
 import { noop } from '../../../utils/functions.js';
 import { disable_search, make_trackable } from '../../../utils/url.js';
 import { fetch_cache_url, validate_depends, validate_load_response } from '../../shared.js';
-import { with_request_store, merge_tracing, record_span } from '@sveltejs/kit/internal/server';
+import { with_request_store, record_span } from '@sveltejs/kit/internal/server';
 import { base64_encode } from '../../utils.js';
 import { NULL_BODY_STATUS } from '../constants.js';
 import { get_node_type } from '../utils.js';
@@ -10,7 +10,7 @@ import { get_node_type } from '../utils.js';
 /**
  * Calls the user's server `load` function.
  * @param {{
- *   event: import('@sveltejs/kit').RequestEvent;
+ *   event: import('@sveltejs/kit/internal/server').RequestEvent;
  *   state: import('types').RequestState;
  *   node: import('types').SSRNode | undefined;
  *   parent: () => Promise<Record<string, any>>;
@@ -80,7 +80,7 @@ export async function load_server_data({ event, state, node, parent }) {
 			'http.route': event.route.id || 'unknown'
 		},
 		fn: async (current) => {
-			const traced_event = merge_tracing(event, current);
+			const traced_event = event.traced(current);
 			const result = await with_request_store({ event: traced_event, state }, () =>
 				load.call(null, {
 					...traced_event,
@@ -191,7 +191,7 @@ export async function load_server_data({ event, state, node, parent }) {
 /**
  * Calls the user's `load` function.
  * @param {{
- *   event: import('@sveltejs/kit').RequestEvent;
+ *   event: import('@sveltejs/kit/internal/server').RequestEvent;
  *   state: import('types').RequestState;
  *   fetched: import('./types.js').Fetched[];
  *   node: import('types').SSRNode | undefined;
@@ -229,7 +229,7 @@ export async function load_data({
 			'http.route': event.route.id || 'unknown'
 		},
 		fn: async (current) => {
-			const traced_event = merge_tracing(event, current);
+			const traced_event = event.traced(current);
 
 			return await with_request_store({ event: traced_event, state }, () =>
 				load.call(null, {

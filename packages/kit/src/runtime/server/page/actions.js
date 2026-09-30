@@ -1,9 +1,10 @@
-/** @import { RequestEvent, Actions } from '@sveltejs/kit' */
+/** @import { Actions } from '@sveltejs/kit' */
+/** @import { RequestEvent } from '@sveltejs/kit/internal/server' */
 /** @import { ActionResult } from '$app/forms' */
 /** @import { SSRNode, ServerNode, ServerActionResult } from 'types' */
 import { DEV } from 'esm-env';
 import { HttpError, Redirect, ActionFailure, SvelteKitError } from '@sveltejs/kit/internal';
-import { with_request_store, merge_tracing, record_span } from '@sveltejs/kit/internal/server';
+import { with_request_store, record_span } from '@sveltejs/kit/internal/server';
 import { normalize_error } from '../../../utils/error.js';
 import { is_form_content_type, negotiate } from '../../../utils/http.js';
 import { with_version_header } from '../utils.js';
@@ -255,7 +256,7 @@ async function call_action(event, state, actions) {
 			'http.route': event.route.id || 'unknown'
 		},
 		fn: async (current) => {
-			const traced_event = merge_tracing(event, current);
+			const traced_event = event.traced(current);
 
 			const result = await with_request_store({ event: traced_event, state }, () =>
 				action(traced_event)

@@ -1,8 +1,8 @@
-/** @import { RequestEvent } from '@sveltejs/kit' */
 /** @import { RequestState } from 'types' */
 import { expect, test, vi } from 'vitest';
 import { HandledHttpError, ValidationError } from '@sveltejs/kit/internal';
 import { prerender } from './prerender.js';
+import { RequestEvent } from '@sveltejs/kit/internal/server';
 import { init_transport, stringify } from '#app/internal/transport';
 
 init_transport({});
@@ -33,18 +33,20 @@ function setup(fetch_impl) {
 	/** @type {any} */ (wrapper).__.id = 'hash/fn';
 
 	store.current = {
-		event: /** @type {RequestEvent} */ (
-			/** @type {unknown} */ ({
-				request: { url: 'http://localhost/' },
-				isRemoteRequest: false,
-				cookies: {}
-			})
+		event: new RequestEvent(
+			/** @type {import('@sveltejs/kit').RequestEvent} */ (
+				/** @type {unknown} */ ({
+					request: { url: 'http://localhost/' },
+					isRemoteRequest: false,
+					cookies: {}
+				})
+			),
+			0
 		),
 		state: /** @type {RequestState} */ (
 			/** @type {unknown} */ ({
 				remote: {},
-				prerendering: undefined,
-				is_in_remote_query: false
+				prerendering: undefined
 			})
 		)
 	};

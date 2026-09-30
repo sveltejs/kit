@@ -17,7 +17,7 @@ import { escape_html } from '../../../utils/escape.js';
 
 /**
  * @param {{
- *   event: import('@sveltejs/kit').RequestEvent;
+ *   event: import('@sveltejs/kit/internal/server').RequestEvent;
  *   state: import('types').RequestState;
  *   error: unknown;
  *   resolve_opts: import('types').RequiredResolveOptions;
@@ -131,7 +131,7 @@ export function static_error_page(status, message) {
 }
 
 /**
- * @param {import('@sveltejs/kit').RequestEvent} event
+ * @param {import('@sveltejs/kit/internal/server').RequestEvent} event
  * @param {import('types').RequestState} state
  * @param {unknown} error
  */

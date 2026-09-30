@@ -10,7 +10,7 @@ import { add_deprecated_handle_error_properties, coalesce_to_error } from '../..
 import { fix_stack_trace, hooks } from './internal.js';
 
 /**
- * @param {import('@sveltejs/kit').RequestEvent} event
+ * @param {import('@sveltejs/kit/internal/server').RequestEvent} event
  * @param {import('types').RequestState} state
  * @param {any} error
  * @returns {App.Error | Promise<App.Error>}
@@ -69,7 +69,7 @@ export function handle_error_and_jsonify(event, state, error) {
 	}
 
 	if (result instanceof Promise) {
-		if (!__SVELTEKIT_SUPPORTS_ASYNC__ && state.is_in_render) {
+		if (!__SVELTEKIT_SUPPORTS_ASYNC__ && event.in_render) {
 			console.warn(
 				`To use an async \`handleError\` hook to handle errors that occur during rendering, you must enable \`compilerOptions.experimental.async\` in the SvelteKit plugin of your Vite config. The returned error has been replaced with a generic object`
 			);
