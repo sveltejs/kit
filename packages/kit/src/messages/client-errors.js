@@ -121,26 +121,26 @@ export function redirect_loop(_values) {
 }
 
 /**
- * Redirects are not allowed in commands. Return a result instead and use goto on the client
+ * Redirects are not allowed in commands. Return a result instead and use `goto` on the client
  * @param {void} _values
  * @returns {never}
  */
 export function remote_command_redirect(_values) {
 	if (DEV) {
-		throw_error('remote_command_redirect', `Redirects are not allowed in commands. Return a result instead and use goto on the client`, remote_command_redirect);
+		throw_error('remote_command_redirect', `Redirects are not allowed in commands. Return a result instead and use \`goto\` on the client`, remote_command_redirect);
 	}
 
 	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/remote_command_redirect');
 }
 
 /**
- * Cannot mix and match file and non-file inputs under the same name ("%name%")
+ * Cannot mix and match file and non-file inputs under the same name (`%name%`)
  * @param {{ "name": string }} _values
  * @returns {never}
  */
 export function remote_form_mixed_inputs(_values) {
 	if (DEV) {
-		throw_error('remote_form_mixed_inputs', `Cannot mix and match file and non-file inputs under the same name ("${_values.name}")`, remote_form_mixed_inputs);
+		throw_error('remote_form_mixed_inputs', `Cannot mix and match file and non-file inputs under the same name (\`${_values.name}\`)`, remote_form_mixed_inputs);
 	}
 
 	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/remote_form_mixed_inputs');
@@ -160,26 +160,26 @@ export function remote_form_multiple_elements(_values) {
 }
 
 /**
- * Can only use the `multiple` attribute when `name` includes a `[]` suffix — consider changing "%name%" to "%name%[]"
+ * Can only use the `multiple` attribute when `name` includes a `[]` suffix — consider changing `%name%` to `%name%[]`
  * @param {{ "name": string }} _values
  * @returns {never}
  */
 export function remote_form_multiple_files(_values) {
 	if (DEV) {
-		throw_error('remote_form_multiple_files', `Can only use the \`multiple\` attribute when \`name\` includes a \`[]\` suffix — consider changing "${_values.name}" to "${_values.name}[]"`, remote_form_multiple_files);
+		throw_error('remote_form_multiple_files', `Can only use the \`multiple\` attribute when \`name\` includes a \`[]\` suffix — consider changing \`${_values.name}\` to \`${_values.name}[]\``, remote_form_multiple_files);
 	}
 
 	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/remote_form_multiple_files');
 }
 
 /**
- * Cannot call submit() before the form is attached
+ * Cannot call `submit()` before the form is attached
  * @param {void} _values
  * @returns {never}
  */
 export function remote_form_not_attached(_values) {
 	if (DEV) {
-		throw_error('remote_form_not_attached', `Cannot call submit() before the form is attached`, remote_form_not_attached);
+		throw_error('remote_form_not_attached', `Cannot call \`submit()\` before the form is attached`, remote_form_not_attached);
 	}
 
 	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/remote_form_not_attached');
@@ -199,26 +199,26 @@ export function remote_form_reserved_field(_values) {
 }
 
 /**
- * Multiple overrides for the same query are not allowed in a single updates() invocation
+ * Multiple overrides for the same query are not allowed in a single `updates()` invocation
  * @param {void} _values
  * @returns {never}
  */
 export function remote_updates_duplicate_override(_values) {
 	if (DEV) {
-		throw_error('remote_updates_duplicate_override', `Multiple overrides for the same query are not allowed in a single updates() invocation`, remote_updates_duplicate_override);
+		throw_error('remote_updates_duplicate_override', `Multiple overrides for the same query are not allowed in a single \`updates()\` invocation`, remote_updates_duplicate_override);
 	}
 
 	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/remote_updates_duplicate_override');
 }
 
 /**
- * updates() expects a query or live query function, query resource, or query override
+ * `updates()` expects a query or live query function, query resource, or query override
  * @param {void} _values
  * @returns {never}
  */
 export function remote_updates_invalid_argument(_values) {
 	if (DEV) {
-		throw_error('remote_updates_invalid_argument', `updates() expects a query or live query function, query resource, or query override`, remote_updates_invalid_argument);
+		throw_error('remote_updates_invalid_argument', `\`updates()\` expects a query or live query function, query resource, or query override`, remote_updates_invalid_argument);
 	}
 
 	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/remote_updates_invalid_argument');

@@ -195,7 +195,7 @@ test.each(['url', 'params', 'route'])(
 					);
 				}
 			)
-		).rejects.toThrowKitError('remote_request_property', { contains: [property] });
+		).rejects.toThrowKitError('remote_request_property', { contains: [`\`event.${property}\``] });
 	}
 );
 
@@ -285,7 +285,7 @@ test.each(['query', 'query.batch', 'query.live'])('%s cannot run while prerender
 					});
 	init({ read });
 	expect(() => read(undefined)).toThrowKitError('remote_query_prerender', {
-		contains: [type, 'read']
+		contains: [`\`${type}\``, '`read`']
 	});
 });
 
@@ -382,12 +382,12 @@ test('requested refresh and reconnect methods retain their query-kind checks', a
 	await expect(
 		run(() => /** @type {any} */ (requested(live, 1)).refreshAll())
 	).rejects.toThrowKitError('remote_requested_wrong_method', {
-		contains: ['refreshAll', 'reconnectAll']
+		contains: ['`refreshAll()`', '`reconnectAll()`']
 	});
 	await expect(
 		run(() => /** @type {any} */ (requested(read, 1)).reconnectAll())
 	).rejects.toThrowKitError('remote_requested_wrong_method', {
-		contains: ['reconnectAll', 'refreshAll']
+		contains: ['`reconnectAll()`', '`refreshAll()`']
 	});
 });
 

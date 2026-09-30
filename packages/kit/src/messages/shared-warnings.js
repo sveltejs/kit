@@ -36,13 +36,13 @@ export function asset_leading_slash(_values) {
 }
 
 /**
- * %route%: Calling `depends('%dependency%')` will throw an error in Firefox because `%scheme%` is a special URI scheme
+ * `%route%`: Calling `depends('%dependency%')` will throw an error in Firefox because `%scheme%` is a special URI scheme
  * @param {{ "route": string; "dependency": string; "scheme": string }} _values
  */
 export function depends_special_scheme(_values) {
 	if (DEV) {
 		console.warn(
-			`%c[sveltekit] ${'depends_special_scheme'}\n%c${`${_values.route}: Calling \`depends('${_values.dependency}')\` will throw an error in Firefox because \`${_values.scheme}\` is a special URI scheme`}\nhttps://next.svelte.dev/e/@sveltejs/kit/${'depends_special_scheme'}`,
+			`%c[sveltekit] ${'depends_special_scheme'}\n%c${`\`${_values.route}\`: Calling \`depends('${_values.dependency}')\` will throw an error in Firefox because \`${_values.scheme}\` is a special URI scheme`}\nhttps://next.svelte.dev/e/@sveltejs/kit/${'depends_special_scheme'}`,
 			bold,
 			normal
 		);

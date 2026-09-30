@@ -17,65 +17,65 @@ export function app_stores_removed(_values) {
 }
 
 /**
- * Invalid array key %key%
+ * Invalid array key `%key%`
  * @param {{ "key": string }} _values
  * @returns {never}
  */
 export function form_field_array_conflict(_values) {
 	if (DEV || (!BROWSER && verbose)) {
-		throw_error('form_field_array_conflict', `Invalid array key ${_values.key}`, form_field_array_conflict);
+		throw_error('form_field_array_conflict', `Invalid array key \`${_values.key}\``, form_field_array_conflict);
 	}
 
 	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/form_field_array_conflict');
 }
 
 /**
- * Form cannot contain duplicated keys — "%name%" has %count% values
+ * Form cannot contain duplicated keys — `%name%` has %count% values
  * @param {{ "name": string; "count": string }} _values
  * @returns {never}
  */
 export function form_field_duplicate(_values) {
 	if (DEV || (!BROWSER && verbose)) {
-		throw_error('form_field_duplicate', `Form cannot contain duplicated keys — "${_values.name}" has ${_values.count} values`, form_field_duplicate);
+		throw_error('form_field_duplicate', `Form cannot contain duplicated keys — \`${_values.name}\` has ${_values.count} values`, form_field_duplicate);
 	}
 
 	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/form_field_duplicate');
 }
 
 /**
- * Invalid key "%key%": This key is not allowed to prevent prototype pollution.
+ * Invalid key `%key%`: This key is not allowed to prevent prototype pollution.
  * @param {{ "key": string }} _values
  * @returns {never}
  */
 export function form_field_forbidden_key(_values) {
 	if (DEV || (!BROWSER && verbose)) {
-		throw_error('form_field_forbidden_key', `Invalid key "${_values.key}": This key is not allowed to prevent prototype pollution.`, form_field_forbidden_key);
+		throw_error('form_field_forbidden_key', `Invalid key \`${_values.key}\`: This key is not allowed to prevent prototype pollution.`, form_field_forbidden_key);
 	}
 
 	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/form_field_forbidden_key');
 }
 
 /**
- * Invalid field name %name%: field names are written in JS object notation, so keys that would need quoting are not supported. See https://svelte.dev/docs/kit/remote-functions#form-Fields
+ * Invalid field name `%name%`: field names are written in JS object notation, so keys that would need quoting are not supported. See https://svelte.dev/docs/kit/remote-functions#form-Fields
  * @param {{ "name": string }} _values
  * @returns {never}
  */
 export function form_field_invalid_name(_values) {
 	if (DEV || (!BROWSER && verbose)) {
-		throw_error('form_field_invalid_name', `Invalid field name ${_values.name}: field names are written in JS object notation, so keys that would need quoting are not supported. See https://svelte.dev/docs/kit/remote-functions#form-Fields`, form_field_invalid_name);
+		throw_error('form_field_invalid_name', `Invalid field name \`${_values.name}\`: field names are written in JS object notation, so keys that would need quoting are not supported. See https://svelte.dev/docs/kit/remote-functions#form-Fields`, form_field_invalid_name);
 	}
 
 	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/form_field_invalid_name');
 }
 
 /**
- * Form contained a field that wasn't created with form.fields.as(...): %name%
+ * Form contained a field that wasn't created with `form.fields.as(...)`: `%name%`
  * @param {{ "name": string }} _values
  * @returns {never}
  */
 export function form_field_unbound(_values) {
 	if (DEV || (!BROWSER && verbose)) {
-		throw_error('form_field_unbound', `Form contained a field that wasn't created with form.fields.as(...): ${_values.name}`, form_field_unbound);
+		throw_error('form_field_unbound', `Form contained a field that wasn't created with \`form.fields.as(...)\`: \`${_values.name}\``, form_field_unbound);
 	}
 
 	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/form_field_unbound');
@@ -147,13 +147,13 @@ export function invalid_redirect_status(_values) {
 }
 
 /**
- * a load function %location% returned %type%, but must return a plain object at the top level (i.e. `return {...}`)
+ * a `load` function %location% returned %type%, but must return a plain object at the top level (i.e. `return {...}`)
  * @param {{ "location": string; "type": string }} _values
  * @returns {never}
  */
 export function load_invalid_response(_values) {
 	if (DEV || (!BROWSER && verbose)) {
-		throw_error('load_invalid_response', `a load function ${_values.location} returned ${_values.type}, but must return a plain object at the top level (i.e. \`return {...}\`)`, load_invalid_response);
+		throw_error('load_invalid_response', `a \`load\` function ${_values.location} returned ${_values.type}, but must return a plain object at the top level (i.e. \`return {...}\`)`, load_invalid_response);
 	}
 
 	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/load_invalid_response');

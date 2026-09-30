@@ -12,6 +12,6 @@ Pass a value as the second argument to `form.fields.field.as(...)` for hidden an
 
 ## load_invalid_response
 
-> a load function %location% returned %type%, but must return a plain object at the top level (i.e. `return {...}`)
+> a `load` function %location% returned %type%, but must return a plain object at the top level (i.e. `return {...}`)
 
 A [`load`](https://svelte.dev/docs/kit/load) function provides the properties of the page's `data` object. Return a plain object such as `{ posts }`, rather than an array, a `Response`, a class instance or a primitive at the top level. `null` and `undefined` are allowed when there is no data to return. To return a `Response`, use an endpoint instead.
