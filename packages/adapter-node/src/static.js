@@ -77,13 +77,15 @@ function negotiate(header, asset) {
 	/** @param {string} coding */
 	const weight = (coding) => weights.get(coding) ?? weights.get('*') ?? 0;
 
+	const zstd = asset.zst ? weight('zstd') : 0;
 	const br = asset.br ? weight('br') : 0;
 	const gzip = asset.gz ? weight('gzip') : 0;
-	const zstd = asset.zst ? weight('zstd') : 0;
 
-	if (zstd > br && zstd > gzip) return 'zst';
-	if (gzip > br) return 'gz';
-	if (br > 0) return 'br';
+	const max = Math.max(zstd, br, gzip);
+	if (max === 0) return;
+	if (zstd === max) return 'zst';
+	if (br === max) return 'br';
+	return 'gz';
 }
 
 /**

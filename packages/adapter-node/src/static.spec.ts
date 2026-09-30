@@ -234,9 +234,11 @@ test('negotiates the compressed variant', async () => {
 	expect(upper.headers['content-encoding']).toBe('br');
 
 	const wildcard = await get('/range.txt', { headers: { 'accept-encoding': '*' } });
-	expect(wildcard.headers['content-encoding']).toBe('br');
+	expect(wildcard.headers['content-encoding']).toBe('zstd');
 
-	const rejected = await get('/range.txt', { headers: { 'accept-encoding': 'br;q=0, gzip;q=0' } });
+	const rejected = await get('/range.txt', {
+		headers: { 'accept-encoding': 'br;q=0, gzip;q=0, zstd;q=0' }
+	});
 	expect(rejected.headers['content-encoding']).toBeUndefined();
 	expect(rejected.body).toBe('0123456789');
 
@@ -244,13 +246,14 @@ test('negotiates the compressed variant', async () => {
 	expect(zstd.headers['content-encoding']).toBe('zstd');
 	expect(zstd.headers['content-length']).toBe(String(range.zst));
 
-	const tied = await get('/range.txt', { headers: { 'accept-encoding': 'zstd, br' } });
-	expect(tied.headers['content-encoding']).toBe('br');
+	// zstd wins ties, but a client that explicitly weights another coding higher still gets it
+	const zstd_wins_tie = await get('/range.txt', { headers: { 'accept-encoding': 'zstd, br' } });
+	expect(zstd_wins_tie.headers['content-encoding']).toBe('zstd');
 
-	const zstd_preferred = await get('/range.txt', {
-		headers: { 'accept-encoding': 'zstd;q=1, br;q=0.5, gzip;q=0.5' }
+	const zstd_outweighed = await get('/range.txt', {
+		headers: { 'accept-encoding': 'zstd;q=0.1, br;q=1, gzip;q=1' }
 	});
-	expect(zstd_preferred.headers['content-encoding']).toBe('zstd');
+	expect(zstd_outweighed.headers['content-encoding']).toBe('br');
 
 	// each representation has its own validator and its own range base
 	const br = await get('/range.txt', { headers: { 'accept-encoding': 'br' } });
