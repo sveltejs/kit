@@ -224,7 +224,7 @@ test.describe('Shadowed pages', () => {
 				/^This is your custom error page saying: "[^]+ \(500 Internal Error\)"$/
 			);
 			expect(message).toContainKitDiagnostic('load_not_serializable', {
-				contains: ['/shadowed/serialization', 'Cannot stringify arbitrary non-POJOs (data.nope)']
+				contains: ['/shadowed/serialization', 'Cannot stringify arbitrary non-POJOs (`data.nope`)']
 			});
 		});
 	}

@@ -34,7 +34,7 @@ Some SvelteKit APIs, such as [remote functions](https://svelte.dev/docs/kit/remo
 
 ## client_address_unsupported
 
-> %adapter% does not specify getClientAddress. Please raise an issue
+> `%adapter%` does not specify `getClientAddress`. Please raise an issue
 
 [`event.getClientAddress()`](https://svelte.dev/docs/kit/@sveltejs-kit#RequestEvent) returns the address provided by your [adapter](https://svelte.dev/docs/kit/adapters), and this adapter doesn't provide one. Raise an issue with the adapter's maintainers. In the meantime, if your app is behind a proxy that forwards the client's address, you can read it from a header such as `x-forwarded-for` with `event.request.headers.get(...)`.
 
@@ -46,7 +46,7 @@ Some SvelteKit APIs, such as [remote functions](https://svelte.dev/docs/kit/remo
 
 ## header_already_set
 
-> "%name%" header is already set
+> `%name%` header is already set
 
 [`setHeaders`](https://svelte.dev/docs/kit/load#Headers) can only set each header once per request (except `server-timing`, whose values are combined), because otherwise it would be unclear which value should win. This often happens when both a layout and a page `load` function set the same header, such as `cache-control`. Set the header in one place only. To change a header of the finished response, use `response.headers.set(...)` in the [`handle`](https://svelte.dev/docs/kit/hooks#Server-hooks-handle) hook instead.
 
@@ -70,7 +70,7 @@ Headers are sent before the body of a response, so they can't be changed once th
 
 ## cookie_too_large
 
-> Cookie "%name%" is too large, and will be discarded by the browser
+> Cookie `%name%` is too large, and will be discarded by the browser
 
 Browsers ignore cookies whose name and value are larger than 4096 bytes, so this cookie would silently never be sent back. Store less data in the cookie — for example, a session ID that refers to data stored on the server. This is only checked during development.
 
@@ -95,6 +95,6 @@ export async function GET({ fetch }) {
 
 ## endpoint_invalid_response
 
-> Invalid response from route %path%: handler should return a Response object
+> Invalid response from route `%path%`: handler should return a `Response` object
 
 Request handlers in [`+server`](https://svelte.dev/docs/kit/routing#server) files must return a [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response). Check that every code path returns one — a missing `return` is a common cause. You can use the [`json`](https://svelte.dev/docs/kit/@sveltejs-kit#json) and [`text`](https://svelte.dev/docs/kit/@sveltejs-kit#text) helpers from `@sveltejs/kit` to create responses.

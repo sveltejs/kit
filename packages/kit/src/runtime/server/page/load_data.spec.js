@@ -75,7 +75,7 @@ test('errors when trying to access non-serialized request headers on the server'
 	const response = await fetch('https://domain-a.com');
 	expect(() => response.headers.get('content-type')).toThrowKitError(
 		'load_response_header_not_serialized',
-		{ contains: ['"content-type"'] }
+		{ contains: ['`content-type`'] }
 	);
 });
 
@@ -87,6 +87,6 @@ test('errors when trying to access non-serialized set-cookie headers on the serv
 	const response = await fetch('https://domain-a.com');
 	expect(() => response.headers.getSetCookie()).toThrowKitError(
 		'load_response_header_not_serialized',
-		{ contains: ['"set-cookie"'] }
+		{ contains: ['`set-cookie`'] }
 	);
 });

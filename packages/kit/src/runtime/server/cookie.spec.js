@@ -47,7 +47,7 @@ describe.skipIf(!process.env.DEV)('cookies in dev', () => {
 
 		// name ("a=") is 2 bytes, so the value alone must stay under 4094 bytes
 		expect(() => cookies.set('a', 'a'.repeat(4096))).toThrowKitError('cookie_too_large', {
-			contains: ['"a"']
+			contains: ['`a`']
 		});
 	});
 
@@ -68,7 +68,7 @@ describe.skipIf(!process.env.DEV)('cookies in dev', () => {
 
 		expect(warn).toHaveBeenCalledOnce();
 		expect(warn).toContainKitDiagnostic('cookie_path_mismatch', {
-			contains: ["'mismatched'", '/account', '/account/settings']
+			contains: ['`mismatched`', '/account', '/account/settings']
 		});
 		warn.mockRestore();
 	});

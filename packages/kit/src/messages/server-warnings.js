@@ -4,13 +4,13 @@ import { DEV } from 'esm-env';
 import { bold, normal } from './internal/shared.js';
 
 /**
- * `cache-control` header contains empty directives. (While parsing "%value%".)
+ * `cache-control` header contains empty directives. (While parsing `%value%`.)
  * @param {{ "value": string }} _values
  */
 export function cache_control_empty_directive(_values) {
 	if (DEV) {
 		console.warn(
-			`%c[sveltekit] ${'cache_control_empty_directive'}\n%c${`\`cache-control\` header contains empty directives. (While parsing "${_values.value}".)`}\nhttps://next.svelte.dev/e/@sveltejs/kit/${'cache_control_empty_directive'}`,
+			`%c[sveltekit] ${'cache_control_empty_directive'}\n%c${`\`cache-control\` header contains empty directives. (While parsing \`${_values.value}\`.)`}\nhttps://next.svelte.dev/e/@sveltejs/kit/${'cache_control_empty_directive'}`,
 			bold,
 			normal
 		);
@@ -20,13 +20,13 @@ export function cache_control_empty_directive(_values) {
 }
 
 /**
- * Invalid cache-control directive "%directive%". Did you mean one of: %directives%? (While parsing "%value%".)
+ * Invalid `cache-control` directive `%directive%`. Did you mean one of: %directives%? (While parsing `%value%`.)
  * @param {{ "directive": string; "directives": string; "value": string }} _values
  */
 export function cache_control_invalid_directive(_values) {
 	if (DEV) {
 		console.warn(
-			`%c[sveltekit] ${'cache_control_invalid_directive'}\n%c${`Invalid cache-control directive "${_values.directive}". Did you mean one of: ${_values.directives}? (While parsing "${_values.value}".)`}\nhttps://next.svelte.dev/e/@sveltejs/kit/${'cache_control_invalid_directive'}`,
+			`%c[sveltekit] ${'cache_control_invalid_directive'}\n%c${`Invalid \`cache-control\` directive \`${_values.directive}\`. Did you mean one of: ${_values.directives}? (While parsing \`${_values.value}\`.)`}\nhttps://next.svelte.dev/e/@sveltejs/kit/${'cache_control_invalid_directive'}`,
 			bold,
 			normal
 		);
@@ -36,13 +36,13 @@ export function cache_control_invalid_directive(_values) {
 }
 
 /**
- * Invalid content-type value "%type%". (While parsing "%value%".)
+ * Invalid `content-type` value `%type%`. (While parsing `%value%`.)
  * @param {{ "type": string; "value": string }} _values
  */
 export function content_type_invalid(_values) {
 	if (DEV) {
 		console.warn(
-			`%c[sveltekit] ${'content_type_invalid'}\n%c${`Invalid content-type value "${_values.type}". (While parsing "${_values.value}".)`}\nhttps://next.svelte.dev/e/@sveltejs/kit/${'content_type_invalid'}`,
+			`%c[sveltekit] ${'content_type_invalid'}\n%c${`Invalid \`content-type\` value \`${_values.type}\`. (While parsing \`${_values.value}\`.)`}\nhttps://next.svelte.dev/e/@sveltejs/kit/${'content_type_invalid'}`,
 			bold,
 			normal
 		);
@@ -52,13 +52,13 @@ export function content_type_invalid(_values) {
 }
 
 /**
- * '%name%' cookie does not exist for %pathname%, but was previously set at %paths%. Did you mean to set its 'path' to '/' instead?
+ * `%name%` cookie does not exist for `%pathname%`, but was previously set at %paths%. Did you mean to set its `path` to `'/'` instead?
  * @param {{ "name": string; "pathname": string; "paths": string }} _values
  */
 export function cookie_path_mismatch(_values) {
 	if (DEV) {
 		console.warn(
-			`%c[sveltekit] ${'cookie_path_mismatch'}\n%c${`'${_values.name}' cookie does not exist for ${_values.pathname}, but was previously set at ${_values.paths}. Did you mean to set its 'path' to '/' instead?`}\nhttps://next.svelte.dev/e/@sveltejs/kit/${'cookie_path_mismatch'}`,
+			`%c[sveltekit] ${'cookie_path_mismatch'}\n%c${`\`${_values.name}\` cookie does not exist for \`${_values.pathname}\`, but was previously set at ${_values.paths}. Did you mean to set its \`path\` to \`'/'\` instead?`}\nhttps://next.svelte.dev/e/@sveltejs/kit/${'cookie_path_mismatch'}`,
 			bold,
 			normal
 		);
@@ -84,13 +84,13 @@ export function form_action_data_without_ssr(_values) {
 }
 
 /**
- * The form action returned an error, but +error.svelte wasn't rendered because SSR is off. To get the error page with CSR, enhance your form with `use:enhance`. See https://svelte.dev/docs/kit/form-actions#progressive-enhancement-use-enhance
+ * The form action returned an error, but `+error.svelte` wasn't rendered because SSR is off. To get the error page with CSR, enhance your form with `use:enhance`. See https://svelte.dev/docs/kit/form-actions#progressive-enhancement-use-enhance
  * @param {void} _values
  */
 export function form_action_error_without_ssr(_values) {
 	if (DEV) {
 		console.warn(
-			`%c[sveltekit] ${'form_action_error_without_ssr'}\n%c${`The form action returned an error, but +error.svelte wasn't rendered because SSR is off. To get the error page with CSR, enhance your form with \`use:enhance\`. See https://svelte.dev/docs/kit/form-actions#progressive-enhancement-use-enhance`}\nhttps://next.svelte.dev/e/@sveltejs/kit/${'form_action_error_without_ssr'}`,
+			`%c[sveltekit] ${'form_action_error_without_ssr'}\n%c${`The form action returned an error, but \`+error.svelte\` wasn't rendered because SSR is off. To get the error page with CSR, enhance your form with \`use:enhance\`. See https://svelte.dev/docs/kit/form-actions#progressive-enhancement-use-enhance`}\nhttps://next.svelte.dev/e/@sveltejs/kit/${'form_action_error_without_ssr'}`,
 			bold,
 			normal
 		);
@@ -116,13 +116,13 @@ export function handle_error_async_without_async_svelte(_values) {
 }
 
 /**
- * %id%: %usage% in a promise handler after `load(...)` has returned will not cause the function to re-run when %change%
+ * `%id%`: %usage% in a promise handler after `load(...)` has returned will not cause the function to re-run when %change%
  * @param {{ "id": string; "usage": string; "change": string }} _values
  */
 export function load_tracking_after_return(_values) {
 	if (DEV) {
 		console.warn(
-			`%c[sveltekit] ${'load_tracking_after_return'}\n%c${`${_values.id}: ${_values.usage} in a promise handler after \`load(...)\` has returned will not cause the function to re-run when ${_values.change}`}\nhttps://next.svelte.dev/e/@sveltejs/kit/${'load_tracking_after_return'}`,
+			`%c[sveltekit] ${'load_tracking_after_return'}\n%c${`\`${_values.id}\`: ${_values.usage} in a promise handler after \`load(...)\` has returned will not cause the function to re-run when ${_values.change}`}\nhttps://next.svelte.dev/e/@sveltejs/kit/${'load_tracking_after_return'}`,
 			bold,
 			normal
 		);
@@ -164,13 +164,13 @@ export function streaming_without_csr(_values) {
 }
 
 /**
- * Removing comments in transformPageChunk can break Svelte's hydration
+ * Removing comments in `transformPageChunk` can break Svelte's hydration
  * @param {void} _values
  */
 export function transform_page_chunk_comments(_values) {
 	if (DEV) {
 		console.warn(
-			`%c[sveltekit] ${'transform_page_chunk_comments'}\n%c${`Removing comments in transformPageChunk can break Svelte's hydration`}\nhttps://next.svelte.dev/e/@sveltejs/kit/${'transform_page_chunk_comments'}`,
+			`%c[sveltekit] ${'transform_page_chunk_comments'}\n%c${`Removing comments in \`transformPageChunk\` can break Svelte's hydration`}\nhttps://next.svelte.dev/e/@sveltejs/kit/${'transform_page_chunk_comments'}`,
 			bold,
 			normal
 		);

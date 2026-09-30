@@ -153,7 +153,7 @@ test.each([
 	if (url_only) {
 		expect(warn).toHaveBeenCalledWith(diagnostic_url('content_type_invalid'));
 	} else {
-		expect(warn).toContainKitDiagnostic('content_type_invalid', { contains: ['"a"', '"a; b"'] });
+		expect(warn).toContainKitDiagnostic('content_type_invalid', { contains: ['`a`', '`a; b`'] });
 	}
 	warn.mockRestore();
 });

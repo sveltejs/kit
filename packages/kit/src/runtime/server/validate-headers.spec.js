@@ -18,7 +18,7 @@ describe('validateHeaders', () => {
 			validateHeaders({ 'cache-control': 'public, maxage=3600' });
 			expect(console_warn_spy).toHaveBeenCalledOnce();
 			expect(console_warn_spy).toContainKitDiagnostic('cache_control_invalid_directive', {
-				contains: ['"maxage"', 'max-age, public', '"public, maxage=3600"']
+				contains: ['`maxage`', 'max-age, public', '`public, maxage=3600`']
 			});
 		});
 
@@ -26,14 +26,14 @@ describe('validateHeaders', () => {
 			validateHeaders({ 'cache-control': 'public,, max-age=3600' });
 			expect(console_warn_spy).toHaveBeenCalledOnce();
 			expect(console_warn_spy).toContainKitDiagnostic('cache_control_empty_directive', {
-				contains: ['"public,, max-age=3600"']
+				contains: ['`public,, max-age=3600`']
 			});
 
 			console_warn_spy.mockClear();
 			validateHeaders({ 'cache-control': 'public, , max-age=3600' });
 			expect(console_warn_spy).toHaveBeenCalledOnce();
 			expect(console_warn_spy).toContainKitDiagnostic('cache_control_empty_directive', {
-				contains: ['"public, , max-age=3600"']
+				contains: ['`public, , max-age=3600`']
 			});
 		});
 
@@ -66,7 +66,7 @@ describe('validateHeaders', () => {
 			validateHeaders({ 'content-type': 'invalid-content-type' });
 			expect(console_warn_spy).toHaveBeenCalledOnce();
 			expect(console_warn_spy).toContainKitDiagnostic('content_type_invalid', {
-				contains: ['"invalid-content-type"']
+				contains: ['`invalid-content-type`']
 			});
 		});
 
@@ -74,14 +74,14 @@ describe('validateHeaders', () => {
 			validateHeaders({ 'content-type': 'invalid/type; invalid=param' });
 			expect(console_warn_spy).toHaveBeenCalledOnce();
 			expect(console_warn_spy).toContainKitDiagnostic('content_type_invalid', {
-				contains: ['"invalid/type"', '"invalid/type; invalid=param"']
+				contains: ['`invalid/type`', '`invalid/type; invalid=param`']
 			});
 
 			console_warn_spy.mockClear();
 			validateHeaders({ 'content-type': 'bad/type; charset=utf-8' });
 			expect(console_warn_spy).toHaveBeenCalledOnce();
 			expect(console_warn_spy).toContainKitDiagnostic('content_type_invalid', {
-				contains: ['"bad/type"']
+				contains: ['`bad/type`']
 			});
 		});
 

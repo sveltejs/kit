@@ -84,9 +84,9 @@ test('?/default is reserved', async () => {
 });
 
 test.each([
-	[{ nope: () => {} }, '(data.nope)'],
-	[{ 'a-b': { c: () => {} } }, '(data["a-b"].c)'],
-	[{ a: [1, () => {}] }, '(data.a[1])']
+	[{ nope: () => {} }, '(`data.nope`)'],
+	[{ 'a-b': { c: () => {} } }, '(`data["a-b"].c`)'],
+	[{ a: [1, () => {}] }, '(`data.a[1]`)']
 ])(
 	'explains unserializable action data %#, with its path, and keeps the devalue error as the cause',
 	(data, path) => {
