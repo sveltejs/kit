@@ -90,7 +90,7 @@ To create a [single page app (SPA)](single-page-apps) you must specify the name 
 
 ### precompress
 
-If `true`, precompresses files with brotli and gzip. This will generate `.br` and `.gz` files.
+If `true`, precompresses files with brotli, zstandard and gzip. This will generate `.gz`, `.br` and `.zst` files.
 
 ### strict
 

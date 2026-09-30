@@ -19,7 +19,7 @@ export interface AdapterOptions {
 	 */
 	fallback?: string;
 	/**
-	 * If `true`, precompresses files with brotli and gzip. This will generate `.br` and `.gz` files.
+	 * If `true`, precompresses files with brotli, zstandard and gzip. This will generate `.br`, `.zst` and `.gz` files.
 	 * @default false
 	 */
 	precompress?: boolean;

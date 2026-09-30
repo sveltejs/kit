@@ -80,7 +80,7 @@ The output directory. It defaults to `build`.
 
 ### precompress
 
-Set `precompress: true` to generate `.br` and `.gz` variants of client and prerendered assets during the build. The generated routes negotiate `Accept-Encoding` per request, preferring brotli over gzip, and each variant carries its own ETag. The option is ignored when `buildOptions.compile` is set, because embedded assets are imported by identity path.
+Set `precompress: true` to generate `.gz`, `.br` and `.zst` variants of client and prerendered assets during the build. The generated routes negotiate `Accept-Encoding` per request, preferring zstandard over brotli over gzip, and each variant carries its own ETag. The option is ignored when `buildOptions.compile` is set, because embedded assets are imported by identity path.
 
 ### envPrefix
 

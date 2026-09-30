@@ -184,7 +184,7 @@ The directory to build the server to. It defaults to `build` — i.e. `node buil
 
 ### precompress
 
-Generates `.br` and `.gz` variants of client and prerendered assets during the build. The server negotiates `Accept-Encoding` per request, preferring brotli over gzip, and each variant carries its own ETag. It defaults to `true`.
+Generates `.br`, `.gz` and `.zst` variants of client and prerendered assets during the build. The server negotiates `Accept-Encoding` per request by weight, preferring zstandard over brotli and gzip on ties, and each variant carries its own ETag. It defaults to `true`.
 
 ### envPrefix
 
