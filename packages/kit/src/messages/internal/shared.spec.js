@@ -260,3 +260,43 @@ test('capture_error returns the server error instead of throwing it, keeping its
 	expect(frames.some((frame) => frame.includes('call_site'))).toBe(true);
 	expect(error.stack).not.toContain('throw_error');
 });
+
+test.each([{ DEV: true }, { DEV: false }])(
+	'remote diagnostics respect their contexts when DEV=$DEV',
+	async ({ DEV }) => {
+		env.DEV = DEV;
+		const [server, client, shared, warnings] = await Promise.all([
+			import('../server-errors.js'),
+			import('../client-errors.js'),
+			import('../shared-errors.js'),
+			import('../client-warnings.js')
+		]);
+		expect(() => server.remote_invalid_validator()).toThrowKitError('remote_invalid_validator');
+		expect(() => client.remote_form_multiple_elements()).toThrowKitError(
+			'remote_form_multiple_elements',
+			{ url_only: !DEV }
+		);
+		expect(() => shared.remote_argument_unsupported({ type: 'Promises' })).toThrowKitError(
+			'remote_argument_unsupported',
+			DEV ? { contains: ['Promises'] } : { url_only: true }
+		);
+		expect(() => shared.form_field_invalid_name({ name: 'user.first-name' })).toThrowKitError(
+			'form_field_invalid_name',
+			DEV ? { contains: ['user.first-name'] } : { url_only: true }
+		);
+		expect(() => shared.form_field_forbidden_key({ key: '__proto__' })).toThrowKitError(
+			'form_field_forbidden_key',
+			DEV ? { contains: ['__proto__'] } : { url_only: true }
+		);
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+		try {
+			warnings.remote_updates_repeated({ invocation: 'command invocation' });
+			expect(warn).toContainKitDiagnostic(
+				'remote_updates_repeated',
+				DEV ? { contains: ['command invocation'] } : { url_only: true }
+			);
+		} finally {
+			warn.mockRestore();
+		}
+	}
+);

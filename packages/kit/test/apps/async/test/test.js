@@ -1,6 +1,6 @@
 import process from 'node:process';
 import http from 'node:http';
-import { expect } from '@playwright/test';
+import { expect } from '../../../playwright-matchers.js';
 import { test } from '../../../utils.js';
 
 test.describe('remote functions', () => {
@@ -113,21 +113,26 @@ test.describe('remote functions', () => {
 		page,
 		clicknav
 	}) => {
-		const expected = ['url', 'params', 'route']
-			.map(
-				(property) =>
-					`Cannot access event.${property} in a query. Pass the value as an argument to the query instead`
-			)
-			.join(' | ');
+		const check = async () => {
+			await expect(page.locator('[data-id="results"]')).toContainText('remote_request_property');
+			const output = await page.locator('[data-id="results"]').textContent();
+			const diagnostics = output?.split(' | ') ?? [];
+			expect(diagnostics).toHaveLength(3);
+			for (const [i, property] of ['url', 'params', 'route'].entries()) {
+				expect(diagnostics[i]).toContainKitDiagnostic('remote_request_property', {
+					contains: [property]
+				});
+			}
+		};
 
 		// direct navigation renders the errors during SSR
 		await page.goto('/remote/event');
-		await expect(page.locator('[data-id="results"]')).toHaveText(expected);
+		await check();
 
 		// client-side navigation calls the query over HTTP
 		await page.goto('/remote');
 		await clicknav('[href="/remote/event"]');
-		await expect(page.locator('[data-id="results"]')).toHaveText(expected);
+		await check();
 	});
 
 	test('forged url headers do not expose event.url to a query', async ({
@@ -1063,9 +1068,10 @@ test.describe('remote functions', () => {
 	test('queries cannot set cookies or headers', async ({ page }) => {
 		await page.goto('/remote/query-event-guards');
 
-		await expect(page.locator('#result')).toHaveText(
-			'Cannot set cookies in `query` or `prerender` functions | setHeaders is not allowed in remote functions'
-		);
+		await expect(page.locator('#result')).toContainText('remote_cookie_forbidden');
+		const output = await page.locator('#result').textContent();
+		expect(output).toContainKitDiagnostic('remote_cookie_forbidden', { contains: ['set'] });
+		expect(output).toContainKitDiagnostic('remote_headers_forbidden');
 	});
 
 	test('queries nested inside live queries are not implicitly serialized', async ({ page }) => {

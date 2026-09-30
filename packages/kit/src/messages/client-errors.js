@@ -121,6 +121,110 @@ export function redirect_loop(_values) {
 }
 
 /**
+ * Redirects are not allowed in commands. Return a result instead and use goto on the client
+ * @param {void} _values
+ * @returns {never}
+ */
+export function remote_command_redirect(_values) {
+	if (DEV) {
+		throw_error('remote_command_redirect', `Redirects are not allowed in commands. Return a result instead and use goto on the client`, remote_command_redirect);
+	}
+
+	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/remote_command_redirect');
+}
+
+/**
+ * Cannot mix and match file and non-file inputs under the same name ("%name%")
+ * @param {{ "name": string }} _values
+ * @returns {never}
+ */
+export function remote_form_mixed_inputs(_values) {
+	if (DEV) {
+		throw_error('remote_form_mixed_inputs', `Cannot mix and match file and non-file inputs under the same name ("${_values.name}")`, remote_form_mixed_inputs);
+	}
+
+	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/remote_form_mixed_inputs');
+}
+
+/**
+ * A form object can only be attached to a single `<form>` element
+ * @param {void} _values
+ * @returns {never}
+ */
+export function remote_form_multiple_elements(_values) {
+	if (DEV) {
+		throw_error('remote_form_multiple_elements', `A form object can only be attached to a single \`<form>\` element`, remote_form_multiple_elements);
+	}
+
+	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/remote_form_multiple_elements');
+}
+
+/**
+ * Can only use the `multiple` attribute when `name` includes a `[]` suffix — consider changing "%name%" to "%name%[]"
+ * @param {{ "name": string }} _values
+ * @returns {never}
+ */
+export function remote_form_multiple_files(_values) {
+	if (DEV) {
+		throw_error('remote_form_multiple_files', `Can only use the \`multiple\` attribute when \`name\` includes a \`[]\` suffix — consider changing "${_values.name}" to "${_values.name}[]"`, remote_form_multiple_files);
+	}
+
+	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/remote_form_multiple_files');
+}
+
+/**
+ * Cannot call submit() before the form is attached
+ * @param {void} _values
+ * @returns {never}
+ */
+export function remote_form_not_attached(_values) {
+	if (DEV) {
+		throw_error('remote_form_not_attached', `Cannot call submit() before the form is attached`, remote_form_not_attached);
+	}
+
+	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/remote_form_not_attached');
+}
+
+/**
+ * `$` is used to collect all FormData validation issues and cannot be used as the `name` of a form control
+ * @param {void} _values
+ * @returns {never}
+ */
+export function remote_form_reserved_field(_values) {
+	if (DEV) {
+		throw_error('remote_form_reserved_field', `\`$\` is used to collect all FormData validation issues and cannot be used as the \`name\` of a form control`, remote_form_reserved_field);
+	}
+
+	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/remote_form_reserved_field');
+}
+
+/**
+ * Multiple overrides for the same query are not allowed in a single updates() invocation
+ * @param {void} _values
+ * @returns {never}
+ */
+export function remote_updates_duplicate_override(_values) {
+	if (DEV) {
+		throw_error('remote_updates_duplicate_override', `Multiple overrides for the same query are not allowed in a single updates() invocation`, remote_updates_duplicate_override);
+	}
+
+	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/remote_updates_duplicate_override');
+}
+
+/**
+ * updates() expects a query or live query function, query resource, or query override
+ * @param {void} _values
+ * @returns {never}
+ */
+export function remote_updates_invalid_argument(_values) {
+	if (DEV) {
+		throw_error('remote_updates_invalid_argument', `updates() expects a query or live query function, query resource, or query override`, remote_updates_invalid_argument);
+	}
+
+	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/remote_updates_invalid_argument');
+}
+
+/**
  * Cannot use reserved query parameter `%key%`
  * @param {{ "key": string }} _values
  * @returns {never}

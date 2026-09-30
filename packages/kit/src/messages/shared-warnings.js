@@ -36,6 +36,22 @@ export function asset_leading_slash(_values) {
 }
 
 /**
+ * %route%: Calling `depends('%dependency%')` will throw an error in Firefox because `%scheme%` is a special URI scheme
+ * @param {{ "route": string; "dependency": string; "scheme": string }} _values
+ */
+export function depends_special_scheme(_values) {
+	if (DEV) {
+		console.warn(
+			`%c[sveltekit] ${'depends_special_scheme'}\n%c${`${_values.route}: Calling \`depends('${_values.dependency}')\` will throw an error in Firefox because \`${_values.scheme}\` is a special URI scheme`}\nhttps://next.svelte.dev/e/@sveltejs/kit/${'depends_special_scheme'}`,
+			bold,
+			normal
+		);
+	} else {
+		console.warn('https://next.svelte.dev/e/@sveltejs/kit/depends_special_scheme');
+	}
+}
+
+/**
  * `%module%` is deprecated, use `%replacement%` instead
  * @param {{ "module": string; "replacement": string }} _values
  */
@@ -64,6 +80,22 @@ export function error_body_deprecated(_values) {
 		);
 	} else {
 		console.warn('https://next.svelte.dev/e/@sveltejs/kit/error_body_deprecated');
+	}
+}
+
+/**
+ * The properties of `form.fields` are virtual, so operators like `in` and `Object.keys` are meaningless. If you need the current value of a form field, use `form.fields.x.value()`
+ * @param {void} _values
+ */
+export function form_fields_enumerated(_values) {
+	if (DEV) {
+		console.warn(
+			`%c[sveltekit] ${'form_fields_enumerated'}\n%c${`The properties of \`form.fields\` are virtual, so operators like \`in\` and \`Object.keys\` are meaningless. If you need the current value of a form field, use \`form.fields.x.value()\``}\nhttps://next.svelte.dev/e/@sveltejs/kit/${'form_fields_enumerated'}`,
+			bold,
+			normal
+		);
+	} else {
+		console.warn('https://next.svelte.dev/e/@sveltejs/kit/form_fields_enumerated');
 	}
 }
 

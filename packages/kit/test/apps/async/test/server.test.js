@@ -10,6 +10,34 @@ test.skip(({ javaScriptEnabled }) => javaScriptEnabled);
 const root = path.resolve(fileURLToPath(import.meta.url), '..', '..');
 
 test.describe('remote functions', () => {
+	test('production client output excludes remote diagnostic text and build dependencies', () => {
+		test.skip(!!process.env.DEV, 'only applicable after build');
+		const files = fs.globSync(`${root}/.svelte-kit/output/client/**/*.js`);
+		expect(files.length).toBeGreaterThan(0);
+		const code = files.map((file) => fs.readFileSync(file, 'utf-8')).join('\n');
+		// minify:false retains JSDoc descriptions — only executable strings count here
+		const executable = code.replace(/\/\*[^]*?\*\//g, '');
+		expect(executable).toContain(
+			'https://next.svelte.dev/e/@sveltejs/kit/remote_form_multiple_elements'
+		);
+		for (const text of [
+			'A form object can only be attached',
+			'Form submission had invalid data',
+			'Updates can only be sent once',
+			'Regular expressions are not valid remote',
+			'Form contained a field that',
+			'Form cannot contain duplicated keys',
+			'Invalid field name ',
+			'This key is not allowed to prevent prototype pollution',
+			'inputs must have a value',
+			'Invalid validator passed to remote',
+			'scripts/process-messages',
+			'@sveltejs/message-box',
+			'node:fs',
+			'Cannot export `default` from a remote module'
+		])
+			expect(executable).not.toContain(text);
+	});
 	test("doesn't write bundle to disk when treeshaking prerendered remote functions", () => {
 		test.skip(!!process.env.DEV, 'only applicable after build');
 		expect(fs.existsSync(path.join(root, 'dist'))).toBe(false);
