@@ -43,46 +43,29 @@ If the `netlify.toml` file or the `build.publish` value is missing, a default va
 
 > [!NOTE] If you have set the publish directory in the Netlify UI to something else then you will need to set it in `netlify.toml` too.
 
-## Options
-
-### `edge`
-
-If `true`, your app will be deployed as a [Netlify Edge Function](https://docs.netlify.com/build/edge-functions/overview/) rather than the standard Node-based function.
-
-Cannot be combined with the `nodeVersion` option.
-
-### `nodeVersion`
-
-The [Node.js version](https://docs.netlify.com/build/functions/configuration/#nodejs-version-for-runtime) used for the serverless function. The supported values are `'nodejs22.x'` and `'nodejs24.x'`.
-
-Cannot be combined with the `edge` option.
-
-### `split`
-
-If `true`, your app will be split into multiple functions instead of a single one for the entire app.
-
 ## Deployment configuration
 
 To control how your routes are deployed to Netlify as functions, you can specify deployment configuration, either through the options shown above or with [`export const config`](page-options#config) inside `+server.js`, `+page(.server).js` and `+layout(.server).js` files.
 
-For example, you could deploy one specific route using the Node.js 24 runtime:
+For example you could deploy one specific route as an individual serverless function, separate from the rest of your app:
 
 ```js
-/// file: admin/+page.js
+/// file: about/+page.js
 /** @type {import('@sveltejs/adapter-netlify').Config} */
 export const config = {
-	nodeVersion: 'nodejs24.x'
+	split: true
 };
 ```
 
 You can set the following options:
 
-- `edge`: `true` to deploy the route as an Edge Function, or `false` to deploy it as a Node-based function
-- `nodeVersion`: the Node.js version to use (`'nodejs22.x'` or `'nodejs24.x'`)
+- `edge`: if `true`, deploys the route as a [Netlify Edge Function](https://docs.netlify.com/build/edge-functions/overview/) rather than the standard Node-based function. Defaults to `false`. Cannot be combined with a `nodeVersion` value
+- `nodeVersion`: the [Node.js version](https://docs.netlify.com/build/functions/configuration/#nodejs-version-for-runtime) used for the serverless function (`'nodejs22.x'` or `'nodejs24.x'`). Defaults to Netlify's Node.js version. Cannot be combined with `edge: true`
+- `split`: if `true`, causes a route to be deployed as an individual function. If `split` is set to `true` at the adapter level, all routes will be deployed as individual functions unless overridden with `split: false`
 
-You cannot configure both `edge: true` and a Node.js `nodeVersion`. An explicit route configuration overrides the adapter's deployment selection. Routes without deployment configuration use the adapter's defaults.
+Configuration set in a layout applies to all the routes beneath that layout, unless overridden at a more granular level. Routes without deployment configuration use the adapter's defaults.
 
-Configuration set in a layout applies to all the routes beneath that layout, unless overridden at a more granular level. Because configuration is merged by property, you must clear an inherited setting when switching between Edge and Node.js:
+Because configuration is merged by property, you must clear an inherited setting when switching between Edge and Node.js:
 
 ```js
 /// file: admin/+page.js
@@ -106,7 +89,7 @@ export const config = {
 
 Setting `nodeVersion: undefined` clears a Node.js version inherited from a layout and falls back to the adapter's defaults. Setting `edge: false` forces Node.js, using the adapter's Node.js version when configured or Netlify's default otherwise.
 
-Routes with the same runtime are grouped into one function by default; different Node.js versions and Edge routes are deployed separately. If `split` is set to `true` at the adapter level, each route pattern is deployed as an individual function using its configured runtime. Prerendered routes do not emit functions, so their deployment configuration has no effect.
+Routes with the same runtime are grouped into one function by default; different Node.js versions and Edge routes are deployed separately. Routes with `split: true` are deployed separately from these groups using their configured runtime. Prerendered routes do not emit functions, so their deployment configuration has no effect.
 
 ## Netlify alternatives to SvelteKit functionality
 

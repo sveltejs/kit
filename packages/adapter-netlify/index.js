@@ -219,9 +219,9 @@ function resolve_route_runtime(config, default_runtime, route_id) {
  * @returns {EntrypointMetadata[]}
  */
 function get_functions(builder, split, default_runtime) {
-	/** @type {Map<EffectiveRuntime, Array<{ runtime: EffectiveRuntime, routes: RouteDefinition<Config>[], patterns: string[], display_name: string }>>} */
+	/** @type {Map<EffectiveRuntime, Array<{ runtime: EffectiveRuntime, split: boolean, routes: RouteDefinition<Config>[], patterns: string[], display_name: string }>>} */
 	const groups = new Map();
-	/** @type {Map<string, { runtime: EffectiveRuntime, route_id: string }>} */
+	/** @type {Map<string, { runtime: EffectiveRuntime, split: boolean, route_id: string }>} */
 	const conflicts = new Map();
 	const app_patterns = new Set();
 
@@ -231,15 +231,16 @@ function get_functions(builder, split, default_runtime) {
 		if (route.prerender === true) continue;
 
 		const runtime = resolve_route_runtime(route.config, default_runtime, route.id);
+		const route_split = route.config.split ?? split;
 		const pattern = get_route_pattern(route);
 		const existing = conflicts.get(pattern);
 
-		if (existing && existing.runtime !== runtime) {
+		if (existing && (existing.runtime !== runtime || existing.split !== route_split)) {
 			throw new Error(
-				`The ${route.id} and ${existing.route_id} routes normalize to the same Netlify pattern (${pattern}), but use different runtimes. Rename one of the routes or make their runtime configs match.`
+				`The ${route.id} and ${existing.route_id} routes normalize to the same Netlify pattern (${pattern}), but have incompatible deployment configs. Rename one of the routes or make their edge, nodeVersion and split configs match.`
 			);
 		}
-		conflicts.set(pattern, { runtime, route_id: route.id });
+		conflicts.set(pattern, { runtime, split: route_split, route_id: route.id });
 
 		const patterns = [pattern, `${pattern === '/' ? '' : pattern}/__data.json`];
 		patterns.forEach((pattern) => app_patterns.add(pattern));
@@ -247,9 +248,9 @@ function get_functions(builder, split, default_runtime) {
 		let runtime_groups = groups.get(runtime);
 		if (!runtime_groups) groups.set(runtime, (runtime_groups = []));
 
-		let group = split
-			? runtime_groups.find((group) => group.patterns[0] === pattern)
-			: runtime_groups[0];
+		let group = route_split
+			? runtime_groups.find((group) => group.split && group.patterns[0] === pattern)
+			: runtime_groups.find((group) => !group.split);
 		// Include lower-priority routes that this pattern can fall back to.
 		const routes = [route];
 		for (let j = i + 1; j < builder.routes.length; j += 1) {
@@ -258,9 +259,15 @@ function get_functions(builder, split, default_runtime) {
 		}
 
 		if (!group) {
-			group = { runtime, routes, patterns, display_name: `SvelteKit ${route.id}` };
+			group = {
+				runtime,
+				split: route_split,
+				routes,
+				patterns,
+				display_name: `SvelteKit ${route.id}`
+			};
 			runtime_groups.push(group);
-		} else if (!split) {
+		} else if (!route_split) {
 			for (const route of routes) {
 				if (!group.routes.includes(route)) group.routes.push(route);
 			}

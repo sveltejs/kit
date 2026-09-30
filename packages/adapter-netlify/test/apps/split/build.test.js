@@ -59,6 +59,18 @@ test('split generates multiple function files', () => {
 	);
 });
 
+test('split false overrides inherited configuration and groups routes', () => {
+	const functions = read_functions(
+		'node',
+		(content) =>
+			content.includes('"/dynamic"') && !content.includes('"name": "SvelteKit catch-all"')
+	);
+	expect(functions).toHaveLength(1);
+	expect(functions[0]).toContain('"/dynamic/__data.json"');
+	expect(functions[0]).toContain('"/dynamic/:param1"');
+	expect(functions[0]).toContain('"/dynamic/:param1/__data.json"');
+});
+
 test('functions have human friendly display names', () => {
 	const functions = read_functions('edge', (content) =>
 		content.includes('"name": "SvelteKit /collection/[[optional]]/article"')

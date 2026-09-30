@@ -4,7 +4,13 @@ import './ambient.d.ts';
 /** A Node.js runtime supported by Netlify. */
 export type Runtime = 'nodejs22.x' | 'nodejs24.x';
 
-export type Config =
+export type Config = {
+	/**
+	 * If `true`, deploy this route as an individual function.
+	 * @default Same as the adapter
+	 */
+	split?: boolean;
+} & (
 	| {
 			/**
 			 * Deploy this route as a [Netlify Edge Function](https://docs.netlify.com/build/edge-functions/overview/).
@@ -25,7 +31,8 @@ export type Config =
 			 * @default Same as the adapter
 			 */
 			nodeVersion?: Runtime | undefined;
-	  };
+	  }
+);
 
 export type AdapterOptions = {
 	/**
