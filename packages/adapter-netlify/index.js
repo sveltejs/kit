@@ -281,7 +281,7 @@ function get_functions(builder, split, default_runtime) {
 
 	// Even when every route is prerendered we still emit a single fallback
 	// function so that SvelteKit can serve its own 404/error page for unknown
-	// paths and handle the `reroute` hook, matching the pre-refactor behaviour.
+	// paths and handle the `reroute` hook
 	if (route_groups.length <= 1) {
 		return [
 			{
