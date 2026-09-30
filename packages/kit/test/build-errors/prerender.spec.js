@@ -43,7 +43,7 @@ test('prerendered endpoints cannot have fallback handlers', { timeout }, () => {
 
 	assert.match(
 		stderr,
-		/prerender_endpoint_methods\nCannot prerender a \+server file with POST, PUT, PATCH, DELETE, QUERY or fallback handlers \(\/fallback\)\nhttps:\/\/next\.svelte\.dev\/e\/@sveltejs\/kit\/prerender_endpoint_methods/
+		/prerender_endpoint_methods\nCannot prerender a `\+server` file with POST, PUT, PATCH, DELETE, QUERY or fallback handlers \(`\/fallback`\)\nhttps:\/\/next\.svelte\.dev\/e\/@sveltejs\/kit\/prerender_endpoint_methods/
 	);
 });
 
@@ -52,7 +52,7 @@ test('entry generators should match their own route', { timeout }, () => {
 
 	assert.match(
 		stderr,
-		/prerender_entry_generator_mismatch\nThe entries export from \/\[slug\]\/\[notSpecific\] generated entry \/whatever\/specific, which was matched by \/\[slug\]\/specific\nhttps:\/\/next\.svelte\.dev\/e\/@sveltejs\/kit\/prerender_entry_generator_mismatch/
+		/prerender_entry_generator_mismatch\nThe `entries` export from `\/\[slug\]\/\[notSpecific\]` generated entry `\/whatever\/specific`, which was matched by `\/\[slug\]\/specific`\nhttps:\/\/next\.svelte\.dev\/e\/@sveltejs\/kit\/prerender_entry_generator_mismatch/
 	);
 });
 
@@ -67,7 +67,7 @@ test('a root +server.js returning non-HTML cannot be prerendered', { timeout }, 
 
 	assert.match(
 		stderr,
-		/prerender_root_non_html\nCannot prerender a root \+server\.js that returns a non-HTML response - static hosts always serve an HTML file for `\/`\nhttps:\/\/next\.svelte\.dev\/e\/@sveltejs\/kit\/prerender_root_non_html/
+		/prerender_root_non_html\nCannot prerender a root `\+server\.js` that returns a non-HTML response — static hosts always serve an HTML file for `\/`\nhttps:\/\/next\.svelte\.dev\/e\/@sveltejs\/kit\/prerender_root_non_html/
 	);
 });
 
@@ -76,7 +76,7 @@ test('links to missing fragments fail the build by default', { timeout }, () => 
 
 	assert.match(
 		stderr,
-		/prerender_missing_id\nThe following pages contain links to \/foo#missing, but no element with id="missing" exists on \/foo:\n  - \/\nhttps:\/\/next\.svelte\.dev\/e\/@sveltejs\/kit\/prerender_missing_id/
+		/prerender_missing_id\nThe following pages contain links to `\/foo#missing`, but no element with `id="missing"` exists on `\/foo`:\n  - \/\nhttps:\/\/next\.svelte\.dev\/e\/@sveltejs\/kit\/prerender_missing_id/
 	);
 	assert.match(stderr, /To suppress or handle this error, implement `handleMissingId`/);
 });

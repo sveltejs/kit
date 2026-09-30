@@ -18,7 +18,7 @@ test('$app/env/private is not statically importable from the client', { timeout 
 				timeout,
 				env
 			}),
-		/server_only_import\nCannot import \$app\/env\/private into code that runs in the browser.*/gs
+		/server_only_import\nCannot import `\$app\/env\/private` into code that runs in the browser.*/gs
 	);
 });
 
@@ -31,7 +31,7 @@ test('$app/env/private is not dynamically importable from the client', { timeout
 				timeout,
 				env
 			}),
-		/server_only_import\nCannot import \$app\/env\/private into code that runs in the browser.*/gs
+		/server_only_import\nCannot import `\$app\/env\/private` into code that runs in the browser.*/gs
 	);
 });
 
@@ -44,7 +44,7 @@ test('$app/env/private is not importable from client hooks outside the project r
 				timeout,
 				env
 			}),
-		/server_only_import\nCannot import \$app\/env\/private into code that runs in the browser.*/gs
+		/server_only_import\nCannot import `\$app\/env\/private` into code that runs in the browser.*/gs
 	);
 });
 
@@ -57,7 +57,7 @@ test('$app/env/private is not importable from the service worker', { timeout }, 
 				timeout,
 				env
 			}),
-		/server_only_import\nCannot import \$app\/env\/private into code that runs in the browser.*/gs
+		/server_only_import\nCannot import `\$app\/env\/private` into code that runs in the browser.*/gs
 	);
 });
 

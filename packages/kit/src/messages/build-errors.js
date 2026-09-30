@@ -14,33 +14,33 @@ export function adapter_generate_manifest_removed(_values, options) {
 }
 
 /**
- * %kind% %file% not found. This is probably a bug in your adapter.
+ * %kind% `%file%` not found. This is probably a bug in your adapter.
  * @param {{ "kind": string; "file": string }} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function adapter_instrumentation_file_missing(_values, options) {
-	throw_error('adapter_instrumentation_file_missing', `${_values.kind} ${_values.file} not found. This is probably a bug in your adapter.`, options, adapter_instrumentation_file_missing);
+	throw_error('adapter_instrumentation_file_missing', `${_values.kind} \`${_values.file}\` not found. This is probably a bug in your adapter.`, options, adapter_instrumentation_file_missing);
 }
 
 /**
- * %file% is unsupported in %adapter%.
+ * `%file%` is unsupported in `%adapter%`.
  * @param {{ "file": string; "adapter": string }} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function adapter_instrumentation_unsupported(_values, options) {
-	throw_error('adapter_instrumentation_unsupported', `${_values.file} is unsupported in ${_values.adapter}.`, options, adapter_instrumentation_unsupported);
+	throw_error('adapter_instrumentation_unsupported', `\`${_values.file}\` is unsupported in \`${_values.adapter}\`.`, options, adapter_instrumentation_unsupported);
 }
 
 /**
- * Cannot use `read` from `$app/server` in %route% when using %adapter%. Please ensure that your adapter is up to date and supports this feature.
+ * Cannot use `read` from `$app/server` in `%route%` when using `%adapter%`. Please ensure that your adapter is up to date and supports this feature.
  * @param {{ "route": string; "adapter": string }} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function adapter_read_unsupported(_values, options) {
-	throw_error('adapter_read_unsupported', `Cannot use \`read\` from \`$app/server\` in ${_values.route} when using ${_values.adapter}. Please ensure that your adapter is up to date and supports this feature.`, options, adapter_read_unsupported);
+	throw_error('adapter_read_unsupported', `Cannot use \`read\` from \`$app/server\` in \`${_values.route}\` when using \`${_values.adapter}\`. Please ensure that your adapter is up to date and supports this feature.`, options, adapter_read_unsupported);
 }
 
 /**
@@ -94,13 +94,13 @@ export function config_app_dir_slash(_values, options) {
 }
 
 /**
- * The `csp.directives['trusted-types']` option must include 'svelte-trusted-html' unless all pages have `csr: false`
+ * The `csp.directives['trusted-types']` option must include `'svelte-trusted-html'` unless all pages have `csr: false`
  * @param {void} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function config_csp_trusted_html_missing(_values, options) {
-	throw_error('config_csp_trusted_html_missing', `The \`csp.directives['trusted-types']\` option must include 'svelte-trusted-html' unless all pages have \`csr: false\``, options, config_csp_trusted_html_missing);
+	throw_error('config_csp_trusted_html_missing', `The \`csp.directives['trusted-types']\` option must include \`'svelte-trusted-html'\` unless all pages have \`csr: false\``, options, config_csp_trusted_html_missing);
 }
 
 /**
@@ -238,13 +238,13 @@ ${_values.config}`, options, config_feature_disabled);
 }
 
 /**
- * %file% is no longer used. Please pass configuration via the `sveltekit(...)` plugin in your Vite config.
+ * `%file%` is no longer used. Please pass configuration via the `sveltekit(...)` plugin in your Vite config.
  * @param {{ "file": string }} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function config_file_unsupported(_values, options) {
-	throw_error('config_file_unsupported', `${_values.file} is no longer used. Please pass configuration via the \`sveltekit(...)\` plugin in your Vite config.`, options, config_file_unsupported);
+	throw_error('config_file_unsupported', `\`${_values.file}\` is no longer used. Please pass configuration via the \`sveltekit(...)\` plugin in your Vite config.`, options, config_file_unsupported);
 }
 
 /**
@@ -508,13 +508,13 @@ export function env_variables_missing(_values, options) {
 }
 
 /**
- * Cannot use relative URL (%url%) with global fetch — use `event.fetch` instead: https://svelte.dev/docs/kit/web-standards#fetch-apis
+ * Cannot use relative URL (`%url%`) with global `fetch` — use `event.fetch` instead: https://svelte.dev/docs/kit/web-standards#fetch-apis
  * @param {{ "url": string }} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function fetch_relative_url(_values, options) {
-	throw_error('fetch_relative_url', `Cannot use relative URL (${_values.url}) with global fetch — use \`event.fetch\` instead: https://svelte.dev/docs/kit/web-standards#fetch-apis`, options, fetch_relative_url);
+	throw_error('fetch_relative_url', `Cannot use relative URL (\`${_values.url}\`) with global \`fetch\` — use \`event.fetch\` instead: https://svelte.dev/docs/kit/web-standards#fetch-apis`, options, fetch_relative_url);
 }
 
 /**
@@ -558,43 +558,43 @@ export function params_export_missing(_values, options) {
 }
 
 /**
- * Cannot read clientAddress during prerendering
+ * Cannot read `clientAddress` during prerendering
  * @param {void} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function prerender_client_address(_values, options) {
-	throw_error('prerender_client_address', `Cannot read clientAddress during prerendering`, options, prerender_client_address);
+	throw_error('prerender_client_address', `Cannot read \`clientAddress\` during prerendering`, options, prerender_client_address);
 }
 
 /**
- * Cannot save %path% as it is already a directory. See https://svelte.dev/docs/kit/page-options#prerender-route-conflicts for more information
+ * Cannot save `%path%` as it is already a directory. See https://svelte.dev/docs/kit/page-options#prerender-route-conflicts for more information
  * @param {{ "path": string; "parent"?: string }} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function prerender_directory_conflict(_values, options) {
-	throw_error('prerender_directory_conflict', (_values?.parent !== undefined ? `Cannot save ${_values.path} as ${_values.parent} is already a file. See https://svelte.dev/docs/kit/page-options#prerender-route-conflicts for more information` : `Cannot save ${_values.path} as it is already a directory. See https://svelte.dev/docs/kit/page-options#prerender-route-conflicts for more information`), options, prerender_directory_conflict);
+	throw_error('prerender_directory_conflict', (_values?.parent !== undefined ? `Cannot save \`${_values.path}\` as \`${_values.parent}\` is already a file. See https://svelte.dev/docs/kit/page-options#prerender-route-conflicts for more information` : `Cannot save \`${_values.path}\` as it is already a directory. See https://svelte.dev/docs/kit/page-options#prerender-route-conflicts for more information`), options, prerender_directory_conflict);
 }
 
 /**
- * Cannot prerender a +server file with %methods% or fallback handlers (%id%)
+ * Cannot prerender a `+server` file with %methods% or fallback handlers (`%id%`)
  * @param {{ "methods": string; "id": string }} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function prerender_endpoint_methods(_values, options) {
-	throw_error('prerender_endpoint_methods', `Cannot prerender a +server file with ${_values.methods} or fallback handlers (${_values.id})`, options, prerender_endpoint_methods);
+	throw_error('prerender_endpoint_methods', `Cannot prerender a \`+server\` file with ${_values.methods} or fallback handlers (\`${_values.id}\`)`, options, prerender_endpoint_methods);
 }
 
 /**
- * The entries export from %id% generated entry %entry%, which was matched by %matched%
+ * The `entries` export from `%id%` generated entry `%entry%`, which was matched by `%matched%`
  * @param {{ "id": string; "entry": string; "matched": string }} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function prerender_entry_generator_mismatch(_values, options) {
-	throw_error('prerender_entry_generator_mismatch', `The entries export from ${_values.id} generated entry ${_values.entry}, which was matched by ${_values.matched}`, options, prerender_entry_generator_mismatch);
+	throw_error('prerender_entry_generator_mismatch', `The \`entries\` export from \`${_values.id}\` generated entry \`${_values.entry}\`, which was matched by \`${_values.matched}\``, options, prerender_entry_generator_mismatch);
 }
 
 /**
@@ -608,55 +608,55 @@ export function prerender_fallback_failed(_values, options) {
 }
 
 /**
- * Failed to prerender %path%
+ * Failed to prerender `%path%`
  * @param {{ "path": string; "reference_type"?: string; "referrer"?: string }} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function prerender_http_error(_values, options) {
-	throw_error('prerender_http_error', (_values?.reference_type !== undefined ? `${_values.path} was ${_values.reference_type} from ${_values.referrer}` : `Failed to prerender ${_values.path}`), options, prerender_http_error);
+	throw_error('prerender_http_error', (_values?.reference_type !== undefined ? `\`${_values.path}\` was ${_values.reference_type} from \`${_values.referrer}\`` : `Failed to prerender \`${_values.path}\``), options, prerender_http_error);
 }
 
 /**
- * Invalid URL %href%
+ * Invalid URL `%href%`
  * @param {{ "href": string; "referrer"?: string }} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function prerender_invalid_url(_values, options) {
-	throw_error('prerender_invalid_url', (_values?.referrer !== undefined ? `Invalid URL ${_values.href} (linked from ${_values.referrer})` : `Invalid URL ${_values.href}`), options, prerender_invalid_url);
+	throw_error('prerender_invalid_url', (_values?.referrer !== undefined ? `Invalid URL \`${_values.href}\` (linked from \`${_values.referrer}\`)` : `Invalid URL \`${_values.href}\``), options, prerender_invalid_url);
 }
 
 /**
- * The following pages contain links to %path%#%id%, but no element with id="%id%" exists on %path%:
+ * The following pages contain links to `%path%#%id%`, but no element with `id="%id%"` exists on `%path%`:
 %referrers%
  * @param {{ "path": string; "id": string; "referrers": string }} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function prerender_missing_id(_values, options) {
-	throw_error('prerender_missing_id', `The following pages contain links to ${_values.path}#${_values.id}, but no element with id="${_values.id}" exists on ${_values.path}:
+	throw_error('prerender_missing_id', `The following pages contain links to \`${_values.path}#${_values.id}\`, but no element with \`id="${_values.id}"\` exists on \`${_values.path}\`:
 ${_values.referrers}`, options, prerender_missing_id);
 }
 
 /**
- * %path% does not begin with `base`. You can fix this by using `resolve('%path%')` from `$app/paths`. The base path is configurable from `paths.base`
+ * `%path%` does not begin with `base`. You can fix this by using `resolve('%path%')` from `$app/paths`. The base path is configurable from `paths.base`
  * @param {{ "path": string; "reference_type"?: string; "referrer"?: string }} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function prerender_path_outside_base(_values, options) {
-	throw_error('prerender_path_outside_base', (_values?.reference_type !== undefined ? `${_values.path} (${_values.reference_type} from ${_values.referrer}) does not begin with \`base\`. You can fix this by using \`resolve('${_values.path}')\` from \`$app/paths\`. The base path is configurable from \`paths.base\`` : `${_values.path} does not begin with \`base\`. You can fix this by using \`resolve('${_values.path}')\` from \`$app/paths\`. The base path is configurable from \`paths.base\``), options, prerender_path_outside_base);
+	throw_error('prerender_path_outside_base', (_values?.reference_type !== undefined ? `\`${_values.path}\` (${_values.reference_type} from \`${_values.referrer}\`) does not begin with \`base\`. You can fix this by using \`resolve('${_values.path}')\` from \`$app/paths\`. The base path is configurable from \`paths.base\`` : `\`${_values.path}\` does not begin with \`base\`. You can fix this by using \`resolve('${_values.path}')\` from \`$app/paths\`. The base path is configurable from \`paths.base\``), options, prerender_path_outside_base);
 }
 
 /**
- * Cannot prerender a root +server.js that returns a non-HTML response - static hosts always serve an HTML file for `%base%`
+ * Cannot prerender a root `+server.js` that returns a non-HTML response — static hosts always serve an HTML file for `%base%`
  * @param {{ "base": string }} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function prerender_root_non_html(_values, options) {
-	throw_error('prerender_root_non_html', `Cannot prerender a root +server.js that returns a non-HTML response - static hosts always serve an HTML file for \`${_values.base}\``, options, prerender_root_non_html);
+	throw_error('prerender_root_non_html', `Cannot prerender a root \`+server.js\` that returns a non-HTML response — static hosts always serve an HTML file for \`${_values.base}\``, options, prerender_root_non_html);
 }
 
 /**
@@ -672,33 +672,33 @@ ${_values.routes}`, options, prerender_unseen_routes);
 }
 
 /**
- * Server files not found at %dir%, did you run `build` first?
+ * Server files not found at `%dir%`, did you run `build` first?
  * @param {{ "dir": string }} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function preview_build_missing(_values, options) {
-	throw_error('preview_build_missing', `Server files not found at ${_values.dir}, did you run \`build\` first?`, options, preview_build_missing);
+	throw_error('preview_build_missing', `Server files not found at \`${_values.dir}\`, did you run \`build\` first?`, options, preview_build_missing);
 }
 
 /**
- * Unexpectedly called prerender function. Did you forget to set { dynamic: true } ?
+ * Unexpectedly called `prerender` function. Did you forget to set `{ dynamic: true }`?
  * @param {void} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function remote_prerender_not_dynamic(_values, options) {
-	throw_error('remote_prerender_not_dynamic', `Unexpectedly called prerender function. Did you forget to set { dynamic: true } ?`, options, remote_prerender_not_dynamic);
+	throw_error('remote_prerender_not_dynamic', `Unexpectedly called \`prerender\` function. Did you forget to set \`{ dynamic: true }\`?`, options, remote_prerender_not_dynamic);
 }
 
 /**
- * Mismatched route config for %id% — the +page and +server files must export the same config, if any
+ * Mismatched route config for `%id%` — the `+page` and `+server` files must export the same config, if any
  * @param {{ "id": string }} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function route_config_mismatch(_values, options) {
-	throw_error('route_config_mismatch', `Mismatched route config for ${_values.id} — the +page and +server files must export the same config, if any`, options, route_config_mismatch);
+	throw_error('route_config_mismatch', `Mismatched route config for \`${_values.id}\` — the \`+page\` and \`+server\` files must export the same config, if any`, options, route_config_mismatch);
 }
 
 /**
@@ -872,13 +872,13 @@ export function route_unbalanced_brackets(_values, options) {
 }
 
 /**
- * Page options are ignored when `router.type === 'hash'` (%file% has %options%)
+ * Page options are ignored when `router.type === 'hash'` (`%file%` has %options%)
  * @param {{ "file": string; "options": string }} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function router_hash_page_options(_values, options) {
-	throw_error('router_hash_page_options', `Page options are ignored when \`router.type === 'hash'\` (${_values.file} has ${_values.options})`, options, router_hash_page_options);
+	throw_error('router_hash_page_options', `Page options are ignored when \`router.type === 'hash'\` (\`${_values.file}\` has ${_values.options})`, options, router_hash_page_options);
 }
 
 /**
@@ -892,7 +892,7 @@ export function routes_not_found(_values, options) {
 }
 
 /**
- * Cannot import %module% into code that runs in the browser, as this could leak sensitive information.
+ * Cannot import `%module%` into code that runs in the browser, as this could leak sensitive information.
 
 %chain%
 
@@ -902,7 +902,7 @@ If you're only using the import as a type, change it to `import type`.
  * @returns {never}
  */
 export function server_only_import(_values, options) {
-	throw_error('server_only_import', `Cannot import ${_values.module} into code that runs in the browser, as this could leak sensitive information.
+	throw_error('server_only_import', `Cannot import \`${_values.module}\` into code that runs in the browser, as this could leak sensitive information.
 
 ${_values.chain}
 
@@ -910,13 +910,13 @@ If you're only using the import as a type, change it to \`import type\`.`, optio
 }
 
 /**
- * Cannot use service worker alongside config.paths.assets
+ * Cannot use service worker alongside `config.paths.assets`
  * @param {void} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function service_worker_assets(_values, options) {
-	throw_error('service_worker_assets', `Cannot use service worker alongside config.paths.assets`, options, service_worker_assets);
+	throw_error('service_worker_assets', `Cannot use service worker alongside \`config.paths.assets\``, options, service_worker_assets);
 }
 
 /**
@@ -940,11 +940,11 @@ export function tsconfig_parse_failed(_values, options) {
 }
 
 /**
- * The configured Vite SSR environment must be a RunnableDevEnvironment
+ * The configured Vite SSR environment must be a `RunnableDevEnvironment`
  * @param {void} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function vite_ssr_environment_not_runnable(_values, options) {
-	throw_error('vite_ssr_environment_not_runnable', `The configured Vite SSR environment must be a RunnableDevEnvironment`, options, vite_ssr_environment_not_runnable);
+	throw_error('vite_ssr_environment_not_runnable', `The configured Vite SSR environment must be a \`RunnableDevEnvironment\``, options, vite_ssr_environment_not_runnable);
 }

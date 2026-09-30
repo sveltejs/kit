@@ -11,11 +11,11 @@ export function adapter_config_kit_deprecated(_values) {
 }
 
 /**
- * Overwriting %file% with fallback page. Consider using a different name for the fallback.
+ * Overwriting `%file%` with fallback page. Consider using a different name for the fallback.
  * @param {{ "file": string }} _values
  */
 export function adapter_fallback_overwrites(_values) {
-	warn('adapter_fallback_overwrites', `Overwriting ${_values.file} with fallback page. Consider using a different name for the fallback.`);
+	warn('adapter_fallback_overwrites', `Overwriting \`${_values.file}\` with fallback page. Consider using a different name for the fallback.`);
 }
 
 /**
@@ -51,11 +51,11 @@ export function config_option_deprecated_typescript(_values) {
 }
 
 /**
- * OPTIONS request handlers will not work unless `%key%.preflightContinue` is set to `true`
+ * `OPTIONS` request handlers will not work unless `%key%.preflightContinue` is set to `true`
  * @param {{ "key": string }} _values
  */
 export function cors_preflight_continue(_values) {
-	warn('cors_preflight_continue', `OPTIONS request handlers will not work unless \`${_values.key}.preflightContinue\` is set to \`true\``);
+	warn('cors_preflight_continue', `\`OPTIONS\` request handlers will not work unless \`${_values.key}.preflightContinue\` is set to \`true\``);
 }
 
 /**
@@ -67,27 +67,27 @@ export function file_name_misspelled(_values) {
 }
 
 /**
- * %file%: `<slot />` or `{@render ...}` tag missing — inner content will not be rendered
+ * `%file%`: `<slot />` or `{@render ...}` tag missing — inner content will not be rendered
  * @param {{ "file": string }} _values
  */
 export function layout_children_missing(_values) {
-	warn('layout_children_missing', `${_values.file}: \`<slot />\` or \`{@render ...}\` tag missing — inner content will not be rendered`);
+	warn('layout_children_missing', `\`${_values.file}\`: \`<slot />\` or \`{@render ...}\` tag missing — inner content will not be rendered`);
 }
 
 /**
- * %file%: `%option%` will be ignored — move it to %fixed% instead. See https://svelte.dev/docs/kit/page-options for more information.
+ * `%file%`: `%option%` will be ignored — move it to `%fixed%` instead. See https://svelte.dev/docs/kit/page-options for more information.
  * @param {{ "file": string; "option": string; "fixed": string }} _values
  */
 export function page_option_in_component(_values) {
-	warn('page_option_in_component', `${_values.file}: \`${_values.option}\` will be ignored — move it to ${_values.fixed} instead. See https://svelte.dev/docs/kit/page-options for more information.`);
+	warn('page_option_in_component', `\`${_values.file}\`: \`${_values.option}\` will be ignored — move it to \`${_values.fixed}\` instead. See https://svelte.dev/docs/kit/page-options for more information.`);
 }
 
 /**
- * location header missing on redirect received from %path%
+ * `location` header missing on redirect received from `%path%`
  * @param {{ "path": string }} _values
  */
 export function prerender_redirect_location_missing(_values) {
-	warn('prerender_redirect_location_missing', `location header missing on redirect received from ${_values.path}`);
+	warn('prerender_redirect_location_missing', `\`location\` header missing on redirect received from \`${_values.path}\``);
 }
 
 /**

@@ -32,7 +32,7 @@ test.describe('remote functions', () => {
 		const code_name = 'remote_prerender_not_dynamic';
 		expect(code).toContain(
 			`throw new Error(${JSON.stringify(
-				`${code_name}\nUnexpectedly called prerender function. Did you forget to set { dynamic: true } ?\nhttps://next.svelte.dev/e/@sveltejs/kit/${code_name}`
+				`${code_name}\nUnexpectedly called \`prerender\` function. Did you forget to set \`{ dynamic: true }\`?\nhttps://next.svelte.dev/e/@sveltejs/kit/${code_name}`
 			)})`
 		);
 	});

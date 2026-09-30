@@ -65,7 +65,7 @@ Alternatively, set [`serviceWorker.register`](https://svelte.dev/docs/kit/config
 
 ## config_csp_trusted_html_missing
 
-> The `csp.directives['trusted-types']` option must include 'svelte-trusted-html' unless all pages have `csr: false`
+> The `csp.directives['trusted-types']` option must include `'svelte-trusted-html'` unless all pages have `csr: false`
 
 When your [CSP](https://svelte.dev/docs/kit/configuration#csp) enforces Trusted Types with `'require-trusted-types-for': ['script']`, Svelte creates HTML through a Trusted Types policy called `svelte-trusted-html`. Add it to the allowed policies:
 

@@ -27,19 +27,19 @@ This warning comes from your adapter, not your app. SvelteKit options used to be
 
 ## adapter_fallback_overwrites
 
-> Overwriting %file% with fallback page. Consider using a different name for the fallback.
+> Overwriting `%file%` with fallback page. Consider using a different name for the fallback.
 
 Your adapter's [fallback page](https://svelte.dev/docs/kit/single-page-apps) has the same name as a file that was already written, such as a prerendered page or a file in `static`, so that file is replaced. Choose a different name for the fallback, for example `200.html` rather than `index.html`.
 
 ## cors_preflight_continue
 
-> OPTIONS request handlers will not work unless `%key%.preflightContinue` is set to `true`
+> `OPTIONS` request handlers will not work unless `%key%.preflightContinue` is set to `true`
 
 Vite's CORS middleware answers `OPTIONS` requests itself, unless `preflightContinue` is `true`, in which case it passes them on to SvelteKit. Your Vite config sets [`%key%`](https://vite.dev/config/server-options#server-cors) in a way that stops `OPTIONS` handlers in `+server.js` files from running. Set `preflightContinue: true` in that option, or set it to `false` to disable Vite's CORS handling entirely.
 
 ## layout_children_missing
 
-> %file%: `<slot />` or `{@render ...}` tag missing — inner content will not be rendered
+> `%file%`: `<slot />` or `{@render ...}` tag missing — inner content will not be rendered
 
 A `+layout.svelte` wraps the pages and layouts below it, and has to render them somewhere. Add `{@render children()}` where the page content should appear:
 
@@ -56,7 +56,7 @@ A `+layout.svelte` wraps the pages and layouts below it, and has to render them 
 
 ## page_option_in_component
 
-> %file%: `%option%` will be ignored — move it to %fixed% instead. See https://svelte.dev/docs/kit/page-options for more information.
+> `%file%`: `%option%` will be ignored — move it to `%fixed%` instead. See https://svelte.dev/docs/kit/page-options for more information.
 
 [Page options](https://svelte.dev/docs/kit/page-options) such as `prerender`, `ssr`, `csr` and `trailingSlash` are read from `+page.js`, `+page.server.js`, `+layout.js` or `+layout.server.js`, not from the `.svelte` component. Move the export to one of those files.
 
@@ -76,6 +76,6 @@ SvelteKit controls these Vite options because its build depends on them, so your
 
 ## prerender_redirect_location_missing
 
-> location header missing on redirect received from %path%
+> `location` header missing on redirect received from `%path%`
 
 While [prerendering](https://svelte.dev/docs/kit/page-options#prerender), this path responded with a 3xx status but no `location` header, so SvelteKit doesn't know where it redirects to and doesn't save it. Use [`redirect`](https://svelte.dev/docs/kit/@sveltejs-kit#redirect) from `@sveltejs/kit`, which sets the header for you, or add a `location` header to the response.

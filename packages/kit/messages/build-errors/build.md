@@ -1,6 +1,6 @@
 ## server_only_import
 
-> Cannot import %module% into code that runs in the browser, as this could leak sensitive information.
+> Cannot import `%module%` into code that runs in the browser, as this could leak sensitive information.
 >
 > %chain%
 >
@@ -20,7 +20,7 @@ This feature is experimental, so you need to opt in to it before you can use it.
 
 ## config_file_unsupported
 
-> %file% is no longer used. Please pass configuration via the `sveltekit(...)` plugin in your Vite config.
+> `%file%` is no longer used. Please pass configuration via the `sveltekit(...)` plugin in your Vite config.
 
 SvelteKit no longer reads `svelte.config.js`. Move your options into the `sveltekit(...)` plugin call in `vite.config.js`, then delete the old file:
 
@@ -58,7 +58,7 @@ The values that `$service-worker` used to provide are now available from modules
 
 ## service_worker_assets
 
-> Cannot use service worker alongside config.paths.assets
+> Cannot use service worker alongside `config.paths.assets`
 
 A service worker must be served from the same origin as your app, but [`paths.assets`](https://svelte.dev/docs/kit/configuration#paths) serves your build output from a different origin, such as a CDN. Remove `paths.assets`, or remove `src/service-worker.js` (or the file configured by [`files.serviceWorker`](https://svelte.dev/docs/kit/configuration#files)).
 
@@ -70,19 +70,19 @@ A service worker must be served from the same origin as your app, but [`paths.as
 
 ## fetch_relative_url
 
-> Cannot use relative URL (%url%) with global fetch — use `event.fetch` instead: https://svelte.dev/docs/kit/web-standards#fetch-apis
+> Cannot use relative URL (`%url%`) with global `fetch` — use `event.fetch` instead: https://svelte.dev/docs/kit/web-standards#fetch-apis
 
 On the server there's no current page for a relative URL to be resolved against, so the global `fetch` needs an absolute URL. Inside `load` functions, actions, hooks and endpoints, use the [`fetch` provided by SvelteKit](https://svelte.dev/docs/kit/load#Making-fetch-requests) (for example `event.fetch` or the `fetch` argument of `load`) instead, which resolves relative URLs against the current request and can call your own endpoints without an HTTP round-trip.
 
 ## preview_build_missing
 
-> Server files not found at %dir%, did you run `build` first?
+> Server files not found at `%dir%`, did you run `build` first?
 
 `vite preview` serves the output of a previous production build. Run `vite build` (usually `npm run build`) before `vite preview`, and make sure both commands use the same [`outDir`](https://svelte.dev/docs/kit/configuration#outDir).
 
 ## remote_prerender_not_dynamic
 
-> Unexpectedly called prerender function. Did you forget to set { dynamic: true } ?
+> Unexpectedly called `prerender` function. Did you forget to set `{ dynamic: true }`?
 
 By default, [`prerender`](https://svelte.dev/docs/kit/remote-functions#prerender) functions are removed from your server bundle once their results have been prerendered, which means they can't be called with arguments that weren't prerendered. If you need to call the function at runtime, set `dynamic: true`:
 
@@ -98,7 +98,7 @@ export const getPost = prerender(
 
 ## vite_ssr_environment_not_runnable
 
-> The configured Vite SSR environment must be a RunnableDevEnvironment
+> The configured Vite SSR environment must be a `RunnableDevEnvironment`
 
 During development, SvelteKit runs your server code with the `ssr` environment's module runner. A Vite plugin in your config has replaced this environment with one that SvelteKit can't run code in. Remove the plugin, or configure it so it doesn't take over the `ssr` environment.
 
