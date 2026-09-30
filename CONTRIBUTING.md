@@ -100,6 +100,8 @@ KIT_E2E_WORKERS=undefined
 KIT_E2E_RETRIES=2 pnpm test:kit
 ```
 
+`KIT_E2E_VARIANT` selects one of the server configuration variants a test app declares in its `playwright.config.js`, e.g. `KIT_E2E_VARIANT=async pnpm -F test-basics pw:dev`.
+
 ## Working on Vite and other dependencies
 
 If you would like to test local changes to Vite or another dependency, you can build it and then use [`pnpm.overrides`](https://pnpm.io/package_json#pnpmoverrides). Please note that `pnpm.overrides` must be specified in the root `package.json` and you must first list the package as a dependency in the root `package.json`:
