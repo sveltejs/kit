@@ -152,7 +152,7 @@ test('precompressed variants are negotiated with their own validators', async ()
 		mtime: 0,
 		br: true,
 		gz: true,
-		zst: true,
+		zst: true
 	})[0][1] as any;
 
 	const zstd = route.GET(
