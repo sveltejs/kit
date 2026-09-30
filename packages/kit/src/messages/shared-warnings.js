@@ -68,13 +68,13 @@ export function error_body_deprecated(_values) {
 }
 
 /**
- * The `message` property of `handleError` is deprecated. Use `error.message` for expected and framework errors, or 'Internal Error' for unexpected errors.
+ * The `message` property of `handleError` is deprecated. Use `error.message` for expected and framework errors, or `'Internal Error'` for unexpected errors.
  * @param {void} _values
  */
 export function handle_error_message_deprecated(_values) {
 	if (DEV) {
 		console.warn(
-			`%c[sveltekit] ${'handle_error_message_deprecated'}\n%c${`The \`message\` property of \`handleError\` is deprecated. Use \`error.message\` for expected and framework errors, or 'Internal Error' for unexpected errors.`}\nhttps://next.svelte.dev/e/@sveltejs/kit/${'handle_error_message_deprecated'}`,
+			`%c[sveltekit] ${'handle_error_message_deprecated'}\n%c${`The \`message\` property of \`handleError\` is deprecated. Use \`error.message\` for expected and framework errors, or \`'Internal Error'\` for unexpected errors.`}\nhttps://next.svelte.dev/e/@sveltejs/kit/${'handle_error_message_deprecated'}`,
 			bold,
 			normal
 		);

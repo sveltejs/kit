@@ -6,7 +6,7 @@ This function only works in the browser, because it depends on the client-side r
 
 ## state_read_outside_render
 
-> Can only read '%name%' on the server during rendering (not in e.g. `load` functions), as it is bound to the current request via component context. This prevents state from leaking between users.
+> Can only read `%name%` on the server during rendering (not in e.g. `load` functions), as it is bound to the current request via component context. This prevents state from leaking between users.
 
 On the server, [`$app/state`](https://svelte.dev/docs/kit/$app-state) reads the state of the request that is currently being rendered from component context, so that one user's data can never [leak to another](https://svelte.dev/docs/kit/state-management#Avoid-shared-state-on-the-server). That context only exists while components render. In `load` functions, hooks and endpoints, use the values passed to the function instead — such as `url`, `params` and the result of `parent()` — or [`getRequestEvent`](https://svelte.dev/docs/kit/$app-server#getRequestEvent).
 
@@ -18,7 +18,7 @@ On the server, [`$app/state`](https://svelte.dev/docs/kit/$app-state) reads the 
 
 ## read_asset_missing
 
-> Asset does not exist: %file%
+> Asset does not exist: `%file%`
 
 [`read`](https://svelte.dev/docs/kit/$app-server#read) can only read files that your server code imports, because those are the files SvelteKit copies into the server output. Pass it the URL you get from importing the file, rather than a path you've built yourself:
 
@@ -31,7 +31,7 @@ const text = await read(file).text();
 
 ## url_search_unavailable_prerender
 
-> Cannot access url.%property% on a page with prerendering enabled
+> Cannot access `url.%property%` on a page with prerendering enabled
 
 A [prerendered](https://svelte.dev/docs/kit/page-options#prerender) page is generated once at build time and then served as a static file for every request, whatever its query string, so its `load` functions can't depend on `url.search` or `url.searchParams`. Read the query string in the browser instead — for example with [`page.url.searchParams`](https://svelte.dev/docs/kit/$app-state#page) in a component — or disable prerendering for the page.
 

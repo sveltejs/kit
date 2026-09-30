@@ -26,13 +26,13 @@ ${_values.issues}`, options, env_invalid);
 }
 
 /**
- * Asset does not exist: %file%
+ * Asset does not exist: `%file%`
  * @param {{ "file": string }} _values
  * @param {ServerThrowOptions} [options]
  * @returns {never}
  */
 export function read_asset_missing(_values, options) {
-	throw_error('read_asset_missing', `Asset does not exist: ${_values.file}`, options, read_asset_missing);
+	throw_error('read_asset_missing', `Asset does not exist: \`${_values.file}\``, options, read_asset_missing);
 }
 
 /**
@@ -56,21 +56,21 @@ export function server_api_unavailable(_values, options) {
 }
 
 /**
- * Can only read '%name%' on the server during rendering (not in e.g. `load` functions), as it is bound to the current request via component context. This prevents state from leaking between users.
+ * Can only read `%name%` on the server during rendering (not in e.g. `load` functions), as it is bound to the current request via component context. This prevents state from leaking between users.
  * @param {{ "name": string }} _values
  * @param {ServerThrowOptions} [options]
  * @returns {never}
  */
 export function state_read_outside_render(_values, options) {
-	throw_error('state_read_outside_render', `Can only read '${_values.name}' on the server during rendering (not in e.g. \`load\` functions), as it is bound to the current request via component context. This prevents state from leaking between users.`, options, state_read_outside_render);
+	throw_error('state_read_outside_render', `Can only read \`${_values.name}\` on the server during rendering (not in e.g. \`load\` functions), as it is bound to the current request via component context. This prevents state from leaking between users.`, options, state_read_outside_render);
 }
 
 /**
- * Cannot access url.%property% on a page with prerendering enabled
+ * Cannot access `url.%property%` on a page with prerendering enabled
  * @param {{ "property": string }} _values
  * @param {ServerThrowOptions} [options]
  * @returns {never}
  */
 export function url_search_unavailable_prerender(_values, options) {
-	throw_error('url_search_unavailable_prerender', `Cannot access url.${_values.property} on a page with prerendering enabled`, options, url_search_unavailable_prerender);
+	throw_error('url_search_unavailable_prerender', `Cannot access \`url.${_values.property}\` on a page with prerendering enabled`, options, url_search_unavailable_prerender);
 }

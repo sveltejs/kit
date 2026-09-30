@@ -121,65 +121,65 @@ export function param_matcher_result_invalid(_values) {
 }
 
 /**
- * Cannot redirect to %location% with `{ external: true }`. The `javascript:` and `data:` protocols must be explicitly listed in the `external` allowlist
+ * Cannot redirect to `%location%` with `{ external: true }`. The `javascript:` and `data:` protocols must be explicitly listed in the `external` allowlist
  * @param {{ "location": string }} _values
  * @returns {never}
  */
 export function redirect_external_javascript(_values) {
 	if (DEV || (!BROWSER && verbose)) {
-		throw_error('redirect_external_javascript', `Cannot redirect to ${_values.location} with \`{ external: true }\`. The \`javascript:\` and \`data:\` protocols must be explicitly listed in the \`external\` allowlist`, redirect_external_javascript);
+		throw_error('redirect_external_javascript', `Cannot redirect to \`${_values.location}\` with \`{ external: true }\`. The \`javascript:\` and \`data:\` protocols must be explicitly listed in the \`external\` allowlist`, redirect_external_javascript);
 	}
 
 	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/redirect_external_javascript');
 }
 
 /**
- * Cannot redirect to external URL %location%. To redirect to an external URL, pass `{ external: true }` or an allowlist of permitted origins as the third argument to `redirect`
+ * Cannot redirect to external URL `%location%`. To redirect to an external URL, pass `{ external: true }` or an allowlist of permitted origins as the third argument to `redirect`
  * @param {{ "location": string }} _values
  * @returns {never}
  */
 export function redirect_external_not_allowed(_values) {
 	if (DEV || (!BROWSER && verbose)) {
-		throw_error('redirect_external_not_allowed', `Cannot redirect to external URL ${_values.location}. To redirect to an external URL, pass \`{ external: true }\` or an allowlist of permitted origins as the third argument to \`redirect\``, redirect_external_not_allowed);
+		throw_error('redirect_external_not_allowed', `Cannot redirect to external URL \`${_values.location}\`. To redirect to an external URL, pass \`{ external: true }\` or an allowlist of permitted origins as the third argument to \`redirect\``, redirect_external_not_allowed);
 	}
 
 	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/redirect_external_not_allowed');
 }
 
 /**
- * Cannot redirect to %location%: URL origin is not included in the `external` allowlist
+ * Cannot redirect to `%location%`: URL origin is not included in the `external` allowlist
  * @param {{ "location": string }} _values
  * @returns {never}
  */
 export function redirect_external_not_in_allowlist(_values) {
 	if (DEV || (!BROWSER && verbose)) {
-		throw_error('redirect_external_not_in_allowlist', `Cannot redirect to ${_values.location}: URL origin is not included in the \`external\` allowlist`, redirect_external_not_in_allowlist);
+		throw_error('redirect_external_not_in_allowlist', `Cannot redirect to \`${_values.location}\`: URL origin is not included in the \`external\` allowlist`, redirect_external_not_in_allowlist);
 	}
 
 	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/redirect_external_not_in_allowlist');
 }
 
 /**
- * `redirect` options.external must be `true` or an array of allowed origins
+ * `redirect` `options.external` must be `true` or an array of allowed origins
  * @param {void} _values
  * @returns {never}
  */
 export function redirect_external_option_invalid(_values) {
 	if (DEV || (!BROWSER && verbose)) {
-		throw_error('redirect_external_option_invalid', `\`redirect\` options.external must be \`true\` or an array of allowed origins`, redirect_external_option_invalid);
+		throw_error('redirect_external_option_invalid', `\`redirect\` \`options.external\` must be \`true\` or an array of allowed origins`, redirect_external_option_invalid);
 	}
 
 	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/redirect_external_option_invalid');
 }
 
 /**
- * Missing params for dynamic route ID %id%
+ * Missing params for dynamic route ID `%id%`
  * @param {{ "id": string }} _values
  * @returns {never}
  */
 export function resolve_params_missing(_values) {
 	if (DEV || (!BROWSER && verbose)) {
-		throw_error('resolve_params_missing', `Missing params for dynamic route ID ${_values.id}`, resolve_params_missing);
+		throw_error('resolve_params_missing', `Missing params for dynamic route ID \`${_values.id}\``, resolve_params_missing);
 	}
 
 	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/resolve_params_missing');
@@ -238,13 +238,13 @@ export function service_worker_module_outside_worker(_values) {
 }
 
 /**
- * Cannot access event.url.hash. Consider using `page.url.hash` inside a component instead
+ * Cannot access `event.url.hash`. Consider using `page.url.hash` inside a component instead
  * @param {void} _values
  * @returns {never}
  */
 export function url_hash_unavailable(_values) {
 	if (DEV || (!BROWSER && verbose)) {
-		throw_error('url_hash_unavailable', `Cannot access event.url.hash. Consider using \`page.url.hash\` inside a component instead`, url_hash_unavailable);
+		throw_error('url_hash_unavailable', `Cannot access \`event.url.hash\`. Consider using \`page.url.hash\` inside a component instead`, url_hash_unavailable);
 	}
 
 	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/url_hash_unavailable');

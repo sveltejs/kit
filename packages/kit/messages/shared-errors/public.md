@@ -12,7 +12,7 @@
 
 ## redirect_external_not_allowed
 
-> Cannot redirect to external URL %location%. To redirect to an external URL, pass `{ external: true }` or an allowlist of permitted origins as the third argument to `redirect`
+> Cannot redirect to external URL `%location%`. To redirect to an external URL, pass `{ external: true }` or an allowlist of permitted origins as the third argument to `redirect`
 
 To protect against open redirects, [`redirect`](https://svelte.dev/docs/kit/@sveltejs-kit#redirect) only accepts locations on the current origin by default. Relative locations such as `'/login'` or `'../other'` are always allowed, but some strings that look relative — such as `'//example.com'` or `'\\example.com'` — are treated as absolute URLs by browsers, and so count as external too.
 
@@ -28,19 +28,19 @@ If the location comes from user input, such as a `?redirectTo=` query parameter,
 
 ## redirect_external_javascript
 
-> Cannot redirect to %location% with `{ external: true }`. The `javascript:` and `data:` protocols must be explicitly listed in the `external` allowlist
+> Cannot redirect to `%location%` with `{ external: true }`. The `javascript:` and `data:` protocols must be explicitly listed in the `external` allowlist
 
 Redirecting to a `javascript:` or `data:` URL can run arbitrary code in the context of your app, so `{ external: true }` doesn't allow these protocols. Such redirects are rarely intended, so check where the location comes from. If you really need one, list the protocol explicitly, for example `{ external: ['javascript:'] }`.
 
 ## redirect_external_not_in_allowlist
 
-> Cannot redirect to %location%: URL origin is not included in the `external` allowlist
+> Cannot redirect to `%location%`: URL origin is not included in the `external` allowlist
 
 The redirect location's origin — its protocol, host and port — must exactly match one of the entries passed as `external` to [`redirect`](https://svelte.dev/docs/kit/@sveltejs-kit#redirect). Paths are ignored, so list origins such as `'https://example.com'`. Note that `http:` and `https:`, or `example.com` and `www.example.com`, are different origins. Add the origin to the allowlist if the redirect is intended.
 
 ## redirect_external_option_invalid
 
-> `redirect` options.external must be `true` or an array of allowed origins
+> `redirect` `options.external` must be `true` or an array of allowed origins
 
 The third argument of [`redirect`](https://svelte.dev/docs/kit/@sveltejs-kit#redirect) controls whether it may redirect to another origin. Pass `{ external: true }` to allow any external URL (except `javascript:` and `data:` URLs), or `{ external: ['https://example.com'] }` to allow specific origins. Omit the option if the location is on your own origin.
 
@@ -64,12 +64,12 @@ The store-based `$app/stores` module was removed in SvelteKit 3. Import `page`, 
 
 ## resolve_params_missing
 
-> Missing params for dynamic route ID %id%
+> Missing params for dynamic route ID `%id%`
 
 When you pass a route ID containing parameters to [`resolve`](https://svelte.dev/docs/kit/$app-paths#resolve), the second argument must provide their values, for example `resolve('/blog/[slug]', { slug: 'hello-world' })`. To resolve a pathname rather than a route ID, omit the leading slash: `resolve('blog/hello-world')`.
 
 ## url_hash_unavailable
 
-> Cannot access event.url.hash. Consider using `page.url.hash` inside a component instead
+> Cannot access `event.url.hash`. Consider using `page.url.hash` inside a component instead
 
 The hash (the part of the URL after `#`) is never sent to the server, so it isn't available to `load` functions or anything else that can run on the server. Read [`page.url.hash`](https://svelte.dev/docs/kit/$app-state#page) in a component instead, where it's available in the browser and updates when the hash changes.

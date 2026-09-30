@@ -37,6 +37,6 @@ The [`handleError`](https://svelte.dev/docs/kit/hooks#handleError) hook now rece
 
 ## handle_error_message_deprecated
 
-> The `message` property of `handleError` is deprecated. Use `error.message` for expected and framework errors, or 'Internal Error' for unexpected errors.
+> The `message` property of `handleError` is deprecated. Use `error.message` for expected and framework errors, or `'Internal Error'` for unexpected errors.
 
 The [`handleError`](https://svelte.dev/docs/kit/hooks#handleError) hook now receives a `kind` that says where the error came from. For `'app'` and `'framework'` errors the safe message is `error.message`. For `'unknown'` errors the message shown to users defaults to `'Internal Error'`, because the thrown error's own message may contain sensitive information. Check `kind` instead of reading the top-level `message`.
