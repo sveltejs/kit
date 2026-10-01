@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: regenerate every route's types on sync so layout types stay current
+fix: avoid missing route types and JSON parse errors when type generation runs concurrently

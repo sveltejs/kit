@@ -300,7 +300,9 @@ function update_types(config, routes, route, root) {
 
 	// remove proxies that are no longer needed
 	for (const entry of fs.readdirSync(outdir, { withFileTypes: true })) {
-		if (entry.isFile() && !written.has(entry.name)) fs.unlinkSync(path.join(outdir, entry.name));
+		if (entry.isFile() && !written.has(entry.name)) {
+			fs.rmSync(path.join(outdir, entry.name), { force: true });
+		}
 	}
 
 	/** @param {Proxies} proxies */
