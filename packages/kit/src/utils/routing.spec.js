@@ -1,7 +1,13 @@
 /** @import { ParamDefinition, ParamMatcher } from '@sveltejs/kit/params' */
 import { assert, expect, test, describe } from 'vitest';
 import * as v from 'valibot';
-import { exec, parse_route_id, resolve_route, find_route } from './routing.js';
+import {
+	exec,
+	parse_route_id,
+	resolve_route,
+	find_route,
+	validate_route_id_params
+} from './routing.js';
 import { defineParams } from '@sveltejs/kit/params';
 
 /** @type {ParamMatcher} */
@@ -115,8 +121,22 @@ describe('parse_route_id', () => {
 
 			expect(actual.pattern.toString()).toEqual(expected.pattern.toString());
 			expect(actual.params).toEqual(expected.params);
+			expect(validate_route_id_params(key)).toBeUndefined();
 		});
 	}
+});
+
+describe('validate_route_id_params', () => {
+	test.each([
+		['/blog/[slug]', undefined],
+		['/blog/[slug=my-matcher]', undefined],
+		['/blog/x[x+2f]y', undefined],
+		['/blog/[sl.ug]', 'sl.ug'],
+		['/blog/a[slug=ma.tcher]b', 'slug=ma.tcher'],
+		['/(group)/[a]/[b c]', 'b c']
+	])('%s returns %s', (id, expected) => {
+		expect(validate_route_id_params(id)).toBe(expected);
+	});
 });
 
 describe('exec', () => {
@@ -512,24 +532,32 @@ describe('resolve_route', () => {
 
 	test('resolvePath errors on missing params for required param', () => {
 		expect(() => resolve_route('/blog/[one]/[two]', { one: 'one' })).toThrow(
-			"Missing parameter 'two' in route /blog/[one]/[two]"
+			'route_param_missing\nMissing parameter `two` in route `/blog/[one]/[two]`\nhttps://next.svelte.dev/e/@sveltejs/kit/route_param_missing'
 		);
 	});
 
 	test('resolvePath errors on missing params for required param with hyphenated name', () => {
 		expect(() => resolve_route('/blog/[page-slug]', {})).toThrow(
-			"Missing parameter 'page-slug' in route /blog/[page-slug]"
+			'route_param_missing\nMissing parameter `page-slug` in route `/blog/[page-slug]`'
+		);
+	});
+
+	test('resolvePath errors on unsupported param values', () => {
+		expect(() =>
+			resolve_route('/blog/[one]', { one: /** @type {any} */ ({ toString: () => 'x' }) })
+		).toThrow(
+			'route_param_value_invalid\nParameter `one` in route `/blog/[one]` must be a string, number, boolean, or bigint\nhttps://next.svelte.dev/e/@sveltejs/kit/route_param_value_invalid'
 		);
 	});
 
 	test('resolvePath errors on params values starting or ending with slashes', () => {
 		assert.throws(
 			() => resolve_route('/blog/[one]/[two]', { one: 'one', two: '/two' }),
-			"Parameter 'two' in route /blog/[one]/[two] cannot start or end with a slash -- this would cause an invalid route like foo//bar"
+			'route_param_slash\nParameter `two` in route `/blog/[one]/[two]` cannot start or end with a slash — this would cause an invalid route like `foo/bar`'
 		);
 		assert.throws(
 			() => resolve_route('/blog/[one]/[two]', { one: 'one', two: 'two/' }),
-			"Parameter 'two' in route /blog/[one]/[two] cannot start or end with a slash -- this would cause an invalid route like foo//bar"
+			'route_param_slash\nParameter `two` in route `/blog/[one]/[two]` cannot start or end with a slash — this would cause an invalid route like `foo/bar`'
 		);
 	});
 });
@@ -618,19 +646,19 @@ describe('find_route', () => {
 
 		assert.throws(
 			() => find_route('/items1/abc', routes, matchers),
-			/Async param matchers are not supported/
+			/^param_matcher_async\nAsync param matchers are not supported\n/
 		);
 		assert.throws(
 			() => find_route('/items2/abc', routes, matchers),
-			/Param matcher must return a string, number, boolean, or bigint/
+			/^param_matcher_result_invalid\nParam matcher must return a string, number, boolean, or bigint\n/
 		);
 		assert.throws(
 			() => find_route('/items3/abc', routes, matchers),
-			/Async param matchers are not supported/
+			/^param_matcher_async\nAsync param matchers are not supported\n/
 		);
 		assert.throws(
 			() => find_route('/items4/abc', routes, matchers),
-			/Param matcher must return a string, number, boolean, or bigint/
+			/^param_matcher_result_invalid\nParam matcher must return a string, number, boolean, or bigint\n/
 		);
 	});
 

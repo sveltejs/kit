@@ -635,7 +635,120 @@ test('allows multiple slugs', () => {
 test('fails if dynamic params are not separated', () => {
 	assert.throws(() => {
 		create('samples/invalid-params');
-	}, /Invalid route \/\[foo\]\[bar\] — parameters must be separated/);
+	}, /^route_params_adjacent\nInvalid route `\/\[foo\]\[bar\]` — parameters must be separated\nhttps:\/\/next\.svelte\.dev\/e\/@sveltejs\/kit\/route_params_adjacent$/);
+});
+
+/**
+ * Creates a routes directory containing the given files, which are deleted afterwards
+ * @param {string[]} files
+ * @param {(dir: string) => void} fn
+ */
+function with_routes(files, fn) {
+	const dir = fs.mkdtempSync(path.join(cwd, 'tmp-'));
+
+	try {
+		for (const file of files) {
+			fs.mkdirSync(path.dirname(path.join(dir, file)), { recursive: true });
+			fs.writeFileSync(path.join(dir, file), '');
+		}
+
+		fn(path.relative(cwd, dir));
+	} finally {
+		fs.rmSync(dir, { recursive: true, force: true });
+	}
+}
+
+test('rejects invalid route syntax', () => {
+	/** @type {Array<[string, string, string]>} */
+	const cases = [
+		[
+			'[X+3F]/+page.svelte',
+			'route_escape_uppercase',
+			'Character escape sequence in `/[X+3F]` must be lowercase'
+		],
+		[
+			'[x+zz]/+page.svelte',
+			'route_escape_invalid',
+			'Invalid character escape sequence in `/[x+zz]`'
+		],
+		[
+			'[x+3f3]/+page.svelte',
+			'route_escape_hex_length',
+			'Hexadecimal escape sequence in `/[x+3f3]` must be two characters'
+		],
+		[
+			'[u+3f]/+page.svelte',
+			'route_escape_unicode_length',
+			'Unicode escape sequence in `/[u+3f]` must be between four and six characters'
+		],
+		[
+			'[foo/+page.svelte',
+			'route_unbalanced_brackets',
+			'Invalid route `/[foo` — brackets are unbalanced'
+		],
+		['a#b/+page.svelte', 'route_hash_character', 'Route `/a#b` should be renamed to /a[x+23]b'],
+		[
+			'[...rest]/[[optional]]/+page.svelte',
+			'route_optional_after_rest',
+			'Invalid route `/[...rest]/[[optional]]` — an `[[optional]]` route segment cannot follow a `[...rest]` route segment'
+		],
+		[
+			'[[...rest]]/+page.svelte',
+			'route_optional_rest',
+			'Invalid route `/[[...rest]]` — a rest route segment is always optional, remove the outer square brackets'
+		],
+		[
+			'[a.b]/+page.svelte',
+			'route_param_invalid',
+			'Invalid param: a.b in route `/[a.b]`. Params and matcher names can only have underscores, hyphens, and alphanumeric characters.'
+		],
+		[
+			'+foo.svelte',
+			'route_file_reserved',
+			'Files prefixed with `+` are reserved (saw `DIR/+foo.svelte`)'
+		],
+		['+foo.js', 'route_file_reserved', 'Files prefixed with `+` are reserved (saw `DIR/+foo.js`)'],
+		[
+			'+page@foo.js',
+			'route_named_layout_in_module',
+			'Only Svelte files can reference named layouts. Remove `@foo` from `+page@foo.js` (at `DIR/+page@foo.js`)'
+		]
+	];
+
+	for (const [file, code, message] of cases) {
+		with_routes([file], (dir) => {
+			expect(() => create(dir), file).toThrow(
+				expect.objectContaining({
+					name: 'SvelteKit error',
+					message: `${code}\n${message.replaceAll('DIR', dir)}\nhttps://next.svelte.dev/e/@sveltejs/kit/${code}`
+				})
+			);
+		});
+	}
+});
+
+test('rejects server files with the hash router', () => {
+	with_routes(['+page.server.js'], (dir) => {
+		assert.throws(
+			() => create(dir, { router: { type: 'hash' } }),
+			new RegExp(
+				`^route_server_file_hash_router\nCannot use server-only files in an app with \`router.type === 'hash'\`: \`${dir}/\\+page\\.server\\.js\`\n`
+			)
+		);
+	});
+});
+
+test('errors if no routes are found', () => {
+	with_routes(['README.md'], (dir) => {
+		assert.throws(() => create(dir), /^routes_not_found\nNo routes found\./);
+	});
+});
+
+test('prevents route conflicts between params', () => {
+	assert.throws(
+		() => create('samples/conflicting-params'),
+		/^route_conflict\nThe `\/\[slug1\]` and `\/\[slug2\]` routes conflict with each other\n/
+	);
 });
 
 test('ignores things that look like lockfiles', () => {
@@ -900,14 +1013,14 @@ test('handles pages without .svelte file', () => {
 test('errors on missing layout', () => {
 	assert.throws(
 		() => create('samples/named-layout-missing'),
-		/samples\/named-layout-missing\/\+page@missing.svelte references missing segment "missing"/
+		/^route_layout_segment_missing\n`samples\/named-layout-missing\/\+page@missing.svelte` references missing segment `missing`\n/
 	);
 });
 
 test('errors on invalid named layout reference', () => {
 	assert.throws(
 		() => create('samples/invalid-named-layout-reference'),
-		/Only Svelte files can reference named layouts. Remove '@' from \+page@.js \(at samples\/invalid-named-layout-reference\/x\/\+page@.js\)/
+		/^route_named_layout_in_module\nOnly Svelte files can reference named layouts. Remove `@` from `\+page@.js` \(at `samples\/invalid-named-layout-reference\/x\/\+page@.js`\)/
 	);
 });
 
@@ -931,44 +1044,44 @@ test('returns null params when file is missing', () => {
 test('prevents route conflicts between groups', () => {
 	assert.throws(
 		() => create('samples/conflicting-groups'),
-		/The "\/\(x\)\/a" and "\/\(y\)\/a" routes conflict with each other/
+		/^route_conflict\nThe `\/\(x\)\/a` and `\/\(y\)\/a` routes conflict with each other\n/
 	);
 });
 
 test('errors with multiple layouts on same directory', () => {
 	assert.throws(
 		() => create('samples/multiple-layouts'),
-		/^Multiple layout component files found in samples\/multiple-layouts\/ : \+layout\.svelte and \+layout@\.svelte/
+		/^route_duplicate_files\nMultiple layout component files found in `samples\/multiple-layouts\/` : `\+layout\.svelte` and `\+layout@\.svelte`/
 	);
 });
 
 test('errors with multiple pages on same directory', () => {
 	assert.throws(
 		() => create('samples/multiple-pages'),
-		/^Multiple page component files found in samples\/multiple-pages\/ : \+page\.svelte and \+page@\.svelte/
+		/^route_duplicate_files\nMultiple page component files found in `samples\/multiple-pages\/` : `\+page\.svelte` and `\+page@\.svelte`/
 	);
 });
 
 test('errors with both ts and js handlers for the same route', () => {
 	assert.throws(
 		() => create('samples/conflicting-ts-js-handlers-page'),
-		/^Multiple universal page module files found in samples\/conflicting-ts-js-handlers-page\/ : \+page\.js and \+page\.ts/
+		/^route_duplicate_files\nMultiple universal page module files found in `samples\/conflicting-ts-js-handlers-page\/` : `\+page\.js` and `\+page\.ts`/
 	);
 
 	assert.throws(
 		() => create('samples/conflicting-ts-js-handlers-layout'),
-		/^Multiple server layout module files found in samples\/conflicting-ts-js-handlers-layout\/ : \+layout\.server\.js and \+layout\.server\.ts/
+		/^route_duplicate_files\nMultiple server layout module files found in `samples\/conflicting-ts-js-handlers-layout\/` : `\+layout\.server\.js` and `\+layout\.server\.ts`/
 	);
 
 	assert.throws(
 		() => create('samples/conflicting-ts-js-handlers-server'),
-		/^Multiple endpoint files found in samples\/conflicting-ts-js-handlers-server\/ : \+server\.js and \+server\.ts/
+		/^route_duplicate_files\nMultiple endpoint files found in `samples\/conflicting-ts-js-handlers-server\/` : `\+server\.js` and `\+server\.ts`/
 	);
 });
 
 test('errors on prerenderable dual route', () => {
 	assert.throws(
 		() => create('samples/prerendered-dual-route'),
-		'Cannot prerender a route (/x) with both a `+page.svelte` and a `+server.js`'
+		'route_prerender_page_and_endpoint\nCannot prerender a route (`/x`) with both a `+page.svelte` and a `+server.js`\nhttps://next.svelte.dev/e/@sveltejs/kit/route_prerender_page_and_endpoint'
 	);
 });

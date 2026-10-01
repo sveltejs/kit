@@ -1,5 +1,5 @@
 /** @import { ParamMatcher, ParamValue } from '@sveltejs/kit/params' */
-import { BROWSER } from 'esm-env';
+import * as e from '../messages/shared-errors.js';
 import { escape_for_regexp } from './regex.js';
 
 const param_pattern = /^(\[)?(\.\.\.)?([\w-]+)(?:=([\w-]+))?(\])?$/;
@@ -79,15 +79,9 @@ export function parse_route_id(id) {
 											return escape(decode_escape_sequence(content.slice(2)));
 										}
 
-										// We know the match cannot be null in the browser because manifest generation
-										// would have invoked this during build and failed if we hit an invalid
-										// param/matcher name with non-alphanumeric character.
+										// We know the match cannot be null because manifest generation checks
+										// each route ID with `validate_route_id_params` first
 										const match = /** @type {RegExpExecArray} */ (param_pattern.exec(content));
-										if (!BROWSER && !match) {
-											throw new Error(
-												`Invalid param: ${content}. Params and matcher names can only have underscores, hyphens, and alphanumeric characters.`
-											);
-										}
 
 										const [, is_optional, is_rest, name, matcher] = match;
 										// It's assumed that the following invalid route id cases are already checked
@@ -114,6 +108,29 @@ export function parse_route_id(id) {
 				);
 
 	return { pattern, params };
+}
+
+/**
+ * Returns the first param in a route ID whose name or matcher contains characters other than
+ * underscores, hyphens and alphanumeric characters, mirroring the segments `parse_route_id` parses
+ * @param {string} id
+ * @returns {string | undefined}
+ */
+export function validate_route_id_params(id) {
+	if (id === '/' || root_group_pattern.test(id)) return;
+
+	for (const segment of get_route_segments(id)) {
+		if (/^\[\.\.\.([\w-]+)(?:=([\w-]+))?\]$/.test(segment)) continue;
+		if (/^\[\[([\w-]+)(?:=([\w-]+))?\]\]$/.test(segment)) continue;
+		if (!segment) continue;
+
+		const parts = segment.split(/\[(.+?)\](?!\])/);
+		for (let i = 1; i < parts.length; i += 2) {
+			const content = parts[i];
+			if (content.startsWith('x+') || content.startsWith('u+')) continue;
+			if (!param_pattern.test(content)) return content;
+		}
+	}
 }
 
 /**
@@ -144,7 +161,7 @@ function run_matcher(matcher, value) {
 	const result = matcher['~standard'].validate(value);
 
 	if (result instanceof Promise) {
-		throw new Error('Async param matchers are not supported');
+		e.param_matcher_async();
 	}
 
 	if (result.issues) {
@@ -159,7 +176,7 @@ function run_matcher(matcher, value) {
 		typeof parsed !== 'boolean' &&
 		typeof parsed !== 'bigint'
 	) {
-		throw new Error('Param matcher must return a string, number, boolean, or bigint');
+		e.param_matcher_result_invalid();
 	}
 
 	return { success: true, value: parsed };
@@ -307,14 +324,12 @@ export function resolve_route(id, params) {
 					if (value === undefined || value === '') {
 						if (optional) return '';
 						if (rest && value !== undefined) return '';
-						throw new Error(`Missing parameter '${name}' in route ${id}`);
+						e.route_param_missing({ name, id });
 					}
 
 					if (typeof value === 'string') {
 						if (value.startsWith('/') || value.endsWith('/')) {
-							throw new Error(
-								`Parameter '${name}' in route ${id} cannot start or end with a slash -- this would cause an invalid route like foo//bar`
-							);
+							e.route_param_slash({ name, id });
 						}
 
 						return value;
@@ -328,7 +343,7 @@ export function resolve_route(id, params) {
 						return String(value);
 					}
 
-					throw new Error('Parameter values must be a string, number, boolean, or bigint');
+					e.route_param_value_invalid({ name, id });
 				})
 			)
 			.filter(Boolean)

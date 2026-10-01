@@ -1,6 +1,7 @@
 /** @import { ParamMatcher } from '@sveltejs/kit/params' */
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
+import * as e from '../messages/build-errors.js';
 
 /**
  * @param {import('types').RouteData[]} routes
@@ -27,7 +28,7 @@ export function collect_matcher_names(routes) {
 export function validate_param_matchers(params, names, file) {
 	for (const name of names) {
 		if (!Object.hasOwn(params, name)) {
-			throw new Error(`No matcher found for parameter '${name}'${file ? ` in ${file}` : ''}`);
+			e.param_matcher_missing({ name, file: file || undefined });
 		}
 	}
 }
@@ -47,14 +48,14 @@ export async function load_and_validate_params({ routes, params_path, root, load
 	if (names.size === 0) return null;
 
 	if (!params_path) {
-		throw new Error(`No matcher found for parameter '${names.values().next().value}'`);
+		e.param_matcher_missing({ name: /** @type {string} */ (names.values().next().value) });
 	}
 
 	const file = path.resolve(root, params_path);
 	const module = load ? await load(file) : await import(pathToFileURL(file).href);
 
 	if (!module.params || typeof module.params !== 'object') {
-		throw new Error(`${params_path} does not export \`params\` from \`defineParams\``);
+		e.params_export_missing({ file: params_path });
 	}
 
 	validate_param_matchers(

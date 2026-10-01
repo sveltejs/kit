@@ -22,7 +22,7 @@ import { write_client_manifest } from '../../../core/sync/write_client_manifest.
 import { logger, runtime_directory } from '../../../core/utils.js';
 import { compact } from '../../../utils/array.js';
 import { copy, read, resolve_entry, walk } from '../../../utils/filesystem.js';
-import { load_and_validate_params } from '../../../utils/params.js';
+import { load_and_validate_params } from '../../../core/params.js';
 import { posixify } from '../../../utils/os.js';
 import { stackless } from '../../../utils/error.js';
 import { s } from '../../../utils/misc.js';

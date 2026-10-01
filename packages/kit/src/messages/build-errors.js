@@ -434,6 +434,206 @@ export function env_variables_missing(_values, options) {
 }
 
 /**
+ * No matcher found for parameter `%name%`
+ * @param {{ "name": string; "file"?: string }} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function param_matcher_missing(_values, options) {
+	throw_error('param_matcher_missing', (_values?.file !== undefined ? `No matcher found for parameter \`${_values.name}\` in \`${_values.file}\`` : `No matcher found for parameter \`${_values.name}\``), options, param_matcher_missing);
+}
+
+/**
+ * `%file%` does not export `params` from `defineParams`
+ * @param {{ "file": string }} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function params_export_missing(_values, options) {
+	throw_error('params_export_missing', `\`${_values.file}\` does not export \`params\` from \`defineParams\``, options, params_export_missing);
+}
+
+/**
+ * The `%first%` and `%second%` routes conflict with each other
+ * @param {{ "first": string; "second": string }} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function route_conflict(_values, options) {
+	throw_error('route_conflict', `The \`${_values.first}\` and \`${_values.second}\` routes conflict with each other`, options, route_conflict);
+}
+
+/**
+ * Multiple %type% files found in `%directory%` : `%existing%` and `%file%`
+ * @param {{ "type": string; "directory": string; "existing": string; "file": string }} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function route_duplicate_files(_values, options) {
+	throw_error('route_duplicate_files', `Multiple ${_values.type} files found in \`${_values.directory}\` : \`${_values.existing}\` and \`${_values.file}\``, options, route_duplicate_files);
+}
+
+/**
+ * Hexadecimal escape sequence in `%id%` must be two characters
+ * @param {{ "id": string }} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function route_escape_hex_length(_values, options) {
+	throw_error('route_escape_hex_length', `Hexadecimal escape sequence in \`${_values.id}\` must be two characters`, options, route_escape_hex_length);
+}
+
+/**
+ * Invalid character escape sequence in `%id%`
+ * @param {{ "id": string }} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function route_escape_invalid(_values, options) {
+	throw_error('route_escape_invalid', `Invalid character escape sequence in \`${_values.id}\``, options, route_escape_invalid);
+}
+
+/**
+ * Unicode escape sequence in `%id%` must be between four and six characters
+ * @param {{ "id": string }} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function route_escape_unicode_length(_values, options) {
+	throw_error('route_escape_unicode_length', `Unicode escape sequence in \`${_values.id}\` must be between four and six characters`, options, route_escape_unicode_length);
+}
+
+/**
+ * Character escape sequence in `%id%` must be lowercase
+ * @param {{ "id": string }} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function route_escape_uppercase(_values, options) {
+	throw_error('route_escape_uppercase', `Character escape sequence in \`${_values.id}\` must be lowercase`, options, route_escape_uppercase);
+}
+
+/**
+ * Files prefixed with `+` are reserved (saw `%file%`)
+ * @param {{ "file": string }} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function route_file_reserved(_values, options) {
+	throw_error('route_file_reserved', `Files prefixed with \`+\` are reserved (saw \`${_values.file}\`)`, options, route_file_reserved);
+}
+
+/**
+ * Route `%id%` should be renamed to %suggestion%
+ * @param {{ "id": string; "suggestion": string }} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function route_hash_character(_values, options) {
+	throw_error('route_hash_character', `Route \`${_values.id}\` should be renamed to ${_values.suggestion}`, options, route_hash_character);
+}
+
+/**
+ * `%file%` references missing segment `%segment%`
+ * @param {{ "file": string; "segment": string }} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function route_layout_segment_missing(_values, options) {
+	throw_error('route_layout_segment_missing', `\`${_values.file}\` references missing segment \`${_values.segment}\``, options, route_layout_segment_missing);
+}
+
+/**
+ * Only Svelte files can reference named layouts. Remove `%layout%` from `%name%` (at `%file%`)
+ * @param {{ "layout": string; "name": string; "file": string }} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function route_named_layout_in_module(_values, options) {
+	throw_error('route_named_layout_in_module', `Only Svelte files can reference named layouts. Remove \`${_values.layout}\` from \`${_values.name}\` (at \`${_values.file}\`)`, options, route_named_layout_in_module);
+}
+
+/**
+ * Invalid route `%id%` — an `[[optional]]` route segment cannot follow a `[...rest]` route segment
+ * @param {{ "id": string }} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function route_optional_after_rest(_values, options) {
+	throw_error('route_optional_after_rest', `Invalid route \`${_values.id}\` — an \`[[optional]]\` route segment cannot follow a \`[...rest]\` route segment`, options, route_optional_after_rest);
+}
+
+/**
+ * Invalid route `%id%` — a rest route segment is always optional, remove the outer square brackets
+ * @param {{ "id": string }} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function route_optional_rest(_values, options) {
+	throw_error('route_optional_rest', `Invalid route \`${_values.id}\` — a rest route segment is always optional, remove the outer square brackets`, options, route_optional_rest);
+}
+
+/**
+ * Invalid param: %param% in route `%id%`. Params and matcher names can only have underscores, hyphens, and alphanumeric characters.
+ * @param {{ "param": string; "id": string }} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function route_param_invalid(_values, options) {
+	throw_error('route_param_invalid', `Invalid param: ${_values.param} in route \`${_values.id}\`. Params and matcher names can only have underscores, hyphens, and alphanumeric characters.`, options, route_param_invalid);
+}
+
+/**
+ * Invalid route `%id%` — parameters must be separated
+ * @param {{ "id": string }} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function route_params_adjacent(_values, options) {
+	throw_error('route_params_adjacent', `Invalid route \`${_values.id}\` — parameters must be separated`, options, route_params_adjacent);
+}
+
+/**
+ * Cannot prerender a route (`%id%`) with both a `+page.svelte` and a `%file%`
+ * @param {{ "id": string; "file": string }} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function route_prerender_page_and_endpoint(_values, options) {
+	throw_error('route_prerender_page_and_endpoint', `Cannot prerender a route (\`${_values.id}\`) with both a \`+page.svelte\` and a \`${_values.file}\``, options, route_prerender_page_and_endpoint);
+}
+
+/**
+ * Cannot use server-only files in an app with `router.type === 'hash'`: `%file%`
+ * @param {{ "file": string }} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function route_server_file_hash_router(_values, options) {
+	throw_error('route_server_file_hash_router', `Cannot use server-only files in an app with \`router.type === 'hash'\`: \`${_values.file}\``, options, route_server_file_hash_router);
+}
+
+/**
+ * Invalid route `%id%` — brackets are unbalanced
+ * @param {{ "id": string }} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function route_unbalanced_brackets(_values, options) {
+	throw_error('route_unbalanced_brackets', `Invalid route \`${_values.id}\` — brackets are unbalanced`, options, route_unbalanced_brackets);
+}
+
+/**
+ * No routes found. If you are using a custom `src/routes` directory, make sure it is specified in your SvelteKit Vite plugin options
+ * @param {void} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function routes_not_found(_values, options) {
+	throw_error('routes_not_found', `No routes found. If you are using a custom \`src/routes\` directory, make sure it is specified in your SvelteKit Vite plugin options`, options, routes_not_found);
+}
+
+/**
  * Failed to parse TypeScript config
  * @param {void | { "details": string }} _values
  * @param {ThrowOptions} [options]

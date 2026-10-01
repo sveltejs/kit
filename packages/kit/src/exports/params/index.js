@@ -1,4 +1,5 @@
 /** @import { ParamDefinition, ParamMatcher } from '@sveltejs/kit/params' */
+import * as e from '../../messages/shared-errors.js';
 
 /**
  * Define [parameter matchers](https://svelte.dev/docs/kit/advanced-routing#Matching) for your app.
@@ -66,5 +67,5 @@ export function normalize_param_definition(definition) {
 		);
 	}
 
-	throw new Error('Invalid param definition');
+	e.param_definition_invalid();
 }

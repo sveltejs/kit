@@ -12,7 +12,7 @@ import { generate_manifest, loud_ssr_load_module } from './generate_manifest.js'
 import { createReadableStream, getRequest, setResponse } from '../../../exports/node/index.js';
 import { coalesce_to_error, set_error_stack } from '../../../utils/error.js';
 import { resolve_entry } from '../../../utils/filesystem.js';
-import { load_and_validate_params } from '../../../utils/params.js';
+import { load_and_validate_params } from '../../../core/params.js';
 import { from_fs, to_fs } from '../../../utils/vite.js';
 import { posixify } from '../../../utils/os.js';
 import { load_error_page } from '../../../core/config/index.js';
