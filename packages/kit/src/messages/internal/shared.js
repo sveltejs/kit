@@ -26,7 +26,7 @@ export const normal = 'font-weight: normal';
  * @returns {never}
  */
 export function throw_error(code, message, caller) {
-	const error = new Error(`${code}\n${message}\nhttps://next.svelte.dev/e/@sveltejs/kit/${code}`);
+	const error = new Error(`${code}\n${message}\nhttps://next.svelte.dev/e/kit/${code}`);
 	error.name = 'SvelteKit error';
 
 	// not available in every browser, in which case the stack also includes these two frames

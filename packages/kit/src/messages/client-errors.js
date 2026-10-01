@@ -13,7 +13,7 @@ export function enhance_file_without_enctype(_values) {
 		throw_error('enhance_file_without_enctype', `Your form contains \`<input type="file">\` fields, but is missing the necessary \`enctype="multipart/form-data"\` attribute`, enhance_file_without_enctype);
 	}
 
-	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/enhance_file_without_enctype');
+	throw new Error('https://next.svelte.dev/e/kit/enhance_file_without_enctype');
 }
 
 /**
@@ -26,7 +26,7 @@ export function enhance_invalid_method(_values) {
 		throw_error('enhance_invalid_method', `\`use:enhance\` can only be used on \`<form>\` elements with \`method="POST"\``, enhance_invalid_method);
 	}
 
-	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/enhance_invalid_method');
+	throw new Error('https://next.svelte.dev/e/kit/enhance_invalid_method');
 }
 
 /**
@@ -39,7 +39,7 @@ export function goto_options_removed(_values) {
 		throw_error('goto_options_removed', `The \`goto(..., { noScroll: true, keepFocus: true })\` options have been replaced by \`reset: false\``, goto_options_removed);
 	}
 
-	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/goto_options_removed');
+	throw new Error('https://next.svelte.dev/e/kit/goto_options_removed');
 }
 
 /**
@@ -52,7 +52,7 @@ export function navigation_before_start(_values) {
 		throw_error('navigation_before_start', `Cannot call \`${_values.caller}(...)\` before router is initialized`, navigation_before_start);
 	}
 
-	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/navigation_before_start');
+	throw new Error('https://next.svelte.dev/e/kit/navigation_before_start');
 }
 
 /**
@@ -65,7 +65,7 @@ export function navigation_external_url(_values) {
 		throw_error('navigation_external_url', `Cannot use \`${_values.caller}\` with an external URL. Use \`window.location = "${_values.url}"\` instead`, navigation_external_url);
 	}
 
-	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/navigation_external_url');
+	throw new Error('https://next.svelte.dev/e/kit/navigation_external_url');
 }
 
 /**
@@ -78,7 +78,7 @@ export function navigation_route_missing(_values) {
 		throw_error('navigation_route_missing', `Cannot use \`${_values.caller}\` with a URL that does not resolve to a route within the app. Use \`window.location = "${_values.url}"\` instead`, navigation_route_missing);
 	}
 
-	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/navigation_route_missing');
+	throw new Error('https://next.svelte.dev/e/kit/navigation_route_missing');
 }
 
 /**
@@ -91,7 +91,7 @@ export function preload_invalid_route_id(_values) {
 		throw_error('preload_invalid_route_id', `\`preloadCode\` expects a route ID starting with \`/\` (such as \`/blog/[slug]\`), but received \`${_values.id}\``, preload_invalid_route_id);
 	}
 
-	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/preload_invalid_route_id');
+	throw new Error('https://next.svelte.dev/e/kit/preload_invalid_route_id');
 }
 
 /**
@@ -104,7 +104,7 @@ export function preload_url_outside_app(_values) {
 		throw_error('preload_url_outside_app', `Attempted to preload a URL that does not belong to this app: \`${_values.url}\``, preload_url_outside_app);
 	}
 
-	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/preload_url_outside_app');
+	throw new Error('https://next.svelte.dev/e/kit/preload_url_outside_app');
 }
 
 /**
@@ -117,7 +117,7 @@ export function redirect_loop(_values) {
 		throw_error('redirect_loop', `Redirect loop while navigating to \`${_values.url}\``, redirect_loop);
 	}
 
-	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/redirect_loop');
+	throw new Error('https://next.svelte.dev/e/kit/redirect_loop');
 }
 
 /**
@@ -130,7 +130,7 @@ export function remote_command_redirect(_values) {
 		throw_error('remote_command_redirect', `Redirects are not allowed in commands. Return a result instead and use \`goto\` on the client`, remote_command_redirect);
 	}
 
-	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/remote_command_redirect');
+	throw new Error('https://next.svelte.dev/e/kit/remote_command_redirect');
 }
 
 /**
@@ -143,7 +143,7 @@ export function remote_form_mixed_inputs(_values) {
 		throw_error('remote_form_mixed_inputs', `Cannot mix and match file and non-file inputs under the same name (\`${_values.name}\`)`, remote_form_mixed_inputs);
 	}
 
-	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/remote_form_mixed_inputs');
+	throw new Error('https://next.svelte.dev/e/kit/remote_form_mixed_inputs');
 }
 
 /**
@@ -156,7 +156,7 @@ export function remote_form_multiple_elements(_values) {
 		throw_error('remote_form_multiple_elements', `A form object can only be attached to a single \`<form>\` element`, remote_form_multiple_elements);
 	}
 
-	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/remote_form_multiple_elements');
+	throw new Error('https://next.svelte.dev/e/kit/remote_form_multiple_elements');
 }
 
 /**
@@ -169,7 +169,7 @@ export function remote_form_multiple_files(_values) {
 		throw_error('remote_form_multiple_files', `Can only use the \`multiple\` attribute when \`name\` includes a \`[]\` suffix — consider changing \`${_values.name}\` to \`${_values.name}[]\``, remote_form_multiple_files);
 	}
 
-	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/remote_form_multiple_files');
+	throw new Error('https://next.svelte.dev/e/kit/remote_form_multiple_files');
 }
 
 /**
@@ -182,7 +182,7 @@ export function remote_form_not_attached(_values) {
 		throw_error('remote_form_not_attached', `Cannot call \`submit()\` before the form is attached`, remote_form_not_attached);
 	}
 
-	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/remote_form_not_attached');
+	throw new Error('https://next.svelte.dev/e/kit/remote_form_not_attached');
 }
 
 /**
@@ -195,7 +195,7 @@ export function remote_form_reserved_field(_values) {
 		throw_error('remote_form_reserved_field', `\`$\` is used to collect all FormData validation issues and cannot be used as the \`name\` of a form control`, remote_form_reserved_field);
 	}
 
-	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/remote_form_reserved_field');
+	throw new Error('https://next.svelte.dev/e/kit/remote_form_reserved_field');
 }
 
 /**
@@ -208,7 +208,7 @@ export function remote_updates_duplicate_override(_values) {
 		throw_error('remote_updates_duplicate_override', `Multiple overrides for the same query are not allowed in a single \`updates()\` invocation`, remote_updates_duplicate_override);
 	}
 
-	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/remote_updates_duplicate_override');
+	throw new Error('https://next.svelte.dev/e/kit/remote_updates_duplicate_override');
 }
 
 /**
@@ -221,7 +221,7 @@ export function remote_updates_invalid_argument(_values) {
 		throw_error('remote_updates_invalid_argument', `\`updates()\` expects a query or live query function, query resource, or query override`, remote_updates_invalid_argument);
 	}
 
-	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/remote_updates_invalid_argument');
+	throw new Error('https://next.svelte.dev/e/kit/remote_updates_invalid_argument');
 }
 
 /**
@@ -234,7 +234,7 @@ export function reserved_query_parameter(_values) {
 		throw_error('reserved_query_parameter', `Cannot use reserved query parameter \`${_values.key}\``, reserved_query_parameter);
 	}
 
-	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/reserved_query_parameter');
+	throw new Error('https://next.svelte.dev/e/kit/reserved_query_parameter');
 }
 
 /**
@@ -247,7 +247,7 @@ export function scroll_handling_outside_navigation(_values) {
 		throw_error('scroll_handling_outside_navigation', `Can only disable scroll handling during navigation`, scroll_handling_outside_navigation);
 	}
 
-	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/scroll_handling_outside_navigation');
+	throw new Error('https://next.svelte.dev/e/kit/scroll_handling_outside_navigation');
 }
 
 /**
@@ -260,7 +260,7 @@ export function snapshot_duplicate_id(_values) {
 		throw_error('snapshot_duplicate_id', (_values?.id !== undefined ? `A snapshot with id \`${_values.id}\` is already registered. Pass a unique \`id\`.` : `\`snapshot()\` was called multiple times from the same call site. Pass a unique \`id\` to distinguish the instances.`), snapshot_duplicate_id);
 	}
 
-	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/snapshot_duplicate_id');
+	throw new Error('https://next.svelte.dev/e/kit/snapshot_duplicate_id');
 }
 
 /**
@@ -273,5 +273,5 @@ export function snapshot_id_missing(_values) {
 		throw_error('snapshot_id_missing', `Could not generate a snapshot id from the stack trace. Pass an \`id\` instead.`, snapshot_id_missing);
 	}
 
-	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/snapshot_id_missing');
+	throw new Error('https://next.svelte.dev/e/kit/snapshot_id_missing');
 }
