@@ -3,7 +3,7 @@ name: CI
 on:
   push:
     branches:
-      - version-3
+      - main
     paths-ignore: &paths_ignore
       - '.changeset/**'
       - '.githooks/**'
