@@ -1,5 +1,5 @@
 /** @import { RequestEvent } from '@sveltejs/kit' */
-/** @import { InternalRequestOptions, SSRManifest, SSROptions } from 'types' */
+/** @import { InternalRequestOptions, SSRManifest } from 'types' */
 import { once } from 'node:events';
 import { createServer } from 'node:http';
 import { afterAll, describe, expect, onTestFinished, test, vi } from 'vitest';
@@ -8,6 +8,9 @@ import { create_request_state } from './state.js';
 // These fallbacks don't render pages or use the generated environment module.
 vi.mock(import('./page/render.js'), () => ({ render_response: vi.fn() }));
 vi.mock('<sveltekit:generated>/env/config.js', () => ({}));
+vi.mock('<sveltekit:generated>/server.js', () => ({
+	options: { csrf_trusted_origins: [] }
+}));
 
 vi.stubGlobal('__SVELTEKIT_DEV__', false);
 vi.stubGlobal('__SVELTEKIT_PATHS_ORIGIN__', undefined);
@@ -16,7 +19,7 @@ vi.stubGlobal('__SVELTEKIT_HASH_ROUTING__', false);
 afterAll(() => vi.unstubAllGlobals());
 
 const { create_fetch } = await import('./fetch.js');
-const { set_hooks, set_manifest, set_options } = await import('./internal.js');
+const { set_hooks, set_manifest } = await import('./internal.js');
 
 set_hooks({
 	handle: ({ event, resolve }) => resolve(event),
@@ -35,7 +38,6 @@ set_manifest(
 		})
 	)
 );
-set_options(/** @type {SSROptions} */ (/** @type {unknown} */ ({ csrf_trusted_origins: [] })));
 
 describe('redirect handling', () => {
 	test.each([
