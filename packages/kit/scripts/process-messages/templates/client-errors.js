@@ -11,5 +11,5 @@ export function CODE(_values) {
 		throw_error('CODE', MESSAGE(_values), CODE);
 	}
 
-	throw new Error('https://next.svelte.dev/e/kit/CODE');
+	throw new Error('https://svelte.dev/e/kit/CODE');
 }

@@ -12,7 +12,7 @@
  */
 export function throw_error(code, message, options, caller) {
 	const error = new Error(
-		`${code}\n${message}\nhttps://next.svelte.dev/e/kit/${code}`,
+		`${code}\n${message}\nhttps://svelte.dev/e/kit/${code}`,
 		options?.cause === undefined ? undefined : { cause: options.cause }
 	);
 	error.name = 'SvelteKit error';

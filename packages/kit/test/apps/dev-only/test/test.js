@@ -20,7 +20,7 @@ Cannot import \`$app/env/private\` into code that runs in the browser, as this c
   $app/env/private
 
 If you're only using the import as a type, change it to \`import type\`.
-https://next.svelte.dev/e/kit/server_only_import`);
+https://svelte.dev/e/kit/server_only_import`);
 	});
 
 	test('$app/server module is not importable from the client', async ({ page }) => {
@@ -34,7 +34,7 @@ Cannot import \`$app/server\` into code that runs in the browser, as this could 
   $app/server
 
 If you're only using the import as a type, change it to \`import type\`.
-https://next.svelte.dev/e/kit/server_only_import`);
+https://svelte.dev/e/kit/server_only_import`);
 	});
 
 	test('server-only module is not importable from the client', async ({ page }) => {
@@ -49,7 +49,7 @@ Cannot import \`src/routes/illegal-imports/server-only-modules/illegal.server.js
    src/routes/illegal-imports/server-only-modules/illegal.server.js
 
 If you're only using the import as a type, change it to \`import type\`.
-https://next.svelte.dev/e/kit/server_only_import`);
+https://svelte.dev/e/kit/server_only_import`);
 	});
 
 	test('server-only folder is not importable from the client (relative import, nested server dir)', async ({
@@ -65,7 +65,7 @@ Cannot import \`#lib/nested/server/private.js\` into code that runs in the brows
   #lib/nested/server/private.js
 
 If you're only using the import as a type, change it to \`import type\`.
-https://next.svelte.dev/e/kit/server_only_import`);
+https://svelte.dev/e/kit/server_only_import`);
 	});
 
 	test('server-only folder is not importable from the client (path import, lib top level)', async ({
@@ -81,7 +81,7 @@ Cannot import \`#lib/server/blah/private.js\` into code that runs in the browser
   #lib/server/blah/private.js
 
 If you're only using the import as a type, change it to \`import type\`.
-https://next.svelte.dev/e/kit/server_only_import`);
+https://svelte.dev/e/kit/server_only_import`);
 	});
 });
 

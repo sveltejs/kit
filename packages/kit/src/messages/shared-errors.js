@@ -13,7 +13,7 @@ export function app_stores_removed(_values) {
 		throw_error('app_stores_removed', `\`$app/stores\` has been removed in favour of \`$app/state\``, app_stores_removed);
 	}
 
-	throw new Error('https://next.svelte.dev/e/kit/app_stores_removed');
+	throw new Error('https://svelte.dev/e/kit/app_stores_removed');
 }
 
 /**
@@ -26,7 +26,7 @@ export function form_field_array_conflict(_values) {
 		throw_error('form_field_array_conflict', `Invalid array key \`${_values.key}\``, form_field_array_conflict);
 	}
 
-	throw new Error('https://next.svelte.dev/e/kit/form_field_array_conflict');
+	throw new Error('https://svelte.dev/e/kit/form_field_array_conflict');
 }
 
 /**
@@ -39,7 +39,7 @@ export function form_field_duplicate(_values) {
 		throw_error('form_field_duplicate', `Form cannot contain duplicated keys — \`${_values.name}\` has ${_values.count} values`, form_field_duplicate);
 	}
 
-	throw new Error('https://next.svelte.dev/e/kit/form_field_duplicate');
+	throw new Error('https://svelte.dev/e/kit/form_field_duplicate');
 }
 
 /**
@@ -52,7 +52,7 @@ export function form_field_forbidden_key(_values) {
 		throw_error('form_field_forbidden_key', `Invalid key \`${_values.key}\`: This key is not allowed to prevent prototype pollution.`, form_field_forbidden_key);
 	}
 
-	throw new Error('https://next.svelte.dev/e/kit/form_field_forbidden_key');
+	throw new Error('https://svelte.dev/e/kit/form_field_forbidden_key');
 }
 
 /**
@@ -65,7 +65,7 @@ export function form_field_invalid_name(_values) {
 		throw_error('form_field_invalid_name', `Invalid field name \`${_values.name}\`: field names are written in JS object notation, so keys that would need quoting are not supported. See https://svelte.dev/docs/kit/remote-functions#form-Fields`, form_field_invalid_name);
 	}
 
-	throw new Error('https://next.svelte.dev/e/kit/form_field_invalid_name');
+	throw new Error('https://svelte.dev/e/kit/form_field_invalid_name');
 }
 
 /**
@@ -78,7 +78,7 @@ export function form_field_unbound(_values) {
 		throw_error('form_field_unbound', `Form contained a field that wasn't created with \`form.fields.as(...)\`: \`${_values.name}\``, form_field_unbound);
 	}
 
-	throw new Error('https://next.svelte.dev/e/kit/form_field_unbound');
+	throw new Error('https://svelte.dev/e/kit/form_field_unbound');
 }
 
 /**
@@ -91,7 +91,7 @@ export function form_input_missing_value(_values) {
 		throw_error('form_input_missing_value', `${_values.type} inputs must have a value`, form_input_missing_value);
 	}
 
-	throw new Error('https://next.svelte.dev/e/kit/form_input_missing_value');
+	throw new Error('https://svelte.dev/e/kit/form_input_missing_value');
 }
 
 /**
@@ -104,7 +104,7 @@ export function invalid_error_status(_values) {
 		throw_error('invalid_error_status', `HTTP error status codes must be between 400 and 599 — ${_values.status} is invalid`, invalid_error_status);
 	}
 
-	throw new Error('https://next.svelte.dev/e/kit/invalid_error_status');
+	throw new Error('https://svelte.dev/e/kit/invalid_error_status');
 }
 
 /**
@@ -117,7 +117,7 @@ export function invalid_export(_values) {
 		throw_error('invalid_export', (_values?.file !== undefined ? `Invalid export \`${_values.key}\` in \`${_values.file}\` (valid exports are ${_values.exports}, or anything with a \`'_'\` prefix)` : `Invalid export \`${_values.key}\` (valid exports are ${_values.exports}, or anything with a \`'_'\` prefix)`), invalid_export);
 	}
 
-	throw new Error('https://next.svelte.dev/e/kit/invalid_export');
+	throw new Error('https://svelte.dev/e/kit/invalid_export');
 }
 
 /**
@@ -130,7 +130,7 @@ export function invalid_export_location(_values) {
 		throw_error('invalid_export_location', (_values?.file !== undefined ? `Invalid export \`${_values.key}\` in \`${_values.file}\` (\`${_values.key}\` is a valid export in ${_values.locations})` : `Invalid export \`${_values.key}\` (\`${_values.key}\` is a valid export in ${_values.locations})`), invalid_export_location);
 	}
 
-	throw new Error('https://next.svelte.dev/e/kit/invalid_export_location');
+	throw new Error('https://svelte.dev/e/kit/invalid_export_location');
 }
 
 /**
@@ -143,7 +143,7 @@ export function invalid_redirect_status(_values) {
 		throw_error('invalid_redirect_status', `Redirect status codes must be between 300 and 308 — ${_values.status} is invalid`, invalid_redirect_status);
 	}
 
-	throw new Error('https://next.svelte.dev/e/kit/invalid_redirect_status');
+	throw new Error('https://svelte.dev/e/kit/invalid_redirect_status');
 }
 
 /**
@@ -156,7 +156,7 @@ export function load_invalid_response(_values) {
 		throw_error('load_invalid_response', `a \`load\` function ${_values.location} returned ${_values.type}, but must return a plain object at the top level (i.e. \`return {...}\`)`, load_invalid_response);
 	}
 
-	throw new Error('https://next.svelte.dev/e/kit/load_invalid_response');
+	throw new Error('https://svelte.dev/e/kit/load_invalid_response');
 }
 
 /**
@@ -169,7 +169,7 @@ export function match_in_service_worker(_values) {
 		throw_error('match_in_service_worker', `Cannot use \`match(...)\` inside a service worker, as it depends on the SvelteKit client instance`, match_in_service_worker);
 	}
 
-	throw new Error('https://next.svelte.dev/e/kit/match_in_service_worker');
+	throw new Error('https://svelte.dev/e/kit/match_in_service_worker');
 }
 
 /**
@@ -182,7 +182,7 @@ export function param_definition_invalid(_values) {
 		throw_error('param_definition_invalid', `Invalid param definition`, param_definition_invalid);
 	}
 
-	throw new Error('https://next.svelte.dev/e/kit/param_definition_invalid');
+	throw new Error('https://svelte.dev/e/kit/param_definition_invalid');
 }
 
 /**
@@ -195,7 +195,7 @@ export function param_matcher_async(_values) {
 		throw_error('param_matcher_async', `Async param matchers are not supported`, param_matcher_async);
 	}
 
-	throw new Error('https://next.svelte.dev/e/kit/param_matcher_async');
+	throw new Error('https://svelte.dev/e/kit/param_matcher_async');
 }
 
 /**
@@ -208,7 +208,7 @@ export function param_matcher_result_invalid(_values) {
 		throw_error('param_matcher_result_invalid', `Param matcher must return a string, number, boolean, or bigint`, param_matcher_result_invalid);
 	}
 
-	throw new Error('https://next.svelte.dev/e/kit/param_matcher_result_invalid');
+	throw new Error('https://svelte.dev/e/kit/param_matcher_result_invalid');
 }
 
 /**
@@ -221,7 +221,7 @@ export function redirect_external_javascript(_values) {
 		throw_error('redirect_external_javascript', `Cannot redirect to \`${_values.location}\` with \`{ external: true }\`. The \`javascript:\` and \`data:\` protocols must be explicitly listed in the \`external\` allowlist`, redirect_external_javascript);
 	}
 
-	throw new Error('https://next.svelte.dev/e/kit/redirect_external_javascript');
+	throw new Error('https://svelte.dev/e/kit/redirect_external_javascript');
 }
 
 /**
@@ -234,7 +234,7 @@ export function redirect_external_not_allowed(_values) {
 		throw_error('redirect_external_not_allowed', `Cannot redirect to external URL \`${_values.location}\`. To redirect to an external URL, pass \`{ external: true }\` or an allowlist of permitted origins as the third argument to \`redirect\``, redirect_external_not_allowed);
 	}
 
-	throw new Error('https://next.svelte.dev/e/kit/redirect_external_not_allowed');
+	throw new Error('https://svelte.dev/e/kit/redirect_external_not_allowed');
 }
 
 /**
@@ -247,7 +247,7 @@ export function redirect_external_not_in_allowlist(_values) {
 		throw_error('redirect_external_not_in_allowlist', `Cannot redirect to \`${_values.location}\`: URL origin is not included in the \`external\` allowlist`, redirect_external_not_in_allowlist);
 	}
 
-	throw new Error('https://next.svelte.dev/e/kit/redirect_external_not_in_allowlist');
+	throw new Error('https://svelte.dev/e/kit/redirect_external_not_in_allowlist');
 }
 
 /**
@@ -260,7 +260,7 @@ export function redirect_external_option_invalid(_values) {
 		throw_error('redirect_external_option_invalid', `\`redirect\` \`options.external\` must be \`true\` or an array of allowed origins`, redirect_external_option_invalid);
 	}
 
-	throw new Error('https://next.svelte.dev/e/kit/redirect_external_option_invalid');
+	throw new Error('https://svelte.dev/e/kit/redirect_external_option_invalid');
 }
 
 /**
@@ -273,7 +273,7 @@ export function remote_argument_unsupported(_values) {
 		throw_error('remote_argument_unsupported', `${_values.type} are not valid remote function arguments`, remote_argument_unsupported);
 	}
 
-	throw new Error('https://next.svelte.dev/e/kit/remote_argument_unsupported');
+	throw new Error('https://svelte.dev/e/kit/remote_argument_unsupported');
 }
 
 /**
@@ -286,7 +286,7 @@ export function resolve_params_missing(_values) {
 		throw_error('resolve_params_missing', `Missing params for dynamic route ID \`${_values.id}\``, resolve_params_missing);
 	}
 
-	throw new Error('https://next.svelte.dev/e/kit/resolve_params_missing');
+	throw new Error('https://svelte.dev/e/kit/resolve_params_missing');
 }
 
 /**
@@ -299,7 +299,7 @@ export function route_param_missing(_values) {
 		throw_error('route_param_missing', `Missing parameter \`${_values.name}\` in route \`${_values.id}\``, route_param_missing);
 	}
 
-	throw new Error('https://next.svelte.dev/e/kit/route_param_missing');
+	throw new Error('https://svelte.dev/e/kit/route_param_missing');
 }
 
 /**
@@ -312,7 +312,7 @@ export function route_param_slash(_values) {
 		throw_error('route_param_slash', `Parameter \`${_values.name}\` in route \`${_values.id}\` cannot start or end with a slash — this would cause an invalid route like \`foo/bar\``, route_param_slash);
 	}
 
-	throw new Error('https://next.svelte.dev/e/kit/route_param_slash');
+	throw new Error('https://svelte.dev/e/kit/route_param_slash');
 }
 
 /**
@@ -325,7 +325,7 @@ export function route_param_value_invalid(_values) {
 		throw_error('route_param_value_invalid', `Parameter \`${_values.name}\` in route \`${_values.id}\` must be a string, number, boolean, or bigint`, route_param_value_invalid);
 	}
 
-	throw new Error('https://next.svelte.dev/e/kit/route_param_value_invalid');
+	throw new Error('https://svelte.dev/e/kit/route_param_value_invalid');
 }
 
 /**
@@ -338,7 +338,7 @@ export function router_hash_page_options(_values) {
 		throw_error('router_hash_page_options', `Page options are ignored when \`router.type === 'hash'\` (\`${_values.source}\` has ${_values.options})`, router_hash_page_options);
 	}
 
-	throw new Error('https://next.svelte.dev/e/kit/router_hash_page_options');
+	throw new Error('https://svelte.dev/e/kit/router_hash_page_options');
 }
 
 /**
@@ -351,7 +351,7 @@ export function service_worker_module_outside_worker(_values) {
 		throw_error('service_worker_module_outside_worker', `The \`$app/service-worker\` module can only be imported into a service worker`, service_worker_module_outside_worker);
 	}
 
-	throw new Error('https://next.svelte.dev/e/kit/service_worker_module_outside_worker');
+	throw new Error('https://svelte.dev/e/kit/service_worker_module_outside_worker');
 }
 
 /**
@@ -364,5 +364,5 @@ export function url_hash_unavailable(_values) {
 		throw_error('url_hash_unavailable', `Cannot access \`event.url.hash\`. Consider using \`page.url.hash\` inside a component instead`, url_hash_unavailable);
 	}
 
-	throw new Error('https://next.svelte.dev/e/kit/url_hash_unavailable');
+	throw new Error('https://svelte.dev/e/kit/url_hash_unavailable');
 }
