@@ -6,18 +6,17 @@ Web development, streamlined. Read the [documentation](https://svelte.dev/docs/k
 
 ### Packages
 
-| Package                                                                     | Changelog                                                     |
-| --------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| [@sveltejs/kit](packages/kit)                                               | [Changelog](packages/kit/CHANGELOG.md)                        |
-| [@sveltejs/adapter-auto](packages/adapter-auto)                             | [Changelog](packages/adapter-auto/CHANGELOG.md)               |
-| [@sveltejs/adapter-cloudflare](packages/adapter-cloudflare)                 | [Changelog](packages/adapter-cloudflare/CHANGELOG.md)         |
-| [@sveltejs/adapter-netlify](packages/adapter-netlify)                       | [Changelog](packages/adapter-netlify/CHANGELOG.md)            |
-| [@sveltejs/adapter-node](packages/adapter-node)                             | [Changelog](packages/adapter-node/CHANGELOG.md)               |
-| [@sveltejs/adapter-static](packages/adapter-static)                         | [Changelog](packages/adapter-static/CHANGELOG.md)             |
-| [@sveltejs/adapter-vercel](packages/adapter-vercel)                         | [Changelog](packages/adapter-vercel/CHANGELOG.md)             |
-| [@sveltejs/amp](packages/amp)                                               | [Changelog](packages/amp/CHANGELOG.md)                        |
-| [@sveltejs/enhanced-img](packages/enhanced-img)                             | [Changelog](packages/enhanced-img/CHANGELOG.md)               |
-| [@sveltejs/package](packages/package)                                       | [Changelog](packages/package/CHANGELOG.md)                    |
+| Package                                                     | Changelog                                             |
+| ----------------------------------------------------------- | ----------------------------------------------------- |
+| [@sveltejs/kit](packages/kit)                               | [Changelog](packages/kit/CHANGELOG.md)                |
+| [@sveltejs/adapter-auto](packages/adapter-auto)             | [Changelog](packages/adapter-auto/CHANGELOG.md)       |
+| [@sveltejs/adapter-cloudflare](packages/adapter-cloudflare) | [Changelog](packages/adapter-cloudflare/CHANGELOG.md) |
+| [@sveltejs/adapter-netlify](packages/adapter-netlify)       | [Changelog](packages/adapter-netlify/CHANGELOG.md)    |
+| [@sveltejs/adapter-node](packages/adapter-node)             | [Changelog](packages/adapter-node/CHANGELOG.md)       |
+| [@sveltejs/adapter-static](packages/adapter-static)         | [Changelog](packages/adapter-static/CHANGELOG.md)     |
+| [@sveltejs/adapter-vercel](packages/adapter-vercel)         | [Changelog](packages/adapter-vercel/CHANGELOG.md)     |
+| [@sveltejs/enhanced-img](packages/enhanced-img)             | [Changelog](packages/enhanced-img/CHANGELOG.md)       |
+| [@sveltejs/package](packages/package)                       | [Changelog](packages/package/CHANGELOG.md)            |
 
 [Additional adapters](https://sveltesociety.dev/packages?category=sveltekit-adapters) are maintained by the community.
 

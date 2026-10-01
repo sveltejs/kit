@@ -1,15 +1,10 @@
-import path from 'node:path';
 import process from 'node:process';
-import { fileURLToPath } from 'node:url';
-
-// since env.js is an entrypoint, `dir` will point to the output directory
-export const dir = path.dirname(fileURLToPath(import.meta.url));
+import { env_prefix } from '#@sveltejs/adapter-node';
 
 const expected = new Set([
 	'SOCKET_PATH',
 	'HOST',
 	'PORT',
-	'ORIGIN',
 	'XFF_DEPTH',
 	'ADDRESS_HEADER',
 	'PROTOCOL_HEADER',
@@ -23,8 +18,6 @@ const expected = new Set([
 ]);
 
 const expected_unprefixed = new Set(['LISTEN_PID', 'LISTEN_FDS']);
-
-export const env_prefix = ENV_PREFIX;
 
 if (env_prefix) {
 	for (const name in process.env) {

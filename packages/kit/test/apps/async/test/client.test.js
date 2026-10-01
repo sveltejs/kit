@@ -1,9 +1,6 @@
 import process from 'node:process';
-import { expect } from '@playwright/test';
+import { expect } from '../../../playwright-matchers.js';
 import { test } from '../../../utils.js';
-const is_node18 = process.versions.node.startsWith('18.');
-import { version as vite_version } from 'vite';
-const is_vite5 = vite_version.startsWith('5.');
 
 test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
 
@@ -13,8 +10,6 @@ test.describe('remote functions', () => {
 		clicknav
 	}) => {
 		test.skip(!process.env.DEV, 'remote functions are only analysed in dev mode');
-		// TODO: remove with SvelteKit 3
-		test.skip(is_node18 && is_vite5, 'vite5 in node18 fails to resolve remote function export');
 		await page.goto('/remote/dev');
 		await page.locator('a[href="/remote/dev/preload"]').hover();
 		await Promise.all([
@@ -35,10 +30,52 @@ test.describe('remote functions', () => {
 		const response = await response_promise;
 		expect(response.headers()['cache-control']).toBe('private, no-store');
 	});
+
+	test('clicking a link to the current page refreshes active queries', async ({ page }) => {
+		await page.goto('/remote/link-refresh');
+		await page.locator('#reset').click();
+
+		const a = page.locator('#count');
+
+		await expect(a).toHaveText('0');
+
+		await page.locator('#increment').click();
+		await expect(a).toHaveText('0');
+
+		await a.click();
+		await expect(a).toHaveText('1');
+	});
+
+	test('packages can re-export remote functions', async ({ page }) => {
+		await page.goto('/remote-lib');
+		await expect(page.locator('h1')).toHaveText('lib says hello');
+		await page.getByRole('button', { name: 'call remote function' }).click();
+		await expect(page.locator('p')).toHaveText('lib says client');
+	});
+
+	test('packages can contain ordinary remote.js files', async ({ page }) => {
+		await page.goto('/plain-lib');
+		await expect(page.locator('p')).toHaveText('key set for https://example.com/jwks');
+	});
+
+	// https://github.com/sveltejs/kit/issues/16854
+	test('deriveds fed by an awaited query stay memoized', async ({ page }) => {
+		await page.goto('/remote/query-derived-memoization');
+		await expect(page.locator('#result')).toHaveText('10');
+
+		await page.evaluate(() => (window.__recomputations = 0));
+		await page.locator('#bump').click();
+		await expect(page.locator('#result')).toHaveText('11');
+
+		// fourteen when memoized, tens of thousands (and climbing with graph depth) when not
+		expect(await page.evaluate(() => window.__recomputations)).toBeLessThan(1000);
+	});
 });
 
 // have to run in serial because commands mutate in-memory data on the server (should fix this at some point)
 test.describe('remote function mutations', () => {
+	test.describe.configure({ mode: 'serial' });
+
 	test.afterEach(async ({ page }) => {
 		if (page.url().endsWith('/remote')) {
 			await page.click('#reset-btn');
@@ -86,6 +123,90 @@ test.describe('remote function mutations', () => {
 		await expect(page.locator('#ssr-batch-result-2')).toHaveText('Walk the dog');
 		await expect(page.locator('#ssr-batch-result-3')).toHaveText('Not found');
 		expect(request_count).toBe(0);
+	});
+
+	test('query.set from within a query during SSR inlines the set values', async ({ page }) => {
+		await page.goto('/remote/query-set-inline');
+
+		// start counting after navigation, so we only observe requests triggered by
+		// creating the `get_thing(id)` resources — they should reuse the inlined values
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.click('#show');
+		await expect(page.locator('#thing-1')).toHaveText('one');
+		await expect(page.locator('#thing-2')).toHaveText('two');
+		await expect(page.locator('#thing-3')).toHaveText('three');
+		await page.waitForTimeout(100); // allow all requests to finish (there shouldn't be any)
+		expect(request_count).toBe(0);
+	});
+
+	test('query.refresh from within a query during SSR inlines the refreshed values', async ({
+		page
+	}) => {
+		await page.goto('/remote/query-set-inline/refresh');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.click('#show');
+		await expect(page.locator('#thing-1')).toHaveText('one');
+		await expect(page.locator('#thing-2')).toHaveText('two');
+		await expect(page.locator('#thing-3')).toHaveText('three');
+		await page.waitForTimeout(100); // allow all requests to finish (there shouldn't be any)
+		expect(request_count).toBe(0);
+	});
+
+	test('a lazily-run refreshed query that refreshes another is included in the single-flight response', async ({
+		page
+	}) => {
+		await page.goto('/remote/nested-refresh');
+		await expect(page.locator('#a')).toHaveText('0');
+		await expect(page.locator('#b')).toHaveText('0');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		// `bump` refreshes `get_a`; when `get_a` runs on the server it refreshes
+		// `get_b`, which is added to the single-flight set mid-collection. Both must
+		// come back in the command response, so `#b` updates without an extra request.
+		await page.click('#bump');
+		await expect(page.locator('#a')).toHaveText('5');
+		await expect(page.locator('#b')).toHaveText('50');
+		await page.waitForTimeout(100); // allow all requests to finish
+		expect(request_count).toBe(1); // only the command itself — no separate refetch of get_b
+	});
+
+	test('a query re-refreshed by another query during collection is cached, not re-run', async ({
+		page
+	}) => {
+		await page.goto('/remote/re-refresh');
+		await expect(page.locator('#value')).toHaveText('0');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		// `bump` refreshes `get_value` (which sees 10) and `driver`. When `driver`
+		// runs during collection it bumps the value to 11 and re-refreshes `get_value`.
+		// `get_value` has already been processed once this drain, so the re-refresh is
+		// cached rather than re-run — the client keeps the first (10) value. This is
+		// what prevents A → B → A refresh cycles from looping forever.
+		await page.click('#bump');
+		await expect(page.locator('#value')).toHaveText('10');
+		await page.waitForTimeout(100); // allow all requests to finish
+		expect(request_count).toBe(1); // only the command — no separate refetch
+	});
+
+	test('queries that refresh each other in a cycle do not loop forever', async ({ page }) => {
+		await page.goto('/remote/refresh-cycle');
+		await expect(page.locator('#value')).toHaveText('0');
+
+		// `get_a` refreshes `get_b` and `get_b` refreshes `get_a`. Without cycle
+		// detection in the drain phase the command response would never settle, so
+		// `#value` would stay at 0 and this assertion would time out.
+		await page.click('#bump');
+
+		await expect(page.locator('#value')).toHaveText('1');
 	});
 
 	test('hydrated query errors are reused', async ({ page }) => {
@@ -143,7 +264,7 @@ test.describe('remote function mutations', () => {
 		await page.click('button');
 
 		await expect(page.locator('#error')).toHaveText(
-			'400: Requested refresh was rejected because it exceeded requested(get_count, 0) limit'
+			'400: Requested update was not handled by the remote function'
 		);
 	});
 
@@ -201,6 +322,36 @@ test.describe('remote function mutations', () => {
 		await page.click('#multiply-server-refresh-after-read-btn');
 		await expect(page.locator('#command-result')).toHaveText('6');
 		await expect(page.locator('#count-result')).toHaveText('6 / 6 (false)');
+		await page.waitForTimeout(100); // allow all requests to finish (in case there are query refreshes which shouldn't happen)
+		expect(request_count).toBe(1);
+	});
+
+	test('command refresh before mutation defers the query until after the mutation', async ({
+		page
+	}) => {
+		await page.goto('/remote');
+		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.click('#multiply-server-refresh-before-mutation-btn');
+		await expect(page.locator('#command-result')).toHaveText('12');
+		await expect(page.locator('#count-result')).toHaveText('12 / 12 (false)');
+		await page.waitForTimeout(100); // allow all requests to finish (in case there are query refreshes which shouldn't happen)
+		expect(request_count).toBe(1);
+	});
+
+	test('command refresh then re-await uses the fresh cache entry', async ({ page }) => {
+		await page.goto('/remote');
+		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.click('#multiply-server-refresh-then-reawait-btn');
+		await expect(page.locator('#command-result')).toHaveText('13');
+		await expect(page.locator('#count-result')).toHaveText('13 / 13 (false)');
 		await page.waitForTimeout(100); // allow all requests to finish (in case there are query refreshes which shouldn't happen)
 		expect(request_count).toBe(1);
 	});
@@ -297,8 +448,8 @@ test.describe('remote function mutations', () => {
 		await expect(page.locator('#result')).toHaveText('action: hello');
 	});
 
-	test('command inside handle hook works with POST', async ({ request }) => {
-		const response = await request.post('/remote/hook-command');
+	test('command inside handle hook works with POST', async ({ request, baseURL }) => {
+		const response = await request.post('/remote/hook-command', { headers: { origin: baseURL } });
 		expect(response.status()).toBe(200);
 		const data = await response.json();
 		expect(data.result).toBe('action: from-hook');
@@ -307,14 +458,16 @@ test.describe('remote function mutations', () => {
 	test('command is blocked inside load functions', async ({ page }) => {
 		const response = await page.goto('/remote/server-load-command');
 		expect(response?.status()).toBe(500);
-		await expect(page.locator('#message')).toContainText('Cannot call a command');
+		await expect(page.locator('#message')).toContainText('remote_command_method');
 	});
 
 	test('command is blocked inside handle hook with GET', async ({ request }) => {
 		const response = await request.get('/remote/hook-command');
 		expect(response.status()).toBe(500);
 		const data = await response.json();
-		expect(data.error).toContain('Cannot call a command');
+		expect(String(data.error)).toContainKitDiagnostic('remote_command_method', {
+			contains: ['GET']
+		});
 	});
 
 	test('prerendered entries use prerender cache while live entries refetch', async ({ page }) => {
@@ -345,20 +498,6 @@ test.describe('remote function mutations', () => {
 		await page.click('#refresh-all');
 		await page.waitForTimeout(100); // allow things to rerun
 		expect(request_count).toBe(5);
-	});
-
-	test('refreshAll({ includeLoadFunctions: false }) reloads remote functions only', async ({
-		page
-	}) => {
-		await page.goto('/remote');
-		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
-
-		let request_count = 0;
-		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
-
-		await page.click('#refresh-remote-only');
-		await page.waitForTimeout(100); // allow things to rerun
-		expect(request_count).toBe(4);
 	});
 
 	test('command tracks pending state', async ({ page }) => {
@@ -397,10 +536,18 @@ test.describe('remote function mutations', () => {
 		await expect(page.locator('p')).toHaveText('success');
 	});
 
+	test('reserved words can be used as remote function export names', async ({ page }) => {
+		await page.goto('/remote/reserved');
+		await expect(page.locator('#reserved-result')).toHaveText('pending');
+
+		await page.click('#reserved-run');
+		await expect(page.locator('#reserved-result')).toHaveText('deleted/classy/42');
+	});
+
 	test('fields.set updates DOM before validate', async ({ page }) => {
 		await page.goto('/remote/form/imperative');
 
-		const input = page.locator('input[name="message"]');
+		const input = page.locator('input[name^="message"]');
 		await input.fill('123');
 
 		await page.locator('#set-and-validate').click();
@@ -450,6 +597,7 @@ test.describe('remote function mutations', () => {
 	// TODO once we have async SSR adjust the test and move this into test.js
 	test('query.batch works', async ({ page }) => {
 		await page.goto('/remote/batch');
+		await page.click('#batch-reset-btn');
 
 		await expect(page.locator('#batch-result-1')).toHaveText('Buy groceries');
 		await expect(page.locator('#batch-result-2')).toHaveText('Walk the dog');
@@ -555,7 +703,11 @@ test.describe('remote function mutations', () => {
 	});
 
 	test('query.live streams updates and reconnects after disconnect', async ({ page, context }) => {
+		const response = page.waitForResponse(
+			(r) => r.headers()['content-type'] === 'text/event-stream'
+		);
 		await page.goto('/remote/live');
+		expect((await response).request().headers()['accept']).toBe('text/event-stream');
 		await page.click('#reset');
 
 		await expect(page.locator('#first-value')).toHaveText('0');
@@ -701,30 +853,23 @@ test.describe('remote function mutations', () => {
 	}) => {
 		await page.goto('/remote/live');
 		await page.click('#reset');
+		await expect(page.locator('#connected')).toHaveText('true');
 
-		await page.click('#stats');
-		await expect(page.locator('#stats-value')).not.toHaveText('pending');
-		const before = JSON.parse((await page.locator('#stats-value').textContent()) ?? '{}');
+		let live_connections = 0;
+		let finite_connections = 0;
+		page.on('request', (request) => {
+			const pathname = new URL(request.url()).pathname;
+			if (pathname.endsWith('/get_count')) live_connections += 1;
+			if (pathname.endsWith('/get_finite_count')) finite_connections += 1;
+		});
 
-		await page.click('#reconnect-live-form');
+		await Promise.all([
+			page.waitForResponse((response) => response.url().includes('reconnect_live_form')),
+			page.click('#reconnect-live-form')
+		]);
 
-		await expect
-			.poll(async () => {
-				await page.click('#stats');
-				const value = (await page.locator('#stats-value').textContent()) ?? '{}';
-				if (value === 'pending') return before.cleanup_count;
-				return JSON.parse(value).cleanup_count;
-			})
-			.toBeGreaterThan(before.cleanup_count);
-
-		await expect
-			.poll(async () => {
-				await page.click('#stats');
-				const value = (await page.locator('#stats-value').textContent()) ?? '{}';
-				if (value === 'pending') return before.finite_connection_count;
-				return JSON.parse(value).finite_connection_count;
-			})
-			.toBe(before.finite_connection_count);
+		await expect.poll(() => live_connections).toBe(1);
+		expect(finite_connections).toBe(0);
 	});
 
 	test('query.live can be detached from the page', async ({ page }) => {
@@ -769,11 +914,9 @@ test.describe('remote function mutations', () => {
 		// iteration breaks after 3 values
 		await expect(page.locator('#for-await-count')).toHaveText('3');
 		await expect(page.locator('#for-await-values')).toHaveText('0,1,2');
-
-		await page.click('#reset');
 	});
 
-	test('for await consumers continue receiving values across invalidateAll-triggered reconnects', async ({
+	test('for await consumers continue receiving values across refreshAll-triggered reconnects', async ({
 		page
 	}) => {
 		await page.goto('/remote/live');
@@ -784,22 +927,20 @@ test.describe('remote function mutations', () => {
 		// the first value should be the current value (0)
 		await expect(page.locator('#stream-log')).toHaveText(/0/);
 
-		// invalidateAll() calls reconnect(), which keeps the existing fan-out
+		// refreshAll() calls reconnect(), which keeps the existing fan-out
 		// open so active `for await` consumers continue receiving values from
 		// the new connection without interruption.
-		await page.click('#run-invalidate-all');
-		await expect(page.locator('#invalidate-state')).toHaveText('resolved');
+		await page.click('#run-refresh-all');
+		await expect(page.locator('#refresh-state')).toHaveText('resolved');
 
 		// Trigger a new value — the still-attached consumer must see it.
 		// Before the fix the fan-out was replaced, orphaning the subscriber so
 		// this value never arrived and the loop hung.
 		await page.click('#increment');
 		await expect(page.locator('#stream-log')).toContainText('1');
-
-		await page.click('#reset');
 	});
 
-	test('invalidateAll resolves while a live query is offline', async ({ page, context }) => {
+	test('refreshAll resolves while a live query is offline', async ({ page, context }) => {
 		await page.goto('/remote/live');
 		await page.click('#reset');
 		await expect(page.locator('#connected')).toHaveText('true');
@@ -807,9 +948,9 @@ test.describe('remote function mutations', () => {
 		await context.setOffline(true);
 
 		// reconnect()'s handshake must settle on every #main exit path (here:
-		// offline) so that awaiting invalidateAll() doesn't deadlock.
-		await page.click('#run-invalidate-all');
-		await expect(page.locator('#invalidate-state')).toHaveText(/resolved|rejected/);
+		// offline) so that awaiting refreshAll() doesn't deadlock.
+		await page.click('#run-refresh-all');
+		await expect(page.locator('#refresh-state')).toHaveText(/resolved|rejected/);
 
 		await context.setOffline(false);
 	});
@@ -911,7 +1052,6 @@ test.describe('remote function mutations', () => {
 	test.describe('isomorphic query caching', () => {
 		test('await in event handler shares cache with simultaneous awaits', async ({ page }) => {
 			await page.goto('/remote/isomorphic-caching');
-			await page.click('#reset');
 
 			await page.click('#await-dedupe');
 			await expect(page.locator('#dedupe')).toHaveText('dedupe ok');
@@ -940,12 +1080,6 @@ test.describe('remote function mutations', () => {
 
 		// the query resource should report the 403 status from the hook
 		await expect(page.locator('#status')).toHaveText('403');
-
-		// clean up the cookie so other tests aren't affected
-		await page.click('#clear-btn');
-		await page.evaluate(() => {
-			document.cookie = 'deny-remote=; path=/; max-age=0';
-		});
 	});
 
 	test('form.for() with enhance does not duplicate requests', async ({ page }) => {
@@ -962,8 +1096,8 @@ test.describe('remote function mutations', () => {
 
 		const form1 = page.locator('form').nth(0);
 
-		const text = form1.locator('input[name="text_field"]');
-		const checkbox = form1.locator('input[name="b:checkbox_field"]');
+		const text = form1.locator('input[name^="text_field"]');
+		const checkbox = form1.locator('input[name^="b:checkbox_field"]');
 
 		// initial values rendered correctly
 		await expect(text).toHaveValue('Example text');
@@ -981,9 +1115,6 @@ test.describe('remote function mutations', () => {
 		// the input value should reflect the updated data
 		await expect(text).toHaveValue('Updated text');
 		await expect(checkbox).not.toBeChecked();
-
-		// reset the values for the client tests
-		await page.click('#reset-values');
 	});
 
 	test('.as(type, value) updates when field.set() is called', async ({ page }) => {
@@ -1042,7 +1173,7 @@ test.describe('remote function mutations', () => {
 		page
 	}) => {
 		await page.goto('/remote/form/native-result');
-		await page.locator('#plain input[name="message"]').fill('hello');
+		await page.locator('#plain input[name^="message"]').fill('hello');
 		await page.click('#plain button');
 
 		// wait for the page resulting from the full-page POST to hydrate
@@ -1054,20 +1185,20 @@ test.describe('remote function mutations', () => {
 		page
 	}) => {
 		await page.goto('/remote/form/native-result');
-		await page.locator('#plain input[name="message"]').fill('ab');
+		await page.locator('#plain input[name^="message"]').fill('ab');
 		await page.click('#plain button');
 
 		// wait for the page resulting from the full-page POST to hydrate
 		await expect(page.locator('#hydrated')).toHaveText('true');
 		await expect(page.locator('#issue')).toHaveText('too short');
-		await expect(page.locator('#plain input[name="message"]')).toHaveValue('ab');
+		await expect(page.locator('#plain input[name^="message"]')).toHaveValue('ab');
 	});
 
 	test('keyed form result from a native (non-enhanced) submission survives hydration', async ({
 		page
 	}) => {
 		await page.goto('/remote/form/native-result');
-		await page.locator('#keyed input[name="message"]').fill('hello');
+		await page.locator('#keyed input[name^="message"]').fill('hello');
 		await page.click('#keyed button');
 
 		// wait for the page resulting from the full-page POST to hydrate
@@ -1081,7 +1212,7 @@ test.describe('remote function mutations', () => {
 		page
 	}) => {
 		await page.goto('/remote/form/native-result');
-		await page.locator('#keyed-slash input[name="message"]').fill('hello');
+		await page.locator('#keyed-slash input[name^="message"]').fill('hello');
 		await page.click('#keyed-slash button');
 
 		// wait for the page resulting from the full-page POST to hydrate
@@ -1107,7 +1238,7 @@ test.describe('remote function mutations', () => {
 
 	test('form submission with element id `reset` resets the form', async ({ page }) => {
 		await page.goto('/remote/form/reset-id');
-		await page.locator('[name="message"]').fill('short');
+		await page.locator('[name^="message"]').fill('short');
 		await page.click('button');
 
 		await expect(page.locator('.error')).toHaveText('too short');
@@ -1115,11 +1246,11 @@ test.describe('remote function mutations', () => {
 		await page.click('[type="reset"]');
 		await expect(page.locator('.error')).toHaveCount(0);
 
-		await page.locator('[name="message"]').fill('long enough');
+		await page.locator('[name^="message"]').fill('long enough');
 		await page.click('button');
 
 		await expect(page.locator('#result')).toHaveText('long enough');
-		await expect(page.locator('[name="message"]')).toBeEmpty();
+		await expect(page.locator('[name^="message"]')).toBeEmpty();
 	});
 });
 
@@ -1130,6 +1261,7 @@ test.describe('client error boundaries', () => {
 		await expect(page.locator('#message')).toContainText(
 			'render error (500 Internal Error, on /server-error-boundary)'
 		);
+		await expect(page.locator('#nested-layout')).toHaveCount(0);
 	});
 
 	test('catches nested server render error and shows nested +error.svelte', async ({
@@ -1144,6 +1276,78 @@ test.describe('client error boundaries', () => {
 		// The nested layout should still be visible
 		await expect(page.locator('#nested-layout')).toBeVisible();
 	});
+
+	test('layout render error renders the same +error.svelte as SSR', async ({ page, app }) => {
+		await page.goto('/');
+		await app.goto('/server-error-boundary/layout-throws');
+		await expect(page.locator('#message')).toContainText(
+			'layout render error (500 Internal Error, on /server-error-boundary/layout-throws)'
+		);
+		await expect(page.locator('#layout-throws-error-message')).toHaveCount(0);
+		await expect(page.locator('#nested-layout')).toHaveCount(0);
+	});
+
+	test('client navigation away from a render error tears down the stale +error.svelte', async ({
+		page,
+		app
+	}) => {
+		await page.goto('/');
+		await app.goto('/server-error-boundary');
+		await expect(page.locator('#message')).toContainText(
+			'render error (500 Internal Error, on /server-error-boundary)'
+		);
+
+		await app.goto('/');
+		await expect(page.locator('#message')).toHaveCount(0);
+		await expect(page.locator('h3')).toHaveText('Tests');
+	});
+
+	test('client navigation away from a nested render error tears down the stale +error.svelte', async ({
+		page,
+		app
+	}) => {
+		await page.goto('/');
+		await app.goto('/server-error-boundary/nested');
+		await expect(page.locator('#nested-error-message')).toBeVisible();
+
+		await app.goto('/');
+		await expect(page.locator('#nested-error-message')).toHaveCount(0);
+		await expect(page.locator('#nested-layout')).toHaveCount(0);
+		await expect(page.locator('h3')).toHaveText('Tests');
+	});
+
+	test('client navigation away from an async render error tears down the stale +error.svelte', async ({
+		page,
+		app
+	}) => {
+		await page.goto('/');
+		await app.goto('/server-error-boundary/async');
+		// the awaited throw surfaces as a 404 through the root error boundary
+		await expect(page.locator('h1')).toHaveText('404');
+
+		await app.goto('/');
+		await expect(page.locator('#message')).toHaveCount(0);
+		await expect(page.locator('h3')).toHaveText('Tests');
+	});
+
+	test('client navigation using preloaded data away from a render error tears down the stale +error.svelte', async ({
+		page,
+		app
+	}) => {
+		await page.goto('/');
+		await app.goto('/server-error-boundary');
+		await expect(page.locator('#message')).toContainText('render error');
+
+		// preloading the home route creates a fork (forkPreloads is enabled);
+		// navigating via that fork must still tear down the failed boundary (#15694)
+		await app.preloadData('/');
+		await page.evaluate(() => new Promise((r) => setTimeout(r, 0)));
+		await page.locator('#error-home').click();
+		await expect(page).toHaveURL('/');
+		await expect(page.locator('#message')).toHaveCount(0);
+		await expect(page.locator('h3')).toHaveText('Tests');
+	});
+
 	test('redirecting from form clears result', async ({ page }) => {
 		await page.goto('/remote/form/reset-on-redirect');
 
@@ -1153,6 +1357,17 @@ test.describe('client error boundaries', () => {
 		await expect(result).toHaveText('hello world');
 		await page.locator('#redirect').click();
 		await expect(result).not.toHaveText('hello world');
+	});
+
+	test('remote form submit resolves after redirect navigation', async ({ page }) => {
+		await page.goto('/remote/form/reset-on-redirect');
+
+		await page.locator('#redirect-other').click();
+		await page.waitForURL('/remote/form/redirect-target/destination');
+
+		await expect
+			.poll(() => page.evaluate(() => sessionStorage.getItem('submit-resolved-pathname')))
+			.toBe('/remote/form/redirect-target/destination');
 	});
 });
 

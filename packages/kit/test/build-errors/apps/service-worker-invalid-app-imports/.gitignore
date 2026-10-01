@@ -1,0 +1,20 @@
+.DS_Store
+node_modules
+/build
+/.svelte-kit
+*** Add File: /Users/rich/Development/SVELTE/KIT/kit/packages/kit/test/build-errors/apps/service-worker-invalid-app-imports/package.json
+{
+	"name": "service-worker-invalid-app-imports",
+	"version": "0.0.1",
+	"private": true,
+	"scripts": {
+		"build": "vite build"
+	},
+	"devDependencies": {
+		"@sveltejs/kit": "workspace:^",
+		"@sveltejs/vite-plugin-svelte": "catalog:",
+		"svelte": "catalog:",
+		"vite": "catalog:"
+	},
+	"type": "module"
+}

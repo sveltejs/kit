@@ -1,9 +1,5 @@
 {
-	"compilerOptions": {
-		"allowJs": true,
-		"checkJs": true,
-		"esModuleInterop": true,
-		"resolveJsonModule": true
-	},
-	"extends": "./.svelte-kit/tsconfig.json"
+	"extends": "$app/tsconfig",
+	"include": ["src", "test/vitest", "test/playwright", "*.js", "../../vitest-matchers.d.ts"],
+	"exclude": ["src/service-worker.js"]
 }

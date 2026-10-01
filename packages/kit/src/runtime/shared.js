@@ -1,6 +1,8 @@
-/** @import { Transport } from '@sveltejs/kit' */
 import * as devalue from 'devalue';
-import { base64_decode, base64_encode, text_encoder } from './utils.js';
+import { base64_decode, base64_encode, text_decoder, text_encoder } from './utils.js';
+import { decoders, encoders } from '#app/internal/transport';
+import * as e from '../messages/shared-errors.js';
+import * as w from '../messages/shared-warnings.js';
 
 /**
  * @param {string} route_id
@@ -9,10 +11,17 @@ import { base64_decode, base64_encode, text_encoder } from './utils.js';
 export function validate_depends(route_id, dep) {
 	const match = /^(moz-icon|view-source|jar):/.exec(dep);
 	if (match) {
-		console.warn(
-			`${route_id}: Calling \`depends('${dep}')\` will throw an error in Firefox because \`${match[1]}\` is a special URI scheme`
-		);
+		w.depends_special_scheme({ route: route_id, dependency: dep, scheme: match[1] });
 	}
+}
+
+/**
+ * Same-origin urls are keyed by path, so prerendered pages can be served from any origin
+ * @param {URL} url
+ * @param {{ origin: string }} page
+ */
+export function fetch_cache_url(url, page) {
+	return url.origin === page.origin ? url.href.slice(page.origin.length) : url.href;
 }
 
 export const INVALIDATED_PARAM = 'x-sveltekit-invalidated';
@@ -25,8 +34,9 @@ export const TRAILING_SLASH_PARAM = 'x-sveltekit-trailing-slash';
  */
 export function validate_load_response(data, location_description) {
 	if (data != null && Object.getPrototypeOf(data) !== Object.prototype) {
-		throw new Error(
-			`a load function ${location_description} returned ${
+		e.load_invalid_response({
+			location: String(location_description),
+			type:
 				typeof data !== 'object'
 					? `a ${typeof data}`
 					: data instanceof Response
@@ -34,20 +44,8 @@ export function validate_load_response(data, location_description) {
 						: Array.isArray(data)
 							? 'an array'
 							: 'a non-plain object'
-			}, but must return a plain object at the top level (i.e. \`return {...}\`)`
-		);
+		});
 	}
-}
-
-/**
- * Try to `devalue.stringify` the data object using the provided transport encoders.
- * @param {any} data
- * @param {Transport} transport
- */
-export function stringify(data, transport) {
-	const encoders = Object.fromEntries(Object.entries(transport).map(([k, v]) => [k, v.encode]));
-
-	return devalue.stringify(data, encoders);
 }
 
 const object_proto_names = /* @__PURE__ */ Object.getOwnPropertyNames(Object.prototype)
@@ -102,22 +100,22 @@ const remote_regex_guard = '__skrag';
 const remote_arg_marker = Symbol(remote_object);
 
 /**
- * @param {Transport} transport
  * @param {boolean} sort
- * @param {Map<any, any>} remote_arg_clones
  */
-function create_remote_arg_reducers(transport, sort, remote_arg_clones) {
+function create_remote_arg_reducers(sort) {
 	/** @type {Record<string, (value: unknown) => unknown>} */
 	const remote_fns_reducers = {
 		/** @param {unknown} value */
 		[remote_regex_guard]: (value) => {
 			if (value instanceof RegExp) {
-				throw new Error('Regular expressions are not valid remote function arguments');
+				e.remote_argument_unsupported({ type: 'Regular expressions' });
 			}
 		}
 	};
 
 	if (sort) {
+		const clones = new Map();
+
 		/** @type {(value: unknown) => Array<[unknown, unknown]> | undefined} */
 		remote_fns_reducers[remote_map] = (value) => {
 			if (!(value instanceof Map)) {
@@ -167,18 +165,15 @@ function create_remote_arg_reducers(transport, sort, remote_arg_clones) {
 				return;
 			}
 
-			if (remote_arg_clones.has(value)) {
-				return remote_arg_clones.get(value);
+			if (clones.has(value)) {
+				return clones.get(value);
 			}
 
-			return to_sorted(value, remote_arg_clones);
+			return to_sorted(value, clones);
 		};
 	}
 
-	const user_reducers = Object.fromEntries(
-		Object.entries(transport).map(([k, v]) => [k, v.encode])
-	);
-	const all_reducers = { ...user_reducers, ...remote_fns_reducers };
+	const all_reducers = { ...encoders, ...remote_fns_reducers };
 
 	/** @type {(value: unknown) => string} */
 	const stringify = (value) => devalue.stringify(value, all_reducers);
@@ -186,8 +181,7 @@ function create_remote_arg_reducers(transport, sort, remote_arg_clones) {
 	return all_reducers;
 }
 
-/** @param {Transport} transport */
-function create_remote_arg_revivers(transport) {
+function create_remote_arg_revivers() {
 	const remote_fns_revivers = {
 		/** @type {(value: unknown) => unknown} */
 		[remote_object]: (value) => value,
@@ -251,11 +245,7 @@ function create_remote_arg_revivers(transport) {
 		}
 	};
 
-	const user_revivers = Object.fromEntries(
-		Object.entries(transport).map(([k, v]) => [k, v.decode])
-	);
-
-	const all_revivers = { ...user_revivers, ...remote_fns_revivers };
+	const all_revivers = { ...decoders, ...remote_fns_revivers };
 
 	/** @type {(data: string) => unknown} */
 	const parse = (data) => devalue.parse(data, all_revivers);
@@ -267,13 +257,12 @@ function create_remote_arg_revivers(transport) {
  * Stringifies the argument (if any) for a remote function in such a way that
  * it is both a valid URL and a valid file name (necessary for prerendering).
  * @param {any} value
- * @param {Transport} transport
  */
-export function stringify_remote_arg(value, transport) {
+export function stringify_remote_arg(value) {
 	if (value === undefined) return '';
 
 	// If people hit file/url size limits, we can look into using something like compress_and_encode_text from svelte.dev beyond a certain size
-	const json = devalue.stringify(value, create_remote_arg_reducers(transport, true, new Map()));
+	const json = devalue.stringify(value, create_remote_arg_reducers(true));
 
 	return url_friendly_base64_encode(json);
 }
@@ -281,12 +270,11 @@ export function stringify_remote_arg(value, transport) {
 /**
  * Stringifies command arguments, including `File` objects.
  * @param {any} value
- * @param {Transport} transport
  */
-export async function stringify_command_arg(value, transport) {
+export async function stringify_command_arg(value) {
 	if (value === undefined) return '';
 
-	const reducers = create_remote_arg_reducers(transport, false, new Map());
+	const reducers = create_remote_arg_reducers(false);
 
 	/** @type {Set<Promise<any>>} */
 	const allowed_promises = new Set();
@@ -315,7 +303,7 @@ export async function stringify_command_arg(value, transport) {
 	/** @param {unknown} value */
 	reducers[remote_promise_guard] = (value) => {
 		if (value instanceof Promise && !allowed_promises.has(value)) {
-			throw new Error('Promises are not valid remote function arguments');
+			e.remote_argument_unsupported({ type: 'Promises' });
 		}
 	};
 
@@ -331,23 +319,24 @@ export async function stringify_command_arg(value, transport) {
  */
 function url_friendly_base64_encode(string) {
 	const bytes = text_encoder.encode(string);
+	// TODO replace with `bytes.toBase64({ alphabet: 'base64url', omitPadding: true })` when we require Node >= 25
 	return base64_encode(bytes).replaceAll('=', '').replaceAll('+', '-').replaceAll('/', '_');
 }
 
 /**
  * Parses the argument (if any) for a remote function
  * @param {string} string
- * @param {Transport} transport
  */
-export function parse_remote_arg(string, transport) {
+export function parse_remote_arg(string) {
 	if (!string) return undefined;
 
-	const json_string = new TextDecoder().decode(
+	const json_string = text_decoder.decode(
+		// TODO replace with `Uint8Array.fromBase64(string, { alphabet: 'base64url' })` when we require Node >= 25
 		// no need to add back `=` characters, atob can handle it
 		base64_decode(string.replaceAll('-', '+').replaceAll('_', '/'))
 	);
 
-	return devalue.parse(json_string, create_remote_arg_revivers(transport));
+	return devalue.parse(json_string, create_remote_arg_revivers());
 }
 
 /**

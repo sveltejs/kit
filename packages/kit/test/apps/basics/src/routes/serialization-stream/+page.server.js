@@ -1,4 +1,4 @@
-import { Foo } from '$lib';
+import { Foo } from '#lib';
 
 export const load = () => {
 	return {

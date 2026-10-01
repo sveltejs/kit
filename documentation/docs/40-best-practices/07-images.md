@@ -16,7 +16,7 @@ Doing this manually is tedious. There are a variety of techniques you can use, d
 
 ```svelte
 <script>
-	import logo from '$lib/assets/logo.png';
+	import logo from '#lib/assets/logo.png';
 </script>
 
 <img alt="The project logo" src={logo} />
@@ -39,14 +39,15 @@ npm i -D @sveltejs/enhanced-img
 Adjust `vite.config.js`:
 
 ```js
-import { sveltekit } from '@sveltejs/kit/vite';
+/// file: vite.config.js
 +++import { enhancedImages } from '@sveltejs/enhanced-img';+++
+import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
 	plugins: [
 		+++enhancedImages(), // must come before the SvelteKit plugin+++
-		sveltekit()
+		sveltekit({/* ... */})
 	]
 });
 ```

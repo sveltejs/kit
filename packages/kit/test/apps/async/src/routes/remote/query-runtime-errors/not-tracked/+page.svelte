@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { RemoteQuery } from '@sveltejs/kit';
+	import type { RemoteQuery } from '$app/server';
 	import { get_count } from '../../query-command.remote.js';
 
 	let status = $state('idle');

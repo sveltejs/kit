@@ -12,9 +12,6 @@ This guide is for AI coding agents working in the SvelteKit monorepo.
 # Initial setup (takes 3-4 minutes, set 10+ min timeout)
 pnpm install --frozen-lockfile
 
-# Build all packages (~1-2 seconds)
-pnpm build
-
 # Format code (~15 seconds)
 pnpm run format
 
@@ -32,7 +29,7 @@ pnpm run check
 pnpm -F @sveltejs/kit test:unit
 
 # Run a single unit test file
-pnpm -F @sveltejs/kit test:unit:dev path/to/test.spec.js
+pnpm vitest run path/to/test.spec.js
 
 # Integration tests (10-30 minutes, set 60+ min timeout)
 pnpm test:kit
@@ -117,7 +114,7 @@ const content_type = request.headers.get('content-type')?.split(';', 1)[0];
 - Type casting when needed: `/** @type {Error} */ (err)`
 - Enable strict mode: `checkJs: true`, `strict: true` in tsconfig.json
 
-### Formatting (via Prettier)
+### Formatting (via oxfmt)
 
 - **Tabs for indentation** (not spaces)
 - **Single quotes** for strings
@@ -151,7 +148,6 @@ const content_type = request.headers.get('content-type')?.split(';', 1)[0];
 - `adapter-*` - Platform adapters (node, cloudflare, netlify, vercel, static, auto)
 - `@sveltejs/package` - Package building utilities
 - `@sveltejs/enhanced-img` - Enhanced image component
-- `@sveltejs/amp` - AMP support
 
 ## Troubleshooting
 

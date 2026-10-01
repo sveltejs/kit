@@ -154,15 +154,23 @@ export interface CspDirectives {
 	>;
 }
 
-export type HttpMethod = 'GET' | 'HEAD' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'OPTIONS';
+export type HttpMethod = 'GET' | 'HEAD' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'OPTIONS' | 'QUERY';
 
 export interface Logger {
 	(msg: string): void;
 	success(msg: string): void;
+	/** Print a bold red message to stderr */
 	error(msg: string): void;
+	/** Print a bold yellow message to stderr */
 	warn(msg: string): void;
+	/** Print faded text to stdout if `verbose === true` */
 	minor(msg: string): void;
+	/** Print to stdout if `verbose === true` */
 	info(msg: string): void;
+	/** Print to stderr without formatting */
+	err(msg: string): void;
+	/** Print a bold red message, followed by a stack trace for each error (following `.cause` chains) */
+	prettyError(error: unknown, caller?: string): void;
 }
 
 export type MaybePromise<T> = T | Promise<T>;

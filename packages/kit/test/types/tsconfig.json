@@ -3,5 +3,6 @@
 	"compilerOptions": {
 		"noEmit": true
 	},
-	"include": ["**/*.test.ts", "../../src/types/*.d.ts"]
+	"include": ["**/*.test.ts", "../../src/types/*.d.ts"],
+	"exclude": ["../../**/write_types/test/**", "./app-error-enhanced/**"]
 }

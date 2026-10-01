@@ -210,6 +210,9 @@ export class SharedIterator {
 			},
 			[Symbol.asyncIterator]() {
 				return iterator;
+			},
+			async [Symbol.asyncDispose]() {
+				// TODO: investigate if this needs to be implemented
 			}
 		};
 

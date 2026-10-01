@@ -8,12 +8,12 @@
  */
 export function number_from_env(name, default_value) {
 	const val = process.env[name];
-	if(val!= null) {
+	if (val != null) {
 		const num = Number(val);
-		if(isNaN(num)){
+		if (isNaN(num)) {
 			throw new Error(`process.env.${name} must be parsable to a number but is "${val}"`);
 		}
 		return num;
 	}
-	return default_value
+	return default_value;
 }

@@ -1,0 +1,15 @@
+{
+	"name": "config-above-root",
+	"private": true,
+	"version": "1.0.0",
+	"description": "package whose only jsconfig lives above the package root",
+	"peerDependencies": {
+		"svelte": "^4.0.0"
+	},
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"svelte": "./dist/index.js"
+		}
+	}
+}

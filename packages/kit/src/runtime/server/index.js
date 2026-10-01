@@ -1,180 +1,80 @@
-/** @import { PromiseWithResolvers } from '../../utils/promise.js' */
-import { noop } from '../../utils/functions.js';
-import { with_resolvers } from '../../utils/promise.js';
-import { IN_WEBCONTAINER } from './constants.js';
-import { respond } from './respond.js';
-import { set_private_env, set_public_env } from '../shared-server.js';
-import { options, get_hooks } from '__SERVER__/internal.js';
-import { filter_env } from '../../utils/env.js';
-import { format_server_error } from './utils.js';
-import { set_read_implementation, set_manifest } from '__sveltekit/server';
-import { set_env } from '__sveltekit/env';
-import { set_app } from './app.js';
+import { set_building, set_prerendering } from '#app/env/server';
+import { enable_verbose_errors } from '../../messages/internal/shared.js';
+import { set_assets } from '../app/paths/internal/server.js';
+import { set_fix_stack_trace, set_manifest, set_read_implementation } from './internal.js';
 
-/** @type {Promise<any>} */
-let init_promise;
+/**
+ * Sets the module-level state the runtime reads, then loads the runtime. Everything that
+ * evaluates user code, the env config included, sits behind this import
+ * @param {import('types').ServerConfigureOptions} opts
+ * @returns {Promise<import('types').ServerInstance>}
+ */
+export async function configure({
+	building,
+	prerendering,
+	manifest,
+	read,
+	assets,
+	fix_stack_trace,
+	env
+}) {
+	if (building) {
+		set_building();
+		enable_verbose_errors();
+	}
+	if (prerendering) set_prerendering();
+	if (manifest) set_manifest(manifest);
+	if (read) set_read_implementation(read);
+	if (assets !== undefined) set_assets(assets);
+	if (fix_stack_trace) set_fix_stack_trace(fix_stack_trace);
 
-/** @type {Promise<void> | null} */
-let current = null;
+	const instance = await import('./instance.js');
+	if (env) instance.set_env(env);
 
+	return instance;
+}
+
+/**
+ * The `server` object adapters receive from `builder.generateServerInstance`
+ * @param {import('types').SSRManifest} manifest
+ * @returns {import('@sveltejs/kit').Server}
+ */
+export function create_server(manifest) {
+	/** @type {import('types').ServerInstance} */
+	let server;
+
+	return {
+		// adapters get to set `env` and `read`, nothing else
+		init: async ({ env, read }) => {
+			server = await configure({ manifest, env, read });
+			await server.init();
+		},
+		/** @type {import('types').ServerInstance['respond']} */
+		respond: (request, options) => server.respond(request, options)
+	};
+}
+
+/** @deprecated use the `server` written by `builder.generateServerInstance`, or `configure` */
 export class Server {
-	/** @type {import('types').SSROptions} */
-	#options;
+	#server;
 
-	/** @type {import('@sveltejs/kit').SSRManifest} */
-	#manifest;
-
-	/** @param {import('@sveltejs/kit').SSRManifest} manifest */
+	/** @param {import('types').SSRManifest} manifest */
 	constructor(manifest) {
-		/** @type {import('types').SSROptions} */
-		this.#options = options;
-		this.#manifest = manifest;
-
-		// Since AsyncLocalStorage is not working in webcontainers, we don't reset `sync_store`
-		// in `src/exports/internal/event.js` and handle only one request at a time.
-		if (IN_WEBCONTAINER) {
-			const respond = this.respond.bind(this);
-
-			/** @type {typeof respond} */
-			this.respond = async (...args) => {
-				const { promise, resolve } = /** @type {PromiseWithResolvers<void>} */ (with_resolvers());
-
-				const previous = current;
-				current = promise;
-
-				await previous;
-				return respond(...args).finally(resolve);
-			};
-		}
-
-		set_manifest(manifest);
+		this.#server = create_server(manifest);
 	}
 
-	/**
-	 * @param {import('@sveltejs/kit').ServerInitOptions} opts
-	 */
-	async init({ env, read }) {
-		// Take care: Some adapters may have to call `Server.init` per-request to set env vars,
-		// so anything that shouldn't be rerun should be wrapped in an `if` block to make sure it hasn't
-		// been done already.
-
-		// set env, in case it's used in initialisation
-		const { env_public_prefix, env_private_prefix } = this.#options;
-
-		set_private_env(filter_env(env, env_private_prefix, env_public_prefix));
-		set_public_env(filter_env(env, env_public_prefix, env_private_prefix));
-		set_env(env);
-
-		if (read) {
-			// Wrap the read function to handle MaybePromise<ReadableStream>
-			// and ensure the public API stays synchronous
-			/** @param {string} file */
-			const wrapped_read = (file) => {
-				const result = read(file);
-				if (result instanceof ReadableStream) {
-					return result;
-				} else {
-					return new ReadableStream({
-						async start(controller) {
-							try {
-								const stream = await Promise.resolve(result);
-								if (!stream) {
-									controller.close();
-									return;
-								}
-
-								const reader = stream.getReader();
-
-								while (true) {
-									const { done, value } = await reader.read();
-									if (done) break;
-									controller.enqueue(value);
-								}
-
-								controller.close();
-							} catch (error) {
-								controller.error(error);
-							}
-						}
-					});
-				}
-			};
-
-			set_read_implementation(wrapped_read);
-		}
-
-		// During dev and for some adapters this function might be called in quick succession,
-		// so we need to make sure we're not invoking this logic (most notably the init hook) multiple times
-		await (init_promise ??= (async () => {
-			try {
-				const module = await get_hooks();
-
-				this.#options.hooks = {
-					handle: module.handle || (({ event, resolve }) => resolve(event)),
-					handleError:
-						module.handleError ||
-						(({ status, error, event }) => {
-							const error_message = format_server_error(
-								status,
-								/** @type {Error} */ (error),
-								event
-							);
-							console.error(error_message);
-						}),
-					handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request)),
-					handleValidationError:
-						module.handleValidationError ||
-						(({ issues }) => {
-							console.error('Remote function schema validation failed:', issues);
-							return { message: 'Bad Request' };
-						}),
-					reroute: module.reroute || noop,
-					transport: module.transport || {}
-				};
-
-				set_app({
-					decoders: module.transport
-						? Object.fromEntries(Object.entries(module.transport).map(([k, v]) => [k, v.decode]))
-						: {}
-				});
-
-				if (module.init) {
-					await module.init();
-				}
-			} catch (e) {
-				if (__SVELTEKIT_DEV__) {
-					this.#options.hooks = {
-						handle: () => {
-							throw e;
-						},
-						handleError: ({ error }) => console.error(error),
-						handleFetch: ({ request, fetch }) => fetch(request),
-						handleValidationError: () => {
-							return { message: 'Bad Request' };
-						},
-						reroute: noop,
-						transport: {}
-					};
-
-					set_app({
-						decoders: {}
-					});
-				} else {
-					throw e;
-				}
-			}
-		})());
+	/** @param {import('@sveltejs/kit').ServerInitOptions} opts */
+	init(opts) {
+		return this.#server.init(opts);
 	}
 
 	/**
 	 * @param {Request} request
-	 * @param {import('types').RequestOptions} options
+	 * @param {import('types').InternalRequestOptions} options
 	 */
-	async respond(request, options) {
-		return respond(request, this.#options, this.#manifest, {
-			...options,
-			error: false,
-			depth: 0
-		});
+	respond(request, options) {
+		return this.#server.respond(request, options);
 	}
 }
+
+export { format_response } from './internal.js';

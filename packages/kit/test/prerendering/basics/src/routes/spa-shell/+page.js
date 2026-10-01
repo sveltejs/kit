@@ -6,5 +6,5 @@ export const ssr = false;
 
 /** @type {import('@sveltejs/kit').Load} */
 export function load() {
-	redirect(301, 'https://example.com/redirected');
+	redirect(301, 'https://example.com/redirected', { external: true });
 }

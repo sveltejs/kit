@@ -1,5 +1,6 @@
 import { form, query } from '$app/server';
 import * as v from 'valibot';
+import { per_session } from '../../per-session.js';
 
 const ValueSchema = v.object({
 	id: v.string(),
@@ -38,18 +39,16 @@ const default_values: Array<Omit<v.InferOutput<typeof ValueSchema>, 'hidden'>> =
 	}
 ];
 
-let values = structuredClone(default_values);
+const session = per_session(() => ({
+	values: structuredClone(default_values),
+	hidden_values: {} as { string?: string; number?: number; boolean?: boolean }
+}));
 
-export const get_values = query(() => values);
-
-let hidden_values: {
-	string?: string;
-	number?: number;
-	boolean?: boolean;
-} = {};
+export const get_values = query(() => session().values);
 
 export const as_value_form = form(ValueSchema, async (data) => {
-	const element = values.find((v) => v.id === data.id);
+	const state = session();
+	const element = state.values.find((v) => v.id === data.id);
 	if (element) {
 		element.text_field = data.text_field;
 		element.number_field = data.number_field;
@@ -59,12 +58,7 @@ export const as_value_form = form(ValueSchema, async (data) => {
 		element.checkbox_field = data.checkbox_field;
 		await get_values().refresh();
 	}
-	hidden_values = data.hidden;
+	state.hidden_values = data.hidden;
 });
 
-export const get_hidden_values = query(() => hidden_values);
-
-export const reset_values = form(async () => {
-	values = structuredClone(default_values);
-	hidden_values = {};
-});
+export const get_hidden_values = query(() => session().hidden_values);

@@ -1,18 +1,16 @@
-/** @import { BuildOptions } from 'esbuild' */
-import { appendFileSync, existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { join, resolve, posix } from 'node:path';
+/** @import { IntegrationsConfig } from '@netlify/edge-functions' */
+/** @import { Builder, RouteDefinition } from '@sveltejs/kit' */
+import crypto from 'node:crypto';
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { builtinModules } from 'node:module';
 import process from 'node:process';
-import esbuild from 'esbuild';
-import toml from '@iarna/toml';
+import { build } from 'rolldown';
+import { matches, s } from './utils.js';
 
-/**
- * @typedef {{
- *   build?: { publish?: string }
- *   functions?: { node_bundler?: 'zisi' | 'esbuild' }
- * } & toml.JsonMap} NetlifyConfig
- */
+const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf-8'));
+const adapter_version = pkg.version;
 
 const name = '@sveltejs/adapter-netlify';
 const files = fileURLToPath(new URL('./files', import.meta.url).href);
@@ -21,13 +19,18 @@ const edge_set_in_env_var =
 	process.env.NETLIFY_SVELTEKIT_USE_EDGE === 'true' ||
 	process.env.NETLIFY_SVELTEKIT_USE_EDGE === '1';
 
+const netlify_framework_config_path = '.netlify/v1/config.json';
+const netlify_framework_serverless_path = '.netlify/v1/functions';
+const netlify_framework_edge_path = '.netlify/v1/edge-functions';
+
 const FUNCTION_PREFIX = 'sveltekit-';
 
-/** @type {import('./index.js').default} */
-export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
+// "build" is the default publish directory when Netlify detects SvelteKit
+
+/** @type {typeof import('./index.js').default} */
+export default function ({ split = false, edge = edge_set_in_env_var, publish = 'build' } = {}) {
 	return {
 		name,
-		/** @param {import('@sveltejs/kit').Builder} builder */
 		async adapt(builder) {
 			if (!builder.routes) {
 				throw new Error(
@@ -36,61 +39,60 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 				);
 			}
 
-			if (existsSync(`${builder.config.kit.files.assets}/_headers`)) {
+			if (existsSync(`${builder.config.files.assets}/_headers`)) {
 				throw new Error(
-					`The _headers file should be placed in the project root rather than the ${builder.config.kit.files.assets} directory`
+					`The _headers file should be placed in the project root rather than the ${builder.config.files.assets} directory`
 				);
 			}
 
-			if (existsSync(`${builder.config.kit.files.assets}/_redirects`)) {
+			if (existsSync(`${builder.config.files.assets}/_redirects`)) {
 				throw new Error(
-					`The _redirects file should be placed in the project root rather than the ${builder.config.kit.files.assets} directory`
+					`The _redirects file should be placed in the project root rather than the ${builder.config.files.assets} directory`
 				);
 			}
-
-			const netlify_config = get_netlify_config();
-
-			// "build" is the default publish directory when Netlify detects SvelteKit
-			const publish = get_publish_directory(netlify_config, builder) || 'build';
 
 			// empty out existing build directories
-			builder.rimraf(publish);
-			builder.rimraf('.netlify/edge-functions');
-			builder.rimraf('.netlify/server');
-			builder.rimraf('.netlify/package.json');
-			builder.rimraf('.netlify/serverless.js');
+			rmSync(publish, { force: true, recursive: true });
+			rmSync('.netlify/v1', { force: true, recursive: true });
 
+			// clean up legacy directories from older adapter versions to avoid
+			// gnarly edge cases when an existing project is upgraded to this version
+			rmSync('.netlify/edge-functions', { force: true, recursive: true });
+			rmSync('.netlify/server', { force: true, recursive: true });
+			rmSync('.netlify/package.json', { force: true, recursive: true });
+			rmSync('.netlify/serverless.js', { force: true, recursive: true });
 			if (existsSync('.netlify/functions-internal')) {
 				for (const file of readdirSync('.netlify/functions-internal')) {
 					if (file.startsWith(FUNCTION_PREFIX)) {
-						builder.rimraf(join('.netlify/functions-internal', file));
+						rmSync(join('.netlify/functions-internal', file), { force: true, recursive: true });
 					}
 				}
 			}
 
-			builder.log.minor(`Publishing to "${publish}"`);
-
 			builder.log.minor('Copying assets...');
-			const publish_dir = `${publish}${builder.config.kit.paths.base}`;
+			const publish_dir = `${publish}${builder.config.paths.base}`;
 			builder.writeClient(publish_dir);
 			builder.writePrerendered(publish_dir);
 
-			builder.log.minor('Writing custom headers...');
-			const headers_file = join(publish, '_headers');
-			builder.copy('_headers', headers_file);
-			appendFileSync(
-				headers_file,
-				`\n\n/${builder.getAppPath()}/immutable/*\n  cache-control: public\n  cache-control: immutable\n  cache-control: max-age=31536000\n`
-			);
+			// Copy user's _headers file if it exists
+			if (existsSync('_headers')) {
+				builder.log.minor('Copying user custom headers...');
+				builder.copy('_headers', join(publish, '_headers'));
+			}
+
+			// Copy user's _redirects file if it exists
+			if (existsSync('_redirects')) {
+				builder.log.minor('Copying user redirects...');
+				builder.copy('_redirects', join(publish, '_redirects'));
+			}
+
+			builder.log.minor('Writing Netlify config...');
+			write_frameworks_config({ builder });
 
 			if (edge) {
-				if (split) {
-					throw new Error('Cannot use `split: true` alongside `edge: true`');
-				}
-
-				await generate_edge_functions({ builder });
+				await generate_edge_functions({ builder, split });
 			} else {
-				generate_lambda_functions({ builder, split, publish });
+				generate_serverless_functions(builder, split);
 			}
 		},
 
@@ -100,358 +102,484 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 		}
 	};
 }
+
 /**
- * @param { object } params
- * @param {import('@sveltejs/kit').Builder} params.builder
+ * @param {Builder} builder
+ * @param {boolean} split
  */
-async function generate_edge_functions({ builder }) {
-	const tmp = builder.getBuildDirectory('netlify-tmp');
-	builder.rimraf(tmp);
-	builder.mkdirp(tmp);
+function generate_serverless_functions(builder, split) {
+	// https://docs.netlify.com/build/frameworks/frameworks-api/#netlifyv1functions
+	mkdirSync(netlify_framework_serverless_path, { recursive: true });
 
-	builder.mkdirp('.netlify/edge-functions');
+	builder.writeServer('.netlify/v1/server');
 
-	builder.log.minor('Generating Edge Function...');
-	const relativePath = posix.relative(tmp, builder.getServerDirectory());
-
-	builder.copy(`${files}/edge.js`, `${tmp}/entry.js`, {
-		replace: {
-			'0SERVER': `${relativePath}/index.js`,
-			MANIFEST: './manifest.js'
-		}
-	});
-
-	const manifest = builder.generateManifest({
-		relativePath
-	});
-
-	writeFileSync(`${tmp}/manifest.js`, `export const manifest = ${manifest};\n`);
-
-	/** @type {{ assets: Set<string> }} */
-	// we have to prepend the file:// protocol because Windows doesn't support absolute path imports
-	const { assets } = (await import(`file://${tmp}/manifest.js`)).manifest;
-
-	const path = '/*';
-	// We only need to specify paths without the trailing slash because
-	// Netlify will handle the optional trailing slash for us
-	const excluded = [
-		// Contains static files
-		`/${builder.getAppPath()}/immutable/*`,
-		`/${builder.getAppPath()}/version.json`,
-		...builder.prerendered.paths,
-		...Array.from(assets).flatMap((asset) => {
-			if (asset.endsWith('/index.html')) {
-				const dir = asset.replace(/\/index\.html$/, '');
-				return [
-					`${builder.config.kit.paths.base}/${asset}`,
-					`${builder.config.kit.paths.base}/${dir}`
-				];
-			}
-			return `${builder.config.kit.paths.base}/${asset}`;
-		}),
-		// Should not be served by SvelteKit at all
-		'/.netlify/*'
-	];
-
-	/** @type {import('@netlify/edge-functions').Manifest} */
-	const edge_manifest = {
-		functions: [
-			{
-				function: 'render',
-				path,
-				excludedPath: /** @type {`/${string}`[]} */ (excluded)
-			}
-		],
-		version: 1
-	};
-
-	/** @type {BuildOptions} */
-	const esbuild_config = {
-		bundle: true,
-		format: 'esm',
-		platform: 'browser',
-		sourcemap: 'linked',
-		target: 'es2020',
-		loader: {
-			'.wasm': 'copy',
-			'.woff': 'copy',
-			'.woff2': 'copy',
-			'.ttf': 'copy',
-			'.eot': 'copy',
-			'.otf': 'copy'
-		},
-		// Node built-ins are allowed, but must be prefixed with `node:`
-		// https://docs.netlify.com/edge-functions/api/#runtime-environment
-		external: builtinModules.map((id) => `node:${id}`),
-		alias: Object.fromEntries(builtinModules.map((id) => [id, `node:${id}`]))
-	};
-	await Promise.all([
-		esbuild.build({
-			entryPoints: [`${tmp}/entry.js`],
-			outfile: '.netlify/edge-functions/render.js',
-			...esbuild_config
-		}),
-		builder.hasServerInstrumentationFile() &&
-			esbuild.build({
-				entryPoints: [`${builder.getServerDirectory()}/instrumentation.server.js`],
-				outfile: '.netlify/edge/instrumentation.server.js',
-				...esbuild_config
-			})
-	]);
-
-	if (builder.hasServerInstrumentationFile()) {
-		builder.instrument({
-			entrypoint: '.netlify/edge-functions/render.js',
-			instrumentation: '.netlify/edge/instrumentation.server.js',
-			start: '.netlify/edge/start.js'
-		});
-	}
-
-	writeFileSync('.netlify/edge-functions/manifest.json', JSON.stringify(edge_manifest));
-}
-/**
- * @param { object } params
- * @param {import('@sveltejs/kit').Builder} params.builder
- * @param { string } params.publish
- * @param { boolean } params.split
- */
-function generate_lambda_functions({ builder, publish, split }) {
-	builder.mkdirp('.netlify/functions-internal/.svelte-kit');
-
-	builder.writeServer('.netlify/server');
-
-	const replace = {
-		'0SERVER': './server/index.js' // digit prefix prevents CJS build from using this as a variable name, which would also get replaced
-	};
-
-	builder.copy(files, '.netlify', { replace, filter: (name) => !name.endsWith('edge.js') });
+	builder.copy(`${files}/serverless.js`, '.netlify/v1/serverless.js');
 
 	builder.log.minor('Generating serverless functions...');
 
 	if (split) {
-		const seen = new Set();
-
-		for (let i = 0; i < builder.routes.length; i++) {
-			const route = builder.routes[i];
-			if (route.prerender === true) continue;
-
-			const routes = [route];
-
-			/** @type {string[]} */
-			const parts = [];
-
-			// The parts should conform to URLPattern syntax
-			// https://docs.netlify.com/build/functions/get-started/?fn-language=ts&data-tab=TypeScript#route-requests
-			for (const segment of route.segments) {
-				if (segment.rest) {
-					parts.push('*');
-				} else if (segment.dynamic) {
-					// URLPattern requires params to start with letters
-					parts.push(`:param${parts.length}`);
-				} else {
-					parts.push(segment.content);
-				}
-			}
-
-			// Netlify handles trailing slashes for us, so we don't need to include them in the pattern
-			const pattern = `/${parts.join('/')}`;
-			const name =
-				FUNCTION_PREFIX + (parts.join('-').replace(/[:.]/g, '_').replace('*', '__rest') || 'index');
-
-			// skip routes with identical patterns, they were already folded into another function
-			if (seen.has(pattern)) continue;
-
-			const patterns = [pattern, `${pattern === '/' ? '' : pattern}/__data.json`];
-			patterns.forEach((p) => seen.add(p));
-
-			// figure out which lower priority routes should be considered fallbacks
-			for (let j = i + 1; j < builder.routes.length; j += 1) {
-				const other = builder.routes[j];
-				if (other.prerender === true) continue;
-
-				if (matches(route.segments, other.segments)) {
-					routes.push(other);
-				}
-			}
-
-			generate_serverless_function({
-				builder,
-				routes,
-				patterns,
-				name
-			});
+		const uuid = crypto.randomUUID();
+		for (const fn of get_split_functions(builder)) {
+			generate_serverless_function(builder, fn, uuid);
 		}
-
-		generate_serverless_function({
-			builder,
-			routes: [],
-			patterns: ['/*'],
-			name: `${FUNCTION_PREFIX}catch-all`,
-			exclude: Array.from(seen)
-		});
 	} else {
-		generate_serverless_function({
-			builder,
+		generate_serverless_function(builder, {
+			type: 'singular',
 			routes: undefined,
 			patterns: ['/*'],
-			name: `${FUNCTION_PREFIX}render`
+			name: `${FUNCTION_PREFIX}render`,
+			display_name: 'SvelteKit server'
+		});
+	}
+}
+
+/**
+ * Writes the Netlify Frameworks API config file
+ * https://docs.netlify.com/build/frameworks/frameworks-api/
+ * @param {{ builder: import('@sveltejs/kit').Builder }} params
+ */
+function write_frameworks_config({ builder }) {
+	// https://docs.netlify.com/build/frameworks/frameworks-api/#headers
+	/** @type {{ headers: Array<{ for: string, values: Record<string, string> }> }} */
+	const config = {
+		headers: [
+			{
+				for: `/${builder.getAppPath()}/immutable/*`,
+				values: {
+					'cache-control': 'public, immutable, max-age=31536000'
+				}
+			}
+		]
+	};
+
+	mkdirSync('.netlify/v1', { recursive: true });
+	writeFileSync(netlify_framework_config_path, s(config));
+}
+
+/** @typedef {'singular' | 'split' | 'catch-all'} EntrypointType */
+
+/**
+ * @typedef {object} EntrypointMetadata
+ * @property {EntrypointType} type
+ * @property {RouteDefinition[] | undefined} routes
+ * @property {string[]} patterns
+ * @property {string} name
+ * @property {string} display_name
+ * @property {string[]} [exclude]
+ */
+
+/**
+ * @param {Builder} builder
+ * @returns {EntrypointMetadata[]}
+ */
+function get_split_functions(builder) {
+	const seen = new Set();
+	let index = 0;
+
+	/** @type {EntrypointMetadata[]} */
+	const functions = [];
+
+	for (let i = 0; i < builder.routes.length; i++) {
+		const route = builder.routes[i];
+		if (route.prerender === true) continue;
+
+		const routes = [route];
+		/** @type {string[]} */
+		const parts = [];
+
+		// The parts should conform to URLPattern syntax
+		// https://docs.netlify.com/build/functions/get-started/?fn-language=ts&data-tab=TypeScript#route-requests
+		for (const [i, segment] of route.segments.entries()) {
+			if (segment.rest) {
+				parts.push('*');
+			} else if (segment.dynamic) {
+				// URLPattern requires params to start with letters
+				const optional = /^\[\[.+\]\]$/.test(segment.content) ? '?' : '';
+				parts.push(`:param${i}${optional}`);
+			} else {
+				parts.push(segment.content);
+			}
+		}
+
+		// Netlify handles trailing slashes for us, so we don't need to include them in the pattern
+		const pattern = `/${parts.join('/')}`;
+
+		// skip routes with identical patterns, they were already folded into another function
+		if (seen.has(pattern)) continue;
+
+		const patterns = [pattern, `${pattern === '/' ? '' : pattern}/__data.json`];
+		patterns.forEach((pattern) => seen.add(pattern));
+
+		// figure out which lower priority routes should be considered fallbacks
+		for (let j = i + 1; j < builder.routes.length; j += 1) {
+			const other = builder.routes[j];
+			if (other.prerender === true) continue;
+
+			if (matches(route.segments, other.segments)) {
+				routes.push(other);
+			}
+		}
+
+		functions.push({
+			type: 'split',
+			routes,
+			patterns,
+			name: `${FUNCTION_PREFIX}${index++}`,
+			display_name: `SvelteKit ${route.id}`
 		});
 	}
 
-	// Copy user's custom _redirects file if it exists
-	if (existsSync('_redirects')) {
-		builder.log.minor('Copying user redirects...');
-		const redirects_file = join(publish, '_redirects');
-		builder.copy('_redirects', redirects_file);
-	}
-}
-
-function get_netlify_config() {
-	if (!existsSync('netlify.toml')) return null;
-
-	try {
-		return /** @type {NetlifyConfig} */ (toml.parse(readFileSync('netlify.toml', 'utf-8')));
-	} catch (err) {
-		if (err instanceof Error) {
-			err.message = `Error parsing netlify.toml: ${err.message}`;
-		}
-		throw err;
-	}
-}
-
-/**
- * @param {NetlifyConfig | null} netlify_config
- * @param {import('@sveltejs/kit').Builder} builder
- **/
-function get_publish_directory(netlify_config, builder) {
-	if (netlify_config) {
-		if (!netlify_config.build?.publish) {
-			builder.log.minor('No publish directory specified in netlify.toml, using default');
-			return;
-		}
-
-		if (resolve(netlify_config.build.publish) === process.cwd()) {
-			throw new Error(
-				'The publish directory cannot be set to the site root. Please change it to another value such as "build" in netlify.toml.'
-			);
-		}
-		return netlify_config.build.publish;
-	}
-
-	builder.log.warn(
-		'No netlify.toml found. Using default publish directory. Consult https://svelte.dev/docs/kit/adapter-netlify#usage for more details'
-	);
-}
-
-/**
- * @typedef {{ rest: boolean, dynamic: boolean, content: string }} RouteSegment
- */
-
-/**
- * @param {RouteSegment[]} a
- * @param {RouteSegment[]} b
- * @returns {boolean}
- */
-function matches(a, b) {
-	if (a[0] && b[0]) {
-		if (b[0].rest) {
-			if (b.length === 1) return true;
-
-			const next_b = b.slice(1);
-
-			for (let i = 0; i < a.length; i += 1) {
-				if (matches(a.slice(i), next_b)) return true;
-			}
-
-			return false;
-		}
-
-		if (!b[0].dynamic) {
-			if (!a[0].dynamic && a[0].content !== b[0].content) return false;
-		}
-
-		if (a.length === 1 && b.length === 1) return true;
-		return matches(a.slice(1), b.slice(1));
-	} else if (a[0]) {
-		return a.length === 1 && a[0].rest;
-	} else {
-		return b.length === 1 && b[0].rest;
-	}
-}
-
-/**
- *
- * @param {{
- *   builder: import('@sveltejs/kit').Builder,
- *   routes: import('@sveltejs/kit').RouteDefinition[] | undefined,
- *   patterns: string[],
- *   name: string,
- *   exclude?: string[]
- * }} opts
- */
-function generate_serverless_function({ builder, routes, patterns, name, exclude }) {
-	const manifest = builder.generateManifest({
-		relativePath: '../server',
-		routes
+	functions.push({
+		type: 'catch-all',
+		routes: [],
+		patterns: ['/*'],
+		name: `${FUNCTION_PREFIX}catch-all`,
+		display_name: 'SvelteKit catch-all',
+		exclude: Array.from(seen)
 	});
 
-	const fn = generate_serverless_function_module(manifest);
-	const config = generate_config_export(patterns, exclude);
+	return functions;
+}
+
+/**
+ * @param {Builder} builder
+ * @param {EntrypointMetadata} fn
+ * @param {string} [uuid]
+ */
+function generate_serverless_function(builder, fn, uuid) {
+	builder.generateServerInstance(`.netlify/v1/server-${fn.name}.js`, {
+		routes: fn.routes,
+		serverDirectory: '.netlify/v1/server'
+	});
+
+	const filename = `${netlify_framework_serverless_path}/${fn.name}.mjs`;
+	const code = generate_function_module(
+		fn.type,
+		'../serverless.js',
+		`../server-${fn.name}.js`,
+		uuid
+	);
+	const config = create_function_config('serverless', fn);
 
 	if (builder.hasServerInstrumentationFile()) {
-		writeFileSync(`.netlify/functions-internal/${name}.mjs`, fn);
+		writeFileSync(filename, code);
+		const initializer = builder.createInstrumentationInitializer({
+			outputDirectory: netlify_framework_serverless_path,
+			serverDirectory: '.netlify/v1/server'
+		});
 		builder.instrument({
-			entrypoint: `.netlify/functions-internal/${name}.mjs`,
-			instrumentation: '.netlify/server/instrumentation.server.js',
-			start: `.netlify/functions-start/${name}.start.mjs`,
+			entrypoint: filename,
+			instrumentation: '.netlify/v1/server/instrumentation.server.js',
+			start: `.netlify/v1/server/${fn.name}.start.mjs`,
+			initializer,
 			module: {
 				generateText: generate_traced_module(config)
 			}
 		});
 	} else {
-		writeFileSync(`.netlify/functions-internal/${name}.mjs`, `${fn}\n${config}`);
+		writeFileSync(filename, `${code}\n${config}`);
 	}
 }
 
 /**
- * @param {string} manifest
+ * @param {EntrypointType} type
+ * @param {string} init
+ * @param {string} server
+ * @param {string} [uuid]
  * @returns {string}
  */
-function generate_serverless_function_module(manifest) {
-	return `\
-import { init } from '../serverless.js';
+function generate_function_module(type, init, server, uuid) {
+	const runtime_imports = [
+		`import { init } from '${init}';`,
+		`import { server } from '${server}';`
+	].join('\n');
+	const original_pathname_header = `const original_pathname_header = \`x-sveltekit-original-pathname-${uuid}\``;
 
-export default init(${manifest});
+	if (type === 'catch-all' && uuid) {
+		// Netlify encodes the response body but `fetch` automatically decodes it.
+		// So, we need to remove the `content-encoding` header to allow Netlify
+		// to correctly re-encode it on the way out.
+		return `\
+import { applyReroute } from '@sveltejs/kit/adapter';
+${runtime_imports}
+
+${original_pathname_header}
+
+const respond = init(server);
+
+export default async (request, context) => {
+	const catch_all_response = await respond(request, context);
+
+	return await applyReroute(catch_all_response, async (url) => {
+		const rerouted_request = new Request(url, request);
+		rerouted_request.headers.set(original_pathname_header, new URL(request.url).pathname);
+
+		const rerouted_response = await fetch(rerouted_request);
+
+		const response = new Response(rerouted_response.body, rerouted_response);
+		if (response.headers.has('content-encoding')) {
+			response.headers.delete('content-encoding');
+			response.headers.delete('content-length');
+		}
+
+		return response;
+	});
+};
+`;
+	}
+
+	if (type === 'split' && uuid) {
+		return `\
+${runtime_imports}
+
+${original_pathname_header}
+
+const respond = init(server);
+
+export default async (request, context) => {
+	if (request.headers.has(original_pathname_header)) {
+		const url = new URL(request.url);
+		url.pathname = request.headers.get(original_pathname_header);
+		request = new Request(url, request);
+		request.headers.delete(original_pathname_header);
+	}
+
+	return await respond(request, context);
+};
+`;
+	}
+
+	return `\
+${runtime_imports}
+
+export default init(server);
 `;
 }
 
+const generator_string = `@sveltejs/adapter-netlify@${adapter_version}`;
+
 /**
- * @param {string[]} patterns
- * @param {string[]} [exclude]
+ * @param {'serverless' | 'edge'} runtime
+ * @param {EntrypointMetadata} fn
  * @returns {string}
  */
-function generate_config_export(patterns, exclude = []) {
-	// TODO: add a human friendly name for the function https://docs.netlify.com/build/frameworks/frameworks-api/#configuration-options-2
-	return `\
-export const config = {
-	path: [${patterns.map((s) => JSON.stringify(s)).join(', ')}],
-	excludedPath: [${['/.netlify/*', ...exclude].map((s) => JSON.stringify(s)).join(', ')}],
-	preferStatic: true
-};
-`;
+function create_function_config(runtime, fn) {
+	/** @type {IntegrationsConfig & { preferStatic?: boolean }} */
+	const config = {
+		name: fn.display_name,
+		generator: generator_string,
+		path: /** @type {`/${string}`[]} */ (fn.patterns),
+		excludedPath: /** @type {`/${string}`[]} */ (['/.netlify/*', ...(fn.exclude ?? [])])
+	};
+
+	if (runtime === 'serverless') {
+		config.preferStatic = true;
+	}
+
+	return `export const config = ${s(config)};\n`;
 }
 
 /**
  * @param {string} config
- * @returns {(opts: { instrumentation: string; start: string }) => string}
+ * @returns {(opts: { instrumentation: string; start: string; initializer: string }) => string}
  */
 function generate_traced_module(config) {
-	return ({ instrumentation, start }) => {
+	return ({ instrumentation, start, initializer }) => {
 		return `\
-import './${instrumentation}';
-const { default: _0 } = await import('./${start}');
+import ${JSON.stringify(to_import_specifier(initializer))};
+import ${JSON.stringify(to_import_specifier(instrumentation))};
+const { default: _0 } = await import(${JSON.stringify(to_import_specifier(start))});
 export { _0 as default };
 
 ${config}`;
 	};
+}
+
+/** @param {string} path */
+function to_import_specifier(path) {
+	return path.startsWith('.') ? path : `./${path}`;
+}
+
+/** @satisfies {import('rolldown').BuildOptions} */
+const rolldown_config = {
+	platform: 'browser',
+	output: {
+		sourcemap: true,
+		codeSplitting: false
+	},
+	transform: {
+		target: 'es2022'
+	},
+	// Node built-ins are allowed, but must be prefixed with `node:`
+	// https://docs.netlify.com/edge-functions/api/#runtime-environment
+	external: builtinModules.map((id) => `node:${id}`),
+	resolve: {
+		alias: Object.fromEntries(builtinModules.map((id) => [id, `node:${id}`]))
+	}
+};
+
+/**
+ * @param {object} params
+ * @param {Builder} params.builder
+ * @param {boolean} params.split
+ */
+async function generate_edge_functions({ builder, split }) {
+	const tmp = builder.getBuildDirectory('netlify-tmp');
+	rmSync(tmp, { force: true, recursive: true });
+	mkdirSync(tmp, { recursive: true });
+
+	// https://docs.netlify.com/build/frameworks/frameworks-api/#edge-functions
+	mkdirSync(netlify_framework_edge_path, { recursive: true });
+
+	builder.log.minor('Generating edge functions...');
+	builder.copy(`${files}/edge.js`, `${tmp}/edge.js`);
+
+	// We only need to specify paths without the trailing slash because
+	// Netlify will handle the optional trailing slash for us
+	const excluded_paths = [
+		// Contains static files
+		`/${builder.getAppPath()}/immutable/*`,
+		`/${builder.getAppPath()}/version.json`,
+		// the base root and `trailingSlash: 'always'` pages are recorded with a trailing slash
+		...builder.prerendered.paths.map((path) => (path === '/' ? path : path.replace(/\/$/, ''))),
+		...Array.from(builder.manifest.assets).flatMap(({ path: asset }) => {
+			if (asset.endsWith('/index.html')) {
+				const dir = asset.replace(/\/index\.html$/, '');
+				return [`${builder.config.paths.base}/${asset}`, `${builder.config.paths.base}/${dir}`];
+			}
+			return `${builder.config.paths.base}/${asset}`;
+		})
+	];
+
+	/** @type {EntrypointMetadata[]} */
+	const functions = split
+		? get_split_functions(builder)
+		: [
+				{
+					type: 'singular',
+					routes: undefined,
+					patterns: ['/*'],
+					name: `${FUNCTION_PREFIX}render`,
+					display_name: 'SvelteKit server'
+				}
+			];
+	const reroute_id = split ? crypto.randomUUID() : undefined;
+
+	for (const fn of functions) {
+		await generate_edge_function(
+			builder,
+			tmp,
+			{
+				...fn,
+				exclude: excluded_paths.concat(fn.exclude ?? [])
+			},
+			reroute_id
+		);
+	}
+}
+
+/**
+ * @param {Builder} builder
+ * @param {string} tmp
+ * @param {EntrypointMetadata} fn
+ * @param {string | undefined} reroute_id
+ */
+async function generate_edge_function(builder, tmp, fn, reroute_id) {
+	builder.generateServerInstance(`${tmp}/server-${fn.name}.js`, { routes: fn.routes });
+
+	const entry = `${tmp}/entry-${fn.name}.js`;
+	const code = generate_edge_function_module(
+		fn.type,
+		'./edge.js',
+		`./server-${fn.name}.js`,
+		reroute_id
+	);
+	const config = create_function_config('edge', fn);
+	writeFileSync(entry, `${code}\n${config}`);
+
+	let input = entry;
+	if (builder.hasServerInstrumentationFile()) {
+		const initializer = builder.createInstrumentationInitializer({
+			outputDirectory: tmp,
+			environment: 'export default Deno.env.toObject();\n'
+		});
+		input = `${tmp}/instrumented-entry-${fn.name}.js`;
+		writeFileSync(input, `export { default, config } from './entry-${fn.name}.js';\n`);
+		builder.instrument({
+			entrypoint: input,
+			instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`,
+			initializer,
+			module: {
+				generateText: generate_traced_module(config)
+			}
+		});
+	}
+
+	await build({
+		...rolldown_config,
+		input,
+		output: {
+			...rolldown_config.output,
+			file: `${netlify_framework_edge_path}/${fn.name}.js`
+		}
+	});
+}
+
+/**
+ * @param {EntrypointType} type
+ * @param {string} init
+ * @param {string} server
+ * @param {string | undefined} reroute_id
+ * @returns {string}
+ */
+function generate_edge_function_module(type, init, server, reroute_id) {
+	if (type === 'singular') {
+		return generate_function_module(type, init, server);
+	}
+
+	const runtime_imports = [
+		`import { init } from '${init}';`,
+		`import { server } from '${server}';`
+	].join('\n');
+	const reroute_parameter = `__sveltekit_original_pathname_${reroute_id}`;
+
+	if (type === 'catch-all') {
+		return `\
+import { applyReroute } from '@sveltejs/kit/adapter';
+${runtime_imports}
+
+const respond = init(server);
+
+export default async (request, context) => {
+	const response = await respond(request, context);
+
+	let rerouted_url;
+	applyReroute(response, (url) => {
+		url.searchParams.set('${reroute_parameter}', new URL(request.url).pathname);
+		rerouted_url = url;
+	});
+
+	return rerouted_url ?? response;
+};
+`;
+	}
+
+	return `\
+${runtime_imports}
+
+const respond = init(server);
+
+export default async (request, context) => {
+	const url = new URL(request.url);
+	const pathname = url.searchParams.get('${reroute_parameter}');
+
+	if (pathname) {
+		url.pathname = pathname;
+		url.searchParams.delete('${reroute_parameter}');
+		request = new Request(url, request);
+	}
+
+	return await respond(request, context);
+};
+`;
 }

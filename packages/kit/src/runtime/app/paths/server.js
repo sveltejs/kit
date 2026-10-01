@@ -1,27 +1,44 @@
-import { base, assets, relative, initial_base } from './internal/server.js';
+import { base, assets, relative } from './internal/server.js';
 import { resolve_route, find_route } from '../../../utils/routing.js';
 import { decode_pathname } from '../../../utils/url.js';
-import { add_data_suffix } from '../../pathname.js';
+import { add_data_suffix } from '../../../pathname.js';
 import { try_get_request_store } from '@sveltejs/kit/internal/server';
-import { manifest } from '__sveltekit/server';
-import { get_hooks } from '__SERVER__/internal.js';
+import { manifest } from '../../server/internal.js';
+import { get_hooks } from '<sveltekit:generated>/server.js';
+import { DEV } from 'esm-env';
+import * as e from '../../../messages/shared-errors.js';
+import * as w from '../../../messages/shared-warnings.js';
 
-/** @type {import('./client.js').asset} */
+export { base, assets, app_dir } from './internal/server.js';
+
+/** @type {typeof import('./client.js').asset} */
 export function asset(file) {
-	// @ts-expect-error we use the `resolve` mechanism, but with the 'wrong' input
-	return assets && assets !== base ? assets + file : resolve(file);
-}
+	// TODO 4.0 remove this
+	if (file[0] === '/') {
+		if (DEV) {
+			w.asset_leading_slash({ path: file, fixed: file.slice(1) });
+		}
 
-/** @type {import('./client.js').resolve} */
-export function resolve(id, params) {
-	if (!id.startsWith('/')) {
-		throw new Error(
-			`Cannot use \`resolve(...)\` with a non-absolute pathname or route ID (got "${id}"). ` +
-				'`resolve` is only for internal pathnames and route IDs; external URLs should be used directly.'
-		);
+		file = file.slice(1);
 	}
 
-	const resolved = resolve_route(id, /** @type {Record<string, string>} */ (params));
+	return assets !== base ? `${assets}/${file}` : resolve(file);
+}
+
+/** @type {typeof import('./client.js').resolve} */
+export function resolve(id, params) {
+	let resolved;
+
+	if (id[0] === '/') {
+		// route ID
+		if (id.includes('[') && !params) {
+			e.resolve_params_missing({ id });
+		}
+
+		resolved = resolve_route(id, params ?? {});
+	} else {
+		resolved = '/' + id;
+	}
 
 	if (relative) {
 		const store = try_get_request_store();
@@ -32,7 +49,7 @@ export function resolve(id, params) {
 			const pathname = store.event.isDataRequest
 				? add_data_suffix(store.event.url.pathname)
 				: store.event.url.pathname;
-			const after_base = pathname.slice(initial_base.length);
+			const after_base = pathname.slice(base.length);
 			const segments = after_base.split('/').slice(2);
 			const prefix = segments.map(() => '..').join('/') || '.';
 
@@ -43,7 +60,7 @@ export function resolve(id, params) {
 	return base + resolved;
 }
 
-/** @type {import('./client.js').match} */
+/** @type {typeof import('./client.js').match} */
 export async function match(url) {
 	const store = try_get_request_store();
 
@@ -68,8 +85,8 @@ export async function match(url) {
 		resolved_path = resolved_path.slice(base.length) || '/';
 	}
 
-	const matchers = await manifest._.matchers();
-	const result = find_route(resolved_path, manifest._.routes, matchers);
+	const matchers = await manifest.matchers();
+	const result = find_route(resolved_path, manifest.routes, matchers);
 
 	if (result) {
 		return {
@@ -80,5 +97,3 @@ export async function match(url) {
 
 	return null;
 }
-
-export { base, assets, resolve as resolveRoute };

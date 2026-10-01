@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-cloudflare",
-	"version": "7.2.9",
+	"version": "8.0.0-next.8",
 	"description": "Adapts SvelteKit applications for Cloudflare Workers or Cloudflare Pages",
 	"keywords": [
 		"adapter",
@@ -27,36 +27,35 @@
 	},
 	"types": "index.d.ts",
 	"files": [
-		"files",
+		"src/virtual-cloudflare-workers.js",
+		"files/worker.js",
 		"index.js",
 		"utils.js",
-		"index.d.ts",
-		"ambient.d.ts"
+		"index.d.ts"
 	],
 	"scripts": {
-		"build": "esbuild src/worker.js --bundle --outfile=files/worker.js --external:SERVER --external:MANIFEST --external:cloudflare:workers --format=esm",
-		"lint": "prettier --check .",
-		"format": "pnpm lint --write",
-		"check": "tsc --skipLibCheck",
+		"lint": "oxfmt --check .",
+		"format": "oxfmt --write .",
+		"check": "pnpm tsc-native && pnpm tsc-native --project files/tsconfig.json",
 		"test:unit": "vitest run",
-		"test:e2e": "pnpm build && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test",
+		"test:e2e": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test",
 		"test": "pnpm test:unit && pnpm test:e2e",
-		"prepublishOnly": "pnpm build"
+		"tsc-native": "node node_modules/@typescript/native/bin/tsc"
 	},
 	"dependencies": {
-		"@cloudflare/workers-types": "^4.20250507.0",
-		"worktop": "0.8.0-next.18"
+		"@cloudflare/workers-types": "^5.20260813.1",
+		"@rolldown/pluginutils": "^1.0.1"
 	},
 	"devDependencies": {
 		"@playwright/test": "catalog:",
 		"@sveltejs/kit": "workspace:^",
 		"@types/node": "catalog:",
-		"esbuild": "catalog:",
-		"typescript": "catalog:",
+		"@typescript/native": "catalog:",
+		"vite": "catalog:",
 		"vitest": "catalog:"
 	},
 	"peerDependencies": {
-		"@sveltejs/kit": "^2.0.0",
-		"wrangler": "^4.0.0"
+		"@sveltejs/kit": "^3.0.0-next.0",
+		"wrangler": "^4.118.0"
 	}
 }

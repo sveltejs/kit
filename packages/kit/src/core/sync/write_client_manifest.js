@@ -1,18 +1,18 @@
 import path from 'node:path';
+import { check_spelling, dedent, write_if_changed } from './utils.js';
 import { relative_path, resolve_entry } from '../../utils/filesystem.js';
 import { s } from '../../utils/misc.js';
-import { dedent, isSvelte5Plus, write_if_changed } from './utils.js';
-import colors from 'kleur';
 
 /**
  * Writes the client manifest to disk. The manifest is used to power the router. It contains the
  * list of routes and corresponding Svelte components (i.e. pages and layouts).
- * @param {import('types').ValidatedKitConfig} kit
+ * @param {import('types').ValidatedConfig} kit
  * @param {import('types').ManifestData} manifest_data
  * @param {string} output
+ * @param {string} root The project root directory
  * @param {import('types').ServerMetadata['nodes']} [metadata] If this is omitted, we have to assume that all routes with a `+layout/page.server.js` file have a server load function
  */
-export function write_client_manifest(kit, manifest_data, output, metadata) {
+export function write_client_manifest(kit, manifest_data, output, root, metadata) {
 	const client_routing = kit.router.resolution === 'client';
 
 	/**
@@ -24,7 +24,7 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 
 		if (node.universal) {
 			declarations.push(
-				`import * as universal from ${s(relative_path(`${output}/nodes`, node.universal))};`,
+				`import * as universal from ${s(relative_path(`${output}/nodes`, path.resolve(root, node.universal)))};`,
 				'export { universal };'
 			);
 		}
@@ -32,7 +32,7 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 		if (node.component) {
 			declarations.push(
 				`export { default as component } from ${s(
-					relative_path(`${output}/nodes`, node.component)
+					relative_path(`${output}/nodes`, path.resolve(root, node.component))
 				)};`
 			);
 		}
@@ -120,19 +120,17 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 		if (root_layout) layouts_with_server_load.add(0);
 	}
 
-	const client_hooks_file = resolve_entry(kit.files.hooks.client);
-	const universal_hooks_file = resolve_entry(kit.files.hooks.universal);
+	const client_hooks_file = resolve_entry(kit.files.hooks.client, kit.moduleExtensions);
+	const universal_hooks_file = resolve_entry(kit.files.hooks.universal, kit.moduleExtensions);
 
-	const typo = resolve_entry('src/+hooks.client');
-	if (typo) {
-		console.log(
-			colors
-				.bold()
-				.yellow(
-					`Unexpected + prefix. Did you mean ${typo.split('/').at(-1)?.slice(1)}?` +
-						` at ${path.resolve(typo)}`
-				)
+	if (!client_hooks_file) {
+		check_spelling(
+			'src/hooks.client',
+			'src/+hooks.client',
+			'Unexpected + prefix',
+			kit.moduleExtensions
 		);
+		check_spelling('src/hooks.client', 'src/hook.client', 'Missing s suffix', kit.moduleExtensions);
 	}
 
 	// Stringified version of
@@ -140,11 +138,6 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 	write_if_changed(
 		`${output}/app.js`,
 		dedent`
-			// in dev, this makes Vite inject its client as this module's first dependency,
-			// so that global constant replacements are installed before any other module
-			// (including user hooks) evaluates. In build it's inert.
-			import.meta.hot;
-
 			${
 				client_hooks_file
 					? `import * as client_hooks from '${relative_path(output, client_hooks_file)}';`
@@ -169,7 +162,7 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 			export const hooks = {
 				handleError: ${
 					client_hooks_file ? 'client_hooks.handleError || ' : ''
-				}(({ error }) => { console.error(error) }),
+				}(({ kind, error }) => { if (kind === 'unknown') { console.error(error); } }),
 				${client_hooks_file ? 'init: client_hooks.init,' : ''}
 				reroute: ${universal_hooks_file ? 'universal_hooks.reroute || ' : ''}(() => {}),
 				transport: ${universal_hooks_file ? 'universal_hooks.transport || ' : ''}{}
@@ -182,28 +175,19 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 
 			export const decode = (type, value) => decoders[type](value);
 
-			export { default as root } from '../root.${isSvelte5Plus() ? 'js' : 'svelte'}';
-
 			export const get_error_template = () => import('../shared/error-template.js').then(m => m.default);
 		`
 	);
 
 	if (client_routing) {
-		// write matchers to a separate module so that we don't
-		// need to worry about name conflicts
-		const imports = [];
-		const matchers = [];
+		const uses_matchers = manifest_data.routes.some((route) =>
+			route.params.some((param) => param.matcher)
+		);
 
-		for (const key in manifest_data.matchers) {
-			const src = manifest_data.matchers[key];
-
-			imports.push(`import { match as ${key} } from ${s(relative_path(output, src))};`);
-			matchers.push(key);
-		}
-
-		const module = imports.length
-			? `${imports.join('\n')}\n\nexport const matchers = { ${matchers.join(', ')} };`
-			: 'export const matchers = {};';
+		const module =
+			!manifest_data.params || !uses_matchers
+				? 'export const matchers = {};'
+				: `import { params as matchers } from ${s(relative_path(output, path.resolve(root, manifest_data.params)))};\n\nexport { matchers };`;
 
 		write_if_changed(`${output}/matchers.js`, module);
 	}

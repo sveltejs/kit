@@ -1,5 +1,5 @@
 <script>
-	import { invalidate, invalidateAll } from '$app/navigation';
+	import { invalidate, refreshAll } from '$app/navigation';
 	import { page } from '$app/state';
 	import { increment_layout, increment_page } from './state';
 
@@ -13,16 +13,16 @@
 		}
 
 		if (str === 'all') {
-			invalidateAll();
+			refreshAll();
 		} else {
 			invalidate(`invalid:${str}`);
 		}
 	}
 </script>
 
-<button class="layout" on:click={() => update('layout')}>Invalidate layout</button>
-<button class="page" on:click={() => update('page')}>Invalidate page</button>
-<button class="all" on:click={() => update('all')}>Invalidate all</button>
+<button class="layout" onclick={() => update('layout')}>Refresh layout</button>
+<button class="page" onclick={() => update('page')}>Refresh page</button>
+<button class="all" onclick={() => update('all')}>Refresh all</button>
 
 <p>layout: {page.data.count_layout}, page: {page.data.count_page}</p>
 

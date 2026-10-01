@@ -17,7 +17,7 @@
 		count = await get_count();
 	})}
 >
-	<input type="number" name="count" />
+	<input {...set_count_form.fields.count.as('text')} />
 	<button>submit</button>
 </form>
 

@@ -7,7 +7,11 @@ const config = {
 		minify: false
 	},
 	clearScreen: false,
-	plugins: [sveltekit()],
+	plugins: [
+		sveltekit({
+			embedded: true
+		})
+	],
 	server: {
 		fs: {
 			allow: [path.resolve('../../../src')]

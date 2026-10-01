@@ -1,5 +1,6 @@
-import { query_responses } from '../../client.js';
-import { HttpError } from '@sveltejs/kit/internal';
+/** @import { HttpError } from '@sveltejs/kit' */
+import { query_responses, handle_error } from '../../client.js';
+import { HandledHttpError } from '@sveltejs/kit/internal';
 import { QUERY_OVERRIDE_KEY } from '../shared.svelte.js';
 import { noop } from '../../../../utils/functions.js';
 import { with_resolvers } from '../../../../utils/promise.js';
@@ -38,7 +39,7 @@ export class Query {
 		return this.#overrides.reduce((v, r) => r(v), /** @type {T} */ (this.#raw));
 	});
 
-	/** @type {any} */
+	/** @type {App.Error | undefined} */
 	#error = $state.raw(undefined);
 
 	/** @type {Promise<T>['then']} */
@@ -48,7 +49,15 @@ export class Query {
 		this.#overrides.length;
 
 		return (resolve, reject) => {
-			const result = p.then(tick).then(() => /** @type {T} */ (this.#current));
+			const result = p.then(tick).then(() => {
+				if (!this.#ready) {
+					throw new HandledHttpError(
+						this.#error ?? { status: 500, message: 'Query resolved without a value' }
+					);
+				}
+
+				return /** @type {T} */ (this.#current);
+			});
 
 			if (resolve || reject) {
 				return result.then(resolve, reject);
@@ -71,7 +80,7 @@ export class Query {
 			delete query_responses[key];
 
 			if (node.e) {
-				this.fail(new HttpError(node.e[0] ?? 500, node.e[1]));
+				this.fail(new HandledHttpError(node.e));
 			} else {
 				this.set(/** @type {T} */ (node.v));
 			}
@@ -118,31 +127,41 @@ export class Query {
 
 				// Untrack this to not trigger mutation validation errors which can occur if you do e.g. $derived({ a: await queryA(), b: await queryB() })
 				untrack(() => {
-					this.#latest.splice(0, idx).forEach((r) => r(undefined));
+					this.#latest.splice(0, idx + 1).forEach((r) => r(undefined));
 					this.#ready = true;
 					this.#loading = false;
 					this.#raw = value;
 					this.#error = undefined;
 				});
-
-				resolve(undefined);
 			})
-			.catch((e) => {
+			.catch(async (e) => {
 				// TODO: Our behavior here could be better:
 				// - We should not reject on redirects, but should hook into the router
 				//   to ensure the query is properly refreshed before the navigation completes
 				// - Instead of failing on transport-level errors, we should probably do what
 				//   LiveQuery does and preserve the last known good value and retry the connection
+				if (this.#latest.indexOf(resolve) === -1) return;
+
+				const error = await handle_error(e, {
+					params: {},
+					route: { id: null },
+					url: new URL(location.href)
+				});
+
+				// Re-check after the async `handle_error` gap: a later request may have
+				// resolved/rejected while we were awaiting and superseded this one, so
+				// recompute the index and bail out if this request is no longer current
 				const idx = this.#latest.indexOf(resolve);
 				if (idx === -1) return;
 
 				untrack(() => {
 					this.#latest.splice(0, idx).forEach((r) => r(undefined));
-					this.#error = e;
+					this.#latest.shift();
+					this.#error = error;
 					this.#loading = false;
 				});
 
-				reject(e);
+				reject(new HandledHttpError(error));
 			});
 
 		return promise;
@@ -222,17 +241,22 @@ export class Query {
 		// SSR record can never shadow the newly-set value
 		delete query_responses[this.#key];
 
+		// a pending request's promise is settled with the value below; replacing it
+		// too would make awaiting consumers settle a second time in a new batch
+		const in_flight = this.#latest.length > 0;
+
 		this.#clear_pending();
 		this.#ready = true;
 		this.#loading = false;
 		this.#error = undefined;
 		this.#raw = value;
-		this.#promise = Promise.resolve();
+
+		if (!in_flight) {
+			this.#promise = Promise.resolve();
+		}
 	}
 
-	/**
-	 * @param {unknown} error
-	 */
+	/** @param {HttpError} error */
 	fail(error) {
 		// normally consumed in the constructor, but make sure a leftover
 		// SSR record can never shadow the newly-set error
@@ -240,7 +264,7 @@ export class Query {
 
 		this.#clear_pending();
 		this.#loading = false;
-		this.#error = error;
+		this.#error = error.body;
 
 		const promise = Promise.reject(error);
 

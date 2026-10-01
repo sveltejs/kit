@@ -37,13 +37,13 @@ test.describe('hash based navigation', () => {
 		expect(url.pathname).toBe('/');
 		expect(url.hash).toBe('#/a#b');
 
-		await page.locator('button[data-push]').click();
+		await page.locator('button[data-shallow]').click();
 		await expect(page.locator('p')).toHaveText('a');
 		url = new URL(page.url());
 		expect(url.pathname).toBe('/');
 		expect(url.hash).toBe('#/b');
 
-		await page.locator('button[data-replace]').click();
+		await page.locator('button[data-shallow-replace]').click();
 		await expect(page.locator('p')).toHaveText('a');
 		url = new URL(page.url());
 		expect(url.pathname).toBe('/');
@@ -119,12 +119,55 @@ test.describe('hash based navigation', () => {
 	test('sequential focus navigation point is set correctly', async ({ page, browserName }) => {
 		const tab = browserName === 'webkit' ? 'Alt+Tab' : 'Tab';
 		await page.goto('/#/focus');
+		await page.evaluate("addEventListener('hashchange', () => (window.hashchanged = true))");
 		await page.locator('a[href="#/focus/a#p"]').click();
 		await page.waitForURL('#/focus/a#p');
-		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('BODY');
+		await expect(page.locator('body')).toBeFocused();
 		await page.keyboard.press(tab);
 		await expect(page.locator('#button3')).toBeFocused();
 		await expect(page.locator('button[id="button3"]')).toBeFocused();
+		expect(await page.evaluate('window.hashchanged')).toBe(undefined);
+	});
+
+	test('does not look up an empty anchor id on navigation', async ({ page }) => {
+		await page.addInitScript(`
+			window.empty_id_lookups = [];
+			const get_element_by_id = Document.prototype.getElementById;
+			Document.prototype.getElementById = function (id) {
+				if (id === '') window.empty_id_lookups.push(new Error().stack);
+				return get_element_by_id.call(this, id);
+			};
+		`);
+
+		await page.goto('/');
+		await page.locator('a[href="/#/a"]').click();
+		await expect(page.locator('p')).toHaveText('a');
+
+		// on failure, the captured stack traces reveal which call site made the empty lookup
+		expect(await page.evaluate('window.empty_id_lookups')).toEqual([]);
+	});
+
+	test('does not look up an empty anchor id when resetting focus to a real anchor', async ({
+		page
+	}) => {
+		await page.addInitScript(`
+			window.empty_id_lookups = [];
+			const get_element_by_id = Document.prototype.getElementById;
+			Document.prototype.getElementById = function (id) {
+				if (id === '') window.empty_id_lookups.push(new Error().stack);
+				return get_element_by_id.call(this, id);
+			};
+		`);
+
+		await page.goto('/#/focus');
+		await page.locator('a[href="#/focus/a#p"]').click();
+		await page.waitForURL('#/focus/a#p');
+
+		// `reset_focus` sets the sequential focus navigation starting point to the
+		// anchor. This exercises the branch that looks up a real anchor and restores
+		// the hash from `element.id`, so the hash must be preserved exactly.
+		expect(new URL(page.url()).hash).toBe('#/focus/a#p');
+		expect(await page.evaluate('window.empty_id_lookups')).toEqual([]);
 	});
 
 	test('resolve works', async ({ page }) => {

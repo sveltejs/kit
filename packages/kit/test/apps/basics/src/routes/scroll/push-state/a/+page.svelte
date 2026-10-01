@@ -1,1 +1,1 @@
-<button id="back-button" type="button" on:click={() => history.back()}>Back</button>
+<button id="back-button" type="button" onclick={() => history.back()}>Back</button>

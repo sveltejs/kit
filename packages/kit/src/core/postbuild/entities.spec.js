@@ -31,7 +31,12 @@ const tests = [
 	{ input: '&#X3a;', output: ':' },
 	{ input: '&#X3A;', output: ':' },
 	{ input: '&>', output: '&>' },
-	{ input: 'id=770&#anchor', output: 'id=770&#anchor' }
+	{ input: 'id=770&#anchor', output: 'id=770&#anchor' },
+	{ input: '/a?x=1&#38;y=2&#38;z=3', output: '/a?x=1&y=2&z=3' },
+	{ input: '&#128512;', output: '😀' },
+	{ input: '&#x1f600;', output: '😀' },
+	{ input: '&#1114112;', output: '�' },
+	{ input: '&#deaf;', output: '�' }
 ];
 
 for (const { input, output } of tests) {

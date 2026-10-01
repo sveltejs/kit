@@ -1,4 +1,4 @@
-import { browser } from '$app/environment';
+import { browser } from '$app/env';
 
 /** @type {import('@sveltejs/kit').Load}*/
 export async function load({ fetch }) {

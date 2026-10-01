@@ -1,9 +1,10 @@
-/** @import { RemoteLiveQuery, RemoteLiveQueryFunction, RemoteQuery, RemoteQueryFunction, RequestEvent } from '@sveltejs/kit' */
+/** @import { RemoteLiveQuery, RemoteLiveQueryFunction, RemoteQuery, RemoteQueryFunction } from '$app/server' */
+/** @import { RequestEvent } from '@sveltejs/kit' */
 /** @import { RemoteInternals, MaybePromise, RequestState, RemoteQueryLiveInternals, RemoteQueryBatchInternals, RemoteQueryInternals, RemoteLiveQueryUserFunctionReturnType } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import { create_remote_key, stringify_remote_arg } from '../../../shared.js';
-import { prerendering } from '$app/env/internal';
+import { prerendering } from '#app/env/server';
 import {
 	create_validator,
 	get_cache,
@@ -13,8 +14,8 @@ import {
 } from './shared.js';
 import { noop } from '../../../../utils/functions.js';
 import { SharedIterator } from '../../../../utils/shared-iterator.js';
-import { handle_error_and_jsonify } from '../../../server/utils.js';
-import { HttpError, SvelteKitError } from '@sveltejs/kit/internal';
+import { handle_error_and_jsonify } from '../../../server/errors.js';
+import * as e from '../../../../messages/server-errors.js';
 
 /**
  * Creates a remote query. When called from the browser, the function will be invoked on the server via a `fetch` call.
@@ -93,13 +94,11 @@ export function query(validate_or_fn, maybe_fn) {
 	/** @type {RemoteQueryFunction<Input, Output> & { __: RemoteQueryInternals }} */
 	const wrapper = (arg) => {
 		if (prerendering) {
-			throw new Error(
-				`Cannot call query '${__.name}' while prerendering, as prerendered pages need static data. Use 'prerender' from $app/server instead`
-			);
+			e.remote_query_prerender({ type: 'query', name: __.name });
 		}
 
 		const { event, state } = get_request_store();
-		const payload = stringify_remote_arg(arg, state.transport);
+		const payload = stringify_remote_arg(arg);
 
 		return create_query_resource(__, payload, event, state, () =>
 			run_remote_function(
@@ -192,13 +191,11 @@ function live(validate_or_fn, maybe_fn) {
 	/** @type {RemoteLiveQueryFunction<Input, Output> & { __: RemoteQueryLiveInternals }} */
 	const wrapper = (arg) => {
 		if (prerendering) {
-			throw new Error(
-				`Cannot call query.live '${__.name}' while prerendering, as prerendered pages need static data. Use 'prerender' from $app/server instead`
-			);
+			e.remote_query_prerender({ type: 'query.live', name: __.name });
 		}
 
 		const { event, state } = get_request_store();
-		const payload = stringify_remote_arg(arg, state.transport);
+		const payload = stringify_remote_arg(arg);
 
 		return create_live_query_resource(__, payload, event, state, () =>
 			run(event, state, () => validate(arg))
@@ -330,7 +327,7 @@ function batch(validate_or_fn, maybe_fn) {
 		id: '',
 		name: '',
 		validate,
-		run: async (args, options) => {
+		run: async (args) => {
 			const { event, state } = get_request_store();
 
 			return run_remote_function(
@@ -347,13 +344,11 @@ function batch(validate_or_fn, maybe_fn) {
 								const data = get_result(arg, i);
 								return { type: 'result', data };
 							} catch (error) {
+								const transformed = await handle_error_and_jsonify(event, state, error);
+
 								return {
 									type: 'error',
-									error: await handle_error_and_jsonify(event, state, options, error),
-									status:
-										error instanceof HttpError || error instanceof SvelteKitError
-											? error.status
-											: 500
+									error: transformed
 								};
 							}
 						})
@@ -373,13 +368,11 @@ function batch(validate_or_fn, maybe_fn) {
 	/** @type {RemoteQueryFunction<Input, Output> & { __: RemoteQueryBatchInternals }} */
 	const wrapper = (arg) => {
 		if (prerendering) {
-			throw new Error(
-				`Cannot call query.batch '${__.name}' while prerendering, as prerendered pages need static data. Use 'prerender' from $app/server instead`
-			);
+			e.remote_query_prerender({ type: 'query.batch', name: __.name });
 		}
 
 		const { event, state } = get_request_store();
-		const payload = stringify_remote_arg(arg, state.transport);
+		const payload = stringify_remote_arg(arg);
 
 		return create_query_resource(__, payload, event, state, () =>
 			// Collect all the calls to the same query in the same macrotask,
@@ -407,27 +400,22 @@ export function refresh(event, state, internals, payload, fn) {
 		return;
 	}
 
-	if (!event.isRemoteRequest) {
-		// or this is a no-JS form submission
+	if (!event.isRemoteRequest && state.is_in_remote_form_or_command) {
+		// ...or this is a no-JS (native) form submission, where the page re-renders
+		// anyway so there's no live client cache to apply a single-flight update to.
 		return;
 	}
 
 	const key = create_remote_key(internals.id, payload);
 
-	// `fn()` is invoked eagerly here, which starts running the query immediately.
-	// The resulting promise is normally awaited (and its rejection handled) in
-	// `collect_remote_data`, but some code paths (e.g. a command throwing a
-	// non-redirect error) never reach that point. Attach a no-op `catch` to the
-	// promise so a rejection is always considered handled and can never become an
-	// unhandled promise rejection (which crashes the process on modern Node).
-	// We still store the original promise so `collect_remote_data` can serialize
-	// either its value or its error as before.
-	const promise = fn();
-	promise.catch(() => {});
-
+	// `fn` is stored rather than invoked eagerly. The query is run at the end of
+	// the request (in `collect_remote_data`), so that it observes any state
+	// mutations that happen after `refresh()` is called. If the developer re-awaits
+	// the query before the request finishes, the cache entry created by that await
+	// is reused instead of re-running the query.
 	(state.remote.explicit ??= new Map()).set(key, {
 		internals,
-		promise
+		fn
 	});
 }
 
@@ -498,19 +486,12 @@ function create_query_resource(__, payload, event, state, fn) {
 
 			refresh(event, state, __, payload, () => p);
 		},
-		// TODO 3.0 remove this
-		// @ts-expect-error This method no longer exists
-		run() {
-			throw new Error(
-				`\`myQuery().run()\` has been removed — please replace it with \`myQuery()\`. See https://github.com/sveltejs/kit/pull/15779 for more details`
-			);
-		},
 		/** @type {Promise<any>['then']} */
 		then(onfulfilled, onrejected) {
 			return get_promise().then(onfulfilled, onrejected);
 		},
 		withOverride() {
-			throw new Error(`Cannot call '${__.name}.withOverride()' on the server`);
+			e.server_api_unavailable({ name: `${__.name}.withOverride()` });
 		},
 		get [Symbol.toStringTag]() {
 			return 'QueryResource';
@@ -534,7 +515,7 @@ function create_live_query_resource(__, payload, event, state, get_generator) {
 		for await (const value of get_generator()) {
 			return value;
 		}
-		throw new Error(`query.live '${__.name}' did not yield a value`);
+		e.remote_query_live_no_value({ name: __.name });
 	};
 
 	const get_promise = () => {
@@ -589,12 +570,6 @@ function create_live_query_resource(__, payload, event, state, get_generator) {
 			refresh(event, state, __, payload, get_promise);
 
 			return Promise.resolve();
-		},
-		/** @ts-expect-error This method no longer exists */
-		run() {
-			throw new Error(
-				'`.run()` has been removed from live queries. Use `for await (const value of liveQuery())` instead.'
-			);
 		},
 		/** @type {Promise<any>['then']} */
 		then(onfulfilled, onrejected) {

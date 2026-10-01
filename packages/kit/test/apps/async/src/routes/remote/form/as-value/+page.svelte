@@ -1,5 +1,5 @@
 <script>
-	import { as_value_form, get_values, get_hidden_values, reset_values } from './form.remote.ts';
+	import { as_value_form, get_values, get_hidden_values } from './form.remote.ts';
 	import Form from './Form.svelte';
 
 	const values = $derived(await get_values());
@@ -35,10 +35,6 @@
 		{...as_value_form.fields.text_field.as('text', 'default text')}
 	/>
 </div>
-
-<form {...reset_values}>
-	<button id="reset-values" type="submit">reset</button>
-</form>
 
 <style>
 	.forms {

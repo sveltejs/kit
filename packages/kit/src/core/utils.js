@@ -1,44 +1,80 @@
-import fs from 'node:fs';
 import path from 'node:path';
-import process from 'node:process';
-import { fileURLToPath } from 'node:url';
-import colors from 'kleur';
-import { posixify, to_fs } from '../utils/filesystem.js';
+import { styleText } from 'node:util';
+import { to_fs } from '../utils/vite.js';
 import { noop } from '../utils/functions.js';
+import { posixify } from '../utils/os.js';
+import { hash } from '../utils/hash.js';
 
 /**
- * Resolved path of the `runtime` directory
+ * Resolved path of the `runtime` directory posix-ified
  *
  * TODO Windows issue:
  * Vite or sth else somehow sets the driver letter inconsistently to lower or upper case depending on the run environment.
  * In playwright debug mode run through VS Code this a root-to-lowercase conversion is needed in order for the tests to run.
  * If we do this conversion in other cases it has the opposite effect though and fails.
  */
-export const runtime_directory = posixify(fileURLToPath(new URL('../runtime', import.meta.url)));
+export const runtime_directory = posixify(path.resolve(import.meta.dirname, '../runtime'));
+
+/**
+ * The name of the `globalThis.__sveltekit_xxx` object the app's payload is attached to
+ * @param {string} version_name
+ * @param {boolean} dev
+ */
+export function get_global_name(version_name, dev) {
+	return dev ? '__sveltekit_dev' : `__sveltekit_${hash(version_name)}`;
+}
 
 /**
  * This allows us to import SvelteKit internals that aren't exposed via `pkg.exports` in a
  * way that works whether `@sveltejs/kit` is installed inside the project's `node_modules`
  * or in a workspace root
+ * @param {string} root
+ * @returns {string}
  */
-export const runtime_base = runtime_directory.startsWith(process.cwd())
-	? `/${path.relative('.', runtime_directory)}`
-	: to_fs(runtime_directory);
+export function get_runtime_base(root) {
+	return runtime_directory.startsWith(root)
+		? `/${posixify(path.relative(root, runtime_directory))}`
+		: to_fs(runtime_directory);
+}
 
 /** @param {{ verbose: boolean }} opts */
-export function logger({ verbose }) {
+export function logger({ verbose } = { verbose: true }) {
 	/** @type {import('types').Logger} */
-	const log = (msg) => console.log(msg.replace(/^/gm, '  '));
+	const log = (msg) => console.log(msg);
 
 	/** @param {string} msg */
-	const err = (msg) => console.error(msg.replace(/^/gm, '  '));
+	const err = (msg) => console.error(msg);
 
-	log.success = (msg) => log(colors.green(`✔ ${msg}`));
-	log.error = (msg) => err(colors.bold().red(msg));
-	log.warn = (msg) => log(colors.bold().yellow(msg));
-
-	log.minor = verbose ? (msg) => log(colors.grey(msg)) : noop;
+	log.success = (msg) => log(styleText('green', `✔ ${msg}`));
+	log.error = (msg) => err(styleText(['bold', 'red'], msg));
+	log.warn = (msg) => console.warn(styleText(['bold', 'yellow'], msg));
+	log.minor = verbose ? (msg) => log(styleText('grey', msg)) : noop;
 	log.info = verbose ? log : noop;
+	log.err = err;
+
+	log.prettyError = (error, caller) => {
+		/** @type {unknown} */
+		let e = error;
+
+		while (e instanceof Error) {
+			let stack = e.stack;
+			if (stack) {
+				if (caller) {
+					const i = stack.indexOf(caller);
+					// Cut the stack trace off at the point when our internal one starts
+					stack = stack.slice(0, stack.lastIndexOf('\n', i));
+				}
+
+				err(stack);
+			}
+
+			e = e.cause;
+		}
+
+		if (e) {
+			err(String(e));
+		}
+	};
 
 	return log;
 }
@@ -56,31 +92,4 @@ export function get_mime_lookup(manifest_data) {
 	});
 
 	return mime;
-}
-
-/**
- * @param {string} dir
- * @param {(file: string) => boolean} [filter]
- */
-export function list_files(dir, filter) {
-	/** @type {string[]} */
-	const files = [];
-
-	/** @param {string} current */
-	function walk(current) {
-		for (const file of fs.readdirSync(path.resolve(dir, current))) {
-			const child = path.posix.join(current, file);
-			if (fs.statSync(path.resolve(dir, child)).isDirectory()) {
-				walk(child);
-			} else {
-				if (!filter || filter(child)) {
-					files.push(child);
-				}
-			}
-		}
-	}
-
-	if (fs.existsSync(dir)) walk('');
-
-	return files;
 }
