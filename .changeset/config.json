@@ -7,7 +7,7 @@
 	"commit": false,
 	"linked": [],
 	"access": "public",
-	"baseBranch": "next",
+	"baseBranch": "main",
 	"bumpVersionsWithWorkspaceProtocolOnly": true,
 	"ignore": ["!(@sveltejs/*)"],
 	"format": false
