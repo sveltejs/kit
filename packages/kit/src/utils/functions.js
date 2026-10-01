@@ -1,3 +1,5 @@
+import * as e from '../messages/server-errors.js';
+
 export function noop() {}
 
 /**
@@ -23,6 +25,6 @@ export function once(fn) {
  */
 export function disallow_on_server(name, parens = '(...)') {
 	return () => {
-		throw new Error(`Cannot call \`${name}${parens}\` on the server`);
+		e.server_api_unavailable({ name: `${name}${parens}` });
 	};
 }

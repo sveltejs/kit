@@ -1,3 +1,5 @@
+import * as e from '../messages/build-errors.js';
+
 /**
  * @param {string} route_id
  * @param {Record<string, any>} config
@@ -15,9 +17,7 @@ export function check_feature(route_id, config, feature, adapter) {
 			});
 
 			if (!supported) {
-				throw new Error(
-					`Cannot use \`read\` from \`$app/server\` in ${route_id} when using ${adapter.name}. Please ensure that your adapter is up to date and supports this feature.`
-				);
+				e.adapter_read_unsupported({ route: route_id, adapter: adapter.name });
 			}
 		}
 	}

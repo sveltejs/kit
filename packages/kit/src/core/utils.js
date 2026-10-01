@@ -47,7 +47,7 @@ export function logger({ verbose } = { verbose: true }) {
 
 	log.success = (msg) => log(styleText('green', `✔ ${msg}`));
 	log.error = (msg) => err(styleText(['bold', 'red'], msg));
-	log.warn = (msg) => log(styleText(['bold', 'yellow'], msg));
+	log.warn = (msg) => console.warn(styleText(['bold', 'yellow'], msg));
 	log.minor = verbose ? (msg) => log(styleText('grey', msg)) : noop;
 	log.info = verbose ? log : noop;
 	log.err = err;

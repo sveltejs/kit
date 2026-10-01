@@ -1,50 +1,6 @@
 /** @import { ParamMatcher } from '@sveltejs/kit/params' */
 import { assert, expect, test } from 'vitest';
-import {
-	collect_matcher_names,
-	load_and_validate_params,
-	validate_param_matchers
-} from './params.js';
-import { normalize_param_definition } from '../exports/params/index.js';
-
-test('collect_matcher_names collects matcher names from routes', () => {
-	const names = collect_matcher_names([
-		/** @type {import('types').RouteData} */ ({
-			params: [{ name: 'id', matcher: 'number' }]
-		})
-	]);
-
-	expect(names).toEqual(new Set(['number']));
-});
-
-test('validate_param_matchers throws for unknown matchers', () => {
-	assert.throws(
-		() => validate_param_matchers({ foo: true }, new Set(['bar']), 'params.js'),
-		/No matcher found for parameter 'bar'/
-	);
-});
-
-test('validate_param_matchers ignores inherited properties', () => {
-	assert.throws(
-		() => validate_param_matchers({}, new Set(['toString']), 'params.js'),
-		/No matcher found for parameter 'toString'/
-	);
-});
-
-test('load_and_validate_params loads and validates params', async () => {
-	const params = await load_and_validate_params({
-		routes: [
-			/** @type {import('types').RouteData} */ ({
-				params: [{ name: 'id', matcher: 'number' }]
-			})
-		],
-		params_path: 'params.js',
-		root: import.meta.dirname,
-		load: () => Promise.resolve({ params: { number: () => true } })
-	});
-
-	expect(params).toEqual({ number: expect.any(Function) });
-});
+import { normalize_param_definition } from './index.js';
 
 test('normalize_param_definition uses the returned value as the parsed param', () => {
 	const matcher = normalize_param_definition(() => true);
@@ -79,6 +35,12 @@ test('normalize_param_definition propagates thrown errors', () => {
 	});
 
 	assert.throws(() => matcher['~standard'].validate('x'), /boom/);
+});
+
+test('normalize_param_definition rejects invalid definitions', () => {
+	expect(() => normalize_param_definition(/** @type {any} */ (42))).toThrowKitError(
+		'param_definition_invalid'
+	);
 });
 
 test('normalize_param_definition passes callable standard schemas through untouched', () => {

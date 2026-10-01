@@ -8,6 +8,9 @@ import { with_request_store } from '@sveltejs/kit/internal/server';
 import { add_deprecated_handle_error_properties, coalesce_to_error } from '../../utils/error.js';
 // `$app/server` reaches this module, so it must not import anything generated
 import { fix_stack_trace, hooks } from './internal.js';
+import { capture_error } from '../../messages/internal/server.js';
+import * as e from '../../messages/server-errors.js';
+import * as w from '../../messages/server-warnings.js';
 
 /**
  * @param {import('@sveltejs/kit').RequestEvent} event
@@ -70,9 +73,7 @@ export function handle_error_and_jsonify(event, state, error) {
 
 	if (result instanceof Promise) {
 		if (!__SVELTEKIT_SUPPORTS_ASYNC__ && state.is_in_render) {
-			console.warn(
-				`To use an async \`handleError\` hook to handle errors that occur during rendering, you must enable \`compilerOptions.experimental.async\` in the SvelteKit plugin of your Vite config. The returned error has been replaced with a generic object`
-			);
+			w.handle_error_async_without_async_svelte();
 
 			// we're discarding the result, but we still need to prevent an unhandled
 			// rejection if the user's async `handleError` hook rejects
@@ -98,10 +99,11 @@ export function handle_error_and_jsonify(event, state, error) {
  * @param {unknown} hook_error
  */
 function log_handle_error_hook_failure(error, hook_error) {
-	const failure = new Error('The `handleError` hook failed', {
-		cause: coalesce_to_error(hook_error)
-	});
-	failure.stack = failure.message;
+	const failure = capture_error(() =>
+		e.handle_error_hook_failed(undefined, { cause: coalesce_to_error(hook_error) })
+	);
+	// only show the diagnostic and the cause, not a stack trace of SvelteKit's internals
+	failure.stack = `${failure.name}: ${failure.message}`;
 	console.error(failure);
 	if (error instanceof SvelteKitError) {
 		console.error(`Original error: ${error.status} ${error.text}: ${error.message}`);

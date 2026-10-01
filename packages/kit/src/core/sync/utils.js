@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { styleText } from 'node:util';
 import { resolve_entry } from '../../utils/filesystem.js';
+import * as w from '../../messages/build-warnings.js';
 
 /** @type {Map<string, string>} */
 const previous_contents = new Map();
@@ -82,10 +82,5 @@ export function check_spelling(original, typo, description, extensions) {
 
 	const corrected = path.basename(misspelled).replace(path.basename(typo), path.basename(original));
 
-	console.warn(
-		styleText(
-			['bold', 'yellow'],
-			`${description}. Did you mean ${corrected}?` + ` at ${path.resolve(misspelled)}`
-		)
-	);
+	w.file_name_misspelled({ description, corrected, file: path.resolve(misspelled) });
 }

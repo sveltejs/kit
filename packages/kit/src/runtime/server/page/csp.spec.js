@@ -1,5 +1,5 @@
 import process from 'node:process';
-import { assert, test, describe, beforeAll } from 'vitest';
+import { assert, expect, test, describe, beforeAll } from 'vitest';
 import { Csp } from './csp.js';
 
 describe.skipIf(!process.env.DEV)('CSPs in dev', () => {
@@ -397,7 +397,7 @@ describe.skipIf(!!process.env.DEV)('CSPs in prod', () => {
 	});
 
 	test('throws when reportOnly contains directives but no report-uri or report-to', () => {
-		assert.throws(() => {
+		expect(() => {
 			new Csp(
 				{
 					mode: 'hash',
@@ -410,7 +410,7 @@ describe.skipIf(!!process.env.DEV)('CSPs in prod', () => {
 					prerender: false
 				}
 			);
-		}, '`content-security-policy-report-only` must be specified with either the `report-to` or `report-uri` directives, or both');
+		}).toThrowKitError('csp_report_only_missing_report');
 	});
 
 	test('add_script_hashes adds hashes to script-src', () => {

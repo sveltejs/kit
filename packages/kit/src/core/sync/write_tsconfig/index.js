@@ -2,7 +2,6 @@
 import process from 'node:process';
 import fs from 'node:fs';
 import path from 'node:path';
-import { styleText } from 'node:util';
 import { write_if_changed } from '../utils.js';
 import {
 	ESSENTIAL_OPTIONS,
@@ -11,6 +10,10 @@ import {
 	remove_trailing_slashstar
 } from './utils.js';
 import { extends_id, validate_resolved_config } from './validate.js';
+import * as e from '../../../messages/build-errors.js';
+import * as w from '../../../messages/build-warnings.js';
+import { posixify } from '../../../utils/os.js';
+import { bullet_list } from '../../../utils/format.js';
 
 /** @type {typeof import('typescript')} */
 let ts;
@@ -117,14 +120,10 @@ function validate_config(dir, options) {
 	// now that we've written the parent config, we can resolve the
 	// user config and validate that nothing important was overwritten
 	if (!extends_id(user_config.options, options.example.extends)) {
-		console.warn(
-			styleText(
-				['bold', 'yellow'],
-				`${path.relative(process.cwd(), user_config.file)} should extend SvelteKit's built-in configuration:`
-			)
-		);
-
-		console.warn(JSON.stringify(options.example, null, '  '));
+		w.tsconfig_extends_missing({
+			file: path.relative(process.cwd(), user_config.file),
+			example: JSON.stringify(options.example, null, '  ')
+		});
 
 		return;
 	}
@@ -140,16 +139,10 @@ function validate_config(dir, options) {
 	);
 
 	if (warnings.length > 0) {
-		console.warn(
-			styleText(
-				['bold', 'yellow'],
-				`Found issues while validating ${path.relative(process.cwd(), user_config.file)}`
-			)
-		);
-
-		for (const warning of warnings) {
-			console.warn(`  - ${warning}`);
-		}
+		w.tsconfig_invalid({
+			file: path.relative(process.cwd(), user_config.file),
+			issues: bullet_list(warnings)
+		});
 	}
 }
 
@@ -198,17 +191,11 @@ function load_user_tsconfig(cwd) {
  * @param {string} file
  */
 function load_tsconfig(file) {
-	const options = ts.readConfigFile(file, ts.sys.readFile);
+	const options = ts.readConfigFile(posixify(file), ts.sys.readFile);
 
 	if (options.error) {
-		let message = `Failed to parse TypeScript config`;
-
-		if (typeof options.error.messageText === 'string') {
-			message += `: ${options.error.messageText}`;
-		}
-
-		const error = new Error(message);
-		error.stack = '';
+		/** @type {string | undefined} */
+		let location;
 
 		if (options.error.file && options.error.start !== undefined) {
 			const line_start = options.error.file.text.lastIndexOf('\n', options.error.start);
@@ -219,10 +206,15 @@ function load_tsconfig(file) {
 					: options.error.file.text.slice(0, options.error.start).split('\n').length;
 			const column = options.error.start - line_start;
 
-			error.stack = `${error.message}\n    at ${path.relative(process.cwd(), file)}:${line}:${column}`;
+			location = `${path.relative(process.cwd(), file)}:${line}:${column}`;
 		}
 
-		throw error;
+		e.tsconfig_parse_failed(
+			typeof options.error.messageText === 'string'
+				? { details: options.error.messageText }
+				: undefined,
+			{ stackless: true, location }
+		);
 	}
 
 	return options.config;
@@ -252,10 +244,10 @@ function get_paths(config, root) {
 
 	for (const [key, value] of Object.entries(alias)) {
 		const key_match = alias_key.exec(key);
-		if (!key_match) throw new Error(`Invalid alias key: ${key}`);
+		if (!key_match) e.config_alias_key_invalid({ key });
 
 		const value_match = alias_value.exec(value);
-		if (!value_match) throw new Error(`Invalid alias value: ${value}`);
+		if (!value_match) e.config_alias_value_invalid({ value });
 
 		const resolved = path.resolve(root, remove_trailing_slashstar(value));
 		const slashstar = key_match[2];

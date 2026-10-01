@@ -10,6 +10,8 @@ import {
 	strip_resolution_suffix
 } from '../pathname.js';
 import { validate_redirect_location } from './url.js';
+import * as e from '../messages/shared-errors.js';
+import * as w from '../messages/shared-warnings.js';
 
 const text_encoder = new TextEncoder();
 
@@ -80,14 +82,12 @@ export { VERSION } from '../version.js';
  */
 export function error(status, message, properties) {
 	if ((!BROWSER || DEV) && (isNaN(status) || status < 400 || status > 599)) {
-		throw new Error(`HTTP error status codes must be between 400 and 599 — ${status} is invalid`);
+		e.invalid_error_status({ status: String(status) });
 	}
 
 	if (message !== undefined && typeof message !== 'string') {
 		if (DEV) {
-			console.warn(
-				'Passing an `App.Error` body as the second argument is deprecated — pass the `message` as the second argument, and any additional properties as the third'
-			);
+			w.error_body_deprecated();
 		}
 
 		({ message, ...properties } = message);
@@ -128,7 +128,7 @@ export function isHttpError(e, status) {
  */
 export function redirect(status, location, options) {
 	if ((!BROWSER || DEV) && (isNaN(status) || status < 300 || status > 308)) {
-		throw new Error('Invalid status code');
+		e.invalid_redirect_status({ status: String(status) });
 	}
 
 	const href = location.toString();

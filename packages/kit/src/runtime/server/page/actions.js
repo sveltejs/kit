@@ -9,6 +9,8 @@ import { is_form_content_type, negotiate } from '../../../utils/http.js';
 import { with_version_header } from '../utils.js';
 import { handle_error_and_jsonify } from '../errors.js';
 import { stringify, uneval } from '#app/internal/transport';
+import { capture_error } from '../../../messages/internal/server.js';
+import * as e from '../../../messages/server-errors.js';
 
 /** @param {RequestEvent} event */
 export function is_action_json_request(event) {
@@ -61,8 +63,8 @@ async function action_result_json(event, state, result) {
 			},
 			{ status: result.status }
 		);
-	} catch (e) {
-		return action_result_json(event, state, action_error_result(e, result.location));
+	} catch (error) {
+		return action_result_json(event, state, action_error_result(error, result.location));
 	}
 }
 
@@ -105,12 +107,12 @@ export function method_not_allowed_result(event, location) {
 }
 
 /**
- * @param {unknown} e
+ * @param {unknown} error
  * @param {string} location
  * @returns {Extract<ServerActionResult, { type: 'redirect' | 'error' }>}
  */
-export function action_error_result(e, location) {
-	const err = normalize_error(e);
+export function action_error_result(error, location) {
+	const err = normalize_error(error);
 
 	if (err instanceof Redirect) {
 		return {
@@ -193,9 +195,9 @@ export async function handle_action_request(event, state, server) {
 				data
 			};
 		}
-	} catch (e) {
+	} catch (error) {
 		return action_error_result(
-			e instanceof ActionFailure ? new Error('Cannot "throw fail()". Use "return fail()"') : e,
+			error instanceof ActionFailure ? capture_error(() => e.action_throw_fail()) : error,
 			location
 		);
 	}
@@ -206,9 +208,7 @@ export async function handle_action_request(event, state, server) {
  */
 function check_named_default_separate(actions) {
 	if (actions.default && Object.keys(actions).length > 1) {
-		throw new Error(
-			'When using named actions, the default action cannot be used. See the docs for more info: https://svelte.dev/docs/kit/form-actions#named-actions'
-		);
+		e.action_default_with_named();
 	}
 }
 
@@ -226,7 +226,7 @@ async function call_action(event, state, actions) {
 		if (param[0].startsWith('/')) {
 			name = param[0].slice(1);
 			if (name === 'default') {
-				throw new Error('Cannot use reserved action name "default"');
+				e.action_name_reserved();
 			}
 			break;
 		}
@@ -276,11 +276,11 @@ async function call_action(event, state, actions) {
 /** @param {any} data */
 function validate_action_return(data) {
 	if (data instanceof Redirect) {
-		throw new Error('Cannot `return redirect(...)` — use `redirect(...)` instead');
+		e.action_return_redirect();
 	}
 
 	if (data instanceof HttpError) {
-		throw new Error('Cannot `return error(...)` — use `error(...)` or `return fail(...)` instead');
+		e.action_return_error();
 	}
 }
 
@@ -301,23 +301,21 @@ export function uneval_action_response(data, route_id) {
 function try_serialize(data, fn, route_id) {
 	try {
 		return fn(data);
-	} catch (e) {
+	} catch (/** @type {any} */ error) {
 		// If we're here, the data could not be serialized with devalue
-		const error = /** @type {any} */ (e);
 
 		// if someone tries to use `json()` in their action
 		if (data instanceof Response) {
-			throw new Error(
-				`Data returned from action inside ${route_id} is not serializable. Form actions need to return plain objects or fail(). E.g. return { success: true } or return fail(400, { message: "invalid" });`,
-				{ cause: e }
-			);
+			e.action_response_not_serializable({ id: route_id }, { cause: error });
 		}
 
 		// if devalue could not serialize a property on the object, etc.
 		if ('path' in error) {
-			let message = `Data returned from action inside ${route_id} is not serializable: ${error.message}`;
-			if (error.path !== '') message += ` (data.${error.path})`;
-			throw new Error(message, { cause: e });
+			const values = { id: route_id, message: error.message };
+			e.action_data_not_serializable(
+				error.path === '' ? values : { ...values, path: `data${error.path}` },
+				{ cause: error }
+			);
 		}
 
 		throw error;

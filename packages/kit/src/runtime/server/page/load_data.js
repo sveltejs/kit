@@ -6,6 +6,8 @@ import { with_request_store, merge_tracing, record_span } from '@sveltejs/kit/in
 import { base64_encode } from '../../utils.js';
 import { NULL_BODY_STATUS } from '../constants.js';
 import { get_node_type } from '../utils.js';
+import * as e from '../../../messages/server-errors.js';
+import * as w from '../../../messages/server-warnings.js';
 
 /**
  * Calls the user's server `load` function.
@@ -43,9 +45,11 @@ export async function load_server_data({ event, state, node, parent }) {
 		event.url,
 		() => {
 			if (DEV && done && !uses.url) {
-				console.warn(
-					`${node.server_id}: Accessing URL properties in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the URL changes`
-				);
+				w.load_tracking_after_return({
+					id: /** @type {string} */ (node.server_id),
+					usage: 'Accessing URL properties',
+					change: 'the URL changes'
+				});
 			}
 
 			if (is_tracking) {
@@ -54,9 +58,11 @@ export async function load_server_data({ event, state, node, parent }) {
 		},
 		(param) => {
 			if (DEV && done && !uses.search_params.has(param)) {
-				console.warn(
-					`${node.server_id}: Accessing URL properties in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the URL changes`
-				);
+				w.load_tracking_after_return({
+					id: /** @type {string} */ (node.server_id),
+					usage: 'Accessing URL properties',
+					change: 'the URL changes'
+				});
 			}
 
 			if (is_tracking) {
@@ -88,9 +94,11 @@ export async function load_server_data({ event, state, node, parent }) {
 						const url = new URL(info instanceof Request ? info.url : info, event.url);
 
 						if (DEV && done && !uses.dependencies.has(url.href)) {
-							console.warn(
-								`${node.server_id}: Calling \`event.fetch(...)\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the dependency is invalidated`
-							);
+							w.load_tracking_after_return({
+								id: /** @type {string} */ (node.server_id),
+								usage: 'Calling `event.fetch(...)`',
+								change: 'the dependency is invalidated'
+							});
 						}
 
 						// Note: server fetches are not added to uses.depends due to security concerns
@@ -105,9 +113,11 @@ export async function load_server_data({ event, state, node, parent }) {
 								validate_depends(node.server_id || 'missing route ID', dep);
 
 								if (done && !uses.dependencies.has(href)) {
-									console.warn(
-										`${node.server_id}: Calling \`depends(...)\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the dependency is invalidated`
-									);
+									w.load_tracking_after_return({
+										id: /** @type {string} */ (node.server_id),
+										usage: 'Calling `depends(...)`',
+										change: 'the dependency is invalidated'
+									});
 								}
 							}
 
@@ -117,11 +127,11 @@ export async function load_server_data({ event, state, node, parent }) {
 					params: new Proxy(event.params, {
 						get: (target, key) => {
 							if (DEV && done && typeof key === 'string' && !uses.params.has(key)) {
-								console.warn(
-									`${node.server_id}: Accessing \`params.${String(
-										key
-									)}\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the param changes`
-								);
+								w.load_tracking_after_return({
+									id: /** @type {string} */ (node.server_id),
+									usage: `Accessing \`params.${key}\``,
+									change: 'the param changes'
+								});
 							}
 
 							if (is_tracking) {
@@ -132,9 +142,11 @@ export async function load_server_data({ event, state, node, parent }) {
 					}),
 					parent: async () => {
 						if (DEV && done && !uses.parent) {
-							console.warn(
-								`${node.server_id}: Calling \`parent(...)\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when parent data changes`
-							);
+							w.load_tracking_after_return({
+								id: /** @type {string} */ (node.server_id),
+								usage: 'Calling `parent(...)`',
+								change: 'parent data changes'
+							});
 						}
 
 						if (is_tracking) {
@@ -145,11 +157,11 @@ export async function load_server_data({ event, state, node, parent }) {
 					route: new Proxy(event.route, {
 						get: (target, key) => {
 							if (DEV && done && typeof key === 'string' && !uses.route) {
-								console.warn(
-									`${node.server_id}: Accessing \`route.${String(
-										key
-									)}\` in a promise handler after \`load(...)\` has returned will not cause the function to re-run when the route changes`
-								);
+								w.load_tracking_after_return({
+									id: /** @type {string} */ (node.server_id),
+									usage: `Accessing \`route.${key}\``,
+									change: 'the route changes'
+								});
 							}
 
 							if (is_tracking) {
@@ -301,11 +313,7 @@ export function create_universal_fetch(event, prerendering, fetched, csr, resolv
 			} else {
 				const acao = response.headers.get('access-control-allow-origin');
 				if (!acao || (acao !== event.url.origin && acao !== '*')) {
-					throw new Error(
-						`CORS error: ${
-							acao ? 'Incorrect' : 'No'
-						} 'Access-Control-Allow-Origin' header is present on the requested resource`
-					);
+					e.load_fetch_cors({ reason: acao ? 'Incorrect' : 'No' });
 				}
 			}
 		}
@@ -460,9 +468,10 @@ export function create_universal_fetch(event, prerendering, fetched, csr, resolv
 				if (value && !lower.startsWith('x-sveltekit-')) {
 					const included = resolve_opts.filterSerializedResponseHeaders(lower, value);
 					if (!included) {
-						throw new Error(
-							`Failed to get response header "${lower}" — it must be included by the \`filterSerializedResponseHeaders\` option: https://svelte.dev/docs/kit/hooks#handle (at ${event.route.id})`
-						);
+						e.load_response_header_not_serialized({
+							name: lower,
+							id: /** @type {string} */ (event.route.id)
+						});
 					}
 				}
 
@@ -475,9 +484,10 @@ export function create_universal_fetch(event, prerendering, fetched, csr, resolv
 				for (const value of values) {
 					const included = resolve_opts.filterSerializedResponseHeaders('set-cookie', value);
 					if (!included) {
-						throw new Error(
-							`Failed to get response header "set-cookie" — it must be included by the \`filterSerializedResponseHeaders\` option: https://svelte.dev/docs/kit/hooks#handle (at ${event.route.id})`
-						);
+						e.load_response_header_not_serialized({
+							name: 'set-cookie',
+							id: /** @type {string} */ (event.route.id)
+						});
 					}
 				}
 
