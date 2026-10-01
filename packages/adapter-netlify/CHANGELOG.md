@@ -1,5 +1,68 @@
 # @sveltejs/adapter-netlify
 
+## 7.0.0
+
+### Major Changes
+
+- chore: use `rolldown` for edge function bundling ([#15432](https://github.com/sveltejs/kit/pull/15432))
+
+- breaking: populate env vars before `instrumentation.server.js` is evaluated and update the adapter instrumentation API ([#16303](https://github.com/sveltejs/kit/pull/16303))
+
+- breaking: write output that conforms to the stable [Netlify Frameworks API](https://docs.netlify.com/build/frameworks/frameworks-api/). ([#15294](https://github.com/sveltejs/kit/pull/15294))
+  
+  Deploying and previewing with Netlify CLI now requires [v17.31.0](https://github.com/netlify/cli/releases/tag/v17.31.0) or later. Run `npm i -g netlify-cli@latest` to upgrade.
+- breaking: write static files based on the `publish` adapter option rather than reading the `netlify.toml` file ([#17078](https://github.com/sveltejs/kit/pull/17078))
+
+- breaking: require SvelteKit 3 ([#15506](https://github.com/sveltejs/kit/pull/15506))
+
+- breaking: edge function build target is now `es2022` ([#15432](https://github.com/sveltejs/kit/pull/15432))
+
+- breaking: require `vite@^8.0.12`, the first Vite 8 release bundling stable `rolldown` 1.0.0 ([#16134](https://github.com/sveltejs/kit/pull/16134))
+
+- breaking: replace the `builder.generateManifest` with `builder.generateServerInstance` and `builder.manifest` ([#16875](https://github.com/sveltejs/kit/pull/16875))
+
+### Minor Changes
+
+- feat: support `split` and `edge` options combined ([#17045](https://github.com/sveltejs/kit/pull/17045))
+
+### Patch Changes
+
+- chore: use `node:fs` instead of deprecated `builder.rimraf` and `builder.mkdirp` ([#16610](https://github.com/sveltejs/kit/pull/16610))
+
+- fix: correctly apply `reroute` results for apps configured with split serverless functions ([#16665](https://github.com/sveltejs/kit/pull/16665))
+
+- fix: ensure types for `platform.context` work ([#16255](https://github.com/sveltejs/kit/pull/16255))
+
+- fix: include `utils.js` in package.json `files` ([#16298](https://github.com/sveltejs/kit/pull/16298))
+
+- chore: replace @netlify/functions with @netlify/types for the Context type ([#16542](https://github.com/sveltejs/kit/pull/16542))
+
+- fix: route requests with omitted optional parameters to split serverless functions ([#17020](https://github.com/sveltejs/kit/pull/17020))
+
+- fix: strip trailing slashes from prerendered paths in the edge function exclude list, so the root page is served statically when using a base path ([#16788](https://github.com/sveltejs/kit/pull/16788))
+
+- fix: copy `_redirects` when deploying edge function ([#17047](https://github.com/sveltejs/kit/pull/17047))
+
+- fix: provide distinct names for each split serverless function ([#16667](https://github.com/sveltejs/kit/pull/16667))
+
+- chore: bump `rolldown` to 1.2.3 ([#16745](https://github.com/sveltejs/kit/pull/16745))
+
+- fix: await `init` on every request to prevent race condition ([#16467](https://github.com/sveltejs/kit/pull/16467))
+
+- fix: import the generated manifest via `pathToFileURL`, which handles special characters in the project path ([#16649](https://github.com/sveltejs/kit/pull/16649))
+
+- chore: include edge function configuration in the function module ([#17058](https://github.com/sveltejs/kit/pull/17058))
+
+- chore: replace `@iarna/toml` with `smol-toml` ([#16948](https://github.com/sveltejs/kit/pull/16948))
+
+- chore: bump Rolldown to `1.2.0` ([#16455](https://github.com/sveltejs/kit/pull/16455))
+
+- chore: identify serverless functions with a UUID instead of Netlify's function token ([#17044](https://github.com/sveltejs/kit/pull/17044))
+
+- fix: ensure serverless function files have unique names ([#17049](https://github.com/sveltejs/kit/pull/17049))
+- Updated dependencies:
+  - @sveltejs/kit@3.0.0
+
 ## 7.0.0-next.12
 
 ### Major Changes
