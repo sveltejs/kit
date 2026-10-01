@@ -12,12 +12,12 @@ export function CODE(_values, options) {
 
 	if (DEV) {
 		console.warn(
-			`%c[sveltekit] ${'CODE'}\n%c${MESSAGE(_values)}\nhttps://next.svelte.dev/e/@sveltejs/kit/${'CODE'}`,
+			`%c[sveltekit] ${'CODE'}\n%c${MESSAGE(_values)}\nhttps://next.svelte.dev/e/kit/${'CODE'}`,
 			bold,
 			normal,
 			...details
 		);
 	} else {
-		console.warn('https://next.svelte.dev/e/@sveltejs/kit/CODE', ...details);
+		console.warn('https://next.svelte.dev/e/kit/CODE', ...details);
 	}
 }

@@ -18,7 +18,7 @@ test.describe('remote functions', () => {
 		// minify:false retains JSDoc descriptions — only executable strings count here
 		const executable = code.replace(/\/\*[^]*?\*\//g, '');
 		expect(executable).toContain(
-			'https://next.svelte.dev/e/@sveltejs/kit/remote_form_multiple_elements'
+			'https://next.svelte.dev/e/kit/remote_form_multiple_elements'
 		);
 		for (const text of [
 			'A form object can only be attached',

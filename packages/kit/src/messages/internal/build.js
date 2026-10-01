@@ -9,7 +9,7 @@ import { styleText } from 'node:util';
  * @param {string} message
  */
 function format(code, message) {
-	return `${code}\n${message}\nhttps://next.svelte.dev/e/@sveltejs/kit/${code}`;
+	return `${code}\n${message}\nhttps://next.svelte.dev/e/kit/${code}`;
 }
 
 /**

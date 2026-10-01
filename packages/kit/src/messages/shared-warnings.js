@@ -10,12 +10,12 @@ import { bold, normal } from './internal/shared.js';
 export function app_environment_deprecated(_values) {
 	if (DEV) {
 		console.warn(
-			`%c[sveltekit] ${'app_environment_deprecated'}\n%c${`\`$app/environment\` is deprecated, use \`$app/env\` instead`}\nhttps://next.svelte.dev/e/@sveltejs/kit/${'app_environment_deprecated'}`,
+			`%c[sveltekit] ${'app_environment_deprecated'}\n%c${`\`$app/environment\` is deprecated, use \`$app/env\` instead`}\nhttps://next.svelte.dev/e/kit/${'app_environment_deprecated'}`,
 			bold,
 			normal
 		);
 	} else {
-		console.warn('https://next.svelte.dev/e/@sveltejs/kit/app_environment_deprecated');
+		console.warn('https://next.svelte.dev/e/kit/app_environment_deprecated');
 	}
 }
 
@@ -26,12 +26,12 @@ export function app_environment_deprecated(_values) {
 export function asset_leading_slash(_values) {
 	if (DEV) {
 		console.warn(
-			`%c[sveltekit] ${'asset_leading_slash'}\n%c${`\`asset('${_values.path}')\` should now be \`asset('${_values.fixed}')\``}\nhttps://next.svelte.dev/e/@sveltejs/kit/${'asset_leading_slash'}`,
+			`%c[sveltekit] ${'asset_leading_slash'}\n%c${`\`asset('${_values.path}')\` should now be \`asset('${_values.fixed}')\``}\nhttps://next.svelte.dev/e/kit/${'asset_leading_slash'}`,
 			bold,
 			normal
 		);
 	} else {
-		console.warn('https://next.svelte.dev/e/@sveltejs/kit/asset_leading_slash');
+		console.warn('https://next.svelte.dev/e/kit/asset_leading_slash');
 	}
 }
 
@@ -42,12 +42,12 @@ export function asset_leading_slash(_values) {
 export function depends_special_scheme(_values) {
 	if (DEV) {
 		console.warn(
-			`%c[sveltekit] ${'depends_special_scheme'}\n%c${`\`${_values.route}\`: Calling \`depends('${_values.dependency}')\` will throw an error in Firefox because \`${_values.scheme}\` is a special URI scheme`}\nhttps://next.svelte.dev/e/@sveltejs/kit/${'depends_special_scheme'}`,
+			`%c[sveltekit] ${'depends_special_scheme'}\n%c${`\`${_values.route}\`: Calling \`depends('${_values.dependency}')\` will throw an error in Firefox because \`${_values.scheme}\` is a special URI scheme`}\nhttps://next.svelte.dev/e/kit/${'depends_special_scheme'}`,
 			bold,
 			normal
 		);
 	} else {
-		console.warn('https://next.svelte.dev/e/@sveltejs/kit/depends_special_scheme');
+		console.warn('https://next.svelte.dev/e/kit/depends_special_scheme');
 	}
 }
 
@@ -58,12 +58,12 @@ export function depends_special_scheme(_values) {
 export function env_module_deprecated(_values) {
 	if (DEV) {
 		console.warn(
-			`%c[sveltekit] ${'env_module_deprecated'}\n%c${`\`${_values.module}\` is deprecated, use \`${_values.replacement}\` instead`}\nhttps://next.svelte.dev/e/@sveltejs/kit/${'env_module_deprecated'}`,
+			`%c[sveltekit] ${'env_module_deprecated'}\n%c${`\`${_values.module}\` is deprecated, use \`${_values.replacement}\` instead`}\nhttps://next.svelte.dev/e/kit/${'env_module_deprecated'}`,
 			bold,
 			normal
 		);
 	} else {
-		console.warn('https://next.svelte.dev/e/@sveltejs/kit/env_module_deprecated');
+		console.warn('https://next.svelte.dev/e/kit/env_module_deprecated');
 	}
 }
 
@@ -74,12 +74,12 @@ export function env_module_deprecated(_values) {
 export function error_body_deprecated(_values) {
 	if (DEV) {
 		console.warn(
-			`%c[sveltekit] ${'error_body_deprecated'}\n%c${`Passing an \`App.Error\` body as the second argument is deprecated — pass the \`message\` as the second argument, and any additional properties as the third`}\nhttps://next.svelte.dev/e/@sveltejs/kit/${'error_body_deprecated'}`,
+			`%c[sveltekit] ${'error_body_deprecated'}\n%c${`Passing an \`App.Error\` body as the second argument is deprecated — pass the \`message\` as the second argument, and any additional properties as the third`}\nhttps://next.svelte.dev/e/kit/${'error_body_deprecated'}`,
 			bold,
 			normal
 		);
 	} else {
-		console.warn('https://next.svelte.dev/e/@sveltejs/kit/error_body_deprecated');
+		console.warn('https://next.svelte.dev/e/kit/error_body_deprecated');
 	}
 }
 
@@ -90,12 +90,12 @@ export function error_body_deprecated(_values) {
 export function form_fields_enumerated(_values) {
 	if (DEV) {
 		console.warn(
-			`%c[sveltekit] ${'form_fields_enumerated'}\n%c${`The properties of \`form.fields\` are virtual, so operators like \`in\` and \`Object.keys\` are meaningless. If you need the current value of a form field, use \`form.fields.x.value()\``}\nhttps://next.svelte.dev/e/@sveltejs/kit/${'form_fields_enumerated'}`,
+			`%c[sveltekit] ${'form_fields_enumerated'}\n%c${`The properties of \`form.fields\` are virtual, so operators like \`in\` and \`Object.keys\` are meaningless. If you need the current value of a form field, use \`form.fields.x.value()\``}\nhttps://next.svelte.dev/e/kit/${'form_fields_enumerated'}`,
 			bold,
 			normal
 		);
 	} else {
-		console.warn('https://next.svelte.dev/e/@sveltejs/kit/form_fields_enumerated');
+		console.warn('https://next.svelte.dev/e/kit/form_fields_enumerated');
 	}
 }
 
@@ -106,12 +106,12 @@ export function form_fields_enumerated(_values) {
 export function handle_error_message_deprecated(_values) {
 	if (DEV) {
 		console.warn(
-			`%c[sveltekit] ${'handle_error_message_deprecated'}\n%c${`The \`message\` property of \`handleError\` is deprecated. Use \`error.message\` for expected and framework errors, or \`'Internal Error'\` for unexpected errors.`}\nhttps://next.svelte.dev/e/@sveltejs/kit/${'handle_error_message_deprecated'}`,
+			`%c[sveltekit] ${'handle_error_message_deprecated'}\n%c${`The \`message\` property of \`handleError\` is deprecated. Use \`error.message\` for expected and framework errors, or \`'Internal Error'\` for unexpected errors.`}\nhttps://next.svelte.dev/e/kit/${'handle_error_message_deprecated'}`,
 			bold,
 			normal
 		);
 	} else {
-		console.warn('https://next.svelte.dev/e/@sveltejs/kit/handle_error_message_deprecated');
+		console.warn('https://next.svelte.dev/e/kit/handle_error_message_deprecated');
 	}
 }
 
@@ -122,11 +122,11 @@ export function handle_error_message_deprecated(_values) {
 export function handle_error_status_deprecated(_values) {
 	if (DEV) {
 		console.warn(
-			`%c[sveltekit] ${'handle_error_status_deprecated'}\n%c${`The \`status\` property of \`handleError\` is deprecated. Use \`error.status\` for expected and framework errors, or \`500\` for unexpected errors.`}\nhttps://next.svelte.dev/e/@sveltejs/kit/${'handle_error_status_deprecated'}`,
+			`%c[sveltekit] ${'handle_error_status_deprecated'}\n%c${`The \`status\` property of \`handleError\` is deprecated. Use \`error.status\` for expected and framework errors, or \`500\` for unexpected errors.`}\nhttps://next.svelte.dev/e/kit/${'handle_error_status_deprecated'}`,
 			bold,
 			normal
 		);
 	} else {
-		console.warn('https://next.svelte.dev/e/@sveltejs/kit/handle_error_status_deprecated');
+		console.warn('https://next.svelte.dev/e/kit/handle_error_status_deprecated');
 	}
 }
