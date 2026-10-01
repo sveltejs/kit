@@ -1659,6 +1659,25 @@ test.describe('Actions', () => {
 		expect(await page.evaluate(() => window.nav_marker)).toBe(true);
 	});
 
+	test('non-redirect action results cannot navigate to another origin', async ({ page }) => {
+		await page.goto('/actions/cross-page/source');
+		const url = page.url();
+		await page.route('**://attacker.example/**', (route) => route.fulfill({ body: 'external' }));
+		await page.route('**/actions/cross-page/destination?**', async (route) => {
+			const response = await route.fetch();
+			await route.fulfill({
+				response,
+				json: { ...(await response.json()), location: '//attacker.example/path' }
+			});
+		});
+
+		await page.locator('button.submit-success').click();
+		await expect(page.locator('pre.source-form')).toHaveText(
+			JSON.stringify({ source: 'destination', username: 'paolo' })
+		);
+		expect(page.url()).toBe(url);
+	});
+
 	test('same-page action drops query params omitted from the action', async ({ page }) => {
 		await page.goto('/actions/cross-page/same-page?page=2');
 		await page.locator('button.submit-relative').click();

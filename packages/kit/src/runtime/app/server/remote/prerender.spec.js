@@ -1,5 +1,7 @@
 /** @import { RequestEvent } from '@sveltejs/kit' */
 /** @import { RequestState } from 'types' */
+import { once } from 'node:events';
+import { createServer } from 'node:http';
 import { expect, test, vi } from 'vitest';
 import { HandledHttpError, ValidationError } from '@sveltejs/kit/internal';
 import { prerender } from './prerender.js';
@@ -7,6 +9,7 @@ import { init_transport, stringify } from '#app/internal/transport';
 
 init_transport({});
 
+const native_fetch = globalThis.fetch;
 const store = vi.hoisted(() => ({ current: /** @type {any} */ (null) }));
 
 vi.mock(import('@sveltejs/kit/internal/server'), async (actualPromise) => {
@@ -25,7 +28,7 @@ const { set_hooks } = await import('../../../server/internal.js');
 /**
  * Creates a prerender function whose self-fetch of the prerendered response
  * resolves as specified, mimicking the production SSR path
- * @param {() => Response | Promise<Response>} fetch_impl
+ * @param {(...args: Parameters<typeof fetch>) => Response | Promise<Response>} fetch_impl
  */
 function setup(fetch_impl) {
 	const fn = vi.fn(() => 'from function');
@@ -127,6 +130,33 @@ test('falls back to the function on a non-ok response', async () => {
 
 	await expect(wrapper()).resolves.toBe('from function');
 	expect(fn).toHaveBeenCalledOnce();
+});
+
+test('falls back to the function without following redirects', async ({ onTestFinished }) => {
+	/** @type {Array<string | undefined>} */
+	const requests = [];
+	const server = createServer((request, response) => {
+		requests.push(request.url);
+
+		if (request.url === '/_app/remote/hash/fn') {
+			response.writeHead(302, { location: '/internal' });
+		}
+
+		response.end('private data');
+	});
+	onTestFinished(() => server[Symbol.asyncDispose]());
+
+	server.listen(0, '127.0.0.1');
+	await once(server, 'listening');
+	const { port } = /** @type {import('node:net').AddressInfo} */ (server.address());
+
+	const { fn, wrapper } = setup(native_fetch);
+	// Model a spoofed origin whose prerendered response redirects to an internal resource.
+	store.current.event.request.url = `http://127.0.0.1:${port}/`;
+
+	await expect(wrapper()).resolves.toBe('from function');
+	expect(fn).toHaveBeenCalledOnce();
+	expect(requests).toEqual(['/_app/remote/hash/fn']);
 });
 
 test('falls back to the function on a non-JSON response', async () => {

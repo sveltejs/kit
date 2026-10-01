@@ -146,18 +146,17 @@ export async function preview(vite, svelte_config) {
 				const { pathname, search } = new URL(/** @type {string} */ (req.url), 'http://dummy');
 
 				const dir = pathname.startsWith(`/${svelte_config.appDir}/remote/`) ? 'data' : 'pages';
-
-				let filename = normalizePath(
-					join(svelte_config.outDir, `output/prerendered/${dir}` + pathname)
-				);
+				const root = join(svelte_config.outDir, `output/prerendered/${dir}`);
+				let decoded = pathname;
 
 				try {
-					filename = decodeURI(filename);
+					decoded = decodeURI(pathname);
 				} catch {
 					// malformed URI
 				}
 
-				let prerendered = is_file(filename);
+				let filename = normalizePath(join(root, decoded));
+				let prerendered = is_file(filename, root);
 
 				if (!prerendered) {
 					const has_trailing_slash = pathname.endsWith('/');
@@ -166,14 +165,14 @@ export async function preview(vite, svelte_config) {
 					/** @type {string | undefined} */
 					let redirect;
 
-					if (is_file(html_filename)) {
+					if (is_file(html_filename, root)) {
 						filename = html_filename;
 						prerendered = true;
 					} else if (has_trailing_slash) {
-						if (is_file(filename.slice(0, -1) + '.html')) {
+						if (is_file(filename.slice(0, -1) + '.html', root)) {
 							redirect = pathname.slice(0, -1);
 						}
-					} else if (is_file(filename + '/index.html')) {
+					} else if (is_file(filename + '/index.html', root)) {
 						redirect = pathname + '/';
 					}
 
@@ -268,7 +267,17 @@ function scoped(scope, handler) {
 	};
 }
 
-/** @param {string} path */
-function is_file(path) {
-	return fs.existsSync(path) && !fs.statSync(path).isDirectory();
+/**
+ * @param {string} path
+ * @param {string} root
+ * @returns {boolean}
+ */
+function is_file(path, root) {
+	return (
+		fs.existsSync(root) &&
+		fs.existsSync(path) &&
+		!fs.statSync(path).isDirectory() &&
+		// Decoding can introduce path separators on Windows. Check containment after resolving them.
+		normalizePath(fs.realpathSync(path)).startsWith(`${normalizePath(fs.realpathSync(root))}/`)
+	);
 }

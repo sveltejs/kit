@@ -102,7 +102,12 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 					// TODO adapters can provide prerendered data more efficiently than
 					// fetching from the public internet
 					// `request.url` rather than `event.url`, which throws inside queries
-					const response = await fetch(new URL(url, event.request.url).href);
+					const response = await fetch(new URL(url, event.request.url).href, {
+						// in the unlikely event that an attacker is able to spoof the origin,
+						// this protects us against SSRF (the attacker-controlled server cannot
+						// trick us into making a request to an internal resource)
+						redirect: 'manual'
+					});
 
 					if (response.ok) {
 						prerendered = /** @type {RemoteFunctionResponse} */ (await response.json());

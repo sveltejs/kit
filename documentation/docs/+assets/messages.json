@@ -1,0 +1,2766 @@
+{
+	"adapter_read_unsupported": {
+		"variants": [
+			{
+				"text": "Cannot use `read` from `$app/server` in `%route%` when using `%adapter%`. Please ensure that your adapter is up to date and supports this feature.",
+				"variables": [
+					"route",
+					"adapter"
+				]
+			}
+		],
+		"details": "[`read`](https://svelte.dev/docs/kit/$app-server#read) reads assets from the filesystem at runtime, which not every deployment platform supports. Your adapter reports that it can't support `read` for this route. Update the adapter to the latest version, [prerender](https://svelte.dev/docs/kit/page-options#prerender) the route so that `read` only runs at build time, or import the asset with a regular `import` instead."
+	},
+	"adapter_generate_manifest_removed": {
+		"variants": [
+			{
+				"text": "The `generateManifest` adapter API has been removed — use `generateServerInstance` or `builder.manifest` instead. You may need to update your adapter",
+				"variables": []
+			}
+		],
+		"details": "This error comes from your adapter, not your app. Update the adapter to a version that supports this version of SvelteKit. If you maintain the adapter, see [writing adapters](https://svelte.dev/docs/kit/writing-adapters)."
+	},
+	"adapter_instrumentation_file_missing": {
+		"variants": [
+			{
+				"text": "%kind% `%file%` not found. This is probably a bug in your adapter.",
+				"variables": [
+					"kind",
+					"file"
+				]
+			}
+		],
+		"details": "Adapters that support [observability](https://svelte.dev/docs/kit/observability) call `builder.instrument(...)` with the paths of the server entry point, the instrumentation file and the file that initializes it. One of these files doesn't exist when the adapter calls `instrument`. Update your adapter; if you maintain it, check that it writes every file before calling `builder.instrument`. See [writing adapters](https://svelte.dev/docs/kit/writing-adapters)."
+	},
+	"adapter_instrumentation_unsupported": {
+		"variants": [
+			{
+				"text": "`%file%` is unsupported in `%adapter%`.",
+				"variables": [
+					"file",
+					"adapter"
+				]
+			}
+		],
+		"details": "[`src/instrumentation.server.js`](https://svelte.dev/docs/kit/observability) has to be loaded before the rest of your server code, which the adapter must arrange for. The adapter you're using doesn't support this. Update it to the latest version, choose an adapter that supports instrumentation, or remove the file."
+	},
+	"route_config_mismatch": {
+		"variants": [
+			{
+				"text": "Mismatched route config for `%id%` — the `+page` and `+server` files must export the same config, if any",
+				"variables": [
+					"id"
+				]
+			}
+		],
+		"details": "A route with both a page and an endpoint is deployed as a single unit, so adapters can only apply one [`config`](https://svelte.dev/docs/kit/page-options#config). Export the same `config` from both files, or from neither."
+	},
+	"server_only_import": {
+		"variants": [
+			{
+				"text": "Cannot import `%module%` into code that runs in the browser, as this could leak sensitive information.\n\n%chain%\n\nIf you're only using the import as a type, change it to `import type`.",
+				"variables": [
+					"module",
+					"chain"
+				]
+			}
+		],
+		"details": "[Server-only modules](https://svelte.dev/docs/kit/server-only-modules) — `$app/server`, `$app/env/private`, files named `*.server.js` and anything inside a `server` directory — can only be imported by code that never runs in the browser, such as `+page.server.js`, `+layout.server.js`, `+server.js` and `hooks.server.js`. The import chain in the error shows how the server-only module ends up in client code, starting from a client entry point (such as a `+page.svelte`, a universal `+page.js` or the service worker).\n\nBreak the chain by moving the import into a server-only file and passing the data you need through a server `load` function, or by moving the code that doesn't need to be secret out of the server-only module."
+	},
+	"config_feature_disabled": {
+		"variants": [
+			{
+				"text": "To enable %feature%, add the following to your SvelteKit plugin in `vite.config.js`:\n\n%config%",
+				"variables": [
+					"feature",
+					"config"
+				]
+			}
+		],
+		"details": "This feature is experimental, so you need to opt in to it before you can use it. Add the option shown in the error to the options you pass to the `sveltekit(...)` Vite plugin. See the [configuration reference](https://svelte.dev/docs/kit/configuration) for details."
+	},
+	"config_file_unsupported": {
+		"variants": [
+			{
+				"text": "`%file%` is no longer used. Please pass configuration via the `sveltekit(...)` plugin in your Vite config.",
+				"variables": [
+					"file"
+				]
+			}
+		],
+		"details": "SvelteKit no longer reads `svelte.config.js`. Move your options into the `sveltekit(...)` plugin call in `vite.config.js`, then delete the old file:\n\n```js\n/// file: vite.config.js\nimport { sveltekit } from '@sveltejs/kit/vite';\nimport adapter from '@sveltejs/adapter-auto';\nimport { defineConfig } from 'vite';\n\nexport default defineConfig({\n\tplugins: [\n\t\tsveltekit({\n\t\t\tadapter: adapter()\n\t\t})\n\t]\n});\n```"
+	},
+	"module_removed_lib": {
+		"variants": [
+			{
+				"text": "`$lib` has been removed. Use `#lib` instead: https://svelte.dev/docs/kit/$lib. To keep using `$lib`, add `alias: { '$lib': 'src/lib' }` to your SvelteKit config.",
+				"variables": []
+			}
+		],
+		"details": "`#lib` is a Node [subpath import](https://nodejs.org/api/packages.html#subpath-imports), which Vite, TypeScript and other tools understand without extra configuration. Replace `$lib/...` imports with `#lib/...`. If you can't migrate yet, restore the old behaviour with the (deprecated) [`alias`](https://svelte.dev/docs/kit/configuration#alias) option."
+	},
+	"module_removed_service_worker": {
+		"variants": [
+			{
+				"text": "`$service-worker` has been removed. Use `immutable`, `assets` and `prerendered` from `$app/manifest`, `version` from `$app/env`, and `resolve(...)` from `$app/paths` instead: https://svelte.dev/docs/kit/$service-worker",
+				"variables": []
+			}
+		],
+		"details": "The values that `$service-worker` used to provide are now available from modules that work everywhere in your app:\n\n- `build` and `files` → `immutable` and `assets` from [`$app/manifest`](https://svelte.dev/docs/kit/$app-manifest)\n- `prerendered` → `prerendered` from `$app/manifest`\n- `version` → `version` from [`$app/env`](https://svelte.dev/docs/kit/$app-env)\n- `base` → `resolve(...)` from [`$app/paths`](https://svelte.dev/docs/kit/$app-paths)"
+	},
+	"service_worker_assets": {
+		"variants": [
+			{
+				"text": "Cannot use service worker alongside `config.paths.assets`",
+				"variables": []
+			}
+		],
+		"details": "A service worker must be served from the same origin as your app, but [`paths.assets`](https://svelte.dev/docs/kit/configuration#paths) serves your build output from a different origin, such as a CDN. Remove `paths.assets`, or remove `src/service-worker.js` (or the file configured by [`files.serviceWorker`](https://svelte.dev/docs/kit/configuration#files))."
+	},
+	"service_worker_invalid_import": {
+		"variants": [
+			{
+				"text": "Cannot import %modules% into service-worker code.",
+				"variables": [
+					"modules"
+				]
+			}
+		],
+		"details": "[Service workers](https://svelte.dev/docs/kit/service-workers) run outside the page, so modules that depend on the page or the client-side router — such as `$app/forms`, `$app/navigation` and `$app/state` — aren't available there. Remove these imports from your service worker and the modules it imports."
+	},
+	"fetch_relative_url": {
+		"variants": [
+			{
+				"text": "Cannot use relative URL (`%url%`) with global `fetch` — use `event.fetch` instead: https://svelte.dev/docs/kit/web-standards#fetch-apis",
+				"variables": [
+					"url"
+				]
+			}
+		],
+		"details": "On the server there's no current page for a relative URL to be resolved against, so the global `fetch` needs an absolute URL. Inside `load` functions, actions, hooks and endpoints, use the [`fetch` provided by SvelteKit](https://svelte.dev/docs/kit/load#Making-fetch-requests) (for example `event.fetch` or the `fetch` argument of `load`) instead, which resolves relative URLs against the current request and can call your own endpoints without an HTTP round-trip."
+	},
+	"preview_build_missing": {
+		"variants": [
+			{
+				"text": "Server files not found at `%dir%`, did you run `build` first?",
+				"variables": [
+					"dir"
+				]
+			}
+		],
+		"details": "`vite preview` serves the output of a previous production build. Run `vite build` (usually `npm run build`) before `vite preview`, and make sure both commands use the same [`outDir`](https://svelte.dev/docs/kit/configuration#outDir)."
+	},
+	"remote_prerender_not_dynamic": {
+		"variants": [
+			{
+				"text": "Unexpectedly called `prerender` function. Did you forget to set `{ dynamic: true }`?",
+				"variables": []
+			}
+		],
+		"details": "By default, [`prerender`](https://svelte.dev/docs/kit/remote-functions#prerender) functions are removed from your server bundle once their results have been prerendered, which means they can't be called with arguments that weren't prerendered. If you need to call the function at runtime, set `dynamic: true`:\n\n```js\nexport const getPost = prerender(\n\tv.string(),\n\tasync (slug) => {\n\t\t// ...\n\t},\n\t{ dynamic: true }\n);\n```"
+	},
+	"vite_ssr_environment_not_runnable": {
+		"variants": [
+			{
+				"text": "The configured Vite SSR environment must be a `RunnableDevEnvironment`",
+				"variables": []
+			}
+		],
+		"details": "During development, SvelteKit runs your server code with the `ssr` environment's module runner. A Vite plugin in your config has replaced this environment with one that SvelteKit can't run code in. Remove the plugin, or configure it so it doesn't take over the `ssr` environment.\n\nThis can also happen when your project resolves more than one copy of `vite` — make sure your dependencies agree on a single version."
+	},
+	"app_template_missing": {
+		"variants": [
+			{
+				"text": "%file% does not exist",
+				"variables": [
+					"file"
+				]
+			}
+		],
+		"details": "SvelteKit renders every page using an app template, which lives at `src/app.html` by default. Create this file, or point [`files.appTemplate`](https://svelte.dev/docs/kit/configuration#files) at the template you want to use.\n\nA minimal template looks like this:\n\n```html\n<!doctype html>\n<html lang=\"en\">\n\t<head>\n\t\t<meta charset=\"utf-8\" />\n\t\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n\t\t%sveltekit.head%\n\t</head>\n\t<body>\n\t\t<div style=\"display: contents\">%sveltekit.body%</div>\n\t</body>\n</html>\n```"
+	},
+	"app_template_tag_missing": {
+		"variants": [
+			{
+				"text": "%file% is missing `%tag%`",
+				"variables": [
+					"file",
+					"tag"
+				]
+			}
+		],
+		"details": "The app template must contain both `%sveltekit.head%` and `%sveltekit.body%`. SvelteKit replaces these placeholders with the page's `<head>` content (such as links, scripts and anything added with `<svelte:head>`) and with the rendered page markup.\n\nPut `%sveltekit.head%` inside the `<head>` element and `%sveltekit.body%` inside the `<body>` element. Using a wrapper such as `<div style=\"display: contents\">` for `%sveltekit.body%` stops browser extensions that inject elements into `<body>` from interfering with hydration."
+	},
+	"config_alias_key_invalid": {
+		"variants": [
+			{
+				"text": "Invalid alias key: `%key%`",
+				"variables": [
+					"key"
+				]
+			}
+		],
+		"details": "Each key in the deprecated [`alias`](https://svelte.dev/docs/kit/configuration#alias) option must be a non-empty, single-line string, optionally ending in `/*`. Prefer declaring [subpath imports](https://nodejs.org/api/packages.html#subpath-imports) in the `imports` field of your `package.json` instead."
+	},
+	"config_alias_value_invalid": {
+		"variants": [
+			{
+				"text": "Invalid alias value: `%value%`",
+				"variables": [
+					"value"
+				]
+			}
+		],
+		"details": "Each value in the deprecated [`alias`](https://svelte.dev/docs/kit/configuration#alias) option must be a non-empty, single-line path, optionally ending in `/*` or a file extension. Prefer declaring [subpath imports](https://nodejs.org/api/packages.html#subpath-imports) in the `imports` field of your `package.json` instead."
+	},
+	"config_app_dir_slash": {
+		"variants": [
+			{
+				"text": "`%keypath%` cannot start or end with `'/'`",
+				"variables": [
+					"keypath"
+				]
+			}
+		],
+		"details": "[`appDir`](https://svelte.dev/docs/kit/configuration#appDir) is a directory name relative to your base path, such as `_app` or `internal/app`. SvelteKit adds the surrounding slashes itself. Remove any leading or trailing `/`."
+	},
+	"config_csp_trusted_types_missing": {
+		"variants": [
+			{
+				"text": "The `csp.directives['trusted-types']` option must include `'sveltekit-trusted-url'` when `serviceWorker.register` is `true`",
+				"variables": []
+			}
+		],
+		"details": "When your [CSP](https://svelte.dev/docs/kit/configuration#csp) enforces Trusted Types with `'require-trusted-types-for': ['script']`, SvelteKit registers your service worker through a Trusted Types policy called `sveltekit-trusted-url`. Add it to the allowed policies:\n\n```js\ncsp: {\n\tdirectives: {\n\t\t'require-trusted-types-for': ['script'],\n\t\t'trusted-types': ['sveltekit-trusted-url']\n\t}\n}\n```\n\nAlternatively, set [`serviceWorker.register`](https://svelte.dev/docs/kit/configuration#serviceWorker) to `false` and register the service worker yourself."
+	},
+	"config_csp_trusted_html_missing": {
+		"variants": [
+			{
+				"text": "The `csp.directives['trusted-types']` option must include `'svelte-trusted-html'` unless all pages have `csr: false`",
+				"variables": []
+			}
+		],
+		"details": "When your [CSP](https://svelte.dev/docs/kit/configuration#csp) enforces Trusted Types with `'require-trusted-types-for': ['script']`, Svelte creates HTML through a Trusted Types policy called `svelte-trusted-html`. Add it to the allowed policies:\n\n```js\ncsp: {\n\tdirectives: {\n\t\t'require-trusted-types-for': ['script'],\n\t\t'trusted-types': ['svelte-trusted-html']\n\t}\n}\n```\n\nThis isn't needed if no page is rendered in the browser, i.e. every page has [`csr = false`](https://svelte.dev/docs/kit/page-options#csr)."
+	},
+	"config_empty_string": {
+		"variants": [
+			{
+				"text": "`%keypath%` cannot be empty",
+				"variables": [
+					"keypath"
+				]
+			}
+		],
+		"details": "This option must be a non-empty string. Provide a value, or remove the option to use its default."
+	},
+	"config_expected_boolean": {
+		"variants": [
+			{
+				"text": "`%keypath%` should be true or false, if specified",
+				"variables": [
+					"keypath"
+				]
+			}
+		],
+		"details": "This option only accepts a boolean. Pass `true` or `false`, or remove the option to use its default."
+	},
+	"config_expected_function": {
+		"variants": [
+			{
+				"text": "`%keypath%` should be a function, if specified",
+				"variables": [
+					"keypath"
+				]
+			}
+		],
+		"details": "This option only accepts a function. Pass a function, or remove the option to use its default."
+	},
+	"config_expected_number": {
+		"variants": [
+			{
+				"text": "`%keypath%` should be a number, if specified",
+				"variables": [
+					"keypath"
+				]
+			}
+		],
+		"details": "This option only accepts a number. Pass a number, or remove the option to use its default."
+	},
+	"config_expected_object": {
+		"variants": [
+			{
+				"text": "`%keypath%` should be an object",
+				"variables": [
+					"keypath"
+				]
+			}
+		],
+		"details": "This option groups related settings, so it must be a plain object (not an array or a primitive value). See the [configuration reference](https://svelte.dev/docs/kit/configuration) for the settings it accepts."
+	},
+	"config_expected_one_of": {
+		"variants": [
+			{
+				"text": "`%keypath%` should be %options%",
+				"variables": [
+					"keypath",
+					"options"
+				]
+			}
+		],
+		"details": "This option only accepts one of the listed values. Use one of them, or remove the option to use the default (the first value in the list)."
+	},
+	"config_expected_positive_integer": {
+		"variants": [
+			{
+				"text": "`%keypath%` should be a positive integer, if specified",
+				"variables": [
+					"keypath"
+				]
+			}
+		],
+		"details": "This option must be a whole number greater than or equal to `1`. For example, [`prerender.concurrency`](https://svelte.dev/docs/kit/configuration#prerender) is the number of pages that can be prerendered simultaneously."
+	},
+	"config_expected_string": {
+		"variants": [
+			{
+				"text": "`%keypath%` should be a string, if specified",
+				"variables": [
+					"keypath"
+				]
+			}
+		],
+		"details": "This option only accepts a string. Pass a string, or remove the option to use its default."
+	},
+	"config_expected_string_array": {
+		"variants": [
+			{
+				"text": "`%keypath%` should be an array of strings, if specified",
+				"variables": [
+					"keypath"
+				]
+			}
+		],
+		"details": "This option only accepts an array of strings, such as `['.svelte']` or `['*', '/about']`. Pass an array (even if it only has one member), or remove the option to use its default."
+	},
+	"config_extension_invalid": {
+		"variants": [
+			{
+				"text": "File extensions must be alphanumeric — saw `'%extension%'`",
+				"variables": [
+					"extension"
+				]
+			}
+		],
+		"details": "Each member of [`extensions`](https://svelte.dev/docs/kit/configuration#extensions) must be a file extension made of letters and numbers, such as `.svelte` or `.svx`. Multi-part extensions such as `.svelte.md` are also allowed."
+	},
+	"config_extension_missing_dot": {
+		"variants": [
+			{
+				"text": "Each member of %keypath% must start with `'.'` — saw `'%extension%'`",
+				"variables": [
+					"keypath",
+					"extension"
+				]
+			}
+		],
+		"details": "Write [`extensions`](https://svelte.dev/docs/kit/configuration#extensions) with a leading dot, for example `['.svelte', '.svx']` rather than `['svelte', 'svx']`."
+	},
+	"config_invalid_adapter": {
+		"variants": [
+			{
+				"text": "The SvelteKit Vite plugin `%keypath%` should be an object with an `adapt` method",
+				"variables": [
+					"keypath"
+				]
+			}
+		],
+		"details": "The `adapter` option expects the object returned by calling an adapter, not the adapter module or function itself. Make sure you call it:\n\n```js\nimport adapter from '@sveltejs/adapter-auto';\n\nsveltekit({\n\tadapter: adapter()\n});\n```\n\nSee [adapters](https://svelte.dev/docs/kit/adapters) for the available adapters and how to write your own."
+	},
+	"config_invalid_prerender_handler": {
+		"variants": [
+			{
+				"text": "`%keypath%` should be `'fail'`, `'warn'`, `'ignore'` or a custom function",
+				"variables": [
+					"keypath"
+				]
+			}
+		],
+		"details": "Prerender handlers decide what happens when SvelteKit encounters a problem while [prerendering](https://svelte.dev/docs/kit/configuration#prerender). Use `'fail'` to stop the build, `'warn'` to log a message and continue, `'ignore'` to continue silently, or pass a function that receives details about the problem and decides for itself — for example by throwing to fail the build."
+	},
+	"config_kit_namespace": {
+		"variants": [
+			{
+				"text": "SvelteKit configuration (%keys%) no longer lives inside a `kit` namespace. Pass it directly to the `sveltekit(...)` Vite plugin",
+				"variables": [
+					"keys"
+				]
+			}
+		],
+		"details": "In SvelteKit 3, options that used to live under `config.kit` in `svelte.config.js` are passed directly to the `sveltekit` Vite plugin, alongside options such as `compilerOptions`. Move them up a level:\n\n```js\nsveltekit({\n\tadapter: adapter(),\n\tcompilerOptions: { runes: true }\n});\n```\n\nSee the [migration guide](https://svelte.dev/docs/kit/migrating-to-sveltekit-3#Configuration) for details."
+	},
+	"config_not_object": {
+		"variants": [
+			{
+				"text": "The SvelteKit options from the Vite config must be an object",
+				"variables": []
+			}
+		],
+		"details": "Pass an options object to the `sveltekit(...)` Vite plugin, for example `sveltekit({ adapter: adapter() })`. Omit the argument entirely to use the defaults. See the [configuration reference](https://svelte.dev/docs/kit/configuration)."
+	},
+	"config_option_removed": {
+		"variants": [
+			{
+				"text": "The `%keypath%` option has been removed. Please see the list of breaking changes for your major release",
+				"variables": [
+					"keypath"
+				]
+			}
+		],
+		"details": "This option no longer exists and is not needed any more. Remove it from your configuration. The [migration guide](https://svelte.dev/docs/kit/migrating-to-sveltekit-3#Configuration-Removed-options) lists removed options and what, if anything, replaces them."
+	},
+	"config_option_removed_check_origin": {
+		"variants": [
+			{
+				"text": "`%keypath%` has been removed in favour of `csrf.trustedOrigins`",
+				"variables": [
+					"keypath"
+				]
+			}
+		],
+		"details": "CSRF protection is always enabled in SvelteKit 3. Instead of disabling it with `checkOrigin: false`, list the external origins that are allowed to submit forms to your app in [`csrf.trustedOrigins`](https://svelte.dev/docs/kit/configuration#csrf):\n\n```js\ncsrf: {\n\ttrustedOrigins: ['https://payment-gateway.com'];\n}\n```"
+	},
+	"config_option_removed_experimental_instrumentation": {
+		"variants": [
+			{
+				"text": "`%keypath%` has been removed. `src/instrumentation.server.js` is now included in the build automatically when it exists; no opt-in is required",
+				"variables": [
+					"keypath"
+				]
+			}
+		],
+		"details": "Remove the option. SvelteKit now picks up [`src/instrumentation.server.js`](https://svelte.dev/docs/kit/observability) automatically."
+	},
+	"config_option_removed_experimental_tracing": {
+		"variants": [
+			{
+				"text": "`%keypath%` has been removed. Server-side tracing is now configured via `tracing.server`",
+				"variables": [
+					"keypath"
+				]
+			}
+		],
+		"details": "Tracing is no longer experimental. Move the setting to the top-level [`tracing`](https://svelte.dev/docs/kit/configuration#tracing) option:\n\n```js\ntracing: {\n\tserver: true;\n}\n```"
+	},
+	"config_option_removed_files_lib": {
+		"variants": [
+			{
+				"text": "`%keypath%` has been removed. Use `#lib` instead of `$lib`: https://svelte.dev/docs/kit/$lib",
+				"variables": [
+					"keypath"
+				]
+			}
+		],
+		"details": "SvelteKit no longer generates a `$lib` alias. Declare a `#lib` [subpath import](https://svelte.dev/docs/kit/$lib) in the `imports` field of your `package.json` (pointing it at whichever directory you used for `files.lib`) and import from `#lib` instead."
+	},
+	"config_option_removed_preload_strategy": {
+		"variants": [
+			{
+				"text": "`%keypath%` has been removed. `modulepreload` will always be used",
+				"variables": [
+					"keypath"
+				]
+			}
+		],
+		"details": "`modulepreload` is now supported in every browser SvelteKit targets, so it is always used. Remove the option."
+	},
+	"config_option_removed_prerender_origin": {
+		"variants": [
+			{
+				"text": "`%keypath%` has been removed in favour of `config.paths.origin`",
+				"variables": [
+					"keypath"
+				]
+			}
+		],
+		"details": "Move the value to [`paths.origin`](https://svelte.dev/docs/kit/configuration#paths). Besides prerendering, it is used for CSRF checks when your app's public origin can't reliably be derived from request headers."
+	},
+	"config_option_removed_vite_plugin": {
+		"variants": [
+			{
+				"text": "`%keypath%` has been removed. Pass `vite-plugin-svelte` options directly to the `sveltekit(...)` Vite plugin",
+				"variables": [
+					"keypath"
+				]
+			}
+		],
+		"details": "Options for `vite-plugin-svelte`, such as `inspector`, are now passed to the `sveltekit` plugin next to SvelteKit's own options. SvelteKit forwards any options it doesn't recognise:\n\n```js\nsveltekit({\n\tadapter: adapter(),\n\tinspector: true\n});\n```"
+	},
+	"config_origin_has_path": {
+		"variants": [
+			{
+				"text": "`%keypath%` must be a valid origin — received `'%input%'` which contains a path, query, or hash. Use the bare origin `'%origin%'` instead",
+				"variables": [
+					"keypath",
+					"input",
+					"origin"
+				]
+			}
+		],
+		"details": "An origin is just the protocol, host and optional port of a URL, such as `https://my-site.com` or `http://localhost:3000`. To deploy your app under a sub-path, use [`paths.base`](https://svelte.dev/docs/kit/configuration#paths) instead."
+	},
+	"config_origin_invalid": {
+		"variants": [
+			{
+				"text": "`%keypath%` must be a valid origin (e.g. 'https://my-site.com'). `'%input%'` could not be parsed as a URL",
+				"variables": [
+					"keypath",
+					"input"
+				]
+			}
+		],
+		"details": "The origin must be an absolute URL including the protocol, such as `https://my-site.com` rather than `my-site.com`."
+	},
+	"config_origin_protocol": {
+		"variants": [
+			{
+				"text": "`%keypath%` must be a valid origin — only 'http' and 'https' protocols are supported, received '%protocol%'",
+				"variables": [
+					"keypath",
+					"protocol"
+				]
+			}
+		],
+		"details": "The origin describes where your app is publicly served, so it must use `http:` or `https:`."
+	},
+	"config_paths_assets_not_absolute": {
+		"variants": [
+			{
+				"text": "`%keypath%` option must be an absolute path, if specified",
+				"variables": [
+					"keypath"
+				]
+			}
+		],
+		"details": "[`paths.assets`](https://svelte.dev/docs/kit/configuration#paths) is for serving your app's files from a different origin, such as a CDN, so it must be a full URL like `https://cdn.example.com/my-app`. To serve your app from a sub-path of your own origin, use `paths.base` instead."
+	},
+	"config_paths_assets_trailing_slash": {
+		"variants": [
+			{
+				"text": "`%keypath%` option must not end with `'/'`",
+				"variables": [
+					"keypath"
+				]
+			}
+		],
+		"details": "Remove the trailing slash from [`paths.assets`](https://svelte.dev/docs/kit/configuration#paths) — for example use `https://cdn.example.com/my-app` rather than `https://cdn.example.com/my-app/`."
+	},
+	"config_paths_base_invalid": {
+		"variants": [
+			{
+				"text": "`%keypath%` option must either be the empty string or a root-relative path that starts but doesn't end with `'/'`",
+				"variables": [
+					"keypath"
+				]
+			}
+		],
+		"details": "[`paths.base`](https://svelte.dev/docs/kit/configuration#paths) is the sub-path your app is served from. Use `''` to serve it from the root, or a value like `/my-app` — with a leading slash and without a trailing one. It cannot be a full URL; use `paths.assets` to serve files from another origin."
+	},
+	"config_prerender_entry_invalid": {
+		"variants": [
+			{
+				"text": "Each member of `%keypath%` must be either `'*'` or an absolute path beginning with `'/'` — saw `'%entry%'`",
+				"variables": [
+					"keypath",
+					"entry"
+				]
+			}
+		],
+		"details": "[`prerender.entries`](https://svelte.dev/docs/kit/configuration#prerender) lists pages to start prerendering from. Use `'*'` to include every route without required parameters, or paths such as `'/blog/hello-world'`, including the leading slash."
+	},
+	"config_server_resolution_bundle_strategy": {
+		"variants": [
+			{
+				"text": "The `router.resolution` option cannot be `'server'` if `output.bundleStrategy` is `'inline'` or `'single'`",
+				"variables": []
+			}
+		],
+		"details": "Server-side route resolution loads each route's code on demand, which requires the default `'split'` [bundle strategy](https://svelte.dev/docs/kit/configuration#output). Either set `output.bundleStrategy` to `'split'`, or set [`router.resolution`](https://svelte.dev/docs/kit/configuration#router) to `'client'`."
+	},
+	"config_server_resolution_hash": {
+		"variants": [
+			{
+				"text": "The `router.resolution` option cannot be `'server'` if `router.type` is `'hash'`",
+				"variables": []
+			}
+		],
+		"details": "Hash-based routing happens entirely in the browser and never asks the server about navigations, so it can't use server-side route resolution. Either set [`router.type`](https://svelte.dev/docs/kit/configuration#router) to `'pathname'`, or set `router.resolution` to `'client'`."
+	},
+	"config_unexpected_option": {
+		"variants": [
+			{
+				"text": "Unexpected option `%keypath%`",
+				"variables": [
+					"keypath"
+				]
+			},
+			{
+				"text": "Unexpected option `%keypath%` (did you mean `%suggestion%`?)",
+				"variables": [
+					"keypath",
+					"suggestion"
+				]
+			}
+		],
+		"details": "This option isn't recognised. Check for typos, and see the [configuration reference](https://svelte.dev/docs/kit/configuration) for the supported options. The option may also have been removed or renamed in a new major version — check the [migration guide](https://svelte.dev/docs/kit/migrating-to-sveltekit-3#Configuration)."
+	},
+	"env_invalid_variable_name": {
+		"variants": [
+			{
+				"text": "Invalid environment variable name `%name%`",
+				"variables": [
+					"name"
+				]
+			}
+		],
+		"details": "The keys of the `variables` object exported from `src/env` become exports of `$app/env/private` and `$app/env/public`, so each name must be a valid JavaScript identifier that isn't a reserved word — for example `API_KEY` rather than `api-key` or `default`."
+	},
+	"env_variables_missing": {
+		"variants": [
+			{
+				"text": "`%file%` must export a variables object",
+				"variables": [
+					"file"
+				]
+			}
+		],
+		"details": "`src/env.js` (or `src/env.ts`) declares your app's [environment variables](https://svelte.dev/docs/kit/environment-variables). Export them as an object called `variables`:\n\n```js\n/// file: src/env.js\nimport { defineEnvVars } from '@sveltejs/kit/env';\n\nexport const variables = defineEnvVars({\n\tAPI_KEY: {}\n});\n```"
+	},
+	"env_app_import": {
+		"variants": [
+			{
+				"text": "Cannot import `$app/*` modules other than `$app/env` inside `src/env`",
+				"variables": []
+			}
+		],
+		"details": "SvelteKit evaluates `src/env` and its dependencies before the rest of your app exists, in order to learn which [environment variables](https://svelte.dev/docs/kit/environment-variables) are declared. At that point only `$app/env` is available. Move code that needs other `$app/*` modules out of `src/env` and the modules it imports."
+	},
+	"env_circular_import": {
+		"variants": [
+			{
+				"text": "Cannot import `$app/env/%type%` inside `src/env` or its dependencies because it creates a circular dependency",
+				"variables": [
+					"type"
+				]
+			},
+			{
+				"text": "Module `%importer%` imports `$app/env/%type%`, which creates a circular dependency with `src/env`",
+				"variables": [
+					"type",
+					"importer"
+				]
+			}
+		],
+		"details": "`$app/env/private` and `$app/env/public` are generated from the `variables` exported by `src/env`, so `src/env` — and any module it imports, directly or indirectly — cannot import them. Remove the import from the module in question, or stop importing that module from `src/env`.\n\nIf you need a variable's value while declaring your variables (for example, to compute a default), read it from `process.env` instead."
+	},
+	"prerender_http_error": {
+		"variants": [
+			{
+				"text": "Failed to prerender `%path%`",
+				"variables": [
+					"path"
+				]
+			},
+			{
+				"text": "`%path%` was %reference_type% from `%referrer%`",
+				"variables": [
+					"path",
+					"reference_type",
+					"referrer"
+				]
+			}
+		],
+		"details": "While [prerendering](https://svelte.dev/docs/kit/page-options#prerender), SvelteKit requested this path — because it was listed in [`prerender.entries`](https://svelte.dev/docs/kit/configuration#prerender), returned from an [`entries`](https://svelte.dev/docs/kit/page-options#entries) function, linked from a prerendered page or fetched during its `load` — and received an error response, which is logged above. When the path was reached from another page, the message says which one.\n\nFix the link or request, or the error in the route. If the failure is expected, handle it with [`prerender.handleHttpError`](https://svelte.dev/docs/kit/configuration#prerender):\n\n```js\nsveltekit({\n\tprerender: {\n\t\thandleHttpError: ({ path, referrer, message }) => {\n\t\t\t// ignore deliberate link to shiny 404 page\n\t\t\tif (path === '/not-found' && referrer === '/blog/how-we-built-our-404-page') {\n\t\t\t\treturn;\n\t\t\t}\n\n\t\t\t// otherwise fail the build\n\t\t\tthrow new Error(message);\n\t\t}\n\t}\n});\n```"
+	},
+	"prerender_path_outside_base": {
+		"variants": [
+			{
+				"text": "`%path%` does not begin with `base`. You can fix this by using `resolve('%path%')` from `$app/paths`. The base path is configurable from `paths.base`",
+				"variables": [
+					"path"
+				]
+			},
+			{
+				"text": "`%path%` (%reference_type% from `%referrer%`) does not begin with `base`. You can fix this by using `resolve('%path%')` from `$app/paths`. The base path is configurable from `paths.base`",
+				"variables": [
+					"path",
+					"reference_type",
+					"referrer"
+				]
+			}
+		],
+		"details": "Your app is served under [`paths.base`](https://svelte.dev/docs/kit/configuration#paths), so every internal URL must start with it. Build links with [`resolve`](https://svelte.dev/docs/kit/$app-paths#resolve) from `$app/paths` instead of hard-coding them, so that the base path is added for you. Like other prerendering HTTP errors, this can be handled with [`prerender.handleHttpError`](https://svelte.dev/docs/kit/configuration#prerender)."
+	},
+	"prerender_missing_id": {
+		"variants": [
+			{
+				"text": "The following pages contain links to `%path%#%id%`, but no element with `id=\"%id%\"` exists on `%path%`:\n%referrers%",
+				"variables": [
+					"path",
+					"id",
+					"referrers"
+				]
+			}
+		],
+		"details": "A prerendered page links to a fragment (`#id`) that doesn't exist on the target page, so the link won't scroll anywhere. Add an element with that `id` to the target page, or fix the link. Handle or ignore these cases with [`prerender.handleMissingId`](https://svelte.dev/docs/kit/configuration#prerender)."
+	},
+	"prerender_entry_generator_mismatch": {
+		"variants": [
+			{
+				"text": "The `entries` export from `%id%` generated entry `%entry%`, which was matched by `%matched%`",
+				"variables": [
+					"id",
+					"entry",
+					"matched"
+				]
+			}
+		],
+		"details": "An [`entries`](https://svelte.dev/docs/kit/page-options#entries) function returns paths that its own route should prerender, but this path is handled by a different route, so the page you expected isn't generated. This usually means a more specific route takes priority (see [sorting](https://svelte.dev/docs/kit/advanced-routing#Sorting)). Change the entries, or the routes, so each entry is matched by the route that generated it. Handle or ignore these cases with [`prerender.handleEntryGeneratorMismatch`](https://svelte.dev/docs/kit/configuration#prerender)."
+	},
+	"prerender_unseen_routes": {
+		"variants": [
+			{
+				"text": "The following routes were marked as prerenderable, but were not prerendered because they were not found while crawling your app:\n%routes%",
+				"variables": [
+					"routes"
+				]
+			}
+		],
+		"details": "These routes (or a parent layout) have `export const prerender = true`, but the prerendering crawler never reached them, so they weren't prerendered. Since prerendered routes can't be server-rendered on demand, requesting them would fail. To fix it:\n\n- Make sure SvelteKit can find the route by following links from [`prerender.entries`](https://svelte.dev/docs/kit/configuration#prerender) or from pages reached by other entries.\n- For dynamic routes, export an [`entries`](https://svelte.dev/docs/kit/page-options#entries) function that lists the parameter values to prerender.\n- Change `export const prerender = true` to `export const prerender = 'auto'`, so that routes that weren't prerendered can still be rendered on demand.\n\nHandle or ignore these cases with [`prerender.handleUnseenRoutes`](https://svelte.dev/docs/kit/configuration#prerender)."
+	},
+	"prerender_invalid_url": {
+		"variants": [
+			{
+				"text": "Invalid URL `%href%`",
+				"variables": [
+					"href"
+				]
+			},
+			{
+				"text": "Invalid URL `%href%` (linked from `%referrer%`)",
+				"variables": [
+					"href",
+					"referrer"
+				]
+			}
+		],
+		"details": "A prerendered page contains a link whose `href` can't be parsed as a URL. Fix the link. Handle or ignore these cases with [`prerender.handleInvalidUrl`](https://svelte.dev/docs/kit/configuration#prerender)."
+	},
+	"prerender_client_address": {
+		"variants": [
+			{
+				"text": "Cannot read `clientAddress` during prerendering",
+				"variables": []
+			}
+		],
+		"details": "When a page is [prerendered](https://svelte.dev/docs/kit/page-options#prerender), there's no user making the request, so `event.getClientAddress()` has nothing to return. Only call it in routes that aren't prerendered, or move it out of code that runs during prerendering, such as a root layout's `load` or `handle`. You can use [`building`](https://svelte.dev/docs/kit/$app-env#building) from `$app/env` to skip that code during the build."
+	},
+	"prerender_root_non_html": {
+		"variants": [
+			{
+				"text": "Cannot prerender a root `+server.js` that returns a non-HTML response — static hosts always serve an HTML file for `%base%`",
+				"variables": [
+					"base"
+				]
+			}
+		],
+		"details": "A prerendered response is written to a file, and static hosts serve the root of your app from an HTML file. A `+server.js` at the root that returns another content type, such as JSON, can't be represented. Return HTML from it, move the endpoint to another route (for example `src/routes/data.json/+server.js`), or don't prerender it."
+	},
+	"prerender_directory_conflict": {
+		"variants": [
+			{
+				"text": "Cannot save `%path%` as it is already a directory. See https://svelte.dev/docs/kit/page-options#prerender-route-conflicts for more information",
+				"variables": [
+					"path"
+				]
+			},
+			{
+				"text": "Cannot save `%path%` as `%parent%` is already a file. See https://svelte.dev/docs/kit/page-options#prerender-route-conflicts for more information",
+				"variables": [
+					"path",
+					"parent"
+				]
+			}
+		],
+		"details": "Prerendering writes each response to a file, and a file and a directory can't share a name. For example, `src/routes/foo/+server.js` and `src/routes/foo/bar/+server.js` would need both a file and a directory called `foo`. Add a file extension to endpoint routes, such as `src/routes/foo.json/+server.js`, so their output names don't clash. See [route conflicts](https://svelte.dev/docs/kit/page-options#Route-conflicts)."
+	},
+	"prerender_fallback_failed": {
+		"variants": [
+			{
+				"text": "Could not create a fallback page",
+				"variables": []
+			}
+		],
+		"details": "SvelteKit renders a fallback page for [single-page apps](https://svelte.dev/docs/kit/single-page-apps) and the hash router by rendering your root layout without a page. That render returned an error response. Check that your root layout (including its `load` functions) and `handle` hook work without a specific route or URL, for example by avoiding code that depends on `params` or on `getClientAddress`."
+	},
+	"route_escape_uppercase": {
+		"variants": [
+			{
+				"text": "Character escape sequence in `%id%` must be lowercase",
+				"variables": [
+					"id"
+				]
+			}
+		],
+		"details": "Route directories can contain [hexadecimal or unicode escape sequences](https://svelte.dev/docs/kit/advanced-routing#Encoding) such as `[x+3f]` or `[u+d83e]`, for characters that can't appear in a file name or have a special meaning in routes. The escape sequence, including its hexadecimal digits, must be lowercase — for example `[x+3f]` rather than `[X+3F]`."
+	},
+	"route_escape_invalid": {
+		"variants": [
+			{
+				"text": "Invalid character escape sequence in `%id%`",
+				"variables": [
+					"id"
+				]
+			}
+		],
+		"details": "An escape sequence in a route directory must contain hexadecimal digits, such as `[x+3f]` for `?` or `[u+2215]` for `∕`. See [encoding](https://svelte.dev/docs/kit/advanced-routing#Encoding) for the supported formats."
+	},
+	"route_escape_hex_length": {
+		"variants": [
+			{
+				"text": "Hexadecimal escape sequence in `%id%` must be two characters",
+				"variables": [
+					"id"
+				]
+			}
+		],
+		"details": "A hexadecimal escape sequence (`[x+nn]`) represents a single character using exactly two hexadecimal digits — for example `[x+23]` for `#`. For characters outside that range, use a unicode escape sequence such as `[u+2215]`. See [encoding](https://svelte.dev/docs/kit/advanced-routing#Encoding)."
+	},
+	"route_escape_unicode_length": {
+		"variants": [
+			{
+				"text": "Unicode escape sequence in `%id%` must be between four and six characters",
+				"variables": [
+					"id"
+				]
+			}
+		],
+		"details": "A unicode escape sequence (`[u+nnnn]`) represents a code point using four to six hexadecimal digits — for example `[u+2215]` or `[u+1f600]`. Characters that fit in two digits can use a hexadecimal escape sequence such as `[x+23]` instead. See [encoding](https://svelte.dev/docs/kit/advanced-routing#Encoding)."
+	},
+	"route_params_adjacent": {
+		"variants": [
+			{
+				"text": "Invalid route `%id%` — parameters must be separated",
+				"variables": [
+					"id"
+				]
+			}
+		],
+		"details": "Two [route parameters](https://svelte.dev/docs/kit/routing#page) can't appear directly next to each other, as in `[foo][bar]`, because there's no way to tell where one ends and the next begins. Separate them with static text, such as `[foo]-[bar]`, or put them in different directories, such as `[foo]/[bar]`."
+	},
+	"route_unbalanced_brackets": {
+		"variants": [
+			{
+				"text": "Invalid route `%id%` — brackets are unbalanced",
+				"variables": [
+					"id"
+				]
+			}
+		],
+		"details": "Every `[` in a route directory must have a matching `]`. Parameters are written as `[param]`, optional parameters as `[[param]]` and rest parameters as `[...rest]`. Check the directory names in the route for a missing or extra bracket."
+	},
+	"route_hash_character": {
+		"variants": [
+			{
+				"text": "Route `%id%` should be renamed to %suggestion%",
+				"variables": [
+					"id",
+					"suggestion"
+				]
+			}
+		],
+		"details": "Directory names containing `#` can't be used in routes, because `#` marks the start of a URL's hash and breaks module resolution. Use the escape sequence `[x+23]` in its place. See [encoding](https://svelte.dev/docs/kit/advanced-routing#Encoding)."
+	},
+	"route_optional_after_rest": {
+		"variants": [
+			{
+				"text": "Invalid route `%id%` — an `[[optional]]` route segment cannot follow a `[...rest]` route segment",
+				"variables": [
+					"id"
+				]
+			}
+		],
+		"details": "A [rest parameter](https://svelte.dev/docs/kit/advanced-routing#Rest-parameters) matches any number of segments, including none, so an [optional parameter](https://svelte.dev/docs/kit/advanced-routing#Optional-parameters) after it could never match anything. Remove the optional parameter, or move it before the rest parameter."
+	},
+	"route_optional_rest": {
+		"variants": [
+			{
+				"text": "Invalid route `%id%` — a rest route segment is always optional, remove the outer square brackets",
+				"variables": [
+					"id"
+				]
+			}
+		],
+		"details": "A [rest parameter](https://svelte.dev/docs/kit/advanced-routing#Rest-parameters) such as `[...rest]` already matches zero or more segments, so it can't also be wrapped in `[[...]]`. Rename `[[...rest]]` to `[...rest]`."
+	},
+	"route_param_invalid": {
+		"variants": [
+			{
+				"text": "Invalid param: %param% in route `%id%`. Params and matcher names can only have underscores, hyphens, and alphanumeric characters.",
+				"variables": [
+					"param",
+					"id"
+				]
+			}
+		],
+		"details": "Parameter names, and the names of [matchers](https://svelte.dev/docs/kit/advanced-routing#Matching) used as `[param=matcher]`, become property names on `params` and keys of the `params` export in `src/params.js`. They may only contain letters, digits, underscores and hyphens. To match other characters literally, use an [escape sequence](https://svelte.dev/docs/kit/advanced-routing#Encoding)."
+	},
+	"route_server_file_hash_router": {
+		"variants": [
+			{
+				"text": "Cannot use server-only files in an app with `router.type === 'hash'`: `%file%`",
+				"variables": [
+					"file"
+				]
+			}
+		],
+		"details": "When [`router.type`](https://svelte.dev/docs/kit/configuration#router) is `'hash'`, the whole app is rendered in the browser from a single page, so there's no server to run `+page.server.js`, `+layout.server.js` or `+server.js` files. Move the logic to a universal `+page.js`/`+layout.js` file, or use the default `'pathname'` router."
+	},
+	"route_duplicate_files": {
+		"variants": [
+			{
+				"text": "Multiple %type% files found in `%directory%` : `%existing%` and `%file%`",
+				"variables": [
+					"type",
+					"directory",
+					"existing",
+					"file"
+				]
+			}
+		],
+		"details": "Each route directory can contain at most one file of each kind — one `+page.svelte`, one `+page.js`, one `+server.js` and so on. This usually happens when a file exists with two extensions, such as `+page.js` and `+page.ts`, or when two components reference different [layouts](https://svelte.dev/docs/kit/advanced-routing#Advanced-layouts-@), such as `+page.svelte` and `+page@.svelte`. Delete or rename one of the files."
+	},
+	"route_conflict": {
+		"variants": [
+			{
+				"text": "The `%first%` and `%second%` routes conflict with each other",
+				"variables": [
+					"first",
+					"second"
+				]
+			}
+		],
+		"details": "The two routes can match the same pathname, so SvelteKit can't decide which one should handle it. [Groups](https://svelte.dev/docs/kit/advanced-routing#Advanced-layouts) don't affect the pathname, so `/(a)/about` and `/(b)/about` both match `/about`. An [optional parameter](https://svelte.dev/docs/kit/advanced-routing#Optional-parameters) creates a route both with and without that segment. Rename or move one of the routes, or use a [matcher](https://svelte.dev/docs/kit/advanced-routing#Matching) to tell parameters apart."
+	},
+	"route_layout_segment_missing": {
+		"variants": [
+			{
+				"text": "`%file%` references missing segment `%segment%`",
+				"variables": [
+					"file",
+					"segment"
+				]
+			}
+		],
+		"details": "A page or layout can [reset its layout hierarchy](https://svelte.dev/docs/kit/advanced-routing#Advanced-layouts-@page) with `@segment` in its file name — for example `+page@item.svelte` uses the layout from the nearest parent directory called `item`. There's no parent directory with that name that contains a layout. Check the spelling, or use `@` on its own to use the root layout."
+	},
+	"routes_not_found": {
+		"variants": [
+			{
+				"text": "No routes found. If you are using a custom `src/routes` directory, make sure it is specified in your SvelteKit Vite plugin options",
+				"variables": []
+			}
+		],
+		"details": "The routes directory exists but doesn't contain any `+page`, `+layout`, `+error` or `+server` files. Add a `src/routes/+page.svelte`, or, if your routes are elsewhere, set [`files.routes`](https://svelte.dev/docs/kit/configuration#files) in the options you pass to the SvelteKit Vite plugin."
+	},
+	"route_prerender_page_and_endpoint": {
+		"variants": [
+			{
+				"text": "Cannot prerender a route (`%id%`) with both a `+page.svelte` and a `%file%`",
+				"variables": [
+					"id",
+					"file"
+				]
+			}
+		],
+		"details": "A route that has both a page and a `+server.js` endpoint uses content negotiation to decide which one to serve for each request. A prerendered route is saved as a single file, so there's no way to serve both. Move the endpoint to its own route, or stop [prerendering](https://svelte.dev/docs/kit/page-options#prerender) this one."
+	},
+	"route_file_reserved": {
+		"variants": [
+			{
+				"text": "Files prefixed with `+` are reserved (saw `%file%`)",
+				"variables": [
+					"file"
+				]
+			}
+		],
+		"details": "SvelteKit only recognises specific [route files](https://svelte.dev/docs/kit/routing), such as `+page.svelte`, `+page.js`, `+page.server.js`, `+layout.svelte`, `+error.svelte` and `+server.js`. Any other file in `src/routes` starting with `+` is reserved. Rename the file so it doesn't start with `+`, or fix the spelling of the route file name. Files including `.test.`, `.spec.` or `.stories.` are ignored."
+	},
+	"route_named_layout_in_module": {
+		"variants": [
+			{
+				"text": "Only Svelte files can reference named layouts. Remove `%layout%` from `%name%` (at `%file%`)",
+				"variables": [
+					"layout",
+					"name",
+					"file"
+				]
+			}
+		],
+		"details": "[Resetting the layout](https://svelte.dev/docs/kit/advanced-routing#Advanced-layouts-@page) with `@` is done on the component — `+page@.svelte` or `+layout@item.svelte`. Module files such as `+page.js` and `+layout.server.js` always belong to the component in the same directory, so their names can't contain `@`."
+	},
+	"param_matcher_missing": {
+		"variants": [
+			{
+				"text": "No matcher found for parameter `%name%`",
+				"variables": [
+					"name"
+				]
+			},
+			{
+				"text": "No matcher found for parameter `%name%` in `%file%`",
+				"variables": [
+					"name",
+					"file"
+				]
+			}
+		],
+		"details": "A route uses a parameter such as `[param=matcher]`, but no matcher with that name exists. Matchers are declared in `src/params.js` (or `src/params.ts`, or the file configured by [`files.params`](https://svelte.dev/docs/kit/configuration#files)) by exporting `params` from `defineParams`:\n\n```js\n/// file: src/params.js\nimport { defineParams } from '@sveltejs/kit/params';\n\nexport const params = defineParams({\n\tinteger: (param) => (/^\\d+$/.test(param) ? Number(param) : undefined)\n});\n```\n\nSee [matching](https://svelte.dev/docs/kit/advanced-routing#Matching)."
+	},
+	"params_export_missing": {
+		"variants": [
+			{
+				"text": "`%file%` does not export `params` from `defineParams`",
+				"variables": [
+					"file"
+				]
+			}
+		],
+		"details": "The params file must export an object called `params`, created with `defineParams`, that contains your [matchers](https://svelte.dev/docs/kit/advanced-routing#Matching):\n\n```js\n/// file: src/params.js\nimport { defineParams } from '@sveltejs/kit/params';\n\nexport const params = defineParams({\n\tinteger: (param) => (/^\\d+$/.test(param) ? Number(param) : undefined)\n});\n```"
+	},
+	"tsconfig_parse_failed": {
+		"variants": [
+			{
+				"text": "Failed to parse TypeScript config",
+				"variables": []
+			},
+			{
+				"text": "Failed to parse TypeScript config: %details%",
+				"variables": [
+					"details"
+				]
+			}
+		],
+		"details": "SvelteKit reads your `tsconfig.json` (or `jsconfig.json`) to check that it is compatible with the configuration it generates, and TypeScript could not parse the file. Fix the problem at the reported location. Note that the file may contain comments and trailing commas, but must otherwise be valid JSON."
+	},
+	"adapter_missing": {
+		"variants": [
+			{
+				"text": "No adapter specified. See https://svelte.dev/docs/kit/adapters to learn how to configure your app to run on the platform of your choosing",
+				"variables": []
+			}
+		],
+		"details": "Adapters turn your build output into something you can deploy to a specific platform. Without one, `vite build` still builds your app, but doesn't produce a deployable app. Pass an adapter to the `sveltekit(...)` Vite plugin:\n\n```js\n/// file: vite.config.js\nimport { sveltekit } from '@sveltejs/kit/vite';\nimport adapter from '@sveltejs/adapter-auto';\nimport { defineConfig } from 'vite';\n\nexport default defineConfig({\n\tplugins: [\n\t\tsveltekit({\n\t\t\tadapter: adapter()\n\t\t})\n\t]\n});\n```"
+	},
+	"adapter_config_kit_deprecated": {
+		"variants": [
+			{
+				"text": "Reading `config.kit` inside adapters is deprecated — it should access configuration on the `config` object directly. You may need to update your adapter",
+				"variables": []
+			}
+		],
+		"details": "This warning comes from your adapter, not your app. SvelteKit options used to be nested under `config.kit`, but are now passed to adapters on `builder.config` directly. Update your adapter to the latest version. If you maintain it, replace `builder.config.kit.x` with `builder.config.x`."
+	},
+	"adapter_fallback_overwrites": {
+		"variants": [
+			{
+				"text": "Overwriting `%file%` with fallback page. Consider using a different name for the fallback.",
+				"variables": [
+					"file"
+				]
+			}
+		],
+		"details": "Your adapter's [fallback page](https://svelte.dev/docs/kit/single-page-apps) has the same name as a file that was already written, such as a prerendered page or a file in `static`, so that file is replaced. Choose a different name for the fallback, for example `200.html` rather than `index.html`."
+	},
+	"cors_preflight_continue": {
+		"variants": [
+			{
+				"text": "`OPTIONS` request handlers will not work unless `%key%.preflightContinue` is set to `true`",
+				"variables": [
+					"key"
+				]
+			}
+		],
+		"details": "Vite's CORS middleware answers `OPTIONS` requests itself, unless `preflightContinue` is `true`, in which case it passes them on to SvelteKit. Your Vite config sets [`%key%`](https://vite.dev/config/server-options#server-cors) in a way that stops `OPTIONS` handlers in `+server.js` files from running. Set `preflightContinue: true` in that option, or set it to `false` to disable Vite's CORS handling entirely."
+	},
+	"layout_children_missing": {
+		"variants": [
+			{
+				"text": "`%file%`: `<slot />` or `{@render ...}` tag missing — inner content will not be rendered",
+				"variables": [
+					"file"
+				]
+			}
+		],
+		"details": "A `+layout.svelte` wraps the pages and layouts below it, and has to render them somewhere. Add `{@render children()}` where the page content should appear:\n\n```svelte\n<!--- file: +layout.svelte --->\n<script>\n\tlet { children } = $props();\n</script>\n\n<nav>...</nav>\n\n{@render children()}\n```"
+	},
+	"page_option_in_component": {
+		"variants": [
+			{
+				"text": "`%file%`: `%option%` will be ignored — move it to `%fixed%` instead. See https://svelte.dev/docs/kit/page-options for more information.",
+				"variables": [
+					"file",
+					"option",
+					"fixed"
+				]
+			}
+		],
+		"details": "[Page options](https://svelte.dev/docs/kit/page-options) such as `prerender`, `ssr`, `csr` and `trailingSlash` are read from `+page.js`, `+page.server.js`, `+layout.js` or `+layout.server.js`, not from the `.svelte` component. Move the export to one of those files."
+	},
+	"transform_index_html_unsupported": {
+		"variants": [
+			{
+				"text": "The following plugins may not work correctly because they use the `transformIndexHtml` hook which is not supported:\n%plugins%",
+				"variables": [
+					"plugins"
+				]
+			}
+		],
+		"details": "SvelteKit renders HTML itself, from `src/app.html`, rather than using an `index.html` file processed by Vite, so Vite's `transformIndexHtml` hook never runs for your pages. Plugins that rely on it to inject tags won't have any effect. Use [`transformPageChunk`](https://svelte.dev/docs/kit/hooks#Server-hooks-handle) in your `handle` hook or edit `src/app.html` instead."
+	},
+	"vite_config_overridden": {
+		"variants": [
+			{
+				"text": "The following Vite config options will be overridden by SvelteKit:\n%options%",
+				"variables": [
+					"options"
+				]
+			}
+		],
+		"details": "SvelteKit controls these Vite options because its build depends on them, so your values are replaced. Remove them from your Vite config. SvelteKit usually provides its own option for the same purpose; see the [configuration reference](https://svelte.dev/docs/kit/configuration)."
+	},
+	"prerender_redirect_location_missing": {
+		"variants": [
+			{
+				"text": "`location` header missing on redirect received from `%path%`",
+				"variables": [
+					"path"
+				]
+			}
+		],
+		"details": "While [prerendering](https://svelte.dev/docs/kit/page-options#prerender), this path responded with a 3xx status but no `location` header, so SvelteKit doesn't know where it redirects to and doesn't save it. Use [`redirect`](https://svelte.dev/docs/kit/@sveltejs-kit#redirect) from `@sveltejs/kit`, which sets the header for you, or add a `location` header to the response."
+	},
+	"config_option_deprecated": {
+		"variants": [
+			{
+				"text": "The `%keypath%` option is deprecated, and will be removed in a future version",
+				"variables": [
+					"keypath"
+				]
+			}
+		],
+		"details": "This option still works, but it will be removed in a future major version of SvelteKit. See the [configuration reference](https://svelte.dev/docs/kit/configuration) for the recommended alternative."
+	},
+	"config_option_deprecated_alias": {
+		"variants": [
+			{
+				"text": "The `%keypath%` option is deprecated, and will be removed in a future version of SvelteKit. Use subpath imports instead: https://svelte.dev/docs/kit/$lib",
+				"variables": [
+					"keypath"
+				]
+			}
+		],
+		"details": "Node's [subpath imports](https://nodejs.org/api/packages.html#subpath-imports), declared in the `imports` field of your `package.json`, are understood natively by Vite, TypeScript and other tools, so they don't need a separate SvelteKit option. For example, instead of `alias: { $utils: 'src/utils' }`, add this to your `package.json`...\n\n```json\n{\n\t\"imports\": {\n\t\t\"#utils/*\": \"./src/utils/*\"\n\t}\n}\n```\n\n...and import from `#utils/...`. See [`$lib`](https://svelte.dev/docs/kit/$lib) for how SvelteKit uses the same mechanism for `#lib`."
+	},
+	"config_option_deprecated_typescript": {
+		"variants": [
+			{
+				"text": "The `%keypath%` option is deprecated, and will be removed in a future version. Add configuration to `tsconfig.json` directly",
+				"variables": [
+					"keypath"
+				]
+			}
+		],
+		"details": "Rather than modifying SvelteKit's generated TypeScript configuration with a function, add the options to your own `tsconfig.json`, which [extends `$app/tsconfig`](https://svelte.dev/docs/kit/$app-tsconfig)."
+	},
+	"file_name_misspelled": {
+		"variants": [
+			{
+				"text": "%description%. Did you mean %corrected%? at %file%",
+				"variables": [
+					"description",
+					"corrected",
+					"file"
+				]
+			}
+		],
+		"details": "SvelteKit only recognises files with specific names, such as `src/hooks.server.js` or `src/hooks.client.js`. It found a file whose name looks like a misspelling of one of them, so that file will be ignored. Rename it to the suggested name."
+	},
+	"tsconfig_extends_missing": {
+		"variants": [
+			{
+				"text": "`%file%` should extend SvelteKit's built-in configuration:\n%example%",
+				"variables": [
+					"file",
+					"example"
+				]
+			}
+		],
+		"details": "Your TypeScript configuration needs to extend the one SvelteKit generates, so that TypeScript knows about generated types, path aliases and the compiler options SvelteKit relies on. The warning includes an example configuration. For your root `tsconfig.json`, that looks like this:\n\n```json\n/// file: tsconfig.json\n{\n\t\"extends\": \"$app/tsconfig\",\n\t\"include\": [\"src\", \"test\", \"*\"],\n\t\"exclude\": [\"src/service-worker\"]\n}\n```\n\nSee [`$app/tsconfig`](https://svelte.dev/docs/kit/$app-tsconfig) and, for service workers, [`$app/tsconfig/service-worker`](https://svelte.dev/docs/kit/$app-tsconfig-service-worker)."
+	},
+	"tsconfig_invalid": {
+		"variants": [
+			{
+				"text": "Found issues while validating `%file%`:\n%issues%",
+				"variables": [
+					"file",
+					"issues"
+				]
+			}
+		],
+		"details": "Your `tsconfig.json` extends SvelteKit's generated configuration, but overrides settings that SvelteKit relies on. In every case, the fix is to stop overriding what [`$app/tsconfig`](https://svelte.dev/docs/kit/$app-tsconfig) sets, or to add back what's missing:\n\n- **`types` was overwritten** — SvelteKit includes `\"$app/types\"` in `compilerOptions.types`, so that TypeScript can see generated module declarations for things like [environment variables](https://svelte.dev/docs/kit/environment-variables). Setting `types` yourself replaces that array rather than merging with it, so include the missing entries, for example `\"types\": [\"$app/types\", \"node\"]`.\n- **`paths` was overwritten** — SvelteKit generates `compilerOptions.paths` from the (deprecated) [`alias`](https://svelte.dev/docs/kit/configuration#alias) option, so that TypeScript resolves these imports the same way Vite does. Remove your `paths`, and declare aliases with [subpath imports](https://nodejs.org/api/packages.html#subpath-imports) in `package.json` instead.\n- **A file should be added to the `exclude` array** — service workers run in a different environment from the rest of your app and need their own TypeScript project, which extends [`$app/tsconfig/service-worker`](https://svelte.dev/docs/kit/$app-tsconfig-service-worker). Exclude them from your root `tsconfig.json`, for example `\"exclude\": [\"src/service-worker\"]`.\n- **An essential option was overwritten** — `isolatedModules` must be `true` because Vite compiles modules one at a time, and `verbatimModuleSyntax` must be `true` so that type imports are safely removed from `.svelte` files. Remove the override."
+	},
+	"enhance_file_without_enctype": {
+		"variants": [
+			{
+				"text": "Your form contains `<input type=\"file\">` fields, but is missing the necessary `enctype=\"multipart/form-data\"` attribute",
+				"variables": []
+			}
+		],
+		"details": "Without `enctype=\"multipart/form-data\"`, a browser submitting the form natively only sends the names of the selected files, not their contents. An enhanced form would behave differently, so [`use:enhance`](https://svelte.dev/docs/kit/form-actions#Progressive-enhancement-use:enhance) rejects the submission rather than letting the two drift apart (see [#9819](https://github.com/sveltejs/kit/issues/9819)). Add the attribute to the `<form>`:\n\n```svelte\n<form method=\"POST\" enctype=\"multipart/form-data\" use:enhance>\n\t<input type=\"file\" name=\"avatar\" />\n</form>\n```"
+	},
+	"enhance_invalid_method": {
+		"variants": [
+			{
+				"text": "`use:enhance` can only be used on `<form>` elements with `method=\"POST\"`",
+				"variables": []
+			}
+		],
+		"details": "[`use:enhance`](https://svelte.dev/docs/kit/form-actions#Progressive-enhancement-use:enhance) progressively enhances forms that submit to [form actions](https://svelte.dev/docs/kit/form-actions), which only handle `POST` requests. Add `method=\"POST\"` to the form. A `GET` form doesn't need enhancing: SvelteKit's router already handles its submissions client-side, like a link."
+	},
+	"goto_options_removed": {
+		"variants": [
+			{
+				"text": "The `goto(..., { noScroll: true, keepFocus: true })` options have been replaced by `reset: false`",
+				"variables": []
+			}
+		],
+		"details": "[`goto`](https://svelte.dev/docs/kit/$app-navigation#goto) no longer accepts separate `noScroll` and `keepFocus` options. Pass `reset: false` instead, which preserves both the scroll position and the focused element:\n\n```js\nimport { goto } from '$app/navigation';\n\nawait goto('/somewhere', { reset: false });\n```"
+	},
+	"navigation_before_start": {
+		"variants": [
+			{
+				"text": "Cannot call `%caller%(...)` before router is initialized",
+				"variables": [
+					"caller"
+				]
+			}
+		],
+		"details": "Shallow routing functions such as [`pushState`](https://svelte.dev/docs/kit/$app-navigation#pushState), [`replaceState`](https://svelte.dev/docs/kit/$app-navigation#replaceState) and `goto(url, { shallow: true })` update the router's history state, which only exists once the app has started in the browser. Call them from event handlers, effects or `onMount` rather than while modules or components are first being evaluated."
+	},
+	"navigation_external_url": {
+		"variants": [
+			{
+				"text": "Cannot use `%caller%` with an external URL. Use `window.location = \"%url%\"` instead",
+				"variables": [
+					"caller",
+					"url"
+				]
+			}
+		],
+		"details": "[`goto`](https://svelte.dev/docs/kit/$app-navigation#goto) and the [shallow routing](https://svelte.dev/docs/kit/shallow-routing) functions navigate within your app using SvelteKit's client-side router, so they can't go to a different origin. To leave the app, perform a full-page navigation by assigning to `window.location` or rendering a regular link."
+	},
+	"navigation_route_missing": {
+		"variants": [
+			{
+				"text": "Cannot use `%caller%` with a URL that does not resolve to a route within the app. Use `window.location = \"%url%\"` instead",
+				"variables": [
+					"caller",
+					"url"
+				]
+			}
+		],
+		"details": "[`goto`](https://svelte.dev/docs/kit/$app-navigation#goto) and the [shallow routing](https://svelte.dev/docs/kit/shallow-routing) functions only navigate to pages of your app. The URL is on the same origin, but no route matches it — check it for typos, and remember that routes without a `+page` (for example, those with only a `+server.js`) can't be navigated to client-side. If the URL is served by something other than SvelteKit, navigate to it with `window.location` instead."
+	},
+	"redirect_loop": {
+		"variants": [
+			{
+				"text": "Redirect loop while navigating to `%url%`",
+				"variables": [
+					"url"
+				]
+			}
+		],
+		"details": "A navigation followed more than 20 redirects without reaching a page, which usually means two or more `load` functions redirect to each other, or a `load` function redirects to its own route. Check the conditions under which each [`redirect`](https://svelte.dev/docs/kit/@sveltejs-kit#redirect) is thrown, and make sure the destination doesn't redirect back."
+	},
+	"reserved_query_parameter": {
+		"variants": [
+			{
+				"text": "Cannot use reserved query parameter `%key%`",
+				"variables": [
+					"key"
+				]
+			}
+		],
+		"details": "SvelteKit uses query parameters starting with `x-sveltekit-` internally when it requests the data for a page, so a URL can't contain them. Rename the parameter."
+	},
+	"scroll_handling_outside_navigation": {
+		"variants": [
+			{
+				"text": "Can only disable scroll handling during navigation",
+				"variables": []
+			}
+		],
+		"details": "[`disableScrollHandling`](https://svelte.dev/docs/kit/$app-navigation#disableScrollHandling) stops SvelteKit from updating the scroll position after the current navigation. It only has an effect while the page is being updated following a navigation — for example in `onMount`, [`afterNavigate`](https://svelte.dev/docs/kit/$app-navigation#afterNavigate) or an action — so calling it at any other time is a mistake."
+	},
+	"preload_invalid_route_id": {
+		"variants": [
+			{
+				"text": "`preloadCode` expects a route ID starting with `/` (such as `/blog/[slug]`), but received `%id%`",
+				"variables": [
+					"id"
+				]
+			}
+		],
+		"details": "[`preloadCode`](https://svelte.dev/docs/kit/$app-navigation#preloadCode) takes the ID of a route, which is its path inside `src/routes` starting with `/`, such as `/blog/[slug]`. Route IDs are never prefixed with the app's [base path](https://svelte.dev/docs/kit/configuration#paths). If you have a URL or pathname, convert it with [`match`](https://svelte.dev/docs/kit/$app-paths#match) from `$app/paths`:\n\n```js\nimport { match } from '$app/paths';\nimport { preloadCode } from '$app/navigation';\n\nconst matched = await match('/blog/hello-world');\nif (matched) await preloadCode(matched.id);\n```"
+	},
+	"preload_url_outside_app": {
+		"variants": [
+			{
+				"text": "Attempted to preload a URL that does not belong to this app: `%url%`",
+				"variables": [
+					"url"
+				]
+			}
+		],
+		"details": "[`preloadData`](https://svelte.dev/docs/kit/$app-navigation#preloadData) runs the `load` functions of one of your app's pages, so the URL must be on the app's origin (and inside its [base path](https://svelte.dev/docs/kit/configuration#paths)) and match a route with a `+page`. Check the URL for typos, and don't preload external URLs."
+	},
+	"remote_command_redirect": {
+		"variants": [
+			{
+				"text": "Redirects are not allowed in commands. Return a result instead and use `goto` on the client",
+				"variables": []
+			}
+		],
+		"details": "Remote commands are imperative mutations and cannot redirect. Return the destination or another result from the command, then call [`goto`](https://svelte.dev/docs/kit/$app-navigation#goto) in the browser after awaiting it. Remote forms support redirects when you need a progressively enhanced submission."
+	},
+	"remote_form_multiple_elements": {
+		"variants": [
+			{
+				"text": "A form object can only be attached to a single `<form>` element",
+				"variables": []
+			}
+		],
+		"details": "Each remote form instance tracks one element's input, validation issues and submission state. To render several forms from the same remote function, use `myForm.for(key)` with a different stable key for each element. An instance returned by `.for(key)` must also be attached to only one element; reusing its key does not create a second independent instance. This includes keys such as `0`, `false` and `''`."
+	},
+	"remote_form_mixed_inputs": {
+		"variants": [
+			{
+				"text": "Cannot mix and match file and non-file inputs under the same name (`%name%`)",
+				"variables": [
+					"name"
+				]
+			}
+		],
+		"details": "Inputs that share an array field must all contain the same kind of data. Use separate fields for file inputs and non-file inputs, and spread the corresponding `form.fields.field.as(...)` props onto each control."
+	},
+	"remote_form_multiple_files": {
+		"variants": [
+			{
+				"text": "Can only use the `multiple` attribute when `name` includes a `[]` suffix — consider changing `%name%` to `%name%[]`",
+				"variables": [
+					"name"
+				]
+			}
+		],
+		"details": "Use `form.fields.files.as('file multiple')` rather than adding `multiple` to the props for a single file input. The array suffix tells SvelteKit to collect all selected files instead of a single file."
+	},
+	"remote_form_not_attached": {
+		"variants": [
+			{
+				"text": "Cannot call `submit()` before the form is attached",
+				"variables": []
+			}
+		],
+		"details": "Spread the remote form object onto a `<form>` element before calling its `submit()` method. Call it from a browser event handler after the element has mounted, and do not submit an instance whose element has been removed."
+	},
+	"remote_form_reserved_field": {
+		"variants": [
+			{
+				"text": "`$` is used to collect all FormData validation issues and cannot be used as the `name` of a form control",
+				"variables": []
+			}
+		],
+		"details": "`form.fields.allIssues()` uses the reserved `$` path for the form's complete issue list. Choose a different field name, including for nested paths and arrays that start with `$`."
+	},
+	"remote_updates_duplicate_override": {
+		"variants": [
+			{
+				"text": "Multiple overrides for the same query are not allowed in a single `updates()` invocation",
+				"variables": []
+			}
+		],
+		"details": "Pass at most one `withOverride(...)` result for each query instance to `.updates(...)`. Combine changes to the same instance into a single override callback. Different arguments identify different query instances and may each have an override."
+	},
+	"remote_updates_invalid_argument": {
+		"variants": [
+			{
+				"text": "`updates()` expects a query or live query function, query resource, or query override",
+				"variables": []
+			}
+		],
+		"details": "Pass a query function to update all its active instances, a query resource to update one instance, or a `withOverride(...)` result to apply an optimistic update. A release callback from an integration is also accepted. Do not pass a command, form, prerender function or an arbitrary value."
+	},
+	"snapshot_duplicate_id": {
+		"variants": [
+			{
+				"text": "`snapshot()` was called multiple times from the same call site. Pass a unique `id` to distinguish the instances.",
+				"variables": []
+			},
+			{
+				"text": "A snapshot with id `%id%` is already registered. Pass a unique `id`.",
+				"variables": [
+					"id"
+				]
+			}
+		],
+		"details": "Each [`snapshot`](https://svelte.dev/docs/kit/snapshots) needs an `id` that is unique among the snapshots mounted at the same time, so that SvelteKit knows which captured value to restore to which component. By default, the `id` is derived from the place in your code where `snapshot` is called, so calling it from a helper function, or from a component that is rendered more than once, produces the same `id` for every instance. Pass an explicit `id` that differs between them, for example one based on a prop."
+	},
+	"snapshot_id_missing": {
+		"variants": [
+			{
+				"text": "Could not generate a snapshot id from the stack trace. Pass an `id` instead.",
+				"variables": []
+			}
+		],
+		"details": "Without an `id` option, [`snapshot`](https://svelte.dev/docs/kit/snapshots) derives one from its call site, using the stack trace of an error. That doesn't work when the environment doesn't provide stack traces (or a library has removed them), so pass an explicit `id`, which also keeps snapshots stable across deployments."
+	},
+	"enhance_invalidate_all_deprecated": {
+		"variants": [
+			{
+				"text": "The `update({ invalidateAll })` option has been deprecated in favour of `update({ refreshAll })`",
+				"variables": []
+			}
+		],
+		"details": "The `invalidateAll` option of the `update` function passed to a [`use:enhance`](https://svelte.dev/docs/kit/form-actions#Progressive-enhancement-Customising-use:enhance) callback has been renamed to `refreshAll`, which also refreshes active remote functions. Replace `invalidateAll` with `refreshAll`."
+	},
+	"link_option_invalid": {
+		"variants": [
+			{
+				"text": "Unexpected value for `%name%` — should be one of %options%",
+				"variables": [
+					"name",
+					"options"
+				]
+			}
+		],
+		"details": "The value of a [link option](https://svelte.dev/docs/kit/link-options) attribute such as `data-sveltekit-preload-data` isn't one that SvelteKit recognises, so it's ignored. The element is logged alongside this warning. Use one of the listed values, or `\"false\"` to [disable the option](https://svelte.dev/docs/kit/link-options#Disabling-options) for this element and its children."
+	},
+	"link_option_replaced": {
+		"variants": [
+			{
+				"text": "`data-sveltekit-%name%=\"true\"` has been replaced with `data-sveltekit-reset=\"false\"`",
+				"variables": [
+					"name"
+				]
+			}
+		],
+		"details": "The `data-sveltekit-keepfocus` and `data-sveltekit-noscroll` [link options](https://svelte.dev/docs/kit/link-options) have been combined into [`data-sveltekit-reset`](https://svelte.dev/docs/kit/link-options#data-sveltekit-reset). Replace them with `data-sveltekit-reset=\"false\"`, which preserves both the scroll position and the focused element. The element is logged alongside this warning."
+	},
+	"window_fetch_in_load": {
+		"variants": [
+			{
+				"text": "Loading `%url%` using `window.fetch`. For best results, use the `fetch` that is passed to your `load` function",
+				"variables": [
+					"url"
+				]
+			}
+		],
+		"details": "The [`fetch`](https://svelte.dev/docs/kit/load#Making-fetch-requests) passed to `load` functions reuses responses that were inlined into the page during server-side rendering, so hydration doesn't request the same data twice, and it tracks the URL as a dependency for [`invalidate`](https://svelte.dev/docs/kit/$app-navigation#invalidate). Take `fetch` from the `load` event instead of using the global one:\n\n```js\n/// file: src/routes/+page.js\n/** @type {import('./$types').PageLoad} */\nexport async function load({ fetch }) {\n\tconst response = await fetch('/api/items');\n\treturn { items: await response.json() };\n}\n```"
+	},
+	"app_body_unwrapped": {
+		"variants": [
+			{
+				"text": "Placing `%tag%` directly inside `<body>` is not recommended, as your app may break for users who have certain browser extensions installed",
+				"variables": [
+					"tag"
+				]
+			}
+		],
+		"details": "Browser extensions often inject elements into `<body>`. When your app is rendered directly into `<body>`, hydration can remove those elements or be confused by them, which breaks the extension or your app. Wrap the placeholder in an element in your [app template](https://svelte.dev/docs/kit/project-structure#Project-files-src):\n\n```html\n<body>\n\t<div style=\"display: contents\">%sveltekit.body%</div>\n</body>\n```"
+	},
+	"full_reload_after_error": {
+		"variants": [
+			{
+				"text": "An error occurred while loading the page. This will cause a full page reload",
+				"variables": []
+			}
+		],
+		"details": "When a client-side navigation fails in a way SvelteKit can't render an error page for (for example, loading the route's code failed), it falls back to a full-page navigation so that the server can respond instead. This warning only appears during development, and execution pauses at a `debugger` statement if your devtools are open so that you can inspect the error before the page reloads. Check the console and network tab for the underlying failure."
+	},
+	"goto_invalidate_all_deprecated": {
+		"variants": [
+			{
+				"text": "The `goto(..., { invalidateAll: %value% })` option has been deprecated in favour of `refreshAll`",
+				"variables": [
+					"value"
+				]
+			}
+		],
+		"details": "The `invalidateAll` option of [`goto`](https://svelte.dev/docs/kit/$app-navigation#goto) has been renamed to `refreshAll`, which also refreshes active remote functions. Replace `invalidateAll` with `refreshAll`."
+	},
+	"goto_replace_state_deprecated": {
+		"variants": [
+			{
+				"text": "The `goto(..., { replaceState: %value% })` option has been deprecated in favour of `replace`",
+				"variables": [
+					"value"
+				]
+			}
+		],
+		"details": "The `replaceState` option of [`goto`](https://svelte.dev/docs/kit/$app-navigation#goto) has been renamed to `replace`. Replace `replaceState` with `replace`."
+	},
+	"history_api_conflict": {
+		"variants": [
+			{
+				"text": "Avoid using `history.pushState(...)` and `history.replaceState(...)` as these will conflict with SvelteKit's router. Use `goto(...)` from `$app/navigation` instead.",
+				"variables": []
+			}
+		],
+		"details": "SvelteKit's router stores its own state in each history entry, which it uses to restore scroll positions, snapshots and [`page.state`](https://svelte.dev/docs/kit/$app-state#page) when navigating back and forward. Calling the browser's history methods directly creates entries without that state. Use [`goto`](https://svelte.dev/docs/kit/$app-navigation#goto) to navigate, or `goto(url, { state, shallow: true })` for [shallow routing](https://svelte.dev/docs/kit/shallow-routing)."
+	},
+	"hmr_reload_after_error": {
+		"variants": [
+			{
+				"text": "The next HMR update will cause the page to reload",
+				"variables": []
+			}
+		],
+		"details": "An unexpected error was handled during development. Because the app may be in an inconsistent state after such an error, SvelteKit reloads the page on the next hot module replacement update rather than patching it in place."
+	},
+	"push_state_deprecated": {
+		"variants": [
+			{
+				"text": "`pushState(...)` is deprecated. Use `goto(url, { state, shallow: true })` instead.",
+				"variables": []
+			}
+		],
+		"details": "[Shallow routing](https://svelte.dev/docs/kit/shallow-routing) is now done with [`goto`](https://svelte.dev/docs/kit/$app-navigation#goto), which accepts the same `state`:\n\n```js\nimport { goto } from '$app/navigation';\n\n// instead of pushState('/photos/1', { selected: 1 })\nawait goto('/photos/1', { state: { selected: 1 }, shallow: true });\n```"
+	},
+	"replace_state_deprecated": {
+		"variants": [
+			{
+				"text": "`replaceState(...)` is deprecated. Use `goto(url, { state, shallow: true, replace: true })` instead.",
+				"variables": []
+			}
+		],
+		"details": "[Shallow routing](https://svelte.dev/docs/kit/shallow-routing) is now done with [`goto`](https://svelte.dev/docs/kit/$app-navigation#goto), which accepts the same `state`:\n\n```js\nimport { goto } from '$app/navigation';\n\n// instead of replaceState('/photos/1', { selected: 1 })\nawait goto('/photos/1', { state: { selected: 1 }, shallow: true, replace: true });\n```"
+	},
+	"snapshot_export_deprecated": {
+		"variants": [
+			{
+				"text": "`export const snapshot` is deprecated. Use the `snapshot` helper from `$app/navigation` instead.",
+				"variables": []
+			}
+		],
+		"details": "Rather than exporting a `snapshot` object from a page or layout, call the [`snapshot`](https://svelte.dev/docs/kit/snapshots) function from `$app/navigation` during component initialization. It works in any component, not just pages and layouts:\n\n```svelte\n<script>\n\timport { snapshot } from '$app/navigation';\n\n\tlet comment = $state('');\n\n\tsnapshot({\n\t\tcapture: () => comment,\n\t\trestore: (value) => (comment = value)\n\t});\n</script>\n```"
+	},
+	"preload_code_endpoint_only": {
+		"variants": [
+			{
+				"text": "`%id%` has no `+page`, so there is no code to preload. If you meant to warm up an endpoint, request it with `fetch` instead.",
+				"variables": [
+					"id"
+				]
+			}
+		],
+		"details": "[`preloadCode`](https://svelte.dev/docs/kit/$app-navigation#preloadCode) imports the components and universal `load` modules of a page. The route exists, but it only has a `+server.js`, so there's nothing to preload."
+	},
+	"preload_data_failed": {
+		"variants": [
+			{
+				"text": "Preloading data for `%path%` failed with the following error: %message%",
+				"variables": [
+					"path",
+					"message"
+				]
+			}
+		],
+		"details": "A link with [`data-sveltekit-preload-data`](https://svelte.dev/docs/kit/link-options#data-sveltekit-preload-data) caused SvelteKit to run the `load` functions of its page ahead of time, and one of them failed. If the error is transient, you can ignore it — the page's data is loaded again when the user navigates. Otherwise, fix the `load` function, or disable preloading for this link with `data-sveltekit-preload-data=\"false\"`."
+	},
+	"preload_route_is_pathname": {
+		"variants": [
+			{
+				"text": "`%id%` did not match any route, but it does match as a pathname — use `match(...)` from `$app/paths` to convert a pathname into a route ID",
+				"variables": [
+					"id"
+				]
+			}
+		],
+		"details": "[`preloadCode`](https://svelte.dev/docs/kit/$app-navigation#preloadCode) takes a route ID such as `/blog/[slug]`, not a pathname such as `/blog/hello-world` (which it accepted in earlier versions). Convert the pathname with [`match`](https://svelte.dev/docs/kit/$app-paths#match):\n\n```js\nimport { match } from '$app/paths';\nimport { preloadCode } from '$app/navigation';\n\nconst matched = await match('/blog/hello-world');\nif (matched) await preloadCode(matched.id);\n```"
+	},
+	"preload_route_missing": {
+		"variants": [
+			{
+				"text": "`%id%` did not match any route",
+				"variables": [
+					"id"
+				]
+			}
+		],
+		"details": "[`preloadCode`](https://svelte.dev/docs/kit/$app-navigation#preloadCode) takes the ID of a route, which is its path inside `src/routes`, such as `/blog/[slug]`. Check the ID for typos. Routes without a `+page` have no code to preload, and with client-side route resolution they aren't known to the browser at all, so they also cause this warning."
+	},
+	"remote_form_issues_ignored": {
+		"variants": [
+			{
+				"text": "Form submission had invalid data, but the validation issues were ignored:\n\n%issues%\n\nMake sure you provide actionable feedback to users, using e.g. `myForm.fields.myField.issues()` or `myForm.fields.allIssues()`",
+				"variables": [
+					"issues"
+				]
+			}
+		],
+		"details": "A remote form submission or preflight validation failed, but your UI did not read all its issues. Display field-specific issues with `form.fields.field.issues()`, or display all issues with `form.fields.allIssues()`, so the user knows what to fix. The list contains the validator's own issue messages and paths; it does not change those issues. This warning is only emitted in development, after giving the UI time to read them."
+	},
+	"remote_updates_repeated": {
+		"variants": [
+			{
+				"text": "Updates can only be sent once per %invocation%. Ignoring additional updates.",
+				"variables": [
+					"invocation"
+				]
+			}
+		],
+		"details": "Call `.updates(...)` once on a command invocation or form submission, passing every query or override in that call. Subsequent calls are ignored and return the original promise; they do not send more updates. Calling `.updates()` without arguments is still a call and opts out of automatic invalidation."
+	},
+	"handle_error_hook_failed": {
+		"variants": [
+			{
+				"text": "The `handleError` hook failed",
+				"variables": []
+			}
+		],
+		"details": "Your [`handleError`](https://svelte.dev/docs/kit/hooks#Shared-hooks-handleError) hook threw an error (or returned a promise that rejected) while it was handling another error. The `cause` of this error is what the hook threw, and the error it was handling is logged after it. SvelteKit responds with a generic `Internal Error` instead of the hook's result. Make sure the hook can handle any value, since anything can be thrown — for example, check `error instanceof Error` before reading `error.message`, and catch failures of any service that it reports errors to."
+	},
+	"action_throw_fail": {
+		"variants": [
+			{
+				"text": "Cannot `throw fail()`. Use `return fail()`",
+				"variables": []
+			}
+		],
+		"details": "[`fail`](https://svelte.dev/docs/kit/@sveltejs-kit#fail) creates a value that a form action returns to report a [validation error](https://svelte.dev/docs/kit/form-actions#Anatomy-of-an-action-Validation-errors). Thrown values are treated as unexpected errors instead, so return it:\n\n```js\n/// file: src/routes/login/+page.server.js\nimport { fail } from '@sveltejs/kit';\n\nexport const actions = {\n\tdefault: async ({ request }) => {\n\t\tconst data = await request.formData();\n\n\t\tif (!data.get('email')) {\n\t\t\treturn fail(400, { missing: true });\n\t\t}\n\t}\n};\n```"
+	},
+	"action_default_with_named": {
+		"variants": [
+			{
+				"text": "When using named actions, the default action cannot be used. See the docs for more info: https://svelte.dev/docs/kit/form-actions#named-actions",
+				"variables": []
+			}
+		],
+		"details": "A page can have either a single `default` [action](https://svelte.dev/docs/kit/form-actions#Default-actions) or any number of [named actions](https://svelte.dev/docs/kit/form-actions#Named-actions), but not both — a form that posts to the page without choosing an action would be ambiguous. Rename the `default` action and point the form that uses it to that name, for example with `action=\"?/create\"`."
+	},
+	"action_name_reserved": {
+		"variants": [
+			{
+				"text": "Cannot use reserved action name `default`",
+				"variables": []
+			}
+		],
+		"details": "The request's URL chose the action named `default` with `?/default`. That name is reserved for the page's [default action](https://svelte.dev/docs/kit/form-actions#Default-actions), which is used by forms that don't choose an action. Remove the `?/default` from the form's `action` attribute (or the `formaction` of its button)."
+	},
+	"action_return_redirect": {
+		"variants": [
+			{
+				"text": "Cannot `return redirect(...)` — use `redirect(...)` instead",
+				"variables": []
+			}
+		],
+		"details": "[`redirect`](https://svelte.dev/docs/kit/@sveltejs-kit#redirect) throws, so its result can't be returned. Call it without `return` — for example `redirect(303, '/login')`."
+	},
+	"action_return_error": {
+		"variants": [
+			{
+				"text": "Cannot `return error(...)` — use `error(...)` or `return fail(...)` instead",
+				"variables": []
+			}
+		],
+		"details": "[`error`](https://svelte.dev/docs/kit/@sveltejs-kit#error) throws, so its result can't be returned. Call it without `return` to show the error page, or return [`fail`](https://svelte.dev/docs/kit/@sveltejs-kit#fail) to report a [validation error](https://svelte.dev/docs/kit/form-actions#Anatomy-of-an-action-Validation-errors) back to the form instead."
+	},
+	"action_response_not_serializable": {
+		"variants": [
+			{
+				"text": "Data returned from action inside `%id%` is not serializable. Form actions need to return plain objects or `fail()`. E.g. `return { success: true }` or `return fail(400, { message: \"invalid\" });`",
+				"variables": [
+					"id"
+				]
+			}
+		],
+		"details": "Form actions return data to the page as [`form`](https://svelte.dev/docs/kit/form-actions#Anatomy-of-an-action), not as a response of their own, so they can't return a `Response` (for example one created with `json(...)`). Return a plain object instead. If you need a custom response, use a [`+server`](https://svelte.dev/docs/kit/routing#server) file."
+	},
+	"action_data_not_serializable": {
+		"variants": [
+			{
+				"text": "Data returned from action inside `%id%` is not serializable: %message%",
+				"variables": [
+					"id",
+					"message"
+				]
+			},
+			{
+				"text": "Data returned from action inside `%id%` is not serializable: %message% (`%path%`)",
+				"variables": [
+					"id",
+					"message",
+					"path"
+				]
+			}
+		],
+		"details": "The data returned from a form action is serialized with [devalue](https://github.com/sveltejs/devalue) to send it to the page, and this value isn't supported. Devalue supports JSON values as well as things like `Date`, `Map`, `Set`, `BigInt` and `URL`, but not functions or class instances. Return plain data instead, or register the type with a [transport hook](https://svelte.dev/docs/kit/hooks#Universal-hooks-transport) to tell SvelteKit how to serialize it."
+	},
+	"load_not_serializable": {
+		"variants": [
+			{
+				"text": "Data returned from `load` while rendering `%id%` is not serializable: %message% (`%path%`). If you need to serialize/deserialize custom types, use transport hooks: https://svelte.dev/docs/kit/hooks#transport.",
+				"variables": [
+					"id",
+					"message",
+					"path"
+				]
+			}
+		],
+		"details": "The data returned from a server `load` function is serialized with [devalue](https://github.com/sveltejs/devalue) to send it to the browser, and the value at the listed path isn't supported. Devalue supports JSON values as well as things like `Date`, `Map`, `Set`, `BigInt`, `URL` and promises, but not functions or class instances. Return plain data instead, move the value into a [universal `load`](https://svelte.dev/docs/kit/load#Universal-vs-server) function, or register the type with a [transport hook](https://svelte.dev/docs/kit/hooks#Universal-hooks-transport)."
+	},
+	"load_not_plain_object": {
+		"variants": [
+			{
+				"text": "Data returned from `load` while rendering `%id%` is not a plain object",
+				"variables": [
+					"id"
+				]
+			}
+		],
+		"details": "A server `load` function must return a plain object (such as `return { post }`), because each of its properties becomes a property of `data`. Wrap the value you want to return in an object."
+	},
+	"load_promise_not_serializable": {
+		"variants": [
+			{
+				"text": "Failed to serialize promise while rendering `%id%`",
+				"variables": [
+					"id"
+				]
+			}
+		],
+		"details": "A server `load` function returned a promise, which SvelteKit [streams](https://svelte.dev/docs/kit/load#Streaming-with-promises) to the browser once it resolves. The value it resolved to can't be serialized with [devalue](https://github.com/sveltejs/devalue), so the promise is rejected in the browser instead — the `cause` of this error says which value was the problem. Resolve the promise to plain data, or register the type with a [transport hook](https://svelte.dev/docs/kit/hooks#Universal-hooks-transport)."
+	},
+	"load_response_header_not_serialized": {
+		"variants": [
+			{
+				"text": "Failed to get response header `%name%` — it must be included by the `filterSerializedResponseHeaders` option: https://svelte.dev/docs/kit/hooks#handle (at `%id%`)",
+				"variables": [
+					"name",
+					"id"
+				]
+			}
+		],
+		"details": "A response fetched with `event.fetch` during server-side rendering is [serialized into the page](https://svelte.dev/docs/kit/load#Making-fetch-requests) so that `load` can use it again in the browser without making the request twice. Only headers that you choose are included, because they may contain sensitive information, so reading any other header would fail in the browser. Include the header by returning `true` for it from the [`filterSerializedResponseHeaders`](https://svelte.dev/docs/kit/hooks#Server-hooks-handle) option of `resolve`:\n\n```js\n/// file: src/hooks.server.js\nexport async function handle({ event, resolve }) {\n\treturn resolve(event, {\n\t\tfilterSerializedResponseHeaders: (name) => name === 'content-type'\n\t});\n}\n```"
+	},
+	"load_fetch_cors": {
+		"variants": [
+			{
+				"text": "CORS error: %reason% `Access-Control-Allow-Origin` header is present on the requested resource",
+				"variables": [
+					"reason"
+				]
+			}
+		],
+		"details": "Universal `load` functions also run in the browser, where a request to another origin only succeeds if that origin allows it with [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS) headers. SvelteKit applies the same check when `load` runs on the server, so that the page doesn't work during server-side rendering and then fail after navigation. Allow your app's origin on the other server with an `access-control-allow-origin` header, or make the request from a [server `load`](https://svelte.dev/docs/kit/load#Universal-vs-server) function or an endpoint instead, where CORS doesn't apply."
+	},
+	"ssr_fetch_relative_url": {
+		"variants": [
+			{
+				"text": "Cannot call `fetch` eagerly during server-side rendering with relative URL (`%url%`) — put your `fetch` calls inside `onMount` or a `load` function instead",
+				"variables": [
+					"url"
+				]
+			}
+		],
+		"details": "During server-side rendering there's no page URL that a relative URL could be resolved against. Fetch the data in a [`load`](https://svelte.dev/docs/kit/load) function, whose `fetch` understands relative URLs and passes the data to the page, or call `fetch` in `onMount` so that it only runs in the browser."
+	},
+	"prerender_actions": {
+		"variants": [
+			{
+				"text": "Cannot prerender pages with actions",
+				"variables": []
+			}
+		],
+		"details": "A [prerendered](https://svelte.dev/docs/kit/page-options#prerender) page is saved as a static file, so there's no server to handle its [form actions](https://svelte.dev/docs/kit/form-actions). Remove `export const prerender = true` (which may also be set by a layout) from the page, or move the actions to a page that isn't prerendered."
+	},
+	"prerender_endpoint_methods": {
+		"variants": [
+			{
+				"text": "Cannot prerender a `+server` file with %methods% or fallback handlers (`%id%`)",
+				"variables": [
+					"methods",
+					"id"
+				]
+			}
+		],
+		"details": "A prerendered endpoint is saved as a static file, which can only answer `GET` requests. Methods that depend on a request body, and `fallback` handlers, would stop working. Move these handlers to a route that isn't prerendered, or remove `export const prerender = true` from this one."
+	},
+	"prerender_endpoint_not_prerenderable": {
+		"variants": [
+			{
+				"text": "`%id%` is not prerenderable",
+				"variables": [
+					"id"
+				]
+			}
+		],
+		"details": "A prerendered page requested this `+server` route with `fetch`, but the route isn't prerendered. The prerendered page would contain its response, while the route itself wouldn't exist in the built app. Add `export const prerender = true` to the `+server` file, or stop requesting it while the page is prerendered."
+	},
+	"prerender_nonce": {
+		"variants": [
+			{
+				"text": "Cannot use prerendering if `config.csp.mode === 'nonce'`",
+				"variables": []
+			}
+		],
+		"details": "A nonce must be different for every response, but a [prerendered](https://svelte.dev/docs/kit/page-options#prerender) page is generated once and then served to everyone. Set [`csp.mode`](https://svelte.dev/docs/kit/configuration#csp) to `'auto'` or `'hash'` instead, which uses nonces only for pages that are rendered dynamically."
+	},
+	"prerender_template_nonce": {
+		"variants": [
+			{
+				"text": "Cannot use prerendering if page template contains `%tag%`",
+				"variables": [
+					"tag"
+				]
+			}
+		],
+		"details": "A nonce must be different for every response, but a [prerendered](https://svelte.dev/docs/kit/page-options#prerender) page is generated once and then served to everyone. Remove the nonce placeholder from `src/app.html`, or don't prerender this page. SvelteKit adds the nonce to the scripts and styles it generates itself, and uses hashes instead on prerendered pages."
+	},
+	"csp_report_only_missing_report": {
+		"variants": [
+			{
+				"text": "`content-security-policy-report-only` must be specified with either the `report-to` or `report-uri` directives, or both",
+				"variables": []
+			}
+		],
+		"details": "A [report-only content security policy](https://svelte.dev/docs/kit/configuration#csp) doesn't block anything — it only reports violations. Without a `report-to` or `report-uri` directive, there's nowhere to send those reports. Add one of them to `csp.reportOnly`, or remove `csp.reportOnly`."
+	},
+	"remote_invalid_validator": {
+		"variants": [
+			{
+				"text": "Invalid validator passed to remote function. Expected `'unchecked'` or a Standard Schema (https://standardschema.dev)",
+				"variables": []
+			}
+		],
+		"details": "Pass a [Standard Schema](https://standardschema.dev) validator as the first argument to a [remote function](https://svelte.dev/docs/kit/remote-functions), followed by its callback. Libraries such as Valibot, Zod and ArkType implement this interface. Use `'unchecked'` only when you intentionally handle validation yourself. A function without an input argument can be declared with just its callback."
+	},
+	"remote_headers_forbidden": {
+		"variants": [
+			{
+				"text": "`setHeaders` is not allowed in remote functions",
+				"variables": []
+			}
+		],
+		"details": "Remote functions can run inside another request or share a response with other queries, so they cannot set response headers. Set headers in a server `load` function, endpoint or `handle` hook instead."
+	},
+	"remote_cookie_forbidden": {
+		"variants": [
+			{
+				"text": "Cannot %operation% cookies in `query` or `prerender` functions",
+				"variables": [
+					"operation"
+				]
+			}
+		],
+		"details": "Queries and prerender functions read data rather than mutate it. Set or delete cookies inside a remote `command` or `form` handler instead, or in an endpoint or form action. Reading cookies is allowed."
+	},
+	"remote_cookie_path_relative": {
+		"variants": [
+			{
+				"text": "Cookies %operation% in remote functions must have an absolute path",
+				"variables": [
+					"operation"
+				]
+			}
+		],
+		"details": "Remote functions can be invoked from different pages, so a relative cookie path would depend on which page invoked them. Pass an absolute `path`, such as `'/'`, to `cookies.set` or `cookies.delete`. Use the same path when deleting a cookie as when setting it."
+	},
+	"remote_request_property": {
+		"variants": [
+			{
+				"text": "Cannot access `event.%property%` in a query. Pass the value as an argument to the query instead",
+				"variables": [
+					"property"
+				]
+			}
+		],
+		"details": "A query's cache key is determined by its argument, not by the page that calls it. Read `url`, `params` or `route` in the caller and pass the required value as an argument so that different values produce different cache entries. This also applies to queries nested inside live queries."
+	},
+	"remote_query_live_not_iterable": {
+		"variants": [
+			{
+				"text": "`query.live` `%name%` must return an `Iterator`, `Iterable`, `AsyncIterator` or `AsyncIterable`",
+				"variables": [
+					"name"
+				]
+			}
+		],
+		"details": "A [`query.live`](https://svelte.dev/docs/kit/remote-functions#query.live) callback must provide a sequence of values. Use an async generator (`async function*`) and `yield` values, or return an iterator or iterable. Returning a single object or a promise of a single value is not sufficient; use a regular `query` for that."
+	},
+	"remote_query_live_no_value": {
+		"variants": [
+			{
+				"text": "`query.live` `%name%` did not yield a value",
+				"variables": [
+					"name"
+				]
+			}
+		],
+		"details": "When a live query is awaited on the server, it must yield at least one value before completing. Check for branches that return without yielding. Yield an initial value (including `null` if appropriate) before waiting for updates."
+	},
+	"remote_query_prerender": {
+		"variants": [
+			{
+				"text": "Cannot call `%type%` `%name%` while prerendering, as prerendered pages need static data. Use `prerender` from `$app/server` instead",
+				"variables": [
+					"type",
+					"name"
+				]
+			}
+		],
+		"details": "Regular, batched and live queries fetch runtime data, while a prerendered page must be generated at build time. Use [`prerender`](https://svelte.dev/docs/kit/remote-functions#prerender) for static data, or disable prerendering for pages that need these queries."
+	},
+	"remote_command_readonly": {
+		"variants": [
+			{
+				"text": "Cannot call a command (`%name%`) inside a query or prerender function",
+				"variables": [
+					"name"
+				]
+			}
+		],
+		"details": "Commands mutate data, so they cannot run inside a query or prerender function. Invoke the command from a browser event handler, a remote form handler, a form action or an endpoint that handles a mutative HTTP method."
+	},
+	"remote_command_method": {
+		"variants": [
+			{
+				"text": "Cannot call a command (`%name%`) from a `%method%` handler",
+				"variables": [
+					"name",
+					"method"
+				]
+			}
+		],
+		"details": "Commands mutate data and cannot be invoked by read-only HTTP requests. Use a handler for `POST`, `PUT`, `PATCH` or `DELETE`, or invoke the command from a browser event handler. Do not change state in `load` functions."
+	},
+	"remote_command_render": {
+		"variants": [
+			{
+				"text": "Cannot call a command (`%name%`) during server-side rendering",
+				"variables": [
+					"name"
+				]
+			}
+		],
+		"details": "Rendering must not mutate application state. Call the command in response to a user interaction, such as a button click, or use a remote form for progressively enhanced submissions."
+	},
+	"remote_form_fail": {
+		"variants": [
+			{
+				"text": "`fail(...)` is for form actions. A remote `form` handler should call `invalid(...)` instead. See https://svelte.dev/docs/kit/remote-functions#form-Programmatic-validation",
+				"variables": []
+			}
+		],
+		"details": "[`fail`](https://svelte.dev/docs/kit/@sveltejs-kit#fail) returns an action failure for a page's form actions. Remote forms use [`invalid`](https://svelte.dev/docs/kit/@sveltejs-kit#invalid) to report validation issues. Call `invalid(issue.field('Message'))` with the issue builder supplied to the form callback, or pass issue strings for errors that apply to the whole form. Do not return or throw the result of `fail` from a remote form handler."
+	},
+	"remote_module_default_export": {
+		"variants": [
+			{
+				"text": "Cannot export `default` from a remote module (`%file%`) — please use named exports instead",
+				"variables": [
+					"file"
+				]
+			}
+		],
+		"details": "Each remote function needs a named export so SvelteKit can identify it in requests and generate its client implementation. Replace the default export with a named export created by `query`, `query.batch`, `query.live`, `command`, `form` or `prerender` from `$app/server`."
+	},
+	"remote_module_invalid_export": {
+		"variants": [
+			{
+				"text": "`%name%` exported from `%file%` is invalid — all exports from this file must be remote functions",
+				"variables": [
+					"name",
+					"file"
+				]
+			}
+		],
+		"details": "A `.remote.js` or `.remote.ts` module can only export remote functions created with `$app/server`. Keep helper values private, or move values that other modules need into a separate module. Type-only exports are allowed in TypeScript because they are erased at runtime."
+	},
+	"remote_requested_invalid_query": {
+		"variants": [
+			{
+				"text": "`requested(...)` expects a query function created with `query(...)`, `query.batch(...)`, or `query.live(...)`",
+				"variables": []
+			}
+		],
+		"details": "Pass the query function itself to [`requested`](https://svelte.dev/docs/kit/remote-functions#Single-flight-mutations-Client-requested-refreshes), not a query resource returned by calling it. Commands, forms and prerender functions are not queries."
+	},
+	"remote_requested_context": {
+		"variants": [
+			{
+				"text": "`requested(...)` can only be called in the context of a command/form remote function",
+				"variables": []
+			}
+		],
+		"details": "`requested` reads the queries that a client asked a mutation to refresh or reconnect. Use it inside a remote `command` or `form` callback, where that request information exists, rather than in a `load` function, endpoint or query."
+	},
+	"remote_requested_async_validator": {
+		"variants": [
+			{
+				"text": "`requested(%name%, %limit%)` cannot be used with synchronous iteration because the query validator is async. Use `for await ... of` instead",
+				"variables": [
+					"name",
+					"limit"
+				]
+			}
+		],
+		"details": "Standard Schema validation can be asynchronous. Iterate the result of `requested` with `for await (const { arg, query } of requested(...))` so validation completes before you use each entry. `refreshAll`, `reconnectAll` and `ignoreAll` already use asynchronous iteration."
+	},
+	"remote_requested_wrong_method": {
+		"variants": [
+			{
+				"text": "`%method%()` is invalid for %type% queries. Use `%replacement%()` instead.",
+				"variables": [
+					"method",
+					"type",
+					"replacement"
+				]
+			}
+		],
+		"details": "Use `refreshAll()` for regular and batched queries, and `reconnectAll()` for live queries. A live query needs to restart its stream rather than perform a one-off fetch. Call the appropriate method on the result of `requested`."
+	},
+	"remote_requested_invalid_limit": {
+		"variants": [
+			{
+				"text": "Limit must be a non-negative integer or `Infinity`",
+				"variables": []
+			}
+		],
+		"details": "The second argument to `requested` limits how many client-requested query instances the mutation will handle. Pass a non-negative integer, or `Infinity` to handle all instances. Negative numbers, fractions and `NaN` are not valid limits."
+	},
+	"request_event_unavailable": {
+		"variants": [
+			{
+				"text": "Can only read the current request event inside functions invoked during `handle`, such as server `load` functions, actions, endpoints, and other server hooks.",
+				"variables": []
+			}
+		],
+		"details": "[`getRequestEvent`](https://svelte.dev/docs/kit/$app-server#getRequestEvent) returns the event of the request that SvelteKit is currently handling, so it only works while that request is being handled — in `handle`, server `load` functions, form actions, `+server` handlers, remote functions and the functions they call. It can't be used at the top level of a module, in `init`, or in code that runs after the response has been sent, such as a `setTimeout` callback. Pass the values you need from the event to that code instead."
+	},
+	"request_event_after_await": {
+		"variants": [
+			{
+				"text": "Can only read the current request event inside functions invoked during `handle`, such as server `load` functions, actions, endpoints, and other server hooks. In environments without `AsyncLocalStorage`, the event must be read synchronously, not after an `await`.",
+				"variables": []
+			}
+		],
+		"details": "[`getRequestEvent`](https://svelte.dev/docs/kit/$app-server#getRequestEvent) uses [`AsyncLocalStorage`](https://nodejs.org/api/async_context.html#class-asynclocalstorage) to find the current request after an `await`. This environment doesn't provide it, so the event can only be read synchronously, before the first `await` of the function that SvelteKit called:\n\n```js\nimport { getRequestEvent } from '$app/server';\n\nexport async function load() {\n\t// read the event first...\n\tconst event = getRequestEvent();\n\n\t// ...and then await\n\tconst user = await get_user(event.cookies.get('session'));\n\n\treturn { user };\n}\n```\n\nOtherwise, the function was called outside of `handle`, server `load` functions, actions or endpoints, where there's no current request."
+	},
+	"request_store_after_await": {
+		"variants": [
+			{
+				"text": "Could not get the request store. In environments without `AsyncLocalStorage`, the request store (used by e.g. remote functions) must be accessed synchronously, not after an `await`. If it was accessed synchronously then this is an internal error.",
+				"variables": []
+			}
+		],
+		"details": "Some SvelteKit APIs, such as [remote functions](https://svelte.dev/docs/kit/remote-functions), need to know which request they are part of. They use [`AsyncLocalStorage`](https://nodejs.org/api/async_context.html#class-asynclocalstorage) to find it after an `await`, but this environment doesn't provide it. Call these APIs synchronously, before the first `await` of the function that SvelteKit called. If that's already the case, please [open an issue](https://github.com/sveltejs/kit/issues)."
+	},
+	"client_address_unsupported": {
+		"variants": [
+			{
+				"text": "`%adapter%` does not specify `getClientAddress`. Please raise an issue",
+				"variables": [
+					"adapter"
+				]
+			}
+		],
+		"details": "[`event.getClientAddress()`](https://svelte.dev/docs/kit/@sveltejs-kit#RequestEvent) returns the address provided by your [adapter](https://svelte.dev/docs/kit/adapters), and this adapter doesn't provide one. Raise an issue with the adapter's maintainers. In the meantime, if your app is behind a proxy that forwards the client's address, you can read it from a header such as `x-forwarded-for` with `event.request.headers.get(...)`."
+	},
+	"set_headers_cookie": {
+		"variants": [
+			{
+				"text": "Use `event.cookies.set(name, value, options)` instead of `event.setHeaders` to set cookies",
+				"variables": []
+			}
+		],
+		"details": "`setHeaders` can't set `set-cookie`, because a response can contain several `set-cookie` headers and SvelteKit needs to know about cookies to apply them correctly — for example, to [forward them to `fetch` requests](https://svelte.dev/docs/kit/load#Cookies) and to read them back with `cookies.get` during the same request. Use [`cookies.set`](https://svelte.dev/docs/kit/@sveltejs-kit#Cookies) instead."
+	},
+	"header_already_set": {
+		"variants": [
+			{
+				"text": "`%name%` header is already set",
+				"variables": [
+					"name"
+				]
+			}
+		],
+		"details": "[`setHeaders`](https://svelte.dev/docs/kit/load#Headers) can only set each header once per request (except `server-timing`, whose values are combined), because otherwise it would be unclear which value should win. This often happens when both a layout and a page `load` function set the same header, such as `cache-control`. Set the header in one place only. To change a header of the finished response, use `response.headers.set(...)` in the [`handle`](https://svelte.dev/docs/kit/hooks#Server-hooks-handle) hook instead."
+	},
+	"cookies_set_after_response": {
+		"variants": [
+			{
+				"text": "Cannot use `cookies.set(...)` after the response has been generated",
+				"variables": []
+			}
+		],
+		"details": "Cookies are sent in the headers of the response, so they can't be changed once the response has been created. This usually happens when `cookies.set` is called in code that runs later, such as a promise that is [streamed](https://svelte.dev/docs/kit/load#Streaming-with-promises) from a `load` function, or a callback that runs after `handle` has returned. Set cookies before your `load` function, action or handler returns."
+	},
+	"set_headers_after_response": {
+		"variants": [
+			{
+				"text": "Cannot use `setHeaders(...)` after the response has been generated",
+				"variables": []
+			}
+		],
+		"details": "Headers are sent before the body of a response, so they can't be changed once the response has been created. This usually happens when `setHeaders` is called in code that runs later, such as a promise that is [streamed](https://svelte.dev/docs/kit/load#Streaming-with-promises) from a `load` function, or a callback that runs after `handle` has returned. Set headers before your `load` function or action returns."
+	},
+	"cookies_serialize_before_route": {
+		"variants": [
+			{
+				"text": "Cannot serialize cookies until after the route is determined",
+				"variables": []
+			}
+		],
+		"details": "[`cookies.serialize`](https://svelte.dev/docs/kit/@sveltejs-kit#Cookies) resolves the cookie's `path` against the current route, whose trailing slash depends on the [`trailingSlash`](https://svelte.dev/docs/kit/page-options#trailingSlash) option. The route isn't known until SvelteKit has matched the request, so calling `serialize` in `handle` before `resolve` fails for cookies on the current hostname. Call it after `resolve`, or in `load` functions, actions and endpoints. If you only need to set the cookie, use `cookies.set` instead, which waits for the route to be determined."
+	},
+	"cookie_too_large": {
+		"variants": [
+			{
+				"text": "Cookie `%name%` is too large, and will be discarded by the browser",
+				"variables": [
+					"name"
+				]
+			}
+		],
+		"details": "Browsers ignore cookies whose name and value are larger than 4096 bytes, so this cookie would silently never be sent back. Store less data in the cookie — for example, a session ID that refers to data stored on the server. This is only checked during development."
+	},
+	"fetch_response_decoded": {
+		"variants": [
+			{
+				"text": "Cannot return `fetch(...)` directly from a handler if the response has a `Content-Encoding: %encoding%` header. The body has already been decoded",
+				"variables": [
+					"encoding"
+				]
+			}
+		],
+		"details": "When you `fetch` a compressed response, the body you read from it has already been decompressed, but its headers still say that it's compressed. Returning that response as-is would make the browser try to decompress it again. Create a new response without the `content-encoding` (and `content-length`) headers instead:\n\n```js\n/// file: src/routes/proxy/+server.js\nexport async function GET({ fetch }) {\n\tconst response = await fetch('https://example.com/data');\n\n\tconst headers = new Headers(response.headers);\n\theaders.delete('content-encoding');\n\theaders.delete('content-length');\n\n\treturn new Response(response.body, { status: response.status, headers });\n}\n```"
+	},
+	"endpoint_invalid_response": {
+		"variants": [
+			{
+				"text": "Invalid response from route `%path%`: handler should return a `Response` object",
+				"variables": [
+					"path"
+				]
+			}
+		],
+		"details": "Request handlers in [`+server`](https://svelte.dev/docs/kit/routing#server) files must return a [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response). Check that every code path returns one — a missing `return` is a common cause. You can use the [`json`](https://svelte.dev/docs/kit/@sveltejs-kit#json) and [`text`](https://svelte.dev/docs/kit/@sveltejs-kit#text) helpers from `@sveltejs/kit` to create responses."
+	},
+	"server_api_unavailable": {
+		"variants": [
+			{
+				"text": "Cannot call `%name%` on the server",
+				"variables": [
+					"name"
+				]
+			}
+		],
+		"details": "This function only works in the browser, because it depends on the client-side router or on browser state. Don't call it while rendering on the server — for example at the top level of a component's `<script>` block, or in a universal `load` function that also runs on the server. Call it from an event handler or an [`$effect`](https://svelte.dev/docs/svelte/$effect) instead, or check [`browser`](https://svelte.dev/docs/kit/$app-env#browser) from `$app/env` first."
+	},
+	"state_read_outside_render": {
+		"variants": [
+			{
+				"text": "Can only read `%name%` on the server during rendering (not in e.g. `load` functions), as it is bound to the current request via component context. This prevents state from leaking between users.",
+				"variables": [
+					"name"
+				]
+			}
+		],
+		"details": "On the server, [`$app/state`](https://svelte.dev/docs/kit/$app-state) reads the state of the request that is currently being rendered from component context, so that one user's data can never [leak to another](https://svelte.dev/docs/kit/state-management#Avoid-shared-state-on-the-server). That context only exists while components render. In `load` functions, hooks and endpoints, use the values passed to the function instead — such as `url`, `params` and the result of `parent()` — or [`getRequestEvent`](https://svelte.dev/docs/kit/$app-server#getRequestEvent)."
+	},
+	"read_implementation_missing": {
+		"variants": [
+			{
+				"text": "No `read` implementation was provided. Please ensure that your adapter is up to date and supports this feature",
+				"variables": []
+			}
+		],
+		"details": "[`read`](https://svelte.dev/docs/kit/$app-server#read) relies on the adapter to read files at runtime, and the adapter you're using didn't provide a way to do that. Update the adapter to its latest version. If it still doesn't support `read`, [prerender](https://svelte.dev/docs/kit/page-options#prerender) the routes that use it, or import the file's contents directly (for example with Vite's `?raw` suffix)."
+	},
+	"read_asset_missing": {
+		"variants": [
+			{
+				"text": "Asset does not exist: `%file%`",
+				"variables": [
+					"file"
+				]
+			}
+		],
+		"details": "[`read`](https://svelte.dev/docs/kit/$app-server#read) can only read files that your server code imports, because those are the files SvelteKit copies into the server output. Pass it the URL you get from importing the file, rather than a path you've built yourself:\n\n```js\nimport { read } from '$app/server';\nimport file from './data.txt';\n\nconst text = await read(file).text();\n```"
+	},
+	"url_search_unavailable_prerender": {
+		"variants": [
+			{
+				"text": "Cannot access `url.%property%` on a page with prerendering enabled",
+				"variables": [
+					"property"
+				]
+			}
+		],
+		"details": "A [prerendered](https://svelte.dev/docs/kit/page-options#prerender) page is generated once at build time and then served as a static file for every request, whatever its query string, so its `load` functions can't depend on `url.search` or `url.searchParams`. Read the query string in the browser instead — for example with [`page.url.searchParams`](https://svelte.dev/docs/kit/$app-state#page) in a component — or disable prerendering for the page."
+	},
+	"define_env_vars_moved": {
+		"variants": [
+			{
+				"text": "`defineEnvVars` has moved — import it from `@sveltejs/kit/env` instead",
+				"variables": []
+			}
+		],
+		"details": "In SvelteKit 3, [`defineEnvVars`](https://svelte.dev/docs/kit/@sveltejs-kit-env#defineEnvVars) lives in `@sveltejs/kit/env` rather than `@sveltejs/kit/hooks`. Update the import in `src/env`:\n\n```js\n/// file: src/env.js\nimport { defineEnvVars } from '@sveltejs/kit/env';\n\nexport const variables = defineEnvVars({\n\tAPI_KEY: {}\n});\n```"
+	},
+	"env_invalid": {
+		"variants": [
+			{
+				"text": "Invalid environment variables:\n%issues%",
+				"variables": [
+					"issues"
+				]
+			}
+		],
+		"details": "The [environment variables](https://svelte.dev/docs/kit/environment-variables) declared in `src/env` are [validated](https://svelte.dev/docs/kit/environment-variables#Validation) when your app builds and when it starts, and some values didn't pass. Each variable is listed with its issues. Issues reported by your own validators are shown as they are. SvelteKit reports these itself:\n\n- **Value is missing** — a variable without a `schema` is required. Set it in the environment (or a `.env` file), or add a validator that accepts `undefined`, such as Valibot's `v.optional(v.string())` or a function that returns a default.\n- **The validator does not implement Standard Schema** — `schema` must be a function or a [Standard Schema](https://standardschema.dev), such as one created with Valibot, Zod or ArkType.\n- **The validator is async** — environment variables are validated synchronously, so a function validator can't return a promise, and a schema can't use asynchronous validation.\n\nTo require a variable when the app starts but not while building it, use [`building`](https://svelte.dev/docs/kit/$app-env#building) from `$app/env` to choose the validator."
+	},
+	"tracing_api_missing": {
+		"variants": [
+			{
+				"text": "Tracing is enabled (see the SvelteKit plugin `tracing.server` option in your `vite.config.js`), but `@opentelemetry/api` is not available. This error will likely resolve itself when you set up your tracing instrumentation in `instrumentation.server.js`. For more information, see https://svelte.dev/docs/kit/observability#opentelemetry-api",
+				"variables": []
+			}
+		],
+		"details": "SvelteKit creates its [tracing spans](https://svelte.dev/docs/kit/observability) with `@opentelemetry/api`, which is a dependency of the instrumentation packages that you use to export them. Set up your instrumentation in `src/instrumentation.server.js`, or install `@opentelemetry/api` directly. If you don't want tracing, disable the `tracing.server` option."
+	},
+	"handle_error_async_without_async_svelte": {
+		"variants": [
+			{
+				"text": "To use an async `handleError` hook to handle errors that occur during rendering, you must enable `compilerOptions.experimental.async` in the SvelteKit plugin of your Vite config. The returned error has been replaced with a generic object",
+				"variables": []
+			}
+		],
+		"details": "Components render synchronously unless Svelte's [asynchronous mode](https://svelte.dev/docs/svelte/await-expressions) is enabled, so rendering can't wait for a [`handleError`](https://svelte.dev/docs/kit/hooks#Shared-hooks-handleError) hook that returns a promise. The error page is rendered with `{ message: 'Internal Error' }` instead of the hook's result. Enable asynchronous mode in `vite.config.js`:\n\n```js\n/// file: vite.config.js\nimport { sveltekit } from '@sveltejs/kit/vite';\nimport { defineConfig } from 'vite';\n\nexport default defineConfig({\n\tplugins: [\n\t\tsveltekit({\n\t\t\tcompilerOptions: {\n\t\t\t\texperimental: { async: true }\n\t\t\t}\n\t\t})\n\t]\n});\n```\n\nOtherwise, make the hook synchronous, for example by not awaiting the service that it reports errors to."
+	},
+	"load_tracking_after_return": {
+		"variants": [
+			{
+				"text": "`%id%`: %usage% in a promise handler after `load(...)` has returned will not cause the function to re-run when %change%",
+				"variables": [
+					"id",
+					"usage",
+					"change"
+				]
+			}
+		],
+		"details": "SvelteKit [tracks](https://svelte.dev/docs/kit/load#Rerunning-load-functions) which parts of the `load` event (such as `url`, `params`, `parent` and `depends`) a server `load` function uses while it runs, so that it only reruns when they change. Uses in a callback that runs after `load` has returned — for example in the `.then` of a [streamed](https://svelte.dev/docs/kit/load#Streaming-with-promises) promise — can't be tracked any more. Read the value before `load` returns and use that copy in the callback:\n\n```js\n/// file: src/routes/blog/[slug]/+page.server.js\nexport function load({ params }) {\n\tconst { slug } = params; // tracked\n\n\treturn {\n\t\tcomments: get_post(slug).then((post) => get_comments(post.id, slug))\n\t};\n}\n```\n\nThis is only checked during development."
+	},
+	"form_action_error_without_ssr": {
+		"variants": [
+			{
+				"text": "The form action returned an error, but `+error.svelte` wasn't rendered because SSR is off. To get the error page with CSR, enhance your form with `use:enhance`. See https://svelte.dev/docs/kit/form-actions#progressive-enhancement-use-enhance",
+				"variables": []
+			}
+		],
+		"details": "Without JavaScript, a form submission loads a new page, which is where the [error page](https://svelte.dev/docs/kit/routing#error) for a failed action would appear. With [`ssr = false`](https://svelte.dev/docs/kit/page-options#ssr) that page is only rendered in the browser, which can't see the result of a submission it didn't make. Enhance the form with [`use:enhance`](https://svelte.dev/docs/kit/form-actions#Progressive-enhancement-use:enhance), so that the browser submits it and receives the result. This is only checked during development."
+	},
+	"form_action_data_without_ssr": {
+		"variants": [
+			{
+				"text": "The form action returned a value, but it isn't available in `page.form`, because SSR is off. To handle the returned value in CSR, enhance your form with `use:enhance`. See https://svelte.dev/docs/kit/form-actions#progressive-enhancement-use-enhance",
+				"variables": []
+			}
+		],
+		"details": "Without JavaScript, a form submission loads a new page, which would get the action's data as [`form`](https://svelte.dev/docs/kit/form-actions#Anatomy-of-an-action). With [`ssr = false`](https://svelte.dev/docs/kit/page-options#ssr) that page is only rendered in the browser, which can't see the result of a submission it didn't make, so the data is lost. Enhance the form with [`use:enhance`](https://svelte.dev/docs/kit/form-actions#Progressive-enhancement-use:enhance), so that the browser submits it and receives the result. This is only checked during development."
+	},
+	"ssr_fetch_eager": {
+		"variants": [
+			{
+				"text": "Avoid calling `fetch` eagerly during server-side rendering — put your `fetch` calls inside `onMount` or a `load` function instead",
+				"variables": []
+			}
+		],
+		"details": "A component called `fetch` while it was rendered on the server. That request runs again when the component hydrates in the browser, and the server-rendered HTML can't wait for it. Fetch the data in a [`load`](https://svelte.dev/docs/kit/load) function, which runs once and passes the result to the page (and whose responses are reused in the browser), or call `fetch` in `onMount` so that it only runs in the browser. This is only checked during development."
+	},
+	"transform_page_chunk_comments": {
+		"variants": [
+			{
+				"text": "Removing comments in `transformPageChunk` can break Svelte's hydration",
+				"variables": []
+			}
+		],
+		"details": "Svelte adds HTML comments to server-rendered markup that it uses to hydrate the page in the browser, and the [`transformPageChunk`](https://svelte.dev/docs/kit/hooks#Server-hooks-handle) option of `resolve` returned HTML with fewer comments than it received. If you're minifying the HTML, configure the minifier to keep comments (server-side includes such as `<!--#include ... -->` are ignored by this check). This is only checked during development."
+	},
+	"streaming_without_csr": {
+		"variants": [
+			{
+				"text": "Returning promises from server `load` functions will only work if `csr === true`",
+				"variables": []
+			}
+		],
+		"details": "[Streamed](https://svelte.dev/docs/kit/load#Streaming-with-promises) promises are sent to the browser after the page and resolved by SvelteKit's client-side code. With [`csr = false`](https://svelte.dev/docs/kit/page-options#csr) there's no client-side code, so they never resolve. Await the promises in `load` instead, or enable `csr`. This is only checked during development."
+	},
+	"cookie_path_mismatch": {
+		"variants": [
+			{
+				"text": "`%name%` cookie does not exist for `%pathname%`, but was previously set at %paths%. Did you mean to set its `path` to `'/'` instead?",
+				"variables": [
+					"name",
+					"pathname",
+					"paths"
+				]
+			}
+		],
+		"details": "A cookie is only sent back for URLs inside its `path`. This cookie was set earlier with [`cookies.set`](https://svelte.dev/docs/kit/@sveltejs-kit#Cookies) and a more specific `path` — for example a relative path, or `path: ''`, which is resolved against the current route — so it isn't available here. To make a cookie available on every page, use the default `path: '/'`:\n\n```js\ncookies.set('session', id, { path: '/' });\n```\n\nThis is only checked during development."
+	},
+	"cache_control_empty_directive": {
+		"variants": [
+			{
+				"text": "`cache-control` header contains empty directives. (While parsing `%value%`.)",
+				"variables": [
+					"value"
+				]
+			}
+		],
+		"details": "The `cache-control` header passed to [`setHeaders`](https://svelte.dev/docs/kit/load#Headers) contains two commas in a row (or a trailing comma), which some browsers and CDNs handle inconsistently. Remove the extra comma. The header is still set. This is only checked during development."
+	},
+	"cache_control_invalid_directive": {
+		"variants": [
+			{
+				"text": "Invalid `cache-control` directive `%directive%`. Did you mean one of: %directives%? (While parsing `%value%`.)",
+				"variables": [
+					"directive",
+					"directives",
+					"value"
+				]
+			}
+		],
+		"details": "The `cache-control` header passed to [`setHeaders`](https://svelte.dev/docs/kit/load#Headers) contains a directive that isn't part of the [specification](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cache-Control), so browsers and CDNs will ignore it — often it's a typo, such as `maxage` instead of `max-age`. The header is still set. This is only checked during development."
+	},
+	"content_type_invalid": {
+		"variants": [
+			{
+				"text": "Invalid `content-type` value `%type%`. (While parsing `%value%`.)",
+				"variables": [
+					"type",
+					"value"
+				]
+			}
+		],
+		"details": "The `content-type` header passed to [`setHeaders`](https://svelte.dev/docs/kit/load#Headers) isn't a valid [media type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/MIME_types), which has the form `type/subtype` (such as `application/json`), optionally followed by parameters like `; charset=utf-8`. The header is still set. This is only checked during development."
+	},
+	"invalid_export": {
+		"variants": [
+			{
+				"text": "Invalid export `%key%` (valid exports are %exports%, or anything with a `'_'` prefix)",
+				"variables": [
+					"key",
+					"exports"
+				]
+			},
+			{
+				"text": "Invalid export `%key%` in `%file%` (valid exports are %exports%, or anything with a `'_'` prefix)",
+				"variables": [
+					"key",
+					"exports",
+					"file"
+				]
+			}
+		],
+		"details": "SvelteKit reads specific exports from [route files](https://svelte.dev/docs/kit/routing) — such as `load`, [page options](https://svelte.dev/docs/kit/page-options) like `prerender` and `ssr`, `actions` in `+page.server.js` or HTTP method handlers in `+server.js` — and rejects anything else, so that a typo like `export const prerendr = true` doesn't silently do nothing. Check the spelling of the export. If it's a helper you only want to use inside the module, prefix its name with `_` or move it into a separate file."
+	},
+	"invalid_export_location": {
+		"variants": [
+			{
+				"text": "Invalid export `%key%` (`%key%` is a valid export in %locations%)",
+				"variables": [
+					"key",
+					"locations"
+				]
+			},
+			{
+				"text": "Invalid export `%key%` in `%file%` (`%key%` is a valid export in %locations%)",
+				"variables": [
+					"key",
+					"locations",
+					"file"
+				]
+			}
+		],
+		"details": "Each kind of [route file](https://svelte.dev/docs/kit/routing) supports a different set of exports. For example, `actions` can only be exported from `+page.server.js`, and HTTP method handlers such as `GET` only from `+server.js`. Move the export to one of the listed files."
+	},
+	"router_hash_page_options": {
+		"variants": [
+			{
+				"text": "Page options are ignored when `router.type === 'hash'` (`%source%` has %options%)",
+				"variables": [
+					"source",
+					"options"
+				]
+			}
+		],
+		"details": "With the [hash router](https://svelte.dev/docs/kit/configuration#router), your app is a single page that's rendered entirely in the browser, so [page options](https://svelte.dev/docs/kit/page-options) such as `prerender`, `ssr` and `trailingSlash` have no effect. Remove them from the file, leaving only `load`."
+	},
+	"form_field_unbound": {
+		"variants": [
+			{
+				"text": "Form contained a field that wasn't created with `form.fields.as(...)`: `%name%`",
+				"variables": [
+					"name"
+				]
+			}
+		],
+		"details": "Spread the props from `myForm.fields.field.as(...)` onto every named control in a remote form. These props encode the field's type and the form it belongs to. Don't replace the generated `name` with a handwritten name or reuse props from a different remote form."
+	},
+	"form_field_duplicate": {
+		"variants": [
+			{
+				"text": "Form cannot contain duplicated keys — `%name%` has %count% values",
+				"variables": [
+					"name",
+					"count"
+				]
+			}
+		],
+		"details": "A single-value field cannot receive several submitted values. Give independent controls different field names. For an array of choices or multiple files, use the corresponding array input props, such as `form.fields.choices.as('checkbox', 'option')` or `form.fields.files.as('file multiple')`, so the generated name has an array suffix."
+	},
+	"form_field_invalid_name": {
+		"variants": [
+			{
+				"text": "Invalid field name `%name%`: field names are written in JS object notation, so keys that would need quoting are not supported. See https://svelte.dev/docs/kit/remote-functions#form-Fields",
+				"variables": [
+					"name"
+				]
+			}
+		],
+		"details": "Remote form field paths use identifiers separated by dots and numeric array indexes in brackets, such as `user.name` or `items[0].title`. Use a schema whose field names can be expressed with this notation. Keys containing spaces, hyphens or other characters requiring quotes are not supported."
+	},
+	"form_field_forbidden_key": {
+		"variants": [
+			{
+				"text": "Invalid key `%key%`: This key is not allowed to prevent prototype pollution.",
+				"variables": [
+					"key"
+				]
+			}
+		],
+		"details": "Remote form field paths cannot contain `__proto__`, `constructor` or `prototype`. These names could modify an object's prototype rather than its data. Rename the field in both the form and its schema. Never use untrusted input to construct field paths without validating it."
+	},
+	"form_field_array_conflict": {
+		"variants": [
+			{
+				"text": "Invalid array key `%key%`",
+				"variables": [
+					"key"
+				]
+			}
+		],
+		"details": "The same form field path is being used as both an array and an object. Check the names of nested controls and the values passed to `form.fields.field.set(...)`. Numeric indexes must address arrays, while named properties must address objects. Don't mix paths such as `items[0]` and `items.title`."
+	},
+	"invalid_error_status": {
+		"variants": [
+			{
+				"text": "HTTP error status codes must be between 400 and 599 — %status% is invalid",
+				"variables": [
+					"status"
+				]
+			}
+		],
+		"details": "[`error`](https://svelte.dev/docs/kit/@sveltejs-kit#error) creates an [expected error](https://svelte.dev/docs/kit/errors#App-errors), which SvelteKit renders with its HTTP status code, so the status must be a client error (4xx) or server error (5xx) code such as `404` or `500`. Check the order of the arguments — the status comes first, then the message. To send the user somewhere else, use [`redirect`](https://svelte.dev/docs/kit/@sveltejs-kit#redirect) instead."
+	},
+	"invalid_redirect_status": {
+		"variants": [
+			{
+				"text": "Redirect status codes must be between 300 and 308 — %status% is invalid",
+				"variables": [
+					"status"
+				]
+			}
+		],
+		"details": "[`redirect`](https://svelte.dev/docs/kit/@sveltejs-kit#redirect) takes the status code as its first argument and the location as its second, for example `redirect(303, '/login')`. Use `303` after a form submission (the browser follows the redirect with a `GET` request), `307` for a temporary redirect that keeps the request method, or `308` for a permanent one. See [Redirects](https://svelte.dev/docs/kit/load#Redirects) for more."
+	},
+	"redirect_external_not_allowed": {
+		"variants": [
+			{
+				"text": "Cannot redirect to external URL `%location%`. To redirect to an external URL, pass `{ external: true }` or an allowlist of permitted origins as the third argument to `redirect`",
+				"variables": [
+					"location"
+				]
+			}
+		],
+		"details": "To protect against open redirects, [`redirect`](https://svelte.dev/docs/kit/@sveltejs-kit#redirect) only accepts locations on the current origin by default. Relative locations such as `'/login'` or `'../other'` are always allowed, but some strings that look relative — such as `'//example.com'` or `'\\\\example.com'` — are treated as absolute URLs by browsers, and so count as external too.\n\nIf you mean to leave your app, opt in explicitly, either with `{ external: true }` (which allows any external URL except `javascript:` and `data:` URLs) or with a list of the origins you trust:\n\n```js\nimport { redirect } from '@sveltejs/kit';\n\nredirect(307, 'https://example.com/docs', { external: ['https://example.com'] });\n```\n\nIf the location comes from user input, such as a `?redirectTo=` query parameter, prefer an allowlist over `true`."
+	},
+	"redirect_external_javascript": {
+		"variants": [
+			{
+				"text": "Cannot redirect to `%location%` with `{ external: true }`. The `javascript:` and `data:` protocols must be explicitly listed in the `external` allowlist",
+				"variables": [
+					"location"
+				]
+			}
+		],
+		"details": "Redirecting to a `javascript:` or `data:` URL can run arbitrary code in the context of your app, so `{ external: true }` doesn't allow these protocols. Such redirects are rarely intended, so check where the location comes from. If you really need one, list the protocol explicitly, for example `{ external: ['javascript:'] }`."
+	},
+	"redirect_external_not_in_allowlist": {
+		"variants": [
+			{
+				"text": "Cannot redirect to `%location%`: URL origin is not included in the `external` allowlist",
+				"variables": [
+					"location"
+				]
+			}
+		],
+		"details": "The redirect location's origin — its protocol, host and port — must exactly match one of the entries passed as `external` to [`redirect`](https://svelte.dev/docs/kit/@sveltejs-kit#redirect). Paths are ignored, so list origins such as `'https://example.com'`. Note that `http:` and `https:`, or `example.com` and `www.example.com`, are different origins. Add the origin to the allowlist if the redirect is intended."
+	},
+	"redirect_external_option_invalid": {
+		"variants": [
+			{
+				"text": "`redirect` `options.external` must be `true` or an array of allowed origins",
+				"variables": []
+			}
+		],
+		"details": "The third argument of [`redirect`](https://svelte.dev/docs/kit/@sveltejs-kit#redirect) controls whether it may redirect to another origin. Pass `{ external: true }` to allow any external URL (except `javascript:` and `data:` URLs), or `{ external: ['https://example.com'] }` to allow specific origins. Omit the option if the location is on your own origin."
+	},
+	"app_stores_removed": {
+		"variants": [
+			{
+				"text": "`$app/stores` has been removed in favour of `$app/state`",
+				"variables": []
+			}
+		],
+		"details": "The store-based `$app/stores` module was removed in SvelteKit 3. Import `page`, `navigating` and `updated` from [`$app/state`](https://svelte.dev/docs/kit/$app-state) instead. Read `page` and `navigating` properties without the `$` prefix — for example `page.url.pathname` rather than `$page.url.pathname` — and replace `$updated` with `updated.current`. See the [migration guide](https://svelte.dev/docs/kit/migrating-to-sveltekit-3) for details."
+	},
+	"service_worker_module_outside_worker": {
+		"variants": [
+			{
+				"text": "The `$app/service-worker` module can only be imported into a service worker",
+				"variables": []
+			}
+		],
+		"details": "[`$app/service-worker`](https://svelte.dev/docs/kit/$app-service-worker) exports `self` typed as the service worker's global scope, which only exists inside a [service worker](https://svelte.dev/docs/kit/service-workers). Only import it from `src/service-worker` and the modules it imports — not from components, `load` functions or other code that runs in the page or on the server."
+	},
+	"match_in_service_worker": {
+		"variants": [
+			{
+				"text": "Cannot use `match(...)` inside a service worker, as it depends on the SvelteKit client instance",
+				"variables": []
+			}
+		],
+		"details": "[`match`](https://svelte.dev/docs/kit/$app-paths#match) resolves a URL to a route using the router of the running app, which doesn't exist inside a [service worker](https://svelte.dev/docs/kit/service-workers). The other `$app/paths` helpers, such as `asset` and `resolve`, do work there. Do the matching in the page instead, or compare URLs against the routes you care about yourself."
+	},
+	"resolve_params_missing": {
+		"variants": [
+			{
+				"text": "Missing params for dynamic route ID `%id%`",
+				"variables": [
+					"id"
+				]
+			}
+		],
+		"details": "When you pass a route ID containing parameters to [`resolve`](https://svelte.dev/docs/kit/$app-paths#resolve), the second argument must provide their values, for example `resolve('/blog/[slug]', { slug: 'hello-world' })`. To resolve a pathname rather than a route ID, omit the leading slash: `resolve('blog/hello-world')`."
+	},
+	"url_hash_unavailable": {
+		"variants": [
+			{
+				"text": "Cannot access `event.url.hash`. Consider using `page.url.hash` inside a component instead",
+				"variables": []
+			}
+		],
+		"details": "The hash (the part of the URL after `#`) is never sent to the server, so it isn't available to `load` functions or anything else that can run on the server. Read [`page.url.hash`](https://svelte.dev/docs/kit/$app-state#page) in a component instead, where it's available in the browser and updates when the hash changes."
+	},
+	"remote_argument_unsupported": {
+		"variants": [
+			{
+				"text": "%type% are not valid remote function arguments",
+				"variables": [
+					"type"
+				]
+			}
+		],
+		"details": "Remote function arguments must be serializable. Pass a regular expression's source and flags separately rather than a `RegExp`, and await promises before passing their resolved values. For custom types, use a [transport hook](https://svelte.dev/docs/kit/hooks#Universal-hooks-transport) to encode and decode them. Commands support `File` arguments; the promises SvelteKit uses internally to read those files are allowed."
+	},
+	"form_input_missing_value": {
+		"variants": [
+			{
+				"text": "%type% inputs must have a value",
+				"variables": [
+					"type"
+				]
+			}
+		],
+		"details": "Pass a value as the second argument to `form.fields.field.as(...)` for hidden and submit inputs, radio buttons and checkbox arrays. Radio buttons and checkbox arrays need an option value to distinguish their choices. A single boolean checkbox instead takes its checked state. This check only runs in development."
+	},
+	"load_invalid_response": {
+		"variants": [
+			{
+				"text": "a `load` function %location% returned %type%, but must return a plain object at the top level (i.e. `return {...}`)",
+				"variables": [
+					"location",
+					"type"
+				]
+			}
+		],
+		"details": "A [`load`](https://svelte.dev/docs/kit/load) function provides the properties of the page's `data` object. Return a plain object such as `{ posts }`, rather than an array, a `Response`, a class instance or a primitive at the top level. `null` and `undefined` are allowed when there is no data to return. To return a `Response`, use an endpoint instead."
+	},
+	"param_matcher_async": {
+		"variants": [
+			{
+				"text": "Async param matchers are not supported",
+				"variables": []
+			}
+		],
+		"details": "[Param matchers](https://svelte.dev/docs/kit/advanced-routing#Matching) run synchronously on every navigation, both on the server and in the browser, to decide which route matches a URL. A matcher must return its result directly: a function can't be `async` or return a promise, and a [Standard Schema](https://standardschema.dev) must not use asynchronous validation (for example Valibot's `*Async` schemas or Zod's `parseAsync` refinements). Do asynchronous work in a `load` function instead."
+	},
+	"param_matcher_result_invalid": {
+		"variants": [
+			{
+				"text": "Param matcher must return a string, number, boolean, or bigint",
+				"variables": []
+			}
+		],
+		"details": "A [param matcher](https://svelte.dev/docs/kit/advanced-routing#Matching) returns the value that ends up in `params`. Because parameters come from — and can be turned back into — a URL, the value must be a string, number, boolean or bigint. Return `undefined` from a matcher function (or fail validation in a schema) when the parameter doesn't match, and parse more complex values in a `load` function."
+	},
+	"param_definition_invalid": {
+		"variants": [
+			{
+				"text": "Invalid param definition",
+				"variables": []
+			}
+		],
+		"details": "Each property of the object passed to `defineParams` must be either a function that receives the parameter as a string and returns the parsed value (or `undefined` if it doesn't match), or a [Standard Schema](https://standardschema.dev) such as one created with Valibot, Zod or ArkType:\n\n```js\n/// file: src/params.js\nimport { defineParams } from '@sveltejs/kit/params';\nimport * as v from 'valibot';\n\nexport const params = defineParams({\n\tlocale: (param) => (param === 'en' || param === 'de' ? param : undefined),\n\tinteger: v.pipe(v.string(), v.toNumber(), v.integer())\n});\n```"
+	},
+	"route_param_missing": {
+		"variants": [
+			{
+				"text": "Missing parameter `%name%` in route `%id%`",
+				"variables": [
+					"name",
+					"id"
+				]
+			}
+		],
+		"details": "Resolving a route ID — for example with [`resolve`](https://svelte.dev/docs/kit/$app-paths#resolve) or the `entries` of a prerendered route — requires a value for every required parameter. Add a value for the parameter, or make it [optional](https://svelte.dev/docs/kit/advanced-routing#Optional-parameters) by renaming `[%name%]` to `[[%name%]]`. An empty string counts as missing, except for [rest parameters](https://svelte.dev/docs/kit/advanced-routing#Rest-parameters)."
+	},
+	"route_param_slash": {
+		"variants": [
+			{
+				"text": "Parameter `%name%` in route `%id%` cannot start or end with a slash — this would cause an invalid route like `foo/bar`",
+				"variables": [
+					"name",
+					"id"
+				]
+			}
+		],
+		"details": "When resolving a route ID, each parameter value is inserted between the slashes of the route, so a value that starts or ends with `/` would produce an empty segment such as `foo//bar`. Trim the leading or trailing slash from the value. [Rest parameters](https://svelte.dev/docs/kit/advanced-routing#Rest-parameters) can contain slashes in between segments, such as `a/b/c`."
+	},
+	"route_param_value_invalid": {
+		"variants": [
+			{
+				"text": "Parameter `%name%` in route `%id%` must be a string, number, boolean, or bigint",
+				"variables": [
+					"name",
+					"id"
+				]
+			}
+		],
+		"details": "When resolving a route ID, parameter values are converted to strings and inserted into the pathname. Only strings, numbers, booleans and bigints can be converted unambiguously. Convert other values — such as dates or objects — to a string first, and use `undefined` to omit an [optional parameter](https://svelte.dev/docs/kit/advanced-routing#Optional-parameters)."
+	},
+	"error_body_deprecated": {
+		"variants": [
+			{
+				"text": "Passing an `App.Error` body as the second argument is deprecated — pass the `message` as the second argument, and any additional properties as the third",
+				"variables": []
+			}
+		],
+		"details": "[`error`](https://svelte.dev/docs/kit/@sveltejs-kit#error) now takes the message and any additional [`App.Error`](https://svelte.dev/docs/kit/types#Error) properties as separate arguments:\n\n```js\nimport { error } from '@sveltejs/kit';\n\n// instead of error(404, { message: 'Not found', code: 'NOT_FOUND' })\nerror(404, 'Not found', { code: 'NOT_FOUND' });\n```"
+	},
+	"asset_leading_slash": {
+		"variants": [
+			{
+				"text": "`asset('%path%')` should now be `asset('%fixed%')`",
+				"variables": [
+					"path",
+					"fixed"
+				]
+			}
+		],
+		"details": "Paths passed to [`asset`](https://svelte.dev/docs/kit/$app-paths#asset) are relative to your `static` directory and no longer start with `/`. The leading slash is still removed for you for now, but this will stop working in SvelteKit 4, so remove it."
+	},
+	"app_environment_deprecated": {
+		"variants": [
+			{
+				"text": "`$app/environment` is deprecated, use `$app/env` instead",
+				"variables": []
+			}
+		],
+		"details": "The `$app/environment` module has been renamed to [`$app/env`](https://svelte.dev/docs/kit/$app-env), which exports the same values and can also be imported in service workers. Replace `'$app/environment'` with `'$app/env'` in your imports. `$app/environment` will be removed in SvelteKit 4."
+	},
+	"env_module_deprecated": {
+		"variants": [
+			{
+				"text": "`%module%` is deprecated, use `%replacement%` instead",
+				"variables": [
+					"module",
+					"replacement"
+				]
+			}
+		],
+		"details": "The `$env/*` modules are replaced by [explicit environment variables](https://svelte.dev/docs/kit/environment-variables). Declare each variable in `src/env` with [`defineEnvVars`](https://svelte.dev/docs/kit/@sveltejs-kit-env#defineEnvVars), then import it from [`$app/env/private`](https://svelte.dev/docs/kit/$app-env-private) or [`$app/env/public`](https://svelte.dev/docs/kit/$app-env-public). Declared variables can be validated, documented, and marked as [static](https://svelte.dev/docs/kit/environment-variables#Static-variables) to be inlined at build time. The `$env/*` modules will be removed in SvelteKit 4."
+	},
+	"handle_error_status_deprecated": {
+		"variants": [
+			{
+				"text": "The `status` property of `handleError` is deprecated. Use `error.status` for expected and framework errors, or `500` for unexpected errors.",
+				"variables": []
+			}
+		],
+		"details": "The [`handleError`](https://svelte.dev/docs/kit/hooks#handleError) hook now receives a `kind` that says where the error came from. For `'app'` and `'framework'` errors the status is `error.status`, and `'unknown'` errors always have status `500`. Check `kind` instead of reading the top-level `status`."
+	},
+	"handle_error_message_deprecated": {
+		"variants": [
+			{
+				"text": "The `message` property of `handleError` is deprecated. Use `error.message` for expected and framework errors, or `'Internal Error'` for unexpected errors.",
+				"variables": []
+			}
+		],
+		"details": "The [`handleError`](https://svelte.dev/docs/kit/hooks#handleError) hook now receives a `kind` that says where the error came from. For `'app'` and `'framework'` errors the safe message is `error.message`. For `'unknown'` errors the message shown to users defaults to `'Internal Error'`, because the thrown error's own message may contain sensitive information. Check `kind` instead of reading the top-level `message`."
+	},
+	"form_fields_enumerated": {
+		"variants": [
+			{
+				"text": "The properties of `form.fields` are virtual, so operators like `in` and `Object.keys` are meaningless. If you need the current value of a form field, use `form.fields.x.value()`",
+				"variables": []
+			}
+		],
+		"details": "Remote form fields are proxies created as you access them, not enumerable properties. Read `form.fields.value()` to obtain the current form data, or `form.fields.field.value()` for a specific field. Don't spread `form.fields`, enumerate its keys or use `in` to test whether a field has a value. This development-only warning is emitted once per call site."
+	},
+	"depends_special_scheme": {
+		"variants": [
+			{
+				"text": "`%route%`: Calling `depends('%dependency%')` will throw an error in Firefox because `%scheme%` is a special URI scheme",
+				"variables": [
+					"route",
+					"dependency",
+					"scheme"
+				]
+			}
+		],
+		"details": "Firefox treats `moz-icon:`, `view-source:` and `jar:` as special URI schemes. For a custom dependency passed to [`depends`](https://svelte.dev/docs/kit/load#Rerunning-load-functions-Manual-invalidation), choose a different application-specific scheme, such as `app:posts`, and use the same identifier when invalidating it."
+	}
+}

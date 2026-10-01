@@ -11,6 +11,7 @@ import {
 } from '../../client/client.js';
 import { notify_version } from '#app/state/client';
 import { deserialize } from './shared.js';
+import { resolve_url } from '../../client/utils.js';
 import * as e from '../../../messages/client-errors.js';
 import * as w from '../../../messages/client-warnings.js';
 
@@ -86,11 +87,15 @@ export function enhance(form_element, submit = noop) {
 		}
 
 		const destination =
-			navigate && result.type !== 'redirect' && !is_current_location(result.location)
-				? result.location
+			navigate && result.type !== 'redirect' && result.location !== undefined
+				? resolve_url(result.location)
 				: undefined;
 
-		if (destination === undefined) {
+		if (
+			destination === undefined ||
+			destination.origin !== location.origin ||
+			is_current_location(destination.href)
+		) {
 			if (should_refresh_all && result.type !== 'redirect') {
 				await refreshAll();
 			}
@@ -101,7 +106,7 @@ export function enhance(form_element, submit = noop) {
 
 		// emulate the browser: navigate to where the submission lands, rendering that
 		// page with this result
-		await apply_action_navigation(destination, result, should_refresh_all);
+		await apply_action_navigation(destination.href, result, should_refresh_all);
 	};
 
 	/** @param {SubmitEvent} event */

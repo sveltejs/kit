@@ -101,6 +101,13 @@ test('inserts http-equiv tag for cache-control headers', () => {
 	expect(content).toMatch('<meta http-equiv="cache-control" content="max-age=300">');
 });
 
+test('escapes cache-control headers in http-equiv tags', () => {
+	const content = read('max-age-malicious.html');
+	expect(content).toContain(
+		'<meta http-equiv="cache-control" content="max-age=300&quot;><script>alert(&quot;xss&quot;)</script>&amp;">'
+	);
+});
+
 test('renders page with data from endpoint', () => {
 	const content = read('fetch-endpoint/buffered.html');
 	expect(content).toMatch('<h1>the answer is 42</h1>');
