@@ -4,6 +4,36 @@ import './ambient.d.ts';
 /** A Node.js runtime supported by Netlify. */
 export type Runtime = 'nodejs22.x' | 'nodejs24.x';
 
+export type Config = {
+	/**
+	 * If `true`, deploy this route as an individual function.
+	 * @default Same as the adapter
+	 */
+	split?: boolean;
+} & (
+	| {
+			/**
+			 * Deploy this route as a [Netlify Edge Function](https://docs.netlify.com/build/edge-functions/overview/).
+			 * Set `nodeVersion: undefined` to clear a Node runtime inherited from a layout.
+			 */
+			edge: true;
+			nodeVersion?: undefined;
+	  }
+	| {
+			/**
+			 * Set `false` to deploy this route as a Node-based function, overriding an Edge adapter or layout.
+			 */
+			edge?: false;
+			/**
+			 * Which [Serverless Function](https://docs.netlify.com/build/functions/configuration/#nodejs-version-for-runtime)
+			 * Node.js version to use (`'nodejs22.x'` or `'nodejs24.x'`).
+			 * Set `undefined` to clear a version inherited from a layout and use the adapter default.
+			 * @default Same as the adapter
+			 */
+			nodeVersion?: Runtime | undefined;
+	  }
+);
+
 export type AdapterOptions = {
 	/**
 	 * If `true`, your app will be split into multiple functions instead of a single one for the entire app.

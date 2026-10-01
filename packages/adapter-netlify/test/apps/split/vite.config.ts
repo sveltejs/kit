@@ -8,7 +8,7 @@ const config: UserConfig = {
 	},
 	plugins: [
 		sveltekit({
-			adapter: adapter({ split: true, edge: process.env.EDGE === 'true' }),
+			adapter: adapter(),
 			compilerOptions: { experimental: { async: true } },
 			experimental: {
 				remoteFunctions: true
