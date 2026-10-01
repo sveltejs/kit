@@ -154,7 +154,7 @@ test.describe('remote functions', () => {
 
 		const body = await response.text();
 		for (const property of ['url', 'params', 'route']) {
-			expect(body).toContain(`Cannot access event.${property} in a query`);
+			expect(body).toContain(`Cannot access \`event.${property}\` in a query`);
 		}
 	});
 
