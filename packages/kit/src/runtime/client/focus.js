@@ -43,6 +43,9 @@ export function reset_focus(url) {
 		// @ts-ignore
 		autofocus.focus();
 	} else {
+		// Focusing an unfocused embedded document would steal focus from its parent
+		if (window.parent !== window && !document.hasFocus()) return;
+
 		// set the sequential focus navigation starting point to the fragment identifier, or to
 		// the first scrollable region when there is none. Not a perfect match for browsers:
 		// shift-tabbing won't immediately cycle up from the end of the page on Chromium

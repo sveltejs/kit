@@ -9,6 +9,27 @@ test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
 test.describe.configure({ mode: 'parallel' });
 
 test.describe('a11y', () => {
+	test('an unfocused iframe does not steal focus when its app starts', async ({
+		page,
+		browserName
+	}) => {
+		await page.goto('/accessibility/iframe-focus');
+
+		const load = page.getByRole('button', { name: 'Load iframe' });
+		await load.click();
+
+		const frame = page.frameLocator('iframe');
+		await expect(frame.getByRole('heading')).toHaveText('Embedded page');
+		await expect(load).toBeFocused();
+
+		await frame.getByRole('link', { name: 'Next' }).click();
+		await expect(frame.getByRole('heading')).toHaveText('Next page');
+		await expect(frame.locator('body')).toBeFocused();
+
+		await page.keyboard.press(browserName === 'webkit' ? 'Alt+Tab' : 'Tab');
+		await expect(frame.getByRole('button', { name: 'focus me' })).toBeFocused();
+	});
+
 	test('resets focus', async ({ page, clicknav, browserName }) => {
 		const tab = browserName === 'webkit' ? 'Alt+Tab' : 'Tab';
 
