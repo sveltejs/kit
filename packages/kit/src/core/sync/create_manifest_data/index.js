@@ -2,12 +2,12 @@
 import { lookup } from '../../../utils/mime.js';
 import fs from 'node:fs';
 import path from 'node:path';
-import { styleText } from 'node:util';
 import { resolve_entry, walk } from '../../../utils/filesystem.js';
 import { posixify } from '../../../utils/os.js';
 import { parse_route_id, validate_route_id_params } from '../../../utils/routing.js';
 import { runtime_directory } from '../../utils.js';
 import * as e from '../../../messages/build-errors.js';
+import * as w from '../../../messages/build-warnings.js';
 import { prevent_conflicts } from './conflict.js';
 import { sort_routes } from './sort.js';
 import {
@@ -243,13 +243,10 @@ function create_routes_and_nodes(cwd, config, fallback) {
 
 					// check if it is a valid route filename but missing the + prefix
 					if (pattern.test(`+${name}`)) {
-						console.log(
-							styleText(
-								['bold', 'yellow'],
-								`Missing route file prefix. Did you mean +${file.name}?` +
-									` at ${path.join(dir, file.name)}`
-							)
-						);
+						w.route_file_prefix_missing({
+							corrected: `+${file.name}`,
+							file: path.join(dir, file.name)
+						});
 					}
 
 					continue;

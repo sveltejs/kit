@@ -1182,6 +1182,18 @@
 		],
 		"details": "Rather than modifying SvelteKit's generated TypeScript configuration with a function, add the options to your own `tsconfig.json`, which [extends `$app/tsconfig`](https://svelte.dev/docs/kit/$app-tsconfig)."
 	},
+	"route_file_prefix_missing": {
+		"variants": [
+			{
+				"text": "Missing route file prefix. Did you mean %corrected%? at %file%",
+				"variables": [
+					"corrected",
+					"file"
+				]
+			}
+		],
+		"details": "SvelteKit only recognises [route files](https://svelte.dev/docs/kit/routing) whose names start with `+`, such as `+page.svelte`, `+layout.svelte`, `+page.js` and `+server.js`. This file matches a route filename except for the missing prefix, so it will be ignored. Rename it to the suggested name if it is intended to be a route file, or choose a different name to distinguish it from one."
+	},
 	"file_name_misspelled": {
 		"variants": [
 			{
