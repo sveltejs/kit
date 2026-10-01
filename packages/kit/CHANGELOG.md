@@ -1,5 +1,29 @@
 # @sveltejs/kit
 
+## 3.0.0-next.32
+
+### Patch Changes
+
+- fix: print `builder.log.warn` messages to stderr, as documented ([#17253](https://github.com/sveltejs/kit/pull/17253))
+
+- chore: standardize remote-function and shared form diagnostics ([#17277](https://github.com/sveltejs/kit/pull/17277))
+
+- chore: standardize app template diagnostics ([#17250](https://github.com/sveltejs/kit/pull/17250))
+
+- chore: standardize Vite plugin, build, prerender and adapter diagnostics ([#17253](https://github.com/sveltejs/kit/pull/17253))
+
+- chore: standardize client navigation, preload, snapshot and enhancement diagnostics ([#17276](https://github.com/sveltejs/kit/pull/17276))
+
+- chore: standardize configuration, environment and tsconfig diagnostics ([#17251](https://github.com/sveltejs/kit/pull/17251))
+
+- chore: standardize public API, `$app/*` and deprecated module diagnostics ([#17265](https://github.com/sveltejs/kit/pull/17265))
+
+- chore: standardize route discovery, parameter and route export diagnostics ([#17252](https://github.com/sveltejs/kit/pull/17252))
+
+- chore: standardize server request, hook and page diagnostics ([#17275](https://github.com/sveltejs/kit/pull/17275))
+
+- fix: report tsconfig parse errors on Windows ([#17251](https://github.com/sveltejs/kit/pull/17251))
+
 ## 3.0.0-next.31
 
 ### Patch Changes
