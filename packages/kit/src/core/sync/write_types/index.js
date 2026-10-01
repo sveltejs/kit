@@ -2,9 +2,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import MagicString from 'magic-string';
 import { walk, resolve_entry } from '../../../utils/filesystem.js';
-import { compact } from '../../../utils/array.js';
 import { posixify } from '../../../utils/os.js';
 import { ts } from '../ts.js';
+import { write } from '../utils.js';
 import { is_page_route } from '../create_manifest_data/index.js';
 const remove_relative_parent_traversals = (/** @type {string} */ path) =>
 	path.replace(/\.\.\//g, '');
@@ -38,98 +38,24 @@ export function write_all_types(config, manifest_data, root) {
 	const types_dir = `${config.outDir}/types`;
 
 	// empty out files that no longer need to exist
-	const routes_dir = remove_relative_parent_traversals(
-		posixify(path.relative(root, config.files.routes))
-	);
 	const expected_directories = new Set(
-		manifest_data.routes.map((route) => path.posix.join(routes_dir, route.id))
+		manifest_data.routes.map((route) => path.resolve(get_outdir(config, route, root)))
 	);
 
 	if (fs.existsSync(types_dir)) {
 		for (const file of walk(types_dir)) {
-			const dir = path.posix.dirname(file);
-			if (!expected_directories.has(dir)) {
+			if (!expected_directories.has(path.resolve(types_dir, path.posix.dirname(file)))) {
 				fs.rmSync(path.join(types_dir, file), { force: true, recursive: true });
 			}
 		}
 	}
 
-	// Read/write meta data on each invocation, not once per node process,
-	// it could be invoked by another process in the meantime.
-	const meta_data_file = `${types_dir}/route_meta_data.json`;
-	const has_meta_data = fs.existsSync(meta_data_file);
-	const meta_data = has_meta_data
-		? /** @type {Record<string, string[]>} */ (JSON.parse(fs.readFileSync(meta_data_file, 'utf-8')))
-		: {};
 	const routes_map = create_routes_map(manifest_data);
-	// For each directory, write $types.d.ts
 	for (const route of manifest_data.routes) {
 		if (!route.leaf && !route.layout && !route.endpoint) continue; // nothing to do
 
-		const outdir = path.join(config.outDir, 'types', routes_dir, route.id);
-
-		// check if the types are out of date
-		/** @type {string[]} */
-		const input_files = [];
-
-		/** @type {import('types').PageNode | null} */
-		let node = route.leaf;
-		while (node) {
-			if (node.universal) input_files.push(node.universal);
-			if (node.server) input_files.push(node.server);
-			node = node.parent ?? null;
-		}
-
-		/** @type {import('types').PageNode | null} */
-		node = route.layout;
-		while (node) {
-			if (node.universal) input_files.push(node.universal);
-			if (node.server) input_files.push(node.server);
-			node = node.parent ?? null;
-		}
-
-		if (route.endpoint) {
-			input_files.push(route.endpoint.file);
-		}
-
-		try {
-			fs.mkdirSync(outdir, { recursive: true });
-		} catch {}
-
-		const output_files = compact(
-			fs.readdirSync(outdir).map((name) => {
-				const stats = fs.statSync(path.join(outdir, name));
-				if (stats.isDirectory()) return;
-				return {
-					name,
-					updated: stats.mtimeMs
-				};
-			})
-		);
-
-		const source_last_updated = Math.max(
-			// ctimeMs includes move operations whereas mtimeMs does not
-			...input_files.map((file) => fs.statSync(path.resolve(root, file)).ctimeMs)
-		);
-		const types_last_updated = Math.max(...output_files.map((file) => file.updated));
-
-		const should_generate =
-			// source files were generated more recently than the types
-			source_last_updated > types_last_updated ||
-			// no meta data file exists yet
-			!has_meta_data ||
-			// some file was deleted
-			!meta_data[route.id]?.every((file) => input_files.includes(file));
-
-		if (should_generate) {
-			// track which old files end up being surplus to requirements
-			const to_delete = new Set(output_files.map((file) => file.name));
-			update_types(config, routes_map, route, root, to_delete);
-			meta_data[route.id] = input_files;
-		}
+		update_types(config, routes_map, route, root);
 	}
-
-	fs.writeFileSync(meta_data_file, JSON.stringify(meta_data, null, '\t'));
 }
 
 /**
@@ -173,18 +99,37 @@ function create_routes_map(manifest_data) {
 }
 
 /**
+ * @param {import('types').ValidatedConfig} config
+ * @param {import('types').RouteData} route
+ * @param {string} root The project root directory
+ */
+function get_outdir(config, route, root) {
+	const routes_dir = remove_relative_parent_traversals(
+		posixify(path.relative(root, config.files.routes))
+	);
+	return path.join(config.outDir, 'types', routes_dir, route.id);
+}
+
+/**
  * Update types for a specific route
  * @param {import('types').ValidatedConfig} config
  * @param {RoutesMap} routes
  * @param {import('types').RouteData} route
  * @param {string} root The project root directory
- * @param {Set<string>} [to_delete]
  */
-function update_types(config, routes, route, root, to_delete = new Set()) {
-	const routes_dir = remove_relative_parent_traversals(
-		posixify(path.relative(root, config.files.routes))
-	);
-	const outdir = path.join(config.outDir, 'types', routes_dir, route.id);
+function update_types(config, routes, route, root) {
+	const outdir = get_outdir(config, route, root);
+
+	/** @type {Set<string>} */
+	const written = new Set();
+	/**
+	 * @param {string} name
+	 * @param {string} code
+	 */
+	const write_file = (name, code) => {
+		written.add(name);
+		write(path.join(outdir, name), code);
+	};
 
 	// now generate new types
 	const imports = [
@@ -250,23 +195,17 @@ function update_types(config, routes, route, root, to_delete = new Set()) {
 			routes.set(route.leaf, route_info);
 		}
 
-		const {
-			declarations: d,
-			exports: e,
-			proxies
-		} = process_node(route.leaf, outdir, true, route_info.proxies, root);
+		const { declarations: d, exports: e } = process_node(
+			route.leaf,
+			outdir,
+			true,
+			route_info.proxies,
+			root
+		);
 
 		exports.push(...e);
 		declarations.push(...d);
-
-		if (proxies.server) {
-			route_info.proxies.server = proxies.server;
-			if (proxies.server?.modified) to_delete.delete(proxies.server.file_name);
-		}
-		if (proxies.universal) {
-			route_info.proxies.universal = proxies.universal;
-			if (proxies.universal?.modified) to_delete.delete(proxies.universal.file_name);
-		}
+		write_proxies(route_info.proxies);
 
 		if (route.leaf.server) {
 			exports.push(
@@ -325,24 +264,20 @@ function update_types(config, routes, route, root, to_delete = new Set()) {
 			'type LayoutParams = RouteParams & ' + generate_params_type(layout_params, outdir, config)
 		);
 
-		const {
-			exports: e,
-			declarations: d,
-			proxies
-		} = process_node(
+		/** @type {Proxies} */
+		const proxies = { server: null, universal: null };
+		const { exports: e, declarations: d } = process_node(
 			route.layout,
 			outdir,
 			false,
-			{ server: null, universal: null },
+			proxies,
 			root,
 			all_pages_have_load
 		);
 
 		exports.push(...e);
 		declarations.push(...d);
-
-		if (proxies.server?.modified) to_delete.delete(proxies.server.file_name);
-		if (proxies.universal?.modified) to_delete.delete(proxies.universal.file_name);
+		write_proxies(proxies);
 
 		exports.push(
 			'export type LayoutProps = { params: LayoutParams; data: LayoutData; children: import("svelte").Snippet }'
@@ -361,11 +296,20 @@ function update_types(config, routes, route, root, to_delete = new Set()) {
 		.filter(Boolean)
 		.join('\n\n');
 
-	fs.writeFileSync(`${outdir}/$types.d.ts`, output);
-	to_delete.delete('$types.d.ts');
+	write_file('$types.d.ts', output);
 
-	for (const file of to_delete) {
-		fs.unlinkSync(path.join(outdir, file));
+	// remove proxies that are no longer needed
+	for (const entry of fs.readdirSync(outdir, { withFileTypes: true })) {
+		if (entry.isFile() && !written.has(entry.name)) {
+			fs.rmSync(path.join(outdir, entry.name), { force: true });
+		}
+	}
+
+	/** @param {Proxies} proxies */
+	function write_proxies(proxies) {
+		for (const proxy of [proxies.server, proxies.universal]) {
+			if (proxy?.modified) write_file(proxy.file_name, proxy.code);
+		}
 	}
 }
 
@@ -398,9 +342,6 @@ function process_node(node, outdir, is_page, proxies, root, all_pages_have_load 
 	if (node.server) {
 		const basename = path.basename(node.server);
 		const proxy = proxies.server;
-		if (proxy?.modified) {
-			fs.writeFileSync(`${outdir}/proxy${basename}`, proxy.code);
-		}
 
 		server_data = get_data_type(node.server, 'null', proxy, true);
 
@@ -451,9 +392,6 @@ function process_node(node, outdir, is_page, proxies, root, all_pages_have_load 
 
 	if (node.universal) {
 		const proxy = proxies.universal;
-		if (proxy?.modified) {
-			fs.writeFileSync(`${outdir}/proxy${path.basename(node.universal)}`, proxy.code);
-		}
 
 		const type = get_data_type(
 			node.universal,
@@ -480,7 +418,7 @@ function process_node(node, outdir, is_page, proxies, root, all_pages_have_load 
 
 	exports.push(`export type ${prefix}Data = ${data};`);
 
-	return { declarations, exports, proxies };
+	return { declarations, exports };
 
 	/**
 	 * @param {string} file_path
