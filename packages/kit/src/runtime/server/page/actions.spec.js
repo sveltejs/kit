@@ -8,7 +8,8 @@ import { init_transport } from '#app/internal/transport';
 vi.stubGlobal('__SVELTEKIT_DEV__', false);
 init_transport({});
 
-const { get_action_location, handle_action_request, uneval_action_response } = await import('./actions.js');
+const { get_action_location, handle_action_request, uneval_action_response } =
+	await import('./actions.js');
 
 /** @param {string} [search] */
 function create_event(search = '') {
