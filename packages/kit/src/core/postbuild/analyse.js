@@ -6,9 +6,13 @@ import { extract_svelte_config, load_vite_config } from '../config/index.js';
 import { forked } from '../../utils/fork.js';
 import { BODY_DEPENDENT_METHODS, ENDPOINT_METHODS } from '../../constants.js';
 import { has_server_load, resolve_route } from '../../utils/routing.js';
-import { check_feature } from '../../utils/features.js';
+import { check_feature } from '../features.js';
 import { createReadableStream } from '@sveltejs/kit/node';
 import { PageNodes } from '../../utils/page_nodes.js';
+import { enable_verbose_errors } from '../../messages/internal/shared.js';
+import * as e from '../../messages/build-errors.js';
+import * as server_errors from '../../messages/server-errors.js';
+import * as shared_errors from '../../messages/shared-errors.js';
 
 export default forked(import.meta.url, analyse);
 
@@ -34,6 +38,10 @@ async function analyse({
 	remotes,
 	vite_config_file
 }) {
+	// this worker validates exports and resolves `entries` with Kit's own modules, rather than the
+	// bundled server's copies that `configure` affects, so its shared errors need the full text too
+	enable_verbose_errors();
+
 	/** @type {import('types').SSRManifest} */
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
@@ -65,12 +73,10 @@ async function analyse({
 		if (hash && node.universal) {
 			const options = Object.keys(node.universal).filter((o) => o !== 'load');
 			if (options.length > 0) {
-				throw new Error(
-					`Page options are ignored when \`router.type === 'hash'\` (${node.universal_id} has ${options
-						.filter((o) => o !== 'load')
-						.map((o) => `'${o}'`)
-						.join(', ')})`
-				);
+				shared_errors.router_hash_page_options({
+					source: /** @type {string} */ (node.universal_id),
+					options: options.map((o) => `'${o}'`).join(', ')
+				});
 			}
 		}
 
@@ -92,15 +98,18 @@ async function analyse({
 		const endpoint = route.endpoint && analyse_endpoint(route, await route.endpoint());
 
 		if (page?.prerender && endpoint?.prerender) {
-			throw new Error(`Cannot prerender a route with both +page and +server files (${route.id})`);
+			const endpoint_file = manifest_data.routes
+				.find((r) => r.id === route.id)
+				?.endpoint?.file.split('/')
+				.pop();
+
+			e.route_prerender_page_and_endpoint({ id: route.id, file: endpoint_file ?? '+server.js' });
 		}
 
 		if (page?.config && endpoint?.config) {
 			for (const key in { ...page.config, ...endpoint.config }) {
 				if (JSON.stringify(page.config[key]) !== JSON.stringify(endpoint.config[key])) {
-					throw new Error(
-						`Mismatched route config for ${route.id} — the +page and +server files must export the same config, if any`
-					);
+					e.route_config_mismatch({ id: route.id });
 				}
 			}
 		}
@@ -175,9 +184,10 @@ function analyse_endpoint(route, mod) {
 				(method) => mod[method]
 			))
 	) {
-		throw new Error(
-			`Cannot prerender a +server file with ${BODY_DEPENDENT_METHODS.join(', ')} or fallback handlers (${route.id})`
-		);
+		server_errors.prerender_endpoint_methods({
+			methods: BODY_DEPENDENT_METHODS.join(', '),
+			id: route.id
+		});
 	}
 
 	/** @type {Array<import('types').HttpMethod | '*'>} */

@@ -46,6 +46,7 @@ import { get_remote_id, handle_remote_call } from './remote-functions.js';
 import { hooks, manifest } from './internal.js';
 import { options } from '<sveltekit:generated>/server.js';
 import { respond_with_error, handle_fatal_error } from './page/respond_with_error.js';
+import * as e from '../../messages/server-errors.js';
 
 /** @type {import('types').RequiredResolveOptions['transformPageChunk']} */
 const default_transform = ({ html }) => html;
@@ -196,9 +197,7 @@ export async function internal_respond(request, state) {
 		getClientAddress:
 			state.getClientAddress ||
 			(() => {
-				throw new Error(
-					`${__SVELTEKIT_ADAPTER_NAME__} does not specify getClientAddress. Please raise an issue`
-				);
+				e.client_address_unsupported({ adapter: __SVELTEKIT_ADAPTER_NAME__ });
 			}),
 		locals: {},
 		params: {},
@@ -220,15 +219,13 @@ export async function internal_respond(request, state) {
 				const value = new_headers[key];
 
 				if (lower === 'set-cookie') {
-					throw new Error(
-						'Use `event.cookies.set(name, value, options)` instead of `event.setHeaders` to set cookies'
-					);
+					e.set_headers_cookie();
 				} else if (lower in headers) {
 					// appendHeaders-style for Server-Timing https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Server-Timing
 					if (lower === 'server-timing') {
 						headers[lower] += ', ' + value;
 					} else {
-						throw new Error(`"${key}" header is already set`);
+						e.header_already_set({ name: key });
 					}
 				} else {
 					headers[lower] = value;
@@ -795,12 +792,12 @@ export async function internal_respond(request, state) {
 			return await handle_fatal_error(event, state, e);
 		} finally {
 			event.cookies.set = () => {
-				throw new Error('Cannot use `cookies.set(...)` after the response has been generated');
+				e.cookies_set_after_response();
 			};
 
 			// @ts-expect-error this has to be assigned lazily
 			event.setHeaders = () => {
-				throw new Error('Cannot use `setHeaders(...)` after the response has been generated');
+				e.set_headers_after_response();
 			};
 		}
 	}

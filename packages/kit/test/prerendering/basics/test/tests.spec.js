@@ -301,5 +301,9 @@ test('identifies missing ids', () => {
 	const missing_ids_file = fileURLToPath(new URL('../missing_ids/index.jsonl', import.meta.url));
 	const missing_ids_content = fs.readFileSync(missing_ids_file, 'utf-8');
 	const missing_ids = JSON.parse(`[${missing_ids_content.slice(0, -1)}]`);
-	expect(missing_ids).toEqual(['missing-id']);
+	expect(missing_ids).toEqual([{ id: 'missing-id', message: expect.any(String) }]);
+	// custom handlers receive the full diagnostic
+	expect(missing_ids[0].message).toContainKitDiagnostic('prerender_missing_id', {
+		contains: ['/missing-id#missing-id', 'id="missing-id"']
+	});
 });

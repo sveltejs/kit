@@ -1018,9 +1018,9 @@ declare module '@sveltejs/kit' {
 	 * Checks whether this is an error thrown by {@link error}.
 	 * @param status The status to filter for.
 	 * */
-	export function isHttpError<T extends number>(e: unknown, status?: T): e is (HttpError & {
+	export function isHttpError<T extends number>(e: unknown, status?: T): e is HttpError & {
 		status: T extends undefined ? never : T;
-	});
+	};
 	/**
 	 * Redirect a request. When called during request handling, SvelteKit will return a redirect response.
 	 * Make sure you're not catching the thrown redirect, which would prevent SvelteKit from handling it.
@@ -1075,7 +1075,7 @@ declare module '@sveltejs/kit' {
 	 * Checks whether this is an action failure thrown by {@link fail}.
 	 * @param e The object to check.
 	 * */
-	export function isActionFailure(e: unknown): e is ActionFailure;
+	export function isActionFailure(e: unknown): e is ActionFailure<undefined>;
 	/**
 	 * Use this to throw a validation error to imperatively fail form validation.
 	 * Can be used in combination with `issue` passed to form actions to create field-specific issues.

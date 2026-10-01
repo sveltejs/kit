@@ -11,6 +11,8 @@ import {
 } from '../../client/client.js';
 import { notify_version } from '#app/state/client';
 import { deserialize } from './shared.js';
+import * as e from '../../../messages/client-errors.js';
+import * as w from '../../../messages/client-warnings.js';
 
 export { applyAction, deserialize };
 
@@ -53,7 +55,7 @@ function clone(element) {
  */
 export function enhance(form_element, submit = noop) {
 	if (DEV && clone(form_element).method !== 'post') {
-		throw new Error('use:enhance can only be used on <form> fields with method="POST"');
+		e.enhance_invalid_method();
 	}
 
 	/**
@@ -73,9 +75,7 @@ export function enhance(form_element, submit = noop) {
 		navigate = true
 	}) => {
 		if (DEV && deprecated_invalidate_all !== undefined) {
-			console.warn(
-				'The `update({ invalidateAll })` option has been deprecated in favour of `update({ refreshAll })`'
-			);
+			w.enhance_invalidate_all_deprecated();
 		}
 
 		should_refresh_all ??= deprecated_invalidate_all ?? result.type === 'success';
@@ -129,9 +129,7 @@ export function enhance(form_element, submit = noop) {
 		if (DEV && enctype !== 'multipart/form-data') {
 			for (const value of form_data.values()) {
 				if (value instanceof File) {
-					throw new Error(
-						'Your form contains <input type="file"> fields, but is missing the necessary `enctype="multipart/form-data"` attribute. This will lead to inconsistent behavior between enhanced and native forms. For more details, see https://github.com/sveltejs/kit/issues/9819.'
-					);
+					e.enhance_file_without_enctype();
 				}
 			}
 		}

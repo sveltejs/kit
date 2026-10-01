@@ -1,4 +1,4 @@
-import { assert, describe } from 'vitest';
+import { assert, describe, expect } from 'vitest';
 import {
 	resolve,
 	normalize_path,
@@ -176,10 +176,7 @@ describe('make_trackable', (test) => {
 			() => {}
 		);
 
-		assert.throws(
-			() => url.hash,
-			/Cannot access event.url.hash. Consider using `page.url.hash` inside a component instead/
-		);
+		expect(() => url.hash).toThrowKitError('url_hash_unavailable');
 	});
 
 	test('does not throw an error when its hash property is accessed if it is allowed', () => {
@@ -258,10 +255,9 @@ describe('disable_search', (test) => {
 		/** @type {Array<keyof URL>} */
 		const props = ['search', 'searchParams'];
 		props.forEach((prop) => {
-			assert.throws(
-				() => url[prop],
-				`Cannot access url.${prop} on a page with prerendering enabled`
-			);
+			expect(() => url[prop]).toThrowKitError('url_search_unavailable_prerender', {
+				contains: [`url.${prop}`]
+			});
 		});
 	});
 });

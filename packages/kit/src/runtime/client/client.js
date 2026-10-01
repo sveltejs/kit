@@ -66,6 +66,10 @@ import Root from '../components/root.svelte';
 import { Props, RenderNode } from '../props.svelte.js';
 import { init_transport, parse, stringify } from '#app/internal/transport';
 import { build_error_chain, nearest_error_pages } from '../error-chain.js';
+import * as e from '../../messages/client-errors.js';
+import * as w from '../../messages/client-warnings.js';
+import * as shared_errors from '../../messages/shared-errors.js';
+import { capture_error } from '../../messages/internal/shared.js';
 
 /**
  * @typedef {{
@@ -139,9 +143,7 @@ if (DEV) {
 
 		warned = true;
 
-		console.warn(
-			"Avoid using `history.pushState(...)` and `history.replaceState(...)` as these will conflict with SvelteKit's router. Use `goto(...)` from `$app/navigation` instead."
-		);
+		w.history_api_conflict();
 	};
 
 	const push_state = history.pushState;
@@ -454,9 +456,7 @@ function* cache_entries(map) {
  */
 async function _start(_app, _target, data) {
 	if (DEV && _target === document.body) {
-		console.warn(
-			'Placing %sveltekit.body% directly inside <body> is not recommended, as your app may break for users who have certain browser extensions installed.\n\nConsider wrapping it in an element:\n\n<div style="display: contents">\n  %sveltekit.body%\n</div>'
-		);
+		w.app_body_unwrapped({ tag: '%sveltekit.body%' });
 	}
 
 	if (payload.data) {
@@ -667,9 +667,7 @@ function capture_snapshot(index) {
 	if (props.components.some((c) => c?.snapshot)) {
 		if (DEV && !warned_snapshot_export) {
 			warned_snapshot_export = true;
-			console.warn(
-				'`export const snapshot` is deprecated. Use the `snapshot` helper from `$app/navigation` instead.'
-			);
+			w.snapshot_export_deprecated();
 		}
 		snapshots[index] = props.components.map((c) => c?.snapshot?.capture());
 	}
@@ -1126,12 +1124,10 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 			const options = Object.keys(node.universal).filter((o) => o !== 'load');
 
 			if (options.length > 0) {
-				throw new Error(
-					`Page options are ignored when \`router.type === 'hash'\` (${route.id} has ${options
-						.filter((o) => o !== 'load')
-						.map((o) => `'${o}'`)
-						.join(', ')})`
-				);
+				shared_errors.router_hash_page_options({
+					source: /** @type {string} */ (route.id),
+					options: options.map((o) => `'${o}'`).join(', ')
+				});
 			}
 		}
 	}
@@ -2050,11 +2046,14 @@ async function navigate({
 		}
 
 		navigation_result = await load_root_error_page({
-			error: await handle_error(new Error('Redirect loop'), {
-				url,
-				params: {},
-				route: { id: null }
-			}),
+			error: await handle_error(
+				capture_error(() => e.redirect_loop({ url: url.href })),
+				{
+					url,
+					params: {},
+					route: { id: null }
+				}
+			),
 			url,
 			route: { id: null }
 		});
@@ -2302,9 +2301,7 @@ async function server_fallback(url, route, error, replace_state) {
 	}
 
 	if (DEV && error.status !== 404) {
-		console.error(
-			'An error occurred while loading the page. This will cause a full page reload. (This message will only appear during development.)'
-		);
+		w.full_reload_after_error();
 
 		debugger; // eslint-disable-line
 	}
@@ -2433,12 +2430,7 @@ function setup_preload() {
 
 			if (DEV) {
 				void _preload_data(intent).catch((error) => {
-					console.warn(
-						`Preloading data for ${intent.url.pathname} failed with the following error: ${error.message}\n` +
-							'If this error is transient, you can ignore it. Otherwise, consider disabling preloading for this route. ' +
-							'This route was preloaded due to a data-sveltekit-preload-data attribute. ' +
-							'See https://svelte.dev/docs/kit/link-options for more info'
-					);
+					w.preload_data_failed({ path: intent.url.pathname, message: error.message });
 				});
 			} else {
 				void _preload_data(intent).catch(noop);
@@ -2497,7 +2489,7 @@ export async function handle_error(error, event) {
 
 	if (DEV && caught.kind !== 'app') {
 		errored = true;
-		console.warn('The next HMR update will cause the page to reload');
+		w.hmr_reload_after_error();
 	}
 
 	const fallback =
@@ -2578,7 +2570,7 @@ export function onNavigate(callback) {
  */
 export function disableScrollHandling() {
 	if (DEV && started && !updating) {
-		throw new Error('Can only disable scroll handling during navigation');
+		e.scroll_handling_outside_navigation();
 	}
 
 	if (updating || !started) {
@@ -2599,21 +2591,13 @@ async function resolve_intent(url, caller) {
 	const resolved = new URL(resolve_url(url));
 
 	if (resolved.origin !== origin) {
-		throw new Error(
-			DEV
-				? `Cannot use \`${caller}\` with an external URL. Use \`window.location = "${url}"\` instead`
-				: `${caller}: invalid URL`
-		);
+		e.navigation_external_url({ caller, url: String(url) });
 	}
 
 	const intent = await get_navigation_intent(resolved, false);
 
 	if (!intent) {
-		throw new Error(
-			DEV
-				? `Cannot use \`${caller}\` with a URL that does not resolve to a route within the app. Use \`window.location = "${url}"\` instead`
-				: `${caller}: invalid URL`
-		);
+		e.navigation_route_missing({ caller, url: String(url) });
 	}
 
 	return intent;
@@ -2636,15 +2620,11 @@ export async function goto(url, opts = {}) {
 	if (DEV) {
 		if ('replaceState' in opts && !warned_on_replace_state) {
 			warned_on_replace_state = true;
-			console.warn(
-				`The \`goto(..., { replaceState: ${opts.replaceState} })\` option has been deprecated in favour of \`replace\``
-			);
+			w.goto_replace_state_deprecated({ value: String(opts.replaceState) });
 		}
 
 		if ('noScroll' in opts || 'keepFocus' in opts) {
-			throw new Error(
-				`The \`goto(..., { noScroll: true, keepFocus: true })\` options have been replaced by \`reset: false\``
-			);
+			e.goto_options_removed();
 		}
 	}
 
@@ -2667,9 +2647,7 @@ export async function goto(url, opts = {}) {
 
 	if (DEV && 'invalidateAll' in opts && !warned_on_invalidate_all) {
 		warned_on_invalidate_all = true;
-		console.warn(
-			`The \`goto(..., { invalidateAll: ${opts.invalidateAll} })\` option has been deprecated in favour of \`refreshAll\``
-		);
+		w.goto_invalidate_all_deprecated({ value: String(opts.invalidateAll) });
 	}
 
 	return _goto(
@@ -2757,7 +2735,7 @@ export async function preloadData(href) {
 	const intent = await get_navigation_intent(url, false);
 
 	if (!intent) {
-		throw new Error(`Attempted to preload a URL that does not belong to this app: ${url}`);
+		e.preload_url_outside_app({ url: url.href });
 	}
 
 	/** @type {Awaited<ReturnType<typeof _preload_data>>} */
@@ -2814,9 +2792,7 @@ export async function preloadData(href) {
  */
 export async function preloadCode(id) {
 	if (DEV && id[0] !== '/') {
-		throw new Error(
-			`argument passed to preloadCode must be a route ID (i.e. "/blog/[slug]" rather than "blog/[slug]")`
-		);
+		e.preload_invalid_route_id({ id });
 	}
 
 	const route = __SVELTEKIT_CLIENT_ROUTING__
@@ -2825,10 +2801,7 @@ export async function preloadCode(id) {
 
 	if (route === ENDPOINT_ONLY) {
 		if (DEV) {
-			console.warn(
-				`'${id}' has no \`+page\`, so there is no code to preload. If you meant to warm up an ` +
-					`endpoint, request it with \`fetch\` instead.`
-			);
+			w.preload_code_endpoint_only({ id });
 		}
 
 		return;
@@ -2838,21 +2811,18 @@ export async function preloadCode(id) {
 		if (DEV) {
 			// warn rather than throw, since under client routing an endpoint-only route id is
 			// indistinguishable from a typo — the client manifest only contains routes with a `+page`
-			let message = `'${id}' did not match any route`;
+			// the most common migration mistake is passing a pathname, which used to work
+			const candidates = [id];
+			if (base && id.startsWith(base)) candidates.push(id.slice(base.length) || '/');
 
-			if (__SVELTEKIT_CLIENT_ROUTING__) {
-				message += ` (note that routes without a \`+page\` have no code to preload)`;
-
-				// the most common migration mistake is passing a pathname, which used to work
-				const candidates = [id];
-				if (base && id.startsWith(base)) candidates.push(id.slice(base.length) || '/');
-
-				if (candidates.some((path) => routes.some((r) => r.exec(path)))) {
-					message += `. It does match as a pathname — use \`match(...)\` from \`$app/paths\` to convert a pathname into a route ID`;
-				}
+			if (
+				__SVELTEKIT_CLIENT_ROUTING__ &&
+				candidates.some((path) => routes.some((r) => r.exec(path)))
+			) {
+				w.preload_route_is_pathname({ id });
+			} else {
+				w.preload_route_missing({ id });
 			}
-
-			console.warn(message);
 		}
 
 		return;
@@ -2872,9 +2842,7 @@ export async function preloadCode(id) {
 export async function pushState(url, state) {
 	if (DEV && !warned_on_push_state) {
 		warned_on_push_state = true;
-		console.warn(
-			'`pushState(...)` is deprecated. Use `goto(url, { state, shallow: true })` instead.'
-		);
+		w.push_state_deprecated();
 	}
 
 	const intent = await resolve_intent(url, 'pushState');
@@ -2898,9 +2866,7 @@ export async function pushState(url, state) {
 export async function replaceState(url, state) {
 	if (DEV && !warned_on_replace_state_function) {
 		warned_on_replace_state_function = true;
-		console.warn(
-			'`replaceState(...)` is deprecated. Use `goto(url, { state, shallow: true, replace: true })` instead.'
-		);
+		w.replace_state_deprecated();
 	}
 
 	const intent = await resolve_intent(url, 'replaceState');
@@ -2924,7 +2890,7 @@ async function update_state(intent, state, { replace, persist_state, reset }, ca
 	const previous_snapshot_registrations = current_registrations();
 
 	if (DEV && !started) {
-		throw new Error(`Cannot call ${caller}(...) before router is initialized`);
+		e.navigation_before_start({ caller });
 	}
 
 	const nav =
@@ -3630,7 +3596,7 @@ async function _hydrate(
 async function load_data(url, invalid) {
 	for (const key of url.searchParams.keys()) {
 		if (key.startsWith('x-sveltekit-')) {
-			throw new Error(`Cannot use reserved query parameter "${key}"`);
+			e.reserved_query_parameter({ key });
 		}
 	}
 
