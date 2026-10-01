@@ -1,5 +1,39 @@
 # @sveltejs/kit
 
+## 3.0.0-next.32
+
+### Patch Changes
+
+- fix: prevent non-redirect enhanced form results from navigating to another origin ([`91aae35`](https://github.com/sveltejs/kit/commit/91aae3547c6cd2935d79c09a53e27c740100000a))
+
+- fix: escape cache-control headers in prerendered HTML ([`d9d55b5`](https://github.com/sveltejs/kit/commit/d9d55b579743c80ee7cb59c272d864fd9253dae7))
+
+- fix: revert route metadata caching to regenerate missing root-route types during sync ([#17281](https://github.com/sveltejs/kit/pull/17281))
+
+- fix: print `builder.log.warn` messages to stderr, as documented ([#17253](https://github.com/sveltejs/kit/pull/17253))
+
+- fix: prevent path traversal when previewing prerendered pages and data on Windows ([`538edbf`](https://github.com/sveltejs/kit/commit/538edbfa809ac0be634a63c7833f8e0328bfc177))
+
+- chore: standardize remote-function and shared form diagnostics ([#17277](https://github.com/sveltejs/kit/pull/17277))
+
+- fix: prevent server-side self-fetch fallbacks from following redirects ([`b11bb87`](https://github.com/sveltejs/kit/commit/b11bb87679a2c405fff80d218c8c0ac16112383a))
+
+- chore: standardize app template diagnostics ([#17250](https://github.com/sveltejs/kit/pull/17250))
+
+- chore: standardize Vite plugin, build, prerender and adapter diagnostics ([#17253](https://github.com/sveltejs/kit/pull/17253))
+
+- chore: standardize client navigation, preload, snapshot and enhancement diagnostics ([#17276](https://github.com/sveltejs/kit/pull/17276))
+
+- chore: standardize configuration, environment and tsconfig diagnostics ([#17251](https://github.com/sveltejs/kit/pull/17251))
+
+- chore: standardize public API, `$app/*` and deprecated module diagnostics ([#17265](https://github.com/sveltejs/kit/pull/17265))
+
+- chore: standardize route discovery, parameter and route export diagnostics ([#17252](https://github.com/sveltejs/kit/pull/17252))
+
+- chore: standardize server request, hook and page diagnostics ([#17275](https://github.com/sveltejs/kit/pull/17275))
+
+- fix: report tsconfig parse errors on Windows ([#17251](https://github.com/sveltejs/kit/pull/17251))
+
 ## 3.0.0-next.31
 
 ### Patch Changes
