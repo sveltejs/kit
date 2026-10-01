@@ -640,6 +640,22 @@ function add_props(base_props, props) {
 }
 
 /**
+ * Hides `key` from spreads while its value is `undefined` (it must be configurable)
+ * @param {Record<string, any>} props
+ * @param {string} key
+ */
+function omit_while_undefined(props, key) {
+	const hidden = () => props[key] === undefined;
+
+	return new Proxy(props, {
+		has: (target, prop) => (prop === key && hidden() ? false : prop in target),
+		ownKeys: (target) => Reflect.ownKeys(target).filter((prop) => prop !== key || !hidden()),
+		getOwnPropertyDescriptor: (target, prop) =>
+			prop === key && hidden() ? undefined : Reflect.getOwnPropertyDescriptor(target, prop)
+	});
+}
+
+/**
  * @param {string} type
  * @param {boolean} is_array
  * @param {unknown} input_value
@@ -821,14 +837,20 @@ function create_field_method(context, path, prop) {
 
 				// Handle select inputs
 				if (type === 'select' || type === 'select multiple') {
-					return add_props(base_props, {
-						multiple: is_array,
-						value: () => {
+					const props = add_props(base_props, { multiple: is_array });
+
+					// omitted while undefined, which would otherwise deselect the current option
+					Object.defineProperty(props, 'value', {
+						enumerable: true,
+						configurable: true,
+						get: () => {
 							const value = read(input_value);
 							// copied, so the state array can't be edited through the props
 							return Array.isArray(value) ? [...value] : value;
 						}
 					});
+
+					return omit_while_undefined(props, 'value');
 				}
 
 				// Handle checkbox inputs
