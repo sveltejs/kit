@@ -38,16 +38,19 @@ function focus_element(element) {
 
 /** @param {URL} url */
 export function reset_focus(url) {
+	// focusing anything inside an iframe that doesn't have focus pulls focus out of the parent page
+	const focusable = window.parent === window || document.hasFocus();
+
 	const autofocus = document.querySelector('[autofocus]');
 	if (autofocus) {
 		// @ts-ignore
-		autofocus.focus();
+		if (focusable) autofocus.focus();
 	} else {
 		// set the sequential focus navigation starting point to the fragment identifier, or to
 		// the first scrollable region when there is none. Not a perfect match for browsers:
 		// shift-tabbing won't immediately cycle up from the end of the page on Chromium
 		// See https://html.spec.whatwg.org/multipage/interaction.html#get-the-focusable-area
-		focus_element(get_hash_element(url, hash_routing) ?? document.body);
+		if (focusable) focus_element(get_hash_element(url, hash_routing) ?? document.body);
 
 		// capture current selection, so we can compare the state after
 		// snapshot restoration and afterNavigate callbacks have run

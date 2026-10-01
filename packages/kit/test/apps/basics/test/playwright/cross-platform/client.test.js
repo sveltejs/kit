@@ -127,6 +127,39 @@ test.describe('a11y', () => {
 		expect(await page.evaluate(() => document.activeElement?.nodeName)).toBe('BODY');
 	});
 
+	test('an app starting in an iframe leaves focus in the parent page', async ({ page }) => {
+		await page.goto('/accessibility/a');
+		const button = page.locator('button', { hasText: 'focus me' });
+		await button.focus();
+
+		await page.evaluate(() => {
+			document.body.append(Object.assign(document.createElement('iframe'), { src: '/no-ssr' }));
+		});
+		await page.frameLocator('iframe').locator('body.started').waitFor();
+
+		await expect(button).toBeFocused();
+	});
+
+	test('navigating inside an iframe leaves focus in the parent page', async ({ page }) => {
+		await page.goto('/accessibility/a');
+		await page.evaluate(() => {
+			document.body.append(
+				Object.assign(document.createElement('iframe'), { src: '/accessibility/autofocus/a' })
+			);
+		});
+		await page.frameLocator('iframe').locator('body.started').waitFor();
+
+		const button = page.locator('button', { hasText: 'focus me' });
+		await button.focus();
+
+		await page.evaluate(() =>
+			// @ts-expect-error
+			document.querySelector('iframe')?.contentWindow?.goto('/accessibility/autofocus/b')
+		);
+
+		await expect(button).toBeFocused();
+	});
+
 	test('blur handler can access data during navigation', async ({ page, app }) => {
 		const errors = /** @type {string[]} */ ([]);
 		page.on('pageerror', (err) => errors.push(err.message));
