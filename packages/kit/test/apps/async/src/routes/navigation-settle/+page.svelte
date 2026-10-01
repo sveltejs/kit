@@ -1,5 +1,5 @@
 <script>
-	import { onNavigate } from '$app/navigation';
+	import { goto, onNavigate } from '$app/navigation';
 	import { onMount } from 'svelte';
 
 	onMount(() => {
@@ -18,3 +18,4 @@
 
 <a href="/navigation-settle/held">held</a>
 <a href="/navigation-settle/other">other</a>
+<button onclick={() => goto('/navigation-settle/other', { shallow: true })}>shallow</button>

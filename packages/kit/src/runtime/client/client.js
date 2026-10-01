@@ -323,6 +323,13 @@ const on_navigate_callbacks = new Set();
 /** @type {Set<(navigation: AfterNavigate) => void>} */
 const after_navigate_callbacks = new Set();
 
+/**
+ * The entries each navigation registered in `after_navigate_callbacks` for the functions its
+ * `onNavigate` callbacks returned, until they run or the navigation is aborted
+ * @type {Set<Array<(navigation: AfterNavigate) => void>>}
+ */
+const on_navigate_registrations = new Set();
+
 /** @type {import('./types.js').NavigationState & { nav: NavigationEvent }} */
 let current = {
 	branch: [],
@@ -2266,10 +2273,20 @@ function register_after_navigate(returned) {
 		(fn) => (navigation) => /** @type {(navigation: AfterNavigate) => void} */ (fn)(navigation)
 	);
 
-	entries.push(() => entries.forEach((entry) => after_navigate_callbacks.delete(entry)));
+	entries.push(() => unregister_after_navigate(entries));
 	entries.forEach((entry) => after_navigate_callbacks.add(entry));
+	on_navigate_registrations.add(entries);
 
 	return entries;
+}
+
+/**
+ * Removes entries added by `register_after_navigate`
+ * @param {Array<(navigation: AfterNavigate) => void>} entries
+ */
+function unregister_after_navigate(entries) {
+	entries.forEach((entry) => after_navigate_callbacks.delete(entry));
+	on_navigate_registrations.delete(entries);
 }
 
 /**
@@ -2296,7 +2313,7 @@ async function finish_navigation(
 
 	if (navigation_token !== nav_token) {
 		// they belong to this navigation, so they must not run when the newer one finishes
-		after_navigate.forEach((entry) => after_navigate_callbacks.delete(entry));
+		unregister_after_navigate(after_navigate);
 		nav.reject(new Error('navigation aborted'));
 		return false;
 	}
@@ -2313,6 +2330,12 @@ async function finish_navigation(
 	// Update to.scroll to the actual scroll position after navigation completed
 	if (nav.navigation.to) {
 		nav.navigation.to.scroll = scroll_state();
+	}
+
+	// a navigation this one superseded may not have reached its own abort yet (it can still be
+	// waiting for its render to settle), so its entries are removed here before they can run
+	for (const entries of on_navigate_registrations) {
+		if (entries !== after_navigate) unregister_after_navigate(entries);
 	}
 
 	after_navigate_callbacks.forEach((fn) => fn(/** @type {AfterNavigate} */ (nav.navigation)));

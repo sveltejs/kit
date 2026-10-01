@@ -1394,6 +1394,28 @@ test.describe('onNavigate', () => {
 			.poll(() => page.evaluate(() => window.after_navigate_log))
 			.toEqual(['/navigation-settle/other', 'shared']);
 	});
+
+	test('a navigation superseded by a shallow navigation before its render settles does not run its onNavigate return value', async ({
+		page
+	}) => {
+		await page.goto('/navigation-settle');
+		await page.evaluate(() => {
+			window.render_gate = new Promise((fulfil) => (window.open_render_gate = fulfil));
+		});
+
+		// the navigation commits, then waits for its render to settle
+		await page.locator('a[href="/navigation-settle/held"]').click();
+		await expect(page).toHaveURL('/navigation-settle/held');
+
+		// a newer shallow navigation starts, and can finish, before the render settles
+		await page.locator('button', { hasText: 'shallow' }).click();
+		await expect(page).toHaveURL('/navigation-settle/other');
+		await page.evaluate(() => window.open_render_gate('open'));
+
+		await expect
+			.poll(() => page.evaluate(() => window.after_navigate_log))
+			.toEqual(['/navigation-settle/other', 'shared']);
+	});
 });
 
 test.describe('fork', () => {
