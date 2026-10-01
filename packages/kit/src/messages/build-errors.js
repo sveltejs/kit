@@ -862,16 +862,6 @@ export function route_unbalanced_brackets(_values, options) {
 }
 
 /**
- * Page options are ignored when `router.type === 'hash'` (`%file%` has %options%)
- * @param {{ "file": string; "options": string }} _values
- * @param {ThrowOptions} [options]
- * @returns {never}
- */
-export function router_hash_page_options(_values, options) {
-	throw_error('router_hash_page_options', `Page options are ignored when \`router.type === 'hash'\` (\`${_values.file}\` has ${_values.options})`, options, router_hash_page_options);
-}
-
-/**
  * No routes found. If you are using a custom `src/routes` directory, make sure it is specified in your SvelteKit Vite plugin options
  * @param {void} _values
  * @param {ThrowOptions} [options]

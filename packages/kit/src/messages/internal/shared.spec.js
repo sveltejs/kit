@@ -158,6 +158,89 @@ test.each([
 	warn.mockRestore();
 });
 
+// client diagnostics only run in browsers, where `verbose` never applies
+test.each([
+	{ DEV: true, url_only: false },
+	{ DEV: false, url_only: true }
+])('client errors when DEV=$DEV', async ({ DEV, url_only }) => {
+	env.DEV = DEV;
+	env.BROWSER = true;
+	const e = await import('../client-errors.js');
+
+	expect(() => e.preload_invalid_route_id({ id: 'blog' })).toThrowKitError(
+		'preload_invalid_route_id',
+		url_only ? { url_only } : { contains: ['`blog`'] }
+	);
+});
+
+test.each([
+	{ DEV: true, url_only: false },
+	{ DEV: false, url_only: true }
+])('client warnings when DEV=$DEV', async ({ DEV, url_only }) => {
+	env.DEV = DEV;
+	env.BROWSER = true;
+	const w = await import('../client-warnings.js');
+	const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+	w.preload_route_missing({ id: '/a' });
+
+	expect(warn).toHaveBeenCalledOnce();
+	if (url_only) {
+		expect(warn).toHaveBeenCalledWith(diagnostic_url('preload_route_missing'));
+	} else {
+		expect(warn).toHaveBeenCalledWith(
+			expect.stringMatching(/^%c\[sveltekit\] preload_route_missing\n%c/),
+			'font-weight: bold',
+			'font-weight: normal'
+		);
+		expect(warn).toContainKitDiagnostic('preload_route_missing', { contains: ['`/a`'] });
+	}
+	warn.mockRestore();
+});
+
+test.each([{ DEV: true }, { DEV: false }])(
+	'client warnings log an element after the message when DEV=$DEV',
+	async ({ DEV }) => {
+		env.DEV = DEV;
+		env.BROWSER = true;
+		const w = await import('../client-warnings.js');
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+		const element = /** @type {Element} */ ({});
+
+		w.link_option_replaced({ name: 'noscroll' }, { element });
+
+		expect(warn).toHaveBeenCalledOnce();
+		expect(warn.mock.calls[0].at(-1)).toBe(element);
+		warn.mockRestore();
+	}
+);
+
+test.each([
+	{ DEV: true, url_only: false },
+	{ DEV: false, url_only: true }
+])('client capture_error returns the client error when DEV=$DEV', async ({ DEV, url_only }) => {
+	env.DEV = DEV;
+	env.BROWSER = true;
+	const [e, { capture_error }] = await Promise.all([
+		import('../client-errors.js'),
+		import('./shared.js')
+	]);
+
+	function call_site() {
+		return capture_error(() => e.redirect_loop({ url: 'https://a.test/b' }));
+	}
+	const error = call_site();
+
+	expect(error).toBeKitError(
+		'redirect_loop',
+		url_only ? { url_only } : { contains: ['https://a.test/b'] }
+	);
+	if (!url_only) {
+		expect(error.stack).toContain('call_site');
+		expect(error.stack).not.toContain('throw_error');
+	}
+});
+
 test('capture_error returns the server error instead of throwing it, keeping its cause and call site', async () => {
 	const [e, { capture_error }] = await Promise.all([
 		import('../server-errors.js'),

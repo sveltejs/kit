@@ -8,6 +8,11 @@ export function enable_verbose_errors() {
 	verbose = true;
 }
 
+/**
+ * @typedef {{ element?: Element }} ClientWarningOptions
+ * - `element`: logged after the warning, so that it can be inspected in the browser's devtools
+ */
+
 /** `console.warn` styles for the code and text of shared runtime warnings, as in Svelte */
 export const bold = 'font-weight: bold';
 export const normal = 'font-weight: normal';
@@ -28,4 +33,19 @@ export function throw_error(code, message, caller) {
 	Error.captureStackTrace?.(error, caller);
 
 	throw error;
+}
+
+/**
+ * Returns the error thrown by `fn`, for the few places that pass an error on (for example to
+ * `handleError`) rather than throwing it. Unlike `capture_error` in `./server.js`, this can be
+ * bundled for browsers, so the thrown error only contains the URL in production
+ * @param {() => never} fn A function that calls a generated `client-errors` or `shared-errors` helper
+ * @returns {Error}
+ */
+export function capture_error(fn) {
+	try {
+		fn();
+	} catch (error) {
+		return /** @type {Error} */ (error);
+	}
 }

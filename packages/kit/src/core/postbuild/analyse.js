@@ -12,6 +12,7 @@ import { PageNodes } from '../../utils/page_nodes.js';
 import { enable_verbose_errors } from '../../messages/internal/shared.js';
 import * as e from '../../messages/build-errors.js';
 import * as server_errors from '../../messages/server-errors.js';
+import * as shared_errors from '../../messages/shared-errors.js';
 
 export default forked(import.meta.url, analyse);
 
@@ -72,8 +73,8 @@ async function analyse({
 		if (hash && node.universal) {
 			const options = Object.keys(node.universal).filter((o) => o !== 'load');
 			if (options.length > 0) {
-				e.router_hash_page_options({
-					file: /** @type {string} */ (node.universal_id),
+				shared_errors.router_hash_page_options({
+					source: /** @type {string} */ (node.universal_id),
 					options: options.map((o) => `'${o}'`).join(', ')
 				});
 			}

@@ -574,8 +574,13 @@ test.describe('Redirects', () => {
 			await page.waitForSelector('#message');
 			expect(page.url()).toBe(`${baseURL}/redirect/loopy/a`);
 			expect(await page.textContent('h1')).toBe('500');
-			expect(await page.textContent('#message')).toBe(
-				'This is your custom error page saying: "Redirect loop (500 Internal Error)"'
+			const message = /** @type {string} */ (await page.textContent('#message'));
+			expect(message).toMatch(
+				/^This is your custom error page saying: "[^]+ \(500 Internal Error\)"$/
+			);
+			expect(message).toContainKitDiagnostic(
+				'redirect_loop',
+				process.env.DEV ? { contains: [`${baseURL}/redirect/loopy/`] } : { url_only: true }
 			);
 		} else {
 			// there's not a lot we can do to handle server-side redirect loops
@@ -613,7 +618,7 @@ test.describe('Redirects', () => {
 		} else if (!javaScriptEnabled) {
 			expect(message).toContainKitDiagnostic('invalid_redirect_status', { url_only: true });
 		} else {
-			expect(message).toContain('"Redirect loop (500 Internal Error)"');
+			expect(message).toContainKitDiagnostic('redirect_loop', { url_only: true });
 		}
 
 		if (!javaScriptEnabled) {
@@ -647,7 +652,7 @@ test.describe('Redirects', () => {
 		} else if (!javaScriptEnabled) {
 			expect(message).toContainKitDiagnostic('invalid_redirect_status', { url_only: true });
 		} else {
-			expect(message).toContain('"Redirect loop (500 Internal Error)"');
+			expect(message).toContainKitDiagnostic('redirect_loop', { url_only: true });
 		}
 	});
 
