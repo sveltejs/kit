@@ -5,7 +5,7 @@ import path from 'node:path';
 import * as devalue from 'devalue';
 import { dedent } from './sync/utils.js';
 import { get_global_name, runtime_directory } from './utils.js';
-import { stackless } from '../utils/error.js';
+import * as e from '../messages/build-errors.js';
 import { resolve_entry } from '../utils/filesystem.js';
 import { handle_issues, validate } from '../exports/internal/env.js';
 import { get_config_aliases } from '../exports/vite/utils.js';
@@ -97,17 +97,17 @@ export async function load_explicit_env(kit, file, root, mode) {
 		({ variables } = await runner.import(file));
 
 		if (!variables || typeof variables !== 'object') {
-			throw new Error(`${file} must export a variables object`);
+			e.env_variables_missing({ file });
 		}
 
 		// validate
 		for (const name of Object.keys(variables)) {
 			if (!valid_identifier.test(name) || reserved.has(name)) {
-				throw new Error(`Invalid environment variable name ${JSON.stringify(name)}`);
+				e.env_invalid_variable_name({ name: JSON.stringify(name) });
 			}
 		}
-	} catch (e) {
-		const error = /** @type {any} */ (e || {});
+	} catch (err) {
+		const error = /** @type {any} */ (err || {});
 
 		if (error.code === 'ERR_MODULE_NOT_FOUND') {
 			const match = error.message?.match(
@@ -117,18 +117,15 @@ export async function load_explicit_env(kit, file, root, mode) {
 			if (match) {
 				const type = /** @type {EnvType} */ (match[1]);
 				const importer = env_importers.get(type);
-				const message = importer
-					? `Module \`${posixify(path.relative(root, importer))}\` imports \`$app/env/${type}\`, which creates a circular dependency with \`src/env\``
-					: `Cannot import \`$app/env/${type}\` inside \`src/env\` or its dependencies because it creates a circular dependency`;
-
-				throw stackless(message);
+				// the stack trace would only point into Vite's module runner
+				e.env_circular_import(
+					{ type, importer: importer && posixify(path.relative(root, importer)) },
+					{ stackless: true }
+				);
 			}
 
 			if (error.message?.includes(`Cannot find module '$app`)) {
-				throw new Error(
-					`Cannot import \`$app/*\` modules other than \`$app/env\` inside \`src/env\``,
-					{ cause: e }
-				);
+				e.env_app_import(undefined, { cause: err });
 			}
 		}
 

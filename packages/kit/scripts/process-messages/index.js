@@ -41,8 +41,18 @@ for (const category of fs.readdirSync(messages_dir).sort()) {
 		.replace(/\r\n/g, '\n')
 		.trim();
 
-	const output = messages.map((message) => render(message, template)).join('\n\n');
+	// leading import lines are emitted once at the top of the generated module
+	const lines = template.split('\n');
+	let i = 0;
+	while (i < lines.length && /^(import |\/\*\* @import )/.test(lines[i])) i += 1;
+	const preamble = lines.slice(0, i).join('\n');
+	const body = lines.slice(i).join('\n').trim();
+
+	const output = messages.map((message) => render(message, body)).join('\n\n');
 
 	fs.mkdirSync(output_dir, { recursive: true });
-	fs.writeFileSync(new URL(`${category}.js`, output_dir), `${banner}\n\n${output}\n`);
+	fs.writeFileSync(
+		new URL(`${category}.js`, output_dir),
+		`${banner}\n\n${preamble ? `${preamble}\n\n` : ''}${output}\n`
+	);
 }

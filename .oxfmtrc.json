@@ -21,6 +21,7 @@
 		"packages/adapter-cloudflare/test/apps/workers/dist/**",
 		"packages/enhanced-img/test/Output.svelte",
 		"packages/kit/src/core/postbuild/fixtures/**",
+		"packages/kit/src/messages/*.js",
 		"packages/kit/src/runtime/components/svelte-5/layout.svelte",
 		"packages/kit/test/apps/basics/test/errors.json",
 		"packages/kit/test/build-errors/**",
