@@ -1,4 +1,3 @@
-import * as set_cookie_parser from 'set-cookie-parser';
 import { BINARY_FORM_CONTENT_TYPE } from '../runtime/form-utils.js';
 
 /**
@@ -58,32 +57,13 @@ export function negotiate(accept, types) {
 }
 
 /**
- * Reads all `Set-Cookie` headers as separate values. `Headers.get('set-cookie')`
- * collapses them into a single comma-joined string that browsers cannot parse, so
- * we use `Headers.getSetCookie()` where available and fall back to splitting the
- * joined string otherwise.
- *
- * TODO 3.0 `getSetCookie` is available in Node 19.7+; once we drop support for
- * older versions we can use it directly and remove the `splitCookiesString` fallback
- * @param {Headers} headers
- * @returns {string[]}
- */
-export function get_set_cookies(headers) {
-	if (typeof headers.getSetCookie === 'function') {
-		return headers.getSetCookie();
-	}
-
-	const set_cookie = headers.get('set-cookie');
-	return set_cookie ? set_cookie_parser.splitCookiesString(set_cookie) : [];
-}
-
-/**
- * Returns `true` if the request contains a `content-type` header with the given type
- * @param {Request} request
+ * Returns `true` if a `content-type` header value is one of the given types, ignoring
+ * parameters such as `charset` and comparing case-insensitively
+ * @param {string | null | undefined} header
  * @param  {...string} types
  */
-function is_content_type(request, ...types) {
-	const type = request.headers.get('content-type')?.split(';', 1)[0].trim() ?? '';
+export function matches_content_type(header, ...types) {
+	const type = header?.split(';', 1)[0].trim() ?? '';
 	return types.includes(type.toLowerCase());
 }
 
@@ -93,8 +73,8 @@ function is_content_type(request, ...types) {
 export function is_form_content_type(request) {
 	// These content types must be protected against CSRF
 	// https://developer.mozilla.org/en-US/docs/Web/API/HTMLFormElement/enctype
-	return is_content_type(
-		request,
+	return matches_content_type(
+		request.headers.get('content-type'),
 		'application/x-www-form-urlencoded',
 		'multipart/form-data',
 		'text/plain',

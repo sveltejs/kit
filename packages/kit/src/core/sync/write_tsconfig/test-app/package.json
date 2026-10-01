@@ -1,0 +1,7 @@
+{
+	"private": true,
+	"imports": {
+		"#lib": "./src/lib",
+		"#lib/*": "./src/lib/*"
+	}
+}

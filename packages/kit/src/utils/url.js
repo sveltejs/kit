@@ -1,12 +1,14 @@
 import { BROWSER, DEV } from 'esm-env';
+import * as e from '../messages/shared-errors.js';
+import * as server_errors from '../messages/server-errors.js';
 
 /**
  * Matches a URI scheme. See https://www.rfc-editor.org/rfc/rfc3986#section-3.1
  * @type {RegExp}
  */
-export const SCHEME = /^[a-z][a-z\d+\-.]+:/i;
+export const SCHEME = /^[a-z][a-z\d+\-.]*:/i;
 
-const internal = new URL('sveltekit-internal://');
+const internal = new URL('a://');
 
 /**
  * @param {string} base
@@ -25,6 +27,38 @@ export function resolve(base, path) {
 /** @param {string} path */
 export function is_root_relative(path) {
 	return path[0] === '/' && path[1] !== '/';
+}
+
+/**
+ * Relative reference from `from` to `to`, which must differ only by a trailing slash
+ * @param {string} from
+ * @param {string} to
+ * @returns {string}
+ */
+export function relative_pathname(from, to) {
+	const segment = to.replace(/\/$/, '').split('/').at(-1);
+
+	// The prefix prevents a colon in the segment from being interpreted as a URL scheme.
+	return from.endsWith('/') ? `../${segment}` : `./${segment}/`;
+}
+
+/**
+ * @param {string} location
+ * @param {string} allowed
+ */
+export function matches_external_allowlist_entry(location, allowed) {
+	if (location === allowed) return true;
+
+	// TODO replace the try/catch with `URL.parse` when browser support allows (Chrome 126, Firefox 126, Safari 18)
+	try {
+		const allow = new URL(allowed);
+		const loc = new URL(location, allow);
+
+		// this is stricter than `loc.origin === allow.origin`, which can fail in `blob:` cases
+		return loc.protocol === allow.protocol && loc.host === allow.host;
+	} catch {
+		return false;
+	}
 }
 
 /**
@@ -49,17 +83,6 @@ export function normalize_path(path, trailing_slash) {
  */
 export function decode_pathname(pathname) {
 	return pathname.split('%25').map(decodeURI).join('%25');
-}
-
-/** @param {Record<string, string>} params */
-export function decode_params(params) {
-	for (const key in params) {
-		// input has already been decoded by decodeURI
-		// now handle the rest
-		params[key] = decodeURIComponent(params[key]);
-	}
-
-	return params;
 }
 
 /**
@@ -164,9 +187,7 @@ function disable_hash(url) {
 
 	Object.defineProperty(url, 'hash', {
 		get() {
-			throw new Error(
-				'Cannot access event.url.hash. Consider using `page.url.hash` inside a component instead'
-			);
+			return e.url_hash_unavailable();
 		}
 	});
 }
@@ -181,7 +202,7 @@ export function disable_search(url) {
 	for (const property of ['search', 'searchParams']) {
 		Object.defineProperty(url, property, {
 			get() {
-				throw new Error(`Cannot access url.${property} on a page with prerendering enabled`);
+				return server_errors.url_search_unavailable_prerender({ property });
 			}
 		});
 	}

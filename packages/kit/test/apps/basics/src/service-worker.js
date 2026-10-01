@@ -1,11 +1,12 @@
-import { build, version } from '$service-worker';
-import { PUBLIC_STATIC } from '$env/static/public';
+import { immutable } from '$app/manifest';
+import { version } from '$app/env';
+import { PUBLIC_STATIC } from '$app/env/public';
 
 const name = `cache-${version}-${PUBLIC_STATIC}`;
 
 self.addEventListener('install', (event) => {
 	// @ts-expect-error
-	event.waitUntil(caches.open(name).then((cache) => cache.addAll(build)));
+	event.waitUntil(caches.open(name).then((cache) => cache.addAll(immutable.map((x) => x.path))));
 });
 
 self.addEventListener('activate', (event) => {
@@ -28,7 +29,7 @@ self.addEventListener('fetch', (event) => {
 	const url = new URL(request.url);
 	const cached = caches.match(request);
 
-	if (url.origin === location.origin && build.includes(url.pathname)) {
+	if (url.origin === location.origin && immutable.some((a) => url.pathname.includes(a.path))) {
 		// always return build files from cache
 		// @ts-expect-error
 		event.respondWith(cached);

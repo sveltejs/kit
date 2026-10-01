@@ -1,6 +1,6 @@
 <script>
 	import { deserialize } from '$app/forms';
-	import { browser } from '$app/environment';
+	import { browser } from '$app/env';
 
 	/** @type {import('./$types').ActionData} */
 	export let form;
@@ -8,7 +8,7 @@
 	$: hydrated_form_values = browser ? form?.values : '';
 
 	/**
-	 * @type {import('svelte/elements').EventHandler<SubmitEvent, HTMLFormElement>}
+	 * @type {(this: HTMLFormElement, event: SubmitEvent) => Promise<void>}
 	 * @this {HTMLFormElement}
 	 */
 	async function submit() {

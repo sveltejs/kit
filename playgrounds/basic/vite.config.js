@@ -1,8 +1,9 @@
 import { enhancedImages } from '@sveltejs/enhanced-img';
 import { sveltekit } from '@sveltejs/kit/vite';
 import adapter from '@sveltejs/adapter-node';
+import { defineConfig } from 'vite';
 
-export default {
+export default defineConfig({
 	plugins: [
 		enhancedImages(),
 		sveltekit({
@@ -23,4 +24,4 @@ export default {
 			allow: ['../../packages/kit']
 		}
 	}
-};
+});

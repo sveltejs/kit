@@ -16,7 +16,9 @@
 <button id="refresh-connections" onclick={refresh_connections}>refresh connections</button>
 
 <p id="value">{live.current}</p>
-<p id="error">{live.error ? `${live.error.status} ${live.error.body.message}` : ''}</p>
+<p id="error">
+	{live.error ? `${live.error.status} ${live.error.message}` : ''}
+</p>
 <p id="connected">{String(live.connected)}</p>
 <p id="done">{String(live.done)}</p>
 <p id="connections">{connections}</p>

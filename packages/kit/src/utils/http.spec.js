@@ -1,5 +1,5 @@
 import { assert, test } from 'vitest';
-import { get_set_cookies, negotiate } from './http.js';
+import { matches_content_type, negotiate } from './http.js';
 
 test('handle valid accept header value', () => {
 	const accept = 'text/html';
@@ -18,23 +18,12 @@ test('handle invalid accept header value', () => {
 	assert.equal(negotiate(accept, ['text/html']), 'text/html');
 });
 
+test('matches content types regardless of parameters and casing', () => {
+	assert.isTrue(matches_content_type('text/html; charset=utf-8', 'text/html'));
+	assert.isTrue(matches_content_type('TEXT/HTML ; charset=UTF-8', 'text/html'));
+	assert.isFalse(matches_content_type('text/html', 'text/plain'));
+});
+
 test('ignores an accept segment with no slash without catastrophic backtracking', () => {
 	assert.equal(negotiate('a'.repeat(200_000), ['text/html']), undefined);
 }, 100);
-
-test('get_set_cookies returns each set-cookie header separately', () => {
-	const headers = new Headers();
-	headers.append('set-cookie', 'session=abc123; Path=/; HttpOnly');
-	headers.append('set-cookie', 'csrf=xyz789; Path=/; SameSite=Strict');
-	headers.append('set-cookie', 'locale=en; Path=/');
-
-	assert.deepEqual(get_set_cookies(headers), [
-		'session=abc123; Path=/; HttpOnly',
-		'csrf=xyz789; Path=/; SameSite=Strict',
-		'locale=en; Path=/'
-	]);
-});
-
-test('get_set_cookies returns an empty array when there are no cookies', () => {
-	assert.deepEqual(get_set_cookies(new Headers()), []);
-});

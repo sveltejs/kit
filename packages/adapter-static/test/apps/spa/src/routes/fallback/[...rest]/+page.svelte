@@ -1,5 +1,5 @@
 <script>
-	import { PUBLIC_VALUE } from '$env/static/public';
+	import { PUBLIC_VALUE } from '$app/env/public';
 </script>
 
 <h1>the fallback page was rendered</h1>

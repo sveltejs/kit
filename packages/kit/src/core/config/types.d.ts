@@ -1,1 +1,1 @@
-export type Validator<T = any> = (input: T, keypath: string) => T;
+export type Validator<T = any> = (input: any, keypath: string) => T;

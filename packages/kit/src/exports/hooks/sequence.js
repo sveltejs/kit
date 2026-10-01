@@ -1,8 +1,9 @@
-/** @import { Handle, RequestEvent, ResolveOptions } from '@sveltejs/kit' */
-/** @import { MaybePromise } from 'types' */
+/** @import { RequestEvent } from '@sveltejs/kit' */
+/** @import { Handle, ResolveOptions } from '@sveltejs/kit/hooks' */
 import {
 	merge_tracing,
 	get_request_store,
+	record_span,
 	with_request_store
 } from '@sveltejs/kit/internal/server';
 
@@ -17,7 +18,7 @@ import {
  * /// file: src/hooks.server.js
  * import { sequence } from '@sveltejs/kit/hooks';
  *
- * /// type: import('@sveltejs/kit').Handle
+ * /// type: import('@sveltejs/kit/hooks').Handle
  * async function first({ event, resolve }) {
  * 	console.log('first pre-processing');
  * 	const result = await resolve(event, {
@@ -36,7 +37,7 @@ import {
  * 	return result;
  * }
  *
- * /// type: import('@sveltejs/kit').Handle
+ * /// type: import('@sveltejs/kit/hooks').Handle
  * async function second({ event, resolve }) {
  * 	console.log('second pre-processing');
  * 	const result = await resolve(event, {
@@ -74,6 +75,8 @@ import {
  * first post-processing
  * ```
  *
+ * Calling `resolve` invokes the next handler in the sequence (or SvelteKit itself, if it is the last one). To pass data between handlers, use `event.locals`.
+ *
  * @param {...Handle} handlers The chain of `handle` functions
  * @returns {Handle}
  */
@@ -89,12 +92,12 @@ export function sequence(...handlers) {
 		 * @param {number} i
 		 * @param {RequestEvent} event
 		 * @param {ResolveOptions | undefined} parent_options
-		 * @returns {MaybePromise<Response>}
+		 * @returns {Promise<Response>}
 		 */
 		function apply_handle(i, event, parent_options) {
 			const handle = handlers[i];
 
-			return state.tracing.record_span({
+			return record_span({
 				name: `sveltekit.handle.sequenced.${handle.name ? handle.name : i}`,
 				attributes: {},
 				fn: async (current) => {

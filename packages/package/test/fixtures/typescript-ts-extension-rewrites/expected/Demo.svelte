@@ -3,3 +3,5 @@
 </script>
 
 {helper()}{helper2()}
+
+<pre>import.meta.glob('./helper*.ts')</pre>

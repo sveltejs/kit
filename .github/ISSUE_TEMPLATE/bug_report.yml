@@ -25,7 +25,7 @@ body:
     id: logs
     attributes:
       label: Logs
-      description: "Please include browser console and server logs around the time this bug occurred. Please try not to insert an image but copy paste the log text."
+      description: 'Please include browser console and server logs around the time this bug occurred. Please try not to insert an image but copy paste the log text.'
       render: Shell
   - type: textarea
     id: system-info

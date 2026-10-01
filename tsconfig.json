@@ -7,5 +7,5 @@
 		"target": "ESNext",
 		"moduleResolution": "bundler"
 	},
-	"include": ["eslint.config.js", ".eslint/*.js"]
+	"include": ["eslint.config.js", ".eslint/*.js", "scripts", "vitest.config.js"]
 }

@@ -2,7 +2,7 @@
 import cjs from 'e2e-test-dep-hooks';
 cjs.cjs();
 
-/** @type {import("@sveltejs/kit").Reroute} */
+/** @type {import("@sveltejs/kit/hooks").Reroute} */
 export function reroute({ url }) {
 	return url.pathname;
 }

@@ -1,8 +1,10 @@
 import { createReadStream } from 'node:fs';
 import { Readable } from 'node:stream';
-import { SvelteKitError } from '../internal/index.js';
+import { SvelteKitError } from '../internal/shared.js';
 import { noop } from '../../utils/functions.js';
-import { get_set_cookies } from '../../utils/http.js';
+
+/** @type {WeakMap<import('http').IncomingMessage, (chunk: Buffer) => void>} */
+const body_data_listeners = new WeakMap();
 
 /**
  * @param {import('http').IncomingMessage} req
@@ -10,10 +12,6 @@ import { get_set_cookies } from '../../utils/http.js';
  */
 function get_raw_body(req, body_size_limit) {
 	const h = req.headers;
-
-	if (!h['content-type']) {
-		return null;
-	}
 
 	const content_length = Number(h['content-length']);
 	const has_content_length = Number.isFinite(content_length);
@@ -38,31 +36,29 @@ function get_raw_body(req, body_size_limit) {
 	return new ReadableStream({
 		start(controller) {
 			if (body_size_limit !== undefined && has_content_length && content_length > body_size_limit) {
-				let message = `Content-length of ${content_length} exceeds limit of ${body_size_limit} bytes.`;
-
-				if (body_size_limit === 0) {
-					// https://github.com/sveltejs/kit/pull/11589
-					// TODO this exists to aid migration — remove in a future version
-					message += ' To disable body size limits, specify Infinity rather than 0.';
-				}
-
-				const error = new SvelteKitError(413, 'Payload Too Large', message);
+				const error = new SvelteKitError(
+					413,
+					'Payload Too Large',
+					`Content-length of ${content_length} exceeds limit of ${body_size_limit} bytes.`
+				);
 
 				controller.error(error);
 				return;
 			}
 
-			req.on('error', (error) => {
+			/** @param {Error} error */
+			const on_error = (error) => {
 				cancelled = true;
 				controller.error(error);
-			});
+			};
 
-			req.on('end', () => {
+			const on_end = () => {
 				if (cancelled) return;
 				controller.close();
-			});
+			};
 
-			req.on('data', (chunk) => {
+			/** @param {Buffer} chunk */
+			const on_data = (chunk) => {
 				if (cancelled) return;
 
 				size += chunk.length;
@@ -94,7 +90,12 @@ function get_raw_body(req, body_size_limit) {
 				if (controller.desiredSize === null || controller.desiredSize <= 0) {
 					req.pause();
 				}
-			});
+			};
+
+			req.on('error', on_error);
+			req.on('end', on_end);
+			req.on('data', on_data);
+			body_data_listeners.set(req, on_data);
 		},
 
 		pull() {
@@ -111,14 +112,13 @@ function get_raw_body(req, body_size_limit) {
 /**
  * @param {{
  *   request: import('http').IncomingMessage;
+ *   response?: import('http').ServerResponse;
  *   base: string;
  *   bodySizeLimit?: number;
  * }} options
- * @returns {Promise<Request>}
+ * @returns {Request}
  */
-// TODO 3.0 make the signature synchronous?
-// eslint-disable-next-line @typescript-eslint/require-await
-export async function getRequest({ request, base, bodySizeLimit }) {
+export function getRequest({ request, response, base, bodySizeLimit }) {
 	let headers = /** @type {Record<string, string>} */ (request.headers);
 	if (request.httpVersionMajor >= 2) {
 		// the Request constructor rejects headers with ':' in the name
@@ -133,15 +133,19 @@ export async function getRequest({ request, base, bodySizeLimit }) {
 		delete headers[':scheme'];
 	}
 
-	// TODO: Whenever Node >=22 is minimum supported version, we can use `request.readableAborted`
-	// @see https://github.com/nodejs/node/blob/5cf3c3e24c7257a0c6192ed8ef71efec8ddac22b/lib/internal/streams/readable.js#L1443-L1453
 	const controller = new AbortController();
-	let errored = false;
-	let end_emitted = false;
-	request.once('error', () => (errored = true));
-	request.once('end', () => (end_emitted = true));
+
 	request.once('close', () => {
-		if ((errored || request.destroyed) && !end_emitted) {
+		if (request.readableAborted) {
+			controller.abort();
+		}
+	});
+
+	// `readableAborted` stays false once the request has been fully read (or drained),
+	// so a client disconnect must also be detected on the response side. `writableEnded`
+	// rather than `writableFinished` because HTTP/2 marks cancelled streams as finished
+	response?.once('close', () => {
+		if (!response.writableEnded) {
 			controller.abort();
 		}
 	});
@@ -160,16 +164,55 @@ export async function getRequest({ request, base, bodySizeLimit }) {
 }
 
 /**
+ * Drains any unconsumed request body once the response has been sent. When a
+ * route doesn't read the request body (for example a page route receiving a
+ * POST), the unread bytes remain buffered in the socket. On keep-alive
+ * connections Node's HTTP parser then reads those leftover bytes as the next
+ * request, fails to parse them, and resets the connection — losing any
+ * pipelined request. Resuming the request discards the bytes so the connection
+ * stays usable.
+ *
+ * Because `get_raw_body` attaches a `data` listener, Node marks the request as
+ * being consumed (`req._consuming`) and skips its own automatic drain, so we
+ * have to do it ourselves. The whole remaining body is read and discarded; this
+ * is the intended trade-off (keeping the connection reusable) over destroying it.
+ * @see https://github.com/sveltejs/kit/issues/14916
+ * @see https://github.com/sveltejs/kit/issues/15526
+ * @param {import('http').ServerResponse} res
+ */
+function drain_request(res) {
+	const req = res.req;
+	if (!req || req.readableEnded || req.destroyed) return;
+
+	// When the body went unread, get_raw_body's `data` listener is still attached
+	// and enqueues into a ReadableStream nobody consumes; it pauses the request at
+	// the high water mark, so one chunk sits in memory and the rest stays buffered
+	// in the socket. Remove only that `data` listener so the resumed stream drops
+	// the remaining bytes instead of re-buffering them. The `end` and `error`
+	// listeners stay attached so the body's ReadableStream is still closed (or
+	// errored) once draining completes, and a consumer that stopped reading
+	// mid-body sees a clean end instead of hanging.
+	const on_data = body_data_listeners.get(req);
+	if (on_data) {
+		req.removeListener('data', on_data);
+		body_data_listeners.delete(req);
+	}
+
+	req.resume();
+}
+
+/**
  * @param {import('http').ServerResponse} res
  * @param {Response} response
- * @returns {Promise<void>}
+ * @returns {void}
  */
-// TODO 3.0 make the signature synchronous?
-// eslint-disable-next-line @typescript-eslint/require-await
-export async function setResponse(res, response) {
+export function setResponse(res, response) {
+	res.once('finish', () => drain_request(res));
+	res.once('close', () => drain_request(res));
+
 	for (const [key, value] of response.headers) {
 		try {
-			res.setHeader(key, key === 'set-cookie' ? get_set_cookies(response.headers) : value);
+			res.setHeader(key, key === 'set-cookie' ? response.headers.getSetCookie() : value);
 		} catch (error) {
 			res.getHeaderNames().forEach((name) => res.removeHeader(name));
 			res.writeHead(500).end(String(error));
@@ -177,14 +220,14 @@ export async function setResponse(res, response) {
 		}
 	}
 
-	res.writeHead(response.status);
-
 	if (!response.body) {
+		res.writeHead(response.status);
 		res.end();
 		return;
 	}
 
 	if (response.body.locked) {
+		res.writeHead(response.status);
 		res.end(
 			'Fatal error: Response body is locked. ' +
 				"This can happen when the response was already read (for example through 'response.json()' or 'response.text()')."
@@ -212,11 +255,73 @@ export async function setResponse(res, response) {
 	res.on('close', cancel);
 	res.on('error', cancel);
 
-	void next();
+	/** @type {Uint8Array<ArrayBuffer>[]} */
+	const buffered = [];
+
+	/** @type {ReturnType<typeof reader.read> | null} */
+	let pending = null;
+
+	void probe();
+
+	// a fixed body (a string, buffer or blob, however constructed) settles all its
+	// reads before the next macrotask, so it can be measured and sent with a
+	// `content-length`; a genuine stream leaves a read pending and only has its
+	// headers delayed by a single tick
+	async function probe() {
+		try {
+			/** @type {Promise<undefined>} */
+			const deadline = new Promise((fulfil) => setImmediate(() => fulfil(undefined)));
+
+			while (buffered.length < 2) {
+				pending = reader.read();
+				const result = await Promise.race([pending, deadline]);
+
+				if (!result) break; // deadline hit — treat the body as a stream
+
+				pending = null;
+
+				if (result.done) {
+					// a `content-length` next to a `transfer-encoding` would be invalid
+					if (!res.hasHeader('content-length') && !res.hasHeader('transfer-encoding')) {
+						res.setHeader(
+							'content-length',
+							buffered.reduce((total, chunk) => total + chunk.byteLength, 0)
+						);
+					}
+					break;
+				}
+
+				buffered.push(result.value);
+			}
+
+			if (res.destroyed) return;
+
+			res.writeHead(response.status);
+			await next();
+		} catch (error) {
+			if (!res.headersSent) res.writeHead(response.status);
+			cancel(error instanceof Error ? error : new Error(String(error)));
+		}
+	}
+
 	async function next() {
 		try {
 			for (;;) {
-				const { done, value } = await reader.read();
+				/** @type {Awaited<ReturnType<typeof reader.read>>} */
+				let result;
+				if (buffered.length > 0) {
+					result = {
+						done: false,
+						value: /** @type {Uint8Array<ArrayBuffer>} */ (buffered.shift())
+					};
+				} else if (pending) {
+					result = await pending;
+					pending = null;
+				} else {
+					result = await reader.read();
+				}
+
+				const { done, value } = result;
 
 				if (done) break;
 

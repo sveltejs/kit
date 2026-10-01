@@ -1,4 +1,4 @@
-import { building, dev } from '$app/environment';
+import { building, dev } from '$app/env';
 import { error, isHttpError, redirect } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 import fs from 'node:fs';
@@ -6,18 +6,6 @@ import { COOKIE_NAME } from './routes/cookies/shared';
 import { _set_from_init } from './routes/init-hooks/+page.server';
 import { getRequestEvent } from '$app/server';
 import { resolve } from '$app/paths';
-
-// TODO: remove in SvelteKit 3.0
-// @ts-ignore this doesn't exist in old Node
-Promise.withResolvers ??= () => {
-	/** @type {{ promise: Promise<any>, resolve: (value: any) => void, reject: (reason?: any) => void }} */
-	const d = {};
-	d.promise = new Promise((resolve, reject) => {
-		d.resolve = resolve;
-		d.reject = reject;
-	});
-	return d;
-};
 
 // check that this doesn't throw when called outside an event context
 resolve('/');
@@ -32,7 +20,6 @@ resolve('/');
 export function error_to_pojo(error) {
 	if (isHttpError(error)) {
 		return {
-			status: error.status,
 			...error.body
 		};
 	}
@@ -41,27 +28,50 @@ export function error_to_pojo(error) {
 	return { name, message, stack, ...custom };
 }
 
-/** @type {import('@sveltejs/kit').HandleServerError} */
-export const handleError = ({ event, error: e, status, message }) => {
-	const error = /** @type {Error} */ (e);
+/** @type {import('@sveltejs/kit/hooks').HandleServerError} */
+export const handleError = ({ event, kind, error }) => {
 	// TODO we do this because there's no other way (that i'm aware of)
 	// to communicate errors back to the test suite. even if we could
 	// capture stderr, attributing an error to a specific request
 	// is trickier when things run concurrently
-	const errors = fs.existsSync('test/errors.json')
-		? JSON.parse(fs.readFileSync('test/errors.json', 'utf8'))
-		: {};
-	errors[event.url.pathname] = error_to_pojo(error);
-	fs.writeFileSync('test/errors.json', JSON.stringify(errors));
+	fs.appendFileSync(
+		'test/errors.jsonl',
+		JSON.stringify({
+			path: event.url.pathname,
+			kind,
+			error: kind === 'unknown' ? error_to_pojo(/** @type {Error} */ (error)) : error
+		}) + '\n'
+	);
+
+	if (kind === 'app') {
+		// so that `error(...)` bodies reach the page verbatim
+		return error;
+	}
+
+	const status = kind === 'framework' ? error.status : 500;
+	const detail = kind === 'framework' ? error.message : /** @type {Error} */ (error).message;
+
+	let message = kind === 'framework' ? error.message : 'Internal Error';
 
 	if (event.url.pathname.startsWith('/get-request-event/')) {
 		const ev = getRequestEvent();
 		message = /** @type {string} */ (ev.locals.message);
 	}
 
+	if (event.url.pathname === '/errors/handle-error-status') {
+		return {
+			status: 404,
+			message: `${detail} (${status} ${message})`
+		};
+	}
+
+	if (event.url.pathname === '/errors/handle-error-status-fallback') {
+		return { status: 503, message };
+	}
+
 	return event.url.pathname.endsWith('404-fallback')
-		? undefined
-		: { message: `${error.message} (${status} ${message})` };
+		? {}
+		: { message: `${detail} (${status} ${message})` };
 };
 
 export const handle = sequence(
@@ -199,13 +209,19 @@ export const handle = sequence(
 		}
 
 		return resolve(event, {
-			// needed for asset-preload tests
-			preload: () => true
+			// needed for asset-preload tests, which assert `filename` is the unhashed source path
+			preload: (input) =>
+				input.type !== 'font' ||
+				[
+					'src/routes/asset-preload/shlop.woff2',
+					'src/routes/asset-preload/shlop.var.woff2',
+					'src/routes/asset-preload/shlop+bold.woff2'
+				].includes(input.filename)
 		});
 	}
 );
 
-/** @type {import('@sveltejs/kit').HandleFetch} */
+/** @type {import('@sveltejs/kit/hooks').HandleFetch} */
 export async function handleFetch({ request, fetch }) {
 	if (request.url.endsWith('/server-fetch-request.json')) {
 		request = new Request(

@@ -1,5 +1,5 @@
 {
-	"extends": "./.svelte-kit/tsconfig.json",
+	"extends": "$app/tsconfig",
 	"compilerOptions": {
 		"rewriteRelativeImportExtensions": true,
 		"allowJs": true,
@@ -10,5 +10,6 @@
 		"skipLibCheck": true,
 		"sourceMap": true,
 		"moduleResolution": "bundler"
-	}
+	},
+	"include": ["src", "test", "playwright.config.js", "vite.config.ts"]
 }

@@ -1,55 +1,49 @@
-import { assert, test } from 'vitest';
-import { execSync } from 'node:child_process';
-import path from 'node:path';
-import { EOL } from 'node:os';
-import process from 'node:process';
-
-const timeout = 60_000;
+import { assert, expect, test } from 'vitest';
+import { bullet_list } from '../../src/utils/format.js';
+import { build, timeout } from './utils.js';
 
 test('prerenderable routes must be prerendered', { timeout }, () => {
-	assert.throws(
-		() =>
-			execSync('pnpm build', {
-				cwd: path.join(process.cwd(), 'apps/prerenderable-not-prerendered'),
-				stdio: 'pipe',
-				timeout
-			}),
-		/The following routes were marked as prerenderable, but were not prerendered because they were not found while crawling your app:\r?\n {2}- \/\[x\]/gs
-	);
+	const output = build('prerenderable-not-prerendered');
+
+	expect(output).toContainKitDiagnostic('prerender_unseen_routes', {
+		contains: [bullet_list(['/[x]'])]
+	});
+	assert.match(output, /To suppress or handle this error, implement `handleUnseenRoutes`/);
+});
+
+test('prerendered endpoints cannot have fallback handlers', { timeout }, () => {
+	const output = build('prerenderable-not-prerendered', { PRERENDER_FALLBACK: 'true' });
+
+	expect(output).toContainKitDiagnostic('prerender_endpoint_methods', {
+		contains: ['POST, PUT, PATCH, DELETE, QUERY', '(`/fallback`)']
+	});
 });
 
 test('entry generators should match their own route', { timeout }, () => {
-	assert.throws(
-		() =>
-			execSync('pnpm build', {
-				cwd: path.join(process.cwd(), 'apps/prerender-entry-generator-mismatch'),
-				stdio: 'pipe',
-				timeout
-			}),
-		`Error: The entries export from /[slug]/[notSpecific] generated entry /whatever/specific, which was matched by /[slug]/specific - see the \`handleEntryGeneratorMismatch\` option in https://svelte.dev/docs/kit/configuration#prerender for more info.${EOL}To suppress or handle this error, implement \`handleEntryGeneratorMismatch\` in https://svelte.dev/docs/kit/configuration#prerender`
-	);
+	const output = build('prerender-entry-generator-mismatch');
+
+	expect(output).toContainKitDiagnostic('prerender_entry_generator_mismatch', {
+		contains: ['/[slug]/[notSpecific]', '/whatever/specific', '/[slug]/specific']
+	});
 });
 
 test('an error in a `prerender` function should fail the build', { timeout }, () => {
-	assert.throws(
-		() =>
-			execSync('pnpm build', {
-				cwd: path.join(process.cwd(), 'apps/prerender-remote-function-error'),
-				stdio: 'pipe',
-				timeout
-			}),
-		/remote function blew up/
-	);
+	const output = build('prerender-remote-function-error');
+
+	assert.match(output, /remote function blew up/);
 });
 
 test('a root +server.js returning non-HTML cannot be prerendered', { timeout }, () => {
-	assert.throws(
-		() =>
-			execSync('pnpm build', {
-				cwd: path.join(process.cwd(), 'apps/prerender-root-non-html-server'),
-				stdio: 'pipe',
-				timeout
-			}),
-		/Cannot prerender a root \+server\.js that returns a non-HTML response/
-	);
+	const output = build('prerender-root-non-html-server');
+
+	expect(output).toContainKitDiagnostic('prerender_root_non_html');
+});
+
+test('links to missing fragments fail the build by default', { timeout }, () => {
+	const output = build('prerenderable-incorrect-fragment');
+
+	expect(output).toContainKitDiagnostic('prerender_missing_id', {
+		contains: ['/foo#missing', 'id="missing"', `:\n${bullet_list(['/'])}`]
+	});
+	assert.match(output, /To suppress or handle this error, implement `handleMissingId`/);
 });

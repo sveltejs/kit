@@ -4,7 +4,7 @@ import { exec, parse_route_id } from '../../utils/routing.js';
  * @param {import('./types.js').SvelteKitApp} app
  * @returns {import('types').CSRRoute[]}
  */
-export function parse({ nodes, server_loads, dictionary, matchers }) {
+export function parse_routes({ nodes, server_loads, dictionary, matchers }) {
 	const layouts_with_server_load = new Set(server_loads);
 
 	return Object.entries(dictionary).map(([id, [leaf, layouts, errors]]) => {

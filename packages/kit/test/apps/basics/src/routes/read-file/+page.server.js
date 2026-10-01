@@ -1,4 +1,4 @@
-import { dev } from '$app/environment';
+import { dev } from '$app/env';
 import { read } from '$app/server';
 import auto from './[auto].txt';
 import url from './[url].txt?url';

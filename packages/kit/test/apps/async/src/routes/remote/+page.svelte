@@ -1,5 +1,5 @@
-<script>
-	import { browser } from '$app/environment';
+<script lang="ts">
+	import { browser } from '$app/env';
 	import { refreshAll } from '$app/navigation';
 	import {
 		add,
@@ -11,6 +11,8 @@
 		set_count_partial_refresh_all,
 		set_count_server_refresh,
 		set_count_server_refresh_after_read,
+		set_count_server_refresh_before_mutation,
+		set_count_server_refresh_then_reawait,
 		set_count_server_set,
 		resolve_deferreds
 	} from './query-command.remote.js';
@@ -18,7 +20,7 @@
 
 	const { data } = $props();
 
-	let command_result = $state(/** @type {number | null} */ (null));
+	let command_result: number | null = $state(null);
 
 	// we just want it not to be treeshaken away
 	void q;
@@ -27,8 +29,7 @@
 	const flaky_ok = get_flaky_count('ok');
 	const flaky_fail = get_flaky_count('fail');
 
-	/** @param {unknown} error */
-	function get_message(error) {
+	function get_message(error: unknown) {
 		if (error instanceof Error) return error.message;
 
 		if (typeof error === 'object' && error && 'message' in error) {
@@ -50,7 +51,7 @@
 <svelte:boundary>
 	<p id="flaky-fail-result">{await flaky_fail}</p>
 
-	{#snippet failed(error)}
+	{#snippet failed(error: unknown)}
 		<p id="flaky-fail-result">{get_message(error)}</p>
 	{/snippet}
 </svelte:boundary>
@@ -97,6 +98,22 @@
 	id="multiply-server-refresh-after-read-btn"
 >
 	command (query server refresh after read)
+</button>
+<button
+	onclick={async () => {
+		command_result = await set_count_server_refresh_before_mutation(12);
+	}}
+	id="multiply-server-refresh-before-mutation-btn"
+>
+	command (query server refresh before mutation)
+</button>
+<button
+	onclick={async () => {
+		command_result = await set_count_server_refresh_then_reawait(13);
+	}}
+	id="multiply-server-refresh-then-reawait-btn"
+>
+	command (query server refresh then re-await)
 </button>
 <button
 	onclick={async () => {
@@ -154,9 +171,6 @@
 </button>
 
 <button id="refresh-all" onclick={() => refreshAll()}>refreshAll</button>
-<button id="refresh-remote-only" onclick={() => refreshAll({ includeLoadFunctions: false })}>
-	refreshAll (remote functions only)
-</button>
 <button id="resolve-deferreds" onclick={() => resolve_deferreds()}>Resolve Deferreds</button>
 
 <a href="/remote/event">/remote/event</a>

@@ -1,20 +1,14 @@
-import { webcrypto } from 'node:crypto';
-import { assert, beforeAll, test, describe } from 'vitest';
+import process from 'node:process';
+import { assert, expect, test, describe, beforeAll } from 'vitest';
 import { Csp } from './csp.js';
 
-// TODO: remove after bumping peer dependency to require Node 20
-if (!globalThis.crypto) {
-	// @ts-expect-error
-	globalThis.crypto = webcrypto;
-}
-
-describe('CSPs in dev', () => {
+describe.skipIf(!process.env.DEV)('CSPs in dev', () => {
 	beforeAll(() => {
 		// @ts-expect-error
 		globalThis.__SVELTEKIT_DEV__ = true;
 	});
 
-	test('adds unsafe-inline styles', () => {
+	test('adds unsafe-inline styles', async () => {
 		const csp = new Csp(
 			{
 				mode: 'hash',
@@ -35,7 +29,7 @@ describe('CSPs in dev', () => {
 			}
 		);
 
-		csp.add_style('');
+		await csp.add_style('');
 
 		assert.equal(
 			csp.csp_provider.get_header(),
@@ -48,8 +42,9 @@ describe('CSPs in dev', () => {
 		);
 	});
 
-	test.skip('removes strict-dynamic', () => {
-		['default-src', 'script-src'].forEach((name) => {
+	// TODO: re-enable when we support strict-dynamic in dev again
+	test.skip('removes strict-dynamic', async () => {
+		for (const name of ['default-src', 'script-src']) {
 			const csp = new Csp(
 				{
 					mode: 'hash',
@@ -66,15 +61,15 @@ describe('CSPs in dev', () => {
 				}
 			);
 
-			csp.add_script('');
+			await csp.add_script('');
 
 			assert.equal(csp.csp_provider.get_header(), '');
 			assert.equal(csp.report_only_provider.get_header(), '');
-		});
+		}
 	});
 });
 
-describe('CSPs in prod', () => {
+describe.skipIf(!!process.env.DEV)('CSPs in prod', () => {
 	beforeAll(() => {
 		// @ts-expect-error
 		globalThis.__SVELTEKIT_DEV__ = false;
@@ -117,7 +112,7 @@ describe('CSPs in prod', () => {
 		assert.equal(csp.report_only_provider.get_header(), "default-src 'self'; report-uri /");
 	});
 
-	test('generates CSP header with nonce', () => {
+	test('generates CSP header with nonce', async () => {
 		const csp = new Csp(
 			{
 				mode: 'nonce',
@@ -134,7 +129,7 @@ describe('CSPs in prod', () => {
 			}
 		);
 
-		csp.add_script('');
+		await csp.add_script('');
 
 		assert.ok(
 			csp.csp_provider.get_header().startsWith("default-src 'self'; script-src 'self' 'nonce-")
@@ -146,7 +141,7 @@ describe('CSPs in prod', () => {
 		);
 	});
 
-	test('skips nonce with unsafe-inline', () => {
+	test('skips nonce with unsafe-inline', async () => {
 		const csp = new Csp(
 			{
 				mode: 'nonce',
@@ -173,8 +168,8 @@ describe('CSPs in prod', () => {
 			}
 		);
 
-		csp.add_script('');
-		csp.add_style('');
+		await csp.add_script('');
+		await csp.add_style('');
 
 		assert.equal(
 			csp.csp_provider.get_header(),
@@ -186,7 +181,7 @@ describe('CSPs in prod', () => {
 		);
 	});
 
-	test('skips nonce in style-src when using unsafe-inline', () => {
+	test('skips nonce in style-src when using unsafe-inline', async () => {
 		const csp = new Csp(
 			{
 				mode: 'nonce',
@@ -203,7 +198,7 @@ describe('CSPs in prod', () => {
 			}
 		);
 
-		csp.add_style('');
+		await csp.add_style('');
 
 		assert.equal(csp.csp_provider.get_header(), "style-src 'self' 'unsafe-inline'");
 		assert.equal(
@@ -212,7 +207,7 @@ describe('CSPs in prod', () => {
 		);
 	});
 
-	test('skips hash with unsafe-inline', () => {
+	test('skips hash with unsafe-inline', async () => {
 		const csp = new Csp(
 			{
 				mode: 'hash',
@@ -229,7 +224,7 @@ describe('CSPs in prod', () => {
 			}
 		);
 
-		csp.add_script('');
+		await csp.add_script('');
 
 		assert.equal(csp.csp_provider.get_header(), "default-src 'unsafe-inline'");
 		assert.equal(
@@ -238,7 +233,7 @@ describe('CSPs in prod', () => {
 		);
 	});
 
-	test('does not add empty comment hash to style-src-elem if already defined', () => {
+	test('does not add empty comment hash to style-src-elem if already defined', async () => {
 		const csp = new Csp(
 			{
 				mode: 'hash',
@@ -254,7 +249,7 @@ describe('CSPs in prod', () => {
 			}
 		);
 
-		csp.add_style('/* empty */');
+		await csp.add_style('/* empty */');
 
 		assert.equal(
 			csp.csp_provider.get_header(),
@@ -290,7 +285,7 @@ describe('CSPs in prod', () => {
 		);
 	});
 
-	test('adds nonce style-src-attr and style-src-elem and nonce + sha to script-src-elem if necessary', () => {
+	test('adds nonce style-src-attr and style-src-elem and nonce + sha to script-src-elem if necessary', async () => {
 		const csp = new Csp(
 			{
 				mode: 'auto',
@@ -306,8 +301,8 @@ describe('CSPs in prod', () => {
 			}
 		);
 
-		csp.add_script('');
-		csp.add_style('');
+		await csp.add_script('');
+		await csp.add_style('');
 
 		const csp_header = csp.csp_provider.get_header();
 		assert.ok(csp_header.includes("script-src-elem 'self' 'nonce-"));
@@ -319,7 +314,7 @@ describe('CSPs in prod', () => {
 		);
 	});
 
-	test('adds hash to script-src-elem, style-src-attr and style-src-elem if necessary during prerendering', () => {
+	test('adds hash to script-src-elem, style-src-attr and style-src-elem if necessary during prerendering', async () => {
 		const csp = new Csp(
 			{
 				mode: 'auto',
@@ -335,8 +330,8 @@ describe('CSPs in prod', () => {
 			}
 		);
 
-		csp.add_script('');
-		csp.add_style('');
+		await csp.add_script('');
+		await csp.add_style('');
 
 		const csp_header = csp.csp_provider.get_header();
 		assert.ok(
@@ -356,7 +351,7 @@ describe('CSPs in prod', () => {
 		);
 	});
 
-	test('uses hashes when prerendering', () => {
+	test('uses hashes when prerendering', async () => {
 		const csp = new Csp(
 			{
 				mode: 'auto',
@@ -373,7 +368,7 @@ describe('CSPs in prod', () => {
 			}
 		);
 
-		csp.add_script('');
+		await csp.add_script('');
 
 		assert.equal(
 			csp.csp_provider.get_header(),
@@ -402,7 +397,7 @@ describe('CSPs in prod', () => {
 	});
 
 	test('throws when reportOnly contains directives but no report-uri or report-to', () => {
-		assert.throws(() => {
+		expect(() => {
 			new Csp(
 				{
 					mode: 'hash',
@@ -415,7 +410,7 @@ describe('CSPs in prod', () => {
 					prerender: false
 				}
 			);
-		}, '`content-security-policy-report-only` must be specified with either the `report-to` or `report-uri` directives, or both');
+		}).toThrowKitError('csp_report_only_missing_report');
 	});
 
 	test('add_script_hashes adds hashes to script-src', () => {
@@ -524,7 +519,7 @@ describe('CSPs in prod', () => {
 		assert.ok(csp.script_needs_nonce);
 	});
 
-	test('adds nonce when both unsafe-inline and strict-dynamic are present', () => {
+	test('adds nonce when both unsafe-inline and strict-dynamic are present', async () => {
 		const csp = new Csp(
 			{
 				mode: 'nonce',
@@ -536,7 +531,7 @@ describe('CSPs in prod', () => {
 			{ prerender: false }
 		);
 
-		csp.add_script('');
+		await csp.add_script('');
 
 		const header = csp.csp_provider.get_header();
 		// Should include nonce even though unsafe-inline is present,
@@ -546,7 +541,7 @@ describe('CSPs in prod', () => {
 		assert.ok(header.includes("'unsafe-inline'"));
 	});
 
-	test('adds nonce with strict-dynamic in default-src', () => {
+	test('adds nonce with strict-dynamic in default-src', async () => {
 		const csp = new Csp(
 			{
 				mode: 'nonce',
@@ -558,7 +553,7 @@ describe('CSPs in prod', () => {
 			{ prerender: false }
 		);
 
-		csp.add_script('');
+		await csp.add_script('');
 
 		const header = csp.csp_provider.get_header();
 		// Should include nonce even though unsafe-inline is present
@@ -567,7 +562,7 @@ describe('CSPs in prod', () => {
 		assert.ok(header.includes("'unsafe-inline'"));
 	});
 
-	test('strict-dynamic does not affect style-src', () => {
+	test('strict-dynamic does not affect style-src', async () => {
 		const csp = new Csp(
 			{
 				mode: 'nonce',
@@ -580,7 +575,7 @@ describe('CSPs in prod', () => {
 			{ prerender: false }
 		);
 
-		csp.add_style('');
+		await csp.add_style('');
 
 		const header = csp.csp_provider.get_header();
 		// Should NOT include nonce because strict-dynamic doesn't affect styles

@@ -1,5 +1,5 @@
 import { error, redirect } from '@sveltejs/kit';
-import { SOME_JSON } from '$env/static/private';
+import { SOME_JSON } from '$app/env/private';
 
 // https://github.com/sveltejs/kit/issues/8646
 if (JSON.parse(SOME_JSON).answer !== 42) {
@@ -18,7 +18,7 @@ export async function load({ cookies, locals, fetch }) {
 
 	const should_fail = cookies.get('fail-type');
 	if (should_fail) {
-		cookies.delete('fail-type', { path: '/' });
+		cookies.delete('fail-type');
 		if (should_fail === 'expected') {
 			error(401, 'Not allowed');
 		} else if (should_fail === 'unexpected') {
@@ -29,6 +29,7 @@ export async function load({ cookies, locals, fetch }) {
 	}
 	// Do NOT make this load function depend on something which would cause it to rerun
 	return {
-		rootlayout: 'rootlayout'
+		rootlayout: 'rootlayout',
+		...(cookies.get('defer') === 'true' ? { deferred: Promise.resolve(42) } : {})
 	};
 }

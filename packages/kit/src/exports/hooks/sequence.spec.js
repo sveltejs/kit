@@ -2,8 +2,6 @@
 /** @import { RequestState } from 'types' */
 import { assert, expect, test, vi } from 'vitest';
 import { sequence } from './sequence.js';
-import { installPolyfills } from '../node/polyfills.js';
-import { noop_span } from '../../runtime/telemetry/noop.js';
 
 const dummy_event = vi.hoisted(
 	() =>
@@ -20,16 +18,10 @@ vi.mock(import('@sveltejs/kit/internal/server'), async (actualPromise) => {
 		...actual,
 		get_request_store: () => ({
 			event: dummy_event,
-			state: /** @type {RequestState} */ ({
-				tracing: {
-					record_span: ({ fn }) => fn(noop_span)
-				}
-			})
+			state: /** @type {RequestState} */ (/** @type {unknown} */ ({}))
 		})
 	};
 });
-
-installPolyfills();
 
 test('applies handlers in sequence', async () => {
 	/** @type {string[]} */
@@ -58,7 +50,10 @@ test('applies handlers in sequence', async () => {
 
 	const response = new Response();
 
-	assert.equal(await handler({ event: dummy_event, resolve: () => response }), response);
+	assert.equal(
+		await handler({ event: dummy_event, resolve: () => Promise.resolve(response) }),
+		response
+	);
 	expect(order).toEqual(['1a', '2a', '3a', '3b', '2b', '1b']);
 });
 
@@ -151,7 +146,7 @@ test('uses first defined preload option', async () => {
 			html += preload({ path: '', type: 'js' });
 			html += preload({ path: '', type: 'css' });
 
-			return new Response(html);
+			return Promise.resolve(new Response(html));
 		}
 	});
 
@@ -183,7 +178,7 @@ test('uses first defined filterSerializedResponseHeaders option', async () => {
 			html += filterSerializedResponseHeaders('a', '');
 			html += filterSerializedResponseHeaders('b', '');
 
-			return new Response(html);
+			return Promise.resolve(new Response(html));
 		}
 	});
 

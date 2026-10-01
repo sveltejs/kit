@@ -5,4 +5,6 @@
 	const q = $derived(live_fail(params.key));
 </script>
 
-<div id="live-error">{q.error ? `${q.error.status}: ${q.error.body.message}` : 'none'}</div>
+<div id="live-error">
+	{q.error ? `${q.error.status}: ${q.error.message}` : 'none'}
+</div>

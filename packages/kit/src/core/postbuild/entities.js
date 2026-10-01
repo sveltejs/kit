@@ -2236,7 +2236,7 @@ const entities = {
 	'zwnj;': '‌'
 };
 
-const numeric = /&#(x)?([0-9a-f]+);/i;
+const numeric = /&#(x)?([0-9a-f]+);/gi;
 const named = new RegExp(
 	`&(${Object.keys(entities)
 		.sort((a, b) => b.length - a.length)
@@ -2247,6 +2247,12 @@ const named = new RegExp(
 /** @param {string} str */
 export function decode(str) {
 	return str
-		.replace(numeric, (_match, hex, code) => String.fromCharCode(hex ? parseInt(code, 16) : +code))
+		.replace(numeric, (_match, hex, code) => {
+			const codepoint = hex ? parseInt(code, 16) : +code;
+			// mirror the HTML parser, which replaces invalid numeric references with U+FFFD
+			return Number.isInteger(codepoint) && codepoint <= 0x10ffff
+				? String.fromCodePoint(codepoint)
+				: '\ufffd';
+		})
 		.replace(named, (_match, entity) => entities[entity]);
 }

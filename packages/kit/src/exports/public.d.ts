@@ -4,30 +4,19 @@ import '../types/ambient.js';
 
 import {
 	AdapterEntry,
-	CspDirectives,
 	HttpMethod,
 	Logger,
 	MaybePromise,
 	Prerendered,
-	PrerenderEntryGeneratorMismatchHandlerValue,
-	PrerenderHttpErrorHandlerValue,
-	PrerenderInvalidUrlHandlerValue,
-	PrerenderMissingIdHandlerValue,
-	PrerenderUnseenRoutesHandlerValue,
 	PrerenderOption,
 	RequestOptions,
-	RouteSegment,
-	DeepPartial,
-	IsAny
+	RouteSegment
 } from '../types/private.js';
-import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from 'types';
-import { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
+import { ValidatedConfig } from 'types';
+import { Plugin } from 'vite';
+import { RouteId as AppRouteId, LayoutParams as AppLayoutParams } from '$app/types';
 import { StandardSchemaV1 } from '@standard-schema/spec';
-import {
-	RouteId as AppRouteId,
-	LayoutParams as AppLayoutParams,
-	ResolvedPathname
-} from '$app/types';
+import { getRequest, setResponse } from '@sveltejs/kit/node';
 
 export { PrerenderOption } from '../types/private.js';
 
@@ -55,7 +44,7 @@ export interface Adapter {
 		 * Test support for `read` from `$app/server`.
 		 * @param details.config The merged adapter-specific route config exported from the route with `export const config`
 		 */
-		read?: (details: { config: any; route: { id: string } }) => boolean;
+		read?: (details: { config: Record<string, any>; route: { id: string } }) => boolean;
 
 		/**
 		 * Test support for `instrumentation.server.js`. To pass, the adapter must support running `instrumentation.server.js` prior to the application code.
@@ -68,6 +57,47 @@ export interface Adapter {
 	 * during dev, build and prerendering.
 	 */
 	emulate?: () => MaybePromise<Emulator>;
+	/**
+	 * Options for configuring and interacting with Vite
+	 * @since 3.0.0
+	 */
+	vite?: AdapterViteConfig | ((ctx: { config: ValidatedConfig }) => AdapterViteConfig);
+}
+
+export interface AdapterViteConfig {
+	/**
+	 * This function overrides the default behavior during Vite's dev and preview modes
+	 * to convert an `http.IncomingMessage` to a `Request` object.
+	 * To call the original `setRequest` function, import it from `@sveltejs/kit/node`.
+	 * @since 3.0.0
+	 */
+	getRequest?: typeof getRequest;
+	/**
+	 * This function overrides the default behavior in Vite's dev and preview modes
+	 * to write a `Response` object to a `http.ServerResponse`.
+	 * To call the original `setResponse` function, import it from `@sveltejs/kit/node`.
+	 * @since 3.0.0
+	 */
+	setResponse?: typeof setResponse;
+	/**
+	 * Vite plugins injected by the adapter. By default,
+	 * they are placed before SvelteKit's plugins.
+	 * @since 3.0.0
+	 */
+	plugins?:
+		| Plugin[]
+		| {
+				/**
+				 * Vite plugins placed before any of SvelteKit's own plugins.
+				 * @since 3.0.0
+				 */
+				pre?: Plugin[];
+				/**
+				 * Vite plugins placed after any of SvelteKit's own plugins.
+				 * @since 3.0.0
+				 */
+				post?: Plugin[];
+		  };
 }
 
 export type LoadProperties<input extends Record<string, any> | void> = input extends void
@@ -97,6 +127,14 @@ export interface ActionFailure<T = undefined> {
 	[uniqueSymbol]: true; // necessary or else UnpackValidationError could wrongly unpack objects with the same shape as ActionFailure
 }
 
+/**
+ * A validation error thrown by `invalid`.
+ */
+export interface ValidationError {
+	/** The validation issues */
+	issues: StandardSchemaV1.Issue[];
+}
+
 type UnpackValidationError<T> =
 	T extends ActionFailure<infer X>
 		? X
@@ -111,25 +149,41 @@ type UnpackValidationError<T> =
 export interface Builder {
 	/** Print messages to the console. `log.info` and `log.minor` are silent unless Vite's `logLevel` is `info`. */
 	log: Logger;
-	/** Remove `dir` and all its contents. */
+	/**
+	 * Remove `dir` and all its contents.
+	 * @deprecated Use `fs.rmSync(dir, { force: true, recursive: true })` instead
+	 */
 	rimraf: (dir: string) => void;
-	/** Create `dir` and any required parent directories. */
+	/**
+	 * Create `dir` and any required parent directories.
+	 * @deprecated Use `fs.mkdirSync(dir, { recursive: true })` instead
+	 */
 	mkdirp: (dir: string) => void;
 
-	/** The fully resolved Svelte config. */
+	/** The fully resolved SvelteKit config. */
 	config: ValidatedConfig;
 	/** Information about prerendered pages and assets, if any. */
 	prerendered: Prerendered;
 	/** An array of all routes (including prerendered) */
 	routes: RouteDefinition[];
+	/**
+	 * The value of the `$app/manifest` module.
+	 * The only difference is `manifest.assets` also includes the service worker, if it exists.
+	 * @since 3.0.0
+	 */
+	manifest: typeof import('$app/manifest');
+	/**
+	 * A record of file extensions to MIME types
+	 * @since 3.0.0
+	 */
+	mimeTypes: Record<string, string>;
 
-	// TODO 3.0 remove this method
 	/**
 	 * Create separate functions that map to one or more routes of your app.
 	 * @param fn A function that groups a set of routes into an entry point
-	 * @deprecated Use `builder.routes` instead
+	 * @deprecated removed in 3.0. Use `builder.routes` instead
 	 */
-	createEntries: (fn: (route: RouteDefinition) => AdapterEntry) => Promise<void>;
+	createEntries?: (fn: (route: RouteDefinition) => AdapterEntry) => Promise<void>;
 
 	/**
 	 * Find all the assets imported by server files belonging to `routes`
@@ -142,15 +196,17 @@ export interface Builder {
 	generateFallback: (dest: string) => Promise<void>;
 
 	/**
-	 * Generate a module exposing build-time environment variables as `$env/dynamic/public` or `$app/env/public` if the app uses it.
+	 * Generate a module exposing public environment variables as `$app/env/public` if the app uses it.
 	 */
 	generateEnvModule: () => void;
 
 	/**
 	 * Generate a server-side manifest to initialise the SvelteKit [server](https://svelte.dev/docs/kit/@sveltejs-kit#Server) with.
-	 * @param opts a relative path to the base directory of the app and optionally in which format (esm or cjs) the manifest should be generated
+	 * @param opts
+	 * @param opts.relativePath A relative path to the base directory of the server build output
+	 * @deprecated removed in 3.0. Use `builder.generateServerInstance` or `builder.manifest` instead
 	 */
-	generateManifest: (opts: { relativePath: string; routes?: RouteDefinition[] }) => string;
+	generateManifest?: (opts: { relativePath: string; routes?: RouteDefinition[] }) => string;
 
 	/**
 	 * Resolve a path to the `name` directory inside `outDir`, e.g. `/path/to/.svelte-kit/my-adapter`.
@@ -164,6 +220,20 @@ export interface Builder {
 	/** Get the application path including any configured `base` path, e.g. `my-base-path/_app`. */
 	getAppPath: () => string;
 
+	/**
+	 * Generates a module exposing a SvelteKit [Server](https://svelte.dev/docs/kit/@sveltejs-kit#Server) instance.
+	 * @param dest
+	 * @param opts.routes A subset of the routes to include in the server's manifest
+	 * @param opts.serverDirectory The directory containing the server code. Defaults to `getServerDirectory()`.
+	 * @since 3.0.0
+	 */
+	generateServerInstance: (
+		dest: string,
+		opts?: {
+			routes?: RouteDefinition[];
+			serverDirectory?: string;
+		}
+	) => void;
 	/**
 	 * Write client assets to `dest`.
 	 * @param dest the destination folder
@@ -182,6 +252,23 @@ export interface Builder {
 	 * @returns an array of files written to `dest`
 	 */
 	writeServer: (dest: string) => string[];
+
+	/**
+	 * Generate an initializer that populates `$env/dynamic/private` before server instrumentation
+	 * runs. Include the returned module in any subsequent bundling or tracing step.
+	 * @param options an object containing the following properties:
+	 * @param options.outputDirectory the directory in which to create the initializer.
+	 * @param options.environment the contents of a module whose default export contains the platform's environment variables. If omitted, `process.env` is used.
+	 * @param options.serverDirectory the directory containing the server build output. Defaults to `getServerDirectory()`.
+	 * @returns the filesystem path to the generated initializer.
+	 * @since 3.0.0
+	 */
+	createInstrumentationInitializer: (options: {
+		outputDirectory: string;
+		environment?: string;
+		serverDirectory?: string;
+	}) => string;
+
 	/**
 	 * Copy a file or directory.
 	 * @param from the source file or directory
@@ -213,6 +300,9 @@ export interface Builder {
 	 * `entrypoint` which imports `instrumentation` and then dynamically imports `start`. This allows
 	 * the module hooks necessary for instrumentation libraries to be loaded prior to any application code.
 	 *
+	 * `initializer` is a module generated by `createInstrumentationInitializer`. It must be included
+	 * in any bundling or tracing step before calling this method.
+	 *
 	 * Caveats:
 	 * - "Live exports" will not work. If your adapter uses live exports, your users will need to manually import the server instrumentation on startup.
 	 * - If `tla` is `false`, OTEL auto-instrumentation may not work properly. Use it if your environment supports it.
@@ -222,100 +312,110 @@ export interface Builder {
 	 * @param options.entrypoint the path to the entrypoint to trace.
 	 * @param options.instrumentation the path to the instrumentation file.
 	 * @param options.start the name of the start file. This is what `entrypoint` will be renamed to.
+	 * @param options.initializer the filesystem path to the bundled or copied instrumentation initializer.
 	 * @param options.module configuration for the resulting entrypoint module.
 	 * @param options.module.exports
-	 * @param options.module.generateText a function that receives the relative paths to the instrumentation and start files, and generates the text of the module to be traced. If not provided, the default implementation will be used, which uses top-level await.
-	 * @since 2.31.0
+	 * @param options.module.generateText a function that receives the relative paths to the initializer, instrumentation and start files, and generates the text of the module to be traced. It must import `initializer` before `instrumentation`, and dynamically import `start` after instrumentation has run. If not provided, the default implementation will be used, which uses top-level await.
+	 * @since 3.0.0
 	 */
 	instrument: (args: {
 		entrypoint: string;
 		instrumentation: string;
 		start?: string;
+		initializer: string;
 		module?:
 			| {
 					exports: string[];
 			  }
 			| {
-					generateText: (args: { instrumentation: string; start: string }) => string;
+					generateText: (args: {
+						instrumentation: string;
+						start: string;
+						initializer: string;
+					}) => string;
 			  };
 	}) => void;
 
 	/**
 	 * Compress files in `directory` with gzip and brotli, where appropriate. Generates `.gz` and `.br` files alongside the originals.
 	 * @param {string} directory The directory containing the files to be compressed
+	 * @returns an array of the files in `directory` that were compressed
 	 */
-	compress: (directory: string) => Promise<void>;
-}
-
-/**
- * An extension of [`vite-plugin-svelte`'s options](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/config.md#svelte-options).
- */
-export interface Config extends SvelteConfig {
-	/**
-	 * SvelteKit options.
-	 *
-	 * @see https://svelte.dev/docs/kit/configuration
-	 */
-	kit?: KitConfig;
-	/** Any additional options required by tooling that integrates with Svelte. */
-	[key: string]: any;
+	compress: (directory: string) => Promise<string[]>;
 }
 
 export interface Cookies {
 	/**
 	 * Gets a cookie that was previously set with `cookies.set`, or from the request headers.
 	 * @param name the name of the cookie
-	 * @param opts the options, passed directly to `cookie.parse`. See documentation [here](https://github.com/jshttp/cookie#cookieparsestr-options)
+	 * @param opts the options, passed directly to `cookie.parseCookie`. See documentation [here](https://github.com/jshttp/cookie?tab=readme-ov-file#cookieparsecookiestr-options)
 	 */
-	get: (name: string, opts?: import('cookie').CookieParseOptions) => string | undefined;
+	get: (name: string, opts?: import('cookie').ParseOptions) => string | undefined;
 
 	/**
 	 * Gets all cookies that were previously set with `cookies.set`, or from the request headers.
-	 * @param opts the options, passed directly to `cookie.parse`. See documentation [here](https://github.com/jshttp/cookie#cookieparsestr-options)
+	 * @param opts the options, passed directly to `cookie.parseCookie`. See documentation [here](https://github.com/jshttp/cookie?tab=readme-ov-file#cookieparsecookiestr-options)
 	 */
-	getAll: (opts?: import('cookie').CookieParseOptions) => Array<{ name: string; value: string }>;
+	getAll: (opts?: import('cookie').ParseOptions) => Array<{ name: string; value: string }>;
 
 	/**
 	 * Sets a cookie. This will add a `set-cookie` header to the response, but also make the cookie available via `cookies.get` or `cookies.getAll` during the current request.
 	 *
-	 * The `httpOnly` and `secure` options are `true` by default (except on http://localhost, where `secure` is `false`), and must be explicitly disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP. The `sameSite` option defaults to `lax`.
+	 * The `httpOnly` is `true` by default, as is `secure`, except during development, when it defaults to `false`. These must be explicitly disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP.
 	 *
-	 * You must specify a `path` for the cookie. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app. You can use relative paths, or set `path: ''` to make the cookie only available on the current path and its children
+	 * The `path` option is `'/'` by default. You can use relative paths, or set `path: ''` to make the cookie only available on the current path and its children.
 	 * @param name the name of the cookie
 	 * @param value the cookie value
-	 * @param opts the options, passed directly to `cookie.serialize`. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
+	 * @param opts the options passed to `cookie.stringifySetCookie` with the SvelteKit defaults described above. See documentation [here](https://github.com/jshttp/cookie?tab=readme-ov-file#cookiestringifysetcookiesetcookieobj-options)
 	 */
-	set: (
-		name: string,
-		value: string,
-		opts: import('cookie').CookieSerializeOptions & { path: string }
-	) => void;
+	set: (name: string, value: string, opts?: import('cookie').SerializeOptions) => void;
 
 	/**
 	 * Deletes a cookie by setting its value to an empty string and setting the expiry date in the past.
 	 *
-	 * You must specify a `path` for the cookie. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app. You can use relative paths, or set `path: ''` to make the cookie only available on the current path and its children
+	 * The `httpOnly` is `true` by default, as is `secure`, except during development, when it defaults to `false`. These must be explicitly disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP.
+	 *
+	 * The `path` option is `'/'` by default. You can use relative paths, or set `path: ''` to make the cookie only available on the current path and its children.
 	 * @param name the name of the cookie
-	 * @param opts the options, passed directly to `cookie.serialize`. The `path` must match the path of the cookie you want to delete. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
+	 * @param opts the options passed to `cookie.stringifySetCookie` with the SvelteKit defaults described above. See documentation [here](https://github.com/jshttp/cookie?tab=readme-ov-file#cookiestringifysetcookiesetcookieobj-options)
 	 */
-	delete: (name: string, opts: import('cookie').CookieSerializeOptions & { path: string }) => void;
+	delete: (name: string, opts?: import('cookie').SerializeOptions) => void;
+
+	/**
+	 * Parses a single `Set-Cookie` header. This allows you to apply cookies received from an external source:
+	 *
+	 * ```js
+	 * import { getRequestEvent } from '$app/server';
+	 *
+	 * export async function GET() {
+	 * 	const { cookies } = getRequestEvent();
+	 *
+	 * 	const response = await fetch('...');
+	 *
+	 * 	for (const str of response.headers.getSetCookie()) {
+	 * 		const { name, value, ...options } = cookies.parse(str);
+	 * 		cookies.set(name, value, options);
+	 * 	}
+	 *
+	 * 	// ...
+	 * }
+	 * ```
+	 *
+	 * Note the use of `headers.getSetCookie()`, which returns an array of cookie headers, _not_ `headers.get('set-cookie')` which returns a single comma-separated string.
+	 */
+	parse: typeof import('cookie').parseSetCookie;
 
 	/**
 	 * Serialize a cookie name-value pair into a `Set-Cookie` header string, but don't apply it to the response.
 	 *
-	 * The `httpOnly` and `secure` options are `true` by default (except on http://localhost, where `secure` is `false`), and must be explicitly disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP. The `sameSite` option defaults to `lax`.
+	 * The `httpOnly` is `true` by default, as is `secure`, except during development, when it defaults to `false`. These must be explicitly disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP.
 	 *
-	 * You must specify a `path` for the cookie. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app. You can use relative paths, or set `path: ''` to make the cookie only available on the current path and its children
-	 *
+	 * The `path` option is `'/'` by default. You can use relative paths, or set `path: ''` to make the cookie only available on the current path and its children.
 	 * @param name the name of the cookie
 	 * @param value the cookie value
-	 * @param opts the options, passed directly to `cookie.serialize`. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
+	 * @param opts the options passed to `cookie.stringifySetCookie` with the SvelteKit defaults described above. See documentation [here](https://github.com/jshttp/cookie?tab=readme-ov-file#cookiestringifysetcookiesetcookieobj-options)
 	 */
-	serialize: (
-		name: string,
-		value: string,
-		opts: import('cookie').CookieSerializeOptions & { path: string }
-	) => string;
+	serialize: (name: string, value: string, opts?: import('cookie').SerializeOptions) => string;
 }
 
 /**
@@ -327,722 +427,6 @@ export interface Emulator {
 	 * and returns an `App.Platform` object
 	 */
 	platform?(details: { config: any; prerender: PrerenderOption }): MaybePromise<App.Platform>;
-}
-
-export interface KitConfig {
-	/**
-	 * Your [adapter](https://svelte.dev/docs/kit/adapters) is run when executing `vite build`. It determines how the output is converted for different platforms.
-	 * @default undefined
-	 */
-	adapter?: Adapter;
-	/**
-	 * An object containing zero or more aliases used to replace values in `import` statements. These aliases are automatically passed to Vite and TypeScript.
-	 *
-	 * ```js
-	 * /// file: svelte.config.js
-	 * /// type: import('@sveltejs/kit').Config
-	 * const config = {
-	 *   kit: {
-	 *     alias: {
-	 *       // this will match a file
-	 *       'my-file': 'path/to/my-file.js',
-	 *
-	 *       // this will match a directory and its contents
-	 *       // (`my-directory/x` resolves to `path/to/my-directory/x`)
-	 *       'my-directory': 'path/to/my-directory',
-	 *
-	 *       // an alias ending /* will only match
-	 *       // the contents of a directory, not the directory itself
-	 *       'my-directory/*': 'path/to/my-directory/*'
-	 *     }
-	 *   }
-	 * };
-	 * ```
-	 *
-	 * > [!NOTE] You will need to run `npm run dev` to have SvelteKit automatically generate the required alias configuration in `jsconfig.json` or `tsconfig.json`.
-	 * @default {}
-	 */
-	alias?: Record<string, string>;
-	/**
-	 * The directory where SvelteKit keeps its stuff, including static assets (such as JS and CSS) and internally-used routes.
-	 *
-	 * If `paths.assets` is specified, there will be two app directories — `${paths.assets}/${appDir}` and `${paths.base}/${appDir}`.
-	 * @default "_app"
-	 */
-	appDir?: string;
-	/**
-	 * [Content Security Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy) configuration. CSP helps to protect your users against cross-site scripting (XSS) attacks, by limiting the places resources can be loaded from. For example, a configuration like this...
-	 *
-	 * ```js
-	 * /// file: svelte.config.js
-	 * /// type: import('@sveltejs/kit').Config
-	 * const config = {
-	 *   kit: {
-	 *     csp: {
-	 *       directives: {
-	 *         'script-src': ['self']
-	 *       },
-	 *       // must be specified with either the `report-uri` or `report-to` directives, or both
-	 *       reportOnly: {
-	 *         'script-src': ['self'],
-	 *         'report-uri': ['/']
-	 *       }
-	 *     }
-	 *   }
-	 * };
-	 *
-	 * export default config;
-	 * ```
-	 *
-	 * ...would prevent scripts loading from external sites. SvelteKit will augment the specified directives with nonces or hashes (depending on `mode`) for any inline styles and scripts it generates.
-	 *
-	 * To add a nonce for scripts and links manually included in `src/app.html`, you may use the placeholder `%sveltekit.nonce%` (for example `<script nonce="%sveltekit.nonce%">`).
-	 *
-	 * When pages are prerendered, the CSP header is added via a `<meta http-equiv>` tag (note that in this case, `frame-ancestors`, `report-uri` and `sandbox` directives will be ignored).
-	 *
-	 * > [!NOTE] When `mode` is `'auto'`, SvelteKit will use nonces for dynamically rendered pages and hashes for prerendered pages. Using nonces with prerendered pages is insecure and therefore forbidden.
-	 *
-	 * > [!NOTE] Note that most [Svelte transitions](https://svelte.dev/tutorial/svelte/transition) work by creating an inline `<style>` element. If you use these in your app, you must either leave the `style-src` directive unspecified or add `unsafe-inline`.
-	 *
-	 * If this level of configuration is insufficient and you have more dynamic requirements, you can use the [`handle` hook](https://svelte.dev/docs/kit/hooks#handle) to roll your own CSP.
-	 */
-	csp?: {
-		/**
-		 * Whether to use hashes or nonces to restrict `<script>` and `<style>` elements. `'auto'` will use hashes for prerendered pages, and nonces for dynamically rendered pages.
-		 */
-		mode?: 'hash' | 'nonce' | 'auto';
-		/**
-		 * Directives that will be added to `Content-Security-Policy` headers.
-		 */
-		directives?: CspDirectives;
-		/**
-		 * Directives that will be added to `Content-Security-Policy-Report-Only` headers.
-		 */
-		reportOnly?: CspDirectives;
-	};
-	/**
-	 * Protection against [cross-site request forgery (CSRF)](https://owasp.org/www-community/attacks/csrf) attacks.
-	 */
-	csrf?: {
-		/**
-		 * Whether to check the incoming `origin` header for `POST`, `PUT`, `PATCH`, or `DELETE` form submissions and verify that it matches the server's origin.
-		 *
-		 * To allow people to make `POST`, `PUT`, `PATCH`, or `DELETE` requests with a `Content-Type` of `application/x-www-form-urlencoded`, `multipart/form-data`, or `text/plain` to your app from other origins, you will need to disable this option. Be careful!
-		 * @default true
-		 * @deprecated Use `trustedOrigins: ['*']` instead
-		 */
-		checkOrigin?: boolean;
-		/**
-		 * An array of origins that are allowed to make cross-origin form submissions to your app.
-		 *
-		 * Each origin should be a complete origin including protocol (e.g., `https://payment-gateway.com`).
-		 * This is useful for allowing trusted third-party services like payment gateways or authentication providers to submit forms to your app.
-		 *
-		 * If the array contains `'*'`, all origins will be trusted. This is generally not recommended!
-		 *
-		 * > [!NOTE] Only add origins you completely trust, as this bypasses CSRF protection for those origins.
-		 *
-		 * CSRF checks only apply in production, not in local development.
-		 * @default []
-		 * @example ['https://checkout.stripe.com', 'https://accounts.google.com']
-		 */
-		trustedOrigins?: string[];
-	};
-	/**
-	 * Whether or not the app is embedded inside a larger app. If `true`, SvelteKit will add its event listeners related to navigation etc on the parent of `%sveltekit.body%` instead of `window`, and will pass `params` from the server rather than inferring them from `location.pathname`.
-	 * Note that it is generally not supported to embed multiple SvelteKit apps on the same page and use client-side SvelteKit features within them (things such as pushing to the history state assume a single instance).
-	 * @default false
-	 */
-	embedded?: boolean;
-	/**
-	 * Environment variable configuration
-	 */
-	env?: {
-		/**
-		 * The directory to search for `.env` files.
-		 * @default "."
-		 */
-		dir?: string;
-		/**
-		 * A prefix that signals that an environment variable is safe to expose to client-side code. See [`$env/static/public`](https://svelte.dev/docs/kit/$env-static-public) and [`$env/dynamic/public`](https://svelte.dev/docs/kit/$env-dynamic-public). Note that Vite's [`envPrefix`](https://vitejs.dev/config/shared-options.html#envprefix) must be set separately if you are using Vite's environment variable handling - though use of that feature should generally be unnecessary.
-		 * @default "PUBLIC_"
-		 */
-		publicPrefix?: string;
-		/**
-		 * A prefix that signals that an environment variable is unsafe to expose to client-side code. Environment variables matching neither the public nor the private prefix will be discarded completely. See [`$env/static/private`](https://svelte.dev/docs/kit/$env-static-private) and [`$env/dynamic/private`](https://svelte.dev/docs/kit/$env-dynamic-private).
-		 * @default ""
-		 * @since 1.21.0
-		 */
-		privatePrefix?: string;
-	};
-	/** Experimental features. Here be dragons. These are not subject to semantic versioning, so breaking changes or removal can happen in any release. */
-	experimental?: {
-		/**
-		 * Whether to enable explicit environment variables using `src/env.js` or `src/env.ts`.
-		 * @since 2.63.0
-		 * @default false
-		 */
-		explicitEnvironmentVariables?: boolean;
-
-		/**
-		 * Options for enabling server-side [OpenTelemetry](https://opentelemetry.io/) tracing for SvelteKit operations including the [`handle` hook](https://svelte.dev/docs/kit/hooks#handle), [`load` functions](https://svelte.dev/docs/kit/load), [form actions](https://svelte.dev/docs/kit/form-actions), and [remote functions](https://svelte.dev/docs/kit/remote-functions).
-		 * @default { server: false, serverFile: false }
-		 * @since 2.31.0
-		 */
-		tracing?: {
-			/**
-			 * Enables server-side [OpenTelemetry](https://opentelemetry.io/) span emission for SvelteKit operations including the [`handle` hook](https://svelte.dev/docs/kit/hooks#handle), [`load` functions](https://svelte.dev/docs/kit/load), [form actions](https://svelte.dev/docs/kit/form-actions), and [remote functions](https://svelte.dev/docs/kit/remote-functions).
-			 * @default false
-			 * @since 2.31.0
-			 */
-			server?: boolean;
-		};
-
-		/**
-		 * @since 2.31.0
-		 */
-		instrumentation?: {
-			/**
-			 * Enables `instrumentation.server.js` for tracing and observability instrumentation.
-			 * @default false
-			 * @since 2.31.0
-			 */
-			server?: boolean;
-		};
-
-		/**
-		 * Whether to enable the experimental remote functions feature. This feature is not yet stable and may be changed or removed at any time.
-		 * @default false
-		 */
-		remoteFunctions?: boolean;
-
-		/**
-		 * Whether to enable the experimental forked preloading feature using Svelte's fork API.
-		 * @default false
-		 */
-		forkPreloads?: boolean;
-
-		/**
-		 * Whether to enable the experimental handling of rendering errors.
-		 * When enabled, `<svelte:boundary>` is used to wrap components at each level
-		 * where there's an `+error.svelte`, rendering the error page if the component fails.
-		 * In addition, error boundaries also work on the server and the error object goes through `handleError`.
-		 * @default false
-		 */
-		handleRenderingErrors?: boolean;
-	};
-	/**
-	 * Where to find various files within your project.
-	 * @deprecated this feature is still supported, but it's generally recommended to use [monorepos](https://levelup.video/tutorials/monorepos-with-pnpm) instead
-	 */
-	files?: {
-		/**
-		 * The location of your source code.
-		 * @deprecated this feature is still supported, but it's generally recommended to use [monorepos](https://levelup.video/tutorials/monorepos-with-pnpm) instead
-		 * @default "src"
-		 * @since 2.28
-		 */
-		src?: string;
-		/**
-		 * A place to put static files that should have stable URLs and undergo no processing, such as `favicon.ico` or `manifest.json`.
-		 * @deprecated this feature is still supported, but it's generally recommended to use [monorepos](https://levelup.video/tutorials/monorepos-with-pnpm) instead
-		 * @default "static"
-		 */
-		assets?: string;
-		hooks?: {
-			/**
-			 * The location of your client [hooks](https://svelte.dev/docs/kit/hooks).
-			 * @deprecated this feature is still supported, but it's generally recommended to use [monorepos](https://levelup.video/tutorials/monorepos-with-pnpm) instead
-			 * @default "src/hooks.client"
-			 */
-			client?: string;
-			/**
-			 * The location of your server [hooks](https://svelte.dev/docs/kit/hooks).
-			 * @deprecated this feature is still supported, but it's generally recommended to use [monorepos](https://levelup.video/tutorials/monorepos-with-pnpm) instead
-			 * @default "src/hooks.server"
-			 */
-			server?: string;
-			/**
-			 * The location of your universal [hooks](https://svelte.dev/docs/kit/hooks).
-			 * @deprecated this feature is still supported, but it's generally recommended to use [monorepos](https://levelup.video/tutorials/monorepos-with-pnpm) instead
-			 * @default "src/hooks"
-			 * @since 2.3.0
-			 */
-			universal?: string;
-		};
-		/**
-		 * Your app's internal library, accessible throughout the codebase as `$lib`.
-		 * @deprecated this feature is still supported, but it's generally recommended to use [monorepos](https://levelup.video/tutorials/monorepos-with-pnpm) instead
-		 * @default "src/lib"
-		 */
-		lib?: string;
-		/**
-		 * A directory containing [parameter matchers](https://svelte.dev/docs/kit/advanced-routing#Matching).
-		 * @deprecated this feature is still supported, but it's generally recommended to use [monorepos](https://levelup.video/tutorials/monorepos-with-pnpm) instead
-		 * @default "src/params"
-		 */
-		params?: string;
-		/**
-		 * The files that define the structure of your app (see [Routing](https://svelte.dev/docs/kit/routing)).
-		 * @deprecated this feature is still supported, but it's generally recommended to use [monorepos](https://levelup.video/tutorials/monorepos-with-pnpm) instead
-		 * @default "src/routes"
-		 */
-		routes?: string;
-		/**
-		 * The location of your service worker's entry point (see [Service workers](https://svelte.dev/docs/kit/service-workers)).
-		 * @deprecated this feature is still supported, but it's generally recommended to use [monorepos](https://levelup.video/tutorials/monorepos-with-pnpm) instead
-		 * @default "src/service-worker"
-		 */
-		serviceWorker?: string;
-		/**
-		 * The location of the template for HTML responses.
-		 * @deprecated this feature is still supported, but it's generally recommended to use [monorepos](https://levelup.video/tutorials/monorepos-with-pnpm) instead
-		 * @default "src/app.html"
-		 */
-		appTemplate?: string;
-		/**
-		 * The location of the template for fallback error responses.
-		 * @deprecated this feature is still supported, but it's generally recommended to use [monorepos](https://levelup.video/tutorials/monorepos-with-pnpm) instead
-		 * @default "src/error.html"
-		 */
-		errorTemplate?: string;
-	};
-	/**
-	 * Inline CSS inside a `<style>` block at the head of the HTML. This option is a number that specifies the maximum length of a CSS file in UTF-16 code units, as specified by the [String.length](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/length) property, to be inlined. All CSS files needed for the page that are smaller than this value are merged and inlined in a `<style>` block.
-	 *
-	 * > [!NOTE] This results in fewer initial requests and can improve your [First Contentful Paint](https://web.dev/first-contentful-paint) score. However, it generates larger HTML output and reduces the effectiveness of browser caches. Use it advisedly.
-	 * @default 0
-	 */
-	inlineStyleThreshold?: number;
-	/**
-	 * An array of file extensions that SvelteKit will treat as modules. Files with extensions that match neither `config.extensions` nor `config.kit.moduleExtensions` will be ignored by the router.
-	 * @default [".js", ".ts"]
-	 */
-	moduleExtensions?: string[];
-	/**
-	 * The directory that SvelteKit writes files to during `dev` and `build`. You should exclude this directory from version control.
-	 * @default ".svelte-kit"
-	 */
-	outDir?: string;
-	/**
-	 * Options related to the build output format
-	 */
-	output?: {
-		/**
-		 * SvelteKit will preload the JavaScript modules needed for the initial page to avoid import 'waterfalls', resulting in faster application startup. There
-		 * are three strategies with different trade-offs:
-		 * - `modulepreload` - uses `<link rel="modulepreload">`. This delivers the best results in Chromium-based browsers, in Firefox 115+, and Safari 17+. It is ignored in older browsers.
-		 * - `preload-js` - uses `<link rel="preload">`. Prevents waterfalls in Chromium and Safari, but Chromium will parse each module twice (once as a script, once as a module). Causes modules to be requested twice in Firefox. This is a good setting if you want to maximise performance for users on iOS devices at the cost of a very slight degradation for Chromium users.
-		 * - `preload-mjs` - uses `<link rel="preload">` but with the `.mjs` extension which prevents double-parsing in Chromium. Some static webservers will fail to serve .mjs files with a `Content-Type: application/javascript` header, which will cause your application to break. If that doesn't apply to you, this is the option that will deliver the best performance for the largest number of users, until `modulepreload` is more widely supported.
-		 * @default "modulepreload"
-		 * @since 1.8.4
-		 */
-		preloadStrategy?: 'modulepreload' | 'preload-js' | 'preload-mjs';
-		/**
-		 * The bundle strategy option affects how your app's JavaScript and CSS files are loaded.
-		 * - If `'split'`, splits the app up into multiple .js/.css files so that they are loaded lazily as the user navigates around the app. This is the default, and is recommended for most scenarios.
-		 * - If `'single'`, creates just one .js bundle and one .css file containing code for the entire app.
-		 * - If `'inline'`, inlines all JavaScript and CSS of the entire app into the HTML. The result is usable without a server (i.e. you can just open the file in your browser).
-		 *
-		 * When using `'split'`, you can also adjust the bundling behaviour by setting [`output.experimentalMinChunkSize`](https://rollupjs.org/configuration-options/#output-experimentalminchunksize) and [`output.manualChunks`](https://rollupjs.org/configuration-options/#output-manualchunks) inside your Vite config's [`build.rollupOptions`](https://vite.dev/config/build-options.html#build-rollupoptions).
-		 *
-		 * If you want to inline your assets, you'll need to set Vite's [`build.assetsInlineLimit`](https://vite.dev/config/build-options.html#build-assetsinlinelimit) option to an appropriate size then import your assets through Vite.
-		 *
-		 * ```js
-		 * /// file: vite.config.js
-		 * import { sveltekit } from '@sveltejs/kit/vite';
-		 * import { defineConfig } from 'vite';
-		 *
-		 * export default defineConfig({
-		 *   plugins: [sveltekit()],
-		 *   build: {
-		 *     // inline all imported assets
-		 *     assetsInlineLimit: Infinity
-		 *   }
-		 * });
-		 * ```
-		 *
-		 * ```svelte
-		 * /// file: src/routes/+layout.svelte
-		 * <script>
-		 *   // import the asset through Vite
-		 *   import favicon from './favicon.png';
-		 * </script>
-		 *
-		 * <svelte:head>
-		 *   <!-- this asset will be inlined as a base64 URL -->
-		 *   <link rel="icon" href={favicon} />
-		 * </svelte:head>
-		 * ```
-		 * @default 'split'
-		 * @since 2.13.0
-		 */
-		bundleStrategy?: 'split' | 'single' | 'inline';
-	};
-	paths?: {
-		/**
-		 * An absolute path that your app's files are served from. This is useful if your files are served from a storage bucket of some kind.
-		 * @default ""
-		 */
-		assets?: '' | `http://${string}` | `https://${string}`;
-		/**
-		 * A root-relative path that must start, but not end with `/` (e.g. `/base-path`), unless it is the empty string. This specifies where your app is served from and allows the app to live on a non-root path. Note that you need to prepend all your root-relative links with the base value or they will point to the root of your domain, not your `base` (this is how the browser works). You can use [`base` from `$app/paths`](https://svelte.dev/docs/kit/$app-paths#base) for that: `<a href="{base}/your-page">Link</a>`. If you find yourself writing this often, it may make sense to extract this into a reusable component.
-		 * @default ""
-		 */
-		base?: '' | `/${string}`;
-		/**
-		 * Whether to use relative asset paths.
-		 *
-		 * If `true`, `base` and `assets` imported from `$app/paths` will be replaced with relative asset paths during server-side rendering, resulting in more portable HTML.
-		 * If `false`, `%sveltekit.assets%` and references to build artifacts will always be root-relative paths, unless `paths.assets` is an external URL
-		 *
-		 * [Single-page app](https://svelte.dev/docs/kit/single-page-apps) fallback pages will always use absolute paths, regardless of this setting.
-		 *
-		 * If your app uses a `<base>` element, you should set this to `false`, otherwise asset URLs will incorrectly be resolved against the `<base>` URL rather than the current page.
-		 *
-		 * In 1.0, `undefined` was a valid value, which was set by default. In that case, if `paths.assets` was not external, SvelteKit would replace `%sveltekit.assets%` with a relative path and use relative paths to reference build artifacts, but `base` and `assets` imported from `$app/paths` would be as specified in your config.
-		 *
-		 * @default true
-		 * @since 1.9.0
-		 */
-		relative?: boolean;
-	};
-	/**
-	 * See [Prerendering](https://svelte.dev/docs/kit/page-options#prerender).
-	 */
-	prerender?: {
-		/**
-		 * How many pages can be prerendered simultaneously. JS is single-threaded, but in cases where prerendering performance is network-bound (for example loading content from a remote CMS) this can speed things up by processing other tasks while waiting on the network response.
-		 * @default 1
-		 */
-		concurrency?: number;
-		/**
-		 * Whether SvelteKit should find pages to prerender by following links from `entries`.
-		 * @default true
-		 */
-		crawl?: boolean;
-		/**
-		 * An array of pages to prerender, or start crawling from (if `crawl: true`). The `*` string includes all routes containing no required `[parameters]`  with optional parameters included as being empty (since SvelteKit doesn't know what value any parameters should have).
-		 * @default ["*"]
-		 */
-		entries?: Array<'*' | `/${string}`>;
-		/**
-		 * How to respond to HTTP errors encountered while prerendering the app.
-		 *
-		 * - `'fail'` — fail the build
-		 * - `'ignore'` - silently ignore the failure and continue
-		 * - `'warn'` — continue, but print a warning
-		 * - `(details) => void` — a custom error handler that takes a `details` object with `status`, `path`, `referrer`, `referenceType` and `message` properties. If you `throw` from this function, the build will fail
-		 *
-		 * ```js
-		 * /// file: svelte.config.js
-		 * /// type: import('@sveltejs/kit').Config
-		 * const config = {
-		 *   kit: {
-		 *     prerender: {
-		 *       handleHttpError: ({ path, referrer, message }) => {
-		 *         // ignore deliberate link to shiny 404 page
-		 *         if (path === '/not-found' && referrer === '/blog/how-we-built-our-404-page') {
-		 *           return;
-		 *         }
-		 *
-		 *         // otherwise fail the build
-		 *         throw new Error(message);
-		 *       }
-		 *     }
-		 *   }
-		 * };
-		 * ```
-		 *
-		 * @default "fail"
-		 * @since 1.15.7
-		 */
-		handleHttpError?: PrerenderHttpErrorHandlerValue;
-		/**
-		 * How to respond when hash links from one prerendered page to another don't correspond to an `id` on the destination page.
-		 *
-		 * - `'fail'` — fail the build
-		 * - `'ignore'` - silently ignore the failure and continue
-		 * - `'warn'` — continue, but print a warning
-		 * - `(details) => void` — a custom error handler that takes a `details` object with `path`, `id`, `referrers` and `message` properties. If you `throw` from this function, the build will fail
-		 *
-		 * @default "fail"
-		 * @since 1.15.7
-		 */
-		handleMissingId?: PrerenderMissingIdHandlerValue;
-		/**
-		 * How to respond when an entry generated by the `entries` export doesn't match the route it was generated from.
-		 *
-		 * - `'fail'` — fail the build
-		 * - `'ignore'` - silently ignore the failure and continue
-		 * - `'warn'` — continue, but print a warning
-		 * - `(details) => void` — a custom error handler that takes a `details` object with `generatedFromId`, `entry`, `matchedId` and `message` properties. If you `throw` from this function, the build will fail
-		 *
-		 * @default "fail"
-		 * @since 1.16.0
-		 */
-		handleEntryGeneratorMismatch?: PrerenderEntryGeneratorMismatchHandlerValue;
-		/**
-		 * How to respond when a route is marked as prerenderable but has not been prerendered.
-		 *
-		 * - `'fail'` — fail the build
-		 * - `'ignore'` - silently ignore the failure and continue
-		 * - `'warn'` — continue, but print a warning
-		 * - `(details) => void` — a custom error handler that takes a `details` object with a `routes` property which contains all routes that haven't been prerendered. If you `throw` from this function, the build will fail
-		 *
-		 * The default behavior is to fail the build. This may be undesirable when you know that some of your routes may never be reached under certain
-		 * circumstances such as a CMS not returning data for a specific area, resulting in certain routes never being reached.
-		 *
-		 * @default "fail"
-		 * @since 2.16.0
-		 */
-		handleUnseenRoutes?: PrerenderUnseenRoutesHandlerValue;
-		/**
-		 * How to respond when SvelteKit encounters a URL it cannot parse while crawling prerendered HTML (for example, an AT Protocol URL such as `at://did:plc:...`).
-		 *
-		 * - `'fail'` — fail the build
-		 * - `'ignore'` - silently ignore the failure and continue
-		 * - `'warn'` — continue, but print a warning
-		 * - `(details) => void` — a custom error handler that takes a `details` object with `href`, `referrer` and `message` properties. If you `throw` from this function, the build will fail
-		 *
-		 * @default "fail"
-		 * @since 2.67.0
-		 */
-		handleInvalidUrl?: PrerenderInvalidUrlHandlerValue;
-		/**
-		 * The value of `url.origin` during prerendering; useful if it is included in rendered content.
-		 * @default "http://sveltekit-prerender"
-		 */
-		origin?: string;
-	};
-	router?: {
-		/**
-		 * What type of client-side router to use.
-		 * - `'pathname'` is the default and means the current URL pathname determines the route
-		 * - `'hash'` means the route is determined by `location.hash`. In this case, SSR and prerendering are disabled. This is only recommended if `pathname` is not an option, for example because you don't control the webserver where your app is deployed.
-		 *   It comes with some caveats: you can't use server-side rendering (or indeed any server logic), and you have to make sure that the links in your app all start with #/, or they won't work. Beyond that, everything works exactly like a normal SvelteKit app.
-		 *
-		 * @default "pathname"
-		 * @since 2.14.0
-		 */
-		type?: 'pathname' | 'hash';
-		/**
-		 * How to determine which route to load when navigating to a new page.
-		 *
-		 * By default, SvelteKit will serve a route manifest to the browser.
-		 * When navigating, this manifest is used (along with the `reroute` hook, if it exists) to determine which components to load and which `load` functions to run.
-		 * Because everything happens on the client, this decision can be made immediately. The drawback is that the manifest needs to be
-		 * loaded and parsed before the first navigation can happen, which may have an impact if your app contains many routes.
-		 *
-		 * Alternatively, SvelteKit can determine the route on the server. This means that for every navigation to a path that has not yet been visited, the server will be asked to determine the route.
-		 * This has several advantages:
-		 * - The client does not need to load the routing manifest upfront, which can lead to faster initial page loads
-		 * - The list of routes is hidden from public view
-		 * - The server has an opportunity to intercept each navigation (for example through a middleware), enabling (for example) A/B testing opaque to SvelteKit
-
-		 * The drawback is that for unvisited paths, resolution will take slightly longer (though this is mitigated by [preloading](https://svelte.dev/docs/kit/link-options#data-sveltekit-preload-data)).
-		 *
-		 * > [!NOTE] When using server-side route resolution and prerendering, the resolution is prerendered along with the route itself.
-		 *
-		 * @default "client"
-		 * @since 2.17.0
-		 */
-		resolution?: 'client' | 'server';
-	};
-	serviceWorker?: {
-		/**
-		 * Determine which files in your `static` directory will be available in `$service-worker.files`.
-		 * @default (filename) => !/\.DS_Store/.test(filename)
-		 */
-		files?: (file: string) => boolean;
-	} & (
-		| {
-				/**
-				 * Whether to automatically register the service worker, if it exists.
-				 * @default true
-				 */
-				register: true;
-				/**
-				 * Options for serviceWorker.register("...", options);
-				 */
-				options?: RegistrationOptions;
-		  }
-		| {
-				/**
-				 * Whether to automatically register the service worker, if it exists.
-				 * @default true
-				 */
-				register?: false;
-		  }
-	);
-	typescript?: {
-		/**
-		 * A function that allows you to edit the generated `tsconfig.json`. You can mutate the config (recommended) or return a new one.
-		 * This is useful for extending a shared `tsconfig.json` in a monorepo root, for example.
-		 *
-		 * Note that any paths configured here should be relative to the generated config file, which is written to `.svelte-kit/tsconfig.json`.
-		 *
-		 * @default (config) => config
-		 * @since 1.3.0
-		 */
-		config?: (config: Record<string, any>) => Record<string, any> | void;
-	};
-	/**
-	 * Client-side navigation can be buggy if you deploy a new version of your app while people are using it. If the code for the new page is already loaded, it may have stale content; if it isn't, the app's route manifest may point to a JavaScript file that no longer exists.
-	 * SvelteKit helps you solve this problem through version management.
-	 * If SvelteKit encounters an error while loading the page and detects that a new version has been deployed (using the `name` specified here, which defaults to a timestamp of the build) it will fall back to traditional full-page navigation.
-	 * Not all navigations will result in an error though, for example if the JavaScript for the next page is already loaded. If you still want to force a full-page navigation in these cases, use techniques such as setting the `pollInterval` and then using `beforeNavigate`:
-	 * ```html
-	 * /// file: +layout.svelte
-	 * <script>
-	 *   import { beforeNavigate } from '$app/navigation';
-	 *   import { updated } from '$app/state';
-	 *
-	 *   beforeNavigate(({ willUnload, to }) => {
-	 *     if (updated.current && !willUnload && to?.url) {
-	 *       location.href = to.url.href;
-	 *     }
-	 *   });
-	 * </script>
-	 * ```
-	 *
-	 * If you set `pollInterval` to a non-zero value, SvelteKit will poll for new versions in the background and set the value of [`updated.current`](https://svelte.dev/docs/kit/$app-state#updated) `true` when it detects one.
-	 */
-	version?: {
-		/**
-		 * The current app version string. If specified, this must be deterministic (e.g. a commit ref rather than `Math.random()` or `Date.now().toString()`), otherwise defaults to a timestamp of the build.
-		 *
-		 * For example, to use the current commit hash, you could do use `git rev-parse HEAD`:
-		 *
-		 * ```js
-		 * /// file: svelte.config.js
-		 * import * as child_process from 'node:child_process';
-		 *
-		 * export default {
-		 *   kit: {
-		 *     version: {
-		 *       name: child_process.execSync('git rev-parse HEAD').toString().trim()
-		 *     }
-		 *   }
-		 * };
-		 * ```
-		 */
-		name?: string;
-		/**
-		 * The interval in milliseconds to poll for version changes. If this is `0`, no polling occurs.
-		 * @default 0
-		 */
-		pollInterval?: number;
-	};
-}
-
-/**
- * The [`handle`](https://svelte.dev/docs/kit/hooks#handle) hook runs every time the SvelteKit server receives a [request](https://svelte.dev/docs/kit/web-standards#Fetch-APIs-Request) and
- * determines the [response](https://svelte.dev/docs/kit/web-standards#Fetch-APIs-Response).
- * It receives an `event` object representing the request and a function called `resolve`, which renders the route and generates a `Response`.
- * This allows you to modify response headers or bodies, or bypass SvelteKit entirely (for implementing routes programmatically, for example).
- */
-export type Handle = (input: {
-	event: RequestEvent;
-	resolve: (event: RequestEvent, opts?: ResolveOptions) => MaybePromise<Response>;
-}) => MaybePromise<Response>;
-
-/**
- * The server-side [`handleError`](https://svelte.dev/docs/kit/hooks#handleError) hook runs when an unexpected error is thrown while responding to a request.
- *
- * If an unexpected error is thrown during loading or rendering, this function will be called with the error and the event.
- * Make sure that this function _never_ throws an error.
- */
-export type HandleServerError = (input: {
-	error: unknown;
-	event: RequestEvent;
-	status: number;
-	message: string;
-}) => MaybePromise<void | App.Error>;
-
-/**
- * The [`handleValidationError`](https://svelte.dev/docs/kit/hooks#handleValidationError) hook runs when the argument to a remote function fails validation.
- *
- * It will be called with the validation issues and the event, and must return an object shape that matches `App.Error`.
- */
-export type HandleValidationError<Issue extends StandardSchemaV1.Issue = StandardSchemaV1.Issue> =
-	(input: { issues: Issue[]; event: RequestEvent }) => MaybePromise<App.Error>;
-
-/**
- * The client-side [`handleError`](https://svelte.dev/docs/kit/hooks#handleError) hook runs when an unexpected error is thrown while navigating.
- *
- * If an unexpected error is thrown during loading or the following render, this function will be called with the error and the event.
- * Make sure that this function _never_ throws an error.
- */
-export type HandleClientError = (input: {
-	error: unknown;
-	event: NavigationEvent;
-	status: number;
-	message: string;
-}) => MaybePromise<void | App.Error>;
-
-/**
- * The [`handleFetch`](https://svelte.dev/docs/kit/hooks#handleFetch) hook allows you to modify (or replace) the result of an [`event.fetch`](https://svelte.dev/docs/kit/load#Making-fetch-requests) call that runs on the server (or during prerendering) inside an endpoint, `load`, `action`, `handle`, `handleError` or `reroute`.
- */
-export type HandleFetch = (input: {
-	event: RequestEvent;
-	request: Request;
-	fetch: typeof fetch;
-}) => MaybePromise<Response>;
-
-/**
- * The [`init`](https://svelte.dev/docs/kit/hooks#init) will be invoked before the server responds to its first request
- * @since 2.10.0
- */
-export type ServerInit = () => MaybePromise<void>;
-
-/**
- * The [`init`](https://svelte.dev/docs/kit/hooks#init) will be invoked once the app starts in the browser
- * @since 2.10.0
- */
-export type ClientInit = () => MaybePromise<void>;
-
-/**
- * The [`reroute`](https://svelte.dev/docs/kit/hooks#reroute) hook allows you to modify the URL before it is used to determine which route to render.
- * @since 2.3.0
- */
-export type Reroute = (event: { url: URL; fetch: typeof fetch }) => MaybePromise<void | string>;
-
-/**
- * The [`transport`](https://svelte.dev/docs/kit/hooks#transport) hook allows you to transport custom types across the server/client boundary.
- *
- * Each transporter has a pair of `encode` and `decode` functions. On the server, `encode` determines whether a value is an instance of the custom type and, if so, returns a non-falsy encoding of the value which can be an object or an array (or `false` otherwise).
- *
- * In the browser, `decode` turns the encoding back into an instance of the custom type.
- *
- * ```ts
- * import type { Transport } from '@sveltejs/kit';
- *
- * declare class MyCustomType {
- * 	data: any
- * }
- *
- * // hooks.js
- * export const transport: Transport = {
- * 	MyCustomType: {
- * 		encode: (value) => value instanceof MyCustomType && [value.data],
- * 		decode: ([data]) => new MyCustomType(data)
- * 	}
- * };
- * ```
- * @since 2.11.0
- */
-export type Transport = Record<string, Transporter>;
-
-/**
- * A member of the [`transport`](https://svelte.dev/docs/kit/hooks#transport) hook.
- */
-export interface Transporter<
-	T = any,
-	U = Exclude<any, false | 0 | '' | null | undefined | typeof NaN>
-> {
-	encode: (value: T) => false | U;
-	decode: (data: U) => T;
 }
 
 /**
@@ -1205,338 +589,6 @@ export interface NavigationEvent<
 	url: URL;
 }
 
-/**
- * Information about the target of a specific navigation.
- */
-export interface NavigationTarget<
-	Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
-	RouteId extends AppRouteId | null = AppRouteId | null
-> {
-	/**
-	 * Parameters of the target page - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object.
-	 * Is `null` if the target is not part of the SvelteKit app (could not be resolved to a route).
-	 */
-	params: Params | null;
-	/**
-	 * Info about the target route
-	 */
-	route: {
-		/**
-		 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
-		 */
-		id: RouteId | null;
-	};
-	/**
-	 * The URL that is navigated to
-	 */
-	url: URL;
-	/**
-	 * The scroll position associated with this navigation.
-	 *
-	 * For the `from` target, this is the scroll position at the moment of navigation.
-	 *
-	 * For the `to` target, this represents the scroll position that will be or was restored:
-	 * - In `beforeNavigate` and `onNavigate`, this is only available for `popstate` navigations (back/forward button)
-	 *   and will be `null` for other navigation types, since the final scroll position isn't known
-	 *   ahead of time.
-	 * - In `afterNavigate`, this is always the scroll position that was applied after the navigation
-	 *   completed.
-	 */
-	scroll: { x: number; y: number } | null;
-}
-
-/**
- * - `enter`: The app has hydrated/started
- * - `form`: The user submitted a `<form method="GET">`
- * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
- * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
- * - `link`: Navigation was triggered by a link click
- * - `popstate`: Navigation was triggered by back/forward navigation
- */
-export type NavigationType = 'enter' | 'form' | 'leave' | 'link' | 'goto' | 'popstate';
-
-export interface NavigationBase {
-	/**
-	 * The type of navigation:
-	 * - `enter`: The app has hydrated/started
-	 * - `form`: The user submitted a `<form method="GET">`
-	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
-	 * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
-	 * - `link`: Navigation was triggered by a link click
-	 * - `popstate`: Navigation was triggered by back/forward navigation
-	 */
-	type: NavigationType;
-	/**
-	 * Where navigation was triggered from
-	 */
-	from: NavigationTarget | null;
-	/**
-	 * Where navigation is going to/has gone to
-	 */
-	to: NavigationTarget | null;
-	/**
-	 * Whether or not the navigation will result in the page being unloaded (i.e. not a client-side navigation).
-	 */
-	willUnload: boolean;
-	/**
-	 * A promise that resolves once the navigation is complete, and rejects if the navigation
-	 * fails or is aborted. In the case of a `willUnload` navigation, the promise will never resolve
-	 */
-	complete: Promise<void>;
-}
-
-/**
- * The navigation that occurs when the app starts/hydrates
- */
-export interface NavigationEnter extends NavigationBase {
-	type: 'enter';
-
-	/**
-	 * In case of a history back/forward navigation, the number of steps to go back/forward
-	 */
-	delta?: undefined;
-
-	/**
-	 * Dispatched `Event` object when navigation occurred by `popstate` or `link`.
-	 */
-	event?: undefined;
-}
-
-export type NavigationExternal = NavigationGoto | NavigationLeave;
-
-/**
- * A navigation triggered by a `goto(...)` call or a redirect
- */
-export interface NavigationGoto extends NavigationBase {
-	type: 'goto';
-
-	// TODO 3.0 remove this property, so that it only exists when type is 'popstate'
-	// (would possibly be a breaking change to do it prior to that)
-	/**
-	 * In case of a history back/forward navigation, the number of steps to go back/forward
-	 */
-	delta?: undefined;
-}
-
-/**
- * A navigation triggered by the tab being closed, or the user navigating to a different document
- */
-export interface NavigationLeave extends NavigationBase {
-	type: 'leave';
-
-	// TODO 3.0 remove this property, so that it only exists when type is 'popstate'
-	// (would possibly be a breaking change to do it prior to that)
-	/**
-	 * In case of a history back/forward navigation, the number of steps to go back/forward
-	 */
-	delta?: undefined;
-}
-
-/**
- * A navigation triggered by a `<form method="GET">`
- */
-export interface NavigationFormSubmit extends NavigationBase {
-	type: 'form';
-
-	/**
-	 * The `SubmitEvent` that caused the navigation
-	 */
-	event: SubmitEvent;
-
-	// TODO 3.0 remove this property, so that it only exists when type is 'popstate'
-	// (would possibly be a breaking change to do it prior to that)
-	/**
-	 * In case of a history back/forward navigation, the number of steps to go back/forward
-	 */
-	delta?: undefined;
-}
-
-/**
- * A navigation triggered by back/forward navigation
- */
-export interface NavigationPopState extends NavigationBase {
-	type: 'popstate';
-
-	/**
-	 * In case of a history back/forward navigation, the number of steps to go back/forward
-	 */
-	delta: number;
-
-	/**
-	 * The `PopStateEvent` that caused the navigation
-	 */
-	event: PopStateEvent;
-}
-
-/**
- * A navigation triggered by a link click
- */
-export interface NavigationLink extends NavigationBase {
-	type: 'link';
-
-	/**
-	 * The `PointerEvent` that caused the navigation
-	 */
-	event: PointerEvent;
-
-	// TODO 3.0 remove this property, so that it only exists when type is 'popstate'
-	// (would possibly be a breaking change to do it prior to that)
-	/**
-	 * In case of a history back/forward navigation, the number of steps to go back/forward
-	 */
-	delta?: undefined;
-}
-
-export type Navigation =
-	| NavigationExternal
-	| NavigationFormSubmit
-	| NavigationPopState
-	| NavigationLink;
-
-/**
- * The argument passed to [`beforeNavigate`](https://svelte.dev/docs/kit/$app-navigation#beforeNavigate) callbacks.
- */
-export type BeforeNavigate = Navigation & {
-	/**
-	 * Call this to prevent the navigation from starting.
-	 */
-	cancel: () => void;
-};
-
-/**
- * The argument passed to [`onNavigate`](https://svelte.dev/docs/kit/$app-navigation#onNavigate) callbacks.
- */
-export type OnNavigate = Navigation & {
-	type: Exclude<NavigationType, 'enter' | 'leave'>;
-	/**
-	 * Since `onNavigate` callbacks are called immediately before a client-side navigation, they will never be called with a navigation that unloads the page.
-	 */
-	willUnload: false;
-};
-
-/**
- * The argument passed to [`afterNavigate`](https://svelte.dev/docs/kit/$app-navigation#afterNavigate) callbacks.
- */
-export type AfterNavigate = (Navigation | NavigationEnter) & {
-	type: Exclude<NavigationType, 'leave'>;
-	/**
-	 * Since `afterNavigate` callbacks are called after a navigation completes, they will never be called with a navigation that unloads the page.
-	 */
-	willUnload: false;
-};
-
-/**
- * The shape of the [`page`](https://svelte.dev/docs/kit/$app-state#page) reactive object and the [`$page`](https://svelte.dev/docs/kit/$app-stores) store.
- */
-export interface Page<
-	Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
-	RouteId extends AppRouteId | null = AppRouteId | null
-> {
-	/**
-	 * The URL of the current page.
-	 */
-	url: URL & { pathname: ResolvedPathname };
-	/**
-	 * The parameters of the current page - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object.
-	 */
-	params: Params;
-	/**
-	 * Info about the current route.
-	 */
-	route: {
-		/**
-		 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
-		 */
-		id: RouteId;
-	};
-	/**
-	 * HTTP status code of the current page.
-	 */
-	status: number;
-	/**
-	 * The error object of the current page, if any. Filled from the `handleError` hooks.
-	 */
-	error: App.Error | null;
-	/**
-	 * The merged result of all data from all `load` functions on the current page. You can type a common denominator through `App.PageData`.
-	 */
-	data: App.PageData & Record<string, any>;
-	/**
-	 * The page state, which can be manipulated using the [`pushState`](https://svelte.dev/docs/kit/$app-navigation#pushState) and [`replaceState`](https://svelte.dev/docs/kit/$app-navigation#replaceState) functions from `$app/navigation`.
-	 */
-	state: App.PageState;
-	/**
-	 * Filled only after a form submission. See [form actions](https://svelte.dev/docs/kit/form-actions) for more info.
-	 */
-	form: any;
-}
-
-/**
- * The shape of a param matcher. See [matching](https://svelte.dev/docs/kit/advanced-routing#Matching) for more info.
- */
-export type ParamMatcher = (param: string) => boolean;
-
-/**
- * A single entry yielded by [`requested`](https://svelte.dev/docs/kit/$app-server#requested)
- * when called with a regular `query`. `arg` is the validated argument (the input *after*
- * the query's schema validated and transformed it, if applicable); `query` is a
- * `RemoteQuery` bound to the client's original cache key, so `refresh()` / `set()` will
- * update the correct client entry.
- */
-export type RequestedEntry<Validated, Output> = {
-	arg: Validated;
-	query: RemoteQuery<Output>;
-};
-
-/**
- * A single entry yielded by [`requested`](https://svelte.dev/docs/kit/$app-server#requested)
- * when called with a `query.live`. `arg` is the validated argument; `query` is a
- * `RemoteLiveQuery` bound to the client's original cache key, so `reconnect()` targets
- * the correct client subscription.
- */
-export type LiveRequestedEntry<Validated, Output> = {
-	arg: Validated;
-	query: RemoteLiveQuery<Output>;
-};
-
-export type QueryRequestedResult<Validated, Output> = Iterable<RequestedEntry<Validated, Output>> &
-	AsyncIterable<RequestedEntry<Validated, Output>> & {
-		/**
-		 * Call `refresh` on all queries selected by this `requested` invocation.
-		 * This is identical to:
-		 * ```ts
-		 * import { requested } from '$app/server';
-		 *
-		 * for await (const { query } of requested(getPost, ...)) {
-		 *   void query.refresh();
-		 * }
-		 * ```
-		 */
-		refreshAll: () => Promise<void>;
-	};
-
-export type LiveQueryRequestedResult<Validated, Output> = Iterable<
-	LiveRequestedEntry<Validated, Output>
-> &
-	AsyncIterable<LiveRequestedEntry<Validated, Output>> & {
-		/**
-		 * Call `reconnect` on all live queries selected by this `requested` invocation.
-		 * This is identical to:
-		 * ```ts
-		 * import { requested } from '$app/server';
-		 *
-		 * for await (const { query } of requested(liveQuery, ...)) {
-		 *   void query.reconnect();
-		 * }
-		 * ```
-		 */
-		reconnectAll: () => Promise<void>;
-	};
-
-export type RequestedResult<Validated, Output> =
-	| QueryRequestedResult<Validated, Output>
-	| LiveQueryRequestedResult<Validated, Output>;
-
 export interface RequestEvent<
 	Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 	RouteId extends AppRouteId | null = AppRouteId | null
@@ -1544,7 +596,7 @@ export interface RequestEvent<
 	/**
 	 * Get or set cookies related to the current request
 	 */
-	cookies: Cookies;
+	readonly cookies: Cookies;
 	/**
 	 * `fetch` is equivalent to the [native `fetch` web API](https://developer.mozilla.org/en-US/docs/Web/API/fetch), with a few additional features:
 	 *
@@ -1556,41 +608,43 @@ export interface RequestEvent<
 	 *
 	 * You can learn more about making credentialed requests with cookies [here](https://svelte.dev/docs/kit/load#Cookies).
 	 */
-	fetch: typeof fetch;
+	readonly fetch: typeof fetch;
 	/**
 	 * The client's IP address, set by the adapter.
 	 */
-	getClientAddress: () => string;
+	readonly getClientAddress: () => string;
 	/**
 	 * Contains custom data that was added to the request within the [`server handle hook`](https://svelte.dev/docs/kit/hooks#handle).
 	 */
-	locals: App.Locals;
+	readonly locals: App.Locals;
 	/**
 	 * The parameters of the current route - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object.
 	 *
-	 * In the context of a remote function request initiated by the client, this relates to the page the remote function
-	 * was called from, _not_ the URL of the endpoint SvelteKit creates for the remote function. Never use this to determine
-	 * whether or not a user is authorized to access certain data, as these values are part of the request which could be manipulated.
+	 * Inside `query` functions (including `query.batch` and `query.live`), accessing this property throws an error.
+	 * Pass values from the page as arguments to the query instead. Inside `form` and `command` functions it relates to the page
+	 * the remote function was called from, _not_ the URL of the endpoint SvelteKit creates for the remote function. Never use it
+	 * to determine whether or not a user is authorized to access certain data, as these values are part of the request which could be manipulated.
 	 */
-	params: Params;
+	readonly params: Params;
 	/**
 	 * Additional data made available through the adapter.
 	 */
-	platform: Readonly<App.Platform> | undefined;
+	readonly platform: Readonly<App.Platform> | undefined;
 	/**
 	 * The original request object.
 	 */
-	request: Request;
+	readonly request: Request;
 	/**
 	 * Info about the current route.
 	 */
-	route: {
+	readonly route: {
 		/**
 		 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
 		 *
-		 * In the context of a remote function request initiated by the client, this relates to the page the remote function
-		 * was called from, _not_ the URL of the endpoint SvelteKit creates for the remote function. Never use this to determine
-		 * whether or not a user is authorized to access certain data, as these values are part of the request which could be manipulated.
+		 * Inside `query` functions (including `query.batch` and `query.live`), accessing this property throws an error.
+		 * Pass values from the page as arguments to the query instead. Inside `form` and `command` functions it relates to the page
+		 * the remote function was called from, _not_ the URL of the endpoint SvelteKit creates for the remote function. Never use it
+		 * to determine whether or not a user is authorized to access certain data, as these values are part of the request which could be manipulated.
 		 */
 		id: RouteId;
 	};
@@ -1616,30 +670,31 @@ export interface RequestEvent<
 	 *
 	 * You cannot add a `set-cookie` header with `setHeaders` — use the [`cookies`](https://svelte.dev/docs/kit/@sveltejs-kit#Cookies) API instead.
 	 */
-	setHeaders: (headers: Record<string, string>) => void;
+	readonly setHeaders: (headers: Record<string, string>) => void;
 	/**
 	 * The requested URL.
 	 *
-	 * In the context of a remote function request initiated by the client, this relates to the page the remote function
-	 * was called from, _not_ the URL of the endpoint SvelteKit creates for the remote function. Never use this to determine
-	 * whether or not a user is authorized to access certain data, as these values are part of the request which could be manipulated.
+	 * Inside `query` functions (including `query.batch` and `query.live`), accessing this property throws an error.
+	 * Pass values from the page as arguments to the query instead. Inside `form` and `command` functions it relates to the page
+	 * the remote function was called from, _not_ the URL of the endpoint SvelteKit creates for the remote function. Never use it
+	 * to determine whether or not a user is authorized to access certain data, as these values are part of the request which could be manipulated.
 	 */
-	url: URL;
+	readonly url: URL;
 	/**
 	 * `true` if the request comes from the client asking for `+page/layout.server.js` data. The `url` property will be stripped of the internal information
 	 * related to the data request in this case. Use this property instead if the distinction is important to you.
 	 */
-	isDataRequest: boolean;
+	readonly isDataRequest: boolean;
 	/**
 	 * `true` for `+server.js` calls coming from SvelteKit without the overhead of actually making an HTTP request. This happens when you make same-origin `fetch` requests on the server.
 	 */
-	isSubRequest: boolean;
+	readonly isSubRequest: boolean;
 
 	/**
 	 * Access to spans for tracing. If tracing is not enabled, these spans will do nothing.
 	 * @since 2.31.0
 	 */
-	tracing: {
+	readonly tracing: {
 		/** Whether tracing is enabled. */
 		enabled: boolean;
 		/** The root span for the request. This span is named `sveltekit.handle.root`. */
@@ -1652,7 +707,7 @@ export interface RequestEvent<
 	 * `true` if the request comes from the client via a remote function. The `url` property will be stripped of the internal information
 	 * related to the data request in this case. Use this property instead if the distinction is important to you.
 	 */
-	isRemoteRequest: boolean;
+	readonly isRemoteRequest: boolean;
 }
 
 /**
@@ -1664,29 +719,6 @@ export type RequestHandler<
 	Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 	RouteId extends AppRouteId | null = AppRouteId | null
 > = (event: RequestEvent<Params, RouteId>) => MaybePromise<Response>;
-
-export interface ResolveOptions {
-	/**
-	 * Applies custom transforms to HTML. If `done` is true, it's the final chunk. Chunks are not guaranteed to be well-formed HTML
-	 * (they could include an element's opening tag but not its closing tag, for example)
-	 * but they will always be split at sensible boundaries such as `%sveltekit.head%` or layout/page components.
-	 * @param input the html chunk and the info if this is the last chunk
-	 */
-	transformPageChunk?: (input: { html: string; done: boolean }) => MaybePromise<string | undefined>;
-	/**
-	 * Determines which headers should be included in serialized responses when a `load` function loads a resource with `fetch`.
-	 * By default, none will be included.
-	 * @param name header name
-	 * @param value header value
-	 */
-	filterSerializedResponseHeaders?: (name: string, value: string) => boolean;
-	/**
-	 * Determines what should be added to the `<head>` tag to preload it.
-	 * By default, `js` and `css` files will be preloaded.
-	 * @param input the type of the file and its path
-	 */
-	preload?: (input: { type: 'font' | 'css' | 'js' | 'asset'; path: string }) => boolean;
-}
 
 export interface RouteDefinition<Config = any> {
 	id: string;
@@ -1703,38 +735,16 @@ export interface RouteDefinition<Config = any> {
 	config: Config;
 }
 
-export class Server {
-	constructor(manifest: SSRManifest);
+export interface Server {
 	init(options: ServerInitOptions): Promise<void>;
 	respond(request: Request, options: RequestOptions): Promise<Response>;
 }
 
 export interface ServerInitOptions {
 	/** A map of environment variables. */
-	env: Record<string, string>;
+	env: Record<string, string | undefined>;
 	/** A function that turns an asset filename into a `ReadableStream`. Required for the `read` export from `$app/server` to work. */
 	read?: (file: string) => MaybePromise<ReadableStream | null>;
-}
-
-export interface SSRManifest {
-	appDir: string;
-	appPath: string;
-	/** Static files from `kit.config.files.assets` and the service worker (if any). */
-	assets: Set<string>;
-	mimeTypes: Record<string, string>;
-
-	/** private fields */
-	_: {
-		client: BuildData['client'];
-		nodes: SSRNodeLoader[];
-		/** hashed filename -> import to that file */
-		remotes: Record<string, () => Promise<any>>;
-		routes: SSRRoute[];
-		prerendered_routes: Set<string>;
-		matchers: () => Promise<Record<string, ParamMatcher>>;
-		/** A `[file]: size` map of all assets imported by server code. */
-		server_assets: Record<string, number>;
-	};
 }
 
 /**
@@ -1847,25 +857,6 @@ export type Actions<
 > = Record<string, Action<Params, OutputData, RouteId>>;
 
 /**
- * When calling a form action via fetch, the response will be one of these shapes.
- * ```svelte
- * <form method="post" use:enhance={() => {
- *   return ({ result }) => {
- * 		// result is of type ActionResult
- *   };
- * }}
- * ```
- */
-export type ActionResult<
-	Success extends Record<string, unknown> | undefined = Record<string, any>,
-	Failure extends Record<string, unknown> | undefined = Record<string, any>
-> =
-	| { type: 'success'; status: number; data?: Success }
-	| { type: 'failure'; status: number; data?: Failure }
-	| { type: 'redirect'; status: number; location: string }
-	| { type: 'error'; status?: number; error: any };
-
-/**
  * The object returned by the [`error`](https://svelte.dev/docs/kit/@sveltejs-kit#error) function.
  */
 export interface HttpError {
@@ -1885,516 +876,13 @@ export interface Redirect {
 	location: string;
 }
 
-export type SubmitFunction<
-	Success extends Record<string, unknown> | undefined = Record<string, any>,
-	Failure extends Record<string, unknown> | undefined = Record<string, any>
-> = (input: {
-	action: URL;
-	formData: FormData;
-	formElement: HTMLFormElement;
-	controller: AbortController;
-	submitter: HTMLElement | null;
-	cancel: () => void;
-}) => MaybePromise<
-	| void
-	| ((opts: {
-			formData: FormData;
-			formElement: HTMLFormElement;
-			action: URL;
-			result: ActionResult<Success, Failure>;
-			/**
-			 * Call this to get the default behavior of a form submission response.
-			 * @param options Set `reset: false` if you don't want the `<form>` values to be reset after a successful submission.
-			 * @param invalidateAll Set `invalidateAll: false` if you don't want the action to call `invalidateAll` after submission.
-			 */
-			update: (options?: { reset?: boolean; invalidateAll?: boolean }) => Promise<void>;
-	  }) => MaybePromise<void>)
->;
-
 /**
  * The type of `export const snapshot` exported from a page or layout component.
+ * @deprecated Use the [`snapshot`](https://svelte.dev/docs/kit/$app-navigation#snapshot) helper from `$app/navigation` instead.
  */
 export interface Snapshot<T = any> {
 	capture: () => T;
 	restore: (snapshot: T) => void;
-}
-
-// If T is unknown or has an index signature, the types below will recurse indefinitely and create giant unions that TS can't handle
-type WillRecurseIndefinitely<T> = unknown extends T ? true : string extends keyof T ? true : false;
-
-// Input type mappings for form fields
-type InputTypeMap = {
-	text: string;
-	email: string;
-	password: string;
-	url: string;
-	tel: string;
-	search: string;
-	number: number;
-	range: number;
-	date: string;
-	'datetime-local': string;
-	time: string;
-	month: string;
-	week: string;
-	color: string;
-	checkbox: boolean | string[];
-	radio: string;
-	file: File;
-	hidden: string | number | boolean;
-	submit: string | number | boolean;
-	button: string;
-	reset: string;
-	image: string;
-	select: string;
-	'select multiple': string[];
-	'file multiple': File[];
-};
-
-// Valid input types for a given value type
-export type RemoteFormFieldType<T> = {
-	[K in keyof InputTypeMap]: T extends InputTypeMap[K] ? K : never;
-}[keyof InputTypeMap];
-
-// Input element properties based on type
-type InputElementProps<T extends keyof InputTypeMap> = T extends 'checkbox' | 'radio'
-	? {
-			name: string;
-			type: T;
-			value?: string;
-			'aria-invalid': boolean | 'false' | 'true' | undefined;
-			get checked(): boolean;
-			set checked(value: boolean);
-			readonly defaultChecked?: boolean;
-		}
-	: T extends 'file'
-		? {
-				name: string;
-				type: 'file';
-				'aria-invalid': boolean | 'false' | 'true' | undefined;
-				get files(): FileList | null;
-				set files(v: FileList | null);
-			}
-		: T extends 'select'
-			? {
-					name: string;
-					'aria-invalid': boolean | 'false' | 'true' | undefined;
-					get value(): string;
-					set value(v: string);
-				}
-			: T extends 'select multiple'
-				? {
-						name: string;
-						multiple: true;
-						'aria-invalid': boolean | 'false' | 'true' | undefined;
-						get value(): string[];
-						set value(v: string[]);
-					}
-				: T extends 'text'
-					? {
-							name: string;
-							'aria-invalid': boolean | 'false' | 'true' | undefined;
-							get value(): string | number;
-							set value(v: string | number);
-							readonly defaultValue?: string | number;
-						}
-					: {
-							name: string;
-							type: T;
-							'aria-invalid': boolean | 'false' | 'true' | undefined;
-							get value(): string | number;
-							set value(v: string | number);
-							readonly defaultValue?: string | number;
-						};
-
-type RemoteFormFieldMethods<T> = {
-	/** The values that will be submitted */
-	value(): DeepPartial<T>;
-	/** Set the values that will be submitted */
-	set(input: DeepPartial<T>): DeepPartial<T>;
-	/** Validation issues, if any */
-	issues(): RemoteFormIssue[] | undefined;
-};
-
-// These two types use "T extends unknown ? .. : .." to distribute over unions.
-// Example: if "type T = A | b" then "keyof T" only contains keys that both A and B have, with "KeysOfUnion<T>" we get the keys of both A and B
-type KeysOfUnion<T> = T extends unknown ? keyof T : never;
-type ValueOfUnionKey<T, K extends PropertyKey> = T extends unknown
-	? K extends keyof T
-		? T[K]
-		: never
-	: never;
-
-export type RemoteFormFieldValue = string | string[] | number | boolean | File | File[];
-
-type AsArgs<Type extends keyof InputTypeMap, Value> = Type extends 'checkbox'
-	? Value extends string[]
-		? [type: Type, value: Value[number] | (string & {})]
-		: Value extends boolean
-			? [type: Type] | [type: Type, value: boolean]
-			: [type: Type] | [type: Type, value: Value | (string & {})]
-	: Type extends 'submit' | 'hidden'
-		? Value extends string
-			? [type: Type, value: Value | (string & {})]
-			: [type: Type, value: Value]
-		: Type extends 'radio'
-			? [type: Type, value: Value | (string & {})]
-			: Type extends 'file' | 'file multiple'
-				? [type: Type]
-				: [type: Type] | [type: Type, value: Value | (string & {})];
-
-/**
- * Form field accessor type that provides name(), value(), and issues() methods
- */
-export type RemoteFormField<Value extends RemoteFormFieldValue> = RemoteFormFieldMethods<Value> & {
-	/**
-	 * Returns an object that can be spread onto an input element with the correct type attribute,
-	 * aria-invalid attribute if the field is invalid, and appropriate value/checked property getters/setters.
-	 * @example
-	 * ```svelte
-	 * <input {...myForm.fields.myString.as('text')} />
-	 * <input {...myForm.fields.myNumber.as('number')} />
-	 * <input {...myForm.fields.myBoolean.as('checkbox')} />
-	 * ```
-	 */
-	as<T extends RemoteFormFieldType<Value>>(...args: AsArgs<T, Value>): InputElementProps<T>;
-};
-
-type RemoteFormFieldContainer<Value> = RemoteFormFieldMethods<Value> & {
-	/** Validation issues belonging to this or any of the fields that belong to it, if any */
-	allIssues(): RemoteFormIssue[] | undefined;
-};
-
-type UnknownField<Value> = RemoteFormFieldMethods<Value> & {
-	/** Validation issues belonging to this or any of the fields that belong to it, if any */
-	allIssues(): RemoteFormIssue[] | undefined;
-	/**
-	 * Returns an object that can be spread onto an input element with the correct type attribute,
-	 * aria-invalid attribute if the field is invalid, and appropriate value/checked property getters/setters.
-	 * @example
-	 * ```svelte
-	 * <input {...myForm.fields.myString.as('text')} />
-	 * <input {...myForm.fields.myNumber.as('number')} />
-	 * <input {...myForm.fields.myBoolean.as('checkbox')} />
-	 * ```
-	 */
-	as<T extends RemoteFormFieldType<Value>>(...args: AsArgs<T, Value>): InputElementProps<T>;
-} & {
-	[key: string | number]: UnknownField<any>;
-};
-
-type RemoteFormFieldsRoot<Input extends RemoteFormInput | void> =
-	IsAny<Input> extends true
-		? RecursiveFormFields
-		: Input extends void
-			? {
-					/** Validation issues, if any */
-					issues(): RemoteFormIssue[] | undefined;
-					/** Validation issues belonging to this or any of the fields that belong to it, if any */
-					allIssues(): RemoteFormIssue[] | undefined;
-				}
-			: RemoteFormFields<Input>;
-
-/**
- * Recursive type to build form fields structure with proxy access
- */
-export type RemoteFormFields<T> =
-	WillRecurseIndefinitely<T> extends true
-		? RecursiveFormFields
-		: NonNullable<T> extends string | number | boolean | File
-			? RemoteFormField<NonNullable<T>>
-			: // [NonNullable<T>] is used to prevent distributing over union while still allowing
-				// nullable wrappers (e.g. `string[] | undefined` from a schema with `.default([])`)
-				// to be treated as arrays; only the last condition should distribute over unions
-				[NonNullable<T>] extends [string[] | File[]]
-				? RemoteFormField<NonNullable<T>> & {
-						[K in number]: RemoteFormField<NonNullable<T>[number]>;
-					}
-				: [NonNullable<T>] extends [Array<infer U>]
-					? RemoteFormFieldContainer<NonNullable<T>> & {
-							[K in number]: RemoteFormFields<U>;
-						}
-					: RemoteFormFieldContainer<T> & {
-							[K in KeysOfUnion<T>]-?: RemoteFormFields<ValueOfUnionKey<T, K>>;
-						};
-
-// By breaking this out into its own type, we avoid the TS recursion depth limit
-type RecursiveFormFields = RemoteFormFieldContainer<any> & {
-	[key: string | number]: UnknownField<any>;
-};
-
-type MaybeArray<T> = T | T[];
-
-export interface RemoteFormInput {
-	[key: string]: MaybeArray<string | number | boolean | File | RemoteFormInput> | undefined;
-}
-
-export interface RemoteFormIssue {
-	message: string;
-	path: Array<string | number>;
-}
-
-// If the schema specifies `id` as a string or number, ensure that `for(...)`
-// only accepts that type. Otherwise, accept `string | number`
-type ExtractId<Input> = Input extends { id: infer Id }
-	? Id extends string | number
-		? Id
-		: string | number
-	: string | number;
-
-/**
- * A function and proxy object used to imperatively create validation errors in form handlers.
- *
- * Access properties to create field-specific issues: `issue.fieldName('message')`.
- * The type structure mirrors the input data structure for type-safe field access.
- * Call `invalid(issue.foo(...), issue.nested.bar(...))` to throw a validation error.
- */
-export type InvalidField<T> =
-	WillRecurseIndefinitely<T> extends true
-		? Record<string | number, any>
-		: NonNullable<T> extends string | number | boolean | File
-			? (message: string) => StandardSchemaV1.Issue
-			: NonNullable<T> extends Array<infer U>
-				? {
-						[K in number]: InvalidField<U>;
-					} & ((message: string) => StandardSchemaV1.Issue)
-				: NonNullable<T> extends RemoteFormInput
-					? {
-							[K in keyof T]-?: InvalidField<T[K]>;
-						} & ((message: string) => StandardSchemaV1.Issue)
-					: Record<string, never>;
-
-/**
- * A validation error thrown by `invalid`.
- */
-export interface ValidationError {
-	/** The validation issues */
-	issues: StandardSchemaV1.Issue[];
-}
-
-/**
- * The form instance as received inside an `enhance` callback. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
- */
-export type RemoteFormEnhanceInstance<
-	Input extends RemoteFormInput | void = RemoteFormInput | void,
-	Output = any
-> = Omit<RemoteForm<Input, Output>, 'enhance' | 'element'> & {
-	readonly element: HTMLFormElement;
-};
-
-/**
- * The callback passed to a remote form's `enhance` method. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
- */
-export type RemoteFormEnhanceCallback<
-	Input extends RemoteFormInput | void = RemoteFormInput | void,
-	Output = any
-> = (form: RemoteFormEnhanceInstance<Input, Output>) => MaybePromise<void>;
-
-/**
- * The type of a remote `form` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
- */
-export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
-	/** Attachment that sets up an event handler that intercepts the form submission on the client to prevent a full page reload */
-	[attachment: symbol]: (node: HTMLFormElement) => void;
-	method: 'POST';
-	/** The URL to send the form to. */
-	action: string;
-	/** The `<form>` element this instance is currently attached to, if any. */
-	get element(): HTMLFormElement | null;
-	/** Submit the currently attached form programmatically. */
-	submit(): Promise<boolean> & {
-		updates: (...updates: RemoteQueryUpdate[]) => Promise<boolean>;
-	};
-	/** Use the `enhance` method to influence what happens when the form is submitted. */
-	enhance(callback: RemoteFormEnhanceCallback<Input, Output>): {
-		method: 'POST';
-		action: string;
-		[attachment: symbol]: (node: HTMLFormElement) => void;
-	};
-	/**
-	 * Create an instance of the form for the given `id`.
-	 * The `id` is stringified and used for deduplication to potentially reuse existing instances.
-	 * Useful when you have multiple forms that use the same remote form action, for example in a loop.
-	 * ```svelte
-	 * {#each todos as todo}
-	 *	{@const todoForm = updateTodo.for(todo.id)}
-	 *	<form {...todoForm}>
-	 *		{#if todoForm.result?.invalid}<p>Invalid data</p>{/if}
-	 *		...
-	 *	</form>
-	 *	{/each}
-	 * ```
-	 */
-	for(id: ExtractId<Input>): Omit<RemoteForm<Input, Output>, 'for'>;
-	/** Preflight checks */
-	preflight(schema: StandardSchemaV1<Input, any>): RemoteForm<Input, Output>;
-	/** Validate the form contents programmatically */
-	validate(options?: {
-		/** Set this to `true` to also show validation issues of fields that haven't been touched yet. */
-		includeUntouched?: boolean;
-		/** Set this to `true` to only run the `preflight` validation. */
-		preflightOnly?: boolean;
-	}): Promise<void>;
-	/** The result of the form submission */
-	get result(): Output | undefined;
-	/** The number of pending submissions */
-	get pending(): number;
-	/** True if the form has been submitted at least once */
-	get submitted(): boolean;
-	/** Access form fields using object notation */
-	fields: RemoteFormFieldsRoot<Input>;
-};
-
-/**
- * The type of a remote `command` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#command) for full documentation.
- */
-export type RemoteCommand<Input, Output> = {
-	(arg: undefined extends Input ? Input | void : Input): Promise<Output> & {
-		updates(...updates: RemoteQueryUpdate[]): Promise<Output>;
-	};
-	/** The number of pending command executions */
-	get pending(): number;
-};
-
-export type RemoteQueryUpdate =
-	| RemoteQuery<any>
-	| RemoteLiveQuery<any>
-	| RemoteQueryFunction<any, any>
-	| RemoteLiveQueryFunction<any, any>
-	| RemoteQueryOverride;
-
-export type RemoteResource<T> = Promise<T> & {
-	/** The error in case the query fails. Most often this is a [`HttpError`](https://svelte.dev/docs/kit/@sveltejs-kit#HttpError) but it isn't guaranteed to be. */
-	get error(): any;
-	/** `true` before the first result is available and during refreshes */
-	get loading(): boolean;
-} & (
-		| {
-				/** The current value of the query. Undefined until `ready` is `true` */
-				get current(): undefined;
-				ready: false;
-		  }
-		| {
-				/** The current value of the query. Undefined until `ready` is `true` */
-				get current(): T;
-				ready: true;
-		  }
-	);
-
-export type RemoteQuery<T> = RemoteResource<T> & {
-	/**
-	 * On the client, this function will update the value of the query without re-fetching it.
-	 *
-	 * On the server, this can be called in the context of a `command` or `form` and the specified data will accompany the action response back to the client.
-	 * This prevents SvelteKit needing to refresh all queries on the page in a second server round-trip.
-	 */
-	set(value: T): void;
-	/**
-	 * On the client, this function will re-fetch the query from the server.
-	 *
-	 * On the server, this can be called in the context of a `command` or `form` and the refreshed data will accompany the action response back to the client.
-	 * This prevents SvelteKit needing to refresh all queries on the page in a second server round-trip.
-	 */
-	refresh(): Promise<void>;
-	/**
-	 * Temporarily override a query's value during a [single-flight mutation](https://svelte.dev/docs/kit/remote-functions#Single-flight-mutations) to provide optimistic updates.
-	 *
-	 * ```svelte
-	 * <script>
-	 *   import { getTodos, addTodo } from './todos.remote.js';
-	 *   const todos = getTodos();
-	 * </script>
-	 *
-	 * <form {...addTodo.enhance(async (form) => {
-	 *   await form.submit().updates(
-	 *     todos.withOverride((todos) => [...todos, { text: form.fields.text.value() }])
-	 *   );
-	 * })}>
-	 *   <input type="text" name="text" />
-	 *   <button type="submit">Add Todo</button>
-	 * </form>
-	 * ```
-	 */
-	withOverride(update: (current: T) => T): RemoteQueryOverride;
-};
-
-export type RemoteLiveQuery<T> = RemoteResource<T> &
-	AsyncIterable<T> & {
-		/** `true` if the live stream is currently connected. */
-		readonly connected: boolean;
-		/** `true` once the current live stream iterator is done. */
-		readonly done: boolean;
-		/** Reconnects the live stream immediately. */
-		reconnect(): Promise<void>;
-	};
-
-export type RemoteQueryOverride = () => void;
-
-/**
- * The type of a remote `prerender` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#prerender) for full documentation.
- */
-export type RemotePrerenderFunction<Input, Output> = (
-	arg: undefined extends Input ? Input | void : Input
-) => RemoteResource<Output>;
-
-/**
- * The return value of a remote `query` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query) for full documentation.
- *
- * The optional `Validated` generic parameter represents the argument type *after* the
- * query's schema has validated and (optionally) transformed it — this is the type the
- * query's implementation function receives on the server, and the type yielded by
- * [`requested`](https://svelte.dev/docs/kit/$app-server#requested). For queries declared
- * with [Standard Schema](https://standardschema.dev/) it differs from `Input` when the
- * schema contains a transform (e.g. `v.pipe(v.number(), v.transform(String))` has
- * `Input = number` but `Validated = string`). For `'unchecked'` validators and queries
- * without arguments it defaults to `Input`.
- */
-export type RemoteQueryFunction<Input, Output, _Validated = Input> = (
-	arg: undefined extends Input ? Input | void : Input
-) => RemoteQuery<Output>;
-
-/**
- * The type of a remote `query.live` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query.live) for full documentation.
- *
- * The optional `Validated` generic parameter represents the argument type *after* the
- * query's schema has validated and (optionally) transformed it, and matches the type
- * yielded by [`requested`](https://svelte.dev/docs/kit/$app-server#requested).
- */
-export type RemoteLiveQueryFunction<Input, Output, _Validated = Input> = (
-	arg: undefined extends Input ? Input | void : Input
-) => RemoteLiveQuery<Output>;
-
-/**
- * [Environment variables](https://svelte.dev/docs/kit/environment-variables) can be configured by exporting
- * a `variables` object from `src/env.ts`, using [`defineEnvVars`](https://svelte.dev/docs/kit/@sveltejs-kit-env#defineEnvVars).
- */
-export interface EnvVarConfig<T> {
-	/**
-	 * Whether the environment variable can be accessed by client-side code.
-	 * - if `true`, it can be imported from `$app/env/public`
-	 * - if `false`, it can be imported from `$app/env/private`, which is a [server-only module](https://svelte.dev/docs/kit/server-only-modules)
-	 * @default false
-	 */
-	public?: boolean;
-	/**
-	 * Whether the value is determined at build time or when the app runs.
-	 * - if `true`, the build time value is inlined into the bundle. This enables optimisations like dead-code elimination
-	 * - if `false`, the value is read from the environment when the app starts
-	 * @default false
-	 */
-	static?: boolean;
-	/**
-	 * A [Standard Schema](https://standardschema.dev/) validator that is applied to the value when the app starts.
-	 * The validator can output any value — not necessarily a string — but public, non-static values must be
-	 * serializable by [devalue](https://github.com/sveltejs/devalue) so that they can be sent to the browser.
-	 *
-	 * If omitted, the value must be a non-empty string.
-	 */
-	schema?: StandardSchemaV1<string | undefined, T>;
-	/**
-	 * A description of the variable that will be used for inline documentation on hover.
-	 */
-	description?: string;
 }
 
 export * from './index.js';

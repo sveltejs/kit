@@ -7,6 +7,9 @@
 	"peerDependencies": {
 		"svelte": "^4.0.0"
 	},
+	"imports": {
+		"#lib/*": "./src/kitlib/*"
+	},
 	"exports": {
 		".": {
 			"types": "./dist/index.d.ts",

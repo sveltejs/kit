@@ -1,46 +1,5 @@
 import process from 'node:process';
 
-/** @param {import("@sveltejs/kit").RouteDefinition<any>} route */
-export function get_pathname(route) {
-	let i = 1;
-
-	const pathname = route.segments
-		.map((segment) => {
-			if (!segment.dynamic) {
-				return '/' + segment.content;
-			}
-
-			const parts = segment.content.split(/\[(.+?)\](?!\])/);
-
-			if (
-				parts.length === 3 &&
-				!parts[0] &&
-				!parts[2] &&
-				(parts[1].startsWith('...') || parts[1][0] === '[')
-			) {
-				// Special case: segment is a single optional or rest parameter.
-				// In that case we don't prepend a slash (also see comment in pattern_to_src).
-				return `$${i++}`;
-			} else {
-				return (
-					'/' +
-					parts
-						.map((content, j) => {
-							if (j % 2) {
-								return `$${i++}`;
-							} else {
-								return content;
-							}
-						})
-						.join('')
-				);
-			}
-		})
-		.join('');
-
-	return pathname[0] === '/' ? pathname.slice(1) : pathname;
-}
-
 /**
  * Adjusts the stringified route regex for Vercel's routing system
  * @param {string} pattern stringified route regex
@@ -56,14 +15,6 @@ export function pattern_to_src(pattern) {
 	if (src === '^/') {
 		src = '^/?';
 	}
-
-	// Move non-capturing groups that swallow slashes into their following capturing groups.
-	// This is necessary because during ISR we're using the regex to construct the __pathname
-	// query parameter: In case of a route like [required]/[...rest] we need to turn them
-	// into $1$2 and not $1/$2, because if [...rest] is empty, we don't want to have a trailing
-	// slash in the __pathname query parameter which wasn't there in the original URL, as that
-	// could result in a false trailing slash redirect in the SvelteKit runtime, leading to infinite redirects.
-	src = src.replace(/\(\?:\/\((.+?)\)\)/g, '(/$1)');
 
 	return src;
 }
@@ -113,37 +64,47 @@ export function parse_isr_expiration(value, route_id) {
  * @returns {RuntimeKey}
  */
 export function resolve_runtime(default_key, override_key) {
-	const key = (override_key ?? default_key ?? get_default_runtime()).replace('experimental_', '');
+	const key = override_key ?? default_key ?? get_default_runtime();
 	assert_is_valid_runtime(key);
 	return key;
 }
 
-const valid_node_versions = [20, 22, 24];
-const formatter = new Intl.ListFormat('en', { type: 'disjunction' });
+const valid_node_versions = [22, 24];
+const formatter = new Intl.ListFormat('en-gb', { type: 'disjunction' });
 
 /** @returns {RuntimeKey} */
 function get_default_runtime() {
-	// TODO may someday need to auto-detect Bun, but this will be complicated because you may want to run your build
-	// with Bun but not have your serverless runtime be in Bun. Vercel will likely have to attach something to `globalThis` or similar
-	// to tell us what the bun configuration is.
-	const major = Number(process.version.slice(1).split('.')[0]);
+	// if the user ran e.g. `bunx --bun vite build`, infer that they want to run the app in Bun
+	if (process.versions.bun) {
+		const major = process.versions.bun.split('.')[0];
+		if (major !== '1') {
+			throw new Error(
+				`Unsupported Bun version: ${major}. Please use Bun 1.x to build your project, or explicitly specify a runtime in your adapter configuration.`
+			);
+		}
 
-	if (!valid_node_versions.includes(major)) {
-		throw new Error(
-			`Unsupported Node.js version: ${process.version}. Please use Node ${formatter.format(valid_node_versions.map((v) => `${v}`))} to build your project, or explicitly specify a runtime in your adapter configuration.`
-		);
+		return `bun${major}.x`;
 	}
 
-	return `nodejs${/** @type {20 | 22 | 24} */ (major)}.x`;
+	// otherwise, default to the version of Node specified in the project config
+	if (process.versions.node) {
+		const major = Number(process.versions.node.split('.')[0]);
+
+		if (!valid_node_versions.includes(major)) {
+			throw new Error(
+				`Unsupported Node.js version: ${process.version}. Please use Node ${formatter.format(valid_node_versions.map((v) => `${v}`))} to build your project, or explicitly specify a runtime in your adapter configuration.`
+			);
+		}
+
+		return `nodejs${/** @type {22 | 24} */ (major)}.x`;
+	}
+
+	throw new Error(
+		'Could not auto-detect a runtime. Please explicitly specify a runtime in your adapter configuration.'
+	);
 }
 
-const valid_runtimes = /** @type {const} */ ([
-	'nodejs20.x',
-	'nodejs22.x',
-	'nodejs24.x',
-	'bun1.x',
-	'edge'
-]);
+const valid_runtimes = /** @type {const} */ (['nodejs22.x', 'nodejs24.x', 'bun1.x']);
 
 /**
  * @param {string} key
@@ -157,5 +118,4 @@ function assert_is_valid_runtime(key) {
 	}
 }
 
-/** @typedef {Exclude<RuntimeKey, 'bun1.x'> | 'experimental_bun1.x'} RuntimeConfigKey */
 /** @typedef {typeof valid_runtimes[number]} RuntimeKey */

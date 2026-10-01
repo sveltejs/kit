@@ -2,6 +2,7 @@
 	"compilerOptions": {
 		"target": "ESNext",
 		"module": "ESNext",
+		"types": ["vite/client"],
 		"allowImportingTsExtensions": true,
 		"rewriteRelativeImportExtensions": true
 	}

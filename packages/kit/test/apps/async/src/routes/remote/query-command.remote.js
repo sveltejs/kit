@@ -5,7 +5,7 @@ export const add = query('unchecked', ({ a, b }) => a + b);
 
 /**
  * The mutable `count`/`should_fail_flaky` state is stored per browser session
- * (keyed by the `count_session` cookie set in `hooks.server.js`) so that tests
+ * (keyed by the `session` cookie set in `hooks.server.js`) so that tests
  * running in parallel against the same dev/preview server — e.g. `test.js` and
  * `client.test.js` on different Playwright workers — don't clobber each other's
  * in-memory state. Each Playwright test gets a fresh browser context, and thus
@@ -17,7 +17,7 @@ const sessions = new Map();
 
 /** @returns {SessionState} */
 function session() {
-	const id = getRequestEvent().cookies.get('count_session') ?? 'default';
+	const id = getRequestEvent().cookies.get('session') ?? 'default';
 	let state = sessions.get(id);
 	if (!state) {
 		state = { count: 0, should_fail_flaky: false };
@@ -113,6 +113,25 @@ export const set_count_server_refresh_after_read = command('unchecked', async (c
 	await get_count();
 	session().count = c;
 	await get_count().refresh();
+	return c;
+});
+
+export const set_count_server_refresh_before_mutation = command('unchecked', async (c) => {
+	// refresh BEFORE the mutation — the deferred refresh must see the new value
+	get_count().refresh();
+	await new Promise((resolve) => setTimeout(resolve, 10));
+	session().count = c;
+	return c;
+});
+
+export const set_count_server_refresh_then_reawait = command('unchecked', async (c) => {
+	// refresh BEFORE the mutation, then re-await to get fresh data within the command
+	get_count().refresh();
+	session().count = c;
+	const fresh = await get_count();
+	if (fresh !== c) {
+		throw new Error(`expected fresh value ${c}, got ${fresh}`);
+	}
 	return c;
 });
 

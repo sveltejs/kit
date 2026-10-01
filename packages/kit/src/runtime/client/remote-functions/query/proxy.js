@@ -1,4 +1,4 @@
-import { app, query_map } from '../../client.js';
+import { query_map } from '../../client.js';
 import {
 	pin_in_effect,
 	pin_while_resolving,
@@ -29,7 +29,7 @@ export class QueryProxy {
 	 */
 	constructor(id, arg, fn) {
 		this.#id = id;
-		this.#payload = stringify_remote_arg(arg, app.hooks.transport);
+		this.#payload = stringify_remote_arg(arg);
 		this.#key = create_remote_key(id, this.#payload);
 		Object.defineProperty(this, QUERY_RESOURCE_KEY, { value: this.#key });
 		this.#fn = fn;

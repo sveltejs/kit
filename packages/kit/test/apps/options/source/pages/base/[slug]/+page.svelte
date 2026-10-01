@@ -1,6 +1,6 @@
 <script>
 	import { page } from '$app/state';
-	import SvelteLogo from '$lib/SvelteLogo.svelte';
+	import SvelteLogo from '#lib/SvelteLogo.svelte';
 </script>
 
 <SvelteLogo />

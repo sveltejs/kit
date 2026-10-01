@@ -1,11 +1,15 @@
-/** @import { Asset, RouteId, RouteIdWithSearchOrHash, Pathname, PathnameWithSearchOrHash, ResolvedPathname } from '$app/types' */
+/** @import { AssetPath, RouteId, RouteIdWithSearchOrHash, PathnameWithSearchOrHash, ResolvedPathname, RouteParams } from '$app/types' */
 /** @import { ResolveArgs } from './types.js' */
-import { base, assets, hash_routing } from './internal/client.js';
+import { base, assets, hash_routing, match_implementation } from './internal/client.js';
 import { resolve_route } from '../../../utils/routing.js';
-import { get_navigation_intent } from '../../client/client.js';
+import { DEV } from 'esm-env';
+import * as e from '../../../messages/shared-errors.js';
+import * as w from '../../../messages/shared-warnings.js';
+
+export { base, assets, app_dir } from './internal/client.js';
 
 /**
- * Resolve the URL of an asset in your `static` directory, by prefixing it with [`config.kit.paths.assets`](https://svelte.dev/docs/kit/configuration#paths) if configured, or otherwise by prefixing it with the base path.
+ * Resolve the URL of an asset in your `static` directory, by prefixing it with [`config.paths.assets`](https://svelte.dev/docs/kit/configuration#paths) if configured, or otherwise by prefixing it with the base path.
  *
  * During server rendering, the base path is relative and depends on the page currently being rendered.
  *
@@ -15,21 +19,33 @@ import { get_navigation_intent } from '../../client/client.js';
  * 	import { asset } from '$app/paths';
  * </script>
  *
- * <img alt="a potato" src={asset('/potato.jpg')} />
+ * <img alt="a potato" src={asset('potato.jpg')} />
  * ```
  * @since 2.26
  *
- * @param {Asset} file
+ * @param {AssetPath} file
  * @returns {string}
  */
 export function asset(file) {
-	return (assets || base) + file;
+	let path = /** @type {string} */ (file);
+
+	// TODO 4.0 remove this
+	if (path[0] === '/') {
+		if (DEV) {
+			w.asset_leading_slash({ path, fixed: path.slice(1) });
+		}
+
+		path = path.slice(1);
+	}
+
+	return (assets || base) + '/' + path;
 }
 
-const pathname_prefix = hash_routing ? '#' : '';
+const pathname_prefix = hash_routing ? '#' : base;
 
 /**
  * Resolve a pathname by prefixing it with the base path, if any, or resolve a route ID by populating dynamic segments with parameters.
+ * In hash routing mode, the returned URL starts with `#`.
  *
  * During server rendering, the base path is relative and depends on the page currently being rendered.
  *
@@ -38,7 +54,7 @@ const pathname_prefix = hash_routing ? '#' : '';
  * import { resolve } from '$app/paths';
  *
  * // using a pathname
- * const resolved = resolve(`/blog/hello-world`);
+ * const resolved = resolve(`blog/hello-world`);
  *
  * // using a route ID plus parameters
  * const resolved = resolve('/blog/[slug]', {
@@ -52,18 +68,18 @@ const pathname_prefix = hash_routing ? '#' : '';
  * @returns {ResolvedPathname}
  */
 export function resolve(...args) {
-	if (!args[0].startsWith('/')) {
-		throw new Error(
-			`Cannot use \`resolve(...)\` with a non-absolute pathname or route ID (got "${args[0]}"). ` +
-				'`resolve` is only for internal pathnames and route IDs; external URLs should be used directly.'
-		);
+	const [id, params] = /** @type {[string, Record<string, string>?]} */ (args);
+
+	if (id[0] === '/') {
+		// route ID
+		if (id.includes('[') && !params) {
+			e.resolve_params_missing({ id });
+		}
+
+		return /** @type {ResolvedPathname} */ (pathname_prefix + resolve_route(id, params ?? {}));
 	}
 
-	// The type error is correct here, and if someone doesn't pass params when they should there's a runtime error,
-	// but we don't want to adjust the internal resolve_route function to accept `undefined`, hence the type cast.
-	return (
-		base + pathname_prefix + resolve_route(args[0], /** @type {Record<string, string>} */ (args[1]))
-	);
+	return /** @type {ResolvedPathname} */ (pathname_prefix + '/' + id);
 }
 
 /**
@@ -73,7 +89,7 @@ export function resolve(...args) {
  * ```js
  * import { match } from '$app/paths';
  *
- * const route = await match('/blog/hello-world');
+ * const route = await match('blog/hello-world');
  *
  * if (route?.id === '/blog/[slug]') {
  * 	const slug = route.params.slug;
@@ -83,24 +99,9 @@ export function resolve(...args) {
  * ```
  * @since 2.52.0
  *
- * @param {Pathname | URL | (string & {})} url
- * @returns {Promise<{ id: RouteId, params: Record<string, string> } | null>}
+ * @param {URL | string} url
+ * @returns {Promise<{ [K in RouteId]: { id: K; params: RouteParams<K>; } }[RouteId] | null>}
  */
-export async function match(url) {
-	if (typeof url === 'string') {
-		url = new URL(url, location.href);
-	}
-
-	const intent = await get_navigation_intent(url, false);
-
-	if (intent) {
-		return {
-			id: /** @type {RouteId} */ (intent.route.id),
-			params: intent.params
-		};
-	}
-
-	return null;
+export function match(url) {
+	return match_implementation(url);
 }
-
-export { base, assets, resolve as resolveRoute };
