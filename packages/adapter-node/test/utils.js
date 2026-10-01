@@ -8,7 +8,11 @@ export const config = {
 	// generous timeouts on CI
 	timeout: process.env.CI ? 45000 : 15000,
 	webServer: {
-		command: 'pnpm build && pnpm preview',
+		command: process.env.NODE_APP_RUNTIME_DIR ? 'node build' : 'pnpm build && pnpm preview',
+		cwd: process.env.NODE_APP_RUNTIME_DIR,
+		env: process.env.NODE_APP_RUNTIME_DIR
+			? { MY_CUSTOM_PORT: '5173', INSTRUMENTATION_ENV: 'available' }
+			: undefined,
 		port: 5173
 	},
 	retries: process.env.CI ? 2 : number_from_env('KIT_E2E_RETRIES', 0),
