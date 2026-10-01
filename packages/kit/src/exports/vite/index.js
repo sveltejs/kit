@@ -35,6 +35,7 @@ import { plugin_remote, plugin_remote_guard } from './plugins/remote.js';
 import { write_app_manifest } from '../../core/sync/write_app_manifest.js';
 import { plugin_service_worker_build } from './build/service-worker.js';
 import { plugin_adapter, plugin_compile } from './build/index.js';
+import { bullet_list } from '../../utils/format.js';
 
 const options_regex = /(export\s+const\s+(prerender|csr|ssr|trailingSlash))\s*=/s;
 
@@ -555,9 +556,9 @@ function kit({ svelte_config }) {
 				(plugin) => plugin.transformIndexHtml && plugin.name !== 'vitest:browser:loader'
 			);
 			if (unsupported_plugins.length) {
-				const plugins = unsupported_plugins
-					.map((plugin) => `  - ${plugin.name || '(missing plugin name)'}`)
-					.join('\n');
+				const plugins = bullet_list(
+					unsupported_plugins.map((plugin) => plugin.name || '(missing plugin name)')
+				);
 
 				w.transform_index_html_unsupported({ plugins });
 			}

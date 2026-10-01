@@ -1,4 +1,5 @@
 import * as e from '../messages/shared-errors.js';
+import { join_or } from './format.js';
 
 /**
  * @param {Set<string>} expected
@@ -61,14 +62,6 @@ function valid_locations(key, ext = '.js') {
 	}
 
 	return locations;
-}
-
-/**
- * Joins a list as `a, b or c`
- * @param {string[]} items
- */
-function join_or(items) {
-	return items.length > 1 ? `${items.slice(0, -1).join(', ')} or ${items.at(-1)}` : items[0];
 }
 
 const valid_layout_exports = new Set([

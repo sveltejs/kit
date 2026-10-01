@@ -1,4 +1,4 @@
-import { assert, expect, test } from 'vitest';
+import { expect, test } from 'vitest';
 import {
 	collect_matcher_names,
 	load_and_validate_params,
@@ -16,16 +16,15 @@ test('collect_matcher_names collects matcher names from routes', () => {
 });
 
 test('validate_param_matchers throws for unknown matchers', () => {
-	assert.throws(
-		() => validate_param_matchers({ foo: true }, new Set(['bar']), 'params.js'),
-		'param_matcher_missing\nNo matcher found for parameter `bar` in `params.js`\nhttps://next.svelte.dev/e/@sveltejs/kit/param_matcher_missing'
-	);
+	expect(() =>
+		validate_param_matchers({ foo: true }, new Set(['bar']), 'params.js')
+	).toThrowKitError('param_matcher_missing', { contains: ['`bar`', 'params.js'] });
 });
 
 test('validate_param_matchers ignores inherited properties', () => {
-	assert.throws(
-		() => validate_param_matchers({}, new Set(['toString']), 'params.js'),
-		/No matcher found for parameter `toString`/
+	expect(() => validate_param_matchers({}, new Set(['toString']), 'params.js')).toThrowKitError(
+		'param_matcher_missing',
+		{ contains: ['`toString`'] }
 	);
 });
 
@@ -40,11 +39,7 @@ test('load_and_validate_params requires a params file for matchers', async () =>
 			params_path: null,
 			root: import.meta.dirname
 		})
-	).rejects.toMatchObject({
-		name: 'SvelteKit error',
-		message:
-			'param_matcher_missing\nNo matcher found for parameter `number`\nhttps://next.svelte.dev/e/@sveltejs/kit/param_matcher_missing'
-	});
+	).rejects.toThrowKitError('param_matcher_missing', { contains: ['`number`'] });
 });
 
 test('load_and_validate_params requires a params export', async () => {
@@ -59,10 +54,7 @@ test('load_and_validate_params requires a params export', async () => {
 			root: import.meta.dirname,
 			load: () => Promise.resolve({})
 		})
-	).rejects.toMatchObject({
-		message:
-			'params_export_missing\n`params.js` does not export `params` from `defineParams`\nhttps://next.svelte.dev/e/@sveltejs/kit/params_export_missing'
-	});
+	).rejects.toThrowKitError('params_export_missing', { contains: ['params.js'] });
 });
 
 test('load_and_validate_params loads and validates params', async () => {

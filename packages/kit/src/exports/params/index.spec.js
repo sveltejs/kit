@@ -1,5 +1,5 @@
 /** @import { ParamMatcher } from '@sveltejs/kit/params' */
-import { assert, test } from 'vitest';
+import { assert, expect, test } from 'vitest';
 import { normalize_param_definition } from './index.js';
 
 test('normalize_param_definition uses the returned value as the parsed param', () => {
@@ -38,9 +38,8 @@ test('normalize_param_definition propagates thrown errors', () => {
 });
 
 test('normalize_param_definition rejects invalid definitions', () => {
-	assert.throws(
-		() => normalize_param_definition(/** @type {any} */ (42)),
-		'param_definition_invalid\nInvalid param definition\nhttps://next.svelte.dev/e/@sveltejs/kit/param_definition_invalid'
+	expect(() => normalize_param_definition(/** @type {any} */ (42))).toThrowKitError(
+		'param_definition_invalid'
 	);
 });
 

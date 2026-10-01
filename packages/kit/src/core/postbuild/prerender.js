@@ -21,6 +21,7 @@ import { fix_stack_trace } from '../../runtime/server/sourcemaps.js';
 import * as e from '../../messages/build-errors.js';
 import * as w from '../../messages/build-warnings.js';
 import { capture_message } from '../../messages/internal/build.js';
+import { bullet_list } from '../../utils/format.js';
 
 export default forked(import.meta.url, prerender);
 
@@ -212,7 +213,7 @@ async function prerender({
 				e.prerender_missing_id({
 					path,
 					id,
-					referrers: referrers.map((l) => `  - ${l}`).join('\n')
+					referrers: bullet_list(referrers)
 				})
 			);
 		}
@@ -236,9 +237,7 @@ async function prerender({
 		'handleUnseenRoutes',
 		config.prerender.handleUnseenRoutes,
 		({ routes }) => {
-			return capture_message(() =>
-				e.prerender_unseen_routes({ routes: routes.map((id) => `  - ${id}`).join('\n') })
-			);
+			return capture_message(() => e.prerender_unseen_routes({ routes: bullet_list(routes) }));
 		}
 	);
 

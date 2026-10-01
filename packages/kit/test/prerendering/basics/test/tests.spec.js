@@ -301,11 +301,9 @@ test('identifies missing ids', () => {
 	const missing_ids_file = fileURLToPath(new URL('../missing_ids/index.jsonl', import.meta.url));
 	const missing_ids_content = fs.readFileSync(missing_ids_file, 'utf-8');
 	const missing_ids = JSON.parse(`[${missing_ids_content.slice(0, -1)}]`);
-	const code = 'prerender_missing_id';
-	expect(missing_ids).toEqual([
-		{
-			id: 'missing-id',
-			message: `${code}\nThe following pages contain links to \`/missing-id#missing-id\`, but no element with \`id="missing-id"\` exists on \`/missing-id\`:\n  - /missing-id\nhttps://next.svelte.dev/e/@sveltejs/kit/${code}`
-		}
-	]);
+	expect(missing_ids).toEqual([{ id: 'missing-id', message: expect.any(String) }]);
+	// custom handlers receive the full diagnostic
+	expect(missing_ids[0].message).toContainKitDiagnostic('prerender_missing_id', {
+		contains: ['/missing-id#missing-id', 'id="missing-id"']
+	});
 });

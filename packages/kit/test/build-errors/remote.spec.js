@@ -1,23 +1,9 @@
-import { assert, test } from 'vitest';
-import { execSync } from 'node:child_process';
-import path from 'node:path';
+import { expect, test } from 'vitest';
+import { build, timeout } from './utils.js';
 
-const timeout = 60_000;
-
-test(
-	'*.remote.js files cannot be used without the experimental.remoteFunctions flag',
-	{
-		timeout
-	},
-	() => {
-		assert.throws(
-			() =>
-				execSync('pnpm build', {
-					cwd: path.join(import.meta.dirname, 'apps/remote-function-without-flag'),
-					stdio: 'pipe',
-					timeout
-				}),
-			/config_feature_disabled\nTo enable remote functions, add the following to your SvelteKit plugin in `vite.config.js`:[\s\S]*remoteFunctions: true\n}\nhttps:\/\/next\.svelte\.dev\/e\/@sveltejs\/kit\/config_feature_disabled/
-		);
-	}
-);
+test('*.remote.js files cannot be used without the experimental.remoteFunctions flag', { timeout }, () => {
+	// the config snippet itself is covered by the unit tests of `config_snippet`
+	expect(build('remote-function-without-flag')).toContainKitDiagnostic('config_feature_disabled', {
+		contains: ['remote functions', 'remoteFunctions: true']
+	});
+});

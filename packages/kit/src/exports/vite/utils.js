@@ -10,6 +10,7 @@ import { escape_for_regexp } from '../../utils/regex.js';
 import * as e from '../../messages/build-errors.js';
 import * as w from '../../messages/build-warnings.js';
 import { app_server, app_env_private } from './module_ids.js';
+import { bullet_list } from '../../utils/format.js';
 
 /**
  * Transforms alias to a valid vite.resolve.alias array.
@@ -213,16 +214,26 @@ export const server_only_directory_pattern = /\/server\//;
  * @returns {never}
  */
 export function error_for_missing_config(feature_name, path, value) {
+	e.config_feature_disabled(
+		{ feature: feature_name, config: config_snippet(path, value) },
+		{ stackless: true }
+	);
+}
+
+/**
+ * Formats the config needed to set the option at `path` to `value`, nesting objects as needed
+ * @param {string} path a keypath such as `experimental.remoteFunctions`
+ * @param {string} value
+ */
+export function config_snippet(path, value) {
 	const hole = '__HOLE__';
 
-	const result = path.split('.').reduce((acc, part, i, parts) => {
+	return path.split('.').reduce((acc, part, i, parts) => {
 		const indent = '  '.repeat(i);
 		const rhs = i === parts.length - 1 ? value : `{\n${hole}\n${indent}}`;
 
 		return acc.replace(hole, `${indent}${part}: ${rhs}`);
 	}, hole);
-
-	e.config_feature_disabled({ feature: feature_name, config: result }, { stackless: true });
 }
 
 /** @type {EnforcedConfig} */
@@ -269,7 +280,7 @@ export function warn_overridden_config(config, resolved_config) {
 	const overridden = find_overridden_config(config, resolved_config, enforced_config, '', []);
 
 	if (overridden.length > 0) {
-		w.vite_config_overridden({ options: overridden.map((key) => `  - ${key}`).join('\n') });
+		w.vite_config_overridden({ options: bullet_list(overridden) });
 	}
 }
 

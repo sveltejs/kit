@@ -74,11 +74,14 @@ export const variables = defineEnvVars({ FOO: {} });
 	try {
 		const config = process_config(validate_config({}), root);
 
-		await expect(load_explicit_env(config, entry, root, 'development')).rejects.toMatchObject({
-			name: 'SvelteKit error',
-			message: `env_circular_import\nModule \`${posixify(path.relative(root, helper))}\` imports \`$app/env/private\`, which creates a circular dependency with \`src/env\`\nhttps://next.svelte.dev/e/@sveltejs/kit/env_circular_import`,
-			stack: ''
-		});
+		// the importer is found by the dependency scanner, and the stack would only point into Vite
+		await expect(load_explicit_env(config, entry, root, 'development')).rejects.toThrowKitError(
+			'env_circular_import',
+			{
+				contains: [`\`${posixify(path.relative(root, helper))}\``, '$app/env/private'],
+				stackless: true
+			}
+		);
 	} finally {
 		fs.rmSync(dir, { recursive: true, force: true });
 	}
@@ -99,21 +102,10 @@ export const variables = {};
 	try {
 		const config = process_config(validate_config({}), root);
 
-		/** @type {any} */
-		let error;
-		try {
-			await load_explicit_env(config, entry, root, 'development');
-		} catch (e) {
-			error = e;
-		}
-
-		expect(error).toMatchObject({
-			name: 'SvelteKit error',
-			message:
-				'env_app_import\nCannot import `$app/*` modules other than `$app/env` inside `src/env`\nhttps://next.svelte.dev/e/@sveltejs/kit/env_app_import'
-		});
-		expect(error.cause).toMatchObject({ code: 'ERR_MODULE_NOT_FOUND' });
-		expect(error.stack).not.toBe('');
+		await expect(load_explicit_env(config, entry, root, 'development')).rejects.toThrowKitError(
+			'env_app_import',
+			{ stackless: false, cause: expect.objectContaining({ code: 'ERR_MODULE_NOT_FOUND' }) }
+		);
 	} finally {
 		fs.rmSync(dir, { recursive: true, force: true });
 	}

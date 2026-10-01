@@ -2,6 +2,7 @@
 /** @import { Validator } from './types.js' */
 import * as e from '../../messages/build-errors.js';
 import * as w from '../../messages/build-warnings.js';
+import { join_or } from '../../utils/format.js';
 
 const directives = object({
 	'child-src': string_array(),
@@ -436,10 +437,9 @@ function boolean(fallback) {
 function list(options, fallback = options[0]) {
 	return validate(fallback, (input, keypath) => {
 		if (!options.includes(input)) {
-			// prettier-ignore
-			const expected = options.length > 2
-				? `one of ${options.slice(0, -1).map(input => `"${input}"`).join(', ')} or "${options[options.length - 1]}"`
-				: `either "${options[0]}" or "${options[1]}"`;
+			const quoted = options.map((option) => `"${option}"`);
+			const expected =
+				options.length > 2 ? `one of ${join_or(quoted)}` : `either ${join_or(quoted)}`;
 
 			e.config_expected_one_of({ keypath, options: expected });
 		}
