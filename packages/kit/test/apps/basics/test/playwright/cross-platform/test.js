@@ -1,6 +1,6 @@
 import process from 'node:process';
-import { expect } from '@playwright/test';
 import { test } from '../../../../../utils.js';
+import { expect } from '../../../../../playwright-matchers.js';
 
 /** @typedef {import('@playwright/test').Response} Response */
 
@@ -593,20 +593,32 @@ test.describe('Redirects', () => {
 
 		await clicknav('[href="/redirect/missing-status/a"]');
 
-		const message = process.env.DEV || !javaScriptEnabled ? 'Invalid status code' : 'Redirect loop';
-
 		expect(page.url()).toBe(`${baseURL}/redirect/missing-status/a`);
 		expect(await page.textContent('h1')).toBe('500');
-		expect(await page.textContent('#message')).toBe(
-			`This is your custom error page saying: "${message} (500 Internal Error)"`
+
+		const message = /** @type {string} */ (await page.textContent('#message'));
+		expect(message).toMatch(
+			/^This is your custom error page saying: "[^]+ \(500 Internal Error\)"$/
 		);
+
+		if (process.env.DEV) {
+			expect(message).toContainKitDiagnostic('invalid_redirect_status', {
+				contains: ['undefined is invalid']
+			});
+		} else if (!javaScriptEnabled) {
+			expect(message).toContainKitDiagnostic('invalid_redirect_status', { url_only: true });
+		} else {
+			expect(message).toContain('"Redirect loop (500 Internal Error)"');
+		}
 
 		if (!javaScriptEnabled) {
 			// handleError is not invoked for client-side navigation
 			const { kind, error } = read_errors('/redirect/missing-status/a');
 			expect(kind).toBe('unknown');
-			const lines = error.stack.split('\n');
-			expect(lines[0]).toBe(`Error: ${message}`);
+			expect(error.name).toBe(process.env.DEV ? 'SvelteKit error' : 'Error');
+			expect(String(error.message)).toContainKitDiagnostic('invalid_redirect_status', {
+				url_only: !process.env.DEV
+			});
 		}
 	});
 
@@ -615,13 +627,23 @@ test.describe('Redirects', () => {
 
 		await clicknav('[href="/redirect/missing-status/b"]');
 
-		const message = process.env.DEV || !javaScriptEnabled ? 'Invalid status code' : 'Redirect loop';
-
 		expect(page.url()).toBe(`${baseURL}/redirect/missing-status/b`);
 		expect(await page.textContent('h1')).toBe('500');
-		expect(await page.textContent('#message')).toBe(
-			`This is your custom error page saying: "${message} (500 Internal Error)"`
+
+		const message = /** @type {string} */ (await page.textContent('#message'));
+		expect(message).toMatch(
+			/^This is your custom error page saying: "[^]+ \(500 Internal Error\)"$/
 		);
+
+		if (process.env.DEV) {
+			expect(message).toContainKitDiagnostic('invalid_redirect_status', {
+				contains: ['555 is invalid']
+			});
+		} else if (!javaScriptEnabled) {
+			expect(message).toContainKitDiagnostic('invalid_redirect_status', { url_only: true });
+		} else {
+			expect(message).toContain('"Redirect loop (500 Internal Error)"');
+		}
 	});
 
 	test('redirect-on-load', async ({ baseURL, page, javaScriptEnabled }) => {

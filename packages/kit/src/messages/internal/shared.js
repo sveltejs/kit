@@ -8,6 +8,10 @@ export function enable_verbose_errors() {
 	verbose = true;
 }
 
+/** `console.warn` styles for the code and text of shared runtime warnings, as in Svelte */
+export const bold = 'font-weight: bold';
+export const normal = 'font-weight: normal';
+
 /**
  * Throws the full diagnostic. Generated helpers throw their URL-only production error inline, so
  * bundlers can remove both this call and the message text from production browser builds
