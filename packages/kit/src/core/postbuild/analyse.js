@@ -11,6 +11,7 @@ import { createReadableStream } from '@sveltejs/kit/node';
 import { PageNodes } from '../../utils/page_nodes.js';
 import { enable_verbose_errors } from '../../messages/internal/shared.js';
 import * as e from '../../messages/build-errors.js';
+import * as server_errors from '../../messages/server-errors.js';
 
 export default forked(import.meta.url, analyse);
 
@@ -182,7 +183,10 @@ function analyse_endpoint(route, mod) {
 				(method) => mod[method]
 			))
 	) {
-		e.prerender_endpoint_methods({ methods: BODY_DEPENDENT_METHODS.join(', '), id: route.id });
+		server_errors.prerender_endpoint_methods({
+			methods: BODY_DEPENDENT_METHODS.join(', '),
+			id: route.id
+		});
 	}
 
 	/** @type {Array<import('types').HttpMethod | '*'>} */

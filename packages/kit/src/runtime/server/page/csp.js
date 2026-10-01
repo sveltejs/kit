@@ -1,5 +1,6 @@
 import { escape_html } from '../../../utils/escape.js';
 import { base64_encode, text_encoder } from '../../utils.js';
+import * as e from '../../../messages/server-errors.js';
 
 const array = new Uint8Array(16);
 
@@ -305,9 +306,7 @@ class CspReportOnlyProvider extends BaseProvider {
 			!directives['report-to']?.length &&
 			!directives['report-uri']?.length
 		) {
-			throw Error(
-				'`content-security-policy-report-only` must be specified with either the `report-to` or `report-uri` directives, or both'
-			);
+			e.csp_report_only_missing_report();
 		}
 	}
 }

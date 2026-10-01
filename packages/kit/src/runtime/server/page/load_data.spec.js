@@ -60,9 +60,7 @@ test('errors when no acao header present on cors', async () => {
 	await expect(async () => {
 		const response = await fetch('https://domain-b.com');
 		await response.text();
-	}).rejects.toThrowError(
-		"CORS error: No 'Access-Control-Allow-Origin' header is present on the requested resource"
-	);
+	}).rejects.toThrowKitError('load_fetch_cors', { contains: ['No'] });
 });
 
 test('succeeds when fetching from local scheme', async () => {
@@ -75,9 +73,9 @@ test('succeeds when fetching from local scheme', async () => {
 test('errors when trying to access non-serialized request headers on the server', async () => {
 	const fetch = create_fetch({});
 	const response = await fetch('https://domain-a.com');
-	assert.throws(
-		() => response.headers.get('content-type'),
-		/Failed to get response header "content-type" — it must be included by the `filterSerializedResponseHeaders` option/
+	expect(() => response.headers.get('content-type')).toThrowKitError(
+		'load_response_header_not_serialized',
+		{ contains: ['`content-type`'] }
 	);
 });
 
@@ -87,8 +85,8 @@ test('errors when trying to access non-serialized set-cookie headers on the serv
 		fetch: async () => new Response('foo', { headers: { 'set-cookie': 'a=1' } })
 	});
 	const response = await fetch('https://domain-a.com');
-	assert.throws(
-		() => response.headers.getSetCookie(),
-		/Failed to get response header "set-cookie" — it must be included by the `filterSerializedResponseHeaders` option/
+	expect(() => response.headers.getSetCookie()).toThrowKitError(
+		'load_response_header_not_serialized',
+		{ contains: ['`set-cookie`'] }
 	);
 });

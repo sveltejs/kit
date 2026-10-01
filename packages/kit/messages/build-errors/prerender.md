@@ -86,12 +86,6 @@ A prerendered response is written to a file, and static hosts serve the root of 
 
 Prerendering writes each response to a file, and a file and a directory can't share a name. For example, `src/routes/foo/+server.js` and `src/routes/foo/bar/+server.js` would need both a file and a directory called `foo`. Add a file extension to endpoint routes, such as `src/routes/foo.json/+server.js`, so their output names don't clash. See [route conflicts](https://svelte.dev/docs/kit/page-options#Route-conflicts).
 
-## prerender_endpoint_methods
-
-> Cannot prerender a `+server` file with %methods% or fallback handlers (`%id%`)
-
-A prerendered endpoint is saved as a static file, which can only answer `GET` requests. Methods that depend on a request body, and `fallback` handlers, would stop working. Move these handlers to a route that isn't prerendered, or remove `export const prerender = true` from this one.
-
 ## prerender_fallback_failed
 
 > Could not create a fallback page

@@ -4,6 +4,126 @@
 import { throw_error } from './internal/server.js';
 
 /**
+ * Data returned from action inside `%id%` is not serializable: %message%
+ * @param {{ "id": string; "message": string; "path"?: string }} _values
+ * @param {ServerThrowOptions} [options]
+ * @returns {never}
+ */
+export function action_data_not_serializable(_values, options) {
+	throw_error('action_data_not_serializable', (_values?.path !== undefined ? `Data returned from action inside \`${_values.id}\` is not serializable: ${_values.message} (\`${_values.path}\`)` : `Data returned from action inside \`${_values.id}\` is not serializable: ${_values.message}`), options, action_data_not_serializable);
+}
+
+/**
+ * When using named actions, the default action cannot be used. See the docs for more info: https://svelte.dev/docs/kit/form-actions#named-actions
+ * @param {void} _values
+ * @param {ServerThrowOptions} [options]
+ * @returns {never}
+ */
+export function action_default_with_named(_values, options) {
+	throw_error('action_default_with_named', `When using named actions, the default action cannot be used. See the docs for more info: https://svelte.dev/docs/kit/form-actions#named-actions`, options, action_default_with_named);
+}
+
+/**
+ * Cannot use reserved action name `default`
+ * @param {void} _values
+ * @param {ServerThrowOptions} [options]
+ * @returns {never}
+ */
+export function action_name_reserved(_values, options) {
+	throw_error('action_name_reserved', `Cannot use reserved action name \`default\``, options, action_name_reserved);
+}
+
+/**
+ * Data returned from action inside `%id%` is not serializable. Form actions need to return plain objects or `fail()`. E.g. `return { success: true }` or `return fail(400, { message: "invalid" });`
+ * @param {{ "id": string }} _values
+ * @param {ServerThrowOptions} [options]
+ * @returns {never}
+ */
+export function action_response_not_serializable(_values, options) {
+	throw_error('action_response_not_serializable', `Data returned from action inside \`${_values.id}\` is not serializable. Form actions need to return plain objects or \`fail()\`. E.g. \`return { success: true }\` or \`return fail(400, { message: "invalid" });\``, options, action_response_not_serializable);
+}
+
+/**
+ * Cannot `return error(...)` — use `error(...)` or `return fail(...)` instead
+ * @param {void} _values
+ * @param {ServerThrowOptions} [options]
+ * @returns {never}
+ */
+export function action_return_error(_values, options) {
+	throw_error('action_return_error', `Cannot \`return error(...)\` — use \`error(...)\` or \`return fail(...)\` instead`, options, action_return_error);
+}
+
+/**
+ * Cannot `return redirect(...)` — use `redirect(...)` instead
+ * @param {void} _values
+ * @param {ServerThrowOptions} [options]
+ * @returns {never}
+ */
+export function action_return_redirect(_values, options) {
+	throw_error('action_return_redirect', `Cannot \`return redirect(...)\` — use \`redirect(...)\` instead`, options, action_return_redirect);
+}
+
+/**
+ * Cannot `throw fail()`. Use `return fail()`
+ * @param {void} _values
+ * @param {ServerThrowOptions} [options]
+ * @returns {never}
+ */
+export function action_throw_fail(_values, options) {
+	throw_error('action_throw_fail', `Cannot \`throw fail()\`. Use \`return fail()\``, options, action_throw_fail);
+}
+
+/**
+ * `%adapter%` does not specify `getClientAddress`. Please raise an issue
+ * @param {{ "adapter": string }} _values
+ * @param {ServerThrowOptions} [options]
+ * @returns {never}
+ */
+export function client_address_unsupported(_values, options) {
+	throw_error('client_address_unsupported', `\`${_values.adapter}\` does not specify \`getClientAddress\`. Please raise an issue`, options, client_address_unsupported);
+}
+
+/**
+ * Cookie `%name%` is too large, and will be discarded by the browser
+ * @param {{ "name": string }} _values
+ * @param {ServerThrowOptions} [options]
+ * @returns {never}
+ */
+export function cookie_too_large(_values, options) {
+	throw_error('cookie_too_large', `Cookie \`${_values.name}\` is too large, and will be discarded by the browser`, options, cookie_too_large);
+}
+
+/**
+ * Cannot serialize cookies until after the route is determined
+ * @param {void} _values
+ * @param {ServerThrowOptions} [options]
+ * @returns {never}
+ */
+export function cookies_serialize_before_route(_values, options) {
+	throw_error('cookies_serialize_before_route', `Cannot serialize cookies until after the route is determined`, options, cookies_serialize_before_route);
+}
+
+/**
+ * Cannot use `cookies.set(...)` after the response has been generated
+ * @param {void} _values
+ * @param {ServerThrowOptions} [options]
+ * @returns {never}
+ */
+export function cookies_set_after_response(_values, options) {
+	throw_error('cookies_set_after_response', `Cannot use \`cookies.set(...)\` after the response has been generated`, options, cookies_set_after_response);
+}
+
+/**
+ * `content-security-policy-report-only` must be specified with either the `report-to` or `report-uri` directives, or both
+ * @param {void} _values
+ * @param {ServerThrowOptions} [options]
+ * @returns {never}
+ */
+export function csp_report_only_missing_report(_values, options) {
+	throw_error('csp_report_only_missing_report', `\`content-security-policy-report-only\` must be specified with either the \`report-to\` or \`report-uri\` directives, or both`, options, csp_report_only_missing_report);
+}
+
+/**
  * `defineEnvVars` has moved — import it from `@sveltejs/kit/env` instead
  * @param {void} _values
  * @param {ServerThrowOptions} [options]
@@ -11,6 +131,16 @@ import { throw_error } from './internal/server.js';
  */
 export function define_env_vars_moved(_values, options) {
 	throw_error('define_env_vars_moved', `\`defineEnvVars\` has moved — import it from \`@sveltejs/kit/env\` instead`, options, define_env_vars_moved);
+}
+
+/**
+ * Invalid response from route `%path%`: handler should return a `Response` object
+ * @param {{ "path": string }} _values
+ * @param {ServerThrowOptions} [options]
+ * @returns {never}
+ */
+export function endpoint_invalid_response(_values, options) {
+	throw_error('endpoint_invalid_response', `Invalid response from route \`${_values.path}\`: handler should return a \`Response\` object`, options, endpoint_invalid_response);
 }
 
 /**
@@ -23,6 +153,136 @@ export function define_env_vars_moved(_values, options) {
 export function env_invalid(_values, options) {
 	throw_error('env_invalid', `Invalid environment variables:
 ${_values.issues}`, options, env_invalid);
+}
+
+/**
+ * Cannot return `fetch(...)` directly from a handler if the response has a `Content-Encoding: %encoding%` header. The body has already been decoded
+ * @param {{ "encoding": string }} _values
+ * @param {ServerThrowOptions} [options]
+ * @returns {never}
+ */
+export function fetch_response_decoded(_values, options) {
+	throw_error('fetch_response_decoded', `Cannot return \`fetch(...)\` directly from a handler if the response has a \`Content-Encoding: ${_values.encoding}\` header. The body has already been decoded`, options, fetch_response_decoded);
+}
+
+/**
+ * The `handleError` hook failed
+ * @param {void} _values
+ * @param {ServerThrowOptions} [options]
+ * @returns {never}
+ */
+export function handle_error_hook_failed(_values, options) {
+	throw_error('handle_error_hook_failed', `The \`handleError\` hook failed`, options, handle_error_hook_failed);
+}
+
+/**
+ * `%name%` header is already set
+ * @param {{ "name": string }} _values
+ * @param {ServerThrowOptions} [options]
+ * @returns {never}
+ */
+export function header_already_set(_values, options) {
+	throw_error('header_already_set', `\`${_values.name}\` header is already set`, options, header_already_set);
+}
+
+/**
+ * CORS error: %reason% `Access-Control-Allow-Origin` header is present on the requested resource
+ * @param {{ "reason": string }} _values
+ * @param {ServerThrowOptions} [options]
+ * @returns {never}
+ */
+export function load_fetch_cors(_values, options) {
+	throw_error('load_fetch_cors', `CORS error: ${_values.reason} \`Access-Control-Allow-Origin\` header is present on the requested resource`, options, load_fetch_cors);
+}
+
+/**
+ * Data returned from `load` while rendering `%id%` is not a plain object
+ * @param {{ "id": string }} _values
+ * @param {ServerThrowOptions} [options]
+ * @returns {never}
+ */
+export function load_not_plain_object(_values, options) {
+	throw_error('load_not_plain_object', `Data returned from \`load\` while rendering \`${_values.id}\` is not a plain object`, options, load_not_plain_object);
+}
+
+/**
+ * Data returned from `load` while rendering `%id%` is not serializable: %message% (`%path%`). If you need to serialize/deserialize custom types, use transport hooks: https://svelte.dev/docs/kit/hooks#transport.
+ * @param {{ "id": string; "message": string; "path": string }} _values
+ * @param {ServerThrowOptions} [options]
+ * @returns {never}
+ */
+export function load_not_serializable(_values, options) {
+	throw_error('load_not_serializable', `Data returned from \`load\` while rendering \`${_values.id}\` is not serializable: ${_values.message} (\`${_values.path}\`). If you need to serialize/deserialize custom types, use transport hooks: https://svelte.dev/docs/kit/hooks#transport.`, options, load_not_serializable);
+}
+
+/**
+ * Failed to serialize promise while rendering `%id%`
+ * @param {{ "id": string }} _values
+ * @param {ServerThrowOptions} [options]
+ * @returns {never}
+ */
+export function load_promise_not_serializable(_values, options) {
+	throw_error('load_promise_not_serializable', `Failed to serialize promise while rendering \`${_values.id}\``, options, load_promise_not_serializable);
+}
+
+/**
+ * Failed to get response header `%name%` — it must be included by the `filterSerializedResponseHeaders` option: https://svelte.dev/docs/kit/hooks#handle (at `%id%`)
+ * @param {{ "name": string; "id": string }} _values
+ * @param {ServerThrowOptions} [options]
+ * @returns {never}
+ */
+export function load_response_header_not_serialized(_values, options) {
+	throw_error('load_response_header_not_serialized', `Failed to get response header \`${_values.name}\` — it must be included by the \`filterSerializedResponseHeaders\` option: https://svelte.dev/docs/kit/hooks#handle (at \`${_values.id}\`)`, options, load_response_header_not_serialized);
+}
+
+/**
+ * Cannot prerender pages with actions
+ * @param {void} _values
+ * @param {ServerThrowOptions} [options]
+ * @returns {never}
+ */
+export function prerender_actions(_values, options) {
+	throw_error('prerender_actions', `Cannot prerender pages with actions`, options, prerender_actions);
+}
+
+/**
+ * Cannot prerender a `+server` file with %methods% or fallback handlers (`%id%`)
+ * @param {{ "methods": string; "id": string }} _values
+ * @param {ServerThrowOptions} [options]
+ * @returns {never}
+ */
+export function prerender_endpoint_methods(_values, options) {
+	throw_error('prerender_endpoint_methods', `Cannot prerender a \`+server\` file with ${_values.methods} or fallback handlers (\`${_values.id}\`)`, options, prerender_endpoint_methods);
+}
+
+/**
+ * `%id%` is not prerenderable
+ * @param {{ "id": string }} _values
+ * @param {ServerThrowOptions} [options]
+ * @returns {never}
+ */
+export function prerender_endpoint_not_prerenderable(_values, options) {
+	throw_error('prerender_endpoint_not_prerenderable', `\`${_values.id}\` is not prerenderable`, options, prerender_endpoint_not_prerenderable);
+}
+
+/**
+ * Cannot use prerendering if `config.csp.mode === 'nonce'`
+ * @param {void} _values
+ * @param {ServerThrowOptions} [options]
+ * @returns {never}
+ */
+export function prerender_nonce(_values, options) {
+	throw_error('prerender_nonce', `Cannot use prerendering if \`config.csp.mode === 'nonce'\``, options, prerender_nonce);
+}
+
+/**
+ * Cannot use prerendering if page template contains `%tag%`
+ * @param {{ "tag": string }} _values
+ * @param {ServerThrowOptions} [options]
+ * @returns {never}
+ */
+export function prerender_template_nonce(_values, options) {
+	throw_error('prerender_template_nonce', `Cannot use prerendering if page template contains \`${_values.tag}\``, options, prerender_template_nonce);
 }
 
 /**
@@ -46,6 +306,36 @@ export function read_implementation_missing(_values, options) {
 }
 
 /**
+ * Can only read the current request event inside functions invoked during `handle`, such as server `load` functions, actions, endpoints, and other server hooks. In environments without `AsyncLocalStorage`, the event must be read synchronously, not after an `await`.
+ * @param {void} _values
+ * @param {ServerThrowOptions} [options]
+ * @returns {never}
+ */
+export function request_event_after_await(_values, options) {
+	throw_error('request_event_after_await', `Can only read the current request event inside functions invoked during \`handle\`, such as server \`load\` functions, actions, endpoints, and other server hooks. In environments without \`AsyncLocalStorage\`, the event must be read synchronously, not after an \`await\`.`, options, request_event_after_await);
+}
+
+/**
+ * Can only read the current request event inside functions invoked during `handle`, such as server `load` functions, actions, endpoints, and other server hooks.
+ * @param {void} _values
+ * @param {ServerThrowOptions} [options]
+ * @returns {never}
+ */
+export function request_event_unavailable(_values, options) {
+	throw_error('request_event_unavailable', `Can only read the current request event inside functions invoked during \`handle\`, such as server \`load\` functions, actions, endpoints, and other server hooks.`, options, request_event_unavailable);
+}
+
+/**
+ * Could not get the request store. In environments without `AsyncLocalStorage`, the request store (used by e.g. remote functions) must be accessed synchronously, not after an `await`. If it was accessed synchronously then this is an internal error.
+ * @param {void} _values
+ * @param {ServerThrowOptions} [options]
+ * @returns {never}
+ */
+export function request_store_after_await(_values, options) {
+	throw_error('request_store_after_await', `Could not get the request store. In environments without \`AsyncLocalStorage\`, the request store (used by e.g. remote functions) must be accessed synchronously, not after an \`await\`. If it was accessed synchronously then this is an internal error.`, options, request_store_after_await);
+}
+
+/**
  * Cannot call `%name%` on the server
  * @param {{ "name": string }} _values
  * @param {ServerThrowOptions} [options]
@@ -56,6 +346,36 @@ export function server_api_unavailable(_values, options) {
 }
 
 /**
+ * Cannot use `setHeaders(...)` after the response has been generated
+ * @param {void} _values
+ * @param {ServerThrowOptions} [options]
+ * @returns {never}
+ */
+export function set_headers_after_response(_values, options) {
+	throw_error('set_headers_after_response', `Cannot use \`setHeaders(...)\` after the response has been generated`, options, set_headers_after_response);
+}
+
+/**
+ * Use `event.cookies.set(name, value, options)` instead of `event.setHeaders` to set cookies
+ * @param {void} _values
+ * @param {ServerThrowOptions} [options]
+ * @returns {never}
+ */
+export function set_headers_cookie(_values, options) {
+	throw_error('set_headers_cookie', `Use \`event.cookies.set(name, value, options)\` instead of \`event.setHeaders\` to set cookies`, options, set_headers_cookie);
+}
+
+/**
+ * Cannot call `fetch` eagerly during server-side rendering with relative URL (`%url%`) — put your `fetch` calls inside `onMount` or a `load` function instead
+ * @param {{ "url": string }} _values
+ * @param {ServerThrowOptions} [options]
+ * @returns {never}
+ */
+export function ssr_fetch_relative_url(_values, options) {
+	throw_error('ssr_fetch_relative_url', `Cannot call \`fetch\` eagerly during server-side rendering with relative URL (\`${_values.url}\`) — put your \`fetch\` calls inside \`onMount\` or a \`load\` function instead`, options, ssr_fetch_relative_url);
+}
+
+/**
  * Can only read `%name%` on the server during rendering (not in e.g. `load` functions), as it is bound to the current request via component context. This prevents state from leaking between users.
  * @param {{ "name": string }} _values
  * @param {ServerThrowOptions} [options]
@@ -63,6 +383,16 @@ export function server_api_unavailable(_values, options) {
  */
 export function state_read_outside_render(_values, options) {
 	throw_error('state_read_outside_render', `Can only read \`${_values.name}\` on the server during rendering (not in e.g. \`load\` functions), as it is bound to the current request via component context. This prevents state from leaking between users.`, options, state_read_outside_render);
+}
+
+/**
+ * Tracing is enabled (see the SvelteKit plugin `tracing.server` option in your `vite.config.js`), but `@opentelemetry/api` is not available. This error will likely resolve itself when you set up your tracing instrumentation in `instrumentation.server.js`. For more information, see https://svelte.dev/docs/kit/observability#opentelemetry-api
+ * @param {void} _values
+ * @param {ServerThrowOptions} [options]
+ * @returns {never}
+ */
+export function tracing_api_missing(_values, options) {
+	throw_error('tracing_api_missing', `Tracing is enabled (see the SvelteKit plugin \`tracing.server\` option in your \`vite.config.js\`), but \`@opentelemetry/api\` is not available. This error will likely resolve itself when you set up your tracing instrumentation in \`instrumentation.server.js\`. For more information, see https://svelte.dev/docs/kit/observability#opentelemetry-api`, options, tracing_api_missing);
 }
 
 /**

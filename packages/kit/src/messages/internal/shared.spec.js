@@ -138,3 +138,42 @@ test('server errors support stackless errors and causes', async () => {
 		cause: undefined
 	});
 });
+
+test.each([
+	{ DEV: true, url_only: false },
+	{ DEV: false, url_only: true }
+])('server warnings when DEV=$DEV', async ({ DEV, url_only }) => {
+	env.DEV = DEV;
+	const w = await import('../server-warnings.js');
+	const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+	w.content_type_invalid({ type: 'a', value: 'a; b' });
+
+	expect(warn).toHaveBeenCalledOnce();
+	if (url_only) {
+		expect(warn).toHaveBeenCalledWith(diagnostic_url('content_type_invalid'));
+	} else {
+		expect(warn).toContainKitDiagnostic('content_type_invalid', { contains: ['`a`', '`a; b`'] });
+	}
+	warn.mockRestore();
+});
+
+test('capture_error returns the server error instead of throwing it, keeping its cause and call site', async () => {
+	const [e, { capture_error }] = await Promise.all([
+		import('../server-errors.js'),
+		import('./server.js')
+	]);
+	const cause = new Error('cause');
+
+	function call_site() {
+		return capture_error(() => e.load_promise_not_serializable({ id: '/a' }, { cause }));
+	}
+	const error = call_site();
+
+	expect(error).toBeKitError('load_promise_not_serializable', { contains: ['/a'], cause });
+	const frames = /** @type {string} */ (error.stack)
+		.split('\n')
+		.filter((line) => line.startsWith('    at '));
+	expect(frames.some((frame) => frame.includes('call_site'))).toBe(true);
+	expect(error.stack).not.toContain('throw_error');
+});

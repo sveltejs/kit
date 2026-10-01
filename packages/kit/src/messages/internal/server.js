@@ -23,3 +23,17 @@ export function throw_error(code, message, options, caller) {
 
 	throw error;
 }
+
+/**
+ * Returns the error thrown by `fn`, for the few places that pass an error on (for example to
+ * `handleError` or a later `console.error`) rather than throwing it. Its stack starts inside `fn`
+ * @param {() => never} fn A function that calls a generated `server-errors` helper
+ * @returns {Error}
+ */
+export function capture_error(fn) {
+	try {
+		fn();
+	} catch (error) {
+		return /** @type {Error} */ (error);
+	}
+}
