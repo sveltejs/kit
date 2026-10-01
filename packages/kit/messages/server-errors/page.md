@@ -21,7 +21,7 @@ export const actions = {
 
 ## action_default_with_named
 
-> When using named actions, the default action cannot be used. See the docs for more info: https://svelte.dev/docs/kit/form-actions#named-actions
+> When using named actions, the default action cannot be used. See the docs for more info: https://svelte.dev/docs/kit/form-actions#Named-actions
 
 A page can have either a single `default` [action](https://svelte.dev/docs/kit/form-actions#Default-actions) or any number of [named actions](https://svelte.dev/docs/kit/form-actions#Named-actions), but not both — a form that posts to the page without choosing an action would be ambiguous. Rename the `default` action and point the form that uses it to that name, for example with `action="?/create"`.
 
@@ -55,13 +55,13 @@ Form actions return data to the page as [`form`](https://svelte.dev/docs/kit/for
 
 > Data returned from action inside `%id%` is not serializable: %message% (`%path%`)
 
-The data returned from a form action is serialized with [devalue](https://github.com/sveltejs/devalue) to send it to the page, and this value isn't supported. Devalue supports JSON values as well as things like `Date`, `Map`, `Set`, `BigInt` and `URL`, but not functions or class instances. Return plain data instead, or register the type with a [transport hook](https://svelte.dev/docs/kit/hooks#Universal-hooks-transport) to tell SvelteKit how to serialize it.
+The data returned from a form action is serialized with [devalue](https://github.com/sveltejs/devalue) to send it to the page, and this value isn't supported. Devalue supports JSON values as well as things like `Date`, `Map`, `Set`, `BigInt` and `URL`, but not functions or class instances. Return plain data instead, or register the type with a [transport hook](https://svelte.dev/docs/kit/hooks#transport) to tell SvelteKit how to serialize it.
 
 ## load_not_serializable
 
 > Data returned from `load` while rendering `%id%` is not serializable: %message% (`%path%`). If you need to serialize/deserialize custom types, use transport hooks: https://svelte.dev/docs/kit/hooks#transport.
 
-The data returned from a server `load` function is serialized with [devalue](https://github.com/sveltejs/devalue) to send it to the browser, and the value at the listed path isn't supported. Devalue supports JSON values as well as things like `Date`, `Map`, `Set`, `BigInt`, `URL` and promises, but not functions or class instances. Return plain data instead, move the value into a [universal `load`](https://svelte.dev/docs/kit/load#Universal-vs-server) function, or register the type with a [transport hook](https://svelte.dev/docs/kit/hooks#Universal-hooks-transport).
+The data returned from a server `load` function is serialized with [devalue](https://github.com/sveltejs/devalue) to send it to the browser, and the value at the listed path isn't supported. Devalue supports JSON values as well as things like `Date`, `Map`, `Set`, `BigInt`, `URL` and promises, but not functions or class instances. Return plain data instead, move the value into a [universal `load`](https://svelte.dev/docs/kit/load#Universal-vs-server) function, or register the type with a [transport hook](https://svelte.dev/docs/kit/hooks#transport).
 
 ## load_not_plain_object
 
@@ -73,13 +73,13 @@ A server `load` function must return a plain object (such as `return { post }`),
 
 > Failed to serialize promise while rendering `%id%`
 
-A server `load` function returned a promise, which SvelteKit [streams](https://svelte.dev/docs/kit/load#Streaming-with-promises) to the browser once it resolves. The value it resolved to can't be serialized with [devalue](https://github.com/sveltejs/devalue), so the promise is rejected in the browser instead — the `cause` of this error says which value was the problem. Resolve the promise to plain data, or register the type with a [transport hook](https://svelte.dev/docs/kit/hooks#Universal-hooks-transport).
+A server `load` function returned a promise, which SvelteKit [streams](https://svelte.dev/docs/kit/load#Streaming-with-promises) to the browser once it resolves. The value it resolved to can't be serialized with [devalue](https://github.com/sveltejs/devalue), so the promise is rejected in the browser instead — the `cause` of this error says which value was the problem. Resolve the promise to plain data, or register the type with a [transport hook](https://svelte.dev/docs/kit/hooks#transport).
 
 ## load_response_header_not_serialized
 
 > Failed to get response header `%name%` — it must be included by the `filterSerializedResponseHeaders` option: https://svelte.dev/docs/kit/hooks#handle (at `%id%`)
 
-A response fetched with `event.fetch` during server-side rendering is [serialized into the page](https://svelte.dev/docs/kit/load#Making-fetch-requests) so that `load` can use it again in the browser without making the request twice. Only headers that you choose are included, because they may contain sensitive information, so reading any other header would fail in the browser. Include the header by returning `true` for it from the [`filterSerializedResponseHeaders`](https://svelte.dev/docs/kit/hooks#Server-hooks-handle) option of `resolve`:
+A response fetched with `event.fetch` during server-side rendering is [serialized into the page](https://svelte.dev/docs/kit/load#Making-fetch-requests) so that `load` can use it again in the browser without making the request twice. Only headers that you choose are included, because they may contain sensitive information, so reading any other header would fail in the browser. Include the header by returning `true` for it from the [`filterSerializedResponseHeaders`](https://svelte.dev/docs/kit/hooks#handle) option of `resolve`:
 
 ```js
 /// file: src/hooks.server.js

@@ -68,13 +68,13 @@ export function cookie_path_mismatch(_values) {
 }
 
 /**
- * The form action returned a value, but it isn't available in `page.form`, because SSR is off. To handle the returned value in CSR, enhance your form with `use:enhance`. See https://svelte.dev/docs/kit/form-actions#progressive-enhancement-use-enhance
+ * The form action returned a value, but it isn't available in `page.form`, because SSR is off. To handle the returned value in CSR, enhance your form with `use:enhance`. See https://svelte.dev/docs/kit/form-actions#Progressive-enhancement-use:enhance
  * @param {void} _values
  */
 export function form_action_data_without_ssr(_values) {
 	if (DEV) {
 		console.warn(
-			`%c[sveltekit] ${'form_action_data_without_ssr'}\n%c${`The form action returned a value, but it isn't available in \`page.form\`, because SSR is off. To handle the returned value in CSR, enhance your form with \`use:enhance\`. See https://svelte.dev/docs/kit/form-actions#progressive-enhancement-use-enhance`}\nhttps://svelte.dev/e/kit/${'form_action_data_without_ssr'}`,
+			`%c[sveltekit] ${'form_action_data_without_ssr'}\n%c${`The form action returned a value, but it isn't available in \`page.form\`, because SSR is off. To handle the returned value in CSR, enhance your form with \`use:enhance\`. See https://svelte.dev/docs/kit/form-actions#Progressive-enhancement-use:enhance`}\nhttps://svelte.dev/e/kit/${'form_action_data_without_ssr'}`,
 			bold,
 			normal
 		);
@@ -84,13 +84,13 @@ export function form_action_data_without_ssr(_values) {
 }
 
 /**
- * The form action returned an error, but `+error.svelte` wasn't rendered because SSR is off. To get the error page with CSR, enhance your form with `use:enhance`. See https://svelte.dev/docs/kit/form-actions#progressive-enhancement-use-enhance
+ * The form action returned an error, but `+error.svelte` wasn't rendered because SSR is off. To get the error page with CSR, enhance your form with `use:enhance`. See https://svelte.dev/docs/kit/form-actions#Progressive-enhancement-use:enhance
  * @param {void} _values
  */
 export function form_action_error_without_ssr(_values) {
 	if (DEV) {
 		console.warn(
-			`%c[sveltekit] ${'form_action_error_without_ssr'}\n%c${`The form action returned an error, but \`+error.svelte\` wasn't rendered because SSR is off. To get the error page with CSR, enhance your form with \`use:enhance\`. See https://svelte.dev/docs/kit/form-actions#progressive-enhancement-use-enhance`}\nhttps://svelte.dev/e/kit/${'form_action_error_without_ssr'}`,
+			`%c[sveltekit] ${'form_action_error_without_ssr'}\n%c${`The form action returned an error, but \`+error.svelte\` wasn't rendered because SSR is off. To get the error page with CSR, enhance your form with \`use:enhance\`. See https://svelte.dev/docs/kit/form-actions#Progressive-enhancement-use:enhance`}\nhttps://svelte.dev/e/kit/${'form_action_error_without_ssr'}`,
 			bold,
 			normal
 		);

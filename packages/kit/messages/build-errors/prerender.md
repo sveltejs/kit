@@ -80,11 +80,11 @@ A prerendered response is written to a file, and static hosts serve the root of 
 
 ## prerender_directory_conflict
 
-> Cannot save `%path%` as it is already a directory. See https://svelte.dev/docs/kit/page-options#prerender-route-conflicts for more information
+> Cannot save `%path%` as it is already a directory. See https://svelte.dev/docs/kit/page-options#prerender-Route-conflicts for more information
 
-> Cannot save `%path%` as `%parent%` is already a file. See https://svelte.dev/docs/kit/page-options#prerender-route-conflicts for more information
+> Cannot save `%path%` as `%parent%` is already a file. See https://svelte.dev/docs/kit/page-options#prerender-Route-conflicts for more information
 
-Prerendering writes each response to a file, and a file and a directory can't share a name. For example, `src/routes/foo/+server.js` and `src/routes/foo/bar/+server.js` would need both a file and a directory called `foo`. Add a file extension to endpoint routes, such as `src/routes/foo.json/+server.js`, so their output names don't clash. See [route conflicts](https://svelte.dev/docs/kit/page-options#Route-conflicts).
+Prerendering writes each response to a file, and a file and a directory can't share a name. For example, `src/routes/foo/+server.js` and `src/routes/foo/bar/+server.js` would need both a file and a directory called `foo`. Add a file extension to endpoint routes, such as `src/routes/foo.json/+server.js`, so their output names don't clash. See [route conflicts](https://svelte.dev/docs/kit/page-options#prerender-Route-conflicts).
 
 ## prerender_fallback_failed
 

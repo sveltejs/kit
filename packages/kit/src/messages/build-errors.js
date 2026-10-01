@@ -568,13 +568,13 @@ export function prerender_client_address(_values, options) {
 }
 
 /**
- * Cannot save `%path%` as it is already a directory. See https://svelte.dev/docs/kit/page-options#prerender-route-conflicts for more information
+ * Cannot save `%path%` as it is already a directory. See https://svelte.dev/docs/kit/page-options#prerender-Route-conflicts for more information
  * @param {{ "path": string; "parent"?: string }} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function prerender_directory_conflict(_values, options) {
-	throw_error('prerender_directory_conflict', (_values?.parent !== undefined ? `Cannot save \`${_values.path}\` as \`${_values.parent}\` is already a file. See https://svelte.dev/docs/kit/page-options#prerender-route-conflicts for more information` : `Cannot save \`${_values.path}\` as it is already a directory. See https://svelte.dev/docs/kit/page-options#prerender-route-conflicts for more information`), options, prerender_directory_conflict);
+	throw_error('prerender_directory_conflict', (_values?.parent !== undefined ? `Cannot save \`${_values.path}\` as \`${_values.parent}\` is already a file. See https://svelte.dev/docs/kit/page-options#prerender-Route-conflicts for more information` : `Cannot save \`${_values.path}\` as it is already a directory. See https://svelte.dev/docs/kit/page-options#prerender-Route-conflicts for more information`), options, prerender_directory_conflict);
 }
 
 /**
