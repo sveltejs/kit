@@ -8,7 +8,7 @@ import { init_transport } from '#app/internal/transport';
 vi.stubGlobal('__SVELTEKIT_DEV__', false);
 init_transport({});
 
-const { handle_action_request, uneval_action_response } = await import('./actions.js');
+const { get_action_location, handle_action_request, uneval_action_response } = await import('./actions.js');
 
 /** @param {string} [search] */
 function create_event(search = '') {
@@ -26,6 +26,15 @@ function create_event(search = '') {
 }
 
 const state = /** @type {RequestState} */ (/** @type {unknown} */ ({}));
+
+test('action locations with leading double slashes remain same-origin', () => {
+	const url = new URL('https://example.com//attacker.example/path?/action&foo=bar');
+	const destination = new URL(get_action_location(url), url);
+
+	expect(destination.origin).toBe(url.origin);
+	expect(destination.pathname).toBe(url.pathname);
+	expect(destination.search).toBe('?foo=bar');
+});
 
 test('returns an error result, rather than throwing, when an action throws fail()', async () => {
 	const result = await handle_action_request(create_event(), state, {

@@ -3017,7 +3017,8 @@ export function is_current_location(value) {
 
 	const destination = resolve_url(value);
 	const current = new URL(location.href);
-	if (destination.pathname !== current.pathname) return false;
+	if (destination.origin !== current.origin || destination.pathname !== current.pathname)
+		return false;
 
 	const keys = new Set([...destination.searchParams.keys(), ...current.searchParams.keys()]);
 	for (const key of keys) {
