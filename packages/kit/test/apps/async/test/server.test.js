@@ -17,9 +17,7 @@ test.describe('remote functions', () => {
 		const code = files.map((file) => fs.readFileSync(file, 'utf-8')).join('\n');
 		// minify:false retains JSDoc descriptions — only executable strings count here
 		const executable = code.replace(/\/\*[^]*?\*\//g, '');
-		expect(executable).toContain(
-			'https://next.svelte.dev/e/kit/remote_form_multiple_elements'
-		);
+		expect(executable).toContain('https://next.svelte.dev/e/kit/remote_form_multiple_elements');
 		for (const text of [
 			'A form object can only be attached',
 			'Form submission had invalid data',
