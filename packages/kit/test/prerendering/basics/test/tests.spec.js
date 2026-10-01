@@ -305,7 +305,7 @@ test('identifies missing ids', () => {
 	expect(missing_ids).toEqual([
 		{
 			id: 'missing-id',
-			message: `${code}\nThe following pages contain links to /missing-id#missing-id, but no element with id="missing-id" exists on /missing-id:\n  - /missing-id\nhttps://next.svelte.dev/e/@sveltejs/kit/${code}`
+			message: `${code}\nThe following pages contain links to \`/missing-id#missing-id\`, but no element with \`id="missing-id"\` exists on \`/missing-id\`:\n  - /missing-id\nhttps://next.svelte.dev/e/@sveltejs/kit/${code}`
 		}
 	]);
 });
