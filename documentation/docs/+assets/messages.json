@@ -131,7 +131,7 @@
 	"fetch_relative_url": {
 		"variants": [
 			{
-				"text": "Cannot use relative URL (`%url%`) with global `fetch` — use `event.fetch` instead: https://svelte.dev/docs/kit/web-standards#fetch-apis",
+				"text": "Cannot use relative URL (`%url%`) with global `fetch` — use `event.fetch` instead: https://svelte.dev/docs/kit/web-standards#Fetch-APIs",
 				"variables": [
 					"url"
 				]
