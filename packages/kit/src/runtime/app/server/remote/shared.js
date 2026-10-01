@@ -3,6 +3,7 @@
 import { error } from '@sveltejs/kit';
 import { ValidationError } from '@sveltejs/kit/internal';
 import { with_request_store } from '@sveltejs/kit/internal/server';
+import * as e from '../../../../messages/server-errors.js';
 
 /**
  * @param {any} validate_or_fn
@@ -39,9 +40,7 @@ export function create_validator(validate_or_fn, maybe_fn) {
 		};
 	}
 
-	throw new Error(
-		'Invalid validator passed to remote function. Expected "unchecked" or a Standard Schema (https://standardschema.dev)'
-	);
+	e.remote_invalid_validator();
 }
 
 /**
@@ -84,28 +83,28 @@ function derive_remote_function_event(event, state, allow_cookies) {
 	const derived = {
 		...event,
 		setHeaders: () => {
-			throw new Error('setHeaders is not allowed in remote functions');
+			e.remote_headers_forbidden();
 		},
 		cookies: {
 			...event.cookies,
 			set: (name, value, opts) => {
 				if (!allow_cookies) {
-					throw new Error('Cannot set cookies in `query` or `prerender` functions');
+					e.remote_cookie_forbidden({ operation: 'set' });
 				}
 
 				if (opts?.path && !opts.path.startsWith('/')) {
-					throw new Error('Cookies set in remote functions must have an absolute path');
+					e.remote_cookie_path_relative({ operation: 'set' });
 				}
 
 				return event.cookies.set(name, value, opts);
 			},
 			delete: (name, opts) => {
 				if (!allow_cookies) {
-					throw new Error('Cannot delete cookies in `query` or `prerender` functions');
+					e.remote_cookie_forbidden({ operation: 'delete' });
 				}
 
 				if (opts?.path && !opts.path.startsWith('/')) {
-					throw new Error('Cookies deleted in remote functions must have an absolute path');
+					e.remote_cookie_path_relative({ operation: 'deleted' });
 				}
 
 				return event.cookies.delete(name, opts);
@@ -119,9 +118,7 @@ function derive_remote_function_event(event, state, allow_cookies) {
 			Object.defineProperty(derived, property, {
 				enumerable: false,
 				get() {
-					throw new Error(
-						`Cannot access event.${property} in a query. Pass the value as an argument to the query instead`
-					);
+					return e.remote_request_property({ property });
 				}
 			});
 		}
@@ -213,9 +210,7 @@ function to_iterator(source, name) {
 		return source[Symbol.iterator]();
 	}
 
-	throw new Error(
-		`query.live '${name}' must return an Iterator, Iterable, AsyncIterator or AsyncIterable`
-	);
+	e.remote_query_live_not_iterable({ name });
 }
 
 /**

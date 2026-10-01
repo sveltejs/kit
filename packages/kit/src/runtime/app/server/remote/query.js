@@ -15,6 +15,7 @@ import {
 import { noop } from '../../../../utils/functions.js';
 import { SharedIterator } from '../../../../utils/shared-iterator.js';
 import { handle_error_and_jsonify } from '../../../server/errors.js';
+import * as e from '../../../../messages/server-errors.js';
 
 /**
  * Creates a remote query. When called from the browser, the function will be invoked on the server via a `fetch` call.
@@ -93,9 +94,7 @@ export function query(validate_or_fn, maybe_fn) {
 	/** @type {RemoteQueryFunction<Input, Output> & { __: RemoteQueryInternals }} */
 	const wrapper = (arg) => {
 		if (prerendering) {
-			throw new Error(
-				`Cannot call query '${__.name}' while prerendering, as prerendered pages need static data. Use 'prerender' from $app/server instead`
-			);
+			e.remote_query_prerender({ type: 'query', name: __.name });
 		}
 
 		const { event, state } = get_request_store();
@@ -192,9 +191,7 @@ function live(validate_or_fn, maybe_fn) {
 	/** @type {RemoteLiveQueryFunction<Input, Output> & { __: RemoteQueryLiveInternals }} */
 	const wrapper = (arg) => {
 		if (prerendering) {
-			throw new Error(
-				`Cannot call query.live '${__.name}' while prerendering, as prerendered pages need static data. Use 'prerender' from $app/server instead`
-			);
+			e.remote_query_prerender({ type: 'query.live', name: __.name });
 		}
 
 		const { event, state } = get_request_store();
@@ -371,9 +368,7 @@ function batch(validate_or_fn, maybe_fn) {
 	/** @type {RemoteQueryFunction<Input, Output> & { __: RemoteQueryBatchInternals }} */
 	const wrapper = (arg) => {
 		if (prerendering) {
-			throw new Error(
-				`Cannot call query.batch '${__.name}' while prerendering, as prerendered pages need static data. Use 'prerender' from $app/server instead`
-			);
+			e.remote_query_prerender({ type: 'query.batch', name: __.name });
 		}
 
 		const { event, state } = get_request_store();
@@ -496,7 +491,7 @@ function create_query_resource(__, payload, event, state, fn) {
 			return get_promise().then(onfulfilled, onrejected);
 		},
 		withOverride() {
-			throw new Error(`Cannot call '${__.name}.withOverride()' on the server`);
+			e.server_api_unavailable({ name: `${__.name}.withOverride()` });
 		},
 		get [Symbol.toStringTag]() {
 			return 'QueryResource';
@@ -520,7 +515,7 @@ function create_live_query_resource(__, payload, event, state, get_generator) {
 		for await (const value of get_generator()) {
 			return value;
 		}
-		throw new Error(`query.live '${__.name}' did not yield a value`);
+		e.remote_query_live_no_value({ name: __.name });
 	};
 
 	const get_promise = () => {

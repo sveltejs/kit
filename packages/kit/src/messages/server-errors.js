@@ -306,6 +306,196 @@ export function read_implementation_missing(_values, options) {
 }
 
 /**
+ * Cannot call a command (`%name%`) from a `%method%` handler
+ * @param {{ "name": string; "method": string }} _values
+ * @param {ServerThrowOptions} [options]
+ * @returns {never}
+ */
+export function remote_command_method(_values, options) {
+	throw_error('remote_command_method', `Cannot call a command (\`${_values.name}\`) from a \`${_values.method}\` handler`, options, remote_command_method);
+}
+
+/**
+ * Cannot call a command (`%name%`) inside a query or prerender function
+ * @param {{ "name": string }} _values
+ * @param {ServerThrowOptions} [options]
+ * @returns {never}
+ */
+export function remote_command_readonly(_values, options) {
+	throw_error('remote_command_readonly', `Cannot call a command (\`${_values.name}\`) inside a query or prerender function`, options, remote_command_readonly);
+}
+
+/**
+ * Cannot call a command (`%name%`) during server-side rendering
+ * @param {{ "name": string }} _values
+ * @param {ServerThrowOptions} [options]
+ * @returns {never}
+ */
+export function remote_command_render(_values, options) {
+	throw_error('remote_command_render', `Cannot call a command (\`${_values.name}\`) during server-side rendering`, options, remote_command_render);
+}
+
+/**
+ * Cannot %operation% cookies in `query` or `prerender` functions
+ * @param {{ "operation": string }} _values
+ * @param {ServerThrowOptions} [options]
+ * @returns {never}
+ */
+export function remote_cookie_forbidden(_values, options) {
+	throw_error('remote_cookie_forbidden', `Cannot ${_values.operation} cookies in \`query\` or \`prerender\` functions`, options, remote_cookie_forbidden);
+}
+
+/**
+ * Cookies %operation% in remote functions must have an absolute path
+ * @param {{ "operation": string }} _values
+ * @param {ServerThrowOptions} [options]
+ * @returns {never}
+ */
+export function remote_cookie_path_relative(_values, options) {
+	throw_error('remote_cookie_path_relative', `Cookies ${_values.operation} in remote functions must have an absolute path`, options, remote_cookie_path_relative);
+}
+
+/**
+ * `fail(...)` is for form actions. A remote `form` handler should call `invalid(...)` instead. See https://svelte.dev/docs/kit/remote-functions#form-Programmatic-validation
+ * @param {void} _values
+ * @param {ServerThrowOptions} [options]
+ * @returns {never}
+ */
+export function remote_form_fail(_values, options) {
+	throw_error('remote_form_fail', `\`fail(...)\` is for form actions. A remote \`form\` handler should call \`invalid(...)\` instead. See https://svelte.dev/docs/kit/remote-functions#form-Programmatic-validation`, options, remote_form_fail);
+}
+
+/**
+ * `setHeaders` is not allowed in remote functions
+ * @param {void} _values
+ * @param {ServerThrowOptions} [options]
+ * @returns {never}
+ */
+export function remote_headers_forbidden(_values, options) {
+	throw_error('remote_headers_forbidden', `\`setHeaders\` is not allowed in remote functions`, options, remote_headers_forbidden);
+}
+
+/**
+ * Invalid validator passed to remote function. Expected `'unchecked'` or a Standard Schema (https://standardschema.dev)
+ * @param {void} _values
+ * @param {ServerThrowOptions} [options]
+ * @returns {never}
+ */
+export function remote_invalid_validator(_values, options) {
+	throw_error('remote_invalid_validator', `Invalid validator passed to remote function. Expected \`'unchecked'\` or a Standard Schema (https://standardschema.dev)`, options, remote_invalid_validator);
+}
+
+/**
+ * Cannot export `default` from a remote module (`%file%`) — please use named exports instead
+ * @param {{ "file": string }} _values
+ * @param {ServerThrowOptions} [options]
+ * @returns {never}
+ */
+export function remote_module_default_export(_values, options) {
+	throw_error('remote_module_default_export', `Cannot export \`default\` from a remote module (\`${_values.file}\`) — please use named exports instead`, options, remote_module_default_export);
+}
+
+/**
+ * `%name%` exported from `%file%` is invalid — all exports from this file must be remote functions
+ * @param {{ "name": string; "file": string }} _values
+ * @param {ServerThrowOptions} [options]
+ * @returns {never}
+ */
+export function remote_module_invalid_export(_values, options) {
+	throw_error('remote_module_invalid_export', `\`${_values.name}\` exported from \`${_values.file}\` is invalid — all exports from this file must be remote functions`, options, remote_module_invalid_export);
+}
+
+/**
+ * `query.live` `%name%` did not yield a value
+ * @param {{ "name": string }} _values
+ * @param {ServerThrowOptions} [options]
+ * @returns {never}
+ */
+export function remote_query_live_no_value(_values, options) {
+	throw_error('remote_query_live_no_value', `\`query.live\` \`${_values.name}\` did not yield a value`, options, remote_query_live_no_value);
+}
+
+/**
+ * `query.live` `%name%` must return an `Iterator`, `Iterable`, `AsyncIterator` or `AsyncIterable`
+ * @param {{ "name": string }} _values
+ * @param {ServerThrowOptions} [options]
+ * @returns {never}
+ */
+export function remote_query_live_not_iterable(_values, options) {
+	throw_error('remote_query_live_not_iterable', `\`query.live\` \`${_values.name}\` must return an \`Iterator\`, \`Iterable\`, \`AsyncIterator\` or \`AsyncIterable\``, options, remote_query_live_not_iterable);
+}
+
+/**
+ * Cannot call `%type%` `%name%` while prerendering, as prerendered pages need static data. Use `prerender` from `$app/server` instead
+ * @param {{ "type": string; "name": string }} _values
+ * @param {ServerThrowOptions} [options]
+ * @returns {never}
+ */
+export function remote_query_prerender(_values, options) {
+	throw_error('remote_query_prerender', `Cannot call \`${_values.type}\` \`${_values.name}\` while prerendering, as prerendered pages need static data. Use \`prerender\` from \`$app/server\` instead`, options, remote_query_prerender);
+}
+
+/**
+ * Cannot access `event.%property%` in a query. Pass the value as an argument to the query instead
+ * @param {{ "property": string }} _values
+ * @param {ServerThrowOptions} [options]
+ * @returns {never}
+ */
+export function remote_request_property(_values, options) {
+	throw_error('remote_request_property', `Cannot access \`event.${_values.property}\` in a query. Pass the value as an argument to the query instead`, options, remote_request_property);
+}
+
+/**
+ * `requested(%name%, %limit%)` cannot be used with synchronous iteration because the query validator is async. Use `for await ... of` instead
+ * @param {{ "name": string; "limit": string }} _values
+ * @param {ServerThrowOptions} [options]
+ * @returns {never}
+ */
+export function remote_requested_async_validator(_values, options) {
+	throw_error('remote_requested_async_validator', `\`requested(${_values.name}, ${_values.limit})\` cannot be used with synchronous iteration because the query validator is async. Use \`for await ... of\` instead`, options, remote_requested_async_validator);
+}
+
+/**
+ * `requested(...)` can only be called in the context of a command/form remote function
+ * @param {void} _values
+ * @param {ServerThrowOptions} [options]
+ * @returns {never}
+ */
+export function remote_requested_context(_values, options) {
+	throw_error('remote_requested_context', `\`requested(...)\` can only be called in the context of a command/form remote function`, options, remote_requested_context);
+}
+
+/**
+ * Limit must be a non-negative integer or `Infinity`
+ * @param {void} _values
+ * @param {ServerThrowOptions} [options]
+ * @returns {never}
+ */
+export function remote_requested_invalid_limit(_values, options) {
+	throw_error('remote_requested_invalid_limit', `Limit must be a non-negative integer or \`Infinity\``, options, remote_requested_invalid_limit);
+}
+
+/**
+ * `requested(...)` expects a query function created with `query(...)`, `query.batch(...)`, or `query.live(...)`
+ * @param {void} _values
+ * @param {ServerThrowOptions} [options]
+ * @returns {never}
+ */
+export function remote_requested_invalid_query(_values, options) {
+	throw_error('remote_requested_invalid_query', `\`requested(...)\` expects a query function created with \`query(...)\`, \`query.batch(...)\`, or \`query.live(...)\``, options, remote_requested_invalid_query);
+}
+
+/**
+ * `%method%()` is invalid for %type% queries. Use `%replacement%()` instead.
+ * @param {{ "method": string; "type": string; "replacement": string }} _values
+ * @param {ServerThrowOptions} [options]
+ * @returns {never}
+ */
+export function remote_requested_wrong_method(_values, options) {
+	throw_error('remote_requested_wrong_method', `\`${_values.method}()\` is invalid for ${_values.type} queries. Use \`${_values.replacement}()\` instead.`, options, remote_requested_wrong_method);
+}
+
+/**
  * Can only read the current request event inside functions invoked during `handle`, such as server `load` functions, actions, endpoints, and other server hooks. In environments without `AsyncLocalStorage`, the event must be read synchronously, not after an `await`.
  * @param {void} _values
  * @param {ServerThrowOptions} [options]

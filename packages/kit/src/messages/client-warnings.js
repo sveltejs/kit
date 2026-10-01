@@ -285,6 +285,54 @@ export function push_state_deprecated(_values, options) {
 }
 
 /**
+ * Form submission had invalid data, but the validation issues were ignored:
+
+%issues%
+
+Make sure you provide actionable feedback to users, using e.g. `myForm.fields.myField.issues()` or `myForm.fields.allIssues()`
+ * @param {{ "issues": string }} _values
+ * @param {ClientWarningOptions} [options]
+ */
+export function remote_form_issues_ignored(_values, options) {
+	const details = options?.element ? [options.element] : [];
+
+	if (DEV) {
+		console.warn(
+			`%c[sveltekit] ${'remote_form_issues_ignored'}\n%c${`Form submission had invalid data, but the validation issues were ignored:
+
+${_values.issues}
+
+Make sure you provide actionable feedback to users, using e.g. \`myForm.fields.myField.issues()\` or \`myForm.fields.allIssues()\``}\nhttps://next.svelte.dev/e/@sveltejs/kit/${'remote_form_issues_ignored'}`,
+			bold,
+			normal,
+			...details
+		);
+	} else {
+		console.warn('https://next.svelte.dev/e/@sveltejs/kit/remote_form_issues_ignored', ...details);
+	}
+}
+
+/**
+ * Updates can only be sent once per %invocation%. Ignoring additional updates.
+ * @param {{ "invocation": string }} _values
+ * @param {ClientWarningOptions} [options]
+ */
+export function remote_updates_repeated(_values, options) {
+	const details = options?.element ? [options.element] : [];
+
+	if (DEV) {
+		console.warn(
+			`%c[sveltekit] ${'remote_updates_repeated'}\n%c${`Updates can only be sent once per ${_values.invocation}. Ignoring additional updates.`}\nhttps://next.svelte.dev/e/@sveltejs/kit/${'remote_updates_repeated'}`,
+			bold,
+			normal,
+			...details
+		);
+	} else {
+		console.warn('https://next.svelte.dev/e/@sveltejs/kit/remote_updates_repeated', ...details);
+	}
+}
+
+/**
  * `replaceState(...)` is deprecated. Use `goto(url, { state, shallow: true, replace: true })` instead.
  * @param {void} _values
  * @param {ClientWarningOptions} [options]

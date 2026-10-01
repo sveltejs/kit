@@ -17,6 +17,84 @@ export function app_stores_removed(_values) {
 }
 
 /**
+ * Invalid array key `%key%`
+ * @param {{ "key": string }} _values
+ * @returns {never}
+ */
+export function form_field_array_conflict(_values) {
+	if (DEV || (!BROWSER && verbose)) {
+		throw_error('form_field_array_conflict', `Invalid array key \`${_values.key}\``, form_field_array_conflict);
+	}
+
+	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/form_field_array_conflict');
+}
+
+/**
+ * Form cannot contain duplicated keys — `%name%` has %count% values
+ * @param {{ "name": string; "count": string }} _values
+ * @returns {never}
+ */
+export function form_field_duplicate(_values) {
+	if (DEV || (!BROWSER && verbose)) {
+		throw_error('form_field_duplicate', `Form cannot contain duplicated keys — \`${_values.name}\` has ${_values.count} values`, form_field_duplicate);
+	}
+
+	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/form_field_duplicate');
+}
+
+/**
+ * Invalid key `%key%`: This key is not allowed to prevent prototype pollution.
+ * @param {{ "key": string }} _values
+ * @returns {never}
+ */
+export function form_field_forbidden_key(_values) {
+	if (DEV || (!BROWSER && verbose)) {
+		throw_error('form_field_forbidden_key', `Invalid key \`${_values.key}\`: This key is not allowed to prevent prototype pollution.`, form_field_forbidden_key);
+	}
+
+	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/form_field_forbidden_key');
+}
+
+/**
+ * Invalid field name `%name%`: field names are written in JS object notation, so keys that would need quoting are not supported. See https://svelte.dev/docs/kit/remote-functions#form-Fields
+ * @param {{ "name": string }} _values
+ * @returns {never}
+ */
+export function form_field_invalid_name(_values) {
+	if (DEV || (!BROWSER && verbose)) {
+		throw_error('form_field_invalid_name', `Invalid field name \`${_values.name}\`: field names are written in JS object notation, so keys that would need quoting are not supported. See https://svelte.dev/docs/kit/remote-functions#form-Fields`, form_field_invalid_name);
+	}
+
+	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/form_field_invalid_name');
+}
+
+/**
+ * Form contained a field that wasn't created with `form.fields.as(...)`: `%name%`
+ * @param {{ "name": string }} _values
+ * @returns {never}
+ */
+export function form_field_unbound(_values) {
+	if (DEV || (!BROWSER && verbose)) {
+		throw_error('form_field_unbound', `Form contained a field that wasn't created with \`form.fields.as(...)\`: \`${_values.name}\``, form_field_unbound);
+	}
+
+	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/form_field_unbound');
+}
+
+/**
+ * %type% inputs must have a value
+ * @param {{ "type": string }} _values
+ * @returns {never}
+ */
+export function form_input_missing_value(_values) {
+	if (DEV || (!BROWSER && verbose)) {
+		throw_error('form_input_missing_value', `${_values.type} inputs must have a value`, form_input_missing_value);
+	}
+
+	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/form_input_missing_value');
+}
+
+/**
  * HTTP error status codes must be between 400 and 599 — %status% is invalid
  * @param {{ "status": string }} _values
  * @returns {never}
@@ -66,6 +144,19 @@ export function invalid_redirect_status(_values) {
 	}
 
 	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/invalid_redirect_status');
+}
+
+/**
+ * a `load` function %location% returned %type%, but must return a plain object at the top level (i.e. `return {...}`)
+ * @param {{ "location": string; "type": string }} _values
+ * @returns {never}
+ */
+export function load_invalid_response(_values) {
+	if (DEV || (!BROWSER && verbose)) {
+		throw_error('load_invalid_response', `a \`load\` function ${_values.location} returned ${_values.type}, but must return a plain object at the top level (i.e. \`return {...}\`)`, load_invalid_response);
+	}
+
+	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/load_invalid_response');
 }
 
 /**
@@ -170,6 +261,19 @@ export function redirect_external_option_invalid(_values) {
 	}
 
 	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/redirect_external_option_invalid');
+}
+
+/**
+ * %type% are not valid remote function arguments
+ * @param {{ "type": string }} _values
+ * @returns {never}
+ */
+export function remote_argument_unsupported(_values) {
+	if (DEV || (!BROWSER && verbose)) {
+		throw_error('remote_argument_unsupported', `${_values.type} are not valid remote function arguments`, remote_argument_unsupported);
+	}
+
+	throw new Error('https://next.svelte.dev/e/@sveltejs/kit/remote_argument_unsupported');
 }
 
 /**

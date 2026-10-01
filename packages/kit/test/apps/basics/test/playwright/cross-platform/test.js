@@ -268,9 +268,9 @@ test.describe('Errors', () => {
 				? "related to route '/errors/invalid-load-response'"
 				: 'in src/routes/errors/invalid-load-response/+page.js';
 
-			expect(await page.textContent('#message')).toBe(
-				`This is your custom error page saying: "a load function ${details} returned an array, but must return a plain object at the top level (i.e. \`return {...}\`) (500 Internal Error)"`
-			);
+			expect(await page.textContent('#message')).toContainKitDiagnostic('load_invalid_response', {
+				contains: [details, 'an array']
+			});
 		});
 
 		test('errors on invalid server load function response', async ({
@@ -287,9 +287,9 @@ test.describe('Errors', () => {
 
 			expect(await page.textContent('footer')).toBe('Custom layout');
 
-			expect(await page.textContent('#message')).toBe(
-				'This is your custom error page saying: "a load function in src/routes/errors/invalid-server-load-response/+page.server.js returned an array, but must return a plain object at the top level (i.e. `return {...}`) (500 Internal Error)"'
-			);
+			expect(await page.textContent('#message')).toContainKitDiagnostic('load_invalid_response', {
+				contains: ['in src/routes/errors/invalid-server-load-response/+page.server.js', 'an array']
+			});
 		});
 	}
 

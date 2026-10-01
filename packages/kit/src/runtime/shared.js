@@ -1,6 +1,8 @@
 import * as devalue from 'devalue';
 import { base64_decode, base64_encode, text_decoder, text_encoder } from './utils.js';
 import { decoders, encoders } from '#app/internal/transport';
+import * as e from '../messages/shared-errors.js';
+import * as w from '../messages/shared-warnings.js';
 
 /**
  * @param {string} route_id
@@ -9,9 +11,7 @@ import { decoders, encoders } from '#app/internal/transport';
 export function validate_depends(route_id, dep) {
 	const match = /^(moz-icon|view-source|jar):/.exec(dep);
 	if (match) {
-		console.warn(
-			`${route_id}: Calling \`depends('${dep}')\` will throw an error in Firefox because \`${match[1]}\` is a special URI scheme`
-		);
+		w.depends_special_scheme({ route: route_id, dependency: dep, scheme: match[1] });
 	}
 }
 
@@ -34,8 +34,9 @@ export const TRAILING_SLASH_PARAM = 'x-sveltekit-trailing-slash';
  */
 export function validate_load_response(data, location_description) {
 	if (data != null && Object.getPrototypeOf(data) !== Object.prototype) {
-		throw new Error(
-			`a load function ${location_description} returned ${
+		e.load_invalid_response({
+			location: String(location_description),
+			type:
 				typeof data !== 'object'
 					? `a ${typeof data}`
 					: data instanceof Response
@@ -43,8 +44,7 @@ export function validate_load_response(data, location_description) {
 						: Array.isArray(data)
 							? 'an array'
 							: 'a non-plain object'
-			}, but must return a plain object at the top level (i.e. \`return {...}\`)`
-		);
+		});
 	}
 }
 
@@ -108,7 +108,7 @@ function create_remote_arg_reducers(sort) {
 		/** @param {unknown} value */
 		[remote_regex_guard]: (value) => {
 			if (value instanceof RegExp) {
-				throw new Error('Regular expressions are not valid remote function arguments');
+				e.remote_argument_unsupported({ type: 'Regular expressions' });
 			}
 		}
 	};
@@ -303,7 +303,7 @@ export async function stringify_command_arg(value) {
 	/** @param {unknown} value */
 	reducers[remote_promise_guard] = (value) => {
 		if (value instanceof Promise && !allowed_promises.has(value)) {
-			throw new Error('Promises are not valid remote function arguments');
+			e.remote_argument_unsupported({ type: 'Promises' });
 		}
 	};
 
