@@ -64,4 +64,4 @@ for (const category of fs.readdirSync(messages_dir).sort()) {
 }
 
 fs.mkdirSync(assets_dir, { recursive: true });
-fs.writeFileSync(new URL('messages.json', assets_dir), JSON.stringify(all, null, '\t'))
+fs.writeFileSync(new URL('messages.json', assets_dir), JSON.stringify(all, null, '\t'));
