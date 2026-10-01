@@ -3,13 +3,12 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
-import { styleText } from 'node:util';
 import { posixify } from '../../utils/os.js';
 import { negotiate } from '../../utils/http.js';
 import { escape_html } from '../../utils/escape.js';
 import { escape_for_regexp } from '../../utils/regex.js';
-import { stackless } from '../../utils/error.js';
-import { dedent } from '../../core/sync/utils.js';
+import * as e from '../../messages/build-errors.js';
+import * as w from '../../messages/build-warnings.js';
 import { app_server, app_env_private } from './module_ids.js';
 
 /**
@@ -223,13 +222,7 @@ export function error_for_missing_config(feature_name, path, value) {
 		return acc.replace(hole, `${indent}${part}: ${rhs}`);
 	}, hole);
 
-	throw stackless(
-		dedent`\
-			To enable ${feature_name}, add the following to your SvelteKit plugin in \`vite.config.js\`:
-
-			${result}
-		`
-	);
+	e.config_feature_disabled({ feature: feature_name, config: result }, { stackless: true });
 }
 
 /** @type {EnforcedConfig} */
@@ -276,12 +269,7 @@ export function warn_overridden_config(config, resolved_config) {
 	const overridden = find_overridden_config(config, resolved_config, enforced_config, '', []);
 
 	if (overridden.length > 0) {
-		console.error(
-			styleText(
-				['bold', 'red'],
-				'The following Vite config options will be overridden by SvelteKit:'
-			) + overridden.map((key) => `\n  - ${key}`).join('')
-		);
+		w.vite_config_overridden({ options: overridden.map((key) => `  - ${key}`).join('\n') });
 	}
 }
 

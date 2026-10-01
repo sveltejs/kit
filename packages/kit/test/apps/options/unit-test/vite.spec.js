@@ -55,7 +55,7 @@ test('no transformIndexHtml warning for the Vitest browser loader', { timeout },
 
 	expect(result.error).toBeUndefined();
 	expect(result.status).toBe(0);
-	expect(result.stdout).not.toContain('transformIndexHtml');
+	expect(result.stderr).not.toContain('transform_index_html_unsupported');
 });
 
 test('transformIndexHtml warning for app plugins', { timeout }, () => {
@@ -73,6 +73,7 @@ test('transformIndexHtml warning for app plugins', { timeout }, () => {
 
 	expect(result.error).toBeUndefined();
 	expect(result.status).toBe(0);
-	expect(result.stdout).toContain('transformIndexHtml');
-	expect(result.stdout).toContain('app-html-transform');
+	expect(result.stderr).toContain(
+		'transform_index_html_unsupported\nThe following plugins may not work correctly because they use the `transformIndexHtml` hook which is not supported:\n  - app-html-transform\nhttps://next.svelte.dev/e/@sveltejs/kit/transform_index_html_unsupported'
+	);
 });

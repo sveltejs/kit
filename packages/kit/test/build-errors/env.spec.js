@@ -18,7 +18,7 @@ test('$app/env/private is not statically importable from the client', { timeout 
 				timeout,
 				env
 			}),
-		/.*Cannot import \$app\/env\/private into code that runs in the browser.*/gs
+		/server_only_import\nCannot import `\$app\/env\/private` into code that runs in the browser.*/gs
 	);
 });
 
@@ -31,7 +31,7 @@ test('$app/env/private is not dynamically importable from the client', { timeout
 				timeout,
 				env
 			}),
-		/.*Cannot import \$app\/env\/private into code that runs in the browser.*/gs
+		/server_only_import\nCannot import `\$app\/env\/private` into code that runs in the browser.*/gs
 	);
 });
 
@@ -44,7 +44,7 @@ test('$app/env/private is not importable from client hooks outside the project r
 				timeout,
 				env
 			}),
-		/.*Cannot import \$app\/env\/private into code that runs in the browser.*/gs
+		/server_only_import\nCannot import `\$app\/env\/private` into code that runs in the browser.*/gs
 	);
 });
 
@@ -57,7 +57,7 @@ test('$app/env/private is not importable from the service worker', { timeout }, 
 				timeout,
 				env
 			}),
-		/.*Cannot import \$app\/env\/private into code that runs in the browser.*/gs
+		/server_only_import\nCannot import `\$app\/env\/private` into code that runs in the browser.*/gs
 	);
 });
 
@@ -73,7 +73,7 @@ test(
 					timeout,
 					env
 				}),
-			/.*Cannot import \$app\/forms, \$app\/navigation, \$app\/state into service-worker code.*/gs
+			/service_worker_invalid_import\nCannot import \$app\/forms, \$app\/navigation, \$app\/state into service-worker code\.\nhttps:\/\/next\.svelte\.dev\/e\/@sveltejs\/kit\/service_worker_invalid_import/
 		);
 	}
 );

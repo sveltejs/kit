@@ -17,7 +17,7 @@ test(
 					stdio: 'pipe',
 					timeout
 				}),
-			/To enable remote functions, add the following to your SvelteKit plugin in `vite.config.js`:[\s\S]*remoteFunctions: true/
+			/config_feature_disabled\nTo enable remote functions, add the following to your SvelteKit plugin in `vite.config.js`:[\s\S]*remoteFunctions: true\n}\nhttps:\/\/next\.svelte\.dev\/e\/@sveltejs\/kit\/config_feature_disabled/
 		);
 	}
 );

@@ -23,6 +23,20 @@ test.describe('remote functions', () => {
 		expect(code.includes('const with_read = prerender(')).toBe(false);
 	});
 
+	test('treeshaken prerendered remote functions explain how to call them at runtime', () => {
+		test.skip(!!process.env.DEV, 'only applicable after build');
+		const code = fs.readFileSync(
+			path.join(root, '.svelte-kit', 'output', 'server', 'chunks', 'prerender.remote.js'),
+			'utf-8'
+		);
+		const code_name = 'remote_prerender_not_dynamic';
+		expect(code).toContain(
+			`throw new Error(${JSON.stringify(
+				`${code_name}\nUnexpectedly called \`prerender\` function. Did you forget to set \`{ dynamic: true }\`?\nhttps://next.svelte.dev/e/@sveltejs/kit/${code_name}`
+			)})`
+		);
+	});
+
 	test('non-dynamic prerendered remote functions with colliding basenames are treeshaken', () => {
 		test.skip(!!process.env.DEV, 'only applicable after build');
 

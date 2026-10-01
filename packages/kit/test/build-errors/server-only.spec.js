@@ -18,7 +18,7 @@ test('#lib/*.server.* is not statically importable from the client', { timeout }
 				timeout,
 				env
 			}),
-		/.*Cannot import #lib\/test.server.js into code that runs in the browser.*/gs
+		/server_only_import\nCannot import `#lib\/test.server.js` into code that runs in the browser, as this could leak sensitive information\.\n\n src\/routes\/\+page\.svelte imports\n  #lib\/test\.server\.js\n\nIf you're only using the import as a type, change it to `import type`\.\nhttps:\/\/next\.svelte\.dev\/e\/@sveltejs\/kit\/server_only_import/
 	);
 });
 
@@ -31,7 +31,7 @@ test('#lib/*.server.* is not dynamically importable from the client', { timeout 
 				timeout,
 				env
 			}),
-		/.*Cannot import #lib\/test.server.js into code that runs in the browser.*/gs
+		/server_only_import\nCannot import `#lib\/test.server.js` into code that runs in the browser.*/gs
 	);
 });
 
@@ -44,7 +44,7 @@ test('#lib/**/server/* is not statically importable from the client', { timeout 
 				timeout,
 				env
 			}),
-		/.*Cannot import #lib\/blah\/server\/something\/private.js into code that runs in the browser.*/gs
+		/server_only_import\nCannot import `#lib\/blah\/server\/something\/private.js` into code that runs in the browser.*/gs
 	);
 });
 
@@ -57,7 +57,7 @@ test('#lib/**/server/* is not dynamically importable from the client', { timeout
 				timeout,
 				env
 			}),
-		/.*Cannot import #lib\/blah\/server\/something\/private.js into code that runs in the browser.*/gs
+		/server_only_import\nCannot import `#lib\/blah\/server\/something\/private.js` into code that runs in the browser.*/gs
 	);
 });
 
@@ -77,7 +77,7 @@ test(
 					timeout,
 					env
 				}),
-			/.*Cannot import #lib\/secret.server.js into code that runs in the browser.*/gs
+			/server_only_import\nCannot import `#lib\/secret.server.js` into code that runs in the browser.*/gs
 		);
 	}
 );
