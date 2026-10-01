@@ -1,4 +1,3 @@
-import { randomUUID } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import MagicString from 'magic-string';
@@ -37,7 +36,6 @@ export function write_all_types(config, manifest_data, root) {
 	if (!ts) return;
 
 	const types_dir = `${config.outDir}/types`;
-	const meta_data_file = `${types_dir}/route_meta_data.json`;
 
 	// empty out files that no longer need to exist
 	const routes_dir = remove_relative_parent_traversals(
@@ -49,8 +47,6 @@ export function write_all_types(config, manifest_data, root) {
 
 	if (fs.existsSync(types_dir)) {
 		for (const file of walk(types_dir)) {
-			if (file === 'route_meta_data.json') continue;
-
 			const dir = path.posix.dirname(file);
 			if (!expected_directories.has(dir)) {
 				fs.rmSync(path.join(types_dir, file), { force: true, recursive: true });
@@ -60,6 +56,7 @@ export function write_all_types(config, manifest_data, root) {
 
 	// Read/write meta data on each invocation, not once per node process,
 	// it could be invoked by another process in the meantime.
+	const meta_data_file = `${types_dir}/route_meta_data.json`;
 	const has_meta_data = fs.existsSync(meta_data_file);
 	const meta_data = has_meta_data
 		? /** @type {Record<string, string[]>} */ (JSON.parse(fs.readFileSync(meta_data_file, 'utf-8')))
@@ -132,13 +129,7 @@ export function write_all_types(config, manifest_data, root) {
 		}
 	}
 
-	const meta_data_temp_file = path.join(config.outDir, `route_meta_data.${randomUUID()}.tmp`);
-	try {
-		fs.writeFileSync(meta_data_temp_file, JSON.stringify(meta_data, null, '\t'));
-		fs.renameSync(meta_data_temp_file, meta_data_file);
-	} finally {
-		fs.rmSync(meta_data_temp_file, { force: true });
-	}
+	fs.writeFileSync(meta_data_file, JSON.stringify(meta_data, null, '\t'));
 }
 
 /**
