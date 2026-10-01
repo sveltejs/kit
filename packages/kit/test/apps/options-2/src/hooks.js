@@ -1,6 +1,6 @@
-import { Foo } from '#lib';
+import { Foo } from '$lib';
 
-/** @type {import("@sveltejs/kit/hooks").Transport} */
+/** @type {import("@sveltejs/kit").Transport} */
 export const transport = {
 	Foo: {
 		encode: (value) => value instanceof Foo && [value.message],

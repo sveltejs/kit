@@ -1,4 +1,4 @@
-import { browser } from '$app/env';
+import { browser } from '$app/environment';
 import { Foo } from './lib';
 
 /** @type {Record<string, string>} */
@@ -9,7 +9,7 @@ const mapping = {
 	'/reroute/invalidate/a': '/reroute/invalidate'
 };
 
-/** @type {import("@sveltejs/kit/hooks").Reroute} */
+/** @type {import("@sveltejs/kit").Reroute} */
 export const reroute = ({ url, fetch }) => {
 	//Try to rewrite the external url used in /reroute/external to the homepage - This should not work
 	if (browser && url.href.startsWith('https://expired.badssl.com')) {
@@ -45,7 +45,7 @@ export const reroute = ({ url, fetch }) => {
 	}
 };
 
-/** @type {import("@sveltejs/kit/hooks").Transport} */
+/** @type {import("@sveltejs/kit").Transport} */
 export const transport = {
 	Foo: {
 		encode: (value) => value instanceof Foo && [value.message],

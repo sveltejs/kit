@@ -1,3 +1,3 @@
-import { immutable } from '$app/manifest';
+import { build } from '$service-worker';
 
-console.log(immutable);
+console.log(build);

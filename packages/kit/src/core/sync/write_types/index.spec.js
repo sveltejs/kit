@@ -2,40 +2,38 @@ import { execSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
-import { assert, describe, expect, test } from 'vitest';
+import { fileURLToPath } from 'node:url';
+import { assert, expect, test } from 'vitest';
+import { rimraf } from '../../../utils/filesystem.js';
 import create_manifest_data from '../create_manifest_data/index.js';
 import { tweak_types, write_all_types } from './index.js';
-import { write_app_types } from '../write_app_types.js';
+import { write_non_ambient } from '../write_non_ambient.js';
 import { validate_config } from '../../config/index.js';
-import { write_env } from '../write_env.js';
-import { write_tsconfig } from '../write_tsconfig/index.js';
 
-const cwd = path.join(import.meta.dirname, 'test');
+const cwd = fileURLToPath(new URL('./test', import.meta.url));
 
 /**
  * @param {string} dir
  */
 function run_test(dir) {
-	fs.rmSync(path.join(cwd, dir, '.svelte-kit'), { force: true, recursive: true });
+	rimraf(path.join(cwd, dir, '.svelte-kit'));
 
 	const initial = validate_config({});
 
-	initial.files.assets = path.resolve(cwd, 'static');
-	initial.files.params = path.resolve(cwd, dir, 'params');
-	initial.files.routes = path.resolve(cwd, dir);
-	initial.outDir = path.resolve(cwd, dir, '.svelte-kit');
+	initial.kit.files.assets = path.resolve(cwd, 'static');
+	initial.kit.files.params = path.resolve(cwd, dir, 'params');
+	initial.kit.files.routes = path.resolve(cwd, dir);
+	initial.kit.outDir = path.resolve(cwd, path.join(dir, '.svelte-kit'));
 
-	const root = path.join(cwd, dir);
+	const manifest = create_manifest_data({
+		config: /** @type {import('types').ValidatedConfig} */ (initial)
+	});
 
-	const manifest = create_manifest_data(initial, root);
-
-	write_all_types(initial, manifest, root);
-	write_app_types(initial, manifest, root);
-	write_tsconfig(initial, root);
-	write_env('', {}, root);
+	write_all_types(initial, manifest);
+	write_non_ambient(initial.kit, manifest);
 }
 
-describe('Creates correct $types', () => {
+test('Creates correct $types', { timeout: 60000 }, () => {
 	// To save us from creating a real SvelteKit project for each of the tests,
 	// we first run the type generation directly for each test case, and then
 	// call `tsc` to check that the generated types are valid.
@@ -44,20 +42,17 @@ describe('Creates correct $types', () => {
 		.filter((dir) => fs.statSync(`${cwd}/${dir}`).isDirectory());
 
 	for (const dir of directories) {
-		test(dir, { timeout: 60000 }, () => {
-			run_test(dir);
-			try {
-				// we skip lib check if MATRIX_VITE is set and not 'current' because overrides for vite can cause type mismatches
-				const skipLibCheck =
-					process.env.MATRIX_VITE != null && process.env.MATRIX_VITE !== 'current';
-				execSync(`pnpm testtypes${skipLibCheck ? ' --skipLibCheck' : ''}`, {
-					cwd: path.join(cwd, dir)
-				});
-			} catch (e) {
-				console.error(/** @type {any} */ (e).stdout.toString());
-				throw e;
-			}
-		});
+		run_test(dir);
+		try {
+			// we skip lib check if MATRIX_VITE is set and not 'current' because overrides for vite can cause type mismatches
+			const skipLibCheck = process.env.MATRIX_VITE != null && process.env.MATRIX_VITE !== 'current';
+			execSync(`pnpm testtypes${skipLibCheck ? ' --skipLibCheck' : ''}`, {
+				cwd: path.join(cwd, dir)
+			});
+		} catch (e) {
+			console.error(/** @type {any} */ (e).stdout.toString());
+			throw new Error(`${dir} type tests failed`, { cause: e });
+		}
 	}
 });
 

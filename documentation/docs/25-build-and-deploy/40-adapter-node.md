@@ -8,22 +8,21 @@ A quick way to get started is by deploying a project using SvelteKit's [official
 
 ## Usage
 
-Run [`npx sv add sveltekit-adapter="adapter:node"`](/docs/cli/sveltekit-adapter), or install with `npm i -D @sveltejs/adapter-node` and add the adapter to your `vite.config.js`:
+Install with `npm i -D @sveltejs/adapter-node`, then add the adapter to your `svelte.config.js`:
 
 ```js
-// @errors: 2307 2554
-/// file: vite.config.js
+// @errors: 2307
+/// file: svelte.config.js
 import adapter from '@sveltejs/adapter-node';
-import { sveltekit } from '@sveltejs/kit/vite';
-import { defineConfig } from 'vite';
 
-export default defineConfig({
-	plugins: [
-		sveltekit({
-			adapter: adapter()
-		})
-	]
-});
+/** @type {import('@sveltejs/kit').Config} */
+const config = {
+	kit: {
+		adapter: adapter()
+	}
+};
+
+export default config;
 ```
 
 ## Deploying
@@ -36,9 +35,7 @@ You will need the output directory, the project's `package.json`, and the produc
 node build
 ```
 
-Development dependencies will be bundled into your app using [Rolldown](https://rolldown.rs/). To control whether a given package is bundled or externalised, place it in `devDependencies` or `dependencies` respectively in your `package.json`.
-
-Client assets and prerendered output are served from a list of files recorded during the build.
+Development dependencies will be bundled into your app using [Rollup](https://rollupjs.org). To control whether a given package is bundled or externalised, place it in `devDependencies` or `dependencies` respectively in your `package.json`.
 
 ### Compressing responses
 
@@ -50,7 +47,19 @@ However, if you're building a [custom server](#Custom-server) and do want to add
 
 In `dev` and `preview`, SvelteKit will read environment variables from your `.env` file (or `.env.local`, or `.env.[mode]`, [as determined by Vite](https://vitejs.dev/guide/env-and-mode.html#env-files).)
 
-In production, `.env` files are _not_ automatically loaded. To do so, use the [`--env-file`](https://nodejs.org/en/learn/command-line/how-to-read-environment-variables-from-nodejs) flag when running the built app:
+In production, `.env` files are _not_ automatically loaded. To do so, install `dotenv` in your project...
+
+```sh
+npm install dotenv
+```
+
+...and invoke it before running the built app:
+
+```sh
+node +++-r dotenv/config+++ build
+```
+
+If you use Node.js v20.6+, you can use the [`--env-file`](https://nodejs.org/en/learn/command-line/how-to-read-environment-variables-from-nodejs) flag instead:
 
 ```sh
 node +++--env-file=.env+++ build
@@ -70,34 +79,18 @@ Alternatively, the server can be configured to accept connections on a specified
 SOCKET_PATH=/tmp/socket node build
 ```
 
-### `PROTOCOL_HEADER`, `HOST_HEADER`, and `PORT_HEADER`
+### `ORIGIN`, `PROTOCOL_HEADER`, `HOST_HEADER`, and `PORT_HEADER`
 
-HTTP doesn't give SvelteKit a reliable way to know the URL that is currently being requested. By default, SvelteKit will derive the origin from the request's `host` header (and the `https` protocol, if no `PROTOCOL_HEADER` is set).
+HTTP doesn't give SvelteKit a reliable way to know the URL that is currently being requested. The simplest way to tell SvelteKit where the app is being served is to set the `ORIGIN` environment variable:
 
-If your app is served from an origin that isn't known at request time — for example because it's behind a reverse proxy that doesn't pass the `host` header, or because you want to use a canonical origin for CSRF checks that differs from the request's host — you can set the [`paths.origin`](configuration#paths) option in your `vite.config.js`:
+```sh
+ORIGIN=https://my.site node build
 
-```js
-// @errors: 2307
-/// file: vite.config.js
-import adapter from '@sveltejs/adapter-node';
-import { sveltekit } from '@sveltejs/kit/vite';
-import { defineConfig } from 'vite';
-
-export default defineConfig({
-	plugins: [
-		sveltekit({
-			adapter: adapter(),
-			paths: {
-				origin: process.env.ORIGIN
-			}
-		})
-	]
-});
+# or e.g. for local previewing and testing
+ORIGIN=http://localhost:3000 node build
 ```
 
-When `paths.origin` is not set (the default), `adapter-node` derives the origin from the request — using the `host` header (and `PROTOCOL_HEADER`/`PORT_HEADER` if set) — and sets `request.url` accordingly. Otherwise, the configured value is used as the trusted self-origin for CSRF checks on form submissions and remote function calls, and as the value of `url.origin` during prerendering.
-
-Alternatively, you can specify headers that tell SvelteKit about the request protocol and host, from which it can construct the origin URL:
+With this, a request for the `/stuff` pathname will correctly resolve to `https://my.site/stuff`. Alternatively, you can specify headers that tell SvelteKit about the request protocol and host, from which it can construct the origin URL:
 
 ```sh
 PROTOCOL_HEADER=x-forwarded-proto HOST_HEADER=x-forwarded-host node build
@@ -158,24 +151,23 @@ The number of seconds for [`keepAliveTimeout`](https://nodejs.org/api/http.html#
 The adapter can be configured with various options:
 
 ```js
-// @errors: 2307 2554
-/// file: vite.config.js
+// @errors: 2307
+/// file: svelte.config.js
 import adapter from '@sveltejs/adapter-node';
-import { sveltekit } from '@sveltejs/kit/vite';
-import { defineConfig } from 'vite';
 
-export default defineConfig({
-	plugins: [
-		sveltekit({
-			adapter: adapter({
-				// default options are shown
-				out: 'build',
-				precompress: true,
-				envPrefix: ''
-			})
+/** @type {import('@sveltejs/kit').Config} */
+const config = {
+	kit: {
+		adapter: adapter({
+			// default options are shown
+			out: 'build',
+			precompress: true,
+			envPrefix: ''
 		})
-	]
-});
+	}
+};
+
+export default config;
 ```
 
 ### out
@@ -184,7 +176,7 @@ The directory to build the server to. It defaults to `build` — i.e. `node buil
 
 ### precompress
 
-Generates `.br` and `.gz` variants of client and prerendered assets during the build. The server negotiates `Accept-Encoding` per request, preferring brotli over gzip, and each variant carries its own ETag. It defaults to `true`.
+Enables precompressing using gzip and brotli for assets and prerendered pages. It defaults to `true`.
 
 ### envPrefix
 
@@ -197,6 +189,7 @@ envPrefix: 'MY_CUSTOM_';
 ```sh
 MY_CUSTOM_HOST=127.0.0.1 \
 MY_CUSTOM_PORT=4000 \
+MY_CUSTOM_ORIGIN=https://my.site \
 node build
 ```
 
@@ -215,8 +208,8 @@ You can listen to the `sveltekit:shutdown` event which is emitted after the HTTP
 ```js
 // @errors: 2304
 process.on('sveltekit:shutdown', async (reason) => {
-	await jobs.stop();
-	await db.close();
+  await jobs.stop();
+  await db.close();
 });
 ```
 
@@ -258,7 +251,7 @@ WantedBy=sockets.target
 
 ## Custom server
 
-The build directory contains two entry points, `index.js` and `handler.js`. Running `index.js` — e.g. `node build`, if you use the default build directory — will start a server on the configured port.
+The adapter creates two files in your build directory — `index.js` and `handler.js`. Running `index.js` — e.g. `node build`, if you use the default build directory — will start a server on the configured port.
 
 Alternatively, you can import the `handler.js` file, which exports a handler suitable for use with [Express](https://github.com/expressjs/express), [Connect](https://github.com/senchalabs/connect) or [Polka](https://github.com/lukeed/polka) (or even just the built-in [`http.createServer`](https://nodejs.org/dist/latest/docs/api/http.html#httpcreateserveroptions-requestlistener)) and set up your own server:
 
@@ -283,6 +276,6 @@ app.listen(3000, () => {
 });
 ```
 
-> [!NOTE] When you use `handler.js` in a custom server, only the environment variables read by the handler itself take effect: `PROTOCOL_HEADER`, `HOST_HEADER`, `PORT_HEADER`, `ADDRESS_HEADER`, `XFF_DEPTH`, and `BODY_SIZE_LIMIT`.
+> [!NOTE] When you use `handler.js` in a custom server, only the environment variables read by the handler itself take effect: `ORIGIN`, `PROTOCOL_HEADER`, `HOST_HEADER`, `PORT_HEADER`, `ADDRESS_HEADER`, `XFF_DEPTH`, and `BODY_SIZE_LIMIT`.
 >
 > The server-lifecycle variables (`PORT`, `HOST`, `SOCKET_PATH`, `SHUTDOWN_TIMEOUT`, `IDLE_TIMEOUT`, `KEEP_ALIVE_TIMEOUT`, `HEADERS_TIMEOUT`, `LISTEN_PID`, `LISTEN_FDS`) are only honored by the default `node build` server. Implement them yourself in a custom server if you need the same behavior — for example, the snippet above listens on a hardcoded `3000` regardless of `PORT`.

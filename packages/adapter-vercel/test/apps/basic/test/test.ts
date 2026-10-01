@@ -19,18 +19,6 @@ test('API routes work', async ({ request }) => {
 	expect(data.ok).toBe(true);
 });
 
-test('route-level maxDuration is applied', async ({ request }) => {
-	const response = await request.get('/max-duration');
-	expect(response.status()).toBe(504);
-	expect(response.headers()['x-vercel-error']).toBe('FUNCTION_INVOCATION_TIMEOUT');
-});
-
-test('dynamic env is available in instrumentation', async ({ request }) => {
-	const response = await request.get('/instrumentation-env');
-	expect(response.ok()).toBe(true);
-	expect(await response.json()).toEqual({ loaded: true });
-});
-
 test('$app/server read works', async ({ request }) => {
 	const response = await request.get('/read');
 	expect(response.ok()).toBe(true);
@@ -58,20 +46,6 @@ test('ISR route serves cached response', async ({ request }) => {
 	expect(first_rendered_at).toBe(second_rendered_at);
 });
 
-test('ISR page with trailingSlash always loads without errors', async ({ page, request }) => {
-	await page.goto('/isr-trailing-slash/');
-
-	expect(new URL(page.url()).pathname).toBe('/isr-trailing-slash/');
-	await expect(page.locator('h1')).toContainText('ISR Trailing Slash Page');
-
-	const rendered_at = await page.locator('#rendered-at').textContent();
-	await page.reload();
-	await expect(page.locator('#rendered-at')).toHaveText(String(rendered_at));
-
-	const response = await request.get('/isr-trailing-slash', { maxRedirects: 0 });
-	expect(response.status()).toBe(308);
-});
-
 test('ISR dynamic route serves cached response per slug', async ({ request }) => {
 	// warm the cache for /isr/alpha
 	const first = await request.get('/isr/alpha');
@@ -93,10 +67,6 @@ test('ISR dynamic route serves cached response per slug', async ({ request }) =>
 	expect(beta.ok()).toBe(true);
 	const beta_html = await beta.text();
 	expect(beta_html).toContain('ISR: beta');
-
-	// trailing slash is normalized rather than silently served
-	const slashed = await request.get('/isr/alpha/', { maxRedirects: 0 });
-	expect(slashed.status()).toBe(308);
 });
 
 test('prerendered page works', async ({ page }) => {
@@ -145,25 +115,4 @@ test('client-side navigation to prerendered routes works', async ({ page }) => {
 
 	await page.click('a[href="/prerendered"]');
 	await expect(page.locator('h1')).toContainText('this page is prerendered');
-});
-
-test('missing immutable asset returns 404 with no-store cache-control', async ({ request }) => {
-	// https://github.com/sveltejs/kit/pull/16077 — the 404 must not inherit the
-	// immutable `max-age=31536000` header, otherwise it's cached for a year
-	const response = await request.get('/_app/immutable/chunks/nonexistent.js');
-	expect(response.status()).toBe(404);
-	expect(response.headers()['cache-control']).toBe('no-store');
-});
-
-test('valid immutable asset is still cached immutably', async ({ page, request }) => {
-	await page.goto('/');
-	// immutable assets are preloaded via <link rel="modulepreload">, not <script src>
-	const href = await page
-		.locator('link[rel="modulepreload"][href*="/_app/immutable/"]')
-		.first()
-		.getAttribute('href');
-	expect(href).toBeTruthy();
-	const response = await request.get(href!.replace(/^\.\//, '/'));
-	expect(response.ok()).toBe(true);
-	expect(response.headers()['cache-control']).toBe('public, immutable, max-age=31536000');
 });

@@ -1,6 +1,5 @@
 <script lang="ts">
-	import { isHttpError } from '@sveltejs/kit';
-	import type { RemoteLiveQuery } from '$app/server';
+	import { isHttpError, type RemoteLiveQuery } from '@sveltejs/kit';
 	import {
 		validated_query_no_args,
 		validated_query_with_arg,
@@ -162,20 +161,14 @@
 		try {
 			// @ts-expect-error
 			validate_result(await validated_query_with_arg('valid', 'ignored'));
-			validate_result(
-				// @ts-expect-error
-				await read_live(validated_live_query_with_arg('valid', 'ignored'))
-			);
-			validate_result(
-				// @ts-expect-error
-				await validated_prerendered_query_with_arg('valid', 'ignored')
-			);
+			// @ts-expect-error
+			validate_result(await read_live(validated_live_query_with_arg('valid', 'ignored')));
+			// @ts-expect-error
+			validate_result(await validated_prerendered_query_with_arg('valid', 'ignored'));
 			// @ts-expect-error
 			validate_result(await validated_command_with_arg('valid', 'ignored'));
-			validate_result(
-				// @ts-expect-error
-				await validated_batch_query_no_validation('valid', 'ignored')
-			);
+			// @ts-expect-error
+			validate_result(await validated_batch_query_no_validation('valid', 'ignored'));
 
 			status = 'success';
 		} catch {

@@ -1,0 +1,44 @@
+{
+	"useTabs": true,
+	"singleQuote": true,
+	"trailingComma": "none",
+	"printWidth": 100,
+	"plugins": ["prettier-plugin-svelte"],
+	"overrides": [
+		{
+			"files": ["*.svelte"],
+			"options": {
+				"bracketSameLine": false
+			}
+		},
+		{
+			"files": ["packages/*/README.md"],
+			"options": {
+				"useTabs": false,
+				"tabWidth": 2
+			}
+		},
+		{
+			"files": [
+				"**/CHANGELOG.md",
+				"**/vite.config.js.timestamp-*",
+				"**/.netlify/**",
+				"**/.svelte-kit/**",
+				"**/.custom-out-dir/**",
+				"**/test-results/**",
+				"**/.vercel/**",
+				"**/.wrangler/**",
+				"documentation/**/*.md",
+				"packages/package/test/fixtures/**/expected/**/*",
+				"packages/package/test/watch/expected/**/*",
+				"packages/package/test/watch/package/**/*",
+				"packages/kit/src/core/postbuild/fixtures/**/*",
+				"packages/adapter-cloudflare/test/apps/workers/dist/**/*",
+				"packages/*/test/**/build/**"
+			],
+			"options": {
+				"rangeEnd": 0
+			}
+		}
+	]
+}

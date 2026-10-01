@@ -1,77 +1,31 @@
+/** @import { RemoteForm } from '@sveltejs/kit' */
 /** @import { BinaryFormMeta, InternalRemoteFormIssue } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 
 import { DEV } from 'esm-env';
 import * as devalue from 'devalue';
-import { stream_from_iterable, text_decoder, text_encoder } from './utils.js';
+import { text_encoder } from './utils.js';
 import { noop } from '../utils/functions.js';
 import { SvelteKitError } from '@sveltejs/kit/internal';
-import * as e from '../messages/shared-errors.js';
-import * as w from '../messages/shared-warnings.js';
+
+const decoder = new TextDecoder();
 
 /**
- * Sets a parsed form field value in a nested object, mutating the original object.
+ * Sets a value in a nested object using a path string, mutating the original object
  * @param {Record<string, any>} object
- * @param {{ name: string; type: 'number' | 'boolean' | null }} field
+ * @param {string} path_string
  * @param {any} value
  */
-export function set_nested_value(object, field, value) {
-	deep_set(object, split_path(field.name), value);
-}
-
-/**
- * Separates a form field's path from the metadata encoded in its name.
- * @param {string} form_id
- * @param {string} key
- * @returns {{ name: string; type: 'number' | 'boolean' | null; is_array: boolean }}
- */
-export function parse_form_key(form_id, key) {
-	const suffix = '/' + form_id;
-	let name = key;
-	let image_coordinate = '';
-
-	if (name.startsWith('i:') && (name.endsWith(suffix + '.x') || name.endsWith(suffix + '.y'))) {
-		image_coordinate = name[name.length - 1];
-		name = name.slice(0, -2);
+export function set_nested_value(object, path_string, value) {
+	if (path_string.startsWith('n:')) {
+		path_string = path_string.slice(2);
+		value = value === '' ? undefined : parseFloat(value);
+	} else if (path_string.startsWith('b:')) {
+		path_string = path_string.slice(2);
+		value = value === 'on';
 	}
 
-	if (!name.endsWith(suffix)) {
-		e.form_field_unbound({ name });
-	}
-
-	name = name.slice(0, -suffix.length);
-
-	/** @type {'number' | 'boolean' | null} */
-	let type = null;
-
-	if (name.startsWith('n:')) {
-		name = name.slice(2);
-		type = 'number';
-	} else if (name.startsWith('b:')) {
-		name = name.slice(2);
-		type = 'boolean';
-	} else if (name.startsWith('i:')) {
-		name = name.slice(2);
-		type = 'number';
-	}
-
-	const is_array = name.endsWith('[]');
-	if (is_array) name = name.slice(0, -2);
-	if (image_coordinate) name += '.' + image_coordinate;
-
-	return { name, type, is_array };
-}
-
-/**
- * @param {'number' | 'boolean' | null} type
- * @param {any} value
- * @returns {any}
- */
-export function coerce_form_value(type, value) {
-	if (Array.isArray(value)) return value.map((value) => coerce_form_value(type, value));
-	if (type === 'number') return value === '' ? undefined : parseFloat(value);
-	if (type === 'boolean') return value === 'on';
-	return value;
+	deep_set(object, split_path(path_string), value);
 }
 
 /** Pass this to set_nested_value to delete the last part of the given path */
@@ -79,34 +33,38 @@ export const DELETE_KEY = {};
 
 /**
  * Convert `FormData` into a POJO
- * @param {string} form_id
  * @param {FormData} data
  */
-export function convert_formdata(form_id, data) {
+export function convert_formdata(data) {
 	/** @type {Record<string, any>} */
 	const result = {};
 
-	for (const field_name of data.keys()) {
+	for (let key of data.keys()) {
+		const is_array = key.endsWith('[]');
 		/** @type {any[]} */
-		const values = data.getAll(field_name);
+		let values = data.getAll(key);
 
-		const field = parse_form_key(form_id, field_name);
+		if (is_array) key = key.slice(0, -2);
 
 		// an empty `<input type="file">` will submit a non-existent file, bizarrely
-		const entries = values.filter(
+		values = values.filter(
 			(entry) => typeof entry === 'string' || entry.name !== '' || entry.size > 0
 		);
-		if (entries.length === 0 && !field.is_array) continue;
+		if (values.length === 0 && !is_array) continue;
 
-		if (entries.length > 1 && !field.is_array) {
-			e.form_field_duplicate({ name: field.name, count: String(entries.length) });
+		if (key.startsWith('n:')) {
+			key = key.slice(2);
+			values = values.map((v) => (v === '' ? undefined : parseFloat(/** @type {string} */ (v))));
+		} else if (key.startsWith('b:')) {
+			key = key.slice(2);
+			values = values.map((v) => v === 'on');
 		}
 
-		set_nested_value(
-			result,
-			field,
-			coerce_form_value(field.type, field.is_array ? entries : entries[0])
-		);
+		if (values.length > 1 && !is_array) {
+			throw new Error(`Form cannot contain duplicated keys — "${key}" has ${values.length} values`);
+		}
+
+		set_nested_value(result, key, is_array ? values : values[0]);
 	}
 
 	return result;
@@ -182,13 +140,12 @@ export function serialize_binary_form(data, meta) {
 
 /**
  * @param {Request} request
- * @param {string} form_id
  * @returns {Promise<{ data: Record<string, any>; meta: BinaryFormMeta; form_data: FormData | null }>}
  */
-export async function deserialize_binary_form(request, form_id) {
+export async function deserialize_binary_form(request) {
 	if (request.headers.get('content-type') !== BINARY_FORM_CONTENT_TYPE) {
 		const form_data = await request.formData();
-		return { data: convert_formdata(form_id, form_data), meta: {}, form_data };
+		return { data: convert_formdata(form_data), meta: {}, form_data };
 	}
 	if (!request.body) {
 		throw deserialize_error('no body');
@@ -208,9 +165,7 @@ export async function deserialize_binary_form(request, form_id) {
 
 		let i = chunks.length;
 		while (i <= index) {
-			// chain reads so only one is ever pending — workerd forbids concurrent reads
-			const previous = chunks[i - 1] ?? Promise.resolve(undefined);
-			chunks[i] = previous.then(() => reader.read()).then((chunk) => chunk.value);
+			chunks[i] = reader.read().then((chunk) => chunk.value);
 			i++;
 		}
 		return chunks[index];
@@ -222,23 +177,47 @@ export async function deserialize_binary_form(request, form_id) {
 	 * @returns {Promise<Uint8Array | null>}
 	 */
 	async function get_buffer(offset, length) {
-		/** @type {Uint8Array<ArrayBuffer>[]} */
-		const parts = [];
-		let total = 0;
-		for await (const part of read_range(get_chunk, offset, length)) {
-			parts.push(part);
-			total += part.byteLength;
-		}
-		if (total < length || parts.length === 0) return null;
-		// If the buffer is completely contained in one chunk, return the subarray as-is
-		if (parts.length === 1) return parts[0];
+		/** @type {Uint8Array} */
+		let start_chunk;
+		let chunk_start = 0;
+		/** @type {number} */
+		let chunk_index;
+		for (chunk_index = 0; ; chunk_index++) {
+			const chunk = await get_chunk(chunk_index);
+			if (!chunk) return null;
 
-		const buffer = new Uint8Array(length);
-		let cursor = 0;
-		for (const part of parts) {
-			buffer.set(part, cursor);
-			cursor += part.byteLength;
+			const chunk_end = chunk_start + chunk.byteLength;
+			// If this chunk contains the target offset
+			if (offset >= chunk_start && offset < chunk_end) {
+				start_chunk = chunk;
+				break;
+			}
+			chunk_start = chunk_end;
 		}
+		// If the buffer is completely contained in one chunk, do a subarray
+		if (offset + length <= chunk_start + start_chunk.byteLength) {
+			return start_chunk.subarray(offset - chunk_start, offset + length - chunk_start);
+		}
+		// Otherwise, copy the data into a new buffer
+		const chunks = [start_chunk.subarray(offset - chunk_start)];
+		let cursor = start_chunk.byteLength - offset + chunk_start;
+		while (cursor < length) {
+			chunk_index++;
+			let chunk = await get_chunk(chunk_index);
+			if (!chunk) return null;
+			if (chunk.byteLength > length - cursor) {
+				chunk = chunk.subarray(0, length - cursor);
+			}
+			chunks.push(chunk);
+			cursor += chunk.byteLength;
+		}
+		const buffer = new Uint8Array(length);
+		cursor = 0;
+		for (const chunk of chunks) {
+			buffer.set(chunk, cursor);
+			cursor += chunk.byteLength;
+		}
+
 		return buffer;
 	}
 
@@ -269,7 +248,7 @@ export async function deserialize_binary_form(request, form_id) {
 		const file_offsets_buffer = await get_buffer(HEADER_BYTES + data_length, file_offsets_length);
 		if (!file_offsets_buffer) throw deserialize_error('file offset table too short');
 
-		const parsed_offsets = JSON.parse(text_decoder.decode(file_offsets_buffer));
+		const parsed_offsets = JSON.parse(decoder.decode(file_offsets_buffer));
 
 		if (
 			!Array.isArray(parsed_offsets) ||
@@ -284,16 +263,14 @@ export async function deserialize_binary_form(request, form_id) {
 
 	/** @type {Array<{ offset: number, size: number }>} */
 	const file_spans = [];
-	const [data, meta] = devalue.parse(text_decoder.decode(data_buffer), {
+	const [data, meta] = devalue.parse(decoder.decode(data_buffer), {
 		File: ([name, type, size, last_modified, index]) => {
 			if (
 				typeof name !== 'string' ||
 				typeof type !== 'string' ||
-				!Number.isSafeInteger(size) ||
-				size < 0 ||
-				!Number.isSafeInteger(last_modified) ||
-				!Number.isSafeInteger(index) ||
-				index < 0
+				typeof size !== 'number' ||
+				typeof last_modified !== 'number' ||
+				typeof index !== 'number'
 			) {
 				throw deserialize_error('invalid file metadata');
 			}
@@ -354,32 +331,6 @@ export async function deserialize_binary_form(request, form_id) {
  */
 function deserialize_error(message) {
 	return new SvelteKitError(400, 'Bad Request', `Could not deserialize binary form: ${message}`);
-}
-
-/**
- * Yields the chunks that make up the byte range `[offset, offset + length)`,
- * trimmed to its boundaries. Ends early if the underlying data runs out.
- * @param {(index: number) => Promise<Uint8Array<ArrayBuffer> | undefined>} get_chunk
- * @param {number} offset
- * @param {number} length
- * @returns {AsyncGenerator<Uint8Array<ArrayBuffer>, void, void>}
- */
-async function* read_range(get_chunk, offset, length) {
-	let chunk_start = 0;
-	for (let index = 0; ; index++) {
-		const chunk = await get_chunk(index);
-		if (!chunk) return;
-
-		const chunk_end = chunk_start + chunk.byteLength;
-		if (chunk_end > offset) {
-			yield chunk.subarray(
-				Math.max(0, offset - chunk_start),
-				Math.min(chunk.byteLength, offset + length - chunk_start)
-			);
-			if (offset + length <= chunk_end) return;
-		}
-		chunk_start = chunk_end;
-	}
 }
 
 /** @implements {File} */
@@ -452,21 +403,57 @@ class LazyFile {
 		return file;
 	}
 	stream() {
-		const range = read_range(this.#get_chunk, this.#offset, this.size);
-		const size = this.size;
-		return stream_from_iterable(
-			(async function* () {
-				let cursor = 0;
-				for await (const chunk of range) {
-					cursor += chunk.byteLength;
-					yield chunk;
+		let cursor = 0;
+		let chunk_index = 0;
+		return new ReadableStream({
+			start: async (controller) => {
+				let chunk_start = 0;
+				/** @type {Uint8Array} */
+				let start_chunk;
+				for (chunk_index = 0; ; chunk_index++) {
+					const chunk = await this.#get_chunk(chunk_index);
+					if (!chunk) return null;
+
+					const chunk_end = chunk_start + chunk.byteLength;
+					// If this chunk contains the target offset
+					if (this.#offset >= chunk_start && this.#offset < chunk_end) {
+						start_chunk = chunk;
+						break;
+					}
+					chunk_start = chunk_end;
 				}
-				if (cursor < size) throw new Error('incomplete file data');
-			})()
-		);
+				// If the buffer is completely contained in one chunk, do a subarray
+				if (this.#offset + this.size <= chunk_start + start_chunk.byteLength) {
+					controller.enqueue(
+						start_chunk.subarray(this.#offset - chunk_start, this.#offset + this.size - chunk_start)
+					);
+					controller.close();
+				} else {
+					controller.enqueue(start_chunk.subarray(this.#offset - chunk_start));
+					cursor = start_chunk.byteLength - this.#offset + chunk_start;
+				}
+			},
+			pull: async (controller) => {
+				chunk_index++;
+				let chunk = await this.#get_chunk(chunk_index);
+				if (!chunk) {
+					controller.error('incomplete file data');
+					controller.close();
+					return;
+				}
+				if (chunk.byteLength > this.size - cursor) {
+					chunk = chunk.subarray(0, this.size - cursor);
+				}
+				controller.enqueue(chunk);
+				cursor += chunk.byteLength;
+				if (cursor >= this.size) {
+					controller.close();
+				}
+			}
+		});
 	}
 	async text() {
-		return text_decoder.decode(await this.arrayBuffer());
+		return decoder.decode(await this.arrayBuffer());
 	}
 }
 
@@ -477,7 +464,7 @@ const path_regex = /^[a-zA-Z_$]\w*(\.[a-zA-Z_$]\w*|\[\d+\])*$/;
  */
 export function split_path(path) {
 	if (!path_regex.test(path)) {
-		e.form_field_invalid_name({ name: path });
+		throw new Error(`Invalid path ${path}`);
 	}
 
 	return path.split(/\.|\[|\]/).filter(Boolean);
@@ -489,7 +476,10 @@ export function split_path(path) {
  */
 function check_prototype_pollution(key) {
 	if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
-		e.form_field_forbidden_key({ key });
+		throw new Error(
+			`Invalid key "${key}"` +
+				(DEV ? ': This key is not allowed to prevent prototype pollution.' : '')
+		);
 	}
 }
 
@@ -512,7 +502,7 @@ export function deep_set(object, keys, value) {
 		const exists = inner != null;
 
 		if (exists && is_array !== Array.isArray(inner)) {
-			e.form_field_array_conflict({ key: keys[i + 1] });
+			throw new Error(`Invalid array key ${keys[i + 1]}`);
 		}
 
 		if (!exists) {
@@ -572,7 +562,7 @@ export function normalize_issue(issue, server = false) {
  */
 export function flatten_issues(issues) {
 	/** @type {Record<string, InternalRemoteFormIssue[]>} */
-	const result = Object.create(null);
+	const result = {};
 
 	for (const issue of issues) {
 		(result.$ ??= []).push(issue);
@@ -601,54 +591,32 @@ export function flatten_issues(issues) {
  * @param {(string | number)[]} path
  * @returns {any}
  */
+
 export function deep_get(object, path) {
 	let current = object;
 	for (const key of path) {
-		if (current === null || typeof current !== 'object' || !Object.hasOwn(current, key)) {
-			return undefined;
+		if (current == null || typeof current !== 'object') {
+			return current;
 		}
-
 		current = current[key];
 	}
 	return current;
 }
 
-/** name prefixes that tell the server which type to coerce a submitted string to */
-const type_prefixes = /** @type {Record<string, string | undefined>} */ ({
-	number: 'n:',
-	boolean: 'b:'
-});
-
 /**
- * adds props; a function becomes a getter that is computed each time it is read
- * @param {Record<string, any>} base_props
- * @param {Record<string, unknown>} props
- */
-function add_props(base_props, props) {
-	for (const prop in props) {
-		const value = props[prop];
-		if (typeof value === 'function') {
-			Object.defineProperty(base_props, prop, {
-				enumerable: true,
-				get: /** @type {() => unknown} */ (value)
-			});
-		} else {
-			base_props[prop] = value;
-		}
-	}
-	return base_props;
-}
-
-/**
- * @param {string} type
+ *
+ * @param {string} field_type
  * @param {boolean} is_array
  * @param {unknown} input_value
  */
-function get_type_prefix(type, is_array, input_value) {
-	if (type === 'number' || type === 'range') return 'n:';
-	if (type === 'image') return 'i:';
-	if (type === 'checkbox' && !is_array) return 'b:';
-	if (type === 'hidden' || type === 'submit') return type_prefixes[typeof input_value] ?? '';
+function get_type_prefix(field_type, is_array, input_value) {
+	if (field_type === 'number' || field_type === 'range') return 'n:';
+	if (field_type === 'checkbox' && !is_array) return 'b:';
+	if (field_type === 'hidden' || field_type === 'submit') {
+		const input_type = typeof input_value;
+		if (input_type === 'number') return 'n:';
+		if (input_type === 'boolean') return 'b:';
+	}
 	return '';
 }
 
@@ -660,10 +628,6 @@ function get_type_prefix(type, is_array, input_value) {
  */
 function deep_clone(value) {
 	if (value !== null && typeof value === 'object') {
-		if (value instanceof Date) {
-			return new Date(value.getTime());
-		}
-
 		if (value instanceof File) {
 			return value;
 		}
@@ -684,231 +648,239 @@ function deep_clone(value) {
 	return value;
 }
 
-const warned_sites = new Set();
-
-// keyed by the stack, so every place that enumerates warns once with its call site
-const warn_no_keys = () => {
-	// Capture the original call site, not a generated diagnostic or factory's frames.
-	const error = new Error();
-	if (warned_sites.has(error.stack)) return;
-	warned_sites.add(error.stack);
-	w.form_fields_enumerated();
-};
-
-// fields are created as they are accessed, so there is nothing to enumerate
-/** @type {ProxyHandler<object> | null} */
-const dev_traps = DEV
-	? {
-			has(target, prop) {
-				if (typeof prop !== 'symbol') warn_no_keys();
-				return prop in target;
-			},
-			ownKeys(target) {
-				warn_no_keys();
-				return Reflect.ownKeys(target);
-			}
-		}
-	: null;
-
-/** @param {InternalRemoteFormIssue} issue */
-const public_issue = (issue) => ({ path: issue.path, message: issue.message });
-
-/** @typedef {{
- * 	form_id: string,
- * 	get: () => Record<string, any>,
- * 	set: (path: (string | number)[], value: any) => void,
- * 	get_issues: (path?: (string | number)[], all?: boolean) => Record<string, InternalRemoteFormIssue[]>,
- * 	get_touched: () => Record<string, boolean>,
- * 	get_dirty: () => Record<string, boolean>
- * }} FieldContext */
-
-/**
- * @param {FieldContext} context
- * @param {(string | number)[]} path
- * @param {string} prop
- * @returns {any} a method of the field at `path`, or undefined for a nested field
- */
-function create_field_method(context, path, prop) {
-	switch (prop) {
-		case 'set':
-			return (/** @type {any} */ value) => {
-				context.set(path, value);
-				return value;
-			};
-		case 'value':
-			return () => deep_clone(deep_get(context.get(), path));
-		case 'issues':
-		case 'allIssues': {
-			const key = build_path_string(path);
-			const all = prop === 'allIssues';
-
-			return () => {
-				const issues = context.get_issues(path, all)[key === '' ? '$' : key];
-				if (all) return issues?.map(public_issue);
-				const own = issues?.filter((issue) => issue.name === key).map(public_issue);
-				return own?.length ? own : undefined;
-			};
-		}
-		case 'touched':
-		case 'dirty': {
-			const key = build_path_string(path);
-
-			return () => {
-				const object = prop === 'dirty' ? context.get_dirty() : context.get_touched();
-				if (Object.hasOwn(object, key)) return true;
-				for (const candidate in object) {
-					if (!Object.hasOwn(object, candidate)) continue;
-					if (key === '') return true;
-					if (!candidate.startsWith(key)) continue;
-					const next = candidate[key.length];
-					if (next === '.' || next === '[') return true;
-				}
-				return false;
-			};
-		}
-		case 'as': {
-			const key = build_path_string(path);
-
-			/**
-			 * the field's value, or `fallback` until the field has been edited
-			 * (without a fallback there is nothing to suppress, so `dirty` is not read)
-			 * @param {unknown} [fallback]
-			 */
-			const read = (fallback) =>
-				deep_get(context.get(), path) ??
-				(fallback !== undefined && Object.hasOwn(context.get_dirty(), key) ? undefined : fallback);
-
-			/**
-			 * @param {string} type
-			 * @param {unknown} [input_value]
-			 * @param {boolean} [checked]
-			 */
-			return (type, input_value, checked) => {
-				const is_array =
-					type === 'file multiple' ||
-					type === 'select multiple' ||
-					(type === 'checkbox' && typeof input_value === 'string');
-
-				const type_prefix = get_type_prefix(type, is_array, input_value);
-
-				// Base properties for all input types
-				/** @type {Record<string, any>} */
-				const base_props = {
-					name: type_prefix + key + (is_array ? '[]' : '') + '/' + context.form_id,
-					get 'aria-invalid'() {
-						const issues = context.get_issues();
-						return key in issues ? 'true' : undefined;
-					}
-				};
-
-				// Add type attribute only for non-text inputs and non-select elements
-				if (type !== 'text' && type !== 'select' && type !== 'select multiple') {
-					base_props.type = type === 'file multiple' ? 'file' : type;
-				}
-
-				// Handle submit and hidden inputs
-				if (type === 'submit' || type === 'hidden') {
-					if (DEV) {
-						if (input_value === null || input_value === undefined) {
-							e.form_input_missing_value({ type: `\`${type}\`` });
-						}
-					}
-
-					return add_props(base_props, {
-						value: typeof input_value === 'boolean' ? (input_value ? 'on' : 'off') : input_value
-					});
-				}
-
-				// Handle select inputs
-				if (type === 'select' || type === 'select multiple') {
-					return add_props(base_props, {
-						multiple: is_array,
-						value: () => {
-							const value = read(input_value);
-							// copied, so the state array can't be edited through the props
-							return Array.isArray(value) ? [...value] : value;
-						}
-					});
-				}
-
-				// Handle checkbox inputs
-				if (type === 'checkbox' || type === 'radio') {
-					// radio and checkbox array inputs take their option as the second argument
-					// and whether it is checked as the third, a single checkbox only the latter
-					const has_option = type === 'radio' || is_array;
-
-					if (DEV && has_option && !input_value) {
-						e.form_input_missing_value({ type: type === 'radio' ? 'Radio' : 'Checkbox array' });
-					}
-
-					if (has_option) {
-						base_props.value = input_value ?? 'on';
-					} else {
-						checked = /** @type {boolean | undefined} */ (input_value);
-					}
-
-					return add_props(base_props, {
-						defaultChecked: checked,
-						checked: () => {
-							const value = read();
-							if (value == null) return read(checked);
-							if (type === 'radio') return value === input_value;
-							if (is_array) return /** @type {unknown[]} */ (value).includes(input_value);
-							return value;
-						}
-					});
-				}
-
-				// Handle file inputs
-				if (type === 'file' || type === 'file multiple') {
-					return add_props(base_props, {
-						multiple: is_array,
-						files: () => {
-							const value = read();
-							const files = value instanceof File ? [value] : value;
-							if (!Array.isArray(files) || !files.every((f) => f instanceof File)) return null;
-
-							// a FileList-like object where DataTransfer does not exist
-							if (typeof DataTransfer === 'undefined') {
-								return Object.assign({ length: files.length }, files);
-							}
-
-							const transfer = new DataTransfer();
-							for (const file of files) transfer.items.add(file);
-							return transfer.files;
-						}
-					});
-				}
-
-				if (type === 'image') return base_props;
-
-				// Handle all other input types (text, number, etc.)
-				return add_props(base_props, {
-					defaultValue: input_value,
-					value: () => String(read(input_value) ?? '')
-				});
-			};
-		}
-	}
-}
-
 /**
  * Creates a proxy-based field accessor for form data
- * @param {FieldContext} context
  * @param {any} target - Function or empty POJO
+ * @param {() => Record<string, any>} get_input - Function to get current input data
+ * @param {(path: (string | number)[], value: any) => void} set_input - Function to set input data
+ * @param {(path?: (string | number)[], all?: boolean) => Record<string, InternalRemoteFormIssue[]>} get_issues - Function to get current issues
  * @param {(string | number)[]} path - Current access path
  * @returns {any} Proxy object with name(), value(), and issues() methods
  */
-export function create_field_proxy(context, target = {}, path = []) {
+export function create_field_proxy(target, get_input, set_input, get_issues, path = []) {
+	const get_value = () => {
+		const value = deep_get(get_input(), path);
+		return deep_clone(value);
+	};
+
 	return new Proxy(target, {
-		...dev_traps,
 		get(target, prop) {
 			if (typeof prop === 'symbol') return target[prop];
 
-			// array access like jobs[0]
-			const next = [...path, /^\d+$/.test(prop) ? parseInt(prop, 10) : prop];
+			// Handle array access like jobs[0]
+			if (/^\d+$/.test(prop)) {
+				return create_field_proxy({}, get_input, set_input, get_issues, [
+					...path,
+					parseInt(prop, 10)
+				]);
+			}
 
-			return create_field_proxy(context, create_field_method(context, path, prop), next);
+			const key = build_path_string(path);
+
+			if (prop === 'set') {
+				const set_func = function (/** @type {any} */ newValue) {
+					set_input(path, newValue);
+					return newValue;
+				};
+				return create_field_proxy(set_func, get_input, set_input, get_issues, [...path, prop]);
+			}
+
+			if (prop === 'value') {
+				return create_field_proxy(get_value, get_input, set_input, get_issues, [...path, prop]);
+			}
+
+			if (prop === 'issues' || prop === 'allIssues') {
+				const issues_func = () => {
+					const all_issues = get_issues(path, prop === 'allIssues')[key === '' ? '$' : key];
+
+					if (prop === 'allIssues') {
+						return all_issues?.map((issue) => ({
+							path: issue.path,
+							message: issue.message
+						}));
+					}
+
+					const issues = all_issues
+						?.filter((issue) => issue.name === key)
+						?.map((issue) => ({
+							path: issue.path,
+							message: issue.message
+						}));
+
+					return issues?.length ? issues : undefined;
+				};
+
+				return create_field_proxy(issues_func, get_input, set_input, get_issues, [...path, prop]);
+			}
+
+			if (prop === 'as') {
+				/**
+				 * @param {string} type
+				 * @param {unknown} [input_value]
+				 */
+				const as_func = (type, input_value) => {
+					const is_array =
+						type === 'file multiple' ||
+						type === 'select multiple' ||
+						(type === 'checkbox' && typeof input_value === 'string');
+
+					const prefix = get_type_prefix(type, is_array, input_value);
+
+					// Base properties for all input types
+					/** @type {Record<string, any>} */
+					const base_props = {
+						name: prefix + key + (is_array ? '[]' : ''),
+						get 'aria-invalid'() {
+							const issues = get_issues();
+							return key in issues ? 'true' : undefined;
+						}
+					};
+
+					// Add type attribute only for non-text inputs and non-select elements
+					if (type !== 'text' && type !== 'select' && type !== 'select multiple') {
+						base_props.type = type === 'file multiple' ? 'file' : type;
+					}
+
+					// Handle submit and hidden inputs
+					if (type === 'submit' || type === 'hidden') {
+						if (DEV) {
+							if (input_value === null || input_value === undefined) {
+								throw new Error(`\`${type}\` inputs must have a value`);
+							}
+						}
+
+						const value =
+							typeof input_value === 'boolean' ? (input_value ? 'on' : 'off') : input_value;
+
+						return Object.defineProperties(base_props, {
+							value: { value, enumerable: true }
+						});
+					}
+
+					// Handle select inputs
+					if (type === 'select' || type === 'select multiple') {
+						return Object.defineProperties(base_props, {
+							multiple: { value: is_array, enumerable: true },
+							value: {
+								enumerable: true,
+								get() {
+									return get_value() ?? input_value;
+								}
+							}
+						});
+					}
+
+					// Handle checkbox inputs
+					if (type === 'checkbox' || type === 'radio') {
+						if (DEV) {
+							if (type === 'radio' && !input_value) {
+								throw new Error('Radio inputs must have a value');
+							}
+
+							if (type === 'checkbox' && is_array && !input_value) {
+								throw new Error('Checkbox array inputs must have a value');
+							}
+						}
+
+						if (type === 'checkbox' && !is_array) {
+							return Object.defineProperties(base_props, {
+								defaultChecked: {
+									enumerable: true,
+									get() {
+										return input_value;
+									}
+								},
+								checked: {
+									enumerable: true,
+									get() {
+										return get_value() ?? input_value;
+									}
+								}
+							});
+						}
+
+						return Object.defineProperties(base_props, {
+							value: { value: input_value ?? 'on', enumerable: true },
+							checked: {
+								enumerable: true,
+								get() {
+									const value = get_value();
+
+									if (type === 'radio') {
+										return value === input_value;
+									}
+
+									return (value ?? []).includes(input_value);
+								}
+							}
+						});
+					}
+
+					// Handle file inputs
+					if (type === 'file' || type === 'file multiple') {
+						return Object.defineProperties(base_props, {
+							multiple: { value: is_array, enumerable: true },
+							files: {
+								enumerable: true,
+								get() {
+									const value = get_value();
+
+									// Convert File/File[] to FileList-like object
+									if (value instanceof File) {
+										// In browsers, we can create a proper FileList using DataTransfer
+										if (typeof DataTransfer !== 'undefined') {
+											const fileList = new DataTransfer();
+											fileList.items.add(value);
+											return fileList.files;
+										}
+										// Fallback for environments without DataTransfer
+										return { 0: value, length: 1 };
+									}
+
+									if (Array.isArray(value) && value.every((f) => f instanceof File)) {
+										if (typeof DataTransfer !== 'undefined') {
+											const fileList = new DataTransfer();
+											value.forEach((file) => fileList.items.add(file));
+											return fileList.files;
+										}
+										// Fallback for environments without DataTransfer
+										/** @type {any} */
+										const fileListLike = { length: value.length };
+										value.forEach((file, index) => {
+											fileListLike[index] = file;
+										});
+										return fileListLike;
+									}
+
+									return null;
+								}
+							}
+						});
+					}
+
+					// Handle all other input types (text, number, etc.)
+					return Object.defineProperties(base_props, {
+						defaultValue: {
+							enumerable: true,
+							get() {
+								return input_value;
+							}
+						},
+						value: {
+							enumerable: true,
+							get() {
+								const value = get_value() ?? input_value;
+								return value != null ? String(value) : '';
+							}
+						}
+					});
+				};
+
+				return create_field_proxy(as_func, get_input, set_input, get_issues, [...path, 'as']);
+			}
+
+			// Handle property access (nested fields)
+			return create_field_proxy({}, get_input, set_input, get_issues, [...path, prop]);
 		}
 	});
 }
@@ -930,4 +902,43 @@ export function build_path_string(path) {
 	}
 
 	return result;
+}
+
+/**
+ * @param {RemoteForm<any, any>} instance
+ * @deprecated remove in 3.0
+ */
+export function throw_on_old_property_access(instance) {
+	Object.defineProperty(instance, 'field', {
+		value: (/** @type {string} */ name) => {
+			const new_name = name.endsWith('[]') ? name.slice(0, -2) : name;
+			throw new Error(
+				`\`form.field\` has been removed: Instead of \`<input name={form.field('${name}')} />\` do \`<input {...form.fields.${new_name}.as(type)} />\``
+			);
+		}
+	});
+
+	for (const property of ['input', 'issues']) {
+		Object.defineProperty(instance, property, {
+			get() {
+				const new_name = property === 'issues' ? 'issues' : 'value';
+				return new Proxy(
+					{},
+					{
+						get(_, prop) {
+							const prop_string = typeof prop === 'string' ? prop : String(prop);
+							const old =
+								prop_string.includes('[') || prop_string.includes('.')
+									? `['${prop_string}']`
+									: `.${prop_string}`;
+							const replacement = `.${prop_string}.${new_name}()`;
+							throw new Error(
+								`\`form.${property}\` has been removed: Instead of \`form.${property}${old}\` write \`form.fields${replacement}\``
+							);
+						}
+					}
+				);
+			}
+		});
+	}
 }

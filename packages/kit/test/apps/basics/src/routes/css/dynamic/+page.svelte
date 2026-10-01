@@ -4,7 +4,7 @@
 </script>
 
 <button
-	onclick={async () => {
+	on:click={async () => {
 		Dynamic = (await import('./Dynamic.svelte')).default;
 	}}>load component</button
 >

@@ -1,6 +1,5 @@
 import * as path from 'node:path';
 import { sveltekit } from '@sveltejs/kit/vite';
-import adapter from '../../../../../adapter-auto/index.js';
 
 /** @type {import('vite').UserConfig} */
 const config = {
@@ -12,15 +11,7 @@ const config = {
 
 	logLevel: 'silent',
 
-	plugins: [
-		sveltekit({
-			adapter: adapter(),
-
-			experimental: {
-				remoteFunctions: true
-			}
-		})
-	],
+	plugins: [sveltekit()],
 
 	server: {
 		fs: {

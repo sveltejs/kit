@@ -1,34 +1,24 @@
-import fs from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
 import { expect, test } from 'vitest';
 import { validate_config } from '../../core/config/index.js';
-import { posixify } from '../../utils/os.js';
+import { posixify } from '../../utils/filesystem.js';
 import { dedent } from '../../core/sync/utils.js';
-import {
-	config_snippet,
-	error_for_missing_config,
-	get_config_aliases,
-	normalize_id,
-	is_remote_module,
-	remote_module_pattern,
-	server_only_directory_pattern,
-	server_only_module_pattern
-} from './utils.js';
-import { app_server, app_env_private } from './module_ids.js';
+import { get_config_aliases, error_for_missing_config } from './utils.js';
 
 test('transform kit.alias to resolve.alias', () => {
 	const config = validate_config({
-		alias: {
-			simpleKey: 'simple/value',
-			key: 'value',
-			'key/*': 'value/*',
-			$regexChar: 'windows\\path',
-			'$regexChar/*': 'windows\\path\\*'
+		kit: {
+			alias: {
+				simpleKey: 'simple/value',
+				key: 'value',
+				'key/*': 'value/*',
+				$regexChar: 'windows\\path',
+				'$regexChar/*': 'windows\\path\\*'
+			}
 		}
 	});
 
-	const aliases = get_config_aliases(config, '.');
+	const aliases = get_config_aliases(config.kit);
 
 	const transformed = aliases.map((entry) => {
 		const replacement = posixify(path.relative('.', entry.replacement));
@@ -40,6 +30,7 @@ test('transform kit.alias to resolve.alias', () => {
 	});
 
 	expect(transformed).toEqual([
+		{ find: '$lib', replacement: 'src/lib' },
 		{ find: 'simpleKey', replacement: 'simple/value' },
 		{ find: /^key$/.toString(), replacement: 'value' },
 		{ find: /^key\/(.+)$/.toString(), replacement: 'value/$1' },
@@ -48,120 +39,45 @@ test('transform kit.alias to resolve.alias', () => {
 	]);
 });
 
-test('normalizes special module ids that live inside the cwd', () => {
-	// in a user's app, kit is installed within the project root, so the
-	// special module ids must be recognized before the cwd is removed
-	const cwd = app_server.slice(0, app_server.indexOf('/src/runtime'));
-
-	expect(normalize_id(app_server, [], cwd)).toBe('$app/server');
-	expect(normalize_id(app_env_private, [], cwd)).toBe('$app/env/private');
-});
-
-test('only removes the cwd from ids inside it', () => {
-	expect(normalize_id('/app/src/module.js', [], '/app')).toBe('src/module.js');
-	expect(normalize_id('/outside/module.js', [], '/app')).toBe('/outside/module.js');
-	// a sibling directory sharing the cwd as a string prefix is still outside it
-	expect(normalize_id('/app-shared/module.js', [], '/app')).toBe('/app-shared/module.js');
-});
-
-test('recognizes server-only module filenames', () => {
-	expect(server_only_module_pattern.test('dir/server.js')).toBe(true);
-	expect(server_only_module_pattern.test('dir/module.server.ts')).toBe(true);
-	expect(server_only_module_pattern.test('dir/module.server.test.js')).toBe(true);
-	expect(server_only_module_pattern.test('dir/server.test.ts')).toBe(true);
-	expect(server_only_module_pattern.test('dir/module.serverish.js')).toBe(false);
-	expect(server_only_module_pattern.test('dir/server/module.js')).toBe(false);
-	expect(server_only_directory_pattern.test('dir/server/module.js')).toBe(true);
-});
-
-test('recognizes remote module filenames', () => {
-	expect(remote_module_pattern.test('dir/remote.js')).toBe(true);
-	expect(remote_module_pattern.test('dir/module.remote.ts')).toBe(true);
-	expect(remote_module_pattern.test('dir/module.remote.test.js')).toBe(true);
-	expect(remote_module_pattern.test('dir/module.remotely.js')).toBe(false);
-	expect(remote_module_pattern.test('dir/remote/module.js')).toBe(false);
-});
-
-test('recognizes remote modules', () => {
-	const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'sveltekit-remote-module-'));
-
-	/**
-	 * @param {string} directory
-	 * @param {Record<string, unknown>} contents
-	 * @returns {void}
-	 */
-	function write_package_json(directory, contents) {
-		fs.mkdirSync(directory, { recursive: true });
-		fs.writeFileSync(path.join(directory, 'package.json'), JSON.stringify(contents));
-	}
-
-	try {
-		expect(is_remote_module(path.join(temp, 'src', 'remote.js'))).toBe(true);
-		expect(is_remote_module(path.join(temp, 'src', 'remotely.js'))).toBe(false);
-		expect(is_remote_module('C:\\app\\src\\remote.js')).toBe(true);
-
-		const plain = path.join(temp, 'node_modules', 'plain');
-		write_package_json(plain, {
-			dependencies: {
-				'@sveltejs/kit': '*'
-			}
-		});
-		expect(is_remote_module(path.join(plain, 'dist', 'remote.js'))).toBe(false);
-
-		const with_peer = path.join(temp, 'node_modules', 'with-peer');
-		write_package_json(with_peer, {
-			peerDependencies: {
-				'@sveltejs/kit': '*'
-			}
-		});
-		expect(is_remote_module(path.join(with_peer, 'dist', 'remote.js'))).toBe(true);
-
-		const with_stub = path.join(temp, 'node_modules', 'with-stub');
-		write_package_json(with_stub, {
-			peerDependencies: {
-				'@sveltejs/kit': '*'
-			}
-		});
-		write_package_json(path.join(with_stub, 'dist'), {});
-		expect(is_remote_module(path.join(with_stub, 'dist', 'jwks', 'remote.js'))).toBe(true);
-
-		const pnpm_package = path.join(temp, 'node_modules', '.pnpm', 'x@1', 'node_modules', 'x');
-		write_package_json(pnpm_package, {
-			peerDependencies: {
-				'@sveltejs/kit': '*'
-			}
-		});
-		expect(is_remote_module(path.join(pnpm_package, 'dist', 'remote.js'))).toBe(true);
-	} finally {
-		fs.rmSync(temp, { recursive: true, force: true });
-	}
-});
-
-test('error_for_missing_config throws config_feature_disabled', () => {
-	expect(() =>
-		error_for_missing_config('remote functions', 'experimental.remoteFunctions', 'true')
-	).toThrowKitError('config_feature_disabled', {
-		contains: ['remote functions', config_snippet('experimental.remoteFunctions', 'true')]
-	});
-});
-
-test.each([
-	['adapter', 'true', 'adapter: true'],
-	['someFeature', 'false', 'someFeature: false'],
-	['special', '{ enabled: true }', 'special: { enabled: true }'],
-	[
-		'experimental.remoteFunctions',
-		'true',
+test('error_for_missing_config - simple single level config', () => {
+	expect(() => error_for_missing_config('feature', 'kit.adapter', 'true')).toThrow(
 		dedent`
-			experimental: {
-			  remoteFunctions: true
+			To enable feature, add the following to your \`svelte.config.js\`:
+
+			kit: {
+			  adapter: true
 			}
 		`
-	],
-	[
-		'a.b.c.d.e',
-		'"value"',
+	);
+});
+
+test('error_for_missing_config - nested config', () => {
+	expect(() =>
+		error_for_missing_config(
+			'instrumentation.server.js',
+			'kit.experimental.instrumentation.server',
+			'true'
+		)
+	).toThrow(
 		dedent`
+			To enable instrumentation.server.js, add the following to your \`svelte.config.js\`:
+
+			kit: {
+			  experimental: {
+			    instrumentation: {
+			      server: true
+			    }
+			  }
+			}
+		`
+	);
+});
+
+test('error_for_missing_config - deeply nested config', () => {
+	expect(() => error_for_missing_config('deep feature', 'a.b.c.d.e', '"value"')).toThrow(
+		dedent`
+			To enable deep feature, add the following to your \`svelte.config.js\`:
+
 			a: {
 			  b: {
 			    c: {
@@ -172,7 +88,31 @@ test.each([
 			  }
 			}
 		`
-	]
-])('config_snippet(%j, %j)', (path, value, expected) => {
-	expect(config_snippet(path, value)).toBe(expected);
+	);
+});
+
+test('error_for_missing_config - two level config', () => {
+	expect(() => error_for_missing_config('some feature', 'kit.someFeature', 'false')).toThrow(
+		dedent`
+			To enable some feature, add the following to your \`svelte.config.js\`:
+
+			kit: {
+			  someFeature: false
+			}
+		`
+	);
+});
+
+test('error_for_missing_config - handles special characters in feature name', () => {
+	expect(() =>
+		error_for_missing_config('special-feature.js', 'kit.special', '{ enabled: true }')
+	).toThrow(
+		dedent`
+			To enable special-feature.js, add the following to your \`svelte.config.js\`:
+
+			kit: {
+			  special: { enabled: true }
+			}
+		`
+	);
 });

@@ -1,7 +1,6 @@
-import { read_implementation, manifest } from '../../server/internal.js';
-import { assets } from '#app/paths';
+import { read_implementation, manifest } from '__sveltekit/server';
+import { base } from '$app/paths';
 import { base64_decode } from '../../utils.js';
-import * as e from '../../../messages/server-errors.js';
 
 /**
  * Read the contents of an imported asset from the filesystem
@@ -21,7 +20,9 @@ export function read(asset) {
 	__SVELTEKIT_TRACK__('$app/server:read');
 
 	if (!read_implementation) {
-		e.read_implementation_missing();
+		throw new Error(
+			'No `read` implementation was provided. Please ensure that your adapter is up to date and supports this feature'
+		);
 	}
 
 	// handle inline assets internally
@@ -53,14 +54,12 @@ export function read(asset) {
 	}
 
 	const file = decodeURIComponent(
-		__SVELTEKIT_DEV__ && asset.startsWith(assets + '/@fs')
-			? asset.slice(assets.length)
-			: asset.slice(assets.length + 1)
+		__SVELTEKIT_DEV__ && asset.startsWith('/@fs') ? asset : asset.slice(base.length + 1)
 	);
 
-	if (file in manifest.server_assets) {
-		const length = manifest.server_assets[file];
-		const type = manifest.mime_types[file.slice(file.lastIndexOf('.'))];
+	if (file in manifest._.server_assets) {
+		const length = manifest._.server_assets[file];
+		const type = manifest.mimeTypes[file.slice(file.lastIndexOf('.'))];
 
 		return new Response(read_implementation(file), {
 			headers: {
@@ -70,7 +69,7 @@ export function read(asset) {
 		});
 	}
 
-	e.read_asset_missing({ file });
+	throw new Error(`Asset does not exist: ${file}`);
 }
 
 export { getRequestEvent } from '@sveltejs/kit/internal/server';

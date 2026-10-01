@@ -1,9 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { chdir } from 'node:process';
-import { extract_svelte_config, load_vite_config } from '../packages/kit/src/core/config/index.js';
-import { all as syncAll } from '../packages/kit/src/core/sync/sync.js';
-import create_manifest_data from '../packages/kit/src/core/sync/create_manifest_data/index.js';
+import { load_config } from '../packages/kit/src/core/config/index.js';
 
 // This isn't strictly necessary, but it eliminates some annoying warnings in CI
 
@@ -15,19 +12,15 @@ for (const directories of [
 	for (const dir of fs.readdirSync(directories)) {
 		const cwd = path.join(directories, dir);
 
-		if (
-			!fs.existsSync(path.join(cwd, 'vite.config.js')) &&
-			!fs.existsSync(path.join(cwd, 'vite.config.ts'))
-		) {
+		if (!fs.existsSync(path.join(cwd,'svelte.config.js'))) {
 			continue;
 		}
 
-		chdir(cwd);
+		process.chdir(cwd);
 
-		const vite_config = await load_vite_config();
-		const sveltekit_config = extract_svelte_config(vite_config);
-
-		const manifest_data = create_manifest_data(sveltekit_config, cwd);
-		syncAll(sveltekit_config, cwd, manifest_data);
+		// we defer this import so that we don't try and resolve `svelte` from
+		// the root via `isSvelte5Plus`, which would blow up
+		const sync = await import('../packages/kit/src/core/sync/sync.js');
+		await sync.all(await load_config({ cwd }), 'development');
 	}
 }

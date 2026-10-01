@@ -1,80 +1,35 @@
 import { test, expect } from 'vitest';
 import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-import { createFilter, resolveConfig } from 'vite';
-import { bullet_list } from '../../../../src/utils/format.js';
 
-const timeout = 60_000;
+// TODO: change to import.meta.dir in version-3 branch
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const cwd = path.resolve(__dirname, '..');
 
-const cwd = path.resolve(import.meta.dirname, '..');
-
-test('ignores all outDir files except generated files', async () => {
-	const config = await resolveConfig(
-		{ configFile: path.join(cwd, 'vite.custom.config.js') },
-		'serve'
-	);
-	const is_ignored = createFilter(config.server.watch.ignored);
-	const out_dir = path.resolve(cwd, '.custom-out-dir').replaceAll('\\', '/');
-
-	expect(is_ignored(`${out_dir}/tsconfig.json`)).toBe(true);
-	expect(is_ignored(`${out_dir}/.svelte-check/tsconfig.json`)).toBe(true);
-	expect(is_ignored(`${out_dir}/types/a/$types.d.ts`)).toBe(true);
-	expect(is_ignored(`${out_dir}/generated`)).toBe(false);
-	expect(is_ignored(`${out_dir}/generated/root.js`)).toBe(false);
-	expect(is_ignored(`${out_dir}/generated/client/app.js`)).toBe(false);
-});
-
-test('no overridden options warning', { timeout }, () => {
-	const result = spawnSync(
-		'pnpm',
-		['vitest', 'run', '--config', './vite.custom.config.js', '-t', 'noop'],
-		{
-			cwd,
-			stdio: 'pipe',
-			encoding: 'utf-8',
-			timeout
-		}
-	);
+test('no overridden options warning', () => {
+	const result = spawnSync('vitest', ['run', '--config', './vite.custom.config.js', '-t', 'noop'], {
+		cwd,
+		encoding: 'utf-8'
+	});
 
 	expect(result.error).toBeUndefined();
 	expect(result.stderr).not.toContain('overridden by SvelteKit');
 	expect(result.stderr).toBe('');
 });
 
-test('no transformIndexHtml warning for the Vitest browser loader', { timeout }, () => {
+test('inline plugin options are used instead of svelte.config.js', () => {
 	const result = spawnSync(
-		'pnpm',
-		['vitest', 'run', '--config', './vite.custom.config.js', '-t', 'noop'],
+		'vitest',
+		['run', '--config', './vite.inline-options.config.js', '-t', 'noop'],
 		{
 			cwd,
-			env: { ...process.env, TEST_HTML_TRANSFORM_PLUGIN: 'vitest:browser:loader' },
-			stdio: 'pipe',
-			encoding: 'utf-8',
-			timeout
+			encoding: 'utf-8'
 		}
 	);
 
-	expect(result.error).toBeUndefined();
-	expect(result.status).toBe(0);
-	expect(result.stderr).not.toContain('transform_index_html_unsupported');
-});
-
-test('transformIndexHtml warning for app plugins', { timeout }, () => {
-	const result = spawnSync(
-		'pnpm',
-		['vitest', 'run', '--config', './vite.custom.config.js', '-t', 'noop'],
-		{
-			cwd,
-			env: { ...process.env, TEST_HTML_TRANSFORM_PLUGIN: 'app-html-transform' },
-			stdio: 'pipe',
-			encoding: 'utf-8',
-			timeout
-		}
+	expect(result.status).not.toBe(0);
+	expect(result.stderr).toContain(
+		"The `router.resolution` option cannot be 'server' if `router.type` is 'hash'"
 	);
-
-	expect(result.error).toBeUndefined();
-	expect(result.status).toBe(0);
-	expect(result.stderr).toContainKitDiagnostic('transform_index_html_unsupported', {
-		contains: [bullet_list(['app-html-transform'])]
-	});
 });

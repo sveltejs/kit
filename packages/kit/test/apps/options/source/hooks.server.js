@@ -1,20 +1,17 @@
-import { building } from '$app/env';
+import { building } from '$app/environment';
+import { env } from '$env/dynamic/private';
+
 // this verifies that dynamic env vars can be read during analysis phase
 // (it would fail if this app contained prerendered routes)
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { TOP_SECRET_SHH_PLS } from '$app/env/private';
+const FOO = env.FOO;
 
-/** @type {import('@sveltejs/kit/hooks').Handle} */
+/** @type {import('@sveltejs/kit').Handle} */
 export function handle({ event, resolve }) {
 	return resolve(event, {
 		// this allows us to check that <link rel="stylesheet"> is still added
 		// to the DOM even if they're not included by `preload`
-		preload: (input) =>
-			input.type === 'font'
-				? input.filename.startsWith(
-						'node_modules/@fontsource/libre-barcode-128-text/files/libre-barcode-128-text-'
-					)
-				: input.type !== 'css'
+		preload: ({ type }) => type !== 'css'
 	});
 }
 

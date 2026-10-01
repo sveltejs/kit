@@ -1,13 +1,17 @@
-/** @import { RemoteResource, RemotePrerenderFunction } from '$app/server' */
-/** @import { RemoteFunctionResponse, RemotePrerenderInputsGenerator, RemotePrerenderInternals, MaybePromise } from 'types' */
+/** @import { RemoteResource, RemotePrerenderFunction } from '@sveltejs/kit' */
+/** @import { RemotePrerenderInputsGenerator, RemotePrerenderInternals, MaybePromise } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
-import { HandledHttpError } from '@sveltejs/kit/internal';
+import { json, error } from '@sveltejs/kit';
 import { get_request_store } from '@sveltejs/kit/internal/server';
-import { stringify_remote_arg } from '../../../shared.js';
-import { parse, stringify } from '#app/internal/transport';
+import { stringify, stringify_remote_arg } from '../../../shared.js';
 import { noop } from '../../../../utils/functions.js';
-import { app_dir, base } from '#app/paths';
-import { create_validator, get_response, run_remote_function } from './shared.js';
+import { app_dir, base } from '$app/paths/internal/server';
+import {
+	create_validator,
+	get_response,
+	parse_remote_response,
+	run_remote_function
+} from './shared.js';
 
 /**
  * Creates a remote prerender function. When called from the browser, the function will be invoked on the server via a `fetch` call.
@@ -84,7 +88,7 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 	/** @type {RemotePrerenderFunction<Input, Output> & { __: RemotePrerenderInternals }} */
 	const wrapper = (arg) => {
 		const { event, state } = get_request_store();
-		const payload = stringify_remote_arg(arg);
+		const payload = stringify_remote_arg(arg, state.transport);
 
 		// `get_response` (as opposed to bare `get_cache`) also registers the call in the
 		// implicit lookup, so that the result is inlined into the page payload (`data.p`)
@@ -95,33 +99,24 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 			const url = `${base}/${app_dir}/remote/${id}${payload ? `/${payload}` : ''}`;
 
 			if (!state.prerendering && !__SVELTEKIT_DEV__ && !event.isRemoteRequest) {
-				/** @type {RemoteFunctionResponse | undefined} */
-				let prerendered;
-
 				try {
 					// TODO adapters can provide prerendered data more efficiently than
 					// fetching from the public internet
-					// `request.url` rather than `event.url`, which throws inside queries
-					const response = await fetch(new URL(url, event.request.url).href, {
-						// in the unlikely event that an attacker is able to spoof the origin,
-						// this protects us against SSRF (the attacker-controlled server cannot
-						// trick us into making a request to an internal resource)
-						redirect: 'manual'
-					});
+					const response = await fetch(new URL(url, event.url.origin).href);
 
-					if (response.ok) {
-						prerendered = /** @type {RemoteFunctionResponse} */ (await response.json());
+					if (!response.ok) {
+						throw new Error('Prerendered response not found');
 					}
+
+					const prerendered = /** @type {RemoteFunctionResponse} */ await response.json();
+
+					if (prerendered.type === 'error') {
+						error(prerendered.status, prerendered.error);
+					}
+
+					return parse_remote_response(prerendered.data, state.transport)._;
 				} catch {
 					// not available prerendered, fallback to normal function
-				}
-
-				if (prerendered) {
-					if (prerendered.type === 'error') {
-						throw new HandledHttpError(prerendered.error);
-					}
-
-					return parse(prerendered.data)._;
 				}
 			}
 
@@ -131,13 +126,7 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 				return /** @type {Promise<any>} */ (state.prerendering.remote_responses.get(url));
 			}
 
-			const promise = run_remote_function(
-				event,
-				{ ...state, is_in_remote_prerender: true },
-				false,
-				() => validate(arg),
-				fn
-			);
+			const promise = run_remote_function(event, state, false, () => validate(arg), fn);
 
 			if (state.prerendering) {
 				state.prerendering.remote_responses.set(url, promise);
@@ -146,10 +135,10 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 			const result = await promise;
 
 			if (state.prerendering) {
-				const body = { type: 'result', data: stringify({ _: result }) };
+				const body = { type: 'result', data: stringify({ _: result }, state.transport) };
 				state.prerendering.dependencies.set(url, {
 					body: JSON.stringify(body),
-					response: Response.json(body)
+					response: json(body)
 				});
 			}
 

@@ -1,4 +1,4 @@
 {
-	"extends": "$app/tsconfig",
-	"include": ["src/**/*.d.ts", "src/**/*.js", "src/**/*.svelte", "*.js", "test/*.js"]
+	"extends": "./.svelte-kit/tsconfig.json",
+	"include": ["src/**/*.d.ts", "src/**/*.js", "src/**/*.svelte"]
 }

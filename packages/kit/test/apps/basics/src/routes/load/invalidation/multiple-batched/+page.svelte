@@ -7,7 +7,7 @@
 <div>
 	<button
 		id="multiple-batched"
-		onclick={(event) => {
+		on:click={(event) => {
 			const btn = event.currentTarget;
 			invalidate('multiple:invalidations-go-brr');
 			invalidate('multiple:invalidations-go-brr');

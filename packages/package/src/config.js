@@ -1,18 +1,36 @@
 import path from 'node:path';
 import process from 'node:process';
 import fs from 'node:fs';
-import { loadConfig } from '@sveltejs/load-config';
+import url from 'node:url';
 
 /**
- * Loads the Svelte config from `vite.config` or `svelte.config` in the current working directory
+ * Loads and validates Svelte config file
+ * @param {{ cwd?: string }} options
  * @returns {Promise<import('./types.js').Options['config']>}
  */
-export async function load_config() {
-	const result = await loadConfig(process.cwd(), { traverse: false });
+export async function load_config({ cwd = process.cwd() } = {}) {
+	const config_files = ['js', 'ts']
+		.map((ext) => path.join(cwd, `svelte.config.${ext}`))
+		.filter((f) => fs.existsSync(f));
 
-	if (result && 'error' in result) throw result.error;
+	if (config_files.length === 0) {
+		return {};
+	}
+	const config_file = config_files[0];
+	if (config_files.length > 1) {
+		console.log(
+			`Found multiple Svelte config files in ${cwd}: ${config_files.map((f) => path.basename(f)).join(', ')}. Using ${path.basename(config_file)}`
+		);
+	}
+	const config = (await import(`${url.pathToFileURL(config_file).href}?ts=${Date.now()}`)).default;
 
-	return /** @type {import('./types.js').Options['config']} */ (result?.config ?? {});
+	if (config.package) {
+		throw new Error(
+			'config.package is no longer supported. See https://github.com/sveltejs/kit/discussions/8825 for more information.'
+		);
+	}
+
+	return config;
 }
 
 /**

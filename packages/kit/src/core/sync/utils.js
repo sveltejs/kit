@@ -1,7 +1,12 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { resolve_entry } from '../../utils/filesystem.js';
-import * as w from '../../messages/build-warnings.js';
+import { mkdirp } from '../../utils/filesystem.js';
+import { import_peer } from '../../utils/import.js';
+
+/** @type {{ VERSION: string }} */
+const { VERSION } = await import_peer('svelte/compiler');
+
+const [MAJOR, MINOR] = VERSION.split('.').map(Number);
 
 /** @type {Map<string, string>} */
 const previous_contents = new Map();
@@ -22,7 +27,7 @@ export function write_if_changed(file, code) {
  */
 export function write(file, code) {
 	previous_contents.set(file, code);
-	fs.mkdirSync(path.dirname(file), { recursive: true });
+	mkdirp(path.dirname(file));
 	fs.writeFileSync(file, code);
 }
 
@@ -70,17 +75,11 @@ export function dedent(strings, ...values) {
 	return str;
 }
 
-/**
- * @param {string} original
- * @param {string} typo The common misspelling to check for
- * @param {string} description What was wrong with the filename
- * @param {string[]} extensions the extensions a module may have
- */
-export function check_spelling(original, typo, description, extensions) {
-	const misspelled = resolve_entry(typo, extensions);
-	if (!misspelled) return;
+export function isSvelte5Plus() {
+	return MAJOR >= 5;
+}
 
-	const corrected = path.basename(misspelled).replace(path.basename(typo), path.basename(original));
-
-	w.file_name_misspelled({ description, corrected, file: path.resolve(misspelled) });
+// TODO 3.0 remove this once we can bump the peerDep range
+export function supportsTrustedTypes() {
+	return (MAJOR === 5 && MINOR >= 51) || MAJOR > 5;
 }

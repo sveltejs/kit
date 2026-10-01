@@ -1,4 +1,3 @@
-import process from 'node:process';
 import * as path from 'node:path';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { playwright } from '@vitest/browser-playwright';
@@ -14,111 +13,28 @@ export default defineConfig({
 		// the reload confuses Playwright
 		include: ['cookie']
 	},
-	plugins: [
-		sveltekit({
-			adapter: {
-				name: 'test-adapter',
-				adapt(builder) {
-					const initializer = builder.createInstrumentationInitializer({
-						outputDirectory: builder.getServerDirectory(),
-						environment: `import { loadEnv } from 'vite';\nexport default loadEnv('production', ${JSON.stringify(import.meta.dirname)}, '');\n`
-					});
-					builder.instrument({
-						entrypoint: `${builder.getServerDirectory()}/index.js`,
-						instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`,
-						initializer,
-						module: {
-							exports: ['configure', 'create_server', 'Server', 'format_response']
-						}
-					});
-				},
-				emulate() {
-					return {
-						platform({ config, prerender }) {
-							return { config, prerender };
-						}
-					};
-				},
-				supports: {
-					read: () => true,
-					instrumentation: () => true
-				}
-			},
-
-			compilerOptions: {
-				experimental: { async: process.env.SVELTE_ASYNC === 'true' }
-			},
-
-			experimental: {
-				remoteFunctions: true
-			},
-
-			tracing: {
-				server: true
-			},
-
-			csrf: {
-				trustedOrigins: ['https://trusted.example.com', 'https://payment-gateway.test']
-			},
-
-			prerender: {
-				entries: [
-					'*',
-					'/routing/prerendered/trailing-slash/always/',
-					'/routing/prerendered/trailing-slash/never',
-					'/routing/prerendered/trailing-slash/ignore'
-				],
-				handleHttpError: ({ path, message }) => {
-					if (path.includes('/reroute/async')) {
-						throw new Error('shouldnt error on ' + path);
-					}
-
-					console.warn(message);
-				}
-			},
-			serviceWorker: {
-				register: true,
-				options: {
-					updateViaCache: 'imports'
-				}
-			},
-
-			version: {
-				name: 'TEST_VERSION'
-			},
-
-			router: {
-				resolution: /** @type {'client' | 'server'} */ (process.env.ROUTER_RESOLUTION) || 'client'
-			}
-		})
-	],
+	plugins: [sveltekit()],
 	server: {
 		fs: {
 			allow: [path.resolve('../../../src')]
-		},
-		cors: {
-			origin: '*'
 		}
 	},
 	test: {
-		name: 'kit-client-import',
 		expect: { requireAssertions: true },
-		browser: {
-			enabled: true,
-			provider: playwright({
-				launchOptions: {
-					channel: process.env.KIT_E2E_BROWSER === 'chromium' ? 'chrome' : undefined
+		projects: [
+			{
+				extends: './vite.config.js',
+				test: {
+					name: 'client',
+					browser: {
+						enabled: true,
+						provider: playwright(),
+						instances: [{ browser: 'chromium' }],
+						headless: true
+					},
+					include: ['unit-test/**/*.spec.js']
 				}
-			}),
-			instances: [
-				{
-					browser:
-						/** @type {"chromium" | "firefox" | "webkit"} */ (process.env.KIT_E2E_BROWSER) ||
-						'chromium'
-				}
-			],
-			headless: true
-		},
-		include: ['test/vitest/client.spec.js']
+			}
+		]
 	}
 });

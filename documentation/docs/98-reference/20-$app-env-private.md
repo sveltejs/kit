@@ -2,6 +2,8 @@
 title: $app/env/private
 ---
 
-Private environment variables defined in `src/env.ts` (or `src/env.js`).
+Private [environment variables](environment-variables) defined in `src/env.ts` (or `src/env.js`).
 
-See the [Environment variables](environment-variables) page for more information.
+To use this module, you must enable the `experimental.explicitEnvironmentVariables` flag in your project configuration.
+
+

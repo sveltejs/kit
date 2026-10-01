@@ -1,8 +1,8 @@
-/** @import { ValidatedConfig } from 'types' */
 /** @import { Validator } from './types.js' */
-import * as e from '../../messages/build-errors.js';
-import * as w from '../../messages/build-warnings.js';
-import { join_or } from '../../utils/format.js';
+
+import process from 'node:process';
+import colors from 'kleur';
+import { supportsTrustedTypes } from '../sync/utils.js';
 
 const directives = object({
 	'child-src': string_array(),
@@ -29,8 +29,14 @@ const directives = object({
 	'navigate-to': string_array(),
 	'report-uri': string_array(),
 	'report-to': string_array(),
-	'require-trusted-types-for': string_array(),
-	'trusted-types': string_array(),
+	'require-trusted-types-for': validate(undefined, (input, keypath) => {
+		assert_trusted_types_supported(keypath);
+		return string_array()(input, keypath);
+	}),
+	'trusted-types': validate(undefined, (input, keypath) => {
+		assert_trusted_types_supported(keypath);
+		return string_array()(input, keypath);
+	}),
 	'upgrade-insecure-requests': boolean(false),
 	'require-sri-for': string_array(),
 	'block-all-mixed-content': boolean(false),
@@ -38,289 +44,329 @@ const directives = object({
 	referrer: string_array()
 });
 
-const prerender_handler = validate(undefined, (input, keypath) => {
-	if (typeof input === 'function') return input;
-	if (['fail', 'warn', 'ignore'].includes(input)) return input;
-	e.config_invalid_prerender_handler({ keypath });
-});
-
-const options = {
-	adapter: validate(undefined, (input, keypath) => {
-		if (typeof input !== 'object' || !input.adapt) {
-			e.config_invalid_adapter({ keypath });
-		}
-
-		return input;
-	}),
-
-	alias: deprecate(
-		validate({}, (input, keypath) => {
-			if (typeof input !== 'object') {
-				e.config_expected_object({ keypath });
-			}
-
-			for (const key in input) {
-				assert_string(input[key], `${keypath}.${key}`);
-			}
-
-			return input;
-		}),
-		w.config_option_deprecated_alias
-	),
-
-	appDir: validate('_app', (input, keypath) => {
-		assert_string(input, keypath);
-
-		if (input) {
-			if (input.startsWith('/') || input.endsWith('/')) {
-				e.config_app_dir_slash({ keypath });
-			}
-		} else {
-			e.config_empty_string({ keypath });
-		}
-
-		return input;
-	}),
-
-	compilerOptions: any(),
-
-	csp: object({
-		mode: list(['auto', 'hash', 'nonce']),
-		directives,
-		reportOnly: directives
-	}),
-
-	csrf: object({
-		checkOrigin: removed(e.config_option_removed_check_origin),
-		trustedOrigins: string_array([])
-	}),
-
-	embedded: boolean(false),
-
-	env: object({
-		dir: string('')
-	}),
-
-	experimental: object(
-		{
-			tracing: removed(e.config_option_removed_experimental_tracing),
-			instrumentation: removed(e.config_option_removed_experimental_instrumentation),
-			remoteFunctions: boolean(false),
-			forkPreloads: boolean(false),
-			handleRenderingErrors: removed()
-		},
-		true
-	),
-
-	extensions: validate(['.svelte'], (input, keypath) => {
-		if (!Array.isArray(input) || !input.every((page) => typeof page === 'string')) {
-			e.config_expected_string_array({ keypath });
-		}
-
-		input.forEach((extension) => {
-			if (extension[0] !== '.') {
-				e.config_extension_missing_dot({ keypath, extension });
-			}
-
-			if (!/^(\.[a-z0-9]+)+$/i.test(extension)) {
-				e.config_extension_invalid({ extension });
-			}
-		});
-
-		return input;
-	}),
-
-	files: object({
-		src: string('src'),
-		assets: string('static'),
-		hooks: object({
-			client: string(null),
-			server: string(null),
-			universal: string(null)
-		}),
-		lib: removed(e.config_option_removed_files_lib),
-		params: string(null),
-		routes: string(null),
-		serviceWorker: string(null),
-		appTemplate: string(null),
-		errorTemplate: string(null)
-	}),
-
-	inlineStyleThreshold: number(0),
-
-	moduleExtensions: string_array(['.js', '.ts']),
-
-	kit: validate(undefined, (input) => {
-		const keys = Object.keys(input)
-			.map((key) => `\`${key}\``)
-			.join(', ');
-
-		e.config_kit_namespace({ keys });
-	}),
-
-	outDir: string('.svelte-kit'),
-
-	output: object({
-		linkHeaderPreload: boolean(false),
-		preloadStrategy: removed(e.config_option_removed_preload_strategy),
-		bundleStrategy: list(['split', 'single', 'inline'])
-	}),
-
-	paths: object({
-		base: validate('', (input, keypath) => {
-			assert_string(input, keypath);
-
-			if (input !== '' && (input.endsWith('/') || !input.startsWith('/'))) {
-				e.config_paths_base_invalid({ keypath });
-			}
-
-			return input;
-		}),
-		assets: validate('', (input, keypath) => {
-			assert_string(input, keypath);
-
-			if (input) {
-				if (!/^[a-z]+:\/\//.test(input)) {
-					e.config_paths_assets_not_absolute({ keypath });
-				}
-
-				if (input.endsWith('/')) {
-					e.config_paths_assets_trailing_slash({ keypath });
-				}
-			}
-
-			return input;
-		}),
-		origin: validate(undefined, (input, keypath) => {
-			assert_string(input, keypath);
-
-			let url;
-
-			try {
-				url = new URL(input);
-			} catch {
-				e.config_origin_invalid({ keypath, input });
-			}
-
-			if (url.protocol !== 'http:' && url.protocol !== 'https:') {
-				e.config_origin_protocol({ keypath, protocol: url.protocol });
-			}
-
-			const origin = url.origin;
-
-			if (input !== origin) {
-				e.config_origin_has_path({ keypath, input, origin });
-			}
-
-			return origin;
-		}),
-		relative: boolean(true)
-	}),
-
-	preprocess: any(),
-
-	prerender: object({
-		concurrency: validate(1, (input, keypath) => {
-			if (!Number.isInteger(input) || input < 1) {
-				e.config_expected_positive_integer({ keypath });
-			}
-
-			return input;
-		}),
-		crawl: boolean(true),
-		entries: validate(['*'], (input, keypath) => {
+/** @type {Validator} */
+export const options = object(
+	{
+		extensions: validate(['.svelte'], (input, keypath) => {
 			if (!Array.isArray(input) || !input.every((page) => typeof page === 'string')) {
-				e.config_expected_string_array({ keypath });
+				throw new Error(`${keypath} must be an array of strings`);
 			}
 
-			input.forEach((page) => {
-				if (page !== '*' && page[0] !== '/') {
-					e.config_prerender_entry_invalid({ keypath, entry: page });
+			input.forEach((extension) => {
+				if (extension[0] !== '.') {
+					throw new Error(`Each member of ${keypath} must start with '.' — saw '${extension}'`);
+				}
+
+				if (!/^(\.[a-z0-9]+)+$/i.test(extension)) {
+					throw new Error(`File extensions must be alphanumeric — saw '${extension}'`);
 				}
 			});
 
 			return input;
 		}),
 
-		handleHttpError: prerender_handler,
-		handleMissingId: prerender_handler,
-		handleEntryGeneratorMismatch: prerender_handler,
-		handleUnseenRoutes: prerender_handler,
-		handleInvalidUrl: prerender_handler,
+		kit: object({
+			adapter: validate(null, (input, keypath) => {
+				if (typeof input !== 'object' || !input.adapt) {
+					let message = `${keypath} should be an object with an "adapt" method`;
 
-		origin: removed(e.config_option_removed_prerender_origin)
-	}),
+					if (Array.isArray(input) || typeof input === 'string') {
+						// for the early adapter adopters
+						message += ', rather than the name of an adapter';
+					}
 
-	router: object({
-		type: list(['pathname', 'hash']),
-		resolution: list(['client', 'server'])
-	}),
+					throw new Error(`${message}. See https://svelte.dev/docs/kit/adapters`);
+				}
 
-	serviceWorker: object({
-		files: removed(),
-		register: boolean(true),
-		// options could be undefined but if it is defined we only validate that
-		// it's an object since the type comes from the browser itself
-		options: validate(undefined, object({}, true))
-	}),
+				return input;
+			}),
 
-	tracing: object({
-		server: boolean(false)
-	}),
+			alias: validate({}, (input, keypath) => {
+				if (typeof input !== 'object') {
+					throw new Error(`${keypath} should be an object`);
+				}
 
-	typescript: deprecate(
-		object({
-			config: fun((config) => config)
-		}),
-		w.config_option_deprecated_typescript
-	),
+				for (const key in input) {
+					assert_string(input[key], `${keypath}.${key}`);
+				}
 
-	version: object({
-		name: string(Date.now().toString()),
-		pollInterval: number(3_600_000)
-	}),
+				return input;
+			}),
 
-	vitePlugin: removed(e.config_option_removed_vite_plugin)
-};
+			appDir: validate('_app', (input, keypath) => {
+				assert_string(input, keypath);
 
-/** @type {Validator<ValidatedConfig>} */
-export const validate_options = object(options, true);
+				if (input) {
+					if (input.startsWith('/') || input.endsWith('/')) {
+						throw new Error(
+							"config.kit.appDir cannot start or end with '/'. See https://svelte.dev/docs/kit/configuration"
+						);
+					}
+				} else {
+					throw new Error(`${keypath} cannot be empty`);
+				}
 
-/**
- * @param {Validator} fn
- * @param {(values: { keypath: string }) => void} warn
- * @returns {Validator}
- */
-function deprecate(fn, warn = w.config_option_deprecated) {
-	return (input, keypath) => {
-		if (input !== undefined) {
-			warn({ keypath });
-		}
+				return input;
+			}),
 
-		return fn(input, keypath);
-	};
-}
+			csp: object({
+				mode: list(['auto', 'hash', 'nonce']),
+				directives,
+				reportOnly: directives
+			}),
+
+			csrf: object({
+				checkOrigin: deprecate(
+					boolean(true),
+					(keypath) =>
+						`\`${keypath}\` has been deprecated in favour of \`csrf.trustedOrigins\`. It will be removed in a future version`
+				),
+				trustedOrigins: string_array([])
+			}),
+
+			embedded: boolean(false),
+
+			env: object({
+				dir: string(process.cwd()),
+				publicPrefix: string('PUBLIC_'),
+				privatePrefix: string('')
+			}),
+
+			experimental: object({
+				tracing: object({
+					server: boolean(false)
+				}),
+				instrumentation: object({
+					server: boolean(false)
+				}),
+				explicitEnvironmentVariables: boolean(false),
+				remoteFunctions: boolean(false),
+				forkPreloads: boolean(false),
+				handleRenderingErrors: boolean(false)
+			}),
+
+			files: object({
+				src: string('src'),
+				assets: string('static'),
+				hooks: object({
+					client: string(null),
+					server: string(null),
+					universal: string(null)
+				}),
+				lib: string(null),
+				params: string(null),
+				routes: string(null),
+				serviceWorker: string(null),
+				appTemplate: string(null),
+				errorTemplate: string(null)
+			}),
+
+			inlineStyleThreshold: number(0),
+
+			moduleExtensions: string_array(['.js', '.ts']),
+
+			outDir: string('.svelte-kit'),
+
+			output: object({
+				preloadStrategy: list(['modulepreload', 'preload-js', 'preload-mjs']),
+				bundleStrategy: list(['split', 'single', 'inline'])
+			}),
+
+			paths: object({
+				base: validate('', (input, keypath) => {
+					assert_string(input, keypath);
+
+					if (input !== '' && (input.endsWith('/') || !input.startsWith('/'))) {
+						throw new Error(
+							`${keypath} option must either be the empty string or a root-relative path that starts but doesn't end with '/'. See https://svelte.dev/docs/kit/configuration#paths`
+						);
+					}
+
+					return input;
+				}),
+				assets: validate('', (input, keypath) => {
+					assert_string(input, keypath);
+
+					if (input) {
+						if (!/^[a-z]+:\/\//.test(input)) {
+							throw new Error(
+								`${keypath} option must be an absolute path, if specified. See https://svelte.dev/docs/kit/configuration#paths`
+							);
+						}
+
+						if (input.endsWith('/')) {
+							throw new Error(
+								`${keypath} option must not end with '/'. See https://svelte.dev/docs/kit/configuration#paths`
+							);
+						}
+					}
+
+					return input;
+				}),
+				relative: boolean(true)
+			}),
+
+			prerender: object({
+				concurrency: number(1),
+				crawl: boolean(true),
+				entries: validate(['*'], (input, keypath) => {
+					if (!Array.isArray(input) || !input.every((page) => typeof page === 'string')) {
+						throw new Error(`${keypath} must be an array of strings`);
+					}
+
+					input.forEach((page) => {
+						if (page !== '*' && page[0] !== '/') {
+							throw new Error(
+								`Each member of ${keypath} must be either '*' or an absolute path beginning with '/' — saw '${page}'`
+							);
+						}
+					});
+
+					return input;
+				}),
+
+				handleHttpError: validate(
+					(/** @type {any} */ { message }) => {
+						throw new Error(
+							message +
+								'\nTo suppress or handle this error, implement `handleHttpError` in https://svelte.dev/docs/kit/configuration#prerender'
+						);
+					},
+					(input, keypath) => {
+						if (typeof input === 'function') return input;
+						if (['fail', 'warn', 'ignore'].includes(input)) return input;
+						throw new Error(`${keypath} should be "fail", "warn", "ignore" or a custom function`);
+					}
+				),
+
+				handleMissingId: validate(
+					(/** @type {any} */ { message }) => {
+						throw new Error(
+							message +
+								'\nTo suppress or handle this error, implement `handleMissingId` in https://svelte.dev/docs/kit/configuration#prerender'
+						);
+					},
+					(input, keypath) => {
+						if (typeof input === 'function') return input;
+						if (['fail', 'warn', 'ignore'].includes(input)) return input;
+						throw new Error(`${keypath} should be "fail", "warn", "ignore" or a custom function`);
+					}
+				),
+
+				handleEntryGeneratorMismatch: validate(
+					(/** @type {any} */ { message }) => {
+						throw new Error(
+							message +
+								'\nTo suppress or handle this error, implement `handleEntryGeneratorMismatch` in https://svelte.dev/docs/kit/configuration#prerender'
+						);
+					},
+					(input, keypath) => {
+						if (typeof input === 'function') return input;
+						if (['fail', 'warn', 'ignore'].includes(input)) return input;
+						throw new Error(`${keypath} should be "fail", "warn", "ignore" or a custom function`);
+					}
+				),
+
+				handleUnseenRoutes: validate(
+					(/** @type {any} */ { message }) => {
+						throw new Error(
+							message +
+								'\nTo suppress or handle this error, implement `handleUnseenRoutes` in https://svelte.dev/docs/kit/configuration#prerender'
+						);
+					},
+					(input, keypath) => {
+						if (typeof input === 'function') return input;
+						if (['fail', 'warn', 'ignore'].includes(input)) return input;
+						throw new Error(`${keypath} should be "fail", "warn", "ignore" or a custom function`);
+					}
+				),
+
+				handleInvalidUrl: validate(
+					(/** @type {any} */ { message }) => {
+						throw new Error(
+							message +
+								'\nTo suppress or handle this error, implement `handleInvalidUrl` in https://svelte.dev/docs/kit/configuration#prerender'
+						);
+					},
+					(input, keypath) => {
+						if (typeof input === 'function') return input;
+						if (['fail', 'warn', 'ignore'].includes(input)) return input;
+						throw new Error(`${keypath} should be "fail", "warn", "ignore" or a custom function`);
+					}
+				),
+
+				origin: validate('http://sveltekit-prerender', (input, keypath) => {
+					assert_string(input, keypath);
+
+					let origin;
+
+					try {
+						origin = new URL(input).origin;
+					} catch {
+						throw new Error(`${keypath} must be a valid origin`);
+					}
+
+					if (input !== origin) {
+						throw new Error(`${keypath} must be a valid origin (${origin} rather than ${input})`);
+					}
+
+					return origin;
+				})
+			}),
+
+			router: object({
+				type: list(['pathname', 'hash']),
+				resolution: list(['client', 'server'])
+			}),
+
+			serviceWorker: object({
+				register: boolean(true),
+				// options could be undefined but if it is defined we only validate that
+				// it's an object since the type comes from the browser itself
+				options: validate(undefined, object({}, true)),
+				files: fun((filename) => !/\.DS_Store/.test(filename))
+			}),
+
+			typescript: object({
+				config: fun((config) => config)
+			}),
+
+			version: object({
+				name: string(Date.now().toString()),
+				pollInterval: number(0)
+			})
+		})
+	},
+	true
+);
 
 // Derive the names of SvelteKit's own config options from the schema, so they
 // stay in sync automatically. These are used to separate Kit's options from
 // `vite-plugin-svelte`'s options when config is passed via the Vite plugin.
-const kit_defaults = validate_options({}, 'config');
+const defaults = /** @type {Record<string, any>} */ (options({}, 'config'));
 
 /** The names of the options that live under the `kit` namespace */
-export const kit_options = Object.keys(kit_defaults);
+export const kit_options = Object.keys(defaults.kit);
 
 /** The names of the options that live under the `kit.experimental` namespace */
-export const kit_experimental_options = Object.keys(kit_defaults.experimental);
+export const kit_experimental_options = Object.keys(defaults.kit.experimental);
 
 /**
- * @param {(values: { keypath: string }) => never} error
+ * @param {Validator} fn
+ * @param {(keypath: string) => string} get_message
  * @returns {Validator}
  */
-function removed(error = e.config_option_removed) {
+function deprecate(
+	fn,
+	get_message = (keypath) =>
+		`The \`${keypath}\` option is deprecated, and will be removed in a future version`
+) {
 	return (input, keypath) => {
-		if (typeof input !== 'undefined') {
-			error({ keypath });
+		if (input !== undefined) {
+			console.warn(colors.bold().yellow(get_message(keypath)));
 		}
+
+		return fn(input, keypath);
 	};
 }
 
@@ -329,26 +375,28 @@ function removed(error = e.config_option_removed) {
  * @param {boolean} [allow_unknown]
  * @returns {Validator}
  */
-export function object(children, allow_unknown = false) {
+function object(children, allow_unknown = false) {
 	return (input, keypath) => {
 		/** @type {Record<string, any>} */
 		const output = {};
 
 		if ((input && typeof input !== 'object') || Array.isArray(input)) {
-			e.config_expected_object({ keypath });
+			throw new Error(`${keypath} should be an object`);
 		}
 
 		for (const key in input) {
 			if (!(key in children)) {
 				if (allow_unknown) {
-					const value = input[key];
-					if (value !== undefined) output[key] = value;
+					output[key] = input[key];
 				} else {
-					// special case
-					const suggestion =
-						keypath === 'config.kit' && key in kit_options ? `config.${key}` : undefined;
+					let message = `Unexpected option ${keypath}.${key}`;
 
-					e.config_unexpected_option({ keypath: `${keypath}.${key}`, suggestion });
+					// special case
+					if (keypath === 'config.kit' && key in options) {
+						message += ` (did you mean config.${key}?)`;
+					}
+
+					throw new Error(message);
 				}
 			}
 		}
@@ -367,7 +415,7 @@ export function object(children, allow_unknown = false) {
  * @param {(value: any, keypath: string) => any} fn
  * @returns {Validator}
  */
-export function validate(fallback, fn) {
+function validate(fallback, fn) {
 	return (input, keypath) => {
 		return input === undefined ? fallback : fn(input, keypath);
 	};
@@ -383,7 +431,7 @@ function string(fallback, allow_empty = true) {
 		assert_string(input, keypath);
 
 		if (!allow_empty && input === '') {
-			e.config_empty_string({ keypath });
+			throw new Error(`${keypath} cannot be empty`);
 		}
 
 		return input;
@@ -397,7 +445,7 @@ function string(fallback, allow_empty = true) {
 function string_array(fallback) {
 	return validate(fallback, (input, keypath) => {
 		if (!Array.isArray(input) || input.some((value) => typeof value !== 'string')) {
-			e.config_expected_string_array({ keypath });
+			throw new Error(`${keypath} must be an array of strings, if specified`);
 		}
 
 		return input;
@@ -411,7 +459,7 @@ function string_array(fallback) {
 function number(fallback) {
 	return validate(fallback, (input, keypath) => {
 		if (typeof input !== 'number') {
-			e.config_expected_number({ keypath });
+			throw new Error(`${keypath} should be a number, if specified`);
 		}
 		return input;
 	});
@@ -424,7 +472,7 @@ function number(fallback) {
 function boolean(fallback) {
 	return validate(fallback, (input, keypath) => {
 		if (typeof input !== 'boolean') {
-			e.config_expected_boolean({ keypath });
+			throw new Error(`${keypath} should be true or false, if specified`);
 		}
 		return input;
 	});
@@ -437,11 +485,12 @@ function boolean(fallback) {
 function list(options, fallback = options[0]) {
 	return validate(fallback, (input, keypath) => {
 		if (!options.includes(input)) {
-			const quoted = options.map((option) => `"${option}"`);
-			const expected =
-				options.length > 2 ? `one of ${join_or(quoted)}` : `either ${join_or(quoted)}`;
+			// prettier-ignore
+			const msg = options.length > 2
+				? `${keypath} should be one of ${options.slice(0, -1).map(input => `"${input}"`).join(', ')} or "${options[options.length - 1]}"`
+				: `${keypath} should be either "${options[0]}" or "${options[1]}"`;
 
-			e.config_expected_one_of({ keypath, options: expected });
+			throw new Error(msg);
 		}
 		return input;
 	});
@@ -454,14 +503,10 @@ function list(options, fallback = options[0]) {
 function fun(fallback) {
 	return validate(fallback, (input, keypath) => {
 		if (typeof input !== 'function') {
-			e.config_expected_function({ keypath });
+			throw new Error(`${keypath} should be a function, if specified`);
 		}
 		return input;
 	});
-}
-
-function any() {
-	return validate(undefined, (input) => input);
 }
 
 /**
@@ -470,6 +515,15 @@ function any() {
  */
 function assert_string(input, keypath) {
 	if (typeof input !== 'string') {
-		e.config_expected_string({ keypath });
+		throw new Error(`${keypath} should be a string, if specified`);
+	}
+}
+
+/** @param {string} keypath */
+function assert_trusted_types_supported(keypath) {
+	if (!supportsTrustedTypes()) {
+		throw new Error(
+			`${keypath} is not supported by your version of Svelte. Please upgrade to Svelte 5.51.0 or later to use this directive.`
+		);
 	}
 }

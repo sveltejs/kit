@@ -15,7 +15,7 @@
 	};
 
 	/** @type {{ title: string } | undefined} */
-	let modal = $state(undefined);
+	let modal = undefined;
 
 	const show_modal = () => {
 		const hash = page.url.hash.substring(1);

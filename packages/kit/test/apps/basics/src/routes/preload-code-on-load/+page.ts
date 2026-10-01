@@ -1,4 +1,4 @@
-import { browser } from '$app/env';
+import { browser } from '$app/environment';
 import { preloadCode } from '$app/navigation';
 
 export async function load() {

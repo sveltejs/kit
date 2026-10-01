@@ -1,11 +1,10 @@
 import { json } from '@sveltejs/kit';
 import { match } from '$app/paths';
 
-/** @satisfies {import('$app/types').ResolvedPathname[]} */
 const test_paths = [
-	'/path-base/base/',
-	'/path-base/base/resolved/',
-	'/path-base/not-a-real-route-that-exists/'
+	'/path-base/resolve-route',
+	'/path-base/resolve-route/resolved',
+	'/path-base/not-a-real-route-that-exists'
 ];
 
 export async function GET() {

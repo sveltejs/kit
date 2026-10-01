@@ -12,8 +12,6 @@
 
 <p id="message">This is your custom error page saying: "<b>{error.message}</b>"</p>
 
-<a id="error-home" href="/">home</a>
-
 <style>
 	h1,
 	p {

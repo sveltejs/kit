@@ -1,9 +1,9 @@
 /* if `bundleStrategy` is 'single' or 'inline', this file is used as the entry point */
 
-import * as kit from './client-entry.js';
+import * as kit from './entry.js';
 
 // @ts-expect-error
-import * as app from '<sveltekit:generated>/client-optimized/app.js';
+import * as app from '__sveltekit/manifest';
 
 /**
  *

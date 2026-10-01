@@ -1,8 +1,5 @@
 .DS_Store
 node_modules
 /.svelte-kit
-
-# Cloudflare
-.wrangler
+/.wrangler
 /dist
-worker-configuration.d.ts

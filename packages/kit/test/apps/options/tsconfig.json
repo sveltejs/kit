@@ -1,10 +1,8 @@
 {
-	"extends": "$app/tsconfig",
-	"include": [
-		"source",
-		"test",
-		"vite.custom.config.js",
-		"playwright.config.js",
-		"../../vitest-matchers.d.ts"
-	]
+	"compilerOptions": {
+		"allowJs": true,
+		"checkJs": true,
+		"noEmit": true
+	},
+	"extends": "./.custom-out-dir/tsconfig.json"
 }

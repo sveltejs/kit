@@ -4,9 +4,8 @@ import { find_deps } from '../../exports/vite/build/utils.js';
  * Finds all the assets that are imported by server files associated with `routes`
  * @param {import('types').BuildData} build_data
  * @param {import('types').RouteData[]} routes
- * @param {string} root
  */
-export function find_server_assets(build_data, routes, root) {
+export function find_server_assets(build_data, routes) {
 	/**
 	 * All nodes actually used in the routes definition (prerendered routes are omitted).
 	 * Root layout/error is always included as they are needed for 404 and root errors.
@@ -20,7 +19,7 @@ export function find_server_assets(build_data, routes, root) {
 	/** @param {string} id */
 	function add_assets(id) {
 		if (id in build_data.server_manifest) {
-			const deps = find_deps(build_data.server_manifest, id, false, root);
+			const deps = find_deps(build_data.server_manifest, id, false);
 			for (const asset of deps.assets) {
 				server_assets.add(asset);
 			}

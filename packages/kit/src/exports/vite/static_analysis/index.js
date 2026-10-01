@@ -1,7 +1,8 @@
 /** @import { PageOptions } from './types.js' */
-/** @import { ESTree } from 'vite' */
+import process from 'node:process';
 import path from 'node:path';
-import { parseSync } from 'vite';
+import { tsPlugin } from '@sveltejs/acorn-typescript';
+import { Parser } from 'acorn';
 import { read } from '../../../utils/filesystem.js';
 
 export const valid_page_options_array = /** @type {const} */ ([
@@ -21,6 +22,8 @@ const skip_parsing_regex = new RegExp(
 	`${Array.from(valid_page_options).join('|')}|(?:export[\\s\\n]+\\*[\\s\\n]+from)`
 );
 
+const parser = Parser.extend(tsPlugin());
+
 /**
  * Collects page options from a +page.js/+layout.js file, ignoring reassignments
  * and using the declared value (except for load functions, for which the value is `true`).
@@ -37,13 +40,15 @@ export function statically_analyse_page_options(filename, input) {
 	}
 
 	try {
-		const source = parseSync(filename, input, { sourceType: 'module' });
-		if (source.errors.length) throw new Error(source.errors[0].message);
+		const source = parser.parse(input, {
+			sourceType: 'module',
+			ecmaVersion: 'latest'
+		});
 
-		/** @type {Map<string, Extract<ESTree.Expression, { type: 'Literal' }>['value']>} */
+		/** @type {Map<string, import('acorn').Literal['value']>} */
 		const page_options = new Map();
 
-		for (const statement of source.program.body) {
+		for (const statement of source.body) {
 			// ignore export all declarations with aliases that are not page options
 			if (
 				statement.type === 'ExportAllDeclaration' &&
@@ -78,7 +83,7 @@ export function statically_analyse_page_options(filename, input) {
 					export_specifiers.set(get_name(specifier.local), exported_name);
 				}
 
-				for (const statement of source.program.body) {
+				for (const statement of source.body) {
 					switch (statement.type) {
 						case 'ImportDeclaration': {
 							for (const import_specifier of statement.specifiers) {
@@ -101,10 +106,7 @@ export function statically_analyse_page_options(filename, input) {
 
 							// class and function declarations
 							if (declaration.type !== 'VariableDeclaration') {
-								if (
-									declaration.id?.type === 'Identifier' &&
-									export_specifiers.has(declaration.id.name)
-								) {
+								if (export_specifiers.has(declaration.id.name)) {
 									return null;
 								}
 								break;
@@ -155,10 +157,9 @@ export function statically_analyse_page_options(filename, input) {
 
 			// class and function declarations
 			if (statement.declaration.type !== 'VariableDeclaration') {
-				const { id } = statement.declaration;
-				if (id?.type === 'Identifier' && valid_page_options.has(id.name)) {
+				if (valid_page_options.has(statement.declaration.id.name)) {
 					// Special case: We only want to know that 'load' is exported (in a way that doesn't cause truthy checks in other places to trigger)
-					if (id.name === 'load') {
+					if (statement.declaration.id.name === 'load') {
 						page_options.set('load', null);
 					} else {
 						return null;
@@ -202,7 +203,7 @@ export function statically_analyse_page_options(filename, input) {
 }
 
 /**
- * @param {ESTree.ModuleExportName} node
+ * @param {import('acorn').Identifier | import('acorn').Literal} node
  * @returns {string}
  */
 function get_name(node) {
@@ -212,13 +213,11 @@ function get_name(node) {
 /**
  * Reads and statically analyses a file for page options
  * @param {string} filepath
- * @param {string} root The project root directory
  * @returns {PageOptions | null} Returns the page options for the file or `null` if unanalysable
  */
-export function get_page_options(filepath, root) {
-	const input = read(path.resolve(root, filepath));
-
+export function get_page_options(filepath) {
 	try {
+		const input = read(filepath);
 		const page_options = statically_analyse_page_options(filepath, input);
 		if (page_options === null) {
 			return null;
@@ -231,9 +230,9 @@ export function get_page_options(filepath, root) {
 }
 
 /**
- * @param {string} root
+ * @param {string} cwd
  */
-export function create_node_analyser(root) {
+export function create_node_analyser(cwd = process.cwd()) {
 	const static_exports = new Map();
 
 	/**
@@ -277,7 +276,7 @@ export function create_node_analyser(root) {
 		}
 
 		if (node.server) {
-			const server_page_options = get_page_options(node.server, root);
+			const server_page_options = get_page_options(path.join(cwd, node.server));
 			if (server_page_options === null) {
 				cache(key, null);
 				return null;
@@ -286,7 +285,7 @@ export function create_node_analyser(root) {
 		}
 
 		if (node.universal) {
-			const universal_page_options = get_page_options(node.universal, root);
+			const universal_page_options = get_page_options(path.join(cwd, node.universal));
 			if (universal_page_options === null) {
 				cache(key, null);
 				return null;

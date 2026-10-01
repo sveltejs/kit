@@ -1,14 +1,15 @@
 import { isRedirect } from '@sveltejs/kit';
 import { do_something } from './routes/remote/server-action/action.remote';
 
-/** @type {import('@sveltejs/kit/hooks').Handle} */
+/** @type {import('@sveltejs/kit').Handle} */
 export async function handle({ event, resolve }) {
 	// Assign each browser session a unique id so that the in-memory `count`
 	// state in `routes/remote/query-command.remote.js` is isolated per test.
 	// Without this, tests running in parallel (different Playwright workers)
 	// against the same server clobber each other's state and flake.
-	if (!event.cookies.get('session')) {
-		event.cookies.set('session', crypto.randomUUID(), {
+	if (!event.cookies.get('count_session')) {
+		event.cookies.set('count_session', crypto.randomUUID(), {
+			path: '/',
 			httpOnly: true,
 			sameSite: 'lax'
 		});
@@ -37,24 +38,31 @@ export async function handle({ event, resolve }) {
 	return resolve(event);
 }
 
-/** @type {import('@sveltejs/kit/hooks').HandleServerError} */
-export const handleError = (input) => {
+/** @type {import('@sveltejs/kit').HandleValidationError} */
+export const handleValidationError = ({ issues }) => {
+	return { message: issues[0].message };
+};
+
+/** @type {import('@sveltejs/kit').HandleServerError} */
+export const handleError = ({ error: e, event, status, message }) => {
 	// helps us catch sveltekit redirects thrown in component code
-	if (isRedirect(input.error)) {
+	if (isRedirect(e)) {
 		throw new Error("Redirects shouldn't trigger the handleError hook");
 	}
 
-	if (input.kind === 'validation') {
-		// must not throw, even when validation failed inside a query
-		void input.event.url.pathname;
-		return { message: input.issues[0].message };
-	}
+	const error = /** @type {Error} */ (e);
 
-	if (input.kind !== 'unknown') return input.error;
+	return { message: `${error.message} (${status} ${message}, on ${event.url.pathname})` };
+};
 
-	const error = /** @type {Error} */ (input.error);
-
-	return {
-		message: `${error.message} (500 Internal Error, on ${input.event.url.pathname})`
-	};
+// TODO: remove in SvelteKit 3.0
+// @ts-ignore this doesn't exist in old Node
+Promise.withResolvers ??= () => {
+	/** @type {{ promise: Promise<any>, resolve: (value: any) => void, reject: (reason?: any) => void }} */
+	const d = {};
+	d.promise = new Promise((resolve, reject) => {
+		d.resolve = resolve;
+		d.reject = reject;
+	});
+	return d;
 };

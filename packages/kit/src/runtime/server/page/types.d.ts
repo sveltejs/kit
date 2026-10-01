@@ -1,4 +1,4 @@
-import { SerializeOptions } from 'cookie';
+import { CookieSerializeOptions } from 'cookie';
 import {
 	CspDirectives,
 	ServerDataNode,
@@ -39,9 +39,7 @@ export interface CspOpts {
 export interface Cookie {
 	name: string;
 	value: string;
-	options: SerializeOptions & {
-		path: string;
-	};
+	options: CookieSerializeOptions & { path: string };
 }
 
 export type ServerDataSerializer = {

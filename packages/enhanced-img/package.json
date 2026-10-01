@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/enhanced-img",
-	"version": "1.0.0-next.5",
+	"version": "0.11.0",
 	"description": "Image optimization for your Svelte apps",
 	"repository": {
 		"type": "git",
@@ -21,9 +21,9 @@
 	"homepage": "https://svelte.dev/docs/kit/images#sveltejs-enhanced-img",
 	"type": "module",
 	"scripts": {
-		"lint": "oxfmt --check .",
-		"check": "node node_modules/@typescript/native/bin/tsc",
-		"format": "oxfmt --write .",
+		"lint": "prettier --check .",
+		"check": "tsc",
+		"format": "prettier --write .",
 		"test": "pnpm test:unit && pnpm test:integration",
 		"test:unit": "vitest run",
 		"test:integration": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test"
@@ -38,25 +38,24 @@
 	},
 	"types": "types/index.d.ts",
 	"dependencies": {
-		"magic-string": "^1.2.3",
-		"sharp": "^0.35.3",
-		"vite-imagetools": "^12.0.0",
-		"zimmerframe": "^1.1.4"
+		"magic-string": "^0.30.5",
+		"sharp": "^0.34.1",
+		"svelte-parse-markup": "^0.1.5",
+		"vite-imagetools": "^9.0.3",
+		"zimmerframe": "^1.1.2"
 	},
 	"devDependencies": {
 		"@types/estree": "catalog:",
 		"@types/node": "catalog:",
+		"rollup": "^4.59.0",
 		"svelte": "catalog:",
-		"@typescript/native": "catalog:",
+		"typescript": "catalog:",
 		"vite": "catalog:",
 		"vitest": "catalog:"
 	},
 	"peerDependencies": {
-		"@sveltejs/vite-plugin-svelte": "^7.0.0",
+		"@sveltejs/vite-plugin-svelte": "^6.0.0 || ^7.0.0",
 		"svelte": "^5.0.0",
-		"vite": ">=8.0.12"
-	},
-	"engines": {
-		"node": ">=22"
+		"vite": "^6.3.0 || >=7.0.0"
 	}
 }

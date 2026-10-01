@@ -6,8 +6,6 @@
 </script>
 
 <div id="value">{q.current ?? 'unset'}</div>
-<div id="error">
-	{q.error ? `${q.error.status}: ${q.error.message}` : 'none'}
-</div>
+<div id="error">{q.error ? `${q.error.status}: ${q.error.body.message}` : 'none'}</div>
 
 <button onclick={() => bump(params.key).updates(q)}>bump</button>

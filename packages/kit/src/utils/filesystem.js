@@ -1,7 +1,27 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { posixify } from './os.js';
-import { rebase_sourcemap } from './sourcemap.js';
+
+/** @param {string} dir */
+export function mkdirp(dir) {
+	try {
+		fs.mkdirSync(dir, { recursive: true });
+	} catch (/** @type {any} */ e) {
+		if (e.code === 'EEXIST') {
+			if (!fs.statSync(dir).isDirectory()) {
+				throw new Error(`Cannot create directory ${dir}, a file already exists at this position`, {
+					cause: e
+				});
+			}
+			return;
+		}
+		throw e;
+	}
+}
+
+/** @param {string} path */
+export function rimraf(path) {
+	fs.rmSync(path, { force: true, recursive: true });
+}
 
 /**
  * @param {string} source
@@ -17,60 +37,46 @@ export function copy(source, target, opts = {}) {
 	/** @type {string[]} */
 	const files = [];
 
+	const prefix = posixify(target) + '/';
+
 	const regex = opts.replace
 		? new RegExp(`\\b(${Object.keys(opts.replace).join('|')})\\b`, 'g')
 		: null;
 
-	/** @type {string | undefined} */
-	let created;
-
 	/**
 	 * @param {string} from
 	 * @param {string} to
-	 * @param {string} file posix path of `to` relative to `target`, empty when copying a single file
-	 * @param {boolean} is_directory
 	 */
-	function go(from, to, file, is_directory) {
+	function go(from, to) {
 		if (opts.filter && !opts.filter(path.basename(from))) return;
 
-		if (is_directory) {
-			for (const entry of fs.readdirSync(from, { withFileTypes: true })) {
-				const child = path.join(from, entry.name);
-				go(
-					child,
-					path.join(to, entry.name),
-					file ? `${file}/${entry.name}` : entry.name,
-					entry.isSymbolicLink() ? fs.statSync(child).isDirectory() : entry.isDirectory()
-				);
-			}
-			return;
-		}
+		const stats = fs.statSync(from);
 
-		const dir = path.dirname(to);
-		if (dir !== created) {
-			fs.mkdirSync(dir, { recursive: true });
-			created = dir;
-		}
-
-		const is_sourcemap = path.extname(from) === '.map';
-		if (opts.replace || is_sourcemap) {
-			let data = fs.readFileSync(from, 'utf-8');
-			if (opts.replace) {
-				data = data.replace(
-					/** @type {RegExp} */ (regex),
-					(_match, key) => /** @type {Record<string, string>} */ (opts.replace)[key]
-				);
-			}
-			if (is_sourcemap) data = rebase_sourcemap(data, from, to);
-			fs.writeFileSync(to, data);
+		if (stats.isDirectory()) {
+			fs.readdirSync(from).forEach((file) => {
+				go(path.join(from, file), path.join(to, file));
+			});
 		} else {
-			fs.copyFileSync(from, to);
-		}
+			mkdirp(path.dirname(to));
 
-		files.push(file || posixify(path.basename(to)));
+			if (opts.replace) {
+				const data = fs.readFileSync(from, 'utf-8');
+				fs.writeFileSync(
+					to,
+					data.replace(
+						/** @type {RegExp} */ (regex),
+						(_match, key) => /** @type {Record<string, string>} */ (opts.replace)[key]
+					)
+				);
+			} else {
+				fs.copyFileSync(from, to);
+			}
+
+			files.push(to === target ? posixify(path.basename(to)) : posixify(to).replace(prefix, ''));
+		}
 	}
 
-	go(source, target, '', fs.statSync(source).isDirectory());
+	go(source, target);
 
 	return files;
 }
@@ -78,22 +84,35 @@ export function copy(source, target, opts = {}) {
 /**
  * Get a list of all files in a directory
  * @param {string} cwd - the directory to walk
- * @param {string} [dir] - the subdirectory to walk, relative to `cwd`
- * @returns {Generator<string>} the posix paths of all found files, relative to `cwd`
+ * @param {boolean} [dirs] - whether to include directories in the result
+ * @returns {string[]} a list of all found files (and possibly directories) relative to `cwd`
  */
-export function* walk(cwd, dir = '') {
-	for (const entry of fs.readdirSync(path.join(cwd, dir), { withFileTypes: true })) {
-		const joined = dir ? `${dir}/${entry.name}` : entry.name;
-		const is_directory = entry.isSymbolicLink()
-			? fs.statSync(path.join(cwd, joined)).isDirectory()
-			: entry.isDirectory();
+export function walk(cwd, dirs = false) {
+	/** @type {string[]} */
+	const all_files = [];
 
-		if (is_directory) {
-			yield* walk(cwd, joined);
-		} else {
-			yield joined;
+	/** @param {string} dir */
+	function walk_dir(dir) {
+		const files = fs.readdirSync(path.join(cwd, dir));
+
+		for (const file of files) {
+			const joined = path.join(dir, file);
+			const stats = fs.statSync(path.join(cwd, joined));
+			if (stats.isDirectory()) {
+				if (dirs) all_files.push(joined);
+				walk_dir(joined);
+			} else {
+				all_files.push(joined);
+			}
 		}
 	}
+
+	return (walk_dir(''), all_files);
+}
+
+/** @param {string} str */
+export function posixify(str) {
+	return str.replace(/\\/g, '/');
 }
 
 /**
@@ -120,12 +139,36 @@ export function relative_path(from, to) {
 }
 
 /**
+ * Prepend given path with `/@fs` prefix
+ * @param {string} str
+ */
+export function to_fs(str) {
+	str = posixify(str);
+	return `/@fs${
+		// Windows/Linux separation - Windows starts with a drive letter, we need a / in front there
+		str.startsWith('/') ? '' : '/'
+	}${str}`;
+}
+
+/**
+ * Removes `/@fs` prefix from given path and posixifies it
+ * @param {string} str
+ */
+export function from_fs(str) {
+	str = posixify(str);
+	if (!str.startsWith('/@fs')) return str;
+
+	str = str.slice(4);
+	// Windows/Linux separation - Windows starts with a drive letter, we need to strip the additional / here
+	return str[2] === ':' && /[A-Z]/.test(str[1]) ? str.slice(1) : str;
+}
+
+/**
  * Given an entry point like [cwd]/src/hooks, returns a filename like [cwd]/src/hooks.js or [cwd]/src/hooks/index.js
  * @param {string} entry
- * @param {string[]} extensions defaults to `['.js', '.ts']`; pass `config.kit.moduleExtensions` for entries that are modules
- * @returns {string | null}
+ * @returns {string|null}
  */
-export function resolve_entry(entry, extensions) {
+export function resolve_entry(entry) {
 	if (fs.existsSync(entry)) {
 		const stats = fs.statSync(entry);
 		if (stats.isFile()) {
@@ -133,8 +176,8 @@ export function resolve_entry(entry, extensions) {
 		}
 
 		const index = path.join(entry, 'index');
-		if (extensions.some((extension) => fs.existsSync(index + extension))) {
-			return resolve_entry(index, extensions);
+		if (fs.existsSync(index + '.js') || fs.existsSync(index + '.ts')) {
+			return resolve_entry(index);
 		}
 	}
 
@@ -144,8 +187,7 @@ export function resolve_entry(entry, extensions) {
 		const base = path.basename(entry);
 		const files = fs.readdirSync(dir);
 		const found = files.find((file) => {
-			const matches = file === base || extensions.some((extension) => file === base + extension);
-			return matches && fs.statSync(path.join(dir, file)).isFile();
+			return file.replace(/\.(js|ts)$/, '') === base && fs.statSync(path.join(dir, file)).isFile();
 		});
 
 		if (found) return path.join(dir, found);

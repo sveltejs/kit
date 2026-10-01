@@ -8,19 +8,18 @@ import {
 } from '@playwright/test';
 import { IncomingMessage, ServerResponse } from 'node:http';
 import '../types/index.d.ts';
-import { AfterNavigate, BeforeNavigate, GotoOptions } from '$app/navigation';
+import { AfterNavigate, BeforeNavigate } from '@sveltejs/kit';
 
 export const test: TestType<
-	Omit<PlaywrightTestArgs, 'page'> &
+	PlaywrightTestArgs &
 		PlaywrightTestOptions & {
 			app: {
-				goto(url: string, opts?: GotoOptions): Promise<void>;
+				goto(url: string, opts?: { replaceState?: boolean }): Promise<void>;
 				invalidate(url: string): Promise<void>;
 				beforeNavigate(fn: (navigation: BeforeNavigate) => void | boolean): void;
 				afterNavigate(fn: (navigation: AfterNavigate) => void): void;
-				preloadCode(id: string): Promise<void>;
+				preloadCode(pathname: string): Promise<void>;
 				preloadData(url: string): Promise<void>;
-				match(url: string): Promise<{ id: string; params: Record<string, string> } | null>;
 			};
 			clicknav(
 				selector: string,
@@ -37,13 +36,10 @@ export const test: TestType<
 			start_server(
 				handler: (req: IncomingMessage, res: ServerResponse) => void
 			): Promise<{ port: number }>;
-			page: Omit<Page, 'goto'> & {
+			page: Page & {
 				goto: (
 					url: string,
-					opts?: Parameters<Page['goto']>[1] & {
-						/** Wait for `onMount` to add the 'started' class to the `<body>` */
-						wait_for_started?: boolean;
-					}
+					opts?: Parameters<Page['goto']>[1] & { wait_for_started?: boolean }
 				) => ReturnType<Page['goto']>;
 			};
 			baseURL: string;

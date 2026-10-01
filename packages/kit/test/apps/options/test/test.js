@@ -1,3 +1,4 @@
+import * as http from 'node:http';
 import process from 'node:process';
 import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
@@ -102,14 +103,24 @@ test.describe('env', () => {
 		await page.goto('/path-base/env');
 		expect(await page.textContent('#public')).toBe('and thank you');
 	});
+	test('respects private prefix', async ({ page }) => {
+		await page.goto('/path-base/env');
+		expect(await page.textContent('#private')).toBe('shhhh');
+		expect(await page.textContent('#neither')).toBe('');
+	});
 });
 
 test.describe('trailingSlash', () => {
 	test('adds trailing slash', async ({ baseURL, page, clicknav }) => {
 		// we can't use Playwright's `request` here, because it resolves redirects
-		const response = await fetch(`${baseURL}/path-base/slash`, { redirect: 'manual' });
-		expect(response.status).toBe(308);
-		expect(response.headers.get('location')).toBe('./slash/');
+		const status = await new Promise((fulfil, reject) => {
+			const request = http.get(`${baseURL}/path-base/slash`);
+			request.on('error', reject);
+			request.on('response', (response) => {
+				fulfil(response.statusCode);
+			});
+		});
+		expect(status).toBe(308);
 
 		await page.goto('/path-base/slash');
 
@@ -121,25 +132,7 @@ test.describe('trailingSlash', () => {
 		expect(await page.textContent('h2')).toBe('/path-base/slash/child/');
 	});
 
-	test('keeps scheme-like segments on the original origin', async ({ baseURL }) => {
-		for (const segment of ['http:example.com', 'https:example.com']) {
-			const url = new URL(`/path-base/slash/${segment}?ref=test`, baseURL);
-			const response = await fetch(url, { redirect: 'manual' });
-			const location = response.headers.get('location');
-			expect(response.status).toBe(308);
-			const target = new URL(/** @type {string} */ (location), url);
-			expect(target.origin).toBe(url.origin);
-			expect(target.pathname).toBe(`${url.pathname}/`);
-			expect(target.search).toBe(url.search);
-			expect(location).toBe(`./${segment}/?ref=test`);
-		}
-	});
-
 	test('removes trailing slash on endpoint', async ({ baseURL, request }) => {
-		const response = await fetch(`${baseURL}/path-base/endpoint/`, { redirect: 'manual' });
-		expect(response.status).toBe(308);
-		expect(response.headers.get('location')).toBe('../endpoint');
-
 		const r1 = await request.get('/path-base/endpoint/');
 		expect(r1.url()).toBe(`${baseURL}/path-base/endpoint`);
 		expect(await r1.text()).toBe('hi');
@@ -188,14 +181,13 @@ test.describe('trailingSlash', () => {
 
 		// also wait for network processing to complete, see
 		// https://playwright.dev/docs/network#network-events
-		// route IDs are never prefixed with `paths.base`
-		await app.preloadCode('/preloading/preloaded');
+		await app.preloadCode('/path-base/preloading/preloaded');
 
 		// svelte request made is environment dependent
 		if (process.env.DEV) {
 			expect(requests.filter((req) => req.endsWith('.svelte')).length).toBe(1);
 		} else {
-			expect(requests.filter((req) => req.endsWith('.js')).length).toBeGreaterThan(0);
+			expect(requests.filter((req) => req.endsWith('.mjs')).length).toBeGreaterThan(0);
 		}
 
 		requests = [];
@@ -212,31 +204,23 @@ test.describe('trailingSlash', () => {
 		page,
 		javaScriptEnabled
 	}) => {
-		test.skip(!javaScriptEnabled, 'data-sveltekit-* only works with JavaScript');
+		if (!javaScriptEnabled) return;
 
 		await page.goto('/path-base/preloading');
 
 		/** @type {string[]} */
 		let requests = [];
-		page.on('request', (r) => {
-			const { pathname } = new URL(r.url());
-			// chromium fetches the favicon lazily, at an arbitrary point after load
-			if (pathname !== '/path-base/favicon.png') requests.push(pathname);
-		});
+		page.on('request', (r) => requests.push(new URL(r.url()).pathname));
 
 		await page.hover('a[href="/path-base/preloading/code"]');
+		await page.waitForTimeout(100);
 
 		// svelte request made is environment dependent
 		if (process.env.DEV) {
-			await expect.poll(() => requests.filter((req) => req.endsWith('.svelte')).length).toBe(1);
+			expect(requests.filter((req) => req.endsWith('.svelte')).length).toBe(1);
 		} else {
-			await expect
-				.poll(() => requests.filter((req) => req.endsWith('.js')).length)
-				.toBeGreaterThan(0);
+			expect(requests.filter((req) => req.endsWith('.mjs')).length).toBeGreaterThan(0);
 		}
-
-		// let the preload finish before asserting that the click adds no requests
-		await page.waitForLoadState('networkidle');
 
 		requests = [];
 		await page.click('a[href="/path-base/preloading/code"]');
@@ -266,20 +250,17 @@ test.describe('$app/paths', () => {
 	test('match() works with base paths', async ({ request }) => {
 		const response = await request.get('/path-base/match');
 
-		expect(await response.json()).toEqual(
-			/** @satisfies {({ path: import('$app/types').ResolvedPathname ; result: { id: import('$app/types').RouteId; params: Record<string, string> } | null})[]} */
-			([
-				{
-					path: '/path-base/base/',
-					result: { id: '/base', params: {} }
-				},
-				{
-					path: '/path-base/base/resolved/',
-					result: { id: '/base/[slug]', params: { slug: 'resolved' } }
-				},
-				{ path: '/path-base/not-a-real-route-that-exists/', result: null }
-			])
-		);
+		expect(await response.json()).toEqual([
+			{
+				path: '/path-base/resolve-route',
+				result: { id: '/resolve-route', params: {} }
+			},
+			{
+				path: '/path-base/resolve-route/resolved',
+				result: { id: '/resolve-route/[foo]', params: { foo: 'resolved' } }
+			},
+			{ path: '/path-base/not-a-real-route-that-exists', result: null }
+		]);
 	});
 });
 

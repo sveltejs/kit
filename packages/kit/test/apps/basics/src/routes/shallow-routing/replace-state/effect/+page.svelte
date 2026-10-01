@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { replaceState } from '$app/navigation';
+	import { pushState as replaceState } from '$app/navigation';
 
 	let count = $state(0);
 

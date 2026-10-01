@@ -4,9 +4,8 @@
 	"private": true,
 	"scripts": {
 		"dev": "vite dev",
-		"preview": "vite preview",
 		"build": "vite build",
-		"test:build": "pnpm build && vitest run build.test.js",
+		"prepare": "svelte-kit sync || echo ''",
 		"test:platform": "playwright test"
 	},
 	"devDependencies": {
@@ -14,8 +13,7 @@
 		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"svelte": "catalog:",
 		"typescript": "catalog:",
-		"vite": "catalog:",
-		"vitest": "catalog:"
+		"vite": "catalog:"
 	},
 	"type": "module"
 }

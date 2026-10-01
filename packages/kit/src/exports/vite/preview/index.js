@@ -1,36 +1,38 @@
-/** @import { NextHandleFunction } from 'connect' */
-/** @import { PreviewServer } from 'vite' */
-/** @import { ValidatedConfig, ServerModule } from 'types' */
 import fs from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { lookup } from '../../../utils/mime.js';
+import { lookup } from 'mrmime';
 import sirv from 'sirv';
 import { loadEnv, normalizePath } from 'vite';
 import { createReadableStream, getRequest, setResponse } from '../../../exports/node/index.js';
+import { installPolyfills } from '../../../exports/node/polyfills.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
-import { relative_pathname } from '../../../utils/url.js';
 import { is_chrome_devtools_request, not_found } from '../utils.js';
-import { set_error_stack } from '../../../utils/error.js';
-import * as e from '../../../messages/build-errors.js';
+
+/** @typedef {import('http').IncomingMessage} Req */
+/** @typedef {import('http').ServerResponse} Res */
+/** @typedef {(req: Req, res: Res, next: () => void) => void} Handler */
 
 /**
- * @param {PreviewServer} vite
- * @param {ValidatedConfig} svelte_config
+ * @param {import('vite').PreviewServer} vite
+ * @param {import('vite').ResolvedConfig} vite_config
+ * @param {import('types').ValidatedConfig} svelte_config
  */
-export async function preview(vite, svelte_config) {
-	const { paths } = svelte_config;
+export async function preview(vite, vite_config, svelte_config) {
+	installPolyfills();
+
+	const { paths } = svelte_config.kit;
 	const base = paths.base;
 	const assets = paths.assets ? SVELTE_KIT_ASSETS : paths.base;
 
-	const protocol = vite.config.preview.https ? 'https' : 'http';
+	const protocol = vite_config.preview.https ? 'https' : 'http';
 
 	const etag = `"${Date.now()}"`;
 
-	const dir = join(svelte_config.outDir, 'output/server');
+	const dir = join(svelte_config.kit.outDir, 'output/server');
 
-	if (!fs.existsSync(`${dir}/manifest.js`)) {
-		e.preview_build_missing({ dir }, { stackless: true });
+	if (!fs.existsSync(dir)) {
+		throw new Error(`Server files not found at ${dir}, did you run \`build\` first?`);
 	}
 
 	const instrumentation = join(dir, 'instrumentation.server.js');
@@ -38,33 +40,32 @@ export async function preview(vite, svelte_config) {
 		await import(pathToFileURL(instrumentation).href);
 	}
 
-	/** @type {ServerModule} */
-	const { configure } = await import(pathToFileURL(join(dir, 'index.js')).href);
+	/** @type {import('types').ServerInternalModule} */
+	const { set_assets } = await import(pathToFileURL(join(dir, 'internal.js')).href);
 
-	/** @type {{ manifest: import('types').SSRManifest }} */
+	/** @type {import('types').ServerModule} */
+	const { Server } = await import(pathToFileURL(join(dir, 'index.js')).href);
+
 	const { manifest } = await import(pathToFileURL(join(dir, 'manifest.js')).href);
 
-	/** @type {import('types').ServerInstance} */
-	let server;
+	set_assets(assets);
+
+	const server = new Server(manifest);
 
 	try {
-		server = await configure({
-			manifest,
-			env: loadEnv(vite.config.mode, svelte_config.env.dir, ''),
-			read: (file) => createReadableStream(`${dir}/${file}`),
-			assets
+		await server.init({
+			env: loadEnv(vite_config.mode, svelte_config.kit.env.dir, ''),
+			read: (file) => createReadableStream(`${dir}/${file}`)
 		});
-
-		await server.init();
 	} catch (error) {
 		// Vite erases the error message when starting the preview server so we store
 		// it in the stack instead. This ensures errors thrown using `stackless`
 		// are still readable
-		if (error instanceof Error) set_error_stack(error, error.message);
+		if (error instanceof Error) error.stack = error.message;
 		throw error;
 	}
 
-	const emulator = await svelte_config.adapter?.emulate?.();
+	const emulator = await svelte_config.kit.adapter?.emulate?.();
 
 	return () => {
 		// Remove the base middleware. It screws with the URL.
@@ -83,10 +84,10 @@ export async function preview(vite, svelte_config) {
 		vite.middlewares.use(
 			scoped(
 				assets,
-				sirv(join(svelte_config.outDir, 'output/client'), {
+				sirv(join(svelte_config.kit.outDir, 'output/client'), {
 					setHeaders: (res, pathname) => {
 						// only apply to immutable directory, not e.g. version.json
-						if (pathname.startsWith(`/${svelte_config.appDir}/immutable`)) {
+						if (pathname.startsWith(`/${svelte_config.kit.appDir}/immutable`)) {
 							res.setHeader('cache-control', 'public,max-age=31536000,immutable');
 						}
 					}
@@ -124,7 +125,7 @@ export async function preview(vite, svelte_config) {
 
 		// prerendered dependencies
 		vite.middlewares.use(
-			scoped(base, mutable(join(svelte_config.outDir, 'output/prerendered/dependencies')))
+			scoped(base, mutable(join(svelte_config.kit.outDir, 'output/prerendered/dependencies')))
 		);
 
 		// prerendered pages (we can't just use sirv because we need to
@@ -145,18 +146,19 @@ export async function preview(vite, svelte_config) {
 
 				const { pathname, search } = new URL(/** @type {string} */ (req.url), 'http://dummy');
 
-				const dir = pathname.startsWith(`/${svelte_config.appDir}/remote/`) ? 'data' : 'pages';
-				const root = join(svelte_config.outDir, `output/prerendered/${dir}`);
-				let decoded = pathname;
+				const dir = pathname.startsWith(`/${svelte_config.kit.appDir}/remote/`) ? 'data' : 'pages';
+
+				let filename = normalizePath(
+					join(svelte_config.kit.outDir, `output/prerendered/${dir}` + pathname)
+				);
 
 				try {
-					decoded = decodeURI(pathname);
+					filename = decodeURI(filename);
 				} catch {
 					// malformed URI
 				}
 
-				let filename = normalizePath(join(root, decoded));
-				let prerendered = is_file(filename, root);
+				let prerendered = is_file(filename);
 
 				if (!prerendered) {
 					const has_trailing_slash = pathname.endsWith('/');
@@ -165,21 +167,21 @@ export async function preview(vite, svelte_config) {
 					/** @type {string | undefined} */
 					let redirect;
 
-					if (is_file(html_filename, root)) {
+					if (is_file(html_filename)) {
 						filename = html_filename;
 						prerendered = true;
 					} else if (has_trailing_slash) {
-						if (is_file(filename.slice(0, -1) + '.html', root)) {
+						if (is_file(filename.slice(0, -1) + '.html')) {
 							redirect = pathname.slice(0, -1);
 						}
-					} else if (is_file(filename + '/index.html', root)) {
+					} else if (is_file(filename + '/index.html')) {
 						redirect = pathname + '/';
 					}
 
 					if (redirect) {
-						res.writeHead(308, {
-							// relative so (possibly invisible) path prefixes are preserved
-							location: relative_pathname(pathname, redirect) + search
+						if (search) redirect += search;
+						res.writeHead(307, {
+							location: redirect
 						});
 
 						res.end();
@@ -205,13 +207,12 @@ export async function preview(vite, svelte_config) {
 		vite.middlewares.use(async (req, res) => {
 			const host = req.headers[':authority'] || req.headers.host;
 
-			const request = (svelte_config.adapter?.vite?.getRequest ?? getRequest)({
+			const request = await getRequest({
 				base: `${protocol}://${host}`,
-				request: req,
-				response: res
+				request: req
 			});
 
-			(svelte_config.adapter?.vite?.setResponse ?? setResponse)(
+			await setResponse(
 				res,
 				await server.respond(request, {
 					getClientAddress: () => {
@@ -220,11 +221,11 @@ export async function preview(vite, svelte_config) {
 						throw new Error('Could not determine clientAddress');
 					},
 					read: (file) => {
-						if (file in manifest.server_assets) {
+						if (file in manifest._.server_assets) {
 							return fs.readFileSync(join(dir, file));
 						}
 
-						return fs.readFileSync(join(svelte_config.files.assets, file));
+						return fs.readFileSync(join(svelte_config.kit.files.assets, file));
 					},
 					emulator
 				})
@@ -235,7 +236,7 @@ export async function preview(vite, svelte_config) {
 
 /**
  * @param {string} dir
- * @returns {NextHandleFunction}
+ * @returns {Handler}
  */
 const mutable = (dir) =>
 	fs.existsSync(dir)
@@ -247,8 +248,8 @@ const mutable = (dir) =>
 
 /**
  * @param {string} scope
- * @param {NextHandleFunction} handler
- * @returns {NextHandleFunction}
+ * @param {Handler} handler
+ * @returns {Handler}
  */
 function scoped(scope, handler) {
 	if (scope === '') return handler;
@@ -267,17 +268,7 @@ function scoped(scope, handler) {
 	};
 }
 
-/**
- * @param {string} path
- * @param {string} root
- * @returns {boolean}
- */
-function is_file(path, root) {
-	return (
-		fs.existsSync(root) &&
-		fs.existsSync(path) &&
-		!fs.statSync(path).isDirectory() &&
-		// Decoding can introduce path separators on Windows. Check containment after resolving them.
-		normalizePath(fs.realpathSync(path)).startsWith(`${normalizePath(fs.realpathSync(root))}/`)
-	);
+/** @param {string} path */
+function is_file(path) {
+	return fs.existsSync(path) && !fs.statSync(path).isDirectory();
 }

@@ -1,5 +1,5 @@
 import process from 'node:process';
-import { prerendered } from '$app/manifest';
+import { prerendered } from '$service-worker';
 
 console.log(prerendered);
 

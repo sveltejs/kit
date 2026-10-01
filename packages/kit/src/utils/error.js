@@ -1,5 +1,4 @@
 import { HttpError, SvelteKitError } from '@sveltejs/kit/internal';
-import * as w from '../messages/shared-warnings.js';
 
 /**
  * For times when you need to throw an error, but without
@@ -11,22 +10,6 @@ export function stackless(message) {
 	const error = new Error(message);
 	error.stack = '';
 	return error;
-}
-
-/**
- * @param {Error} error
- * @param {string} stack
- * @returns {string | undefined}
- */
-export function set_error_stack(error, stack) {
-	try {
-		// Unlike assignment in strict mode, Reflect.set returns false for a read-only property
-		Reflect.set(error, 'stack', stack);
-	} catch {
-		// A custom setter or proxy trap may still throw
-	}
-
-	return error.stack;
 }
 
 /**
@@ -47,7 +30,7 @@ export function coalesce_to_error(err) {
  * @param {unknown} error
  */
 export function normalize_error(error) {
-	return /** @type {import('../exports/internal/shared.js').Redirect | HttpError | SvelteKitError | Error} */ (
+	return /** @type {import('../exports/internal/index.js').Redirect | HttpError | SvelteKitError | Error} */ (
 		error
 	);
 }
@@ -60,28 +43,8 @@ export function get_status(error) {
 }
 
 /**
- * Adds development-only compatibility accessors for the former top-level `status` and `message`
- * properties of the `handleError` hook input.
- * @template {object} T
- * @param {T} input
- * @param {{ status: number; message: string }} fallback
- * @returns {T}
+ * @param {unknown} error
  */
-export function add_deprecated_handle_error_properties(input, fallback) {
-	Object.defineProperties(input, {
-		status: {
-			get() {
-				w.handle_error_status_deprecated();
-				return fallback.status;
-			}
-		},
-		message: {
-			get() {
-				w.handle_error_message_deprecated();
-				return fallback.message;
-			}
-		}
-	});
-
-	return input;
+export function get_message(error) {
+	return error instanceof SvelteKitError ? error.text : 'Internal Error';
 }

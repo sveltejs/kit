@@ -1,22 +1,16 @@
+import process from 'node:process';
 import fs from 'node:fs';
 import path from 'node:path';
-import { pathToFileURL } from 'node:url';
 
 /**
- * Resolves a peer dependency relative to the current working directory.
- *
- * Mainly used to resolve the correct Vite package when an app's SvelteKit is a
- * linked local repository.
- *
- * Duplicated with `packages/adapter-auto`
+ * Resolves a peer dependency relative to the current CWD. Duplicated with `packages/adapter-auto`
  * @param {string} dependency
- * @param {string} root
  */
-function resolve_peer(dependency, root) {
+function resolve_peer(dependency) {
 	let [name, ...parts] = dependency.split('/');
 	if (name[0] === '@') name += `/${parts.shift()}`;
 
-	let dir = root;
+	let dir = process.cwd();
 
 	while (!fs.existsSync(`${dir}/node_modules/${name}/package.json`)) {
 		if (dir === (dir = path.dirname(dir))) {
@@ -48,13 +42,11 @@ function resolve_peer(dependency, root) {
  * Resolve a dependency relative to the current working directory,
  * rather than relative to this package (but falls back to trying that, if necessary)
  * @param {string} dependency
- * @param {string} root
  */
-export async function import_peer(dependency, root) {
+export async function import_peer(dependency) {
 	try {
-		return await import(/* @vite-ignore */ pathToFileURL(resolve_peer(dependency, root)).href);
+		return await import(/* @vite-ignore */ resolve_peer(dependency));
 	} catch {
-		// eslint-disable-next-line kit-node-custom/require-path-to-file-url -- bare package specifier, not a path
 		return await import(/* @vite-ignore */ dependency);
 	}
 }

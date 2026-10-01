@@ -1,10 +1,9 @@
-/** @import { RemoteCommand } from '$app/server' */
+/** @import { RemoteCommand } from '@sveltejs/kit' */
 /** @import { MaybePromise, RemoteCommandInternals } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import { create_validator, run_remote_function } from './shared.js';
 import { MUTATIVE_METHODS } from '../../../../constants.js';
-import * as e from '../../../../messages/server-errors.js';
 
 /**
  * Creates a remote command. When called from the browser, the function will be invoked on the server via a `fetch` call.
@@ -66,19 +65,16 @@ export function command(validate_or_fn, maybe_fn) {
 	const wrapper = (arg) => {
 		const { event, state } = get_request_store();
 
-		if (
-			!MUTATIVE_METHODS.includes(event.request.method) ||
-			state.is_in_remote_query ||
-			state.is_in_remote_prerender
-		) {
-			if (state.is_in_remote_query || state.is_in_remote_prerender) {
-				e.remote_command_readonly({ name: __.name });
-			}
-			e.remote_command_method({ name: __.name, method: event.request.method });
+		if (!MUTATIVE_METHODS.includes(event.request.method)) {
+			throw new Error(
+				`Cannot call a command (\`${__.name}(${maybe_fn ? '...' : ''})\`) from a ${event.request.method} handler`
+			);
 		}
 
 		if (state.is_in_render) {
-			e.remote_command_render({ name: __.name });
+			throw new Error(
+				`Cannot call a command (\`${__.name}(${maybe_fn ? '...' : ''})\`) during server-side rendering`
+			);
 		}
 
 		const promise = Promise.resolve(
@@ -87,7 +83,7 @@ export function command(validate_or_fn, maybe_fn) {
 
 		// @ts-expect-error
 		promise.updates = () => {
-			e.server_api_unavailable({ name: `${__.name}(...).updates(...)` });
+			throw new Error(`Cannot call '${__.name}(...).updates(...)' on the server`);
 		};
 
 		return /** @type {ReturnType<RemoteCommand<Input, Output>>} */ (promise);

@@ -4,9 +4,9 @@
 	"private": true,
 	"scripts": {
 		"dev": "vite dev",
-		"build": "MY_CUSTOM_PORT=5173 INSTRUMENTATION_ENV=available vite build",
-		"preview": "MY_CUSTOM_PORT=5173 INSTRUMENTATION_ENV=available node build",
-		"test:build": "pnpm build && vitest run build.test.js",
+		"build": "vite build",
+		"preview": "MY_CUSTOM_PORT=5173 node build",
+		"prepare": "svelte-kit sync || echo ''",
 		"test:platform": "playwright test"
 	},
 	"devDependencies": {
@@ -14,12 +14,7 @@
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"svelte": "catalog:",
-		"vite": "catalog:",
-		"vitest": "catalog:"
-	},
-	"dependencies": {
-		"server-side-dep": "file:server-side-dep",
-		"server-side-svelte-dep": "file:server-side-svelte-dep"
+		"vite": "catalog:"
 	},
 	"type": "module"
 }

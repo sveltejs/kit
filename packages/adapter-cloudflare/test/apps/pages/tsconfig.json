@@ -9,5 +9,5 @@
 		"sourceMap": true,
 		"moduleResolution": "bundler"
 	},
-	"extends": "$app/tsconfig"
+	"extends": "./.svelte-kit/tsconfig.json"
 }

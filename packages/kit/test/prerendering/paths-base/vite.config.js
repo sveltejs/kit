@@ -1,8 +1,7 @@
 import * as path from 'node:path';
 import { sveltekit } from '@sveltejs/kit/vite';
-import adapter from '../../../../adapter-static/index.js';
 
-/** @type {import('vitest/config').ViteUserConfig} */
+/** @type {import('vite').UserConfig} */
 const config = {
 	build: {
 		minify: false,
@@ -14,24 +13,12 @@ const config = {
 
 	logLevel: 'silent',
 
-	plugins: [
-		sveltekit({
-			adapter: adapter(),
-
-			paths: {
-				base: '/path-base',
-				relative: false
-			}
-		})
-	],
+	plugins: [sveltekit()],
 
 	server: {
 		fs: {
 			allow: [path.resolve('../../../src')]
 		}
-	},
-	test: {
-		name: 'kit-prerendering-paths-base'
 	}
 };
 

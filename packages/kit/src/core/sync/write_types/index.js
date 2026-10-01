@@ -1,11 +1,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import process from 'node:process';
 import MagicString from 'magic-string';
-import { walk, resolve_entry } from '../../../utils/filesystem.js';
+import { posixify, rimraf, walk } from '../../../utils/filesystem.js';
 import { compact } from '../../../utils/array.js';
-import { posixify } from '../../../utils/os.js';
 import { ts } from '../ts.js';
-import { is_page_route } from '../create_manifest_data/index.js';
 const remove_relative_parent_traversals = (/** @type {string} */ path) =>
 	path.replace(/\.\.\//g, '');
 const is_whitespace = (/** @type {string} */ char) => /\s/.test(char);
@@ -26,30 +25,31 @@ const is_whitespace = (/** @type {string} */ char) => /\s/.test(char);
  *  @typedef {Map<import('types').PageNode, {route: import('types').RouteData, proxies: Proxies}>} RoutesMap
  */
 
+const cwd = process.cwd();
+
 /**
  * Creates types for the whole manifest
  * @param {import('types').ValidatedConfig} config
  * @param {import('types').ManifestData} manifest_data
- * @param {string} root The project root directory
  */
-export function write_all_types(config, manifest_data, root) {
+export function write_all_types(config, manifest_data) {
 	if (!ts) return;
 
-	const types_dir = `${config.outDir}/types`;
+	const types_dir = `${config.kit.outDir}/types`;
 
 	// empty out files that no longer need to exist
 	const routes_dir = remove_relative_parent_traversals(
-		posixify(path.relative(root, config.files.routes))
+		posixify(path.relative('.', config.kit.files.routes))
 	);
 	const expected_directories = new Set(
-		manifest_data.routes.map((route) => path.posix.join(routes_dir, route.id))
+		manifest_data.routes.map((route) => path.join(routes_dir, route.id))
 	);
 
 	if (fs.existsSync(types_dir)) {
 		for (const file of walk(types_dir)) {
-			const dir = path.posix.dirname(file);
+			const dir = path.dirname(file);
 			if (!expected_directories.has(dir)) {
-				fs.rmSync(path.join(types_dir, file), { force: true, recursive: true });
+				rimraf(path.join(types_dir, file));
 			}
 		}
 	}
@@ -66,7 +66,7 @@ export function write_all_types(config, manifest_data, root) {
 	for (const route of manifest_data.routes) {
 		if (!route.leaf && !route.layout && !route.endpoint) continue; // nothing to do
 
-		const outdir = path.join(config.outDir, 'types', routes_dir, route.id);
+		const outdir = path.join(config.kit.outDir, 'types', routes_dir, route.id);
 
 		// check if the types are out of date
 		/** @type {string[]} */
@@ -109,7 +109,7 @@ export function write_all_types(config, manifest_data, root) {
 
 		const source_last_updated = Math.max(
 			// ctimeMs includes move operations whereas mtimeMs does not
-			...input_files.map((file) => fs.statSync(path.resolve(root, file)).ctimeMs)
+			...input_files.map((file) => fs.statSync(file).ctimeMs)
 		);
 		const types_last_updated = Math.max(...output_files.map((file) => file.updated));
 
@@ -124,7 +124,7 @@ export function write_all_types(config, manifest_data, root) {
 		if (should_generate) {
 			// track which old files end up being surplus to requirements
 			const to_delete = new Set(output_files.map((file) => file.name));
-			update_types(config, routes_map, route, root, to_delete);
+			update_types(config, routes_map, route, to_delete);
 			meta_data[route.id] = input_files;
 		}
 	}
@@ -138,9 +138,8 @@ export function write_all_types(config, manifest_data, root) {
  * @param {import('types').ValidatedConfig} config
  * @param {import('types').ManifestData} manifest_data
  * @param {string} file
- * @param {string} root The project root directory
  */
-export function write_types(config, manifest_data, file, root) {
+export function write_types(config, manifest_data, file) {
 	if (!ts) return;
 
 	if (!path.basename(file).startsWith('+')) {
@@ -148,13 +147,13 @@ export function write_types(config, manifest_data, file, root) {
 		return;
 	}
 
-	const id = '/' + posixify(path.relative(config.files.routes, path.dirname(file)));
+	const id = '/' + posixify(path.relative(config.kit.files.routes, path.dirname(file)));
 
 	const route = manifest_data.routes.find((route) => route.id === id);
 	if (!route) return;
 	if (!route.leaf && !route.layout && !route.endpoint) return; // nothing to do
 
-	update_types(config, create_routes_map(manifest_data), route, root);
+	update_types(config, create_routes_map(manifest_data), route);
 }
 
 /**
@@ -177,20 +176,16 @@ function create_routes_map(manifest_data) {
  * @param {import('types').ValidatedConfig} config
  * @param {RoutesMap} routes
  * @param {import('types').RouteData} route
- * @param {string} root The project root directory
  * @param {Set<string>} [to_delete]
  */
-function update_types(config, routes, route, root, to_delete = new Set()) {
+function update_types(config, routes, route, to_delete = new Set()) {
 	const routes_dir = remove_relative_parent_traversals(
-		posixify(path.relative(root, config.files.routes))
+		posixify(path.relative('.', config.kit.files.routes))
 	);
-	const outdir = path.join(config.outDir, 'types', routes_dir, route.id);
+	const outdir = path.join(config.kit.outDir, 'types', routes_dir, route.id);
 
 	// now generate new types
-	const imports = [
-		"import type * as Kit from '@sveltejs/kit';",
-		"import { MatcherParam } from '@sveltejs/kit/params';"
-	];
+	const imports = ["import type * as Kit from '@sveltejs/kit';"];
 
 	/** @type {string[]} */
 	const declarations = [];
@@ -201,6 +196,11 @@ function update_types(config, routes, route, root, to_delete = new Set()) {
 	// add 'Expand' helper
 	// Makes sure a type is "repackaged" and therefore more readable
 	declarations.push('type Expand<T> = T extends infer O ? { [K in keyof O]: O[K] } : never;');
+
+	// returns the predicate of a matcher's type guard - or string if there is no type guard
+	declarations.push(
+		'type MatcherParam<M> = M extends (param : string) => param is (infer U extends string) ? U : string;'
+	);
 
 	declarations.push(
 		'type RouteParams = ' + generate_params_type(route.params, outdir, config) + ';'
@@ -235,10 +235,7 @@ function update_types(config, routes, route, root, to_delete = new Set()) {
 			'type OptionalUnion<U extends Record<string, any>, A extends keyof U = U extends U ? keyof U : never> = U extends unknown ? { [P in Exclude<A, keyof U>]?: never } & U : never;',
 
 			// Re-export `Snapshot` from @sveltejs/kit — in future we could use this to infer <T> from the return type of `snapshot.capture`
-			'/** @deprecated Use the `snapshot` helper from `$app/navigation` instead. */',
-			'export type Snapshot<T = any> = Kit.Snapshot<T>;',
-
-			'export type ErrorProps = { error: App.Error };'
+			'export type Snapshot<T = any> = Kit.Snapshot<T>;'
 		);
 	}
 
@@ -254,7 +251,7 @@ function update_types(config, routes, route, root, to_delete = new Set()) {
 			declarations: d,
 			exports: e,
 			proxies
-		} = process_node(route.leaf, outdir, true, route_info.proxies, root);
+		} = process_node(route.leaf, outdir, true, route_info.proxies);
 
 		exports.push(...e);
 		declarations.push(...d);
@@ -270,8 +267,15 @@ function update_types(config, routes, route, root, to_delete = new Set()) {
 
 		if (route.leaf.server) {
 			exports.push(
-				'export type Action<OutputData extends Record<string, any> | void = Record<string, any> | void> = Kit.Action<RouteParams, OutputData, RouteId>',
-				'export type Actions<OutputData extends Record<string, any> | void = Record<string, any> | void> = Kit.Actions<RouteParams, OutputData, RouteId>',
+				'export type Action<OutputData extends Record<string, any> | void = Record<string, any> | void> = Kit.Action<RouteParams, OutputData, RouteId>'
+			);
+			exports.push(
+				'export type Actions<OutputData extends Record<string, any> | void = Record<string, any> | void> = Kit.Actions<RouteParams, OutputData, RouteId>'
+			);
+		}
+
+		if (route.leaf.server) {
+			exports.push(
 				'export type PageProps = { params: RouteParams; data: PageData; form: ActionData }'
 			);
 		} else {
@@ -283,9 +287,7 @@ function update_types(config, routes, route, root, to_delete = new Set()) {
 		let all_pages_have_load = true;
 		/** @type {import('types').RouteParam[]} */
 		const layout_params = [];
-		// a layout can live in a directory that has no `+page` of its own, in which case its own id
-		// is never the matched route — a request to a colocated `+server` doesn't execute layouts
-		const ids = is_page_route(route) ? ['RouteId'] : [];
+		const ids = ['RouteId'];
 
 		route.layout.child_pages?.forEach((page) => {
 			const leaf = routes.get(page);
@@ -298,7 +300,7 @@ function update_types(config, routes, route, root, to_delete = new Set()) {
 					layout_params.push({ ...param, optional: true });
 				}
 
-				ensureProxies(page, leaf.proxies, root);
+				ensureProxies(page, leaf.proxies);
 
 				if (
 					// Be defensive - if a proxy doesn't exist (because it couldn't be created), assume a load function exists.
@@ -319,7 +321,7 @@ function update_types(config, routes, route, root, to_delete = new Set()) {
 			ids.push('null');
 		}
 
-		declarations.push(`type LayoutRouteId = ${ids.join(' | ') || 'never'}`);
+		declarations.push(`type LayoutRouteId = ${ids.join(' | ')}`);
 
 		declarations.push(
 			'type LayoutParams = RouteParams & ' + generate_params_type(layout_params, outdir, config)
@@ -334,7 +336,6 @@ function update_types(config, routes, route, root, to_delete = new Set()) {
 			outdir,
 			false,
 			{ server: null, universal: null },
-			root,
 			all_pages_have_load
 		);
 
@@ -374,10 +375,9 @@ function update_types(config, routes, route, root, to_delete = new Set()) {
  * @param {string} outdir
  * @param {boolean} is_page
  * @param {Proxies} proxies
- * @param {string} root The project root directory
  * @param {boolean} [all_pages_have_load]
  */
-function process_node(node, outdir, is_page, proxies, root, all_pages_have_load = true) {
+function process_node(node, outdir, is_page, proxies, all_pages_have_load = true) {
 	const params = `${is_page ? 'Route' : 'Layout'}Params`;
 	const prefix = is_page ? 'Page' : 'Layout';
 
@@ -393,7 +393,7 @@ function process_node(node, outdir, is_page, proxies, root, all_pages_have_load 
 	/** @type {string} */
 	let data;
 
-	ensureProxies(node, proxies, root);
+	ensureProxies(node, proxies);
 
 	if (node.server) {
 		const basename = path.basename(node.server);
@@ -426,7 +426,7 @@ function process_node(node, outdir, is_page, proxies, root, all_pages_have_load 
 				// The advantage is that type updates are reflected without saving.
 				const from = proxy.modified
 					? `./proxy${replace_ext_with_js(basename)}`
-					: path_to_original(outdir, node.server, root);
+					: path_to_original(outdir, node.server);
 
 				exports.push(
 					'type ExcludeActionFailure<T> = T extends Kit.ActionFailure<any> ? never : T extends void ? never : T;',
@@ -434,7 +434,7 @@ function process_node(node, outdir, is_page, proxies, root, all_pages_have_load 
 					'type ExtractActionFailure<T> = T extends Kit.ActionFailure<infer X>	? X extends void ? never : X : never;',
 					'type ActionsFailure<T extends Record<string, (...args: any) => any>> = { [Key in keyof T]: Exclude<ExtractActionFailure<Awaited<ReturnType<T[Key]>>>, void>; }[keyof T];',
 					`type ActionsExport = typeof import('${from}').actions`,
-					"export type SubmitFunction = import('$app/forms').SubmitFunction<Expand<ActionsSuccess<ActionsExport>>, Expand<ActionsFailure<ActionsExport>>>"
+					'export type SubmitFunction = Kit.SubmitFunction<Expand<ActionsSuccess<ActionsExport>>, Expand<ActionsFailure<ActionsExport>>>'
 				);
 
 				type = 'Expand<Kit.AwaitedActions<ActionsExport>> | null';
@@ -495,7 +495,7 @@ function process_node(node, outdir, is_page, proxies, root, all_pages_have_load 
 				// The advantage is that type updates are reflected without saving.
 				const from = proxy.modified
 					? `./proxy${replace_ext_with_js(path.basename(file_path))}`
-					: path_to_original(outdir, file_path, root);
+					: path_to_original(outdir, file_path);
 				const type = `Kit.LoadProperties<Awaited<ReturnType<typeof import('${from}').load>>>`;
 				return expand ? `Expand<OptionalUnion<EnsureDefined<${type}>>>` : type;
 			} else {
@@ -515,26 +515,24 @@ function process_node(node, outdir, is_page, proxies, root, all_pages_have_load 
  *
  * @param {import('types').PageNode} node
  * @param {Proxies} proxies
- * @param {string} root The project root directory
  */
-function ensureProxies(node, proxies, root) {
+function ensureProxies(node, proxies) {
 	if (node.server && !proxies.server) {
-		proxies.server = createProxy(node.server, true, root);
+		proxies.server = createProxy(node.server, true);
 	}
 
 	if (node.universal && !proxies.universal) {
-		proxies.universal = createProxy(node.universal, false, root);
+		proxies.universal = createProxy(node.universal, false);
 	}
 }
 
 /**
  * @param {string} file_path
  * @param {boolean} is_server
- * @param {string} root The project root directory
  * @returns {Proxy}
  */
-function createProxy(file_path, is_server, root) {
-	const proxy = tweak_types(fs.readFileSync(path.resolve(root, file_path), 'utf8'), is_server);
+function createProxy(file_path, is_server) {
+	const proxy = tweak_types(fs.readFileSync(file_path, 'utf8'), is_server);
 	if (proxy) {
 		return {
 			...proxy,
@@ -579,10 +577,9 @@ function get_parent_type(node, type) {
 /**
  * @param {string} outdir
  * @param {string} file_path
- * @param {string} root The project root directory
  */
-function path_to_original(outdir, file_path, root) {
-	return posixify(path.relative(outdir, path.join(root, replace_ext_with_js(file_path))));
+function path_to_original(outdir, file_path) {
+	return posixify(path.relative(outdir, path.join(cwd, replace_ext_with_js(file_path))));
 }
 
 /**
@@ -601,22 +598,16 @@ function replace_ext_with_js(file_path) {
  * @param {import('types').ValidatedConfig} config
  */
 function generate_params_type(params, outdir, config) {
-	const path_to_params = () => {
-		const params_file =
-			resolve_entry(config.files.params, config.moduleExtensions) ??
-			config.files.params.replace(/\.(js|ts)$/, '') + '.js';
-
-		return posixify(path.relative(outdir, params_file));
-	};
-
-	const params_import = path_to_params();
+	/** @param {string} matcher */
+	const path_to_matcher = (matcher) =>
+		posixify(path.relative(outdir, path.join(config.kit.files.params, matcher + '.js')));
 
 	return `{ ${params
 		.map(
 			(param) =>
-				`${/^\w+$/.test(param.name) ? param.name : `'${param.name}'`}${param.optional ? '?' : ''}: ${
+				`${param.name}${param.optional ? '?' : ''}: ${
 					param.matcher
-						? `MatcherParam<(typeof import('${params_import}').params)[${JSON.stringify(param.matcher)}]>`
+						? `MatcherParam<typeof import('${path_to_matcher(param.matcher)}').match>`
 						: 'string'
 				}${param.optional ? ' | undefined' : ''}`
 		)
@@ -724,62 +715,6 @@ export function tweak_types(content, is_server) {
 			return _modified;
 		}
 
-		/**
-		 * @param {number} name_end position of the identifier the annotation is attached to
-		 * @param {import('typescript').TypeNode} type_node
-		 * @returns {string} the removed annotation's text
-		 */
-		function strip_type_annotation(name_end, type_node) {
-			let a = type_node.pos;
-			const b = type_node.end;
-			while (is_whitespace(content[a])) a += 1;
-
-			const type = content.slice(a, b);
-			code.remove(name_end, type_node.end);
-			modified = true;
-			return type;
-		}
-
-		/**
-		 * Types the first parameter of an untyped arrow/function expression.
-		 * @param {import('typescript').Expression | undefined} rhs
-		 * @param {string} type
-		 * @returns {boolean} `false` if there was nothing to annotate
-		 */
-		function annotate_first_param(rhs, type) {
-			if (
-				!rhs ||
-				!(ts.isArrowFunction(rhs) || ts.isFunctionExpression(rhs)) ||
-				!rhs.parameters.length
-			) {
-				return false;
-			}
-
-			const arg = rhs.parameters[0];
-			const add_parens = content[arg.pos - 1] !== '(';
-
-			if (add_parens) code.prependRight(arg.pos, '(');
-
-			if (arg.type) return false;
-
-			code.appendLeft(arg.name.end, `: ${type}` + (add_parens ? ')' : ''));
-			return true;
-		}
-
-		/**
-		 * @param {import('typescript').Expression | undefined} initializer
-		 * @param {(prop: import('typescript').PropertyAssignment) => void} callback
-		 */
-		function for_each_action(initializer, callback) {
-			if (initializer && ts.isObjectLiteralExpression(initializer)) {
-				for (const prop of initializer.properties) {
-					if (ts.isPropertyAssignment(prop) && ts.isIdentifier(prop.name)) {
-						callback(prop);
-					}
-				}
-			}
-		}
-
 		ast.forEachChild((node) => {
 			if (ts.isFunctionDeclaration(node) && node.name?.text && node.name?.text === 'load') {
 				// remove JSDoc comment above `export function load ...`
@@ -805,13 +740,42 @@ export function tweak_types(content, is_server) {
 						// edge case — remove JSDoc comment above individual export
 						replace_jsdoc_type_tags(declaration, declaration.initializer);
 
+						// remove type from `export const load: Load ...`
 						if (declaration.type) {
-							const type = strip_type_annotation(declaration.name.end, declaration.type);
+							let a = declaration.type.pos;
+							const b = declaration.type.end;
+							while (is_whitespace(content[a])) a += 1;
 
-							if (!annotate_first_param(declaration.initializer, `Parameters<${type}>[0]`)) {
+							const type = content.slice(a, b);
+							code.remove(declaration.name.end, declaration.type.end);
+
+							const rhs = declaration.initializer;
+
+							if (
+								rhs &&
+								(ts.isArrowFunction(rhs) || ts.isFunctionExpression(rhs)) &&
+								rhs.parameters.length
+							) {
+								const arg = rhs.parameters[0];
+								const add_parens = content[arg.pos - 1] !== '(';
+
+								if (add_parens) code.prependRight(arg.pos, '(');
+
+								if (arg && !arg.type) {
+									code.appendLeft(
+										arg.name.end,
+										`: Parameters<${type}>[0]` + (add_parens ? ')' : '')
+									);
+								} else {
+									// prevent "type X is imported but not used" (isn't silenced by @ts-nocheck) when svelte-check runs
+									code.append(`;null as any as ${type};`);
+								}
+							} else {
 								// prevent "type X is imported but not used" (isn't silenced by @ts-nocheck) when svelte-check runs
 								code.append(`;null as any as ${type};`);
 							}
+
+							modified = true;
 						}
 					} else if (
 						is_server &&
@@ -823,34 +787,69 @@ export function tweak_types(content, is_server) {
 						const removed = replace_jsdoc_type_tags(node, declaration.initializer);
 						// ... and move type to each individual action
 						if (removed) {
-							for_each_action(declaration.initializer, (prop) => {
-								const rhs = prop.initializer;
-								const replaced = replace_jsdoc_type_tags(prop, rhs);
-								if (
-									!replaced &&
-									rhs &&
-									(ts.isArrowFunction(rhs) || ts.isFunctionExpression(rhs)) &&
-									rhs.parameters?.[0]
-								) {
-									const name = ts.isIdentifier(rhs.parameters[0].name)
-										? rhs.parameters[0].name.text
-										: 'event';
-									code.prependRight(
-										rhs.pos,
-										`/** @param {import('./$types').RequestEvent} ${name} */ `
-									);
+							const rhs = declaration.initializer;
+							if (ts.isObjectLiteralExpression(rhs)) {
+								for (const prop of rhs.properties) {
+									if (ts.isPropertyAssignment(prop) && ts.isIdentifier(prop.name)) {
+										const rhs = prop.initializer;
+										const replaced = replace_jsdoc_type_tags(prop, rhs);
+										if (
+											!replaced &&
+											rhs &&
+											(ts.isArrowFunction(rhs) || ts.isFunctionExpression(rhs)) &&
+											rhs.parameters?.[0]
+										) {
+											const name = ts.isIdentifier(rhs.parameters[0].name)
+												? rhs.parameters[0].name.text
+												: 'event';
+											code.prependRight(
+												rhs.pos,
+												`/** @param {import('./$types').RequestEvent} ${name} */ `
+											);
+										}
+									}
 								}
-							});
+							}
 						}
 
+						// remove type from `export const actions: Actions ...`
 						if (declaration.type) {
-							const type = strip_type_annotation(declaration.name.end, declaration.type);
+							let a = declaration.type.pos;
+							const b = declaration.type.end;
+							while (is_whitespace(content[a])) a += 1;
+
+							const type = content.slice(a, b);
+							code.remove(declaration.name.end, declaration.type.end);
 							code.append(`;null as any as ${type};`);
+							modified = true;
 
 							// ... and move type to each individual action
-							for_each_action(declaration.initializer, (prop) => {
-								annotate_first_param(prop.initializer, "import('./$types').RequestEvent");
-							});
+							const rhs = declaration.initializer;
+							if (ts.isObjectLiteralExpression(rhs)) {
+								for (const prop of rhs.properties) {
+									if (ts.isPropertyAssignment(prop) && ts.isIdentifier(prop.name)) {
+										const rhs = prop.initializer;
+
+										if (
+											rhs &&
+											(ts.isArrowFunction(rhs) || ts.isFunctionExpression(rhs)) &&
+											rhs.parameters.length
+										) {
+											const arg = rhs.parameters[0];
+											const add_parens = content[arg.pos - 1] !== '(';
+
+											if (add_parens) code.prependRight(arg.pos, '(');
+
+											if (arg && !arg.type) {
+												code.appendLeft(
+													arg.name.end,
+													": import('./$types').RequestEvent" + (add_parens ? ')' : '')
+												);
+											}
+										}
+									}
+								}
+							}
 						}
 					}
 				}

@@ -1,6 +1,5 @@
-import { styleText } from 'node:util';
+import colors from 'kleur';
 import { create_builder } from './builder.js';
-import * as w from '../../messages/build-warnings.js';
 
 /**
  * @param {import('types').ValidatedConfig} config
@@ -8,11 +7,10 @@ import * as w from '../../messages/build-warnings.js';
  * @param {import('types').ServerMetadata} server_metadata
  * @param {import('types').Prerendered} prerendered
  * @param {import('types').PrerenderMap} prerender_map
- * @param {typeof import('$app/manifest')} app_manifest
  * @param {import('types').Logger} log
  * @param {import('types').RemoteChunk[]} remotes
  * @param {import('vite').ResolvedConfig} vite_config
- * @param {Record<string, import('@sveltejs/kit/env').EnvVarConfig<any>> | null} explicit_env_config
+ * @param {Record<string, import('@sveltejs/kit').EnvVarConfig<any>> | null} explicit_env_config
  */
 export async function adapt(
 	config,
@@ -20,36 +18,23 @@ export async function adapt(
 	server_metadata,
 	prerendered,
 	prerender_map,
-	app_manifest,
 	log,
 	remotes,
 	vite_config,
 	explicit_env_config
 ) {
-	const { name, adapt } = config.adapter;
+	// This is only called when adapter is truthy, so the cast is safe
+	const { name, adapt } = /** @type {import('@sveltejs/kit').Adapter} */ (config.kit.adapter);
 
-	console.log(styleText(['bold', 'cyan'], `\n> Using ${name}`));
-
-	let warned = false;
+	console.log(colors.bold().cyan(`\n> Using ${name}`));
 
 	const builder = create_builder({
-		config: {
-			...config,
-			get kit() {
-				if (!warned) {
-					warned = true;
-					w.adapter_config_kit_deprecated();
-				}
-
-				return config;
-			}
-		},
+		config,
 		build_data,
 		server_metadata,
 		route_data: build_data.manifest_data.routes.filter((route) => route.page || route.endpoint),
 		prerendered,
 		prerender_map,
-		app_manifest,
 		log,
 		remotes,
 		vite_config,

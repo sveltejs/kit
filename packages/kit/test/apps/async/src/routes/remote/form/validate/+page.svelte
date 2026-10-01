@@ -1,5 +1,5 @@
 <script>
-	import { issue_path_form, my_form, my_form_2, unmount_form } from './form.remote.ts';
+	import { issue_path_form, my_form, my_form_2 } from './form.remote.ts';
 	import * as v from 'valibot';
 
 	const schema = v.object({
@@ -8,21 +8,10 @@
 		button: v.literal('submitter')
 	});
 
-	const unmount_schema = v.object({
-		qux: v.picklist(['a', 'b'])
-	});
-
 	let error = $state(false);
-	let mounted = $state(true);
-	let unmount_error = $state('no error');
 </script>
 
-<form
-	id="my-form"
-	{...my_form.preflight(schema)}
-	oninput={() => my_form.validate()}
-	onfocusout={() => my_form.validate()}
->
+<form id="my-form" {...my_form.preflight(schema)} oninput={() => my_form.validate()}>
 	{#each my_form.fields.foo.issues() as issue}
 		<p>{issue.message}</p>
 	{/each}
@@ -45,13 +34,17 @@
 		submit (imperative validation)
 	</button>
 </form>
-<button id="trigger-validate" onclick={() => my_form.validate({ all: true })}>
+<button id="trigger-validate" onclick={() => my_form.validate({ includeUntouched: true })}>
 	trigger validation
 </button>
 
 <form id="issue-path-form" {...issue_path_form}>
 	<input {...issue_path_form.fields.nested.value.as('text')} />
-	<button type="button" id="validate" onclick={() => issue_path_form.validate({ all: true })}>
+	<button
+		type="button"
+		id="validate"
+		onclick={() => issue_path_form.validate({ includeUntouched: true })}
+	>
 		Validate
 	</button>
 	<pre id="allIssues">{JSON.stringify(issue_path_form.fields.allIssues())}</pre>
@@ -78,26 +71,3 @@
 
 	<button>submit</button>
 </form>
-
-{#if mounted}
-	<form id="unmount-form" {...unmount_form.preflight(unmount_schema)}>
-		<input {...unmount_form.fields.qux.as('text')} />
-	</form>
-{/if}
-
-<button
-	id="unmount-then-validate"
-	onclick={async () => {
-		const validated = unmount_form.validate({ all: true });
-		mounted = false;
-
-		try {
-			await validated;
-		} catch (e) {
-			unmount_error = /** @type {Error} */ (e).message;
-		}
-	}}
->
-	unmount then validate
-</button>
-<p id="unmount-error">{unmount_error}</p>

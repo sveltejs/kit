@@ -1,7 +1,5 @@
-import { writeFileSync } from 'node:fs';
 import * as path from 'node:path';
 import { sveltekit } from '@sveltejs/kit/vite';
-import adapter from '../../../../adapter-static/index.js';
 
 /** @type {import('vitest/config').ViteUserConfig} */
 const config = {
@@ -13,27 +11,7 @@ const config = {
 
 	logLevel: 'silent',
 
-	plugins: [
-		sveltekit({
-			adapter: adapter(),
-			paths: {
-				origin: 'http://prerender.origin'
-			},
-			router: {
-				resolution: 'server'
-			},
-			prerender: {
-				handleHttpError: 'warn',
-				handleMissingId: ({ id, message }) => {
-					writeFileSync(
-						'./missing_ids/index.jsonl',
-						JSON.stringify({ id, message }) + ',',
-						'utf-8'
-					);
-				}
-			}
-		})
-	],
+	plugins: [sveltekit()],
 
 	define: {
 		'process.env.MY_ENV': '"MY_ENV DEFINED"'
@@ -46,9 +24,7 @@ const config = {
 	},
 
 	test: {
-		name: 'kit-prerendering-basics',
-		globalSetup: path.join(import.meta.dirname, 'globalSetup.js'),
-		setupFiles: [path.join(import.meta.dirname, '../../matchers.js')]
+		globalSetup: './globalSetup.js'
 	}
 };
 

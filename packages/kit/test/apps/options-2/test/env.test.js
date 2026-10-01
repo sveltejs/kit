@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import { execFile } from 'node:child_process';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
-import { expect } from '../../../playwright-matchers.js';
+import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
 
 const output = fileURLToPath(new URL('../.svelte-kit/output', import.meta.url));
@@ -36,14 +36,13 @@ test.describe('env', () => {
 		await expect(page.locator('body')).toHaveAttribute('data-message', 'hello');
 	});
 
-	test('does not import env.js or embed env in prerendered pages when there are no public dynamic environment variables', ({
+	test('does not import env.js from prerendered pages when there are no public dynamic environment variables', ({
 		javaScriptEnabled
 	}) => {
 		test.skip(javaScriptEnabled || !!process.env.DEV || !!process.env.DYNAMIC_PUBLIC_ENV);
 
 		const root_page = read('prerendered/pages/env/prerendered.html');
 		expect(root_page).not.toContain('_app/env.js');
-		expect(root_page).not.toMatch(/env: /);
 		expect(fs.existsSync(`${output}/prerendered/dependencies/_app/env.js`)).toBeFalsy();
 	});
 });
@@ -71,21 +70,21 @@ test.describe('$app/env', () => {
 	}) => {
 		test.skip(javaScriptEnabled || !!process.env.DEV || !process.env.DYNAMIC_PUBLIC_ENV);
 
-		const content = read('/prerendered/dependencies/_app/env.js');
+		const content = read('/prerendered/dependencies/_app/env.script.js');
 		expect(content).toContain('hello');
 
 		const service_worker = read('/client/service-worker.js');
-		expect(service_worker).toContain('import { env } from "/basepath/_app/env.js"');
+		expect(service_worker).toContain('importScripts("/basepath/_app/env.script.js");');
 	});
 
-	test('does not load env.js in the service worker when there are no public dynamic environment variables', ({
+	test('does not load env.script.js in the service worker when there are no public dynamic environment variables', ({
 		javaScriptEnabled
 	}) => {
 		test.skip(javaScriptEnabled || !!process.env.DEV || !!process.env.DYNAMIC_PUBLIC_ENV);
 
 		const serviceWorker = read('/client/service-worker.js');
-		expect(serviceWorker).not.toContain('import { env } from "/basepath/_app/env.js"');
-		expect(fs.existsSync(`${output}/prerendered/dependencies/_app/env.js`)).toBeFalsy();
+		expect(serviceWorker).not.toContain('importScripts("/basepath/_app/env.script.js");');
+		expect(fs.existsSync(`${output}/prerendered/dependencies/_app/env.script.js`)).toBeFalsy();
 	});
 
 	test('runtime-only validation', async ({ page, javaScriptEnabled }) => {
@@ -97,13 +96,13 @@ test.describe('$app/env', () => {
 		// test validation runs at runtime
 		if (!process.env.DEV) {
 			const app_dir = fileURLToPath(new URL('..', import.meta.url));
-			/** @type {string} */
 			const output = await new Promise((resolve) => {
 				execFile('pnpm', ['vite', 'preview'], { cwd: app_dir }, (_, stdout, stderr) =>
 					resolve(stdout + stderr)
 				);
 			});
-			expect(output).toContainKitDiagnostic('env_invalid', { contains: ['RUNTIME_ONLY'] });
+			expect(output).toContain('Invalid environment variables');
+			expect(output).toContain('RUNTIME_ONLY');
 		}
 	});
 });

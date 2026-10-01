@@ -1,5 +1,5 @@
 <script>
-	import { version } from '$app/env';
+	import { version } from '$app/environment';
 </script>
 
 <h1>{version}</h1>

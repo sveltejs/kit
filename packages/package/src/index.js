@@ -1,9 +1,9 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { styleText } from 'node:util';
+import colors from 'kleur';
 import chokidar from 'chokidar';
 import { preprocess } from 'svelte/compiler';
-import { posixify } from './filesystem.js';
+import { copy, mkdirp, posixify, rimraf } from './filesystem.js';
 import {
 	analyze,
 	resolve_aliases,
@@ -35,8 +35,8 @@ async function do_build(options, analyse_code) {
 		throw new Error(`${path.relative('.', input)} does not exist`);
 	}
 
-	fs.rmSync(temp, { force: true, recursive: true });
-	fs.mkdirSync(temp, { recursive: true });
+	rimraf(temp);
+	mkdirp(temp);
 
 	const files = scan(input, extensions);
 
@@ -61,17 +61,16 @@ async function do_build(options, analyse_code) {
 	}
 
 	if (!options.preserve_output) {
-		fs.rmSync(output, { force: true, recursive: true });
+		rimraf(output);
 	}
 
-	fs.mkdirSync(output, { recursive: true });
-	fs.cpSync(temp, output, { recursive: true, dereference: true });
+	mkdirp(output);
+	copy(temp, output);
 
 	console.log(
-		styleText(
-			['bold', 'green'],
-			`${path.relative(options.cwd, input)} -> ${path.relative(options.cwd, output)}`
-		)
+		colors
+			.bold()
+			.green(`${path.relative(options.cwd, input)} -> ${path.relative(options.cwd, output)}`)
 	);
 }
 
@@ -209,44 +208,18 @@ function normalize_options(options) {
 	const input = path.resolve(options.cwd, options.input);
 	const output = path.resolve(options.cwd, options.output);
 	const preserve_output = options.preserve_output;
-	const temp = path.resolve(options.cwd, options.config.outDir ?? '.svelte-kit', '__package__');
+	const temp = path.resolve(
+		options.cwd,
+		options.config.kit?.outDir ?? '.svelte-kit',
+		'__package__'
+	);
 	const extensions = options.config.extensions ?? ['.svelte'];
 	const tsconfig = options.tsconfig ? path.resolve(options.cwd, options.tsconfig) : undefined;
 
-	/** @type {Record<string, string>} */
-	const alias = { ...(options.config.alias ?? {}) };
-
-	// Read `#`-prefixed imports from package.json and add them as aliases
-	const pkg_path = path.resolve(options.cwd, 'package.json');
-	if (fs.existsSync(pkg_path)) {
-		try {
-			const imports = JSON.parse(fs.readFileSync(pkg_path, 'utf-8')).imports;
-			if (imports) {
-				// Add `/*` entries first (as trailing-slash keys for prefix matching)
-				for (const [key, raw_value] of Object.entries(imports)) {
-					if (key.startsWith('#') && key.endsWith('/*')) {
-						const value = normalize_import_value(raw_value);
-						if (value) {
-							// Strip the trailing /* from the value — it's a wildcard, not a literal path
-							const dir = value.endsWith('/*') ? value.slice(0, -2) : value;
-							alias[key.slice(0, -2) + '/'] = path.resolve(options.cwd, dir);
-						}
-					}
-				}
-				// Then add exact entries (for exact import matching)
-				for (const [key, raw_value] of Object.entries(imports)) {
-					if (key.startsWith('#') && !key.endsWith('/*')) {
-						const value = normalize_import_value(raw_value);
-						if (value) {
-							alias[key] = path.resolve(options.cwd, value);
-						}
-					}
-				}
-			}
-		} catch {
-			// malformed package.json — ignore
-		}
-	}
+	const alias = {
+		$lib: path.resolve(options.cwd, options.config.kit?.files?.lib ?? 'src/lib'),
+		...(options.config.kit?.alias ?? {})
+	};
 
 	return {
 		input,
@@ -257,20 +230,6 @@ function normalize_options(options) {
 		alias,
 		tsconfig
 	};
-}
-
-/**
- * @param {string | Record<string, string>} value
- * @returns {string | null}
- */
-function normalize_import_value(value) {
-	if (typeof value === 'string') {
-		return value.replace(/^\.\//, '');
-	}
-	if (value && typeof value === 'object' && typeof value.default === 'string') {
-		return value.default.replace(/^\.\//, '');
-	}
-	return null;
 }
 
 /**
@@ -322,9 +281,7 @@ async function process_file(
 
 		analyse_code(file.name, contents);
 		write(dest, contents);
-	} else if (fs.existsSync(filename)) {
-		// copyFileSync rather than cpSync: cpSync with dereference errors on symlinked sources
-		fs.mkdirSync(path.dirname(dest), { recursive: true });
-		fs.copyFileSync(filename, dest);
+	} else {
+		copy(filename, dest);
 	}
 }

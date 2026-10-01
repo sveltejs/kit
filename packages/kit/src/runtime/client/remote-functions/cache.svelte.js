@@ -1,10 +1,8 @@
-/** @import { Query } from './query/instance.svelte.js' */
-/** @import { LiveQuery } from './query-live/instance.svelte.js' */
 import { tick } from 'svelte';
 import { once } from '../../../utils/functions.js';
 
 /**
- * @template [R=Query<any> | LiveQuery<any>]
+ * @template R
  * @typedef {object} CacheEntry
  * @property {number} proxy_count The number of live proxy instances referencing this
  *   entry. The entry is eligible for eviction when this hits zero.

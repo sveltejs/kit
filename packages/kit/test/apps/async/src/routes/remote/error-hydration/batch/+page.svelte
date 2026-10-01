@@ -17,6 +17,4 @@
 	{/snippet}
 </svelte:boundary>
 
-<div id="batch-error">
-	{q.error ? `${q.error.status}: ${q.error.message}` : 'none'}
-</div>
+<div id="batch-error">{q.error ? `${q.error.status}: ${q.error.body?.message}` : 'none'}</div>

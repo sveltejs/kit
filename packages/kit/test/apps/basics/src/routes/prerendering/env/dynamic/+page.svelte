@@ -1,5 +1,5 @@
 <script>
-	import { PUBLIC_PRERENDERING } from '$app/env/public';
+	import { env } from '$env/dynamic/public';
 </script>
 
-<h2>prerendering: {PUBLIC_PRERENDERING}</h2>
+<h2>prerendering: {env.PUBLIC_PRERENDERING}</h2>

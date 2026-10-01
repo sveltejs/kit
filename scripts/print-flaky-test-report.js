@@ -1,5 +1,3 @@
-import * as process from 'node:process';
-
 // pnpm captures stdout and prefixes it with the package name which breaks the annotations
 // so save it in a file and print it out at the end
 // ideally we'd just use cat, but that doesn't work on Windows hence this script

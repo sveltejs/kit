@@ -7,7 +7,7 @@
 <button
 	onclick={() => {
 		goto('/fork?key=value', {
-			replace: true
+			replaceState: true
 		});
 	}}
 >

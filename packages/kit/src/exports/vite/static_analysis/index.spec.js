@@ -1,11 +1,5 @@
 import { expect, test } from 'vitest';
-import { get_page_options, statically_analyse_page_options } from './index.js';
-
-test('throws if the page options file does not exist', () => {
-	expect(() => get_page_options('missing/+page.server.js', import.meta.dirname)).toThrowError(
-		expect.objectContaining({ code: 'ENOENT' })
-	);
-});
+import { statically_analyse_page_options } from './index.js';
 
 test.each([
 	[

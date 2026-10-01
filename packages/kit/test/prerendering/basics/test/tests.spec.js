@@ -18,26 +18,15 @@ const build = fileURLToPath(new URL('../build', import.meta.url));
  * @returns {Buffer<ArrayBufferLike>}
  */
 /**
- * @template {BufferEncoding | null} [T='utf-8']
  * @param {string} file
- * @param {T} encoding
- * @returns {T extends string ? string : Buffer<ArrayBufferLike>}
+ * @param {BufferEncoding | null} [encoding]
+ * @returns {string | Buffer<ArrayBufferLike>}
  */
-const read = (file, encoding = /** @type {T} */ ('utf-8')) =>
-	/** @type {T extends string ? string : Buffer<ArrayBufferLike>} */ (
-		fs.readFileSync(`${build}/${file}`, encoding)
-	);
+const read = (file, encoding = 'utf-8') => fs.readFileSync(`${build}/${file}`, encoding);
 
 test('prerenders /', () => {
 	const content = read('index.html');
 	expect(content).toMatch('<h1>hello</h1>');
-});
-
-test('prerenders route resolution modules alongside .html pages', () => {
-	assert.isTrue(fs.statSync(`${build}/page.html`).isFile());
-	expect(read('page.html__route.js')).toContain('export const');
-	assert.isFalse(fs.existsSync(`${build}/page.html/__route.js`));
-	assert.isTrue(fs.statSync(`${build}/prerendering-true/__route.js`).isFile());
 });
 
 test('renders a redirect', () => {
@@ -59,7 +48,6 @@ test('renders a server-side redirect', () => {
 
 	expect(data).toEqual({
 		type: 'redirect',
-		status: 301,
 		location: 'https://example.com/redirected'
 	});
 });
@@ -99,13 +87,6 @@ test('renders a shell when SSR is turned off and there is no server data', () =>
 test('inserts http-equiv tag for cache-control headers', () => {
 	const content = read('max-age.html');
 	expect(content).toMatch('<meta http-equiv="cache-control" content="max-age=300">');
-});
-
-test('escapes cache-control headers in http-equiv tags', () => {
-	const content = read('max-age-malicious.html');
-	expect(content).toContain(
-		'<meta http-equiv="cache-control" content="max-age=300&quot;><script>alert(&quot;xss&quot;)</script>&amp;">'
-	);
 });
 
 test('renders page with data from endpoint', () => {
@@ -241,12 +222,12 @@ test('fetches data from local endpoint', () => {
 	assert.equal(read('origin/message.json'), JSON.stringify({ message: 'hello' }));
 });
 
-test('respects config.paths.origin', () => {
+test('respects config.prerender.origin', () => {
 	const content = read('origin.html');
 	expect(content).toMatch('<h2>http://prerender.origin</h2>');
 });
 
-test('$app/env - includes environment variables', () => {
+test('$env - includes environment variables', () => {
 	const content = read('env.html');
 
 	assert.match(
@@ -276,9 +257,9 @@ test('prerendered.paths omits trailing slashes for endpoints', () => {
 	const content = read('service-worker.js');
 
 	for (const path of [
-		'trailing-slash/page/',
-		'trailing-slash/page/__data.json',
-		'trailing-slash/standalone-endpoint.json'
+		'/trailing-slash/page/',
+		'/trailing-slash/page/__data.json',
+		'/trailing-slash/standalone-endpoint.json'
 	]) {
 		expect(content, `Missing ${path}`).toMatch(`"${path}"`);
 	}
@@ -294,23 +275,14 @@ test('prerenders paths with optional parameters with empty values', () => {
 	expect(content).includes('Path with Value');
 });
 
-test('crawls links that start with config.paths.origin', () => {
+test('crawls links that start with config.prerender.origin', () => {
 	const content = read('prerender-origin/dynamic.html');
 	expect(content).toBeTruthy();
-});
-
-test('crawls pages whose content-type has a charset parameter', () => {
-	expect(read('content-type-charset.html')).toBeTruthy();
-	expect(read('content-type-charset/dynamic.html')).toBeTruthy();
 });
 
 test('identifies missing ids', () => {
 	const missing_ids_file = fileURLToPath(new URL('../missing_ids/index.jsonl', import.meta.url));
 	const missing_ids_content = fs.readFileSync(missing_ids_file, 'utf-8');
 	const missing_ids = JSON.parse(`[${missing_ids_content.slice(0, -1)}]`);
-	expect(missing_ids).toEqual([{ id: 'missing-id', message: expect.any(String) }]);
-	// custom handlers receive the full diagnostic
-	expect(missing_ids[0].message).toContainKitDiagnostic('prerender_missing_id', {
-		contains: ['/missing-id#missing-id', 'id="missing-id"']
-	});
+	expect(missing_ids).toEqual(['missing-id']);
 });

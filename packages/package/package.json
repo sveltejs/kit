@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/package",
-	"version": "3.0.0-next.8",
+	"version": "2.5.8",
 	"description": "The fastest way to build Svelte packages",
 	"repository": {
 		"type": "git",
@@ -20,33 +20,24 @@
 	"homepage": "https://svelte.dev",
 	"type": "module",
 	"dependencies": {
-		"@sveltejs/load-config": "^0.2.3",
 		"chokidar": "^5.0.0",
-		"semver": "^7.8.5",
-		"svelte2tsx": "~0.7.60"
+		"kleur": "^4.1.5",
+		"sade": "^1.8.1",
+		"semver": "^7.5.4",
+		"svelte2tsx": "~0.7.55"
 	},
 	"devDependencies": {
-		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"@types/node": "catalog:",
 		"@types/semver": "catalog:",
-		"@typescript/native": "catalog:",
 		"prettier": "catalog:",
-		"prettier-plugin-svelte": "catalog:",
 		"svelte": "catalog:",
 		"svelte-preprocess": "catalog:",
-		"typescript": "^6.0.3",
-		"vite": "catalog:",
+		"typescript": "catalog:",
 		"vitest": "catalog:"
 	},
 	"peerDependencies": {
-		"svelte": "^3.44.0 || ^4.0.0 || ^5.0.0-next.1",
-		"typescript": "^6.0.0"
-	},
-	"peerDependenciesMeta": {
-		"typescript": {
-			"optional": true
-		}
+		"svelte": "^3.44.0 || ^4.0.0 || ^5.0.0-next.1"
 	},
 	"bin": {
 		"svelte-package": "svelte-package.js"
@@ -55,18 +46,16 @@
 		"src"
 	],
 	"scripts": {
-		"lint": "oxfmt --check .",
-		"check": "pnpm tsc-native",
-		"check:all": "pnpm tsc-native && pnpm -r --filter=\"./**\" check",
-		"format": "oxfmt --write .",
-		"test": "vitest run",
-		"test:unit": "vitest run",
-		"tsc-native": "node node_modules/@typescript/native/bin/tsc"
+		"lint": "prettier --check .",
+		"check": "tsc",
+		"check:all": "tsc && pnpm -r --filter=\"./**\" check",
+		"format": "pnpm lint --write",
+		"test": "vitest run"
 	},
 	"exports": {
 		"./package.json": "./package.json"
 	},
 	"engines": {
-		"node": ">=22"
+		"node": "^16.14 || >=18"
 	}
 }

@@ -1,5 +1,0 @@
-@font-face {
-	/* we need a font file that exceeds assetsInlineLimit */
-	font-family: 'Shlop';
-	src: url(./shlop.woff2);
-}

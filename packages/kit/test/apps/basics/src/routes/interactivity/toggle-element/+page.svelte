@@ -7,13 +7,13 @@
 </script>
 
 {#if visible}
-	<button onclick={toggle}>remove</button>
+	<button on:click={toggle}>remove</button>
 
 	<!-- svelte-ignore a11y-missing-attribute a11y-click-events-have-key-events a11y-no-static-element-interactions -->
-	<a onclick={toggle}>remove</a>
+	<a on:click={toggle}>remove</a>
 {:else}
-	<button onclick={toggle}>add</button>
+	<button on:click={toggle}>add</button>
 
 	<!-- svelte-ignore a11y-missing-attribute a11y-click-events-have-key-events a11y-no-static-element-interactions -->
-	<a onclick={toggle}>add</a>
+	<a on:click={toggle}>add</a>
 {/if}

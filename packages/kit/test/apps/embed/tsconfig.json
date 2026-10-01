@@ -1,4 +1,10 @@
 {
-	"extends": "$app/tsconfig",
-	"include": ["src", "test", "*.js"]
+	"compilerOptions": {
+		"allowJs": true,
+		"checkJs": true,
+		"esModuleInterop": true,
+		"noEmit": true,
+		"resolveJsonModule": true
+	},
+	"extends": "./.svelte-kit/tsconfig.json"
 }

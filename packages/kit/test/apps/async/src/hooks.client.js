@@ -1,17 +1,13 @@
 import { isRedirect } from '@sveltejs/kit';
 
-/** @type {import('@sveltejs/kit/hooks').HandleClientError} */
-export const handleError = (input) => {
+/** @type {import('@sveltejs/kit').HandleClientError} */
+export const handleError = ({ error: e, event, status, message }) => {
 	// helps us catch sveltekit redirects thrown in component code
-	if (isRedirect(input.error)) {
+	if (isRedirect(e)) {
 		throw new Error("Redirects shouldn't trigger the handleError hook");
 	}
 
-	if (input.kind !== 'unknown') return input.error;
+	const error = /** @type {Error} */ (e);
 
-	const error = /** @type {Error} */ (input.error);
-
-	return {
-		message: `${error.message} (500 Internal Error, on ${input.event.url.pathname})`
-	};
+	return { message: `${error.message} (${status} ${message}, on ${event.url.pathname})` };
 };

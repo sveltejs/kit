@@ -10,7 +10,7 @@
 <button
 	type="button"
 	class="specified"
-	onclick={() =>
+	on:click={() =>
 		(window.promise = goto(page.url.pathname, {
 			invalidate: ['invalidate-depends-goto:layout', 'invalidate-depends-goto:shared']
 		}))}
@@ -22,7 +22,7 @@
 <button
 	type="button"
 	class="server"
-	onclick={() =>
+	on:click={() =>
 		(window.promise = goto(page.url.pathname, { invalidate: ['invalidate-depends-goto:server'] }))}
 >
 	invalidate server
@@ -32,7 +32,7 @@
 <button
 	type="button"
 	class="shared"
-	onclick={() =>
+	on:click={() =>
 		(window.promise = goto(page.url.pathname, { invalidate: ['invalidate-depends-goto:shared'] }))}
 >
 	invalidate shared
@@ -42,7 +42,7 @@
 <button
 	type="button"
 	class="neither"
-	onclick={() =>
+	on:click={() =>
 		(window.promise = goto(page.url.pathname, { invalidate: ['invalidate-depends-goto:neither'] }))}
 >
 	invalidate neither

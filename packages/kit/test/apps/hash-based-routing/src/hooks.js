@@ -1,4 +1,4 @@
-/** @type {import('@sveltejs/kit/hooks').Reroute} */
+/** @type {import('@sveltejs/kit').Reroute} */
 export function reroute({ url }) {
 	if (url.hash === '#/reroute-a') {
 		// works with leading hash...

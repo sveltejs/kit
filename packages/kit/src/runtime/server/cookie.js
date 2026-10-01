@@ -1,10 +1,11 @@
-import { parseCookie, parseSetCookie, stringifySetCookie } from 'cookie';
+import { parse, serialize } from 'cookie';
 import { DEV } from 'esm-env';
 import { normalize_path, resolve } from '../../utils/url.js';
 import { add_data_suffix } from '../pathname.js';
 import { text_encoder } from '../utils.js';
-import * as e from '../../messages/server-errors.js';
-import * as w from '../../messages/server-warnings.js';
+
+// eslint-disable-next-line no-control-regex -- control characters are invalid in cookie names
+const INVALID_COOKIE_CHARACTER_REGEX = /[\x00-\x1F\x7F()<>@,;:"/[\]?={} \t]/;
 
 /**
  * Tracks all cookies set during dev mode so we can emit warnings
@@ -19,6 +20,14 @@ const cookie_paths = {};
  * in RFC 6265bis: https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis-20#section-5.6-7.5.1
  */
 const MAX_COOKIE_SIZE = 4096;
+
+// TODO 3.0 remove this check
+/** @param {import('./page/types.js').Cookie['options']} options */
+function validate_options(options) {
+	if (options?.path === undefined) {
+		throw new Error('You must specify a `path` when setting, deleting or serializing cookies');
+	}
+}
 
 /**
  * Generates a unique key for a cookie based on its domain, path, and name in
@@ -41,28 +50,7 @@ function generate_cookie_key(domain, path, name) {
  */
 export function get_cookies(request, url) {
 	const header = request.headers.get('cookie') ?? '';
-	const initial_cookies = /** @type {Record<string, string>} */ (
-		parseCookie(header, { decode: (value) => value })
-	);
-
-	/** @type {ReturnType<typeof parseCookie> | undefined} */
-	let default_cookies;
-
-	/**
-	 * The header never changes during the request, so the default-decode parse is cached
-	 * @param {import('cookie').ParseOptions} [opts]
-	 */
-	function parse_header(opts) {
-		return opts?.decode ? parseCookie(header, opts) : (default_cookies ??= parseCookie(header));
-	}
-
-	/** @param {import('./page/types.js').Cookie} cookie */
-	function matches_url(cookie) {
-		return (
-			domain_matches(url.hostname, cookie.options.domain) &&
-			path_matches(url.pathname, cookie.options.path)
-		);
-	}
+	const initial_cookies = parse(header, { decode: (value) => value });
 
 	/** @type {string | undefined} */
 	let normalized_url;
@@ -70,12 +58,11 @@ export function get_cookies(request, url) {
 	/** @type {Map<string, import('./page/types.js').Cookie>} */
 	const new_cookies = new Map();
 
-	/** @type {Omit<import('cookie').SetCookie, 'name' | 'value'>} */
+	/** @type {import('cookie').CookieSerializeOptions} */
 	const defaults = {
 		httpOnly: true,
-		path: '/',
 		sameSite: 'lax',
-		secure: !__SVELTEKIT_DEV__ && !(url.hostname === 'localhost' && url.protocol === 'http:')
+		secure: url.hostname === 'localhost' && url.protocol === 'http:' ? false : true
 	};
 
 	/** @type {import('@sveltejs/kit').Cookies} */
@@ -85,25 +72,28 @@ export function get_cookies(request, url) {
 		// typescript users. `@type {import('@sveltejs/kit').Cookies}` above is not
 		// sufficient to do so.
 
+		/**
+		 * @param {string} name
+		 * @param {import('cookie').CookieParseOptions} [opts]
+		 */
 		get(name, opts) {
 			// Look for the most specific matching cookie from new_cookies
-			/** @type {import('./page/types.js').Cookie | undefined} */
-			let best_match;
-			for (const c of new_cookies.values()) {
-				if (
-					c.name === name &&
-					matches_url(c) &&
-					(!best_match || c.options.path.length > best_match.options.path.length)
-				) {
-					best_match = c;
-				}
-			}
+			const best_match = Array.from(new_cookies.values())
+				.filter((c) => {
+					return (
+						c.name === name &&
+						domain_matches(url.hostname, c.options.domain) &&
+						path_matches(url.pathname, c.options.path)
+					);
+				})
+				.sort((a, b) => b.options.path.length - a.options.path.length)[0];
 
 			if (best_match) {
 				return best_match.options.maxAge === 0 ? undefined : best_match.value;
 			}
 
-			const cookie = parse_header(opts)[name]; // the decoded string or undefined
+			const req_cookies = parse(header, { decode: opts?.decode });
+			const cookie = req_cookies[name]; // the decoded string or undefined
 
 			// in development, if the cookie was set during this session with `cookies.set`,
 			// but at a different path, warn the user. (ignore cookies from request headers,
@@ -115,22 +105,30 @@ export function get_cookies(request, url) {
 				});
 
 				if (paths.length > 0) {
-					w.cookie_path_mismatch({ name, pathname: url.pathname, paths: conjoin([...paths]) });
+					console.warn(
+						// prettier-ignore
+						`'${name}' cookie does not exist for ${url.pathname}, but was previously set at ${conjoin([...paths])}. Did you mean to set its 'path' to '/' instead?`
+					);
 				}
 			}
 
 			return cookie;
 		},
 
+		/**
+		 * @param {import('cookie').CookieParseOptions} [opts]
+		 */
 		getAll(opts) {
-			// copy, so the cached parse isn't mutated below
-			const cookies = { ...parse_header(opts) };
+			const cookies = parse(header, { decode: opts?.decode });
 
 			// Group cookies by name and find the most specific one for each name
 			const lookup = new Map();
 
 			for (const c of new_cookies.values()) {
-				if (matches_url(c)) {
+				if (
+					domain_matches(url.hostname, c.options.domain) &&
+					path_matches(url.pathname, c.options.path)
+				) {
 					const existing = lookup.get(c.name);
 
 					// If no existing cookie or this one has a more specific (longer) path, use this one
@@ -142,43 +140,59 @@ export function get_cookies(request, url) {
 
 			// Add the most specific cookies to the result
 			for (const c of lookup.values()) {
-				// tombstones (deleted cookies) shadow request-header cookies,
-				// mirroring the behavior of `get()`
-				if (c.options.maxAge === 0) {
-					delete cookies[c.name];
-				} else {
-					cookies[c.name] = c.value;
-				}
+				cookies[c.name] = c.value;
 			}
 
-			return /** @type {Array<{ name: string; value: string }>} */ (
-				Object.entries(cookies)
-					.filter(([, value]) => value != null)
-					.map(([name, value]) => ({ name, value }))
-			);
+			return Object.entries(cookies).map(([name, value]) => ({ name, value }));
 		},
 
+		/**
+		 * @param {string} name
+		 * @param {string} value
+		 * @param {import('./page/types.js').Cookie['options']} options
+		 */
 		set(name, value, options) {
+			// TODO: remove this check in 3.0
+			const illegal_characters = name.match(INVALID_COOKIE_CHARACTER_REGEX);
+			if (illegal_characters) {
+				console.warn(
+					`The cookie name "${name}" will be invalid in SvelteKit 3.0 as it contains ${illegal_characters.join(
+						' and '
+					)}. See RFC 2616 for more details https://datatracker.ietf.org/doc/html/rfc2616#section-2.2`
+				);
+			}
+
+			validate_options(options);
 			set_internal(name, value, { ...defaults, ...options });
 		},
 
+		/**
+		 * @param {string} name
+		 *  @param {import('./page/types.js').Cookie['options']} options
+		 */
 		delete(name, options) {
+			validate_options(options);
 			cookies.set(name, '', { ...options, maxAge: 0 });
 		},
 
-		parse: parseSetCookie,
+		/**
+		 * @param {string} name
+		 * @param {string} value
+		 *  @param {import('./page/types.js').Cookie['options']} options
+		 */
+		serialize(name, value, options) {
+			validate_options(options);
 
-		serialize(name, value, { encode, ...options } = {}) {
-			let path = options.path ?? '/';
+			let path = options.path;
 
 			if (!options.domain || options.domain === url.hostname) {
 				if (!normalized_url) {
-					e.cookies_serialize_before_route();
+					throw new Error('Cannot serialize cookies until after the route is determined');
 				}
 				path = resolve(normalized_url, path);
 			}
 
-			return stringifySetCookie({ name, value, ...defaults, ...options, path }, { encode });
+			return serialize(name, value, { ...defaults, ...options, path });
 		}
 	};
 
@@ -204,9 +218,7 @@ export function get_cookies(request, url) {
 
 		// explicit header has highest precedence
 		if (header) {
-			const parsed = /** @type {Record<string, string>} */ (
-				parseCookie(header, { decode: (value) => value })
-			);
+			const parsed = parse(header, { decode: (value) => value });
 			for (const name in parsed) {
 				combined_cookies[name] = parsed[name];
 			}
@@ -223,7 +235,7 @@ export function get_cookies(request, url) {
 	/**
 	 * @param {string} name
 	 * @param {string} value
-	 * @param {import('cookie').SerializeOptions} options
+	 * @param {import('./page/types.js').Cookie['options']} options
 	 */
 	function set_internal(name, value, options) {
 		if (!normalized_url) {
@@ -231,7 +243,7 @@ export function get_cookies(request, url) {
 			return;
 		}
 
-		let path = options.path ?? '/';
+		let path = options.path;
 
 		if (!options.domain || options.domain === url.hostname) {
 			path = resolve(normalized_url, path);
@@ -243,13 +255,12 @@ export function get_cookies(request, url) {
 		new_cookies.set(cookie_key, cookie);
 
 		if (DEV) {
+			// only the name/value pair counts towards MAX_COOKIE_SIZE, not the other attributes
+			const encoder = cookie.options.encode || encodeURIComponent;
 			const size =
-				// only the name/value pair counts towards MAX_COOKIE_SIZE, not the other attributes
-				text_encoder.encode(name).byteLength +
-				text_encoder.encode((options.encode ?? encodeURIComponent)(value)).byteLength;
-
+				text_encoder.encode(name).byteLength + text_encoder.encode(encoder(value)).byteLength;
 			if (size > MAX_COOKIE_SIZE) {
-				e.cookie_too_large({ name });
+				throw new Error(`Cookie "${name}" is too large, and will be discarded by the browser`);
 			}
 
 			cookie_paths[name] ??= new Set();
@@ -305,22 +316,15 @@ export function path_matches(path, constraint) {
  */
 export function add_cookies_to_headers(headers, cookies) {
 	for (const new_cookie of cookies) {
-		const {
-			name,
-			value,
-			options: { encode, ...options }
-		} = new_cookie;
-		headers.append('set-cookie', stringifySetCookie({ name, value, ...options }, { encode }));
+		const { name, value, options } = new_cookie;
+		headers.append('set-cookie', serialize(name, value, options));
 
 		// special case — for routes ending with .html, the route data lives in a sibling
 		// `.html__data.json` file rather than a child `/__data.json` file, which means
 		// we need to duplicate the cookie
 		if (options.path.endsWith('.html')) {
 			const path = add_data_suffix(options.path);
-			headers.append(
-				'set-cookie',
-				stringifySetCookie({ name, value, ...options, path }, { encode })
-			);
+			headers.append('set-cookie', serialize(name, value, { ...options, path }));
 		}
 	}
 }

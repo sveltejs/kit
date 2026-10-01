@@ -1,4 +1,4 @@
-/** @type {typeof import('typescript')} */
+/** @type {import('typescript')} */
 // @ts-ignore
 export let ts = undefined;
 try {

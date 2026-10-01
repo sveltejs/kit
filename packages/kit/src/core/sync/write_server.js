@@ -1,9 +1,12 @@
 import path from 'node:path';
-import { resolve_entry } from '../../utils/filesystem.js';
-import { posixify } from '../../utils/os.js';
+import process from 'node:process';
+import { hash } from '../../utils/hash.js';
+import { posixify, resolve_entry } from '../../utils/filesystem.js';
 import { s } from '../../utils/misc.js';
 import { load_error_page, load_template } from '../config/index.js';
-import { check_spelling, write_if_changed } from './utils.js';
+import { runtime_directory } from '../utils.js';
+import { isSvelte5Plus, write_if_changed } from './utils.js';
+import colors from 'kleur';
 import { escape_html } from '../../utils/escape.js';
 
 /**
@@ -11,38 +14,65 @@ import { escape_html } from '../../utils/escape.js';
  *   server_hooks: string | null;
  *   universal_hooks: string | null;
  *   config: import('types').ValidatedConfig;
+ *   has_service_worker: boolean;
+ *   runtime_directory: string;
  *   template: string;
  * }} opts
  */
-const server_template = ({ config, server_hooks, universal_hooks, template }) => `
-import error from './shared/error-template.js';
+const server_template = ({
+	config,
+	server_hooks,
+	universal_hooks,
+	has_service_worker,
+	runtime_directory,
+	template
+}) => `
+import root from '../root.${isSvelte5Plus() ? 'js' : 'svelte'}';
+import { set_building, set_prerendering } from '$app/env/internal';
+import { set_assets } from '$app/paths/internal/server';
+import { set_manifest, set_read_implementation } from '__sveltekit/server';
+import { set_private_env, set_public_env } from '${runtime_directory}/shared-server.js';
+import error from '../shared/error-template.js';
 
 export const options = {
 	app_template_contains_nonce: ${template.includes('%sveltekit.nonce%')},
-	csp: ${s(config.csp)},
-	csrf_trusted_origins: ${s(config.csrf.trustedOrigins)},
-	service_worker_options: ${config.serviceWorker.register ? s(config.serviceWorker.options) : 'null'},
+	async: ${s(!!config.compilerOptions?.experimental?.async)},
+	csp: ${s(config.kit.csp)},
+	csrf_check_origin: ${s(config.kit.csrf.checkOrigin && !config.kit.csrf.trustedOrigins.includes('*'))},
+	csrf_trusted_origins: ${s(config.kit.csrf.trustedOrigins)},
+	embedded: ${config.kit.embedded},
+	env_public_prefix: '${config.kit.env.publicPrefix}',
+	env_private_prefix: '${config.kit.env.privatePrefix}',
+	hash_routing: ${s(config.kit.router.type === 'hash')},
+	hooks: null, // added lazily, via \`get_hooks\`
+	preload_strategy: ${s(config.kit.output.preloadStrategy)},
+	root,
+	service_worker: ${has_service_worker},
+	service_worker_options: ${config.kit.serviceWorker.register ? s(config.kit.serviceWorker.options) : 'null'},
+	server_error_boundaries: ${s(!!config.kit.experimental.handleRenderingErrors)},
 	templates: {
 		app: ({ head, body, assets, nonce, env }) => ${s(template)
 			.replace('%sveltekit.head%', '" + head + "')
 			.replace('%sveltekit.body%', '" + body + "')
 			.replace(/%sveltekit\.assets%/g, '" + assets + "')
 			.replace(/%sveltekit\.nonce%/g, '" + nonce + "')
-			.replace(/%sveltekit\.version%/g, escape_html(config.version.name))
+			.replace(/%sveltekit\.version%/g, escape_html(config.kit.version.name))
 			.replace(
 				/%sveltekit\.env\.([^%]+)%/g,
 				(_match, capture) => `" + (env[${s(capture)}] ?? "") + "`
 			)},
 		error
-	}
+	},
+	version_hash: ${s(hash(config.kit.version.name))}
 };
 
 export async function get_hooks() {
 	let handle;
 	let handleFetch;
 	let handleError;
+	let handleValidationError;
 	let init;
-	${server_hooks ? `({ handle, handleFetch, handleError, init } = await import(${s(server_hooks)}));` : ''}
+	${server_hooks ? `({ handle, handleFetch, handleError, handleValidationError, init } = await import(${s(server_hooks)}));` : ''}
 
 	let reroute;
 	let transport;
@@ -52,46 +82,44 @@ export async function get_hooks() {
 		handle,
 		handleFetch,
 		handleError,
+		handleValidationError,
 		init,
 		reroute,
 		transport
 	};
 }
+
+export { set_assets, set_building, set_manifest, set_prerendering, set_private_env, set_public_env, set_read_implementation };
 `;
+
+// TODO need to re-run this whenever src/app.html or src/error.html are
+// created or changed, or src/service-worker.js is created or deleted.
+// Also, need to check that updating hooks.server.js works
 
 /**
  * Write server configuration to disk
  * @param {import('types').ValidatedConfig} config
  * @param {string} output
- * @param {string} root The project root directory
  */
-export function write_server(config, output, root) {
-	const server_hooks_file = resolve_entry(config.files.hooks.server, config.moduleExtensions);
-	const universal_hooks_file = resolve_entry(config.files.hooks.universal, config.moduleExtensions);
+export function write_server(config, output) {
+	const server_hooks_file = resolve_entry(config.kit.files.hooks.server);
+	const universal_hooks_file = resolve_entry(config.kit.files.hooks.universal);
 
-	if (!server_hooks_file) {
-		check_spelling(
-			'src/hooks.server',
-			'src/+hooks.server',
-			'Unexpected + prefix',
-			config.moduleExtensions
+	const typo = resolve_entry('src/+hooks.server');
+	if (typo) {
+		console.log(
+			colors
+				.bold()
+				.yellow(
+					`Unexpected + prefix. Did you mean ${typo.split('/').at(-1)?.slice(1)}?` +
+						` at ${path.resolve(typo)}`
+				)
 		);
-		check_spelling(
-			'src/hooks.server',
-			'src/hook.server',
-			'Missing s suffix',
-			config.moduleExtensions
-		);
-	}
-
-	if (!universal_hooks_file) {
-		check_spelling('src/hooks', 'src/+hooks', 'Unexpected + prefix', config.moduleExtensions);
-		check_spelling('src/hooks', 'src/hook', 'Missing s suffix', config.moduleExtensions);
 	}
 
 	/** @param {string} file */
 	function relative(file) {
-		return posixify(path.relative(output, file));
+		return posixify(path.relative(`${output}/server`, file));
 	}
 
 	write_if_changed(
@@ -104,12 +132,15 @@ export function write_server(config, output, root) {
 	// Contains the stringified version of
 	/** @type {import('types').SSROptions} */
 	write_if_changed(
-		`${output}/server.js`,
+		`${output}/server/internal.js`,
 		server_template({
 			config,
 			server_hooks: server_hooks_file ? relative(server_hooks_file) : null,
 			universal_hooks: universal_hooks_file ? relative(universal_hooks_file) : null,
-			template: load_template(root, config)
+			has_service_worker:
+				config.kit.serviceWorker.register && !!resolve_entry(config.kit.files.serviceWorker),
+			runtime_directory: relative(runtime_directory),
+			template: load_template(process.cwd(), config)
 		})
 	);
 }

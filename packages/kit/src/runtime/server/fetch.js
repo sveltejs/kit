@@ -1,21 +1,23 @@
-import { parseSetCookie } from 'cookie';
+import * as set_cookie_parser from 'set-cookie-parser';
 import { noop } from '../../utils/functions.js';
+import { get_set_cookies } from '../../utils/http.js';
 import { respond } from './respond.js';
-import * as paths from '#app/paths';
-import { hooks, manifest, read_implementation } from './internal.js';
+import * as paths from '$app/paths/internal/server';
+import { read_implementation } from '__sveltekit/server';
 import { has_prerendered_path } from './utils.js';
-import { fork_state_for_subrequest } from './state.js';
 
 /**
  * @param {{
  *   event: import('@sveltejs/kit').RequestEvent;
- *   state: import('types').RequestState;
+ *   options: import('types').SSROptions;
+ *   manifest: import('@sveltejs/kit').SSRManifest;
+ *   state: import('types').SSRState;
  *   get_cookie_header: (url: URL, header: string | null) => string;
  *   set_internal: (name: string, value: string, opts: import('./page/types.js').Cookie['options']) => void;
  * }} opts
  * @returns {typeof fetch}
  */
-export function create_fetch({ event, state, get_cookie_header, set_internal }) {
+export function create_fetch({ event, options, manifest, state, get_cookie_header, set_internal }) {
 	/**
 	 * @type {typeof fetch}
 	 */
@@ -28,7 +30,7 @@ export function create_fetch({ event, state, get_cookie_header, set_internal }) 
 		let credentials =
 			(info instanceof Request ? info.credentials : init?.credentials) ?? 'same-origin';
 
-		return hooks.handleFetch({
+		return options.hooks.handleFetch({
 			event,
 			request: original_request,
 			fetch: async (info, init) => {
@@ -81,29 +83,30 @@ export function create_fetch({ event, state, get_cookie_header, set_internal }) 
 
 				// handle fetch requests for static assets. e.g. prebaked data, etc.
 				// we need to support everything the browser's fetch supports
+				const prefix = paths.assets || paths.base;
 				const filename = (
-					decoded.startsWith(paths.assets) ? decoded.slice(paths.assets.length) : decoded
+					decoded.startsWith(prefix) ? decoded.slice(prefix.length) : decoded
 				).slice(1);
 				const filename_html = `${filename}/index.html`; // path may also match path/index.html
 
-				const is_asset = manifest.assets.has(filename) || filename in manifest.server_assets;
+				const is_asset = manifest.assets.has(filename) || filename in manifest._.server_assets;
 				const is_asset_html =
-					manifest.assets.has(filename_html) || filename_html in manifest.server_assets;
+					manifest.assets.has(filename_html) || filename_html in manifest._.server_assets;
 
 				if (is_asset || is_asset_html) {
 					const file = is_asset ? filename : filename_html;
 
 					if (state.read) {
 						const type = is_asset
-							? manifest.mime_types[filename.slice(filename.lastIndexOf('.'))]
+							? manifest.mimeTypes[filename.slice(filename.lastIndexOf('.'))]
 							: 'text/html';
 
 						return new Response(state.read(file), {
 							headers: type ? { 'content-type': type } : {}
 						});
-					} else if (read_implementation && file in manifest.server_assets) {
-						const length = manifest.server_assets[file];
-						const type = manifest.mime_types[file.slice(file.lastIndexOf('.'))];
+					} else if (read_implementation && file in manifest._.server_assets) {
+						const length = manifest._.server_assets[file];
+						const type = manifest.mimeTypes[file.slice(file.lastIndexOf('.'))];
 
 						return new Response(read_implementation(file), {
 							headers: {
@@ -113,17 +116,16 @@ export function create_fetch({ event, state, get_cookie_header, set_internal }) 
 						});
 					}
 
-					// A spoofed request origin must not be able to redirect us to an internal resource.
-					return await fetch(request, { redirect: 'manual' });
+					return await fetch(request);
 				}
 
-				if (has_prerendered_path(decoded)) {
+				if (has_prerendered_path(manifest, paths.base + decoded)) {
 					// The path of something prerendered could match a different route
 					// that is still in the manifest, leading to the wrong route being loaded.
 					// We therefore bail early here. The prerendered logic is different for
 					// each adapter, (except maybe for prerendered redirects)
 					// so we need to make an actual HTTP request.
-					return await fetch(request, { redirect: 'manual' });
+					return await fetch(request);
 				}
 
 				if (credentials !== 'omit') {
@@ -142,24 +144,27 @@ export function create_fetch({ event, state, get_cookie_header, set_internal }) 
 					request.headers.set('accept', '*/*');
 				}
 
-				const accept_language = event.request.headers.get('accept-language');
-				if (accept_language && !request.headers.has('accept-language')) {
-					request.headers.set('accept-language', accept_language);
+				if (!request.headers.has('accept-language')) {
+					request.headers.set(
+						'accept-language',
+						/** @type {string} */ (event.request.headers.get('accept-language'))
+					);
 				}
 
-				const response = await internal_fetch(request, state);
+				const response = await internal_fetch(request, options, manifest, state);
 
-				for (const str of response.headers.getSetCookie()) {
-					const { name, value, ...cookie_options } = parseSetCookie(str, { decode: (v) => v });
+				for (const str of get_set_cookies(response.headers)) {
+					const { name, value, ...options } = set_cookie_parser.parseString(str, {
+						decodeValues: false
+					});
 
-					const path =
-						cookie_options.path ?? (url.pathname.split('/').slice(0, -1).join('/') || '/');
+					const path = options.path ?? (url.pathname.split('/').slice(0, -1).join('/') || '/');
 
-					// sameSite is string, something more specific is required - type cast is safe
-					set_internal(name, /** @type {string} */ (value), {
+					// options.sameSite is string, something more specific is required - type cast is safe
+					set_internal(name, value, {
 						path,
 						encode: (value) => value,
-						.../** @type {import('cookie').SerializeOptions} */ (cookie_options)
+						.../** @type {import('cookie').CookieSerializeOptions} */ (options)
 					});
 				}
 
@@ -193,31 +198,40 @@ function normalize_fetch_input(info, init, url) {
 
 /**
  * @param {Request} request
- * @param {import('types').RequestState} state
+ * @param {import('types').SSROptions} options
+ * @param {import('@sveltejs/kit').SSRManifest} manifest
+ * @param {import('types').SSRState} state
  * @returns {Promise<Response>}
  */
-async function internal_fetch(request, state) {
-	if (request.signal?.aborted) {
-		throw new DOMException('The operation was aborted.', 'AbortError');
+async function internal_fetch(request, options, manifest, state) {
+	if (request.signal) {
+		if (request.signal.aborted) {
+			throw new DOMException('The operation was aborted.', 'AbortError');
+		}
+
+		let remove_abort_listener = noop;
+		/** @type {Promise<never>} */
+		const abort_promise = new Promise((_, reject) => {
+			const on_abort = () => {
+				reject(new DOMException('The operation was aborted.', 'AbortError'));
+			};
+			request.signal.addEventListener('abort', on_abort, { once: true });
+			remove_abort_listener = () => request.signal.removeEventListener('abort', on_abort);
+		});
+
+		const result = await Promise.race([
+			respond(request, options, manifest, {
+				...state,
+				depth: state.depth + 1
+			}),
+			abort_promise
+		]);
+		remove_abort_listener();
+		return result;
+	} else {
+		return await respond(request, options, manifest, {
+			...state,
+			depth: state.depth + 1
+		});
 	}
-
-	const subrequest_state = fork_state_for_subrequest(state);
-
-	if (!request.signal) {
-		return await respond(request, subrequest_state);
-	}
-
-	let remove_abort_listener = noop;
-	/** @type {Promise<never>} */
-	const abort_promise = new Promise((_, reject) => {
-		const on_abort = () => {
-			reject(new DOMException('The operation was aborted.', 'AbortError'));
-		};
-		request.signal.addEventListener('abort', on_abort, { once: true });
-		remove_abort_listener = () => request.signal.removeEventListener('abort', on_abort);
-	});
-
-	return Promise.race([respond(request, subrequest_state), abort_promise]).finally(
-		remove_abort_listener
-	);
 }

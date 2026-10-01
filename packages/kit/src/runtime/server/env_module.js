@@ -1,5 +1,6 @@
 import * as devalue from 'devalue';
-import { rendered_env } from '<sveltekit:generated>/env/config.js';
+import { public_env } from '../shared-server.js';
+import { rendered_env } from '__sveltekit/env';
 
 /** @type {string} */
 let payload;
@@ -15,7 +16,9 @@ let headers;
  * @returns {Response}
  */
 export function get_public_env(request) {
-	const env = rendered_env;
+	const script = request.url.endsWith('.script.js');
+
+	const env = __SVELTEKIT_EXPERIMENTAL_EXPLICIT_ENVIRONMENT_VARIABLES__ ? rendered_env : public_env;
 
 	payload ??= devalue.uneval(env);
 	etag ??= `W/${Date.now()}`;
@@ -26,6 +29,10 @@ export function get_public_env(request) {
 
 	if (request.headers.get('if-none-match') === etag) {
 		return new Response(undefined, { status: 304, headers });
+	}
+
+	if (script) {
+		return new Response(`globalThis.__sveltekit_sw={env:${payload}}`, { headers });
 	}
 
 	return new Response(`export const env=${payload}`, { headers });

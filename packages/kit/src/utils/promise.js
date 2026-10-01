@@ -1,12 +1,16 @@
+/** @see https://github.com/microsoft/TypeScript/blob/904e7dd97dc8da1352c8e05d70829dff17c73214/src/lib/es2024.promise.d.ts */
+
 /**
- * Replacement for `Promise.withResolvers()` that does not require the native
- * static method, which only shipped in Safari 17.4 / Chrome 119 / Firefox 121.
- *
- * The client remote-function runtime is bundled and shipped to browsers verbatim
- * (Vite 8's default build target is Safari 16.4 / Chrome 111) and is not
- * polyfilled, so it must not assume `Promise.withResolvers` exists. The
- * server-side and build-time call sites run on Node 22+ and keep using the
- * native method.
+ * @template T
+ * @typedef {{
+ *   promise: Promise<T>;
+ *   resolve: (value: T | PromiseLike<T>) => void;
+ *   reject: (reason?: any) => void;
+ * }} PromiseWithResolvers<T>
+ */
+
+/**
+ * TODO: Whenever Node >21 is minimum supported version, we can use `Promise.withResolvers` to avoid this ceremony
  *
  * @template T
  * @returns {PromiseWithResolvers<T>}

@@ -1,6 +1,6 @@
 /** @typedef {Record<string, string[]>} Query */
 
-/** @param {import('$app/state').ReadonlyURLSearchParams} query */
+/** @param {URLSearchParams} query */
 export function to_pojo(query) {
 	/** @type {Query}*/
 	const values = {};

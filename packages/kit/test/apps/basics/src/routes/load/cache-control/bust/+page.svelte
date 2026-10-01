@@ -12,4 +12,4 @@
 </script>
 
 <p class="counter">Count is {data.count}</p>
-<button onclick={update}>update</button>
+<button on:click={update}>update</button>
