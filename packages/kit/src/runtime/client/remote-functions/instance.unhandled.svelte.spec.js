@@ -104,17 +104,30 @@ describe('Query errors', () => {
 		const first_result = Promise.resolve(query);
 		await tick();
 		const second_result = query.refresh();
-		second.reject(new Error('nope'));
+		const failure = new TypeError('Failed to fetch');
+		second.reject(failure);
 
 		const [first_error, second_error] = await Promise.all([
 			first_result.catch((error) => error),
 			second_result.catch((error) => error)
 		]);
-		expect(first_error).toBeInstanceOf(HandledHttpError);
-		expect(second_error).toBeInstanceOf(HandledHttpError);
-		expect(first_error.body).toBe(second_error.body);
+		expect(first_error).toBe(failure);
+		expect(second_error).toBe(failure);
+		expect(query.error).toEqual({ message: 'Failed to fetch', status: 500 });
 		expect(query.ready).toBe(false);
 		expect(query.current).toBeUndefined();
+	});
+
+	test('HTTP failures are finalized after passing through handleError', async () => {
+		const failure = new HttpError({ status: 503, message: 'unavailable' });
+		const query = new Query('http-error', () => Promise.reject(failure));
+
+		const rejection = await Promise.resolve(query).catch((error) => error);
+
+		expect(rejection).toBeInstanceOf(HandledHttpError);
+		expect(rejection).not.toBe(failure);
+		expect(rejection.body).toEqual({ status: 503, message: 'unavailable' });
+		expect(query.error).toEqual({ status: 503, message: 'unavailable' });
 	});
 
 	test('fail rejects existing awaiters before the first value', async () => {
