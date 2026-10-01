@@ -6,7 +6,7 @@
 
 /** @param {string} code */
 export function diagnostic_url(code) {
-	return `https://next.svelte.dev/e/kit/${code}`;
+	return `https://svelte.dev/e/kit/${code}`;
 }
 
 /**

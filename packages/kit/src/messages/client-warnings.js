@@ -14,13 +14,13 @@ export function app_body_unwrapped(_values, options) {
 
 	if (DEV) {
 		console.warn(
-			`%c[sveltekit] ${'app_body_unwrapped'}\n%c${`Placing \`${_values.tag}\` directly inside \`<body>\` is not recommended, as your app may break for users who have certain browser extensions installed`}\nhttps://next.svelte.dev/e/kit/${'app_body_unwrapped'}`,
+			`%c[sveltekit] ${'app_body_unwrapped'}\n%c${`Placing \`${_values.tag}\` directly inside \`<body>\` is not recommended, as your app may break for users who have certain browser extensions installed`}\nhttps://svelte.dev/e/kit/${'app_body_unwrapped'}`,
 			bold,
 			normal,
 			...details
 		);
 	} else {
-		console.warn('https://next.svelte.dev/e/kit/app_body_unwrapped', ...details);
+		console.warn('https://svelte.dev/e/kit/app_body_unwrapped', ...details);
 	}
 }
 
@@ -34,13 +34,13 @@ export function enhance_invalidate_all_deprecated(_values, options) {
 
 	if (DEV) {
 		console.warn(
-			`%c[sveltekit] ${'enhance_invalidate_all_deprecated'}\n%c${`The \`update({ invalidateAll })\` option has been deprecated in favour of \`update({ refreshAll })\``}\nhttps://next.svelte.dev/e/kit/${'enhance_invalidate_all_deprecated'}`,
+			`%c[sveltekit] ${'enhance_invalidate_all_deprecated'}\n%c${`The \`update({ invalidateAll })\` option has been deprecated in favour of \`update({ refreshAll })\``}\nhttps://svelte.dev/e/kit/${'enhance_invalidate_all_deprecated'}`,
 			bold,
 			normal,
 			...details
 		);
 	} else {
-		console.warn('https://next.svelte.dev/e/kit/enhance_invalidate_all_deprecated', ...details);
+		console.warn('https://svelte.dev/e/kit/enhance_invalidate_all_deprecated', ...details);
 	}
 }
 
@@ -54,13 +54,13 @@ export function full_reload_after_error(_values, options) {
 
 	if (DEV) {
 		console.warn(
-			`%c[sveltekit] ${'full_reload_after_error'}\n%c${`An error occurred while loading the page. This will cause a full page reload`}\nhttps://next.svelte.dev/e/kit/${'full_reload_after_error'}`,
+			`%c[sveltekit] ${'full_reload_after_error'}\n%c${`An error occurred while loading the page. This will cause a full page reload`}\nhttps://svelte.dev/e/kit/${'full_reload_after_error'}`,
 			bold,
 			normal,
 			...details
 		);
 	} else {
-		console.warn('https://next.svelte.dev/e/kit/full_reload_after_error', ...details);
+		console.warn('https://svelte.dev/e/kit/full_reload_after_error', ...details);
 	}
 }
 
@@ -74,13 +74,13 @@ export function goto_invalidate_all_deprecated(_values, options) {
 
 	if (DEV) {
 		console.warn(
-			`%c[sveltekit] ${'goto_invalidate_all_deprecated'}\n%c${`The \`goto(..., { invalidateAll: ${_values.value} })\` option has been deprecated in favour of \`refreshAll\``}\nhttps://next.svelte.dev/e/kit/${'goto_invalidate_all_deprecated'}`,
+			`%c[sveltekit] ${'goto_invalidate_all_deprecated'}\n%c${`The \`goto(..., { invalidateAll: ${_values.value} })\` option has been deprecated in favour of \`refreshAll\``}\nhttps://svelte.dev/e/kit/${'goto_invalidate_all_deprecated'}`,
 			bold,
 			normal,
 			...details
 		);
 	} else {
-		console.warn('https://next.svelte.dev/e/kit/goto_invalidate_all_deprecated', ...details);
+		console.warn('https://svelte.dev/e/kit/goto_invalidate_all_deprecated', ...details);
 	}
 }
 
@@ -94,13 +94,13 @@ export function goto_replace_state_deprecated(_values, options) {
 
 	if (DEV) {
 		console.warn(
-			`%c[sveltekit] ${'goto_replace_state_deprecated'}\n%c${`The \`goto(..., { replaceState: ${_values.value} })\` option has been deprecated in favour of \`replace\``}\nhttps://next.svelte.dev/e/kit/${'goto_replace_state_deprecated'}`,
+			`%c[sveltekit] ${'goto_replace_state_deprecated'}\n%c${`The \`goto(..., { replaceState: ${_values.value} })\` option has been deprecated in favour of \`replace\``}\nhttps://svelte.dev/e/kit/${'goto_replace_state_deprecated'}`,
 			bold,
 			normal,
 			...details
 		);
 	} else {
-		console.warn('https://next.svelte.dev/e/kit/goto_replace_state_deprecated', ...details);
+		console.warn('https://svelte.dev/e/kit/goto_replace_state_deprecated', ...details);
 	}
 }
 
@@ -114,13 +114,13 @@ export function history_api_conflict(_values, options) {
 
 	if (DEV) {
 		console.warn(
-			`%c[sveltekit] ${'history_api_conflict'}\n%c${`Avoid using \`history.pushState(...)\` and \`history.replaceState(...)\` as these will conflict with SvelteKit's router. Use \`goto(...)\` from \`$app/navigation\` instead.`}\nhttps://next.svelte.dev/e/kit/${'history_api_conflict'}`,
+			`%c[sveltekit] ${'history_api_conflict'}\n%c${`Avoid using \`history.pushState(...)\` and \`history.replaceState(...)\` as these will conflict with SvelteKit's router. Use \`goto(...)\` from \`$app/navigation\` instead.`}\nhttps://svelte.dev/e/kit/${'history_api_conflict'}`,
 			bold,
 			normal,
 			...details
 		);
 	} else {
-		console.warn('https://next.svelte.dev/e/kit/history_api_conflict', ...details);
+		console.warn('https://svelte.dev/e/kit/history_api_conflict', ...details);
 	}
 }
 
@@ -134,13 +134,13 @@ export function hmr_reload_after_error(_values, options) {
 
 	if (DEV) {
 		console.warn(
-			`%c[sveltekit] ${'hmr_reload_after_error'}\n%c${`The next HMR update will cause the page to reload`}\nhttps://next.svelte.dev/e/kit/${'hmr_reload_after_error'}`,
+			`%c[sveltekit] ${'hmr_reload_after_error'}\n%c${`The next HMR update will cause the page to reload`}\nhttps://svelte.dev/e/kit/${'hmr_reload_after_error'}`,
 			bold,
 			normal,
 			...details
 		);
 	} else {
-		console.warn('https://next.svelte.dev/e/kit/hmr_reload_after_error', ...details);
+		console.warn('https://svelte.dev/e/kit/hmr_reload_after_error', ...details);
 	}
 }
 
@@ -154,13 +154,13 @@ export function link_option_invalid(_values, options) {
 
 	if (DEV) {
 		console.warn(
-			`%c[sveltekit] ${'link_option_invalid'}\n%c${`Unexpected value for \`${_values.name}\` — should be one of ${_values.options}`}\nhttps://next.svelte.dev/e/kit/${'link_option_invalid'}`,
+			`%c[sveltekit] ${'link_option_invalid'}\n%c${`Unexpected value for \`${_values.name}\` — should be one of ${_values.options}`}\nhttps://svelte.dev/e/kit/${'link_option_invalid'}`,
 			bold,
 			normal,
 			...details
 		);
 	} else {
-		console.warn('https://next.svelte.dev/e/kit/link_option_invalid', ...details);
+		console.warn('https://svelte.dev/e/kit/link_option_invalid', ...details);
 	}
 }
 
@@ -174,13 +174,13 @@ export function link_option_replaced(_values, options) {
 
 	if (DEV) {
 		console.warn(
-			`%c[sveltekit] ${'link_option_replaced'}\n%c${`\`data-sveltekit-${_values.name}="true"\` has been replaced with \`data-sveltekit-reset="false"\``}\nhttps://next.svelte.dev/e/kit/${'link_option_replaced'}`,
+			`%c[sveltekit] ${'link_option_replaced'}\n%c${`\`data-sveltekit-${_values.name}="true"\` has been replaced with \`data-sveltekit-reset="false"\``}\nhttps://svelte.dev/e/kit/${'link_option_replaced'}`,
 			bold,
 			normal,
 			...details
 		);
 	} else {
-		console.warn('https://next.svelte.dev/e/kit/link_option_replaced', ...details);
+		console.warn('https://svelte.dev/e/kit/link_option_replaced', ...details);
 	}
 }
 
@@ -194,13 +194,13 @@ export function preload_code_endpoint_only(_values, options) {
 
 	if (DEV) {
 		console.warn(
-			`%c[sveltekit] ${'preload_code_endpoint_only'}\n%c${`\`${_values.id}\` has no \`+page\`, so there is no code to preload. If you meant to warm up an endpoint, request it with \`fetch\` instead.`}\nhttps://next.svelte.dev/e/kit/${'preload_code_endpoint_only'}`,
+			`%c[sveltekit] ${'preload_code_endpoint_only'}\n%c${`\`${_values.id}\` has no \`+page\`, so there is no code to preload. If you meant to warm up an endpoint, request it with \`fetch\` instead.`}\nhttps://svelte.dev/e/kit/${'preload_code_endpoint_only'}`,
 			bold,
 			normal,
 			...details
 		);
 	} else {
-		console.warn('https://next.svelte.dev/e/kit/preload_code_endpoint_only', ...details);
+		console.warn('https://svelte.dev/e/kit/preload_code_endpoint_only', ...details);
 	}
 }
 
@@ -214,13 +214,13 @@ export function preload_data_failed(_values, options) {
 
 	if (DEV) {
 		console.warn(
-			`%c[sveltekit] ${'preload_data_failed'}\n%c${`Preloading data for \`${_values.path}\` failed with the following error: ${_values.message}`}\nhttps://next.svelte.dev/e/kit/${'preload_data_failed'}`,
+			`%c[sveltekit] ${'preload_data_failed'}\n%c${`Preloading data for \`${_values.path}\` failed with the following error: ${_values.message}`}\nhttps://svelte.dev/e/kit/${'preload_data_failed'}`,
 			bold,
 			normal,
 			...details
 		);
 	} else {
-		console.warn('https://next.svelte.dev/e/kit/preload_data_failed', ...details);
+		console.warn('https://svelte.dev/e/kit/preload_data_failed', ...details);
 	}
 }
 
@@ -234,13 +234,13 @@ export function preload_route_is_pathname(_values, options) {
 
 	if (DEV) {
 		console.warn(
-			`%c[sveltekit] ${'preload_route_is_pathname'}\n%c${`\`${_values.id}\` did not match any route, but it does match as a pathname — use \`match(...)\` from \`$app/paths\` to convert a pathname into a route ID`}\nhttps://next.svelte.dev/e/kit/${'preload_route_is_pathname'}`,
+			`%c[sveltekit] ${'preload_route_is_pathname'}\n%c${`\`${_values.id}\` did not match any route, but it does match as a pathname — use \`match(...)\` from \`$app/paths\` to convert a pathname into a route ID`}\nhttps://svelte.dev/e/kit/${'preload_route_is_pathname'}`,
 			bold,
 			normal,
 			...details
 		);
 	} else {
-		console.warn('https://next.svelte.dev/e/kit/preload_route_is_pathname', ...details);
+		console.warn('https://svelte.dev/e/kit/preload_route_is_pathname', ...details);
 	}
 }
 
@@ -254,13 +254,13 @@ export function preload_route_missing(_values, options) {
 
 	if (DEV) {
 		console.warn(
-			`%c[sveltekit] ${'preload_route_missing'}\n%c${`\`${_values.id}\` did not match any route`}\nhttps://next.svelte.dev/e/kit/${'preload_route_missing'}`,
+			`%c[sveltekit] ${'preload_route_missing'}\n%c${`\`${_values.id}\` did not match any route`}\nhttps://svelte.dev/e/kit/${'preload_route_missing'}`,
 			bold,
 			normal,
 			...details
 		);
 	} else {
-		console.warn('https://next.svelte.dev/e/kit/preload_route_missing', ...details);
+		console.warn('https://svelte.dev/e/kit/preload_route_missing', ...details);
 	}
 }
 
@@ -274,13 +274,13 @@ export function push_state_deprecated(_values, options) {
 
 	if (DEV) {
 		console.warn(
-			`%c[sveltekit] ${'push_state_deprecated'}\n%c${`\`pushState(...)\` is deprecated. Use \`goto(url, { state, shallow: true })\` instead.`}\nhttps://next.svelte.dev/e/kit/${'push_state_deprecated'}`,
+			`%c[sveltekit] ${'push_state_deprecated'}\n%c${`\`pushState(...)\` is deprecated. Use \`goto(url, { state, shallow: true })\` instead.`}\nhttps://svelte.dev/e/kit/${'push_state_deprecated'}`,
 			bold,
 			normal,
 			...details
 		);
 	} else {
-		console.warn('https://next.svelte.dev/e/kit/push_state_deprecated', ...details);
+		console.warn('https://svelte.dev/e/kit/push_state_deprecated', ...details);
 	}
 }
 
@@ -302,13 +302,13 @@ export function remote_form_issues_ignored(_values, options) {
 
 ${_values.issues}
 
-Make sure you provide actionable feedback to users, using e.g. \`myForm.fields.myField.issues()\` or \`myForm.fields.allIssues()\``}\nhttps://next.svelte.dev/e/kit/${'remote_form_issues_ignored'}`,
+Make sure you provide actionable feedback to users, using e.g. \`myForm.fields.myField.issues()\` or \`myForm.fields.allIssues()\``}\nhttps://svelte.dev/e/kit/${'remote_form_issues_ignored'}`,
 			bold,
 			normal,
 			...details
 		);
 	} else {
-		console.warn('https://next.svelte.dev/e/kit/remote_form_issues_ignored', ...details);
+		console.warn('https://svelte.dev/e/kit/remote_form_issues_ignored', ...details);
 	}
 }
 
@@ -322,13 +322,13 @@ export function remote_updates_repeated(_values, options) {
 
 	if (DEV) {
 		console.warn(
-			`%c[sveltekit] ${'remote_updates_repeated'}\n%c${`Updates can only be sent once per ${_values.invocation}. Ignoring additional updates.`}\nhttps://next.svelte.dev/e/kit/${'remote_updates_repeated'}`,
+			`%c[sveltekit] ${'remote_updates_repeated'}\n%c${`Updates can only be sent once per ${_values.invocation}. Ignoring additional updates.`}\nhttps://svelte.dev/e/kit/${'remote_updates_repeated'}`,
 			bold,
 			normal,
 			...details
 		);
 	} else {
-		console.warn('https://next.svelte.dev/e/kit/remote_updates_repeated', ...details);
+		console.warn('https://svelte.dev/e/kit/remote_updates_repeated', ...details);
 	}
 }
 
@@ -342,13 +342,13 @@ export function replace_state_deprecated(_values, options) {
 
 	if (DEV) {
 		console.warn(
-			`%c[sveltekit] ${'replace_state_deprecated'}\n%c${`\`replaceState(...)\` is deprecated. Use \`goto(url, { state, shallow: true, replace: true })\` instead.`}\nhttps://next.svelte.dev/e/kit/${'replace_state_deprecated'}`,
+			`%c[sveltekit] ${'replace_state_deprecated'}\n%c${`\`replaceState(...)\` is deprecated. Use \`goto(url, { state, shallow: true, replace: true })\` instead.`}\nhttps://svelte.dev/e/kit/${'replace_state_deprecated'}`,
 			bold,
 			normal,
 			...details
 		);
 	} else {
-		console.warn('https://next.svelte.dev/e/kit/replace_state_deprecated', ...details);
+		console.warn('https://svelte.dev/e/kit/replace_state_deprecated', ...details);
 	}
 }
 
@@ -362,13 +362,13 @@ export function snapshot_export_deprecated(_values, options) {
 
 	if (DEV) {
 		console.warn(
-			`%c[sveltekit] ${'snapshot_export_deprecated'}\n%c${`\`export const snapshot\` is deprecated. Use the \`snapshot\` helper from \`$app/navigation\` instead.`}\nhttps://next.svelte.dev/e/kit/${'snapshot_export_deprecated'}`,
+			`%c[sveltekit] ${'snapshot_export_deprecated'}\n%c${`\`export const snapshot\` is deprecated. Use the \`snapshot\` helper from \`$app/navigation\` instead.`}\nhttps://svelte.dev/e/kit/${'snapshot_export_deprecated'}`,
 			bold,
 			normal,
 			...details
 		);
 	} else {
-		console.warn('https://next.svelte.dev/e/kit/snapshot_export_deprecated', ...details);
+		console.warn('https://svelte.dev/e/kit/snapshot_export_deprecated', ...details);
 	}
 }
 
@@ -382,12 +382,12 @@ export function window_fetch_in_load(_values, options) {
 
 	if (DEV) {
 		console.warn(
-			`%c[sveltekit] ${'window_fetch_in_load'}\n%c${`Loading \`${_values.url}\` using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function`}\nhttps://next.svelte.dev/e/kit/${'window_fetch_in_load'}`,
+			`%c[sveltekit] ${'window_fetch_in_load'}\n%c${`Loading \`${_values.url}\` using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function`}\nhttps://svelte.dev/e/kit/${'window_fetch_in_load'}`,
 			bold,
 			normal,
 			...details
 		);
 	} else {
-		console.warn('https://next.svelte.dev/e/kit/window_fetch_in_load', ...details);
+		console.warn('https://svelte.dev/e/kit/window_fetch_in_load', ...details);
 	}
 }
