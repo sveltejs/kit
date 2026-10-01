@@ -48,7 +48,7 @@ The third argument of [`redirect`](https://svelte.dev/docs/kit/@sveltejs-kit#red
 
 > `$app/stores` has been removed in favour of `$app/state`
 
-The store-based `$app/stores` module was removed in SvelteKit 3. Import `page`, `navigating` and `updated` from [`$app/state`](https://svelte.dev/docs/kit/$app-state) instead, and read them without the `$` prefix — for example `page.url.pathname` rather than `$page.url.pathname`. See the [migration guide](https://svelte.dev/docs/kit/migrating-to-sveltekit-3) for details.
+The store-based `$app/stores` module was removed in SvelteKit 3. Import `page`, `navigating` and `updated` from [`$app/state`](https://svelte.dev/docs/kit/$app-state) instead. Read `page` and `navigating` properties without the `$` prefix — for example `page.url.pathname` rather than `$page.url.pathname` — and replace `$updated` with `updated.current`. See the [migration guide](https://svelte.dev/docs/kit/migrating-to-sveltekit-3) for details.
 
 ## service_worker_module_outside_worker
 
