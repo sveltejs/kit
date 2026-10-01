@@ -71,6 +71,154 @@ test.describe('remote functions', () => {
 		await expect(page.locator('body')).not.toContainText('Protected content');
 	});
 
+	test('query error retries keep protected content hidden while pending', async ({
+		page,
+		context,
+		javaScriptEnabled
+	}) => {
+		test.skip(!javaScriptEnabled);
+
+		await page.goto('/remote/query-guard');
+		await page.click('a[href="/remote/query-guard/error"]');
+		await expect(page.locator('h1')).toHaveText('401');
+		await expect(page.locator('body')).toContainText('Unauthorized');
+		await expect(page.locator('nav')).toHaveAttribute('data-navigating', 'false');
+
+		// Remember even transient insertions that disappear before a locator assertion runs
+		const observed = await page.evaluateHandle(() => {
+			const state = { exposed: false };
+			const observer = new MutationObserver((records) => {
+				for (const record of records) {
+					for (const node of record.addedNodes) {
+						if (
+							node instanceof Element &&
+							(node.matches('#protected-content') || node.querySelector('#protected-content'))
+						) {
+							state.exposed = true;
+						}
+					}
+				}
+			});
+			observer.observe(document.body, { childList: true, subtree: true });
+			return { state, observer };
+		});
+
+		for (const authorized of [false, false, true]) {
+			if (authorized) {
+				await context.addCookies([
+					{ name: 'query-guard-authorized', value: 'true', url: new URL('/', page.url()).href }
+				]);
+			}
+
+			let release = () => {};
+			const pending = new Promise((fulfil) => {
+				release = () => fulfil(undefined);
+			});
+			await page.route(
+				'**/_app/remote/**',
+				async (route) => {
+					await pending;
+					await route.continue();
+				},
+				{ times: 1 }
+			);
+
+			try {
+				await Promise.all([
+					page.waitForRequest((request) => request.url().includes('/_app/remote/')),
+					page.click('a[href="/remote/query-guard/error"]')
+				]);
+				await page.evaluate(() => new Promise(requestAnimationFrame));
+				await expect(page.locator('#protected-content')).toHaveCount(0);
+				expect(await observed.evaluate(({ state }) => state.exposed)).toBe(false);
+				await expect(page.locator('nav')).toHaveAttribute('data-navigating', 'true');
+
+				if (authorized) {
+					await observed.evaluate(({ observer }) => observer.disconnect());
+				}
+
+				const response = page.waitForResponse((response) =>
+					response.url().includes('/_app/remote/')
+				);
+				release();
+				await (await response).finished();
+				await page.evaluate(() => new Promise(requestAnimationFrame));
+			} finally {
+				release();
+			}
+
+			await expect(page.locator('nav')).toHaveAttribute('data-navigating', 'false');
+			if (authorized) {
+				await expect(page.locator('#protected-content')).toHaveText('Protected content');
+			} else {
+				await expect(page.locator('h1')).toHaveText('401');
+				await expect(page.locator('body')).toContainText('Unauthorized');
+			}
+		}
+
+		expect(await observed.evaluate(({ state }) => state.exposed)).toBe(false);
+	});
+
+	for (const preloaded of [false, true]) {
+		test(`navigation away from a pending query error retry ignores its late error (preloaded: ${preloaded})`, async ({
+			page,
+			app,
+			javaScriptEnabled
+		}) => {
+			test.skip(!javaScriptEnabled);
+
+			await page.goto('/remote/query-guard');
+			await page.click('a[href="/remote/query-guard/error"]');
+			await expect(page.locator('h1')).toHaveText('401');
+			await expect(page.locator('nav')).toHaveAttribute('data-navigating', 'false');
+
+			let release = () => {};
+			const pending = new Promise((fulfil) => {
+				release = () => fulfil(undefined);
+			});
+			await page.route(
+				'**/_app/remote/**',
+				async (route) => {
+					await pending;
+					await route.continue();
+				},
+				{ times: 1 }
+			);
+
+			try {
+				await Promise.all([
+					page.waitForRequest((request) => request.url().includes('/_app/remote/')),
+					page.click('a[href="/remote/query-guard/error"]')
+				]);
+				await page.evaluate(() => new Promise(requestAnimationFrame));
+				await expect(page.locator('nav')).toHaveAttribute('data-navigating', 'true');
+
+				if (preloaded) {
+					await app.preloadData('/remote/query-guard');
+					await page.evaluate(() => new Promise(requestAnimationFrame));
+				}
+
+				await page.click('a[href="/remote/query-guard"]');
+				await expect(page.locator('h1')).toHaveText('Home');
+				await expect(page.locator('nav')).toHaveAttribute('data-navigating', 'false');
+
+				const response = page.waitForResponse((response) =>
+					response.url().includes('/_app/remote/')
+				);
+				release();
+				await (await response).finished();
+				await page.evaluate(() => new Promise(requestAnimationFrame));
+			} finally {
+				release();
+			}
+
+			await expect(page).toHaveURL(/\/remote\/query-guard$/);
+			await expect(page.locator('h1')).toHaveText('Home');
+			await expect(page.locator('nav')).toHaveAttribute('data-navigating', 'false');
+			await expect(page.locator('#protected-content')).toHaveCount(0);
+		});
+	}
+
 	test('query redirect to a same-origin URL outside the app navigates', async ({
 		page,
 		javaScriptEnabled

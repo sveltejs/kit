@@ -1,8 +1,11 @@
 import { error, redirect } from '@sveltejs/kit';
-import { query } from '$app/server';
+import { getRequestEvent, query } from '$app/server';
 
 export const guard = query(() => {
-	error(401, 'Unauthorized');
+	if (!getRequestEvent().cookies.get('query-guard-authorized')) {
+		error(401, 'Unauthorized');
+	}
+	return true;
 });
 
 export const go_home = query(() => {

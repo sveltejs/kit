@@ -9,4 +9,4 @@
 			: go_home());
 </script>
 
-<h1>Protected content</h1>
+<h1 id="protected-content">Protected content</h1>
