@@ -38,7 +38,8 @@ export function is_root_relative(path) {
 export function relative_pathname(from, to) {
 	const segment = to.replace(/\/$/, '').split('/').at(-1);
 
-	return from.endsWith('/') ? `../${segment}` : `${segment}/`;
+	// The prefix prevents a colon in the segment from being interpreted as a URL scheme.
+	return from.endsWith('/') ? `../${segment}` : `./${segment}/`;
 }
 
 /**

@@ -69,7 +69,16 @@ const files = create_file_map({
 			['/sub/', '/sub/index.html']
 		]
 	},
-	prerendered_assets: { entries: [['/about', about]], aliases: [] }
+	prerendered_assets: {
+		entries: [
+			['/about', about],
+			['/always/http:example.com/', about],
+			['/always/https:example.com/', about],
+			['/never/http:example.com', about],
+			['/never/https:example.com', about]
+		],
+		aliases: []
+	}
 });
 
 const middleware = serve_static(files);
@@ -170,6 +179,30 @@ test('serves prerendered pages and redirects their non-canonical trailing-slash 
 	const redirect = await get('/about/?x=1');
 	expect(redirect.status).toBe(308);
 	expect(redirect.headers['location']).toBe('../about?x=1');
+});
+
+test('keeps scheme-like prerendered paths on the original origin', async () => {
+	for (const segment of ['http:example.com', 'https:example.com']) {
+		for (const trailing_slash of ['always', 'never']) {
+			const pathname = `/${trailing_slash}/${segment}`;
+			const from = trailing_slash === 'always' ? pathname : `${pathname}/`;
+			const to = trailing_slash === 'always' ? `${pathname}/` : pathname;
+			const response = await get(`${from}?ref=test`);
+			const location = response.headers['location'];
+
+			expect(response.status).toBe(308);
+			for (const protocol of ['https:', 'http:']) {
+				const base = new URL(`${protocol}//internal/mount${from}?ref=test`);
+				const target = new URL(location!, base);
+				expect(target.origin).toBe(base.origin);
+				expect(target.pathname).toBe(`/mount${to}`);
+				expect(target.search).toBe(base.search);
+			}
+			expect(location).toBe(
+				`${trailing_slash === 'always' ? `./${segment}/` : `../${segment}`}?ref=test`
+			);
+		}
+	}
 });
 
 test('answers a matching if-none-match with a 304 that carries the validators', async () => {
