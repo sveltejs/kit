@@ -2362,59 +2362,62 @@ test.describe('Shallow routing', () => {
 		page
 	}) => {
 		for (const shallow of [true, false]) {
-			const prefix = shallow ? 'shallow' : 'regular';
-			const input = page.locator('[data-id="options-focus"]');
-			const state = () =>
-				page.evaluate(() => ({
-					focus: document.activeElement?.getAttribute('data-id') ?? document.activeElement?.tagName,
-					y: scrollY
-				}));
+			await test.step(shallow ? 'shallow' : 'non-shallow', async () => {
+				const prefix = shallow ? 'shallow' : 'regular';
+				const input = page.locator('[data-id="options-focus"]');
+				const state = () =>
+					page.evaluate(() => ({
+						focus:
+							document.activeElement?.getAttribute('data-id') ?? document.activeElement?.tagName,
+						y: scrollY
+					}));
 
-			await page.goto('/shallow-routing/push-state');
-			await input.focus();
-			await page.evaluate(() => scrollTo(0, 500));
+				await page.goto('/shallow-routing/push-state');
+				await input.focus();
+				await page.evaluate(() => scrollTo(0, 500));
 
-			await app.goto(`?${prefix}=a`, { shallow, reset: false });
-			await expect.poll(state).toEqual({ focus: 'options-focus', y: 500 });
+				await app.goto(`?${prefix}=a`, { shallow, reset: false });
+				await expect.poll(state).toEqual({ focus: 'options-focus', y: 500 });
 
-			await page.evaluate(() => scrollTo(0, 700));
-			await page.goBack();
-			await expect(page).not.toHaveURL(new RegExp(`${prefix}=a`));
-			await expect.poll(state).toEqual({ focus: 'options-focus', y: 700 });
+				await page.evaluate(() => scrollTo(0, 700));
+				await page.goBack();
+				await expect(page).not.toHaveURL(new RegExp(`${prefix}=a`));
+				await expect.poll(state).toEqual({ focus: 'options-focus', y: 700 });
 
-			await page.evaluate(() => scrollTo(0, 300));
-			await page.goForward();
-			await expect(page).toHaveURL(new RegExp(`${prefix}=a`));
-			await expect.poll(state).toEqual({ focus: 'options-focus', y: 300 });
+				await page.evaluate(() => scrollTo(0, 300));
+				await page.goForward();
+				await expect(page).toHaveURL(new RegExp(`${prefix}=a`));
+				await expect.poll(state).toEqual({ focus: 'options-focus', y: 300 });
 
-			await page.reload();
-			await input.focus();
-			await page.evaluate(() => scrollTo(0, 350));
-			await page.goBack();
-			await expect(page).not.toHaveURL(new RegExp(`${prefix}=a`));
-			await expect.poll(state).toEqual({ focus: 'options-focus', y: 350 });
+				await page.reload();
+				await input.focus();
+				await page.evaluate(() => scrollTo(0, 350));
+				await page.goBack();
+				await expect(page).not.toHaveURL(new RegExp(`${prefix}=a`));
+				await expect.poll(state).toEqual({ focus: 'options-focus', y: 350 });
 
-			await page.evaluate(() => scrollTo(0, 400));
-			await page.goForward();
-			await expect(page).toHaveURL(new RegExp(`${prefix}=a`));
-			await expect.poll(state).toEqual({ focus: 'options-focus', y: 400 });
+				await page.evaluate(() => scrollTo(0, 400));
+				await page.goForward();
+				await expect(page).toHaveURL(new RegExp(`${prefix}=a`));
+				await expect.poll(state).toEqual({ focus: 'options-focus', y: 400 });
 
-			await app.goto(`?${prefix}=b`, { shallow, reset: true });
-			await input.focus();
-			await page.evaluate(() => scrollTo(0, 700));
-			await app.goto(`?${prefix}=c`, { shallow, reset: false });
-			await expect.poll(state).toEqual({ focus: 'options-focus', y: 700 });
+				await app.goto(`?${prefix}=b`, { shallow, reset: true });
+				await input.focus();
+				await page.evaluate(() => scrollTo(0, 700));
+				await app.goto(`?${prefix}=c`, { shallow, reset: false });
+				await expect.poll(state).toEqual({ focus: 'options-focus', y: 700 });
 
-			await page.evaluate(() => scrollTo(0, 900));
-			await page.evaluate(() => history.go(-2));
-			await expect(page).toHaveURL(new RegExp(`${prefix}=a`));
-			await expect.poll(state).toEqual({ focus: 'BODY', y: 400 });
+				await page.evaluate(() => scrollTo(0, 900));
+				await page.evaluate(() => history.go(-2));
+				await expect(page).toHaveURL(new RegExp(`${prefix}=a`));
+				await expect.poll(state).toEqual({ focus: 'BODY', y: 400 });
 
-			await input.focus();
-			await page.evaluate(() => scrollTo(0, 400));
-			await page.evaluate(() => history.go(2));
-			await expect(page).toHaveURL(new RegExp(`${prefix}=c`));
-			await expect.poll(state).toEqual({ focus: 'BODY', y: 900 });
+				await input.focus();
+				await page.evaluate(() => scrollTo(0, 400));
+				await page.evaluate(() => history.go(2));
+				await expect(page).toHaveURL(new RegExp(`${prefix}=c`));
+				await expect.poll(state).toEqual({ focus: 'BODY', y: 900 });
+			});
 		}
 	});
 
