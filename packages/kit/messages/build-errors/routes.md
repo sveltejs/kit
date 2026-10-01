@@ -68,7 +68,7 @@ When [`router.type`](https://svelte.dev/docs/kit/configuration#router) is `'hash
 
 > Multiple %type% files found in `%directory%` : `%existing%` and `%file%`
 
-Each route directory can contain at most one file of each kind — one `+page.svelte`, one `+page.js`, one `+server.js` and so on. This usually happens when a file exists with two extensions, such as `+page.js` and `+page.ts`, or when two components reference different [layouts](https://svelte.dev/docs/kit/advanced-routing#Advanced-layouts-@), such as `+page.svelte` and `+page@.svelte`. Delete or rename one of the files.
+Each route directory can contain at most one file of each kind — one `+page.svelte`, one `+page.js`, one `+server.js` and so on. This usually happens when a file exists with two extensions, such as `+page.js` and `+page.ts`, or when two components reference different [layouts](https://svelte.dev/docs/kit/advanced-routing#Advanced-layouts), such as `+page.svelte` and `+page@.svelte`. Delete or rename one of the files.
 
 ## route_conflict
 
@@ -80,7 +80,7 @@ The two routes can match the same pathname, so SvelteKit can't decide which one 
 
 > `%file%` references missing segment `%segment%`
 
-A page or layout can [reset its layout hierarchy](https://svelte.dev/docs/kit/advanced-routing#Advanced-layouts-@page) with `@segment` in its file name — for example `+page@item.svelte` uses the layout from the nearest parent directory called `item`. There's no parent directory with that name that contains a layout. Check the spelling, or use `@` on its own to use the root layout.
+A page or layout can [reset its layout hierarchy](https://svelte.dev/docs/kit/advanced-routing#Advanced-layouts-page) with `@segment` in its file name — for example `+page@item.svelte` uses the layout from the nearest parent directory called `item`. There's no parent directory with that name that contains a layout. Check the spelling, or use `@` on its own to use the root layout.
 
 ## routes_not_found
 
@@ -104,7 +104,7 @@ SvelteKit only recognises specific [route files](https://svelte.dev/docs/kit/rou
 
 > Only Svelte files can reference named layouts. Remove `%layout%` from `%name%` (at `%file%`)
 
-[Resetting the layout](https://svelte.dev/docs/kit/advanced-routing#Advanced-layouts-@page) with `@` is done on the component — `+page@.svelte` or `+layout@item.svelte`. Module files such as `+page.js` and `+layout.server.js` always belong to the component in the same directory, so their names can't contain `@`.
+[Resetting the layout](https://svelte.dev/docs/kit/advanced-routing#Advanced-layouts-page) with `@` is done on the component — `+page@.svelte` or `+layout@item.svelte`. Module files such as `+page.js` and `+layout.server.js` always belong to the component in the same directory, so their names can't contain `@`.
 
 ## param_matcher_missing
 

@@ -65,7 +65,7 @@ A `+layout.svelte` wraps the pages and layouts below it, and has to render them 
 > The following plugins may not work correctly because they use the `transformIndexHtml` hook which is not supported:
 > %plugins%
 
-SvelteKit renders HTML itself, from `src/app.html`, rather than using an `index.html` file processed by Vite, so Vite's `transformIndexHtml` hook never runs for your pages. Plugins that rely on it to inject tags won't have any effect. Use [`transformPageChunk`](https://svelte.dev/docs/kit/hooks#Server-hooks-handle) in your `handle` hook or edit `src/app.html` instead.
+SvelteKit renders HTML itself, from `src/app.html`, rather than using an `index.html` file processed by Vite, so Vite's `transformIndexHtml` hook never runs for your pages. Plugins that rely on it to inject tags won't have any effect. Use [`transformPageChunk`](https://svelte.dev/docs/kit/hooks#handle) in your `handle` hook or edit `src/app.html` instead.
 
 ## vite_config_overridden
 

@@ -778,20 +778,20 @@
 	"prerender_directory_conflict": {
 		"variants": [
 			{
-				"text": "Cannot save `%path%` as it is already a directory. See https://svelte.dev/docs/kit/page-options#prerender-route-conflicts for more information",
+				"text": "Cannot save `%path%` as it is already a directory. See https://svelte.dev/docs/kit/page-options#prerender-Route-conflicts for more information",
 				"variables": [
 					"path"
 				]
 			},
 			{
-				"text": "Cannot save `%path%` as `%parent%` is already a file. See https://svelte.dev/docs/kit/page-options#prerender-route-conflicts for more information",
+				"text": "Cannot save `%path%` as `%parent%` is already a file. See https://svelte.dev/docs/kit/page-options#prerender-Route-conflicts for more information",
 				"variables": [
 					"path",
 					"parent"
 				]
 			}
 		],
-		"details": "Prerendering writes each response to a file, and a file and a directory can't share a name. For example, `src/routes/foo/+server.js` and `src/routes/foo/bar/+server.js` would need both a file and a directory called `foo`. Add a file extension to endpoint routes, such as `src/routes/foo.json/+server.js`, so their output names don't clash. See [route conflicts](https://svelte.dev/docs/kit/page-options#Route-conflicts)."
+		"details": "Prerendering writes each response to a file, and a file and a directory can't share a name. For example, `src/routes/foo/+server.js` and `src/routes/foo/bar/+server.js` would need both a file and a directory called `foo`. Add a file extension to endpoint routes, such as `src/routes/foo.json/+server.js`, so their output names don't clash. See [route conflicts](https://svelte.dev/docs/kit/page-options#prerender-Route-conflicts)."
 	},
 	"prerender_fallback_failed": {
 		"variants": [
@@ -937,7 +937,7 @@
 				]
 			}
 		],
-		"details": "Each route directory can contain at most one file of each kind — one `+page.svelte`, one `+page.js`, one `+server.js` and so on. This usually happens when a file exists with two extensions, such as `+page.js` and `+page.ts`, or when two components reference different [layouts](https://svelte.dev/docs/kit/advanced-routing#Advanced-layouts-@), such as `+page.svelte` and `+page@.svelte`. Delete or rename one of the files."
+		"details": "Each route directory can contain at most one file of each kind — one `+page.svelte`, one `+page.js`, one `+server.js` and so on. This usually happens when a file exists with two extensions, such as `+page.js` and `+page.ts`, or when two components reference different [layouts](https://svelte.dev/docs/kit/advanced-routing#Advanced-layouts), such as `+page.svelte` and `+page@.svelte`. Delete or rename one of the files."
 	},
 	"route_conflict": {
 		"variants": [
@@ -961,7 +961,7 @@
 				]
 			}
 		],
-		"details": "A page or layout can [reset its layout hierarchy](https://svelte.dev/docs/kit/advanced-routing#Advanced-layouts-@page) with `@segment` in its file name — for example `+page@item.svelte` uses the layout from the nearest parent directory called `item`. There's no parent directory with that name that contains a layout. Check the spelling, or use `@` on its own to use the root layout."
+		"details": "A page or layout can [reset its layout hierarchy](https://svelte.dev/docs/kit/advanced-routing#Advanced-layouts-page) with `@segment` in its file name — for example `+page@item.svelte` uses the layout from the nearest parent directory called `item`. There's no parent directory with that name that contains a layout. Check the spelling, or use `@` on its own to use the root layout."
 	},
 	"routes_not_found": {
 		"variants": [
@@ -1006,7 +1006,7 @@
 				]
 			}
 		],
-		"details": "[Resetting the layout](https://svelte.dev/docs/kit/advanced-routing#Advanced-layouts-@page) with `@` is done on the component — `+page@.svelte` or `+layout@item.svelte`. Module files such as `+page.js` and `+layout.server.js` always belong to the component in the same directory, so their names can't contain `@`."
+		"details": "[Resetting the layout](https://svelte.dev/docs/kit/advanced-routing#Advanced-layouts-page) with `@` is done on the component — `+page@.svelte` or `+layout@item.svelte`. Module files such as `+page.js` and `+layout.server.js` always belong to the component in the same directory, so their names can't contain `@`."
 	},
 	"param_matcher_missing": {
 		"variants": [
@@ -1125,7 +1125,7 @@
 				]
 			}
 		],
-		"details": "SvelteKit renders HTML itself, from `src/app.html`, rather than using an `index.html` file processed by Vite, so Vite's `transformIndexHtml` hook never runs for your pages. Plugins that rely on it to inject tags won't have any effect. Use [`transformPageChunk`](https://svelte.dev/docs/kit/hooks#Server-hooks-handle) in your `handle` hook or edit `src/app.html` instead."
+		"details": "SvelteKit renders HTML itself, from `src/app.html`, rather than using an `index.html` file processed by Vite, so Vite's `transformIndexHtml` hook never runs for your pages. Plugins that rely on it to inject tags won't have any effect. Use [`transformPageChunk`](https://svelte.dev/docs/kit/hooks#handle) in your `handle` hook or edit `src/app.html` instead."
 	},
 	"vite_config_overridden": {
 		"variants": [
@@ -1650,7 +1650,7 @@
 				"variables": []
 			}
 		],
-		"details": "Your [`handleError`](https://svelte.dev/docs/kit/hooks#Shared-hooks-handleError) hook threw an error (or returned a promise that rejected) while it was handling another error. The `cause` of this error is what the hook threw, and the error it was handling is logged after it. SvelteKit responds with a generic `Internal Error` instead of the hook's result. Make sure the hook can handle any value, since anything can be thrown — for example, check `error instanceof Error` before reading `error.message`, and catch failures of any service that it reports errors to."
+		"details": "Your [`handleError`](https://svelte.dev/docs/kit/hooks#handleError) hook threw an error (or returned a promise that rejected) while it was handling another error. The `cause` of this error is what the hook threw, and the error it was handling is logged after it. SvelteKit responds with a generic `Internal Error` instead of the hook's result. Make sure the hook can handle any value, since anything can be thrown — for example, check `error instanceof Error` before reading `error.message`, and catch failures of any service that it reports errors to."
 	},
 	"action_throw_fail": {
 		"variants": [
@@ -1664,7 +1664,7 @@
 	"action_default_with_named": {
 		"variants": [
 			{
-				"text": "When using named actions, the default action cannot be used. See the docs for more info: https://svelte.dev/docs/kit/form-actions#named-actions",
+				"text": "When using named actions, the default action cannot be used. See the docs for more info: https://svelte.dev/docs/kit/form-actions#Named-actions",
 				"variables": []
 			}
 		],
@@ -1726,7 +1726,7 @@
 				]
 			}
 		],
-		"details": "The data returned from a form action is serialized with [devalue](https://github.com/sveltejs/devalue) to send it to the page, and this value isn't supported. Devalue supports JSON values as well as things like `Date`, `Map`, `Set`, `BigInt` and `URL`, but not functions or class instances. Return plain data instead, or register the type with a [transport hook](https://svelte.dev/docs/kit/hooks#Universal-hooks-transport) to tell SvelteKit how to serialize it."
+		"details": "The data returned from a form action is serialized with [devalue](https://github.com/sveltejs/devalue) to send it to the page, and this value isn't supported. Devalue supports JSON values as well as things like `Date`, `Map`, `Set`, `BigInt` and `URL`, but not functions or class instances. Return plain data instead, or register the type with a [transport hook](https://svelte.dev/docs/kit/hooks#transport) to tell SvelteKit how to serialize it."
 	},
 	"load_not_serializable": {
 		"variants": [
@@ -1739,7 +1739,7 @@
 				]
 			}
 		],
-		"details": "The data returned from a server `load` function is serialized with [devalue](https://github.com/sveltejs/devalue) to send it to the browser, and the value at the listed path isn't supported. Devalue supports JSON values as well as things like `Date`, `Map`, `Set`, `BigInt`, `URL` and promises, but not functions or class instances. Return plain data instead, move the value into a [universal `load`](https://svelte.dev/docs/kit/load#Universal-vs-server) function, or register the type with a [transport hook](https://svelte.dev/docs/kit/hooks#Universal-hooks-transport)."
+		"details": "The data returned from a server `load` function is serialized with [devalue](https://github.com/sveltejs/devalue) to send it to the browser, and the value at the listed path isn't supported. Devalue supports JSON values as well as things like `Date`, `Map`, `Set`, `BigInt`, `URL` and promises, but not functions or class instances. Return plain data instead, move the value into a [universal `load`](https://svelte.dev/docs/kit/load#Universal-vs-server) function, or register the type with a [transport hook](https://svelte.dev/docs/kit/hooks#transport)."
 	},
 	"load_not_plain_object": {
 		"variants": [
@@ -1761,7 +1761,7 @@
 				]
 			}
 		],
-		"details": "A server `load` function returned a promise, which SvelteKit [streams](https://svelte.dev/docs/kit/load#Streaming-with-promises) to the browser once it resolves. The value it resolved to can't be serialized with [devalue](https://github.com/sveltejs/devalue), so the promise is rejected in the browser instead — the `cause` of this error says which value was the problem. Resolve the promise to plain data, or register the type with a [transport hook](https://svelte.dev/docs/kit/hooks#Universal-hooks-transport)."
+		"details": "A server `load` function returned a promise, which SvelteKit [streams](https://svelte.dev/docs/kit/load#Streaming-with-promises) to the browser once it resolves. The value it resolved to can't be serialized with [devalue](https://github.com/sveltejs/devalue), so the promise is rejected in the browser instead — the `cause` of this error says which value was the problem. Resolve the promise to plain data, or register the type with a [transport hook](https://svelte.dev/docs/kit/hooks#transport)."
 	},
 	"load_response_header_not_serialized": {
 		"variants": [
@@ -1773,7 +1773,7 @@
 				]
 			}
 		],
-		"details": "A response fetched with `event.fetch` during server-side rendering is [serialized into the page](https://svelte.dev/docs/kit/load#Making-fetch-requests) so that `load` can use it again in the browser without making the request twice. Only headers that you choose are included, because they may contain sensitive information, so reading any other header would fail in the browser. Include the header by returning `true` for it from the [`filterSerializedResponseHeaders`](https://svelte.dev/docs/kit/hooks#Server-hooks-handle) option of `resolve`:\n\n```js\n/// file: src/hooks.server.js\nexport async function handle({ event, resolve }) {\n\treturn resolve(event, {\n\t\tfilterSerializedResponseHeaders: (name) => name === 'content-type'\n\t});\n}\n```"
+		"details": "A response fetched with `event.fetch` during server-side rendering is [serialized into the page](https://svelte.dev/docs/kit/load#Making-fetch-requests) so that `load` can use it again in the browser without making the request twice. Only headers that you choose are included, because they may contain sensitive information, so reading any other header would fail in the browser. Include the header by returning `true` for it from the [`filterSerializedResponseHeaders`](https://svelte.dev/docs/kit/hooks#handle) option of `resolve`:\n\n```js\n/// file: src/hooks.server.js\nexport async function handle({ event, resolve }) {\n\treturn resolve(event, {\n\t\tfilterSerializedResponseHeaders: (name) => name === 'content-type'\n\t});\n}\n```"
 	},
 	"load_fetch_cors": {
 		"variants": [
@@ -2117,7 +2117,7 @@
 				]
 			}
 		],
-		"details": "[`setHeaders`](https://svelte.dev/docs/kit/load#Headers) can only set each header once per request (except `server-timing`, whose values are combined), because otherwise it would be unclear which value should win. This often happens when both a layout and a page `load` function set the same header, such as `cache-control`. Set the header in one place only. To change a header of the finished response, use `response.headers.set(...)` in the [`handle`](https://svelte.dev/docs/kit/hooks#Server-hooks-handle) hook instead."
+		"details": "[`setHeaders`](https://svelte.dev/docs/kit/load#Headers) can only set each header once per request (except `server-timing`, whose values are combined), because otherwise it would be unclear which value should win. This often happens when both a layout and a page `load` function set the same header, such as `cache-control`. Set the header in one place only. To change a header of the finished response, use `response.headers.set(...)` in the [`handle`](https://svelte.dev/docs/kit/hooks#handle) hook instead."
 	},
 	"cookies_set_after_response": {
 		"variants": [
@@ -2268,7 +2268,7 @@
 				"variables": []
 			}
 		],
-		"details": "Components render synchronously unless Svelte's [asynchronous mode](https://svelte.dev/docs/svelte/await-expressions) is enabled, so rendering can't wait for a [`handleError`](https://svelte.dev/docs/kit/hooks#Shared-hooks-handleError) hook that returns a promise. The error page is rendered with `{ message: 'Internal Error' }` instead of the hook's result. Enable asynchronous mode in `vite.config.js`:\n\n```js\n/// file: vite.config.js\nimport { sveltekit } from '@sveltejs/kit/vite';\nimport { defineConfig } from 'vite';\n\nexport default defineConfig({\n\tplugins: [\n\t\tsveltekit({\n\t\t\tcompilerOptions: {\n\t\t\t\texperimental: { async: true }\n\t\t\t}\n\t\t})\n\t]\n});\n```\n\nOtherwise, make the hook synchronous, for example by not awaiting the service that it reports errors to."
+		"details": "Components render synchronously unless Svelte's [asynchronous mode](https://svelte.dev/docs/svelte/await-expressions) is enabled, so rendering can't wait for a [`handleError`](https://svelte.dev/docs/kit/hooks#handleError) hook that returns a promise. The error page is rendered with `{ message: 'Internal Error' }` instead of the hook's result. Enable asynchronous mode in `vite.config.js`:\n\n```js\n/// file: vite.config.js\nimport { sveltekit } from '@sveltejs/kit/vite';\nimport { defineConfig } from 'vite';\n\nexport default defineConfig({\n\tplugins: [\n\t\tsveltekit({\n\t\t\tcompilerOptions: {\n\t\t\t\texperimental: { async: true }\n\t\t\t}\n\t\t})\n\t]\n});\n```\n\nOtherwise, make the hook synchronous, for example by not awaiting the service that it reports errors to."
 	},
 	"load_tracking_after_return": {
 		"variants": [
@@ -2286,7 +2286,7 @@
 	"form_action_error_without_ssr": {
 		"variants": [
 			{
-				"text": "The form action returned an error, but `+error.svelte` wasn't rendered because SSR is off. To get the error page with CSR, enhance your form with `use:enhance`. See https://svelte.dev/docs/kit/form-actions#progressive-enhancement-use-enhance",
+				"text": "The form action returned an error, but `+error.svelte` wasn't rendered because SSR is off. To get the error page with CSR, enhance your form with `use:enhance`. See https://svelte.dev/docs/kit/form-actions#Progressive-enhancement-use:enhance",
 				"variables": []
 			}
 		],
@@ -2295,7 +2295,7 @@
 	"form_action_data_without_ssr": {
 		"variants": [
 			{
-				"text": "The form action returned a value, but it isn't available in `page.form`, because SSR is off. To handle the returned value in CSR, enhance your form with `use:enhance`. See https://svelte.dev/docs/kit/form-actions#progressive-enhancement-use-enhance",
+				"text": "The form action returned a value, but it isn't available in `page.form`, because SSR is off. To handle the returned value in CSR, enhance your form with `use:enhance`. See https://svelte.dev/docs/kit/form-actions#Progressive-enhancement-use:enhance",
 				"variables": []
 			}
 		],
@@ -2317,7 +2317,7 @@
 				"variables": []
 			}
 		],
-		"details": "Svelte adds HTML comments to server-rendered markup that it uses to hydrate the page in the browser, and the [`transformPageChunk`](https://svelte.dev/docs/kit/hooks#Server-hooks-handle) option of `resolve` returned HTML with fewer comments than it received. If you're minifying the HTML, configure the minifier to keep comments (server-side includes such as `<!--#include ... -->` are ignored by this check). This is only checked during development."
+		"details": "Svelte adds HTML comments to server-rendered markup that it uses to hydrate the page in the browser, and the [`transformPageChunk`](https://svelte.dev/docs/kit/hooks#handle) option of `resolve` returned HTML with fewer comments than it received. If you're minifying the HTML, configure the minifier to keep comments (server-side includes such as `<!--#include ... -->` are ignored by this check). This is only checked during development."
 	},
 	"streaming_without_csr": {
 		"variants": [
@@ -2605,7 +2605,7 @@
 				]
 			}
 		],
-		"details": "Remote function arguments must be serializable. Pass a regular expression's source and flags separately rather than a `RegExp`, and await promises before passing their resolved values. For custom types, use a [transport hook](https://svelte.dev/docs/kit/hooks#Universal-hooks-transport) to encode and decode them. Commands support `File` arguments; the promises SvelteKit uses internally to read those files are allowed."
+		"details": "Remote function arguments must be serializable. Pass a regular expression's source and flags separately rather than a `RegExp`, and await promises before passing their resolved values. For custom types, use a [transport hook](https://svelte.dev/docs/kit/hooks#transport) to encode and decode them. Commands support `File` arguments; the promises SvelteKit uses internally to read those files are allowed."
 	},
 	"form_input_missing_value": {
 		"variants": [

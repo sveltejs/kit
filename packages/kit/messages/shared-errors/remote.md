@@ -2,7 +2,7 @@
 
 > %type% are not valid remote function arguments
 
-Remote function arguments must be serializable. Pass a regular expression's source and flags separately rather than a `RegExp`, and await promises before passing their resolved values. For custom types, use a [transport hook](https://svelte.dev/docs/kit/hooks#Universal-hooks-transport) to encode and decode them. Commands support `File` arguments; the promises SvelteKit uses internally to read those files are allowed.
+Remote function arguments must be serializable. Pass a regular expression's source and flags separately rather than a `RegExp`, and await promises before passing their resolved values. For custom types, use a [transport hook](https://svelte.dev/docs/kit/hooks#transport) to encode and decode them. Commands support `File` arguments; the promises SvelteKit uses internally to read those files are allowed.
 
 ## form_input_missing_value
 
