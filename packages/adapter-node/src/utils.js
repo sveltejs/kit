@@ -44,3 +44,37 @@ export function format_listening_address(path, host, port, address) {
 		port: String(port)
 	});
 }
+
+/**
+ * Parses `Accept-Encoding` and picks the preferred variant that exists
+ * @param {string | null | undefined} header
+ * @param {{ br?: number | boolean, gz?: number | boolean }} asset
+ * @returns {'br' | 'gz' | undefined}
+ */
+export function negotiate(header, asset) {
+	if (!header || !(asset.br || asset.gz)) return;
+
+	/** @type {Map<string, number>} */
+	const weights = new Map();
+
+	for (const part of header.toLowerCase().split(',')) {
+		const [coding, ...params] = part.split(';');
+		let weight = 1;
+
+		for (const param of params) {
+			const [name, value] = param.split('=');
+			if (name.trim() === 'q') weight = parseFloat(value) || 0;
+		}
+
+		weights.set(coding.trim(), weight);
+	}
+
+	/** @param {string} coding */
+	const weight = (coding) => weights.get(coding) ?? weights.get('*') ?? 0;
+
+	const br = asset.br ? weight('br') : 0;
+	const gzip = asset.gz ? weight('gzip') : 0;
+
+	if (gzip > br) return 'gz';
+	if (br > 0) return 'br';
+}

@@ -1,4 +1,4 @@
-import { assets, redirects, server_assets as server_files } from '#@sveltejs/adapter-bun';
+import { assets, redirects, server_assets as server_files } from '#@sveltejs/adapter-node';
 import {
 	client_asset,
 	prerendered_asset,

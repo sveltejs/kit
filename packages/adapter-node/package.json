@@ -36,6 +36,7 @@
 		"index.js",
 		"index.d.ts",
 		"ambient.d.ts",
+		"utils.js",
 		"bun/src/*.js",
 		"bun/index.js",
 		"bun/index.d.ts",

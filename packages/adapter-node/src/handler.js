@@ -4,7 +4,6 @@ import { getRequest, setResponse, createReadableStream } from '@sveltejs/kit/nod
 import {
 	server,
 	dir,
-	env_prefix,
 	base,
 	app_path,
 	origin,
@@ -13,6 +12,7 @@ import {
 	prerendered_assets
 } from '#@sveltejs/adapter-node';
 import { env } from './env.js';
+import { forwarded_address } from './address.js';
 import { parse_as_bytes } from './utils.js';
 import { create_file_map, serve_static } from './static.js';
 
@@ -75,34 +75,11 @@ const ssr = async (req, res) => {
 		platform: { req },
 		getClientAddress: () => {
 			if (address_header) {
-				if (!(address_header in req.headers)) {
-					throw new Error(
-						`Address header was specified with ${
-							env_prefix + 'ADDRESS_HEADER'
-						}=${address_header} but is absent from request`
-					);
-				}
-
-				const value = /** @type {string} */ (req.headers[address_header]) || '';
-
-				if (address_header === 'x-forwarded-for') {
-					const addresses = value.split(',');
-
-					if (xff_depth < 1) {
-						throw new Error(`${env_prefix + 'XFF_DEPTH'} must be a positive integer`);
-					}
-
-					if (xff_depth > addresses.length) {
-						throw new Error(
-							`${env_prefix + 'XFF_DEPTH'} is ${xff_depth}, but only found ${
-								addresses.length
-							} addresses`
-						);
-					}
-					return addresses[addresses.length - xff_depth].trim();
-				}
-
-				return value;
+				return forwarded_address(
+					address_header,
+					/** @type {string | undefined} */ (req.headers[address_header]),
+					xff_depth
+				);
 			}
 
 			return (

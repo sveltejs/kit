@@ -1,7 +1,8 @@
 /** @import { Server as BunServer } from 'bun' */
-import { env_prefix, origin, server } from '#@sveltejs/adapter-bun';
+import { origin, server } from '#@sveltejs/adapter-node';
 import { server_assets } from './routes.js';
 import { env, number_env } from './env.js';
+import { forwarded_address } from '../../src/address.js';
 
 const address_header = env('ADDRESS_HEADER', '').toLowerCase();
 const protocol_header = env('PROTOCOL_HEADER', '').toLowerCase();
@@ -104,19 +105,5 @@ function get_client_address(request, bun_server) {
 		return /** @type {string} */ (bun_server.requestIP(request)?.address);
 	}
 
-	const value = request.headers.get(address_header);
-	if (value === null) {
-		throw new Error(
-			`Address header was specified with ${env_prefix}ADDRESS_HEADER=${address_header} but is absent from request`
-		);
-	}
-	if (address_header !== 'x-forwarded-for') return value;
-
-	const addresses = value.split(',');
-	if (xff_depth > addresses.length) {
-		throw new Error(
-			`${env_prefix}XFF_DEPTH is ${xff_depth}, but only found ${addresses.length} addresses`
-		);
-	}
-	return addresses[addresses.length - xff_depth].trim();
+	return forwarded_address(address_header, request.headers.get(address_header), xff_depth);
 }

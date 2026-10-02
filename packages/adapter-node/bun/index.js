@@ -1,22 +1,7 @@
 /** @import { Builder } from '@sveltejs/kit' */
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-// posix so it matches the module ids Vite reports on every platform
-const files = fileURLToPath(new URL('./src', import.meta.url)).replaceAll('\\', '/');
-const handoff = '#@sveltejs/adapter-bun';
-
-/**
- * Matches sirv's default behaviour in adapter-node: dotfiles are not served,
- * with an exception for the `.well-known` directory.
- * @param {string} file
- */
-function is_dotfile(file) {
-	return file
-		.split('/')
-		.some((segment, i) => segment.startsWith('.') && !(i === 0 && segment === '.well-known'));
-}
+import { bundle_runtime, is_hidden } from '../utils.js';
 
 // bounds open file handles while every asset hashes concurrently
 const MAX_OPEN_FILES = 64;
@@ -119,8 +104,8 @@ export default function (opts = {}) {
 			const server = builder.getServerDirectory();
 			builder.generateServerInstance(`${server}/server.js`);
 
-			// values only known once the app is built, next to server/ so the chunks' `../adapter-bun.js` resolves
-			const handoff_file = path.resolve(server, '../adapter-bun.js');
+			// values only known once the app is built, next to server/ so the chunks' `../adapter-node.js` resolves
+			const handoff_file = path.resolve(server, '../adapter-node.js');
 			fs.writeFileSync(
 				handoff_file,
 				[
@@ -151,7 +136,7 @@ export default function (opts = {}) {
 
 			if (!embed) {
 				builder.copy(server, `${out}/server`);
-				builder.copy(handoff_file, `${out}/adapter-bun.js`);
+				builder.copy(handoff_file, `${out}/adapter-node.js`);
 				fs.writeFileSync(`${out}/index.js`, `import './server/adapter-index.js';\n`);
 				return;
 			}
@@ -188,57 +173,7 @@ export default function (opts = {}) {
 			instrumentation: () => true
 		},
 
-		vite: {
-			plugins: {
-				post: [
-					{
-						name: 'vite-plugin-sveltejs-adapter-bun',
-						apply: 'build',
-						config(config) {
-							const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-							// vite-plugin-svelte lists Svelte libraries here so their export conditions resolve at build time
-							const no_external = Array.isArray(config.ssr?.noExternal)
-								? config.ssr.noExternal
-								: [];
-
-							return {
-								ssr: {
-									// Vite doesn't bundle dependencies for SSR by default. Bundle everything
-									// except production dependencies that don't need the build's export conditions
-									external: Object.keys(pkg.dependencies || {}).filter(
-										(dep) =>
-											!no_external.some((rule) =>
-												typeof rule === 'string' ? rule === dep : rule.test(dep)
-											)
-									),
-									noExternal: true
-								},
-								environments: {
-									ssr: {
-										build: {
-											rolldownOptions: {
-												// bundled with the app's server code so shared modules aren't duplicated
-												input: { 'adapter-index': `${files}/index.js` },
-												// generated after the Vite build and rewritten to an output-relative path
-												external: [handoff],
-												output: {
-													paths: { [handoff]: '../adapter-bun.js' },
-													// the hand-off path only holds at the output root, so adapter chunks may not nest
-													chunkFileNames: (chunk) =>
-														chunk.moduleIds.some((id) => id.startsWith(files))
-															? 'adapter-bun-[name].js'
-															: 'chunks/[name].js'
-												}
-											}
-										}
-									}
-								}
-							};
-						}
-					}
-				]
-			}
-		}
+		vite: bundle_runtime({ 'adapter-index': 'bun/src/index.js' })
 	};
 }
 
@@ -256,7 +191,7 @@ async function create_routes({ builder, out, embed, precompress }) {
 	const dest = embed ? builder.getBuildDirectory('adapter-bun') : out;
 	if (embed) fs.rmSync(dest, { recursive: true, force: true });
 
-	const client_files = builder.writeClient(`${dest}/client`).filter((file) => !is_dotfile(file));
+	const client_files = builder.writeClient(`${dest}/client`).filter((file) => !is_hidden(file));
 	const prerendered_files = builder.writePrerendered(`${dest}/prerendered`);
 	validate_file_paths([
 		...client_files,

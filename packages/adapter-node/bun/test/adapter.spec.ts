@@ -5,9 +5,9 @@ import adapter from '../index.js';
 const package_dir = new URL('..', import.meta.url).pathname.replace(/\/$/, '');
 const src_dir = `${package_dir}/src`;
 const server_dir = '.svelte-kit/output/server';
-const handoff_file = `${process.cwd()}/.svelte-kit/output/adapter-bun.js`;
+const handoff_file = `${process.cwd()}/.svelte-kit/output/adapter-node.js`;
 const entrypoint = `${server_dir}/adapter-index.js`;
-const handoff = '#@sveltejs/adapter-bun';
+const handoff = '#@sveltejs/adapter-node';
 
 let bun_build: Mock<(options: any) => Promise<any>>;
 let read_file: Mock<typeof fs.readFileSync>;
@@ -84,7 +84,7 @@ describe('Vite build configuration', () => {
 		expect(config.ssr).toEqual({ external: ['jsdom'], noExternal: true });
 		expect(options.input).toEqual({ 'adapter-index': `${src_dir}/index.js` });
 		expect(options.external).toEqual([handoff]);
-		expect(options.output.paths).toEqual({ [handoff]: '../adapter-bun.js' });
+		expect(options.output.paths).toEqual({ [handoff]: '../adapter-node.js' });
 	});
 
 	test('bundles production dependencies that vite-plugin-svelte marks noExternal', () => {
@@ -105,7 +105,7 @@ describe('Vite build configuration', () => {
 		const { chunkFileNames } = vite_config().environments.ssr.build.rolldownOptions.output;
 
 		expect(chunkFileNames({ moduleIds: [`${src_dir}/handler.js`, '/app/src/hooks.js'] })).toBe(
-			'adapter-bun-[name].js'
+			'adapter-node-[name].js'
 		);
 		expect(chunkFileNames({ moduleIds: ['/app/src/hooks.js'] })).toBe('chunks/[name].js');
 	});
@@ -120,7 +120,7 @@ describe('build output', () => {
 		expect(builder.log.minor).toHaveBeenCalledWith('Building server');
 		expect(builder.generateServerInstance).toHaveBeenCalledWith(`${server_dir}/server.js`);
 		expect(builder.copy).toHaveBeenCalledWith(server_dir, 'build/server');
-		expect(builder.copy).toHaveBeenCalledWith(handoff_file, 'build/adapter-bun.js');
+		expect(builder.copy).toHaveBeenCalledWith(handoff_file, 'build/adapter-node.js');
 		expect(write_file).toHaveBeenCalledWith(
 			'build/index.js',
 			"import './server/adapter-index.js';\n"

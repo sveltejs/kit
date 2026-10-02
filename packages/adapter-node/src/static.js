@@ -2,6 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { pipeline } from 'node:stream';
+import { negotiate } from './utils.js';
 
 /**
  * @typedef {(req: IncomingMessage, res: ServerResponse, next: () => void | Promise<void>) => void | Promise<void>} Middleware
@@ -49,40 +50,6 @@ function relative_pathname(from, to) {
 
 	// The prefix prevents a colon in the segment from being interpreted as a URL scheme.
 	return from.endsWith('/') ? `../${segment}` : `./${segment}/`;
-}
-
-/**
- * Parses `Accept-Encoding` and picks the preferred variant that exists
- * @param {string | undefined} header
- * @param {Asset} asset
- * @returns {'br' | 'gz' | undefined}
- */
-function negotiate(header, asset) {
-	if (!header || !(asset.br || asset.gz)) return;
-
-	/** @type {Map<string, number>} */
-	const weights = new Map();
-
-	for (const part of header.toLowerCase().split(',')) {
-		const [coding, ...params] = part.split(';');
-		let weight = 1;
-
-		for (const param of params) {
-			const [name, value] = param.split('=');
-			if (name.trim() === 'q') weight = parseFloat(value) || 0;
-		}
-
-		weights.set(coding.trim(), weight);
-	}
-
-	/** @param {string} coding */
-	const weight = (coding) => weights.get(coding) ?? weights.get('*') ?? 0;
-
-	const br = asset.br ? weight('br') : 0;
-	const gzip = asset.gz ? weight('gzip') : 0;
-
-	if (gzip > br) return 'gz';
-	if (br > 0) return 'br';
 }
 
 /**

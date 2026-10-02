@@ -28,7 +28,7 @@ export function mock_handoff({
 	redirects?: unknown[];
 	server_assets?: unknown[];
 } = {}) {
-	mock.module('#@sveltejs/adapter-bun', () => ({
+	mock.module('#@sveltejs/adapter-node', () => ({
 		server,
 		dir,
 		app_dir,
