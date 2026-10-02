@@ -1,6 +1,6 @@
 /** @import { Server as BunServer } from 'bun' */
 import { env_prefix, origin, server } from '#@sveltejs/adapter-bun';
-import { server_assets } from './routes.js';
+import { serve_static, server_assets } from './assets.js';
 import { env, number_env } from './env.js';
 
 const address_header = env('ADDRESS_HEADER', '').toLowerCase();
@@ -21,7 +21,13 @@ await server.init({
  * @returns {Promise<Response>}
  */
 export async function handler(request, bun_server) {
-	const normalized_request = normalize_request(request);
+	// null when an empty Host header makes request.url relative
+	const url = URL.parse(request.url);
+
+	const asset = url && serve_static(request, url);
+	if (asset) return asset;
+
+	const normalized_request = normalize_request(request, url);
 	if (normalized_request instanceof Response) return normalized_request;
 
 	const response = await server.respond(normalized_request, {
@@ -40,12 +46,12 @@ export async function handler(request, bun_server) {
 /**
  * Rewrites the request onto the public origin the user actually requested.
  * @param {Request} request
+ * @param {URL | null} url
  * @returns {Request | Response}
  */
-function normalize_request(request) {
+function normalize_request(request, url) {
 	try {
-		// an empty Host header makes request.url relative, so parsing belongs in the try
-		const url = new URL(request.url);
+		if (url === null) throw new Error(`${request.url} is not an absolute URL`);
 		const request_origin = origin || get_origin(request, url);
 		return request_origin === url.origin
 			? request
