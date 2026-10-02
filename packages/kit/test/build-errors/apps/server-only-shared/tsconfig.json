@@ -1,4 +1,12 @@
 {
 	"extends": "$app/tsconfig",
-	"include": ["src", "*.js"]
+	"compilerOptions": {
+		"allowJs": true,
+		"checkJs": true,
+		"esModuleInterop": true,
+		"forceConsistentCasingInFileNames": true,
+		"resolveJsonModule": true,
+		"sourceMap": true,
+		"noEmit": true
+	}
 }

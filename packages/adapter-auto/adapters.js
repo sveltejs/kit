@@ -10,8 +10,8 @@ export const adapters = [
 		version: '7'
 	},
 	{
-		name: 'Cloudflare Pages',
-		test: () => !!process.env.CF_PAGES,
+		name: 'Cloudflare Workers',
+		test: () => !!process.env.WORKERS_CI,
 		module: '@sveltejs/adapter-cloudflare',
 		version: '8'
 	},
@@ -38,12 +38,5 @@ export const adapters = [
 		test: () => !!process.env.GCP_BUILDPACKS,
 		module: '@sveltejs/adapter-node',
 		version: '6'
-	},
-	{
-		name: 'Render',
-		test: () => !!process.env.RENDER,
-		module: '@sveltejs/adapter-node',
-		// TODO replace with a stable version
-		version: 'next'
 	}
 ];

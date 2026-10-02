@@ -1,8 +1,7 @@
-import { DEV } from 'esm-env';
+import { BROWSER, DEV } from 'esm-env';
 import { PRELOAD_PRIORITIES } from './constants.js';
-import * as w from '../../messages/client-warnings.js';
 
-export const origin = location.origin;
+export const origin = BROWSER ? location.origin : '';
 
 /** @param {string | URL} url */
 export function resolve_url(url) {
@@ -71,12 +70,11 @@ function validate_link_option(element, name, value) {
 
 	// @ts-expect-error - includes is dumb
 	if (!warned.has(element) && !valid_link_options[name].includes(value)) {
-		w.link_option_invalid(
-			{
-				name,
-				options: valid_link_options[name].map((option) => JSON.stringify(option)).join(', ')
-			},
-			{ element }
+		console.error(
+			`Unexpected value for ${name} — should be one of ${valid_link_options[name]
+				.map((option) => JSON.stringify(option))
+				.join(', ')}`,
+			element
 		);
 
 		warned.add(element);
@@ -107,11 +105,7 @@ function parent_element(element) {
  */
 export function find_anchor(element, target) {
 	while (element && element !== target) {
-		// don't read `nodeName` — a form control named `nodeName` shadows it on its form
-		if (
-			(element instanceof HTMLAnchorElement || element instanceof SVGAElement) &&
-			element.hasAttribute('href')
-		) {
+		if (element.nodeName.toUpperCase() === 'A' && element.hasAttribute('href')) {
 			return /** @type {HTMLAnchorElement | SVGAElement} */ (element);
 		}
 
@@ -128,7 +122,6 @@ export function get_link_info(a, base, uses_hash_router) {
 	/** @type {URL | undefined} */
 	let url;
 
-	// TODO replace the try/catch with `URL.parse` when browser support allows (Chrome 126, Firefox 126, Safari 18)
 	try {
 		url = new URL(a instanceof SVGAElement ? a.href.baseVal : a.href, document.baseURI);
 
@@ -180,7 +173,10 @@ export function get_router_options(element) {
 				const value = el.getAttribute(`data-sveltekit-${name}`);
 				if (value !== null && !warned.has(el)) {
 					warned.add(el);
-					w.link_option_replaced({ name }, { element: el });
+					console.warn(
+						`\`data-sveltekit-${name}="true"\` has been replaced with \`data-sveltekit-reset="false"\``
+					);
+					console.log(el);
 				}
 			}
 		}
@@ -235,17 +231,6 @@ export function is_external_url(url, base, hash_routing) {
 	}
 
 	return false;
-}
-
-/**
- * The element a URL's fragment points at, if any. Under hash routing the fragment sits after the route
- * @param {URL} url
- * @param {boolean} hash_routing
- * @returns {HTMLElement | null}
- */
-export function get_hash_element(url, hash_routing) {
-	const id = hash_routing ? (url.hash.split('#', 3)[2] ?? '') : url.hash.slice(1);
-	return id ? document.getElementById(decodeURIComponent(id)) : null;
 }
 
 /** @type {Set<string> | null} */

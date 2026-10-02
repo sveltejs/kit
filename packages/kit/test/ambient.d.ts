@@ -1,4 +1,4 @@
-import { AfterNavigate, BeforeNavigate, GotoOptions } from '$app/navigation';
+import { AfterNavigate, BeforeNavigate, GotoOptions } from '@sveltejs/kit';
 
 declare global {
 	interface Window {
@@ -12,8 +12,7 @@ declare global {
 	const preloadData: (url: string) => Promise<void>;
 	const beforeNavigate: (fn: (navigation: BeforeNavigate) => void | boolean) => void;
 	const afterNavigate: (fn: (navigation: AfterNavigate) => void) => void;
-	const preloadCode: (id: string) => Promise<void>;
-	const match: (url: string) => Promise<{ id: string; params: Record<string, string> } | null>;
+	const preloadCode: (pathname: string) => Promise<void>;
 }
 
 export {};

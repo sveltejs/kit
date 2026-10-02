@@ -19,16 +19,11 @@ export default defineConfig({
 			adapter: {
 				name: 'test-adapter',
 				adapt(builder) {
-					const initializer = builder.createInstrumentationInitializer({
-						outputDirectory: builder.getServerDirectory(),
-						environment: `import { loadEnv } from 'vite';\nexport default loadEnv('production', ${JSON.stringify(import.meta.dirname)}, '');\n`
-					});
 					builder.instrument({
 						entrypoint: `${builder.getServerDirectory()}/index.js`,
 						instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`,
-						initializer,
 						module: {
-							exports: ['configure', 'create_server', 'Server', 'format_response']
+							exports: ['Server']
 						}
 					});
 				},
@@ -105,20 +100,10 @@ export default defineConfig({
 		expect: { requireAssertions: true },
 		browser: {
 			enabled: true,
-			provider: playwright({
-				launchOptions: {
-					channel: process.env.KIT_E2E_BROWSER === 'chromium' ? 'chrome' : undefined
-				}
-			}),
-			instances: [
-				{
-					browser:
-						/** @type {"chromium" | "firefox" | "webkit"} */ (process.env.KIT_E2E_BROWSER) ||
-						'chromium'
-				}
-			],
+			provider: playwright(),
+			instances: [{ browser: process.env.KIT_E2E_BROWSER || 'chromium' }],
 			headless: true
 		},
-		include: ['test/vitest/client.spec.js']
+		include: ['unit-test/**/*.spec.js']
 	}
 });

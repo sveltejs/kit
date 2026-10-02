@@ -2,6 +2,7 @@
 /** @import { RequestState } from 'types' */
 import { assert, expect, test, vi } from 'vitest';
 import { sequence } from './sequence.js';
+import { noop_span } from '../../runtime/telemetry/noop.js';
 
 const dummy_event = vi.hoisted(
 	() =>
@@ -18,7 +19,11 @@ vi.mock(import('@sveltejs/kit/internal/server'), async (actualPromise) => {
 		...actual,
 		get_request_store: () => ({
 			event: dummy_event,
-			state: /** @type {RequestState} */ (/** @type {unknown} */ ({}))
+			state: /** @type {RequestState} */ ({
+				tracing: {
+					record_span: ({ fn }) => fn(noop_span)
+				}
+			})
 		})
 	};
 });

@@ -1,7 +1,6 @@
 import { DEV } from 'esm-env';
-import * as w from '../../../messages/shared-warnings.js';
-export * from '../../app/env/private/index.js';
+export * from '../../app/env/private.js';
 
 if (DEV) {
-	w.env_module_deprecated({ module: '$env/static/private', replacement: '$app/env/private' });
+	console.warn('`$env/static/private` is deprecated, use `$app/env/private` instead');
 }

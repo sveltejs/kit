@@ -13,6 +13,7 @@
 	},
 	"include": [
 		"index.js",
+		"rolldown.config.js",
 		"vitest.config.js",
 		"src/**/*.js",
 		"src/**/*.ts",
@@ -20,5 +21,6 @@
 		"tests/**/*.js",
 		"tests/**/*.ts",
 		"./internal.d.ts"
-	]
+	],
+	"exclude": ["smoke.spec_disabled.js"]
 }

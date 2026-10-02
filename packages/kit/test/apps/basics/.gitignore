@@ -1,4 +1,4 @@
-/test/errors.jsonl
+/test/errors.json
 !/.env
 /src/routes/routing/symlink-from
 /test/spans.jsonl

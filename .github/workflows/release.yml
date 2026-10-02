@@ -3,7 +3,7 @@ name: Release
 on:
   push:
     branches:
-      - main
+      - version-3
 
 concurrency:
   # prevent two release workflows from running at once
@@ -26,16 +26,18 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
       - name: Setup Node.js
-        uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          runtime: node@24
+          node-version: 24.x
           # don't cache pnpm for releases to circumvent cache poisoning
-          cache: false
+
+      - run: pnpm install --frozen-lockfile
 
       - name: Create Release Pull Request or Publish to npm
         id: changesets
-        uses: changesets/action@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
+        uses: changesets/action@c47fa68bd43bb8ae0bae7e558622593deebf5955 # v2.0.0-next.3
         with:
           # This expects you to have a script called release which does a build for your packages and calls changeset publish
           publish-script: pnpm changeset:release

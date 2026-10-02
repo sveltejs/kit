@@ -3,7 +3,7 @@
 import * as kit from './client-entry.js';
 
 // @ts-expect-error
-import * as app from '<sveltekit:generated>/client-optimized/app.js';
+import * as app from '__sveltekit/manifest';
 
 /**
  *

@@ -18,26 +18,15 @@ const build = fileURLToPath(new URL('../build', import.meta.url));
  * @returns {Buffer<ArrayBufferLike>}
  */
 /**
- * @template {BufferEncoding | null} [T='utf-8']
  * @param {string} file
- * @param {T} encoding
- * @returns {T extends string ? string : Buffer<ArrayBufferLike>}
+ * @param {BufferEncoding | null} [encoding]
+ * @returns {string | Buffer<ArrayBufferLike>}
  */
-const read = (file, encoding = /** @type {T} */ ('utf-8')) =>
-	/** @type {T extends string ? string : Buffer<ArrayBufferLike>} */ (
-		fs.readFileSync(`${build}/${file}`, encoding)
-	);
+const read = (file, encoding = 'utf-8') => fs.readFileSync(`${build}/${file}`, encoding);
 
 test('prerenders /', () => {
 	const content = read('index.html');
 	expect(content).toMatch('<h1>hello</h1>');
-});
-
-test('prerenders route resolution modules alongside .html pages', () => {
-	assert.isTrue(fs.statSync(`${build}/page.html`).isFile());
-	expect(read('page.html__route.js')).toContain('export const');
-	assert.isFalse(fs.existsSync(`${build}/page.html/__route.js`));
-	assert.isTrue(fs.statSync(`${build}/prerendering-true/__route.js`).isFile());
 });
 
 test('renders a redirect', () => {
@@ -99,13 +88,6 @@ test('renders a shell when SSR is turned off and there is no server data', () =>
 test('inserts http-equiv tag for cache-control headers', () => {
 	const content = read('max-age.html');
 	expect(content).toMatch('<meta http-equiv="cache-control" content="max-age=300">');
-});
-
-test('escapes cache-control headers in http-equiv tags', () => {
-	const content = read('max-age-malicious.html');
-	expect(content).toContain(
-		'<meta http-equiv="cache-control" content="max-age=300&quot;><script>alert(&quot;xss&quot;)</script>&amp;">'
-	);
 });
 
 test('renders page with data from endpoint', () => {
@@ -308,9 +290,5 @@ test('identifies missing ids', () => {
 	const missing_ids_file = fileURLToPath(new URL('../missing_ids/index.jsonl', import.meta.url));
 	const missing_ids_content = fs.readFileSync(missing_ids_file, 'utf-8');
 	const missing_ids = JSON.parse(`[${missing_ids_content.slice(0, -1)}]`);
-	expect(missing_ids).toEqual([{ id: 'missing-id', message: expect.any(String) }]);
-	// custom handlers receive the full diagnostic
-	expect(missing_ids[0].message).toContainKitDiagnostic('prerender_missing_id', {
-		contains: ['/missing-id#missing-id', 'id="missing-id"']
-	});
+	expect(missing_ids).toEqual(['missing-id']);
 });

@@ -1,5 +1,3 @@
-import * as e from '../../../messages/build-errors.js';
-
 /** @param {import('types').RouteData[]} routes */
 export function prevent_conflicts(routes) {
 	/** @type {Map<string, string>} */
@@ -44,7 +42,9 @@ export function prevent_conflicts(routes) {
 				.replace(/\/$/, '');
 
 			if (lookup.has(key)) {
-				e.route_conflict({ first: /** @type {string} */ (lookup.get(key)), second: route.id });
+				throw new Error(
+					`The "${lookup.get(key)}" and "${route.id}" routes conflict with each other`
+				);
 			}
 
 			lookup.set(key, route.id);
@@ -60,7 +60,7 @@ function normalize_route_id(id) {
 			.replace(/(?<=^|\/)\(.+?\)(?=$|\/)/g, '')
 
 			.replace(/\[[ux]\+([0-9a-f]+)\]/g, (_, x) =>
-				String.fromCodePoint(parseInt(x, 16)).replace(/\//g, '%2f')
+				String.fromCharCode(parseInt(x, 16)).replace(/\//g, '%2f')
 			)
 
 			// replace `[param]` with `<*>`, `[param=x]` with `<x>`, and `[[param]]` with `<?*>`

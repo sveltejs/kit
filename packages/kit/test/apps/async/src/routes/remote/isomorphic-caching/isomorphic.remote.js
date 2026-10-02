@@ -1,12 +1,16 @@
-import { query } from '$app/server';
-import { per_session } from '../per-session.js';
+import { query, command } from '$app/server';
 
-const session = per_session(() => ({ counter: 0, times_called: 0 }));
+let counter = 0;
+let times_called = 0;
 
 export const get_value = query(() => {
-	const state = session();
-	state.times_called += 1;
-	return state.counter;
+	times_called += 1;
+	return counter;
 });
 
-export const get_call_count = query(() => session().times_called);
+export const get_call_count = query(() => times_called);
+
+export const reset = command(() => {
+	counter = 0;
+	times_called = 0;
+});

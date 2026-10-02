@@ -13,6 +13,10 @@ const body_data_listeners = new WeakMap();
 function get_raw_body(req, body_size_limit) {
 	const h = req.headers;
 
+	if (!h['content-type']) {
+		return null;
+	}
+
 	const content_length = Number(h['content-length']);
 	const has_content_length = Number.isFinite(content_length);
 
@@ -112,13 +116,12 @@ function get_raw_body(req, body_size_limit) {
 /**
  * @param {{
  *   request: import('http').IncomingMessage;
- *   response?: import('http').ServerResponse;
  *   base: string;
  *   bodySizeLimit?: number;
  * }} options
  * @returns {Request}
  */
-export function getRequest({ request, response, base, bodySizeLimit }) {
+export function getRequest({ request, base, bodySizeLimit }) {
 	let headers = /** @type {Record<string, string>} */ (request.headers);
 	if (request.httpVersionMajor >= 2) {
 		// the Request constructor rejects headers with ':' in the name
@@ -134,18 +137,14 @@ export function getRequest({ request, response, base, bodySizeLimit }) {
 	}
 
 	const controller = new AbortController();
-
+	// TODO: Whenever Node >=22.17 is the minimum supported version, we can do `if (request.readableAborted) controller.abort()` instead
+	// see https://github.com/nodejs/node/blob/5cf3c3e24c7257a0c6192ed8ef71efec8ddac22b/lib/internal/streams/readable.js#L1443-L1453
+	let errored = false;
+	let end_emitted = false;
+	request.once('error', () => (errored = true));
+	request.once('end', () => (end_emitted = true));
 	request.once('close', () => {
-		if (request.readableAborted) {
-			controller.abort();
-		}
-	});
-
-	// `readableAborted` stays false once the request has been fully read (or drained),
-	// so a client disconnect must also be detected on the response side. `writableEnded`
-	// rather than `writableFinished` because HTTP/2 marks cancelled streams as finished
-	response?.once('close', () => {
-		if (!response.writableEnded) {
+		if ((errored || request.destroyed) && !end_emitted) {
 			controller.abort();
 		}
 	});
@@ -220,14 +219,14 @@ export function setResponse(res, response) {
 		}
 	}
 
+	res.writeHead(response.status);
+
 	if (!response.body) {
-		res.writeHead(response.status);
 		res.end();
 		return;
 	}
 
 	if (response.body.locked) {
-		res.writeHead(response.status);
 		res.end(
 			'Fatal error: Response body is locked. ' +
 				"This can happen when the response was already read (for example through 'response.json()' or 'response.text()')."
@@ -255,73 +254,11 @@ export function setResponse(res, response) {
 	res.on('close', cancel);
 	res.on('error', cancel);
 
-	/** @type {Uint8Array<ArrayBuffer>[]} */
-	const buffered = [];
-
-	/** @type {ReturnType<typeof reader.read> | null} */
-	let pending = null;
-
-	void probe();
-
-	// a fixed body (a string, buffer or blob, however constructed) settles all its
-	// reads before the next macrotask, so it can be measured and sent with a
-	// `content-length`; a genuine stream leaves a read pending and only has its
-	// headers delayed by a single tick
-	async function probe() {
-		try {
-			/** @type {Promise<undefined>} */
-			const deadline = new Promise((fulfil) => setImmediate(() => fulfil(undefined)));
-
-			while (buffered.length < 2) {
-				pending = reader.read();
-				const result = await Promise.race([pending, deadline]);
-
-				if (!result) break; // deadline hit — treat the body as a stream
-
-				pending = null;
-
-				if (result.done) {
-					// a `content-length` next to a `transfer-encoding` would be invalid
-					if (!res.hasHeader('content-length') && !res.hasHeader('transfer-encoding')) {
-						res.setHeader(
-							'content-length',
-							buffered.reduce((total, chunk) => total + chunk.byteLength, 0)
-						);
-					}
-					break;
-				}
-
-				buffered.push(result.value);
-			}
-
-			if (res.destroyed) return;
-
-			res.writeHead(response.status);
-			await next();
-		} catch (error) {
-			if (!res.headersSent) res.writeHead(response.status);
-			cancel(error instanceof Error ? error : new Error(String(error)));
-		}
-	}
-
+	void next();
 	async function next() {
 		try {
 			for (;;) {
-				/** @type {Awaited<ReturnType<typeof reader.read>>} */
-				let result;
-				if (buffered.length > 0) {
-					result = {
-						done: false,
-						value: /** @type {Uint8Array<ArrayBuffer>} */ (buffered.shift())
-					};
-				} else if (pending) {
-					result = await pending;
-					pending = null;
-				} else {
-					result = await reader.read();
-				}
-
-				const { done, value } = result;
+				const { done, value } = await reader.read();
 
 				if (done) break;
 

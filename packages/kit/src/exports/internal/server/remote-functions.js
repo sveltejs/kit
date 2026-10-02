@@ -1,5 +1,4 @@
 /** @import { RemoteInternals } from 'types' */
-import * as e from '../../../messages/server-errors.js';
 
 /** @type {RemoteInternals['type'][]} */
 const types = ['command', 'form', 'prerender', 'query', 'query_batch', 'query_live'];
@@ -11,12 +10,16 @@ const types = ['command', 'form', 'prerender', 'query', 'query_batch', 'query_li
  */
 export function init_remote_functions(module, file, hash) {
 	if (module.default) {
-		e.remote_module_default_export({ file });
+		throw new Error(
+			`Cannot export \`default\` from a remote module (${file}) — please use named exports instead`
+		);
 	}
 
 	for (const [name, fn] of Object.entries(module)) {
 		if (!types.includes(fn?.__?.type)) {
-			e.remote_module_invalid_export({ name, file });
+			throw new Error(
+				`\`${name}\` exported from ${file} is invalid — all exports from this file must be remote functions`
+			);
 		}
 
 		fn.__.id = `${hash}/${name}`;

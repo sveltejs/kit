@@ -8,10 +8,14 @@
 	"pin": {
 		"enabled": false
 	},
-	"ignoreDeps": ["@types/node"],
+	"ignoreDeps": [
+		"@types/node"
+	],
 	"packageRules": [
 		{
-			"matchDatasources": ["npm"],
+			"matchDatasources": [
+				"npm"
+			],
 			"minimumReleaseAge": "2 days"
 		},
 		{
@@ -29,8 +33,12 @@
 			"minimumReleaseAge": "0 days"
 		},
 		{
-			"matchPackageNames": ["vite"],
-			"matchUpdateTypes": ["major"],
+			"matchPackageNames": [
+				"vite"
+			],
+			"matchUpdateTypes": [
+				"major"
+			],
 			"enabled": false
 		}
 	]

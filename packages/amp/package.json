@@ -1,0 +1,43 @@
+{
+	"name": "@sveltejs/amp",
+	"version": "1.1.5",
+	"description": "AMP integration for SvelteKit",
+	"keywords": [
+		"accelerated mobile pages",
+		"amp",
+		"svelte",
+		"sveltekit"
+	],
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/sveltejs/kit.git",
+		"directory": "packages/amp"
+	},
+	"license": "MIT",
+	"homepage": "https://svelte.dev",
+	"type": "module",
+	"exports": {
+		".": {
+			"types": "./index.d.ts",
+			"import": "./index.js"
+		},
+		"./package.json": "./package.json"
+	},
+	"types": "index.d.ts",
+	"files": [
+		"index.js",
+		"index.d.ts"
+	],
+	"scripts": {
+		"check": "tsc",
+		"lint": "prettier --check .",
+		"format": "pnpm lint --write"
+	},
+	"devDependencies": {
+		"@sveltejs/kit": "workspace:^",
+		"typescript": "catalog:"
+	},
+	"peerDependencies": {
+		"@sveltejs/kit": "^1.0.0 || ^2.0.0"
+	}
+}

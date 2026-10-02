@@ -1,13 +1,18 @@
-/** @import { RemoteResource, RemotePrerenderFunction } from '$app/server' */
+/** @import { RemoteResource, RemotePrerenderFunction } from '@sveltejs/kit' */
 /** @import { RemoteFunctionResponse, RemotePrerenderInputsGenerator, RemotePrerenderInternals, MaybePromise } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
-import { HandledHttpError } from '@sveltejs/kit/internal';
+import { json } from '@sveltejs/kit';
+import { HttpError } from '@sveltejs/kit/internal';
 import { get_request_store } from '@sveltejs/kit/internal/server';
-import { stringify_remote_arg } from '../../../shared.js';
-import { parse, stringify } from '#app/internal/transport';
+import { stringify, stringify_remote_arg } from '../../../shared.js';
 import { noop } from '../../../../utils/functions.js';
-import { app_dir, base } from '#app/paths';
-import { create_validator, get_response, run_remote_function } from './shared.js';
+import { app_dir, base } from '$app/paths/internal/server';
+import {
+	create_validator,
+	get_response,
+	parse_remote_response,
+	run_remote_function
+} from './shared.js';
 
 /**
  * Creates a remote prerender function. When called from the browser, the function will be invoked on the server via a `fetch` call.
@@ -84,7 +89,7 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 	/** @type {RemotePrerenderFunction<Input, Output> & { __: RemotePrerenderInternals }} */
 	const wrapper = (arg) => {
 		const { event, state } = get_request_store();
-		const payload = stringify_remote_arg(arg);
+		const payload = stringify_remote_arg(arg, state.transport);
 
 		// `get_response` (as opposed to bare `get_cache`) also registers the call in the
 		// implicit lookup, so that the result is inlined into the page payload (`data.p`)
@@ -102,12 +107,7 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 					// TODO adapters can provide prerendered data more efficiently than
 					// fetching from the public internet
 					// `request.url` rather than `event.url`, which throws inside queries
-					const response = await fetch(new URL(url, event.request.url).href, {
-						// in the unlikely event that an attacker is able to spoof the origin,
-						// this protects us against SSRF (the attacker-controlled server cannot
-						// trick us into making a request to an internal resource)
-						redirect: 'manual'
-					});
+					const response = await fetch(new URL(url, event.request.url).href);
 
 					if (response.ok) {
 						prerendered = /** @type {RemoteFunctionResponse} */ (await response.json());
@@ -118,10 +118,10 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 
 				if (prerendered) {
 					if (prerendered.type === 'error') {
-						throw new HandledHttpError(prerendered.error);
+						throw new HttpError(prerendered.error);
 					}
 
-					return parse(prerendered.data)._;
+					return parse_remote_response(prerendered.data, state.transport)._;
 				}
 			}
 
@@ -146,10 +146,10 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 			const result = await promise;
 
 			if (state.prerendering) {
-				const body = { type: 'result', data: stringify({ _: result }) };
+				const body = { type: 'result', data: stringify({ _: result }, state.transport) };
 				state.prerendering.dependencies.set(url, {
 					body: JSON.stringify(body),
-					response: Response.json(body)
+					response: json(body)
 				});
 			}
 

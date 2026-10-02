@@ -1,4 +1,4 @@
-<script lang="ts">
+<script>
 	import { browser } from '$app/env';
 	import { refreshAll } from '$app/navigation';
 	import {
@@ -20,7 +20,7 @@
 
 	const { data } = $props();
 
-	let command_result: number | null = $state(null);
+	let command_result = $state(/** @type {number | null} */ (null));
 
 	// we just want it not to be treeshaken away
 	void q;
@@ -29,7 +29,8 @@
 	const flaky_ok = get_flaky_count('ok');
 	const flaky_fail = get_flaky_count('fail');
 
-	function get_message(error: unknown) {
+	/** @param {unknown} error */
+	function get_message(error) {
 		if (error instanceof Error) return error.message;
 
 		if (typeof error === 'object' && error && 'message' in error) {
@@ -51,7 +52,7 @@
 <svelte:boundary>
 	<p id="flaky-fail-result">{await flaky_fail}</p>
 
-	{#snippet failed(error: unknown)}
+	{#snippet failed(error)}
 		<p id="flaky-fail-result">{get_message(error)}</p>
 	{/snippet}
 </svelte:boundary>

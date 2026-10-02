@@ -1,5 +1,5 @@
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
-/** @import { DefinedEnvVars, EnvVarConfig } from '@sveltejs/kit/env' */
+/** @import { DefinedEnvVars, EnvVarConfig } from '@sveltejs/kit' */
 
 /**
  * Utility for defining [environment variables](https://svelte.dev/docs/kit/environment-variables),

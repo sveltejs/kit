@@ -22,7 +22,7 @@
  */
 declare namespace App {
 	/**
-	 * Defines the common shape of expected and unexpected errors. Expected errors are thrown using the `error` function. Every error passes through the `handleError` hooks, which must return this shape (with `status` and `message` optional, since they default to those of the caught error).
+	 * Defines the common shape of expected and unexpected errors. Expected errors are thrown using the `error` function. Unexpected errors are handled by the `handleError` hooks which should return this shape.
 	 */
 	export interface Error {
 		status: number;
@@ -78,41 +78,9 @@ declare module '$app/manifest' {
 	 */
 	export const prerendered: Array<{ path: import('$app/types').Path }>;
 	/**
-	 * A route in your app, along with its capabilities. `page` indicates the presence of a `+page`,
-	 * while `endpoint` indicates the presence of a `+server`. Both are `true` when both files exist.
+	 * An array of objects with an `id` property representing the routes in your app.
 	 */
-	export type ManifestRoute =
-		| {
-				id: Exclude<import('$app/types').PageRouteId, import('$app/types').EndpointRouteId>;
-				page: true;
-				endpoint: false;
-		  }
-		| {
-				id: Exclude<import('$app/types').EndpointRouteId, import('$app/types').PageRouteId>;
-				page: false;
-				endpoint: true;
-		  }
-		| {
-				id: Extract<import('$app/types').PageRouteId, import('$app/types').EndpointRouteId>;
-				page: true;
-				endpoint: true;
-		  };
-	/**
-	 * An array of objects representing the routes in your app. Only routes that the router can match
-	 * are included — directories that merely hold a `+layout` are not routes of their own.
-	 *
-	 * Each object has an `id`, plus `page` and `endpoint` booleans describing whether the route has a
-	 * `+page` and/or a `+server`. Both are `true` for a route that has both, so the capabilities can
-	 * be filtered independently:
-	 *
-	 * ```js
-	 * import { routes } from '$app/manifest';
-	 *
-	 * const pages = routes.filter((route) => route.page);
-	 * const endpoints = routes.filter((route) => route.endpoint);
-	 * ```
-	 */
-	export const routes: ManifestRoute[];
+	export const routes: Array<{ id: import('$app/types').RouteId }>;
 }
 
 /**
@@ -126,8 +94,6 @@ declare module '$app/types' {
 		// These are all functions so that we can leverage function overloads to get the correct type.
 		// Using the return types directly would error with a "not the same type" error.
 		// https://www.typescriptlang.org/docs/handbook/declaration-merging.html#merging-interfaces
-		PageRouteId(): string;
-		EndpointRouteId(): string;
 		RouteId(): string;
 		RouteParams(): Record<string, Record<string, string>>;
 		LayoutParams(): Record<string, Record<string, string>>;
@@ -137,21 +103,7 @@ declare module '$app/types' {
 	}
 
 	/**
-	 * A union of the route IDs in your app that have a `+page`.
-	 *
-	 * A route ID can be in both `PageRouteId` and `EndpointRouteId`, if its directory contains both a `+page` and a `+server`.
-	 */
-	export type PageRouteId = ReturnType<AppTypes['PageRouteId']>;
-
-	/**
-	 * A union of the route IDs in your app that have a `+server`.
-	 *
-	 * A route ID can be in both `PageRouteId` and `EndpointRouteId`, if its directory contains both a `+page` and a `+server`.
-	 */
-	export type EndpointRouteId = ReturnType<AppTypes['EndpointRouteId']>;
-
-	/**
-	 * A union of all the route IDs in your app — the union of `PageRouteId` and `EndpointRouteId`. Used for `page.route.id` and `event.route.id`.
+	 * A union of all the route IDs in your app. Used for `page.route.id` and `event.route.id`.
 	 */
 	export type RouteId = ReturnType<AppTypes['RouteId']>;
 
@@ -168,14 +120,13 @@ declare module '$app/types' {
 		: Record<string, never>;
 
 	/**
-	 * The route IDs accepted by `LayoutParams`. Like `RouteId`, these preserve route groups and `[param]` syntax, but they identify directories containing layouts rather than matchable routes.
-	 */
-	type LayoutParamsId = keyof ReturnType<AppTypes['LayoutParams']>;
-
-	/**
 	 * A utility for getting the parameters associated with a given layout, which is similar to `RouteParams` but also includes optional parameters for any child route.
+	 *
+	 * Unlike `RouteId`, this accepts any directory in `src/routes`, since a layout can live in a directory that has no `+page` or `+server` of its own.
 	 */
-	export type LayoutParams<T extends LayoutParamsId> = ReturnType<AppTypes['LayoutParams']>[T];
+	export type LayoutParams<T extends keyof ReturnType<AppTypes['LayoutParams']>> = ReturnType<
+		AppTypes['LayoutParams']
+	>[T];
 
 	/**
 	 * A union of all valid paths in your app, relative to the `base` path.

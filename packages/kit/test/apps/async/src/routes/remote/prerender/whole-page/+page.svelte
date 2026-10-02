@@ -1,6 +1,4 @@
 <script>
-	import { prerendered_form } from '../prerender.remote.js';
-
 	let { data } = $props();
 </script>
 
@@ -10,7 +8,3 @@
 	{data.r3}
 	{data.r4}
 </p>
-
-<form data-prerendered {...prerendered_form}>
-	<button>submit</button>
-</form>

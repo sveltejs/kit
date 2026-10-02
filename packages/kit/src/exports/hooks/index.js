@@ -1,10 +1,8 @@
-import * as e from '../../messages/server-errors.js';
-
 export { sequence } from './sequence.js';
 
 /**
  * @internal
  */
 export function defineEnvVars() {
-	e.define_env_vars_moved();
+	throw new Error(`\`defineEnvVars\` has moved — import it from \`@sveltejs/kit/env\` instead`);
 }

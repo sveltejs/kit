@@ -1,21 +1,12 @@
 import { escape_html } from '../../../utils/escape.js';
-import { base64_encode, text_encoder } from '../../utils.js';
-import * as e from '../../../messages/server-errors.js';
+import { sha256 } from './crypto.js';
 
 const array = new Uint8Array(16);
 
 function generate_nonce() {
 	crypto.getRandomValues(array);
-	return base64_encode(array);
+	return btoa(String.fromCharCode(...array));
 }
-
-/** @param {string} content */
-async function sha256(content) {
-	const digest = await crypto.subtle.digest('SHA-256', text_encoder.encode(content));
-	return base64_encode(new Uint8Array(digest));
-}
-
-/** @typedef {`nonce-${string}` | `sha256-${string}`} CspSource */
 
 const quoted = new Set([
 	'self',
@@ -38,7 +29,7 @@ class BaseProvider {
 	#use_hashes;
 
 	/** @type {boolean} */
-	script_needs_csp;
+	#script_needs_csp;
 
 	/** @type {boolean} */
 	#script_src_needs_csp;
@@ -47,7 +38,7 @@ class BaseProvider {
 	#script_src_elem_needs_csp;
 
 	/** @type {boolean} */
-	style_needs_csp;
+	#style_needs_csp;
 
 	/** @type {boolean} */
 	#style_src_needs_csp;
@@ -85,11 +76,15 @@ class BaseProvider {
 	/** @type {boolean} */
 	script_needs_hash;
 
+	/** @type {string} */
+	#nonce;
+
 	/**
 	 * @param {boolean} use_hashes
 	 * @param {import('types').CspDirectives} directives
+	 * @param {string} nonce
 	 */
-	constructor(use_hashes, directives) {
+	constructor(use_hashes, directives, nonce) {
 		this.#use_hashes = use_hashes;
 		this.#directives = __SVELTEKIT_DEV__ ? { ...directives } : directives; // clone in dev so we can safely mutate
 
@@ -153,20 +148,30 @@ class BaseProvider {
 		this.#style_src_attr_needs_csp = style_needs_csp(style_src_attr);
 		this.#style_src_elem_needs_csp = style_needs_csp(style_src_elem);
 
-		this.script_needs_csp = this.#script_src_needs_csp || this.#script_src_elem_needs_csp;
-		this.style_needs_csp =
+		this.#script_needs_csp = this.#script_src_needs_csp || this.#script_src_elem_needs_csp;
+		this.#style_needs_csp =
 			!__SVELTEKIT_DEV__ &&
 			(this.#style_src_needs_csp ||
 				this.#style_src_attr_needs_csp ||
 				this.#style_src_elem_needs_csp);
 
-		this.script_needs_nonce = this.script_needs_csp && !this.#use_hashes;
-		this.style_needs_nonce = this.style_needs_csp && !this.#use_hashes;
-		this.script_needs_hash = this.script_needs_csp && this.#use_hashes;
+		this.script_needs_nonce = this.#script_needs_csp && !this.#use_hashes;
+		this.style_needs_nonce = this.#style_needs_csp && !this.#use_hashes;
+		this.script_needs_hash = this.#script_needs_csp && this.#use_hashes;
+
+		this.#nonce = nonce;
 	}
 
-	/** @param {CspSource} source */
-	add_script(source) {
+	/**
+	 * @param {string} content
+	 * @returns {`nonce-${string}` | `sha256-${string}`}
+	 */
+	#get_source(content) {
+		return this.#use_hashes ? `sha256-${sha256(content)}` : `nonce-${this.#nonce}`;
+	}
+
+	/** @param {`nonce-${string}` | `sha256-${string}`} source */
+	#add_script_source(source) {
 		if (this.#script_src_needs_csp) {
 			this.#script_src.add(source);
 		}
@@ -176,9 +181,25 @@ class BaseProvider {
 		}
 	}
 
-	/** @param {CspSource} source */
-	add_style(source) {
-		if (!this.style_needs_csp) return;
+	/** @param {string} content */
+	add_script(content) {
+		if (!this.#script_needs_csp) return;
+
+		this.#add_script_source(this.#get_source(content));
+	}
+
+	/** @param {`sha256-${string}`[]} hashes */
+	add_script_hashes(hashes) {
+		for (const hash of hashes) {
+			this.#add_script_source(hash);
+		}
+	}
+
+	/** @param {string} content */
+	add_style(content) {
+		if (!this.#style_needs_csp) return;
+
+		const source = this.#get_source(content);
 
 		if (this.#style_src_needs_csp) {
 			this.#style_src.add(source);
@@ -294,9 +315,10 @@ class CspReportOnlyProvider extends BaseProvider {
 	/**
 	 * @param {boolean} use_hashes
 	 * @param {import('types').CspDirectives} directives
+	 * @param {string} nonce
 	 */
-	constructor(use_hashes, directives) {
-		super(use_hashes, directives);
+	constructor(use_hashes, directives, nonce) {
+		super(use_hashes, directives, nonce);
 
 		// If we're generating content-security-policy-report-only,
 		// if there are any directives, we need a report-uri or report-to (or both)
@@ -306,7 +328,9 @@ class CspReportOnlyProvider extends BaseProvider {
 			!directives['report-to']?.length &&
 			!directives['report-uri']?.length
 		) {
-			e.csp_report_only_missing_report();
+			throw Error(
+				'`content-security-policy-report-only` must be specified with either the `report-to` or `report-uri` directives, or both'
+			);
 		}
 	}
 }
@@ -321,25 +345,14 @@ export class Csp {
 	/** @type {CspReportOnlyProvider} */
 	report_only_provider;
 
-	/** @type {boolean} */
-	#use_hashes;
-
 	/**
 	 * @param {import('./types.js').CspConfig} config
 	 * @param {import('./types.js').CspOpts} opts
 	 */
 	constructor({ mode, directives, reportOnly }, { prerender }) {
-		this.#use_hashes = mode === 'hash' || (mode === 'auto' && prerender);
-		this.csp_provider = new CspProvider(this.#use_hashes, directives);
-		this.report_only_provider = new CspReportOnlyProvider(this.#use_hashes, reportOnly);
-	}
-
-	/**
-	 * @param {string} content
-	 * @returns {Promise<CspSource>}
-	 */
-	async #get_source(content) {
-		return this.#use_hashes ? `sha256-${await sha256(content)}` : `nonce-${this.nonce}`;
+		const use_hashes = mode === 'hash' || (mode === 'auto' && prerender);
+		this.csp_provider = new CspProvider(use_hashes, directives, this.nonce);
+		this.report_only_provider = new CspReportOnlyProvider(use_hashes, reportOnly, this.nonce);
 	}
 
 	get script_needs_hash() {
@@ -355,28 +368,20 @@ export class Csp {
 	}
 
 	/** @param {string} content */
-	async add_script(content) {
-		if (!this.csp_provider.script_needs_csp && !this.report_only_provider.script_needs_csp) return;
-
-		const source = await this.#get_source(content);
-		if (this.csp_provider.script_needs_csp) this.csp_provider.add_script(source);
-		if (this.report_only_provider.script_needs_csp) this.report_only_provider.add_script(source);
+	add_script(content) {
+		this.csp_provider.add_script(content);
+		this.report_only_provider.add_script(content);
 	}
 
 	/** @param {`sha256-${string}`[]} hashes */
 	add_script_hashes(hashes) {
-		for (const hash of hashes) {
-			this.csp_provider.add_script(hash);
-			this.report_only_provider.add_script(hash);
-		}
+		this.csp_provider.add_script_hashes(hashes);
+		this.report_only_provider.add_script_hashes(hashes);
 	}
 
 	/** @param {string} content */
-	async add_style(content) {
-		if (!this.csp_provider.style_needs_csp && !this.report_only_provider.style_needs_csp) return;
-
-		const source = await this.#get_source(content);
-		this.csp_provider.add_style(source);
-		this.report_only_provider.add_style(source);
+	add_style(content) {
+		this.csp_provider.add_style(content);
+		this.report_only_provider.add_style(content);
 	}
 }

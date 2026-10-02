@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-vercel",
-	"version": "7.0.0",
+	"version": "7.0.0-next.4",
 	"description": "A SvelteKit adapter that creates a Vercel app",
 	"keywords": [
 		"adapter",
@@ -33,11 +33,12 @@
 		"index.d.ts"
 	],
 	"scripts": {
-		"lint": "oxfmt --check .",
-		"format": "oxfmt --write .",
-		"check": "node node_modules/@typescript/native/bin/tsc",
-		"test:unit": "vitest run *.spec.js",
-		"test": "pnpm test:unit && pnpm -r --filter='./test/apps/**' test:build"
+		"lint": "prettier --check .",
+		"format": "pnpm lint --write",
+		"check": "tsc",
+		"test:unit": "vitest run",
+		"test:build": "cd test/apps/basic && pnpm build",
+		"test": "pnpm test:unit && pnpm test:build"
 	},
 	"dependencies": {
 		"@vercel/nft": "^1.10.2"
@@ -45,7 +46,7 @@
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",
 		"@types/node": "catalog:",
-		"@typescript/native": "catalog:",
+		"typescript": "catalog:",
 		"vitest": "catalog:"
 	},
 	"peerDependencies": {

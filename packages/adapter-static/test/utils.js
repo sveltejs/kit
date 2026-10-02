@@ -9,7 +9,7 @@ export const config = {
 	timeout: process.env.CI ? 45000 : 15000,
 	webServer: {
 		command: 'pnpm build && pnpm preview',
-		port: 5174
+		port: 5173
 	},
 	retries: process.env.CI ? 2 : number_from_env('KIT_E2E_RETRIES', 0),
 	projects: [
@@ -21,7 +21,7 @@ export const config = {
 		...devices['Desktop Chrome'],
 		screenshot: 'only-on-failure',
 		trace: 'retain-on-failure',
-		channel: 'chrome'
+		channel: 'chromium'
 	},
 	workers: process.env.CI ? 2 : number_from_env('KIT_E2E_WORKERS', undefined),
 	reporter: 'list',

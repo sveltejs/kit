@@ -1,5 +1,4 @@
 import { execSync } from 'node:child_process';
-import { pathToFileURL } from 'node:url';
 import { adapters } from './adapters.js';
 import path from 'node:path';
 import fs from 'node:fs';
@@ -123,7 +122,7 @@ async function get_adapter() {
 	}
 
 	/** @type {{ default: () => Adapter }} */
-	const module = await import(pathToFileURL(resolved).href);
+	const module = await import(resolved);
 
 	const adapter = module.default();
 
@@ -136,7 +135,7 @@ async function get_adapter() {
 	};
 }
 
-/** @type {typeof import('./index.js').default} */
+/** @type {import('./index.js').default} */
 export default () => ({
 	name: '@sveltejs/adapter-auto',
 	adapt: async (builder) => {

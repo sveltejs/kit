@@ -7,8 +7,5 @@
 	"assets": {
 		"directory": "../dist/public",
 		"binding": "ASSETS"
-	},
-	"vars": {
-		"FOO": "from wrangler.jsonc"
 	}
 }

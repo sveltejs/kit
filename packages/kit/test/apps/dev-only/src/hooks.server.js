@@ -1,5 +1,4 @@
-/** @type {import("@sveltejs/kit/hooks").HandleServerError} */
-export function handleError({ kind, error }) {
-	if (kind !== 'unknown') return error;
+/** @type {import("@sveltejs/kit").HandleServerError} */
+export function handleError({ error }) {
 	return { message: /**@type{any}*/ (error).message };
 }

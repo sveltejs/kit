@@ -1,22 +1,18 @@
-/** @import { IncomingHttpHeaders } from 'node:http' */
+import fs from 'node:fs';
+import path, { extname } from 'node:path';
 import process from 'node:process';
+import sirv from 'sirv';
+import { parse as polka_url_parser } from '@polka/url';
 import { getRequest, setResponse, createReadableStream } from '@sveltejs/kit/node';
-import {
-	server,
-	dir,
-	env_prefix,
-	base,
-	app_path,
-	origin,
-	mime_types,
-	assets,
-	prerendered_assets
-} from '#@sveltejs/adapter-node';
-import { env } from './env.js';
+import { Server } from 'SERVER';
+import { manifest, prerendered, base, uncompressed_extensions } from 'MANIFEST';
+import { dir } from './dir.js';
+import { env, env_prefix } from './env.js';
 import { parse_as_bytes } from './utils.js';
-import { create_file_map, serve_static } from './static.js';
 
-/** @import { Middleware } from './static.js' */
+const server = new Server(manifest);
+
+const origin = ORIGIN;
 
 const xff_depth = parseInt(env('XFF_DEPTH', '1'));
 const address_header = env('ADDRESS_HEADER', '').toLowerCase();
@@ -39,7 +35,83 @@ await server.init({
 	read: (file) => createReadableStream(`${asset_dir}/${file}`)
 });
 
-/** @type {Middleware} */
+/**
+ * @param {string} path
+ * @param {boolean} client
+ */
+function serve(path, client = false) {
+	return fs.existsSync(path)
+		? sirv(path, {
+				etag: true,
+				gzip: PRECOMPRESS,
+				brotli: PRECOMPRESS,
+				setHeaders: (res, pathname) => {
+					// `sirv` sets `Vary` from its options rather than from the file it resolved
+					if (PRECOMPRESS && uncompressed_extensions.has(extname(pathname))) {
+						res.removeHeader('vary');
+					}
+
+					// `sirv` uses its own bundled `mrmime`, which the manifest's added types never reach
+					let type = manifest.mimeTypes[pathname.slice(pathname.lastIndexOf('.'))];
+					if (type === 'text/html') type += ';charset=utf-8';
+					if (type) res.setHeader('content-type', type);
+
+					// only apply to build directory, not e.g. version.json
+					if (
+						client &&
+						pathname.startsWith(`/${manifest.appPath}/immutable/`) &&
+						res.statusCode === 200
+					) {
+						res.setHeader('cache-control', 'public,max-age=31536000,immutable');
+					}
+				}
+			})
+		: undefined;
+}
+
+/**
+ * Relative reference from `from` to `to`, which must differ only by a trailing slash.
+ * Keep in sync with the copy in `packages/kit/src/utils/url.js`
+ * @param {string} from
+ * @param {string} to
+ * @returns {string}
+ */
+function relative_pathname(from, to) {
+	const segment = to.replace(/\/$/, '').split('/').at(-1);
+
+	return from.endsWith('/') ? `../${segment}` : `${segment}/`;
+}
+
+// required because the static file server ignores trailing slashes
+/** @returns {import('polka').Middleware} */
+function serve_prerendered() {
+	const handler = serve(path.join(dir, 'prerendered'));
+
+	return (req, res, next) => {
+		let { pathname, search, query } = polka_url_parser(req);
+
+		try {
+			pathname = decodeURIComponent(pathname);
+		} catch {
+			// ignore invalid URI
+		}
+
+		if (prerendered.has(pathname)) {
+			return handler?.(req, res, next);
+		}
+
+		// remove or add trailing slash as appropriate
+		const inverted = pathname.at(-1) === '/' ? pathname.slice(0, -1) : pathname + '/';
+		if (prerendered.has(inverted)) {
+			const location = relative_pathname(pathname, inverted) + (query ? search : '');
+			res.writeHead(308, { location }).end();
+		} else {
+			void next();
+		}
+	};
+}
+
+/** @type {import('polka').Middleware} */
 const ssr = async (req, res) => {
 	/** @type {Request} */
 	let request;
@@ -62,7 +134,6 @@ const ssr = async (req, res) => {
 		request = getRequest({
 			base: request_origin,
 			request: req,
-			response: res,
 			bodySizeLimit: body_size_limit
 		});
 	} catch {
@@ -127,6 +198,26 @@ const ssr = async (req, res) => {
 	setResponse(res, response);
 };
 
+/** @param {import('polka').Middleware[]} handlers */
+function sequence(handlers) {
+	/** @type {import('polka').Middleware} */
+	return (req, res, next) => {
+		/**
+		 * @param {number} i
+		 * @returns {ReturnType<import('polka').Middleware>}
+		 */
+		function handle(i) {
+			if (i < handlers.length) {
+				return handlers[i](req, res, () => handle(i + 1));
+			} else {
+				return next();
+			}
+		}
+
+		return handle(0);
+	};
+}
+
 /**
  * @param {string} name
  * @param {string | string[] | undefined} value
@@ -145,7 +236,7 @@ function normalise_header(name, value) {
 }
 
 /**
- * @param {IncomingHttpHeaders} headers
+ * @param {import('http').IncomingHttpHeaders} headers
  * @returns {string}
  */
 function get_origin(headers) {
@@ -180,9 +271,7 @@ function get_origin(headers) {
 	return port ? `${protocol}://${host}:${port}` : `${protocol}://${host}`;
 }
 
-const serve = serve_static(
-	create_file_map({ dir, base, app_path, mime_types, assets, prerendered_assets })
+export const handler = sequence(
+	/** @type {(import('sirv').RequestHandler | import('polka').Middleware)[]} */
+	([serve(path.join(dir, 'client'), true), serve_prerendered(), ssr].filter(Boolean))
 );
-
-/** @type {Middleware} */
-export const handler = (req, res, next) => serve(req, res, () => ssr(req, res, next));

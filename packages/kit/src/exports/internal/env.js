@@ -1,18 +1,17 @@
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
-/** @import { EnvVarConfig } from '@sveltejs/kit/env' */
+/** @import { EnvVarConfig } from '@sveltejs/kit' */
 
-import * as e from '../../messages/server-errors.js';
-import { bullet_list } from '../../utils/format.js';
+import { stackless } from '../../utils/error.js';
 
-export const MISSING = {
+const MISSING = {
 	message: `Value is missing. If it is optional, add a validator declaring it as such.`
 };
 
-export const BAD_VALIDATOR = {
+const BAD_VALIDATOR = {
 	message: 'Variable was configured with a validator that does not implement Standard Schema'
 };
 
-export const ASYNC_VALIDATOR = {
+const ASYNC_VALIDATOR = {
 	message: 'Variable uses an async validator, which is not supported'
 };
 
@@ -65,10 +64,11 @@ export function handle_issues(issues) {
 		return;
 	}
 
-	const list = entries
-		.map(([name, issues]) => `${name}\n${bullet_list(issues.map((issue) => issue.message))}`)
-		.join('\n\n');
+	let message = 'Invalid environment variables\n';
 
-	// the stack would only point into SvelteKit's generated modules
-	e.env_invalid({ issues: `\n${list}\n` }, { stackless: true });
+	for (const [name, issues] of entries) {
+		message += `\n${name}\n${issues.map((issue) => `  - ${issue.message}`).join('\n')}\n`;
+	}
+
+	throw stackless(message);
 }

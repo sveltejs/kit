@@ -10,6 +10,5 @@
 		"skipLibCheck": true,
 		"sourceMap": true,
 		"moduleResolution": "bundler"
-	},
-	"include": ["src", "test", "playwright.config.js", "vite.config.ts"]
+	}
 }

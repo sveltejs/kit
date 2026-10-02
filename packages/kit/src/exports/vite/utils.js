@@ -1,23 +1,19 @@
-/** @import { UserConfig } from 'vite' */
-/** @import { EnforcedConfig } from './types.js' */
-import fs from 'node:fs';
 import path from 'node:path';
-import process from 'node:process';
 import { posixify } from '../../utils/os.js';
 import { negotiate } from '../../utils/http.js';
 import { escape_html } from '../../utils/escape.js';
 import { escape_for_regexp } from '../../utils/regex.js';
-import * as e from '../../messages/build-errors.js';
-import * as w from '../../messages/build-warnings.js';
-import { app_server, app_env_private } from './module_ids.js';
-import { bullet_list } from '../../utils/format.js';
+import { stackless } from '../../utils/error.js';
+import { dedent } from '../../core/sync/utils.js';
+import { app_server, app_env_private, sveltekit_env_private } from './module_ids.js';
+import { styleText } from 'node:util';
 
 /**
  * Transforms alias to a valid vite.resolve.alias array.
  *
  * Related to tsconfig path alias creation.
  *
- * @param {import('types').ValidatedConfig} config
+ * @param {import('types').ValidatedKitConfig} config
  * @param {string} root
  */
 export function get_config_aliases(config, root) {
@@ -117,16 +113,6 @@ const query_pattern = /\?.*$/s;
 export function normalize_id(id, aliases, cwd) {
 	id = id.replace(query_pattern, '');
 
-	// check before the cwd is removed — in a user's app these modules live
-	// inside `node_modules`, i.e. within the cwd
-	if (id === app_server) {
-		return '$app/server';
-	}
-
-	if (id === app_env_private) {
-		return '$app/env/private';
-	}
-
 	for (const { alias, path } of aliases) {
 		if (id === path || id.startsWith(path + '/')) {
 			id = id.replace(path, alias);
@@ -134,66 +120,26 @@ export function normalize_id(id, aliases, cwd) {
 		}
 	}
 
-	if (id.startsWith(cwd + '/')) {
+	if (id.startsWith(cwd)) {
 		id = path.relative(cwd, id);
+	}
+
+	if (id === app_server) {
+		return '$app/server';
+	}
+
+	if (id === app_env_private || id === sveltekit_env_private) {
+		return '$app/env/private';
 	}
 
 	return posixify(id);
 }
 
-export const remote_module_pattern = /[/.]remote\.[^/]+$/;
-
-/**
- * A cache of which directories can export remote modules
- * @type {Map<string, boolean>}
- */
-const remote_module_cache = new Map();
-
-/**
- * Whether `id` is a remote module. Files in node_modules only count if the
- * package they belong to has a peer dependency on `@sveltejs/kit`
- * @param {string} id
- * @returns {boolean}
- */
-export function is_remote_module(id) {
-	id = posixify(id);
-	if (!remote_module_pattern.test(id)) return false;
-	if (!id.includes('node_modules')) return true;
-
-	return can_export_remote_module(path.dirname(id));
-}
-
-/**
- * @param {string} directory
- * @returns {boolean}
- */
-function can_export_remote_module(directory) {
-	let cached = remote_module_cache.get(directory);
-	if (cached !== undefined) return cached;
-
-	let pkg;
-
-	try {
-		pkg = JSON.parse(fs.readFileSync(path.join(directory, 'package.json'), 'utf8'));
-	} catch {}
-
-	if (pkg?.peerDependencies?.['@sveltejs/kit']) {
-		cached = true;
-	} else {
-		const parent = path.dirname(directory);
-
-		cached =
-			path.basename(directory) === 'node_modules' || parent === directory
-				? false // base case
-				: can_export_remote_module(parent); // recurse
-	}
-
-	remote_module_cache.set(directory, cached);
-	return cached;
-}
-
-export const server_only_module_pattern = /[/.]server\.[^/]+$/;
+export const remote_module_pattern = /[/.]remote(\.[^/]+)+$/;
+export const server_only_module_pattern = /[/.]server(\.[^/]+)+$/;
 export const server_only_directory_pattern = /\/server\//;
+
+export const strip_virtual_prefix = /** @param {string} id */ (id) => id.replace('\0virtual:', '');
 
 /**
  * For `error_for_missing_config('remote functions', 'experimental.remoteFunctions', 'true')`,
@@ -214,112 +160,35 @@ export const server_only_directory_pattern = /\/server\//;
  * @returns {never}
  */
 export function error_for_missing_config(feature_name, path, value) {
-	e.config_feature_disabled(
-		{ feature: feature_name, config: config_snippet(path, value) },
-		{ stackless: true }
-	);
-}
-
-/**
- * Formats the config needed to set the option at `path` to `value`, nesting objects as needed
- * @param {string} path a keypath such as `experimental.remoteFunctions`
- * @param {string} value
- */
-export function config_snippet(path, value) {
 	const hole = '__HOLE__';
 
-	return path.split('.').reduce((acc, part, i, parts) => {
+	const result = path.split('.').reduce((acc, part, i, parts) => {
 		const indent = '  '.repeat(i);
 		const rhs = i === parts.length - 1 ? value : `{\n${hole}\n${indent}}`;
 
 		return acc.replace(hole, `${indent}${part}: ${rhs}`);
 	}, hole);
-}
 
-/** @type {EnforcedConfig} */
-export const enforced_config = {
-	appType: true,
-	base: true,
-	build: {
-		cssCodeSplit: true,
-		emptyOutDir: true,
-		lib: {
-			entry: true,
-			name: true,
-			formats: true
-		},
-		manifest: true,
-		outDir: true,
-		rolldownOptions: {
-			input: true,
-			output: {
-				format: true,
-				entryFileNames: true,
-				chunkFileNames: true,
-				assetFileNames: true
-			},
-			preserveEntrySignatures: true
-		},
-		ssr: true
-	},
-	publicDir: true,
-	resolve: {
-		alias: {
-			$app: true,
-			$env: true,
-			'<sveltekit:generated>': true
-		}
-	}
-};
+	throw stackless(
+		dedent`\
+			To enable ${feature_name}, add the following to your SvelteKit plugin in \`vite.config.js\`:
 
-/**
- * @param {UserConfig} config
- * @param {UserConfig} resolved_config
- */
-export function warn_overridden_config(config, resolved_config) {
-	const overridden = find_overridden_config(config, resolved_config, enforced_config, '', []);
-
-	if (overridden.length > 0) {
-		w.vite_config_overridden({ options: bullet_list(overridden) });
-	}
+			${result}
+		`
+	);
 }
 
 /**
- * @param {Record<string, any>} config
- * @param {Record<string, any>} resolved_config
- * @param {EnforcedConfig} enforced_config
- * @param {string} path
- * @param {string[]} out used locally to compute the return value
+ * @param {number} status
+ * @param {Request} request
  */
-export function find_overridden_config(config, resolved_config, enforced_config, path, out) {
-	if (config == null || resolved_config == null) {
-		return out;
+export function log_response(status, request) {
+	const url = new URL(request.url);
+	const log = `[${status}] ${request.method} ${url.href.replace(url.origin, '')}`;
+
+	if (status < 400) {
+		console.log(log);
+	} else {
+		console.error(styleText(['bold', 'red'], log));
 	}
-
-	for (const key in enforced_config) {
-		if (typeof config === 'object' && key in config && key in resolved_config) {
-			const enforced = enforced_config[key];
-			const resolved = resolved_config[key];
-
-			if (enforced === true) {
-				if (comparable(config[key]) !== comparable(resolved)) {
-					out.push(path + key);
-				}
-			} else {
-				find_overridden_config(config[key], resolved, enforced, path + key + '.', out);
-			}
-		}
-	}
-	return out;
-}
-
-/**
- * Normalizes a config value for comparison, since Windows paths may use backslashes
- * and differ in casing (e.g. the drive letter) depending on where they came from.
- * @param {any} value
- */
-export function comparable(value) {
-	if (typeof value !== 'string') return value;
-	const normalized = posixify(value);
-	return process.platform === 'win32' ? normalized.toLowerCase() : normalized;
 }

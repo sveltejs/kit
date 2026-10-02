@@ -6,18 +6,15 @@ Before you can deploy your SvelteKit app, you need to _adapt_ it for your deploy
 
 Official adapters exist for a variety of platforms — these are documented on the following pages:
 
-- [`@sveltejs/adapter-cloudflare`](adapter-cloudflare) for Cloudflare Workers and Cloudflare Pages
+- [`@sveltejs/adapter-cloudflare`](adapter-cloudflare) for Cloudflare Workers
 - [`@sveltejs/adapter-netlify`](adapter-netlify) for Netlify
 - [`@sveltejs/adapter-node`](adapter-node) for Node servers
-- [`@sveltejs/adapter-bun`](adapter-bun) for Bun servers
 - [`@sveltejs/adapter-static`](adapter-static) for static site generation (SSG)
 - [`@sveltejs/adapter-vercel`](adapter-vercel) for Vercel
 
 Additional [community-provided adapters](/packages#sveltekit-adapters) exist for other platforms.
 
 ## Using adapters
-
-Run [`npx sv add sveltekit-adapter`](/docs/cli/sveltekit-adapter) to install an adapter and add it to your config.
 
 Your adapter is specified in `vite.config.js`:
 

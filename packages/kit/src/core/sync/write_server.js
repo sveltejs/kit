@@ -1,4 +1,5 @@
 import path from 'node:path';
+import { hash } from '../../utils/hash.js';
 import { resolve_entry } from '../../utils/filesystem.js';
 import { posixify } from '../../utils/os.js';
 import { s } from '../../utils/misc.js';
@@ -11,38 +12,58 @@ import { escape_html } from '../../utils/escape.js';
  *   server_hooks: string | null;
  *   universal_hooks: string | null;
  *   config: import('types').ValidatedConfig;
+ *   has_service_worker: boolean;
  *   template: string;
  * }} opts
  */
-const server_template = ({ config, server_hooks, universal_hooks, template }) => `
-import error from './shared/error-template.js';
+const server_template = ({
+	config,
+	server_hooks,
+	universal_hooks,
+	has_service_worker,
+	template
+}) => `
+import { set_building, set_prerendering } from '$app/env/internal';
+import { set_assets } from '$app/paths/internal/server';
+import { set_fix_stack_trace, set_manifest, set_read_implementation } from '__sveltekit/server';
+import error from '../shared/error-template.js';
 
 export const options = {
 	app_template_contains_nonce: ${template.includes('%sveltekit.nonce%')},
-	csp: ${s(config.csp)},
-	csrf_trusted_origins: ${s(config.csrf.trustedOrigins)},
-	service_worker_options: ${config.serviceWorker.register ? s(config.serviceWorker.options) : 'null'},
+	csp: ${s(config.kit.csp)},
+	csrf_check_origin: ${s(!config.kit.csrf.trustedOrigins.includes('*'))},
+	csrf_trusted_origins: ${s(config.kit.csrf.trustedOrigins)},
+	embedded: ${config.kit.embedded},
+	hash_routing: ${s(config.kit.router.type === 'hash')},
+	hooks: null, // added lazily, via \`get_hooks\`
+	link_header_preload: ${s(config.kit.output.linkHeaderPreload)},
+	paths_origin: ${s(config.kit.paths.origin)},
+	service_worker: ${has_service_worker},
+	service_worker_options: ${config.kit.serviceWorker.register ? s(config.kit.serviceWorker.options) : 'null'},
 	templates: {
 		app: ({ head, body, assets, nonce, env }) => ${s(template)
 			.replace('%sveltekit.head%', '" + head + "')
 			.replace('%sveltekit.body%', '" + body + "')
 			.replace(/%sveltekit\.assets%/g, '" + assets + "')
 			.replace(/%sveltekit\.nonce%/g, '" + nonce + "')
-			.replace(/%sveltekit\.version%/g, escape_html(config.version.name))
+			.replace(/%sveltekit\.version%/g, escape_html(config.kit.version.name))
 			.replace(
 				/%sveltekit\.env\.([^%]+)%/g,
 				(_match, capture) => `" + (env[${s(capture)}] ?? "") + "`
 			)},
 		error
-	}
+	},
+	version: ${s(config.kit.version.name)},
+	version_hash: ${s(hash(config.kit.version.name))}
 };
 
 export async function get_hooks() {
 	let handle;
 	let handleFetch;
 	let handleError;
+	let handleValidationError;
 	let init;
-	${server_hooks ? `({ handle, handleFetch, handleError, init } = await import(${s(server_hooks)}));` : ''}
+	${server_hooks ? `({ handle, handleFetch, handleError, handleValidationError, init } = await import(${s(server_hooks)}));` : ''}
 
 	let reroute;
 	let transport;
@@ -52,11 +73,14 @@ export async function get_hooks() {
 		handle,
 		handleFetch,
 		handleError,
+		handleValidationError,
 		init,
 		reroute,
 		transport
 	};
 }
+
+export { set_assets, set_building, set_fix_stack_trace, set_manifest, set_prerendering, set_read_implementation };
 `;
 
 /**
@@ -66,32 +90,22 @@ export async function get_hooks() {
  * @param {string} root The project root directory
  */
 export function write_server(config, output, root) {
-	const server_hooks_file = resolve_entry(config.files.hooks.server, config.moduleExtensions);
-	const universal_hooks_file = resolve_entry(config.files.hooks.universal, config.moduleExtensions);
+	const server_hooks_file = resolve_entry(config.kit.files.hooks.server);
+	const universal_hooks_file = resolve_entry(config.kit.files.hooks.universal);
 
 	if (!server_hooks_file) {
-		check_spelling(
-			'src/hooks.server',
-			'src/+hooks.server',
-			'Unexpected + prefix',
-			config.moduleExtensions
-		);
-		check_spelling(
-			'src/hooks.server',
-			'src/hook.server',
-			'Missing s suffix',
-			config.moduleExtensions
-		);
+		check_spelling('src/hooks.server', 'src/+hooks.server', 'Unexpected + prefix');
+		check_spelling('src/hooks.server', 'src/hook.server', 'Missing s suffix');
 	}
 
 	if (!universal_hooks_file) {
-		check_spelling('src/hooks', 'src/+hooks', 'Unexpected + prefix', config.moduleExtensions);
-		check_spelling('src/hooks', 'src/hook', 'Missing s suffix', config.moduleExtensions);
+		check_spelling('src/hooks', 'src/+hooks', 'Unexpected + prefix');
+		check_spelling('src/hooks', 'src/hook', 'Missing s suffix');
 	}
 
 	/** @param {string} file */
 	function relative(file) {
-		return posixify(path.relative(output, file));
+		return posixify(path.relative(`${output}/server`, file));
 	}
 
 	write_if_changed(
@@ -104,11 +118,13 @@ export function write_server(config, output, root) {
 	// Contains the stringified version of
 	/** @type {import('types').SSROptions} */
 	write_if_changed(
-		`${output}/server.js`,
+		`${output}/server/internal.js`,
 		server_template({
 			config,
 			server_hooks: server_hooks_file ? relative(server_hooks_file) : null,
 			universal_hooks: universal_hooks_file ? relative(universal_hooks_file) : null,
+			has_service_worker:
+				config.kit.serviceWorker.register && !!resolve_entry(config.kit.files.serviceWorker),
 			template: load_template(root, config)
 		})
 	);
