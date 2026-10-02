@@ -40,6 +40,13 @@ export function write(file, code) {
 
 	try {
 		fs.writeFileSync(tmp, code);
+	} catch (error) {
+		// the existing file is untouched at this point, and stays that way
+		fs.rmSync(tmp, { force: true });
+		throw error;
+	}
+
+	try {
 		fs.renameSync(tmp, file);
 	} catch {
 		// replacing a file that another process has open can fail on Windows
