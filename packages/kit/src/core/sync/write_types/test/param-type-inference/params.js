@@ -1,4 +1,4 @@
-import { defineParams } from '@sveltejs/kit';
+import { defineParams } from '@sveltejs/kit/params';
 import * as v from 'valibot';
 
 export const params = defineParams({

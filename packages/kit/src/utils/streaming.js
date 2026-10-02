@@ -10,26 +10,16 @@ import { noop } from './functions.js';
  */
 export function create_async_iterator() {
 	let resolved = -1;
-	let returned = -1;
 
 	/** @type {PromiseWithResolvers<T>[]} */
 	const deferred = [];
 
 	return {
-		iterate: (transform = (x) => x) => {
-			return {
-				[Symbol.asyncIterator]() {
-					return {
-						next: async () => {
-							const next = deferred[++returned];
-							if (!next) return { value: null, done: true };
-
-							const value = await next.promise;
-							return { value: transform(value), done: false };
-						}
-					};
-				}
-			};
+		async *iterate(transform = (x) => x) {
+			// `deferred` can grow while we iterate, as resolved values may add further promises
+			for (let i = 0; i < deferred.length; i += 1) {
+				yield transform(await deferred[i].promise);
+			}
 		},
 		add: (promise) => {
 			const next = Promise.withResolvers();

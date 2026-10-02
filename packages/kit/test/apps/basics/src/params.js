@@ -1,4 +1,4 @@
-import { defineParams } from '@sveltejs/kit';
+import { defineParams } from '@sveltejs/kit/params';
 
 export const params = defineParams({
 	lowercase: (param) => {
@@ -13,5 +13,6 @@ export const params = defineParams({
 		const value = parseInt(param);
 		if (isNaN(value)) return;
 		return value;
-	}
+	},
+	bigint: (param) => BigInt(param)
 });

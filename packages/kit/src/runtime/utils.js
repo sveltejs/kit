@@ -3,31 +3,53 @@ import { BROWSER } from 'esm-env';
 export const text_encoder = new TextEncoder();
 
 /**
- * Like node's path.relative, but without using node
- * @param {string} from
- * @param {string} to
+ * `ReadableStream.from`, for runtimes that don't support it (as of writing, every Bun release)
+ * @template T
+ * @param {AsyncIterable<T>} iterable
+ * @returns {ReadableStream<T>}
  */
-export function get_relative_path(from, to) {
-	const from_parts = from.split(/[/\\]/);
-	const to_parts = to.split(/[/\\]/);
-	from_parts.pop(); // get dirname
-
-	while (from_parts[0] === to_parts[0]) {
-		from_parts.shift();
-		to_parts.shift();
+export function stream_from_iterable(iterable) {
+	// TODO remove the casts once TypeScript's lib includes `ReadableStream.from`
+	if (/** @type {any} */ (ReadableStream).from) {
+		return /** @type {any} */ (ReadableStream).from(iterable);
 	}
 
-	let i = from_parts.length;
-	while (i--) from_parts[i] = '..';
-
-	return from_parts.concat(to_parts).join('/');
+	const iterator = iterable[Symbol.asyncIterator]();
+	return new ReadableStream({
+		async pull(controller) {
+			const { value, done } = await iterator.next();
+			if (done) controller.close();
+			else controller.enqueue(value);
+		},
+		async cancel(reason) {
+			await iterator.return?.(reason);
+		}
+	});
 }
+
+/**
+ * @param {string} head
+ * @param {AsyncIterable<string>} chunks
+ * @returns {ReadableStream<Uint8Array>} `head` followed by each non-empty chunk, encoded
+ */
+export function stream_text(head, chunks) {
+	return stream_from_iterable(
+		(async function* () {
+			yield text_encoder.encode(head);
+			for await (const chunk of chunks) {
+				if (chunk) yield text_encoder.encode(chunk);
+			}
+		})()
+	);
+}
+export const text_decoder = new TextDecoder();
 
 /**
  * @param {Uint8Array} bytes
  * @returns {string}
  */
 export function base64_encode(bytes) {
+	// TODO replace with `bytes.toBase64()` when we require Node >= 25
 	// Using `Buffer` is faster than iterating
 	if (!BROWSER && globalThis.Buffer) {
 		return globalThis.Buffer.from(bytes).toString('base64');
@@ -47,6 +69,7 @@ export function base64_encode(bytes) {
  * @returns {Uint8Array}
  */
 export function base64_decode(encoded) {
+	// TODO replace with `Uint8Array.fromBase64(encoded)` when we require Node >= 25
 	// Using `Buffer` is faster than iterating
 	if (!BROWSER && globalThis.Buffer) {
 		const buffer = globalThis.Buffer.from(encoded, 'base64');

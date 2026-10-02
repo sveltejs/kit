@@ -1,11 +1,13 @@
+/** @import { ValidatedConfig } from 'types' */
 import { lookup } from '../../../utils/mime.js';
 import fs from 'node:fs';
 import path from 'node:path';
-import { styleText } from 'node:util';
-import { resolve_entry } from '../../../utils/filesystem.js';
+import { resolve_entry, walk } from '../../../utils/filesystem.js';
 import { posixify } from '../../../utils/os.js';
-import { parse_route_id } from '../../../utils/routing.js';
-import { list_files, runtime_directory } from '../../utils.js';
+import { parse_route_id, validate_route_id_params } from '../../../utils/routing.js';
+import { runtime_directory } from '../../utils.js';
+import * as e from '../../../messages/build-errors.js';
+import * as w from '../../../messages/build-warnings.js';
 import { prevent_conflicts } from './conflict.js';
 import { sort_routes } from './sort.js';
 import {
@@ -13,24 +15,27 @@ import {
 	get_page_options
 } from '../../../exports/vite/static_analysis/index.js';
 
+const component_name_pattern = /^\+(?:(page(?:@(.*))?)|(layout(?:@(.*))?)|(error))$/;
+
+const module_name_pattern =
+	/^\+(?:(server)|(page(?:(@[a-zA-Z0-9_-]*))?(\.server)?)|(layout(?:(@[a-zA-Z0-9_-]*))?(\.server)?))$/;
+
 /**
  * Generates the manifest data used for the client-side manifest and types generation.
- * @param {{
- *   config: import('types').ValidatedConfig;
- *   fallback?: string;
- *   cwd: string;
- * }} opts
+ * @param {ValidatedConfig} config
+ * @param {string} root
+ * @param {string} [fallback] Where to look for fallback components
  * @returns {import('types').ManifestData}
  */
-export default function create_manifest_data({
+export default function create_manifest_data(
 	config,
-	fallback = `${runtime_directory}/components`,
-	cwd
-}) {
+	root,
+	fallback = `${runtime_directory}/components`
+) {
 	const assets = create_assets(config);
-	const hooks = create_hooks(config, cwd);
-	const params = resolve_params(config, cwd);
-	const { nodes, routes } = create_routes_and_nodes(cwd, config, fallback);
+	const hooks = create_hooks(config, root);
+	const params = resolve_params(config, root);
+	const { nodes, routes } = create_routes_and_nodes(root, config, fallback);
 
 	return {
 		assets,
@@ -42,13 +47,31 @@ export default function create_manifest_data({
 }
 
 /**
- * Whether the router can match this route. `manifest_data.routes` also contains an entry for
- * every other directory in `src/routes`, so that layouts and params can be resolved, and those
- * ids never reach `event.route.id`.
+ * Whether this route has a `+page`. Independent of `is_endpoint_route` — a route can be both.
  * @param {import('types').RouteData} route
+ * @returns {boolean}
+ */
+export function is_page_route(route) {
+	return !!route.page;
+}
+
+/**
+ * Whether this route has a `+server`. Independent of `is_page_route` — a route can be both.
+ * @param {import('types').RouteData} route
+ * @returns {boolean}
+ */
+export function is_endpoint_route(route) {
+	return !!route.endpoint;
+}
+
+/**
+ * Whether the router can match this route. `manifest_data.routes` also contains entries for
+ * directories with layouts or errors, which never reach `event.route.id`.
+ * @param {import('types').RouteData} route
+ * @returns {boolean}
  */
 export function is_app_route(route) {
-	return !!(route.page || route.endpoint);
+	return is_page_route(route) || is_endpoint_route(route);
 }
 
 /**
@@ -56,9 +79,10 @@ export function is_app_route(route) {
  * @param {import('types').ValidatedConfig} config
  */
 export function create_assets(config) {
-	return list_files(config.kit.files.assets).map((file) => ({
+	if (!fs.existsSync(config.files.assets)) return [];
+
+	return [...walk(config.files.assets)].map((file) => ({
 		file,
-		size: fs.statSync(path.resolve(config.kit.files.assets, file)).size,
 		type: lookup(file) || null
 	}));
 }
@@ -68,9 +92,9 @@ export function create_assets(config) {
  * @param {string} cwd
  */
 function create_hooks(config, cwd) {
-	const client = resolve_entry(config.kit.files.hooks.client);
-	const server = resolve_entry(config.kit.files.hooks.server);
-	const universal = resolve_entry(config.kit.files.hooks.universal);
+	const client = resolve_entry(config.files.hooks.client, config.moduleExtensions);
+	const server = resolve_entry(config.files.hooks.server, config.moduleExtensions);
+	const universal = resolve_entry(config.files.hooks.universal, config.moduleExtensions);
 
 	return {
 		client: client && posixify(path.relative(cwd, client)),
@@ -84,7 +108,7 @@ function create_hooks(config, cwd) {
  * @param {string} cwd
  */
 function resolve_params(config, cwd) {
-	const params_file = resolve_entry(config.kit.files.params);
+	const params_file = resolve_entry(config.files.params, config.moduleExtensions);
 	return params_file ? posixify(path.relative(cwd, params_file)) : null;
 }
 
@@ -97,15 +121,15 @@ function create_routes_and_nodes(cwd, config, fallback) {
 	/** @type {import('types').RouteData[]} */
 	let routes = [];
 
-	const routes_base = posixify(path.relative(cwd, config.kit.files.routes));
+	const routes_base = posixify(path.relative(cwd, config.files.routes));
 
-	const valid_extensions = [...config.extensions, ...config.kit.moduleExtensions];
+	const valid_extensions = [...config.extensions, ...config.moduleExtensions];
 
 	/** @type {import('types').PageNode[]} */
 	const nodes = [];
 
 	// create route data by processing files in `src/routes`
-	if (fs.existsSync(config.kit.files.routes)) {
+	if (fs.existsSync(config.files.routes)) {
 		/**
 		 * @param {number} depth
 		 * @param {string} id
@@ -115,53 +139,52 @@ function create_routes_and_nodes(cwd, config, fallback) {
 		const walk = (depth, id, segment, parent) => {
 			const unescaped = id.replace(/\[([ux])\+([^\]]+)\]/gi, (match, type, code) => {
 				if (match !== match.toLowerCase()) {
-					throw new Error(`Character escape sequence in ${id} must be lowercase`);
+					e.route_escape_uppercase({ id });
 				}
 
 				if (!/[0-9a-f]+/.test(code)) {
-					throw new Error(`Invalid character escape sequence in ${id}`);
+					e.route_escape_invalid({ id });
 				}
 
 				if (type === 'x') {
 					if (code.length !== 2) {
-						throw new Error(`Hexadecimal escape sequence in ${id} must be two characters`);
+						e.route_escape_hex_length({ id });
 					}
 
 					return String.fromCharCode(parseInt(code, 16));
 				} else {
 					if (code.length < 4 || code.length > 6) {
-						throw new Error(
-							`Unicode escape sequence in ${id} must be between four and six characters`
-						);
+						e.route_escape_unicode_length({ id });
 					}
 
-					return String.fromCharCode(parseInt(code, 16));
+					return String.fromCodePoint(parseInt(code, 16));
 				}
 			});
 
 			if (/\]\[/.test(unescaped)) {
-				throw new Error(`Invalid route ${id} — parameters must be separated`);
+				e.route_params_adjacent({ id });
 			}
 
 			if (count_occurrences('[', id) !== count_occurrences(']', id)) {
-				throw new Error(`Invalid route ${id} — brackets are unbalanced`);
+				e.route_unbalanced_brackets({ id });
 			}
 
 			if (/#/.test(segment)) {
 				// Vite will barf on files with # in them
-				throw new Error(`Route ${id} should be renamed to ${id.replace(/#/g, '[x+23]')}`);
+				e.route_hash_character({ id, suggestion: id.replace(/#/g, '[x+23]') });
 			}
 
 			if (/\[\.\.\.[\w-]+\]\/\[\[/.test(id)) {
-				throw new Error(
-					`Invalid route ${id} — an [[optional]] route segment cannot follow a [...rest] route segment`
-				);
+				e.route_optional_after_rest({ id });
 			}
 
 			if (/\[\[\.\.\./.test(id)) {
-				throw new Error(
-					`Invalid route ${id} — a rest route segment is always optional, remove the outer square brackets`
-				);
+				e.route_optional_rest({ id });
+			}
+
+			const invalid_param = validate_route_id_params(id);
+			if (invalid_param !== undefined) {
+				e.route_param_invalid({ param: invalid_param, id });
 			}
 
 			const { pattern, params } = parse_route_id(id);
@@ -191,18 +214,18 @@ function create_routes_and_nodes(cwd, config, fallback) {
 
 			const dir = path.join(cwd, routes_base, id);
 
-			// We can't use withFileTypes because of a NodeJs bug which returns wrong results
-			// with isDirectory() in case of symlinks: https://github.com/nodejs/node/issues/30646
 			// We sort the entries because `readdirSync` order is not guaranteed and differs
 			// between runtimes (e.g. Node returns entries alphabetically, Bun in directory
 			// order). Node indices are assigned from this traversal order, so without sorting
 			// the SSR and client manifests can disagree, causing hydration mismatches.
 			const files = fs
-				.readdirSync(dir)
-				.sort()
-				.map((name) => ({
-					is_dir: fs.statSync(path.join(dir, name)).isDirectory(),
-					name
+				.readdirSync(dir, { withFileTypes: true })
+				.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0))
+				.map((entry) => ({
+					is_dir: entry.isSymbolicLink()
+						? fs.statSync(path.join(dir, entry.name)).isDirectory()
+						: entry.isDirectory(),
+					name: entry.name
 				}));
 
 			// process files first
@@ -214,22 +237,27 @@ function create_routes_and_nodes(cwd, config, fallback) {
 
 				if (!file.name.startsWith('+')) {
 					const name = file.name.slice(0, -ext.length);
+					const pattern = config.extensions.includes(ext)
+						? component_name_pattern
+						: module_name_pattern;
+
 					// check if it is a valid route filename but missing the + prefix
-					const typo =
-						/^(?:(page(?:@(.*))?)|(layout(?:@(.*))?)|(error))$/.test(name) ||
-						/^(?:(server)|(page(?:(@[a-zA-Z0-9_-]*))?(\.server)?)|(layout(?:(@[a-zA-Z0-9_-]*))?(\.server)?))$/.test(
-							name
-						);
-					if (typo) {
-						console.log(
-							styleText(
-								['bold', 'yellow'],
-								`Missing route file prefix. Did you mean +${file.name}?` +
-									` at ${path.join(dir, file.name)}`
-							)
-						);
+					if (pattern.test(`+${name}`)) {
+						w.route_file_prefix_missing({
+							corrected: `+${file.name}`,
+							file: path.join(dir, file.name)
+						});
 					}
 
+					continue;
+				}
+
+				// allow e.g. `+page.stories.svelte` or `+server.test.ts`
+				if (
+					file.name.includes('.test.') ||
+					file.name.includes('.spec.') ||
+					file.name.includes('.stories.')
+				) {
 					continue;
 				}
 
@@ -238,13 +266,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 					const ext = valid_extensions.find((ext) => name.endsWith(ext));
 					if (ext) name = name.slice(0, -ext.length);
 
-					const valid =
-						/^\+(?:(page(?:@(.*))?)|(layout(?:@(.*))?)|(error))$/.test(name) ||
-						/^\+(?:(server)|(page(?:(@[a-zA-Z0-9_-]*))?(\.server)?)|(layout(?:(@[a-zA-Z0-9_-]*))?(\.server)?))$/.test(
-							name
-						);
-
-					if (valid) continue;
+					if (component_name_pattern.test(name) || module_name_pattern.test(name)) continue;
 				}
 
 				const project_relative = posixify(path.relative(cwd, path.join(dir, file.name)));
@@ -253,25 +275,25 @@ function create_routes_and_nodes(cwd, config, fallback) {
 					project_relative,
 					file.name,
 					config.extensions,
-					config.kit.moduleExtensions
+					config.moduleExtensions
 				);
 
-				if (config.kit.router.type === 'hash' && item.kind === 'server') {
-					throw new Error(
-						`Cannot use server-only files in an app with \`router.type === 'hash': ${project_relative}`
-					);
+				if (config.router.type === 'hash' && item.kind === 'server') {
+					e.route_server_file_hash_router({ file: project_relative });
 				}
 
 				/**
 				 * @param {string} type
 				 * @param {string} existing_file
+				 * @returns {never}
 				 */
-				function duplicate_files_error(type, existing_file) {
-					return new Error(
-						`Multiple ${type} files found in ${routes_base}${route.id} : ${path.basename(
-							existing_file
-						)} and ${file.name}`
-					);
+				function duplicate_files(type, existing_file) {
+					e.route_duplicate_files({
+						type,
+						directory: `${routes_base}${route.id}`,
+						existing: path.basename(existing_file),
+						file: file.name
+					});
 				}
 
 				if (item.kind === 'component') {
@@ -284,7 +306,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 						if (!route.layout) {
 							route.layout = { depth, child_pages: [] };
 						} else if (route.layout.component) {
-							throw duplicate_files_error('layout component', route.layout.component);
+							duplicate_files('layout component', route.layout.component);
 						}
 
 						route.layout.component = project_relative;
@@ -293,7 +315,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 						if (!route.leaf) {
 							route.leaf = { depth };
 						} else if (route.leaf.component) {
-							throw duplicate_files_error('page component', route.leaf.component);
+							duplicate_files('page component', route.leaf.component);
 						}
 
 						route.leaf.component = project_relative;
@@ -303,7 +325,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 					if (!route.layout) {
 						route.layout = { depth, child_pages: [] };
 					} else if (route.layout[item.kind]) {
-						throw duplicate_files_error(
+						duplicate_files(
 							item.kind + ' layout module',
 							/** @type {string} */ (route.layout[item.kind])
 						);
@@ -314,7 +336,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 					if (!route.leaf) {
 						route.leaf = { depth };
 					} else if (route.leaf[item.kind]) {
-						throw duplicate_files_error(
+						duplicate_files(
 							item.kind + ' page module',
 							/** @type {string} */ (route.leaf[item.kind])
 						);
@@ -323,7 +345,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 					route.leaf[item.kind] = project_relative;
 				} else {
 					if (route.endpoint) {
-						throw duplicate_files_error('endpoint', route.endpoint.file);
+						duplicate_files('endpoint', route.endpoint.file);
 					}
 
 					route.endpoint = {
@@ -346,9 +368,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 		if (routes.length === 1) {
 			const root = routes[0];
 			if (!root.leaf && !root.error && !root.layout && !root.endpoint) {
-				throw new Error(
-					'No routes found. If you are using a custom src/routes directory, make sure it is specified in your SvelteKit Vite plugin options'
-				);
+				e.routes_not_found();
 			}
 		}
 	} else {
@@ -446,7 +466,10 @@ function create_routes_and_nodes(cwd, config, fallback) {
 		}
 
 		if (parent_id !== undefined) {
-			throw new Error(`${current_node.component} references missing segment "${parent_id}"`);
+			e.route_layout_segment_missing({
+				file: /** @type {string} */ (current_node.component),
+				segment: parent_id
+			});
 		}
 	}
 
@@ -483,9 +506,10 @@ function create_routes_and_nodes(cwd, config, fallback) {
 			if (page.page_options?.prerender || route.endpoint.page_options?.prerender) {
 				const endpoint_file = route.endpoint.file.split('/').pop();
 
-				throw new Error(
-					`Cannot prerender a route (${route.id}) with both a \`+page.svelte\` and a \`${endpoint_file}\``
-				);
+				e.route_prerender_page_and_endpoint({
+					id: route.id,
+					file: /** @type {string} */ (endpoint_file)
+				});
 			}
 		}
 	}
@@ -508,10 +532,9 @@ function analyze(project_relative, file, component_extensions, module_extensions
 	const component_extension = component_extensions.find((ext) => file.endsWith(ext));
 	if (component_extension) {
 		const name = file.slice(0, -component_extension.length);
-		const pattern = /^\+(?:(page(?:@(.*))?)|(layout(?:@(.*))?)|(error))$/;
-		const match = pattern.exec(name);
+		const match = component_name_pattern.exec(name);
 		if (!match) {
-			throw new Error(`Files prefixed with + are reserved (saw ${project_relative})`);
+			e.route_file_reserved({ file: project_relative });
 		}
 
 		return {
@@ -526,16 +549,15 @@ function analyze(project_relative, file, component_extensions, module_extensions
 	const module_extension = module_extensions.find((ext) => file.endsWith(ext));
 	if (module_extension) {
 		const name = file.slice(0, -module_extension.length);
-		const pattern =
-			/^\+(?:(server)|(page(?:(@[a-zA-Z0-9_-]*))?(\.server)?)|(layout(?:(@[a-zA-Z0-9_-]*))?(\.server)?))$/;
-		const match = pattern.exec(name);
+		const match = module_name_pattern.exec(name);
 		if (!match) {
-			throw new Error(`Files prefixed with + are reserved (saw ${project_relative})`);
+			e.route_file_reserved({ file: project_relative });
 		} else if (match[3] || match[6]) {
-			throw new Error(
-				// prettier-ignore
-				`Only Svelte files can reference named layouts. Remove '${match[3] || match[6]}' from ${file} (at ${project_relative})`
-			);
+			e.route_named_layout_in_module({
+				layout: match[3] || match[6],
+				name: file,
+				file: project_relative
+			});
 		}
 
 		const kind = match[1] || match[4] || match[7] ? 'server' : 'universal';
@@ -547,7 +569,7 @@ function analyze(project_relative, file, component_extensions, module_extensions
 		};
 	}
 
-	throw new Error(`Files and directories prefixed with + are reserved (saw ${project_relative})`);
+	e.route_file_reserved({ file: project_relative });
 }
 
 /**

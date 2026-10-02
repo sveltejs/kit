@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { styleText } from 'node:util';
-import { mkdirp, resolve_entry } from '../../utils/filesystem.js';
+import { resolve_entry } from '../../utils/filesystem.js';
+import * as w from '../../messages/build-warnings.js';
 
 /** @type {Map<string, string>} */
 const previous_contents = new Map();
@@ -22,7 +22,7 @@ export function write_if_changed(file, code) {
  */
 export function write(file, code) {
 	previous_contents.set(file, code);
-	mkdirp(path.dirname(file));
+	fs.mkdirSync(path.dirname(file), { recursive: true });
 	fs.writeFileSync(file, code);
 }
 
@@ -74,17 +74,13 @@ export function dedent(strings, ...values) {
  * @param {string} original
  * @param {string} typo The common misspelling to check for
  * @param {string} description What was wrong with the filename
+ * @param {string[]} extensions the extensions a module may have
  */
-export function check_spelling(original, typo, description) {
-	const misspelled = resolve_entry(typo);
+export function check_spelling(original, typo, description, extensions) {
+	const misspelled = resolve_entry(typo, extensions);
 	if (!misspelled) return;
 
 	const corrected = path.basename(misspelled).replace(path.basename(typo), path.basename(original));
 
-	console.warn(
-		styleText(
-			['bold', 'yellow'],
-			`${description}. Did you mean ${corrected}?` + ` at ${path.resolve(misspelled)}`
-		)
-	);
+	w.file_name_misspelled({ description, corrected, file: path.resolve(misspelled) });
 }

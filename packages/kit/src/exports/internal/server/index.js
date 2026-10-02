@@ -32,4 +32,6 @@ export {
 
 export { init_remote_functions } from './remote-functions.js';
 
+export { init_tracing, otel, record_span } from './telemetry.js';
+
 export * from '../shared.js';

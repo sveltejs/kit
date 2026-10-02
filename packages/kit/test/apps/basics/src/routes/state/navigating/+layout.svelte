@@ -6,6 +6,7 @@
 	<a href="/state/navigating/a">a</a>
 	<a href="/state/navigating/b">b</a>
 	<a href="/state/navigating/c">c</a>
+	<a href="#hash">hash</a>
 </nav>
 
 <div id="nav-status">

@@ -1,1 +1,1 @@
-export * from '#app/paths';
+export { asset, resolve, match } from '#app/paths';

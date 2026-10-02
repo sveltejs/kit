@@ -1,4 +1,5 @@
 import process from 'node:process';
+import { env_prefix } from '#@sveltejs/adapter-node';
 
 const expected = new Set([
 	'SOCKET_PATH',
@@ -17,8 +18,6 @@ const expected = new Set([
 ]);
 
 const expected_unprefixed = new Set(['LISTEN_PID', 'LISTEN_FDS']);
-
-export const env_prefix = ENV_PREFIX;
 
 if (env_prefix) {
 	for (const name in process.env) {

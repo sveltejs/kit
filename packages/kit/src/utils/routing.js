@@ -1,4 +1,5 @@
-import { BROWSER } from 'esm-env';
+/** @import { ParamMatcher, ParamValue } from '@sveltejs/kit/params' */
+import * as e from '../messages/shared-errors.js';
 import { escape_for_regexp } from './regex.js';
 
 const param_pattern = /^(\[)?(\.\.\.)?([\w-]+)(?:=([\w-]+))?(\])?$/;
@@ -11,8 +12,8 @@ const escape_sequence_pattern = /\[([ux])\+([^\]]+)\]/;
  * Decodes the codepoints of an `[x+nn]` or `[u+nnnn]` escape sequence
  * @param {string} code the sequence without its `[x+`/`[u+` prefix or `]` suffix
  */
-function decode_escape_sequence(code) {
-	return String.fromCharCode(...code.split('-').map((codepoint) => parseInt(codepoint, 16)));
+export function decode_escape_sequence(code) {
+	return String.fromCodePoint(...code.split('-').map((codepoint) => parseInt(codepoint, 16)));
 }
 
 /**
@@ -20,7 +21,7 @@ function decode_escape_sequence(code) {
  * escape sequence still matches the pattern `parse_route_id` builds for it
  * @param {string} str
  */
-function encode_pathname_chars(str) {
+export function encode_pathname_chars(str) {
 	return str.replace(
 		/[%/?#]/g,
 		(char) => '%' + char.charCodeAt(0).toString(16).toUpperCase().padStart(2, '0')
@@ -78,15 +79,9 @@ export function parse_route_id(id) {
 											return escape(decode_escape_sequence(content.slice(2)));
 										}
 
-										// We know the match cannot be null in the browser because manifest generation
-										// would have invoked this during build and failed if we hit an invalid
-										// param/matcher name with non-alphanumeric character.
+										// We know the match cannot be null because manifest generation checks
+										// each route ID with `validate_route_id_params` first
 										const match = /** @type {RegExpExecArray} */ (param_pattern.exec(content));
-										if (!BROWSER && !match) {
-											throw new Error(
-												`Invalid param: ${content}. Params and matcher names can only have underscores, hyphens, and alphanumeric characters.`
-											);
-										}
 
 										const [, is_optional, is_rest, name, matcher] = match;
 										// It's assumed that the following invalid route id cases are already checked
@@ -115,15 +110,27 @@ export function parse_route_id(id) {
 	return { pattern, params };
 }
 
-const optional_param_regex = /\/\[\[[\w-]+?(?:=[\w-]+)?\]\]/;
-
 /**
- * Removes optional params from a route ID.
+ * Returns the first param in a route ID whose name or matcher contains characters other than
+ * underscores, hyphens and alphanumeric characters, mirroring the segments `parse_route_id` parses
  * @param {string} id
- * @returns The route id with optional params removed
+ * @returns {string | undefined}
  */
-export function remove_optional_params(id) {
-	return id.replace(optional_param_regex, '');
+export function validate_route_id_params(id) {
+	if (id === '/' || root_group_pattern.test(id)) return;
+
+	for (const segment of get_route_segments(id)) {
+		if (/^\[\.\.\.([\w-]+)(?:=([\w-]+))?\]$/.test(segment)) continue;
+		if (/^\[\[([\w-]+)(?:=([\w-]+))?\]\]$/.test(segment)) continue;
+		if (!segment) continue;
+
+		const parts = segment.split(/\[(.+?)\](?!\])/);
+		for (let i = 1; i < parts.length; i += 2) {
+			const content = parts[i];
+			if (content.startsWith('x+') || content.startsWith('u+')) continue;
+			if (!param_pattern.test(content)) return content;
+		}
+	}
 }
 
 /**
@@ -146,7 +153,7 @@ export function get_route_segments(route) {
 }
 
 /**
- * @param {import('@sveltejs/kit').ParamMatcher} matcher
+ * @param {ParamMatcher} matcher
  * @param {string} value
  * @returns {{ success: true, value: any } | { success: false }}
  */
@@ -154,7 +161,7 @@ function run_matcher(matcher, value) {
 	const result = matcher['~standard'].validate(value);
 
 	if (result instanceof Promise) {
-		throw new Error('Async param matchers are not supported');
+		e.param_matcher_async();
 	}
 
 	if (result.issues) {
@@ -169,7 +176,7 @@ function run_matcher(matcher, value) {
 		typeof parsed !== 'boolean' &&
 		typeof parsed !== 'bigint'
 	) {
-		throw new Error('Param matcher must return a string, number, boolean, or bigint');
+		e.param_matcher_result_invalid();
 	}
 
 	return { success: true, value: parsed };
@@ -178,7 +185,7 @@ function run_matcher(matcher, value) {
 /**
  * @param {RegExpMatchArray} match
  * @param {import('types').RouteParam[]} params
- * @param {Record<string, import('@sveltejs/kit').ParamMatcher>} matchers
+ * @param {Record<string, ParamMatcher>} matchers
  */
 export function exec(match, params, matchers) {
 	/** @type {Record<string, any>} */
@@ -280,7 +287,7 @@ const basic_param_pattern = /\[(\[)?(\.\.\.)?([\w-]+?)(?:=([\w-]+))?\]\]?/g;
 
 // escape sequences are expanded in the same pass as the params, so that a param
 // value containing `[x+2f]` is not itself expanded
-const segment_pattern = new RegExp(
+export const segment_pattern = new RegExp(
 	`${escape_sequence_pattern.source}|${basic_param_pattern.source}`,
 	'g'
 );
@@ -298,7 +305,7 @@ const segment_pattern = new RegExp(
  * ); // `/blog/hello-world/something/else`
  * ```
  * @param {string} id
- * @param {Record<string, import('@sveltejs/kit').ParamValue | undefined>} params
+ * @param {Record<string, ParamValue | undefined>} params
  * @returns {string}
  */
 export function resolve_route(id, params) {
@@ -317,14 +324,12 @@ export function resolve_route(id, params) {
 					if (value === undefined || value === '') {
 						if (optional) return '';
 						if (rest && value !== undefined) return '';
-						throw new Error(`Missing parameter '${name}' in route ${id}`);
+						e.route_param_missing({ name, id });
 					}
 
 					if (typeof value === 'string') {
 						if (value.startsWith('/') || value.endsWith('/')) {
-							throw new Error(
-								`Parameter '${name}' in route ${id} cannot start or end with a slash -- this would cause an invalid route like foo//bar`
-							);
+							e.route_param_slash({ name, id });
 						}
 
 						return value;
@@ -338,7 +343,7 @@ export function resolve_route(id, params) {
 						return String(value);
 					}
 
-					throw new Error('Parameter values must be a string, number, boolean, or bigint');
+					e.route_param_value_invalid({ name, id });
 				})
 			)
 			.filter(Boolean)
@@ -360,7 +365,7 @@ export function has_server_load(node) {
  * @template {{pattern: RegExp, params: import('types').RouteParam[]}} Route
  * @param {string} path - The decoded pathname to match
  * @param {Route[]} routes
- * @param {Record<string, import('@sveltejs/kit').ParamMatcher>} matchers
+ * @param {Record<string, ParamMatcher>} matchers
  * @returns {{ route: Route, params: Record<string, any> } | null}
  */
 export function find_route(path, routes, matchers) {

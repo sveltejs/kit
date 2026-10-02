@@ -6,8 +6,7 @@
 		"dev": "vite dev",
 		"build": "vite build",
 		"preview": "vite preview",
-		"prepare": "svelte-kit sync",
-		"check": "svelte-kit sync && tsc && svelte-check",
+		"check": "svelte-kit sync && node node_modules/@typescript/native/bin/tsc && svelte-check --tsgo --incremental",
 		"test": "pnpm test:dev && pnpm test:build",
 		"test:dev": "DEV=true playwright test",
 		"test:build": "playwright test"
@@ -17,6 +16,7 @@
 		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"svelte": "catalog:",
 		"svelte-check": "catalog:",
+		"@typescript/native": "catalog:",
 		"typescript": "catalog:",
 		"vite": "catalog:"
 	},

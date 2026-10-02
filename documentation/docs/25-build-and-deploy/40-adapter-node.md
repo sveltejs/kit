@@ -4,9 +4,11 @@ title: Node servers
 
 To generate a standalone Node server, use [`adapter-node`](https://github.com/sveltejs/kit/tree/main/packages/adapter-node).
 
+A quick way to get started is by deploying a project using SvelteKit's [official Railway template](https://railway.com/deploy/svelte-kit).
+
 ## Usage
 
-Install with `npm i -D @sveltejs/adapter-node`, then add the adapter to your `vite.config.js`:
+Run [`npx sv add sveltekit-adapter="adapter:node"`](/docs/cli/sveltekit-adapter), or install with `npm i -D @sveltejs/adapter-node` and add the adapter to your `vite.config.js`:
 
 ```js
 // @errors: 2307 2554
@@ -36,6 +38,8 @@ node build
 
 Development dependencies will be bundled into your app using [Rolldown](https://rolldown.rs/). To control whether a given package is bundled or externalised, place it in `devDependencies` or `dependencies` respectively in your `package.json`.
 
+Client assets and prerendered output are served from a list of files recorded during the build.
+
 ### Compressing responses
 
 You will typically want to compress responses coming from the server. If you're already deploying your server behind a reverse proxy for SSL or load balancing, it typically results in better performance to also handle compression at that layer since Node.js is single-threaded.
@@ -46,19 +50,7 @@ However, if you're building a [custom server](#Custom-server) and do want to add
 
 In `dev` and `preview`, SvelteKit will read environment variables from your `.env` file (or `.env.local`, or `.env.[mode]`, [as determined by Vite](https://vitejs.dev/guide/env-and-mode.html#env-files).)
 
-In production, `.env` files are _not_ automatically loaded. To do so, install `dotenv` in your project...
-
-```sh
-npm install dotenv
-```
-
-...and invoke it before running the built app:
-
-```sh
-node +++-r dotenv/config+++ build
-```
-
-If you use Node.js v20.6+, you can use the [`--env-file`](https://nodejs.org/en/learn/command-line/how-to-read-environment-variables-from-nodejs) flag instead:
+In production, `.env` files are _not_ automatically loaded. To do so, use the [`--env-file`](https://nodejs.org/en/learn/command-line/how-to-read-environment-variables-from-nodejs) flag when running the built app:
 
 ```sh
 node +++--env-file=.env+++ build
@@ -117,7 +109,7 @@ PROTOCOL_HEADER=x-forwarded-proto HOST_HEADER=x-forwarded-host node build
 
 If `adapter-node` can't correctly determine the URL of your deployment, you may experience this error when using [form actions](form-actions):
 
-> [!NOTE] Cross-site POST form submissions are forbidden
+> Cross-site POST form submissions are forbidden
 
 ### `ADDRESS_HEADER` and `XFF_DEPTH`
 
@@ -192,7 +184,7 @@ The directory to build the server to. It defaults to `build` — i.e. `node buil
 
 ### precompress
 
-Enables precompressing using gzip and brotli for assets and prerendered pages. It defaults to `true`.
+Generates `.br` and `.gz` variants of client and prerendered assets during the build. The server negotiates `Accept-Encoding` per request, preferring brotli over gzip, and each variant carries its own ETag. It defaults to `true`.
 
 ### envPrefix
 
@@ -266,7 +258,7 @@ WantedBy=sockets.target
 
 ## Custom server
 
-The adapter creates two files in your build directory — `index.js` and `handler.js`. Running `index.js` — e.g. `node build`, if you use the default build directory — will start a server on the configured port.
+The build directory contains two entry points, `index.js` and `handler.js`. Running `index.js` — e.g. `node build`, if you use the default build directory — will start a server on the configured port.
 
 Alternatively, you can import the `handler.js` file, which exports a handler suitable for use with [Express](https://github.com/expressjs/express), [Connect](https://github.com/senchalabs/connect) or [Polka](https://github.com/lukeed/polka) (or even just the built-in [`http.createServer`](https://nodejs.org/dist/latest/docs/api/http.html#httpcreateserveroptions-requestlistener)) and set up your own server:
 

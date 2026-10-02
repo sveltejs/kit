@@ -5,7 +5,7 @@ export const add = query('unchecked', ({ a, b }) => a + b);
 
 /**
  * The mutable `count`/`should_fail_flaky` state is stored per browser session
- * (keyed by the `count_session` cookie set in `hooks.server.js`) so that tests
+ * (keyed by the `session` cookie set in `hooks.server.js`) so that tests
  * running in parallel against the same dev/preview server — e.g. `test.js` and
  * `client.test.js` on different Playwright workers — don't clobber each other's
  * in-memory state. Each Playwright test gets a fresh browser context, and thus
@@ -17,7 +17,7 @@ const sessions = new Map();
 
 /** @returns {SessionState} */
 function session() {
-	const id = getRequestEvent().cookies.get('count_session') ?? 'default';
+	const id = getRequestEvent().cookies.get('session') ?? 'default';
 	let state = sessions.get(id);
 	if (!state) {
 		state = { count: 0, should_fail_flaky: false };

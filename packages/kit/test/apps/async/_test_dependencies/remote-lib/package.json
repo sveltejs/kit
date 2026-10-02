@@ -4,5 +4,8 @@
 	"private": true,
 	"type": "module",
 	"main": "index.js",
-	"svelte": "./index.js"
+	"svelte": "./index.js",
+	"peerDependencies": {
+		"@sveltejs/kit": "*"
+	}
 }

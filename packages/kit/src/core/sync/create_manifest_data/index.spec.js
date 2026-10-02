@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { assert, expect, test, vi } from 'vitest';
+import { expect, test, vi } from 'vitest';
 import create_manifest_data from './index.js';
 import { sort_routes } from './sort.js';
 import { validate_config } from '../../config/index.js';
@@ -9,20 +9,16 @@ const cwd = path.join(import.meta.dirname, 'test');
 
 /**
  * @param {string} dir
- * @param {import('@sveltejs/kit').Config} config
+ * @param {import('@sveltejs/kit/vite').Config} config
  */
 const create = (dir, config = {}) => {
 	const initial = validate_config(config);
 
-	initial.kit.files.assets = path.resolve(cwd, 'static');
-	initial.kit.files.params = path.resolve(cwd, 'params');
-	initial.kit.files.routes = path.resolve(cwd, dir);
+	initial.files.assets = path.resolve(cwd, 'static');
+	initial.files.params = path.resolve(cwd, 'params');
+	initial.files.routes = path.resolve(cwd, dir);
 
-	return create_manifest_data({
-		config: /** @type {import('types').ValidatedConfig} */ (initial),
-		fallback: cwd,
-		cwd
-	});
+	return create_manifest_data(initial, cwd, cwd);
 };
 
 const default_layout = {
@@ -35,8 +31,7 @@ const default_error = {
 
 /** @param {import('types').PageNode} node */
 function simplify_node(node) {
-	/** @type {import('types').PageNode} */
-	const simplified = {};
+	const simplified = /** @type {import('types').PageNode} */ ({});
 
 	if (node.component) simplified.component = node.component;
 	if (node.universal) simplified.universal = node.universal;
@@ -208,6 +203,7 @@ test('succeeds when routes does not exist', () => {
 test('encodes invalid characters', () => {
 	const { nodes, routes } = create('samples/encoding');
 
+	const emoji = { component: 'samples/encoding/[u+1f600]/+page.svelte' };
 	const quote = { component: 'samples/encoding/[x+22]/+page.svelte' };
 	const hash = { component: 'samples/encoding/[x+23]/+page.svelte' };
 	const question_mark = { component: 'samples/encoding/[x+3f]/+page.svelte' };
@@ -217,6 +213,7 @@ test('encodes invalid characters', () => {
 	expect(nodes.map(simplify_node)).toEqual([
 		default_layout,
 		default_error,
+		emoji,
 		quote,
 		hash,
 		question_mark,
@@ -225,8 +222,8 @@ test('encodes invalid characters', () => {
 	]);
 
 	expect(routes.map((p) => p.pattern.toString())).toEqual(
-		[/^\/$/, /^\/\]\/?$/, /^\/\[\/?$/, /^\/%3[Ff]\/?$/, /^\/%23\/?$/, /^\/"\/?$/].map((pattern) =>
-			pattern.toString()
+		[/^\/$/, /^\/\]\/?$/, /^\/\[\/?$/, /^\/%3[Ff]\/?$/, /^\/%23\/?$/, /^\/"\/?$/, /^\/😀\/?$/].map(
+			(pattern) => pattern.toString()
 		)
 	);
 });
@@ -636,9 +633,78 @@ test('allows multiple slugs', () => {
 });
 
 test('fails if dynamic params are not separated', () => {
-	assert.throws(() => {
-		create('samples/invalid-params');
-	}, /Invalid route \/\[foo\]\[bar\] — parameters must be separated/);
+	expect(() => create('samples/invalid-params')).toThrowKitError('route_params_adjacent', {
+		contains: ['/[foo][bar]']
+	});
+});
+
+/**
+ * Creates a routes directory containing the given files, which are deleted afterwards
+ * @param {string[]} files
+ * @param {(dir: string) => void} fn
+ */
+function with_routes(files, fn) {
+	const dir = fs.mkdtempSync(path.join(cwd, 'tmp-'));
+
+	try {
+		for (const file of files) {
+			fs.mkdirSync(path.dirname(path.join(dir, file)), { recursive: true });
+			fs.writeFileSync(path.join(dir, file), '');
+		}
+
+		fn(path.relative(cwd, dir));
+	} finally {
+		fs.rmSync(dir, { recursive: true, force: true });
+	}
+}
+
+test.each(
+	/** @type {Array<[string, string, string[]]>} */ ([
+		['[X+3F]/+page.svelte', 'route_escape_uppercase', ['/[X+3F]']],
+		['[x+zz]/+page.svelte', 'route_escape_invalid', ['/[x+zz]']],
+		['[x+3f3]/+page.svelte', 'route_escape_hex_length', ['/[x+3f3]']],
+		['[u+3f]/+page.svelte', 'route_escape_unicode_length', ['/[u+3f]']],
+		['[foo/+page.svelte', 'route_unbalanced_brackets', ['/[foo']],
+		// the suggested name is computed from the route ID
+		['a#b/+page.svelte', 'route_hash_character', ['/a#b', '/a[x+23]b']],
+		[
+			'[...rest]/[[optional]]/+page.svelte',
+			'route_optional_after_rest',
+			['/[...rest]/[[optional]]']
+		],
+		['[[...rest]]/+page.svelte', 'route_optional_rest', ['/[[...rest]]']],
+		['[a.b]/+page.svelte', 'route_param_invalid', ['a.b', '/[a.b]']],
+		['+foo.svelte', 'route_file_reserved', ['DIR/+foo.svelte']],
+		['+foo.js', 'route_file_reserved', ['DIR/+foo.js']],
+		['+page@foo.js', 'route_named_layout_in_module', ['`@foo`', '+page@foo.js', 'DIR/+page@foo.js']]
+	])
+)('rejects invalid route syntax in %s with %s', (file, code, contains) => {
+	with_routes([file], (dir) => {
+		expect(() => create(dir)).toThrowKitError(code, {
+			contains: contains.map((part) => part.replaceAll('DIR', dir))
+		});
+	});
+});
+
+test('rejects server files with the hash router', () => {
+	with_routes(['+page.server.js'], (dir) => {
+		expect(() => create(dir, { router: { type: 'hash' } })).toThrowKitError(
+			'route_server_file_hash_router',
+			{ contains: [`${dir}/+page.server.js`] }
+		);
+	});
+});
+
+test('errors if no routes are found', () => {
+	with_routes(['README.md'], (dir) => {
+		expect(() => create(dir)).toThrowKitError('routes_not_found');
+	});
+});
+
+test('prevents route conflicts between params', () => {
+	expect(() => create('samples/conflicting-params')).toThrowKitError('route_conflict', {
+		contains: ['`/[slug1]` and `/[slug2]`']
+	});
 });
 
 test('ignores things that look like lockfiles', () => {
@@ -658,6 +724,27 @@ test('ignores things that look like lockfiles', () => {
 			}
 		}
 	]);
+});
+
+test('only suggests a + prefix for names valid with the file extension', () => {
+	const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+	try {
+		const { nodes, routes } = create('samples/missing-prefix');
+
+		expect(spy).toHaveBeenCalledTimes(1);
+		expect(spy.mock.calls[0][0]).toContainKitDiagnostic('route_file_prefix_missing', {
+			contains: ['+page.svelte', path.join(cwd, 'samples/missing-prefix/page.svelte')]
+		});
+		expect(nodes.map(simplify_node)).toEqual([
+			default_layout,
+			default_error,
+			{ component: 'samples/missing-prefix/+page.svelte' }
+		]);
+		expect(routes[0].page).toEqual({ layouts: [0], errors: [1], leaf: 2 });
+	} finally {
+		spy.mockRestore();
+	}
 });
 
 test('works with custom extensions', () => {
@@ -720,12 +807,10 @@ test('lists static assets', () => {
 	expect(assets).toEqual([
 		{
 			file: 'bar/baz.txt',
-			size: 14,
 			type: 'text/plain'
 		},
 		{
 			file: 'foo.txt',
-			size: 9,
 			type: 'text/plain'
 		}
 	]);
@@ -889,16 +974,16 @@ test('handles pages without .svelte file', () => {
 });
 
 test('errors on missing layout', () => {
-	assert.throws(
-		() => create('samples/named-layout-missing'),
-		/samples\/named-layout-missing\/\+page@missing.svelte references missing segment "missing"/
+	expect(() => create('samples/named-layout-missing')).toThrowKitError(
+		'route_layout_segment_missing',
+		{ contains: ['samples/named-layout-missing/+page@missing.svelte', '`missing`'] }
 	);
 });
 
 test('errors on invalid named layout reference', () => {
-	assert.throws(
-		() => create('samples/invalid-named-layout-reference'),
-		/Only Svelte files can reference named layouts. Remove '@' from \+page@.js \(at samples\/invalid-named-layout-reference\/x\/\+page@.js\)/
+	expect(() => create('samples/invalid-named-layout-reference')).toThrowKitError(
+		'route_named_layout_in_module',
+		{ contains: ['`@`', 'samples/invalid-named-layout-reference/x/+page@.js'] }
 	);
 });
 
@@ -920,46 +1005,30 @@ test('returns null params when file is missing', () => {
 });
 
 test('prevents route conflicts between groups', () => {
-	assert.throws(
-		() => create('samples/conflicting-groups'),
-		/The "\/\(x\)\/a" and "\/\(y\)\/a" routes conflict with each other/
-	);
+	expect(() => create('samples/conflicting-groups')).toThrowKitError('route_conflict', {
+		contains: ['`/(x)/a` and `/(y)/a`']
+	});
 });
 
-test('errors with multiple layouts on same directory', () => {
-	assert.throws(
-		() => create('samples/multiple-layouts'),
-		/^Multiple layout component files found in samples\/multiple-layouts\/ : \+layout\.svelte and \+layout@\.svelte/
-	);
-});
-
-test('errors with multiple pages on same directory', () => {
-	assert.throws(
-		() => create('samples/multiple-pages'),
-		/^Multiple page component files found in samples\/multiple-pages\/ : \+page\.svelte and \+page@\.svelte/
-	);
-});
-
-test('errors with both ts and js handlers for the same route', () => {
-	assert.throws(
-		() => create('samples/conflicting-ts-js-handlers-page'),
-		/^Multiple universal page module files found in samples\/conflicting-ts-js-handlers-page\/ : \+page\.js and \+page\.ts/
-	);
-
-	assert.throws(
-		() => create('samples/conflicting-ts-js-handlers-layout'),
-		/^Multiple server layout module files found in samples\/conflicting-ts-js-handlers-layout\/ : \+layout\.server\.js and \+layout\.server\.ts/
-	);
-
-	assert.throws(
-		() => create('samples/conflicting-ts-js-handlers-server'),
-		/^Multiple endpoint files found in samples\/conflicting-ts-js-handlers-server\/ : \+server\.js and \+server\.ts/
-	);
+test.each([
+	['multiple-layouts', 'layout component', '`+layout.svelte` and `+layout@.svelte`'],
+	['multiple-pages', 'page component', '`+page.svelte` and `+page@.svelte`'],
+	['conflicting-ts-js-handlers-page', 'universal page module', '`+page.js` and `+page.ts`'],
+	[
+		'conflicting-ts-js-handlers-layout',
+		'server layout module',
+		'`+layout.server.js` and `+layout.server.ts`'
+	],
+	['conflicting-ts-js-handlers-server', 'endpoint', '`+server.js` and `+server.ts`']
+])('errors on duplicate files in samples/%s', (sample, type, files) => {
+	expect(() => create(`samples/${sample}`)).toThrowKitError('route_duplicate_files', {
+		contains: [type, `samples/${sample}/`, files]
+	});
 });
 
 test('errors on prerenderable dual route', () => {
-	assert.throws(
-		() => create('samples/prerendered-dual-route'),
-		'Cannot prerender a route (/x) with both a `+page.svelte` and a `+server.js`'
+	expect(() => create('samples/prerendered-dual-route')).toThrowKitError(
+		'route_prerender_page_and_endpoint',
+		{ contains: ['(`/x`)'] }
 	);
 });

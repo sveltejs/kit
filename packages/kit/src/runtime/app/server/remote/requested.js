@@ -1,11 +1,11 @@
-/** @import { RemoteLiveQuery, RemoteLiveQueryFunction, RemoteQuery, RemoteQueryFunction, RequestedResult, QueryRequestedResult, LiveQueryRequestedResult } from '@sveltejs/kit' */
+/** @import { RemoteLiveQuery, RemoteLiveQueryFunction, RemoteQuery, RemoteQueryFunction, RequestedResult, RemoteQueryRequestedResult, RemoteLiveQueryRequestedResult } from '$app/server' */
 /** @import { MaybePromise, RemoteAnyQueryInternals } from 'types' */
-import { HttpError } from '@sveltejs/kit/internal';
 import { get_request_store } from '@sveltejs/kit/internal/server';
-import { parse_remote_arg } from '../../../shared.js';
+import { create_remote_key, parse_remote_arg } from '../../../shared.js';
 import { noop } from '../../../../utils/functions.js';
 import { get_cache } from './shared.js';
 import { refresh } from './query.js';
+import * as e from '../../../../messages/server-errors.js';
 
 /**
  * Inside a remote `command` or `form` callback, returns an iterable
@@ -53,7 +53,7 @@ import { refresh } from './query.js';
  * @overload
  * @param {RemoteQueryFunction<Input, Output, Validated>} query
  * @param {number} limit
- * @returns {QueryRequestedResult<Validated, Output>}
+ * @returns {RemoteQueryRequestedResult<Validated, Output>}
  */
 /**
  * Inside a remote `command` or `form` callback, returns an iterable
@@ -91,7 +91,7 @@ import { refresh } from './query.js';
  * @overload
  * @param {RemoteLiveQueryFunction<Input, Output, Validated>} query
  * @param {number} limit
- * @returns {LiveQueryRequestedResult<Validated, Output>}
+ * @returns {RemoteLiveQueryRequestedResult<Validated, Output>}
  */
 /**
  * @template Input
@@ -112,27 +112,35 @@ export function requested(query, limit) {
 		internals?.type !== 'query_batch' &&
 		internals?.type !== 'query_live'
 	) {
-		throw new Error(
-			'requested(...) expects a query function created with query(...), query.batch(...), or query.live(...)'
-		);
+		e.remote_requested_invalid_query();
 	}
 
 	// narrow-stable alias so generator closures below don't lose the narrowing
 	const __ = internals;
 
 	const requested = state.remote.requested;
-	const payloads = requested?.get(__.id) ?? [];
+	const payloads = requested?.get(__.id) ?? new Set();
+	const ignored = (state.remote.ignored ??= new Set());
+
+	/** @param {string} payload */
+	const consume = (payload) => {
+		payloads.delete(payload);
+		if (payloads.size === 0) requested?.delete(__.id);
+	};
+
+	/** @param {string} payload */
+	const create_ignore = (payload) => () => {
+		ignored.add(create_remote_key(__.id, payload));
+	};
 
 	// note: don't initialize these maps here -- they will be initialized by the
 	// command/form wrapper when we enter them, and if we initialize them here
 	// we will enable requested(...) in contexts where it shouldn't be allowed,
 	// such as load functions or other server functions
 	if (!state.is_in_remote_form_or_command) {
-		throw new Error(
-			'requested(...) can only be called in the context of a command/form remote function'
-		);
+		e.remote_requested_context();
 	}
-	const [selected, skipped] = split_limit(payloads, limit);
+	const [selected, skipped] = split_limit([...payloads], limit);
 
 	/**
 	 * Registers the failure exactly like `.set()` registers a value: the error record
@@ -149,31 +157,25 @@ export function requested(query, limit) {
 		refresh(event, state, __, payload, () => promise);
 	};
 
-	for (const payload of skipped) {
-		record_failure(
-			payload,
-			new HttpError({
-				status: 400,
-				message: `Requested refresh was rejected because it exceeded requested(${__.name}, ${limit}) limit`
-			})
-		);
-	}
+	for (const payload of skipped) consume(payload);
 
 	const result = {
 		*[Symbol.iterator]() {
 			for (const payload of selected) {
+				consume(payload);
 				try {
-					const parsed = parse_remote_arg(payload, state.transport);
+					const parsed = parse_remote_arg(payload);
 					const validated = __.validate(parsed);
 
 					if (is_thenable(validated)) {
-						throw new Error(
-							// TODO improve
-							`requested(${__.name}, ${limit}) cannot be used with synchronous iteration because the query validator is async. Use \`for await ... of\` instead`
-						);
+						e.remote_requested_async_validator({ name: __.name, limit: String(limit) });
 					}
 
-					yield { arg: validated, query: __.bind(payload, validated) };
+					yield {
+						arg: validated,
+						query: __.bind(payload, validated),
+						ignore: create_ignore(payload)
+					};
 				} catch (error) {
 					record_failure(payload, error);
 					continue;
@@ -182,10 +184,15 @@ export function requested(query, limit) {
 		},
 		async *[Symbol.asyncIterator]() {
 			yield* race_all(selected, async (payload) => {
+				consume(payload);
 				try {
-					const parsed = parse_remote_arg(payload, state.transport);
+					const parsed = parse_remote_arg(payload);
 					const validated = await __.validate(parsed);
-					return { arg: validated, query: __.bind(payload, validated) };
+					return {
+						arg: validated,
+						query: __.bind(payload, validated),
+						ignore: create_ignore(payload)
+					};
 				} catch (error) {
 					record_failure(payload, error);
 					throw new Error(`Skipping ${__.name}(${payload})`, { cause: error });
@@ -194,7 +201,11 @@ export function requested(query, limit) {
 		},
 		async refreshAll() {
 			if (__.type === 'query_live') {
-				throw new Error('refreshAll() is invalid for live queries. Use reconnectAll() instead.');
+				e.remote_requested_wrong_method({
+					method: 'refreshAll',
+					type: 'live',
+					replacement: 'reconnectAll'
+				});
 			}
 
 			for await (const { query } of result) {
@@ -203,12 +214,19 @@ export function requested(query, limit) {
 		},
 		async reconnectAll() {
 			if (__.type !== 'query_live') {
-				throw new Error('reconnectAll() is invalid for regular queries. Use refreshAll() instead.');
+				e.remote_requested_wrong_method({
+					method: 'reconnectAll',
+					type: 'regular',
+					replacement: 'refreshAll'
+				});
 			}
 
 			for await (const { query } of result) {
 				void (/** @type {RemoteLiveQuery<Output>} */ (query).reconnect());
 			}
+		},
+		async ignoreAll() {
+			for await (const { ignore } of result) ignore();
 		}
 	};
 
@@ -226,7 +244,7 @@ function split_limit(array, limit) {
 		return [array, []];
 	}
 	if (!Number.isInteger(limit) || limit < 0) {
-		throw new Error('Limit must be a non-negative integer or Infinity');
+		e.remote_requested_invalid_limit();
 	}
 	return [array.slice(0, limit), array.slice(limit)];
 }

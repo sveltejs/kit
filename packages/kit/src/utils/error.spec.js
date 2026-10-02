@@ -1,32 +1,62 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { HttpError, SvelteKitError } from '@sveltejs/kit/internal';
-import { get_status } from './error.js';
+import { add_deprecated_handle_error_properties, get_status, set_error_stack } from './error.js';
+
+describe('set_error_stack', () => {
+	it('updates a writable stack', () => {
+		const error = new Error('original');
+
+		expect(set_error_stack(error, 'updated')).toBe('updated');
+		expect(error.stack).toBe('updated');
+	});
+
+	it('preserves a read-only stack', () => {
+		const error = new Error('original');
+		Object.defineProperty(error, 'stack', { value: 'original' });
+
+		expect(set_error_stack(error, 'updated')).toBe('original');
+		expect(error.stack).toBe('original');
+	});
+});
 
 describe('get_status', () => {
-	it('returns status from transformed error', () => {
-		expect(get_status({ message: 'not found', status: 404 }, new Error('oops'))).toBe(404);
+	it('returns the status of an HttpError', () => {
+		expect(get_status(new HttpError({ status: 418, message: 'teapot' }))).toBe(418);
 	});
 
-	it('falls back to HttpError status', () => {
-		const error = new HttpError({ status: 403, message: 'forbidden' });
-		expect(get_status({ message: 'forbidden' }, error)).toBe(403);
-	});
-
-	it('falls back to SvelteKitError status', () => {
-		const error = new SvelteKitError(404, 'Not Found', 'missing');
-		expect(get_status({ message: 'missing' }, error)).toBe(404);
+	it('returns the status of a SvelteKitError', () => {
+		expect(get_status(new SvelteKitError(404, 'Not Found', 'missing'))).toBe(404);
 	});
 
 	it('returns 500 for plain errors', () => {
-		expect(get_status({ message: 'oops' }, new Error('oops'))).toBe(500);
-	});
-
-	it('works with a single HttpError argument', () => {
-		const error = new HttpError({ status: 418, message: 'teapot' });
-		expect(get_status(error)).toBe(418);
-	});
-
-	it('works with a single plain Error argument', () => {
 		expect(get_status(new Error('oops'))).toBe(500);
+	});
+
+	it('returns 500 for non-errors', () => {
+		expect(get_status({ status: 404 })).toBe(500);
+		expect(get_status(undefined)).toBe(500);
+	});
+});
+
+describe('add_deprecated_handle_error_properties', () => {
+	it('adds non-enumerable accessors that warn and return the fallback values', () => {
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+		const input = add_deprecated_handle_error_properties(
+			{ kind: 'unknown', error: new Error('nope') },
+			{ status: 500, message: 'Internal Error' }
+		);
+
+		expect(Object.keys(input)).toEqual(['kind', 'error']);
+		expect(/** @type {any} */ (input).status).toBe(500);
+		expect(/** @type {any} */ (input).message).toBe('Internal Error');
+		expect(warn).toHaveBeenCalledTimes(2);
+		expect(warn.mock.calls[0]).toContainKitDiagnostic('handle_error_status_deprecated');
+		expect(warn.mock.calls[1]).toContainKitDiagnostic('handle_error_message_deprecated');
+
+		// every access warns and returns the value, as before
+		expect(/** @type {any} */ (input).status).toBe(500);
+		expect(warn).toHaveBeenCalledTimes(3);
+
+		warn.mockRestore();
 	});
 });

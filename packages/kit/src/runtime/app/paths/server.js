@@ -1,18 +1,22 @@
 import { base, assets, relative } from './internal/server.js';
 import { resolve_route, find_route } from '../../../utils/routing.js';
 import { decode_pathname } from '../../../utils/url.js';
-import { add_data_suffix } from '../../pathname.js';
+import { add_data_suffix } from '../../../pathname.js';
 import { try_get_request_store } from '@sveltejs/kit/internal/server';
 import { manifest } from '../../server/internal.js';
-import { get_hooks } from '__SERVER__/internal.js';
+import { get_hooks } from '<sveltekit:generated>/server.js';
 import { DEV } from 'esm-env';
+import * as e from '../../../messages/shared-errors.js';
+import * as w from '../../../messages/shared-warnings.js';
 
-/** @type {import('./client.js').asset} */
+export { base, assets, app_dir } from './internal/server.js';
+
+/** @type {typeof import('./client.js').asset} */
 export function asset(file) {
 	// TODO 4.0 remove this
 	if (file[0] === '/') {
 		if (DEV) {
-			console.warn(`\`asset('${file}')\` should now be \`asset('${file.slice(1)}')\``);
+			w.asset_leading_slash({ path: file, fixed: file.slice(1) });
 		}
 
 		file = file.slice(1);
@@ -21,14 +25,14 @@ export function asset(file) {
 	return assets !== base ? `${assets}/${file}` : resolve(file);
 }
 
-/** @type {import('./client.js').resolve} */
+/** @type {typeof import('./client.js').resolve} */
 export function resolve(id, params) {
 	let resolved;
 
 	if (id[0] === '/') {
 		// route ID
 		if (id.includes('[') && !params) {
-			throw new Error(`Missing params for dynamic route ID ${id}`);
+			e.resolve_params_missing({ id });
 		}
 
 		resolved = resolve_route(id, params ?? {});
@@ -56,7 +60,7 @@ export function resolve(id, params) {
 	return base + resolved;
 }
 
-/** @type {import('./client.js').match} */
+/** @type {typeof import('./client.js').match} */
 export async function match(url) {
 	const store = try_get_request_store();
 
@@ -81,8 +85,8 @@ export async function match(url) {
 		resolved_path = resolved_path.slice(base.length) || '/';
 	}
 
-	const matchers = await manifest._.matchers();
-	const result = find_route(resolved_path, manifest._.routes, matchers);
+	const matchers = await manifest.matchers();
+	const result = find_route(resolved_path, manifest.routes, matchers);
 
 	if (result) {
 		return {

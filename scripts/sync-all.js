@@ -3,6 +3,7 @@ import path from 'node:path';
 import { chdir } from 'node:process';
 import { extract_svelte_config, load_vite_config } from '../packages/kit/src/core/config/index.js';
 import { all as syncAll } from '../packages/kit/src/core/sync/sync.js';
+import create_manifest_data from '../packages/kit/src/core/sync/create_manifest_data/index.js';
 
 // This isn't strictly necessary, but it eliminates some annoying warnings in CI
 
@@ -26,6 +27,7 @@ for (const directories of [
 		const vite_config = await load_vite_config();
 		const sveltekit_config = extract_svelte_config(vite_config);
 
-		syncAll(sveltekit_config, cwd);
+		const manifest_data = create_manifest_data(sveltekit_config, cwd);
+		syncAll(sveltekit_config, cwd, manifest_data);
 	}
 }

@@ -1,5 +1,194 @@
 # @sveltejs/adapter-node
 
+## 6.0.0
+
+### Major Changes
+
+- breaking: populate env vars before `instrumentation.server.js` is evaluated and update the adapter instrumentation API ([#16303](https://github.com/sveltejs/kit/pull/16303))
+
+- chore: migrate from rollup to rolldown ([#15297](https://github.com/sveltejs/kit/pull/15297))
+
+- breaking: require SvelteKit 3 ([#15506](https://github.com/sveltejs/kit/pull/15506))
+
+- breaking: add `kit.paths.origin` config option, remove `kit.prerender.origin` and the `adapter-node` `ORIGIN` environment variable ([#16161](https://github.com/sveltejs/kit/pull/16161))
+
+- breaking: require `vite@^8.0.12`, the first Vite 8 release bundling stable `rolldown` 1.0.0 ([#16134](https://github.com/sveltejs/kit/pull/16134))
+
+- breaking: replace the `builder.generateManifest` with `builder.generateServerInstance` and `builder.manifest` ([#16875](https://github.com/sveltejs/kit/pull/16875))
+
+- breaking: record the list of static assets at build time, files added to the output afterwards are not served ([#16908](https://github.com/sveltejs/kit/pull/16908))
+
+- breaking: validate static assets with content-hash `ETag`s and stop sending `Last-Modified` ([#16908](https://github.com/sveltejs/kit/pull/16908))
+
+- breaking: serve static assets only to `GET` and `HEAD` requests ([#16908](https://github.com/sveltejs/kit/pull/16908))
+
+### Minor Changes
+
+- feat: serve static assets from tables recorded at adapt time, instead of using sirv ([#16908](https://github.com/sveltejs/kit/pull/16908))
+
+- feat: better error logging ([#16374](https://github.com/sveltejs/kit/pull/16374))
+
+### Patch Changes
+
+- fix: prevent scheme-like path segments from causing off-site trailing-slash redirects ([#17294](https://github.com/sveltejs/kit/pull/17294))
+
+- fix: serve static files with the Content-Type recorded in the manifest ([#16564](https://github.com/sveltejs/kit/pull/16564))
+
+- chore: bundle the adapter's server source directly instead of prebuilding it with rolldown ([#17109](https://github.com/sveltejs/kit/pull/17109))
+
+- chore: use `node:fs` instead of deprecated `builder.rimraf` and `builder.mkdirp` ([#16610](https://github.com/sveltejs/kit/pull/16610))
+
+- chore: hand adapt-time values to the server as a module instead of patching built chunks ([#17103](https://github.com/sveltejs/kit/pull/17103))
+
+- fix: externalize `@opentelemetry/api` to prevent bundler chunk colocation between `instrumentation.server.js` and application code ([#16302](https://github.com/sveltejs/kit/pull/16302))
+
+- feat: abort `request.signal` when the response closes prematurely, via a new `response` option for `getRequest` ([#16793](https://github.com/sveltejs/kit/pull/16793))
+
+- fix: allow prerelease versions of SvelteKit 3 to satisfy the peer dependency range ([#16286](https://github.com/sveltejs/kit/pull/16286))
+
+- fix: always bundle dev dependencies ([#17210](https://github.com/sveltejs/kit/pull/17210))
+
+- chore: avoid bundling the server twice ([#17068](https://github.com/sveltejs/kit/pull/17068))
+
+- fix: correctly bundle entrypoints on Windows ([#16367](https://github.com/sveltejs/kit/pull/16367))
+
+- fix: bundle Svelte libraries listed in `dependencies` instead of externalising them ([#17234](https://github.com/sveltejs/kit/pull/17234))
+
+- chore: bump `rolldown` to 1.2.3 ([#16745](https://github.com/sveltejs/kit/pull/16745))
+
+- chore: use `builder.config` to access SvelteKit config settings ([#16895](https://github.com/sveltejs/kit/pull/16895))
+
+- fix: preserve stripped path prefixes by making trailing-slash redirects relative ([#16431](https://github.com/sveltejs/kit/pull/16431))
+
+- chore: bump Rolldown to `1.2.0` ([#16455](https://github.com/sveltejs/kit/pull/16455))
+
+- fix: don't send `Vary: Accept-Encoding` for assets that were never precompressed ([#16566](https://github.com/sveltejs/kit/pull/16566))
+
+- chore: remove polka, attach the handler to the http server directly ([#16907](https://github.com/sveltejs/kit/pull/16907))
+- Updated dependencies:
+  - @sveltejs/kit@3.0.0
+
+## 6.0.0-next.15
+
+### Patch Changes
+
+- fix: bundle Svelte libraries listed in `dependencies` instead of externalising them ([#17234](https://github.com/sveltejs/kit/pull/17234))
+- Updated dependencies [[`f8a90be`](https://github.com/sveltejs/kit/commit/f8a90be73c61dee7d586b26d19dad59637de63b0), [`30d06f5`](https://github.com/sveltejs/kit/commit/30d06f5698528cf540899900366fc0cfeb3dc7f6), [`0107721`](https://github.com/sveltejs/kit/commit/0107721dbdde1310d4c5427f7ad33a2ee5593d3e)]:
+  - @sveltejs/kit@3.0.0-next.30
+
+## 6.0.0-next.14
+
+### Patch Changes
+
+- fix: always bundle dev dependencies ([#17210](https://github.com/sveltejs/kit/pull/17210))
+- Updated dependencies [[`058d29b`](https://github.com/sveltejs/kit/commit/058d29be2cbedb91546b6f6ddf157b881b87360b), [`5e11958`](https://github.com/sveltejs/kit/commit/5e119589bb8784cb43fd631afaa81b78b3ff6f36)]:
+  - @sveltejs/kit@3.0.0-next.29
+
+## 6.0.0-next.13
+
+### Major Changes
+
+- breaking: record the list of static assets at build time, files added to the output afterwards are not served ([#16908](https://github.com/sveltejs/kit/pull/16908))
+
+- breaking: validate static assets with content-hash `ETag`s and stop sending `Last-Modified` ([#16908](https://github.com/sveltejs/kit/pull/16908))
+
+- breaking: serve static assets only to `GET` and `HEAD` requests ([#16908](https://github.com/sveltejs/kit/pull/16908))
+
+### Minor Changes
+
+- feat: serve static assets from tables recorded at adapt time, instead of using sirv ([#16908](https://github.com/sveltejs/kit/pull/16908))
+
+### Patch Changes
+
+- chore: bundle the adapter's server source directly instead of prebuilding it with rolldown ([#17109](https://github.com/sveltejs/kit/pull/17109))
+
+- chore: hand adapt-time values to the server as a module instead of patching built chunks ([#17103](https://github.com/sveltejs/kit/pull/17103))
+
+- chore: avoid bundling the server twice ([#17068](https://github.com/sveltejs/kit/pull/17068))
+- Updated dependencies [[`abf47df`](https://github.com/sveltejs/kit/commit/abf47df887f914f09c39a7f771d32cdd55fb346d), [`df3f003`](https://github.com/sveltejs/kit/commit/df3f0034b541701bd3319225f4e6003579d4ebd6), [`3c044cd`](https://github.com/sveltejs/kit/commit/3c044cda5c356dede92167dcca549cd58e73e61f), [`509dd14`](https://github.com/sveltejs/kit/commit/509dd146696b2c77ae3ac8ac2435773864520016), [`5d8722c`](https://github.com/sveltejs/kit/commit/5d8722c60977efb6e4606fefd9750c2349af410a), [`462111a`](https://github.com/sveltejs/kit/commit/462111a1411551386c6e1aa6c14f967f4ae875c2), [`9f3342f`](https://github.com/sveltejs/kit/commit/9f3342fb9305d1fd731a49497bec894469073fd0), [`224e791`](https://github.com/sveltejs/kit/commit/224e791cb05f95a5c2d881e5a7d5341352f3c052), [`8614b01`](https://github.com/sveltejs/kit/commit/8614b016e3be4247cb1aae615870f4c23a0622b3), [`65f93c8`](https://github.com/sveltejs/kit/commit/65f93c83b29f47ebc05bfdeac53f8c92c8d522e1), [`147f09a`](https://github.com/sveltejs/kit/commit/147f09ab7397727f17b5f35ff7535eb1a089180f), [`09b8de8`](https://github.com/sveltejs/kit/commit/09b8de849561b5c81112dbe029e9279e8184903c), [`68c6ef9`](https://github.com/sveltejs/kit/commit/68c6ef97fad9baf6c883e203b1ceb686e2ca74a1), [`377fc5d`](https://github.com/sveltejs/kit/commit/377fc5dd93054ba01ec0e9623036735ff7aadfb5), [`84cb5fd`](https://github.com/sveltejs/kit/commit/84cb5fd2173028e29edf87bcbfc551f34dc2e1a9), [`99492ac`](https://github.com/sveltejs/kit/commit/99492ac605a74e066623d8934fa9f662d4350c99), [`4ac8c9b`](https://github.com/sveltejs/kit/commit/4ac8c9b4b9f015769f81adb941c85cf42fc17424), [`8efeeb3`](https://github.com/sveltejs/kit/commit/8efeeb3dea17c6dd3a1cdf55fc25ba0a53e6ee4c), [`4c812c8`](https://github.com/sveltejs/kit/commit/4c812c808c6b62c78b89fb0021dcfe45e06afcc7), [`fbbb4c7`](https://github.com/sveltejs/kit/commit/fbbb4c7d3c4ff3a3792a58db26c6be77996a392d), [`c6ba86b`](https://github.com/sveltejs/kit/commit/c6ba86ba7983a53f0d1e16c0a6462009d5245d4d), [`7847e4e`](https://github.com/sveltejs/kit/commit/7847e4e27f17a0a94b29f88d79050d704436957c), [`68791be`](https://github.com/sveltejs/kit/commit/68791be662e01afd7235e1eb6a2b6b7acf332b17), [`f8258ee`](https://github.com/sveltejs/kit/commit/f8258ee5e042d48d198cca3f35982e90db0077cb), [`4da6320`](https://github.com/sveltejs/kit/commit/4da6320db8d70b73b93e142e4bb6ba9173be3b97), [`b21766f`](https://github.com/sveltejs/kit/commit/b21766f362e39f51cb4ae8f894ea5aca40cf305e), [`a2bfcaf`](https://github.com/sveltejs/kit/commit/a2bfcafbe496e23b1e0bcfce442309bb94783efd), [`680405d`](https://github.com/sveltejs/kit/commit/680405d2d06f02774a8d7df5351df4a0d259c338), [`755024a`](https://github.com/sveltejs/kit/commit/755024a1af3ffcb80cdf939b2cf50ada3a2cb684), [`3a7d329`](https://github.com/sveltejs/kit/commit/3a7d3290e28dffa730d0c71699906dbc6d2fd584)]:
+  - @sveltejs/kit@3.0.0-next.28
+
+## 6.0.0-next.12
+
+### Major Changes
+
+- breaking: populate env vars before `instrumentation.server.js` is evaluated and update the adapter instrumentation API ([#16303](https://github.com/sveltejs/kit/pull/16303))
+
+- breaking: replace the `builder.generateManifest` with `builder.generateServerInstance` and `builder.manifest` ([#16875](https://github.com/sveltejs/kit/pull/16875))
+
+### Patch Changes
+
+- Updated dependencies [[`9a4b343`](https://github.com/sveltejs/kit/commit/9a4b343bd8ab0060dc624fbdd139155fc4a0a1dc), [`ee2f55b`](https://github.com/sveltejs/kit/commit/ee2f55b1e3338d2fa92a25fe53d095129edf1002), [`65673a4`](https://github.com/sveltejs/kit/commit/65673a4dd35054c16f8555eb896dfb773d86a556), [`1b79845`](https://github.com/sveltejs/kit/commit/1b79845e117f417b63fa399149816d73882c27ea), [`b12bb78`](https://github.com/sveltejs/kit/commit/b12bb789c17c30e7ff835de4af004d2f3eb36159), [`03f1687`](https://github.com/sveltejs/kit/commit/03f1687fe612ce3d2d9131139b5b188d9cf90c64), [`49f0808`](https://github.com/sveltejs/kit/commit/49f0808f3e983d0cb5a4d586cf0d1678467431ed), [`e7c74bf`](https://github.com/sveltejs/kit/commit/e7c74bf8227dc228cb36e822eaff5992569b830a), [`0876d63`](https://github.com/sveltejs/kit/commit/0876d633145088c7a5213e9f530cf2fed96ce35d), [`9a2b9ba`](https://github.com/sveltejs/kit/commit/9a2b9bacbb2de0533966bb029ef526b357aac086), [`c9f54b5`](https://github.com/sveltejs/kit/commit/c9f54b5d66acd9443d36b0ae9aa0a656809bd7f9), [`22b8152`](https://github.com/sveltejs/kit/commit/22b8152f74882775ac63e1cf96d3016b92ac8256), [`f6d44cf`](https://github.com/sveltejs/kit/commit/f6d44cf007d6c6b54de57f6ae4ef8e2e7fea2f44), [`3c3a27b`](https://github.com/sveltejs/kit/commit/3c3a27bf67a26164266e132dbb7f9266643cf724), [`7f376b1`](https://github.com/sveltejs/kit/commit/7f376b109cd770638806184cf5d8bf4cf88c5bf2), [`8a587c7`](https://github.com/sveltejs/kit/commit/8a587c7b3919408ec66a362eb249fe5cf43f5316), [`aa4f960`](https://github.com/sveltejs/kit/commit/aa4f9605761e686f6aaf414b9186c68ddd2468dc)]:
+  - @sveltejs/kit@3.0.0-next.27
+
+## 6.0.0-next.11
+
+### Patch Changes
+
+- chore: remove polka, attach the handler to the http server directly ([#16907](https://github.com/sveltejs/kit/pull/16907))
+- Updated dependencies [[`ff8cdd4`](https://github.com/sveltejs/kit/commit/ff8cdd4df8f6a0ee26c25854aa0656f2dc968caf), [`723572c`](https://github.com/sveltejs/kit/commit/723572c76053ebcae02b19166fe7400f45175c70), [`3b8e034`](https://github.com/sveltejs/kit/commit/3b8e034d62f1372f0e450da88c0705bd9828a816), [`f2c5102`](https://github.com/sveltejs/kit/commit/f2c5102079c80c904b3fe165666813023248facc), [`c66a6ed`](https://github.com/sveltejs/kit/commit/c66a6ed5bb6ba4594b0a952744a1d9c7e457b001), [`428e5ef`](https://github.com/sveltejs/kit/commit/428e5efeedba49ccd42d43f85e53707f6704931c)]:
+  - @sveltejs/kit@3.0.0-next.26
+
+## 6.0.0-next.10
+
+### Patch Changes
+
+- chore: bump `rolldown` to 1.2.3 ([#16745](https://github.com/sveltejs/kit/pull/16745))
+- Updated dependencies [[`1742811`](https://github.com/sveltejs/kit/commit/1742811562358caf6042bed33c60ce6427a3e831), [`1611c61`](https://github.com/sveltejs/kit/commit/1611c617a1ec1b32e10627c2815fb7e6673f3157), [`b361b81`](https://github.com/sveltejs/kit/commit/b361b815e79828a6b7404d759d0a4c3892814a4e), [`b361b81`](https://github.com/sveltejs/kit/commit/b361b815e79828a6b7404d759d0a4c3892814a4e), [`b361b81`](https://github.com/sveltejs/kit/commit/b361b815e79828a6b7404d759d0a4c3892814a4e), [`b361b81`](https://github.com/sveltejs/kit/commit/b361b815e79828a6b7404d759d0a4c3892814a4e), [`13e7b18`](https://github.com/sveltejs/kit/commit/13e7b186a94b5b8317771d2b1e795b432dcd6faf), [`529346d`](https://github.com/sveltejs/kit/commit/529346d96369f92cdd804be9c4313c598efe34b8), [`b361b81`](https://github.com/sveltejs/kit/commit/b361b815e79828a6b7404d759d0a4c3892814a4e), [`81d6319`](https://github.com/sveltejs/kit/commit/81d6319eef08a765ccd3922790a7aee16e284cc2), [`b361b81`](https://github.com/sveltejs/kit/commit/b361b815e79828a6b7404d759d0a4c3892814a4e), [`69a5bdf`](https://github.com/sveltejs/kit/commit/69a5bdf9f45810eeed2faa089c8d3206463d347e)]:
+  - @sveltejs/kit@3.0.0-next.20
+
+## 6.0.0-next.9
+
+### Patch Changes
+
+- fix: externalize `@opentelemetry/api` to prevent bundler chunk colocation between `instrumentation.server.js` and application code ([#16302](https://github.com/sveltejs/kit/pull/16302))
+- Updated dependencies [[`04f9ab4`](https://github.com/sveltejs/kit/commit/04f9ab4f64a25c2fecac65ccd97cf4663eb9c1fa), [`1e198bd`](https://github.com/sveltejs/kit/commit/1e198bdbea745b845d9ae59e6a2d3fc62a404b01), [`813726d`](https://github.com/sveltejs/kit/commit/813726dabdc923ce138452dc8cc91d881e329e5d), [`a115a7b`](https://github.com/sveltejs/kit/commit/a115a7beb9b34d1e43609e96100de48010afc3be), [`031ac69`](https://github.com/sveltejs/kit/commit/031ac69d0d8c7d66c9e61aa43a8c447877eb87ff), [`dc7442c`](https://github.com/sveltejs/kit/commit/dc7442cc622c257e89a7acc9253795a449d51df7), [`19c4478`](https://github.com/sveltejs/kit/commit/19c447850e269807eeb089b595267a0616203afa), [`dc7442c`](https://github.com/sveltejs/kit/commit/dc7442cc622c257e89a7acc9253795a449d51df7), [`dc7442c`](https://github.com/sveltejs/kit/commit/dc7442cc622c257e89a7acc9253795a449d51df7), [`0b3e2b3`](https://github.com/sveltejs/kit/commit/0b3e2b386896cf868328138a66670f19931ebea5), [`c5d0ce2`](https://github.com/sveltejs/kit/commit/c5d0ce2a9e47615c245e8ac57e10ee2120142138)]:
+  - @sveltejs/kit@3.0.0-next.19
+
+## 6.0.0-next.8
+
+### Major Changes
+
+- chore: migrate from rollup to rolldown
+
+- breaking: require SvelteKit 3
+
+- breaking: add `kit.paths.origin` config option, remove `kit.prerender.origin` and the `adapter-node` `ORIGIN` environment variable
+
+- breaking: require `vite@^8.0.12`, the first Vite 8 release bundling stable `rolldown` 1.0.0
+
+### Minor Changes
+
+- feat: better error logging
+
+### Patch Changes
+
+- fix: serve static files with the Content-Type recorded in the manifest
+
+- chore: use `node:fs` instead of deprecated `builder.rimraf` and `builder.mkdirp` ([#16286](https://github.com/sveltejs/kit/pull/16286))
+
+- fix: allow prerelease versions of SvelteKit 3 to satisfy the peer dependency range
+
+- fix: correctly bundle entrypoints on Windows
+
+- fix: preserve stripped path prefixes by making trailing-slash redirects relative
+
+- chore: bump Rolldown to `1.2.0`
+
+- fix: don't send `Vary: Accept-Encoding` for assets that were never precompressed
+- Updated dependencies [[`bbd1e2f`](https://github.com/sveltejs/kit/commit/bbd1e2fcc9af58edb9846393b081be61df4789d5), [`e21d27b`](https://github.com/sveltejs/kit/commit/e21d27ba490c89da98dbad24fca364d0163137c4), [`6044d05`](https://github.com/sveltejs/kit/commit/6044d055031bc17deedc069dc4016565364bd4f4), [`7fb611f`](https://github.com/sveltejs/kit/commit/7fb611fb604e4d74cd889f5fe21ccd255f876382), [`9f06b3a`](https://github.com/sveltejs/kit/commit/9f06b3ac78be30d27b07fc00ea40bda493c573aa), [`8763327`](https://github.com/sveltejs/kit/commit/87633271ce40ac0839be9468598e965bde3cad51), [`7dc2379`](https://github.com/sveltejs/kit/commit/7dc23798cde97b5616049ba8d443a07e8c558bdc), [`a70c3eb`](https://github.com/sveltejs/kit/commit/a70c3eb31fe1e28f1532c84ec569ec7099da3344), [`89f49c7`](https://github.com/sveltejs/kit/commit/89f49c70b7fb4883cf704d2fb57d2d8595790ad2), [`f36b3a4`](https://github.com/sveltejs/kit/commit/f36b3a4cd307bd8c89e03fa191becc175e7b3077), [`1144a63`](https://github.com/sveltejs/kit/commit/1144a63d318c3c3255d06b374bb7a656a469fabf), [`9f06b3a`](https://github.com/sveltejs/kit/commit/9f06b3ac78be30d27b07fc00ea40bda493c573aa)]:
+  - @sveltejs/kit@3.0.0-next.15
+
+## 6.0.0-next.7
+
+### Patch Changes
+
+- fix: serve static files with the Content-Type recorded in the manifest ([#16564](https://github.com/sveltejs/kit/pull/16564))
+
+- fix: don't send `Vary: Accept-Encoding` for assets that were never precompressed ([#16566](https://github.com/sveltejs/kit/pull/16566))
+- Updated dependencies [[`c3f58bb`](https://github.com/sveltejs/kit/commit/c3f58bb0eb6bde790897f1e8b89019bc39a062e5), [`b655dc7`](https://github.com/sveltejs/kit/commit/b655dc7cf043ff01d53e494e9744e548bb3ad9fd), [`a70cc4f`](https://github.com/sveltejs/kit/commit/a70cc4f2ca24e7099c898456085ffe18d191657e), [`b325afb`](https://github.com/sveltejs/kit/commit/b325afb509b54445f678348e88ea2bf0152f4cec), [`e76b3d7`](https://github.com/sveltejs/kit/commit/e76b3d778bacb429fdb40a41b13ff04b54d97c1f), [`58f47eb`](https://github.com/sveltejs/kit/commit/58f47eb94016c5405829667bbc873e027c7b363c), [`fe9d8d9`](https://github.com/sveltejs/kit/commit/fe9d8d939b6d1a07b2957104fda6a1123f5eebd3), [`0c7bbd7`](https://github.com/sveltejs/kit/commit/0c7bbd7bd4a346c560e7cbf9b39ba8bda7c718f0), [`08d7e2a`](https://github.com/sveltejs/kit/commit/08d7e2a1b327d4e68c217f6e7d6b305732c82b1b), [`f70f679`](https://github.com/sveltejs/kit/commit/f70f679143d4330b6d3b7d0e690145b5487df97f), [`0624b26`](https://github.com/sveltejs/kit/commit/0624b2678efd41223f70972f7bff2d81d4a5c7f9), [`0624b26`](https://github.com/sveltejs/kit/commit/0624b2678efd41223f70972f7bff2d81d4a5c7f9), [`f4222ad`](https://github.com/sveltejs/kit/commit/f4222adc504a7041b50325424a3eb86af02961ed), [`089628b`](https://github.com/sveltejs/kit/commit/089628b0d9637578085ad61b5786cd1c4476e399), [`d8617b3`](https://github.com/sveltejs/kit/commit/d8617b3f2f08144f6acfc7c636b89d62b982a33d), [`c7369a1`](https://github.com/sveltejs/kit/commit/c7369a148169dfd51af150c461ff266977b6befd), [`5e5e592`](https://github.com/sveltejs/kit/commit/5e5e592f093d05c6ea30a41a0ebf543829069c5f), [`60057c1`](https://github.com/sveltejs/kit/commit/60057c1d2a1e6429e5f315d587ebc01baef6dc94), [`f70f679`](https://github.com/sveltejs/kit/commit/f70f679143d4330b6d3b7d0e690145b5487df97f), [`38f1528`](https://github.com/sveltejs/kit/commit/38f15289e249942275eab1281516702de08b7a30), [`40092f3`](https://github.com/sveltejs/kit/commit/40092f34aa063d033fc7a4d1d6fb1c10abd8cbf6), [`ff4247e`](https://github.com/sveltejs/kit/commit/ff4247e2376862207dd9df7317f39d8bb8dd9ee4), [`79a5de5`](https://github.com/sveltejs/kit/commit/79a5de581fc1bb708879678b8295706221ba0f0f), [`a70cc4f`](https://github.com/sveltejs/kit/commit/a70cc4f2ca24e7099c898456085ffe18d191657e)]:
+  - @sveltejs/kit@3.0.0-next.14
+
 ## 6.0.0-next.6
 
 ### Patch Changes

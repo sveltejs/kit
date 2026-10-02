@@ -1,5 +1,5 @@
 /** @import { Component } from 'svelte'; */
-/** @import { Page } from '@sveltejs/kit'; */
+/** @import { Page } from '$app/state'; */
 
 import { noop } from '../utils/functions.js';
 
@@ -12,6 +12,7 @@ export class Props {
 	 * that currently live on the page — used for capturing and restoring snapshots.
 	 * It's updated/manipulated through `bind:this` in `Root.svelte`.
 	 * @type {Array<Record<string, any>>}
+	 * @deprecated only used for `export const snapshot` — TODO 4.0 get rid
 	 */
 	components = [];
 
@@ -62,7 +63,7 @@ export class RenderNode {
 	/**
 	 *
 	 * @param {Component} component
-	 * @param {Component} error
+	 * @param {Component | undefined} error
 	 */
 	constructor(component, error) {
 		this.component = component;

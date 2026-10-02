@@ -1,4 +1,4 @@
-/** @import { EnvVarConfig } from '@sveltejs/kit' */
+/** @import { EnvVarConfig } from '@sveltejs/kit/env' */
 import path from 'node:path';
 import { create_explicit_env_types } from '../env.js';
 import { write_if_changed } from './utils.js';

@@ -3,9 +3,10 @@
 	"private": true,
 	"type": "module",
 	"devDependencies": {
-		"typescript": "~6.0.3"
+		"typescript": "~6.0.3",
+		"@typescript/native": "catalog:"
 	},
 	"scripts": {
-		"testtypes": "tsc"
+		"testtypes": "node node_modules/@typescript/native/bin/tsc"
 	}
 }

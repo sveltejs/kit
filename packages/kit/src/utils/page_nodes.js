@@ -1,3 +1,4 @@
+/** @import { UniversalNode, ServerNode } from 'types' */
 import {
 	validate_layout_exports,
 	validate_layout_server_exports,
@@ -42,10 +43,10 @@ export class PageNodes {
 	/**
 	 * @template {'prerender' | 'ssr' | 'csr' | 'trailingSlash'} Option
 	 * @param {Option} option
-	 * @returns {Value | undefined}
+	 * @returns {(UniversalNode | ServerNode)[Option] | undefined}
 	 */
 	#get_option(option) {
-		/** @typedef {(import('types').UniversalNode | import('types').ServerNode)[Option]} Value */
+		/** @typedef {(UniversalNode | ServerNode)[Option]} Value */
 
 		return this.data.reduce((value, node) => {
 			return node?.universal?.[option] ?? node?.server?.[option] ?? value;

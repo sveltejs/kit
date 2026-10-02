@@ -21,7 +21,7 @@ export const config = {
 		...devices['Desktop Chrome'],
 		screenshot: 'only-on-failure',
 		trace: 'retain-on-failure',
-		channel: 'chromium'
+		channel: 'chrome'
 	},
 	workers: process.env.CI ? 2 : number_from_env('KIT_E2E_WORKERS', undefined),
 	reporter: 'list',

@@ -1,12 +1,13 @@
 /** @import { RemoteFunctionResponse, RemoteFunctionData, RemoteFunctionDataNode } from 'types' */
-/** @import { RemoteQueryUpdate } from '@sveltejs/kit' */
+/** @import { RemoteQueryUpdate } from '$app/server' */
 /** @import { CacheEntry } from './cache.svelte.js' */
 import * as devalue from 'devalue';
 import { app, _goto, live_query_map, query_map, query_responses } from '../client.js';
-import { HttpError, Redirect } from '@sveltejs/kit/internal';
+import { HttpError, Redirect, HandledHttpError } from '@sveltejs/kit/internal';
 import { untrack } from 'svelte';
 import { create_remote_key, split_remote_key } from '../../shared.js';
-import { navigating, page, notify_version } from '../state.svelte.js';
+import { navigating, page, notify_version } from '#app/state/client';
+import * as e from '../../../messages/client-errors.js';
 
 /** Indicates a query function, as opposed to a query instance */
 export const QUERY_FUNCTION_ID = Symbol('sveltekit.query_function_id');
@@ -86,7 +87,7 @@ export function pin_while_resolving(cache_map, cache, id, payload, then) {
  */
 export function unwrap_node(node) {
 	if (node.e) {
-		throw new HttpError(node.e);
+		throw new HandledHttpError(node.e);
 	}
 
 	return node.v;
@@ -97,7 +98,7 @@ export function get_remote_request_headers() {
 	// even in forks because it's state-based - therefore not using window.location.
 	// Use untrack(...) to Avoid accidental reactive dependency on pathname/search
 	return untrack(() => {
-		const url = navigating.current?.to?.url ?? page.url;
+		const url = navigating?.to?.url ?? page.url;
 
 		return {
 			'x-sveltekit-pathname': url.pathname,
@@ -109,8 +110,9 @@ export function get_remote_request_headers() {
 /**
  * @param {string} url
  * @param {RequestInit} [init]
+ * @param {Set<string> | null} [refreshes]
  */
-export async function remote_request(url, init) {
+export async function remote_request(url, init, refreshes) {
 	const response = await fetch(url, init);
 	const status = response.status;
 
@@ -118,22 +120,17 @@ export async function remote_request(url, init) {
 	notify_version(response.headers.get('x-sveltekit-version'));
 
 	if (!response.ok) {
-		const result = await response.json().catch(() => ({
-			type: 'error',
-			status,
-			error: {
-				status,
-				message: response.statusText
-			}
-		}));
+		const result = await response.json().catch(() => undefined);
 
-		throw new HttpError({ status, ...result.error });
+		throw result?.type === 'error'
+			? new HandledHttpError({ status, ...result.error })
+			: new HttpError({ status, message: response.statusText });
 	}
 
 	const result = /** @type {RemoteFunctionResponse} */ (await response.json());
 
 	if (result.type === 'error') {
-		throw new HttpError(result.error);
+		throw new HandledHttpError(result.error);
 	}
 
 	const data = /** @type {RemoteFunctionData} */ (
@@ -148,7 +145,7 @@ export async function remote_request(url, init) {
 	function refresh(key, entry, result) {
 		if (entry?.resource) {
 			if (result.e) {
-				entry.resource.fail(new HttpError(result.e));
+				entry.resource.fail(new HandledHttpError(result.e));
 			} else {
 				entry.resource.set(result.v);
 			}
@@ -163,6 +160,7 @@ export async function remote_request(url, init) {
 	// update queries with refreshed data
 	if (data.q) {
 		for (const key in data.q) {
+			refreshes?.delete(key);
 			const parts = split_remote_key(key);
 			const entry = query_map.get(parts.id)?.get(parts.payload);
 
@@ -173,6 +171,7 @@ export async function remote_request(url, init) {
 	// reconnect live queries
 	if (data.l) {
 		for (const key in data.l) {
+			refreshes?.delete(key);
 			const parts = split_remote_key(key);
 			const entry = live_query_map.get(parts.id)?.get(parts.payload);
 
@@ -187,7 +186,25 @@ export async function remote_request(url, init) {
 		}
 	}
 
+	for (const key of data.i ?? []) refreshes?.delete(key);
+
 	return data;
+}
+
+/** @param {Set<string> | null} refreshes */
+export function fail_unhandled_refreshes(refreshes) {
+	for (const key of refreshes ?? []) {
+		const parts = split_remote_key(key);
+		const entry =
+			query_map.get(parts.id)?.get(parts.payload) ??
+			live_query_map.get(parts.id)?.get(parts.payload);
+		entry?.resource.fail(
+			new HttpError({
+				status: 400,
+				message: 'Requested update was not handled by the remote function'
+			})
+		);
+	}
 }
 
 /**
@@ -202,7 +219,7 @@ export async function handle_side_channel_response(response) {
 	}
 
 	if (response.type === 'error') {
-		throw new HttpError(response.error);
+		throw new HandledHttpError(response.error);
 	}
 
 	return response;
@@ -250,9 +267,7 @@ export function categorize_updates(updates) {
 				refreshes.add(key);
 
 				if (override_keys.has(key)) {
-					throw new Error(
-						'Multiple overrides for the same query are not allowed in a single updates() invocation'
-					);
+					e.remote_updates_duplicate_override();
 				}
 
 				override_keys.add(key);
@@ -276,9 +291,7 @@ export function categorize_updates(updates) {
 			continue;
 		}
 
-		throw new Error(
-			'updates() expects a query or live query function, query resource, or query override'
-		);
+		e.remote_updates_invalid_argument();
 	}
 
 	return { overrides, refreshes };

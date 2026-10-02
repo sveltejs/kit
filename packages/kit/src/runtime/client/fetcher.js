@@ -1,12 +1,12 @@
-import { BROWSER, DEV } from 'esm-env';
-import { noop } from '../../utils/functions.js';
-import { hash } from '../../utils/hash.js';
+import { DEV } from 'esm-env';
+import { hash_request } from '../../utils/hash.js';
 import { base64_decode } from '../utils.js';
+import { fetch_cache_url } from '../shared.js';
+import * as w from '../../messages/client-warnings.js';
 
 let loading = 0;
 
-/** @type {typeof fetch} */
-const native_fetch = BROWSER ? window.fetch : /** @type {any} */ (noop);
+const native_fetch = window.fetch;
 
 export function lock_fetch() {
 	loading += 1;
@@ -16,7 +16,7 @@ export function unlock_fetch() {
 	loading -= 1;
 }
 
-if (DEV && BROWSER) {
+if (DEV) {
 	let can_inspect_stack_trace = false;
 
 	// detect whether async stack traces work
@@ -53,25 +53,23 @@ if (DEV && BROWSER) {
 		const used_kit_fetch = init?.__sveltekit_fetch__;
 
 		if (in_load_heuristic && !used_kit_fetch) {
-			console.warn(
-				`Loading ${url} using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://svelte.dev/docs/kit/load#making-fetch-requests`
-			);
+			w.window_fetch_in_load({ url });
 		}
 
 		const method = input instanceof Request ? input.method : init?.method || 'GET';
 
 		if (method !== 'GET') {
-			cache.delete(build_selector(input));
+			clear_cache(input);
 		}
 
 		return native_fetch(input, init);
 	};
-} else if (BROWSER) {
+} else {
 	window.fetch = (input, init) => {
 		const method = input instanceof Request ? input.method : init?.method || 'GET';
 
 		if (method !== 'GET') {
-			cache.delete(build_selector(input));
+			clear_cache(input);
 		}
 
 		return native_fetch(input, init);
@@ -154,6 +152,28 @@ export function dev_fetch(resource, opts) {
 }
 
 /**
+ * Evict all cached responses for a URL, including responses keyed by request data
+ * @param {RequestInfo | URL} input
+ */
+function clear_cache(input) {
+	const selector = build_selector(requested_url(input));
+	for (const key of cache.keys()) {
+		if (key.startsWith(selector)) cache.delete(key);
+	}
+}
+
+/**
+ * Non-GET requests must evict under the stored key, however the url is spelled
+ * @param {RequestInfo | URL} input
+ */
+function requested_url(input) {
+	return fetch_cache_url(
+		new URL(input instanceof Request ? input.url : input, location.href),
+		location
+	);
+}
+
+/**
  * Build the cache key for a given request
  * @param {URL | RequestInfo} resource
  * @param {RequestInit} [opts]
@@ -172,18 +192,7 @@ function build_selector(resource, opts) {
 			return null;
 		}
 
-		/** @type {import('types').StrictBody[]} */
-		const values = [];
-
-		if (opts.headers) {
-			values.push([...new Headers(opts.headers)].join(','));
-		}
-
-		if (body) {
-			values.push(/** @type {import('types').StrictBody} */ (body));
-		}
-
-		selector += `[data-hash="${hash(...values)}"]`;
+		selector += `[data-hash="${hash_request(opts.headers, body)}"]`;
 	}
 
 	return selector;

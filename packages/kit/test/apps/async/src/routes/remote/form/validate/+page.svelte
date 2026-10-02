@@ -1,5 +1,5 @@
 <script>
-	import { issue_path_form, my_form, my_form_2 } from './form.remote.ts';
+	import { issue_path_form, my_form, my_form_2, unmount_form } from './form.remote.ts';
 	import * as v from 'valibot';
 
 	const schema = v.object({
@@ -8,7 +8,13 @@
 		button: v.literal('submitter')
 	});
 
+	const unmount_schema = v.object({
+		qux: v.picklist(['a', 'b'])
+	});
+
 	let error = $state(false);
+	let mounted = $state(true);
+	let unmount_error = $state('no error');
 </script>
 
 <form
@@ -72,3 +78,26 @@
 
 	<button>submit</button>
 </form>
+
+{#if mounted}
+	<form id="unmount-form" {...unmount_form.preflight(unmount_schema)}>
+		<input {...unmount_form.fields.qux.as('text')} />
+	</form>
+{/if}
+
+<button
+	id="unmount-then-validate"
+	onclick={async () => {
+		const validated = unmount_form.validate({ all: true });
+		mounted = false;
+
+		try {
+			await validated;
+		} catch (e) {
+			unmount_error = /** @type {Error} */ (e).message;
+		}
+	}}
+>
+	unmount then validate
+</button>
+<p id="unmount-error">{unmount_error}</p>

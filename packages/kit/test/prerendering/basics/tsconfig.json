@@ -4,6 +4,7 @@
 		"checkJs": true,
 		"noEmit": true
 	},
-	"include": ["src", "test", "vite.config.js", "globalSetup.js"],
+	"include": ["src", "test", "vite.config.js", "globalSetup.js", "../../vitest-matchers.d.ts"],
+	"exclude": ["src/service-worker.js"],
 	"extends": "$app/tsconfig"
 }

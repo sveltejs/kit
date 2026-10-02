@@ -1,13 +1,13 @@
 <script>
 	import { onNavigate } from '$app/navigation';
 
-	/** @type {import("@sveltejs/kit").OnNavigate['from']} */
+	/** @type {import("$app/navigation").OnNavigate['from']} */
 	let from;
 
-	/** @type {import("@sveltejs/kit").OnNavigate['to']} */
+	/** @type {import("$app/navigation").OnNavigate['to']} */
 	let to;
 
-	/** @type {Omit<import('@sveltejs/kit').NavigationType, 'enter' | 'leave'>} */
+	/** @type {Omit<import('$app/navigation').NavigationType, 'enter' | 'leave'>} */
 	let type;
 	let shallow = false;
 

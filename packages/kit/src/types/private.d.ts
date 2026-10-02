@@ -154,7 +154,7 @@ export interface CspDirectives {
 	>;
 }
 
-export type HttpMethod = 'GET' | 'HEAD' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'OPTIONS';
+export type HttpMethod = 'GET' | 'HEAD' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'OPTIONS' | 'QUERY';
 
 export interface Logger {
 	(msg: string): void;
@@ -239,11 +239,20 @@ export interface PrerenderInvalidUrlHandler {
 export type PrerenderHttpErrorHandlerValue = 'fail' | 'warn' | 'ignore' | PrerenderHttpErrorHandler;
 export type PrerenderMissingIdHandlerValue = 'fail' | 'warn' | 'ignore' | PrerenderMissingIdHandler;
 export type PrerenderUnseenRoutesHandlerValue =
-	'fail' | 'warn' | 'ignore' | PrerenderUnseenRoutesHandler;
+	| 'fail'
+	| 'warn'
+	| 'ignore'
+	| PrerenderUnseenRoutesHandler;
 export type PrerenderEntryGeneratorMismatchHandlerValue =
-	'fail' | 'warn' | 'ignore' | PrerenderEntryGeneratorMismatchHandler;
+	| 'fail'
+	| 'warn'
+	| 'ignore'
+	| PrerenderEntryGeneratorMismatchHandler;
 export type PrerenderInvalidUrlHandlerValue =
-	'fail' | 'warn' | 'ignore' | PrerenderInvalidUrlHandler;
+	| 'fail'
+	| 'warn'
+	| 'ignore'
+	| PrerenderInvalidUrlHandler;
 
 export type PrerenderOption = boolean | 'auto';
 

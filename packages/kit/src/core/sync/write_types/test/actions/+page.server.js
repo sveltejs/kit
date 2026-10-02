@@ -1,4 +1,4 @@
-import { fail } from '../../../../../../src/exports/index.js';
+import { fail } from '@sveltejs/kit';
 
 const condition = false;
 

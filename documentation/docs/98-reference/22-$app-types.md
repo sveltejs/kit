@@ -10,7 +10,7 @@ This module contains generated types for the routes in your app.
 
 ```js
 // @noErrors
-import type { RouteId, RouteParams, LayoutParams } from '$app/types';
+import type { RouteId, PageRouteId, EndpointRouteId, RouteParams, LayoutParams } from '$app/types';
 ```
 
 ## AssetPath
@@ -27,12 +27,40 @@ type AssetPath = 'favicon.png' | 'robots.txt' | (string & {});
 
 ## RouteId
 
-A union of all the route IDs in your app. Used for `page.route.id` and `event.route.id`.
+A union of all the route IDs in your app — the union of `PageRouteId` and `EndpointRouteId`. Used for `page.route.id` and `event.route.id`.
 
 <div class="ts-block">
 
 ```dts
-type RouteId = '/' | '/my-route' | '/my-other-route/[param]';
+type RouteId = '/' | '/my-route' | '/my-other-route/[param]' | '/my-endpoint';
+```
+
+</div>
+
+## PageRouteId
+
+A union of the route IDs in your app that have a `+page`.
+
+A route ID can be in both `PageRouteId` and `EndpointRouteId`, if its directory contains both a `+page` and a `+server`. In the example below, `/my-route` has both.
+
+<div class="ts-block">
+
+```dts
+type PageRouteId = '/' | '/my-route' | '/my-other-route/[param]';
+```
+
+</div>
+
+## EndpointRouteId
+
+A union of the route IDs in your app that have a `+server`.
+
+A route ID can be in both `PageRouteId` and `EndpointRouteId`, if its directory contains both a `+page` and a `+server`. In the example below, `/my-route` has both.
+
+<div class="ts-block">
+
+```dts
+type EndpointRouteId = '/my-route' | '/my-endpoint';
 ```
 
 </div>
@@ -80,14 +108,12 @@ type RouteParams<T extends RouteId> = { /* generated */ } | Record<string, never
 
 ## LayoutParams
 
-A utility for getting the parameters associated with a given layout, which is similar to `RouteParams` but also includes optional parameters for any child route.
-
-Unlike `RouteId`, this accepts any directory in `src/routes`, since a layout can live in a directory that has no `+page` or `+server` of its own.
+A utility for getting the parameters associated with a given layout, which is similar to `RouteParams` but also includes optional parameters for any child route. It accepts the route ID of any directory containing a layout, including layout-only directories that are not part of `RouteId`.
 
 <div class="ts-block">
 
 ```dts
-type LayoutParams<T extends '/' | '/my-route' | '/my-other-route'> = { /* generated */ };
+type LayoutParams<T extends '/' | '/my-layout' | '/my-other-layout'> = { /* generated */ };
 ```
 
 </div>
