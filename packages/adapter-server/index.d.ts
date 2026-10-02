@@ -14,8 +14,7 @@ export function isHidden(file: string): boolean;
  * @example
  * ```js
  * vite: bundleRuntime({
- * 	name: 'adapter-example',
- * 	handoff: '#adapter-example',
+ * 	name: '@example/adapter-example',
  * 	src: new URL('./src', import.meta.url),
  * 	input: { index: 'index.js' }
  * })
@@ -23,12 +22,11 @@ export function isHidden(file: string): boolean;
  */
 export function bundleRuntime(options: {
 	/**
-	 * Names the module that hands build-time values to the runtime. The adapter writes
-	 * `<name>.js` next to the server directory during `adapt`
+	 * The adapter's package name. The runtime modules import build-time values from `#<name>`,
+	 * a module that the adapter writes next to the server directory during `adapt`, as
+	 * `adapter-example.js` for `@example/adapter-example`
 	 */
 	name: string;
-	/** The specifier that the runtime modules import `<name>.js` with */
-	handoff: string;
 	/** The directory that contains the adapter's runtime modules */
 	src: URL;
 	/** Entry points of the runtime: output names and their files in `src` */

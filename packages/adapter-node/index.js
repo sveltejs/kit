@@ -81,8 +81,7 @@ export default function (opts = {}) {
 		},
 
 		vite: bundleRuntime({
-			name: 'adapter-node',
-			handoff: '#@sveltejs/adapter-node',
+			name: '@sveltejs/adapter-node',
 			src: new URL('./src', import.meta.url),
 			input: {
 				'adapter-index': 'index.js',

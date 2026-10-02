@@ -7,15 +7,17 @@ export function isHidden(file) {
 }
 
 /** @type {typeof import('./index.js').bundleRuntime} */
-export function bundleRuntime({ name, handoff, src, input }) {
+export function bundleRuntime({ name, src, input }) {
 	// posix so it matches the module ids Vite reports on every platform
 	const dir = fileURLToPath(src).replaceAll('\\', '/');
+	const handoff = `#${name}`;
+	const stem = name.slice(name.lastIndexOf('/') + 1);
 
 	return {
 		plugins: {
 			post: [
 				{
-					name: `vite-plugin-sveltekit-${name}`,
+					name: `vite-plugin-sveltekit-${stem}`,
 					apply: 'build',
 					config(config) {
 						const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
@@ -45,11 +47,11 @@ export function bundleRuntime({ name, handoff, src, input }) {
 											// generated after the Vite build and rewritten to an output-relative path
 											external: [handoff],
 											output: {
-												paths: { [handoff]: `../${name}.js` },
+												paths: { [handoff]: `../${stem}.js` },
 												// the hand-off path only holds at the output root, so adapter chunks may not nest
 												chunkFileNames: (chunk) =>
 													chunk.moduleIds.some((id) => id.startsWith(dir))
-														? `${name}-[name].js`
+														? `${stem}-[name].js`
 														: 'chunks/[name].js'
 											}
 										}

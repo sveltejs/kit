@@ -174,8 +174,7 @@ export default function (opts = {}) {
 		},
 
 		vite: bundleRuntime({
-			name: 'adapter-bun',
-			handoff: '#@sveltejs/adapter-bun',
+			name: '@sveltejs/adapter-bun',
 			src: new URL('./src', import.meta.url),
 			input: { 'adapter-index': 'index.js' }
 		})
