@@ -27,25 +27,15 @@
 	},
 	"types": "index.d.ts",
 	"files": [
-		"src/*.js",
 		"index.js",
-		"index.d.ts",
-		"ambient.d.ts"
+		"index.d.ts"
 	],
-	"scripts": {
-		"test": "bun test .spec",
-		"check": "tsc",
-		"lint": "prettier --check .",
-		"format": "pnpm lint --write"
+	"dependencies": {
+		"@sveltejs/adapter-node": "workspace:^",
+		"bun-types": "^1.3.14"
 	},
 	"devDependencies": {
-		"@playwright/test": "catalog:",
-		"@sveltejs/kit": "workspace:^",
-		"@types/node": "catalog:",
-		"typescript": "catalog:"
-	},
-	"dependencies": {
-		"bun-types": "^1.3.14"
+		"@sveltejs/kit": "workspace:^"
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^3.0.0-next.0"
