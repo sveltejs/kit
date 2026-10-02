@@ -1,6 +1,8 @@
 /** @import { ValidatedConfig } from 'types' */
 /** @import { Validator } from './types.js' */
-import { styleText } from 'node:util';
+import * as e from '../../messages/build-errors.js';
+import * as w from '../../messages/build-warnings.js';
+import { join_or } from '../../utils/format.js';
 
 const directives = object({
 	'child-src': string_array(),
@@ -39,14 +41,13 @@ const directives = object({
 const prerender_handler = validate(undefined, (input, keypath) => {
 	if (typeof input === 'function') return input;
 	if (['fail', 'warn', 'ignore'].includes(input)) return input;
-	throw new Error(`${keypath} should be "fail", "warn", "ignore" or a custom function`);
+	e.config_invalid_prerender_handler({ keypath });
 });
 
 const options = {
 	adapter: validate(undefined, (input, keypath) => {
 		if (typeof input !== 'object' || !input.adapt) {
-			const message = `The SvelteKit Vite plugin ${keypath} should be an object with an \`adapt\` method`;
-			throw new Error(`${message}. See https://svelte.dev/docs/kit/adapters`);
+			e.config_invalid_adapter({ keypath });
 		}
 
 		return input;
@@ -55,7 +56,7 @@ const options = {
 	alias: deprecate(
 		validate({}, (input, keypath) => {
 			if (typeof input !== 'object') {
-				throw new Error(`${keypath} should be an object`);
+				e.config_expected_object({ keypath });
 			}
 
 			for (const key in input) {
@@ -64,8 +65,7 @@ const options = {
 
 			return input;
 		}),
-		(keypath) =>
-			`The \`${keypath}\` option is deprecated, and will be removed in a future version of SvelteKit. Use subpath imports instead: https://svelte.dev/docs/kit/$lib`
+		w.config_option_deprecated_alias
 	),
 
 	appDir: validate('_app', (input, keypath) => {
@@ -73,12 +73,10 @@ const options = {
 
 		if (input) {
 			if (input.startsWith('/') || input.endsWith('/')) {
-				throw new Error(
-					`${keypath} cannot start or end with '/'. See https://svelte.dev/docs/kit/configuration`
-				);
+				e.config_app_dir_slash({ keypath });
 			}
 		} else {
-			throw new Error(`${keypath} cannot be empty`);
+			e.config_empty_string({ keypath });
 		}
 
 		return input;
@@ -93,9 +91,7 @@ const options = {
 	}),
 
 	csrf: object({
-		checkOrigin: removed(
-			(keypath) => `\`${keypath}\` has been removed in favour of \`csrf.trustedOrigins\``
-		),
+		checkOrigin: removed(e.config_option_removed_check_origin),
 		trustedOrigins: string_array([])
 	}),
 
@@ -107,14 +103,8 @@ const options = {
 
 	experimental: object(
 		{
-			tracing: removed(
-				(keypath) =>
-					`\`${keypath}\` has been removed. Server-side tracing is now configured via \`tracing.server\``
-			),
-			instrumentation: removed(
-				(keypath) =>
-					`\`${keypath}\` has been removed. \`src/instrumentation.server.js\` is now included in the build automatically when it exists; no opt-in is required`
-			),
+			tracing: removed(e.config_option_removed_experimental_tracing),
+			instrumentation: removed(e.config_option_removed_experimental_instrumentation),
 			remoteFunctions: boolean(false),
 			forkPreloads: boolean(false),
 			handleRenderingErrors: removed()
@@ -124,16 +114,16 @@ const options = {
 
 	extensions: validate(['.svelte'], (input, keypath) => {
 		if (!Array.isArray(input) || !input.every((page) => typeof page === 'string')) {
-			throw new Error(`${keypath} must be an array of strings`);
+			e.config_expected_string_array({ keypath });
 		}
 
 		input.forEach((extension) => {
 			if (extension[0] !== '.') {
-				throw new Error(`Each member of ${keypath} must start with '.' — saw '${extension}'`);
+				e.config_extension_missing_dot({ keypath, extension });
 			}
 
 			if (!/^(\.[a-z0-9]+)+$/i.test(extension)) {
-				throw new Error(`File extensions must be alphanumeric — saw '${extension}'`);
+				e.config_extension_invalid({ extension });
 			}
 		});
 
@@ -148,10 +138,7 @@ const options = {
 			server: string(null),
 			universal: string(null)
 		}),
-		lib: removed(
-			(keypath) =>
-				`\`${keypath}\` has been removed. Use #lib instead of $lib: https://svelte.dev/docs/kit/$lib`
-		),
+		lib: removed(e.config_option_removed_files_lib),
 		params: string(null),
 		routes: string(null),
 		serviceWorker: string(null),
@@ -168,18 +155,14 @@ const options = {
 			.map((key) => `\`${key}\``)
 			.join(', ');
 
-		throw new Error(
-			`SvelteKit configuration (${keys}) no longer lives inside a \`kit\` namespace. Pass it directly to the \`sveltekit(...)\` Vite plugin`
-		);
+		e.config_kit_namespace({ keys });
 	}),
 
 	outDir: string('.svelte-kit'),
 
 	output: object({
 		linkHeaderPreload: boolean(false),
-		preloadStrategy: removed(
-			(keypath) => `\`${keypath}\` has been removed. modulepreload will always be used`
-		),
+		preloadStrategy: removed(e.config_option_removed_preload_strategy),
 		bundleStrategy: list(['split', 'single', 'inline'])
 	}),
 
@@ -188,9 +171,7 @@ const options = {
 			assert_string(input, keypath);
 
 			if (input !== '' && (input.endsWith('/') || !input.startsWith('/'))) {
-				throw new Error(
-					`${keypath} option must either be the empty string or a root-relative path that starts but doesn't end with '/'. See https://svelte.dev/docs/kit/configuration#paths`
-				);
+				e.config_paths_base_invalid({ keypath });
 			}
 
 			return input;
@@ -200,15 +181,11 @@ const options = {
 
 			if (input) {
 				if (!/^[a-z]+:\/\//.test(input)) {
-					throw new Error(
-						`${keypath} option must be an absolute path, if specified. See https://svelte.dev/docs/kit/configuration#paths`
-					);
+					e.config_paths_assets_not_absolute({ keypath });
 				}
 
 				if (input.endsWith('/')) {
-					throw new Error(
-						`${keypath} option must not end with '/'. See https://svelte.dev/docs/kit/configuration#paths`
-					);
+					e.config_paths_assets_trailing_slash({ keypath });
 				}
 			}
 
@@ -222,23 +199,17 @@ const options = {
 			try {
 				url = new URL(input);
 			} catch {
-				throw new Error(
-					`${keypath} must be a valid origin (e.g. 'https://my-site.com'). '${input}' could not be parsed as a URL`
-				);
+				e.config_origin_invalid({ keypath, input });
 			}
 
 			if (url.protocol !== 'http:' && url.protocol !== 'https:') {
-				throw new Error(
-					`${keypath} must be a valid origin — only 'http' and 'https' protocols are supported, received '${url.protocol}'`
-				);
+				e.config_origin_protocol({ keypath, protocol: url.protocol });
 			}
 
 			const origin = url.origin;
 
 			if (input !== origin) {
-				throw new Error(
-					`${keypath} must be a valid origin — received '${input}' which contains a path, query, or hash. Use the bare origin '${origin}' instead`
-				);
+				e.config_origin_has_path({ keypath, input, origin });
 			}
 
 			return origin;
@@ -249,18 +220,22 @@ const options = {
 	preprocess: any(),
 
 	prerender: object({
-		concurrency: number(1),
+		concurrency: validate(1, (input, keypath) => {
+			if (!Number.isInteger(input) || input < 1) {
+				e.config_expected_positive_integer({ keypath });
+			}
+
+			return input;
+		}),
 		crawl: boolean(true),
 		entries: validate(['*'], (input, keypath) => {
 			if (!Array.isArray(input) || !input.every((page) => typeof page === 'string')) {
-				throw new Error(`${keypath} must be an array of strings`);
+				e.config_expected_string_array({ keypath });
 			}
 
 			input.forEach((page) => {
 				if (page !== '*' && page[0] !== '/') {
-					throw new Error(
-						`Each member of ${keypath} must be either '*' or an absolute path beginning with '/' — saw '${page}'`
-					);
+					e.config_prerender_entry_invalid({ keypath, entry: page });
 				}
 			});
 
@@ -273,9 +248,7 @@ const options = {
 		handleUnseenRoutes: prerender_handler,
 		handleInvalidUrl: prerender_handler,
 
-		origin: removed(
-			(keypath) => `\`${keypath}\` has been removed in favour of \`config.paths.origin\``
-		)
+		origin: removed(e.config_option_removed_prerender_origin)
 	}),
 
 	router: object({
@@ -299,9 +272,7 @@ const options = {
 		object({
 			config: fun((config) => config)
 		}),
-		(keypath) => {
-			return `The \`${keypath}\` option is deprecated, and will be removed in a future version. Add configuration to tsconfig.json directly`;
-		}
+		w.config_option_deprecated_typescript
 	),
 
 	version: object({
@@ -309,10 +280,7 @@ const options = {
 		pollInterval: number(3_600_000)
 	}),
 
-	vitePlugin: removed(
-		(keypath) =>
-			`\`${keypath}\` has been removed. Pass \`vite-plugin-svelte\` options directly to the \`sveltekit(...)\` Vite plugin`
-	)
+	vitePlugin: removed(e.config_option_removed_vite_plugin)
 };
 
 /** @type {Validator<ValidatedConfig>} */
@@ -320,17 +288,13 @@ export const validate_options = object(options, true);
 
 /**
  * @param {Validator} fn
- * @param {(keypath: string) => string} get_message
+ * @param {(values: { keypath: string }) => void} warn
  * @returns {Validator}
  */
-function deprecate(
-	fn,
-	get_message = (keypath) =>
-		`The \`${keypath}\` option is deprecated, and will be removed in a future version`
-) {
+function deprecate(fn, warn = w.config_option_deprecated) {
 	return (input, keypath) => {
 		if (input !== undefined) {
-			console.warn(styleText(['bold', 'yellow'], get_message(keypath)));
+			warn({ keypath });
 		}
 
 		return fn(input, keypath);
@@ -349,16 +313,13 @@ export const kit_options = Object.keys(kit_defaults);
 export const kit_experimental_options = Object.keys(kit_defaults.experimental);
 
 /**
- * @param {(keypath: string) => string} get_message
+ * @param {(values: { keypath: string }) => never} error
  * @returns {Validator}
  */
-function removed(
-	get_message = (keypath) =>
-		`The \`${keypath}\` option has been removed. Please see the list of breaking changes for your major release`
-) {
+function removed(error = e.config_option_removed) {
 	return (input, keypath) => {
 		if (typeof input !== 'undefined') {
-			throw new Error(get_message(keypath));
+			error({ keypath });
 		}
 	};
 }
@@ -374,7 +335,7 @@ export function object(children, allow_unknown = false) {
 		const output = {};
 
 		if ((input && typeof input !== 'object') || Array.isArray(input)) {
-			throw new Error(`${keypath} should be an object`);
+			e.config_expected_object({ keypath });
 		}
 
 		for (const key in input) {
@@ -383,14 +344,11 @@ export function object(children, allow_unknown = false) {
 					const value = input[key];
 					if (value !== undefined) output[key] = value;
 				} else {
-					let message = `Unexpected option ${keypath}.${key}`;
-
 					// special case
-					if (keypath === 'config.kit' && key in kit_options) {
-						message += ` (did you mean config.${key}?)`;
-					}
+					const suggestion =
+						keypath === 'config.kit' && key in kit_options ? `config.${key}` : undefined;
 
-					throw new Error(message);
+					e.config_unexpected_option({ keypath: `${keypath}.${key}`, suggestion });
 				}
 			}
 		}
@@ -425,7 +383,7 @@ function string(fallback, allow_empty = true) {
 		assert_string(input, keypath);
 
 		if (!allow_empty && input === '') {
-			throw new Error(`${keypath} cannot be empty`);
+			e.config_empty_string({ keypath });
 		}
 
 		return input;
@@ -439,7 +397,7 @@ function string(fallback, allow_empty = true) {
 function string_array(fallback) {
 	return validate(fallback, (input, keypath) => {
 		if (!Array.isArray(input) || input.some((value) => typeof value !== 'string')) {
-			throw new Error(`${keypath} must be an array of strings, if specified`);
+			e.config_expected_string_array({ keypath });
 		}
 
 		return input;
@@ -453,7 +411,7 @@ function string_array(fallback) {
 function number(fallback) {
 	return validate(fallback, (input, keypath) => {
 		if (typeof input !== 'number') {
-			throw new Error(`${keypath} should be a number, if specified`);
+			e.config_expected_number({ keypath });
 		}
 		return input;
 	});
@@ -466,7 +424,7 @@ function number(fallback) {
 function boolean(fallback) {
 	return validate(fallback, (input, keypath) => {
 		if (typeof input !== 'boolean') {
-			throw new Error(`${keypath} should be true or false, if specified`);
+			e.config_expected_boolean({ keypath });
 		}
 		return input;
 	});
@@ -479,12 +437,11 @@ function boolean(fallback) {
 function list(options, fallback = options[0]) {
 	return validate(fallback, (input, keypath) => {
 		if (!options.includes(input)) {
-			// prettier-ignore
-			const msg = options.length > 2
-				? `${keypath} should be one of ${options.slice(0, -1).map(input => `"${input}"`).join(', ')} or "${options[options.length - 1]}"`
-				: `${keypath} should be either "${options[0]}" or "${options[1]}"`;
+			const quoted = options.map((option) => `"${option}"`);
+			const expected =
+				options.length > 2 ? `one of ${join_or(quoted)}` : `either ${join_or(quoted)}`;
 
-			throw new Error(msg);
+			e.config_expected_one_of({ keypath, options: expected });
 		}
 		return input;
 	});
@@ -497,7 +454,7 @@ function list(options, fallback = options[0]) {
 function fun(fallback) {
 	return validate(fallback, (input, keypath) => {
 		if (typeof input !== 'function') {
-			throw new Error(`${keypath} should be a function, if specified`);
+			e.config_expected_function({ keypath });
 		}
 		return input;
 	});
@@ -513,6 +470,6 @@ function any() {
  */
 function assert_string(input, keypath) {
 	if (typeof input !== 'string') {
-		throw new Error(`${keypath} should be a string, if specified`);
+		e.config_expected_string({ keypath });
 	}
 }

@@ -6,6 +6,7 @@ import { validate_config } from '../../core/config/index.js';
 import { posixify } from '../../utils/os.js';
 import { dedent } from '../../core/sync/utils.js';
 import {
+	config_snippet,
 	error_for_missing_config,
 	get_config_aliases,
 	normalize_id,
@@ -136,35 +137,31 @@ test('recognizes remote modules', () => {
 	}
 });
 
-test('error_for_missing_config - simple single level config', () => {
-	expect(() => error_for_missing_config('feature', 'adapter', 'true')).toThrow(
-		dedent`
-			To enable feature, add the following to your SvelteKit plugin in \`vite.config.js\`:
-
-			adapter: true
-		`
-	);
-});
-
-test('error_for_missing_config - nested config', () => {
+test('error_for_missing_config throws config_feature_disabled', () => {
 	expect(() =>
 		error_for_missing_config('remote functions', 'experimental.remoteFunctions', 'true')
-	).toThrow(
-		dedent`
-			To enable remote functions, add the following to your SvelteKit plugin in \`vite.config.js\`:
+	).toThrowKitError('config_feature_disabled', {
+		contains: ['remote functions', config_snippet('experimental.remoteFunctions', 'true')]
+	});
+});
 
+test.each([
+	['adapter', 'true', 'adapter: true'],
+	['someFeature', 'false', 'someFeature: false'],
+	['special', '{ enabled: true }', 'special: { enabled: true }'],
+	[
+		'experimental.remoteFunctions',
+		'true',
+		dedent`
 			experimental: {
 			  remoteFunctions: true
 			}
 		`
-	);
-});
-
-test('error_for_missing_config - deeply nested config', () => {
-	expect(() => error_for_missing_config('deep feature', 'a.b.c.d.e', '"value"')).toThrow(
+	],
+	[
+		'a.b.c.d.e',
+		'"value"',
 		dedent`
-			To enable deep feature, add the following to your SvelteKit plugin in \`vite.config.js\`:
-
 			a: {
 			  b: {
 			    c: {
@@ -175,27 +172,7 @@ test('error_for_missing_config - deeply nested config', () => {
 			  }
 			}
 		`
-	);
-});
-
-test('error_for_missing_config - two level config', () => {
-	expect(() => error_for_missing_config('some feature', 'someFeature', 'false')).toThrow(
-		dedent`
-			To enable some feature, add the following to your SvelteKit plugin in \`vite.config.js\`:
-
-			someFeature: false
-		`
-	);
-});
-
-test('error_for_missing_config - handles special characters in feature name', () => {
-	expect(() =>
-		error_for_missing_config('special-feature.js', 'special', '{ enabled: true }')
-	).toThrow(
-		dedent`
-			To enable special-feature.js, add the following to your SvelteKit plugin in \`vite.config.js\`:
-
-			special: { enabled: true }
-		`
-	);
+	]
+])('config_snippet(%j, %j)', (path, value, expected) => {
+	expect(config_snippet(path, value)).toBe(expected);
 });

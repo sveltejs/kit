@@ -603,7 +603,8 @@ function replace_ext_with_js(file_path) {
 function generate_params_type(params, outdir, config) {
 	const path_to_params = () => {
 		const params_file =
-			resolve_entry(config.files.params) ?? config.files.params.replace(/\.(js|ts)$/, '') + '.js';
+			resolve_entry(config.files.params, config.moduleExtensions) ??
+			config.files.params.replace(/\.(js|ts)$/, '') + '.js';
 
 		return posixify(path.relative(outdir, params_file));
 	};

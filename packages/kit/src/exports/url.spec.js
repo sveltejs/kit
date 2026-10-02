@@ -1,4 +1,4 @@
-import { assert, describe } from 'vitest';
+import { assert, describe, expect } from 'vitest';
 import { is_external_location, validate_redirect_location } from './url.js';
 
 describe('is_absolute_location', (test) => {
@@ -30,27 +30,41 @@ describe('validate_redirect_location', (test) => {
 		validate_redirect_location('/foo');
 	});
 
-	test('requires permission for absolute locations', () => {
-		assert.throws(
-			() => validate_redirect_location('https://google.de'),
-			/Cannot redirect to external URL "https:\/\/google\.de"/
-		);
+	test.each([
+		['/foo', { external: true }],
+		['https://example.com', { external: true }],
+		['https://example.com/a', { external: ['https://example.com'] }],
+		['javascript:alert(1)', { external: ['javascript:'] }]
+	])('allows %j with %j', (location, options) => {
+		validate_redirect_location(location, options);
 	});
 
-	test('requires permission for locations that parse as absolute after URL normalization', () => {
-		assert.throws(
-			() => validate_redirect_location(' https://google.de'),
-			/Cannot redirect to external URL " https:\/\/google\.de"/
-		);
+	test.each([
+		// locations that parse as absolute after URL normalization count as external too
+		...['https://google.de', ' https://google.de', '\\\\google.de', 'x:foo'].map((location) => ({
+			location,
+			options: undefined,
+			code: 'redirect_external_not_allowed'
+		})),
+		{
+			location: 'javascript:alert(1)',
+			options: { external: true },
+			code: 'redirect_external_javascript'
+		},
+		{
+			location: 'https://evil.com',
+			options: { external: ['https://google.de'] },
+			code: 'redirect_external_not_in_allowlist'
+		}
+	])('rejects $location with $code', ({ location, options, code }) => {
+		expect(() => validate_redirect_location(location, options)).toThrowKitError(code, {
+			contains: [JSON.stringify(location)]
+		});
+	});
 
-		assert.throws(
-			() => validate_redirect_location('\\\\google.de'),
-			/Cannot redirect to external URL "\\\\\\\\google\.de"/
-		);
-
-		assert.throws(
-			() => validate_redirect_location('x:foo'),
-			/Cannot redirect to external URL "x:foo"/
-		);
+	test('rejects an invalid external option', () => {
+		expect(() =>
+			validate_redirect_location('https://google.de', { external: /** @type {any} */ ('yes') })
+		).toThrowKitError('redirect_external_option_invalid');
 	});
 });

@@ -5,6 +5,7 @@ import { create_remote_key, parse_remote_arg } from '../../../shared.js';
 import { noop } from '../../../../utils/functions.js';
 import { get_cache } from './shared.js';
 import { refresh } from './query.js';
+import * as e from '../../../../messages/server-errors.js';
 
 /**
  * Inside a remote `command` or `form` callback, returns an iterable
@@ -111,9 +112,7 @@ export function requested(query, limit) {
 		internals?.type !== 'query_batch' &&
 		internals?.type !== 'query_live'
 	) {
-		throw new Error(
-			'requested(...) expects a query function created with query(...), query.batch(...), or query.live(...)'
-		);
+		e.remote_requested_invalid_query();
 	}
 
 	// narrow-stable alias so generator closures below don't lose the narrowing
@@ -139,9 +138,7 @@ export function requested(query, limit) {
 	// we will enable requested(...) in contexts where it shouldn't be allowed,
 	// such as load functions or other server functions
 	if (!state.is_in_remote_form_or_command) {
-		throw new Error(
-			'requested(...) can only be called in the context of a command/form remote function'
-		);
+		e.remote_requested_context();
 	}
 	const [selected, skipped] = split_limit([...payloads], limit);
 
@@ -171,10 +168,7 @@ export function requested(query, limit) {
 					const validated = __.validate(parsed);
 
 					if (is_thenable(validated)) {
-						throw new Error(
-							// TODO improve
-							`requested(${__.name}, ${limit}) cannot be used with synchronous iteration because the query validator is async. Use \`for await ... of\` instead`
-						);
+						e.remote_requested_async_validator({ name: __.name, limit: String(limit) });
 					}
 
 					yield {
@@ -207,7 +201,11 @@ export function requested(query, limit) {
 		},
 		async refreshAll() {
 			if (__.type === 'query_live') {
-				throw new Error('refreshAll() is invalid for live queries. Use reconnectAll() instead.');
+				e.remote_requested_wrong_method({
+					method: 'refreshAll',
+					type: 'live',
+					replacement: 'reconnectAll'
+				});
 			}
 
 			for await (const { query } of result) {
@@ -216,7 +214,11 @@ export function requested(query, limit) {
 		},
 		async reconnectAll() {
 			if (__.type !== 'query_live') {
-				throw new Error('reconnectAll() is invalid for regular queries. Use refreshAll() instead.');
+				e.remote_requested_wrong_method({
+					method: 'reconnectAll',
+					type: 'regular',
+					replacement: 'refreshAll'
+				});
 			}
 
 			for await (const { query } of result) {
@@ -242,7 +244,7 @@ function split_limit(array, limit) {
 		return [array, []];
 	}
 	if (!Number.isInteger(limit) || limit < 0) {
-		throw new Error('Limit must be a non-negative integer or Infinity');
+		e.remote_requested_invalid_limit();
 	}
 	return [array.slice(0, limit), array.slice(limit)];
 }

@@ -4,12 +4,12 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
-import * as url from 'node:url';
 import { styleText } from 'node:util';
 import { validate_options, kit_options, kit_experimental_options } from './options.js';
 import { resolve_entry } from '../../utils/filesystem.js';
 import { import_peer } from '../../utils/import.js';
 import { stackless } from '../../utils/error.js';
+import * as e from '../../messages/build-errors.js';
 
 /**
  * Splits the config passed to the `sveltekit` Vite plugin into the options that
@@ -78,7 +78,7 @@ export function load_template(cwd, config) {
 	const relative = path.relative(cwd, files.appTemplate);
 
 	if (!fs.existsSync(files.appTemplate)) {
-		throw new Error(`${relative} does not exist`);
+		e.app_template_missing({ file: relative });
 	}
 
 	const contents = fs.readFileSync(files.appTemplate, 'utf8');
@@ -86,7 +86,7 @@ export function load_template(cwd, config) {
 	const expected_tags = ['%sveltekit.head%', '%sveltekit.body%'];
 	expected_tags.forEach((tag) => {
 		if (contents.indexOf(tag) === -1) {
-			throw new Error(`${relative} is missing ${tag}`);
+			e.app_template_tag_missing({ file: relative, tag });
 		}
 	});
 
@@ -104,7 +104,7 @@ export function load_error_page(config) {
 	// Don't do this inside resolving the config, because that would mean
 	// adding/removing error.html isn't detected and would require a restart.
 	if (!fs.existsSync(config.files.errorTemplate)) {
-		errorTemplate = url.fileURLToPath(new URL('./default-error.html', import.meta.url));
+		errorTemplate = path.join(import.meta.dirname, 'default-error.html');
 	}
 
 	return fs.readFileSync(errorTemplate, 'utf-8');
@@ -138,12 +138,10 @@ export function process_config(config, cwd) {
 	if (
 		config.csp?.directives?.['require-trusted-types-for']?.includes('script') &&
 		config.serviceWorker.register &&
-		resolve_entry(path.resolve(cwd, config.files.serviceWorker)) &&
+		resolve_entry(path.resolve(cwd, config.files.serviceWorker), config.moduleExtensions) &&
 		!config.csp?.directives?.['trusted-types']?.includes('sveltekit-trusted-url')
 	) {
-		throw new Error(
-			"The `csp.directives['trusted-types']` option must include 'sveltekit-trusted-url' when `serviceWorker.register` is true"
-		);
+		e.config_csp_trusted_types_missing();
 	}
 
 	config.outDir = path.resolve(cwd, config.outDir);
@@ -170,9 +168,7 @@ export function process_config(config, cwd) {
 export function validate_config(config) {
 	try {
 		if (typeof config !== 'object') {
-			throw new Error(
-				'The SvelteKit options from the Vite config must be an object. See https://svelte.dev/docs/kit/configuration'
-			);
+			e.config_not_object();
 		}
 
 		const validated = validate_options(config, 'config');
@@ -189,14 +185,10 @@ export function validate_config(config) {
 
 		if (validated.router.resolution === 'server') {
 			if (validated.router.type === 'hash') {
-				throw new Error(
-					"The `router.resolution` option cannot be 'server' if `router.type` is 'hash'"
-				);
+				e.config_server_resolution_hash();
 			}
 			if (validated.output.bundleStrategy !== 'split') {
-				throw new Error(
-					"The `router.resolution` option cannot be 'server' if `output.bundleStrategy` is 'inline' or 'single'"
-				);
+				e.config_server_resolution_bundle_strategy();
 			}
 		}
 

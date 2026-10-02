@@ -17,6 +17,8 @@ Additional [community-provided adapters](/packages#sveltekit-adapters) exist for
 
 ## Using adapters
 
+Run [`npx sv add sveltekit-adapter`](/docs/cli/sveltekit-adapter) to install an adapter and add it to your config.
+
 Your adapter is specified in `vite.config.js`:
 
 ```js

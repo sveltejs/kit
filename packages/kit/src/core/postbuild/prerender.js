@@ -17,6 +17,11 @@ import { createReadableStream } from '@sveltejs/kit/node';
 import generate_fallback from './fallback.js';
 import { stringify_remote_arg } from '../../runtime/shared.js';
 import { matches_content_type } from '../../utils/http.js';
+import { fix_stack_trace } from '../../runtime/server/sourcemaps.js';
+import * as e from '../../messages/build-errors.js';
+import * as w from '../../messages/build-warnings.js';
+import { capture_message } from '../../messages/internal/build.js';
+import { bullet_list } from '../../utils/format.js';
 
 export default forked(import.meta.url, prerender);
 
@@ -51,23 +56,16 @@ async function prerender({
 	/** @type {import('types').SSRManifest} */
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
-	/** @type {import('types').ServerInternalModule} */
-	const { set_building, set_prerendering, set_manifest, set_read_implementation, format_response } =
-		await import(pathToFileURL(`${out}/server/internal.js`).href);
-
-	// configure `import { building } from `$app/env` —
-	// essential we do this before analysing the code
-	set_building();
-	set_prerendering();
-
-	// `set_env` and `Server` live in modules that import the user's `src/env` config. We import them
-	// *after* `set_building()` so that `building`-dependent expressions resolve correctly
-	/** @type {typeof import('<sveltekit:generated>/env/config.js')} */
-	const { set_env } = await import(pathToFileURL(`${out}/server/env.js`).href);
-	set_env(env);
-
 	/** @type {import('types').ServerModule} */
-	const { Server } = await import(pathToFileURL(`${out}/server/index.js`).href);
+	const { configure, format_response } = await import(pathToFileURL(`${out}/server/index.js`).href);
+
+	const { init, respond } = await configure({
+		building: true,
+		prerendering: true,
+		env,
+		manifest,
+		read: (file) => createReadableStream(`${out}/server/${file}`)
+	});
 
 	const throw_handled = () => {
 		throw new Error('__handled__');
@@ -187,19 +185,23 @@ async function prerender({
 		'handleHttpError',
 		config.prerender.handleHttpError,
 		({ status, path, referrer, referenceType }) => {
-			let message = `Failed to prerender ${path}`;
-
 			if (status === 404) {
 				if (!path.startsWith(config.paths.base)) {
-					message = referrer ? `${path} (${referenceType} from ${referrer})` : path;
+					return capture_message(() =>
+						e.prerender_path_outside_base(
+							referrer ? { path, reference_type: referenceType, referrer } : { path }
+						)
+					);
+				}
 
-					message += ` does not begin with \`base\`. You can fix this by using \`resolve('${path}')\` from \`$app/paths\`. The base path is configurable from \`paths.base\``;
-				} else if (referrer) {
-					message = `${path} was ${referenceType} from ${referrer}`;
+				if (referrer) {
+					return capture_message(() =>
+						e.prerender_http_error({ path, reference_type: referenceType, referrer })
+					);
 				}
 			}
 
-			return message;
+			return capture_message(() => e.prerender_http_error({ path }));
 		}
 	);
 
@@ -207,9 +209,12 @@ async function prerender({
 		'handleMissingId',
 		config.prerender.handleMissingId,
 		({ path, id, referrers }) => {
-			return (
-				`The following pages contain links to ${path}#${id}, but no element with id="${id}" exists on ${path}:` +
-				referrers.map((l) => `\n  - ${l}`).join('')
+			return capture_message(() =>
+				e.prerender_missing_id({
+					path,
+					id,
+					referrers: bullet_list(referrers)
+				})
 			);
 		}
 	);
@@ -218,7 +223,13 @@ async function prerender({
 		'handleEntryGeneratorMismatch',
 		config.prerender.handleEntryGeneratorMismatch,
 		({ generatedFromId, entry, matchedId }) => {
-			return `The entries export from ${generatedFromId} generated entry ${entry}, which was matched by ${matchedId === entry ? 'a static route' : matchedId}`;
+			return capture_message(() =>
+				e.prerender_entry_generator_mismatch({
+					id: generatedFromId,
+					entry,
+					matched: matchedId === entry ? 'a static route' : matchedId
+				})
+			);
 		}
 	);
 
@@ -226,8 +237,7 @@ async function prerender({
 		'handleUnseenRoutes',
 		config.prerender.handleUnseenRoutes,
 		({ routes }) => {
-			const list = routes.map((id) => `  - ${id}`).join('\n');
-			return `The following routes were marked as prerenderable, but were not prerendered because they were not found while crawling your app:\n${list}`;
+			return capture_message(() => e.prerender_unseen_routes({ routes: bullet_list(routes) }));
 		}
 	);
 
@@ -235,7 +245,9 @@ async function prerender({
 		'handleInvalidUrl',
 		config.prerender.handleInvalidUrl,
 		({ href, referrer }) => {
-			return `Invalid URL ${href}${referrer ? ` (linked from ${referrer})` : ''}`;
+			return capture_message(() =>
+				e.prerender_invalid_url(referrer ? { href, referrer } : { href })
+			);
 		}
 	);
 
@@ -384,9 +396,9 @@ async function prerender({
 
 		const request = new Request(prerender_origin + encoded);
 
-		const response = await server.respond(request, {
+		const response = await respond(request, {
 			getClientAddress() {
-				throw new Error('Cannot read clientAddress during prerendering');
+				e.prerender_client_address();
 			},
 			prerendering: {
 				dependencies,
@@ -535,9 +547,7 @@ async function prerender({
 		const is_html = response_type === REDIRECT || matches_content_type(type, 'text/html');
 
 		if (!is_html && response.status === 200 && decoded.slice(config.paths.base.length + 1) === '') {
-			throw new Error(
-				`Cannot prerender a root +server.js that returns a non-HTML response - static hosts always serve an HTML file for \`${config.paths.base || '/'}\``
-			);
+			e.prerender_root_non_html({ base: config.paths.base || '/' });
 		}
 
 		const file = output_filename(decoded, is_html);
@@ -583,7 +593,7 @@ async function prerender({
 					}
 				}
 			} else {
-				log.warn(`location header missing on redirect received from ${decoded}`);
+				w.prerender_redirect_location_missing({ path: decoded });
 			}
 
 			return;
@@ -591,18 +601,14 @@ async function prerender({
 
 		if (response.status === 200) {
 			if (existsSync(dest) && statSync(dest).isDirectory()) {
-				throw new Error(
-					`Cannot save ${decoded} as it is already a directory. See https://svelte.dev/docs/kit/page-options#prerender-route-conflicts for more information`
-				);
+				e.prerender_directory_conflict({ path: decoded });
 			}
 
 			const dir = dirname(dest);
 
 			if (existsSync(dir) && !statSync(dir).isDirectory()) {
 				const parent = decoded.split('/').slice(0, -1).join('/');
-				throw new Error(
-					`Cannot save ${decoded} as ${parent} is already a file. See https://svelte.dev/docs/kit/page-options#prerender-route-conflicts for more information`
-				);
+				e.prerender_directory_conflict({ path: decoded, parent });
 			}
 
 			mkdirSync(dir, { recursive: true });
@@ -651,11 +657,6 @@ async function prerender({
 		}
 	}
 
-	// the user's remote function modules may reference `read` or the `manifest` at the top-level
-	// so we need to set them before evaluating those modules to avoid potential runtime errors
-	set_manifest(manifest);
-	set_read_implementation((file) => createReadableStream(`${out}/server/${file}`));
-
 	/** @type {Array<import('types').RemotePrerenderInternals>} */
 	const prerender_functions = [];
 
@@ -676,11 +677,7 @@ async function prerender({
 
 	// only run the server after the `should_prerender` check so that we
 	// don't run the user's init hook unnecessarily
-	const server = new Server(manifest);
-	await server.init({
-		env,
-		read: (file) => createReadableStream(`${config.outDir}/output/server/${file}`)
-	});
+	await init();
 
 	log.info('Prerendering');
 
@@ -709,8 +706,18 @@ async function prerender({
 	}
 
 	for (const internals of prerender_functions) {
+		/** @type {any[]} */
+		let inputs;
+
+		try {
+			inputs = (await internals.inputs?.()) ?? [];
+		} catch (e) {
+			if (e instanceof Error) fix_stack_trace(e);
+			throw e;
+		}
+
 		if (internals.has_arg) {
-			for (const arg of (await internals.inputs?.()) ?? []) {
+			for (const arg of inputs) {
 				void enqueue(null, remote_prefix + internals.id + '/' + stringify_remote_arg(arg));
 			}
 		} else {

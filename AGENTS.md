@@ -12,9 +12,6 @@ This guide is for AI coding agents working in the SvelteKit monorepo.
 # Initial setup (takes 3-4 minutes, set 10+ min timeout)
 pnpm install --frozen-lockfile
 
-# Build all packages (~1-2 seconds)
-pnpm build
-
 # Format code (~15 seconds)
 pnpm run format
 
@@ -32,7 +29,7 @@ pnpm run check
 pnpm -F @sveltejs/kit test:unit
 
 # Run a single unit test file
-pnpm -F @sveltejs/kit test:unit:dev path/to/test.spec.js
+pnpm vitest run path/to/test.spec.js
 
 # Integration tests (10-30 minutes, set 60+ min timeout)
 pnpm test:kit

@@ -3,7 +3,7 @@ name: CI
 on:
   push:
     branches:
-      - version-3
+      - main
     paths-ignore: &paths_ignore
       - '.changeset/**'
       - '.githooks/**'
@@ -45,7 +45,7 @@ jobs:
           persist-credentials: false
       - uses: ./.github/actions/node-setup
       - run: pnpm run lint
-      - run: cd packages/kit && pnpm prepublishOnly && { [ "`git status --porcelain=v1`" == "" ] || (echo "Generated types have changed — please run prepublishOnly locally and commit the changes after you have reviewed them"; git diff; exit 1); }
+      - run: cd packages/kit && pnpm prepublishOnly && { [ "`git status --porcelain=v1`" == "" ] || (echo "Generated types or messages have changed — please run prepublishOnly locally and commit the changes after you have reviewed them"; git diff; exit 1); }
       - run: pnpm run check
   test:
     # unit tests for kit and every other package; `script` is a root package.json script

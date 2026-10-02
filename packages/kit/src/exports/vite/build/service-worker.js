@@ -2,6 +2,7 @@
 /** @import { Plugin, UserConfig } from 'vite' */
 import { runtime_directory } from '../../../core/utils.js';
 import { warn_overridden_config } from '../utils.js';
+import * as e from '../../../messages/build-errors.js';
 
 /**
  * @param {ValidatedConfig} kit
@@ -18,7 +19,7 @@ export function plugin_service_worker_build(kit, get_config) {
 			if (!service_worker_entry_file) return;
 
 			if (kit.paths.assets) {
-				throw new Error('Cannot use service worker alongside config.paths.assets');
+				e.service_worker_assets();
 			}
 
 			const user_service_worker_output_config =
@@ -87,11 +88,11 @@ export function plugin_service_worker_build(kit, get_config) {
 			}
 
 			if (invalid_modules.size > 0) {
-				throw new Error(
-					`Cannot import ${Array.from(modules.values())
+				e.service_worker_invalid_import({
+					modules: Array.from(modules.values())
 						.filter((module) => invalid_modules.has(module))
-						.join(', ')} into service-worker code.`
-				);
+						.join(', ')
+				});
 			}
 		}
 	};

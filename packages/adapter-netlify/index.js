@@ -1,22 +1,13 @@
 /** @import { IntegrationsConfig } from '@netlify/edge-functions' */
 /** @import { Builder, RouteDefinition } from '@sveltejs/kit' */
-/** @import { TomlTable } from 'smol-toml' */
 import crypto from 'node:crypto';
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { builtinModules } from 'node:module';
 import process from 'node:process';
-import { parse } from 'smol-toml';
 import { build } from 'rolldown';
-import { matches, get_publish_directory, s } from './utils.js';
-
-/**
- * @typedef {{
- *   build?: { publish?: string }
- *   functions?: { node_bundler?: 'zisi' | 'esbuild' }
- * } & TomlTable} NetlifyConfig
- */
+import { matches, s } from './utils.js';
 
 const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf-8'));
 const adapter_version = pkg.version;
@@ -34,8 +25,10 @@ const netlify_framework_edge_path = '.netlify/v1/edge-functions';
 
 const FUNCTION_PREFIX = 'sveltekit-';
 
+// "build" is the default publish directory when Netlify detects SvelteKit
+
 /** @type {typeof import('./index.js').default} */
-export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
+export default function ({ split = false, edge = edge_set_in_env_var, publish = 'build' } = {}) {
 	return {
 		name,
 		async adapt(builder) {
@@ -58,11 +51,6 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 				);
 			}
 
-			const netlify_config = get_netlify_config();
-
-			// "build" is the default publish directory when Netlify detects SvelteKit
-			const publish = get_publish_directory(netlify_config, builder) || 'build';
-
 			// empty out existing build directories
 			rmSync(publish, { force: true, recursive: true });
 			rmSync('.netlify/v1', { force: true, recursive: true });
@@ -80,8 +68,6 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 					}
 				}
 			}
-
-			builder.log.minor(`Publishing to "${publish}"`);
 
 			builder.log.minor('Copying assets...');
 			const publish_dir = `${publish}${builder.config.paths.base}`;
@@ -144,22 +130,6 @@ function generate_serverless_functions(builder, split) {
 			name: `${FUNCTION_PREFIX}render`,
 			display_name: 'SvelteKit server'
 		});
-	}
-}
-
-/**
- * @returns {NetlifyConfig | null}
- */
-function get_netlify_config() {
-	if (!existsSync('netlify.toml')) return null;
-
-	try {
-		return parse(readFileSync('netlify.toml', 'utf-8'));
-	} catch (err) {
-		if (err instanceof Error) {
-			throw new Error(`Failed to parse netlify.toml: ${err.message}`, { cause: err });
-		}
-		throw err;
 	}
 }
 

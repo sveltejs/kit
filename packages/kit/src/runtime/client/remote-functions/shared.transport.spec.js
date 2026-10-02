@@ -21,10 +21,71 @@ vi.mock('#app/state/client', () => ({
 	notify_version: () => {}
 }));
 
-const { fail_unhandled_refreshes, remote_request } = await import('./shared.svelte.js');
+const { fail_unhandled_refreshes, remote_request, categorize_updates, QUERY_OVERRIDE_KEY } =
+	await import('./shared.svelte.js');
 const { HttpError, HandledHttpError } = await import('@sveltejs/kit/internal');
 const { query_map, live_query_map } = await import('../client.js');
 const devalue = await import('devalue');
+const { command } = await import('./command.svelte.js');
+
+test('command update warnings retain the original promise and deferred argument failures', async () => {
+	const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+	const fetch = vi.fn(() =>
+		mock_response({
+			json: () => Promise.resolve({ type: 'result', data: devalue.stringify({ _: 42 }) })
+		})
+	);
+	vi.stubGlobal('fetch', fetch);
+	try {
+		const mutate = command('hash/mutate');
+		const promise = mutate(undefined);
+		expect(promise.updates()).toBe(promise);
+		expect(promise.updates()).toBe(promise);
+		await expect(promise).resolves.toBe(42);
+		expect(warn).toHaveBeenCalledOnce();
+		expect(warn).toContainKitDiagnostic('remote_updates_repeated', {
+			contains: ['command invocation']
+		});
+		expect(mutate.pending).toBe(0);
+		const invalid = mutate(undefined);
+		expect(invalid.updates(/** @type {any} */ (null))).toBe(invalid);
+		await expect(invalid).rejects.toThrowKitError('remote_updates_invalid_argument');
+		expect(fetch).toHaveBeenCalledOnce();
+		expect(mutate.pending).toBe(0);
+	} finally {
+		warn.mockRestore();
+		vi.unstubAllGlobals();
+	}
+});
+
+test('command redirects reject with client guidance', async () => {
+	vi.stubGlobal('fetch', () =>
+		mock_response({
+			json: () =>
+				Promise.resolve({ type: 'result', data: devalue.stringify({ redirect: '/next' }) })
+		})
+	);
+	try {
+		const mutate = command('hash/mutate');
+		await expect(mutate(undefined)).rejects.toThrowKitError('remote_command_redirect');
+		expect(mutate.pending).toBe(0);
+	} finally {
+		vi.unstubAllGlobals();
+	}
+});
+
+test('invalid update arguments throw without changing their value', () => {
+	for (const value of [null, undefined, 1, 'query', {}]) {
+		expect(() => categorize_updates([/** @type {any} */ (value)])).toThrowKitError(
+			'remote_updates_invalid_argument'
+		);
+	}
+	const release = () => {};
+	Object.defineProperty(release, QUERY_OVERRIDE_KEY, { value: 'hash/query/' });
+	expect(() => categorize_updates([release, release])).toThrowKitError(
+		'remote_updates_duplicate_override'
+	);
+});
 
 /**
  * Build a mock fetch Response. `remote_request` reads `response.headers` before

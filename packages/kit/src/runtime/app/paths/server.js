@@ -6,6 +6,8 @@ import { try_get_request_store } from '@sveltejs/kit/internal/server';
 import { manifest } from '../../server/internal.js';
 import { get_hooks } from '<sveltekit:generated>/server.js';
 import { DEV } from 'esm-env';
+import * as e from '../../../messages/shared-errors.js';
+import * as w from '../../../messages/shared-warnings.js';
 
 export { base, assets, app_dir } from './internal/server.js';
 
@@ -14,7 +16,7 @@ export function asset(file) {
 	// TODO 4.0 remove this
 	if (file[0] === '/') {
 		if (DEV) {
-			console.warn(`\`asset('${file}')\` should now be \`asset('${file.slice(1)}')\``);
+			w.asset_leading_slash({ path: file, fixed: file.slice(1) });
 		}
 
 		file = file.slice(1);
@@ -30,7 +32,7 @@ export function resolve(id, params) {
 	if (id[0] === '/') {
 		// route ID
 		if (id.includes('[') && !params) {
-			throw new Error(`Missing params for dynamic route ID ${id}`);
+			e.resolve_params_missing({ id });
 		}
 
 		resolved = resolve_route(id, params ?? {});
