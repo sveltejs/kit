@@ -42,6 +42,7 @@
 		"test": "pnpm test:unit && pnpm test:e2e"
 	},
 	"dependencies": {
+		"@cloudflare/vite-plugin": "^1.54.5",
 		"@cloudflare/workers-types": "^5.20260813.1",
 		"@rolldown/pluginutils": "^1.0.1"
 	},

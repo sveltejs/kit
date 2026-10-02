@@ -1,0 +1,8 @@
+{
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	"main": "src/worker.js",
+	"compatibility_date": "2026-06-24",
+	"vars": {
+		"FOO": "from wrangler.jsonc"
+	}
+}

@@ -5,5 +5,5 @@
 		// worker types are full of typescript errors we can't fix
 		"skipLibCheck": true
 	},
-	"include": ["worker.js", "internal.d.ts"]
+	"include": ["default-worker.js", "respond.js", "internal.d.ts"]
 }

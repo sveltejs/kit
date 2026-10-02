@@ -2,6 +2,10 @@ declare module 'SERVER' {
 	export const server: import('@sveltejs/kit').Server;
 }
 
+declare module 'virtual:todo-name-cloudflare-handler' {
+	export const respond: (request: Request) => Promise<Response>;
+}
+
 namespace Cloudflare {
 	interface Env {
 		ASSETS_BINDING: {
