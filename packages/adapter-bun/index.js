@@ -173,11 +173,17 @@ export default function (opts = {}) {
 			instrumentation: () => true
 		},
 
-		vite: bundleRuntime({
-			name: '@sveltejs/adapter-bun',
-			src: new URL('./src', import.meta.url),
-			input: { 'adapter-index': 'index.js' }
-		})
+		vite: {
+			plugins: {
+				post: [
+					bundleRuntime({
+						name: '@sveltejs/adapter-bun',
+						src: new URL('./src', import.meta.url),
+						input: { 'adapter-index': 'index.js' }
+					})
+				]
+			}
+		}
 	};
 }
 

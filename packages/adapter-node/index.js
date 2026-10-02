@@ -80,15 +80,21 @@ export default function (opts = {}) {
 			instrumentation: () => true
 		},
 
-		vite: bundleRuntime({
-			name: '@sveltejs/adapter-node',
-			src: new URL('./src', import.meta.url),
-			input: {
-				'adapter-index': 'index.js',
-				'adapter-env': 'env.js',
-				handler: 'handler.js'
+		vite: {
+			plugins: {
+				post: [
+					bundleRuntime({
+						name: '@sveltejs/adapter-node',
+						src: new URL('./src', import.meta.url),
+						input: {
+							'adapter-index': 'index.js',
+							'adapter-env': 'env.js',
+							handler: 'handler.js'
+						}
+					})
+				]
 			}
-		})
+		}
 	};
 }
 

@@ -43,12 +43,12 @@
 		"format": "oxfmt --write ."
 	},
 	"devDependencies": {
-		"@sveltejs/kit": "workspace:^",
 		"@types/node": "catalog:",
 		"@typescript/native": "catalog:",
+		"vite": "catalog:",
 		"vitest": "catalog:"
 	},
 	"peerDependencies": {
-		"@sveltejs/kit": "^3.0.0-next.0"
+		"vite": "^8.0.12"
 	}
 }

@@ -1,4 +1,4 @@
-import type { AdapterViteConfig } from '@sveltejs/kit';
+import type { Plugin } from 'vite';
 
 /**
  * Whether a static file is a dotfile, which servers customarily do not serve.
@@ -7,17 +7,23 @@ import type { AdapterViteConfig } from '@sveltejs/kit';
 export function isHidden(file: string): boolean;
 
 /**
- * Adds an adapter's runtime modules to the app's server build, so that they are bundled together
- * with the app's server code. Development dependencies are bundled too, and the production
- * dependencies in the app's `package.json` stay external.
+ * A Vite plugin that adds an adapter's runtime modules to the app's server build, so that they
+ * are bundled together with the app's server code. Development dependencies are bundled too, and
+ * the production dependencies in the app's `package.json` stay external.
  *
  * @example
  * ```js
- * vite: bundleRuntime({
- * 	name: '@example/adapter-example',
- * 	src: new URL('./src', import.meta.url),
- * 	input: { index: 'index.js' }
- * })
+ * vite: {
+ * 	plugins: {
+ * 		post: [
+ * 			bundleRuntime({
+ * 				name: '@example/adapter-example',
+ * 				src: new URL('./src', import.meta.url),
+ * 				input: { 'adapter-index': 'index.js' }
+ * 			})
+ * 		]
+ * 	}
+ * }
  * ```
  */
 export function bundleRuntime(options: {
@@ -29,6 +35,10 @@ export function bundleRuntime(options: {
 	name: string;
 	/** The directory that contains the adapter's runtime modules */
 	src: URL;
-	/** Entry points of the runtime: output names and their files in `src` */
+	/**
+	 * Entry points of the runtime: output names and their files in `src`. The output is written
+	 * next to SvelteKit's own server files, `index.js`, `env.js` and `server.js` among them, so
+	 * the names need a prefix of their own
+	 */
 	input: Record<string, string>;
-}): AdapterViteConfig;
+}): Plugin;
