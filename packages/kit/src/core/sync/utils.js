@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import process from 'node:process';
 import { resolve_entry } from '../../utils/filesystem.js';
 import * as w from '../../messages/build-warnings.js';
 
@@ -11,19 +12,52 @@ const previous_contents = new Map();
  * @param {string} code
  */
 export function write_if_changed(file, code) {
-	if (code !== previous_contents.get(file)) {
-		write(file, code);
+	if (code === previous_contents.get(file)) return;
+
+	// a new process has no record of what an earlier one wrote, so we compare against
+	// the file itself. Otherwise every process that syncs rewrites every generated file,
+	// and anything watching them (such as a running dev server) reacts to files that
+	// did not change
+	if (code === read(file)) {
+		previous_contents.set(file, code);
+		return;
 	}
+
+	write(file, code);
 }
 
 /**
+ * Writes via a temporary file in the same directory, so that the file is replaced
+ * in one step and a concurrent reader never sees it empty or partially written
  * @param {string} file
  * @param {string} code
  */
 export function write(file, code) {
 	previous_contents.set(file, code);
 	fs.mkdirSync(path.dirname(file), { recursive: true });
-	fs.writeFileSync(file, code);
+
+	const tmp = `${file}.${process.pid}.tmp`;
+
+	try {
+		fs.writeFileSync(tmp, code);
+		fs.renameSync(tmp, file);
+	} catch {
+		// replacing a file that another process has open can fail on Windows
+		fs.rmSync(tmp, { force: true });
+		fs.writeFileSync(file, code);
+	}
+}
+
+/**
+ * @param {string} file
+ * @returns {string | undefined} the contents of the file, or `undefined` if it cannot be read
+ */
+function read(file) {
+	try {
+		return fs.readFileSync(file, 'utf-8');
+	} catch {
+		return undefined;
+	}
 }
 
 /** @type {WeakMap<TemplateStringsArray, { strings: string[], indents: string[] }>} */
