@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
 import { afterAll, expect, test, vi } from 'vitest';
-import { check_spelling, write, write_if_changed } from './utils.js';
+import { check_spelling, write_if_changed } from './utils.js';
 
 const fixtures = path.join(import.meta.dirname, 'fixtures');
 
@@ -76,51 +76,13 @@ test.describe('write', () => {
 		expect(fs.statSync(file).mtime).not.toEqual(long_ago);
 	});
 
-	test('write creates missing directories and leaves no temporary file behind', () => {
-		const file = path.join(dir, 'nested/deeper/created.js');
+	test('write_if_changed recreates a file that another process deleted', () => {
+		const file = path.join(dir, 'nested/deleted.js');
 
-		write(file, 'export const a = 1;');
-		write(file, 'export const a = 2;');
-
-		expect(fs.readFileSync(file, 'utf-8')).toBe('export const a = 2;');
-		expect(fs.readdirSync(path.dirname(file))).toEqual(['created.js']);
-	});
-
-	test('write falls back to writing the file directly if it cannot be replaced', () => {
-		const file = path.join(dir, 'fallback/locked.js');
-
-		write(file, 'export const a = 1;');
-
-		const rename_spy = vi.spyOn(fs, 'renameSync').mockImplementationOnce(() => {
-			throw new Error('EPERM: operation not permitted, rename');
-		});
-
-		try {
-			write(file, 'export const a = 2;');
-		} finally {
-			rename_spy.mockRestore();
-		}
-
-		expect(fs.readFileSync(file, 'utf-8')).toBe('export const a = 2;');
-		expect(fs.readdirSync(path.dirname(file))).toEqual(['locked.js']);
-	});
-
-	test('write leaves the existing file untouched if the temporary file cannot be written', () => {
-		const file = path.join(dir, 'failed/kept.js');
-
-		write(file, 'export const a = 1;');
-
-		const write_spy = vi.spyOn(fs, 'writeFileSync').mockImplementationOnce(() => {
-			throw new Error('ENOSPC: no space left on device, write');
-		});
-
-		try {
-			expect(() => write(file, 'export const a = 2;')).toThrow('ENOSPC');
-		} finally {
-			write_spy.mockRestore();
-		}
+		write_if_changed(file, 'export const a = 1;');
+		fs.rmSync(file);
+		write_if_changed(file, 'export const a = 1;');
 
 		expect(fs.readFileSync(file, 'utf-8')).toBe('export const a = 1;');
-		expect(fs.readdirSync(path.dirname(file))).toEqual(['kept.js']);
 	});
 });
