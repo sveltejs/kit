@@ -1,9 +1,8 @@
 /** @import { RequestEvent } from '@sveltejs/kit' */
-/** @import { MaybePromise, RequestState, RemoteInternals, RequestStore, RemoteLiveQueryUserFunctionReturnType } from 'types' */
+/** @import { ServerHooks, MaybePromise, RequestState, RemoteInternals, RequestStore, RemoteLiveQueryUserFunctionReturnType } from 'types' */
+import { parse } from 'devalue';
 import { error } from '@sveltejs/kit';
-import { ValidationError } from '@sveltejs/kit/internal';
-import { with_request_store } from '@sveltejs/kit/internal/server';
-import * as e from '../../../../messages/server-errors.js';
+import { with_request_store, get_request_store } from '@sveltejs/kit/internal/server';
 
 /**
  * @param {any} validate_or_fn
@@ -28,19 +27,28 @@ export function create_validator(validate_or_fn, maybe_fn) {
 	// use https://standardschema.dev validator if provided
 	if ('~standard' in validate_or_fn) {
 		return async (arg) => {
+			// Get event before async validation to ensure it's available in server environments without AsyncLocalStorage, too
+			const { event, state } = get_request_store();
+
 			// access property and call method in one go to preserve potential this context
 			const result = await validate_or_fn['~standard'].validate(arg);
 
 			// if the `issues` field exists, the validation failed
 			if (result.issues) {
-				throw new ValidationError(result.issues);
+				const body = await state.handleValidationError({
+					issues: result.issues,
+					event: state.original_event ?? event
+				});
+				error(body.status ?? 400, body);
 			}
 
 			return result.value;
 		};
 	}
 
-	e.remote_invalid_validator();
+	throw new Error(
+		'Invalid validator passed to remote function. Expected "unchecked" or a Standard Schema (https://standardschema.dev)'
+	);
 }
 
 /**
@@ -73,6 +81,20 @@ export async function get_response(internals, payload, state, get_result) {
 }
 
 /**
+ * @param {any} data
+ * @param {ServerHooks['transport']} transport
+ */
+export function parse_remote_response(data, transport) {
+	/** @type {Record<string, any>} */
+	const revivers = {};
+	for (const key in transport) {
+		revivers[key] = transport[key].decode;
+	}
+
+	return parse(data, revivers);
+}
+
+/**
  * @param {RequestEvent} event
  * @param {RequestState} state
  * @param {boolean} allow_cookies
@@ -83,28 +105,28 @@ function derive_remote_function_event(event, state, allow_cookies) {
 	const derived = {
 		...event,
 		setHeaders: () => {
-			e.remote_headers_forbidden();
+			throw new Error('setHeaders is not allowed in remote functions');
 		},
 		cookies: {
 			...event.cookies,
 			set: (name, value, opts) => {
 				if (!allow_cookies) {
-					e.remote_cookie_forbidden({ operation: 'set' });
+					throw new Error('Cannot set cookies in `query` or `prerender` functions');
 				}
 
-				if (opts?.path && !opts.path.startsWith('/')) {
-					e.remote_cookie_path_relative({ operation: 'set' });
+				if (opts.path && !opts.path.startsWith('/')) {
+					throw new Error('Cookies set in remote functions must have an absolute path');
 				}
 
 				return event.cookies.set(name, value, opts);
 			},
 			delete: (name, opts) => {
 				if (!allow_cookies) {
-					e.remote_cookie_forbidden({ operation: 'delete' });
+					throw new Error('Cannot delete cookies in `query` or `prerender` functions');
 				}
 
-				if (opts?.path && !opts.path.startsWith('/')) {
-					e.remote_cookie_path_relative({ operation: 'deleted' });
+				if (opts.path && !opts.path.startsWith('/')) {
+					throw new Error('Cookies deleted in remote functions must have an absolute path');
 				}
 
 				return event.cookies.delete(name, opts);
@@ -118,7 +140,9 @@ function derive_remote_function_event(event, state, allow_cookies) {
 			Object.defineProperty(derived, property, {
 				enumerable: false,
 				get() {
-					return e.remote_request_property({ property });
+					throw new Error(
+						`Cannot access event.${property} in a query. Pass the value as an argument to the query instead`
+					);
 				}
 			});
 		}
@@ -128,6 +152,7 @@ function derive_remote_function_event(event, state, allow_cookies) {
 		event: derived,
 		state: {
 			...state,
+			original_event: state.original_event ?? event,
 			is_in_remote_function: true
 		}
 	};
@@ -210,7 +235,9 @@ function to_iterator(source, name) {
 		return source[Symbol.iterator]();
 	}
 
-	e.remote_query_live_not_iterable({ name });
+	throw new Error(
+		`query.live '${name}' must return an Iterator, Iterable, AsyncIterator or AsyncIterable`
+	);
 }
 
 /**

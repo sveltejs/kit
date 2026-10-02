@@ -8,21 +8,19 @@
 		"paths": {
 			"@sveltejs/kit": ["../kit/types/index"]
 		},
-		// playwright and worker types are a mess
-		"skipLibCheck": true,
 		// taken from the Cloudflare Workers TypeScript template https://github.com/cloudflare/workers-sdk/blob/main/packages/create-cloudflare/templates/hello-world/ts/tsconfig.json
 		"target": "es2024",
 		"lib": ["es2024"],
-		"types": ["node"]
+		"types": ["node", "@cloudflare/workers-types"]
 	},
 	"include": [
 		"index.js",
-		"index.spec.js",
-		"src",
 		"utils.js",
 		"utils.spec.js",
+		"rolldown.config.js",
 		"vitest.config.js",
-		"globals.d.ts",
-		"test/utils.js"
+		"test/utils.js",
+		"internal.d.ts",
+		"src/worker.js"
 	]
 }

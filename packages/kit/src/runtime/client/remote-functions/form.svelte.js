@@ -1,11 +1,9 @@
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
-/** @import { RemoteFormInput, RemoteForm, RemoteQueryUpdate } from '$app/server' */
+/** @import { RemoteFormInput, RemoteForm, RemoteQueryUpdate } from '@sveltejs/kit' */
 /** @import { InternalRemoteFormIssue } from 'types' */
-import { app_dir, base } from '#app/paths';
+import { app_dir, base } from '$app/paths/internal/client';
 import { DEV } from 'esm-env';
-import * as e from '../../../messages/client-errors.js';
-import * as w from '../../../messages/client-warnings.js';
-
+import { HttpError } from '@sveltejs/kit/internal';
 import {
 	query_responses,
 	_goto,
@@ -13,9 +11,9 @@ import {
 	handle_error,
 	refreshAll
 } from '../client.js';
-import { page } from '#app/state/client';
+import { page } from '../state.svelte.js';
 import { tick } from 'svelte';
-import { categorize_updates, fail_unhandled_refreshes, remote_request } from './shared.svelte.js';
+import { categorize_updates, remote_request } from './shared.svelte.js';
 import { createAttachmentKey } from 'svelte/attachments';
 import {
 	convert_formdata,
@@ -135,9 +133,7 @@ export function form(id) {
 			if (await instance.submit()) {
 				await tick();
 				// We call reset from the prototype to avoid DOM clobbering
-				if (instance.element.isConnected) {
-					HTMLFormElement.prototype.reset.call(instance.element);
-				}
+				HTMLFormElement.prototype.reset.call(instance.element);
 			}
 		};
 
@@ -173,6 +169,7 @@ export function form(id) {
 				}
 
 				if (unread_issues.length > 0) {
+					const message = `Form submission had invalid data, but the validation issues were ignored:`;
 					const summary = unread_issues
 						.map((issue) =>
 							issue.path.length === 0
@@ -180,7 +177,9 @@ export function form(id) {
 								: `  - ${issue.path.join('.')} (${issue.message})`
 						)
 						.join('\n');
-					w.remote_form_issues_ignored({ issues: summary }, { element: element ?? undefined });
+					const suggestion = `Make sure you provide actionable feedback to users, using e.g. \`myForm.fields.myField.issues()\` or \`myForm.fields.allIssues()\``;
+
+					console.warn(`${message}\n\n${summary}\n\n${suggestion}`);
 				}
 
 				unread_issues = null;
@@ -223,91 +222,89 @@ export function form(id) {
 			/** @type {Error | undefined} */
 			let updates_error;
 
-			const promise =
-				/** @type {Promise<boolean> & { updates: (...args: RemoteQueryUpdate[]) => Promise<boolean> }} */ (
-					(async () => {
-						try {
-							await Promise.resolve();
+			/** @type {Promise<boolean> & { updates: (...args: RemoteQueryUpdate[]) => Promise<boolean> }} */
+			const promise = (async () => {
+				try {
+					await Promise.resolve();
 
-							if (updates_error) {
-								throw updates_error;
-							}
+					if (updates_error) {
+						throw updates_error;
+					}
 
-							if (should_preflight) {
-								const valid = await preflight(form_data);
-								if (!valid) return false;
-							}
+					if (should_preflight) {
+						const valid = await preflight(form_data);
+						if (!valid) return false;
+					}
 
-							const { blob } = serialize_binary_form(convert(form_data), {
-								remote_refreshes: Array.from(refreshes ?? [])
-							});
+					const { blob } = serialize_binary_form(convert(form_data), {
+						remote_refreshes: Array.from(refreshes ?? [])
+					});
 
-							const response = await remote_request(
-								`${base}/${app_dir}/remote/${action_id_without_key}`,
-								{
-									method: 'POST',
-									headers: {
-										'Content-Type': BINARY_FORM_CONTENT_TYPE,
-										// Forms cannot be called during rendering, so it's save to use location here
-										'x-sveltekit-pathname': location.pathname,
-										'x-sveltekit-search': location.search
-									},
-									body: blob
-								},
-								refreshes
-							);
-
-							({ issues: raw_issues = [], result } = response._ ?? {});
-
-							// if the developer took control of updates via `.updates(...)` (even with
-							// no arguments), or the server performed explicit refreshes, don't invalidateAll
-							const should_refresh = refreshes === null && !response.r;
-
-							if (response.redirect) {
-								// Use internal version to allow redirects to external URLs
-								await _goto(response.redirect, {
-									refreshAll: should_refresh
-								});
-								return true;
-							}
-
-							const succeeded = raw_issues.length === 0;
-
-							if (succeeded) {
-								fail_unhandled_refreshes(refreshes);
-								if (should_refresh) {
-									await refreshAll();
-								}
-							} else {
-								if (DEV) {
-									warn_on_missing_issue_reads();
-								}
-							}
-
-							return succeeded;
-						} catch (e) {
-							result = undefined;
-							raw_issues = [];
-							throw e;
-						} finally {
-							overrides?.forEach((fn) => fn());
-
-							void tick().then(() => {
-								if (entry) {
-									entry.count--;
-									if (entry.count === 0) {
-										instances.delete(key);
-									}
-								}
-							});
+					const response = await remote_request(
+						`${base}/${app_dir}/remote/${action_id_without_key}`,
+						{
+							method: 'POST',
+							headers: {
+								'Content-Type': BINARY_FORM_CONTENT_TYPE,
+								// Forms cannot be called during rendering, so it's save to use location here
+								'x-sveltekit-pathname': location.pathname,
+								'x-sveltekit-search': location.search
+							},
+							body: blob
 						}
-					})()
-				);
+					);
+
+					({ issues: raw_issues = [], result } = response._ ?? {});
+
+					// if the developer took control of updates via `.updates(...)` (even with
+					// no arguments), or the server performed explicit refreshes, don't invalidateAll
+					const should_refresh = refreshes === null && !response.r;
+
+					if (response.redirect) {
+						// Use internal version to allow redirects to external URLs
+						void _goto(response.redirect, {
+							refreshAll: should_refresh
+						});
+						return true;
+					}
+
+					const succeeded = raw_issues.length === 0;
+
+					if (succeeded) {
+						if (should_refresh) {
+							void refreshAll();
+						}
+					} else {
+						if (DEV) {
+							warn_on_missing_issue_reads();
+						}
+					}
+
+					return succeeded;
+				} catch (e) {
+					result = undefined;
+					raw_issues = [];
+					throw e;
+				} finally {
+					overrides?.forEach((fn) => fn());
+
+					void tick().then(() => {
+						if (entry) {
+							entry.count--;
+							if (entry.count === 0) {
+								instances.delete(key);
+							}
+						}
+					});
+				}
+			})();
 
 			let updates_called = false;
 			promise.updates = (...args) => {
 				if (updates_called) {
-					w.remote_updates_repeated({ invocation: 'form submission' });
+					console.warn(
+						'Updates can only be sent once per form submission. Ignoring additional updates.'
+					);
 					return promise;
 				}
 				updates_called = true;
@@ -379,7 +376,8 @@ export function form(id) {
 			return true;
 		}
 
-		const instance = /** @type {RemoteForm<T, U>} */ ({});
+		/** @type {RemoteForm<T, U>} */
+		const instance = {};
 
 		instance.method = 'POST';
 		Object.defineProperty(instance, 'action', {
@@ -389,7 +387,13 @@ export function form(id) {
 
 		instance[createAttachmentKey()] = (/** @type {HTMLFormElement} */ form) => {
 			if (element) {
-				e.remote_form_multiple_elements();
+				let message = `A form object can only be attached to a single \`<form>\` element`;
+				if (DEV && !key) {
+					const name = id.split('/').pop();
+					message += `. To create multiple instances, use \`${name}.for(key)\``;
+				}
+
+				throw new Error(message);
 			}
 
 			element = form;
@@ -439,7 +443,7 @@ export function form(id) {
 					set_nested_value(input, previous_submitter, undefined);
 				}
 
-				if (event.submitter && /** @type {HTMLInputElement} */ (event.submitter).type !== 'image') {
+				if (event.submitter) {
 					const name = event.submitter.getAttribute('name');
 
 					/** @type {null | ReturnType<typeof parse_form_key>} */
@@ -473,22 +477,25 @@ export function form(id) {
 
 					await enhance_callback(create_enhance_callback_instance(form, form_data));
 				} catch (e) {
-					const error = await handle_error(e, {
-						params: {},
-						route: { id: null },
-						url: new URL(location.href)
-					});
+					const error =
+						e instanceof HttpError
+							? e.body
+							: await handle_error(e, {
+									params: {},
+									route: { id: null },
+									url: new URL(location.href)
+								});
 					void set_nearest_error_page(error);
 				} finally {
 					pending_count--;
 				}
 			};
 
-			/** @param {Event} event */
-			const handle_input = (event) => {
+			/** @param {Event} e */
+			const handle_input = (e) => {
 				// strictly speaking it can be an HTMLTextAreaElement or HTMLSelectElement
 				// but that makes the types unnecessarily awkward
-				const element = /** @type {HTMLInputElement} */ (event.target);
+				const element = /** @type {HTMLInputElement} */ (e.target);
 
 				const name = element.name;
 				if (!name) return;
@@ -511,9 +518,11 @@ export function form(id) {
 						);
 
 						if (DEV) {
-							for (const input of elements) {
-								if ((input.type === 'file') !== is_file) {
-									e.remote_form_mixed_inputs({ name: element.name });
+							for (const e of elements) {
+								if ((e.type === 'file') !== is_file) {
+									throw new Error(
+										`Cannot mix and match file and non-file inputs under the same name ("${element.name}")`
+									);
 								}
 							}
 						}
@@ -526,10 +535,12 @@ export function form(id) {
 						}
 					}
 
-					set_nested_value(input, field, is_file ? value : coerce_form_value(field.type, value));
+					set_nested_value(input, field, value);
 				} else if (is_file) {
 					if (DEV && element.multiple) {
-						e.remote_form_multiple_files({ name });
+						throw new Error(
+							`Can only use the \`multiple\` attribute when \`name\` includes a \`[]\` suffix — consider changing "${name}" to "${name}[]"`
+						);
 					}
 
 					const file = /** @type {HTMLInputElement & { files: FileList }} */ (element).files[0];
@@ -543,10 +554,7 @@ export function form(id) {
 					set_nested_value(
 						input,
 						field,
-						coerce_form_value(
-							field.type,
-							element.type === 'checkbox' && !element.checked ? null : element.value
-						)
+						element.type === 'checkbox' && !element.checked ? null : element.value
 					);
 				}
 
@@ -603,11 +611,11 @@ export function form(id) {
 			submit: {
 				value: () => {
 					if (!element) {
-						e.remote_form_not_attached();
+						throw new Error('Cannot call submit() before the form is attached');
 					}
 
 					const default_submitter = /** @type {HTMLElement | undefined} */ (
-						element.querySelector('button:not([type]), [type="submit"], [type="image"]')
+						element.querySelector('button:not([type]), [type="submit"]')
 					);
 
 					const form_data = new FormData(element, default_submitter);
@@ -689,16 +697,15 @@ export function form(id) {
 			validate: {
 				/** @type {RemoteForm<any, any>['validate']} */
 				value: async ({ all = false, preflightOnly = false } = {}) => {
+					if (!element) return;
+
 					const id = ++validate_id;
 
 					// wait a tick in case the user is calling validate() right after set() which takes time to propagate
 					await tick();
 
-					// the form may have been removed from the DOM while we were waiting
-					if (!element) return;
-
 					const default_submitter = /** @type {HTMLElement | undefined} */ (
-						element.querySelector('button:not([type]), [type="submit"], [type="image"]')
+						element.querySelector('button:not([type]), [type="submit"]')
 					);
 
 					const form_data = new FormData(element, default_submitter);
@@ -774,19 +781,19 @@ export function form(id) {
 
 			try {
 				$effect.pre(() => {
-					entry.count += 1;
-					instances.set(key, entry);
-
 					return () => {
 						entry.count--;
 
 						void tick().then(() => {
-							if (entry.count === 0 && instances.get(key) === entry) {
+							if (entry.count === 0) {
 								instances.delete(key);
 							}
 						});
 					};
 				});
+
+				entry.count += 1;
+				instances.set(key, entry);
 			} catch {
 				// not in an effect context
 			}
@@ -816,14 +823,18 @@ function clone(element) {
 function validate_form_data(form_data, enctype) {
 	for (const key of form_data.keys()) {
 		if (/^\$[.[]?/.test(key)) {
-			e.remote_form_reserved_field();
+			throw new Error(
+				'`$` is used to collect all FormData validation issues and cannot be used as the `name` of a form control'
+			);
 		}
 	}
 
 	if (enctype !== 'multipart/form-data') {
 		for (const value of form_data.values()) {
 			if (value instanceof File) {
-				e.enhance_file_without_enctype();
+				throw new Error(
+					'Your form contains <input type="file"> fields, but is missing the necessary `enctype="multipart/form-data"` attribute. This will lead to inconsistent behavior between enhanced and native forms. For more details, see https://github.com/sveltejs/kit/issues/9819.'
+				);
 			}
 		}
 	}

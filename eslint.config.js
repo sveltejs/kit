@@ -1,7 +1,5 @@
 import svelte_config from '@sveltejs/eslint-config';
-import noExportsToRuntimeImports from './.eslint/no-exports-to-runtime-imports.js';
 import noRuntimeToExportsImports from './.eslint/no-runtime-to-exports-imports.js';
-import requirePathToFileURL from './.eslint/require-path-to-file-url.js';
 
 /** @type {import('eslint').Linter.Config[]} */
 export default [
@@ -11,19 +9,6 @@ export default [
 			'no-undef': 'off',
 			// we have some non-reactive state in our runtime modules, and we don't want to be nagged about it
 			'svelte/prefer-svelte-reactivity': 'off'
-		}
-	},
-	{
-		files: ['packages/kit/src/exports/**/*.js'],
-		plugins: {
-			'kit-exports-custom': {
-				rules: {
-					'no-exports-to-runtime-imports': noExportsToRuntimeImports
-				}
-			}
-		},
-		rules: {
-			'kit-exports-custom/no-exports-to-runtime-imports': 'error'
 		}
 	},
 	{
@@ -40,56 +25,6 @@ export default [
 		}
 	},
 	{
-		// code that ends up in user bundles must not pull in Vite or the build pipeline
-		files: [
-			'packages/kit/src/runtime/**/*.js',
-			'packages/kit/src/exports/**/*.js',
-			'packages/kit/src/utils/**/*.js'
-		],
-		ignores: ['packages/kit/src/exports/vite/**'],
-		rules: {
-			'no-restricted-imports': [
-				'error',
-				{
-					patterns: [
-						{
-							group: ['vite', '**/vite/**', '**/core/**', '**/cli.js', '**/runner.js'],
-							message:
-								'This code is bundled into user apps and must not import Vite or the build pipeline (src/core, src/exports/vite).'
-						},
-						{
-							group: ['**/messages/build-*.js', '**/messages/internal/build.js'],
-							message:
-								'Build diagnostics always include their full text. Use src/messages/shared-errors.js in code that is bundled into user apps.'
-						}
-					]
-				}
-			]
-		}
-	},
-	{
-		// code that runs in Node, where dynamic imports of absolute paths
-		// need `pathToFileURL` to work on Windows
-		files: [
-			'packages/kit/src/**/*.js',
-			'packages/adapter-*/*.js',
-			'packages/adapter-*/src/**/*.js',
-			'packages/package/src/**/*.js'
-		],
-		// the client runtime's dynamic imports are resolved by vite, not Node
-		ignores: ['packages/kit/src/runtime/**'],
-		plugins: {
-			'kit-node-custom': {
-				rules: {
-					'require-path-to-file-url': requirePathToFileURL
-				}
-			}
-		},
-		rules: {
-			'kit-node-custom/require-path-to-file-url': 'error'
-		}
-	},
-	{
 		ignores: [
 			'**/.svelte-kit',
 			'**/.netlify',
@@ -98,10 +33,10 @@ export default [
 			'**/test-results',
 			'**/dist',
 			'**/.custom-out-dir',
+			'packages/adapter-*/files',
+			'!packages/adapter-vercel/files',
 			'packages/kit/src/core/config/fixtures/multiple', // dir contains svelte config with multiple extensions tripping eslint
 			'packages/kit/src/core/sync/create_manifest_data/test/samples/**/*',
-			'packages/kit/src/core/sync/write_types/test/*/**/*',
-			'packages/kit/scripts/process-messages/templates/**/*', // contains generator placeholders
 			'packages/kit/types/index.d.ts', // generated file
 			'packages/*/test/apps/**/*',
 			'packages/*/test/**/build/**',
@@ -111,7 +46,8 @@ export default [
 			'packages/package/test/errors/**/*',
 			'packages/package/test/fixtures/**/*',
 			'packages/package/test/watch/expected/**/*',
-			'packages/package/test/watch/package/**/*'
+			'packages/package/test/watch/package/**/*',
+			'packages/adapter-node/smoke.spec_disabled.js'
 		]
 	},
 	{

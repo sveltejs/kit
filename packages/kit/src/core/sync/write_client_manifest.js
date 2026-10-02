@@ -1,4 +1,3 @@
-import path from 'node:path';
 import { check_spelling, dedent, write_if_changed } from './utils.js';
 import { relative_path, resolve_entry } from '../../utils/filesystem.js';
 import { s } from '../../utils/misc.js';
@@ -6,13 +5,12 @@ import { s } from '../../utils/misc.js';
 /**
  * Writes the client manifest to disk. The manifest is used to power the router. It contains the
  * list of routes and corresponding Svelte components (i.e. pages and layouts).
- * @param {import('types').ValidatedConfig} kit
+ * @param {import('types').ValidatedKitConfig} kit
  * @param {import('types').ManifestData} manifest_data
  * @param {string} output
- * @param {string} root The project root directory
  * @param {import('types').ServerMetadata['nodes']} [metadata] If this is omitted, we have to assume that all routes with a `+layout/page.server.js` file have a server load function
  */
-export function write_client_manifest(kit, manifest_data, output, root, metadata) {
+export function write_client_manifest(kit, manifest_data, output, metadata) {
 	const client_routing = kit.router.resolution === 'client';
 
 	/**
@@ -24,7 +22,7 @@ export function write_client_manifest(kit, manifest_data, output, root, metadata
 
 		if (node.universal) {
 			declarations.push(
-				`import * as universal from ${s(relative_path(`${output}/nodes`, path.resolve(root, node.universal)))};`,
+				`import * as universal from ${s(relative_path(`${output}/nodes`, node.universal))};`,
 				'export { universal };'
 			);
 		}
@@ -32,7 +30,7 @@ export function write_client_manifest(kit, manifest_data, output, root, metadata
 		if (node.component) {
 			declarations.push(
 				`export { default as component } from ${s(
-					relative_path(`${output}/nodes`, path.resolve(root, node.component))
+					relative_path(`${output}/nodes`, node.component)
 				)};`
 			);
 		}
@@ -120,17 +118,12 @@ export function write_client_manifest(kit, manifest_data, output, root, metadata
 		if (root_layout) layouts_with_server_load.add(0);
 	}
 
-	const client_hooks_file = resolve_entry(kit.files.hooks.client, kit.moduleExtensions);
-	const universal_hooks_file = resolve_entry(kit.files.hooks.universal, kit.moduleExtensions);
+	const client_hooks_file = resolve_entry(kit.files.hooks.client);
+	const universal_hooks_file = resolve_entry(kit.files.hooks.universal);
 
 	if (!client_hooks_file) {
-		check_spelling(
-			'src/hooks.client',
-			'src/+hooks.client',
-			'Unexpected + prefix',
-			kit.moduleExtensions
-		);
-		check_spelling('src/hooks.client', 'src/hook.client', 'Missing s suffix', kit.moduleExtensions);
+		check_spelling('src/hooks.client', 'src/+hooks.client', 'Unexpected + prefix');
+		check_spelling('src/hooks.client', 'src/hook.client', 'Missing s suffix');
 	}
 
 	// Stringified version of
@@ -162,7 +155,7 @@ export function write_client_manifest(kit, manifest_data, output, root, metadata
 			export const hooks = {
 				handleError: ${
 					client_hooks_file ? 'client_hooks.handleError || ' : ''
-				}(({ kind, error }) => { if (kind === 'unknown') { console.error(error); } }),
+				}(({ error }) => { console.error(error) }),
 				${client_hooks_file ? 'init: client_hooks.init,' : ''}
 				reroute: ${universal_hooks_file ? 'universal_hooks.reroute || ' : ''}(() => {}),
 				transport: ${universal_hooks_file ? 'universal_hooks.transport || ' : ''}{}
@@ -187,7 +180,7 @@ export function write_client_manifest(kit, manifest_data, output, root, metadata
 		const module =
 			!manifest_data.params || !uses_matchers
 				? 'export const matchers = {};'
-				: `import { params as matchers } from ${s(relative_path(output, path.resolve(root, manifest_data.params)))};\n\nexport { matchers };`;
+				: `import { params as matchers } from ${s(relative_path(output, manifest_data.params))};\n\nexport { matchers };`;
 
 		write_if_changed(`${output}/matchers.js`, module);
 	}

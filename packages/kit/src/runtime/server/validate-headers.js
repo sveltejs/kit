@@ -1,5 +1,3 @@
-import * as w from '../../messages/server-warnings.js';
-
 /** @type {Set<string>} */
 const VALID_CACHE_CONTROL_DIRECTIVES = new Set([
 	'max-age',
@@ -25,37 +23,42 @@ const CONTENT_TYPE_PATTERN =
 /** @type {Record<string, (value: string) => void>} */
 const HEADER_VALIDATORS = {
 	'cache-control': (value) => {
+		const error_suffix = `(While parsing "${value}".)`;
 		const parts = value.split(',').map((part) => part.trim());
 		if (parts.some((part) => !part)) {
-			w.cache_control_empty_directive({ value });
-			return;
+			throw new Error(`\`cache-control\` header contains empty directives. ${error_suffix}`);
 		}
 
 		const directives = parts.map((part) => part.split('=')[0].toLowerCase());
 		const invalid = directives.find((directive) => !VALID_CACHE_CONTROL_DIRECTIVES.has(directive));
 		if (invalid) {
-			w.cache_control_invalid_directive({
-				directive: invalid,
-				directives: [...VALID_CACHE_CONTROL_DIRECTIVES].join(', '),
-				value
-			});
+			throw new Error(
+				`Invalid cache-control directive "${invalid}". Did you mean one of: ${[...VALID_CACHE_CONTROL_DIRECTIVES].join(', ')}? ${error_suffix}`
+			);
 		}
 	},
 
 	'content-type': (value) => {
 		const type = value.split(';')[0].trim();
+		const error_suffix = `(While parsing "${value}".)`;
 		if (!CONTENT_TYPE_PATTERN.test(type)) {
-			w.content_type_invalid({ type, value });
+			throw new Error(`Invalid content-type value "${type}". ${error_suffix}`);
 		}
 	}
 };
 
 /**
- * Warns about header values that browsers and CDNs are likely to ignore or misinterpret
  * @param {Record<string, string>} headers
  */
 export function validateHeaders(headers) {
 	for (const [key, value] of Object.entries(headers)) {
-		HEADER_VALIDATORS[key.toLowerCase()]?.(value);
+		const validator = HEADER_VALIDATORS[key.toLowerCase()];
+		try {
+			validator?.(value);
+		} catch (error) {
+			if (error instanceof Error) {
+				console.warn(`[SvelteKit] ${error.message}`);
+			}
+		}
 	}
 }

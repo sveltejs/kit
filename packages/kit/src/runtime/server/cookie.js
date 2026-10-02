@@ -3,8 +3,6 @@ import { DEV } from 'esm-env';
 import { normalize_path, resolve } from '../../utils/url.js';
 import { add_data_suffix } from '../pathname.js';
 import { text_encoder } from '../utils.js';
-import * as e from '../../messages/server-errors.js';
-import * as w from '../../messages/server-warnings.js';
 
 /**
  * Tracks all cookies set during dev mode so we can emit warnings
@@ -115,7 +113,10 @@ export function get_cookies(request, url) {
 				});
 
 				if (paths.length > 0) {
-					w.cookie_path_mismatch({ name, pathname: url.pathname, paths: conjoin([...paths]) });
+					console.warn(
+						// prettier-ignore
+						`'${name}' cookie does not exist for ${url.pathname}, but was previously set at ${conjoin([...paths])}. Did you mean to set its 'path' to '/' instead?`
+					);
 				}
 			}
 
@@ -168,12 +169,12 @@ export function get_cookies(request, url) {
 
 		parse: parseSetCookie,
 
-		serialize(name, value, { encode, ...options } = {}) {
+		serialize(name, value, { encode, ...options }) {
 			let path = options.path ?? '/';
 
 			if (!options.domain || options.domain === url.hostname) {
 				if (!normalized_url) {
-					e.cookies_serialize_before_route();
+					throw new Error('Cannot serialize cookies until after the route is determined');
 				}
 				path = resolve(normalized_url, path);
 			}
@@ -249,7 +250,7 @@ export function get_cookies(request, url) {
 				text_encoder.encode((options.encode ?? encodeURIComponent)(value)).byteLength;
 
 			if (size > MAX_COOKIE_SIZE) {
-				e.cookie_too_large({ name });
+				throw new Error(`Cookie "${name}" is too large, and will be discarded by the browser`);
 			}
 
 			cookie_paths[name] ??= new Set();

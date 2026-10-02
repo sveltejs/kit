@@ -73,7 +73,7 @@ export function get_lang(event: import('@sveltejs/kit').RequestEvent) {
 // @filename: hooks.server.js
 import { get_lang } from './utils';
 // ---cut---
-/** @type {import('@sveltejs/kit/hooks').Handle} */
+/** @type {import('@sveltejs/kit').Handle} */
 export function handle({ event, resolve }) {
 	return resolve(event, {
 		transformPageChunk: ({ html }) => html.replace('%lang%', get_lang(event))

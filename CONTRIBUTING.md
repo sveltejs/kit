@@ -149,11 +149,7 @@ For changes to be reflected in package changelogs, run `pnpm changeset` and foll
 
 ### Type changes
 
-If your PR changes the generated types of SvelteKit, run `pnpm generate:types` inside `packages/kit` and commit the new output (don't format it — `packages/kit/types` is excluded from oxfmt). Review the changes carefully to ensure there are no unwanted changes. If you don't commit type changes, CI will fail.
-
-### Diagnostic messages
-
-Some SvelteKit error messages are written as Markdown in `packages/kit/messages/<context>-<severity>/*.md`. Each entry has a `## code` heading, a blockquoted message that can use `%name%` placeholders, and an explanation. `scripts/process-messages/index.js` turns each category into helpers in `packages/kit/src/messages/<context>-<severity>.js`, using the matching template in `scripts/process-messages/templates`. After you edit a message, run `pnpm generate:messages` inside `packages/kit` and commit the generated file. Never edit it by hand. `prepublishOnly` runs this step as well, so CI fails if the output is out of date.
+If your PR changes the generated types of SvelteKit, run `pnpm generate:types` inside `packages/kit` and commit the new output (don't format it with Prettier!). Review the changes carefully to ensure there are no unwanted changes. If you don't commit type changes, CI will fail.
 
 ## Releases
 

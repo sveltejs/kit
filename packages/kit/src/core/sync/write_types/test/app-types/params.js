@@ -1,4 +1,4 @@
-import { defineParams } from '@sveltejs/kit/params';
+import { defineParams } from '@sveltejs/kit';
 
 export const params = defineParams({
 	locale: (param) => {

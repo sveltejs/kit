@@ -3,10 +3,9 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { Parser } from 'acorn';
 import MagicString from 'magic-string';
 import { posixify } from '../../../utils/os.js';
-import * as e from '../../../messages/build-errors.js';
-import { capture_message } from '../../../messages/internal/build.js';
 
 /**
  * @param {typeof import('vite')} vite
@@ -32,11 +31,6 @@ export async function treeshake_prerendered_remotes(
 
 	/** @type {string[]} */
 	const chunk_paths = [];
-
-	// embedded in the server bundle, which only runs on the server, so the full text is kept
-	const not_dynamic_message = JSON.stringify(
-		capture_message(() => e.remote_prerender_not_dynamic())
-	);
 
 	for (const remote of remotes) {
 		const exports_map = metadata.remotes.get(remote.hash);
@@ -65,12 +59,11 @@ export async function treeshake_prerendered_remotes(
 		const chunk_path = posixify(path.relative(cwd, `${out}/server/${remote_chunk.fileName}`));
 
 		const code = fs.readFileSync(chunk_path, 'utf-8');
-		const parsed = vite.parseSync(chunk_path, code);
-		if (parsed.errors.length) throw new Error(parsed.errors[0].message);
+		const parsed = Parser.parse(code, { sourceType: 'module', ecmaVersion: 'latest' });
 		const modified_code = new MagicString(code);
 
 		for (const fn of prerendered) {
-			for (const node of parsed.program.body) {
+			for (const node of parsed.body) {
 				const declaration =
 					node.type === 'ExportNamedDeclaration'
 						? node.declaration
@@ -85,14 +78,14 @@ export async function treeshake_prerendered_remotes(
 						modified_code.overwrite(
 							node.start,
 							node.end,
-							`const ${fn} = prerender('unchecked', () => { throw new Error(${not_dynamic_message}) });`
+							`const ${fn} = prerender('unchecked', () => { throw new Error('Unexpectedly called prerender function. Did you forget to set { dynamic: true } ?') });`
 						);
 					}
 				}
 			}
 		}
 
-		for (const node of parsed.program.body) {
+		for (const node of parsed.body) {
 			if (node.type === 'ExportDefaultDeclaration') {
 				modified_code.remove(node.start, node.end);
 			}

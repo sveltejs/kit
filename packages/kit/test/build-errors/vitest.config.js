@@ -1,9 +1,9 @@
-import { fileURLToPath } from 'node:url';
+// we need this file to prevent Vitest from resolving a Vitest config from another directory
+
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
 	test: {
-		name: 'kit-build-errors',
-		setupFiles: [fileURLToPath(new URL('../matchers.js', import.meta.url))]
+		name: 'kit-build-errors'
 	}
 });

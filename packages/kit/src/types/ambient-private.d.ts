@@ -1,12 +1,27 @@
-/** Internal version of $app/server */
-declare module '<sveltekit:generated>/server.js' {
-	import { SSROptions, ServerHooks } from 'types';
-
-	export const options: SSROptions;
-	export function get_hooks(): Promise<Partial<ServerHooks>>;
+/** Internal version of $app/paths */
+declare module '__sveltekit/paths' {
+	export let base: '' | `/${string}`;
+	export let assets: '' | `https://${string}` | `http://${string}` | '/_svelte_kit_assets';
+	export let app_dir: string;
+	export let relative: boolean;
+	export function reset(): void;
+	export function override(paths: { base: string; assets: string }): void;
+	export function set_assets(path: string): void;
 }
 
-declare module '<sveltekit:generated>/env/config.js' {
+/** Internal version of $app/server */
+declare module '__sveltekit/server' {
+	import { SSRManifest } from '@sveltejs/kit';
+
+	export let fix_stack_trace: (error: Error) => string;
+	export let manifest: SSRManifest;
+	export function read_implementation(path: string): ReadableStream;
+	export function set_fix_stack_trace(fn: (error: Error) => string): void;
+	export function set_manifest(manifest: SSRManifest): void;
+	export function set_read_implementation(fn: (path: string) => ReadableStream): void;
+}
+
+declare module '__sveltekit/env' {
 	// exported environment variables are defined in env.d.ts
 
 	/** Populate exported environment variables */
@@ -19,22 +34,22 @@ declare module '<sveltekit:generated>/env/config.js' {
 	export const rendered_env: Record<string, any>;
 }
 
-declare module '<sveltekit:generated>/env/private/server.js' {
+declare module '__sveltekit/env/private' {
 	// exported environment variables are defined in env.d.ts
 }
 
-declare module '<sveltekit:generated>/env/public/client.js' {
+declare module '__sveltekit/env/public/client' {
 	// exported environment variables are defined in env.d.ts
 }
 
-declare module '<sveltekit:generated>/env/public/server.js' {
+declare module '__sveltekit/env/public/server' {
 	// exported environment variables are defined in env.d.ts
 }
 
 /** Internal version of $app/manifest */
-declare module '<sveltekit:generated>/app-manifest.js' {
+declare module '__sveltekit/manifest-data' {
 	export const immutable: Array<{ path: string }>;
 	export const assets: Array<{ path: string }>;
 	export const prerendered: Array<{ path: string }>;
-	export const routes: Array<{ id: string; page: boolean; endpoint: boolean }>;
+	export const routes: Array<{ id: string }>;
 }

@@ -51,13 +51,13 @@ A more realistic version of your blog post's `load` function, that only runs on 
 ```js
 /// file: src/routes/blog/[slug]/+page.server.js
 // @filename: ambient.d.ts
-declare module '#lib/server/database.js' {
+declare module '#lib/server/database' {
 	export function getPost(slug: string): Promise<{ title: string, content: string }>
 }
 
 // @filename: index.js
 // ---cut---
-import * as db from '#lib/server/database.js';
+import * as db from '#lib/server/database';
 
 /** @type {import('./$types').PageServerLoad} */
 export async function load({ params }) {
@@ -76,13 +76,13 @@ Your `+layout.svelte` files can also load data, via `+layout.js` or `+layout.ser
 ```js
 /// file: src/routes/blog/[slug]/+layout.server.js
 // @filename: ambient.d.ts
-declare module '#lib/server/database.js' {
+declare module '#lib/server/database' {
 	export function getPostSummaries(): Promise<Array<{ title: string, slug: string }>>
 }
 
 // @filename: index.js
 // ---cut---
-import * as db from '#lib/server/database.js';
+import * as db from '#lib/server/database';
 
 /** @type {import('./$types').LayoutServerLoad} */
 export async function load() {
@@ -297,13 +297,13 @@ A server `load` function can get [`cookies`](@sveltejs-kit#Cookies) as shown bel
 ```js
 /// file: src/routes/+layout.server.js
 // @filename: ambient.d.ts
-declare module '#lib/server/database.js' {
+declare module '#lib/server/database' {
 	export function getUser(sessionid: string | undefined): Promise<{ name: string, avatar: string }>
 }
 
 // @filename: index.js
 // ---cut---
-import * as db from '#lib/server/database.js';
+import * as db from '#lib/server/database';
 
 /** @type {import('./$types').LayoutServerLoad} */
 export async function load({ cookies }) {
@@ -421,7 +421,7 @@ export async function load({ params, parent }) {
 
 ## Errors
 
-If an error is thrown during `load`, the nearest [`+error.svelte`](routing#error) will be rendered. For [app errors](errors#App-errors), use the `error` helper from `@sveltejs/kit` to specify the HTTP status code and an optional message:
+If an error is thrown during `load`, the nearest [`+error.svelte`](routing#error) will be rendered. For [_expected_](errors#Expected-errors) errors, use the `error` helper from `@sveltejs/kit` to specify the HTTP status code and an optional message:
 
 ```js
 /// file: src/routes/admin/+layout.server.js
@@ -453,7 +453,7 @@ export function load({ locals }) {
 
 Calling `error(...)` will throw an exception, making it easy to stop execution from inside helper functions.
 
-Every error is passed to the [`handleError`](hooks#handleError) hook. An [unknown error](errors#Unknown-errors) is treated as a 500 Internal Error unless the hook says otherwise.
+If an [_unexpected_](errors#Unexpected-errors) error is thrown, SvelteKit will invoke [`handleError`](hooks#handleError) and treat it as a 500 Internal Error.
 
 > [!NOTE] [In SvelteKit 1.x](migrating-to-sveltekit-2#redirect-and-error-are-no-longer-thrown-by-you) you had to `throw` the error yourself
 
@@ -578,13 +578,13 @@ For example, given a pair of `load` functions like these...
 ```js
 /// file: src/routes/blog/[slug]/+page.server.js
 // @filename: ambient.d.ts
-declare module '#lib/server/database.js' {
+declare module '#lib/server/database' {
 	export function getPost(slug: string): Promise<{ title: string, content: string }>
 }
 
 // @filename: index.js
 // ---cut---
-import * as db from '#lib/server/database.js';
+import * as db from '#lib/server/database';
 
 /** @type {import('./$types').PageServerLoad} */
 export async function load({ params }) {
@@ -597,13 +597,13 @@ export async function load({ params }) {
 ```js
 /// file: src/routes/blog/[slug]/+layout.server.js
 // @filename: ambient.d.ts
-declare module '#lib/server/database.js' {
+declare module '#lib/server/database' {
 	export function getPostSummaries(): Promise<Array<{ title: string, slug: string }>>
 }
 
 // @filename: index.js
 // ---cut---
-import * as db from '#lib/server/database.js';
+import * as db from '#lib/server/database';
 
 /** @type {import('./$types').LayoutServerLoad} */
 export async function load() {
@@ -689,7 +689,7 @@ To summarize, a `load` function will rerun in the following situations:
 - It references a property of `url` (such as `url.pathname` or `url.search`) whose value has changed. Properties in `request.url` are _not_ tracked
 - It calls `url.searchParams.get(...)`, `url.searchParams.getAll(...)` or `url.searchParams.has(...)` and the parameter in question changes. Accessing other properties of `url.searchParams` will have the same effect as accessing `url.search`.
 - It calls `await parent()` and a parent `load` function reran
-- A child server `load` function calls `await parent()` and is rerunning, and the parent is also a server `load` function. A universal `load` function that calls `await parent()` reuses the parent's existing data instead
+- A child `load` function calls `await parent()` and is rerunning, and the parent is a server load function
 - It declared a dependency on a specific URL via [`fetch`](#Making-fetch-requests) (universal load only) or [`depends`](@sveltejs-kit#LoadEvent), and that URL was marked invalid with [`invalidate(url)`]($app-navigation#invalidate)
 - All active `load` functions were forcibly rerun with [`refreshAll()`]($app-navigation#refreshAll)
 
@@ -756,7 +756,7 @@ Now, you can call `requireLogin` in any `load` function (or [form action](form-a
 /// file: +page.server.js
 // @filename: ambient.d.ts
 
-declare module '#lib/server/auth.js' {
+declare module '#lib/server/auth' {
 	interface User {
 		name: string;
 	}
@@ -766,7 +766,7 @@ declare module '#lib/server/auth.js' {
 
 // @filename: index.ts
 // ---cut---
-import { requireLogin } from '#lib/server/auth.js';
+import { requireLogin } from '#lib/server/auth';
 
 export function load() {
 	const user = requireLogin();

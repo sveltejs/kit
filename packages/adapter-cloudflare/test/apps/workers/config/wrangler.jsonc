@@ -2,11 +2,10 @@
 // to test that the adapter still resolves the paths correctly
 {
 	"$schema": "../node_modules/wrangler/config-schema.json",
+	"main": "../dist/index.js",
 	"compatibility_date": "2026-06-24",
 	"assets": {
+		"directory": "../dist/public",
 		"binding": "ASSETS"
-	},
-	"vars": {
-		"FOO": "from wrangler.jsonc"
 	}
 }

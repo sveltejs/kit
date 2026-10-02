@@ -6,7 +6,6 @@ import {
 	beforeNavigate,
 	afterNavigate
 } from '$app/navigation';
-import { match } from '$app/paths';
 import { onMount, tick } from 'svelte';
 
 export function setup() {
@@ -19,7 +18,6 @@ export function setup() {
 			preloadData,
 			beforeNavigate,
 			afterNavigate,
-			match,
 			svelte_tick: tick
 		});
 

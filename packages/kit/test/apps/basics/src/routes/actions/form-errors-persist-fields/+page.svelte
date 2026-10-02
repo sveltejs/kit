@@ -8,7 +8,7 @@
 	$: hydrated_form_values = browser ? form?.values : '';
 
 	/**
-	 * @type {(this: HTMLFormElement, event: SubmitEvent) => Promise<void>}
+	 * @type {import('svelte/elements').EventHandler<SubmitEvent, HTMLFormElement>}
 	 * @this {HTMLFormElement}
 	 */
 	async function submit() {

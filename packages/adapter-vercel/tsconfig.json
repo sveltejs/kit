@@ -11,6 +11,5 @@
 		},
 		"types": ["node"]
 	},
-	"include": ["*.js", "files/**/*.js", "internal.d.ts", "test/**/*.js"],
-	"exclude": ["test/apps/**"]
+	"include": ["*.js", "files/**/*.js", "internal.d.ts", "test/**/*.js"]
 }

@@ -1,15 +1,21 @@
-/** @import { Config } from '@sveltejs/kit/vite' */
+/** @import { Config, KitConfig } from '@sveltejs/kit' */
+/** @import { Options, SvelteConfig } from '@sveltejs/vite-plugin-svelte' */
 /** @import { ValidatedConfig } from 'types' */
 /** @import { ResolvedConfig } from 'vite' */
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import * as url from 'node:url';
 import { styleText } from 'node:util';
-import { validate_options, kit_options, kit_experimental_options } from './options.js';
+import {
+	validate_kit_options,
+	kit_options,
+	kit_experimental_options,
+	validate_svelte_options
+} from './options.js';
 import { resolve_entry } from '../../utils/filesystem.js';
 import { import_peer } from '../../utils/import.js';
 import { stackless } from '../../utils/error.js';
-import * as e from '../../messages/build-errors.js';
 
 /**
  * Splits the config passed to the `sveltekit` Vite plugin into the options that
@@ -17,21 +23,23 @@ import * as e from '../../messages/build-errors.js';
  * `vite-plugin-svelte`. SvelteKit makes no assumptions about which options
  * `vite-plugin-svelte` accepts — it plucks out its own options and passes
  * everything else along (`vite-plugin-svelte` does its own validation).
- * @param {Config} config
+ * @param {KitConfig & Omit<Options, 'onwarn'> & Pick<SvelteConfig, 'vitePlugin'>} config
  * @returns {{ svelte_config: Config, vite_plugin_svelte_config: Record<string, any> }}
  */
 export function split_config(config) {
-	/** @type {Config} */
-	const svelte_config = {};
+	const { extensions, compilerOptions, vitePlugin, preprocess, ...rest } = config;
+
+	/** @type {KitConfig} */
+	const kit = {};
 
 	/** @type {Record<string, any>} */
 	const vite_plugin_svelte_config = {};
 
-	for (const key in config) {
+	for (const key in rest) {
 		if (key === 'experimental') {
 			// `experimental` is a namespace that both SvelteKit and vite-plugin-svelte
 			// use, so pluck out the flags SvelteKit recognises and pass the rest along
-			const experimental = /** @type {Record<string, any>} */ (config[key]) ?? {};
+			const experimental = /** @type {Record<string, any>} */ (rest[key]) ?? {};
 
 			/** @type {Record<string, any>} */
 			const kit_experimental = {};
@@ -47,21 +55,21 @@ export function split_config(config) {
 			}
 
 			if (Object.keys(kit_experimental).length > 0) {
-				svelte_config.experimental = kit_experimental;
+				kit.experimental = kit_experimental;
 			}
 			if (Object.keys(vps_experimental).length > 0) {
 				vite_plugin_svelte_config.experimental = vps_experimental;
 			}
 		} else if (kit_options.includes(key)) {
 			// @ts-expect-error - we've verified this is one of SvelteKit's own options
-			svelte_config[key] = config[key];
+			kit[key] = rest[key];
 		} else {
-			vite_plugin_svelte_config[key] = /** @type {Record<string, any>} */ (config)[key];
+			vite_plugin_svelte_config[key] = /** @type {Record<string, any>} */ (rest)[key];
 		}
 	}
 
 	return {
-		svelte_config,
+		svelte_config: { extensions, compilerOptions, vitePlugin, preprocess, kit },
 		vite_plugin_svelte_config
 	};
 }
@@ -72,13 +80,13 @@ export function split_config(config) {
  * @param {string} cwd
  * @param {ValidatedConfig} config
  */
-export function load_template(cwd, config) {
-	const { files } = config;
+export function load_template(cwd, { kit }) {
+	const { files } = kit;
 
 	const relative = path.relative(cwd, files.appTemplate);
 
 	if (!fs.existsSync(files.appTemplate)) {
-		e.app_template_missing({ file: relative });
+		throw new Error(`${relative} does not exist`);
 	}
 
 	const contents = fs.readFileSync(files.appTemplate, 'utf8');
@@ -86,7 +94,7 @@ export function load_template(cwd, config) {
 	const expected_tags = ['%sveltekit.head%', '%sveltekit.body%'];
 	expected_tags.forEach((tag) => {
 		if (contents.indexOf(tag) === -1) {
-			e.app_template_tag_missing({ file: relative, tag });
+			throw new Error(`${relative} is missing ${tag}`);
 		}
 	});
 
@@ -99,12 +107,12 @@ export function load_template(cwd, config) {
  * @param {ValidatedConfig} config
  */
 export function load_error_page(config) {
-	let { errorTemplate } = config.files;
+	let { errorTemplate } = config.kit.files;
 
 	// Don't do this inside resolving the config, because that would mean
 	// adding/removing error.html isn't detected and would require a restart.
-	if (!fs.existsSync(config.files.errorTemplate)) {
-		errorTemplate = path.join(import.meta.dirname, 'default-error.html');
+	if (!fs.existsSync(config.kit.files.errorTemplate)) {
+		errorTemplate = url.fileURLToPath(new URL('./default-error.html', import.meta.url));
 	}
 
 	return fs.readFileSync(errorTemplate, 'utf-8');
@@ -112,12 +120,13 @@ export function load_error_page(config) {
 
 /**
  * @param {string} [config]
- * @param {typeof import('vite')} [vite]
  */
-export async function load_vite_config(config, vite) {
-	vite ??= /** @type {typeof import('vite')} */ (await import_peer('vite', process.cwd()));
+export async function load_vite_config(config) {
+	const { resolveConfig } = /** @type {import('vite')} */ (
+		await import_peer('vite', process.cwd())
+	);
 
-	return vite.resolveConfig({ configFile: config }, 'build', process.env.MODE ?? 'production');
+	return resolveConfig({ configFile: config }, 'build', process.env.MODE ?? 'production');
 }
 
 /**
@@ -136,25 +145,27 @@ export function extract_svelte_config(vite_config) {
  */
 export function process_config(config, cwd) {
 	if (
-		config.csp?.directives?.['require-trusted-types-for']?.includes('script') &&
-		config.serviceWorker.register &&
-		resolve_entry(path.resolve(cwd, config.files.serviceWorker), config.moduleExtensions) &&
-		!config.csp?.directives?.['trusted-types']?.includes('sveltekit-trusted-url')
+		config.kit.csp?.directives?.['require-trusted-types-for']?.includes('script') &&
+		config.kit.serviceWorker.register &&
+		resolve_entry(path.resolve(cwd, config.kit.files.serviceWorker)) &&
+		!config.kit.csp?.directives?.['trusted-types']?.includes('sveltekit-trusted-url')
 	) {
-		e.config_csp_trusted_types_missing();
+		throw new Error(
+			"The `csp.directives['trusted-types']` option must include 'sveltekit-trusted-url' when `serviceWorker.register` is true"
+		);
 	}
 
-	config.outDir = path.resolve(cwd, config.outDir);
-	config.env.dir = path.resolve(cwd, config.env.dir);
+	config.kit.outDir = path.resolve(cwd, config.kit.outDir);
+	config.kit.env.dir = path.resolve(cwd, config.kit.env.dir);
 
-	for (const key in config.files) {
+	for (const key in config.kit.files) {
 		if (key === 'hooks') {
-			config.files.hooks.client = path.resolve(cwd, config.files.hooks.client);
-			config.files.hooks.server = path.resolve(cwd, config.files.hooks.server);
-			config.files.hooks.universal = path.resolve(cwd, config.files.hooks.universal);
+			config.kit.files.hooks.client = path.resolve(cwd, config.kit.files.hooks.client);
+			config.kit.files.hooks.server = path.resolve(cwd, config.kit.files.hooks.server);
+			config.kit.files.hooks.universal = path.resolve(cwd, config.kit.files.hooks.universal);
 		} else if (key !== 'lib' /* TODO remove when we remove the `lib` option altogether */) {
 			// @ts-expect-error
-			config.files[key] = path.resolve(cwd, config.files[key]);
+			config.kit.files[key] = path.resolve(cwd, config.kit.files[key]);
 		}
 	}
 
@@ -168,11 +179,16 @@ export function process_config(config, cwd) {
 export function validate_config(config) {
 	try {
 		if (typeof config !== 'object') {
-			e.config_not_object();
+			throw new Error(
+				'The SvelteKit options from the Vite config must be an object. See https://svelte.dev/docs/kit/configuration'
+			);
 		}
 
-		const validated = validate_options(config, 'config');
-		const files = validated.files;
+		const validated = /** @type {ValidatedConfig} */ ({
+			...validate_svelte_options(config, 'config'),
+			kit: validate_kit_options(config.kit, 'config')
+		});
+		const files = validated.kit.files;
 
 		files.hooks.client ??= path.join(files.src, 'hooks.client');
 		files.hooks.server ??= path.join(files.src, 'hooks.server');
@@ -183,19 +199,26 @@ export function validate_config(config) {
 		files.appTemplate ??= path.join(files.src, 'app.html');
 		files.errorTemplate ??= path.join(files.src, 'error.html');
 
-		if (validated.router.resolution === 'server') {
-			if (validated.router.type === 'hash') {
-				e.config_server_resolution_hash();
+		if (validated.kit.router.resolution === 'server') {
+			if (validated.kit.router.type === 'hash') {
+				throw new Error(
+					"The `router.resolution` option cannot be 'server' if `router.type` is 'hash'"
+				);
 			}
-			if (validated.output.bundleStrategy !== 'split') {
-				e.config_server_resolution_bundle_strategy();
+			if (validated.kit.output.bundleStrategy !== 'split') {
+				throw new Error(
+					"The `router.resolution` option cannot be 'server' if `output.bundleStrategy` is 'inline' or 'single'"
+				);
 			}
 		}
 
-		if (typeof config.adapter?.vite === 'function') {
-			validated.adapter.vite = config.adapter.vite({
-				config: validated
-			});
+		if (
+			validated.kit.csp?.directives?.['require-trusted-types-for']?.includes('script') &&
+			!validated.kit.csp?.directives?.['trusted-types']?.includes('svelte-trusted-html')
+		) {
+			throw new Error(
+				"The `csp.directives['trusted-types']` option must include 'svelte-trusted-html'"
+			);
 		}
 
 		return validated;

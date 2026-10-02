@@ -18,7 +18,7 @@ export async function load({ cookies, locals, fetch }) {
 
 	const should_fail = cookies.get('fail-type');
 	if (should_fail) {
-		cookies.delete('fail-type');
+		cookies.delete('fail-type', { path: '/' });
 		if (should_fail === 'expected') {
 			error(401, 'Not allowed');
 		} else if (should_fail === 'unexpected') {
@@ -29,7 +29,6 @@ export async function load({ cookies, locals, fetch }) {
 	}
 	// Do NOT make this load function depend on something which would cause it to rerun
 	return {
-		rootlayout: 'rootlayout',
-		...(cookies.get('defer') === 'true' ? { deferred: Promise.resolve(42) } : {})
+		rootlayout: 'rootlayout'
 	};
 }

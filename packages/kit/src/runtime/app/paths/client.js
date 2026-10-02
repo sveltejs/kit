@@ -1,12 +1,8 @@
-/** @import { AssetPath, RouteId, RouteIdWithSearchOrHash, PathnameWithSearchOrHash, ResolvedPathname, RouteParams } from '$app/types' */
+/** @import { AssetPath, RouteId, RouteIdWithSearchOrHash, Path, PathnameWithSearchOrHash, ResolvedPathname, RouteParams } from '$app/types' */
 /** @import { ResolveArgs } from './types.js' */
 import { base, assets, hash_routing, match_implementation } from './internal/client.js';
 import { resolve_route } from '../../../utils/routing.js';
 import { DEV } from 'esm-env';
-import * as e from '../../../messages/shared-errors.js';
-import * as w from '../../../messages/shared-warnings.js';
-
-export { base, assets, app_dir } from './internal/client.js';
 
 /**
  * Resolve the URL of an asset in your `static` directory, by prefixing it with [`config.paths.assets`](https://svelte.dev/docs/kit/configuration#paths) if configured, or otherwise by prefixing it with the base path.
@@ -27,25 +23,22 @@ export { base, assets, app_dir } from './internal/client.js';
  * @returns {string}
  */
 export function asset(file) {
-	let path = /** @type {string} */ (file);
-
 	// TODO 4.0 remove this
-	if (path[0] === '/') {
+	if (file[0] === '/') {
 		if (DEV) {
-			w.asset_leading_slash({ path, fixed: path.slice(1) });
+			console.warn(`\`asset('${file}')\` should now be \`asset('${file.slice(1)}')\``);
 		}
 
-		path = path.slice(1);
+		file = file.slice(1);
 	}
 
-	return (assets || base) + '/' + path;
+	return (assets || base) + '/' + file;
 }
 
-const pathname_prefix = hash_routing ? '#' : base;
+const pathname_prefix = hash_routing ? '#' : '';
 
 /**
  * Resolve a pathname by prefixing it with the base path, if any, or resolve a route ID by populating dynamic segments with parameters.
- * In hash routing mode, the returned URL starts with `#`.
  *
  * During server rendering, the base path is relative and depends on the page currently being rendered.
  *
@@ -68,18 +61,18 @@ const pathname_prefix = hash_routing ? '#' : base;
  * @returns {ResolvedPathname}
  */
 export function resolve(...args) {
-	const [id, params] = /** @type {[string, Record<string, string>?]} */ (args);
+	if (args[0][0] === '/') {
+		const [id, params] = args;
 
-	if (id[0] === '/') {
 		// route ID
 		if (id.includes('[') && !params) {
-			e.resolve_params_missing({ id });
+			throw new Error(`Missing params for dynamic route ID ${id}`);
 		}
 
-		return /** @type {ResolvedPathname} */ (pathname_prefix + resolve_route(id, params ?? {}));
+		return base + pathname_prefix + resolve_route(args[0], args[1] ?? {});
 	}
 
-	return /** @type {ResolvedPathname} */ (pathname_prefix + '/' + id);
+	return base + pathname_prefix + '/' + args[0];
 }
 
 /**
@@ -99,7 +92,7 @@ export function resolve(...args) {
  * ```
  * @since 2.52.0
  *
- * @param {URL | string} url
+ * @param {Path | URL | (string & {})} url
  * @returns {Promise<{ [K in RouteId]: { id: K; params: RouteParams<K>; } }[RouteId] | null>}
  */
 export function match(url) {

@@ -17,7 +17,3 @@ export const reset_form = form(
 		}
 	}
 );
-
-export const redirect_form = form(v.object({}), () => {
-	redirect(303, '/remote/form/redirect-target/destination');
-});

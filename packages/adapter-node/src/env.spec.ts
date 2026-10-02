@@ -1,7 +1,9 @@
 import { afterEach, expect, test, describe, vi } from 'vitest';
 import { timeout_env } from '../src/env.js';
 
-vi.mock('#@sveltejs/adapter-node', () => ({ env_prefix: '' }));
+vi.hoisted(() => {
+	vi.stubGlobal('ENV_PREFIX', '');
+});
 
 describe('timeout_env', () => {
 	afterEach(() => {

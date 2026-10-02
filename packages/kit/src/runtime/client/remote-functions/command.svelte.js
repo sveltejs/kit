@@ -1,14 +1,8 @@
-/** @import { RemoteCommand, RemoteQueryUpdate } from '$app/server' */
-import { app_dir, base } from '#app/paths';
+/** @import { RemoteCommand, RemoteQueryUpdate } from '@sveltejs/kit' */
+import { app_dir, base } from '$app/paths/internal/client';
+import { app } from '../client.js';
 import { stringify_command_arg } from '../../shared.js';
-import * as e from '../../../messages/client-errors.js';
-import * as w from '../../../messages/client-warnings.js';
-import {
-	get_remote_request_headers,
-	categorize_updates,
-	remote_request,
-	fail_unhandled_refreshes
-} from './shared.svelte.js';
+import { get_remote_request_headers, categorize_updates, remote_request } from './shared.svelte.js';
 
 /**
  * Client-version of the `command` function from `$app/server`.
@@ -41,50 +35,46 @@ export function command(id) {
 			...get_remote_request_headers()
 		};
 
-		const promise =
-			/** @type {Promise<any> & { updates: (...args: RemoteQueryUpdate[]) => Promise<any> }} */ (
-				(async () => {
-					try {
-						// Wait a tick to give room for the `updates` method to be called
-						await Promise.resolve();
+		/** @type {Promise<any> & { updates: (...args: RemoteQueryUpdate[]) => Promise<any> }} */
+		const promise = (async () => {
+			try {
+				// Wait a tick to give room for the `updates` method to be called
+				await Promise.resolve();
 
-						if (updates_error) {
-							throw updates_error;
-						}
+				if (updates_error) {
+					throw updates_error;
+				}
 
-						const response = await remote_request(
-							`${base}/${app_dir}/remote/${id}`,
-							{
-								method: 'POST',
-								body: JSON.stringify({
-									payload: await stringify_command_arg(arg),
-									refreshes: Array.from(refreshes ?? [])
-								}),
-								headers
-							},
-							refreshes
-						);
+				const response = await remote_request(`${base}/${app_dir}/remote/${id}`, {
+					method: 'POST',
+					body: JSON.stringify({
+						payload: await stringify_command_arg(arg, app.hooks.transport),
+						refreshes: Array.from(refreshes ?? [])
+					}),
+					headers
+				});
 
-						if (response.redirect) {
-							e.remote_command_redirect();
-						}
+				if (response.redirect) {
+					throw new Error(
+						'Redirects are not allowed in commands. Return a result instead and use goto on the client'
+					);
+				}
 
-						fail_unhandled_refreshes(refreshes);
+				return response._;
+			} finally {
+				overrides?.forEach((fn) => fn());
 
-						return response._;
-					} finally {
-						overrides?.forEach((fn) => fn());
-
-						// Decrement pending count when command completes
-						pending_count--;
-					}
-				})()
-			);
+				// Decrement pending count when command completes
+				pending_count--;
+			}
+		})();
 
 		let updates_called = false;
 		promise.updates = (...args) => {
 			if (updates_called) {
-				w.remote_updates_repeated({ invocation: 'command invocation' });
+				console.warn(
+					'Updates can only be sent once per command invocation. Ignoring additional updates.'
+				);
 				return promise;
 			}
 			updates_called = true;

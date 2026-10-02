@@ -1,14 +1,13 @@
-import { assert, expect, test } from 'vitest';
+import { assert, test } from 'vitest';
 import { defineEnvVars } from '../env/index.js';
-import { ASYNC_VALIDATOR, BAD_VALIDATOR, MISSING, handle_issues, validate } from './env.js';
-import { bullet_list } from '../../utils/format.js';
+import { validate } from './env.js';
 
 test('reports a variable without a validator as missing when it is undefined', () => {
 	/** @type {Record<string, import('@standard-schema/spec').StandardSchemaV1.Issue[]>} */
 	const issues = {};
 	validate({}, undefined, 'FOO', issues);
 
-	assert.deepEqual(issues.FOO, [MISSING]);
+	assert.ok(issues.FOO);
 });
 
 test('accepts an empty string for a variable without a validator', () => {
@@ -57,7 +56,7 @@ test('rejects async function validators', () => {
 	const issues = {};
 	validate(variables, 'x', 'FOO', issues);
 
-	assert.deepEqual(issues.FOO, [ASYNC_VALIDATOR]);
+	assert.equal(issues.FOO[0].message, 'Variable uses an async validator, which is not supported');
 });
 
 test('passes standard schema configs through untouched', () => {
@@ -97,45 +96,4 @@ test('passes standard schema configs through untouched', () => {
 	const issues = {};
 	assert.equal(validate(variables, 'x', 'BAR', issues), 'from-schema');
 	assert.deepEqual(issues, {});
-});
-
-test('reports configuration issues and forwards validator issues in one diagnostic', () => {
-	const user_issue = { message: 'expected a Google Analytics ID', path: ['x'] };
-	const variables = defineEnvVars({
-		BAD: { schema: /** @type {any} */ ({}) },
-		USER: {
-			schema: {
-				'~standard': {
-					version: 1,
-					vendor: 'test',
-					validate: () => ({ issues: [user_issue] })
-				}
-			}
-		}
-	});
-
-	/** @type {Record<string, import('@standard-schema/spec').StandardSchemaV1.Issue[]>} */
-	const issues = {};
-	validate(variables, undefined, 'MISSING', issues);
-	validate(variables, 'x', 'BAD', issues);
-	validate(variables, 'x', 'USER', issues);
-
-	assert.deepEqual(issues.MISSING, [MISSING]);
-	assert.deepEqual(issues.BAD, [BAD_VALIDATOR]);
-	// issues from the user's validator are forwarded untouched
-	assert.equal(issues.USER[0], user_issue);
-
-	expect(() => handle_issues(issues)).toThrowKitError('env_invalid', {
-		contains: [
-			// each variable is listed with its issues, using the messages from the issue objects
-			`MISSING\n${bullet_list([MISSING.message])}`,
-			`BAD\n${bullet_list([BAD_VALIDATOR.message])}`,
-			`USER\n${bullet_list([user_issue.message])}`
-		],
-		stackless: true
-	});
-});
-
-test('does not throw without issues', () => {
-	assert.equal(handle_issues({}), undefined);
 });

@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-static",
-	"version": "4.0.0",
+	"version": "4.0.0-next.2",
 	"description": "Adapter for SvelteKit apps that prerenders your entire site as a collection of static files",
 	"keywords": [
 		"adapter",
@@ -33,17 +33,18 @@
 		"platforms.js"
 	],
 	"scripts": {
-		"lint": "oxfmt --check .",
-		"check": "node node_modules/@typescript/native/bin/tsc",
-		"format": "oxfmt --write .",
+		"lint": "prettier --check .",
+		"check": "tsc",
+		"format": "pnpm lint --write",
 		"test": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test"
 	},
 	"devDependencies": {
 		"@playwright/test": "catalog:",
 		"@sveltejs/kit": "workspace:^",
 		"@types/node": "catalog:",
+		"sirv": "^3.0.2",
 		"svelte": "catalog:",
-		"@typescript/native": "catalog:",
+		"typescript": "catalog:",
 		"vite": "catalog:"
 	},
 	"peerDependencies": {

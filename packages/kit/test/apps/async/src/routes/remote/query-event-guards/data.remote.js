@@ -7,7 +7,7 @@ export const blocked_operations = query(() => {
 	const results = [];
 
 	try {
-		cookies.set('illegal', 'yes');
+		cookies.set('illegal', 'yes', { path: '/' });
 		results.push('cookies.set succeeded');
 	} catch (e) {
 		results.push(/** @type {Error} */ (e).message);

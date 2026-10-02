@@ -1,1 +1,1 @@
-export * from '<sveltekit:generated>/app-manifest.js';
+export * from '__sveltekit/manifest-data';

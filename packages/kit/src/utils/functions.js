@@ -1,5 +1,3 @@
-import * as e from '../messages/server-errors.js';
-
 export function noop() {}
 
 /**
@@ -16,15 +14,5 @@ export function once(fn) {
 		if (done) return result;
 		done = true;
 		return (result = fn());
-	};
-}
-
-/**
- * @param {string} name
- * @param {string} [parens]
- */
-export function disallow_on_server(name, parens = '(...)') {
-	return () => {
-		e.server_api_unavailable({ name: `${name}${parens}` });
 	};
 }

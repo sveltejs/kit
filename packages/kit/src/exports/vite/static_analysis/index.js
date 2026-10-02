@@ -1,7 +1,7 @@
 /** @import { PageOptions } from './types.js' */
-/** @import { ESTree } from 'vite' */
 import path from 'node:path';
-import { parseSync } from 'vite';
+import { tsPlugin } from '@sveltejs/acorn-typescript';
+import { Parser } from 'acorn';
 import { read } from '../../../utils/filesystem.js';
 
 export const valid_page_options_array = /** @type {const} */ ([
@@ -21,6 +21,8 @@ const skip_parsing_regex = new RegExp(
 	`${Array.from(valid_page_options).join('|')}|(?:export[\\s\\n]+\\*[\\s\\n]+from)`
 );
 
+const parser = Parser.extend(tsPlugin());
+
 /**
  * Collects page options from a +page.js/+layout.js file, ignoring reassignments
  * and using the declared value (except for load functions, for which the value is `true`).
@@ -37,13 +39,15 @@ export function statically_analyse_page_options(filename, input) {
 	}
 
 	try {
-		const source = parseSync(filename, input, { sourceType: 'module' });
-		if (source.errors.length) throw new Error(source.errors[0].message);
+		const source = parser.parse(input, {
+			sourceType: 'module',
+			ecmaVersion: 'latest'
+		});
 
-		/** @type {Map<string, Extract<ESTree.Expression, { type: 'Literal' }>['value']>} */
+		/** @type {Map<string, import('acorn').Literal['value']>} */
 		const page_options = new Map();
 
-		for (const statement of source.program.body) {
+		for (const statement of source.body) {
 			// ignore export all declarations with aliases that are not page options
 			if (
 				statement.type === 'ExportAllDeclaration' &&
@@ -78,7 +82,7 @@ export function statically_analyse_page_options(filename, input) {
 					export_specifiers.set(get_name(specifier.local), exported_name);
 				}
 
-				for (const statement of source.program.body) {
+				for (const statement of source.body) {
 					switch (statement.type) {
 						case 'ImportDeclaration': {
 							for (const import_specifier of statement.specifiers) {
@@ -101,10 +105,7 @@ export function statically_analyse_page_options(filename, input) {
 
 							// class and function declarations
 							if (declaration.type !== 'VariableDeclaration') {
-								if (
-									declaration.id?.type === 'Identifier' &&
-									export_specifiers.has(declaration.id.name)
-								) {
+								if (export_specifiers.has(declaration.id.name)) {
 									return null;
 								}
 								break;
@@ -155,10 +156,9 @@ export function statically_analyse_page_options(filename, input) {
 
 			// class and function declarations
 			if (statement.declaration.type !== 'VariableDeclaration') {
-				const { id } = statement.declaration;
-				if (id?.type === 'Identifier' && valid_page_options.has(id.name)) {
+				if (valid_page_options.has(statement.declaration.id.name)) {
 					// Special case: We only want to know that 'load' is exported (in a way that doesn't cause truthy checks in other places to trigger)
-					if (id.name === 'load') {
+					if (statement.declaration.id.name === 'load') {
 						page_options.set('load', null);
 					} else {
 						return null;
@@ -202,7 +202,7 @@ export function statically_analyse_page_options(filename, input) {
 }
 
 /**
- * @param {ESTree.ModuleExportName} node
+ * @param {import('acorn').Identifier | import('acorn').Literal} node
  * @returns {string}
  */
 function get_name(node) {
