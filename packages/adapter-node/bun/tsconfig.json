@@ -8,17 +8,9 @@
 		"moduleResolution": "node16",
 		"skipLibCheck": true,
 		"paths": {
-			"@sveltejs/kit": ["../kit/types/index"]
+			"@sveltejs/kit": ["../../kit/types/index"]
 		},
 		"types": ["bun-types", "node"]
 	},
-	"include": [
-		"index.js",
-		"src/**/*.js",
-		"test/*.js",
-		"test/*.ts",
-		"tests/**/*.js",
-		"tests/**/*.ts",
-		"./internal.d.ts"
-	]
+	"include": ["index.js", "src/**/*.js", "test/*.js", "test/*.ts", "./internal.d.ts"]
 }

@@ -86,7 +86,7 @@ function validate_file_paths(files) {
 	}
 }
 
-/** @type {import('./index.js').default} */
+/** @type {typeof import('./index.js').default} */
 export default function (opts = {}) {
 	const {
 		out = 'build',
@@ -98,11 +98,11 @@ export default function (opts = {}) {
 	const embed = !!buildOptions.compile;
 
 	return {
-		name: '@sveltejs/adapter-bun',
+		name: '@sveltejs/adapter-node/bun',
 		async adapt(builder) {
 			if (typeof Bun === 'undefined') {
 				throw new Error(
-					'adapter-bun requires running the SvelteKit build with Bun. Use `bun run --bun build`.'
+					'@sveltejs/adapter-node/bun requires running the SvelteKit build with Bun. Use `bun run --bun build`.'
 				);
 			}
 

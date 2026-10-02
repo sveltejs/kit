@@ -48,7 +48,7 @@ describe('adapter contract', () => {
 	test('identifies itself and declares supported SvelteKit features', () => {
 		const instance = adapter();
 
-		expect(instance.name).toBe('@sveltejs/adapter-bun');
+		expect(instance.name).toBe('@sveltejs/adapter-node/bun');
 		expect(instance.supports?.read?.({ route: { id: '/file' }, config: {} })).toBe(true);
 		expect(instance.supports?.instrumentation?.()).toBe(true);
 	});
@@ -68,7 +68,7 @@ describe('adapter contract', () => {
 
 		expect(result.exitCode).toBe(1);
 		expect(result.stderr.toString()).toContain(
-			'adapter-bun requires running the SvelteKit build with Bun'
+			'@sveltejs/adapter-node/bun requires running the SvelteKit build with Bun'
 		);
 	});
 });

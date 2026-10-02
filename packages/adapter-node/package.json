@@ -1,9 +1,10 @@
 {
 	"name": "@sveltejs/adapter-node",
 	"version": "6.0.0",
-	"description": "Adapter for SvelteKit apps that generates a standalone Node server",
+	"description": "Adapter for SvelteKit apps that generates a standalone Node or Bun server",
 	"keywords": [
 		"adapter",
+		"bun",
 		"deploy",
 		"hosting",
 		"node.js",
@@ -23,6 +24,10 @@
 			"types": "./index.d.ts",
 			"import": "./index.js"
 		},
+		"./bun": {
+			"types": "./bun/index.d.ts",
+			"import": "./bun/index.js"
+		},
 		"./package.json": "./package.json"
 	},
 	"types": "index.d.ts",
@@ -30,14 +35,19 @@
 		"src/*.js",
 		"index.js",
 		"index.d.ts",
-		"ambient.d.ts"
+		"ambient.d.ts",
+		"bun/src/*.js",
+		"bun/index.js",
+		"bun/index.d.ts",
+		"bun/ambient.d.ts"
 	],
 	"scripts": {
 		"prepublishOnly": "echo TODO: remove this script once .github/workflows/platform-tests-node.yml no longer invokes prepublishOnly, after version-3 is merged into main",
-		"test": "pnpm test:unit && pnpm test:build",
+		"test": "pnpm test:unit && pnpm test:bun && pnpm test:build",
 		"test:unit": "vitest run",
+		"test:bun": "cd bun && bun test .spec",
 		"test:build": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:build",
-		"check": "node node_modules/@typescript/native/bin/tsc",
+		"check": "node node_modules/@typescript/native/bin/tsc && node node_modules/@typescript/native/bin/tsc -p bun",
 		"lint": "oxfmt --check .",
 		"format": "oxfmt --write ."
 	},
@@ -45,9 +55,16 @@
 		"@sveltejs/kit": "workspace:^",
 		"@types/node": "catalog:",
 		"@typescript/native": "catalog:",
+		"bun-types": "^1.3.14",
 		"vitest": "catalog:"
 	},
 	"peerDependencies": {
-		"@sveltejs/kit": "^3.0.0-next.0"
+		"@sveltejs/kit": "^3.0.0-next.0",
+		"bun-types": "^1.3.14"
+	},
+	"peerDependenciesMeta": {
+		"bun-types": {
+			"optional": true
+		}
 	}
 }

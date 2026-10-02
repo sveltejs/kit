@@ -5,8 +5,6 @@ export default defineConfig({
 	test: {
 		projects: [
 			'packages/*',
-			// Bun tests should run in Bun, not NodeJS
-			'!packages/adapter-bun',
 			// prevent Vitest from crawling nested Vite apps in the kit test directory
 			// which do not use Vitest but have a vite.config.js file
 			'!packages/kit',

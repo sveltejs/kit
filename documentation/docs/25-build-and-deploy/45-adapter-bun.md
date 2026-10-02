@@ -2,7 +2,7 @@
 title: Bun servers
 ---
 
-[`adapter-bun`](https://github.com/sveltejs/kit/tree/main/packages/adapter-bun) builds a SvelteKit application into a standalone [Bun](https://bun.com/) server. The generated server uses `Bun.serve` for requests and `Bun.file` responses for client assets, prerendered output, and files read with [`read`](https://svelte.dev/docs/kit/$app-server#read) from `$app/server`.
+[`@sveltejs/adapter-node/bun`](https://github.com/sveltejs/kit/tree/main/packages/adapter-node/bun) builds a SvelteKit application into a standalone [Bun](https://bun.com/) server. The generated server uses `Bun.serve` for requests and `Bun.file` responses for client assets, prerendered output, and files read with [`read`](https://svelte.dev/docs/kit/$app-server#read) from `$app/server`.
 
 > [!NOTE] Bun 1.4 or newer is required.
 
@@ -11,7 +11,13 @@ title: Bun servers
 Install the adapter:
 
 ```sh
-bun add -D @sveltejs/adapter-bun
+bun add -D @sveltejs/adapter-node
+```
+
+The types of `serverOptions`, `buildOptions` and `platform.server` come from Bun's own type definitions, which are installed separately:
+
+```sh
+bun add -D @types/bun
 ```
 
 Configure it in `vite.config.js`:
@@ -19,7 +25,7 @@ Configure it in `vite.config.js`:
 ```js
 // @errors: 2307 2554
 /// file: vite.config.js
-import adapter from '@sveltejs/adapter-bun';
+import adapter from '@sveltejs/adapter-node/bun';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
 
@@ -55,7 +61,7 @@ Client assets and prerendered output are registered as native Bun routes. Only `
 ```js
 // @errors: 2307 2554
 /// file: vite.config.js
-import adapter from '@sveltejs/adapter-bun';
+import adapter from '@sveltejs/adapter-node/bun';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
 
@@ -88,7 +94,7 @@ A prefix for every deployment environment variable documented below. This is use
 
 ```js
 // @errors: 2307
-import adapter from '@sveltejs/adapter-bun';
+import adapter from '@sveltejs/adapter-node/bun';
 // ---cut---
 adapter({ envPrefix: 'MY_APP_' });
 ```
@@ -126,7 +132,7 @@ Set `compile: true` to generate a single executable at `<out>/server`:
 
 ```js
 // @errors: 2307
-import adapter from '@sveltejs/adapter-bun';
+import adapter from '@sveltejs/adapter-node/bun';
 // ---cut---
 adapter({
 	buildOptions: {
@@ -146,7 +152,7 @@ The executable embeds the server code, client assets, prerendered output, and Bu
 
 ```js
 // @errors: 2307
-import adapter from '@sveltejs/adapter-bun';
+import adapter from '@sveltejs/adapter-node/bun';
 // ---cut---
 adapter({
 	out: 'dist',
@@ -190,7 +196,7 @@ SOCKET_PATH=/tmp/sveltekit.sock bun ./build
 
 `BODY_SIZE_LIMIT` controls `Bun.serve`'s `maxRequestBodySize`. It defaults to `512K`. The value must resolve to a whole number of bytes and may use a case-insensitive binary `K`, `M`, or `G` suffix, such as `768K` or `1.5M`. `Infinity` disables the limit.
 
-`CONNECTION_IDLE_TIMEOUT` sets Bun's per-request inactivity timeout in seconds. It must be an integer from `0` through `255`; `0` disables the timeout. The generated handler disables the timeout for responses whose content type starts with `text/event-stream` and also adds `X-Accel-Buffering: no`. It is deliberately not called `IDLE_TIMEOUT`, which on adapter-node means something different (shut the server down after N seconds without requests).
+`CONNECTION_IDLE_TIMEOUT` sets Bun's per-request inactivity timeout in seconds. It must be an integer from `0` through `255`; `0` disables the timeout. The generated handler disables the timeout for responses whose content type starts with `text/event-stream` and also adds `X-Accel-Buffering: no`. It is deliberately not called `IDLE_TIMEOUT`, which for [Node servers](adapter-node) means something different (shut the server down after N seconds without requests).
 
 `DEVELOPMENT` enables Bun's development-mode error pages. It defaults to `false` for the generated server.
 

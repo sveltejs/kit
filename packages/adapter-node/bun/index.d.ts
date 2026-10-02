@@ -35,16 +35,18 @@ interface AdapterOptions {
 	 * Default options passed to `Bun.serve`. Environment variables take precedence.
 	 * The options must be JSON-serializable.
 	 */
-	serverOptions?: Pick<
-		import('bun').Serve.Options<never>,
-		| 'development'
-		| 'hostname'
-		| 'port'
-		| 'idleTimeout'
-		| 'maxRequestBodySize'
-		| 'reusePort'
-		| 'unix'
-		| 'ipv6Only'
+	serverOptions?: Partial<
+		Pick<
+			import('bun').Serve.Options<never>,
+			| 'development'
+			| 'hostname'
+			| 'port'
+			| 'idleTimeout'
+			| 'maxRequestBodySize'
+			| 'reusePort'
+			| 'unix'
+			| 'ipv6Only'
+		>
 	>;
 	/**
 	 * Options for the `Bun.build` call that turns the server into an executable. Set `compile`
@@ -53,18 +55,20 @@ interface AdapterOptions {
 	 * are reserved. Without `compile`, the server is built by Vite and these options are ignored.
 	 * @default {}
 	 */
-	buildOptions?: Pick<
-		import('bun').BuildConfig,
-		| 'sourcemap'
-		| 'minify'
-		| 'bytecode'
-		| 'banner'
-		| 'footer'
-		| 'drop'
-		| 'features'
-		| 'optimizeImports'
-		| 'external'
-		| 'compile'
+	buildOptions?: Partial<
+		Pick<
+			import('bun').BuildConfig,
+			| 'sourcemap'
+			| 'minify'
+			| 'bytecode'
+			| 'banner'
+			| 'footer'
+			| 'drop'
+			| 'features'
+			| 'optimizeImports'
+			| 'external'
+			| 'compile'
+		>
 	>;
 }
 
