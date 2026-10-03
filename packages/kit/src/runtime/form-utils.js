@@ -1,5 +1,6 @@
 /** @import { BinaryFormMeta, InternalRemoteFormIssue } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
+/** @import { RemoteFormInvalidField } from '$app/server' */
 
 import { DEV } from 'esm-env';
 import * as devalue from 'devalue';
@@ -930,4 +931,67 @@ export function build_path_string(path) {
 	}
 
 	return result;
+}
+
+/**
+ * Creates an invalid function that can be used to imperatively mark form fields as invalid
+ * @returns {RemoteFormInvalidField<any>}
+ */
+export function create_issues() {
+	return /** @type {RemoteFormInvalidField<any>} */ (
+		new Proxy(
+			/** @param {string} message */
+			(message) => {
+				return create_issue(message);
+			},
+			{
+				get(target, prop) {
+					if (typeof prop === 'symbol') return /** @type {any} */ (target)[prop];
+
+					return create_issue_proxy(prop, []);
+				}
+			}
+		)
+	);
+
+	/**
+	 * @param {string} message
+	 * @param {(string | number)[]} path
+	 * @returns {StandardSchemaV1.Issue}
+	 */
+	function create_issue(message, path = []) {
+		return {
+			message,
+			path
+		};
+	}
+
+	/**
+	 * Creates a proxy that builds up a path and returns a function to create an issue
+	 * @param {string | number} key
+	 * @param {(string | number)[]} path
+	 */
+	function create_issue_proxy(key, path) {
+		const new_path = [...path, key];
+
+		/**
+		 * @param {string} message
+		 * @returns {StandardSchemaV1.Issue}
+		 */
+		const issue_func = (message) => create_issue(message, new_path);
+
+		return new Proxy(issue_func, {
+			get(target, prop) {
+				if (typeof prop === 'symbol') return /** @type {any} */ (target)[prop];
+
+				// Handle array access like invalid.items[0]
+				if (/^\d+$/.test(prop)) {
+					return create_issue_proxy(parseInt(prop, 10), new_path);
+				}
+
+				// Handle property access like invalid.field.nested
+				return create_issue_proxy(prop, new_path);
+			}
+		});
+	}
 }

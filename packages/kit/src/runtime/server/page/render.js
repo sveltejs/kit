@@ -29,6 +29,7 @@ import { count_non_ssi_comments } from '../utils.js';
 import { handle_error_and_jsonify } from '../errors.js';
 import * as env from '<sveltekit:generated>/env/config.js';
 import { collect_remote_data } from '../remote-functions.js';
+import { collect_universal_data } from '../universal.js';
 import Root from '../../components/root.svelte';
 import { render } from 'svelte/server';
 import { Props, RenderNode } from '../../props.svelte.js';
@@ -508,11 +509,16 @@ export async function render_response({
 		}
 
 		const remote_data = await collect_remote_data({}, event, state);
+		const universal_data = await collect_universal_data(event, state);
 
-		const serialized_data =
+		let serialized_data =
 			Object.keys(remote_data).length > 0
 				? `${global}.data = ${uneval(remote_data)};\n\n\t\t\t\t\t\t`
 				: '';
+
+		if (Object.keys(universal_data).length > 0) {
+			serialized_data += `${global}.universal = ${uneval(universal_data)};\n\n\t\t\t\t\t\t`;
+		}
 
 		// `client.app` is a proxy for `bundleStrategy === 'split'`
 		const boot = client.inline

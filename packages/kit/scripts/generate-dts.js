@@ -17,7 +17,8 @@ await createBundle({
 		'$app/paths': 'src/runtime/app/paths/public.d.ts',
 		'$app/server': 'src/runtime/app/server/public.d.ts',
 		'$app/service-worker': 'src/runtime/app/service-worker/index.js',
-		'$app/state': 'src/runtime/app/state/public.d.ts'
+		'$app/state': 'src/runtime/app/state/public.d.ts',
+		'$app/universal': 'src/runtime/app/universal/public.d.ts'
 	},
 	include: ['src'],
 	exclude: ['**/test/**', '**/fixtures/**', '**/*.spec.js'],

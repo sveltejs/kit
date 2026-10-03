@@ -258,6 +258,21 @@ export const query_responses = {};
  */
 export const prerender_responses = {};
 
+/**
+ * Data that was serialized during SSR for `$app/universal` functions, stored as `{ v }`/`{ e }` nodes
+ * (queries, keyed by `id/payload`) or form outputs (keyed by action id).
+ * Entries are deleted as they are consumed (when the corresponding resource is created).
+ * @type {{ q: Record<string, RemoteFunctionDataNode>, f: Record<string, any> }}
+ */
+export const universal_responses = { q: {}, f: {} };
+
+/**
+ * All active `$app/universal` query resources, keyed by `id/payload`.
+ * Used to refresh them on `invalidateAll()`/`refreshAll()`.
+ * @type {Map<string, import('../app/universal/client/cache.svelte.js').UniversalCacheEntry<any>>}
+ */
+export const universal_query_map = new Map();
+
 /** @type {Array<((url: URL) => boolean)>} */
 const invalidated = [];
 
@@ -470,6 +485,11 @@ async function _start(_app, _target, data) {
 		for (const k in p) prerender_responses[k] = p[k];
 	}
 
+	if (payload.universal) {
+		Object.assign(universal_responses.q, payload.universal.q);
+		Object.assign(universal_responses.f, payload.universal.f);
+	}
+
 	// detect basic auth credentials in the current URL
 	// https://github.com/sveltejs/kit/pull/11179
 	// if so, refresh the page without credentials
@@ -588,6 +608,8 @@ async function _invalidate(reset_page_state = true) {
 	// Rerun queries
 	/** @type {Map<string, Promise<void>>} */
 	const live_query_reconnects = new Map();
+	/** @type {Map<string, Promise<void>>} */
+	const universal_invalidations = new Map();
 	if (force_invalidation) {
 		for (const [, { resource }] of cache_entries(query_map)) {
 			void resource.refresh();
@@ -597,6 +619,12 @@ async function _invalidate(reset_page_state = true) {
 			const promise = resource.reconnect();
 			promise.catch(noop);
 			live_query_reconnects.set(key, promise);
+		}
+
+		for (const [key, { resource }] of universal_query_map) {
+			const promise = resource.invalidate();
+			promise.catch(noop);
+			universal_invalidations.set(key, promise);
 		}
 	}
 
@@ -643,6 +671,12 @@ async function _invalidate(reset_page_state = true) {
 	}
 	for (const [key] of cache_entries(live_query_map)) {
 		const promise = live_query_reconnects.get(key);
+		if (promise) {
+			promises.push(promise);
+		}
+	}
+	for (const [key] of universal_query_map) {
+		const promise = universal_invalidations.get(key);
 		if (promise) {
 			promises.push(promise);
 		}
@@ -706,6 +740,8 @@ export async function _goto(url, options = {}, redirect_count = 0, nav_token = {
 	let query_keys;
 	/** @type {Set<string>} */
 	let live_query_keys;
+	/** @type {Set<string>} */
+	let universal_keys;
 
 	// Clear preload cache when refreshAll is true to ensure fresh data
 	// after form submissions or explicit invalidations
@@ -740,6 +776,7 @@ export async function _goto(url, options = {}, redirect_count = 0, nav_token = {
 				for (const [key] of cache_entries(live_query_map)) {
 					live_query_keys.add(key);
 				}
+				universal_keys = new Set(universal_query_map.keys());
 			}
 
 			if (options.invalidate) {
@@ -762,6 +799,11 @@ export async function _goto(url, options = {}, redirect_count = 0, nav_token = {
 				for (const [key, { resource }] of cache_entries(live_query_map)) {
 					if (live_query_keys?.has(key)) {
 						void resource.reconnect();
+					}
+				}
+				for (const [key, { resource }] of universal_query_map) {
+					if (universal_keys?.has(key)) {
+						resource.invalidate().catch(noop);
 					}
 				}
 			});

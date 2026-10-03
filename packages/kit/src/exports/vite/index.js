@@ -32,6 +32,7 @@ import { process_config, split_config, validate_config } from '../../core/config
 import { plugin_env_vars, plugin_service_worker_env_vars } from './plugins/env-vars.js';
 import { plugin_guard } from './plugins/guard.js';
 import { plugin_remote, plugin_remote_guard } from './plugins/remote.js';
+import { plugin_universal } from './plugins/universal.js';
 import { write_app_manifest } from '../../core/sync/write_app_manifest.js';
 import { plugin_service_worker_build } from './build/service-worker.js';
 import { plugin_adapter, plugin_compile } from './build/index.js';
@@ -625,6 +626,7 @@ function kit({ svelte_config }) {
 					remote_metadata = metadata;
 				}
 			),
+			plugin_universal(() => ({ root })),
 			plugin_env_vars(svelte_config, (vars) => {
 				explicit_env_config = vars;
 			}),

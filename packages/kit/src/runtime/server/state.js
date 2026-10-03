@@ -17,7 +17,13 @@ function transient_fields() {
 		is_in_remote_form_or_command: false,
 		is_in_remote_query: false,
 		is_in_remote_prerender: false,
-		is_in_render: false
+		is_in_render: false,
+		universal: {
+			data: null,
+			form_outputs: null,
+			keyed_forms: null
+		},
+		is_in_universal_function: false
 	};
 }
 

@@ -134,6 +134,12 @@
 			"browser": "./src/runtime/app/paths/client.js",
 			"default": "./src/runtime/app/paths/server.js"
 		},
+		"#app/universal": {
+			"types": "./src/runtime/app/universal/client/index.js",
+			"workerd": "./src/runtime/app/universal/server.js",
+			"browser": "./src/runtime/app/universal/client/index.js",
+			"default": "./src/runtime/app/universal/server.js"
+		},
 		"#app/state": {
 			"types": "./src/runtime/app/state/client.svelte.js",
 			"workerd": "./src/runtime/app/state/server.js",

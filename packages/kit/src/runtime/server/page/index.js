@@ -21,6 +21,7 @@ import { load_data, load_server_data } from './load_data.js';
 import { render_response } from './render.js';
 import { DEV } from 'esm-env';
 import { get_remote_action, handle_remote_form_post } from '../remote-functions.js';
+import { get_universal_action, handle_universal_form_post } from '../universal.js';
 import { PageNodes } from '../../../utils/page_nodes.js';
 import { static_error_page, respond_with_error } from './respond_with_error.js';
 import * as e from '../../../messages/server-errors.js';
@@ -62,8 +63,11 @@ export async function render_page(event, state, page, nodes, resolve_opts) {
 
 		if (is_action_request(event)) {
 			const remote_id = get_remote_action(event.url);
+			const universal_id = !remote_id && get_universal_action(event.url);
 			if (remote_id) {
 				action_result = await handle_remote_form_post(event, state, remote_id);
+			} else if (universal_id) {
+				action_result = await handle_universal_form_post(event, state, universal_id, nodes);
 			} else {
 				// for action requests, first call handler in +page.server.js
 				// (this also determines status code)

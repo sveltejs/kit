@@ -788,6 +788,39 @@ export interface RequestState {
 	readonly is_in_remote_query: boolean;
 	readonly is_in_remote_prerender: boolean;
 	readonly is_in_render: boolean;
+	/** State for `$app/universal` functions */
+	readonly universal: {
+		/** Request-scoped cache of query results, by universal function and stringified argument */
+		data: null | Map<object, Map<string, UniversalCacheEntry>>;
+		/** Outputs of non-enhanced universal form submissions, by action id */
+		form_outputs: null | Map<
+			string,
+			{ input?: Record<string, any>; issues?: InternalRemoteFormIssue[]; result?: any }
+		>;
+		/** Instances created via `myForm.for(...)` */
+		keyed_forms: null | Map<string, any>;
+	};
+	/** True while a `$app/universal` function is running. Used to route `fetch` calls through `event.fetch` */
+	readonly is_in_universal_function: boolean;
+}
+
+export interface UniversalCacheEntry {
+	promise: Promise<any>;
+	settled: boolean;
+	failed: boolean;
+	value: any;
+	error: unknown;
+}
+
+/** Data serialized during SSR for `$app/universal` functions */
+export interface UniversalFunctionData {
+	/** query results, keyed by `id/payload` */
+	q?: Record<string, RemoteFunctionDataNode>;
+	/** outputs of non-enhanced form submissions, keyed by action id */
+	f?: Record<
+		string,
+		{ input?: Record<string, any>; issues?: InternalRemoteFormIssue[]; result?: any }
+	>;
 }
 
 export interface RequestStore {
@@ -807,6 +840,8 @@ export interface SvelteKitPayload {
 	env?: Record<string, string>;
 	/** Serialized data from query/form/command functions */
 	data?: RemoteFunctionData;
+	/** Serialized data from `$app/universal` functions */
+	universal?: UniversalFunctionData;
 	/** Create a placeholder promise */
 	defer?: (id: number) => Promise<any>;
 	/** Resolve a placeholder promise */
