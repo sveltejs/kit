@@ -4,7 +4,7 @@
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import {
 	create_field_proxy,
-	set_nested_value,
+	split_path,
 	deep_set,
 	normalize_issue,
 	flatten_issues,
@@ -13,9 +13,7 @@ import {
 import { get_cache, get_implicit_lookup, run_remote_function } from './shared.js';
 import { ActionFailure, ValidationError } from '@sveltejs/kit/internal';
 import { DEV } from 'esm-env';
-
-const incorrect_fail_message =
-	'`fail(...)` is for form actions. A remote `form` handler should call `invalid(...)` instead. See https://svelte.dev/docs/kit/remote-functions#form-Programmatic-validation';
+import * as e from '../../../../messages/server-errors.js';
 
 /**
  * Creates a form object that can be spread onto a `<form>` element.
@@ -124,15 +122,15 @@ export function form(validate_or_fn, maybe_fn) {
 						);
 
 						if (DEV && output.result instanceof ActionFailure) {
-							throw new Error(incorrect_fail_message);
+							e.remote_form_fail();
 						}
-					} catch (e) {
-						if (e instanceof ValidationError) {
-							handle_issues(output, e.issues, form_data, __.id);
-						} else if (DEV && e instanceof ActionFailure) {
-							throw new Error(incorrect_fail_message, { cause: e });
+					} catch (error) {
+						if (error instanceof ValidationError) {
+							handle_issues(output, error.issues, form_data, __.id);
+						} else if (DEV && error instanceof ActionFailure) {
+							e.remote_form_fail(undefined, { cause: error });
 						} else {
-							throw e;
+							throw error;
 						}
 					}
 				}
@@ -156,7 +154,8 @@ export function form(validate_or_fn, maybe_fn) {
 
 		Object.defineProperty(instance, 'action', {
 			get: () => {
-				const search = new URLSearchParams(get_request_store().event.url.search);
+				const { event, state } = get_request_store();
+				const search = new URLSearchParams(state.prerendering ? '' : event.url.search);
 				search.delete('/remote');
 
 				const query = search.toString();
@@ -226,13 +225,13 @@ export function form(validate_or_fn, maybe_fn) {
 
 		Object.defineProperty(instance, 'validate', {
 			value: () => {
-				throw new Error('Cannot call validate() on the server');
+				e.server_api_unavailable({ name: 'form.validate()' });
 			}
 		});
 
 		Object.defineProperty(instance, 'submit', {
 			value: () => {
-				throw new Error('Cannot call submit() on the server');
+				e.server_api_unavailable({ name: 'form.submit()' });
 			}
 		});
 
@@ -286,15 +285,17 @@ function handle_issues(output, issues, form_data, form_id) {
 		output.input = {};
 
 		for (const field_name of form_data.keys()) {
+			const field = parse_form_key(form_id, field_name);
+			const path = split_path(field.name);
+
 			// redact sensitive fields
-			if (/^[.\]]?_/.test(field_name)) continue;
+			if (path.some((part) => part.startsWith('_'))) continue;
 
 			const values = form_data.getAll(field_name).filter((value) => typeof value === 'string');
-			const field = parse_form_key(form_id, field_name);
 
-			set_nested_value(
+			deep_set(
 				/** @type {Record<string, any>} */ (output.input),
-				field,
+				path,
 				field.is_array ? values : values[0]
 			);
 		}

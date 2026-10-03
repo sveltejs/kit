@@ -6,6 +6,8 @@ import * as devalue from 'devalue';
 import { stream_from_iterable, text_decoder, text_encoder } from './utils.js';
 import { noop } from '../utils/functions.js';
 import { SvelteKitError } from '@sveltejs/kit/internal';
+import * as e from '../messages/shared-errors.js';
+import * as w from '../messages/shared-warnings.js';
 
 /**
  * Sets a parsed form field value in a nested object, mutating the original object.
@@ -34,7 +36,7 @@ export function parse_form_key(form_id, key) {
 	}
 
 	if (!name.endsWith(suffix)) {
-		throw new Error(`Form contained a field that wasn't created with form.fields.as(...): ${name}`);
+		e.form_field_unbound({ name });
 	}
 
 	name = name.slice(0, -suffix.length);
@@ -97,9 +99,7 @@ export function convert_formdata(form_id, data) {
 		if (entries.length === 0 && !field.is_array) continue;
 
 		if (entries.length > 1 && !field.is_array) {
-			throw new Error(
-				`Form cannot contain duplicated keys — "${field.name}" has ${entries.length} values`
-			);
+			e.form_field_duplicate({ name: field.name, count: String(entries.length) });
 		}
 
 		set_nested_value(
@@ -289,9 +289,11 @@ export async function deserialize_binary_form(request, form_id) {
 			if (
 				typeof name !== 'string' ||
 				typeof type !== 'string' ||
-				typeof size !== 'number' ||
-				typeof last_modified !== 'number' ||
-				typeof index !== 'number'
+				!Number.isSafeInteger(size) ||
+				size < 0 ||
+				!Number.isSafeInteger(last_modified) ||
+				!Number.isSafeInteger(index) ||
+				index < 0
 			) {
 				throw deserialize_error('invalid file metadata');
 			}
@@ -475,12 +477,7 @@ const path_regex = /^[a-zA-Z_$]\w*(\.[a-zA-Z_$]\w*|\[\d+\])*$/;
  */
 export function split_path(path) {
 	if (!path_regex.test(path)) {
-		throw new Error(
-			`Invalid field name ${path}` +
-				(DEV
-					? ': field names are written in JS object notation, so keys that would need quoting are not supported. See https://svelte.dev/docs/kit/remote-functions#form-Fields'
-					: '')
-		);
+		e.form_field_invalid_name({ name: path });
 	}
 
 	return path.split(/\.|\[|\]/).filter(Boolean);
@@ -492,10 +489,7 @@ export function split_path(path) {
  */
 function check_prototype_pollution(key) {
 	if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
-		throw new Error(
-			`Invalid key "${key}"` +
-				(DEV ? ': This key is not allowed to prevent prototype pollution.' : '')
-		);
+		e.form_field_forbidden_key({ key });
 	}
 }
 
@@ -518,7 +512,7 @@ export function deep_set(object, keys, value) {
 		const exists = inner != null;
 
 		if (exists && is_array !== Array.isArray(inner)) {
-			throw new Error(`Invalid array key ${keys[i + 1]}`);
+			e.form_field_array_conflict({ key: keys[i + 1] });
 		}
 
 		if (!exists) {
@@ -578,7 +572,7 @@ export function normalize_issue(issue, server = false) {
  */
 export function flatten_issues(issues) {
 	/** @type {Record<string, InternalRemoteFormIssue[]>} */
-	const result = {};
+	const result = Object.create(null);
 
 	for (const issue of issues) {
 		(result.$ ??= []).push(issue);
@@ -610,7 +604,10 @@ export function flatten_issues(issues) {
 export function deep_get(object, path) {
 	let current = object;
 	for (const key of path) {
-		if (current === null || typeof current !== 'object') return undefined;
+		if (current === null || typeof current !== 'object' || !Object.hasOwn(current, key)) {
+			return undefined;
+		}
+
 		current = current[key];
 	}
 	return current;
@@ -691,12 +688,11 @@ const warned_sites = new Set();
 
 // keyed by the stack, so every place that enumerates warns once with its call site
 const warn_no_keys = () => {
-	const error = new Error(
-		'The properties of `form.fields` are virtual, so operators like `in` and `Object.keys` are meaningless. If you need the current value of a form field, use `form.fields.x.value()`'
-	);
+	// Capture the original call site, not a generated diagnostic or factory's frames.
+	const error = new Error();
 	if (warned_sites.has(error.stack)) return;
 	warned_sites.add(error.stack);
-	console.warn(error);
+	w.form_fields_enumerated();
 };
 
 // fields are created as they are accessed, so there is nothing to enumerate
@@ -814,7 +810,7 @@ function create_field_method(context, path, prop) {
 				if (type === 'submit' || type === 'hidden') {
 					if (DEV) {
 						if (input_value === null || input_value === undefined) {
-							throw new Error(`\`${type}\` inputs must have a value`);
+							e.form_input_missing_value({ type: `\`${type}\`` });
 						}
 					}
 
@@ -842,9 +838,7 @@ function create_field_method(context, path, prop) {
 					const has_option = type === 'radio' || is_array;
 
 					if (DEV && has_option && !input_value) {
-						throw new Error(
-							`${type === 'radio' ? 'Radio' : 'Checkbox array'} inputs must have a value`
-						);
+						e.form_input_missing_value({ type: type === 'radio' ? 'Radio' : 'Checkbox array' });
 					}
 
 					if (has_option) {

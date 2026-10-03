@@ -1,6 +1,6 @@
 import process from 'node:process';
 import { afterEach, describe, expect, test } from 'bun:test';
-import { mock_manifest } from './mocks.js';
+import { mock_handoff } from './mocks.js';
 
 const changed = new Set<string>();
 let instance = 0;
@@ -148,7 +148,7 @@ describe('bytes_env', () => {
 });
 
 async function load_env(prefix = '') {
-	mock_manifest({ env_prefix: prefix });
+	mock_handoff({ env_prefix: prefix });
 	// a fresh query string re-runs the module-level prefix check
 	const specifier = `../src/env.js?instance=${++instance}`;
 	return (await import(specifier)) as typeof import('../src/env.js');

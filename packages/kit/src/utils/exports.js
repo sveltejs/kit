@@ -1,3 +1,6 @@
+import * as e from '../messages/shared-errors.js';
+import { join_or } from './format.js';
+
 /**
  * @param {Set<string>} expected
  */
@@ -12,13 +15,17 @@ function validator(expected) {
 		for (const key in module) {
 			if (key[0] === '_' || expected.has(key)) continue; // key is valid in this module
 
-			const values = [...expected.values()];
+			const locations = valid_locations(key, file?.slice(file.lastIndexOf('.')));
 
-			const hint =
-				hint_for_supported_files(key, file?.slice(file.lastIndexOf('.'))) ??
-				`valid exports are ${values.join(', ')}, or anything with a '_' prefix`;
+			if (locations.length > 0) {
+				e.invalid_export_location({ key, locations: join_or(locations), file: file || undefined });
+			}
 
-			throw new Error(`Invalid export '${key}'${file ? ` in ${file}` : ''} (${hint})`);
+			e.invalid_export({
+				key,
+				exports: [...expected.values()].join(', '),
+				file: file || undefined
+			});
 		}
 	}
 
@@ -26,38 +33,35 @@ function validator(expected) {
 }
 
 /**
+ * Returns the route files in which `key` is a valid export
  * @param {string} key
  * @param {string} ext
- * @returns {string | void}
+ * @returns {string[]}
  */
-function hint_for_supported_files(key, ext = '.js') {
-	const supported_files = [];
+function valid_locations(key, ext = '.js') {
+	const locations = [];
 
 	if (valid_layout_exports.has(key)) {
-		supported_files.push(`+layout${ext}`);
+		locations.push(`+layout${ext}`);
 	}
 
 	if (valid_page_exports.has(key)) {
-		supported_files.push(`+page${ext}`);
+		locations.push(`+page${ext}`);
 	}
 
 	if (valid_layout_server_exports.has(key)) {
-		supported_files.push(`+layout.server${ext}`);
+		locations.push(`+layout.server${ext}`);
 	}
 
 	if (valid_page_server_exports.has(key)) {
-		supported_files.push(`+page.server${ext}`);
+		locations.push(`+page.server${ext}`);
 	}
 
 	if (valid_server_exports.has(key)) {
-		supported_files.push(`+server${ext}`);
+		locations.push(`+server${ext}`);
 	}
 
-	if (supported_files.length > 0) {
-		return `'${key}' is a valid export in ${supported_files.slice(0, -1).join(', ')}${
-			supported_files.length > 1 ? ' or ' : ''
-		}${supported_files.at(-1)}`;
-	}
+	return locations;
 }
 
 const valid_layout_exports = new Set([

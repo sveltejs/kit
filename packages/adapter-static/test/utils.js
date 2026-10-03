@@ -9,7 +9,7 @@ export const config = {
 	timeout: process.env.CI ? 45000 : 15000,
 	webServer: {
 		command: 'pnpm build && pnpm preview',
-		port: 5173
+		port: 5174
 	},
 	retries: process.env.CI ? 2 : number_from_env('KIT_E2E_RETRIES', 0),
 	projects: [

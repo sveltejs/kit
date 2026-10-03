@@ -352,7 +352,7 @@ declare module '@sveltejs/kit' {
 		 * @param value the cookie value
 		 * @param opts the options passed to `cookie.stringifySetCookie` with the SvelteKit defaults described above. See documentation [here](https://github.com/jshttp/cookie?tab=readme-ov-file#cookiestringifysetcookiesetcookieobj-options)
 		 */
-		set: (name: string, value: string, opts: import('cookie').SerializeOptions) => void;
+		set: (name: string, value: string, opts?: import('cookie').SerializeOptions) => void;
 
 		/**
 		 * Deletes a cookie by setting its value to an empty string and setting the expiry date in the past.
@@ -363,7 +363,7 @@ declare module '@sveltejs/kit' {
 		 * @param name the name of the cookie
 		 * @param opts the options passed to `cookie.stringifySetCookie` with the SvelteKit defaults described above. See documentation [here](https://github.com/jshttp/cookie?tab=readme-ov-file#cookiestringifysetcookiesetcookieobj-options)
 		 */
-		delete: (name: string, opts: import('cookie').SerializeOptions) => void;
+		delete: (name: string, opts?: import('cookie').SerializeOptions) => void;
 
 		/**
 		 * Parses a single `Set-Cookie` header. This allows you to apply cookies received from an external source:
@@ -378,7 +378,7 @@ declare module '@sveltejs/kit' {
 		 *
 		 * 	for (const str of response.headers.getSetCookie()) {
 		 * 		const { name, value, ...options } = cookies.parse(str);
-		 * 		cookies.set(name, value, { ...options, path: '/' });
+		 * 		cookies.set(name, value, options);
 		 * 	}
 		 *
 		 * 	// ...
@@ -399,7 +399,7 @@ declare module '@sveltejs/kit' {
 		 * @param value the cookie value
 		 * @param opts the options passed to `cookie.stringifySetCookie` with the SvelteKit defaults described above. See documentation [here](https://github.com/jshttp/cookie?tab=readme-ov-file#cookiestringifysetcookiesetcookieobj-options)
 		 */
-		serialize: (name: string, value: string, opts: import('cookie').SerializeOptions) => string;
+		serialize: (name: string, value: string, opts?: import('cookie').SerializeOptions) => string;
 	}
 
 	/**
@@ -1018,9 +1018,9 @@ declare module '@sveltejs/kit' {
 	 * Checks whether this is an error thrown by {@link error}.
 	 * @param status The status to filter for.
 	 * */
-	export function isHttpError<T extends number>(e: unknown, status?: T): e is (HttpError & {
+	export function isHttpError<T extends number>(e: unknown, status?: T): e is HttpError & {
 		status: T extends undefined ? never : T;
-	});
+	};
 	/**
 	 * Redirect a request. When called during request handling, SvelteKit will return a redirect response.
 	 * Make sure you're not catching the thrown redirect, which would prevent SvelteKit from handling it.
@@ -1075,7 +1075,7 @@ declare module '@sveltejs/kit' {
 	 * Checks whether this is an action failure thrown by {@link fail}.
 	 * @param e The object to check.
 	 * */
-	export function isActionFailure(e: unknown): e is ActionFailure;
+	export function isActionFailure(e: unknown): e is ActionFailure<undefined>;
 	/**
 	 * Use this to throw a validation error to imperatively fail form validation.
 	 * Can be used in combination with `issue` passed to form actions to create field-specific issues.
@@ -1816,7 +1816,7 @@ declare module '@sveltejs/kit/vite' {
 		 */
 		inlineStyleThreshold?: number;
 		/**
-		 * An array of file extensions that SvelteKit will treat as modules. Files with extensions that match neither `config.extensions` nor `config.moduleExtensions` will be ignored by the router.
+		 * An array of file extensions that SvelteKit will treat as modules. Files with extensions that match neither `config.extensions` nor `config.moduleExtensions` will be ignored.
 		 * @default [".js", ".ts"]
 		 */
 		moduleExtensions?: string[];
@@ -2923,6 +2923,7 @@ declare module '$app/paths' {
 	export function asset(file: AssetPath): string;
 	/**
 	 * Resolve a pathname by prefixing it with the base path, if any, or resolve a route ID by populating dynamic segments with parameters.
+	 * In hash routing mode, the returned URL starts with `#`.
 	 *
 	 * During server rendering, the base path is relative and depends on the page currently being rendered.
 	 *

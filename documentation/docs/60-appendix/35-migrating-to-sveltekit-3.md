@@ -16,7 +16,7 @@ SvelteKit 3 requires the following minimum versions:
 
 - Node v22.17
 - TypeScript v6
-- Svelte v5.56.4
+- Svelte v5.57.1
 - Vite v8.0.12 (the first Vite 8 release bundling stable `rolldown` v1)
 - `@sveltejs/vite-plugin-svelte` v7
 
@@ -499,6 +499,9 @@ await myCache.match(request);
 
 - bundling now happens with `rolldown`
 - the `ORIGIN` environment variable is removed (set `paths.origin` in your Vite config instead)
+- static assets are served from a list recorded at build time; files added to the output directory afterwards are not served, and replaced ones keep their old size and `ETag` (use environment variables for runtime configuration)
+- `ETag`s for static assets are content hashes, and `Last-Modified` is no longer sent
+- only `GET` and `HEAD` requests are served static assets; other methods result in a 405 response
 
 ### `adapter-netlify`
 
@@ -521,6 +524,7 @@ For adapter authors, there are some additional changes:
 - `builder.compress` returns a list of compressed files
 - `builder.mkdirp` and `builder.rimraf` are deprecated in favour of `node:fs` methods
 - `builder.generateManifest` has been removed — use `builder.generateServerInstance` to replace it, and `builder.manifest` to access the manifest
+- the `Server` class exported from the server output is deprecated — use the `server` object written by `builder.generateServerInstance`
 
 #### Server instrumentation
 

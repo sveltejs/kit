@@ -11,7 +11,7 @@ import {
 	server_only_directory_pattern,
 	server_only_module_pattern
 } from '../utils.js';
-import { stackless } from '../../../utils/error.js';
+import * as e from '../../../messages/build-errors.js';
 import { posixify } from '../../../utils/os.js';
 
 /**
@@ -197,11 +197,7 @@ export function plugin_guard(kit, get_config, get_manifest_data) {
 						})
 						.join(' imports\n');
 
-					let message = `Cannot import ${normalized} into code that runs in the browser, as this could leak sensitive information.`;
-					message += `\n\n${pyramid}`;
-					message += `\n\nIf you're only using the import as a type, change it to \`import type\`.`;
-
-					throw stackless(message);
+					e.server_only_import({ module: normalized, chain: pyramid }, { stackless: true });
 				}
 
 				// No chain from this server-only module to a client entrypoint was found —

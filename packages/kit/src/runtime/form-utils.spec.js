@@ -1,4 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
+import * as devalue from 'devalue';
 import {
 	BINARY_FORM_CONTENT_TYPE,
 	DELETE_KEY,
@@ -7,6 +8,7 @@ import {
 	deep_get,
 	deep_set,
 	deserialize_binary_form,
+	flatten_issues,
 	parse_form_key,
 	serialize_binary_form,
 	split_path
@@ -47,12 +49,26 @@ describe('split_path', () => {
 
 	for (const input of bad) {
 		test(input, () => {
-			expect(() => split_path(input)).toThrowError(`Invalid field name ${input}`);
+			expect(() => split_path(input)).toThrowKitError('form_field_invalid_name', {
+				contains: [input]
+			});
 		});
 	}
 });
 
 describe('convert_formdata', () => {
+	test('duplicate single-value fields are diagnosed, while array fields still collect values', () => {
+		const data = new FormData();
+		data.append('name/form', 'first');
+		data.append('name/form', 'second');
+		expect(() => convert_formdata('form', data)).toThrowKitError('form_field_duplicate', {
+			contains: ['name', '2']
+		});
+		const array = new FormData();
+		array.append('name[]/form', 'first');
+		array.append('name[]/form', 'second');
+		expect(convert_formdata('form', array)).toEqual({ name: ['first', 'second'] });
+	});
 	test('normalizes type prefixes and array suffixes', () => {
 		expect(parse_form_key('form', 'n:items[]/form')).toEqual({
 			name: 'items',
@@ -86,7 +102,9 @@ describe('convert_formdata', () => {
 	});
 
 	test('rejects field names without the form id suffix', () => {
-		expect(() => parse_form_key('form', 'foo/other')).toThrow(/wasn't created with form.fields.as/);
+		expect(() => parse_form_key('form', 'foo/other')).toThrowKitError('form_field_unbound', {
+			contains: ['foo/other']
+		});
 	});
 
 	test('coerces typed values after normalizing field names', () => {
@@ -165,15 +183,15 @@ describe('convert_formdata', () => {
 		const data = new FormData();
 		data.append('foo/other/form', 'foo');
 
-		expect(() => convert_formdata('/this/form', data)).toThrow(
-			/wasn't created with form.fields.as/
-		);
+		expect(() => convert_formdata('/this/form', data)).toThrowKitError('form_field_unbound', {
+			contains: ['foo/other/form']
+		});
 	});
 
 	test.each(POLLUTION_ATTACKS)('prevents prototype pollution: %s', (attack) => {
 		const data = new FormData();
 		data.append(attack + '/form', 'bad');
-		expect(() => convert_formdata('form', data)).toThrow(/Invalid key "/);
+		expect(() => convert_formdata('form', data)).toThrowKitError('form_field_forbidden_key');
 	});
 });
 
@@ -500,6 +518,41 @@ describe('binary form serializer', () => {
 		);
 	});
 
+	test.each([
+		{ name: 'negative size', size: -1, last_modified: 0, index: 0 },
+		{ name: 'fractional size', size: 0.5, last_modified: 0, index: 0 },
+		{ name: 'NaN size', size: NaN, last_modified: 0, index: 0 },
+		{ name: 'infinite size', size: Infinity, last_modified: 0, index: 0 },
+		{ name: 'unsafe size', size: Number.MAX_SAFE_INTEGER + 1, last_modified: 0, index: 0 },
+		{ name: 'fractional lastModified', size: 0, last_modified: 0.5, index: 0 },
+		{ name: 'NaN lastModified', size: 0, last_modified: NaN, index: 0 },
+		{ name: 'infinite lastModified', size: 0, last_modified: Infinity, index: 0 },
+		{
+			name: 'unsafe lastModified',
+			size: 0,
+			last_modified: Number.MAX_SAFE_INTEGER + 1,
+			index: 0
+		},
+		{ name: 'negative index', size: 0, last_modified: 0, index: -1 },
+		{ name: 'fractional index', size: 0, last_modified: 0, index: 0.5 },
+		{ name: 'NaN index', size: 0, last_modified: 0, index: NaN },
+		{ name: 'infinite index', size: 0, last_modified: 0, index: Infinity },
+		{ name: 'unsafe index', size: 0, last_modified: 0, index: Number.MAX_SAFE_INTEGER + 1 }
+	])('rejects invalid numeric file metadata: $name', async (metadata) => {
+		const file = {};
+		const payload = devalue.stringify([{ file }, {}], {
+			File: (value) => {
+				if (value === file) {
+					return ['a.txt', 'text/plain', metadata.size, metadata.last_modified, metadata.index];
+				}
+			}
+		});
+
+		await expect(deserialize_binary_form(build_raw_request(payload), '')).rejects.toThrow(
+			'invalid file metadata'
+		);
+	});
+
 	test('rejects memory amplification attack via nested array in file offset table', async () => {
 		// A crafted file offset table
 		// containing a nested array like [[1e20,1e20,...,1e20]]. When file_offsets[0] is
@@ -814,6 +867,14 @@ describe('binary form serializer', () => {
 });
 
 describe('deep_set', () => {
+	test('conflicting array and object paths reject without changing the existing value', () => {
+		const target = { items: {} };
+		expect(() => deep_set(target, ['items', '0'], 'value')).toThrowKitError(
+			'form_field_array_conflict',
+			{ contains: ['0'] }
+		);
+		expect(target).toEqual({ items: {} });
+	});
 	test('always creates own property', () => {
 		const target = {};
 
@@ -827,8 +888,12 @@ describe('deep_set', () => {
 
 	test.each(POLLUTION_ATTACKS)('avoids prototype injection', (attack) => {
 		const target = {};
-		expect(() => deep_set(target, attack.split('.'), 'bad')).toThrow(/Invalid key/);
-		expect(() => deep_set(target, attack.split('.'), DELETE_KEY)).toThrow(/Invalid key/);
+		expect(() => deep_set(target, attack.split('.'), 'bad')).toThrowKitError(
+			'form_field_forbidden_key'
+		);
+		expect(() => deep_set(target, attack.split('.'), DELETE_KEY)).toThrowKitError(
+			'form_field_forbidden_key'
+		);
 	});
 
 	test.each([null, undefined])('creates nested object when intermediate value is %s', (value) => {
@@ -846,7 +911,33 @@ describe('deep_set', () => {
 	});
 });
 
+describe('prototype property names', () => {
+	test('are treated like ordinary form field names', () => {
+		expect.soft(deep_get({}, ['toString'])).toBeUndefined();
+
+		const issue = { name: 'toString', path: ['toString'], message: 'invalid', server: true };
+		expect(flatten_issues([issue])).toEqual({ $: [issue], toString: [issue] });
+	});
+});
+
 describe('deep_get', () => {
+	test('tracks missing properties on reactive proxies', () => {
+		let tracked = false;
+		const object = new Proxy(
+			{},
+			{
+				has: () => (tracked = true),
+				getOwnPropertyDescriptor: () => {
+					tracked = true;
+					return undefined;
+				}
+			}
+		);
+
+		expect(deep_get(object, ['missing'])).toBeUndefined();
+		expect(tracked).toBe(true);
+	});
+
 	test('walks objects and arrays and stops at anything else', () => {
 		const object = { a: [{ b: 'hello' }] };
 		expect(deep_get(object, [])).toBe(object);
@@ -857,6 +948,17 @@ describe('deep_get', () => {
 });
 
 describe('create_field_proxy', () => {
+	test.each(['hidden', 'submit', 'radio'])('%s inputs require a value in development', (type) => {
+		const proxy = create_field_proxy({
+			form_id: 'form',
+			get: () => ({}),
+			set: () => {},
+			get_issues: () => ({}),
+			get_touched: () => ({}),
+			get_dirty: () => ({})
+		});
+		expect(() => proxy.field.as(type)).toThrowKitError('form_input_missing_value');
+	});
 	test('image inputs use coordinate names and omit value properties', () => {
 		const proxy = create_field_proxy({
 			form_id: 'form',
@@ -990,7 +1092,7 @@ describe('create_field_proxy', () => {
 		expect(edited.a.as('checkbox', true).checked).toBe(undefined);
 	});
 
-	test('enumerating fields warns once per call site, with a stack trace', () => {
+	test('enumerating fields warns once per call site without diagnostic factory frames in the key', () => {
 		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 		const proxy = create_field_proxy({
 			form_id: 'form',
@@ -1010,9 +1112,16 @@ describe('create_field_proxy', () => {
 		expect('a' in proxy).toBe(false);
 		expect(warn).toHaveBeenCalledTimes(2);
 
-		const [error] = warn.mock.calls[1];
-		expect(error.message).toMatch('`form.fields`');
-		expect(error.stack).toMatch('form-utils.spec.js');
+		// The same operation at a different user call site must not share the first key.
+		for (let i = 0; i < 2; i++) expect(Object.keys(proxy.a.b)).toEqual([]);
+		expect(warn).toHaveBeenCalledTimes(3);
+
+		expect(warn).toContainKitDiagnostic('form_fields_enumerated');
+		expect(warn.mock.calls[1]).toEqual([
+			expect.stringMatching(/^%c\[sveltekit\] form_fields_enumerated\n%c/),
+			'font-weight: bold',
+			'font-weight: normal'
+		]);
 		warn.mockRestore();
 	});
 });

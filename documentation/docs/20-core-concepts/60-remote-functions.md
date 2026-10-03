@@ -477,7 +477,7 @@ export const createProfile = form(datingProfile, (data) => { /* ... */ });
 
 Because our form contains a `file` input, we've added an `enctype="multipart/form-data"` attribute. The values for `info.height` and `info.likesDogs` are coerced to a number and a boolean respectively.
 
-> [!NOTE] If a `checkbox` input is unchecked, the value is not included in the [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData) object that SvelteKit constructs the data from. As such, we have to make the value optional in our schema. In Valibot that means using `v.optional(v.boolean(), false)` instead of just `v.boolean()`, whereas in Zod it would mean using `z.coerce.boolean<boolean>()`.
+> [!NOTE] If a `checkbox` input is unchecked, the value is not included in the [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData) object that SvelteKit constructs the data from. As such, we have to give the value a default of `false` in our schema, rather than merely marking it optional. In Valibot that means using `v.optional(v.boolean(), false)` instead of just `v.boolean()`, whereas in Zod it means using `z.boolean().default(false)` instead of just `z.boolean()`.
 
 In the case of `radio` and `checkbox` inputs that all belong to the same field, the `value` must be specified as a second argument to `.as(...)`:
 
@@ -1027,6 +1027,8 @@ export const updatePost = form(
 
 Because queries are keyed based on their arguments, `getPost(post.id).set(result)` on the server knows to look up the matching `getPost(id)` on the client to update it. The same goes for `getPosts().refresh()` -- it knows to look up `getPosts()` with no argument on the client.
 
+Calling `refresh()`, `set()` or `reconnect()` anywhere in a `form` handler replaces the default invalidation of all queries and load functions for that submission, so only the queries you refreshed will update.
+
 ### Reconnecting live queries in mutations
 
 Single-flight mutations can also reconnect `query.live` instances. In a `form`/`command` handler, call `.reconnect()` on the live query resource you want to reconnect:
@@ -1113,7 +1115,7 @@ import { requested, query } from '$app/server';
 export const getPosts = query('unchecked', ({ filter }) => {
 	return ['foo', 'bar'];
 });
----cut---
+// ---cut---
 for (const { arg, query, ignore } of requested(getPosts, 10)) {
 	if (arg.filter === 'author:santa') {
 		void query.refresh();
@@ -1143,9 +1145,13 @@ await requested(getPosts, 1).refreshAll();
 If you want to intentionally ignore every selected update, use `ignoreAll`:
 
 ```js
-import { requested } from '$app/server';
+import { requested, query } from '$app/server';
 
----cut---
+export const getPosts = query('unchecked', ({ filter }) => {
+	return ['foo', 'bar'];
+});
+
+// ---cut---
 await requested(getPosts, 10).ignoreAll();
 ```
 

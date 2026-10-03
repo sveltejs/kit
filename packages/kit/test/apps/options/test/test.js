@@ -109,7 +109,7 @@ test.describe('trailingSlash', () => {
 		// we can't use Playwright's `request` here, because it resolves redirects
 		const response = await fetch(`${baseURL}/path-base/slash`, { redirect: 'manual' });
 		expect(response.status).toBe(308);
-		expect(response.headers.get('location')).toBe('slash/');
+		expect(response.headers.get('location')).toBe('./slash/');
 
 		await page.goto('/path-base/slash');
 
@@ -119,6 +119,20 @@ test.describe('trailingSlash', () => {
 		await clicknav('[data-testid="child"]');
 		expect(page.url()).toBe(`${baseURL}/path-base/slash/child/`);
 		expect(await page.textContent('h2')).toBe('/path-base/slash/child/');
+	});
+
+	test('keeps scheme-like segments on the original origin', async ({ baseURL }) => {
+		for (const segment of ['http:example.com', 'https:example.com']) {
+			const url = new URL(`/path-base/slash/${segment}?ref=test`, baseURL);
+			const response = await fetch(url, { redirect: 'manual' });
+			const location = response.headers.get('location');
+			expect(response.status).toBe(308);
+			const target = new URL(/** @type {string} */ (location), url);
+			expect(target.origin).toBe(url.origin);
+			expect(target.pathname).toBe(`${url.pathname}/`);
+			expect(target.search).toBe(url.search);
+			expect(location).toBe(`./${segment}/?ref=test`);
+		}
 	});
 
 	test('removes trailing slash on endpoint', async ({ baseURL, request }) => {

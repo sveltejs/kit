@@ -1,14 +1,11 @@
-/** @import { TopLevelFilterExpression } from '@rolldown/pluginutils' */
-import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
-import { dirname, extname, relative } from 'node:path';
+import { createHash } from 'node:crypto';
+import * as fs from 'node:fs';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { and, id, importerId, include } from '@rolldown/pluginutils';
-import remapping from '@jridgewell/remapping';
-import MagicString from 'magic-string';
 
-const files = fileURLToPath(new URL('./files', import.meta.url).href);
-const posixified_files = posixify(files);
-const dir_id = posixify(`${files}/dir.js`);
+// posix so it matches the module ids Vite reports on every platform
+const src = fileURLToPath(new URL('./src', import.meta.url).href).replaceAll('\\', '/');
+const handoff = '#@sveltejs/adapter-node';
 
 /** @type {typeof import('./index.js').default} */
 export default function (opts = {}) {
@@ -17,48 +14,38 @@ export default function (opts = {}) {
 	return {
 		name: '@sveltejs/adapter-node',
 		async adapt(builder) {
-			const tmp = builder.getBuildDirectory('adapter-node');
+			fs.rmSync(out, { force: true, recursive: true });
 
-			rmSync(out, { force: true, recursive: true });
-			rmSync(tmp, { force: true, recursive: true });
-			mkdirSync(tmp, { recursive: true });
+			const base = builder.config.paths.base;
+			const client_dir = `${out}/client${base}`;
+			const prerendered_dir = `${out}/prerendered${base}`;
 
 			builder.log.minor('Copying assets');
-			const written = [
-				...builder.writeClient(`${out}/client${builder.config.paths.base}`),
-				...builder.writePrerendered(`${out}/prerendered${builder.config.paths.base}`)
-			];
+			const client_files = builder.writeClient(client_dir);
+			const prerendered_files = builder.writePrerendered(prerendered_dir);
 
-			/** @type {string[]} */
-			let compressed = [];
+			builder.log.minor(precompress ? 'Compressing and hashing assets' : 'Hashing assets');
+			const [client_compressed, prerendered_compressed] = precompress
+				? await Promise.all([builder.compress(client_dir), builder.compress(prerendered_dir)])
+				: [[], []];
 
-			if (precompress) {
-				builder.log.minor('Compressing assets');
-				compressed = (
-					await Promise.all([
-						builder.compress(`${out}/client`),
-						builder.compress(`${out}/prerendered`)
-					])
-				).flat();
-			}
-
-			const compressed_extensions = new Set(compressed.map((file) => extname(file)));
-			// a pathname whose extension appears in neither set may be a route segment
-			// resolving to a compressed `index.html`, so it must keep its `Vary` header
-			const uncompressed_extensions = new Set(
-				written.map((file) => extname(file)).filter((ext) => ext && !compressed_extensions.has(ext))
+			const assets = create_asset_table(
+				base,
+				measure_files(client_dir, client_files, client_compressed)
+			);
+			const prerendered_assets = create_prerendered_table(
+				base,
+				measure_files(prerendered_dir, prerendered_files, prerendered_compressed),
+				builder.prerendered.paths
 			);
 
 			const server = builder.getServerDirectory();
-			const manifest = JSON.parse(readFileSync(`${server}/.vite/manifest.json`, 'utf8'));
-			const adapter_index = find_entry(manifest, 'adapter-index');
-			const handler = find_entry(manifest, 'handler');
 
 			builder.generateServerInstance(`${server}/server.js`);
 
 			if (builder.hasServerInstrumentationFile()) {
 				builder.instrument({
-					entrypoint: `${server}/${adapter_index.file}`,
+					entrypoint: `${server}/adapter-index.js`,
 					instrumentation: `${server}/instrumentation.server.js`,
 					initializer: builder.createInstrumentationInitializer({ outputDirectory: server }),
 					module: {
@@ -67,29 +54,29 @@ export default function (opts = {}) {
 				});
 			}
 
-			const output_server = `${out}/server`;
-			builder.copy(server, output_server);
+			builder.copy(server, `${out}/server`);
 
-			// `dir.js` must evaluate at the output root because it anchors the asset directories
-			renameSync(`${output_server}/dir.js`, `${out}/dir.js`);
-			if (existsSync(`${output_server}/dir.js.map`)) {
-				renameSync(`${output_server}/dir.js.map`, `${out}/dir.js.map`);
-			}
-			writeFileSync(`${output_server}/dir.js`, `export * from '../dir.js';\n`);
+			// values only known after the build. `dir` needs the output root
+			fs.writeFileSync(
+				`${out}/adapter-node.js`,
+				[
+					`import { dirname } from 'node:path';`,
+					`import { fileURLToPath } from 'node:url';`,
+					`export { server } from './server/server.js';`,
+					`export const dir = dirname(fileURLToPath(import.meta.url));`,
+					`export const base = ${JSON.stringify(base)};`,
+					`export const app_path = ${JSON.stringify(builder.getAppPath())};`,
+					`export const origin = ${JSON.stringify(builder.config.paths.origin)};`,
+					`export const env_prefix = ${JSON.stringify(envPrefix)};`,
+					`export const mime_types = ${JSON.stringify(builder.mimeTypes)};`,
+					// JSON.parse of a string loads about twice as fast as an object literal of the same size
+					`export const assets = JSON.parse(${JSON.stringify(JSON.stringify(assets))});`,
+					`export const prerendered_assets = JSON.parse(${JSON.stringify(JSON.stringify(prerendered_assets))});`
+				].join('\n')
+			);
 
-			// replace the stubs whose values are only known after the build
-			replace_stubs(output_server, handler.chunks, {
-				__SVELTEKIT_ADAPTER_NODE_UNCOMPRESSED_EXTENSIONS__: `new Set(${JSON.stringify([...uncompressed_extensions])})`,
-				__SVELTEKIT_ADAPTER_NODE_PRERENDERED__: `new Set(${JSON.stringify([...builder.prerendered.paths])})`,
-				__SVELTEKIT_ADAPTER_NODE_MIMETYPES__: JSON.stringify(builder.mimeTypes),
-				__SVELTEKIT_ADAPTER_NODE_SERVER__: (chunk) => {
-					const server = posixify(relative(dirname(chunk), 'server.js'));
-					return server.startsWith('.') ? server : `./${server}`;
-				}
-			});
-
-			writeFileSync(`${out}/index.js`, `export * from './server/${adapter_index.file}';\n`);
-			writeFileSync(`${out}/handler.js`, `export * from './server/${handler.file}';\n`);
+			fs.writeFileSync(`${out}/index.js`, `export * from './server/adapter-index.js';\n`);
+			fs.writeFileSync(`${out}/handler.js`, `export * from './server/handler.js';\n`);
 		},
 
 		supports: {
@@ -97,205 +84,201 @@ export default function (opts = {}) {
 			instrumentation: () => true
 		},
 
-		vite({ config }) {
-			/** @type {Record<string, string>} */
-			const defines = {
-				// these get replaced later in the adapt step
-				UNCOMPRESSED_EXTENSIONS: '__SVELTEKIT_ADAPTER_NODE_UNCOMPRESSED_EXTENSIONS__',
-				PRERENDERED: '__SVELTEKIT_ADAPTER_NODE_PRERENDERED__',
-				MIME_TYPES: '__SVELTEKIT_ADAPTER_NODE_MIMETYPES__',
+		vite: {
+			plugins: {
+				post: [
+					{
+						name: 'vite-plugin-sveltekit-adapter-node',
+						apply: 'build',
+						config(config) {
+							const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+							// vite-plugin-svelte lists Svelte libraries here so their export conditions resolve at build time
+							const no_external = Array.isArray(config.ssr?.noExternal)
+								? config.ssr.noExternal
+								: [];
 
-				BASE_PATH: JSON.stringify(config.paths.base),
-				APP_PATH: JSON.stringify(
-					`${config.paths.base.slice(1)}${config.paths.base ? '/' : ''}${config.appDir}`
-				),
-				ORIGIN: JSON.stringify(config.paths.origin) || 'undefined',
-				ENV_PREFIX: JSON.stringify(envPrefix),
-				PRECOMPRESS: JSON.stringify(precompress)
-			};
-
-			return {
-				plugins: {
-					post: [
-						{
-							name: 'vite-plugin-sveltekit-adapter-node',
-							apply: 'build',
-							config() {
-								const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
-
-								return {
-									environments: {
-										ssr: {
-											build: {
-												rolldownOptions: {
-													// Copy the prebuilt entrypoints into the build directory so that the
-													// adapter's own bundled dependencies resolve correctly, then bundle them
-													// together with the app's server code. Bundling everything in a single
-													// pass means shared modules (e.g. `SvelteKitError` from `@sveltejs/kit`)
-													// aren't duplicated. See https://github.com/sveltejs/kit/issues/15755
-													input: {
-														'adapter-index': `${files}/index.js`,
-														'adapter-env': `${files}/adapter-env.js`,
-														handler: `${files}/handler.js`
-													},
-													output: {
-														chunkFileNames(chunk) {
-															if (chunk.name === 'dir') return '[name].js';
-															return 'chunks/[name].js';
-														},
-														codeSplitting: {
-															groups: [
-																{
-																	name: 'dir',
-																	test: dir_id
-																}
-															]
-														}
-													},
-													// deployments only need their production dependencies.
-													// Anything in devDependencies will get included in the
-													// bundled code
-													external: [
-														// dependencies could have deep exports, so we need a regex
-														...Object.keys(pkg.dependencies || {}).map(
-															(d) => new RegExp(`^${d}(\\/.*)?$`)
-														)
-													]
+							return {
+								ssr: {
+									// Vite doesn't bundle dependencies for SSR by default. Bundle everything
+									// except production dependencies that don't need the build's export conditions
+									external: Object.keys(pkg.dependencies || {}).filter(
+										(dep) =>
+											!no_external.some((rule) =>
+												typeof rule === 'string' ? rule === dep : rule.test(dep)
+											)
+									),
+									noExternal: true
+								},
+								environments: {
+									ssr: {
+										build: {
+											rolldownOptions: {
+												// bundled with the app's server code so shared modules aren't duplicated (#15755)
+												input: {
+													'adapter-index': `${src}/index.js`,
+													'adapter-env': `${src}/env.js`,
+													handler: `${src}/handler.js`
+												},
+												// generated after the Vite build and rewritten to an output-relative path
+												external: [handoff],
+												output: {
+													paths: { [handoff]: '../adapter-node.js' },
+													// the hand-off path only holds at the output root, so adapter chunks may not nest
+													chunkFileNames: (chunk) =>
+														chunk.moduleIds.some((id) => id.startsWith(src))
+															? 'adapter-node-[name].js'
+															: 'chunks/[name].js'
 												}
 											}
 										}
 									}
-								};
-							},
-							applyToEnvironment(environment) {
-								return environment.name === 'ssr';
-							},
-							transform: {
-								filter: { id: new RegExp(`^${escape_regex(posixified_files)}/`) },
-								handler(code) {
-									const s = new MagicString(code);
-
-									for (const [from, to] of Object.entries(defines)) {
-										for (const match of code.matchAll(new RegExp(`\\b${from}\\b`, 'g'))) {
-											s.overwrite(match.index, match.index + from.length, to);
-										}
-									}
-
-									return {
-										code: s.toString(),
-										map: s.generateMap({ hires: 'boundary' })
-									};
 								}
-							},
-							resolveId: {
-								// composable filters are not accepted type-wise but still work during build
-								// see https://github.com/vitejs/rolldown-vite/issues/605
-								filter: /** @type {any} */ (
-									/** @satisfies {TopLevelFilterExpression[]} */ ([
-										include(
-											and(
-												importerId(new RegExp(`^${escape_regex(posixified_files)}/`)),
-												id(/^SERVER$/)
-											)
-										)
-									])
-								),
-								handler() {
-									return { external: true, id: '__SVELTEKIT_ADAPTER_NODE_SERVER__' };
-								}
-							}
+							};
 						}
-					]
-				}
-			};
+					}
+				]
+			}
 		}
 	};
 }
 
 /**
- * @typedef {{ file: string; imports?: string[]; isEntry?: boolean; name?: string }} ManifestEntry
+ * Dotfiles are not served, with the customary exception of `.well-known`
+ * @param {string} file
  */
-
-/**
- * @param {Record<string, ManifestEntry>} manifest
- * @param {string} name
- */
-function find_entry(manifest, name) {
-	const match = Object.entries(manifest).find(([, entry]) => entry.isEntry && entry.name === name);
-	if (!match) throw new Error(`Could not find adapter-node entry ${name} in the Vite manifest`);
-
-	/** @type {string[]} */
-	const chunks = [];
-	const seen = new Set();
-
-	/** @param {string} key */
-	const visit = (key) => {
-		if (seen.has(key)) return;
-		seen.add(key);
-
-		const chunk = manifest[key];
-		if (!chunk) throw new Error(`Could not find ${key} in the Vite manifest`);
-
-		chunks.push(chunk.file);
-		for (const dependency of chunk.imports ?? []) visit(dependency);
-	};
-
-	visit(match[0]);
-	return { file: match[1].file, chunks };
+function is_hidden(file) {
+	return file.split('/').some((segment) => segment[0] === '.') && !file.startsWith('.well-known/');
 }
 
 /**
- * @param {string} dir
- * @param {string[]} chunks
- * @param {Record<string, string | ((chunk: string) => string)>} replacements
+ * Size and content hash from one pass over the file, a buffer at a time
+ * @param {string} file
+ * @param {Buffer} buffer
  */
-function replace_stubs(dir, chunks, replacements) {
-	const pattern = new RegExp(`\\b(${Object.keys(replacements).join('|')})\\b`, 'g');
-	const found = new Set();
+function measure(file, buffer) {
+	const fd = fs.openSync(file, 'r');
+	const hash = createHash('sha256');
+	let size = 0;
 
-	for (const chunk of chunks) {
-		const file = `${dir}/${chunk}`;
-		const code = readFileSync(file, 'utf8');
-		const matches = [...code.matchAll(pattern)];
-		if (matches.length === 0) continue;
+	try {
+		let read;
+		while ((read = fs.readSync(fd, buffer)) > 0) {
+			hash.update(buffer.subarray(0, read));
+			size += read;
+		}
+	} finally {
+		fs.closeSync(fd);
+	}
 
-		const s = new MagicString(code);
+	return { size, etag: hash.digest('base64url') };
+}
 
-		for (const match of matches) {
-			found.add(match[0]);
-			const replacement = replacements[match[0]];
-			const value = typeof replacement === 'function' ? replacement(chunk) : replacement;
-			s.overwrite(match.index, match.index + match[0].length, value);
+/**
+ * Size and content hash of every servable file, plus the sizes of the
+ * compressed variants where `builder.compress` wrote them.
+ * Files are read one at a time through a single buffer, so large outputs
+ * neither exhaust file descriptors nor pile up in memory
+ * @param {string} root
+ * @param {string[]} files
+ * @param {string[]} compressed
+ * @returns {AssetEntry[]}
+ */
+function measure_files(root, files, compressed) {
+	const variants = new Set(compressed);
+	const buffer = Buffer.allocUnsafe(64 * 1024);
+
+	/** @type {AssetEntry[]} */
+	const entries = [];
+
+	for (const file of files) {
+		if (is_hidden(file)) continue;
+
+		const abs = join(root, file);
+
+		/** @type {AssetEntry} */
+		const entry = { file, ...measure(abs, buffer) };
+
+		// `builder.compress` writes a `.gz` and a `.br` variant of every file it returns
+		if (variants.has(file)) {
+			entry.gz = fs.statSync(`${abs}.gz`).size;
+			entry.br = fs.statSync(`${abs}.br`).size;
 		}
 
-		writeFileSync(file, s.toString());
-
-		const map_file = `${file}.map`;
-		if (!existsSync(map_file)) continue;
-
-		const map = remapping(
-			[
-				JSON.parse(s.generateMap({ hires: 'boundary', source: chunk }).toString()),
-				JSON.parse(readFileSync(map_file, 'utf8'))
-			],
-			() => null
-		);
-		writeFileSync(map_file, map.toString());
+		entries.push(entry);
 	}
 
-	const missing = Object.keys(replacements).filter((stub) => !found.has(stub));
-	if (missing.length > 0) {
-		throw new Error(`Could not find adapter-node stubs: ${missing.join(', ')}`);
+	return entries;
+}
+
+/**
+ * Keys the measured files by URL: the exact pathname, plus the `/foo` and
+ * `/foo/` forms of `foo.html`/`foo/index.html` files
+ * @param {string} base
+ * @param {AssetEntry[]} measured
+ * @returns {AssetTable}
+ */
+function create_asset_table(base, measured) {
+	const entries = measured.map(
+		(entry) => /** @type {[string, AssetEntry]} */ ([`${base}/${entry.file}`, entry])
+	);
+
+	entries.sort(([a], [b]) => (a < b ? -1 : 1));
+
+	const keys = new Set(entries.map(([key]) => key));
+
+	/** @type {Array<[string, string]>} */
+	const aliases = [];
+
+	/**
+	 * @param {string} alias
+	 * @param {string} key
+	 */
+	function alias(alias, key) {
+		if (!keys.has(alias)) {
+			keys.add(alias);
+			aliases.push([alias, key]);
+		}
 	}
+
+	// `/foo` and `/foo/` resolve to `foo.html`, or to `foo/index.html` when only that exists.
+	// `foo.html` sorts first, so it claims the aliases (the resolution order sirv used)
+	for (const [key, entry] of entries) {
+		if (!entry.file.endsWith('.html')) continue;
+
+		const is_index = entry.file === 'index.html' || entry.file.endsWith('/index.html');
+		const with_slash = is_index ? key.slice(0, -'index.html'.length) : key.slice(0, -5) + '/';
+
+		alias(with_slash, key);
+		if (with_slash.length > 1) alias(with_slash.slice(0, -1), key);
+	}
+
+	return { entries, aliases };
 }
 
-/** @param {string} str */
-function escape_regex(str) {
-	// TODO replace with `RegExp.escape(str)` when we require Node >= 24
-	return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
+/**
+ * Keys the measured files by the exact paths kit prerendered, so a lookup
+ * hit is precisely a prerendered page, asset or redirect and every other
+ * pathname (including the non-canonical trailing-slash form) misses
+ * @param {string} base
+ * @param {AssetEntry[]} measured
+ * @param {string[]} paths
+ * @returns {AssetTable}
+ */
+function create_prerendered_table(base, measured, paths) {
+	const by_file = new Map(measured.map((entry) => [entry.file, entry]));
 
-/** @param {string} str */
-function posixify(str) {
-	return str.replace(/\\/g, '/');
+	/** @type {Array<[string, AssetEntry]>} */
+	const entries = [];
+
+	for (const path of paths) {
+		// invert `output_filename` in kit's prerenderer
+		const file = path.slice(base.length + 1) || 'index.html';
+		const entry =
+			by_file.get(file) ?? by_file.get(file + (file.endsWith('/') ? 'index.html' : '.html'));
+		if (entry) entries.push([path, entry]);
+	}
+
+	entries.sort(([a], [b]) => (a < b ? -1 : 1));
+
+	return { entries, aliases: [] };
 }

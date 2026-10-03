@@ -455,9 +455,11 @@ describe('Errors', () => {
 		const response = await get('/errors/invalid-route-response');
 
 		expect(response.status).toBe(500);
-		expect(await response.text()).toMatch(
-			'Invalid response from route /errors/invalid-route-response: handler should return a Response object'
-		);
+		const { message } = await response.json();
+		// server errors keep their full text in production
+		expect(message).toContainKitDiagnostic('endpoint_invalid_response', {
+			contains: ['/errors/invalid-route-response']
+		});
 	});
 
 	test('unhandled http method', async () => {

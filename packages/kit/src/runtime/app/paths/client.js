@@ -3,6 +3,8 @@
 import { base, assets, hash_routing, match_implementation } from './internal/client.js';
 import { resolve_route } from '../../../utils/routing.js';
 import { DEV } from 'esm-env';
+import * as e from '../../../messages/shared-errors.js';
+import * as w from '../../../messages/shared-warnings.js';
 
 export { base, assets, app_dir } from './internal/client.js';
 
@@ -30,7 +32,7 @@ export function asset(file) {
 	// TODO 4.0 remove this
 	if (path[0] === '/') {
 		if (DEV) {
-			console.warn(`\`asset('${path}')\` should now be \`asset('${path.slice(1)}')\``);
+			w.asset_leading_slash({ path, fixed: path.slice(1) });
 		}
 
 		path = path.slice(1);
@@ -39,10 +41,11 @@ export function asset(file) {
 	return (assets || base) + '/' + path;
 }
 
-const pathname_prefix = hash_routing ? '#' : '';
+const pathname_prefix = hash_routing ? '#' : base;
 
 /**
  * Resolve a pathname by prefixing it with the base path, if any, or resolve a route ID by populating dynamic segments with parameters.
+ * In hash routing mode, the returned URL starts with `#`.
  *
  * During server rendering, the base path is relative and depends on the page currently being rendered.
  *
@@ -70,15 +73,13 @@ export function resolve(...args) {
 	if (id[0] === '/') {
 		// route ID
 		if (id.includes('[') && !params) {
-			throw new Error(`Missing params for dynamic route ID ${id}`);
+			e.resolve_params_missing({ id });
 		}
 
-		return (
-			/** @type {ResolvedPathname} */ (base + pathname_prefix + resolve_route(id, params ?? {}))
-		);
+		return /** @type {ResolvedPathname} */ (pathname_prefix + resolve_route(id, params ?? {}));
 	}
 
-	return /** @type {ResolvedPathname} */ (base + pathname_prefix + '/' + id);
+	return /** @type {ResolvedPathname} */ (pathname_prefix + '/' + id);
 }
 
 /**

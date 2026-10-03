@@ -1,6 +1,6 @@
 import process from 'node:process';
-import { expect } from '@playwright/test';
 import { test } from '../../../../utils.js';
+import { expect } from '../../../../playwright-matchers.js';
 
 /** @typedef {import('@playwright/test').Response} Response */
 
@@ -1001,6 +1001,25 @@ test.describe('$app/state', () => {
 		}
 	});
 
+	test('navigating state clears when a shallow popstate aborts a navigation', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		await page.goto('/state/navigating/a');
+
+		expect(await page.textContent('#nav-status')).toBe('not currently navigating');
+
+		if (javaScriptEnabled) {
+			await page.click('a[href="#hash"]');
+			await page.click('a[href="/state/navigating/c"]');
+			await expect(page.locator('#navigating')).toBeVisible();
+
+			// going back over the hash entry is handled shallowly, so no navigation replaces the aborted one
+			await page.goBack();
+			await expect(page.locator('#not-navigating')).toBeVisible();
+		}
+	});
+
 	test('should update page state when URL hash is changed through the address bar', async ({
 		baseURL,
 		page,
@@ -1086,6 +1105,9 @@ test.describe('Matchers', () => {
 		await clicknav('[href="/routing/matched/1"]');
 		expect(await page.textContent('h1')).toBe('number: 1');
 
+		await clicknav('[href="/routing/matched/bigint/9007199254740993"]');
+		expect(await page.textContent('h1')).toBe('bigint: 9007199254740993 (bigint)');
+
 		await clicknav('[href="/routing/matched/everything-else"]');
 		expect(await page.textContent('h1')).toBe('fallback: everything-else');
 	});
@@ -1128,9 +1150,7 @@ test.describe('Actions', () => {
 		const error_promise = page.waitForEvent('pageerror');
 		await page.click('button');
 		const error = await error_promise;
-		expect(error.message).toBe(
-			'Your form contains <input type="file"> fields, but is missing the necessary `enctype="multipart/form-data"` attribute. This will lead to inconsistent behavior between enhanced and native forms. For more details, see https://github.com/sveltejs/kit/issues/9819.'
-		);
+		expect(error.message).toContainKitDiagnostic('enhance_file_without_enctype');
 	});
 
 	test('Error props are returned', async ({ page, javaScriptEnabled }) => {
@@ -1278,6 +1298,18 @@ test.describe('Actions', () => {
 
 		await expect(page.locator('h1')).toHaveText('403');
 		await expect(page.locator('p')).toHaveText('Forbidden (403 Forbidden)');
+	});
+
+	test('use:enhance follows an HTTP redirect to a non-ActionResult page', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		test.skip(!javaScriptEnabled, 'Skip when JavaScript is disabled');
+		await page.goto('/actions/enhance-non-action-response');
+		await page.locator('button.redirect').click();
+
+		await expect(page.locator('h1')).toHaveText('login');
+		expect(new URL(page.url()).pathname).toBe('/actions/enhance-non-action-response/login');
 	});
 
 	test('use:enhance abort controller', async ({ page, javaScriptEnabled }) => {

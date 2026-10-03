@@ -3,14 +3,14 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
-import { styleText } from 'node:util';
 import { posixify } from '../../utils/os.js';
 import { negotiate } from '../../utils/http.js';
 import { escape_html } from '../../utils/escape.js';
 import { escape_for_regexp } from '../../utils/regex.js';
-import { stackless } from '../../utils/error.js';
-import { dedent } from '../../core/sync/utils.js';
+import * as e from '../../messages/build-errors.js';
+import * as w from '../../messages/build-warnings.js';
 import { app_server, app_env_private } from './module_ids.js';
+import { bullet_list } from '../../utils/format.js';
 
 /**
  * Transforms alias to a valid vite.resolve.alias array.
@@ -214,22 +214,26 @@ export const server_only_directory_pattern = /\/server\//;
  * @returns {never}
  */
 export function error_for_missing_config(feature_name, path, value) {
+	e.config_feature_disabled(
+		{ feature: feature_name, config: config_snippet(path, value) },
+		{ stackless: true }
+	);
+}
+
+/**
+ * Formats the config needed to set the option at `path` to `value`, nesting objects as needed
+ * @param {string} path a keypath such as `experimental.remoteFunctions`
+ * @param {string} value
+ */
+export function config_snippet(path, value) {
 	const hole = '__HOLE__';
 
-	const result = path.split('.').reduce((acc, part, i, parts) => {
+	return path.split('.').reduce((acc, part, i, parts) => {
 		const indent = '  '.repeat(i);
 		const rhs = i === parts.length - 1 ? value : `{\n${hole}\n${indent}}`;
 
 		return acc.replace(hole, `${indent}${part}: ${rhs}`);
 	}, hole);
-
-	throw stackless(
-		dedent`\
-			To enable ${feature_name}, add the following to your SvelteKit plugin in \`vite.config.js\`:
-
-			${result}
-		`
-	);
 }
 
 /** @type {EnforcedConfig} */
@@ -276,12 +280,7 @@ export function warn_overridden_config(config, resolved_config) {
 	const overridden = find_overridden_config(config, resolved_config, enforced_config, '', []);
 
 	if (overridden.length > 0) {
-		console.error(
-			styleText(
-				['bold', 'red'],
-				'The following Vite config options will be overridden by SvelteKit:'
-			) + overridden.map((key) => `\n  - ${key}`).join('')
-		);
+		w.vite_config_overridden({ options: bullet_list(overridden) });
 	}
 }
 

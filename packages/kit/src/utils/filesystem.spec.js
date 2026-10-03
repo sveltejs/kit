@@ -4,6 +4,8 @@ import { dirname, join } from 'node:path';
 import { assert, expect, beforeEach, test } from 'vitest';
 import { copy, resolve_entry } from './filesystem.js';
 
+const EXTENSIONS = ['.js', '.ts'];
+
 /** @type {string} */
 let source_dir;
 /** @type {string} */
@@ -195,7 +197,7 @@ test('leaves non-sourcemap .map files unchanged', () => {
 test('resolves index files', () => {
 	write(join('service-worker', 'index.js'), '');
 
-	expect(resolve_entry(source_dir + '/service-worker')).toBe(
+	expect(resolve_entry(source_dir + '/service-worker', EXTENSIONS)).toBe(
 		join(source_dir, 'service-worker', 'index.js')
 	);
 });
@@ -203,24 +205,48 @@ test('resolves index files', () => {
 test('resolves entries that have an extension', () => {
 	write('hooks.js', '');
 
-	expect(resolve_entry(join(source_dir, 'hooks.js'))).toBe(join(source_dir, 'hooks.js'));
+	expect(resolve_entry(join(source_dir, 'hooks.js'), EXTENSIONS)).toBe(
+		join(source_dir, 'hooks.js')
+	);
+});
+
+test('resolves entries with an extension from moduleExtensions', () => {
+	write('hooks.server.py', '');
+
+	expect(resolve_entry(join(source_dir, 'hooks.server'), ['.js', '.ts', '.py'])).toBe(
+		join(source_dir, 'hooks.server.py')
+	);
+});
+
+test('ignores extensions that are not listed', () => {
+	write('hooks.server.py', '');
+
+	expect(resolve_entry(join(source_dir, 'hooks.server'), EXTENSIONS)).toBeNull();
+});
+
+test('resolves index files with an extension from moduleExtensions', () => {
+	write(join('params', 'index.py'), '');
+
+	expect(resolve_entry(source_dir + '/params', ['.js', '.ts', '.py'])).toBe(
+		join(source_dir, 'params', 'index.py')
+	);
 });
 
 test('resolves universal hooks file when hooks folder exists', () => {
 	write(join('hooks', 'not-index.js'), '');
 	write('hooks.js', '');
 
-	expect(resolve_entry(source_dir + '/hooks')).toBe(join(source_dir, 'hooks.js'));
+	expect(resolve_entry(source_dir + '/hooks', EXTENSIONS)).toBe(join(source_dir, 'hooks.js'));
 });
 
 test('ignores hooks.server folder when resolving universal hooks file', () => {
 	write(join('hooks.server', 'index.js'), '');
 
-	expect(resolve_entry(source_dir + '/hooks')).null;
+	expect(resolve_entry(source_dir + '/hooks', EXTENSIONS)).null;
 });
 
 test('ignores hooks folder when resolving universal hooks file', () => {
 	write(join('hooks', 'hooks.server.js'), '');
 
-	expect(resolve_entry(source_dir + '/hooks')).null;
+	expect(resolve_entry(source_dir + '/hooks', EXTENSIONS)).null;
 });

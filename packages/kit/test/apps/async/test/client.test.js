@@ -1,5 +1,5 @@
 import process from 'node:process';
-import { expect } from '@playwright/test';
+import { expect } from '../../../playwright-matchers.js';
 import { test } from '../../../utils.js';
 
 test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
@@ -458,14 +458,16 @@ test.describe('remote function mutations', () => {
 	test('command is blocked inside load functions', async ({ page }) => {
 		const response = await page.goto('/remote/server-load-command');
 		expect(response?.status()).toBe(500);
-		await expect(page.locator('#message')).toContainText('Cannot call a command');
+		await expect(page.locator('#message')).toContainText('remote_command_method');
 	});
 
 	test('command is blocked inside handle hook with GET', async ({ request }) => {
 		const response = await request.get('/remote/hook-command');
 		expect(response.status()).toBe(500);
 		const data = await response.json();
-		expect(data.error).toContain('Cannot call a command');
+		expect(String(data.error)).toContainKitDiagnostic('remote_command_method', {
+			contains: ['GET']
+		});
 	});
 
 	test('prerendered entries use prerender cache while live entries refetch', async ({ page }) => {
@@ -701,7 +703,11 @@ test.describe('remote function mutations', () => {
 	});
 
 	test('query.live streams updates and reconnects after disconnect', async ({ page, context }) => {
+		const response = page.waitForResponse(
+			(r) => r.headers()['content-type'] === 'text/event-stream'
+		);
 		await page.goto('/remote/live');
+		expect((await response).request().headers()['accept']).toBe('text/event-stream');
 		await page.click('#reset');
 
 		await expect(page.locator('#first-value')).toHaveText('0');
