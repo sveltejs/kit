@@ -420,8 +420,8 @@ importers:
         version: 1.2.9
     devDependencies:
       '@netlify/edge-functions':
-        specifier: ^3.0.8
-        version: 3.0.8
+        specifier: ^4.0.0
+        version: 4.0.2
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../kit
@@ -2552,13 +2552,17 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
 
-  '@netlify/edge-functions@3.0.8':
-    resolution: {integrity: sha512-ml1oCDsRTTRmZS2nUj8XRD1b6+foEiZT3lPk7qQ4nv/jnxylHJ20ooPzPDH+cJmGjXFrMeR14/91W1o6D2ftBg==}
-    engines: {node: '>=18.0.0'}
+  '@netlify/edge-functions@4.0.2':
+    resolution: {integrity: sha512-DQflkwaC3greGAAZ9v2wE5PU0qkXMeC7xhRnF/8DEGCjWaVLt/uf48nqDkyCxLG84GYMSQSmlMs+O4wPf+FqPw==}
+    engines: {node: '>=22.12.0'}
 
   '@netlify/types@2.8.0':
     resolution: {integrity: sha512-8/g0Pt6y6wXj5Ia5eeYLiXhRfWeqZXGXpGFeCiiQdUOem+FPtXdA4+YdGxqzWc7D0AvptKSO01KGeeVWHSu8Kg==}
     engines: {node: ^18.14.0 || >=20}
+
+  '@netlify/types@3.2.0':
+    resolution: {integrity: sha512-PVvY1EEN9i2Er0LQoiyNG7i/BnwnttLuZqIkBnhL2Jrcj3P5N/NcGkv1i20MJ2ngNGSPQcT7tagDmF3V6BsdWg==}
+    engines: {node: '>=22.12.0'}
 
   '@opentelemetry/api-logs@0.221.0':
     resolution: {integrity: sha512-OlanaW1vv7ufTqQ3/fPLI4arGt5ZoM+P8abOMki6uEYnpRazepSWDwDnnw+la7kE26SHVC18//SMccrDvLKOXQ==}
@@ -5258,11 +5262,13 @@ snapshots:
       - encoding
       - supports-color
 
-  '@netlify/edge-functions@3.0.8':
+  '@netlify/edge-functions@4.0.2':
     dependencies:
-      '@netlify/types': 2.8.0
+      '@netlify/types': 3.2.0
 
   '@netlify/types@2.8.0': {}
+
+  '@netlify/types@3.2.0': {}
 
   '@opentelemetry/api-logs@0.221.0':
     dependencies:

@@ -47,7 +47,7 @@
 		"rolldown": "^1.2.3"
 	},
 	"devDependencies": {
-		"@netlify/edge-functions": "^3.0.8",
+		"@netlify/edge-functions": "^4.0.0",
 		"@sveltejs/kit": "workspace:^",
 		"@types/deno": "^2.7.0",
 		"@types/node": "catalog:",
