@@ -45,7 +45,7 @@ export function get_global_name(options) {
 export function redirect_response(status, location) {
 	const response = new Response(undefined, {
 		status,
-		headers: { location }
+		headers: { location: encodeURI(location) }
 	});
 	return response;
 }
