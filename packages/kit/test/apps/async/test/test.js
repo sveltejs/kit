@@ -1185,3 +1185,79 @@ test.describe('server error boundaries', () => {
 		await expect(page.locator('#nested-layout')).toHaveCount(0);
 	});
 });
+
+test.describe('universal functions', () => {
+	test('query, query.batch and query.live render during SSR', async ({ page }) => {
+		await page.goto('/universal/query');
+
+		await expect(page.locator('#count')).toHaveText('0 (server)');
+		await expect(page.locator('#item-a')).toHaveText('item a');
+		await expect(page.locator('#item-b')).toHaveText('item b');
+		await expect(page.locator('#item-c')).toHaveText('item c');
+	});
+
+	test('query.live renders the first yielded value during SSR', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		test.skip(javaScriptEnabled, 'the value keeps updating in the browser');
+
+		await page.goto('/universal/query');
+		await expect(page.locator('#ticks')).toHaveText('0');
+		await expect(page.locator('#connected')).toHaveText('false');
+	});
+
+	test('form runs in the browser, or on the server without JS', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		await page.goto('/universal/form');
+		await expect(page.locator('#todos li')).toHaveText(['first todo']);
+
+		await page.locator('[data-default] input').fill('second todo');
+		await page.locator('[data-default] button').click();
+
+		await expect(page.locator('#result')).toHaveText(
+			`second todo (${javaScriptEnabled ? 'browser' : 'server'})`
+		);
+		await expect(page.locator('#todos li')).toHaveText(['first todo', 'second todo']);
+		await expect(page.locator('#issues')).toHaveText('');
+	});
+
+	test('form validates against its schema, in the browser or on the server', async ({ page }) => {
+		await page.goto('/universal/form');
+
+		await page.locator('[data-default] input').fill('no');
+		await page.locator('[data-default] button').click();
+
+		await expect(page.locator('#issues')).toHaveText('text is too short');
+		await expect(page.locator('[data-default] input')).toHaveValue('no');
+		await expect(page.locator('[data-default] input')).toHaveAttribute('aria-invalid', 'true');
+		await expect(page.locator('#result')).toHaveText('none');
+		await expect(page.locator('#todos li')).toHaveText(['first todo']);
+	});
+
+	test('form handler can raise issues imperatively via invalid(...)', async ({ page }) => {
+		await page.goto('/universal/form');
+
+		await page.locator('[data-default] input').fill('please reject this');
+		await page.locator('[data-default] button').click();
+
+		await expect(page.locator('#issues')).toHaveText('rejected by the API');
+		await expect(page.locator('#result')).toHaveText('none');
+		await expect(page.locator('#todos li')).toHaveText(['first todo']);
+	});
+
+	test('keyed form instances work without JS', async ({ page, javaScriptEnabled }) => {
+		test.skip(javaScriptEnabled, 'the enhanced form is covered by the client tests');
+
+		await page.goto('/universal/form');
+
+		await page.locator('[data-enhanced] input').fill('keyed todo');
+		await page.locator('[data-enhanced] button').click();
+
+		await expect(page.locator('#enhanced-result')).toHaveText('keyed todo (server)');
+		await expect(page.locator('#result')).toHaveText('none');
+		await expect(page.locator('#todos li')).toHaveText(['first todo', 'keyed todo']);
+	});
+});

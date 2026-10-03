@@ -1381,3 +1381,198 @@ test.describe('fork', () => {
 		await expect(page.locator('a[href="/fork/1"]')).toBeVisible();
 	});
 });
+
+test.describe('universal functions', () => {
+	/**
+	 * Records all requests the browser makes to the fake API that universal functions talk to
+	 * @param {import('@playwright/test').Page} page
+	 */
+	function track_api_requests(page) {
+		/** @type {string[]} */
+		const requests = [];
+
+		page.on('request', (r) => {
+			const url = new URL(r.url());
+			if (url.pathname.startsWith('/universal/api/')) {
+				requests.push(`${r.method()} ${url.pathname}${url.search}`);
+			}
+		});
+
+		return requests;
+	}
+
+	test('results computed during SSR are reused during hydration', async ({ page }) => {
+		const requests = track_api_requests(page);
+
+		await page.goto('/universal/query');
+		await expect(page.locator('#count')).toHaveText('0 (server)');
+		await expect(page.locator('#item-a')).toHaveText('item a');
+
+		await page.waitForTimeout(200); // give hydration a chance to (wrongly) re-run queries
+		await expect(page.locator('#count')).toHaveText('0 (server)');
+		expect(requests).toEqual([]);
+	});
+
+	test('query refresh runs the function in the browser', async ({ page }) => {
+		const requests = track_api_requests(page);
+
+		await page.goto('/universal/query');
+		await expect(page.locator('#count')).toHaveText('0 (server)');
+
+		await page.click('#refresh-count');
+		await expect(page.locator('#count')).toHaveText('0 (browser)');
+		expect(requests).toEqual(['GET /universal/api/count']);
+	});
+
+	test('queries run in the browser after client-side navigation', async ({ page, clicknav }) => {
+		await page.goto('/universal');
+		const requests = track_api_requests(page);
+
+		await clicknav('a[href="/universal/query"]');
+		await expect(page.locator('#count')).toHaveText('0 (browser)');
+		await expect(page.locator('#item-c')).toHaveText('item c');
+
+		expect(requests.sort()).toEqual([
+			'GET /universal/api/count',
+			'GET /universal/api/items?ids=a,b,c'
+		]);
+	});
+
+	test('query.batch batches calls made in the same macrotask', async ({ page }) => {
+		await page.goto('/universal/query');
+		await expect(page.locator('#item-a')).toHaveText('item a');
+
+		const requests = track_api_requests(page);
+
+		await page.click('#refresh-items');
+		await page.waitForTimeout(200);
+
+		expect(requests).toEqual(['GET /universal/api/items?ids=a,b,c']);
+		await expect(page.locator('#item-b')).toHaveText('item b');
+	});
+
+	test('query.live keeps iterating in the browser', async ({ page }) => {
+		await page.goto('/universal/query');
+
+		await expect(page.locator('#connected')).toHaveText('true');
+		await expect
+			.poll(async () => Number(await page.locator('#ticks').textContent()))
+			.toBeGreaterThan(2);
+
+		await page.click('#reconnect');
+		await expect
+			.poll(async () => Number(await page.locator('#ticks').textContent()))
+			.toBeLessThan(3);
+		await expect(page.locator('#connected')).toHaveText('true');
+	});
+
+	test('command refreshes the queries passed to updates(...)', async ({ page }) => {
+		await page.goto('/universal/command');
+		await expect(page.locator('#count')).toHaveText('0');
+
+		const requests = track_api_requests(page);
+
+		await page.click('#set-with-updates');
+		await expect(page.locator('#result')).toHaveText('1');
+		await expect(page.locator('#count')).toHaveText('1');
+		expect(requests).toEqual(['POST /universal/api/count', 'GET /universal/api/count']);
+	});
+
+	test('command refreshes all instances of a query function passed to updates(...)', async ({
+		page
+	}) => {
+		await page.goto('/universal/command');
+		await expect(page.locator('#count')).toHaveText('0');
+
+		await page.click('#set-with-function-updates');
+		await expect(page.locator('#result')).toHaveText('2');
+		await expect(page.locator('#count')).toHaveText('2');
+	});
+
+	test('command applies overrides until the mutation and refresh completed', async ({ page }) => {
+		await page.goto('/universal/command');
+		await expect(page.locator('#count')).toHaveText('0');
+
+		await page.click('#set-with-override');
+		await expect(page.locator('#count')).toHaveText('99');
+		await expect(page.locator('#pending')).toHaveText('1');
+
+		await page.click('#open-gate');
+		await expect(page.locator('#result')).toHaveText('3');
+		await expect(page.locator('#count')).toHaveText('3');
+		await expect(page.locator('#pending')).toHaveText('0');
+	});
+
+	test('command does not refresh anything without updates(...)', async ({ page }) => {
+		await page.goto('/universal/command');
+		await expect(page.locator('#count')).toHaveText('0');
+
+		const requests = track_api_requests(page);
+
+		await page.click('#set-without-updates');
+		await expect(page.locator('#result')).toHaveText('4');
+		await page.waitForTimeout(100);
+		await expect(page.locator('#count')).toHaveText('0');
+		expect(requests).toEqual(['POST /universal/api/count']);
+
+		await page.click('#refresh');
+		await expect(page.locator('#count')).toHaveText('4');
+	});
+
+	test('form applies overrides until the submission and refresh completed', async ({ page }) => {
+		await page.goto('/universal/form');
+		await expect(page.locator('#todos li')).toHaveText(['first todo']);
+
+		await page.locator('[data-enhanced] input').fill('enhanced todo');
+		await page.locator('[data-enhanced] button').click();
+
+		await expect(page.locator('#todos li')).toHaveText([
+			'first todo',
+			'enhanced todo (optimistic)'
+		]);
+
+		const requests = track_api_requests(page);
+
+		await page.click('#open-gate');
+		await expect(page.locator('#enhanced-result')).toHaveText('enhanced todo (browser)');
+		await expect(page.locator('#todos li')).toHaveText(['first todo', 'enhanced todo']);
+
+		// only the query passed to `updates(...)` is refreshed, instead of everything
+		expect(requests).toEqual(['POST /universal/api/todos', 'GET /universal/api/todos']);
+	});
+
+	test('form validation does not call the handler', async ({ page }) => {
+		await page.goto('/universal/form');
+		await expect(page.locator('#todos li')).toHaveText(['first todo']);
+
+		const requests = track_api_requests(page);
+
+		await page.locator('[data-default] input').fill('no');
+		await page.locator('[data-default] button').click();
+		await expect(page.locator('#issues')).toHaveText('text is too short');
+
+		expect(requests).toEqual([]);
+	});
+
+	test('form state of a non-enhanced submission survives hydration', async ({ page }) => {
+		await page.goto('/universal/form');
+
+		// submitting via the prototype method bypasses the enhancement, i.e. it does a native POST
+		await page.locator('[data-default] input').fill('no');
+		await page.evaluate(() => {
+			const form = /** @type {HTMLFormElement} */ (document.querySelector('[data-default]'));
+			HTMLFormElement.prototype.submit.call(form);
+		});
+
+		await expect(page).toHaveURL(/\?\/universal=/);
+		await page.waitForSelector('body.started');
+		await expect(page.locator('#issues')).toHaveText('text is too short');
+		await expect(page.locator('[data-default] input')).toHaveValue('no');
+
+		// enhanced submissions keep working afterwards
+		await page.locator('[data-default] input').fill('after hydration');
+		await page.locator('[data-default] button').click();
+		await expect(page.locator('#result')).toHaveText('after hydration (browser)');
+		await expect(page.locator('#issues')).toHaveText('');
+	});
+});
