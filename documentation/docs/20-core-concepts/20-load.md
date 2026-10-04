@@ -194,7 +194,7 @@ A `load` function is invoked at runtime, unless you [prerender](page-options#pre
 
 Both universal and server `load` functions have access to properties describing the request (`params`, `route` and `url`) and various functions (`fetch`, `setHeaders`, `parent`, `depends` and `untrack`). These are described in the following sections.
 
-Server `load` functions are called with a `ServerLoadEvent`, which inherits `clientAddress`, `cookies`, `locals`, `platform` and `request` from `RequestEvent`.
+Server `load` functions are called with a `ServerLoadEvent`, which inherits `cookies`, `locals`, `platform` and `request` from `RequestEvent` and provides the `getClientAddress()` method.
 
 Universal `load` functions are called with a `LoadEvent`, which has a `data` property. If you have `load` functions in both `+page.js` and `+page.server.js` (or `+layout.js` and `+layout.server.js`), the return value of the server `load` function is the `data` property of the universal `load` function's argument.
 
