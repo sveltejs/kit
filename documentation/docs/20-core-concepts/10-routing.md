@@ -20,6 +20,12 @@ We'll introduce these files in a moment in more detail, but here are a few simpl
 
 > [!NOTE] When navigating from page A to B, SvelteKit preserves the components that are common to both of them — [see here](state-management#Component-and-page-state-is-preserved) for more detail.
 
+> [!NOTE]
+> With the new routing, several routes can contain a file with the same name — `src/routes/blog/[slug]/+page.svelte` and
+> `src/routes/about/+page.svelte` are both `+page.svelte`. In VS Code you can tell them apart by setting
+> `workbench.editor.labelFormat` to `"short"`, which shows only the filename instead of the whole path. Alternatively,
+> `"medium"` shows the filename plus its parent directories, e.g. `[slug] / +page.svelte`.
+
 ## +page
 
 ### +page.svelte
