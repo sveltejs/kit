@@ -464,6 +464,9 @@ importers:
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
         version: 7.3.1(svelte@5.57.1(@typescript-eslint/types@8.70.1))(vite@8.3.0(@types/node@22.20.4)(esbuild@0.28.1)(yaml@2.9.1))
+      e2e-test-dep-wasm:
+        specifier: file:./_test_dependencies/wasm-lib
+        version: file:packages/adapter-netlify/test/apps/edge/_test_dependencies/wasm-lib
       svelte:
         specifier: 'catalog:'
         version: 5.57.1(@typescript-eslint/types@8.70.1)
@@ -3543,6 +3546,9 @@ packages:
     peerDependencies:
       '@sveltejs/kit': '*'
 
+  e2e-test-dep-wasm@file:packages/adapter-netlify/test/apps/edge/_test_dependencies/wasm-lib:
+    resolution: {directory: packages/adapter-netlify/test/apps/edge/_test_dependencies/wasm-lib, type: directory}
+
   emoji-regex@8.0.0:
     resolution: {integrity: sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A==}
 
@@ -6145,6 +6151,8 @@ snapshots:
   e2e-test-dep-remote@file:packages/kit/test/apps/async/_test_dependencies/remote-lib(@sveltejs/kit@packages+kit):
     dependencies:
       '@sveltejs/kit': link:packages/kit
+
+  e2e-test-dep-wasm@file:packages/adapter-netlify/test/apps/edge/_test_dependencies/wasm-lib: {}
 
   emoji-regex@8.0.0: {}
 

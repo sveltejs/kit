@@ -413,9 +413,24 @@ const rolldown_config = {
 	// Node built-ins are allowed, but must be prefixed with `node:`
 	// https://docs.netlify.com/edge-functions/api/#runtime-environment
 	external: builtinModules.map((id) => `node:${id}`),
-	resolve: {
-		alias: Object.fromEntries(builtinModules.map((id) => [id, `node:${id}`]))
-	}
+	moduleTypes: {
+		'.wasm': 'copy',
+		'.woff': 'copy',
+		'.woff2': 'copy',
+		'.ttf': 'copy',
+		'.eot': 'copy',
+		'.otf': 'copy'
+	},
+	plugins: [
+		{
+			// `resolve.alias` doesn't work here because rolldown tries to resolve
+			// the aliased `node:` specifier before checking `external`
+			name: 'node-builtins',
+			resolveId(id) {
+				if (builtinModules.includes(id)) return { id: `node:${id}`, external: true };
+			}
+		}
+	]
 };
 
 /**

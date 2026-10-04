@@ -33,3 +33,15 @@ test('page renders on the client if SSR is turned off', async ({ page }) => {
 	await page.goto('/treeshake-server');
 	await expect(page.locator('p')).toHaveText('this should never appear in the server bundle');
 });
+
+test('bare Node built-in imports work', async ({ request }) => {
+	const response = await request.get('/node-builtin');
+	expect(await response.text()).toBe(
+		'2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824'
+	);
+});
+
+test('.wasm imports work', async ({ request }) => {
+	const response = await request.get('/wasm');
+	expect(await response.text()).toBe('3');
+});
