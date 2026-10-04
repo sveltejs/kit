@@ -9,7 +9,7 @@ import { build, watch } from '../src/index.js';
 import { load_config } from '../src/config.js';
 import { transpile_ts } from '../src/typescript.js';
 import { _create_validator } from '../src/validate.js';
-import { allows_svelte_3, resolve_aliases } from '../src/utils.js';
+import { predates_svelte_4, resolve_aliases } from '../src/utils.js';
 import { walk } from '../src/filesystem.js';
 
 const original_cwd = process.cwd();
@@ -664,19 +664,18 @@ test.each([
 	['~3.59', true],
 	['*', true],
 	['', true],
+	['<5', true],
+	['>3.59.0', true],
 	['^4.0.0', false],
 	['^4.0.0 || ^5.0.0', false],
 	['^5.0.0-next.1', false],
 	['>=4 <6', false],
 	['>3', false],
-	['<3.0.0', false],
 	['^3.0.0 ^4.0.0', false],
-	['^0.3.0', false],
 	['latest', false],
 	['next', false],
 	['workspace:^', false],
-	['catalog:', false],
-	['^3.0.0 || latest', false]
-])('detects whether %j allows Svelte 3', (range, expected) => {
-	expect(allows_svelte_3(range)).toBe(expected);
+	['catalog:', false]
+])('detects whether %j includes releases older than Svelte 4', (range, expected) => {
+	expect(predates_svelte_4(range)).toBe(expected);
 });

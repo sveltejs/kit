@@ -173,82 +173,35 @@ export function analyze(file, extensions) {
 	};
 }
 
-const comparator =
-	/^(\^|~|[<>]=?|=)?v?(\d+|[x*])(?:\.(\d+|[x*]))?(?:\.(\d+|[x*]))?(?:-[\w.-]+)?(?:\+[\w.-]+)?$/i;
+const comparator = /^(\^|~|[<>]=?|=)?v?(\d+|[x*])((?:\.(?:\d+|[x*])){0,2})(?:[-+][\w.+-]+)?$/i;
 
 /**
- * @param {number} major
- * @param {number} [minor]
- * @param {number} [patch]
- */
-function to_number(major, minor = 0, patch = 0) {
-	return (major * 1e5 + minor) * 1e5 + patch;
-}
-
-/**
- * Whether a version range allows a Svelte 3 release. Version specs that are not
- * semver ranges, e.g. "latest" or "next" or catalog references, do not
+ * Whether a version range includes releases older than Svelte 4. Version specs that
+ * are not semver ranges, e.g. "latest" or "next" or catalog references, do not
  *
  * @param {string} range
  * @returns {boolean}
  */
-export function allows_svelte_3(range) {
-	let allowed = false;
-
-	for (const set of range.split('||')) {
-		let min = 0;
-		let max = Infinity;
-
+export function predates_svelte_4(range) {
+	return range.split('||').some((set) => {
 		const comparators = set
 			.trim()
-			.replace(/^(\S+)\s+-\s+(\S+)$/, '>=$1 <=$2')
+			.replace(/\s+-\s+/, ' <=')
 			.replace(/([<>=~^])\s+/g, '$1')
 			.split(/\s+/);
 
-		for (const str of comparators) {
-			if (str === '') continue;
+		return comparators.every((str) => {
+			if (str === '') return true;
 
 			const match = comparator.exec(str);
 			if (!match) return false;
 
-			const [, operator, ...parts] = match;
-			const wildcard = parts.findIndex((part) => part === undefined || /[x*]/i.test(part));
-			const [major, minor, patch] = parts.slice(0, wildcard === -1 ? 3 : wildcard).map(Number);
-			if (major === undefined) continue;
+			const [, operator = '', major, rest] = match;
+			// upper bounds and wildcards do not raise the lowest allowed version
+			if (operator[0] === '<' || !/\d/.test(major)) return true;
 
-			const version = to_number(major, minor, patch);
-			// the first version that a partial version such as `3` or `3.1` no longer covers
-			const next =
-				minor === undefined
-					? to_number(major + 1)
-					: patch === undefined
-						? to_number(major, minor + 1)
-						: version + 1;
-
-			if (operator === '>=') {
-				min = Math.max(min, version);
-			} else if (operator === '>') {
-				min = Math.max(min, next);
-			} else if (operator === '<') {
-				max = Math.min(max, version);
-			} else if (operator === '<=') {
-				max = Math.min(max, next);
-			} else {
-				min = Math.max(min, version);
-
-				if (operator === '^') {
-					// `^0.x` is narrower than this, but ends below 1.0.0 either way
-					max = Math.min(max, to_number(major + 1));
-				} else if (operator === '~' && minor !== undefined) {
-					max = Math.min(max, to_number(major, minor + 1));
-				} else {
-					max = Math.min(max, next);
-				}
-			}
-		}
-
-		allowed ||= Math.max(min, to_number(3)) < Math.min(max, to_number(4));
-	}
-
-	return allowed;
+			// `>3` and `>3.x` start at 4.0.0
+			return +major + Number(operator === '>' && /^(\.[x*]|$)/i.test(rest)) < 4;
+		});
+	});
 }
