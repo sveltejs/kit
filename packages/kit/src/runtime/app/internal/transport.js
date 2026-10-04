@@ -34,12 +34,14 @@ export function init_transport(transport) {
 
 	has_custom_transporters = transporters.length > 0;
 
-	/** @param {unknown} thing */
-	const replacer = (thing) => {
+	/** @type {import('devalue').UnevalReplacer} */
+	const replacer = (thing, js) => {
 		for (const key of Object.keys(transport)) {
 			const encoded = transport[key].encode(thing);
 			if (encoded) {
-				return `app.decode('${key}', ${devalue.uneval(encoded, replacer)})`;
+				// in devalue v6 the replacer must return a source created with the
+				// supplied `js` tag; each `${...}` hole is recursively serialized
+				return js`app.decode(${key}, ${encoded})`;
 			}
 		}
 	};
