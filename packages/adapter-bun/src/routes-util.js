@@ -156,7 +156,14 @@ function file_route(file, meta, extra_headers = {}) {
 			response_headers['content-encoding'] = CONTENT_ENCODING[encoding];
 			body_file = `${file}.${encoding}`;
 		}
-		return new Response(Bun.file(body_file), { headers: response_headers });
+		const body = Bun.file(body_file);
+		const if_range = request.headers.get('if-range');
+		if (request.headers.has('range') && if_range !== null && if_range.trim() !== etag) {
+			return new Response(body.stream().pipeThrough(new TransformStream()), {
+				headers: response_headers
+			});
+		}
+		return new Response(body, { headers: response_headers });
 	};
 
 	return { GET: handler };
