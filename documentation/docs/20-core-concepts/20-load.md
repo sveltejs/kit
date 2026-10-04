@@ -150,7 +150,10 @@ Data returned from layout `load` functions is available to child `+layout.svelte
 {/if}+++
 ```
 
-> [!NOTE] If multiple `load` functions return data with the same key, the last one 'wins' — the result of a layout `load` returning `{ a: 1, b: 2 }` and a page `load` returning `{ b: 3, c: 4 }` would be `{ a: 1, b: 3, c: 4 }`.
+> [!NOTE]
+> If multiple `load` functions return data with the same key, the last one 'wins'. Here, _last_ does not mean the one that resolved last — all `load` functions for a page run [concurrently](#Parallel-loading). It means the one that is deepest in the route tree: data from the root layout is merged first, then each nested layout, and finally the page's `load` function, which overwrites any matching keys.
+>
+> For example, a `+layout.js` returning `{ a: 1, b: 2 }` and a `+page.js` returning `{ b: 3, c: 4 }` would result in `{ a: 1, b: 3, c: 4 }`.
 
 ## page.data
 
@@ -568,6 +571,10 @@ export function load({ fetch }) {
 ## Parallel loading
 
 When rendering (or navigating to) a page, SvelteKit runs all `load` functions concurrently, avoiding a waterfall of requests. During client-side navigation, the result of calling multiple server `load` functions are grouped into a single response. Once all `load` functions have returned, the page is rendered.
+
+This is true on the server during SSR and in the browser during client-side navigation. Server `load` functions run concurrently with each other, and universal `load` functions run concurrently with each other. The only ordering constraint is that a universal `load` function receives its own node's server `load` result as `data`, so it cannot run until that has resolved.
+
+Concurrency only applies to _running_ the functions. Their return values are merged in a fixed [route-tree order](#Layout-data), regardless of which function resolves first.
 
 ## Rerunning load functions
 
