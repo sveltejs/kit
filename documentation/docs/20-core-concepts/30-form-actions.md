@@ -208,7 +208,11 @@ export const actions = {
 };
 ```
 
-> [!NOTE] Note that as a precaution, we only return the email back to the page — not the password.
+> [!NOTE]
+> Treat anything you return from an action as public. It is embedded in the page and
+> readable by anyone who can see the page, so never return secrets, password hashes, or
+> session tokens from an action — the login example above returns `email` only because it
+> is the one value the form needs to re-display.
 
 ```svelte
 /// file: src/routes/login/+page.svelte
