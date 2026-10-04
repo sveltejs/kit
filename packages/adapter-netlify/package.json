@@ -43,7 +43,7 @@
 		"tsc-native": "node node_modules/@typescript/native/bin/tsc"
 	},
 	"dependencies": {
-		"@netlify/types": "^2.8.0",
+		"@netlify/types": "^3.0.0",
 		"rolldown": "^1.2.3"
 	},
 	"devDependencies": {

@@ -413,8 +413,8 @@ importers:
   packages/adapter-netlify:
     dependencies:
       '@netlify/types':
-        specifier: ^2.8.0
-        version: 2.8.0
+        specifier: ^3.0.0
+        version: 3.2.0
       rolldown:
         specifier: ^1.2.3
         version: 1.2.9
