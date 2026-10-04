@@ -413,8 +413,8 @@ importers:
   packages/adapter-netlify:
     dependencies:
       '@netlify/types':
-        specifier: ^2.8.0
-        version: 2.8.0
+        specifier: ^3.0.0
+        version: 3.2.0
       rolldown:
         specifier: ^1.2.3
         version: 1.2.9
@@ -2559,6 +2559,10 @@ packages:
   '@netlify/types@2.8.0':
     resolution: {integrity: sha512-8/g0Pt6y6wXj5Ia5eeYLiXhRfWeqZXGXpGFeCiiQdUOem+FPtXdA4+YdGxqzWc7D0AvptKSO01KGeeVWHSu8Kg==}
     engines: {node: ^18.14.0 || >=20}
+
+  '@netlify/types@3.2.0':
+    resolution: {integrity: sha512-PVvY1EEN9i2Er0LQoiyNG7i/BnwnttLuZqIkBnhL2Jrcj3P5N/NcGkv1i20MJ2ngNGSPQcT7tagDmF3V6BsdWg==}
+    engines: {node: '>=22.12.0'}
 
   '@opentelemetry/api-logs@0.221.0':
     resolution: {integrity: sha512-OlanaW1vv7ufTqQ3/fPLI4arGt5ZoM+P8abOMki6uEYnpRazepSWDwDnnw+la7kE26SHVC18//SMccrDvLKOXQ==}
@@ -5263,6 +5267,8 @@ snapshots:
       '@netlify/types': 2.8.0
 
   '@netlify/types@2.8.0': {}
+
+  '@netlify/types@3.2.0': {}
 
   '@opentelemetry/api-logs@0.221.0':
     dependencies:
