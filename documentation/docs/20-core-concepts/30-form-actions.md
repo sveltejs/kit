@@ -522,6 +522,13 @@ const response = await fetch(this.action, {
 
 Form actions are the preferred way to send data to the server, since they can be progressively enhanced, but you can also use [`+server.js`](routing#server) files to expose (for example) a JSON API. Here's how such an interaction could look like:
 
+> [!NOTE] A page that is [prerendered](page-options#prerender) has no server at runtime, so its own actions can never run — a `POST` to it fails. This rules out form actions for anything that has to stay static: a newsletter widget inside a prerendered layout, a pop-up on an otherwise static page, or an SPA with no backend. For those cases there are two options, and both keep progressive enhancement:
+>
+> - point the form at an action belonging to a page that _is_ server-rendered, and pass `navigate: false` to `use:enhance`'s `update` so the result is applied to the page the user is still on, as [described above](#Progressive-enhancement-use:enhance)
+> - expose a [`+server.js`](routing#server) endpoint instead, losing `use:enhance`'s form handling but keeping the page itself static
+>
+> The first option reads a little oddly — your form's `action` points at a route that has nothing to do with the widget the user is looking at — so it's worth knowing that the indirection is deliberate and not a workaround for a bug.
+
 ```svelte
 <!--- file: src/routes/send-message/+page.svelte --->
 <script>
