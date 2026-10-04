@@ -9,7 +9,7 @@ import { build, watch } from '../src/index.js';
 import { load_config } from '../src/config.js';
 import { transpile_ts } from '../src/typescript.js';
 import { _create_validator } from '../src/validate.js';
-import { resolve_aliases } from '../src/utils.js';
+import { allows_svelte_3, resolve_aliases } from '../src/utils.js';
 import { walk } from '../src/filesystem.js';
 
 const original_cwd = process.cwd();
@@ -650,4 +650,33 @@ import(  './dynamic2.js'  );
 
 	const resolved = resolve_aliases(input, file, source, alias);
 	expect(resolved.trim()).toBe(expectedResolved.trim());
+});
+
+test.each([
+	['^3.55.0', true],
+	['^3.44.0 || ^4.0.0 || ^5.0.0-next.1', true],
+	['^5.0.0 || 3.x', true],
+	['3.0', true],
+	['>=3 <6', true],
+	['>=3.0.0 <4.0.0', true],
+	['3 - 5', true],
+	['<=3.0.0', true],
+	['~3.59', true],
+	['*', true],
+	['', true],
+	['^4.0.0', false],
+	['^4.0.0 || ^5.0.0', false],
+	['^5.0.0-next.1', false],
+	['>=4 <6', false],
+	['>3', false],
+	['<3.0.0', false],
+	['^3.0.0 ^4.0.0', false],
+	['^0.3.0', false],
+	['latest', false],
+	['next', false],
+	['workspace:^', false],
+	['catalog:', false],
+	['^3.0.0 || latest', false]
+])('detects whether %j allows Svelte 3', (range, expected) => {
+	expect(allows_svelte_3(range)).toBe(expected);
 });

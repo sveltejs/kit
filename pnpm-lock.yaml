@@ -203,9 +203,6 @@ catalogs:
     '@types/node':
       specifier: ^22.19.19
       version: 22.20.4
-    '@types/semver':
-      specifier: ^7.8.0
-      version: 7.8.0
     '@typescript/native':
       specifier: npm:typescript@^7.0.2
       version: 7.0.2
@@ -1809,9 +1806,6 @@ importers:
       chokidar:
         specifier: ^5.0.0
         version: 5.0.0
-      semver:
-        specifier: ^7.8.5
-        version: 7.8.5
       svelte2tsx:
         specifier: ~0.7.60
         version: 0.7.61(svelte@5.57.1(@typescript-eslint/types@8.70.1))(typescript@6.0.3)
@@ -1825,9 +1819,6 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 22.20.4
-      '@types/semver':
-        specifier: 'catalog:'
-        version: 7.8.0
       '@typescript/native':
         specifier: 'catalog:'
         version: typescript@7.0.2
@@ -3128,9 +3119,6 @@ packages:
 
   '@types/node@26.6.2':
     resolution: {integrity: sha512-X1P21scMv4zGKLYqjdGjaKa7COa0RKVYYZZN/NfvLQ1JegxFhdhpZG/Lyn8AXx6CDUavKAd11v6BvfpkDByK8g==}
-
-  '@types/semver@7.8.0':
-    resolution: {integrity: sha512-1mAINjtQCXXeLkJ9ehXkwOcBpqtLxiVtKhpUf83DdRNdQKV0iXZpaHYqRr7nj+wvxuJzoAmAwXI+sCNMv1CzLQ==}
 
   '@typescript-eslint/eslint-plugin@8.70.1':
     resolution: {integrity: sha512-nDNrUQ/4ruSNYbu749TRY7cfrzPtoLHEXSNBI8aaNY32LlZCajixqRf3FqcKC4p5Cam4VOHYx/t+i5+nKXvrqA==}
@@ -5754,8 +5742,6 @@ snapshots:
   '@types/node@26.6.2':
     dependencies:
       undici-types: 8.9.0
-
-  '@types/semver@7.8.0': {}
 
   '@typescript-eslint/eslint-plugin@8.70.1(@typescript-eslint/parser@8.70.1(eslint@10.11.0(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3))(eslint@10.11.0(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3)':
     dependencies:

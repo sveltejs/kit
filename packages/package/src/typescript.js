@@ -1,9 +1,8 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { createRequire } from 'node:module';
-import semver from 'semver';
 import { posixify, walk } from './filesystem.js';
-import { resolve_aliases, write } from './utils.js';
+import { allows_svelte_3, resolve_aliases, write } from './utils.js';
 import { emitDts } from 'svelte2tsx';
 import { load_pkg_json } from './config.js';
 
@@ -28,13 +27,7 @@ export async function emit_dts(input, output, final_output, cwd, alias, files, t
 	const require = createRequire(import.meta.url);
 	const pkg = load_pkg_json(cwd);
 	const svelte_dep = pkg.peerDependencies?.svelte || pkg.dependencies?.svelte || '3.0';
-	let no_svelte_3;
-	try {
-		no_svelte_3 = !semver.intersects(svelte_dep, '^3.0.0');
-	} catch {
-		// Not all version specs are valid semver, e.g. "latest" or "next" or catalog references
-		no_svelte_3 = true;
-	}
+	const no_svelte_3 = !allows_svelte_3(svelte_dep);
 	await emitDts({
 		libRoot: input,
 		svelteShimsPath: no_svelte_3
