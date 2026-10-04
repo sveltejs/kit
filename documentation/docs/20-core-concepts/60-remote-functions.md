@@ -80,14 +80,20 @@ The query returned from `getPosts` works as a [`Promise`](https://developer.mozi
 
 <h1>Recent posts</h1>
 
-<ul>
-	{#each await getPosts() as { title, slug }}
-		<li><a href="/blog/{slug}">{title}</a></li>
-	{/each}
-</ul>
+<svelte:boundary>
+	{#snippet pending()}
+		<p>loading...</p>
+	{/snippet}
+
+	<ul>
+		{#each await getPosts() as { title, slug }}
+			<li><a href="/blog/{slug}">{title}</a></li>
+		{/each}
+	</ul>
+</svelte:boundary>
 ```
 
-Until the promise resolves — and if it errors — the nearest [`<svelte:boundary>`](../svelte/svelte-boundary) will be invoked.
+Until the promise resolves — and if it errors — the nearest [`<svelte:boundary>`](../svelte/svelte-boundary) will be invoked. Awaiting inside a component also _requires_ that boundary to have a `pending` snippet, otherwise Svelte throws `await_outside_boundary` ("Cannot await outside a `svelte:boundary>` with a `pending` snippet"). If you already have a `<svelte:boundary>` higher up the tree — for example in your root `+layout.svelte` — you don't need another one.
 
 While using `await` is recommended, as an alternative the query also has `loading`, `error` and `current` properties:
 
@@ -130,9 +136,17 @@ Query functions can accept an argument, such as the `slug` of an individual post
 	const post = $derived(await getPost(params.slug));
 </script>
 
-<h1>{post.title}</h1>
-<div>{@html post.content}</div>
+<svelte:boundary>
+	{#snippet pending()}
+		<p>loading...</p>
+	{/snippet}
+
+	<h1>{post.title}</h1>
+	<div>{@html post.content}</div>
+</svelte:boundary>
 ```
+
+`const post = $derived(await getPost(params.slug))` assigns the value at the top level of the `<script>` tag — the same way you'd use `$derived` with any other reactive value. Without `$derived`, Svelte evaluates the expression once and never replaces it when `params.slug` changes.
 
 Since `getPost` exposes an HTTP endpoint, it's important to validate this argument to be sure that it's the correct type. For this, we can use any [Standard Schema](https://standardschema.dev/) validation library such as [Zod](https://zod.dev/) or [Valibot](https://valibot.dev/):
 
