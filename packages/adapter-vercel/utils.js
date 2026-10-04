@@ -70,20 +70,24 @@ export function resolve_runtime(default_key, override_key) {
 }
 
 const valid_node_versions = [22, 24];
+const valid_bun_versions = ['1.x', '1.4.x'];
 const formatter = new Intl.ListFormat('en-gb', { type: 'disjunction' });
 
 /** @returns {RuntimeKey} */
 function get_default_runtime() {
 	// if the user ran e.g. `bunx --bun vite build`, infer that they want to run the app in Bun
 	if (process.versions.bun) {
-		const major = process.versions.bun.split('.')[0];
+		const [major, minor] = process.versions.bun.split('.');
 		if (major !== '1') {
 			throw new Error(
 				`Unsupported Bun version: ${major}. Please use Bun 1.x to build your project, or explicitly specify a runtime in your adapter configuration.`
 			);
 		}
 
-		return `bun${major}.x`;
+		// pin the minor when Vercel can resolve it specifically (e.g. `bun1.4.x`),
+		// otherwise fall back to `bun1.x` so a newer Bun still builds
+		const version = minor ? `${major}.${minor}.x` : `${major}.x`;
+		return `bun${valid_bun_versions.includes(version) ? version : `${major}.x`}`;
 	}
 
 	// otherwise, default to the version of Node specified in the project config
@@ -104,7 +108,12 @@ function get_default_runtime() {
 	);
 }
 
-const valid_runtimes = /** @type {const} */ (['nodejs22.x', 'nodejs24.x', 'bun1.x']);
+const valid_runtimes = /** @type {const} */ ([
+	'nodejs22.x',
+	'nodejs24.x',
+	'bun1.x',
+	'bun1.4.x'
+]);
 
 /**
  * @param {string} key
