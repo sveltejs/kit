@@ -4,7 +4,6 @@ import crypto from 'node:crypto';
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { builtinModules } from 'node:module';
 import process from 'node:process';
 import { build } from 'rolldown';
 import { matches, s } from './utils.js';
@@ -402,12 +401,12 @@ function to_import_specifier(path) {
 
 /** @satisfies {import('rolldown').BuildOptions} */
 const rolldown_config = {
-  // Mirror Netlify's edge-bundler behaviour for externalising Node.js built-ins
-  // see https://github.com/netlify/build/blob/main/packages/edge-bundler/node/npm_dependencies.ts#L289-L309
-  platform: 'node',
-  resolve: {
-    mainFields: ['module', 'browser', 'main'],
-  },
+	// Mirror Netlify's edge-bundler behaviour for externalising Node.js built-ins
+	// see https://github.com/netlify/build/blob/main/packages/edge-bundler/node/npm_dependencies.ts#L289-L309
+	platform: 'node',
+	resolve: {
+		mainFields: ['module', 'browser', 'main']
+	},
 	output: {
 		sourcemap: true,
 		codeSplitting: false

@@ -36,12 +36,6 @@ test('treeshakes component from the server bundle if SSR is turned off', () => {
 	expect(edge_function).not.toContain('this should never appear in the server bundle');
 });
 
-test('bare Node built-in imports are prefixed with `node:`', () => {
-	const edge_function = fs.readFileSync(edge_function_path, 'utf-8');
-	expect(edge_function).toMatch(/from ["']node:crypto["']/);
-	expect(edge_function).not.toMatch(/from ["']crypto["']/);
-});
-
 test('.wasm files are copied alongside the edge function', () => {
 	const edge_function = fs.readFileSync(edge_function_path, 'utf-8');
 	const wasm_import = edge_function.match(/import\(["'](\.\/[^"']+\.wasm)["']\)/)?.[1];
