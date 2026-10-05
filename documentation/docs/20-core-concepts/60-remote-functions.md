@@ -202,6 +202,11 @@ Any query can be re-fetched via its `refresh` method, which retrieves the latest
 
 > [!NOTE] Queries are cached while they're on the page, meaning `getPosts() === getPosts()`. This means you don't need a reference like `const posts = getPosts()` in order to update the query.
 
+> [!NOTE] This is the client-driven, manual way to refresh a query. When the refresh should travel with a
+> mutation instead of being a second request, use [single-flight mutations](#Single-flight-mutations)
+> — which covers both server-driven refreshes (`query.refresh()`, `query.set()`) and
+> client-requested refreshes (`.updates(...)`).
+
 ## query.batch
 
 `query.batch` works like `query` except that it batches requests that happen within the same macrotask. This solves the so-called n+1 problem: rather than each query resulting in a separate database call (for example), simultaneous queries are grouped together.
@@ -972,6 +977,12 @@ Now simply call `addLike`, from (for example) an event handler:
 ```
 
 > [!NOTE] Commands cannot be called during render.
+
+> [!NOTE] Unlike a `form`, a successful `command` invalidates nothing, so any query it affected keeps
+> showing the previous value until something else refreshes it. To refresh queries in the same
+> request as the command, use [single-flight mutations](#Single-flight-mutations) — in particular
+> [`myCommand().updates(...)`](#Single-flight-mutations-Client-requested-refreshes), which lets the
+> client name the exact query instances to refresh.
 
 ## Single-flight mutations
 
