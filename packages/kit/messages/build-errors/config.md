@@ -138,13 +138,13 @@ This option only accepts an array of strings, such as `['.svelte']` or `['*', '/
 
 > File extensions must be alphanumeric — saw `'%extension%'`
 
-Each member of [`extensions`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#extensions) must be a file extension made of letters and numbers, such as `.svelte` or `.svx`. Multi-part extensions such as `.svelte.md` are also allowed.
+Each member of [`extensions`](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/config.md#extensions) must be a file extension made of letters and numbers, such as `.svelte` or `.svx`. Multi-part extensions such as `.svelte.md` are also allowed.
 
 ## config_extension_missing_dot
 
 > Each member of %keypath% must start with `'.'` — saw `'%extension%'`
 
-Write [`extensions`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#extensions) with a leading dot, for example `['.svelte', '.svx']` rather than `['svelte', 'svx']`.
+Write [`extensions`](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/config.md#extensions) with a leading dot, for example `['.svelte', '.svx']` rather than `['svelte', 'svx']`.
 
 ## config_invalid_adapter
 

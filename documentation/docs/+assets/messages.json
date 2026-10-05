@@ -351,7 +351,7 @@
 				]
 			}
 		],
-		"details": "Each member of [`extensions`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#extensions) must be a file extension made of letters and numbers, such as `.svelte` or `.svx`. Multi-part extensions such as `.svelte.md` are also allowed."
+		"details": "Each member of [`extensions`](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/config.md#extensions) must be a file extension made of letters and numbers, such as `.svelte` or `.svx`. Multi-part extensions such as `.svelte.md` are also allowed."
 	},
 	"config_extension_missing_dot": {
 		"variants": [
@@ -363,7 +363,7 @@
 				]
 			}
 		],
-		"details": "Write [`extensions`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#extensions) with a leading dot, for example `['.svelte', '.svx']` rather than `['svelte', 'svx']`."
+		"details": "Write [`extensions`](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/config.md#extensions) with a leading dot, for example `['.svelte', '.svx']` rather than `['svelte', 'svx']`."
 	},
 	"config_invalid_adapter": {
 		"variants": [
