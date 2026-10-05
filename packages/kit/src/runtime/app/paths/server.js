@@ -43,7 +43,10 @@ export function resolve(id, params) {
 	if (relative) {
 		const store = try_get_request_store();
 
-		if (store && !store.state.prerendering?.fallback) {
+		// Relative prefixes depend on the current page URL. Queries cannot read
+		// `event.url`, and a page-relative path would be wrong anyway because
+		// query results are cached across pages — fall back to an absolute path.
+		if (store && !store.state.prerendering?.fallback && !store.state.is_in_remote_query) {
 			// the relative path depth must reflect the URL the browser is actually at, which
 			// for a data request includes the `__data.json` suffix that was stripped during routing
 			const pathname = store.event.isDataRequest
