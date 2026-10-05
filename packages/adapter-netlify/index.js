@@ -414,7 +414,6 @@ const rolldown_config = {
 	},
 	// Node built-ins are allowed, but must be prefixed with `node:`
 	// https://docs.netlify.com/edge-functions/api/#runtime-environment
-	external: builtinModules.map((id) => `node:${id}`),
 	resolve: {
 		alias: Object.fromEntries(builtinModules.map((id) => [id, `node:${id}`])),
 		mainFields: ['module', 'browser', 'main']
