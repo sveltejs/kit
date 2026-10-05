@@ -768,12 +768,9 @@ test('does not warn for server-only modules named server.js or server.ts', () =>
 					id: '/',
 					pattern: '/^/$/',
 					page: { layouts: [0], errors: [1], leaf: 2 }
-				},
-				{
-					id: '/nested',
-					pattern: '/^/nested/?$/'
 				}
 			]);
+			expect(routes.some((route) => route.endpoint)).toBe(false);
 		});
 	} finally {
 		spy.mockRestore();
