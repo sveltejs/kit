@@ -241,8 +241,9 @@ function create_routes_and_nodes(cwd, config, fallback) {
 						? component_name_pattern
 						: module_name_pattern;
 
-					// check if it is a valid route filename but missing the + prefix
-					if (pattern.test(`+${name}`)) {
+					// `server.js` / `server.ts` are valid server-only modules in Kit 3, not
+					// forgotten `+server` routes: https://svelte.dev/docs/kit/server-only-modules#Your-modules
+					if (name !== 'server' && pattern.test(`+${name}`)) {
 						w.route_file_prefix_missing({
 							corrected: `+${file.name}`,
 							file: path.join(dir, file.name)

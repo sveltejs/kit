@@ -747,6 +747,39 @@ test('only suggests a + prefix for names valid with the file extension', () => {
 	}
 });
 
+test('does not warn for server-only modules named server.js or server.ts', () => {
+	const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+	try {
+		with_routes(['+page.svelte', 'server.ts', 'nested/server.js', 'page.ts'], (dir) => {
+			const { nodes, routes } = create(dir);
+
+			expect(spy).toHaveBeenCalledTimes(1);
+			expect(spy.mock.calls[0][0]).toContainKitDiagnostic('route_file_prefix_missing', {
+				contains: ['+page.ts', path.join(cwd, dir, 'page.ts')]
+			});
+			expect(nodes.map(simplify_node)).toEqual([
+				default_layout,
+				default_error,
+				{ component: `${dir}/+page.svelte` }
+			]);
+			expect(routes.map(simplify_route)).toEqual([
+				{
+					id: '/',
+					pattern: '/^/$/',
+					page: { layouts: [0], errors: [1], leaf: 2 }
+				},
+				{
+					id: '/nested',
+					pattern: '/^/nested/?$/'
+				}
+			]);
+		});
+	} finally {
+		spy.mockRestore();
+	}
+});
+
 test('works with custom extensions', () => {
 	const { nodes, routes } = create('samples/custom-extension', {
 		extensions: ['.jazz', '.beebop', '.funk', '.svelte']
