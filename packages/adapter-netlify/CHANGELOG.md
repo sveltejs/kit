@@ -5,8 +5,6 @@
 ### Patch Changes
 
 - fix: support bare Node built-in imports and `.wasm`/font files in edge functions ([#17324](https://github.com/sveltejs/kit/pull/17324))
-- Updated dependencies:
-  - @sveltejs/kit@3.0.1
 
 ## 7.0.0
 
