@@ -747,6 +747,50 @@ test('only suggests a + prefix for names valid with the file extension', () => {
 	}
 });
 
+test('does not warn for server.ts that only exports a helper', () => {
+	const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+	try {
+		with_routes(['+page.svelte', 'server.ts', 'page.svelte'], (dir) => {
+			fs.writeFileSync(
+				path.join(cwd, dir, 'server.ts'),
+				'export function helper() {\n\treturn 1;\n}\n'
+			);
+
+			create(dir);
+
+			expect(spy).toHaveBeenCalledTimes(1);
+			expect(spy.mock.calls[0][0]).toContainKitDiagnostic('route_file_prefix_missing', {
+				contains: ['+page.svelte', path.join(cwd, dir, 'page.svelte')]
+			});
+		});
+	} finally {
+		spy.mockRestore();
+	}
+});
+
+test('warns for server.ts that exports an endpoint handler', () => {
+	const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+	try {
+		with_routes(['+page.svelte', 'server.ts'], (dir) => {
+			fs.writeFileSync(
+				path.join(cwd, dir, 'server.ts'),
+				'export function GET() {\n\treturn new Response();\n}\n'
+			);
+
+			create(dir);
+
+			expect(spy).toHaveBeenCalledTimes(1);
+			expect(spy.mock.calls[0][0]).toContainKitDiagnostic('route_file_prefix_missing', {
+				contains: ['+server.ts', path.join(cwd, dir, 'server.ts')]
+			});
+		});
+	} finally {
+		spy.mockRestore();
+	}
+});
+
 test('works with custom extensions', () => {
 	const { nodes, routes } = create('samples/custom-extension', {
 		extensions: ['.jazz', '.beebop', '.funk', '.svelte']
