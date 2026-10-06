@@ -1372,6 +1372,37 @@ test.describe('client error boundaries', () => {
 });
 
 test.describe('fork', () => {
+	test('preloading a parameterized remote query only uses the destination params once', async ({
+		page,
+		app
+	}) => {
+		/** @type {Array<string | null>} */
+		const payloads = [];
+		page.on('request', (request) => {
+			const url = new URL(request.url());
+			if (url.pathname.endsWith('/get_index')) payloads.push(url.searchParams.get('payload'));
+		});
+
+		await page.goto('/fork');
+		await app.preloadData('/fork/1');
+		await page.waitForTimeout(100);
+
+		expect(payloads).toHaveLength(1);
+		expect(payloads[0]).toBeTruthy();
+	});
+
+	test('a remote query started in a discarded preload can be started again', async ({
+		page,
+		app
+	}) => {
+		await page.goto('/fork');
+		await app.preloadData('/fork/1');
+		await app.preloadData('/fork/2');
+		await app.goto('/fork/1');
+
+		await expect(page.locator('p')).toHaveText('Index 1');
+	});
+
 	test('preloading one route must not throw errors when navigating elsewhere', async ({ page }) => {
 		await page.goto('/fork');
 		await page.locator('a[href="/fork/1"]').hover();
