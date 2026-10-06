@@ -2,7 +2,7 @@
 
 > %file% does not exist
 
-SvelteKit renders every page using an app template, which lives at `src/app.html` by default. Create this file, or point [`files.appTemplate`](https://svelte.dev/docs/kit/configuration#files) at the template you want to use.
+SvelteKit renders every page using an app template, which lives at `src/app.html` by default. Create this file, or point [`files.appTemplate`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#files) at the template you want to use.
 
 A minimal template looks like this:
 
@@ -32,25 +32,25 @@ Put `%sveltekit.head%` inside the `<head>` element and `%sveltekit.body%` inside
 
 > Invalid alias key: `%key%`
 
-Each key in the deprecated [`alias`](https://svelte.dev/docs/kit/configuration#alias) option must be a non-empty, single-line string, optionally ending in `/*`. Prefer declaring [subpath imports](https://nodejs.org/api/packages.html#subpath-imports) in the `imports` field of your `package.json` instead.
+Each key in the deprecated [`alias`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#alias) option must be a non-empty, single-line string, optionally ending in `/*`. Prefer declaring [subpath imports](https://nodejs.org/api/packages.html#subpath-imports) in the `imports` field of your `package.json` instead.
 
 ## config_alias_value_invalid
 
 > Invalid alias value: `%value%`
 
-Each value in the deprecated [`alias`](https://svelte.dev/docs/kit/configuration#alias) option must be a non-empty, single-line path, optionally ending in `/*` or a file extension. Prefer declaring [subpath imports](https://nodejs.org/api/packages.html#subpath-imports) in the `imports` field of your `package.json` instead.
+Each value in the deprecated [`alias`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#alias) option must be a non-empty, single-line path, optionally ending in `/*` or a file extension. Prefer declaring [subpath imports](https://nodejs.org/api/packages.html#subpath-imports) in the `imports` field of your `package.json` instead.
 
 ## config_app_dir_slash
 
 > `%keypath%` cannot start or end with `'/'`
 
-[`appDir`](https://svelte.dev/docs/kit/configuration#appDir) is a directory name relative to your base path, such as `_app` or `internal/app`. SvelteKit adds the surrounding slashes itself. Remove any leading or trailing `/`.
+[`appDir`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#appDir) is a directory name relative to your base path, such as `_app` or `internal/app`. SvelteKit adds the surrounding slashes itself. Remove any leading or trailing `/`.
 
 ## config_csp_trusted_types_missing
 
 > The `csp.directives['trusted-types']` option must include `'sveltekit-trusted-url'` when `serviceWorker.register` is `true`
 
-When your [CSP](https://svelte.dev/docs/kit/configuration#csp) enforces Trusted Types with `'require-trusted-types-for': ['script']`, SvelteKit registers your service worker through a Trusted Types policy called `sveltekit-trusted-url`. Add it to the allowed policies:
+When your [CSP](https://svelte.dev/docs/kit/@sveltejs-kit-vite#csp) enforces Trusted Types with `'require-trusted-types-for': ['script']`, SvelteKit registers your service worker through a Trusted Types policy called `sveltekit-trusted-url`. Add it to the allowed policies:
 
 ```js
 csp: {
@@ -61,13 +61,13 @@ csp: {
 }
 ```
 
-Alternatively, set [`serviceWorker.register`](https://svelte.dev/docs/kit/configuration#serviceWorker) to `false` and register the service worker yourself.
+Alternatively, set [`serviceWorker.register`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#serviceWorker) to `false` and register the service worker yourself.
 
 ## config_csp_trusted_html_missing
 
 > The `csp.directives['trusted-types']` option must include `'svelte-trusted-html'` unless all pages have `csr: false`
 
-When your [CSP](https://svelte.dev/docs/kit/configuration#csp) enforces Trusted Types with `'require-trusted-types-for': ['script']`, Svelte creates HTML through a Trusted Types policy called `svelte-trusted-html`. Add it to the allowed policies:
+When your [CSP](https://svelte.dev/docs/kit/@sveltejs-kit-vite#csp) enforces Trusted Types with `'require-trusted-types-for': ['script']`, Svelte creates HTML through a Trusted Types policy called `svelte-trusted-html`. Add it to the allowed policies:
 
 ```js
 csp: {
@@ -108,7 +108,7 @@ This option only accepts a number. Pass a number, or remove the option to use it
 
 > `%keypath%` should be an object
 
-This option groups related settings, so it must be a plain object (not an array or a primitive value). See the [configuration reference](https://svelte.dev/docs/kit/configuration) for the settings it accepts.
+This option groups related settings, so it must be a plain object (not an array or a primitive value). See the [configuration reference](https://svelte.dev/docs/kit/@sveltejs-kit-vite) for the settings it accepts.
 
 ## config_expected_one_of
 
@@ -120,7 +120,7 @@ This option only accepts one of the listed values. Use one of them, or remove th
 
 > `%keypath%` should be a positive integer, if specified
 
-This option must be a whole number greater than or equal to `1`. For example, [`prerender.concurrency`](https://svelte.dev/docs/kit/configuration#prerender) is the number of pages that can be prerendered simultaneously.
+This option must be a whole number greater than or equal to `1`. For example, [`prerender.concurrency`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#prerender) is the number of pages that can be prerendered simultaneously.
 
 ## config_expected_string
 
@@ -138,13 +138,13 @@ This option only accepts an array of strings, such as `['.svelte']` or `['*', '/
 
 > File extensions must be alphanumeric — saw `'%extension%'`
 
-Each member of [`extensions`](https://svelte.dev/docs/kit/configuration#extensions) must be a file extension made of letters and numbers, such as `.svelte` or `.svx`. Multi-part extensions such as `.svelte.md` are also allowed.
+Each member of [`extensions`](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/config.md#extensions) must be a file extension made of letters and numbers, such as `.svelte` or `.svx`. Multi-part extensions such as `.svelte.md` are also allowed.
 
 ## config_extension_missing_dot
 
 > Each member of %keypath% must start with `'.'` — saw `'%extension%'`
 
-Write [`extensions`](https://svelte.dev/docs/kit/configuration#extensions) with a leading dot, for example `['.svelte', '.svx']` rather than `['svelte', 'svx']`.
+Write [`extensions`](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/config.md#extensions) with a leading dot, for example `['.svelte', '.svx']` rather than `['svelte', 'svx']`.
 
 ## config_invalid_adapter
 
@@ -166,7 +166,7 @@ See [adapters](https://svelte.dev/docs/kit/adapters) for the available adapters 
 
 > `%keypath%` should be `'fail'`, `'warn'`, `'ignore'` or a custom function
 
-Prerender handlers decide what happens when SvelteKit encounters a problem while [prerendering](https://svelte.dev/docs/kit/configuration#prerender). Use `'fail'` to stop the build, `'warn'` to log a message and continue, `'ignore'` to continue silently, or pass a function that receives details about the problem and decides for itself — for example by throwing to fail the build.
+Prerender handlers decide what happens when SvelteKit encounters a problem while [prerendering](https://svelte.dev/docs/kit/@sveltejs-kit-vite#prerender). Use `'fail'` to stop the build, `'warn'` to log a message and continue, `'ignore'` to continue silently, or pass a function that receives details about the problem and decides for itself — for example by throwing to fail the build.
 
 ## config_kit_namespace
 
@@ -187,7 +187,7 @@ See the [migration guide](https://svelte.dev/docs/kit/migrating-to-sveltekit-3#C
 
 > The SvelteKit options from the Vite config must be an object
 
-Pass an options object to the `sveltekit(...)` Vite plugin, for example `sveltekit({ adapter: adapter() })`. Omit the argument entirely to use the defaults. See the [configuration reference](https://svelte.dev/docs/kit/configuration).
+Pass an options object to the `sveltekit(...)` Vite plugin, for example `sveltekit({ adapter: adapter() })`. Omit the argument entirely to use the defaults. See the [configuration reference](https://svelte.dev/docs/kit/@sveltejs-kit-vite).
 
 ## config_option_removed
 
@@ -199,7 +199,7 @@ This option no longer exists and is not needed any more. Remove it from your con
 
 > `%keypath%` has been removed in favour of `csrf.trustedOrigins`
 
-CSRF protection is always enabled in SvelteKit 3. Instead of disabling it with `checkOrigin: false`, list the external origins that are allowed to submit forms to your app in [`csrf.trustedOrigins`](https://svelte.dev/docs/kit/configuration#csrf):
+CSRF protection is always enabled in SvelteKit 3. Instead of disabling it with `checkOrigin: false`, list the external origins that are allowed to submit forms to your app in [`csrf.trustedOrigins`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#csrf):
 
 ```js
 csrf: {
@@ -217,7 +217,7 @@ Remove the option. SvelteKit now picks up [`src/instrumentation.server.js`](http
 
 > `%keypath%` has been removed. Server-side tracing is now configured via `tracing.server`
 
-Tracing is no longer experimental. Move the setting to the top-level [`tracing`](https://svelte.dev/docs/kit/configuration#tracing) option:
+Tracing is no longer experimental. Move the setting to the top-level [`tracing`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#tracing) option:
 
 ```js
 tracing: {
@@ -241,7 +241,7 @@ SvelteKit no longer generates a `$lib` alias. Declare a `#lib` [subpath import](
 
 > `%keypath%` has been removed in favour of `config.paths.origin`
 
-Move the value to [`paths.origin`](https://svelte.dev/docs/kit/configuration#paths). Besides prerendering, it is used for CSRF checks when your app's public origin can't reliably be derived from request headers.
+Move the value to [`paths.origin`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#paths). Besides prerendering, it is used for CSRF checks when your app's public origin can't reliably be derived from request headers.
 
 ## config_option_removed_vite_plugin
 
@@ -260,7 +260,7 @@ sveltekit({
 
 > `%keypath%` must be a valid origin — received `'%input%'` which contains a path, query, or hash. Use the bare origin `'%origin%'` instead
 
-An origin is just the protocol, host and optional port of a URL, such as `https://my-site.com` or `http://localhost:3000`. To deploy your app under a sub-path, use [`paths.base`](https://svelte.dev/docs/kit/configuration#paths) instead.
+An origin is just the protocol, host and optional port of a URL, such as `https://my-site.com` or `http://localhost:3000`. To deploy your app under a sub-path, use [`paths.base`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#paths) instead.
 
 ## config_origin_invalid
 
@@ -278,37 +278,37 @@ The origin describes where your app is publicly served, so it must use `http:` o
 
 > `%keypath%` option must be an absolute path, if specified
 
-[`paths.assets`](https://svelte.dev/docs/kit/configuration#paths) is for serving your app's files from a different origin, such as a CDN, so it must be a full URL like `https://cdn.example.com/my-app`. To serve your app from a sub-path of your own origin, use `paths.base` instead.
+[`paths.assets`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#paths) is for serving your app's files from a different origin, such as a CDN, so it must be a full URL like `https://cdn.example.com/my-app`. To serve your app from a sub-path of your own origin, use `paths.base` instead.
 
 ## config_paths_assets_trailing_slash
 
 > `%keypath%` option must not end with `'/'`
 
-Remove the trailing slash from [`paths.assets`](https://svelte.dev/docs/kit/configuration#paths) — for example use `https://cdn.example.com/my-app` rather than `https://cdn.example.com/my-app/`.
+Remove the trailing slash from [`paths.assets`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#paths) — for example use `https://cdn.example.com/my-app` rather than `https://cdn.example.com/my-app/`.
 
 ## config_paths_base_invalid
 
 > `%keypath%` option must either be the empty string or a root-relative path that starts but doesn't end with `'/'`
 
-[`paths.base`](https://svelte.dev/docs/kit/configuration#paths) is the sub-path your app is served from. Use `''` to serve it from the root, or a value like `/my-app` — with a leading slash and without a trailing one. It cannot be a full URL; use `paths.assets` to serve files from another origin.
+[`paths.base`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#paths) is the sub-path your app is served from. Use `''` to serve it from the root, or a value like `/my-app` — with a leading slash and without a trailing one. It cannot be a full URL; use `paths.assets` to serve files from another origin.
 
 ## config_prerender_entry_invalid
 
 > Each member of `%keypath%` must be either `'*'` or an absolute path beginning with `'/'` — saw `'%entry%'`
 
-[`prerender.entries`](https://svelte.dev/docs/kit/configuration#prerender) lists pages to start prerendering from. Use `'*'` to include every route without required parameters, or paths such as `'/blog/hello-world'`, including the leading slash.
+[`prerender.entries`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#prerender) lists pages to start prerendering from. Use `'*'` to include every route without required parameters, or paths such as `'/blog/hello-world'`, including the leading slash.
 
 ## config_server_resolution_bundle_strategy
 
 > The `router.resolution` option cannot be `'server'` if `output.bundleStrategy` is `'inline'` or `'single'`
 
-Server-side route resolution loads each route's code on demand, which requires the default `'split'` [bundle strategy](https://svelte.dev/docs/kit/configuration#output). Either set `output.bundleStrategy` to `'split'`, or set [`router.resolution`](https://svelte.dev/docs/kit/configuration#router) to `'client'`.
+Server-side route resolution loads each route's code on demand, which requires the default `'split'` [bundle strategy](https://svelte.dev/docs/kit/@sveltejs-kit-vite#output). Either set `output.bundleStrategy` to `'split'`, or set [`router.resolution`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#router) to `'client'`.
 
 ## config_server_resolution_hash
 
 > The `router.resolution` option cannot be `'server'` if `router.type` is `'hash'`
 
-Hash-based routing happens entirely in the browser and never asks the server about navigations, so it can't use server-side route resolution. Either set [`router.type`](https://svelte.dev/docs/kit/configuration#router) to `'pathname'`, or set `router.resolution` to `'client'`.
+Hash-based routing happens entirely in the browser and never asks the server about navigations, so it can't use server-side route resolution. Either set [`router.type`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#router) to `'pathname'`, or set `router.resolution` to `'client'`.
 
 ## config_unexpected_option
 
@@ -316,4 +316,4 @@ Hash-based routing happens entirely in the browser and never asks the server abo
 
 > Unexpected option `%keypath%` (did you mean `%suggestion%`?)
 
-This option isn't recognised. Check for typos, and see the [configuration reference](https://svelte.dev/docs/kit/configuration) for the supported options. The option may also have been removed or renamed in a new major version — check the [migration guide](https://svelte.dev/docs/kit/migrating-to-sveltekit-3#Configuration).
+This option isn't recognised. Check for typos, and see the [configuration reference](https://svelte.dev/docs/kit/@sveltejs-kit-vite) for the supported options. The option may also have been removed or renamed in a new major version — check the [migration guide](https://svelte.dev/docs/kit/migrating-to-sveltekit-3#Configuration).

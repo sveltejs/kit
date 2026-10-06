@@ -16,7 +16,7 @@ Break the chain by moving the import into a server-only file and passing the dat
 >
 > %config%
 
-This feature is experimental, so you need to opt in to it before you can use it. Add the option shown in the error to the options you pass to the `sveltekit(...)` Vite plugin. See the [configuration reference](https://svelte.dev/docs/kit/configuration) for details.
+This feature is experimental, so you need to opt in to it before you can use it. Add the option shown in the error to the options you pass to the `sveltekit(...)` Vite plugin. See the [configuration reference](https://svelte.dev/docs/kit/@sveltejs-kit-vite) for details.
 
 ## config_file_unsupported
 
@@ -43,7 +43,7 @@ export default defineConfig({
 
 > `$lib` has been removed. Use `#lib` instead: https://svelte.dev/docs/kit/$lib. To keep using `$lib`, add `alias: { '$lib': 'src/lib' }` to your SvelteKit config.
 
-`#lib` is a Node [subpath import](https://nodejs.org/api/packages.html#subpath-imports), which Vite, TypeScript and other tools understand without extra configuration. Replace `$lib/...` imports with `#lib/...`. If you can't migrate yet, restore the old behaviour with the (deprecated) [`alias`](https://svelte.dev/docs/kit/configuration#alias) option.
+`#lib` is a Node [subpath import](https://nodejs.org/api/packages.html#subpath-imports), which Vite, TypeScript and other tools understand without extra configuration. Replace `$lib/...` imports with `#lib/...`. If you can't migrate yet, restore the old behaviour with the (deprecated) [`alias`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#alias) option.
 
 ## module_removed_service_worker
 
@@ -60,7 +60,7 @@ The values that `$service-worker` used to provide are now available from modules
 
 > Cannot use service worker alongside `config.paths.assets`
 
-A service worker must be served from the same origin as your app, but [`paths.assets`](https://svelte.dev/docs/kit/configuration#paths) serves your build output from a different origin, such as a CDN. Remove `paths.assets`, or remove `src/service-worker.js` (or the file configured by [`files.serviceWorker`](https://svelte.dev/docs/kit/configuration#files)).
+A service worker must be served from the same origin as your app, but [`paths.assets`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#paths) serves your build output from a different origin, such as a CDN. Remove `paths.assets`, or remove `src/service-worker.js` (or the file configured by [`files.serviceWorker`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#files)).
 
 ## service_worker_invalid_import
 
@@ -78,7 +78,7 @@ On the server there's no current page for a relative URL to be resolved against,
 
 > Server files not found at `%dir%`, did you run `build` first?
 
-`vite preview` serves the output of a previous production build. Run `vite build` (usually `npm run build`) before `vite preview`, and make sure both commands use the same [`outDir`](https://svelte.dev/docs/kit/configuration#outDir).
+`vite preview` serves the output of a previous production build. Run `vite build` (usually `npm run build`) before `vite preview`, and make sure both commands use the same [`outDir`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#outDir).
 
 ## remote_prerender_not_dynamic
 

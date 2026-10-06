@@ -18,7 +18,7 @@ Auth [cookies](@sveltejs-kit#Cookies) can be checked inside the [`handle`](hooks
 
 ## Libraries
 
-The [Svelte CLI](/docs/cli) gives the option to [set up Better Auth](https://svelte.dev/docs/cli/better-auth) with a new project or add it to an existing project.
+The [Svelte CLI](/docs/cli) gives the option to [set up Better Auth](/docs/cli/better-auth) with a new project or add it to an existing project.
 
 ## Guides
 
