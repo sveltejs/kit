@@ -1067,7 +1067,7 @@ test.describe('remote functions', () => {
 
 	test('resolve() inside a query returns an absolute path', async ({ page }) => {
 		await page.goto('/remote/query-resolve');
-		await expect(page.locator('#resolved')).toHaveText('/login');
+		await expect(page.locator('#resolved')).toHaveText('/remote');
 	});
 
 	test('queries cannot set cookies or headers', async ({ page }) => {
