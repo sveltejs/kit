@@ -683,7 +683,7 @@ declare module '@sveltejs/kit' {
 			enabled: boolean;
 			/** The root span for the request. This span is named `sveltekit.handle.root`. */
 			root: Span;
-			/** The span associated with the current `handle` hook, `load` function, or form action. */
+			/** The span associated with the current `handle` hook, `load` function, form action, or `+server` handler. */
 			current: Span;
 		};
 
@@ -2100,7 +2100,7 @@ declare module '@sveltejs/kit/vite' {
 		 */
 		tracing?: {
 			/**
-			 * Enables server-side [OpenTelemetry](https://opentelemetry.io/) span emission for SvelteKit operations including the [`handle` hook](https://svelte.dev/docs/kit/hooks#handle), [`load` functions](https://svelte.dev/docs/kit/load), [form actions](https://svelte.dev/docs/kit/form-actions), and [remote functions](https://svelte.dev/docs/kit/remote-functions). Tracing — and more significantly, observability instrumentation — can have a nontrivial overhead, so consider whether you really need it, or if it might be more appropriate to turn it on in development and preview environments only.
+			 * Enables server-side [OpenTelemetry](https://opentelemetry.io/) span emission for SvelteKit operations including the [`handle` hook](https://svelte.dev/docs/kit/hooks#handle), [`load` functions](https://svelte.dev/docs/kit/load), [form actions](https://svelte.dev/docs/kit/form-actions), [`+server` handlers](https://svelte.dev/docs/kit/routing#server), and [remote functions](https://svelte.dev/docs/kit/remote-functions). Tracing — and more significantly, observability instrumentation — can have a nontrivial overhead, so consider whether you really need it, or if it might be more appropriate to turn it on in development and preview environments only.
 			 * @default false
 			 */
 			server?: boolean;

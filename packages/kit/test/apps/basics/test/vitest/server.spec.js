@@ -1446,6 +1446,47 @@ describe('tracing', () => {
 			])
 		});
 	});
+
+	test('correct spans are created for a +server handler', async () => {
+		const test_id = randomBytes(8).toString('hex');
+		const response = await get(`/tracing/endpoint?test_id=${test_id}`);
+		expect(response.status).toBe(200);
+
+		const traces = read_traces(test_id);
+		const resolve_root_span = find_resolve_root_span(traces[0]);
+		expect(resolve_root_span).not.toBeNull();
+		expect(resolve_root_span?.children).toEqual([
+			expect.objectContaining({
+				name: 'sveltekit.endpoint',
+				status: { code: 0 },
+				attributes: {
+					'http.route': '/tracing/endpoint',
+					'http.method': 'GET',
+					'custom.attribute': 'endpoint'
+				}
+			})
+		]);
+	});
+
+	test('correct spans are created for an Error thrown by a +server handler', async () => {
+		const test_id = randomBytes(8).toString('hex');
+		const response = await get(`/tracing/endpoint-error?test_id=${test_id}`);
+		expect(response.status).toBe(500);
+
+		const traces = read_traces(test_id);
+		const resolve_root_span = find_resolve_root_span(traces[0]);
+		expect(resolve_root_span).not.toBeNull();
+		expect(resolve_root_span?.children).toEqual([
+			expect.objectContaining({
+				name: 'sveltekit.endpoint',
+				status: { code: 2, message: 'Regular error from tracing endpoint test' },
+				attributes: expect.objectContaining({
+					'http.route': '/tracing/endpoint-error',
+					'sveltekit.endpoint.result.type': 'unknown_error'
+				})
+			})
+		]);
+	});
 });
 
 describe.skipIf(dev)('asset preload', () => {
