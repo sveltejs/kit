@@ -1,5 +1,11 @@
 # @sveltejs/adapter-netlify
 
+## 7.0.1
+
+### Patch Changes
+
+- fix: support bare Node built-in imports and `.wasm`/font files in edge functions ([#17324](https://github.com/sveltejs/kit/pull/17324))
+
 ## 7.0.0
 
 ### Major Changes

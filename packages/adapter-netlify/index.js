@@ -402,7 +402,9 @@ function to_import_specifier(path) {
 
 /** @satisfies {import('rolldown').BuildOptions} */
 const rolldown_config = {
-	platform: 'browser',
+	// Mirror Netlify's edge-bundler behaviour for externalising Node.js built-ins
+	// see https://github.com/netlify/build/blob/main/packages/edge-bundler/node/npm_dependencies.ts#L289-L309
+	platform: 'node',
 	output: {
 		sourcemap: true,
 		codeSplitting: false
@@ -412,9 +414,19 @@ const rolldown_config = {
 	},
 	// Node built-ins are allowed, but must be prefixed with `node:`
 	// https://docs.netlify.com/edge-functions/api/#runtime-environment
-	external: builtinModules.map((id) => `node:${id}`),
 	resolve: {
-		alias: Object.fromEntries(builtinModules.map((id) => [id, `node:${id}`]))
+		alias: Object.fromEntries(builtinModules.map((id) => [id, `node:${id}`])),
+		mainFields: ['module', 'browser', 'main']
+	},
+	// Rolldown's default does not handle these files automatically
+	// see https://github.com/rolldown/rolldown/blob/main/crates/rolldown/src/utils/prepare_build_context.rs#L320-L336
+	moduleTypes: {
+		'.wasm': 'copy',
+		'.woff': 'copy',
+		'.woff2': 'copy',
+		'.ttf': 'copy',
+		'.eot': 'copy',
+		'.otf': 'copy'
 	}
 };
 

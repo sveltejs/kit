@@ -35,3 +35,13 @@ test('treeshakes component from the server bundle if SSR is turned off', () => {
 	const edge_function = fs.readFileSync(edge_function_path, 'utf-8');
 	expect(edge_function).not.toContain('this should never appear in the server bundle');
 });
+
+test('.wasm files are copied alongside the edge function', () => {
+	const edge_function = fs.readFileSync(edge_function_path, 'utf-8');
+	const wasm_import = edge_function.match(/import\(["'](\.\/[^"']+\.wasm)["']\)/)?.[1];
+
+	expect(wasm_import).toBeDefined();
+	expect(fs.existsSync(path.resolve(path.dirname(edge_function_path), wasm_import ?? ''))).toBe(
+		true
+	);
+});

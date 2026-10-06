@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 3.0.1
+
+### Patch Changes
+
+- fix: ensure relative imports in generated types work with `nodenext` module resolution ([#17351](https://github.com/sveltejs/kit/pull/17351))
+
 ## 3.0.0
 
 ### Major Changes
