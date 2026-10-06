@@ -1,5 +1,10 @@
 import { assert, test, describe } from 'vitest';
-import { parse_isr_expiration, pattern_to_src, resolve_runtime } from './utils.js';
+import {
+	parse_isr_expiration,
+	pattern_to_src,
+	resolve_runtime,
+	validate_isr_route
+} from './utils.js';
 
 // workaround so that TypeScript doesn't follow that import which makes it pick up that file and then error on missing import aliases
 const { parse_route_id } = await import(
@@ -76,6 +81,34 @@ describe('parse_isr_expiration', () => {
 		assert.throws(
 			() => parse_isr_expiration('1.1', '/isr'),
 			/value was a string but could not be parsed as an integer, in \/isr/
+		);
+	});
+});
+
+describe('validate_isr_route', () => {
+	const route = {
+		id: '/mixed',
+		page: { methods: ['GET'] },
+		api: { methods: [] }
+	};
+
+	test.each(['GET', 'HEAD', '*'])('rejects a page with a %s endpoint', (method) => {
+		assert.throws(
+			() => validate_isr_route({ ...route, api: { methods: [method] } }),
+			/cannot use ISR\. It has a \+page and a \+server file/
+		);
+	});
+
+	test.each(['POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'QUERY'])(
+		'allows a page with a %s endpoint',
+		(method) => {
+			assert.doesNotThrow(() => validate_isr_route({ ...route, api: { methods: [method] } }));
+		}
+	);
+
+	test('allows an endpoint-only route with a fallback', () => {
+		assert.doesNotThrow(() =>
+			validate_isr_route({ ...route, page: { methods: [] }, api: { methods: ['*'] } })
 		);
 	});
 });
