@@ -3,15 +3,16 @@ import path from 'node:path';
 import { resolve_entry } from '../../utils/filesystem.js';
 import * as w from '../../messages/build-warnings.js';
 
-/** @type {Map<string, string>} */
-const previous_contents = new Map();
-
 /**
  * @param {string} file
  * @param {string} code
  */
 export function write_if_changed(file, code) {
-	if (code !== previous_contents.get(file)) {
+	// compare against the file itself rather than what this process wrote earlier: another
+	// process syncing the same project (such as `vitest run` beside `vite dev`) would
+	// otherwise rewrite every generated file with identical bytes, and the dev server
+	// reloads on each of them
+	if (code !== read(file)) {
 		write(file, code);
 	}
 }
@@ -21,9 +22,20 @@ export function write_if_changed(file, code) {
  * @param {string} code
  */
 export function write(file, code) {
-	previous_contents.set(file, code);
 	fs.mkdirSync(path.dirname(file), { recursive: true });
 	fs.writeFileSync(file, code);
+}
+
+/**
+ * @param {string} file
+ * @returns {string | undefined} the contents of the file, or `undefined` if it cannot be read
+ */
+function read(file) {
+	try {
+		return fs.readFileSync(file, 'utf-8');
+	} catch {
+		return undefined;
+	}
 }
 
 /** @type {WeakMap<TemplateStringsArray, { strings: string[], indents: string[] }>} */
