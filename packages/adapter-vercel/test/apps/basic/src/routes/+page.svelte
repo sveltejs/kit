@@ -1,3 +1,7 @@
+<script>
+	import { prerendered } from './remote-read.remote.js';
+</script>
+
 <h1>Hello from SvelteKit on Vercel</h1>
 
 <nav>
@@ -7,3 +11,5 @@
 	<a href="/prerendered">Prerendered</a>
 	<a href="/deep/nested/route">Deep Nested</a>
 </nav>
+
+<p>Remote: {await prerendered()}</p>
