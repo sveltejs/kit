@@ -323,3 +323,17 @@ export function comparable(value) {
 	const normalized = posixify(value);
 	return process.platform === 'win32' ? normalized.toLowerCase() : normalized;
 }
+
+/**
+ * Whether a plugin uses the `transformIndexHtml` hook, which SvelteKit apps don't support
+ * @param {import('vite').Plugin} plugin
+ * @returns {boolean}
+ */
+export function uses_unsupported_html_hook(plugin) {
+	// Vitest and Storybook invoke this hook for their own HTML, not the SvelteKit app
+	return (
+		!!plugin.transformIndexHtml &&
+		plugin.name !== 'vitest:browser:loader' &&
+		!plugin.name?.includes('storybook')
+	);
+}
