@@ -13,7 +13,8 @@ import {
 	is_remote_module,
 	remote_module_pattern,
 	server_only_directory_pattern,
-	server_only_module_pattern
+	server_only_module_pattern,
+	uses_unsupported_html_hook
 } from './utils.js';
 import { app_server, app_env_private } from './module_ids.js';
 
@@ -175,4 +176,18 @@ test.each([
 	]
 ])('config_snippet(%j, %j)', (path, value, expected) => {
 	expect(config_snippet(path, value)).toBe(expected);
+});
+
+test.each([
+	['app-html-transform', true],
+	['vitest:browser:loader', false],
+	['storybook:code-generator-plugin', false],
+	['vite:storybook-inject-mocker-runtime', false],
+	['vite-plugin-storybook-test', false]
+])('uses_unsupported_html_hook(%j) with transformIndexHtml', (name, expected) => {
+	expect(uses_unsupported_html_hook({ name, transformIndexHtml: () => undefined })).toBe(expected);
+});
+
+test('uses_unsupported_html_hook ignores plugins without transformIndexHtml', () => {
+	expect(uses_unsupported_html_hook({ name: 'app-plugin' })).toBe(false);
 });
