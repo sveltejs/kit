@@ -897,7 +897,20 @@ async function initialize(result, target, should_hydrate) {
 	// Removes the style node we used to avoid FOUC during development
 	if (__SVELTEKIT_DEV__) {
 		const style = document.querySelector('style[data-sveltekit]');
-		if (style) style.remove();
+		const font_faces = style?.previousElementSibling;
+
+		if (font_faces?.hasAttribute('data-sveltekit-font-faces')) {
+			if (declared_later(font_faces)) {
+				// Apply the styles Vite injected first. Taking in the removal at the same
+				// time makes the browser re-create the font faces that were kept
+				void getComputedStyle(document.documentElement).color;
+				watch_dev_font_faces(font_faces);
+			} else {
+				font_faces.remove();
+			}
+		}
+
+		style?.remove();
 	}
 
 	apply_navigation_result(result);
@@ -3791,6 +3804,63 @@ if (DEV) {
 			}
 		});
 	}
+}
+
+/** @type {Set<Element>} */
+const dev_font_faces = new Set();
+
+/** @type {MutationObserver | undefined} */
+let dev_font_faces_observer;
+
+/**
+ * Watches `@font-face` rules that were kept from the styles inlined during development (see
+ * `render_response`). They go when Vite's styles stop declaring them: updates rewrite those,
+ * and they leave the head when their module is pruned
+ * @param {Element} style
+ */
+function watch_dev_font_faces(style) {
+	dev_font_faces.add(style);
+
+	if (dev_font_faces_observer) return;
+
+	dev_font_faces_observer = new MutationObserver(check_dev_font_faces);
+	dev_font_faces_observer.observe(document.head, { childList: true });
+
+	if (import.meta.hot) {
+		import.meta.hot.on('vite:afterUpdate', check_dev_font_faces);
+	}
+}
+
+function check_dev_font_faces() {
+	for (const style of dev_font_faces) {
+		if (declared_later(style)) continue;
+
+		style.remove();
+		dev_font_faces.delete(style);
+	}
+}
+
+/**
+ * Whether each rule of a stylesheet is also declared by one of the styles that Vite injected
+ * after it and that always apply. They are children of the head, which is what's observed
+ * @param {Element} style
+ */
+function declared_later(style) {
+	/** @type {Set<string>} */
+	const declared = new Set();
+
+	for (const node of document.head.children) {
+		if (!(node instanceof HTMLStyleElement) || !node.hasAttribute('data-vite-dev-id')) continue;
+		if (!node.sheet || node.sheet.disabled || node.sheet.media.length > 0) continue;
+		if (!(style.compareDocumentPosition(node) & Node.DOCUMENT_POSITION_FOLLOWING)) continue;
+
+		for (const rule of node.sheet.cssRules) {
+			if (rule instanceof CSSFontFaceRule) declared.add(rule.cssText);
+		}
+	}
+
+	const rules = /** @type {HTMLStyleElement} */ (style).sheet?.cssRules;
+	return !!rules?.length && Array.from(rules).every((rule) => declared.has(rule.cssText));
 }
 
 /**

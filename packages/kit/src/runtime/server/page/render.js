@@ -97,6 +97,9 @@ export async function render_response({
 	// TODO if we add a client entry point one day, we will need to include inline_styles with the entry, otherwise stylesheets will be linked even if they are below inlineStyleThreshold
 	const inline_styles = new Map();
 
+	/** @type {Map<string, { css: string; split: { font_faces: string; rest: string } | null }>} */
+	const dev_styles = new Map();
+
 	/** @type {Omit<SyncRenderOutput, 'html'>} */
 	let rendered;
 
@@ -261,6 +264,10 @@ export async function render_response({
 		for (const url of node.stylesheets) stylesheets.add(url);
 		for (const font of node.fonts) fonts.set(font.file, font);
 
+		if (__SVELTEKIT_DEV__ && node.dev_styles) {
+			for (const { url, ...style } of await node.dev_styles()) dev_styles.set(url, style);
+		}
+
 		if (node.inline_styles && !client?.inline) {
 			Object.entries(await node.inline_styles()).forEach(([filename, css]) => {
 				if (typeof css === 'string') {
@@ -279,18 +286,45 @@ export async function render_response({
 	/** @param {string} path */
 	const prefixed = (path) => client_path(path, { base, assets });
 
+	let font_faces = '';
+
+	if (__SVELTEKIT_DEV__ && dev_styles.size > 0) {
+		// Moving the `@font-face` rules out of only some stylesheets could change which one wins
+		const split = Array.from(dev_styles.values()).every((style) => style.split);
+
+		for (const [url, style] of dev_styles) {
+			if (split && style.split) {
+				if (style.split.font_faces) font_faces += (font_faces && '\n') + style.split.font_faces;
+				inline_styles.set(url, style.split.rest);
+			} else {
+				inline_styles.set(url, style.css);
+			}
+		}
+	}
+
 	const style = client?.inline
 		? client.inline?.style
 		: Array.from(inline_styles.values()).join('\n');
 
-	if (style) {
+	if (font_faces) {
+		// The client keeps these after hydration while Vite's styles declare the same ones.
+		// Removing a stylesheet that declares them makes the browser re-create the page's
+		// font faces and load their fonts again
+		const attributes = ['data-sveltekit-font-faces'];
+		if (csp.style_needs_nonce) attributes.push(`nonce="${csp.nonce}"`);
+		await csp.add_style(font_faces);
+		head.add_style(font_faces, attributes);
+	}
+
+	// the client finds the `@font-face` rules above next to this, so it's there even if it's empty
+	if (style || font_faces) {
 		// We always inline all styles to avoid FOUC during development.
 		// Once that's accomplished, we find and remove the style node using the
 		// `data-sveltekit` attribute once CSR kicks in
 		const attributes = __SVELTEKIT_DEV__ ? ['data-sveltekit'] : [];
 		if (csp.style_needs_nonce) attributes.push(`nonce="${csp.nonce}"`);
-		await csp.add_style(style);
-		head.add_style(style, attributes);
+		await csp.add_style(style ?? '');
+		head.add_style(style ?? '', attributes);
 	}
 
 	/**

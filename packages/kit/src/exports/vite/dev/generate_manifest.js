@@ -6,6 +6,7 @@ import path from 'node:path';
 import { get_mime_lookup, get_runtime_base } from '../../../core/utils.js';
 import { from_fs, to_fs } from '../../../utils/vite.js';
 import { compact } from '../../../utils/array.js';
+import { split_font_faces } from '../../../utils/css.js';
 import * as e from '../../../messages/build-errors.js';
 import { styleText } from 'node:util';
 
@@ -31,6 +32,9 @@ export function generate_manifest(
 	root,
 	get_remotes
 ) {
+	/** @type {Map<string, { css: string; split: ReturnType<typeof split_font_faces> }>} */
+	const splits = new Map();
+
 	return {
 		app_dir: svelte_config.appDir,
 		app_path: svelte_config.appDir,
@@ -132,7 +136,7 @@ export function generate_manifest(
 
 				// in dev we inline all styles to avoid FOUC. this gets populated lazily so that
 				// components/stylesheets loaded via import() during `load` are included
-				result.inline_styles = async () => {
+				result.dev_styles = async () => {
 					/** @type {Set<EnvironmentModuleNode>} */
 					const deps = new Set();
 
@@ -140,8 +144,8 @@ export function generate_manifest(
 						await find_deps(vite_dev_server, module_node, deps);
 					}
 
-					/** @type {Record<string, string>} */
-					const styles = {};
+					/** @type {Awaited<ReturnType<NonNullable<SSRNode['dev_styles']>>>} */
+					const styles = [];
 
 					for (const dep of deps) {
 						if (vite.isCSSRequest(dep.url) && !vite_css_query_regex.test(dep.url)) {
@@ -150,7 +154,15 @@ export function generate_manifest(
 								: dep.url + '?inline';
 							try {
 								const mod = await runner.import(inlineCssUrl);
-								styles[dep.url] = mod.default;
+								const css = /** @type {string} */ (mod.default);
+
+								let cached = splits.get(dep.url);
+								if (cached?.css !== css) {
+									cached = { css, split: split_font_faces(css) };
+									splits.set(dep.url, cached);
+								}
+
+								styles.push({ url: dep.url, css, split: cached.split });
 							} catch {
 								// this can happen with dynamically imported modules, I think
 								// because the Vite module graph doesn't distinguish between

@@ -719,6 +719,122 @@ test.describe('Nested layouts', () => {
 	});
 });
 
+test.describe('CSS', () => {
+	test('keeps the inlined @font-face rules through hydration in dev', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		test.skip(!process.env.DEV || !javaScriptEnabled, 'styles are only inlined in dev');
+
+		// hold the page's stylesheet back until the font faces from the inlined styles have been
+		// recorded. This also makes Vite inject it in the same task as hydration
+		/** @type {() => void} */
+		let start = () => {};
+		const started = new Promise((fulfil) => (start = /** @type {() => void} */ (fulfil)));
+		await page.route(/\/css\/font-face\/styles\.css/, async (route) => {
+			await started;
+			await route.continue();
+		});
+
+		await page.goto('/css/font-face', { waitUntil: 'domcontentloaded', wait_for_started: false });
+		await page.evaluate(() => {
+			// @ts-expect-error
+			window.ssr_faces = Array.from(document.fonts).filter((face) =>
+				face.family.includes('Font Face')
+			);
+		});
+
+		start();
+		await page.locator('body.started').waitFor();
+
+		expect(
+			await page.evaluate(() => ({
+				// @ts-expect-error
+				faces: window.ssr_faces.length,
+				// re-created font faces would load their fonts again
+				// @ts-expect-error
+				kept: window.ssr_faces.every((face) => Array.from(document.fonts).includes(face)),
+				removed: document.querySelector('style[data-sveltekit]') === null,
+				color: getComputedStyle(/** @type {Element} */ (document.querySelector('.font-face'))).color
+			}))
+		).toEqual({ faces: 1, kept: true, removed: true, color: 'rgb(0, 128, 0)' });
+	});
+
+	test('removes the inlined @font-face rules the client does not declare in dev', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		test.skip(!process.env.DEV || !javaScriptEnabled, 'styles are only inlined in dev');
+
+		// hold the client back to look at the server-rendered styles
+		/** @type {() => void} */
+		let start = () => {};
+		const started = new Promise((fulfil) => (start = /** @type {() => void} */ (fulfil)));
+		await page.route(/\/runtime\/client\/entry\.js/, async (route) => {
+			await started;
+			await route.continue();
+		});
+
+		await page.goto('/css/font-face/server-only', {
+			waitUntil: 'domcontentloaded',
+			wait_for_started: false
+		});
+
+		// only the styles that Vite injects into the head, and that always apply, count as copies
+		// of the server-only face
+		expect(
+			await page.evaluate(() => {
+				const kept = /** @type {HTMLStyleElement} */ (
+					document.querySelector('style[data-sveltekit-font-faces]')
+				);
+				const font_face = Array.from(kept.sheet?.cssRules ?? []).find((rule) =>
+					rule.cssText.includes('Server Only')
+				);
+
+				/**
+				 * @param {HTMLElement} parent
+				 * @param {string} [id]
+				 */
+				const copy = (parent, id) => {
+					const style = document.createElement('style');
+					if (id) style.setAttribute('data-vite-dev-id', id);
+					style.textContent = font_face?.cssText ?? '';
+					parent.append(style);
+					return style;
+				};
+
+				copy(document.head);
+				copy(document.body, 'body');
+
+				const print = copy(document.head, 'print');
+				if (print.sheet) print.sheet.media.mediaText = 'print';
+
+				return font_face !== undefined;
+			})
+		).toBe(true);
+
+		start();
+		await page.locator('body.started').waitFor();
+
+		expect(
+			await page.evaluate(() => ({
+				kept: document.querySelector('style[data-sveltekit-font-faces]') !== null,
+				color: getComputedStyle(/** @type {Element} */ (document.querySelector('.font-face'))).color
+			}))
+		).toEqual({ kept: false, color: 'rgb(0, 128, 0)' });
+	});
+
+	test('leaves the inlined styles whole if some @font-face rules cannot be moved in dev', async ({
+		request
+	}) => {
+		test.skip(!process.env.DEV, 'styles are only inlined in dev');
+
+		const html = await (await request.get('/css/font-face/media')).text();
+		expect(html).toContain('Font Face In Media');
+		expect(html).not.toContain('data-sveltekit-font-faces');
+	});
+});
+
 test.describe('Page options', () => {
 	test('does not include <script> or <link rel="modulepreload"> with csr=false', async ({
 		page,
