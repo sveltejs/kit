@@ -55,18 +55,40 @@ export class RenderNode {
 	error;
 
 	/** @type {Record<string, any>} */
-	data = $state.raw({});
+	data;
 
 	/** @type {RenderNode | undefined} */
-	child = $state.raw();
+	child;
 
 	/**
 	 *
 	 * @param {Component} component
 	 * @param {Component | undefined} error
+	 * @param {Record<string, any>} [data]
+	 * @param {RenderNode} [child]
 	 */
-	constructor(component, error) {
+	constructor(component, error, data = {}, child = undefined) {
 		this.component = component;
 		this.error = error;
+		this.data = $state.raw(data);
+		this.child = $state.raw(child);
 	}
+}
+
+/**
+ * Initialize reactive fields with their final values, rather than mutating an empty
+ * tree. Otherwise async rendering can read the empty tree from an earlier batch.
+ * @param {Array<Pick<RenderNode, 'component' | 'error' | 'data'>>} nodes
+ * @returns {RenderNode}
+ */
+export function create_render_tree(nodes) {
+	/** @type {RenderNode | undefined} */
+	let tree;
+
+	for (let i = nodes.length - 1; i >= 0; i -= 1) {
+		const { component, error, data } = nodes[i];
+		tree = new RenderNode(component, error, data, tree);
+	}
+
+	return /** @type {RenderNode} */ (tree);
 }

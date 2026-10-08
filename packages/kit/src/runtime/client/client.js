@@ -63,7 +63,7 @@ import {
 import { noop_span } from '../../telemetry.js';
 import { read_ndjson } from './ndjson.js';
 import Root from '../components/root.svelte';
-import { Props, RenderNode } from '../props.svelte.js';
+import { Props, RenderNode, create_render_tree } from '../props.svelte.js';
 import { init_transport, parse, stringify } from '#app/internal/transport';
 import { build_error_chain, nearest_error_pages } from '../error-chain.js';
 import * as e from '../../messages/client-errors.js';
@@ -900,6 +900,9 @@ async function initialize(result, target, should_hydrate) {
 		if (style) style.remove();
 	}
 
+	// No component has observed the placeholder root yet. Install the complete tree
+	// without a reactive write that async rendering could rewind to its empty state.
+	props.tree = result.props.tree;
 	apply_navigation_result(result);
 
 	// TODO treeshake `hydrate` in csr mode
@@ -1013,8 +1016,8 @@ async function get_navigation_result_from_branch({
 		errors &&
 		(await build_error_chain(branch, errors, (loader) => loader().then((e) => e.component)));
 
-	let current_node = result.props.tree;
-	let current_depth = 1;
+	/** @type {Array<Pick<RenderNode, 'component' | 'error' | 'data'>>} */
+	const nodes = [];
 
 	/** @type {RenderNode | undefined} */
 	let previous_node = props.tree;
@@ -1032,33 +1035,24 @@ async function get_navigation_result_from_branch({
 			!previous_node ||
 			node?.data !== prev?.data
 		) {
-			current_node.data = { ...data, ...node.data };
+			data = { ...data, ...node.data };
 			data_changed = true;
 		} else {
 			// use existing object — prevents effects re-running unnecessarily
-			current_node.data = previous_node.data;
+			data = previous_node.data;
 		}
 
-		data = current_node.data;
+		nodes.push({
+			component: node.node.component,
+			// the root boundary stays unarmed
+			error: nodes.length === 0 ? undefined : error_components?.[nodes.length],
+			data
+		});
 
-		if (i < branch.length - 1) {
-			let next_index = i + 1;
-			while (next_index < branch.length && !branch[next_index]) {
-				next_index += 1;
-			}
-
-			const next = branch[next_index];
-
-			if (next) {
-				current_node = current_node.child = new RenderNode(
-					next.node.component,
-					error_components?.[current_depth++]
-				);
-
-				previous_node = previous_node?.child;
-			}
-		}
+		previous_node = previous_node?.child;
 	}
+
+	result.props.tree = create_render_tree(nodes);
 
 	const page_changed =
 		!current.url ||
