@@ -11,6 +11,7 @@ import {
 	get_config_aliases,
 	normalize_id,
 	is_remote_module,
+	is_server_only_path,
 	remote_module_pattern,
 	server_only_directory_pattern,
 	server_only_module_pattern,
@@ -73,6 +74,37 @@ test('recognizes server-only module filenames', () => {
 	expect(server_only_module_pattern.test('dir/module.serverish.js')).toBe(false);
 	expect(server_only_module_pattern.test('dir/server/module.js')).toBe(false);
 	expect(server_only_directory_pattern.test('dir/server/module.js')).toBe(true);
+});
+
+test('only checks the part of the path inside the project root for server-only modules', () => {
+	/**
+	 * @param {string} id
+	 * @param {string} root
+	 */
+	const check = (id, root) =>
+		is_server_only_path(id, {
+			root,
+			node_modules: `${root}/node_modules`,
+			routes: `${root}/src/routes`,
+			assets: `${root}/static`
+		});
+
+	expect(check('/app/src/lib/server/db.js', '/app')).toBe(true);
+	expect(check('/app/src/lib/db.server.js', '/app')).toBe(true);
+	expect(check('/app/server/db.js', '/app')).toBe(true);
+	expect(check('/app/src/lib/db.js', '/app')).toBe(false);
+	expect(check('/app/src/routes/server/+page.svelte', '/app')).toBe(false);
+	expect(check('/app/static/server/file.js', '/app')).toBe(false);
+	expect(check('/app/node_modules/pkg/server/index.js', '/app')).toBe(false);
+	expect(check('/outside/server/db.js', '/app')).toBe(false);
+
+	// the project itself is inside a `server` directory
+	expect(check('/repo/server/.svelte-kit/generated/build/app-manifest.js', '/repo/server')).toBe(
+		false
+	);
+	expect(check('/repo/server/src/lib/db.js', '/repo/server')).toBe(false);
+	expect(check('/repo/server/src/lib/server/db.js', '/repo/server')).toBe(true);
+	expect(check('/repo/server/src/lib/db.server.js', '/repo/server')).toBe(true);
 });
 
 test('recognizes remote module filenames', () => {
