@@ -1,9 +1,8 @@
 /** @import { RemoteQueryFunction } from '$app/server' */
 import { app_dir, base } from '#app/paths';
-import { _goto } from '../client.js';
 import { QUERY_FUNCTION_ID, remote_request } from './shared.svelte.js';
 import { QueryProxy } from './query/proxy.js';
-import { HandledHttpError } from '@sveltejs/kit/internal';
+import { HandledHttpError, Redirect } from '@sveltejs/kit/internal';
 
 /**
  * @param {string} id
@@ -49,18 +48,7 @@ export function query_batch(id) {
 						});
 
 						if (response.redirect) {
-							// Use internal version to allow redirects to external URLs
-							await _goto(response.redirect);
-
-							// settle all batched promises (with `undefined`, like a redirect
-							// from a non-batched query) so that callers don't hang forever
-							for (const resolvers of batched.values()) {
-								for (const { resolve } of resolvers) {
-									resolve(undefined);
-								}
-							}
-
-							return;
+							throw new Redirect(307, response.redirect);
 						}
 
 						const results = response._;

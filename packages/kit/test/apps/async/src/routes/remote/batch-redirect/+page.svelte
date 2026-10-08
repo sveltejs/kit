@@ -7,7 +7,7 @@
 		status = 'pending';
 
 		try {
-			await batch_redirect('a');
+			await Promise.all([batch_redirect('a'), batch_redirect('b')]);
 			status = 'resolved';
 		} catch {
 			status = 'rejected';

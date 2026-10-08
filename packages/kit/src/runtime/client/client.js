@@ -88,15 +88,12 @@ const ICON_REL_ATTRIBUTES = new Set(['icon', 'shortcut icon', 'apple-touch-icon'
 let errored = false;
 
 /**
- * `reset` functions for `<svelte:boundary>`s in the generated root that have
- * failed. A failed boundary stays failed until `reset()` is called — prop
- * updates alone don't re-render its content — so without resetting, a client
- * navigation away from a render error would leave the stale `+error.svelte`
- * mounted. The boundary's `onerror` populates this array; `navigate` drains it
- * after applying the new props. See sveltejs/kit#15694.
- * @type {Set<() => void>}
+ * Failed boundary replacements and the navigation currently retrying them
+ * New failures have no owner, while pending retries stay available so that a
+ * superseding navigation can replace their pending content before settling
+ * @type {Map<() => void, {} | null>}
  */
-const resetters = new Set();
+const resetters = new Map();
 
 // We track information associated with each history entry in sessionStorage,
 // rather than on history.state itself, because when navigation is driven by
@@ -503,7 +500,7 @@ async function _start(_app, _target, data) {
 		tree,
 		form: undefined,
 		error: undefined,
-		onerror: (_, reset) => resetters.add(reset)
+		onerror: (_, reset) => resetters.set(reset, null)
 	});
 
 	const history_metadata = get_history_metadata();
@@ -2178,23 +2175,43 @@ async function navigate({
 			// `fork.commit()` applies the preloaded state synchronously before the
 			// first `await`, so reset any previously-failed boundaries now so the
 			// stale `+error.svelte` is torn down. See sveltejs/kit#15694.
-			for (const reset_boundary of resetters) {
+			for (const [reset_boundary] of resetters) {
+				resetters.set(reset_boundary, nav_token);
 				reset_boundary();
 			}
-			resetters.clear();
+			commit_promise = commit_promise.then(settled);
 		} else {
 			apply_navigation_result(navigation_result);
+
+			// Replace retries from superseded navigations before waiting for their pending work
+			for (const [reset_boundary, owner] of resetters) {
+				if (owner !== null) {
+					resetters.set(reset_boundary, nav_token);
+					reset_boundary();
+				}
+			}
 
 			// Reset boundaries that failed on a previous navigation once the new props have
 			// flushed (see sveltejs/kit#15694). Resetting first re-renders the old content at
 			// a depth the new tree may not have, stranding the stale `+error.svelte`.
 			commit_promise = settled().then(() => {
-				for (const reset_boundary of resetters) {
-					reset_boundary();
+				if (navigation_token !== nav_token) return;
+
+				for (const [reset_boundary, owner] of resetters) {
+					if (owner === null) {
+						resetters.set(reset_boundary, nav_token);
+						reset_boundary();
+					}
 				}
-				resetters.clear();
+				return settled();
 			});
 		}
+
+		commit_promise = commit_promise.then(() => {
+			for (const [reset_boundary, owner] of resetters) {
+				if (owner === nav_token) resetters.delete(reset_boundary);
+			}
+		});
 
 		has_navigated = true;
 	} else {
