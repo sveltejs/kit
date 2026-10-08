@@ -1,5 +1,19 @@
 # @sveltejs/kit
 
+## 3.1.0
+
+### Minor Changes
+
+- feat: emit a `sveltekit.endpoint` span for `+server` handlers when server tracing is enabled ([#17325](https://github.com/sveltejs/kit/pull/17325))
+
+### Patch Changes
+
+- fix: don't treat every module as server-only when the project is inside a `server` directory ([#17376](https://github.com/sveltejs/kit/pull/17376))
+
+- fix: leave generated files alone when their contents are unchanged ([#17310](https://github.com/sveltejs/kit/pull/17310))
+
+- fix: don't warn about Storybook's Vite plugins that use `transformIndexHtml` ([#17373](https://github.com/sveltejs/kit/pull/17373))
+
 ## 3.0.1
 
 ### Patch Changes
