@@ -172,36 +172,3 @@ export function analyze(file, extensions) {
 		is_svelte: !!svelte_extension
 	};
 }
-
-const comparator = /^(\^|~|[<>]=?|=)?v?(\d+|[x*])((?:\.(?:\d+|[x*])){0,2})(?:[-+][\w.+-]+)?$/i;
-
-/**
- * Whether a version range includes releases older than Svelte 4. Version specs that
- * are not semver ranges, e.g. "latest" or "next" or catalog references, do not
- *
- * @param {string} range
- * @returns {boolean}
- */
-export function predates_svelte_4(range) {
-	return range.split('||').some((set) => {
-		const comparators = set
-			.trim()
-			.replace(/\s+-\s+/, ' <=')
-			.replace(/([<>=~^])\s+/g, '$1')
-			.split(/\s+/);
-
-		return comparators.every((str) => {
-			if (str === '') return true;
-
-			const match = comparator.exec(str);
-			if (!match) return false;
-
-			const [, operator = '', major, rest] = match;
-			// upper bounds and wildcards do not raise the lowest allowed version
-			if (operator[0] === '<' || !/\d/.test(major)) return true;
-
-			// `>3` and `>3.x` start at 4.0.0
-			return +major + Number(operator === '>' && /^(\.[x*]|$)/i.test(rest)) < 4;
-		});
-	});
-}

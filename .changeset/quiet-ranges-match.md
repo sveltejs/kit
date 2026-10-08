@@ -2,4 +2,4 @@
 '@sveltejs/package': patch
 ---
 
-chore: remove dependency on semver
+fix: emit component types for the installed Svelte version, rather than the oldest one the `svelte` dependency range allows

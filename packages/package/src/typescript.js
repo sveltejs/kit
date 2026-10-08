@@ -1,10 +1,10 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { createRequire } from 'node:module';
+import { VERSION } from 'svelte/compiler';
 import { posixify, walk } from './filesystem.js';
-import { predates_svelte_4, resolve_aliases, write } from './utils.js';
+import { resolve_aliases, write } from './utils.js';
 import { emitDts } from 'svelte2tsx';
-import { load_pkg_json } from './config.js';
 
 /**
  * Generates d.ts files by invoking TypeScript's "emit d.ts files from input files".
@@ -14,25 +14,20 @@ import { load_pkg_json } from './config.js';
  * @param {string} input
  * @param {string} output
  * @param {string} final_output
- * @param {string} cwd
  * @param {Record<string, string>} alias
  * @param {import('./types.js').File[]} files
  * @param {string | undefined} tsconfig
  */
-export async function emit_dts(input, output, final_output, cwd, alias, files, tsconfig) {
+export async function emit_dts(input, output, final_output, alias, files, tsconfig) {
 	const tmp = `${output}/__package_types_tmp__`;
 	fs.rmSync(tmp, { force: true, recursive: true });
 	fs.mkdirSync(tmp, { recursive: true });
 
 	const require = createRequire(import.meta.url);
-	const pkg = load_pkg_json(cwd);
-	const svelte_dep = pkg.peerDependencies?.svelte || pkg.dependencies?.svelte || '3.0';
 	await emitDts({
 		libRoot: input,
 		svelteShimsPath: require.resolve(
-			predates_svelte_4(svelte_dep)
-				? 'svelte2tsx/svelte-shims.d.ts'
-				: 'svelte2tsx/svelte-shims-v4.d.ts'
+			VERSION.startsWith('3.') ? 'svelte2tsx/svelte-shims.d.ts' : 'svelte2tsx/svelte-shims-v4.d.ts'
 		),
 		declarationDir: tmp,
 		tsconfig
