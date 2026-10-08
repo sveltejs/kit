@@ -1,5 +1,11 @@
 # @sveltejs/package
 
+## 3.0.1
+
+### Patch Changes
+
+- fix: emit component types for the installed Svelte version, rather than the oldest one the `svelte` dependency range allows ([#17330](https://github.com/sveltejs/kit/pull/17330))
+
 ## 3.0.0
 
 ### Major Changes
