@@ -1,9 +1,8 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { createRequire } from 'node:module';
-import { VERSION } from 'svelte/compiler';
 import { posixify, walk } from './filesystem.js';
-import { resolve_aliases, write } from './utils.js';
+import { predates_svelte_4, resolve_aliases, write } from './utils.js';
 import { emitDts } from 'svelte2tsx';
 
 /**
@@ -27,7 +26,7 @@ export async function emit_dts(input, output, final_output, alias, files, tsconf
 	await emitDts({
 		libRoot: input,
 		svelteShimsPath: require.resolve(
-			VERSION.startsWith('3.') ? 'svelte2tsx/svelte-shims.d.ts' : 'svelte2tsx/svelte-shims-v4.d.ts'
+			predates_svelte_4 ? 'svelte2tsx/svelte-shims.d.ts' : 'svelte2tsx/svelte-shims-v4.d.ts'
 		),
 		declarationDir: tmp,
 		tsconfig
