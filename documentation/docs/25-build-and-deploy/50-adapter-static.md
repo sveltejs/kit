@@ -136,6 +136,14 @@ on:
   push:
     branches: 'main'
 
+permissions:
+  contents: read
+  pages: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
 jobs:
   build_site:
     runs-on: ubuntu-latest
@@ -146,11 +154,9 @@ jobs:
       # If you're using pnpm, add this step then change the commands and cache key below to use `pnpm`
       # - name: Install pnpm
       #   uses: pnpm/action-setup@v6
-      #   with:
-      #     version: 8
 
       - name: Install Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm
@@ -158,9 +164,13 @@ jobs:
       - name: Install dependencies
         run: npm i
 
+      - name: Configure Pages
+        id: pages
+        uses: actions/configure-pages@v6
+
       - name: build
         env:
-          BASE_PATH: '/${{ github.event.repository.name }}'
+          BASE_PATH: ${{ steps.pages.outputs.base_path }}
         run: |
           npm run build
 
@@ -169,6 +179,8 @@ jobs:
         with:
           # this should match the `pages` option in your adapter-static options
           path: 'build/'
+          # keep dotfiles such as `static/.well-known`
+          include-hidden-files: true
 
   deploy:
     needs: build_site
