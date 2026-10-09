@@ -131,8 +131,8 @@ export async function render_response({
 				: event.url.pathname;
 			({ base, assets } = resolve_paths(pathname));
 
-			// resolve e.g. '../..' against current location, then remove trailing slash
-			base_expression = `new URL(${s(base)}, location).pathname.slice(0, -1)`;
+			// resolve e.g. '../../' against current location, then remove trailing slash
+			base_expression = `new URL(${s(base + '/')}, location).pathname.slice(0, -1)`;
 		} else if (__SVELTEKIT_HASH_ROUTING__) {
 			// we have to assume that we're in the right place
 			base_expression = "new URL('.', location).pathname.slice(0, -1)";
