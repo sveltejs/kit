@@ -1371,6 +1371,53 @@ test.describe('client error boundaries', () => {
 	});
 });
 
+test.describe('onNavigate', () => {
+	test('a navigation superseded before its render settles does not run its onNavigate return value', async ({
+		page
+	}) => {
+		await page.goto('/navigation-settle');
+		await page.evaluate(() => {
+			window.render_gate = new Promise((fulfil) => (window.open_render_gate = fulfil));
+		});
+
+		// the navigation commits, then waits for its render to settle
+		await page.locator('a[href="/navigation-settle/held"]').click();
+		await expect(page).toHaveURL('/navigation-settle/held');
+
+		// a newer navigation starts before the render settles
+		await page.locator('a[href="/navigation-settle/other"]').click();
+		await expect(page).toHaveURL('/navigation-settle/other');
+		await page.evaluate(() => window.open_render_gate('open'));
+
+		await expect(page.locator('p')).toHaveText('other');
+		await expect
+			.poll(() => page.evaluate(() => window.after_navigate_log))
+			.toEqual(['/navigation-settle/other', 'shared']);
+	});
+
+	test('a navigation superseded by a shallow navigation before its render settles does not run its onNavigate return value', async ({
+		page
+	}) => {
+		await page.goto('/navigation-settle');
+		await page.evaluate(() => {
+			window.render_gate = new Promise((fulfil) => (window.open_render_gate = fulfil));
+		});
+
+		// the navigation commits, then waits for its render to settle
+		await page.locator('a[href="/navigation-settle/held"]').click();
+		await expect(page).toHaveURL('/navigation-settle/held');
+
+		// a newer shallow navigation starts, and can finish, before the render settles
+		await page.locator('button', { hasText: 'shallow' }).click();
+		await expect(page).toHaveURL('/navigation-settle/other');
+		await page.evaluate(() => window.open_render_gate('open'));
+
+		await expect
+			.poll(() => page.evaluate(() => window.after_navigate_log))
+			.toEqual(['/navigation-settle/other', 'shared']);
+	});
+});
+
 test.describe('fork', () => {
 	test('preloading one route must not throw errors when navigating elsewhere', async ({ page }) => {
 		await page.goto('/fork');
@@ -1379,5 +1426,34 @@ test.describe('fork', () => {
 
 		await expect(page).toHaveURL('/fork?key=value');
 		await expect(page.locator('a[href="/fork/1"]')).toBeVisible();
+	});
+
+	test('a navigation superseded while onNavigate is pending discards its preload fork', async ({
+		page,
+		app
+	}) => {
+		await page.goto('/fork/superseded');
+
+		const subscribers = () => page.evaluate(() => window.fork_store_subscribers ?? 0);
+		const held = () => page.evaluate(() => window.held_navigations?.length);
+
+		// the fork renders the preloaded page, which subscribes to the store
+		await app.preloadData('/fork/superseded/preloaded');
+		await expect.poll(subscribers).toBe(1);
+
+		// the navigation takes over the fork, then waits in onNavigate
+		await page.locator('a[href="/fork/superseded/preloaded"]').click();
+		await expect.poll(held).toBe(1);
+
+		await page.locator('a[href="/fork/superseded/other"]').click();
+		await expect.poll(held).toBe(2);
+
+		// the superseded navigation aborts, and its fork must be discarded
+		await page.evaluate(() => window.held_navigations[0]());
+		await expect.poll(subscribers).toBe(0);
+
+		await page.evaluate(() => window.held_navigations[1]());
+		await expect(page).toHaveURL('/fork/superseded/other');
+		await expect(page.locator('p')).toHaveText('other');
 	});
 });
