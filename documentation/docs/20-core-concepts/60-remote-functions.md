@@ -732,6 +732,40 @@ You can prevent sensitive data (such as passwords and credit card numbers) from 
 
 In this example, if the data does not validate, only the first `<input>` will be populated when the page reloads.
 
+### Pending submissions
+
+Each form has a `pending` property that reflects how many submissions are currently in progress. It is `0` when nothing is in flight, and becomes greater than `0` as soon as a submission starts — including while the data is being validated client-side, which happens _before_ the request is sent:
+
+```svelte
+<!--- file: src/routes/blog/new/+page.svelte --->
+<script>
+	import { createPost } from '../data.remote';
+</script>
+
+<h1>Create a new post</h1>
+
+<form {...createPost}>
+	<fieldset disabled={!!createPost.pending}>
+		<label>
+			<h2>Title</h2>
+			<input {...createPost.fields.title.as('text')} />
+		</label>
+
+		<button>Publish!</button>
+	</fieldset>
+</form>
+```
+
+Wrapping the contents in a disabled `<fieldset>` — or putting `disabled={!!createPost.pending}` on individual inputs and buttons — prevents the user from submitting the same data twice, or from editing fields while a submission is in flight. Because `pending` is a number rather than a boolean, it can also be used to report progress:
+
+```svelte
+<button disabled={!!createPost.pending}>
+	{#if createPost.pending}saving...{:else}Publish!{/if}
+</button>
+```
+
+> [!NOTE] `pending` only counts submissions that SvelteKit performs itself — those handled by progressive enhancement, and those triggered by `form.submit()`. A submission the browser carries out on its own, as happens when JavaScript is unavailable, never increments it, since the page is being torn down anyway.
+
 ### Returns and redirects
 
 The example above uses [`redirect(...)`](@sveltejs-kit#redirect), which sends the user to the newly created page. Alternatively, the callback could return data, in which case it would be available as `createPost.result`:
