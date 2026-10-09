@@ -10,7 +10,6 @@
 	onclick={() => {
 		// @ts-expect-error set is not in the types; we wanna test here that we guard against mutation in goto, too
 		page.url.searchParams.set('q', 'test');
-		// @ts-expect-error
 		goto(page.url);
 	}}>test</button
 >
