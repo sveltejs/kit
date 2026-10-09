@@ -45,7 +45,13 @@ export function resolve_paths(pathname) {
 	if (!relative) return { base, assets };
 
 	const segments = pathname.slice(base.length).split('/').slice(2);
-	const relative_base = segments.map(() => '..').join('/') || '.';
+
+	// on `/a/b/c` without a trailing slash, `.` resolves to `/a/b/`, so relative paths need to
+	// start with `./c` instead
+	const relative_base =
+		base && pathname === base
+			? `./${base.split('/').at(-1)}`
+			: segments.map(() => '..').join('/') || '.';
 
 	return {
 		base: relative_base,

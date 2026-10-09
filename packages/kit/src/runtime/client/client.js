@@ -965,17 +965,12 @@ async function get_navigation_result_from_branch({
 	route,
 	form
 }) {
+	// if `paths.base === '/a/b/c`, then the root route defaults to `/a/b/c/`
 	/** @type {import('types').TrailingSlash} */
-	let slash = 'never';
+	let slash = base && (url.pathname === base || url.pathname === base + '/') ? 'always' : 'never';
 
-	// if `paths.base === '/a/b/c`, then the root route is always `/a/b/c/`, regardless of
-	// the `trailingSlash` route option, so that relative paths to JS and CSS work
-	if (base && (url.pathname === base || url.pathname === base + '/')) {
-		slash = 'always';
-	} else {
-		for (const node of branch) {
-			if (node?.slash !== undefined) slash = node.slash;
-		}
+	for (const node of branch) {
+		if (node?.slash !== undefined) slash = node.slash;
 	}
 
 	url.pathname = normalize_path(url.pathname, slash);
