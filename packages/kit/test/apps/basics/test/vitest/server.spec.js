@@ -331,6 +331,19 @@ describe('Endpoints', () => {
 		expect(await html_response.text()).toContain('Hi');
 	});
 
+	test('content negotiation: requests that rank text/html below another type hit endpoint', async () => {
+		// the accept header of SimplePie-based feed readers such as FreshRSS
+		const response = await get('/routing/content-negotiation', {
+			headers: {
+				accept:
+					'application/atom+xml, application/rss+xml, application/rdf+xml;q=0.9, application/xml;q=0.8, text/xml;q=0.8, text/html;q=0.7, unknown/unknown;q=0.1, application/unknown;q=0.1, */*;q=0.1'
+			}
+		});
+
+		expect(response.status).toBe(200);
+		expect(await response.text()).toBe('GET');
+	});
+
 	test('multiple set-cookie on endpoints using GET', async () => {
 		const response = await get('/set-cookie');
 
