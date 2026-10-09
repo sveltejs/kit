@@ -2,45 +2,7 @@
 title: Advanced routing
 ---
 
-## Route parameters
-
-A route parameter is a segment wrapped in brackets. `src/routes/articles/[articleId]` matches `/articles/hello-world`, and the bracketed name is available as `params.articleId`. This is the only thing named `articleId` — the data you look up with it can be called whatever you like.
-
-In a `load` function, it arrives on the event object:
-
-```js
-/// file: src/routes/articles/[articleId]/+page.js
-// @filename: ambient.d.ts
-export declare const articles: { id: string; title: string }[];
-// @filename: index.js
-// ---cut---
-import { articles } from '../../articles.js';
-
-/** @type {import('./$types').PageLoad} */
-export function load({ params }) {
-	const { articleId } = params;
-
-	return {
-		article: articles.find((entry) => entry.id === articleId)
-	};
-}
-```
-
-As of 2.24, pages also receive a `params` prop, which is useful alongside [remote functions](remote-functions):
-
-```svelte
-<!--- file: src/routes/articles/[articleId]/+page.svelte --->
-<script>
-	import { getArticle } from '../../articles.remote';
-
-	/** @type {import('./$types').PageProps} */
-	let { params } = $props();
-
-	const article = $derived(await getArticle(params.articleId));
-</script>
-```
-
-Route parameters are always strings unless you attach a [matcher](#Matching) that transforms them. Values are decoded, so `%20` in the URL arrives as a space.
+For an introduction to routing and how to access route parameters, see [Routing](routing).
 
 ## Rest parameters
 
