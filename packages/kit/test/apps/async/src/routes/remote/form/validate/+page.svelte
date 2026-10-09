@@ -1,5 +1,11 @@
 <script>
-	import { issue_path_form, my_form, my_form_2, unmount_form } from './form.remote.ts';
+	import {
+		issue_path_form,
+		my_form,
+		my_form_2,
+		unmount_form,
+		redirect_form
+	} from './form.remote.ts';
 	import * as v from 'valibot';
 
 	const schema = v.object({
@@ -15,6 +21,12 @@
 	let error = $state(false);
 	let mounted = $state(true);
 	let unmount_error = $state('no error');
+	let validation_count = $state(0);
+	let validation_error = $state('');
+
+	$effect(() => {
+		redirect_form.fields.allIssues();
+	});
 </script>
 
 <form
@@ -101,3 +113,28 @@
 	unmount then validate
 </button>
 <p id="unmount-error">{unmount_error}</p>
+
+<form
+	id="redirect-form"
+	{...redirect_form.enhance(async ({ submit }) => {
+		await submit();
+	})}
+>
+	<input {...redirect_form.fields.answer.as('text')} />
+	<button>save</button>
+	<button
+		type="button"
+		onclick={async () => {
+			try {
+				await redirect_form.validate();
+				validation_count++;
+			} catch (e) {
+				validation_error = /** @type {Error} */ (e).message;
+			}
+		}}>validate redirect form</button
+	>
+	<p id="redirect-validation-count">{validation_count}</p>
+	<p id="redirect-validation-error">{validation_error}</p>
+	<p id="redirect-issues">{JSON.stringify(redirect_form.fields.allIssues() ?? [])}</p>
+	<p id="redirect-submitted">{redirect_form.submitted}</p>
+</form>
