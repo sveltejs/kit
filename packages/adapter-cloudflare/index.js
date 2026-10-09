@@ -222,27 +222,42 @@ export default function (options = {}) {
  * @returns {Plugin}
  */
 function virtual_workers_module(options, stub_import) {
+	// shared so that concurrent servers start one proxy and only the last close disposes it
 	const setup = async () => {
-		if (globalThis.__sveltekit_cloudflare_platform) return;
-		const proxy = await getPlatformProxy(options);
-		// We store the platform proxy on globalThis so that our virtual workers module
-		// can access the same instance that we use here to populate `caches` and `cf` (above).
-		globalThis.__sveltekit_cloudflare_platform = proxy;
-		/** @type {any} */ (globalThis).caches = proxy.caches;
+		const shared = (globalThis.__sveltekit_cloudflare_platform_setup ??= {
+			servers: 0,
+			proxy: getPlatformProxy(options)
+		});
+		shared.servers += 1;
+		try {
+			const proxy = await shared.proxy;
+			// We store the platform proxy on globalThis so that our virtual workers module
+			// can access the same instance that we use here to populate `caches` and `cf`.
+			globalThis.__sveltekit_cloudflare_platform = proxy;
+			/** @type {any} */ (globalThis).caches = proxy.caches;
+		} catch (error) {
+			// let the next server retry
+			if (globalThis.__sveltekit_cloudflare_platform_setup === shared) {
+				globalThis.__sveltekit_cloudflare_platform_setup = undefined;
+			}
+			throw error;
+		}
 	};
 	const dispose = async () => {
-		const proxy = globalThis.__sveltekit_cloudflare_platform;
+		const shared = globalThis.__sveltekit_cloudflare_platform_setup;
+		if (!shared) return;
+		shared.servers -= 1;
+		if (shared.servers > 0) return;
+		globalThis.__sveltekit_cloudflare_platform_setup = undefined;
 		globalThis.__sveltekit_cloudflare_platform = undefined;
-		await proxy?.dispose();
+		await (await shared.proxy).dispose();
 	};
 	return {
 		name: 'vite-plugin-sveltekit-adapter-cloudflare-virtual-workers-module',
 		configureServer: setup,
 		configurePreviewServer: setup,
-		closeServer({ reason }) {
-			// a restarting server is created before the old one closes, so it inherits the proxy
-			if (reason === 'close') return dispose();
-		},
+		// a restarting server is set up before the old one closes, so the proxy survives
+		closeServer: dispose,
 		closePreviewServer: dispose,
 		resolveId: {
 			filter: { id: exactRegex('cloudflare:workers') },
