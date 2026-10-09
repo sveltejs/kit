@@ -33,6 +33,7 @@ defaults:
 
 jobs:
   build:
+    name: ${{ inputs.variant }} / build
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -74,6 +75,7 @@ jobs:
           retention-days: 1
 
   deploy:
+    name: ${{ inputs.variant }} / deploy
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -134,6 +136,7 @@ jobs:
           retention-days: 1
 
   test:
+    name: ${{ inputs.variant }} / test
     needs: deploy
     runs-on: ubuntu-latest
     timeout-minutes: 15
