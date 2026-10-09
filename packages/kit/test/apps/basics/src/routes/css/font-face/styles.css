@@ -1,0 +1,9 @@
+@font-face {
+	font-family: 'Font Face';
+	src: url('../../asset-preload/shlop.woff2') format('woff2');
+}
+
+.font-face {
+	color: green;
+	font-family: 'Font Face', sans-serif;
+}

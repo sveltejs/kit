@@ -60,6 +60,54 @@ test.describe('Filesystem updates', () => {
 		}
 	});
 
+	test('Font faces kept from the inlined styles follow HMR updates', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		test.skip(!process.env.DEV || !javaScriptEnabled);
+
+		const fonts_file = fileURLToPath(new URL('../src/routes/font-face/fonts.js', import.meta.url));
+		const styles_file = fileURLToPath(
+			new URL('../src/routes/font-face/styles.css', import.meta.url)
+		);
+		const fonts_contents = fs.readFileSync(fonts_file, 'utf-8');
+		const styles_contents = fs.readFileSync(styles_file, 'utf-8');
+
+		const ranges = () =>
+			page.evaluate(() =>
+				Array.from(document.fonts)
+					.filter((face) => face.family.includes('Hot Face'))
+					.map((face) => face.unicodeRange)
+			);
+
+		try {
+			await page.goto('/font-face');
+			expect(await page.locator('style[data-sveltekit-font-faces]').count()).toBe(1);
+
+			// an edited face replaces the kept one
+			fs.writeFileSync(styles_file, styles_contents.replace('U+0-FF', 'U+41'));
+			await expect.poll(ranges).toEqual(['U+41']);
+
+			fs.writeFileSync(styles_file, styles_contents);
+			await page.waitForTimeout(500); // this is the rare time we actually need waitForTimeout; we have no visibility into whether the module graph has been invalidated
+			await page.reload();
+			expect(await page.locator('style[data-sveltekit-font-faces]').count()).toBe(1);
+
+			// so does a stylesheet that is no longer imported, whatever comes after the kept
+			// style (here, the styles inlined for another app that doesn't hydrate)
+			await page.evaluate(() => {
+				const style = document.createElement('style');
+				style.setAttribute('data-sveltekit', '');
+				document.querySelector('style[data-sveltekit-font-faces]')?.after(style);
+			});
+			fs.writeFileSync(fonts_file, 'export {};\n');
+			await expect.poll(ranges).toEqual([]);
+		} finally {
+			fs.writeFileSync(fonts_file, fonts_contents);
+			fs.writeFileSync(styles_file, styles_contents);
+		}
+	});
+
 	test('Universal node is updated when page options change', async ({
 		page,
 		javaScriptEnabled,

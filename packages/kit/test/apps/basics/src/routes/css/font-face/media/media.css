@@ -1,0 +1,6 @@
+@media (min-width: 1px) {
+	@font-face {
+		font-family: 'Font Face In Media';
+		src: url('../../../asset-preload/shlop.woff2') format('woff2');
+	}
+}
