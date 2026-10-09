@@ -314,6 +314,43 @@ describe('binary form serializer', () => {
 		expect(world_slice.type).toBe(file.type);
 	});
 
+	test('LazyFile refuses string coercion instead of being silently stringified', async () => {
+		const { blob } = serialize_binary_form(
+			{
+				file: new File(['Hello World'], 'a.txt', { type: 'text/plain' })
+			},
+			{}
+		);
+		const res = await deserialize_binary_form(
+			new Request('http://test', {
+				method: 'POST',
+				body: blob,
+				headers: {
+					'Content-Type': BINARY_FORM_CONTENT_TYPE,
+					'Content-Length': blob.size.toString()
+				}
+			}),
+			''
+		);
+		/** @type {File} */
+		const file = res.data.file;
+
+		// The three-argument overload selects `append(name, blob, filename)`. The
+		// proxy gets this value past that type check without it being a real blob,
+		// so `FormData` would otherwise coerce it and put `[object Object]` on the
+		// wire under the right filename, with nothing reporting a failure.
+		expect(() => new FormData().append('file', file, file.name)).toThrow(TypeError);
+		expect(() => `${file}`).toThrow(TypeError);
+
+		// The two-argument overload must keep working, and the contents must still
+		// reach the wire when the body is serialized the way `fetch` serializes it.
+		const body = new FormData();
+		body.append('file', file);
+		const serialized = await new Response(body).text();
+		expect(serialized).toContain('Hello World');
+		expect(serialized).not.toContain('[object Object]');
+	});
+
 	test('works without Content-Length header', async () => {
 		const { blob } = serialize_binary_form(
 			{
