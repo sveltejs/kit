@@ -732,8 +732,8 @@ importers:
         specifier: ^2.0.1
         version: 2.0.1
       devalue:
-        specifier: ^5.9.4
-        version: 5.9.4
+        specifier: ^6.0.0
+        version: 6.0.2
       esm-env:
         specifier: ^1.2.2
         version: 1.2.2
@@ -3481,6 +3481,10 @@ packages:
   devalue@5.9.4:
     resolution: {integrity: sha512-sPAT4pztbu6586/hrhOnMKS17IJrvg12mXiSPSS3W5qDeN2RGgvZ0diZCm31dBbnevfVmujNO3IM2wrS4Y2Rhg==}
 
+  devalue@6.0.2:
+    resolution: {integrity: sha512-6V1HzU4to74skg//ScZR2mp9bdz+rESC9jQzVIIG/ha0HYgymHcXIQQCjH0+ivRaSuY82fa9fZ7Ro6QZT4s4uw==}
+    engines: {node: '>=22.17'}
+
   dts-buddy@0.8.3:
     resolution: {integrity: sha512-1x/UrAYRlQYA7QeLjyiTo5x6u5FvsU2hheGXT/hJWJ1zQzR+dMSQMMGPmuSKAH4/rhdCuLAtUZUr+NIXubwjfQ==}
     hasBin: true
@@ -6044,6 +6048,8 @@ snapshots:
   detect-libc@2.1.2: {}
 
   devalue@5.9.4: {}
+
+  devalue@6.0.2: {}
 
   dts-buddy@0.8.3(typescript@6.0.3):
     dependencies:

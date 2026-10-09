@@ -8,6 +8,21 @@ import { capture_error } from '../../../messages/internal/server.js';
 import * as e from '../../../messages/server-errors.js';
 
 /**
+ * Create a devalue `js` fragment from a string of trusted JavaScript that
+ * should be emitted verbatim (e.g. an identifier like the SvelteKit global).
+ * devalue v6's `js` tag serializes `${...}` holes, so raw code can't be passed
+ * as a hole — it has to live in the template's string portion.
+ * @param {import('devalue').JavaScriptTag} js
+ * @param {string} code
+ */
+function raw(js, code) {
+	const strings = /** @type {TemplateStringsArray} */ (
+		Object.assign([code], { raw: [code] })
+	);
+	return js(strings);
+}
+
+/**
  * If the serialized data contains promises, `chunks` will be an
  * async iterable containing their resolutions
  * @param {import('@sveltejs/kit').RequestEvent} event
@@ -23,8 +38,8 @@ export function server_data_serializer(event, state) {
 
 	/** @param {number} index */
 	function get_replacer(index) {
-		/** @param {any} thing */
-		return function replacer(thing) {
+		/** @type {import('devalue').UnevalReplacer} */
+		return function replacer(thing, js) {
 			if (typeof thing?.then === 'function') {
 				const id = promise_id++;
 
@@ -66,12 +81,17 @@ export function server_data_serializer(event, state) {
 
 				iterator.add(promise);
 
-				return `${global}.defer(${id})`;
+				// in devalue v6 the replacer must return a source created with the
+				// supplied `js` tag. `global` is a (build-time) identifier that must be
+				// emitted verbatim rather than as a serialized string, so it's wrapped
+				// in a raw fragment
+				return js`${raw(js, global)}.defer(${id})`;
 			} else {
 				for (const key in encoders) {
 					const encoded = encoders[key](thing);
 					if (encoded) {
-						return `app.decode('${key}', ${devalue.uneval(encoded, replacer)})`;
+						// each `${...}` hole is recursively serialized by devalue
+						return js`app.decode(${key}, ${encoded})`;
 					}
 				}
 			}
