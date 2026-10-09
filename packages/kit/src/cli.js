@@ -103,7 +103,11 @@ if (command === 'sync') {
 		const sveltekit_config = extract_svelte_config(vite_config);
 
 		const sync = await import('./core/sync/sync.js');
-		sync.all_types(sveltekit_config, vite_config.root);
+		// Resolving a build config already syncs via the compile plugin. Plugin-free configs
+		// (for example, component libraries) still need the types-only fallback.
+		if (!vite_config.plugins.some((plugin) => plugin.name === 'vite-plugin-sveltekit-compile')) {
+			sync.all_types(sveltekit_config, vite_config.root);
+		}
 
 		const entry = resolve_env_entry(sveltekit_config, vite_config.root);
 		await sync.env(sveltekit_config, entry, vite_config.root, values.mode);
