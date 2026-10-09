@@ -48,6 +48,8 @@ const pathname_prefix = hash_routing ? '#' : base;
  * In hash routing mode, the returned URL starts with `#`.
  *
  * During server rendering, the base path is relative and depends on the page currently being rendered.
+ * Inside a remote `query`, the path is always absolute (the configured base plus the resolved pathname),
+ * because query results are cached across pages.
  *
  * @example
  * ```js
