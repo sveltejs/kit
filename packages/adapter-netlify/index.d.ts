@@ -1,12 +1,10 @@
 import { Adapter } from '@sveltejs/kit';
 import './ambient.d.ts';
 
-export interface AdapterOptions {
-	/**
-	 * If `true`, your app will be deployed as a [Netlify Edge Function](https://docs.netlify.com/build/edge-functions/overview/) rather than the standard Node-based function.
-	 * @default false
-	 */
-	edge?: boolean;
+/** A Node.js runtime supported by Netlify. */
+export type Runtime = 'nodejs22.x' | 'nodejs24.x';
+
+export type AdapterOptions = {
 	/**
 	 * If `true`, your app will be split into multiple functions instead of a single one for the entire app.
 	 * @default false
@@ -18,6 +16,27 @@ export interface AdapterOptions {
 	 * @since 7.0.0
 	 */
 	publish?: string;
-}
+} & (
+	| {
+			/**
+			 * If `true`, your app will be deployed as a [Netlify Edge Function](https://docs.netlify.com/build/edge-functions/overview/) rather than the standard Node-based function.
+			 * Cannot be combined with the `nodeVersion` option.
+			 */
+			edge: true;
+			nodeVersion?: undefined;
+	  }
+	| {
+			/**
+			 * If `true`, your app will be deployed as a [Netlify Edge Function](https://docs.netlify.com/build/edge-functions/overview/) rather than the standard Node-based function.
+			 * @default false
+			 */
+			edge?: false;
+			/**
+			 * The [Node.js version](https://docs.netlify.com/build/functions/configuration/#nodejs-version-for-runtime) used for the serverless function. The supported values are `'nodejs22.x'` and `'nodejs24.x'`.
+			 * Cannot be combined with `edge: true`.
+			 */
+			nodeVersion?: Runtime | undefined;
+	  }
+);
 
 export default function plugin(opts?: AdapterOptions): Adapter;
