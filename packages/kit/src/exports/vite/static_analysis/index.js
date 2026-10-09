@@ -2,7 +2,11 @@
 /** @import { ESTree } from 'vite' */
 import path from 'node:path';
 import { parseSync } from 'vite';
+import { ENDPOINT_METHODS } from '../../../constants.js';
 import { read } from '../../../utils/filesystem.js';
+
+const endpoint_handler_names = new Set([...ENDPOINT_METHODS, 'fallback']);
+const endpoint_handler_pattern = new RegExp(`\\b(?:${[...endpoint_handler_names].join('|')})\\b`);
 
 export const valid_page_options_array = /** @type {const} */ ([
 	'ssr',
@@ -207,6 +211,75 @@ export function statically_analyse_page_options(filename, input) {
  */
 function get_name(node) {
 	return node.type === 'Identifier' ? node.name : /** @type {string} */ (node.value);
+}
+
+/**
+ * Whether `file` exports a `+server` handler (`GET`, `POST`, `fallback`, etc).
+ * Parse failures and `export *` are treated as possible forgotten endpoints so
+ * the missing-prefix warning still fires.
+ *
+ * @param {string} file Absolute path to the module
+ * @returns {boolean}
+ */
+export function has_endpoint_handler_export(file) {
+	let input;
+	try {
+		input = read(file);
+	} catch {
+		return true;
+	}
+
+	// skip AST parsing when the source cannot mention a handler name
+	if (!endpoint_handler_pattern.test(input)) {
+		return false;
+	}
+
+	try {
+		const source = parseSync(file, input, { sourceType: 'module' });
+		if (source.errors.length) return true;
+
+		for (const statement of source.program.body) {
+			if (statement.type === 'ExportAllDeclaration') {
+				if (statement.exported && !endpoint_handler_names.has(get_name(statement.exported))) {
+					continue;
+				}
+				return true;
+			}
+
+			if (statement.type !== 'ExportNamedDeclaration') continue;
+
+			for (const specifier of statement.specifiers) {
+				if (endpoint_handler_names.has(get_name(specifier.exported))) {
+					return true;
+				}
+			}
+
+			const declaration = statement.declaration;
+			if (!declaration) continue;
+
+			if (declaration.type === 'FunctionDeclaration' || declaration.type === 'ClassDeclaration') {
+				if (
+					declaration.id?.type === 'Identifier' &&
+					endpoint_handler_names.has(declaration.id.name)
+				) {
+					return true;
+				}
+			} else if (declaration.type === 'VariableDeclaration') {
+				for (const declarator of declaration.declarations) {
+					if (
+						declarator.id.type === 'Identifier' &&
+						endpoint_handler_names.has(declarator.id.name)
+					) {
+						return true;
+					}
+				}
+			}
+		}
+
+		return false;
+	} catch {
+		return true;
+	}
 }
 
 /**
