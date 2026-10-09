@@ -54,6 +54,35 @@ export default defineConfig({
 
 Building will take longer on the first build due to the computational expense of transforming images. However, the build output will be cached in `./node_modules/.cache/imagetools` so that subsequent builds will be fast.
 
+### Caching images in CI
+
+Because the cache lives in `node_modules`, it is thrown away at the start of every CI job, so every CI run pays the full cost of transforming your images again. Restoring the cache with [`actions/cache`](https://github.com/actions/cache) brings CI build times back in line with local ones:
+
+```yaml
+# .github/workflows/deploy.yml
+# ...
+- uses: actions/checkout@v5
+- uses: pnpm/action-setup@v4
+- uses: actions/setup-node@v6
+  with:
+    cache: pnpm
+- uses: actions/cache@v4
+  with:
+    path: node_modules/.cache
+    key: ${{ runner.os }}-imagetools-${{ hashFiles('pnpm-lock.yaml') }}
+    restore-keys: |
+      ${{ runner.os }}-imagetools-
+- run: pnpm install --frozen-lockfile
+- run: pnpm build
+```
+
+Key the cache on your lockfile so that changing `@sveltejs/enhanced-img` (or a transitive dependency of it) correctly invalidates the transformed output, and add `restore-keys` so a slightly stale cache is still restored and updated instead of being rebuilt from scratch. Use `package-lock.json` or `yarn.lock` in `hashFiles` instead of `pnpm-lock.yaml` if you use npm or yarn.
+
+If you deploy with [`actions/deploy-pages`](https://github.com/actions/deploy-pages), place the cache step before it: restore the cache, then build, then deploy.
+
+> [!WARNING]
+> The cache is keyed on your lockfile, not on the contents of your images. If you replace an image file but keep its filename and change nothing else, a stale cache entry can be restored for it. Change the key (for example by including a hash of your assets, or by bumping a version you interpolate into the key) when that risk matters.
+
 ### Basic usage
 
 Use in your `.svelte` components by using `<enhanced:img>` rather than `<img>` and referencing the image file with a [Vite asset import](https://vitejs.dev/guide/assets.html#static-asset-handling) path:
