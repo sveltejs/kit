@@ -2,6 +2,8 @@
 title: Advanced routing
 ---
 
+For an introduction to routing and how to access route parameters, see [Routing](routing).
+
 ## Rest parameters
 
 If the number of route segments is unknown, you can use rest syntax — for example you might implement GitHub's file viewer like so...
