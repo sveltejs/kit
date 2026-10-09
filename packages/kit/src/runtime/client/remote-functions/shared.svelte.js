@@ -111,8 +111,9 @@ export function get_remote_request_headers() {
  * @param {string} url
  * @param {RequestInit} [init]
  * @param {Set<string> | null} [refreshes]
+ * @param {string} [query_key] the key of the query making this request, whose own result is returned rather than applied via `set`
  */
-export async function remote_request(url, init, refreshes) {
+export async function remote_request(url, init, refreshes, query_key) {
 	const response = await fetch(url, init);
 	const status = response.status;
 
@@ -161,6 +162,9 @@ export async function remote_request(url, init, refreshes) {
 	if (data.q) {
 		for (const key in data.q) {
 			refreshes?.delete(key);
+			// the request waits for the redirect's navigation, and the new page may be
+			// waiting for this query, so in that case apply the value right away
+			if (key === query_key && !data.redirect) continue;
 			const parts = split_remote_key(key);
 			const entry = query_map.get(parts.id)?.get(parts.payload);
 

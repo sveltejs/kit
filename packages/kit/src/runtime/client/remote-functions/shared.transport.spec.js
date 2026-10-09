@@ -9,7 +9,8 @@ vi.mock(new URL('../client.js', import.meta.url).pathname, () => ({
 	query_map: new Map(),
 	query_responses: {},
 	live_query_map: new Map(),
-	_goto: () => {}
+	_goto: vi.fn(),
+	handle_error: (/** @type {any} */ error) => error.body
 }));
 
 // Mock `#app/state/client` — imports `navigating` and `page` which are reactive
@@ -24,9 +25,10 @@ vi.mock('#app/state/client', () => ({
 const { fail_unhandled_refreshes, remote_request, categorize_updates, QUERY_OVERRIDE_KEY } =
 	await import('./shared.svelte.js');
 const { HttpError, HandledHttpError } = await import('@sveltejs/kit/internal');
-const { query_map, live_query_map } = await import('../client.js');
+const { query_map, live_query_map, _goto } = await import('../client.js');
 const devalue = await import('devalue');
 const { command } = await import('./command.svelte.js');
+const { query } = await import('./query/index.js');
 
 test('command update warnings retain the original promise and deferred argument failures', async () => {
 	const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
@@ -240,5 +242,121 @@ describe('remote_request transport error handling', () => {
 		fail_unhandled_refreshes(refreshes);
 
 		expect(fail).not.toHaveBeenCalled();
+	});
+});
+
+describe('query responses', () => {
+	beforeEach(() => {
+		vi.unstubAllGlobals();
+		query_map.clear();
+	});
+
+	/**
+	 * Stubs `fetch` so that each request for `hash/get_value` stays pending until
+	 * the test responds to it, mirroring the server's response shape for a direct
+	 * query call (the value is in `_` and, under the query's own key, in `q`)
+	 * @param {Record<string, any>} [other] responses for other remote functions
+	 */
+	function hold_query_requests(other = {}) {
+		/** @type {Array<(value: number) => void>} */
+		const respond = [];
+
+		vi.stubGlobal('fetch', (/** @type {string} */ url) => {
+			const id = url.split('/remote/')[1];
+			if (id in other) {
+				return mock_response({
+					json: () => Promise.resolve({ type: 'result', data: devalue.stringify(other[id]) })
+				});
+			}
+
+			return new Promise((fulfil) => {
+				respond.push((value) =>
+					fulfil(
+						mock_response({
+							json: () =>
+								Promise.resolve({
+									type: 'result',
+									data: devalue.stringify({ _: value, q: { 'hash/get_value/': { v: value } } })
+								})
+						})
+					)
+				);
+			});
+		});
+
+		return respond;
+	}
+
+	test('an older response that arrives last does not overwrite a newer one', async () => {
+		const respond = hold_query_requests();
+		const value = query('hash/get_value')(undefined);
+
+		void value.refresh();
+		void value.refresh();
+		expect(respond).toHaveLength(2);
+
+		respond[1](2);
+		await new Promise((resolve) => setTimeout(resolve, 0));
+		expect(value.current).toBe(2);
+
+		respond[0](1);
+		await new Promise((resolve) => setTimeout(resolve, 0));
+		expect(value.current).toBe(2);
+	});
+
+	test('uses the value or error a query set on itself on the server', async () => {
+		/** @type {any} */
+		let node = { v: 2 };
+		vi.stubGlobal('fetch', () =>
+			mock_response({
+				json: () =>
+					Promise.resolve({
+						type: 'result',
+						data: devalue.stringify({ _: 1, q: { 'hash/get_value/': node } })
+					})
+			})
+		);
+		const value = query('hash/get_value')(undefined);
+
+		await value.refresh();
+		expect(value.current).toBe(2);
+
+		node = { e: { status: 500, message: 'refresh failed' } };
+		await value.refresh().catch(() => {});
+		expect(value.error).toEqual({ status: 500, message: 'refresh failed' });
+	});
+
+	test('applies a value the query set on itself before following its redirect', async () => {
+		vi.mocked(_goto).mockReturnValueOnce(new Promise(() => {}));
+		vi.stubGlobal('fetch', () =>
+			mock_response({
+				json: () =>
+					Promise.resolve({
+						type: 'result',
+						data: devalue.stringify({ redirect: '/next', q: { 'hash/get_value/': { v: 2 } } })
+					})
+			})
+		);
+		const value = query('hash/get_value')(undefined);
+
+		void value.refresh();
+		await new Promise((resolve) => setTimeout(resolve, 0));
+		expect(_goto).toHaveBeenCalledWith('/next');
+		expect(value.current).toBe(2);
+	});
+
+	test('a response that was in flight during a command does not overwrite its update', async () => {
+		const respond = hold_query_requests({
+			'hash/mutate': { _: null, q: { 'hash/get_value/': { v: 2 } } }
+		});
+		const value = query('hash/get_value')(undefined);
+
+		void value.refresh();
+		await command('hash/mutate')(undefined);
+		expect(value.current).toBe(2);
+
+		respond[0](1);
+		await new Promise((resolve) => setTimeout(resolve, 0));
+		expect(value.current).toBe(2);
 	});
 });
