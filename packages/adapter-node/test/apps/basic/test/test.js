@@ -98,3 +98,39 @@ test('serves immutable assets with an immutable cache header', async ({ request 
 	expect(response.status()).toBe(200);
 	expect(response.headers()['cache-control']).toBe('public,max-age=31536000,immutable');
 });
+
+test('prerendered pages are HTML with nosniff', async ({ page }) => {
+	await page.route('**/prerendered-page', async (route) => {
+		const response = await route.fetch();
+		await route.fulfill({
+			response,
+			headers: { ...response.headers(), 'x-content-type-options': 'nosniff' }
+		});
+	});
+	await page.goto('/prerendered-page');
+	expect(await page.evaluate(() => document.contentType)).toBe('text/html');
+	await expect(page.locator('h1')).toHaveText('prerendered');
+});
+
+test('prerendered pages preserve HTML MIME for HEAD and compressed responses', async ({
+	request
+}) => {
+	for (const encoding of ['identity', 'gzip', 'br']) {
+		for (const method of ['GET', 'HEAD']) {
+			const response = await request.fetch('/prerendered-page', {
+				method,
+				headers: { 'accept-encoding': encoding }
+			});
+			expect(response.status()).toBe(200);
+			expect(response.headers()['content-type']).toBe('text/html;charset=utf-8');
+			expect(response.headers()['content-encoding']).toBe(
+				encoding === 'identity' ? undefined : encoding
+			);
+			if (method === 'HEAD') {
+				expect(await response.body()).toHaveLength(0);
+			} else {
+				expect(await response.text()).toContain('prerendered');
+			}
+		}
+	}
+});
