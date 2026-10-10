@@ -346,7 +346,11 @@ test.describe('subresourceIntegrity', () => {
 });
 
 test.describe('Integrity-Policy', () => {
-	test.skip(({ javaScriptEnabled }) => !javaScriptEnabled || !!process.env.DEV);
+	// server-side route resolution `import()`s a per-path `__route.js` that has no build-time hash
+	test.skip(
+		({ javaScriptEnabled }) =>
+			!javaScriptEnabled || !!process.env.DEV || process.env.ROUTER_RESOLUTION === 'server'
+	);
 
 	test('scripts load on first visit and client-side navigation', async ({ page }) => {
 		/** @type {string[]} */
