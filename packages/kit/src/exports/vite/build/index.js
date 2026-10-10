@@ -2,6 +2,7 @@
 /** @import { EnvVarConfig } from '@sveltejs/kit/env' */
 /** @import { BuildData, ManifestData, Prerendered, ServerMetadata, RemoteChunk, ValidatedConfig } from 'types' */
 /** @import { Manifest, Plugin, ResolvedConfig, Rolldown, UserConfig } from 'vite' */
+import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
@@ -760,6 +761,25 @@ export function plugin_compile(
 							fs.rmSync(`${out}/client/${start.file}.map`, { force: true });
 							if (inline_style) fs.unlinkSync(`${out}/client/${inline_style.fileName}`);
 						}
+					}
+
+					// Compute SRI integrity hashes from the files on disk, so the hash always
+					// matches the bytes the browser actually receives
+					if (build_data.client && kit.subresourceIntegrity) {
+						const algorithm = kit.subresourceIntegrity;
+						/** @type {Record<string, string>} */
+						const integrity = {};
+
+						for (const chunk of client_chunks) {
+							const file = `${out}/client/${chunk.fileName}`;
+							// inlined chunks are deleted above, so they are never fetched
+							if (!fs.existsSync(file)) continue;
+
+							const hash = createHash(algorithm).update(fs.readFileSync(file)).digest('base64');
+							integrity[chunk.fileName] = `${algorithm}-${hash}`;
+						}
+
+						build_data.client.integrity = integrity;
 					}
 
 					// regenerate manifest now that we have client entry...

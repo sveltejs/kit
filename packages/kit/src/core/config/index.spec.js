@@ -122,6 +122,7 @@ const get_defaults = (prefix = '') => ({
 		options: undefined,
 		register: true
 	},
+	subresourceIntegrity: false,
 	tracing: { server: false },
 	typescript: {},
 	paths: {

@@ -80,6 +80,7 @@ export async function render_response({
 	}
 
 	const client = manifest.client;
+	const integrity_map = client?.integrity;
 
 	const modulepreloads = new Set(client?.imports);
 	const stylesheets = new Set(client?.stylesheets);
@@ -319,6 +320,10 @@ export async function render_response({
 			// include them in disabled state so that Vite can detect them and doesn't try to add them
 			attributes.push('disabled', 'media="(max-width: 0)"');
 		} else {
+			const integrity = integrity_map?.[dep];
+			if (integrity) {
+				attributes.push(`integrity="${integrity}"`, 'crossorigin="anonymous"');
+			}
 			if (__SVELTEKIT_LINK_HEADER_PRELOAD__ && resolve_opts.preload({ type: 'css', path })) {
 				link_headers.add(`<${encodeURI(path)}>; rel="preload"; as="style"; nopush`);
 			}
@@ -371,7 +376,19 @@ export async function render_response({
 				const path = prefixed(dep);
 
 				if (resolve_opts.preload({ type: 'js', path })) {
-					add_preload(path, ['rel="modulepreload"']);
+					const integrity = integrity_map?.[dep];
+
+					if (integrity) {
+						// SRI only takes effect on the HTML tag — a `Link` header cannot carry
+						// `integrity`, so bypass `add_preload` and always emit the tag
+						head.add_link_tag(path, [
+							'rel="modulepreload"',
+							`integrity="${integrity}"`,
+							'crossorigin="anonymous"'
+						]);
+					} else {
+						add_preload(path, ['rel="modulepreload"']);
+					}
 				}
 			}
 		}
