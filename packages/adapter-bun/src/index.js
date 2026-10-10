@@ -2,7 +2,7 @@
 import fs from 'node:fs';
 import process from 'node:process';
 import { server_options } from '#@sveltejs/adapter-bun';
-import { routes } from './routes.js';
+import { routes } from './assets.js';
 import { handler } from './handler.js';
 import { boolean_env, bytes_env, env, number_env } from './env.js';
 
