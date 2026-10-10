@@ -344,3 +344,26 @@ test.describe('subresourceIntegrity', () => {
 		}
 	});
 });
+
+test.describe('Integrity-Policy', () => {
+	test.skip(({ javaScriptEnabled }) => !javaScriptEnabled || !!process.env.DEV);
+
+	test('scripts load on first visit and client-side navigation', async ({ page }) => {
+		/** @type {string[]} */
+		const blocked = [];
+		page.on('requestfailed', (request) => {
+			if (request.failure()?.errorText === 'integrity') blocked.push(request.url());
+		});
+
+		await page.goto('/path-base/integrity-policy');
+		await page.locator('button').click();
+		await expect(page.locator('button')).toHaveText('clicks: 1');
+
+		await page.getByRole('link', { name: 'b', exact: true }).click();
+		await expect(page.getByRole('heading', { name: 'b', exact: true })).toBeVisible();
+		await page.getByRole('button', { name: 'b clicks: 0' }).click();
+		await expect(page.getByRole('button', { name: 'b clicks: 1' })).toBeVisible();
+
+		expect(blocked).toEqual([]);
+	});
+});
