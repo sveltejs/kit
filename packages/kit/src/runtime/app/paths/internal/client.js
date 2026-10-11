@@ -4,6 +4,7 @@
 
 /** @import { RouteId } from '$app/types' */
 import { payload } from '../../../client/payload.js';
+import * as e from '../../../../messages/shared-errors.js';
 
 export const base = payload.base ?? __SVELTEKIT_PATHS_BASE__;
 export const assets = payload.assets ?? base ?? __SVELTEKIT_PATHS_ASSETS__;
@@ -20,9 +21,7 @@ export const hash_routing = __SVELTEKIT_HASH_ROUTING__;
 export let match_implementation = async (_url) => {
 	// @ts-ignore
 	if (typeof ServiceWorkerGlobalScope !== 'undefined' && self instanceof ServiceWorkerGlobalScope) {
-		throw new Error(
-			'Cannot use `match(...)` inside a service worker, as it depends on the SvelteKit client instance'
-		);
+		e.match_in_service_worker();
 	}
 
 	return null;

@@ -50,8 +50,12 @@ describe('add_deprecated_handle_error_properties', () => {
 		expect(/** @type {any} */ (input).status).toBe(500);
 		expect(/** @type {any} */ (input).message).toBe('Internal Error');
 		expect(warn).toHaveBeenCalledTimes(2);
-		expect(warn.mock.calls[0][0]).toContain('Use `error.status`');
-		expect(warn.mock.calls[1][0]).toContain('Use `error.message`');
+		expect(warn.mock.calls[0]).toContainKitDiagnostic('handle_error_status_deprecated');
+		expect(warn.mock.calls[1]).toContainKitDiagnostic('handle_error_message_deprecated');
+
+		// every access warns and returns the value, as before
+		expect(/** @type {any} */ (input).status).toBe(500);
+		expect(warn).toHaveBeenCalledTimes(3);
 
 		warn.mockRestore();
 	});

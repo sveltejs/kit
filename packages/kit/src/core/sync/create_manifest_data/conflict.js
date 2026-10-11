@@ -1,3 +1,5 @@
+import * as e from '../../../messages/build-errors.js';
+
 /** @param {import('types').RouteData[]} routes */
 export function prevent_conflicts(routes) {
 	/** @type {Map<string, string>} */
@@ -42,9 +44,7 @@ export function prevent_conflicts(routes) {
 				.replace(/\/$/, '');
 
 			if (lookup.has(key)) {
-				throw new Error(
-					`The "${lookup.get(key)}" and "${route.id}" routes conflict with each other`
-				);
+				e.route_conflict({ first: /** @type {string} */ (lookup.get(key)), second: route.id });
 			}
 
 			lookup.set(key, route.id);

@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import { execFile } from 'node:child_process';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
-import { expect } from '@playwright/test';
+import { expect } from '../../../playwright-matchers.js';
 import { test } from '../../../utils.js';
 
 const output = fileURLToPath(new URL('../.svelte-kit/output', import.meta.url));
@@ -97,13 +97,13 @@ test.describe('$app/env', () => {
 		// test validation runs at runtime
 		if (!process.env.DEV) {
 			const app_dir = fileURLToPath(new URL('..', import.meta.url));
+			/** @type {string} */
 			const output = await new Promise((resolve) => {
 				execFile('pnpm', ['vite', 'preview'], { cwd: app_dir }, (_, stdout, stderr) =>
 					resolve(stdout + stderr)
 				);
 			});
-			expect(output).toContain('Invalid environment variables');
-			expect(output).toContain('RUNTIME_ONLY');
+			expect(output).toContainKitDiagnostic('env_invalid', { contains: ['RUNTIME_ONLY'] });
 		}
 	});
 });

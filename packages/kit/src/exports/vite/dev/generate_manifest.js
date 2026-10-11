@@ -6,6 +6,7 @@ import path from 'node:path';
 import { get_mime_lookup, get_runtime_base } from '../../../core/utils.js';
 import { from_fs, to_fs } from '../../../utils/vite.js';
 import { compact } from '../../../utils/array.js';
+import * as e from '../../../messages/build-errors.js';
 import { styleText } from 'node:util';
 
 // vite-specifc queries that we should skip handling for css urls
@@ -201,7 +202,7 @@ export function generate_manifest(
 			const module = await runner.import(url);
 
 			if (!module.params) {
-				throw new Error(`${manifest_data.params} does not export \`params\` from \`defineParams\``);
+				e.params_export_missing({ file: manifest_data.params });
 			}
 
 			return module.params;

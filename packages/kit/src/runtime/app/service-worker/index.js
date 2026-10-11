@@ -3,6 +3,7 @@
 /// <reference lib="webworker" />
 
 import { DEV } from 'esm-env';
+import * as e from '../../../messages/shared-errors.js';
 
 /**
  * The execution context of a service worker. This export exists to make it easier to
@@ -19,6 +20,6 @@ if (DEV) {
 		typeof ServiceWorkerGlobalScope === 'undefined' ||
 		!(self instanceof ServiceWorkerGlobalScope)
 	) {
-		throw new Error('The `$app/service-worker` module can only be imported into a service worker');
+		e.service_worker_module_outside_worker();
 	}
 }

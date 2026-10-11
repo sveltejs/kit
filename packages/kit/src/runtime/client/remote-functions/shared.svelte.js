@@ -7,6 +7,7 @@ import { HttpError, Redirect, HandledHttpError } from '@sveltejs/kit/internal';
 import { untrack } from 'svelte';
 import { create_remote_key, split_remote_key } from '../../shared.js';
 import { navigating, page, notify_version } from '#app/state/client';
+import * as e from '../../../messages/client-errors.js';
 
 /** Indicates a query function, as opposed to a query instance */
 export const QUERY_FUNCTION_ID = Symbol('sveltekit.query_function_id');
@@ -266,9 +267,7 @@ export function categorize_updates(updates) {
 				refreshes.add(key);
 
 				if (override_keys.has(key)) {
-					throw new Error(
-						'Multiple overrides for the same query are not allowed in a single updates() invocation'
-					);
+					e.remote_updates_duplicate_override();
 				}
 
 				override_keys.add(key);
@@ -292,9 +291,7 @@ export function categorize_updates(updates) {
 			continue;
 		}
 
-		throw new Error(
-			'updates() expects a query or live query function, query resource, or query override'
-		);
+		e.remote_updates_invalid_argument();
 	}
 
 	return { overrides, refreshes };

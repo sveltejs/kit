@@ -3,11 +3,13 @@
 import { base, assets, hash_routing, match_implementation } from './internal/client.js';
 import { resolve_route } from '../../../utils/routing.js';
 import { DEV } from 'esm-env';
+import * as e from '../../../messages/shared-errors.js';
+import * as w from '../../../messages/shared-warnings.js';
 
 export { base, assets, app_dir } from './internal/client.js';
 
 /**
- * Resolve the URL of an asset in your `static` directory, by prefixing it with [`config.paths.assets`](https://svelte.dev/docs/kit/configuration#paths) if configured, or otherwise by prefixing it with the base path.
+ * Resolve the URL of an asset in your `static` directory, by prefixing it with [`config.paths.assets`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#paths) if configured, or otherwise by prefixing it with the base path.
  *
  * During server rendering, the base path is relative and depends on the page currently being rendered.
  *
@@ -30,7 +32,7 @@ export function asset(file) {
 	// TODO 4.0 remove this
 	if (path[0] === '/') {
 		if (DEV) {
-			console.warn(`\`asset('${path}')\` should now be \`asset('${path.slice(1)}')\``);
+			w.asset_leading_slash({ path, fixed: path.slice(1) });
 		}
 
 		path = path.slice(1);
@@ -71,7 +73,7 @@ export function resolve(...args) {
 	if (id[0] === '/') {
 		// route ID
 		if (id.includes('[') && !params) {
-			throw new Error(`Missing params for dynamic route ID ${id}`);
+			e.resolve_params_missing({ id });
 		}
 
 		return /** @type {ResolvedPathname} */ (pathname_prefix + resolve_route(id, params ?? {}));

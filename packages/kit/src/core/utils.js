@@ -1,5 +1,4 @@
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { styleText } from 'node:util';
 import { to_fs } from '../utils/vite.js';
 import { noop } from '../utils/functions.js';
@@ -14,7 +13,7 @@ import { hash } from '../utils/hash.js';
  * In playwright debug mode run through VS Code this a root-to-lowercase conversion is needed in order for the tests to run.
  * If we do this conversion in other cases it has the opposite effect though and fails.
  */
-export const runtime_directory = posixify(fileURLToPath(new URL('../runtime', import.meta.url)));
+export const runtime_directory = posixify(path.resolve(import.meta.dirname, '../runtime'));
 
 /**
  * The name of the `globalThis.__sveltekit_xxx` object the app's payload is attached to
@@ -48,7 +47,7 @@ export function logger({ verbose } = { verbose: true }) {
 
 	log.success = (msg) => log(styleText('green', `✔ ${msg}`));
 	log.error = (msg) => err(styleText(['bold', 'red'], msg));
-	log.warn = (msg) => log(styleText(['bold', 'yellow'], msg));
+	log.warn = (msg) => console.warn(styleText(['bold', 'yellow'], msg));
 	log.minor = verbose ? (msg) => log(styleText('grey', msg)) : noop;
 	log.info = verbose ? log : noop;
 	log.err = err;

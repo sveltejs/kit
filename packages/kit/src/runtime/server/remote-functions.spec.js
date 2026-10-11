@@ -130,3 +130,40 @@ test('serializes explicitly ignored requested updates', async () => {
 	const result = await response.json();
 	expect(parse(result.data)).toEqual({ _: null, i: ['hash/query/[-1]'] });
 });
+
+test.each([
+	{ type: 'query_live', method: 'POST', status: 405, body: 'Method Not Allowed' },
+	{ type: 'query_batch', method: 'GET', status: 405, body: 'Method Not Allowed' },
+	{ type: 'form', method: 'GET', status: 405, body: 'Method Not Allowed' },
+	{ type: 'form', method: 'POST', status: 415, body: 'Unsupported Media Type' }
+])(
+	'remote $type $method protocol errors retain their status and payload',
+	async ({ type, method, status, body }) => {
+		const handleError = vi.fn();
+		set_hooks(/** @type {any} */ ({ handleError }));
+		const fn = Object.assign(() => {}, { __: { type, name: 'fn' } });
+		set_manifest(
+			/** @type {any} */ ({ remotes: { hash: () => Promise.resolve({ default: { fn } }) } })
+		);
+		const response = await handle_remote_call(
+			/** @type {any} */ ({
+				request: new Request('http://localhost/_app/remote/hash/fn', {
+					method,
+					headers: { 'content-type': 'application/json' }
+				}),
+				tracing: { current: { setAttributes: vi.fn() } }
+			}),
+			/** @type {any} */ ({ remote: {} }),
+			'hash/fn'
+		);
+		// Remote calls carry errors in a 200 response; the payload retains the original status.
+		expect(response.status).toBe(200);
+		expect(await response.json()).toEqual({ type: 'error', error: { status, message: body } });
+		expect(handleError).toHaveBeenCalledWith(
+			expect.objectContaining({
+				kind: 'framework',
+				error: { status, message: body }
+			})
+		);
+	}
+);

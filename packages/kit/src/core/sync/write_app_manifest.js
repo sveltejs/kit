@@ -65,11 +65,14 @@ function stringify_assets(assets) {
  */
 export function get_manifest_routes(routes) {
 	return (
-		routes?.filter(is_app_route).map((route) => /** @type {ManifestRoute} */ ({
-			id: route.id,
-			page: is_page_route(route),
-			endpoint: is_endpoint_route(route)
-		})) ?? []
+		routes?.filter(is_app_route).map(
+			(route) =>
+				/** @type {ManifestRoute} */ ({
+					id: route.id,
+					page: is_page_route(route),
+					endpoint: is_endpoint_route(route)
+				})
+		) ?? []
 	);
 }
 
