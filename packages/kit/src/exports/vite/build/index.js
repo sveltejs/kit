@@ -242,7 +242,12 @@ export function plugin_compile(
 						rolldownOptions: {
 							output: {
 								name: `${global_name}.app`,
-								assetFileNames: `${app_immutable}/assets/[name].[hash][extname]`,
+								assetFileNames: (asset) => {
+									// Avoid reusing CSS cached without CORS headers before SSR links
+									// used crossorigin. Keep this suffix stable across releases.
+									const suffix = asset.names.some((name) => name.endsWith('.css')) ? '.cors' : '';
+									return `${app_immutable}/assets/[name].[hash]${suffix}[extname]`;
+								},
 								sourcemapIgnoreList
 							},
 							preserveEntrySignatures: 'strict',

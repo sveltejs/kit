@@ -183,6 +183,28 @@ test.describe("bundleStrategy: 'single'", () => {
 	});
 });
 
+test.describe('CSS request mode', () => {
+	test.skip(!!process.env.DEV);
+
+	for (const path of ['/basepath/asset-preload', '/basepath/asset-preload/prerendered']) {
+		test(`fetches CSS once in CORS mode on ${path}`, async ({ page }) => {
+			/** @type {import('@playwright/test').Request[]} */
+			const requests = [];
+			page.on('request', (request) => {
+				if (request.url().endsWith('.css')) requests.push(request);
+			});
+
+			await page.goto(path);
+			await page.waitForLoadState('networkidle');
+
+			// The single bundle's stylesheet and its preload must share a request mode.
+			expect(requests).toHaveLength(1);
+			expect(requests[0].url()).toMatch(/\.cors\.css$/);
+			expect((await requests[0].allHeaders())['sec-fetch-mode']).toBe('cors');
+		});
+	}
+});
+
 test.describe('Link header preload', () => {
 	test.skip(({ javaScriptEnabled }) => javaScriptEnabled || !!process.env.DEV);
 
@@ -193,6 +215,11 @@ test.describe('Link header preload', () => {
 
 		expect(header).toContain('rel="modulepreload"');
 		expect(header).toContain('as="font"');
+		const styles = header.split(',').filter((link) => link.includes('as="style"'));
+		expect(styles.length).toBeGreaterThan(0);
+		for (const style of styles) {
+			expect(style).toContain('; crossorigin');
+		}
 	});
 
 	test('does not inject Link headers on prerendered pages', async ({ request }) => {
@@ -209,6 +236,11 @@ test.describe('Link header preload', () => {
 
 		expect(body).toContain('rel="modulepreload"');
 		expect(body).toContain('as="font"');
+		const styles = body.match(/<link[^>]+rel="stylesheet"[^>]*>/g);
+		expect(styles?.length).toBeGreaterThan(0);
+		for (const style of styles ?? []) {
+			expect(style).toContain(' crossorigin');
+		}
 	});
 
 	test('does not inject <link> tags on non-prerendered pages', async ({ request }) => {

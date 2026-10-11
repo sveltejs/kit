@@ -312,7 +312,8 @@ export async function render_response({
 	for (const dep of stylesheets) {
 		const path = prefixed(dep);
 
-		const attributes = ['rel="stylesheet"'];
+		// Match Vite and load_css so cached responses can be reused during navigation.
+		const attributes = ['rel="stylesheet"', 'crossorigin'];
 
 		if (inline_styles.has(dep)) {
 			// don't load stylesheets that are already inlined
@@ -320,7 +321,7 @@ export async function render_response({
 			attributes.push('disabled', 'media="(max-width: 0)"');
 		} else {
 			if (__SVELTEKIT_LINK_HEADER_PRELOAD__ && resolve_opts.preload({ type: 'css', path })) {
-				link_headers.add(`<${encodeURI(path)}>; rel="preload"; as="style"; nopush`);
+				link_headers.add(`<${encodeURI(path)}>; rel="preload"; as="style"; crossorigin; nopush`);
 			}
 		}
 

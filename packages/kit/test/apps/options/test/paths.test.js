@@ -189,6 +189,13 @@ test.describe('inlineStyleThreshold', () => {
 			expect(await page.$('style')).not.toBeNull();
 			expect(await page.$('link[rel="stylesheet"][disabled]')).not.toBeNull();
 			expect(await page.$('link[rel="stylesheet"]:not([disabled])')).not.toBeNull();
+			// Disabled links also need to match Vite's CORS mode if they are enabled later.
+			expect(await page.locator('link[rel="stylesheet"]:not([crossorigin])').count()).toBe(0);
+			const hrefs = await page
+				.locator('link[rel="stylesheet"]')
+				.evaluateAll((links) => links.map((link) => link.getAttribute('href')));
+			// Even unchanged CSS must not reuse responses cached before the CORS-mode change.
+			for (const href of hrefs) expect(href).toMatch(/\.cors\.css$/);
 		}
 	});
 
