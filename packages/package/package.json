@@ -22,14 +22,12 @@
 	"dependencies": {
 		"@sveltejs/load-config": "^0.2.3",
 		"chokidar": "^5.0.0",
-		"semver": "^7.8.5",
 		"svelte2tsx": "~0.7.60"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"@types/node": "catalog:",
-		"@types/semver": "catalog:",
 		"@typescript/native": "catalog:",
 		"prettier": "catalog:",
 		"prettier-plugin-svelte": "catalog:",
