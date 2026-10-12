@@ -2070,6 +2070,177 @@ test.describe('Shallow routing', () => {
 		await expect(page.locator('[data-id="shallow"]')).toHaveText('null');
 	});
 
+	for (const button of ['one', 'params']) {
+		test(`Runs shallow history navigation hooks (${button})`, async ({ page }) => {
+			await page.goto('/shallow-routing/push-state');
+			const now = await page.locator('[data-id="now"]').textContent();
+			await page.locator(`[data-id="${button}"]`).click();
+			await expect.poll(() => page.evaluate(() => window.shallow_navigation_log.length)).toBe(4);
+			await page.evaluate(() => (window.shallow_navigation_log = []));
+
+			await page.goBack();
+			await expect(page.locator('p')).toHaveText('active: false');
+			await expect
+				.poll(() => page.evaluate(() => window.shallow_navigation_log))
+				.toEqual([
+					{
+						hook: 'before',
+						params: {},
+						path: '/shallow-routing/push-state',
+						route: '/shallow-routing/push-state',
+						shallow: true,
+						type: 'popstate'
+					},
+					{ hook: 'on', shallow: true, type: 'popstate' },
+					{ hook: 'after', shallow: true, state: 'active: false', type: 'popstate' },
+					{ hook: 'complete' }
+				]);
+			await expect(page.locator('[data-id="now"]')).toHaveText(now ?? '');
+			await page.evaluate(() => (window.shallow_navigation_log = []));
+
+			await page.goForward();
+			await expect(page.locator('p')).toHaveText('active: true');
+			await expect.poll(() => page.evaluate(() => window.shallow_navigation_log.length)).toBe(4);
+			expect(await page.evaluate(() => window.shallow_navigation_log)).toEqual([
+				{
+					hook: 'before',
+					params: button === 'params' ? { param: 'hello' } : {},
+					path: '/shallow-routing/push-state' + (button === 'params' ? '/hello' : ''),
+					route: '/shallow-routing/push-state' + (button === 'params' ? '/[param]' : ''),
+					shallow: true,
+					type: 'popstate'
+				},
+				{ hook: 'on', shallow: true, type: 'popstate' },
+				{ hook: 'after', shallow: true, state: 'active: true', type: 'popstate' },
+				{ hook: 'complete' }
+			]);
+			await expect(page.locator('[data-id="now"]')).toHaveText(now ?? '');
+		});
+	}
+
+	test('Keeps hash-only history traversal hook-free in a shallow context', async ({
+		page,
+		app
+	}) => {
+		await page.goto('/shallow-routing/push-state');
+		await app.goto('', { shallow: true, state: { active: true } });
+		await page.evaluate(() => (window.shallow_navigation_log = []));
+
+		// Native hash links inherit the shallow entry's state and rendered URL.
+		for (const hash of ['#one', '#two']) {
+			await page.evaluate((hash) => {
+				const a = document.createElement('a');
+				a.href = hash;
+				document.body.append(a);
+				a.click();
+				a.remove();
+			}, hash);
+			await expect(page).toHaveURL(new RegExp(`${hash}$`));
+		}
+
+		await page.goBack();
+		await expect(page).toHaveURL(/#one$/);
+		await page.goBack();
+		await expect(page).toHaveURL('/shallow-routing/push-state');
+		await page.goForward();
+		await expect(page).toHaveURL(/#one$/);
+		await page.goForward();
+		await expect(page).toHaveURL(/#two$/);
+		await expect(page.locator('p')).toHaveText('active: true');
+		expect(await page.evaluate(() => window.shallow_navigation_log)).toEqual([]);
+
+		// A shallow goto that changes only the hash must still run hooks, including
+		// on traversal. URL/state equality alone cannot distinguish these entries.
+		await app.goto('#three', { shallow: true, state: { active: true } });
+		await page.evaluate(() => (window.shallow_navigation_log = []));
+		await page.goBack();
+		await expect(page).toHaveURL(/#two$/);
+		await expect
+			.poll(() => page.evaluate(() => window.shallow_navigation_log.map((n) => n.hook)))
+			.toEqual(['before', 'on', 'after', 'complete']);
+		await page.evaluate(() => (window.shallow_navigation_log = []));
+		await page.goForward();
+		await expect(page).toHaveURL(/#three$/);
+		await expect
+			.poll(() => page.evaluate(() => window.shallow_navigation_log.map((n) => n.hook)))
+			.toEqual(['before', 'on', 'after', 'complete']);
+	});
+
+	test('Waits for onNavigate when restoring shallow history', async ({ page }) => {
+		await page.goto('/shallow-routing/push-state?defer');
+		await page.locator('[data-id="one"]').click();
+		await expect.poll(() => page.evaluate(() => window.shallow_navigation_log.length)).toBe(4);
+		await page.evaluate(() => (window.shallow_navigation_log = []));
+
+		await page.goBack();
+		await expect
+			.poll(() => page.evaluate(() => window.shallow_navigation_log.map((n) => n.hook)))
+			.toEqual(['before', 'on']);
+		await expect(page.locator('p')).toHaveText('active: true');
+
+		await page.evaluate(() => document.dispatchEvent(new Event('continue-navigation')));
+		await expect(page.locator('p')).toHaveText('active: false');
+		await expect
+			.poll(() => page.evaluate(() => window.shallow_navigation_log.map((n) => n.hook)))
+			.toEqual(['before', 'on', 'after', 'cleanup', 'complete']);
+
+		await page.evaluate(() => (window.shallow_navigation_log = []));
+		await page.locator('[data-id="one"]').click();
+		await expect
+			.poll(() => page.evaluate(() => window.shallow_navigation_log.map((n) => n.hook)))
+			.toEqual(['before', 'on', 'after', 'complete']);
+	});
+
+	test('Does not commit a superseded shallow history restoration', async ({ page, app }) => {
+		await page.goto('/shallow-routing/push-state?defer');
+		await page.locator('[data-id="one"]').click();
+		await expect.poll(() => page.evaluate(() => window.shallow_navigation_log.length)).toBe(4);
+		await page.evaluate(() => (window.shallow_navigation_log = []));
+
+		await page.goBack();
+		await expect
+			.poll(() => page.evaluate(() => window.shallow_navigation_log.map((n) => n.hook)))
+			.toEqual(['before', 'on']);
+		await app.goto('/shallow-routing/push-state', { shallow: true, state: { active: true } });
+		await page.evaluate(() => document.dispatchEvent(new Event('continue-navigation')));
+		await expect
+			.poll(() => page.evaluate(() => window.shallow_navigation_log.map((n) => n.hook)))
+			.toEqual(['before', 'on', 'on', 'after', 'aborted']);
+		await expect(page.locator('p')).toHaveText('active: true');
+
+		await page.evaluate(() => (window.shallow_navigation_log = []));
+		await app.goto('/shallow-routing/push-state', { shallow: true });
+		expect(await page.evaluate(() => window.shallow_navigation_log.map((n) => n.hook))).toEqual([
+			'before',
+			'on',
+			'after',
+			'complete'
+		]);
+	});
+
+	test('Can cancel shallow history restoration', async ({ page, baseURL }) => {
+		await page.goto('/shallow-routing/push-state?cancel-popstate');
+		await page.locator('[data-id="params"]').click();
+		await expect.poll(() => page.evaluate(() => window.shallow_navigation_log.length)).toBe(4);
+		const entry = await page.evaluate(() => history.state);
+		await page.evaluate(() => (window.shallow_navigation_log = []));
+
+		await page.goBack();
+		await expect.poll(() => page.evaluate(() => history.state)).toEqual(entry);
+		await expect(page).toHaveURL(`${baseURL}/shallow-routing/push-state/hello`);
+		await expect(page.locator('p')).toHaveText('active: true');
+		expect(await page.evaluate(() => window.shallow_navigation_log)).toEqual([
+			{
+				hook: 'before',
+				params: {},
+				path: '/shallow-routing/push-state',
+				route: '/shallow-routing/push-state',
+				shallow: true,
+				type: 'popstate'
+			}
+		]);
+	});
+
 	test('serializes custom objects in state', async ({ page }) => {
 		await page.goto('/shallow-routing/push-state/foo');
 		await expect(page.locator('[data-testid=foo]')).toHaveText('foo: nope');
