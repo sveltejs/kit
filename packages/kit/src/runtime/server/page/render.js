@@ -53,7 +53,7 @@ import * as w from '../../../messages/server-warnings.js';
  *   resolve_opts: import('types').RequiredResolveOptions;
  *   action_result?: import('types').ServerActionResult;
  *   data_serializer: import('./types.js').ServerDataSerializer;
- *   error_components?: Array<import('svelte').Component | undefined>
+ *   error_pages?: Array<{ node: import('types').SSRNode; component: Component | undefined } | undefined>
  * }} opts
  */
 export async function render_response({
@@ -67,7 +67,7 @@ export async function render_response({
 	resolve_opts,
 	action_result,
 	data_serializer,
-	error_components
+	error_pages
 }) {
 	if (state.prerendering || state.prerender_default === true) {
 		if (options.csp.mode === 'nonce') {
@@ -99,6 +99,9 @@ export async function render_response({
 
 	/** @type {Omit<SyncRenderOutput, 'html'>} */
 	let rendered;
+
+	/** Whether an error boundary rendered an `+error.svelte` page */
+	let boundary_failed = false;
 
 	const form_value =
 		action_result?.type === 'success' || action_result?.type === 'failure'
@@ -177,7 +180,7 @@ export async function render_response({
 				current_node = current_node.child = new RenderNode(
 					// TODO tidy up
 					/** @type {Component} */ (await branch[i + 1].node.component?.()),
-					error_components?.[i + 1]
+					error_pages?.[i + 1]?.component
 				);
 			}
 		}
@@ -196,11 +199,13 @@ export async function render_response({
 				]
 			]),
 			csp: csp.script_needs_nonce ? { nonce: csp.nonce } : { hash: csp.script_needs_hash },
-			transformError: error_components
+			transformError: error_pages
 				? /** @param {unknown} e */ (e) => {
 						if (isRedirect(e)) {
 							throw e;
 						}
+
+						boundary_failed = true;
 
 						const handled = handle_error_and_jsonify(event, render_state, e);
 
@@ -256,7 +261,17 @@ export async function render_response({
 		rendered = { head: '', body: '', hashes: { script: [] } };
 	}
 
-	for (const { node } of branch) {
+	const nodes = branch.map(({ node }) => node);
+
+	// we don't know which boundary rendered its error page, and the client
+	// loads every error page in the chain anyway, so include all of them
+	if (boundary_failed && error_pages) {
+		for (const error_page of error_pages) {
+			if (error_page) nodes.push(error_page.node);
+		}
+	}
+
+	for (const node of nodes) {
 		for (const url of node.imports) modulepreloads.add(url);
 		for (const url of node.stylesheets) stylesheets.add(url);
 		for (const font of node.fonts) fonts.set(font.file, font);

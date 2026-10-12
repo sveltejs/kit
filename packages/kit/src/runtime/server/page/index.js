@@ -295,7 +295,7 @@ export async function render_page(event, state, page, nodes, resolve_opts) {
 							},
 							status,
 							error,
-							error_components: await load_error_components(ssr, error_branch, page),
+							error_pages: await load_error_pages(ssr, error_branch, page),
 							branch: error_branch,
 							fetched,
 							data_serializer
@@ -343,7 +343,7 @@ export async function render_page(event, state, page, nodes, resolve_opts) {
 			action_result,
 			fetched,
 			data_serializer: !ssr ? server_data_serializer(event, state) : data_serializer,
-			error_components: await load_error_components(ssr, branch, page)
+			error_pages: await load_error_pages(ssr, branch, page)
 		});
 	} catch (e) {
 		// a remote function could have thrown a redirect during render
@@ -367,10 +367,10 @@ export async function render_page(event, state, page, nodes, resolve_opts) {
  * @param {Array<import('./types.js').Loaded | null>} branch
  * @param {PageNodeIndexes} page
  */
-function load_error_components(ssr, branch, page) {
+function load_error_pages(ssr, branch, page) {
 	if (!ssr) return undefined;
 
 	return build_error_chain(branch, page.errors, (idx) =>
-		manifest.nodes[idx]?.().then((e) => e.component?.())
+		manifest.nodes[idx]?.().then(async (node) => ({ node, component: await node.component?.() }))
 	);
 }
