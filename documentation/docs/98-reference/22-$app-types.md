@@ -79,7 +79,7 @@ type Path = '' | 'my-route' | `my-other-route/${string}` & {};
 
 ## ResolvedPathname
 
-Similar to `Path`, but prefixed with a [base path](configuration#paths). Used for `page.url.pathname`.
+Similar to `Path`, but prefixed with a [base path](@sveltejs-kit-vite#paths). Used for `page.url.pathname`.
 
 <div class="ts-block">
 

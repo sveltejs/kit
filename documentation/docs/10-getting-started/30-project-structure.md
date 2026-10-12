@@ -44,10 +44,10 @@ The `src` directory contains the meat of your project. Everything except `src/ro
 - `app.html` is your page template — an HTML document containing the following placeholders:
   - `%sveltekit.head%` — `<link>` and `<script>` elements needed by the app, plus any `<svelte:head>` content
   - `%sveltekit.body%` — the markup for a rendered page. This should live inside a `<div>` or other element, rather than directly inside `<body>`, to prevent bugs caused by browser extensions injecting elements that are then destroyed by the hydration process. SvelteKit will warn you in development if this is not the case
-  - `%sveltekit.assets%` — either [`paths.assets`](configuration#paths), if specified, or a relative path to [`paths.base`](configuration#paths)
-  - `%sveltekit.nonce%` — a [CSP](configuration#csp) nonce for manually included links and scripts, if used
+  - `%sveltekit.assets%` — either [`paths.assets`](@sveltejs-kit-vite#paths), if specified, or a relative path to [`paths.base`](@sveltejs-kit-vite#paths)
+  - `%sveltekit.nonce%` — a [CSP](@sveltejs-kit-vite#csp) nonce for manually included links and scripts, if used
   - `%sveltekit.env.[NAME]%` - this will be replaced at render time with the `[NAME]` environment variable, which must be defined as a public variable in `src/env`. It will fallback to `''` if not matched.
-  - `%sveltekit.version%` — the app version, which can be specified with the [`version`](configuration#version) configuration
+  - `%sveltekit.version%` — the app version, which can be specified with the [`version`](@sveltejs-kit-vite#version) configuration
 - `error.html` is the page that is rendered when everything else fails. It can contain the following placeholders:
   - `%sveltekit.status%` — the HTTP status
   - `%sveltekit.error.message%` — the error message
@@ -77,7 +77,7 @@ When you create a project with `npx sv create`, you'll also notice that `package
 
 ### vite.config.js
 
-A SvelteKit project is really just a [Vite](https://vitejs.dev) project that uses the [`@sveltejs/kit/vite`](@sveltejs-kit-vite) plugin, along with any other [Vite configuration](https://vitejs.dev/config/). The plugin accepts your Svelte and SvelteKit [configuration](configuration).
+A SvelteKit project is really just a [Vite](https://vitejs.dev) project that uses the [`@sveltejs/kit/vite`](@sveltejs-kit-vite) plugin, along with any other [Vite configuration](https://vitejs.dev/config/). The plugin accepts your Svelte and SvelteKit [@sveltejs-kit-vite](configuration).
 
 ### tsconfig.json
 
@@ -87,4 +87,4 @@ This file (or `jsconfig.json`, if you prefer type-checked `.js` files over `.ts`
 
 ### .svelte-kit
 
-As you develop and build your project, SvelteKit will generate files in a `.svelte-kit` directory (configurable as [`outDir`](configuration#outDir)). You can ignore its contents, and delete them at any time (they will be regenerated when you next `dev` or `build`).
+As you develop and build your project, SvelteKit will generate files in a `.svelte-kit` directory (configurable as [`outDir`](@sveltejs-kit-vite#outDir)). You can ignore its contents, and delete them at any time (they will be regenerated when you next `dev` or `build`).
