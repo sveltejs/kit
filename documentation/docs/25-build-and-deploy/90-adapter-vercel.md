@@ -59,7 +59,7 @@ If your functions need to access data in a specific region, it's recommended tha
 
 ## Image Optimization
 
-You may set the `images` config to control how Vercel builds your images. See the [image configuration reference](https://vercel.com/docs/build-output-api/v3/@sveltejs-kit-vite#images) for full details. As an example, you may set:
+You may set the `images` config to control how Vercel builds your images. See the [image configuration reference](https://vercel.com/docs/build-output-api/v3/configuration#images) for full details. As an example, you may set:
 
 ```js
 // @errors: 2554
