@@ -24,7 +24,12 @@ async function generate_fallback({ manifest_path, env, out_dir, origin, assets }
 	/** @type {import('types').SSRManifest} */
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
-	const { init, respond } = await configure({ building: true, manifest, env });
+	const { init, respond } = await configure({
+		building: true,
+		manifest,
+		env,
+		read_static: (file) => readFileSync(join(assets, file))
+	});
 	await init();
 
 	const response = await respond(new Request(origin + '/[fallback]'), {
@@ -36,8 +41,7 @@ async function generate_fallback({ manifest_path, env, out_dir, origin, assets }
 			dependencies: new Map(),
 			remote_responses: new Map(),
 			resolved_route_ids: new Set()
-		},
-		read: (file) => readFileSync(join(assets, file))
+		}
 	});
 
 	if (response.ok) {

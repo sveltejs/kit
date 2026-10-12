@@ -57,6 +57,23 @@ export function set_manifest(value) {
 	if (__SVELTEKIT_DEV__) save(manifest_key, value);
 }
 
+/** @type {import('types').ServerConfigureOptions['read_static']} */
+export let read_static;
+
+/** @type {import('types').ServerConfigureOptions['before_handle']} */
+export let before_handle;
+
+/** @type {import('types').ServerConfigureOptions['emulator']} */
+export let emulator;
+
+/**
+ * What the process hosting the runtime lends it, set on every `configure`
+ * @param {import('types').ServerConfigureOptions} opts
+ */
+export function set_host(opts) {
+	({ read_static, before_handle, emulator } = opts);
+}
+
 /**
  * @param {ServerHooks} value
  */

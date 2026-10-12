@@ -1,7 +1,12 @@
 import { set_building, set_prerendering } from '#app/env/server';
 import { enable_verbose_errors } from '../../messages/internal/shared.js';
 import { set_assets } from '../app/paths/internal/server.js';
-import { set_fix_stack_trace, set_manifest, set_read_implementation } from './internal.js';
+import {
+	set_fix_stack_trace,
+	set_host,
+	set_manifest,
+	set_read_implementation
+} from './internal.js';
 
 /**
  * Sets the module-level state the runtime reads, then loads the runtime. Everything that
@@ -9,15 +14,9 @@ import { set_fix_stack_trace, set_manifest, set_read_implementation } from './in
  * @param {import('types').ServerConfigureOptions} opts
  * @returns {Promise<import('types').ServerInstance>}
  */
-export async function configure({
-	building,
-	prerendering,
-	manifest,
-	read,
-	assets,
-	fix_stack_trace,
-	env
-}) {
+export async function configure(opts) {
+	const { building, prerendering, manifest, read, assets, fix_stack_trace, env } = opts;
+
 	if (building) {
 		set_building();
 		enable_verbose_errors();
@@ -27,6 +26,7 @@ export async function configure({
 	if (read) set_read_implementation(read);
 	if (assets !== undefined) set_assets(assets);
 	if (fix_stack_trace) set_fix_stack_trace(fix_stack_trace);
+	set_host(opts);
 
 	const instance = await import('./instance.js');
 	if (env) instance.set_env(env);
