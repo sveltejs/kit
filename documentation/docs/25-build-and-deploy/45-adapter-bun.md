@@ -8,9 +8,6 @@ title: Bun servers
 
 ## Usage
 
-Install the adapter:
-
-
 Run `npx sv add sveltekit-adapter="adapter:bun"`, or install with `npm i -D @sveltejs/adapter-bun` and add the adapter to your `vite.config.js`:
 
 ```js
