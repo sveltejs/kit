@@ -1,5 +1,5 @@
 {
 	"extends": "$app/tsconfig",
-	"include": ["src", "test/vitest", "test/playwright", "*.js"],
+	"include": ["src", "test/vitest", "test/playwright", "*.js", "../../vitest-matchers.d.ts"],
 	"exclude": ["src/service-worker.js"]
 }

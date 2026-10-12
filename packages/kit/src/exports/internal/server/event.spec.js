@@ -1,6 +1,16 @@
 /** @import { RequestEvent as Interface } from '@sveltejs/kit' */
-import { assert, expect, test } from 'vitest';
+import { afterEach, assert, expect, test, vi } from 'vitest';
 import { RequestEvent, QUERY, COMMAND, RENDER } from './event.js';
+
+afterEach(() => {
+	vi.doUnmock('node:async_hooks');
+	vi.resetModules();
+});
+
+/** Waits for `event.js` to find out whether `AsyncLocalStorage` is available */
+function settle() {
+	return new Promise((resolve) => setTimeout(resolve));
+}
 
 function root() {
 	return new RequestEvent(
@@ -19,6 +29,27 @@ function root() {
 	);
 }
 
+test('explains where the request event can be read', async () => {
+	const { getRequestEvent } = await import('./event.js');
+	await settle();
+
+	expect(() => getRequestEvent()).toThrowKitError('request_event_unavailable');
+});
+
+test('explains that the request event must be read synchronously without AsyncLocalStorage', async () => {
+	vi.doMock('node:async_hooks', () => {
+		throw new Error('not available');
+	});
+	const { getRequestEvent, get_event, with_event, RequestEvent } = await import('./event.js');
+	await settle();
+
+	expect(() => getRequestEvent()).toThrowKitError('request_event_after_await');
+	expect(() => get_event()).toThrowKitError('request_store_after_await');
+
+	const event = new RequestEvent(/** @type {any} */ ({}), 0, /** @type {any} */ ({}));
+	expect(with_event(event, () => getRequestEvent())).toBe(event);
+});
+
 test('flags accumulate through nested views', () => {
 	const event = root().clone(RENDER).clone(QUERY);
 
@@ -36,7 +67,9 @@ test('a query view throws on access to the page, on every copy', () => {
 
 	for (const event of [query, traced, traced.clone(QUERY)]) {
 		for (const property of /** @type {const} */ (['url', 'params', 'route'])) {
-			expect(() => event[property]).toThrow(`Cannot access event.${property} in a query`);
+			expect(() => event[property]).toThrowKitError('remote_request_property', {
+				contains: [`\`event.${property}\``]
+			});
 		}
 	}
 
@@ -75,11 +108,17 @@ test('remote views restrict headers and cookies', () => {
 	const query = root().clone(QUERY);
 	const command = root().clone(COMMAND);
 
-	expect(() => query.setHeaders({})).toThrow('setHeaders is not allowed');
-	expect(() => query.cookies.set('a', 'b', { path: '/' })).toThrow('Cannot set cookies');
-	expect(() => command.cookies.set('a', 'b', { path: 'x' })).toThrow('absolute path');
+	expect(() => query.setHeaders({})).toThrowKitError('remote_headers_forbidden');
+	expect(() => query.cookies.set('a', 'b', { path: '/' })).toThrowKitError(
+		'remote_cookie_forbidden',
+		{ contains: ['set'] }
+	);
+	expect(() => command.cookies.set('a', 'b', { path: 'x' })).toThrowKitError(
+		'remote_cookie_path_relative'
+	);
 	command.cookies.set('a', 'b', { path: '/' });
-	expect(() => command.clone(QUERY).cookies.set('a', 'b', { path: '/' })).toThrow(
-		'Cannot set cookies'
+	expect(() => command.clone(QUERY).cookies.set('a', 'b', { path: '/' })).toThrowKitError(
+		'remote_cookie_forbidden',
+		{ contains: ['set'] }
 	);
 });

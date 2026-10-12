@@ -77,14 +77,26 @@ describe('Vite build configuration', () => {
 	test('bundles the server source with the app and keeps production dependencies external', () => {
 		read_file.mockReturnValue(JSON.stringify({ dependencies: { jsdom: '1.0.0' } }));
 
-		const options = vite_config().environments.ssr.build.rolldownOptions;
+		const config = vite_config();
+		const options = config.environments.ssr.build.rolldownOptions;
 
 		expect(read_file).toHaveBeenCalledWith('package.json', 'utf8');
+		expect(config.ssr).toEqual({ external: ['jsdom'], noExternal: true });
 		expect(options.input).toEqual({ 'adapter-index': `${src_dir}/index.js` });
-		expect(options.external).toEqual([handoff, /^jsdom(\/.*)?$/]);
-		expect('jsdom/lib/api.js').toMatch(options.external[1]);
-		expect('jsdom-global').not.toMatch(options.external[1]);
+		expect(options.external).toEqual([handoff]);
 		expect(options.output.paths).toEqual({ [handoff]: '../adapter-bun.js' });
+	});
+
+	test('bundles production dependencies that vite-plugin-svelte marks noExternal', () => {
+		read_file.mockReturnValue(
+			JSON.stringify({
+				dependencies: { jsdom: '1.0.0', 'svelte-lib': '1.0.0', '@ui/kit': '1.0.0' }
+			})
+		);
+
+		const { ssr } = vite_config({ ssr: { noExternal: ['svelte-lib', /^@ui\//] } });
+
+		expect(ssr.external).toEqual(['jsdom']);
 	});
 
 	test('keeps adapter chunks at the output root so the hand-off path resolves', () => {
@@ -398,8 +410,8 @@ describe('generated routes', () => {
 	});
 });
 
-function vite_config() {
-	return (adapter() as any).vite.plugins.post[0].config();
+function vite_config(config = {}) {
+	return (adapter() as any).vite.plugins.post[0].config(config);
 }
 
 function handoff_source() {

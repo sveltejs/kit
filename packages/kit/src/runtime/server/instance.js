@@ -7,6 +7,8 @@ import { set_hooks, fix_stack_trace } from './internal.js';
 import { init_tracing } from '@sveltejs/kit/internal/server';
 import { DEV } from 'esm-env';
 import { init_transport } from '#app/internal/transport';
+import { capture_error } from '../../messages/internal/server.js';
+import * as e from '../../messages/server-errors.js';
 
 /** @type {Promise<any>} */
 let init_promise;
@@ -33,9 +35,7 @@ if (DEV) {
 		if (encoding) {
 			decoded_responses.set(
 				response,
-				new Error(
-					`Cannot return \`fetch(...)\` directly from a handler if the response has a \`Content-Encoding: ${encoding}\` header. The body has already been decoded`
-				)
+				capture_error(() => e.fetch_response_decoded({ encoding }))
 			);
 		}
 

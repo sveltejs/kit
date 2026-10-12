@@ -7,7 +7,7 @@ import {
 	normalizeUrl,
 	redirect
 } from './index.js';
-import { assert, describe, it } from 'vitest';
+import { assert, describe, expect, it, vi } from 'vitest';
 
 describe('normalizeUrl', () => {
 	it('noop for regular url', () => {
@@ -114,37 +114,31 @@ describe('redirect', () => {
 	});
 
 	it('throws a descriptive error for external redirect locations', () => {
-		assert.throws(
-			() => redirect(307, 'https://google.de'),
-			/Cannot redirect to external URL "https:\/\/google\.de"/
+		expect(() => redirect(307, 'https://google.de')).toThrowKitError(
+			'redirect_external_not_allowed',
+			{ contains: ['"https://google.de"'] }
 		);
 	});
 
 	it('throws a descriptive error for redirect locations that parse as external', () => {
-		assert.throws(
-			() => redirect(307, ' https://google.de'),
-			/Cannot redirect to external URL " https:\/\/google\.de"/
-		);
-
-		assert.throws(
-			() => redirect(307, '\\\\google.de'),
-			/Cannot redirect to external URL "\\\\\\\\google\.de"/
-		);
-
-		assert.throws(() => redirect(307, 'x:foo'), /Cannot redirect to external URL "x:foo"/);
+		for (const location of [' https://google.de', '\\\\google.de', 'x:foo']) {
+			expect(() => redirect(307, location)).toThrowKitError('redirect_external_not_allowed', {
+				contains: [JSON.stringify(location)]
+			});
+		}
 	});
 
 	it('throws a descriptive error for javascript URLs with external: true', () => {
-		assert.throws(
-			() => redirect(307, 'javascript:alert(1)', { external: true }),
-			/Cannot redirect to "javascript:alert\(1\)" with `{ external: true }`/
+		expect(() => redirect(307, 'javascript:alert(1)', { external: true })).toThrowKitError(
+			'redirect_external_javascript',
+			{ contains: ['"javascript:alert(1)"'] }
 		);
 	});
 
 	it('throws a descriptive error for normalized javascript URLs with external: true', () => {
-		assert.throws(
-			() => redirect(307, 'java\tscript:alert(1)', { external: true }),
-			/Cannot redirect to "java\\tscript:alert\(1\)" with `{ external: true }`/
+		expect(() => redirect(307, 'java\tscript:alert(1)', { external: true })).toThrowKitError(
+			'redirect_external_javascript',
+			{ contains: ['"java\\tscript:alert(1)"'] }
 		);
 	});
 
@@ -163,10 +157,9 @@ describe('redirect', () => {
 	});
 
 	it('throws a descriptive error for disallowed external locations', () => {
-		assert.throws(
-			() => redirect(307, 'https://evil.com', { external: ['https://google.de'] }),
-			/Cannot redirect to "https:\/\/evil\.com": URL origin is not included in the `external` allowlist/
-		);
+		expect(() =>
+			redirect(307, 'https://evil.com', { external: ['https://google.de'] })
+		).toThrowKitError('redirect_external_not_in_allowlist', { contains: ['"https://evil.com"'] });
 	});
 
 	it('throws a descriptive error for invalid redirect locations', () => {
@@ -212,6 +205,47 @@ describe('error', () => {
 				})
 			);
 		}
+	});
+});
+
+describe('invalid statuses', () => {
+	it.each([undefined, 302, 600, NaN])('rejects error status %s', (status) => {
+		expect(() => error(/** @type {any} */ (status), 'nope')).toThrowKitError(
+			'invalid_error_status',
+			{ contains: [`${status} is invalid`] }
+		);
+	});
+
+	it.each([undefined, 200, 309, 555])('rejects redirect status %s', (status) => {
+		/** @type {unknown} */
+		let caught;
+		try {
+			redirect(/** @type {any} */ (status), '/a');
+		} catch (e) {
+			caught = e;
+		}
+
+		assert.equal(isRedirect(caught), false);
+		expect(caught).toBeKitError('invalid_redirect_status', { contains: [`${status} is invalid`] });
+	});
+
+	it('still accepts a deprecated App.Error body, warning about it', () => {
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+		try {
+			error(404, /** @type {any} */ ({ message: 'Not here', code: 'missing' }));
+			assert.fail('Expected error to throw');
+		} catch (e) {
+			if (!isHttpError(e)) assert.fail('Expected an HttpError');
+			assert.deepEqual(
+				e.body,
+				/** @type {any} */ ({ code: 'missing', message: 'Not here', status: 404 })
+			);
+		}
+
+		expect(warn).toHaveBeenCalledOnce();
+		expect(warn).toContainKitDiagnostic('error_body_deprecated');
+		warn.mockRestore();
 	});
 });
 
