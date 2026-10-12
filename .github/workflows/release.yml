@@ -3,7 +3,7 @@ name: Release
 on:
   push:
     branches:
-      - version-3
+      - main
 
 concurrency:
   # prevent two release workflows from running at once

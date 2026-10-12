@@ -3,6 +3,7 @@
 import { error } from '@sveltejs/kit';
 import { ValidationError } from '@sveltejs/kit/internal';
 import { with_event } from '@sveltejs/kit/internal/server';
+import * as e from '../../../../messages/server-errors.js';
 
 /**
  * @param {any} validate_or_fn
@@ -39,9 +40,7 @@ export function create_validator(validate_or_fn, maybe_fn) {
 		};
 	}
 
-	throw new Error(
-		'Invalid validator passed to remote function. Expected "unchecked" or a Standard Schema (https://standardschema.dev)'
-	);
+	e.remote_invalid_validator();
 }
 
 /**
@@ -148,9 +147,7 @@ function to_iterator(source, name) {
 		return source[Symbol.iterator]();
 	}
 
-	throw new Error(
-		`query.live '${name}' must return an Iterator, Iterable, AsyncIterator or AsyncIterable`
-	);
+	e.remote_query_live_not_iterable({ name });
 }
 
 /**

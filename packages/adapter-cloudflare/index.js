@@ -230,10 +230,20 @@ function virtual_workers_module(options, stub_import) {
 		globalThis.__sveltekit_cloudflare_platform = proxy;
 		/** @type {any} */ (globalThis).caches = proxy.caches;
 	};
+	const dispose = async () => {
+		const proxy = globalThis.__sveltekit_cloudflare_platform;
+		globalThis.__sveltekit_cloudflare_platform = undefined;
+		await proxy?.dispose();
+	};
 	return {
 		name: 'vite-plugin-sveltekit-adapter-cloudflare-virtual-workers-module',
 		configureServer: setup,
 		configurePreviewServer: setup,
+		closeServer({ reason }) {
+			// a restarting server is created before the old one closes, so it inherits the proxy
+			if (reason === 'close') return dispose();
+		},
+		closePreviewServer: dispose,
 		resolveId: {
 			filter: { id: exactRegex('cloudflare:workers') },
 			handler() {

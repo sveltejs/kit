@@ -4,6 +4,7 @@
 import { get_event, COMMAND } from '@sveltejs/kit/internal/server';
 import { create_validator, run_remote_function } from './shared.js';
 import { MUTATIVE_METHODS } from '../../../../constants.js';
+import * as e from '../../../../messages/server-errors.js';
 
 /**
  * Creates a remote command. When called from the browser, the function will be invoked on the server via a `fetch` call.
@@ -67,22 +68,21 @@ export function command(validate_or_fn, maybe_fn) {
 		const nested = event.in_query || event.in_prerender;
 
 		if (nested || !MUTATIVE_METHODS.includes(event.request.method)) {
-			const violation = nested
-				? `inside a query or prerender function`
-				: `from a ${event.request.method} handler`;
-
-			throw new Error(`Cannot call a command (${__.name}) ${violation}`);
+			if (nested) {
+				e.remote_command_readonly({ name: __.name });
+			}
+			e.remote_command_method({ name: __.name, method: event.request.method });
 		}
 
 		if (event.in_render) {
-			throw new Error(`Cannot call a command (${__.name}) during server-side rendering`);
+			e.remote_command_render({ name: __.name });
 		}
 
 		const promise = Promise.resolve(run_remote_function(event, COMMAND, () => validate(arg), fn));
 
 		// @ts-expect-error
 		promise.updates = () => {
-			throw new Error(`Cannot call '${__.name}(...).updates(...)' on the server`);
+			e.server_api_unavailable({ name: `${__.name}(...).updates(...)` });
 		};
 
 		return /** @type {ReturnType<RemoteCommand<Input, Output>>} */ (promise);

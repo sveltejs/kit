@@ -1,4 +1,5 @@
 import { set_building, set_prerendering } from '#app/env/server';
+import { enable_verbose_errors } from '../../messages/internal/shared.js';
 import { set_assets } from '../app/paths/internal/server.js';
 import {
 	set_fix_stack_trace,
@@ -16,7 +17,10 @@ import {
 export async function configure(opts) {
 	const { building, prerendering, manifest, read, assets, fix_stack_trace, env } = opts;
 
-	if (building) set_building();
+	if (building) {
+		set_building();
+		enable_verbose_errors();
+	}
 	if (prerendering) set_prerendering();
 	if (manifest) set_manifest(manifest);
 	if (read) set_read_implementation(read);

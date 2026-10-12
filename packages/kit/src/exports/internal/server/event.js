@@ -4,6 +4,7 @@
 /** @import { AsyncLocalStorage } from 'node:async_hooks' */
 import { DEV } from 'esm-env';
 import { IN_WEBCONTAINER } from '../../../constants.js';
+import * as e from '../../../messages/server-errors.js';
 
 /** The kinds of code an event gets handed to, and the groups the runtime asks about */
 export const QUERY = 1;
@@ -21,7 +22,7 @@ const STATE = Symbol('sveltekit.state');
 
 /** @type {Interface['setHeaders']} */
 function forbid_set_headers() {
-	throw new Error('setHeaders is not allowed in remote functions');
+	e.remote_headers_forbidden();
 }
 
 /**
@@ -47,10 +48,10 @@ class RemoteCookies {
 	 */
 	#check(verb, opts) {
 		if (this.#flags & (QUERY | PRERENDER)) {
-			throw new Error(`Cannot ${verb} cookies in \`query\` or \`prerender\` functions`);
+			e.remote_cookie_forbidden({ operation: verb });
 		}
 		if (opts?.path && !opts.path.startsWith('/')) {
-			throw new Error('Cookies in remote functions must have an absolute path');
+			e.remote_cookie_path_relative({ operation: verb === 'set' ? 'set' : 'deleted' });
 		}
 	}
 
@@ -238,9 +239,7 @@ Object.setPrototypeOf(QueryEvent.prototype, RequestEvent.prototype);
 for (const property of ['url', 'params', 'route']) {
 	Object.defineProperty(QueryEvent.prototype, property, {
 		get() {
-			throw new Error(
-				`Cannot access event.${property} in a query. Pass the value as an argument to the query instead`
-			);
+			return e.remote_request_property({ property });
 		}
 	});
 }
@@ -271,15 +270,8 @@ export function getRequestEvent() {
 	const event = try_get_event();
 
 	if (!event) {
-		let message =
-			'Can only read the current request event inside functions invoked during `handle`, such as server `load` functions, actions, endpoints, and other server hooks.';
-
-		if (!als) {
-			message +=
-				' In environments without `AsyncLocalStorage`, the event must be read synchronously, not after an `await`.';
-		}
-
-		throw new Error(message);
+		if (als) e.request_event_unavailable();
+		e.request_event_after_await();
 	}
 
 	return event;
@@ -288,17 +280,8 @@ export function getRequestEvent() {
 export function get_event() {
 	const event = try_get_event();
 	if (!event) {
-		let message = 'Could not get the request event.';
-
-		if (als) {
-			message += ' This is an internal error.';
-		} else {
-			message +=
-				' In environments without `AsyncLocalStorage`, the request event (used by e.g. remote functions) must be accessed synchronously, not after an `await`.' +
-				' If it was accessed synchronously then this is an internal error.';
-		}
-
-		throw new Error(message);
+		if (als) throw new Error('Could not get the request event. This is an internal error.');
+		e.request_store_after_await();
 	}
 	return event;
 }

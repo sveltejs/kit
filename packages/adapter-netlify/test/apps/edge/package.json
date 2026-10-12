@@ -12,6 +12,7 @@
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
+		"e2e-test-dep-wasm": "file:./_test_dependencies/wasm-lib",
 		"svelte": "catalog:",
 		"vite": "catalog:",
 		"vitest": "catalog:"

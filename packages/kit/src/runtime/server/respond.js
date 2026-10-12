@@ -41,6 +41,7 @@ import { get_remote_id, handle_remote_call } from './remote-functions.js';
 import { before_handle, emulator, hooks, manifest } from './internal.js';
 import { options } from '<sveltekit:generated>/server.js';
 import { respond_with_error, handle_fatal_error } from './page/respond_with_error.js';
+import * as e from '../../messages/server-errors.js';
 
 /** @type {import('types').RequiredResolveOptions['transformPageChunk']} */
 const default_transform = ({ html }) => html;
@@ -190,9 +191,7 @@ export async function internal_respond(request, state) {
 			getClientAddress:
 				state.getClientAddress ||
 				(() => {
-					throw new Error(
-						`${__SVELTEKIT_ADAPTER_NAME__} does not specify getClientAddress. Please raise an issue`
-					);
+					e.client_address_unsupported({ adapter: __SVELTEKIT_ADAPTER_NAME__ });
 				}),
 			locals: {},
 			params: {},
@@ -206,7 +205,7 @@ export async function internal_respond(request, state) {
 			route: { id: null },
 			setHeaders: (new_headers) => {
 				if (responded) {
-					throw new Error('Cannot use `setHeaders(...)` after the response has been generated');
+					e.set_headers_after_response();
 				}
 
 				if (DEV) {
@@ -217,15 +216,13 @@ export async function internal_respond(request, state) {
 					const lower = key.toLowerCase();
 
 					if (lower === 'set-cookie') {
-						throw new Error(
-							'Use `event.cookies.set(name, value, options)` instead of `event.setHeaders` to set cookies'
-						);
+						e.set_headers_cookie();
 					} else if (Object.hasOwn(headers, lower)) {
 						// appendHeaders-style for Server-Timing https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Server-Timing
 						if (lower === 'server-timing') {
 							headers[lower] += ', ' + value;
 						} else {
-							throw new Error(`"${key}" header is already set`);
+							e.header_already_set({ name: key });
 						}
 					} else {
 						headers[lower] = value;
@@ -318,9 +315,11 @@ export async function internal_respond(request, state) {
 		});
 
 		try {
+			// A spoofed request origin must not be able to redirect us to an internal resource.
+			const response = await fetch(new Request(url, request), { redirect: 'manual' });
+
 			// `fetch` automatically decodes the body, so we need to delete the related headers to not break the response
 			// Also see https://github.com/sveltejs/kit/issues/12197 for more info (we should fix this more generally at some point)
-			const response = await fetch(url, request);
 			const headers = new Headers(response.headers);
 			if (headers.has('content-encoding')) {
 				headers.delete('content-encoding');
@@ -722,7 +721,7 @@ export async function internal_respond(request, state) {
 				// to an external service from the root layout while rendering an error page
 				const headers = new Headers(request.headers);
 				headers.set('x-sveltekit-error', 'true');
-				return await fetch(request, { headers });
+				return await fetch(request, { headers, redirect: 'manual' });
 			}
 
 			if (state.error) {
@@ -771,7 +770,7 @@ export async function internal_respond(request, state) {
 
 			// we can't load the endpoint from our own manifest,
 			// so we need to make an actual HTTP request
-			const response = await fetch(request);
+			const response = await fetch(request, { redirect: 'manual' });
 
 			// clone the response so that headers are mutable (https://github.com/sveltejs/kit/issues/13857)
 			return new Response(response.body, response);
@@ -784,7 +783,7 @@ export async function internal_respond(request, state) {
 		} finally {
 			responded = true;
 			event.cookies.set = () => {
-				throw new Error('Cannot use `cookies.set(...)` after the response has been generated');
+				e.cookies_set_after_response();
 			};
 		}
 	}
