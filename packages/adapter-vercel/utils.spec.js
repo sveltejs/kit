@@ -1,3 +1,4 @@
+import process from 'node:process';
 import { assert, test, describe } from 'vitest';
 import { parse_isr_expiration, pattern_to_src, resolve_runtime } from './utils.js';
 
@@ -106,7 +107,10 @@ describe('resolve_runtime', () => {
 });
 
 describe('resolve_runtime with bun detected', () => {
-	/** @param {string} bun_version */
+	/**
+	 * @param {string} bun_version
+	 * @param {() => void} fn
+	 */
 	function with_bun(bun_version, fn) {
 		const descriptor = Object.getOwnPropertyDescriptor(process.versions, 'bun');
 		Object.defineProperty(process.versions, 'bun', { value: bun_version, configurable: true });
