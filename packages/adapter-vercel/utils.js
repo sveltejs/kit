@@ -87,8 +87,8 @@ function get_default_runtime() {
 		// pin the minor when Vercel can resolve it specifically (e.g. `bun1.4.x`),
 		// otherwise fall back to `bun1.x` so a newer Bun still builds
 		const version = minor ? `${major}.${minor}.x` : `${major}.x`;
-		return /** @type {`bun${valid_bun_versions[number]}`} */ (
-			`bun${valid_bun_versions.includes(/** @type {valid_bun_versions[number]} */ (version)) ? version : `${major}.x`}`
+		return /** @type {`bun${typeof valid_bun_versions[number]}`} */ (
+			`bun${valid_bun_versions.includes(/** @type {typeof valid_bun_versions[number]} */ (version)) ? version : `${major}.x`}`
 		);
 	}
 
