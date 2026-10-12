@@ -70,7 +70,7 @@ export function resolve_runtime(default_key, override_key) {
 }
 
 const valid_node_versions = [22, 24];
-const valid_bun_versions = ['1.x', '1.4.x'];
+const valid_bun_versions = /** @type {const} */ (['1.x', '1.4.x']);
 const formatter = new Intl.ListFormat('en-gb', { type: 'disjunction' });
 
 /** @returns {RuntimeKey} */
@@ -87,7 +87,9 @@ function get_default_runtime() {
 		// pin the minor when Vercel can resolve it specifically (e.g. `bun1.4.x`),
 		// otherwise fall back to `bun1.x` so a newer Bun still builds
 		const version = minor ? `${major}.${minor}.x` : `${major}.x`;
-		return `bun${valid_bun_versions.includes(version) ? version : `${major}.x`}`;
+		return /** @type {`bun${valid_bun_versions[number]}`} */ (
+			`bun${valid_bun_versions.includes(/** @type {valid_bun_versions[number]} */ (version)) ? version : `${major}.x`}`
+		);
 	}
 
 	// otherwise, default to the version of Node specified in the project config
@@ -108,12 +110,7 @@ function get_default_runtime() {
 	);
 }
 
-const valid_runtimes = /** @type {const} */ ([
-	'nodejs22.x',
-	'nodejs24.x',
-	'bun1.x',
-	'bun1.4.x'
-]);
+const valid_runtimes = /** @type {const} */ (['nodejs22.x', 'nodejs24.x', 'bun1.x', 'bun1.4.x']);
 
 /**
  * @param {string} key
