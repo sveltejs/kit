@@ -1,4 +1,3 @@
-/** @import { RequestState } from 'types' */
 import { expect, test, vi } from 'vitest';
 import { fail, redirect } from '@sveltejs/kit';
 import { ActionFailure } from '@sveltejs/kit/internal';
@@ -23,11 +22,10 @@ function create_event(search = '') {
 			url: new URL(`http://localhost/a${search}`),
 			route: { id: '/a' }
 		}),
-		0
+		0,
+		/** @type {any} */ ({})
 	);
 }
-
-const state = /** @type {RequestState} */ (/** @type {unknown} */ ({}));
 
 test('action locations with leading double slashes remain same-origin', () => {
 	const url = new URL('https://example.com//attacker.example/path?/action&foo=bar');
@@ -39,7 +37,7 @@ test('action locations with leading double slashes remain same-origin', () => {
 });
 
 test('returns an error result, rather than throwing, when an action throws fail()', async () => {
-	const result = await handle_action_request(create_event(), state, {
+	const result = await handle_action_request(create_event(), {
 		actions: {
 			default: () => {
 				throw fail(400);
@@ -54,7 +52,7 @@ test('returns an error result, rather than throwing, when an action throws fail(
 });
 
 test('still returns a failure result for a returned fail()', async () => {
-	const result = await handle_action_request(create_event(), state, {
+	const result = await handle_action_request(create_event(), {
 		actions: { default: () => fail(400, { missing: true }) }
 	});
 
@@ -62,7 +60,7 @@ test('still returns a failure result for a returned fail()', async () => {
 });
 
 test('returning redirect() from an action is an error', async () => {
-	const result = await handle_action_request(create_event(), state, {
+	const result = await handle_action_request(create_event(), {
 		actions: {
 			// @ts-expect-error `redirect` returns `never`, but this tests the misuse
 			default: () => {
@@ -80,14 +78,14 @@ test('returning redirect() from an action is an error', async () => {
 
 test('default and named actions cannot be mixed', async () => {
 	await expect(
-		handle_action_request(create_event(), state, {
+		handle_action_request(create_event(), {
 			actions: { default: () => {}, other: () => {} }
 		})
 	).rejects.toThrowKitError('action_default_with_named');
 });
 
 test('?/default is reserved', async () => {
-	const result = await handle_action_request(create_event('?/default'), state, {
+	const result = await handle_action_request(create_event('?/default'), {
 		actions: { default: () => {} }
 	});
 

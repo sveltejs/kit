@@ -1,4 +1,4 @@
-/** @import { RequestState, ServerHooks } from 'types' */
+/** @import { ServerHooks } from 'types' */
 import { afterEach, expect, test, vi } from 'vitest';
 import { SvelteKitError } from '@sveltejs/kit/internal';
 import { RequestEvent, RENDER } from '@sveltejs/kit/internal/server';
@@ -9,12 +9,7 @@ vi.stubGlobal('__SVELTEKIT_SUPPORTS_ASYNC__', false);
 const { handle_error_and_jsonify } = await import('./errors.js');
 const { set_hooks } = await import('./internal.js');
 
-const event = new RequestEvent(/** @type {any} */ ({}), 0);
-
-/** @param {Partial<RequestState>} [state] */
-function create_state(state = {}) {
-	return /** @type {RequestState} */ (/** @type {unknown} */ (state));
-}
+const event = new RequestEvent(/** @type {any} */ ({}), 0, /** @type {any} */ ({}));
 
 /** @param {ServerHooks['handleError']} handleError */
 function use_hook(handleError) {
@@ -33,7 +28,7 @@ test('logs a failing handleError hook with its cause and the original error, and
 	const log = vi.spyOn(console, 'error').mockImplementation(() => {});
 	const original = new Error('original');
 
-	const body = handle_error_and_jsonify(event, create_state(), original);
+	const body = handle_error_and_jsonify(event, original);
 
 	expect(body).toEqual({ status: 500, message: 'Internal Error' });
 	expect(log).toHaveBeenCalledTimes(2);
@@ -51,7 +46,6 @@ test('keeps the status of framework errors when the handleError hook rejects', a
 
 	const body = await handle_error_and_jsonify(
 		event,
-		create_state(),
 		new SvelteKitError(404, 'Not Found', 'Not found: /a')
 	);
 
@@ -67,7 +61,7 @@ test('warns once and discards the result of an async handleError hook during ren
 	use_hook(() => Promise.resolve({ message: 'custom' }));
 	const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-	const body = handle_error_and_jsonify(event.clone(RENDER), create_state(), new Error('x'));
+	const body = handle_error_and_jsonify(event.clone(RENDER), new Error('x'));
 
 	expect(body).toEqual({ status: 500, message: 'Internal Error' });
 	expect(warn).toHaveBeenCalledOnce();

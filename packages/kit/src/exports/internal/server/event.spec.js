@@ -1,6 +1,6 @@
 /** @import { RequestEvent as Interface } from '@sveltejs/kit' */
 import { afterEach, assert, expect, test, vi } from 'vitest';
-import { RequestEvent, CONTEXT, QUERY, COMMAND, RENDER } from './event.js';
+import { RequestEvent, QUERY, COMMAND, RENDER } from './event.js';
 
 afterEach(() => {
 	vi.doUnmock('node:async_hooks');
@@ -24,7 +24,8 @@ function root() {
 				tracing: { enabled: false }
 			})
 		),
-		0
+		0,
+		/** @type {any} */ ({ remote: {} })
 	);
 }
 
@@ -39,18 +40,14 @@ test('explains that the request event must be read synchronously without AsyncLo
 	vi.doMock('node:async_hooks', () => {
 		throw new Error('not available');
 	});
-	const { getRequestEvent, get_request_store, with_request_store, RequestEvent } =
-		await import('./event.js');
+	const { getRequestEvent, get_event, with_event, RequestEvent } = await import('./event.js');
 	await settle();
 
 	expect(() => getRequestEvent()).toThrowKitError('request_event_after_await');
-	expect(() => get_request_store()).toThrowKitError('request_store_after_await');
+	expect(() => get_event()).toThrowKitError('request_store_after_await');
 
-	const store = /** @type {any} */ ({
-		event: new RequestEvent(/** @type {any} */ ({}), 0),
-		state: {}
-	});
-	expect(with_request_store(store, () => getRequestEvent())).toBe(store.event);
+	const event = new RequestEvent(/** @type {any} */ ({}), 0, /** @type {any} */ ({}));
+	expect(with_event(event, () => getRequestEvent())).toBe(event);
 });
 
 test('flags accumulate through nested views', () => {
@@ -102,7 +99,8 @@ test('views share the request data and own nothing else', () => {
 	const event = base.clone(QUERY);
 
 	assert.strictEqual(event.locals, base.locals);
-	assert.deepEqual(Object.getOwnPropertySymbols(event), [CONTEXT]);
+	assert.equal(Object.getOwnPropertySymbols(event).length, 2);
+	assert.strictEqual(event.state, base.state);
 	assert.isFalse(Object.hasOwn(event, 'url'));
 });
 

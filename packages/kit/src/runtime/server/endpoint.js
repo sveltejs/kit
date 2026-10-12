@@ -1,5 +1,5 @@
 import { Redirect } from '@sveltejs/kit/internal';
-import { record_span, with_request_store } from '@sveltejs/kit/internal/server';
+import { record_span, with_event } from '@sveltejs/kit/internal/server';
 import { BODY_DEPENDENT_METHODS, ENDPOINT_METHODS, PAGE_METHODS } from '../../constants.js';
 import { negotiate } from '../../utils/http.js';
 import { method_not_allowed } from './utils.js';
@@ -7,11 +7,11 @@ import * as e from '../../messages/server-errors.js';
 
 /**
  * @param {import('@sveltejs/kit/internal/server').RequestEvent} event
- * @param {import('types').RequestState} state
  * @param {import('types').SSREndpoint} mod
  * @returns {Promise<Response>}
  */
-export async function render_endpoint(event, state, mod) {
+export async function render_endpoint(event, mod) {
+	const state = event.state;
 	const method = /** @type {import('types').HttpMethod} */ (event.request.method);
 
 	let handler = mod[method] || mod.fallback;
@@ -59,7 +59,7 @@ export async function render_endpoint(event, state, mod) {
 			},
 			fn: async (current) => {
 				const traced_event = event.traced(current);
-				return with_request_store({ event: traced_event, state }, () => handler(traced_event));
+				return with_event(traced_event, () => handler(traced_event));
 			}
 		});
 

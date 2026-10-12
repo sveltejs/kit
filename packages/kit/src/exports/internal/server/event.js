@@ -1,6 +1,6 @@
 /** @import { Cookies, RequestEvent as Interface } from '@sveltejs/kit' */
 /** @import { Span } from '@opentelemetry/api' */
-/** @import { RequestStore } from 'types' */
+/** @import { RequestState } from 'types' */
 /** @import { AsyncLocalStorage } from 'node:async_hooks' */
 import { DEV } from 'esm-env';
 import { IN_WEBCONTAINER } from '../../../constants.js';
@@ -16,6 +16,9 @@ const REMOTE = QUERY | PRERENDER | FORM | COMMAND;
 
 /** The kinds on the stack, kept under a symbol so it is not part of the public shape */
 export const CONTEXT = Symbol('sveltekit.context');
+
+/** The request state, shared by every view of the request */
+const STATE = Symbol('sveltekit.state');
 
 /** @type {Interface['setHeaders']} */
 function forbid_set_headers() {
@@ -94,11 +97,15 @@ export class RequestEvent {
 	/** @type {number} */
 	[CONTEXT];
 
+	/** @type {RequestState} */
+	[STATE];
+
 	/**
 	 * @param {Interface} source
 	 * @param {number} flags
+	 * @param {RequestState} state
 	 */
-	constructor(source, flags) {
+	constructor(source, flags, state) {
 		this.cookies = source.cookies;
 		this.fetch = source.fetch;
 		this.getClientAddress = source.getClientAddress;
@@ -114,6 +121,7 @@ export class RequestEvent {
 		this.isRemoteRequest = source.isRemoteRequest;
 		this.tracing = source.tracing;
 		this[CONTEXT] = flags;
+		this[STATE] = state;
 	}
 
 	/**
@@ -123,9 +131,15 @@ export class RequestEvent {
 	 * @returns {RequestEvent}
 	 */
 	static from(event, current) {
-		const view = new RequestEvent(event, 0);
+		const { [STATE]: state } = /** @type {Partial<RequestEvent>} */ (event);
+		const view = new RequestEvent(event, 0, /** @type {RequestState} */ (state));
 		view.tracing = { ...event.tracing, current };
 		return view;
+	}
+
+	/** What the runtime knows about the request, shared by every view of it */
+	get state() {
+		return this[STATE];
 	}
 
 	/** Inside a `query` function, however deep */
@@ -163,8 +177,8 @@ export class RequestEvent {
 		const flags = this[CONTEXT] | kind;
 		const view =
 			flags & QUERY
-				? /** @type {RequestEvent} */ (new QueryEvent(this, flags))
-				: new RequestEvent(this, flags);
+				? /** @type {RequestEvent} */ (new QueryEvent(this, flags, this[STATE]))
+				: new RequestEvent(this, flags, this[STATE]);
 
 		if (kind & REMOTE) {
 			view.cookies = new RemoteCookies(this.cookies, flags);
@@ -195,11 +209,15 @@ class QueryEvent {
 	/** @type {number} */
 	[CONTEXT];
 
+	/** @type {RequestState} */
+	[STATE];
+
 	/**
 	 * @param {Interface} source
 	 * @param {number} flags
+	 * @param {RequestState} state
 	 */
-	constructor(source, flags) {
+	constructor(source, flags, state) {
 		this.cookies = source.cookies;
 		this.fetch = source.fetch;
 		this.getClientAddress = source.getClientAddress;
@@ -212,6 +230,7 @@ class QueryEvent {
 		this.isRemoteRequest = source.isRemoteRequest;
 		this.tracing = source.tracing;
 		this[CONTEXT] = flags;
+		this[STATE] = state;
 	}
 }
 
@@ -225,10 +244,10 @@ for (const property of ['url', 'params', 'route']) {
 	});
 }
 
-/** @type {RequestStore | null} */
-let sync_store = null;
+/** @type {RequestEvent | null} */
+let sync_event = null;
 
-/** @type {AsyncLocalStorage<RequestStore | null> | null} */
+/** @type {AsyncLocalStorage<RequestEvent | null> | null} */
 let als;
 
 import('node:async_hooks')
@@ -248,7 +267,7 @@ import('node:async_hooks')
  * @returns {Interface}
  */
 export function getRequestEvent() {
-	const event = try_get_request_store()?.event;
+	const event = try_get_event();
 
 	if (!event) {
 		if (als) e.request_event_unavailable();
@@ -258,37 +277,37 @@ export function getRequestEvent() {
 	return event;
 }
 
-export function get_request_store() {
-	const result = try_get_request_store();
-	if (!result) {
-		if (als) throw new Error('Could not get the request store. This is an internal error.');
+export function get_event() {
+	const event = try_get_event();
+	if (!event) {
+		if (als) throw new Error('Could not get the request event. This is an internal error.');
 		e.request_store_after_await();
 	}
-	return result;
+	return event;
 }
 
-export function try_get_request_store() {
-	return sync_store ?? als?.getStore() ?? null;
+export function try_get_event() {
+	return sync_event ?? als?.getStore() ?? null;
 }
 
 /**
  * @template T
- * @param {RequestStore | null} store
+ * @param {RequestEvent | null} event
  * @param {() => T} fn
  */
-export function with_request_store(store, fn) {
-	if (DEV && store && !(store.event instanceof RequestEvent)) {
+export function with_event(event, fn) {
+	if (DEV && event && !(event instanceof RequestEvent)) {
 		throw new Error('The request store only holds events made by `RequestEvent`, never a copy');
 	}
 
 	try {
-		sync_store = store;
-		return als ? als.run(store, fn) : fn();
+		sync_event = event;
+		return als ? als.run(event, fn) : fn();
 	} finally {
-		// Since AsyncLocalStorage is not working in webcontainers, we don't reset `sync_store`
+		// Since AsyncLocalStorage is not working in webcontainers, we don't reset `sync_event`
 		// and handle only one request at a time in `src/runtime/server/index.js`.
 		if (!IN_WEBCONTAINER) {
-			sync_store = null;
+			sync_event = null;
 		}
 	}
 }

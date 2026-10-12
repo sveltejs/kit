@@ -11,10 +11,9 @@ import * as e from '../../../messages/server-errors.js';
  * If the serialized data contains promises, `chunks` will be an
  * async iterable containing their resolutions
  * @param {import('@sveltejs/kit/internal/server').RequestEvent} event
- * @param {import('types').RequestState} state
  * @returns {import('./types.js').ServerDataSerializer}
  */
-export function server_data_serializer(event, state) {
+export function server_data_serializer(event) {
 	let promise_id = 1;
 	let max_nodes = -1;
 
@@ -32,7 +31,7 @@ export function server_data_serializer(event, state) {
 					.then(/** @param {any} data */ (data) => ({ data }))
 					.catch(
 						/** @param {any} error */ async (error) => ({
-							error: await handle_error_and_jsonify(event, state, error)
+							error: await handle_error_and_jsonify(event, error)
 						})
 					)
 					.then(
@@ -46,7 +45,6 @@ export function server_data_serializer(event, state) {
 							} catch (serialization_error) {
 								error = await handle_error_and_jsonify(
 									event,
-									state,
 									capture_error(() =>
 										e.load_promise_not_serializable(
 											{ id: /** @type {string} */ (event.route.id) },
@@ -128,10 +126,9 @@ export function server_data_serializer(event, state) {
  * If the serialized data contains promises, `chunks` will be an
  * async iterable containing their resolutions
  * @param {import('@sveltejs/kit/internal/server').RequestEvent} event
- * @param {import('types').RequestState} state
  * @returns {import('./types.js').ServerDataSerializerJson}
  */
-export function server_data_serializer_json(event, state) {
+export function server_data_serializer_json(event) {
 	let promise_id = 1;
 
 	const iterator = create_async_iterator();
@@ -153,7 +150,7 @@ export function server_data_serializer_json(event, state) {
 				.catch(
 					/** @param {any} error */ async (error) => {
 						key = 'error';
-						return handle_error_and_jsonify(event, state, error);
+						return handle_error_and_jsonify(event, error);
 					}
 				)
 				.then(
@@ -165,7 +162,6 @@ export function server_data_serializer_json(event, state) {
 						} catch (serialization_error) {
 							const error = await handle_error_and_jsonify(
 								event,
-								state,
 								capture_error(() =>
 									e.load_promise_not_serializable(
 										{ id: /** @type {string} */ (event.route.id) },

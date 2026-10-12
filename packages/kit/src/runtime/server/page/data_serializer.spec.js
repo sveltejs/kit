@@ -1,4 +1,4 @@
-/** @import { RequestState, ServerHooks } from 'types' */
+/** @import { ServerHooks } from 'types' */
 import { expect, test, vi } from 'vitest';
 import { RequestEvent } from '@sveltejs/kit/internal/server';
 import { init_transport } from '#app/internal/transport';
@@ -11,8 +11,11 @@ const { server_data_serializer, server_data_serializer_json } =
 	await import('./data_serializer.js');
 const { set_hooks } = await import('../internal.js');
 
-const event = new RequestEvent(/** @type {any} */ ({ route: { id: '/a' } }), 0);
-const state = /** @type {RequestState} */ (/** @type {unknown} */ ({}));
+const event = new RequestEvent(
+	/** @type {any} */ ({ route: { id: '/a' } }),
+	0,
+	/** @type {any} */ ({})
+);
 
 /** @param {any} data */
 function node(data) {
@@ -27,7 +30,7 @@ test.each([
 ])(
 	'explains unserializable load data with %s, keeping the devalue error as the cause',
 	(_, create) => {
-		const serializer = create(event, state);
+		const serializer = create(event);
 
 		expect(() => serializer.add_node(0, node({ nope: () => {} }))).toThrowKitError(
 			'load_not_serializable',
@@ -50,7 +53,7 @@ test('passes an unserializable promise result to handleError, with the devalue e
 		)
 	);
 
-	const serializer = server_data_serializer_json(event, state);
+	const serializer = server_data_serializer_json(event);
 	serializer.add_node(0, node({ promise: Promise.resolve(() => {}) }));
 
 	const { chunks } = serializer.get_data();

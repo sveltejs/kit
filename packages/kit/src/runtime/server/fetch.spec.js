@@ -1,8 +1,8 @@
-/** @import { RequestEvent } from '@sveltejs/kit' */
 /** @import { InternalRequestOptions, SSRManifest } from 'types' */
 import { once } from 'node:events';
 import { createServer } from 'node:http';
 import { afterAll, describe, expect, onTestFinished, test, vi } from 'vitest';
+import { RequestEvent } from '@sveltejs/kit/internal/server';
 import { create_request_state } from './state.js';
 
 // These fallbacks don't render pages or use the generated environment module.
@@ -72,8 +72,7 @@ describe('redirect handling', () => {
 		const state = create_request_state(/** @type {InternalRequestOptions} */ ({}));
 		state.error = error;
 		const fetch = create_fetch({
-			event: /** @type {RequestEvent} */ ({ url, request: new Request(url) }),
-			state,
+			event: new RequestEvent(/** @type {any} */ ({ url, request: new Request(url) }), 0, state),
 			get_cookie_header: () => '',
 			set_internal: () => {}
 		});
