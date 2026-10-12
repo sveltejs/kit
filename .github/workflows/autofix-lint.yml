@@ -62,6 +62,8 @@ jobs:
         run: pnpm format
       - name: Generate types
         run: pnpm -F @sveltejs/kit generate:types
+      - name: Generate error messages
+        run: pnpm -F @sveltejs/kit generate:messages
       - name: Commit changes
         env:
           TARGET_REF: ${{ github.event_name == 'workflow_dispatch' && github.ref_name || steps.pr.outputs.ref }}

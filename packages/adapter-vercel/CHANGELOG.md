@@ -1,5 +1,47 @@
 # @sveltejs/adapter-vercel
 
+## 7.0.0
+
+### Major Changes
+
+- chore: use `rolldown` for edge function bundling ([#15432](https://github.com/sveltejs/kit/pull/15432))
+
+- breaking: populate env vars before `instrumentation.server.js` is evaluated and update the adapter instrumentation API ([#16303](https://github.com/sveltejs/kit/pull/16303))
+
+- breaking: edge function build target is now `es2022` ([#15432](https://github.com/sveltejs/kit/pull/15432))
+
+- breaking: require `vite@^8.0.12`, the first Vite 8 release bundling stable `rolldown` 1.0.0 ([#16134](https://github.com/sveltejs/kit/pull/16134))
+
+- breaking: replace the `builder.generateManifest` with `builder.generateServerInstance` and `builder.manifest` ([#16875](https://github.com/sveltejs/kit/pull/16875))
+
+- breaking: remove support for edge and Node 20 runtimes ([#16520](https://github.com/sveltejs/kit/pull/16520))
+
+### Patch Changes
+
+- chore: bump `@vercel/nft` dependency ([#16522](https://github.com/sveltejs/kit/pull/16522))
+
+- chore: use `node:fs` instead of deprecated `builder.rimraf` and `builder.mkdirp` ([#16610](https://github.com/sveltejs/kit/pull/16610))
+
+- fix: omit ISR data endpoints for server-only routes ([#16731](https://github.com/sveltejs/kit/pull/16731))
+
+- fix: correctly apply `reroute` results for apps configured with split serverless functions ([#16665](https://github.com/sveltejs/kit/pull/16665))
+
+- fix: pass the requested pathname, including any trailing slash, to ISR functions ([#16903](https://github.com/sveltejs/kit/pull/16903))
+
+- fix: allow prerelease versions of SvelteKit 3 to satisfy the peer dependency range ([#16286](https://github.com/sveltejs/kit/pull/16286))
+
+- fix: await `init` on every request to prevent race condition ([#16467](https://github.com/sveltejs/kit/pull/16467))
+
+- fix: match sibling `.html__route.js` route resolution requests ([#16674](https://github.com/sveltejs/kit/pull/16674))
+
+- chore: bump Rolldown to `1.2.0` ([#16455](https://github.com/sveltejs/kit/pull/16455))
+
+- fix: ignore `EEXIST` errors when symlinking traced files that resolve to the same destination ([#16809](https://github.com/sveltejs/kit/pull/16809))
+
+- fix: trace `process.cwd()`-relative files from the project directory and never glob from the filesystem root ([#16972](https://github.com/sveltejs/kit/pull/16972))
+- Updated dependencies:
+  - @sveltejs/kit@3.0.0
+
 ## 7.0.0-next.9
 
 ### Major Changes

@@ -2,6 +2,7 @@ import { test, expect } from 'vitest';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { createFilter, resolveConfig } from 'vite';
+import { bullet_list } from '../../../../src/utils/format.js';
 
 const timeout = 60_000;
 
@@ -55,7 +56,7 @@ test('no transformIndexHtml warning for the Vitest browser loader', { timeout },
 
 	expect(result.error).toBeUndefined();
 	expect(result.status).toBe(0);
-	expect(result.stdout).not.toContain('transformIndexHtml');
+	expect(result.stderr).not.toContain('transform_index_html_unsupported');
 });
 
 test('transformIndexHtml warning for app plugins', { timeout }, () => {
@@ -73,6 +74,7 @@ test('transformIndexHtml warning for app plugins', { timeout }, () => {
 
 	expect(result.error).toBeUndefined();
 	expect(result.status).toBe(0);
-	expect(result.stdout).toContain('transformIndexHtml');
-	expect(result.stdout).toContain('app-html-transform');
+	expect(result.stderr).toContainKitDiagnostic('transform_index_html_unsupported', {
+		contains: [bullet_list(['app-html-transform'])]
+	});
 });

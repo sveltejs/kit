@@ -1,6 +1,6 @@
 import process from 'node:process';
-import { expect } from '@playwright/test';
 import { test } from '../../../../utils.js';
+import { expect } from '../../../../playwright-matchers.js';
 
 /** @typedef {import('@playwright/test').Response} Response */
 
@@ -48,10 +48,15 @@ test.describe('searchParams', () => {
 
 			expect(response.status()).toBe(400);
 			expect(await response.text()).toBe(message);
-			expect(await app.preloadData(url)).toMatchObject({
-				type: 'error',
-				error: { message: `${message} (500 Internal Error)` }
-			});
+
+			/** @type {{ type: string; status: number; error: App.Error }} */
+			const result = /** @type {any} */ (await app.preloadData(url));
+			expect(result).toMatchObject({ type: 'error', status: 500 });
+			expect(result.error.message).toMatch(/ \(500 Internal Error\)$/);
+			expect(result.error.message).toContainKitDiagnostic(
+				'reserved_query_parameter',
+				process.env.DEV ? { contains: [`\`${decodeURIComponent(key)}\``] } : { url_only: true }
+			);
 		}
 
 		expect(await app.preloadData('/load/url-query-param/')).toMatchObject({
@@ -158,9 +163,7 @@ test.describe('Load', () => {
 	if (process.env.DEV) {
 		test('accessing url.hash from load errors and suggests using page state', async ({ page }) => {
 			await page.goto('/load/url-hash#please-dont-send-me-to-load');
-			expect(await page.textContent('#message')).toBe(
-				'This is your custom error page saying: "Cannot access event.url.hash. Consider using `page.url.hash` inside a component instead (500 Internal Error)"'
-			);
+			expect(await page.textContent('#message')).toContainKitDiagnostic('url_hash_unavailable');
 		});
 	}
 
@@ -411,12 +414,9 @@ test.describe('Load', () => {
 			await Promise.all([
 				page.goto('/load/window-fetch/incorrect'),
 				page.waitForEvent('console', {
-					predicate: (message) => {
-						return (
-							message.text() ===
-							`Loading ${baseURL}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://svelte.dev/docs/kit/load#making-fetch-requests`
-						);
-					},
+					predicate: (message) =>
+						message.text().includes('window_fetch_in_load') &&
+						message.text().includes(`${baseURL}/load/window-fetch/data.json`),
 					timeout: 3_000
 				})
 			]);
@@ -433,9 +433,7 @@ test.describe('Load', () => {
 			await page.goto('/load/window-fetch/correct');
 			expect(await page.textContent('h1')).toBe('42');
 
-			expect(warnings).not.toContain(
-				`Loading ${baseURL}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://svelte.dev/docs/kit/load#making-fetch-requests`
-			);
+			expect(warnings.join('\n')).not.toContainKitDiagnostic('window_fetch_in_load');
 		});
 	}
 
@@ -1661,6 +1659,25 @@ test.describe('Actions', () => {
 		expect(await page.evaluate(() => window.nav_marker)).toBe(true);
 	});
 
+	test('non-redirect action results cannot navigate to another origin', async ({ page }) => {
+		await page.goto('/actions/cross-page/source');
+		const url = page.url();
+		await page.route('**://attacker.example/**', (route) => route.fulfill({ body: 'external' }));
+		await page.route('**/actions/cross-page/destination?**', async (route) => {
+			const response = await route.fetch();
+			await route.fulfill({
+				response,
+				json: { ...(await response.json()), location: '//attacker.example/path' }
+			});
+		});
+
+		await page.locator('button.submit-success').click();
+		await expect(page.locator('pre.source-form')).toHaveText(
+			JSON.stringify({ source: 'destination', username: 'paolo' })
+		);
+		expect(page.url()).toBe(url);
+	});
+
 	test('same-page action drops query params omitted from the action', async ({ page }) => {
 		await page.goto('/actions/cross-page/same-page?page=2');
 		await page.locator('button.submit-relative').click();
@@ -1814,20 +1831,21 @@ test.describe('goto', () => {
 		await page.goto('/goto');
 		await page.click('button');
 
-		const message = process.env.DEV
-			? 'Cannot use `goto` with an external URL. Use `window.location = "https://example.com"` instead'
-			: 'goto: invalid URL';
-		await expect(page.locator('p')).toHaveText(message);
+		await expect(page.locator('p')).not.toHaveText('...');
+		expect(await page.locator('p').textContent()).toContainKitDiagnostic(
+			'navigation_external_url',
+			process.env.DEV ? { contains: ['`goto`', '"https://example.com"'] } : { url_only: true }
+		);
 	});
 
 	test('goto fails with a URL that does not resolve to a route', async ({ page }) => {
 		await page.goto('/goto/no-such-route');
 		await page.click('button');
 
-		await expect(page.locator('p')).toContainText(
-			process.env.DEV
-				? 'Cannot use `goto` with a URL that does not resolve to a route within the app'
-				: 'goto: invalid URL'
+		await expect(page.locator('p')).not.toHaveText('...');
+		expect(await page.locator('p').textContent()).toContainKitDiagnostic(
+			'navigation_route_missing',
+			process.env.DEV ? { contains: ['`goto`'] } : { url_only: true }
 		);
 	});
 
@@ -1844,13 +1862,16 @@ test.describe('goto', () => {
 		await page.goBack();
 		await expect(page).toHaveURL('/goto/testentry');
 
-		expect(warnings.filter((warning) => warning.includes('replaceState'))).toEqual(
-			process.env.DEV
-				? [
-						'The `goto(..., { replaceState: true })` option has been deprecated in favour of `replace`'
-					]
-				: []
+		// warned once, and only in development
+		const deprecations = warnings.filter((warning) =>
+			warning.includes('goto_replace_state_deprecated')
 		);
+		expect(deprecations).toHaveLength(process.env.DEV ? 1 : 0);
+		if (process.env.DEV) {
+			expect(deprecations[0]).toContainKitDiagnostic('goto_replace_state_deprecated', {
+				contains: ['replaceState: true']
+			});
+		}
 	});
 
 	test('persists state through redirects when persistState is true', async ({ app, page }) => {
@@ -2525,11 +2546,12 @@ test.describe('Shallow routing', () => {
 		await expect(page.locator('p')).toHaveText('count: 0');
 		await page.locator('button').click();
 		await expect(page.locator('p')).toHaveText('count: 1');
-		expect(warnings.filter((warning) => warning.includes('pushState(...)'))).toEqual(
-			process.env.DEV
-				? ['`pushState(...)` is deprecated. Use `goto(url, { state, shallow: true })` instead.']
-				: []
-		);
+		// warned once, and only in development
+		const deprecations = warnings.filter((warning) => warning.includes('push_state_deprecated'));
+		expect(deprecations).toHaveLength(process.env.DEV ? 1 : 0);
+		if (process.env.DEV) {
+			expect(deprecations[0]).toContainKitDiagnostic('push_state_deprecated');
+		}
 	});
 
 	test('replaceState remains functional and does not loop infinitely in $effect', async ({
@@ -2545,13 +2567,12 @@ test.describe('Shallow routing', () => {
 		await expect(page.locator('p')).toHaveText('count: 0');
 		await page.locator('button').click();
 		await expect(page.locator('p')).toHaveText('count: 1');
-		expect(warnings.filter((warning) => warning.includes('replaceState(...)'))).toEqual(
-			process.env.DEV
-				? [
-						'`replaceState(...)` is deprecated. Use `goto(url, { state, shallow: true, replace: true })` instead.'
-					]
-				: []
-		);
+		// warned once, and only in development
+		const deprecations = warnings.filter((warning) => warning.includes('replace_state_deprecated'));
+		expect(deprecations).toHaveLength(process.env.DEV ? 1 : 0);
+		if (process.env.DEV) {
+			expect(deprecations[0]).toContainKitDiagnostic('replace_state_deprecated');
+		}
 	});
 
 	test('refreshAll reruns load functions without resetting page.state', async ({ page }) => {

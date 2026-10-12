@@ -11,13 +11,16 @@ test('exports the handler', async () => {
 	expect(handler).toBeDefined();
 });
 
-test('dependencies are not bundled', () => {
-	const build = path.resolve(import.meta.dirname, 'build');
-	const marker = 'server-side-dep implementation';
+const build = path.resolve(import.meta.dirname, 'build');
 
-	for (const file of fs.readdirSync(build, { encoding: 'utf8', recursive: true })) {
-		if (file.endsWith('.js')) {
-			expect(fs.readFileSync(path.join(build, file), 'utf8')).not.toContain(marker);
-		}
-	}
+function server_source() {
+	return fs
+		.readdirSync(build, { encoding: 'utf8', recursive: true })
+		.filter((file) => file.endsWith('.js'))
+		.map((file) => fs.readFileSync(path.join(build, file), 'utf8'))
+		.join('\n');
+}
+
+test('dependencies are not bundled', () => {
+	expect(server_source()).not.toContain('server-side-dep implementation');
 });

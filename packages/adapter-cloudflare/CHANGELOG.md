@@ -1,5 +1,57 @@
 # @sveltejs/adapter-cloudflare
 
+## 8.0.0
+
+### Major Changes
+
+- breaking: minimum Wrangler version required is `4.118.0` ([#16668](https://github.com/sveltejs/kit/pull/16668))
+
+- breaking: populate env vars before `instrumentation.server.js` is evaluated and update the adapter instrumentation API ([#16303](https://github.com/sveltejs/kit/pull/16303))
+
+- breaking: upgrade `@cloudflare/workers-types` to 4.20260219.0 ([#15347](https://github.com/sveltejs/kit/pull/15347))
+
+- breaking: upgrade minimum `wrangler` version to ^4.67.0 ([#15347](https://github.com/sveltejs/kit/pull/15347))
+
+- breaking: remove `platform.context` in favour of `platform.ctx` ([#15347](https://github.com/sveltejs/kit/pull/15347))
+
+- breaking: remove cloudflare `platform`, emulate the `cloudflare:workers` module instead ([#16754](https://github.com/sveltejs/kit/pull/16754))
+
+- breaking: require SvelteKit 3 ([#15506](https://github.com/sveltejs/kit/pull/15506))
+
+- breaking: remove use of the Cloudflare Workers Cache API in favour of Workers Caching ([#16640](https://github.com/sveltejs/kit/pull/16640))
+
+- breaking: replace the `builder.generateManifest` with `builder.generateServerInstance` and `builder.manifest` ([#16875](https://github.com/sveltejs/kit/pull/16875))
+
+### Patch Changes
+
+- chore: use `node:fs` instead of deprecated `builder.rimraf` and `builder.mkdirp` ([#16610](https://github.com/sveltejs/kit/pull/16610))
+
+- chore: bump `@cloudflare/workers-types` to `4.20260621.1` ([#16455](https://github.com/sveltejs/kit/pull/16455))
+
+- fix: dispose the platform proxy when the Vite dev or preview server closes ([#17238](https://github.com/sveltejs/kit/pull/17238))
+
+- fix: avoid overriding user's existing `_headers` rules ([#16183](https://github.com/sveltejs/kit/pull/16183))
+
+- chore: check the `WORKERS_CI` environment variable to determine if we're building for Cloudflare Workers ([#13733](https://github.com/sveltejs/kit/pull/13733))
+
+- fix: allow prerelease versions of SvelteKit 3 to satisfy the peer dependency range ([#16286](https://github.com/sveltejs/kit/pull/16286))
+
+- fix: avoid caching immutable asset 404s ([#16627](https://github.com/sveltejs/kit/pull/16627))
+
+- chore: use `builder.config` to access SvelteKit config settings ([#16895](https://github.com/sveltejs/kit/pull/16895))
+
+- chore: bump `@cloudflare/worker-types` to 5.20260809.1 ([#16745](https://github.com/sveltejs/kit/pull/16745))
+- Updated dependencies:
+  - @sveltejs/kit@3.0.0
+
+## 8.0.0-next.8
+
+### Patch Changes
+
+- fix: dispose the platform proxy when the Vite dev or preview server closes ([#17238](https://github.com/sveltejs/kit/pull/17238))
+- Updated dependencies [[`12ae0b9`](https://github.com/sveltejs/kit/commit/12ae0b9f7b1b92a0356dadcd87d47f8a1707bf3e), [`ee3332f`](https://github.com/sveltejs/kit/commit/ee3332fe58292be9fcfabaef65dc39e61ab6d1f8), [`72832f9`](https://github.com/sveltejs/kit/commit/72832f9f85d94e569b4b4f27799dc6a01564fd01), [`846f3d4`](https://github.com/sveltejs/kit/commit/846f3d42a2cfe60f0501fc80a7ceeaa604324c30)]:
+  - @sveltejs/kit@3.0.0-next.31
+
 ## 8.0.0-next.7
 
 ### Major Changes

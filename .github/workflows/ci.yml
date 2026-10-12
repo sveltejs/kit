@@ -3,7 +3,7 @@ name: CI
 on:
   push:
     branches:
-      - version-3
+      - main
     paths-ignore: &paths_ignore
       - '.changeset/**'
       - '.githooks/**'
@@ -45,7 +45,7 @@ jobs:
           persist-credentials: false
       - uses: ./.github/actions/node-setup
       - run: pnpm run lint
-      - run: cd packages/kit && pnpm prepublishOnly && { [ "`git status --porcelain=v1`" == "" ] || (echo "Generated types have changed — please run prepublishOnly locally and commit the changes after you have reviewed them"; git diff; exit 1); }
+      - run: cd packages/kit && pnpm prepublishOnly && { [ "`git status --porcelain=v1`" == "" ] || (echo "Generated types or messages have changed — please run prepublishOnly locally and commit the changes after you have reviewed them"; git diff; exit 1); }
       - run: pnpm run check
   test:
     # unit tests for kit and every other package; `script` is a root package.json script
@@ -73,7 +73,7 @@ jobs:
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         if: matrix.script == 'test:others'
         with:
-          bun-version: 1.4.0
+          bun-version: 1.4.2
       - run: pnpm run sync-all
       - run: pnpm ${{ matrix.script }}
   e2e:
@@ -150,7 +150,7 @@ jobs:
         run: find packages -type d -name test-results -not -empty | tar -czf test-results.tar.gz --files-from=-
       - name: Upload test results
         if: failure()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           retention-days: 3
           name: test-failure-${{ github.run_id }}-${{ strategy.job-index }}

@@ -1,5 +1,25 @@
 # @sveltejs/adapter-static
 
+## 4.0.0
+
+### Major Changes
+
+- breaking: require SvelteKit 3 ([#15506](https://github.com/sveltejs/kit/pull/15506))
+
+### Patch Changes
+
+- chore: use `node:fs` instead of deprecated `builder.rimraf` and `builder.mkdirp` ([#16610](https://github.com/sveltejs/kit/pull/16610))
+
+- fix: avoid caching immutable asset 404s when configuring for Vercel ([#16626](https://github.com/sveltejs/kit/pull/16626))
+
+- fix: match adapter-vercel's prerendered redirect handling when deploying to Vercel ([#16497](https://github.com/sveltejs/kit/pull/16497))
+
+- fix: allow prerelease versions of SvelteKit 3 to satisfy the peer dependency range ([#16286](https://github.com/sveltejs/kit/pull/16286))
+
+- chore: use `builder.config` to access SvelteKit config settings ([#16895](https://github.com/sveltejs/kit/pull/16895))
+- Updated dependencies:
+  - @sveltejs/kit@3.0.0
+
 ## 4.0.0-next.4
 
 ### Major Changes
