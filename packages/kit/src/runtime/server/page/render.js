@@ -53,7 +53,7 @@ import * as w from '../../../messages/server-warnings.js';
  *   resolve_opts: import('types').RequiredResolveOptions;
  *   action_result?: import('types').ServerActionResult;
  *   data_serializer: import('./types.js').ServerDataSerializer;
- *   error_components?: Array<import('svelte').Component | undefined>
+ *   error_components?: Array<{ node: import('types').SSRNode; component: Component } | undefined>
  * }} opts
  */
 export async function render_response({
@@ -80,6 +80,7 @@ export async function render_response({
 	}
 
 	const client = manifest.client;
+	const nodes = new Set(branch.map(({ node }) => node));
 
 	const modulepreloads = new Set(client?.imports);
 	const stylesheets = new Set(client?.stylesheets);
@@ -140,6 +141,21 @@ export async function render_response({
 	}
 
 	if (page_config.ssr) {
+		const errors = error_components?.map((error) => {
+			if (!error) return undefined;
+
+			const { node, component: error_component } = error;
+
+			// Error pages aren't in the loaded branch. Collect their dependencies only if rendered.
+			/** @type {Component} */
+			const component = (...args) => {
+				nodes.add(node);
+				return error_component(...args);
+			};
+
+			return component;
+		});
+
 		const page = {
 			error,
 			params: /** @type {Record<string, any>} */ (event.params),
@@ -177,7 +193,7 @@ export async function render_response({
 				current_node = current_node.child = new RenderNode(
 					// TODO tidy up
 					/** @type {Component} */ (await branch[i + 1].node.component?.()),
-					error_components?.[i + 1]
+					errors?.[i + 1]
 				);
 			}
 		}
@@ -256,7 +272,7 @@ export async function render_response({
 		rendered = { head: '', body: '', hashes: { script: [] } };
 	}
 
-	for (const { node } of branch) {
+	for (const node of nodes) {
 		for (const url of node.imports) modulepreloads.add(url);
 		for (const url of node.stylesheets) stylesheets.add(url);
 		for (const font of node.fonts) fonts.set(font.file, font);
