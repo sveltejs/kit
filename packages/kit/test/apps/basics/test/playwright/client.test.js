@@ -19,6 +19,43 @@ test.describe('a11y', () => {
 	});
 });
 
+test.describe('Hydration preloads', () => {
+	for (const path of [
+		'/',
+		'/errors/nested-error-page',
+		'/errors/nested-error-page/nope',
+		'/non-existent-route',
+		'/no-ssr',
+		'/no-ssr/error-preload',
+		'/prerendering/env/prerendered'
+	]) {
+		test(`preloads error modules before hydration on ${path}`, async ({ page }) => {
+			test.skip(!!process.env.DEV, 'modulepreloads are emitted in production builds');
+
+			/** @type {Set<string>} */
+			const modules = new Set();
+			page.on('request', (request) => {
+				if (/\/_app\/immutable\/(nodes|chunks)\/.*\.js$/.test(request.url())) {
+					modules.add(request.url());
+				}
+			});
+
+			const response = await page.goto(path);
+			const html = await /** @type {Response} */ (response).text();
+			// Read the original response, not the DOM: Vite inserts preload links during startup.
+			const preloads = [...html.matchAll(/<link href="([^"]+)" rel="modulepreload">/g)].map(
+				([, href]) => new URL(href, page.url()).href
+			);
+
+			expect([...modules].some((url) => /\/nodes\/1\./.test(url))).toBe(true);
+			for (const url of modules) {
+				expect(preloads).toContain(url);
+			}
+			expect(new Set(preloads).size).toBe(preloads.length);
+		});
+	}
+});
+
 test.describe('Caching', () => {
 	test('caches __data.json requests with invalidated search param', async ({ page, app }) => {
 		await page.goto('/');
