@@ -1254,6 +1254,20 @@ test.describe('remote function mutations', () => {
 	});
 });
 
+test.describe('hydration', () => {
+	test('hydrates nested layout data inside a pending boundary', async ({ context }) => {
+		// Avoid waiting for body.started so a hydration error fails the assertion directly.
+		const page = await context.newPage();
+		const hydrated = Promise.race([
+			page.waitForEvent('console', (message) => message.text() === 'root child').then(() => null),
+			page.waitForEvent('pageerror').then((error) => error.message)
+		]);
+
+		await page.goto('/hydration-pending-boundary/path');
+		expect(await hydrated).toBeNull();
+	});
+});
+
 test.describe('client error boundaries', () => {
 	test('catches client render error and shows root +error.svelte', async ({ page, app }) => {
 		await page.goto('/');
