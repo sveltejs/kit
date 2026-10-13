@@ -1,19 +1,22 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { expect, test } from 'vitest';
+import { beforeAll, expect, test } from 'vitest';
 import { deploy } from '../../../../../test-utils/deploy.vitest.js';
 
 const app = deploy(import.meta.dirname);
 const edge_function_path = path.join(app, '.netlify/v1/edge-functions/sveltekit-render.js');
-const edge_function = () => fs.readFileSync(edge_function_path, 'utf-8');
+let edge_function = '';
+beforeAll(() => {
+	edge_function = fs.readFileSync(edge_function_path, 'utf-8');
+});
 
 test('configuration is included in the edge function module', () => {
 	const config = JSON.parse(fs.readFileSync(path.join(app, '.netlify/v1/config.json'), 'utf-8'));
 
 	expect(config).not.toHaveProperty('edge_functions');
-	expect(edge_function()).toContain('"name": "SvelteKit server"');
-	expect(edge_function()).toContain('"path": ["/*"]');
-	expect(edge_function()).toContain('"excludedPath":');
+	expect(edge_function).toContain('"name": "SvelteKit server"');
+	expect(edge_function).toContain('"path": ["/*"]');
+	expect(edge_function).toContain('"excludedPath":');
 });
 
 test('_headers are copied to publish directory', () => {
@@ -27,11 +30,11 @@ test('_redirects are copied to publish directory', () => {
 });
 
 test('treeshakes component from the server bundle if SSR is turned off', () => {
-	expect(edge_function()).not.toContain('this should never appear in the server bundle');
+	expect(edge_function).not.toContain('this should never appear in the server bundle');
 });
 
 test('.wasm files are copied alongside the edge function', () => {
-	const wasm_import = edge_function().match(/import\(["'](\.\/[^"']+\.wasm)["']\)/)?.[1];
+	const wasm_import = edge_function.match(/import\(["'](\.\/[^"']+\.wasm)["']\)/)?.[1];
 
 	expect(wasm_import).toBeDefined();
 	expect(fs.existsSync(path.resolve(path.dirname(edge_function_path), wasm_import ?? ''))).toBe(
