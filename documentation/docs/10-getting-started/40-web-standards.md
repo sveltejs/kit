@@ -93,7 +93,7 @@ const foo = url.searchParams.get('foo');
 
 ## Web Crypto
 
-The [Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API) is made available via the `crypto` global. It's used internally for [Content Security Policy](configuration#csp) headers, but you can also use it for things like generating UUIDs:
+The [Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API) is made available via the `crypto` global. It's used internally for [Content Security Policy](@sveltejs-kit-vite#csp) headers, but you can also use it for things like generating UUIDs:
 
 ```js
 const uuid = crypto.randomUUID();

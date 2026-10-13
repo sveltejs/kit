@@ -8,13 +8,7 @@ title: Bun servers
 
 ## Usage
 
-Install the adapter:
-
-```sh
-bun add -D @sveltejs/adapter-bun
-```
-
-Configure it in `vite.config.js`:
+Run `npx sv add sveltekit-adapter="adapter:bun"`, or install with `npm i -D @sveltejs/adapter-bun` and add the adapter to your `vite.config.js`:
 
 ```js
 // @errors: 2307 2554
@@ -196,7 +190,7 @@ SOCKET_PATH=/tmp/sveltekit.sock bun ./build
 
 ### Public origin behind a proxy
 
-If [`paths.origin`](configuration#paths) is configured, that value is the trusted origin for every request. Otherwise, the adapter derives the host from the `Host` header and assumes the scheme is `https`, since production deployments usually terminate TLS upstream. Configure `paths.origin` or `PROTOCOL_HEADER` if that assumption is wrong, for example when serving plain HTTP directly.
+If [`paths.origin`](@sveltejs-kit-vite#paths) is configured, that value is the trusted origin for every request. Otherwise, the adapter derives the host from the `Host` header and assumes the scheme is `https`, since production deployments usually terminate TLS upstream. Configure `paths.origin` or `PROTOCOL_HEADER` if that assumption is wrong, for example when serving plain HTTP directly.
 
 Behind a trusted reverse proxy, `PROTOCOL_HEADER`, `HOST_HEADER`, and `PORT_HEADER` name headers that contain the public scheme, host, and port:
 
