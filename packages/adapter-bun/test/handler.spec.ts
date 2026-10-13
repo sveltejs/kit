@@ -1,4 +1,5 @@
 import process from 'node:process';
+import { heapStats } from 'bun:jsc';
 import { afterEach, expect, mock, spyOn, test } from 'bun:test';
 import { mock_handoff } from './mocks.js';
 
@@ -44,6 +45,124 @@ test('uses paths.origin as the trusted request origin when configured', async ()
 	await loaded.handler(new Request('http://internal/path'), loaded.bun_server);
 
 	expect(loaded.respond.mock.calls[0][0].url).toBe('https://canonical.example/path');
+});
+
+test('preserves request metadata, the unread body and abort signal when normalizing', async () => {
+	const loaded = await load_handler({ origin: 'https://canonical.example' });
+	const controller = new AbortController();
+	const original = new Request('http://internal/path?query=yes', {
+		method: 'POST',
+		headers: { 'content-type': 'text/plain', 'x-custom': 'value' },
+		body: 'hello',
+		signal: controller.signal,
+		cache: 'no-store',
+		credentials: 'omit',
+		integrity: 'sha256-test',
+		mode: 'same-origin',
+		redirect: 'manual',
+		referrer: 'https://referrer.example/',
+		referrerPolicy: 'no-referrer'
+	});
+
+	await loaded.handler(original, loaded.bun_server);
+
+	const normalized = loaded.respond.mock.calls[0][0];
+	expect(normalized.url).toBe('https://canonical.example/path?query=yes');
+	for (const property of [
+		'method',
+		'cache',
+		'credentials',
+		'integrity',
+		'keepalive',
+		'mode',
+		'redirect',
+		'referrer',
+		'referrerPolicy'
+	] as const) {
+		expect(normalized[property]).toBe(original[property]);
+	}
+	expect([...normalized.headers]).toEqual([...original.headers]);
+	expect(normalized.bodyUsed).toBe(false);
+	expect(await normalized.text()).toBe('hello');
+	controller.abort();
+	expect(normalized.signal.aborted).toBe(true);
+});
+
+test('keeps the original request when its origin already matches', async () => {
+	const loaded = await load_handler({ origin: 'http://internal' });
+	const original = new Request('http://internal/path', { method: 'POST', body: 'hello' });
+
+	await loaded.handler(original, loaded.bun_server);
+
+	expect(loaded.respond.mock.calls[0][0]).toBe(original);
+	expect(original.bodyUsed).toBe(false);
+});
+
+test('returns without waiting for an unread streaming body to finish', async () => {
+	const loaded = await load_handler();
+	const original = new Request('http://internal/path', {
+		method: 'POST',
+		body: new ReadableStream()
+	});
+
+	const response = await loaded.handler(original, loaded.bun_server);
+
+	expect(response.status).toBe(200);
+	const normalized = loaded.respond.mock.calls[0][0];
+	expect(normalized.bodyUsed).toBe(false);
+	await normalized.body?.cancel();
+});
+
+test('allows the normalized request body to be streamed as the response', async () => {
+	const loaded = await load_handler();
+	loaded.respond.mockImplementation(async (request) => new Response(request.body));
+	const original = new Request('http://internal/path', {
+		method: 'POST',
+		body: new Blob(['hello']).stream()
+	});
+
+	const response = await loaded.handler(original, loaded.bun_server);
+
+	expect(await response.text()).toBe('hello');
+});
+
+test('streams native incoming bodies and uses the original request for the client address', async () => {
+	const loaded = await load_handler({ origin: 'https://canonical.example' });
+	loaded.respond.mockImplementation(async (request, options) => {
+		expect(request.url).toBe('https://canonical.example/path?query=yes');
+		expect(request.method).toBe('POST');
+		expect(request.headers.get('x-custom')).toBe('value');
+		expect(request.bodyUsed).toBe(false);
+		expect(options.getClientAddress()).toBe('127.0.0.1');
+		return new Response(request.body);
+	});
+	const server = Bun.serve({
+		port: 0,
+		hostname: '127.0.0.1',
+		fetch: (request, server) => loaded.handler(request, server)
+	});
+
+	try {
+		const bytes = new TextEncoder().encode('a'.repeat(250_000) + '\0é' + 'b'.repeat(250_000));
+		const response = await fetch(new URL('/path?query=yes', server.url), {
+			method: 'POST',
+			headers: { 'x-custom': 'value' },
+			body: new ReadableStream({
+				async start(controller) {
+					// Split a multibyte character across chunks in a body without Content-Length.
+					controller.enqueue(bytes.subarray(0, 250_002));
+					await Bun.sleep(10);
+					controller.enqueue(bytes.subarray(250_002));
+					controller.close();
+				}
+			})
+		});
+
+		expect(response.status).toBe(200);
+		expect(new Uint8Array(await response.arrayBuffer())).toEqual(bytes);
+	} finally {
+		await server.stop(true);
+	}
 });
 
 test('derives the public origin from configured proxy headers', async () => {
@@ -189,6 +308,48 @@ test('leaves ordinary responses and their timeouts unchanged', async () => {
 	expect(loaded.timeout).not.toHaveBeenCalled();
 	expect(response.headers.has('x-accel-buffering')).toBe(false);
 });
+
+test.each([undefined, 'https://canonical.example'])(
+	'releases unread request bodies after normalizing the origin to %s',
+	async (origin) => {
+		const loaded = await load_handler({ origin });
+		loaded.respond.mockImplementation(async () => new Response('Forbidden', { status: 403 }));
+		const server = Bun.serve({
+			port: 0,
+			hostname: '127.0.0.1',
+			async fetch(request, server) {
+				const response = await loaded.handler(request, server);
+				// The test double must not keep the normalized requests alive itself.
+				loaded.respond.mockClear();
+				return response;
+			}
+		});
+
+		try {
+			const body = 'x'.repeat(250_000);
+			const send = async () => {
+				const response = await fetch(server.url, { method: 'POST', body });
+				expect(response.status).toBe(403);
+				await response.arrayBuffer();
+			};
+			for (let i = 0; i < 50; i += 1) await send();
+			await Bun.sleep(100);
+			Bun.gc(true);
+			const before = heapStats().protectedObjectCount;
+
+			for (let i = 0; i < 10; i += 1) {
+				await Promise.all(Array.from({ length: 10 }, send));
+			}
+			await Bun.sleep(100);
+			Bun.gc(true);
+
+			// Bun's native Request-copy path leaked two protected objects per POST.
+			expect(heapStats().protectedObjectCount - before).toBeLessThan(10);
+		} finally {
+			await server.stop(true);
+		}
+	}
+);
 
 async function load_handler({
 	origin,

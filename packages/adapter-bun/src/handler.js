@@ -47,9 +47,25 @@ function normalize_request(request) {
 		// an empty Host header makes request.url relative, so parsing belongs in the try
 		const url = new URL(request.url);
 		const request_origin = origin || get_origin(request, url);
-		return request_origin === url.origin
-			? request
-			: new Request(request_origin + url.pathname + url.search, request);
+		if (request_origin === url.origin) return request;
+
+		// Passing the incoming Request as init uses Bun's native body-copy path,
+		// which retains unread bodies (https://github.com/oven-sh/bun/issues/45185).
+		// Transfer the body as a stream instead, without consuming or buffering it.
+		return new Request(request_origin + url.pathname + url.search, {
+			method: request.method,
+			headers: request.headers,
+			body: request.body,
+			signal: request.signal,
+			cache: request.cache,
+			credentials: request.credentials,
+			integrity: request.integrity,
+			keepalive: request.keepalive,
+			mode: request.mode,
+			redirect: request.redirect,
+			referrer: request.referrer,
+			referrerPolicy: request.referrerPolicy
+		});
 	} catch (error) {
 		console.error(
 			`Could not determine request origin: ${error instanceof Error ? error.message : String(error)}`
