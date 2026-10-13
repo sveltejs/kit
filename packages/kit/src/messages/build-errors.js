@@ -508,13 +508,13 @@ export function env_variables_missing(_values, options) {
 }
 
 /**
- * Cannot use relative URL (`%url%`) with global `fetch` — use `event.fetch` instead: https://svelte.dev/docs/kit/web-standards#fetch-apis
+ * Cannot use relative URL (`%url%`) with global `fetch` — use `event.fetch` instead: https://svelte.dev/docs/kit/web-standards#Fetch-APIs
  * @param {{ "url": string }} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function fetch_relative_url(_values, options) {
-	throw_error('fetch_relative_url', `Cannot use relative URL (\`${_values.url}\`) with global \`fetch\` — use \`event.fetch\` instead: https://svelte.dev/docs/kit/web-standards#fetch-apis`, options, fetch_relative_url);
+	throw_error('fetch_relative_url', `Cannot use relative URL (\`${_values.url}\`) with global \`fetch\` — use \`event.fetch\` instead: https://svelte.dev/docs/kit/web-standards#Fetch-APIs`, options, fetch_relative_url);
 }
 
 /**
@@ -568,13 +568,13 @@ export function prerender_client_address(_values, options) {
 }
 
 /**
- * Cannot save `%path%` as it is already a directory. See https://svelte.dev/docs/kit/page-options#prerender-route-conflicts for more information
+ * Cannot save `%path%` as it is already a directory. See https://svelte.dev/docs/kit/page-options#prerender-Route-conflicts for more information
  * @param {{ "path": string; "parent"?: string }} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function prerender_directory_conflict(_values, options) {
-	throw_error('prerender_directory_conflict', (_values?.parent !== undefined ? `Cannot save \`${_values.path}\` as \`${_values.parent}\` is already a file. See https://svelte.dev/docs/kit/page-options#prerender-route-conflicts for more information` : `Cannot save \`${_values.path}\` as it is already a directory. See https://svelte.dev/docs/kit/page-options#prerender-route-conflicts for more information`), options, prerender_directory_conflict);
+	throw_error('prerender_directory_conflict', (_values?.parent !== undefined ? `Cannot save \`${_values.path}\` as \`${_values.parent}\` is already a file. See https://svelte.dev/docs/kit/page-options#prerender-Route-conflicts for more information` : `Cannot save \`${_values.path}\` as it is already a directory. See https://svelte.dev/docs/kit/page-options#prerender-Route-conflicts for more information`), options, prerender_directory_conflict);
 }
 
 /**

@@ -306,7 +306,7 @@ export function write_app_types(config, manifest_data, root) {
 
 	const content = [
 		GENERATED_COMMENT,
-		`import '@sveltejs/kit';\nimport './env';`,
+		`import '@sveltejs/kit';\nimport './env.js';`, // .js file ending needed for nodenext module resolution
 		generate_app_types(manifest_data, config, dir),
 		template.trim()
 	].join('\n\n');

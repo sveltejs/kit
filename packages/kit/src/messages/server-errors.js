@@ -14,13 +14,13 @@ export function action_data_not_serializable(_values, options) {
 }
 
 /**
- * When using named actions, the default action cannot be used. See the docs for more info: https://svelte.dev/docs/kit/form-actions#named-actions
+ * When using named actions, the default action cannot be used. See the docs for more info: https://svelte.dev/docs/kit/form-actions#Named-actions
  * @param {void} _values
  * @param {ServerThrowOptions} [options]
  * @returns {never}
  */
 export function action_default_with_named(_values, options) {
-	throw_error('action_default_with_named', `When using named actions, the default action cannot be used. See the docs for more info: https://svelte.dev/docs/kit/form-actions#named-actions`, options, action_default_with_named);
+	throw_error('action_default_with_named', `When using named actions, the default action cannot be used. See the docs for more info: https://svelte.dev/docs/kit/form-actions#Named-actions`, options, action_default_with_named);
 }
 
 /**

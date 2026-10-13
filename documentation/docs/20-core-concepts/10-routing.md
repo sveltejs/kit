@@ -8,7 +8,7 @@ At the heart of SvelteKit is a _filesystem-based router_. The routes of your app
 - `src/routes/about` creates an `/about` route
 - `src/routes/blog/[slug]` creates a route with a _parameter_, `slug`, that can be used to load data dynamically when a user requests a page like `/blog/hello-world`
 
-> [!NOTE] You can change `src/routes` to a different directory by editing the [project config](configuration).
+> [!NOTE] You can change `src/routes` to a different directory by editing the [project config](@sveltejs-kit-vite).
 
 Each route directory contains one or more _route files_, which can be identified by their `+` prefix.
 

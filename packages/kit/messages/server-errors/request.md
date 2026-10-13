@@ -48,7 +48,7 @@ Some SvelteKit APIs, such as [remote functions](https://svelte.dev/docs/kit/remo
 
 > `%name%` header is already set
 
-[`setHeaders`](https://svelte.dev/docs/kit/load#Headers) can only set each header once per request (except `server-timing`, whose values are combined), because otherwise it would be unclear which value should win. This often happens when both a layout and a page `load` function set the same header, such as `cache-control`. Set the header in one place only. To change a header of the finished response, use `response.headers.set(...)` in the [`handle`](https://svelte.dev/docs/kit/hooks#Server-hooks-handle) hook instead.
+[`setHeaders`](https://svelte.dev/docs/kit/load#Headers) can only set each header once per request (except `server-timing`, whose values are combined), because otherwise it would be unclear which value should win. This often happens when both a layout and a page `load` function set the same header, such as `cache-control`. Set the header in one place only. To change a header of the finished response, use `response.headers.set(...)` in the [`handle`](https://svelte.dev/docs/kit/hooks#handle) hook instead.
 
 ## cookies_set_after_response
 

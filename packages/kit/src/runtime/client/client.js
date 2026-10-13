@@ -2612,7 +2612,7 @@ async function resolve_intent(url, caller) {
  * `goto` is intended for navigations to routes that belong to the app, and will reject if a route cannot be resolved.
  * For external URLs, use `window.location = url` to perform a full-page navigation instead of calling `goto(url)`.
  *
- * @param {string | URL} url Where to navigate to. Note that if you've set [`config.paths.base`](https://svelte.dev/docs/kit/configuration#paths) and the URL is root-relative, you need to prepend the base path if you want to navigate within the app.
+ * @param {string | URL} url Where to navigate to. Note that if you've set [`config.paths.base`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#paths) and the URL is root-relative, you need to prepend the base path if you want to navigate within the app.
  * @param {GotoOptions} [opts] Options related to the navigation
  * @returns {Promise<void>}
  */
@@ -2772,7 +2772,7 @@ export async function preloadData(href) {
  * Typically, you might call this to speed up subsequent navigation.
  *
  * Takes a route ID such as `/about` or `/blog/[slug]`. Unlike pathnames, route IDs
- * are never prefixed with the app's [base path](https://svelte.dev/docs/kit/configuration#paths).
+ * are never prefixed with the app's [base path](https://svelte.dev/docs/kit/@sveltejs-kit-vite#paths).
  * If you have a pathname rather than a route ID, you can convert it with
  * [`match`](https://svelte.dev/docs/kit/$app-paths#match) from `$app/paths`:
  *
