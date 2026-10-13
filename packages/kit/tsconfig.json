@@ -30,7 +30,7 @@
 		"noUnusedParameters": true,
 		"types": ["node"]
 	},
-	"include": ["*.js", "scripts/**/*", "src/**/*"],
+	"include": ["*.js", "scripts/**/*", "src/**/*", "test/vitest-matchers.d.ts"],
 	"exclude": [
 		"./**/write_types/test/**",
 		"./src/runtime/app/service-worker",

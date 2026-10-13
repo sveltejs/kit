@@ -1,6 +1,6 @@
 import process from 'node:process';
-import { expect } from '@playwright/test';
 import { test } from '../../../../utils.js';
+import { expect } from '../../../../playwright-matchers.js';
 
 /** @typedef {import('@playwright/test').Response} Response */
 
@@ -1150,9 +1150,7 @@ test.describe('Actions', () => {
 		const error_promise = page.waitForEvent('pageerror');
 		await page.click('button');
 		const error = await error_promise;
-		expect(error.message).toBe(
-			'Your form contains <input type="file"> fields, but is missing the necessary `enctype="multipart/form-data"` attribute. This will lead to inconsistent behavior between enhanced and native forms. For more details, see https://github.com/sveltejs/kit/issues/9819.'
-		);
+		expect(error.message).toContainKitDiagnostic('enhance_file_without_enctype');
 	});
 
 	test('Error props are returned', async ({ page, javaScriptEnabled }) => {

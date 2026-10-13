@@ -228,7 +228,13 @@ function virtual_workers_module(options, stub_import) {
 		// We store the platform proxy on globalThis so that our virtual workers module
 		// can access the same instance that we use here to populate `caches` and `cf` (above).
 		globalThis.__sveltekit_cloudflare_platform = proxy;
-		/** @type {any} */ (globalThis).caches = proxy.caches;
+		// Deno defines `caches` with a getter and no setter, so assigning to it throws
+		Object.defineProperty(globalThis, 'caches', {
+			value: proxy.caches,
+			writable: true,
+			enumerable: true,
+			configurable: true
+		});
 	};
 	const dispose = async () => {
 		const proxy = globalThis.__sveltekit_cloudflare_platform;

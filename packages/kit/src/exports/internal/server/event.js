@@ -2,6 +2,7 @@
 /** @import { RequestStore } from 'types' */
 /** @import { AsyncLocalStorage } from 'node:async_hooks' */
 import { IN_WEBCONTAINER } from '../../../constants.js';
+import * as e from '../../../messages/server-errors.js';
 
 /** @type {RequestStore | null} */
 let sync_store = null;
@@ -29,15 +30,8 @@ export function getRequestEvent() {
 	const event = try_get_request_store()?.event;
 
 	if (!event) {
-		let message =
-			'Can only read the current request event inside functions invoked during `handle`, such as server `load` functions, actions, endpoints, and other server hooks.';
-
-		if (!als) {
-			message +=
-				' In environments without `AsyncLocalStorage`, the event must be read synchronously, not after an `await`.';
-		}
-
-		throw new Error(message);
+		if (als) e.request_event_unavailable();
+		e.request_event_after_await();
 	}
 
 	return event;
@@ -46,17 +40,8 @@ export function getRequestEvent() {
 export function get_request_store() {
 	const result = try_get_request_store();
 	if (!result) {
-		let message = 'Could not get the request store.';
-
-		if (als) {
-			message += ' This is an internal error.';
-		} else {
-			message +=
-				' In environments without `AsyncLocalStorage`, the request store (used by e.g. remote functions) must be accessed synchronously, not after an `await`.' +
-				' If it was accessed synchronously then this is an internal error.';
-		}
-
-		throw new Error(message);
+		if (als) throw new Error('Could not get the request store. This is an internal error.');
+		e.request_store_after_await();
 	}
 	return result;
 }

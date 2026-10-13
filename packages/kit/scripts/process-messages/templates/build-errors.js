@@ -1,12 +1,12 @@
+/** @import { ThrowOptions } from './internal/build.js' */
+import { throw_error } from './internal/build.js';
+
 /**
  * DESCRIPTION
- * @param {VALUES} values
+ * @param {VALUES} _values
+ * @param {ThrowOptions} [options]
  * @returns {never}
  */
-export function CODE(values) {
-	const error = new Error(
-		`${'CODE'}\n${MESSAGE(values)}\nhttps://next.svelte.dev/e/@sveltejs/kit/${'CODE'}`
-	);
-	error.name = 'SvelteKit error';
-	throw error;
+export function CODE(_values, options) {
+	throw_error('CODE', MESSAGE(_values), options, CODE);
 }

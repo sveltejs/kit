@@ -1,5 +1,73 @@
 # @sveltejs/adapter-node
 
+## 6.0.0
+
+### Major Changes
+
+- breaking: populate env vars before `instrumentation.server.js` is evaluated and update the adapter instrumentation API ([#16303](https://github.com/sveltejs/kit/pull/16303))
+
+- chore: migrate from rollup to rolldown ([#15297](https://github.com/sveltejs/kit/pull/15297))
+
+- breaking: require SvelteKit 3 ([#15506](https://github.com/sveltejs/kit/pull/15506))
+
+- breaking: add `kit.paths.origin` config option, remove `kit.prerender.origin` and the `adapter-node` `ORIGIN` environment variable ([#16161](https://github.com/sveltejs/kit/pull/16161))
+
+- breaking: require `vite@^8.0.12`, the first Vite 8 release bundling stable `rolldown` 1.0.0 ([#16134](https://github.com/sveltejs/kit/pull/16134))
+
+- breaking: replace the `builder.generateManifest` with `builder.generateServerInstance` and `builder.manifest` ([#16875](https://github.com/sveltejs/kit/pull/16875))
+
+- breaking: record the list of static assets at build time, files added to the output afterwards are not served ([#16908](https://github.com/sveltejs/kit/pull/16908))
+
+- breaking: validate static assets with content-hash `ETag`s and stop sending `Last-Modified` ([#16908](https://github.com/sveltejs/kit/pull/16908))
+
+- breaking: serve static assets only to `GET` and `HEAD` requests ([#16908](https://github.com/sveltejs/kit/pull/16908))
+
+### Minor Changes
+
+- feat: serve static assets from tables recorded at adapt time, instead of using sirv ([#16908](https://github.com/sveltejs/kit/pull/16908))
+
+- feat: better error logging ([#16374](https://github.com/sveltejs/kit/pull/16374))
+
+### Patch Changes
+
+- fix: prevent scheme-like path segments from causing off-site trailing-slash redirects ([#17294](https://github.com/sveltejs/kit/pull/17294))
+
+- fix: serve static files with the Content-Type recorded in the manifest ([#16564](https://github.com/sveltejs/kit/pull/16564))
+
+- chore: bundle the adapter's server source directly instead of prebuilding it with rolldown ([#17109](https://github.com/sveltejs/kit/pull/17109))
+
+- chore: use `node:fs` instead of deprecated `builder.rimraf` and `builder.mkdirp` ([#16610](https://github.com/sveltejs/kit/pull/16610))
+
+- chore: hand adapt-time values to the server as a module instead of patching built chunks ([#17103](https://github.com/sveltejs/kit/pull/17103))
+
+- fix: externalize `@opentelemetry/api` to prevent bundler chunk colocation between `instrumentation.server.js` and application code ([#16302](https://github.com/sveltejs/kit/pull/16302))
+
+- feat: abort `request.signal` when the response closes prematurely, via a new `response` option for `getRequest` ([#16793](https://github.com/sveltejs/kit/pull/16793))
+
+- fix: allow prerelease versions of SvelteKit 3 to satisfy the peer dependency range ([#16286](https://github.com/sveltejs/kit/pull/16286))
+
+- fix: always bundle dev dependencies ([#17210](https://github.com/sveltejs/kit/pull/17210))
+
+- chore: avoid bundling the server twice ([#17068](https://github.com/sveltejs/kit/pull/17068))
+
+- fix: correctly bundle entrypoints on Windows ([#16367](https://github.com/sveltejs/kit/pull/16367))
+
+- fix: bundle Svelte libraries listed in `dependencies` instead of externalising them ([#17234](https://github.com/sveltejs/kit/pull/17234))
+
+- chore: bump `rolldown` to 1.2.3 ([#16745](https://github.com/sveltejs/kit/pull/16745))
+
+- chore: use `builder.config` to access SvelteKit config settings ([#16895](https://github.com/sveltejs/kit/pull/16895))
+
+- fix: preserve stripped path prefixes by making trailing-slash redirects relative ([#16431](https://github.com/sveltejs/kit/pull/16431))
+
+- chore: bump Rolldown to `1.2.0` ([#16455](https://github.com/sveltejs/kit/pull/16455))
+
+- fix: don't send `Vary: Accept-Encoding` for assets that were never precompressed ([#16566](https://github.com/sveltejs/kit/pull/16566))
+
+- chore: remove polka, attach the handler to the http server directly ([#16907](https://github.com/sveltejs/kit/pull/16907))
+- Updated dependencies:
+  - @sveltejs/kit@3.0.0
+
 ## 6.0.0-next.15
 
 ### Patch Changes

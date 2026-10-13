@@ -56,6 +56,11 @@ export default [
 							group: ['vite', '**/vite/**', '**/core/**', '**/cli.js', '**/runner.js'],
 							message:
 								'This code is bundled into user apps and must not import Vite or the build pipeline (src/core, src/exports/vite).'
+						},
+						{
+							group: ['**/messages/build-*.js', '**/messages/internal/build.js'],
+							message:
+								'Build diagnostics always include their full text. Use src/messages/shared-errors.js in code that is bundled into user apps.'
 						}
 					]
 				}

@@ -45,7 +45,7 @@ export default defineConfig({
 });
 ```
 
-See the [configuration docs](configuration) for further examples.
+See the [configuration docs](@sveltejs-kit-vite) for further examples.
 
 ### Removed options
 

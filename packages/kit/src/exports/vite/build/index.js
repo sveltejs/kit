@@ -22,9 +22,11 @@ import { write_client_manifest } from '../../../core/sync/write_client_manifest.
 import { logger, runtime_directory } from '../../../core/utils.js';
 import { compact } from '../../../utils/array.js';
 import { copy, read, resolve_entry, walk } from '../../../utils/filesystem.js';
-import { load_and_validate_params } from '../../../utils/params.js';
+import { load_and_validate_params } from '../../../core/params.js';
 import { posixify } from '../../../utils/os.js';
 import { stackless } from '../../../utils/error.js';
+import * as e from '../../../messages/build-errors.js';
+import * as w from '../../../messages/build-warnings.js';
 import { s } from '../../../utils/misc.js';
 
 /**
@@ -187,7 +189,10 @@ export function plugin_compile(
 				);
 				if (server_instrumentation) {
 					if (kit.adapter && !kit.adapter.supports?.instrumentation?.()) {
-						throw new Error(`${server_instrumentation} is unsupported in ${kit.adapter.name}.`);
+						e.adapter_instrumentation_unsupported({
+							file: server_instrumentation,
+							adapter: kit.adapter.name
+						});
 					}
 					server_input['instrumentation.server'] = server_instrumentation;
 				}
@@ -532,9 +537,7 @@ export function plugin_compile(
 					kit.csp.directives['require-trusted-types-for']?.includes('script') &&
 					!kit.csp.directives['trusted-types']?.includes('svelte-trusted-html')
 				) {
-					throw new Error(
-						"The `csp.directives['trusted-types']` option must include 'svelte-trusted-html' unless all pages have `csr: false`"
-					);
+					e.config_csp_trusted_html_missing();
 				}
 
 				if (skip_client_build) {
@@ -916,12 +919,7 @@ export function plugin_compile(
 							explicit_env_config
 						);
 					} else {
-						log.warn('\nNo adapter specified');
-
-						const link = styleText(['bold', 'cyan'], 'https://svelte.dev/docs/kit/adapters');
-						console.log(
-							`See ${link} to learn how to configure your app to run on the platform of your choosing`
-						);
+						w.adapter_missing();
 					}
 				};
 				set_finalise(finalise);
