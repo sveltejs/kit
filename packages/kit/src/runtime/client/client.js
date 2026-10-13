@@ -1013,7 +1013,16 @@ async function get_navigation_result_from_branch({
 		errors &&
 		(await build_error_chain(branch, errors, (loader) => loader().then((e) => e.component)));
 
-	let current_node = result.props.tree;
+	// Build the branch directly on the live root node (not a detached tree that
+	// `apply_navigation_result` later copies via two reactive writes). In async mode
+	// Svelte batches effects: if the first flush sees `data` but not yet `child`
+	// (or vice versa), re-running in an older batch can rewind the tree to the
+	// placeholder state and a pending boundary then reads `child === undefined`.
+	// Mutating the already-mounted root means Root only ever observes complete,
+	// in-place updates; on first load it hasn't rendered yet, so it reads the
+	// finished tree. `component`/`error` are plain fields, so plain (non-
+	// `$state.raw`) `data`/`child` on fresh nodes are never tracked stale.
+	let current_node = (result.props.tree = props.tree);
 	let current_depth = 1;
 
 	/** @type {RenderNode | undefined} */
@@ -1032,14 +1041,14 @@ async function get_navigation_result_from_branch({
 			!previous_node ||
 			node?.data !== prev?.data
 		) {
-			current_node.data = { ...data, ...node.data };
+			data = { ...data, ...node.data };
 			data_changed = true;
 		} else {
 			// use existing object — prevents effects re-running unnecessarily
-			current_node.data = previous_node.data;
+			data = previous_node.data;
 		}
 
-		data = current_node.data;
+		current_node.data = data;
 
 		if (i < branch.length - 1) {
 			let next_index = i + 1;
@@ -1050,14 +1059,21 @@ async function get_navigation_result_from_branch({
 			const next = branch[next_index];
 
 			if (next) {
-				current_node = current_node.child = new RenderNode(
-					next.node.component,
-					error_components?.[current_depth++]
-				);
+				const child = new RenderNode(next.node.component, error_components?.[current_depth++]);
+				// Populate before linking so Root never sees a child with empty data.
+				current_node = current_node.child = child;
 
 				previous_node = previous_node?.child;
+			} else {
+				current_node.child = undefined;
 			}
+		} else {
+			current_node.child = undefined;
 		}
+	}
+
+	if (branch.length === 0) {
+		current_node.child = undefined;
 	}
 
 	const page_changed =
@@ -3799,8 +3815,10 @@ if (DEV) {
 function apply_navigation_result(result) {
 	update_page(result.props.page);
 
-	props.tree.data = result.props.tree.data;
-	props.tree.child = result.props.tree.child;
+	// `get_navigation_result_from_branch` already built the branch on `props.tree`,
+	// so there is nothing to copy here. Copying `data`/`child` in two separate
+	// reactive writes is what let async batches observe (and rewind to) a
+	// half-initialised tree on first load — see #17383.
 
 	if ('form' in result.props) {
 		props.form = result.props.form;
