@@ -577,6 +577,32 @@ test.describe('Redirects', () => {
 		await expect(page.locator('h1')).toHaveText('c');
 	});
 
+	// These link navigations run with and without JS, using the same expected destinations.
+	for (const [path, destination] of [
+		['/redirect/always/universal', '/redirect/c'],
+		['/redirect/always/server', '/redirect/c'],
+		['/redirect/never/universal/', '/redirect/c'],
+		['/redirect/never/server/', '/redirect/c'],
+		['/redirect/ignore/universal', '/redirect/c'],
+		['/redirect/ignore/universal/', '/redirect/ignore/c'],
+		['/redirect/ignore/server', '/redirect/c'],
+		['/redirect/ignore/server/', '/redirect/ignore/c'],
+		['/redirect/always/override/', '/redirect/c'],
+		['/redirect/always/parent/leaf/', '/redirect/c']
+	]) {
+		test(`relative redirect from ${path} matches native navigation`, async ({
+			baseURL,
+			page,
+			clicknav
+		}) => {
+			await page.goto('/redirect');
+			await clicknav(`[href="${path}"]`);
+
+			await expect(page).toHaveURL(`${baseURL}${destination}`);
+			await expect(page.locator('h1')).toHaveText('c');
+		});
+	}
+
 	test('prevents redirect loops', async ({ baseURL, page, javaScriptEnabled, browserName }) => {
 		await page.goto('/redirect');
 

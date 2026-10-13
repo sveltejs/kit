@@ -1037,6 +1037,19 @@ test.describe('Prefetching', () => {
 		);
 	});
 
+	test('normalizes trailing slashes when preloading relative redirects', async ({ page, app }) => {
+		await page.goto('/redirect');
+
+		expect(await app.preloadData('/redirect/a/')).toMatchObject({
+			type: 'redirect',
+			location: '/redirect/b'
+		});
+
+		await app.goto('/redirect/a/');
+		await expect(page).toHaveURL('/redirect/c');
+		await expect(page.locator('h1')).toHaveText('c');
+	});
+
 	test('does not replay a preloaded redirect when a later hop returns to the route', async ({
 		page,
 		app

@@ -9,7 +9,13 @@
 import { DEV } from 'esm-env';
 import { settled, tick, fork, onMount, hydrate, mount } from 'svelte';
 import { HttpError, Redirect, SvelteKitError, HandledHttpError } from '@sveltejs/kit/internal';
-import { decode_pathname, strip_hash, make_trackable, normalize_path } from '../../utils/url.js';
+import {
+	decode_pathname,
+	strip_hash,
+	make_trackable,
+	normalize_path,
+	resolve
+} from '../../utils/url.js';
 import { dev_fetch, initial_fetch, lock_fetch, subsequent_fetch, unlock_fetch } from './fetcher.js';
 import { parse_routes, parse_server_route } from './parse.js';
 import * as storage from './session-storage.js';
@@ -943,6 +949,29 @@ async function initialize(result, target, should_hydrate) {
 }
 
 /**
+ * @param {URL} url
+ * @param {Array<{ slash?: import('types').TrailingSlash } | undefined>} branch
+ */
+function normalize_url(url, branch) {
+	/** @type {import('types').TrailingSlash} */
+	let slash = 'never';
+
+	// if `paths.base === '/a/b/c`, then the root route is always `/a/b/c/`, regardless of
+	// the `trailingSlash` route option, so that relative paths to JS and CSS work
+	if (base && (url.pathname === base || url.pathname === base + '/')) {
+		slash = 'always';
+	} else {
+		for (const node of branch) {
+			if (node?.slash !== undefined) slash = node.slash;
+		}
+	}
+
+	url.pathname = normalize_path(url.pathname, slash);
+	// eslint-disable-next-line no-self-assign
+	url.search = url.search; // turn `/?` into `/`
+}
+
+/**
  *
  * @param {{
  *   url: URL;
@@ -965,22 +994,7 @@ async function get_navigation_result_from_branch({
 	route,
 	form
 }) {
-	/** @type {import('types').TrailingSlash} */
-	let slash = 'never';
-
-	// if `paths.base === '/a/b/c`, then the root route is always `/a/b/c/`, regardless of
-	// the `trailingSlash` route option, so that relative paths to JS and CSS work
-	if (base && (url.pathname === base || url.pathname === base + '/')) {
-		slash = 'always';
-	} else {
-		for (const node of branch) {
-			if (node?.slash !== undefined) slash = node.slash;
-		}
-	}
-
-	url.pathname = normalize_path(url.pathname, slash);
-	// eslint-disable-next-line no-self-assign
-	url.search = url.search; // turn `/?` into `/`
+	normalize_url(url, branch);
 
 	/** @type {import('./types.js').NavigationFinished} */
 	const result = {
@@ -1506,10 +1520,32 @@ async function load_route({ id, invalidating, url, params, route, preload, actio
 				branch.push(await branch_promises[i]);
 			} catch (err) {
 				if (err instanceof Redirect) {
+					// A redirect can bypass branch construction, but its base URL still needs
+					// the trailing slash policy of the entire route, including leaf overrides.
+					const redirect_branch = await Promise.all(
+						loaders.map(async (loader, i) => {
+							if (!loader) return;
+							const node = await loader[1]().catch(noop);
+							const server_node = server_data_nodes?.[i];
+							const server_slash =
+								server_node?.type === 'data'
+									? server_node.slash
+									: loader[0] && server_node?.type !== 'error'
+										? current.branch[i]?.server?.slash
+										: undefined;
+							return { slash: node?.universal?.trailingSlash ?? server_slash };
+						})
+					);
+					const redirect_url = new URL(url);
+					normalize_url(redirect_url, redirect_branch);
+
 					return {
 						type: 'redirect',
 						status: err.status,
-						location: err.location
+						location: resolve(
+							redirect_url.pathname + redirect_url.search + redirect_url.hash,
+							err.location
+						)
 					};
 				}
 

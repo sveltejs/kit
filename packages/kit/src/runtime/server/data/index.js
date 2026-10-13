@@ -5,7 +5,7 @@ import { once } from '../../../utils/functions.js';
 import { server_data_serializer_json } from '../page/data_serializer.js';
 import { load_server_data } from '../page/load_data.js';
 import { handle_error_and_jsonify } from '../errors.js';
-import { normalize_path } from '../../../utils/url.js';
+import { normalize_path, resolve } from '../../../utils/url.js';
 import { stream_text } from '../../utils.js';
 import { with_version_header } from '../utils.js';
 import { manifest } from '../internal.js';
@@ -24,14 +24,14 @@ export async function render_data(event, state, route, invalidated_data_nodes, t
 		return with_version_header(new Response(undefined, { status: 404 }));
 	}
 
+	const url = new URL(event.url);
+	url.pathname = normalize_path(url.pathname, trailing_slash);
+
 	try {
 		const node_ids = [...route.page.layouts, route.page.leaf];
 		const invalidated = invalidated_data_nodes ?? node_ids.map(() => true);
 
 		let aborted = false;
-
-		const url = new URL(event.url);
-		url.pathname = normalize_path(url.pathname, trailing_slash);
 
 		const new_event = { ...event, url };
 
@@ -124,7 +124,9 @@ export async function render_data(event, state, route, invalidated_data_nodes, t
 		const error = normalize_error(e);
 
 		if (error instanceof Redirect) {
-			return redirect_json_response(error);
+			return redirect_json_response(
+				new Redirect(error.status, resolve(url.pathname + url.search, error.location))
+			);
 		} else {
 			const transformed = await handle_error_and_jsonify(event, state, error);
 			return json_response(transformed, transformed.status);
