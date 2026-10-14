@@ -103,7 +103,7 @@ async function prerender({
 					log_failure(details);
 
 					log.err(
-						`To suppress or handle this error, implement \`${name}\` in https://svelte.dev/docs/kit/configuration#prerender\n`
+						`To suppress or handle this error, implement \`${name}\` in https://svelte.dev/docs/kit/@sveltejs-kit-vite#prerender\n`
 					);
 
 					throw_handled();

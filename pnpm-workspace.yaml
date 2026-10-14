@@ -51,7 +51,7 @@ catalog:
   '@changesets/changelog-github': 1.0.1
   '@fontsource/libre-barcode-128-text': ^5.3.0
   '@opentelemetry/api': ^1.9.1
-  '@opentelemetry/sdk-node': ^0.222.0
+  '@opentelemetry/sdk-node': ^0.223.0
   '@opentelemetry/sdk-trace-node': ^2.8.0
   '@playwright/test': ^1.62.1
   '@polka/url': ^1.0.0-next.29
@@ -61,11 +61,9 @@ catalog:
   '@types/connect': ^3.4.38
   '@types/estree': ^1.0.8
   '@types/node': ^22.19.19
-  '@types/semver': ^7.8.0
   eslint: ^10.8.1
   prettier: ^3.9.6
   prettier-plugin-svelte: ^4.1.1
-  semver: ^7.5.4
   sirv-cli: ^3.0.1
   svelte: ^5.57.1
   svelte-check: ^4.7.5

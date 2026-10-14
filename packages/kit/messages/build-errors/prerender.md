@@ -4,9 +4,9 @@
 
 > `%path%` was %reference_type% from `%referrer%`
 
-While [prerendering](https://svelte.dev/docs/kit/page-options#prerender), SvelteKit requested this path — because it was listed in [`prerender.entries`](https://svelte.dev/docs/kit/configuration#prerender), returned from an [`entries`](https://svelte.dev/docs/kit/page-options#entries) function, linked from a prerendered page or fetched during its `load` — and received an error response, which is logged above. When the path was reached from another page, the message says which one.
+While [prerendering](https://svelte.dev/docs/kit/page-options#prerender), SvelteKit requested this path — because it was listed in [`prerender.entries`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#prerender), returned from an [`entries`](https://svelte.dev/docs/kit/page-options#entries) function, linked from a prerendered page or fetched during its `load` — and received an error response, which is logged above. When the path was reached from another page, the message says which one.
 
-Fix the link or request, or the error in the route. If the failure is expected, handle it with [`prerender.handleHttpError`](https://svelte.dev/docs/kit/configuration#prerender):
+Fix the link or request, or the error in the route. If the failure is expected, handle it with [`prerender.handleHttpError`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#prerender):
 
 ```js
 sveltekit({
@@ -30,20 +30,20 @@ sveltekit({
 
 > `%path%` (%reference_type% from `%referrer%`) does not begin with `base`. You can fix this by using `resolve('%path%')` from `$app/paths`. The base path is configurable from `paths.base`
 
-Your app is served under [`paths.base`](https://svelte.dev/docs/kit/configuration#paths), so every internal URL must start with it. Build links with [`resolve`](https://svelte.dev/docs/kit/$app-paths#resolve) from `$app/paths` instead of hard-coding them, so that the base path is added for you. Like other prerendering HTTP errors, this can be handled with [`prerender.handleHttpError`](https://svelte.dev/docs/kit/configuration#prerender).
+Your app is served under [`paths.base`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#paths), so every internal URL must start with it. Build links with [`resolve`](https://svelte.dev/docs/kit/$app-paths#resolve) from `$app/paths` instead of hard-coding them, so that the base path is added for you. Like other prerendering HTTP errors, this can be handled with [`prerender.handleHttpError`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#prerender).
 
 ## prerender_missing_id
 
 > The following pages contain links to `%path%#%id%`, but no element with `id="%id%"` exists on `%path%`:
 > %referrers%
 
-A prerendered page links to a fragment (`#id`) that doesn't exist on the target page, so the link won't scroll anywhere. Add an element with that `id` to the target page, or fix the link. Handle or ignore these cases with [`prerender.handleMissingId`](https://svelte.dev/docs/kit/configuration#prerender).
+A prerendered page links to a fragment (`#id`) that doesn't exist on the target page, so the link won't scroll anywhere. Add an element with that `id` to the target page, or fix the link. Handle or ignore these cases with [`prerender.handleMissingId`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#prerender).
 
 ## prerender_entry_generator_mismatch
 
 > The `entries` export from `%id%` generated entry `%entry%`, which was matched by `%matched%`
 
-An [`entries`](https://svelte.dev/docs/kit/page-options#entries) function returns paths that its own route should prerender, but this path is handled by a different route, so the page you expected isn't generated. This usually means a more specific route takes priority (see [sorting](https://svelte.dev/docs/kit/advanced-routing#Sorting)). Change the entries, or the routes, so each entry is matched by the route that generated it. Handle or ignore these cases with [`prerender.handleEntryGeneratorMismatch`](https://svelte.dev/docs/kit/configuration#prerender).
+An [`entries`](https://svelte.dev/docs/kit/page-options#entries) function returns paths that its own route should prerender, but this path is handled by a different route, so the page you expected isn't generated. This usually means a more specific route takes priority (see [sorting](https://svelte.dev/docs/kit/advanced-routing#Sorting)). Change the entries, or the routes, so each entry is matched by the route that generated it. Handle or ignore these cases with [`prerender.handleEntryGeneratorMismatch`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#prerender).
 
 ## prerender_unseen_routes
 
@@ -52,11 +52,11 @@ An [`entries`](https://svelte.dev/docs/kit/page-options#entries) function return
 
 These routes (or a parent layout) have `export const prerender = true`, but the prerendering crawler never reached them, so they weren't prerendered. Since prerendered routes can't be server-rendered on demand, requesting them would fail. To fix it:
 
-- Make sure SvelteKit can find the route by following links from [`prerender.entries`](https://svelte.dev/docs/kit/configuration#prerender) or from pages reached by other entries.
+- Make sure SvelteKit can find the route by following links from [`prerender.entries`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#prerender) or from pages reached by other entries.
 - For dynamic routes, export an [`entries`](https://svelte.dev/docs/kit/page-options#entries) function that lists the parameter values to prerender.
 - Change `export const prerender = true` to `export const prerender = 'auto'`, so that routes that weren't prerendered can still be rendered on demand.
 
-Handle or ignore these cases with [`prerender.handleUnseenRoutes`](https://svelte.dev/docs/kit/configuration#prerender).
+Handle or ignore these cases with [`prerender.handleUnseenRoutes`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#prerender).
 
 ## prerender_invalid_url
 
@@ -64,7 +64,7 @@ Handle or ignore these cases with [`prerender.handleUnseenRoutes`](https://svelt
 
 > Invalid URL `%href%` (linked from `%referrer%`)
 
-A prerendered page contains a link whose `href` can't be parsed as a URL. Fix the link. Handle or ignore these cases with [`prerender.handleInvalidUrl`](https://svelte.dev/docs/kit/configuration#prerender).
+A prerendered page contains a link whose `href` can't be parsed as a URL. Fix the link. Handle or ignore these cases with [`prerender.handleInvalidUrl`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#prerender).
 
 ## prerender_client_address
 
