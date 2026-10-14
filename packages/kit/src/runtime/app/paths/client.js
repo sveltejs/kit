@@ -1,4 +1,4 @@
-/** @import { AssetPath, RouteId, RouteIdWithSearchOrHash, PathnameWithSearchOrHash, ResolvedPathname, RouteParams } from '$app/types' */
+/** @import { AssetPath, RouteId, PathnameWithSearchOrHash, ResolvedPathname, RouteParams, ResolvableRouteIdWithSearchOrHash } from '$app/types' */
 /** @import { ResolveArgs } from './types.js' */
 import { base, assets, hash_routing, match_implementation } from './internal/client.js';
 import { resolve_route } from '../../../utils/routing.js';
@@ -63,7 +63,7 @@ const pathname_prefix = hash_routing ? '#' : base;
  * ```
  * @since 2.26
  *
- * @template {RouteIdWithSearchOrHash | PathnameWithSearchOrHash} T
+ * @template {ResolvableRouteIdWithSearchOrHash | PathnameWithSearchOrHash} T
  * @param {ResolveArgs<T>} args
  * @returns {ResolvedPathname}
  */
