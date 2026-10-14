@@ -77,6 +77,25 @@ export function pin_while_resolving(cache_map, cache, id, payload, then) {
 }
 
 /**
+ * Where a value or error for a query came from, when it came in another request's response
+ * @typedef {object} Update
+ * @property {number} sent the number of the request that carried it (see `next_request_id`)
+ * @property {boolean} mutation whether that request was a command or form, which may have
+ *   changed the data, rather than a read
+ */
+
+let request_count = 0;
+
+/**
+ * Numbers requests in the order they are made, so that a query can tell which of
+ * its own requests and the other requests whose responses carry its value came first.
+ * A `query.batch` request is numbered when the query asks for it, before the batch is sent
+ */
+export function next_request_id() {
+	return ++request_count;
+}
+
+/**
  * @returns {{ 'x-sveltekit-pathname': string, 'x-sveltekit-search': string }}
  */
 /**
@@ -110,10 +129,12 @@ export function get_remote_request_headers() {
 /**
  * @param {string} url
  * @param {RequestInit} [init]
- * @param {Set<string> | null} [refreshes]
+ * @param {Set<string> | null} [refreshes] the updates a command or form asked for (`null` if none); left out for reads
  * @param {string} [query_key] the key of the query making this request, whose own result is returned rather than applied via `set`
  */
 export async function remote_request(url, init, refreshes, query_key) {
+	/** @type {Update} */
+	const update = { sent: next_request_id(), mutation: refreshes !== undefined };
 	const response = await fetch(url, init);
 	const status = response.status;
 
@@ -142,13 +163,14 @@ export async function remote_request(url, init, refreshes, query_key) {
 	 * @param {string} key
 	 * @param {CacheEntry | undefined} entry
 	 * @param {any} result
+	 * @param {Update} [update]
 	 */
-	function refresh(key, entry, result) {
+	function refresh(key, entry, result, update) {
 		if (entry?.resource) {
 			if (result.e) {
-				entry.resource.fail(new HandledHttpError(result.e));
+				entry.resource.fail(new HandledHttpError(result.e), update);
 			} else {
-				entry.resource.set(result.v);
+				entry.resource.set(result.v, update);
 			}
 		} else if (!result.e) {
 			// `query_responses` stores `{ v }`/`{ e }` nodes, not raw values.
@@ -168,7 +190,8 @@ export async function remote_request(url, init, refreshes, query_key) {
 			const parts = split_remote_key(key);
 			const entry = query_map.get(parts.id)?.get(parts.payload);
 
-			refresh(key, entry, data.q[key]);
+			// the query's own entry, when it is applied here, settles all of its requests as before
+			refresh(key, entry, data.q[key], key === query_key ? undefined : update);
 		}
 	}
 

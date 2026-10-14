@@ -31,7 +31,7 @@ export function query(id) {
 
 			// return the result rather than having `remote_request` apply it via `set`,
 			// so that `Query` can discard a response that a newer one has superseded
-			const result = await remote_request(url, undefined, null, key);
+			const result = await remote_request(url, undefined, undefined, key);
 
 			if (result.redirect) {
 				// Use internal version to allow redirects to external URLs

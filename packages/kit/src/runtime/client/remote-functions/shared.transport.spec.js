@@ -10,7 +10,9 @@ vi.mock(new URL('../client.js', import.meta.url).pathname, () => ({
 	query_responses: {},
 	live_query_map: new Map(),
 	_goto: vi.fn(),
-	handle_error: (/** @type {any} */ error) => error.body
+	handle_error: (/** @type {any} */ error) => error.body,
+	set_nearest_error_page: () => {},
+	refreshAll: () => {}
 }));
 
 // Mock `#app/state/client` — imports `navigating` and `page` which are reactive
@@ -29,6 +31,9 @@ const { query_map, live_query_map, _goto } = await import('../client.js');
 const devalue = await import('devalue');
 const { command } = await import('./command.svelte.js');
 const { query } = await import('./query/index.js');
+const { form } = await import('./form.svelte.js');
+const { query_batch } = await import('./query-batch.svelte.js');
+const { create_remote_key, stringify_remote_arg } = await import('../../shared.js');
 
 test('command update warnings retain the original promise and deferred argument failures', async () => {
 	const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
@@ -220,7 +225,7 @@ describe('remote_request transport error handling', () => {
 		await remote_request('/x', undefined, refreshes);
 		fail_unhandled_refreshes(refreshes);
 
-		expect(resource.set).toHaveBeenCalledWith(42);
+		expect(resource.set).toHaveBeenCalledWith(42, { sent: expect.any(Number), mutation: true });
 		expect(resource.fail).not.toHaveBeenCalled();
 	});
 
@@ -251,33 +256,37 @@ describe('query responses', () => {
 		query_map.clear();
 	});
 
+	const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
+
 	/**
-	 * Stubs `fetch` so that each request for `hash/get_value` stays pending until
-	 * the test responds to it, mirroring the server's response shape for a direct
-	 * query call (the value is in `_` and, under the query's own key, in `q`)
-	 * @param {Record<string, any>} [other] responses for other remote functions
+	 * The server's response to a direct call of `hash/get_value`: the value is in `_`
+	 * and, under the query's own key, in `q`
+	 * @param {number} value
 	 */
-	function hold_query_requests(other = {}) {
-		/** @type {Array<(value: number) => void>} */
-		const respond = [];
+	const query_result = (value) => ({ _: value, q: { 'hash/get_value/': { v: value } } });
+
+	/**
+	 * The server's response to a command that updated `hash/get_value`
+	 * @param {any} node
+	 */
+	const command_result = (node) => ({ _: null, q: { 'hash/get_value/': node } });
+
+	/**
+	 * Stubs `fetch` so that each request stays pending until the test responds to it
+	 * @returns {Record<string, Array<(data: any) => void>>} the responders, by remote function id
+	 */
+	function hold_requests() {
+		/** @type {Record<string, Array<(data: any) => void>>} */
+		const respond = {};
 
 		vi.stubGlobal('fetch', (/** @type {string} */ url) => {
 			const id = url.split('/remote/')[1];
-			if (id in other) {
-				return mock_response({
-					json: () => Promise.resolve({ type: 'result', data: devalue.stringify(other[id]) })
-				});
-			}
 
 			return new Promise((fulfil) => {
-				respond.push((value) =>
+				(respond[id] ??= []).push((data) =>
 					fulfil(
 						mock_response({
-							json: () =>
-								Promise.resolve({
-									type: 'result',
-									data: devalue.stringify({ _: value, q: { 'hash/get_value/': { v: value } } })
-								})
+							json: () => Promise.resolve({ type: 'result', data: devalue.stringify(data) })
 						})
 					)
 				);
@@ -288,20 +297,47 @@ describe('query responses', () => {
 	}
 
 	test('an older response that arrives last does not overwrite a newer one', async () => {
-		const respond = hold_query_requests();
+		const respond = hold_requests();
 		const value = query('hash/get_value')(undefined);
 
 		void value.refresh();
 		void value.refresh();
-		expect(respond).toHaveLength(2);
+		expect(respond['hash/get_value']).toHaveLength(2);
 
-		respond[1](2);
-		await new Promise((resolve) => setTimeout(resolve, 0));
+		respond['hash/get_value'][1](query_result(2));
+		await flush();
 		expect(value.current).toBe(2);
 
-		respond[0](1);
-		await new Promise((resolve) => setTimeout(resolve, 0));
+		respond['hash/get_value'][0](query_result(1));
+		await flush();
 		expect(value.current).toBe(2);
+	});
+
+	test('stays loading until the newest of several refreshes responds', async () => {
+		for (const failure of [false, true]) {
+			const respond = hold_requests();
+			const value = query('hash/get_value')(undefined);
+
+			void value.refresh().catch(() => {});
+			let refreshed = false;
+			const refresh = value.refresh().then(() => (refreshed = true));
+
+			respond['hash/get_value'][0](
+				failure
+					? { _: null, q: { 'hash/get_value/': { e: { status: 500, message: 'failed' } } } }
+					: query_result(1)
+			);
+			await flush();
+			expect(value.loading).toBe(true);
+			expect(refreshed).toBe(false);
+
+			respond['hash/get_value'][1](query_result(2));
+			await refresh;
+			expect(value.current).toBe(2);
+			expect(value.loading).toBe(false);
+
+			query_map.clear();
+		}
 	});
 
 	test('uses the value or error a query set on itself on the server', async () => {
@@ -322,7 +358,9 @@ describe('query responses', () => {
 		expect(value.current).toBe(2);
 
 		node = { e: { status: 500, message: 'refresh failed' } };
-		await value.refresh().catch(() => {});
+		await expect(value.refresh()).rejects.toMatchObject({
+			body: { status: 500, message: 'refresh failed' }
+		});
 		expect(value.error).toEqual({ status: 500, message: 'refresh failed' });
 	});
 
@@ -340,23 +378,286 @@ describe('query responses', () => {
 		const value = query('hash/get_value')(undefined);
 
 		void value.refresh();
-		await new Promise((resolve) => setTimeout(resolve, 0));
+		await flush();
 		expect(_goto).toHaveBeenCalledWith('/next');
 		expect(value.current).toBe(2);
 	});
 
+	test("a value read by another query doesn't replace the query's own newer read", async () => {
+		const respond = hold_requests();
+		const other = query('hash/other')(undefined);
+		const value = query('hash/get_value')(undefined);
+
+		void other.refresh();
+		void value.refresh();
+		respond['hash/get_value'][0](query_result(2));
+		await flush();
+
+		respond['hash/other'][0]({ _: 0, q: { 'hash/other/': { v: 0 }, 'hash/get_value/': { v: 1 } } });
+		await flush();
+		expect(value.current).toBe(2);
+		expect(respond['hash/get_value']).toHaveLength(1);
+	});
+
 	test('a response that was in flight during a command does not overwrite its update', async () => {
-		const respond = hold_query_requests({
-			'hash/mutate': { _: null, q: { 'hash/get_value/': { v: 2 } } }
-		});
+		const respond = hold_requests();
 		const value = query('hash/get_value')(undefined);
 
 		void value.refresh();
-		await command('hash/mutate')(undefined);
+		const mutation = command('hash/mutate')(undefined);
+		await flush();
+		respond['hash/mutate'][0](command_result({ v: 2 }));
+		await mutation;
 		expect(value.current).toBe(2);
 
-		respond[0](1);
-		await new Promise((resolve) => setTimeout(resolve, 0));
+		respond['hash/get_value'][0](query_result(1));
+		await flush();
+		expect(value.current).toBe(2);
+		expect(respond['hash/get_value']).toHaveLength(1);
+	});
+
+	test("a refresh sent during a command isn't settled by the command's update", async () => {
+		const respond = hold_requests();
+		const value = query('hash/get_value')(undefined);
+
+		const mutation = command('hash/mutate')(undefined);
+		await flush();
+		let refreshed = false;
+		const refresh = value.refresh().then(() => (refreshed = true));
+		respond['hash/mutate'][0](command_result({ v: 2 }));
+		await mutation;
+		await flush();
+		expect(value.current).toBe(2);
+		expect(value.loading).toBe(true);
+		expect(refreshed).toBe(false);
+
+		// the refresh may have read before the command committed, so a fresh read decides
+		respond['hash/get_value'][0](query_result(3));
+		await flush();
+		expect(refreshed).toBe(false);
+		expect(respond['hash/get_value']).toHaveLength(2);
+
+		respond['hash/get_value'][1](query_result(3));
+		await refresh;
+		expect(value.current).toBe(3);
+		expect(value.loading).toBe(false);
+	});
+
+	test("a command's failed update doesn't settle a refresh sent during the command", async () => {
+		const respond = hold_requests();
+		const value = query('hash/get_value')(undefined);
+
+		const mutation = command('hash/mutate')(undefined);
+		await flush();
+		let refreshed = false;
+		const refresh = value.refresh().then(() => (refreshed = true));
+		respond['hash/mutate'][0](command_result({ e: { status: 500, message: 'failed' } }));
+		await mutation;
+		await flush();
+		expect(refreshed).toBe(false);
+
+		respond['hash/get_value'][0](query_result(3));
+		respond['hash/get_value'][1](query_result(3));
+		await refresh;
+		expect(value.current).toBe(3);
+		expect(value.error).toBe(undefined);
+	});
+
+	test("a command's update is applied after a read sent during the command, and a fresh read decides", async () => {
+		for (const [read, committed] of [
+			[0, 1], // the read ran before the command committed
+			[3, 2] // the command's update was read before someone else's change
+		]) {
+			const respond = hold_requests();
+			const value = query('hash/get_value')(undefined);
+
+			const mutation = command('hash/mutate')(undefined);
+			await flush();
+			const refresh = value.refresh();
+			respond['hash/get_value'][0](query_result(read));
+			await refresh;
+			expect(value.current).toBe(read);
+
+			respond['hash/mutate'][0](command_result({ v: committed }));
+			await mutation;
+			expect(value.current).toBe(committed);
+			expect(respond['hash/get_value']).toHaveLength(2);
+
+			const fresh = Math.max(read, committed);
+			respond['hash/get_value'][1](query_result(fresh));
+			await flush();
+			expect(value.current).toBe(fresh);
+
+			query_map.clear();
+		}
+	});
+
+	test('a failed fresh read fails the refresh that waited for it, and the query', async () => {
+		const failed = { _: null, q: { 'hash/get_value/': { e: { status: 500, message: 'failed' } } } };
+
+		for (const settled_first of [false, true]) {
+			const respond = hold_requests();
+			const value = query('hash/get_value')(undefined);
+
+			const mutation = command('hash/mutate')(undefined);
+			await flush();
+			const refresh = value.refresh();
+			refresh.catch(() => {});
+			if (settled_first) {
+				respond['hash/get_value'][0](query_result(0));
+				await refresh;
+			}
+
+			respond['hash/mutate'][0](command_result({ v: 1 }));
+			await mutation;
+			respond['hash/get_value'][1](failed);
+
+			if (!settled_first) {
+				await expect(refresh).rejects.toMatchObject({ body: { status: 500, message: 'failed' } });
+			}
+			await expect(Promise.resolve(value)).rejects.toMatchObject({
+				body: { status: 500, message: 'failed' }
+			});
+			expect(value.error).toEqual({ status: 500, message: 'failed' });
+
+			query_map.clear();
+		}
+	});
+
+	test('awaiting the query follows the newest fresh read after overlapping commands', async () => {
+		const respond = hold_requests();
+		const value = query('hash/get_value')(undefined);
+
+		const first = command('hash/mutate')(undefined);
+		await flush();
+		const refresh = value.refresh();
+		const second = command('hash/mutate')(undefined);
+		await flush();
+
+		respond['hash/mutate'][0](command_result({ v: 1 }));
+		await first;
+		respond['hash/mutate'][1](command_result({ v: 2 }));
+		await second;
+		// the refresh is superseded by the second command's update
+		await refresh;
+		expect(respond['hash/get_value']).toHaveLength(3);
+
+		let settled = false;
+		const awaited = Promise.resolve(value);
+		awaited.then(
+			() => (settled = true),
+			() => (settled = true)
+		);
+		await flush();
+		expect(settled).toBe(false);
+
+		respond['hash/get_value'][2]({
+			_: null,
+			q: { 'hash/get_value/': { e: { status: 500, message: 'failed' } } }
+		});
+		await expect(awaited).rejects.toMatchObject({ body: { status: 500, message: 'failed' } });
+		expect(value.error).toEqual({ status: 500, message: 'failed' });
+	});
+
+	test('a refresh that fails while a fresh read decides fails the callers waiting for that read', async () => {
+		const failed = { status: 500, message: 'failed' };
+
+		for (const batch of [false, true]) {
+			const respond = hold_requests();
+			const id = batch ? 'hash/get_batch' : 'hash/get_value';
+			const key = batch ? create_remote_key(id, stringify_remote_arg('x')) : 'hash/get_value/';
+			const value = batch ? query_batch(id)('x') : query(id)(undefined);
+			/** @param {any} node */
+			const answer = (node) =>
+				batch
+					? { _: [node.e ? { type: 'error', error: node.e } : { type: 'result', data: node.v }] }
+					: { _: node.v ?? null, q: { [key]: node } };
+
+			const mutation = command('hash/mutate')(undefined);
+			await flush();
+			const refresh = value.refresh();
+			await flush();
+			respond[id][0](answer({ v: 0 }));
+			await refresh;
+
+			respond['hash/mutate'][0]({ _: null, q: { [key]: { v: 1 } } });
+			await mutation;
+			await flush();
+			expect(respond[id]).toHaveLength(2);
+
+			let settled = false;
+			const awaited = Promise.resolve(value);
+			awaited.then(
+				() => (settled = true),
+				() => (settled = true)
+			);
+			const newer = value.refresh();
+			newer.catch(() => {});
+			await flush();
+			expect(settled).toBe(false);
+
+			respond[id][2](answer({ e: failed }));
+			await expect(newer).rejects.toMatchObject({ body: failed });
+			await expect(awaited).rejects.toMatchObject({ body: failed });
+			expect(value.error).toEqual(failed);
+
+			query_map.clear();
+		}
+	});
+
+	test("a form's update that overlaps a refresh is decided by a fresh read, whose failure fails the refresh", async () => {
+		const respond = hold_requests();
+		const value = query('hash/get_value')(undefined);
+		const remote = form('hash/myForm');
+		const element = document.createElement('form');
+		const attachment = /** @type {symbol} */ (
+			Reflect.ownKeys(remote).find((key) => typeof key === 'symbol')
+		);
+		const detach = /** @type {any} */ (remote)[attachment](element);
+
+		try {
+			const submission = remote.submit();
+			await flush();
+			const refresh = value.refresh();
+			refresh.catch(() => {});
+
+			respond['hash/myForm'][0]({ _: {}, r: true, q: { 'hash/get_value/': { v: 1 } } });
+			await expect(submission).resolves.toBe(true);
+			expect(value.current).toBe(1);
+			expect(respond['hash/get_value']).toHaveLength(2);
+
+			respond['hash/get_value'][1]({
+				_: null,
+				q: { 'hash/get_value/': { e: { status: 500, message: 'failed' } } }
+			});
+			await expect(refresh).rejects.toMatchObject({ body: { status: 500, message: 'failed' } });
+			expect(value.error).toEqual({ status: 500, message: 'failed' });
+		} finally {
+			detach();
+		}
+	});
+
+	test("overlapping commands' updates are applied, and a fresh read decides", async () => {
+		const respond = hold_requests();
+		const value = query('hash/get_value')(undefined);
+
+		const first = command('hash/mutate')(undefined);
+		await flush();
+		const second = command('hash/mutate')(undefined);
+		await flush();
+
+		respond['hash/mutate'][1](command_result({ v: 1 }));
+		await second;
+		expect(value.current).toBe(1);
+		expect(respond['hash/get_value']).toBeUndefined();
+
+		respond['hash/mutate'][0](command_result({ v: 2 }));
+		await first;
+		expect(value.current).toBe(2);
+		expect(respond['hash/get_value']).toHaveLength(1);
+
+		respond['hash/get_value'][0](query_result(2));
+		await flush();
 		expect(value.current).toBe(2);
 	});
 });

@@ -1,7 +1,8 @@
 /** @import { HttpError } from '@sveltejs/kit' */
+/** @import { Update } from '../shared.svelte.js' */
 import { query_responses, handle_error } from '../../client.js';
 import { HandledHttpError } from '@sveltejs/kit/internal';
-import { QUERY_OVERRIDE_KEY } from '../shared.svelte.js';
+import { QUERY_OVERRIDE_KEY, next_request_id } from '../shared.svelte.js';
 import { noop } from '../../../../utils/functions.js';
 import { with_resolvers } from '../../../../utils/promise.js';
 import { tick, untrack } from 'svelte';
@@ -19,8 +20,17 @@ export class Query {
 	/** @type {() => Promise<T>} */
 	#fn;
 	#loading = $state(true);
-	/** @type {Array<(value: undefined) => void>} */
+	/**
+	 * The pending requests, oldest first. `waits` marks the ones whose callers wait for a
+	 * later request to decide: the reads that overlapped a mutation's update, and the
+	 * fresh read started to decide (see `#reconcile`)
+	 * @type {Array<{ id: number, waits: boolean, promise: Promise<void>, resolve: (value: undefined) => void, reject: (error: unknown) => void }>}
+	 */
 	#latest = [];
+	/** The number of the request whose result is shown (see `next_request_id`) */
+	#shown = 0;
+	/** Requests numbered below this overlapped a mutation's update, and don't apply their responses */
+	#floor = 0;
 
 	/** @type {boolean} */
 	#ready = $state(false);
@@ -102,12 +112,67 @@ export class Query {
 			.catch(noop);
 	}
 
-	#clear_pending() {
-		this.#latest.forEach((r) => r(undefined));
-		this.#latest.length = 0;
+	/**
+	 * Settles the pending requests sent before `sent`, which a value from a later
+	 * request supersedes. Requests sent after it stay pending
+	 * @param {number} [sent]
+	 */
+	#clear_pending(sent = Infinity) {
+		const newer = this.#latest.findIndex((request) => request.id > sent);
+		const settled = this.#latest.splice(0, newer === -1 ? this.#latest.length : newer);
+		settled.forEach((request) => request.resolve(undefined));
 	}
 
-	#run() {
+	/**
+	 * Takes a value or error that came in another request's response, and settles the
+	 * pending requests it supersedes: all of them if `update` isn't given, otherwise
+	 * the ones sent before the request that carried it.
+	 *
+	 * A read's value is ignored if a request of this query sent after it has already
+	 * responded, or while a fresh request is deciding (see `#reconcile`). A mutation's
+	 * value isn't: a read sent after the mutation may still have run before it
+	 * committed. So if a request of this query sent after the mutation has responded
+	 * or is still pending, it isn't known which of them saw the newer state, and a
+	 * fresh request has to decide
+	 * @param {Update | undefined} update
+	 * @returns {'ignore' | 'apply' | 'reconcile'}
+	 */
+	#receive(update) {
+		if (!update) {
+			this.#clear_pending();
+			return 'apply';
+		}
+
+		const { sent, mutation } = update;
+
+		if (!mutation && (sent < this.#shown || sent < this.#floor)) return 'ignore';
+
+		this.#clear_pending(sent);
+		const overlaps = this.#shown > sent || this.#latest.length > 0;
+		this.#shown = Math.max(this.#shown, sent);
+
+		return mutation && overlaps ? 'reconcile' : 'apply';
+	}
+
+	/**
+	 * Starts the fresh request that decides after a mutation's update overlapped
+	 * other requests of this query (see `#receive`). The requests sent before it
+	 * don't apply their responses, and are settled when it responds
+	 */
+	#reconcile() {
+		this.#floor = next_request_id();
+		for (const request of this.#latest) request.waits = true;
+		const promise = this.#run(true);
+
+		// a pending request's promise settles when the fresh one responds, so the query can
+		// keep it. Otherwise awaiting the query has to wait for the fresh request
+		if (!this.#latest.some((request) => request.promise === this.#promise)) {
+			this.#promise = promise;
+		}
+	}
+
+	/** @param {boolean} [waits] whether this is a fresh read started by `#reconcile` */
+	#run(waits = false) {
 		this.#loading = true;
 
 		const { promise, resolve, reject } = with_resolvers();
@@ -117,19 +182,22 @@ export class Query {
 		// so make sure the stored promise can never become an unhandled rejection
 		promise.catch(noop);
 
-		this.#latest.push(resolve);
+		const request = { id: next_request_id(), waits, promise, resolve, reject };
+		this.#latest.push(request);
 
 		Promise.resolve(this.#fn())
 			.then((value) => {
-				// Skip the response if resource was refreshed with a later promise while we were waiting for this one to resolve
-				const idx = this.#latest.indexOf(resolve);
-				if (idx === -1) return;
+				// Skip the response if resource was refreshed with a later promise while we were waiting for this one to resolve,
+				// or if it overlapped a mutation's update, after which a later request decides
+				const idx = this.#latest.indexOf(request);
+				if (idx === -1 || request.id < this.#floor) return;
 
 				// Untrack this to not trigger mutation validation errors which can occur if you do e.g. $derived({ a: await queryA(), b: await queryB() })
 				untrack(() => {
-					this.#latest.splice(0, idx + 1).forEach((r) => r(undefined));
+					this.#latest.splice(0, idx + 1).forEach((r) => r.resolve(undefined));
+					this.#shown = request.id;
 					this.#ready = true;
-					this.#loading = false;
+					this.#loading = this.#latest.length > 0;
 					this.#raw = value;
 					this.#error = undefined;
 				});
@@ -140,7 +208,7 @@ export class Query {
 				//   to ensure the query is properly refreshed before the navigation completes
 				// - Instead of failing on transport-level errors, we should probably do what
 				//   LiveQuery does and preserve the last known good value and retry the connection
-				if (this.#latest.indexOf(resolve) === -1) return;
+				if (this.#latest.indexOf(request) === -1 || request.id < this.#floor) return;
 
 				const error = await handle_error(e, {
 					params: {},
@@ -151,17 +219,23 @@ export class Query {
 				// Re-check after the async `handle_error` gap: a later request may have
 				// resolved/rejected while we were awaiting and superseded this one, so
 				// recompute the index and bail out if this request is no longer current
-				const idx = this.#latest.indexOf(resolve);
-				if (idx === -1) return;
+				const idx = this.#latest.indexOf(request);
+				if (idx === -1 || request.id < this.#floor) return;
+
+				const handled = new HandledHttpError(error);
 
 				untrack(() => {
-					this.#latest.splice(0, idx).forEach((r) => r(undefined));
+					// the callers of a request that waits for a later one to decide (see `#reconcile`) fail with it
+					this.#latest
+						.splice(0, idx)
+						.forEach((r) => (r.waits ? r.reject(handled) : r.resolve(undefined)));
 					this.#latest.shift();
+					this.#shown = request.id;
 					this.#error = error;
-					this.#loading = false;
+					this.#loading = this.#latest.length > 0;
 				});
 
-				reject(new HandledHttpError(error));
+				reject(handled);
 			});
 
 		return promise;
@@ -235,8 +309,9 @@ export class Query {
 
 	/**
 	 * @param {T} value
+	 * @param {Update} [update] where the value came from, if it came in another request's response
 	 */
-	set(value) {
+	set(value, update) {
 		// normally consumed in the constructor, but make sure a leftover
 		// SSR record can never shadow the newly-set value
 		delete query_responses[this.#key];
@@ -245,26 +320,43 @@ export class Query {
 		// too would make awaiting consumers settle a second time in a new batch
 		const in_flight = this.#latest.length > 0;
 
-		this.#clear_pending();
+		const action = this.#receive(update);
+		if (action === 'ignore') return;
+
 		this.#ready = true;
-		this.#loading = false;
+		this.#loading = this.#latest.length > 0;
 		this.#error = undefined;
 		this.#raw = value;
 
-		if (!in_flight) {
+		if (action === 'reconcile') {
+			this.#reconcile();
+		} else if (!in_flight) {
 			this.#promise = Promise.resolve();
 		}
 	}
 
-	/** @param {HttpError} error */
-	fail(error) {
+	/**
+	 * @param {HttpError} error
+	 * @param {Update} [update] where the error came from, if it came in another request's response
+	 */
+	fail(error, update) {
 		// normally consumed in the constructor, but make sure a leftover
 		// SSR record can never shadow the newly-set error
 		delete query_responses[this.#key];
 
-		this.#clear_pending();
-		this.#loading = false;
+		const action = this.#receive(update);
+		if (action === 'ignore') return;
+
+		this.#loading = this.#latest.length > 0;
 		this.#error = error.body;
+
+		if (action === 'reconcile') {
+			this.#reconcile();
+			return;
+		}
+
+		// a request sent after the one that failed is still pending, and settles the promise
+		if (this.#loading) return;
 
 		const promise = Promise.reject(error);
 
