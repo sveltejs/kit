@@ -257,28 +257,39 @@ function virtual_workers_module(options, stub_import) {
 				if (resolved.configPath) {
 					const config_path = path.resolve(resolved.configPath);
 					let reloading = false;
-					const on_change = async (/** @type {string} */ file) => {
+					const reload_proxy = async () => {
+						const previous = globalThis.__sveltekit_cloudflare_platform;
+						const next = await getPlatformProxy(options);
+						globalThis.__sveltekit_cloudflare_platform = next;
+						if (globalThis.__sveltekit_cloudflare_platform_setup) {
+							globalThis.__sveltekit_cloudflare_platform_setup.proxy = Promise.resolve(next);
+						}
+						Object.defineProperty(globalThis, 'caches', {
+							value: next.caches,
+							writable: true,
+							enumerable: true,
+							configurable: true
+						});
+						if (previous) {
+							await previous.dispose();
+						}
+					};
+					const on_change = (/** @type {string} */ file) => {
 						if (reloading || path.resolve(file) !== config_path) return;
 						reloading = true;
-						try {
-							const previous = globalThis.__sveltekit_cloudflare_platform;
-							const next = await getPlatformProxy(options);
-							globalThis.__sveltekit_cloudflare_platform = next;
-							if (globalThis.__sveltekit_cloudflare_platform_setup) {
-								globalThis.__sveltekit_cloudflare_platform_setup.proxy = Promise.resolve(next);
-							}
-							Object.defineProperty(globalThis, 'caches', {
-								value: next.caches,
-								writable: true,
-								enumerable: true,
-								configurable: true
+						reload_proxy()
+							.catch((/** @type {unknown} */ error) => {
+								// A rejection must not become unhandled — it would crash the dev
+								// server. Log it the same way `createLogger('warn').warn()` surfaces
+								// adapter messages in the terminal and leave the previous proxy in
+								// place (it was only disposed on success, so bindings keep working).
+								server.config.logger.warn(
+									`[adapter-cloudflare] failed to reload the Cloudflare platform proxy after a wrangler config change: ${error instanceof Error ? error.message : String(error)}`
+								);
+							})
+							.finally(() => {
+								reloading = false;
 							});
-							if (previous) {
-								await previous.dispose();
-							}
-						} finally {
-							reloading = false;
-						}
 					};
 					server.watcher.add(config_path);
 					server.watcher.on('change', on_change);

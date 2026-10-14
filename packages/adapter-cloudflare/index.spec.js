@@ -162,6 +162,33 @@ test('does not install a config watcher when wrangler cannot resolve a config pa
 	await server.close();
 });
 
+test('swallows a rejection from the config-reload path and warns, keeping the previous proxy', async () => {
+	const config_path = path.resolve('wrangler.toml');
+	vi.mocked(unstable_readConfig).mockReturnValueOnce(
+		/** @type {any} */ ({ configPath: config_path })
+	);
+	const server = await create_server();
+	const previous = globalThis.__sveltekit_cloudflare_platform;
+	const warn = vi.spyOn(server.config.logger, 'warn').mockImplementation(() => {});
+
+	// The SECOND getPlatformProxy call — the reload — rejects.
+	vi.mocked(getPlatformProxy).mockRejectedValueOnce(new Error('nope'));
+
+	server.watcher.emit('change', config_path);
+	// Wait for the microtask queue to drain so the catch handler runs.
+	await vi.waitFor(() => {
+		expect(warn).toHaveBeenCalledOnce();
+	});
+	const first_call = /** @type {any[]} */ (warn.mock.calls[0]);
+	expect(first_call[0]).toMatch(/adapter-cloudflare.*wrangler config change.*nope/);
+	// Previous proxy is still in place since the swap aborted before dispose.
+	expect(globalThis.__sveltekit_cloudflare_platform).toBe(previous);
+	expect(dispose).not.toHaveBeenCalled();
+
+	await server.close();
+	expect(dispose).toHaveBeenCalledOnce();
+});
+
 test('rejects concurrent servers sharing a failed platform proxy and allows a retry', async () => {
 	const { promise, reject } = Promise.withResolvers();
 	vi.mocked(getPlatformProxy).mockReturnValueOnce(promise);
