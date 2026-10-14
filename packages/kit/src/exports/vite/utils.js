@@ -196,6 +196,28 @@ export const server_only_module_pattern = /[/.]server\.[^/]+$/;
 export const server_only_directory_pattern = /\/server\//;
 
 /**
+ * Whether a module inside the project is server-only because of its filename (e.g. `foo.server.js`)
+ * or because it is inside a `server` directory. Only the part of the path inside the project root
+ * is considered, so that a project located in a `server` directory isn't treated as server-only.
+ * Modules outside the root or in `node_modules` are never considered server-only by path.
+ * @param {string} id posixified absolute path of the module
+ * @param {{ root: string; node_modules: string; routes: string; assets: string }} dirs posixified absolute paths
+ * @returns {boolean}
+ */
+export function is_server_only_path(id, { root, node_modules, routes, assets }) {
+	if (!id.startsWith(root + '/') || id.startsWith(node_modules + '/')) return false;
+
+	const relative = id.slice(root.length);
+
+	return (
+		server_only_module_pattern.test(relative) ||
+		(server_only_directory_pattern.test(relative) &&
+			!id.startsWith(routes + '/') &&
+			!id.startsWith(assets + '/'))
+	);
+}
+
+/**
  * For `error_for_missing_config('remote functions', 'experimental.remoteFunctions', 'true')`,
  * returns:
  *
@@ -322,4 +344,18 @@ export function comparable(value) {
 	if (typeof value !== 'string') return value;
 	const normalized = posixify(value);
 	return process.platform === 'win32' ? normalized.toLowerCase() : normalized;
+}
+
+/**
+ * Whether a plugin uses the `transformIndexHtml` hook, which SvelteKit apps don't support
+ * @param {import('vite').Plugin} plugin
+ * @returns {boolean}
+ */
+export function uses_unsupported_html_hook(plugin) {
+	// Vitest and Storybook invoke this hook for their own HTML, not the SvelteKit app
+	return (
+		!!plugin.transformIndexHtml &&
+		plugin.name !== 'vitest:browser:loader' &&
+		!plugin.name?.includes('storybook')
+	);
 }

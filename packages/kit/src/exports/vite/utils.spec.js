@@ -11,9 +11,11 @@ import {
 	get_config_aliases,
 	normalize_id,
 	is_remote_module,
+	is_server_only_path,
 	remote_module_pattern,
 	server_only_directory_pattern,
-	server_only_module_pattern
+	server_only_module_pattern,
+	uses_unsupported_html_hook
 } from './utils.js';
 import { app_server, app_env_private } from './module_ids.js';
 
@@ -72,6 +74,37 @@ test('recognizes server-only module filenames', () => {
 	expect(server_only_module_pattern.test('dir/module.serverish.js')).toBe(false);
 	expect(server_only_module_pattern.test('dir/server/module.js')).toBe(false);
 	expect(server_only_directory_pattern.test('dir/server/module.js')).toBe(true);
+});
+
+test('only checks the part of the path inside the project root for server-only modules', () => {
+	/**
+	 * @param {string} id
+	 * @param {string} root
+	 */
+	const check = (id, root) =>
+		is_server_only_path(id, {
+			root,
+			node_modules: `${root}/node_modules`,
+			routes: `${root}/src/routes`,
+			assets: `${root}/static`
+		});
+
+	expect(check('/app/src/lib/server/db.js', '/app')).toBe(true);
+	expect(check('/app/src/lib/db.server.js', '/app')).toBe(true);
+	expect(check('/app/server/db.js', '/app')).toBe(true);
+	expect(check('/app/src/lib/db.js', '/app')).toBe(false);
+	expect(check('/app/src/routes/server/+page.svelte', '/app')).toBe(false);
+	expect(check('/app/static/server/file.js', '/app')).toBe(false);
+	expect(check('/app/node_modules/pkg/server/index.js', '/app')).toBe(false);
+	expect(check('/outside/server/db.js', '/app')).toBe(false);
+
+	// the project itself is inside a `server` directory
+	expect(check('/repo/server/.svelte-kit/generated/build/app-manifest.js', '/repo/server')).toBe(
+		false
+	);
+	expect(check('/repo/server/src/lib/db.js', '/repo/server')).toBe(false);
+	expect(check('/repo/server/src/lib/server/db.js', '/repo/server')).toBe(true);
+	expect(check('/repo/server/src/lib/db.server.js', '/repo/server')).toBe(true);
 });
 
 test('recognizes remote module filenames', () => {
@@ -175,4 +208,18 @@ test.each([
 	]
 ])('config_snippet(%j, %j)', (path, value, expected) => {
 	expect(config_snippet(path, value)).toBe(expected);
+});
+
+test.each([
+	['app-html-transform', true],
+	['vitest:browser:loader', false],
+	['storybook:code-generator-plugin', false],
+	['vite:storybook-inject-mocker-runtime', false],
+	['vite-plugin-storybook-test', false]
+])('uses_unsupported_html_hook(%j) with transformIndexHtml', (name, expected) => {
+	expect(uses_unsupported_html_hook({ name, transformIndexHtml: () => undefined })).toBe(expected);
+});
+
+test('uses_unsupported_html_hook ignores plugins without transformIndexHtml', () => {
+	expect(uses_unsupported_html_hook({ name: 'app-plugin' })).toBe(false);
 });
