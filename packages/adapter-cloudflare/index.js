@@ -244,16 +244,40 @@ function virtual_workers_module(options, stub_import) {
 				configurable: true
 			});
 
-			// Watch the wrangler config file for changes and restart the dev server when
-			// it is edited, so the platform proxy picks up the new config without a manual
-			// restart. Only `ViteDevServer` has a `watcher`; the preview server does not.
-			if ('watcher' in server && 'restart' in server) {
+			// Watch the wrangler config file for changes and swap the platform proxy
+			// in place when it is edited — recreating only the shared proxy instead
+			// of restarting the whole dev server (per @teemingc on #17432). The
+			// previous proxy is disposed, a fresh one is read from the on-disk
+			// config, and `globalThis.__sveltekit_cloudflare_platform{,_setup}` plus
+			// `globalThis.caches` are swapped to the new instance so the virtual
+			// workers module and `cf` getter above see the new bindings. Only
+			// `ViteDevServer` has a `watcher`; the preview server does not.
+			if ('watcher' in server) {
 				const resolved = unstable_readConfig({ config: options.configPath });
 				if (resolved.configPath) {
 					const config_path = path.resolve(resolved.configPath);
-					const on_change = (/** @type {string} */ file) => {
-						if (path.resolve(file) === config_path) {
-							void server.restart();
+					let reloading = false;
+					const on_change = async (/** @type {string} */ file) => {
+						if (reloading || path.resolve(file) !== config_path) return;
+						reloading = true;
+						try {
+							const previous = globalThis.__sveltekit_cloudflare_platform;
+							const next = await getPlatformProxy(options);
+							globalThis.__sveltekit_cloudflare_platform = next;
+							if (globalThis.__sveltekit_cloudflare_platform_setup) {
+								globalThis.__sveltekit_cloudflare_platform_setup.proxy = Promise.resolve(next);
+							}
+							Object.defineProperty(globalThis, 'caches', {
+								value: next.caches,
+								writable: true,
+								enumerable: true,
+								configurable: true
+							});
+							if (previous) {
+								await previous.dispose();
+							}
+						} finally {
+							reloading = false;
 						}
 					};
 					server.watcher.add(config_path);

@@ -110,33 +110,54 @@ test('retries the platform proxy after it fails to start', async () => {
 	expect(globalThis.__sveltekit_cloudflare_platform_setup).toBeUndefined();
 });
 
-test('restarts the dev server when the wrangler config file changes', async () => {
+test('swaps the shared platform proxy in place when wrangler config changes', async () => {
 	const config_path = path.resolve('wrangler.toml');
 	vi.mocked(unstable_readConfig).mockReturnValueOnce(
 		/** @type {any} */ ({ configPath: config_path })
 	);
+
 	const server = await create_server();
-	const restart = vi.spyOn(server, 'restart').mockResolvedValue();
-
 	expect(server.watcher.listeners('change').length).toBeGreaterThan(0);
-	server.watcher.emit('change', config_path);
-	expect(restart).toHaveBeenCalledOnce();
 
-	restart.mockClear();
+	const previous = globalThis.__sveltekit_cloudflare_platform;
+	const previous_dispose = /** @type {any} */ (previous).dispose;
+	const previous_proxy = globalThis.__sveltekit_cloudflare_platform_setup?.proxy;
+	expect(previous).toBeDefined();
+
+	// Prime the mock so the SECOND getPlatformProxy call (the config-change reload)
+	// returns a fresh proxy, distinguishable from the first.
+	const next_dispose = vi.fn(() => Promise.resolve());
+	const next_caches = /** @type {any} */ ({});
+	vi.mocked(getPlatformProxy).mockResolvedValueOnce(
+		/** @type {any} */ ({ caches: next_caches, dispose: next_dispose })
+	);
+
+	server.watcher.emit('change', config_path);
+	await vi.waitFor(() => {
+		expect(globalThis.__sveltekit_cloudflare_platform).not.toBe(previous);
+	});
+	expect(previous_dispose).toHaveBeenCalledOnce();
+	expect(globalThis.__sveltekit_cloudflare_platform_setup?.proxy).not.toBe(previous_proxy);
+
+	// Unrelated file changes do not swap or dispose again.
+	previous_dispose.mockClear();
+	next_dispose.mockClear();
 	server.watcher.emit('change', path.resolve('src/routes/+page.svelte'));
-	expect(restart).not.toHaveBeenCalled();
+	expect(previous_dispose).not.toHaveBeenCalled();
+	expect(next_dispose).not.toHaveBeenCalled();
 
 	await server.close();
-	expect(dispose).toHaveBeenCalledOnce();
+	expect(next_dispose).toHaveBeenCalledOnce();
 });
 
 test('does not install a config watcher when wrangler cannot resolve a config path', async () => {
 	// `unstable_readConfig` returns `{ configPath: undefined }` from the default mock
 	const server = await create_server();
-	const restart = vi.spyOn(server, 'restart').mockResolvedValue();
 
+	const starting_proxy = globalThis.__sveltekit_cloudflare_platform;
 	server.watcher.emit('change', path.resolve('wrangler.toml'));
-	expect(restart).not.toHaveBeenCalled();
+	// No swap even if a file-change event sneaks in — the handler was never wired.
+	expect(globalThis.__sveltekit_cloudflare_platform).toBe(starting_proxy);
 
 	await server.close();
 });
