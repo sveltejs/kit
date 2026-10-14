@@ -39,3 +39,13 @@ test.describe('Skipped client build', () => {
 		expect(worker_response.status()).toBe(200);
 	});
 });
+
+test.describe('CSP', () => {
+	test('allows the nonce that scripts in the template use', async ({ request }) => {
+		const response = await request.get('/assets');
+		const nonce = (await response.text()).match(/<script nonce="([^"]+)">/)?.[1];
+
+		expect(nonce).toBeDefined();
+		expect(response.headers()['content-security-policy']).toContain(`'nonce-${nonce}'`);
+	});
+});
