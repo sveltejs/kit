@@ -223,7 +223,9 @@ export default function (options = {}) {
  */
 function virtual_workers_module(options, stub_import) {
 	// shared so that concurrent servers start one proxy and only the last close disposes it
-	const setup = async (/** @type {import('vite').ViteDevServer | import('vite').PreviewServer} */ server) => {
+	const setup = async (
+		/** @type {import('vite').ViteDevServer | import('vite').PreviewServer} */ server
+	) => {
 		const shared = (globalThis.__sveltekit_cloudflare_platform_setup ??= {
 			servers: 0,
 			proxy: getPlatformProxy(options)
@@ -251,7 +253,7 @@ function virtual_workers_module(options, stub_import) {
 					const config_path = path.resolve(resolved.configPath);
 					const on_change = (/** @type {string} */ file) => {
 						if (path.resolve(file) === config_path) {
-							server.restart();
+							void server.restart();
 						}
 					};
 					server.watcher.add(config_path);
