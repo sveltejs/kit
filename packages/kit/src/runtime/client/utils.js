@@ -1,5 +1,6 @@
 import { DEV } from 'esm-env';
 import { PRELOAD_PRIORITIES } from './constants.js';
+import * as w from '../../messages/client-warnings.js';
 
 export const origin = location.origin;
 
@@ -70,11 +71,12 @@ function validate_link_option(element, name, value) {
 
 	// @ts-expect-error - includes is dumb
 	if (!warned.has(element) && !valid_link_options[name].includes(value)) {
-		console.error(
-			`Unexpected value for ${name} — should be one of ${valid_link_options[name]
-				.map((option) => JSON.stringify(option))
-				.join(', ')}`,
-			element
+		w.link_option_invalid(
+			{
+				name,
+				options: valid_link_options[name].map((option) => JSON.stringify(option)).join(', ')
+			},
+			{ element }
 		);
 
 		warned.add(element);
@@ -178,10 +180,7 @@ export function get_router_options(element) {
 				const value = el.getAttribute(`data-sveltekit-${name}`);
 				if (value !== null && !warned.has(el)) {
 					warned.add(el);
-					console.warn(
-						`\`data-sveltekit-${name}="true"\` has been replaced with \`data-sveltekit-reset="false"\``
-					);
-					console.log(el);
+					w.link_option_replaced({ name }, { element: el });
 				}
 			}
 		}
@@ -242,7 +241,7 @@ export function is_external_url(url, base, hash_routing) {
  * The element a URL's fragment points at, if any. Under hash routing the fragment sits after the route
  * @param {URL} url
  * @param {boolean} hash_routing
- * @returns {Element | null}
+ * @returns {HTMLElement | null}
  */
 export function get_hash_element(url, hash_routing) {
 	const id = hash_routing ? (url.hash.split('#', 3)[2] ?? '') : url.hash.slice(1);

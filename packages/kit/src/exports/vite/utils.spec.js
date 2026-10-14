@@ -6,13 +6,16 @@ import { validate_config } from '../../core/config/index.js';
 import { posixify } from '../../utils/os.js';
 import { dedent } from '../../core/sync/utils.js';
 import {
+	config_snippet,
 	error_for_missing_config,
 	get_config_aliases,
 	normalize_id,
 	is_remote_module,
+	is_server_only_path,
 	remote_module_pattern,
 	server_only_directory_pattern,
-	server_only_module_pattern
+	server_only_module_pattern,
+	uses_unsupported_html_hook
 } from './utils.js';
 import { app_server, app_env_private } from './module_ids.js';
 
@@ -71,6 +74,37 @@ test('recognizes server-only module filenames', () => {
 	expect(server_only_module_pattern.test('dir/module.serverish.js')).toBe(false);
 	expect(server_only_module_pattern.test('dir/server/module.js')).toBe(false);
 	expect(server_only_directory_pattern.test('dir/server/module.js')).toBe(true);
+});
+
+test('only checks the part of the path inside the project root for server-only modules', () => {
+	/**
+	 * @param {string} id
+	 * @param {string} root
+	 */
+	const check = (id, root) =>
+		is_server_only_path(id, {
+			root,
+			node_modules: `${root}/node_modules`,
+			routes: `${root}/src/routes`,
+			assets: `${root}/static`
+		});
+
+	expect(check('/app/src/lib/server/db.js', '/app')).toBe(true);
+	expect(check('/app/src/lib/db.server.js', '/app')).toBe(true);
+	expect(check('/app/server/db.js', '/app')).toBe(true);
+	expect(check('/app/src/lib/db.js', '/app')).toBe(false);
+	expect(check('/app/src/routes/server/+page.svelte', '/app')).toBe(false);
+	expect(check('/app/static/server/file.js', '/app')).toBe(false);
+	expect(check('/app/node_modules/pkg/server/index.js', '/app')).toBe(false);
+	expect(check('/outside/server/db.js', '/app')).toBe(false);
+
+	// the project itself is inside a `server` directory
+	expect(check('/repo/server/.svelte-kit/generated/build/app-manifest.js', '/repo/server')).toBe(
+		false
+	);
+	expect(check('/repo/server/src/lib/db.js', '/repo/server')).toBe(false);
+	expect(check('/repo/server/src/lib/server/db.js', '/repo/server')).toBe(true);
+	expect(check('/repo/server/src/lib/db.server.js', '/repo/server')).toBe(true);
 });
 
 test('recognizes remote module filenames', () => {
@@ -136,35 +170,31 @@ test('recognizes remote modules', () => {
 	}
 });
 
-test('error_for_missing_config - simple single level config', () => {
-	expect(() => error_for_missing_config('feature', 'adapter', 'true')).toThrow(
-		dedent`
-			To enable feature, add the following to your SvelteKit plugin in \`vite.config.js\`:
-
-			adapter: true
-		`
-	);
-});
-
-test('error_for_missing_config - nested config', () => {
+test('error_for_missing_config throws config_feature_disabled', () => {
 	expect(() =>
 		error_for_missing_config('remote functions', 'experimental.remoteFunctions', 'true')
-	).toThrow(
-		dedent`
-			To enable remote functions, add the following to your SvelteKit plugin in \`vite.config.js\`:
+	).toThrowKitError('config_feature_disabled', {
+		contains: ['remote functions', config_snippet('experimental.remoteFunctions', 'true')]
+	});
+});
 
+test.each([
+	['adapter', 'true', 'adapter: true'],
+	['someFeature', 'false', 'someFeature: false'],
+	['special', '{ enabled: true }', 'special: { enabled: true }'],
+	[
+		'experimental.remoteFunctions',
+		'true',
+		dedent`
 			experimental: {
 			  remoteFunctions: true
 			}
 		`
-	);
-});
-
-test('error_for_missing_config - deeply nested config', () => {
-	expect(() => error_for_missing_config('deep feature', 'a.b.c.d.e', '"value"')).toThrow(
+	],
+	[
+		'a.b.c.d.e',
+		'"value"',
 		dedent`
-			To enable deep feature, add the following to your SvelteKit plugin in \`vite.config.js\`:
-
 			a: {
 			  b: {
 			    c: {
@@ -175,27 +205,21 @@ test('error_for_missing_config - deeply nested config', () => {
 			  }
 			}
 		`
-	);
+	]
+])('config_snippet(%j, %j)', (path, value, expected) => {
+	expect(config_snippet(path, value)).toBe(expected);
 });
 
-test('error_for_missing_config - two level config', () => {
-	expect(() => error_for_missing_config('some feature', 'someFeature', 'false')).toThrow(
-		dedent`
-			To enable some feature, add the following to your SvelteKit plugin in \`vite.config.js\`:
-
-			someFeature: false
-		`
-	);
+test.each([
+	['app-html-transform', true],
+	['vitest:browser:loader', false],
+	['storybook:code-generator-plugin', false],
+	['vite:storybook-inject-mocker-runtime', false],
+	['vite-plugin-storybook-test', false]
+])('uses_unsupported_html_hook(%j) with transformIndexHtml', (name, expected) => {
+	expect(uses_unsupported_html_hook({ name, transformIndexHtml: () => undefined })).toBe(expected);
 });
 
-test('error_for_missing_config - handles special characters in feature name', () => {
-	expect(() =>
-		error_for_missing_config('special-feature.js', 'special', '{ enabled: true }')
-	).toThrow(
-		dedent`
-			To enable special-feature.js, add the following to your SvelteKit plugin in \`vite.config.js\`:
-
-			special: { enabled: true }
-		`
-	);
+test('uses_unsupported_html_hook ignores plugins without transformIndexHtml', () => {
+	expect(uses_unsupported_html_hook({ name: 'app-plugin' })).toBe(false);
 });

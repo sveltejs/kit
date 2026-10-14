@@ -6,12 +6,13 @@ import { and, exactRegex, importerId, include, not } from '@rolldown/pluginutils
 import { app_env_private, app_server } from '../module_ids.js';
 import {
 	error_for_missing_config,
+	is_server_only_path,
 	normalize_id,
 	remote_module_pattern,
 	server_only_directory_pattern,
 	server_only_module_pattern
 } from '../utils.js';
-import { stackless } from '../../../utils/error.js';
+import * as e from '../../../messages/build-errors.js';
 import { posixify } from '../../../utils/os.js';
 
 /**
@@ -108,19 +109,15 @@ export function plugin_guard(kit, get_config, get_manifest_data) {
 			handler(id) {
 				const normalized = normalize_id(id, normalized_aliases, normalized_cwd);
 
-				let is_server_only = normalized === '$app/env/private' || normalized === '$app/server';
-
-				// skip .server.js files outside the cwd or in node_modules, as the filename might not mean 'server-only module' in this context
-				if (id.startsWith(normalized_cwd + '/') && !id.startsWith(normalized_node_modules + '/')) {
-					// e.g. `server.ts` or `foo.server.ts`
-					is_server_only ||= server_only_module_pattern.test(id);
-
-					// e.g. `server/foo.ts`, unless in `src/routes` or `static`
-					is_server_only ||=
-						server_only_directory_pattern.test(id) &&
-						!id.startsWith(normalized_routes + '/') &&
-						!id.startsWith(normalized_assets + '/');
-				}
+				const is_server_only =
+					normalized === '$app/env/private' ||
+					normalized === '$app/server' ||
+					is_server_only_path(id, {
+						root: normalized_cwd,
+						node_modules: normalized_node_modules,
+						routes: normalized_routes,
+						assets: normalized_assets
+					});
 
 				if (!is_server_only) return;
 
@@ -197,11 +194,7 @@ export function plugin_guard(kit, get_config, get_manifest_data) {
 						})
 						.join(' imports\n');
 
-					let message = `Cannot import ${normalized} into code that runs in the browser, as this could leak sensitive information.`;
-					message += `\n\n${pyramid}`;
-					message += `\n\nIf you're only using the import as a type, change it to \`import type\`.`;
-
-					throw stackless(message);
+					e.server_only_import({ module: normalized, chain: pyramid }, { stackless: true });
 				}
 
 				// No chain from this server-only module to a client entrypoint was found —

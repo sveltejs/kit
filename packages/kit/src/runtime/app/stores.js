@@ -1,10 +1,9 @@
 // TODO: remove this file when enough people have migrated to Kit 3
+import * as e from '../../messages/shared-errors.js';
 
 /** @returns {never} */
 function removed() {
-	throw new Error(
-		'`$app/stores` has been removed in favour of `$app/state`. See https://svelte.dev/docs/kit/migrating-to-sveltekit-2#SvelteKit-2.12:-$app-stores-deprecated'
-	);
+	e.app_stores_removed();
 }
 
 /**

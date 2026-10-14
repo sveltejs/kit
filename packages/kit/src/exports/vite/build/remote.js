@@ -5,6 +5,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import MagicString from 'magic-string';
 import { posixify } from '../../../utils/os.js';
+import * as e from '../../../messages/build-errors.js';
+import { capture_message } from '../../../messages/internal/build.js';
 
 /**
  * @param {typeof import('vite')} vite
@@ -30,6 +32,11 @@ export async function treeshake_prerendered_remotes(
 
 	/** @type {string[]} */
 	const chunk_paths = [];
+
+	// embedded in the server bundle, which only runs on the server, so the full text is kept
+	const not_dynamic_message = JSON.stringify(
+		capture_message(() => e.remote_prerender_not_dynamic())
+	);
 
 	for (const remote of remotes) {
 		const exports_map = metadata.remotes.get(remote.hash);
@@ -78,7 +85,7 @@ export async function treeshake_prerendered_remotes(
 						modified_code.overwrite(
 							node.start,
 							node.end,
-							`const ${fn} = prerender('unchecked', () => { throw new Error('Unexpectedly called prerender function. Did you forget to set { dynamic: true } ?') });`
+							`const ${fn} = prerender('unchecked', () => { throw new Error(${not_dynamic_message}) });`
 						);
 					}
 				}

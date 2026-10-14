@@ -69,7 +69,8 @@ const config = {
 	},
 	test: {
 		name: 'kit-vitest',
-		include: ['./unit-test/*.spec.js']
+		include: ['./unit-test/*.spec.js'],
+		setupFiles: [path.join(import.meta.dirname, '../../matchers.js')]
 	}
 };
 

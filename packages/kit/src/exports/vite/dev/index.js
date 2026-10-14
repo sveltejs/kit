@@ -12,7 +12,7 @@ import { generate_manifest, loud_ssr_load_module } from './generate_manifest.js'
 import { createReadableStream, getRequest, setResponse } from '../../../exports/node/index.js';
 import { coalesce_to_error, set_error_stack } from '../../../utils/error.js';
 import { resolve_entry } from '../../../utils/filesystem.js';
-import { load_and_validate_params } from '../../../utils/params.js';
+import { load_and_validate_params } from '../../../core/params.js';
 import { from_fs, to_fs } from '../../../utils/vite.js';
 import { posixify } from '../../../utils/os.js';
 import { load_error_page } from '../../../core/config/index.js';
@@ -22,7 +22,8 @@ import { get_runtime_base } from '../../../core/utils.js';
 import '../../../utils/mime.js'; // extend mrmime with additional types (affects sirv too)
 import { is_chrome_devtools_request, is_remote_module, not_found } from '../utils.js';
 import { SCHEME } from '../../../utils/url.js';
-import { check_feature } from '../../../utils/features.js';
+import { check_feature } from '../../../core/features.js';
+import * as e from '../../../messages/build-errors.js';
 import { escape_html } from '../../../utils/escape.js';
 import { get_runner } from '../../../runner.js';
 import { write_server } from '../../../core/sync/write_server.js';
@@ -64,9 +65,7 @@ export async function dev(
 	const fetch = globalThis.fetch;
 	globalThis.fetch = (info, init) => {
 		if (typeof info === 'string' && !SCHEME.test(info)) {
-			throw new Error(
-				`Cannot use relative URL (${info}) with global fetch — use \`event.fetch\` instead: https://svelte.dev/docs/kit/web-standards#fetch-apis`
-			);
+			e.fetch_relative_url({ url: info });
 		}
 
 		return fetch(info, init);
@@ -305,8 +304,8 @@ export async function dev(
 				/** @type {Function} */ (middleware.handle).name === 'viteServeStaticMiddleware'
 		);
 
-		// Vite will give a 403 on URLs like /test, /static, and /package.json preventing us from
-		// serving routes with those names. See https://github.com/vitejs/vite/issues/7363
+		// Vite's static middleware would serve project files at URLs like /test, /static and
+		// /package.json before our routes get a chance. See https://github.com/vitejs/vite/issues/7363
 		remove_static_middlewares(vite_dev_server.middlewares);
 
 		vite_dev_server.middlewares.use(async (req, res) => {
@@ -375,9 +374,10 @@ export async function dev(
 
 				if (resolved_instrumentation) {
 					if (svelte_config.adapter && !svelte_config.adapter.supports?.instrumentation?.()) {
-						throw new Error(
-							`${resolved_instrumentation} is unsupported in ${svelte_config.adapter.name}.`
-						);
+						e.adapter_instrumentation_unsupported({
+							file: resolved_instrumentation,
+							adapter: svelte_config.adapter.name
+						});
 					}
 
 					const { set_env } = await runner.import('<sveltekit:generated>/env/config.js');

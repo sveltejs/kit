@@ -1,8 +1,9 @@
 import { Redirect } from '@sveltejs/kit/internal';
-import { with_request_store } from '@sveltejs/kit/internal/server';
+import { merge_tracing, record_span, with_request_store } from '@sveltejs/kit/internal/server';
 import { BODY_DEPENDENT_METHODS, ENDPOINT_METHODS, PAGE_METHODS } from '../../constants.js';
 import { negotiate } from '../../utils/http.js';
 import { method_not_allowed } from './utils.js';
+import * as e from '../../messages/server-errors.js';
 
 /**
  * @param {import('@sveltejs/kit').RequestEvent} event
@@ -32,13 +33,16 @@ export async function render_endpoint(event, state, mod) {
 				(method) => mod[method]
 			))
 	) {
-		throw new Error('Cannot prerender endpoints with body-dependent methods or fallback handlers');
+		e.prerender_endpoint_methods({
+			methods: BODY_DEPENDENT_METHODS.join(', '),
+			id: /** @type {string} */ (event.route.id)
+		});
 	}
 
 	if (state.prerendering && !state.prerendering.inside_reroute && !prerender) {
 		if (state.depth > 0) {
 			// if request came from a prerendered page, bail
-			throw new Error(`${event.route.id} is not prerenderable`);
+			e.prerender_endpoint_not_prerenderable({ id: /** @type {string} */ (event.route.id) });
 		} else {
 			// if request came direct from the crawler, signal that
 			// this route cannot be prerendered, but don't bail
@@ -47,14 +51,24 @@ export async function render_endpoint(event, state, mod) {
 	}
 
 	try {
-		const response = await with_request_store({ event, state }, () =>
-			handler(/** @type {import('@sveltejs/kit').RequestEvent<Record<string, any>>} */ (event))
-		);
+		const response = await record_span({
+			name: 'sveltekit.endpoint',
+			attributes: {
+				'http.route': event.route.id || 'unknown',
+				'http.method': method
+			},
+			fn: async (current) => {
+				const traced_event = merge_tracing(event, current);
+				return with_request_store({ event: traced_event, state }, () =>
+					handler(
+						/** @type {import('@sveltejs/kit').RequestEvent<Record<string, any>>} */ (traced_event)
+					)
+				);
+			}
+		});
 
 		if (!(response instanceof Response)) {
-			throw new Error(
-				`Invalid response from route ${event.url.pathname}: handler should return a Response object`
-			);
+			e.endpoint_invalid_response({ path: event.url.pathname });
 		}
 
 		if (state.prerendering && (!state.prerendering.inside_reroute || prerender)) {

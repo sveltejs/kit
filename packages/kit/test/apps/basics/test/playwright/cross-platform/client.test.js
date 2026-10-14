@@ -1,6 +1,6 @@
 import process from 'node:process';
-import { expect } from '@playwright/test';
 import { test } from '../../../../../utils.js';
+import { expect } from '../../../../../playwright-matchers.js';
 
 /** @typedef {{ fromScroll: { x: number, y: number }, toScroll: { x: number, y: number }, type: string }} ScrollState */
 
@@ -125,6 +125,39 @@ test.describe('a11y', () => {
 			)
 		).toBe('BODY');
 		expect(await page.evaluate(() => document.activeElement?.nodeName)).toBe('BODY');
+	});
+
+	test('an app starting in an iframe leaves focus in the parent page', async ({ page }) => {
+		await page.goto('/accessibility/a');
+		const button = page.locator('button', { hasText: 'focus me' });
+		await button.focus();
+
+		await page.evaluate(() => {
+			document.body.append(Object.assign(document.createElement('iframe'), { src: '/no-ssr' }));
+		});
+		await page.frameLocator('iframe').locator('body.started').waitFor();
+
+		await expect(button).toBeFocused();
+	});
+
+	test('navigating inside an iframe leaves focus in the parent page', async ({ page }) => {
+		await page.goto('/accessibility/a');
+		await page.evaluate(() => {
+			document.body.append(
+				Object.assign(document.createElement('iframe'), { src: '/accessibility/autofocus/a' })
+			);
+		});
+		await page.frameLocator('iframe').locator('body.started').waitFor();
+
+		const button = page.locator('button', { hasText: 'focus me' });
+		await button.focus();
+
+		await page.evaluate(() =>
+			// @ts-expect-error
+			document.querySelector('iframe')?.contentWindow?.goto('/accessibility/autofocus/b')
+		);
+
+		await expect(button).toBeFocused();
 	});
 
 	test('blur handler can access data during navigation', async ({ page, app }) => {
@@ -861,9 +894,9 @@ test.describe('Prefetching', () => {
 				await app.preloadCode('https://example.com');
 				throw new Error('Error was not thrown');
 			} catch (/** @type {any} */ e) {
-				expect(e.message).toMatch(
-					'argument passed to preloadCode must be a route ID (i.e. "/blog/[slug]" rather than "blog/[slug]")'
-				);
+				expect(String(e.message)).toContainKitDiagnostic('preload_invalid_route_id', {
+					contains: ['`https://example.com`']
+				});
 			}
 		}
 	});
@@ -939,7 +972,9 @@ test.describe('Prefetching', () => {
 
 			await app.preloadCode('/does-not-exist-[at]-all');
 
-			expect(warnings.join('\n')).toMatch('did not match any route');
+			expect(warnings.join('\n')).toContainKitDiagnostic('preload_route_missing', {
+				contains: ['/does-not-exist-[at]-all']
+			});
 		});
 
 		test('warns when preloadCode is called with an endpoint-only route id', async ({
@@ -959,11 +994,15 @@ test.describe('Prefetching', () => {
 
 			if (process.env.ROUTER_RESOLUTION) {
 				// under server resolution the endpoint tells us the route exists but has no page
-				expect(warnings.join('\n')).toMatch('has no `+page`');
+				expect(warnings.join('\n')).toContainKitDiagnostic('preload_code_endpoint_only', {
+					contains: ['/set-cookie']
+				});
 			} else {
 				// under client routing, endpoint-only routes aren't in the client manifest at all,
 				// so they're indistinguishable from an unknown id
-				expect(warnings.join('\n')).toMatch('did not match any route');
+				expect(warnings.join('\n')).toContainKitDiagnostic('preload_route_missing', {
+					contains: ['/set-cookie']
+				});
 			}
 		});
 
@@ -979,7 +1018,10 @@ test.describe('Prefetching', () => {
 
 				await app.preloadCode('/routing/some-slug');
 
-				expect(warnings.join('\n')).toMatch('match(');
+				expect(warnings.join('\n')).toContainKitDiagnostic('preload_route_is_pathname', {
+					contains: ['/routing/some-slug']
+				});
+				expect(warnings.join('\n')).not.toContain('preload_route_missing');
 			});
 		}
 	}
@@ -1018,8 +1060,13 @@ test.describe('Prefetching', () => {
 		await app.goto('/routing/preloading/preloaded');
 		expect(requests).toEqual([]);
 
-		await expect(app.preloadData('https://example.com')).rejects.toThrowError(
-			'Attempted to preload a URL that does not belong to this app'
+		const error = await app.preloadData('https://example.com').then(
+			() => null,
+			(/** @type {Error} */ error) => error
+		);
+		expect(error?.message).toContainKitDiagnostic(
+			'preload_url_outside_app',
+			process.env.DEV ? { contains: ['https://example.com/'] } : { url_only: true }
 		);
 	});
 
@@ -1179,7 +1226,7 @@ test.describe('Routing', () => {
 		await page.goto('/routing/focus');
 		await page.locator('[href="/routing/focus/a#p"]').click();
 		await page.waitForURL('**/routing/focus/a#p');
-		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('BODY');
+		await expect(page.locator('body')).toBeFocused();
 		await page.keyboard.press(tab);
 		await expect(page.locator('#button3')).toBeFocused();
 	});
@@ -1420,7 +1467,7 @@ test.describe('Interactivity', () => {
 
 test.describe('Load', () => {
 	if (process.env.DEV) {
-		test('using window.fetch does not cause false-positive warning', async ({ page, baseURL }) => {
+		test('using window.fetch does not cause false-positive warning', async ({ page }) => {
 			/** @type {string[]} */
 			const warnings = [];
 			page.on('console', (msg) => {
@@ -1432,9 +1479,7 @@ test.describe('Load', () => {
 			await page.goto('/load/window-fetch/outside-load');
 			expect(await page.textContent('h1')).toBe('42');
 
-			expect(warnings).not.toContain(
-				`Loading ${baseURL}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://svelte.dev/docs/kit/load#making-fetch-requests`
-			);
+			expect(warnings.join('\n')).not.toContainKitDiagnostic('window_fetch_in_load');
 		});
 	}
 });

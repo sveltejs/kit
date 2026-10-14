@@ -1,13 +1,8 @@
-import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, expect, test } from 'vitest';
 import { blur_active_element, reset_focus } from './focus.js';
 
 beforeEach(() => {
-	window.scrollTo = vi.fn();
 	document.body.innerHTML = '';
-});
-
-afterEach(() => {
-	vi.useRealTimers();
 });
 
 test('blur_active_element blurs a focused SVG element', () => {
@@ -28,12 +23,10 @@ test('reset_focus focuses the body without leaving a tabindex behind', () => {
 	expect(document.body.hasAttribute('tabindex')).toBe(false);
 });
 
-test('reset_focus restores the scroll position after jumping to the hash target', () => {
-	vi.useFakeTimers();
-	Object.defineProperty(window, 'pageYOffset', { value: 400, configurable: true });
-	document.body.innerHTML = '<div id="a"></div>';
+test("reset_focus restores the hash target's tabindex", () => {
+	document.body.innerHTML = '<p id="a" tabindex="0"></p><p id="b"></p>';
 	reset_focus(new URL('/#a', location.href));
-	expect(window.scrollTo).not.toHaveBeenCalled();
-	vi.runAllTimers();
-	expect(window.scrollTo).toHaveBeenCalledWith(0, 400);
+	expect(document.getElementById('a')?.getAttribute('tabindex')).toBe('0');
+	reset_focus(new URL('/#b', location.href));
+	expect(document.getElementById('b')?.hasAttribute('tabindex')).toBe(false);
 });

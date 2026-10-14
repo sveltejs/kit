@@ -1,4 +1,6 @@
 import { BROWSER, DEV } from 'esm-env';
+import * as e from '../messages/shared-errors.js';
+import * as server_errors from '../messages/server-errors.js';
 
 /**
  * Matches a URI scheme. See https://www.rfc-editor.org/rfc/rfc3986#section-3.1
@@ -36,7 +38,8 @@ export function is_root_relative(path) {
 export function relative_pathname(from, to) {
 	const segment = to.replace(/\/$/, '').split('/').at(-1);
 
-	return from.endsWith('/') ? `../${segment}` : `${segment}/`;
+	// The prefix prevents a colon in the segment from being interpreted as a URL scheme.
+	return from.endsWith('/') ? `../${segment}` : `./${segment}/`;
 }
 
 /**
@@ -184,9 +187,7 @@ function disable_hash(url) {
 
 	Object.defineProperty(url, 'hash', {
 		get() {
-			throw new Error(
-				'Cannot access event.url.hash. Consider using `page.url.hash` inside a component instead'
-			);
+			return e.url_hash_unavailable();
 		}
 	});
 }
@@ -201,7 +202,7 @@ export function disable_search(url) {
 	for (const property of ['search', 'searchParams']) {
 		Object.defineProperty(url, property, {
 			get() {
-				throw new Error(`Cannot access url.${property} on a page with prerendering enabled`);
+				return server_errors.url_search_unavailable_prerender({ property });
 			}
 		});
 	}

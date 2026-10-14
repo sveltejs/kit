@@ -11,7 +11,7 @@ beforeEach(() => {
 
 test('restores a popped position ahead of the hash target', () => {
 	document.body.innerHTML = '<div id="a"></div>';
-	expect(restore_scroll(new URL('/#a', location.href), true, { x: 10, y: 20 })).toBe(null);
+	restore_scroll(new URL('/#a', location.href), true, { x: 10, y: 20 });
 	expect(window.scrollTo).toHaveBeenCalledWith(10, 20);
 	expect(Element.prototype.scrollIntoView).not.toHaveBeenCalled();
 });
