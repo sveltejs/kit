@@ -220,11 +220,15 @@ function native_navigation(url, replace = false) {
  * tries to update it.
  */
 async function update_service_worker() {
-	if ('serviceWorker' in navigator) {
-		const registration = await navigator.serviceWorker.getRegistration(base || '/');
-		if (registration) {
-			await registration.update();
+	try {
+		if ('serviceWorker' in navigator) {
+			const registration = await navigator.serviceWorker.getRegistration(base || '/');
+			if (registration) {
+				await registration.update();
+			}
 		}
+	} catch {
+		// A failed service worker update must not prevent the fallback document navigation.
 	}
 }
 
