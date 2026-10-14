@@ -53,8 +53,9 @@ export default /** @satisfies {import('vitest/config').ViteUserConfig} */ ({
 					name: 'kit-server-build',
 					setupFiles,
 					environment: 'node',
+					// Vitest sets `process.env.DEV` itself, so set it to an empty string to run the production tests
 					env: {
-						DEV: 'true'
+						DEV: ''
 					},
 					include: ['src/runtime/server/page/csp.spec.js', 'src/runtime/server/cookie.spec.js'],
 					exclude: [...exclude, 'src/**/*.svelte.spec.js']
