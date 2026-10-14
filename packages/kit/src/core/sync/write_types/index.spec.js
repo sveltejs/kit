@@ -1,5 +1,6 @@
 import { execSync } from 'node:child_process';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
 import { assert, describe, expect, test } from 'vitest';
@@ -308,4 +309,96 @@ test('Leaves satisfies operator untouched', () => {
 	expect(rewritten?.exports).toEqual(['load', 'actions']);
 	assert.equal(rewritten?.modified, false);
 	assert.equal(rewritten?.code, source);
+});
+
+describe('write_all_types caching', () => {
+	/**
+	 * @param {(ctx: { root: string; config: import('types').ValidatedConfig; types_dir: string }) => void} fn
+	 */
+	function with_temp_project(fn) {
+		const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kit-write-types-'));
+		try {
+			const config = validate_config({});
+			config.files.assets = path.resolve(root, 'static');
+			config.files.params = path.resolve(root, 'src/params');
+			config.files.routes = path.resolve(root, 'src/routes');
+			config.outDir = path.resolve(root, '.svelte-kit');
+
+			fs.mkdirSync(path.join(root, 'src/routes/only-svelte'), { recursive: true });
+			fs.mkdirSync(path.join(root, 'src/routes/sub'), { recursive: true });
+			fs.writeFileSync(
+				path.join(root, 'src/routes/+page.js'),
+				'export function load() { return { a: 1 }; }\n'
+			);
+			fs.writeFileSync(path.join(root, 'src/routes/+page.svelte'), '');
+			fs.writeFileSync(path.join(root, 'src/routes/only-svelte/+page.svelte'), '');
+			fs.writeFileSync(
+				path.join(root, 'src/routes/sub/+page.js'),
+				'export function load() { return { b: 2 }; }\n'
+			);
+			fs.writeFileSync(path.join(root, 'src/routes/sub/+page.svelte'), '');
+
+			fn({ root, config, types_dir: path.join(config.outDir, 'types') });
+		} finally {
+			fs.rmSync(root, { force: true, recursive: true });
+		}
+	}
+
+	test('preserves route_meta_data.json and root $types.d.ts and skips unchanged routes on subsequent syncs', () => {
+		with_temp_project(({ root, config, types_dir }) => {
+			const manifest = create_manifest_data(config, root);
+			write_all_types(config, manifest, root);
+
+			const meta_data_file = path.join(types_dir, 'route_meta_data.json');
+			const root_types = path.join(types_dir, 'src/routes/$types.d.ts');
+
+			expect(fs.existsSync(meta_data_file)).toBe(true);
+			expect(fs.existsSync(root_types)).toBe(true);
+
+			// Replace root $types.d.ts with a sentinel whose mtime is >= source ctime
+			fs.writeFileSync(root_types, '// cached sentinel\n');
+
+			write_all_types(config, manifest, root);
+
+			expect(fs.existsSync(meta_data_file)).toBe(true);
+			expect(fs.readFileSync(root_types, 'utf-8')).toBe('// cached sentinel\n');
+		});
+	});
+
+	test('regenerates $types.d.ts when deleted on a route with only +page.svelte', () => {
+		with_temp_project(({ root, config, types_dir }) => {
+			const manifest = create_manifest_data(config, root);
+			write_all_types(config, manifest, root);
+
+			const only_svelte_types = path.join(types_dir, 'src/routes/only-svelte/$types.d.ts');
+			expect(fs.existsSync(only_svelte_types)).toBe(true);
+
+			fs.rmSync(only_svelte_types);
+			expect(fs.existsSync(only_svelte_types)).toBe(false);
+
+			write_all_types(config, manifest, root);
+			expect(fs.existsSync(only_svelte_types)).toBe(true);
+		});
+	});
+
+	test('removes stale route files from types_dir', () => {
+		with_temp_project(({ root, config, types_dir }) => {
+			const manifest = create_manifest_data(config, root);
+			write_all_types(config, manifest, root);
+
+			const meta_data_file = path.join(types_dir, 'route_meta_data.json');
+			const root_types = path.join(types_dir, 'src/routes/$types.d.ts');
+			const sub_types = path.join(types_dir, 'src/routes/sub/$types.d.ts');
+
+			expect(fs.existsSync(sub_types)).toBe(true);
+
+			fs.rmSync(path.join(root, 'src/routes/sub'), { force: true, recursive: true });
+			const next_manifest = create_manifest_data(config, root);
+			write_all_types(config, next_manifest, root);
+
+			expect(fs.existsSync(sub_types)).toBe(false);
+			expect(fs.existsSync(meta_data_file)).toBe(true);
+			expect(fs.existsSync(root_types)).toBe(true);
+		});
+	});
 });

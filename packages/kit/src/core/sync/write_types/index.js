@@ -5,6 +5,7 @@ import { walk, resolve_entry } from '../../../utils/filesystem.js';
 import { compact } from '../../../utils/array.js';
 import { posixify } from '../../../utils/os.js';
 import { ts } from '../ts.js';
+import { write_if_changed } from '../utils.js';
 import { is_page_route } from '../create_manifest_data/index.js';
 const remove_relative_parent_traversals = (/** @type {string} */ path) =>
 	path.replace(/\.\.\//g, '');
@@ -42,12 +43,14 @@ export function write_all_types(config, manifest_data, root) {
 		posixify(path.relative(root, config.files.routes))
 	);
 	const expected_directories = new Set(
-		manifest_data.routes.map((route) => path.posix.join(routes_dir, route.id))
+		manifest_data.routes.map((route) => path.resolve(types_dir, routes_dir, route.id.slice(1)))
 	);
 
 	if (fs.existsSync(types_dir)) {
 		for (const file of walk(types_dir)) {
-			const dir = path.posix.dirname(file);
+			if (file === 'route_meta_data.json') continue;
+
+			const dir = path.resolve(types_dir, path.posix.dirname(file));
 			if (!expected_directories.has(dir)) {
 				fs.rmSync(path.join(types_dir, file), { force: true, recursive: true });
 			}
@@ -92,20 +95,18 @@ export function write_all_types(config, manifest_data, root) {
 			input_files.push(route.endpoint.file);
 		}
 
-		try {
-			fs.mkdirSync(outdir, { recursive: true });
-		} catch {}
-
-		const output_files = compact(
-			fs.readdirSync(outdir).map((name) => {
-				const stats = fs.statSync(path.join(outdir, name));
-				if (stats.isDirectory()) return;
-				return {
-					name,
-					updated: stats.mtimeMs
-				};
-			})
-		);
+		const output_files = fs.existsSync(outdir)
+			? compact(
+					fs.readdirSync(outdir).map((name) => {
+						const stats = fs.statSync(path.join(outdir, name));
+						if (stats.isDirectory()) return;
+						return {
+							name,
+							updated: stats.mtimeMs
+						};
+					})
+				)
+			: [];
 
 		const source_last_updated = Math.max(
 			// ctimeMs includes move operations whereas mtimeMs does not
@@ -116,6 +117,8 @@ export function write_all_types(config, manifest_data, root) {
 		const should_generate =
 			// source files were generated more recently than the types
 			source_last_updated > types_last_updated ||
+			// $types.d.ts is missing (e.g. for a route with only +page.svelte where input_files is empty)
+			!output_files.some((file) => file.name === '$types.d.ts') ||
 			// no meta data file exists yet
 			!has_meta_data ||
 			// some file was deleted
@@ -129,6 +132,7 @@ export function write_all_types(config, manifest_data, root) {
 		}
 	}
 
+	fs.mkdirSync(types_dir, { recursive: true });
 	fs.writeFileSync(meta_data_file, JSON.stringify(meta_data, null, '\t'));
 }
 
@@ -361,7 +365,7 @@ function update_types(config, routes, route, root, to_delete = new Set()) {
 		.filter(Boolean)
 		.join('\n\n');
 
-	fs.writeFileSync(`${outdir}/$types.d.ts`, output);
+	write_if_changed(`${outdir}/$types.d.ts`, output);
 	to_delete.delete('$types.d.ts');
 
 	for (const file of to_delete) {
@@ -399,7 +403,7 @@ function process_node(node, outdir, is_page, proxies, root, all_pages_have_load 
 		const basename = path.basename(node.server);
 		const proxy = proxies.server;
 		if (proxy?.modified) {
-			fs.writeFileSync(`${outdir}/proxy${basename}`, proxy.code);
+			write_if_changed(`${outdir}/proxy${basename}`, proxy.code);
 		}
 
 		server_data = get_data_type(node.server, 'null', proxy, true);
@@ -452,7 +456,7 @@ function process_node(node, outdir, is_page, proxies, root, all_pages_have_load 
 	if (node.universal) {
 		const proxy = proxies.universal;
 		if (proxy?.modified) {
-			fs.writeFileSync(`${outdir}/proxy${path.basename(node.universal)}`, proxy.code);
+			write_if_changed(`${outdir}/proxy${path.basename(node.universal)}`, proxy.code);
 		}
 
 		const type = get_data_type(
