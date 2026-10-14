@@ -2510,12 +2510,55 @@ export async function handle_error(error, event) {
  * @param {Set<T>} callbacks
  * @param {T} callback
  */
+/**
+ * Named handler for the `beforeunload` event so it can be conditionally
+ * added and removed. We only register it while at least one `beforeNavigate`
+ * callback is active — having any `beforeunload` listener prevents the browser
+ * from storing the page in the Back/Forward Cache (bfcache).
+ *
+ * @param {BeforeUnloadEvent} e
+ */
+function handle_before_unload(e) {
+	let should_block = false;
+
+	persist_state();
+
+	if (!is_navigating) {
+		const nav = create_navigation(current, undefined, null, 'leave');
+
+		// If we're navigating, beforeNavigate was already called. If we end up
+		// in here during navigation, it's due to an external or full-page-reload
+		// link, for which we don't want to call the hook again.
+		/** @type {BeforeNavigate} */
+		const navigation = {
+			...nav.navigation,
+			cancel: () => {
+				should_block = true;
+				nav.reject(new Error('navigation cancelled'));
+			}
+		};
+
+		before_navigate_callbacks.forEach((fn) => fn(navigation));
+	}
+
+	if (should_block) {
+		e.preventDefault();
+		e.returnValue = '';
+	}
+}
+
 function add_navigation_callback(callbacks, callback) {
 	onMount(() => {
+		if (callbacks === before_navigate_callbacks && callbacks.size === 0) {
+			addEventListener('beforeunload', handle_before_unload);
+		}
 		callbacks.add(callback);
 
 		return () => {
 			callbacks.delete(callback);
+			if (callbacks === before_navigate_callbacks && callbacks.size === 0) {
+				removeEventListener('beforeunload', handle_before_unload);
+			}
 		};
 	});
 }
@@ -3083,33 +3126,10 @@ export async function set_nearest_error_page(error) {
 function _start_router() {
 	history.scrollRestoration = 'manual';
 
-	addEventListener('beforeunload', (e) => {
-		let should_block = false;
+	// `beforeunload` is registered lazily in add_navigation_callback when the
+	// first `beforeNavigate` callback is added, and removed when the last one
+	// is removed. Registering it unconditionally prevents bfcache on all pages.
 
-		persist_state();
-
-		if (!is_navigating) {
-			const nav = create_navigation(current, undefined, null, 'leave');
-
-			// If we're navigating, beforeNavigate was already called. If we end up in here during navigation,
-			// it's due to an external or full-page-reload link, for which we don't want to call the hook again.
-			/** @type {BeforeNavigate} */
-			const navigation = {
-				...nav.navigation,
-				cancel: () => {
-					should_block = true;
-					nav.reject(new Error('navigation cancelled'));
-				}
-			};
-
-			before_navigate_callbacks.forEach((fn) => fn(navigation));
-		}
-
-		if (should_block) {
-			e.preventDefault();
-			e.returnValue = '';
-		}
-	});
 	addEventListener('visibilitychange', () => {
 		if (document.visibilityState === 'hidden') {
 			persist_state();
