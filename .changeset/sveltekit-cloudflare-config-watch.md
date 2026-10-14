@@ -2,4 +2,4 @@
 '@sveltejs/adapter-cloudflare': patch
 ---
 
-fix: restart the dev server when the Wrangler config file changes
+fix: restart the platform proxy when the Wrangler config file changes
