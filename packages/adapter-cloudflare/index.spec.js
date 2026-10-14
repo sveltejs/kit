@@ -1,13 +1,14 @@
+import path from 'node:path';
 import { beforeEach, expect, test, vi } from 'vitest';
 import { createServer } from 'vite';
-import { getPlatformProxy } from 'wrangler';
+import { getPlatformProxy, unstable_readConfig } from 'wrangler';
 import adapter from './index.js';
 
 const dispose = vi.fn(() => Promise.resolve());
 
 vi.mock('wrangler', () => ({
 	getPlatformProxy: vi.fn(() => Promise.resolve({ caches: {}, dispose })),
-	unstable_readConfig: vi.fn()
+	unstable_readConfig: vi.fn(() => ({ configPath: undefined }))
 }));
 
 beforeEach(() => {
@@ -107,6 +108,37 @@ test('retries the platform proxy after it fails to start', async () => {
 	await server.close();
 	expect(dispose).toHaveBeenCalledOnce();
 	expect(globalThis.__sveltekit_cloudflare_platform_setup).toBeUndefined();
+});
+
+test('restarts the dev server when the wrangler config file changes', async () => {
+	const config_path = path.resolve('wrangler.toml');
+	vi.mocked(unstable_readConfig).mockReturnValueOnce(
+		/** @type {any} */ ({ configPath: config_path })
+	);
+	const server = await create_server();
+	const restart = vi.spyOn(server, 'restart').mockResolvedValue();
+
+	expect(server.watcher.listeners('change').length).toBeGreaterThan(0);
+	server.watcher.emit('change', config_path);
+	expect(restart).toHaveBeenCalledOnce();
+
+	restart.mockClear();
+	server.watcher.emit('change', path.resolve('src/routes/+page.svelte'));
+	expect(restart).not.toHaveBeenCalled();
+
+	await server.close();
+	expect(dispose).toHaveBeenCalledOnce();
+});
+
+test('does not install a config watcher when wrangler cannot resolve a config path', async () => {
+	// `unstable_readConfig` returns `{ configPath: undefined }` from the default mock
+	const server = await create_server();
+	const restart = vi.spyOn(server, 'restart').mockResolvedValue();
+
+	server.watcher.emit('change', path.resolve('wrangler.toml'));
+	expect(restart).not.toHaveBeenCalled();
+
+	await server.close();
 });
 
 test('rejects concurrent servers sharing a failed platform proxy and allows a retry', async () => {

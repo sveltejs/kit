@@ -223,7 +223,7 @@ export default function (options = {}) {
  */
 function virtual_workers_module(options, stub_import) {
 	// shared so that concurrent servers start one proxy and only the last close disposes it
-	const setup = async () => {
+	const setup = async (/** @type {import('vite').ViteDevServer | import('vite').PreviewServer} */ server) => {
 		const shared = (globalThis.__sveltekit_cloudflare_platform_setup ??= {
 			servers: 0,
 			proxy: getPlatformProxy(options)
@@ -241,6 +241,23 @@ function virtual_workers_module(options, stub_import) {
 				enumerable: true,
 				configurable: true
 			});
+
+			// Watch the wrangler config file for changes and restart the dev server when
+			// it is edited, so the platform proxy picks up the new config without a manual
+			// restart. Only `ViteDevServer` has a `watcher`; the preview server does not.
+			if ('watcher' in server && 'restart' in server) {
+				const resolved = unstable_readConfig({ config: options.configPath });
+				if (resolved.configPath) {
+					const config_path = path.resolve(resolved.configPath);
+					const on_change = (/** @type {string} */ file) => {
+						if (path.resolve(file) === config_path) {
+							server.restart();
+						}
+					};
+					server.watcher.add(config_path);
+					server.watcher.on('change', on_change);
+				}
+			}
 		} catch (error) {
 			// let the next server retry
 			if (globalThis.__sveltekit_cloudflare_platform_setup === shared) {
