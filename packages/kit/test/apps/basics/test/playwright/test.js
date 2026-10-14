@@ -1093,6 +1093,21 @@ test.describe('searchParams', () => {
 });
 
 test.describe('Matchers', () => {
+	test('Loads TypeScript params and their imports with .js specifiers', async ({
+		page,
+		clicknav
+	}) => {
+		const response = await page.goto('/routing/matched/fruits/apple');
+		expect(response?.status()).toBe(200);
+		expect(await page.textContent('h1')).toBe('fruit: apple');
+
+		await clicknav('[href="/routing/matched/fruits/orange"]');
+		expect(await page.textContent('h1')).toBe('fruit: orange');
+
+		const invalid = await page.goto('/routing/matched/fruits/rocket');
+		expect(invalid?.status()).toBe(404);
+	});
+
 	test('Matches parameters', async ({ page, clicknav }) => {
 		await page.goto('/routing/matched');
 
