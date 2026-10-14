@@ -72,7 +72,7 @@ SvelteKit renders HTML itself, from `src/app.html`, rather than using an `index.
 > The following Vite config options will be overridden by SvelteKit:
 > %options%
 
-SvelteKit controls these Vite options because its build depends on them, so your values are replaced. Remove them from your Vite config. SvelteKit usually provides its own option for the same purpose; see the [configuration reference](https://svelte.dev/docs/kit/configuration).
+SvelteKit controls these Vite options because its build depends on them, so your values are replaced. Remove them from your Vite config. SvelteKit usually provides its own option for the same purpose; see the [configuration reference](https://svelte.dev/docs/kit/@sveltejs-kit-vite).
 
 ## prerender_redirect_location_missing
 

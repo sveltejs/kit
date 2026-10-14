@@ -19,6 +19,7 @@ import {
 	get_config_aliases,
 	is_remote_module,
 	remote_module_pattern,
+	uses_unsupported_html_hook,
 	warn_overridden_config
 } from './utils.js';
 import * as e from '../../messages/build-errors.js';
@@ -551,10 +552,7 @@ function kit({ svelte_config }) {
 				write_app_manifest(`${out_dir}/generated/dev`, undefined, false);
 			}
 
-			const unsupported_plugins = config.plugins.filter(
-				// Vitest invokes this hook for its own browser tester HTML, not the SvelteKit app
-				(plugin) => plugin.transformIndexHtml && plugin.name !== 'vitest:browser:loader'
-			);
+			const unsupported_plugins = config.plugins.filter(uses_unsupported_html_hook);
 			if (unsupported_plugins.length) {
 				const plugins = bullet_list(
 					unsupported_plugins.map((plugin) => plugin.name || '(missing plugin name)')
