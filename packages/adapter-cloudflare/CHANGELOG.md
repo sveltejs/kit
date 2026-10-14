@@ -9,8 +9,6 @@
 - fix: start one platform proxy for concurrent Vite servers and keep it alive until the last one closes ([#17368](https://github.com/sveltejs/kit/pull/17368))
 
 - fix: support `Span#setStatus` and `Span#updateName` on local emulation of Cloudflare `tracing` ([#17400](https://github.com/sveltejs/kit/pull/17400))
-- Updated dependencies:
-  - @sveltejs/kit@3.1.0
 
 ## 8.0.0
 
