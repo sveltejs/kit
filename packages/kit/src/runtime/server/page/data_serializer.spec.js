@@ -36,6 +36,28 @@ test.each([
 	}
 );
 
+test.each([
+	['uneval', server_data_serializer],
+	['stringify', server_data_serializer_json]
+])('rethrows an error that is not a devalue error unchanged with %s', (_, create) => {
+	const serializer = create(event, state);
+	const boom = new Error('getter exploded');
+	const data = {
+		get value() {
+			throw boom;
+		}
+	};
+
+	let thrown;
+	try {
+		serializer.add_node(0, node(data));
+	} catch (error) {
+		thrown = /** @type {Error} */ (error);
+	}
+
+	expect(thrown).toBe(boom);
+});
+
 test('passes an unserializable promise result to handleError, with the devalue error as its cause', async () => {
 	/** @type {unknown[]} */
 	const handled = [];

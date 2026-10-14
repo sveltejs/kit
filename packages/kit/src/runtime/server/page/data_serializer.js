@@ -98,6 +98,7 @@ export function server_data_serializer(event, state) {
 
 				strings[i] = devalue.uneval(payload, get_replacer(i));
 			} catch (/** @type {any} */ error) {
+				if (!(error instanceof devalue.DevalueError)) throw error;
 				error.path = error.path.slice(1);
 				throw_devalue_error(event, error);
 			}
@@ -208,6 +209,7 @@ export function server_data_serializer_json(event, state) {
 						serialize_uses(node)
 					)}${node.slash ? `,"slash":${JSON.stringify(node.slash)}` : ''}}`;
 			} catch (/** @type {any} */ error) {
+				if (!(error instanceof devalue.DevalueError)) throw error;
 				error.path = 'data' + error.path;
 				throw_devalue_error(event, error);
 			}
