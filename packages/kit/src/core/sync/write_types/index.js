@@ -6,6 +6,7 @@ import { compact } from '../../../utils/array.js';
 import { posixify } from '../../../utils/os.js';
 import { ts } from '../ts.js';
 import { is_page_route } from '../create_manifest_data/index.js';
+
 const remove_relative_parent_traversals = (/** @type {string} */ path) =>
 	path.replace(/\.\.\//g, '');
 const is_whitespace = (/** @type {string} */ char) => /\s/.test(char);
@@ -72,7 +73,7 @@ export function write_all_types(config, manifest_data, root) {
 	for (const route of manifest_data.routes) {
 		if (!route.leaf && !route.layout && !route.endpoint) continue; // nothing to do
 
-		const outdir = path.join(config.outDir, 'types', routes_dir, route.id);
+		const outdir = path.join(types_dir, routes_dir, route.id);
 
 		// check if the types are out of date
 		/** @type {string[]} */
@@ -124,6 +125,9 @@ export function write_all_types(config, manifest_data, root) {
 			source_last_updated > types_last_updated ||
 			// no meta data file exists yet
 			!has_meta_data ||
+			// the outdir may have been removed by the user but the routes_meta_data.json
+			// cache doesn't know this has happened
+			!output_files.some((file) => file.name === '$types.d.ts') ||
 			// some file was deleted
 			!meta_data[route.id]?.every((file) => input_files.includes(file));
 
@@ -135,6 +139,7 @@ export function write_all_types(config, manifest_data, root) {
 		}
 	}
 
+	fs.mkdirSync(types_dir, { recursive: true });
 	fs.writeFileSync(meta_data_file, JSON.stringify(meta_data, null, '\t'));
 }
 
