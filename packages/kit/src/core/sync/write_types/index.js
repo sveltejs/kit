@@ -1,4 +1,3 @@
-import { randomUUID } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import MagicString from 'magic-string';
@@ -147,13 +146,7 @@ export function write_all_types(config, manifest_data, root) {
 	}
 
 	fs.mkdirSync(types_dir, { recursive: true });
-	const meta_data_temp_file = path.join(config.outDir, `route_meta_data.${randomUUID()}.tmp`);
-	try {
-		fs.writeFileSync(meta_data_temp_file, JSON.stringify(meta_data, null, '\t'));
-		fs.renameSync(meta_data_temp_file, meta_data_file);
-	} finally {
-		fs.rmSync(meta_data_temp_file, { force: true });
-	}
+	fs.writeFileSync(meta_data_file, JSON.stringify(meta_data, null, '\t'));
 }
 
 /**
