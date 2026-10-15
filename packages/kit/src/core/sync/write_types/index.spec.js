@@ -430,9 +430,21 @@ describe('Cleans up unused files', () => {
 	test('recovers when route_meta_data.json contains invalid JSON', () => {
 		const types_dir = sync();
 		const meta_data_file = path.join(types_dir, 'route_meta_data.json');
-		fs.writeFileSync(meta_data_file, '{"/": [');
+		const original_exists = fs.existsSync;
+		const exists_spy = vi.spyOn(fs, 'existsSync').mockImplementation((file) => {
+			if (file === meta_data_file) {
+				// Simulate another process in the middle of writing route_meta_data.json
+				fs.writeFileSync(meta_data_file, '{"/": [');
+			}
+			return original_exists(file);
+		});
 
-		expect(() => sync()).not.toThrow();
+		try {
+			expect(() => sync()).not.toThrow();
+		} finally {
+			exists_spy.mockRestore();
+		}
+
 		expect(() => JSON.parse(fs.readFileSync(meta_data_file, 'utf-8'))).not.toThrow();
 	});
 
