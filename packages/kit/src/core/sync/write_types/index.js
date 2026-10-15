@@ -65,9 +65,15 @@ export function write_all_types(config, manifest_data, root) {
 	// it could be invoked by another process in the meantime.
 	const meta_data_file = `${types_dir}/route_meta_data.json`;
 	const has_meta_data = fs.existsSync(meta_data_file);
-	const meta_data = has_meta_data
-		? /** @type {Record<string, string[]>} */ (JSON.parse(fs.readFileSync(meta_data_file, 'utf-8')))
-		: {};
+	/** @type {Record<string, string[]>} */
+	let meta_data = {};
+	if (has_meta_data) {
+		try {
+			meta_data = JSON.parse(fs.readFileSync(meta_data_file, 'utf-8'));
+		} catch {
+			// parsing can fail if another process is in the middle of writing the file
+		}
+	}
 	const routes_map = create_routes_map(manifest_data);
 	// For each directory, write $types.d.ts
 	for (const route of manifest_data.routes) {
