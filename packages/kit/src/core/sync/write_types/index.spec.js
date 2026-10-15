@@ -379,6 +379,28 @@ describe('Cleans up unused files', () => {
 		assert.ok(!fs.existsSync(stale));
 	});
 
+	test('regenerates types when a component-only route is removed and re-added', () => {
+		const types_dir = sync();
+		const route_dir = path.join(root, 'src/routes/about');
+		const types_file = path.join(types_dir, 'src/routes/about/$types.d.ts');
+		const meta_data_file = path.join(types_dir, 'route_meta_data.json');
+		const original_types = fs.readFileSync(types_file, 'utf-8');
+
+		fs.rmSync(route_dir, { recursive: true });
+		sync();
+
+		assert.ok(!fs.existsSync(types_file));
+		assert.deepEqual(JSON.parse(fs.readFileSync(meta_data_file, 'utf-8'))['/about'], []);
+
+		// With no own or inherited load files, timestamps and cached inputs cannot
+		// invalidate the cache. The missing $types.d.ts must trigger regeneration.
+		fs.mkdirSync(route_dir, { recursive: true });
+		fs.writeFileSync(path.join(route_dir, '+page.svelte'), '');
+		sync();
+
+		assert.equal(fs.readFileSync(types_file, 'utf-8'), original_types);
+	});
+
 	test('preserves route_meta_data.json', () => {
 		const types_dir = sync();
 		const meta_data_file = path.join(types_dir, 'route_meta_data.json');
