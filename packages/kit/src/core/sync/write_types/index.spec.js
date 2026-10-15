@@ -404,4 +404,57 @@ describe('Cleans up unused files', () => {
 		// nothing changed, so the cached metadata means the types should not be regenerated
 		assert.equal(fs.readFileSync(root_types, 'utf-8'), '// marker');
 	});
+
+	describe('has root route types after repeated syncs', () => {
+		beforeEach(() => {
+			fs.writeFileSync(path.join(root, 'src/routes/+layout.svelte'), '');
+		});
+
+		/** @param {string} types_dir */
+		function assert_types_exist(types_dir) {
+			for (const dir of ['src/routes', 'src/routes/about']) {
+				const file = path.join(types_dir, dir, '$types.d.ts');
+				assert.ok(fs.existsSync(file), `${file} should exist`);
+			}
+		}
+
+		test('in a fresh app (no .svelte-kit)', () => {
+			for (let i = 0; i < 3; i += 1) {
+				assert_types_exist(sync());
+			}
+		});
+
+		// A route with no load files has an empty `input_files`, so `source_last_updated` is
+		// `-Infinity` and `meta_data[id]` is `[]`. Neither triggers regeneration, so once
+		// `route_meta_data.json` exists, missing types for such a route are never recreated.
+		test('after root types are removed', () => {
+			const types_dir = sync();
+			const root_types = path.join(types_dir, 'src/routes/$types.d.ts');
+
+			fs.rmSync(root_types);
+			assert.ok(fs.existsSync(path.join(types_dir, 'route_meta_data.json')));
+
+			assert_types_exist(sync());
+		});
+
+		test('after output directory is removed', () => {
+			const types_dir = sync();
+
+			fs.rmSync(path.join(types_dir, 'src/routes/$types.d.ts'));
+			fs.rmSync(path.join(types_dir, 'src/routes/about'), { recursive: true });
+
+			assert_types_exist(sync());
+		});
+
+		test('if the source is newer than the types', () => {
+			const types_dir = sync();
+
+			// make the generated file look older than the source so the cache is invalidated
+			const old = new Date(Date.now() - 60_000);
+			fs.utimesSync(path.join(types_dir, 'src/routes/$types.d.ts'), old, old);
+			fs.writeFileSync(path.join(root, 'src/routes/+page.js'), 'export const load = () => ({});');
+
+			assert_types_exist(sync());
+		});
+	});
 });
