@@ -23,6 +23,29 @@ test('__data.json prerender config is not generated for server-only route', () =
 
 /** @type {{ routes: Array<{ src?: string, dest?: string, handle?: string }> }} */
 const config = JSON.parse(fs.readFileSync(`${output}/config.json`, 'utf8'));
+
+test('root and index routes keep distinct functions', () => {
+	const targets = ['/', '/index'].map((pathname) => {
+		const route = config.routes.find(
+			(route) => route.src && route.dest && new RegExp(route.src).test(pathname)
+		);
+		assert.ok(route?.dest && route.src);
+		assert.ok(new RegExp(route.src).test(`${pathname.replace(/\/$/, '')}/__data.json`));
+		const base = `${output}/functions${route.dest}`;
+		const target = fs.realpathSync(`${base}.func`);
+		if (pathname === '/') {
+			assert.ok(
+				config.routes.indexOf(route) < config.routes.findIndex((r) => r.handle === 'filesystem')
+			);
+		} else {
+			assert.equal(fs.realpathSync(`${base}/__data.json.func`), target);
+		}
+		return target;
+	});
+
+	assert.notEqual(targets[0], targets[1]);
+});
+
 const route_sources = config.routes.flatMap((route) =>
 	typeof route.src === 'string' ? [route.src] : []
 );
