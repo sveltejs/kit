@@ -390,7 +390,7 @@ describe('Cleans up unused files', () => {
 		sync();
 
 		assert.ok(!fs.existsSync(types_file));
-		assert.deepEqual(JSON.parse(fs.readFileSync(meta_data_file, 'utf-8'))['/about'], []);
+		assert.equal(JSON.parse(fs.readFileSync(meta_data_file, 'utf-8'))['/about'], undefined);
 
 		// With no own or inherited load files, timestamps and cached inputs cannot
 		// invalidate the cache. The missing $types.d.ts must trigger regeneration.
@@ -486,5 +486,99 @@ describe('Cleans up unused files', () => {
 
 			assert_types_exist(sync());
 		});
+	});
+
+	test('regenerates layout $types.d.ts when child pages are added or removed', () => {
+		fs.writeFileSync(path.join(root, 'src/routes/+layout.svelte'), '');
+
+		const types_dir = sync();
+		const root_types = path.join(types_dir, 'src/routes/$types.d.ts');
+		const meta_data_file = path.join(types_dir, 'route_meta_data.json');
+		expect(fs.readFileSync(root_types, 'utf-8')).not.toContain('"/[slug]"');
+
+		// Add a new child page with only +page.svelte (and set future mtime on existing types
+		// to ensure regeneration relies on tracked_files rather than ctimeMs alone)
+		const future = new Date(Date.now() + 60_000);
+		fs.utimesSync(root_types, future, future);
+		fs.utimesSync(meta_data_file, future, future);
+
+		fs.mkdirSync(path.join(root, 'src/routes/[slug]'), { recursive: true });
+		fs.writeFileSync(path.join(root, 'src/routes/[slug]/+page.svelte'), '');
+
+		sync();
+
+		const updated_content = fs.readFileSync(root_types, 'utf-8');
+		expect(updated_content).toContain('"/[slug]"');
+		expect(updated_content).toContain('slug?: string');
+
+		// Remove the child page and verify layout types update again
+		fs.utimesSync(root_types, future, future);
+		fs.utimesSync(meta_data_file, future, future);
+		fs.rmSync(path.join(root, 'src/routes/[slug]'), { force: true, recursive: true });
+
+		sync();
+
+		const final_content = fs.readFileSync(root_types, 'utf-8');
+		expect(final_content).not.toContain('"/[slug]"');
+		expect(final_content).not.toContain('slug?: string');
+	});
+
+	test('regenerates layout $types.d.ts when a child page load export changes', () => {
+		fs.writeFileSync(
+			path.join(root, 'src/routes/+layout.server.js'),
+			'export function load() { return { layout: 1 }; }\n'
+		);
+		fs.writeFileSync(path.join(root, 'src/routes/+layout.svelte'), '');
+		fs.writeFileSync(
+			path.join(root, 'src/routes/+page.js'),
+			'export function load() { return { home: 1 }; }\n'
+		);
+		fs.writeFileSync(
+			path.join(root, 'src/routes/about/+page.js'),
+			'export function load() { return { about: 1 }; }\n'
+		);
+
+		const types_dir = sync();
+		const root_types = path.join(types_dir, 'src/routes/$types.d.ts');
+		const meta_data_file = path.join(types_dir, 'route_meta_data.json');
+		expect(fs.readFileSync(root_types, 'utf-8')).toContain(
+			'export type LayoutServerLoad<OutputData extends Partial<App.PageData> & Record<string, any> | void'
+		);
+
+		// Backdate generated files so editing child +page.js has ctimeMs > types_last_updated
+		const past = new Date(Date.now() - 10_000);
+		fs.utimesSync(root_types, past, past);
+		fs.utimesSync(meta_data_file, past, past);
+
+		// Edit child +page.js to remove its load export without adding/removing the file
+		fs.writeFileSync(path.join(root, 'src/routes/about/+page.js'), 'export const ssr = true;\n');
+
+		sync();
+
+		expect(fs.readFileSync(root_types, 'utf-8')).toContain(
+			'export type LayoutServerLoad<OutputData extends OutputDataShape<LayoutServerParentData> = OutputDataShape<LayoutServerParentData>>'
+		);
+	});
+
+	test('prunes removed routes from route_meta_data.json and avoids rewriting when unchanged', () => {
+		const types_dir = sync();
+		const meta_data_file = path.join(types_dir, 'route_meta_data.json');
+		const initial_meta = JSON.parse(fs.readFileSync(meta_data_file, 'utf-8'));
+		expect(initial_meta).toHaveProperty('/about');
+
+		// Set a sentinel mtime on route_meta_data.json and re-run without changes
+		const sentinel_time = new Date(Date.now() + 30_000);
+		fs.utimesSync(meta_data_file, sentinel_time, sentinel_time);
+		const mtime_before = fs.statSync(meta_data_file).mtimeMs;
+
+		sync();
+		expect(fs.statSync(meta_data_file).mtimeMs).toBe(mtime_before);
+
+		// Remove /about route and verify it is pruned from route_meta_data.json
+		fs.rmSync(path.join(root, 'src/routes/about'), { force: true, recursive: true });
+		sync();
+
+		const updated_meta = JSON.parse(fs.readFileSync(meta_data_file, 'utf-8'));
+		expect(updated_meta).not.toHaveProperty('/about');
 	});
 });
