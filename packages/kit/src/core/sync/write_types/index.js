@@ -65,12 +65,15 @@ export function write_all_types(config, manifest_data, root) {
 	// Read/write meta data on each invocation, not once per node process,
 	// it could be invoked by another process in the meantime.
 	const meta_data_file = `${types_dir}/route_meta_data.json`;
+	const has_meta_data = fs.existsSync(meta_data_file);
 	/** @type {Record<string, string[]>} */
 	let meta_data = {};
-	try {
-		meta_data = JSON.parse(fs.readFileSync(meta_data_file, 'utf-8'));
-	} catch {
-		// parsing can fail if another process is in the middle of writing the file
+	if (has_meta_data) {
+		try {
+			meta_data = JSON.parse(fs.readFileSync(meta_data_file, 'utf-8'));
+		} catch {
+			// parsing can fail if another process is in the middle of writing the file
+		}
 	}
 	const routes_map = create_routes_map(manifest_data);
 	// For each directory, write $types.d.ts
@@ -127,10 +130,12 @@ export function write_all_types(config, manifest_data, root) {
 		const should_generate =
 			// source files were generated more recently than the types
 			source_last_updated > types_last_updated ||
+			// no meta data file exists yet
+			!has_meta_data ||
 			// `outdir` may have been removed but the routes_meta_data.json cache
 			// doesn't know about that
 			!output_files.some((file) => file.name === '$types.d.ts') ||
-			// no meta data for this route yet, or some file was deleted
+			// some file was deleted
 			!meta_data[route.id]?.every((file) => input_files.includes(file));
 
 		if (should_generate) {
