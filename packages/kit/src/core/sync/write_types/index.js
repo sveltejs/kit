@@ -27,13 +27,6 @@ const is_whitespace = (/** @type {string} */ char) => /\s/.test(char);
  */
 
 /**
- * Creates types for the whole manifest
- * @param {import('types').ValidatedConfig} config
- * @param {import('types').ManifestData} manifest_data
- * @param {string} root The project root directory
- */
-
-/**
  * Recursively remove empty directories under `root`, leaving `root` itself.
  * @param {string} dir
  * @param {string} root
@@ -55,6 +48,12 @@ function remove_empty_directories(dir, root = dir) {
 	}
 }
 
+/**
+ * Creates types for the whole manifest
+ * @param {import('types').ValidatedConfig} config
+ * @param {import('types').ManifestData} manifest_data
+ * @param {string} root The project root directory
+ */
 export function write_all_types(config, manifest_data, root) {
 	if (!ts) return;
 
