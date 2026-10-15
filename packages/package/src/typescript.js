@@ -51,6 +51,9 @@ export async function emit_dts(input, output, final_output, alias, files, tsconf
 		if (file.endsWith('.d.ts.map')) {
 			// Because we put the .d.ts files in a temporary directory, the relative path needs to be adjusted
 			const parsed = JSON.parse(source);
+			const component = files.find(
+				(candidate) => candidate.is_svelte && file === candidate.name + '.d.ts.map'
+			);
 			if (parsed.sources) {
 				parsed.sources = /** @type {string[]} */ (parsed.sources).map((source) =>
 					posixify(
@@ -59,7 +62,7 @@ export async function emit_dts(input, output, final_output, alias, files, tsconf
 								path.dirname(path.join(final_output, file)),
 								path.dirname(path.join(input, file))
 							),
-							path.basename(source)
+							path.basename(component?.name ?? source)
 						)
 					)
 				);
