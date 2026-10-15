@@ -125,8 +125,8 @@ export function write_all_types(config, manifest_data, root) {
 			source_last_updated > types_last_updated ||
 			// no meta data file exists yet
 			!has_meta_data ||
-			// the outdir may have been removed by the user but the routes_meta_data.json
-			// cache doesn't know this has happened
+			// `outdir` may have been removed but the routes_meta_data.json cache
+			// doesn't know about that
 			!output_files.some((file) => file.name === '$types.d.ts') ||
 			// some file was deleted
 			!meta_data[route.id]?.every((file) => input_files.includes(file));
