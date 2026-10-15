@@ -1020,6 +1020,45 @@ test.describe('$app/state', () => {
 		}
 	});
 
+	test('navigating exposes shallow and event during a link navigation (#17473)', async ({
+		app,
+		page,
+		javaScriptEnabled
+	}) => {
+		await page.goto('/state/navigating/a');
+
+		if (javaScriptEnabled) {
+			await app.preloadCode('/state/navigating/b');
+
+			const values = await Promise.all([
+				page.click('a[href="/state/navigating/b"]'),
+				page.waitForSelector('#navigating').then(async () => ({
+					shallow: await page.textContent('#navigating-shallow'),
+					eventType: await page.textContent('#navigating-event')
+				}))
+			]).then(([, v]) => v);
+
+			expect(values.shallow).toBe('false');
+			expect(values.eventType).not.toBe('none');
+			await page.waitForSelector('#not-navigating');
+		}
+	});
+
+	test('navigating.shallow is true during a shallow goto (#17473)', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		await page.goto('/state/navigating/a');
+
+		if (javaScriptEnabled) {
+			await page.click('#shallow-goto');
+			await page.waitForSelector('#not-navigating');
+			// Shallow navigations can finish before #navigating is painted; the layout
+			// records navigating.shallow while it was set.
+			expect(await page.textContent('#seen-shallow')).toBe('true');
+		}
+	});
+
 	test('should update page state when URL hash is changed through the address bar', async ({
 		baseURL,
 		page,

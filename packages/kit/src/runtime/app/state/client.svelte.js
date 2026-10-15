@@ -103,9 +103,10 @@ export function set_navigation(value) {
 }
 
 /**
- * A read-only object representing an in-progress navigation, with `from`, `to`, `type` and (if `type === 'popstate'`) `delta` properties.
+ * A read-only object representing an in-progress navigation, with `from`, `to`, `type`,
+ * `shallow`, `event` and (if `type === 'popstate'`) `delta` properties.
  * Values are `null` when no navigation is occurring, or during server rendering.
- * @type {Navigation | { from: null, to: null, type: null, willUnload: null, delta: null, complete: null }}
+ * @type {Navigation | { from: null, to: null, type: null, willUnload: null, delta: null, complete: null, shallow: null, event: null }}
  */
 export const navigating = {
 	get from() {
@@ -126,6 +127,13 @@ export const navigating = {
 	},
 	get complete() {
 		return navigation ? navigation.complete : null;
+	},
+	get shallow() {
+		return navigation ? navigation.shallow : null;
+	},
+	// @ts-expect-error `event` exists only on link/form/popstate navigations
+	get event() {
+		return navigation && 'event' in navigation ? navigation.event : null;
 	}
 };
 

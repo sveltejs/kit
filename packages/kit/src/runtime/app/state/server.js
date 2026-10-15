@@ -51,7 +51,9 @@ export const navigating = {
 	type: null,
 	willUnload: null,
 	delta: null,
-	complete: null
+	complete: null,
+	shallow: null,
+	event: null
 };
 
 export const updated = {
