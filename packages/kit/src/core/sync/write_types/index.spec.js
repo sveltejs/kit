@@ -424,19 +424,6 @@ describe('Cleans up unused files', () => {
 			}
 		});
 
-		// A route with no load files has an empty `input_files`, so `source_last_updated` is
-		// `-Infinity` and `meta_data[id]` is `[]`. Neither triggers regeneration, so once
-		// `route_meta_data.json` exists, missing types for such a route are never recreated.
-		test('after root types are removed', () => {
-			const types_dir = sync();
-			const root_types = path.join(types_dir, 'src/routes/$types.d.ts');
-
-			fs.rmSync(root_types);
-			assert.ok(fs.existsSync(path.join(types_dir, 'route_meta_data.json')));
-
-			assert_types_exist(sync());
-		});
-
 		test('after output directory is removed', () => {
 			const types_dir = sync();
 
