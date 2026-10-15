@@ -427,6 +427,15 @@ describe('Cleans up unused files', () => {
 		assert.equal(fs.readFileSync(root_types, 'utf-8'), '// marker');
 	});
 
+	test('recovers when route_meta_data.json contains invalid JSON', () => {
+		const types_dir = sync();
+		const meta_data_file = path.join(types_dir, 'route_meta_data.json');
+		fs.writeFileSync(meta_data_file, '{"/": [');
+
+		expect(() => sync()).not.toThrow();
+		expect(() => JSON.parse(fs.readFileSync(meta_data_file, 'utf-8'))).not.toThrow();
+	});
+
 	describe('has root route types after repeated syncs', () => {
 		beforeEach(() => {
 			fs.writeFileSync(path.join(root, 'src/routes/+layout.svelte'), '');
