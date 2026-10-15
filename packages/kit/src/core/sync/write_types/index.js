@@ -70,7 +70,7 @@ export function write_all_types(config, manifest_data, root) {
 	try {
 		meta_data = JSON.parse(fs.readFileSync(meta_data_file, 'utf-8'));
 	} catch {
-		// file does not exist or could not be parsed
+		// parsing can fail if another process is in the middle of writing the file
 	}
 	const routes_map = create_routes_map(manifest_data);
 	// For each directory, write $types.d.ts
