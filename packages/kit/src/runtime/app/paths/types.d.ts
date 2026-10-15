@@ -18,6 +18,6 @@ export type ResolveArgs<T> = T extends `/${string}`
 			? RouteParams<R> extends Record<string, never>
 				? [route: T]
 				: [route: T, params: RouteParams<R>]
-		    : [never]
+			: [never]
 		: [never]
 	: [pathname: T];
