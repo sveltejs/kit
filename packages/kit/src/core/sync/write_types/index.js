@@ -27,6 +27,28 @@ const is_whitespace = (/** @type {string} */ char) => /\s/.test(char);
  */
 
 /**
+ * Recursively remove empty directories under `root`, leaving `root` itself.
+ * @param {string} dir
+ * @param {string} root
+ */
+function remove_empty_directories(dir, root = dir) {
+	if (!fs.existsSync(dir)) return;
+
+	for (const name of fs.readdirSync(dir)) {
+		const child = path.join(dir, name);
+		if (fs.statSync(child).isDirectory()) {
+			remove_empty_directories(child, root);
+		}
+	}
+
+	if (path.resolve(dir) === path.resolve(root)) return;
+
+	if (fs.readdirSync(dir).length === 0) {
+		fs.rmdirSync(dir);
+	}
+}
+
+/**
  * Creates types for the whole manifest
  * @param {import('types').ValidatedConfig} config
  * @param {import('types').ManifestData} manifest_data
@@ -52,6 +74,8 @@ export function write_all_types(config, manifest_data, root) {
 				fs.rmSync(path.join(types_dir, file), { force: true, recursive: true });
 			}
 		}
+		// Stale files are removed above; empty route directories are left behind.
+		remove_empty_directories(types_dir);
 	}
 
 	// Read/write meta data on each invocation, not once per node process,
