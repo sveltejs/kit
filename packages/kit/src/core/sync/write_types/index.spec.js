@@ -1,8 +1,9 @@
 import { execSync } from 'node:child_process';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
-import { assert, describe, expect, test } from 'vitest';
+import { afterEach, assert, beforeEach, describe, expect, test } from 'vitest';
 import create_manifest_data from '../create_manifest_data/index.js';
 import { tweak_types, write_all_types } from './index.js';
 import { write_app_types } from '../write_app_types.js';
@@ -308,4 +309,66 @@ test('Leaves satisfies operator untouched', () => {
 	expect(rewritten?.exports).toEqual(['load', 'actions']);
 	assert.equal(rewritten?.modified, false);
 	assert.equal(rewritten?.code, source);
+});
+
+describe('Cleans up unused files', () => {
+	/** @type {string} */
+	let root;
+
+	beforeEach(() => {
+		root = fs.mkdtempSync(path.join(os.tmpdir(), 'kit-write-types-'));
+
+		for (const dir of ['', 'about']) {
+			const route_dir = path.join(root, 'src/routes', dir);
+			fs.mkdirSync(route_dir, { recursive: true });
+			fs.writeFileSync(path.join(route_dir, '+page.svelte'), '');
+		}
+	});
+
+	afterEach(() => {
+		fs.rmSync(root, { force: true, recursive: true });
+	});
+
+	function sync() {
+		const config = validate_config({});
+		config.files.assets = path.join(root, 'static');
+		config.files.params = path.join(root, 'src/params');
+		config.files.routes = path.join(root, 'src/routes');
+		config.outDir = path.join(root, '.svelte-kit');
+
+		write_all_types(config, create_manifest_data(config, root), root);
+
+		return path.join(config.outDir, 'types');
+	}
+
+	test('removes empty output directories for removed routes', () => {
+		const types_dir = sync();
+		const route_types_dir = path.join(types_dir, 'src/routes/about');
+		const types_file = path.join(route_types_dir, '$types.d.ts');
+		assert.ok(fs.existsSync(types_file));
+
+		fs.rmSync(path.join(root, 'src/routes/about'), { recursive: true });
+		sync();
+
+		assert.ok(!fs.existsSync(types_file));
+		assert.ok(!fs.existsSync(route_types_dir));
+	});
+
+	test('keeps parent directories that still have nested routes', () => {
+		const nested = path.join(root, 'src/routes/about/team');
+		fs.mkdirSync(nested, { recursive: true });
+		fs.writeFileSync(path.join(nested, '+page.svelte'), '');
+
+		const types_dir = sync();
+		const about_dir = path.join(types_dir, 'src/routes/about');
+		const team_types = path.join(about_dir, 'team/$types.d.ts');
+		assert.ok(fs.existsSync(team_types));
+
+		fs.rmSync(path.join(root, 'src/routes/about/team'), { recursive: true });
+		sync();
+
+		assert.ok(!fs.existsSync(team_types));
+		assert.ok(!fs.existsSync(path.join(about_dir, 'team')));
+		assert.ok(fs.existsSync(path.join(about_dir, '$types.d.ts')));
+	});
 });
