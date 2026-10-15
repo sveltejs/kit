@@ -42,11 +42,19 @@ export function write_all_types(config, manifest_data, root) {
 		posixify(path.relative(root, config.files.routes))
 	);
 	const expected_directories = new Set(
-		manifest_data.routes.map((route) => path.posix.join(routes_dir, route.id))
+		manifest_data.routes.map((route) => {
+			// path.posix.join(routes_dir, '/') keeps a trailing slash; walk() dirs do not (#17465)
+			let dir = path.posix.join(routes_dir, route.id).replace(/\/$/, '');
+			// join('', '/sub') yields '/sub', but walk() paths are relative (#17465 tests)
+			if (dir.startsWith('/')) dir = dir.slice(1);
+			return dir === '' ? '.' : dir;
+		})
 	);
 
 	if (fs.existsSync(types_dir)) {
 		for (const file of walk(types_dir)) {
+			// route_meta_data.json sits at the types root, not under a route dir (#17464)
+			if (file === 'route_meta_data.json') continue;
 			const dir = path.posix.dirname(file);
 			if (!expected_directories.has(dir)) {
 				fs.rmSync(path.join(types_dir, file), { force: true, recursive: true });

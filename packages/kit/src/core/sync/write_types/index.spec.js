@@ -309,3 +309,48 @@ test('Leaves satisfies operator untouched', () => {
 	assert.equal(rewritten?.modified, false);
 	assert.equal(rewritten?.code, source);
 });
+
+test('Preserves route_meta_data.json and root $types across sync runs', () => {
+	// #17464: cleanup used to delete types/route_meta_data.json (dirname ".")
+	// #17465: root route expected dir had a trailing slash so src/routes/$types.d.ts was removed
+	const dir = 'simple-page-shared-only';
+	const root = path.join(cwd, dir);
+	const types_dir = path.join(root, '.svelte-kit', 'types');
+	const meta_data_file = path.join(types_dir, 'route_meta_data.json');
+	// With routes_dir === project root (this fixture), root types live at types/$types.d.ts
+	const root_types = path.join(types_dir, '$types.d.ts');
+	const child_types = path.join(types_dir, 'sub', '$types.d.ts');
+
+	fs.rmSync(path.join(root, '.svelte-kit'), { force: true, recursive: true });
+
+	const initial = validate_config({});
+	initial.files.assets = path.resolve(cwd, 'static');
+	initial.files.params = path.resolve(cwd, dir, 'params');
+	initial.files.routes = path.resolve(cwd, dir);
+	initial.outDir = path.resolve(cwd, dir, '.svelte-kit');
+
+	const manifest = create_manifest_data(initial, root);
+	write_all_types(initial, manifest, root);
+
+	expect(fs.existsSync(meta_data_file)).toBe(true);
+	expect(fs.existsSync(root_types)).toBe(true);
+	expect(fs.existsSync(child_types)).toBe(true);
+
+	const marker = '// cache-survives-sync';
+	fs.appendFileSync(root_types, `\n${marker}\n`);
+	fs.appendFileSync(child_types, `\n${marker}\n`);
+	const meta_before = fs.readFileSync(meta_data_file, 'utf-8');
+
+	write_all_types(initial, manifest, root);
+
+	expect(fs.existsSync(meta_data_file)).toBe(true);
+	expect(fs.existsSync(root_types)).toBe(true);
+	expect(fs.existsSync(child_types)).toBe(true);
+	const meta = JSON.parse(fs.readFileSync(meta_data_file, 'utf-8'));
+	expect(Object.keys(meta).length).toBeGreaterThan(0);
+	// unchanged sources → should_generate false → markers kept (#17464/#17465)
+	expect(fs.readFileSync(root_types, 'utf-8')).toContain(marker);
+	expect(fs.readFileSync(child_types, 'utf-8')).toContain(marker);
+	// meta file itself was not wiped mid-pass
+	expect(JSON.parse(meta_before)).toEqual(meta);
+});
