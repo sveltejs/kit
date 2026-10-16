@@ -3937,7 +3937,8 @@ declare module '$app/state' {
 	 * */
 	export const page: Page;
 	/**
-	 * A read-only object representing an in-progress navigation, with `from`, `to`, `type` and (if `type === 'popstate'`) `delta` properties.
+	 * A read-only object representing an in-progress navigation, with `from`, `to`, `type`,
+	 * `shallow`, `event` and (if `type === 'popstate'`) `delta` properties.
 	 * Values are `null` when no navigation is occurring, or during server rendering.
 	 * */
 	export const navigating: Navigation | {
@@ -3947,6 +3948,8 @@ declare module '$app/state' {
 		willUnload: null;
 		delta: null;
 		complete: null;
+		shallow: null;
+		event: null;
 	};
 	/**
 	 * A read-only reactive value that's initially `false`. SvelteKit checks for new versions on data, remote, and form action responses (via the `x-sveltekit-version` header), when the tab regains focus or becomes visible, and on a poll interval (see [`version.pollInterval`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#version)). `updated.current` is set to `true` when a new version is detected. `updated.check()` will force an immediate check, regardless of polling.
