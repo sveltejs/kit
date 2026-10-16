@@ -131,7 +131,6 @@ export const navigating = {
 	get shallow() {
 		return navigation ? navigation.shallow : null;
 	},
-	// @ts-expect-error `event` exists only on link/form/popstate navigations
 	get event() {
 		return navigation && 'event' in navigation ? navigation.event : null;
 	}
