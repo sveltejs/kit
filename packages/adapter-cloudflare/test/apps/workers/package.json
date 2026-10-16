@@ -4,14 +4,16 @@
 	"private": true,
 	"scripts": {
 		"dev": "vite dev",
-		"build": "vite build",
-		"preview": "wrangler dev dist/index.js --config config/wrangler.jsonc",
+		"build": "vite build && node test/validate.js && wrangler deploy --dry-run --outdir .svelte-kit/dry-run",
+		"preview": "vite preview --port 8787",
 		"generate:types": "wrangler types --config config/wrangler.jsonc",
 		"test:dev": "DEV=true playwright test",
 		"test:build": "playwright test",
-		"test": "pnpm test:dev && pnpm test:build"
+		"test:base": "TEST_BASE=true playwright test",
+		"test": "pnpm test:dev && pnpm test:build && pnpm test:base"
 	},
 	"devDependencies": {
+		"@opentelemetry/api": "catalog:",
 		"@sveltejs/adapter-cloudflare": "workspace:*",
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "catalog:",

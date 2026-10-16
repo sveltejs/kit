@@ -13,7 +13,7 @@ describe('validates Wrangler config', () => {
 		).toThrow('Cloudflare Pages is no longer supported');
 	});
 
-	test('Worker and static assets', () => {
+	test('rejects framework-managed output directories', () => {
 		expect(() =>
 			validate_worker_settings(
 				/** @type {import('wrangler').Unstable_Config} */ ({
@@ -25,39 +25,40 @@ describe('validates Wrangler config', () => {
 					}
 				})
 			)
-		).not.toThrow();
+		).toThrow('Remove `assets.directory`');
 	});
 
-	test('static assets only', () => {
+	test.each([{}, { assets: { binding: 'CUSTOM_ASSETS', not_found_handling: '404-page' } }])(
+		'accepts managed Worker settings %j',
+		(config) => {
+			expect(() =>
+				validate_worker_settings(/** @type {import('wrangler').Unstable_Config} */ (config))
+			).not.toThrow();
+		}
+	);
+
+	test('allows an explicit assets binding without a directory', () => {
 		expect(() =>
 			validate_worker_settings(
 				/** @type {import('wrangler').Unstable_Config} */ ({
 					configPath: 'wrangler.jsonc',
-					assets: {
-						directory: 'dist/assets'
-					}
-				})
-			)
-		).not.toThrow();
-	});
-
-	test('missing `assets.directory` key', () => {
-		expect(() =>
-			validate_worker_settings(
-				/** @type {import('wrangler').Unstable_Config} */ ({
-					configPath: 'wrangler.jsonc',
-					main: 'dist/index.js',
 					assets: {
 						binding: 'ASSETS'
 					}
 				})
 			)
-		).toThrow(
-			`You must specify the \`assets.directory\` key in wrangler.jsonc. Consult https://developers.cloudflare.com/workers/static-assets/binding/#directory`
-		);
+		).not.toThrow();
 	});
 
-	test('missing `assets.binding` key', () => {
+	test('rejects custom or output Worker entries', () => {
+		for (const main of ['src/worker.ts', 'dist/index.js']) {
+			expect(() =>
+				validate_worker_settings(/** @type {import('wrangler').Unstable_Config} */ ({ main }))
+			).toThrow('Remove `main`');
+		}
+	});
+
+	test('rejects output directories even without a binding', () => {
 		expect(() =>
 			validate_worker_settings(
 				/** @type {import('wrangler').Unstable_Config} */ ({
@@ -68,12 +69,10 @@ describe('validates Wrangler config', () => {
 					}
 				})
 			)
-		).toThrow(
-			`You must specify the \`assets.binding\` key in wrangler.jsonc before deploying your Worker. Consult https://developers.cloudflare.com/workers/static-assets/binding/#binding`
-		);
+		).toThrow('Remove `assets.directory`');
 	});
 
-	test('missing `main` key or should remove `assets.binding` key', () => {
+	test('rejects output directories even without a Worker entry', () => {
 		expect(() =>
 			validate_worker_settings(
 				/** @type {import('wrangler').Unstable_Config} */ ({
@@ -84,9 +83,7 @@ describe('validates Wrangler config', () => {
 					}
 				})
 			)
-		).toThrow(
-			`You must specify the \`main\` key in wrangler.jsonc if you want to deploy a Worker alongside your static assets. Otherwise, remove the \`assets.binding\` key if you only want to deploy static assets.`
-		);
+		).toThrow('Remove `assets.directory`');
 	});
 });
 
