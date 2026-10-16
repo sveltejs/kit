@@ -19,6 +19,7 @@
 </script>
 
 {#snippet node(n: RenderNode, depth: number)}
+	{let reset_key = $state(0)}
 	{const Component = $derived(n.component)}
 	{const Error = $derived(n.error)}
 	{const data = $derived(n.data)}
@@ -27,17 +28,23 @@
 		<Error {error} />
 	{/snippet}
 
-	<svelte:boundary failed={Error ? failed : undefined} onerror={Error ? onerror : undefined}>
-		{#if n.child}
-			<!-- svelte-ignore binding_property_non_reactive -->
-			<Component bind:this={components[depth]} {data} {form} params={page.params}>
-				{@render node(n.child, depth + 1)}
-			</Component>
-		{:else}
-			<!-- svelte-ignore binding_property_non_reactive -->
-			<Component bind:this={components[depth]} {data} {form} params={page.params} {error} />
-		{/if}
-	</svelte:boundary>
+	<!-- Stage retries until their async work settles instead of rendering directly into the page -->
+	{#key reset_key}
+		<svelte:boundary
+			failed={Error ? failed : undefined}
+			onerror={Error ? (error) => onerror(error, () => (reset_key += 1)) : undefined}
+		>
+			{#if n.child}
+				<!-- svelte-ignore binding_property_non_reactive -->
+				<Component bind:this={components[depth]} {data} {form} params={page.params}>
+					{@render node(n.child, depth + 1)}
+				</Component>
+			{:else}
+				<!-- svelte-ignore binding_property_non_reactive -->
+				<Component bind:this={components[depth]} {data} {form} params={page.params} {error} />
+			{/if}
+		</svelte:boundary>
+	{/key}
 {/snippet}
 
 {@render node(tree, 0)}
