@@ -73,13 +73,7 @@ When building for Cloudflare Workers, this adapter expects to find a [Wrangler c
 
 ## Deployment
 
-Run `vite build` (typically via `npm run build`) to produce a deployable Worker. The adapter internally uses [`@cloudflare/vite-plugin`](https://developers.cloudflare.com/workers/vite-plugin/) for the final production Worker build; you do not need to add the Cloudflare plugin to your Vite configuration yourself.
-
-The normal build output is `.svelte-kit/cloudflare/worker/index.js` for the Worker and `.svelte-kit/cloudflare/client` for client assets, including static and prerendered assets. The adapter handles your application's [base path](configuration#paths). The Cloudflare plugin generates `.wrangler/deploy/config.json`, which lets Wrangler find the generated deployment configuration. Do not point your source Wrangler configuration's `main` or `assets.directory` at the build output.
-
-After building, use the Wrangler CLI to deploy your application by running `npx wrangler deploy`, or use the [Cloudflare Git integration](https://developers.cloudflare.com/workers/ci-cd/builds/) to enable automatic builds and deployments on push.
-
-If you enable [source maps](https://vite.dev/config/build-options.html#build-sourcemap) in your Vite build configuration, the Cloudflare-generated deployment configuration handles them.
+You can use the Wrangler CLI to deploy your application by running `npx wrangler deploy` or use the [Cloudflare Git integration](https://developers.cloudflare.com/workers/ci-cd/builds/) to enable automatic builds and deployments on push.
 
 ## Runtime APIs
 
