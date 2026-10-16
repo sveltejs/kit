@@ -4,7 +4,8 @@ import adapter from '@sveltejs/adapter-node';
 /** @type {import('vite').UserConfig} */
 const config = {
 	build: {
-		minify: false
+		minify: false,
+		assetsInlineLimit: (file) => (file.endsWith('.wasm') ? false : undefined)
 	},
 	plugins: [
 		sveltekit({

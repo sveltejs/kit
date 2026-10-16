@@ -55,6 +55,26 @@ test('filters out subdirectory contents', () => {
 	expect(copied.sort()).toEqual(['file-one.js', 'file-two.css'].sort());
 });
 
+test('filters by relative path without excluding matching basenames elsewhere', () => {
+	write('nested/app/immutable/assets/image.png', '');
+	write('chunks/assets/keep.js', '');
+	write('nested/app/keep.js', '');
+	/** @type {Array<[string, string]>} */
+	const visited = [];
+
+	const copied = copy(source_dir, dest_dir, {
+		filter: (basename, path) => {
+			visited.push([basename, path]);
+			return path !== 'nested/app/immutable/assets';
+		}
+	});
+
+	expect(copied.sort()).toEqual(['chunks/assets/keep.js', 'nested/app/keep.js']);
+	expect(visited).toContainEqual(['source', '']);
+	expect(visited).toContainEqual(['assets', 'nested/app/immutable/assets']);
+	expect(visited).not.toContainEqual(['image.png', 'nested/app/immutable/assets/image.png']);
+});
+
 test('copies recursively', () => {
 	write('file-one.js', '');
 	write('file-two.css', '');

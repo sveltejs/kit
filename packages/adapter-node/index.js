@@ -54,7 +54,16 @@ export default function (opts = {}) {
 				});
 			}
 
-			builder.copy(server, `${out}/server`);
+			// Kit has already published these SSR-emitted files to the client output,
+			// which also supplies `$app/server`'s `read` implementation. Keep WebAssembly
+			// files, however, since Vite's SSR helper loads them from the server filesystem.
+			builder.copy(server, `${out}/server`, {
+				// Older Kit versions only pass the basename, so retain their unfiltered copy.
+				filter: (basename, path = '') =>
+					path !== `${builder.config.appDir}/immutable/workers` &&
+					(basename.endsWith('.wasm') ||
+						!path.startsWith(`${builder.config.appDir}/immutable/assets/`))
+			});
 
 			// values only known after the build. `dir` needs the output root
 			fs.writeFileSync(
