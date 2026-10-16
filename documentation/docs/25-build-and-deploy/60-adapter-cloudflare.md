@@ -190,6 +190,6 @@ export default defineConfig({
 
 1. Remove `pages_build_output_dir`, `main`, and `assets.directory` from your Wrangler configuration. Follow [Basic configuration](#Basic-configuration); the adapter manages the Worker entry and assets directory.
 2. Remove the adapter's `routes` option and any `_routes.json` files. Workers Static Assets handles asset routing without them; see [Cloudflare's routing documentation](https://developers.cloudflare.com/workers/static-assets/routing/).
-3. Replace `wrangler pages dev` with `vite preview` and replace `wrangler pages deploy` with `wrangler deploy`. For automatic deployments, use [Workers Builds](https://developers.cloudflare.com/workers/ci-cd/builds/) instead of the Pages Git integration.
+3. Replace `wrangler pages dev` with `vite preview`, and replace `wrangler pages deploy` with `wrangler deploy`. For automatic deployments, use [Workers Builds](https://developers.cloudflare.com/workers/ci-cd/builds/) instead of the Pages Git integration.
 
 You can keep using `_headers` and `_redirects` files in the project root. If you only need a static site on Cloudflare Pages, use [`adapter-static`](adapter-static) instead.
