@@ -1,8 +1,9 @@
 import { execSync } from 'node:child_process';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
-import { assert, describe, expect, test } from 'vitest';
+import { afterEach, assert, beforeEach, describe, expect, test, vi } from 'vitest';
 import create_manifest_data from '../create_manifest_data/index.js';
 import { tweak_types, write_all_types } from './index.js';
 import { write_app_types } from '../write_app_types.js';
@@ -308,4 +309,161 @@ test('Leaves satisfies operator untouched', () => {
 	expect(rewritten?.exports).toEqual(['load', 'actions']);
 	assert.equal(rewritten?.modified, false);
 	assert.equal(rewritten?.code, source);
+});
+
+describe('Cleans up unused files', () => {
+	/** @type {string} */
+	let root;
+
+	beforeEach(() => {
+		root = fs.mkdtempSync(path.join(os.tmpdir(), 'kit-write-types-'));
+
+		for (const dir of ['', 'about']) {
+			const route_dir = path.join(root, 'src/routes', dir);
+			fs.mkdirSync(route_dir, { recursive: true });
+			fs.writeFileSync(path.join(route_dir, '+page.svelte'), '');
+		}
+	});
+
+	afterEach(() => {
+		fs.rmSync(root, { force: true, recursive: true });
+	});
+
+	function sync() {
+		const config = validate_config({});
+		config.files.assets = path.join(root, 'static');
+		config.files.params = path.join(root, 'src/params');
+		config.files.routes = path.join(root, 'src/routes');
+		config.outDir = path.join(root, '.svelte-kit');
+
+		write_all_types(config, create_manifest_data(config, root), root);
+
+		return path.join(config.outDir, 'types');
+	}
+
+	test('root route types are preserved if the root route exists', () => {
+		const types_dir = sync();
+		const root_types = path.join(types_dir, 'src/routes/$types.d.ts');
+		const about_types = path.join(types_dir, 'src/routes/about/$types.d.ts');
+		assert.ok(fs.existsSync(root_types));
+		assert.ok(fs.existsSync(about_types));
+
+		// `path.posix.join('src/routes', '/')` is `src/routes/`, which never matches
+		// `dirname('src/routes/$types.d.ts')`, causing the root types to be removed
+		// (and then regenerated) on every sync. Spy on removals to catch that.
+		const rm_spy = vi.spyOn(fs, 'rmSync');
+
+		try {
+			sync();
+
+			const removed = rm_spy.mock.calls.map(([file]) => String(file));
+			assert.ok(!removed.includes(root_types), 'root $types.d.ts should not be removed');
+			assert.ok(!removed.includes(about_types), 'about $types.d.ts should not be removed');
+		} finally {
+			rm_spy.mockRestore();
+		}
+
+		assert.ok(fs.existsSync(root_types));
+		assert.ok(fs.existsSync(about_types));
+	});
+
+	test('deletes files in directories that no longer correspond to a route', () => {
+		const types_dir = sync();
+
+		const stale = path.join(types_dir, 'src/routes/removed/$types.d.ts');
+		fs.mkdirSync(path.dirname(stale), { recursive: true });
+		fs.writeFileSync(stale, '// stale');
+
+		sync();
+
+		assert.ok(!fs.existsSync(stale));
+	});
+
+	test('regenerates types when a component-only route is removed and re-added', () => {
+		const types_dir = sync();
+		const route_dir = path.join(root, 'src/routes/about');
+		const types_file = path.join(types_dir, 'src/routes/about/$types.d.ts');
+		const meta_data_file = path.join(types_dir, 'route_meta_data.json');
+		const original_types = fs.readFileSync(types_file, 'utf-8');
+
+		fs.rmSync(route_dir, { recursive: true });
+		sync();
+
+		assert.ok(!fs.existsSync(types_file));
+		assert.deepEqual(JSON.parse(fs.readFileSync(meta_data_file, 'utf-8'))['/about'], []);
+
+		// With no own or inherited load files, timestamps and cached inputs cannot
+		// invalidate the cache. The missing $types.d.ts must trigger regeneration.
+		fs.mkdirSync(route_dir, { recursive: true });
+		fs.writeFileSync(path.join(route_dir, '+page.svelte'), '');
+		sync();
+
+		assert.equal(fs.readFileSync(types_file, 'utf-8'), original_types);
+	});
+
+	test('preserves route_meta_data.json', () => {
+		const types_dir = sync();
+		const meta_data_file = path.join(types_dir, 'route_meta_data.json');
+		const root_types = path.join(types_dir, 'src/routes/$types.d.ts');
+		assert.ok(fs.existsSync(meta_data_file));
+
+		// `route_meta_data.json` sits directly in the types dir, so its dirname (`.`) is never
+		// an expected directory. It must be skipped explicitly, otherwise the cache is lost
+		// and every route's types get regenerated on every sync.
+		const rm_spy = vi.spyOn(fs, 'rmSync');
+		fs.writeFileSync(root_types, '// marker');
+
+		try {
+			sync();
+
+			const removed = rm_spy.mock.calls.map(([file]) => String(file));
+			assert.ok(!removed.includes(meta_data_file), 'route_meta_data.json should not be removed');
+		} finally {
+			rm_spy.mockRestore();
+		}
+
+		assert.ok(fs.existsSync(meta_data_file));
+		// nothing changed, so the cached metadata means the types should not be regenerated
+		assert.equal(fs.readFileSync(root_types, 'utf-8'), '// marker');
+	});
+
+	describe('has root route types after repeated syncs', () => {
+		beforeEach(() => {
+			fs.writeFileSync(path.join(root, 'src/routes/+layout.svelte'), '');
+		});
+
+		/** @param {string} types_dir */
+		function assert_types_exist(types_dir) {
+			for (const dir of ['src/routes', 'src/routes/about']) {
+				const file = path.join(types_dir, dir, '$types.d.ts');
+				assert.ok(fs.existsSync(file), `${file} should exist`);
+			}
+		}
+
+		test('in a fresh app (no .svelte-kit)', () => {
+			for (let i = 0; i < 3; i += 1) {
+				assert_types_exist(sync());
+			}
+		});
+
+		test('after output directory is removed', () => {
+			const types_dir = sync();
+
+			fs.rmSync(path.join(types_dir, 'src/routes/$types.d.ts'));
+			fs.rmSync(path.join(types_dir, 'src/routes/about'), { recursive: true });
+
+			assert_types_exist(sync());
+		});
+
+		test('if the source is newer than the types', () => {
+			const types_dir = sync();
+
+			// make the generated file look older than the source so the cache is invalidated
+			const old = new Date(Date.now() - 60_000);
+			fs.utimesSync(path.join(types_dir, 'src/routes/$types.d.ts'), old, old);
+			fs.writeFileSync(path.join(root, 'src/routes/+page.js'), 'export const load = () => ({});');
+
+			assert_types_exist(sync());
+		});
+	});
 });
