@@ -9,3 +9,7 @@ export function load() {
 		rendered_at: Date.now()
 	};
 }
+
+export const actions = {
+	default: () => ({ success: true })
+};
