@@ -119,7 +119,9 @@ describe('build output', () => {
 		expect(fs.rmSync).toHaveBeenCalledWith('build', { recursive: true, force: true });
 		expect(builder.log.minor).toHaveBeenCalledWith('Building server');
 		expect(builder.generateServerInstance).toHaveBeenCalledWith(`${server_dir}/server.js`);
-		expect(builder.copy).toHaveBeenCalledWith(server_dir, 'build/server');
+		expect(builder.copy).toHaveBeenCalledWith(server_dir, 'build/server', {
+			filter: expect.any(Function)
+		});
 		expect(builder.copy).toHaveBeenCalledWith(handoff_file, 'build/adapter-bun.js');
 		expect(write_file).toHaveBeenCalledWith(
 			'build/index.js',
@@ -129,6 +131,26 @@ describe('build output', () => {
 		expect(builder.instrument).not.toHaveBeenCalled();
 		expect(builder.compress).not.toHaveBeenCalled();
 	});
+
+	test.each(['_app', 'nested/app'])(
+		'does not copy public assets for appDir %s',
+		async (app_dir) => {
+			const builder = create_builder({ app_dir });
+			await adapter().adapt(builder);
+
+			const filter = builder.copy.mock.calls[0][2].filter;
+			expect(filter('assets', `${app_dir}/immutable/assets`)).toBe(true);
+			expect(filter('image.png', `${app_dir}/immutable/assets/image.png`)).toBe(false);
+			expect(filter('data.txt', `${app_dir}/immutable/assets/data.txt`)).toBe(false);
+			expect(filter('module.wasm', `${app_dir}/immutable/assets/module.wasm`)).toBe(true);
+			expect(filter('workers', `${app_dir}/immutable/workers`)).toBe(false);
+			expect(filter('assets', 'chunks/assets')).toBe(true);
+			expect(filter('server.js', 'server.js')).toBe(true);
+			expect(filter('keep.txt', `${app_dir}/immutable/assets-other/keep.txt`)).toBe(true);
+			// The adapter still supports Kit versions without the second argument.
+			expect(filter('assets')).toBe(true);
+		}
+	);
 
 	test('hands the configured values to the server', async () => {
 		await adapter({
@@ -428,6 +450,7 @@ function create_builder({
 	routes = [],
 	server_assets = [],
 	base = '',
+	app_dir = '_app',
 	origin,
 	instrumentation = false
 }: {
@@ -438,11 +461,12 @@ function create_builder({
 	routes?: Array<{ id: string; prerender: boolean | string }>;
 	server_assets?: string[];
 	base?: string;
+	app_dir?: string;
 	origin?: string;
 	instrumentation?: boolean;
 } = {}) {
 	return {
-		config: { outDir: '.svelte-kit', paths: { base, origin }, appDir: '_app' },
+		config: { outDir: '.svelte-kit', paths: { base, origin }, appDir: app_dir },
 		routes,
 		prerendered: {
 			pages: new Map(prerendered_pages),

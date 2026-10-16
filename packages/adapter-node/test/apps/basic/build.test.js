@@ -30,3 +30,19 @@ test('dependencies are not bundled', () => {
 test('everything else is bundled', () => {
 	expect(leaked_imports(app, 'build')).toEqual([]);
 });
+
+test('does not copy public assets into the server output', () => {
+	const files = fs.readdirSync(path.join(app, 'build/client/_app/immutable/assets'));
+	expect(files.some((file) => file.startsWith('image.'))).toBe(true);
+	expect(files.some((file) => file.startsWith('server-only.'))).toBe(true);
+	const server_files = fs.readdirSync(path.join(app, 'build/server/_app/immutable/assets'));
+	// Unlike URL imports, WebAssembly initializers need their files on the server.
+	expect(server_files).toEqual(files.filter((file) => file.endsWith('.wasm')));
+	expect(server_files).toHaveLength(1);
+	expect(fs.existsSync(path.join(app, 'build/server/_app/immutable/workers'))).toBe(false);
+});
+
+test('loads emitted WebAssembly from the server filesystem', async () => {
+	const { GET } = await import(path.join(app, 'build/server/entries/endpoints/wasm/_server.js'));
+	expect(await (await GET()).json()).toEqual([]);
+});

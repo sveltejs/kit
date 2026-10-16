@@ -1,3 +1,5 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import { expect, test } from '@playwright/test';
 
 test('SSR', async ({ page }) => {
@@ -97,4 +99,30 @@ test('serves immutable assets with an immutable cache header', async ({ request 
 	const response = await request.get(asset);
 	expect(response.status()).toBe(200);
 	expect(response.headers()['cache-control']).toBe('public,max-age=31536000,immutable');
+});
+
+test('does not duplicate imported assets in the server output', async ({ page, request }) => {
+	await page.goto('/assets');
+	await expect(page.locator('p')).toHaveText('server-only asset');
+	const image = page.getByAltText('Imported asset');
+	await expect(image).toBeVisible();
+	expect(await image.evaluate((img) => img.complete && img.naturalWidth > 0)).toBe(true);
+
+	for (const url of [
+		await image.getAttribute('src'),
+		await page.getByText('Server-only asset', { exact: true }).getAttribute('href'),
+		await page.getByText('Worker asset', { exact: true }).getAttribute('href')
+	]) {
+		expect(url).toMatch(/\/_app\/immutable\/(assets|workers)\//);
+		const file = new URL(url, page.url()).pathname.slice(1);
+		expect((await request.get(url)).status()).toBe(200);
+		expect(fs.existsSync(path.join('build/client', file))).toBe(true);
+		expect(fs.existsSync(path.join('build/server', file))).toBe(false);
+	}
+});
+
+test('loads emitted WebAssembly on the server', async ({ request }) => {
+	const response = await request.get('/wasm');
+	expect(response.status()).toBe(200);
+	expect(await response.json()).toEqual([]);
 });

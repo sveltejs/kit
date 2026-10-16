@@ -7,7 +7,7 @@ import { rebase_sourcemap } from './sourcemap.js';
  * @param {string} source
  * @param {string} target
  * @param {{
- *   filter?: (basename: string) => boolean;
+ *   filter?: (basename: string, path: string) => boolean;
  *   replace?: Record<string, string>;
  * }} opts
  */
@@ -31,7 +31,7 @@ export function copy(source, target, opts = {}) {
 	 * @param {boolean} is_directory
 	 */
 	function go(from, to, file, is_directory) {
-		if (opts.filter && !opts.filter(path.basename(from))) return;
+		if (opts.filter && !opts.filter(path.basename(from), file)) return;
 
 		if (is_directory) {
 			for (const entry of fs.readdirSync(from, { withFileTypes: true })) {
