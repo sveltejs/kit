@@ -35,6 +35,24 @@ test.describe('adapter', () => {
 });
 
 test.describe('Imports', () => {
+	test('isolates runtime dependencies from older application dependencies', async ({
+		page,
+		context
+	}) => {
+		await page.goto('/runtime-dependencies');
+
+		await expect(page.locator('#current')).toHaveText('https://example.com/kit');
+		await expect(page.locator('#current')).toHaveClass('kit current');
+		await expect(page.locator('#legacy-cookie')).toHaveText('legacy=app');
+		await expect(page.locator('#legacy-devalue')).toHaveText('{hello:"app"}');
+		await expect(page.locator('#legacy-class')).toHaveClass('app legacy');
+		expect(await context.cookies()).toEqual(
+			expect.arrayContaining([
+				expect.objectContaining({ name: 'runtime-dependency', value: 'kit' })
+			])
+		);
+	});
+
 	// https://github.com/sveltejs/kit/issues/461
 	test('handles static asset imports', async ({ baseURL, page }) => {
 		await page.goto('/asset-import');
