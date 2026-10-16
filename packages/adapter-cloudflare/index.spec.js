@@ -88,7 +88,9 @@ test.each([
 			expect(fs.readFileSync(`${dest}/_redirects`, 'utf8')).toContain('/old /new 301');
 
 			if (generated) {
-				expect(generateFallback).toHaveBeenCalledExactlyOnceWith(`${dest}/base/${generated}`);
+				expect(generateFallback).toHaveBeenCalledExactlyOnceWith(
+					path.join(dest, 'base', generated)
+				);
 			} else {
 				expect(generateFallback).not.toHaveBeenCalled();
 				if (not_found_handling === '404-page') {
