@@ -70,11 +70,6 @@ When building for Cloudflare Workers, this adapter expects to find a [Wrangler c
 }
 ```
 
-Do not set `main`; the adapter generates the Worker entry.
-
-The adapter manages `assets.directory` and rejects configurations that specify it. You can set `assets.binding` (which defaults to `ASSETS`) and other `assets` settings, such as `not_found_handling`.
-
-SvelteKit's [`paths.assets`](configuration#paths) option is not supported because `vite preview` cannot serve assets from a separate location. Leave it unset; [`paths.base`](configuration#paths) is supported.
 
 ## Deployment
 
