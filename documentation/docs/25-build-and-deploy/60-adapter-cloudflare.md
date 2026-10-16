@@ -49,7 +49,7 @@ Path to your [Wrangler configuration file](https://developers.cloudflare.com/wor
 
 ### platformProxy
 
-Preferences for the emulated `env` local bindings during development only. The Node.js development server uses [`getPlatformProxy`](https://developers.cloudflare.com/workers/wrangler/api/#parameters-1); these options do not apply to `vite preview`, which runs the built application in workerd. See the Wrangler API documentation for a full list of options.
+Preferences for the emulated `env` local bindings during development. See the [`getPlatformProxy`](https://developers.cloudflare.com/workers/wrangler/api/#parameters-1) Wrangler API documentation for a full list of options.
 
 ### fallback
 
