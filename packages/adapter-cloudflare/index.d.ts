@@ -28,9 +28,7 @@ export interface AdapterOptions {
 
 	/**
 	 * Config object passed to [`getPlatformProxy`](https://developers.cloudflare.com/workers/wrangler/api/#getplatformproxy)
-	 * during development only. The development server runs in Node.js, not workerd.
-	 * Preview uses the Cloudflare Vite plugin to serve the built application in workerd
-	 * and does not use these options.
+	 * during development.
 	 */
 	platformProxy?: GetPlatformProxyOptions;
 }
