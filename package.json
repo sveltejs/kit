@@ -38,7 +38,7 @@
 		"@sveltejs/eslint-config": "catalog:",
 		"@types/node": "catalog:",
 		"eslint": "catalog:",
-		"oxfmt": "^0.72.0",
+		"oxfmt": "^0.73.0",
 		"vite": "catalog:",
 		"vitest": "catalog:"
 	},
