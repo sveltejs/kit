@@ -15,6 +15,15 @@ export default defineConfig({
 		include: ['cookie']
 	},
 	plugins: [
+		{
+			name: 'virtual-css',
+			resolveId(id) {
+				if (id === 'virtual:styles.css') return '\0virtual:styles.css';
+			},
+			load(id) {
+				if (id.split('?')[0] === '\0virtual:styles.css') return '.virtual { color: orange; }';
+			}
+		},
 		sveltekit({
 			adapter: {
 				name: 'test-adapter',
