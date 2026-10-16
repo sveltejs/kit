@@ -53,10 +53,10 @@ declare module '@sveltejs/kit' {
 
 	export interface AdapterViteConfig {
 		/**
-		 * Whether SvelteKit should install its Node-based preview server. Set to `false`
+		 * Whether SvelteKit should use its Node-based preview server. Set to `false`
 		 * when the adapter provides its own preview implementation through a Vite plugin.
 		 * @default true
-		 * @since 3.0.0
+		 * @since 3.2.0
 		 */
 		preview?: boolean;
 		/**
