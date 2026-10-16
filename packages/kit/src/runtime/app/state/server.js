@@ -49,8 +49,10 @@ export const navigating = {
 	from: null,
 	to: null,
 	type: null,
+	shallow: null,
 	willUnload: null,
 	delta: null,
+	event: null,
 	complete: null
 };
 
