@@ -1,4 +1,5 @@
 /** @import { Component } from 'svelte'; */
+/** @import { RenderNode } from '../../props.svelte.js'; */
 /** @import { SyncRenderOutput } from 'svelte/server' */
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
@@ -31,7 +32,7 @@ import * as env from '<sveltekit:generated>/env/config.js';
 import { collect_remote_data } from '../remote-functions.js';
 import Root from '../../components/root.svelte';
 import { render } from 'svelte/server';
-import { Props, RenderNode } from '../../props.svelte.js';
+import { Props, create_render_tree } from '../../props.svelte.js';
 import { has_custom_transporters, uneval } from '#app/internal/transport';
 import { manifest } from '../internal.js';
 import { options } from '<sveltekit:generated>/server.js';
@@ -152,37 +153,30 @@ export async function render_response({
 			state: {}
 		};
 
-		const props = new Props({
-			page,
-			tree: new RenderNode(
-				// TODO tidy up
-				/** @type {Component} */ (await branch[0].node.component?.()),
-				undefined
-			),
-			form: form_value,
-			error: error ?? undefined
-		});
-
-		let current_node = props.tree;
-		let data = props.page.data;
+		/** @type {Array<Pick<RenderNode, 'component' | 'error' | 'data'>>} */
+		const nodes = [];
+		let data = page.data;
 
 		for (let i = 0; i < branch.length; i += 1) {
 			const node = branch[i];
-
 			data = { ...data, ...node.data };
 
-			current_node.data = data;
-
-			if (i < branch.length - 1) {
-				current_node = current_node.child = new RenderNode(
-					// TODO tidy up
-					/** @type {Component} */ (await branch[i + 1].node.component?.()),
-					error_components?.[i + 1]
-				);
-			}
+			nodes.push({
+				// TODO tidy up
+				component: /** @type {Component} */ (await node.node.component?.()),
+				error: i === 0 ? undefined : error_components?.[i],
+				data
+			});
 		}
 
-		props.page.data = data;
+		page.data = data;
+
+		const props = new Props({
+			page,
+			tree: create_render_tree(nodes),
+			form: form_value,
+			error: error ?? undefined
+		});
 
 		const render_state = { ...state, is_in_render: true };
 

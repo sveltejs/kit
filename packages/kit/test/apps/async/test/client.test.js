@@ -4,6 +4,30 @@ import { test } from '../../../utils.js';
 
 test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
 
+for (const ssr of [true, false]) {
+	test(`renders nested load data inside a pending boundary (ssr: ${ssr})`, async ({
+		page,
+		app
+	}) => {
+		/** @type {string[]} */
+		const errors = [];
+		page.on('pageerror', (error) => errors.push(error.message));
+
+		const path = `/render-tree/child${ssr ? '' : '/csr'}`;
+		await page.goto(path);
+		expect(errors).toEqual([]);
+		await expect(page.locator('#rendered')).toHaveText('root / child');
+
+		await page.reload();
+		await expect(page.locator('#rendered')).toHaveText('root / child');
+
+		await app.goto('/');
+		await app.goto(path);
+		await expect(page.locator('#rendered')).toHaveText('root / child');
+		expect(errors).toEqual([]);
+	});
+}
+
 test.describe('remote functions', () => {
 	test('preloading data works when the page component and server load both import a remote function', async ({
 		page,
