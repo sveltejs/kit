@@ -11,10 +11,6 @@
 		restore: (value) => {
 			message = value;
 			order.push('restore');
-		},
-		reset: () => {
-			message = '';
-			order.push('reset');
 		}
 	});
 
