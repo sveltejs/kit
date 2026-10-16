@@ -7,6 +7,12 @@ test('worker', async ({ page }) => {
 	await expect(page.locator('h1')).toContainText('Sum: 3');
 });
 
+test('reads a prerendered remote function during SSR', async ({ request }) => {
+	const response = await request.get('/');
+	expect(response.status()).toBe(200);
+	expect(await response.text()).toContain('from prerendered asset');
+});
+
 test('cloudflare:workers', async ({ request }) => {
 	const res = await request.get('/env');
 	expect(await res.text()).toBe('from wrangler.jsonc');

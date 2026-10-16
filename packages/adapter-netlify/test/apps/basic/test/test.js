@@ -8,6 +8,12 @@ test('page renders', async ({ request }) => {
 	expect(await response.text()).toContain('Hello from SvelteKit');
 });
 
+test('reads a prerendered remote function during SSR', async ({ request }) => {
+	const response = await request.get('/');
+	expect(response.status()).toBe(200);
+	expect(await response.text()).toContain('from prerendered asset');
+});
+
 test('dynamic route works', async ({ request }) => {
 	const response = await request.get('/greeting/world');
 	expect(response.status()).toBe(200);
