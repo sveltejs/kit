@@ -941,9 +941,8 @@ async function initialize(result, target, should_hydrate) {
 	}
 
 	restore_snapshot(current_navigation_index);
+	// Client-only startup restores in `navigate` so don't restore twice
 	if (hydrated) {
-		// Client-only startup restores in navigate, after afterNavigate callbacks.
-		// Hydration also restores here if a load error made us mount the error page instead.
 		restore_navigation_snapshot(current_history_index);
 	}
 
