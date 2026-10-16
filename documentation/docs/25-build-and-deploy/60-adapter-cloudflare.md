@@ -104,11 +104,12 @@ To make these types available to your app, install [`wrangler`](https://www.npmj
 
 ### Testing locally
 
-`vite dev` runs SvelteKit in Node.js and uses Wrangler's `getPlatformProxy` to emulate Cloudflare-specific values. Local [bindings](https://developers.cloudflare.com/workers/wrangler/configuration/#bindings) are created based on your [Wrangler configuration file](https://developers.cloudflare.com/workers/wrangler/) and populate `env`. Use the adapter's [`platformProxy` option](#Options-platformProxy) to configure these development bindings. Workerd-backed development is not supported.
+Cloudflare specific values are emulated during development. Local [bindings](https://developers.cloudflare.com/workers/wrangler/configuration/#bindings) are created based on your [Wrangler configuration file](https://developers.cloudflare.com/workers/wrangler/) and are used to populate `env` during development and preview. Use the adapter's [`platformProxy` option](#Options-platformProxy) to change your preferences for the bindings.
 
-After running `vite build`, run `vite preview` to serve the built Worker and assets in [workerd](https://github.com/cloudflare/workerd) using the Cloudflare Vite plugin's native preview support. Preview defaults to Vite's port `4173`; use `vite preview --port <port>` to choose another port. Unlike development, preview uses the built Worker's runtime and does not use `platformProxy` options.
 
 > [!NOTE] Durable Objects and Workflows defined in your own Worker require custom class exports, which are not supported by this adapter. You can bind to Durable Objects deployed in a separate Worker.
+
+For testing the build, you should use [Wrangler](https://developers.cloudflare.com/workers/wrangler/) version 4. Once you have built your site, run `wrangler dev`.
 
 ## Headers and redirects
 
