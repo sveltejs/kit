@@ -1,5 +1,5 @@
 import { assert, describe, test } from 'vitest';
-import { fix_css_urls, tippex_comments_and_strings } from './css.js';
+import { fix_css_urls, split_font_faces, tippex_comments_and_strings } from './css.js';
 
 describe('fix_css_urls', () => {
 	const cdn_assets = 'https://cdn.example.com/_app/immutable/assets';
@@ -264,5 +264,58 @@ describe('tippex_comments_and_strings', () => {
 			'test is correctly formed (input and expected lengths should always match)'
 		);
 		assert.equal(result.length, input.length, 'output length must equal input length');
+	});
+});
+
+describe('split_font_faces', () => {
+	test('leaves stylesheets without font faces alone', () => {
+		const css = '.a { color: red; }\n@media (min-width: 1px) { .b { color: blue; } }';
+		assert.deepEqual(split_font_faces(css), { font_faces: '', rest: css });
+	});
+
+	test('moves top-level font faces out', () => {
+		assert.deepEqual(
+			split_font_faces(
+				"@font-face { font-family: 'A'; src: url(a.woff2); }\n.a { font-family: 'A'; }"
+			),
+			{
+				font_faces: "@font-face { font-family: 'A'; src: url(a.woff2); }",
+				rest: "\n.a { font-family: 'A'; }"
+			}
+		);
+	});
+
+	test('recognises the at-rule however it is written', () => {
+		const css =
+			'@FONT-FACE{font-family:A}@font\\2d face{font-family:B}@\\66ont-face{font-family:C}';
+		assert.deepEqual(split_font_faces(css), { font_faces: css.replace(/\}@/g, '}\n@'), rest: '' });
+	});
+
+	test('reads comments, strings, URLs and escapes like a browser', () => {
+		const font_face = '@font-face { src: url(a}b.woff2), url("c}d.woff2"); font-family: "\\"}" }';
+		const css = `/* @font-face { */ .a\\{ { content: "}" } .b { c: 1url(}) }\n${font_face}`;
+		assert.deepEqual(split_font_faces(css), {
+			font_faces: font_face,
+			rest: '/* @font-face { */ .a\\{ { content: "}" } .b { c: 1url(}) }\n'
+		});
+	});
+
+	test.each([
+		['@media print { @font-face { font-family: A; } }'],
+		['@layer base { @font-face { font-family: A; } }'],
+		['.a { @font-face { font-family: A; } }'],
+		['@import url(https://example.com/fonts.css);\n@font-face { font-family: A; }'],
+		['@font-face { font-family: A; }\n@namespace svg url(http://www.w3.org/2000/svg);'],
+		['<!--\n@font-face { font-family: A; }\n-->'],
+		['.a { content: "b\n}" } @font-face { font-family: A; }'],
+		['.a { b: url(c"d) } @font-face { font-family: A; }'],
+		['#url(}) @font-face { font-family: A; }'],
+		['} @font-face { font-family: A; }'],
+		['@font-face;'],
+		['@font-face { font-family: A; } .a { color: red'],
+		['@font-face { font-family: A; } /* b'],
+		['@font-face { font-family: A; } @layer b']
+	])('gives up on %j', (css) => {
+		assert.equal(split_font_faces(css), null);
 	});
 });

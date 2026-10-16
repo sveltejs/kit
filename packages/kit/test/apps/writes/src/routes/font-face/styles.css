@@ -1,0 +1,5 @@
+@font-face {
+	font-family: 'Hot Face';
+	src: url('/missing.woff2') format('woff2');
+	unicode-range: U+0-FF;
+}

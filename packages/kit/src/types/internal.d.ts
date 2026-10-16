@@ -515,14 +515,19 @@ export interface SSRNode {
 	server_id?: string;
 
 	/**
-	 * During development, all styles are inlined for the page to avoid FOUC.
-	 * But in production, this stores styles that are below the inline threshold.
-	 * It returns a Promise during development because Vite needs to load the
-	 * modules on demand. But in production, the contents have been precomputed
-	 * during the build, so it can return synchronously.
+	 * In production, this stores styles that are below the inline threshold.
 	 */
 	inline_styles?(): MaybePromise<
 		Record<string, string | ((assets: string, base: string) => string)>
+	>;
+	/**
+	 * During development, all styles are inlined for the page to avoid FOUC.
+	 * `split` holds their top-level `@font-face` rules separately, so that they
+	 * can stay in the page after hydration, or is `null` if they can't be moved.
+	 * It returns a Promise because Vite needs to load the modules on demand.
+	 */
+	dev_styles?(): Promise<
+		Array<{ url: string; css: string; split: { font_faces: string; rest: string } | null }>
 	>;
 	/** Svelte component */
 	component?: SSRComponentLoader;
