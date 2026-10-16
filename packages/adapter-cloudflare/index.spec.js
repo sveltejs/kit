@@ -75,8 +75,6 @@ test.each([
 		);
 
 		try {
-			// A Pages environment must not select the removed Pages build path.
-			vi.stubEnv('CF_PAGES', '1');
 			await adapter({ fallback: /** @type {'plaintext' | 'spa'} */ (fallback) }).adapt(builder);
 
 			expect(builder.writeClient).toHaveBeenCalledWith(`${dest}/base`);
@@ -102,6 +100,39 @@ test.each([
 		} finally {
 			vi.unstubAllEnvs();
 			fs.rmSync(root, { recursive: true, force: true });
+		}
+	}
+);
+
+test.each([
+	{ config: {}, workers_ci: '' },
+	{
+		config: { main: 'dist/index.js', assets: { directory: 'dist', binding: 'ASSETS' } },
+		workers_ci: '1'
+	}
+])(
+	'rejects Pages CI before writing build output with $config and WORKERS_CI=$workers_ci',
+	async ({ config, workers_ci }) => {
+		vi.mocked(unstable_readConfig).mockReturnValue(
+			/** @type {import('wrangler').Unstable_Config} */ (config)
+		);
+		const getBuildDirectory = vi.fn();
+		const builder = /** @type {import('@sveltejs/kit').Builder} */ (
+			/** @type {unknown} */ ({
+				config: { files: { assets: 'static' } },
+				getBuildDirectory
+			})
+		);
+
+		try {
+			vi.stubEnv('CF_PAGES', '1');
+			vi.stubEnv('WORKERS_CI', workers_ci);
+			await expect(adapter().adapt(builder)).rejects.toThrow(
+				'Cloudflare Pages is no longer supported. Deploy with Cloudflare Workers instead. Consult https://svelte.dev/docs/kit/adapter-cloudflare#Migrating-from-Cloudflare-Pages'
+			);
+			expect(getBuildDirectory).not.toHaveBeenCalled();
+		} finally {
+			vi.unstubAllEnvs();
 		}
 	}
 );

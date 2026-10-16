@@ -191,7 +191,7 @@ assets.binding = "ASSETS" # Exclude this if you don't have a `main` key configur
 
 ## Migrating from Cloudflare Pages
 
-`adapter-cloudflare` no longer supports Cloudflare Pages. See Cloudflare's [Workers and Pages compatibility matrix](https://developers.cloudflare.com/workers/static-assets/migration-guides/migrate-from-pages/#compatibility-matrix) for a comparison of supported features. To migrate to Cloudflare Workers:
+`adapter-cloudflare` no longer supports Cloudflare Pages and throws a migration error when running in Pages CI (`CF_PAGES`) or when `pages_build_output_dir` is configured. See Cloudflare's [Workers and Pages compatibility matrix](https://developers.cloudflare.com/workers/static-assets/migration-guides/migrate-from-pages/#compatibility-matrix) for a comparison of supported features. To migrate to Cloudflare Workers:
 
 1. Remove `pages_build_output_dir` from your Wrangler configuration and add the `main` and `assets` settings shown in [Basic configuration](#Basic-configuration).
 2. Remove the adapter's `routes` option and any `_routes.json` files. Workers Static Assets handles asset routing without them; see [Cloudflare's routing documentation](https://developers.cloudflare.com/workers/static-assets/routing/).

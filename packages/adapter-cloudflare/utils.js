@@ -1,7 +1,15 @@
+import process from 'node:process';
+
 /**
  * @param {import('wrangler').Unstable_Config} wrangler_config
  */
 export function validate_worker_settings(wrangler_config) {
+	if (process.env.CF_PAGES) {
+		throw new Error(
+			`Cloudflare Pages is no longer supported. Deploy with Cloudflare Workers instead. Consult https://svelte.dev/docs/kit/adapter-cloudflare#Migrating-from-Cloudflare-Pages`
+		);
+	}
+
 	const config_path = wrangler_config.configPath || 'your wrangler.jsonc file';
 
 	if (wrangler_config.pages_build_output_dir) {
