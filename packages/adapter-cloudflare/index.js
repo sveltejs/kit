@@ -217,12 +217,7 @@ export default function (options = {}) {
 }
 
 /**
- * Reloads the shared Cloudflare platform proxy in place after a wrangler
- * config change. Reads a fresh proxy, swaps it into globalThis so the
- * virtual workers module and inbound-request `cf` getter see the new
- * bindings, points the shared setup record at it, and disposes the
- * previous proxy. Hoisted so the dev-server watcher handler stays flat.
- *
+ * Sets a new platform proxy and disposes the old one if it exists
  * @param {GetPlatformProxyOptions} options
  */
 async function reload_cloudflare_platform_proxy(options) {
