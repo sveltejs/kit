@@ -1408,6 +1408,76 @@ test.describe('env', () => {
 });
 
 test.describe('Snapshots', () => {
+	test('restores function snapshots when hydration falls back to mounting an error page', async ({
+		page
+	}) => {
+		await page.goto('/errors/load-client?snapshot');
+		await expect(page.locator('h1')).toHaveText('500');
+		await page.locator('[data-testid="stale-input"]').fill('error value');
+
+		await page.reload();
+		await expect(page.locator('h1')).toHaveText('500');
+		await expect(page.locator('[data-testid="stale-input"]')).toHaveValue('error value');
+	});
+
+	test('preserves distinct shallow snapshots across reload when ssr is disabled', async ({
+		page,
+		app
+	}) => {
+		await page.goto('/no-ssr/snapshot/helper');
+		const input = page.locator('input');
+		await input.fill('first entry');
+
+		await app.goto('/no-ssr/snapshot/helper?second', { shallow: true });
+		await expect(input).toHaveValue('');
+		await input.fill('second entry');
+		await page.reload();
+		await expect(input).toHaveValue('second entry');
+
+		await page.goBack();
+		await expect(input).toHaveValue('first entry');
+
+		await page.goForward();
+		await expect(input).toHaveValue('second entry');
+	});
+
+	for (const type of ['export', 'helper']) {
+		test(`restores ${type} snapshots on reload when ssr is disabled`, async ({ page }) => {
+			await page.goto(`/no-ssr/snapshot/${type}`);
+			await page.locator('input').fill('reload value');
+			await page.reload();
+			await expect(page.locator('input')).toHaveValue('reload value');
+		});
+	}
+
+	test('restores function snapshots once after afterNavigate when ssr is disabled', async ({
+		page
+	}) => {
+		await page.goto('/no-ssr/snapshot/helper');
+		await expect(page.locator('[data-testid="order"]')).toHaveText('afterNavigate');
+		await page.locator('input').fill('reload value');
+
+		await page.reload();
+		await expect(page.locator('input')).toHaveValue('reload value');
+		await expect(page.locator('[data-testid="order"]')).toHaveText('afterNavigate,restore');
+	});
+
+	test('clears function snapshots on real replacements when ssr is disabled', async ({
+		page,
+		app
+	}) => {
+		await page.goto('/no-ssr/snapshot/helper');
+		await page.locator('input').fill('reload value');
+		await page.reload();
+		await expect(page.locator('input')).toHaveValue('reload value');
+
+		await app.goto('/no-ssr/snapshot/helper?replaced', { replace: true });
+		await expect(page.locator('input')).toHaveValue('');
+		await expect(page.locator('[data-testid="order"]')).toHaveText(
+			'afterNavigate,restore,afterNavigate,reset'
+		);
+	});
+
 	test('recovers snapshotted data', async ({ page, clicknav }) => {
 		await page.goto('/snapshot/a');
 

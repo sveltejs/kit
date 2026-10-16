@@ -941,7 +941,11 @@ async function initialize(result, target, should_hydrate) {
 	}
 
 	restore_snapshot(current_navigation_index);
-	restore_navigation_snapshot(current_history_index);
+	if (hydrated) {
+		// Client-only startup restores in navigate, after afterNavigate callbacks.
+		// Hydration also restores here if a load error made us mount the error page instead.
+		restore_navigation_snapshot(current_history_index);
+	}
 
 	started = true;
 }
@@ -2077,7 +2081,8 @@ async function navigate({
 
 	updating = true;
 
-	if (!popped) {
+	// Initial entry has no outgoing page, and its persisted snapshots must survive startup.
+	if (started && !popped) {
 		// popstate captures the source entry synchronously, before the traversal is resolved
 		capture_scroll(previous_history_index);
 		capture_snapshot(previous_navigation_index);
