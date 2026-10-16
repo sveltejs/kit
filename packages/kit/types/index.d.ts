@@ -2665,6 +2665,10 @@ declare module '$app/navigation' {
 	 */
 	export interface NavigationGoto extends NavigationBase {
 		type: 'goto';
+		/**
+		 * Dispatched `Event` object when navigation occurred by `popstate` or `link`.
+		 */
+		event?: undefined;
 	}
 
 	/**
@@ -2672,6 +2676,10 @@ declare module '$app/navigation' {
 	 */
 	export interface NavigationLeave extends NavigationBase {
 		type: 'leave';
+		/**
+		 * Dispatched `Event` object when navigation occurred by `popstate` or `link`.
+		 */
+		event?: undefined;
 	}
 
 	/**

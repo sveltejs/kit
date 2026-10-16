@@ -15,6 +15,7 @@ declare global {
 			active?: boolean;
 			count?: number;
 			foo?: Foo;
+			shallow?: number;
 		}
 	}
 

@@ -148,6 +148,11 @@ export type NavigationExternal = NavigationGoto | NavigationLeave;
  */
 export interface NavigationGoto extends NavigationBase {
 	type: 'goto';
+
+	/**
+	 * Dispatched `Event` object when navigation occurred by `popstate` or `link`.
+	 */
+	event?: undefined;
 }
 
 /**
@@ -155,6 +160,11 @@ export interface NavigationGoto extends NavigationBase {
  */
 export interface NavigationLeave extends NavigationBase {
 	type: 'leave';
+
+	/**
+	 * Dispatched `Event` object when navigation occurred by `popstate` or `link`.
+	 */
+	event?: undefined;
 }
 
 /**
