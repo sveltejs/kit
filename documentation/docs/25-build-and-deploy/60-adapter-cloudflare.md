@@ -167,7 +167,6 @@ export default defineConfig({
 ```toml
 /// file: wrangler.toml
 ---site.bucket = ".cloudflare/public"---
-+++assets.binding = "ASSETS" # Optional; this is the default.+++
 ```
 
 ### wrangler.jsonc
@@ -177,10 +176,7 @@ export default defineConfig({
 {
 ---	"site": {
 		"bucket": ".cloudflare/public"
-	},---
-+++	"assets": {
-		"binding": "ASSETS" // Optional; this is the default.
-	}+++
+	}---
 }
 ```
 
