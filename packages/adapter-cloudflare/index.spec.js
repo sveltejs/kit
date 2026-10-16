@@ -66,7 +66,8 @@ test.each([
 	'builds Workers assets with $not_found_handling and $fallback',
 	async ({ not_found_handling, fallback, generated }) => {
 		const root = fs.mkdtempSync(path.join(os.tmpdir(), 'adapter-cloudflare-'));
-		const dest = path.join(root, 'cloudflare-tmp/assets');
+		const tmp = path.join(root, 'cloudflare-tmp');
+		const dest = `${tmp}/assets`;
 		const server = path.join(root, 'server');
 		const generateFallback = vi.fn();
 		const copy = vi.fn();
@@ -134,7 +135,7 @@ test.each([
 				customize(config);
 				expect(config).toMatchObject({
 					main: path.join(root, 'cloudflare-tmp/worker.js'),
-					assets: { binding: 'CUSTOM_ASSETS', directory: dest },
+					assets: { binding: 'CUSTOM_ASSETS', directory: path.resolve(dest) },
 					compatibility_flags: [flag ?? 'nodejs_als']
 				});
 			}
@@ -142,7 +143,7 @@ test.each([
 			expect(createBuilder).toHaveBeenCalledWith(
 				expect.objectContaining({
 					configFile: false,
-					publicDir: dest,
+					publicDir: path.resolve(dest),
 					build: expect.objectContaining({ outDir: path.join(root, 'cloudflare'), sourcemap: true })
 				})
 			);
@@ -155,13 +156,9 @@ test.each([
 
 			expect(builder.writeClient).toHaveBeenCalledWith(`${dest}/base`);
 			expect(builder.writePrerendered).toHaveBeenCalledWith(`${dest}/base`);
-			expect(copy).toHaveBeenCalledWith(
-				expect.any(String),
-				path.join(root, 'cloudflare-tmp/worker.js'),
-				{
-					replace: expect.objectContaining({ ASSETS_BINDING: 'CUSTOM_ASSETS' })
-				}
-			);
+			expect(copy).toHaveBeenCalledWith(expect.any(String), `${tmp}/worker.js`, {
+				replace: expect.objectContaining({ ASSETS_BINDING: 'CUSTOM_ASSETS' })
+			});
 			expect(fs.existsSync(`${dest}/_routes.json`)).toBe(false);
 			expect(fs.readFileSync(`${dest}/.assetsignore`, 'utf8')).toContain('_worker.js');
 			expect(fs.readFileSync(`${dest}/_headers`, 'utf8')).toContain('/base/_app/immutable/*');
