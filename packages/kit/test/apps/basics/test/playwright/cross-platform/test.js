@@ -565,6 +565,18 @@ test.describe('Redirects', () => {
 		expect(page.url()).toBe(`${baseURL}/redirect`);
 	});
 
+	test('normalizes trailing slashes before resolving relative redirects', async ({
+		baseURL,
+		page,
+		clicknav
+	}) => {
+		await page.goto('/redirect');
+		await clicknav('[href="/redirect/a/"]');
+
+		expect(page.url()).toBe(`${baseURL}/redirect/c`);
+		await expect(page.locator('h1')).toHaveText('c');
+	});
+
 	test('prevents redirect loops', async ({ baseURL, page, javaScriptEnabled, browserName }) => {
 		await page.goto('/redirect');
 
