@@ -270,14 +270,7 @@ function virtual_workers_module(options, stub_import) {
 				configurable: true
 			});
 
-			// Watch the wrangler config file for changes and swap the platform proxy
-			// in place when it is edited — recreating only the shared proxy instead
-			// of restarting the whole dev server (per @teemingc on #17432). The
-			// previous proxy is disposed, a fresh one is read from the on-disk
-			// config, and `globalThis.__sveltekit_cloudflare_platform{,_setup}` plus
-			// `globalThis.caches` are swapped to the new instance so the virtual
-			// workers module and `cf` getter above see the new bindings. Only
-			// `ViteDevServer` has a `watcher`; the preview server does not.
+			// reinitialise the platform proxy when the wrangler config changes
 			if ('watcher' in server) {
 				const resolved = unstable_readConfig({ config: options.configPath });
 				if (resolved.configPath) {
