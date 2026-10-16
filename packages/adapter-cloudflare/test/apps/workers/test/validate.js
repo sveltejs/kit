@@ -7,12 +7,15 @@ const root = process.cwd();
 const output = path.join(root, '.svelte-kit/cloudflare/worker');
 const config = JSON.parse(fs.readFileSync(path.join(output, 'wrangler.json'), 'utf8'));
 assert.ok(fs.existsSync(path.join(output, config.main)));
-assert.ok(fs.existsSync(path.join(output, `${config.main}.map`)));
+assert.ok(fs.existsSync(path.join(output, 'server/index.js.map')));
 const sources = fs
 	.readdirSync(output, { recursive: true })
 	.filter((file) => file.endsWith('.map'))
-	.flatMap((file) => JSON.parse(fs.readFileSync(path.join(output, file), 'utf8')).sources);
-assert.ok(sources.some((source) => source.endsWith('/src/routes/cf/+server.js')));
+	.flatMap((file) => {
+		const map = JSON.parse(fs.readFileSync(path.join(output, file), 'utf8'));
+		return map.sources.map((source) => path.resolve(output, path.dirname(file), source));
+	});
+assert.ok(sources.includes(path.join(root, 'src/routes/cf/+server.js')));
 assert.equal(config.upload_source_maps, true);
 assert.equal(config.no_bundle, true);
 assert.ok(config.compatibility_flags.includes('nodejs_als'));

@@ -10,7 +10,7 @@ import { validate_worker_settings, append_headers } from './utils.js';
 import { exactRegex } from '@rolldown/pluginutils';
 import { getRequest } from '@sveltejs/kit/node';
 import { cloudflare } from '@cloudflare/vite-plugin';
-import { createBuilder, loadEnv } from 'vite';
+import { loadEnv } from 'vite';
 
 const name = '@sveltejs/adapter-cloudflare';
 
@@ -21,6 +21,8 @@ export default function (options = {}) {
 		import.meta.resolve('./src/virtual-cloudflare-workers.js') + '?' + crypto.randomUUID();
 	/** @type {ResolvedConfig} */
 	let vite_config;
+	/** @type {import('vite').BuildEnvironmentOptions} */
+	let kit_build;
 
 	/**
 	 * @param {string} [root]
@@ -60,18 +62,22 @@ export default function (options = {}) {
 			validate_worker_settings(wrangler_config);
 
 			const dest = builder.getBuildDirectory('cloudflare');
-			const tmp = builder.getBuildDirectory('cloudflare-tmp');
-			const assets = `${tmp}/assets`;
-			const worker_dest = `${tmp}/worker.js`;
+			const worker_dir = `${dest}/worker`;
+			const assets = `${dest}/client`;
+			const worker_dest = `${worker_dir}/index.js`;
 			const assets_binding = wrangler_config.assets?.binding ?? 'ASSETS';
 			const files = fileURLToPath(new URL('./files', import.meta.url));
-			const server_dir = posixify(path.resolve(builder.getServerDirectory()));
+			const server_dir = `${worker_dir}/server`;
+			const output_config = JSON.parse(
+				fs.readFileSync(`${builder.getServerDirectory()}/wrangler.json`, 'utf8')
+			);
 
 			fs.rmSync(dest, { force: true, recursive: true });
-			fs.rmSync(tmp, { force: true, recursive: true });
 			fs.mkdirSync(assets, { recursive: true });
 
-			replace_stub(builder.getServerDirectory(), stub_import);
+			builder.writeServer(server_dir);
+			replace_stub(server_dir, stub_import);
+			fs.rmSync(`${server_dir}/wrangler.json`);
 
 			// client assets and prerendered pages
 			const assets_dest = `${assets}${builder.config.paths.base}`;
@@ -94,7 +100,7 @@ export default function (options = {}) {
 
 			// worker
 			const worker_dest_dir = path.dirname(worker_dest);
-			builder.generateServerInstance(`${tmp}/server.js`);
+			builder.generateServerInstance(`${worker_dir}/server.js`, { serverDirectory: server_dir });
 			builder.copy(`${files}/worker.js`, worker_dest, {
 				replace: {
 					// the paths returned by the Wrangler config might be Windows paths,
@@ -102,7 +108,7 @@ export default function (options = {}) {
 					// will be interpreted as escape characters and create an incorrect import path.
 					// We also need to ensure the relative imports start with ./ since Wrangler
 					// errors if a relative import looks like a package import
-					SERVER: `./${posixify(path.relative(worker_dest_dir, tmp))}/server.js`,
+					SERVER: `./${posixify(path.relative(worker_dest_dir, worker_dir))}/server.js`,
 					BASE_PATH: JSON.stringify(builder.config.paths.base),
 					APP_PATH: JSON.stringify(builder.getAppPath()),
 					MANIFEST_ASSETS: `new Set(${JSON.stringify(builder.manifest.assets.map((a) => a.path))})`,
@@ -113,11 +119,12 @@ export default function (options = {}) {
 			if (builder.hasServerInstrumentationFile()) {
 				const initializer = builder.createInstrumentationInitializer({
 					outputDirectory: worker_dest_dir,
+					serverDirectory: server_dir,
 					environment: `import { env } from 'cloudflare:workers';\nexport default env;\n`
 				});
 				builder.instrument({
 					entrypoint: worker_dest,
-					instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`,
+					instrumentation: `${server_dir}/instrumentation.server.js`,
 					initializer,
 					module: {
 						generateText: ({ instrumentation, start, initializer }) =>
@@ -150,74 +157,17 @@ export default function (options = {}) {
 
 			fs.writeFileSync(`${assets}/.assetsignore`, generate_assetsignore(), { flag: 'a' });
 
-			// Run Cloudflare's complete build only after Kit has finished prerendering and
-			// generating its server. Its builder owns both the Worker bundle and deployment config.
-			const worker_builder = await createBuilder({
-				configFile: false,
-				root: vite_config.root,
-				mode: vite_config.mode,
-				logLevel: vite_config.logLevel,
-				base: '/',
-				publicDir: path.resolve(assets),
-				resolve: { alias: vite_config.resolve.alias },
-				define: vite_config.define,
-				build: {
-					outDir: path.resolve(dest),
-					minify: vite_config.build.minify,
-					sourcemap: vite_config.build.sourcemap
-				},
-				environments: {
-					client: {
-						build: { rollupOptions: { input: 'virtual:sveltekit-cloudflare-assets' } }
-					}
-				},
-				plugins: [
-					{
-						name: 'vite-plugin-sveltekit-cloudflare-handler',
-						enforce: 'pre',
-						resolveId(id) {
-							if (id === 'virtual:sveltekit-cloudflare-assets')
-								return '\0sveltekit-cloudflare-assets';
-						},
-						load(id) {
-							if (id === '\0sveltekit-cloudflare-assets') return '';
-							// Compose Kit's source maps with the final Worker bundle's maps.
-							if (id.startsWith(`${server_dir}/`) && fs.existsSync(`${id}.map`)) {
-								return {
-									code: fs.readFileSync(id, 'utf8'),
-									map: JSON.parse(fs.readFileSync(`${id}.map`, 'utf8'))
-								};
-							}
-						},
-						generateBundle(_options, bundle) {
-							for (const [file, output] of Object.entries(bundle)) {
-								if (
-									output.type === 'chunk' &&
-									output.facadeModuleId === '\0sveltekit-cloudflare-assets'
-								)
-									delete bundle[file];
-							}
-						}
-					},
-					cloudflare({
-						configPath: options.config,
-						viteEnvironment: { name: 'worker' },
-						config(config) {
-							config.main = path.resolve(worker_dest);
-							config.assets ??= {};
-							config.assets.binding ??= 'ASSETS';
-							config.assets.directory = path.resolve(assets);
-							if (
-								!config.compatibility_flags.includes('nodejs_compat') &&
-								!config.compatibility_flags.includes('nodejs_als')
-							) {
-								config.compatibility_flags.push('nodejs_als');
-							}
-						}
-					})
-				]
-			});
-			await worker_builder.buildApp();
+			// Keep Cloudflare's normalized configuration, pointing it at the final Worker and assets.
+			output_config.main = path.basename(worker_dest);
+			output_config.assets.directory = posixify(path.relative(worker_dir, assets));
+			fs.writeFileSync(`${worker_dir}/wrangler.json`, JSON.stringify(output_config, null, 2));
+
+			const deploy_config_path = path.join(vite_config.root, '.wrangler/deploy/config.json');
+			const deploy_config = JSON.parse(fs.readFileSync(deploy_config_path, 'utf8'));
+			deploy_config.configPath = posixify(
+				path.relative(path.dirname(deploy_config_path), path.resolve(worker_dir, 'wrangler.json'))
+			);
+			fs.writeFileSync(deploy_config_path, JSON.stringify(deploy_config, null, 2));
 		},
 		supports: {
 			read: () => true,
@@ -242,22 +192,60 @@ export default function (options = {}) {
 				plugins: [
 					{
 						name: 'vite-plugin-sveltekit-adapter-cloudflare',
-						config: {
+						config(config, env) {
+							if (env.command !== 'build') return;
+							const wrangler_config = read_config(config.root, env.mode);
+							validate_worker_settings(wrangler_config);
+							kit_build = config.environments?.ssr?.build ?? {};
+							// Kit's buildApp hook owns analysis, the client build and prerendering.
+							// Suppress Cloudflare's default builder, which would build them again.
+							config.builder ??= {};
+							config.builder.buildApp ??= async () => {};
+						},
+						configEnvironment: {
 							order: 'post',
-							handler(config, env) {
-								if (env.command !== 'build') return;
-								const wrangler_config = read_config(config.root, env.mode);
-								validate_worker_settings(wrangler_config);
+							handler(name, config) {
+								if (name !== 'ssr' || !kit_build) return;
+								config.resolve ??= {};
+								// Kit externalizes OpenTelemetry; Workers need it bundled instead.
+								config.resolve.external = [];
+								// Let our resolver supply the Node stub for analysis and prerendering.
+								config.resolve.builtins = config.resolve.builtins?.filter(
+									(id) => id !== 'cloudflare:workers'
+								);
+								config.build ??= {};
+								config.build.outDir = kit_build.outDir;
+								config.build.rolldownOptions ??= {};
+								config.build.rolldownOptions.input = kit_build.rolldownOptions?.input;
+								config.build.rolldownOptions.output = kit_build.rolldownOptions?.output;
 							}
 						},
 						configResolved(config) {
 							vite_config = config;
 						}
 					},
-					...cloudflare({ configPath: options.config }).map((plugin) => ({
+					...cloudflare({
+						configPath: options.config,
+						viteEnvironment: { name: 'ssr' },
+						config(config) {
+							if (!kit_build) return;
+							const input = /** @type {Record<string, string>} */ (
+								kit_build.rolldownOptions?.input
+							);
+							config.main = path.resolve(input.index);
+							config.assets ??= {};
+							config.assets.binding ??= 'ASSETS';
+							if (
+								!config.compatibility_flags.includes('nodejs_compat') &&
+								!config.compatibility_flags.includes('nodejs_als')
+							) {
+								config.compatibility_flags.push('nodejs_als');
+							}
+						}
+					}).map((plugin) => ({
 						...plugin,
 						/** @type {Plugin['apply']} */
-						apply: (_config, env) => env.isPreview === true
+						apply: (_config, env) => env.command === 'build' || env.isPreview === true
 					})),
 					virtual_workers_module(
 						{
@@ -452,10 +440,18 @@ function replace_stub(directory, stub_import) {
 		const file_path = path.join(directory, file);
 		if (fs.statSync(file_path).isDirectory()) {
 			replace_stub(file_path, stub_import);
-		} else {
-			const contents = fs.readFileSync(file_path, 'utf8');
+		} else if (file.endsWith('.js')) {
+			let contents = fs.readFileSync(file_path, 'utf8');
 			if (contents.includes(stub_import)) {
-				fs.writeFileSync(file_path, contents.replaceAll(stub_import, 'cloudflare:workers'));
+				// Pad outside the string literal so that existing source-map columns stay valid.
+				const padding = ' '.repeat(stub_import.length - 'cloudflare:workers'.length);
+				for (const quote of ['"', "'"]) {
+					contents = contents.replaceAll(
+						`${quote}${stub_import}${quote}`,
+						`${quote}cloudflare:workers${quote}${padding}`
+					);
+				}
+				fs.writeFileSync(file_path, contents);
 			}
 		}
 	}
