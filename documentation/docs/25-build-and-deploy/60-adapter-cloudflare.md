@@ -144,7 +144,7 @@ Alternatively, you can [prerender](page-options#prerender) the routes in questio
 
 ## Migrating from Workers Sites
 
-Cloudflare no longer recommends using [Workers Sites](https://developers.cloudflare.com/workers/configuration/sites/configuration/) and instead recommends using [Workers Static Assets](https://developers.cloudflare.com/workers/static-assets/). To migrate, replace `@sveltejs/adapter-cloudflare-workers` with `@sveltejs/adapter-cloudflare` and remove all `site` configuration settings from your Wrangler configuration file and the `main` setting.
+Cloudflare no longer recommends using [Workers Sites](https://developers.cloudflare.com/workers/configuration/sites/configuration/) and instead recommends using [Workers Static Assets](https://developers.cloudflare.com/workers/static-assets/). To migrate, replace `@sveltejs/adapter-cloudflare-workers` with `@sveltejs/adapter-cloudflare` and remove `main` and all `site` configuration settings from your Wrangler configuration file.
 
 ```js
 // @errors: 2307
