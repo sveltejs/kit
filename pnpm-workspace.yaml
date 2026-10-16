@@ -75,7 +75,7 @@ catalog:
   '@typescript/native': npm:typescript@^7.0.2
   valibot: ^1.4.2
   vite: ^8.2.1
-  wrangler: ^4.120.1
+  wrangler: ^4.151.0
 
   # unit test deps that should be upgraded together
   '@vitest/browser-playwright': ^5.0.1

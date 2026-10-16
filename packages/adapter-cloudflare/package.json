@@ -43,6 +43,7 @@
 		"tsc-native": "node node_modules/@typescript/native/bin/tsc"
 	},
 	"dependencies": {
+		"@cloudflare/vite-plugin": "^1.64.0",
 		"@cloudflare/workers-types": "^5.20260925.1",
 		"@rolldown/pluginutils": "^1.0.1"
 	},
@@ -56,6 +57,7 @@
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^3.0.0-next.0",
-		"wrangler": "^4.118.0"
+		"vite": "^8.2.1",
+		"wrangler": "^4.151.0"
 	}
 }

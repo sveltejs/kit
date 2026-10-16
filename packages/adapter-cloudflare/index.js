@@ -1,4 +1,4 @@
-/** @import { Plugin, PreviewServer, ViteDevServer } from 'vite' */
+/** @import { Plugin, ResolvedConfig, ViteDevServer } from 'vite' */
 /** @import { GetPlatformProxyOptions } from 'wrangler' */
 
 import fs from 'node:fs';
@@ -9,6 +9,8 @@ import { getPlatformProxy, unstable_readConfig } from 'wrangler';
 import { validate_worker_settings, append_headers } from './utils.js';
 import { exactRegex } from '@rolldown/pluginutils';
 import { getRequest } from '@sveltejs/kit/node';
+import { cloudflare } from '@cloudflare/vite-plugin';
+import { loadEnv } from 'vite';
 
 const name = '@sveltejs/adapter-cloudflare';
 
@@ -17,6 +19,30 @@ export default function (options = {}) {
 	// Add a random query so we can reliably string-replace the stub
 	const stub_import =
 		import.meta.resolve('./src/virtual-cloudflare-workers.js') + '?' + crypto.randomUUID();
+	/** @type {ResolvedConfig} */
+	let vite_config;
+	/** @type {import('vite').BuildEnvironmentOptions} */
+	let kit_build;
+
+	/**
+	 * @param {string} [root]
+	 * @param {string} [mode]
+	 */
+	function read_config(root = process.cwd(), mode = 'production') {
+		root = path.resolve(root);
+		const env = loadEnv(mode, root, 'CLOUDFLARE_');
+		const config =
+			options.config ??
+			env.CLOUDFLARE_VITE_WRANGLER_CONFIG_PATH ??
+			['wrangler.jsonc', 'wrangler.json', 'wrangler.toml'].find((file) =>
+				fs.existsSync(path.join(root, file))
+			);
+		return unstable_readConfig({
+			config: config ? path.resolve(root, config) : undefined,
+			env: env.CLOUDFLARE_ENV
+		});
+	}
+
 	return {
 		name,
 		async adapt(builder) {
@@ -32,35 +58,29 @@ export default function (options = {}) {
 				);
 			}
 
-			const wrangler_config = unstable_readConfig({ config: options.config });
+			const wrangler_config = read_config(vite_config?.root, vite_config?.mode);
 			validate_worker_settings(wrangler_config);
 
-			let dest = builder.getBuildDirectory('cloudflare');
-			const worker_dest = wrangler_config.main ?? `${dest}/_worker.js`;
+			const dest = builder.getBuildDirectory('cloudflare');
+			const worker_dir = `${dest}/worker`;
+			const assets = `${dest}/client`;
+			const worker_dest = `${worker_dir}/index.js`;
 			const assets_binding = wrangler_config.assets?.binding ?? 'ASSETS';
-
-			if (wrangler_config.assets?.directory) {
-				// wrangler doesn't resolve `assets.directory` to an absolute path unlike
-				// `main` so we need to do it ourselves here
-				const parent_dir = wrangler_config.configPath
-					? path.dirname(path.resolve(wrangler_config.configPath))
-					: process.cwd();
-				dest = path.resolve(parent_dir, wrangler_config.assets.directory);
-			}
-
-			const files = fileURLToPath(new URL('./files', import.meta.url).href);
-			const tmp = builder.getBuildDirectory('cloudflare-tmp');
+			const files = fileURLToPath(new URL('./files', import.meta.url));
+			const server_dir = `${worker_dir}/server`;
+			const output_config = JSON.parse(
+				fs.readFileSync(`${builder.getServerDirectory()}/wrangler.json`, 'utf8')
+			);
 
 			fs.rmSync(dest, { force: true, recursive: true });
-			fs.rmSync(worker_dest, { force: true, recursive: true });
+			fs.mkdirSync(assets, { recursive: true });
 
-			fs.mkdirSync(dest, { recursive: true });
-			fs.mkdirSync(tmp, { recursive: true });
-
-			replace_stub(builder.getServerDirectory(), stub_import);
+			builder.writeServer(server_dir);
+			replace_stub(server_dir, stub_import);
+			fs.rmSync(`${server_dir}/wrangler.json`);
 
 			// client assets and prerendered pages
-			const assets_dest = `${dest}${builder.config.paths.base}`;
+			const assets_dest = `${assets}${builder.config.paths.base}`;
 			fs.mkdirSync(assets_dest, { recursive: true });
 			if (wrangler_config.assets?.not_found_handling === '404-page') {
 				// generate plaintext 404.html first which can then be overridden by prerendering, if the user defined such a page.
@@ -80,7 +100,7 @@ export default function (options = {}) {
 
 			// worker
 			const worker_dest_dir = path.dirname(worker_dest);
-			builder.generateServerInstance(`${tmp}/server.js`);
+			builder.generateServerInstance(`${worker_dir}/server.js`, { serverDirectory: server_dir });
 			builder.copy(`${files}/worker.js`, worker_dest, {
 				replace: {
 					// the paths returned by the Wrangler config might be Windows paths,
@@ -88,7 +108,7 @@ export default function (options = {}) {
 					// will be interpreted as escape characters and create an incorrect import path.
 					// We also need to ensure the relative imports start with ./ since Wrangler
 					// errors if a relative import looks like a package import
-					SERVER: `./${posixify(path.relative(worker_dest_dir, tmp))}/server.js`,
+					SERVER: `./${posixify(path.relative(worker_dest_dir, worker_dir))}/server.js`,
 					BASE_PATH: JSON.stringify(builder.config.paths.base),
 					APP_PATH: JSON.stringify(builder.getAppPath()),
 					MANIFEST_ASSETS: `new Set(${JSON.stringify(builder.manifest.assets.map((a) => a.path))})`,
@@ -99,18 +119,23 @@ export default function (options = {}) {
 			if (builder.hasServerInstrumentationFile()) {
 				const initializer = builder.createInstrumentationInitializer({
 					outputDirectory: worker_dest_dir,
+					serverDirectory: server_dir,
 					environment: `import { env } from 'cloudflare:workers';\nexport default env;\n`
 				});
 				builder.instrument({
 					entrypoint: worker_dest,
-					instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`,
-					initializer
+					instrumentation: `${server_dir}/instrumentation.server.js`,
+					initializer,
+					module: {
+						generateText: ({ instrumentation, start, initializer }) =>
+							`import './${initializer}';\nimport './${instrumentation}';\nexport { default } from './${start}';\n`
+					}
 				});
 			}
 
 			// _headers
 			const headers_src = '_headers';
-			const headers_dest = `${dest}/_headers`;
+			const headers_dest = `${assets}/_headers`;
 			/** @type {string | undefined} */
 			let headers;
 			if (fs.existsSync(headers_src)) {
@@ -120,7 +145,7 @@ export default function (options = {}) {
 
 			// _redirects
 			const redirects_src = '_redirects';
-			const redirects_dest = `${dest}/_redirects`;
+			const redirects_dest = `${assets}/_redirects`;
 			if (fs.existsSync(redirects_src)) {
 				fs.copyFileSync(redirects_src, redirects_dest);
 			}
@@ -130,29 +155,107 @@ export default function (options = {}) {
 				});
 			}
 
-			fs.writeFileSync(`${dest}/.assetsignore`, generate_assetsignore(), { flag: 'a' });
+			fs.writeFileSync(`${assets}/.assetsignore`, generate_assetsignore(), { flag: 'a' });
+
+			// Keep Cloudflare's normalized configuration, pointing it at the final Worker and assets.
+			output_config.main = path.basename(worker_dest);
+			output_config.assets.directory = posixify(path.relative(worker_dir, assets));
+			fs.writeFileSync(`${worker_dir}/wrangler.json`, JSON.stringify(output_config, null, 2));
+
+			const deploy_config_path = path.join(vite_config.root, '.wrangler/deploy/config.json');
+			const deploy_config = JSON.parse(fs.readFileSync(deploy_config_path, 'utf8'));
+			deploy_config.configPath = posixify(
+				path.relative(path.dirname(deploy_config_path), path.resolve(worker_dir, 'wrangler.json'))
+			);
+			fs.writeFileSync(deploy_config_path, JSON.stringify(deploy_config, null, 2));
 		},
 		supports: {
 			read: () => true,
 			instrumentation: () => true
 		},
-		vite: {
-			getRequest(options) {
-				const request = getRequest(options);
-				/** @type {import('@cloudflare/workers-types').Request} */ (
-					/** @type {unknown} */ (request)
-				).cf = globalThis.__sveltekit_cloudflare_platform?.cf;
-				return request;
-			},
-			plugins: [
-				virtual_workers_module(
+		vite({ config }) {
+			if (config.paths.assets) {
+				throw new Error(
+					'@sveltejs/adapter-cloudflare does not support paths.assets because vite preview cannot serve assets from a separate location. Remove paths.assets from your SvelteKit configuration.'
+				);
+			}
+
+			return {
+				preview: false,
+				getRequest(options) {
+					const request = getRequest(options);
+					/** @type {import('@cloudflare/workers-types').Request} */ (
+						/** @type {unknown} */ (request)
+					).cf = globalThis.__sveltekit_cloudflare_platform?.cf;
+					return request;
+				},
+				plugins: [
 					{
-						configPath: options.config,
-						...options.platformProxy
+						name: 'vite-plugin-sveltekit-adapter-cloudflare',
+						config(config, env) {
+							if (env.command !== 'build') return;
+							const wrangler_config = read_config(config.root, env.mode);
+							validate_worker_settings(wrangler_config);
+							kit_build = config.environments?.ssr?.build ?? {};
+							// Kit's buildApp hook owns analysis, the client build and prerendering.
+							// Suppress Cloudflare's default builder, which would build them again.
+							config.builder ??= {};
+							config.builder.buildApp ??= async () => {};
+						},
+						configEnvironment: {
+							order: 'post',
+							handler(name, config) {
+								if (name !== 'ssr' || !kit_build) return;
+								config.resolve ??= {};
+								// Kit externalizes OpenTelemetry; Workers need it bundled instead.
+								config.resolve.external = [];
+								// Let our resolver supply the Node stub for analysis and prerendering.
+								config.resolve.builtins = config.resolve.builtins?.filter(
+									(id) => id !== 'cloudflare:workers'
+								);
+								config.build ??= {};
+								config.build.outDir = kit_build.outDir;
+								config.build.rolldownOptions ??= {};
+								config.build.rolldownOptions.input = kit_build.rolldownOptions?.input;
+								config.build.rolldownOptions.output = kit_build.rolldownOptions?.output;
+							}
+						},
+						configResolved(config) {
+							vite_config = config;
+						}
 					},
-					stub_import
-				)
-			]
+					...cloudflare({
+						configPath: options.config,
+						viteEnvironment: { name: 'ssr' },
+						config(config) {
+							if (!kit_build) return;
+							const input = /** @type {Record<string, string>} */ (
+								kit_build.rolldownOptions?.input
+							);
+							config.main = path.resolve(input.index);
+							config.assets ??= {};
+							config.assets.binding ??= 'ASSETS';
+							if (
+								!config.compatibility_flags.includes('nodejs_compat') &&
+								!config.compatibility_flags.includes('nodejs_als')
+							) {
+								config.compatibility_flags.push('nodejs_als');
+							}
+						}
+					}).map((plugin) => ({
+						...plugin,
+						/** @type {Plugin['apply']} */
+						apply: (_config, env) => env.command === 'build' || env.isPreview === true
+					})),
+					virtual_workers_module(
+						{
+							configPath: options.config,
+							...options.platformProxy
+						},
+						stub_import
+					)
+				]
+			};
 		}
 	};
 }
@@ -185,7 +288,7 @@ async function reload_cloudflare_platform_proxy(options) {
  * @returns {Plugin}
  */
 function virtual_workers_module(options, stub_import) {
-	/** @param {ViteDevServer | PreviewServer} server */
+	/** @param {ViteDevServer} server */
 	const setup = async (server) => {
 		// shared so that concurrent servers start one proxy and only the last close disposes it
 		const shared = (globalThis.__sveltekit_cloudflare_platform_setup ??= {
@@ -253,11 +356,10 @@ function virtual_workers_module(options, stub_import) {
 	};
 	return {
 		name: 'vite-plugin-sveltekit-adapter-cloudflare-virtual-workers-module',
+		apply: (_config, env) => !env.isPreview,
 		configureServer: setup,
-		configurePreviewServer: setup,
 		// a restarting server is set up before the old one closes, so the proxy survives
 		closeServer: dispose,
-		closePreviewServer: dispose,
 		resolveId: {
 			filter: { id: exactRegex('cloudflare:workers') },
 			handler() {
@@ -338,10 +440,18 @@ function replace_stub(directory, stub_import) {
 		const file_path = path.join(directory, file);
 		if (fs.statSync(file_path).isDirectory()) {
 			replace_stub(file_path, stub_import);
-		} else {
-			const contents = fs.readFileSync(file_path, 'utf8');
+		} else if (file.endsWith('.js')) {
+			let contents = fs.readFileSync(file_path, 'utf8');
 			if (contents.includes(stub_import)) {
-				fs.writeFileSync(file_path, contents.replaceAll(stub_import, 'cloudflare:workers'));
+				// Pad outside the string literal so that existing source-map columns stay valid.
+				const padding = ' '.repeat(stub_import.length - 'cloudflare:workers'.length);
+				for (const quote of ['"', "'"]) {
+					contents = contents.replaceAll(
+						`${quote}${stub_import}${quote}`,
+						`${quote}cloudflare:workers${quote}${padding}`
+					);
+				}
+				fs.writeFileSync(file_path, contents);
 			}
 		}
 	}
