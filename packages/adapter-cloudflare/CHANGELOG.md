@@ -5,8 +5,6 @@
 ### Patch Changes
 
 - fix: restart the platform proxy when the Wrangler config file changes ([#17432](https://github.com/sveltejs/kit/pull/17432))
-- Updated dependencies:
-  - @sveltejs/kit@3.1.1
 
 ## 8.0.1
 
