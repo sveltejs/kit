@@ -220,11 +220,15 @@ function native_navigation(url, replace = false) {
  * tries to update it.
  */
 async function update_service_worker() {
-	if ('serviceWorker' in navigator) {
-		const registration = await navigator.serviceWorker.getRegistration(base || '/');
-		if (registration) {
-			await registration.update();
+	try {
+		if ('serviceWorker' in navigator) {
+			const registration = await navigator.serviceWorker.getRegistration(base || '/');
+			if (registration) {
+				await registration.update();
+			}
 		}
+	} catch {
+		// A failed service worker update must not prevent the fallback document navigation.
 	}
 }
 
@@ -937,7 +941,10 @@ async function initialize(result, target, should_hydrate) {
 	}
 
 	restore_snapshot(current_navigation_index);
-	restore_navigation_snapshot(current_history_index);
+	// Client-only startup restores in `navigate` so don't restore twice
+	if (hydrated) {
+		restore_navigation_snapshot(current_history_index);
+	}
 
 	started = true;
 }
@@ -2073,7 +2080,8 @@ async function navigate({
 
 	updating = true;
 
-	if (!popped) {
+	// Initial entry has no outgoing page, and its persisted snapshots must survive startup.
+	if (started && !popped) {
 		// popstate captures the source entry synchronously, before the traversal is resolved
 		capture_scroll(previous_history_index);
 		capture_snapshot(previous_navigation_index);

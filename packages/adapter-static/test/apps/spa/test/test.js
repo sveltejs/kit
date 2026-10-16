@@ -1,22 +1,25 @@
 import * as fs from 'node:fs';
+import path from 'node:path';
 import process from 'node:process';
 import { expect, test } from '@playwright/test';
+import { location } from '../../../../../../test-utils/deploy.js';
 
-const cwd = process.cwd();
+// the app is built and served from a deploy copy, see test-utils/serve.js
+const build = path.join(location(process.cwd()), 'build');
 
 test('generates a fallback page', async ({ page }) => {
-	expect(fs.existsSync(`${cwd}/build/200.html`)).toBeTruthy();
+	expect(fs.existsSync(path.join(build, '200.html'))).toBeTruthy();
 
 	await page.goto('/fallback/a/b/c');
 	expect(await page.textContent('h1')).toEqual('the fallback page was rendered');
 });
 
 test('does not prerender pages without prerender=true', () => {
-	expect(fs.existsSync(`${cwd}/build/index.html`)).toBeFalsy();
+	expect(fs.existsSync(path.join(build, 'index.html'))).toBeFalsy();
 });
 
 test('prerenders page with prerender=true', () => {
-	expect(fs.existsSync(`${cwd}/build/about.html`)).toBeTruthy();
+	expect(fs.existsSync(path.join(build, 'about.html'))).toBeTruthy();
 });
 
 test('renders content in fallback page when JS runs', async ({ page }) => {
