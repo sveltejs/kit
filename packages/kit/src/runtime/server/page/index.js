@@ -371,6 +371,9 @@ function load_error_components(ssr, branch, page) {
 	if (!ssr) return undefined;
 
 	return build_error_chain(branch, page.errors, (idx) =>
-		manifest.nodes[idx]?.().then((e) => e.component?.())
+		manifest.nodes[idx]?.().then(async (node) => {
+			const component = await node.component?.();
+			return component && { node, component };
+		})
 	);
 }
