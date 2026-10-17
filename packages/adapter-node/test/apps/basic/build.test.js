@@ -30,3 +30,11 @@ test('dependencies are not bundled', () => {
 test('everything else is bundled', () => {
 	expect(leaked_imports(app, 'build')).toEqual([]);
 });
+
+test('server-emitted assets are only written to the client output', () => {
+	const assets = '_app/immutable/assets';
+	expect(fs.existsSync(path.join(app, 'build/server', assets))).toBe(false);
+
+	const client = fs.readdirSync(path.join(app, 'build/client', assets));
+	expect(client.some((file) => file.startsWith('asset.') && file.endsWith('.txt'))).toBe(true);
+});

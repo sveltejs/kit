@@ -56,6 +56,13 @@ export default function (opts = {}) {
 
 			builder.copy(server, `${out}/server`);
 
+			// kit already copies the SSR-emitted assets into the client output, which is where
+			// `read` and the static handler serve them from, so the server copies are dead weight
+			fs.rmSync(`${out}/server/${builder.config.appDir}/immutable/assets`, {
+				force: true,
+				recursive: true
+			});
+
 			// values only known after the build. `dir` needs the output root
 			fs.writeFileSync(
 				`${out}/adapter-node.js`,

@@ -98,3 +98,8 @@ test('serves immutable assets with an immutable cache header', async ({ request 
 	expect(response.status()).toBe(200);
 	expect(response.headers()['cache-control']).toBe('public,max-age=31536000,immutable');
 });
+
+test('reads server-only assets', async ({ request }) => {
+	const response = await request.get('/read-asset');
+	expect(await response.text()).toBe('server-only asset contents\n');
+});

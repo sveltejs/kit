@@ -151,6 +151,12 @@ export default function (opts = {}) {
 
 			if (!embed) {
 				builder.copy(server, `${out}/server`);
+				// kit already copies the SSR-emitted assets into the client output, which is where
+				// `read` and the static handler serve them from, so the server copies are dead weight
+				fs.rmSync(`${out}/server/${builder.config.appDir}/immutable/assets`, {
+					force: true,
+					recursive: true
+				});
 				builder.copy(handoff_file, `${out}/adapter-bun.js`);
 				fs.writeFileSync(`${out}/index.js`, `import './server/adapter-index.js';\n`);
 				return;
