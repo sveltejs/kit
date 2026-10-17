@@ -1,6 +1,5 @@
-/** @import { HttpError } from '@sveltejs/kit' */
 import { query_responses, handle_error } from '../../client.js';
-import { HandledHttpError } from '@sveltejs/kit/internal';
+import { HandledHttpError, HttpError } from '@sveltejs/kit/internal';
 import { QUERY_OVERRIDE_KEY } from '../shared.svelte.js';
 import { noop } from '../../../../utils/functions.js';
 import { with_resolvers } from '../../../../utils/promise.js';
@@ -41,6 +40,8 @@ export class Query {
 
 	/** @type {App.Error | undefined} */
 	#error = $state.raw(undefined);
+	/** @type {{ value: unknown } | undefined} */
+	#rejection = $state.raw();
 
 	/** @type {Promise<T>['then']} */
 	// @ts-expect-error TS doesn't understand that the promise returns something
@@ -51,6 +52,8 @@ export class Query {
 		return (resolve, reject) => {
 			const result = p.then(tick).then(() => {
 				if (!this.#ready) {
+					if (this.#rejection) throw this.#rejection.value;
+
 					throw new HandledHttpError(
 						this.#error ?? { status: 500, message: 'Query resolved without a value' }
 					);
@@ -132,6 +135,7 @@ export class Query {
 					this.#loading = false;
 					this.#raw = value;
 					this.#error = undefined;
+					this.#rejection = undefined;
 				});
 			})
 			.catch(async (e) => {
@@ -147,6 +151,7 @@ export class Query {
 					route: { id: null },
 					url: new URL(location.href)
 				});
+				const rejection = e instanceof HttpError ? new HandledHttpError(error) : e;
 
 				// Re-check after the async `handle_error` gap: a later request may have
 				// resolved/rejected while we were awaiting and superseded this one, so
@@ -158,10 +163,11 @@ export class Query {
 					this.#latest.splice(0, idx).forEach((r) => r(undefined));
 					this.#latest.shift();
 					this.#error = error;
+					this.#rejection = { value: rejection };
 					this.#loading = false;
 				});
 
-				reject(new HandledHttpError(error));
+				reject(rejection);
 			});
 
 		return promise;
@@ -249,6 +255,7 @@ export class Query {
 		this.#ready = true;
 		this.#loading = false;
 		this.#error = undefined;
+		this.#rejection = undefined;
 		this.#raw = value;
 
 		if (!in_flight) {
@@ -265,6 +272,7 @@ export class Query {
 		this.#clear_pending();
 		this.#loading = false;
 		this.#error = error.body;
+		this.#rejection = { value: error };
 
 		const promise = Promise.reject(error);
 
