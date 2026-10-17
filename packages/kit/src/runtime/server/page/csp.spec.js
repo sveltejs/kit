@@ -2,7 +2,7 @@ import process from 'node:process';
 import { assert, expect, test, describe, beforeAll } from 'vitest';
 import { Csp } from './csp.js';
 
-describe.skipIf(!process.env.DEV)('CSPs in dev', () => {
+describe.skipIf(!process.env.KIT_TEST_DEV)('CSPs in dev', () => {
 	beforeAll(() => {
 		// @ts-expect-error
 		globalThis.__SVELTEKIT_DEV__ = true;
@@ -69,7 +69,7 @@ describe.skipIf(!process.env.DEV)('CSPs in dev', () => {
 	});
 });
 
-describe.skipIf(!!process.env.DEV)('CSPs in prod', () => {
+describe.skipIf(!!process.env.KIT_TEST_DEV)('CSPs in prod', () => {
 	beforeAll(() => {
 		// @ts-expect-error
 		globalThis.__SVELTEKIT_DEV__ = false;
@@ -600,6 +600,26 @@ describe.skipIf(!!process.env.DEV)('CSPs in prod', () => {
 		assert.equal(
 			csp.csp_provider.get_header(),
 			"script-src 'self' 'report-sha256' 'report-sha384' 'report-sha512'"
+		);
+	});
+
+	test('quotes the other keyword sources', () => {
+		const csp = new Csp(
+			{
+				mode: 'nonce',
+				directives: {
+					'script-src': ['self', 'trusted-types-eval', 'unsafe-allow-redirects'],
+					'connect-src': ['self', 'unsafe-webtransport-hashes'],
+					'trusted-types': ['my-policy', 'allow-duplicates']
+				},
+				reportOnly: {}
+			},
+			{ prerender: false }
+		);
+
+		assert.equal(
+			csp.csp_provider.get_header(),
+			"script-src 'self' 'trusted-types-eval' 'unsafe-allow-redirects'; connect-src 'self' 'unsafe-webtransport-hashes'; trusted-types my-policy 'allow-duplicates'"
 		);
 	});
 });
