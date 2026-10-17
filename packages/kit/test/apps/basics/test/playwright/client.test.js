@@ -954,6 +954,101 @@ test.describe('Invalidation', () => {
 });
 
 test.describe('data-sveltekit attributes', () => {
+	for (const preload of ['false', 'code', 'data']) {
+		for (const svg of [false, true]) {
+			test(`removed hovered ${svg ? 'SVG' : 'HTML'} links can be collected (preload: ${preload})`, async ({
+				page,
+				context,
+				browserName
+			}) => {
+				test.skip(browserName !== 'chromium', 'Requires CDP to force garbage collection');
+
+				await page.goto(`/data-sveltekit/preload-retention?preload=${preload}&svg=${svg}`);
+				const ref = await page.evaluateHandle(
+					() => new WeakRef(/** @type {Element} */ (document.querySelector('[role="dialog"]')))
+				);
+				await page.locator('[role="dialog"] a').hover();
+				// Let the rest timer and any preloading finish before removing the link.
+				await page.waitForTimeout(100);
+				await page.waitForLoadState('networkidle');
+				await page.keyboard.press('Escape');
+				await expect(page.getByRole('dialog')).toHaveCount(0);
+
+				const cdp = await context.newCDPSession(page);
+				await expect
+					.poll(async () => {
+						await cdp.send('HeapProfiler.collectGarbage');
+						return ref.evaluate((ref) => ref.deref() === undefined);
+					})
+					.toBe(true);
+				await ref.dispose();
+				await cdp.detach();
+			});
+		}
+	}
+
+	test('a page left by clicking a hovered link can be collected', async ({
+		page,
+		context,
+		browserName,
+		clicknav
+	}) => {
+		test.skip(browserName !== 'chromium', 'Requires CDP to force garbage collection');
+
+		await page.goto('/data-sveltekit/preload-retention');
+		const ref = await page.evaluateHandle(
+			() => new WeakRef(/** @type {Element} */ (document.querySelector('main')))
+		);
+		await clicknav('main > a');
+		await expect(page.locator('main')).toHaveCount(0);
+
+		const cdp = await context.newCDPSession(page);
+		await expect
+			.poll(async () => {
+				await cdp.send('HeapProfiler.collectGarbage');
+				return ref.evaluate((ref) => ref.deref() === undefined);
+			})
+			.toBe(true);
+		await ref.dispose();
+		await cdp.detach();
+	});
+
+	test('SVG links preload after href changes and code-to-data priority escalation', async ({
+		page
+	}) => {
+		/** @type {string[]} */
+		const requests = [];
+		page.on('request', (request) => {
+			if (request.url().includes('/preload-data/target/__data.json')) {
+				requests.push(request.url());
+			}
+		});
+
+		await page.goto('/data-sveltekit/preload-retention?preload=code&svg=true');
+		const link = page.locator('[role="dialog"] a');
+		await link.evaluate((a) => a.setAttribute('data-sveltekit-preload-data', 'tap'));
+		await link.hover();
+		await page.waitForTimeout(100);
+		await page.waitForLoadState('networkidle');
+		expect(requests).toHaveLength(0);
+
+		await link.dispatchEvent('touchstart');
+		await expect.poll(() => requests.length).toBe(1);
+		await page.waitForLoadState('networkidle');
+
+		// The first data preload clears current_a when it discards the old load cache.
+		// Tap again to exercise deduplication with an existing cache entry.
+		await link.dispatchEvent('touchstart');
+		await page.waitForTimeout(100);
+		await page.waitForLoadState('networkidle');
+		expect(requests).toHaveLength(1);
+
+		await link.evaluate((a) => a.setAttribute('href', '/data-sveltekit/preload-data/target?x=1'));
+		await link.dispatchEvent('touchstart');
+		await expect.poll(() => requests.length).toBe(2);
+		expect(new URL(requests[1]).searchParams.get('x')).toBe('1');
+	});
+
 	test('data-sveltekit-preload-code', async ({ page }) => {
 		/** @type {string[]} */
 		const responses = [];
