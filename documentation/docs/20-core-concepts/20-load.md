@@ -198,6 +198,19 @@ Server `load` functions are called with a `ServerLoadEvent`, which inherits `coo
 
 Universal `load` functions are called with a `LoadEvent`, which has a `data` property. If you have `load` functions in both `+page.js` and `+page.server.js` (or `+layout.js` and `+layout.server.js`), the return value of the server `load` function is the `data` property of the universal `load` function's argument.
 
+![Server load data feeds universal load during SSR and is serialized into the initial HTML. During hydration the browser passes that original server data to universal load again, reusing captured fetch responses. The page receives the universal load result.](assets/server-and-universal-load.svg)
+
+[Edit diagram](https://svgdiagram.ai/diagram-sources/sveltekit-server-and-universal-load?version=1).
+
+This shows a page with both load functions, using the default SSR and hydration
+behavior. The cross-boundary arrows show information carried in the same initial
+HTML response, rather than separate requests. The browser receives the original
+server load result as the universal load's `data` input; the page receives the
+universal load's return value. Universal load runs in both environments, while
+server load stays on the server. Layout data and later navigations are omitted
+from this view; their behavior is described elsewhere on this page.
+
+
 ### Output
 
 A universal `load` function can return an object containing any values, including things like custom classes and component constructors.
