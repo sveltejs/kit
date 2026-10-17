@@ -2,7 +2,7 @@ import { execSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
-import { assert, describe, expect, test } from 'vitest';
+import { assert, describe, expect, test, vi } from 'vitest';
 import create_manifest_data from '../create_manifest_data/index.js';
 import { tweak_types, write_all_types } from './index.js';
 import { write_app_types } from '../write_app_types.js';
@@ -308,4 +308,66 @@ test('Leaves satisfies operator untouched', () => {
 	expect(rewritten?.exports).toEqual(['load', 'actions']);
 	assert.equal(rewritten?.modified, false);
 	assert.equal(rewritten?.code, source);
+});
+
+test('Root route $types.d.ts is not deleted on subsequent sync runs', () => {
+	// Regression test for https://github.com/sveltejs/kit/issues/17465:
+	// expected_directories was keyed with a trailing slash for the root route
+	// (path.posix.join(routes_dir, '/')), while path.posix.dirname never
+	// produces one, so the root $types.d.ts was deleted (and wastefully
+	// rewritten) on every sync run.
+	const dir = fs.mkdtempSync(path.join(cwd, 'tmp-root-route-'));
+
+	try {
+		// mimic a real project layout: root with src/routes and src/params
+		fs.mkdirSync(path.join(dir, 'src', 'routes'), { recursive: true });
+		fs.mkdirSync(path.join(dir, 'src', 'params'), { recursive: true });
+		fs.mkdirSync(path.join(dir, 'static'));
+		fs.writeFileSync(
+			path.join(dir, 'src', 'routes', '+page.js'),
+			'export const load = () => {\n\treturn { hello: "world" };\n};\n'
+		);
+
+		const config = validate_config({});
+		config.files.assets = path.resolve(dir, 'static');
+		config.files.params = path.resolve(dir, 'src', 'params');
+		config.files.routes = path.resolve(dir, 'src', 'routes');
+		config.outDir = path.resolve(dir, '.svelte-kit');
+
+		const manifest = create_manifest_data(config, dir);
+
+		// first sync run writes the root route types
+		write_all_types(config, manifest, dir);
+		const types_file = path.join(
+			config.outDir,
+			'types',
+			'src',
+			'routes',
+			'$types.d.ts'
+		);
+		assert.ok(fs.existsSync(types_file), 'root $types.d.ts written on first sync run');
+
+		// a second sync run must not delete the root route types.
+		// (the metadata file is rewritten every run, which can trigger a
+		// regeneration — what the bug is about is the deletion itself)
+		const deleted = [];
+		const original_rm = fs.rmSync;
+		vi.spyOn(fs, 'rmSync').mockImplementation(
+			(/** @type {any} */ target, /** @type {any} */ options) => {
+				deleted.push(String(target));
+				return original_rm(target, options);
+			}
+		);
+		try {
+			write_all_types(config, manifest, dir);
+		} finally {
+			vi.restoreAllMocks();
+		}
+		assert.ok(
+			!deleted.some((target) => target.endsWith(path.join('src', 'routes', '$types.d.ts'))),
+			`root $types.d.ts was deleted on a second sync run: ${JSON.stringify(deleted)}`
+		);
+	} finally {
+		fs.rmSync(dir, { force: true, recursive: true });
+	}
 });

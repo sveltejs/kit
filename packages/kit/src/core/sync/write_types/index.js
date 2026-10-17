@@ -42,7 +42,12 @@ export function write_all_types(config, manifest_data, root) {
 		posixify(path.relative(root, config.files.routes))
 	);
 	const expected_directories = new Set(
-		manifest_data.routes.map((route) => path.posix.join(routes_dir, route.id))
+		manifest_data.routes.map((route) =>
+			// the root route id is '/', which would leave a trailing slash that
+			// `path.posix.dirname` never produces — strip it so the root
+			// $types.d.ts isn't treated as surplus to requirements on every sync
+			path.posix.join(routes_dir, route.id).replace(/\/$/, '')
+		)
 	);
 
 	if (fs.existsSync(types_dir)) {
