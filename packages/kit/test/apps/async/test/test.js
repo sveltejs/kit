@@ -758,6 +758,60 @@ test.describe('remote functions', () => {
 		await expect(allIssues).toContainText('"path":["nested","value"]');
 	});
 
+	for (const source of ['hook', 'schema']) {
+		for (const submitted of [false, true]) {
+			test(`form validate handles ${source} redirects ${submitted ? 'after' : 'before'} submission`, async ({
+				page,
+				context,
+				javaScriptEnabled
+			}) => {
+				test.skip(!javaScriptEnabled, 'requires JavaScript to validate');
+
+				await page.goto('/remote/form/validate');
+				const form = page.locator('#redirect-form');
+				const input = form.locator('input');
+				const validate = form.getByRole('button', { name: 'validate redirect form' });
+				const issues = page.locator('#redirect-issues');
+				const count = page.locator('#redirect-validation-count');
+
+				await input.fill('a');
+				if (submitted) {
+					await form.getByRole('button', { name: 'save', exact: true }).click();
+					await expect(page.locator('#redirect-submitted')).toHaveText('true');
+				}
+				await validate.click();
+				await expect(count).toHaveText('1');
+				await expect(issues).toContainText('answer is too short');
+
+				await context.addCookies([
+					{ name: 'redirect-validation', value: source, url: new URL('/', page.url()).href }
+				]);
+				await input.fill('yes');
+				const response = page.waitForResponse((response) =>
+					response.url().endsWith('/redirect_form')
+				);
+				await validate.click();
+				const body = await (await response).json();
+				if (source === 'hook') {
+					expect(body).toEqual({ type: 'redirect', status: 303, location: '/remote' });
+				} else {
+					expect(body).toEqual({ type: 'result', data: expect.stringContaining('redirect') });
+				}
+				await expect(count).toHaveText('2');
+				await expect(page.locator('#redirect-validation-error')).toHaveText('');
+				await expect(issues).toHaveText('[]');
+				// Validation is not a submission — it should not navigate.
+				await expect(page).toHaveURL(/\/remote\/form\/validate$/);
+
+				await context.clearCookies({ name: 'redirect-validation' });
+				await input.fill('a');
+				await validate.click();
+				await expect(count).toHaveText('3');
+				await expect(issues).toContainText('answer is too short');
+			});
+		}
+	}
+
 	test('form validate does not throw if the form unmounts while validating', async ({
 		page,
 		javaScriptEnabled
