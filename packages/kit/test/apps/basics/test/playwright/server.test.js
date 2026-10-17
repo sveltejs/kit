@@ -48,6 +48,34 @@ test.describe('Endpoints', () => {
 });
 
 test.describe('Errors', () => {
+	test('does not include unused error-page styles in successful SSR responses', async ({
+		request
+	}) => {
+		test.skip(!!process.env.DEV, 'production builds emit stylesheet links');
+
+		/** @param {import('@playwright/test').APIResponse} response */
+		const stylesheets = async (response) =>
+			[...(await response.text()).matchAll(/<link href="([^"]+)" rel="stylesheet"[^>]*>/g)].map(
+				([, href]) => new URL(href, response.url()).href
+			);
+
+		// These successful pages share their layouts and have no page-local CSS. Only the
+		// second has a nested +error.svelte with styles, which must not be linked until used.
+		const baseline = await request.get('/errors/load-client');
+		const success = await request.get('/errors/nested-error-page');
+		expect(baseline.status()).toBe(200);
+		expect(success.status()).toBe(200);
+		const layout_styles = await stylesheets(baseline);
+		expect(layout_styles.length).toBeGreaterThan(0);
+		expect(await stylesheets(success)).toEqual(layout_styles);
+
+		const failure = await request.get('/errors/nested-error-page/nope');
+		expect(failure.status()).toBe(500);
+		const error_styles = await stylesheets(failure);
+		for (const href of layout_styles) expect(error_styles).toContain(href);
+		expect(error_styles).toHaveLength(layout_styles.length + 1);
+	});
+
 	test('returns 400 when accessing a malformed URI', async ({ page }) => {
 		const response = await page.goto('/%c0%ae%c0%ae/etc/passwd');
 		if (process.env.DEV) {
