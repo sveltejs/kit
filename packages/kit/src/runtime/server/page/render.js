@@ -80,6 +80,7 @@ export async function render_response({
 	}
 
 	const client = manifest.client;
+	const integrity_map = client?.integrity;
 
 	const modulepreloads = new Set(client?.imports);
 	const stylesheets = new Set(client?.stylesheets);
@@ -319,7 +320,15 @@ export async function render_response({
 			// include them in disabled state so that Vite can detect them and doesn't try to add them
 			attributes.push('disabled', 'media="(max-width: 0)"');
 		} else {
-			if (__SVELTEKIT_LINK_HEADER_PRELOAD__ && resolve_opts.preload({ type: 'css', path })) {
+			const integrity = integrity_map?.[dep];
+			if (integrity) {
+				attributes.push(`integrity="${integrity}"`, 'crossorigin="anonymous"');
+			} else if (
+				// a `Link` header cannot carry `integrity`, and the browser won't use a
+				// preload whose integrity doesn't match the stylesheet, so skip it
+				__SVELTEKIT_LINK_HEADER_PRELOAD__ &&
+				resolve_opts.preload({ type: 'css', path })
+			) {
 				link_headers.add(`<${encodeURI(path)}>; rel="preload"; as="style"; nopush`);
 			}
 		}
@@ -355,6 +364,25 @@ export async function render_response({
 	if (page_config.csr && client) {
 		const route = client.routes?.find((r) => r.id === event.route.id) ?? null;
 
+		if (integrity_map) {
+			// `import()` and Vite's preload helper can't carry an `integrity` attribute, so
+			// the browser looks up the integrity of every JS module in the import map instead
+			// ponytail: lists every client JS chunk on every page; scope it per route if the map gets big
+			/** @type {Record<string, string>} */
+			const integrity = {};
+			for (const file in integrity_map) {
+				if (file.endsWith('.js')) integrity[prefixed(file)] = integrity_map[file];
+			}
+
+			const import_map = JSON.stringify({ integrity });
+			await csp.add_script(import_map);
+			head.set_import_map(
+				`<script type="importmap"${
+					csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''
+				}>${import_map}</script>`
+			);
+		}
+
 		// when serving a prerendered page in an app that uses runtime public env vars, we must
 		// import the env.js module so that it evaluates before any user code can evaluate.
 		// TODO revert to using top-level await once https://bugs.webkit.org/show_bug.cgi?id=242740 is fixed
@@ -371,7 +399,19 @@ export async function render_response({
 				const path = prefixed(dep);
 
 				if (resolve_opts.preload({ type: 'js', path })) {
-					add_preload(path, ['rel="modulepreload"']);
+					const integrity = integrity_map?.[dep];
+
+					if (integrity) {
+						// SRI only takes effect on the HTML tag — a `Link` header cannot carry
+						// `integrity`, so bypass `add_preload` and always emit the tag
+						head.add_link_tag(path, [
+							'rel="modulepreload"',
+							`integrity="${integrity}"`,
+							'crossorigin="anonymous"'
+						]);
+					} else {
+						add_preload(path, ['rel="modulepreload"']);
+					}
 				}
 			}
 		}
@@ -646,6 +686,8 @@ class Head {
 	/** @type {string[]} */
 	#http_equiv = [];
 	/** @type {string[]} */
+	#import_map = [];
+	/** @type {string[]} */
 	#link_tags = [];
 	/** @type {string[]} */
 	#style_tags = [];
@@ -662,6 +704,8 @@ class Head {
 	build() {
 		return [
 			...this.#http_equiv,
+			// must come before any module is loaded, so its integrity metadata applies to all of them
+			...this.#import_map,
 			...this.#link_tags,
 			this.#rendered,
 			...this.#style_tags,
@@ -693,6 +737,11 @@ class Head {
 	 */
 	add_link_tag(href, attributes) {
 		this.#link_tags.push(`<link href="${href}" ${attributes.join(' ')}>`);
+	}
+
+	/** @param {string} tag */
+	set_import_map(tag) {
+		this.#import_map = [tag];
 	}
 
 	/** @param {string} tag */
