@@ -53,8 +53,9 @@ export default /** @satisfies {import('vitest/config').ViteUserConfig} */ ({
 					name: 'kit-server-build',
 					setupFiles,
 					environment: 'node',
+					// Vitest sets `process.env.DEV` itself, so the dev-only suites use their own flag
 					env: {
-						DEV: 'true'
+						KIT_TEST_DEV: 'true'
 					},
 					include: ['src/runtime/server/page/csp.spec.js', 'src/runtime/server/cookie.spec.js'],
 					exclude: [...exclude, 'src/**/*.svelte.spec.js']
