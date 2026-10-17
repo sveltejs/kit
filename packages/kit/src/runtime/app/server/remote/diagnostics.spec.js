@@ -6,7 +6,12 @@ import { ActionFailure, HttpError, ValidationError } from '@sveltejs/kit/interna
 import {
 	getRequestEvent,
 	with_request_store,
-	init_remote_functions
+	init_remote_functions,
+	RequestEvent,
+	QUERY,
+	PRERENDER,
+	COMMAND,
+	RENDER
 } from '@sveltejs/kit/internal/server';
 import { create_validator, run_remote_function, run_remote_generator } from './shared.js';
 import { command } from './command.js';
@@ -36,15 +41,18 @@ beforeEach(() => {
 	flags.prerendering = false;
 	flags.DEV = true;
 	store = /** @type {any} */ ({
-		event: {
-			request: new Request('http://localhost/page', { method: 'POST' }),
-			url: new URL('http://localhost/page'),
-			params: {},
-			route: { id: '/page' },
-			cookies: { set: vi.fn(), delete: vi.fn(), get: () => 'cookie' },
-			setHeaders: vi.fn(),
-			isRemoteRequest: true
-		},
+		event: new RequestEvent(
+			/** @type {any} */ ({
+				request: new Request('http://localhost/page', { method: 'POST' }),
+				url: new URL('http://localhost/page'),
+				params: {},
+				route: { id: '/page' },
+				cookies: { set: vi.fn(), delete: vi.fn(), get: () => 'cookie' },
+				setHeaders: vi.fn(),
+				isRemoteRequest: true
+			}),
+			0
+		),
 		state: { remote: {} }
 	});
 });
@@ -112,7 +120,7 @@ test.each(['set', 'delete'])('queries cannot %s cookies', async (operation) => {
 		run_remote_function(
 			store.event,
 			store.state,
-			false,
+			QUERY,
 			() => undefined,
 			() => {
 				const cookies = getRequestEvent().cookies;
@@ -132,7 +140,7 @@ test.each(['set', 'delete'])(
 			run_remote_function(
 				store.event,
 				store.state,
-				true,
+				COMMAND,
 				() => undefined,
 				() => {
 					const cookies = getRequestEvent().cookies;
@@ -148,7 +156,7 @@ test('mutations forward absolute cookie operations and queries can read cookies'
 	await run_remote_function(
 		store.event,
 		store.state,
-		true,
+		COMMAND,
 		() => undefined,
 		() => {
 			const cookies = getRequestEvent().cookies;
@@ -166,7 +174,7 @@ test('remote functions cannot set headers', async () => {
 		run_remote_function(
 			store.event,
 			store.state,
-			true,
+			COMMAND,
 			() => undefined,
 			() => getRequestEvent().setHeaders({ test: 'value' })
 		)
@@ -177,19 +185,18 @@ test('remote functions cannot set headers', async () => {
 test.each(['url', 'params', 'route'])(
 	'queries cannot access event.%s, including nested queries',
 	async (property) => {
-		store.state = { ...store.state, is_in_remote_query: true };
 		await expect(
 			run_remote_function(
 				store.event,
 				store.state,
-				false,
+				QUERY,
 				() => undefined,
 				() => {
-					const event = getRequestEvent();
+					const event = /** @type {RequestEvent} */ (getRequestEvent());
 					return run_remote_function(
 						event,
 						store.state,
-						false,
+						QUERY,
 						() => undefined,
 						() => /** @type {any} */ (getRequestEvent())[property]
 					);
@@ -203,7 +210,7 @@ test('live callbacks must return an iterable', async () => {
 	const iterator = run_remote_generator(
 		store.event,
 		store.state,
-		false,
+		QUERY,
 		() => undefined,
 		() => /** @type {any} */ ({}),
 		'live'
@@ -218,7 +225,7 @@ test('live generators retain request context and clean up when closed', async ()
 	const iterator = run_remote_generator(
 		store.event,
 		store.state,
-		false,
+		QUERY,
 		() => undefined,
 		function* () {
 			try {
@@ -239,11 +246,7 @@ test('live generators retain request context and clean up when closed', async ()
 test.each(['query', 'prerender'])('commands cannot run inside a %s', (type) => {
 	const mutate = command(() => 'result');
 	init({ mutate });
-	store.state = {
-		...store.state,
-		is_in_remote_query: type === 'query',
-		is_in_remote_prerender: type === 'prerender'
-	};
+	store.event = store.event.clone(type === 'query' ? QUERY : PRERENDER);
 	expect(() => run(() => mutate())).toThrowKitError('remote_command_readonly', {
 		contains: ['mutate']
 	});
@@ -252,12 +255,12 @@ test.each(['query', 'prerender'])('commands cannot run inside a %s', (type) => {
 test('commands cannot run on GET or during SSR', () => {
 	const mutate = command(() => 'result');
 	init({ mutate });
-	store.event = { ...store.event, request: new Request('http://localhost/') };
+	store.event.request = new Request('http://localhost/');
 	expect(() => run(() => mutate())).toThrowKitError('remote_command_method', {
 		contains: ['GET', 'mutate']
 	});
-	store.event = { ...store.event, request: new Request('http://localhost/', { method: 'POST' }) };
-	store.state = { ...store.state, is_in_render: true };
+	store.event.request = new Request('http://localhost/', { method: 'POST' });
+	store.event = store.event.clone(RENDER);
 	expect(() => run(() => mutate())).toThrowKitError('remote_command_render', {
 		contains: ['mutate']
 	});
@@ -364,7 +367,7 @@ test('requested validates its function, context and limit', () => {
 		'remote_requested_invalid_query'
 	);
 	expect(() => run(() => requested(read, 1))).toThrowKitError('remote_requested_context');
-	store.state = { ...store.state, is_in_remote_form_or_command: true };
+	store.event = store.event.clone(COMMAND);
 	for (const limit of [-1, 0.5, NaN]) {
 		expect(() => run(() => requested(read, limit))).toThrowKitError(
 			'remote_requested_invalid_limit'
@@ -374,7 +377,7 @@ test('requested validates its function, context and limit', () => {
 });
 
 test('requested refresh and reconnect methods retain their query-kind checks', async () => {
-	store.state = { ...store.state, is_in_remote_form_or_command: true };
+	store.event = store.event.clone(COMMAND);
 	const read = query(() => 1);
 	const live = query.live(function* () {
 		yield 1;
@@ -399,7 +402,7 @@ test('requested records async-validator misuse at synchronous iteration without 
 		() => 1
 	);
 	init({ read });
-	store.state = { ...store.state, is_in_remote_form_or_command: true };
+	store.event = store.event.clone(COMMAND);
 	const payload = stringify_remote_arg('input');
 	store.state.remote.requested = new Map([['hash/read', new Set([payload])]]);
 	expect([...run(() => requested(read, 1))]).toEqual([]);

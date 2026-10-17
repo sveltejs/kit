@@ -1,7 +1,7 @@
-/** @import { RequestEvent } from '@sveltejs/kit' */
 /** @import { RequestState, ServerHooks } from 'types' */
 import { afterEach, expect, test, vi } from 'vitest';
 import { SvelteKitError } from '@sveltejs/kit/internal';
+import { RequestEvent, RENDER } from '@sveltejs/kit/internal/server';
 
 vi.stubGlobal('__SVELTEKIT_DEV__', false);
 vi.stubGlobal('__SVELTEKIT_SUPPORTS_ASYNC__', false);
@@ -9,7 +9,7 @@ vi.stubGlobal('__SVELTEKIT_SUPPORTS_ASYNC__', false);
 const { handle_error_and_jsonify } = await import('./errors.js');
 const { set_hooks } = await import('./internal.js');
 
-const event = /** @type {RequestEvent} */ (/** @type {unknown} */ ({}));
+const event = new RequestEvent(/** @type {any} */ ({}), 0);
 
 /** @param {Partial<RequestState>} [state] */
 function create_state(state = {}) {
@@ -67,11 +67,7 @@ test('warns once and discards the result of an async handleError hook during ren
 	use_hook(() => Promise.resolve({ message: 'custom' }));
 	const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-	const body = handle_error_and_jsonify(
-		event,
-		create_state({ is_in_render: true }),
-		new Error('x')
-	);
+	const body = handle_error_and_jsonify(event.clone(RENDER), create_state(), new Error('x'));
 
 	expect(body).toEqual({ status: 500, message: 'Internal Error' });
 	expect(warn).toHaveBeenCalledOnce();

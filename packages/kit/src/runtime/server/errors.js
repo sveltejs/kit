@@ -13,7 +13,7 @@ import * as e from '../../messages/server-errors.js';
 import * as w from '../../messages/server-warnings.js';
 
 /**
- * @param {import('@sveltejs/kit').RequestEvent} event
+ * @param {import('@sveltejs/kit/internal/server').RequestEvent} event
  * @param {import('types').RequestState} state
  * @param {any} error
  * @returns {App.Error | Promise<App.Error>}
@@ -72,7 +72,7 @@ export function handle_error_and_jsonify(event, state, error) {
 	}
 
 	if (result instanceof Promise) {
-		if (!__SVELTEKIT_SUPPORTS_ASYNC__ && state.is_in_render) {
+		if (!__SVELTEKIT_SUPPORTS_ASYNC__ && event.in_render) {
 			w.handle_error_async_without_async_svelte();
 
 			// we're discarding the result, but we still need to prevent an unhandled
