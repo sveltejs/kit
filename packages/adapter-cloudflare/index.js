@@ -1,4 +1,4 @@
-/** @import { Plugin } from 'vite' */
+/** @import { Plugin, PreviewServer, ViteDevServer } from 'vite' */
 /** @import { GetPlatformProxyOptions } from 'wrangler' */
 
 import fs from 'node:fs';
@@ -217,38 +217,105 @@ export default function (options = {}) {
 }
 
 /**
+ * Sets a new platform proxy and disposes the old one if it exists
+ * @param {GetPlatformProxyOptions} options
+ */
+async function reload_cloudflare_platform_proxy(options) {
+	const previous = globalThis.__sveltekit_cloudflare_platform;
+	const next = await getPlatformProxy(options);
+	globalThis.__sveltekit_cloudflare_platform = next;
+	if (globalThis.__sveltekit_cloudflare_platform_setup) {
+		globalThis.__sveltekit_cloudflare_platform_setup.proxy = Promise.resolve(next);
+	}
+	Object.defineProperty(globalThis, 'caches', {
+		value: next.caches,
+		writable: true,
+		enumerable: true,
+		configurable: true
+	});
+	if (previous) {
+		await previous.dispose();
+	}
+}
+
+/**
  * @param {GetPlatformProxyOptions} options
  * @param {string} stub_import
  * @returns {Plugin}
  */
 function virtual_workers_module(options, stub_import) {
-	const setup = async () => {
-		if (globalThis.__sveltekit_cloudflare_platform) return;
-		const proxy = await getPlatformProxy(options);
-		// We store the platform proxy on globalThis so that our virtual workers module
-		// can access the same instance that we use here to populate `caches` and `cf` (above).
-		globalThis.__sveltekit_cloudflare_platform = proxy;
-		// Deno defines `caches` with a getter and no setter, so assigning to it throws
-		Object.defineProperty(globalThis, 'caches', {
-			value: proxy.caches,
-			writable: true,
-			enumerable: true,
-			configurable: true
+	/** @param {ViteDevServer | PreviewServer} server */
+	const setup = async (server) => {
+		// shared so that concurrent servers start one proxy and only the last close disposes it
+		const shared = (globalThis.__sveltekit_cloudflare_platform_setup ??= {
+			servers: 0,
+			proxy: getPlatformProxy(options)
 		});
+		shared.servers += 1;
+		try {
+			const proxy = await shared.proxy;
+			// We store the platform proxy on globalThis so that our virtual workers module
+			// can access the same instance that we use here to populate `caches` and `cf` (above).
+			globalThis.__sveltekit_cloudflare_platform = proxy;
+			// Deno defines `caches` with a getter and no setter, so assigning to it throws
+			Object.defineProperty(globalThis, 'caches', {
+				value: proxy.caches,
+				writable: true,
+				enumerable: true,
+				configurable: true
+			});
+
+			// reinitialise the platform proxy when the wrangler config changes
+			if ('watcher' in server) {
+				const resolved = unstable_readConfig({ config: options.configPath });
+				if (resolved.configPath) {
+					const config_path = path.resolve(resolved.configPath);
+					let reloading = false;
+
+					/** @param {string} file */
+					const on_change = (file) => {
+						if (reloading || path.resolve(file) !== config_path) return;
+						reloading = true;
+						reload_cloudflare_platform_proxy(options)
+							.catch((/** @type {unknown} */ error) => {
+								// A rejection must not become unhandled — it would crash the dev
+								// server. Log the message and leave the previous proxy in place
+								// (it is only disposed on the success path, so bindings keep working).
+								server.config.logger.warn(
+									`[adapter-cloudflare] failed to reload the Cloudflare platform proxy after a wrangler config change: ${error instanceof Error ? error.message : String(error)}`
+								);
+							})
+							.finally(() => {
+								reloading = false;
+							});
+					};
+					server.watcher.add(config_path);
+					server.watcher.on('change', on_change);
+				}
+			}
+		} catch (error) {
+			// let the next server retry
+			if (globalThis.__sveltekit_cloudflare_platform_setup === shared) {
+				globalThis.__sveltekit_cloudflare_platform_setup = undefined;
+			}
+			throw error;
+		}
 	};
 	const dispose = async () => {
-		const proxy = globalThis.__sveltekit_cloudflare_platform;
+		const shared = globalThis.__sveltekit_cloudflare_platform_setup;
+		if (!shared) return;
+		shared.servers -= 1;
+		if (shared.servers > 0) return;
+		globalThis.__sveltekit_cloudflare_platform_setup = undefined;
 		globalThis.__sveltekit_cloudflare_platform = undefined;
-		await proxy?.dispose();
+		await (await shared.proxy).dispose();
 	};
 	return {
 		name: 'vite-plugin-sveltekit-adapter-cloudflare-virtual-workers-module',
 		configureServer: setup,
 		configurePreviewServer: setup,
-		closeServer({ reason }) {
-			// a restarting server is created before the old one closes, so it inherits the proxy
-			if (reason === 'close') return dispose();
-		},
+		// a restarting server is set up before the old one closes, so the proxy survives
+		closeServer: dispose,
 		closePreviewServer: dispose,
 		resolveId: {
 			filter: { id: exactRegex('cloudflare:workers') },

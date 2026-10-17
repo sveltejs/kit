@@ -1,5 +1,15 @@
 # @sveltejs/adapter-cloudflare
 
+## 8.0.1
+
+### Patch Changes
+
+- fix: start the dev server on runtimes such as Deno that define `caches` as a getter-only global ([#17401](https://github.com/sveltejs/kit/pull/17401))
+
+- fix: start one platform proxy for concurrent Vite servers and keep it alive until the last one closes ([#17368](https://github.com/sveltejs/kit/pull/17368))
+
+- fix: support `Span#setStatus` and `Span#updateName` on local emulation of Cloudflare `tracing` ([#17400](https://github.com/sveltejs/kit/pull/17400))
+
 ## 8.0.0
 
 ### Major Changes

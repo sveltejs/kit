@@ -1,5 +1,11 @@
 # @sveltejs/adapter-vercel
 
+## 7.0.1
+
+### Patch Changes
+
+- fix: keep the detected Bun minor in the resolved runtime ([#17331](https://github.com/sveltejs/kit/pull/17331))
+
 ## 7.0.0
 
 ### Major Changes
