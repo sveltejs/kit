@@ -338,13 +338,7 @@ test('Root route $types.d.ts is not deleted on subsequent sync runs', () => {
 
 		// first sync run writes the root route types
 		write_all_types(config, manifest, dir);
-		const types_file = path.join(
-			config.outDir,
-			'types',
-			'src',
-			'routes',
-			'$types.d.ts'
-		);
+		const types_file = path.join(config.outDir, 'types', 'src', 'routes', '$types.d.ts');
 		assert.ok(fs.existsSync(types_file), 'root $types.d.ts written on first sync run');
 
 		// a second sync run must not delete the root route types.
