@@ -81,10 +81,12 @@ export class ActionFailure {
 export class ValidationError extends Error {
 	/**
 	 * @param {StandardSchemaV1.Issue[]} issues
+	 * @param {{ name?: string; file?: string }} [remote]
 	 */
-	constructor(issues) {
+	constructor(issues, remote) {
 		super('Validation failed');
 		this.name = 'ValidationError';
 		this.issues = issues;
+		this.remote = remote;
 	}
 }
