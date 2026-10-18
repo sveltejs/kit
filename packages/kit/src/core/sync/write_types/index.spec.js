@@ -344,6 +344,7 @@ test('Root route $types.d.ts is not deleted on subsequent sync runs', () => {
 		// a second sync run must not delete the root route types.
 		// (the metadata file is rewritten every run, which can trigger a
 		// regeneration — what the bug is about is the deletion itself)
+		/** @type {string[]} */
 		const deleted = [];
 		const original_rm = fs.rmSync;
 		vi.spyOn(fs, 'rmSync').mockImplementation(
