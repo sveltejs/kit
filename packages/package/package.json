@@ -31,7 +31,6 @@
 		"@typescript/native": "catalog:",
 		"prettier": "catalog:",
 		"prettier-plugin-svelte": "catalog:",
-		"sass-embedded": "^1.105.2",
 		"svelte": "catalog:",
 		"svelte-preprocess": "catalog:",
 		"typescript": "^6.0.3",

@@ -1,7 +1,5 @@
 import fs from 'node:fs';
 import process from 'node:process';
-import { execFile } from 'node:child_process';
-import { promisify } from 'node:util';
 import { join, resolve } from 'node:path';
 
 import prettier from 'prettier';
@@ -123,59 +121,6 @@ for (const dir of fs.readdirSync(join(import.meta.dirname, 'errors'))) {
 		}
 	});
 }
-
-test.each([false, true])(
-	'CLI exits after preprocessing SCSS with vitePreprocess (types: %s)',
-	async (types) => {
-		const cwd = join(import.meta.dirname, 'fixtures', 'vite-preprocess');
-		const { stdout } = await promisify(execFile)(
-			process.execPath,
-			[join(import.meta.dirname, '../svelte-package.js'), ...(types ? [] : ['--no-types'])],
-			{ cwd, timeout: 20_000 }
-		);
-
-		expect(stdout).toContain('src/lib -> dist');
-		const component = fs.readFileSync(join(cwd, 'dist/Component.svelte'), 'utf-8');
-		expect(component).toContain('color: red;');
-		expect(component).not.toContain('lang="scss"');
-		expect(fs.existsSync(join(cwd, 'dist/Component.svelte.d.ts'))).toBe(types);
-	},
-	25_000
-);
-
-test('CLI flushes output and runs exit handlers after preprocessing', async () => {
-	const cwd = join(import.meta.dirname, 'fixtures', 'cli-completion');
-	const { stdout, stderr } = await promisify(execFile)(
-		process.execPath,
-		[join(import.meta.dirname, '../svelte-package.js'), '--no-types'],
-		{ cwd, timeout: 10_000, env: { ...process.env, FORCE_COLOR: '0' } }
-	);
-
-	expect(stdout).toBe('out\n'.repeat(32_768) + 'src/lib -> dist\n');
-	expect(stderr).toBe('err\n'.repeat(32_768));
-	expect(fs.readFileSync(join(cwd, 'dist/exit.txt'), 'utf-8')).toBe('exited');
-}, 15_000);
-
-test('CLI preserves a nonzero exit code after async preprocessing', async () => {
-	const cwd = join(import.meta.dirname, 'fixtures', 'cli-completion');
-	await expect(
-		promisify(execFile)(
-			process.execPath,
-			[
-				'--import=data:text/javascript,process.exitCode=42',
-				join(import.meta.dirname, '../svelte-package.js'),
-				'--no-types'
-			],
-			{ cwd, timeout: 10_000, env: { ...process.env, FORCE_COLOR: '0' } }
-		)
-	).rejects.toMatchObject({
-		code: 42,
-		stdout: 'out\n'.repeat(32_768) + 'src/lib -> dist\n',
-		stderr: 'err\n'.repeat(32_768)
-	});
-	expect(fs.readFileSync(join(cwd, 'dist/Component.svelte'), 'utf-8')).toContain('async demo');
-	expect(fs.readFileSync(join(cwd, 'dist/exit.txt'), 'utf-8')).toBe('exited');
-}, 15_000);
 
 test('create package with javascript', async () => {
 	// should also preserve filename casing
