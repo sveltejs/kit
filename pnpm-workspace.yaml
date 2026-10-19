@@ -35,6 +35,7 @@ packages:
   - '!.test-tmp/**'
   - playgrounds/*
 allowBuilds:
+  '@parcel/watcher': false # uses prebuilt optional dependencies
   esbuild: true
   protobufjs: false # postinstall script only prints warnings
   rolldown: true

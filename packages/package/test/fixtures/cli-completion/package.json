@@ -1,0 +1,13 @@
+{
+	"name": "cli-completion",
+	"private": true,
+	"type": "module",
+	"exports": {
+		".": {
+			"svelte": "./dist/Component.svelte"
+		}
+	},
+	"peerDependencies": {
+		"svelte": "^5.0.0"
+	}
+}
