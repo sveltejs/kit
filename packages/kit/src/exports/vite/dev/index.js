@@ -461,6 +461,7 @@ export async function dev(
 			} catch (e) {
 				const error = coalesce_to_error(e);
 				res.statusCode = 500;
+				res.setHeader('Content-Type', 'text/plain; charset=utf-8');
 				fix_stack_trace(error);
 				console.error(styleText(['bold', 'red'], String(error)));
 				res.end(error.stack || error.message); // handle `stackless` errors
