@@ -93,6 +93,20 @@ try {
 	};
 
 	await (values.watch ? packaging.watch(options) : packaging.build(options));
+
+	if (!values.watch) {
+		// Preprocessors can keep resources alive after packaging (for example, Vite's Sass compiler).
+		// Flush buffered output before exiting, and allow synchronous exit handlers to run.
+		await Promise.all(
+			[process.stdout, process.stderr].map(
+				(stream) =>
+					new Promise((fulfil, reject) => {
+						stream.write('', (error) => (error ? reject(error) : fulfil(undefined)));
+					})
+			)
+		);
+		process.exit();
+	}
 } catch (error) {
 	handle_error(/** @type {Error} */ (error));
 }
