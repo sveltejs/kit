@@ -29,6 +29,8 @@ export default defineConfig({
 	},
 	plugins: [
 		sveltekit({
+			compilerOptions: { experimental: { async: true } },
+			experimental: { remoteFunctions: true },
 			adapter: adapter({
 				envPrefix: 'MY_CUSTOM_',
 				buildOptions

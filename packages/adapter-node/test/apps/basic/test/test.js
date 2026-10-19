@@ -5,6 +5,12 @@ test('SSR', async ({ page }) => {
 	await expect(page.locator('h1')).toContainText('Hello world!');
 });
 
+test('reads a prerendered remote function during SSR', async ({ request }) => {
+	const response = await request.get('/');
+	expect(response.status()).toBe(200);
+	expect(await response.text()).toContain('from prerendered asset');
+});
+
 test('CSR', async ({ page }) => {
 	await page.goto('/');
 	await expect(page.locator('button')).toContainText('Toggle: false');
