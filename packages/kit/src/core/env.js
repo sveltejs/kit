@@ -51,6 +51,8 @@ export async function load_explicit_env(kit, file, root, mode) {
 	const server = await vite.createServer({
 		configFile: false,
 		logLevel: 'silent',
+		// closed as soon as `file` is imported; the caller watches `deps` itself
+		server: { watch: null },
 		mode,
 		define: {
 			// these are needed by $app/env
