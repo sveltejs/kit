@@ -1,6 +1,14 @@
-import process from 'node:process';
 import { assert, expect, test, describe, beforeAll, vi } from 'vitest';
 import { domain_matches, path_matches, get_cookies } from './cookie.js';
+
+const env = vi.hoisted(() => ({ DEV: false }));
+
+vi.mock('esm-env', async (original) => ({
+	...(await original()),
+	get DEV() {
+		return env.DEV;
+	}
+}));
 
 vi.stubGlobal('__SVELTEKIT_DEV__', undefined);
 
@@ -37,8 +45,9 @@ const cookies_setup = ({ href, headers } = {}) => {
 	return result;
 };
 
-describe.skipIf(!process.env.DEV)('cookies in dev', () => {
+describe('cookies in dev', () => {
 	beforeAll(() => {
+		env.DEV = true;
 		vi.stubGlobal('__SVELTEKIT_DEV__', true);
 	});
 
@@ -96,8 +105,9 @@ describe.skipIf(!process.env.DEV)('cookies in dev', () => {
 	});
 });
 
-describe.skipIf(!!process.env.DEV)('cookies in prod', () => {
+describe('cookies in prod', () => {
 	beforeAll(() => {
+		env.DEV = false;
 		vi.stubGlobal('__SVELTEKIT_DEV__', false);
 	});
 

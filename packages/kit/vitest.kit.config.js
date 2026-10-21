@@ -49,18 +49,6 @@ export default /** @satisfies {import('vitest/config').ViteUserConfig} */ ({
 				}
 			},
 			{
-				test: {
-					name: 'kit-server-build',
-					setupFiles,
-					environment: 'node',
-					env: {
-						DEV: 'true'
-					},
-					include: ['src/runtime/server/page/csp.spec.js', 'src/runtime/server/cookie.spec.js'],
-					exclude: [...exclude, 'src/**/*.svelte.spec.js']
-				}
-			},
-			{
 				resolve: {
 					conditions: ['browser']
 				},
