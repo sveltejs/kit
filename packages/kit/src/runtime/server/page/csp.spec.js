@@ -1,8 +1,7 @@
-import process from 'node:process';
 import { assert, expect, test, describe, beforeAll } from 'vitest';
 import { Csp } from './csp.js';
 
-describe.skipIf(!process.env.KIT_TEST_DEV)('CSPs in dev', () => {
+describe('CSPs in dev', () => {
 	beforeAll(() => {
 		// @ts-expect-error
 		globalThis.__SVELTEKIT_DEV__ = true;
@@ -69,7 +68,7 @@ describe.skipIf(!process.env.KIT_TEST_DEV)('CSPs in dev', () => {
 	});
 });
 
-describe.skipIf(!!process.env.KIT_TEST_DEV)('CSPs in prod', () => {
+describe('CSPs in prod', () => {
 	beforeAll(() => {
 		// @ts-expect-error
 		globalThis.__SVELTEKIT_DEV__ = false;
