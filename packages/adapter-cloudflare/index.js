@@ -1,4 +1,4 @@
-/** @import { Plugin, PreviewServer, ViteDevServer } from 'vite' */
+/** @import { EnvironmentOptions, Plugin, PreviewServer, ViteDevServer } from 'vite' */
 /** @import { GetPlatformProxyOptions } from 'wrangler' */
 
 import fs from 'node:fs';
@@ -15,6 +15,7 @@ import {
 } from './utils.js';
 import { exactRegex } from '@rolldown/pluginutils';
 import { getRequest } from '@sveltejs/kit/node';
+import { cloudflare } from '@cloudflare/vite-plugin';
 
 const name = '@sveltejs/adapter-cloudflare';
 
@@ -204,6 +205,7 @@ export default function (options = {}) {
 				return request;
 			},
 			plugins: [
+				...cloudflare_environment(options.config),
 				virtual_workers_module(
 					{
 						configPath: options.config,
@@ -214,6 +216,75 @@ export default function (options = {}) {
 			]
 		}
 	};
+}
+
+// TODO: move the Vite plugins into their own file
+/**
+ * Applies the Worker environment config that `@cloudflare/vite-plugin` generates to the SSR
+ * environment so that the server output suits workerd. We leave out its Worker entrypoint
+ * and build pipeline since SvelteKit provides those
+ * @param {string | undefined} config_path
+ * @returns {Plugin[]}
+ */
+function cloudflare_environment(config_path) {
+	const plugins = cloudflare({
+		configPath: config_path,
+		viteEnvironment: { name: 'ssr' },
+		config(config) {
+			// the plugin requires `main` to exist but our Worker entrypoint is generated after the build
+			config.main = fileURLToPath(new URL('./files/worker.js', import.meta.url));
+		}
+	});
+
+	const config_plugin = /** @type {Plugin} */ (
+		plugins.find((plugin) => plugin.name === 'vite-plugin-cloudflare:config')
+	);
+	const reused = new Set([
+		// resolves the plugin config that the other plugins read
+		'vite-plugin-cloudflare',
+		// alias Node.js builtins to the polyfills workerd uses and leave the rest as imports
+		'vite-plugin-cloudflare:nodejs-als',
+		'vite-plugin-cloudflare:nodejs-compat',
+		'vite-plugin-cloudflare:nodejs-compat-warnings'
+	]);
+
+	return [
+		...plugins
+			.filter((plugin) => reused.has(plugin.name))
+			.map((plugin) => /** @type {Plugin} */ ({ ...plugin, apply: 'build' })),
+		{
+			name: 'vite-plugin-sveltekit-adapter-cloudflare-environment',
+			apply: 'build',
+			async config(user_config, env) {
+				const hook = /** @type {Function} */ (config_plugin.config);
+				/** @type {EnvironmentOptions} */
+				const ssr = (await hook.call(this, user_config, env)).environments.ssr;
+
+				return {
+					environments: {
+						ssr: {
+							keepProcessEnv: ssr.keepProcessEnv,
+							define: ssr.define,
+							resolve: {
+								noExternal: ssr.resolve?.noExternal,
+								// `browser` would resolve `esm-env` to `BROWSER = true` and similar
+								conditions: ssr.resolve?.conditions?.filter((condition) => condition !== 'browser'),
+								// we resolve `cloudflare:workers` to a stub that runs in Node
+								builtins: ssr.resolve?.builtins?.filter((id) => id !== 'cloudflare:workers')
+							},
+							build: {
+								target: ssr.build?.target,
+								rolldownOptions: {
+									platform: ssr.build?.rolldownOptions?.platform,
+									resolve: ssr.build?.rolldownOptions?.resolve
+								}
+							}
+						}
+					}
+				};
+			}
+		}
+	];
 }
 
 /**
