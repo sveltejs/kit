@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: don't watch the file system while loading `src/env`
+fix: avoid adding a file watcher while loading `src/env`
