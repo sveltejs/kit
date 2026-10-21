@@ -3,6 +3,7 @@ import { read } from '$app/server';
 import auto from './[auto].txt';
 import url from './[url].txt?url';
 import styles from './[styles].css?url';
+import no_inline from './no-inline.txt?url&no-inline';
 
 /** @type {Record<string, { default: string }>} */
 const local_glob = import.meta.glob('./assets/**', {
@@ -25,6 +26,7 @@ export async function load() {
 		auto: await read(auto).text(),
 		url: await read(url).text(),
 		styles: await read(styles).text(),
+		no_inline: await read(no_inline).text(),
 		local_glob: await read(local_glob['./assets/[file].txt'].default).text(),
 		external_glob: await read(Object.values(external_glob)[0].default).text(),
 		svg: await read(local_glob['./assets/icon.svg'].default).text()
