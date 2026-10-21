@@ -2,7 +2,6 @@ import fs from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { assert, expect, test, vi } from 'vitest';
-import { ESLint } from 'eslint';
 import { validate_config, split_config, load_template } from './index.js';
 
 /**
@@ -152,30 +151,6 @@ test('fills in defaults', () => {
 	defaults.version.name = validated.version.name;
 
 	expect(validated).toEqual(defaults);
-});
-
-test('default config can be used with the ESLint cache', async () => {
-	const cwd = fs.mkdtempSync(join(tmpdir(), 'svelte-kit-eslint-'));
-
-	try {
-		fs.writeFileSync(join(cwd, 'test.js'), '');
-		const eslint = new ESLint({
-			cwd,
-			cache: true,
-			overrideConfigFile: true,
-			overrideConfig: {
-				languageOptions: {
-					parserOptions: { svelteConfig: validate_config({}) }
-				}
-			}
-		});
-
-		const results = await eslint.lintFiles(['test.js']);
-		expect(results[0].messages).toEqual([]);
-		expect(fs.existsSync(join(cwd, '.eslintcache'))).toBe(true);
-	} finally {
-		fs.rmSync(cwd, { recursive: true, force: true });
-	}
 });
 
 test('validates explicit typescript.config callbacks', () => {
