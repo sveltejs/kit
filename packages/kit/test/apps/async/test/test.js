@@ -21,6 +21,11 @@ test.describe('remote functions', () => {
 		await expect(page.locator('body')).not.toContainText('Loading todo');
 	});
 
+	test('query can read a file imported by the remote module', async ({ page }) => {
+		await page.goto('/remote/read-file');
+		await expect(page.locator('#text')).toHaveText('Imported by a remote function 😎');
+	});
+
 	test('query.live renders the first yielded value during SSR', async ({ page }) => {
 		await page.goto('/remote/live');
 		await expect(page.locator('#first-value')).toHaveText('0');
