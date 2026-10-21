@@ -11,6 +11,8 @@ const useful_cloudflare_plugins = new Set([
 	'vite-plugin-cloudflare:nodejs-compat-warnings'
 ]);
 
+const worker_entry = fileURLToPath(new URL('./files/worker.js', import.meta.url));
+
 /**
  * Applies the Worker environment config that `@cloudflare/vite-plugin` generates
  * so that the server output suits workerd
@@ -22,8 +24,9 @@ export function plugin_config(config_path) {
 		configPath: config_path,
 		viteEnvironment: { name: 'ssr' },
 		config(config) {
-			// the plugin requires `main` to exist but our Worker entrypoint is generated after the build
-			config.main = fileURLToPath(new URL('./files/worker.js', import.meta.url));
+			// the plugin requires `main` to be populated, so we set it to avoid it
+			// trying to resolve build-generated entry in the user's wrangler config
+			config.main = worker_entry;
 		}
 	});
 
