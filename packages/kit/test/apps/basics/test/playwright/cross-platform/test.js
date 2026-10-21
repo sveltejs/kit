@@ -1178,6 +1178,19 @@ test.describe('XSS', () => {
 });
 
 test.describe('$app/server', () => {
+	test('can read files imported with queries', async ({ page }) => {
+		const response = await page.goto('/read-file');
+		expect(response?.status()).toBe(200);
+		const text = await page.getByTestId('url').innerText();
+		await expect(page.getByTestId('no_inline')).toHaveText(text);
+		await expect(page.getByTestId('fragment')).toHaveText(text);
+		await expect(page.getByTestId('query_and_fragment')).toHaveText(text);
+		await expect(page.getByTestId('content_type')).toHaveText('text/plain');
+		await expect(page.getByTestId('external_no_inline')).toHaveText(
+			await page.getByTestId('external_glob').innerText()
+		);
+	});
+
 	test('can read a file', async ({ page }) => {
 		await page.goto('/read-file');
 
