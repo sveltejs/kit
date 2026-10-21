@@ -31,6 +31,7 @@
 		"files/worker.js",
 		"index.js",
 		"utils.js",
+		"workerd.js",
 		"index.d.ts"
 	],
 	"scripts": {
