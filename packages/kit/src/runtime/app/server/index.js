@@ -52,10 +52,13 @@ export function read(asset) {
 		});
 	}
 
+	// strip any query or hash, e.g. the `?no-inline` Vite keeps on dev asset URLs
+	const pathname = asset.split(/[?#]/, 1)[0];
+
 	const file = decodeURIComponent(
-		__SVELTEKIT_DEV__ && asset.startsWith(assets + '/@fs')
-			? asset.slice(assets.length)
-			: asset.slice(assets.length + 1)
+		__SVELTEKIT_DEV__ && pathname.startsWith(assets + '/@fs')
+			? pathname.slice(assets.length)
+			: pathname.slice(assets.length + 1)
 	);
 
 	if (file in manifest.server_assets) {
