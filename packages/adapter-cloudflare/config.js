@@ -23,7 +23,8 @@ const worker_entry = fileURLToPath(new URL('./files/worker.js', import.meta.url)
 export function plugin_config(config_path) {
 	const plugins = cloudflare({
 		// the plugin resolves a relative path against Vite's root but Wrangler resolves
-		// it against the working directory, which is what the rest of the adapter uses
+		// it against the working directory, which is what the rest of the adapter uses.
+		// TODO: resolve the Wrangler config against Vite's root throughout the adapter
 		configPath: config_path && path.resolve(config_path),
 		viteEnvironment: { name: 'ssr' },
 		config(config) {
