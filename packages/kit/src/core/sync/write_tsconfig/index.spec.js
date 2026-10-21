@@ -121,3 +121,29 @@ test('reports tsconfig parse errors with their location and no stack trace', () 
 	expect(error).toBeKitError('tsconfig_parse_failed');
 	expect(error.stack).toBe(`${error.message}\n    at tsconfig.json:3:2`);
 });
+
+test.each(['mutate', 'replace'])('applies an explicit tsconfig transform (%s)', (mode) => {
+	const root = fs.mkdtempSync(path.join(os.tmpdir(), 'svelte-kit-tsconfig-'));
+	dirs.push(root);
+	vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+	const transform = vi.fn((config) => {
+		if (mode === 'replace') {
+			return { ...config, compilerOptions: { ...config.compilerOptions, strict: true } };
+		}
+		config.compilerOptions.strict = true;
+	});
+	const config = process_config(validate_config({ typescript: { config: transform } }), root);
+	write_tsconfig(config, root);
+
+	const generated = JSON.parse(
+		fs.readFileSync(path.join(root, 'node_modules/$app/tsconfig.json'), 'utf8')
+	);
+	const service_worker = JSON.parse(
+		fs.readFileSync(path.join(root, 'node_modules/$app/tsconfig/service-worker.json'), 'utf8')
+	);
+
+	expect(transform).toHaveBeenCalledOnce();
+	expect(generated.compilerOptions.strict).toBe(true);
+	expect(service_worker.compilerOptions.strict).toBeUndefined();
+});

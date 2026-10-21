@@ -2115,7 +2115,6 @@ declare module '@sveltejs/kit/vite' {
 			 *
 			 * Note that any paths configured here should be relative to the generated config file, which is written to `node_modules/$app/tsconfig.json`.
 			 *
-			 * @default (config) => config
 			 * @since 1.3.0
 			 */
 			config?: (config: Record<string, any>) => Record<string, any> | void;
