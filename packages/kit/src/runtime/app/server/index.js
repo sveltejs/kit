@@ -52,8 +52,9 @@ export function read(asset) {
 		});
 	}
 
-	// strip any query or hash, e.g. the `?no-inline` Vite keeps on dev asset URLs
-	const pathname = asset.split(/[?#]/, 1)[0];
+	// strip any query or hash, e.g. the `?no-inline` Vite keeps on dev asset URLs.
+	// this matches Vite's `cleanUrl`, which treats the first `?` or `#` as the end of the file path
+	const pathname = asset.replace(/[?#].*$/, '');
 
 	const file = decodeURIComponent(
 		__SVELTEKIT_DEV__ && pathname.startsWith(assets + '/@fs')
