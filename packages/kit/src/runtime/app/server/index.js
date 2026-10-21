@@ -52,8 +52,9 @@ export function read(asset) {
 		});
 	}
 
-	// strip any query or hash, e.g. the `?no-inline` Vite keeps on dev asset URLs.
-	// this matches Vite's `cleanUrl`, which treats the first `?` or `#` as the end of the file path
+	// Vite keeps some of the import's query or hash on the asset URL (e.g. `?v=1`, or `?no-inline`
+	// during dev), so strip it the same way as Vite's `cleanUrl`, which treats the first `?` or `#`
+	// as the end of the file path
 	const pathname = asset.replace(/[?#].*$/, '');
 
 	const file = decodeURIComponent(

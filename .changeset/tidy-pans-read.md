@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: ignore query strings when using `read` on imported assets during dev
+fix: ignore the query string and hash of an imported asset's URL when using `read`
