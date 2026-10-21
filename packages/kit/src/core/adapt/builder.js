@@ -124,6 +124,7 @@ export function create_builder({
 			const server_assets = find_server_assets(
 				build_data,
 				route_data.filter((route) => prerender_map.get(route.id) !== true),
+				remotes,
 				vite_config.root
 			);
 			for (const file of server_assets) {
@@ -168,6 +169,7 @@ export function create_builder({
 			return find_server_assets(
 				build_data,
 				route_data.map((route) => /** @type {import('types').RouteData} */ (lookup.get(route))),
+				remotes,
 				vite_config.root
 			);
 		},
