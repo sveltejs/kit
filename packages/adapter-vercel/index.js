@@ -99,7 +99,13 @@ const plugin = function (defaults = {}) {
 					`export const manifest = ${builder.generateManifest({ relativePath, routes })};\n`
 				);
 
-				await create_function_bundle(builder, `${tmp}/index.js`, dir, config);
+				// files that server code reads at runtime but that tracing may not find (e.g. when the
+				// path is computed): ship them with every function, at their place in the server output
+				const server_only_assets = (builder.findServerOnlyAssets?.() ?? []).map((file) =>
+					path.resolve(builder.getServerDirectory(), file)
+				);
+
+				await create_function_bundle(builder, `${tmp}/index.js`, dir, config, server_only_assets);
 
 				for (const asset of builder.findServerAssets(routes)) {
 					// TODO use symlinks, once Build Output API supports doing so
@@ -707,8 +713,9 @@ function static_vercel_config(builder, config, dir) {
  * @param {string} entry
  * @param {string} dir
  * @param {import('./index.js').ServerlessConfig} config
+ * @param {string[]} [extra_files] absolute paths of files to include besides the traced ones
  */
-async function create_function_bundle(builder, entry, dir, config) {
+async function create_function_bundle(builder, entry, dir, config, extra_files = []) {
 	fs.rmSync(dir, { force: true, recursive: true });
 
 	let base = entry;
@@ -754,6 +761,11 @@ async function create_function_bundle(builder, entry, dir, config) {
 				console.error(`    - \u001B[1m\u001B[36m${module}\u001B[39m\u001B[22m`);
 			}
 		}
+	}
+
+	for (const file of extra_files) {
+		// `fileList` entries are relative to `base`
+		traced.fileList.add(path.relative(base, file));
 	}
 
 	const files = Array.from(traced.fileList);

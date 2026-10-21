@@ -111,6 +111,16 @@ declare module '@sveltejs/kit' {
 		findServerAssets: (routes: RouteDefinition[]) => string[];
 
 		/**
+		 * Find the files the server build emitted that are never served to clients: assets outside
+		 * `appDir`, such as a file a Vite plugin emits for server code to read at runtime (for example
+		 * with `fs.readFile(new URL('./data.bin', import.meta.url))`). Paths are relative to
+		 * `getServerDirectory()`. Adapters that don't deploy the whole server directory must deploy
+		 * these files at the same location relative to the server code, so relative URLs resolve.
+		 * @since 2.71.0
+		 */
+		findServerOnlyAssets: () => string[];
+
+		/**
 		 * Generate a fallback page for a static webserver to use when no route is matched. Useful for single-page apps.
 		 */
 		generateFallback: (dest: string) => Promise<void>;
@@ -2686,6 +2696,12 @@ declare module '@sveltejs/kit' {
 			};
 		} | null;
 		server_manifest: import('vite').Manifest;
+		/**
+		 * Assets emitted by the server build outside `appDir`, which SvelteKit never copies to the
+		 * client output (for example, a file a Vite plugin emits next to the server code that reads
+		 * it). Paths are relative to the server output directory.
+		 */
+		server_only_assets: string[];
 	}
 
 	interface ManifestData {

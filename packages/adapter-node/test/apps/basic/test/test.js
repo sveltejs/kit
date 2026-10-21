@@ -22,3 +22,9 @@ test('does not set X-Accel-Buffering header on other responses', async ({ reques
 	const response = await request.get('/');
 	expect(response.headers()['x-accel-buffering']).toBeUndefined();
 });
+
+test('reads a server-only asset relative to the server code', async ({ request }) => {
+	const response = await request.get('/server-only-asset');
+	expect(await response.text()).toBe('server-only data');
+	expect((await request.get('/server-only/data.txt')).status()).toBe(404);
+});
