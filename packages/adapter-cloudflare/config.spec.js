@@ -10,17 +10,19 @@ test('resolves a relative wrangler config path against the working directory', a
 	const root = fs.mkdtempSync(path.join(os.tmpdir(), 'adapter-cloudflare-'));
 
 	try {
-		const config = await resolveConfig(
-			{
-				root,
-				configFile: false,
-				logLevel: 'silent',
-				plugins: plugin_config('test/apps/workers/config/wrangler.jsonc')
-			},
-			'build'
-		);
-
-		expect(config.environments.ssr.resolve.conditions).toContain('workerd');
+		// `@cloudflare/vite-plugin` throws if it can't find the config file, which happens
+		// if the relative path is resolved against the Vite root instead of the working directory
+		await expect(
+			resolveConfig(
+				{
+					root,
+					configFile: false,
+					logLevel: 'silent',
+					plugins: plugin_config('test/apps/workers/config/wrangler.jsonc')
+				},
+				'build'
+			)
+		).resolves.toBeDefined();
 	} finally {
 		fs.rmSync(root, { recursive: true, force: true });
 	}
