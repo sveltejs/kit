@@ -273,7 +273,7 @@ export interface Builder {
 	 * Copy a file or directory.
 	 * @param from the source file or directory
 	 * @param to the destination file or directory
-	 * @param opts.filter a function receiving the basename and POSIX path relative to `from` (empty for `from` itself) to determine whether a file or directory should be copied
+	 * @param opts.filter a function to determine whether a file or directory should be copied
 	 * @param opts.replace a map of strings to replace
 	 * @returns an array of files that were copied
 	 */
