@@ -1,13 +1,14 @@
+import path from 'node:path';
 import { beforeEach, expect, test, vi } from 'vitest';
 import { createServer } from 'vite';
-import { getPlatformProxy } from 'wrangler';
+import { getPlatformProxy, unstable_readConfig } from 'wrangler';
 import adapter from './index.js';
 
 const dispose = vi.fn(() => Promise.resolve());
 
 vi.mock('wrangler', () => ({
 	getPlatformProxy: vi.fn(() => Promise.resolve({ caches: {}, dispose })),
-	unstable_readConfig: vi.fn()
+	unstable_readConfig: vi.fn(() => ({ configPath: undefined }))
 }));
 
 beforeEach(() => {
@@ -107,6 +108,85 @@ test('retries the platform proxy after it fails to start', async () => {
 	await server.close();
 	expect(dispose).toHaveBeenCalledOnce();
 	expect(globalThis.__sveltekit_cloudflare_platform_setup).toBeUndefined();
+});
+
+test('swaps the shared platform proxy in place when wrangler config changes', async () => {
+	const config_path = path.resolve('wrangler.toml');
+	vi.mocked(unstable_readConfig).mockReturnValueOnce(
+		/** @type {any} */ ({ configPath: config_path })
+	);
+
+	const server = await create_server();
+	expect(server.watcher.listeners('change').length).toBeGreaterThan(0);
+
+	const previous = globalThis.__sveltekit_cloudflare_platform;
+	const previous_dispose = /** @type {any} */ (previous).dispose;
+	const previous_proxy = globalThis.__sveltekit_cloudflare_platform_setup?.proxy;
+	expect(previous).toBeDefined();
+
+	// Prime the mock so the SECOND getPlatformProxy call (the config-change reload)
+	// returns a fresh proxy, distinguishable from the first.
+	const next_dispose = vi.fn(() => Promise.resolve());
+	const next_caches = /** @type {any} */ ({});
+	vi.mocked(getPlatformProxy).mockResolvedValueOnce(
+		/** @type {any} */ ({ caches: next_caches, dispose: next_dispose })
+	);
+
+	server.watcher.emit('change', config_path);
+	await vi.waitFor(() => {
+		expect(globalThis.__sveltekit_cloudflare_platform).not.toBe(previous);
+	});
+	expect(previous_dispose).toHaveBeenCalledOnce();
+	expect(globalThis.__sveltekit_cloudflare_platform_setup?.proxy).not.toBe(previous_proxy);
+
+	// Unrelated file changes do not swap or dispose again.
+	previous_dispose.mockClear();
+	next_dispose.mockClear();
+	server.watcher.emit('change', path.resolve('src/routes/+page.svelte'));
+	expect(previous_dispose).not.toHaveBeenCalled();
+	expect(next_dispose).not.toHaveBeenCalled();
+
+	await server.close();
+	expect(next_dispose).toHaveBeenCalledOnce();
+});
+
+test('does not install a config watcher when wrangler cannot resolve a config path', async () => {
+	// `unstable_readConfig` returns `{ configPath: undefined }` from the default mock
+	const server = await create_server();
+
+	const starting_proxy = globalThis.__sveltekit_cloudflare_platform;
+	server.watcher.emit('change', path.resolve('wrangler.toml'));
+	// No swap even if a file-change event sneaks in — the handler was never wired.
+	expect(globalThis.__sveltekit_cloudflare_platform).toBe(starting_proxy);
+
+	await server.close();
+});
+
+test('swallows a rejection from the config-reload path and warns, keeping the previous proxy', async () => {
+	const config_path = path.resolve('wrangler.toml');
+	vi.mocked(unstable_readConfig).mockReturnValueOnce(
+		/** @type {any} */ ({ configPath: config_path })
+	);
+	const server = await create_server();
+	const previous = globalThis.__sveltekit_cloudflare_platform;
+	const warn = vi.spyOn(server.config.logger, 'warn').mockImplementation(() => {});
+
+	// The SECOND getPlatformProxy call — the reload — rejects.
+	vi.mocked(getPlatformProxy).mockRejectedValueOnce(new Error('nope'));
+
+	server.watcher.emit('change', config_path);
+	// Wait for the microtask queue to drain so the catch handler runs.
+	await vi.waitFor(() => {
+		expect(warn).toHaveBeenCalledOnce();
+	});
+	const first_call = /** @type {any[]} */ (warn.mock.calls[0]);
+	expect(first_call[0]).toMatch(/adapter-cloudflare.*wrangler config change.*nope/);
+	// Previous proxy is still in place since the swap aborted before dispose.
+	expect(globalThis.__sveltekit_cloudflare_platform).toBe(previous);
+	expect(dispose).not.toHaveBeenCalled();
+
+	await server.close();
+	expect(dispose).toHaveBeenCalledOnce();
 });
 
 test('rejects concurrent servers sharing a failed platform proxy and allows a retry', async () => {

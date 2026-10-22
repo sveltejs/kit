@@ -1,6 +1,6 @@
 import { sveltekit } from '@sveltejs/kit/vite';
 import type { UserConfig } from 'vite';
-import adapter from '../../../index.js';
+import adapter from '@sveltejs/adapter-netlify';
 
 const config: UserConfig = {
 	build: {
