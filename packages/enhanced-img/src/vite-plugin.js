@@ -316,21 +316,42 @@ function serialize_img_attributes(content, attributes, details) {
 			attribute_strings.push(`width=${details.width}`);
 			attribute_strings.push(`height=${details.height}`);
 		} else if (!user_width && user_height) {
-			attribute_strings.push(
-				`width=${Math.round(
-					(stringToNumber(details.width) * user_height) / stringToNumber(details.height)
-				)}`
-			);
+			attribute_strings.push(`width=${scale(details.width, details.height, user_height)}`);
 		} else if (!user_height && user_width) {
-			attribute_strings.push(
-				`height=${Math.round(
-					(stringToNumber(details.height) * user_width) / stringToNumber(details.width)
-				)}`
-			);
+			attribute_strings.push(`height=${scale(details.height, details.width, user_width)}`);
 		}
 	}
 
 	return attribute_strings.join(' ');
+}
+
+/**
+ * Scales an image dimension by the ratio of the size the user set to the matching image size.
+ * The image sizes are `{expression}` strings when the image is only known at runtime.
+ * @param {string | number} size
+ * @param {string | number} matching_size
+ * @param {number} user_size
+ */
+function scale(size, matching_size, user_size) {
+	if (is_expression(size) || is_expression(matching_size)) {
+		return `{Math.round((${unwrap(size)} * ${user_size}) / ${unwrap(matching_size)})}`;
+	}
+	return Math.round((stringToNumber(size) * user_size) / stringToNumber(matching_size));
+}
+
+/**
+ * @param {string | number} value
+ * @returns {value is string}
+ */
+function is_expression(value) {
+	return typeof value === 'string' && value.startsWith('{');
+}
+
+/**
+ * @param {string | number} value
+ */
+function unwrap(value) {
+	return is_expression(value) ? value.slice(1, -1) : value;
 }
 
 /**
