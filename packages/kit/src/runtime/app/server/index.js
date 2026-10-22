@@ -52,6 +52,9 @@ export function read(asset) {
 		});
 	}
 
+	// Strip URL queries and fragments before decoding characters that belong to the filename.
+	asset = asset.split(/[?#]/, 1)[0];
+
 	const file = decodeURIComponent(
 		__SVELTEKIT_DEV__ && asset.startsWith(assets + '/@fs')
 			? asset.slice(assets.length)
