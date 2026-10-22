@@ -1,6 +1,12 @@
 import process from 'node:process';
 import { assert, test, describe } from 'vitest';
-import { escape_src, parse_isr_expiration, pattern_to_src, resolve_runtime } from './utils.js';
+import {
+	escape_src,
+	get_uniform_trailing_slash,
+	parse_isr_expiration,
+	pattern_to_src,
+	resolve_runtime
+} from './utils.js';
 
 // workaround so that TypeScript doesn't follow that import which makes it pick up that file and then error on missing import aliases
 const { parse_route_id } = await import(
@@ -212,5 +218,37 @@ describe('resolve_runtime with node detected', () => {
 				/Unsupported Node\.js version.*Please use an even Node version to build your project/
 			);
 		});
+	});
+});
+
+describe('get_uniform_trailing_slash', () => {
+	test('returns the option when every route uses it', () => {
+		assert.equal(
+			get_uniform_trailing_slash([{ trailingSlash: 'never' }, { trailingSlash: 'never' }]),
+			'never'
+		);
+		assert.equal(
+			get_uniform_trailing_slash([{ trailingSlash: 'always' }, { trailingSlash: 'always' }]),
+			'always'
+		);
+	});
+
+	test('returns undefined when routes use different options', () => {
+		assert.equal(
+			get_uniform_trailing_slash([{ trailingSlash: 'never' }, { trailingSlash: 'always' }]),
+			undefined
+		);
+	});
+
+	test('returns undefined when routes ignore trailing slashes', () => {
+		assert.equal(get_uniform_trailing_slash([{ trailingSlash: 'ignore' }]), undefined);
+	});
+
+	test('returns undefined when SvelteKit does not expose the option', () => {
+		assert.equal(get_uniform_trailing_slash([{}, {}]), undefined);
+	});
+
+	test('returns undefined when there are no routes', () => {
+		assert.equal(get_uniform_trailing_slash([]), undefined);
 	});
 });

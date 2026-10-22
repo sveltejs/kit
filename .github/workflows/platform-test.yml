@@ -113,7 +113,7 @@ jobs:
         env: &vercel-secrets
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ inputs.variant == 'basic' && secrets.VERCEL_PROJECT_ID_BASIC || secrets.VERCEL_PROJECT_ID_SPLIT }}
+          VERCEL_PROJECT_ID: ${{ inputs.variant == 'basic' && secrets.VERCEL_PROJECT_ID_BASIC || inputs.variant == 'trailing-slash' && secrets.VERCEL_PROJECT_ID_TRAILING_SLASH || secrets.VERCEL_PROJECT_ID_SPLIT }}
         # the CLI reads `.vercel/output` from here but checks that the project's root directory exists
         run: |
           mkdir -p "$APP"
