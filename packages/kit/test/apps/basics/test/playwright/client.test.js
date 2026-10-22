@@ -1408,6 +1408,30 @@ test.describe('env', () => {
 });
 
 test.describe('Snapshots', () => {
+	test('restores function snapshots when hydration falls back to mounting an error page', async ({
+		page
+	}) => {
+		await page.goto('/errors/load-client?snapshot');
+		await expect(page.locator('h1')).toHaveText('500');
+		await page.locator('[data-testid="stale-input"]').fill('error value');
+
+		await page.reload();
+		await expect(page.locator('h1')).toHaveText('500');
+		await expect(page.locator('[data-testid="stale-input"]')).toHaveValue('error value');
+	});
+
+	test('restores function snapshots on reload once after afterNavigate when ssr is disabled', async ({
+		page
+	}) => {
+		await page.goto('/no-ssr/snapshot/helper');
+		await expect(page.locator('[data-testid="order"]')).toHaveText('afterNavigate');
+		await page.locator('input').fill('reload value');
+
+		await page.reload();
+		await expect(page.locator('input')).toHaveValue('reload value');
+		await expect(page.locator('[data-testid="order"]')).toHaveText('afterNavigate,restore');
+	});
+
 	test('recovers snapshotted data', async ({ page, clicknav }) => {
 		await page.goto('/snapshot/a');
 

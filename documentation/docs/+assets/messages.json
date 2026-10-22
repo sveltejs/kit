@@ -77,7 +77,7 @@
 				]
 			}
 		],
-		"details": "This feature is experimental, so you need to opt in to it before you can use it. Add the option shown in the error to the options you pass to the `sveltekit(...)` Vite plugin. See the [configuration reference](https://svelte.dev/docs/kit/configuration) for details."
+		"details": "This feature is experimental, so you need to opt in to it before you can use it. Add the option shown in the error to the options you pass to the `sveltekit(...)` Vite plugin. See the [configuration reference](https://svelte.dev/docs/kit/@sveltejs-kit-vite) for details."
 	},
 	"config_file_unsupported": {
 		"variants": [
@@ -97,7 +97,7 @@
 				"variables": []
 			}
 		],
-		"details": "`#lib` is a Node [subpath import](https://nodejs.org/api/packages.html#subpath-imports), which Vite, TypeScript and other tools understand without extra configuration. Replace `$lib/...` imports with `#lib/...`. If you can't migrate yet, restore the old behaviour with the (deprecated) [`alias`](https://svelte.dev/docs/kit/configuration#alias) option."
+		"details": "`#lib` is a Node [subpath import](https://nodejs.org/api/packages.html#subpath-imports), which Vite, TypeScript and other tools understand without extra configuration. Replace `$lib/...` imports with `#lib/...`. If you can't migrate yet, restore the old behaviour with the (deprecated) [`alias`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#alias) option."
 	},
 	"module_removed_service_worker": {
 		"variants": [
@@ -115,7 +115,7 @@
 				"variables": []
 			}
 		],
-		"details": "A service worker must be served from the same origin as your app, but [`paths.assets`](https://svelte.dev/docs/kit/configuration#paths) serves your build output from a different origin, such as a CDN. Remove `paths.assets`, or remove `src/service-worker.js` (or the file configured by [`files.serviceWorker`](https://svelte.dev/docs/kit/configuration#files))."
+		"details": "A service worker must be served from the same origin as your app, but [`paths.assets`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#paths) serves your build output from a different origin, such as a CDN. Remove `paths.assets`, or remove `src/service-worker.js` (or the file configured by [`files.serviceWorker`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#files))."
 	},
 	"service_worker_invalid_import": {
 		"variants": [
@@ -148,7 +148,7 @@
 				]
 			}
 		],
-		"details": "`vite preview` serves the output of a previous production build. Run `vite build` (usually `npm run build`) before `vite preview`, and make sure both commands use the same [`outDir`](https://svelte.dev/docs/kit/configuration#outDir)."
+		"details": "`vite preview` serves the output of a previous production build. Run `vite build` (usually `npm run build`) before `vite preview`, and make sure both commands use the same [`outDir`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#outDir)."
 	},
 	"remote_prerender_not_dynamic": {
 		"variants": [
@@ -177,7 +177,7 @@
 				]
 			}
 		],
-		"details": "SvelteKit renders every page using an app template, which lives at `src/app.html` by default. Create this file, or point [`files.appTemplate`](https://svelte.dev/docs/kit/configuration#files) at the template you want to use.\n\nA minimal template looks like this:\n\n```html\n<!doctype html>\n<html lang=\"en\">\n\t<head>\n\t\t<meta charset=\"utf-8\" />\n\t\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n\t\t%sveltekit.head%\n\t</head>\n\t<body>\n\t\t<div style=\"display: contents\">%sveltekit.body%</div>\n\t</body>\n</html>\n```"
+		"details": "SvelteKit renders every page using an app template, which lives at `src/app.html` by default. Create this file, or point [`files.appTemplate`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#files) at the template you want to use.\n\nA minimal template looks like this:\n\n```html\n<!doctype html>\n<html lang=\"en\">\n\t<head>\n\t\t<meta charset=\"utf-8\" />\n\t\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n\t\t%sveltekit.head%\n\t</head>\n\t<body>\n\t\t<div style=\"display: contents\">%sveltekit.body%</div>\n\t</body>\n</html>\n```"
 	},
 	"app_template_tag_missing": {
 		"variants": [
@@ -200,7 +200,7 @@
 				]
 			}
 		],
-		"details": "Each key in the deprecated [`alias`](https://svelte.dev/docs/kit/configuration#alias) option must be a non-empty, single-line string, optionally ending in `/*`. Prefer declaring [subpath imports](https://nodejs.org/api/packages.html#subpath-imports) in the `imports` field of your `package.json` instead."
+		"details": "Each key in the deprecated [`alias`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#alias) option must be a non-empty, single-line string, optionally ending in `/*`. Prefer declaring [subpath imports](https://nodejs.org/api/packages.html#subpath-imports) in the `imports` field of your `package.json` instead."
 	},
 	"config_alias_value_invalid": {
 		"variants": [
@@ -211,7 +211,7 @@
 				]
 			}
 		],
-		"details": "Each value in the deprecated [`alias`](https://svelte.dev/docs/kit/configuration#alias) option must be a non-empty, single-line path, optionally ending in `/*` or a file extension. Prefer declaring [subpath imports](https://nodejs.org/api/packages.html#subpath-imports) in the `imports` field of your `package.json` instead."
+		"details": "Each value in the deprecated [`alias`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#alias) option must be a non-empty, single-line path, optionally ending in `/*` or a file extension. Prefer declaring [subpath imports](https://nodejs.org/api/packages.html#subpath-imports) in the `imports` field of your `package.json` instead."
 	},
 	"config_app_dir_slash": {
 		"variants": [
@@ -222,7 +222,7 @@
 				]
 			}
 		],
-		"details": "[`appDir`](https://svelte.dev/docs/kit/configuration#appDir) is a directory name relative to your base path, such as `_app` or `internal/app`. SvelteKit adds the surrounding slashes itself. Remove any leading or trailing `/`."
+		"details": "[`appDir`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#appDir) is a directory name relative to your base path, such as `_app` or `internal/app`. SvelteKit adds the surrounding slashes itself. Remove any leading or trailing `/`."
 	},
 	"config_csp_trusted_types_missing": {
 		"variants": [
@@ -231,7 +231,7 @@
 				"variables": []
 			}
 		],
-		"details": "When your [CSP](https://svelte.dev/docs/kit/configuration#csp) enforces Trusted Types with `'require-trusted-types-for': ['script']`, SvelteKit registers your service worker through a Trusted Types policy called `sveltekit-trusted-url`. Add it to the allowed policies:\n\n```js\ncsp: {\n\tdirectives: {\n\t\t'require-trusted-types-for': ['script'],\n\t\t'trusted-types': ['sveltekit-trusted-url']\n\t}\n}\n```\n\nAlternatively, set [`serviceWorker.register`](https://svelte.dev/docs/kit/configuration#serviceWorker) to `false` and register the service worker yourself."
+		"details": "When your [CSP](https://svelte.dev/docs/kit/@sveltejs-kit-vite#csp) enforces Trusted Types with `'require-trusted-types-for': ['script']`, SvelteKit registers your service worker through a Trusted Types policy called `sveltekit-trusted-url`. Add it to the allowed policies:\n\n```js\ncsp: {\n\tdirectives: {\n\t\t'require-trusted-types-for': ['script'],\n\t\t'trusted-types': ['sveltekit-trusted-url']\n\t}\n}\n```\n\nAlternatively, set [`serviceWorker.register`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#serviceWorker) to `false` and register the service worker yourself."
 	},
 	"config_csp_trusted_html_missing": {
 		"variants": [
@@ -240,7 +240,7 @@
 				"variables": []
 			}
 		],
-		"details": "When your [CSP](https://svelte.dev/docs/kit/configuration#csp) enforces Trusted Types with `'require-trusted-types-for': ['script']`, Svelte creates HTML through a Trusted Types policy called `svelte-trusted-html`. Add it to the allowed policies:\n\n```js\ncsp: {\n\tdirectives: {\n\t\t'require-trusted-types-for': ['script'],\n\t\t'trusted-types': ['svelte-trusted-html']\n\t}\n}\n```\n\nThis isn't needed if no page is rendered in the browser, i.e. every page has [`csr = false`](https://svelte.dev/docs/kit/page-options#csr)."
+		"details": "When your [CSP](https://svelte.dev/docs/kit/@sveltejs-kit-vite#csp) enforces Trusted Types with `'require-trusted-types-for': ['script']`, Svelte creates HTML through a Trusted Types policy called `svelte-trusted-html`. Add it to the allowed policies:\n\n```js\ncsp: {\n\tdirectives: {\n\t\t'require-trusted-types-for': ['script'],\n\t\t'trusted-types': ['svelte-trusted-html']\n\t}\n}\n```\n\nThis isn't needed if no page is rendered in the browser, i.e. every page has [`csr = false`](https://svelte.dev/docs/kit/page-options#csr)."
 	},
 	"config_empty_string": {
 		"variants": [
@@ -295,7 +295,7 @@
 				]
 			}
 		],
-		"details": "This option groups related settings, so it must be a plain object (not an array or a primitive value). See the [configuration reference](https://svelte.dev/docs/kit/configuration) for the settings it accepts."
+		"details": "This option groups related settings, so it must be a plain object (not an array or a primitive value). See the [configuration reference](https://svelte.dev/docs/kit/@sveltejs-kit-vite) for the settings it accepts."
 	},
 	"config_expected_one_of": {
 		"variants": [
@@ -318,7 +318,7 @@
 				]
 			}
 		],
-		"details": "This option must be a whole number greater than or equal to `1`. For example, [`prerender.concurrency`](https://svelte.dev/docs/kit/configuration#prerender) is the number of pages that can be prerendered simultaneously."
+		"details": "This option must be a whole number greater than or equal to `1`. For example, [`prerender.concurrency`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#prerender) is the number of pages that can be prerendered simultaneously."
 	},
 	"config_expected_string": {
 		"variants": [
@@ -351,7 +351,7 @@
 				]
 			}
 		],
-		"details": "Each member of [`extensions`](https://svelte.dev/docs/kit/configuration#extensions) must be a file extension made of letters and numbers, such as `.svelte` or `.svx`. Multi-part extensions such as `.svelte.md` are also allowed."
+		"details": "Each member of [`extensions`](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/config.md#extensions) must be a file extension made of letters and numbers, such as `.svelte` or `.svx`. Multi-part extensions such as `.svelte.md` are also allowed."
 	},
 	"config_extension_missing_dot": {
 		"variants": [
@@ -363,7 +363,7 @@
 				]
 			}
 		],
-		"details": "Write [`extensions`](https://svelte.dev/docs/kit/configuration#extensions) with a leading dot, for example `['.svelte', '.svx']` rather than `['svelte', 'svx']`."
+		"details": "Write [`extensions`](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/config.md#extensions) with a leading dot, for example `['.svelte', '.svx']` rather than `['svelte', 'svx']`."
 	},
 	"config_invalid_adapter": {
 		"variants": [
@@ -385,7 +385,7 @@
 				]
 			}
 		],
-		"details": "Prerender handlers decide what happens when SvelteKit encounters a problem while [prerendering](https://svelte.dev/docs/kit/configuration#prerender). Use `'fail'` to stop the build, `'warn'` to log a message and continue, `'ignore'` to continue silently, or pass a function that receives details about the problem and decides for itself — for example by throwing to fail the build."
+		"details": "Prerender handlers decide what happens when SvelteKit encounters a problem while [prerendering](https://svelte.dev/docs/kit/@sveltejs-kit-vite#prerender). Use `'fail'` to stop the build, `'warn'` to log a message and continue, `'ignore'` to continue silently, or pass a function that receives details about the problem and decides for itself — for example by throwing to fail the build."
 	},
 	"config_kit_namespace": {
 		"variants": [
@@ -405,7 +405,7 @@
 				"variables": []
 			}
 		],
-		"details": "Pass an options object to the `sveltekit(...)` Vite plugin, for example `sveltekit({ adapter: adapter() })`. Omit the argument entirely to use the defaults. See the [configuration reference](https://svelte.dev/docs/kit/configuration)."
+		"details": "Pass an options object to the `sveltekit(...)` Vite plugin, for example `sveltekit({ adapter: adapter() })`. Omit the argument entirely to use the defaults. See the [configuration reference](https://svelte.dev/docs/kit/@sveltejs-kit-vite)."
 	},
 	"config_option_removed": {
 		"variants": [
@@ -427,7 +427,7 @@
 				]
 			}
 		],
-		"details": "CSRF protection is always enabled in SvelteKit 3. Instead of disabling it with `checkOrigin: false`, list the external origins that are allowed to submit forms to your app in [`csrf.trustedOrigins`](https://svelte.dev/docs/kit/configuration#csrf):\n\n```js\ncsrf: {\n\ttrustedOrigins: ['https://payment-gateway.com'];\n}\n```"
+		"details": "CSRF protection is always enabled in SvelteKit 3. Instead of disabling it with `checkOrigin: false`, list the external origins that are allowed to submit forms to your app in [`csrf.trustedOrigins`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#csrf):\n\n```js\ncsrf: {\n\ttrustedOrigins: ['https://payment-gateway.com'];\n}\n```"
 	},
 	"config_option_removed_experimental_instrumentation": {
 		"variants": [
@@ -449,7 +449,7 @@
 				]
 			}
 		],
-		"details": "Tracing is no longer experimental. Move the setting to the top-level [`tracing`](https://svelte.dev/docs/kit/configuration#tracing) option:\n\n```js\ntracing: {\n\tserver: true;\n}\n```"
+		"details": "Tracing is no longer experimental. Move the setting to the top-level [`tracing`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#tracing) option:\n\n```js\ntracing: {\n\tserver: true;\n}\n```"
 	},
 	"config_option_removed_files_lib": {
 		"variants": [
@@ -482,7 +482,7 @@
 				]
 			}
 		],
-		"details": "Move the value to [`paths.origin`](https://svelte.dev/docs/kit/configuration#paths). Besides prerendering, it is used for CSRF checks when your app's public origin can't reliably be derived from request headers."
+		"details": "Move the value to [`paths.origin`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#paths). Besides prerendering, it is used for CSRF checks when your app's public origin can't reliably be derived from request headers."
 	},
 	"config_option_removed_vite_plugin": {
 		"variants": [
@@ -506,7 +506,7 @@
 				]
 			}
 		],
-		"details": "An origin is just the protocol, host and optional port of a URL, such as `https://my-site.com` or `http://localhost:3000`. To deploy your app under a sub-path, use [`paths.base`](https://svelte.dev/docs/kit/configuration#paths) instead."
+		"details": "An origin is just the protocol, host and optional port of a URL, such as `https://my-site.com` or `http://localhost:3000`. To deploy your app under a sub-path, use [`paths.base`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#paths) instead."
 	},
 	"config_origin_invalid": {
 		"variants": [
@@ -541,7 +541,7 @@
 				]
 			}
 		],
-		"details": "[`paths.assets`](https://svelte.dev/docs/kit/configuration#paths) is for serving your app's files from a different origin, such as a CDN, so it must be a full URL like `https://cdn.example.com/my-app`. To serve your app from a sub-path of your own origin, use `paths.base` instead."
+		"details": "[`paths.assets`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#paths) is for serving your app's files from a different origin, such as a CDN, so it must be a full URL like `https://cdn.example.com/my-app`. To serve your app from a sub-path of your own origin, use `paths.base` instead."
 	},
 	"config_paths_assets_trailing_slash": {
 		"variants": [
@@ -552,7 +552,7 @@
 				]
 			}
 		],
-		"details": "Remove the trailing slash from [`paths.assets`](https://svelte.dev/docs/kit/configuration#paths) — for example use `https://cdn.example.com/my-app` rather than `https://cdn.example.com/my-app/`."
+		"details": "Remove the trailing slash from [`paths.assets`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#paths) — for example use `https://cdn.example.com/my-app` rather than `https://cdn.example.com/my-app/`."
 	},
 	"config_paths_base_invalid": {
 		"variants": [
@@ -563,7 +563,7 @@
 				]
 			}
 		],
-		"details": "[`paths.base`](https://svelte.dev/docs/kit/configuration#paths) is the sub-path your app is served from. Use `''` to serve it from the root, or a value like `/my-app` — with a leading slash and without a trailing one. It cannot be a full URL; use `paths.assets` to serve files from another origin."
+		"details": "[`paths.base`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#paths) is the sub-path your app is served from. Use `''` to serve it from the root, or a value like `/my-app` — with a leading slash and without a trailing one. It cannot be a full URL; use `paths.assets` to serve files from another origin."
 	},
 	"config_prerender_entry_invalid": {
 		"variants": [
@@ -575,7 +575,7 @@
 				]
 			}
 		],
-		"details": "[`prerender.entries`](https://svelte.dev/docs/kit/configuration#prerender) lists pages to start prerendering from. Use `'*'` to include every route without required parameters, or paths such as `'/blog/hello-world'`, including the leading slash."
+		"details": "[`prerender.entries`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#prerender) lists pages to start prerendering from. Use `'*'` to include every route without required parameters, or paths such as `'/blog/hello-world'`, including the leading slash."
 	},
 	"config_server_resolution_bundle_strategy": {
 		"variants": [
@@ -584,7 +584,7 @@
 				"variables": []
 			}
 		],
-		"details": "Server-side route resolution loads each route's code on demand, which requires the default `'split'` [bundle strategy](https://svelte.dev/docs/kit/configuration#output). Either set `output.bundleStrategy` to `'split'`, or set [`router.resolution`](https://svelte.dev/docs/kit/configuration#router) to `'client'`."
+		"details": "Server-side route resolution loads each route's code on demand, which requires the default `'split'` [bundle strategy](https://svelte.dev/docs/kit/@sveltejs-kit-vite#output). Either set `output.bundleStrategy` to `'split'`, or set [`router.resolution`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#router) to `'client'`."
 	},
 	"config_server_resolution_hash": {
 		"variants": [
@@ -593,7 +593,7 @@
 				"variables": []
 			}
 		],
-		"details": "Hash-based routing happens entirely in the browser and never asks the server about navigations, so it can't use server-side route resolution. Either set [`router.type`](https://svelte.dev/docs/kit/configuration#router) to `'pathname'`, or set `router.resolution` to `'client'`."
+		"details": "Hash-based routing happens entirely in the browser and never asks the server about navigations, so it can't use server-side route resolution. Either set [`router.type`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#router) to `'pathname'`, or set `router.resolution` to `'client'`."
 	},
 	"config_unexpected_option": {
 		"variants": [
@@ -611,7 +611,7 @@
 				]
 			}
 		],
-		"details": "This option isn't recognised. Check for typos, and see the [configuration reference](https://svelte.dev/docs/kit/configuration) for the supported options. The option may also have been removed or renamed in a new major version — check the [migration guide](https://svelte.dev/docs/kit/migrating-to-sveltekit-3#Configuration)."
+		"details": "This option isn't recognised. Check for typos, and see the [configuration reference](https://svelte.dev/docs/kit/@sveltejs-kit-vite) for the supported options. The option may also have been removed or renamed in a new major version — check the [migration guide](https://svelte.dev/docs/kit/migrating-to-sveltekit-3#Configuration)."
 	},
 	"env_invalid_variable_name": {
 		"variants": [
@@ -679,7 +679,7 @@
 				]
 			}
 		],
-		"details": "While [prerendering](https://svelte.dev/docs/kit/page-options#prerender), SvelteKit requested this path — because it was listed in [`prerender.entries`](https://svelte.dev/docs/kit/configuration#prerender), returned from an [`entries`](https://svelte.dev/docs/kit/page-options#entries) function, linked from a prerendered page or fetched during its `load` — and received an error response, which is logged above. When the path was reached from another page, the message says which one.\n\nFix the link or request, or the error in the route. If the failure is expected, handle it with [`prerender.handleHttpError`](https://svelte.dev/docs/kit/configuration#prerender):\n\n```js\nsveltekit({\n\tprerender: {\n\t\thandleHttpError: ({ path, referrer, message }) => {\n\t\t\t// ignore deliberate link to shiny 404 page\n\t\t\tif (path === '/not-found' && referrer === '/blog/how-we-built-our-404-page') {\n\t\t\t\treturn;\n\t\t\t}\n\n\t\t\t// otherwise fail the build\n\t\t\tthrow new Error(message);\n\t\t}\n\t}\n});\n```"
+		"details": "While [prerendering](https://svelte.dev/docs/kit/page-options#prerender), SvelteKit requested this path — because it was listed in [`prerender.entries`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#prerender), returned from an [`entries`](https://svelte.dev/docs/kit/page-options#entries) function, linked from a prerendered page or fetched during its `load` — and received an error response, which is logged above. When the path was reached from another page, the message says which one.\n\nFix the link or request, or the error in the route. If the failure is expected, handle it with [`prerender.handleHttpError`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#prerender):\n\n```js\nsveltekit({\n\tprerender: {\n\t\thandleHttpError: ({ path, referrer, message }) => {\n\t\t\t// ignore deliberate link to shiny 404 page\n\t\t\tif (path === '/not-found' && referrer === '/blog/how-we-built-our-404-page') {\n\t\t\t\treturn;\n\t\t\t}\n\n\t\t\t// otherwise fail the build\n\t\t\tthrow new Error(message);\n\t\t}\n\t}\n});\n```"
 	},
 	"prerender_path_outside_base": {
 		"variants": [
@@ -698,7 +698,7 @@
 				]
 			}
 		],
-		"details": "Your app is served under [`paths.base`](https://svelte.dev/docs/kit/configuration#paths), so every internal URL must start with it. Build links with [`resolve`](https://svelte.dev/docs/kit/$app-paths#resolve) from `$app/paths` instead of hard-coding them, so that the base path is added for you. Like other prerendering HTTP errors, this can be handled with [`prerender.handleHttpError`](https://svelte.dev/docs/kit/configuration#prerender)."
+		"details": "Your app is served under [`paths.base`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#paths), so every internal URL must start with it. Build links with [`resolve`](https://svelte.dev/docs/kit/$app-paths#resolve) from `$app/paths` instead of hard-coding them, so that the base path is added for you. Like other prerendering HTTP errors, this can be handled with [`prerender.handleHttpError`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#prerender)."
 	},
 	"prerender_missing_id": {
 		"variants": [
@@ -711,7 +711,7 @@
 				]
 			}
 		],
-		"details": "A prerendered page links to a fragment (`#id`) that doesn't exist on the target page, so the link won't scroll anywhere. Add an element with that `id` to the target page, or fix the link. Handle or ignore these cases with [`prerender.handleMissingId`](https://svelte.dev/docs/kit/configuration#prerender)."
+		"details": "A prerendered page links to a fragment (`#id`) that doesn't exist on the target page, so the link won't scroll anywhere. Add an element with that `id` to the target page, or fix the link. Handle or ignore these cases with [`prerender.handleMissingId`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#prerender)."
 	},
 	"prerender_entry_generator_mismatch": {
 		"variants": [
@@ -724,7 +724,7 @@
 				]
 			}
 		],
-		"details": "An [`entries`](https://svelte.dev/docs/kit/page-options#entries) function returns paths that its own route should prerender, but this path is handled by a different route, so the page you expected isn't generated. This usually means a more specific route takes priority (see [sorting](https://svelte.dev/docs/kit/advanced-routing#Sorting)). Change the entries, or the routes, so each entry is matched by the route that generated it. Handle or ignore these cases with [`prerender.handleEntryGeneratorMismatch`](https://svelte.dev/docs/kit/configuration#prerender)."
+		"details": "An [`entries`](https://svelte.dev/docs/kit/page-options#entries) function returns paths that its own route should prerender, but this path is handled by a different route, so the page you expected isn't generated. This usually means a more specific route takes priority (see [sorting](https://svelte.dev/docs/kit/advanced-routing#Sorting)). Change the entries, or the routes, so each entry is matched by the route that generated it. Handle or ignore these cases with [`prerender.handleEntryGeneratorMismatch`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#prerender)."
 	},
 	"prerender_unseen_routes": {
 		"variants": [
@@ -735,7 +735,7 @@
 				]
 			}
 		],
-		"details": "These routes (or a parent layout) have `export const prerender = true`, but the prerendering crawler never reached them, so they weren't prerendered. Since prerendered routes can't be server-rendered on demand, requesting them would fail. To fix it:\n\n- Make sure SvelteKit can find the route by following links from [`prerender.entries`](https://svelte.dev/docs/kit/configuration#prerender) or from pages reached by other entries.\n- For dynamic routes, export an [`entries`](https://svelte.dev/docs/kit/page-options#entries) function that lists the parameter values to prerender.\n- Change `export const prerender = true` to `export const prerender = 'auto'`, so that routes that weren't prerendered can still be rendered on demand.\n\nHandle or ignore these cases with [`prerender.handleUnseenRoutes`](https://svelte.dev/docs/kit/configuration#prerender)."
+		"details": "These routes (or a parent layout) have `export const prerender = true`, but the prerendering crawler never reached them, so they weren't prerendered. Since prerendered routes can't be server-rendered on demand, requesting them would fail. To fix it:\n\n- Make sure SvelteKit can find the route by following links from [`prerender.entries`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#prerender) or from pages reached by other entries.\n- For dynamic routes, export an [`entries`](https://svelte.dev/docs/kit/page-options#entries) function that lists the parameter values to prerender.\n- Change `export const prerender = true` to `export const prerender = 'auto'`, so that routes that weren't prerendered can still be rendered on demand.\n\nHandle or ignore these cases with [`prerender.handleUnseenRoutes`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#prerender)."
 	},
 	"prerender_invalid_url": {
 		"variants": [
@@ -753,7 +753,7 @@
 				]
 			}
 		],
-		"details": "A prerendered page contains a link whose `href` can't be parsed as a URL. Fix the link. Handle or ignore these cases with [`prerender.handleInvalidUrl`](https://svelte.dev/docs/kit/configuration#prerender)."
+		"details": "A prerendered page contains a link whose `href` can't be parsed as a URL. Fix the link. Handle or ignore these cases with [`prerender.handleInvalidUrl`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#prerender)."
 	},
 	"prerender_client_address": {
 		"variants": [
@@ -923,7 +923,7 @@
 				]
 			}
 		],
-		"details": "When [`router.type`](https://svelte.dev/docs/kit/configuration#router) is `'hash'`, the whole app is rendered in the browser from a single page, so there's no server to run `+page.server.js`, `+layout.server.js` or `+server.js` files. Move the logic to a universal `+page.js`/`+layout.js` file, or use the default `'pathname'` router."
+		"details": "When [`router.type`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#router) is `'hash'`, the whole app is rendered in the browser from a single page, so there's no server to run `+page.server.js`, `+layout.server.js` or `+server.js` files. Move the logic to a universal `+page.js`/`+layout.js` file, or use the default `'pathname'` router."
 	},
 	"route_duplicate_files": {
 		"variants": [
@@ -970,7 +970,7 @@
 				"variables": []
 			}
 		],
-		"details": "The routes directory exists but doesn't contain any `+page`, `+layout`, `+error` or `+server` files. Add a `src/routes/+page.svelte`, or, if your routes are elsewhere, set [`files.routes`](https://svelte.dev/docs/kit/configuration#files) in the options you pass to the SvelteKit Vite plugin."
+		"details": "The routes directory exists but doesn't contain any `+page`, `+layout`, `+error` or `+server` files. Add a `src/routes/+page.svelte`, or, if your routes are elsewhere, set [`files.routes`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#files) in the options you pass to the SvelteKit Vite plugin."
 	},
 	"route_prerender_page_and_endpoint": {
 		"variants": [
@@ -1024,7 +1024,7 @@
 				]
 			}
 		],
-		"details": "A route uses a parameter such as `[param=matcher]`, but no matcher with that name exists. Matchers are declared in `src/params.js` (or `src/params.ts`, or the file configured by [`files.params`](https://svelte.dev/docs/kit/configuration#files)) by exporting `params` from `defineParams`:\n\n```js\n/// file: src/params.js\nimport { defineParams } from '@sveltejs/kit/params';\n\nexport const params = defineParams({\n\tinteger: (param) => (/^\\d+$/.test(param) ? Number(param) : undefined)\n});\n```\n\nSee [matching](https://svelte.dev/docs/kit/advanced-routing#Matching)."
+		"details": "A route uses a parameter such as `[param=matcher]`, but no matcher with that name exists. Matchers are declared in `src/params.js` (or `src/params.ts`, or the file configured by [`files.params`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#files)) by exporting `params` from `defineParams`:\n\n```js\n/// file: src/params.js\nimport { defineParams } from '@sveltejs/kit/params';\n\nexport const params = defineParams({\n\tinteger: (param) => (/^\\d+$/.test(param) ? Number(param) : undefined)\n});\n```\n\nSee [matching](https://svelte.dev/docs/kit/advanced-routing#Matching)."
 	},
 	"params_export_missing": {
 		"variants": [
@@ -1136,7 +1136,7 @@
 				]
 			}
 		],
-		"details": "SvelteKit controls these Vite options because its build depends on them, so your values are replaced. Remove them from your Vite config. SvelteKit usually provides its own option for the same purpose; see the [configuration reference](https://svelte.dev/docs/kit/configuration)."
+		"details": "SvelteKit controls these Vite options because its build depends on them, so your values are replaced. Remove them from your Vite config. SvelteKit usually provides its own option for the same purpose; see the [configuration reference](https://svelte.dev/docs/kit/@sveltejs-kit-vite)."
 	},
 	"prerender_redirect_location_missing": {
 		"variants": [
@@ -1158,7 +1158,7 @@
 				]
 			}
 		],
-		"details": "This option still works, but it will be removed in a future major version of SvelteKit. See the [configuration reference](https://svelte.dev/docs/kit/configuration) for the recommended alternative."
+		"details": "This option still works, but it will be removed in a future major version of SvelteKit. See the [configuration reference](https://svelte.dev/docs/kit/@sveltejs-kit-vite) for the recommended alternative."
 	},
 	"config_option_deprecated_alias": {
 		"variants": [
@@ -1229,7 +1229,7 @@
 				]
 			}
 		],
-		"details": "Your `tsconfig.json` extends SvelteKit's generated configuration, but overrides settings that SvelteKit relies on. In every case, the fix is to stop overriding what [`$app/tsconfig`](https://svelte.dev/docs/kit/$app-tsconfig) sets, or to add back what's missing:\n\n- **`types` was overwritten** — SvelteKit includes `\"$app/types\"` in `compilerOptions.types`, so that TypeScript can see generated module declarations for things like [environment variables](https://svelte.dev/docs/kit/environment-variables). Setting `types` yourself replaces that array rather than merging with it, so include the missing entries, for example `\"types\": [\"$app/types\", \"node\"]`.\n- **`paths` was overwritten** — SvelteKit generates `compilerOptions.paths` from the (deprecated) [`alias`](https://svelte.dev/docs/kit/configuration#alias) option, so that TypeScript resolves these imports the same way Vite does. Remove your `paths`, and declare aliases with [subpath imports](https://nodejs.org/api/packages.html#subpath-imports) in `package.json` instead.\n- **A file should be added to the `exclude` array** — service workers run in a different environment from the rest of your app and need their own TypeScript project, which extends [`$app/tsconfig/service-worker`](https://svelte.dev/docs/kit/$app-tsconfig-service-worker). Exclude them from your root `tsconfig.json`, for example `\"exclude\": [\"src/service-worker\"]`.\n- **An essential option was overwritten** — `isolatedModules` must be `true` because Vite compiles modules one at a time, and `verbatimModuleSyntax` must be `true` so that type imports are safely removed from `.svelte` files. Remove the override."
+		"details": "Your `tsconfig.json` extends SvelteKit's generated configuration, but overrides settings that SvelteKit relies on. In every case, the fix is to stop overriding what [`$app/tsconfig`](https://svelte.dev/docs/kit/$app-tsconfig) sets, or to add back what's missing:\n\n- **`types` was overwritten** — SvelteKit includes `\"$app/types\"` in `compilerOptions.types`, so that TypeScript can see generated module declarations for things like [environment variables](https://svelte.dev/docs/kit/environment-variables). Setting `types` yourself replaces that array rather than merging with it, so include the missing entries, for example `\"types\": [\"$app/types\", \"node\"]`.\n- **`paths` was overwritten** — SvelteKit generates `compilerOptions.paths` from the (deprecated) [`alias`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#alias) option, so that TypeScript resolves these imports the same way Vite does. Remove your `paths`, and declare aliases with [subpath imports](https://nodejs.org/api/packages.html#subpath-imports) in `package.json` instead.\n- **A file should be added to the `exclude` array** — service workers run in a different environment from the rest of your app and need their own TypeScript project, which extends [`$app/tsconfig/service-worker`](https://svelte.dev/docs/kit/$app-tsconfig-service-worker). Exclude them from your root `tsconfig.json`, for example `\"exclude\": [\"src/service-worker\"]`.\n- **An essential option was overwritten** — `isolatedModules` must be `true` because Vite compiles modules one at a time, and `verbatimModuleSyntax` must be `true` so that type imports are safely removed from `.svelte` files. Remove the override."
 	},
 	"enhance_file_without_enctype": {
 		"variants": [
@@ -1333,7 +1333,7 @@
 				]
 			}
 		],
-		"details": "[`preloadCode`](https://svelte.dev/docs/kit/$app-navigation#preloadCode) takes the ID of a route, which is its path inside `src/routes` starting with `/`, such as `/blog/[slug]`. Route IDs are never prefixed with the app's [base path](https://svelte.dev/docs/kit/configuration#paths). If you have a URL or pathname, convert it with [`match`](https://svelte.dev/docs/kit/$app-paths#match) from `$app/paths`:\n\n```js\nimport { match } from '$app/paths';\nimport { preloadCode } from '$app/navigation';\n\nconst matched = await match('/blog/hello-world');\nif (matched) await preloadCode(matched.id);\n```"
+		"details": "[`preloadCode`](https://svelte.dev/docs/kit/$app-navigation#preloadCode) takes the ID of a route, which is its path inside `src/routes` starting with `/`, such as `/blog/[slug]`. Route IDs are never prefixed with the app's [base path](https://svelte.dev/docs/kit/@sveltejs-kit-vite#paths). If you have a URL or pathname, convert it with [`match`](https://svelte.dev/docs/kit/$app-paths#match) from `$app/paths`:\n\n```js\nimport { match } from '$app/paths';\nimport { preloadCode } from '$app/navigation';\n\nconst matched = await match('/blog/hello-world');\nif (matched) await preloadCode(matched.id);\n```"
 	},
 	"preload_url_outside_app": {
 		"variants": [
@@ -1344,7 +1344,7 @@
 				]
 			}
 		],
-		"details": "[`preloadData`](https://svelte.dev/docs/kit/$app-navigation#preloadData) runs the `load` functions of one of your app's pages, so the URL must be on the app's origin (and inside its [base path](https://svelte.dev/docs/kit/configuration#paths)) and match a route with a `+page`. Check the URL for typos, and don't preload external URLs."
+		"details": "[`preloadData`](https://svelte.dev/docs/kit/$app-navigation#preloadData) runs the `load` functions of one of your app's pages, so the URL must be on the app's origin (and inside its [base path](https://svelte.dev/docs/kit/@sveltejs-kit-vite#paths)) and match a route with a `+page`. Check the URL for typos, and don't preload external URLs."
 	},
 	"remote_command_redirect": {
 		"variants": [
@@ -1836,7 +1836,7 @@
 				"variables": []
 			}
 		],
-		"details": "A nonce must be different for every response, but a [prerendered](https://svelte.dev/docs/kit/page-options#prerender) page is generated once and then served to everyone. Set [`csp.mode`](https://svelte.dev/docs/kit/configuration#csp) to `'auto'` or `'hash'` instead, which uses nonces only for pages that are rendered dynamically."
+		"details": "A nonce must be different for every response, but a [prerendered](https://svelte.dev/docs/kit/page-options#prerender) page is generated once and then served to everyone. Set [`csp.mode`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#csp) to `'auto'` or `'hash'` instead, which uses nonces only for pages that are rendered dynamically."
 	},
 	"prerender_template_nonce": {
 		"variants": [
@@ -1856,7 +1856,7 @@
 				"variables": []
 			}
 		],
-		"details": "A [report-only content security policy](https://svelte.dev/docs/kit/configuration#csp) doesn't block anything — it only reports violations. Without a `report-to` or `report-uri` directive, there's nowhere to send those reports. Add one of them to `csp.reportOnly`, or remove `csp.reportOnly`."
+		"details": "A [report-only content security policy](https://svelte.dev/docs/kit/@sveltejs-kit-vite#csp) doesn't block anything — it only reports violations. Without a `report-to` or `report-uri` directive, there's nowhere to send those reports. Add one of them to `csp.reportOnly`, or remove `csp.reportOnly`."
 	},
 	"remote_invalid_validator": {
 		"variants": [
@@ -2427,7 +2427,7 @@
 				]
 			}
 		],
-		"details": "With the [hash router](https://svelte.dev/docs/kit/configuration#router), your app is a single page that's rendered entirely in the browser, so [page options](https://svelte.dev/docs/kit/page-options) such as `prerender`, `ssr` and `trailingSlash` have no effect. Remove them from the file, leaving only `load`."
+		"details": "With the [hash router](https://svelte.dev/docs/kit/@sveltejs-kit-vite#router), your app is a single page that's rendered entirely in the browser, so [page options](https://svelte.dev/docs/kit/page-options) such as `prerender`, `ssr` and `trailingSlash` have no effect. Remove them from the file, leaving only `load`."
 	},
 	"form_field_unbound": {
 		"variants": [

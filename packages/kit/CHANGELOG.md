@@ -1,5 +1,33 @@
 # @sveltejs/kit
 
+## 3.1.0
+
+### Minor Changes
+
+- feat: support `report-sha256`/`report-sha384`/`report-sha512` CSP hash-reporting keywords ([#17398](https://github.com/sveltejs/kit/pull/17398))
+
+- feat: emit a `sveltekit.endpoint` span for `+server` handlers when server tracing is enabled ([#17325](https://github.com/sveltejs/kit/pull/17325))
+
+### Patch Changes
+
+- fix: don't treat every module as server-only when the project is inside a `server` directory ([#17376](https://github.com/sveltejs/kit/pull/17376))
+
+- fix: continue deployment recovery when service worker updates fail ([#17440](https://github.com/sveltejs/kit/pull/17440))
+
+- fix: infer prerendered MIME types from generated files ([#17381](https://github.com/sveltejs/kit/pull/17381))
+
+- fix: leave generated files alone when their contents are unchanged ([#17310](https://github.com/sveltejs/kit/pull/17310))
+
+- fix: leave focus in the parent page when an app in an unfocused iframe starts or navigates ([#17297](https://github.com/sveltejs/kit/pull/17297))
+
+- fix: don't warn about Storybook's Vite plugins that use `transformIndexHtml` ([#17373](https://github.com/sveltejs/kit/pull/17373))
+
+## 3.0.1
+
+### Patch Changes
+
+- fix: ensure relative imports in generated types work with `nodenext` module resolution ([#17351](https://github.com/sveltejs/kit/pull/17351))
+
 ## 3.0.0
 
 ### Major Changes
