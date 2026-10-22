@@ -265,9 +265,9 @@ async function resolve(vite, vite_dev_server, runner, id) {
 }
 
 /**
- * Adds `nodes` and the modules they import, directly or not, to `deps`, in the order the modules
- * are evaluated: static imports depth first, then dynamic imports. The order of dynamic imports
- * that run later is only approximated
+ * Adds `nodes` and the modules they import, directly or not, to `deps`: static imports depth first,
+ * which puts their stylesheets in the order the browser evaluates them, then the modules imported
+ * dynamically, whose order at run time is only approximated
  * @param {ViteDevServer} vite
  * @param {EnvironmentModuleNode[]} nodes
  * @param {Set<EnvironmentModuleNode>} deps
