@@ -1,4 +1,4 @@
-/** @import { Plugin, PreviewServer, ResolvedConfig, ViteDevServer } from 'vite' */
+/** @import { Plugin, ResolvedConfig, ViteDevServer } from 'vite' */
 /** @import { GetPlatformProxyOptions } from 'wrangler' */
 
 import fs from 'node:fs';
@@ -171,35 +171,44 @@ export default function (options = {}) {
 			read: () => true,
 			instrumentation: () => true
 		},
-		vite: {
-			getRequest(options) {
-				const request = getRequest(options);
-				/** @type {import('@cloudflare/workers-types').Request} */ (
-					/** @type {unknown} */ (request)
-				).cf = globalThis.__sveltekit_cloudflare_platform?.cf;
-				return request;
-			},
-			plugins: [
-				{
-					name: 'vite-plugin-sveltekit-adapter-cloudflare',
-					config(config, env) {
-						// fail early instead of after building
-						if (env.command !== 'build') return;
-						validate_worker_settings(read_config(config.root, env.mode));
-					},
-					configResolved(config) {
-						vite_config = config;
-					}
+		vite({ config }) {
+			if (config.paths.assets) {
+				throw new Error(
+					'@sveltejs/adapter-cloudflare does not support paths.assets because vite preview cannot serve assets from a separate location. Remove paths.assets from your SvelteKit configuration.'
+				);
+			}
+
+			return {
+				preview: false,
+				getRequest(options) {
+					const request = getRequest(options);
+					/** @type {import('@cloudflare/workers-types').Request} */ (
+						/** @type {unknown} */ (request)
+					).cf = globalThis.__sveltekit_cloudflare_platform?.cf;
+					return request;
 				},
-				...plugin_config(options.config),
-				virtual_workers_module(
+				plugins: [
 					{
-						configPath: options.config,
-						...options.platformProxy
+						name: 'vite-plugin-sveltekit-adapter-cloudflare',
+						config(config, env) {
+							// fail early instead of after building
+							if (env.command !== 'build') return;
+							validate_worker_settings(read_config(config.root, env.mode));
+						},
+						configResolved(config) {
+							vite_config = config;
+						}
 					},
-					stub_import
-				)
-			]
+					...plugin_config(options.config),
+					virtual_workers_module(
+						{
+							configPath: options.config,
+							...options.platformProxy
+						},
+						stub_import
+					)
+				]
+			};
 		}
 	};
 }
@@ -232,7 +241,7 @@ async function reload_cloudflare_platform_proxy(options) {
  * @returns {Plugin}
  */
 function virtual_workers_module(options, stub_import) {
-	/** @param {ViteDevServer | PreviewServer} server */
+	/** @param {ViteDevServer} server */
 	const setup = async (server) => {
 		// shared so that concurrent servers start one proxy and only the last close disposes it
 		const shared = (globalThis.__sveltekit_cloudflare_platform_setup ??= {
@@ -300,11 +309,10 @@ function virtual_workers_module(options, stub_import) {
 	};
 	return {
 		name: 'vite-plugin-sveltekit-adapter-cloudflare-virtual-workers-module',
+		apply: (_config, env) => !env.isPreview,
 		configureServer: setup,
-		configurePreviewServer: setup,
 		// a restarting server is set up before the old one closes, so the proxy survives
 		closeServer: dispose,
-		closePreviewServer: dispose,
 		resolveId: {
 			filter: { id: exactRegex('cloudflare:workers') },
 			handler() {

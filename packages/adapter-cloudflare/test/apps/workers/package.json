@@ -5,7 +5,7 @@
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build && node test/validate.js && wrangler deploy --dry-run --outdir .svelte-kit/dry-run",
-		"preview": "wrangler dev --port 8787",
+		"preview": "vite preview --port 8787",
 		"generate:types": "wrangler types --config config/wrangler.jsonc",
 		"test:dev": "DEV=true playwright test",
 		"test:build": "playwright test",

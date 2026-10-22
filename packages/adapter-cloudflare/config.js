@@ -19,18 +19,20 @@ const build_output_plugins = new Set([
 ]);
 
 /**
- * In preview, the plugin expects to read the output config from its own build pipeline,
- * which we don't use, so we leave `vite preview` to SvelteKit
+ * `vite preview` runs the build output with the full plugin instead
  * @type {Plugin['apply']}
  */
 const not_preview = (_config, env) => !env.isPreview;
+
+/** @type {Plugin['apply']} */
+const preview = (_config, env) => env.isPreview === true;
 
 const worker_entry = fileURLToPath(new URL('./files/worker.js', import.meta.url));
 
 /**
  * Applies the Worker environment config that `@cloudflare/vite-plugin` generates
  * so that dev emulates workerd and the server output suits it. It also generates the
- * deployment config for the build output
+ * deployment config and previews the build output in workerd
  * @param {string | undefined} config_path
  * @returns {Plugin[]}
  */
@@ -88,6 +90,8 @@ export function plugin_config(config_path) {
 			// lets the other plugins read the resolved Vite config
 			configResolved: cloudflare_config_plugin?.configResolved
 		}),
+		// `vite preview` runs the Worker in workerd
+		...plugins.map((plugin) => /** @satisfies {Plugin} */ ({ ...plugin, apply: preview })),
 		{
 			name: 'vite-plugin-sveltekit-adapter-cloudflare-environment',
 			apply: not_preview,

@@ -18,7 +18,8 @@ vi.mock('@cloudflare/vite-plugin', () => ({
 			config: () => ({ environments: { ssr: { resolve: {}, build: {} } } }),
 			configResolved: () => {}
 		},
-		{ name: 'vite-plugin-cloudflare:output-config' }
+		{ name: 'vite-plugin-cloudflare:output-config' },
+		{ name: 'vite-plugin-cloudflare:preview' }
 	])
 }));
 
@@ -42,11 +43,23 @@ beforeEach(() => {
 
 /**
  * @param {import('@sveltejs/kit').Adapter} [instance]
+ * @param {string} [assets]
  */
-function get_vite_config(instance = adapter()) {
-	if (typeof instance.vite === 'function') throw new Error('Expected an adapter config object');
-	return instance.vite;
+function get_vite_config(instance = adapter(), assets = '') {
+	if (typeof instance.vite !== 'function') throw new Error('Expected an adapter config function');
+	return instance.vite({
+		config: /** @type {Parameters<typeof instance.vite>[0]['config']} */ ({ paths: { assets } })
+	});
 }
+
+test.each(['https://cdn.example.com', '/assets'])(
+	'rejects paths.assets=%s when configuring the adapter',
+	(assets) => {
+		expect(() => get_vite_config(adapter(), assets)).toThrow(
+			'@sveltejs/adapter-cloudflare does not support paths.assets because vite preview cannot serve assets from a separate location'
+		);
+	}
+);
 
 function create_server() {
 	const { plugins } = /** @type {{ plugins: import('vite').Plugin[] }} */ (get_vite_config());
@@ -265,6 +278,28 @@ test('selects Wrangler configuration and named environments from Vite env files'
 		vi.unstubAllEnvs();
 		fs.rmSync(root, { recursive: true, force: true });
 	}
+});
+
+test('uses Cloudflare plugins for build and preview and the Node proxy for development', () => {
+	const config = /** @type {{ plugins: import('vite').Plugin[], preview: boolean }} */ (
+		get_vite_config()
+	);
+	expect(config.preview).toBe(false);
+
+	const dev = { command: /** @type {const} */ ('serve'), mode: 'development', isPreview: false };
+	const preview_env = { ...dev, isPreview: true };
+	const cf_preview = config.plugins.find(
+		(plugin) =>
+			plugin.name === 'vite-plugin-cloudflare:preview' && typeof plugin.apply === 'function'
+	);
+	const proxy = config.plugins.find((plugin) => plugin.name.endsWith('-virtual-workers-module'));
+	if (typeof cf_preview?.apply !== 'function' || typeof proxy?.apply !== 'function') {
+		throw new Error('Expected preview filters');
+	}
+	expect(cf_preview.apply({}, dev)).toBe(false);
+	expect(cf_preview.apply({}, preview_env)).toBe(true);
+	expect(proxy.apply({}, dev)).toBe(true);
+	expect(proxy.apply({}, preview_env)).toBe(false);
 });
 
 test('bundles the dependencies that Kit externalizes for Workers', () => {
