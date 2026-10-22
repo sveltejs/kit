@@ -21,5 +21,6 @@ export function init_remote_functions(module, file, hash) {
 
 		fn.__.id = `${hash}/${name}`;
 		fn.__.name = name;
+		fn.__.file = file;
 	}
 }

@@ -9,6 +9,7 @@ import { DEV } from 'esm-env';
 import { init_transport } from '#app/internal/transport';
 import { capture_error } from '../../messages/internal/server.js';
 import * as e from '../../messages/server-errors.js';
+import { default_handle_error } from './errors.js';
 
 /** @type {Promise<any>} */
 let init_promise;
@@ -55,31 +56,7 @@ export async function init() {
 
 			set_hooks({
 				handle: module.handle || (({ event, resolve }) => resolve(event)),
-				handleError:
-					module.handleError ||
-					(({ kind, error, issues }) => {
-						if (kind === 'validation') {
-							console.error('Remote function schema validation failed:', issues);
-							return;
-						}
-
-						if (kind !== 'unknown') {
-							// don't log stack traces for 404s etc, it's all internal gubbins
-							return;
-						}
-
-						let e = error;
-						while (e instanceof Error) {
-							if (e.stack) {
-								console.error(e.stack);
-							}
-							e = e.cause;
-						}
-
-						if (e) {
-							console.error(String(e));
-						}
-					}),
+				handleError: module.handleError || default_handle_error,
 				handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request)),
 				reroute: module.reroute || noop
 			});

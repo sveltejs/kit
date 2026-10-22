@@ -34,7 +34,8 @@ export function handle_error_and_jsonify(event, state, error) {
 		caught = {
 			kind: 'validation',
 			error: { status: 400, message: 'Bad Request' },
-			issues: error.issues
+			issues: error.issues,
+			remote: error.remote
 		};
 	} else {
 		caught = { kind: 'unknown', error };
@@ -109,5 +110,37 @@ function log_handle_error_hook_failure(error, hook_error) {
 		console.error(`Original error: ${error.status} ${error.text}: ${error.message}`);
 	} else {
 		console.error('Original error:', error);
+	}
+}
+
+/**
+ * @param {import('@sveltejs/kit/hooks').CaughtError & { event: import('@sveltejs/kit').RequestEvent }} input
+ */
+export function default_handle_error({ kind, error, issues, remote }) {
+	if (kind === 'validation') {
+		const fn = remote?.name
+			? remote.file
+				? `${remote.name} (${remote.file})`
+				: remote.name
+			: undefined;
+		console.error(`Remote function ${fn ? fn + ' ' : ''}schema validation failed:`, issues);
+		return;
+	}
+
+	if (kind !== 'unknown') {
+		// don't log stack traces for 404s etc, it's all internal gubbins
+		return;
+	}
+
+	let e = error;
+	while (e instanceof Error) {
+		if (e.stack) {
+			console.error(e.stack);
+		}
+		e = e.cause;
+	}
+
+	if (e) {
+		console.error(String(e));
 	}
 }
