@@ -1,5 +1,6 @@
 <script>
 	import { page } from '$app/state';
+	import Snapshot from './snapshot/stale/Stale.svelte';
 </script>
 
 <svelte:head>
@@ -9,6 +10,10 @@
 <h1>{page.status}</h1>
 
 <p id="message">This is your custom error page saying: "<b>{page.error?.message}</b>"</p>
+
+{#if page.url.searchParams.has('snapshot')}
+	<Snapshot />
+{/if}
 
 <style>
 	h1,
