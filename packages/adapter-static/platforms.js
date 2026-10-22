@@ -10,6 +10,32 @@ import process from 'node:process';
  * }}
  * Platform */
 
+// Vercel serves files named `index.*` at their directory's path, so prerendered pages that
+// have a trailing slash are renamed to something else when every route has one
+const INDEX_FILE = '__index.html';
+
+/** @param {string} str */
+function escape_regex(str) {
+	return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Returns the `trailingSlash` option if every route uses the same one, allowing
+ * trailing slashes to be normalized with a single route rather than one per page.
+ * Returns `undefined` if the routes disagree, if they use `'ignore'`,
+ * or if the version of SvelteKit doesn't expose the option to adapters.
+ * This function is duplicated in adapter-vercel
+ * @param {Array<{ trailingSlash?: 'never' | 'always' | 'ignore' }>} routes
+ * @returns {'never' | 'always' | undefined}
+ */
+function get_uniform_trailing_slash(routes) {
+	const values = new Set(routes.map((route) => route.trailingSlash));
+	if (values.size !== 1) return;
+
+	const [value] = values;
+	if (value === 'never' || value === 'always') return value;
+}
+
 // This function is duplicated in adapter-vercel
 /** @param {import('@sveltejs/kit').Builder} builder */
 function static_vercel_config(builder) {
@@ -39,7 +65,35 @@ function static_vercel_config(builder) {
 		});
 	}
 
+	const base = builder.config.paths.base;
+	const trailing_slash = get_uniform_trailing_slash(builder.routes);
+
+	if (base && trailing_slash) {
+		// the root of the app always has a trailing slash when `paths.base` is set
+		prerendered_redirects.push({
+			src: `^${escape_regex(base)}$`,
+			headers: { Location: `${base}/` },
+			status: 308
+		});
+	}
+
+	if (trailing_slash === 'never') {
+		prerendered_redirects.push({
+			src: `^${escape_regex(base)}/(.+)/$`,
+			headers: { Location: `${base}/$1` },
+			status: 308
+		});
+	}
+
 	for (const [path, page] of builder.prerendered.pages) {
+		if (trailing_slash === 'always' && path !== '/' && path.endsWith('/')) {
+			// Vercel ignores trailing slashes when looking up static files, and serves `foo/index.html`
+			// at `foo`, so we rename the page to stop `/foo` from matching it. That way, `/foo` is
+			// redirected after the filesystem phase, while the `miss` route serves the page for `/foo/`
+			overrides[page.file] = { path: page.file.replace(/index\.html$/, INDEX_FILE) };
+			continue;
+		}
+
 		let overrides_path = path.slice(1);
 
 		if (path !== '/') {
@@ -51,42 +105,66 @@ function static_vercel_config(builder) {
 				overrides_path = path.slice(1, -1);
 			}
 
-			prerendered_redirects.push(
-				{ src: path, dest: counterpart_route },
-				{ src: counterpart_route, status: 308, headers: { Location: path } }
-			);
+			if (!trailing_slash) {
+				prerendered_redirects.push(
+					{ src: path, dest: counterpart_route },
+					{ src: counterpart_route, status: 308, headers: { Location: path } }
+				);
+			}
 		}
 
 		overrides[page.file] = { path: overrides_path };
 	}
 
+	/** @type {any[]} */
+	const routes = [
+		...prerendered_redirects,
+		{
+			src: `/${builder.getAppPath()}/immutable/.+`,
+			headers: {
+				'cache-control': 'public, immutable, max-age=31536000'
+			}
+		}
+	];
+
+	if (trailing_slash === 'always') {
+		// serve the renamed page for `/foo/` if it exists. Routes in the `miss` phase
+		// are reverted if they don't match a file, so other requests are unaffected
+		routes.push({ handle: 'miss' }, { src: '^(/.+)/$', dest: `$1/${INDEX_FILE}`, check: true });
+	}
+
+	routes.push(
+		{
+			handle: 'filesystem'
+		},
+		// Prevent incorrect caching: if a request to /_app/immutable/* doesn't match
+		// a static file, return 404 instead of falling through to dynamic routes.
+		// Otherwise, we could accidentally immutably cache dynamic content served
+		// by the fallback function. `no-store` stops the earlier immutable header
+		// from sticking to this 404, so a missing asset isn't cached for a year.
+		{
+			src: `/${builder.getAppPath()}/immutable/.+`,
+			status: 404,
+			headers: {
+				'cache-control': 'no-store'
+			},
+			continue: false
+		}
+	);
+
+	if (trailing_slash === 'always') {
+		// Requests that reach this point didn't match a static file, so we can add a trailing
+		// slash without affecting assets. Internal requests are excluded since they never have one
+		routes.push({
+			src: `^(?!/${escape_regex(builder.getAppPath())}/)(?!.*__(?:data\\.json|route\\.js)$)(${escape_regex(base)}/.*[^/])$`,
+			headers: { Location: '$1/' },
+			status: 308
+		});
+	}
+
 	return {
 		version: 3,
-		routes: [
-			...prerendered_redirects,
-			{
-				src: `/${builder.getAppPath()}/immutable/.+`,
-				headers: {
-					'cache-control': 'public, immutable, max-age=31536000'
-				}
-			},
-			{
-				handle: 'filesystem'
-			},
-			// Prevent incorrect caching: if a request to /_app/immutable/* doesn't match
-			// a static file, return 404 instead of falling through to dynamic routes.
-			// Otherwise, we could accidentally immutably cache dynamic content served
-			// by the fallback function. `no-store` stops the earlier immutable header
-			// from sticking to this 404, so a missing asset isn't cached for a year.
-			{
-				src: `/${builder.getAppPath()}/immutable/.+`,
-				status: 404,
-				headers: {
-					'cache-control': 'no-store'
-				},
-				continue: false
-			}
-		],
+		routes,
 		overrides
 	};
 }

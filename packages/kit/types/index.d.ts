@@ -714,6 +714,11 @@ declare module '@sveltejs/kit' {
 		};
 		pattern: RegExp;
 		prerender: PrerenderOption;
+		/**
+		 * The route's [`trailingSlash`](https://svelte.dev/docs/kit/page-options#trailingSlash) option
+		 * @since 3.2.0
+		 */
+		trailingSlash: TrailingSlash;
 		segments: RouteSegment[];
 		methods: Array<HttpMethod | '*'>;
 		config: Config;
@@ -961,6 +966,9 @@ declare module '@sveltejs/kit' {
 		dynamic: boolean;
 		rest: boolean;
 	}
+
+	/** @default 'never' */
+	type TrailingSlash = 'never' | 'always' | 'ignore';
 	type RecursiveRequired<T> = {
 		// Recursive implementation of TypeScript's Required utility type.
 		// Will recursively continue until it reaches a primitive or Function

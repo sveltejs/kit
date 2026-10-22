@@ -679,6 +679,9 @@ importers:
 
   packages/adapter-vercel/test/apps/split:
     devDependencies:
+      '@sveltejs/adapter-vercel':
+        specifier: workspace:*
+        version: link:../../..
       '@sveltejs/kit':
         specifier: workspace:*
         version: link:../../../../kit
@@ -694,6 +697,33 @@ importers:
       vite:
         specifier: 'catalog:'
         version: 8.3.0(@types/node@22.20.4)(esbuild@0.28.1)(yaml@2.9.1)
+      vitest:
+        specifier: 'catalog:'
+        version: 5.0.1(@opentelemetry/api@1.9.1)(@types/node@22.20.4)(@vitest/browser-playwright@5.0.1)(@vitest/ui@5.0.1)(jsdom@30.1.0)(vite@8.3.0(@types/node@22.20.4)(esbuild@0.28.1)(yaml@2.9.1))
+
+  packages/adapter-vercel/test/apps/trailing-slash:
+    devDependencies:
+      '@sveltejs/adapter-vercel':
+        specifier: workspace:*
+        version: link:../../..
+      '@sveltejs/kit':
+        specifier: workspace:*
+        version: link:../../../../kit
+      '@sveltejs/vite-plugin-svelte':
+        specifier: 'catalog:'
+        version: 7.3.1(svelte@5.57.1(@typescript-eslint/types@8.70.1))(vite@8.3.0(@types/node@22.20.4)(esbuild@0.28.1)(yaml@2.9.1))
+      svelte:
+        specifier: 'catalog:'
+        version: 5.57.1(@typescript-eslint/types@8.70.1)
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+      vite:
+        specifier: 'catalog:'
+        version: 8.3.0(@types/node@22.20.4)(esbuild@0.28.1)(yaml@2.9.1)
+      vitest:
+        specifier: 'catalog:'
+        version: 5.0.1(@opentelemetry/api@1.9.1)(@types/node@22.20.4)(@vitest/browser-playwright@5.0.1)(@vitest/ui@5.0.1)(jsdom@30.1.0)(vite@8.3.0(@types/node@22.20.4)(esbuild@0.28.1)(yaml@2.9.1))
 
   packages/enhanced-img:
     dependencies:
