@@ -7,7 +7,7 @@ const app = deploy(import.meta.dirname);
 const output = path.join(app, '.vercel/output');
 const functions = `${output}/functions/api/json`;
 
-/** @type {{ routes: Array<{ src?: string, dest?: string, handle?: string }> }} */
+/** @type {{ routes: Array<{ src?: string, dest?: string, handle?: string, status?: number, headers?: Record<string, string> }> }} */
 let config;
 beforeAll(() => (config = JSON.parse(fs.readFileSync(`${output}/config.json`, 'utf8'))));
 
@@ -64,6 +64,22 @@ test('dynamic ISR routes are matched after the filesystem', () => {
 	const filesystem = config.routes.findIndex((route) => route.handle === 'filesystem');
 	const index = config.routes.findIndex((route) => route.src === '^(/isr/([^/]+?)/?)$');
 	assert.ok(index > filesystem);
+});
+
+test('prerendered trailing slash redirects are combined into one route per direction', () => {
+	const redirects = config.routes.filter((route) => route.status === 308);
+	assert.equal(redirects.length, 2);
+
+	const add = redirects.find((route) => route.headers?.Location === '/$1/');
+	assert.equal(add?.src, '^/(prerendered-trailing-slash/a|prerendered-trailing-slash/b)$');
+
+	const remove = redirects.find((route) => route.headers?.Location === '/$1');
+	assert.ok(remove?.src?.includes('prerendered/caf%C3%A9'));
+	assert.ok(remove?.src?.includes('prerendered/v1\\.2'));
+});
+
+test('prerendered pages do not need routes to be served', () => {
+	assert.ok(!config.routes.some((route) => route.dest?.startsWith('/prerendered')));
 });
 
 test('process.cwd() is traced from the project directory', () => {
