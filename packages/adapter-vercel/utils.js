@@ -24,6 +24,56 @@ export function escape_regex(str) {
 	return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+// Vercel rejects routes whose `src` is longer than 4096 characters
+const MAX_SRC_LENGTH = 4000;
+
+/**
+ * Creates routes that redirect prerendered pages to their canonical trailing slash form.
+ * Since Vercel limits the number of routes in a deployment, pathnames are combined into
+ * as few routes as possible rather than creating one route per page.
+ * This function is duplicated in adapter-static
+ * @param {string[]} pathnames decoded pathnames without leading or trailing slashes
+ * @param {boolean} trailing_slash `true` if the redirect should add a trailing slash, `false` if it should remove it
+ */
+export function trailing_slash_redirects(pathnames, trailing_slash) {
+	/** @type {Array<{ src: string, headers: { Location: string }, status: number, caseSensitive: boolean }>} */
+	const routes = [];
+
+	/** @type {string[]} */
+	let alternatives = [];
+	let length = 0;
+
+	const flush = () => {
+		if (alternatives.length === 0) return;
+
+		const group = alternatives.join('|');
+
+		routes.push({
+			src: trailing_slash ? `^/(${group})$` : `^/(${group})/$`,
+			headers: { Location: trailing_slash ? '/$1/' : '/$1' },
+			status: 308,
+			caseSensitive: true
+		});
+
+		alternatives = [];
+		length = 0;
+	};
+
+	for (const pathname of pathnames) {
+		// Vercel matches against the encoded pathname, so we encode it the same way Kit does when prerendering
+		const alternative = escape_regex(encodeURI(pathname));
+
+		if (length + alternative.length + 1 > MAX_SRC_LENGTH) flush();
+
+		alternatives.push(alternative);
+		length += alternative.length + 1;
+	}
+
+	flush();
+
+	return routes;
+}
+
 /**
  * Returns the `trailingSlash` option if every route uses the same one, allowing
  * trailing slashes to be normalized with a single route rather than one per page.
