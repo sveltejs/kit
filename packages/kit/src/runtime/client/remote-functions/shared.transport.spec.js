@@ -399,6 +399,33 @@ describe('query responses', () => {
 		expect(respond['hash/get_value']).toHaveLength(1);
 	});
 
+	test("a value another query read while a command ran doesn't replace the command's update", async () => {
+		const respond = hold_requests();
+		const other = query('hash/other')(undefined);
+		const value = query('hash/get_value')(undefined);
+
+		void value.refresh();
+		respond['hash/get_value'][0](query_result(0));
+		await flush();
+
+		const mutation = command('hash/mutate')(undefined);
+		await flush();
+		void other.refresh();
+		respond['hash/mutate'][0](command_result({ v: 2 }));
+		await mutation;
+		expect(value.current).toBe(2);
+
+		// the other query may have read before the command committed, so a fresh read decides
+		respond['hash/other'][0]({ _: 0, q: { 'hash/other/': { v: 0 }, 'hash/get_value/': { v: 1 } } });
+		await flush();
+		expect(value.current).toBe(2);
+		expect(respond['hash/get_value']).toHaveLength(2);
+
+		respond['hash/get_value'][1](query_result(3));
+		await flush();
+		expect(value.current).toBe(3);
+	});
+
 	test('a response that was in flight during a command does not overwrite its update', async () => {
 		const respond = hold_requests();
 		const value = query('hash/get_value')(undefined);

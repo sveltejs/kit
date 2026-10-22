@@ -38,6 +38,8 @@ export class Query {
 	#pending = [];
 	/** The number of the request whose value or error is applied (see `next_request_id`) */
 	#applied = 0;
+	/** The number taken when the latest mutation's update arrived */
+	#mutation_received = 0;
 	/** Responses to requests numbered below this are ignored, while a fresh read decides (see `#reconcile`) */
 	#ignore_before = 0;
 
@@ -138,11 +140,12 @@ export class Query {
 	 * the ones sent before the request that carried it.
 	 *
 	 * A read's value is ignored if a request of this query sent after it has already
-	 * responded, or while a fresh request is deciding (see `#reconcile`). A mutation's
-	 * value isn't: a read sent after the mutation may still have run before it
-	 * committed. So if a request of this query sent after the mutation has responded
-	 * or is still pending, it isn't known which of them saw the newer state, and a
-	 * fresh request has to decide
+	 * responded, or while a fresh request is deciding (see `#reconcile`). A read and a
+	 * mutation that overlap can't be ordered by when they were sent: the read may have
+	 * run before or after the mutation committed. So a fresh request decides when a
+	 * mutation's update arrives while a request of this query sent after the mutation
+	 * has responded or is still pending, and when another query's response brings a
+	 * value of this query that it read while the mutation was in flight
 	 * @param {Update | undefined} update
 	 * @returns {'ignore' | 'apply' | 'reconcile'}
 	 */
@@ -154,11 +157,20 @@ export class Query {
 
 		const { sent, mutation } = update;
 
-		if (!mutation && (sent < this.#applied || sent < this.#ignore_before)) return 'ignore';
+		if (!mutation) {
+			if (sent < this.#applied || sent < this.#ignore_before) return 'ignore';
+
+			// sent before the latest mutation's update arrived, and after the mutation
+			if (sent < this.#mutation_received) {
+				this.#reconcile();
+				return 'ignore';
+			}
+		}
 
 		this.#settle_superseded(sent);
 		const overlaps = this.#applied > sent || this.#pending.length > 0;
 		this.#applied = Math.max(this.#applied, sent);
+		if (mutation) this.#mutation_received = next_request_id();
 
 		return mutation && overlaps ? 'reconcile' : 'apply';
 	}
