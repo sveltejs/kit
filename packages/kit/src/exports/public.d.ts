@@ -10,7 +10,8 @@ import {
 	Prerendered,
 	PrerenderOption,
 	RequestOptions,
-	RouteSegment
+	RouteSegment,
+	TrailingSlash
 } from '../types/private.js';
 import { ValidatedConfig } from 'types';
 import { Plugin } from 'vite';
@@ -730,6 +731,11 @@ export interface RouteDefinition<Config = any> {
 	};
 	pattern: RegExp;
 	prerender: PrerenderOption;
+	/**
+	 * The route's [`trailingSlash`](https://svelte.dev/docs/kit/page-options#trailingSlash) option
+	 * @since 3.2.0
+	 */
+	trailingSlash: TrailingSlash;
 	segments: RouteSegment[];
 	methods: Array<HttpMethod | '*'>;
 	config: Config;
