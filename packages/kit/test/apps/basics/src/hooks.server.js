@@ -133,6 +133,10 @@ export const handle = sequence(
 			throw new Error('Error in handle');
 		} else if (event.url.pathname === '/errors/expected-error-in-handle') {
 			error(500, 'Expected error in handle');
+		} else if (event.url.pathname === '/%E0%A4%A') {
+			if (event.url.searchParams.has('error')) throw new Error('Error in handle for malformed URI');
+			event.cookies.set('malformed', 'redirected', { path: '/' });
+			redirect(303, '/');
 		}
 
 		const response = await resolve(event, {
