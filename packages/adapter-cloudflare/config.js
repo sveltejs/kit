@@ -16,7 +16,7 @@ const worker_entry = fileURLToPath(new URL('./files/worker.js', import.meta.url)
 
 /**
  * Applies the Worker environment config that `@cloudflare/vite-plugin` generates
- * so that the server output suits workerd
+ * so that dev emulates workerd and the server output suits it
  * @param {string | undefined} config_path
  * @returns {Plugin[]}
  */
@@ -45,12 +45,9 @@ export function plugin_config(config_path) {
 	}
 
 	return [
-		...plugins
-			.filter((plugin) => useful_cloudflare_plugins.has(plugin.name))
-			.map((plugin) => /** @satisfies {Plugin} */ ({ ...plugin, apply: 'build' })),
+		...plugins.filter((plugin) => useful_cloudflare_plugins.has(plugin.name)),
 		{
 			name: 'vite-plugin-sveltekit-adapter-cloudflare-environment',
-			apply: 'build',
 			async config(user_config, env) {
 				const ssr = (await cloudflare_config_hook.call(this, user_config, env))?.environments?.ssr;
 
@@ -71,6 +68,11 @@ export function plugin_config(config_path) {
 								conditions: ssr.resolve?.conditions?.filter((condition) => condition !== 'browser'),
 								// we resolve `cloudflare:workers` to a stub that runs in Node
 								builtins: ssr.resolve?.builtins?.filter((id) => id !== 'cloudflare:workers')
+							},
+							optimizeDeps: {
+								...ssr.optimizeDeps,
+								// points to our stand-in `main`
+								entries: undefined
 							},
 							build: {
 								target: ssr.build?.target,

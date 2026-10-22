@@ -1,0 +1,11 @@
+{
+	"name": "conditions-dep",
+	"version": "0.0.1",
+	"type": "module",
+	"exports": {
+		".": {
+			"workerd": "./workerd.js",
+			"default": "./default.js"
+		}
+	}
+}

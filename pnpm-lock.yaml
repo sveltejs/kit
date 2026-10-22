@@ -409,6 +409,9 @@ importers:
       cjs-dep:
         specifier: file:cjs-dep
         version: file:packages/adapter-cloudflare/test/apps/workers/cjs-dep
+      conditions-dep:
+        specifier: file:conditions-dep
+        version: file:packages/adapter-cloudflare/test/apps/workers/conditions-dep
       server-side-dep:
         specifier: file:server-side-dep
         version: file:packages/adapter-cloudflare/test/apps/workers/server-side-dep
@@ -3658,6 +3661,9 @@ packages:
   color-name@1.1.4:
     resolution: {integrity: sha512-dOy+3AuW3a2wNbZHIuMZpTcgjGuLU/uBL/ubcZF9OXbDo8ff4O8yVp5Bf0efS8uEoYo5q4Fx7dY9OgQGXgAsQA==}
 
+  conditions-dep@file:packages/adapter-cloudflare/test/apps/workers/conditions-dep:
+    resolution: {directory: packages/adapter-cloudflare/test/apps/workers/conditions-dep, type: directory}
+
   consola@3.4.2:
     resolution: {integrity: sha512-5IKcdX0nnYavi6G7TtOhwkYzyjfJlatbjMjuLSfE2kYT5pMDOilZ4OvMhi637CcDICTmz3wARPoyhqyX1Y+XvA==}
     engines: {node: ^14.18.0 || >=16.10.0}
@@ -6412,6 +6418,8 @@ snapshots:
       color-name: 1.1.4
 
   color-name@1.1.4: {}
+
+  conditions-dep@file:packages/adapter-cloudflare/test/apps/workers/conditions-dep: {}
 
   consola@3.4.2: {}
 

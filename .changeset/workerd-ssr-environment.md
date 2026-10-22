@@ -2,4 +2,4 @@
 '@sveltejs/adapter-cloudflare': patch
 ---
 
-fix: build the server with the environment config from `@cloudflare/vite-plugin` so that CommonJS `require` calls of Node builtins work in workerd
+fix: apply the environment config from `@cloudflare/vite-plugin` during dev and build so that dependencies resolve the same way as in workerd and CommonJS `require` calls of Node builtins work
