@@ -118,7 +118,8 @@ export async function render_response({
 	let base_expression = s(paths.base);
 
 	const csp = new Csp(options.csp, {
-		prerender: !!(state.prerendering || state.prerender_default === true)
+		prerender: !!(state.prerendering || state.prerender_default === true),
+		template_contains_nonce: options.app_template_contains_nonce
 	});
 
 	// if appropriate, use relative paths for greater portability

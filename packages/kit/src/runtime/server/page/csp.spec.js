@@ -395,6 +395,76 @@ describe('CSPs in prod', () => {
 		assert.ok(csp.nonce);
 	});
 
+	/** @type {Array<'nonce' | 'auto'>} */
+	const nonce_modes = ['nonce', 'auto'];
+
+	test('adds the nonce for scripts in the template when the page adds no script', () => {
+		for (const mode of nonce_modes) {
+			const csp = new Csp(
+				{
+					mode,
+					directives: {
+						'script-src': ['self']
+					},
+					reportOnly: {
+						'script-src': ['self'],
+						'report-uri': ['/']
+					}
+				},
+				{
+					prerender: false,
+					template_contains_nonce: true
+				}
+			);
+
+			assert.equal(csp.csp_provider.get_header(), `script-src 'self' 'nonce-${csp.nonce}'`);
+			assert.equal(
+				csp.report_only_provider.get_header(),
+				`script-src 'self' 'nonce-${csp.nonce}'; report-uri /`
+			);
+		}
+	});
+
+	test('does not add a nonce when neither the template nor the page uses one', () => {
+		for (const mode of nonce_modes) {
+			for (const template_contains_nonce of [false, undefined]) {
+				const csp = new Csp(
+					{
+						mode,
+						directives: {
+							'script-src': ['self']
+						},
+						reportOnly: {}
+					},
+					{
+						prerender: false,
+						template_contains_nonce
+					}
+				);
+
+				assert.equal(csp.csp_provider.get_header(), "script-src 'self'");
+			}
+		}
+	});
+
+	test('does not add the template nonce when using hashes', () => {
+		const csp = new Csp(
+			{
+				mode: 'hash',
+				directives: {
+					'script-src': ['self']
+				},
+				reportOnly: {}
+			},
+			{
+				prerender: false,
+				template_contains_nonce: true
+			}
+		);
+
+		assert.equal(csp.csp_provider.get_header(), "script-src 'self'");
+	});
+
 	test('throws when reportOnly contains directives but no report-uri or report-to', () => {
 		expect(() => {
 			new Csp(
