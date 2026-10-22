@@ -290,9 +290,9 @@ export async function render_response({
 	};
 
 	if (__SVELTEKIT_DEV__) {
-		// We always inline all styles to avoid FOUC during development. Each one is marked with
-		// its module's id, so that Vite's client adopts it instead of adding a copy, and then
-		// updates it on HMR and removes it when the module is no longer imported
+		// We always inline all styles to avoid FOUC during development. Each one is marked with the
+		// id Vite's client knows its module by, so that the client takes it over when the module
+		// runs, instead of adding a copy
 		for (const [id, style] of inline_styles) {
 			await add_style(style, [`data-vite-dev-id="${escape_html(id, true)}"`]);
 		}
