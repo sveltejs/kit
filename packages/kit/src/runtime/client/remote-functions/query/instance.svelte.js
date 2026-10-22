@@ -36,7 +36,7 @@ export class Query {
 	 * @type {PendingRequest[]}
 	 */
 	#pending = [];
-	/** The number of the request whose value or error is applied (see `next_request_id`) */
+	/** The highest number of a request whose value or error has been applied (see `next_request_id`) */
 	#applied = 0;
 	/** The number taken when the latest mutation's update arrived */
 	#mutation_received = 0;
@@ -160,9 +160,12 @@ export class Query {
 		if (!mutation) {
 			if (sent < this.#applied || sent < this.#ignore_before) return 'ignore';
 
-			// sent before the latest mutation's update arrived, and after the mutation
+			// sent before the latest mutation's update arrived, and after the mutation, so it may have
+			// read before the mutation committed. A read of this query sent since then decides, and if
+			// there is none yet, a fresh one does
 			if (sent < this.#mutation_received) {
-				this.#reconcile();
+				const later_read = this.#pending.some((request) => request.id > this.#mutation_received);
+				if (!later_read) this.#reconcile();
 				return 'ignore';
 			}
 		}
@@ -177,7 +180,8 @@ export class Query {
 
 	/**
 	 * Starts the fresh request that decides after a mutation's update overlapped
-	 * other requests of this query (see `#receive`). The requests sent before it
+	 * other requests of this query, or a read of another query that brought a value of
+	 * this one (see `#receive`). The requests sent before it
 	 * don't apply their responses, and are settled when it responds
 	 */
 	#reconcile() {
