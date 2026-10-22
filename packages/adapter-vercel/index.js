@@ -400,6 +400,10 @@ function static_vercel_config(builder, config, dir) {
 	/** @type {Record<string, { path: string }>} */
 	const overrides = {};
 
+	// prerendered files are written to `static${base}`, but their paths are relative to `base`,
+	// whereas the keys of `overrides` must be relative to `static`
+	const static_prefix = builder.config.paths.base ? `${builder.config.paths.base.slice(1)}/` : '';
+
 	/** @type {import('./index.js').ImagesConfig | undefined} */
 	const images = config.images;
 
@@ -441,7 +445,7 @@ function static_vercel_config(builder, config, dir) {
 			);
 		}
 
-		overrides[page.file] = { path: overrides_path };
+		overrides[static_prefix + page.file] = { path: overrides_path };
 	}
 
 	const routes = [
