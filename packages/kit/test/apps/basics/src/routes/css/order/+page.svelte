@@ -3,4 +3,6 @@
 	import './override.css';
 </script>
 
-<p class="order">this text is blue</p>
+<p class="nested">this text is blue</p>
+<p class="cycle">this text is blue</p>
+<p class="late">this text is blue</p>

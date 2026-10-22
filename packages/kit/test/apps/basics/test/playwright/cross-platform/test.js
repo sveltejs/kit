@@ -53,10 +53,21 @@ test.describe('CSS', () => {
 		check_styles(get_computed_style);
 	});
 
-	test('applies styles in the order they are imported', async ({ page, get_computed_style }) => {
+	test('applies styles in the order they are imported', async ({
+		page,
+		get_computed_style,
+		javaScriptEnabled
+	}) => {
 		await page.goto('/css/order');
-		await expect(page.locator('.order')).toBeVisible();
-		expect(await get_computed_style('.order', 'color')).toBe('rgb(0, 0, 255)');
+		await expect(page.locator('.nested')).toBeVisible();
+
+		expect(await get_computed_style('.nested', 'color')).toBe('rgb(0, 0, 255)');
+		expect(await get_computed_style('.cycle', 'color')).toBe('rgb(0, 0, 255)');
+
+		// a built page doesn't link the styles that `load` imports, until the client loads them
+		if (process.env.DEV || javaScriptEnabled) {
+			expect(await get_computed_style('.late', 'color')).toBe('rgb(0, 0, 255)');
+		}
 	});
 
 	test('loads styles on routes with encoded characters', async ({ page, get_computed_style }) => {

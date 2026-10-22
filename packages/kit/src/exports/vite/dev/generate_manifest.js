@@ -148,7 +148,7 @@ export function generate_manifest(
 								: dep.url + '?inline';
 							try {
 								const mod = await runner.import(inlineCssUrl);
-								// keyed by the id that Vite's client knows the module by (see `render_response`)
+								// keyed by the module's id, which Vite's client uses too when it resolves the same file
 								styles[dep.id ?? dep.url] = mod.default;
 							} catch {
 								// this can happen with dynamically imported modules, I think
@@ -265,50 +265,58 @@ async function resolve(vite, vite_dev_server, runner, id) {
 }
 
 /**
- * Adds the modules that `nodes` import, directly or not, to `deps`, in the order the modules are
- * evaluated, so that the styles inlined during development cascade as they do once Vite's client
- * has taken them over
+ * Adds `nodes` and the modules they import, directly or not, to `deps`, in the order the modules
+ * are evaluated: static imports depth first, then dynamic imports. The order of dynamic imports
+ * that run later is only approximated
  * @param {ViteDevServer} vite
  * @param {EnvironmentModuleNode[]} nodes
  * @param {Set<EnvironmentModuleNode>} deps
  */
 async function find_deps(vite, nodes, deps) {
-	/** @type {Map<EnvironmentModuleNode, EnvironmentModuleNode[]>} each module's imports, in order */
+	/** @type {Map<EnvironmentModuleNode, { static_imports: EnvironmentModuleNode[], dynamic_imports: EnvironmentModuleNode[] }>} */
 	const imports = new Map();
+
+	/** @param {string[]} [urls] */
+	async function resolve_urls(urls = []) {
+		const nodes = await Promise.all(
+			urls.map((url) => vite.environments.ssr.moduleGraph.getModuleByUrl(url))
+		);
+		return nodes.filter((node) => node !== undefined);
+	}
 
 	// since `transformResult.deps` contains URLs instead of `ModuleNode`s, this process is asynchronous.
 	// instead of using `await`, we resolve all branches in parallel.
 	/** @param {EnvironmentModuleNode} node */
 	async function discover(node) {
 		if (imports.has(node)) return;
-		imports.set(node, []);
 
-		let found = Array.from(node.importedModules);
+		/** @type {{ static_imports: EnvironmentModuleNode[], dynamic_imports: EnvironmentModuleNode[] }} */
+		const found = { static_imports: Array.from(node.importedModules), dynamic_imports: [] };
+		imports.set(node, found);
 
 		if (node.transformResult) {
-			const { deps: urls = [], dynamicDeps = [] } = node.transformResult;
-			const nodes = await Promise.all(
-				[...urls, ...dynamicDeps].map((url) =>
-					vite.environments.ssr.moduleGraph.getModuleByUrl(url)
-				)
-			);
-			found = nodes.filter((node) => node !== undefined);
+			found.static_imports = await resolve_urls(node.transformResult.deps);
+			found.dynamic_imports = await resolve_urls(node.transformResult.dynamicDeps);
 		}
 
-		imports.set(node, found);
-		await Promise.all(found.map(discover));
+		await Promise.all([...found.static_imports, ...found.dynamic_imports].map(discover));
 	}
+
+	/** @type {EnvironmentModuleNode[]} */
+	const dynamic_imports = [];
 
 	/** @param {EnvironmentModuleNode} node */
 	function add(node) {
-		for (const imported of imports.get(node) ?? []) {
-			if (!deps.has(imported)) {
-				deps.add(imported);
-				add(imported);
-			}
-		}
+		if (deps.has(node)) return;
+		deps.add(node);
+
+		const found = imports.get(node);
+		found?.static_imports.forEach(add);
+		dynamic_imports.push(...(found?.dynamic_imports ?? []));
 	}
 
 	await Promise.all(nodes.map(discover));
-	for (const node of nodes) add(node);
+	nodes.forEach(add);
+	// the list grows as dynamically imported modules are added
+	for (const node of dynamic_imports) add(node);
 }
