@@ -395,8 +395,11 @@ describe('CSPs in prod', () => {
 		assert.ok(csp.nonce);
 	});
 
+	/** @type {Array<'nonce' | 'auto'>} */
+	const nonce_modes = ['nonce', 'auto'];
+
 	test('adds the nonce for scripts in the template when the page adds no script', () => {
-		for (const mode of /** @type {const} */ (['nonce', 'auto'])) {
+		for (const mode of nonce_modes) {
 			const csp = new Csp(
 				{
 					mode,
@@ -423,7 +426,7 @@ describe('CSPs in prod', () => {
 	});
 
 	test('does not add a nonce when neither the template nor the page uses one', () => {
-		for (const mode of /** @type {const} */ (['nonce', 'auto'])) {
+		for (const mode of nonce_modes) {
 			for (const template_contains_nonce of [false, undefined]) {
 				const csp = new Csp(
 					{
