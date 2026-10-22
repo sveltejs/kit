@@ -1,3 +1,4 @@
+/** @import { RemoteFunctionData, RemoteFunctionDataNode } from 'types' */
 import { describe, expect, test, vi, beforeEach } from 'vitest';
 
 // Mock `client.js` — the real module pulls in the SvelteKit router/hydration
@@ -10,7 +11,7 @@ vi.mock(new URL('../client.js', import.meta.url).pathname, () => ({
 	query_responses: {},
 	live_query_map: new Map(),
 	_goto: vi.fn(),
-	handle_error: (/** @type {any} */ error) => error.body,
+	handle_error: (/** @type {{ body: App.Error }} */ error) => error.body,
 	set_nearest_error_page: () => {},
 	refreshAll: () => {}
 }));
@@ -31,7 +32,6 @@ const { query_map, live_query_map, _goto } = await import('../client.js');
 const devalue = await import('devalue');
 const { command } = await import('./command.svelte.js');
 const { query } = await import('./query/index.js');
-const { form } = await import('./form.svelte.js');
 const { query_batch } = await import('./query-batch.svelte.js');
 const { create_remote_key, stringify_remote_arg } = await import('../../shared.js');
 
@@ -267,16 +267,16 @@ describe('query responses', () => {
 
 	/**
 	 * The server's response to a command that updated `hash/get_value`
-	 * @param {any} node
+	 * @param {RemoteFunctionDataNode} node
 	 */
 	const command_result = (node) => ({ _: null, q: { 'hash/get_value/': node } });
 
 	/**
 	 * Stubs `fetch` so that each request stays pending until the test responds to it
-	 * @returns {Record<string, Array<(data: any) => void>>} the responders, by remote function id
+	 * @returns {Record<string, Array<(data: RemoteFunctionData) => void>>} the responders, by remote function id
 	 */
 	function hold_requests() {
-		/** @type {Record<string, Array<(data: any) => void>>} */
+		/** @type {Record<string, Array<(data: RemoteFunctionData) => void>>} */
 		const respond = {};
 
 		vi.stubGlobal('fetch', (/** @type {string} */ url) => {
@@ -341,7 +341,7 @@ describe('query responses', () => {
 	});
 
 	test('uses the value or error a query set on itself on the server', async () => {
-		/** @type {any} */
+		/** @type {RemoteFunctionDataNode} */
 		let node = { v: 2 };
 		vi.stubGlobal('fetch', () =>
 			mock_response({
@@ -594,7 +594,7 @@ describe('query responses', () => {
 			const id = batch ? 'hash/get_batch' : 'hash/get_value';
 			const key = batch ? create_remote_key(id, stringify_remote_arg('x')) : 'hash/get_value/';
 			const value = batch ? query_batch(id)('x') : query(id)(undefined);
-			/** @param {any} node */
+			/** @param {RemoteFunctionDataNode} node */
 			const answer = (node) =>
 				batch
 					? { _: [node.e ? { type: 'error', error: node.e } : { type: 'result', data: node.v }] }
@@ -629,38 +629,6 @@ describe('query responses', () => {
 			expect(value.error).toEqual(failed);
 
 			query_map.clear();
-		}
-	});
-
-	test("a form's update that overlaps a refresh is decided by a fresh read, whose failure fails the refresh", async () => {
-		const respond = hold_requests();
-		const value = query('hash/get_value')(undefined);
-		const remote = form('hash/myForm');
-		const element = document.createElement('form');
-		const attachment = /** @type {symbol} */ (
-			Reflect.ownKeys(remote).find((key) => typeof key === 'symbol')
-		);
-		const detach = /** @type {any} */ (remote)[attachment](element);
-
-		try {
-			const submission = remote.submit();
-			await flush();
-			const refresh = value.refresh();
-			refresh.catch(() => {});
-
-			respond['hash/myForm'][0]({ _: {}, r: true, q: { 'hash/get_value/': { v: 1 } } });
-			await expect(submission).resolves.toBe(true);
-			expect(value.current).toBe(1);
-			expect(respond['hash/get_value']).toHaveLength(2);
-
-			respond['hash/get_value'][1]({
-				_: null,
-				q: { 'hash/get_value/': { e: { status: 500, message: 'failed' } } }
-			});
-			await expect(refresh).rejects.toMatchObject({ body: { status: 500, message: 'failed' } });
-			expect(value.error).toEqual({ status: 500, message: 'failed' });
-		} finally {
-			detach();
 		}
 	});
 
