@@ -970,9 +970,12 @@ declare module '@sveltejs/kit' {
 			: T[K]; // Use the exact type for everything else
 	};
 
-	type ValidatedConfig = RecursiveRequired<Omit<Config, 'preprocess' | 'adapter'>> & {
+	type ValidatedConfig = RecursiveRequired<
+		Omit<Config, 'preprocess' | 'adapter' | 'typescript'>
+	> & {
 		adapter: Adapter & { vite?: AdapterViteConfig };
 		preprocess: Config['preprocess'];
+		typescript: { config: NonNullable<Config['typescript']>['config'] };
 	};
 	/**
 	 * Throws an error with a HTTP status code and an optional message.
