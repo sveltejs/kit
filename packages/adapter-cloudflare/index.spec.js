@@ -18,8 +18,50 @@ beforeEach(() => {
 	vi.clearAllMocks();
 });
 
+/**
+ * @param {import('@sveltejs/kit').Adapter} [instance]
+ * @param {string} [assets]
+ */
+function get_vite_config(instance = adapter(), assets = '') {
+	if (typeof instance.vite !== 'function') throw new Error('Expected an adapter config function');
+	return instance.vite({
+		config: /** @type {Parameters<typeof instance.vite>[0]['config']} */ ({ paths: { assets } })
+	});
+}
+
+test.each(['https://cdn.example.com', '/assets'])(
+	'rejects paths.assets=%s when configuring the adapter',
+	(assets) => {
+		expect(() => get_vite_config(adapter(), assets)).toThrow(
+			'@sveltejs/adapter-cloudflare does not support paths.assets because vite preview cannot serve assets from a separate location'
+		);
+	}
+);
+
+test('uses Cloudflare plugins for preview and the Node proxy for development', () => {
+	const config = /** @type {{ plugins: import('vite').Plugin[], preview: boolean }} */ (
+		get_vite_config()
+	);
+	expect(config.preview).toBe(false);
+
+	const dev = { command: /** @type {const} */ ('serve'), mode: 'development', isPreview: false };
+	const preview_env = { ...dev, isPreview: true };
+	const cf_preview = config.plugins.find(
+		(plugin) =>
+			plugin.name === 'vite-plugin-cloudflare:preview' && typeof plugin.apply === 'function'
+	);
+	const proxy = config.plugins.find((plugin) => plugin.name.endsWith('-virtual-workers-module'));
+	if (typeof cf_preview?.apply !== 'function' || typeof proxy?.apply !== 'function') {
+		throw new Error('Expected preview filters');
+	}
+	expect(cf_preview.apply({}, dev)).toBe(false);
+	expect(cf_preview.apply({}, preview_env)).toBe(true);
+	expect(proxy.apply({}, dev)).toBe(true);
+	expect(proxy.apply({}, preview_env)).toBe(false);
+});
+
 function create_server() {
-	const { plugins } = /** @type {{ plugins: import('vite').Plugin[] }} */ (adapter().vite);
+	const { plugins } = /** @type {{ plugins: import('vite').Plugin[] }} */ (get_vite_config());
 	return createServer({
 		configFile: false,
 		logLevel: 'silent',
@@ -52,7 +94,7 @@ test('exposes the platform caches when the runtime defines `caches` as a getter'
 	});
 
 	try {
-		const { plugins } = /** @type {{ plugins: import('vite').Plugin[] }} */ (adapter().vite);
+		const { plugins } = /** @type {{ plugins: import('vite').Plugin[] }} */ (get_vite_config());
 		const server = await createServer({
 			configFile: false,
 			logLevel: 'silent',

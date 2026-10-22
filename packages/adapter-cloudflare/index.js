@@ -1,5 +1,5 @@
 /** @import { WorkerConfig } from '@cloudflare/vite-plugin' */
-/** @import { Plugin, PreviewServer, ResolvedConfig, ViteDevServer } from 'vite' */
+/** @import { Plugin, ResolvedConfig, ViteDevServer } from 'vite' */
 /** @import { GetPlatformProxyOptions } from 'wrangler' */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -158,52 +158,61 @@ export default function (options = {}) {
 			read: () => true,
 			instrumentation: () => true
 		},
-		vite: {
-			getRequest(options) {
-				const request = getRequest(options);
-				/** @type {import('@cloudflare/workers-types').Request} */ (
-					/** @type {unknown} */ (request)
-				).cf = globalThis.__sveltekit_cloudflare_platform?.cf;
-				return request;
-			},
-			plugins: [
-				{
-					name: 'vite-plugin-sveltekit-adapter-cloudflare-resolved-config',
-					configResolved(config) {
-						vite_config = config;
-					}
+		vite({ config }) {
+			if (config.paths.assets) {
+				throw new Error(
+					'@sveltejs/adapter-cloudflare does not support paths.assets because vite preview cannot serve assets from a separate location. Remove paths.assets from your SvelteKit configuration.'
+				);
+			}
+
+			return {
+				preview: false,
+				getRequest(options) {
+					const request = getRequest(options);
+					/** @type {import('@cloudflare/workers-types').Request} */ (
+						/** @type {unknown} */ (request)
+					).cf = globalThis.__sveltekit_cloudflare_platform?.cf;
+					return request;
 				},
-				...plugin_config(options.config, (config) => (wrangler_config = config)),
-				{
-					name: 'vite-plugin-sveltekit-adapter-cloudflare-env',
-					apply: is_dev_or_build,
-					config: {
-						// runs after the Cloudflare Vite plugin resolved the Wrangler config
-						// but before SvelteKit reads `process.env`
-						order: 'post',
-						handler() {
-							sync_process_env(
-								unstable_getVarsForDev(
-									wrangler_config.configPath,
-									undefined,
-									wrangler_config.vars,
-									wrangler_config.targetEnvironment,
-									true,
-									wrangler_config.secrets
-								)
-							);
-						}
-					}
-				},
-				virtual_workers_module(
+				plugins: [
 					{
-						configPath: options.config,
-						...options.platformProxy
+						name: 'vite-plugin-sveltekit-adapter-cloudflare-resolved-config',
+						configResolved(config) {
+							vite_config = config;
+						}
 					},
-					stub_import,
-					() => wrangler_config?.targetEnvironment
-				)
-			]
+					...plugin_config(options.config, (config) => (wrangler_config = config)),
+					{
+						name: 'vite-plugin-sveltekit-adapter-cloudflare-env',
+						apply: is_dev_or_build,
+						config: {
+							// runs after the Cloudflare Vite plugin resolved the Wrangler config
+							// but before SvelteKit reads `process.env`
+							order: 'post',
+							handler() {
+								sync_process_env(
+									unstable_getVarsForDev(
+										wrangler_config.configPath,
+										undefined,
+										wrangler_config.vars,
+										wrangler_config.targetEnvironment,
+										true,
+										wrangler_config.secrets
+									)
+								);
+							}
+						}
+					},
+					virtual_workers_module(
+						{
+							configPath: options.config,
+							...options.platformProxy
+						},
+						stub_import,
+						() => wrangler_config?.targetEnvironment
+					)
+				]
+			};
 		}
 	};
 }
@@ -241,7 +250,7 @@ async function reload_cloudflare_platform_proxy(options) {
 function virtual_workers_module(options, stub_import, get_environment) {
 	const explicit_environment = options.environment;
 
-	/** @param {ViteDevServer | PreviewServer} server */
+	/** @param {ViteDevServer} server */
 	const setup = async (server) => {
 		// shared so that concurrent servers start one proxy and only the last close disposes it
 		const shared = (globalThis.__sveltekit_cloudflare_platform_setup ??= {
@@ -321,6 +330,7 @@ function virtual_workers_module(options, stub_import, get_environment) {
 	};
 	return {
 		name: 'vite-plugin-sveltekit-adapter-cloudflare-virtual-workers-module',
+		apply: is_dev_or_build,
 		configResolved(config) {
 			// resolve the config path relative to the Vite `root` setting rather than
 			// the current working directory
@@ -332,10 +342,8 @@ function virtual_workers_module(options, stub_import, get_environment) {
 			options.environment = explicit_environment ?? get_environment();
 		},
 		configureServer: setup,
-		configurePreviewServer: setup,
 		// a restarting server is set up before the old one closes, so the proxy survives
 		closeServer: dispose,
-		closePreviewServer: dispose,
 		resolveId: {
 			filter: { id: exactRegex('cloudflare:workers') },
 			handler() {

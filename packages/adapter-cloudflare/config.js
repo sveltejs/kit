@@ -20,13 +20,19 @@ const useful_cloudflare_build_plugins = new Set([
 	'vite-plugin-cloudflare:additional-modules'
 ]);
 
-/** @type {Plugin['apply']} */
+/**
+ * `vite preview` runs the build output with the full plugin instead
+ * @type {Plugin['apply']}
+ */
 export const is_dev_or_build = (_config, env) => !env.isPreview;
+
+/** @type {Plugin['apply']} */
+const is_preview = (_config, env) => env.isPreview === true;
 
 /**
  * Applies the Worker environment config that `@cloudflare/vite-plugin` generates
  * so that dev emulates workerd and the server output suits it.
- * It also generates the Wrangler deployment config for the build output
+ * It also generates the Wrangler deployment config and previews the build output in workerd
  * @param {string | undefined} config_path
  * @param {(config: WorkerConfig) => void} set_worker_config
  * @returns {Plugin[]}
@@ -72,6 +78,10 @@ export function plugin_config(config_path, set_worker_config) {
 
 			return [];
 		}),
+		// `vite preview` runs the Worker in workerd
+		...cloudflare_plugins.map(
+			(plugin) => /** @satisfies {Plugin} */ ({ ...plugin, apply: is_preview })
+		),
 		{
 			name: 'vite-plugin-sveltekit-adapter-cloudflare-environment',
 			apply: is_dev_or_build,
