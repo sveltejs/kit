@@ -25,25 +25,15 @@ export function validate_worker_settings(wrangler_config) {
 		);
 	}
 
-	// we need the `assets.directory` key so that the static assets are deployed
-	if ((wrangler_config.main || wrangler_config.assets) && !wrangler_config.assets?.directory) {
+	if (wrangler_config.assets?.directory !== undefined) {
 		throw new Error(
-			`You must specify the \`assets.directory\` key in ${config_path}. Consult https://developers.cloudflare.com/workers/static-assets/binding/#directory`
+			`Remove \`assets.directory\` from ${config_path}. The Cloudflare Vite plugin manages the deployment output. Consult https://svelte.dev/docs/kit/adapter-cloudflare`
 		);
 	}
 
-	// we need the `assets.binding` key so that the Worker can access the static assets
-	if (wrangler_config.main && !wrangler_config.assets?.binding) {
+	if (wrangler_config.main !== undefined) {
 		throw new Error(
-			`You must specify the \`assets.binding\` key in ${config_path} before deploying your Worker. Consult https://developers.cloudflare.com/workers/static-assets/binding/#binding`
-		);
-	}
-
-	// the user might have forgot the `main` key or should remove the `assets.binding`
-	// key to deploy static assets without a Worker
-	if (!wrangler_config.main && wrangler_config.assets?.binding) {
-		throw new Error(
-			`You must specify the \`main\` key in ${config_path} if you want to deploy a Worker alongside your static assets. Otherwise, remove the \`assets.binding\` key if you only want to deploy static assets.`
+			`Remove \`main\` from ${config_path}. The adapter generates the Worker entry; custom Worker entries are not supported. Consult https://svelte.dev/docs/kit/adapter-cloudflare`
 		);
 	}
 }

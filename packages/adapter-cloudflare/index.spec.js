@@ -1,12 +1,31 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { beforeEach, expect, test, vi } from 'vitest';
-import { createServer } from 'vite';
+import { createBuilder, createServer } from 'vite';
+import { cloudflare } from '@cloudflare/vite-plugin';
 import { getPlatformProxy, unstable_readConfig } from 'wrangler';
 import adapter from './index.js';
 
 const dispose = vi.fn(() => Promise.resolve());
+
+vi.mock('@cloudflare/vite-plugin', () => ({
+	cloudflare: vi.fn(() => [
+		{ name: 'vite-plugin-cloudflare' },
+		{
+			name: 'vite-plugin-cloudflare:config',
+			config: () => ({ environments: { ssr: { resolve: {}, build: {} } } }),
+			configResolved: () => {}
+		},
+		{ name: 'vite-plugin-cloudflare:output-config' }
+	])
+}));
+
+vi.mock('vite', async (importOriginal) => ({
+	...(await importOriginal()),
+	createBuilder: vi.fn(() => Promise.resolve({ buildApp: vi.fn() }))
+}));
 
 vi.mock('wrangler', () => ({
 	getPlatformProxy: vi.fn(() => Promise.resolve({ caches: {}, dispose })),
@@ -15,10 +34,22 @@ vi.mock('wrangler', () => ({
 
 beforeEach(() => {
 	vi.clearAllMocks();
+	// the adapter also reads the Wrangler config when creating its Vite config
+	vi.mocked(unstable_readConfig)
+		.mockReset()
+		.mockReturnValue(/** @type {any} */ ({ configPath: undefined }));
 });
 
+/**
+ * @param {import('@sveltejs/kit').Adapter} [instance]
+ */
+function get_vite_config(instance = adapter()) {
+	if (typeof instance.vite === 'function') throw new Error('Expected an adapter config object');
+	return instance.vite;
+}
+
 function create_server() {
-	const { plugins } = /** @type {{ plugins: import('vite').Plugin[] }} */ (adapter().vite);
+	const { plugins } = /** @type {{ plugins: import('vite').Plugin[] }} */ (get_vite_config());
 	return createServer({
 		configFile: false,
 		logLevel: 'silent',
@@ -36,18 +67,32 @@ test.each([
 	'builds Workers assets with $not_found_handling and $fallback',
 	async ({ not_found_handling, fallback, generated }) => {
 		const root = fs.mkdtempSync(path.join(os.tmpdir(), 'adapter-cloudflare-'));
-		const dest = path.join(root, 'dist/public');
+		const tmp = `${path.join(root, 'cloudflare')}/worker`;
+		const dest = `${path.join(root, 'cloudflare')}/client`;
 		const server = path.join(root, 'server');
 		const generateFallback = vi.fn();
 		const copy = vi.fn();
 		fs.mkdirSync(server);
+		fs.writeFileSync(
+			path.join(server, 'wrangler.json'),
+			JSON.stringify({
+				main: 'index.js',
+				no_bundle: true,
+				assets: { binding: 'CUSTOM_ASSETS', directory: '../client' },
+				vars: { FOO: 'from wrangler.jsonc' }
+			})
+		);
+		const deploy_config = path.join(root, '.wrangler/deploy/config.json');
+		fs.mkdirSync(path.dirname(deploy_config), { recursive: true });
+		fs.writeFileSync(
+			deploy_config,
+			JSON.stringify({ configPath: '../../server/wrangler.json', auxiliaryWorkers: [] })
+		);
 
 		vi.mocked(unstable_readConfig).mockReturnValue(
 			/** @type {import('wrangler').Unstable_Config} */ ({
 				configPath: path.join(root, 'config/wrangler.jsonc'),
-				main: path.join(root, 'dist/index.js'),
 				assets: {
-					directory: '../dist/public',
 					binding: 'CUSTOM_ASSETS',
 					not_found_handling
 				}
@@ -69,17 +114,108 @@ test.each([
 				generateServerInstance: vi.fn(),
 				writeClient: vi.fn(),
 				writePrerendered: vi.fn(),
+				writeServer: vi.fn((/** @type {string} */ dest) => {
+					fs.cpSync(server, dest, { recursive: true });
+				}),
 				copy,
 				hasServerInstrumentationFile: () => false
 			})
 		);
 
 		try {
-			await adapter({ fallback: /** @type {'plaintext' | 'spa'} */ (fallback) }).adapt(builder);
+			vi.stubEnv('CLOUDFLARE_ENV', 'staging');
+			const instance = adapter({ fallback: /** @type {'plaintext' | 'spa'} */ (fallback) });
+			const { plugins } = /** @type {{ plugins: import('vite').Plugin[] }} */ (
+				get_vite_config(instance)
+			);
+			const configure =
+				/** @type {(config: import('vite').UserConfig, env: import('vite').ConfigEnv) => unknown} */ (
+					plugins[0].config
+				);
+			configure(
+				{
+					root,
+					environments: {
+						ssr: { build: { rolldownOptions: { input: { index: `${server}/index.js` } } } }
+					}
+				},
+				{ command: 'build', mode: 'production' }
+			);
+			{
+				const config_resolved = /** @type {(config: unknown) => void} */ (
+					plugins[0].configResolved
+				);
+				config_resolved({
+					root,
+					mode: 'production',
+					logLevel: 'silent',
+					resolve: { alias: [] },
+					define: {},
+					build: { minify: false, sourcemap: true }
+				});
+			}
+			const proxy = plugins.find((plugin) => plugin.name.endsWith('-virtual-workers-module'));
+			if (!proxy) throw new Error('Expected a virtual workers module plugin');
+			const stub = /** @type {{ handler: () => { id: string } }} */ (proxy.resolveId).handler().id;
+			const code = `import { env } from ${JSON.stringify(stub)};\nexport const value = env.FOO;\n`;
+			fs.writeFileSync(path.join(server, 'env.js'), code);
+			const sourcemap = JSON.stringify({ version: 3, sources: ['env.js'], sourcesContent: [code] });
+			fs.writeFileSync(path.join(server, 'env.js.map'), sourcemap);
+			fs.writeFileSync(path.join(server, 'asset.bin'), Buffer.from([0, 255, 128]));
+			await instance.adapt(builder);
+			const deployed_code = fs.readFileSync(`${tmp}/server/env.js`, 'utf8');
+			expect(deployed_code).toContain('"cloudflare:workers"');
+			expect(deployed_code).not.toContain(stub);
+			expect(deployed_code.length).toBe(code.length);
+			expect(deployed_code.indexOf('export const')).toBe(code.indexOf('export const'));
+			expect(fs.readFileSync(`${tmp}/server/env.js.map`, 'utf8')).toBe(sourcemap);
+			expect(fs.readFileSync(`${tmp}/server/asset.bin`)).toEqual(Buffer.from([0, 255, 128]));
+			expect(fs.readFileSync(path.join(server, 'env.js'), 'utf8')).toBe(code);
+			expect(unstable_readConfig).toHaveBeenCalledWith({ config: undefined, env: 'staging' });
+
+			const customize = vi.mocked(cloudflare).mock.calls.at(-1)?.[0]?.config;
+			if (typeof customize !== 'function') throw new Error('Expected a config customizer');
+			for (const flag of [undefined, 'nodejs_compat', 'nodejs_als']) {
+				const config = /** @type {Parameters<typeof customize>[0]} */ ({
+					compatibility_flags: flag ? [flag] : [],
+					assets: { binding: 'CUSTOM_ASSETS' }
+				});
+				customize(config);
+				expect(config).toMatchObject({
+					// a stand-in since the Worker entry is generated after the build
+					main: fileURLToPath(new URL('./files/worker.js', import.meta.url)),
+					assets: { binding: 'CUSTOM_ASSETS' },
+					compatibility_flags: [flag ?? 'nodejs_als']
+				});
+			}
+
+			expect(createBuilder).not.toHaveBeenCalled();
+			expect(builder.writeServer).toHaveBeenCalledExactlyOnceWith(`${tmp}/server`);
+			expect(builder.generateServerInstance).toHaveBeenCalledWith(`${tmp}/server.js`, {
+				serverDirectory: `${tmp}/server`
+			});
+			expect(JSON.parse(fs.readFileSync(`${tmp}/wrangler.json`, 'utf8'))).toEqual({
+				main: 'index.js',
+				no_bundle: true,
+				assets: { binding: 'CUSTOM_ASSETS', directory: '../client' },
+				vars: { FOO: 'from wrangler.jsonc' }
+			});
+			const deployed = JSON.parse(fs.readFileSync(deploy_config, 'utf8'));
+			expect(deployed.auxiliaryWorkers).toEqual([]);
+			expect(path.resolve(path.dirname(deploy_config), deployed.configPath)).toBe(
+				path.join(tmp, 'wrangler.json')
+			);
+			expect(fs.existsSync(`${tmp}/server/wrangler.json`)).toBe(false);
+			expect(cloudflare).toHaveBeenCalledWith(
+				expect.objectContaining({
+					viteEnvironment: { name: 'ssr' },
+					config: expect.any(Function)
+				})
+			);
 
 			expect(builder.writeClient).toHaveBeenCalledWith(`${dest}/base`);
 			expect(builder.writePrerendered).toHaveBeenCalledWith(`${dest}/base`);
-			expect(copy).toHaveBeenCalledWith(expect.any(String), path.join(root, 'dist/index.js'), {
+			expect(copy).toHaveBeenCalledWith(expect.any(String), `${tmp}/index.js`, {
 				replace: expect.objectContaining({ ASSETS_BINDING: 'CUSTOM_ASSETS' })
 			});
 			expect(fs.existsSync(`${dest}/_routes.json`)).toBe(false);
@@ -105,6 +241,47 @@ test.each([
 		}
 	}
 );
+
+test('selects Wrangler configuration and named environments from Vite env files', () => {
+	const root = fs.mkdtempSync(path.join(os.tmpdir(), 'adapter-cloudflare-env-'));
+	try {
+		vi.stubEnv('CLOUDFLARE_ENV', undefined);
+		vi.stubEnv('CLOUDFLARE_VITE_WRANGLER_CONFIG_PATH', undefined);
+		fs.writeFileSync(
+			path.join(root, '.env.production'),
+			'CLOUDFLARE_ENV=staging\nCLOUDFLARE_VITE_WRANGLER_CONFIG_PATH=config/wrangler.jsonc\n'
+		);
+		const { plugins } = /** @type {{ plugins: import('vite').Plugin[] }} */ (get_vite_config());
+		const configure =
+			/** @type {(config: import('vite').UserConfig, env: import('vite').ConfigEnv) => unknown} */ (
+				plugins[0].config
+			);
+		configure({ root }, { command: 'build', mode: 'production' });
+		expect(unstable_readConfig).toHaveBeenCalledWith({
+			config: path.join(root, 'config/wrangler.jsonc'),
+			env: 'staging'
+		});
+	} finally {
+		vi.unstubAllEnvs();
+		fs.rmSync(root, { recursive: true, force: true });
+	}
+});
+
+test('bundles the dependencies that Kit externalizes for Workers', () => {
+	const { plugins } = /** @type {{ plugins: import('vite').Plugin[] }} */ (get_vite_config());
+	const hook = plugins.find(
+		(plugin) => plugin.name === 'vite-plugin-sveltekit-adapter-cloudflare-workers'
+	)?.configEnvironment;
+	if (typeof hook !== 'object') throw new Error('Expected a post environment hook');
+	const configure_environment =
+		/** @type {(name: string, config: import('vite').EnvironmentOptions) => void} */ (hook.handler);
+	const ssr = { resolve: { external: ['@opentelemetry/api'] } };
+	configure_environment('ssr', ssr);
+	expect(ssr.resolve.external).toEqual([]);
+	const client = { resolve: { external: ['foo'] } };
+	configure_environment('client', client);
+	expect(client.resolve.external).toEqual(['foo']);
+});
 
 test.each([
 	{ config: {}, workers_ci: '' },
@@ -163,7 +340,7 @@ test('exposes the platform caches when the runtime defines `caches` as a getter'
 	});
 
 	try {
-		const { plugins } = /** @type {{ plugins: import('vite').Plugin[] }} */ (adapter().vite);
+		const { plugins } = /** @type {{ plugins: import('vite').Plugin[] }} */ (get_vite_config());
 		const server = await createServer({
 			configFile: false,
 			logLevel: 'silent',
@@ -226,9 +403,7 @@ test('retries the platform proxy after it fails to start', async () => {
 
 test('swaps the shared platform proxy in place when wrangler config changes', async () => {
 	const config_path = path.resolve('wrangler.toml');
-	vi.mocked(unstable_readConfig).mockReturnValueOnce(
-		/** @type {any} */ ({ configPath: config_path })
-	);
+	vi.mocked(unstable_readConfig).mockReturnValue(/** @type {any} */ ({ configPath: config_path }));
 
 	const server = await create_server();
 	expect(server.watcher.listeners('change').length).toBeGreaterThan(0);
@@ -278,9 +453,7 @@ test('does not install a config watcher when wrangler cannot resolve a config pa
 
 test('swallows a rejection from the config-reload path and warns, keeping the previous proxy', async () => {
 	const config_path = path.resolve('wrangler.toml');
-	vi.mocked(unstable_readConfig).mockReturnValueOnce(
-		/** @type {any} */ ({ configPath: config_path })
-	);
+	vi.mocked(unstable_readConfig).mockReturnValue(/** @type {any} */ ({ configPath: config_path }));
 	const server = await create_server();
 	const previous = globalThis.__sveltekit_cloudflare_platform;
 	const warn = vi.spyOn(server.config.logger, 'warn').mockImplementation(() => {});

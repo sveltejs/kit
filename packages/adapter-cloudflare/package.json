@@ -58,6 +58,7 @@
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^3.0.0-next.0",
+		"vite": "^8.2.1",
 		"wrangler": "^4.151.0"
 	}
 }

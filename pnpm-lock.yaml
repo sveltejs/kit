@@ -373,6 +373,9 @@ importers:
 
   packages/adapter-cloudflare/test/apps/workers:
     devDependencies:
+      '@opentelemetry/api':
+        specifier: 'catalog:'
+        version: 1.9.1
       '@sveltejs/adapter-cloudflare':
         specifier: workspace:*
         version: link:../../..
