@@ -164,6 +164,10 @@ export function create_builder({
 			return files;
 		},
 
+		findServerOnlyAssets() {
+			return [...build_data.server_only_assets];
+		},
+
 		findServerAssets(route_data) {
 			return find_server_assets(
 				build_data,

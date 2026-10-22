@@ -1,5 +1,9 @@
 import { assert, describe, test } from 'vitest';
-import { create_function_as_string, generate_placeholder } from './utils.js';
+import {
+	create_function_as_string,
+	find_server_only_assets,
+	generate_placeholder
+} from './utils.js';
 import { fix_css_urls } from '../../../utils/css.js';
 import { escape_for_interpolation } from '../../../utils/escape.js';
 
@@ -68,4 +72,22 @@ describe('dynamic URL paths in CSS', () => {
 		const output = eval(`(${code})('${assets_path}', '${base_path}')`);
 		assert.equal(output, expected);
 	});
+});
+
+test("server-only assets are the server build's assets outside appDir", () => {
+	/** @param {string} fileName */
+	const asset = (fileName) => ({ type: /** @type {const} */ ('asset'), fileName });
+	const output = /** @type {any} */ ([
+		{ type: 'chunk', fileName: 'index.js' },
+		{ type: 'chunk', fileName: 'chunks/data.js' },
+		asset('_app/immutable/assets/image.Bx9a.png'),
+		asset('.vite/manifest.json'),
+		asset('chunks/data.js.map'),
+		asset('server-only/data.bin'),
+		asset('snapshot.bin')
+	]);
+	assert.deepEqual(find_server_only_assets(output, '_app'), [
+		'server-only/data.bin',
+		'snapshot.bin'
+	]);
 });

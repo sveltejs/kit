@@ -198,3 +198,22 @@ export function generate_placeholder(content, key) {
 
 	return placeholder;
 }
+
+/**
+ * Assets emitted by the server build that are not copied to the client output: everything outside
+ * `appDir` (which holds the server copies of client-facing assets) except Vite's own metadata.
+ * @param {import('vite').Rolldown.RolldownOutput['output']} server_chunks
+ * @param {string} app_dir
+ * @returns {string[]}
+ */
+export function find_server_only_assets(server_chunks, app_dir) {
+	return server_chunks
+		.filter(
+			(output) =>
+				output.type === 'asset' &&
+				!output.fileName.startsWith(`${app_dir}/`) &&
+				!output.fileName.startsWith('.vite/') &&
+				!output.fileName.endsWith('.map')
+		)
+		.map((output) => output.fileName);
+}

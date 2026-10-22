@@ -98,3 +98,9 @@ test('serves immutable assets with an immutable cache header', async ({ request 
 	expect(response.status()).toBe(200);
 	expect(response.headers()['cache-control']).toBe('public,max-age=31536000,immutable');
 });
+
+test('reads a server-only asset relative to the server code', async ({ request }) => {
+	const response = await request.get('/server-only-asset');
+	expect(await response.text()).toBe('server-only data');
+	expect((await request.get('/server-only/data.txt')).status()).toBe(404);
+});
