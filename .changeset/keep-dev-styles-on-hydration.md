@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: keep the top-level `@font-face` rules of the styles inlined during development through hydration while Vite's styles declare the same rules, so that their fonts aren't loaded again
+fix: let Vite's client take over the styles inlined during development instead of replacing them on hydration, which re-created their font faces

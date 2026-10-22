@@ -150,7 +150,8 @@ export function generate_manifest(
 								: dep.url + '?inline';
 							try {
 								const mod = await runner.import(inlineCssUrl);
-								styles[dep.url] = mod.default;
+								// keyed by the id that Vite's client knows the module by (see `render_response`)
+								styles[dep.id ?? dep.url] = mod.default;
 							} catch {
 								// this can happen with dynamically imported modules, I think
 								// because the Vite module graph doesn't distinguish between

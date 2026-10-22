@@ -2818,3 +2818,41 @@ test.describe('routing', () => {
 		await expect(page).toHaveURL((url) => url.pathname === '/routing');
 	});
 });
+
+test.describe('CSS', () => {
+	test('lets Vite take over the styles inlined during development', async ({ page }) => {
+		test.skip(!process.env.DEV, 'styles are only inlined during development');
+
+		// hold back the stylesheet's module, so that hydration waits until the inlined style is found
+		/** @type {import('@playwright/test').Route[]} */
+		const held = [];
+		await page.route(
+			(url) => url.pathname.endsWith('/css/_styles.css'),
+			(route) => {
+				held.push(route);
+			}
+		);
+
+		await page.goto('/css', { waitUntil: 'commit', wait_for_started: false });
+
+		// `color: green` is only in `_styles.css`
+		const inlined = await page.waitForFunction(() =>
+			Array.from(document.querySelectorAll('style')).find((style) =>
+				style.textContent?.includes('color: green')
+			)
+		);
+		await expect.poll(() => held.length).toBe(1);
+		await held[0].continue();
+		await page.locator('body.started').waitFor();
+
+		expect(await inlined.evaluate((style) => style?.isConnected)).toBe(true);
+		expect(
+			await page.evaluate(
+				() =>
+					Array.from(document.querySelectorAll('style')).filter((style) =>
+						style.textContent?.includes('color: green')
+					).length
+			)
+		).toBe(1);
+	});
+});
