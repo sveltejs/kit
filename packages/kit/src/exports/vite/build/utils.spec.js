@@ -1,5 +1,5 @@
 import { assert, describe, test } from 'vitest';
-import { create_function_as_string, generate_placeholder } from './utils.js';
+import { create_function_as_string, find_deps, generate_placeholder } from './utils.js';
 import { fix_css_urls } from '../../../utils/css.js';
 import { escape_for_interpolation } from '../../../utils/escape.js';
 
@@ -67,5 +67,41 @@ describe('dynamic URL paths in CSS', () => {
 
 		const output = eval(`(${code})('${assets_path}', '${base_path}')`);
 		assert.equal(output, expected);
+	});
+});
+
+describe('find_deps', () => {
+	test('includes static imports of a chunk first reached through a dynamic import', () => {
+		/** @type {import('vite').Manifest} */
+		const manifest = {
+			'entry.js': { file: 'entry.js', isEntry: true, imports: ['_a.js', '_b.js'] },
+			'_a.js': { file: 'a.js', dynamicImports: ['_c.js'] },
+			'_b.js': { file: 'b.js', imports: ['_c.js'] },
+			'_c.js': { file: 'c.js', imports: ['_d.js'] },
+			'_d.js': { file: 'd.js', css: ['d.css'] }
+		};
+
+		const { imports, stylesheet_map } = find_deps(manifest, 'entry.js', true, '.');
+
+		assert.deepEqual(imports.sort(), ['a.js', 'b.js', 'c.js', 'd.js', 'entry.js']);
+		assert.deepEqual(Array.from(stylesheet_map.get('entry.js')?.css ?? []), ['d.css']);
+		assert.deepEqual(Array.from(stylesheet_map.get('_c.js')?.css ?? []), ['d.css']);
+	});
+
+	test('does not include chunks that are only imported dynamically', () => {
+		/** @type {import('vite').Manifest} */
+		const manifest = {
+			'entry.js': { file: 'entry.js', isEntry: true, imports: ['_a.js'] },
+			'_a.js': { file: 'a.js', dynamicImports: ['_c.js'] },
+			'_c.js': { file: 'c.js', imports: ['_d.js'] },
+			'_d.js': { file: 'd.js', css: ['d.css'] }
+		};
+
+		const { imports, stylesheets, stylesheet_map } = find_deps(manifest, 'entry.js', true, '.');
+
+		assert.deepEqual(imports.sort(), ['a.js', 'entry.js']);
+		assert.deepEqual(stylesheets, ['d.css']);
+		assert.deepEqual(Array.from(stylesheet_map.get('_c.js')?.css ?? []), ['d.css']);
+		assert.isFalse(stylesheet_map.has('entry.js'));
 	});
 });
