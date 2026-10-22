@@ -3,3 +3,6 @@
 <a data-sveltekit-preload-data={false} href="/remote/query-redirect/from-common-layout"
 	>from layout</a
 >
+<a data-sveltekit-preload-data={false} href="/remote/query-redirect/from-common-layout?outside"
+	>from layout across boundary</a
+>
