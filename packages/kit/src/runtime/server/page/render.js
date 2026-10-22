@@ -279,18 +279,29 @@ export async function render_response({
 	/** @param {string} path */
 	const prefixed = (path) => client_path(path, { base, assets });
 
-	const style = client?.inline
-		? client.inline?.style
-		: Array.from(inline_styles.values()).join('\n');
-
-	if (style) {
-		// We always inline all styles to avoid FOUC during development.
-		// Once that's accomplished, we find and remove the style node using the
-		// `data-sveltekit` attribute once CSR kicks in
-		const attributes = __SVELTEKIT_DEV__ ? ['data-sveltekit'] : [];
+	/**
+	 * @param {string} style
+	 * @param {string[]} attributes
+	 */
+	const add_style = async (style, attributes) => {
 		if (csp.style_needs_nonce) attributes.push(`nonce="${csp.nonce}"`);
 		await csp.add_style(style);
 		head.add_style(style, attributes);
+	};
+
+	if (__SVELTEKIT_DEV__) {
+		// We always inline all styles to avoid FOUC during development. Each one is marked with its
+		// module's id, so that Vite's client takes it over, instead of adding a copy, when it runs a
+		// module with the same id
+		for (const [id, style] of inline_styles) {
+			await add_style(style, [`data-vite-dev-id="${escape_html(id, true)}"`]);
+		}
+	} else {
+		const style = client?.inline
+			? client.inline?.style
+			: Array.from(inline_styles.values()).join('\n');
+
+		if (style) await add_style(style, []);
 	}
 
 	/**
