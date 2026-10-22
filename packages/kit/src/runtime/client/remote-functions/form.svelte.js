@@ -15,7 +15,12 @@ import {
 } from '../client.js';
 import { page } from '#app/state/client';
 import { tick } from 'svelte';
-import { categorize_updates, fail_unhandled_refreshes, remote_request } from './shared.svelte.js';
+import {
+	categorize_updates,
+	fail_unhandled_refreshes,
+	handle_remote_response,
+	remote_request
+} from './shared.svelte.js';
 import { createAttachmentKey } from 'svelte/attachments';
 import {
 	convert_formdata,
@@ -30,7 +35,8 @@ import {
 	DELETE_KEY,
 	BINARY_FORM_CONTENT_TYPE,
 	parse_form_key,
-	coerce_form_value
+	coerce_form_value,
+	get_file_paths
 } from '../../form-utils.js';
 
 /**
@@ -121,6 +127,11 @@ export function form(id) {
 
 		/** @type {any} */
 		let result = $state.raw(initial?.result);
+
+		/**
+		 * @type {Record<string, { uploaded: number, total: number, percent: number }>}
+		 */
+		let upload_progress = $state({});
 
 		/** @type {number} */
 		let pending_count = $state(0);
@@ -238,24 +249,63 @@ export function form(id) {
 								if (!valid) return false;
 							}
 
-							const { blob } = serialize_binary_form(convert(form_data), {
+							const data = convert(form_data);
+							const { blob, file_offsets } = serialize_binary_form(data, {
 								remote_refreshes: Array.from(refreshes ?? [])
 							});
 
-							const response = await remote_request(
-								`${base}/${app_dir}/remote/${action_id_without_key}`,
-								{
-									method: 'POST',
-									headers: {
-										'Content-Type': BINARY_FORM_CONTENT_TYPE,
-										// Forms cannot be called during rendering, so it's save to use location here
-										'x-sveltekit-pathname': location.pathname,
-										'x-sveltekit-search': location.search
-									},
-									body: blob
-								},
-								refreshes
-							);
+							/** @type {Response} */
+							const xhr_response = await new Promise((resolve, reject) => {
+								const xhr = new XMLHttpRequest();
+								xhr.addEventListener('load', () => {
+									resolve(
+										new Response(xhr.response ?? xhr.responseText, {
+											status: xhr.status,
+											statusText: xhr.statusText,
+											headers: parse_xhr_headers(xhr.getAllResponseHeaders())
+										})
+									);
+								});
+								xhr.addEventListener('error', () => {
+									reject(new TypeError('Network request failed'));
+								});
+
+								if (file_offsets) {
+									const file_paths = get_file_paths(data);
+									for (const [file, path] of file_paths) {
+										deep_set(upload_progress, path, {
+											uploaded: 0,
+											total: file.size,
+											get percent() {
+												if (this.total === 0) return 0;
+												return this.uploaded / this.total;
+											}
+										});
+									}
+									xhr.upload.addEventListener('progress', (ev) => {
+										for (const file of file_offsets) {
+											const total = file.file.size;
+											let uploaded = ev.loaded - file.start;
+											if (uploaded <= 0) continue;
+											if (uploaded > total) uploaded = total;
+											const path = file_paths.get(file.file);
+											if (!path) continue;
+											// Could be null if the form was reset mid-upload
+											const progress = deep_get(upload_progress, path);
+											if (!progress) continue;
+											progress.uploaded = uploaded;
+										}
+									});
+								}
+
+								xhr.open('POST', `${base}/${app_dir}/remote/${action_id_without_key}`);
+								xhr.setRequestHeader('Content-Type', BINARY_FORM_CONTENT_TYPE);
+								xhr.setRequestHeader('x-sveltekit-pathname', location.pathname);
+								xhr.setRequestHeader('x-sveltekit-search', location.search);
+								xhr.send(blob);
+							});
+
+							const response = await handle_remote_response(xhr_response, refreshes);
 
 							({ issues: raw_issues = [], result } = response._ ?? {});
 
@@ -536,6 +586,14 @@ export function form(id) {
 
 					if (file) {
 						set_nested_value(input, field, file);
+						set_nested_value(upload_progress, field, {
+							uploaded: 0,
+							total: file.size,
+							get percent() {
+								if (this.total === 0) return 0;
+								return this.uploaded / this.total;
+							}
+						});
 					} else {
 						set_nested_value(input, field, DELETE_KEY);
 					}
@@ -563,6 +621,7 @@ export function form(id) {
 				touched = {};
 				dirty = {};
 				can_validate = {};
+				upload_progress = {};
 				submitted = false;
 			};
 
@@ -662,7 +721,9 @@ export function form(id) {
 							return issues;
 						},
 						get_touched: () => touched,
-						get_dirty: () => dirty
+						get_dirty: () => dirty,
+						get_progress: (path) =>
+							deep_get(upload_progress, path) ?? { uploaded: 0, total: 0, percent: 0 }
 					})
 			},
 			result: {
@@ -827,4 +888,20 @@ function validate_form_data(form_data, enctype) {
 			}
 		}
 	}
+}
+
+/**
+ * @param {string} xhr_headers
+ * @returns {Headers}
+ */
+function parse_xhr_headers(xhr_headers) {
+	const headers = new Headers();
+	const lines = xhr_headers.trim().split('\n');
+	for (const line of lines) {
+		const colon_index = line.indexOf(':');
+		const key = line.substring(0, colon_index).trim();
+		const value = line.substring(colon_index + 1).trim();
+		headers.append(key, value);
+	}
+	return headers;
 }

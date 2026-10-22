@@ -142,15 +142,20 @@ export function serialize_binary_form(data, meta) {
 		}
 	});
 
-	const encoded_header_buffer = text_encoder.encode(encoded_header);
+	/** @type {Array<number> | undefined} */
+	let file_offsets;
 
 	let encoded_file_offsets = '';
+
+	/** @type {Array<[file: File, index: number]>} */
+	let unsorted_files;
+
 	if (files.length) {
+		unsorted_files = [...files];
 		// Sort small files to the front
 		files.sort(([a], [b]) => a.size - b.size);
 
-		/** @type {Array<number>} */
-		const file_offsets = new Array(files.length);
+		file_offsets = new Array(files.length);
 		let start = 0;
 		for (const [file, index] of files) {
 			file_offsets[index] = start;
@@ -158,6 +163,8 @@ export function serialize_binary_form(data, meta) {
 		}
 		encoded_file_offsets = JSON.stringify(file_offsets);
 	}
+
+	const encoded_header_buffer = text_encoder.encode(encoded_header);
 
 	const length_buffer = new Uint8Array(4);
 	const length_view = new DataView(length_buffer.buffer);
@@ -175,9 +182,36 @@ export function serialize_binary_form(data, meta) {
 		blob_parts.push(file);
 	}
 
+	const file_offset_start = HEADER_BYTES + encoded_header.length + encoded_file_offsets.length;
+
 	return {
-		blob: new Blob(blob_parts)
+		blob: new Blob(blob_parts),
+		file_offsets: file_offsets?.map((o, i) => ({
+			start: o + file_offset_start,
+			file: unsorted_files[i][0]
+		}))
 	};
+}
+
+/**
+ * Finds the paths to every File in an object
+ * @param {unknown} object
+ * @param {Map<File, string[]>} paths
+ * @param {string[]} path
+ */
+export function get_file_paths(object, paths = new Map(), path = []) {
+	if (Array.isArray(object)) {
+		for (let i = 0; i < object.length; i++) {
+			get_file_paths(object[i], paths, [...path, i.toString()]);
+		}
+	} else if (object instanceof File) {
+		paths.set(object, path);
+	} else if (typeof object === 'object' && object !== null) {
+		for (const [key, value] of Object.entries(object)) {
+			get_file_paths(value, paths, [...path, key]);
+		}
+	}
+	return paths;
 }
 
 /**
@@ -719,7 +753,8 @@ const public_issue = (issue) => ({ path: issue.path, message: issue.message });
  * 	set: (path: (string | number)[], value: any) => void,
  * 	get_issues: (path?: (string | number)[], all?: boolean) => Record<string, InternalRemoteFormIssue[]>,
  * 	get_touched: () => Record<string, boolean>,
- * 	get_dirty: () => Record<string, boolean>
+ * 	get_dirty: () => Record<string, boolean>,
+ *  get_progress: (path: (string | number)[]) => { uploaded: number, total: number, percent: number }
  * }} FieldContext */
 
 /**
@@ -765,6 +800,9 @@ function create_field_method(context, path, prop) {
 				}
 				return false;
 			};
+		}
+		case 'progress': {
+			return () => context.get_progress(path);
 		}
 		case 'as': {
 			const key = build_path_string(path);
