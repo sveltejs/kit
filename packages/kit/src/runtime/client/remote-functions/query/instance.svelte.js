@@ -1,5 +1,16 @@
 /** @import { HttpError } from '@sveltejs/kit' */
 /** @import { Update } from '../shared.svelte.js' */
+/**
+ * @typedef {object} PendingRequest
+ * @property {number} id its number (see `next_request_id`)
+ * @property {boolean} fails_with_successor whether its callers fail if the request that settles
+ *   it fails. That's the case for the reads that overlapped a mutation's update, and for the fresh
+ *   read started to decide between them (see `#reconcile`). Other requests resolve and leave the
+ *   error to the query
+ * @property {Promise<void>} promise
+ * @property {(value: undefined) => void} resolve
+ * @property {(error: unknown) => void} reject
+ */
 import { query_responses, handle_error } from '../../client.js';
 import { HandledHttpError } from '@sveltejs/kit/internal';
 import { QUERY_OVERRIDE_KEY, next_request_id } from '../shared.svelte.js';
@@ -21,16 +32,14 @@ export class Query {
 	#fn;
 	#loading = $state(true);
 	/**
-	 * The pending requests, oldest first. `waits` marks the ones whose callers wait for a
-	 * later request to decide: the reads that overlapped a mutation's update, and the
-	 * fresh read started to decide (see `#reconcile`)
-	 * @type {Array<{ id: number, waits: boolean, promise: Promise<void>, resolve: (value: undefined) => void, reject: (error: unknown) => void }>}
+	 * This query's requests that haven't been settled yet, oldest first
+	 * @type {PendingRequest[]}
 	 */
-	#latest = [];
-	/** The number of the request whose result is shown (see `next_request_id`) */
-	#shown = 0;
-	/** Requests numbered below this overlapped a mutation's update, and don't apply their responses */
-	#floor = 0;
+	#pending = [];
+	/** The number of the request whose value or error is applied (see `next_request_id`) */
+	#applied = 0;
+	/** Responses to requests numbered below this are ignored, while a fresh read decides (see `#reconcile`) */
+	#ignore_before = 0;
 
 	/** @type {boolean} */
 	#ready = $state(false);
@@ -117,10 +126,10 @@ export class Query {
 	 * request supersedes. Requests sent after it stay pending
 	 * @param {number} [sent]
 	 */
-	#clear_pending(sent = Infinity) {
-		const newer = this.#latest.findIndex((request) => request.id > sent);
-		const settled = this.#latest.splice(0, newer === -1 ? this.#latest.length : newer);
-		settled.forEach((request) => request.resolve(undefined));
+	#settle_superseded(sent = Infinity) {
+		const newer = this.#pending.findIndex((request) => request.id > sent);
+		const superseded = this.#pending.splice(0, newer === -1 ? this.#pending.length : newer);
+		for (const request of superseded) request.resolve(undefined);
 	}
 
 	/**
@@ -139,17 +148,17 @@ export class Query {
 	 */
 	#receive(update) {
 		if (!update) {
-			this.#clear_pending();
+			this.#settle_superseded();
 			return 'apply';
 		}
 
 		const { sent, mutation } = update;
 
-		if (!mutation && (sent < this.#shown || sent < this.#floor)) return 'ignore';
+		if (!mutation && (sent < this.#applied || sent < this.#ignore_before)) return 'ignore';
 
-		this.#clear_pending(sent);
-		const overlaps = this.#shown > sent || this.#latest.length > 0;
-		this.#shown = Math.max(this.#shown, sent);
+		this.#settle_superseded(sent);
+		const overlaps = this.#applied > sent || this.#pending.length > 0;
+		this.#applied = Math.max(this.#applied, sent);
 
 		return mutation && overlaps ? 'reconcile' : 'apply';
 	}
@@ -160,19 +169,19 @@ export class Query {
 	 * don't apply their responses, and are settled when it responds
 	 */
 	#reconcile() {
-		this.#floor = next_request_id();
-		for (const request of this.#latest) request.waits = true;
+		this.#ignore_before = next_request_id();
+		for (const request of this.#pending) request.fails_with_successor = true;
 		const promise = this.#run(true);
 
 		// a pending request's promise settles when the fresh one responds, so the query can
 		// keep it. Otherwise awaiting the query has to wait for the fresh request
-		if (!this.#latest.some((request) => request.promise === this.#promise)) {
+		if (!this.#pending.some((request) => request.promise === this.#promise)) {
 			this.#promise = promise;
 		}
 	}
 
-	/** @param {boolean} [waits] whether this is a fresh read started by `#reconcile` */
-	#run(waits = false) {
+	/** @param {boolean} [fresh] whether this is the fresh read started by `#reconcile` */
+	#run(fresh = false) {
 		this.#loading = true;
 
 		const { promise, resolve, reject } = with_resolvers();
@@ -182,22 +191,29 @@ export class Query {
 		// so make sure the stored promise can never become an unhandled rejection
 		promise.catch(noop);
 
-		const request = { id: next_request_id(), waits, promise, resolve, reject };
-		this.#latest.push(request);
+		/** @type {PendingRequest} */
+		const request = {
+			id: next_request_id(),
+			fails_with_successor: fresh,
+			promise,
+			resolve,
+			reject
+		};
+		this.#pending.push(request);
 
 		Promise.resolve(this.#fn())
 			.then((value) => {
 				// Skip the response if resource was refreshed with a later promise while we were waiting for this one to resolve,
 				// or if it overlapped a mutation's update, after which a later request decides
-				const idx = this.#latest.indexOf(request);
-				if (idx === -1 || request.id < this.#floor) return;
+				const idx = this.#pending.indexOf(request);
+				if (idx === -1 || request.id < this.#ignore_before) return;
 
 				// Untrack this to not trigger mutation validation errors which can occur if you do e.g. $derived({ a: await queryA(), b: await queryB() })
 				untrack(() => {
-					this.#latest.splice(0, idx + 1).forEach((r) => r.resolve(undefined));
-					this.#shown = request.id;
+					this.#pending.splice(0, idx + 1).forEach((r) => r.resolve(undefined));
+					this.#applied = request.id;
 					this.#ready = true;
-					this.#loading = this.#latest.length > 0;
+					this.#loading = this.#pending.length > 0;
 					this.#raw = value;
 					this.#error = undefined;
 				});
@@ -208,7 +224,7 @@ export class Query {
 				//   to ensure the query is properly refreshed before the navigation completes
 				// - Instead of failing on transport-level errors, we should probably do what
 				//   LiveQuery does and preserve the last known good value and retry the connection
-				if (this.#latest.indexOf(request) === -1 || request.id < this.#floor) return;
+				if (this.#pending.indexOf(request) === -1 || request.id < this.#ignore_before) return;
 
 				const error = await handle_error(e, {
 					params: {},
@@ -219,20 +235,22 @@ export class Query {
 				// Re-check after the async `handle_error` gap: a later request may have
 				// resolved/rejected while we were awaiting and superseded this one, so
 				// recompute the index and bail out if this request is no longer current
-				const idx = this.#latest.indexOf(request);
-				if (idx === -1 || request.id < this.#floor) return;
+				const idx = this.#pending.indexOf(request);
+				if (idx === -1 || request.id < this.#ignore_before) return;
 
 				const handled = new HandledHttpError(error);
 
 				untrack(() => {
-					// the callers of a request that waits for a later one to decide (see `#reconcile`) fail with it
-					this.#latest
-						.splice(0, idx)
-						.forEach((r) => (r.waits ? r.reject(handled) : r.resolve(undefined)));
-					this.#latest.shift();
-					this.#shown = request.id;
+					const superseded_requests = this.#pending.splice(0, idx);
+					for (const superseded of superseded_requests) {
+						if (superseded.fails_with_successor) superseded.reject(handled);
+						else superseded.resolve(undefined);
+					}
+
+					this.#pending.shift();
+					this.#applied = request.id;
 					this.#error = error;
-					this.#loading = this.#latest.length > 0;
+					this.#loading = this.#pending.length > 0;
 				});
 
 				reject(handled);
@@ -318,13 +336,13 @@ export class Query {
 
 		// a pending request's promise is settled with the value below; replacing it
 		// too would make awaiting consumers settle a second time in a new batch
-		const in_flight = this.#latest.length > 0;
+		const in_flight = this.#pending.length > 0;
 
 		const action = this.#receive(update);
 		if (action === 'ignore') return;
 
 		this.#ready = true;
-		this.#loading = this.#latest.length > 0;
+		this.#loading = this.#pending.length > 0;
 		this.#error = undefined;
 		this.#raw = value;
 
@@ -347,7 +365,7 @@ export class Query {
 		const action = this.#receive(update);
 		if (action === 'ignore') return;
 
-		this.#loading = this.#latest.length > 0;
+		this.#loading = this.#pending.length > 0;
 		this.#error = error.body;
 
 		if (action === 'reconcile') {
