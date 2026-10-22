@@ -53,6 +53,12 @@ test.describe('CSS', () => {
 		check_styles(get_computed_style);
 	});
 
+	test('applies styles in the order they are imported', async ({ page, get_computed_style }) => {
+		await page.goto('/css/order');
+		await expect(page.locator('.order')).toBeVisible();
+		expect(await get_computed_style('.order', 'color')).toBe('rgb(0, 0, 255)');
+	});
+
 	test('loads styles on routes with encoded characters', async ({ page, get_computed_style }) => {
 		await page.goto('/css/encöded');
 		expect(await get_computed_style('h1', 'color')).toBe('rgb(128, 0, 128)');

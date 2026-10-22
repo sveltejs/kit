@@ -136,9 +136,7 @@ export function generate_manifest(
 					/** @type {Set<EnvironmentModuleNode>} */
 					const deps = new Set();
 
-					for (const module_node of module_nodes) {
-						await find_deps(vite_dev_server, module_node, deps);
-					}
+					await find_deps(vite_dev_server, module_nodes, deps);
 
 					/** @type {Record<string, string>} */
 					const styles = {};
@@ -267,44 +265,50 @@ async function resolve(vite, vite_dev_server, runner, id) {
 }
 
 /**
+ * Adds the modules that `nodes` import, directly or not, to `deps`, in the order the modules are
+ * evaluated, so that the styles inlined during development cascade as they do once Vite's client
+ * has taken them over
  * @param {ViteDevServer} vite
- * @param {EnvironmentModuleNode} node
+ * @param {EnvironmentModuleNode[]} nodes
  * @param {Set<EnvironmentModuleNode>} deps
  */
-async function find_deps(vite, node, deps) {
+async function find_deps(vite, nodes, deps) {
+	/** @type {Map<EnvironmentModuleNode, EnvironmentModuleNode[]>} each module's imports, in order */
+	const imports = new Map();
+
 	// since `transformResult.deps` contains URLs instead of `ModuleNode`s, this process is asynchronous.
 	// instead of using `await`, we resolve all branches in parallel.
-	/** @type {Promise<void>[]} */
-	const branches = [];
+	/** @param {EnvironmentModuleNode} node */
+	async function discover(node) {
+		if (imports.has(node)) return;
+		imports.set(node, []);
+
+		let found = Array.from(node.importedModules);
+
+		if (node.transformResult) {
+			const { deps: urls = [], dynamicDeps = [] } = node.transformResult;
+			const nodes = await Promise.all(
+				[...urls, ...dynamicDeps].map((url) =>
+					vite.environments.ssr.moduleGraph.getModuleByUrl(url)
+				)
+			);
+			found = nodes.filter((node) => node !== undefined);
+		}
+
+		imports.set(node, found);
+		await Promise.all(found.map(discover));
+	}
 
 	/** @param {EnvironmentModuleNode} node */
-	async function add(node) {
-		if (!deps.has(node)) {
-			deps.add(node);
-			await find_deps(vite, node, deps);
+	function add(node) {
+		for (const imported of imports.get(node) ?? []) {
+			if (!deps.has(imported)) {
+				deps.add(imported);
+				add(imported);
+			}
 		}
 	}
 
-	/** @param {string} url */
-	async function add_by_url(url) {
-		const node = await vite.environments.ssr.moduleGraph.getModuleByUrl(url);
-
-		if (node) {
-			await add(node);
-		}
-	}
-
-	if (node.transformResult) {
-		if (node.transformResult.deps) {
-			node.transformResult.deps.forEach((url) => branches.push(add_by_url(url)));
-		}
-
-		if (node.transformResult.dynamicDeps) {
-			node.transformResult.dynamicDeps.forEach((url) => branches.push(add_by_url(url)));
-		}
-	} else {
-		node.importedModules.forEach((node) => branches.push(add(node)));
-	}
-
-	await Promise.all(branches);
+	await Promise.all(nodes.map(discover));
+	for (const node of nodes) add(node);
 }
