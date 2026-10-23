@@ -365,6 +365,30 @@ describe('cookies in prod', () => {
 	});
 });
 
+describe('get_cookie_header', () => {
+	test('does not include deleted cookies', () => {
+		const href = 'https://example.com';
+		const { cookies, get_cookie_header, set_internal } = cookies_setup({
+			href,
+			headers: { cookie: 'session=abc; theme=dark' }
+		});
+		cookies.delete('session');
+		assert.equal(get_cookie_header(new URL(href), null), 'theme=dark');
+
+		// e.g. a `set-cookie: theme=; Max-Age=0` header received by `event.fetch`
+		set_internal('theme', '', { path: '/', maxAge: 0 });
+		assert.equal(get_cookie_header(new URL(href), null), '');
+	});
+
+	test('uses the most specific cookie when the same name is set at several paths', () => {
+		const { cookies, get_cookie_header } = cookies_setup();
+		cookies.set('x', 'specific', { path: '/foo' });
+		cookies.set('x', 'root', { path: '/' });
+		const header = get_cookie_header(new URL('https://example.com/foo/bar'), null);
+		assert.equal(header, 'a=b; x=specific');
+	});
+});
+
 describe('cookies.parse', () => {
 	const { cookies } = cookies_setup();
 

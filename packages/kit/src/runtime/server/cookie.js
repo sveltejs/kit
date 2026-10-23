@@ -194,12 +194,28 @@ export function get_cookies(request, url) {
 		};
 
 		// cookies previous set during this event with cookies.set have higher precedence
+		// (like `get()` and `getAll()`, only the most specific cookie for each name is used)
+		/** @type {Map<string, import('./page/types.js').Cookie>} */
+		const lookup = new Map();
+
 		for (const cookie of new_cookies.values()) {
 			if (!domain_matches(destination.hostname, cookie.options.domain)) continue;
 			if (!path_matches(destination.pathname, cookie.options.path)) continue;
 
-			const encoder = cookie.options.encode || encodeURIComponent;
-			combined_cookies[cookie.name] = encoder(cookie.value);
+			const existing = lookup.get(cookie.name);
+			if (!existing || cookie.options.path.length > existing.options.path.length) {
+				lookup.set(cookie.name, cookie);
+			}
+		}
+
+		for (const cookie of lookup.values()) {
+			// deleted cookies are not sent, mirroring the behavior of `get()`
+			if (cookie.options.maxAge === 0) {
+				delete combined_cookies[cookie.name];
+			} else {
+				const encoder = cookie.options.encode || encodeURIComponent;
+				combined_cookies[cookie.name] = encoder(cookie.value);
+			}
 		}
 
 		// explicit header has highest precedence
