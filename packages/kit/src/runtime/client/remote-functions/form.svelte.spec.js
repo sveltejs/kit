@@ -1,5 +1,6 @@
 import { flushSync, tick } from 'svelte';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, it, test, vi } from 'vitest';
+import { parse_xhr_headers } from './form.svelte.js';
 
 const env = vi.hoisted(() => ({ DEV: true }));
 vi.mock('esm-env', () => ({
@@ -231,4 +232,55 @@ test('form.for keeps its instance when the derived that holds it reconnects', as
 	} finally {
 		cleanup();
 	}
+});
+
+describe('parse_xhr_headers', () => {
+	it('returns a Headers instance', () => {
+		expect(parse_xhr_headers('X-A: 1')).toBeInstanceOf(Headers);
+	});
+
+	it('parses a single header', () => {
+		const headers = parse_xhr_headers('Content-Type: text/html');
+		expect(headers.get('Content-Type')).toBe('text/html');
+	});
+
+	it('parses multiple headers', () => {
+		const headers = parse_xhr_headers(
+			'Content-Type: application/json\nX-Request-Id: abc123\nCache-Control: no-store'
+		);
+		expect(headers.get('content-type')).toBe('application/json');
+		expect(headers.get('x-request-id')).toBe('abc123');
+		expect(headers.get('cache-control')).toBe('no-store');
+	});
+
+	it('trims whitespace around names and values', () => {
+		const headers = parse_xhr_headers('  Content-Type   :      application/json   ');
+		expect(headers.get('content-type')).toBe('application/json');
+	});
+
+	it('accepts values containing colons', () => {
+		const headers = parse_xhr_headers('Date: Mon, 23 Oct 2026 10:00:00 GMT');
+		expect(headers.get('date')).toBe('Mon, 23 Oct 2026 10:00:00 GMT');
+	});
+
+	it('accepts CRLF line endings', () => {
+		const headers = parse_xhr_headers('Content-Type: text/plain\r\nX-Foo: bar');
+		expect(headers.get('content-type')).toBe('text/plain');
+		expect(headers.get('x-foo')).toBe('bar');
+	});
+
+	it('combines repeated names into one comma-joined entry', () => {
+		const headers = parse_xhr_headers('X-Multi: one\nX-Multi: two');
+		expect([...headers.entries()]).toEqual([['x-multi', 'one, two']]);
+	});
+
+	it('allows an empty header value', () => {
+		const headers = parse_xhr_headers('X-Empty:   ');
+		expect(headers.get('x-empty')).toBe('');
+	});
+
+	it('works with empty input', () => {
+		const headers = parse_xhr_headers('');
+		expect([...headers.entries()].length).toBe(0);
+	});
 });
