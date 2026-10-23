@@ -216,3 +216,20 @@ test.describe('request abort', () => {
 		await expect(page.locator('pre')).toHaveText('{"aborted":true}');
 	});
 });
+
+test.describe('middleware fallback errors', () => {
+	test.skip(!process.env.DEV);
+
+	for (const kind of ['stack', 'stackless']) {
+		test(`renders ${kind} errors as UTF-8 plain text`, async ({ page }) => {
+			const response = await page.goto(`/fallback-error/${kind}`, { wait_for_started: false });
+
+			expect(response?.status()).toBe(500);
+			expect(response?.headers()['content-type']).toBe('text/plain; charset=utf-8');
+			expect(await page.evaluate(() => document.characterSet)).toBe('UTF-8');
+			await expect(page.locator('body')).toContainText(
+				'Está vacía. Formato: Server=…;Database=… <b>error</b>'
+			);
+		});
+	}
+});
