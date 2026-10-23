@@ -3939,15 +3939,18 @@ declare module '$app/state' {
 	 * */
 	export const page: Page;
 	/**
-	 * A read-only object representing an in-progress navigation, with `from`, `to`, `type` and (if `type === 'popstate'`) `delta` properties.
+	 * A read-only object representing an in-progress navigation, with `from`, `to`, `type`, `shallow` and (if `type === 'popstate'`) `delta` properties.
+	 * For `link`, `form` and `popstate` navigations, `event` contains the event that triggered the navigation.
 	 * Values are `null` when no navigation is occurring, or during server rendering.
 	 * */
 	export const navigating: Navigation | {
 		from: null;
 		to: null;
 		type: null;
+		shallow: null;
 		willUnload: null;
 		delta: null;
+		event: null;
 		complete: null;
 	};
 	/**
