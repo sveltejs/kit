@@ -258,8 +258,9 @@ export function form(id) {
 							const xhr_response = await new Promise((resolve, reject) => {
 								const xhr = new XMLHttpRequest();
 								xhr.addEventListener('load', () => {
+									const body = (xhr.response ?? xhr.responseText) || null;
 									resolve(
-										new Response(xhr.response ?? xhr.responseText, {
+										new Response(body, {
 											status: xhr.status,
 											statusText: xhr.statusText,
 											headers: parse_xhr_headers(xhr.getAllResponseHeaders())
