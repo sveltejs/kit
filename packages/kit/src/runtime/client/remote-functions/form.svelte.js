@@ -896,12 +896,14 @@ function validate_form_data(form_data, enctype) {
  * @param {string} xhr_headers
  * @returns {Headers}
  */
-function parse_xhr_headers(xhr_headers) {
+export function parse_xhr_headers(xhr_headers) {
 	const headers = new Headers();
 	const lines = xhr_headers.trim().split('\n');
 	for (const line of lines) {
 		const colon_index = line.indexOf(':');
+		if (colon_index === -1) continue;
 		const key = line.substring(0, colon_index).trim();
+		if (!key) continue;
 		const value = line.substring(colon_index + 1).trim();
 		headers.append(key, value);
 	}

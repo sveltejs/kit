@@ -955,7 +955,8 @@ describe('create_field_proxy', () => {
 			set: () => {},
 			get_issues: () => ({}),
 			get_touched: () => ({}),
-			get_dirty: () => ({})
+			get_dirty: () => ({}),
+			get_progress: () => ({ uploaded: 0, total: 0, percent: 0 })
 		});
 		expect(() => proxy.field.as(type)).toThrowKitError('form_input_missing_value');
 	});
@@ -966,7 +967,8 @@ describe('create_field_proxy', () => {
 			set: () => {},
 			get_issues: () => ({}),
 			get_touched: () => ({}),
-			get_dirty: () => ({})
+			get_dirty: () => ({}),
+			get_progress: () => ({ uploaded: 0, total: 0, percent: 0 })
 		});
 
 		expect(proxy.position.as('image')).toEqual({
@@ -990,7 +992,8 @@ describe('create_field_proxy', () => {
 			set: () => {},
 			get_issues: () => ({}),
 			get_touched: () => ({}),
-			get_dirty: () => ({})
+			get_dirty: () => ({}),
+			get_progress: () => ({ uploaded: 0, total: 0, percent: 0 })
 		});
 
 		const cloned = proxy.created_at.value();
@@ -1010,7 +1013,8 @@ describe('create_field_proxy', () => {
 			set: () => {},
 			get_issues: () => ({ bad: [] }),
 			get_touched: () => ({}),
-			get_dirty: () => ({})
+			get_dirty: () => ({}),
+			get_progress: () => ({ uploaded: 0, total: 0, percent: 0 })
 		});
 
 		/**
@@ -1085,7 +1089,8 @@ describe('create_field_proxy', () => {
 			set: () => {},
 			get_issues: () => ({}),
 			get_touched: () => ({}),
-			get_dirty: () => ({ a: true })
+			get_dirty: () => ({ a: true }),
+			get_progress: () => ({ uploaded: 0, total: 0, percent: 0 })
 		});
 
 		expect(edited.a.as('number', 3).value).toBe('');
@@ -1100,7 +1105,8 @@ describe('create_field_proxy', () => {
 			set: () => {},
 			get_issues: () => ({}),
 			get_touched: () => ({}),
-			get_dirty: () => ({})
+			get_dirty: () => ({}),
+			get_progress: () => ({ uploaded: 0, total: 0, percent: 0 })
 		});
 
 		expect(Symbol.iterator in proxy).toBe(false);
