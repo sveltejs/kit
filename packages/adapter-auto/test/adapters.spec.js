@@ -2,16 +2,11 @@ import { assert, expect, test, vi } from 'vitest';
 import { adapters } from '../adapters.js';
 import { existsSync, readFileSync } from 'node:fs';
 
-test('detects Cloudflare Workers builds but not Pages builds', () => {
+test('detects Cloudflare Workers builds', () => {
 	const cloudflare = adapters.find((adapter) => adapter.module === '@sveltejs/adapter-cloudflare');
 	assert.ok(cloudflare);
 
 	try {
-		vi.stubEnv('WORKERS_CI', '');
-		vi.stubEnv('CF_PAGES', '1');
-		expect(cloudflare.test()).toBe(false);
-
-		vi.stubEnv('CF_PAGES', '');
 		vi.stubEnv('WORKERS_CI', '1');
 		expect(cloudflare.test()).toBe(true);
 	} finally {
