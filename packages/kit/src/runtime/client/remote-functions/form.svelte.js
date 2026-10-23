@@ -737,7 +737,8 @@ export function form(id) {
 							return;
 						}
 
-						array = /** @type {InternalRemoteFormIssue[]} */ (result._);
+						// Redirect responses have no validation issues.
+						array = /** @type {InternalRemoteFormIssue[]} */ (result._ ?? []);
 					}
 
 					if (!all && !submitted) {
