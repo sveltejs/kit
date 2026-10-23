@@ -59,7 +59,7 @@ For Cloudflare Workers, the default behaviour is to return a null-body 404-statu
 
 ## Basic configuration
 
-When building for Cloudflare Workers, this adapter expects to find a [Wrangler configuration file](https://developers.cloudflare.com/workers/wrangler/configuration/) in the project root. It should look something like this:
+The adapter expects to find a [Wrangler configuration file](https://developers.cloudflare.com/workers/wrangler/configuration/) in the project root. It should look something like this:
 
 ```jsonc
 /// file: wrangler.jsonc
@@ -191,10 +191,10 @@ assets.binding = "ASSETS" # Exclude this if you don't have a `main` key configur
 
 ## Migrating from Cloudflare Pages
 
-`adapter-cloudflare` no longer supports Cloudflare Pages and throws a migration error when running in Pages CI (`CF_PAGES`) or when `pages_build_output_dir` is configured. See Cloudflare's [Workers and Pages compatibility matrix](https://developers.cloudflare.com/workers/static-assets/migration-guides/migrate-from-pages/#compatibility-matrix) for a comparison of supported features. To migrate to Cloudflare Workers:
+To migrate to Cloudflare Workers:
 
-1. Remove `pages_build_output_dir` from your Wrangler configuration and add the `main` and `assets` settings shown in [Basic configuration](#Basic-configuration).
-2. Remove the adapter's `routes` option and any `_routes.json` files. Workers Static Assets handles asset routing without them; see [Cloudflare's routing documentation](https://developers.cloudflare.com/workers/static-assets/routing/).
+1. Remove `pages_build_output_dir` from your Wrangler configuration and [add the `main` and `assets` settings](#Basic-configuration).
+2. Remove the adapter's `routes` option and any `_routes.json` files.
 3. Replace `wrangler pages dev` and `wrangler pages deploy` with `wrangler dev` and `wrangler deploy`. For automatic deployments, use [Workers Builds](https://developers.cloudflare.com/workers/ci-cd/builds/) instead of the Pages Git integration.
 
-You can keep using `_headers` and `_redirects` files in the project root. If you only need a static site on Cloudflare Pages, use [`adapter-static`](adapter-static) instead.
+See Cloudflare's [Workers and Pages compatibility matrix](https://developers.cloudflare.com/workers/static-assets/migration-guides/migrate-from-pages/#compatibility-matrix) for a comparison of supported features.
