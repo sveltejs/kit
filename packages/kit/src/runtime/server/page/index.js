@@ -148,7 +148,8 @@ export async function render_page(event, state, page, nodes, resolve_opts) {
 				event,
 				state,
 				resolve_opts,
-				data_serializer: server_data_serializer(event, state)
+				data_serializer: server_data_serializer(event, state),
+				...(csr ? await load_error_components(false, nodes.data, page) : {})
 			});
 		}
 
@@ -295,7 +296,7 @@ export async function render_page(event, state, page, nodes, resolve_opts) {
 							},
 							status,
 							error,
-							error_components: await load_error_components(ssr, error_branch, page),
+							...(await load_error_components(ssr, error_branch, page)),
 							branch: error_branch,
 							fetched,
 							data_serializer
@@ -343,7 +344,7 @@ export async function render_page(event, state, page, nodes, resolve_opts) {
 			action_result,
 			fetched,
 			data_serializer: !ssr ? server_data_serializer(event, state) : data_serializer,
-			error_components: await load_error_components(ssr, branch, page)
+			...(await load_error_components(ssr, branch, page))
 		});
 	} catch (e) {
 		// a remote function could have thrown a redirect during render
@@ -364,13 +365,20 @@ export async function render_page(event, state, page, nodes, resolve_opts) {
 
 /**
  * @param {boolean} ssr
- * @param {Array<import('./types.js').Loaded | null>} branch
+ * @param {Array<unknown>} branch
  * @param {PageNodeIndexes} page
  */
-function load_error_components(ssr, branch, page) {
-	if (!ssr) return undefined;
+async function load_error_components(ssr, branch, page) {
+	/** @type {SSRNode[]} */
+	const error_nodes = [];
+	const error_components = await build_error_chain(branch, page.errors, async (idx) => {
+		const node = await manifest.nodes[idx]?.();
+		if (!node) return undefined;
 
-	return build_error_chain(branch, page.errors, (idx) =>
-		manifest.nodes[idx]?.().then((e) => e.component?.())
-	);
+		error_nodes.push(node);
+		// Without SSR, only load the metadata: the component may use browser-only globals.
+		return ssr ? node.component?.() : undefined;
+	});
+
+	return { error_components: ssr ? error_components : undefined, error_nodes };
 }
