@@ -1014,34 +1014,6 @@ test.describe('remote functions', () => {
 			})
 		);
 	});
-	test('large file uploads work', async ({ page }) => {
-		await page.goto('/remote/form/file-upload');
-
-		await page.locator('input[name^="file1"]').setInputFiles({
-			name: 'a.txt',
-			mimeType: 'text/plain',
-			buffer: Buffer.alloc(1024 * 1024 * 10)
-		});
-		await page.locator('input[name^="deep.files[0]"]').setInputFiles({
-			name: 'b.txt',
-			mimeType: 'text/plain',
-			buffer: Buffer.from('b')
-		});
-		await page.locator('input[name^="deep.files[1]"]').setInputFiles({
-			name: 'cc.txt',
-			mimeType: 'text/plain',
-			buffer: Buffer.from('cc')
-		});
-		await page.locator('button').click();
-
-		await expect(page.locator('pre')).toHaveText(
-			JSON.stringify({
-				text: 'Hello world',
-				file1: 1024 * 1024 * 10,
-				file2: [1, 2]
-			})
-		);
-	});
 
 	test('file upload progress works', async ({ page, context, javaScriptEnabled }) => {
 		if (!javaScriptEnabled) return;
@@ -1056,18 +1028,18 @@ test.describe('remote functions', () => {
 		try {
 			const progress = page.locator('#progress1');
 			expect(progress).toHaveText('{"uploaded":0,"total":0,"percent":0}');
-			await page.locator('input[name="file1"]').setInputFiles({
+			await page.locator('input[name^="file1"]').setInputFiles({
 				name: 'a.txt',
 				mimeType: 'text/plain',
 				buffer: Buffer.alloc(1024 * 1024 * 10)
 			});
 			expect(progress).toHaveText('{"uploaded":0,"total":10485760,"percent":0}');
-			await page.locator('input[name="deep.files[0]"]').setInputFiles({
+			await page.locator('input[name^="deep.files[0]"]').setInputFiles({
 				name: 'b.txt',
 				mimeType: 'text/plain',
 				buffer: Buffer.from('b')
 			});
-			await page.locator('input[name="deep.files[1]"]').setInputFiles({
+			await page.locator('input[name^="deep.files[1]"]').setInputFiles({
 				name: 'c.txt',
 				mimeType: 'text/plain',
 				buffer: Buffer.from('c')
@@ -1083,6 +1055,13 @@ test.describe('remote functions', () => {
 			await check_percent();
 			await expect(progress).not.toHaveText(progress_text);
 			await check_percent();
+			await expect(page.locator('pre')).toHaveText(
+				JSON.stringify({
+					text: 'Hello world',
+					file1: 1024 * 1024 * 10,
+					file2: [1, 2]
+				})
+			);
 			await page.locator('#reset').click();
 			await expect(progress).toHaveText('{"uploaded":0,"total":0,"percent":0}');
 		} finally {
