@@ -2,6 +2,7 @@
 /** @import { EnvVarConfig } from '@sveltejs/kit/env' */
 /** @import { BuildData, ManifestData, Prerendered, ServerMetadata, RemoteChunk, ValidatedConfig } from 'types' */
 /** @import { Manifest, Plugin, ResolvedConfig, Rolldown, UserConfig } from 'vite' */
+import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
@@ -762,6 +763,16 @@ export function plugin_compile(
 						}
 					}
 
+					// Compute SRI integrity hashes from the files on disk, so the hash always
+					// matches the bytes the browser actually receives
+					if (build_data.client && kit.subresourceIntegrity) {
+						build_data.client.integrity = compute_integrity(
+							`${out}/client`,
+							client_chunks.map((chunk) => chunk.fileName),
+							kit.subresourceIntegrity
+						);
+					}
+
 					// regenerate manifest now that we have client entry...
 					fs.writeFileSync(
 						manifest_path,
@@ -825,6 +836,36 @@ export function plugin_compile(
 
 				replace_manifest_placeholder_strings(`${out}/server`, { prerendered: prerendered_paths });
 				replace_manifest_placeholder_strings(`${out}/client`, { prerendered: prerendered_paths });
+
+				// the replacement above rewrites client chunks that import `$app/manifest`, so
+				// their SRI hashes are stale — recompute them, and update the pages that were
+				// prerendered with the old hashes
+				const old_integrity = build_data.client?.integrity;
+				if (build_data.client && old_integrity && kit.subresourceIntegrity) {
+					const integrity = compute_integrity(
+						`${out}/client`,
+						Object.keys(old_integrity),
+						kit.subresourceIntegrity
+					);
+					build_data.client.integrity = integrity;
+
+					const changed = Object.keys(integrity).filter(
+						(file) => integrity[file] !== old_integrity[file]
+					);
+
+					if (changed.length > 0 && fs.existsSync(`${out}/prerendered`)) {
+						for (const file of walk(`${out}/prerendered`)) {
+							if (!file.endsWith('.html')) continue;
+
+							const file_path = `${out}/prerendered/${file}`;
+							let html = read(file_path);
+							for (const chunk of changed) {
+								html = html.replaceAll(old_integrity[chunk], integrity[chunk]);
+							}
+							fs.writeFileSync(file_path, html);
+						}
+					}
+				}
 
 				// For `inline` strategy, the entry file was deleted and read into
 				// `build_data.client.inline.script` — replace the sentinel there too
@@ -1087,6 +1128,28 @@ const replace_manifest_placeholder_variables = (chunks, output_dir, values) => {
 		const file_path = `${output_dir}/${chunk.fileName}`;
 		fs.writeFileSync(file_path, code);
 	}
+};
+
+/**
+ * Computes SRI hashes from the files on disk, so a hash always matches the bytes the
+ * browser receives. Files that no longer exist (e.g. inlined chunks) are skipped.
+ * @param {string} dir
+ * @param {string[]} files
+ * @param {'sha256' | 'sha384' | 'sha512'} algorithm
+ */
+const compute_integrity = (dir, files, algorithm) => {
+	/** @type {Record<string, string>} */
+	const integrity = {};
+
+	for (const file of files) {
+		const file_path = `${dir}/${file}`;
+		if (!fs.existsSync(file_path)) continue;
+
+		const hash = createHash(algorithm).update(fs.readFileSync(file_path)).digest('base64');
+		integrity[file] = `${algorithm}-${hash}`;
+	}
+
+	return integrity;
 };
 
 /**
