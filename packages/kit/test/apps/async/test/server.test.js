@@ -10,6 +10,17 @@ test.skip(({ javaScriptEnabled }) => javaScriptEnabled);
 const root = path.resolve(fileURLToPath(import.meta.url), '..', '..');
 
 test.describe('remote functions', () => {
+	test('match preserves URL origins inside nested batched queries during SSR', async ({ page }) => {
+		await page.goto('/remote/match');
+
+		const hosts = [new URL(page.url()).host, 'string.example', 'url.example'];
+		for (const [i, host] of hosts.entries()) {
+			await expect(page.locator(`[data-id="batch-match-${i}"]`)).toHaveText(
+				JSON.stringify({ id: '/fork/[index]', params: { index: host } })
+			);
+		}
+	});
+
 	test('production client output excludes remote diagnostic text and build dependencies', () => {
 		test.skip(!!process.env.DEV, 'only applicable after build');
 		const files = fs.globSync(`${root}/.svelte-kit/output/client/**/*.js`);

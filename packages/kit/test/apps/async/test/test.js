@@ -158,6 +158,33 @@ test.describe('remote functions', () => {
 		}
 	});
 
+	test('match can be called from a remote query', async ({ page, app, javaScriptEnabled }) => {
+		const check = async () => {
+			const expected = [
+				{ id: '/remote', params: {} },
+				{ id: '/fork/[index]', params: { index: 'relative' } },
+				{ id: '/fork/[index]', params: { index: 'test-slug' } },
+				null,
+				{ id: '/fork/[index]', params: { index: new URL(page.url()).host } },
+				{ id: '/fork/[index]', params: { index: 'absolute' } },
+				{ id: '/fork/[index]', params: { index: 'url' } }
+			];
+
+			for (const [i, result] of expected.entries()) {
+				await expect(page.locator(`[data-id="match-${i}"]`)).toHaveText(JSON.stringify(result));
+			}
+		};
+
+		await page.goto('/remote/match');
+		await check();
+
+		if (javaScriptEnabled) {
+			await page.goto('/remote');
+			await app.goto('/remote/match');
+			await check();
+		}
+	});
+
 	test('queries can read prerendered data during SSR', async ({ page }) => {
 		await page.goto('/remote/prerender-in-query');
 		await expect(page.locator('[data-id="nested-prerender"]')).toHaveText('yes');
