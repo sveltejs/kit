@@ -1063,7 +1063,7 @@ test.describe('remote functions', () => {
 			await page.locator('input[name^="deep.files[1]"]').setInputFiles({
 				name: 'c.txt',
 				mimeType: 'text/plain',
-				buffer: Buffer.from('c')
+				buffer: Buffer.from('cc')
 			});
 			await page.locator('#submit').click();
 			await expect(progress).not.toHaveText(/"uploaded":0/);
