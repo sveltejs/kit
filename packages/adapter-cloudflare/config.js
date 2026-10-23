@@ -1,5 +1,4 @@
 /** @import { Plugin } from 'vite' */
-import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { cloudflare } from '@cloudflare/vite-plugin';
 
@@ -10,6 +9,13 @@ const useful_cloudflare_plugins = new Set([
 	'vite-plugin-cloudflare:nodejs-als',
 	'vite-plugin-cloudflare:nodejs-compat',
 	'vite-plugin-cloudflare:nodejs-compat-warnings'
+]);
+
+const build_output_plugins = new Set([
+	// generate the output `wrangler.json` and handle Wasm and other non-JavaScript modules
+	'vite-plugin-cloudflare:output-config',
+	'vite-plugin-cloudflare:wasm-helper',
+	'vite-plugin-cloudflare:additional-modules'
 ]);
 
 /**
@@ -23,27 +29,36 @@ const worker_entry = fileURLToPath(new URL('./files/worker.js', import.meta.url)
 
 /**
  * Applies the Worker environment config that `@cloudflare/vite-plugin` generates
- * so that dev emulates workerd and the server output suits it
+ * so that dev emulates workerd and the server output suits it. It also generates the
+ * deployment config for the build output
  * @param {string | undefined} config_path
  * @returns {Plugin[]}
  */
 export function plugin_config(config_path) {
 	const plugins = cloudflare({
-		// the plugin resolves a relative path against Vite's root but Wrangler resolves
-		// it against the working directory, which is what the rest of the adapter uses.
-		// TODO: resolve the Wrangler config against Vite's root throughout the adapter
-		configPath: config_path && path.resolve(config_path),
+		configPath: config_path,
 		viteEnvironment: { name: 'ssr' },
 		config(config) {
 			// the plugin requires `main` to be populated, so we set it to avoid it
 			// trying to resolve build-generated entry in the user's wrangler config
 			config.main = worker_entry;
+
+			config.assets ??= {};
+			config.assets.binding ??= 'ASSETS';
+			if (
+				!config.compatibility_flags.includes('nodejs_compat') &&
+				!config.compatibility_flags.includes('nodejs_als')
+			) {
+				// SvelteKit uses `AsyncLocalStorage`
+				config.compatibility_flags.push('nodejs_als');
+			}
 		}
 	});
 
-	const cloudflare_config_hook = plugins.find(
+	const cloudflare_config_plugin = plugins.find(
 		(plugin) => plugin.name === 'vite-plugin-cloudflare:config'
-	)?.config;
+	);
+	const cloudflare_config_hook = cloudflare_config_plugin?.config;
 
 	if (typeof cloudflare_config_hook !== 'function') {
 		throw new Error(
@@ -55,6 +70,24 @@ export function plugin_config(config_path) {
 		...plugins
 			.filter((plugin) => useful_cloudflare_plugins.has(plugin.name))
 			.map((plugin) => /** @satisfies {Plugin} */ ({ ...plugin, apply: not_preview })),
+		...plugins
+			.filter((plugin) => build_output_plugins.has(plugin.name))
+			.map((plugin) => /** @satisfies {Plugin} */ ({ ...plugin, apply: 'build' })),
+		/** @satisfies {Plugin} */ ({
+			name: 'vite-plugin-sveltekit-adapter-cloudflare-workers',
+			apply: 'build',
+			configEnvironment: {
+				order: 'post',
+				handler(name, config) {
+					if (name !== 'ssr') return;
+					// Kit externalizes OpenTelemetry but the Worker is deployed without bundling
+					config.resolve ??= {};
+					config.resolve.external = [];
+				}
+			},
+			// lets the other plugins read the resolved Vite config
+			configResolved: cloudflare_config_plugin?.configResolved
+		}),
 		{
 			name: 'vite-plugin-sveltekit-adapter-cloudflare-environment',
 			apply: not_preview,

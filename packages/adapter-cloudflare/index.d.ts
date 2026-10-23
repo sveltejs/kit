@@ -6,6 +6,8 @@ export default function plugin(options?: AdapterOptions): Adapter;
 export interface AdapterOptions {
 	/**
 	 * Path to your [Wrangler configuration file](https://developers.cloudflare.com/workers/wrangler/configuration/).
+	 * The adapter manages `main` and `assets.directory`; neither must be configured.
+	 * `assets.binding` defaults to `ASSETS`.
 	 */
 	config?: string;
 	/**
