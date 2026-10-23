@@ -389,10 +389,12 @@ export async function internal_respond(request, state) {
 
 		// determine whether we need to redirect to add/remove a trailing slash
 		if (route && !remote_id) {
-			// if `paths.base === '/a/b/c`, then the root route is `/a/b/c/`,
-			// regardless of the `trailingSlash` route option
+			// if `paths.base === '/a/b/c`, then the root route defaults to `/a/b/c/`. A prerendered
+			// root is always written to `index.html`, so only an on-demand root can opt out
 			if (url.pathname === base || url.pathname === base + '/') {
-				trailing_slash = 'always';
+				trailing_slash = state.prerendering
+					? 'always'
+					: (page_nodes?.trailing_slash('always') ?? 'always');
 			} else if (page_nodes) {
 				if (DEV) {
 					page_nodes.validate();
