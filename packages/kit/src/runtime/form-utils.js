@@ -175,7 +175,7 @@ export function serialize_binary_form(data, meta) {
 	length_view.setUint32(0, encoded_header_buffer.byteLength, true);
 	blob_parts.push(length_buffer.slice());
 
-	length_view.setUint16(0, encoded_file_offsets.length, true);
+	length_view.setUint16(0, encoded_file_offsets.byteLength, true);
 	blob_parts.push(length_buffer.slice(0, 2));
 
 	blob_parts.push(encoded_header_buffer);
@@ -185,7 +185,8 @@ export function serialize_binary_form(data, meta) {
 		blob_parts.push(file);
 	}
 
-	const file_offset_start = HEADER_BYTES + encoded_header.length + encoded_file_offsets.length;
+	const file_offset_start =
+		HEADER_BYTES + encoded_header_buffer.byteLength + encoded_file_offsets.byteLength;
 
 	return {
 		blob: new Blob(blob_parts),
