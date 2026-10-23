@@ -1017,7 +1017,8 @@ test.describe('remote functions', () => {
 
 	const big_file = Buffer.alloc(1024 * 1024 * 10);
 
-	test('replacing a file mid-upload', async ({ page }) => {
+	test('replacing a file mid-upload', async ({ page, javaScriptEnabled }) => {
+		if (!javaScriptEnabled) return;
 		await page.goto('/remote/form/file-upload');
 
 		await page.locator('input[name^="file1"]').setInputFiles({
