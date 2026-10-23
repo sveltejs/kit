@@ -2910,7 +2910,7 @@ declare module '$app/navigation' {
 }
 
 declare module '$app/paths' {
-	import type { AssetPath, RouteIdWithSearchOrHash, PathnameWithSearchOrHash, ResolvedPathname, RouteId, RouteParams } from '$app/types';
+	import type { AssetPath, ResolvableRouteIdWithSearchOrHash, PathnameWithSearchOrHash, ResolvedPathname, RouteId, RouteParams, ResolvableRouteId } from '$app/types';
 	/**
 	 * Resolve the URL of an asset in your `static` directory, by prefixing it with [`config.paths.assets`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#paths) if configured, or otherwise by prefixing it with the base path.
 	 *
@@ -2949,7 +2949,7 @@ declare module '$app/paths' {
 	 * @since 2.26
 	 *
 	 * */
-	export function resolve<T extends RouteIdWithSearchOrHash | PathnameWithSearchOrHash>(...args: ResolveArgs<T>): ResolvedPathname;
+	export function resolve<T extends ResolvableRouteIdWithSearchOrHash | PathnameWithSearchOrHash>(...args: ResolveArgs<T>): ResolvedPathname;
 	/**
 	 * Match a path or URL to a route ID and extracts any parameters.
 	 *
@@ -2978,11 +2978,19 @@ declare module '$app/paths' {
 			? U
 			: T;
 
+	type StripTrailingSlash<T extends ResolvableRouteId> = T extends '/'
+		? T
+		: T extends `${infer U}/`
+			? U
+			: T;
+
 	type ResolveArgs<T> = T extends `/${string}`
-		? StripSearchOrHash<T> extends infer U extends RouteId
-			? RouteParams<U> extends Record<string, never>
-				? [route: T]
-				: [route: T, params: RouteParams<U>]
+		? StripSearchOrHash<T> extends infer U extends ResolvableRouteId
+			? StripTrailingSlash<U> extends infer R extends RouteId
+				? RouteParams<R> extends Record<string, never>
+					? [route: T]
+					: [route: T, params: RouteParams<R>]
+			    : [never]
 			: [never]
 		: [pathname: T];
 
@@ -4092,6 +4100,7 @@ declare module '$app/types' {
 		PageRouteId(): string;
 		EndpointRouteId(): string;
 		RouteId(): string;
+		ResolvableRouteId(): string;
 		RouteParams(): Record<string, Record<string, string>>;
 		LayoutParams(): Record<string, Record<string, string>>;
 		Path(): string;
@@ -4119,9 +4128,22 @@ declare module '$app/types' {
 	export type RouteId = ReturnType<AppTypes['RouteId']>;
 
 	/**
+	 * A union of all the route IDs with trailing slashes determined by each route's `trailingSlash` option. Used for `resolve`.
+	 */
+	export type ResolvableRouteId = ReturnType<AppTypes['ResolvableRouteId']>;
+
+	/**
 	 * `RouteId`, but possibly suffixed with a search string and/or hash.
 	 */
 	export type RouteIdWithSearchOrHash = RouteId | `${RouteId}?${string}` | `${RouteId}#${string}`;
+
+	/**
+	 * `ResolvableRouteId`, but possibly suffixed with a search string and/or hash.
+	 */
+	export type ResolvableRouteIdWithSearchOrHash =
+		| ResolvableRouteId
+		| `${ResolvableRouteId}?${string}`
+		| `${ResolvableRouteId}#${string}`;
 
 	/**
 	 * A utility for getting the parameters associated with a given route.

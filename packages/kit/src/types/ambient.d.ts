@@ -129,6 +129,7 @@ declare module '$app/types' {
 		PageRouteId(): string;
 		EndpointRouteId(): string;
 		RouteId(): string;
+		ResolvableRouteId(): string;
 		RouteParams(): Record<string, Record<string, string>>;
 		LayoutParams(): Record<string, Record<string, string>>;
 		Path(): string;
@@ -156,9 +157,22 @@ declare module '$app/types' {
 	export type RouteId = ReturnType<AppTypes['RouteId']>;
 
 	/**
+	 * A union of all the route IDs with trailing slashes determined by each route's `trailingSlash` option. Used for `resolve`.
+	 */
+	export type ResolvableRouteId = ReturnType<AppTypes['ResolvableRouteId']>;
+
+	/**
 	 * `RouteId`, but possibly suffixed with a search string and/or hash.
 	 */
 	export type RouteIdWithSearchOrHash = RouteId | `${RouteId}?${string}` | `${RouteId}#${string}`;
+
+	/**
+	 * `ResolvableRouteId`, but possibly suffixed with a search string and/or hash.
+	 */
+	export type ResolvableRouteIdWithSearchOrHash =
+		| ResolvableRouteId
+		| `${ResolvableRouteId}?${string}`
+		| `${ResolvableRouteId}#${string}`;
 
 	/**
 	 * A utility for getting the parameters associated with a given route.
