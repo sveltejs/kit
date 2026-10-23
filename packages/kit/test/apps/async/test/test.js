@@ -1015,6 +1015,27 @@ test.describe('remote functions', () => {
 		);
 	});
 
+	const big_file = Buffer.alloc(1024 * 1024 * 10);
+
+	test('replacing a file mid-upload', async ({ page }) => {
+		await page.goto('/remote/form/file-upload');
+
+		await page.locator('input[name^="file1"]').setInputFiles({
+			name: 'a.txt',
+			mimeType: 'text/plain',
+			buffer: big_file
+		});
+		const progress = page.locator('#progress1');
+		expect(progress).toHaveText(`{"uploaded":0,"total":${big_file.byteLength},"percent":0}`);
+		await page.locator('#submit').click();
+		await page.locator('input[name^="file1"]').setInputFiles({
+			name: 'a.txt',
+			mimeType: 'text/plain',
+			buffer: Buffer.from('a')
+		});
+		expect(progress).toHaveText(`{"uploaded":0,"total":1,"percent":0}`);
+	});
+
 	test('file upload progress works', async ({ page, context, javaScriptEnabled }) => {
 		if (!javaScriptEnabled) return;
 		await page.goto('/remote/form/file-upload');
@@ -1031,7 +1052,7 @@ test.describe('remote functions', () => {
 			await page.locator('input[name^="file1"]').setInputFiles({
 				name: 'a.txt',
 				mimeType: 'text/plain',
-				buffer: Buffer.alloc(1024 * 1024 * 10)
+				buffer: big_file
 			});
 			expect(progress).toHaveText('{"uploaded":0,"total":10485760,"percent":0}');
 			await page.locator('input[name^="deep.files[0]"]').setInputFiles({
@@ -1058,7 +1079,7 @@ test.describe('remote functions', () => {
 			await expect(page.locator('pre')).toHaveText(
 				JSON.stringify({
 					text: 'Hello world',
-					file1: 1024 * 1024 * 10,
+					file1: big_file.byteLength,
 					file2: [1, 2]
 				})
 			);

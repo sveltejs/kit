@@ -273,8 +273,10 @@ export function form(id) {
 
 								if (file_offsets) {
 									const file_paths = get_file_paths(data);
+									/** @type {Map<File, { uploaded: number }>} */
+									const progress_objects = new Map();
 									for (const [file, path] of file_paths) {
-										deep_set(upload_progress, path, {
+										const progress = $state({
 											uploaded: 0,
 											total: file.size,
 											get percent() {
@@ -282,6 +284,8 @@ export function form(id) {
 												return this.uploaded / this.total;
 											}
 										});
+										progress_objects.set(file, progress);
+										deep_set(upload_progress, path, progress);
 									}
 									xhr.upload.addEventListener('progress', (ev) => {
 										for (const file of file_offsets) {
@@ -289,10 +293,7 @@ export function form(id) {
 											let uploaded = ev.loaded - file.start;
 											if (uploaded <= 0) continue;
 											if (uploaded > total) uploaded = total;
-											const path = file_paths.get(file.file);
-											if (!path) continue;
-											// Could be null if the form was reset mid-upload
-											const progress = deep_get(upload_progress, path);
+											const progress = progress_objects.get(file.file);
 											if (!progress) continue;
 											progress.uploaded = uploaded;
 										}
