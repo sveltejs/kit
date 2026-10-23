@@ -79,6 +79,7 @@ import { capture_error } from '../../messages/internal/shared.js';
  *   state: string;
  *   persistState: boolean;
  *   resetIndex: number;
+ *   hashOriginIndex?: number;
  * }} HistoryMetadata
  */
 
@@ -103,7 +104,7 @@ const resetters = new Set();
 // popstate it's too late to access the options or update the focus position associated with the
 // state we're navigating from
 /**
- * @type {Record<number, { scroll?: { x: number; y: number }; resetIndex?: number }>}
+ * @type {Record<number, { scroll?: { x: number; y: number }; resetIndex?: number; hashOriginIndex?: number }>}
  */
 const history_info = storage.get(HISTORY_INFO_KEY) ?? {};
 
@@ -166,12 +167,13 @@ function capture_scroll(index) {
 
 /**
  * @param {number} index
- * @param {Pick<HistoryMetadata, 'resetIndex'>} options
+ * @param {Pick<HistoryMetadata, 'resetIndex' | 'hashOriginIndex'>} options
  */
 function set_history_options(index, options) {
 	history_info[index] = {
 		...history_info[index],
-		resetIndex: options.resetIndex
+		resetIndex: options.resetIndex,
+		hashOriginIndex: options.hashOriginIndex ?? index
 	};
 }
 
@@ -2249,6 +2251,7 @@ async function run_on_navigate_callbacks(navigation) {
 
 		after_navigate.push(cleanup);
 		after_navigate.forEach((fn) => after_navigate_callbacks.add(fn));
+		return cleanup;
 	}
 }
 
@@ -3363,11 +3366,61 @@ function _start_router() {
 					}
 				: null;
 
+			const block = () => {
+				current_history_index = previous_history_index;
+				current_navigation_index = previous_navigation_index;
+				current_reset_index = previous_reset_index;
+				history.go(-delta);
+			};
+
 			if (shallow) {
 				// We don't need to navigate, we just need to update scroll and/or state.
-				// This happens with hash links and `pushState`/`replaceState`. The
+				// This happens with hash links and shallow routing. The
 				// exception is if we haven't navigated yet, since we could have
 				// got here after a modal navigation then a reload
+
+				// The token above aborted any in-flight navigation. A shallow restoration
+				// starts its own lifecycle, while ordinary hash links remain hook-free.
+				is_navigating = false;
+				set_navigation(null);
+
+				const nav =
+					(page.shallow || shallow_target) &&
+					source_info?.hashOriginIndex !== (history_metadata.hashOriginIndex ?? history_index)
+						? _before_navigate({
+								url,
+								type: 'popstate',
+								delta,
+								event,
+								scroll,
+								shallow: true,
+								target: shallow_target ?? {
+									params: current.params,
+									route: current.route ? { id: current.route.id } : null,
+									url
+								}
+							})
+						: undefined;
+
+				if (nav === null) {
+					block();
+					return;
+				}
+
+				const previous_snapshot_registrations = current_registrations();
+				if (nav) {
+					is_navigating = true;
+					set_navigation(nav.navigation);
+					updating = true;
+					const cleanup = await run_on_navigate_callbacks(
+						/** @type {OnNavigate} */ (nav.navigation)
+					);
+					if (navigation_token !== token) {
+						cleanup?.();
+						nav.reject(new Error('navigation aborted'));
+						return;
+					}
+				}
 
 				blur_active_element(reset);
 
@@ -3378,11 +3431,16 @@ function _start_router() {
 
 				update_url(url);
 
-				if (reset && scroll) scrollTo(scroll.x, scroll.y);
-				restore_navigation_snapshot(current_history_index, current_registrations());
-				// the token above aborted any in-flight navigation, and nothing else will clear it
-				is_navigating = false;
+				if (nav) {
+					const finished = await finish_navigation(nav, token, url, scroll, reset, settled());
+					if (!finished) return;
+				} else if (reset && scroll) {
+					scrollTo(scroll.x, scroll.y);
+				}
+
+				restore_navigation_snapshot(current_history_index, previous_snapshot_registrations);
 				set_navigation(null);
+				if (nav) updating = false;
 				return;
 			}
 
@@ -3396,12 +3454,7 @@ function _start_router() {
 					delta,
 					shallow: shallow_target
 				},
-				block: () => {
-					current_history_index = previous_history_index;
-					current_navigation_index = previous_navigation_index;
-					current_reset_index = previous_reset_index;
-					history.go(-delta);
-				},
+				block,
 				nav_token: token,
 				event
 			});
@@ -3435,13 +3488,19 @@ function _start_router() {
 					[HISTORY_METADATA_KEY]: {
 						...history_metadata,
 						historyIndex: ++current_history_index,
-						navigationIndex: current_navigation_index
+						navigationIndex: current_navigation_index,
+						// Hash links inherit their originating entry, including shallow state.
+						// Traversing within this group must not run navigation hooks.
+						hashOriginIndex: history_metadata.hashOriginIndex ?? history_metadata.historyIndex
 					}
 				},
 				'',
 				location.href
 			);
-			set_history_options(current_history_index, history_metadata);
+			set_history_options(
+				current_history_index,
+				/** @type {HistoryMetadata} */ (get_history_metadata())
+			);
 		}
 	});
 
