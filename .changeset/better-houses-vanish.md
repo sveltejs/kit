@@ -2,6 +2,4 @@
 '@sveltejs/adapter-cloudflare': major
 ---
 
-feat: generate the Cloudflare Workers deployment output and configuration with the Cloudflare Vite plugin
-
-Remove `main` and `assets.directory` from Wrangler configuration; the adapter manages the Worker entry and deployment output and generates the configuration used by `wrangler deploy`.
+feat: support unbundled deployments
