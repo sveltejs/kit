@@ -9,6 +9,7 @@ import { exactRegex } from '@rolldown/pluginutils';
 import { getRequest } from '@sveltejs/kit/node';
 import { plugin_config } from './config.js';
 import {
+	find_wrangler_config,
 	is_building_for_cloudflare_pages,
 	validate_worker_settings,
 	get_routes_json,
@@ -23,6 +24,7 @@ export default function (options = {}) {
 	// Add a random query so we can reliably string-replace the stub
 	const stub_import =
 		import.meta.resolve('./src/virtual-cloudflare-workers.js') + '?' + crypto.randomUUID();
+	let root = process.cwd();
 	return {
 		name,
 		async adapt(builder) {
@@ -48,7 +50,7 @@ export default function (options = {}) {
 			}
 
 			const { wrangler_config, building_for_cloudflare_pages } = validate_wrangler_config(
-				options.config
+				find_wrangler_config(root, options.config)
 			);
 
 			let dest = builder.getBuildDirectory('cloudflare');
@@ -69,7 +71,7 @@ export default function (options = {}) {
 					// `main` and `pages_build_output_dir` so we need to do it ourselves here
 					const parent_dir = wrangler_config.configPath
 						? path.dirname(path.resolve(wrangler_config.configPath))
-						: process.cwd();
+						: root;
 					dest = path.resolve(parent_dir, wrangler_config.assets.directory);
 				}
 				if (wrangler_config.assets?.binding) {
@@ -204,14 +206,14 @@ export default function (options = {}) {
 				return request;
 			},
 			plugins: [
+				{
+					name: 'vite-plugin-sveltekit-adapter-cloudflare-root',
+					configResolved(config) {
+						root = config.root;
+					}
+				},
 				...plugin_config(options.config),
-				virtual_workers_module(
-					{
-						configPath: options.config,
-						...options.platformProxy
-					},
-					stub_import
-				)
+				virtual_workers_module(options, stub_import)
 			]
 		}
 	};
@@ -242,13 +244,18 @@ async function reload_cloudflare_platform_proxy(options) {
 }
 
 /**
- * @param {GetPlatformProxyOptions} options
+ * @param {import('./index.js').AdapterOptions} adapter_options
  * @param {string} stub_import
  * @returns {Plugin}
  */
-function virtual_workers_module(options, stub_import) {
+function virtual_workers_module(adapter_options, stub_import) {
 	/** @param {ViteDevServer | PreviewServer} server */
 	const setup = async (server) => {
+		/** @type {GetPlatformProxyOptions} */
+		const options = {
+			configPath: find_wrangler_config(server.config.root, adapter_options.config),
+			...adapter_options.platformProxy
+		};
 		// shared so that concurrent servers start one proxy and only the last close disposes it
 		const shared = (globalThis.__sveltekit_cloudflare_platform_setup ??= {
 			servers: 0,

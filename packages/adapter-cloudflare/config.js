@@ -1,5 +1,4 @@
 /** @import { Plugin } from 'vite' */
-import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { cloudflare } from '@cloudflare/vite-plugin';
 
@@ -29,10 +28,7 @@ const worker_entry = fileURLToPath(new URL('./files/worker.js', import.meta.url)
  */
 export function plugin_config(config_path) {
 	const plugins = cloudflare({
-		// the plugin resolves a relative path against Vite's root but Wrangler resolves
-		// it against the working directory, which is what the rest of the adapter uses.
-		// TODO: resolve the Wrangler config against Vite's root throughout the adapter
-		configPath: config_path && path.resolve(config_path),
+		configPath: config_path,
 		viteEnvironment: { name: 'ssr' },
 		config(config) {
 			// the plugin requires `main` to be populated, so we set it to avoid it
