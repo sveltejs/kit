@@ -412,6 +412,26 @@ class LazyFile {
 		this.stream = this.stream.bind(this);
 		this.text = this.text.bind(this);
 	}
+	/**
+	 * Refuse to be turned into a string.
+	 *
+	 * The proxy this is wrapped in reports `File.prototype`, which gets it past
+	 * the type check in `FormData.append(name, blob, filename)` without it being
+	 * a real `Blob`. `FormData` then falls back to string coercion, so the
+	 * request carries `[object Object]` under the right filename and content
+	 * type, and nothing anywhere reports a failure. Throwing restores the
+	 * `TypeError` that `append` would have raised had the prototype not been
+	 * spoofed.
+	 *
+	 * The two-argument `append(name, blob)` is unaffected and still streams.
+	 */
+	[Symbol.toPrimitive]() {
+		throw new TypeError(
+			`Cannot convert the file "${this.name}" to a string. If you passed it to ` +
+				'`FormData.append()` with a filename argument, omit the filename — the file ' +
+				'already carries its own.'
+		);
+	}
 	/** @type {ArrayBuffer | undefined} */
 	#buffer;
 	async arrayBuffer() {
