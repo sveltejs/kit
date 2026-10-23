@@ -145,7 +145,8 @@ export function serialize_binary_form(data, meta) {
 	/** @type {Array<number> | undefined} */
 	let file_offsets;
 
-	let encoded_file_offsets = '';
+	/** @type {Uint8Array<ArrayBuffer>} */
+	let encoded_file_offsets;
 
 	/** @type {Array<[file: File, index: number]>} */
 	let unsorted_files;
@@ -161,7 +162,9 @@ export function serialize_binary_form(data, meta) {
 			file_offsets[index] = start;
 			start += file.size;
 		}
-		encoded_file_offsets = JSON.stringify(file_offsets);
+		encoded_file_offsets = text_encoder.encode(JSON.stringify(file_offsets));
+	} else {
+		encoded_file_offsets = new Uint8Array();
 	}
 
 	const encoded_header_buffer = text_encoder.encode(encoded_header);
