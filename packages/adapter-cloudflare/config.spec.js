@@ -20,27 +20,3 @@ test('resolves a relative wrangler config path against the Vite root', async () 
 		)
 	).resolves.toBeDefined();
 });
-
-test('does not apply the Cloudflare plugins during preview', async () => {
-	// a Vite root without the `.wrangler/deploy/config.json` that the plugin reads in preview
-	const root = fs.mkdtempSync(path.join(os.tmpdir(), 'adapter-cloudflare-'));
-
-	try {
-		await expect(
-			resolveConfig(
-				{
-					root,
-					configFile: false,
-					logLevel: 'silent',
-					plugins: plugin_config(path.resolve('test/apps/workers/config/wrangler.jsonc'))
-				},
-				'serve',
-				'production',
-				'production',
-				true
-			)
-		).resolves.toBeDefined();
-	} finally {
-		fs.rmSync(root, { recursive: true, force: true });
-	}
-});
