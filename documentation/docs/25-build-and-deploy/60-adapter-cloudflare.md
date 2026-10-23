@@ -70,8 +70,6 @@ The adapter expects to find a [Wrangler configuration file](https://developers.c
 }
 ```
 
-The adapter applies the [Cloudflare Vite plugin](https://developers.cloudflare.com/workers/vite-plugin/) to SvelteKit's server build. It generates the Worker and static assets in `.svelte-kit/cloudflare` and the configuration used by `wrangler deploy`. Do not configure `main` or `assets.directory` yourself, or add the Cloudflare Vite plugin separately.
-
 ## Deployment
 
 You can use the Wrangler CLI to deploy your application by running `npx wrangler deploy` or use the [Cloudflare Git integration](https://developers.cloudflare.com/workers/ci-cd/builds/) to enable automatic builds and deployments on push.
