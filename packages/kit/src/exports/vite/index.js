@@ -373,6 +373,16 @@ function kit({ svelte_config }) {
 					appType: 'custom',
 					environments: {
 						ssr: {
+							dev: {
+								createEnvironment:
+									config.environments?.ssr?.dev?.createEnvironment ??
+									((name, config) =>
+										vite.createRunnableDevEnvironment(name, config, {
+											// Kit imports server modules per request, which already picks up
+											// invalidations. HMR would reload the entire program instead.
+											runnerOptions: { hmr: false }
+										}))
+							},
 							build: {
 								sourcemap:
 									config.environments?.ssr?.build?.sourcemap ?? config.build?.sourcemap ?? true
