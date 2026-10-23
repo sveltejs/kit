@@ -36,11 +36,19 @@ export function allowed_methods(mod) {
  * @param {string} location
  */
 export function redirect_response(status, location) {
-	const response = new Response(undefined, {
+	return new Response(undefined, {
 		status,
 		headers: { location }
 	});
-	return response;
+}
+
+/**
+ * Whether the response is being prerendered, either because we're running the prerenderer
+ * or because a `+server.js` endpoint inherits the prerender option of the page fetching it
+ * @param {import('types').RequestState} state
+ */
+export function is_prerendering(state) {
+	return !!state.prerendering || state.prerender_default === true;
 }
 
 /**
