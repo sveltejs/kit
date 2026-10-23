@@ -1080,7 +1080,7 @@ test.describe('remote functions', () => {
 				JSON.stringify({
 					text: 'Hello world',
 					file1: big_file.byteLength,
-					file2: [1, 2]
+					files: [1, 2]
 				})
 			);
 			await page.locator('#reset').click();
