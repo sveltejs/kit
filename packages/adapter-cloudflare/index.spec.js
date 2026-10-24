@@ -1,3 +1,5 @@
+import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { beforeEach, expect, test, vi } from 'vitest';
 import { createServer } from 'vite';
@@ -15,9 +17,11 @@ beforeEach(() => {
 	vi.clearAllMocks();
 });
 
-function create_server() {
+/** @param {string} [root] */
+function create_server(root) {
 	const { plugins } = /** @type {{ plugins: import('vite').Plugin[] }} */ (adapter().vite);
 	return createServer({
+		root,
 		configFile: false,
 		logLevel: 'silent',
 		plugins,
@@ -220,4 +224,21 @@ test('rejects concurrent servers sharing a failed platform proxy and allows a re
 	await server.close();
 	expect(dispose).toHaveBeenCalledOnce();
 	expect(globalThis.__sveltekit_cloudflare_platform_setup).toBeUndefined();
+});
+
+test('finds the wrangler config relative to the Vite root', async () => {
+	const root = fs.realpathSync.native(
+		fs.mkdtempSync(path.join(os.tmpdir(), 'adapter-cloudflare-'))
+	);
+	const config_path = path.join(root, 'wrangler.jsonc');
+	fs.writeFileSync(config_path, JSON.stringify({ name: 'test', compatibility_date: '2025-01-01' }));
+
+	try {
+		const server = await create_server(root);
+		const options = vi.mocked(getPlatformProxy).mock.calls[0][0];
+		expect(fs.realpathSync.native(options.configPath)).toBe(fs.realpathSync.native(config_path));
+		await server.close();
+	} finally {
+		fs.rmSync(root, { recursive: true, force: true });
+	}
 });

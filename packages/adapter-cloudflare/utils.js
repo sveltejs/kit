@@ -1,4 +1,20 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import process from 'node:process';
+
+/**
+ * Finds the Wrangler config relative to Vite's root, the same way `@cloudflare/vite-plugin` does
+ * @param {string} root
+ * @param {string | undefined} config
+ * @returns {string | undefined}
+ */
+export function find_wrangler_config(root, config) {
+	if (config) return path.resolve(root, config);
+
+	return ['wrangler.jsonc', 'wrangler.json', 'wrangler.toml']
+		.map((file) => path.join(root, file))
+		.find((file) => fs.existsSync(file));
+}
 
 /**
  * @param {import('wrangler').Unstable_Config} wrangler_config
