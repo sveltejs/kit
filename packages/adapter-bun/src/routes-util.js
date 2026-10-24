@@ -15,7 +15,7 @@ function resolve_file(subdir, filename) {
 
 /**
  * @typedef {Serve.Routes<never, string>[string]} RouteHandler
- * @typedef {{ hash: string, mtime: number, br?: boolean, gz?: boolean }} AssetMeta
+ * @typedef {{ hash: string, mtime: number, br?: boolean | string, gz?: boolean | string }} AssetMeta
  */
 
 const CONTENT_ENCODING = { br: 'br', gz: 'gzip' };
@@ -154,7 +154,8 @@ function file_route(file, meta, extra_headers = {}) {
 		let body_file = file;
 		if (encoding !== null) {
 			response_headers['content-encoding'] = CONTENT_ENCODING[encoding];
-			body_file = `${file}.${encoding}`;
+			const variant = meta[encoding];
+			body_file = typeof variant === 'string' ? variant : `${file}.${encoding}`;
 		}
 		return new Response(Bun.file(body_file), { headers: response_headers });
 	};
