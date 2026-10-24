@@ -9,6 +9,7 @@ import { DEV } from 'esm-env';
 import { init_transport } from '#app/internal/transport';
 import { capture_error } from '../../messages/internal/server.js';
 import * as e from '../../messages/server-errors.js';
+import { restore, save } from './dev.js';
 
 /** @type {Promise<any>} */
 let init_promise;
@@ -22,7 +23,10 @@ let init_promise;
 const decoded_responses = new WeakMap();
 
 if (DEV) {
-	const fetch = globalThis.fetch;
+	// A server reload must replace this wrapper, not wrap the previous instance.
+	const key = Symbol.for('sveltekit.unpatched_fetch');
+	const fetch = /** @type {typeof globalThis.fetch} */ (restore(key) ?? globalThis.fetch);
+	save(key, fetch);
 
 	/**
 	 * @param {RequestInfo | URL} info
