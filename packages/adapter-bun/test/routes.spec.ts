@@ -218,6 +218,32 @@ test('embedded routes use the imported asset instead of a filesystem path', asyn
 	expect(server_file.name).toBe('/embedded/server.txt');
 });
 
+test('embedded precompressed variants are served from their imported assets', async () => {
+	const { routes, file } = await load_routes({ embed: true });
+
+	const route = routes.client_asset('app.js', '/embedded/app.js', {
+		hash: 'abc',
+		mtime: 0,
+		br: '/embedded/app.js.br',
+		gz: '/embedded/app.js.gz'
+	})[0][1] as any;
+
+	const br = route.GET(
+		new Request('http://localhost/app.js', { headers: { 'accept-encoding': 'br' } })
+	);
+	expect(br.headers.get('content-encoding')).toBe('br');
+	expect(file).toHaveBeenLastCalledWith('/embedded/app.js.br');
+
+	const gzip = route.GET(
+		new Request('http://localhost/app.js', { headers: { 'accept-encoding': 'gzip' } })
+	);
+	expect(gzip.headers.get('content-encoding')).toBe('gzip');
+	expect(file).toHaveBeenLastCalledWith('/embedded/app.js.gz');
+
+	route.GET(new Request('http://localhost/app.js'));
+	expect(file).toHaveBeenLastCalledWith('/embedded/app.js');
+});
+
 test('server assets resolve from the client output in regular builds', async () => {
 	const { routes, file } = await load_routes();
 
