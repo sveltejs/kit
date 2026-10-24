@@ -235,9 +235,8 @@ test('finds the wrangler config relative to the Vite root', async () => {
 
 	try {
 		const server = await create_server(root);
-		expect(getPlatformProxy).toHaveBeenCalledWith(
-			expect.objectContaining({ configPath: config_path })
-		);
+		const options = vi.mocked(getPlatformProxy).mock.calls[0][0];
+		expect(fs.realpathSync.native(options.configPath)).toBe(fs.realpathSync.native(config_path));
 		await server.close();
 	} finally {
 		fs.rmSync(root, { recursive: true, force: true });
