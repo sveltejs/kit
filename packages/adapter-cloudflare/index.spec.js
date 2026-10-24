@@ -227,7 +227,9 @@ test('rejects concurrent servers sharing a failed platform proxy and allows a re
 });
 
 test('finds the wrangler config relative to the Vite root', async () => {
-	const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'adapter-cloudflare-')));
+	const root = fs.realpathSync.native(
+		fs.mkdtempSync(path.join(os.tmpdir(), 'adapter-cloudflare-'))
+	);
 	const config_path = path.join(root, 'wrangler.jsonc');
 	fs.writeFileSync(config_path, JSON.stringify({ name: 'test', compatibility_date: '2025-01-01' }));
 
