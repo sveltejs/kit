@@ -970,9 +970,12 @@ declare module '@sveltejs/kit' {
 			: T[K]; // Use the exact type for everything else
 	};
 
-	type ValidatedConfig = RecursiveRequired<Omit<Config, 'preprocess' | 'adapter'>> & {
+	type ValidatedConfig = RecursiveRequired<
+		Omit<Config, 'preprocess' | 'adapter' | 'typescript'>
+	> & {
 		adapter: Adapter & { vite?: AdapterViteConfig };
 		preprocess: Config['preprocess'];
+		typescript: { config: NonNullable<Config['typescript']>['config'] };
 	};
 	/**
 	 * Throws an error with a HTTP status code and an optional message.
@@ -2120,7 +2123,6 @@ declare module '@sveltejs/kit/vite' {
 			 *
 			 * Note that any paths configured here should be relative to the generated config file, which is written to `node_modules/$app/tsconfig.json`.
 			 *
-			 * @default (config) => config
 			 * @since 1.3.0
 			 */
 			config?: (config: Record<string, any>) => Record<string, any> | void;
