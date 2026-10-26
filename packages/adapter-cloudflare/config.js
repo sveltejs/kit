@@ -30,25 +30,22 @@ const worker_entry = fileURLToPath(new URL('./files/worker.js', import.meta.url)
  * @returns {Plugin[]}
  */
 export function plugin_config(config_path) {
-	const plugins = cloudflare({
+	const cloudflare_plugins = cloudflare({
 		configPath: config_path,
 		viteEnvironment: { name: 'ssr' },
 		config(config) {
-			// the plugin requires `main` to be populated, so we set it to avoid it
-			// trying to resolve build-generated entry in the user's wrangler config
 			config.main = worker_entry;
-
 			config.assets ??= {};
 			config.assets.binding ??= 'ASSETS';
 
-			// SvelteKit uses `AsyncLocalStorage`
+			// Svelte and SvelteKit use `node:async_hooks`
 			if (!config.compatibility_flags.includes('nodejs_als')) {
 				config.compatibility_flags.push('nodejs_als');
 			}
 		}
 	});
 
-	const cloudflare_config_plugin = plugins.find(
+	const cloudflare_config_plugin = cloudflare_plugins.find(
 		(plugin) => plugin.name === 'vite-plugin-cloudflare:config'
 	);
 	const cloudflare_config_hook = cloudflare_config_plugin?.config;
@@ -60,7 +57,12 @@ export function plugin_config(config_path) {
 	}
 
 	return [
-		...plugins.flatMap((plugin) => {
+		{
+			name: 'vite-plugin-sveltekit-adapter-cloudflare-config',
+			// lets the other Cloudflare plugins read the resolved Vite config
+			configResolved: cloudflare_config_plugin?.configResolved
+		},
+		...cloudflare_plugins.flatMap((plugin) => {
 			if (useful_cloudflare_plugins.has(plugin.name)) {
 				return [{ ...plugin, apply: is_dev_or_build }];
 			}
@@ -124,9 +126,7 @@ export function plugin_config(config_path) {
 					config.resolve ??= {};
 					config.resolve.external = [];
 				}
-			},
-			// lets the other Cloudflare plugins read the resolved Vite config
-			configResolved: cloudflare_config_plugin?.configResolved
+			}
 		}
 	];
 }
