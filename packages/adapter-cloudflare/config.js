@@ -11,19 +11,14 @@ const useful_cloudflare_plugins = new Set([
 	'vite-plugin-cloudflare:nodejs-compat-warnings'
 ]);
 
-const build_output_plugins = new Set([
-	// generate the output `wrangler.json` and handle Wasm and other non-JavaScript modules
+const useful_cloudflare_build_plugins = new Set([
 	'vite-plugin-cloudflare:output-config',
 	'vite-plugin-cloudflare:wasm-helper',
 	'vite-plugin-cloudflare:additional-modules'
 ]);
 
-/**
- * In preview, the plugin expects to read the output config from its own build pipeline,
- * which we don't use, so we leave `vite preview` to SvelteKit
- * @type {Plugin['apply']}
- */
-const not_preview = (_config, env) => !env.isPreview;
+/** @type {Plugin['apply']} */
+const is_dev_or_build = (_config, env) => !env.isPreview;
 
 const worker_entry = fileURLToPath(new URL('./files/worker.js', import.meta.url));
 
@@ -65,30 +60,20 @@ export function plugin_config(config_path) {
 	}
 
 	return [
-		...plugins
-			.filter((plugin) => useful_cloudflare_plugins.has(plugin.name))
-			.map((plugin) => /** @satisfies {Plugin} */ ({ ...plugin, apply: not_preview })),
-		...plugins
-			.filter((plugin) => build_output_plugins.has(plugin.name))
-			.map((plugin) => /** @satisfies {Plugin} */ ({ ...plugin, apply: 'build' })),
-		/** @satisfies {Plugin} */ ({
-			name: 'vite-plugin-sveltekit-adapter-cloudflare-workers',
-			apply: 'build',
-			configEnvironment: {
-				order: 'post',
-				handler(name, config) {
-					if (name !== 'ssr') return;
-					// Kit externalizes OpenTelemetry but the Worker is deployed without bundling
-					config.resolve ??= {};
-					config.resolve.external = [];
-				}
-			},
-			// lets the other plugins read the resolved Vite config
-			configResolved: cloudflare_config_plugin?.configResolved
+		...plugins.flatMap((plugin) => {
+			if (useful_cloudflare_plugins.has(plugin.name)) {
+				return [{ ...plugin, apply: is_dev_or_build }];
+			}
+
+			if (useful_cloudflare_build_plugins.has(plugin.name)) {
+				return /** @satisfies {Plugin[]} */ ([{ ...plugin, apply: 'build' }]);
+			}
+
+			return [];
 		}),
 		{
 			name: 'vite-plugin-sveltekit-adapter-cloudflare-environment',
-			apply: not_preview,
+			apply: is_dev_or_build,
 			async config(user_config, env) {
 				const ssr = (await cloudflare_config_hook.call(this, user_config, env))?.environments?.ssr;
 
@@ -126,6 +111,20 @@ export function plugin_config(config_path) {
 					}
 				};
 			}
+		},
+		{
+			name: 'vite-plugin-sveltekit-adapter-cloudflare-build',
+			apply: 'build',
+			configEnvironment: {
+				order: 'post',
+				handler(name, config) {
+					if (name !== 'ssr') return;
+					config.resolve ??= {};
+					config.resolve.external = [];
+				}
+			},
+			// lets the other plugins read the resolved Vite config
+			configResolved: cloudflare_config_plugin?.configResolved
 		}
 	];
 }

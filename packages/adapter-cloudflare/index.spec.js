@@ -84,7 +84,7 @@ test('selects Wrangler configuration and named environments from Vite env files'
 test('bundles the dependencies that Kit externalizes for Workers', () => {
 	const { plugins } = /** @type {{ plugins: import('vite').Plugin[] }} */ (get_vite_config());
 	const hook = plugins.find(
-		(plugin) => plugin.name === 'vite-plugin-sveltekit-adapter-cloudflare-workers'
+		(plugin) => plugin.name === 'vite-plugin-sveltekit-adapter-cloudflare-build'
 	)?.configEnvironment;
 	if (typeof hook !== 'object') throw new Error('Expected a post environment hook');
 	const configure_environment =
