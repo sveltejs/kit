@@ -13,7 +13,7 @@ describe('validates Wrangler config', () => {
 		).toThrow('Cloudflare Pages is no longer supported');
 	});
 
-	test('rejects framework-managed output directories', () => {
+	test('Worker and static assets', () => {
 		expect(() =>
 			validate_worker_settings(
 				/** @type {import('wrangler').Unstable_Config} */ ({
@@ -25,7 +25,7 @@ describe('validates Wrangler config', () => {
 					}
 				})
 			)
-		).toThrow('Remove `assets.directory`');
+		).not.toThrow();
 	});
 
 	test.each([{}, { assets: { binding: 'CUSTOM_ASSETS', not_found_handling: '404-page' } }])(
@@ -48,42 +48,6 @@ describe('validates Wrangler config', () => {
 				})
 			)
 		).not.toThrow();
-	});
-
-	test('rejects custom or output Worker entries', () => {
-		for (const main of ['src/worker.ts', 'dist/index.js']) {
-			expect(() =>
-				validate_worker_settings(/** @type {import('wrangler').Unstable_Config} */ ({ main }))
-			).toThrow('Remove `main`');
-		}
-	});
-
-	test('rejects output directories even without a binding', () => {
-		expect(() =>
-			validate_worker_settings(
-				/** @type {import('wrangler').Unstable_Config} */ ({
-					configPath: 'wrangler.jsonc',
-					main: 'dist/index.js',
-					assets: {
-						directory: 'dist/assets'
-					}
-				})
-			)
-		).toThrow('Remove `assets.directory`');
-	});
-
-	test('rejects output directories even without a Worker entry', () => {
-		expect(() =>
-			validate_worker_settings(
-				/** @type {import('wrangler').Unstable_Config} */ ({
-					configPath: 'wrangler.jsonc',
-					assets: {
-						directory: 'dist/assets',
-						binding: 'ASSETS'
-					}
-				})
-			)
-		).toThrow('Remove `assets.directory`');
 	});
 });
 

@@ -24,18 +24,6 @@ export function validate_worker_settings(wrangler_config) {
 			`You must remove all \`site\` keys in ${config_path}. Consult https://svelte.dev/docs/kit/adapter-cloudflare#Migrating-from-Workers-Sites`
 		);
 	}
-
-	if (wrangler_config.assets?.directory !== undefined) {
-		throw new Error(
-			`Remove \`assets.directory\` from ${config_path}. The Cloudflare Vite plugin manages the deployment output. Consult https://svelte.dev/docs/kit/adapter-cloudflare`
-		);
-	}
-
-	if (wrangler_config.main !== undefined) {
-		throw new Error(
-			`Remove \`main\` from ${config_path}. The adapter generates the Worker entry; custom Worker entries are not supported. Consult https://svelte.dev/docs/kit/adapter-cloudflare`
-		);
-	}
 }
 
 /**
