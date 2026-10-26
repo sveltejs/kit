@@ -45,11 +45,9 @@ export function plugin_config(config_path) {
 
 			config.assets ??= {};
 			config.assets.binding ??= 'ASSETS';
-			if (
-				!config.compatibility_flags.includes('nodejs_compat') &&
-				!config.compatibility_flags.includes('nodejs_als')
-			) {
-				// SvelteKit uses `AsyncLocalStorage`
+
+			// SvelteKit uses `AsyncLocalStorage`
+			if (!config.compatibility_flags.includes('nodejs_als')) {
 				config.compatibility_flags.push('nodejs_als');
 			}
 		}
