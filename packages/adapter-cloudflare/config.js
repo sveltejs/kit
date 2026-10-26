@@ -125,7 +125,7 @@ export function plugin_config(config_path) {
 					config.resolve.external = [];
 				}
 			},
-			// lets the other plugins read the resolved Vite config
+			// lets the other Cloudflare plugins read the resolved Vite config
 			configResolved: cloudflare_config_plugin?.configResolved
 		}
 	];
