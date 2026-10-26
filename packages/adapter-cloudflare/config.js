@@ -119,6 +119,8 @@ export function plugin_config(config_path) {
 				order: 'post',
 				handler(name, config) {
 					if (name !== 'ssr') return;
+
+					// Cloudflare's Vite plugin doesn't allow external SSR deps
 					config.resolve ??= {};
 					config.resolve.external = [];
 				}
