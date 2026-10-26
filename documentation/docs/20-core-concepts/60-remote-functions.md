@@ -394,6 +394,19 @@ The form object contains `method` and `action` properties that allow it to work 
 
 As with `query`, if the callback uses the submitted `data`, it should be [validated](#query-Query-arguments) by passing a [Standard Schema](https://standardschema.dev) as the first argument to `form`.
 
+### Pending submissions
+
+With JavaScript enabled, `pending` is the number of submissions in progress, including any preflight validation. You can use it to disable the form and show a pending state:
+
+```svelte
+<form {...createPost}>
+	<fieldset disabled={!!createPost.pending}>
+		<!-- form content goes here -->
+		<button>{createPost.pending ? 'Publishing...' : 'Publish!'}</button>
+	</fieldset>
+</form>
+```
+
 ### Fields
 
 A form is composed of a set of _fields_, which are defined by the schema. In the case of `createPost`, we have two fields, `title` and `content`, which are both strings. To get the attributes for a field, call its `.as(...)` method, specifying which [input type](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input#input_types) to use. For most input types, you can also pass a second argument — `.as(type, value)` — to control the rendered value:
