@@ -24,8 +24,8 @@ const worker_entry = fileURLToPath(new URL('./files/worker.js', import.meta.url)
 
 /**
  * Applies the Worker environment config that `@cloudflare/vite-plugin` generates
- * so that dev emulates workerd and the server output suits it. It also generates the
- * deployment config for the build output
+ * so that dev emulates workerd and the server output suits it.
+ * It also generates the Wrangler deployment config for the build output
  * @param {string | undefined} config_path
  * @returns {Plugin[]}
  */
