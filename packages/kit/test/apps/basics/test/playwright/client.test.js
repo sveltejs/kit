@@ -2817,4 +2817,26 @@ test.describe('routing', () => {
 		await expect(page.locator('h1')).toHaveText('Great success!');
 		await expect(page).toHaveURL((url) => url.pathname === '/routing');
 	});
+
+	test('does not load code from another origin for a pathname starting with //', async ({
+		page,
+		app
+	}) => {
+		/** @type {string[]} */
+		const requests = [];
+		await page.route('**://attacker.example/**', (route) => {
+			requests.push(route.request().url());
+			return route.fulfill({
+				contentType: 'text/javascript',
+				headers: { 'access-control-allow-origin': '*' },
+				body: 'window.pwned = true; export const route = undefined; export const params = {};'
+			});
+		});
+
+		await page.goto('/routing/a');
+		await app.goto('/routing/..//attacker.example/x').catch(() => {});
+
+		expect(requests).toEqual([]);
+		expect(await page.evaluate(() => /** @type {any} */ (window).pwned)).toBeUndefined();
+	});
 });

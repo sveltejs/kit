@@ -1834,10 +1834,17 @@ export async function get_navigation_intent(url, invalidating) {
 			}
 		}
 	} else {
+		// build the specifier from the validated URL rather than the raw pathname, since
+		// a pathname like `//evil.com/x` would otherwise be treated as protocol-relative
+		const resolution_url = new URL(url);
+		resolution_url.pathname = add_resolution_suffix(url.pathname);
+		resolution_url.search = '';
+		resolution_url.hash = '';
+
 		/** @type {{ route?: import('types').CSRRouteServer, params: Record<string, string>}} */
 		const { route, params } = await import(
 			/* @vite-ignore */
-			add_resolution_suffix(url.pathname)
+			resolution_url.href
 		);
 
 		if (!route) return;
