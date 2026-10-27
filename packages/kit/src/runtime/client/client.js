@@ -1834,17 +1834,12 @@ export async function get_navigation_intent(url, invalidating) {
 			}
 		}
 	} else {
-		// build the specifier from the validated URL rather than the raw pathname, since
-		// a pathname like `//evil.com/x` would otherwise be treated as protocol-relative
-		const resolution_url = new URL(url);
-		resolution_url.pathname = add_resolution_suffix(url.pathname);
-		resolution_url.search = '';
-		resolution_url.hash = '';
-
 		/** @type {{ route?: import('types').CSRRouteServer, params: Record<string, string>}} */
 		const { route, params } = await import(
+			// prefix with the origin, since a pathname like `//evil.com/x` would otherwise be treated
+			// as protocol-relative. Don't use `new URL(pathname, origin)`, which has the same problem
 			/* @vite-ignore */
-			resolution_url.href
+			url.origin + add_resolution_suffix(url.pathname)
 		);
 
 		if (!route) return;
