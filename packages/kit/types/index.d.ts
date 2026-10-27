@@ -2978,13 +2978,23 @@ declare module '$app/paths' {
 			? U
 			: T;
 
-	type ResolveArgs<T> = T extends `/${string}`
+	type ResolveParams<T> = T extends `/${string}`
 		? StripSearchOrHash<T> extends infer U extends RouteId
-			? RouteParams<U> extends Record<string, never>
-				? [route: T]
-				: [route: T, params: RouteParams<U>]
-			: [never]
-		: [pathname: T];
+			? RouteParams<U>
+			: never
+		: never;
+
+	// Distribute over the parameter types, not the argument tuple, so union-valued
+	// route IDs and params (for example, from `match`) can be passed together.
+	// Validate leading-slash strings separately: pathname patterns can also match them.
+	type ResolveArgs<T> =
+		StripSearchOrHash<Extract<T, `/${string}`>> extends RouteId
+			? [ResolveParams<T>] extends [never]
+				? [pathname: T]
+				: ResolveParams<T> extends Record<string, never>
+					? [route: T, params?: ResolveParams<T>]
+					: [route: T, params: ResolveParams<T>]
+			: [never];
 
 	export {};
 }
