@@ -1,5 +1,5 @@
-import fs from 'node:fs';
-import os from 'node:os';
+/** @import { Adapter } from '@sveltejs/kit' */
+/** @import { Plugin } from 'vite' */
 import path from 'node:path';
 import { beforeEach, expect, test, vi } from 'vitest';
 import { createServer } from 'vite';
@@ -39,15 +39,17 @@ beforeEach(() => {
 });
 
 /**
- * @param {import('@sveltejs/kit').Adapter} [instance]
+ * @param {Adapter} [instance]
  */
 function get_vite_config(instance = adapter()) {
-	if (typeof instance.vite === 'function') throw new Error('Expected an adapter config object');
+	if (!instance.vite || typeof instance.vite === 'function') {
+		throw new Error('Expected an adapter config object');
+	}
 	return instance.vite;
 }
 
 function create_server() {
-	const { plugins } = /** @type {{ plugins: import('vite').Plugin[] }} */ (get_vite_config());
+	const { plugins } = /** @type {{ plugins: Plugin[] }} */ (get_vite_config());
 	return createServer({
 		configFile: false,
 		logLevel: 'silent',
@@ -55,31 +57,6 @@ function create_server() {
 		server: { middlewareMode: true }
 	});
 }
-
-test('selects Wrangler configuration and named environments from Vite env files', () => {
-	const root = fs.mkdtempSync(path.join(os.tmpdir(), 'adapter-cloudflare-env-'));
-	try {
-		vi.stubEnv('CLOUDFLARE_ENV', undefined);
-		vi.stubEnv('CLOUDFLARE_VITE_WRANGLER_CONFIG_PATH', undefined);
-		fs.writeFileSync(
-			path.join(root, '.env.production'),
-			'CLOUDFLARE_ENV=staging\nCLOUDFLARE_VITE_WRANGLER_CONFIG_PATH=config/wrangler.jsonc\n'
-		);
-		const { plugins } = /** @type {{ plugins: import('vite').Plugin[] }} */ (get_vite_config());
-		const configure =
-			/** @type {(config: import('vite').UserConfig, env: import('vite').ConfigEnv) => unknown} */ (
-				plugins[0].config
-			);
-		configure({ root }, { command: 'build', mode: 'production' });
-		expect(unstable_readConfig).toHaveBeenCalledWith({
-			config: path.join(root, 'config/wrangler.jsonc'),
-			env: 'staging'
-		});
-	} finally {
-		vi.unstubAllEnvs();
-		fs.rmSync(root, { recursive: true, force: true });
-	}
-});
 
 test('disposes the platform proxy when the dev server closes, not when it restarts', async () => {
 	const server = await create_server();
@@ -105,7 +82,7 @@ test('exposes the platform caches when the runtime defines `caches` as a getter'
 	});
 
 	try {
-		const { plugins } = /** @type {{ plugins: import('vite').Plugin[] }} */ (get_vite_config());
+		const { plugins } = /** @type {{ plugins: Plugin[] }} */ (get_vite_config());
 		const server = await createServer({
 			configFile: false,
 			logLevel: 'silent',

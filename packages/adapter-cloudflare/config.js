@@ -61,11 +61,6 @@ export function plugin_config(config_path, set_worker_config) {
 	}
 
 	return [
-		{
-			name: 'vite-plugin-sveltekit-adapter-cloudflare',
-			// lets the other Cloudflare plugins read the resolved Vite config
-			configResolved: cloudflare_config_plugin?.configResolved
-		},
 		...cloudflare_plugins.flatMap((plugin) => {
 			if (useful_cloudflare_plugins.has(plugin.name)) {
 				return [{ ...plugin, apply: is_dev_or_build }];
@@ -119,8 +114,7 @@ export function plugin_config(config_path, set_worker_config) {
 			}
 		},
 		{
-			name: 'vite-plugin-sveltekit-adapter-cloudflare-build',
-			apply: 'build',
+			name: 'vite-plugin-sveltekit-adapter-cloudflare-config',
 			configEnvironment: {
 				order: 'post',
 				handler(name, config) {
@@ -130,7 +124,9 @@ export function plugin_config(config_path, set_worker_config) {
 					config.resolve ??= {};
 					config.resolve.external = [];
 				}
-			}
+			},
+			// lets the Cloudflare output-config Vite plugin read the resolved Vite config
+			configResolved: cloudflare_config_plugin?.configResolved
 		}
 	];
 }

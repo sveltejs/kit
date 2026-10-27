@@ -165,7 +165,7 @@ export default function (options = {}) {
 			},
 			plugins: [
 				{
-					name: 'vite-plugin-sveltekit-adapter-cloudflare-config',
+					name: 'vite-plugin-sveltekit-adapter-cloudflare-resolved-config',
 					configResolved(config) {
 						vite_config = config;
 					}
