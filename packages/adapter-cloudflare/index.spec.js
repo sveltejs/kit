@@ -1,5 +1,3 @@
-/** @import { Adapter } from '@sveltejs/kit' */
-/** @import { Plugin } from 'vite' */
 import path from 'node:path';
 import { beforeEach, expect, test, vi } from 'vitest';
 import { createServer } from 'vite';
@@ -15,24 +13,10 @@ vi.mock('wrangler', () => ({
 
 beforeEach(() => {
 	vi.clearAllMocks();
-	// the adapter also reads the Wrangler config when creating its Vite config
-	vi.mocked(unstable_readConfig)
-		.mockReset()
-		.mockReturnValue(/** @type {any} */ ({ configPath: undefined }));
 });
 
-/**
- * @param {Adapter} [instance]
- */
-function get_vite_config(instance = adapter()) {
-	if (!instance.vite || typeof instance.vite === 'function') {
-		throw new Error('Expected an adapter config object');
-	}
-	return instance.vite;
-}
-
 function create_server() {
-	const { plugins } = /** @type {{ plugins: Plugin[] }} */ (get_vite_config());
+	const { plugins } = /** @type {{ plugins: import('vite').Plugin[] }} */ (adapter().vite);
 	return createServer({
 		configFile: false,
 		logLevel: 'silent',
@@ -65,7 +49,7 @@ test('exposes the platform caches when the runtime defines `caches` as a getter'
 	});
 
 	try {
-		const { plugins } = /** @type {{ plugins: Plugin[] }} */ (get_vite_config());
+		const { plugins } = /** @type {{ plugins: import('vite').Plugin[] }} */ (adapter().vite);
 		const server = await createServer({
 			configFile: false,
 			logLevel: 'silent',
@@ -128,7 +112,9 @@ test('retries the platform proxy after it fails to start', async () => {
 
 test('swaps the shared platform proxy in place when wrangler config changes', async () => {
 	const config_path = path.resolve('wrangler.toml');
-	vi.mocked(unstable_readConfig).mockReturnValue(/** @type {any} */ ({ configPath: config_path }));
+	vi.mocked(unstable_readConfig).mockReturnValueOnce(
+		/** @type {any} */ ({ configPath: config_path })
+	);
 
 	const server = await create_server();
 	expect(server.watcher.listeners('change').length).toBeGreaterThan(0);
@@ -178,7 +164,9 @@ test('does not install a config watcher when wrangler cannot resolve a config pa
 
 test('swallows a rejection from the config-reload path and warns, keeping the previous proxy', async () => {
 	const config_path = path.resolve('wrangler.toml');
-	vi.mocked(unstable_readConfig).mockReturnValue(/** @type {any} */ ({ configPath: config_path }));
+	vi.mocked(unstable_readConfig).mockReturnValueOnce(
+		/** @type {any} */ ({ configPath: config_path })
+	);
 	const server = await create_server();
 	const previous = globalThis.__sveltekit_cloudflare_platform;
 	const warn = vi.spyOn(server.config.logger, 'warn').mockImplementation(() => {});
