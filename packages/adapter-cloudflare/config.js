@@ -22,9 +22,6 @@ const useful_cloudflare_build_plugins = new Set([
 ]);
 
 /**
- * Applies the Worker environment config that `@cloudflare/vite-plugin` generates
- * so that dev emulates workerd and the server output suits it.
- * It also generates the Wrangler deployment config and previews the build output in workerd
  * @param {string | undefined} config_path
  * @param {(config: WorkerConfig) => void} set_worker_config
  * @returns {Plugin[]}
