@@ -151,7 +151,9 @@ export function plugin_guard(kit, get_config, get_manifest_data) {
 				if (manifest_data.hooks.universal) add_entrypoint(manifest_data.hooks.universal);
 
 				// param matchers run in the browser when `router.resolution` is `'client'`
-				if (manifest_data.params) add_entrypoint(manifest_data.params);
+				if (manifest_data.params && kit.router.resolution === 'client') {
+					add_entrypoint(manifest_data.params);
+				}
 
 				if (service_worker_entry_file) {
 					add_entrypoint(service_worker_entry_file);
