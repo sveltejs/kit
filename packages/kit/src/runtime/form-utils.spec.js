@@ -195,23 +195,19 @@ describe('convert_formdata', () => {
 		expect(() => convert_formdata('form', data)).toThrowKitError('form_field_forbidden_key');
 	});
 
-	test('converts many fields in a single pass', () => {
+	// a quadratic implementation takes many seconds to process this many fields
+	test('converts many fields in linear time', { timeout: 1000 }, () => {
+		const count = 20_000;
 		const data = new FormData();
-		for (let i = 0; i < 1000; i += 1) {
+		for (let i = 0; i < count; i += 1) {
 			data.append(`f${i}/form`, String(i));
 			data.append('items[]/form', String(i));
 		}
 
-		const get_all = vi.spyOn(FormData.prototype, 'getAll');
-		try {
-			const converted = convert_formdata('form', data);
-			expect(Object.keys(converted)).toHaveLength(1001);
-			expect(converted.f999).toBe('999');
-			expect(converted.items).toHaveLength(1000);
-			expect(get_all).not.toHaveBeenCalled();
-		} finally {
-			get_all.mockRestore();
-		}
+		const converted = convert_formdata('form', data);
+		expect(Object.keys(converted)).toHaveLength(count + 1);
+		expect(converted[`f${count - 1}`]).toBe(String(count - 1));
+		expect(converted.items).toHaveLength(count);
 	});
 });
 
