@@ -89,7 +89,13 @@ export async function format_response(status, request, manifest) {
 		log += pathname + styleText('dim', requested.slice(pathname.length));
 	} else if (has_remote_prefix(url)) {
 		const id = /** @type {string} */ (strip_remote_prefix(url));
-		const remote = await get_remote_function(id, manifest);
+		/** @type {Awaited<ReturnType<typeof get_remote_function>>} */
+		let remote;
+		try {
+			remote = await get_remote_function(id, manifest);
+		} catch {
+			// fallback to basic logging
+		}
 		if (remote) {
 			const internals = remote.fn.__;
 			log += styleText('dim', 'remote: ');
