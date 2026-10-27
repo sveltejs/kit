@@ -2,7 +2,7 @@
 /** @import { Plugin } from 'vite' */
 import { fileURLToPath } from 'node:url';
 import { cloudflare } from '@cloudflare/vite-plugin';
-import { is_dev_or_build, is_preview } from './utils.js';
+import { is_dev_or_build } from './utils.js';
 
 const worker_entry = fileURLToPath(new URL('./files/worker.js', import.meta.url));
 
@@ -59,20 +59,15 @@ export function plugin_config(config_path, set_worker_config) {
 	}
 
 	return [
-		...cloudflare_plugins.flatMap((plugin) => {
-			if (useful_cloudflare_plugins.has(plugin.name)) {
-				return [{ ...plugin, apply: is_dev_or_build }];
-			}
-
-			if (useful_cloudflare_build_plugins.has(plugin.name)) {
-				return /** @satisfies {Plugin[]} */ ([{ ...plugin, apply: 'build' }]);
-			}
-
-			return [];
-		}),
-		// `vite preview` runs the Worker in workerd
 		...cloudflare_plugins.map(
-			(plugin) => /** @satisfies {Plugin} */ ({ ...plugin, apply: is_preview })
+			(plugin) =>
+				/** @satisfies {Plugin} */ ({
+					...plugin,
+					apply: (_config, env) =>
+						env.isPreview === true ||
+						useful_cloudflare_plugins.has(plugin.name) ||
+						(env.command === 'build' && useful_cloudflare_build_plugins.has(plugin.name))
+				})
 		),
 		{
 			name: 'vite-plugin-sveltekit-adapter-cloudflare-environment',
