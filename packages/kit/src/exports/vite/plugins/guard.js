@@ -8,12 +8,15 @@ import {
 	error_for_missing_config,
 	is_server_only_path,
 	normalize_id,
+	query_pattern,
 	remote_module_pattern,
 	server_only_directory_pattern,
 	server_only_module_pattern
 } from '../utils.js';
 import * as e from '../../../messages/build-errors.js';
 import { posixify } from '../../../utils/os.js';
+
+const server_only_module_with_query_pattern = /[/.]server\.[^/?]+\?/;
 
 /**
  * Ensures that client-side code can't accidentally import server-side code,
@@ -103,6 +106,8 @@ export function plugin_guard(kit, get_config, get_manifest_data) {
 					exactRegex(app_server),
 					exactRegex(app_env_private),
 					server_only_module_pattern,
+					// `server_only_module_pattern` won't match if the query contains a `/`
+					server_only_module_with_query_pattern,
 					server_only_directory_pattern
 				]
 			},
@@ -112,7 +117,7 @@ export function plugin_guard(kit, get_config, get_manifest_data) {
 				const is_server_only =
 					normalized === '$app/env/private' ||
 					normalized === '$app/server' ||
-					is_server_only_path(id, {
+					is_server_only_path(id.replace(query_pattern, ''), {
 						root: normalized_cwd,
 						node_modules: normalized_node_modules,
 						routes: normalized_routes,
@@ -145,6 +150,9 @@ export function plugin_guard(kit, get_config, get_manifest_data) {
 				if (manifest_data.hooks.client) add_entrypoint(manifest_data.hooks.client);
 				if (manifest_data.hooks.universal) add_entrypoint(manifest_data.hooks.universal);
 
+				// param matchers run in the browser when `router.resolution` is `'client'`
+				if (manifest_data.params) add_entrypoint(manifest_data.params);
+
 				if (service_worker_entry_file) {
 					add_entrypoint(service_worker_entry_file);
 				}
@@ -155,14 +163,15 @@ export function plugin_guard(kit, get_config, get_manifest_data) {
 				// and a greedy first-match could follow a server-only branch that never
 				// reaches an entrypoint — see https://github.com/sveltejs/kit/issues/16232
 				/** @type {Set<string>} */
-				const visited = new Set([normalized]);
+				let visited = new Set([normalized]);
 
 				/**
 				 * @param {string} current
 				 * @param {string[]} chain
+				 * @param {(id: string) => boolean} is_target
 				 * @returns {string[] | null}
 				 */
-				function find_chain(current, chain) {
+				function find_chain(current, chain, is_target) {
 					const importers = import_map.get(current);
 					if (!importers) return null;
 
@@ -171,44 +180,44 @@ export function plugin_guard(kit, get_config, get_manifest_data) {
 						visited.add(importer);
 
 						const next_chain = [...chain, importer];
-						if (entrypoints.has(importer)) {
+						if (is_target(importer)) {
 							return next_chain;
 						}
-						const result = find_chain(importer, next_chain);
+						const result = find_chain(importer, next_chain, is_target);
 						if (result) return result;
 					}
 					return null;
 				}
 
-				const chain = find_chain(normalized, [normalized]);
+				let chain = find_chain(normalized, [normalized], (id) => entrypoints.has(id));
 
-				if (chain) {
-					if (
-						!kit.experimental.remoteFunctions &&
-						chain.some((id) => remote_module_pattern.test(id))
-					) {
-						error_for_missing_config('remote functions', 'experimental.remoteFunctions', 'true');
-					}
-
-					const pyramid = chain
-						.reverse()
-						.map((id, i) => {
-							return `${' '.repeat(i + 1)}${id}`;
-						})
-						.join(' imports\n');
-
-					if (remote_module_pattern.test(id)) {
-						e.remote_module_server_only(
-							{ module: normalized, chain: pyramid },
-							{ stackless: true }
-						);
-					}
-
-					e.server_only_import({ module: normalized, chain: pyramid }, { stackless: true });
+				if (!chain) {
+					// This module is being loaded into the client bundle, so it must be reachable from
+					// client code even if none of the known entrypoints import it. Fail closed rather
+					// than letting it through, and report the chain back to whatever module pulled it in
+					visited = new Set([normalized]);
+					chain = find_chain(normalized, [normalized], (id) => !import_map.has(id)) ?? [normalized];
 				}
 
-				// No chain from this server-only module to a client entrypoint was found —
-				// the module is only imported from server code, which is valid.
+				if (
+					!kit.experimental.remoteFunctions &&
+					chain.some((id) => remote_module_pattern.test(id))
+				) {
+					error_for_missing_config('remote functions', 'experimental.remoteFunctions', 'true');
+				}
+
+				const pyramid = chain
+					.reverse()
+					.map((id, i) => {
+						return `${' '.repeat(i + 1)}${id}`;
+					})
+					.join(' imports\n');
+
+				if (remote_module_pattern.test(id)) {
+					e.remote_module_server_only({ module: normalized, chain: pyramid }, { stackless: true });
+				}
+
+				e.server_only_import({ module: normalized, chain: pyramid }, { stackless: true });
 			}
 		},
 

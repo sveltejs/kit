@@ -6,7 +6,7 @@
 >
 > If you're only using the import as a type, change it to `import type`.
 
-[Server-only modules](https://svelte.dev/docs/kit/server-only-modules) — `$app/server`, `$app/env/private`, files named `*.server.js` and anything inside a `server` directory — can only be imported by code that never runs in the browser, such as `+page.server.js`, `+layout.server.js`, `+server.js` and `hooks.server.js`. The import chain in the error shows how the server-only module ends up in client code, starting from a client entry point (such as a `+page.svelte`, a universal `+page.js` or the service worker).
+[Server-only modules](https://svelte.dev/docs/kit/server-only-modules) — `$app/server`, `$app/env/private`, files named `*.server.js` and anything inside a `server` directory — can only be imported by code that never runs in the browser, such as `+page.server.js`, `+layout.server.js`, `+server.js` and `hooks.server.js`. The import chain in the error shows how the server-only module ends up in client code, starting from a client entry point (such as a `+page.svelte`, a universal `+page.js`, `src/params.js` or the service worker).
 
 Break the chain by moving the import into a server-only file and passing the data you need through a server `load` function, or by moving the code that doesn't need to be secret out of the server-only module.
 
