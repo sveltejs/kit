@@ -21,7 +21,7 @@
 	"type": "module",
 	"dependencies": {
 		"@sveltejs/load-config": "^0.2.3",
-		"chokidar": "^5.0.0",
+		"chokidar": "^6.0.0",
 		"svelte2tsx": "~0.7.60"
 	},
 	"devDependencies": {

@@ -597,9 +597,12 @@ export interface Uses {
 	search_params: Set<string>;
 }
 
-export type ValidatedConfig = RecursiveRequired<Omit<Config, 'preprocess' | 'adapter'>> & {
+export type ValidatedConfig = RecursiveRequired<
+	Omit<Config, 'preprocess' | 'adapter' | 'typescript'>
+> & {
 	adapter: Adapter & { vite?: AdapterViteConfig };
 	preprocess: Config['preprocess'];
+	typescript: { config: NonNullable<Config['typescript']>['config'] };
 };
 
 export type BinaryFormMeta = {
