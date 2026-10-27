@@ -1,5 +1,13 @@
 /** @import { WorkerConfig } from '@cloudflare/vite-plugin' */
+/** @import { Plugin } from 'vite' */
 import process from 'node:process';
+
+/** @type {Plugin['apply']} */
+export const is_dev_or_build = (_config, env) => !env.isPreview;
+
+
+/** @type {Plugin['apply']} */
+export const is_preview = (_config, env) => env.isPreview === true;
 
 /**
  * @param {WorkerConfig} wrangler_config

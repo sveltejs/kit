@@ -7,8 +7,13 @@ import { fileURLToPath } from 'node:url';
 import { exactRegex } from '@rolldown/pluginutils';
 import { getRequest } from '@sveltejs/kit/node';
 import { getPlatformProxy, unstable_getVarsForDev, unstable_readConfig } from 'wrangler';
-import { is_dev_or_build, plugin_config } from './config.js';
-import { validate_worker_settings, append_headers, sync_process_env } from './utils.js';
+import { plugin_config } from './config.js';
+import {
+	validate_worker_settings,
+	append_headers,
+	is_dev_or_build,
+	sync_process_env
+} from './utils.js';
 
 const files = fileURLToPath(new URL('./files', import.meta.url));
 

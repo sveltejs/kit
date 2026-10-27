@@ -2,6 +2,7 @@
 /** @import { Plugin } from 'vite' */
 import { fileURLToPath } from 'node:url';
 import { cloudflare } from '@cloudflare/vite-plugin';
+import { is_dev_or_build, is_preview } from './utils.js';
 
 const worker_entry = fileURLToPath(new URL('./files/worker.js', import.meta.url));
 
@@ -19,15 +20,6 @@ const useful_cloudflare_build_plugins = new Set([
 	'vite-plugin-cloudflare:wasm-helper',
 	'vite-plugin-cloudflare:additional-modules'
 ]);
-
-/**
- * `vite preview` runs the build output with the full plugin instead
- * @type {Plugin['apply']}
- */
-export const is_dev_or_build = (_config, env) => !env.isPreview;
-
-/** @type {Plugin['apply']} */
-const is_preview = (_config, env) => env.isPreview === true;
 
 /**
  * Applies the Worker environment config that `@cloudflare/vite-plugin` generates
