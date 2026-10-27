@@ -150,6 +150,49 @@ test('swaps the shared platform proxy in place when wrangler config changes', as
 	expect(next_dispose).toHaveBeenCalledOnce();
 });
 
+test('reloads the shared platform proxy once when concurrent servers see a wrangler config change', async () => {
+	const config_path = path.resolve('wrangler.toml');
+	vi.mocked(unstable_readConfig).mockReturnValue(/** @type {any} */ ({ configPath: config_path }));
+
+	const servers = await Promise.all([create_server(), create_server()]);
+	const implementation = vi.mocked(getPlatformProxy).getMockImplementation();
+	try {
+		expect(getPlatformProxy).toHaveBeenCalledOnce();
+		const previous = globalThis.__sveltekit_cloudflare_platform;
+
+		/** @type {Array<{ caches: {}, dispose: import('vitest').Mock }>} */
+		const reloaded = [];
+		vi.mocked(getPlatformProxy).mockImplementation(() => {
+			const proxy = { caches: {}, dispose: vi.fn(() => Promise.resolve()) };
+			reloaded.push(proxy);
+			return Promise.resolve(/** @type {any} */ (proxy));
+		});
+
+		// every server watches the config file, so one change reaches each of them
+		for (const server of servers) {
+			server.watcher.emit('change', config_path);
+		}
+		await vi.waitFor(() => {
+			expect(globalThis.__sveltekit_cloudflare_platform).not.toBe(previous);
+		});
+		// let any other in-flight reloads settle
+		await new Promise((resolve) => setTimeout(resolve, 0));
+
+		expect(getPlatformProxy).toHaveBeenCalledTimes(2);
+		expect(dispose).toHaveBeenCalledOnce();
+		// every new proxy is either the one in use or has been disposed
+		for (const proxy of reloaded) {
+			if (proxy !== globalThis.__sveltekit_cloudflare_platform) {
+				expect(proxy.dispose).toHaveBeenCalledOnce();
+			}
+		}
+	} finally {
+		vi.mocked(getPlatformProxy).mockImplementation(/** @type {any} */ (implementation));
+		vi.mocked(unstable_readConfig).mockReturnValue({ configPath: undefined });
+		await Promise.all(servers.map((server) => server.close()));
+	}
+});
+
 test('does not install a config watcher when wrangler cannot resolve a config path', async () => {
 	// `unstable_readConfig` returns `{ configPath: undefined }` from the default mock
 	const server = await create_server();
