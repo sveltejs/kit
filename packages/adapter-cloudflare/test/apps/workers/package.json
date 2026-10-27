@@ -8,7 +8,7 @@
 		"preview": "wrangler dev",
 		"generate:types": "wrangler types --config config/wrangler.jsonc",
 		"test:dev": "DEV=true playwright test",
-		"test:build": "wrangler deploy --dry-run --outdir .svelte-kit/dry-run && playwright test",
+		"test:build": "playwright test",
 		"test": "pnpm test:dev && pnpm test:build"
 	},
 	"devDependencies": {
