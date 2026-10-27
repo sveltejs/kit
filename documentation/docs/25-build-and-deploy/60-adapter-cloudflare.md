@@ -61,8 +61,6 @@ For Cloudflare Workers, the default behaviour is to return a null-body 404-statu
 
 You can use the Wrangler CLI to deploy your application by running `npx wrangler deploy` or use the [Cloudflare Git integration](https://developers.cloudflare.com/workers/ci-cd/builds/) to enable automatic builds and deployments on push.
 
-[`paths.base`](configuration#paths) is supported. `paths.assets` is not supported because `vite preview` cannot serve assets from a separate location.
-
 ## Runtime APIs
 
 The [`env`](https://developers.cloudflare.com/workers/runtime-apis/fetch-event#parameters) object contains your project's [bindings](https://developers.cloudflare.com/workers/runtime-apis/bindings/), which consist of KV/DO namespaces, etc. It is available on the [`cloudflare:workers`](https://developers.cloudflare.com/workers/runtime-apis/bindings/#importing-env-as-a-global) module.
@@ -92,11 +90,11 @@ To make these types available to your app, install [`wrangler`](https://www.npmj
 
 ### Testing locally
 
-`vite dev` runs your application in Node.js, with Cloudflare-specific values emulated by Wrangler's platform proxy. Local [bindings](https://developers.cloudflare.com/workers/wrangler/configuration/#bindings) are created based on your [Wrangler configuration file](https://developers.cloudflare.com/workers/wrangler/) and populate `env`. Use the adapter's [`platformProxy` option](#Options-platformProxy) to change the development proxy's preferences.
+Cloudflare specific values are emulated during development. Local [bindings](https://developers.cloudflare.com/workers/wrangler/configuration/#bindings) are created based on your [Wrangler configuration file](https://developers.cloudflare.com/workers/wrangler/) and are used to populate `env` during development and preview. Use the adapter config [`platformProxy` option](#Options-platformProxy) to change your preferences for the bindings.
 
-Run `vite build` followed by `vite preview` to test the built Worker in Cloudflare's local `workerd` runtime. Preview uses the generated Wrangler configuration and bindings rather than the development platform proxy. You can also run `wrangler dev` after building.
+> [!NOTE] [Durable Objects](https://developers.cloudflare.com/durable-objects/) and [Workflows](https://developers.cloudflare.com/workflows/), which require custom classes to be exported from your worker, are not currently supported. 
 
-> [!NOTE] [Durable Objects](https://developers.cloudflare.com/durable-objects/) and [Workflows](https://developers.cloudflare.com/workflows/), which require custom classes to be exported from your worker, are not currently supported.
+Once you have built your site, run `vite preview` to test the built Worker in Cloudflare's local `workerd` runtime. If you were previously using `wrangler dev`, you may want to take a look at the [migration guide](https://developers.cloudflare.com/workers/vite-plugin/reference/migrating-from-wrangler-dev/).
 
 ## Headers and redirects
 
