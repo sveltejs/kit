@@ -166,7 +166,7 @@ export default function (options = {}) {
 		vite({ config }) {
 			if (config.paths.assets) {
 				throw new Error(
-					'@sveltejs/adapter-cloudflare does not support paths.assets because vite preview cannot serve assets from a separate location. Remove paths.assets from your SvelteKit configuration.'
+					'@sveltejs/adapter-cloudflare does not support paths.assets. Remove paths.assets from your SvelteKit configuration.'
 				);
 			}
 
