@@ -1,5 +1,6 @@
 import { describe, expect, test, vi } from 'vitest';
 import * as devalue from 'devalue';
+import { Worker } from 'node:worker_threads';
 import {
 	BINARY_FORM_CONTENT_TYPE,
 	DELETE_KEY,
@@ -195,19 +196,55 @@ describe('convert_formdata', () => {
 		expect(() => convert_formdata('form', data)).toThrowKitError('form_field_forbidden_key');
 	});
 
-	// a quadratic implementation takes many seconds to process this many fields
-	test('converts many fields in linear time', { timeout: 1000 }, () => {
+	// a quadratic implementation takes many seconds to process this many fields. The conversion
+	// is synchronous, so it runs in a worker that can be terminated rather than blocking the suite
+	test('converts many fields in linear time', async () => {
 		const count = 20_000;
-		const data = new FormData();
-		for (let i = 0; i < count; i += 1) {
-			data.append(`f${i}/form`, String(i));
-			data.append('items[]/form', String(i));
-		}
 
-		const converted = convert_formdata('form', data);
-		expect(Object.keys(converted)).toHaveLength(count + 1);
-		expect(converted[`f${count - 1}`]).toBe(String(count - 1));
-		expect(converted.items).toHaveLength(count);
+		const worker = new Worker(
+			`
+			const { parentPort, workerData } = require('node:worker_threads');
+
+			import(workerData.url).then(({ convert_formdata }) => {
+				const data = new FormData();
+				for (let i = 0; i < workerData.count; i += 1) {
+					data.append('f' + i + '/form', String(i));
+					data.append('items[]/form', String(i));
+				}
+
+				parentPort.postMessage('ready');
+
+				const converted = convert_formdata('form', data);
+				parentPort.postMessage({
+					keys: Object.keys(converted).length,
+					last: converted['f' + (workerData.count - 1)],
+					items: converted.items.length
+				});
+			});
+			`,
+			{ eval: true, workerData: { url: new URL('./form-utils.js', import.meta.url).href, count } }
+		);
+
+		try {
+			const result = await new Promise((fulfil, reject) => {
+				/** @type {ReturnType<typeof setTimeout>} */
+				let timeout;
+
+				worker.on('error', reject);
+				worker.on('message', (message) => {
+					if (message === 'ready') {
+						timeout = setTimeout(() => reject(new Error('Conversion took longer than 1s')), 1000);
+					} else {
+						clearTimeout(timeout);
+						fulfil(message);
+					}
+				});
+			});
+
+			expect(result).toEqual({ keys: count + 1, last: String(count - 1), items: count });
+		} finally {
+			await worker.terminate();
+		}
 	});
 });
 
