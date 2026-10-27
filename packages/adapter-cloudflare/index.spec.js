@@ -150,6 +150,58 @@ test('swaps the shared platform proxy in place when wrangler config changes', as
 	expect(next_dispose).toHaveBeenCalledOnce();
 });
 
+test('reloads the shared platform proxy once when concurrent servers see a wrangler config change', async () => {
+	const config_path = path.resolve('wrangler.toml');
+	vi.mocked(unstable_readConfig).mockReturnValue(/** @type {any} */ ({ configPath: config_path }));
+
+	const servers = await Promise.all([create_server(), create_server()]);
+	const implementation = vi.mocked(getPlatformProxy).getMockImplementation();
+	try {
+		expect(getPlatformProxy).toHaveBeenCalledOnce();
+		const previous = globalThis.__sveltekit_cloudflare_platform;
+
+		/** @type {Array<import('wrangler').PlatformProxy>} */
+		const reloaded = [];
+		vi.mocked(getPlatformProxy).mockImplementation(() => {
+			const proxy = { caches: {}, dispose: vi.fn(() => Promise.resolve()) };
+			reloaded.push(/** @type {any} */ (proxy));
+			return Promise.resolve(/** @type {any} */ (proxy));
+		});
+
+		// every server watches the config file, so one change reaches each of them
+		for (const server of servers) {
+			server.watcher.emit('change', config_path);
+		}
+		await vi.waitFor(() => {
+			expect(globalThis.__sveltekit_cloudflare_platform).not.toBe(previous);
+		});
+		await globalThis.__sveltekit_cloudflare_platform_setup?.reload;
+
+		expect(getPlatformProxy).toHaveBeenCalledTimes(2);
+		expect(dispose).toHaveBeenCalledOnce();
+		expect(/** @type {any} */ (globalThis).caches).toBe(
+			globalThis.__sveltekit_cloudflare_platform?.caches
+		);
+
+		// A later change starts one new reload, not one per server.
+		for (const server of servers) {
+			server.watcher.emit('change', config_path);
+		}
+		await globalThis.__sveltekit_cloudflare_platform_setup?.reload;
+		expect(getPlatformProxy).toHaveBeenCalledTimes(3);
+		// every new proxy is either the one in use or has been disposed
+		for (const proxy of reloaded) {
+			if (proxy !== globalThis.__sveltekit_cloudflare_platform) {
+				expect(proxy.dispose).toHaveBeenCalledOnce();
+			}
+		}
+	} finally {
+		vi.mocked(getPlatformProxy).mockImplementation(/** @type {any} */ (implementation));
+		vi.mocked(unstable_readConfig).mockReturnValue({ configPath: undefined });
+		await Promise.all(servers.map((server) => server.close()));
+	}
+});
+
 test('does not install a config watcher when wrangler cannot resolve a config path', async () => {
 	// `unstable_readConfig` returns `{ configPath: undefined }` from the default mock
 	const server = await create_server();
@@ -221,3 +273,85 @@ test('rejects concurrent servers sharing a failed platform proxy and allows a re
 	expect(dispose).toHaveBeenCalledOnce();
 	expect(globalThis.__sveltekit_cloudflare_platform_setup).toBeUndefined();
 });
+
+test('shares a failed config reload and retries on the next change', async () => {
+	const config_path = path.resolve('wrangler.toml');
+	vi.mocked(unstable_readConfig)
+		.mockReturnValueOnce(/** @type {any} */ ({ configPath: config_path }))
+		.mockReturnValueOnce(/** @type {any} */ ({ configPath: config_path }));
+	const servers = await Promise.all([create_server(), create_server()]);
+	const previous = globalThis.__sveltekit_cloudflare_platform;
+	const warnings = servers.map((server) => vi.spyOn(server.config.logger, 'warn'));
+	const { promise, reject } = Promise.withResolvers();
+	vi.mocked(getPlatformProxy).mockReturnValueOnce(promise);
+
+	try {
+		for (const server of servers) {
+			server.watcher.emit('change', config_path);
+		}
+		expect(getPlatformProxy).toHaveBeenCalledTimes(2);
+		reject(new Error('invalid config'));
+		await vi.waitFor(() => {
+			for (const warn of warnings) expect(warn).toHaveBeenCalledOnce();
+		});
+		expect(globalThis.__sveltekit_cloudflare_platform).toBe(previous);
+		expect(await globalThis.__sveltekit_cloudflare_platform_setup?.proxy).toBe(previous);
+		expect(globalThis.__sveltekit_cloudflare_platform_setup?.reload).toBeUndefined();
+		expect(dispose).not.toHaveBeenCalled();
+
+		for (const server of servers) {
+			server.watcher.emit('change', config_path);
+		}
+		await globalThis.__sveltekit_cloudflare_platform_setup?.reload;
+		expect(getPlatformProxy).toHaveBeenCalledTimes(3);
+		expect(dispose).toHaveBeenCalledOnce();
+	} finally {
+		await Promise.all(servers.map((server) => server.close()));
+	}
+});
+
+test.each([false, true])(
+	'waits for a config reload before final disposal (new server joins: %s)',
+	async (join) => {
+		const config_path = path.resolve('wrangler.toml');
+		vi.mocked(unstable_readConfig).mockReturnValueOnce(
+			/** @type {any} */ ({ configPath: config_path })
+		);
+		const server = await create_server();
+		const { promise, resolve } = Promise.withResolvers();
+		const next_dispose = vi.fn(() => Promise.resolve());
+		const next = /** @type {any} */ ({ caches: {}, dispose: next_dispose });
+		vi.mocked(getPlatformProxy).mockReturnValueOnce(promise);
+		server.watcher.emit('change', config_path);
+		const closing = server.close();
+		await vi.waitFor(() => {
+			expect(globalThis.__sveltekit_cloudflare_platform_setup?.servers).toBe(0);
+		});
+		expect(dispose).not.toHaveBeenCalled();
+
+		const joining = join ? create_server() : undefined;
+		if (join) {
+			await vi.waitFor(() => {
+				expect(globalThis.__sveltekit_cloudflare_platform_setup?.servers).toBe(1);
+			});
+		}
+		resolve(next);
+		const joined = await joining;
+		try {
+			await closing;
+			expect(getPlatformProxy).toHaveBeenCalledTimes(2);
+			expect(dispose).toHaveBeenCalledOnce();
+			if (joined) {
+				expect(globalThis.__sveltekit_cloudflare_platform).toBe(next);
+				expect(next_dispose).not.toHaveBeenCalled();
+			} else {
+				expect(globalThis.__sveltekit_cloudflare_platform).toBeUndefined();
+				expect(globalThis.__sveltekit_cloudflare_platform_setup).toBeUndefined();
+				expect(next_dispose).toHaveBeenCalledOnce();
+			}
+		} finally {
+			await joined?.close();
+		}
+		expect(next_dispose).toHaveBeenCalledOnce();
+	}
+);
