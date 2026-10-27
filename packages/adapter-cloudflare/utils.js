@@ -1,7 +1,8 @@
+/** @import { WorkerConfig } from '@cloudflare/vite-plugin' */
 import process from 'node:process';
 
 /**
- * @param {import('wrangler').Unstable_Config} wrangler_config
+ * @param {WorkerConfig} wrangler_config
  */
 export function validate_worker_settings(wrangler_config) {
 	if (process.env.CF_PAGES) {
@@ -15,13 +16,6 @@ export function validate_worker_settings(wrangler_config) {
 	if (wrangler_config.pages_build_output_dir) {
 		throw new Error(
 			`Cloudflare Pages is no longer supported. Remove \`pages_build_output_dir\` from ${config_path} and configure Cloudflare Workers instead. Consult https://svelte.dev/docs/kit/adapter-cloudflare#Migrating-from-Cloudflare-Pages`
-		);
-	}
-
-	// we don't support workers sites
-	if (wrangler_config.site) {
-		throw new Error(
-			`You must remove all \`site\` keys in ${config_path}. Consult https://svelte.dev/docs/kit/adapter-cloudflare#Migrating-from-Workers-Sites`
 		);
 	}
 }

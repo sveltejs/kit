@@ -1,6 +1,9 @@
+/** @import { WorkerConfig } from '@cloudflare/vite-plugin' */
 /** @import { Plugin } from 'vite' */
 import { fileURLToPath } from 'node:url';
 import { cloudflare } from '@cloudflare/vite-plugin';
+
+const worker_entry = fileURLToPath(new URL('./files/worker.js', import.meta.url));
 
 const useful_cloudflare_plugins = new Set([
 	// resolves the plugin config that the other plugins read
@@ -20,16 +23,15 @@ const useful_cloudflare_build_plugins = new Set([
 /** @type {Plugin['apply']} */
 const is_dev_or_build = (_config, env) => !env.isPreview;
 
-const worker_entry = fileURLToPath(new URL('./files/worker.js', import.meta.url));
-
 /**
  * Applies the Worker environment config that `@cloudflare/vite-plugin` generates
  * so that dev emulates workerd and the server output suits it.
  * It also generates the Wrangler deployment config for the build output
  * @param {string | undefined} config_path
+ * @param {(config: WorkerConfig) => void} set_worker_config
  * @returns {Plugin[]}
  */
-export function plugin_config(config_path) {
+export function plugin_config(config_path, set_worker_config) {
 	const cloudflare_plugins = cloudflare({
 		configPath: config_path,
 		viteEnvironment: { name: 'ssr' },
@@ -42,6 +44,8 @@ export function plugin_config(config_path) {
 			if (!config.compatibility_flags.includes('nodejs_als')) {
 				config.compatibility_flags.push('nodejs_als');
 			}
+
+			set_worker_config(config);
 		}
 	});
 
@@ -58,7 +62,7 @@ export function plugin_config(config_path) {
 
 	return [
 		{
-			name: 'vite-plugin-sveltekit-adapter-cloudflare-config',
+			name: 'vite-plugin-sveltekit-adapter-cloudflare',
 			// lets the other Cloudflare plugins read the resolved Vite config
 			configResolved: cloudflare_config_plugin?.configResolved
 		},
