@@ -281,6 +281,11 @@ function virtual_workers_module(options, stub_import) {
 	};
 	return {
 		name: 'vite-plugin-sveltekit-adapter-cloudflare-virtual-workers-module',
+		configResolved(config) {
+			if (options.configPath) {
+				options.configPath = path.resolve(config.root, options.configPath);
+			}
+		},
 		configureServer: setup,
 		configurePreviewServer: setup,
 		// a restarting server is set up before the old one closes, so the proxy survives
