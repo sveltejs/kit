@@ -8,23 +8,6 @@ import adapter from './index.js';
 
 const dispose = vi.fn(() => Promise.resolve());
 
-vi.mock('@cloudflare/vite-plugin', () => ({
-	cloudflare: vi.fn(() => [
-		{ name: 'vite-plugin-cloudflare' },
-		{
-			name: 'vite-plugin-cloudflare:config',
-			config: () => ({ environments: { ssr: { resolve: {}, build: {} } } }),
-			configResolved: () => {}
-		},
-		{ name: 'vite-plugin-cloudflare:output-config' }
-	])
-}));
-
-vi.mock('vite', async (importOriginal) => ({
-	...(await importOriginal()),
-	createBuilder: vi.fn(() => Promise.resolve({ buildApp: vi.fn() }))
-}));
-
 vi.mock('wrangler', () => ({
 	getPlatformProxy: vi.fn(() => Promise.resolve({ caches: {}, dispose })),
 	unstable_readConfig: vi.fn(() => ({ configPath: undefined }))
