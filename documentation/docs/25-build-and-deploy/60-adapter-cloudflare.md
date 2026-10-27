@@ -57,19 +57,6 @@ Whether to render a plaintext 404.html page or a rendered SPA fallback page for 
 
 For Cloudflare Workers, the default behaviour is to return a null-body 404-status response for non-matching assets requests. However, if the [`assets.not_found_handling`](https://developers.cloudflare.com/workers/static-assets/routing/#2-not_found_handling) Wrangler configuration setting is set to `"404-page"`, this page will be served if a request fails to match an asset. If `assets.not_found_handling` is set to `"single-page-application"`, the adapter will render a SPA fallback `index.html` page regardless of the `fallback` option specified.
 
-## Basic configuration
-
-The adapter expects to find a [Wrangler configuration file](https://developers.cloudflare.com/workers/wrangler/configuration/) in the project root. It should look something like this:
-
-```jsonc
-/// file: wrangler.jsonc
-{
-	"name": "<any-name-you-want>",
-	"compatibility_flags": ["nodejs_als"],
-	"compatibility_date": "<YYYY-MM-DD>"
-}
-```
-
 ## Deployment
 
 You can use the Wrangler CLI to deploy your application by running `npx wrangler deploy` or use the [Cloudflare Git integration](https://developers.cloudflare.com/workers/ci-cd/builds/) to enable automatic builds and deployments on push.
@@ -116,17 +103,6 @@ The [`_headers`](https://developers.cloudflare.com/workers/static-assets/headers
 However, they will have no effect on responses dynamically rendered by SvelteKit, which should return custom headers or redirect responses from [server endpoints](routing#server) or with the [`handle`](hooks#handle) hook.
 
 ## Troubleshooting
-
-### Node.js compatibility
-
-If you would like to enable [Node.js compatibility](https://developers.cloudflare.com/workers/runtime-apis/nodejs/), you can add the `nodejs_compat` compatibility flag to your Wrangler configuration file:
-
-```jsonc
-/// file: wrangler.jsonc
-{
-	"compatibility_flags": ["nodejs_compat"]
-}
-```
 
 ### Worker size limits
 
