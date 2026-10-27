@@ -9,6 +9,7 @@ import {
 	deep_set,
 	deserialize_binary_form,
 	flatten_issues,
+	group_formdata,
 	parse_form_key,
 	serialize_binary_form,
 	split_path
@@ -192,6 +193,39 @@ describe('convert_formdata', () => {
 		const data = new FormData();
 		data.append(attack + '/form', 'bad');
 		expect(() => convert_formdata('form', data)).toThrowKitError('form_field_forbidden_key');
+	});
+
+	test('converts many fields in a single pass', () => {
+		const data = new FormData();
+		for (let i = 0; i < 1000; i += 1) {
+			data.append(`f${i}/form`, String(i));
+			data.append('items[]/form', String(i));
+		}
+
+		const get_all = vi.spyOn(FormData.prototype, 'getAll');
+		try {
+			const converted = convert_formdata('form', data);
+			expect(Object.keys(converted)).toHaveLength(1001);
+			expect(converted.f999).toBe('999');
+			expect(converted.items).toHaveLength(1000);
+			expect(get_all).not.toHaveBeenCalled();
+		} finally {
+			get_all.mockRestore();
+		}
+	});
+});
+
+describe('group_formdata', () => {
+	test('groups values by name, preserving order', () => {
+		const data = new FormData();
+		data.append('a', '1');
+		data.append('b', '2');
+		data.append('a', '3');
+
+		expect([...group_formdata(data)]).toEqual([
+			['a', ['1', '3']],
+			['b', ['2']]
+		]);
 	});
 });
 

@@ -78,6 +78,28 @@ export function coerce_form_value(type, value) {
 export const DELETE_KEY = {};
 
 /**
+ * Groups `FormData` entries by name in a single pass. Calling `data.getAll(name)`
+ * for each name is O(n²) in the number of entries, which is a DoS vector.
+ * @param {FormData} data
+ * @returns {Map<string, FormDataEntryValue[]>}
+ */
+export function group_formdata(data) {
+	/** @type {Map<string, FormDataEntryValue[]>} */
+	const grouped = new Map();
+
+	for (const [name, value] of data) {
+		const values = grouped.get(name);
+		if (values) {
+			values.push(value);
+		} else {
+			grouped.set(name, [value]);
+		}
+	}
+
+	return grouped;
+}
+
+/**
  * Convert `FormData` into a POJO
  * @param {string} form_id
  * @param {FormData} data
@@ -86,10 +108,7 @@ export function convert_formdata(form_id, data) {
 	/** @type {Record<string, any>} */
 	const result = {};
 
-	for (const field_name of data.keys()) {
-		/** @type {any[]} */
-		const values = data.getAll(field_name);
-
+	for (const [field_name, values] of group_formdata(data)) {
 		const field = parse_form_key(form_id, field_name);
 
 		// an empty `<input type="file">` will submit a non-existent file, bizarrely
