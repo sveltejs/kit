@@ -1,3 +1,4 @@
+/** @import { SSRManifest } from 'types' */
 import { expect, test, vi } from 'vitest';
 import { stripVTControlCharacters } from 'node:util';
 
@@ -7,51 +8,136 @@ import { stripVTControlCharacters } from 'node:util';
 
 const { format_response } = await import('./internal.js');
 
-test('formats a plain page request', () => {
+const manifest = /** @type {SSRManifest} */ (
+	/** @type {unknown} */ ({
+		remotes: {
+			abc123: () =>
+				Promise.resolve({
+					default: {
+						my_query: {
+							__: {
+								type: 'query',
+								name: 'my_query',
+								dev_loc: {
+									file: 'file:///tmp/file.js',
+									line: 12,
+									column: 13
+								}
+							}
+						},
+						no_line: {
+							__: {
+								type: 'command',
+								name: 'no_line',
+								dev_loc: {
+									file: 'file:///tmp/file.js'
+								}
+							}
+						},
+						no_loc: {
+							__: {
+								type: 'command',
+								name: 'no_loc'
+							}
+						}
+					}
+				})
+		}
+	})
+);
+
+test('formats a plain page request', async () => {
 	expect(
-		stripVTControlCharacters(format_response(200, new Request('http://localhost:5173/')))
+		stripVTControlCharacters(
+			await format_response(200, new Request('http://localhost:5173/'), manifest)
+		)
 	).toBe('200 GET /');
 });
 
-test('formats a request with a path', () => {
+test('formats a request with a path', async () => {
 	expect(
-		stripVTControlCharacters(format_response(200, new Request('http://localhost:5173/blog/hello')))
+		stripVTControlCharacters(
+			await format_response(200, new Request('http://localhost:5173/blog/hello'), manifest)
+		)
 	).toBe('200 GET /blog/hello');
 });
 
-test('formats a data request', () => {
+test('formats a data request', async () => {
 	expect(
 		stripVTControlCharacters(
-			format_response(200, new Request('http://localhost:5173/blog/hello/__data.json?sveltekit=1'))
+			await format_response(
+				200,
+				new Request('http://localhost:5173/blog/hello/__data.json?sveltekit=1'),
+				manifest
+			)
 		)
 	).toBe('200 GET /blog/hello/__data.json?sveltekit=1');
 });
 
-test('formats a route resolution request', () => {
+test('formats a route resolution request', async () => {
 	expect(
 		stripVTControlCharacters(
-			format_response(200, new Request('http://localhost:5173/blog/hello/__route.js'))
+			await format_response(
+				200,
+				new Request('http://localhost:5173/blog/hello/__route.js'),
+				manifest
+			)
 		)
 	).toBe('200 GET /blog/hello/__route.js');
 });
 
-test('formats a remote function request', () => {
+test('formats a remote function request with manifest missing', async () => {
 	expect(
 		stripVTControlCharacters(
-			format_response(200, new Request('http://localhost:5173/_app/remote/abc123/def?x=1'))
+			await format_response(
+				200,
+				new Request('http://localhost:5173/_app/remote/abc123/def?x=1', {}),
+				manifest
+			)
 		)
 	).toBe('200 GET /_app/remote/abc123/def?x=1');
 });
 
-test('formats an error response', () => {
+test('formats a remote function request with no location', async () => {
+	const res = await format_response(
+		200,
+		new Request('http://localhost:5173/_app/remote/abc123/no_loc?x=1', {}),
+		manifest
+	);
+	expect(stripVTControlCharacters(res)).toBe('200 GET remote: no_loc() ?x=1');
+});
+
+test('formats a remote function request with no line number', async () => {
+	const res = await format_response(
+		200,
+		new Request('http://localhost:5173/_app/remote/abc123/no_line', {}),
+		manifest
+	);
+	expect(stripVTControlCharacters(res)).toBe('200 GET remote: no_line()');
+	expect(res).toContain(';file:///tmp/file.js\u0007');
+});
+
+test('formats a remote function request with a line number', async () => {
+	const res = await format_response(
+		200,
+		new Request('http://localhost:5173/_app/remote/abc123/my_query', {}),
+		manifest
+	);
+	expect(stripVTControlCharacters(res)).toBe('200 GET remote: my_query()');
+	expect(res).toContain(';file:///tmp/file.js#12\u0007');
+});
+
+test('formats an error response', async () => {
 	expect(
-		stripVTControlCharacters(format_response(500, new Request('http://localhost:5173/')))
+		stripVTControlCharacters(
+			await format_response(500, new Request('http://localhost:5173/'), manifest)
+		)
 	).toBe('500 GET /');
 });
 
-test('returns a string and does not log to the console', () => {
+test('returns a string and does not log to the console', async () => {
 	const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
-	const result = format_response(200, new Request('http://localhost:5173/'));
+	const result = await format_response(200, new Request('http://localhost:5173/'), manifest);
 	expect(typeof result).toBe('string');
 	expect(spy).not.toHaveBeenCalled();
 	spy.mockRestore();

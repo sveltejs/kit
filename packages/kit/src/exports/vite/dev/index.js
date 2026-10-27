@@ -450,12 +450,18 @@ export async function dev(
 
 				if (rendered.status === 404) {
 					// @ts-expect-error
-					serve_static_middleware.handle(req, res, () => {
-						log_dev_response(rendered.status, format_response(rendered.status, request));
+					serve_static_middleware.handle(req, res, async () => {
+						log_dev_response(
+							rendered.status,
+							await format_response(rendered.status, request, manifest)
+						);
 						(svelte_config.adapter?.vite?.setResponse ?? setResponse)(res, rendered);
 					});
 				} else {
-					log_dev_response(rendered.status, format_response(rendered.status, request));
+					log_dev_response(
+						rendered.status,
+						await format_response(rendered.status, request, manifest)
+					);
 					(svelte_config.adapter?.vite?.setResponse ?? setResponse)(res, rendered);
 				}
 			} catch (e) {

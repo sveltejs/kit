@@ -1,6 +1,5 @@
 /** @import { RequestEvent } from '@sveltejs/kit' */
-/** @import { RemoteForm } from '$app/server' */
-/** @import { RemoteFormInternals, RemoteFunctionData, RemoteFunctionResponse, RemoteInternals, RequestState, ServerActionResult } from 'types' */
+/** @import { RemoteFormInternals, RemoteFunctionData, RemoteFunctionResponse, RemoteInternals, RequestState, ServerActionResult, SSRManifest } from 'types' */
 
 import { error } from '@sveltejs/kit';
 import { Redirect, SvelteKitError } from '@sveltejs/kit/internal';
@@ -158,20 +157,49 @@ export async function handle_remote_call(event, state, id) {
 }
 
 /**
+ *
+ * @param {string} id
+ * @param {SSRManifest} manifest
+ * @returns {Promise<{ fn: ((...args: any[]) => any) & { __: RemoteInternals }, additional_args: string } | undefined>}
+ */
+export async function get_remote_function(id, manifest) {
+	const first_slash = id.indexOf('/');
+	if (first_slash === -1) return;
+	const second_slash = id.indexOf('/', first_slash + 1);
+	const hash = id.substring(0, first_slash);
+	/** @type {string} */
+	let name;
+	let additional_args = '';
+	if (second_slash === -1) {
+		name = id.substring(first_slash + 1);
+	} else {
+		name = id.substring(first_slash + 1, second_slash);
+		additional_args = id.substring(second_slash + 1);
+	}
+
+	const remotes = manifest.remotes;
+	if (!Object.hasOwn(remotes, hash)) return;
+
+	const module = await remotes[hash]();
+	if (!Object.hasOwn(module.default, name)) return;
+
+	return {
+		fn: module.default[name],
+		additional_args
+	};
+}
+
+/**
  * @param {RequestEvent} event
  * @param {RequestState} state
  * @param {string} id
  */
 async function handle_remote_call_internal(event, state, id) {
-	const [hash, name, additional_args] = id.split('/');
-	const remotes = manifest.remotes;
+	const remote = await get_remote_function(id, manifest);
 
-	if (!Object.hasOwn(remotes, hash)) error(404);
+	if (!remote) error(404);
 
-	const module = await remotes[hash]();
-	const fn = Object.hasOwn(module.default, name) ? module.default[name] : undefined;
-
-	if (!fn) error(404);
+	const { fn, additional_args } = remote;
 
 	/** @type {RemoteInternals} */
 	const internals = fn.__;
@@ -536,20 +564,12 @@ export async function handle_remote_form_post(event, state, id) {
  */
 async function handle_remote_form_post_internal(event, state, id) {
 	const location = get_action_location(event.url);
-	// `hash` and `name` can never contain a `/`, but the JSON-stringified key of a
-	// keyed (`form.for(key)`) instance can — rejoin the remaining segments
-	const [hash, name, ...rest] = id.split('/');
-	const action_id = rest.join('/');
-	const remotes = manifest.remotes;
-	const module = Object.hasOwn(remotes, hash) ? await remotes[hash]() : undefined;
-
-	let form = /** @type {RemoteForm<any, any>} */ (
-		module && Object.hasOwn(module.default, name) ? module.default[name] : undefined
-	);
-
-	if (!form) {
+	const remote = await get_remote_function(id, manifest);
+	if (!remote) {
 		return method_not_allowed_result(event, location);
 	}
+	let form = remote.fn;
+	const action_id = remote.additional_args;
 
 	if (action_id) {
 		// @ts-expect-error
@@ -557,7 +577,7 @@ async function handle_remote_form_post_internal(event, state, id) {
 	}
 
 	try {
-		const __ = /** @type {RemoteFormInternals} */ (/** @type {any} */ (form).__);
+		const __ = /** @type {RemoteFormInternals} */ (form.__);
 
 		const { data, meta, form_data } = await deserialize_binary_form(event.request, __.id);
 

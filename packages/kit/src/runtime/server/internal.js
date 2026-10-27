@@ -7,7 +7,11 @@ import {
 	strip_data_suffix,
 	strip_resolution_suffix
 } from '../../pathname.js';
-import { has_remote_prefix, strip_remote_prefix } from '../../runtime/server/remote-functions.js';
+import {
+	get_remote_function,
+	has_remote_prefix,
+	strip_remote_prefix
+} from '../../runtime/server/remote-functions.js';
 
 // using `getBuiltinModule` rather than `import` makes this safe to run in non-Node-compatible environments
 const styleText =
@@ -68,9 +72,10 @@ export function set_hooks(value) {
 /**
  * @param {number} status
  * @param {Request} request
- * @returns {string}
+ * @param {SSRManifest} manifest
+ * @returns {Promise<string>}
  */
-export function format_response(status, request) {
+export async function format_response(status, request, manifest) {
 	const url = new URL(request.url);
 	const requested = url.href.replace(url.origin, '');
 
@@ -84,11 +89,28 @@ export function format_response(status, request) {
 		log += pathname + styleText('dim', requested.slice(pathname.length));
 	} else if (has_remote_prefix(url)) {
 		const id = /** @type {string} */ (strip_remote_prefix(url));
-		const [file_hash, name, arg_hash] = id.split('/');
-
-		log += styleText('dim', `${url.pathname.slice(0, -id.length)}${file_hash}/`) + name;
-		if (arg_hash) log += styleText('dim', `/${arg_hash}`);
-		if (url.search) log += styleText('dim', url.search);
+		const remote = await get_remote_function(id, manifest);
+		if (remote) {
+			const internals = remote.fn.__;
+			log += styleText('dim', 'remote: ');
+			if (internals.dev_loc) {
+				let file_link = internals.dev_loc.file;
+				if (internals.dev_loc.line !== undefined) {
+					file_link += `#${internals.dev_loc.line}`;
+				}
+				log += `\u001B]8;;${file_link}\u0007`;
+			}
+			log += styleText(['bold'], `${internals.name}()`);
+			if (internals.dev_loc) {
+				log += '\u001B]8;;\u0007';
+			}
+			if (url.search) log += ' ' + styleText('dim', url.search);
+		} else {
+			const [file_hash, name, arg_hash] = id.split('/');
+			log += styleText('dim', `${url.pathname.slice(0, -id.length)}${file_hash}/`) + name;
+			if (arg_hash) log += styleText('dim', `/${arg_hash}`);
+			if (url.search) log += styleText('dim', url.search);
+		}
 	} else {
 		log += requested;
 	}
