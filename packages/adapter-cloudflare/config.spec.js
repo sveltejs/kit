@@ -12,7 +12,7 @@ test('resolves a relative wrangler config path against the Vite root', async () 
 				root: path.resolve('test/apps/workers'),
 				configFile: false,
 				logLevel: 'silent',
-				plugins: plugin_config('config/wrangler.jsonc')
+				plugins: plugin_config('config/wrangler.jsonc', () => {})
 			},
 			'build'
 		)
