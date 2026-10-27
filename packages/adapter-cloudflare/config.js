@@ -115,6 +115,7 @@ export function plugin_config(config_path, set_worker_config) {
 		},
 		{
 			name: 'vite-plugin-sveltekit-adapter-cloudflare-config',
+			apply: is_dev_or_build,
 			configEnvironment: {
 				order: 'post',
 				handler(name, config) {
