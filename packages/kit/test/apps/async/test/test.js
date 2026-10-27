@@ -109,6 +109,12 @@ test.describe('remote functions', () => {
 		expect(body).not.toContain('private-data');
 	});
 
+	test('private (non-exported) query.batch functions do not share a batch', async ({ page }) => {
+		await page.goto('/remote/batch-private');
+
+		await expect(page.locator('#results')).toHaveText('a:one, b:TWO, a:same, b:SAME');
+	});
+
 	test('queries cannot access the route/url of the page they were called from', async ({
 		page,
 		clicknav
