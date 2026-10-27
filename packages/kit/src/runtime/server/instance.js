@@ -4,6 +4,7 @@ import { respond as handle } from './respond.js';
 import { create_request_state } from './state.js';
 import { get_hooks } from '<sveltekit:generated>/server.js';
 import { set_hooks, fix_stack_trace } from './internal.js';
+import { restore, save } from './dev.js';
 import { init_tracing } from '@sveltejs/kit/internal/server';
 import { DEV } from 'esm-env';
 import { init_transport } from '#app/internal/transport';
@@ -21,14 +22,19 @@ let init_promise;
  */
 const decoded_responses = new WeakMap();
 
+const unwrapped_fetch_key = Symbol.for('sveltekit.unwrapped_fetch');
+
 if (DEV) {
-	const fetch = globalThis.fetch;
+	// `instance.js` is re-evaluated on every server reload in dev. Reuse the
+	// `fetch` from before the first wrapper, otherwise each reload stacks
+	// another wrapper and retains the previous reload's module scope
+	const fetch = restore(unwrapped_fetch_key) ?? globalThis.fetch;
 
 	/**
 	 * @param {RequestInfo | URL} info
 	 * @param {RequestInit} [init]
 	 */
-	globalThis.fetch = async (info, init) => {
+	const wrapped_fetch = async (info, init) => {
 		const response = await fetch(info, init);
 		const encoding = response.headers.get('content-encoding');
 
@@ -41,6 +47,9 @@ if (DEV) {
 
 		return response;
 	};
+
+	save(unwrapped_fetch_key, fetch);
+	globalThis.fetch = wrapped_fetch;
 }
 
 /**
