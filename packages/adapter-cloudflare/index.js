@@ -53,6 +53,9 @@ export default function (options = {}) {
 			builder.writeServer(server_dir);
 			replace_stub(server_dir, stub_import);
 			fs.rmSync(`${server_dir}/wrangler.json`);
+			if (fs.existsSync(`${server_dir}/.dev.vars`)) {
+				fs.renameSync(`${server_dir}/.dev.vars`, `${worker_dir}/.dev.vars`);
+			}
 
 			// client assets and prerendered pages
 			const assets_dest = `${assets}${builder.config.paths.base}`;
