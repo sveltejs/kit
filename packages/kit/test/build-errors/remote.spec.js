@@ -7,3 +7,15 @@ test('*.remote.js files cannot be used without the experimental.remoteFunctions 
 		contains: ['remote functions', 'remoteFunctions: true']
 	});
 });
+
+test('remote modules in server directories report how to fix their location', { timeout }, () => {
+	expect(build('remote-server-directory', { TEST: 'false' })).toContainKitDiagnostic(
+		'remote_module_server_only',
+		{
+			contains: [
+				'#lib/server/location.remote.js',
+				' src/routes/+page.svelte imports\n  #lib/server/location.remote.js'
+			]
+		}
+	);
+});
