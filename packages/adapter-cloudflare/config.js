@@ -32,7 +32,7 @@ export function plugin_config(config_path) {
 		viteEnvironment: { name: 'ssr' },
 		config(config) {
 			// the plugin requires `main` to be populated, so we set it to avoid it
-			// trying to resolve build-generated entry in the user's wrangler config
+			// trying to resolve the build-generated entry in the user's wrangler config
 			config.main = worker_entry;
 
 			// TODO: remove this when we bump the Cloudflare Vite plugin version
