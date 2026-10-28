@@ -79,6 +79,13 @@ describe('3-route preload matrix', () => {
 		expect(font_preloads(c).length).toBeGreaterThanOrEqual(1);
 		expect(font_preloads(home).every(([tag]) => !tag.includes('font-c'))).toBe(true);
 		expect(font_preloads(b)).toHaveLength(0);
+
+		expect(b).toContain('--font-d');
+		expect(home).not.toContain('--font-d');
+		expect(c).not.toContain('--font-d');
+		expect(font_preloads(home).every(([tag]) => !tag.includes('font-d'))).toBe(true);
+		expect(font_preloads(b).every(([tag]) => !tag.includes('font-d'))).toBe(true);
+		expect(font_preloads(c).every(([tag]) => !tag.includes('font-d'))).toBe(true);
 	});
 });
 

@@ -33,6 +33,26 @@ export default defineConfig({
 					preload: false
 				},
 				{
+					name: 'Fraunces',
+					cssVariable: '--font-home',
+					provider: 'google',
+					weights: ['400'],
+					styles: ['normal'],
+					subsets: ['latin'],
+					display: 'swap',
+					preload: false
+				},
+				{
+					name: 'Lora',
+					cssVariable: '--font-serif',
+					provider: 'google',
+					weights: ['400'],
+					styles: ['normal'],
+					subsets: ['latin'],
+					display: 'swap',
+					preload: false
+				},
+				{
 					name: 'Libre Barcode 128 Text',
 					cssVariable: '--font-display',
 					provider: 'local',

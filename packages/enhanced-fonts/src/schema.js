@@ -50,5 +50,16 @@ export function validate_families(families) {
 		validated.push(/** @type {FontFamily} */ (family));
 	}
 
+	/** @type {Set<string>} */
+	const css_variables = new Set();
+	for (const family of validated) {
+		if (css_variables.has(family.cssVariable)) {
+			throw new Error(
+				`enhancedFonts({ families }) cssVariable ${JSON.stringify(family.cssVariable)} is duplicated`
+			);
+		}
+		css_variables.add(family.cssVariable);
+	}
+
 	return validated;
 }

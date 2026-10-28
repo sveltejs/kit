@@ -32,6 +32,12 @@ const config = {
 					cssVariable: '--font-c',
 					provider: 'local',
 					src: [{ path: './fonts/c.woff2', weight: '400', style: 'normal' }]
+				},
+				{
+					name: 'Font D',
+					cssVariable: '--font-d',
+					provider: 'local',
+					src: [{ path: './fonts/a.woff2', weight: '400', style: 'normal' }]
 				}
 			]
 		})

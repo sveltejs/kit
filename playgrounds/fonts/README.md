@@ -2,6 +2,8 @@
 
 Experimental SvelteKit app for [`@sveltejs/enhanced-fonts`](../../packages/enhanced-fonts). One app, swap adapters — not a demo per adapter. This package is **not published to npm**.
 
+Styling is **Svelte `<style>` blocks** with `font-family: var(--font-*)` only. There is no Tailwind (or other utility CSS framework). Custom properties are declared on `:root` by `<Font>` (unscoped head CSS) and inherit into scoped component styles.
+
 ## Run
 
 From the repo root (after `pnpm install --frozen-lockfile`):
@@ -17,7 +19,7 @@ pnpm --filter playground-fonts build
 pnpm --filter playground-fonts preview
 ```
 
-`build` downloads Inter from Google (via unifont) and copies the Fontsource woff2 into hashed client assets. Visitors never hit `fonts.googleapis.com` / `fonts.gstatic.com`.
+`build` downloads Inter, Fraunces, and Lora from Google (via unifont) and copies the Fontsource woff2 into hashed client assets. Visitors never hit `fonts.googleapis.com` / `fonts.gstatic.com`.
 
 ## Adapter
 
@@ -29,14 +31,20 @@ Default is `@sveltejs/adapter-static` (prerender every route). To serve with Nod
 
 `@sveltejs/adapter-node` is already a workspace dependency so the swap is import-only.
 
-## Three-route matrix
+## Three-route matrix + never-preloaded 4th family
 
-Shared family **A** is Inter (`--font-inter`, Google, `font-display: swap`). Family **C** is Libre Barcode 128 Text (`--font-display`, Fontsource files via the `local` provider). Assert **HTML** (`@font-face` / `<link rel="preload" as="font">`), not “the network downloaded it.”
+Default **preload stays off**. Shared family **A** is Inter (`--font-inter`, Google, `font-display: swap`) — preloaded **only on `/`**. Family **B** is Fraunces (`--font-home`) on `/` only, never preloaded. Family **C** is Libre Barcode 128 Text (`--font-display`, Fontsource via `local`) on `/display` only, never preloaded. Family **D** is Lora (`--font-serif`) on `/about` — **used** there via `var(--font-serif)` and **never** gets `<link rel="preload" as="font">` on any route.
+
+Assert **HTML** (`@font-face` / `<link rel="preload" as="font">`), not “the network downloaded it.”
 
 |                                    | `/`     | `/about` | `/display` |
 | ---------------------------------- | ------- | -------- | ---------- |
 | `@font-face` / CSS for Inter       | yes     | yes      | yes        |
 | `<link rel=preload as=font>` Inter | **yes** | **no**   | **no**     |
+| CSS for Fraunces                   | yes     | no       | no         |
+| preload Fraunces                   | **no**  | never    | never      |
+| CSS for Lora (family D)            | no      | yes      | no         |
+| preload Lora                       | never   | **no**   | never      |
 | CSS for Libre Barcode              | no      | no       | yes        |
 | preload Libre Barcode              | never   | never    | **no**     |
 

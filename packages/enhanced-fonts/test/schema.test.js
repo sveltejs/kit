@@ -60,4 +60,14 @@ describe('families schema', () => {
 			])
 		).not.toThrow();
 	});
+
+	test('duplicate families[] cssVariable is a plugin error', () => {
+		expect(() => validate_families([family('--font-inter'), family('--font-inter')])).toThrow(
+			/--font-inter/
+		);
+	});
 });
+
+// Same CssVariable twice in one document (two <Font> in layout+page or one .svelte
+// file) must SSR/build throw, not merge. ESLint covers same-file duplicates later.
+// svelte-check is out of v1. Do not implement that throw in this unique-emit pass.

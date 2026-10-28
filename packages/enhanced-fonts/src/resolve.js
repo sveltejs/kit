@@ -3,6 +3,7 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { render_family_css } from './css.js';
 import { content_hash, slug } from './hash.js';
+import { unique_by_href } from './preload.js';
 import { validate_families } from './schema.js';
 
 /** @import { FontFamily, LocalFontSrc } from '../types/index.js' */
@@ -106,11 +107,13 @@ export async function resolve_families(families, ctx) {
 
 		by_css_variable[family.cssVariable] = {
 			css: render_family_css(family, faces),
-			preloads: faces.map((face) => ({
-				href: face.url,
-				type: 'font/woff2',
-				subset: face.subset
-			})),
+			preloads: unique_by_href(
+				faces.map((face) => ({
+					href: face.url,
+					type: 'font/woff2',
+					subset: face.subset
+				}))
+			),
 			data: faces.map((face) => ({
 				src: [{ url: face.url, format: 'woff2' }],
 				weight: face.weight,

@@ -7,7 +7,8 @@
 
 <article class="prose">
 	<p class="meta">
-		Route <code>/display</code> · Inter CSS only · Fontsource family route-local · no preload
+		Route <code>/display</code> · Inter CSS only · Libre Barcode (<code>--font-display</code>)
+		route-local · never preloaded
 	</p>
 	<h1>The display shelf</h1>
 	<p>

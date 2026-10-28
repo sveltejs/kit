@@ -29,6 +29,31 @@ describe('local resolve and merge', () => {
 		expect(resolved.by_css_variable['--font-test'].css).toContain('--font-test:');
 	});
 
+	test('two weights sharing bytes emit one hashed woff2 and one preload href', async () => {
+		const resolved = await resolve_families(
+			[
+				{
+					name: 'Inter',
+					cssVariable: '--font-inter',
+					provider: 'local',
+					src: [
+						{ path: fixture, weight: '400', style: 'normal' },
+						{ path: fixture, weight: '600', style: 'normal' }
+					]
+				}
+			],
+			{ root: path.dirname(fixture), assets_dir: '_app/immutable' }
+		);
+
+		expect(resolved.files).toHaveLength(1);
+		const preloads = resolved.by_css_variable['--font-inter'].preloads;
+		const hrefs = preloads.map((entry) => entry.href);
+		expect(hrefs).toHaveLength(1);
+		expect(new Set(hrefs).size).toBe(1);
+		expect(hrefs[0]).toMatch(/\/_app\/immutable\/fonts\/.+\.woff2$/);
+		expect(resolved.by_css_variable['--font-inter'].data).toHaveLength(2);
+	});
+
 	test('merges two config entries with the same --font-* + name + provider', () => {
 		const merged = merge_families([
 			{
