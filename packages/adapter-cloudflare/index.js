@@ -6,7 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { exactRegex } from '@rolldown/pluginutils';
 import { getRequest } from '@sveltejs/kit/node';
-import { getPlatformProxy, unstable_getVarsForDev, unstable_readConfig } from 'wrangler';
+import { getPlatformProxy, unstable_readConfig } from 'wrangler';
 import { is_dev_or_build, plugin_config } from './config.js';
 import { validate_worker_settings, append_headers, sync_process_env } from './utils.js';
 
@@ -182,16 +182,7 @@ export default function (options = {}) {
 						// but before SvelteKit reads `process.env`
 						order: 'post',
 						handler() {
-							sync_process_env(() =>
-								unstable_getVarsForDev(
-									wrangler_config.configPath,
-									undefined,
-									wrangler_config.vars,
-									wrangler_config.targetEnvironment,
-									true,
-									wrangler_config.secrets
-								)
-							);
+							sync_process_env(wrangler_config);
 						}
 					}
 				},
