@@ -115,3 +115,32 @@ it('does not parse the contents of <style> blocks that have not been preprocesse
 	expect(code).toContain('&:hover img {');
 	expect(code).not.toContain('enhanced\\:img');
 });
+
+it('leaves `<style>` inside scripts and comments alone', async () => {
+	const vite_plugin = image_plugin({ name: 'vite-imagetools-mock' });
+	const transform =
+		/** @type {(this: unknown, code: string, id: string) => Promise<{ code: string }>} */ (
+			// @ts-expect-error fails until vite is updated
+			vite_plugin.transform.handler
+		);
+	const input = `<script>
+	let { src } = $props();
+	const open = '<style>';
+</script>
+
+<!-- <style> -->
+<enhanced:img {src} alt="test" />
+
+<style>
+	enhanced\\:img {
+		width: 10px;
+	}
+</style>
+`;
+	const { code } = await transform.call({}, input, 'Input.svelte');
+	expect(code).toContain("const open = '<style>';");
+	expect(code).toContain('<picture>');
+	expect(code).toContain('img {');
+	expect(code).not.toContain('enhanced\\:img');
+	expect(() => compile(code, { filename: 'Input.svelte' })).not.toThrow();
+});

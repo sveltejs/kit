@@ -227,9 +227,10 @@ export function image_plugin(imagetools_plugin) {
 	return plugin;
 }
 
-// Same as the regex Svelte's `preprocess` uses to find style tags
-const STYLE_TAGS =
-	/<!--[^]*?-->|<style((?:\s+[^=>'"/\s]+=(?:"[^"]*"|'[^']*'|[^>\s]+)|\s+[^=>'"/\s]+)*\s*)(?:\/>|>([\S\s]*?)<\/style>)/g;
+// Comments, `<script>` tags and `<style>` tags, using the same patterns as Svelte's `preprocess`.
+// Comments and scripts are matched so that `<style>` inside them is left alone.
+const COMMENTS_SCRIPTS_AND_STYLES =
+	/<!--[^]*?-->|<script(?:(?:\s+[^=>'"/\s]+=(?:"[^"]*"|'[^']*'|[^>\s]+)|\s+[^=>'"/\s]+)*\s*)(?:\/>|>[\S\s]*?<\/script>)|<style((?:\s+[^=>'"/\s]+=(?:"[^"]*"|'[^']*'|[^>\s]+)|\s+[^=>'"/\s]+)*\s*)(?:\/>|>([\S\s]*?)<\/style>)/g;
 
 /**
  * Replaces the contents of `<style>` tags with whitespace, keeping line breaks
@@ -237,7 +238,7 @@ const STYLE_TAGS =
  * @param {string} content
  */
 function blank_styles(content) {
-	return content.replace(STYLE_TAGS, (match, _attributes, styles) => {
+	return content.replace(COMMENTS_SCRIPTS_AND_STYLES, (match, _attributes, styles) => {
 		if (!styles) return match;
 		const start = match.length - '</style>'.length - styles.length;
 		return match.slice(0, start) + styles.replace(/[^\n]/g, ' ') + '</style>';
