@@ -135,10 +135,12 @@ test('swaps the shared platform proxy in place when wrangler config changes', as
 		/** @type {any} */ ({ caches: next_caches, dispose: next_dispose })
 	);
 
+	const restart = vi.spyOn(server, 'restart').mockResolvedValue();
 	server.watcher.emit('change', config_path);
 	await vi.waitFor(() => {
-		expect(globalThis.__sveltekit_cloudflare_platform).not.toBe(previous);
+		expect(restart).toHaveBeenCalledOnce();
 	});
+	expect(globalThis.__sveltekit_cloudflare_platform).not.toBe(previous);
 	expect(previous_dispose).toHaveBeenCalledOnce();
 	expect(globalThis.__sveltekit_cloudflare_platform_setup?.proxy).not.toBe(previous_proxy);
 
