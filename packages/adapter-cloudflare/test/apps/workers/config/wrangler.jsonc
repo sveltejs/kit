@@ -3,7 +3,7 @@
 {
 	"$schema": "../node_modules/wrangler/config-schema.json",
 	"main": "../dist/index.js",
-	"compatibility_date": "2026-08-04",
+	"compatibility_date": "2026-08-06",
 	"assets": {
 		"directory": "../dist/public",
 		"binding": "ASSETS"
