@@ -285,6 +285,8 @@ function virtual_workers_module(options, stub_import) {
 	return {
 		name: 'vite-plugin-sveltekit-adapter-cloudflare-virtual-workers-module',
 		configResolved(config) {
+			// resolve the config path relative to the Vite `root` setting rather than
+			// the current working directory
 			if (options.configPath) {
 				options.configPath = path.resolve(config.root, options.configPath);
 			}

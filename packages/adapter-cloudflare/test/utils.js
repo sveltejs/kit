@@ -14,7 +14,7 @@ export const config = {
 		command: process.env.DEV ? `node ${serve} dev` : `node ${serve} build preview`,
 		port: process.env.DEV ? 5173 : 8787,
 		// match `wrangler deploy`, which bundles with NODE_ENV=production
-		env: { FOO: 'build-time value', ...(process.env.DEV ? {} : { NODE_ENV: 'production' }) },
+		env: { ...(process.env.DEV ? {} : { NODE_ENV: 'production' }) },
 		gracefulShutdown: { signal: 'SIGTERM', timeout: 5000 }
 	},
 	retries: process.env.CI ? 2 : number_from_env('KIT_E2E_RETRIES', 0),
