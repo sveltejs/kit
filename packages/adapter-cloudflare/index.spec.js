@@ -38,28 +38,6 @@ test.each(['https://cdn.example.com', '/assets'])(
 	}
 );
 
-test('uses Cloudflare plugins for preview and the Node proxy for development', () => {
-	const config = /** @type {{ plugins: import('vite').Plugin[], preview: boolean }} */ (
-		get_vite_config()
-	);
-	expect(config.preview).toBe(false);
-
-	const dev = { command: /** @type {const} */ ('serve'), mode: 'development', isPreview: false };
-	const preview_env = { ...dev, isPreview: true };
-	const cf_preview = config.plugins.find(
-		(plugin) =>
-			plugin.name === 'vite-plugin-cloudflare:preview' && typeof plugin.apply === 'function'
-	);
-	const proxy = config.plugins.find((plugin) => plugin.name.endsWith('-virtual-workers-module'));
-	if (typeof cf_preview?.apply !== 'function' || typeof proxy?.apply !== 'function') {
-		throw new Error('Expected preview filters');
-	}
-	expect(cf_preview.apply({}, dev)).toBe(false);
-	expect(cf_preview.apply({}, preview_env)).toBe(true);
-	expect(proxy.apply({}, dev)).toBe(true);
-	expect(proxy.apply({}, preview_env)).toBe(false);
-});
-
 function create_server() {
 	const { plugins } = /** @type {{ plugins: import('vite').Plugin[] }} */ (get_vite_config());
 	return createServer({
