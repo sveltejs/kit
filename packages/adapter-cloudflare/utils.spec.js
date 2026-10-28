@@ -1,3 +1,6 @@
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import process from 'node:process';
 import { describe, test, expect } from 'vitest';
 import { validate_worker_settings, append_headers, sync_process_env } from './utils.js';
@@ -90,25 +93,36 @@ describe('_headers', () => {
 });
 
 describe('sync_process_env', () => {
+	// an empty directory so that Wrangler doesn't pick up any `.env` or `.dev.vars` files
+	const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'adapter-cloudflare-'));
+
+	/**
+	 * @param {Record<string, unknown>} vars
+	 */
+	const config = (vars) =>
+		/** @type {import('@cloudflare/vite-plugin').WorkerConfig} */ (
+			/** @type {unknown} */ ({ configPath: path.join(dir, 'wrangler.jsonc'), vars })
+		);
+
 	test('adds variables and removes the ones that are gone', () => {
-		sync_process_env({ SYNC_A: { value: 'a' }, SYNC_B: { value: { json: true } } });
+		sync_process_env(config({ SYNC_A: 'a', SYNC_B: { json: true } }));
 		expect(process.env.SYNC_A).toBe('a');
 		expect(process.env.SYNC_B).toBe('{"json":true}');
 
-		sync_process_env({ SYNC_A: { value: 'changed' } });
+		sync_process_env(config({ SYNC_A: 'changed' }));
 		expect(process.env.SYNC_A).toBe('changed');
 		expect('SYNC_B' in process.env).toBe(false);
 
-		sync_process_env({});
+		sync_process_env(config({}));
 		expect('SYNC_A' in process.env).toBe(false);
 	});
 
 	test('does not overwrite variables set elsewhere', () => {
 		process.env.SYNC_A = 'shell';
-		sync_process_env({ SYNC_A: { value: 'wrangler' } });
+		sync_process_env(config({ SYNC_A: 'wrangler' }));
 		expect(process.env.SYNC_A).toBe('shell');
 
-		sync_process_env({});
+		sync_process_env(config({}));
 		expect(process.env.SYNC_A).toBe('shell');
 		delete process.env.SYNC_A;
 	});
