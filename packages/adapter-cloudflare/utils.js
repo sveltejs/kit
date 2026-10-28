@@ -46,38 +46,25 @@ ${formatted_headers}
 `.trim();
 }
 
-/**
- * The variables we copied into `process.env` and the values we set them to
- * @type {Map<string, string>}
- */
+/** @type {Map<string, string>} */
 const injected_env = new Map();
 
 /**
- * Copies Wrangler variables into `process.env` so that SvelteKit can read them
- * while it runs in Node. Variables already set elsewhere (e.g. by the shell) win.
- * Variables from a previous call that are no longer present are removed.
- * @param {Record<string, string>} vars
- * @returns {boolean} whether `process.env` changed
+ * Copies Wrangler variables into `process.env` so that SvelteKit can read them while it runs in Node,
+ * without overwriting variables set elsewhere and removing the ones we set previously
+ * @param {Record<string, { value: unknown }>} vars
  */
 export function sync_process_env(vars) {
-	let changed = false;
-
 	for (const [key, value] of injected_env) {
-		if (vars[key] === value) continue;
-		// leave it alone if something else has since changed it
-		if (process.env[key] === value) {
-			delete process.env[key];
-			changed = true;
-		}
-		injected_env.delete(key);
+		if (process.env[key] === value) delete process.env[key];
 	}
+	injected_env.clear();
 
-	for (const [key, value] of Object.entries(vars)) {
-		if (injected_env.has(key) || key in process.env) continue;
-		process.env[key] = value;
-		injected_env.set(key, value);
-		changed = true;
+	for (const [key, { value }] of Object.entries(vars)) {
+		if (key in process.env) continue;
+		// matches how workerd exposes JSON vars on `process.env`
+		const string = typeof value === 'string' ? value : JSON.stringify(value);
+		process.env[key] = string;
+		injected_env.set(key, string);
 	}
-
-	return changed;
 }

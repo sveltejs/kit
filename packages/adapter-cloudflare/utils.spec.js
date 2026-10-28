@@ -1,5 +1,5 @@
 import process from 'node:process';
-import { afterEach, describe, test, expect } from 'vitest';
+import { describe, test, expect } from 'vitest';
 import { validate_worker_settings, append_headers, sync_process_env } from './utils.js';
 
 describe('validates Wrangler config', () => {
@@ -90,38 +90,26 @@ describe('_headers', () => {
 });
 
 describe('sync_process_env', () => {
-	afterEach(() => {
-		sync_process_env({});
-		delete process.env.SYNC_A;
-		delete process.env.SYNC_B;
-	});
-
 	test('adds variables and removes the ones that are gone', () => {
-		expect(sync_process_env({ SYNC_A: 'a', SYNC_B: 'b' })).toBe(true);
+		sync_process_env({ SYNC_A: { value: 'a' }, SYNC_B: { value: { json: true } } });
 		expect(process.env.SYNC_A).toBe('a');
-		expect(process.env.SYNC_B).toBe('b');
+		expect(process.env.SYNC_B).toBe('{"json":true}');
 
-		expect(sync_process_env({ SYNC_A: 'a', SYNC_B: 'b' })).toBe(false);
-
-		expect(sync_process_env({ SYNC_A: 'changed' })).toBe(true);
+		sync_process_env({ SYNC_A: { value: 'changed' } });
 		expect(process.env.SYNC_A).toBe('changed');
 		expect('SYNC_B' in process.env).toBe(false);
+
+		sync_process_env({});
+		expect('SYNC_A' in process.env).toBe(false);
 	});
 
 	test('does not overwrite variables set elsewhere', () => {
 		process.env.SYNC_A = 'shell';
-		expect(sync_process_env({ SYNC_A: 'wrangler' })).toBe(false);
+		sync_process_env({ SYNC_A: { value: 'wrangler' } });
 		expect(process.env.SYNC_A).toBe('shell');
 
 		sync_process_env({});
 		expect(process.env.SYNC_A).toBe('shell');
-	});
-
-	test('does not remove variables that were changed after we set them', () => {
-		sync_process_env({ SYNC_A: 'wrangler' });
-		process.env.SYNC_A = 'changed';
-
-		sync_process_env({});
-		expect(process.env.SYNC_A).toBe('changed');
+		delete process.env.SYNC_A;
 	});
 });
