@@ -34,7 +34,9 @@ export function plugin_config(config_path) {
 			// the plugin requires `main` to be populated, so we set it to avoid it
 			// trying to resolve build-generated entry in the user's wrangler config
 			config.main = worker_entry;
-			// Older plugin versions don't recognize the date-based Node.js compatibility default.
+
+			// TODO: remove this when we bump the Cloudflare Vite plugin version
+			// Older Cloudflare Vite plugin versions don't recognize the date-based Node.js compatibility default.
 			if (
 				config.compatibility_date &&
 				config.compatibility_date >= '2026-08-04' &&
@@ -63,9 +65,9 @@ export function plugin_config(config_path) {
 			name: 'vite-plugin-sveltekit-adapter-cloudflare-environment',
 			apply: is_dev_or_build,
 			async config(user_config, env) {
-				const ssr = (await cloudflare_config_hook.call(this, user_config, env))?.environments?.ssr;
+				const cloudflare_ssr = (await cloudflare_config_hook.call(this, user_config, env))?.environments?.ssr;
 
-				if (ssr === undefined) {
+				if (cloudflare_ssr === undefined) {
 					throw new Error(
 						'Failed to get the SSR environment config from @cloudflare/vite-plugin. This should not happen.'
 					);
@@ -74,25 +76,25 @@ export function plugin_config(config_path) {
 				return {
 					environments: {
 						ssr: {
-							keepProcessEnv: ssr.keepProcessEnv,
-							define: ssr.define,
+							keepProcessEnv: cloudflare_ssr.keepProcessEnv,
+							define: cloudflare_ssr.define,
 							resolve: {
-								noExternal: ssr.resolve?.noExternal,
+								noExternal: cloudflare_ssr.resolve?.noExternal,
 								// `browser` would resolve `esm-env` to `BROWSER = true` and similar
-								conditions: ssr.resolve?.conditions?.filter((condition) => condition !== 'browser'),
+								conditions: cloudflare_ssr.resolve?.conditions?.filter((condition) => condition !== 'browser'),
 								// we resolve `cloudflare:workers` to a stub that runs in Node
-								builtins: ssr.resolve?.builtins?.filter((id) => id !== 'cloudflare:workers')
+								builtins: cloudflare_ssr.resolve?.builtins?.filter((id) => id !== 'cloudflare:workers')
 							},
 							optimizeDeps: {
-								...ssr.optimizeDeps,
+								...cloudflare_ssr.optimizeDeps,
 								// points to our stand-in `main`
 								entries: undefined
 							},
 							build: {
-								target: ssr.build?.target,
+								target: cloudflare_ssr.build?.target,
 								rolldownOptions: {
-									platform: ssr.build?.rolldownOptions?.platform,
-									resolve: ssr.build?.rolldownOptions?.resolve
+									platform: cloudflare_ssr.build?.rolldownOptions?.platform,
+									resolve: cloudflare_ssr.build?.rolldownOptions?.resolve
 								}
 							}
 						}
