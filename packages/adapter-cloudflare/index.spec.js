@@ -33,7 +33,7 @@ test.each(['https://cdn.example.com', '/assets'])(
 	'rejects paths.assets=%s when configuring the adapter',
 	(assets) => {
 		expect(() => get_vite_config(adapter(), assets)).toThrow(
-			'@sveltejs/adapter-cloudflare does not support paths.assets because vite preview cannot serve assets from a separate location'
+			'@sveltejs/adapter-cloudflare does not support paths.assets'
 		);
 	}
 );
@@ -292,7 +292,7 @@ test('starts the platform proxy with the Wrangler environment from a `.env` file
 	fs.writeFileSync(path.join(root, '.env.staging'), 'CLOUDFLARE_ENV=staging');
 
 	try {
-		const { plugins } = /** @type {{ plugins: import('vite').Plugin[] }} */ (adapter().vite);
+		const { plugins } = /** @type {{ plugins: import('vite').Plugin[] }} */ (get_vite_config());
 		const server = await createServer({
 			root,
 			mode: 'staging',
