@@ -183,7 +183,10 @@ export function plugin_guard(kit, get_config, get_manifest_data) {
 				const chain = find_chain(normalized, [normalized]);
 
 				if (chain) {
-					if (chain.some((id) => remote_module_pattern.test(id))) {
+					if (
+						!kit.experimental.remoteFunctions &&
+						chain.some((id) => remote_module_pattern.test(id))
+					) {
 						error_for_missing_config('remote functions', 'experimental.remoteFunctions', 'true');
 					}
 
@@ -193,6 +196,13 @@ export function plugin_guard(kit, get_config, get_manifest_data) {
 							return `${' '.repeat(i + 1)}${id}`;
 						})
 						.join(' imports\n');
+
+					if (remote_module_pattern.test(id)) {
+						e.remote_module_server_only(
+							{ module: normalized, chain: pyramid },
+							{ stackless: true }
+						);
+					}
 
 					e.server_only_import({ module: normalized, chain: pyramid }, { stackless: true });
 				}
