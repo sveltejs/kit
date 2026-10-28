@@ -3,6 +3,7 @@
 /** @import { ValidatedConfig } from 'types' */
 import path from 'node:path';
 import { exactRegex } from '@rolldown/pluginutils';
+import MagicString from 'magic-string';
 import * as sync from '../../../core/sync/sync.js';
 import { create_env_modules, resolve_env_entry } from '../../../core/env.js';
 import { import_peer } from '../../../utils/import.js';
@@ -119,14 +120,18 @@ export function plugin_service_worker_env_vars(get_service_worker_entry_file) {
 		},
 		transform: {
 			filter: {},
-			handler(code) {
+			handler(code, id) {
 				// prepend the service worker with an import that configures
 				// `env`, in case `$app/env/public` is imported. In production
 				// this is required: dynamic public env vars aren't known at
 				// build time, so `env.js` is loaded at runtime. In dev, the
 				// imported module just inlines the current values instead.
+				const transformed = new MagicString(code).prepend(
+					"import '<sveltekit:generated>/env/service-worker.js';\n"
+				);
 				return {
-					code: `import '<sveltekit:generated>/env/service-worker.js';\n${code}`
+					code: transformed.toString(),
+					map: transformed.generateMap({ source: id, hires: true })
 				};
 			}
 		}
