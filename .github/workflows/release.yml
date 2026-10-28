@@ -29,7 +29,7 @@ jobs:
       - name: Setup Node.js
         uses: pnpm/setup@a0881977cd8ea73b1ed212236c99ca10dcc80cf4 # v3.1.1
         with:
-          runtime: node@24
+          runtime: node@26
           # don't cache pnpm for releases to circumvent cache poisoning
           cache: false
 
