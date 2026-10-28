@@ -1,3 +1,5 @@
+import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { beforeEach, expect, test, vi } from 'vitest';
 import { createServer } from 'vite';
@@ -220,4 +222,33 @@ test('rejects concurrent servers sharing a failed platform proxy and allows a re
 	await server.close();
 	expect(dispose).toHaveBeenCalledOnce();
 	expect(globalThis.__sveltekit_cloudflare_platform_setup).toBeUndefined();
+});
+
+test('starts the platform proxy with the Wrangler environment from a `.env` file', async () => {
+	const root = fs.mkdtempSync(path.join(os.tmpdir(), 'adapter-cloudflare-'));
+	fs.writeFileSync(
+		path.join(root, 'wrangler.jsonc'),
+		JSON.stringify({ name: 'app', compatibility_date: '2025-01-01', env: { staging: {} } })
+	);
+	fs.writeFileSync(path.join(root, '.env.staging'), 'CLOUDFLARE_ENV=staging');
+
+	try {
+		const { plugins } = /** @type {{ plugins: import('vite').Plugin[] }} */ (adapter().vite);
+		const server = await createServer({
+			root,
+			mode: 'staging',
+			configFile: false,
+			logLevel: 'silent',
+			plugins,
+			server: { middlewareMode: true }
+		});
+
+		expect(getPlatformProxy).toHaveBeenCalledWith(
+			expect.objectContaining({ environment: 'staging' })
+		);
+
+		await server.close();
+	} finally {
+		fs.rmSync(root, { recursive: true, force: true });
+	}
 });

@@ -179,7 +179,8 @@ export default function (options = {}) {
 						configPath: options.config,
 						...options.platformProxy
 					},
-					stub_import
+					stub_import,
+					() => wrangler_config?.targetEnvironment
 				)
 			]
 		}
@@ -213,9 +214,12 @@ async function reload_cloudflare_platform_proxy(options) {
 /**
  * @param {GetPlatformProxyOptions} options
  * @param {string} stub_import
+ * @param {() => string | undefined} get_environment the Wrangler environment the Cloudflare Vite plugin resolved
  * @returns {Plugin}
  */
-function virtual_workers_module(options, stub_import) {
+function virtual_workers_module(options, stub_import, get_environment) {
+	const explicit_environment = options.environment;
+
 	/** @param {ViteDevServer | PreviewServer} server */
 	const setup = async (server) => {
 		// shared so that concurrent servers start one proxy and only the last close disposes it
@@ -290,6 +294,9 @@ function virtual_workers_module(options, stub_import) {
 			if (options.configPath) {
 				options.configPath = path.resolve(config.root, options.configPath);
 			}
+			// the Cloudflare Vite plugin also reads `CLOUDFLARE_ENV` from `.env` files,
+			// so use the same environment instead of only the shell's `CLOUDFLARE_ENV`
+			options.environment = explicit_environment ?? get_environment();
 		},
 		configureServer: setup,
 		configurePreviewServer: setup,
