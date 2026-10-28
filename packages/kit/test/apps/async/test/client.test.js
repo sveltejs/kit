@@ -1381,3 +1381,31 @@ test.describe('fork', () => {
 		await expect(page.locator('a[href="/fork/1"]')).toBeVisible();
 	});
 });
+
+for (const kind of ['query', 'batch', 'live']) {
+	test(`view transitions capture already-loaded ${kind} content`, async ({ page }) => {
+		await page.goto(`/remote/query-settled/${kind}`);
+		test.skip(!(await page.evaluate(() => !!document.startViewTransition)));
+		await expect(page.locator('h1')).toHaveText('Hello');
+
+		for (let i = 0; i < 3; i++) {
+			await page.getByRole('button', { name: 'open', exact: true }).click();
+			await expect(page.locator('#captured')).toHaveText('300px');
+			await page.goBack();
+			await expect(page.locator('#detail')).toHaveCount(0);
+		}
+	});
+
+	test(`already-loaded ${kind} settles in microtasks`, async ({ page, app }) => {
+		// Cover hydrated values and queries fetched on the client.
+		await page.goto('/');
+		await app.goto(`/remote/query-settled/${kind}`);
+		for (const hydrate of [false, true]) {
+			if (hydrate) await page.reload();
+			for (const method of ['await', 'then', 'catch', 'finally']) {
+				await page.getByRole('button', { name: method, exact: true }).click();
+				await expect(page.locator('#result')).toHaveText('Hello');
+			}
+		}
+	});
+}

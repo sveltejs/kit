@@ -3,7 +3,7 @@ import { HttpError, Redirect, HandledHttpError } from '@sveltejs/kit/internal';
 import { noop, once } from '../../../../utils/functions.js';
 import { with_resolvers } from '../../../../utils/promise.js';
 import { SharedIterator } from '../../../../utils/shared-iterator.js';
-import { tick } from 'svelte';
+import { tick, untrack } from 'svelte';
 import { create_live_iterator } from './iterator.js';
 
 /**
@@ -57,7 +57,9 @@ export class LiveQuery {
 		const p = /** @type {Promise<T>} */ (this.#promise);
 
 		return (resolve, reject) => {
-			const result = p.then(tick).then(() => /** @type {T} */ (this.#raw));
+			// Once the first value is available, awaiting it doesn't need another flush.
+			const promise = untrack(() => this.#ready) ? p : p.then(tick);
+			const result = promise.then(() => /** @type {T} */ (this.#raw));
 
 			if (resolve || reject) {
 				return result.then(resolve, reject);

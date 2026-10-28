@@ -49,7 +49,13 @@ export class Query {
 		this.#overrides.length;
 
 		return (resolve, reject) => {
-			const result = p.then(tick).then(() => {
+			// Pending responses and optimistic overrides need a flush before reading the value,
+			// but an already-loaded query should settle in microtasks. Don't add dependencies
+			// to #then that would cause awaiters to rerun when loading finishes.
+			const promise = untrack(() => this.#ready && !this.#loading && this.#overrides.length === 0)
+				? p
+				: p.then(tick);
+			const result = promise.then(() => {
 				if (!this.#ready) {
 					throw new HandledHttpError(
 						this.#error ?? { status: 500, message: 'Query resolved without a value' }
