@@ -2,4 +2,4 @@
 '@sveltejs/adapter-cloudflare': patch
 ---
 
-fix: escape prerendered redirect paths written to the `_redirects` file
+fix: prevent prerendered paths from creating unintended rules in `_redirects` and `_routes.json`

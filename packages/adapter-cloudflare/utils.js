@@ -90,17 +90,19 @@ export function generate_redirects(redirects, log) {
 	const rules = [];
 
 	for (const [path, redirect] of redirects) {
-		const from = encode_redirect_token(path).replace(/[?#]/g, (char) => encodeURIComponent(char));
-
-		// splats and placeholders would turn this into a rule that matches other paths
-		if (from.includes('*') || /:[A-Za-z]/.test(from)) {
+		if (has_wildcard(path)) {
 			log.warn(
-				`Skipping _redirects rule for prerendered redirect ${JSON.stringify(path)} because its path contains characters with special meaning in a _redirects file`
+				`Skipping _redirects rule for prerendered redirect ${JSON.stringify(path)} because its path contains characters that would match other paths. The prerendered redirect page will be served instead`
 			);
 			continue;
 		}
 
-		rules.push(`${from} ${encode_redirect_token(redirect.location)} ${redirect.status}`);
+		// encode the path as it appears in a request URL, which is what Cloudflare matches against.
+		// This also encodes whitespace, which would otherwise be parsed as a token separator
+		const from = path.replace(/[\0-\x20"#<>?^`{}\x7f-\u{10ffff}]/gu, encodeURIComponent);
+		const to = redirect.location.replace(/[\0-\x20\x7f-\u{10ffff}]/gu, encodeURIComponent);
+
+		rules.push(`${from} ${to} ${redirect.status}`);
 	}
 
 	if (rules.length === 0) return '';
@@ -113,13 +115,13 @@ ${rules.join('\n')}
 }
 
 /**
- * Percent-encodes characters that would otherwise be interpreted as part of the
- * `_redirects` file syntax (token separators and line breaks)
- * @param {string} token
- * @returns {string}
+ * Whether a path contains splats or placeholders, which can't be escaped in
+ * `_redirects` or `_routes.json` and would cause a rule to match other paths
+ * @param {string} path
+ * @returns {boolean}
  */
-function encode_redirect_token(token) {
-	return token.replace(/[\s\p{Cc}]/gu, (char) => encodeURIComponent(char));
+function has_wildcard(path) {
+	return path.includes('*') || /:[A-Za-z]/.test(path);
 }
 
 /**
@@ -179,7 +181,10 @@ export function get_routes_json(builder, client_assets, redirects, routes) {
 		}
 
 		if (rule === '<prerendered>') {
-			builder.prerendered.paths.forEach((path) => excluded_routes.add(path));
+			// paths with wildcards are left to the Worker, which serves prerendered paths by exact match
+			for (const path of builder.prerendered.paths) {
+				if (!has_wildcard(path)) excluded_routes.add(path);
+			}
 			continue;
 		}
 
