@@ -1,4 +1,5 @@
 import path from 'node:path';
+import process from 'node:process';
 import { beforeEach, expect, test, vi } from 'vitest';
 import { createServer } from 'vite';
 import { getPlatformProxy, unstable_readConfig } from 'wrangler';
@@ -7,7 +8,7 @@ import adapter from './index.js';
 const dispose = vi.fn(() => Promise.resolve());
 
 vi.mock('wrangler', () => ({
-	getPlatformProxy: vi.fn(() => Promise.resolve({ caches: {}, dispose })),
+	getPlatformProxy: vi.fn(() => Promise.resolve({ caches: {}, env: {}, dispose })),
 	unstable_readConfig: vi.fn(() => ({ configPath: undefined }))
 }));
 
@@ -129,7 +130,7 @@ test('swaps the shared platform proxy in place when wrangler config changes', as
 	const next_dispose = vi.fn(() => Promise.resolve());
 	const next_caches = /** @type {any} */ ({});
 	vi.mocked(getPlatformProxy).mockResolvedValueOnce(
-		/** @type {any} */ ({ caches: next_caches, dispose: next_dispose })
+		/** @type {any} */ ({ caches: next_caches, env: {}, dispose: next_dispose })
 	);
 
 	server.watcher.emit('change', config_path);
@@ -191,13 +192,25 @@ test('swallows a rejection from the config-reload path and warns, keeping the pr
 
 test('rejects concurrent servers sharing a failed platform proxy and allows a retry', async () => {
 	const { promise, reject } = Promise.withResolvers();
-	vi.mocked(getPlatformProxy).mockReturnValueOnce(promise);
+	let waiting = 0;
+	vi.mocked(getPlatformProxy).mockReturnValueOnce(
+		/** @type {any} */ ({
+			/**
+			 * @param {(value: any) => void} resolve
+			 * @param {(reason: unknown) => void} reject
+			 */
+			then(resolve, reject) {
+				waiting += 1;
+				return promise.then(resolve, reject);
+			}
+		})
+	);
 	const pending = Promise.allSettled([create_server(), create_server()]);
 
 	// Both servers must be awaiting the same proxy before it fails.
 	try {
 		await vi.waitFor(() => {
-			expect(globalThis.__sveltekit_cloudflare_platform_setup?.servers).toBe(2);
+			expect(waiting).toBe(2);
 		});
 	} finally {
 		reject(new Error('failed to start'));
@@ -220,4 +233,78 @@ test('rejects concurrent servers sharing a failed platform proxy and allows a re
 	await server.close();
 	expect(dispose).toHaveBeenCalledOnce();
 	expect(globalThis.__sveltekit_cloudflare_platform_setup).toBeUndefined();
+});
+
+test('copies the platform proxy variables into process.env before the config is resolved', async () => {
+	vi.mocked(getPlatformProxy).mockResolvedValueOnce(
+		/** @type {any} */ ({
+			caches: {},
+			env: { WRANGLER_VAR: 'from wrangler', BINDING: {} },
+			dispose
+		})
+	);
+
+	/** @type {Record<string, string | undefined>} */
+	const seen = {};
+	const { plugins } = /** @type {{ plugins: import('vite').Plugin[] }} */ (adapter().vite);
+	const server = await createServer({
+		configFile: false,
+		logLevel: 'silent',
+		plugins: [
+			...plugins,
+			{
+				name: 'read-env',
+				configResolved() {
+					seen.WRANGLER_VAR = process.env.WRANGLER_VAR;
+					seen.BINDING = process.env.BINDING;
+				}
+			}
+		],
+		server: { middlewareMode: true }
+	});
+
+	expect(seen).toEqual({ WRANGLER_VAR: 'from wrangler', BINDING: undefined });
+
+	await server.close();
+	delete process.env.WRANGLER_VAR;
+});
+
+test('restarts the dev server when the wrangler variables change', async () => {
+	const config_path = path.resolve('wrangler.toml');
+	vi.mocked(unstable_readConfig).mockReturnValue(/** @type {any} */ ({ configPath: config_path }));
+	vi.mocked(getPlatformProxy).mockResolvedValueOnce(
+		/** @type {any} */ ({ caches: {}, env: { REMOVED_VAR: 'old' }, dispose })
+	);
+
+	const server = await create_server();
+	expect(process.env.REMOVED_VAR).toBe('old');
+	const restart = vi.spyOn(server, 'restart').mockResolvedValue();
+
+	vi.mocked(getPlatformProxy).mockResolvedValueOnce(
+		/** @type {any} */ ({ caches: {}, env: { ADDED_VAR: 'new' }, dispose })
+	);
+	server.watcher.emit('change', path.resolve('.dev.vars'));
+	await vi.waitFor(() => {
+		expect(restart).toHaveBeenCalledOnce();
+	});
+	expect(process.env.ADDED_VAR).toBe('new');
+	expect('REMOVED_VAR' in process.env).toBe(false);
+
+	// a binding-only change keeps the server running
+	vi.mocked(getPlatformProxy).mockResolvedValueOnce(
+		/** @type {any} */ ({ caches: {}, env: { ADDED_VAR: 'new', BINDING: {} }, dispose })
+	);
+	server.watcher.emit('change', config_path);
+	await vi.waitFor(() => {
+		expect(getPlatformProxy).toHaveBeenCalledTimes(3);
+	});
+	await vi.waitFor(() => {
+		expect(dispose).toHaveBeenCalledTimes(2);
+	});
+	expect(restart).toHaveBeenCalledOnce();
+
+	await server.close();
+	vi.mocked(unstable_readConfig).mockReset();
+	vi.mocked(unstable_readConfig).mockReturnValue(/** @type {any} */ ({ configPath: undefined }));
+	delete process.env.ADDED_VAR;
 });

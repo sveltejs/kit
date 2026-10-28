@@ -1,14 +1,15 @@
 /** @import { WorkerConfig } from '@cloudflare/vite-plugin' */
 /** @import { Plugin, PreviewServer, ResolvedConfig, ViteDevServer } from 'vite' */
-/** @import { GetPlatformProxyOptions } from 'wrangler' */
+/** @import { GetPlatformProxyOptions, PlatformProxy } from 'wrangler' */
 import fs from 'node:fs';
 import path from 'node:path';
+import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { exactRegex } from '@rolldown/pluginutils';
 import { getRequest } from '@sveltejs/kit/node';
-import { getPlatformProxy, unstable_readConfig } from 'wrangler';
+import { getPlatformProxy, unstable_getVarsForDev, unstable_readConfig } from 'wrangler';
 import { plugin_config } from './config.js';
-import { validate_worker_settings, append_headers } from './utils.js';
+import { validate_worker_settings, append_headers, sync_process_env } from './utils.js';
 
 const files = fileURLToPath(new URL('./files', import.meta.url));
 
@@ -174,6 +175,35 @@ export default function (options = {}) {
 					}
 				},
 				...plugin_config(options.config, (config) => (wrangler_config = config)),
+				{
+					name: 'vite-plugin-sveltekit-adapter-cloudflare-build-env',
+					apply: 'build',
+					config: {
+						// runs after the Cloudflare Vite plugin resolved the Wrangler config
+						order: 'post',
+						handler() {
+							// `vars` and local secrets from `.dev.vars` / `.env`, as `wrangler dev` sees them,
+							// so that SvelteKit can validate them and use them when prerendering
+							const vars = unstable_getVarsForDev(
+								wrangler_config.configPath,
+								undefined,
+								wrangler_config.vars ?? {},
+								wrangler_config.targetEnvironment,
+								true,
+								wrangler_config.secrets
+							);
+							sync_process_env(
+								Object.fromEntries(
+									Object.entries(vars).map(([key, { value }]) => [
+										key,
+										// matches how workerd exposes JSON vars on `process.env`
+										typeof value === 'string' ? value : JSON.stringify(value)
+									])
+								)
+							);
+						}
+					}
+				},
 				virtual_workers_module(
 					{
 						configPath: options.config,
@@ -191,6 +221,7 @@ export default function (options = {}) {
 /**
  * Sets a new platform proxy and disposes the old one if it exists
  * @param {GetPlatformProxyOptions} options
+ * @returns {Promise<PlatformProxy>}
  */
 async function reload_cloudflare_platform_proxy(options) {
 	const previous = globalThis.__sveltekit_cloudflare_platform;
@@ -208,6 +239,22 @@ async function reload_cloudflare_platform_proxy(options) {
 	if (previous) {
 		await previous.dispose();
 	}
+	return next;
+}
+
+/**
+ * Copies the platform proxy's text variables, which include `.dev.vars` secrets, into `process.env`
+ * @param {PlatformProxy} proxy
+ * @returns {boolean} whether `process.env` changed
+ */
+function sync_dev_process_env(proxy) {
+	/** @type {Record<string, string>} */
+	const vars = {};
+	for (const [key, value] of Object.entries(proxy.env)) {
+		// bindings are objects
+		if (typeof value === 'string') vars[key] = value;
+	}
+	return sync_process_env(vars);
 }
 
 /**
@@ -216,13 +263,24 @@ async function reload_cloudflare_platform_proxy(options) {
  * @returns {Plugin}
  */
 function virtual_workers_module(options, stub_import) {
-	/** @param {ViteDevServer | PreviewServer} server */
-	const setup = async (server) => {
+	const get_shared = () =>
 		// shared so that concurrent servers start one proxy and only the last close disposes it
-		const shared = (globalThis.__sveltekit_cloudflare_platform_setup ??= {
+		(globalThis.__sveltekit_cloudflare_platform_setup ??= {
 			servers: 0,
 			proxy: getPlatformProxy(options)
 		});
+
+	/** @param {NonNullable<typeof globalThis.__sveltekit_cloudflare_platform_setup>} shared */
+	const reset = (shared) => {
+		// let the next server retry
+		if (globalThis.__sveltekit_cloudflare_platform_setup === shared) {
+			globalThis.__sveltekit_cloudflare_platform_setup = undefined;
+		}
+	};
+
+	/** @param {ViteDevServer | PreviewServer} server */
+	const setup = async (server) => {
+		const shared = get_shared();
 		shared.servers += 1;
 		try {
 			const proxy = await shared.proxy;
@@ -237,39 +295,51 @@ function virtual_workers_module(options, stub_import) {
 				configurable: true
 			});
 
-			// reinitialise the platform proxy when the wrangler config changes
+			// reinitialise the platform proxy when the wrangler config or local variables change
 			if ('watcher' in server) {
 				const resolved = unstable_readConfig({ config: options.configPath });
 				if (resolved.configPath) {
 					const config_path = path.resolve(resolved.configPath);
+					const config_dir = path.dirname(config_path);
+					const cloudflare_env = options.environment ?? process.env.CLOUDFLARE_ENV;
+					// the same files that `@cloudflare/vite-plugin` watches
+					const watched = new Set([
+						config_path,
+						...['.dev.vars', '.env']
+							.flatMap((file) => (cloudflare_env ? [file, `${file}.${cloudflare_env}`] : [file]))
+							.map((file) => path.join(config_dir, file))
+					]);
 					let reloading = false;
 
 					/** @param {string} file */
 					const on_change = (file) => {
-						if (reloading || path.resolve(file) !== config_path) return;
+						if (reloading || !watched.has(path.resolve(file))) return;
 						reloading = true;
 						reload_cloudflare_platform_proxy(options)
-							.catch((/** @type {unknown} */ error) => {
-								// A rejection must not become unhandled — it would crash the dev
-								// server. Log the message and leave the previous proxy in place
-								// (it is only disposed on the success path, so bindings keep working).
-								server.config.logger.warn(
-									`[adapter-cloudflare] failed to reload the Cloudflare platform proxy after a wrangler config change: ${error instanceof Error ? error.message : String(error)}`
-								);
-							})
+							.then(
+								async (proxy) => {
+									// restart so that SvelteKit reads the new variables
+									if (sync_dev_process_env(proxy)) await server.restart();
+								},
+								(/** @type {unknown} */ error) => {
+									// A rejection must not become unhandled — it would crash the dev
+									// server. Log the message and leave the previous proxy in place
+									// (it is only disposed on the success path, so bindings keep working).
+									server.config.logger.warn(
+										`[adapter-cloudflare] failed to reload the Cloudflare platform proxy after a wrangler config change: ${error instanceof Error ? error.message : String(error)}`
+									);
+								}
+							)
 							.finally(() => {
 								reloading = false;
 							});
 					};
-					server.watcher.add(config_path);
+					for (const file of watched) server.watcher.add(file);
 					server.watcher.on('change', on_change);
 				}
 			}
 		} catch (error) {
-			// let the next server retry
-			if (globalThis.__sveltekit_cloudflare_platform_setup === shared) {
-				globalThis.__sveltekit_cloudflare_platform_setup = undefined;
-			}
+			reset(shared);
 			throw error;
 		}
 	};
@@ -284,11 +354,27 @@ function virtual_workers_module(options, stub_import) {
 	};
 	return {
 		name: 'vite-plugin-sveltekit-adapter-cloudflare-virtual-workers-module',
-		configResolved(config) {
-			// resolve the config path relative to the Vite `root` setting rather than
-			// the current working directory
-			if (options.configPath) {
-				options.configPath = path.resolve(config.root, options.configPath);
+		config: {
+			// runs after other plugins may have changed `root`
+			order: 'post',
+			async handler(config, env) {
+				// resolve the config path relative to the Vite `root` setting rather than
+				// the current working directory
+				if (options.configPath) {
+					options.configPath = path.resolve(config.root ?? '', options.configPath);
+				}
+
+				if (env.command !== 'serve' || env.isPreview) return;
+
+				// SvelteKit reads `process.env` once the config is resolved, so we need the
+				// proxy's variables now rather than when the server is configured
+				const shared = get_shared();
+				try {
+					sync_dev_process_env(await shared.proxy);
+				} catch (error) {
+					reset(shared);
+					throw error;
+				}
 			}
 		},
 		configureServer: setup,
