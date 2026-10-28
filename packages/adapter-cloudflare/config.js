@@ -12,12 +12,8 @@ const useful_cloudflare_plugins = new Set([
 	'vite-plugin-cloudflare:nodejs-compat-warnings'
 ]);
 
-/**
- * In preview, the plugin expects to read the output config from its own build pipeline,
- * which we don't use, so we leave `vite preview` to SvelteKit
- * @type {Plugin['apply']}
- */
-const not_preview = (_config, env) => !env.isPreview;
+/** @type {Plugin['apply']} */
+const is_dev_or_build = (_config, env) => !env.isPreview;
 
 const worker_entry = fileURLToPath(new URL('./files/worker.js', import.meta.url));
 
@@ -54,10 +50,10 @@ export function plugin_config(config_path) {
 	return [
 		...plugins
 			.filter((plugin) => useful_cloudflare_plugins.has(plugin.name))
-			.map((plugin) => /** @satisfies {Plugin} */ ({ ...plugin, apply: not_preview })),
+			.map((plugin) => /** @satisfies {Plugin} */ ({ ...plugin, apply: is_dev_or_build })),
 		{
 			name: 'vite-plugin-sveltekit-adapter-cloudflare-environment',
-			apply: not_preview,
+			apply: is_dev_or_build,
 			async config(user_config, env) {
 				const ssr = (await cloudflare_config_hook.call(this, user_config, env))?.environments?.ssr;
 
