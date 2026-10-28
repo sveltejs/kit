@@ -85,3 +85,33 @@ it('parses a non-minimized object', () => {
 	);
 	expect(parsed).toBeDefined();
 });
+
+it('does not parse the contents of <style> blocks that have not been preprocessed', async () => {
+	const vite_plugin = image_plugin({ name: 'vite-imagetools-mock' });
+	const transform =
+		/** @type {(this: unknown, code: string, id: string) => Promise<{ code: string }>} */ (
+			// @ts-expect-error fails until vite is updated
+			vite_plugin.transform.handler
+		);
+	const input = `<script>
+	let { src } = $props();
+</script>
+
+<enhanced:img {src} alt="test" />
+
+<style lang="scss">
+	// a line comment
+	$size: 10px;
+	.wrapper {
+		&:hover enhanced\\:img {
+			width: #{$size};
+		}
+	}
+</style>
+`;
+	const { code } = await transform.call({}, input, 'Input.svelte');
+	expect(code).toContain('<picture>');
+	expect(code).toContain('// a line comment');
+	expect(code).toContain('&:hover img {');
+	expect(code).not.toContain('enhanced\\:img');
+});
