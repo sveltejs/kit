@@ -300,6 +300,8 @@ function virtual_workers_module(options, stub_import, get_environment) {
 					};
 					server.watcher.add(watched);
 					server.watcher.on('change', on_change);
+					server.watcher.on('add', on_change);
+					server.watcher.on('unlink', on_change);
 				}
 			}
 		} catch (error) {

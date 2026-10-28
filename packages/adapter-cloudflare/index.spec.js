@@ -225,21 +225,24 @@ test('rejects concurrent servers sharing a failed platform proxy and allows a re
 	expect(globalThis.__sveltekit_cloudflare_platform_setup).toBeUndefined();
 });
 
-test('restarts the dev server when a local variables file changes', async () => {
-	const config_path = path.resolve('wrangler.toml');
-	vi.mocked(unstable_readConfig).mockReturnValueOnce(
-		/** @type {any} */ ({ configPath: config_path })
-	);
-	const server = await create_server();
-	const restart = vi.spyOn(server, 'restart').mockResolvedValue();
+test.each(['change', 'add', 'unlink'])(
+	'restarts the dev server on local variables file %s',
+	async (event) => {
+		const config_path = path.resolve('wrangler.toml');
+		vi.mocked(unstable_readConfig).mockReturnValueOnce(
+			/** @type {any} */ ({ configPath: config_path })
+		);
+		const server = await create_server();
+		const restart = vi.spyOn(server, 'restart').mockResolvedValue();
 
-	server.watcher.emit('change', path.resolve('.dev.vars'));
-	await vi.waitFor(() => {
-		expect(restart).toHaveBeenCalledOnce();
-	});
+		server.watcher.emit(event, path.resolve('.dev.vars'));
+		await vi.waitFor(() => {
+			expect(restart).toHaveBeenCalledOnce();
+		});
 
-	await server.close();
-});
+		await server.close();
+	}
+);
 
 test('starts the platform proxy with the Wrangler environment from a `.env` file', async () => {
 	const root = fs.mkdtempSync(path.join(os.tmpdir(), 'adapter-cloudflare-'));
