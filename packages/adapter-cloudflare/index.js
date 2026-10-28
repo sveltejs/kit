@@ -195,7 +195,7 @@ export default function (options = {}) {
 							// but before SvelteKit reads `process.env`
 							order: 'post',
 							handler() {
-								sync_process_env(
+								sync_process_env(() =>
 									unstable_getVarsForDev(
 										wrangler_config.configPath,
 										undefined,
@@ -314,6 +314,8 @@ function virtual_workers_module(options, stub_import, get_environment) {
 					};
 					server.watcher.add(watched);
 					server.watcher.on('change', on_change);
+					server.watcher.on('add', on_change);
+					server.watcher.on('unlink', on_change);
 				}
 			}
 		} catch (error) {
