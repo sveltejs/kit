@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { exactRegex } from '@rolldown/pluginutils';
 import { getRequest } from '@sveltejs/kit/node';
 import { getPlatformProxy, unstable_getVarsForDev, unstable_readConfig } from 'wrangler';
-import { plugin_config } from './config.js';
+import { is_dev_or_build, plugin_config } from './config.js';
 import { validate_worker_settings, append_headers, sync_process_env } from './utils.js';
 
 const files = fileURLToPath(new URL('./files', import.meta.url));
@@ -176,7 +176,7 @@ export default function (options = {}) {
 				...plugin_config(options.config, (config) => (wrangler_config = config)),
 				{
 					name: 'vite-plugin-sveltekit-adapter-cloudflare-env',
-					apply: (_config, env) => !env.isPreview,
+					apply: is_dev_or_build,
 					config: {
 						// runs after the Cloudflare Vite plugin resolved the Wrangler config
 						// but before SvelteKit reads `process.env`
