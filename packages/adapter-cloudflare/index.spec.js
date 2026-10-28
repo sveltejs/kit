@@ -1,3 +1,4 @@
+/** @import { Plugin } from 'vite' */
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -24,9 +25,11 @@ beforeEach(() => {
  */
 function get_vite_config(instance = adapter(), assets = '') {
 	if (typeof instance.vite !== 'function') throw new Error('Expected an adapter config function');
-	return instance.vite({
-		config: /** @type {Parameters<typeof instance.vite>[0]['config']} */ ({ paths: { assets } })
-	});
+	return /** @type {{ plugins: Plugin[] }} */ (
+		instance.vite({
+			config: /** @type {Parameters<typeof instance.vite>[0]['config']} */ ({ paths: { assets } })
+		})
+	);
 }
 
 test.each(['https://cdn.example.com', '/assets'])(
@@ -39,7 +42,7 @@ test.each(['https://cdn.example.com', '/assets'])(
 );
 
 function create_server() {
-	const { plugins } = /** @type {{ plugins: import('vite').Plugin[] }} */ (get_vite_config());
+	const { plugins } = get_vite_config();
 	return createServer({
 		configFile: false,
 		logLevel: 'silent',
@@ -72,7 +75,7 @@ test('exposes the platform caches when the runtime defines `caches` as a getter'
 	});
 
 	try {
-		const { plugins } = /** @type {{ plugins: import('vite').Plugin[] }} */ (get_vite_config());
+		const { plugins } = get_vite_config();
 		const server = await createServer({
 			configFile: false,
 			logLevel: 'silent',
@@ -275,7 +278,7 @@ test('starts the platform proxy with the Wrangler environment from a `.env` file
 	fs.writeFileSync(path.join(root, '.env.staging'), 'CLOUDFLARE_ENV=staging');
 
 	try {
-		const { plugins } = /** @type {{ plugins: import('vite').Plugin[] }} */ (get_vite_config());
+		const { plugins } = get_vite_config();
 		const server = await createServer({
 			root,
 			mode: 'staging',
