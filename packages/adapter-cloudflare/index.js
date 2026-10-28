@@ -182,7 +182,7 @@ export default function (options = {}) {
 						// but before SvelteKit reads `process.env`
 						order: 'post',
 						handler() {
-							sync_process_env(
+							sync_process_env(() =>
 								unstable_getVarsForDev(
 									wrangler_config.configPath,
 									undefined,

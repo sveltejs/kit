@@ -52,13 +52,16 @@ const injected_env = new Map();
 /**
  * Copies Wrangler variables into `process.env` so that SvelteKit can read them while it runs in Node,
  * without overwriting variables set elsewhere and removing the ones we set previously
- * @param {Record<string, { value: unknown }>} vars
+ * @param {Record<string, { value: unknown }> | (() => Record<string, { value: unknown }>)} vars
  */
 export function sync_process_env(vars) {
 	for (const [key, value] of injected_env) {
 		if (process.env[key] === value) delete process.env[key];
 	}
 	injected_env.clear();
+
+	// Wrangler's dotenv loader can read process.env, so load only after clearing our old values.
+	if (typeof vars === 'function') vars = vars();
 
 	for (const [key, { value }] of Object.entries(vars)) {
 		if (key in process.env) continue;
