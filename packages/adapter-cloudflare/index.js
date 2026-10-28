@@ -368,6 +368,8 @@ function posixify(str) {
  * @param {string} stub_import
  */
 function replace_stub(directory, stub_import) {
+	// Pad outside the string literal so that existing source-map columns stay valid.
+	const padding = ' '.repeat(stub_import.length - 'cloudflare:workers'.length);
 	// recurse, find stub_import, replace with "cloudflare:workers"
 	const files = fs.readdirSync(directory);
 	for (const file of files) {
@@ -377,8 +379,6 @@ function replace_stub(directory, stub_import) {
 		} else if (file.endsWith('.js')) {
 			let contents = fs.readFileSync(file_path, 'utf8');
 			if (contents.includes(stub_import)) {
-				// Pad outside the string literal so that existing source-map columns stay valid.
-				const padding = ' '.repeat(stub_import.length - 'cloudflare:workers'.length);
 				for (const quote of ['"', "'"]) {
 					contents = contents.replaceAll(
 						`${quote}${stub_import}${quote}`,
