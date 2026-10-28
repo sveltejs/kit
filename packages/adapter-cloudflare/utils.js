@@ -1,6 +1,7 @@
 /** @import { WorkerConfig } from '@cloudflare/vite-plugin' */
 /** @import { Plugin } from 'vite' */
 import process from 'node:process';
+import { unstable_getVarsForDev } from 'wrangler';
 
 /** @type {Plugin['apply']} */
 export const is_dev_or_build = (_config, env) => !env.isPreview;
@@ -54,27 +55,34 @@ ${formatted_headers}
 }
 
 /** @type {Map<string, string>} */
-const injected_env = new Map();
+const wrangler_config_vars = new Map();
 
 /**
  * Copies Wrangler variables into `process.env` so that SvelteKit can read them while it runs in Node,
  * without overwriting variables set elsewhere and removing the ones we set previously
- * @param {Record<string, { value: unknown }> | (() => Record<string, { value: unknown }>)} vars
+ * @param {WorkerConfig} wrangler_config
  */
-export function sync_process_env(vars) {
-	for (const [key, value] of injected_env) {
+export function sync_process_env(wrangler_config) {
+	for (const [key, value] of wrangler_config_vars) {
 		if (process.env[key] === value) delete process.env[key];
 	}
-	injected_env.clear();
+	wrangler_config_vars.clear();
 
-	// Wrangler's dotenv loader can read process.env, so load only after clearing our old values.
-	if (typeof vars === 'function') vars = vars();
+	const vars = unstable_getVarsForDev(
+		wrangler_config.configPath,
+		undefined,
+		wrangler_config.vars,
+		wrangler_config.targetEnvironment,
+		true,
+		wrangler_config.secrets
+	);
 
 	for (const [key, { value }] of Object.entries(vars)) {
 		if (key in process.env) continue;
+
 		// matches how workerd exposes JSON vars on `process.env`
-		const string = typeof value === 'string' ? value : JSON.stringify(value);
-		process.env[key] = string;
-		injected_env.set(key, string);
+		const stringified_value = typeof value === 'string' ? value : JSON.stringify(value);
+		process.env[key] = stringified_value;
+		wrangler_config_vars.set(key, stringified_value);
 	}
 }
