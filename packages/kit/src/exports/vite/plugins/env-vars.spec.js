@@ -35,6 +35,7 @@ test('preserves service worker source locations after injecting env', async () =
 	if (!('output' in result)) throw new Error('Expected a single build output');
 	const chunk = result.output.find((output) => output.type === 'chunk');
 	if (!chunk?.map) throw new Error('Expected a chunk with a sourcemap');
+	expect(chunk.code).toContain('<sveltekit:generated>/env/service-worker.js');
 	const map = new SourceMap(JSON.parse(chunk.map.toString()));
 	const statements = [...chunk.code.split('\n').entries()].filter(([, line]) =>
 		line.startsWith('console.log')
