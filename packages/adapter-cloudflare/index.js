@@ -1,4 +1,4 @@
-/** @import { Plugin, PreviewServer, ViteDevServer } from 'vite' */
+/** @import { Plugin } from 'vite' */
 /** @import { GetPlatformProxyOptions } from 'wrangler' */
 
 import fs from 'node:fs';
@@ -217,36 +217,13 @@ export default function (options = {}) {
 }
 
 /**
- * Sets a new platform proxy and disposes the old one if it exists
- * @param {GetPlatformProxyOptions} options
- */
-async function reload_cloudflare_platform_proxy(options) {
-	const previous = globalThis.__sveltekit_cloudflare_platform;
-	const next = await getPlatformProxy(options);
-	globalThis.__sveltekit_cloudflare_platform = next;
-	if (globalThis.__sveltekit_cloudflare_platform_setup) {
-		globalThis.__sveltekit_cloudflare_platform_setup.proxy = Promise.resolve(next);
-	}
-	Object.defineProperty(globalThis, 'caches', {
-		value: next.caches,
-		writable: true,
-		enumerable: true,
-		configurable: true
-	});
-	if (previous) {
-		await previous.dispose();
-	}
-}
-
-/**
  * @param {GetPlatformProxyOptions} options
  * @param {string} stub_import
  * @returns {Plugin}
  */
 function virtual_workers_module(options, stub_import) {
-	/** @param {ViteDevServer | PreviewServer} server */
-	const setup = async (server) => {
-		// shared so that concurrent servers start one proxy and only the last close disposes it
+	// shared so that concurrent servers start one proxy and only the last close disposes it
+	const setup = async () => {
 		const shared = (globalThis.__sveltekit_cloudflare_platform_setup ??= {
 			servers: 0,
 			proxy: getPlatformProxy(options)
@@ -264,35 +241,6 @@ function virtual_workers_module(options, stub_import) {
 				enumerable: true,
 				configurable: true
 			});
-
-			// reinitialise the platform proxy when the wrangler config changes
-			if ('watcher' in server) {
-				const resolved = unstable_readConfig({ config: options.configPath });
-				if (resolved.configPath) {
-					const config_path = path.resolve(resolved.configPath);
-					let reloading = false;
-
-					/** @param {string} file */
-					const on_change = (file) => {
-						if (reloading || path.resolve(file) !== config_path) return;
-						reloading = true;
-						reload_cloudflare_platform_proxy(options)
-							.catch((/** @type {unknown} */ error) => {
-								// A rejection must not become unhandled — it would crash the dev
-								// server. Log the message and leave the previous proxy in place
-								// (it is only disposed on the success path, so bindings keep working).
-								server.config.logger.warn(
-									`[adapter-cloudflare] failed to reload the Cloudflare platform proxy after a wrangler config change: ${error instanceof Error ? error.message : String(error)}`
-								);
-							})
-							.finally(() => {
-								reloading = false;
-							});
-					};
-					server.watcher.add(config_path);
-					server.watcher.on('change', on_change);
-				}
-			}
 		} catch (error) {
 			// let the next server retry
 			if (globalThis.__sveltekit_cloudflare_platform_setup === shared) {
