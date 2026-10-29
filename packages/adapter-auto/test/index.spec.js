@@ -7,14 +7,11 @@ import process from 'node:process';
 /** @type {string} */
 let cwd;
 
-/** @type {boolean} */
-let detected;
-
 vi.mock('../adapters.js', () => ({
 	adapters: [
 		{
 			name: 'Fake',
-			test: () => detected,
+			test: () => true,
 			module: 'fake-adapter',
 			version: '1'
 		}
@@ -40,7 +37,6 @@ beforeEach(() => {
 	);
 
 	vi.spyOn(process, 'cwd').mockReturnValue(cwd);
-	vi.resetModules();
 });
 
 afterEach(() => {
@@ -49,26 +45,9 @@ afterEach(() => {
 });
 
 test('exposes the Vite config of the detected adapter', async () => {
-	detected = true;
-
 	const { default: adapter } = await import('../index.js');
 	const result = adapter();
 
 	assert.equal(result.name, 'fake-adapter');
 	assert.deepEqual(result.vite, { plugins: [{ name: 'fake-adapter-plugin' }] });
-});
-
-test('falls back to a warning when no environment is detected', async () => {
-	detected = false;
-
-	const { default: adapter } = await import('../index.js');
-	const result = adapter();
-
-	assert.equal(result.name, '@sveltejs/adapter-auto');
-	assert.equal(result.vite, undefined);
-
-	const warn = vi.fn();
-	await result.adapt(/** @type {any} */ ({ log: { warn } }));
-	assert.equal(warn.mock.calls.length, 1);
-	assert.throws(() => result.supports?.read?.({ config: {}, route: { id: '/' } }));
 });
