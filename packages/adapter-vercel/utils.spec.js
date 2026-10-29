@@ -92,8 +92,29 @@ describe('resolve_runtime', () => {
 		assert.equal(result, 'bun1.x');
 	});
 
-	test('throws an error when resolving to an invalid runtime', () => {
+	test('throws an error when resolving to an invalid runtime (malformed#1)', () => {
 		assert.throws(() => resolve_runtime('node18.x', undefined), /Unsupported runtime: node18.x/);
+	});
+
+	test('throws an error when resolving to an invalid runtime (malformed#2)', () => {
+		assert.throws(
+			() => resolve_runtime('nodejs028.x', undefined),
+			/Unsupported runtime: nodejs028.x/
+		);
+	});
+
+	test('throws an error when resolving to an invalid runtime (too old)', () => {
+		assert.throws(
+			() => resolve_runtime('nodejs20.x', undefined),
+			/Unsupported runtime: nodejs20.x/
+		);
+	});
+
+	test('throws an error when resolving to an invalid runtime (uneven)', () => {
+		assert.throws(
+			() => resolve_runtime('nodejs33.x', undefined),
+			/Unsupported runtime: nodejs33.x/
+		);
 	});
 
 	test('accepts a minor-pinned bun runtime', () => {
@@ -104,6 +125,11 @@ describe('resolve_runtime', () => {
 	test('accepts nodejs26.x', () => {
 		const result = resolve_runtime('nodejs26.x');
 		assert.equal(result, 'nodejs26.x');
+	});
+
+	test('accepts nodejs96.x (far into the future)', () => {
+		const result = resolve_runtime('nodejs96.x');
+		assert.equal(result, 'nodejs96.x');
 	});
 
 	test('throws an error for an unsupported bun minor', () => {
@@ -182,11 +208,17 @@ describe('resolve_runtime with node detected', () => {
 		});
 	});
 
+	test('detects future Node 96', () => {
+		with_node('96.1.0', () => {
+			assert.equal(resolve_runtime(undefined, undefined), 'nodejs96.x');
+		});
+	});
+
 	test('throws for an unsupported Node major', () => {
 		with_node('27.0.0', () => {
 			assert.throws(
 				() => resolve_runtime(undefined, undefined),
-				/Unsupported Node\.js version.*Please use Node 22, 24 or 26/
+				/Unsupported Node\.js version.*Please use an even Node version \(22 or higher\)/
 			);
 		});
 	});
