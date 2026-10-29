@@ -33,6 +33,8 @@ async function reload_cloudflare_platform_proxy(options) {
  * @returns {Plugin}
  */
 export function plugin_platform(options, stub_import, get_environment) {
+	const explicit_environment = options.environment;
+
 	/** @param {ViteDevServer | PreviewServer} server */
 	const setup = async (server) => {
 		// shared so that concurrent servers start one proxy and only the last close disposes it
@@ -118,6 +120,16 @@ export function plugin_platform(options, stub_import, get_environment) {
 
 	return {
 		name: 'vite-plugin-sveltekit-adapter-cloudflare-virtual-workers-module',
+		configResolved(config) {
+			// resolve the config path relative to the Vite `root` setting rather than
+			// the current working directory
+			if (options.configPath) {
+				options.configPath = path.resolve(config.root, options.configPath);
+			}
+			// the Cloudflare Vite plugin also reads `CLOUDFLARE_ENV` from `.env` files,
+			// so use the same environment instead of only the shell's `CLOUDFLARE_ENV`
+			options.environment = explicit_environment ?? get_environment();
+		},
 		configureServer: setup,
 		configurePreviewServer: setup,
 		// a restarting server is set up before the old one closes, so the proxy survives

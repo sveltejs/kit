@@ -3,7 +3,7 @@ import process from 'node:process';
 import { unstable_getVarsForDev } from 'wrangler';
 
 /**
- * @param {import('wrangler').Unstable_Config} wrangler_config
+ * @param {WorkerConfig} wrangler_config
  */
 export function validate_worker_settings(wrangler_config) {
 	if (process.env.CF_PAGES) {
@@ -17,35 +17,6 @@ export function validate_worker_settings(wrangler_config) {
 	if (wrangler_config.pages_build_output_dir) {
 		throw new Error(
 			`Cloudflare Pages is no longer supported. Remove \`pages_build_output_dir\` from ${config_path} and configure Cloudflare Workers instead. Consult https://svelte.dev/docs/kit/adapter-cloudflare#Migrating-from-Cloudflare-Pages`
-		);
-	}
-
-	// we don't support workers sites
-	if (wrangler_config.site) {
-		throw new Error(
-			`You must remove all \`site\` keys in ${config_path}. Consult https://svelte.dev/docs/kit/adapter-cloudflare#Migrating-from-Workers-Sites`
-		);
-	}
-
-	// we need the `assets.directory` key so that the static assets are deployed
-	if ((wrangler_config.main || wrangler_config.assets) && !wrangler_config.assets?.directory) {
-		throw new Error(
-			`You must specify the \`assets.directory\` key in ${config_path}. Consult https://developers.cloudflare.com/workers/static-assets/binding/#directory`
-		);
-	}
-
-	// we need the `assets.binding` key so that the Worker can access the static assets
-	if (wrangler_config.main && !wrangler_config.assets?.binding) {
-		throw new Error(
-			`You must specify the \`assets.binding\` key in ${config_path} before deploying your Worker. Consult https://developers.cloudflare.com/workers/static-assets/binding/#binding`
-		);
-	}
-
-	// the user might have forgot the `main` key or should remove the `assets.binding`
-	// key to deploy static assets without a Worker
-	if (!wrangler_config.main && wrangler_config.assets?.binding) {
-		throw new Error(
-			`You must specify the \`main\` key in ${config_path} if you want to deploy a Worker alongside your static assets. Otherwise, remove the \`assets.binding\` key if you only want to deploy static assets.`
 		);
 	}
 }
