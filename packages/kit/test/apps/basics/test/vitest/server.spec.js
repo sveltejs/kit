@@ -938,6 +938,16 @@ describe('reroute', () => {
 		const response = await get('/reroute/error-handling/server-error');
 		expect(response.status).toBe(500);
 	});
+
+	test('Returns a 400 response if reroute rewrites a malformed pathname', async () => {
+		const response = await get('/%c0%ae/reroute/malformed');
+		if (dev) {
+			// Vite rejects malformed URIs before they reach SvelteKit
+			expect(response.status).toBeGreaterThanOrEqual(400);
+		} else {
+			expect(response.status).toBe(400);
+		}
+	});
 });
 
 describe('init', () => {

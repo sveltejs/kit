@@ -40,6 +40,10 @@ export const reroute = ({ url, fetch }) => {
 		return '/reroute/prerendered/destination';
 	}
 
+	if (url.pathname.endsWith('/reroute/malformed')) {
+		return '/';
+	}
+
 	if (url.pathname in mapping) {
 		return mapping[url.pathname];
 	}
