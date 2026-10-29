@@ -29,9 +29,10 @@ async function reload_cloudflare_platform_proxy(options) {
 /**
  * @param {GetPlatformProxyOptions} options
  * @param {string} stub_import
+ * @param {() => string | undefined} get_environment the Wrangler environment the Cloudflare Vite plugin resolved
  * @returns {Plugin}
  */
-export function plugin_platform(options, stub_import) {
+export function plugin_platform(options, stub_import, get_environment) {
 	/** @param {ViteDevServer | PreviewServer} server */
 	const setup = async (server) => {
 		// shared so that concurrent servers start one proxy and only the last close disposes it
@@ -56,18 +57,30 @@ export function plugin_platform(options, stub_import) {
 
 			if (!('watcher' in server)) return;
 
-			// reinitialise the platform proxy when the wrangler config changes
+			// reinitialise the platform proxy when the wrangler config or local variables change
 			const resolved = unstable_readConfig({ config: options.configPath });
 			if (!resolved.configPath) return;
 
 			const config_path = path.resolve(resolved.configPath);
+			// the same files that `@cloudflare/vite-plugin` watches
+			const local_files = ['.dev.vars', '.env'];
+			const cloudflare_env = get_environment();
+			if (cloudflare_env) {
+				local_files.push(`.dev.vars.${cloudflare_env}`, `.env.${cloudflare_env}`);
+			}
+			const watched = [
+				config_path,
+				...local_files.map((file) => path.join(path.dirname(config_path), file))
+			];
 			let reloading = false;
 
 			/** @param {string} file */
 			const on_change = (file) => {
-				if (reloading || path.resolve(file) !== config_path) return;
+				if (reloading || !watched.includes(path.resolve(file))) return;
 				reloading = true;
 				reload_cloudflare_platform_proxy(options)
+					// so that SvelteKit reads the new variables
+					.then(() => server.restart())
 					.catch((/** @type {unknown} */ error) => {
 						// A rejection must not become unhandled — it would crash the dev
 						// server. Log the message and leave the previous proxy in place
@@ -80,8 +93,10 @@ export function plugin_platform(options, stub_import) {
 						reloading = false;
 					});
 			};
-			server.watcher.add(config_path);
+			server.watcher.add(watched);
 			server.watcher.on('change', on_change);
+			server.watcher.on('add', on_change);
+			server.watcher.on('unlink', on_change);
 		} catch (error) {
 			// let the next server retry
 			if (globalThis.__sveltekit_cloudflare_platform_setup === shared) {
