@@ -1,5 +1,15 @@
 # @sveltejs/adapter-vercel
 
+## 7.0.2
+
+### Patch Changes
+
+- fix: escape prerendered paths used in Vercel route patterns ([`8a81718`](https://github.com/sveltejs/kit/commit/8a81718cd8b306dbe830210ada7249d8e2ae9e7b))
+
+- fix: support Node.js 26 (`nodejs26.x`) and future even Node.js versions ([#17570](https://github.com/sveltejs/kit/pull/17570))
+- Updated dependencies:
+  - @sveltejs/kit@3.1.1
+
 ## 7.0.1
 
 ### Patch Changes
