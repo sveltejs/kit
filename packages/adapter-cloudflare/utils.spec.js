@@ -91,6 +91,7 @@ describe('_headers', () => {
 		);
 	});
 });
+
 describe('sync_process_env', () => {
 	// an empty directory so that Wrangler doesn't pick up any `.env` or `.dev.vars` files
 	const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'adapter-cloudflare-'));

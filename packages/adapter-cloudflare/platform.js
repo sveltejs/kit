@@ -1,8 +1,9 @@
-/** @import { Plugin, PreviewServer, ViteDevServer } from 'vite' */
+/** @import { Plugin, ViteDevServer } from 'vite' */
 /** @import { GetPlatformProxyOptions } from 'wrangler' */
 import path from 'node:path';
 import { exactRegex } from '@rolldown/pluginutils';
 import { getPlatformProxy, unstable_readConfig } from 'wrangler';
+import { is_dev_or_build } from './utils.js';
 
 /**
  * Sets a new platform proxy and disposes the old one if it exists
@@ -35,7 +36,7 @@ async function reload_cloudflare_platform_proxy(options) {
 export function plugin_platform(options, stub_import, get_environment) {
 	const explicit_environment = options.environment;
 
-	/** @param {ViteDevServer | PreviewServer} server */
+	/** @param {ViteDevServer} server */
 	const setup = async (server) => {
 		// shared so that concurrent servers start one proxy and only the last close disposes it
 		const shared = (globalThis.__sveltekit_cloudflare_platform_setup ??= {
@@ -120,6 +121,7 @@ export function plugin_platform(options, stub_import, get_environment) {
 
 	return {
 		name: 'vite-plugin-sveltekit-adapter-cloudflare-virtual-workers-module',
+		apply: is_dev_or_build,
 		configResolved(config) {
 			// resolve the config path relative to the Vite `root` setting rather than
 			// the current working directory
@@ -131,10 +133,8 @@ export function plugin_platform(options, stub_import, get_environment) {
 			options.environment = explicit_environment ?? get_environment();
 		},
 		configureServer: setup,
-		configurePreviewServer: setup,
 		// a restarting server is set up before the old one closes, so the proxy survives
 		closeServer: dispose,
-		closePreviewServer: dispose,
 		resolveId: {
 			filter: { id: exactRegex('cloudflare:workers') },
 			handler() {

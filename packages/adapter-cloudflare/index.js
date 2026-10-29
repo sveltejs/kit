@@ -4,9 +4,14 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { getRequest } from '@sveltejs/kit/node';
-import { is_dev_or_build, plugin_config } from './config.js';
+import { plugin_config } from './config.js';
 import { plugin_platform } from './platform.js';
-import { validate_worker_settings, append_headers, sync_process_env } from './utils.js';
+import {
+	validate_worker_settings,
+	append_headers,
+	is_dev_or_build,
+	sync_process_env
+} from './utils.js';
 
 const files = fileURLToPath(new URL('./files', import.meta.url));
 
@@ -156,43 +161,52 @@ export default function (options = {}) {
 			read: () => true,
 			instrumentation: () => true
 		},
-		vite: {
-			getRequest(options) {
-				const request = getRequest(options);
-				/** @type {import('@cloudflare/workers-types').Request} */ (
-					/** @type {unknown} */ (request)
-				).cf = globalThis.__sveltekit_cloudflare_platform?.cf;
-				return request;
-			},
-			plugins: [
-				{
-					name: 'vite-plugin-sveltekit-adapter-cloudflare-resolved-config',
-					configResolved(config) {
-						vite_config = config;
-					}
+		vite({ config }) {
+			if (config.paths.assets) {
+				throw new Error(
+					'@sveltejs/adapter-cloudflare does not support paths.assets. Remove paths.assets from your SvelteKit configuration.'
+				);
+			}
+
+			return {
+				preview: false,
+				getRequest(options) {
+					const request = getRequest(options);
+					/** @type {import('@cloudflare/workers-types').Request} */ (
+						/** @type {unknown} */ (request)
+					).cf = globalThis.__sveltekit_cloudflare_platform?.cf;
+					return request;
 				},
-				...plugin_config(options.config, (config) => (wrangler_config = config)),
-				{
-					name: 'vite-plugin-sveltekit-adapter-cloudflare-env',
-					apply: is_dev_or_build,
-					config: {
-						// runs after the Cloudflare Vite plugin resolved the Wrangler config
-						// but before SvelteKit reads `process.env`
-						order: 'post',
-						handler() {
-							sync_process_env(wrangler_config);
-						}
-					}
-				},
-				plugin_platform(
+				plugins: [
 					{
-						configPath: options.config,
-						...options.platformProxy
+						name: 'vite-plugin-sveltekit-adapter-cloudflare-resolved-config',
+						configResolved(config) {
+							vite_config = config;
+						}
 					},
-					stub_import,
-					() => wrangler_config?.targetEnvironment
-				)
-			]
+					...plugin_config(options.config, (config) => (wrangler_config = config)),
+					{
+						name: 'vite-plugin-sveltekit-adapter-cloudflare-env',
+						apply: is_dev_or_build,
+						config: {
+							// runs after the Cloudflare Vite plugin resolved the Wrangler config
+							// but before SvelteKit reads `process.env`
+							order: 'post',
+							handler() {
+								sync_process_env(wrangler_config);
+							}
+						}
+					},
+					plugin_platform(
+						{
+							configPath: options.config,
+							...options.platformProxy
+						},
+						stub_import,
+						() => wrangler_config?.targetEnvironment
+					)
+				]
+			};
 		}
 	};
 }
