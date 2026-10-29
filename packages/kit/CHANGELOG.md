@@ -1,5 +1,31 @@
 # @sveltejs/kit
 
+## 3.1.1
+
+### Patch Changes
+
+- fix: return a 400 response instead of throwing when `reroute` rewrites a malformed pathname ([`1d21a3b`](https://github.com/sveltejs/kit/commit/1d21a3b0beca23f044f02789926e011a904f8959))
+
+- fix: restore function snapshots on reload when SSR is disabled ([#17477](https://github.com/sveltejs/kit/pull/17477))
+
+- fix: prevent separate non-exported `query.batch` functions from sharing a batch ([`3529813`](https://github.com/sveltejs/kit/commit/352981356b22f775b0fbe6475fd19c7680ab5c9a))
+
+- fix: reuse the original `fetch` across dev server reloads ([#17548](https://github.com/sveltejs/kit/pull/17548))
+
+- fix: avoid adding a file watcher while loading `src/env` ([#17502](https://github.com/sveltejs/kit/pull/17502))
+
+- fix: parse remote form submissions in linear time ([`d593e7e`](https://github.com/sveltejs/kit/commit/d593e7e8960cd7e97e81cb834d7fa5c56d821944))
+
+- fix: prevent server-side route resolution from loading code from another origin for pathnames starting with `//` ([`dd63fd1`](https://github.com/sveltejs/kit/commit/dd63fd1a2e52221e2024e3c59d6d15f7f0afca64))
+
+- fix: preserve service worker sourcemaps when injecting env ([#17566](https://github.com/sveltejs/kit/pull/17566))
+
+- fix: prevent server-only modules from being imported into browser code via `src/params.js` ([`ae07803`](https://github.com/sveltejs/kit/commit/ae07803806f75b8b5662ae4ab92934ca1356fd84))
+
+- fix: avoid injecting a non-serializable TypeScript config callback by default ([#17512](https://github.com/sveltejs/kit/pull/17512))
+
+- fix: report actionable errors for remote modules in server-only locations ([#17567](https://github.com/sveltejs/kit/pull/17567))
+
 ## 3.1.0
 
 ### Minor Changes
