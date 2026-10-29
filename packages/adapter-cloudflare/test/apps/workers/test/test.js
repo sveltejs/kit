@@ -17,6 +17,11 @@ test('cloudflare:workers', async ({ request }) => {
 	}
 });
 
+test('$app/env/private reads Wrangler vars', async ({ request }) => {
+	const res = await request.get('/env/private');
+	expect(await res.text()).toBe('from wrangler.jsonc');
+});
+
 test('Request.cf', async ({ request }) => {
 	const res = await request.get(`${base}/cf`);
 	const cf = await res.json();
