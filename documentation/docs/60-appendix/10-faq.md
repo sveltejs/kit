@@ -12,7 +12,7 @@ See [the documentation regarding project types](project-types) for more details.
 
 ## Which browsers does SvelteKit support?
 
-SvelteKit's client runtime targets the same browsers as [Vite's default `build.target`](https://vite.dev/config/build-options#build-target), `'baseline-widely-available'`. With Vite 8 this means Chrome 111, Edge 111, Firefox 114 and Safari 16.4 or later. This is a higher floor than [Svelte's own](../svelte/browser-support), since SvelteKit (and libraries it bundles into the client, such as [`devalue`](https://github.com/sveltejs/devalue)) use language features and APIs such as `Object.hasOwn`. APIs newer than this target are only used behind feature detection.
+SvelteKit's client runtime targets the same browsers as [Vite's default `build.target`](https://vite.dev/config/build-options#build-target), `'baseline-widely-available'`. With Vite 8 this means Chrome 111, Edge 111, Firefox 114 and Safari 16.4 or later. 
 
 The client runtime is not polyfilled. Setting a lower `build.target` only changes how syntax is transformed — it does not add missing APIs — so if you need to support older browsers you will need to add polyfills yourself, for example with [`@vitejs/plugin-legacy`](https://github.com/vitejs/vite/tree/main/packages/plugin-legacy).
 
