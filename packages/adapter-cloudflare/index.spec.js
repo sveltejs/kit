@@ -10,6 +10,7 @@ const dispose = vi.fn(() => Promise.resolve());
 
 vi.mock('wrangler', () => ({
 	getPlatformProxy: vi.fn(() => Promise.resolve({ caches: {}, dispose })),
+	unstable_getVarsForDev: vi.fn(() => ({})),
 	unstable_readConfig: vi.fn(() => ({ configPath: undefined }))
 }));
 
@@ -134,10 +135,12 @@ test('swaps the shared platform proxy in place when wrangler config changes', as
 		/** @type {any} */ ({ caches: next_caches, dispose: next_dispose })
 	);
 
+	const restart = vi.spyOn(server, 'restart').mockResolvedValue();
 	server.watcher.emit('change', config_path);
 	await vi.waitFor(() => {
-		expect(globalThis.__sveltekit_cloudflare_platform).not.toBe(previous);
+		expect(restart).toHaveBeenCalledOnce();
 	});
+	expect(globalThis.__sveltekit_cloudflare_platform).not.toBe(previous);
 	expect(previous_dispose).toHaveBeenCalledOnce();
 	expect(globalThis.__sveltekit_cloudflare_platform_setup?.proxy).not.toBe(previous_proxy);
 
@@ -223,6 +226,25 @@ test('rejects concurrent servers sharing a failed platform proxy and allows a re
 	expect(dispose).toHaveBeenCalledOnce();
 	expect(globalThis.__sveltekit_cloudflare_platform_setup).toBeUndefined();
 });
+
+test.each(['change', 'add', 'unlink'])(
+	'restarts the dev server on local variables file %s',
+	async (event) => {
+		const config_path = path.resolve('wrangler.toml');
+		vi.mocked(unstable_readConfig).mockReturnValueOnce(
+			/** @type {any} */ ({ configPath: config_path })
+		);
+		const server = await create_server();
+		const restart = vi.spyOn(server, 'restart').mockResolvedValue();
+
+		server.watcher.emit(event, path.resolve('.dev.vars'));
+		await vi.waitFor(() => {
+			expect(restart).toHaveBeenCalledOnce();
+		});
+
+		await server.close();
+	}
+);
 
 test('starts the platform proxy with the Wrangler environment from a `.env` file', async () => {
 	const root = fs.mkdtempSync(path.join(os.tmpdir(), 'adapter-cloudflare-'));

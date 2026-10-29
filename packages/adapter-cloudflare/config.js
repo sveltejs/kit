@@ -21,7 +21,7 @@ const useful_cloudflare_build_plugins = new Set([
 ]);
 
 /** @type {Plugin['apply']} */
-const is_dev_or_build = (_config, env) => !env.isPreview;
+export const is_dev_or_build = (_config, env) => !env.isPreview;
 
 /**
  * Applies the Worker environment config that `@cloudflare/vite-plugin` generates
