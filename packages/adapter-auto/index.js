@@ -81,9 +81,9 @@ function resolve_peer(dependency) {
 /** @typedef {import('@sveltejs/kit').Adapter} Adapter */
 
 /**
- * @returns {Promise<Adapter | undefined>} The corresponding adapter for the current environment if found otherwise undefined
+ * @returns {Promise<(() => Adapter) | undefined>} The adapter factory for the current environment, if found
  */
-async function get_adapter() {
+async function get_adapter_factory() {
 	const match = adapters.find((candidate) => candidate.test());
 
 	if (!match) return;
@@ -125,40 +125,42 @@ async function get_adapter() {
 	/** @type {{ default: () => Adapter }} */
 	const module = await import(pathToFileURL(resolved).href);
 
-	const adapter = module.default();
+	return () => {
+		const adapter = module.default();
 
-	return {
-		...adapter,
-		adapt: (builder) => {
-			builder.log.info(`Detected environment: ${match.name}. Using ${match.module}`);
-			return adapter.adapt(builder);
-		}
+		return {
+			...adapter,
+			adapt: (builder) => {
+				builder.log.info(`Detected environment: ${match.name}. Using ${match.module}`);
+				return adapter.adapt(builder);
+			}
+		};
 	};
 }
 
+// Resolve before SvelteKit configures Vite so all adapter hooks are available.
+const factory = await get_adapter_factory();
+
 /** @type {typeof import('./index.js').default} */
-export default () => ({
-	name: '@sveltejs/adapter-auto',
-	adapt: async (builder) => {
-		const adapter = await get_adapter();
-
-		if (adapter) return adapter.adapt(builder);
-
-		builder.log.warn(
-			'Could not detect a supported production environment. See https://svelte.dev/docs/kit/adapters to learn how to configure your app to run on the platform of your choosing'
-		);
-	},
-	supports: {
-		read: () => {
-			supports_error(
-				'The read function imported from $app/server only works in certain environments'
+export default factory ??
+	(() => ({
+		name: '@sveltejs/adapter-auto',
+		adapt: (builder) => {
+			builder.log.warn(
+				'Could not detect a supported production environment. See https://svelte.dev/docs/kit/adapters to learn how to configure your app to run on the platform of your choosing'
 			);
 		},
-		instrumentation: () => {
-			supports_error('`instrumentation.server.js` only works in certain environments');
+		supports: {
+			read: () => {
+				supports_error(
+					'The read function imported from $app/server only works in certain environments'
+				);
+			},
+			instrumentation: () => {
+				supports_error('`instrumentation.server.js` only works in certain environments');
+			}
 		}
-	}
-});
+	}));
 
 /**
  * @param {string} message
