@@ -34,18 +34,6 @@ export function plugin_config(config_path) {
 			// the plugin requires `main` to be populated, so we set it to avoid it
 			// trying to resolve the build-generated entry in the user's wrangler config
 			config.main = worker_entry;
-
-			// TODO: remove this when we bump the Cloudflare Vite plugin version
-			// Older Cloudflare Vite plugin versions don't recognize the date-based Node.js compatibility default.
-			if (
-				config.compatibility_date &&
-				config.compatibility_date >= '2026-08-04' &&
-				!config.compatibility_flags.includes('no_nodejs_compat_v2')
-			) {
-				config.compatibility_flags = [
-					...new Set([...config.compatibility_flags, 'nodejs_compat_v2'])
-				];
-			}
 		}
 	});
 

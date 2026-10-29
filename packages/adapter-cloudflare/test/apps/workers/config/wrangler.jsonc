@@ -10,7 +10,5 @@
 	},
 	"vars": {
 		"FOO": "from wrangler.jsonc"
-	},
-	// TODO: remove this after we bump wrangler since it enables it by default for later compat dates
-	"compatibility_flags": ["nodejs_compat"]
+	}
 }
