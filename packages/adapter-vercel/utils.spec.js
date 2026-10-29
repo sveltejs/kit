@@ -101,6 +101,11 @@ describe('resolve_runtime', () => {
 		assert.equal(result, 'bun1.4.x');
 	});
 
+	test('accepts nodejs26.x', () => {
+		const result = resolve_runtime('nodejs26.x');
+		assert.equal(result, 'nodejs26.x');
+	});
+
 	test('throws an error for an unsupported bun minor', () => {
 		assert.throws(() => resolve_runtime('bun1.9.x', undefined), /Unsupported runtime: bun1.9.x/);
 	});
@@ -143,6 +148,46 @@ describe('resolve_runtime with bun detected', () => {
 	test('throws for a bun major other than 1', () => {
 		with_bun('2.0.0', () => {
 			assert.throws(() => resolve_runtime(undefined, undefined), /Unsupported Bun version: 2/);
+		});
+	});
+});
+
+describe('resolve_runtime with node detected', () => {
+	/**
+	 * @param {string} node_version
+	 * @param {() => void} fn
+	 */
+	function with_node(node_version, fn) {
+		const node = Object.getOwnPropertyDescriptor(process.versions, 'node');
+		const bun = Object.getOwnPropertyDescriptor(process.versions, 'bun');
+		Object.defineProperty(process.versions, 'node', { value: node_version, configurable: true });
+		delete process.versions.bun;
+		try {
+			fn();
+		} finally {
+			if (node) Object.defineProperty(process.versions, 'node', node);
+			if (bun) Object.defineProperty(process.versions, 'bun', bun);
+		}
+	}
+
+	test('detects Node 26', () => {
+		with_node('26.0.0', () => {
+			assert.equal(resolve_runtime(undefined, undefined), 'nodejs26.x');
+		});
+	});
+
+	test('detects Node 24', () => {
+		with_node('24.1.0', () => {
+			assert.equal(resolve_runtime(undefined, undefined), 'nodejs24.x');
+		});
+	});
+
+	test('throws for an unsupported Node major', () => {
+		with_node('27.0.0', () => {
+			assert.throws(
+				() => resolve_runtime(undefined, undefined),
+				/Unsupported Node\.js version.*Please use Node 22, 24 or 26/
+			);
 		});
 	});
 });

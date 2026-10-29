@@ -69,7 +69,7 @@ export function resolve_runtime(default_key, override_key) {
 	return key;
 }
 
-const valid_node_versions = [22, 24];
+const valid_node_versions = [22, 24, 26];
 const valid_bun_versions = /** @type {const} */ (['1.x', '1.4.x']);
 const formatter = new Intl.ListFormat('en-gb', { type: 'disjunction' });
 
@@ -102,7 +102,7 @@ function get_default_runtime() {
 			);
 		}
 
-		return `nodejs${/** @type {22 | 24} */ (major)}.x`;
+		return `nodejs${/** @type {22 | 24 | 26} */ (major)}.x`;
 	}
 
 	throw new Error(
@@ -110,7 +110,13 @@ function get_default_runtime() {
 	);
 }
 
-const valid_runtimes = /** @type {const} */ (['nodejs22.x', 'nodejs24.x', 'bun1.x', 'bun1.4.x']);
+const valid_runtimes = /** @type {const} */ ([
+	'nodejs22.x',
+	'nodejs24.x',
+	'nodejs26.x',
+	'bun1.x',
+	'bun1.4.x'
+]);
 
 /**
  * @param {string} key
