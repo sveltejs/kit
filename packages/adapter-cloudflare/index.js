@@ -1,5 +1,6 @@
 /** @import { Plugin, PreviewServer, ViteDevServer } from 'vite' */
 /** @import { GetPlatformProxyOptions } from 'wrangler' */
+/** @import { WorkerConfig } from '@cloudflare/vite-plugin' */
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
@@ -7,13 +8,14 @@ import { fileURLToPath } from 'node:url';
 import { getPlatformProxy, unstable_readConfig } from 'wrangler';
 import { exactRegex } from '@rolldown/pluginutils';
 import { getRequest } from '@sveltejs/kit/node';
-import { plugin_config } from './config.js';
+import { is_dev_or_build, plugin_config } from './config.js';
 import {
 	is_building_for_cloudflare_pages,
 	validate_worker_settings,
 	get_routes_json,
 	parse_redirects,
-	append_headers
+	append_headers,
+	sync_process_env
 } from './utils.js';
 
 const name = '@sveltejs/adapter-cloudflare';
@@ -23,6 +25,10 @@ export default function (options = {}) {
 	// Add a random query so we can reliably string-replace the stub
 	const stub_import =
 		import.meta.resolve('./src/virtual-cloudflare-workers.js') + '?' + crypto.randomUUID();
+
+	/** @type {WorkerConfig} */
+	let worker_config;
+
 	return {
 		name,
 		async adapt(builder) {
@@ -204,13 +210,26 @@ export default function (options = {}) {
 				return request;
 			},
 			plugins: [
-				...plugin_config(options.config),
+				...plugin_config(options.config, (config) => (worker_config = config)),
+				{
+					name: 'vite-plugin-sveltekit-adapter-cloudflare-env',
+					apply: is_dev_or_build,
+					config: {
+						// runs after the Cloudflare Vite plugin resolved the Wrangler config
+						// but before SvelteKit reads `process.env`
+						order: 'post',
+						handler() {
+							sync_process_env(worker_config);
+						}
+					}
+				},
 				virtual_workers_module(
 					{
 						configPath: options.config,
 						...options.platformProxy
 					},
-					stub_import
+					stub_import,
+					() => worker_config?.targetEnvironment
 				)
 			]
 		}
@@ -244,9 +263,10 @@ async function reload_cloudflare_platform_proxy(options) {
 /**
  * @param {GetPlatformProxyOptions} options
  * @param {string} stub_import
+ * @param {() => string | undefined} get_environment the Wrangler environment the Cloudflare Vite plugin resolved
  * @returns {Plugin}
  */
-function virtual_workers_module(options, stub_import) {
+function virtual_workers_module(options, stub_import, get_environment) {
 	/** @param {ViteDevServer | PreviewServer} server */
 	const setup = async (server) => {
 		// shared so that concurrent servers start one proxy and only the last close disposes it
@@ -268,18 +288,30 @@ function virtual_workers_module(options, stub_import) {
 				configurable: true
 			});
 
-			// reinitialise the platform proxy when the wrangler config changes
+			// reinitialise the platform proxy when the wrangler config or local variables change
 			if ('watcher' in server) {
 				const resolved = unstable_readConfig({ config: options.configPath });
 				if (resolved.configPath) {
 					const config_path = path.resolve(resolved.configPath);
+					// the same files that `@cloudflare/vite-plugin` watches
+					const local_files = ['.dev.vars', '.env'];
+					const cloudflare_env = get_environment();
+					if (cloudflare_env) {
+						local_files.push(`.dev.vars.${cloudflare_env}`, `.env.${cloudflare_env}`);
+					}
+					const watched = [
+						config_path,
+						...local_files.map((file) => path.join(path.dirname(config_path), file))
+					];
 					let reloading = false;
 
 					/** @param {string} file */
 					const on_change = (file) => {
-						if (reloading || path.resolve(file) !== config_path) return;
+						if (reloading || !watched.includes(path.resolve(file))) return;
 						reloading = true;
 						reload_cloudflare_platform_proxy(options)
+							// so that SvelteKit reads the new variables
+							.then(() => server.restart())
 							.catch((/** @type {unknown} */ error) => {
 								// A rejection must not become unhandled — it would crash the dev
 								// server. Log the message and leave the previous proxy in place
@@ -292,8 +324,10 @@ function virtual_workers_module(options, stub_import) {
 								reloading = false;
 							});
 					};
-					server.watcher.add(config_path);
+					server.watcher.add(watched);
 					server.watcher.on('change', on_change);
+					server.watcher.on('add', on_change);
+					server.watcher.on('unlink', on_change);
 				}
 			}
 		} catch (error) {
