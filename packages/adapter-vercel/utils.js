@@ -19,6 +19,19 @@ export function pattern_to_src(pattern) {
 	return src;
 }
 
+/**
+ * Escapes a pathname so that it can be matched literally by a Vercel route `src` regex
+ * @param {string} pathname
+ */
+export function escape_src(pathname) {
+	// hex escapes rather than backslash escapes, since Vercel only appends the `$` anchor
+	// if `src` doesn't already end with `$`, and it replaces `\/` with `/`
+	return pathname.replace(
+		/[.*+?^${}()|[\]\\]/g,
+		(char) => `\\x${char.charCodeAt(0).toString(16).padStart(2, '0')}`
+	);
+}
+
 const integer = /^\d+$/;
 
 /**

@@ -1,6 +1,6 @@
 import process from 'node:process';
 import { assert, test, describe } from 'vitest';
-import { parse_isr_expiration, pattern_to_src, resolve_runtime } from './utils.js';
+import { escape_src, parse_isr_expiration, pattern_to_src, resolve_runtime } from './utils.js';
 
 // workaround so that TypeScript doesn't follow that import which makes it pick up that file and then error on missing import aliases
 const { parse_route_id } = await import(
@@ -38,6 +38,24 @@ test('pattern_to_src for route with rest parameter', () => {
 
 test('pattern_to_src for route with rest parameter in the middle', () => {
 	run_pattern_to_src_test('/foo/[...bar]/baz', '^/foo(?:/([^]*))?/baz/?');
+});
+
+describe('escape_src', () => {
+	test('matches prerendered paths literally', () => {
+		for (const path of ['/account/x|.*', '/blog/(a)[b]{1}+?', '/a$', '/a\\/b', '/^a']) {
+			const regex = new RegExp(`^${escape_src(path)}$`);
+			assert.ok(regex.test(path), path);
+		}
+
+		const regex = new RegExp(`^${escape_src('/account/x|.*')}$`);
+		assert.notOk(regex.test('/'));
+		assert.notOk(regex.test('/_app/immutable/entry/start.js'));
+	});
+
+	test('does not end with `$` or contain `\\/`', () => {
+		assert.equal(escape_src('/a$'), '/a\\x24');
+		assert.equal(escape_src('/a\\/b'), '/a\\x5c/b');
+	});
 });
 
 describe('parse_isr_expiration', () => {
