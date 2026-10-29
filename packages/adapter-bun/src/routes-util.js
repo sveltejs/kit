@@ -1,6 +1,7 @@
 /** @import { BunFile, BunRequest, Serve } from 'bun' */
 import { app_dir, base, dir, embed } from '#@sveltejs/adapter-bun';
 import path from 'node:path';
+import { negotiateEncoding } from '@sveltejs/adapter-server/runtime';
 
 /**
  * Embedded assets are imported by identity path; on-disk assets live under the
@@ -90,26 +91,6 @@ function is_fresh(request, etag, mtime) {
 }
 
 /**
- * @param {string | null} accept
- * @param {AssetMeta} meta
- * @returns {'br' | 'gz' | null}
- */
-function negotiate(accept, meta) {
-	if (accept === null || (!meta.br && !meta.gz)) return null;
-
-	const accepted = new Set();
-	for (const part of accept.split(',')) {
-		const [name = '', ...params] = part.trim().toLowerCase().split(';');
-		if (params.some((param) => /^q=0(\.0*)?$/.test(param.trim()))) continue;
-		accepted.add(name.trim());
-	}
-
-	if (meta.br && (accepted.has('br') || accepted.has('*'))) return 'br';
-	if (meta.gz && (accepted.has('gzip') || accepted.has('*'))) return 'gz';
-	return null;
-}
-
-/**
  * @param {string[]} paths
  * @param {RouteHandler} route
  * @returns {Array<[string, RouteHandler]>}
@@ -134,9 +115,9 @@ function file_route(file, meta, extra_headers = {}) {
 		// Bun serializes Range itself for file bodies; ranges apply to the identity representation
 		const encoding =
 			request.headers.get('range') === null
-				? negotiate(request.headers.get('accept-encoding'), meta)
-				: null;
-		const etag = encoding === null ? `"${meta.hash}"` : `"${meta.hash}-${encoding}"`;
+				? negotiateEncoding(request.headers.get('accept-encoding'), meta)
+				: undefined;
+		const etag = encoding ? `"${meta.hash}-${encoding}"` : `"${meta.hash}"`;
 
 		/** @type {Record<string, string>} */
 		const response_headers = {
@@ -152,7 +133,7 @@ function file_route(file, meta, extra_headers = {}) {
 		}
 
 		let body_file = file;
-		if (encoding !== null) {
+		if (encoding) {
 			response_headers['content-encoding'] = CONTENT_ENCODING[encoding];
 			body_file = `${file}.${encoding}`;
 		}
