@@ -12,7 +12,7 @@ const config = {
 		// the reload confuses Playwright
 		include: ['cookie']
 	},
-	plugins: [sveltekit()],
+	plugins: [sveltekit({ experimental: { remoteFunctions: true } })],
 	server: {
 		fs: {
 			allow: [path.resolve('../../../src')]
