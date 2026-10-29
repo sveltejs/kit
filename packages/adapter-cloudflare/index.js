@@ -1,22 +1,13 @@
-/** @import { Plugin, PreviewServer, ViteDevServer } from 'vite' */
-/** @import { GetPlatformProxyOptions } from 'wrangler' */
 /** @import { WorkerConfig } from '@cloudflare/vite-plugin' */
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
-import { getPlatformProxy, unstable_readConfig } from 'wrangler';
-import { exactRegex } from '@rolldown/pluginutils';
+import { unstable_readConfig } from 'wrangler';
 import { getRequest } from '@sveltejs/kit/node';
 import { is_dev_or_build, plugin_config } from './config.js';
-import {
-	is_building_for_cloudflare_pages,
-	validate_worker_settings,
-	get_routes_json,
-	parse_redirects,
-	append_headers,
-	sync_process_env
-} from './utils.js';
+import { plugin_platform } from './platform.js';
+import { validate_worker_settings, append_headers, sync_process_env } from './utils.js';
 
 const name = '@sveltejs/adapter-cloudflare';
 
@@ -32,15 +23,6 @@ export default function (options = {}) {
 	return {
 		name,
 		async adapt(builder) {
-			if (
-				fs.existsSync('_routes.json') ||
-				fs.existsSync(`${builder.config.files.assets}/_routes.json`)
-			) {
-				throw new Error(
-					"Cloudflare Pages' _routes.json should be configured from the adapter option of the SvelteKit plugin in your vite.config.js. See https://svelte.dev/docs/kit/adapter-cloudflare#Options-routes"
-				);
-			}
-
 			if (fs.existsSync(`${builder.config.files.assets}/_headers`)) {
 				throw new Error(
 					`The _headers file should be placed in the project root rather than the ${builder.config.files.assets} directory`
@@ -53,34 +35,20 @@ export default function (options = {}) {
 				);
 			}
 
-			const { wrangler_config, building_for_cloudflare_pages } = validate_wrangler_config(
-				options.config
-			);
+			const wrangler_config = unstable_readConfig({ config: options.config });
+			validate_worker_settings(wrangler_config);
 
 			let dest = builder.getBuildDirectory('cloudflare');
-			let worker_dest = `${dest}/_worker.js`;
-			let assets_binding = 'ASSETS';
+			const worker_dest = wrangler_config.main ?? `${dest}/_worker.js`;
+			const assets_binding = wrangler_config.assets?.binding ?? 'ASSETS';
 
-			if (building_for_cloudflare_pages) {
-				if (wrangler_config.pages_build_output_dir) {
-					dest = wrangler_config.pages_build_output_dir;
-					worker_dest = `${dest}/_worker.js`;
-				}
-			} else {
-				if (wrangler_config.main) {
-					worker_dest = wrangler_config.main;
-				}
-				if (wrangler_config.assets?.directory) {
-					// wrangler doesn't resolve `assets.directory` to an absolute path unlike
-					// `main` and `pages_build_output_dir` so we need to do it ourselves here
-					const parent_dir = wrangler_config.configPath
-						? path.dirname(path.resolve(wrangler_config.configPath))
-						: process.cwd();
-					dest = path.resolve(parent_dir, wrangler_config.assets.directory);
-				}
-				if (wrangler_config.assets?.binding) {
-					assets_binding = wrangler_config.assets.binding;
-				}
+			if (wrangler_config.assets?.directory) {
+				// wrangler doesn't resolve `assets.directory` to an absolute path unlike
+				// `main` so we need to do it ourselves here
+				const parent_dir = wrangler_config.configPath
+					? path.dirname(path.resolve(wrangler_config.configPath))
+					: process.cwd();
+				dest = path.resolve(parent_dir, wrangler_config.assets.directory);
 			}
 
 			const files = fileURLToPath(new URL('./files', import.meta.url).href);
@@ -97,13 +65,9 @@ export default function (options = {}) {
 			// client assets and prerendered pages
 			const assets_dest = `${dest}${builder.config.paths.base}`;
 			fs.mkdirSync(assets_dest, { recursive: true });
-			if (
-				building_for_cloudflare_pages ||
-				wrangler_config.assets?.not_found_handling === '404-page'
-			) {
+			if (wrangler_config.assets?.not_found_handling === '404-page') {
 				// generate plaintext 404.html first which can then be overridden by prerendering, if the user defined such a page.
 				// This file is served when a request fails to match an asset.
-				// If we're building for Cloudflare Pages, it's only served when a request matches an entry in `routes.exclude`
 				const fallback = path.join(assets_dest, '404.html');
 				if (options.fallback === 'spa') {
 					await builder.generateFallback(fallback);
@@ -111,12 +75,9 @@ export default function (options = {}) {
 					fs.writeFileSync(fallback, 'Not Found');
 				}
 			}
-			const client_assets = builder.writeClient(assets_dest);
+			builder.writeClient(assets_dest);
 			builder.writePrerendered(assets_dest);
-			if (
-				!building_for_cloudflare_pages &&
-				wrangler_config.assets?.not_found_handling === 'single-page-application'
-			) {
+			if (wrangler_config.assets?.not_found_handling === 'single-page-application') {
 				await builder.generateFallback(path.join(assets_dest, 'index.html'));
 			}
 
@@ -172,30 +133,7 @@ export default function (options = {}) {
 				});
 			}
 
-			if (building_for_cloudflare_pages) {
-				// _routes.json
-
-				// we need to add the source paths found in the `_redirects` file to the
-				// `_routes.json` file so that Cloudflare knows it shouldn't invoke the
-				// Worker but instead let the rules in the `_redirects` file take over.
-				/** @type {string[]} */
-				let redirects = [];
-				if (fs.existsSync(redirects_dest)) {
-					const redirect_rules = fs.readFileSync(redirects_dest, 'utf8');
-					redirects = parse_redirects(redirect_rules);
-				}
-
-				fs.writeFileSync(
-					`${dest}/_routes.json`,
-					JSON.stringify(
-						get_routes_json(builder, client_assets, redirects, options.routes ?? {}),
-						null,
-						'\t'
-					)
-				);
-			} else {
-				fs.writeFileSync(`${dest}/.assetsignore`, generate_assetsignore(), { flag: 'a' });
-			}
+			fs.writeFileSync(`${dest}/.assetsignore`, generate_assetsignore(), { flag: 'a' });
 		},
 		supports: {
 			read: () => true,
@@ -223,7 +161,7 @@ export default function (options = {}) {
 						}
 					}
 				},
-				virtual_workers_module(
+				plugin_platform(
 					{
 						configPath: options.config,
 						...options.platformProxy
@@ -232,136 +170,6 @@ export default function (options = {}) {
 					() => worker_config?.targetEnvironment
 				)
 			]
-		}
-	};
-}
-
-// TODO: move the Vite plugin stuff into their own file
-
-/**
- * Sets a new platform proxy and disposes the old one if it exists
- * @param {GetPlatformProxyOptions} options
- */
-async function reload_cloudflare_platform_proxy(options) {
-	const previous = globalThis.__sveltekit_cloudflare_platform;
-	const next = await getPlatformProxy(options);
-	globalThis.__sveltekit_cloudflare_platform = next;
-	if (globalThis.__sveltekit_cloudflare_platform_setup) {
-		globalThis.__sveltekit_cloudflare_platform_setup.proxy = Promise.resolve(next);
-	}
-	Object.defineProperty(globalThis, 'caches', {
-		value: next.caches,
-		writable: true,
-		enumerable: true,
-		configurable: true
-	});
-	if (previous) {
-		await previous.dispose();
-	}
-}
-
-/**
- * @param {GetPlatformProxyOptions} options
- * @param {string} stub_import
- * @param {() => string | undefined} get_environment the Wrangler environment the Cloudflare Vite plugin resolved
- * @returns {Plugin}
- */
-function virtual_workers_module(options, stub_import, get_environment) {
-	/** @param {ViteDevServer | PreviewServer} server */
-	const setup = async (server) => {
-		// shared so that concurrent servers start one proxy and only the last close disposes it
-		const shared = (globalThis.__sveltekit_cloudflare_platform_setup ??= {
-			servers: 0,
-			proxy: getPlatformProxy(options)
-		});
-		shared.servers += 1;
-		try {
-			const proxy = await shared.proxy;
-			// We store the platform proxy on globalThis so that our virtual workers module
-			// can access the same instance that we use here to populate `caches` and `cf` (above).
-			globalThis.__sveltekit_cloudflare_platform = proxy;
-			// Deno defines `caches` with a getter and no setter, so assigning to it throws
-			Object.defineProperty(globalThis, 'caches', {
-				value: proxy.caches,
-				writable: true,
-				enumerable: true,
-				configurable: true
-			});
-
-			// reinitialise the platform proxy when the wrangler config or local variables change
-			if ('watcher' in server) {
-				const resolved = unstable_readConfig({ config: options.configPath });
-				if (resolved.configPath) {
-					const config_path = path.resolve(resolved.configPath);
-					// the same files that `@cloudflare/vite-plugin` watches
-					const local_files = ['.dev.vars', '.env'];
-					const cloudflare_env = get_environment();
-					if (cloudflare_env) {
-						local_files.push(`.dev.vars.${cloudflare_env}`, `.env.${cloudflare_env}`);
-					}
-					const watched = [
-						config_path,
-						...local_files.map((file) => path.join(path.dirname(config_path), file))
-					];
-					let reloading = false;
-
-					/** @param {string} file */
-					const on_change = (file) => {
-						if (reloading || !watched.includes(path.resolve(file))) return;
-						reloading = true;
-						reload_cloudflare_platform_proxy(options)
-							// so that SvelteKit reads the new variables
-							.then(() => server.restart())
-							.catch((/** @type {unknown} */ error) => {
-								// A rejection must not become unhandled — it would crash the dev
-								// server. Log the message and leave the previous proxy in place
-								// (it is only disposed on the success path, so bindings keep working).
-								server.config.logger.warn(
-									`[adapter-cloudflare] failed to reload the Cloudflare platform proxy after a wrangler config change: ${error instanceof Error ? error.message : String(error)}`
-								);
-							})
-							.finally(() => {
-								reloading = false;
-							});
-					};
-					server.watcher.add(watched);
-					server.watcher.on('change', on_change);
-					server.watcher.on('add', on_change);
-					server.watcher.on('unlink', on_change);
-				}
-			}
-		} catch (error) {
-			// let the next server retry
-			if (globalThis.__sveltekit_cloudflare_platform_setup === shared) {
-				globalThis.__sveltekit_cloudflare_platform_setup = undefined;
-			}
-			throw error;
-		}
-	};
-	const dispose = async () => {
-		const shared = globalThis.__sveltekit_cloudflare_platform_setup;
-		if (!shared) return;
-		shared.servers -= 1;
-		if (shared.servers > 0) return;
-		globalThis.__sveltekit_cloudflare_platform_setup = undefined;
-		globalThis.__sveltekit_cloudflare_platform = undefined;
-		await (await shared.proxy).dispose();
-	};
-	return {
-		name: 'vite-plugin-sveltekit-adapter-cloudflare-virtual-workers-module',
-		configureServer: setup,
-		configurePreviewServer: setup,
-		// a restarting server is set up before the old one closes, so the proxy survives
-		closeServer: dispose,
-		closePreviewServer: dispose,
-		resolveId: {
-			filter: { id: exactRegex('cloudflare:workers') },
-			handler() {
-				return {
-					id: stub_import,
-					external: true
-				};
-			}
 		}
 	};
 }
@@ -417,37 +225,12 @@ _redirects
 `.trimEnd();
 }
 
-/**
- * @param {string | undefined} config_file
- * @returns {{
- * 	wrangler_config: import('wrangler').Unstable_Config,
- * 	building_for_cloudflare_pages: boolean
- * }}
- */
-function validate_wrangler_config(config_file = undefined) {
-	const wrangler_config = unstable_readConfig({ config: config_file });
-
-	const building_for_cloudflare_pages = is_building_for_cloudflare_pages(wrangler_config);
-
-	// we don't need to validate the config if we're building for Cloudflare Pages
-	// because the `main` and `assets` values cannot be changed there
-	if (!building_for_cloudflare_pages) {
-		validate_worker_settings(wrangler_config);
-	}
-
-	return {
-		wrangler_config,
-		building_for_cloudflare_pages
-	};
-}
-
 /** @param {string} str */
 function posixify(str) {
 	return str.replace(/\\/g, '/');
 }
 
 /**
- *
  * @param {string} directory
  * @param {string} stub_import
  */
