@@ -30,9 +30,10 @@
 		"src/virtual-cloudflare-workers.js",
 		"files/worker.js",
 		"index.js",
-		"utils.js",
+		"index.d.ts",
 		"config.js",
-		"index.d.ts"
+		"platform.js",
+		"utils.js"
 	],
 	"scripts": {
 		"lint": "oxfmt --check .",
