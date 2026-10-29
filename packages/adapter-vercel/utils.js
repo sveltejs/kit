@@ -129,4 +129,5 @@ function assert_is_valid_runtime(key) {
 	}
 }
 
+// this is what to update when Vercel adds a new Node runtime or deprecates an old one! leave the rest of the code alone
 /** @typedef {typeof valid_non_node_runtimes[number] | 'nodejs22.x' | 'nodejs24.x' | 'nodejs26.x' | ({} & `nodejs${number}.x`)} RuntimeKey */
