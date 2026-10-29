@@ -2,7 +2,7 @@
 // to test that the adapter still resolves the paths correctly
 {
 	"$schema": "../node_modules/wrangler/config-schema.json",
-	"compatibility_date": "2026-09-01",
+	"compatibility_date": "2026-06-24",
 	"vars": {
 		"FOO": "from wrangler.jsonc"
 	}
