@@ -1836,8 +1836,10 @@ export async function get_navigation_intent(url, invalidating) {
 	} else {
 		/** @type {{ route?: import('types').CSRRouteServer, params: Record<string, string>}} */
 		const { route, params } = await import(
+			// prefix with the origin, since a pathname like `//evil.com/x` would otherwise be treated
+			// as protocol-relative. Don't use `new URL(pathname, origin)`, which has the same problem
 			/* @vite-ignore */
-			add_resolution_suffix(url.pathname)
+			url.origin + add_resolution_suffix(url.pathname)
 		);
 
 		if (!route) return;
