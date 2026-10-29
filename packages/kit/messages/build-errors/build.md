@@ -10,6 +10,18 @@
 
 Break the chain by moving the import into a server-only file and passing the data you need through a server `load` function, or by moving the code that doesn't need to be secret out of the server-only module.
 
+## remote_module_server_only
+
+> Cannot import remote module `%module%` into code that runs in the browser because it is server-only.
+>
+> %chain%
+>
+> Move the remote module outside any `server` directory, and remove any `server` segment from its filename.
+
+[Remote modules](https://svelte.dev/docs/kit/remote-functions) are transformed into fetch wrappers for the browser, so their server-side implementation is never exposed to the client. They can import server-only modules, but a remote module that is itself [server-only](https://svelte.dev/docs/kit/server-only-modules) — for example, in `src/lib/server` or named `data.server.remote.js` — cannot be imported by browser code. Its server-only location prevents client imports before the remote module can be transformed. It can still be imported by server-only code.
+
+Move or rename the remote module, and update its imports. Keep any other server-only modules it imports in their existing locations.
+
 ## config_feature_disabled
 
 > To enable %feature%, add the following to your SvelteKit plugin in `vite.config.js`:
