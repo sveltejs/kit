@@ -110,14 +110,24 @@ describe('resolve_runtime', () => {
 		assert.equal(result, 'bun1.x');
 	});
 
-	test('throws an error when resolving to an invalid runtime', () => {
-		assert.throws(() => resolve_runtime('node18.x', undefined), /Unsupported runtime: node18.x/);
-	});
+	test.each(['node18.x', 'nodejs028.x', 'nodejs18.x', 'nodejs33.x', 'nodejs100.x', 'nodejs2,.x'])(
+		'throws an error when resolving to an invalid runtime (%s)',
+		(runtime) => {
+			assert.throws(() => resolve_runtime(runtime), /Unsupported runtime/);
+		}
+	);
 
 	test('accepts a minor-pinned bun runtime', () => {
 		const result = resolve_runtime('bun1.4.x');
 		assert.equal(result, 'bun1.4.x');
 	});
+
+	test.each(['nodejs22.x', 'nodejs24.x', 'nodejs26.x', 'nodejs96.x', 'nodejs98.x'])(
+		'accepts %s',
+		(runtime) => {
+			assert.equal(resolve_runtime(runtime), runtime);
+		}
+	);
 
 	test('throws an error for an unsupported bun minor', () => {
 		assert.throws(() => resolve_runtime('bun1.9.x', undefined), /Unsupported runtime: bun1.9.x/);
@@ -161,6 +171,46 @@ describe('resolve_runtime with bun detected', () => {
 	test('throws for a bun major other than 1', () => {
 		with_bun('2.0.0', () => {
 			assert.throws(() => resolve_runtime(undefined, undefined), /Unsupported Bun version: 2/);
+		});
+	});
+});
+
+describe('resolve_runtime with node detected', () => {
+	/**
+	 * @param {string} node_version
+	 * @param {() => void} fn
+	 */
+	function with_node(node_version, fn) {
+		const node = Object.getOwnPropertyDescriptor(process.versions, 'node');
+		const bun = Object.getOwnPropertyDescriptor(process.versions, 'bun');
+		Object.defineProperty(process.versions, 'node', { value: node_version, configurable: true });
+		delete process.versions.bun;
+		try {
+			fn();
+		} finally {
+			if (node) Object.defineProperty(process.versions, 'node', node);
+			if (bun) Object.defineProperty(process.versions, 'bun', bun);
+		}
+	}
+
+	test.each([
+		['22.0.0', 'nodejs22.x'],
+		['24.1.0', 'nodejs24.x'],
+		['26.0.0', 'nodejs26.x'],
+		['96.1.0', 'nodejs96.x'],
+		['98.0.0', 'nodejs98.x']
+	])('detects Node %s', (version, runtime) => {
+		with_node(version, () => {
+			assert.equal(resolve_runtime(undefined, undefined), runtime);
+		});
+	});
+
+	test.each(['18.0.0', '27.0.0'])('throws for an unsupported Node major (%s)', (version) => {
+		with_node(version, () => {
+			assert.throws(
+				() => resolve_runtime(undefined, undefined),
+				/Unsupported Node\.js version.*Please use an even Node version to build your project/
+			);
 		});
 	});
 });

@@ -82,9 +82,7 @@ export function resolve_runtime(default_key, override_key) {
 	return key;
 }
 
-const valid_node_versions = [22, 24];
 const valid_bun_versions = /** @type {const} */ (['1.x', '1.4.x']);
-const formatter = new Intl.ListFormat('en-gb', { type: 'disjunction' });
 
 /** @returns {RuntimeKey} */
 function get_default_runtime() {
@@ -108,14 +106,15 @@ function get_default_runtime() {
 	// otherwise, default to the version of Node specified in the project config
 	if (process.versions.node) {
 		const major = Number(process.versions.node.split('.')[0]);
+		const version_key = /** @type {const} */ (`nodejs${major}.x`);
 
-		if (!valid_node_versions.includes(major)) {
+		if (!valid_node_version_regex.test(version_key)) {
 			throw new Error(
-				`Unsupported Node.js version: ${process.version}. Please use Node ${formatter.format(valid_node_versions.map((v) => `${v}`))} to build your project, or explicitly specify a runtime in your adapter configuration.`
+				`Unsupported Node.js version: ${process.version}. Please use an even Node version to build your project, or explicitly specify a runtime in your adapter configuration.`
 			);
 		}
 
-		return `nodejs${/** @type {22 | 24} */ (major)}.x`;
+		return version_key;
 	}
 
 	throw new Error(
@@ -123,18 +122,25 @@ function get_default_runtime() {
 	);
 }
 
-const valid_runtimes = /** @type {const} */ (['nodejs22.x', 'nodejs24.x', 'bun1.x', 'bun1.4.x']);
+const valid_non_node_runtimes = /** @type {const} */ (['bun1.x', 'bun1.4.x']);
+const valid_node_version_regex = /^nodejs[2-9][02468]\.x$/;
 
 /**
  * @param {string} key
  * @returns {asserts key is RuntimeKey}
  */
 function assert_is_valid_runtime(key) {
-	if (!valid_runtimes.includes(/** @type {RuntimeKey} */ (key))) {
+	if (
+		!valid_non_node_runtimes.includes(
+			/** @type {typeof valid_non_node_runtimes[number]} */ (key)
+		) &&
+		!valid_node_version_regex.test(key)
+	) {
 		throw new Error(
-			`Unsupported runtime: ${key}. Supported runtimes are: ${valid_runtimes.join(', ')}. See the Node.js Version section in your Vercel project settings for info on the currently supported versions.`
+			`Unsupported runtime: ${key}. Supported runtimes are: ${valid_non_node_runtimes.join(', ')}, and even Node versions. See the Node.js Version section in your Vercel project settings for info on the currently supported versions.`
 		);
 	}
 }
 
-/** @typedef {typeof valid_runtimes[number]} RuntimeKey */
+// this is what to update when Vercel adds a new Node runtime or deprecates an old one! leave the rest of the code alone
+/** @typedef {typeof valid_non_node_runtimes[number] | 'nodejs22.x' | 'nodejs24.x' | 'nodejs26.x' | ({} & `nodejs${number}.x`)} RuntimeKey */
