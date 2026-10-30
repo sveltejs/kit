@@ -295,8 +295,13 @@ export async function internal_respond(request, state) {
 	/** @type {PageNodes | undefined} */
 	let page_nodes;
 
+	/** @type {string} */
+	let decoded_pathname;
+
 	try {
 		resolved_path = decode_pathname(resolved_path);
+		// `reroute` can turn a malformed pathname into a valid one, so this must be decoded separately
+		decoded_pathname = decode_pathname(url.pathname);
 	} catch {
 		resolved_path = null;
 		return await handle();
@@ -304,8 +309,7 @@ export async function internal_respond(request, state) {
 
 	// try to serve the rerouted prerendered resource if it exists
 	if (
-		// the resolved path has been decoded so it should be compared to the decoded url pathname
-		resolved_path !== decode_pathname(url.pathname) &&
+		resolved_path !== decoded_pathname &&
 		!state.prerendering?.fallback &&
 		has_prerendered_path(resolved_path)
 	) {

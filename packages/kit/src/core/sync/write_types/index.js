@@ -153,6 +153,13 @@ export function write_all_types(config, manifest_data, root) {
 		}
 	}
 
+	// Remove entries for routes that no longer exist so the file does not
+	// accumulate stale keys after routes are deleted.
+	const current_route_ids = new Set(manifest_data.routes.map((route) => route.id));
+	for (const id of Object.keys(meta_data)) {
+		if (!current_route_ids.has(id)) delete meta_data[id];
+	}
+
 	fs.writeFileSync(meta_data_file, JSON.stringify(meta_data, null, '\t'));
 }
 

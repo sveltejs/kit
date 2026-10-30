@@ -1,5 +1,6 @@
 import { describe, expect, test, vi } from 'vitest';
 import * as devalue from 'devalue';
+import { Worker } from 'node:worker_threads';
 import {
 	BINARY_FORM_CONTENT_TYPE,
 	DELETE_KEY,
@@ -9,6 +10,7 @@ import {
 	deep_set,
 	deserialize_binary_form,
 	flatten_issues,
+	group_formdata,
 	parse_form_key,
 	serialize_binary_form,
 	split_path
@@ -192,6 +194,71 @@ describe('convert_formdata', () => {
 		const data = new FormData();
 		data.append(attack + '/form', 'bad');
 		expect(() => convert_formdata('form', data)).toThrowKitError('form_field_forbidden_key');
+	});
+
+	// a quadratic implementation takes many seconds to process this many fields. The conversion
+	// is synchronous, so it runs in a worker that can be terminated rather than blocking the suite
+	test('converts many fields in linear time', async () => {
+		const count = 20_000;
+
+		const worker = new Worker(
+			`
+			const { parentPort, workerData } = require('node:worker_threads');
+
+			import(workerData.url).then(({ convert_formdata }) => {
+				const data = new FormData();
+				for (let i = 0; i < workerData.count; i += 1) {
+					data.append('f' + i + '/form', String(i));
+					data.append('items[]/form', String(i));
+				}
+
+				parentPort.postMessage('ready');
+
+				const converted = convert_formdata('form', data);
+				parentPort.postMessage({
+					keys: Object.keys(converted).length,
+					last: converted['f' + (workerData.count - 1)],
+					items: converted.items.length
+				});
+			});
+			`,
+			{ eval: true, workerData: { url: new URL('./form-utils.js', import.meta.url).href, count } }
+		);
+
+		try {
+			const result = await new Promise((fulfil, reject) => {
+				/** @type {ReturnType<typeof setTimeout>} */
+				let timeout;
+
+				worker.on('error', reject);
+				worker.on('message', (message) => {
+					if (message === 'ready') {
+						timeout = setTimeout(() => reject(new Error('Conversion took longer than 1s')), 1000);
+					} else {
+						clearTimeout(timeout);
+						fulfil(message);
+					}
+				});
+			});
+
+			expect(result).toEqual({ keys: count + 1, last: String(count - 1), items: count });
+		} finally {
+			await worker.terminate();
+		}
+	});
+});
+
+describe('group_formdata', () => {
+	test('groups values by name, preserving order', () => {
+		const data = new FormData();
+		data.append('a', '1');
+		data.append('b', '2');
+		data.append('a', '3');
+
+		expect([...group_formdata(data)]).toEqual([
+			['a', ['1', '3']],
+			['b', ['2']]
+		]);
 	});
 });
 
@@ -516,6 +583,37 @@ describe('binary form serializer', () => {
 		await expect(deserialize_binary_form(build_raw_request(payload), '')).rejects.toThrow(
 			'invalid file metadata'
 		);
+	});
+
+	test('rejects payload with File reference when file offset table is empty', async () => {
+		const file = {};
+		const payload = devalue.stringify([{ file }, {}], {
+			File: (value) => {
+				if (value === file) {
+					return ['f.txt', 'text/plain', 5, 0, 0];
+				}
+			}
+		});
+
+		// Build a raw request with file_offsets_length === 0
+		const data_buf = text_encoder.encode(payload);
+		const body = new Uint8Array(7 + data_buf.length);
+		const view = new DataView(body.buffer);
+		body[0] = 0;
+		view.setUint32(1, data_buf.length, true);
+		view.setUint16(5, 0, true); // file_offsets_length = 0
+		body.set(data_buf, 7);
+
+		const req = new Request('http://test', {
+			method: 'POST',
+			body,
+			headers: {
+				'Content-Type': BINARY_FORM_CONTENT_TYPE,
+				'Content-Length': body.length.toString()
+			}
+		});
+
+		await expect(deserialize_binary_form(req, '')).rejects.toThrow('invalid file metadata');
 	});
 
 	test.each([

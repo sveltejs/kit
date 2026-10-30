@@ -5,7 +5,7 @@ export default function plugin(config?: Config): Adapter;
 
 export interface ServerlessConfig {
 	/**
-	 * Which [Serverless Function](https://vercel.com/docs/concepts/functions/serverless-functions) runtime to use (`'nodejs22.x'`, `'nodejs24.x'` etc).
+	 * Which [Serverless Function](https://vercel.com/docs/concepts/functions/serverless-functions) runtime to use (`'nodejs22.x'`, `'nodejs24.x'`, `'nodejs26.x'` etc).
 	 * @default Same as the build environment
 	 */
 	runtime?: RuntimeKey;
