@@ -11,3 +11,16 @@ export const relative = __SVELTEKIT_PATHS_RELATIVE__;
 export function set_assets(path) {
 	assets = path;
 }
+
+/**
+ * The relative path from `pathname` back to `base`, e.g. `.` or `../..`
+ * @param {string} pathname
+ */
+export function relative_base(pathname) {
+	// on `/a/b/c` without a trailing slash, `.` resolves to `/a/b/`, so relative paths need to
+	// start with `./c` instead
+	if (base && pathname === base) return `./${base.split('/').at(-1)}`;
+
+	const segments = pathname.slice(base.length).split('/').slice(2);
+	return segments.map(() => '..').join('/') || '.';
+}

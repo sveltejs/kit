@@ -281,6 +281,7 @@ if (test_project && test_project !== 'js' && test_project !== 'no-js') {
 /** @type {Record<string, number>} */
 const ports = {
 	'test-async': 5300,
+	'test-base-root-trailing-slash': 5312,
 	'test-basics': 5301,
 	'test-dev-only': 5302,
 	'test-embed': 5303,
