@@ -1,11 +1,13 @@
 import process from 'node:process';
 import { assert, test, describe } from 'vitest';
 import {
+	encode_pathname,
 	escape_src,
 	get_uniform_trailing_slash,
 	parse_isr_expiration,
 	pattern_to_src,
-	resolve_runtime
+	resolve_runtime,
+	trailing_slash_redirects
 } from './utils.js';
 
 // workaround so that TypeScript doesn't follow that import which makes it pick up that file and then error on missing import aliases
@@ -250,5 +252,86 @@ describe('get_uniform_trailing_slash', () => {
 
 	test('returns undefined when there are no routes', () => {
 		assert.equal(get_uniform_trailing_slash([]), undefined);
+	});
+});
+
+describe('encode_pathname', () => {
+	test('matches the pathname a browser requests for a pathname decoded by decodeURI', () => {
+		for (const url of [
+			'/a%23b',
+			'/a%3Fb',
+			'/a%2Fb',
+			'/a%40b%2Cc',
+			'/caf%C3%A9',
+			'/100%25',
+			'/a%20b'
+		]) {
+			assert.equal(encode_pathname(decodeURI(url)), url);
+		}
+	});
+});
+
+describe('trailing_slash_redirects', () => {
+	test('returns no routes for no pathnames', () => {
+		assert.deepEqual(trailing_slash_redirects([], false), []);
+	});
+
+	test('combines pathnames into a single route that removes the trailing slash', () => {
+		assert.deepEqual(trailing_slash_redirects(['foo', 'blog/bar'], false), [
+			{
+				src: '^/(foo|blog/bar)/$',
+				headers: { Location: '/$1' },
+				status: 308,
+				caseSensitive: true
+			}
+		]);
+	});
+
+	test('combines pathnames into a single route that adds the trailing slash', () => {
+		assert.deepEqual(trailing_slash_redirects(['foo', 'blog/bar'], true), [
+			{
+				src: '^/(foo|blog/bar)$',
+				headers: { Location: '/$1/' },
+				status: 308,
+				caseSensitive: true
+			}
+		]);
+	});
+
+	test('encodes pathnames and escapes regex characters', () => {
+		const [route] = trailing_slash_redirects(['café', 'v1.2', 'a (b)', 'c+d'], false);
+		assert.equal(route.src, '^/(caf%C3%A9|v1\\.2|a%20\\(b\\)|c\\+d)/$');
+
+		const regex = new RegExp(route.src);
+		assert.ok(regex.test('/v1.2/'));
+		assert.ok(!regex.test('/v1x2/'));
+		assert.ok(regex.test('/a%20(b)/'));
+	});
+
+	test('does not encode reserved escapes left intact by decodeURI a second time', () => {
+		const pathnames = ['a%23b', 'a%3Fb', 'a%2Fb', 'a%2fb', '100%', 'café%23'];
+		const [route] = trailing_slash_redirects(pathnames, false);
+		assert.equal(route.src, '^/(a%23b|a%3Fb|a%2Fb|a%2fb|100%25|caf%C3%A9%23)/$');
+
+		const regex = new RegExp(route.src);
+		for (const url of ['/a%23b/', '/a%3Fb/', '/a%2Fb/', '/100%25/', '/caf%C3%A9%23/']) {
+			assert.ok(regex.test(url), url);
+		}
+	});
+
+	test('splits pathnames across routes when they exceed the maximum length', () => {
+		const pathnames = Array.from({ length: 1000 }, (_, i) => `blog/post-${i}`);
+		const routes = trailing_slash_redirects(pathnames, false);
+
+		assert.ok(routes.length > 1);
+
+		for (const route of routes) {
+			assert.ok(route.src.length <= 4096);
+		}
+
+		const matched = pathnames.filter((pathname) =>
+			routes.some((route) => new RegExp(route.src).test(`/${pathname}/`))
+		);
+		assert.equal(matched.length, pathnames.length);
 	});
 });

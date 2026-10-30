@@ -10,7 +10,8 @@ import {
 	get_uniform_trailing_slash,
 	parse_isr_expiration,
 	pattern_to_src,
-	resolve_runtime
+	resolve_runtime,
+	trailing_slash_redirects
 } from './utils.js';
 
 const INTERNAL = '![-]'; // this name is guaranteed not to conflict with user routes
@@ -461,6 +462,12 @@ function static_vercel_config(builder, config, dir) {
 		});
 	}
 
+	/** @type {string[]} */
+	const add_trailing_slash = [];
+
+	/** @type {string[]} */
+	const remove_trailing_slash = [];
+
 	for (const [path, page] of builder.prerendered.pages) {
 		if (trailing_slash === 'always' && path !== '/' && path.endsWith('/')) {
 			// Vercel ignores trailing slashes when looking up static files, and serves `foo/index.html`
@@ -474,23 +481,24 @@ function static_vercel_config(builder, config, dir) {
 		let overrides_path = path.slice(1);
 
 		if (path !== '/') {
-			/** @type {string | undefined} */
-			let counterpart_route = path + '/';
-
 			if (path.endsWith('/')) {
-				counterpart_route = path.slice(0, -1);
 				overrides_path = path.slice(1, -1);
-			}
-
-			if (!trailing_slash) {
-				prerendered_redirects.push(
-					{ src: escape_src(path), dest: counterpart_route },
-					{ src: escape_src(counterpart_route), status: 308, headers: { Location: path } }
-				);
+				add_trailing_slash.push(overrides_path);
+			} else {
+				remove_trailing_slash.push(overrides_path);
 			}
 		}
 
 		overrides[page.file] = { path: overrides_path };
+	}
+
+	if (!trailing_slash) {
+		// Vercel ignores trailing slashes when looking up static files, so `/foo` and `/foo/`
+		// are both served by the `foo` file. We only need routes for the redirects
+		prerendered_redirects.push(
+			...trailing_slash_redirects(add_trailing_slash, true),
+			...trailing_slash_redirects(remove_trailing_slash, false)
+		);
 	}
 
 	const routes = [
