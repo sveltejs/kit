@@ -1,21 +1,21 @@
 import { BINARY_FORM_CONTENT_TYPE } from '../runtime/form-utils.js';
 
 /**
- * Given an Accept header and a list of possible content types, pick
- * the most suitable one to respond with
+ * Parses an Accept header into its media ranges, most preferred first
  * @param {string} accept
- * @param {string[]} types
  */
-export function negotiate(accept, types) {
+function parse_accept(accept) {
 	/** @type {Array<{ type: string, subtype: string, q: number, i: number }>} */
 	const parts = [];
 
 	accept.split(',').forEach((str, i) => {
-		const match = /^[ \t]*([^/ \t]+)\/([^; \t]+)[ \t]*(?:;[ \t]*q=([0-9.]+))?/.exec(str);
+		const match = /^[ \t]*([^/ \t]+)\/([^; \t]+)/.exec(str);
 
 		// no match equals invalid header — ignore
 		if (match) {
-			const [, type, subtype, q = '1'] = match;
+			const [, type, subtype] = match;
+			// the quality can follow other parameters, e.g. `application/json;charset=utf-8;q=0.5`
+			const q = /;[ \t]*q=([0-9.]+)/.exec(str)?.[1] ?? '1';
 			parts.push({ type, subtype, q: +q, i });
 		}
 	});
@@ -36,6 +36,18 @@ export function negotiate(accept, types) {
 		return a.i - b.i;
 	});
 
+	return parts;
+}
+
+/**
+ * Given an Accept header and a list of possible content types, pick
+ * the most suitable one to respond with
+ * @param {string} accept
+ * @param {string[]} types
+ */
+export function negotiate(accept, types) {
+	const parts = parse_accept(accept);
+
 	let accepted;
 	let min_priority = Infinity;
 
@@ -54,6 +66,24 @@ export function negotiate(accept, types) {
 	}
 
 	return accepted;
+}
+
+/**
+ * Returns `true` if an Accept header prioritises `text/html`, meaning it names `text/html`
+ * (or `text/*`) with a quality at least as high as any other media range in the header,
+ * as browsers do when navigating to a page. A header that only accepts HTML through a
+ * catch-all wildcard, or ranks another type above it, does not.
+ * @param {string} accept
+ */
+export function prefers_html(accept) {
+	const parts = parse_accept(accept);
+
+	const html = parts.find(
+		(part) => part.type === 'text' && (part.subtype === 'html' || part.subtype === '*')
+	);
+
+	// parts are sorted by quality, highest first
+	return html !== undefined && html.q === parts[0].q;
 }
 
 /**
