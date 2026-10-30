@@ -37,9 +37,10 @@ const MAX_DEPTH = 10;
  * @param {PageNodeIndexes} page
  * @param {import('../../../utils/page_nodes.js').PageNodes} nodes
  * @param {RequiredResolveOptions} resolve_opts
+ * @param {ReturnType<typeof import('../headers.js').create_headers>} headers
  * @returns {Promise<Response>}
  */
-export async function render_page(event, state, page, nodes, resolve_opts) {
+export async function render_page(event, state, page, nodes, resolve_opts, headers) {
 	if (state.depth > MAX_DEPTH) {
 		// infinite request cycle detected
 		return text(`Not found: ${event.url.pathname}`, {
@@ -80,6 +81,9 @@ export async function render_page(event, state, page, nodes, resolve_opts) {
 				status = action_result.status;
 			}
 		}
+
+		// headers set from here on only apply if the page renders
+		headers.hold();
 
 		// it's crucial that we do this before returning the non-SSR response, otherwise
 		// SvelteKit will erroneously believe that the path has been prerendered,
@@ -353,12 +357,16 @@ export async function render_page(event, state, page, nodes, resolve_opts) {
 
 		// if we end up here, it means the data loaded successfully
 		// but the page failed to render, or that a prerendering error occurred
+		headers.discard();
+
 		return await respond_with_error({
 			event,
 			state,
 			error: e,
 			resolve_opts
 		});
+	} finally {
+		headers.commit();
 	}
 }
 
