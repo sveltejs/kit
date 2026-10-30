@@ -112,7 +112,10 @@ type RemoteFormFieldMethods<T> = {
 	set(input: DeepPartial<T>): DeepPartial<T>;
 	/** Whether the field or any nested field has been interacted with since the form was mounted */
 	touched(): boolean;
-	/** Whether the field or any nested field has been edited since the form was mounted */
+	/**
+	 * Whether the current value differs from the value captured when the form was mounted.
+	 * This returns false when the current value is restored to that mounted value.
+	 */
 	dirty(): boolean;
 	/** Validation issues, if any */
 	issues(): RemoteFormIssue[] | undefined;
