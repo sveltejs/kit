@@ -2329,31 +2329,35 @@ if (import.meta.hot) {
 
 /**
  * The anchor element whose href is being preloaded. It is reset after navigation
- * or changes when a different anchor element is being preloaded.
- * @type {{ element: Element | SVGAElement | undefined; href: string | SVGAnimatedString | undefined }}
+ * or changes when a different anchor element is being preloaded. Held weakly so
+ * removing a preloaded link does not retain its detached subtree.
+ * @type {{ element: WeakRef<HTMLAnchorElement | SVGAElement> | undefined; href: string | undefined }}
  */
 let current_a = { element: undefined, href: undefined };
 
 function setup_preload() {
 	/** @type {NodeJS.Timeout} */
 	let mousemove_timeout;
-	/** @type {HTMLAnchorElement | SVGAElement | undefined} */
+	// Removed links do not fire mouseleave, so do not keep them alive.
+	/** @type {WeakRef<HTMLAnchorElement | SVGAElement> | undefined} */
 	let hovered_a;
 	/** @type {PreloadDataPriority} */
 	let current_priority;
 
 	function clear_hover_preload() {
 		clearTimeout(mousemove_timeout);
-		hovered_a?.removeEventListener('mousemove', start_hover_preload);
-		hovered_a?.removeEventListener('mouseleave', clear_hover_preload);
+		const a = hovered_a?.deref();
+		a?.removeEventListener('mousemove', start_hover_preload);
+		a?.removeEventListener('mouseleave', clear_hover_preload);
 		hovered_a = undefined;
 	}
 
 	function start_hover_preload() {
 		clearTimeout(mousemove_timeout);
 		mousemove_timeout = setTimeout(() => {
-			if (!hovered_a) return;
-			void preload(hovered_a, PRELOAD_PRIORITIES.hover);
+			const a = hovered_a?.deref();
+			if (!a) return;
+			void preload(a, PRELOAD_PRIORITIES.hover);
 		}, 20);
 	}
 
@@ -2362,10 +2366,10 @@ function setup_preload() {
 		if (!(event.target instanceof Element)) return;
 
 		const a = find_anchor(event.target, container);
-		if (!a || a === hovered_a) return;
+		if (!a || a === hovered_a?.deref()) return;
 
 		clear_hover_preload();
-		hovered_a = a;
+		hovered_a = new WeakRef(a);
 
 		const options = get_router_options(a);
 
@@ -2416,9 +2420,11 @@ function setup_preload() {
 	 * @param {PreloadDataPriority} priority
 	 */
 	async function preload(a, priority) {
+		// Store the value, not SVGAnimatedString, which also retains its owner.
+		const href = a instanceof SVGAElement ? a.href.baseVal : a.href;
 		// we don't want to preload data again if the user has already hovered/tapped
 		const interacted =
-			a === current_a.element && a?.href === current_a.href && priority >= current_priority;
+			a === current_a.element?.deref() && href === current_a.href && priority >= current_priority;
 		if (!a || interacted) return;
 
 		const { url, external, download } = get_link_info(a, base, app.hash);
@@ -2431,7 +2437,7 @@ function setup_preload() {
 		if (options.reload || same_url) return;
 
 		if (priority <= options.preload_data) {
-			current_a = { element: a, href: a.href };
+			current_a = { element: new WeakRef(a), href };
 			// we don't want to preload data again on tap if we've already preloaded it on hover
 			current_priority = PRELOAD_PRIORITIES.tap;
 
@@ -2446,7 +2452,7 @@ function setup_preload() {
 				void _preload_data(intent).catch(noop);
 			}
 		} else if (priority <= options.preload_code) {
-			current_a = { element: a, href: a.href };
+			current_a = { element: new WeakRef(a), href };
 			current_priority = priority;
 			void _preload_code(/** @type {URL} */ (url));
 		}
