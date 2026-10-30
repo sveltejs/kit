@@ -1,3 +1,4 @@
+import process from 'node:process';
 import { assert, test, describe } from 'vitest';
 import { get_pathname, parse_isr_expiration, pattern_to_src, resolve_runtime } from '../utils.js';
 
@@ -185,7 +186,69 @@ describe('resolve_runtime', () => {
 		assert.equal(result, 'bun1.x');
 	});
 
-	test('throws an error when resolving to an invalid runtime', () => {
-		assert.throws(() => resolve_runtime('node18.x', undefined), /Unsupported runtime: node18.x/);
+	test.each(['node18.x', 'nodejs028.x', 'nodejs18.x', 'nodejs33.x', 'nodejs100.x', 'nodejs2,.x'])(
+		'throws an error when resolving to an invalid runtime (%s)',
+		(runtime) => {
+			assert.throws(() => resolve_runtime(runtime), /Unsupported runtime/);
+		}
+	);
+
+	test.each(['nodejs20.x', 'nodejs22.x', 'nodejs24.x', 'nodejs26.x', 'nodejs96.x', 'nodejs98.x'])(
+		'accepts %s',
+		(runtime) => {
+			assert.equal(resolve_runtime(runtime), runtime);
+		}
+	);
+
+	test.each(['bun1.x', 'edge'])('accepts %s', (runtime) => {
+		assert.equal(resolve_runtime(runtime), runtime);
 	});
+});
+
+describe('resolve_runtime with node detected', () => {
+	/**
+	 * @param {string} node_version
+	 * @param {() => void} fn
+	 */
+	function with_node(node_version, fn) {
+		const version = Object.getOwnPropertyDescriptor(process, 'version');
+		Object.defineProperty(process, 'version', { value: `v${node_version}`, configurable: true });
+		try {
+			fn();
+		} finally {
+			if (version) Object.defineProperty(process, 'version', version);
+		}
+	}
+
+	test.each([
+		['20.0.0', 'nodejs20.x'],
+		['22.0.0', 'nodejs22.x'],
+		['24.1.0', 'nodejs24.x'],
+		['26.0.0', 'nodejs26.x'],
+		['28.0.0', 'nodejs28.x'],
+		['96.1.0', 'nodejs96.x'],
+		['98.0.0', 'nodejs98.x']
+	])('detects Node %s', (version, runtime) => {
+		with_node(version, () => {
+			assert.equal(resolve_runtime(undefined, undefined), runtime);
+		});
+	});
+
+	test('an explicit nodejs26.x override wins over the detected version', () => {
+		with_node('24.0.0', () => {
+			assert.equal(resolve_runtime(undefined, 'nodejs26.x'), 'nodejs26.x');
+		});
+	});
+
+	test.each(['18.0.0', '25.0.0', '27.0.0'])(
+		'throws for an unsupported Node major (%s)',
+		(version) => {
+			with_node(version, () => {
+				assert.throws(
+					() => resolve_runtime(undefined, undefined),
+					/Unsupported Node\.js version.*Please use an even Node version to build your project/
+				);
+			});
+		}
+	);
 });
