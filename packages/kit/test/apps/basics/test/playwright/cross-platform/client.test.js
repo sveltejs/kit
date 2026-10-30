@@ -1147,6 +1147,69 @@ test.describe('Prefetching', () => {
 });
 
 test.describe('Routing', () => {
+	for (const action of ['back', 'forward', 'link', 'goto', 'shallow', 'persist']) {
+		test(`can ${action} after traversing to an unpersisted history entry`, async ({
+			page,
+			app
+		}) => {
+			/** @type {string[]} */
+			const errors = [];
+			page.on('pageerror', (error) => errors.push(error.message));
+
+			await page.addInitScript(() => {
+				if (sessionStorage.getItem('first-document-done')) return;
+				sessionStorage.setItem('first-document-done', 'true');
+
+				// Model an earlier document that disappeared without persisting its history info.
+				for (const type of ['beforeunload', 'visibilitychange']) {
+					addEventListener(type, (event) => event.stopImmediatePropagation(), { capture: true });
+				}
+			});
+
+			const url = '/load/url-query-param';
+			await page.goto(url);
+			await app.goto(`${url}?currentClientState=ABC`);
+			await app.goto(`${url}?currentClientState=DEF`);
+			await page.reload();
+			expect(
+				await page.evaluate(() => sessionStorage.getItem('sveltekit:history-info'))
+			).toBeNull();
+
+			await page.goBack();
+			await expect(page.locator('h1')).toHaveText('Hello ABC');
+
+			if (action === 'back') {
+				await page.goBack();
+				await expect(page.locator('h1')).toHaveText('Hello');
+			} else if (action === 'forward') {
+				await page.goForward();
+				await expect(page.locator('h1')).toHaveText('Hello DEF');
+			} else if (action === 'link') {
+				await page.locator(`a[href="${url}?currentClientState=DEF"]`).click();
+				await expect(page.locator('h1')).toHaveText('Hello DEF');
+			} else if (action === 'goto' || action === 'shallow') {
+				await app.goto(`${url}?currentClientState=DEF`, { shallow: action === 'shallow' });
+				await expect(page.locator('h1')).toHaveText(
+					action === 'shallow' ? 'Hello ABC' : 'Hello DEF'
+				);
+			}
+
+			// Persistence must work even if the current entry was not created in this document.
+			const info = await page.evaluate(() => {
+				dispatchEvent(new Event('beforeunload'));
+				const metadata = history.state['sveltekit:metadata'];
+				const records = JSON.parse(sessionStorage.getItem('sveltekit:history-info') ?? '{}');
+				return { record: records[metadata.historyIndex], resetIndex: metadata.resetIndex };
+			});
+			expect(errors).toEqual([]);
+			expect(info.record).toEqual({ scroll: { x: 0, y: 0 }, resetIndex: info.resetIndex });
+
+			await app.goto('/routing/b');
+			await expect(page.locator('h1')).toHaveText('b');
+			expect(errors).toEqual([]);
+		});
+	}
+
 	test('navigates to a new page without reloading', async ({ app, page, clicknav }) => {
 		await page.goto('/routing');
 
