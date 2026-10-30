@@ -116,3 +116,9 @@ test('client-side navigation to prerendered routes works', async ({ page }) => {
 	await page.click('a[href="/prerendered"]');
 	await expect(page.locator('h1')).toContainText('this page is prerendered');
 });
+
+test('reads a server-only asset relative to the server code', async ({ request }) => {
+	const response = await request.get('/server-only-asset');
+	expect(await response.text()).toBe('server-only data');
+	expect((await request.get('/server-only/data.txt')).status()).toBe(404);
+});

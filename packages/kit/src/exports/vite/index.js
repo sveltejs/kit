@@ -26,7 +26,7 @@ import { load_svelte_config, process_config, split_config } from '../../core/con
 import { generate_manifest } from '../../core/generate_manifest/index.js';
 import { build_server_nodes } from './build/build_server.js';
 import { build_service_worker } from './build/build_service_worker.js';
-import { find_deps, resolve_symlinks } from './build/utils.js';
+import { find_deps, find_server_only_assets, resolve_symlinks } from './build/utils.js';
 import { dev } from './dev/index.js';
 import { preview } from './preview/index.js';
 import { error_for_missing_config, get_config_aliases, get_env, normalize_id } from './utils.js';
@@ -1274,7 +1274,8 @@ async function kit({ svelte_config }) {
 					out_dir: out,
 					service_worker: service_worker_entry_file ? 'service-worker.js' : null, // TODO make file configurable?
 					client: null,
-					server_manifest
+					server_manifest,
+					server_only_assets: find_server_only_assets(Object.values(server_bundle), kit.appDir)
 				};
 
 				const manifest_path = `${out}/server/manifest-full.js`;
