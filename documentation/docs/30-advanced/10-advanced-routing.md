@@ -1,5 +1,6 @@
 ---
 title: Advanced routing
+tags: advanced-routing
 ---
 
 ## Rest parameters

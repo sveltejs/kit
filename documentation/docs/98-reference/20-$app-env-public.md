@@ -1,5 +1,6 @@
 ---
 title: $app/env/public
+tags: env-public
 ---
 
 Public environment variables defined in `src/env.ts` (or `src/env.js`).

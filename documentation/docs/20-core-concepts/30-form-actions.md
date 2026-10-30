@@ -1,5 +1,6 @@
 ---
 title: Form actions
+tags: form-actions
 ---
 
 A `+page.server.js` file can export _actions_, which allow you to `POST` data to the server using the `<form>` element.
