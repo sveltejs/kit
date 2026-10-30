@@ -412,6 +412,10 @@ function static_vercel_config(builder, config, dir) {
 	/** @type {Record<string, { path: string }>} */
 	const overrides = {};
 
+	// prerendered files are written to `static${base}`, but their paths are relative to `base`,
+	// whereas the keys of `overrides` must be relative to `static`
+	const static_prefix = builder.config.paths.base ? `${builder.config.paths.base.slice(1)}/` : '';
+
 	/** @type {import('./index.js').ImagesConfig | undefined} */
 	const images = config.images;
 
@@ -462,8 +466,7 @@ function static_vercel_config(builder, config, dir) {
 			// Vercel ignores trailing slashes when looking up static files, and serves `foo/index.html`
 			// at `foo`, so we rename the page to stop `/foo` from matching it. That way, `/foo` is
 			// redirected after the filesystem phase, while the `miss` route serves the page for `/foo/`
-			// unlike `page.file`, overrides are relative to the static directory, which includes the base
-			const file = base ? `${base.slice(1)}/${page.file}` : page.file;
+			const file = static_prefix + page.file;
 			overrides[file] = { path: file.replace(/index\.html$/, INDEX_FILE) };
 			continue;
 		}
