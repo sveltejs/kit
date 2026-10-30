@@ -687,14 +687,11 @@ export async function internal_respond(request, state) {
 								response = new Response(null, {
 									status: 204,
 									headers: {
-										allow: Array.from(allowed_methods.values()).join(', ')
+										allow: [...allowed_methods].join(', ')
 									}
 								});
 							} else {
-								const mod = [...allowed_methods].reduce((acc, curr) => {
-									acc[curr] = true;
-									return acc;
-								}, /** @type {Record<string, any>} */ ({}));
+								const mod = Object.fromEntries([...allowed_methods].map((m) => [m, true]));
 								response = method_not_allowed(mod, method);
 							}
 						}

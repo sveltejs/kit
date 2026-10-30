@@ -94,8 +94,7 @@ function write_parent_tsconfig(root, id, config, transform) {
 	// simplified tsconfig resolvers (e.g. Playwright's) only find `${id}.json`, not `${id}/tsconfig.json`
 	const out_file = path.join(root, `node_modules/${id}.json`);
 
-	let normalized = normalize_config(out_file, config);
-	normalized = transform?.(normalized) ?? normalized;
+	const normalized = normalize_config(out_file, config, transform);
 
 	write_if_changed(out_file, JSON.stringify(normalized, null, '\t'));
 }

@@ -83,12 +83,11 @@ export function load_template(cwd, config) {
 
 	const contents = fs.readFileSync(files.appTemplate, 'utf8');
 
-	const expected_tags = ['%sveltekit.head%', '%sveltekit.body%'];
-	expected_tags.forEach((tag) => {
-		if (contents.indexOf(tag) === -1) {
+	for (const tag of ['%sveltekit.head%', '%sveltekit.body%']) {
+		if (!contents.includes(tag)) {
 			e.app_template_tag_missing({ file: relative, tag });
 		}
-	});
+	}
 
 	return contents;
 }
