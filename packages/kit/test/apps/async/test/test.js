@@ -1190,4 +1190,12 @@ test.describe('server error boundaries', () => {
 		await expect(page.locator('#layout-throws-error-message')).toHaveCount(0);
 		await expect(page.locator('#nested-layout')).toHaveCount(0);
 	});
+
+	test('CSS for the +error.svelte is reflected in server render', async ({
+		page,
+		get_computed_style
+	}) => {
+		await page.goto('/server-error-boundary');
+		expect(await get_computed_style('h1', 'color')).toBe('rgb(255, 0, 0)');
+	});
 });

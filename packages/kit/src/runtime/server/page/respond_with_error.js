@@ -90,7 +90,7 @@ export async function respond_with_error({ event, state, error, resolve_opts }) 
 			status: transformed.status,
 			error: transformed,
 			branch,
-			error_components: [],
+			error_pages: [],
 			fetched,
 			event,
 			state,
