@@ -610,10 +610,11 @@ export type BinaryFormMeta = {
 	validate_only?: boolean;
 };
 
-interface BaseRemoteInternals {
+export interface BaseRemoteInternals {
 	type: string;
 	id: string;
 	name: string;
+	file?: string;
 }
 
 export interface RemoteQueryInternals extends BaseRemoteInternals {

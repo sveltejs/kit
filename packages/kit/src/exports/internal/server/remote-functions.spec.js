@@ -20,6 +20,6 @@ test.each(['command', 'form', 'prerender', 'query', 'query_batch', 'query_live']
 	(type) => {
 		const fn = Object.assign(() => {}, { __: { type, id: '', name: '' } });
 		init_remote_functions({ fn }, 'src/lib/a.remote.js', 'hash');
-		expect(fn.__).toEqual({ type, id: 'hash/fn', name: 'fn' });
+		expect(fn.__).toEqual({ type, id: 'hash/fn', name: 'fn', file: 'src/lib/a.remote.js' });
 	}
 );

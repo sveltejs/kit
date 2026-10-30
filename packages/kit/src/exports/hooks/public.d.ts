@@ -25,6 +25,11 @@ type ValidationCaughtError<Issue extends StandardSchemaV1.Issue> = {
 	kind: 'validation';
 	error: { status: number; message: string };
 	issues: Issue[];
+	/** Information about the remote function that failed validation */
+	remote?: {
+		name?: string;
+		file?: string;
+	};
 };
 
 /**
@@ -43,6 +48,8 @@ export type CaughtError<Issue extends StandardSchemaV1.Issue = StandardSchemaV1.
 				error: CaughtErrorMap[Kind];
 				/** Only present for validation errors */
 				issues?: undefined;
+				/** Only present for validation errors */
+				remote?: undefined;
 			};
 	  }[keyof CaughtErrorMap]
 	| ValidationCaughtError<Issue>;
