@@ -312,7 +312,8 @@ export async function deserialize_binary_form(request, form_id) {
 				size < 0 ||
 				!Number.isSafeInteger(last_modified) ||
 				!Number.isSafeInteger(index) ||
-				index < 0
+				index < 0 ||
+				file_offsets === undefined
 			) {
 				throw deserialize_error('invalid file metadata');
 			}

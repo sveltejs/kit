@@ -585,6 +585,37 @@ describe('binary form serializer', () => {
 		);
 	});
 
+	test('rejects payload with File reference when file offset table is empty', async () => {
+		const file = {};
+		const payload = devalue.stringify([{ file }, {}], {
+			File: (value) => {
+				if (value === file) {
+					return ['f.txt', 'text/plain', 5, 0, 0];
+				}
+			}
+		});
+
+		// Build a raw request with file_offsets_length === 0
+		const data_buf = text_encoder.encode(payload);
+		const body = new Uint8Array(7 + data_buf.length);
+		const view = new DataView(body.buffer);
+		body[0] = 0;
+		view.setUint32(1, data_buf.length, true);
+		view.setUint16(5, 0, true); // file_offsets_length = 0
+		body.set(data_buf, 7);
+
+		const req = new Request('http://test', {
+			method: 'POST',
+			body,
+			headers: {
+				'Content-Type': BINARY_FORM_CONTENT_TYPE,
+				'Content-Length': body.length.toString()
+			}
+		});
+
+		await expect(deserialize_binary_form(req, '')).rejects.toThrow('invalid file metadata');
+	});
+
 	test.each([
 		{ name: 'negative size', size: -1, last_modified: 0, index: 0 },
 		{ name: 'fractional size', size: 0.5, last_modified: 0, index: 0 },
