@@ -1,6 +1,6 @@
 ---
 title: $app/navigation
-tags: invalidation, link-options
+tags: invalidation, preloading
 ---
 
 > MODULE: $app/navigation
