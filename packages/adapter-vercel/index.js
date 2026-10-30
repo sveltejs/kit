@@ -227,10 +227,10 @@ const plugin = function (defaults = {}) {
 			}
 
 			// Vercel's filesystem phase serves a function at its own path, with or without a
-			// trailing slash, before the routes below are consulted. Static ISR routes live at
-			// their own path, so they must be routed before it to arrive with `__pathname`
+			// trailing slash, before the routes below are consulted. Static ISR routes must
+			// arrive with `__pathname`, and the root must not fall through to an index route.
 			/** @type {any[]} */
-			const static_isr_routes = [];
+			const static_routes = [];
 
 			for (const route of builder.routes) {
 				if (is_prerendered(route)) continue;
@@ -240,6 +240,11 @@ const plugin = function (defaults = {}) {
 				const name = functions.get(pattern);
 
 				const isr = isr_config.get(route);
+				if (!isr && route.id === '/' && builder.routes.some((route) => route.id === '/index')) {
+					static_routes.push({ src: src + '(?:/__data.json)?$', dest: `/${name}` });
+					continue;
+				}
+
 				if (isr) {
 					const isr_name = route.id.slice(1) || '__root__'; // should we check that __root__ isn't a route?
 					const base = `${dirs.functions}/${isr_name}`;
@@ -269,7 +274,7 @@ const plugin = function (defaults = {}) {
 
 					const routes = route.segments.some((segment) => segment.dynamic)
 						? static_config.routes
-						: static_isr_routes;
+						: static_routes;
 
 					// capture the requested pathname (minus the `^` anchor) as `__pathname`,
 					// since the function otherwise only sees its own path
@@ -326,7 +331,7 @@ const plugin = function (defaults = {}) {
 			}
 
 			const filesystem = static_config.routes.findIndex((route) => route.handle === 'filesystem');
-			static_config.routes.splice(filesystem, 0, ...static_isr_routes);
+			static_config.routes.splice(filesystem, 0, ...static_routes);
 
 			if (builder.config.router.resolution === 'server') {
 				// Create a separate serverless function just for server-side route resolution.
