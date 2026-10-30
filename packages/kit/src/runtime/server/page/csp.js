@@ -331,10 +331,16 @@ export class Csp {
 	 * @param {import('./types.js').CspConfig} config
 	 * @param {import('./types.js').CspOpts} opts
 	 */
-	constructor({ mode, directives, reportOnly }, { prerender }) {
+	constructor({ mode, directives, reportOnly }, { prerender, template_contains_nonce }) {
 		this.#use_hashes = mode === 'hash' || (mode === 'auto' && prerender);
 		this.csp_provider = new CspProvider(this.#use_hashes, directives);
 		this.report_only_provider = new CspReportOnlyProvider(this.#use_hashes, reportOnly);
+
+		// scripts in the template can use the nonce whether or not the page adds any of its own
+		if (template_contains_nonce && !this.#use_hashes) {
+			this.csp_provider.add_script(`nonce-${this.nonce}`);
+			this.report_only_provider.add_script(`nonce-${this.nonce}`);
+		}
 	}
 
 	/**
