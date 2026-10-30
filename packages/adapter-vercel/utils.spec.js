@@ -110,7 +110,7 @@ describe('resolve_runtime', () => {
 		assert.equal(result, 'bun1.x');
 	});
 
-	test.each(['node18.x', 'nodejs028.x', 'nodejs18.x', 'nodejs33.x', 'nodejs100.x', 'nodejs2,.x'])(
+	test.each(['node18.x', 'nodejs028.x', 'nodejs18.x', 'nodejs23.x', 'nodejs25.x', 'nodejs100.x', 'nodejs2,.x'])(
 		'throws an error when resolving to an invalid runtime (%s)',
 		(runtime) => {
 			assert.throws(() => resolve_runtime(runtime), /Unsupported runtime/);
@@ -122,7 +122,7 @@ describe('resolve_runtime', () => {
 		assert.equal(result, 'bun1.4.x');
 	});
 
-	test.each(['nodejs22.x', 'nodejs24.x', 'nodejs26.x', 'nodejs96.x', 'nodejs98.x'])(
+	test.each(['nodejs22.x', 'nodejs24.x', 'nodejs26.x', 'nodejs27.x', 'nodejs33.x', 'nodejs99.x'])(
 		'accepts %s',
 		(runtime) => {
 			assert.equal(resolve_runtime(runtime), runtime);
@@ -197,19 +197,20 @@ describe('resolve_runtime with node detected', () => {
 		['22.0.0', 'nodejs22.x'],
 		['24.1.0', 'nodejs24.x'],
 		['26.0.0', 'nodejs26.x'],
-		['96.1.0', 'nodejs96.x'],
-		['98.0.0', 'nodejs98.x']
+		['27.0.0', 'nodejs27.x'],
+		['29.1.0', 'nodejs29.x'],
+		['99.0.0', 'nodejs99.x']
 	])('detects Node %s', (version, runtime) => {
 		with_node(version, () => {
 			assert.equal(resolve_runtime(undefined, undefined), runtime);
 		});
 	});
 
-	test.each(['18.0.0', '27.0.0'])('throws for an unsupported Node major (%s)', (version) => {
+	test.each(['18.0.0', '23.0.0', '25.0.0'])('throws for an unsupported Node major (%s)', (version) => {
 		with_node(version, () => {
 			assert.throws(
 				() => resolve_runtime(undefined, undefined),
-				/Unsupported Node\.js version.*Please use an even Node version to build your project/
+				/Unsupported Node\.js version.*Please use Node 22, 24, or 26 and later to build your project/
 			);
 		});
 	});
