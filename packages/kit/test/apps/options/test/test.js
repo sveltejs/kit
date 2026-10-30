@@ -1,10 +1,45 @@
 import process from 'node:process';
+import path from 'node:path';
+import { spawnSync } from 'node:child_process';
 import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
 
 test.describe.configure({ mode: 'parallel' });
 
 test.skip(!!process.env.PATHS_ASSETS || process.env.PATHS_RELATIVE === 'false');
+
+test('sync generates route types once', ({ javaScriptEnabled }) => {
+	test.skip(!javaScriptEnabled);
+
+	// Every write_all_types invocation writes route_meta_data.json, even when the types are current.
+	const preload = `
+		import fs from 'node:fs';
+		const write = fs.writeFileSync;
+		fs.writeFileSync = function(file, ...args) {
+			if (String(file).endsWith('route_meta_data.json')) {
+				console.log('route types generated');
+			}
+			return write.call(this, file, ...args);
+		};
+	`;
+
+	const result = spawnSync(
+		process.execPath,
+		[
+			'--import',
+			`data:text/javascript,${encodeURIComponent(preload)}`,
+			'node_modules/@sveltejs/kit/svelte-kit.js',
+			'sync',
+			'--config',
+			'vite.custom.config.js'
+		],
+		{ cwd: path.resolve(import.meta.dirname, '..'), encoding: 'utf-8', timeout: 30_000 }
+	);
+
+	expect(result.error).toBeUndefined();
+	expect(result.status, result.stderr).toBe(0);
+	expect(result.stdout.match(/route types generated/g)).toHaveLength(1);
+});
 
 test.describe('CSP', () => {
 	test('blocks script from external site', async ({ page, start_server }) => {
