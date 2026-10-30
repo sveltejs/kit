@@ -510,6 +510,52 @@ test.describe('SPA mode / no SSR', () => {
 });
 
 test.describe('$app/state', () => {
+	for (const mode of ['ssr', 'no-ssr']) {
+		test(`initializes payload before evaluating code splitting groups (${mode})`, async ({
+			page
+		}) => {
+			await page.goto(`/code-splitting${mode === 'no-ssr' ? '/no-ssr' : ''}`);
+			await expect(page.locator('#version')).toHaveText('TEST_VERSION');
+			await expect(page.locator('#updated')).toHaveText('false');
+
+			await page.locator('#go').click();
+			await expect(page.locator('h1')).toHaveText('other');
+			await expect(page.locator('#updated')).toHaveText('false');
+
+			await page.locator('#check').click();
+			await expect(page.locator('#checked')).toHaveText('false');
+			await expect(page.locator('#updated')).toHaveText('false');
+		});
+	}
+
+	for (const source of ['header', 'poll']) {
+		test(`detects a new version from ${source} with code splitting groups`, async ({ page }) => {
+			test.skip(!!process.env.DEV, 'version checks are disabled in dev');
+			await page.goto('/code-splitting');
+
+			if (source === 'header') {
+				await page.route('**/code-splitting/other/__data.json*', async (route) => {
+					const response = await route.fetch();
+					await route.fulfill({
+						response,
+						headers: { ...response.headers(), 'x-sveltekit-version': 'NEW_VERSION' }
+					});
+				});
+				await page.locator('#go').click();
+				await expect(page.locator('h1')).toHaveText('other');
+			} else {
+				await page.route('**/_app/version.json', (route) =>
+					route.fulfill({ json: { version: 'NEW_VERSION' } })
+				);
+				await page.locator('#check').click();
+				await expect(page.locator('#checked')).toHaveText('true');
+			}
+
+			await expect(page.locator('#updated')).toHaveText('true');
+			await expect(page.locator('#version')).toHaveText('TEST_VERSION');
+		});
+	}
+
 	test('can use $app/state from anywhere on client', async ({ page }) => {
 		await page.goto('/state/client-access');
 		await expect(page.locator('h1')).toHaveText('undefined');
