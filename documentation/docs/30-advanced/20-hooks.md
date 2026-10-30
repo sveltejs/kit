@@ -1,5 +1,6 @@
 ---
 title: Hooks
+tags: hooks
 ---
 
 'Hooks' are app-wide functions you declare that SvelteKit will call in response to specific events, giving you fine-grained control over the framework's behaviour.
