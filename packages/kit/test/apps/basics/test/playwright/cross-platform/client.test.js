@@ -180,6 +180,48 @@ test.describe('a11y', () => {
 	});
 });
 
+test.describe('History state', () => {
+	for (const [path, link, heading] of [
+		['/accessibility/a', '/accessibility/b', 'b'],
+		['/no-ssr', '/no-ssr/other', 'other']
+	]) {
+		test(`starts and navigates in an iframe with unreadable history.state (${path})`, async ({
+			page
+		}) => {
+			const errors = /** @type {string[]} */ ([]);
+			page.on('pageerror', (error) => errors.push(error.message));
+
+			await page.addInitScript(() => {
+				if (window !== window.top) {
+					// Safari can hide history state in a third-party iframe, even after replaceState.
+					Object.defineProperty(History.prototype, 'state', { get: () => null });
+				}
+			});
+
+			await page.goto('/');
+			await page.evaluate((src) => {
+				document.body.append(Object.assign(document.createElement('iframe'), { src }));
+			}, path);
+
+			const iframe = page.frameLocator('iframe');
+			await expect(iframe.locator('body.started')).toBeAttached();
+			expect(await iframe.locator('body').evaluate(() => history.state)).toBe(null);
+
+			// This marker must survive navigation, so a full-page reload cannot mask a broken router.
+			await iframe.locator('body').evaluate((body) => (body.dataset.marker = 'preserved'));
+			const initial_heading = await iframe.locator('h1').textContent();
+			await iframe.locator(`a[href="${link}"]`).click();
+			await expect(iframe.locator('h1')).toHaveText(heading);
+			await expect(iframe.locator('body')).toHaveAttribute('data-marker', 'preserved');
+
+			await iframe.locator('body').evaluate(() => history.back());
+			await expect(iframe.locator('h1')).toHaveText(initial_heading ?? '');
+			await expect(iframe.locator('body')).toHaveAttribute('data-marker', 'preserved');
+			expect(errors).toEqual([]);
+		});
+	}
+});
+
 test.describe('Navigation lifecycle functions', () => {
 	test('beforeNavigate prevents navigation triggered by link click', async ({ page, baseURL }) => {
 		await page.goto('/navigation-lifecycle/before-navigate/prevent-navigation');
