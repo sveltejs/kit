@@ -4,9 +4,20 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { VERSION } from '@sveltejs/kit';
 import { nodeFileTrace } from '@vercel/nft';
-import { escape_src, parse_isr_expiration, pattern_to_src, resolve_runtime } from './utils.js';
+import {
+	escape_regex,
+	escape_src,
+	get_uniform_trailing_slash,
+	parse_isr_expiration,
+	pattern_to_src,
+	resolve_runtime
+} from './utils.js';
 
 const INTERNAL = '![-]'; // this name is guaranteed not to conflict with user routes
+
+// Vercel serves files named `index.*` at their directory's path, so prerendered pages that
+// have a trailing slash are renamed to something else when every route has one
+const INDEX_FILE = '__index.html';
 
 /** @type {typeof import('./index.js').default} **/
 const plugin = function (defaults = {}) {
@@ -325,8 +336,9 @@ const plugin = function (defaults = {}) {
 				}
 			}
 
-			const filesystem = static_config.routes.findIndex((route) => route.handle === 'filesystem');
-			static_config.routes.splice(filesystem, 0, ...static_isr_routes);
+			// routes before the first `handle` are matched before the filesystem
+			const first_handle = static_config.routes.findIndex((route) => route.handle);
+			static_config.routes.splice(first_handle, 0, ...static_isr_routes);
 
 			if (builder.config.router.resolution === 'server') {
 				// Create a separate serverless function just for server-side route resolution.
@@ -400,6 +412,10 @@ function static_vercel_config(builder, config, dir) {
 	/** @type {Record<string, { path: string }>} */
 	const overrides = {};
 
+	// prerendered files are written to `static${base}`, but their paths are relative to `base`,
+	// whereas the keys of `overrides` must be relative to `static`
+	const static_prefix = builder.config.paths.base ? `${builder.config.paths.base.slice(1)}/` : '';
+
 	/** @type {import('./index.js').ImagesConfig | undefined} */
 	const images = config.images;
 
@@ -425,7 +441,36 @@ function static_vercel_config(builder, config, dir) {
 		});
 	}
 
+	const base = builder.config.paths.base;
+	const trailing_slash = get_uniform_trailing_slash(builder.routes);
+
+	if (base && trailing_slash) {
+		// the root of the app always has a trailing slash when `paths.base` is set
+		prerendered_redirects.push({
+			src: `^${escape_regex(base)}$`,
+			headers: { Location: `${base}/` },
+			status: 308
+		});
+	}
+
+	if (trailing_slash === 'never') {
+		prerendered_redirects.push({
+			src: `^${escape_regex(base)}/(.+)/$`,
+			headers: { Location: `${base}/$1` },
+			status: 308
+		});
+	}
+
 	for (const [path, page] of builder.prerendered.pages) {
+		if (trailing_slash === 'always' && path !== '/' && path.endsWith('/')) {
+			// Vercel ignores trailing slashes when looking up static files, and serves `foo/index.html`
+			// at `foo`, so we rename the page to stop `/foo` from matching it. That way, `/foo` is
+			// redirected after the filesystem phase, while the `miss` route serves the page for `/foo/`
+			const file = static_prefix + page.file;
+			overrides[file] = { path: file.replace(/index\.html$/, INDEX_FILE) };
+			continue;
+		}
+
 		let overrides_path = path.slice(1);
 
 		if (path !== '/') {
@@ -437,10 +482,12 @@ function static_vercel_config(builder, config, dir) {
 				overrides_path = path.slice(1, -1);
 			}
 
-			prerendered_redirects.push(
-				{ src: escape_src(path), dest: counterpart_route },
-				{ src: escape_src(counterpart_route), status: 308, headers: { Location: path } }
-			);
+			if (!trailing_slash) {
+				prerendered_redirects.push(
+					{ src: escape_src(path), dest: counterpart_route },
+					{ src: escape_src(counterpart_route), status: 308, headers: { Location: path } }
+				);
+			}
 		}
 
 		overrides[page.file] = { path: overrides_path };
@@ -506,6 +553,12 @@ function static_vercel_config(builder, config, dir) {
 		});
 	}
 
+	if (trailing_slash === 'always') {
+		// serve the renamed page for `/foo/` if it exists. Routes in the `miss` phase
+		// are reverted if they don't match a file, so other requests are unaffected
+		routes.push({ handle: 'miss' }, { src: '^(/.+)/$', dest: `$1/${INDEX_FILE}`, check: true });
+	}
+
 	routes.push({
 		handle: 'filesystem'
 	});
@@ -523,6 +576,16 @@ function static_vercel_config(builder, config, dir) {
 		},
 		continue: false
 	});
+
+	if (trailing_slash === 'always') {
+		// Requests that reach this point didn't match a static file, so we can add a trailing
+		// slash without affecting assets. Internal requests are excluded since they never have one
+		routes.push({
+			src: `^(?!/${escape_regex(builder.getAppPath())}/)(?!.*__(?:data\\.json|route\\.js)$)(${escape_regex(base)}/.*[^/])$`,
+			headers: { Location: '$1/' },
+			status: 308
+		});
+	}
 
 	return {
 		version: 3,

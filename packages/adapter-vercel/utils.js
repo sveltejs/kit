@@ -32,6 +32,28 @@ export function escape_src(pathname) {
 	);
 }
 
+/** @param {string} str */
+export function escape_regex(str) {
+	return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Returns the `trailingSlash` option if every route uses the same one, allowing
+ * trailing slashes to be normalized with a single route rather than one per page.
+ * Returns `undefined` if the routes disagree, if they use `'ignore'`,
+ * or if the version of SvelteKit doesn't expose the option to adapters.
+ * This function is duplicated in adapter-static
+ * @param {Array<{ trailingSlash?: 'never' | 'always' | 'ignore' }>} routes
+ * @returns {'never' | 'always' | undefined}
+ */
+export function get_uniform_trailing_slash(routes) {
+	const values = new Set(routes.map((route) => route.trailingSlash));
+	if (values.size !== 1) return;
+
+	const [value] = values;
+	if (value === 'never' || value === 'always') return value;
+}
+
 const integer = /^\d+$/;
 
 /**
