@@ -886,16 +886,16 @@ async function initialize(result, target, should_hydrate) {
 	if (__SVELTEKIT_DEV__ && result.state.error && document.querySelector('vite-error-overlay'))
 		return;
 
+	/** @type {NavigationEvent} */
+	const nav = {
+		params: result.state.params,
+		route: { id: result.state.route?.id ?? null },
+		url: new URL(location.href)
+	};
+
 	current = {
 		...result.state,
 		nav
-	};
-
-	/** @type {NavigationEvent} */
-	const nav = {
-		params: current.params,
-		route: { id: current.route?.id ?? null },
-		url: new URL(location.href)
 	};
 
 	// Removes the style node we used to avoid FOUC during development
