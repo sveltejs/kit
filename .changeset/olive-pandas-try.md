@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: use hydrated route and params for enter navigation
+fix: correctly populate route and params for `afterNavigate` during hydration
