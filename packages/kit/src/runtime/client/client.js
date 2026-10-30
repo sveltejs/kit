@@ -888,8 +888,8 @@ async function initialize(result, target, should_hydrate) {
 
 	/** @type {NavigationEvent} */
 	const nav = {
-		params: current.params,
-		route: { id: current.route?.id ?? null },
+		params: result.state.params,
+		route: { id: result.state.route?.id ?? null },
 		url: new URL(location.href)
 	};
 
