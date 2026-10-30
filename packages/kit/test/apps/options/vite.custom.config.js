@@ -16,6 +16,7 @@ const config = {
 					async: true
 				}
 			},
+			subresourceIntegrity: 'sha384',
 			csp: {
 				directives: {
 					'script-src': ['self'],

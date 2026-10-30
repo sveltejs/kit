@@ -2098,6 +2098,11 @@ declare module '@sveltejs/kit/vite' {
 					register?: false;
 			  };
 		/**
+		 * Enable [Subresource Integrity](https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity) (SRI) hash generation for scripts and stylesheets. When set to a hash algorithm, SvelteKit computes integrity hashes for client assets at build time and adds `integrity` and `crossorigin` attributes to the `<link>` tags it emits. Module scripts get their hashes from an import map. Not compatible with a strict `Integrity-Policy` when [`router.resolution`](https://svelte.dev/docs/kit/configuration#router) is `'server'`, because the generated route-resolution modules have no build-time hash.
+		 * @default false
+		 */
+		subresourceIntegrity?: false | 'sha256' | 'sha384' | 'sha512';
+		/**
 		 * Options for enabling [OpenTelemetry](https://opentelemetry.io/) tracing for SvelteKit operations.
 		 * @default { server: false }
 		 */

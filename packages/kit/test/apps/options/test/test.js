@@ -1,4 +1,5 @@
 import process from 'node:process';
+import { createHash } from 'node:crypto';
 import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
 
@@ -311,5 +312,62 @@ test.describe('Async', () => {
 
 		await expect(page.locator('h1', { hasText: 'Page B' })).toBeVisible();
 		expect(logs).toEqual(['mounted', 'navigated']);
+	});
+});
+
+test.describe('subresourceIntegrity', () => {
+	test('integrity hashes match the served assets', async ({ page, request }) => {
+		test.skip(!!process.env.DEV, 'SRI hashes are only generated at build time');
+
+		await page.goto('/path-base');
+
+		const links = await page.locator('link[integrity]').all();
+		expect(links.length).toBeGreaterThan(0);
+
+		for (const link of links) {
+			const href = await link.getAttribute('href');
+			const integrity = await link.getAttribute('integrity');
+			if (!href || !integrity) throw new Error('link is missing href or integrity');
+
+			expect(await link.getAttribute('crossorigin')).toBe('anonymous');
+
+			// `paths.relative` is enabled for this app, so hrefs are relative to the page
+			const response = await request.get(new URL(href, page.url()).href);
+			expect(response.status()).toBe(200);
+
+			// the hash must match the bytes the browser actually receives, otherwise
+			// the browser rejects the asset
+			const hash = createHash('sha384')
+				.update(await response.body())
+				.digest('base64');
+			expect(integrity).toBe(`sha384-${hash}`);
+		}
+	});
+});
+
+test.describe('Integrity-Policy', () => {
+	// server-side route resolution `import()`s a per-path `__route.js` that has no build-time hash
+	test.skip(
+		({ javaScriptEnabled }) =>
+			!javaScriptEnabled || !!process.env.DEV || process.env.ROUTER_RESOLUTION === 'server'
+	);
+
+	test('scripts load on first visit and client-side navigation', async ({ page }) => {
+		/** @type {string[]} */
+		const blocked = [];
+		page.on('requestfailed', (request) => {
+			if (request.failure()?.errorText === 'integrity') blocked.push(request.url());
+		});
+
+		await page.goto('/path-base/integrity-policy');
+		await page.locator('button').click();
+		await expect(page.locator('button')).toHaveText('clicks: 1');
+
+		await page.getByRole('link', { name: 'b', exact: true }).click();
+		await expect(page.getByRole('heading', { name: 'b', exact: true })).toBeVisible();
+		await page.getByRole('button', { name: 'b clicks: 0' }).click();
+		await expect(page.getByRole('button', { name: 'b clicks: 1' })).toBeVisible();
+
+		expect(blocked).toEqual([]);
 	});
 });
