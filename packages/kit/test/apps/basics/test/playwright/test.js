@@ -959,6 +959,42 @@ test.describe('$app/state', () => {
 		expect(JSON.parse((await page.textContent('#state-data')) ?? '')).toEqual(stuff3);
 	});
 
+	test('navigating metadata is null when idle', async ({ page }) => {
+		await page.goto('/state/navigating/a');
+		await expect(page.locator('#navigation-idle')).toHaveText('null null');
+	});
+
+	test('navigating state exposes shallow and event metadata', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		test.skip(!javaScriptEnabled);
+		await page.goto('/state/navigating/a');
+
+		const metadata = page.locator('#navigation-metadata');
+		const idle = page.locator('#navigation-idle');
+
+		await page.getByRole('button', { name: 'shallow goto', exact: true }).click();
+		await expect(metadata).toHaveText('goto true undefined true');
+		await expect(idle).toHaveText('null null');
+
+		await page.locator('a[href="/state/navigating/b"]').click();
+		await expect(metadata).toHaveText('link false click true');
+		await expect(idle).toHaveText('null null');
+
+		await page.goBack();
+		await expect(metadata).toHaveText('popstate true popstate true');
+		await expect(idle).toHaveText('null null');
+
+		await page.getByRole('button', { name: 'submit', exact: true }).click();
+		await expect(metadata).toHaveText('form false submit true');
+		await expect(idle).toHaveText('null null');
+
+		await page.getByRole('button', { name: 'goto', exact: true }).click();
+		await expect(metadata).toHaveText('goto false undefined true');
+		await expect(idle).toHaveText('null null');
+	});
+
 	test('navigating state contains from, to and type', async ({ app, page, javaScriptEnabled }) => {
 		await page.goto('/state/navigating/a');
 
