@@ -104,6 +104,12 @@ test('uses SvelteKit for non-GET requests that share a static pathname', async (
 	expect(await response.json()).toEqual({ message: 'hello from a server endpoint' });
 });
 
+test('reads a prerendered remote function during SSR', async ({ request }) => {
+	const response = await request.get('/remote-read');
+	expect(response.status()).toBe(200);
+	expect(await response.text()).toContain('Remote: from prerendered asset');
+});
+
 test('makes imported assets available to $app/server read', async ({ request }) => {
 	const response = await request.get('/read');
 	expect(response.status()).toBe(200);
