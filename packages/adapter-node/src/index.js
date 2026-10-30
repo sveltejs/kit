@@ -4,7 +4,6 @@ import net from 'node:net';
 import process from 'node:process';
 import { handler } from './handler.js';
 import { env, timeout_env } from './env.js';
-import { rm } from 'node:fs/promises';
 import { format_listening_address } from './utils.js';
 
 export const path = env('SOCKET_PATH', false);
@@ -79,7 +78,9 @@ httpServer.on('request', (req, res) => {
  * A live unix domain socket also reports `size === 0`, so size alone cannot
  * distinguish a stale file from a socket bound by another process (e.g. a
  * sibling worker in Node cluster / PM2 cluster mode).
- * Conservative: any outcome other than ECONNREFUSED is treated as "live".
+ * Conservative: any outcome other than ECONNREFUSED is treated as "live". (A live socket
+ * whose backlog is full answers EAGAIN on Linux, but ECONNREFUSED on BSD-derived kernels
+ * such as macOS; there is no way to tell that apart from a stale file.)
  * @param {string} socket_path
  */
 async function remove_stale_socket(socket_path) {
@@ -110,11 +111,12 @@ async function remove_stale_socket(socket_path) {
 	if (alive) return;
 
 	try {
-		// Re-stat and compare inode to guard against a concurrent bind between
-		// our probe and the remove (another process cleaned up and re-bound).
+		// Re-stat and compare the inode right before removing: a sibling process may have
+		// cleaned up and bound a new socket at this path while we were probing. Both calls are
+		// synchronous so nothing else runs in this process in between.
 		const now = fs.statSync(socket_path);
 		if (now.ino !== before.ino || now.dev !== before.dev || !now.isSocket()) return;
-		await rm(socket_path, { force: true });
+		fs.rmSync(socket_path);
 	} catch {
 		// ENOENT: another instance already cleaned up
 	}
