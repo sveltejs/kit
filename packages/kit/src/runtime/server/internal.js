@@ -79,12 +79,14 @@ export async function format_response(status, request, manifest) {
 	const url = new URL(request.url);
 	const requested = url.href.replace(url.origin, '');
 
-	let log = `${styleText(status < 400 ? ['cyan'] : ['bold', 'red'], `${status}`)} ${request.method} `;
+	let log = `${styleText(status < 400 ? ['cyan'] : ['bold', 'red'], `${status}`)} `;
 
 	if (has_data_suffix(url.pathname)) {
+		log += `${request.method} `;
 		const pathname = strip_data_suffix(url.pathname) || '/';
 		log += pathname + styleText('dim', requested.slice(pathname.length));
 	} else if (has_resolution_suffix(url.pathname)) {
+		log += `${request.method} `;
 		const pathname = strip_resolution_suffix(url.pathname) || '/';
 		log += pathname + styleText('dim', requested.slice(pathname.length));
 	} else if (has_remote_prefix(url)) {
@@ -98,7 +100,8 @@ export async function format_response(status, request, manifest) {
 		}
 		if (remote) {
 			const internals = remote.fn.__;
-			log += styleText('dim', 'remote: ');
+			log += styleText(['bold', 'magenta'], 'ƒ ');
+			log += styleText('magenta', `${internals.type.replace('_', '.')} `);
 			if (internals.dev_loc) {
 				let file_link = internals.dev_loc.file;
 				if (internals.dev_loc.line !== undefined) {
@@ -118,7 +121,7 @@ export async function format_response(status, request, manifest) {
 			if (url.search) log += styleText('dim', url.search);
 		}
 	} else {
-		log += requested;
+		log += `${request.method} ${requested}`;
 	}
 
 	return log;
