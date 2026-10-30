@@ -426,6 +426,10 @@ function kit({ svelte_config }) {
 					},
 					ssr: {
 						noExternal: [
+							// Bundle Kit and Svelte's runtime dependencies so the server output doesn't
+							// resolve incompatible versions installed by the application. Only do this
+							// during builds, since dev must externalize CommonJS application versions.
+							...(is_build ? ['cookie', 'devalue', 'clsx'] : []),
 							// This ensures that esm-env is inlined into the server output with the
 							// export conditions resolved correctly through Vite. This prevents adapters
 							// that bundle later on from resolving the export conditions incorrectly
