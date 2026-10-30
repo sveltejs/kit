@@ -1,5 +1,6 @@
 /** @import { RemoteChunk } from 'types' */
 import { join } from 'node:path';
+import process from 'node:process';
 import { pathToFileURL } from 'node:url';
 import { validate_server_exports } from '../../utils/exports.js';
 import { extract_svelte_config, load_vite_config } from '../config/index.js';
@@ -7,6 +8,7 @@ import { forked } from '../../utils/fork.js';
 import { BODY_DEPENDENT_METHODS, ENDPOINT_METHODS } from '../../constants.js';
 import { has_server_load, resolve_route } from '../../utils/routing.js';
 import { check_feature } from '../features.js';
+import { load_and_validate_params } from '../params.js';
 import { createReadableStream } from '@sveltejs/kit/node';
 import { PageNodes } from '../../utils/page_nodes.js';
 import { enable_verbose_errors } from '../../messages/internal/shared.js';
@@ -57,6 +59,14 @@ async function analyse({
 		manifest,
 		env,
 		read: (file) => createReadableStream(`${server_root}/server/${file}`)
+	});
+
+	// Validate the compiled matchers after initialising their build-time state.
+	await load_and_validate_params({
+		routes: manifest_data.routes,
+		params_path: manifest_data.params,
+		root: vite_config.root ?? process.cwd(),
+		load: async () => ({ params: await manifest.matchers() })
 	});
 
 	/** @type {import('types').ServerMetadata} */
